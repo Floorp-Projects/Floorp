@@ -11,6 +11,8 @@
 
 #include "mozilla/dom/ToJSValue.h"
 
+#include "mprio.h"
+
 #include "PrioEncoder.h"
 
 namespace mozilla {
@@ -50,110 +52,29 @@ void PrioEncoder::Encode(GlobalObject& aGlobal, const nsCString& aBatchID,
     return;
   }
 
-  SECStatus prio_rv = SECSuccess;
-
-  if (!sSingleton) {
-    nsresult rv;
-
-    nsAutoCStringN<CURVE25519_KEY_LEN_HEX + 1> prioKeyA;
-    rv = Preferences::GetCString("prio.publicKeyA", prioKeyA);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return;
-    }
-
-    nsAutoCStringN<CURVE25519_KEY_LEN_HEX + 1> prioKeyB;
-    rv = Preferences::GetCString("prio.publicKeyB", prioKeyB);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return;
-    }
-
-    // Check that both public keys are of the right length
-    // and contain only hex digits 0-9a-fA-f
-    if (!PrioEncoder::IsValidHexPublicKey(prioKeyA) ||
-        !PrioEncoder::IsValidHexPublicKey(prioKeyB)) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return;
-    }
-
-    prio_rv = Prio_init();
-
-    if (prio_rv != SECSuccess) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return;
-    }
-
-    prio_rv = PublicKey_import_hex(
-        &sPublicKeyA,
-        reinterpret_cast<const unsigned char*>(prioKeyA.BeginReading()),
-        CURVE25519_KEY_LEN_HEX);
-    if (prio_rv != SECSuccess) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return;
-    }
-
-    prio_rv = PublicKey_import_hex(
-        &sPublicKeyB,
-        reinterpret_cast<const unsigned char*>(prioKeyB.BeginReading()),
-        CURVE25519_KEY_LEN_HEX);
-    if (prio_rv != SECSuccess) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return;
-    }
-
-    sSingleton = new PrioEncoder();
-    ClearOnShutdown(&sSingleton);
-  }
-
-  nsTArray<bool> dataItems = aPrioParams.mBooleans;
-  if (dataItems.Length() > gNumBooleans) {
-    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(
-        NS_LITERAL_STRING("Maximum boolean value exceeded"));
+  nsCString aResult;
+  nsCString bResult;
+  nsresult rv = PrioEncoder::EncodeNative(aBatchID, aPrioParams.mBooleans,
+                                          aResult, bResult);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
     return;
   }
-
-  PrioConfig prioConfig = PrioConfig_new(
-      dataItems.Length(), sPublicKeyA, sPublicKeyB,
-      reinterpret_cast<const unsigned char*>(aBatchID.BeginReading()),
-      aBatchID.Length());
-
-  if (!prioConfig) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  auto configGuard = MakeScopeExit([&] { PrioConfig_clear(prioConfig); });
-
-  unsigned char* forServerA = nullptr;
-  unsigned int lenA = 0;
-  unsigned char* forServerB = nullptr;
-  unsigned int lenB = 0;
-
-  prio_rv = PrioClient_encode(prioConfig, dataItems.Elements(), &forServerA,
-                              &lenA, &forServerB, &lenB);
 
   nsTArray<uint8_t> arrayForServerA;
   nsTArray<uint8_t> arrayForServerB;
 
-  if (!arrayForServerA.AppendElements(reinterpret_cast<uint8_t*>(forServerA),
-                                      lenA, fallible)) {
+  if (!arrayForServerA.AppendElements(
+          reinterpret_cast<const uint8_t*>(aResult.BeginReading()),
+          aResult.Length(), fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
-  free(forServerA);
-
-  if (!arrayForServerB.AppendElements(reinterpret_cast<uint8_t*>(forServerB),
-                                      lenB, fallible)) {
+  if (!arrayForServerB.AppendElements(
+          reinterpret_cast<const uint8_t*>(bResult.BeginReading()),
+          bResult.Length(), fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
-
-  free(forServerB);
-
-  if (prio_rv != SECSuccess) {
-    aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
@@ -176,6 +97,49 @@ void PrioEncoder::Encode(GlobalObject& aGlobal, const nsCString& aBatchID,
   aData.mB.Construct().Init(&valueB.toObject());
 }
 
+/* static */
+nsresult PrioEncoder::EncodeNative(const nsCString& aBatchID,
+                                   const nsTArray<bool>& aData,
+                                   nsCString& aResult, nsCString& bResult) {
+  SECStatus prio_rv = SECSuccess;
+
+  nsresult rv = PrioEncoder::LazyInitSingleton();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (aData.Length() > gNumBooleans) {
+    return NS_ERROR_RANGE_ERR;
+  }
+
+  PrioConfig prioConfig = PrioConfig_new(
+      aData.Length(), sPublicKeyA, sPublicKeyB,
+      reinterpret_cast<const unsigned char*>(aBatchID.BeginReading()),
+      aBatchID.Length());
+
+  if (!prioConfig) {
+    return NS_ERROR_FAILURE;
+  }
+
+  auto configGuard = MakeScopeExit([&] { PrioConfig_clear(prioConfig); });
+
+  unsigned char* forServerA = nullptr;
+  unsigned int lenA = 0;
+  unsigned char* forServerB = nullptr;
+  unsigned int lenB = 0;
+
+  prio_rv = PrioClient_encode(prioConfig, aData.Elements(), &forServerA, &lenA,
+                              &forServerB, &lenB);
+
+  aResult.Adopt(reinterpret_cast<char*>(forServerA), lenA);
+  bResult.Adopt(reinterpret_cast<char*>(forServerB), lenB);
+
+  if (prio_rv != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 bool PrioEncoder::IsValidHexPublicKey(mozilla::Span<const char> aStr) {
   if (aStr.Length() != CURVE25519_KEY_LEN_HEX) {
     return false;
@@ -188,6 +152,59 @@ bool PrioEncoder::IsValidHexPublicKey(mozilla::Span<const char> aStr) {
   }
 
   return true;
+}
+
+/* static */
+nsresult PrioEncoder::LazyInitSingleton() {
+  if (!sSingleton) {
+    nsresult rv;
+
+    nsAutoCStringN<CURVE25519_KEY_LEN_HEX + 1> prioKeyA;
+    rv = Preferences::GetCString("prio.publicKeyA", prioKeyA);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    nsAutoCStringN<CURVE25519_KEY_LEN_HEX + 1> prioKeyB;
+    rv = Preferences::GetCString("prio.publicKeyB", prioKeyB);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // Check that both public keys are of the right length
+    // and contain only hex digits 0-9a-fA-f
+    if (!PrioEncoder::IsValidHexPublicKey(prioKeyA) ||
+        !PrioEncoder::IsValidHexPublicKey(prioKeyB)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    SECStatus prio_rv = SECSuccess;
+    prio_rv = Prio_init();
+
+    if (prio_rv != SECSuccess) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    prio_rv = PublicKey_import_hex(
+        &sPublicKeyA,
+        reinterpret_cast<const unsigned char*>(prioKeyA.BeginReading()),
+        CURVE25519_KEY_LEN_HEX);
+    if (prio_rv != SECSuccess) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    prio_rv = PublicKey_import_hex(
+        &sPublicKeyB,
+        reinterpret_cast<const unsigned char*>(prioKeyB.BeginReading()),
+        CURVE25519_KEY_LEN_HEX);
+    if (prio_rv != SECSuccess) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    sSingleton = new PrioEncoder();
+    ClearOnShutdown(&sSingleton);
+  }
+  return NS_OK;
 }
 
 }  // namespace dom

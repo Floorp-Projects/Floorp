@@ -10,9 +10,9 @@
 #include "mozilla/dom/PrioEncoderBinding.h"
 #include "mozilla/dom/RootedDictionary.h"
 
-#include "mprio.h"
-
 class nsIGlobalObject;
+typedef struct SECKEYPublicKeyStr SECKEYPublicKey;
+typedef SECKEYPublicKey* PublicKey;
 
 namespace mozilla {
 namespace dom {
@@ -21,6 +21,12 @@ class PrioEncoder {
  public:
   NS_INLINE_DECL_REFCOUNTING(PrioEncoder)
 
+  // C++ API
+  static nsresult EncodeNative(const nsCString& aBatchID,
+                               const nsTArray<bool>& aData, nsCString& aResult,
+                               nsCString& bResult);
+
+  // DOM API
   static void Encode(GlobalObject& aGlobal, const nsCString& aBatchID,
                      const PrioParams& aPrioParams,
                      RootedDictionary<PrioEncodedData>& aData,
@@ -40,6 +46,8 @@ class PrioEncoder {
   static StaticRefPtr<PrioEncoder> sSingleton;
 
   static bool IsValidHexPublicKey(mozilla::Span<const char>);
+
+  static nsresult LazyInitSingleton();
 };
 
 }  // namespace dom
