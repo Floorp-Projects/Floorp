@@ -16,7 +16,9 @@ async function testSteps()
     // Deprecated client
     "storage/default/https+++example.com/asmjs/"
   ];
-  const invalidOriginPath = "storage/default/invalid+++example.com/"
+  const obsoleteFilePath =
+    "storage/default/https+++example.com/idb/UUID123.tmp";
+  const invalidOriginPath = "storage/default/invalid+++example.com/";
 
   info("Verifying the obsolete origins are removed after the 2_1To2_2 upgrade" +
        " and invalid origins wouldn't block upgrades");
@@ -29,8 +31,12 @@ async function testSteps()
   // directories.
   for (let originPath of obsoleteOriginPaths.concat(invalidOriginPath)) {
     let originDir = getRelativeFile(originPath);
-    originDir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
+    originDir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt(0o755));
   }
+
+
+  let strangeFile = getRelativeFile(obsoleteFilePath);
+  strangeFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt(0o644));
 
   info("Upgrading");
 
@@ -39,7 +45,7 @@ async function testSteps()
 
   info("Verifying the obsolete origins are removed after the 2_1To2_2 upgrade");
 
-  for (let originPath of obsoleteOriginPaths) {
+  for (let originPath of obsoleteOriginPaths.concat(obsoleteFilePath)) {
      let folder = getRelativeFile(originPath);
      let exists = folder.exists();
      ok(!exists, "Obsolete origin was removed during origin initialization");
