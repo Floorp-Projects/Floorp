@@ -250,11 +250,9 @@ void WinWebAuthnManager::Register(
         break;
     }
 
-    if (sel.authenticatorAttachment().type() ==
-        WebAuthnMaybeAuthenticatorAttachment::Tuint8_t) {
+    if (sel.authenticatorAttachment().isSome()) {
       const AuthenticatorAttachment authenticatorAttachment =
-          static_cast<AuthenticatorAttachment>(
-              sel.authenticatorAttachment().get_uint8_t());
+          sel.authenticatorAttachment().value();
       switch (authenticatorAttachment) {
         case AuthenticatorAttachment::Platform:
           winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM;
