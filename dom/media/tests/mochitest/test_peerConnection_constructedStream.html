@@ -49,9 +49,6 @@ runNetworkTest(() => {
 
     is(receivedStream.getTracks().length, sentTracks.length,
        "Should receive same number of tracks as were sent");
-    sentTracks.forEach(t =>
-      ok(receivedStream.getTracks().find(t2 => t.id == test.pcRemote.getWebrtcTrackId(t2)),
-         "The sent track (" + t.id + ") should exist on the receive side"));
   };
 
   test.chain.append([

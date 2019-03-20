@@ -1696,8 +1696,12 @@ class StaticAnalysis(MachCommandBase):
                      help='Regular expression matching the names of the headers to '
                           'output diagnostics from. Diagnostics from the main file '
                           'of each translation unit are always displayed')
+    @CommandArgument('--output', '-o', default=None,
+                     help='Write clang-tidy output in a file')
+    @CommandArgument('--format', default='text', choices=('text', 'json'),
+                     help='Output format to write in a file')
     def check(self, source=None, jobs=2, strip=1, verbose=False,
-              checks='-*', fix=False, header_filter=''):
+              checks='-*', fix=False, header_filter='', output=None, format='text'):
         from mozbuild.controller.building import (
             StaticAnalysisFooter,
             StaticAnalysisOutputManager,
@@ -1732,12 +1736,17 @@ class StaticAnalysis(MachCommandBase):
         monitor = StaticAnalysisMonitor(self.topsrcdir, self.topobjdir, total)
 
         footer = StaticAnalysisFooter(self.log_manager.terminal, monitor)
-        with StaticAnalysisOutputManager(self.log_manager, monitor, footer) as output:
-            rc = self.run_process(args=args, ensure_exit_code=False, line_handler=output.on_line, cwd=cwd)
+        with StaticAnalysisOutputManager(self.log_manager, monitor, footer) as output_manager:
+            rc = self.run_process(args=args, ensure_exit_code=False, line_handler=output_manager.on_line, cwd=cwd)
 
             self.log(logging.WARNING, 'warning_summary',
                      {'count': len(monitor.warnings_db)},
                      '{count} warnings present.')
+
+            # Write output file
+            if output is not None:
+                output_manager.write(output, format)
+
         if rc != 0:
             return rc
         # if we are building firefox for android it might be nice to
@@ -2333,8 +2342,8 @@ class StaticAnalysis(MachCommandBase):
         return 0
 
     @Command('clang-format',  category='misc', description='Run clang-format on current changes')
-    @CommandArgument('--show', '-s', action='store_true', default=False,
-                     help='Show diff output on instead of applying changes')
+    @CommandArgument('--show', '-s', action='store_const', const='stdout', dest='output_path',
+                     help='Show diff output on stdout instead of applying changes')
     @CommandArgument('--assume-filename', '-a', nargs=1, default=None,
                      help='This option is usually used in the context of hg-formatsource.'
                           'When reading from stdin, clang-format assumes this '
@@ -2351,13 +2360,21 @@ class StaticAnalysis(MachCommandBase):
                      help='Specify a commit to reformat from.'
                           'For git you can also pass a range of commits (foo..bar)'
                           'to format all of them at the same time.')
-    def clang_format(self, show, assume_filename, path, commit, verbose=False):
+    @CommandArgument('--output', '-o', default=None, dest='output_path',
+                     help='Specify a file handle to write clang-format raw output instead of '
+                          'applying changes. This can be stdout or a file path.')
+    def clang_format(self, assume_filename, path, commit, output_path=None, verbose=False):
         # Run clang-format or clang-format-diff on the local changes
         # or files/directories
         if path is not None:
             path = self._conv_to_abspath(path)
 
         os.chdir(self.topsrcdir)
+
+        # Load output file handle, either stdout or a file handle in write mode
+        output = None
+        if output_path is not None:
+            output = sys.stdout if output_path == 'stdout' else open(output_path, 'w')
 
         # With assume_filename we want to have stdout clean since the result of the
         # format will be redirected to stdout. Only in case of errror we
@@ -2382,12 +2399,12 @@ class StaticAnalysis(MachCommandBase):
 
         if path is None:
             return self._run_clang_format_diff(self._clang_format_diff,
-                                               self._clang_format_path, show, commit)
+                                               self._clang_format_path, commit, output)
 
         if assume_filename:
             return self._run_clang_format_in_console(self._clang_format_path, path, assume_filename)
 
-        return self._run_clang_format_path(self._clang_format_path, show, path)
+        return self._run_clang_format_path(self._clang_format_path, path, output)
 
     def _verify_checker(self, item):
         check = item['name']
@@ -2764,7 +2781,7 @@ class StaticAnalysis(MachCommandBase):
         os.chdir(currentWorkingDir)
         return rc
 
-    def _run_clang_format_diff(self, clang_format_diff, clang_format, show, commit):
+    def _run_clang_format_diff(self, clang_format_diff, clang_format, commit, output_file):
         # Run clang-format on the diff
         # Note that this will potentially miss a lot things
         from subprocess import Popen, PIPE, check_output, CalledProcessError
@@ -2772,13 +2789,14 @@ class StaticAnalysis(MachCommandBase):
         diff_process = Popen(self._get_clang_format_diff_command(commit), stdout=PIPE)
         args = [sys.executable, clang_format_diff, "-p1", "-binary=%s" % clang_format]
 
-        if not show:
+        if not output_file:
             args.append("-i")
         try:
             output = check_output(args, stdin=diff_process.stdout)
-            if show:
+            if output_file:
                 # We want to print the diffs
-                print(output)
+                print(output, file=output_file)
+
             return 0
         except CalledProcessError as e:
             # Something wrong happend
@@ -2851,14 +2869,14 @@ class StaticAnalysis(MachCommandBase):
             process.wait();
             return 0
 
-    def _run_clang_format_path(self, clang_format, show, paths):
+    def _run_clang_format_path(self, clang_format, paths, output_file):
 
         # Run clang-format on files or directories directly
         from subprocess import check_output, CalledProcessError
 
         args = [clang_format, "-i"]
 
-        if show:
+        if output_file:
             # We just want to show the diff, we create the directory to copy it
             tmpdir = os.path.join(self.topobjdir, 'tmp')
             if not os.path.exists(tmpdir):
@@ -2871,7 +2889,7 @@ class StaticAnalysis(MachCommandBase):
 
         print("Processing %d file(s)..." % len(path_list))
 
-        if show:
+        if output_file:
             for i in range(0, len(path_list)):
                 l = path_list[i: (i + 1)]
 
@@ -2904,7 +2922,7 @@ class StaticAnalysis(MachCommandBase):
                     # here, we expect changes. if we are here, this means that
                     # there is a diff to show
                     if e.output:
-                        print(e.output)
+                        print(e.output, file=output_file)
 
             shutil.rmtree(tmpdir)
             return 0
@@ -2949,6 +2967,7 @@ class StaticAnalysis(MachCommandBase):
             if error_code is not None:
                 return error_code
         return 0
+
 
 @CommandProvider
 class Vendor(MachCommandBase):

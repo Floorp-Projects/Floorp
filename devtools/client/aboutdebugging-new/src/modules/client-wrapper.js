@@ -140,6 +140,10 @@ class ClientWrapper {
     return this.client.mainRoot.getAddon({ id });
   }
 
+  async getMainProcess() {
+    return this.client.mainRoot.getMainProcess();
+  }
+
   async getServiceWorkerFront({ id }) {
     const { serviceWorkers } = await this.listWorkers();
     const workerFronts = serviceWorkers.map(sw => sw.workerTargetFront);

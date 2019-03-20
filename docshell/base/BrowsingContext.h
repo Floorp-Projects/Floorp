@@ -89,7 +89,6 @@ class BrowsingContextBase {
 // BrowsingContext::Create* methods.
 class BrowsingContext : public nsWrapperCache,
                         public SupportsWeakPtr<BrowsingContext>,
-                        public LinkedListElement<RefPtr<BrowsingContext>>,
                         public BrowsingContextBase {
  public:
   enum class Type { Chrome, Content };
@@ -248,6 +247,8 @@ class BrowsingContext : public nsWrapperCache,
 
   JSObject* WrapObject(JSContext* aCx);
 
+  void StartDelayedAutoplayMediaComponents();
+
   /**
    * Transaction object. This object is used to specify and then commit
    * modifications to synchronized fields in BrowsingContexts.
@@ -397,6 +398,9 @@ class BrowsingContext : public nsWrapperCache,
       MOZ_RELEASE_ASSERT(opener && opener->Group() == Group());
     }
   }
+
+  // Ensure that we only set the flag on the top level browsing context.
+  void DidSetIsActivatedByUserGesture(ContentParent* aSource);
 
   // Type of BrowsingContent
   const Type mType;

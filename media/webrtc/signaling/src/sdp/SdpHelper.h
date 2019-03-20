@@ -54,8 +54,7 @@ class SdpHelper {
 
   nsresult GetMidFromLevel(const Sdp& sdp, uint16_t level, std::string* mid);
   nsresult GetIdsFromMsid(const Sdp& sdp, const SdpMediaSection& msection,
-                          std::vector<std::string>* streamId,
-                          std::string* trackId);
+                          std::vector<std::string>* streamId);
   nsresult GetMsids(const SdpMediaSection& msection,
                     std::vector<SdpMsidAttributeList::Msid>* msids);
   nsresult ParseMsid(const std::string& msidAttribute, std::string* streamId,

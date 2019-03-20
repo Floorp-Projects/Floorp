@@ -21,10 +21,11 @@ static constexpr nsUConvProp encodingsGroups[] = {
 };
 
 // List of mozilla internal x-* tags that map to themselves (see bug 256257)
-static constexpr const char* kLangGroups[] = {
+static constexpr nsStaticAtom* kLangGroups[] = {
     // This list must be sorted!
-    "x-armn",  "x-cyrillic", "x-devanagari", "x-geor", "x-math",
-    "x-tamil", "x-unicode",  "x-western"
+    nsGkAtoms::x_armn,  nsGkAtoms::x_cyrillic, nsGkAtoms::x_devanagari,
+    nsGkAtoms::x_geor,  nsGkAtoms::x_math,     nsGkAtoms::x_tamil,
+    nsGkAtoms::Unicode, nsGkAtoms::x_western
     // These self-mappings are not necessary unless somebody use them to specify
     // lang in (X)HTML/XML documents, which they shouldn't. (see bug 256257)
     // x-beng=x-beng
@@ -39,7 +40,7 @@ static constexpr const char* kLangGroups[] = {
 // Map ISO 15924 script codes from BCP47 lang tag to mozilla's langGroups.
 static constexpr struct {
   const char* mTag;
-  nsAtom* mAtom;
+  nsStaticAtom* mAtom;
 } kScriptLangGroup[] = {
     // This list must be sorted by script code!
     {"Arab", nsGkAtoms::ar},
@@ -86,7 +87,8 @@ nsLanguageAtomService* nsLanguageAtomService::GetService() {
   return gLangAtomService.get();
 }
 
-nsAtom* nsLanguageAtomService::LookupLanguage(const nsACString& aLanguage) {
+nsStaticAtom* nsLanguageAtomService::LookupLanguage(
+    const nsACString& aLanguage) {
   nsAutoCString lowered(aLanguage);
   ToLowerCase(lowered);
 
@@ -128,42 +130,41 @@ nsAtom* nsLanguageAtomService::GetLocaleLanguage() {
   return mLocaleLanguage;
 }
 
-nsAtom* nsLanguageAtomService::GetLanguageGroup(nsAtom* aLanguage,
-                                                bool* aNeedsToCache) {
-  nsAtom* retVal = mLangToGroup.GetWeak(aLanguage);
-
-  if (!retVal) {
-    if (aNeedsToCache) {
-      *aNeedsToCache = true;
-      return nullptr;
-    }
-    RefPtr<nsAtom> uncached = GetUncachedLanguageGroup(aLanguage);
-    retVal = uncached.get();
-
-    AssertIsMainThreadOrServoFontMetricsLocked();
-    // The hashtable will keep an owning reference to the atom
-    mLangToGroup.Put(aLanguage, uncached);
+nsStaticAtom* nsLanguageAtomService::GetLanguageGroup(nsAtom* aLanguage,
+                                                      bool* aNeedsToCache) {
+  if (nsStaticAtom* group = mLangToGroup.Get(aLanguage)) {
+    return group;
   }
-
-  return retVal;
+  if (aNeedsToCache) {
+    *aNeedsToCache = true;
+    return nullptr;
+  }
+  AssertIsMainThreadOrServoFontMetricsLocked();
+  nsStaticAtom* group = GetUncachedLanguageGroup(aLanguage);
+  mLangToGroup.Put(aLanguage, group);
+  return group;
 }
 
-already_AddRefed<nsAtom> nsLanguageAtomService::GetUncachedLanguageGroup(
+nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
     nsAtom* aLanguage) const {
   nsAutoCString langStr;
   aLanguage->ToUTF8String(langStr);
   ToLowerCase(langStr);
 
-  RefPtr<nsAtom> langGroup;
   if (langStr[0] == 'x' && langStr[1] == '-') {
     // Internal x-* langGroup codes map to themselves (see bug 256257)
-    size_t unused;
-    if (BinarySearchIf(
-            kLangGroups, 0, ArrayLength(kLangGroups),
-            [&langStr](const char* tag) -> int { return langStr.Compare(tag); },
-            &unused)) {
-      langGroup = NS_Atomize(langStr);
-      return langGroup.forget();
+    for (nsStaticAtom* langGroup : kLangGroups) {
+      if (langGroup == aLanguage) {
+        return langGroup;
+      }
+      if (aLanguage->IsAsciiLowercase()) {
+        continue;
+      }
+      // Do the slow ascii-case-insensitive comparison just if needed.
+      nsDependentAtomString string(langGroup);
+      if (string.EqualsASCII(langStr.get(), langStr.Length())) {
+        return langGroup;
+      }
     }
   } else {
     // If the lang code can be parsed as BCP47, look up its (likely) script
@@ -174,11 +175,9 @@ already_AddRefed<nsAtom> nsLanguageAtomService::GetUncachedLanguageGroup(
       }
       if (loc.GetScript().EqualsLiteral("Hant")) {
         if (loc.GetRegion().EqualsLiteral("HK")) {
-          langGroup = nsGkAtoms::HongKongChinese;
-        } else {
-          langGroup = nsGkAtoms::Taiwanese;
+          return nsGkAtoms::HongKongChinese;
         }
-        return langGroup.forget();
+        return nsGkAtoms::Taiwanese;
       } else {
         size_t foundIndex;
         const nsCString& script = loc.GetScript();
@@ -187,14 +186,12 @@ already_AddRefed<nsAtom> nsLanguageAtomService::GetUncachedLanguageGroup(
                              return script.Compare(entry.mTag);
                            },
                            &foundIndex)) {
-          langGroup = kScriptLangGroup[foundIndex].mAtom;
-          return langGroup.forget();
+          return kScriptLangGroup[foundIndex].mAtom;
         }
       }
     }
   }
 
   // Fall back to x-unicode if no match was found
-  langGroup = nsGkAtoms::Unicode;
-  return langGroup.forget();
+  return nsGkAtoms::Unicode;
 }

@@ -329,6 +329,9 @@ nsresult nsSecureBrowserUIImpl::UpdateStateAndSecurityInfo(nsIChannel* channel,
       MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug, ("  is EV"));
       mState |= STATE_IDENTITY_EV_TOPLEVEL;
     }
+    // Proactively check for mixed content in case GetState() is never called
+    // (this can happen when loading from the BF cache).
+    CheckForMixedContent();
   }
   return NS_OK;
 }

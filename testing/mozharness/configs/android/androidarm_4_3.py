@@ -31,4 +31,8 @@ config = {
     },
     "marionette_extra": "--emulator",
     "bogomips_minimum": 250,
+    # in support of test-verify
+    "android_version": 18,
+    "is_fennec": True,
+    "is_emulator": True,
 }

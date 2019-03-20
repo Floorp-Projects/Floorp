@@ -4,17 +4,20 @@
 // Bug 742944 - Test that window.open works with <iframe mozbrowser>.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 function runTest() {
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
   var gotPopup = false;
-  iframe.addEventListener('mozbrowseropenwindow', function(e) {
-    is(gotPopup, false, 'Should get just one popup.');
+  iframe.addEventListener("mozbrowseropenwindow", function(e) {
+    is(gotPopup, false, "Should get just one popup.");
     gotPopup = true;
 
     document.body.appendChild(e.detail.frameElement);
@@ -25,18 +28,15 @@ function runTest() {
     is(e.detail.features, "dialog=1");
   });
 
-  iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
-    ok(gotPopup, 'Got mozbrowseropenwindow event before showmodalprompt event.');
+  iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {
+    ok(gotPopup, "Got mozbrowseropenwindow event before showmodalprompt event.");
     if (e.detail.message.indexOf("success:") == 0) {
       ok(true, e.detail.message);
-    }
-    else if (e.detail.message.indexOf("failure:") == 0) {
+    } else if (e.detail.message.indexOf("failure:") == 0) {
       ok(false, e.detail.message);
-    }
-    else if (e.detail.message == "finish") {
+    } else if (e.detail.message == "finish") {
       SimpleTest.finish();
-    }
-    else {
+    } else {
       ok(false, "Got invalid message: " + e.detail.message);
     }
   });
@@ -51,8 +51,8 @@ function runTest() {
    * Onload, we fire a few alerts saying "success:REASON" or "failure:REASON".
    * Finally, we fire a "finish" alert, which ends the test.
    */
-  iframe.src = 'file_browserElement_Open1.html';
+  iframe.src = "file_browserElement_Open1.html";
   document.body.appendChild(iframe);
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

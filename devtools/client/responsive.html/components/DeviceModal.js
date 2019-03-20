@@ -10,9 +10,10 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const DeviceAdder = createFactory(require("./DeviceAdder"));
+const DeviceForm = createFactory(require("./DeviceForm"));
+const DeviceList = createFactory(require("./DeviceList"));
 
-const { getStr, getFormatStr } = require("../utils/l10n");
+const { getFormatStr, getStr } = require("../utils/l10n");
 const Types = require("../types");
 
 class DeviceModal extends PureComponent {
@@ -31,7 +32,9 @@ class DeviceModal extends PureComponent {
   constructor(props) {
     super(props);
 
-    this.state = {};
+    this.state = {
+      isDeviceFormShown: false,
+    };
     for (const type of this.props.devices.types) {
       for (const device of this.props.devices[type]) {
         this.state[device.name] = device.displayed;
@@ -40,8 +43,11 @@ class DeviceModal extends PureComponent {
 
     this.onAddCustomDevice = this.onAddCustomDevice.bind(this);
     this.onDeviceCheckboxChange = this.onDeviceCheckboxChange.bind(this);
+    this.onDeviceFormShow = this.onDeviceFormShow.bind(this);
+    this.onDeviceFormHide = this.onDeviceFormHide.bind(this);
     this.onDeviceModalSubmit = this.onDeviceModalSubmit.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
+    this.validateAddDeviceFormNameField = this.validateAddDeviceFormNameField.bind(this);
   }
 
   componentDidMount() {
@@ -67,6 +73,14 @@ class DeviceModal extends PureComponent {
     this.setState({
       [target.value]: !this.state[target.value],
     });
+  }
+
+  onDeviceFormShow() {
+    this.setState({ isDeviceFormShown: true });
+  }
+
+  onDeviceFormHide() {
+    this.setState({ isDeviceFormShown: false });
   }
 
   onDeviceModalSubmit() {
@@ -115,23 +129,99 @@ class DeviceModal extends PureComponent {
     }
   }
 
+  renderAddDeviceForm(devices, viewportTemplate) {
+    // If a device is currently selected, fold its attributes into a single object for use
+    // as the starting values of the form.  If no device is selected, use the values for
+    // the current window.
+    const deviceTemplate = viewportTemplate;
+    if (viewportTemplate.device) {
+      const device = devices[viewportTemplate.deviceType].find(d => {
+        return d.name == viewportTemplate.device;
+      });
+      Object.assign(deviceTemplate, {
+        pixelRatio: device.pixelRatio,
+        userAgent: device.userAgent,
+        touch: device.touch,
+        name: getFormatStr("responsive.customDeviceNameFromBase", device.name),
+      });
+    } else {
+      Object.assign(deviceTemplate, {
+        pixelRatio: window.devicePixelRatio,
+        userAgent: navigator.userAgent,
+        touch: false,
+        name: getStr("responsive.customDeviceName"),
+      });
+    }
+
+    return (
+      DeviceForm({
+        formType: "add",
+        buttonText: getStr("responsive.addDevice2"),
+        device: deviceTemplate,
+        onDeviceFormHide: this.onDeviceFormHide,
+        onDeviceFormShow: this.onDeviceFormShow,
+        onSave: this.onAddCustomDevice,
+        validateName: this.validateAddDeviceFormNameField,
+        viewportTemplate,
+      })
+    );
+  }
+
+  renderDevices() {
+    const sortedDevices = {};
+    for (const type of this.props.devices.types) {
+      sortedDevices[type] = this.props.devices[type]
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      sortedDevices[type].forEach(device => {
+        device.isChecked = this.state[device.name];
+      });
+    }
+
+    return (
+      this.props.devices.types.map(type => {
+        return sortedDevices[type].length ?
+          dom.div(
+            {
+              className: `device-type device-type-${type}`,
+              key: type,
+            },
+            dom.header({ className: "device-header" }, type),
+            DeviceList({
+              devices: sortedDevices,
+              type,
+              onDeviceCheckboxChange: this.onDeviceCheckboxChange,
+              onRemoveCustomDevice: this.props.onRemoveCustomDevice,
+            })
+          )
+          :
+          null;
+      })
+    );
+  }
+
+  /**
+   * Validates the name field's value by checking if the added device's name already
+   * exists in the custom devices list.
+   *
+   * @param  {String} value
+   *         The input field value for the device name.
+   * @return {Boolean} true if device name is valid, false otherwise.
+   */
+  validateAddDeviceFormNameField(value) {
+    const { devices } = this.props;
+    const nameFieldValue = value.trim();
+    const deviceFound = devices.custom.find(device => device.name == nameFieldValue);
+
+    return !deviceFound;
+  }
+
   render() {
     const {
       deviceAdderViewportTemplate,
       devices,
-      onRemoveCustomDevice,
       onUpdateDeviceModal,
     } = this.props;
-
-    const {
-      onAddCustomDevice,
-    } = this;
-
-    const sortedDevices = {};
-    for (const type of devices.types) {
-      sortedDevices[type] = Object.assign([], devices[type])
-        .sort((a, b) => a.name.localeCompare(b.name));
-    }
 
     return (
       dom.div(
@@ -140,65 +230,26 @@ class DeviceModal extends PureComponent {
           className: this.props.devices.isModalOpen ? "opened" : "closed",
         },
         dom.div({ className: "device-modal" },
-          dom.button({
-            id: "device-close-button",
-            className: "devtools-button",
-            onClick: () => onUpdateDeviceModal(false),
-          }),
-          dom.div({ className: "device-modal-content" },
-            devices.types.map(type => {
-              return dom.div(
-                {
-                  className: `device-type device-type-${type}`,
-                  key: type,
-                },
-                dom.header({ className: "device-header" },
-                  type
-                ),
-                sortedDevices[type].map(device => {
-                  const details = getFormatStr(
-                    "responsive.deviceDetails", device.width, device.height,
-                    device.pixelRatio, device.userAgent, device.touch
-                  );
-
-                  let removeDeviceButton;
-                  if (type == "custom") {
-                    removeDeviceButton = dom.button({
-                      className: "device-remove-button devtools-button",
-                      onClick: () => onRemoveCustomDevice(device),
-                    });
-                  }
-
-                  return dom.label(
-                    {
-                      className: "device-label",
-                      key: device.name,
-                      title: details,
-                    },
-                    dom.input({
-                      className: "device-input-checkbox",
-                      type: "checkbox",
-                      value: device.name,
-                      checked: this.state[device.name],
-                      onChange: this.onDeviceCheckboxChange,
-                    }),
-                    dom.span(
-                      {
-                        className: "device-name",
-                      },
-                      device.name
-                    ),
-                    removeDeviceButton
-                  );
+          dom.div({ className: "device-modal-header" },
+            !this.state.isDeviceFormShown ?
+              dom.header({ className: "device-modal-title" },
+                getStr("responsive.deviceSettings"),
+                dom.button({
+                  id: "device-close-button",
+                  className: "devtools-button",
+                  onClick: () => onUpdateDeviceModal(false),
                 })
-              );
-            })
+              )
+              :
+              null,
+            this.renderAddDeviceForm(devices, deviceAdderViewportTemplate)
           ),
-          DeviceAdder({
-            devices,
-            viewportTemplate: deviceAdderViewportTemplate,
-            onAddCustomDevice,
-          }),
+          dom.div({
+            className: `device-modal-content
+              ${this.state.isDeviceFormShown ? " form-shown" : ""}`,
+          },
+          this.renderDevices()
+          ),
           dom.button(
             {
               id: "device-submit-button",

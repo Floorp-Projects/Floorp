@@ -528,15 +528,18 @@ impl<T, U> Polygon<T, U> where
             } else {
                 continue;
             };
-            // compute the cut point
-            if let Some(t) = line.intersect_edge(*point0 .. *point1) {
-                // Note: it is expected that T is in [0, 1] range, but it can go outside of it
-                // by a small amount due to computation inefficiencies, and it's fine.
-                debug_assert!(t >= -T::epsilon() * T::from(10.0).unwrap() && t <= T::one() + T::epsilon() * T::from(10.0).unwrap());
-                debug_assert_eq!(*cut, None);
-                let point = *point0 + (*point1 - *point0) * t;
-                *cut = Some((i, point));
-            }
+            // compute the cut point by weighting the opposite distances
+            //
+            // Note: this algorithm is designed to not favor one end of the edge over the other.
+            // The previous approach of calling `intersect_edge` sometimes ended up with "t" ever
+            // slightly outside of [0, 1] range, since it was computing it relative to the first point only.
+            //
+            // Given that we are intersecting two straight lines, the triangles on both
+            // sides of intersection are alike, so distances along the [point0, point1] line
+            // are proportional to the side vector lengths we just computed: (side0, side1).
+            let point = (*point0 * side1.abs() + point1.to_vector() * side0.abs()) / (side0 - side1).abs();
+            debug_assert_eq!(*cut, None);
+            *cut = Some((i, point));
         }
         // form new polygons
         if let (Some(first), Some(mut second)) = (cut_positive, cut_negative) {

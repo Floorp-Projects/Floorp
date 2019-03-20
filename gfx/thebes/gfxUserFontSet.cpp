@@ -978,19 +978,6 @@ gfxUserFontFamily* gfxUserFontSet::LookupFamily(
   return mFontFamilies.GetWeak(key);
 }
 
-bool gfxUserFontSet::ContainsUserFontSetFonts(
-    const FontFamilyList& aFontList) const {
-  for (const FontFamilyName& name : aFontList.GetFontlist()->mNames) {
-    if (!name.IsNamed()) {
-      continue;
-    }
-    if (LookupFamily(nsAtomCString(name.mName))) {
-      return true;
-    }
-  }
-  return false;
-}
-
 gfxUserFontFamily* gfxUserFontSet::GetFamily(const nsACString& aFamilyName) {
   nsAutoCString key(aFamilyName);
   ToLowerCase(key);

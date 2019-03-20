@@ -9,39 +9,40 @@
 // preventDefault() on the event.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 function runTest() {
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
-  iframe.addEventListener('mozbrowseropenwindow', function(e) {
-    ok(e.detail.url.includes('does_not_exist.html'),
-       'Opened URL; got ' + e.detail.url);
-    is(e.detail.name, '');
-    is(e.detail.features, '');
+  iframe.addEventListener("mozbrowseropenwindow", function(e) {
+    ok(e.detail.url.includes("does_not_exist.html"),
+       "Opened URL; got " + e.detail.url);
+    is(e.detail.name, "");
+    is(e.detail.features, "");
 
     // Call preventDefault, but don't add the iframe to the DOM.  This still
     // amounts to rejecting the popup.
     e.preventDefault();
   });
 
-  iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
+  iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {
     var msg = e.detail.message;
-    if (msg.indexOf('success:') == 0) {
+    if (msg.indexOf("success:") == 0) {
       ok(true, msg);
-    }
-    else if (msg == 'finish') {
+    } else if (msg == "finish") {
       SimpleTest.finish();
-    }
-    else {
+    } else {
       ok(false, msg);
     }
   });
 
-  iframe.src = 'file_browserElement_OpenWindowRejected.html';
+  iframe.src = "file_browserElement_OpenWindowRejected.html";
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

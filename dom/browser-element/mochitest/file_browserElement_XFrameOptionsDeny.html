@@ -10,27 +10,27 @@
 // iframe this page is contained in, without scrolling, in order for the test's
 // screenshots to work properly.
 
-var iframe1 = document.createElement('iframe');
-iframe1.height = '300px';
-var iframe2 = document.createElement('iframe');
-iframe2.height = '300px';
+var iframe1 = document.createElement("iframe");
+iframe1.height = "300px";
+var iframe2 = document.createElement("iframe");
+iframe2.height = "300px";
 document.body.appendChild(iframe1);
 document.body.appendChild(iframe2);
 
 // This causes our embedder to take a screenshot (and blocks until the
 // screenshot is completed).
-alert('step 1');
+alert("step 1");
 
 // Wait for both iframes to load.
 
 var iframe1Loaded = false;
-iframe1.addEventListener('load', function() {
+iframe1.addEventListener("load", function() {
   iframe1Loaded = true;
   waitForBothLoads();
 }, {once: true});
 
 var iframe2Loaded = false;
-iframe2.addEventListener('load', function() {
+iframe2.addEventListener("load", function() {
   iframe2Loaded = true;
   waitForBothLoads();
 }, {once: true});
@@ -39,16 +39,16 @@ function waitForBothLoads() {
   if (iframe1Loaded && iframe2Loaded) {
     setTimeout(function() {
       // This causes our embedder to take another screenshot.
-      alert('step 2');
+      alert("step 2");
     }, 0);
   }
 }
 
-iframe1.src = 'file_browserElement_XFrameOptions.sjs?DENY';
+iframe1.src = "file_browserElement_XFrameOptions.sjs?DENY";
 
 // Load iframe2 with the origin of our parent.  Since we have a different
 // origin and are inside <iframe mozbrowser>, this should not load.
-iframe2.src = 'http://mochi.test:8888/tests/dom/browser-element/mochitest/file_browserElement_XFrameOptions.sjs?SAMEORIGIN';
+iframe2.src = "http://mochi.test:8888/tests/dom/browser-element/mochitest/file_browserElement_XFrameOptions.sjs?SAMEORIGIN";
 </script>
 
 </body>

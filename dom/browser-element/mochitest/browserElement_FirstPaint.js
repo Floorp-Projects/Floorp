@@ -4,33 +4,34 @@
 // Bug 787378 - Add mozbrowserfirstpaint event.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 function runTest() {
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
   var gotFirstPaint = false;
   var gotFirstLocationChange = false;
-  iframe.addEventListener('mozbrowserfirstpaint', function(e) {
+  iframe.addEventListener("mozbrowserfirstpaint", function(e) {
     ok(!gotFirstPaint, "Got only one first paint.");
     gotFirstPaint = true;
 
     if (gotFirstLocationChange) {
-      iframe.src = browserElementTestHelpers.emptyPage1 + '?2';
+      iframe.src = browserElementTestHelpers.emptyPage1 + "?2";
     }
   });
 
-  iframe.addEventListener('mozbrowserlocationchange', function(e) {
+  iframe.addEventListener("mozbrowserlocationchange", function(e) {
     if (e.detail.url == browserElementTestHelpers.emptyPage1) {
       gotFirstLocationChange = true;
       if (gotFirstPaint) {
-        iframe.src = browserElementTestHelpers.emptyPage1 + '?2';
+        iframe.src = browserElementTestHelpers.emptyPage1 + "?2";
       }
-    }
-    else if (e.detail.url.endsWith('?2')) {
+    } else if (e.detail.url.endsWith("?2")) {
       SimpleTest.finish();
     }
   });
@@ -40,4 +41,4 @@ function runTest() {
   iframe.src = browserElementTestHelpers.emptyPage1;
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

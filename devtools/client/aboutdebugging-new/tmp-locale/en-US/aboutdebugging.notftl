@@ -307,3 +307,7 @@ about-debugging-extension-debug-setting-label = Enable extension debugging <a>Le
 # target items in the category. This text is used as ’title’ attribute of the header,
 # to describe this feature.
 about-debugging-collapse-expand-debug-targets = Collapse / expand
+
+about-debugging-main-process-name = Main Process
+about-debugging-main-process-description = Main Process for the target runtime
+

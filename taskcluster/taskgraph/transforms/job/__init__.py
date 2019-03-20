@@ -133,7 +133,7 @@ def rewrite_when_to_optimization(config, jobs):
 @transforms.add
 def set_implementation(config, jobs):
     for job in jobs:
-        impl, os = worker_type_implementation(job['worker-type'])
+        impl, os = worker_type_implementation(config.graph_config, job['worker-type'])
         if os:
             job.setdefault('tags', {})['os'] = os
         if impl:
@@ -143,7 +143,6 @@ def set_implementation(config, jobs):
         worker['implementation'] = impl
         if os:
             worker['os'] = os
-
         yield job
 
 

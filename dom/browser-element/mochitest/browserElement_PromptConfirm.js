@@ -8,26 +8,28 @@
 // ourselves.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 browserElementTestHelpers.allowTopLevelDataURINavigation();
 
 function runTest() {
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
   document.body.appendChild(iframe);
 
   var prompts = [
-    {msg: '1', type: 'alert', rv: 42, expected: 'undefined'},
-    {msg: '2', type: 'confirm', rv: true, expected: 'true'},
-    {msg: '3', type: 'confirm', rv: false, expected: 'false'},
+    {msg: "1", type: "alert", rv: 42, expected: "undefined"},
+    {msg: "2", type: "confirm", rv: true, expected: "true"},
+    {msg: "3", type: "confirm", rv: false, expected: "false"},
 
     // rv == 42 should be coerced to 'true' for confirm.
-    {msg: '4', type: 'confirm', rv: 42, expected: 'true'},
-    {msg: '5', type: 'prompt', rv: 'worked', expected: 'worked'},
-    {msg: '6', type: 'prompt', rv: null, expected: 'null'},
-    {msg: '7', type: 'prompt', rv: '', expected: ''}
+    {msg: "4", type: "confirm", rv: 42, expected: "true"},
+    {msg: "5", type: "prompt", rv: "worked", expected: "worked"},
+    {msg: "6", type: "prompt", rv: null, expected: "null"},
+    {msg: "7", type: "prompt", rv: "", expected: ""},
   ];
 
   iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {
@@ -38,11 +40,10 @@ function runTest() {
       is(e.detail.message, curPrompt.msg, "prompt message");
       is(e.detail.promptType, curPrompt.type, "prompt type");
 
-      if (e.detail.promptType == 'prompt') {
+      if (e.detail.promptType == "prompt") {
         ok(e.detail.returnValue === null, "prompt's returnValue should be null");
         is(e.detail.initialValue, "initial", "prompt's initial value.");
-      }
-      else {
+      } else {
         ok(e.detail.returnValue === undefined,
            "Other than for prompt, shouldn't have initial value.");
       }
@@ -54,14 +55,13 @@ function runTest() {
         e.detail.returnValue = curPrompt.rv;
         e.detail.unblock();
       });
-    }
-    else {
+    } else {
       prompts.shift();
 
       // |e| now corresponds to an alert() containing the return value we just
       // sent for this prompt.
 
-      is(e.detail.message, 'RESULT:' + curPrompt.expected,
+      is(e.detail.message, "RESULT:" + curPrompt.expected,
          "expected rv for msg " + curPrompt.msg);
 
       if (prompts.length == 0) {
@@ -70,6 +70,7 @@ function runTest() {
     }
   });
 
+  /* eslint-disable no-useless-concat */
   iframe.src =
     'data:text/html,<html><body><script>\
       function sendVal(val) { \
@@ -82,7 +83,8 @@ function runTest() {
       sendVal(prompt("5", "initial")); \
       sendVal(prompt("6", "initial")); \
       sendVal(prompt("7", "initial")); \
-    </scr' + 'ipt></body></html>';
+    </scr' + "ipt></body></html>";
+  /* eslint-enable no-useless-concat */
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

@@ -57,10 +57,6 @@ module.exports = {
     // Disallow use of this/super before calling super() in constructors.
     "no-this-before-super": "error",
 
-    // Disallow throwing literals (eg. |throw "error"| instead of
-    // |throw new Error("error")|)
-    "no-throw-literal": "error",
-
     // Disallow unmodified loop conditions.
     "no-unmodified-loop-condition": "error",
 

@@ -3,14 +3,14 @@
 <script>
 
 var name = location.search.substring(1);
-addEventListener('load', function() {
+addEventListener("load", function() {
   setTimeout(function() {
-    alert(name + ':ready');
+    alert(name + ":ready");
   }, 0);
 });
 
-addEventListener('visibilitychange', function() {
-  alert(name + ':' + (document.hidden ? 'hidden' : 'visible'));
+addEventListener("visibilitychange", function() {
+  alert(name + ":" + (document.hidden ? "hidden" : "visible"));
 });
 
 </script>

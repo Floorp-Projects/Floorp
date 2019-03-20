@@ -23,16 +23,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
   document.body.appendChild(iframe);
 
-  iframe.addEventListener('mozbrowserloadstart', function() {
-    ok(false, 'Should not send mozbrowserloadstart event.');
+  iframe.addEventListener("mozbrowserloadstart", function() {
+    ok(false, "Should not send mozbrowserloadstart event.");
   });
 
-  iframe.addEventListener('load', function() {
-    ok(true, 'Got iframe load event.');
+  iframe.addEventListener("load", function() {
+    ok(true, "Got iframe load event.");
     SimpleTest.finish();
   });
 
@@ -41,7 +41,7 @@ function runTest() {
 
 browserElementTestHelpers.setEnabledPref(true);
 SpecialPowers.removePermission("browser", document);
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);
 
 </script>
 

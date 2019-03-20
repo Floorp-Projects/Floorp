@@ -49,7 +49,7 @@ class ADBProcess(object):
         # Remove -s <serialno> from the error message to allow bug suggestions
         # to be independent of the individual failing device.
         arg_string = ' '.join(self.args)
-        arg_string = re.sub(' -s \w+', '', arg_string)
+        arg_string = re.sub(' -s [\w-]+', '', arg_string)
         return ('args: %s, exitcode: %s, stdout: %s' % (
             arg_string, self.exitcode, self.stdout))
 

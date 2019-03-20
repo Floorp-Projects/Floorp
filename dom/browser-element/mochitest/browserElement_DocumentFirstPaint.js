@@ -4,6 +4,8 @@
 // Bug 829486 - Add mozdocumentbrowserfirstpaint event.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 
@@ -20,8 +22,8 @@ function runTestQueue(queue) {
   var test = queue.shift();
 
   function runNext() {
-    iframe.removeEventListener('mozbrowserdocumentfirstpaint', documentfirstpainthandler);
-    iframe.removeEventListener('mozbrowserloadend', loadendhandler);
+    iframe.removeEventListener("mozbrowserdocumentfirstpaint", documentfirstpainthandler);
+    iframe.removeEventListener("mozbrowserloadend", loadendhandler);
     runTestQueue(queue);
   }
 
@@ -40,8 +42,8 @@ function runTestQueue(queue) {
     }
   }
 
-  iframe.addEventListener('mozbrowserdocumentfirstpaint', documentfirstpainthandler);
-  iframe.addEventListener('mozbrowserloadend', loadendhandler);
+  iframe.addEventListener("mozbrowserdocumentfirstpaint", documentfirstpainthandler);
+  iframe.addEventListener("mozbrowserloadend", loadendhandler);
 
   test();
 }
@@ -60,10 +62,10 @@ function testFirstLoad() {
 }
 
 function runTest() {
-  iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
   runTestQueue([testFirstLoad, testReload, testChangeLocation]);
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

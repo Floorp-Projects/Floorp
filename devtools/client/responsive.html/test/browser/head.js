@@ -480,12 +480,12 @@ function addDeviceInModal(ui, device) {
     ui.toolWindow.require("devtools/client/shared/vendor/react-dom-test-utils");
   const { document, store } = ui.toolWindow;
 
-  const nameInput = document.querySelector("#device-adder-name input");
+  const nameInput = document.querySelector("#device-form-name input");
   const [ widthInput, heightInput ] =
-    document.querySelectorAll("#device-adder-size input");
-  const pixelRatioInput = document.querySelector("#device-adder-pixel-ratio input");
-  const userAgentInput = document.querySelector("#device-adder-user-agent input");
-  const touchInput = document.querySelector("#device-adder-touch input");
+    document.querySelectorAll("#device-form-size input");
+  const pixelRatioInput = document.querySelector("#device-form-pixel-ratio input");
+  const userAgentInput = document.querySelector("#device-form-user-agent input");
+  const touchInput = document.querySelector("#device-form-touch input");
 
   nameInput.value = device.name;
   Simulate.change(nameInput);
@@ -503,7 +503,7 @@ function addDeviceInModal(ui, device) {
   Simulate.change(touchInput);
 
   const existingCustomDevices = store.getState().devices.custom.length;
-  const adderSave = document.querySelector("#device-adder-save");
+  const adderSave = document.querySelector("#device-form-save");
   const saved = waitUntilState(store, state =>
     state.devices.custom.length == existingCustomDevices + 1
   );
