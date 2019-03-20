@@ -32,6 +32,11 @@ namespace wr {
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorANGLE::Create(
     RefPtr<widget::CompositorWidget>&& aWidget) {
+  if (!RenderThread::Get()->SharedGL()) {
+    gfxCriticalNote << "Failed to get shared GL context";
+    return nullptr;
+  }
+
   UniquePtr<RenderCompositorANGLE> compositor =
       MakeUnique<RenderCompositorANGLE>(std::move(aWidget));
   if (!compositor->Initialize()) {
