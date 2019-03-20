@@ -284,20 +284,12 @@ about-debugging-connection-prompt-disable-button = Disable connection prompt
 # Title of the application displayed in the tab
 -application-title = Debugging
 
-# Page title of connect / runtime page
-# Part of "about-debugging-page-title" string defined below
-about-debugging-page-title-selected-page =
-  { $selectedPage ->
-     [connect] Setup
-     *[runtime] Runtime
-  }
+# Page title (ie tab title) for the Setup page
+about-debugging-page-title-setup-page = { -application-title } - Setup
 
-# Page title with the runtime displayed in the tab
+# Page title (ie tab title) for the Runtime page
 # { $selectedRuntimeId } is the id of the current runtime, such as "this-firefox", "localhost:6080", ...
-about-debugging-page-title-with-runtime = { -application-title } - { about-debugging-page-title-selected-page } / { $selectedRuntimeId }
-
-# Page title without the runtime displayed in the tab
-about-debugging-page-title = { -application-title } - { about-debugging-page-title-selected-page }
+about-debugging-page-title-runtime-page = { -application-title } - Runtime / { $selectedRuntimeId }
 
 # Title of a modal dialog displayed on remote runtime pages after clicking on the Profile Runtime button.
 about-debugging-profiler-dialog-title = Performance Profiler
