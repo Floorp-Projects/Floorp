@@ -3,21 +3,20 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
-
+import { setBreakpointPositions } from "./breakpointPositions";
 import {
   breakpointExists,
   assertBreakpoint,
   createBreakpoint,
   getASTLocation,
   makeBreakpointId,
-  makeBreakpointLocation,
-  findPosition
+  makeBreakpointLocation
 } from "../../utils/breakpoint";
 import { PROMISE } from "../utils/middleware/promise";
 import {
   getSymbols,
   getFirstBreakpointPosition,
-  getBreakpointPositionsForSource,
+  getBreakpointPositionsForLocation,
   getSourceFromId
 } from "../../selectors";
 
@@ -101,15 +100,14 @@ export function addBreakpoint(
 ) {
   return async ({ dispatch, getState, sourceMaps, client }: ThunkArgs) => {
     recordEvent("add_breakpoint");
-    let position;
+
     const { sourceId, column } = location;
 
-    if (column === undefined) {
-      position = getFirstBreakpointPosition(getState(), location);
-    } else {
-      const positions = getBreakpointPositionsForSource(getState(), sourceId);
-      position = findPosition(positions, location);
-    }
+    await dispatch(setBreakpointPositions(sourceId));
+
+    const position = column
+      ? getBreakpointPositionsForLocation(getState(), location)
+      : getFirstBreakpointPosition(getState(), location);
 
     if (!position) {
       return;
