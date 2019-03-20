@@ -2,7 +2,7 @@
 
 # MANUAL
 
-`MANUAL` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L115)
+`MANUAL` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L136)
 
 Do not follow redirects and let caller handle them manually.
 

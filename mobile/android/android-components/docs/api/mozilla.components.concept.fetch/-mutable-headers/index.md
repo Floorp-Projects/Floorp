@@ -2,7 +2,7 @@
 
 # MutableHeaders
 
-`class MutableHeaders : `[`Headers`](../-headers/index.md)`, `[`MutableIterable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-iterable/index.html)`<`[`Header`](../-header/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Headers.kt#L74)
+`class MutableHeaders : `[`Headers`](../-headers/index.md)`, `[`MutableIterable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-iterable/index.html)`<`[`Header`](../-header/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Headers.kt#L86)
 
 A collection of HTTP [Headers](../-headers/index.md) (mutable) of a [Request](../-request/index.md) or [Response](../-response/index.md).
 

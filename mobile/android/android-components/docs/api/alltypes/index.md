@@ -125,7 +125,7 @@
 | [mozilla.components.concept.engine.EngineView](../mozilla.components.concept.engine/-engine-view/index.md) | View component that renders web content. |
 | [mozilla.components.feature.session.EngineViewPresenter](../mozilla.components.feature.session/-engine-view-presenter/index.md) | Presenter implementation for EngineView. |
 | [mozilla.components.browser.errorpages.ErrorPages](../mozilla.components.browser.errorpages/-error-pages/index.md) |  |
-| [mozilla.components.service.glean.error.ErrorRecording](../mozilla.components.service.glean.error/-error-recording/index.md) |  |
+| [mozilla.components.service.glean.error.ErrorRecording](../mozilla.components.service.glean.error/-error-recording.md) |  |
 | [mozilla.components.browser.errorpages.ErrorType](../mozilla.components.browser.errorpages/-error-type/index.md) | Enum containing all supported error types that we can display an error page for. |
 | [mozilla.components.service.glean.EventMetricType](../mozilla.components.service.glean/-event-metric-type/index.md) | This implements the developer facing API for recording events. |
 | [org.mozilla.telemetry.measurement.EventsMeasurement](../org.mozilla.telemetry.measurement/-events-measurement/index.md) |  |
@@ -292,6 +292,8 @@
 | [mozilla.components.service.pocket.PocketEndpoint](../mozilla.components.service.pocket/-pocket-endpoint/index.md) | Makes requests to the Pocket API and returns the requested data. |
 | [mozilla.components.service.pocket.data.PocketGlobalVideoRecommendation](../mozilla.components.service.pocket.data/-pocket-global-video-recommendation/index.md) | A recommended video as returned from the Pocket Global Video Recommendation endpoint v2. |
 | [org.mozilla.telemetry.measurement.PocketIdMeasurement](../org.mozilla.telemetry.measurement/-pocket-id-measurement/index.md) | A unique, randomly generated UUID for this pocket client for fire-tv instance. This is distinct from the telemetry clientId. The clientId should not be able to be tied to the pocketId in any way. |
+| [mozilla.components.service.pocket.data.PocketListenArticleMetadata](../mozilla.components.service.pocket.data/-pocket-listen-article-metadata/index.md) | The metadata for a spoken article's audio file. |
+| [mozilla.components.service.pocket.PocketListenEndpoint](../mozilla.components.service.pocket/-pocket-listen-endpoint/index.md) | Makes requests to the Pocket Listen API and returns the requested data. |
 | [mozilla.components.service.pocket.net.PocketResponse](../mozilla.components.service.pocket.net/-pocket-response/index.md) | A response from the Pocket API: the subclasses determine the type of the result and contain usable data. |
 | [org.mozilla.telemetry.measurement.ProcessStartTimestampMeasurement](../org.mozilla.telemetry.measurement/-process-start-timestamp-measurement/index.md) |  |
 | [mozilla.components.concept.sync.Profile](../mozilla.components.concept.sync/-profile/index.md) |  |

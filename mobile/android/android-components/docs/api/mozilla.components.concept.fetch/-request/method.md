@@ -2,7 +2,7 @@
 
 # method
 
-`val method: `[`Method`](-method/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L37)
+`val method: `[`Method`](-method/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L41)
 
 The request method (GET, POST, ..)
 

@@ -2,7 +2,7 @@
 
 # useCaches
 
-`val useCaches: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L44)
+`val useCaches: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L48)
 
 Whether caches should be used or a network request
 should be forced, defaults to true (use caches).
@@ -11,3 +11,10 @@ should be forced, defaults to true (use caches).
 
 `useCaches` - Whether caches should be used or a network request
 should be forced, defaults to true (use caches).
+
+**See Also**
+
+[Headers.Names](../-headers/-names/index.md)
+
+[Headers.Values](../-headers/-values/index.md)
+

@@ -2,7 +2,7 @@
 
 # useStream
 
-`fun <R> useStream(block: (`[`InputStream`](https://developer.android.com/reference/java/io/InputStream.html)`) -> `[`R`](use-stream.md#R)`): `[`R`](use-stream.md#R) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L70)
+`fun <R> useStream(block: (`[`InputStream`](https://developer.android.com/reference/java/io/InputStream.html)`) -> `[`R`](use-stream.md#R)`): `[`R`](use-stream.md#R) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L91)
 
 Executes the given [block](use-stream.md#mozilla.components.concept.fetch.Request.Body$useStream(kotlin.Function1((java.io.InputStream, mozilla.components.concept.fetch.Request.Body.useStream.R)))/block) function on the body's stream and then closes it down correctly whether an
 exception is thrown or not.

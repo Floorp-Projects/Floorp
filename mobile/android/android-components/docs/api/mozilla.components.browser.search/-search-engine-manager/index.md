@@ -2,7 +2,7 @@
 
 # SearchEngineManager
 
-`class SearchEngineManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/SearchEngineManager.kt#L25)
+`class SearchEngineManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/SearchEngineManager.kt#L26)
 
 This class provides access to a centralized registry of search engines.
 
@@ -11,7 +11,7 @@ This class provides access to a centralized registry of search engines.
 | Name | Summary |
 |---|---|
 | [&lt;init&gt;](-init-.md) | `SearchEngineManager(providers: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`SearchEngineProvider`](../../mozilla.components.browser.search.provider/-search-engine-provider/index.md)`> = listOf(
-            AssetsSearchEngineProvider(LocaleSearchLocalizationProvider())))`<br>This class provides access to a centralized registry of search engines. |
+            AssetsSearchEngineProvider(LocaleSearchLocalizationProvider())), coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.Default)`<br>This class provides access to a centralized registry of search engines. |
 
 ### Properties
 

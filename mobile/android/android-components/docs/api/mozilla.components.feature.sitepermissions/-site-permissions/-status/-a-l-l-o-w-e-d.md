@@ -3,3 +3,10 @@
 # ALLOWED
 
 `ALLOWED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissions.kt#L26)
+
+### Inherited Functions
+
+| Name | Summary |
+|---|---|
+| [doNotAskAgain](do-not-ask-again.md) | `fun doNotAskAgain(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
+| [isAllowed](is-allowed.md) | `fun isAllowed(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |

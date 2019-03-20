@@ -2,7 +2,7 @@
 
 # redirect
 
-`val redirect: `[`Redirect`](-redirect/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L42)
+`val redirect: `[`Redirect`](-redirect/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L46)
 
 Whether the [Client](../-client/index.md) should follow redirects (HTTP 3xx) for this request or not.
 

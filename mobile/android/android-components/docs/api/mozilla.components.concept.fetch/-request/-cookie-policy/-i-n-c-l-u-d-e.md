@@ -2,7 +2,7 @@
 
 # INCLUDE
 
-`INCLUDE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L122)
+`INCLUDE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L143)
 
 Include cookies when sending the request.
 

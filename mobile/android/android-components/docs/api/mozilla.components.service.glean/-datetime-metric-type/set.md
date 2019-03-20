@@ -2,7 +2,7 @@
 
 # set
 
-`fun set(value: `[`Date`](https://developer.android.com/reference/java/util/Date.html)` = Date()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/DatetimeMetricType.kt#L43)
+`fun set(value: `[`Date`](https://developer.android.com/reference/java/util/Date.html)` = Date()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/DatetimeMetricType.kt#L38)
 
 Set a datetime value, truncating it to the metric's resolution.
 

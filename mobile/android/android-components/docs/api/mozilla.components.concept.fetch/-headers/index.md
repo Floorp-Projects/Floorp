@@ -10,7 +10,8 @@ A collection of HTTP [Headers](./index.md) (immutable) of a [Request](../-reques
 
 | Name | Summary |
 |---|---|
-| [Common](-common/index.md) | `object Common`<br>A collection of common HTTP header definitions. |
+| [Names](-names/index.md) | `object Names`<br>A collection of common HTTP header names. |
+| [Values](-values/index.md) | `object Values`<br>A collection of common HTTP header values. |
 
 ### Properties
 

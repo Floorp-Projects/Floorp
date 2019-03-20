@@ -2,7 +2,7 @@
 
 # Body
 
-`class Body : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L51)
+`class Body : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L55)
 
 A [Body](./index.md) to be send with the [Request](../index.md).
 
@@ -28,4 +28,5 @@ A [Body](./index.md) to be send with the [Request](../index.md).
 | Name | Summary |
 |---|---|
 | [fromFile](from-file.md) | `fun fromFile(file: `[`File`](https://developer.android.com/reference/java/io/File.html)`): `[`Body`](./index.md)<br>Create a [Body](./index.md) from the provided [File](https://developer.android.com/reference/java/io/File.html). |
+| [fromParamsForFormUrlEncoded](from-params-for-form-url-encoded.md) | `fun fromParamsForFormUrlEncoded(unencodedParams: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): `[`Body`](./index.md)<br>Create a [Body](./index.md) from the provided [unencodedParams](from-params-for-form-url-encoded.md#mozilla.components.concept.fetch.Request.Body.Companion$fromParamsForFormUrlEncoded(kotlin.collections.Map((kotlin.String, )))/unencodedParams) in the format of Content-Type "application/x-www-form-urlencoded". Parameters are formatted as "key1=value1&key2=value2..." and values are percent-encoded. If the given map is empty, the response body will contain the empty string. |
 | [fromString](from-string.md) | `fun fromString(value: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Body`](./index.md)<br>Create a [Body](./index.md) from the provided [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html). |

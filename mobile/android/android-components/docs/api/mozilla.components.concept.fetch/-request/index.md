@@ -2,7 +2,7 @@
 
 # Request
 
-`data class Request` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L35)
+`data class Request` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L39)
 
 The [Request](./index.md) data class represents a resource request to be send by a [Client](../-client/index.md).
 

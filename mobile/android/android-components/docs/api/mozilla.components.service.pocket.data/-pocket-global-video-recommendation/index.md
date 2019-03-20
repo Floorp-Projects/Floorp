@@ -19,7 +19,7 @@ A recommended video as returned from the Pocket Global Video Recommendation endp
 | [authors](authors.md) | `val authors: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Author`](-author/index.md)`>`<br>the authors or publishers of this recommendation; unclear if this can be empty. |
 | [domain](domain.md) | `val domain: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>the domain where the video appears, e.g. "youtube.com". |
 | [excerpt](excerpt.md) | `val excerpt: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>a summary of the video. |
-| [id](id.md) | `val id: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>a unique identifier for this recommendation. |
+| [id](id.md) | `val id: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)<br>a unique identifier for this recommendation. |
 | [imageSrc](image-src.md) | `val imageSrc: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>a url to a still image representing the video. |
 | [popularitySortId](popularity-sort-id.md) | `val popularitySortId: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>the index of this recommendation in the list if the list was sorted by popularity. |
 | [publishedTimestamp](published-timestamp.md) | `val publishedTimestamp: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>unknown: please ask for clarification if needed. This may be "0". |

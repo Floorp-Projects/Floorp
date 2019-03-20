@@ -2,7 +2,7 @@
 
 # cookiePolicy
 
-`val cookiePolicy: `[`CookiePolicy`](-cookie-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L43)
+`val cookiePolicy: `[`CookiePolicy`](-cookie-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L47)
 
 A policy to specify whether or not cookies should be
 sent with the request, defaults to [CookiePolicy.INCLUDE](-cookie-policy/-i-n-c-l-u-d-e.md)

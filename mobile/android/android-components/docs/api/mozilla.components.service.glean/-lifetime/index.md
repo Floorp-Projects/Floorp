@@ -2,7 +2,7 @@
 
 # Lifetime
 
-`enum class Lifetime` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/CommonMetricData.kt#L17)
+`enum class Lifetime` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/CommonMetricData.kt#L12)
 
 Enumeration of different metric lifetimes.
 

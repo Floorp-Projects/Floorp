@@ -6,4 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [ErrorRecording](-error-recording/index.md) | `object ErrorRecording` |
+| [ErrorRecording](-error-recording.md) | `object ErrorRecording` |
