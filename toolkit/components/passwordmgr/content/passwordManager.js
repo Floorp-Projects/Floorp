@@ -11,8 +11,6 @@ ChromeUtils.defineModuleGetter(this, "DeferredTask",
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");
 
-let kSignonBundle;
-
 // Default value for signon table sorting
 let lastSignonSortColumn = "hostname";
 let lastSignonSortAscending = true;
@@ -69,7 +67,6 @@ function Startup() {
   Services.obs.addObserver(signonReloadDisplay, "passwordmgr-storage-changed");
 
   signonsTree = document.getElementById("signonsTree");
-  kSignonBundle = document.getElementById("signonBundle");
   filterField = document.getElementById("filter");
   togglePasswordsButton = document.getElementById("togglePasswords");
   signonsIntro = document.getElementById("signonsIntro");
@@ -77,13 +74,12 @@ function Startup() {
   removeButton = document.getElementById("removeSignon");
   removeAllButton = document.getElementById("removeAllSignons");
 
-  togglePasswordsButton.label = kSignonBundle.getString("showPasswords");
-  togglePasswordsButton.accessKey = kSignonBundle.getString("showPasswordsAccessKey");
-  signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionAll2");
-  autofillCheckbox.label = kSignonBundle.getString("autofillLoginsAndPasswords");
+  document.l10n.setAttributes(togglePasswordsButton, "show-passwords");
+  document.l10n.setAttributes(signonsIntro, "logins-description-all");
+  document.l10n.setAttributes(autofillCheckbox, "auto-fill-logins-and-passwords");
   autofillCheckbox.checked = Services.prefs.getBoolPref("signon.autofillForms");
-  removeAllButton.setAttribute("label", kSignonBundle.getString("removeAll.label"));
-  removeAllButton.setAttribute("accesskey", kSignonBundle.getString("removeAll.accesskey"));
+  document.l10n.setAttributes(removeAllButton, "remove-all");
+
   document.getElementsByTagName("treecols")[0].addEventListener("click", (event) => {
     let { target, button } = event;
     let sortField = target.getAttribute("data-field-name");
@@ -111,6 +107,8 @@ function Startup() {
   }
 
   FocusFilterBox();
+  document.l10n.translateElements(document.querySelectorAll("[data-l10n-id]")).then(
+    () => window.sizeToContent());
 }
 
 function watchLoginAutofill() {
@@ -228,7 +226,6 @@ function SortTree(column, ascending) {
   // remember which item was selected so we can restore it after the sort
   let selections = GetTreeSelections();
   let selectedNumber = selections.length ? table[selections[0]].number : -1;
-
   function compareFunc(a, b) {
     let valA, valB;
     switch (column) {
@@ -395,12 +392,12 @@ function DeleteSignon() {
   FinalizeSignonDeletions(syncNeeded);
 }
 
-function DeleteAllSignons() {
+async function DeleteAllSignons() {
   // Confirm the user wants to remove all passwords
   let dummy = { value: false };
   if (Services.prompt.confirmEx(window,
-                                kSignonBundle.getString("removeAllPasswordsTitle"),
-                                kSignonBundle.getString("removeAllPasswordsPrompt"),
+                                await document.l10n.formatValue("remove-all-passwords-title"),
+                                await document.l10n.formatValue("remove-all-passwords-prompt"),
                                 Services.prompt.STD_YES_NO_BUTTONS + Services.prompt.BUTTON_POS_1_DEFAULT,
                                 null, null, null, null, dummy) == 1) { // 1 == "No" button
     return;
@@ -433,11 +430,10 @@ function DeleteAllSignons() {
   Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_MANAGE_DELETED_ALL");
 }
 
-function TogglePasswordVisible() {
-  if (showingPasswords || masterPasswordLogin(AskUserShowPasswords)) {
+async function TogglePasswordVisible() {
+  if (showingPasswords || await masterPasswordLogin(AskUserShowPasswords)) {
     showingPasswords = !showingPasswords;
-    togglePasswordsButton.label = kSignonBundle.getString(showingPasswords ? "hidePasswords" : "showPasswords");
-    togglePasswordsButton.accessKey = kSignonBundle.getString(showingPasswords ? "hidePasswordsAccessKey" : "showPasswordsAccessKey");
+    document.l10n.setAttributes(togglePasswordsButton, showingPasswords ? "hide-passwords" : "show-passwords");
     document.getElementById("passwordCol").hidden = !showingPasswords;
     FilterPasswords();
   }
@@ -449,13 +445,13 @@ function TogglePasswordVisible() {
   Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_MANAGE_VISIBILITY_TOGGLED");
 }
 
-function AskUserShowPasswords() {
+async function AskUserShowPasswords() {
   let dummy = { value: false };
 
   // Confirm the user wants to display passwords
   return Services.prompt.confirmEx(window,
                                    null,
-                                   kSignonBundle.getString("noMasterPasswordPrompt"), Services.prompt.STD_YES_NO_BUTTONS,
+                                   await document.l10n.formatValue("no-master-password-prompt"), Services.prompt.STD_YES_NO_BUTTONS,
                                    null, null, null, null, dummy) == 0; // 0=="Yes" button
 }
 
@@ -553,9 +549,8 @@ function SignonClearFilter() {
   }
   signonsTreeView._lastSelectedRanges = [];
 
-  signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionAll2");
-  removeAllButton.setAttribute("label", kSignonBundle.getString("removeAll.label"));
-  removeAllButton.setAttribute("accesskey", kSignonBundle.getString("removeAll.accesskey"));
+  document.l10n.setAttributes(signonsIntro, "logins-description-all");
+  document.l10n.setAttributes(removeAllButton, "remove-all");
 }
 
 function FocusFilterBox() {
@@ -628,9 +623,8 @@ function FilterPasswords() {
     signonsTreeView.selection.select(0);
   }
 
-  signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionFiltered");
-  removeAllButton.setAttribute("label", kSignonBundle.getString("removeAllShown.label"));
-  removeAllButton.setAttribute("accesskey", kSignonBundle.getString("removeAllShown.accesskey"));
+  document.l10n.setAttributes(signonsIntro, "logins-description-filtered");
+  document.l10n.setAttributes(removeAllButton, "remove-all-shown");
 }
 
 function CopySiteUrl() {
@@ -725,7 +719,7 @@ function UpdateContextMenu() {
   }
 }
 
-function masterPasswordLogin(noPasswordCallback) {
+async function masterPasswordLogin(noPasswordCallback) {
   // This doesn't harm if passwords are not encrypted
   let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"]
                     .createInstance(Ci.nsIPK11TokenDB);
