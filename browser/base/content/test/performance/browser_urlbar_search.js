@@ -16,17 +16,6 @@
 const EXPECTED_REFLOWS_FIRST_OPEN = [
   {
     stack: [
-      "_openPanel@resource:///modules/UrlbarView.jsm",
-      "onQueryResults@resource:///modules/UrlbarView.jsm",
-      "_notify@resource:///modules/UrlbarController.jsm",
-      "receiveResults@resource:///modules/UrlbarController.jsm",
-      "notifyResults@resource:///modules/UrlbarProvidersManager.jsm",
-      "add@resource:///modules/UrlbarProvidersManager.jsm",
-      "onSearchResult@resource:///modules/UrlbarProviderUnifiedComplete.jsm",
-    ],
-  },
-  {
-    stack: [
       "__rebuild@chrome://browser/content/search/search-one-offs.js",
       /* This is limited to a one-line stack, because the next item is an async
          function and as such not supported on all trees, according to bug 1501761.
@@ -43,6 +32,15 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       */
     ],
   },
+  // This is the this.panel.openPopup() call in UrlbarView._openPanel.  See bug
+  // 1359989, which was filed against the legacy awesomebar but applies here too
+  // because it seems to be caused by platform code.
+  {
+    stack: [
+      "_openPanel@resource:///modules/UrlbarView.jsm",
+      "onQueryResults@resource:///modules/UrlbarView.jsm",
+    ],
+  },
 ];
 
 /* These reflows happen every time the panel opens. */
@@ -54,11 +52,6 @@ const EXPECTED_REFLOWS_SECOND_OPEN = [
     stack: [
       "_openPanel@resource:///modules/UrlbarView.jsm",
       "onQueryResults@resource:///modules/UrlbarView.jsm",
-      "_notify@resource:///modules/UrlbarController.jsm",
-      "receiveResults@resource:///modules/UrlbarController.jsm",
-      "notifyResults@resource:///modules/UrlbarProvidersManager.jsm",
-      "add@resource:///modules/UrlbarProvidersManager.jsm",
-      "onSearchResult@resource:///modules/UrlbarProviderUnifiedComplete.jsm",
     ],
   },
 ];
