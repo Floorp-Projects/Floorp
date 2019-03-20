@@ -27,6 +27,7 @@ apps:
       - pulseaudio
       - removable-media
       - screen-inhibit-control
+      - u2f-devices
       - unity7
       - upower-observe
       - x11
