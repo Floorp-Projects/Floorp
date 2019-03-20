@@ -74,8 +74,8 @@ class Instance {
   Instance(JSContext* cx, HandleWasmInstanceObject object, SharedCode code,
            UniqueTlsData tlsData, HandleWasmMemoryObject memory,
            SharedTableVector&& tables, StructTypeDescrVector&& structTypeDescrs,
-           Handle<FunctionVector> funcImports,
-           HandleValVector globalImportValues,
+           const JSFunctionVector& funcImports,
+           const ValVector& globalImportValues,
            const WasmGlobalObjectVector& globalObjs,
            UniqueDebugState maybeDebug);
   ~Instance();
