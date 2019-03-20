@@ -51,6 +51,7 @@ fn main() {
         "GL_OES_EGL_image_external",
         "GL_OES_EGL_image",
         "GL_OES_texture_half_float",
+        "GL_EXT_shader_pixel_local_storage",
     ];
     let gles_reg = Registry::new(
         Api::Gles2,
