@@ -1345,27 +1345,6 @@ static bool GetImportArg(JSContext* cx, CallArgs callArgs,
   return true;
 }
 
-static bool Instantiate(JSContext* cx, const Module& module,
-                        HandleObject importObj,
-                        MutableHandleWasmInstanceObject instanceObj) {
-  RootedObject instanceProto(
-      cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
-
-  Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
-  Rooted<WasmTableObjectVector> tables(cx);
-  RootedWasmMemoryObject memory(cx);
-  Rooted<WasmGlobalObjectVector> globalObjs(cx);
-
-  RootedValVector globals(cx);
-  if (!GetImports(cx, module, importObj, &funcs, tables.get(), &memory,
-                  globalObjs.get(), &globals)) {
-    return false;
-  }
-
-  return module.instantiate(cx, funcs, tables.get(), memory, globals,
-                            globalObjs.get(), instanceProto, instanceObj);
-}
-
 /* static */
 bool WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -1392,8 +1371,23 @@ bool WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  RootedObject instanceProto(
+      cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
+
+  Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
+  Rooted<WasmTableObjectVector> tables(cx);
+  RootedWasmMemoryObject memory(cx);
+  Rooted<WasmGlobalObjectVector> globalObjs(cx);
+
+  RootedValVector globals(cx);
+  if (!GetImports(cx, *module, importObj, &funcs, tables.get(), &memory,
+                  globalObjs.get(), &globals)) {
+    return false;
+  }
+
   RootedWasmInstanceObject instanceObj(cx);
-  if (!Instantiate(cx, *module, importObj, &instanceObj)) {
+  if (!module->instantiate(cx, funcs, tables.get(), memory, globals,
+                           globalObjs.get(), instanceProto, &instanceObj)) {
     return false;
   }
 
@@ -2866,30 +2860,44 @@ static bool Reject(JSContext* cx, const CompileArgs& args,
   return PromiseObject::reject(cx, promise, rejectionValue);
 }
 
-static bool Resolve(JSContext* cx, const Module& module,
-                    Handle<PromiseObject*> promise, bool instantiate,
-                    HandleObject importObj, const UniqueCharsVector& warnings,
-                    const char* methodSuffix = "") {
-  if (!ReportCompileWarnings(cx, warnings)) {
-    return false;
+enum class Ret { Pair, Instance };
+
+static bool AsyncInstantiate(JSContext* cx, const Module& module,
+                             HandleObject importObj, Ret ret,
+                             Handle<PromiseObject*> promise) {
+  RootedObject instanceProto(
+      cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
+
+  Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
+  Rooted<WasmTableObjectVector> tables(cx);
+  RootedWasmMemoryObject memory(cx);
+  Rooted<WasmGlobalObjectVector> globalObjs(cx);
+
+  RootedValVector globals(cx);
+  if (!GetImports(cx, module, importObj, &funcs, tables.get(), &memory,
+                  globalObjs.get(), &globals)) {
+    return RejectWithPendingException(cx, promise);
   }
 
-  RootedObject proto(
-      cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
-  RootedObject moduleObj(cx, WasmModuleObject::create(cx, module, proto));
-  if (!moduleObj) {
+  RootedWasmInstanceObject instanceObj(cx);
+  if (!module.instantiate(cx, funcs, tables.get(), memory, globals,
+                          globalObjs.get(), instanceProto, &instanceObj)) {
     return RejectWithPendingException(cx, promise);
   }
 
   RootedValue resolutionValue(cx);
-  if (instantiate) {
-    RootedWasmInstanceObject instanceObj(cx);
-    if (!Instantiate(cx, module, importObj, &instanceObj)) {
+  if (ret == Ret::Instance) {
+    resolutionValue = ObjectValue(*instanceObj);
+  } else {
+    RootedObject resultObj(cx, JS_NewPlainObject(cx));
+    if (!resultObj) {
       return RejectWithPendingException(cx, promise);
     }
 
-    RootedObject resultObj(cx, JS_NewPlainObject(cx));
-    if (!resultObj) {
+    RootedObject proto(
+        cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
+    RootedObject moduleObj(cx, WasmModuleObject::create(cx, module, proto));
+    if (!moduleObj) {
       return RejectWithPendingException(cx, promise);
     }
 
@@ -2904,18 +2912,31 @@ static bool Resolve(JSContext* cx, const Module& module,
     }
 
     resolutionValue = ObjectValue(*resultObj);
-  } else {
-    MOZ_ASSERT(!importObj);
-    resolutionValue = ObjectValue(*moduleObj);
   }
 
   if (!PromiseObject::resolve(cx, promise, resolutionValue)) {
     return RejectWithPendingException(cx, promise);
   }
 
-  Log(cx, "async %s%s() succeeded", (instantiate ? "instantiate" : "compile"),
-      methodSuffix);
+  Log(cx, "async instantiate succeeded");
+  return true;
+}
 
+static bool ResolveCompile(JSContext* cx, const Module& module,
+                           Handle<PromiseObject*> promise) {
+  RootedObject proto(
+      cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
+  RootedObject moduleObj(cx, WasmModuleObject::create(cx, module, proto));
+  if (!moduleObj) {
+    return RejectWithPendingException(cx, promise);
+  }
+
+  RootedValue resolutionValue(cx, ObjectValue(*moduleObj));
+  if (!PromiseObject::resolve(cx, promise, resolutionValue)) {
+    return RejectWithPendingException(cx, promise);
+  }
+
+  Log(cx, "async compile succeeded");
   return true;
 }
 
@@ -2950,9 +2971,16 @@ struct CompileBufferTask : PromiseHelperTask {
   }
 
   bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
-    return module
-               ? Resolve(cx, *module, promise, instantiate, importObj, warnings)
-               : Reject(cx, *compileArgs, promise, error);
+    if (!module) {
+      return Reject(cx, *compileArgs, promise, error);
+    }
+    if (!ReportCompileWarnings(cx, warnings)) {
+      return false;
+    }
+    if (instantiate) {
+      return AsyncInstantiate(cx, *module, importObj, Ret::Pair, promise);
+    }
+    return ResolveCompile(cx, *module, promise);
   }
 };
 
@@ -3063,17 +3091,9 @@ static bool WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp) {
 
   const Module* module;
   if (IsModuleObject(firstArg, &module)) {
-    RootedWasmInstanceObject instanceObj(cx);
-    if (!Instantiate(cx, *module, importObj, &instanceObj)) {
-      return RejectWithPendingException(cx, promise, callArgs);
-    }
-
-    RootedValue resolutionValue(cx, ObjectValue(*instanceObj));
-    if (!PromiseObject::resolve(cx, promise, resolutionValue)) {
+    if (!AsyncInstantiate(cx, *module, importObj, Ret::Instance, promise)) {
       return false;
     }
-
-    Log(cx, "async instantiate() succeeded");
   } else {
     auto task = cx->make_unique<CompileBufferTask>(cx, promise, importObj);
     if (!task || !task->init(cx, "WebAssembly.instantiate")) {
@@ -3410,8 +3430,13 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer {
 
     if (module_) {
       MOZ_ASSERT(!streamFailed_ && !streamError_ && !compileError_);
-      return Resolve(cx, *module_, promise, instantiate_, importObj_, warnings_,
-                     "Streaming");
+      if (!ReportCompileWarnings(cx, warnings_)) {
+        return false;
+      }
+      if (instantiate_) {
+        return AsyncInstantiate(cx, *module_, importObj_, Ret::Pair, promise);
+      }
+      return ResolveCompile(cx, *module_, promise);
     }
 
     if (streamError_) {
