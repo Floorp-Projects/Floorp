@@ -448,12 +448,13 @@ class nsTString : public nsTSubstring<T> {
    * verify restrictions for dependent strings
    */
   void AssertValidDependentString() {
-    NS_ASSERTION(this->mData, "nsTDependentString must wrap a non-NULL buffer");
-    NS_ASSERTION(this->mLength != size_type(-1),
-                 "nsTDependentString has bogus length");
-    NS_ASSERTION(this->mData[substring_type::mLength] == 0,
-                 "nsTDependentString must wrap only null-terminated strings. "
-                 "You are probably looking for nsTDependentSubstring.");
+    MOZ_ASSERT(this->mData, "nsTDependentString must wrap a non-NULL buffer");
+    MOZ_ASSERT(this->mLength != size_type(-1),
+               "nsTDependentString has bogus length");
+    MOZ_DIAGNOSTIC_ASSERT(this->mData[substring_type::mLength] == 0,
+                          "nsTDependentString must wrap only null-terminated "
+                          "strings.  You are probably looking for "
+                          "nsTDependentSubstring.");
   }
 
  protected:
