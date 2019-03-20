@@ -1104,13 +1104,16 @@ class PresShell final : public nsIPresShell,
     /**
      * PrepareToDispatchEvent() prepares to dispatch aEvent.
      *
-     * @param aEvent            The handling event.
-     * @return                  true if the event is user interaction.  I.e.,
-     *                          enough obvious input to allow to open popup,
-     *                          etc.  false, otherwise.
+     * @param aEvent                    The handling event.
+     * @param aIsUserInteraction        [out] Set to true if the event is user
+     *                                  interaction.  I.e., enough obvious input
+     *                                  to allow to open popup, etc.  Otherwise,
+     *                                  set to false.
+     * @return                          true if the caller can dispatch the
+     *                                  event into the DOM.
      */
     MOZ_CAN_RUN_SCRIPT
-    bool PrepareToDispatchEvent(WidgetEvent* aEvent);
+    bool PrepareToDispatchEvent(WidgetEvent* aEvent, bool* aIsUserInteraction);
 
     /**
      * MaybeHandleKeyboardEventBeforeDispatch() may handle aKeyboardEvent
@@ -1121,16 +1124,6 @@ class PresShell final : public nsIPresShell,
     MOZ_CAN_RUN_SCRIPT
     void MaybeHandleKeyboardEventBeforeDispatch(
         WidgetKeyboardEvent* aKeyboardEvent);
-
-    /**
-     * PrepareToDispatchContextMenuEvent() prepares to dispatch aEvent into
-     * the DOM.
-     *
-     * @param aEvent            Must be eContextMenu event.
-     * @return                  true if it can be dispatched into the DOM.
-     *                          Otherwise, false.
-     */
-    bool PrepareToDispatchContextMenuEvent(WidgetEvent* aEvent);
 
     /**
      * This and the next two helper methods are used to target and position the
