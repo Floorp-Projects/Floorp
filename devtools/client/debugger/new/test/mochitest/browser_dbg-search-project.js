@@ -58,6 +58,7 @@ add_task(async function() {
 
   const selectedSource = dbg.selectors.getSelectedSource(dbg.getState());
   ok(selectedSource.url.includes("switching-01"));
+  await waitForLoadedSource(dbg, "switching-01");
 });
 
 add_task(async function() {
