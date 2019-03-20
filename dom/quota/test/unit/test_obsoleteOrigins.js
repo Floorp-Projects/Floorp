@@ -14,14 +14,18 @@ async function testSteps()
     "storage/default/chrome+++content+browser.xul/",
     "storage/default/moz-safe-about+++home/"
   ];
+  const invalidOriginPath = "storage/default/invalid+++example.com/"
 
-  info("Verifying the obsolete origins are removed after the 2_1To2_2 upgrade");
+  info("Verifying the obsolete origins are removed after the 2_1To2_2 upgrade" +
+       " and invalid origins wouldn't block upgrades");
 
   // This profile only contains the storage.sqlite with schema 2_1, so that we
   // can test the 2_1To2_2 upgrade.
   installPackage("version2_2upgrade_profile");
 
-  for (let originPath of obsoleteOriginPaths) {
+  // Creating artifical directories for setting up a profile with testing
+  // directories.
+  for (let originPath of obsoleteOriginPaths.concat(invalidOriginPath)) {
     let originDir = getRelativeFile(originPath);
     originDir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
   }
@@ -38,6 +42,11 @@ async function testSteps()
      let exists = folder.exists();
      ok(!exists, "Obsolete origin was removed during origin initialization");
   }
+
+  // Removing the invalid origin directory becasue it will block the temporary
+  // storage initialization
+  let folder = getRelativeFile(invalidOriginPath);
+  folder.remove(true);
 
   info("Verifying the temporary storage is able to be initialized after " +
        "removing an invalid origin");
