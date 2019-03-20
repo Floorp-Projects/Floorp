@@ -32,6 +32,8 @@ interface CanonicalBrowsingContext : BrowsingContext {
   sequence<WindowGlobalParent> getWindowGlobals();
 
   readonly attribute WindowGlobalParent? currentWindowGlobal;
+
+  void notifyStartDelayedAutoplayMedia();
 };
 
 [Exposed=Window, ChromeOnly]

@@ -60,6 +60,12 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // function)
   void NotifySetUserGestureActivationFromIPC(bool aIsUserGestureActivation);
 
+  // This function is used to start the autoplay media which are delayed to
+  // start. If needed, it would also notify the content browsing context which
+  // are related with the canonical browsing content tree to start delayed
+  // autoplay media.
+  void NotifyStartDelayedAutoplayMedia();
+
   // Validate that the given process is allowed to perform the given
   // transaction. aSource is |nullptr| if set in the parent process.
   bool ValidateTransaction(const Transaction& aTransaction,

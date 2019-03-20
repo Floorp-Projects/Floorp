@@ -1082,6 +1082,12 @@ interface nsIDocShell : nsIDocShellTreeItem
   */
   [noscript] void dispatchLocationChangeEvent();
 
+
+  /**
+   * Start delayed autoplay media which are in the current document.
+   */
+  [noscript] void startDelayedAutoplayMediaComponents();
+
   /**
    * Take ownership of the ClientSource representing an initial about:blank
    * document that was never needed.  As an optimization we avoid creating
