@@ -29,12 +29,19 @@ use style::gecko_bindings::structs::nsresult;
 use xpcom::interfaces::{nsICertStorage, nsIFile, nsIObserver, nsIPrefBranch, nsISupports};
 use xpcom::{nsIID, GetterAddrefs, RefPtr, XpCom};
 
-use rkv::{Rkv, StoreOptions, Value};
+use rkv::{Rkv, SingleStore, StoreOptions, Value};
 
 const PREFIX_REV_IS: &str = "is";
 const PREFIX_REV_SPK: &str = "spk";
 const PREFIX_CRLITE: &str = "crlite";
 const PREFIX_WL: &str = "wl";
+
+fn make_key(prefix: &str, part_a: &[u8], part_b: &[u8]) -> Vec<u8> {
+    let mut key = prefix.as_bytes().to_owned();
+    key.extend_from_slice(part_a);
+    key.extend_from_slice(part_b);
+    key
+}
 
 #[allow(non_camel_case_types, non_snake_case)]
 
@@ -57,7 +64,8 @@ impl<T: Display> From<T> for SecurityStateError {
 
 /// `SecurityState`
 pub struct SecurityState {
-    path: PathBuf,
+    env: Rkv,
+    store: SingleStore,
     int_prefs: HashMap<String, i32>,
 }
 
@@ -67,8 +75,13 @@ impl SecurityState {
         store_path.push("security_state");
 
         create_dir_all(store_path.as_path())?;
+        let env = Rkv::new(store_path.as_path())?;
+        let mut options = StoreOptions::create();
+        options.create = true;
+        let store = env.open_single("cert_storage", options)?;
         let mut ss = SecurityState {
-            path: store_path,
+            env: env,
+            store: store,
             int_prefs: HashMap::new(),
         };
 
@@ -88,70 +101,67 @@ impl SecurityState {
         let file = BufReader::new(f);
 
         // Add the data from revocations.txt
-        let mut dn: Option<String> = None;
-        let mut l;
+        let mut dn: Option<Vec<u8>> = None;
         for line in file.lines() {
-            l = match line.map_err(|_| SecurityStateError::from("io error reading line data")) {
-                Ok(data) => data.to_owned(),
+            let l = match line.map_err(|_| SecurityStateError::from("io error reading line data")) {
+                Ok(data) => data,
                 Err(e) => return Err(e),
             };
-            let l_sans_prefix = match l.len() {
-                0 => "".to_owned(),
-                _ => l[1..].to_owned(),
-            };
-            // In future, we can maybe log migration failures. For now, ignore the error
-            // and attempt to continue.
-            let _ = match l.chars().next() {
-                Some('#') => Ok(()),
-                Some('\t') => match &dn {
-                    Some(name) => self.set_revocation_by_subject_and_pub_key(
-                        &name,
-                        &l_sans_prefix,
-                        nsICertStorage::STATE_ENFORCE as i16,
-                    ),
-                    None => Err(SecurityStateError::from("pubkey with no subject")),
-                },
-                Some(' ') => match &dn {
-                    Some(name) => self.set_revocation_by_issuer_and_serial(
-                        &name,
-                        &l_sans_prefix,
-                        nsICertStorage::STATE_ENFORCE as i16,
-                    ),
-                    None => Err(SecurityStateError::from("serial with no issuer")),
-                },
-                Some(_) => {
-                    dn = Some(l);
-                    Ok(())
+            if l.len() == 0 || l.starts_with("#") {
+                continue;
+            }
+            let leading_char = match l.chars().next() {
+                Some(c) => c,
+                None => {
+                    return Err(SecurityStateError::from(
+                        "couldn't get char from non-empty str?",
+                    ));
                 }
-                None => Ok(()),
             };
+            // In future, we can maybe log migration failures. For now, ignore decoding and storage
+            // errors and attempt to continue.
+            // Check if we have a new DN
+            if leading_char != '\t' && leading_char != ' ' {
+                if let Ok(decoded_dn) = base64::decode(&l) {
+                    dn = Some(decoded_dn);
+                }
+                continue;
+            }
+            let l_sans_prefix = match base64::decode(&l[1..]) {
+                Ok(decoded) => decoded,
+                Err(_) => continue,
+            };
+            if let Some(name) = &dn {
+                if leading_char == '\t' {
+                    let _ = self.set_revocation_by_subject_and_pub_key(
+                        name,
+                        &l_sans_prefix,
+                        nsICertStorage::STATE_ENFORCE as i16,
+                    );
+                } else {
+                    let _ = self.set_revocation_by_issuer_and_serial(
+                        name,
+                        &l_sans_prefix,
+                        nsICertStorage::STATE_ENFORCE as i16,
+                    );
+                }
+            }
         }
 
         Ok(())
     }
 
-    fn write_entry(&mut self, key: &str, value: i16) -> Result<(), SecurityStateError> {
-        let p = self.path.as_path();
-        let env = Rkv::new(p)?;
-        let store = env.open_single("cert_storage", StoreOptions::create())?;
-
-        let mut writer = env.write()?;
-        store.put(&mut writer, key, &Value::I64(value as i64))?;
+    fn write_entry(&mut self, key: &[u8], value: i16) -> Result<(), SecurityStateError> {
+        let mut writer = self.env.write()?;
+        self.store
+            .put(&mut writer, key, &Value::I64(value as i64))?;
         writer.commit()?;
         Ok(())
     }
 
-    fn read_entry(&self, key: &str) -> Result<Option<i16>, SecurityStateError> {
-        // TODO: figure out a way to de-dupe getting the env / store
-        let p = self.path.as_path();
-        let env = Rkv::new(p)?;
-        let store = env.open_single("cert_storage", StoreOptions::create())?;
-
-        let reader = env.read()?;
-        match store.get(&reader, key) {
-            // There's no tidy way in rkv::Value to get an owned value. The
-            // only way I can see to get such functionality is to go via
-            // primitives.
+    fn read_entry(&self, key: &[u8]) -> Result<Option<i16>, SecurityStateError> {
+        let reader = self.env.read()?;
+        match self.store.get(&reader, key) {
             Ok(Some(Value::I64(i)))
                 if i <= (std::i16::MAX as i64) && i >= (std::i16::MIN as i64) =>
             {
@@ -166,66 +176,53 @@ impl SecurityState {
 
     pub fn set_revocation_by_issuer_and_serial(
         &mut self,
-        issuer: &str,
-        serial: &str,
+        issuer: &[u8],
+        serial: &[u8],
         state: i16,
     ) -> Result<(), SecurityStateError> {
-        self.write_entry(&format!("{}:{}:{}", PREFIX_REV_IS, issuer, serial), state)
+        self.write_entry(&make_key(PREFIX_REV_IS, issuer, serial), state)
     }
 
     pub fn set_revocation_by_subject_and_pub_key(
         &mut self,
-        subject: &str,
-        pub_key_hash: &str,
+        subject: &[u8],
+        pub_key_hash: &[u8],
         state: i16,
     ) -> Result<(), SecurityStateError> {
-        self.write_entry(
-            &format!("{}:{}:{}", PREFIX_REV_SPK, subject, pub_key_hash),
-            state,
-        )
+        self.write_entry(&make_key(PREFIX_REV_SPK, subject, pub_key_hash), state)
     }
 
     pub fn set_enrollment(
         &mut self,
-        issuer: &str,
-        serial: &str,
+        issuer: &[u8],
+        serial: &[u8],
         state: i16,
     ) -> Result<(), SecurityStateError> {
-        self.write_entry(&format!("{}:{}:{}", PREFIX_CRLITE, issuer, serial), state)
+        self.write_entry(&make_key(PREFIX_CRLITE, issuer, serial), state)
     }
 
     pub fn set_whitelist(
         &mut self,
-        issuer: &str,
-        serial: &str,
+        issuer: &[u8],
+        serial: &[u8],
         state: i16,
     ) -> Result<(), SecurityStateError> {
-        self.write_entry(&format!("{}:{}:{}", PREFIX_WL, issuer, serial), state)
+        self.write_entry(&make_key(PREFIX_WL, issuer, serial), state)
     }
 
     pub fn get_revocation_state(
         &self,
-        issuer: &str,
-        serial: &str,
-        subject: &str,
-        pub_key: &str,
+        issuer: &[u8],
+        serial: &[u8],
+        subject: &[u8],
+        pub_key: &[u8],
     ) -> Result<i16, SecurityStateError> {
-        let pub_key_hash = match base64::decode(pub_key) {
-            Ok(pk) => {
-                let mut digest = Sha256::default();
-                digest.input(&pk);
-                let digest_result = digest.result();
-                base64::encode(&digest_result)
-            }
-            Err(_) => {
-                return Err(SecurityStateError::from(
-                    "problem base64 decoding public key",
-                ));
-            }
-        };
+        let mut digest = Sha256::default();
+        digest.input(pub_key);
+        let pub_key_hash = digest.result();
 
-        let subject_pubkey = format!("{}:{}:{}", PREFIX_REV_SPK, subject, pub_key_hash);
-        let issuer_serial = format!("{}:{}:{}", PREFIX_REV_IS, issuer, serial);
+        let subject_pubkey = make_key(PREFIX_REV_SPK, subject, &pub_key_hash);
+        let issuer_serial = make_key(PREFIX_REV_IS, issuer, serial);
 
         let st: i16 = match self.read_entry(&issuer_serial) {
             Ok(Some(value)) => value,
@@ -233,7 +230,7 @@ impl SecurityState {
             Err(_) => {
                 return Err(SecurityStateError::from(
                     "problem reading revocation state (from issuer / serial)",
-                ))
+                ));
             }
         };
 
@@ -247,17 +244,17 @@ impl SecurityState {
             Err(_) => {
                 return Err(SecurityStateError::from(
                     "problem reading revocation state (from subject / pubkey)",
-                ))
+                ));
             }
         }
     }
 
     pub fn get_enrollment_state(
         &self,
-        issuer: &str,
-        serial: &str,
+        issuer: &[u8],
+        serial: &[u8],
     ) -> Result<i16, SecurityStateError> {
-        let issuer_serial = format!("{}:{}:{}", PREFIX_CRLITE, issuer, serial);
+        let issuer_serial = make_key(PREFIX_CRLITE, issuer, serial);
         match self.read_entry(&issuer_serial) {
             Ok(Some(value)) => Ok(value),
             Ok(None) => Ok(nsICertStorage::STATE_UNSET as i16),
@@ -267,10 +264,10 @@ impl SecurityState {
 
     pub fn get_whitelist_state(
         &self,
-        issuer: &str,
-        serial: &str,
+        issuer: &[u8],
+        serial: &[u8],
     ) -> Result<i16, SecurityStateError> {
-        let issuer_serial = format!("{}:{}:{}", PREFIX_WL, issuer, serial);
+        let issuer_serial = make_key(PREFIX_WL, issuer, serial);
         match self.read_entry(&issuer_serial) {
             Ok(Some(value)) => Ok(value),
             Ok(None) => Ok(nsICertStorage::STATE_UNSET as i16),
@@ -407,7 +404,7 @@ fn read_int_pref(name: &str) -> Result<i32, SecurityStateError> {
         _ => {
             return Err(SecurityStateError::from(
                 "could not get preferences service",
-            ))
+            ));
         }
     };
 
@@ -429,7 +426,7 @@ fn read_int_pref(name: &str) -> Result<i32, SecurityStateError> {
     if !res.succeeded() {
         match res.0 {
             r if r == nsresult::NS_ERROR_UNEXPECTED as u32 => (),
-            _ => return Err(SecurityStateError::from("could not read pref")), // nserror::nsresult(err),
+            _ => return Err(SecurityStateError::from("could not read pref")),
         }
     }
     Ok(pref_value)
@@ -454,10 +451,18 @@ pub extern "C" fn cert_storage_constructor(
     }
 }
 
+macro_rules! try_ns {
+    ($e:expr) => {
+        match $e {
+            Ok(value) => value,
+            Err(_) => return nserror::NS_ERROR_FAILURE,
+        }
+    };
+}
+
 #[derive(xpcom)]
 #[xpimplements(nsICertStorage, nsIObserver)]
 #[refcnt = "atomic"]
-
 struct InitCertStorage {
     security_state: RwLock<SecurityState>,
 }
@@ -507,15 +512,10 @@ impl CertStorage {
         if issuer.is_null() || serial.is_null() {
             return nserror::NS_ERROR_FAILURE;
         }
-        let mut ss = match self.security_state.write() {
-            Err(_) => return nserror::NS_ERROR_FAILURE,
-            Ok(write_guard) => write_guard,
-        };
-        match ss.set_revocation_by_issuer_and_serial(
-            (*issuer).as_str_unchecked(),
-            (*serial).as_str_unchecked(),
-            state,
-        ) {
+        let issuer_decoded = try_ns!(base64::decode(&*issuer));
+        let serial_decoded = try_ns!(base64::decode(&*serial));
+        let mut ss = try_ns!(self.security_state.write());
+        match ss.set_revocation_by_issuer_and_serial(&issuer_decoded, &serial_decoded, state) {
             Ok(_) => nserror::NS_OK,
             _ => nserror::NS_ERROR_FAILURE,
         }
@@ -530,15 +530,10 @@ impl CertStorage {
         if subject.is_null() || pub_key_base64.is_null() {
             return nserror::NS_ERROR_FAILURE;
         }
-        let mut ss = match self.security_state.write() {
-            Err(_) => return nserror::NS_ERROR_FAILURE,
-            Ok(write_guard) => write_guard,
-        };
-        match ss.set_revocation_by_subject_and_pub_key(
-            (*subject).as_str_unchecked(),
-            (*pub_key_base64).as_str_unchecked(),
-            state,
-        ) {
+        let subject_decoded = try_ns!(base64::decode(&*subject));
+        let pub_key_decoded = try_ns!(base64::decode(&*pub_key_base64));
+        let mut ss = try_ns!(self.security_state.write());
+        match ss.set_revocation_by_subject_and_pub_key(&subject_decoded, &pub_key_decoded, state) {
             Ok(_) => nserror::NS_OK,
             _ => nserror::NS_ERROR_FAILURE,
         }
@@ -553,15 +548,10 @@ impl CertStorage {
         if issuer.is_null() || serial.is_null() {
             return nserror::NS_ERROR_FAILURE;
         }
-        let mut ss = match self.security_state.write() {
-            Err(_) => return nserror::NS_ERROR_FAILURE,
-            Ok(write_guard) => write_guard,
-        };
-        match ss.set_enrollment(
-            (*issuer).as_str_unchecked(),
-            (*serial).as_str_unchecked(),
-            state,
-        ) {
+        let issuer_decoded = try_ns!(base64::decode(&*issuer));
+        let serial_decoded = try_ns!(base64::decode(&*serial));
+        let mut ss = try_ns!(self.security_state.write());
+        match ss.set_enrollment(&issuer_decoded, &serial_decoded, state) {
             Ok(_) => nserror::NS_OK,
             _ => nserror::NS_ERROR_FAILURE,
         }
@@ -576,15 +566,10 @@ impl CertStorage {
         if issuer.is_null() || serial.is_null() {
             return nserror::NS_ERROR_FAILURE;
         }
-        let mut ss = match self.security_state.write() {
-            Err(_) => return nserror::NS_ERROR_FAILURE,
-            Ok(write_guard) => write_guard,
-        };
-        match ss.set_whitelist(
-            (*issuer).as_str_unchecked(),
-            (*serial).as_str_unchecked(),
-            state,
-        ) {
+        let issuer_decoded = try_ns!(base64::decode(&*issuer));
+        let serial_decoded = try_ns!(base64::decode(&*serial));
+        let mut ss = try_ns!(self.security_state.write());
+        match ss.set_whitelist(&issuer_decoded, &serial_decoded, state) {
             Ok(_) => nserror::NS_OK,
             _ => nserror::NS_ERROR_FAILURE,
         }
@@ -601,18 +586,20 @@ impl CertStorage {
         if issuer.is_null() || serial.is_null() || subject.is_null() || pub_key_base64.is_null() {
             return nserror::NS_ERROR_FAILURE;
         }
-
-        let ss = match self.security_state.read() {
-            Err(_) => return nserror::NS_ERROR_FAILURE,
-            Ok(read_guard) => read_guard,
-        };
-
+        // TODO (bug 1535752): If we're calling this function when we already have binary data (e.g.
+        // in a TrustDomain::GetCertTrust callback), we should be able to pass in the binary data
+        // directly. See also bug 1535486.
+        let issuer_decoded = try_ns!(base64::decode(&*issuer));
+        let serial_decoded = try_ns!(base64::decode(&*serial));
+        let subject_decoded = try_ns!(base64::decode(&*subject));
+        let pub_key_decoded = try_ns!(base64::decode(&*pub_key_base64));
+        let ss = try_ns!(self.security_state.read());
         *state = nsICertStorage::STATE_UNSET as i16;
         match ss.get_revocation_state(
-            (*issuer).as_str_unchecked(),
-            (*serial).as_str_unchecked(),
-            (*subject).as_str_unchecked(),
-            (*pub_key_base64).as_str_unchecked(),
+            &issuer_decoded,
+            &serial_decoded,
+            &subject_decoded,
+            &pub_key_decoded,
         ) {
             Ok(st) => {
                 *state = st;
@@ -628,14 +615,14 @@ impl CertStorage {
         serial: *const nsACString,
         state: *mut i16,
     ) -> nserror::nsresult {
-        let ss = match self.security_state.read() {
-            Err(_) => return nserror::NS_ERROR_FAILURE,
-            Ok(read_guard) => read_guard,
-        };
-
+        if issuer.is_null() || serial.is_null() {
+            return nserror::NS_ERROR_FAILURE;
+        }
+        let issuer_decoded = try_ns!(base64::decode(&*issuer));
+        let serial_decoded = try_ns!(base64::decode(&*serial));
+        let ss = try_ns!(self.security_state.read());
         *state = nsICertStorage::STATE_UNSET as i16;
-
-        match ss.get_enrollment_state((*issuer).as_str_unchecked(), (*serial).as_str_unchecked()) {
+        match ss.get_enrollment_state(&issuer_decoded, &serial_decoded) {
             Ok(st) => {
                 *state = st;
                 nserror::NS_OK
@@ -650,14 +637,14 @@ impl CertStorage {
         serial: *const nsACString,
         state: *mut i16,
     ) -> nserror::nsresult {
-        let ss = match self.security_state.read() {
-            Err(_) => return nserror::NS_ERROR_FAILURE,
-            Ok(read_guard) => read_guard,
-        };
-
+        if issuer.is_null() || serial.is_null() {
+            return nserror::NS_ERROR_FAILURE;
+        }
+        let issuer_decoded = try_ns!(base64::decode(&*issuer));
+        let serial_decoded = try_ns!(base64::decode(&*serial));
+        let ss = try_ns!(self.security_state.read());
         *state = nsICertStorage::STATE_UNSET as i16;
-
-        match ss.get_whitelist_state((*issuer).as_str_unchecked(), (*serial).as_str_unchecked()) {
+        match ss.get_whitelist_state(&issuer_decoded, &serial_decoded) {
             Ok(st) => {
                 *state = st;
                 nserror::NS_OK
@@ -668,12 +655,7 @@ impl CertStorage {
 
     unsafe fn IsBlocklistFresh(&self, fresh: *mut bool) -> nserror::nsresult {
         *fresh = false;
-
-        let ss = match self.security_state.read() {
-            Err(_) => return nserror::NS_ERROR_FAILURE,
-            Ok(read_guard) => read_guard,
-        };
-
+        let ss = try_ns!(self.security_state.read());
         *fresh = match ss.is_blocklist_fresh() {
             Ok(is_fresh) => is_fresh,
             Err(_) => false,
@@ -684,12 +666,7 @@ impl CertStorage {
 
     unsafe fn IsWhitelistFresh(&self, fresh: *mut bool) -> nserror::nsresult {
         *fresh = false;
-
-        let ss = match self.security_state.read() {
-            Err(_) => return nserror::NS_ERROR_FAILURE,
-            Ok(read_guard) => read_guard,
-        };
-
+        let ss = try_ns!(self.security_state.read());
         *fresh = match ss.is_whitelist_fresh() {
             Ok(is_fresh) => is_fresh,
             Err(_) => false,
@@ -700,12 +677,7 @@ impl CertStorage {
 
     unsafe fn IsEnrollmentFresh(&self, fresh: *mut bool) -> nserror::nsresult {
         *fresh = false;
-
-        let ss = match self.security_state.read() {
-            Err(_) => return nserror::NS_ERROR_FAILURE,
-            Ok(read_guard) => read_guard,
-        };
-
+        let ss = try_ns!(self.security_state.read());
         *fresh = match ss.is_enrollment_fresh() {
             Ok(is_fresh) => is_fresh,
             Err(_) => false,
@@ -744,19 +716,13 @@ impl CertStorage {
                     _ => return nserror::NS_ERROR_FAILURE,
                 };
 
-                let res = prefs.GetIntPref(
-                    (&pref_name).as_ptr(),
-                    (&mut pref_value) as *mut i32,
-                );
+                let res = prefs.GetIntPref((&pref_name).as_ptr(), (&mut pref_value) as *mut i32);
 
                 if !res.succeeded() {
                     return res;
                 }
 
-                let mut ss = match self.security_state.write() {
-                    Err(_) => return nserror::NS_ERROR_FAILURE,
-                    Ok(write_guard) => write_guard,
-                };
+                let mut ss = try_ns!(self.security_state.write());
                 ss.pref_seen(name_string.as_str_unchecked(), pref_value);
             }
             _ => (),
