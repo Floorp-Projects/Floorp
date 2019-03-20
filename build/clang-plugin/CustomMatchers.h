@@ -205,6 +205,31 @@ AST_MATCHER_P(Expr, ignoreTrivials, internal::Matcher<Expr>, InnerMatcher) {
   return InnerMatcher.matches(*IgnoreTrivials(&Node), Finder, Builder);
 }
 
+// Takes two matchers: the first one is a condition; the second is a matcher to be
+// applied once we are done unwrapping trivials.  While the condition does not match
+// and we're looking at a trivial, will keep unwrapping the trivial and trying again.
+// Once the condition matches, we will go ahead and unwrap all trivials and apply the
+// inner matcher to the result.
+//
+// The expected use here is if we want to condition a match on some typecheck but
+// apply the match to only non-trivials, because there are trivials (e.g. casts) that
+// can change types.
+AST_MATCHER_P2(Expr, ignoreTrivialsConditional,
+               internal::Matcher<Expr>, Condition,
+               internal::Matcher<Expr>, InnerMatcher) {
+  const Expr *node = &Node;
+  while (true) {
+    if (Condition.matches(*node, Finder, Builder)) {
+      return InnerMatcher.matches(*IgnoreTrivials(node), Finder, Builder);
+    }
+    const Expr *newNode = MaybeSkipOneTrivial(node);
+    if (newNode == node) {
+      return false;
+    }
+    node = newNode;
+  }
+}
+
 // We can't call this "isImplicit" since it clashes with an existing matcher in
 // clang.
 AST_MATCHER(CXXConstructorDecl, isMarkedImplicit) {
