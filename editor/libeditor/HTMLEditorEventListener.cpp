@@ -258,7 +258,7 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
   WidgetMouseEvent* mousedownEvent =
       aMouseEvent->WidgetEventPtr()->AsMouseEvent();
 
-  RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
+  HTMLEditor* htmlEditor = mEditorBase->AsHTMLEditor();
   MOZ_ASSERT(htmlEditor);
 
   // Contenteditable should disregard mousedowns outside it.

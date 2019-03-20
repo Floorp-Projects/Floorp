@@ -205,7 +205,6 @@ class IMEStateManager {
    * because they must be handled by same target as composition events when
    * there is a composition.
    */
-  MOZ_CAN_RUN_SCRIPT
   static void HandleSelectionEvent(nsPresContext* aPresContext,
                                    nsIContent* aEventTargetContent,
                                    WidgetSelectionEvent* aSelectionEvent);

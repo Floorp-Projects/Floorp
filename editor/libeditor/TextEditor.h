@@ -105,7 +105,6 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
     return NS_SUCCEEDED(rv) && isEmpty;
   }
 
-  MOZ_CAN_RUN_SCRIPT
   virtual nsresult HandleKeyPressEvent(
       WidgetKeyboardEvent* aKeyboardEvent) override;
 
@@ -174,7 +173,6 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    *
    * @ param aString   the string to be set
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult SetText(const nsAString& aString);
 
   /**
@@ -185,7 +183,6 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @param aReplaceRange       The range to be replaced.
    *                            If nullptr, all contents will be replaced.
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult ReplaceTextAsAction(const nsAString& aString,
                                nsRange* aReplaceRange = nullptr);
 
@@ -368,7 +365,6 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   /**
    * Make the given selection span the entire document.
    */
-  MOZ_CAN_RUN_SCRIPT
   virtual nsresult SelectEntireDocument() override;
 
   /**
