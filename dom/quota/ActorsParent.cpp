@@ -1415,7 +1415,7 @@ class MOZ_STACK_CLASS OriginParser final {
 
   typedef nsCCharSeparatedTokenizerTemplate<IgnoreWhitespace> Tokenizer;
 
-  enum SchemeType { eNone, eFile, eAbout };
+  enum SchemeType { eNone, eFile, eAbout, eChrome };
 
   enum State {
     eExpectingAppIdOrScheme,
@@ -5190,8 +5190,7 @@ nsresult QuotaManager::EnsureOriginDirectory(nsIFile* aDirectory,
       return rv;
     }
 
-    if (!leafName.EqualsLiteral(kChromeOrigin) &&
-        !IsSanitizedOriginValid(NS_ConvertUTF16toUTF8(leafName))) {
+    if (!IsSanitizedOriginValid(NS_ConvertUTF16toUTF8(leafName))) {
       QM_WARNING(
           "Preventing creation of a new origin directory which is not "
           "supported by our origin parser or is obsolete!");
@@ -5860,7 +5859,6 @@ auto QuotaManager::GetDirectoryLockTable(PersistenceType aPersistenceType)
 
 bool QuotaManager::IsSanitizedOriginValid(const nsACString& aSanitizedOrigin) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(!aSanitizedOrigin.Equals(kChromeOrigin));
 
   bool valid;
   if (auto entry = mValidOrigins.LookupForAdd(aSanitizedOrigin)) {
@@ -8135,14 +8133,7 @@ nsresult StorageOperationBase::OriginProps::Init(nsIFile* aDirectory) {
     return rv;
   }
 
-  if (leafName.EqualsLiteral(kChromeOrigin)) {
-    // XXX We can remove this special handling once origin parser supports it
-    //     directly.
-    mDirectory = aDirectory;
-    mLeafName = leafName;
-    mSpec = kChromeOrigin;
-    mType = eChrome;
-  } else if (leafName.EqualsLiteral("moz-safe-about+++home")) {
+  if (leafName.EqualsLiteral("moz-safe-about+++home")) {
     // XXX We can remove this special handling once origin parser supports it
     //     directly.
 
@@ -8165,7 +8156,9 @@ nsresult StorageOperationBase::OriginProps::Init(nsIFile* aDirectory) {
     mLeafName = leafName;
     mSpec = spec;
     mAttrs = attrs;
-    mType = result == OriginParser::ObsoleteOrigin ? eObsolete : eContent;
+    mType = result == OriginParser::ObsoleteOrigin
+                ? eObsolete
+                : mSpec.EqualsLiteral(kChromeOrigin) ? eChrome : eContent;
   }
 
   return NS_OK;
@@ -8218,7 +8211,7 @@ auto OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs)
     QM_WARNING("Origin '%s' failed to parse, handled tokens: %s", mOrigin.get(),
                mHandledTokens.get());
 
-    return InvalidOrigin;
+    return mSchemeType == eChrome ? ObsoleteOrigin : InvalidOrigin;
   }
 
   MOZ_ASSERT(mState == eComplete || mState == eHandledTrailingSeparator);
@@ -8258,7 +8251,7 @@ auto OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs)
 
   if (mSchemeType == eAbout) {
     spec.Append(':');
-  } else {
+  } else if (mSchemeType != eChrome) {
     spec.AppendLiteral("://");
   }
 
@@ -8280,18 +8273,26 @@ void OriginParser::HandleScheme(const nsDependentCSubstring& aToken) {
 
   bool isAbout = false;
   bool isFile = false;
+  bool isChrome = false;
   if (aToken.EqualsLiteral("http") || aToken.EqualsLiteral("https") ||
       (isAbout = aToken.EqualsLiteral("about") ||
                  aToken.EqualsLiteral("moz-safe-about")) ||
       aToken.EqualsLiteral("indexeddb") ||
       (isFile = aToken.EqualsLiteral("file")) || aToken.EqualsLiteral("app") ||
       aToken.EqualsLiteral("resource") ||
-      aToken.EqualsLiteral("moz-extension")) {
+      aToken.EqualsLiteral("moz-extension") ||
+      (isChrome = aToken.EqualsLiteral(kChromeOrigin))) {
     mScheme = aToken;
 
     if (isAbout) {
       mSchemeType = eAbout;
       mState = eExpectingHost;
+    } else if (isChrome) {
+      mSchemeType = eChrome;
+      if (mTokenizer.hasMoreTokens()) {
+        mError = true;
+      }
+      mState = eComplete;
     } else {
       if (isFile) {
         mSchemeType = eFile;
