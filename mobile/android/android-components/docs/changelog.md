@@ -21,7 +21,10 @@ permalink: /changelog/
   * ⚠️ **This is a breaking API change!**: `PocketGlobalVideoRecommendation.id` is now a Long instead of an Int
 
 * **browser-engine-gecko-nightly**
- * `GeckoEngine` will throw a `RuntimeException` if the `GeckoRuntime` shuts down unsolicited.
+  * `GeckoEngine` will throw a `RuntimeException` if the `GeckoRuntime` shuts down unsolicited.
+
+* **feature-awesomebar**
+  * `SearchSuggestionProvider` and `AwesomeBarFeature` now allow setting a search suggestion limit.
 
 # 0.47.0
 
@@ -65,9 +68,6 @@ permalink: /changelog/
 * **feature-session-bundling**
   * Saving, restoring and removing `SessionBundle` instances need to happen on a worker thread now (off the main thread).
   * The actual session state is now saved on the file system outside of the internally used SQLite database.
-
-* **feature-awesomebar**
-  * `SearchSuggestionProvider` and `AwesomeBarFeature` now allow setting a search suggestion limit.
 
 * **support-ktx**
   * Added `File.truncateDirectory()` to remove all files (and sub directories) in a directory.
