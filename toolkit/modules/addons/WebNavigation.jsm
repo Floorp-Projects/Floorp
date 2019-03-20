@@ -12,6 +12,8 @@ ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
                                "resource:///modules/BrowserWindowTracker.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "UrlbarUtils",
+                               "resource:///modules/UrlbarUtils.jsm");
 
 // Maximum amount of time that can be passed and still consider
 // the data recent (similar to how is done in nsNavHistory,
@@ -33,6 +35,7 @@ var Manager = {
     this.createdNavigationTargetByOuterWindowId = new Map();
 
     Services.obs.addObserver(this, "autocomplete-did-enter-text", true);
+    Services.obs.addObserver(this, "urlbar-user-start-navigation", true);
 
     Services.obs.addObserver(this, "webNavigation-createdNavigationTarget");
 
@@ -49,6 +52,7 @@ var Manager = {
   uninit() {
     // Stop collecting recent tab transition data and reset the WeakMap.
     Services.obs.removeObserver(this, "autocomplete-did-enter-text");
+    Services.obs.removeObserver(this, "urlbar-user-start-navigation");
     Services.obs.removeObserver(this, "webNavigation-createdNavigationTarget");
 
     Services.mm.removeMessageListener("Content:Click", this);
@@ -108,7 +112,11 @@ var Manager = {
    * @param {string|undefined} data
    */
   observe: function(subject, topic, data) {
-    if (topic == "autocomplete-did-enter-text") {
+    if (topic == "urlbar-user-start-navigation") {
+      this.onURLBarUserStartNavigation(subject.wrappedJSObject);
+    } else if (topic == "autocomplete-did-enter-text") {
+      // autocomplete-did-enter-text supports the legacy urlbar. Bug 1535379 will
+      // clean this up.
       this.onURLBarAutoCompletion(subject);
     } else if (topic == "webNavigation-createdNavigationTarget") {
       // The observed notification is coming from privileged JavaScript components running
@@ -134,6 +142,65 @@ var Manager = {
    * clicking on an url generated from a searchengine or a keyword, or a
    * bookmark found by the urlbar autocompletion).
    *
+   * @param {object} acData
+   *   The data for the autocompleted item.
+   * @param {object} [acData.result]
+   *   The result information associated with the navigation action.
+   * @param {UrlbarUtils.RESULT_TYPE} [acData.result.type]
+   *   The result type associated with the navigation action.
+   * @param {UrlbarUtils.RESULT_SOURCE} [acData.result.source]
+   *   The result source associated with the navigation action.
+   */
+  onURLBarUserStartNavigation(acData) {
+    let tabTransitionData = {
+      from_address_bar: true,
+    };
+
+    if (!acData.result) {
+      tabTransitionData.typed = true;
+    } else {
+      switch (acData.result.type) {
+        case UrlbarUtils.RESULT_TYPE.KEYWORD:
+          tabTransitionData.keyword = true;
+          break;
+        case UrlbarUtils.RESULT_TYPE.SEARCH:
+          tabTransitionData.generated = true;
+          break;
+        case UrlbarUtils.RESULT_TYPE.URL:
+          if (acData.result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS) {
+            tabTransitionData.auto_bookmark = true;
+          } else {
+            tabTransitionData.typed = true;
+          }
+          break;
+        case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
+          // Remote tab are autocomplete results related to
+          // tab urls from a remote synchronized Firefox.
+          tabTransitionData.typed = true;
+          break;
+        case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+          // This "switchtab" autocompletion should be ignored, because
+          // it is not related to a navigation.
+          // Fall through.
+        case UrlbarUtils.RESULT_TYPE.OMNIBOX:
+          // "Omnibox" should be ignored as the add-on may or may not initiate
+          // a navigation on the item being selected.
+          throw new Error(`Unexpectedly received notification for ${acData.result.type}`);
+        default:
+          Cu.reportError(`Received unexpected result type ${acData.result.type}, falling back to typed transition.`);
+          // Fallback on "typed" if the type is unknown.
+          tabTransitionData.typed = true;
+      }
+    }
+
+    this.setRecentTabTransitionData(tabTransitionData);
+  },
+
+  /**
+   * Recognize the type of urlbar user interaction (e.g. typing a new url,
+   * clicking on an url generated from a searchengine or a keyword, or a
+   * bookmark found by the urlbar autocompletion).
+   *
    * @param {nsIAutoCompleteInput} input
    */
   onURLBarAutoCompletion(input) {
@@ -146,13 +213,13 @@ var Manager = {
       let controller = input.popup.view.QueryInterface(Ci.nsIAutoCompleteController);
       let idx = input.popup.selectedIndex;
 
-      let tabTransistionData = {
+      let tabTransitionData = {
         from_address_bar: true,
       };
 
       if (idx < 0 || idx >= controller.matchCount) {
         // Recognize when no valid autocomplete results has been selected.
-        tabTransistionData.typed = true;
+        tabTransitionData.typed = true;
       } else {
         let value = controller.getValueAt(idx);
         let action = input._parseActionUrl(value);
@@ -161,21 +228,21 @@ var Manager = {
           // Detect keyword and generated and more typed scenarios.
           switch (action.type) {
             case "keyword":
-              tabTransistionData.keyword = true;
+              tabTransitionData.keyword = true;
               break;
             case "searchengine":
             case "searchsuggestion":
-              tabTransistionData.generated = true;
+              tabTransitionData.generated = true;
               break;
             case "visiturl":
               // Visiturl are autocompletion results related to
               // history suggestions.
-              tabTransistionData.typed = true;
+              tabTransitionData.typed = true;
               break;
             case "remotetab":
               // Remote tab are autocomplete results related to
               // tab urls from a remote synchronized Firefox.
-              tabTransistionData.typed = true;
+              tabTransitionData.typed = true;
               break;
             case "switchtab":
               // This "switchtab" autocompletion should be ignored, because
@@ -183,7 +250,7 @@ var Manager = {
               return;
             default:
               // Fallback on "typed" if unable to detect a known moz-action type.
-              tabTransistionData.typed = true;
+              tabTransitionData.typed = true;
           }
         } else {
           // Special handling for bookmark urlbar autocompletion
@@ -191,16 +258,16 @@ var Manager = {
           let styles = new Set(controller.getStyleAt(idx).split(/\s+/));
 
           if (styles.has("bookmark")) {
-            tabTransistionData.auto_bookmark = true;
+            tabTransitionData.auto_bookmark = true;
           } else {
             // Fallback on "typed" if unable to detect a specific actionType
             // (and when in the styles there are "autofill" or "history").
-            tabTransistionData.typed = true;
+            tabTransitionData.typed = true;
           }
         }
       }
 
-      this.setRecentTabTransitionData(tabTransistionData);
+      this.setRecentTabTransitionData(tabTransitionData);
     }
   },
 
