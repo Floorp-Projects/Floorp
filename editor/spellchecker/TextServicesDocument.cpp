@@ -1666,10 +1666,7 @@ bool TextServicesDocument::IsTextNode(nsIContent* aContent) {
 nsresult TextServicesDocument::SetSelectionInternal(int32_t aOffset,
                                                     int32_t aLength,
                                                     bool aDoUpdate) {
-  if (NS_WARN_IF(!mSelCon) || NS_WARN_IF(aOffset < 0) ||
-      NS_WARN_IF(aLength < 0)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  NS_ENSURE_TRUE(mSelCon && aOffset >= 0 && aLength >= 0, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINode> startNode;
   int32_t startNodeOffset = 0;
@@ -1731,22 +1728,26 @@ nsresult TextServicesDocument::SetSelectionInternal(int32_t aOffset,
   //      use it.
 
   RefPtr<Selection> selection;
+
   if (aDoUpdate) {
     selection = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
+    NS_ENSURE_STATE(selection);
+
+    nsresult rv = selection->Collapse(startNode, startNodeOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (!aLength) {
-    if (aDoUpdate) {
-      nsresult rv = selection->Collapse(startNode, startNodeOffset);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
+  if (aLength <= 0) {
+    // We have a collapsed selection. (Caret)
+
     mSelEndIndex = mSelStartIndex;
     mSelEndOffset = mSelStartOffset;
+
+    //**** KDEBUG ****
+    // printf("\n* Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex,
+    //        mSelStartOffset, mSelEndIndex, mSelEndOffset);
+    //**** KDEBUG ****
+
     return NS_OK;
   }
 
@@ -1779,22 +1780,18 @@ nsresult TextServicesDocument::SetSelectionInternal(int32_t aOffset,
     }
   }
 
-  if (!aDoUpdate) {
-    return NS_OK;
+  if (aDoUpdate && endNode) {
+    nsresult rv = selection->Extend(endNode, endNodeOffset);
+
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (!endNode) {
-    nsresult rv = selection->Collapse(startNode, startNodeOffset);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to collapse selection");
-    return rv;
-  }
+  //**** KDEBUG ****
+  // printf("\n * Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex,
+  //        mSelStartOffset, mSelEndIndex, mSelEndOffset);
+  //**** KDEBUG ****
 
-  ErrorResult error;
-  selection->SetStartAndEndInLimiter(
-      RawRangeBoundary(startNode, startNodeOffset),
-      RawRangeBoundary(endNode, endNodeOffset), error);
-  NS_WARNING_ASSERTION(!error.Failed(), "Failed to set selection");
-  return error.StealNSResult();
+  return NS_OK;
 }
 
 nsresult TextServicesDocument::GetSelection(BlockSelectionStatus* aSelStatus,

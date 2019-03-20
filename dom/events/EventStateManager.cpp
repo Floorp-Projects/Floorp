@@ -750,12 +750,10 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       DeltaAccumulator::GetInstance()->InitLineOrPageDelta(aTargetFrame, this,
                                                            wheelEvent);
     } break;
-    case eSetSelection: {
-      nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
-      IMEStateManager::HandleSelectionEvent(aPresContext, focusedContent,
+    case eSetSelection:
+      IMEStateManager::HandleSelectionEvent(aPresContext, GetFocusedContent(),
                                             aEvent->AsSelectionEvent());
       break;
-    }
     case eContentCommandCut:
     case eContentCommandCopy:
     case eContentCommandPaste:

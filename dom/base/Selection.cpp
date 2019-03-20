@@ -2763,12 +2763,14 @@ void Selection::SelectAllChildren(nsINode& aNode, ErrorResult& aRv) {
   if (mFrameSelection) {
     mFrameSelection->PostReason(nsISelectionListener::SELECTALL_REASON);
   }
+  SelectionBatcher batch(this);
 
-  // Chrome moves focus when aNode is outside of active editing host.
-  // So, we don't need to respect the limiter with this method.
-  SetStartAndEndInternal(InLimiter::eNo, RawRangeBoundary(&aNode, 0),
-                         RawRangeBoundary(&aNode, aNode.GetChildCount()),
-                         eDirNext, aRv);
+  Collapse(aNode, 0, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  Extend(aNode, aNode.GetChildCount(), aRv);
 }
 
 bool Selection::ContainsNode(nsINode& aNode, bool aAllowPartial,
@@ -3388,86 +3390,43 @@ void Selection::SetBaseAndExtentJS(nsINode& aAnchorNode, uint32_t aAnchorOffset,
   SetBaseAndExtent(aAnchorNode, aAnchorOffset, aFocusNode, aFocusOffset, aRv);
 }
 
-void Selection::SetBaseAndExtentInternal(InLimiter aInLimiter,
-                                         const RawRangeBoundary& aAnchorRef,
-                                         const RawRangeBoundary& aFocusRef,
-                                         ErrorResult& aRv) {
+void Selection::SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
+                                 nsINode& aFocusNode, uint32_t aFocusOffset,
+                                 ErrorResult& aRv) {
   if (!mFrameSelection) {
     return;
   }
 
-  if (NS_WARN_IF(!aAnchorRef.IsSet()) || NS_WARN_IF(!aFocusRef.IsSet())) {
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
-
-  if (!HasSameRoot(*aAnchorRef.Container()) ||
-      !HasSameRoot(*aFocusRef.Container())) {
+  if (!HasSameRoot(aAnchorNode) || !HasSameRoot(aFocusNode)) {
     // Return with no error
     return;
   }
 
-  // Prevent "selectionchange" event temporarily because it should be fired
-  // after we set the direction.
-  // XXX If they are disconnected, shouldn't we return error before allocating
-  //     new nsRange instance?
-  SelectionBatcher batch(this);
-  if (nsContentUtils::ComparePoints(aAnchorRef, aFocusRef) <= 0) {
-    SetStartAndEndInternal(aInLimiter, aAnchorRef, aFocusRef, eDirNext, aRv);
-    return;
-  }
-
-  SetStartAndEndInternal(aInLimiter, aFocusRef, aAnchorRef, eDirPrevious, aRv);
-}
-
-void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
-                                       const RawRangeBoundary& aStartRef,
-                                       const RawRangeBoundary& aEndRef,
-                                       nsDirection aDirection,
-                                       ErrorResult& aRv) {
-  if (NS_WARN_IF(!aStartRef.IsSet()) || NS_WARN_IF(!aEndRef.IsSet())) {
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
-
-  // Don't fire "selectionchange" event until everything done.
   SelectionBatcher batch(this);
 
-  if (aInLimiter == InLimiter::eYes) {
-    if (!IsValidSelectionPoint(mFrameSelection, aStartRef.Container())) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-    if (aStartRef.Container() != aEndRef.Container() &&
-        !IsValidSelectionPoint(mFrameSelection, aEndRef.Container())) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-  }
-
-  // If we're not called by JS, we can remove all ranges first.  Then, we
-  // may be able to reuse one of current ranges for reducing the cost of
-  // nsRange allocation.  Note that if this is called by
-  // SetBaseAndExtentJS(), when we fail to initialize new range, we
-  // shouldn't remove current ranges.  Therefore, we need to check whether
-  // we're called by JS or internally.
-  if (!mCalledByJS && !mCachedRange) {
-    nsresult rv = RemoveAllRangesTemporarily();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-      return;
-    }
+  int32_t relativePosition = nsContentUtils::ComparePoints(
+      &aAnchorNode, aAnchorOffset, &aFocusNode, aFocusOffset);
+  nsINode* start = &aAnchorNode;
+  nsINode* end = &aFocusNode;
+  uint32_t startOffset = aAnchorOffset;
+  uint32_t endOffset = aFocusOffset;
+  if (relativePosition > 0) {
+    start = &aFocusNode;
+    end = &aAnchorNode;
+    startOffset = aFocusOffset;
+    endOffset = aAnchorOffset;
   }
 
   // If there is cached range, we should reuse it for saving the allocation
-  // const (and some other cost in nsRange::DoSetRange()).
+  // const (and some other cost in nsRange::DoSetRange().
   RefPtr<nsRange> newRange = std::move(mCachedRange);
 
   nsresult rv = NS_OK;
   if (newRange) {
-    rv = newRange->SetStartAndEnd(aStartRef, aEndRef);
+    rv = newRange->SetStartAndEnd(start, startOffset, end, endOffset);
   } else {
-    rv = nsRange::CreateRange(aStartRef, aEndRef, getter_AddRefs(newRange));
+    rv = nsRange::CreateRange(start, startOffset, end, endOffset,
+                              getter_AddRefs(newRange));
   }
 
   // nsRange::SetStartAndEnd() and nsRange::CreateRange() returns
@@ -3487,7 +3446,7 @@ void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
     return;
   }
 
-  SetDirection(aDirection);
+  SetDirection(relativePosition > 0 ? eDirPrevious : eDirNext);
 }
 
 /** SelectionLanguageChange modifies the cursor Bidi level after a change in
