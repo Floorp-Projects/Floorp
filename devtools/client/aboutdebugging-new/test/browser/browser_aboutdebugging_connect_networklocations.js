@@ -9,6 +9,7 @@
  */
 
 const TEST_NETWORK_LOCATION = "localhost:1111";
+const TEST_NETWORK_LOCATION_INVALID = "testnetwork";
 
 add_task(async function() {
   const { document, tab } = await openAboutDebugging();
@@ -18,20 +19,30 @@ add_task(async function() {
   let networkLocations = document.querySelectorAll(".js-network-location");
   is(networkLocations.length, 0, "By default, no network locations are displayed");
 
-  addNetworkLocation(TEST_NETWORK_LOCATION, document);
+  info("Check whether error message should show if the input value is invalid");
+  addNetworkLocation(TEST_NETWORK_LOCATION_INVALID, document);
+  await waitUntil(() =>
+    document.querySelector(".qa-connect-page__network-form__error-message"));
 
   info("Wait until the new network location is visible in the list");
+  addNetworkLocation(TEST_NETWORK_LOCATION, document);
   await waitUntil(() => document.querySelectorAll(".js-network-location").length === 1);
-  networkLocations = document.querySelectorAll(".js-network-location");
+  await waitUntil(() =>
+    !document.querySelector(".qa-connect-page__network-form__error-message"));
 
+  networkLocations = document.querySelectorAll(".js-network-location");
   const networkLocationValue =
     networkLocations[0].querySelector(".js-network-location-value");
   is(networkLocationValue.textContent, TEST_NETWORK_LOCATION,
     "Added network location has the expected value");
 
-  removeNetworkLocation(TEST_NETWORK_LOCATION, document);
+  info("Check whether error message should show if the input value was duplicate");
+  addNetworkLocation(TEST_NETWORK_LOCATION, document);
+  await waitUntil(() =>
+    document.querySelector(".qa-connect-page__network-form__error-message"));
 
   info("Wait until the new network location is removed from the list");
+  removeNetworkLocation(TEST_NETWORK_LOCATION, document);
   await waitUntil(() => document.querySelectorAll(".js-network-location").length === 0);
 
   await removeTab(tab);
@@ -41,6 +52,7 @@ function addNetworkLocation(location, document) {
   info("Setting a value in the network form input");
   const networkLocationInput =
     document.querySelector(".js-network-form-input");
+  networkLocationInput.value = "";
   networkLocationInput.focus();
   EventUtils.sendString(location, networkLocationInput.ownerGlobal);
 
