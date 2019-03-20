@@ -354,7 +354,7 @@ class UrlbarAbstraction {
       await new Promise(resolve => this.window.requestIdleCallback(resolve, {timeout: 1000}));
       return this.panel.richlistbox.itemChildren[index];
     }
-    // TODO: Quantum Bar doesn't yet implement lazy results replacement.
+    // TODO Bug 1530338: Quantum Bar doesn't yet implement lazy results replacement.
     await this.promiseSearchComplete();
     if (index >= this.urlbar.view._rows.length) {
       throw new Error("Not enough results");
@@ -502,7 +502,7 @@ class UrlbarAbstraction {
         return false;
       }, "Waiting for suggestions");
     }
-    // TODO: Quantum Bar doesn't yet implement lazy results replacement. When
+    // TODO Bug 1530338: Quantum Bar doesn't yet implement lazy results replacement. When
     // we do that, we'll have to be sure the suggestions we find are relevant
     // for the current query. For now let's just wait for the search to be
     // complete.
