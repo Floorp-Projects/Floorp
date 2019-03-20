@@ -55,7 +55,6 @@ module.exports = {
   }, {
     // TODO: Bug 1246594. Empty this list once the rule has landed for all dirs
     "files": [
-      "accessible/tests/mochitest/events.js",
       "browser/actors/ContextMenuChild.jsm",
       "browser/base/content/**",
       "browser/components/customizableui/**",
