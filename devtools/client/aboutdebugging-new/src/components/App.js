@@ -17,7 +17,7 @@ const Switch = createFactory(require("devtools/client/shared/vendor/react-router
 const Redirect = createFactory(require("devtools/client/shared/vendor/react-router-dom").Redirect);
 
 const Types = require("../types/index");
-const { RUNTIMES } = require("../constants");
+const { PAGE_TYPES, RUNTIMES } = require("../constants");
 
 const ConnectPage = createFactory(require("./connect/ConnectPage"));
 const RuntimePage = createFactory(require("./RuntimePage"));
@@ -49,17 +49,11 @@ class App extends PureComponent {
   updateTitle() {
     const { getString, selectedPage, selectedRuntimeId } = this.props;
 
-    const runtimeTitle = selectedRuntimeId ?
-                          getString(
-                            "about-debugging-page-title-with-runtime",
-                            { selectedPage, selectedRuntimeId }
-                          )
-                          : getString(
-                            "about-debugging-page-title",
-                            { selectedPage }
-                          );
+    const pageTitle = selectedPage === PAGE_TYPES.RUNTIME ?
+      getString("about-debugging-page-title-runtime-page", { selectedRuntimeId }) :
+      getString("about-debugging-page-title-setup-page");
 
-    document.title = runtimeTitle;
+    document.title = pageTitle;
   }
 
   renderConnect() {
