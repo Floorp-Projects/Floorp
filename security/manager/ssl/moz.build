@@ -11,9 +11,9 @@ XPIDL_SOURCES += [
     'nsIASN1PrintableItem.idl',
     'nsIASN1Sequence.idl',
     'nsIBadCertListener2.idl',
-    'nsICertBlocklist.idl',
     'nsICertificateDialogs.idl',
     'nsICertOverrideService.idl',
+    'nsICertStorage.idl',
     'nsIClientAuthDialogs.idl',
     'nsIContentSignatureVerifier.idl',
     'nsICryptoHash.idl',
@@ -99,7 +99,7 @@ EXPORTS.ipc += [
 ]
 
 UNIFIED_SOURCES += [
-    'CertBlocklist.cpp',
+    'cert_storage/src/cert_storage.cpp',
     'ContentSignatureVerifier.cpp',
     'CryptoTask.cpp',
     'CSTrustDomain.cpp',
