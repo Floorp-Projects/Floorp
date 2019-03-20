@@ -8,10 +8,11 @@ cat > $MACHRC << EOF
 default=syntax
 EOF
 
-calculate_hash='import hashlib, os, sys
-print hashlib.sha256(os.path.abspath(sys.argv[1])).hexdigest()'
-roothash=$(python -c "$calculate_hash" "$topsrcdir")
-cachedir=$MOZBUILD_STATE_PATH/cache/$roothash/taskgraph
+cmd="$topsrcdir/mach python -c 'from mozboot.util import get_state_dir; print(get_state_dir(srcdir=True))'"
+# First run local state dir generation so it doesn't affect test output.
+eval $cmd > /dev/null 2>&1
+# Now run it again to get the actual directory.
+cachedir=$(eval $cmd)/cache/taskgraph
 mkdir -p $cachedir
 
 cat > $cachedir/target_task_set << EOF
@@ -90,8 +91,5 @@ EOF
 
 # set mtime to the future so we don't re-generate tasks
 find $cachedir -type f -exec touch -d "next day" {} +
-
-# trigger local state dir generation so it doesn't affect test output
-$topsrcdir/mach python -c "from mozboot.util import get_state_dir; get_state_dir(srcdir=True)" > /dev/null 2>&1
 
 export testargs="--no-push --no-artifact"

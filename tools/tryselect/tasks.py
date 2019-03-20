@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import glob
 import hashlib
 import json
 import os
@@ -55,18 +54,18 @@ def invalidate(cache, root):
 
 
 def generate_tasks(params, full, root):
-    # Try to delete the old taskgraph cache directory.
-    old_cache_dir = os.path.join(get_state_dir(), 'cache', 'taskgraph')
-    if os.path.isdir(old_cache_dir):
-        shutil.rmtree(old_cache_dir)
-
+    # TODO: Remove after January 1st, 2020.
+    # Try to delete the old taskgraph cache directories.
     root_hash = hashlib.sha256(os.path.abspath(root)).hexdigest()
-    cache_dir = os.path.join(get_state_dir(), 'cache', root_hash, 'taskgraph')
+    old_cache_dirs = [
+        os.path.join(get_state_dir(), 'cache', 'taskgraph'),
+        os.path.join(get_state_dir(), 'cache', root_hash, 'taskgraph'),
+    ]
+    for cache_dir in old_cache_dirs:
+        if os.path.isdir(cache_dir):
+            shutil.rmtree(cache_dir)
 
-    # Cleanup old cache files
-    for path in glob.glob(os.path.join(cache_dir, '*_graph')):
-        os.remove(path)
-
+    cache_dir = os.path.join(get_state_dir(srcdir=True), 'cache', 'taskgraph')
     attr = 'full_task_set' if full else 'target_task_set'
     cache = os.path.join(cache_dir, attr)
 
