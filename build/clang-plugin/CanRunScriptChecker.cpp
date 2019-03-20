@@ -81,16 +81,18 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
   auto LocalKnownLive = anyOf(KnownLiveSmartPtr, MozKnownLiveCall);
 
   auto InvalidArg =
-      // We want to find any expression,
-      ignoreTrivials(expr(
-          // which has a refcounted pointer type,
-          anyOf(
-            hasType(Refcounted),
-            hasType(pointsTo(Refcounted)),
-            hasType(references(Refcounted)),
-            hasType(isSmartPtrToRefCounted())
-          ),
-          // and which is not this,
+      ignoreTrivialsConditional(
+        // We want to consider things if there is anything refcounted involved,
+        // including in any of the trivials that we otherwise strip off.
+        anyOf(
+          hasType(Refcounted),
+          hasType(pointsTo(Refcounted)),
+          hasType(references(Refcounted)),
+          hasType(isSmartPtrToRefCounted())
+        ),
+        // We want to find any expression,
+        expr(
+          // which is not this,
           unless(cxxThisExpr()),
           // and which is not a stack smart ptr
           unless(KnownLiveSmartPtr),
@@ -111,6 +113,8 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
           // and which is not a default arg with value nullptr, since those are
           // always safe.
           unless(cxxDefaultArgExpr(isNullDefaultArg())),
+          // and which is not a literal nullptr
+          unless(cxxNullPtrLiteralExpr()),
           // and which is not a dereference of a parameter of the parent
           // function (including "this"),
           unless(
