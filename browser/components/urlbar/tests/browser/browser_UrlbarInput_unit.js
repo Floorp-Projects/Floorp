@@ -165,7 +165,7 @@ add_task(async function test_autofill_disabled_on_prefix_search() {
     });
     checkStartQueryCall(fakeController.startQuery, {
       searchString: "autofill",
-      enableAutofill: true,
+      allowAutofill: true,
     });
 
     // search for "auto" -- autofill should be disabled since the previous
@@ -177,7 +177,7 @@ add_task(async function test_autofill_disabled_on_prefix_search() {
     });
     checkStartQueryCall(fakeController.startQuery, {
       searchString: "auto",
-      enableAutofill: false,
+      allowAutofill: false,
     }, 1);
 
     // search for "autofill" again -- autofill should be enabled
@@ -188,7 +188,7 @@ add_task(async function test_autofill_disabled_on_prefix_search() {
     });
     checkStartQueryCall(fakeController.startQuery, {
       searchString: "autofill",
-      enableAutofill: true,
+      allowAutofill: true,
     }, 2);
 
     sandbox.resetHistory();

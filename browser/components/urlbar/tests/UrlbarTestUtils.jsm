@@ -46,15 +46,24 @@ var UrlbarTestUtils = {
     let urlbar = getUrlbarAbstraction(win);
     let restoreAnimationsFn = urlbar.disableAnimations();
     await new Promise(resolve => waitForFocus(resolve, win));
+    let lastSearchString = urlbar.lastSearchString;
     urlbar.focus();
     urlbar.value = inputText;
     if (fireInputEvent) {
       // This is necessary to get the urlbar to set gBrowser.userTypedValue.
       urlbar.fireInputEvent();
     }
-    // In the quantum bar it's enough to fire the input event to start a query,
-    // invoking startSearch would do it twice.
-    if (!urlbar.quantumbar || !fireInputEvent) {
+    // With awesomebar, we must call startSearch to start the search.  With
+    // quantumbar, we can either fire an input event or call start search, so be
+    // careful not to do both since that would start two searches.  However,
+    // there's one wrinkle with quantumbar: If the new search and old search are
+    // the same, the input event will *not* start a new search, by design.  Many
+    // existing tests do consecutive searches with the same string and expect
+    // new searches to start.  To keep those tests running, call startSearch
+    // directly in those cases.
+    if (!urlbar.quantumbar ||
+        !fireInputEvent ||
+        inputText == lastSearchString) {
       urlbar.startSearch(inputText);
     }
     return this.promiseSearchComplete(win, restoreAnimationsFn);
@@ -286,6 +295,11 @@ class UrlbarAbstraction {
   }
   get value() {
     return this.urlbar.value;
+  }
+
+  get lastSearchString() {
+    return this.quantumbar ? this.urlbar._lastSearchString :
+                             this.urlbar.controller.searchString;
   }
 
   get panel() {

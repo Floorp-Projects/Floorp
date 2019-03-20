@@ -320,8 +320,8 @@ async function doSimpleTest(revertBetweenSteps) {
   });
 
   // "@tes" -- not an alias, no highlight
-  gURLBar.search(ALIAS.substr(0, ALIAS.length - 1));
-  await promiseSearchComplete();
+  await promiseAutocompleteResultPopup(ALIAS.substr(0, ALIAS.length - 1),
+                                       window, true);
   await waitForAutocompleteResultAt(0);
   await assertAlias(false);
 
@@ -331,8 +331,7 @@ async function doSimpleTest(revertBetweenSteps) {
   }
 
   // "@test" -- alias, highlight
-  gURLBar.search(ALIAS);
-  await promiseSearchComplete();
+  await promiseAutocompleteResultPopup(ALIAS, window, true);
   await waitForAutocompleteResultAt(0);
   await assertAlias(true);
 
@@ -342,8 +341,7 @@ async function doSimpleTest(revertBetweenSteps) {
   }
 
   // "@test foo" -- alias, highlight
-  gURLBar.search(ALIAS + " foo");
-  await promiseSearchComplete();
+  await promiseAutocompleteResultPopup(ALIAS + " foo", window, true);
   await waitForAutocompleteResultAt(0);
   await assertAlias(true);
 
@@ -353,8 +351,7 @@ async function doSimpleTest(revertBetweenSteps) {
   }
 
   // "@test" -- alias, highlight
-  gURLBar.search(ALIAS);
-  await promiseSearchComplete();
+  await promiseAutocompleteResultPopup(ALIAS, window, true);
   await waitForAutocompleteResultAt(0);
   await assertAlias(true);
 
@@ -364,8 +361,8 @@ async function doSimpleTest(revertBetweenSteps) {
   }
 
   // "@tes" -- not an alias, no highlight
-  gURLBar.search(ALIAS.substr(0, ALIAS.length - 1));
-  await promiseSearchComplete();
+  await promiseAutocompleteResultPopup(ALIAS.substr(0, ALIAS.length - 1),
+                                       window, true);
   await waitForAutocompleteResultAt(0);
   await assertAlias(false);
 

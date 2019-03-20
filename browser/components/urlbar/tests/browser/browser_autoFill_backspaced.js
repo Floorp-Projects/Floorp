@@ -16,6 +16,7 @@ async function test_autocomplete(data) {
   if (onAutoFill)
     onAutoFill();
 
+  info("Synthesizing keys");
   keys.forEach(key => EventUtils.synthesizeKey(key));
 
   Assert.equal(gURLBar.textValue, modified, "backspaced value is as expected");
