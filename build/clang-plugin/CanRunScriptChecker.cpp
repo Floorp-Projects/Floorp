@@ -49,6 +49,7 @@
 
 #include "CanRunScriptChecker.h"
 #include "CustomMatchers.h"
+#include "clang/Lex/Lexer.h"
 
 void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
   auto Refcounted = qualType(hasDeclaration(cxxRecordDecl(isRefCounted())));
@@ -301,16 +302,22 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   }
 
   const char *ErrorInvalidArg =
-      "arguments must all be strong refs or parent parameters when calling a "
+      "arguments must all be strong refs or caller's parameters when calling a "
       "function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object "
-      "argument)";
+      "argument).  '%0' is neither.";
 
   const char *ErrorNonCanRunScriptParent =
       "functions marked as MOZ_CAN_RUN_SCRIPT can only be called from "
       "functions also marked as MOZ_CAN_RUN_SCRIPT";
   const char *NoteNonCanRunScriptParent = "caller function declared here";
 
-  const Expr *InvalidArg = Result.Nodes.getNodeAs<Expr>("invalidArg");
+  const Expr *InvalidArg;
+  if (const CXXDefaultArgExpr* defaultArg =
+          Result.Nodes.getNodeAs<CXXDefaultArgExpr>("invalidArg")) {
+    InvalidArg = defaultArg->getExpr();
+  } else {
+    InvalidArg = Result.Nodes.getNodeAs<Expr>("invalidArg");
+  }
 
   const CallExpr *Call = Result.Nodes.getNodeAs<CallExpr>("callExpr");
   // If we don't find the FunctionDecl linked to this call or if it's not marked
@@ -361,8 +368,13 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   // If we have an invalid argument in the call, we emit the diagnostic to
   // signal it.
   if (InvalidArg) {
+    const std::string invalidArgText =
+        Lexer::getSourceText(
+            CharSourceRange::getTokenRange(InvalidArg->getSourceRange()),
+            Result.Context->getSourceManager(),
+            Result.Context->getLangOpts());
     diag(InvalidArg->getExprLoc(), ErrorInvalidArg, DiagnosticIDs::Error)
-        << CallRange;
+        << InvalidArg->getSourceRange() << invalidArgText;
   }
 
   // If the parent function is not marked as MOZ_CAN_RUN_SCRIPT, we emit an
