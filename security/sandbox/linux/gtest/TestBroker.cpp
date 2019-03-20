@@ -29,13 +29,13 @@
 
 namespace mozilla {
 
-static const int MAY_ACCESS = SandboxBroker::MAY_ACCESS;
-static const int MAY_READ = SandboxBroker::MAY_READ;
-static const int MAY_WRITE = SandboxBroker::MAY_WRITE;
-static const int MAY_CREATE = SandboxBroker::MAY_CREATE;
-static const auto AddAlways = SandboxBroker::Policy::AddAlways;
-
 class SandboxBrokerTest : public ::testing::Test {
+  static const int MAY_ACCESS = SandboxBroker::MAY_ACCESS;
+  static const int MAY_READ = SandboxBroker::MAY_READ;
+  static const int MAY_WRITE = SandboxBroker::MAY_WRITE;
+  static const int MAY_CREATE = SandboxBroker::MAY_CREATE;
+  static const auto AddAlways = SandboxBroker::Policy::AddAlways;
+
   UniquePtr<SandboxBroker> mServer;
   UniquePtr<SandboxBrokerClient> mClient;
 
