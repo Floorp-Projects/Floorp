@@ -757,6 +757,27 @@ QuotaManagerService::Persist(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
+QuotaManagerService::ListInitializedOrigins(nsIQuotaCallback* aCallback,
+                                            nsIQuotaRequest** _retval) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aCallback);
+
+  RefPtr<Request> request = new Request(aCallback);
+
+  ListInitializedOriginsParams params;
+
+  nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
+
+  nsresult rv = InitiateRequest(info);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 QuotaManagerService::Observe(nsISupports* aSubject, const char* aTopic,
                              const char16_t* aData) {
   MOZ_ASSERT(XRE_IsParentProcess());
