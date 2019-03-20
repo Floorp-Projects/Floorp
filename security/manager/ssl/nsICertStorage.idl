@@ -1,0 +1,116 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#define NS_CERTSTORAGE_CONTRACTID "@mozilla.org/security/certstorage;1"
+%}
+
+[scriptable, uuid(327100a7-3401-45ef-b160-bf880f1016fd)]
+interface nsICertStorage : nsISupports {
+  const short STATE_UNSET = 0;
+  const short STATE_ENFORCE = 1;
+
+  /**
+   * Set the revocation state of a certificate by issuer and serial number:
+   * issuer name (base-64 encoded DER) and serial number (base-64 encoded DER).
+   */
+  [must_use]
+  void setRevocationByIssuerAndSerial(in ACString issuer,
+                                      in ACString serialNumber,
+                                      in short state);
+
+  /**
+   * Set the revocation state of a certificate by subject and public key hash:
+   * subject name (base-64 encoded DER) and hash of public key (base-64 encoded
+   * sha-256 hash of the public key).
+   * state (short) is STATE_ENFORCE for revoked certs, STATE_UNSET otherwise.
+   */
+  [must_use]
+  void setRevocationBySubjectAndPubKey(in ACString subject,
+                                       in ACString pubKeyHash,
+                                       in short state);
+
+  /**
+   * Set the whitelist state of an intermediate certificate by issuer and
+   * serial number:
+   * issuer name (base-64 encoded DER) and serial number (base-64 encoded DER).
+   * state (short) is STATE_ENFORCE for whitelisted certs, STATE_UNSET otherwise.
+   */
+  [must_use]
+  void setWhitelist(in ACString issuer,
+                    in ACString serialNumber,
+                    in short state);
+
+  /**
+   * Set the CRLite enrollment state of a certificate by issuer and serial
+   * number:
+   * issuer name (base-64 encoded DER) and serial number (base-64 encoded DER).
+   * state (short) is STATE_ENFORCE for enrolled certs, STATE_UNSET otherwise.
+   */
+  [must_use]
+  void setEnrollment(in ACString issuer,
+                    in ACString serialNumber,
+                    in short state);
+
+  /**
+   * Get the revocation state of a certificate.
+   * issuer - issuer name, DER, Base64 encoded
+   * serial - serial number, DER, Base64 encoded
+   * subject - subject name, DER, Base64 encoded
+   * pubkey - public key, DER, Base64 encoded
+   */
+  [must_use]
+  short getRevocationState(in ACString issuer,
+                           in ACString serial,
+                           in ACString subject,
+                           in ACString pubkey);
+
+  /**
+   * Get the CRLite enrollment status of a certificate.
+   * issuer - issuer name, DER, Base64 encoded
+   * serial - serial number, DER, Base64 encoded
+   */
+  [must_use]
+  short getEnrollmentState(in ACString issuer,
+                           in ACString serial);
+
+  /**
+   * Get the whitelist status of an intermediate certificate.
+   * issuer - issuer name, DER, Base64 encoded
+   * serial - serial number, DER, Base64 encoded
+   */
+  [must_use]
+  short getWhitelistState(in ACString issuer,
+                          in ACString serial);
+
+   /**
+    * Check that the blocklist data is current. Specifically, that the current
+    * time is no more than security.onecrl.maximum_staleness_in_seconds seconds
+    * after the last blocklist update (as stored in the
+    * services.blocklist.onecrl.checked pref)
+    */
+  [must_use]
+  boolean isBlocklistFresh();
+
+   /**
+    * Check that the whitelist data is current. Specifically, that the current
+    * time is no more than security.onecrl.maximum_staleness_in_seconds seconds
+    * after the last whitelist update (as stored in the
+    * services.blocklist.intermediates.checked pref)
+    */
+  [must_use]
+  boolean isWhitelistFresh();
+
+   /**
+    * Check that the CRLite enrollment data is current. Specifically, that the current
+    * time is no more than security.onecrl.maximum_staleness_in_seconds seconds
+    * after the last crlite enrollment update (as stored in the
+    * services.blocklist.crlite.checked pref)
+    */
+  [must_use]
+  boolean isEnrollmentFresh();
+};
