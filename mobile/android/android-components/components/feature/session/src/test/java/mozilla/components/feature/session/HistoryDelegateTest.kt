@@ -81,6 +81,30 @@ class HistoryDelegateTest {
                 return null
             }
 
+            override suspend fun deleteEverything() {
+                fail()
+            }
+
+            override suspend fun deleteVisitsSince(since: Long) {
+                fail()
+            }
+
+            override suspend fun deleteVisitsBetween(startTime: Long, endTime: Long) {
+                fail()
+            }
+
+            override suspend fun deleteVisitsFor(url: String) {
+                fail()
+            }
+
+            override suspend fun prune() {
+                fail()
+            }
+
+            override suspend fun runMaintenance() {
+                fail()
+            }
+
             override fun cleanup() {
                 fail()
             }

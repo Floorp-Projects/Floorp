@@ -384,6 +384,54 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
+    fun `storage passes through calls to deleteEverything`() = runBlocking {
+        val storage = storage!!
+        val writer = writer!!
+        storage.deleteEverything()
+        verify(writer).deleteEverything()
+        verify(writer, never()).deleteVisitsBetween(ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong())
+        verify(writer, never()).deleteVisitsSince(ArgumentMatchers.anyLong())
+        verify(writer, never()).deletePlace(ArgumentMatchers.anyString())
+        Unit
+    }
+
+    @Test
+    fun `storage passes through calls to deleteVisitsBetween`() = runBlocking {
+        val storage = storage!!
+        val writer = writer!!
+        storage.deleteVisitsBetween(15, 20)
+        verify(writer, never()).deleteEverything()
+        verify(writer).deleteVisitsBetween(15, 20)
+        verify(writer, never()).deleteVisitsSince(ArgumentMatchers.anyLong())
+        verify(writer, never()).deletePlace(ArgumentMatchers.anyString())
+        Unit
+    }
+
+    @Test
+    fun `storage passes through calls to deleteVisitsSince`() = runBlocking {
+        val storage = storage!!
+        val writer = writer!!
+        storage.deleteVisitsSince(15)
+        verify(writer, never()).deleteEverything()
+        verify(writer, never()).deleteVisitsBetween(ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong())
+        verify(writer).deleteVisitsSince(15)
+        verify(writer, never()).deletePlace(ArgumentMatchers.anyString())
+        Unit
+    }
+
+    @Test
+    fun `storage passes through calls to deleteVisitsFor`() = runBlocking {
+        val storage = storage!!
+        val writer = writer!!
+        storage.deleteVisitsFor("http://www.firefox.com")
+        verify(writer, never()).deleteEverything()
+        verify(writer, never()).deleteVisitsBetween(ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong())
+        verify(writer, never()).deleteVisitsSince(ArgumentMatchers.anyLong())
+        verify(writer).deletePlace("http://www.firefox.com")
+        Unit
+    }
+
+    @Test
     fun `storage passes through calls to cleanup`() {
         val storage = storage!!
         val conn = conn!!
@@ -392,5 +440,27 @@ class PlacesHistoryStorageTest {
 
         storage.cleanup()
         verify(conn, times(1)).close()
+    }
+
+    @Test
+    fun `storage passes through calls to runMaintanence`() = runBlocking {
+        val storage = storage!!
+        val writer = writer!!
+
+        verify(writer, never()).runMaintenance()
+
+        storage.runMaintenance()
+        verify(writer, times(1)).runMaintenance()
+    }
+
+    @Test
+    fun `storage passes through calls to prune`() = runBlocking {
+        val storage = storage!!
+        val writer = writer!!
+
+        verify(writer, never()).pruneDestructively()
+
+        storage.prune()
+        verify(writer, times(1)).pruneDestructively()
     }
 }

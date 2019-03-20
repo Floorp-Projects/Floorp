@@ -20,9 +20,10 @@ const val AUTOCOMPLETE_SOURCE_NAME = "memoryHistory"
 /**
  * An in-memory implementation of [mozilla.components.concept.storage.HistoryStorage].
  */
+@SuppressWarnings("TooManyFunctions")
 class InMemoryHistoryStorage : HistoryStorage {
     @VisibleForTesting
-    internal val pages: LinkedHashMap<String, MutableList<Visit>> = linkedMapOf()
+    internal var pages: HashMap<String, MutableList<Visit>> = linkedMapOf()
     @VisibleForTesting
     internal val pageMeta: HashMap<String, PageObservation> = hashMapOf()
 
@@ -55,7 +56,7 @@ class InMemoryHistoryStorage : HistoryStorage {
         return pages.keys.toList()
     }
 
-    override suspend fun getDetailedVisits(start: Long, end: Long): List<VisitInfo> {
+    override suspend fun getDetailedVisits(start: Long, end: Long): List<VisitInfo> = synchronized(pages + pageMeta) {
         val visits = mutableListOf<VisitInfo>()
 
         pages.forEach {
@@ -109,6 +110,45 @@ class InMemoryHistoryStorage : HistoryStorage {
         }
     }
 
+    override suspend fun deleteEverything() = synchronized(pages + pageMeta) {
+        pages.clear()
+        pageMeta.clear()
+    }
+
+    override suspend fun deleteVisitsSince(since: Long) = synchronized(pages) {
+        pages.entries.forEach {
+            it.setValue(it.value.filterNot { visit -> visit.timestamp >= since }.toMutableList())
+        }
+        pages = pages.filter { it.value.isNotEmpty() } as HashMap<String, MutableList<Visit>>
+    }
+
+    override suspend fun deleteVisitsBetween(startTime: Long, endTime: Long) = synchronized(pages) {
+        pages.entries.forEach {
+            it.setValue(it.value.filterNot { visit ->
+                visit.timestamp >= startTime && visit.timestamp <= endTime
+            }.toMutableList())
+        }
+        pages = pages.filter { it.value.isNotEmpty() } as HashMap<String, MutableList<Visit>>
+    }
+
+    override suspend fun deleteVisitsFor(url: String) = synchronized(pages + pageMeta) {
+        pages.remove(url)
+        pageMeta.remove(url)
+        Unit
+    }
+
+    override suspend fun prune() {
+        // Not applicable.
+    }
+
+    override suspend fun runMaintenance() {
+        // Not applicable.
+    }
+
+    override fun cleanup() {
+        // GC will take care of our internal data structures, so there's nothing to do here.
+    }
+
     // Borrowed from https://gist.github.com/ademar111190/34d3de41308389a0d0d8
     private fun levenshteinDistance(a: String, b: String): Int {
         val lhsLength = a.length
@@ -145,9 +185,5 @@ class InMemoryHistoryStorage : HistoryStorage {
         }
 
         return cost[lhsLength - 1]
-    }
-
-    override fun cleanup() {
-        // GC will take care of our internal data structures, so there's nothing to do here.
     }
 }

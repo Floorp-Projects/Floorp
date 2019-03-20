@@ -12,6 +12,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.lang.Thread.sleep
 
 @RunWith(RobolectricTestRunner::class)
 class InMemoryHistoryStorageTest {
@@ -235,5 +236,97 @@ class InMemoryHistoryStorageTest {
         assertEquals(3, res.totalItems)
 
         assertNull(history.getAutocompleteSuggestion("hello"))
+    }
+
+    @Test
+    fun `store can delete everything`() = runBlocking {
+        val history = InMemoryHistoryStorage()
+
+        history.recordVisit("http://www.mozilla.org", VisitType.TYPED)
+        history.recordVisit("http://www.mozilla.org", VisitType.DOWNLOAD)
+        history.recordVisit("http://www.mozilla.org", VisitType.BOOKMARK)
+        history.recordVisit("http://www.mozilla.org", VisitType.RELOAD)
+        history.recordVisit("http://www.firefox.com", VisitType.EMBED)
+        history.recordVisit("http://www.firefox.com", VisitType.REDIRECT_PERMANENT)
+        history.recordVisit("http://www.firefox.com", VisitType.REDIRECT_TEMPORARY)
+        history.recordVisit("http://www.firefox.com", VisitType.LINK)
+
+        history.recordObservation("http://www.firefox.com", PageObservation("Firefox"))
+
+        assertEquals(2, history.getVisited().size)
+
+        history.deleteEverything()
+
+        assertEquals(0, history.getVisited().size)
+    }
+
+    @Test
+    fun `store can delete by url`() = runBlocking {
+        val history = InMemoryHistoryStorage()
+
+        history.recordVisit("http://www.mozilla.org", VisitType.TYPED)
+        history.recordVisit("http://www.mozilla.org", VisitType.DOWNLOAD)
+        history.recordVisit("http://www.mozilla.org", VisitType.BOOKMARK)
+        history.recordVisit("http://www.mozilla.org", VisitType.RELOAD)
+        history.recordVisit("http://www.firefox.com", VisitType.EMBED)
+        history.recordVisit("http://www.firefox.com", VisitType.REDIRECT_PERMANENT)
+        history.recordVisit("http://www.firefox.com", VisitType.REDIRECT_TEMPORARY)
+        history.recordVisit("http://www.firefox.com", VisitType.LINK)
+
+        history.recordObservation("http://www.firefox.com", PageObservation("Firefox"))
+
+        assertEquals(2, history.getVisited().size)
+
+        history.deleteVisitsFor("http://www.mozilla.org")
+
+        assertEquals(1, history.getVisited().size)
+        assertEquals("http://www.firefox.com", history.getVisited()[0])
+
+        history.deleteVisitsFor("http://www.firefox.com")
+        assertEquals(0, history.getVisited().size)
+    }
+
+    @Test
+    fun `store can delete by 'since'`() = runBlocking {
+        val history = InMemoryHistoryStorage()
+
+        history.recordVisit("http://www.mozilla.org", VisitType.TYPED)
+        history.recordVisit("http://www.mozilla.org", VisitType.DOWNLOAD)
+        history.recordVisit("http://www.mozilla.org", VisitType.BOOKMARK)
+
+        history.deleteVisitsSince(0)
+        val visits = history.getVisited()
+        assertEquals(0, visits.size)
+    }
+
+    @Test
+    fun `store can delete by 'range'`() {
+        val history = InMemoryHistoryStorage()
+
+        runBlocking {
+            history.recordVisit("http://www.mozilla.org/1", VisitType.TYPED)
+            sleep(10)
+            history.recordVisit("http://www.mozilla.org/2", VisitType.DOWNLOAD)
+            sleep(10)
+            history.recordVisit("http://www.mozilla.org/3", VisitType.BOOKMARK)
+        }
+
+        val ts = runBlocking {
+            val visits = history.getDetailedVisits(0, Long.MAX_VALUE)
+
+            assertEquals(3, visits.size)
+            visits[1].visitTime
+        }
+
+        runBlocking {
+            history.deleteVisitsBetween(ts - 1, ts + 1)
+        }
+        val visits = runBlocking {
+            history.getDetailedVisits(0, Long.MAX_VALUE)
+        }
+        assertEquals(2, visits.size)
+
+        assertEquals("http://www.mozilla.org/1", visits[0].url)
+        assertEquals("http://www.mozilla.org/3", visits[1].url)
     }
 }

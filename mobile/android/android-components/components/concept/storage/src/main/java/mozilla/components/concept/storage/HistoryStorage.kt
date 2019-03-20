@@ -7,6 +7,7 @@ package mozilla.components.concept.storage
 /**
  * An interface which defines read/write methods for history data.
  */
+@SuppressWarnings("TooManyFunctions")
 interface HistoryStorage {
     /**
      * Records a visit to a page.
@@ -57,6 +58,40 @@ interface HistoryStorage {
      * @return An optional domain URL which best matches the query.
      */
     fun getAutocompleteSuggestion(query: String): HistoryAutocompleteResult?
+
+    /**
+     * Remove all locally stored data.
+     */
+    suspend fun deleteEverything()
+
+    /**
+     * Remove history visits in an inclusive range from [since] to now.
+     * @param since A unix timestamp, milliseconds.
+     */
+    suspend fun deleteVisitsSince(since: Long)
+
+    /**
+     * Remove history visits in an inclusive range from [startTime] to [endTime].
+     * @param startTime A unix timestamp, milliseconds.
+     * @param endTime A unix timestamp, milliseconds.
+     */
+    suspend fun deleteVisitsBetween(startTime: Long, endTime: Long)
+
+    /**
+     * Remove all history visits for a given [url].
+     * @param url A page URL for which to remove visits.
+     */
+    suspend fun deleteVisitsFor(url: String)
+
+    /**
+     * Prune history storage, removing stale history.
+     */
+    suspend fun prune()
+
+    /**
+     * Perform internal storage maintenance.
+     */
+    suspend fun runMaintenance()
 
     /**
      * Cleanup any allocated resources.

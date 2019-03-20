@@ -59,6 +59,13 @@ permalink: /changelog/
 * **feature-accounts**, **service-firefox-account**
   * Added API to start an FxA pairing flow. See `FirefoxAccountsAuthFeature.beginPairingAuthentication` and `FxaAccountsManager.beingAuthentication` respectively.
 
+* **concept-storage**
+  * ⚠️ **This is a breaking API change!** for non-component implementations of `HistoryStorage`.
+  * `HistoryStorage` got new APIs: `deleteEverything`, `deleteVisitsSince`, `deleteVisitsBetween`, `deleteVisitsFor`, `prune` and `runMaintenance`.
+
+* **browser-storage-sync**, **browser-storage-memory**
+  * Implementations of `concept-storage`/`HistoryStorage` expose the newly added APIs.
+
 # 0.47.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.46.0...v0.47.0)

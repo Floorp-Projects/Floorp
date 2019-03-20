@@ -28,8 +28,9 @@ const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
 typealias SyncAuthInfo = mozilla.appservices.places.SyncAuthInfo
 
 /**
- * Implementation of the [HistoryStorage] which is backed by a Rust Places lib via [PlacesConnection].
+ * Implementation of the [HistoryStorage] which is backed by a Rust Places lib via [PlacesApi].
  */
+@SuppressWarnings("TooManyFunctions")
 open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStore {
     private val scope by lazy { CoroutineScope(Dispatchers.IO) }
     private val storageDir by lazy { context.filesDir }
@@ -103,6 +104,65 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
                 source = AUTOCOMPLETE_SOURCE_NAME,
                 totalItems = 1
             )
+        }
+    }
+
+    /**
+     * Sync behaviour: will not remove any history from remote devices, but it will prevent deleted
+     * history from returning.
+     */
+    override suspend fun deleteEverything() {
+        withContext(scope.coroutineContext) {
+            places.writer().deleteEverything()
+        }
+    }
+
+    /**
+     * Sync behaviour: may remove history from remote devices, if the removed visits were the only
+     * ones for a URL.
+     */
+    override suspend fun deleteVisitsSince(since: Long) {
+        withContext(scope.coroutineContext) {
+            places.writer().deleteVisitsSince(since)
+        }
+    }
+
+    /**
+     * Sync behaviour: may remove history from remote devices, if the removed visits were the only
+     * ones for a URL.
+     */
+    override suspend fun deleteVisitsBetween(startTime: Long, endTime: Long) {
+        withContext(scope.coroutineContext) {
+            places.writer().deleteVisitsBetween(startTime, endTime)
+        }
+    }
+
+    /**
+     * Sync behaviour: will remove history from remote devices.
+     */
+    override suspend fun deleteVisitsFor(url: String) {
+        withContext(scope.coroutineContext) {
+            places.writer().deletePlace(url)
+        }
+    }
+
+    /**
+     * Should only be called in response to severe disk storage pressure. May delete all of the data,
+     * or some subset of it.
+     * Sync behaviour: will not remove history from remote clients.
+     */
+    override suspend fun prune() {
+        withContext(scope.coroutineContext) {
+            places.writer().pruneDestructively()
+        }
+    }
+
+    /**
+     * Internal database maintenance tasks. Ideally this should be called once a day.
+     */
+    override suspend fun runMaintenance() {
+        withContext(scope.coroutineContext) {
+            places.writer().runMaintenance()
         }
     }
 
