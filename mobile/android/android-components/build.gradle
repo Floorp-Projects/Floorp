@@ -136,7 +136,8 @@ subprojects {
             if (project.hasProperty("coverage") && project.name != "support-test") {
                 tasks.withType(Test) {
                     jacoco.includeNoLocationClasses = true
-                    doLast { jacocoTestReport.execute() }
+
+                    finalizedBy jacocoTestReport
                 }
 
                 task jacocoTestReport(type: JacocoReport) {
