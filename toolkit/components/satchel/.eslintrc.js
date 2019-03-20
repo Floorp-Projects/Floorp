@@ -37,7 +37,6 @@ module.exports = {
       max: 2,
     }],
     "no-proto": "error",
-    "no-throw-literal": "error",
     "no-unused-expressions": "error",
     "no-unused-vars": ["error", {
       args: "none",

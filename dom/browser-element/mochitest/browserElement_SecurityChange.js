@@ -5,39 +5,42 @@
 // mozbrowsersecuritychange events.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 function runTest() {
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
   var lastSecurityState;
-  iframe.addEventListener('mozbrowsersecuritychange', function(e) {
+  iframe.addEventListener("mozbrowsersecuritychange", function(e) {
     lastSecurityState = e.detail;
   });
 
-  var filepath = 'tests/dom/browser-element/mochitest/file_browserElement_SecurityChange.html';
+  var filepath = "tests/dom/browser-element/mochitest/file_browserElement_SecurityChange.html";
 
   var count = 0;
-  iframe.addEventListener('mozbrowserloadend', function(e) {
+  iframe.addEventListener("mozbrowserloadend", function(e) {
     count++;
     switch (count) {
     case 1:
-      is(lastSecurityState.state, 'secure');
+      is(lastSecurityState.state, "secure");
       is(lastSecurityState.extendedValidation, false);
       is(lastSecurityState.mixedContent, false);
       iframe.src = "http://example.com/" + filepath;
       break;
     case 2:
-      is(lastSecurityState.state, 'insecure');
+      is(lastSecurityState.state, "insecure");
       is(lastSecurityState.extendedValidation, false);
       is(lastSecurityState.mixedContent, false);
-      iframe.src = 'https://example.com:443/' + filepath + '?broken';
+      iframe.src = "https://example.com:443/" + filepath + "?broken";
       break;
     case 3:
-      is(lastSecurityState.state, 'broken');
+      is(lastSecurityState.state, "broken");
       is(lastSecurityState.extendedValidation, false);
       is(lastSecurityState.mixedContent, true);
       SimpleTest.finish();
@@ -49,10 +52,9 @@ function runTest() {
   document.body.appendChild(iframe);
 }
 
-addEventListener('testready', function() {
-  SpecialPowers.pushPrefEnv({"set" : [
+addEventListener("testready", function() {
+  SpecialPowers.pushPrefEnv({"set": [
     ["browser.safebrowsing.phishing.enabled", false],
     ["browser.safebrowsing.malware.enabled", false],
   ]}, runTest);
 });
-

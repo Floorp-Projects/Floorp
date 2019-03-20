@@ -3,7 +3,8 @@
 
 Aloha!  My URL is <span id='url'></span>.
 <script>
-document.getElementById('url').innerHTML = window.location;
+// eslint-disable-next-line no-unsanitized/property
+document.getElementById("url").innerHTML = window.location;
 </script>
 
 <script>
@@ -12,9 +13,8 @@ document.getElementById('url').innerHTML = window.location;
 
   var alreadyBlocked = false;
 
-  addEventListener('keydown', function(e) {
-    if (e.keyCode == KeyboardEvent.DOM_VK_ESCAPE &&
-        alreadyBlocked == false) {
+  addEventListener("keydown", function(e) {
+    if (e.keyCode == KeyboardEvent.DOM_VK_ESCAPE && !alreadyBlocked) {
       alreadyBlocked = true;
       e.preventDefault();
     }

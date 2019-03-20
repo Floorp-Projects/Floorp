@@ -9,41 +9,40 @@ function _getPath() {
     return "/chrome/dom/browser-element/mochitest";
   }
   return window.location.pathname
-               .substring(0, window.location.pathname.lastIndexOf('/'))
+               .substring(0, window.location.pathname.lastIndexOf("/"))
                .replace("/priority", "");
 }
 
 const browserElementTestHelpers = {
-  _getBoolPref: function(pref) {
+  _getBoolPref(pref) {
     try {
       return SpecialPowers.getBoolPref(pref);
-    }
-    catch (e) {
+    } catch (e) {
       return undefined;
     }
   },
 
-  _setPref: function(pref, value) {
+  _setPref(pref, value) {
     this.lockTestReady();
     if (value !== undefined && value !== null) {
-      SpecialPowers.pushPrefEnv({'set': [[pref, value]]}, this.unlockTestReady.bind(this));
+      SpecialPowers.pushPrefEnv({"set": [[pref, value]]}, this.unlockTestReady.bind(this));
     } else {
-      SpecialPowers.pushPrefEnv({'clear': [[pref]]}, this.unlockTestReady.bind(this));
+      SpecialPowers.pushPrefEnv({"clear": [[pref]]}, this.unlockTestReady.bind(this));
     }
   },
 
-  _setPrefs: function() {
+  _setPrefs() {
     this.lockTestReady();
-    SpecialPowers.pushPrefEnv({'set': Array.slice(arguments)}, this.unlockTestReady.bind(this));
+    SpecialPowers.pushPrefEnv({"set": Array.slice(arguments)}, this.unlockTestReady.bind(this));
   },
 
   _testReadyLockCount: 0,
   _firedTestReady: false,
-  lockTestReady: function() {
+  lockTestReady() {
     this._testReadyLockCount++;
   },
 
-  unlockTestReady: function() {
+  unlockTestReady() {
     this._testReadyLockCount--;
     if (this._testReadyLockCount == 0 && !this._firedTestReady) {
       this._firedTestReady = true;
@@ -51,41 +50,41 @@ const browserElementTestHelpers = {
     }
   },
 
-  enableProcessPriorityManager: function() {
+  enableProcessPriorityManager() {
     this._setPrefs(
-      ['dom.ipc.processPriorityManager.testMode', true],
-      ['dom.ipc.processPriorityManager.enabled', true]
+      ["dom.ipc.processPriorityManager.testMode", true],
+      ["dom.ipc.processPriorityManager.enabled", true]
     );
   },
 
-  setClipboardPlainTextOnlyPref: function(value) {
-    this._setPref('clipboard.plainTextOnly', value);
+  setClipboardPlainTextOnlyPref(value) {
+    this._setPref("clipboard.plainTextOnly", value);
   },
 
-  setEnabledPref: function(value) {
-    this._setPrefs(['dom.mozBrowserFramesEnabled', value],
-                   ['network.disable.ipc.security', value]);
+  setEnabledPref(value) {
+    this._setPrefs(["dom.mozBrowserFramesEnabled", value],
+                   ["network.disable.ipc.security", value]);
   },
 
-  setupAccessibleCaretPref: function() {
-    this._setPref('layout.accessiblecaret.enabled', true);
+  setupAccessibleCaretPref() {
+    this._setPref("layout.accessiblecaret.enabled", true);
     // Disable hide carets for mouse input for select-all tests so that we can
     // get mozbrowsercaretstatechanged events.
-    this._setPref('layout.accessiblecaret.hide_carets_for_mouse_input', false);
+    this._setPref("layout.accessiblecaret.hide_carets_for_mouse_input", false);
   },
 
-  getOOPByDefaultPref: function() {
+  getOOPByDefaultPref() {
     return this._getBoolPref("dom.ipc.browser_frames.oop_by_default");
   },
 
-  addPermission: function() {
+  addPermission() {
     this.lockTestReady();
     SpecialPowers.pushPermissions(
-      [{'type': "browser", 'allow': 1, 'context': document}],
+      [{"type": "browser", "allow": 1, "context": document}],
       this.unlockTestReady.bind(this));
   },
 
-  allowTopLevelDataURINavigation: function() {
+  allowTopLevelDataURINavigation() {
     this._setPref("security.data_uri.block_toplevel_data_uri_navigations", false);
   },
 
@@ -96,20 +95,20 @@ const browserElementTestHelpers = {
   // function which takes (subject, topic, data).
   //
   // We'll clean up any observers you add at the end of the test.
-  addProcessPriorityObserver: function(processPriorityTopic, observerFn) {
+  addProcessPriorityObserver(processPriorityTopic, observerFn) {
     var topic = "process-priority-manager:TEST-ONLY:" + processPriorityTopic;
 
     // SpecialPowers appears to require that the observer be an object, not a
     // function.
     var observer = {
-      observe: observerFn
+      observe: observerFn,
     };
 
     SpecialPowers.addObserver(observer, topic);
     this._observers.push([observer, topic]);
   },
 
-  cleanUp: function() {
+  cleanUp() {
     for (var i = 0; i < this._observers.length; i++) {
       SpecialPowers.removeObserver(this._observers[i][0],
                                    this._observers[i][1]);
@@ -117,11 +116,11 @@ const browserElementTestHelpers = {
   },
 
   // Some basically-empty pages from different domains you can load.
-  'emptyPage1': 'http://example.com' + _getPath() + '/file_empty.html',
-  'fileEmptyPage1': 'file_empty.html',
-  'emptyPage2': 'http://example.org' + _getPath() + '/file_empty.html',
-  'emptyPage3': 'http://test1.example.org' + _getPath() + '/file_empty.html',
-  'focusPage': 'http://example.org' + _getPath() + '/file_focus.html',
+  "emptyPage1": "http://example.com" + _getPath() + "/file_empty.html",
+  "fileEmptyPage1": "file_empty.html",
+  "emptyPage2": "http://example.org" + _getPath() + "/file_empty.html",
+  "emptyPage3": "http://test1.example.org" + _getPath() + "/file_empty.html",
+  "focusPage": "http://example.org" + _getPath() + "/file_focus.html",
 };
 
 // Returns a promise which is resolved when a subprocess is created.  The
@@ -140,7 +139,7 @@ function expectProcessCreated(/* optional */ initialPriority) {
         observed = true;
 
         var childID = parseInt(data);
-        ok(true, 'Got new process, id=' + childID);
+        ok(true, "Got new process, id=" + childID);
         if (initialPriority) {
           expectPriorityChange(childID, initialPriority).then(function() {
             resolve(childID);
@@ -159,7 +158,7 @@ function expectOnlyOneProcessCreated(/* optional */ initialPriority) {
   var p = expectProcessCreated(initialPriority);
   p.then(function() {
     expectProcessCreated().then(function(childID) {
-      ok(false, 'Got unexpected process creation, childID=' + childID);
+      ok(false, "Got unexpected process creation, childID=" + childID);
     });
   });
   return p;
@@ -173,7 +172,7 @@ function expectPriorityChange(childID, expectedPriority) {
   return new Promise(function(resolve, reject) {
     var observed = false;
     browserElementTestHelpers.addProcessPriorityObserver(
-      'process-priority-set',
+      "process-priority-set",
       function(subject, topic, data) {
         if (observed) {
           return;
@@ -189,8 +188,8 @@ function expectPriorityChange(childID, expectedPriority) {
         observed = true;
 
         is(priority, expectedPriority,
-           'Expected priority of childID ' + childID +
-           ' to change to ' + expectedPriority);
+           "Expected priority of childID " + childID +
+           " to change to " + expectedPriority);
 
         if (priority == expectedPriority) {
           resolve();
@@ -206,8 +205,8 @@ function expectPriorityChange(childID, expectedPriority) {
 // the mozbrowser##eventName event.
 function expectMozbrowserEvent(iframe, eventName) {
   return new Promise(function(resolve, reject) {
-    iframe.addEventListener('mozbrowser' + eventName, function handler(e) {
-      iframe.removeEventListener('mozbrowser' + eventName, handler);
+    iframe.addEventListener("mozbrowser" + eventName, function handler(e) {
+      iframe.removeEventListener("mozbrowser" + eventName, handler);
       resolve(e);
     });
   });
@@ -249,7 +248,7 @@ function expectMozbrowserEvent(iframe, eventName) {
 //    content results in a broken security state.
 
 (function() {
-  var oop = !location.pathname.includes('_inproc_');
+  var oop = !location.pathname.includes("_inproc_");
 
   browserElementTestHelpers.lockTestReady();
   SpecialPowers.setBoolPref("network.disable.ipc.security", true);
@@ -260,12 +259,12 @@ function expectMozbrowserEvent(iframe, eventName) {
                             browserElementTestHelpers.unlockTestReady.bind(browserElementTestHelpers));
 })();
 
-addEventListener('unload', function() {
+addEventListener("unload", function() {
   browserElementTestHelpers.cleanUp();
 });
 
 // Wait for the load event before unlocking the test-ready event.
 browserElementTestHelpers.lockTestReady();
-addEventListener('load', function() {
+addEventListener("load", function() {
   SimpleTest.executeSoon(browserElementTestHelpers.unlockTestReady.bind(browserElementTestHelpers));
 });

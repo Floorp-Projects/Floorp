@@ -21,7 +21,6 @@ from taskgraph.transforms.base import TransformConfig
 from taskgraph.transforms.job.common import add_cache
 from taskgraph.transforms.task import payload_builders
 from taskgraph.util.schema import Schema, validate_schema
-from taskgraph.util.workertypes import worker_type_implementation
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -60,8 +59,9 @@ def transform(monkeypatch, config):
 
         monkeypatch.setattr(job, 'configure_taskdesc_for_run', _configure_taskdesc_for_run)
 
-        for func in job.transforms._transforms:
-            task = list(func(config, [task]))[0]
+        for _ in job.transforms(config, [task]):
+            # This forces the generator to be evaluated
+            pass
 
         return frozen_args
 
@@ -69,9 +69,9 @@ def transform(monkeypatch, config):
 
 
 @pytest.mark.parametrize('task', [
-    {'worker-type': 'aws-provisioner-v1/gecko-1-b-linux'},
-    {'worker-type': 'releng-hardware/gecko-t-win10-64-hw'},
-], ids=lambda t: worker_type_implementation(t['worker-type'])[0])
+    {'worker-type': 'b-linux'},
+    {'worker-type': 't-win10-64-hw'},
+], ids=lambda t: t['worker-type'])
 def test_worker_caches(task, transform):
     config, job, taskdesc, impl = transform(task)
     add_cache(job, taskdesc, 'cache1', '/cache1')

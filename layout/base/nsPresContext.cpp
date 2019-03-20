@@ -362,7 +362,7 @@ void nsPresContext::GetUserPreferences() {
 
   mPrefScrollbarSide = Preferences::GetInt("layout.scrollbar.side");
 
-  Document()->ResetLangPrefs();
+  Document()->SetMayNeedFontPrefsUpdate();
 
   // * image animation
   nsAutoCString animatePref;
@@ -524,8 +524,12 @@ void nsPresContext::UpdateAfterPreferencesChanged() {
   }
 
   if (mDocument->IsInChromeDocShell()) {
+    // FIXME(emilio): Do really all these prefs not affect chrome docs? I
+    // suspect we should move this check somewhere else.
     return;
   }
+
+  StaticPresData::Get()->InvalidateFontPrefs();
 
   // Initialize our state from the user preferences
   GetUserPreferences();
@@ -1655,23 +1659,19 @@ void nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont) {
   if (!mShell) return;
 
   // Note: this method is called without a font when rules in the userfont set
-  // are updated, which may occur during reflow as a result of the lazy
-  // initialization of the userfont set. It would be better to avoid a full
-  // restyle but until this method is only called outside of reflow, schedule a
-  // full restyle in these cases.
+  // are updated.
+  //
+  // We can avoid a full restyle if font-metric-dependent units are not in use,
+  // since we know there's no style resolution that would depend on this font
+  // and trigger its load.
+  //
+  // TODO(emilio): We could be more granular if we knew which families have
+  // potentially changed.
   if (!aUpdatedFont) {
-    PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW,
-                                 RestyleHint::RecascadeSubtree());
+    auto hint =
+      UsesExChUnits() ? RestyleHint::RecascadeSubtree() : RestyleHint{0};
+    PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW, hint);
     return;
-  }
-
-  // Special case - if either the 'ex' or 'ch' units are used, these
-  // depend upon font metrics. Updating this information requires
-  // rebuilding the rule tree from the top, avoiding the reuse of cached
-  // data even when no style rules have changed.
-  if (UsesExChUnits()) {
-    PostRebuildAllStyleDataEvent(nsChangeHint(0),
-                                 RestyleHint::RecascadeSubtree());
   }
 
   // Iterate over the frame tree looking for frames associated with the
@@ -1680,8 +1680,7 @@ void nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont) {
   // it contains that specific font (i.e. the one chosen within the family
   // given the weight, width, and slant from the nsStyleFont). If it does,
   // mark that frame dirty and skip inspecting its descendants.
-  nsIFrame* root = mShell->GetRootFrame();
-  if (root) {
+  if (nsIFrame* root = mShell->GetRootFrame()) {
     nsFontFaceUtils::MarkDirtyForFontChange(root, aUpdatedFont);
   }
 }

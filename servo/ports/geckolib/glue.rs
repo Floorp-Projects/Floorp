@@ -234,6 +234,7 @@ static mut DUMMY_URL_DATA: *mut URLExtraData = 0 as *mut _;
 #[no_mangle]
 pub unsafe extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
     use style::gecko_bindings::sugar::origin_flags;
+    use style::properties::computed_value_flags;
 
     // Pretend that we're a Servo Layout thread, to make some assertions happy.
     thread_state::initialize(thread_state::ThreadState::LAYOUT);
@@ -241,6 +242,7 @@ pub unsafe extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
     // Perform some debug-only runtime assertions.
     origin_flags::assert_flags_match();
     parser::assert_parsing_mode_match();
+    computed_value_flags::assert_match();
     traversal_flags::assert_traversal_flags_match();
     specified::font::assert_variant_east_asian_matches();
     specified::font::assert_variant_ligatures_matches();
@@ -3515,30 +3517,6 @@ pub unsafe extern "C" fn Servo_ComputedValues_Inherit(
     }
 
     style.build().into()
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_ComputedValues_GetStyleBits(values: ComputedStyleBorrowed) -> u8 {
-    use style::properties::computed_value_flags::ComputedValueFlags;
-    // FIXME(emilio): We could do this more efficiently I'm quite sure.
-    let flags = values.flags;
-    let mut result = 0;
-    if flags.contains(ComputedValueFlags::IS_RELEVANT_LINK_VISITED) {
-        result |= structs::ComputedStyleBit_RelevantLinkVisited;
-    }
-    if flags.contains(ComputedValueFlags::HAS_TEXT_DECORATION_LINES) {
-        result |= structs::ComputedStyleBit_HasTextDecorationLines;
-    }
-    if flags.contains(ComputedValueFlags::SHOULD_SUPPRESS_LINEBREAK) {
-        result |= structs::ComputedStyleBit_SuppressLineBreak;
-    }
-    if flags.contains(ComputedValueFlags::IS_TEXT_COMBINED) {
-        result |= structs::ComputedStyleBit_IsTextCombined;
-    }
-    if flags.contains(ComputedValueFlags::IS_IN_PSEUDO_ELEMENT_SUBTREE) {
-        result |= structs::ComputedStyleBit_HasPseudoElementData;
-    }
-    result
 }
 
 #[no_mangle]

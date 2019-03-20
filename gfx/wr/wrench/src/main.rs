@@ -512,8 +512,9 @@ fn main() {
             Some("gpu-cache") => png::ReadSurface::GpuCache,
             _ => panic!("Unknown surface argument value")
         };
+        let output_path = subargs.value_of("OUTPUT").map(|s| PathBuf::from(s));
         let reader = YamlFrameReader::new_from_args(subargs);
-        png::png(&mut wrench, surface, &mut window, reader, rx.unwrap());
+        png::png(&mut wrench, surface, &mut window, reader, rx.unwrap(), output_path);
     } else if let Some(subargs) = args.subcommand_matches("reftest") {
         // Exit with an error code in order to ensure the CI job fails.
         process::exit(reftest(wrench, &mut window, subargs, rx.unwrap()) as _);

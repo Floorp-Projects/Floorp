@@ -4,6 +4,8 @@
 // Test that alert works.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -13,34 +15,33 @@ var iframe;
 var mm;
 
 function runTest() {
-  iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
   document.body.appendChild(iframe);
 
   mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
-  mm.addMessageListener('test-success', function(msg) {
+  mm.addMessageListener("test-success", function(msg) {
     numPendingChildTests--;
     ok(true, SpecialPowers.wrap(msg).json);
   });
-  mm.addMessageListener('test-fail', function(msg) {
+  mm.addMessageListener("test-fail", function(msg) {
     numPendingChildTests--;
     ok(false, SpecialPowers.wrap(msg).json);
   });
 
   // Wait for the initial load to finish, then navigate the page, then wait
   // for that load to finish, then start test1.
-  iframe.addEventListener('mozbrowserloadend', function() {
+  iframe.addEventListener("mozbrowserloadend", function() {
     iframe.src = browserElementTestHelpers.emptyPage1;
 
-    iframe.addEventListener('mozbrowserloadend', function() {
+    iframe.addEventListener("mozbrowserloadend", function() {
       SimpleTest.executeSoon(test1);
     }, {once: true});
   }, {once: true});
-
 }
 
 function test1() {
-  iframe.addEventListener('mozbrowsershowmodalprompt', test2);
+  iframe.addEventListener("mozbrowsershowmodalprompt", test2);
 
   // Do window.alert within the iframe, then modify the global |testState|
   // after the alert.
@@ -59,7 +60,7 @@ function test1() {
 function test2(e) {
   iframe.removeEventListener("mozbrowsershowmodalprompt", test2);
 
-  is(e.detail.message, 'Hello, world!');
+  is(e.detail.message, "Hello, world!");
   e.preventDefault(); // cause the alert to block.
 
   SimpleTest.executeSoon(function() { test2a(e); });
@@ -98,17 +99,17 @@ function test3(e) {
   // to spin and wait.
   function onTryAgain() {
     SimpleTest.executeSoon(function() {
-      //dump('onTryAgain\n');
+      // dump('onTryAgain\n');
       mm.loadFrameScript(script2, /* allowDelayedLoad = */ false);
     });
   }
 
-  mm.addMessageListener('test-try-again', onTryAgain);
+  mm.addMessageListener("test-try-again", onTryAgain);
   numPendingChildTests++;
 
   onTryAgain();
   waitForPendingTests(function() {
-    mm.removeMessageListener('test-try-again', onTryAgain);
+    mm.removeMessageListener("test-try-again", onTryAgain);
     test4();
   });
 }
@@ -125,21 +126,21 @@ function test4() {
 
 // test4 is a mozbrowsershowmodalprompt listener.
 function test5(e) {
-  iframe.removeEventListener('mozbrowsershowmodalprompt', test5);
+  iframe.removeEventListener("mozbrowsershowmodalprompt", test5);
 
-  is(e.detail.message, 'test4');
+  is(e.detail.message, "test4");
   e.preventDefault(); // cause the page to block.
 
   SimpleTest.executeSoon(test5a);
 }
 
 function test5a() {
-  iframe.addEventListener('mozbrowserloadend', test5b);
+  iframe.addEventListener("mozbrowserloadend", test5b);
   iframe.src = browserElementTestHelpers.emptyPage2;
 }
 
 function test5b() {
-  iframe.removeEventListener('mozbrowserloadend', test5b);
+  iframe.removeEventListener("mozbrowserloadend", test5b);
   SimpleTest.executeSoon(test6);
 }
 
@@ -148,18 +149,18 @@ var promptBlockers = [];
 function test6() {
   iframe.addEventListener("mozbrowsershowmodalprompt", test6a);
 
-  var script = 'data:,\
+  var script = "data:,\
     this.testState = 0; \
     content.alert(1); \
     this.testState = 3; \
-  ';
+  ";
   mm.loadFrameScript(script, /* allowDelayedLoad = */ false);
 }
 
 function test6a(e) {
   iframe.removeEventListener("mozbrowsershowmodalprompt", test6a);
 
-  is(e.detail.message, '1');
+  is(e.detail.message, "1");
   e.preventDefault(); // cause the alert to block.
   promptBlockers.push(e);
 
@@ -183,18 +184,18 @@ function test6b() {
 function test6c() {
   iframe.addEventListener("mozbrowsershowmodalprompt", test6d);
 
-  var script = 'data:,\
+  var script = "data:,\
     this.testState = 1; \
     content.alert(2); \
     this.testState = 2; \
-  ';
+  ";
   mm.loadFrameScript(script, /* allowDelayedLoad = */ false);
 }
 
 function test6d(e) {
   iframe.removeEventListener("mozbrowsershowmodalprompt", test6d);
 
-  is(e.detail.message, '2');
+  is(e.detail.message, "2");
   e.preventDefault(); // cause the alert to block.
   promptBlockers.push(e);
 
@@ -232,17 +233,17 @@ function test6f() {
   // to spin and wait.
   function onTryAgain() {
     SimpleTest.executeSoon(function() {
-      //dump('onTryAgain\n');
+      // dump('onTryAgain\n');
       mm.loadFrameScript(script2, /* allowDelayedLoad = */ false);
     });
   }
 
-  mm.addMessageListener('test-try-again', onTryAgain);
+  mm.addMessageListener("test-try-again", onTryAgain);
   numPendingChildTests++;
 
   onTryAgain();
   waitForPendingTests(function() {
-    mm.removeMessageListener('test-try-again', onTryAgain);
+    mm.removeMessageListener("test-try-again", onTryAgain);
     test6g();
   });
 }
@@ -264,17 +265,17 @@ function test6g() {
   // to spin and wait.
   function onTryAgain() {
     SimpleTest.executeSoon(function() {
-      //dump('onTryAgain\n');
+      // dump('onTryAgain\n');
       mm.loadFrameScript(script2, /* allowDelayedLoad = */ false);
     });
   }
 
-  mm.addMessageListener('test-try-again', onTryAgain);
+  mm.addMessageListener("test-try-again", onTryAgain);
   numPendingChildTests++;
 
   onTryAgain();
   waitForPendingTests(function() {
-    mm.removeMessageListener('test-try-again', onTryAgain);
+    mm.removeMessageListener("test-try-again", onTryAgain);
     test6h();
   });
 }
@@ -299,4 +300,4 @@ function waitForPendingTests(next) {
   next();
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

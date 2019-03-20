@@ -6,6 +6,14 @@
 
 "use strict";
 
+/*
+global addMessageListener
+global removeMessageListener
+global docShell
+global content
+global sendAsyncMsg
+*/
+
 function debug(msg) {
   // dump("BrowserElementCopyPaste - " + msg + "\n");
 }
@@ -14,25 +22,25 @@ debug("loaded");
 
 var CopyPasteAssistent = {
   COMMAND_MAP: {
-    'cut': 'cmd_cut',
-    'copy': 'cmd_copy',
-    'paste': 'cmd_paste',
-    'selectall': 'cmd_selectAll'
+    "cut": "cmd_cut",
+    "copy": "cmd_copy",
+    "paste": "cmd_paste",
+    "selectall": "cmd_selectAll",
   },
 
-  init: function() {
+  init() {
     addEventListener("mozcaretstatechanged", this,
                      /* useCapture = */ true, /* wantsUntrusted = */ false);
     addMessageListener("browser-element-api:call", this);
   },
 
-  destroy: function() {
+  destroy() {
     removeEventListener("mozcaretstatechanged", this,
                         /* useCapture = */ true, /* wantsUntrusted = */ false);
     removeMessageListener("browser-element-api:call", this);
   },
 
-  handleEvent: function(event) {
+  handleEvent(event) {
     switch (event.type) {
       case "mozcaretstatechanged":
         this._caretStateChangedHandler(event);
@@ -40,7 +48,7 @@ var CopyPasteAssistent = {
     }
   },
 
-  receiveMessage: function(message) {
+  receiveMessage(message) {
     switch (message.name) {
       case "browser-element-api:call":
         this._browserAPIHandler(message);
@@ -48,9 +56,9 @@ var CopyPasteAssistent = {
     }
   },
 
-  _browserAPIHandler: function(e) {
+  _browserAPIHandler(e) {
     switch (e.data.msg_name) {
-      case 'copypaste-do-command':
+      case "copypaste-do-command":
         if (this._isCommandEnabled(e.data.command)) {
           docShell.doCommand(this.COMMAND_MAP[e.data.command]);
         }
@@ -58,7 +66,7 @@ var CopyPasteAssistent = {
     }
   },
 
-  _isCommandEnabled: function(cmd) {
+  _isCommandEnabled(cmd) {
     let command = this.COMMAND_MAP[cmd];
     if (!command) {
       return false;
@@ -67,11 +75,11 @@ var CopyPasteAssistent = {
     return docShell.isCommandEnabled(command);
   },
 
-  _caretStateChangedHandler: function(e) {
+  _caretStateChangedHandler(e) {
     e.stopPropagation();
 
     let boundingClientRect = e.boundingClientRect;
-    let canPaste = this._isCommandEnabled("paste");
+    this._isCommandEnabled("paste");
     let zoomFactor = content.innerWidth == 0 ? 1 : content.screen.width / content.innerWidth;
 
     let detail = {
@@ -89,13 +97,13 @@ var CopyPasteAssistent = {
         canCopy: this._isCommandEnabled("copy"),
         canPaste: this._isCommandEnabled("paste"),
       },
-      zoomFactor: zoomFactor,
+      zoomFactor,
       reason: e.reason,
       collapsed: e.collapsed,
       caretVisible: e.caretVisible,
       selectionVisible: e.selectionVisible,
       selectionEditable: e.selectionEditable,
-      selectedTextContent: e.selectedTextContent
+      selectedTextContent: e.selectedTextContent,
     };
 
     // Get correct geometry information if we have nested iframe.
@@ -109,12 +117,12 @@ var CopyPasteAssistent = {
       currentWindow = currentWindow.realFrameElement.ownerGlobal;
 
       let targetDocShell = currentWindow.docShell;
-      if(targetDocShell.isMozBrowser) {
+      if (targetDocShell.isMozBrowser) {
         break;
       }
     }
 
-    sendAsyncMsg('caretstatechanged', detail);
+    sendAsyncMsg("caretstatechanged", detail);
   },
 };
 

@@ -9,21 +9,24 @@
 // image load will be cancaelled and mozbrowserloadend should be called.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 browserElementTestHelpers.setEnabledPref(true);
 
 var iframe;
 var stopped = false;
-var imgSrc = 'http://test/tests/dom/browser-element/mochitest/file_bug709759.sjs';
+var imgSrc = "http://test/tests/dom/browser-element/mochitest/file_bug709759.sjs";
 
 function runTest() {
-  iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
   // FIXME: Bug 1270790
-  iframe.setAttribute('remote', 'true');
-  iframe.addEventListener('mozbrowserloadend', loadend);
-  iframe.src = 'data:text/html,<html>' +
+  iframe.setAttribute("remote", "true");
+  iframe.addEventListener("mozbrowserloadend", loadend);
+  iframe.src = "data:text/html,<html>" +
     '<body><img src="' + imgSrc + '" /></body></html>';
 
   document.body.appendChild(iframe);
@@ -35,12 +38,12 @@ function runTest() {
 }
 
 function loadend() {
-  ok(stopped, 'Iframes network connections were stopped');
+  ok(stopped, "Iframes network connections were stopped");
 
   // Wait 1 second and make sure there isn't a mozbrowsererror after stop();
-  iframe.addEventListener('mozbrowsererror', handleError);
+  iframe.addEventListener("mozbrowsererror", handleError);
   window.setTimeout(function() {
-    iframe.removeEventListener('mozbrowsererror', handleError);
+    iframe.removeEventListener("mozbrowsererror", handleError);
     SimpleTest.finish();
   }, 1000);
 }
@@ -49,4 +52,4 @@ function handleError() {
   ok(false, "mozbrowsererror should not be fired");
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

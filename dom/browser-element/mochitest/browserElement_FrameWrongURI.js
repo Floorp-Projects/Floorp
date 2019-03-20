@@ -4,49 +4,51 @@
 // Bug 804446 - Test that window.open(javascript:..) works with <iframe mozbrowser>.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 function runTest() {
-  var iframeJS = document.createElement('iframe');
-  iframeJS.setAttribute('mozbrowser', 'true');
+  var iframeJS = document.createElement("iframe");
+  iframeJS.setAttribute("mozbrowser", "true");
 
-  iframeJS.addEventListener('mozbrowserloadstart', function(e) {
+  iframeJS.addEventListener("mozbrowserloadstart", function(e) {
     ok(false, "This should not happen!");
   });
 
-  iframeJS.addEventListener('mozbrowserloadend', function(e) {
+  iframeJS.addEventListener("mozbrowserloadend", function(e) {
     ok(false, "This should not happen!");
   });
 
   iframeJS.src = 'javascript:alert("Foo");';
   document.body.appendChild(iframeJS);
 
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
   var gotPopup = false;
-  iframe.addEventListener('mozbrowseropenwindow', function(e) {
-    is(gotPopup, false, 'Should get just one popup.');
+  iframe.addEventListener("mozbrowseropenwindow", function(e) {
+    is(gotPopup, false, "Should get just one popup.");
     gotPopup = true;
 
     document.body.appendChild(e.detail.frameElement);
   });
 
-  iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
-    ok(gotPopup, 'Got mozbrowseropenwindow event before showmodalprompt event.');
+  iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {
+    ok(gotPopup, "Got mozbrowseropenwindow event before showmodalprompt event.");
     if (e.detail.message.indexOf("success") == 0) {
       ok(true, e.detail.message);
       SimpleTest.finish();
-    }
-    else {
+    } else {
       ok(false, "Got invalid message: " + e.detail.message);
     }
   });
 
-  iframe.src = 'file_browserElement_FrameWrongURI.html';
+  iframe.src = "file_browserElement_FrameWrongURI.html";
   document.body.appendChild(iframe);
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

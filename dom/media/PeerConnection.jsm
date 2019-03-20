@@ -222,6 +222,9 @@ class RTCIceCandidate {
   }
 
   __init(dict) {
+    if (dict.sdpMid == null && dict.sdpMLineIndex == null) {
+      throw new this._win.TypeError("Either sdpMid or sdpMLineIndex must be specified");
+    }
     Object.assign(this, dict);
   }
 }
@@ -1107,14 +1110,15 @@ class RTCPeerConnection {
       containsTrickle(topSection) || sections.every(containsTrickle);
   }
 
-  // TODO: Implement processing for end-of-candidates (bug 1318167)
   addIceCandidate(cand, onSucc, onErr) {
-    if (cand === null) {
+    if (cand.candidate != "" &&
+        cand.sdpMid == null &&
+        cand.sdpMLineIndex == null) {
       throw new this._win.DOMException(
-        "Empty candidate can not be added.",
+        "Cannot add a candidate without specifying either sdpMid or sdpMLineIndex",
         "TypeError");
     }
-    return this._auto(onSucc, onErr, () => cand && this._addIceCandidate(cand));
+    return this._auto(onSucc, onErr, () => this._addIceCandidate(cand));
   }
 
   async _addIceCandidate({ candidate, sdpMid, sdpMLineIndex, usernameFragment }) {

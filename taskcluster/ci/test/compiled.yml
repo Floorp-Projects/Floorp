@@ -30,7 +30,10 @@ cppunit:
         by-test-platform:
             android-em.*: xlarge
             default: default
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            android-em-4.3-arm7-api-16/opt: ['try']
+            default: built-projects
 
 gtest:
     description: "GTests run"
@@ -77,6 +80,7 @@ jittest:
             # Additionally, platforms contain suffixes like "/opt" or "/debug".
             (?=linux).*(?!-ccov)...../.*: []  # redundant with SM(...)
             (?=windows).*(?!-ccov)...../.*: []  # redundant with SM(p)
+            android-hw-.*-api-16/opt: ['try']
             default: built-projects
     chunks:
         by-test-platform:

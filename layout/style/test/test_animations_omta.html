@@ -2599,13 +2599,19 @@ addAsyncAnimTest(async function() {
           "transform-like properties transition runs on compositor thread");
 
   advance_clock(5000);
-  omta_is("transform",
-          // The order is: translate, scale, transform.
-          // So the translate() in transform should be multiplied by 1.5.
-          { compositorValue: [ 1.5, 0, 0, 1.5, (150 + 250*1.5), 0 ],
-            usesMultipleProperties: true },
-          RunningOn.Compositor,
-          "transform-like properties on compositor at 5s");
+
+  if (isGeckoView()) {
+    todo(false,
+         "Bug 1536392: GeckoView with e10s: cannot get correct OMTA style");
+  } else {
+    omta_is("transform",
+            // The order is: translate, scale, transform.
+            // So the translate() in transform should be multiplied by 1.5.
+            { compositorValue: [ 1.5, 0, 0, 1.5, (150 + 250*1.5), 0 ],
+              usesMultipleProperties: true },
+            RunningOn.Compositor,
+            "transform-like properties on compositor at 5s");
+  }
 
   done_div();
 });

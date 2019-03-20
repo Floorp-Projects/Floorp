@@ -20,9 +20,9 @@ fuzzy-if(d2d,0-255,0-24) == element-paint-transform-03.html element-paint-transf
 fuzzy-if(asyncPan,0-2,0-140) fuzzy-if(skiaContent,0-3,0-106) fuzzy-if(webrender&&!gtkWidget,134-222,1197-1588) == element-paint-native-widget.html element-paint-native-widget-ref.html   # in -ref the scrollframe is active and layerized differently with APZ
 fails-if(usesRepeatResampling&&!(webrender&&winWidget)) == element-paint-subimage-sampling-restriction.html about:blank
 == element-paint-clippath.html element-paint-clippath-ref.html
-fuzzy-if(webrender,36-36,702-704) == element-paint-sharpness-01a.html element-paint-sharpness-01b.html
+fuzzy-if(webrender,36-36,712-715) == element-paint-sharpness-01a.html element-paint-sharpness-01b.html
 fuzzy-if(skiaContent,0-1,0-326) == element-paint-sharpness-01b.html element-paint-sharpness-01c.html
-fuzzy-if(webrender,36-36,702-704) == element-paint-sharpness-01c.html element-paint-sharpness-01d.html
+fuzzy-if(webrender,36-36,712-715) == element-paint-sharpness-01c.html element-paint-sharpness-01d.html
 == element-paint-sharpness-02a.html element-paint-sharpness-02b.html
 == element-paint-sharpness-02b.html element-paint-sharpness-02c.html
 == element-paint-paintserversize-rounding-01.html element-paint-paintserversize-rounding-01-ref.html

@@ -200,7 +200,6 @@ class JsepSessionImpl : public JsepSession {
   nsresult GetRemoteIds(const Sdp& sdp, const SdpMediaSection& msection,
                         std::vector<std::string>* streamIds,
                         std::string* trackId);
-  nsresult RemoveDuplicateTrackIds(Sdp* sdp);
   nsresult CreateOfferMsection(const JsepOfferOptions& options,
                                JsepTransceiver& transceiver, Sdp* local);
   nsresult CreateAnswerMsection(const JsepAnswerOptions& options,

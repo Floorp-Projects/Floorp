@@ -52,7 +52,7 @@ void BlockingResourceBase::StackWalkCallback(uint32_t aFrameNumber, void* aPc,
                                              void* aSp, void* aClosure) {
 #  ifndef MOZ_CALLSTACK_DISABLED
   AcquisitionState* state = (AcquisitionState*)aClosure;
-  state->AppendElement(aPc);
+  state->ref().AppendElement(aPc);
 #  endif
 }
 
@@ -61,11 +61,16 @@ void BlockingResourceBase::GetStackTrace(AcquisitionState& aState) {
   // Skip this function and the calling function.
   const uint32_t kSkipFrames = 2;
 
-  aState.Clear();
+  // Clear the array...
+  aState.reset();
+  // ...and create a new one; this also puts the state to 'acquired' status
+  // regardless of whether we obtain a stack trace or not.
+  aState.emplace();
 
   // NB: Ignore the return value, there's nothing useful we can do if this
   //     this fails.
-  MozStackWalk(StackWalkCallback, kSkipFrames, 24, &aState);
+  MozStackWalk(StackWalkCallback, kSkipFrames, kAcquisitionStateStackSize,
+               aState.ptr());
 #  endif
 }
 
@@ -173,10 +178,10 @@ bool BlockingResourceBase::Print(nsACString& aOut) const {
 
   WalkTheStackCodeAddressService addressService;
 
-  for (uint32_t i = 0; i < state.Length(); i++) {
+  for (uint32_t i = 0; i < state.ref().Length(); i++) {
     const size_t kMaxLength = 1024;
     char buffer[kMaxLength];
-    addressService.GetLocation(i + 1, state[i], buffer, kMaxLength);
+    addressService.GetLocation(i + 1, state.ref()[i], buffer, kMaxLength);
     const char* fmt = "    %s\n";
     aOut.AppendLiteral("    ");
     aOut.Append(buffer);
@@ -298,7 +303,9 @@ void BlockingResourceBase::Acquire() {
 #  else
   // Take a stack snapshot.
   GetStackTrace(mAcquired);
-  if (mFirstSeen.IsEmpty()) {
+  MOZ_ASSERT(IsAcquired());
+
+  if (!mFirstSeen) {
     mFirstSeen = mAcquired;
   }
 #  endif

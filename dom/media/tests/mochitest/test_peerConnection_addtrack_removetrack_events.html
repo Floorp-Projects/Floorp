@@ -52,7 +52,6 @@ runNetworkTest(function (options) {
                  "Expected event to be instance of MediaStreamTrackEvent");
               is(trackEvent.type, "addtrack",
                  "Expected addtrack event type");
-              is(test.pcRemote.getWebrtcTrackId(trackEvent.track), newTrack.id, "Expected track in event");
               is(trackEvent.track.readyState, "live",
                  "added track should be live");
             })

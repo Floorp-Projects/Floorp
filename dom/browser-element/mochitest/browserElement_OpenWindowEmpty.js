@@ -5,27 +5,30 @@
 // about:blank as default
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 function runTest() {
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
   var gotPopup = false;
-  iframe.addEventListener('mozbrowseropenwindow', function(e) {
-    is(gotPopup, false, 'Should get just one popup.');
+  iframe.addEventListener("mozbrowseropenwindow", function(e) {
+    is(gotPopup, false, "Should get just one popup.");
     gotPopup = true;
 
-    is(e.detail.url, 'about:blank', "Popup's has correct URL");
+    is(e.detail.url, "about:blank", "Popup's has correct URL");
     e.preventDefault();
 
     SimpleTest.finish();
   });
 
-  iframe.src = 'file_browserElement_OpenWindowEmpty.html';
+  iframe.src = "file_browserElement_OpenWindowEmpty.html";
   document.body.appendChild(iframe);
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

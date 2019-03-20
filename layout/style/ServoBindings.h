@@ -789,8 +789,6 @@ ComputedStyleStrong Servo_ComputedValues_Inherit(
     RawServoStyleSetBorrowed, mozilla::PseudoStyleType,
     ComputedStyleBorrowedOrNull parent_style, mozilla::InheritTarget);
 
-uint8_t Servo_ComputedValues_GetStyleBits(ComputedStyleBorrowed values);
-
 bool Servo_ComputedValues_EqualCustomProperties(
     ServoComputedDataBorrowed first, ServoComputedDataBorrowed second);
 

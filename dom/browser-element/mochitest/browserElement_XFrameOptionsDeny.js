@@ -5,6 +5,8 @@
 // subframe of <iframe mozbrowser>.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -28,21 +30,21 @@ function arrayBuffersEqual(a, b) {
 }
 
 function runTest() {
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
   // Our child will create two iframes, so make sure this iframe is big enough
   // to show both of them without scrolling, so taking a screenshot gets both
   // frames.
-  iframe.height = '1000px';
+  iframe.height = "1000px";
 
   var step1, stepfinish;
-  iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
+  iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {
     switch (e.detail.message) {
-    case 'step 1':
+    case "step 1":
       step1 = SpecialPowers.snapshotWindow(iframe.contentWindow);
       break;
-    case 'step 2':
+    case "step 2":
       // The page has now attempted to load the X-Frame-Options page; take
       // another screenshot.
       stepfinish = SpecialPowers.snapshotWindow(iframe.contentWindow);
@@ -57,7 +59,7 @@ function runTest() {
   // Load this page from a different origin than ourselves.  This page will, in
   // turn, load a child from mochi.test:8888, our origin, with X-Frame-Options:
   // SAMEORIGIN.  That load should be denied.
-  iframe.src = 'http://example.com/tests/dom/browser-element/mochitest/file_browserElement_XFrameOptionsDeny.html';
+  iframe.src = "http://example.com/tests/dom/browser-element/mochitest/file_browserElement_XFrameOptionsDeny.html";
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

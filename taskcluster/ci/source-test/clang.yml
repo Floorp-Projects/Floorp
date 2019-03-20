@@ -1,0 +1,67 @@
+job-defaults:
+    platform: linux64/opt
+    attributes:
+        code-review: true
+    worker-type:
+        by-platform:
+            linux64.*: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        docker-image: {in-tree: debian7-amd64-build}
+        max-run-time: 3600
+    treeherder:
+        kind: other
+        tier: 2
+    run:
+        using: run-task
+        tooltool-downloads: public
+    toolchains:
+        - linux64-clang
+        - linux64-clang-tidy
+        - linux64-rust
+        - linux64-cbindgen
+        - linux64-nasm
+        - linux64-node
+    when:
+        # Extension list from https://hg.mozilla.org/mozilla-central/file/tip/python/mozbuild/mozbuild/mach_commands.py#l1664
+        files-changed:
+            - '**.c'
+            - '**.cpp'
+            - '**.cc'
+            - '**.cxx'
+            - '**.m'
+            - '**.mm'
+            - '**.h'
+            - '**.hh'
+            - '**.hpp'
+            - '**.hxx'
+
+tidy:
+    description: Run static-analysis (clang-tidy) on C/C++ patches
+    treeherder:
+        symbol: clang(tidy)
+    run:
+        command: >-
+            source $HOME/checkouts/gecko/taskcluster/scripts/misc/source-test-clang-setup.sh &&
+            cd $HOME/checkouts/gecko &&
+            ./mach --log-no-times static-analysis check $TRY_MODIFIED_FILES --output $HOME/clang-tidy.json --format json
+
+    worker:
+        artifacts:
+            - type: file
+              name: public/code-review/clang-tidy.json
+              path: /builds/worker/clang-tidy.json
+
+format:
+    description: Run clang-format on C/C++ patches
+    treeherder:
+        symbol: clang(format)
+    run:
+        command: >-
+            source $HOME/checkouts/gecko/taskcluster/scripts/misc/source-test-clang-setup.sh &&
+            cd $HOME/checkouts/gecko &&
+            ./mach --log-no-times clang-format --path $TRY_MODIFIED_FILES --output $HOME/clang-format.diff
+    worker:
+        artifacts:
+            - type: file
+              name: public/code-review/clang-format.diff
+              path: /builds/worker/clang-format.diff

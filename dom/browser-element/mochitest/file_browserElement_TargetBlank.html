@@ -8,10 +8,10 @@ function clickLink() {
   var e = document.createEvent("MouseEvent");
   e.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0,
                    false, false, false, false, 0, null);
-  document.getElementById('link').dispatchEvent(e);
+  document.getElementById("link").dispatchEvent(e);
 }
 
-addEventListener('load', function() { setTimeout(clickLink, 0) });
+addEventListener("load", function() { setTimeout(clickLink, 0); });
 </script>
 
 </body>

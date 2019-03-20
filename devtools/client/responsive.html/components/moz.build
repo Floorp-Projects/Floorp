@@ -7,7 +7,9 @@
 DevToolsModules(
     'App.js',
     'Browser.js',
-    'DeviceAdder.js',
+    'Device.js',
+    'DeviceForm.js',
+    'DeviceList.js',
     'DeviceModal.js',
     'DevicePixelRatioMenu.js',
     'DeviceSelector.js',

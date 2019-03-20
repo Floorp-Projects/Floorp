@@ -18,6 +18,7 @@ const debugTargetListenerMiddleware = require("./middleware/debug-target-listene
 const errorLoggingMiddleware = require("./middleware/error-logging");
 const eventRecordingMiddleware = require("./middleware/event-recording");
 const extensionComponentDataMiddleware = require("./middleware/extension-component-data");
+const processComponentDataMiddleware = require("./middleware/process-component-data");
 const tabComponentDataMiddleware = require("./middleware/tab-component-data");
 const workerComponentDataMiddleware = require("./middleware/worker-component-data");
 const { getDebugTargetCollapsibilities } = require("./modules/debug-target-collapsibilities");
@@ -37,6 +38,7 @@ function configureStore() {
                                      errorLoggingMiddleware,
                                      eventRecordingMiddleware,
                                      extensionComponentDataMiddleware,
+                                     processComponentDataMiddleware,
                                      tabComponentDataMiddleware,
                                      workerComponentDataMiddleware,
                                      waitUntilService);

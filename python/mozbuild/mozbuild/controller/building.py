@@ -730,14 +730,17 @@ class StaticAnalysisFooter(Footer):
 
 
 class StaticAnalysisOutputManager(OutputManager):
-    """Handles writing static analysis output to a terminal."""
+    """Handles writing static analysis output to a terminal or file."""
 
     def __init__(self, log_manager, monitor, footer):
         self.monitor = monitor
+        self.raw = ''
         OutputManager.__init__(self, log_manager, footer)
 
     def on_line(self, line):
         warning, relevant = self.monitor.on_line(line)
+        if relevant:
+            self.raw += line + '\n'
 
         if warning:
             self.log(logging.INFO, 'compiler_warning', warning,
@@ -754,6 +757,22 @@ class StaticAnalysisOutputManager(OutputManager):
             finally:
                 if have_handler:
                     self.handler.release()
+
+    def write(self, path, output_format):
+        assert output_format in ('text', 'json'), \
+            'Invalid output format {}'.format(output_format)
+        path = os.path.realpath(path)
+
+        if output_format == 'json':
+            self.monitor._warnings_database.save_to_file(path)
+
+        else:
+            with open(path, 'w') as f:
+                f.write(self.raw)
+
+        self.log(logging.INFO, 'write_output',
+                 {'path': path, 'format': output_format},
+                 'Wrote {format} output in {path}')
 
 
 class CCacheStats(object):

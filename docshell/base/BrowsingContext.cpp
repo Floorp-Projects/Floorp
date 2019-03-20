@@ -30,6 +30,13 @@
 #include "nsThreadUtils.h"
 #include "xpcprivate.h"
 
+#include "AutoplayPolicy.h"
+
+extern mozilla::LazyLogModule gAutoplayPermissionLog;
+
+#define AUTOPLAY_LOG(msg, ...) \
+  MOZ_LOG(gAutoplayPermissionLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
+
 namespace mozilla {
 namespace dom {
 
@@ -744,6 +751,23 @@ void BrowsingContext::LocationProxy::Replace(const nsAString& aUrl,
     return;
   }
   win->GetLocation()->Replace(aUrl, aSubjectPrincipal, aError);
+}
+
+void BrowsingContext::StartDelayedAutoplayMediaComponents() {
+  if (!mDocShell) {
+    return;
+  }
+  AUTOPLAY_LOG("%s : StartDelayedAutoplayMediaComponents for bc 0x%08" PRIx64,
+               XRE_IsParentProcess() ? "Parent" : "Child", Id());
+  mDocShell->StartDelayedAutoplayMediaComponents();
+}
+
+void BrowsingContext::DidSetIsActivatedByUserGesture(ContentParent* aSource) {
+  MOZ_ASSERT(!mParent, "Set user activation flag on non top-level context!");
+  USER_ACTIVATION_LOG(
+      "Set user gesture activation %d for %s browsing context 0x%08" PRIx64,
+      mIsActivatedByUserGesture, XRE_IsParentProcess() ? "Parent" : "Child",
+      Id());
 }
 
 }  // namespace dom

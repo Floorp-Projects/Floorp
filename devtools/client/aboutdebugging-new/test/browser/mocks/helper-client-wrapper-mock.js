@@ -70,6 +70,8 @@ function createClientMock() {
     },
     // Empty array of addons
     listAddons: () => [],
+    // Empty array of processes
+    listProcesses: () => [],
     // Empty array of tabs
     listTabs: () => [],
     // Empty arrays of workers
@@ -78,6 +80,8 @@ function createClientMock() {
       serviceWorkers: [],
       sharedWorkers: [],
     }),
+    // no-op
+    getMainProcess: () => {},
     // no-op
     getFront: () => {},
     // no-op
@@ -119,4 +123,3 @@ function createThisFirefoxClientMock() {
   return mockThisFirefoxClient;
 }
 /* exported createThisFirefoxClientMock */
-
