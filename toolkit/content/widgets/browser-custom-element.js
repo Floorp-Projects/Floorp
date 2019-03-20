@@ -1622,7 +1622,7 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
     throw new Error("Closing a browser which was not attached to a tabbrowser is unsupported.");
   }
 
-  swapBrowsers(aOtherBrowser, aFlags) {
+  swapBrowsers(aOtherBrowser) {
     // The request comes from a XPCOM component, we'd want to redirect
     // the request to tabbrowser so tabbrowser will be setup correctly,
     // and it will eventually call swapDocShells.
@@ -1631,7 +1631,7 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
     if (ourTabBrowser && otherTabBrowser) {
       let ourTab = ourTabBrowser.getTabForBrowser(this);
       let otherTab = otherTabBrowser.getTabForBrowser(aOtherBrowser);
-      ourTabBrowser.swapBrowsers(ourTab, otherTab, aFlags);
+      ourTabBrowser.swapBrowsers(ourTab, otherTab);
       return;
     }
 
