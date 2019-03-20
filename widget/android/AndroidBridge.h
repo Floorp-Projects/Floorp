@@ -113,6 +113,8 @@ class AndroidBridge final {
   void GetExtensionFromMimeType(const nsACString& aMimeType,
                                 nsACString& aFileExt);
 
+  bool GetClipboardText(nsAString& aText);
+
   int GetScreenDepth();
 
   void Vibrate(const nsTArray<uint32_t>& aPattern);
