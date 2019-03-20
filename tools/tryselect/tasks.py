@@ -64,10 +64,10 @@ def generate_tasks(params, full, root):
     cache_dir = os.path.join(get_state_dir(), 'cache', root_hash, 'taskgraph')
 
     # Cleanup old cache files
-    for path in glob.glob(os.path.join(cache_dir, '*_set')):
+    for path in glob.glob(os.path.join(cache_dir, '*_graph')):
         os.remove(path)
 
-    attr = 'full_task_graph' if full else 'target_task_graph'
+    attr = 'full_task_set' if full else 'target_task_set'
     cache = os.path.join(cache_dir, attr)
 
     invalidate(cache, root)
