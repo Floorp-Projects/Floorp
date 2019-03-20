@@ -6377,34 +6377,20 @@ static void DebugOutputDrawLine(int32_t aDepth, nsLineBox* aLine, bool aDrawn) {
 }
 #endif
 
-static void DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
-                        nsBlockFrame::LineIterator& aLine, int32_t aDepth,
-                        int32_t& aDrawnLines, const nsDisplayListSet& aLists,
+static void DisplayLine(nsDisplayListBuilder* aBuilder,
+                        nsBlockFrame::LineIterator& aLine,
+                        const bool aLineInLine, const nsDisplayListSet& aLists,
                         nsBlockFrame* aFrame, TextOverflow* aTextOverflow,
-                        uint32_t aLineNumberForTextOverflow) {
-  // If the line's combined area (which includes child frames that
-  // stick outside of the line's bounding box or our bounding box)
-  // intersects the dirty rect then paint the line.
-  bool intersect = aLineArea.Intersects(aBuilder->GetDirtyRect());
-  bool visible = aLineArea.Intersects(aBuilder->GetVisibleRect());
+                        uint32_t aLineNumberForTextOverflow, int32_t aDepth,
+                        int32_t& aDrawnLines) {
 #ifdef DEBUG
   if (nsBlockFrame::gLamePaintMetrics) {
     aDrawnLines++;
   }
+  const bool intersect =
+      aLine->GetVisualOverflowArea().Intersects(aBuilder->GetDirtyRect());
   DebugOutputDrawLine(aDepth, aLine.get(), intersect);
 #endif
-  // The line might contain a placeholder for a visible out-of-flow, in which
-  // case we need to descend into it. If there is such a placeholder, we will
-  // have NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO set.
-  // In particular, we really want to check ShouldDescendIntoFrame()
-  // on all the frames on the line, but that might be expensive.  So
-  // we approximate it by checking it on aFrame; if it's true for any
-  // frame in the line, it's also true for aFrame.
-  bool lineInline = aLine->IsInline();
-  bool lineMayHaveTextOverflow = aTextOverflow && lineInline;
-  if (!intersect && !aBuilder->ShouldDescendIntoFrame(aFrame, visible) &&
-      !lineMayHaveTextOverflow)
-    return;
 
   // Collect our line's display items in a temporary nsDisplayListCollection,
   // so that we can apply any "text-overflow" clipping to the entire collection
@@ -6415,9 +6401,9 @@ static void DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
   // Inline-level child backgrounds go on the regular child content list.
   nsDisplayListSet childLists(
       collection,
-      lineInline ? collection.Content() : collection.BlockBorderBackgrounds());
+      aLineInLine ? collection.Content() : collection.BlockBorderBackgrounds());
 
-  uint32_t flags = lineInline ? nsIFrame::DISPLAY_CHILD_INLINE : 0;
+  uint32_t flags = aLineInLine ? nsIFrame::DISPLAY_CHILD_INLINE : 0;
 
   nsIFrame* kid = aLine->mFirstChild;
   int32_t n = aLine->GetChildCount();
@@ -6426,7 +6412,7 @@ static void DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
     kid = kid->GetNextSibling();
   }
 
-  if (lineMayHaveTextOverflow) {
+  if (aTextOverflow && aLineInLine) {
     aTextOverflow->ProcessLine(collection, aLine.get(),
                                aLineNumberForTextOverflow);
   }
@@ -6473,6 +6459,18 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   Maybe<TextOverflow> textOverflow =
       TextOverflow::WillProcessLines(aBuilder, this);
 
+  const bool descendAlways =
+      (GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) ||
+      aBuilder->GetIncludeAllOutOfFlows();
+  const bool descendIfVisible = ForceDescendIntoIfVisible();
+  const bool hasDescendantPlaceHolders = descendAlways || descendIfVisible;
+
+  const auto ShouldDescendIntoLine = [&](const nsRect& aLineArea) -> bool {
+    return descendAlways || aLineArea.Intersects(aBuilder->GetDirtyRect()) ||
+           (descendIfVisible &&
+            aLineArea.Intersects(aBuilder->GetVisibleRect()));
+  };
+
   // Don't use the line cursor if we might have a descendant placeholder ...
   // it might skip lines that contain placeholders but don't themselves
   // intersect with the dirty area.
@@ -6483,15 +6481,16 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // Also skip the cursor if we're creating text overflow markers,
   // since we need to know what line number we're up to in order
   // to generate unique display item keys.
-  nsLineBox* cursor =
-      (aBuilder->ShouldDescendIntoFrame(this, true) || textOverflow.isSome())
-          ? nullptr
-          : GetFirstLineContaining(aBuilder->GetDirtyRect().y);
+  nsLineBox* cursor = (hasDescendantPlaceHolders || textOverflow.isSome())
+                          ? nullptr
+                          : GetFirstLineContaining(aBuilder->GetDirtyRect().y);
   LineIterator line_end = LinesEnd();
+
+  TextOverflow* textOverflowPtr = textOverflow.ptrOr(nullptr);
 
   if (cursor) {
     for (LineIterator line = mLines.begin(cursor); line != line_end; ++line) {
-      nsRect lineArea = line->GetVisualOverflowArea();
+      const nsRect lineArea = line->GetVisualOverflowArea();
       if (!lineArea.IsEmpty()) {
         // Because we have a cursor, the combinedArea.ys are non-decreasing.
         // Once we've passed aDirtyRect.YMost(), we can never see it again.
@@ -6499,8 +6498,11 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
           break;
         }
         MOZ_ASSERT(textOverflow.isNothing());
-        DisplayLine(aBuilder, lineArea, line, depth, drawnLines, aLists, this,
-                    nullptr, 0);
+
+        if (ShouldDescendIntoLine(lineArea)) {
+          DisplayLine(aBuilder, line, line->IsInline(), aLists, this, nullptr,
+                      0, depth, drawnLines);
+        }
       }
     }
   } else {
@@ -6509,9 +6511,14 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nscoord lastY = INT32_MIN;
     nscoord lastYMost = INT32_MIN;
     for (LineIterator line = LinesBegin(); line != line_end; ++line) {
-      nsRect lineArea = line->GetVisualOverflowArea();
-      DisplayLine(aBuilder, lineArea, line, depth, drawnLines, aLists, this,
-                  textOverflow.ptrOr(nullptr), lineCount);
+      const nsRect lineArea = line->GetVisualOverflowArea();
+      const bool lineInLine = line->IsInline();
+
+      if ((lineInLine && textOverflowPtr) || ShouldDescendIntoLine(lineArea)) {
+        DisplayLine(aBuilder, line, lineInLine, aLists, this, textOverflowPtr,
+                    lineCount, depth, drawnLines);
+      }
+
       if (!lineArea.IsEmpty()) {
         if (lineArea.y < lastY || lineArea.YMost() < lastYMost) {
           nonDecreasingYs = false;
