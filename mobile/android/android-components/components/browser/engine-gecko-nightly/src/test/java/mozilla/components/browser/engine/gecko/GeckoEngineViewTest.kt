@@ -10,6 +10,7 @@ import androidx.test.core.app.ApplicationProvider
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -21,6 +22,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@Ignore
 class GeckoEngineViewTest {
 
     private val context: Context

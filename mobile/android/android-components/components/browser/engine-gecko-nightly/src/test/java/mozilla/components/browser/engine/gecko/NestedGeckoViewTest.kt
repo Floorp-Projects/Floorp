@@ -16,6 +16,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.mockMotionEvent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.any
@@ -26,6 +27,7 @@ import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@Ignore
 class NestedGeckoViewTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()

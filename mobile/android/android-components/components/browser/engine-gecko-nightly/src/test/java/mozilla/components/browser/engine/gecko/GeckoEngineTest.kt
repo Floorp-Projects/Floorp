@@ -18,6 +18,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -40,6 +41,7 @@ class GeckoEngineTest {
     private val context: Context = mock(Context::class.java)
 
     @Test
+    @Ignore
     fun createView() {
         assertTrue(GeckoEngine(context, runtime = runtime).createView(
             ApplicationProvider.getApplicationContext()
