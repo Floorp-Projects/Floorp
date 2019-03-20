@@ -72,6 +72,9 @@ subprojects {
 
             // Format test output
             tasks.matching {it instanceof Test}.all {
+                systemProperty "robolectric.logging", "stdout"
+                systemProperty "logging.test-mode", "true"
+
                 testLogging.events = []
 
                 def out = services.get(StyledTextOutputFactory).create("an-ouput")
