@@ -1,0 +1,17 @@
+{
+  "name": "App",
+  "short_name": "app",
+  "start_url": "./start/index.html",
+  "display": "standalone",
+  "background_color": "#c0feee",
+  "theme_color": "cadetblue",
+  "icons": [{
+    "src": "images/test.gif",
+    "sizes": "192x192",
+    "type": "image/gif"
+  }],
+  "related_applications": [{
+    "platform": "play",
+    "url": "https://play.google.com/store/apps/details?id=my.first.webapp"
+  }]
+}
