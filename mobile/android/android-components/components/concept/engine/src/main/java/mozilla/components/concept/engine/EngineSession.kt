@@ -6,6 +6,7 @@ package mozilla.components.concept.engine
 
 import android.graphics.Bitmap
 import android.support.annotation.CallSuper
+import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
 
 import mozilla.components.concept.engine.prompt.PromptRequest
@@ -46,6 +47,8 @@ abstract class EngineSession(
         fun onPromptRequest(promptRequest: PromptRequest) = Unit
         fun onOpenWindowRequest(windowRequest: WindowRequest) = Unit
         fun onCloseWindowRequest(windowRequest: WindowRequest) = Unit
+        fun onMediaAdded(media: Media) = Unit
+        fun onMediaRemoved(media: Media) = Unit
 
         @Suppress("LongParameterList")
         fun onExternalResource(

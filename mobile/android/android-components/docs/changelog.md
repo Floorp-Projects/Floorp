@@ -18,6 +18,13 @@ permalink: /changelog/
     * `browser-engine-gecko-beta`: GeckoView 67.0
     * `browser-engine-gecko-nightly`: GeckoView 68.0
 
+* **browser-session**
+  * Session now exposes a list of `Media` instances representing playable media on the currently displayed page (see `concept-engine`).
+
+* **concept-engine**, **browser-engine-gecko-nightly**
+  * Added `Media` class representing a playable media element on the the currently displayed page. Consumers can subscribe to `Media` instances in order to receive updates whenever the state of a `Media` object changes. Currently only the "playback state" is exposed. Consumers can control playback through the
+  attached `Media.Controller` instance.
+
 * **concept-fetch**
   * ⚠️ **This is a breaking API change!**: `Headers.Common` was renamed to `Headers.Names`.
   * Added `Headers.Values`.

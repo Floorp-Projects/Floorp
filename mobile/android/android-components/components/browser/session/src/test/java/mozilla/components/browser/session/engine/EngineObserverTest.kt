@@ -10,6 +10,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
 
 import mozilla.components.concept.engine.prompt.PromptRequest
@@ -319,5 +320,52 @@ class EngineObserverTest {
         assertTrue(session.closeWindowRequest.isConsumed())
         observer.onCloseWindowRequest(windowRequest)
         assertFalse(session.closeWindowRequest.isConsumed())
+    }
+
+    @Test
+    fun `onMediaAdded will add media to session`() {
+        val session = Session("https://www.mozilla.org")
+        val observer = EngineObserver(session)
+
+        val media1: Media = mock()
+        observer.onMediaAdded(media1)
+
+        assertEquals(listOf(media1), session.media)
+
+        val media2: Media = mock()
+        observer.onMediaAdded(media2)
+
+        assertEquals(listOf(media1, media2), session.media)
+
+        val media3: Media = mock()
+        observer.onMediaAdded(media3)
+
+        assertEquals(listOf(media1, media2, media3), session.media)
+    }
+
+    @Test
+    fun `onMediaRemoved will remove media from session`() {
+        val session = Session("https://www.mozilla.org")
+        val observer = EngineObserver(session)
+
+        val media1: Media = mock()
+        val media2: Media = mock()
+        val media3: Media = mock()
+
+        session.media = listOf(media1)
+        session.media = listOf(media1, media2)
+        session.media = listOf(media1, media2, media3)
+
+        observer.onMediaRemoved(media2)
+
+        assertEquals(listOf(media1, media3), session.media)
+
+        observer.onMediaRemoved(media1)
+
+        assertEquals(listOf(media3), session.media)
+
+        observer.onMediaRemoved(media3)
+
+        assertEquals(emptyList<Media>(), session.media)
     }
 }

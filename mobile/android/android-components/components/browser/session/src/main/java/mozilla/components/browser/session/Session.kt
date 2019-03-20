@@ -9,6 +9,7 @@ import mozilla.components.browser.session.engine.EngineSessionHolder
 import mozilla.components.browser.session.manifest.WebAppManifest
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
@@ -67,6 +68,8 @@ class Session(
         fun onPromptRequested(session: Session, promptRequest: PromptRequest): Boolean = false
         fun onOpenWindowRequested(session: Session, windowRequest: WindowRequest): Boolean = false
         fun onCloseWindowRequested(session: Session, windowRequest: WindowRequest): Boolean = false
+        fun onMediaRemoved(session: Session, media: List<Media>, removed: Media) = Unit
+        fun onMediaAdded(session: Session, media: List<Media>, added: Media) = Unit
     }
 
     /**
@@ -215,6 +218,25 @@ class Session(
     var download: Consumable<Download> by Delegates.vetoable(Consumable.empty()) { _, _, download ->
         val consumers = wrapConsumers<Download> { onDownload(this@Session, it) }
         !download.consumeBy(consumers)
+    }
+
+    /**
+     * List of [Media] on the currently visited page.
+     */
+    var media: List<Media> by Delegates.observable(emptyList()) { _, old, new ->
+        if (old.size > new.size) {
+            val removed = old - new
+            require(removed.size == 1) { "Expected only one item to be removed, but was ${removed.size}" }
+            notifyObservers {
+                onMediaRemoved(this@Session, new, removed[0])
+            }
+        } else if (new.size > old.size) {
+            val added = new - old
+            require(added.size == 1) { "Expected only one item to be added, but was ${added.size}" }
+            notifyObservers {
+                onMediaAdded(this@Session, new, added[0])
+            }
+        }
     }
 
     /**

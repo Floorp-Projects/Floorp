@@ -6,6 +6,7 @@ package mozilla.components.concept.engine
 
 import android.graphics.Bitmap
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.test.mock
@@ -34,6 +35,9 @@ class EngineSessionTest {
         val windowRequest = mock(WindowRequest::class.java)
         session.register(observer)
 
+        val mediaAdded: Media = mock()
+        val mediaRemoved: Media = mock()
+
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
         session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
         session.notifyInternalObservers { onProgress(25) }
@@ -53,6 +57,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onOpenWindowRequest(windowRequest) }
         session.notifyInternalObservers { onCloseWindowRequest(windowRequest) }
+        session.notifyInternalObservers { onMediaAdded(mediaAdded) }
+        session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onLocationChange("https://www.firefox.com")
@@ -73,6 +79,8 @@ class EngineSessionTest {
         verify(observer).onCancelContentPermissionRequest(permissionRequest)
         verify(observer).onOpenWindowRequest(windowRequest)
         verify(observer).onCloseWindowRequest(windowRequest)
+        verify(observer).onMediaAdded(mediaAdded)
+        verify(observer).onMediaRemoved(mediaRemoved)
         verifyNoMoreInteractions(observer)
     }
 
@@ -107,6 +115,9 @@ class EngineSessionTest {
         session.notifyInternalObservers { onCloseWindowRequest(windowRequest) }
         session.unregister(observer)
 
+        val mediaAdded: Media = mock()
+        val mediaRemoved: Media = mock()
+
         session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(false) }
@@ -124,6 +135,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onAppPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onOpenWindowRequest(otherWindowRequest) }
         session.notifyInternalObservers { onCloseWindowRequest(otherWindowRequest) }
+        session.notifyInternalObservers { onMediaAdded(mediaAdded) }
+        session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -159,6 +172,8 @@ class EngineSessionTest {
         verify(observer, never()).onCancelContentPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onOpenWindowRequest(otherWindowRequest)
         verify(observer, never()).onCloseWindowRequest(otherWindowRequest)
+        verify(observer, never()).onMediaAdded(mediaAdded)
+        verify(observer, never()).onMediaRemoved(mediaRemoved)
         verifyNoMoreInteractions(observer)
     }
 
@@ -571,6 +586,8 @@ class EngineSessionTest {
         defaultObserver.onCancelContentPermissionRequest(mock(PermissionRequest::class.java))
         defaultObserver.onOpenWindowRequest(mock(WindowRequest::class.java))
         defaultObserver.onCloseWindowRequest(mock(WindowRequest::class.java))
+        defaultObserver.onMediaAdded(mock())
+        defaultObserver.onMediaRemoved(mock())
     }
 
     @Test

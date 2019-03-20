@@ -10,6 +10,7 @@ import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
@@ -121,5 +122,18 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
 
     override fun onCloseWindowRequest(windowRequest: WindowRequest) {
         session.closeWindowRequest = Consumable.from(windowRequest)
+    }
+
+    override fun onMediaAdded(media: Media) {
+        session.media = session.media.toMutableList().also {
+            it.add(media)
+        }
+    }
+
+    override fun onMediaRemoved(media: Media) {
+        session.media = session.media.toMutableList().also {
+            it.remove(media)
+        }
+        media.unregisterObservers()
     }
 }
