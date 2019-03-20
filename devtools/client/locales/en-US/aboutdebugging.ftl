@@ -15,12 +15,9 @@ about-debugging-page-title-runtime-page = Debugging - Runtime / { $selectedRunti
 
 # Sidebar strings
 
-# Display name of the runtime "This Firefox". Reused as the sidebar name for This Firefox
-# (about-debugging-sidebar-this-firefox.name). Not displayed elsewhere in the application
-# at the moment.
-# This should the same string as the part outside of the parentheses in toolbox.properties
-# toolbox.debugTargetInfo.runtimeLabel.thisFirefox. See Bug 1520525.
-about-debugging-this-firefox-runtime-name = This Firefox
+# Display name of the runtime for the currently running instance of Firefox. Used in the
+# Sidebar and in the Setup page.
+about-debugging-this-firefox-runtime-name = This { -brand-shorter-name }
 
 # Sidebar heading for selecting the currently running instance of Firefox
 about-debugging-sidebar-this-firefox =
@@ -83,7 +80,7 @@ about-debugging-setup-intro = Configure the connection method you wish to remote
 about-debugging-setup-link-android-devices = View list of supported Android devices
 
 # Explanatory text in the Setup page about what the 'This Firefox' page is for
-about-debugging-setup-this-firefox = Use <a>This Firefox</a> to debug tabs, extensions and service workers on this version of Firefox.
+about-debugging-setup-this-firefox = Use <a>{ about-debugging-this-firefox-runtime-name }</a> to debug tabs, extensions and service workers on this version of { -brand-shorter-name }.
 
 # Title of the heading Connect section of the Setup page.
 about-debugging-setup-connect-heading = Connect a Device
@@ -92,7 +89,7 @@ about-debugging-setup-connect-heading = Connect a Device
 about-debugging-setup-usb-title = USB
 
 # Explanatory text displayed in the Setup page when USB debugging is disabled
-about-debugging-setup-usb-disabled = Enabling this will download and add the required Android USB debugging components to Firefox.
+about-debugging-setup-usb-disabled = Enabling this will download and add the required Android USB debugging components to { -brand-shorter-name }.
 
 # Text of the button displayed in the USB section of the setup page when USB debugging is disabled.
 # Clicking on it will download components needed to debug USB Devices remotely.
@@ -197,7 +194,7 @@ about-debugging-runtime-version-too-old-67-debugger = The Debugger panel may not
 # { $localID } is the build ID of the current Firefox instance (same format)
 # { $runtimeVersion } is the version of the remote runtime (for instance "67.0a1")
 # { $localVersion } is the version of your current runtime (same format)
-about-debugging-runtime-version-too-recent = The connected runtime is more recent ({ $runtimeVersion }, buildID { $runtimeID }) than your desktop Firefox ({ $localVersion }, buildID { $localID }). This is an unsupported setup and may cause DevTools to fail. Please update Firefox. <a>Troubleshooting</a>
+about-debugging-runtime-version-too-recent = The connected runtime is more recent ({ $runtimeVersion }, buildID { $runtimeID }) than your { -brand-shorter-name } ({ $localVersion }, buildID { $localID }). This is an unsupported setup and may cause DevTools to fail. Please update Firefox. <a>Troubleshooting</a>
 
 # Displayed for runtime info in runtime pages.
 # { $name } is brand name such as "Firefox Nightly"
