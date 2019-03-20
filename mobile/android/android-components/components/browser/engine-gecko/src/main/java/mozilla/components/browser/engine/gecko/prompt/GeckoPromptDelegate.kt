@@ -14,7 +14,6 @@ import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
-import mozilla.components.concept.engine.prompt.PromptRequest.File
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
@@ -47,7 +46,6 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_MONTH
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_TIME
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_WEEK
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.FILE_TYPE_MULTIPLE
 import java.security.InvalidParameterException
 
 typealias GeckoChoice = GeckoSession.PromptDelegate.Choice
@@ -60,7 +58,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     GeckoSession.PromptDelegate {
 
     override fun onChoicePrompt(
-        session: GeckoSession?,
+        session: GeckoSession,
         title: String?,
         msg: String?,
         type: Int,
@@ -89,7 +87,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     }
 
     override fun onAlert(
-        session: GeckoSession?,
+        session: GeckoSession,
         title: String?,
         message: String?,
         callback: AlertCallback
@@ -108,8 +106,43 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
     }
 
+    override fun onFilePrompt(
+        session: GeckoSession,
+        title: String?,
+        selectionType: Int,
+        mimeTypes: Array<out String>?,
+        callback: FileCallback
+    ) {
+
+        val onSelectMultiple: (Context, Array<Uri>) -> Unit = { context, uris ->
+            callback.confirm(context, uris)
+        }
+
+        val isMultipleFilesSelection = selectionType == GeckoSession.PromptDelegate.FILE_TYPE_MULTIPLE
+
+        val onSelectSingle: (Context, Uri) -> Unit = { context, uri ->
+            callback.confirm(context, uri)
+        }
+
+        val onDismiss: () -> Unit = {
+            callback.dismiss()
+        }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.File(
+                    mimeTypes ?: emptyArray(),
+                    isMultipleFilesSelection,
+                    onSelectSingle,
+                    onSelectMultiple,
+                    onDismiss
+                )
+            )
+        }
+    }
+
     override fun onDateTimePrompt(
-        session: GeckoSession?,
+        session: GeckoSession,
         title: String?,
         type: Int,
         value: String?,
@@ -141,41 +174,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             format,
             geckoCallback
         )
-    }
-
-    override fun onFilePrompt(
-        session: GeckoSession?,
-        title: String?,
-        selectionType: Int,
-        mimeTypes: Array<out String>,
-        callback: FileCallback
-    ) {
-
-        val onSelectMultiple: (Context, Array<Uri>) -> Unit = { context, uris ->
-            callback.confirm(context, uris)
-        }
-
-        val isMultipleFilesSelection = selectionType == FILE_TYPE_MULTIPLE
-
-        val onSelectSingle: (Context, Uri) -> Unit = { context, uri ->
-            callback.confirm(context, uri)
-        }
-
-        val onDismiss: () -> Unit = {
-            callback.dismiss()
-        }
-
-        geckoEngineSession.notifyObservers {
-            onPromptRequest(
-                File(
-                    mimeTypes,
-                    isMultipleFilesSelection,
-                    onSelectSingle,
-                    onSelectMultiple,
-                    onDismiss
-                )
-            )
-        }
     }
 
     override fun onAuthPrompt(
@@ -228,26 +226,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
     }
 
-    override fun onColorPrompt(
-        session: GeckoSession,
-        title: String?,
-        defaultColor: String?,
-        callback: TextCallback
-    ) {
-
-        val onConfirm: (String) -> Unit = {
-            callback.confirm(it)
-        }
-        val onDismiss: () -> Unit = {
-            callback.dismiss()
-        }
-        geckoEngineSession.notifyObservers {
-            onPromptRequest(
-                PromptRequest.Color(defaultColor ?: "", onConfirm, onDismiss)
-            )
-        }
-    }
-
     override fun onTextPrompt(
         session: GeckoSession,
         title: String?,
@@ -272,6 +250,26 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     callback.checkboxValue = showMoreDialogs
                     callback.confirm(valueInput)
                 })
+        }
+    }
+
+    override fun onColorPrompt(
+        session: GeckoSession,
+        title: String?,
+        defaultColor: String?,
+        callback: TextCallback
+    ) {
+
+        val onConfirm: (String) -> Unit = {
+            callback.confirm(it)
+        }
+        val onDismiss: () -> Unit = {
+            callback.dismiss()
+        }
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.Color(defaultColor ?: "", onConfirm, onDismiss)
+            )
         }
     }
 
@@ -375,9 +373,9 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
 
         val selectionType = when (format) {
-            "HH:mm" -> PromptRequest.TimeSelection.Type.TIME
-            "yyyy-MM-dd'T'HH:mm" -> PromptRequest.TimeSelection.Type.DATE_AND_TIME
-            else -> PromptRequest.TimeSelection.Type.DATE
+            "HH:mm" -> TimeSelection.Type.TIME
+            "yyyy-MM-dd'T'HH:mm" -> TimeSelection.Type.DATE_AND_TIME
+            else -> TimeSelection.Type.DATE
         }
 
         geckoEngineSession.notifyObservers {

@@ -8,6 +8,7 @@ import android.content.Context
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -117,7 +118,7 @@ class GeckoEngineTest {
 
     @Test
     fun `speculativeConnect forwards call to executor`() {
-        val executor: GeckoWebExecutor = mozilla.components.support.test.mock()
+        val executor: GeckoWebExecutor = mock()
 
         val engine = GeckoEngine(context, runtime = runtime, executorProvider = { executor })
 

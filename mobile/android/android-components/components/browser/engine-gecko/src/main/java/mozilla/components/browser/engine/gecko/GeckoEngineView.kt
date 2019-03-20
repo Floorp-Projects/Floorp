@@ -54,7 +54,7 @@ class GeckoEngineView @JvmOverloads constructor(
                 currentGeckoView.releaseSession()
             }
 
-            currentGeckoView.session = internalSession.geckoSession
+            currentGeckoView.setSession(internalSession.geckoSession)
         }
     }
 

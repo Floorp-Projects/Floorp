@@ -5,7 +5,7 @@
 internal object GeckoVersions {
     const val nightly_version = "67.0.20190316094726"
     const val beta_version = "66.0.20190128143734"
-    const val release_version = "65.0.20190125215035"
+    const val release_version = "66.0.20190320150847"
 }
 
 @Suppress("MaxLineLength")
