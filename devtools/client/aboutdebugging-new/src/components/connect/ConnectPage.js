@@ -196,7 +196,7 @@ class ConnectPage extends PureComponent {
             ? dom.div(
               {},
               NetworkLocationsList({ dispatch, networkLocations }),
-              NetworkLocationsForm({ dispatch, networkLocations }),
+              NetworkLocationsForm({ dispatch }),
             )
             : null,
         },
