@@ -40,9 +40,10 @@ namespace net {
 
 namespace {
 
-void AppendMemoryStorageID(nsAutoCString& key) {
-  key.Append('/');
-  key.Append('M');
+void AppendMemoryStorageTag(nsAutoCString& key) {
+  // Using DEL as the very last ascii-7 character we can use in the list of attributes
+  key.Append('\x7f');
+  key.Append(',');
 }
 
 }  // namespace
@@ -1060,7 +1061,7 @@ bool CacheStorageService::RemoveEntry(CacheEntry* aEntry,
     RemoveExactEntry(entries, entryKey, aEntry, false /* don't overwrite */);
 
   nsAutoCString memoryStorageID(aEntry->GetStorageID());
-  AppendMemoryStorageID(memoryStorageID);
+  AppendMemoryStorageTag(memoryStorageID);
 
   if (sGlobalEntryTables->Get(memoryStorageID, &entries))
     RemoveExactEntry(entries, entryKey, aEntry, false /* don't overwrite */);
@@ -1099,7 +1100,7 @@ void CacheStorageService::RecordMemoryOnlyEntry(CacheEntry* aEntry,
 
   CacheEntryTable* entries = nullptr;
   nsAutoCString memoryStorageID(aEntry->GetStorageID());
-  AppendMemoryStorageID(memoryStorageID);
+  AppendMemoryStorageTag(memoryStorageID);
 
   if (!sGlobalEntryTables->Get(memoryStorageID, &entries)) {
     if (!aOnlyInMemory) {
@@ -1528,7 +1529,7 @@ nsresult CacheStorageService::CheckStorageEntry(CacheStorage const* aStorage,
   CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
 
   if (!aStorage->WriteToDisk()) {
-    AppendMemoryStorageID(contextKey);
+    AppendMemoryStorageTag(contextKey);
   }
 
   LOG(("CacheStorageService::CheckStorageEntry [uri=%s, eid=%s, contextKey=%s]",
@@ -1801,7 +1802,7 @@ nsresult CacheStorageService::DoomStorageEntries(
   NS_ENSURE_TRUE(!mShutdown, NS_ERROR_NOT_INITIALIZED);
 
   nsAutoCString memoryStorageID(aContextKey);
-  AppendMemoryStorageID(memoryStorageID);
+  AppendMemoryStorageTag(memoryStorageID);
 
   if (aDiskStorage) {
     LOG(("  dooming disk+memory storage of %s", aContextKey.BeginReading()));
