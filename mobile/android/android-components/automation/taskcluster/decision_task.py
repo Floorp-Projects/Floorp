@@ -208,7 +208,7 @@ def _get_release_gradle_tasks(module_name, is_snapshot):
         for gradle_task in ('assemble', 'test', 'lint')
     )
 
-    return gradle_tasks + ' uploadArchives zipMavenArtifacts'
+    return gradle_tasks + ' ' + module_name + ':publish' + ' zipMavenArtifacts'
 
 
 def release(artifacts_info, version, is_snapshot, is_staging):
