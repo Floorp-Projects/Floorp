@@ -586,11 +586,9 @@ RefPtr<U2FRegisterPromise> U2FSoftTokenManager::Register(
         userVerificaitonRequirement == UserVerificationRequirement::Required;
 
     bool requirePlatformAttachment = false;
-    if (sel.authenticatorAttachment().type() ==
-        WebAuthnMaybeAuthenticatorAttachment::Tuint8_t) {
+    if (sel.authenticatorAttachment().isSome()) {
       const AuthenticatorAttachment authenticatorAttachment =
-          static_cast<AuthenticatorAttachment>(
-              sel.authenticatorAttachment().get_uint8_t());
+          sel.authenticatorAttachment().value();
       if (authenticatorAttachment == AuthenticatorAttachment::Platform) {
         requirePlatformAttachment = true;
       }
