@@ -39,7 +39,6 @@ class App extends PureComponent {
       selectedPage: Types.page,
       selectedRuntimeId: PropTypes.string,
       usbRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
-      wifiEnabled: PropTypes.bool.isRequired,
     };
   }
 
@@ -68,14 +67,12 @@ class App extends PureComponent {
       adbAddonStatus,
       dispatch,
       networkLocations,
-      wifiEnabled,
     } = this.props;
 
     return ConnectPage({
       adbAddonStatus,
       dispatch,
       networkLocations,
-      wifiEnabled,
     });
   }
 
@@ -184,7 +181,6 @@ const mapStateToProps = state => {
     selectedPage: state.ui.selectedPage,
     selectedRuntimeId: state.runtimes.selectedRuntimeId,
     usbRuntimes: state.runtimes.usbRuntimes,
-    wifiEnabled: state.ui.wifiEnabled,
   };
 };
 

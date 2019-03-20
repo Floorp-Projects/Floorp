@@ -18,7 +18,7 @@ const {
 } = require("../constants");
 
 function UiState(locations = [], debugTargetCollapsibilities = {},
-                 wifiEnabled = false, showSystemAddons = false) {
+                 showSystemAddons = false) {
   return {
     adbAddonStatus: null,
     debugTargetCollapsibilities,
@@ -28,7 +28,6 @@ function UiState(locations = [], debugTargetCollapsibilities = {},
     showProfilerDialog: false,
     showSystemAddons,
     temporaryInstallError: null,
-    wifiEnabled,
   };
 }
 
