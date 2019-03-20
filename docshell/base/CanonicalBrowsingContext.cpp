@@ -10,6 +10,11 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
 
+extern mozilla::LazyLogModule gAutoplayPermissionLog;
+
+#define AUTOPLAY_LOG(msg, ...) \
+  MOZ_LOG(gAutoplayPermissionLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
+
 namespace mozilla {
 namespace dom {
 
@@ -117,6 +122,26 @@ void CanonicalBrowsingContext::Traverse(
 void CanonicalBrowsingContext::Unlink() {
   CanonicalBrowsingContext* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowGlobals);
+}
+
+void CanonicalBrowsingContext::NotifyStartDelayedAutoplayMedia() {
+  if (!mCurrentWindowGlobal) {
+    return;
+  }
+
+  // As this function would only be called when user click the play icon on the
+  // tab bar. That's clear user intent to play, so gesture activate the browsing
+  // context so that the block-autoplay logic allows the media to autoplay.
+  NotifyUserGestureActivation();
+  AUTOPLAY_LOG("NotifyStartDelayedAutoplayMedia for chrome bc 0x%08" PRIx64,
+               Id());
+  StartDelayedAutoplayMediaComponents();
+  // Notfiy all content browsing contexts which are related with the canonical
+  // browsing content tree to start delayed autoplay media.
+  for (auto iter = Group()->ContentParentsIter(); !iter.Done(); iter.Next()) {
+    auto entry = iter.Get();
+    Unused << entry->GetKey()->SendStartDelayedAutoplayMediaComponents(this);
+  }
 }
 
 }  // namespace dom

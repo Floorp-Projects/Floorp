@@ -684,6 +684,9 @@ class ContentChild final : public PContentChild,
       const Maybe<LoadInfoArgs>& aLoadInfoForwarder, const uint64_t& aChannelId,
       nsIURI* aOriginalURI, const uint64_t& aIdentifier);
 
+  mozilla::ipc::IPCResult RecvStartDelayedAutoplayMediaComponents(
+      BrowsingContext* aContext);
+
 #ifdef NIGHTLY_BUILD
   // Fetch the current number of pending input events.
   //

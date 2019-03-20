@@ -985,6 +985,15 @@ nsDocShell::DispatchLocationChangeEvent() {
                         &nsDocShell::FireDummyOnLocationChange));
 }
 
+NS_IMETHODIMP
+nsDocShell::StartDelayedAutoplayMediaComponents() {
+  RefPtr<nsPIDOMWindowOuter> outerWindow = GetWindow();
+  if (outerWindow) {
+    outerWindow->SetMediaSuspend(nsISuspendedTypes::NONE_SUSPENDED);
+  }
+  return NS_OK;
+}
+
 bool nsDocShell::MaybeInitTiming() {
   if (mTiming && !mBlankTiming) {
     return false;

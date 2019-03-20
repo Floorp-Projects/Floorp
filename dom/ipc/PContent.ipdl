@@ -777,6 +777,12 @@ child:
                                nsIURI aOriginalURI,
                                uint64_t aIdentifier);
 
+    /**
+    * This method is used to notifty content process to start delayed autoplay
+    * media via browsing context.
+    */
+    async StartDelayedAutoplayMediaComponents(BrowsingContext aContext);
+
     // Begin subscribing to a new BrowsingContextGroup, sending down the current
     // value for every individual BrowsingContext.
     async RegisterBrowsingContextGroup(BrowsingContextInitializer[] aInits);
