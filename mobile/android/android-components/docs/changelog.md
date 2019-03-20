@@ -12,6 +12,12 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * **Merge day!**
+    * `browser-engine-gecko-release`: GeckoView 66.0
+    * `browser-engine-gecko-beta`: GeckoView 67.0
+    * `browser-engine-gecko-nightly`: GeckoView 68.0
+
 * **concept-fetch**
   * ⚠️ **This is a breaking API change!**: `Headers.Common` was renamed to `Headers.Names`.
   * Added `Headers.Values`.
@@ -30,7 +36,6 @@ permalink: /changelog/
   * ⚠️ **This is a breaking API change!**: `FindInPageFeature` constructor now takes an `EngineView` instance.
   * Blur controlled `EngineView` for better screen reader accessibility.
   * Announce result count for screen reader users.
-
 
 # 0.47.0
 
