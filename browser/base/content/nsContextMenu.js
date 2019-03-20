@@ -679,7 +679,7 @@ nsContextMenu.prototype = {
     this.showItem("context-media-showcontrols", onMedia && !this.target.controls);
     this.showItem("context-media-hidecontrols", this.target.controls && (this.onVideo || (this.onAudio && !this.inSyntheticDoc)));
     this.showItem("context-video-fullscreen", this.onVideo && !this.target.ownerDocument.fullscreen);
-    if (AppConstants.NIGHTLY_BUILD) {
+    {
       let shouldDisplay = Services.prefs.getBoolPref("media.videocontrols.picture-in-picture.enabled") &&
                           this.onVideo &&
                           !this.target.ownerDocument.fullscreen;
