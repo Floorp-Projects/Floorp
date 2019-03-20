@@ -6811,6 +6811,8 @@ void nsGlobalWindowInner::ForgetSharedWorker(SharedWorker* aSharedWorker) {
 }
 
 void nsGlobalWindowInner::StorageAccessGranted() {
+  PropagateFirstPartyStorageAccessGrantedToWorkers(this);
+
   // If we have a partitioned localStorage, it's time to replace it with a real
   // one in order to receive notifications.
 
