@@ -200,6 +200,14 @@ function persisted(principal, callback) {
   return request;
 }
 
+function listInitializedOrigins(callback) {
+  let request =
+      SpecialPowers._getQuotaManager().listInitializedOrigins(callback);
+  request.callback = callback;
+
+  return request;
+}
+
 function installPackage(packageName)
 {
   let directoryService = Cc["@mozilla.org/file/directory_service;1"]
