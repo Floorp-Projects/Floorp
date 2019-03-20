@@ -347,6 +347,45 @@ struct DisallowConstNonRefPtrMemberArgs {
   }
 };
 
+MOZ_CAN_RUN_SCRIPT void test_temporary_1() {
+  RefPtr<RefCountedBase>(new RefCountedBase())->method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_temporary_2() {
+  test_ref(*RefPtr<RefCountedBase>(new RefCountedBase()));
+}
+
+struct WeakSmartPtr {
+  RefCountedBase* member;
+
+  explicit WeakSmartPtr(RefCountedBase* arg) : member(arg) {}
+
+  RefCountedBase* operator->() const {
+    return member;
+  }
+
+  RefCountedBase& operator*() const {
+    return *member;
+  }
+
+  operator RefCountedBase*() const {
+    return member;
+  }
+};
+
+MOZ_CAN_RUN_SCRIPT void test_temporary_3() {
+  WeakSmartPtr(new RefCountedBase())->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+MOZ_CAN_RUN_SCRIPT void test_temporary_4() {
+  test_ref(*WeakSmartPtr(new RefCountedBase())); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+MOZ_CAN_RUN_SCRIPT void test_temporary_5() {
+  test2(WeakSmartPtr(new RefCountedBase())); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+
 template<typename T>
 struct TArray {
   TArray() {

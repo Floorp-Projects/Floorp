@@ -65,7 +65,11 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
   // 2) It's a const member of "this".  We know "this" is alive (recursively)
   //    and const members can't change their value hence can't drop their
   //    reference until "this" gets destroyed.
-  auto KnownLiveSmartPtr = anyOf(StackSmartPtr, ConstMemberOfThisSmartPtr);
+  auto KnownLiveSmartPtr = anyOf(
+    StackSmartPtr,
+    ConstMemberOfThisSmartPtr,
+    ignoreTrivials(cxxConstructExpr(hasType(isSmartPtrToRefCounted()))));
+
   auto MozKnownLiveCall =
     ignoreTrivials(callExpr(callee(functionDecl(hasName("MOZ_KnownLive")))));
 
