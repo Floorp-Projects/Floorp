@@ -98,8 +98,9 @@ interface nsIContentPermissionRequest : nsISupports {
   /**
    * allow or cancel the request
    */
-
+  [can_run_script]
   void cancel();
+  [can_run_script]
   void allow([optional] in jsval choices); // {"type1": "choice1", "type2": "choiceA"}
 };
 
