@@ -1716,13 +1716,17 @@ class StaticAnalysis(MachCommandBase):
         if rc != 0:
             return rc
 
+        # Split in several chunks to avoid hitting Python's limit of 100 groups in re
         compile_db = json.loads(open(self._compile_db, 'r').read())
         total = 0
         import re
-        name_re = re.compile('(' + ')|('.join(source) + ')')
-        for f in compile_db:
-            if name_re.search(f['file']):
-                total = total + 1
+        chunk_size = 50
+        for offset in range(0, len(source), chunk_size):
+            source_chunks = source[offset:offset + chunk_size]
+            name_re = re.compile('(' + ')|('.join(source_chunks) + ')')
+            for f in compile_db:
+                if name_re.search(f['file']):
+                    total = total + 1
 
         if not total:
             return 0
