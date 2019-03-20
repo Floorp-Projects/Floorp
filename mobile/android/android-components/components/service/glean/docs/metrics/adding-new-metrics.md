@@ -62,6 +62,9 @@ val first = snapshot.single()
 assertEquals("login_opened", first.name)
 ```
 
+NOTE: Using the testing API requires calling `Glean.enableTestingMode()` first,
+such as from a `@Before` method.
+
 ## Counters
 
 Used to count how often something happens, say how often a certain button was pressed.
@@ -88,6 +91,7 @@ Controls.refreshPressed.add(5) // Adds 5 to the counter.
 ```
 
 There are test APIs available too:
+
 ```Kotlin
 import org.mozilla.yourApplication.GleanMetrics.Controls
 
@@ -96,3 +100,6 @@ assertTrue(Controls.refreshPressed.testHasValue())
 // Does the counter have the expected value?
 assertEquals(6, Controls.refreshPressed.testGetValue())
 ```
+
+NOTE: Using the testing API requires calling `Glean.enableTestingMode()` first,
+such as from a `@Before` method.
