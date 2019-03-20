@@ -25,8 +25,10 @@ class L10n {
     }
 
     const locales = Services.locale.appLocalesAsBCP47;
-    const generator =
-      L10nRegistry.generateBundles(locales, ["aboutdebugging.ftl"]);
+    const generator = L10nRegistry.generateBundles(locales, [
+      "aboutdebugging.ftl",
+      "devtools/aboutdebugging.ftl",
+    ]);
 
     this._bundles = [];
     for await (const bundle of generator) {
