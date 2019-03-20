@@ -224,7 +224,8 @@ void CoreLocationLocationProvider::Update(nsIDOMGeoPosition* aSomewhere) {
   }
 }
 void CoreLocationLocationProvider::NotifyError(uint16_t aErrorCode) {
-  mCallback->NotifyError(aErrorCode);
+  nsCOMPtr<nsIGeolocationUpdate> callback(mCallback);
+  callback->NotifyError(aErrorCode);
 }
 void CoreLocationLocationProvider::CreateMLSFallbackProvider() {
   if (mMLSFallbackProvider) {

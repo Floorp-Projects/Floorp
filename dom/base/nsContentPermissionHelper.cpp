@@ -17,6 +17,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
@@ -135,6 +136,8 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent {
   nsTArray<PermissionRequest> mRequests;
 
  private:
+  // Not MOZ_CAN_RUN_SCRIPT because we can't annotate the thing we override yet.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual mozilla::ipc::IPCResult Recvprompt() override;
   virtual mozilla::ipc::IPCResult RecvNotifyVisibility(
       const bool& aIsVisible) override;
@@ -162,7 +165,8 @@ ContentPermissionRequestParent::~ContentPermissionRequestParent() {
 mozilla::ipc::IPCResult ContentPermissionRequestParent::Recvprompt() {
   mProxy = new nsContentPermissionRequestProxy(this);
   if (NS_FAILED(mProxy->Init(mRequests))) {
-    mProxy->Cancel();
+    RefPtr<nsContentPermissionRequestProxy> proxy(mProxy);
+    proxy->Cancel();
   }
   return IPC_OK();
 }
@@ -631,11 +635,14 @@ class RequestAllowEvent : public Runnable {
         mAllow(allow),
         mRequest(request) {}
 
+  // Not MOZ_CAN_RUN_SCRIPT because we can't annotate the thing we override yet.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Run() override {
+    // MOZ_KnownLive is OK, because we never drop the ref to mRequest.
     if (mAllow) {
-      mRequest->Allow(JS::UndefinedHandleValue);
+      MOZ_KnownLive(mRequest)->Allow(JS::UndefinedHandleValue);
     } else {
-      mRequest->Cancel();
+      MOZ_KnownLive(mRequest)->Cancel();
     }
     return NS_OK;
   }
@@ -931,12 +938,14 @@ RemotePermissionRequest::~RemotePermissionRequest() {
 
 void RemotePermissionRequest::DoCancel() {
   NS_ASSERTION(mRequest, "We need a request");
-  mRequest->Cancel();
+  nsCOMPtr<nsIContentPermissionRequest> request(mRequest);
+  request->Cancel();
 }
 
 void RemotePermissionRequest::DoAllow(JS::HandleValue aChoices) {
   NS_ASSERTION(mRequest, "We need a request");
-  mRequest->Allow(aChoices);
+  nsCOMPtr<nsIContentPermissionRequest> request(mRequest);
+  request->Allow(aChoices);
 }
 
 // PContentPermissionRequestChild
