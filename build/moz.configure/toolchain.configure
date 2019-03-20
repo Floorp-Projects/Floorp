@@ -1183,7 +1183,6 @@ def msvs_version(info):
 set_config('MSVS_VERSION', msvs_version)
 
 include('compile-checks.configure')
-include('arm.configure', when=depends(target.cpu)(lambda cpu: cpu == 'arm'))
 
 
 @depends(have_64_bit,
