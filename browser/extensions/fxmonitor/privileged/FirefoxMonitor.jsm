@@ -164,7 +164,7 @@ this.FirefoxMonitor = {
     } else {
       // Something is very strange if we reach this line, so we throw
       // in order to prevent init from completing and burst the stack.
-      throw "Cannot find fxmonitor chrome.manifest for registering translated strings";
+      throw new Error("Cannot find fxmonitor chrome.manifest for registering translated strings");
     }
   },
 

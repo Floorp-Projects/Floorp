@@ -43,7 +43,7 @@ async function withHttpServer(details = { scheme: "http", host: "localhost", por
       details.port = server.identity.primaryPort;
       server.identity.setPrimary(details.scheme, details.host, details.port);
     } catch (ex) {
-      throw ("We can't launch our http server successfully. " + ex);
+      throw new Error("We can't launch our http server successfully. " + ex);
     }
     Assert.ok(server.identity.has(details.scheme, details.host, details.port),
               `${url} is listening.`);

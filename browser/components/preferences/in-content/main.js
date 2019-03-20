@@ -2444,7 +2444,7 @@ var gMainPane = {
         let downloadsDir = await Downloads.getSystemDownloadsDirectory();
         return new FileUtils.File(downloadsDir);
     }
-    throw "ASSERTION FAILED: folder type should be 'Desktop' or 'Downloads'";
+    throw new Error("ASSERTION FAILED: folder type should be 'Desktop' or 'Downloads'");
   },
 
   /**

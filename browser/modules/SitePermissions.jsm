@@ -521,7 +521,7 @@ var SitePermissions = {
     }
 
     if (state == this.ALLOW_COOKIES_FOR_SESSION && permissionID != "cookie") {
-      throw "ALLOW_COOKIES_FOR_SESSION can only be set on the cookie permission";
+      throw new Error("ALLOW_COOKIES_FOR_SESSION can only be set on the cookie permission");
     }
 
     // Save temporary permissions.
@@ -535,11 +535,11 @@ var SitePermissions = {
       // a more fine-grained TemporaryPermissions that temporarily blocks for the
       // entire browser, but temporarily allows only for specific frames.
       if (state != this.BLOCK) {
-        throw "'Block' is the only permission we can save temporarily on a browser";
+        throw new Error("'Block' is the only permission we can save temporarily on a browser");
       }
 
       if (!browser) {
-        throw "TEMPORARY scoped permissions require a browser object";
+        throw new Error("TEMPORARY scoped permissions require a browser object");
       }
 
       TemporaryPermissions.set(browser, permissionID, state);

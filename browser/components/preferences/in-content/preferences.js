@@ -31,7 +31,7 @@ var gCategoryInits = new Map();
 function init_category_if_required(category) {
   let categoryInfo = gCategoryInits.get(category);
   if (!categoryInfo) {
-    throw "Unknown in-content prefs category! Can't init " + category;
+    throw new Error("Unknown in-content prefs category! Can't init " + category);
   }
   if (categoryInfo.inited) {
     return null;

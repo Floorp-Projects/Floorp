@@ -16,5 +16,5 @@ function test() {
     }
   }
 
-  throw "couldn't find the content window";
+  throw new Error("couldn't find the content window");
 }

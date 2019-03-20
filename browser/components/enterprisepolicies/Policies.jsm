@@ -884,7 +884,7 @@ var Policies = {
             try {
               defaultEngine = Services.search.getEngineByName(param.Default);
               if (!defaultEngine) {
-                throw "No engine by that name could be found";
+                throw new Error("No engine by that name could be found");
               }
             } catch (ex) {
               log.error(`Search engine lookup failed when attempting to set ` +

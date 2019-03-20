@@ -149,11 +149,11 @@ let gContainersManager = {
     let name = document.getElementById("name").value;
 
     if (!this.icons.includes(icon)) {
-      throw "Internal error. The icon value doesn't match.";
+      throw new Error("Internal error. The icon value doesn't match.");
     }
 
     if (!this.colors.includes(color)) {
-      throw "Internal error. The color value doesn't match.";
+      throw new Error("Internal error. The color value doesn't match.");
     }
 
     if (this.userContextId) {
