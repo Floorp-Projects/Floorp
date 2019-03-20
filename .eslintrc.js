@@ -55,17 +55,6 @@ module.exports = {
   }, {
     // TODO: Bug 1246594. Empty this list once the rule has landed for all dirs
     "files": [
-      "browser/actors/ContextMenuChild.jsm",
-      "browser/base/content/**",
-      "browser/components/customizableui/**",
-      "browser/components/enterprisepolicies/Policies.jsm",
-      "browser/components/places/content/**",
-      "browser/components/preferences/**",
-      "browser/components/privatebrowsing/test/browser/browser_privatebrowsing_cache.js",
-      "browser/components/urlbar/tests/browser/head-common.js",
-      "browser/extensions/fxmonitor/privileged/FirefoxMonitor.jsm",
-      "browser/modules/**",
-      "browser/tools/mozscreenshots/mozscreenshots/extension/TestRunner.jsm",
       "docshell/test/chrome/docshell_helpers.js",
       "docshell/test/navigation/NavigationUtils.js",
       "dom/asmjscache/test/**",

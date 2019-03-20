@@ -32,7 +32,7 @@ function getStorageEntryCount(device, goon) {
     storage = Services.cache2.diskCacheStorage(Services.loadContextInfo.default, false);
     break;
   default:
-    throw "Unknown device " + device + " at getStorageEntryCount";
+    throw new Error(`Unknown device ${device} at getStorageEntryCount`);
   }
 
   var visitor = {
