@@ -33,9 +33,7 @@ EntryCallbackRunnable::EntryCallbackRunnable(FileSystemEntryCallback* aCallback,
 
 NS_IMETHODIMP
 EntryCallbackRunnable::Run() {
-  // Both of our strongly held members never change (they're const), so we can
-  // use MOZ_KnownLive on them.
-  MOZ_KnownLive(mCallback)->Call(MOZ_KnownLive(*mEntry));
+  mCallback->Call(*mEntry);
   return NS_OK;
 }
 
@@ -54,8 +52,7 @@ ErrorCallbackRunnable::ErrorCallbackRunnable(nsIGlobalObject* aGlobalObject,
 NS_IMETHODIMP
 ErrorCallbackRunnable::Run() {
   RefPtr<DOMException> exception = DOMException::Create(mError);
-  // mCallback never changes (it's const) so MOZ_KnownLive is ok.
-  MOZ_KnownLive(mCallback)->Call(*exception);
+  mCallback->Call(*exception);
   return NS_OK;
 }
 
@@ -68,8 +65,7 @@ EmptyEntriesCallbackRunnable::EmptyEntriesCallbackRunnable(
 NS_IMETHODIMP
 EmptyEntriesCallbackRunnable::Run() {
   Sequence<OwningNonNull<FileSystemEntry>> sequence;
-  // mCallback never changes (it's const), so MOZ_KnownLive is ok.
-  MOZ_KnownLive(mCallback)->Call(sequence);
+  mCallback->Call(sequence);
   return NS_OK;
 }
 
@@ -192,8 +188,7 @@ void GetEntryHelper::CompleteOperation(JSObject* aObj) {
 
     RefPtr<FileSystemFileEntry> entry = new FileSystemFileEntry(
         mParentEntry->GetParentObject(), file, mParentEntry, mFileSystem);
-    // mSuccessCallback never changes (it's const), so MOZ_KnownLive is ok.
-    MOZ_KnownLive(mSuccessCallback)->Call(*entry);
+    mSuccessCallback->Call(*entry);
     return;
   }
 
@@ -207,8 +202,7 @@ void GetEntryHelper::CompleteOperation(JSObject* aObj) {
 
   RefPtr<FileSystemDirectoryEntry> entry = new FileSystemDirectoryEntry(
       mParentEntry->GetParentObject(), directory, mParentEntry, mFileSystem);
-  // mSuccessCallback never changes (it's const), so MOZ_KnownLive is ok.
-  MOZ_KnownLive(mSuccessCallback)->Call(*entry);
+  mSuccessCallback->Call(*entry);
 }
 
 void GetEntryHelper::ContinueRunning(JSObject* aObj) {
