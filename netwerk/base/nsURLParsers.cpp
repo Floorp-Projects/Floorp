@@ -8,6 +8,7 @@
 #include "mozilla/RangedPtr.h"
 #include "mozilla/TextUtils.h"
 
+#include "nsCRTGlue.h"
 #include "nsURLParsers.h"
 #include "nsURLHelper.h"
 #include "nsString.h"
