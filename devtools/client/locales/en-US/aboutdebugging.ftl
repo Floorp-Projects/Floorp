@@ -4,6 +4,15 @@
 
 ### These strings are used inside the about:debugging UI.
 
+# Page Title strings
+
+# Page title (ie tab title) for the Setup page
+about-debugging-page-title-setup-page = Debugging - Setup
+
+# Page title (ie tab title) for the Runtime page
+# { $selectedRuntimeId } is the id of the current runtime, such as "this-firefox", "localhost:6080", ...
+about-debugging-page-title-runtime-page = Debugging - Runtime / { $selectedRuntimeId }
+
 # Sidebar strings
 
 # Display name of the runtime "This Firefox". Reused as the sidebar name for This Firefox
