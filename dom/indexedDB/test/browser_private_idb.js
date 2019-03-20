@@ -5,7 +5,6 @@ async function idbCheckFunc() {
     factory = indexedDB;
   } catch (ex) {
     // in a frame-script, we need to pierce "content"
-    // eslint-disable-next-line mozilla/no-cpows-in-tests
     factory = content.indexedDB;
   }
   try {
@@ -73,7 +72,6 @@ const workerScriptBlob = new Blob([workerScript]);
  */
 async function workerCheckDeployer({ srcBlob, workerType }) {
   let worker, port;
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   const url = content.URL.createObjectURL(srcBlob);
   if (workerType === "dedicated") {
     worker = new content.Worker(url);
