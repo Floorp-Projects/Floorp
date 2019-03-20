@@ -8,7 +8,7 @@ EXPORTS.mozilla += [
     'SandboxLaunch.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'LinuxCapabilities.cpp',
     'SandboxLaunch.cpp',
 ]

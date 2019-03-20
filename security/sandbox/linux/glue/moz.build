@@ -4,11 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += [
-    '../../chromium/base/strings/safe_sprintf.cc',
+UNIFIED_SOURCES += [
     '../SandboxLogging.cpp',
     'SandboxCrash.cpp',
     'SandboxPrefBridge.cpp',
+]
+
+SOURCES += [
+    '../../chromium/base/strings/safe_sprintf.cc',
 ]
 
 # Avoid Chromium logging dependency, because this is going into

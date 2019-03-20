@@ -23,7 +23,7 @@ EXPORTS.mozilla += [
     'SandboxInfo.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     '../chromium-shim/base/logging.cpp',
     '../chromium-shim/base/threading/platform_thread_linux.cpp',
     '../chromium/base/at_exit.cc',
@@ -31,7 +31,6 @@ SOURCES += [
     '../chromium/base/lazy_instance.cc',
     '../chromium/base/memory/ref_counted.cc',
     '../chromium/base/memory/singleton.cc',
-    '../chromium/base/strings/safe_sprintf.cc',
     '../chromium/base/strings/string16.cc',
     '../chromium/base/strings/string_piece.cc',
     '../chromium/base/strings/string_util.cc',
@@ -43,7 +42,6 @@ SOURCES += [
     '../chromium/base/synchronization/lock.cc',
     '../chromium/base/synchronization/lock_impl_posix.cc',
     '../chromium/base/synchronization/waitable_event_posix.cc',
-    '../chromium/base/third_party/icu/icu_utf.cc',
     '../chromium/base/threading/platform_thread_internal_posix.cc',
     '../chromium/base/threading/platform_thread_posix.cc',
     '../chromium/base/threading/thread_collision_warner.cc',
@@ -62,8 +60,6 @@ SOURCES += [
     '../chromium/sandbox/linux/bpf_dsl/syscall_set.cc',
     '../chromium/sandbox/linux/seccomp-bpf/die.cc',
     '../chromium/sandbox/linux/seccomp-bpf/syscall.cc',
-    '../chromium/sandbox/linux/seccomp-bpf/trap.cc',
-    '../chromium/sandbox/linux/services/syscall_wrappers.cc',
     'broker/SandboxBrokerCommon.cpp',
     'Sandbox.cpp',
     'SandboxBrokerClient.cpp',
@@ -74,6 +70,13 @@ SOURCES += [
     'SandboxLogging.cpp',
     'SandboxOpenedFiles.cpp',
     'SandboxReporterClient.cpp',
+]
+
+SOURCES += [
+    '../chromium/base/strings/safe_sprintf.cc',
+    '../chromium/base/third_party/icu/icu_utf.cc',
+    '../chromium/sandbox/linux/seccomp-bpf/trap.cc',
+    '../chromium/sandbox/linux/services/syscall_wrappers.cc',
 ]
 
 # This copy of SafeSPrintf doesn't need to avoid the Chromium logging
