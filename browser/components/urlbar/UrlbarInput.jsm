@@ -258,7 +258,7 @@ class UrlbarInput {
 
   /**
    * Handles an event which would cause a url or text to be opened.
-   * XXX the name is currently handleCommand which is compatible with
+   * TODO Bug 1536816 the name is currently handleCommand which is compatible with
    * urlbarBindings. However, it is no longer called automatically by autocomplete,
    * See _on_keydown.
    *
@@ -1238,7 +1238,7 @@ class UrlbarInput {
     let allowAutofill =
       this._maybeAutofillOnInput(value, deletedAutofilledSubstring);
 
-    // XXX Fill in lastKey, and add anything else we need.
+    // TODO Bug 1524550: Fill in lastKey, and add anything else we need.
     this.startQuery({
       searchString: value,
       allowAutofill,
