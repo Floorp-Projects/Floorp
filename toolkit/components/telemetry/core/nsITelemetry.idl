@@ -660,4 +660,32 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   Promise gatherMemory();
+
+  /**
+   * Serializes the per-origin data in plain text, optionally clearing
+   * the storage. Only to be used by about:telemetry.
+   *
+   * The returned structure looks like:
+   *   { metric: [origin1, origin2, ...], ...}
+   *
+   * @param aClear Whether to clear the storage. Default false.
+   * @return a snapshot of the per-origin data.
+   */
+  [implicit_jscontext]
+  jsval getOriginSnapshot([optional] in boolean aClear);
+
+  /**
+   * Encodes the per-origin information then serializes it.
+   * Returns a Promise.
+   *
+   * @param aClear Whether to clear the storage. Default false.
+   * @return Promise that resolves to the serialized encoded data.
+   */
+  [implicit_jscontext]
+  Promise getEncodedOriginSnapshot([optional] in boolean aClear);
+
+  /**
+   * Clears Firefox Origin Telemetry. Only to be used in tests.
+   */
+  void clearOrigins();
 };

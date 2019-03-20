@@ -95,6 +95,7 @@
 #include "TelemetryCommon.h"
 #include "TelemetryEvent.h"
 #include "TelemetryHistogram.h"
+#include "TelemetryOrigin.h"
 #include "TelemetryScalar.h"
 
 namespace {
@@ -278,6 +279,10 @@ TelemetryImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
   COLLECT_REPORT("explicit/telemetry/event/data",
                  TelemetryEvent::SizeOfIncludingThis(aMallocSizeOf),
                  "Memory used by Telemetry Event data");
+
+  COLLECT_REPORT("explicit/telemetry/origin/data",
+                 TelemetryOrigin::SizeOfIncludingThis(aMallocSizeOf),
+                 "Memory used by Telemetry Origin data");
 
 #undef COLLECT_REPORT
 
@@ -1198,6 +1203,7 @@ already_AddRefed<nsITelemetry> TelemetryImpl::CreateTelemetryInstance() {
   // Only record events from the parent process.
   TelemetryEvent::InitializeGlobalState(XRE_IsParentProcess(),
                                         XRE_IsParentProcess());
+  TelemetryOrigin::InitializeGlobalState();
 
   // Now, create and initialize the Telemetry global state.
   sTelemetry = new TelemetryImpl();
@@ -1236,6 +1242,7 @@ void TelemetryImpl::ShutdownTelemetry() {
   TelemetryHistogram::DeInitializeGlobalState();
   TelemetryScalar::DeInitializeGlobalState();
   TelemetryEvent::DeInitializeGlobalState();
+  TelemetryOrigin::DeInitializeGlobalState();
   TelemetryIPCAccumulator::DeInitializeGlobalState();
 
 #if defined(MOZ_TELEMETRY_GECKOVIEW)
@@ -1721,6 +1728,24 @@ TelemetryImpl::SetEventRecordingEnabled(const nsACString& aCategory,
 }
 
 NS_IMETHODIMP
+TelemetryImpl::GetOriginSnapshot(bool aClear, JSContext* aCx,
+                                 JS::MutableHandleValue aResult) {
+  return TelemetryOrigin::GetOriginSnapshot(aClear, aCx, aResult);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetEncodedOriginSnapshot(bool aClear, JSContext* aCx,
+                                        Promise** aResult) {
+  return TelemetryOrigin::GetEncodedOriginSnapshot(aClear, aCx, aResult);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::ClearOrigins() {
+  TelemetryOrigin::ClearOrigins();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 TelemetryImpl::FlushBatchedChildTelemetry() {
   TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
   return NS_OK;
@@ -2111,6 +2136,11 @@ void RecordEvent(mozilla::Telemetry::EventID aId,
 
 void SetEventRecordingEnabled(const nsACString& aCategory, bool aEnabled) {
   TelemetryEvent::SetEventRecordingEnabled(aCategory, aEnabled);
+}
+
+void RecordOrigin(mozilla::Telemetry::OriginMetricID aId,
+                  const nsACString& aOrigin) {
+  TelemetryOrigin::RecordOrigin(aId, aOrigin);
 }
 
 void ShutdownTelemetry() { TelemetryImpl::ShutdownTelemetry(); }
