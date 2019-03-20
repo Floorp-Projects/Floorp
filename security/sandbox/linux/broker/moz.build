@@ -10,7 +10,7 @@ EXPORTS.mozilla += [
     'SandboxBrokerPolicyFactory.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'SandboxBroker.cpp',
     'SandboxBrokerCommon.cpp',
     'SandboxBrokerPolicyFactory.cpp',

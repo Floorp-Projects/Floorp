@@ -9,7 +9,7 @@ EXPORTS.mozilla += [
     'SandboxReporterCommon.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'SandboxReporter.cpp',
     'SandboxReporterWrappers.cpp',
 ]
