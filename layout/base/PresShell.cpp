@@ -7666,12 +7666,8 @@ nsresult PresShell::EventHandler::HandleEventWithCurrentEventInfo(
     }
   }
 
-  bool isHandlingUserInput = PrepareToDispatchEvent(aEvent);
-
-  // If we cannot open context menu even though eContextMenu is fired, we
-  // should stop dispatching it into the DOM.
-  if (aEvent->mMessage == eContextMenu &&
-      !PrepareToDispatchContextMenuEvent(aEvent)) {
+  bool isHandlingUserInput = false;
+  if (!PrepareToDispatchEvent(aEvent, &isHandlingUserInput)) {
     return NS_OK;
   }
 
@@ -7797,8 +7793,10 @@ nsresult PresShell::EventHandler::DispatchEvent(
       aOverrideClickTarget);
 }
 
-bool PresShell::EventHandler::PrepareToDispatchEvent(WidgetEvent* aEvent) {
+bool PresShell::EventHandler::PrepareToDispatchEvent(WidgetEvent* aEvent,
+                                                     bool* aIsUserInteraction) {
   MOZ_ASSERT(aEvent->IsTrusted());
+  MOZ_ASSERT(aIsUserInteraction);
 
   if (aEvent->IsUserAction()) {
     mPresShell->mHasHandledUserInput = true;
@@ -7813,12 +7811,14 @@ bool PresShell::EventHandler::PrepareToDispatchEvent(WidgetEvent* aEvent) {
       // Not all keyboard events are treated as user input, so that popups
       // can't be opened, fullscreen mode can't be started, etc at unexpected
       // time.
-      return keyboardEvent->CanTreatAsUserInput();
+      *aIsUserInteraction = keyboardEvent->CanTreatAsUserInput();
+      return true;
     }
     case eMouseDown:
     case eMouseUp:
     case ePointerDown:
     case ePointerUp:
+      *aIsUserInteraction = true;
       return true;
 
     case eMouseMove: {
@@ -7827,7 +7827,8 @@ bool PresShell::EventHandler::PrepareToDispatchEvent(WidgetEvent* aEvent) {
                           GetPresContext()->EventStateManager() ==
                               EventStateManager::GetActiveEventStateManager();
       nsIPresShell::AllowMouseCapture(allowCapture);
-      return false;
+      *aIsUserInteraction = false;
+      return true;
     }
     case eDrop: {
       nsCOMPtr<nsIDragSession> session = nsContentUtils::GetDragSession();
@@ -7838,11 +7839,33 @@ bool PresShell::EventHandler::PrepareToDispatchEvent(WidgetEvent* aEvent) {
           aEvent->mFlags.mOnlyChromeDispatch = true;
         }
       }
-      return false;
+      *aIsUserInteraction = false;
+      return true;
     }
+    case eContextMenu: {
+      *aIsUserInteraction = false;
 
+      // If we cannot open context menu even though eContextMenu is fired, we
+      // should stop dispatching it into the DOM.
+      WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+      if (mouseEvent->IsContextMenuKeyEvent() &&
+          !AdjustContextMenuKeyEvent(mouseEvent)) {
+        return false;
+      }
+
+      // If "Shift" state is active, context menu should be forcibly opened even
+      // if web apps want to prevent it since we respect our users' intention.
+      // In this case, we don't fire "contextmenu" event on web content because
+      // of not cancelable.
+      if (mouseEvent->IsShift()) {
+        aEvent->mFlags.mOnlyChromeDispatch = true;
+        aEvent->mFlags.mRetargetToNonNativeAnonymous = true;
+      }
+      return true;
+    }
     default:
-      return false;
+      *aIsUserInteraction = false;
+      return true;
   }
 }
 
@@ -7893,29 +7916,6 @@ void PresShell::EventHandler::FinalizeHandlingEvent(WidgetEvent* aEvent) {
     default:
       return;
   }
-}
-
-bool PresShell::EventHandler::PrepareToDispatchContextMenuEvent(
-    WidgetEvent* aEvent) {
-  MOZ_ASSERT(aEvent);
-  MOZ_ASSERT(aEvent->mMessage == eContextMenu);
-  MOZ_ASSERT(aEvent->IsTrusted());
-
-  WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
-  if (mouseEvent->IsContextMenuKeyEvent() &&
-      !AdjustContextMenuKeyEvent(mouseEvent)) {
-    return false;
-  }
-
-  // If "Shift" state is active, context menu should be forcibly opened even
-  // if web apps want to prevent it since we respect our users' intention.
-  // In this case, we don't fire "contextmenu" event on web content because
-  // of not cancelable.
-  if (mouseEvent->IsShift()) {
-    aEvent->mFlags.mOnlyChromeDispatch = true;
-    aEvent->mFlags.mRetargetToNonNativeAnonymous = true;
-  }
-  return true;
 }
 
 void PresShell::EventHandler::MaybeHandleKeyboardEventBeforeDispatch(
