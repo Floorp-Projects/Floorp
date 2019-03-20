@@ -5,6 +5,7 @@
 
 package org.mozilla.geckoview.test;
 
+import org.json.JSONObject;
 import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
@@ -112,6 +113,10 @@ public class TestRunnerActivity extends Activity {
 
         @Override
         public void onFirstComposite(final GeckoSession session) {
+        }
+
+        @Override
+        public void onWebAppManifest(final GeckoSession session, final JSONObject manifest) {
         }
     };
 
