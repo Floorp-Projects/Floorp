@@ -32,6 +32,18 @@ class GeckoEngine(
 ) : Engine {
     private val executor by lazy { executorProvider.invoke() }
 
+    init {
+        runtime.delegate = GeckoRuntime.Delegate {
+            // On shutdown: The runtime is shutting down (possibly because of an unrecoverable error state). We crash
+            // the app here for two reasons:
+            //  - We want to know about those unsolicited shutdowns and fix those issues.
+            //  - We can't recover easily from this situation. Just continuing will leave us with an engine that
+            //    doesn't do anything anymore.
+            @Suppress("TooGenericExceptionThrown")
+            throw RuntimeException("GeckoRuntime is shutting down")
+        }
+    }
+
     /**
      * Creates a new Gecko-based EngineView.
      */

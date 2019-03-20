@@ -20,6 +20,9 @@ permalink: /changelog/
   * Access an article's text-to-speech listen metadata via `PocketListenEndpoint.getListenArticleMetadata`.
   * ⚠️ **This is a breaking API change!**: `PocketGlobalVideoRecommendation.id` is now a Long instead of an Int
 
+* **browser-engine-gecko-nightly**
+ * `GeckoEngine` will throw a `RuntimeException` if the `GeckoRuntime` shuts down unsolicited.
+
 # 0.47.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.46.0...v0.47.0)

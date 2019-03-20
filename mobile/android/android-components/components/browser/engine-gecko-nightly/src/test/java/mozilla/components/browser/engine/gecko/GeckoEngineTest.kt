@@ -15,6 +15,7 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -197,5 +198,19 @@ class GeckoEngineTest {
 
         assertTrue(onErrorCalled)
         assertEquals(expected, throwable)
+    }
+
+    @Test(expected = RuntimeException::class)
+    fun `WHEN GeckoRuntime is shutting down THEN GeckoEngine throws runtime exception`() {
+        val runtime: GeckoRuntime = mock()
+
+        GeckoEngine(context, runtime = runtime)
+
+        val captor = argumentCaptor<GeckoRuntime.Delegate>()
+        verify(runtime).delegate = captor.capture()
+
+        assertNotNull(captor.value)
+
+        captor.value.onShutdown()
     }
 }
