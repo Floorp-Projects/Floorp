@@ -168,7 +168,7 @@ function remoteSettingsFunction() {
       const remainingMilliseconds = parseInt(backoffReleaseTime, 10) - Date.now();
       if (remainingMilliseconds > 0) {
         // Backoff time has not elapsed yet.
-        UptakeTelemetry.report(TELEMETRY_COMPONENT, UptakeTelemetry.STATUS.BACKOFF, telemetryArgs);
+        await UptakeTelemetry.report(TELEMETRY_COMPONENT, UptakeTelemetry.STATUS.BACKOFF, telemetryArgs);
         throw new Error(`Server is asking clients to back off; retry in ${Math.ceil(remainingMilliseconds / 1000)}s.`);
       } else {
         gPrefs.clearUserPref(PREF_SETTINGS_SERVER_BACKOFF);
@@ -198,7 +198,7 @@ function remoteSettingsFunction() {
       } else {
         reportStatus = UptakeTelemetry.STATUS.UNKNOWN_ERROR;
       }
-      UptakeTelemetry.report(TELEMETRY_COMPONENT, reportStatus, telemetryArgs);
+      await UptakeTelemetry.report(TELEMETRY_COMPONENT, reportStatus, telemetryArgs);
       // No need to go further.
       throw new Error(`Polling for changes failed: ${e.message}.`);
     }
@@ -211,7 +211,7 @@ function remoteSettingsFunction() {
     // Report polling success to Uptake Telemetry.
     const reportStatus = changes.length === 0 ? UptakeTelemetry.STATUS.UP_TO_DATE
                                               : UptakeTelemetry.STATUS.SUCCESS;
-    UptakeTelemetry.report(TELEMETRY_COMPONENT, reportStatus, telemetryArgs);
+    await UptakeTelemetry.report(TELEMETRY_COMPONENT, reportStatus, telemetryArgs);
 
     // Check if the server asked the clients to back off (for next poll).
     if (backoffSeconds) {

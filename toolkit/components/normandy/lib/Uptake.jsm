@@ -35,17 +35,17 @@ var Uptake = {
   RUNNER_SERVER_ERROR: UptakeTelemetry.STATUS.SERVER_ERROR,
   RUNNER_SUCCESS: UptakeTelemetry.STATUS.SUCCESS,
 
-  reportRunner(status) {
-    UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/runner` });
+  async reportRunner(status) {
+    await UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/runner` });
   },
 
-  reportRecipe(recipe, status) {
-    UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/recipe/${recipe.id}` });
+  async reportRecipe(recipe, status) {
+    await UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/recipe/${recipe.id}` });
     const revisionId = parseInt(recipe.revision_id, 10);
     Services.telemetry.keyedScalarSet("normandy.recipe_freshness", recipe.id, revisionId);
   },
 
-  reportAction(actionName, status) {
-    UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/action/${actionName}` });
+  async reportAction(actionName, status) {
+    await UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/action/${actionName}` });
   },
 };
