@@ -7,10 +7,6 @@ job-defaults:
         by-test-platform:
             linux64/debug: both
             default: false
-    run-on-projects:
-        by-test-platform:
-            android-em-4.3-arm7-api-16/opt: ['try']
-            default: built-projects
     mozharness:
         script:
             by-test-platform:
@@ -36,6 +32,7 @@ crashtest:
     description: "Crashtest run"
     suite: reftest/crashtest
     treeherder-symbol: R(C)
+    run-on-projects: built-projects
     instance-size:
         by-test-platform:
             android-em.*: xlarge
@@ -48,7 +45,6 @@ crashtest:
         by-test-platform:
             android-em-4.3-arm7-api-16/debug: 10
             android-em-4.3-arm7-api-16/opt: 4
-            android-em-4.3-arm7-api-16-pgo/opt: 4
             android-em-7.*: 1
             default: 1
     e10s:
@@ -65,6 +61,7 @@ jsreftest:
     suite: reftest/jsreftest
     schedules-component: jsreftest  # scheduling for this reftest is different from the others..
     treeherder-symbol: R(J)
+    run-on-projects: built-projects
     instance-size:
         by-test-platform:
             android-em.*: xlarge
@@ -95,6 +92,7 @@ reftest:
     description: "Reftest run"
     suite: reftest/reftest
     treeherder-symbol: R(R)
+    run-on-projects: built-projects
     instance-size:
         by-test-platform:
             android-em.*: xlarge
