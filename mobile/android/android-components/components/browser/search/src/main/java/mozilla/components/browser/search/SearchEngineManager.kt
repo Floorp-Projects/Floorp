@@ -18,16 +18,18 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
 import mozilla.components.browser.search.provider.SearchEngineProvider
 import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
+import kotlin.coroutines.CoroutineContext
 
 /**
  * This class provides access to a centralized registry of search engines.
  */
 class SearchEngineManager(
     private val providers: List<SearchEngineProvider> = listOf(
-            AssetsSearchEngineProvider(LocaleSearchLocalizationProvider()))
+            AssetsSearchEngineProvider(LocaleSearchLocalizationProvider())),
+    coroutineContext: CoroutineContext = Dispatchers.Default
 ) {
     private var deferredSearchEngines: Deferred<List<SearchEngine>>? = null
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(coroutineContext)
     var defaultSearchEngine: SearchEngine? = null
 
     /**
@@ -97,7 +99,7 @@ class SearchEngineManager(
         return searchEngines
     }
 
-    private val localeChangedReceiver by lazy {
+    internal val localeChangedReceiver by lazy {
         object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent?) {
                 scope.launch {
