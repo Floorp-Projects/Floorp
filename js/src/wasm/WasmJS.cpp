@@ -2843,56 +2843,84 @@ static bool Reject(JSContext* cx, const CompileArgs& args,
 
 enum class Ret { Pair, Instance };
 
+class AsyncInstantiateTask : public OffThreadPromiseTask {
+  SharedModule module_;
+  PersistentRooted<ImportValues> imports_;
+  Ret ret_;
+
+ public:
+  AsyncInstantiateTask(JSContext* cx, const Module& module, Ret ret,
+                       Handle<PromiseObject*> promise)
+      : OffThreadPromiseTask(cx, promise),
+        module_(&module),
+        imports_(cx),
+        ret_(ret) {}
+
+  ImportValues& imports() { return imports_.get(); }
+
+  bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
+    RootedObject instanceProto(
+        cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
+
+    RootedWasmInstanceObject instanceObj(cx);
+    if (!module_->instantiate(cx, imports_.get(), instanceProto,
+                              &instanceObj)) {
+      return RejectWithPendingException(cx, promise);
+    }
+
+    RootedValue resolutionValue(cx);
+    if (ret_ == Ret::Instance) {
+      resolutionValue = ObjectValue(*instanceObj);
+    } else {
+      RootedObject resultObj(cx, JS_NewPlainObject(cx));
+      if (!resultObj) {
+        return RejectWithPendingException(cx, promise);
+      }
+
+      RootedObject moduleProto(
+          cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
+      RootedObject moduleObj(
+          cx, WasmModuleObject::create(cx, *module_, moduleProto));
+      if (!moduleObj) {
+        return RejectWithPendingException(cx, promise);
+      }
+
+      RootedValue val(cx, ObjectValue(*moduleObj));
+      if (!JS_DefineProperty(cx, resultObj, "module", val, JSPROP_ENUMERATE)) {
+        return RejectWithPendingException(cx, promise);
+      }
+
+      val = ObjectValue(*instanceObj);
+      if (!JS_DefineProperty(cx, resultObj, "instance", val,
+                             JSPROP_ENUMERATE)) {
+        return RejectWithPendingException(cx, promise);
+      }
+
+      resolutionValue = ObjectValue(*resultObj);
+    }
+
+    if (!PromiseObject::resolve(cx, promise, resolutionValue)) {
+      return RejectWithPendingException(cx, promise);
+    }
+
+    Log(cx, "async instantiate succeeded");
+    return true;
+  }
+};
+
 static bool AsyncInstantiate(JSContext* cx, const Module& module,
                              HandleObject importObj, Ret ret,
                              Handle<PromiseObject*> promise) {
-  RootedObject instanceProto(
-      cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
+  auto task = js::MakeUnique<AsyncInstantiateTask>(cx, module, ret, promise);
+  if (!task || !task->init(cx)) {
+    return false;
+  }
 
-  Rooted<ImportValues> imports(cx);
-  if (!GetImports(cx, module, importObj, imports.address())) {
+  if (!GetImports(cx, module, importObj, &task->imports())) {
     return RejectWithPendingException(cx, promise);
   }
 
-  RootedWasmInstanceObject instanceObj(cx);
-  if (!module.instantiate(cx, imports.get(), instanceProto, &instanceObj)) {
-    return RejectWithPendingException(cx, promise);
-  }
-
-  RootedValue resolutionValue(cx);
-  if (ret == Ret::Instance) {
-    resolutionValue = ObjectValue(*instanceObj);
-  } else {
-    RootedObject resultObj(cx, JS_NewPlainObject(cx));
-    if (!resultObj) {
-      return RejectWithPendingException(cx, promise);
-    }
-
-    RootedObject proto(
-        cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
-    RootedObject moduleObj(cx, WasmModuleObject::create(cx, module, proto));
-    if (!moduleObj) {
-      return RejectWithPendingException(cx, promise);
-    }
-
-    RootedValue val(cx, ObjectValue(*moduleObj));
-    if (!JS_DefineProperty(cx, resultObj, "module", val, JSPROP_ENUMERATE)) {
-      return RejectWithPendingException(cx, promise);
-    }
-
-    val = ObjectValue(*instanceObj);
-    if (!JS_DefineProperty(cx, resultObj, "instance", val, JSPROP_ENUMERATE)) {
-      return RejectWithPendingException(cx, promise);
-    }
-
-    resolutionValue = ObjectValue(*resultObj);
-  }
-
-  if (!PromiseObject::resolve(cx, promise, resolutionValue)) {
-    return RejectWithPendingException(cx, promise);
-  }
-
-  Log(cx, "async instantiate succeeded");
+  task.release()->dispatchResolveAndDestroy();
   return true;
 }
 
