@@ -5396,53 +5396,8 @@ bool js::ThrowCheckIsCallable(JSContext* cx, CheckIsCallableKind kind) {
 }
 
 bool js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame) {
-  RootedFunction fun(cx);
-  if (frame.isFunctionFrame()) {
-    fun = frame.callee();
-  } else {
-    Scope* startingScope;
-    if (frame.isDebuggerEvalFrame()) {
-      AbstractFramePtr evalInFramePrev =
-          frame.asInterpreterFrame()->evalInFramePrev();
-      while (evalInFramePrev.isDebuggerEvalFrame()) {
-        evalInFramePrev =
-            evalInFramePrev.asInterpreterFrame()->evalInFramePrev();
-      }
-      startingScope = evalInFramePrev.script()->bodyScope();
-    } else {
-      MOZ_ASSERT(frame.isEvalFrame());
-      MOZ_ASSERT(frame.script()->isDirectEvalInFunction());
-      startingScope = frame.script()->enclosingScope();
-    }
-
-    for (ScopeIter si(startingScope); si; si++) {
-      if (si.scope()->is<FunctionScope>()) {
-        fun = si.scope()->as<FunctionScope>().canonicalFunction();
-        break;
-      }
-    }
-    MOZ_ASSERT(fun);
-  }
-
-  if (fun->isDerivedClassConstructor()) {
-    const char* name = "anonymous";
-    UniqueChars str;
-    if (fun->explicitName()) {
-      str = AtomToPrintableString(cx, fun->explicitName());
-      if (!str) {
-        return false;
-      }
-      name = str.get();
-    }
-
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_UNINITIALIZED_THIS, name);
-    return false;
-  }
-
-  MOZ_ASSERT(fun->isArrow());
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            JSMSG_UNINITIALIZED_THIS_ARROW);
+                            JSMSG_UNINITIALIZED_THIS);
   return false;
 }
 
