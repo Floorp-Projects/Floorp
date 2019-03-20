@@ -4,19 +4,14 @@
 
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "UrlbarTestUtils",
+                               "resource://testing-common/UrlbarTestUtils.jsm");
 
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
-async function promiseAutocompleteResultPopup(inputText) {
-  gURLBar.focus();
-  gURLBar.value = inputText;
-  gURLBar.controller.startSearch(inputText);
-  await promisePopupShown(gURLBar.popup);
-  await BrowserTestUtils.waitForCondition(() => {
-    return gURLBar.controller.searchStatus >=
-      Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
-  });
+function promiseAutocompleteResultPopup(inputText) {
+  return UrlbarTestUtils.promiseAutocompleteResultPopup(window, inputText, waitForFocus);
 }
 
 async function addBookmark(bookmark) {
@@ -60,10 +55,7 @@ async function prepareSearchEngine() {
     await Services.search.setDefault(oldDefaultEngine);
 
     // Make sure the popup is closed for the next test.
-    gURLBar.blur();
-    gURLBar.popup.selectedIndex = -1;
-    gURLBar.popup.hidePopup();
-    ok(!gURLBar.popup.popupOpen, "popup should be closed");
+    await UrlbarTestUtils.promisePopupClose(window);
 
     // Clicking suggestions causes visits to search results pages, so clear that
     // history now.
@@ -109,7 +101,46 @@ add_task(async function test_webnavigation_urlbar_typed_transitions() {
   await extension.awaitFinish("webNavigation.from_address_bar.typed");
 
   await extension.unload();
-  info("extension unloaded");
+});
+
+add_task(async function test_webnavigation_urlbar_typed_closed_popup_transitions() {
+  function backgroundScript() {
+    browser.webNavigation.onCommitted.addListener((msg) => {
+      browser.test.assertEq("http://example.com/?q=typedClosed", msg.url,
+                            "Got the expected url");
+      // assert from_address_bar transition qualifier
+      browser.test.assertTrue(msg.transitionQualifiers &&
+                              msg.transitionQualifiers.includes("from_address_bar"),
+                              "Got the expected from_address_bar transitionQualifier");
+      browser.test.assertEq("typed", msg.transitionType,
+                            "Got the expected transitionType");
+      browser.test.notifyPass("webNavigation.from_address_bar.typed");
+    });
+
+    browser.test.sendMessage("ready");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: backgroundScript,
+    manifest: {
+      permissions: ["webNavigation"],
+    },
+  });
+
+  await extension.startup();
+  await SimpleTest.promiseFocus(window);
+
+  await extension.awaitMessage("ready");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup(window, "http://example.com/?q=typedClosed", waitForFocus);
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  // Closing the popup forces a different code route that handles no results
+  // being displayed.
+  await UrlbarTestUtils.promisePopupClose(window);
+  EventUtils.synthesizeKey("VK_RETURN", {});
+
+  await extension.awaitFinish("webNavigation.from_address_bar.typed");
+
+  await extension.unload();
 });
 
 add_task(async function test_webnavigation_urlbar_bookmark_transitions() {
@@ -149,12 +180,11 @@ add_task(async function test_webnavigation_urlbar_bookmark_transitions() {
 
   await promiseAutocompleteResultPopup("Bookmark To Click");
 
-  let item = gURLBar.popup.richlistbox.getItemAtIndex(1);
-  item.click();
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  EventUtils.synthesizeMouseAtCenter(result.element.row, {});
   await extension.awaitFinish("webNavigation.from_address_bar.auto_bookmark");
 
   await extension.unload();
-  info("extension unloaded");
 });
 
 add_task(async function test_webnavigation_urlbar_keyword_transition() {
@@ -195,13 +225,12 @@ add_task(async function test_webnavigation_urlbar_keyword_transition() {
 
   await promiseAutocompleteResultPopup("testkw search");
 
-  let item = gURLBar.popup.richlistbox.getItemAtIndex(0);
-  item.click();
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  EventUtils.synthesizeMouseAtCenter(result.element.row, {});
 
   await extension.awaitFinish("webNavigation.from_address_bar.keyword");
 
   await extension.unload();
-  info("extension unloaded");
 });
 
 add_task(async function test_webnavigation_urlbar_search_transitions() {
@@ -237,11 +266,10 @@ add_task(async function test_webnavigation_urlbar_search_transitions() {
   await prepareSearchEngine();
   await promiseAutocompleteResultPopup("foo");
 
-  let item = gURLBar.popup.richlistbox.getItemAtIndex(0);
-  item.click();
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  EventUtils.synthesizeMouseAtCenter(result.element.row, {});
 
   await extension.awaitFinish("webNavigation.from_address_bar.generated");
 
   await extension.unload();
-  info("extension unloaded");
 });

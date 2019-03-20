@@ -345,7 +345,7 @@ class UrlbarInput {
             browser.lastLocationChange == lastLocationChange) {
           openParams.postData = data.postData;
           openParams.allowInheritPrincipal = data.mayInheritPrincipal;
-          this._loadURL(data.url, where, openParams, browser);
+          this._loadURL(data.url, where, openParams, null, browser);
         }
       });
       return;
@@ -445,7 +445,10 @@ class UrlbarInput {
     if (!url) {
       throw new Error(`Invalid url for result ${JSON.stringify(result)}`);
     }
-    this._loadURL(url, where, openParams);
+    this._loadURL(url, where, openParams, {
+      source: result.source,
+      type: result.type,
+    });
   }
 
   /**
@@ -986,9 +989,15 @@ class UrlbarInput {
    *   The POST data associated with a search submission.
    * @param {boolean} [params.allowInheritPrincipal]
    *   If the principal may be inherited
+   * @param {object} [result]
+   *   Details of the selected result, if any
+   * @param {UrlbarUtils.RESULT_TYPE} [result.type]
+   *   Details of the result type, if any.
+   * @param {UrlbarUtils.RESULT_SOURCE} [result.source]
+   *   Details of the result source, if any.
    * @param {object} browser [optional] the browser to use for the load.
    */
-  _loadURL(url, openUILinkWhere, params,
+  _loadURL(url, openUILinkWhere, params, result = {},
            browser = this.window.gBrowser.selectedBrowser) {
     this.value = url;
     browser.userTypedValue = url;
@@ -1031,6 +1040,9 @@ class UrlbarInput {
     if (openUILinkWhere != "current") {
       this.handleRevert();
     }
+
+    // Notify about the start of navigation.
+    this._notifyStartNavigation(result);
 
     try {
       this.window.openTrustedLinkIn(url, openUILinkWhere, params);
@@ -1129,6 +1141,20 @@ class UrlbarInput {
     });
 
     insertLocation.insertAdjacentElement("afterend", pasteAndGo);
+  }
+
+  /**
+   * This notifies observers that the user has entered or selected something in
+   * the URL bar which will cause navigation.
+   *
+   * We use the observer service, so that we don't need to load extra facilities
+   * if they aren't being used, e.g. WebNavigation.
+   *
+   * @param {UrlbarResult} [result]
+   *   The result that was selected, if any.
+   */
+  _notifyStartNavigation(result) {
+    Services.obs.notifyObservers({result}, "urlbar-user-start-navigation");
   }
 
   // Event handlers below.
