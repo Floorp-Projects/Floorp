@@ -26,6 +26,10 @@
 #  include "mozilla/widget/WinCompositorWindowThread.h"
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "GLLibraryEGL.h"
+#endif
+
 using namespace mozilla;
 
 static already_AddRefed<gl::GLContext> CreateGLContext();
@@ -802,11 +806,36 @@ static already_AddRefed<gl::GLContext> CreateGLContextANGLE() {
 }
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+static already_AddRefed<gl::GLContext> CreateGLContextEGL() {
+  nsCString discardFailureId;
+  if (!gl::GLLibraryEGL::EnsureInitialized(/* forceAccel */ true,
+                                           &discardFailureId)) {
+    gfxCriticalNote << "Failed to load EGL library: " << discardFailureId.get();
+    return nullptr;
+  }
+  // Create GLContext with dummy EGLSurface.
+  RefPtr<gl::GLContext> gl =
+      gl::GLContextProviderEGL::CreateForCompositorWidget(
+          nullptr, /* aWebRender */ true, /* aForceAccelerated */ true);
+  if (!gl || !gl->MakeCurrent()) {
+    gfxCriticalNote << "Failed GL context creation for WebRender: "
+                    << gfx::hexa(gl.get());
+    return nullptr;
+  }
+  return gl.forget();
+}
+#endif
+
 static already_AddRefed<gl::GLContext> CreateGLContext() {
 #ifdef XP_WIN
   if (gfx::gfxVars::UseWebRenderANGLE()) {
     return CreateGLContextANGLE();
   }
+#endif
+
+#ifdef MOZ_WIDGET_ANDROID
+  return CreateGLContextEGL();
 #endif
   // We currently only support a shared GLContext
   // with ANGLE.
