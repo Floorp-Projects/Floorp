@@ -730,8 +730,8 @@ void DisplayListBuilder::Finalize(
   wr_api_finalize_builder(SubBuilder(aOutTransaction.mRenderRoot).mWrState,
                           &aOutTransaction.mContentSize,
                           &aOutTransaction.mDLDesc, &dl.inner);
-  aOutTransaction.mDL =
-      ipc::ByteBuf(dl.inner.data, dl.inner.length, dl.inner.capacity);
+  aOutTransaction.mDL.emplace(dl.inner.data, dl.inner.length,
+                              dl.inner.capacity);
   dl.inner.capacity = 0;
   dl.inner.data = nullptr;
 }

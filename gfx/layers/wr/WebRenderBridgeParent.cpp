@@ -896,25 +896,13 @@ void WebRenderBridgeParent::SetAPZSampleTime() {
 
 bool WebRenderBridgeParent::SetDisplayList(
     wr::RenderRoot aRenderRoot, const gfx::IntRect& aRect,
-    const nsTArray<WebRenderParentCommand>& aCommands,
     const wr::LayoutSize& aContentSize, ipc::ByteBuf&& aDL,
     const wr::BuiltDisplayListDescriptor& aDLDesc,
     const nsTArray<OpUpdateResource>& aResourceUpdates,
     const nsTArray<RefCountedShmem>& aSmallShmems,
     const nsTArray<ipc::Shmem>& aLargeShmems, const TimeStamp& aTxnStartTime,
-    wr::TransactionBuilder& aTxn, Maybe<wr::AutoTransactionSender>& aTxnSender,
-    wr::Epoch aWrEpoch, bool aValidTransaction, bool aObserveLayersUpdate) {
-  wr::WebRenderAPI* api = Api(aRenderRoot);
-  aTxn.SetLowPriority(!IsRootWebRenderBridgeParent());
-  if (aValidTransaction) {
-    aTxnSender.emplace(api, &aTxn);
-  }
-
-  if (NS_WARN_IF(
-          !ProcessWebRenderParentCommands(aCommands, aTxn, aRenderRoot))) {
-    return false;
-  }
-
+    wr::TransactionBuilder& aTxn, wr::Epoch aWrEpoch, bool aValidTransaction,
+    bool aObserveLayersUpdate) {
   if (NS_WARN_IF(!UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems,
                                   aTxn))) {
     return false;
@@ -954,7 +942,7 @@ bool WebRenderBridgeParent::SetDisplayList(
           MakeUnique<SceneBuiltNotification>(this, aWrEpoch, aTxnStartTime));
     }
 
-    api->SendTransaction(aTxn);
+    Api(aRenderRoot)->SendTransaction(aTxn);
 
     // We will schedule generating a frame after the scene
     // build is done, so we don't need to do it here.
@@ -1006,16 +994,26 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
   mReceivedDisplayList = true;
   bool observeLayersUpdate = ShouldParentObserveEpoch();
 
-  // The IsFirstPaint() flag should be the same for all the scrolldata across
-  // all the renderroot display lists in a given transaction. We assert this
-  // below. So we can read the flag from any one of them.
-  if (aDisplayLists[0].mScrollData.IsFirstPaint()) {
-    mIsFirstPaint = true;
-  }
+  // The IsFirstPaint() flag should be the same for all the non-empty
+  // scrolldata across all the renderroot display lists in a given
+  // transaction. We assert this below. So we can read the flag from any one
+  // of them.
+  Maybe<size_t> firstScrollDataIndex;
   for (size_t i = 1; i < aDisplayLists.Length(); i++) {
-    // Ensure the flag is the same on all of them.
-    MOZ_RELEASE_ASSERT(aDisplayLists[i].mScrollData.IsFirstPaint() ==
-                       aDisplayLists[0].mScrollData.IsFirstPaint());
+    auto& scrollData = aDisplayLists[i].mScrollData;
+    if (scrollData) {
+      if (firstScrollDataIndex.isNothing()) {
+        firstScrollDataIndex = Some(i);
+        if (scrollData && scrollData->IsFirstPaint()) {
+          mIsFirstPaint = true;
+        }
+      } else {
+        auto firstNonEmpty = aDisplayLists[*firstScrollDataIndex].mScrollData;
+        // Ensure the flag is the same on all of them.
+        MOZ_RELEASE_ASSERT(scrollData->IsFirstPaint() ==
+                           firstNonEmpty->IsFirstPaint());
+      }
+    }
   }
 
   // aScrollData is moved into this function but that is not reflected by the
@@ -1026,8 +1024,10 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
   // sent to WebRender, so that the UpdateHitTestingTree call is guaranteed to
   // be in the updater queue at the time that the scene swap completes.
   for (auto& displayList : aDisplayLists) {
-    UpdateAPZScrollData(wrEpoch, std::move(displayList.mScrollData),
-                        displayList.mRenderRoot);
+    if (displayList.mScrollData) {
+      UpdateAPZScrollData(wrEpoch, std::move(displayList.mScrollData.ref()),
+                          displayList.mRenderRoot);
+    }
   }
 
   bool validTransaction = aIdNamespace == mIdNamespace;
@@ -1037,13 +1037,25 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
   for (auto& displayList : aDisplayLists) {
     MOZ_ASSERT(displayList.mRenderRoot == wr::RenderRoot::Default ||
                IsRootWebRenderBridgeParent());
-    if (!SetDisplayList(
-            displayList.mRenderRoot, displayList.mRect, displayList.mCommands,
-            displayList.mContentSize, std::move(displayList.mDL),
-            displayList.mDLDesc, displayList.mResourceUpdates,
-            displayList.mSmallShmems, displayList.mLargeShmems, aTxnStartTime,
-            txns[displayList.mRenderRoot], senders[displayList.mRenderRoot],
-            wrEpoch, validTransaction, observeLayersUpdate)) {
+    auto renderRoot = displayList.mRenderRoot;
+    auto& txn = txns[renderRoot];
+
+    txn.SetLowPriority(!IsRootWebRenderBridgeParent());
+    if (validTransaction) {
+      senders[renderRoot].emplace(Api(renderRoot), &txn);
+    }
+
+    if (NS_WARN_IF(!ProcessWebRenderParentCommands(displayList.mCommands, txn,
+                                                   renderRoot))) {
+      return IPC_FAIL(this, "Invalid parent command found");
+    }
+
+    if (displayList.mDL &&
+        !SetDisplayList(renderRoot, displayList.mRect, displayList.mContentSize,
+                        std::move(displayList.mDL.ref()), displayList.mDLDesc,
+                        displayList.mResourceUpdates, displayList.mSmallShmems,
+                        displayList.mLargeShmems, aTxnStartTime, txn, wrEpoch,
+                        validTransaction, observeLayersUpdate)) {
       return IPC_FAIL(this, "Failed call to SetDisplayList");
     }
   }
