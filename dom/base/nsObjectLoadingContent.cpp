@@ -2310,14 +2310,14 @@ nsresult nsObjectLoadingContent::OpenChannel() {
 
   nsContentPolicyType contentPolicyType = GetContentPolicyType();
 
-  rv = NS_NewChannel(getter_AddRefs(chan), mURI, thisContent, securityFlags,
-                     contentPolicyType,
-                     nullptr,  // aPerformanceStorage
-                     group,    // aLoadGroup
-                     shim,     // aCallbacks
-                     nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
-                         nsIChannel::LOAD_BYPASS_SERVICE_WORKER |
-                         nsIRequest::LOAD_HTML_OBJECT_DATA);
+  rv = NS_NewChannel(
+      getter_AddRefs(chan), mURI, thisContent, securityFlags, contentPolicyType,
+      nullptr,  // aPerformanceStorage
+      group,    // aLoadGroup
+      shim,     // aCallbacks
+      nsIChannel::LOAD_CALL_CONTENT_SNIFFERS | nsIChannel::LOAD_CLASSIFY_URI |
+          nsIChannel::LOAD_BYPASS_SERVICE_WORKER |
+          nsIRequest::LOAD_HTML_OBJECT_DATA);
   NS_ENSURE_SUCCESS(rv, rv);
   if (inherit) {
     nsCOMPtr<nsILoadInfo> loadinfo = chan->LoadInfo();

@@ -332,7 +332,7 @@ void nsBaseChannel::ClassifyURI() {
     return;
   }
 
-  if (NS_ShouldClassifyChannel(this)) {
+  if (mLoadFlags & LOAD_CLASSIFY_URI) {
     RefPtr<nsChannelClassifier> classifier = new nsChannelClassifier(this);
     if (classifier) {
       classifier->Start();

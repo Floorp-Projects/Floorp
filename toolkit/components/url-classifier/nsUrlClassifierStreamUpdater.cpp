@@ -126,12 +126,9 @@ nsresult nsUrlClassifierStreamUpdater::FetchUpdate(
        aUpdateUrl->GetSpecOrDefault().get()));
 #endif
 
-  // SafeBrowsing update request should never be classified to make sure
-  // we can recover from a bad SafeBrowsing database.
   nsresult rv;
-  uint32_t loadFlags = nsIChannel::INHIBIT_CACHING |
-                       nsIChannel::LOAD_BYPASS_CACHE |
-                       nsIChannel::LOAD_BYPASS_URL_CLASSIFIER;
+  uint32_t loadFlags =
+      nsIChannel::INHIBIT_CACHING | nsIChannel::LOAD_BYPASS_CACHE;
   rv = NS_NewChannel(getter_AddRefs(mChannel), aUpdateUrl,
                      nsContentUtils::GetSystemPrincipal(),
                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,

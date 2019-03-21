@@ -120,6 +120,7 @@ function makeChannel(path, loadingPrincipal, topWindowURI) {
   }
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";
+  chan.loadFlags |= Ci.nsIChannel.LOAD_CLASSIFY_URI;
   if (topWindowURI) {
     chan.QueryInterface(Ci.nsIHttpChannelInternal).setTopWindowURIIfUnknown(topWindowURI);
   }
@@ -246,7 +247,7 @@ var tests = [
   },
 
   // Annotations ON, system loading principal, topWinURI of example.com
-  // => trackers should not be de-prioritized
+  // => trackers should be de-prioritized
   function setupAnnotationsOnSystemPrincipal() {
     if (skipLowestPriority) {
       runTests();
@@ -277,16 +278,16 @@ var tests = [
         path: trackingOrigin + "/evil.css",
         loadingPrincipal: null, // system principal
         topWindowURI: defaultTopWindowURI,
-        expectedTracking: false,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
-        expectedThrottleable: false,
+        expectedTracking: true,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST,
+        expectedThrottleable: true,
       },
       {
         path: trackingOrigin + "/evil.js",
         loadingPrincipal: null, // system principal
         topWindowURI: defaultTopWindowURI,
-        expectedTracking: false,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+        expectedTracking: true,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST,
         expectedThrottleable: true,
       },
     ];
