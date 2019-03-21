@@ -36,24 +36,22 @@ void AddWorkerHolderToStreamChild(const CacheResponse& aResponse,
                                   CacheWorkerHolder* aWorkerHolder) {
   MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerHolder);
 
-  if (aResponse.body().type() == CacheReadStreamOrVoid::Tvoid_t) {
+  if (aResponse.body().isNothing()) {
     return;
   }
 
-  AddWorkerHolderToStreamChild(aResponse.body().get_CacheReadStream(),
-                               aWorkerHolder);
+  AddWorkerHolderToStreamChild(aResponse.body().ref(), aWorkerHolder);
 }
 
 void AddWorkerHolderToStreamChild(const CacheRequest& aRequest,
                                   CacheWorkerHolder* aWorkerHolder) {
   MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerHolder);
 
-  if (aRequest.body().type() == CacheReadStreamOrVoid::Tvoid_t) {
+  if (aRequest.body().isNothing()) {
     return;
   }
 
-  AddWorkerHolderToStreamChild(aRequest.body().get_CacheReadStream(),
-                               aWorkerHolder);
+  AddWorkerHolderToStreamChild(aRequest.body().ref(), aWorkerHolder);
 }
 
 }  // namespace
@@ -108,7 +106,7 @@ mozilla::ipc::IPCResult CacheOpChild::Recv__delete__(
 
   switch (aResult.type()) {
     case CacheOpResult::TCacheMatchResult: {
-      HandleResponse(aResult.get_CacheMatchResult().responseOrVoid());
+      HandleResponse(aResult.get_CacheMatchResult().maybeResponse());
       break;
     }
     case CacheOpResult::TCacheMatchAllResult: {
@@ -128,7 +126,7 @@ mozilla::ipc::IPCResult CacheOpChild::Recv__delete__(
       break;
     }
     case CacheOpResult::TStorageMatchResult: {
-      HandleResponse(aResult.get_StorageMatchResult().responseOrVoid());
+      HandleResponse(aResult.get_StorageMatchResult().maybeResponse());
       break;
     }
     case CacheOpResult::TStorageHasResult: {
@@ -194,13 +192,13 @@ PBackgroundChild* CacheOpChild::GetIPCManager() {
   MOZ_CRASH("CacheOpChild does not implement TypeUtils::GetIPCManager()");
 }
 
-void CacheOpChild::HandleResponse(const CacheResponseOrVoid& aResponseOrVoid) {
-  if (aResponseOrVoid.type() == CacheResponseOrVoid::Tvoid_t) {
+void CacheOpChild::HandleResponse(const Maybe<CacheResponse>& aMaybeResponse) {
+  if (aMaybeResponse.isNothing()) {
     mPromise->MaybeResolveWithUndefined();
     return;
   }
 
-  const CacheResponse& cacheResponse = aResponseOrVoid.get_CacheResponse();
+  const CacheResponse& cacheResponse = aMaybeResponse.ref();
 
   AddWorkerHolderToStreamChild(cacheResponse, GetWorkerHolder());
   RefPtr<Response> response = ToResponse(cacheResponse);

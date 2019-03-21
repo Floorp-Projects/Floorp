@@ -916,7 +916,7 @@ nsresult CacheMatch(mozIStorageConnection* aConn, CacheId aCacheId,
 }
 
 nsresult CacheMatchAll(mozIStorageConnection* aConn, CacheId aCacheId,
-                       const CacheRequestOrVoid& aRequestOrVoid,
+                       const Maybe<CacheRequest>& aMaybeRequest,
                        const CacheQueryParams& aParams,
                        nsTArray<SavedResponse>& aSavedResponsesOut) {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -924,13 +924,13 @@ nsresult CacheMatchAll(mozIStorageConnection* aConn, CacheId aCacheId,
   nsresult rv;
 
   AutoTArray<EntryId, 256> matches;
-  if (aRequestOrVoid.type() == CacheRequestOrVoid::Tvoid_t) {
+  if (aMaybeRequest.isNothing()) {
     rv = QueryAll(aConn, aCacheId, matches);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   } else {
-    rv = QueryCache(aConn, aCacheId, aRequestOrVoid, aParams, matches);
+    rv = QueryCache(aConn, aCacheId, aMaybeRequest.ref(), aParams, matches);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1035,7 +1035,7 @@ nsresult CacheDelete(mozIStorageConnection* aConn, CacheId aCacheId,
 }
 
 nsresult CacheKeys(mozIStorageConnection* aConn, CacheId aCacheId,
-                   const CacheRequestOrVoid& aRequestOrVoid,
+                   const Maybe<CacheRequest>& aMaybeRequest,
                    const CacheQueryParams& aParams,
                    nsTArray<SavedRequest>& aSavedRequestsOut) {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -1043,13 +1043,13 @@ nsresult CacheKeys(mozIStorageConnection* aConn, CacheId aCacheId,
   nsresult rv;
 
   AutoTArray<EntryId, 256> matches;
-  if (aRequestOrVoid.type() == CacheRequestOrVoid::Tvoid_t) {
+  if (aMaybeRequest.isNothing()) {
     rv = QueryAll(aConn, aCacheId, matches);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   } else {
-    rv = QueryCache(aConn, aCacheId, aRequestOrVoid, aParams, matches);
+    rv = QueryCache(aConn, aCacheId, aMaybeRequest.ref(), aParams, matches);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
