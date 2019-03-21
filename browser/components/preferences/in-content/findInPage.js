@@ -232,7 +232,7 @@ var gSearchResultsPane = {
 
       // Building the range for highlighted areas
       let rootPreferencesChildren = [...document
-        .querySelectorAll("#mainPrefPane > *:not([data-hidden-from-search])")];
+        .querySelectorAll("#mainPrefPane > *:not([data-hidden-from-search]):not(script):not(stringbundle)")];
 
       if (subQuery) {
         // Since the previous query is a subset of the current query,
