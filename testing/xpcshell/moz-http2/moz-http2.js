@@ -643,6 +643,18 @@ function handleRequest(req, res) {
     res.end("");
     return;
   }
+  else if (u.pathname === "/dns-ip") {
+    // bar.example.com has A entry 192.192.192.192
+    var content= new Buffer("00000100000100010000000003626172076578616D706C6503636F6D0000010001C00C00010001000000370004C0C0C0C0", "hex");
+    res.setHeader('Content-Type', 'application/dns-message');
+    res.setHeader('Content-Length', content.length);
+    // pass back a cookie here, check it in /dns-auth
+    res.setHeader('Set-Cookie', 'trackyou=yes; path=/; max-age=100000;');
+    res.writeHead(200);
+    res.write(content);
+    res.end("");
+    return;
+  }
   else if (u.pathname === "/dns-ns") {
     // confirm.example.com has NS entry ns.example.com
     var content= new Buffer("00000100000100010000000007636F6E6669726D076578616D706C6503636F6D0000020001C00C00020001000000370012026E73076578616D706C6503636F6D010A00", "hex");
