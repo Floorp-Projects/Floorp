@@ -165,10 +165,13 @@ void gfxAndroidPlatform::GetCommonFallbackFonts(
     uint8_t block = (aCh >> 8) & 0xff;
     switch (block) {
       case 0x05:
+        aFontList.AppendElement("Noto Sans Hebrew");
         aFontList.AppendElement("Droid Sans Hebrew");
+        aFontList.AppendElement("Noto Sans Armenian");
         aFontList.AppendElement("Droid Sans Armenian");
         break;
       case 0x06:
+        aFontList.AppendElement("Noto Sans Arabic");
         aFontList.AppendElement("Droid Sans Arabic");
         break;
       case 0x09:
@@ -185,10 +188,12 @@ void gfxAndroidPlatform::GetCommonFallbackFonts(
         break;
       case 0x10:
       case 0x2d:
+        aFontList.AppendElement("Noto Sans Georgian");
         aFontList.AppendElement("Droid Sans Georgian");
         break;
       case 0x12:
       case 0x13:
+        aFontList.AppendElement("Noto Sans Ethiopic");
         aFontList.AppendElement("Droid Sans Ethiopic");
         break;
       case 0x21:
