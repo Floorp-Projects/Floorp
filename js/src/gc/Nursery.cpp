@@ -1172,38 +1172,8 @@ MOZ_ALWAYS_INLINE void js::Nursery::setStartPosition() {
 }
 
 void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
-  static const float GrowThreshold = 0.03f;
-  static const float ShrinkThreshold = 0.01f;
-  static const float PromotionGoal = (GrowThreshold + ShrinkThreshold) / 2.0f;
-
-  unsigned newMaxNurseryChunks;
-
-  // Shrink the nursery to its minimum size of we ran out of memory or
-  // received a memory pressure event.
-  if (gc::IsOOMReason(reason)) {
-    minimizeAllocableSpace();
+  if (maybeResizeExact(reason)) {
     return;
-  }
-
-#ifdef JS_GC_ZEAL
-  // This zeal mode disabled nursery resizing.
-  if (runtime()->hasZealMode(ZealMode::GenerationalGC)) {
-    return;
-  }
-#endif
-
-  newMaxNurseryChunks = tunables().gcMaxNurseryBytes() >> ChunkShift;
-  if (newMaxNurseryChunks != chunkCountLimit_) {
-    chunkCountLimit_ = newMaxNurseryChunks;
-    /* The configured maximum nursery size is changing */
-    if (maxChunkCount() > newMaxNurseryChunks) {
-      /* We need to shrink the nursery */
-      static_assert(NurseryChunkUsableSize < ChunkSize,
-                    "Usable size must be smaller than total size or this "
-                    "calculation might overflow");
-      shrinkAllocableSpace(newMaxNurseryChunks * NurseryChunkUsableSize);
-      return;
-    }
   }
 
   /*
@@ -1219,29 +1189,30 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
    * relationship that works for all programs and can be predicted in
    * advance doesn't exist.
    */
+  static const float GrowThreshold = 0.03f;
+  static const float ShrinkThreshold = 0.01f;
+  static const float PromotionGoal = (GrowThreshold + ShrinkThreshold) / 2.0f;
   const float factor = promotionRate / PromotionGoal;
   MOZ_ASSERT(factor >= 0.0f);
 
   MOZ_ASSERT((float(capacity()) * factor) <= SIZE_MAX);
-  const size_t newCapacity = size_t(float(capacity()) * factor);
+  size_t newCapacity = size_t(float(capacity()) * factor);
 
   // If one of these conditions is true then we always shrink or grow the
   // nursery.  This way the thresholds still have an effect even if the goal
   // seeking says the current size is ideal.
-  if (maxChunkCount() < chunkCountLimit() && promotionRate > GrowThreshold) {
-    size_t lowLimit = (CheckedInt<size_t>(capacity()) + SubChunkStep).value();
-    size_t highLimit =
-        Min((CheckedInt<size_t>(chunkCountLimit()) * NurseryChunkUsableSize)
-                .value(),
-            (CheckedInt<size_t>(capacity()) * 2).value());
+  size_t lowLimit = Max(SubChunkLimit, capacity() / 2);
+  size_t highLimit = Min(
+      (CheckedInt<size_t>(chunkCountLimit()) * NurseryChunkUsableSize).value(),
+      (CheckedInt<size_t>(capacity()) * 2).value());
+  newCapacity = mozilla::Clamp(newCapacity, lowLimit, highLimit);
 
-    growAllocableSpace(mozilla::Clamp(newCapacity, lowLimit, highLimit));
+  if (maxChunkCount() < chunkCountLimit() && promotionRate > GrowThreshold &&
+      newCapacity > capacity()) {
+    growAllocableSpace(newCapacity);
   } else if (capacity() >= SubChunkLimit + SubChunkStep &&
-             promotionRate < ShrinkThreshold) {
-    size_t lowLimit = Max(SubChunkLimit, capacity() / 2);
-    size_t highLimit = (CheckedInt<size_t>(capacity()) - SubChunkStep).value();
-
-    shrinkAllocableSpace(mozilla::Clamp(newCapacity, lowLimit, highLimit));
+             promotionRate < ShrinkThreshold && newCapacity < capacity()) {
+    shrinkAllocableSpace(newCapacity);
   }
 
   // Assert that the limits are set such that we can shrink the nursery below
@@ -1249,6 +1220,38 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   static_assert(
       SubChunkLimit + SubChunkStep < NurseryChunkUsableSize,
       "Nursery limit must be at least one step from the full chunk size");
+}
+
+bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
+  // Shrink the nursery to its minimum size of we ran out of memory or
+  // received a memory pressure event.
+  if (gc::IsOOMReason(reason)) {
+    minimizeAllocableSpace();
+    return true;
+  }
+
+#ifdef JS_GC_ZEAL
+  // This zeal mode disabled nursery resizing.
+  if (runtime()->hasZealMode(ZealMode::GenerationalGC)) {
+    return true;
+  }
+#endif
+
+  unsigned newMaxNurseryChunks = tunables().gcMaxNurseryBytes() >> ChunkShift;
+  if (newMaxNurseryChunks != chunkCountLimit_) {
+    chunkCountLimit_ = newMaxNurseryChunks;
+    /* The configured maximum nursery size is changing */
+    if (maxChunkCount() > newMaxNurseryChunks) {
+      /* We need to shrink the nursery */
+      static_assert(NurseryChunkUsableSize < ChunkSize,
+                    "Usable size must be smaller than total size or this "
+                    "calculation might overflow");
+      shrinkAllocableSpace(newMaxNurseryChunks * NurseryChunkUsableSize);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void js::Nursery::growAllocableSpace(size_t newCapacity) {
