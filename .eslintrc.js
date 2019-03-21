@@ -55,8 +55,6 @@ module.exports = {
   }, {
     // TODO: Bug 1246594. Empty this list once the rule has landed for all dirs
     "files": [
-      "docshell/test/chrome/docshell_helpers.js",
-      "docshell/test/navigation/NavigationUtils.js",
       "dom/asmjscache/test/**",
       "dom/cache/test/mochitest/test_cache_tons_of_fd.html",
       "dom/crypto/test/**",
