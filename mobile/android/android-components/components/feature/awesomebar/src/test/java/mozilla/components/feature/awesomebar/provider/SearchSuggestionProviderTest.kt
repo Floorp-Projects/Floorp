@@ -346,4 +346,9 @@ class SearchSuggestionProviderTest {
             assertEquals("fire", suggestion.chips[0].title)
         }
     }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `Constructor throws if limit is less than 1`() {
+        SearchSuggestionProvider(mock(), mock(), mock(), limit = 0)
+    }
 }

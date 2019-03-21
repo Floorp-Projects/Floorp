@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
  * @param searchEngine The search engine to request suggestions from.
  * @param searchUseCase The use case to invoke for searches.
  * @param fetchClient The HTTP client for requesting suggestions from the search engine.
- * @param limit The maximum number of suggestions that should be returned.
+ * @param limit The maximum number of suggestions that should be returned. It needs to be >= 1.
  * @param mode Whether to return a single search suggestion (with chips) or one suggestion per item.
  */
 class SearchSuggestionProvider(
@@ -41,6 +41,10 @@ class SearchSuggestionProvider(
         }
     } else {
         null
+    }
+
+    init {
+        require(limit >= 1) { "limit needs to be >= 1" }
     }
 
     @Suppress("ReturnCount")
