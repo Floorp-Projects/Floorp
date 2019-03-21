@@ -131,16 +131,16 @@ var ModuleManager = {
 
     // Now we're switching the remoteness (value of "remote" attr).
 
+    let disabledModules = [];
     this.forEach(module => {
-      if (module.enabled && module.impl) {
-        module.impl.onDisable();
+      if (module.enabled) {
+        module.enabled = false;
+        disabledModules.push(module);
       }
     });
 
     this.forEach(module => {
-      if (module.impl) {
-        module.impl.onDestroyBrowser();
-      }
+      module.onDestroyBrowser();
     });
 
     const parent = this.browser.parentNode;
@@ -161,10 +161,8 @@ var ModuleManager = {
 
     parent.appendChild(this.browser);
 
-    this.forEach(module => {
-      if (module.enabled && module.impl) {
-        module.impl.onEnable();
-      }
+    disabledModules.forEach(module => {
+      module.enabled = true;
     });
 
     this.browser.focus();
@@ -280,7 +278,6 @@ class ModuleInfo {
       this._impl.onSettingsUpdate();
     }
     this._loadPhase(this._onInitPhase);
-    this._onInitPhase = null;
 
     this.enabled = this._enabledOnInit;
   }
@@ -289,6 +286,14 @@ class ModuleInfo {
     if (this._impl) {
       this._impl.onDestroy();
     }
+  }
+
+  // Called before the browser is removed
+  onDestroyBrowser() {
+    if (this.impl) {
+      this.impl.onDestroyBrowser();
+    }
+    this._contentModuleLoaded = false;
   }
 
   /**
@@ -345,7 +350,6 @@ class ModuleInfo {
 
     if (aEnabled) {
       this._loadPhase(this._onEnablePhase);
-      this._onEnablePhase = null;
       if (this._impl) {
         this._impl.onEnable();
         this._impl.onSettingsUpdate();
