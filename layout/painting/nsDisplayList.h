@@ -3542,11 +3542,48 @@ class RetainedDisplayList : public nsDisplayList {
   nsTArray<OldItemInfo> mOldItems;
 };
 
-class FlattenedDisplayItemIterator {
+class FlattenedDisplayListIterator {
  public:
-  FlattenedDisplayItemIterator(nsDisplayListBuilder* aBuilder,
+  FlattenedDisplayListIterator(nsDisplayListBuilder* aBuilder,
+                               nsDisplayList* aList)
+      : FlattenedDisplayListIterator(aBuilder, aList, true) {}
+
+  ~FlattenedDisplayListIterator() { MOZ_ASSERT(!HasNext()); }
+
+  virtual bool HasNext() const { return mNext || !mStack.IsEmpty(); }
+
+  nsDisplayItem* GetNextItem() {
+    MOZ_ASSERT(mNext);
+
+    nsDisplayItem* current = mNext;
+    nsDisplayItem* next = current->GetAbove();
+
+    // Attempt to merge |next| with |current|.
+    if (next && current->CanMerge(next)) {
+      // Merging is possible, collect all the successive mergeable items.
+      AutoTArray<nsDisplayItem*, 2> willMerge{current};
+
+      do {
+        willMerge.AppendElement(next);
+      } while ((next = next->GetAbove()) && current->CanMerge(next));
+
+      current = mBuilder->MergeItems(willMerge);
+    }
+
+    // |mNext| will be either the first item that could not be merged with
+    // |current|, or nullptr.
+    mNext = next;
+    ResolveFlattening();
+
+    return current;
+  }
+
+  nsDisplayItem* PeekNext() { return mNext; }
+
+ protected:
+  FlattenedDisplayListIterator(nsDisplayListBuilder* aBuilder,
                                nsDisplayList* aList,
-                               const bool aResolveFlattening = true)
+                               const bool aResolveFlattening)
       : mBuilder(aBuilder), mNext(aList->GetBottom()) {
     if (aResolveFlattening) {
       // This is done conditionally in case subclass overrides
@@ -3555,24 +3592,9 @@ class FlattenedDisplayItemIterator {
     }
   }
 
-  virtual ~FlattenedDisplayItemIterator() { MOZ_ASSERT(!HasNext()); }
+  virtual void EnterChildList(nsDisplayItem* aContainerItem) {}
+  virtual void ExitChildList() {}
 
-  nsDisplayItem* GetNext() {
-    nsDisplayItem* next = mNext;
-
-    // Advance mNext to the following item
-    if (next) {
-      mNext = mNext->GetAbove();
-      ResolveFlattening();
-    }
-    return next;
-  }
-
-  bool HasNext() const { return mNext || !mStack.IsEmpty(); }
-
-  nsDisplayItem* PeekNext() { return mNext; }
-
- protected:
   bool AtEndOfNestedList() const { return !mNext && mStack.Length() > 0; }
 
   virtual bool ShouldFlattenNextItem() {
@@ -3585,17 +3607,16 @@ class FlattenedDisplayItemIterator {
     // item, or the very end of the outer list.
     while (AtEndOfNestedList() || ShouldFlattenNextItem()) {
       if (AtEndOfNestedList()) {
-        // Pop the last item off the stack.
-        mNext = mStack.LastElement();
-        ExitChildList(mNext);
-        mStack.RemoveElementAt(mStack.Length() - 1);
-        // We stored the item that was flattened, so advance to the next.
-        mNext = mNext->GetAbove();
+        ExitChildList();
+
+        // We reached the end of the list, pop the next item from the stack.
+        mNext = mStack.PopLastElement();
       } else {
-        // This item wants to be flattened. Store the current item on the stack,
-        // and use the first item in the child list instead.
-        mStack.AppendElement(mNext);
         EnterChildList(mNext);
+
+        // This item wants to be flattened. Store the next item on the stack,
+        // and use the first item in the child list instead.
+        mStack.AppendElement(mNext->GetAbove());
 
         nsDisplayList* childItems =
             mNext->GetType() != DisplayItemType::TYPE_TRANSFORM
@@ -3607,12 +3628,10 @@ class FlattenedDisplayItemIterator {
     }
   }
 
-  virtual void ExitChildList(nsDisplayItem* aItem) {}
-  virtual void EnterChildList(nsDisplayItem* aItem) {}
-
+ private:
   nsDisplayListBuilder* mBuilder;
   nsDisplayItem* mNext;
-  AutoTArray<nsDisplayItem*, 10> mStack;
+  AutoTArray<nsDisplayItem*, 16> mStack;
 };
 
 struct HitTestInfo {
