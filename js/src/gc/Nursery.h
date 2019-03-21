@@ -630,6 +630,7 @@ class Nursery {
 
   /* Change the allocable space provided by the nursery. */
   void maybeResizeNursery(JS::GCReason reason);
+  bool maybeResizeExact(JS::GCReason reason);
   void growAllocableSpace(size_t newCapacity);
   void shrinkAllocableSpace(size_t newCapacity);
   void minimizeAllocableSpace();
