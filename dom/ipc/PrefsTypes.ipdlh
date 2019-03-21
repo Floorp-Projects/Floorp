@@ -14,11 +14,6 @@ union PrefValue {
   bool;
 };
 
-union MaybePrefValue {
-  PrefValue;
-  null_t;
-};
-
 // This serialization form mirrors that used in mozilla::Pref in
 // Preferences.cpp. The two should be kept in sync, e.g. if something is added
 // to one it should also be added to the other.
@@ -28,8 +23,8 @@ union MaybePrefValue {
 struct Pref {
   nsCString name;
   bool isLocked;
-  MaybePrefValue defaultValue;
-  MaybePrefValue userValue;
+  PrefValue? defaultValue;
+  PrefValue? userValue;
 };
 
 } // namespace dom
