@@ -8062,6 +8062,9 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     mOnStopRequestCalled = true;
   }
 
+  // The prefetch needs to be released on the main thread
+  mDNSPrefetch = nullptr;
+
   // notify "http-on-stop-connect" observers
   gHttpHandler->OnStopRequest(this);
 
