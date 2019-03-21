@@ -68,11 +68,20 @@ async function testCDP() {
   await Page.enable();
   ok(true, "Page domain has been enabled");
 
+  const frameStoppedLoading = Page.frameStoppedLoading();
+  const navigatedWithinDocument = Page.navigatedWithinDocument();
+  const loadEventFired = Page.loadEventFired();
   await Page.navigate({url: "data:text/html;charset=utf-8,test-page<script>console.log('foo');</script><script>'</script>"});
   ok(true, "A new page has been loaded");
 
-  await Page.loadEventFired();
-  ok(true, "The new page is done loading");
+  await loadEventFired;
+  ok(true, "`Page.loadEventFired` fired");
+
+  await frameStoppedLoading;
+  ok(true, "`Page.frameStoppedLoading` fired");
+
+  await navigatedWithinDocument;
+  ok(true, "`Page.navigatedWithinDocument` fired");
 
   await client.close();
   ok(true, "The client is closed");
