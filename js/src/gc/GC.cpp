@@ -1694,8 +1694,13 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return uint32_t(tunables.gcMaxBytes());
     case JSGC_MAX_MALLOC_BYTES:
       return mallocCounter.maxBytes();
+    case JSGC_MAX_NURSERY_BYTES:
+      MOZ_ASSERT(tunables.gcMaxNurseryBytes() < UINT32_MAX);
+      return uint32_t(tunables.gcMaxNurseryBytes());
     case JSGC_BYTES:
       return uint32_t(heapSize.gcBytes());
+    case JSGC_NUMBER:
+      return uint32_t(number);
     case JSGC_MODE:
       return uint32_t(mode);
     case JSGC_UNUSED_CHUNKS:
@@ -1741,13 +1746,17 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return tunables.maxEmptyChunkCount();
     case JSGC_COMPACTING_ENABLED:
       return compactingEnabled;
+    case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
+      return tunables.nurseryFreeThresholdForIdleCollection();
+    case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT:
+      return uint32_t(tunables.nurseryFreeThresholdForIdleCollectionFraction() *
+                      100.0f);
     case JSGC_PRETENURE_THRESHOLD:
       return uint32_t(tunables.pretenureThreshold() * 100);
     case JSGC_PRETENURE_GROUP_THRESHOLD:
       return tunables.pretenureGroupThreshold();
     default:
-      MOZ_ASSERT(key == JSGC_NUMBER);
-      return uint32_t(number);
+      MOZ_CRASH("Unknown parameter key");
   }
 }
 
