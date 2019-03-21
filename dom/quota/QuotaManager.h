@@ -61,6 +61,9 @@ class NS_NO_VTABLE RefCountedObject {
 class DirectoryLock : public RefCountedObject {
   friend class DirectoryLockImpl;
 
+ public:
+  virtual void LogState() = 0;
+
  private:
   DirectoryLock() {}
 
@@ -209,6 +212,11 @@ class QuotaManager final : public BackgroundThreadObject {
                                             bool aPersistent,
                                             int64_t* aTimestamp,
                                             bool* aPersisted);
+
+  already_AddRefed<DirectoryLock> CreateDirectoryLock(
+      PersistenceType aPersistenceType, const nsACString& aGroup,
+      const nsACString& aOrigin, Client::Type aClientType, bool aExclusive,
+      OpenDirectoryListener* aOpenListener);
 
   // This is the main entry point into the QuotaManager API.
   // Any storage API implementation (quota client) that participates in

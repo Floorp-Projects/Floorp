@@ -6,11 +6,23 @@
 
 #include "QuotaCommon.h"
 
-BEGIN_QUOTA_NAMESPACE
+namespace mozilla {
+namespace dom {
+namespace quota {
+
+namespace {
+
+LazyLogModule gLogger("QuotaManager");
+
+}  // namespace
 
 #ifdef NIGHTLY_BUILD
 NS_NAMED_LITERAL_CSTRING(kInternalError, "internal");
 NS_NAMED_LITERAL_CSTRING(kExternalError, "external");
 #endif
 
-END_QUOTA_NAMESPACE
+LogModule* GetQuotaManagerLogger() { return gLogger; }
+
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla

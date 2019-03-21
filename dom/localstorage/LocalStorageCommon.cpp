@@ -18,6 +18,7 @@ namespace {
 
 StaticMutex gNextGenLocalStorageMutex;
 Atomic<int32_t> gNextGenLocalStorageEnabled(-1);
+LazyLogModule gLogger("LocalStorage");
 
 }  // namespace
 
@@ -132,6 +133,8 @@ nsresult GenerateOriginKey2(const PrincipalInfo& aPrincipalInfo,
 
   return NS_OK;
 }
+
+LogModule* GetLocalStorageLogger() { return gLogger; }
 
 }  // namespace dom
 }  // namespace mozilla
