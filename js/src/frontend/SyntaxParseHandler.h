@@ -600,7 +600,7 @@ class SyntaxParseHandler {
 
   bool isSuperBase(Node pn) { return pn == NodeSuperBase; }
 
-  void setOp(Node pn, JSOp op) {}
+  void setCallOp(CallNodeType pn, JSOp op) {}
   void setListHasNonConstInitializer(ListNodeType literal) {}
   MOZ_MUST_USE Node parenthesize(Node node) {
     // A number of nodes have different behavior upon parenthesization, but
