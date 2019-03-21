@@ -5,22 +5,15 @@
 package mozilla.components.browser.storage.sync
 
 import android.content.Context
-import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.VisitObservation
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.VisitInfo
-import mozilla.components.concept.sync.SyncStatus
-import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.concept.storage.VisitType
-import mozilla.components.concept.sync.AuthInfo
+import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.utils.segmentAwareDomainMatch
 
 const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
@@ -31,15 +24,7 @@ typealias SyncAuthInfo = mozilla.appservices.places.SyncAuthInfo
  * Implementation of the [HistoryStorage] which is backed by a Rust Places lib via [PlacesApi].
  */
 @SuppressWarnings("TooManyFunctions")
-open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStore {
-    private val scope by lazy { CoroutineScope(Dispatchers.IO) }
-    private val storageDir by lazy { context.filesDir }
-
-    @VisibleForTesting
-    internal open val places: Connection by lazy {
-        RustPlacesConnection.init(storageDir)
-        RustPlacesConnection
-    }
+open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), HistoryStorage, SyncableStore {
 
     override suspend fun recordVisit(uri: String, visitType: VisitType) {
         withContext(scope.coroutineContext) {
@@ -51,11 +36,11 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
         // NB: visitType 'UPDATE_PLACE' means "record meta information about this URL".
         withContext(scope.coroutineContext) {
             places.writer().noteObservation(
-                VisitObservation(
-                    url = uri,
-                    visitType = mozilla.appservices.places.VisitType.UPDATE_PLACE,
-                    title = observation.title
-                )
+                    VisitObservation(
+                            url = uri,
+                            visitType = mozilla.appservices.places.VisitType.UPDATE_PLACE,
+                            title = observation.title
+                    )
             )
         }
     }
@@ -67,9 +52,9 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
     override suspend fun getVisited(): List<String> {
         return withContext(scope.coroutineContext) {
             places.reader().getVisitedUrlsInRange(
-                start = 0,
-                end = System.currentTimeMillis(),
-                includeRemote = true
+                    start = 0,
+                    end = System.currentTimeMillis(),
+                    includeRemote = true
             )
         }
     }
@@ -78,11 +63,6 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
         return withContext(scope.coroutineContext) {
             places.reader().getVisitInfos(start, end).map { it.into() }
         }
-    }
-
-    override fun cleanup() {
-        scope.coroutineContext.cancelChildren()
-        places.close()
     }
 
     override fun getSuggestions(query: String, limit: Int): List<SearchResult> {
@@ -98,11 +78,11 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
         val resultText = segmentAwareDomainMatch(query, arrayListOf(url))
         return resultText?.let {
             HistoryAutocompleteResult(
-                input = query,
-                text = it.matchedSegment,
-                url = it.url,
-                source = AUTOCOMPLETE_SOURCE_NAME,
-                totalItems = 1
+                    input = query,
+                    text = it.matchedSegment,
+                    url = it.url,
+                    source = AUTOCOMPLETE_SOURCE_NAME,
+                    totalItems = 1
             )
         }
     }
@@ -154,24 +134,6 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
     override suspend fun prune() {
         withContext(scope.coroutineContext) {
             places.writer().pruneDestructively()
-        }
-    }
-
-    /**
-     * Internal database maintenance tasks. Ideally this should be called once a day.
-     */
-    override suspend fun runMaintenance() {
-        withContext(scope.coroutineContext) {
-            places.writer().runMaintenance()
-        }
-    }
-
-    override suspend fun sync(authInfo: AuthInfo): SyncStatus {
-        return try {
-            places.sync(authInfo.into())
-            SyncStatus.Ok
-        } catch (e: PlacesException) {
-            SyncStatus.Error(e)
         }
     }
 }

@@ -6,37 +6,36 @@ package mozilla.components.browser.storage.sync
 
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.PlacesException
-import mozilla.appservices.places.ReadableHistoryConnection
+import mozilla.appservices.places.PlacesReaderConnection
+import mozilla.appservices.places.PlacesWriterConnection
 import mozilla.appservices.places.SearchResult
 import mozilla.appservices.places.VisitInfo
 import mozilla.appservices.places.VisitObservation
-import mozilla.appservices.places.WritableHistoryConnection
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.sync.AuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.support.test.eq
-import org.junit.Test
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.fail
 import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.times
 import org.mockito.Mockito.never
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
-import java.lang.IllegalArgumentException
 
 @RunWith(RobolectricTestRunner::class)
 class PlacesHistoryStorageTest {
     private var conn: Connection? = null
-    private var reader: ReadableHistoryConnection? = null
-    private var writer: WritableHistoryConnection? = null
+    private var reader: PlacesReaderConnection? = null
+    private var writer: PlacesWriterConnection? = null
 
     private var storage: PlacesHistoryStorage? = null
 
@@ -301,12 +300,12 @@ class PlacesHistoryStorageTest {
     fun `storage passes through sync calls`() = runBlocking {
         var passedAuthInfo: SyncAuthInfo? = null
         val conn = object : Connection {
-            override fun reader(): ReadableHistoryConnection {
+            override fun reader(): PlacesReaderConnection {
                 fail()
                 return mock()
             }
 
-            override fun writer(): WritableHistoryConnection {
+            override fun writer(): PlacesWriterConnection {
                 fail()
                 return mock()
             }
@@ -333,12 +332,12 @@ class PlacesHistoryStorageTest {
     @Test
     fun `storage passes through sync OK results`() = runBlocking {
         val conn = object : Connection {
-            override fun reader(): ReadableHistoryConnection {
+            override fun reader(): PlacesReaderConnection {
                 fail()
                 return mock()
             }
 
-            override fun writer(): WritableHistoryConnection {
+            override fun writer(): PlacesWriterConnection {
                 fail()
                 return mock()
             }
@@ -359,12 +358,12 @@ class PlacesHistoryStorageTest {
     fun `storage passes through sync exceptions`() = runBlocking {
         val exception = PlacesException("test error")
         val conn = object : Connection {
-            override fun reader(): ReadableHistoryConnection {
+            override fun reader(): PlacesReaderConnection {
                 fail()
                 return mock()
             }
 
-            override fun writer(): WritableHistoryConnection {
+            override fun writer(): PlacesWriterConnection {
                 fail()
                 return mock()
             }

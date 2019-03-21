@@ -42,7 +42,7 @@ permalink: /changelog/
 * **concept-fetch**
   * ⚠️ **This is a breaking API change!**: `Headers.Common` was renamed to `Headers.Names`.
   * Added `Headers.Values`.
-
+  
 * **service-pocket**
   * Access an article's text-to-speech listen metadata via `PocketListenEndpoint.getListenArticleMetadata`.
   * ⚠️ **This is a breaking API change!**: `PocketGlobalVideoRecommendation.id` is now a Long instead of an Int
@@ -76,9 +76,13 @@ permalink: /changelog/
 * **concept-storage**
   * ⚠️ **This is a breaking API change!** for non-component implementations of `HistoryStorage`.
   * `HistoryStorage` got new APIs: `deleteEverything`, `deleteVisitsSince`, `deleteVisitsBetween`, `deleteVisitsFor`, `prune` and `runMaintenance`.
+  * Added `BookmarksStorage` for handling the saving, searching, and management of browser bookmarks.
 
 * **browser-storage-sync**, **browser-storage-memory**
   * Implementations of `concept-storage`/`HistoryStorage` expose the newly added APIs.
+  
+* **browser-storage-sync**
+  * Implementations of `concept-storage`/`BookmarksStorage` expose the newly added APIs.
 
 # 0.47.0
 

@@ -8,7 +8,7 @@ package mozilla.components.concept.storage
  * An interface which defines read/write methods for history data.
  */
 @SuppressWarnings("TooManyFunctions")
-interface HistoryStorage {
+interface HistoryStorage : Storage {
     /**
      * Records a visit to a page.
      * @param uri of the page which was visited.
@@ -87,16 +87,6 @@ interface HistoryStorage {
      * Prune history storage, removing stale history.
      */
     suspend fun prune()
-
-    /**
-     * Perform internal storage maintenance.
-     */
-    suspend fun runMaintenance()
-
-    /**
-     * Cleanup any allocated resources.
-     */
-    fun cleanup()
 }
 
 data class PageObservation(val title: String?)
