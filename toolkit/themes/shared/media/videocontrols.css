@@ -424,6 +424,7 @@
   background-image: url(chrome://global/skin/media/error.png);
 }
 
+%ifdef NIGHTLY_BUILD
 .statusIcon[type="pictureInPicture"] {
   min-width: 84px;
   min-height: 84px;
@@ -432,6 +433,7 @@
   fill: #fff;
   stroke: #fff;
 }
+%endif
 
 /* Overlay Play button */
 .clickToPlay {
