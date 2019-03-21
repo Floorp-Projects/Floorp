@@ -24,12 +24,21 @@ class Target {
     this.sessions = new Map();
   }
 
+  /**
+   * Close all pending connections to this target.
+   */
+  disconnect() {
+    for (const [conn] of this.sessions) {
+      conn.close();
+    }
+  }
+
   // nsIHttpRequestHandler
 
   async handle(request, response) {
     const so = await WebSocketServer.upgrade(request, response);
     const transport = new WebSocketDebuggerTransport(so);
-    const conn = new Connection(transport);
+    const conn = new Connection(transport, response._connection);
     this.sessions.set(conn, new this.sessionClass(conn, this));
   }
 

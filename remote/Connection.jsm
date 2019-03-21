@@ -13,9 +13,14 @@ XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 XPCOMUtils.defineLazyServiceGetter(this, "UUIDGen", "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
 
 class Connection {
-  constructor(transport) {
+  /**
+   * @param WebSocketDebuggerTransport transport
+   * @param httpd.js's Connection httpdConnection
+   */
+  constructor(transport, httpdConnection) {
     this.id = UUIDGen.generateUUID().toString();
     this.transport = transport;
+    this.httpdConnection = httpdConnection;
 
     this.transport.hooks = this;
     this.transport.ready();
@@ -93,6 +98,11 @@ class Connection {
   close() {
     this.transport.close();
     this.sessions.clear();
+
+    // In addition to the WebSocket transport, we also have to close the Connection
+    // used internaly within httpd.js. Otherwise the server doesn't shut down correctly
+    // and keep these Connection instances alive.
+    this.httpdConnection.close();
   }
 
   onClosed(status) {}
