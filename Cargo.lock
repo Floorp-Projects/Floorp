@@ -377,6 +377,20 @@ version = "1.0.23"
 source = "git+https://github.com/glandium/cc-rs?branch=1.0.23-clang-cl-aarch64#2aa71628b1261b5515bd8668afca591669ba195d"
 
 [[package]]
+name = "cert_storage"
+version = "0.0.1"
+dependencies = [
+ "base64 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nserror 0.1.0",
+ "nsstring 0.1.0",
+ "rkv 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sha2 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "style 0.0.1",
+ "time 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "xpcom 0.1.0",
+]
+
+[[package]]
 name = "cexpr"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1127,6 +1141,7 @@ dependencies = [
  "arrayvec 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "audioipc-client 0.4.0",
  "audioipc-server 0.2.3",
+ "cert_storage 0.0.1",
  "cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "cubeb-pulse 0.2.0",
  "cubeb-sys 0.5.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1172,7 +1187,7 @@ dependencies = [
 
 [[package]]
 name = "gleam"
-version = "0.6.12"
+version = "0.6.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "gl_generator 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3133,7 +3148,7 @@ dependencies = [
  "dwrote 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "freetype 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "fxhash 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "gleam 0.6.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gleam 0.6.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3184,7 +3199,7 @@ dependencies = [
  "euclid 0.19.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "foreign-types 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "fxhash 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "gleam 0.6.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gleam 0.6.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "nsstring 0.1.0",
  "rayon 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3439,7 +3454,7 @@ dependencies = [
 "checksum generic-array 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3c0f28c2f5bfb5960175af447a2da7c18900693738343dc896ffbcabd9839592"
 "checksum generic-array 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ef25c5683767570c2bbd7deba372926a55eaae9982d7726ee2a1050239d45b9d"
 "checksum gl_generator 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a0ffaf173cf76c73a73e080366bf556b4776ece104b06961766ff11449f38604"
-"checksum gleam 0.6.12 (registry+https://github.com/rust-lang/crates.io-index)" = "f1519ca611d230e1deadbedfb79044b921ac4a961ab8823fef10e37271e2c38e"
+"checksum gleam 0.6.14 (registry+https://github.com/rust-lang/crates.io-index)" = "17bca843dd3cf25db1bf415d55de9c0f0ae09dd7fa952ec3cef9930f90de1339"
 "checksum glob 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)" = "8be18de09a56b60ed0edf84bc9df007e30040691af7acd1c41874faac5895bfb"
 "checksum goblin 0.0.17 (registry+https://github.com/rust-lang/crates.io-index)" = "5911d7df7b8f65ab676c5327b50acea29d3c6a1a4ad05e444cf5dce321b26db2"
 "checksum h2 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)" = "a27e7ed946e8335bdf9a191bc1b9b14a03ba822d013d2f58437f4fabcbd7fc2c"

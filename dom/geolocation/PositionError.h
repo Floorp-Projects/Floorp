@@ -38,6 +38,7 @@ class PositionError final : public nsWrapperCache {
 
   void GetMessage(nsAString& aMessage) const;
 
+  MOZ_CAN_RUN_SCRIPT
   void NotifyCallback(const GeoPositionErrorCallback& callback);
 
  private:

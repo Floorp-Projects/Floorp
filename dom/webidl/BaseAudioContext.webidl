@@ -10,7 +10,9 @@
  * liability, trademark and document use rules apply.
  */
 
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback DecodeSuccessCallback = void (AudioBuffer decodedData);
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback DecodeErrorCallback = void (DOMException error);
 
 enum AudioContextState {

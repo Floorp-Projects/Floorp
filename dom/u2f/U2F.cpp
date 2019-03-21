@@ -270,7 +270,7 @@ void U2F::Register(const nsAString& aAppId,
 
   WebAuthnMakeCredentialInfo info(mOrigin, adjustedAppId, challenge, clientData,
                                   adjustedTimeoutMillis, excludeList,
-                                  null_t() /* no extra info for U2F */);
+                                  Nothing() /* no extra info for U2F */);
 
   MOZ_ASSERT(mTransaction.isNothing());
   mTransaction = Some(U2FTransaction(AsVariant(callback)));
@@ -417,7 +417,7 @@ void U2F::Sign(const nsAString& aAppId, const nsAString& aChallenge,
 
   WebAuthnGetAssertionInfo info(mOrigin, adjustedAppId, challenge, clientData,
                                 adjustedTimeoutMillis, permittedList,
-                                null_t() /* no extra info for U2F */);
+                                Nothing() /* no extra info for U2F */);
 
   MOZ_ASSERT(mTransaction.isNothing());
   mTransaction = Some(U2FTransaction(AsVariant(callback)));

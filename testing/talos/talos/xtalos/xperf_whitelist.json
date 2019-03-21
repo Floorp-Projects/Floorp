@@ -524,6 +524,12 @@
     "minbytes": 0,
     "maxbytes": 32768
   },
+  "{profile}\\security_state\\data.mdb": {
+    "mincount": 0,
+    "maxcount": 4,
+    "minbytes": 0,
+    "maxbytes": 608
+  },
   "{profile}\\sessioncheckpoints.json": {
     "mincount": 0,
     "maxcount": 2,

@@ -109,23 +109,20 @@ RefPtr<U2FRegisterPromise> U2FHIDTokenManager::Register(
 
   uint64_t registerFlags = 0;
 
-  if (aInfo.Extra().type() != WebAuthnMaybeMakeCredentialExtraInfo::Tnull_t) {
-    const auto& extra = aInfo.Extra().get_WebAuthnMakeCredentialExtraInfo();
+  if (aInfo.Extra().isSome()) {
+    const auto& extra = aInfo.Extra().ref();
     const WebAuthnAuthenticatorSelection& sel = extra.AuthenticatorSelection();
 
     UserVerificationRequirement userVerificaitonRequirement =
-        static_cast<UserVerificationRequirement>(
-            sel.userVerificationRequirement());
+        sel.userVerificationRequirement();
 
     bool requireUserVerification =
         userVerificaitonRequirement == UserVerificationRequirement::Required;
 
     bool requirePlatformAttachment = false;
-    if (sel.authenticatorAttachment().type() ==
-        WebAuthnMaybeAuthenticatorAttachment::Tuint8_t) {
+    if (sel.authenticatorAttachment().isSome()) {
       const AuthenticatorAttachment authenticatorAttachment =
-          static_cast<AuthenticatorAttachment>(
-              sel.authenticatorAttachment().get_uint8_t());
+          sel.authenticatorAttachment().value();
       if (authenticatorAttachment == AuthenticatorAttachment::Platform) {
         requirePlatformAttachment = true;
       }
@@ -228,12 +225,11 @@ RefPtr<U2FSignPromise> U2FHIDTokenManager::Sign(
   nsTArray<nsTArray<uint8_t>> appIds;
   appIds.AppendElement(rpIdHash);
 
-  if (aInfo.Extra().type() != WebAuthnMaybeGetAssertionExtraInfo::Tnull_t) {
-    const auto& extra = aInfo.Extra().get_WebAuthnGetAssertionExtraInfo();
+  if (aInfo.Extra().isSome()) {
+    const auto& extra = aInfo.Extra().ref();
 
     UserVerificationRequirement userVerificaitonReq =
-        static_cast<UserVerificationRequirement>(
-            extra.userVerificationRequirement());
+        extra.userVerificationRequirement();
 
     // Set flags for credential requests.
     if (userVerificaitonReq == UserVerificationRequirement::Required) {

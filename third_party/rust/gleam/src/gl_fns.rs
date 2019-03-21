@@ -50,6 +50,14 @@ impl Gl for GlFns {
         }
     }
 
+    fn map_buffer(&self,
+                  target: GLenum,
+                  access: GLbitfield) -> *mut c_void {
+        unsafe {
+            return self.ffi_gl_.MapBuffer(target, access);
+        }
+    }
+
     fn map_buffer_range(&self,
                         target: GLenum,
                         offset: GLintptr,
@@ -148,6 +156,16 @@ impl Gl for GlFns {
         );
 
         pixels
+    }
+
+    unsafe fn read_pixels_into_pbo(&self,
+                            x: GLint,
+                            y: GLint,
+                            width: GLsizei,
+                            height: GLsizei,
+                            format: GLenum,
+                            pixel_type: GLenum) {
+        self.ffi_gl_.ReadPixels(x, y, width, height, format, pixel_type, ptr::null_mut());
     }
 
     fn sample_coverage(&self, value: GLclampf, invert: bool) {

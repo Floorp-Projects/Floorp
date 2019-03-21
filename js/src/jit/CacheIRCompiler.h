@@ -56,6 +56,7 @@ namespace jit {
   _(GuardXrayExpandoShapeAndDefaultProto) \
   _(GuardNoAllocationMetadataBuilder)     \
   _(GuardObjectGroupNotPretenured)        \
+  _(GuardFunctionHasJitEntry)             \
   _(LoadObject)                           \
   _(LoadProto)                            \
   _(LoadEnclosingEnvironment)             \
@@ -125,6 +126,7 @@ namespace jit {
   _(CallInt32ToString)                    \
   _(CallNumberToString)                   \
   _(CallIsSuspendedGeneratorResult)       \
+  _(MetaTwoByte)                          \
   _(WrapResult)
 
 // [SMDDOC] CacheIR Value Representation and Tracking
@@ -737,7 +739,7 @@ class MOZ_RAII CacheIRCompiler {
   // up with the opcode signature in CACHE_IR_OPS.
   void assertAllArgumentsConsumed() {
     CacheOp prevOp = CacheOp(*currentVerificationPosition_);
-    uint32_t expectedLength = CacheIROpFormat::OpLengths[uint8_t(prevOp)];
+    uint32_t expectedLength = 1 + CacheIROpFormat::ArgLengths[uint8_t(prevOp)];
 
     const uint8_t* newPosition = reader.currentPosition();
     MOZ_ASSERT(newPosition > currentVerificationPosition_);
@@ -883,6 +885,12 @@ class MOZ_RAII CacheIRCompiler {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
     return jsid::fromRawBits(readStubWord(offset, StubField::Type::Id));
   }
+
+ public:
+  // The maximum number of inlineable spread call arguments. Keep this small
+  // to avoid controllable stack overflows by attackers passing large arrays
+  // to spread call.
+  static const uint32_t MAX_ARGS_SPREAD_LENGTH = 16;
 };
 
 // Ensures the IC's output register is available for writing.

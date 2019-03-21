@@ -7,26 +7,15 @@
 const Services = require("Services");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
-const { L10nRegistry, FileSource } =
-  require("resource://gre/modules/L10nRegistry.jsm");
+const { L10nRegistry } = require("resource://gre/modules/L10nRegistry.jsm");
 
 class L10n {
   async init() {
-    // XXX Until the strings for the updated about:debugging stabilize, we
-    // locate them outside the regular directory for locale resources so that
-    // they don't get picked up by localization tools.
-    if (!L10nRegistry.sources.has("aboutdebugging")) {
-      const temporarySource = new FileSource(
-        "aboutdebugging",
-        ["en-US"],
-        "chrome://devtools/content/aboutdebugging-new/tmp-locale/{locale}/"
-      );
-      L10nRegistry.registerSource(temporarySource);
-    }
-
     const locales = Services.locale.appLocalesAsBCP47;
-    const generator =
-      L10nRegistry.generateBundles(locales, ["aboutdebugging.ftl"]);
+    const generator = L10nRegistry.generateBundles(locales, [
+      "branding/brand.ftl",
+      "devtools/aboutdebugging.ftl",
+    ]);
 
     this._bundles = [];
     for await (const bundle of generator) {
@@ -50,10 +39,6 @@ class L10n {
     // - perform asserts based on the number of arguments
     // - add new arguments
     return this._reactLocalization.getString.apply(this._reactLocalization, arguments);
-  }
-
-  destroy() {
-    L10nRegistry.removeSource("aboutdebugging");
   }
 }
 

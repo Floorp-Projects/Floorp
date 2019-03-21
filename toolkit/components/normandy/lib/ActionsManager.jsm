@@ -67,7 +67,7 @@ class ActionsManager {
         } else {
           status = Uptake.ACTION_SERVER_ERROR;
         }
-        Uptake.reportAction(action.name, status);
+        await Uptake.reportAction(action.name, status);
       }
     }
 
@@ -85,7 +85,7 @@ class ActionsManager {
       } catch (err) {
         log.error(`Could not run pre-execution hook for ${actionName}:`, err.message);
         manager.disabled = true;
-        Uptake.reportAction(actionName, Uptake.ACTION_PRE_EXECUTION_ERROR);
+        await Uptake.reportAction(actionName, Uptake.ACTION_PRE_EXECUTION_ERROR);
       }
     }
   }
@@ -117,13 +117,13 @@ class ActionsManager {
           status = Uptake.RECIPE_EXECUTION_ERROR;
         }
       }
-      Uptake.reportRecipe(recipe, status);
+      await Uptake.reportRecipe(recipe, status);
     } else {
       log.error(
         `Could not execute recipe ${recipe.name}:`,
         `Action ${recipe.action} is either missing or invalid.`
       );
-      Uptake.reportRecipe(recipe, Uptake.RECIPE_INVALID_ACTION);
+      await Uptake.reportRecipe(recipe, Uptake.RECIPE_INVALID_ACTION);
     }
   }
 
@@ -148,10 +148,10 @@ class ActionsManager {
 
       try {
         await manager.runAsyncCallback("postExecution");
-        Uptake.reportAction(actionName, Uptake.ACTION_SUCCESS);
+        await Uptake.reportAction(actionName, Uptake.ACTION_SUCCESS);
       } catch (err) {
         log.info(`Could not run post-execution hook for ${actionName}:`, err.message);
-        Uptake.reportAction(actionName, Uptake.ACTION_POST_EXECUTION_ERROR);
+        await Uptake.reportAction(actionName, Uptake.ACTION_POST_EXECUTION_ERROR);
       }
     }
 

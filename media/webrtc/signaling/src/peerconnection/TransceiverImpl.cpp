@@ -138,7 +138,7 @@ nsresult TransceiverImpl::UpdateSendTrack(dom::MediaStreamTrack* aSendTrack) {
 }
 
 nsresult TransceiverImpl::UpdateTransport() {
-  if (!mJsepTransceiver->HasLevel()) {
+  if (!mJsepTransceiver->HasLevel() || mJsepTransceiver->IsStopped()) {
     return NS_OK;
   }
 

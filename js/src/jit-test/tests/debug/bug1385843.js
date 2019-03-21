@@ -9,7 +9,6 @@ g.eval("(" + function() {
         count++;
         var ex = frame.eval("this").throw.unsafeDereference();
         assertEq(ex.message.includes("call super constructor"), true);
-        assertEq(ex.message.includes("Foo2"), true);
     }
 } + ")()");
 class Foo1 {};
