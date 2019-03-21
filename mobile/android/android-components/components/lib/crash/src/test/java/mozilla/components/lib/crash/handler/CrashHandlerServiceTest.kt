@@ -26,7 +26,6 @@ class CrashHandlerServiceTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
 
-
     @After
     fun tearDown() {
         CrashReporter.reset()
