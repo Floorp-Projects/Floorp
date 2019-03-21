@@ -26,6 +26,12 @@ permalink: /changelog/
 * **feature-awesomebar**
   * `SearchSuggestionProvider` and `AwesomeBarFeature` now allow setting a search suggestion limit.
 
+* **feature-findinpage**
+  * ⚠️ **This is a breaking API change!**: `FindInPageFeature` constructor now takes an `EngineView` instance.
+  * Blur controlled `EngineView` for better screen reader accessibility.
+  * Announce result count for screen reader users.
+
+
 # 0.47.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.46.0...v0.47.0)
@@ -97,11 +103,6 @@ permalink: /changelog/
 
 * **concept-fetch**
   * Added common HTTP header constants in `Headers.Common`. This collection is incomplete: add your own!
-
-* **feature-findinpage**
-  * ⚠️ **This is a breaking API change!**: `FindInPageFeature` constructor now takes an `EngineView` instance.
-  * Blur controlled `EngineView` for better screen reader accessibility.
-  * Announce result count for screen reader users.
 
 # 0.46.0
 
