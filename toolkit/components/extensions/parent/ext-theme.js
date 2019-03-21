@@ -38,35 +38,39 @@ class Theme {
    * @param {string} extension Extension that created the theme.
    * @param {Integer} windowId The windowId where the theme is applied.
    */
-  constructor({extension, details, darkDetails, windowId, experiment}) {
+  constructor({extension, details, darkDetails, windowId, experiment, startupData}) {
     this.extension = extension;
     this.details = details;
     this.darkDetails = darkDetails;
     this.windowId = windowId;
 
-    this.lwtStyles = {
-      icons: {},
-    };
-    this.lwtDarkStyles = null;
+    if (startupData && startupData.lwtData) {
+      Object.assign(this, startupData);
+    } else {
+      this.lwtStyles = {
+        icons: {},
+      };
+      this.lwtDarkStyles = null;
 
-    if (experiment) {
-      const canRunExperiment = AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
-        Services.prefs.getBoolPref("extensions.legacy.enabled");
-      if (canRunExperiment) {
-        this.lwtStyles.experimental = {
-          colors: {},
-          images: {},
-          properties: {},
-        };
-        const {baseURI} = this.extension;
-        if (experiment.stylesheet) {
-          experiment.stylesheet = baseURI.resolve(experiment.stylesheet);
+      if (experiment) {
+        const canRunExperiment = AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
+          Services.prefs.getBoolPref("extensions.legacy.enabled");
+        if (canRunExperiment) {
+          this.lwtStyles.experimental = {
+            colors: {},
+            images: {},
+            properties: {},
+          };
+          const {baseURI} = this.extension;
+          if (experiment.stylesheet) {
+            experiment.stylesheet = baseURI.resolve(experiment.stylesheet);
+          }
+          this.experiment = experiment;
+        } else {
+          const {logger} = this.extension;
+          logger.warn("This extension is not allowed to run theme experiments");
+          return;
         }
-        this.experiment = experiment;
-      } else {
-        const {logger} = this.extension;
-        logger.warn("This extension is not allowed to run theme experiments");
-        return;
       }
     }
     this.load();
@@ -80,37 +84,47 @@ class Theme {
    *   properties can be found in the schema under ThemeType.
    */
   load() {
-    this.loadDetails(this.details, this.lwtStyles);
-    if (this.darkDetails) {
-      this.lwtDarkStyles = {
-        icons: {},
+    if (!this.lwtData) {
+      this.loadDetails(this.details, this.lwtStyles);
+      if (this.darkDetails) {
+        this.lwtDarkStyles = {
+          icons: {},
+        };
+        this.loadDetails(this.darkDetails, this.lwtDarkStyles);
+      }
+
+      this.lwtData = {
+        theme: this.lwtStyles,
+        darkTheme: this.lwtDarkStyles,
       };
-      this.loadDetails(this.darkDetails, this.lwtDarkStyles);
-    }
 
-    let lwtData = {
-      theme: this.lwtStyles,
-      darkTheme: this.lwtDarkStyles,
-    };
+      if (this.experiment) {
+        this.lwtData.experiment = this.experiment;
+      }
 
-    if (this.experiment) {
-      lwtData.experiment = this.experiment;
+      this.extension.startupData = {
+        lwtData: this.lwtData,
+        lwtStyles: this.lwtStyles,
+        lwtDarkStyles: this.lwtDarkStyles,
+        experiment: this.experiment,
+      };
+      this.extension.saveStartupData();
     }
 
     if (this.windowId) {
-      lwtData.window =
+      this.lwtData.window =
         getWinUtils(windowTracker.getWindow(this.windowId)).outerWindowID;
       windowOverrides.set(this.windowId, this);
     } else {
       windowOverrides.clear();
       defaultTheme = this;
-      LightweightThemeManager.fallbackThemeData = lwtData;
+      LightweightThemeManager.fallbackThemeData = this.lwtData;
     }
     onUpdatedEmitter.emit("theme-updated", this.details, this.windowId);
 
     Services.obs.notifyObservers(null,
                                  "lightweight-theme-styling-update",
-                                 JSON.stringify(lwtData));
+                                 JSON.stringify(this.lwtData));
   }
 
   /**
@@ -404,6 +418,7 @@ this.theme = class extends ExtensionAPI {
       details: manifest.theme,
       darkDetails: manifest.dark_theme,
       experiment: manifest.theme_experiment,
+      startupData: extension.startupData,
     });
   }
 
