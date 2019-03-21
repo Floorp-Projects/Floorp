@@ -23,6 +23,7 @@ remote.jar:
   # targets
   content/targets/MainProcessTarget.jsm (targets/MainProcessTarget.jsm)
   content/targets/TabTarget.jsm (targets/TabTarget.jsm)
+  content/targets/Target.jsm (targets/Target.jsm)
   content/targets/Targets.jsm (targets/Targets.jsm)
 
   # domains
