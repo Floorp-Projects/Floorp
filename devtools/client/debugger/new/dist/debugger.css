@@ -3637,7 +3637,6 @@ html .breakpoints-list .breakpoint.paused {
   padding: 0 0.5em;
   line-height: 25px;
   position: relative;
-  transition: all 0.25s ease;
   cursor: pointer;
   display: flex;
 }
