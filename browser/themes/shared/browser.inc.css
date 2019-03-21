@@ -6,17 +6,23 @@
 %include addons/extension-controlled.inc.css
 
 %filter substitution
-%define navbarTabsShadowSize 1px
 %define themeTransition background-color 0.1s cubic-bezier(.17,.67,.83,.67)
 %define lwtPopupBrighttextLinkColor #45a1ff
 
 :root {
   /* Note: Setting this to 0 (without px) breaks CSS calculations for OSX. */
   --space-above-tabbar: 0px;
+  --tabs-navbar-shadow-size: 1px;
 }
 
 :root[extradragspace][tabsintitlebar]:not([inFullscreen]) {
   --space-above-tabbar: 8px;
+}
+
+@media (min-resolution: 1.5dppx) {
+  :root {
+    --tabs-navbar-shadow-size: 0.5px;
+  }
 }
 
 /* Increase contrast of UI links on dark themes */

@@ -133,7 +133,7 @@
 #main-window:-moz-any([sizemode="fullscreen"],[customize-entered]) #nav-bar:not([tabs-hidden="true"]),
 #main-window:not([tabsintitlebar]) #nav-bar:not([tabs-hidden="true"]),
 #nav-bar:not([tabs-hidden="true"]):-moz-lwtheme {
-  box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border-color);
+  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--tabs-border-color);
 }
 
 /* Always draw a border on Yosemite to ensure the border is well-defined there
@@ -147,7 +147,7 @@
   }
 
   #main-window[tabsintitlebar] #nav-bar:not([tabs-hidden="true"]):not(:-moz-lwtheme) {
-    box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border-color);
+    box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--tabs-border-color);
   }
 }
 
