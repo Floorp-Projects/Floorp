@@ -371,12 +371,12 @@ class FullParseHandler {
   BinaryNodeType newPropertyDefinition(Node key, Node val) {
     MOZ_ASSERT(isUsableAsObjectPropertyName(key));
     checkAndSetIsDirectRHSAnonFunction(val);
-    return newBinary(ParseNodeKind::Colon, key, val, JSOP_INITPROP);
+    return new_<PropertyDefinition>(key, val, AccessorType::None);
   }
 
   void addPropertyDefinition(ListNodeType literal, BinaryNodeType propdef) {
     MOZ_ASSERT(literal->isKind(ParseNodeKind::ObjectExpr));
-    MOZ_ASSERT(propdef->isKind(ParseNodeKind::Colon));
+    MOZ_ASSERT(propdef->isKind(ParseNodeKind::PropertyDefinition));
 
     if (!propdef->right()->isConstant()) {
       literal->setHasNonConstInitializer();
@@ -451,8 +451,7 @@ class FullParseHandler {
 
     checkAndSetIsDirectRHSAnonFunction(funNode);
 
-    ClassMethod* classMethod =
-        new_<ClassMethod>(key, funNode, AccessorTypeToJSOp(atype), isStatic);
+    ClassMethod* classMethod = new_<ClassMethod>(key, funNode, atype, isStatic);
     if (!classMethod) {
       return false;
     }
@@ -780,8 +779,7 @@ class FullParseHandler {
                                                      AccessorType atype) {
     MOZ_ASSERT(isUsableAsObjectPropertyName(key));
 
-    return newBinary(ParseNodeKind::Colon, key, value,
-                     AccessorTypeToJSOp(atype));
+    return new_<PropertyDefinition>(key, value, atype);
   }
 
   BinaryNodeType newShorthandPropertyDefinition(Node key, Node value) {
