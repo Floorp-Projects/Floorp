@@ -73,7 +73,8 @@ class NetworkLocationsForm extends PureComponent {
 
     return Message(
       {
-        className: "connect-page__network-form__error-message",
+        className: "connect-page__network-form__error-message " +
+                   "qa-connect-page__network-form__error-message",
         level: MESSAGE_LEVEL.ERROR,
       },
       Localized(
