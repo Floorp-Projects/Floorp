@@ -747,6 +747,7 @@ class ContextMenuChild extends ActorChild {
     context.onCompletedImage    = false;
     context.onCTPPlugin         = false;
     context.onDRMMedia          = false;
+    context.onPiPVideo          = false;
     context.onEditable          = false;
     context.onImage             = false;
     context.onKeywordField      = false;
@@ -869,6 +870,10 @@ class ContextMenuChild extends ActorChild {
 
       if (this._isProprietaryDRM()) {
         context.onDRMMedia = true;
+      }
+
+      if (context.target.isCloningElementVisually) {
+        context.onPiPVideo = true;
       }
 
       // Firefox always creates a HTMLVideoElement when loading an ogg file
