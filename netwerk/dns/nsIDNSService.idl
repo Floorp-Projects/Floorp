@@ -212,6 +212,17 @@ interface nsIDNSService : nsISupports
      */
     [noscript] void getDNSCacheEntries(in EntriesArray args);
 
+
+    /**
+     * Clears the DNS cache.
+     * @param aTrrToo
+     *        If true we will clear TRR cached entries too. Since these
+     *        are resolved remotely it's not necessary to clear them when
+     *        the network status changes, but it's sometimes useful to do so
+     *        for tests or other situations.
+     */
+    void clearCache(in boolean aTrrToo);
+
     /**
      * @return the hostname of the operating system.
      */
