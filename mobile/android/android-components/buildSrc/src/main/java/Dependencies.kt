@@ -9,6 +9,7 @@ object Versions {
 
     const val androidx_test = "1.1.0"
     const val androidx_runner = "1.1.0"
+    const val androidx_espresso = "3.1.1"
 
     const val junit = "4.12"
     const val robolectric = "4.1"
@@ -53,6 +54,7 @@ object Dependencies {
     const val androidx_test_runner = "androidx.test:runner:${Versions.androidx_test}"
     const val androidx_test_rules = "androidx.test:rules:${Versions.androidx_test}"
     const val androidx_work_testing = "android.arch.work:work-testing:${Versions.workmanager}"
+    const val androidx_espresso_core = "androidx.test.espresso:espresso-core:${Versions.androidx_espresso}"
 
     const val support_annotations = "com.android.support:support-annotations:${Versions.support_libraries}"
     const val support_cardview = "com.android.support:cardview-v7:${Versions.support_libraries}"

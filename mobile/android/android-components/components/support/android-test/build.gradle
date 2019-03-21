@@ -33,6 +33,8 @@ android {
 dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.arch_lifecycle
+
+    implementation Dependencies.androidx_espresso_core
 }
 
 apply from: '../../../publish.gradle'
