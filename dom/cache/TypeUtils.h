@@ -37,7 +37,6 @@ namespace cache {
 
 class CacheQueryParams;
 class CacheReadStream;
-class CacheReadStreamOrVoid;
 class CacheRequest;
 class CacheResponse;
 class HeadersEntry;
@@ -123,7 +122,7 @@ class TypeUtils {
                                                       ErrorResult& aRv);
 
   void SerializeCacheStream(
-      nsIInputStream* aStream, CacheReadStreamOrVoid* aStreamOut,
+      nsIInputStream* aStream, Maybe<CacheReadStream>* aStreamOut,
       nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList,
       ErrorResult& aRv);
 
