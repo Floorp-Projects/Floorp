@@ -715,6 +715,11 @@ pub extern "C" fn wr_renderer_map_and_recycle_screenshot(
     )
 }
 
+#[no_mangle]
+pub extern "C" fn wr_renderer_release_profiler_structures(renderer: &mut Renderer) {
+    renderer.release_profiler_structures();
+}
+
 // Call wr_renderer_render() before calling this function.
 #[no_mangle]
 pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut Renderer,
