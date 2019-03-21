@@ -45,7 +45,6 @@ class nsIContent;
 
 class nsPresContext;
 struct nsTimingFunction;
-struct RawServoRuleNode;
 struct TreeMatchContext;
 
 namespace mozilla {
@@ -356,7 +355,7 @@ class ServoStyleSet {
    */
   already_AddRefed<ComputedStyle> ResolveForDeclarations(
       const ComputedStyle* aParentOrNull,
-      RawServoDeclarationBlockBorrowed aDeclarations);
+      const RawServoDeclarationBlock* aDeclarations);
 
   already_AddRefed<RawServoAnimationValue> ComputeAnimationValue(
       dom::Element* aElement, RawServoDeclarationBlock* aDeclaration,

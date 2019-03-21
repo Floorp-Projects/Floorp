@@ -392,8 +392,7 @@ class EffectCompositeOrderComparator {
 
 bool EffectCompositor::GetServoAnimationRule(
     const dom::Element* aElement, PseudoStyleType aPseudoType,
-    CascadeLevel aCascadeLevel,
-    RawServoAnimationValueMapBorrowedMut aAnimationValues) {
+    CascadeLevel aCascadeLevel, RawServoAnimationValueMap* aAnimationValues) {
   MOZ_ASSERT(aAnimationValues);
   MOZ_ASSERT(mPresContext && mPresContext->IsDynamic(),
              "Should not be in print preview");
