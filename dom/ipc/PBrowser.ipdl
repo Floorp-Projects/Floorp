@@ -119,12 +119,6 @@ struct RequestData
   nsCString matchedList;
 };
 
-union OptionalShmem
-{
-  void_t;
-  Shmem;
-};
-
 nested(upto inside_cpow) sync protocol PBrowser
 {
     manager PContent;
@@ -588,7 +582,7 @@ parent:
     nested(inside_sync) sync DispatchKeyboardEvent(WidgetKeyboardEvent event);
 
     async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action,
-                            OptionalShmem visualData,
+                            Shmem? visualData,
                             uint32_t stride, SurfaceFormat format,
                             LayoutDeviceIntRect dragRect,
                             Principal principal);

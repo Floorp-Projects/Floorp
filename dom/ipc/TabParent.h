@@ -572,7 +572,7 @@ class TabParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvInvokeDragSession(
       nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction,
-      const OptionalShmem& aVisualDnDData, const uint32_t& aStride,
+      Maybe<Shmem>&& aVisualDnDData, const uint32_t& aStride,
       const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
       const IPC::Principal& aPrincipal);
 
