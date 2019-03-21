@@ -163,7 +163,7 @@ function xpcWaitForFinishedFrames(callback, numFrames) {
     }
 
     if (finishedFrameCount > numFrames)
-      throw "Too many frames loaded.";
+      throw new Error("Too many frames loaded.");
   }
 
   var finishedWindows = [];
