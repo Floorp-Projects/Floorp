@@ -5,11 +5,11 @@
 
 add_task(function test_constructor() {
   Assert.throws(() => new UrlbarQueryContext(),
-    /Missing or empty enableAutofill provided to UrlbarQueryContext/,
+    /Missing or empty allowAutofill provided to UrlbarQueryContext/,
     "Should throw with no arguments");
 
   Assert.throws(() => new UrlbarQueryContext({
-    enableAutofill: true,
+    allowAutofill: true,
     isPrivate: false,
     maxResults: 1,
     searchString: "foo",
@@ -17,7 +17,7 @@ add_task(function test_constructor() {
     "Should throw with a missing lastKey parameter");
 
   Assert.throws(() => new UrlbarQueryContext({
-    enableAutofill: true,
+    allowAutofill: true,
     isPrivate: false,
     lastKey: "b",
     searchString: "foo",
@@ -25,7 +25,7 @@ add_task(function test_constructor() {
     "Should throw with a missing maxResults parameter");
 
   Assert.throws(() => new UrlbarQueryContext({
-    enableAutofill: true,
+    allowAutofill: true,
     lastKey: "b",
     maxResults: 1,
     searchString: "foo",
@@ -37,19 +37,19 @@ add_task(function test_constructor() {
     lastKey: "b",
     maxResults: 1,
     searchString: "foo",
-  }), /Missing or empty enableAutofill provided to UrlbarQueryContext/,
-    "Should throw with a missing enableAutofill parameter");
+  }), /Missing or empty allowAutofill provided to UrlbarQueryContext/,
+    "Should throw with a missing allowAutofill parameter");
 
   let qc = new UrlbarQueryContext({
-    enableAutofill: false,
+    allowAutofill: false,
     isPrivate: true,
     lastKey: "b",
     maxResults: 1,
     searchString: "foo",
   });
 
-  Assert.strictEqual(qc.enableAutofill, false,
-    "Should have saved the correct value for enableAutofill");
+  Assert.strictEqual(qc.allowAutofill, false,
+    "Should have saved the correct value for allowAutofill");
   Assert.strictEqual(qc.isPrivate, true,
     "Should have saved the correct value for isPrivate");
   Assert.equal(qc.lastKey, "b",

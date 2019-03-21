@@ -32,6 +32,8 @@ function synthesizeDblClickOnCell(aTree, column, row) {
 
 async function togglePasswords() {
   pwmgrdlg.document.querySelector("#togglePasswords").doCommand();
+  await ContentTaskUtils.waitForCondition(() => !signonsTree.columns.getNamedColumn("passwordCol").hidden,
+                                          "Waiting for Passwords Column to Show/Hide");
   await new Promise(resolve => waitForFocus(resolve, pwmgrdlg));
   pwmgrdlg.document.documentElement.clientWidth; // flush to ensure UI up-to-date
 }

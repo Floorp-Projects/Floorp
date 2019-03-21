@@ -693,6 +693,24 @@ async function runUrlbarTest(useAwesomebar,
           fn();
         }, ms);
       };
+    } else {
+      let popup = URLBar.view;
+      let oldOnQueryResults = popup.onQueryResults.bind(popup);
+      let oldOnQueryFinished = popup.onQueryFinished.bind(popup);
+
+      // We need to invalidate the frame tree outside of the normal
+      // mechanism since invalidations and result additions to the
+      // URL bar occur without firing JS events (which is how we
+      // normally know to dirty the frame tree).
+      popup.onQueryResults = (context) => {
+        dirtyFrame(win);
+        oldOnQueryResults(context);
+      };
+
+      popup.onQueryFinished = (context) => {
+        dirtyFrame(win);
+        oldOnQueryFinished(context);
+      };
     }
 
     let waitExtra = async () => {

@@ -2,15 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-### These strings are used inside the about:debugging panel which is available
-### by setting the preference `devtools.aboutdebugging.new-enabled` to true.
+### These strings are used inside the about:debugging UI.
 
-# Display name of the runtime "This Firefox". Reused as the sidebar name for This Firefox
-# (about-debugging-sidebar-this-firefox.name). Not displayed elsewhere in the application
-# at the moment.
-# This should the same string as the part outside of the parentheses in toolbox.properties
-# toolbox.debugTargetInfo.runtimeLabel.thisFirefox. See 1520525.
-about-debugging-this-firefox-runtime-name = This Firefox
+# Page Title strings
+
+# Page title (ie tab title) for the Setup page
+about-debugging-page-title-setup-page = Debugging - Setup
+
+# Page title (ie tab title) for the Runtime page
+# { $selectedRuntimeId } is the id of the current runtime, such as "this-firefox", "localhost:6080", ...
+about-debugging-page-title-runtime-page = Debugging - Runtime / { $selectedRuntimeId }
+
+# Sidebar strings
+
+# Display name of the runtime for the currently running instance of Firefox. Used in the
+# Sidebar and in the Setup page.
+about-debugging-this-firefox-runtime-name = This { -brand-shorter-name }
 
 # Sidebar heading for selecting the currently running instance of Firefox
 about-debugging-sidebar-this-firefox =
@@ -56,21 +63,43 @@ about-debugging-sidebar-runtime-item-name =
 about-debugging-sidebar-runtime-item-name-no-device =
   .title = { $displayName }
 
-# Temporary text displayed in a sidebar button to refresh USB devices. Temporary
-# UI, do not localize.
+# Text displayed in a sidebar button to refresh the list of USB devices. Clicking on it
+# will attempt to update the list of devices displayed in the sidebar.
 about-debugging-refresh-usb-devices-button = Refresh devices
 
+# Setup Page strings
+
 # Title of the Setup page.
-about-debugging-connect-title = Setup
+about-debugging-setup-title = Setup
+
+# Introduction text in the Setup page to explain how to configure remote debugging.
+about-debugging-setup-intro = Configure the connection method you wish to remotely debug your device with.
+
+# Link displayed in the Setup page that leads to MDN page with list of supported devices.
+# Temporarily leads to https://support.mozilla.org/en-US/kb/will-firefox-work-my-mobile-device#w_android-devices
+about-debugging-setup-link-android-devices = View list of supported Android devices
 
 # Explanatory text in the Setup page about what the 'This Firefox' page is for
-about-debugging-setup-this-firefox = Use <a>This Firefox</a> to debug tags, extensions and service workers on this version of Firefox.
+about-debugging-setup-this-firefox = Use <a>{ about-debugging-this-firefox-runtime-name }</a> to debug tabs, extensions and service workers on this version of { -brand-shorter-name }.
+
+# Title of the heading Connect section of the Setup page.
+about-debugging-setup-connect-heading = Connect a Device
 
 # USB section of the Setup page
 about-debugging-setup-usb-title = USB
-about-debugging-setup-usb-disabled = Enabling this will download and add the required Android USB debugging components to Firefox.
+
+# Explanatory text displayed in the Setup page when USB debugging is disabled
+about-debugging-setup-usb-disabled = Enabling this will download and add the required Android USB debugging components to { -brand-shorter-name }.
+
+# Text of the button displayed in the USB section of the setup page when USB debugging is disabled.
+# Clicking on it will download components needed to debug USB Devices remotely.
 about-debugging-setup-usb-enable-button = Enable USB Devices
+
+# Text of the button displayed in the USB section of the setup page when USB debugging is enabled.
 about-debugging-setup-usb-disable-button = Disable USB Devices
+
+# Text of the button displayed in the USB section of the setup page while USB debugging
+# components are downloaded and installed.
 about-debugging-setup-usb-updating-button = Updating…
 
 # USB section of the Setup page (USB status)
@@ -90,14 +119,27 @@ about-debugging-setup-usb-step-enable-debug-firefox = Enable USB Debugging in Fi
 # USB section step by step guide
 about-debugging-setup-usb-step-plug-device = Connect the Android device to your computer.
 
-# Network section of the Connect page
-about-debugging-connect-network =
+# Network section of the Setup page
+about-debugging-setup-network =
   .title = Network Location
 
-# Temporary text displayed when network location support is turned off via preferences.
-# { $pref } is the name of the preference that enables network locations
-# Do not localize
-about-debugging-connect-network-disabled = Network location support currently under development. You can enable it with the preference “{ $pref }”.
+# Text of a button displayed after the network locations "Host" input.
+# Clicking on it will add the new network location to the list.
+about-debugging-network-locations-add-button = Add
+
+# Text to display when there are no locations to show.
+about-debugging-network-locations-empty-text = No network locations have been added yet.
+
+# Text of the label for the text input that allows users to add new network locations in
+# the Connect page. A host is a hostname and a port separated by a colon, as suggested by
+# the input's placeholder "localhost:6080".
+about-debugging-network-locations-host-input-label = Host
+
+# Text of a button displayed next to existing network locations in the Connect page.
+# Clicking on it removes the network location from the list.
+about-debugging-network-locations-remove-button = Remove
+
+# Runtime Page strings
 
 # Below are the titles for the various categories of debug targets that can be found
 # on "runtime" pages of about:debugging.
@@ -119,6 +161,9 @@ about-debugging-runtime-shared-workers =
 # Title of the other workers category.
 about-debugging-runtime-other-workers =
   .name = Other Workers
+# Title of the processes category.
+about-debugging-runtime-processes =
+  .name = Processes
 
 # Label of the button opening the performance profiler panel in runtime pages for remote
 # runtimes.
@@ -149,7 +194,40 @@ about-debugging-runtime-version-too-old-67-debugger = The Debugger panel may not
 # { $localID } is the build ID of the current Firefox instance (same format)
 # { $runtimeVersion } is the version of the remote runtime (for instance "67.0a1")
 # { $localVersion } is the version of your current runtime (same format)
-about-debugging-runtime-version-too-recent = The connected runtime is more recent ({ $runtimeVersion }, buildID { $runtimeID }) than your desktop Firefox ({ $localVersion }, buildID { $localID }). This is an unsupported setup and may cause DevTools to fail. Please update Firefox. <a>Troubleshooting</a>
+about-debugging-runtime-version-too-recent = The connected runtime is more recent ({ $runtimeVersion }, buildID { $runtimeID }) than your { -brand-shorter-name } ({ $localVersion }, buildID { $localID }). This is an unsupported setup and may cause DevTools to fail. Please update Firefox. <a>Troubleshooting</a>
+
+# Displayed for runtime info in runtime pages.
+# { $name } is brand name such as "Firefox Nightly"
+# { $version } is version such as "64.0a1"
+about-debugging-runtime-name = { $name } ({ $version })
+
+# Text of a button displayed in Runtime pages for remote runtimes.
+# Clicking on the button will close the connection to the runtime.
+about-debugging-runtime-disconnect-button = Disconnect
+
+# Text of the connection prompt button displayed in Runtime pages, when the preference
+# "devtools.debugger.prompt-connection" is false on the target runtime.
+about-debugging-connection-prompt-enable-button = Enable connection prompt
+
+# Text of the connection prompt button displayed in Runtime pages, when the preference
+# "devtools.debugger.prompt-connection" is true on the target runtime.
+about-debugging-connection-prompt-disable-button = Disable connection prompt
+
+# Title of a modal dialog displayed on remote runtime pages after clicking on the Profile Runtime button.
+about-debugging-profiler-dialog-title = Performance Profiler
+
+# Label of a checkbox displayed in the runtime page for "This Firefox".
+# This checkbox will toggle preferences that enable local addon debugging.
+# The "Learn more" link points to MDN.
+# https://developer.mozilla.org/docs/Tools/about:debugging#Enabling_add-on_debugging
+about-debugging-extension-debug-setting-label = Enable extension debugging. <a>Learn more</a>
+
+# Clicking on the header of a debug target category will expand or collapse the debug
+# target items in the category. This text is used as ’title’ attribute of the header,
+# to describe this feature.
+about-debugging-collapse-expand-debug-targets = Collapse / expand
+
+# Debug Targets strings
 
 # Displayed in the categories of "runtime" pages that don't have any debug target to
 # show. Debug targets depend on the category (extensions, tabs, workers...).
@@ -184,9 +262,10 @@ about-debugging-tmp-extension-install-message = Select manifest.json file or .xp
 # This string is displayed as a message about the add-on having a temporaryID.
 about-debugging-tmp-extension-temporary-id = This WebExtension has a temporary ID. <a>Learn more</a>
 
-# Text of a link displayed for extensions in "runtime" pages.
-# Clicking on the link should open the manifest file in a new tab.
-about-debugging-extension-manifest-link = Manifest URL
+# Text displayed for extensions in "runtime" pages, before displaying a link the extension's
+# manifest URL.
+about-debugging-extension-manifest-url =
+  .label = Manifest URL
 
 # Text displayed for extensions in "runtime" pages, before displaying the extension's uuid.
 # UUIDs look like b293e463-481e-5148-a487-5aaf7a130429
@@ -200,23 +279,8 @@ about-debugging-extension-location =
 
 # Text displayed for extensions in "runtime" pages, before displaying the extension's ID.
 # For instance "geckoprofiler@mozilla.com" or "{ed26ddcb-5611-4512-a89a-51b8db81cfb2}".
-about-debugging-extension-id = Extension ID
-
-# Text of a button displayed after the network locations "Host" input.
-# Clicking on it will add the new network location to the list.
-about-debugging-network-locations-add-button = Add
-
-# Text to display when there are no locations to show.
-about-debugging-network-locations-empty-text = No network locations have been added yet.
-
-# Text of the label for the text input that allows users to add new network locations in
-# the Connect page. A host is a hostname and a port separated by a colon, as suggested by
-# the input's placeholder "localhost:6080".
-about-debugging-network-locations-host-input-label = Host
-
-# Text of a button displayed next to existing network locations in the Connect page.
-# Clicking on it removes the network location from the list.
-about-debugging-network-locations-remove-button = Remove
+about-debugging-extension-id =
+  .label = Extension ID
 
 # This string is displayed as a label of the button that pushes a test payload
 # to a service worker.
@@ -230,29 +294,25 @@ about-debugging-worker-action-start = Start
 # This string is displayed as a label of the button that unregisters a service worker.
 about-debugging-worker-action-unregister = Unregister
 
-# Reused for the service worker fetch status labels.
-# "Fetch" is an event type and should not be localized.
--worker-fetch-label = Fetch
-
 # Displayed for service workers in runtime pages that listen to Fetch events.
 about-debugging-worker-fetch-listening =
-  .label = { -worker-fetch-label }
+  .label = Fetch
   .value = Listening for fetch events
 
 # Displayed for service workers in runtime pages that do not listen to Fetch events.
 about-debugging-worker-fetch-not-listening =
-  .label = { -worker-fetch-label }
+  .label = Fetch
   .value = Not listening for fetch events
 
-# Displayed for service workers in runtime pages, to indicate the status of a worker.
-# For workers for which no registration could be found yet, they are considered as
-# 'registering' (only active registrations are visible from about:debugging).
-about-debugging-worker-status =
-  { $status ->
-    [running] Running
-   *[stopped] Stopped
-    [registering] Registering
-  }
+# Displayed for service workers in runtime pages that are currently running (service
+# worker instance is active).
+about-debugging-worker-status-running = Running
+
+# Displayed for service workers in runtime pages that are registered but stopped.
+about-debugging-worker-status-stopped = Stopped
+
+# Displayed for service workers in runtime pages that are registering.
+about-debugging-worker-status-registering = Registering
 
 # Displayed for service workers in runtime pages, to label the scope of a worker
 about-debugging-worker-scope =
@@ -263,51 +323,10 @@ about-debugging-worker-scope =
 about-debugging-worker-push-service =
   .label = Push Service
 
-# Displayed for runtime info in runtime pages.
-# { $name } is brand name such as "Firefox Nightly"
-# { $version } is version such as "64.0a1"
-about-debugging-runtime-name = { $name } ({ $version })
-
-# Text of the connection prompt button displayed in Runtime pages, when the preference
-# "devtools.debugger.prompt-connection" is false on the target runtime.
-about-debugging-connection-prompt-enable-button = Enable connection prompt
-
-# Text of the connection prompt button displayed in Runtime pages, when the preference
-# "devtools.debugger.prompt-connection" is true on the target runtime.
-about-debugging-connection-prompt-disable-button = Disable connection prompt
-
-# Title of the application displayed in the tab
--application-title = Debugging
-
-# Page title of connect / runtime page
-# Part of "about-debugging-page-title" string defined below
-about-debugging-page-title-selected-page =
-  { $selectedPage ->
-     [connect] Setup
-     *[runtime] Runtime
-  }
-
-# Page title with the runtime displayed in the tab
-# { $selectedRuntimeId } is the id of the current runtime, such as "this-firefox", "localhost:6080", ...
-about-debugging-page-title-with-runtime = { -application-title } - { about-debugging-page-title-selected-page } / { $selectedRuntimeId }
-
-# Page title without the runtime displayed in the tab
-about-debugging-page-title = { -application-title } - { about-debugging-page-title-selected-page }
-
-# Title of a modal dialog displayed on remote runtime pages after clicking on the Profile Runtime button.
-about-debugging-profiler-dialog-title = Performance Profiler
-
-# Label of a checkbox displayed in the runtime page for "This Firefox".
-# This checkbox will toggle preferences that enable local addon debugging.
-# The "Learn more" link points to MDN.
-# https://developer.mozilla.org/docs/Tools/about:debugging#Enabling_add-on_debugging
-about-debugging-extension-debug-setting-label = Enable extension debugging <a>Learn more</a>
-
-# Clicking on the header of a debug target category will expand or collapse the debug
-# target items in the category. This text is used as ’title’ attribute of the header,
-# to describe this feature.
-about-debugging-collapse-expand-debug-targets = Collapse / expand
-
+# Displayed as name for the Main Process debug target in the Processes category. Only for
+# remote runtimes, if `devtools.aboutdebugging.process-debugging` is true.
 about-debugging-main-process-name = Main Process
-about-debugging-main-process-description = Main Process for the target runtime
 
+# Displayed as description for the Main Process debug target in the Processes category.
+# Only for remote runtimes, if `devtools.aboutdebugging.process-debugging` is true.
+about-debugging-main-process-description = Main Process for the target runtime

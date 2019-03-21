@@ -1198,7 +1198,8 @@ def check_have_64_bit(have_64_bit, compiler_have_64_bit):
 def default_debug_flags(compiler_info, target):
     # Debug info is ON by default.
     if compiler_info.type == 'clang-cl':
-        return '-Z7'
+        # -fno-limit-debug-info works around https://llvm.org/pr38944
+        return '-Z7 -fno-limit-debug-info'
     elif target.kernel == 'WINNT' and compiler_info.type == 'clang':
         return '-g -gcodeview'
     return '-g'

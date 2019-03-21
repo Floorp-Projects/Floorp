@@ -4664,6 +4664,7 @@ class IDLCallback(IDLObjectWithScope):
 
         self._treatNonCallableAsNull = False
         self._treatNonObjectAsNull = False
+        self._isRunScriptBoundary = False
 
     def isCallback(self):
         return True
@@ -4701,6 +4702,8 @@ class IDLCallback(IDLObjectWithScope):
                 self._treatNonCallableAsNull = True
             elif attr.identifier() == "TreatNonObjectAsNull":
                 self._treatNonObjectAsNull = True
+            elif attr.identifier() == "MOZ_CAN_RUN_SCRIPT_BOUNDARY":
+                self._isRunScriptBoundary = True
             else:
                 unhandledAttrs.append(attr)
         if self._treatNonCallableAsNull and self._treatNonObjectAsNull:
@@ -4711,6 +4714,9 @@ class IDLCallback(IDLObjectWithScope):
 
     def _getDependentObjects(self):
         return set([self._returnType] + self._arguments)
+
+    def isRunScriptBoundary(self):
+        return self._isRunScriptBoundary;
 
 
 class IDLCallbackType(IDLType):

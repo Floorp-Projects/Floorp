@@ -139,7 +139,7 @@ class TypedArrayObject : public ArrayBufferViewObject {
   void getElements(Value* vp);
 
   static bool GetTemplateObjectForNative(JSContext* cx, Native native,
-                                         const CallArgs& args,
+                                         const JS::HandleValueArray args,
                                          MutableHandleObject res);
 
   /*

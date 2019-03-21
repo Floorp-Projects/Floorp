@@ -2272,7 +2272,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 80;
+    const UI_VERSION = 81;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
@@ -2583,6 +2583,26 @@ BrowserGlue.prototype = {
       const kLocalHosts = new Set(["localhost", "127.0.0.1"]);
       hosts = hosts.split(/[ ,]+/).filter(host => !kLocalHosts.has(host)).join(", ");
       Services.prefs.setCharPref("network.proxy.no_proxies_on", hosts);
+    }
+
+    if (currentUIVersion < 81) {
+      // Reset homepage pref for users who have it set to a default from before Firefox 4:
+      //   <locale>.(start|start2|start3).mozilla.(com|org)
+      const HOMEPAGE_PREF = "browser.startup.homepage";
+      if (Services.prefs.prefHasUserValue(HOMEPAGE_PREF)) {
+        const DEFAULT = Services.prefs.getDefaultBranch(HOMEPAGE_PREF).getCharPref("");
+        let value = Services.prefs.getCharPref(HOMEPAGE_PREF);
+        let updated = value.replace(
+          /https?:\/\/([\w\-]+[.])?start[\d]*\.mozilla\.(org|com)[^|]*/ig, DEFAULT);
+        if (updated != value) {
+          if (updated == DEFAULT) {
+            Services.prefs.clearUserPref(HOMEPAGE_PREF);
+          } else {
+            value = updated;
+            Services.prefs.setCharPref(HOMEPAGE_PREF, value);
+          }
+        }
+      }
     }
 
     // Update the migration version.

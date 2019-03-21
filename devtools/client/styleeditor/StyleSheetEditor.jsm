@@ -42,9 +42,6 @@ const CHECK_LINKED_SHEET_DELAY = 500;
 // How many times to check for linked file changes
 const MAX_CHECK_COUNT = 10;
 
-// The classname used to show a line that is not used
-const UNUSED_CLASS = "cm-unused-line";
-
 // How much time should the mouse be still before the selector at that position
 // gets highlighted?
 const SELECTOR_HIGHLIGHT_TIMEOUT = 500;
@@ -303,41 +300,6 @@ StyleSheetEditor.prototype = {
         throw e;
       }
     });
-  },
-
-  /**
-   * Add markup to a region. UNUSED_CLASS is added to specified lines
-   * @param region An object shaped like
-   *   {
-   *     start: { line: L1, column: C1 },
-   *     end: { line: L2, column: C2 }    // optional
-   *   }
-   */
-  addUnusedRegion: function(region) {
-    this.sourceEditor.addLineClass(region.start.line - 1, UNUSED_CLASS);
-    if (region.end) {
-      for (let i = region.start.line; i <= region.end.line; i++) {
-        this.sourceEditor.addLineClass(i - 1, UNUSED_CLASS);
-      }
-    }
-  },
-
-  /**
-   * As addUnusedRegion except that it takes an array of regions
-   */
-  addUnusedRegions: function(regions) {
-    for (const region of regions) {
-      this.addUnusedRegion(region);
-    }
-  },
-
-  /**
-   * Remove all the unused markup regions added by addUnusedRegion
-   */
-  removeAllUnusedRegions: function() {
-    for (let i = 0; i < this.sourceEditor.lineCount(); i++) {
-      this.sourceEditor.removeLineClass(i, UNUSED_CLASS);
-    }
   },
 
   /**

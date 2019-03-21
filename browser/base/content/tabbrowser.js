@@ -3318,7 +3318,7 @@ window._gBrowser = {
           this._isBusy = true;
       }
 
-      this._swapBrowserDocShells(aOurTab, otherBrowser, Ci.nsIBrowser.SWAP_DEFAULT, stateFlags);
+      this._swapBrowserDocShells(aOurTab, otherBrowser, stateFlags);
     }
 
     // Unregister the previously opened URI
@@ -3367,7 +3367,7 @@ window._gBrowser = {
     return true;
   },
 
-  swapBrowsers(aOurTab, aOtherTab, aFlags) {
+  swapBrowsers(aOurTab, aOtherTab) {
     let otherBrowser = aOtherTab.linkedBrowser;
     let otherTabBrowser = otherBrowser.getTabBrowser();
 
@@ -3378,7 +3378,7 @@ window._gBrowser = {
     filter.removeProgressListener(tabListener);
 
     // Perform the docshell swap through the common mechanism.
-    this._swapBrowserDocShells(aOurTab, otherBrowser, aFlags);
+    this._swapBrowserDocShells(aOurTab, otherBrowser);
 
     // Restore the listeners for the swapped in tab.
     tabListener = new otherTabBrowser.ownerGlobal.TabProgressListener(aOtherTab, otherBrowser, false, false);
@@ -3389,7 +3389,7 @@ window._gBrowser = {
     otherBrowser.webProgress.addProgressListener(filter, notifyAll);
   },
 
-  _swapBrowserDocShells(aOurTab, aOtherBrowser, aFlags, aStateFlags) {
+  _swapBrowserDocShells(aOurTab, aOtherBrowser, aStateFlags) {
     // aOurTab's browser needs to be inserted now if it hasn't already.
     this._insertBrowser(aOurTab);
 
@@ -3432,17 +3432,15 @@ window._gBrowser = {
       remoteBrowser._outerWindowIDBrowserMap.set(aOtherBrowser.outerWindowID, aOtherBrowser);
     }
 
-    if (!(aFlags & Ci.nsIBrowser.SWAP_KEEP_PERMANENT_KEY)) {
-      // Swap permanentKey properties.
-      let ourPermanentKey = ourBrowser.permanentKey;
-      ourBrowser.permanentKey = aOtherBrowser.permanentKey;
-      aOtherBrowser.permanentKey = ourPermanentKey;
-      aOurTab.permanentKey = ourBrowser.permanentKey;
-      if (remoteBrowser) {
-        let otherTab = remoteBrowser.getTabForBrowser(aOtherBrowser);
-        if (otherTab) {
-          otherTab.permanentKey = aOtherBrowser.permanentKey;
-        }
+    // Swap permanentKey properties.
+    let ourPermanentKey = ourBrowser.permanentKey;
+    ourBrowser.permanentKey = aOtherBrowser.permanentKey;
+    aOtherBrowser.permanentKey = ourPermanentKey;
+    aOurTab.permanentKey = ourBrowser.permanentKey;
+    if (remoteBrowser) {
+      let otherTab = remoteBrowser.getTabForBrowser(aOtherBrowser);
+      if (otherTab) {
+        otherTab.permanentKey = aOtherBrowser.permanentKey;
       }
     }
 

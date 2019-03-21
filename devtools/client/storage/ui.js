@@ -80,7 +80,6 @@ const ITEM_NAME_MAX_LENGTH = 32;
 class StorageUI {
   constructor(front, target, panelWin, toolbox) {
     EventEmitter.decorate(this);
-
     this._target = target;
     this._window = panelWin;
     this._panelDoc = panelWin.document;
@@ -601,7 +600,8 @@ class StorageUI {
     }
 
     try {
-      if (reason === REASON.POPULATE) {
+      if (reason === REASON.POPULATE ||
+          (reason === REASON.NEW_ROW && this.table.items.size === 0)) {
         let subType = null;
         // The indexedDB type could have sub-type data to fetch.
         // If having names specified, then it means
@@ -630,6 +630,8 @@ class StorageUI {
       const {data} = await storageType.getStoreObjects(host, names, fetchOpts);
       if (data.length) {
         await this.populateTable(data, reason);
+      } else if (reason === REASON.POPULATE) {
+        await this.clearHeaders();
       }
       this.updateToolbar();
       this.emit("store-objects-updated");
@@ -653,9 +655,6 @@ class StorageUI {
       this._addButton.hidden = false;
       this._addButton.setAttribute("tooltiptext",
         L10N.getFormatStr("storage.popupMenu.addItemLabel"));
-    } else {
-      this._addButton.hidden = true;
-      this._addButton.removeAttribute("tooltiptext");
     }
   }
 
@@ -985,6 +984,8 @@ class StorageUI {
 
     let names = null;
     if (!host) {
+      // If selected item has no host then reset table headers
+      await this.clearHeaders();
       return;
     }
     if (item.length > 2) {
@@ -992,6 +993,13 @@ class StorageUI {
     }
     await this.fetchStorageObjects(type, host, names, REASON.POPULATE);
     this.itemOffset = 0;
+  }
+
+  /**
+   * Clear the column headers in the storage table
+   */
+  async clearHeaders() {
+    this.table.setColumns({}, null, {}, {});
   }
 
   /**
@@ -1117,6 +1125,10 @@ class StorageUI {
       // Stop Propagation to prevent opening up of split console
       this.hideSidebar();
       this.sidebarToggledOpen = false;
+      event.stopPropagation();
+      event.preventDefault();
+    } else if (event.keyCode == KeyCodes.DOM_VK_BACK_SPACE && this.table.selectedRow) {
+      this.onRemoveItem();
       event.stopPropagation();
       event.preventDefault();
     }
@@ -1300,13 +1312,17 @@ class StorageUI {
   onRemoveItem() {
     const [, host, ...path] = this.tree.selectedItem;
     const front = this.getCurrentFront();
-    const rowId = this.table.contextMenuRowId;
+    const uniqueId = this.table.uniqueId;
+    const rowId = this.table.contextMenuRowId || this.table.selectedRow[uniqueId];
     const data = this.table.items.get(rowId);
+
     let name = data[this.table.uniqueId];
     if (path.length > 0) {
       name = JSON.stringify([...path, name]);
     }
     front.removeItem(host, name);
+
+    return false;
   }
 
   /**

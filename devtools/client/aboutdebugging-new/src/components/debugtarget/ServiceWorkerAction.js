@@ -48,6 +48,20 @@ class ServiceWorkerAction extends PureComponent {
     });
   }
 
+  _getStatusLocalizationId(status) {
+    switch (status) {
+      case SERVICE_WORKER_STATUSES.REGISTERING.toLowerCase():
+        return "about-debugging-worker-status-registering";
+      case SERVICE_WORKER_STATUSES.RUNNING.toLowerCase():
+        return "about-debugging-worker-status-running";
+      case SERVICE_WORKER_STATUSES.STOPPED.toLowerCase():
+        return "about-debugging-worker-status-stopped";
+      default:
+        // Assume status is stopped for unknown status value.
+        return "about-debugging-worker-status-stopped";
+    }
+  }
+
   _renderStatus() {
     const status = this.props.target.details.status.toLowerCase();
     const statusClassName = status === SERVICE_WORKER_STATUSES.RUNNING.toLowerCase()
@@ -55,8 +69,7 @@ class ServiceWorkerAction extends PureComponent {
 
     return Localized(
       {
-        id: "about-debugging-worker-status",
-        $status: status,
+        id: this._getStatusLocalizationId(status),
       },
       dom.span(
         {

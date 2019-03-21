@@ -19,6 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=884693
 
     const SERVER_URL = "http://mochi.test:8888/tests/dom/base/test/chrome/bug884693.sjs";
     const INVALID_XML = "InvalidXML";
+    const XML_WITHOUT_ROOT = "<?xml version='1.0'?>";
 
     let consoleService = Cc["@mozilla.org/consoleservice;1"].
                          getService(Ci.nsIConsoleService)
@@ -63,7 +64,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=884693
       then(() => { return runTest(205, "Reset Content", INVALID_XML, "", []); }).
       then(() => { return runTest(304, "Not modified", "", "", []); }).
       then(() => { return runTest(304, "Not modified", INVALID_XML, "", []); }).
-      then(() => { return runTest(200, "OK", "", "", ["no root element found"]); }).
+      then(() => { return runTest(200, "OK", "", "", []); }).
+      then(() => { return runTest(200, "OK", XML_WITHOUT_ROOT, XML_WITHOUT_ROOT, ["no root element found"]); }).
       then(() => { return runTest(200, "OK", INVALID_XML, INVALID_XML, ["syntax error"]); }).
       then(SimpleTest.finish);
 

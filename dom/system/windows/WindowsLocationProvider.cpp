@@ -9,6 +9,7 @@
 #include "nsComponentManagerUtils.h"
 #include "prtime.h"
 #include "MLSFallback.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/PositionErrorBinding.h"
@@ -40,7 +41,8 @@ WindowsLocationProvider::MLSUpdate::NotifyError(uint16_t aError) {
   if (!mCallback) {
     return NS_ERROR_FAILURE;
   }
-  return mCallback->NotifyError(aError);
+  nsCOMPtr<nsIGeolocationUpdate> callback(mCallback);
+  return callback->NotifyError(aError);
 }
 
 class LocationEvent final : public ILocationEvents {
@@ -55,6 +57,7 @@ class LocationEvent final : public ILocationEvents {
   STDMETHODIMP QueryInterface(REFIID iid, void** ppv) override;
 
   // ILocationEvents interface
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   STDMETHODIMP OnStatusChanged(REFIID aReportType,
                                LOCATION_REPORT_STATUS aStatus) override;
   STDMETHODIMP OnLocationChanged(REFIID aReportType,
@@ -127,7 +130,8 @@ LocationEvent::OnStatusChanged(REFIID aReportType,
     default:
       return S_OK;
   }
-  mCallback->NotifyError(err);
+  nsCOMPtr<nsIGeolocationUpdate> callback(mCallback);
+  callback->NotifyError(err);
   return S_OK;
 }
 
