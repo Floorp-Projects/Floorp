@@ -68,7 +68,11 @@ public final class MediaManager extends Service {
     public boolean onUnbind(final Intent intent) {
         Log.i(LOGTAG, "Media service has been unbound. Stopping.");
         stopSelf();
-        Process.killProcess(Process.myPid());
+        if (mNumActiveRequests != 0) {
+            // Not unbound by RemoteManager -- caller process is dead.
+            Log.w(LOGTAG, "unbound while client still active.");
+            Process.killProcess(Process.myPid());
+        }
         return false;
     }
 }
