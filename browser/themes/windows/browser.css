@@ -106,10 +106,10 @@
     /* On Windows 10, when temporarily showing the menu bar, make it at least as
      * tall as the tab bar such that the window controls don't appear to move up. */
     :root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
-      height: calc(var(--tab-min-height) - @navbarTabsShadowSize@);
+      height: calc(var(--tab-min-height) - var(--tabs-navbar-shadow-size));
     }
     :root[tabsintitlebar][sizemode="normal"] #toolbar-menubar[autohide="true"] {
-      height: calc(var(--tab-min-height) + var(--space-above-tabbar) - @navbarTabsShadowSize@);
+      height: calc(var(--tab-min-height) + var(--space-above-tabbar) - var(--tabs-navbar-shadow-size));
     }
   }
 }
@@ -273,7 +273,7 @@
 }
 
 #nav-bar {
-  box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border-color);
+  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--tabs-border-color);
 }
 @media (-moz-windows-compositor: 0) {
   #nav-bar[tabs-hidden="true"] {
@@ -919,7 +919,7 @@ notification[value="translation"] {
 /* Prevent window controls from overlapping the nav bar's shadow on the tab
  * bar. */
 #TabsToolbar > .titlebar-buttonbox-container {
-  margin-bottom: @navbarTabsShadowSize@;
+  margin-bottom: var(--tabs-navbar-shadow-size);
 }
 
 :root:not([privatebrowsingmode=temporary]) .accessibility-indicator,

@@ -76,7 +76,7 @@ toolbar[brighttext] {
 #TabsToolbar .toolbarbutton-1,
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
-  margin: 0 0 @navbarTabsShadowSize@ !important;
+  margin: 0 0 var(--tabs-navbar-shadow-size) !important;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
