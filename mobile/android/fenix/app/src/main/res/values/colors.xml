@@ -85,4 +85,6 @@
 
     <color name="quick_action_read_icon">#8a201f</color>
     <color name="quick_action_read_icon_background">#fce98f</color>
+
+    <color name="quick_action_pull_tab">#2915141A</color>
 </resources>

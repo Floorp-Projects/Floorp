@@ -20,7 +20,7 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:background="@color/off_white"
+        android:background="?attr/toolbarColor"
         android:clipToPadding="true"
         app:behavior_hideable="true"
         app:behavior_peekHeight="15dp"

@@ -53,6 +53,7 @@
         <item name="browserToolbarBackground">@color/off_white</item>
         <item name="browserToolbarIcons">@color/icons_light_mode</item>
         <item name="browserToolbarMenuIcons">@color/icons_light_mode</item>
+        <item name="quickActionPullTabColor">@color/quick_action_pull_tab</item>
 
         <!-- History fragment colors -->
         <item name="historyTitleColor">@color/history_title_light_theme</item>
@@ -93,6 +94,7 @@
         <item name="homeDividerColor">@color/search_private_background</item>
         <item name="sessionBackgroundColor">@color/session_list_private_header</item>
         <item name="sessionBorderColor">@color/private_browsing_primary</item>
+        <item name="quickActionPullTabColor">@color/off_white</item>
 
         <!-- Search fragment colors -->
         <item name="searchBackground">@color/private_browsing_bottom_gradient</item>

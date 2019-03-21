@@ -9,16 +9,16 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/off_white">
+    android:background="?attr/toolbarColor">
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/quick_action_sheet_handle"
-        android:layout_marginTop="3dp"
         android:layout_marginBottom="10dp"
         android:layout_width="24dp"
         android:layout_height="2dp"
         android:layout_gravity="center_horizontal"
-        android:background="@drawable/ic_drawer_pull_tab"/>
+        android:background="?attr/quickActionPullTabColor"
+        android:src="@drawable/ic_drawer_pull_tab"/>
 
     <LinearLayout
         android:orientation="horizontal"
@@ -26,7 +26,7 @@
         android:layout_width="match_parent"
         android:layout_marginBottom="3dp"
         android:layout_height="wrap_content"
-        android:background="@color/off_white">
+        android:background="?attr/toolbarColor">
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_weight="1"
@@ -37,7 +37,7 @@
             android:layout_gravity="center_vertical"
             android:contentDescription="@string/quick_action_share"
             android:src="@drawable/quick_action_icon_share"
-            android:background="@color/off_white"/>
+            android:background="?attr/toolbarColor"/>
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_weight="1"
@@ -48,7 +48,7 @@
             android:layout_gravity="center_vertical"
             android:contentDescription="@string/quick_action_screenshot"
             android:src="@drawable/library_icon_screenshots_circle_background"
-            android:background="@color/off_white"/>
+            android:background="?attr/toolbarColor"/>
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_weight="1"
@@ -59,7 +59,7 @@
             android:layout_gravity="center_vertical"
             android:contentDescription="@string/quick_action_download"
             android:src="@drawable/library_icon_downloads_circle_background"
-            android:background="@color/off_white"/>
+            android:background="?attr/toolbarColor"/>
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_weight="1"
@@ -70,7 +70,7 @@
             android:layout_gravity="center_vertical"
             android:contentDescription="@string/quick_action_favorite"
             android:src="@drawable/library_icon_favorites_circle_background"
-            android:background="@color/off_white"/>
+            android:background="?attr/toolbarColor"/>
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_weight="1"
@@ -81,7 +81,7 @@
             android:layout_gravity="center_vertical"
             android:contentDescription="@string/quick_action_read"
             android:src="@drawable/quick_action_icon_read"
-            android:background="@color/off_white"/>
+            android:background="?attr/toolbarColor"/>
     </LinearLayout>
 
     <LinearLayout
@@ -89,7 +89,7 @@
         android:layout_gravity="bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/off_white">
+        android:background="?attr/toolbarColor">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:layout_height="wrap_content"
@@ -97,6 +97,7 @@
             android:layout_width="0dp"
             android:textAlignment="center"
             android:textSize="12sp"
+            android:textColor="?attr/toolbarTextColor"
             android:text="@string/quick_action_share"/>
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -105,6 +106,7 @@
             android:layout_width="0dp"
             android:textAlignment="center"
             android:textSize="12sp"
+            android:textColor="?attr/toolbarTextColor"
             android:text="@string/quick_action_screenshot"/>
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -113,6 +115,7 @@
             android:layout_width="0dp"
             android:textAlignment="center"
             android:textSize="12sp"
+            android:textColor="?attr/toolbarTextColor"
             android:text="@string/quick_action_download"/>
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -121,6 +124,7 @@
             android:layout_width="0dp"
             android:textAlignment="center"
             android:textSize="12sp"
+            android:textColor="?attr/toolbarTextColor"
             android:text="@string/quick_action_favorite"/>
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -129,8 +133,8 @@
             android:layout_width="0dp"
             android:textAlignment="center"
             android:textSize="12sp"
+            android:textColor="?attr/toolbarTextColor"
             android:text="@string/quick_action_read"/>
     </LinearLayout>
-
 </LinearLayout>
 
