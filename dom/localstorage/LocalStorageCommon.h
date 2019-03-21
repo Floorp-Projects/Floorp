@@ -186,6 +186,8 @@
 
 namespace mozilla {
 
+class LogModule;
+
 namespace ipc {
 
 class PrincipalInfo;
@@ -237,6 +239,8 @@ bool CachedNextGenLocalStorageEnabled();
 nsresult GenerateOriginKey2(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                             nsACString& aOriginAttrSuffix,
                             nsACString& aOriginKey);
+
+LogModule* GetLocalStorageLogger();
 
 }  // namespace dom
 }  // namespace mozilla
