@@ -14,11 +14,13 @@ var PlacesTestUtils = Object.freeze({
   /**
    * Asynchronously adds visits to a page.
    *
-   * @param aPlaceInfo
-   *        Can be an nsIURI, in such a case a single LINK visit will be added.
-   *        Otherwise can be an object describing the visit to add, or an array
-   *        of these objects:
-   *          { uri: href, URL or nsIURI of the page,
+   * @param {*} aPlaceInfo
+   *        A string URL, nsIURI, Window.URL object, info object (explained
+   *        below), or an array of any of those.  Info objects describe the
+   *        visits to add more fully than URLs/URIs alone and look like this:
+   *
+   *          {
+   *            uri: href, URL or nsIURI of the page,
    *            [optional] transition: one of the TRANSITION_* from nsINavHistoryService,
    *            [optional] title: title of the page,
    *            [optional] visitDate: visit date, either in microseconds from the epoch or as a date object
@@ -33,21 +35,26 @@ var PlacesTestUtils = Object.freeze({
     let places = [];
     let infos = [];
 
-    if (placeInfo instanceof Ci.nsIURI ||
-        placeInfo instanceof URL ||
-        typeof placeInfo == "string") {
-      places.push({ uri: placeInfo });
-    } else if (Array.isArray(placeInfo)) {
-      places = places.concat(placeInfo);
-    } else if (typeof placeInfo == "object" && placeInfo.uri) {
-      places.push(placeInfo);
+    if (Array.isArray(placeInfo)) {
+      places.push(...placeInfo);
     } else {
-      throw new Error("Unsupported type passed to addVisits");
+      places.push(placeInfo);
     }
 
     // Create a PageInfo for each entry.
     let lastStoredVisit;
-    for (let place of places) {
+    for (let obj of places) {
+      let place;
+      if (obj instanceof Ci.nsIURI ||
+          obj instanceof URL ||
+          typeof obj == "string") {
+        place = { uri: obj };
+      } else if (typeof obj == "object" && obj.uri) {
+        place = obj;
+      } else {
+        throw new Error("Unsupported type passed to addVisits");
+      }
+
       let info = {url: place.uri};
       let spec = place.uri instanceof Ci.nsIURI ? place.uri.spec : new URL(place.uri).href;
       info.title = "title" in place ? place.title : "test visit for " + spec ;
