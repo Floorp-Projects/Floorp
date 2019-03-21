@@ -66,6 +66,9 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
 
   void AddWebRenderParentCommand(const WebRenderParentCommand& aCmd,
                                  wr::RenderRoot aRenderRoot);
+  bool HasWebRenderParentCommands(wr::RenderRoot aRenderRoot) {
+    return !mParentCommands[aRenderRoot].IsEmpty();
+  }
 
   void UpdateResources(wr::IpcResourceUpdateQueue& aResources,
                        wr::RenderRoot aRenderRoot);
