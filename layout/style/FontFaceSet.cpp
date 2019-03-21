@@ -569,7 +569,7 @@ void FontFaceSet::ForEach(JSContext* aCx, FontFaceSetForEachCallback& aCallback,
                           JS::Handle<JS::Value> aThisArg, ErrorResult& aRv) {
   JS::Rooted<JS::Value> thisArg(aCx, aThisArg);
   for (size_t i = 0; i < Size(); i++) {
-    FontFace* face = GetFontFaceAt(i);
+    RefPtr<FontFace> face = GetFontFaceAt(i);
     aCallback.Call(thisArg, *face, *face, *this, aRv);
     if (aRv.Failed()) {
       return;

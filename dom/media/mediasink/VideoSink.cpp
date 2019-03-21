@@ -12,7 +12,10 @@
 
 #include "VideoSink.h"
 
-#include "GeckoProfiler.h"
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfileJSONWriter.h"
+#  include "ProfilerMarkerPayload.h"
+#endif
 #include "MediaQueue.h"
 #include "VideoUtils.h"
 
@@ -30,6 +33,42 @@ extern LazyLogModule gMediaDecoderLog;
   MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, (FMT(x, ##__VA_ARGS__)))
 #define VSINK_LOG_V(x, ...) \
   MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, (FMT(x, ##__VA_ARGS__)))
+
+#ifdef MOZ_GECKO_PROFILER
+#  define VSINK_ADD_PROFILER_MARKER(tag, markerTime, aTime, vTime)          \
+    do {                                                                    \
+      if (profiler_thread_is_being_profiled()) {                            \
+        profiler_add_marker(                                                \
+            tag, JS::ProfilingCategoryPair::GRAPHICS,                       \
+            MakeUnique<VideoFrameMarkerPayload>(markerTime, aTime, vTime)); \
+      }                                                                     \
+    } while (0)
+
+class VideoFrameMarkerPayload : public ProfilerMarkerPayload {
+ public:
+  explicit VideoFrameMarkerPayload(mozilla::TimeStamp aMarkerTime,
+                                   int64_t aAudioPositionUs,
+                                   int64_t aVideoFrameTimeUs)
+      : ProfilerMarkerPayload(aMarkerTime, aMarkerTime),
+        mAudioPositionUs(aAudioPositionUs),
+        mVideoFrameTimeUs(aVideoFrameTimeUs) {}
+
+  void StreamPayload(SpliceableJSONWriter& aWriter,
+                     const TimeStamp& aProcessStartTime,
+                     UniqueStacks& aUniqueStacks) {
+    StreamCommonProps("UpdateRenderVideoFrames", aWriter, aProcessStartTime,
+                      aUniqueStacks);
+    aWriter.IntProperty("audio", mAudioPositionUs);
+    aWriter.IntProperty("video", mVideoFrameTimeUs);
+  }
+
+ private:
+  int64_t mAudioPositionUs;
+  int64_t mVideoFrameTimeUs;
+};
+#else
+#  define VSINK_ADD_PROFILER_MARKER(tag, markerTime, aTime, vTime)
+#endif
 
 using namespace mozilla::layers;
 
@@ -411,7 +450,7 @@ void VideoSink::RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime,
   MediaSink::PlaybackParams params = mAudioSink->GetPlaybackParams();
   for (uint32_t i = 0; i < frames.Length(); ++i) {
     VideoData* frame = frames[i];
-
+    bool wasSent = frame->IsSentToCompositor();
     frame->MarkSentToCompositor();
 
     if (!frame->mImage || !frame->mImage->IsValid() ||
@@ -452,6 +491,10 @@ void VideoSink::RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime,
     VSINK_LOG_V("playing video frame %" PRId64 " (id=%x) (vq-queued=%zu)",
                 frame->mTime.ToMicroseconds(), frame->mFrameID,
                 VideoQueue().GetSize());
+    if (!wasSent) {
+      VSINK_ADD_PROFILER_MARKER("VideoSink: play", aClockTimeStamp, aClockTime,
+                                frame->mTime.ToMicroseconds());
+    }
   }
 
   if (images.Length() > 0) {
@@ -488,11 +531,10 @@ void VideoSink::UpdateRenderedVideoFrames() {
       VSINK_LOG_V("discarding video frame mTime=%" PRId64
                   " clock_time=%" PRId64,
                   frame->mTime.ToMicroseconds(), clockTime.ToMicroseconds());
+      VSINK_ADD_PROFILER_MARKER("VideoSink: discard", nowTime,
+                                clockTime.ToMicroseconds(),
+                                frame->mTime.ToMicroseconds());
     }
-  }
-
-  if (droppedCount > 0) {
-    PROFILER_ADD_MARKER("DroppedUncompositedVideoFrames", GRAPHICS);
   }
 
   if (droppedCount || sentToCompositorCount) {

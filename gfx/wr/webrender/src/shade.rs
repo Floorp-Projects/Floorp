@@ -52,6 +52,7 @@ const DEBUG_OVERDRAW_FEATURE: &str = "DEBUG_OVERDRAW";
 const DITHERING_FEATURE: &str = "DITHERING";
 const DUAL_SOURCE_FEATURE: &str = "DUAL_SOURCE_BLENDING";
 const FAST_PATH_FEATURE: &str = "FAST_PATH";
+const PIXEL_LOCAL_STORAGE_FEATURE: &str = "PIXEL_LOCAL_STORAGE";
 
 pub(crate) enum ShaderKind {
     Primitive,
@@ -63,6 +64,7 @@ pub(crate) enum ShaderKind {
     VectorStencil,
     #[allow(dead_code)]
     VectorCover,
+    Resolve,
 }
 
 pub struct LazilyCompiledShader {
@@ -125,7 +127,7 @@ impl LazilyCompiledShader {
     ) -> Result<&mut Program, ShaderError> {
         if self.program.is_none() {
             let program = match self.kind {
-                ShaderKind::Primitive | ShaderKind::Brush | ShaderKind::Text => {
+                ShaderKind::Primitive | ShaderKind::Brush | ShaderKind::Text | ShaderKind::Resolve => {
                     create_prim_shader(
                         self.name,
                         device,
@@ -175,6 +177,7 @@ impl LazilyCompiledShader {
                 ShaderKind::VectorStencil => VertexArrayKind::VectorStencil,
                 ShaderKind::VectorCover => VertexArrayKind::VectorCover,
                 ShaderKind::ClipCache => VertexArrayKind::Clip,
+                ShaderKind::Resolve => VertexArrayKind::Resolve,
             };
 
             let vertex_descriptor = match vertex_format {
@@ -187,6 +190,7 @@ impl LazilyCompiledShader {
                 VertexArrayKind::VectorCover => &desc::VECTOR_COVER,
                 VertexArrayKind::Border => &desc::BORDER,
                 VertexArrayKind::Scale => &desc::SCALE,
+                VertexArrayKind::Resolve => &desc::RESOLVE,
             };
 
             device.link_program(program, vertex_descriptor)?;
@@ -265,6 +269,7 @@ impl BrushShader {
         features: &[&'static str],
         precache_flags: ShaderPrecacheFlags,
         dual_source: bool,
+        use_pixel_local_storage: bool,
     ) -> Result<Self, ShaderError> {
         let opaque = LazilyCompiledShader::new(
             ShaderKind::Brush,
@@ -276,6 +281,9 @@ impl BrushShader {
 
         let mut alpha_features = features.to_vec();
         alpha_features.push(ALPHA_FEATURE);
+        if use_pixel_local_storage {
+            alpha_features.push(PIXEL_LOCAL_STORAGE_FEATURE);
+        }
 
         let alpha = LazilyCompiledShader::new(
             ShaderKind::Brush,
@@ -285,7 +293,10 @@ impl BrushShader {
             precache_flags,
         )?;
 
-        let dual_source = if dual_source {
+        // If using PLS, we disable all subpixel AA implicitly. Subpixel AA is always
+        // disabled on mobile devices anyway, due to uncertainty over the subpixel
+        // layout configuration.
+        let dual_source = if dual_source && !use_pixel_local_storage {
             let mut dual_source_features = alpha_features.to_vec();
             dual_source_features.push(DUAL_SOURCE_FEATURE);
 
@@ -498,6 +509,12 @@ pub struct Shaders {
     pub ps_text_run: TextShader,
     pub ps_text_run_dual_source: TextShader,
 
+    // Helper shaders for pixel local storage render paths.
+    // pls_init: Initialize pixel local storage, based on current framebuffer value.
+    // pls_resolve: Convert pixel local storage, writing out to fragment value.
+    pub pls_init: LazilyCompiledShader,
+    pub pls_resolve: LazilyCompiledShader,
+
     ps_split_composite: LazilyCompiledShader,
 }
 
@@ -507,12 +524,17 @@ impl Shaders {
         gl_type: GlType,
         options: &RendererOptions,
     ) -> Result<Self, ShaderError> {
+        let use_pixel_local_storage = device
+            .get_capabilities()
+            .supports_pixel_local_storage;
+
         let brush_solid = BrushShader::new(
             "brush_solid",
             device,
             &[],
             options.precache_flags,
             false,
+            use_pixel_local_storage,
         )?;
 
         let brush_blend = BrushShader::new(
@@ -521,6 +543,7 @@ impl Shaders {
             &[],
             options.precache_flags,
             false,
+            use_pixel_local_storage,
         )?;
 
         let brush_mix_blend = BrushShader::new(
@@ -529,6 +552,7 @@ impl Shaders {
             &[],
             options.precache_flags,
             false,
+            use_pixel_local_storage,
         )?;
 
         let brush_radial_gradient = BrushShader::new(
@@ -541,6 +565,7 @@ impl Shaders {
             },
             options.precache_flags,
             false,
+            use_pixel_local_storage,
         )?;
 
         let brush_linear_gradient = BrushShader::new(
@@ -553,6 +578,7 @@ impl Shaders {
             },
             options.precache_flags,
             false,
+            use_pixel_local_storage,
         )?;
 
         let cs_blur_a8 = LazilyCompiledShader::new(
@@ -603,6 +629,28 @@ impl Shaders {
             options.precache_flags,
         )?;
 
+        let pls_precache_flags = if use_pixel_local_storage {
+            options.precache_flags
+        } else {
+            ShaderPrecacheFlags::empty()
+        };
+
+        let pls_init = LazilyCompiledShader::new(
+            ShaderKind::Resolve,
+            "pls_init",
+            &[PIXEL_LOCAL_STORAGE_FEATURE],
+            device,
+            pls_precache_flags,
+        )?;
+
+        let pls_resolve = LazilyCompiledShader::new(
+            ShaderKind::Resolve,
+            "pls_resolve",
+            &[PIXEL_LOCAL_STORAGE_FEATURE],
+            device,
+            pls_precache_flags,
+        )?;
+
         let cs_scale_a8 = LazilyCompiledShader::new(
             ShaderKind::Cache(VertexArrayKind::Scale),
             "cs_scale",
@@ -619,9 +667,17 @@ impl Shaders {
             options.precache_flags,
         )?;
 
+        // TODO(gw): The split composite + text shader are special cases - the only
+        //           shaders used during normal scene rendering that aren't a brush
+        //           shader. Perhaps we can unify these in future?
+        let mut extra_features = Vec::new();
+        if use_pixel_local_storage {
+            extra_features.push(PIXEL_LOCAL_STORAGE_FEATURE);
+        }
+
         let ps_text_run = TextShader::new("ps_text_run",
             device,
-            &[],
+            &extra_features,
             options.precache_flags,
         )?;
 
@@ -635,6 +691,14 @@ impl Shaders {
             device,
             &[DUAL_SOURCE_FEATURE],
             dual_source_precache_flags,
+        )?;
+
+        let ps_split_composite = LazilyCompiledShader::new(
+            ShaderKind::Primitive,
+            "ps_split_composite",
+            &extra_features,
+            device,
+            options.precache_flags,
         )?;
 
         // All image configuration.
@@ -656,6 +720,7 @@ impl Shaders {
                     &image_features,
                     options.precache_flags,
                     !options.disable_dual_source_blending,
+                    use_pixel_local_storage,
                 )?);
             }
             image_features.clear();
@@ -682,6 +747,7 @@ impl Shaders {
                     &yuv_features,
                     options.precache_flags,
                     false,
+                    use_pixel_local_storage,
                 )?;
                 let index = Self::get_yuv_shader_index(
                     *image_buffer_kind,
@@ -723,14 +789,6 @@ impl Shaders {
             options.precache_flags,
         )?;
 
-        let ps_split_composite = LazilyCompiledShader::new(
-            ShaderKind::Primitive,
-            "ps_split_composite",
-            &[],
-            device,
-            options.precache_flags,
-        )?;
-
         Ok(Shaders {
             cs_blur_a8,
             cs_blur_rgba8,
@@ -751,6 +809,8 @@ impl Shaders {
             cs_clip_rectangle_fast,
             cs_clip_box_shadow,
             cs_clip_image,
+            pls_init,
+            pls_resolve,
             ps_text_run,
             ps_text_run_dual_source,
             ps_split_composite,
@@ -822,6 +882,8 @@ impl Shaders {
         self.cs_clip_rectangle_fast.deinit(device);
         self.cs_clip_box_shadow.deinit(device);
         self.cs_clip_image.deinit(device);
+        self.pls_init.deinit(device);
+        self.pls_resolve.deinit(device);
         self.ps_text_run.deinit(device);
         self.ps_text_run_dual_source.deinit(device);
         for shader in self.brush_image {

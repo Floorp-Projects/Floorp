@@ -14,7 +14,7 @@ TimeoutHandler::TimeoutHandler(JSContext* aCx) : TimeoutHandler() {
   nsJSUtils::GetCallingLocation(aCx, mFileName, &mLineNo, &mColumn);
 }
 
-nsresult TimeoutHandler::Call() { return NS_OK; }
+void TimeoutHandler::Call() {}
 
 void TimeoutHandler::GetLocation(const char** aFileName, uint32_t* aLineNo,
                                  uint32_t* aColumn) {

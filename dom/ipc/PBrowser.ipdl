@@ -112,23 +112,11 @@ struct WebProgressData
   uint64_t DOMWindowID;
 };
 
-union OptionalWebProgressData
-{
-  void_t;
-  WebProgressData;
-};
-
 struct RequestData
 {
   nsIURI requestURI;
   nsIURI originalRequestURI;
   nsCString matchedList;
-};
-
-union OptionalShmem
-{
-  void_t;
-  Shmem;
 };
 
 nested(upto inside_cpow) sync protocol PBrowser
@@ -550,7 +538,7 @@ parent:
     async RegisterProtocolHandler(nsString scheme, nsIURI handlerURI, nsString title,
                                   nsIURI documentURI);
 
-    async OnContentBlockingEvent(OptionalWebProgressData aWebProgressData,
+    async OnContentBlockingEvent(WebProgressData? aWebProgressData,
                                  RequestData aRequestData, uint32_t aEvent);
 
 child:
@@ -594,7 +582,7 @@ parent:
     nested(inside_sync) sync DispatchKeyboardEvent(WidgetKeyboardEvent event);
 
     async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action,
-                            OptionalShmem visualData,
+                            Shmem? visualData,
                             uint32_t stride, SurfaceFormat format,
                             LayoutDeviceIntRect dragRect,
                             Principal principal);

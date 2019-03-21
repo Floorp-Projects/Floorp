@@ -312,7 +312,7 @@ class CallbackObject : public nsISupports {
               const char* aExecutionReason,
               ExceptionHandling aExceptionHandling, JS::Realm* aRealm = nullptr,
               bool aIsJSImplementedWebIDL = false);
-    ~CallSetup();
+    MOZ_CAN_RUN_SCRIPT ~CallSetup();
 
     JSContext* GetContext() const { return mCx; }
 

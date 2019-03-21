@@ -26,52 +26,75 @@ class ConsoleInstance final : public nsISupports, public nsWrapperCache {
 
   nsPIDOMWindowInner* GetParentObject() const { return nullptr; }
 
+  MOZ_CAN_RUN_SCRIPT
   void Log(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void Info(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void Warn(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void Error(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void Exception(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void Debug(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void Table(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void Trace(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void Dir(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void Dirxml(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void Group(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void GroupCollapsed(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void GroupEnd(JSContext* aCx);
 
+  MOZ_CAN_RUN_SCRIPT
   void Time(JSContext* aCx, const nsAString& aLabel);
 
+  MOZ_CAN_RUN_SCRIPT
   void TimeLog(JSContext* aCx, const nsAString& aLabel,
                const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void TimeEnd(JSContext* aCx, const nsAString& aLabel);
 
+  MOZ_CAN_RUN_SCRIPT
   void TimeStamp(JSContext* aCx, const JS::Handle<JS::Value> aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void Profile(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void ProfileEnd(JSContext* aCx, const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void Assert(JSContext* aCx, bool aCondition,
               const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void Count(JSContext* aCx, const nsAString& aLabel);
 
+  MOZ_CAN_RUN_SCRIPT
   void CountReset(JSContext* aCx, const nsAString& aLabel);
 
+  MOZ_CAN_RUN_SCRIPT
   void Clear(JSContext* aCx);
 
   // For testing only.

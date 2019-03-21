@@ -420,7 +420,7 @@ class IdleRequestExecutorTimeoutHandler final : public TimeoutHandler {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IdleRequestExecutorTimeoutHandler,
                                            TimeoutHandler)
 
-  nsresult Call() override;
+  void Call() override;
 
  private:
   ~IdleRequestExecutorTimeoutHandler() override {}
@@ -530,13 +530,15 @@ IdleRequestExecutor::GetName(nsACString& aName) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-IdleRequestExecutor::Run() {
+// MOZ_CAN_RUN_SCRIPT_BOUNDARY until nsIRunnable::Run is MOZ_CAN_RUN_SCRIPT.
+// See bug 1535398.
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP IdleRequestExecutor::Run() {
   MOZ_ASSERT(NS_IsMainThread());
 
   mDispatched = false;
   if (mWindow) {
-    return mWindow->ExecuteIdleRequest(mDeadline);
+    RefPtr<nsGlobalWindowInner> window(mWindow);
+    window->ExecuteIdleRequest(mDeadline);
   }
 
   return NS_OK;
@@ -617,11 +619,10 @@ void IdleRequestExecutor::DelayedDispatch(uint32_t aDelay) {
   mDelayedExecutorHandle = Some(handle);
 }
 
-nsresult IdleRequestExecutorTimeoutHandler::Call() {
+void IdleRequestExecutorTimeoutHandler::Call() {
   if (!mExecutor->IsCancelled()) {
     mExecutor->ScheduleDispatch();
   }
-  return NS_OK;
 }
 
 void nsGlobalWindowInner::ScheduleIdleRequestDispatch() {
@@ -659,23 +660,25 @@ void nsGlobalWindowInner::RemoveIdleCallback(
   aRequest->removeFrom(mIdleRequestCallbacks);
 }
 
-nsresult nsGlobalWindowInner::RunIdleRequest(IdleRequest* aRequest,
-                                             DOMHighResTimeStamp aDeadline,
-                                             bool aDidTimeout) {
+void nsGlobalWindowInner::RunIdleRequest(IdleRequest* aRequest,
+                                         DOMHighResTimeStamp aDeadline,
+                                         bool aDidTimeout) {
   AssertIsOnMainThread();
+  // XXXbz Do we still need this RefPtr?  MOZ_CAN_RUN_SCRIPT should
+  // guarantee that caller is holding a strong ref on the stack.
   RefPtr<IdleRequest> request(aRequest);
   RemoveIdleCallback(request);
-  return request->IdleRun(this, aDeadline, aDidTimeout);
+  request->IdleRun(this, aDeadline, aDidTimeout);
 }
 
-nsresult nsGlobalWindowInner::ExecuteIdleRequest(TimeStamp aDeadline) {
+void nsGlobalWindowInner::ExecuteIdleRequest(TimeStamp aDeadline) {
   AssertIsOnMainThread();
   RefPtr<IdleRequest> request = mIdleRequestCallbacks.getFirst();
 
   if (!request) {
     // There are no more idle requests, so stop scheduling idle
     // request callbacks.
-    return NS_OK;
+    return;
   }
 
   // If the request that we're trying to execute has been queued
@@ -683,7 +686,7 @@ nsresult nsGlobalWindowInner::ExecuteIdleRequest(TimeStamp aDeadline) {
   // of the idle period.
   if (mIdleRequestExecutor->IneligibleForCurrentIdlePeriod(request)) {
     mIdleRequestExecutor->MaybeDispatch(aDeadline);
-    return NS_OK;
+    return;
   }
 
   DOMHighResTimeStamp deadline = 0.0;
@@ -693,14 +696,13 @@ nsresult nsGlobalWindowInner::ExecuteIdleRequest(TimeStamp aDeadline) {
   }
 
   mIdleRequestExecutor->MaybeUpdateIdlePeriodLimit();
-  nsresult result = RunIdleRequest(request, deadline, false);
+  RunIdleRequest(request, deadline, false);
 
   // Running the idle callback could've suspended the window, in which
   // case mIdleRequestExecutor will be null.
   if (mIdleRequestExecutor) {
     mIdleRequestExecutor->MaybeDispatch();
   }
-  return result;
 }
 
 class IdleRequestTimeoutHandler final : public TimeoutHandler {
@@ -713,9 +715,10 @@ class IdleRequestTimeoutHandler final : public TimeoutHandler {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IdleRequestTimeoutHandler,
                                            TimeoutHandler)
 
-  nsresult Call() override {
-    return nsGlobalWindowInner::Cast(mWindow)->RunIdleRequest(mIdleRequest, 0.0,
-                                                              true);
+  MOZ_CAN_RUN_SCRIPT void Call() override {
+    RefPtr<nsGlobalWindowInner> window(nsGlobalWindowInner::Cast(mWindow));
+    RefPtr<IdleRequest> request(mIdleRequest);
+    window->RunIdleRequest(request, 0.0, true);
   }
 
  private:
@@ -5559,6 +5562,8 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
                                             nsIScriptContext* aScx) {
   // Hold on to the timeout in case mExpr or mFunObj releases its
   // doc.
+  // XXXbz Our caller guarantees it'll hold on to the timeout (because
+  // we're MOZ_CAN_RUN_SCRIPT), so we can probably stop doing that...
   RefPtr<Timeout> timeout = aTimeout;
   Timeout* last_running_timeout = mTimeoutManager->BeginRunningTimeout(timeout);
   timeout->mRunning = true;
@@ -7012,7 +7017,7 @@ void nsPIDOMWindowInner::BroadcastReport(Report* aReport) {
 
 void nsPIDOMWindowInner::NotifyReportingObservers() {
   nsTArray<RefPtr<ReportingObserver>> reportingObservers(mReportingObservers);
-  for (ReportingObserver* observer : reportingObservers) {
+  for (RefPtr<ReportingObserver>& observer : reportingObservers) {
     observer->MaybeNotify();
   }
 }

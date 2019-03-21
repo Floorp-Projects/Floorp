@@ -492,9 +492,11 @@ nsresult HTMLCanvasElement::DispatchPrintCallback(nsITimerCallback* aCallback) {
   return OwnerDoc()->Dispatch(TaskCategory::Other, renderEvent.forget());
 }
 
+MOZ_CAN_RUN_SCRIPT
 void HTMLCanvasElement::CallPrintCallback() {
-  ErrorResult rv;
-  GetMozPrintCallback()->Call(*mPrintState, rv);
+  RefPtr<PrintCallback> callback = GetMozPrintCallback();
+  RefPtr<HTMLCanvasPrintState> state = mPrintState;
+  callback->Call(*state);
 }
 
 void HTMLCanvasElement::ResetPrintCallback() {

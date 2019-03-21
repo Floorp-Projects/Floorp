@@ -219,6 +219,7 @@ class PromiseJobRunnable final : public MicroTaskRunnable {
   virtual ~PromiseJobRunnable() {}
 
  protected:
+  MOZ_CAN_RUN_SCRIPT
   virtual void Run(AutoSlowOperation& aAso) override {
     JSObject* callback = mCallback->CallbackPreserveColor();
     nsIGlobalObject* global = callback ? xpc::NativeGlobal(callback) : nullptr;
@@ -232,7 +233,8 @@ class PromiseJobRunnable final : public MicroTaskRunnable {
       AutoHandlingUserInputStatePusher userInpStatePusher(
           mPropagateUserInputEventHandling, nullptr, doc);
 
-      mCallback->Call("promise callback");
+      // mCallback is const, so can't suddenly become null.
+      MOZ_KnownLive(mCallback)->Call("promise callback");
       aAso.CheckForInterrupt();
     }
     // Now that mCallback is no longer needed, clear any pointers it contains to
@@ -250,7 +252,7 @@ class PromiseJobRunnable final : public MicroTaskRunnable {
   }
 
  private:
-  RefPtr<PromiseJobCallback> mCallback;
+  const RefPtr<PromiseJobCallback> mCallback;
   bool mPropagateUserInputEventHandling;
 };
 
@@ -525,6 +527,9 @@ class AsyncMutationHandler final : public mozilla::Runnable {
  public:
   AsyncMutationHandler() : mozilla::Runnable("AsyncMutationHandler") {}
 
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.  See
+  // bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Run() override {
     CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
     if (ccjs) {

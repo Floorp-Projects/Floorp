@@ -94,6 +94,7 @@ class WebExtensionPolicy final : public nsISupports,
 
   nsCString BackgroundPageHTML() const;
 
+  MOZ_CAN_RUN_SCRIPT
   void Localize(const nsAString& aInput, nsString& aResult) const;
 
   const nsString& Name() const { return mName; }

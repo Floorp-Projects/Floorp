@@ -41,10 +41,12 @@ class PlacesObservers {
   static void RemoveListener(const nsTArray<PlacesEventType>& aEventTypes,
                              places::INativePlacesEventCallback* aCallback);
 
+  MOZ_CAN_RUN_SCRIPT
   static void NotifyListeners(
       GlobalObject& aGlobal,
       const Sequence<OwningNonNull<PlacesEvent>>& aEvents, ErrorResult& rv);
 
+  MOZ_CAN_RUN_SCRIPT
   static void NotifyListeners(
       const Sequence<OwningNonNull<PlacesEvent>>& aEvents);
 

@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+  <style>
+  div {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: 0;
+    background: blue;
+  }
+  fieldset {
+    width: 300px;
+    height: 200px;
+    border: 1px solid;
+    position: relative;
+    overflow: hidden;
+  }
+  </style>
+  <fieldset style="columns: 1;">
+    <!-- The position of <div>s should remain the same regardless of
+         the multicol style on fieldset. -->
+    <legend>Legend<div style="left: 0px;"></div></legend>
+    <div style="left: 10px;"></div>
+  </fieldset>
+</html>

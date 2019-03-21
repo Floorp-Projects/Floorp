@@ -10,6 +10,10 @@ add_task(async function() {
   clickElementWithSelector(dbg, ".watch-expressions-pane ._header");
 
   info(">> Click + to add the new expression");
+  await waitForElementWithSelector(
+    dbg,
+    ".watch-expressions-pane ._header .plus"
+  );
   clickElementWithSelector(dbg, ".watch-expressions-pane ._header .plus");
 
   info(">> Ensure element gets focused");

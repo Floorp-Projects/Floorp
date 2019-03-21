@@ -12,22 +12,22 @@ use app_units::Au;
 
 /// Represents the font metrics that style needs from a font to compute the
 /// value of certain CSS units like `ex`.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct FontMetrics {
     /// The x-height of the font.
-    pub x_height: Au,
+    pub x_height: Option<Au>,
     /// The zero advance. This is usually writing mode dependent
-    pub zero_advance_measure: Au,
+    pub zero_advance_measure: Option<Au>,
 }
 
-/// The result for querying font metrics for a given font family.
+/// Type of font metrics to retrieve.
 #[derive(Clone, Debug, PartialEq)]
-pub enum FontMetricsQueryResult {
-    /// The font is available, but we may or may not have found any font metrics
-    /// for it.
-    Available(FontMetrics),
-    /// The font is not available.
-    NotAvailable,
+pub enum FontMetricsOrientation {
+    /// Get metrics for horizontal or vertical according to the Context's
+    /// writing mode.
+    MatchContext,
+    /// Force getting horizontal metrics.
+    Horizontal,
 }
 
 /// A trait used to represent something capable of providing us font metrics.
@@ -37,8 +37,9 @@ pub trait FontMetricsProvider {
         &self,
         _context: &crate::values::computed::Context,
         _base_size: crate::values::specified::length::FontBaseSize,
-    ) -> FontMetricsQueryResult {
-        FontMetricsQueryResult::NotAvailable
+        _orientation: FontMetricsOrientation,
+    ) -> FontMetrics {
+        Default::default()
     }
 
     /// Get default size of a given language and generic family.

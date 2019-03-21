@@ -192,6 +192,7 @@ class FontFaceSet final : public DOMEventTargetHelper,
   uint32_t Size();
   already_AddRefed<mozilla::dom::FontFaceSetIterator> Entries();
   already_AddRefed<mozilla::dom::FontFaceSetIterator> Values();
+  MOZ_CAN_RUN_SCRIPT
   void ForEach(JSContext* aCx, FontFaceSetForEachCallback& aCallback,
                JS::Handle<JS::Value> aThisArg, mozilla::ErrorResult& aRv);
 

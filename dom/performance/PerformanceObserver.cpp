@@ -106,7 +106,8 @@ void PerformanceObserver::Notify() {
   mQueuedEntries.Clear();
 
   ErrorResult rv;
-  mCallback->Call(this, *list, *this, rv);
+  RefPtr<PerformanceObserverCallback> callback(mCallback);
+  callback->Call(this, *list, *this, rv);
   if (NS_WARN_IF(rv.Failed())) {
     rv.SuppressException();
   }

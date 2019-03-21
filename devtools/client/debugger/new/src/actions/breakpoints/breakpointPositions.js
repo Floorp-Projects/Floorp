@@ -123,6 +123,9 @@ export function setBreakpointPositions(sourceId: string) {
         (async () => {
           try {
             await _setBreakpointPositions(sourceId, thunkArgs);
+          } catch (e) {
+            // TODO: Address exceptions originating from 1536618
+            // `Debugger.Source belongs to a different Debugger`
           } finally {
             requests.delete(sourceId);
           }

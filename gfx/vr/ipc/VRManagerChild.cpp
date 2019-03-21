@@ -387,7 +387,9 @@ void VRManagerChild::RunFrameRequestCallbacks() {
   callbacks.AppendElements(mFrameRequestCallbacks);
   mFrameRequestCallbacks.Clear();
   for (auto& callback : callbacks) {
-    callback.mCallback->Call(timeStamp);
+    // The FrameRequest copied into the on-stack array holds a strong ref to its
+    // mCallback and there's nothing that can drop that ref until we return.
+    MOZ_KnownLive(callback.mCallback)->Call(timeStamp);
   }
 }
 

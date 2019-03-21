@@ -24,8 +24,9 @@ class EntriesCallbackRunnable final : public Runnable {
     MOZ_ASSERT(aCallback);
   }
 
-  NS_IMETHOD
-  Run() override {
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.  See
+  // bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
     Sequence<OwningNonNull<FileSystemEntry>> entries;
     for (uint32_t i = 0; i < mEntries.Length(); ++i) {
       if (!entries.AppendElement(mEntries[i].forget(), fallible)) {
@@ -33,12 +34,13 @@ class EntriesCallbackRunnable final : public Runnable {
       }
     }
 
-    mCallback->Call(entries);
+    // mCallback never changes (it's const), so MOZ_KnownLive is ok.
+    MOZ_KnownLive(mCallback)->Call(entries);
     return NS_OK;
   }
 
  private:
-  RefPtr<FileSystemEntriesCallback> mCallback;
+  const RefPtr<FileSystemEntriesCallback> mCallback;
   Sequence<RefPtr<FileSystemEntry>> mEntries;
 };
 

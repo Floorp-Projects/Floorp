@@ -445,8 +445,7 @@ class ConsoleRunnable : public StructuredCloneHolderBase {
     return true;
   }
 
-  void ProcessProfileData(JSContext* aCx, Console* aConsole,
-                          Console::MethodName aMethodName,
+  void ProcessProfileData(JSContext* aCx, Console::MethodName aMethodName,
                           const nsAString& aAction) {
     AssertIsOnMainThread();
 
@@ -485,7 +484,7 @@ class ConsoleRunnable : public StructuredCloneHolderBase {
       }
     }
 
-    aConsole->ProfileMethodInternal(aCx, aMethodName, aAction, arguments);
+    Console::ProfileMethodMainthread(aCx, aAction, arguments);
   }
 
   ConsoleStructuredCloneData mClonedData;
@@ -634,7 +633,7 @@ class ConsoleWorkerRunnable : public WorkerProxyToMainThreadRunnable,
       wp = wp->GetParent();
     }
 
-    nsPIDOMWindowInner* window = wp->GetWindow();
+    nsCOMPtr<nsPIDOMWindowInner> window = wp->GetWindow();
     if (!window) {
       RunWindowless(aWorkerPrivate);
     } else {
@@ -655,7 +654,7 @@ class ConsoleWorkerRunnable : public WorkerProxyToMainThreadRunnable,
       return;
     }
 
-    nsPIDOMWindowOuter* outerWindow = aWindow->GetOuterWindow();
+    nsCOMPtr<nsPIDOMWindowOuter> outerWindow = aWindow->GetOuterWindow();
     if (NS_WARN_IF(!outerWindow)) {
       return;
     }
@@ -834,8 +833,7 @@ class ConsoleProfileWorkletRunnable final : public ConsoleWorkletRunnable {
 
     // We don't need to set a parent object in mCallData bacause there are not
     // DOM objects exposed to worklet.
-
-    ProcessProfileData(cx, mConsole, mName, mAction);
+    ProcessProfileData(cx, mName, mAction);
   }
 
   virtual void ReleaseData() override {}
@@ -870,7 +868,7 @@ class ConsoleProfileWorkerRunnable final : public ConsoleWorkerRunnable {
     // Now we could have the correct window (if we are not window-less).
     mClonedData.mParent = aInnerWindow;
 
-    ProcessProfileData(aCx, mConsole, mName, mAction);
+    ProcessProfileData(aCx, mName, mAction);
 
     mClonedData.mParent = nullptr;
   }
@@ -1267,6 +1265,13 @@ void Console::ProfileMethodInternal(JSContext* aCx, MethodName aMethodName,
     return;
   }
 
+  ProfileMethodMainthread(aCx, aAction, aData);
+}
+
+// static
+void Console::ProfileMethodMainthread(JSContext* aCx, const nsAString& aAction,
+                                      const Sequence<JS::Value>& aData) {
+  MOZ_ASSERT(NS_IsMainThread());
   ConsoleCommon::ClearException ce(aCx);
 
   RootedDictionary<ConsoleProfileEvent> event(aCx);
@@ -2517,7 +2522,8 @@ void Console::NotifyHandler(JSContext* aCx,
   }
 
   JS::Rooted<JS::Value> ignored(aCx);
-  mConsoleEventNotifier->Call(value, &ignored);
+  RefPtr<AnyCallback> notifier(mConsoleEventNotifier);
+  notifier->Call(value, &ignored);
 }
 
 void Console::RetrieveConsoleEvents(JSContext* aCx,
@@ -2850,7 +2856,8 @@ void Console::MaybeExecuteDumpFunctionForTime(JSContext* aCx,
 
 void Console::ExecuteDumpFunction(const nsAString& aMessage) {
   if (mDumpFunction) {
-    mDumpFunction->Call(aMessage);
+    RefPtr<ConsoleInstanceDumpCallback> dumpFunction(mDumpFunction);
+    dumpFunction->Call(aMessage);
     return;
   }
 

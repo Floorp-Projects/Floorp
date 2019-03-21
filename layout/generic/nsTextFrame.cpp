@@ -1744,7 +1744,7 @@ static nscoord GetSpaceWidthAppUnits(const gfxTextRun* aTextRun) {
 static gfxFloat GetMinTabAdvanceAppUnits(const gfxTextRun* aTextRun) {
   gfxFloat chWidthAppUnits = NS_round(
       GetFirstFontMetrics(aTextRun->GetFontGroup(), aTextRun->IsVertical())
-          .zeroOrAveCharWidth *
+          .ZeroOrAveCharWidth() *
       aTextRun->GetAppUnitsPerDevUnit());
   return 0.5 * chWidthAppUnits;
 }

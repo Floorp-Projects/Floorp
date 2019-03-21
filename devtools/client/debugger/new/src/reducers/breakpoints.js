@@ -9,10 +9,10 @@
  * @module reducers/breakpoints
  */
 
-import { isGeneratedId, isOriginalId } from "devtools-source-map";
+import { isGeneratedId } from "devtools-source-map";
 import { isEqual } from "lodash";
 
-import { makeBreakpointId } from "../utils/breakpoint";
+import { makeBreakpointId, findPosition } from "../utils/breakpoint";
 import { findEmptyLines } from "../utils/empty-lines";
 
 // eslint-disable-next-line max-len
@@ -22,6 +22,7 @@ import type {
   XHRBreakpoint,
   Breakpoint,
   BreakpointId,
+  MappedLocation,
   SourceLocation,
   BreakpointPositions
 } from "../types";
@@ -380,19 +381,13 @@ export function hasBreakpointPositions(
   return !!getBreakpointPositionsForSource(state, sourceId);
 }
 
-export function getBreakpointPositionsForLine(
+export function getBreakpointPositionsForLocation(
   state: OuterState,
-  sourceId: string,
-  line: number
-): ?BreakpointPositions {
+  location: SourceLocation
+): ?MappedLocation {
+  const { sourceId } = location;
   const positions = getBreakpointPositionsForSource(state, sourceId);
-  if (!positions) {
-    return null;
-  }
-  return positions.filter(({ location, generatedLocation }) => {
-    const loc = isOriginalId(sourceId) ? location : generatedLocation;
-    return loc.line == line;
-  });
+  return findPosition(positions, location);
 }
 
 export function isEmptyLineInSource(

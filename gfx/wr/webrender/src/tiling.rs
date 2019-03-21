@@ -450,6 +450,7 @@ impl RenderTarget for ColorRenderTarget {
                     batch_builder.build(
                         &mut self.alpha_batch_containers,
                         &mut merged_batches,
+                        target_rect,
                     );
                 }
                 _ => {

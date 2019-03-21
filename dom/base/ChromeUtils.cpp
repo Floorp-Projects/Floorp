@@ -319,7 +319,9 @@ class IdleDispatchRunnable final : public IdleRunnable,
         mCallback(&aCallback),
         mParent(aParent) {}
 
-  NS_IMETHOD Run() override {
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.
+  // See bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
     if (mCallback) {
       CancelTimer();
 
@@ -329,12 +331,10 @@ class IdleDispatchRunnable final : public IdleRunnable,
       RefPtr<IdleDeadline> idleDeadline =
           new IdleDeadline(mParent, mTimedOut, deadline.ToMilliseconds());
 
-      mCallback->Call(*idleDeadline, rv, "ChromeUtils::IdleDispatch handler");
-      mCallback = nullptr;
+      RefPtr<IdleRequestCallback> callback(mCallback.forget());
+      MOZ_ASSERT(!mCallback);
+      callback->Call(*idleDeadline, "ChromeUtils::IdleDispatch handler");
       mParent = nullptr;
-
-      rv.SuppressException();
-      return rv.StealNSResult();
     }
     return NS_OK;
   }

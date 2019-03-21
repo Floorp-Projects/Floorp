@@ -23,12 +23,13 @@ class EntryCallbackRunnable final : public Runnable {
   EntryCallbackRunnable(FileSystemEntryCallback* aCallback,
                         FileSystemEntry* aEntry);
 
-  NS_IMETHOD
-  Run() override;
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.  See
+  // bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override;
 
  private:
-  RefPtr<FileSystemEntryCallback> mCallback;
-  RefPtr<FileSystemEntry> mEntry;
+  const RefPtr<FileSystemEntryCallback> mCallback;
+  const RefPtr<FileSystemEntry> mEntry;
 };
 
 class ErrorCallbackRunnable final : public Runnable {
@@ -36,12 +37,13 @@ class ErrorCallbackRunnable final : public Runnable {
   ErrorCallbackRunnable(nsIGlobalObject* aGlobalObject,
                         ErrorCallback* aCallback, nsresult aError);
 
-  NS_IMETHOD
-  Run() override;
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.  See
+  // bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override;
 
  private:
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<ErrorCallback> mCallback;
+  const RefPtr<ErrorCallback> mCallback;
   nsresult mError;
 };
 
@@ -49,11 +51,12 @@ class EmptyEntriesCallbackRunnable final : public Runnable {
  public:
   explicit EmptyEntriesCallbackRunnable(FileSystemEntriesCallback* aCallback);
 
-  NS_IMETHOD
-  Run() override;
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.  See
+  // bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override;
 
  private:
-  RefPtr<FileSystemEntriesCallback> mCallback;
+  const RefPtr<FileSystemEntriesCallback> mCallback;
 };
 
 class GetEntryHelper final : public PromiseNativeHandler {
@@ -68,6 +71,7 @@ class GetEntryHelper final : public PromiseNativeHandler {
 
   void Run();
 
+  MOZ_CAN_RUN_SCRIPT
   virtual void ResolvedCallback(JSContext* aCx,
                                 JS::Handle<JS::Value> aValue) override;
 
@@ -81,14 +85,14 @@ class GetEntryHelper final : public PromiseNativeHandler {
 
   void ContinueRunning(JSObject* aObj);
 
-  void CompleteOperation(JSObject* aObj);
+  MOZ_CAN_RUN_SCRIPT void CompleteOperation(JSObject* aObj);
 
   RefPtr<FileSystemDirectoryEntry> mParentEntry;
   RefPtr<Directory> mDirectory;
   nsTArray<nsString> mParts;
   RefPtr<FileSystem> mFileSystem;
 
-  RefPtr<FileSystemEntryCallback> mSuccessCallback;
+  const RefPtr<FileSystemEntryCallback> mSuccessCallback;
   RefPtr<ErrorCallback> mErrorCallback;
 
   FileSystemDirectoryEntry::GetInternalType mType;

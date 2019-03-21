@@ -12,6 +12,7 @@
 #include "nsITimeoutHandler.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace dom {
@@ -26,7 +27,7 @@ class TimeoutHandler : public nsITimeoutHandler {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(TimeoutHandler)
 
-  virtual nsresult Call() override;
+  MOZ_CAN_RUN_SCRIPT virtual void Call() override;
   virtual void GetLocation(const char** aFileName, uint32_t* aLineNo,
                            uint32_t* aColumn) override;
   virtual void MarkForCC() override {}

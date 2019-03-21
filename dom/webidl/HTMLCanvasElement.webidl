@@ -66,8 +66,6 @@ interface MozCanvasPrintState
   void done();
 };
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback PrintCallback = void(MozCanvasPrintState ctx);
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback BlobCallback = void(Blob? blob);

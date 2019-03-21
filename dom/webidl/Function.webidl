@@ -10,7 +10,6 @@
  * Opera Software ASA. You are granted a license to use, reproduce
  * and create derivative works of this document.
  */
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback Function = any(any... arguments);
 
 callback VoidFunction = void ();

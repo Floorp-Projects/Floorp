@@ -49,67 +49,90 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
                                                     uint64_t aInnerWindowID,
                                                     ErrorResult& aRv);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Log(const GlobalObject& aGlobal,
                   const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Info(const GlobalObject& aGlobal,
                    const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Warn(const GlobalObject& aGlobal,
                    const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Error(const GlobalObject& aGlobal,
                     const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Exception(const GlobalObject& aGlobal,
                         const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Debug(const GlobalObject& aGlobal,
                     const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Table(const GlobalObject& aGlobal,
                     const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Trace(const GlobalObject& aGlobal,
                     const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Dir(const GlobalObject& aGlobal,
                   const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Dirxml(const GlobalObject& aGlobal,
                      const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Group(const GlobalObject& aGlobal,
                     const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void GroupCollapsed(const GlobalObject& aGlobal,
                              const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void GroupEnd(const GlobalObject& aGlobal);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Time(const GlobalObject& aGlobal, const nsAString& aLabel);
 
+  MOZ_CAN_RUN_SCRIPT
   static void TimeLog(const GlobalObject& aGlobal, const nsAString& aLabel,
                       const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void TimeEnd(const GlobalObject& aGlobal, const nsAString& aLabel);
 
+  MOZ_CAN_RUN_SCRIPT
   static void TimeStamp(const GlobalObject& aGlobal,
                         const JS::Handle<JS::Value> aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Profile(const GlobalObject& aGlobal,
                       const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void ProfileEnd(const GlobalObject& aGlobal,
                          const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Assert(const GlobalObject& aGlobal, bool aCondition,
                      const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Count(const GlobalObject& aGlobal, const nsAString& aLabel);
 
+  MOZ_CAN_RUN_SCRIPT
   static void CountReset(const GlobalObject& aGlobal, const nsAString& aLabel);
 
+  MOZ_CAN_RUN_SCRIPT
   static void Clear(const GlobalObject& aGlobal);
 
   static already_AddRefed<ConsoleInstance> CreateInstance(
@@ -162,27 +185,38 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   static already_AddRefed<Console> GetConsoleInternal(
       const GlobalObject& aGlobal, ErrorResult& aRv);
 
+  MOZ_CAN_RUN_SCRIPT
   static void ProfileMethod(const GlobalObject& aGlobal, MethodName aName,
                             const nsAString& aAction,
                             const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void ProfileMethodInternal(JSContext* aCx, MethodName aName,
                              const nsAString& aAction,
                              const Sequence<JS::Value>& aData);
 
+  // Implementation of the mainthread-only parts of ProfileMethod.
+  // This is indepedent of console instance state.
+  static void ProfileMethodMainthread(JSContext* aCx, const nsAString& aAction,
+                                      const Sequence<JS::Value>& aData);
+
+  MOZ_CAN_RUN_SCRIPT
   static void Method(const GlobalObject& aGlobal, MethodName aName,
                      const nsAString& aString,
                      const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void MethodInternal(JSContext* aCx, MethodName aName,
                       const nsAString& aString,
                       const Sequence<JS::Value>& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   static void StringMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
                            const Sequence<JS::Value>& aData,
                            MethodName aMethodName,
                            const nsAString& aMethodString);
 
+  MOZ_CAN_RUN_SCRIPT
   void StringMethodInternal(JSContext* aCx, const nsAString& aLabel,
                             const Sequence<JS::Value>& aData,
                             MethodName aMethodName,
@@ -200,6 +234,7 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   void ReleaseCallData(ConsoleCallData* aCallData);
 
   // aCx and aArguments must be in the same JS compartment.
+  MOZ_CAN_RUN_SCRIPT
   void NotifyHandler(JSContext* aCx, const Sequence<JS::Value>& aArguments,
                      ConsoleCallData* aData);
 
@@ -370,15 +405,18 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
                       const Sequence<JS::Value>& aData,
                       DOMHighResTimeStamp* aTimeStamp);
 
+  MOZ_CAN_RUN_SCRIPT
   void MaybeExecuteDumpFunction(JSContext* aCx, const nsAString& aMethodName,
                                 const Sequence<JS::Value>& aData,
                                 nsIStackFrame* aStack);
 
+  MOZ_CAN_RUN_SCRIPT
   void MaybeExecuteDumpFunctionForTime(JSContext* aCx, MethodName aMethodName,
                                        const nsAString& aMethodString,
                                        uint64_t aMonotonicTimer,
                                        const JS::Value& aData);
 
+  MOZ_CAN_RUN_SCRIPT
   void ExecuteDumpFunction(const nsAString& aMessage);
 
   bool IsEnabled(JSContext* aCx) const;
