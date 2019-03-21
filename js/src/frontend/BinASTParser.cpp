@@ -2093,7 +2093,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
   }
 
   BINJS_TRY_DECL(result, handler_.newCall(callee, arguments));
-  result->setOp(op);
+  result->setCallOp(op);
   return result;
 }
 
