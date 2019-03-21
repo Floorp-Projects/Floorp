@@ -65,6 +65,10 @@ open class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // There is no session, or it has timed out; we should pop everything to home
+        if (components.core.sessionStorage.current() == null) {
+            navHost.navController.popBackStack(R.id.homeFragment, false)
+        }
         components.analytics.metrics.track(Event.OpenedApp)
     }
 
