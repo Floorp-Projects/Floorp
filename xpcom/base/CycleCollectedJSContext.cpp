@@ -233,7 +233,8 @@ class PromiseJobRunnable final : public MicroTaskRunnable {
       AutoHandlingUserInputStatePusher userInpStatePusher(
           mPropagateUserInputEventHandling, nullptr, doc);
 
-      mCallback->Call("promise callback");
+      // mCallback is const, so can't suddenly become null.
+      MOZ_KnownLive(mCallback)->Call("promise callback");
       aAso.CheckForInterrupt();
     }
     // Now that mCallback is no longer needed, clear any pointers it contains to

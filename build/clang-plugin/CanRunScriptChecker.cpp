@@ -34,22 +34,18 @@
  *    https://bugzilla.mozilla.org/show_bug.cgi?id=1535523 tracks this.
  *
  * Given those invariants we then require that when calling a MOZ_CAN_RUN_SCRIPT
- * function all refcounted arguments (including "this") satisfy one of four
+ * function all refcounted arguments (including "this") satisfy one of three
  * conditions:
  *  a) The argument is held via a strong pointer on the stack.
- *  b) The argument is a const strong pointer member of "this".  We know "this"
- *     is being kept alive, and a const strong pointer member can't drop its ref
- *     until "this" dies.
- *  c) The argument is an argument of the caller (and hence held by a strong
+ *  b) The argument is an argument of the caller (and hence held by a strong
  *     pointer somewhere higher up the callstack).
- *  d) The argument is explicitly annotated with MOZ_KnownLive, which indicates
+ *  c) The argument is explicitly annotated with MOZ_KnownLive, which indicates
  *     that something is guaranteed to keep it alive (e.g. it's rooted via a JS
  *     reflector).
  */
 
 #include "CanRunScriptChecker.h"
 #include "CustomMatchers.h"
-#include "clang/Lex/Lexer.h"
 
 void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
   auto Refcounted = qualType(hasDeclaration(cxxRecordDecl(isRefCounted())));
@@ -57,69 +53,40 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
     ignoreTrivials(
       declRefExpr(to(varDecl(hasAutomaticStorageDuration())),
                   hasType(isSmartPtrToRefCounted())));
-  auto ConstMemberOfThisSmartPtr =
-    memberExpr(hasType(isSmartPtrToRefCounted()),
-               hasType(isConstQualified()),
-               hasObjectExpression(cxxThisExpr()));
-  // A smartptr can be known-live for two reasons:
-  // 1) It's declared on the stack.
-  // 2) It's a const member of "this".  We know "this" is alive (recursively)
-  //    and const members can't change their value hence can't drop their
-  //    reference until "this" gets destroyed.
-  auto KnownLiveSmartPtr = anyOf(
-    StackSmartPtr,
-    ConstMemberOfThisSmartPtr,
-    ignoreTrivials(cxxConstructExpr(hasType(isSmartPtrToRefCounted()))));
-
   auto MozKnownLiveCall =
-    ignoreTrivials(callExpr(callee(functionDecl(hasName("MOZ_KnownLive")))));
-
-  // A matcher that matches some cases that are known live due to local
-  // information (as in, not relying on the rest of this analysius to guarantee
-  // their liveness).  There's some conceptual overlap with the set of unless()
-  // clauses in InvalidArg here, but for our purposes this limited set of cases
-  // is fine.
-  auto LocalKnownLive = anyOf(KnownLiveSmartPtr, MozKnownLiveCall);
+    callExpr(callee(functionDecl(hasName("MOZ_KnownLive"))));
 
   auto InvalidArg =
-      ignoreTrivialsConditional(
-        // We want to consider things if there is anything refcounted involved,
-        // including in any of the trivials that we otherwise strip off.
-        anyOf(
-          hasType(Refcounted),
-          hasType(pointsTo(Refcounted)),
-          hasType(references(Refcounted)),
-          hasType(isSmartPtrToRefCounted())
-        ),
-        // We want to find any expression,
-        expr(
-          // which is not this,
+      // We want to find any expression,
+      ignoreTrivials(expr(
+          // which has a refcounted pointer type,
+          anyOf(
+            hasType(Refcounted),
+            hasType(pointsTo(Refcounted)),
+            hasType(references(Refcounted)),
+            hasType(isSmartPtrToRefCounted())
+          ),
+          // and which is not this,
           unless(cxxThisExpr()),
           // and which is not a stack smart ptr
-          unless(KnownLiveSmartPtr),
+          unless(StackSmartPtr),
           // and which is not a method call on a stack smart ptr,
-          unless(cxxMemberCallExpr(on(KnownLiveSmartPtr))),
-          // and which is not calling operator* or operator-> on a thing that is
-          // already known to be live.
+          unless(cxxMemberCallExpr(on(StackSmartPtr))),
+          // and which is not calling operator* on a stack smart ptr.
           unless(
-            cxxOperatorCallExpr(
-              anyOf(hasOverloadedOperatorName("*"),
-                    hasOverloadedOperatorName("->")),
-              hasAnyArgument(LocalKnownLive),
-              argumentCountIs(1)
+            allOf(
+              cxxOperatorCallExpr(hasOverloadedOperatorName("*")),
+              callExpr(allOf(
+                hasAnyArgument(StackSmartPtr),
+                argumentCountIs(1)
+              ))
             )
           ),
           // and which is not a parameter of the parent function,
           unless(declRefExpr(to(parmVarDecl()))),
-          // and which is not a constexpr variable, since that must be
-          // computable at compile-time and therefore isn't going to be going
-          // away.
-          unless(declRefExpr(to(varDecl(isConstexpr())))),
           // and which is not a default arg with value nullptr, since those are
           // always safe.
           unless(cxxDefaultArgExpr(isNullDefaultArg())),
-          // and which is not a literal nullptr
-          unless(cxxNullPtrLiteralExpr()),
           // and which is not a dereference of a parameter of the parent
           // function (including "this"),
           unless(
@@ -135,12 +102,7 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
                   // implicitCastExpr), but it's simpler to just use
                   // ignoreTrivials to strip off the cast.
                   ignoreTrivials(declRefExpr(to(parmVarDecl()))),
-                  cxxThisExpr(),
-                  // We also allow dereferencing a constexpr variable here,
-                  // since that will just end up with a reference to the
-                  // compile-time-constant thing.  Again, use ignoreTrivials()
-                  // to stip off the LValueToRValue cast.
-                  ignoreTrivials(declRefExpr(to(varDecl(isConstexpr()))))
+                  cxxThisExpr()
                 )
               )
             )
@@ -166,9 +128,6 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
           ),
           expr().bind("invalidArg")));
 
-  // A matcher which will mark the first invalid argument it finds invalid, but
-  // will always match, even if it finds no invalid arguments, so it doesn't
-  // preclude other matchers from running and maybe finding invalid args.
   auto OptionalInvalidExplicitArg = anyOf(
       // We want to find any argument which is invalid.
       hasAnyArgument(InvalidArg),
@@ -187,11 +146,15 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
               cxxMemberCallExpr(
                   // which optionally has an invalid arg,
                   OptionalInvalidExplicitArg,
-                  // or which optionally has an invalid this argument,
+                  // or which optionally has an invalid implicit this argument,
                   anyOf(
-                    on(InvalidArg),
-                    anything()
-                  ),
+                      // which derefs into an invalid arg,
+                      on(cxxOperatorCallExpr(
+                          anyOf(hasAnyArgument(InvalidArg), anything()))),
+                      // or is an invalid arg.
+                      on(InvalidArg),
+
+                      anything()),
                   expr().bind("callExpr")),
               // or a regular call expression,
               callExpr(
@@ -302,22 +265,16 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   }
 
   const char *ErrorInvalidArg =
-      "arguments must all be strong refs or caller's parameters when calling a "
+      "arguments must all be strong refs or parent parameters when calling a "
       "function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object "
-      "argument).  '%0' is neither.";
+      "argument)";
 
   const char *ErrorNonCanRunScriptParent =
       "functions marked as MOZ_CAN_RUN_SCRIPT can only be called from "
       "functions also marked as MOZ_CAN_RUN_SCRIPT";
   const char *NoteNonCanRunScriptParent = "caller function declared here";
 
-  const Expr *InvalidArg;
-  if (const CXXDefaultArgExpr* defaultArg =
-          Result.Nodes.getNodeAs<CXXDefaultArgExpr>("invalidArg")) {
-    InvalidArg = defaultArg->getExpr();
-  } else {
-    InvalidArg = Result.Nodes.getNodeAs<Expr>("invalidArg");
-  }
+  const Expr *InvalidArg = Result.Nodes.getNodeAs<Expr>("invalidArg");
 
   const CallExpr *Call = Result.Nodes.getNodeAs<CallExpr>("callExpr");
   // If we don't find the FunctionDecl linked to this call or if it's not marked
@@ -368,13 +325,8 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   // If we have an invalid argument in the call, we emit the diagnostic to
   // signal it.
   if (InvalidArg) {
-    const std::string invalidArgText =
-        Lexer::getSourceText(
-            CharSourceRange::getTokenRange(InvalidArg->getSourceRange()),
-            Result.Context->getSourceManager(),
-            Result.Context->getLangOpts());
     diag(InvalidArg->getExprLoc(), ErrorInvalidArg, DiagnosticIDs::Error)
-        << InvalidArg->getSourceRange() << invalidArgText;
+        << CallRange;
   }
 
   // If the parent function is not marked as MOZ_CAN_RUN_SCRIPT, we emit an

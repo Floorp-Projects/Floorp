@@ -216,7 +216,7 @@ inline NS_HIDDEN_(void)
  * an nsMainThreadPtrHandle<T> rather than an nsCOMPtr<T>.
  */
 template <class T>
-class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHolder final {
+class nsMainThreadPtrHolder final {
  public:
   // We can only acquire a pointer on the main thread. We to fail fast for
   // threading bugs, so by default we assert if our pointer is used or acquired
@@ -310,7 +310,7 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHolder final {
 };
 
 template <class T>
-class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHandle {
+class nsMainThreadPtrHandle {
   RefPtr<nsMainThreadPtrHolder<T>> mPtr;
 
  public:

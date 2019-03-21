@@ -624,12 +624,8 @@ nsGeolocationService::Update(nsIDOMGeoPosition* aSomewhere) {
 
 NS_IMETHODIMP
 nsGeolocationService::NotifyError(uint16_t aErrorCode) {
-  // nsTArray doesn't have a constructors that takes a different-type TArray.
-  nsTArray<RefPtr<Geolocation>> geolocators;
-  geolocators.AppendElements(mGeolocators);
-  for (uint32_t i = 0; i < geolocators.Length(); i++) {
-    // MOZ_KnownLive because the stack array above keeps it alive.
-    MOZ_KnownLive(geolocators[i])->NotifyError(aErrorCode);
+  for (uint32_t i = 0; i < mGeolocators.Length(); i++) {
+    mGeolocators[i]->NotifyError(aErrorCode);
   }
   return NS_OK;
 }
