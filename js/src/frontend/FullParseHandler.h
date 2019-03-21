@@ -112,7 +112,7 @@ class FullParseHandler {
   SourceKind sourceKind() const { return sourceKind_; }
 
   NameNodeType newName(PropertyName* name, const TokenPos& pos, JSContext* cx) {
-    return new_<NameNode>(ParseNodeKind::Name, JSOP_GETNAME, name, pos);
+    return new_<NameNode>(ParseNodeKind::Name, JSOP_NOP, name, pos);
   }
 
   UnaryNodeType newComputedName(Node expr, uint32_t begin, uint32_t end) {
@@ -217,7 +217,6 @@ class FullParseHandler {
 
   UnaryNodeType newDelete(uint32_t begin, Node expr) {
     if (expr->isKind(ParseNodeKind::Name)) {
-      expr->setOp(JSOP_DELNAME);
       return newUnary(ParseNodeKind::DeleteNameExpr, begin, expr);
     }
 
@@ -404,7 +403,7 @@ class FullParseHandler {
 
     literal->setHasNonConstInitializer();
     BinaryNode* propdef =
-        newBinary(ParseNodeKind::Shorthand, name, expr, JSOP_INITPROP);
+        newBinary(ParseNodeKind::Shorthand, name, expr, JSOP_NOP);
     if (!propdef) {
       return false;
     }
@@ -543,8 +542,6 @@ class FullParseHandler {
       return false;
     }
 
-    MOZ_ASSERT(genName->getOp() == JSOP_GETNAME);
-    genName->setOp(JSOP_SETNAME);
     ParseNode* genInit =
         newAssignment(ParseNodeKind::AssignExpr, /* lhs = */ genName,
                       /* rhs = */ makeGen);
@@ -563,8 +560,6 @@ class FullParseHandler {
   }
 
   BinaryNodeType newSetThis(Node thisName, Node value) {
-    MOZ_ASSERT(thisName->getOp() == JSOP_GETNAME);
-    thisName->setOp(JSOP_SETNAME);
     return newBinary(ParseNodeKind::SetThis, thisName, value);
   }
 
@@ -785,7 +780,7 @@ class FullParseHandler {
   BinaryNodeType newShorthandPropertyDefinition(Node key, Node value) {
     MOZ_ASSERT(isUsableAsObjectPropertyName(key));
 
-    return newBinary(ParseNodeKind::Shorthand, key, value, JSOP_INITPROP);
+    return newBinary(ParseNodeKind::Shorthand, key, value, JSOP_NOP);
   }
 
   ListNodeType newParamsBody(const TokenPos& pos) {
@@ -834,11 +829,6 @@ class FullParseHandler {
 
   bool isUnparenthesizedAssignment(Node node) {
     if (node->isKind(ParseNodeKind::AssignExpr) && !node->isInParens()) {
-      // ParseNodeKind::Assign is also (mis)used for things like
-      // |var name = expr;|. But this method is only called on actual
-      // expressions, so we can just assert the node's op is the one used
-      // for plain assignment.
-      MOZ_ASSERT(node->isOp(JSOP_NOP));
       return true;
     }
 
@@ -998,10 +988,6 @@ class FullParseHandler {
       }
     }
     return nullptr;
-  }
-
-  void adjustGetToSet(Node node) {
-    node->setOp(node->isOp(JSOP_GETLOCAL) ? JSOP_SETLOCAL : JSOP_SETNAME);
   }
 
   bool canSkipLazyInnerFunctions() { return !!lazyOuterFunction_; }

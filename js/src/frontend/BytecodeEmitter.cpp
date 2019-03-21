@@ -3928,8 +3928,6 @@ bool BytecodeEmitter::emitTemplateString(ListNode* templateString) {
 }
 
 bool BytecodeEmitter::emitDeclarationList(ListNode* declList) {
-  MOZ_ASSERT(declList->isOp(JSOP_NOP));
-
   for (ParseNode* decl : declList->contents()) {
     ParseNode* pattern;
     ParseNode* initializer;
@@ -3937,8 +3935,6 @@ bool BytecodeEmitter::emitDeclarationList(ListNode* declList) {
       pattern = decl;
       initializer = nullptr;
     } else {
-      MOZ_ASSERT(decl->isOp(JSOP_NOP));
-
       AssignmentNode* assignNode = &decl->as<AssignmentNode>();
       pattern = assignNode->left();
       initializer = assignNode->right();
@@ -3951,7 +3947,6 @@ bool BytecodeEmitter::emitDeclarationList(ListNode* declList) {
         return false;
       }
     } else {
-      MOZ_ASSERT(decl->isOp(JSOP_NOP));
       MOZ_ASSERT(pattern->isKind(ParseNodeKind::ArrayExpr) ||
                  pattern->isKind(ParseNodeKind::ObjectExpr));
       MOZ_ASSERT(initializer != nullptr);
@@ -5355,8 +5350,6 @@ bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
 
 bool BytecodeEmitter::emitForIn(ForNode* forInLoop,
                                 const EmitterScope* headLexicalEmitterScope) {
-  MOZ_ASSERT(forInLoop->isOp(JSOP_ITER));
-
   TernaryNode* forInHead = forInLoop->head();
   MOZ_ASSERT(forInHead->isKind(ParseNodeKind::ForIn));
 
@@ -6605,8 +6598,6 @@ bool BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt) {
   }
 
   if (useful) {
-    MOZ_ASSERT_IF(expr->isKind(ParseNodeKind::AssignExpr),
-                  expr->isOp(JSOP_NOP));
     ValueUsage valueUsage =
         wantval ? ValueUsage::WantValue : ValueUsage::IgnoreValue;
     ExpressionStatementEmitter ese(this, valueUsage);
@@ -9063,10 +9054,22 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::TrueExpr:
+      if (!emit1(JSOP_TRUE)) {
+        return false;
+      }
+      break;
     case ParseNodeKind::FalseExpr:
+      if (!emit1(JSOP_FALSE)) {
+        return false;
+      }
+      break;
     case ParseNodeKind::NullExpr:
+      if (!emit1(JSOP_NULL)) {
+        return false;
+      }
+      break;
     case ParseNodeKind::RawUndefinedExpr:
-      if (!emit1(pn->getOp())) {
+      if (!emit1(JSOP_UNDEFINED)) {
         return false;
       }
       break;
