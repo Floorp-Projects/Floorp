@@ -153,8 +153,6 @@
     <!-- Quick Action Sheet -->
     <!-- Option in Quick Action Sheet in the browser to share the current page -->
     <string name="quick_action_share">Share</string>
-    <!-- Option in Quick Action Sheet in the browser to screenshot the current page -->
-    <string name="quick_action_screenshot">Screenshot</string>
     <!-- Option in Quick Action Sheet in the browser to download the current page -->
     <string name="quick_action_download">Download</string>
     <!-- Option in Quick Action Sheet in the browser to favorite the current page -->

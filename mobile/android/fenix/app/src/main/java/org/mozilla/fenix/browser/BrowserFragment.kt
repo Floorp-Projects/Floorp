@@ -210,7 +210,7 @@ class BrowserFragment : Fragment(), BackHandler {
         )
 
         val actionSheet = view.findViewById<QuickActionSheet>(R.id.quick_action_sheet)
-        //actionSheet.afterInflate()
+        // actionSheet.afterInflate()
 
         val actionEmitter = ActionBusFactory.get(this).getManagedEmitter(SearchAction::class.java)
         sessionId?.let { id ->

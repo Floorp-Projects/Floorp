@@ -46,17 +46,6 @@
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
             android:layout_gravity="center_vertical"
-            android:contentDescription="@string/quick_action_screenshot"
-            android:src="@drawable/library_icon_screenshots_circle_background"
-            android:background="?attr/toolbarColor"/>
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_gravity="center_vertical"
             android:contentDescription="@string/quick_action_download"
             android:src="@drawable/library_icon_downloads_circle_background"
             android:background="?attr/toolbarColor"/>
@@ -99,15 +88,6 @@
             android:textSize="12sp"
             android:textColor="?attr/toolbarTextColor"
             android:text="@string/quick_action_share"/>
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:textAlignment="center"
-            android:textSize="12sp"
-            android:textColor="?attr/toolbarTextColor"
-            android:text="@string/quick_action_screenshot"/>
 
         <androidx.appcompat.widget.AppCompatTextView
             android:layout_height="wrap_content"
