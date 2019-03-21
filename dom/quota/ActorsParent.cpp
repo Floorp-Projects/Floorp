@@ -3599,11 +3599,11 @@ nsresult QuotaManager::GetDirectoryMetadata2(
     return rv;
   }
 
- if (!origin.EqualsLiteral(kChromeOrigin)) {
+  if (!origin.EqualsLiteral(kChromeOrigin)) {
     OriginAttributes originAttributes;
     nsCString originNoSuffix;
-    if (NS_WARN_IF(!originAttributes.PopulateFromOrigin(origin,
-                                                        originNoSuffix))) {
+    if (NS_WARN_IF(
+            !originAttributes.PopulateFromOrigin(origin, originNoSuffix))) {
       return NS_ERROR_FAILURE;
     }
 
@@ -3624,19 +3624,19 @@ nsresult QuotaManager::GetDirectoryMetadata2(
     if (group != upToDateGroup) {
       group = upToDateGroup;
 
-      rv = CreateDirectoryMetadata(
-          aDirectory, timestamp, suffix, group, origin);
+      rv =
+          CreateDirectoryMetadata(aDirectory, timestamp, suffix, group, origin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      rv = CreateDirectoryMetadata2(
-          aDirectory, timestamp, persisted, suffix, group, origin);
+      rv = CreateDirectoryMetadata2(aDirectory, timestamp, persisted, suffix,
+                                    group, origin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-  #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       ContentPrincipalInfo contentPrincipalInfo;
       contentPrincipalInfo.attrs() = originAttributes;
       contentPrincipalInfo.originNoSuffix() = originNoSuffix;
@@ -3650,7 +3650,7 @@ nsresult QuotaManager::GetDirectoryMetadata2(
 
       RefPtr<PrincipalVerifier> principalVerifier =
           PrincipalVerifier::CreateAndDispatch(std::move(principalInfos));
-  #endif
+#endif
     }
   }
 
