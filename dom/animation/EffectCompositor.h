@@ -183,9 +183,9 @@ class EffectCompositor {
       const nsIFrame* aFrame);
 
   // Associates a performance warning with effects on |aFrame| that animate
-  // |aProperty|.
+  // properties in |aPropertySet|.
   static void SetPerformanceWarning(
-      const nsIFrame* aFrame, nsCSSPropertyID aProperty,
+      const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet,
       const AnimationPerformanceWarning& aWarning);
 
   // Do a bunch of stuff that we should avoid doing during the parallel

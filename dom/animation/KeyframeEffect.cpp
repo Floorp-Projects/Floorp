@@ -37,6 +37,22 @@
 
 namespace mozilla {
 
+void AnimationProperty::SetPerformanceWarning(
+    const AnimationPerformanceWarning& aWarning, const Element* aElement) {
+  if (mPerformanceWarning && *mPerformanceWarning == aWarning) {
+    return;
+  }
+
+  mPerformanceWarning = Some(aWarning);
+
+  nsAutoString localizedString;
+  if (nsLayoutUtils::IsAnimationLoggingEnabled() &&
+      mPerformanceWarning->ToLocalizedString(localizedString)) {
+    nsAutoCString logMessage = NS_ConvertUTF16toUTF8(localizedString);
+    AnimationUtils::LogAsyncAnimationFailure(logMessage, aElement);
+  }
+}
+
 bool PropertyValuePair::operator==(const PropertyValuePair& aOther) const {
   if (mProperty != aOther.mProperty) {
     return false;
@@ -1512,19 +1528,16 @@ bool KeyframeEffect::HasGeometricProperties() const {
 }
 
 void KeyframeEffect::SetPerformanceWarning(
-    nsCSSPropertyID aProperty, const AnimationPerformanceWarning& aWarning) {
+    const nsCSSPropertyIDSet& aPropertySet,
+    const AnimationPerformanceWarning& aWarning) {
+  nsCSSPropertyIDSet curr = aPropertySet;
   for (AnimationProperty& property : mProperties) {
-    if (property.mProperty == aProperty &&
-        (!property.mPerformanceWarning ||
-         *property.mPerformanceWarning != aWarning)) {
-      property.mPerformanceWarning = Some(aWarning);
-
-      nsAutoString localizedString;
-      if (nsLayoutUtils::IsAnimationLoggingEnabled() &&
-          property.mPerformanceWarning->ToLocalizedString(localizedString)) {
-        nsAutoCString logMessage = NS_ConvertUTF16toUTF8(localizedString);
-        AnimationUtils::LogAsyncAnimationFailure(logMessage, mTarget->mElement);
-      }
+    if (!curr.HasProperty(property.mProperty)) {
+      continue;
+    }
+    property.SetPerformanceWarning(aWarning, mTarget->mElement);
+    curr.RemoveProperty(property.mProperty);
+    if (curr.IsEmpty()) {
       return;
     }
   }
