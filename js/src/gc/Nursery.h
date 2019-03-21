@@ -146,14 +146,6 @@ class Nursery {
    */
   static const size_t SubChunkStep = gc::ArenaSize;
 
-  /*
-   * 192K is conservative, not too low that root marking dominates.  The Limit
-   * should be a multiple of the Step.
-   */
-  static const size_t SubChunkLimit = 192 * 1024;
-  static_assert(SubChunkLimit % SubChunkStep == 0,
-                "The limit should be a multiple of the step");
-
   struct alignas(gc::CellAlignBytes) CellAlignedByte {
     char byte;
   };
@@ -339,7 +331,6 @@ class Nursery {
   size_t spaceToEnd(unsigned chunkCount) const;
 
   size_t capacity() const {
-    MOZ_ASSERT(capacity_ >= SubChunkLimit || capacity_ == 0);
     MOZ_ASSERT(capacity_ <= chunkCountLimit() * gc::ChunkSize);
     return capacity_;
   }

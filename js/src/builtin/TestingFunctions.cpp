@@ -465,6 +465,7 @@ static bool MinorGC(JSContext* cx, unsigned argc, Value* vp) {
 #define FOR_EACH_GC_PARAM(_)                                                 \
   _("maxBytes", JSGC_MAX_BYTES, true)                                        \
   _("maxMallocBytes", JSGC_MAX_MALLOC_BYTES, true)                           \
+  _("minNurseryBytes", JSGC_MIN_NURSERY_BYTES, true)                         \
   _("maxNurseryBytes", JSGC_MAX_NURSERY_BYTES, true)                         \
   _("gcBytes", JSGC_BYTES, false)                                            \
   _("gcNumber", JSGC_NUMBER, false)                                          \
