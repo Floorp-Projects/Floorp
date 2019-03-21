@@ -1103,6 +1103,10 @@ struct AssemblerBufferWithConstantPools
   }
 
   void align(unsigned alignment) {
+    align(alignment, alignFillInst_);
+  }
+
+  void align(unsigned alignment, uint32_t pattern) {
     MOZ_ASSERT(mozilla::IsPowerOfTwo(alignment));
     MOZ_ASSERT(alignment >= InstSize);
 
@@ -1127,7 +1131,7 @@ struct AssemblerBufferWithConstantPools
 
     inhibitNops_ = true;
     while ((sizeExcludingCurrentPool() & (alignment - 1)) && !this->oom()) {
-      putInt(alignFillInst_);
+      putInt(pattern);
     }
     inhibitNops_ = false;
   }

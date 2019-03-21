@@ -694,9 +694,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void align(int alignment) { armbuffer_.align(alignment); }
 
   void haltingAlign(int alignment) {
-    // TODO: Implement a proper halting align.
-    // ARM doesn't have one either.
-    armbuffer_.align(alignment);
+    armbuffer_.align(alignment, vixl::HLT | ImmException(0xBAAD));
   }
   void nopAlign(int alignment) { armbuffer_.align(alignment); }
 
