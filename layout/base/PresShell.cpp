@@ -10699,6 +10699,19 @@ bool nsIPresShell::SetVisualViewportOffset(
   return didChange;
 }
 
+void nsIPresShell::SetPendingVisualScrollUpdate(
+    const nsPoint& aVisualViewportOffset,
+    FrameMetrics::ScrollOffsetUpdateType aUpdateType) {
+  mPendingVisualScrollUpdate =
+      mozilla::Some(VisualScrollUpdate{aVisualViewportOffset, aUpdateType});
+
+  // The pending update is picked up during the next paint.
+  // Schedule a paint to make sure one will happen.
+  if (nsIFrame* rootFrame = GetRootFrame()) {
+    rootFrame->SchedulePaint();
+  }
+}
+
 nsPoint nsIPresShell::GetVisualViewportOffsetRelativeToLayoutViewport() const {
   return GetVisualViewportOffset() - GetLayoutViewportOffset();
 }
