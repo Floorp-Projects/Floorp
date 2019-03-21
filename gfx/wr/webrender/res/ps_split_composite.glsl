@@ -112,6 +112,6 @@ void main(void) {
     float alpha = do_clip();
     float perspective_divisor = mix(gl_FragCoord.w, 1.0, vLayerAndPerspective.y);
     vec2 uv = clamp(vUv * perspective_divisor, vUvSampleBounds.xy, vUvSampleBounds.zw);
-    oFragColor = alpha * textureLod(sPrevPassColor, vec3(uv, vLayerAndPerspective.x), 0.0);
+    write_output(alpha * textureLod(sPrevPassColor, vec3(uv, vLayerAndPerspective.x), 0.0));
 }
 #endif
