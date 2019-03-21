@@ -511,7 +511,9 @@ void KeyframeEffect::ComposeStyleRule(
     const AnimationProperty& aProperty,
     const AnimationPropertySegment& aSegment,
     const ComputedTiming& aComputedTiming) {
-  Servo_AnimationCompose(&aAnimationValues, &mBaseValues, aProperty.mProperty,
+  auto* opaqueTable =
+      reinterpret_cast<RawServoAnimationValueTable*>(&mBaseValues);
+  Servo_AnimationCompose(&aAnimationValues, opaqueTable, aProperty.mProperty,
                          &aSegment, &aProperty.mSegments.LastElement(),
                          &aComputedTiming, mEffectOptions.mIterationComposite);
 }

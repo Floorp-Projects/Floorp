@@ -32,12 +32,3 @@ extern crate style_traits;
 #[cfg(target_pointer_width = "64")]
 mod size_of;
 mod specified_values;
-
-mod servo_function_signatures;
-
-use style::*;
-
-#[allow(dead_code, improper_ctypes)]
-mod bindings {
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}

@@ -2646,7 +2646,6 @@ dependencies = [
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "malloc_size_of 0.0.1",
  "num-traits 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "regex 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "selectors 0.21.0",
  "size_of_test 0.0.1",
  "smallvec 0.6.6 (registry+https://github.com/rust-lang/crates.io-index)",
