@@ -23,6 +23,7 @@
 
 <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+<script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"/>
 <script type="application/javascript"
         src="chrome://pippki/content/certViewer.js"/>
 <html:style>
@@ -40,8 +41,6 @@
     font-weight: normal;
   }
 </html:style>
-
-#include ../../../../../toolkit/content/editMenuCommands.inc.xul
 
   <tabbox flex="1">
     <tabs>

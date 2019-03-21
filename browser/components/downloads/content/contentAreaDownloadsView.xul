@@ -30,8 +30,8 @@
           src="chrome://browser/content/downloads/allDownloadsView.js"/>
   <script type="application/javascript"
           src="chrome://global/content/contentAreaUtils.js"/>
-
-#include ../../../../toolkit/content/editMenuCommands.inc.xul
+  <script type="application/javascript"
+          src="chrome://global/content/editMenuOverlay.js"/>
 
 #include ../../../../toolkit/content/editMenuKeys.inc.xul
 #ifdef XP_MACOSX

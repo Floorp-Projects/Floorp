@@ -25,6 +25,7 @@
   <script type="application/javascript" src="chrome://browser/content/webext-panels.js"/>
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"/>
 
   <commandset id="mainCommandset">
     <command id="Browser:Back"
@@ -76,6 +77,4 @@
         />
     </menulist>
   </popupset>
-
-#include ../../../toolkit/content/editMenuCommands.inc.xul
 </page>
