@@ -44,8 +44,11 @@ class RendererScreenshotGrabber final {
  private:
   /**
    * Drop all our allocated memory when we are no longer profiling.
+   *
+   * This will also instruct WebRender to drop all its Gecko profiler
+   * associated memory.
    */
-  void Destroy();
+  void Destroy(Renderer* aRenderer);
 
   /**
    * Actually grab a screenshot from WebRender.
