@@ -104,9 +104,10 @@ static bool DepthFirstSearchUse(MIRGenerator* mir,
       }
 
       if (cphi->isInWorklist() || cphi == producer) {
-        // We are already iterating over the uses of this Phi
-        // instruction. Skip it.
-        continue;
+        // We are already iterating over the uses of this Phi instruction which
+        // are part of a loop, instead of trying to handle loops, conservatively
+        // mark them as used.
+        return push(producer, use);
       }
 
       if (cphi->getUsageAnalysis() == PhiUsage::Unused) {
