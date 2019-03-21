@@ -594,7 +594,8 @@ static inline ParseNode* FunctionStatementList(FunctionNode* funNode) {
 }
 
 static inline bool IsNormalObjectField(ParseNode* pn) {
-  return pn->isKind(ParseNodeKind::Colon) && pn->getOp() == JSOP_INITPROP &&
+  return pn->isKind(ParseNodeKind::PropertyDefinition) &&
+         pn->as<PropertyDefinition>().accessorType() == AccessorType::None &&
          BinaryLeft(pn)->isKind(ParseNodeKind::ObjectPropertyName);
 }
 

@@ -1249,7 +1249,7 @@ restart:
       *answer = true;
       return true;
 
-    case ParseNodeKind::Colon:
+    case ParseNodeKind::PropertyDefinition:
     case ParseNodeKind::Case: {
       BinaryNode* node = &pn->as<BinaryNode>();
       if (!checkSideEffects(node->left(), answer)) {
@@ -3620,7 +3620,7 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
         member->isKind(ParseNodeKind::Spread)) {
       subpattern = member->as<UnaryNode>().kid();
     } else {
-      MOZ_ASSERT(member->isKind(ParseNodeKind::Colon) ||
+      MOZ_ASSERT(member->isKind(ParseNodeKind::PropertyDefinition) ||
                  member->isKind(ParseNodeKind::Shorthand));
       subpattern = member->as<BinaryNode>().right();
     }
@@ -3698,7 +3698,7 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
       }
       needsGetElem = false;
     } else {
-      MOZ_ASSERT(member->isKind(ParseNodeKind::Colon) ||
+      MOZ_ASSERT(member->isKind(ParseNodeKind::PropertyDefinition) ||
                  member->isKind(ParseNodeKind::Shorthand));
 
       ParseNode* key = member->as<BinaryNode>().left();
@@ -7569,16 +7569,21 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
     ParseNode* key = prop->left();
     ParseNode* propVal = prop->right();
-    JSOp op = propdef->getOp();
-    MOZ_ASSERT(op == JSOP_INITPROP || op == JSOP_INITPROP_GETTER ||
-               op == JSOP_INITPROP_SETTER);
+    AccessorType accessorType;
+    if (prop->is<ClassMethod>()) {
+      accessorType = prop->as<ClassMethod>().accessorType();
+    } else if (prop->is<PropertyDefinition>()) {
+      accessorType = prop->as<PropertyDefinition>().accessorType();
+    } else {
+      accessorType = AccessorType::None;
+    }
 
-    auto emitValue = [this, &key, &propVal, op, &pe]() {
+    auto emitValue = [this, &key, &propVal, accessorType, &pe]() {
       //            [stack] CTOR? OBJ CTOR? KEY?
 
       if (propVal->isDirectRHSAnonFunction()) {
         if (key->isKind(ParseNodeKind::NumberExpr)) {
-          MOZ_ASSERT(op == JSOP_INITPROP);
+          MOZ_ASSERT(accessorType == AccessorType::None);
 
           NumericLiteral* literal = &key->as<NumericLiteral>();
           RootedAtom keyAtom(cx, NumberToAtom(cx, literal->value()));
@@ -7591,7 +7596,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
           }
         } else if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
                    key->isKind(ParseNodeKind::StringExpr)) {
-          MOZ_ASSERT(op == JSOP_INITPROP);
+          MOZ_ASSERT(accessorType == AccessorType::None);
 
           RootedAtom keyAtom(cx, key->as<NameNode>().atom());
           if (!emitAnonymousFunctionWithName(propVal, keyAtom)) {
@@ -7601,9 +7606,9 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         } else {
           MOZ_ASSERT(key->isKind(ParseNodeKind::ComputedName));
 
-          FunctionPrefixKind prefix = op == JSOP_INITPROP
+          FunctionPrefixKind prefix = accessorType == AccessorType::None
                                           ? FunctionPrefixKind::None
-                                          : op == JSOP_INITPROP_GETTER
+                                          : accessorType == AccessorType::Getter
                                                 ? FunctionPrefixKind::Get
                                                 : FunctionPrefixKind::Set;
 
@@ -7657,20 +7662,20 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         return false;
       }
 
-      switch (op) {
-        case JSOP_INITPROP:
+      switch (accessorType) {
+        case AccessorType::None:
           if (!pe.emitInitIndexProp()) {
             //      [stack] CTOR? OBJ
             return false;
           }
           break;
-        case JSOP_INITPROP_GETTER:
+        case AccessorType::Getter:
           if (!pe.emitInitIndexGetter()) {
             //      [stack] CTOR? OBJ
             return false;
           }
           break;
-        case JSOP_INITPROP_SETTER:
+        case AccessorType::Setter:
           if (!pe.emitInitIndexSetter()) {
             //      [stack] CTOR? OBJ
             return false;
@@ -7704,20 +7709,20 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       }
 
       RootedAtom keyAtom(cx, key->as<NameNode>().atom());
-      switch (op) {
-        case JSOP_INITPROP:
+      switch (accessorType) {
+        case AccessorType::None:
           if (!pe.emitInitProp(keyAtom)) {
             //      [stack] CTOR? OBJ
             return false;
           }
           break;
-        case JSOP_INITPROP_GETTER:
+        case AccessorType::Getter:
           if (!pe.emitInitGetter(keyAtom)) {
             //      [stack] CTOR? OBJ
             return false;
           }
           break;
-        case JSOP_INITPROP_SETTER:
+        case AccessorType::Setter:
           if (!pe.emitInitSetter(keyAtom)) {
             //      [stack] CTOR? OBJ
             return false;
@@ -7751,20 +7756,20 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       return false;
     }
 
-    switch (op) {
-      case JSOP_INITPROP:
+    switch (accessorType) {
+      case AccessorType::None:
         if (!pe.emitInitComputedProp()) {
           //        [stack] CTOR? OBJ
           return false;
         }
         break;
-      case JSOP_INITPROP_GETTER:
+      case AccessorType::Getter:
         if (!pe.emitInitComputedGetter()) {
           //        [stack] CTOR? OBJ
           return false;
         }
         break;
-      case JSOP_INITPROP_SETTER:
+      case AccessorType::Setter:
         if (!pe.emitInitComputedSetter()) {
           //        [stack] CTOR? OBJ
           return false;
