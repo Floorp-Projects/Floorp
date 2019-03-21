@@ -26,6 +26,9 @@ class TabTarget extends Target {
     super(targets, TabSession);
 
     this.browser = browser;
+
+    // Define the HTTP path to query this target
+    this.path = `/devtools/page/${this.id}`;
   }
 
   connect() {
@@ -101,7 +104,7 @@ class TabTarget extends Target {
     const RemoteAgent = Cc["@mozilla.org/remote/agent"]
         .getService(Ci.nsISupports).wrappedJSObject;
     const {host, port} = RemoteAgent;
-    return `ws://${host}:${port}/devtools/page/${this.id}`;
+    return `ws://${host}:${port}${this.path}`;
   }
 
   toString() {

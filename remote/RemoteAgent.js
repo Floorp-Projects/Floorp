@@ -44,7 +44,10 @@ class ParentRemoteAgent {
     });
 
     this.targets.on("connect", (eventName, target) => {
-      this.server.registerPathHandler(`/devtools/page/${target.id}`, target);
+      if (!target.path) {
+        throw new Error(`Target is missing 'path' attribute: ${target}`);
+      }
+      this.server.registerPathHandler(target.path, target);
     });
     this.targets.on("disconnect", (eventName, target) => {
       // TODO(ato): removing a handler is currently not possible

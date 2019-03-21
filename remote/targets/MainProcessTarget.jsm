@@ -23,13 +23,16 @@ class MainProcessTarget extends Target {
     super(targets, Session);
 
     this.type = "main-process";
+
+    // Define the HTTP path to query this target
+    this.path = "/devtools/browser";
   }
 
   get wsDebuggerURL() {
     const RemoteAgent = Cc["@mozilla.org/remote/agent"]
         .getService(Ci.nsISupports).wrappedJSObject;
     const {host, port} = RemoteAgent;
-    return `ws://${host}:${port}/devtools/page/${this.id}`;
+    return `ws://${host}:${port}${this.path}`;
   }
 
   toString() {
