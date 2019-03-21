@@ -2210,26 +2210,24 @@ mozilla::ipc::IPCResult TabParent::RecvRegisterProtocolHandler(
 }
 
 mozilla::ipc::IPCResult TabParent::RecvOnContentBlockingEvent(
-    const OptionalWebProgressData& aWebProgressData,
+    const Maybe<WebProgressData>& aWebProgressData,
     const RequestData& aRequestData, const uint32_t& aEvent) {
   nsCOMPtr<nsIBrowser> browser =
       mFrameElement ? mFrameElement->AsBrowser() : nullptr;
   if (browser) {
-    MOZ_ASSERT(aWebProgressData.type() != OptionalWebProgressData::T__None);
-
-    if (aWebProgressData.type() == OptionalWebProgressData::Tvoid_t) {
+    if (aWebProgressData.isNothing()) {
       Unused << browser->CallWebProgressContentBlockingEventListeners(
           false, false, false, 0, 0, aRequestData.requestURI(),
           aRequestData.originalRequestURI(), aRequestData.matchedList(),
           aEvent);
     } else {
       Unused << browser->CallWebProgressContentBlockingEventListeners(
-          true, aWebProgressData.get_WebProgressData().isTopLevel(),
-          aWebProgressData.get_WebProgressData().isLoadingDocument(),
-          aWebProgressData.get_WebProgressData().loadType(),
-          aWebProgressData.get_WebProgressData().DOMWindowID(),
-          aRequestData.requestURI(), aRequestData.originalRequestURI(),
-          aRequestData.matchedList(), aEvent);
+          true, aWebProgressData.ref().isTopLevel(),
+          aWebProgressData.ref().isLoadingDocument(),
+          aWebProgressData.ref().loadType(),
+          aWebProgressData.ref().DOMWindowID(), aRequestData.requestURI(),
+          aRequestData.originalRequestURI(), aRequestData.matchedList(),
+          aEvent);
     }
   }
 
