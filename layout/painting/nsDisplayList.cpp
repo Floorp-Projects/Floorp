@@ -453,7 +453,6 @@ static void SetAnimatable(nsCSSPropertyID aProperty,
   MOZ_ASSERT(aFrame);
 
   if (aAnimationValue.IsNull()) {
-    printf_stderr("[Boris] set null animatable\n");
     aAnimatable = null_t();
     return;
   }

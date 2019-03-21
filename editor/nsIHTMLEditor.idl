@@ -147,7 +147,6 @@ interface nsIHTMLEditor : nsISupports
    *
    *  @param aSourceString   HTML source string of the entire new document
    */
-  [can_run_script]
   void rebuildDocumentFromSource(in AString aSourceString);
 
   /**
@@ -183,7 +182,6 @@ interface nsIHTMLEditor : nsISupports
     *
     * @param aElement   An element in the document
     */
-  [can_run_script]
   void selectElement(in Element aElement);
 
   /**

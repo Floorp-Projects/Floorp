@@ -407,9 +407,8 @@ EditorSpellCheck::GetNextMisspelledWord(nsAString& aNextMisspelledWord) {
   DeleteSuggestedWordList();
   // Beware! This may flush notifications via synchronous
   // ScrollSelectionIntoView.
-  RefPtr<mozSpellChecker> spellChecker(mSpellChecker);
-  return spellChecker->NextMisspelledWord(aNextMisspelledWord,
-                                          &mSuggestedWordList);
+  return mSpellChecker->NextMisspelledWord(aNextMisspelledWord,
+                                           &mSuggestedWordList);
 }
 
 NS_IMETHODIMP
@@ -451,8 +450,7 @@ EditorSpellCheck::ReplaceWord(const nsAString& aMisspelledWord,
                               bool aAllOccurrences) {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
-  RefPtr<mozSpellChecker> spellChecker(mSpellChecker);
-  return spellChecker->Replace(aMisspelledWord, aReplaceWord, aAllOccurrences);
+  return mSpellChecker->Replace(aMisspelledWord, aReplaceWord, aAllOccurrences);
 }
 
 NS_IMETHODIMP
