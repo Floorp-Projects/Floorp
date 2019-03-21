@@ -1,0 +1,31 @@
+[package]
+name = "bits"
+version = "0.1.0"
+authors = ["Adam Gashlin <agashlin@mozilla.com>"]
+license = "MIT/Apache-2.0"
+publish = false
+
+[features]
+status_serde = ["serde", "serde_derive"]
+
+[dependencies]
+comedy = "0.1.0"
+filetime_win = "0.1.0"
+guid_win = "0.1.0"
+serde = { version = "1.0.80", optional = true }
+serde_derive = { version = "1.0.80", optional = true }
+
+[dependencies.winapi]
+version = "0.3.6"
+features = ["basetsd",
+            "bits",
+            "bits2_5",
+            "bitsmsg",
+            "guiddef",
+            "minwindef",
+            "ntdef",
+            "rpcndr",
+            "unknwnbase",
+            "winerror",
+            "winnls",
+            ]
