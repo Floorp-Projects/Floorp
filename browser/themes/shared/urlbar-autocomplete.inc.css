@@ -120,13 +120,13 @@
   max-width: calc(var(--item-content-width) * .7 - 2 * (16px + @urlbarViewIconMarginEnd@));
 }
 
-.urlbarView-secondary::before {
+.urlbarView-title-separator::before {
   content: "\2014";
   color: var(--panel-disabled-color);
   margin: 0 .4em;
 }
 
-.urlbarView-title:empty + .urlbarView-secondary::before {
+.urlbarView-title:empty + .urlbarView-title-separator {
   display: none;
 }
 
@@ -142,6 +142,7 @@
 }
 
 .urlbarView-secondary {
+  display: inline-block;
   color: var(--urlbar-popup-action-color);
 }
 
@@ -149,7 +150,11 @@
   color: var(--urlbar-popup-url-color);
 }
 
-.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-secondary::before,
+.urlbarView-url:-moz-locale-dir(rtl) {
+  direction: ltr !important;
+}
+
+.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-title-separator::before,
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-secondary {
   color: inherit;
 }
@@ -158,6 +163,7 @@
 .urlbarView-row[type=remotetab]:hover > .urlbarView-row-inner > .urlbarView-action,
 .urlbarView-row[type=remotetab]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-url,
 .urlbarView-row[type=search]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-action,
+.urlbarView-row[type=search]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-title-separator,
 #urlbar-results[actionoverride] .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-action,
 #urlbar-results:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-url {
   display: none;
