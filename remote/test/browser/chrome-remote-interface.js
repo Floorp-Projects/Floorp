@@ -17422,11 +17422,9 @@ var CDP =
 	                                this.webSocketUrl = url;
 	                                // update the connection parameters using the debugging URL
 	                                urlObject = parseUrl(url);
- 
-                                  // !!! WORKAROUND for misbehaving server
-	                                // options.host = urlObject.hostname;
-	                                // options.port = urlObject.port || options.port;
 
+	                                options.host = urlObject.hostname;
+	                                options.port = urlObject.port || options.port;
 	                                // fetch the protocol and prepare the API
 	                                _context.next = 11;
 	                                return this._fetchProtocol(options);
