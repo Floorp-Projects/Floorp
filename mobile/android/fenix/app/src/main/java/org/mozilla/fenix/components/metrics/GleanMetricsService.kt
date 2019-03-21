@@ -4,7 +4,7 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Context
-import mozilla.components.service.glean.EventMetricType
+import mozilla.components.service.glean.metrics.EventMetricType
 import mozilla.components.service.glean.Glean
 import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.BuildConfig

@@ -1,1 +1,36 @@
 include ':app', ':architecture'
+
+//////////////////////////////////////////////////////////////////////////
+// Local Development overrides
+//////////////////////////////////////////////////////////////////////////
+
+Properties localProperties = null;
+String settingAppServicesPath = "substitutions.application-services.dir";
+
+if (file('local.properties').canRead()) {
+    localProperties = new Properties()
+    localProperties.load(file('local.properties').newDataInputStream())
+    logger.lifecycle('Local configuration: loaded local.properties')
+} else {
+    logger.lifecycle('Local configuration: absent local.properties; proceeding as normal.')
+}
+
+if (localProperties != null) {
+    String appServicesLocalPath = localProperties.getProperty(settingAppServicesPath);
+
+    if (appServicesLocalPath != null) {
+        logger.lifecycle("Local configuration: substituting application-services modules from path: $appServicesLocalPath")
+
+        includeBuild(appServicesLocalPath) {
+            dependencySubstitution {
+                substitute module('org.mozilla.appservices:fxaclient') with project(':fxa-client-library')
+                substitute module('org.mozilla.appservices:logins') with project(':logins-library')
+                substitute module('org.mozilla.appservices:places') with project(':places-library')
+                substitute module('org.mozilla.appservices:rustlog') with project(':rustlog-library')
+            }
+        }
+
+    } else {
+        logger.lifecycle("Local configuration: application-services substitution path missing. Specify it via '$settingAppServicesPath' setting.")
+    }
+}

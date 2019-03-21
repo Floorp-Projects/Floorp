@@ -16,6 +16,7 @@ import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SessionStorage
+import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
@@ -122,6 +123,9 @@ class Core(private val context: Context) {
      * private sessions).
      */
     val historyStorage by lazy { PlacesHistoryStorage(context) }
+
+    val bookmarksStorage
+            by lazy { PlacesBookmarksStorage(context) }
 
     /**
      * Constructs a [TrackingProtectionPolicy] based on current preferences.

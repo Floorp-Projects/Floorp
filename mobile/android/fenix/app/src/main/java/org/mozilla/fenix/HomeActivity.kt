@@ -28,6 +28,7 @@ import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragmentDirections
+import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.search.SearchFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
 
@@ -80,8 +81,8 @@ open class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // There is no session, or it has timed out; we should pop everything to home
-        if (components.core.sessionStorage.current() == null) {
+        // There is no session, or it has timed out; we should pop everything to home if not in private mode
+        if (components.core.sessionStorage.current() == null && !browsingModeManager.isPrivate) {
             navHost.navController.popBackStack(R.id.homeFragment, false)
         }
     }
@@ -109,7 +110,6 @@ open class HomeActivity : AppCompatActivity() {
                 return
             }
         }
-
         super.onBackPressed()
     }
 
@@ -166,6 +166,8 @@ open class HomeActivity : AppCompatActivity() {
             BrowserDirection.FromSearch -> SearchFragmentDirections.actionSearchFragmentToBrowserFragment(sessionId)
             BrowserDirection.FromSettings ->
                 SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(sessionId)
+            BrowserDirection.FromBookmarks ->
+                BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(sessionId)
         }
 
         navHost.navController.navigate(directions)
@@ -202,5 +204,5 @@ open class HomeActivity : AppCompatActivity() {
 }
 
 enum class BrowserDirection {
-    FromGlobal, FromHome, FromSearch, FromSettings
+    FromGlobal, FromHome, FromSearch, FromSettings, FromBookmarks
 }

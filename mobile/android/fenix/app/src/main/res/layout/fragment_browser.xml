@@ -18,19 +18,14 @@
 
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollQuickAction"
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:background="?attr/toolbarColor"
         android:clipToPadding="true"
         app:behavior_hideable="true"
         app:behavior_peekHeight="15dp"
-        app:layout_behavior="org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior">
-        <org.mozilla.fenix.quickactionsheet.QuickActionSheet
-            android:id="@+id/quick_action_sheet"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"/>
-    </androidx.core.widget.NestedScrollView>
+        app:layout_behavior="org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior"/>
 
     <mozilla.components.feature.findinpage.view.FindInPageBar
         android:id="@+id/findInPageView"

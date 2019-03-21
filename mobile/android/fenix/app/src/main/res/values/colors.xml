@@ -8,6 +8,7 @@
     <color name="color_accent">#D81B60</color>
 
     <color name="history_delete_button_background">#F2F2F5</color>
+    <color name="bookmark_favicon_background">#DFDFE3</color>
     <color name="light_mode_text_color">#20123A</color>
 
     <color name="awesome_bar_title_color">#212121</color>

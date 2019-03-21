@@ -10,13 +10,13 @@
         android:icon="@drawable/ic_search"
         android:iconTint="?attr/iconColor"
         android:title="@string/library_search"
-        app:showAsAction="always"
+        app:showAsAction="ifRoom"
         tools:targetApi="o" />
     <item
         android:id="@+id/libraryClose"
         android:icon="@drawable/ic_close"
         android:iconTint="?attr/iconColor"
         android:title="@string/content_description_close_button"
-        app:showAsAction="always"
+        app:showAsAction="ifRoom"
         tools:targetApi="o" />
 </menu>

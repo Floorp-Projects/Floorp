@@ -15,8 +15,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_library.*
-import org.mozilla.fenix.utils.ItsNotBrokenSnack
+import mozilla.appservices.places.BookmarkRoot
 import org.mozilla.fenix.R
+import org.mozilla.fenix.library.bookmarks.BookmarkFragmentArgs
+import org.mozilla.fenix.utils.ItsNotBrokenSnack
 
 class LibraryFragment : Fragment() {
 
@@ -47,14 +49,17 @@ class LibraryFragment : Fragment() {
                 null
             )
         )
+
+        libraryBookmarks.setOnClickListener(Navigation.createNavigateOnClickListener(
+            LibraryFragmentDirections.actionLibraryFragmentToBookmarksFragment(BookmarkRoot.Root.id).actionId,
+            BookmarkFragmentArgs(BookmarkRoot.Root.id).toBundle()
+        ))
+
         libraryDownloads.setOnClickListener {
             ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "348")
         }
         libraryScreenshots.setOnClickListener {
             ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "89")
-        }
-        libraryBookmarks.setOnClickListener {
-            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "90")
         }
         libraryReadingList.setOnClickListener {
             ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "913")

@@ -189,7 +189,7 @@
     <string name="library_screenshots">Screenshots</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Downloads</string>
-    <!-- Option in Library to open Bookmarks page -->
+    <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Bookmarks</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">History</string>
@@ -278,4 +278,32 @@
 
     <!-- Content Description for session item share button -->
     <string name="content_description_session_share">Share session</string>
+
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Bookmark menu</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Edit bookmark</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Select folder</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Add folder</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">Bookmark Created.</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">EDIT</string>
+
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Edit</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">Select</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Copy</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Share</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Open in new tab</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Open in private tab</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Delete</string>
 </resources>

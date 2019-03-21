@@ -89,6 +89,9 @@
         <action
             android:id="@+id/action_libraryFragment_to_historyFragment"
             app:destination="@+id/historyFragment" />
+        <action
+            android:id="@+id/action_libraryFragment_to_bookmarksFragment"
+            app:destination="@+id/bookmarkFragment" />
     </fragment>
 
     <fragment
@@ -97,6 +100,20 @@
         android:label="@string/library_history"
         tools:layout="@layout/fragment_history" />
 
+    <fragment
+        android:id="@+id/bookmarkFragment"
+        android:name="org.mozilla.fenix.library.bookmarks.BookmarkFragment"
+        android:label="@string/library_bookmarks"
+        tools:layout="@layout/fragment_bookmark">
+        <argument
+            android:name="currentRoot"
+            app:argType="string" />
+        <action android:id="@+id/action_bookmarkFragment_to_browserFragment"
+            app:destination="@id/browserFragment" />
+        <action
+            android:id="@+id/action_bookmarkFragment_self"
+            app:destination="@id/bookmarkFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/settingsFragment"

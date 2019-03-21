@@ -67,7 +67,7 @@ class QuickActionSheet @JvmOverloads constructor(
     }
 
     private fun updateImportantForAccessibility(state: Int) {
-        findViewById<LinearLayout>(R.id.quick_action_sheet_buttonbar).importantForAccessibility =
+        findViewById<LinearLayout>(R.id.quick_action_buttons_layout).importantForAccessibility =
             if (state == BottomSheetBehavior.STATE_COLLAPSED || state == BottomSheetBehavior.STATE_HIDDEN)
                 View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
             else
