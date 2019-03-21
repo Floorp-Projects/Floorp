@@ -193,11 +193,10 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
           }
           break;
 
-        case ParseNodeKind::Colon:
+        case ParseNodeKind::PropertyDefinition:
         case ParseNodeKind::Shorthand:
-          // Record the ParseNodeKind::Colon/Shorthand but skip the
-          // ParseNodeKind::Object so we're not flagged as a
-          // contributor.
+          // Record the ParseNodeKind::PropertyDefinition/Shorthand but skip the
+          // ParseNodeKind::Object so we're not flagged as a contributor.
           pos--;
           MOZ_FALLTHROUGH;
 
@@ -272,7 +271,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     for (int pos = size - 1; pos >= 0; pos--) {
       ParseNode* node = toName[pos];
 
-      if (node->isKind(ParseNodeKind::Colon) ||
+      if (node->isKind(ParseNodeKind::PropertyDefinition) ||
           node->isKind(ParseNodeKind::Shorthand)) {
         ParseNode* left = node->as<BinaryNode>().left();
         if (left->isKind(ParseNodeKind::ObjectPropertyName) ||

@@ -319,7 +319,7 @@ restart:
     case ParseNodeKind::ComputedName:
     case ParseNodeKind::Spread:
     case ParseNodeKind::MutateProto:
-    case ParseNodeKind::Colon:
+    case ParseNodeKind::PropertyDefinition:
     case ParseNodeKind::Shorthand:
     case ParseNodeKind::ConditionalExpr:
     case ParseNodeKind::TypeOfNameExpr:
@@ -1491,7 +1491,7 @@ class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
     ListNode* list = &pn->as<ListNode>();
     if (list->hasNonConstInitializer()) {
       for (ParseNode* node : list->contents()) {
-        if (node->getKind() != ParseNodeKind::Colon) {
+        if (node->getKind() != ParseNodeKind::PropertyDefinition) {
           return true;
         }
         BinaryNode* binary = &node->as<BinaryNode>();
