@@ -17,3 +17,7 @@
   padding-block-start: calc(var(--base-unit) * 4);
   padding-inline: calc(var(--base-unit) * 6);
 }
+
+.connect-page__network-form__error-message {
+  grid-column: 1 / -1;
+}
