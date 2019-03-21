@@ -1205,7 +1205,7 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   size_t highLimit =
       Min((CheckedInt<size_t>(chunkCountLimit()) * ChunkSize).value(),
           (CheckedInt<size_t>(capacity()) * 2).value());
-  newCapacity = mozilla::Clamp(newCapacity, lowLimit, highLimit);
+  newCapacity = roundSize(mozilla::Clamp(newCapacity, lowLimit, highLimit));
 
   if (maxChunkCount() < chunkCountLimit() && promotionRate > GrowThreshold &&
       newCapacity > capacity()) {
@@ -1237,7 +1237,9 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
   }
 #endif
 
-  unsigned newMaxNurseryChunks = tunables().gcMaxNurseryBytes() >> ChunkShift;
+  unsigned newMaxNurseryChunks =
+      JS_ROUND(tunables().gcMaxNurseryBytes(), ChunkSize) / ChunkSize;
+  MOZ_ASSERT(newMaxNurseryChunks > 0);
   if (newMaxNurseryChunks != chunkCountLimit_) {
     chunkCountLimit_ = newMaxNurseryChunks;
     /* The configured maximum nursery size is changing */
@@ -1254,19 +1256,20 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
   return false;
 }
 
+size_t js::Nursery::roundSize(size_t size) const {
+  if (size >= ChunkSize) {
+    size = JS_ROUND(size, ChunkSize);
+  } else {
+    size = Min(JS_ROUND(size, SubChunkStep),
+               JS_ROUNDDOWN(NurseryChunkUsableSize, SubChunkStep));
+  }
+  return size;
+}
+
 void js::Nursery::growAllocableSpace(size_t newCapacity) {
   MOZ_ASSERT_IF(!isSubChunkMode(), newCapacity > currentChunk_ * ChunkSize);
-  if (isSubChunkMode()) {
-    if (newCapacity >= NurseryChunkUsableSize) {
-      capacity_ = ChunkSize;
-    } else {
-      capacity_ =
-          Min(JS_ROUNDUP(newCapacity, SubChunkStep), NurseryChunkUsableSize);
-    }
-  } else {
-    capacity_ = JS_ROUNDUP(newCapacity, ChunkSize);
-  }
-  MOZ_ASSERT(capacity_ <= chunkCountLimit_ * ChunkSize);
+  MOZ_ASSERT(newCapacity <= chunkCountLimit_ * ChunkSize);
+  capacity_ = newCapacity;
   setCurrentEnd();
 }
 
@@ -1288,10 +1291,6 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
   }
 #endif
 
-  size_t stepSize = newCapacity < NurseryChunkUsableSize
-                        ? SubChunkStep
-                        : NurseryChunkUsableSize;
-  newCapacity -= newCapacity % stepSize;
   // Don't shrink the nursery to zero (use Nursery::disable() instead)
   // This can't happen due to the rounding-down performed above because of the
   // clamping in maybeResizeNursery().
@@ -1302,7 +1301,7 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
   }
   MOZ_ASSERT(newCapacity < capacity());
 
-  unsigned newCount = (newCapacity + ChunkSize - 1) / ChunkSize;
+  unsigned newCount = JS_HOWMANY(newCapacity, ChunkSize);
   if (newCount < allocatedChunkCount()) {
     freeChunksFrom(newCount);
   }
