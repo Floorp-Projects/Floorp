@@ -27,7 +27,7 @@ nsresult GetOriginSnapshot(bool aClear, JSContext* aCx,
                            JS::MutableHandleValue aResult);
 
 nsresult GetEncodedOriginSnapshot(bool aClear, JSContext* aCx,
-                                  mozilla::dom::Promise** aResult);
+                                  JS::MutableHandleValue aSnapshot);
 
 // Only to be used for testing.
 void ClearOrigins();

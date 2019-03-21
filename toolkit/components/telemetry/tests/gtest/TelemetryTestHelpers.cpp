@@ -5,6 +5,7 @@
 #include "TelemetryTestHelpers.h"
 
 #include "core/TelemetryCommon.h"
+#include "core/TelemetryOrigin.h"
 #include "gtest/gtest.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Unused.h"
@@ -179,6 +180,71 @@ void GetOriginSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
   ASSERT_TRUE(originSnapshot.isObject()) << "The snapshot must be an object.";
 
   aResult.set(originSnapshot);
+}
+
+/*
+ * Extracts the `a` and `b` strings from the prioData snapshot object
+ * of length 1. Which looks like:
+ *
+ * [{
+ *   encoding: encodingName,
+ *   prio: {
+ *     a: <string>,
+ *     b: <string>,
+ *   },
+ * }]
+ */
+void GetEncodedOriginStrings(JSContext* aCx, const nsCString& encoding,
+                             nsAutoJSString& aStr, nsAutoJSString& bStr) {
+  JS::RootedValue snapshot(aCx);
+  nsresult rv;
+  rv = TelemetryOrigin::GetEncodedOriginSnapshot(false /* clear */, aCx,
+                                                 &snapshot);
+
+  ASSERT_FALSE(NS_FAILED(rv));
+  ASSERT_FALSE(snapshot.isNullOrUndefined())
+      << "Encoded snapshot must not be null/undefined.";
+
+  JS::RootedObject prioDataObj(aCx, &snapshot.toObject());
+  bool isArray = false;
+  ASSERT_TRUE(JS_IsArrayObject(aCx, prioDataObj, &isArray) && isArray)
+      << "The metric's origins must be in an array.";
+
+  uint32_t length = 0;
+  ASSERT_TRUE(JS_GetArrayLength(aCx, prioDataObj, &length) && length == 1)
+      << "Length of returned array must be 1.";
+
+  JS::RootedValue arrayItem(aCx);
+  ASSERT_TRUE(JS_GetElement(aCx, prioDataObj, 0, &arrayItem));
+  ASSERT_TRUE(arrayItem.isObject());
+  ASSERT_FALSE(arrayItem.isNullOrUndefined());
+
+  JS::RootedObject arrayItemObj(aCx, &arrayItem.toObject());
+
+  JS::RootedValue encodingVal(aCx);
+  ASSERT_TRUE(JS_GetProperty(aCx, arrayItemObj, "encoding", &encodingVal));
+  ASSERT_TRUE(encodingVal.isString());
+  nsAutoJSString jsStr;
+  ASSERT_TRUE(jsStr.init(aCx, encodingVal));
+  ASSERT_TRUE(NS_ConvertUTF16toUTF8(jsStr) == encoding)
+      << "Encoding must match expectation.";
+
+  JS::RootedValue prioVal(aCx);
+  ASSERT_TRUE(JS_GetProperty(aCx, arrayItemObj, "prio", &prioVal));
+  ASSERT_TRUE(prioVal.isObject());
+  ASSERT_FALSE(prioVal.isNullOrUndefined());
+
+  JS::RootedObject prioObj(aCx, &prioVal.toObject());
+
+  JS::RootedValue aVal(aCx);
+  ASSERT_TRUE(JS_GetProperty(aCx, prioObj, "a", &aVal));
+  ASSERT_TRUE(aVal.isString());
+  ASSERT_TRUE(aStr.init(aCx, aVal));
+
+  JS::RootedValue bVal(aCx);
+  ASSERT_TRUE(JS_GetProperty(aCx, prioObj, "b", &bVal));
+  ASSERT_TRUE(bVal.isString());
+  ASSERT_TRUE(bStr.init(aCx, bVal));
 }
 
 void GetEventSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
