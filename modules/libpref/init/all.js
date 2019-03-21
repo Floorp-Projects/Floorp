@@ -444,8 +444,6 @@ pref("media.peerconnection.sdp.rust.enabled", false);
 pref("media.peerconnection.sdp.rust.compare", false);
 #endif
 
-pref("media.videocontrols.picture-in-picture.enabled", false);
-
 pref("media.webrtc.debug.trace_mask", 0);
 pref("media.webrtc.debug.multi_log", false);
 pref("media.webrtc.debug.log_file", "");

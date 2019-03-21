@@ -28,7 +28,6 @@ FINAL_TARGET_FILES.actors += [
     'FindBarChild.jsm',
     'FinderChild.jsm',
     'KeyPressEventModelCheckerChild.jsm',
-    'PictureInPictureChild.jsm',
     'PopupBlockingChild.jsm',
     'PrintingChild.jsm',
     'PurgeSessionHistoryChild.jsm',
@@ -41,3 +40,8 @@ FINAL_TARGET_FILES.actors += [
     'WebNavigationChild.jsm',
     'ZoomChild.jsm',
 ]
+
+if CONFIG['NIGHTLY_BUILD']:
+    FINAL_TARGET_FILES.actors += [
+        'PictureInPictureChild.jsm',
+    ]

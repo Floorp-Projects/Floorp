@@ -215,7 +215,6 @@ nsContextMenu.prototype = {
     this.onCompletedImage    = context.onCompletedImage;
     this.onCTPPlugin         = context.onCTPPlugin;
     this.onDRMMedia          = context.onDRMMedia;
-    this.onPiPVideo          = context.onPiPVideo;
     this.onEditable          = context.onEditable;
     this.onImage             = context.onImage;
     this.onKeywordField      = context.onKeywordField;
@@ -679,7 +678,7 @@ nsContextMenu.prototype = {
     this.showItem("context-media-showcontrols", onMedia && !this.target.controls);
     this.showItem("context-media-hidecontrols", this.target.controls && (this.onVideo || (this.onAudio && !this.inSyntheticDoc)));
     this.showItem("context-video-fullscreen", this.onVideo && !this.target.ownerDocument.fullscreen);
-    {
+    if (AppConstants.NIGHTLY_BUILD) {
       let shouldDisplay = Services.prefs.getBoolPref("media.videocontrols.picture-in-picture.enabled") &&
                           this.onVideo &&
                           !this.target.ownerDocument.fullscreen;
@@ -714,7 +713,6 @@ nsContextMenu.prototype = {
         let canSaveSnapshot = !this.onDRMMedia && this.target.readyState >= this.target.HAVE_CURRENT_DATA;
         this.setItemAttr("context-video-saveimage", "disabled", !canSaveSnapshot);
         this.setItemAttr("context-video-fullscreen", "disabled", hasError);
-        this.setItemAttr("context-video-pictureinpicture", "checked", this.onPiPVideo);
       }
     }
     this.showItem("context-media-sep-commands", onMedia);
