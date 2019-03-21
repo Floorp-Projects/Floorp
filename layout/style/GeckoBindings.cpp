@@ -2050,7 +2050,7 @@ GeckoFontMetrics Gecko_GetFontMetrics(RawGeckoPresContextBorrowed aPresContext,
   gfxFloat zeroWidth = fm->GetThebesFontGroup()
                            ->GetFirstValidFont()
                            ->GetMetrics(fm->Orientation())
-                           .zeroOrAveCharWidth;
+                           .ZeroOrAveCharWidth();
   ret.mChSize = NS_round(aPresContext->AppUnitsPerDevPixel() * zeroWidth);
   return ret;
 }
