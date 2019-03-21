@@ -101,9 +101,6 @@ var CoveragePing = Object.freeze({
     request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
     request.setRequestHeader("Date", new Date().toUTCString());
 
-    // Prevent the request channel from running though URLClassifier (bug 1296802)
-    request.channel.loadFlags &= ~Ci.nsIChannel.LOAD_CLASSIFY_URI;
-
     let errorhandler = (event) => {
       let failure = event.type;
       log.error(`error making request to ${endpoint}: ${failure}`);
