@@ -403,7 +403,14 @@ class MOZ_NON_PARAM Vector final : private AllocPolicy {
         : CapacityAndReserved(aCapacity, aReserved) {}
     CRAndStorage() = default;
 
-    T* storage() { return nullptr; }
+    T* storage() {
+      // If this returns |nullptr|, functions like |Vector::begin()| would too,
+      // breaking callers that pass a vector's elements as pointer/length to
+      // code that bounds its operation by length but (even just as a sanity
+      // check) always wants a non-null pointer.  Fake up an aligned, non-null
+      // pointer to support these callers.
+      return reinterpret_cast<T*>(sizeof(T));
+    }
   };
 
   CRAndStorage<kInlineCapacity, 0> mTail;
