@@ -62,6 +62,14 @@ internal sealed class Event {
     object FailedToFetchProfile : Event()
 
     object Logout : Event()
+
+    data class Pair(val pairingUrl: String) : Event() {
+        override fun toString(): String {
+            // data classes define their own toString, so we override it here as well as in the base
+            // class to avoid exposing the 'pairingUrl' in logs.
+            return this.javaClass.simpleName
+        }
+    }
 }
 
 /**
@@ -138,6 +146,7 @@ open class FxaAccountManager(
                     when (event) {
                         Event.Authenticate -> AccountState.NotAuthenticated
                         Event.FailedToAuthenticate -> AccountState.NotAuthenticated
+                        is Event.Pair -> AccountState.NotAuthenticated
                         is Event.Authenticated -> AccountState.AuthenticatedNoProfile
                         else -> null
                     }
@@ -203,7 +212,7 @@ open class FxaAccountManager(
         return processQueueAsync(Event.FetchProfile)
     }
 
-    fun beginAuthenticationAsync(): Deferred<String> {
+    fun beginAuthenticationAsync(pairingUrl: String? = null): Deferred<String> {
         val deferredAuthUrl: CompletableDeferred<String> = CompletableDeferred()
 
         oauthObservers.register(object : OAuthObserver {
@@ -218,8 +227,8 @@ open class FxaAccountManager(
             }
         })
 
-        processQueueAsync(Event.Authenticate)
-
+        val event = if (pairingUrl != null) Event.Pair(pairingUrl) else Event.Authenticate
+        processQueueAsync(event)
         return deferredAuthUrl
     }
 
@@ -273,7 +282,7 @@ open class FxaAccountManager(
     /**
      * Side-effects matrix. Defines non-pure operations that must take place for state+event combinations.
      */
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "ReturnCount")
     private suspend fun stateActions(forState: AccountState, via: Event): Event? {
         // We're about to enter a new state ('forState') via some event ('via').
         // States will have certain side-effects associated with different event transitions.
@@ -335,6 +344,16 @@ open class FxaAccountManager(
                     Event.Authenticate -> {
                         val url = try {
                             account.beginOAuthFlow(scopes, true).await()
+                        } catch (e: FxaException) {
+                            oauthObservers.notifyObservers { onError(e) }
+                            return Event.FailedToAuthenticate
+                        }
+                        oauthObservers.notifyObservers { onBeginOAuthFlow(url) }
+                        null
+                    }
+                    is Event.Pair -> {
+                        val url = try {
+                            account.beginPairingFlow(via.pairingUrl, scopes).await()
                         } catch (e: FxaException) {
                             oauthObservers.notifyObservers { onError(e) }
                             return Event.FailedToAuthenticate

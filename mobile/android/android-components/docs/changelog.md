@@ -56,6 +56,8 @@ permalink: /changelog/
       val config = Configuration(httpClient = lazy { GeckoViewFetchClient(context, GeckoRuntime()) })
       Glean.initialize(context, config)
     ```
+* **feature-accounts**, **service-firefox-account**
+  * Added API to start an FxA pairing flow. See `FirefoxAccountsAuthFeature.beginPairingAuthentication` and `FxaAccountsManager.beingAuthentication` respectively.
 
 # 0.47.0
 

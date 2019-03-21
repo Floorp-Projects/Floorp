@@ -27,11 +27,24 @@ class FirefoxAccountsAuthFeature(
     private val coroutineContext: CoroutineContext = Dispatchers.Main
 ) {
     fun beginAuthentication() {
+        beginAuthenticationAsync {
+            accountManager.beginAuthenticationAsync().await()
+        }
+    }
+
+    fun beginPairingAuthentication(pairingUrl: String) {
+        beginAuthenticationAsync {
+            accountManager.beginAuthenticationAsync(pairingUrl).await()
+        }
+    }
+
+    private fun beginAuthenticationAsync(beginAuthentication: suspend () -> String) {
         CoroutineScope(coroutineContext).launch {
             val authUrl = try {
-                accountManager.beginAuthenticationAsync().await()
+                beginAuthentication()
             } catch (e: FxaException) {
                 // FIXME return a fallback URL provided by Config...
+                // https://github.com/mozilla-mobile/android-components/issues/2496
                 "https://accounts.firefox.com/signin"
             }
             // TODO

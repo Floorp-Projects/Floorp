@@ -20,8 +20,8 @@ import mozilla.components.support.test.mock
 import org.junit.Test
 
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
-import org.mockito.Mockito
+import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -46,27 +46,85 @@ class TestableFxaAccountManager(
 
 @RunWith(RobolectricTestRunner::class)
 class FirefoxAccountsAuthFeatureTest {
+
     @Test
     fun `begin authentication`() {
+        val manager = prepareAccountManagerForSuccessfulAuthentication()
+        val mockAddTab: TabsUseCases.AddNewTabUseCase = mock()
+        val mockTabs: TabsUseCases = mock()
+        `when`(mockTabs.addTab).thenReturn(mockAddTab)
+
+        runBlocking {
+            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", "somePath", this.coroutineContext)
+            feature.beginAuthentication()
+        }
+
+        verify(mockAddTab, times(1)).invoke("auth://url")
+    }
+
+    @Test
+    fun `begin pairing authentication`() {
+        val manager = prepareAccountManagerForSuccessfulAuthentication()
+        val mockAddTab: TabsUseCases.AddNewTabUseCase = mock()
+        val mockTabs: TabsUseCases = mock()
+        `when`(mockTabs.addTab).thenReturn(mockAddTab)
+
+        runBlocking {
+            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", "somePath", this.coroutineContext)
+            feature.beginPairingAuthentication("auth://pair")
+        }
+
+        verify(mockAddTab, times(1)).invoke("auth://url")
+    }
+
+    @Test
+    fun `begin authentication with errors`() {
+        val manager = prepareAccountManagerForFailedAuthentication()
+        val mockAddTab: TabsUseCases.AddNewTabUseCase = mock()
+        val mockTabs: TabsUseCases = mock()
+        `when`(mockTabs.addTab).thenReturn(mockAddTab)
+
+        runBlocking {
+            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", "somePath", this.coroutineContext)
+            feature.beginAuthentication()
+        }
+
+        // Fallback url is invoked.
+        verify(mockAddTab, times(1)).invoke("https://accounts.firefox.com/signin")
+    }
+
+    @Test
+    fun `begin pairing authentication with errors`() {
+        val manager = prepareAccountManagerForFailedAuthentication()
+        val mockAddTab: TabsUseCases.AddNewTabUseCase = mock()
+        val mockTabs: TabsUseCases = mock()
+        `when`(mockTabs.addTab).thenReturn(mockAddTab)
+
+        runBlocking {
+            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", "somePath", this.coroutineContext)
+            feature.beginPairingAuthentication("auth://pair")
+        }
+
+        // Fallback url is invoked.
+        verify(mockAddTab, times(1)).invoke("https://accounts.firefox.com/signin")
+    }
+
+    private fun prepareAccountManagerForSuccessfulAuthentication(): TestableFxaAccountManager {
         val accountStorage = mock<AccountStorage>()
         val mockAccount: OAuthAccount = mock()
+        val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
 
-        val profile = Profile(
-                uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
-
-        Mockito.`when`(mockAccount.getProfile(ArgumentMatchers.anyBoolean())).thenReturn(CompletableDeferred(profile))
-        Mockito.`when`(mockAccount.beginOAuthFlow(any(), ArgumentMatchers.anyBoolean()))
-                .thenReturn(CompletableDeferred("auth://url"))
+        `when`(mockAccount.getProfile(anyBoolean())).thenReturn(CompletableDeferred(profile))
+        `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(CompletableDeferred("auth://url"))
+        `when`(mockAccount.beginPairingFlow(anyString(), any())).thenReturn(CompletableDeferred("auth://url"))
         // This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
         // and threads will deadlock since it'll never be resolved while state machine is waiting for it.
         // So we manually complete it here!
         val unitDeferred = CompletableDeferred<Unit>()
         unitDeferred.complete(Unit)
-        Mockito.`when`(mockAccount.completeOAuthFlow(
-                ArgumentMatchers.anyString(), ArgumentMatchers.anyString())
-        ).thenReturn(unitDeferred)
+        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitDeferred)
         // There's no account at the start.
-        Mockito.`when`(accountStorage.read()).thenReturn(null)
+        `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
             RuntimeEnvironment.application,
@@ -81,44 +139,28 @@ class FirefoxAccountsAuthFeatureTest {
             manager.initAsync().await()
         }
 
-        val mockAddTab: TabsUseCases.AddNewTabUseCase = mock()
-        val mockTabs: TabsUseCases = mock()
-        `when`(mockTabs.addTab).thenReturn(mockAddTab)
-
-        runBlocking {
-            val feature = FirefoxAccountsAuthFeature(
-                manager, mockTabs, "somePath", "somePath", this.coroutineContext)
-            feature.beginAuthentication()
-        }
-
-        verify(mockAddTab, times(1)).invoke("auth://url")
-        Unit
+        return manager
     }
 
-    @Test
-    fun `begin authentication with errors`() {
+    private fun prepareAccountManagerForFailedAuthentication(): TestableFxaAccountManager {
         val accountStorage = mock<AccountStorage>()
         val mockAccount: OAuthAccount = mock()
+        val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
 
-        val profile = Profile(
-                uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
-
-        Mockito.`when`(mockAccount.getProfile(ArgumentMatchers.anyBoolean())).thenReturn(CompletableDeferred(profile))
+        `when`(mockAccount.getProfile(anyBoolean())).thenReturn(CompletableDeferred(profile))
 
         val exceptionalDeferred = CompletableDeferred<String>()
         exceptionalDeferred.completeExceptionally(FxaNetworkException("oops"))
-        Mockito.`when`(mockAccount.beginOAuthFlow(any(), ArgumentMatchers.anyBoolean()))
-                .thenReturn(exceptionalDeferred)
+        `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(exceptionalDeferred)
+        `when`(mockAccount.beginPairingFlow(anyString(), any())).thenReturn(exceptionalDeferred)
         // This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
         // and threads will deadlock since it'll never be resolved while state machine is waiting for it.
         // So we manually complete it here!
         val unitDeferred = CompletableDeferred<Unit>()
         unitDeferred.complete(Unit)
-        Mockito.`when`(mockAccount.completeOAuthFlow(
-                ArgumentMatchers.anyString(), ArgumentMatchers.anyString())
-        ).thenReturn(unitDeferred)
+        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitDeferred)
         // There's no account at the start.
-        Mockito.`when`(accountStorage.read()).thenReturn(null)
+        `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
                 RuntimeEnvironment.application,
@@ -133,18 +175,6 @@ class FirefoxAccountsAuthFeatureTest {
             manager.initAsync().await()
         }
 
-        val mockAddTab: TabsUseCases.AddNewTabUseCase = mock()
-        val mockTabs: TabsUseCases = mock()
-        `when`(mockTabs.addTab).thenReturn(mockAddTab)
-
-        runBlocking {
-            val feature = FirefoxAccountsAuthFeature(
-                    manager, mockTabs, "somePath", "somePath", this.coroutineContext)
-            feature.beginAuthentication()
-        }
-
-        // Fallback url is invoked.
-        verify(mockAddTab, times(1)).invoke("https://accounts.firefox.com/signin")
-        Unit
+        return manager
     }
 }

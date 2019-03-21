@@ -20,7 +20,8 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
@@ -74,6 +75,7 @@ class FxaAccountManagerTest {
         assertNull(FxaAccountManager.nextState(state, Event.AccountNotFound))
         assertNull(FxaAccountManager.nextState(state, Event.AccountRestored))
         assertEquals(AccountState.NotAuthenticated, FxaAccountManager.nextState(state, Event.Authenticate))
+        assertEquals(AccountState.NotAuthenticated, FxaAccountManager.nextState(state, Event.Pair("auth://pair")))
         assertEquals(AccountState.AuthenticatedNoProfile, FxaAccountManager.nextState(state, Event.Authenticated("code", "state")))
         assertNull(FxaAccountManager.nextState(state, Event.FetchProfile))
         assertNull(FxaAccountManager.nextState(state, Event.FetchedProfile))
@@ -190,7 +192,7 @@ class FxaAccountManagerTest {
         val mockAccount: OAuthAccount = mock()
         val profile = Profile(
                 "testUid", "test@example.com", null, "Test Profile")
-        `when`(mockAccount.getProfile(ArgumentMatchers.anyBoolean())).thenReturn(CompletableDeferred(profile))
+        `when`(mockAccount.getProfile(anyBoolean())).thenReturn(CompletableDeferred(profile))
         // We have an account at the start.
         `when`(accountStorage.read()).thenReturn(mockAccount)
 
@@ -244,42 +246,11 @@ class FxaAccountManagerTest {
 
     @Test
     fun `happy authentication and profile flow`() {
-        val accountStorage = mock<AccountStorage>()
         val mockAccount: OAuthAccount = mock()
-
-        val profile = Profile(
-            uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
-
-        `when`(mockAccount.getProfile(ArgumentMatchers.anyBoolean())).thenReturn(CompletableDeferred(profile))
-        `when`(mockAccount.beginOAuthFlow(any(), ArgumentMatchers.anyBoolean()))
-                .thenReturn(CompletableDeferred("auth://url"))
-        // This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
-        // and threads will deadlock since it'll never be resolved while state machine is waiting for it.
-        // So we manually complete it here!
-        val unitDeferred = CompletableDeferred<Unit>()
-        unitDeferred.complete(Unit)
-        `when`(mockAccount.completeOAuthFlow(
-            ArgumentMatchers.anyString(), ArgumentMatchers.anyString())
-        ).thenReturn(unitDeferred)
-        // There's no account at the start.
-        `when`(accountStorage.read()).thenReturn(null)
-
-        val manager = TestableFxaAccountManager(
-                RuntimeEnvironment.application,
-                Config.release("dummyId", "bad://url"),
-                arrayOf("profile", "test-scope"),
-                accountStorage
-        ) {
-            mockAccount
-        }
-
+        val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
+        val accountStorage = mock<AccountStorage>()
         val accountObserver: AccountObserver = mock()
-
-        manager.register(accountObserver)
-
-        runBlocking {
-            manager.initAsync().await()
-        }
+        val manager = prepareHappyAuthenticationFlow(mockAccount, profile, accountStorage, accountObserver)
 
         // We start off as logged-out, but the event won't be called (initial default state is assumed).
         verify(accountObserver, never()).onLoggedOut()
@@ -311,50 +282,50 @@ class FxaAccountManagerTest {
     }
 
     @Test
+    fun `happy pairing authentication and profile flow`() {
+        val mockAccount: OAuthAccount = mock()
+        val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
+        val accountStorage = mock<AccountStorage>()
+        val accountObserver: AccountObserver = mock()
+        val manager = prepareHappyAuthenticationFlow(mockAccount, profile, accountStorage, accountObserver)
+
+        // We start off as logged-out, but the event won't be called (initial default state is assumed).
+        verify(accountObserver, never()).onLoggedOut()
+        verify(accountObserver, never()).onAuthenticated(any())
+
+        reset(accountObserver)
+        runBlocking {
+            assertEquals("auth://url", manager.beginAuthenticationAsync(pairingUrl = "auth://pairing").await())
+        }
+        assertNull(manager.authenticatedAccount())
+        assertNull(manager.accountProfile())
+
+        runBlocking {
+            manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
+        }
+
+        verify(accountStorage, times(1)).read()
+        // Confirm account is persisted after authentication.
+        verify(accountStorage, times(1)).write(mockAccount)
+        verify(accountStorage, never()).clear()
+
+        verify(accountObserver, never()).onError(any())
+        verify(accountObserver, times(1)).onAuthenticated(mockAccount)
+        verify(accountObserver, times(1)).onProfileUpdated(profile)
+        verify(accountObserver, never()).onLoggedOut()
+
+        assertEquals(mockAccount, manager.authenticatedAccount())
+        assertEquals(profile, manager.accountProfile())
+    }
+
+    @Test
     fun `unhappy authentication flow`() {
         val accountStorage = mock<AccountStorage>()
         val mockAccount: OAuthAccount = mock()
-
-        val profile = Profile(
-                uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
-
-        `when`(mockAccount.getProfile(ArgumentMatchers.anyBoolean())).thenReturn(CompletableDeferred(profile))
-
-        // Pretend we have a network problem while initiating an auth flow.
-        val exceptionalDeferred = CompletableDeferred<String>()
-        val fxaException = FxaNetworkException("network problem")
-        exceptionalDeferred.completeExceptionally(fxaException)
-
-        `when`(mockAccount.beginOAuthFlow(any(), ArgumentMatchers.anyBoolean()))
-                .thenReturn(exceptionalDeferred)
-
-        // This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
-        // and threads will deadlock since it'll never be resolved while state machine is waiting for it.
-        // So we manually complete it here!
-        val unitDeferred = CompletableDeferred<Unit>()
-        unitDeferred.complete(Unit)
-        `when`(mockAccount.completeOAuthFlow(
-                ArgumentMatchers.anyString(), ArgumentMatchers.anyString())
-        ).thenReturn(unitDeferred)
-        // There's no account at the start.
-        `when`(accountStorage.read()).thenReturn(null)
-
-        val manager = TestableFxaAccountManager(
-                RuntimeEnvironment.application,
-                Config.release("dummyId", "bad://url"),
-                arrayOf("profile", "test-scope"),
-                accountStorage
-        ) {
-            mockAccount
-        }
-
+        val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
         val accountObserver: AccountObserver = mock()
-
-        manager.register(accountObserver)
-
-        runBlocking {
-            manager.initAsync().await()
-        }
+        val fxaException = FxaNetworkException("network problem")
+        val manager = prepareUnhappyAuthenticationFlow(mockAccount, profile, accountStorage, accountObserver, fxaException)
 
         // We start off as logged-out, but the event won't be called (initial default state is assumed).
         verify(accountObserver, never()).onLoggedOut()
@@ -375,12 +346,65 @@ class FxaAccountManagerTest {
         assertNull(manager.accountProfile())
 
         // Try again, without any network problems this time.
-        exceptionalDeferred.completeExceptionally(fxaException)
-        `when`(mockAccount.beginOAuthFlow(any(), ArgumentMatchers.anyBoolean()))
-                .thenReturn(CompletableDeferred("auth://url"))
+        `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(CompletableDeferred("auth://url"))
 
         runBlocking {
             assertEquals("auth://url", manager.beginAuthenticationAsync().await())
+        }
+
+        assertNull(manager.authenticatedAccount())
+        assertNull(manager.accountProfile())
+
+        runBlocking {
+            manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
+        }
+
+        verify(accountStorage, times(1)).read()
+        // Confirm account is persisted after authentication.
+        verify(accountStorage, times(1)).write(mockAccount)
+        verify(accountStorage, never()).clear()
+
+        verify(accountObserver, never()).onError(any())
+        verify(accountObserver, times(1)).onAuthenticated(mockAccount)
+        verify(accountObserver, times(1)).onProfileUpdated(profile)
+        verify(accountObserver, never()).onLoggedOut()
+
+        assertEquals(mockAccount, manager.authenticatedAccount())
+        assertEquals(profile, manager.accountProfile())
+    }
+
+    @Test
+    fun `unhappy pairing authentication flow`() {
+        val accountStorage = mock<AccountStorage>()
+        val mockAccount: OAuthAccount = mock()
+        val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
+        val accountObserver: AccountObserver = mock()
+        val fxaException = FxaNetworkException("network problem")
+        val manager = prepareUnhappyAuthenticationFlow(mockAccount, profile, accountStorage, accountObserver, fxaException)
+
+        // We start off as logged-out, but the event won't be called (initial default state is assumed).
+        verify(accountObserver, never()).onLoggedOut()
+        verify(accountObserver, never()).onAuthenticated(any())
+
+        reset(accountObserver)
+        runBlocking {
+            try {
+                manager.beginAuthenticationAsync(pairingUrl = "auth://pairing").await()
+                fail()
+            } catch (e: FxaNetworkException) {
+                assertEquals(fxaException, e)
+            }
+        }
+        // Confirm that account state observable doesn't receive authentication errors.
+        verify(accountObserver, never()).onError(any())
+        assertNull(manager.authenticatedAccount())
+        assertNull(manager.accountProfile())
+
+        // Try again, without any network problems this time.
+        `when`(mockAccount.beginPairingFlow(anyString(), any())).thenReturn(CompletableDeferred("auth://url"))
+
+        runBlocking {
+            assertEquals("auth://url", manager.beginAuthenticationAsync(pairingUrl = "auth://pairing").await())
         }
 
         assertNull(manager.authenticatedAccount())
@@ -413,17 +437,14 @@ class FxaAccountManagerTest {
         val fxaException = FxaException("test exception")
         exceptionalProfile.completeExceptionally(fxaException)
 
-        `when`(mockAccount.getProfile(ArgumentMatchers.anyBoolean())).thenReturn(exceptionalProfile)
-        `when`(mockAccount.beginOAuthFlow(any(), ArgumentMatchers.anyBoolean()))
-                .thenReturn(CompletableDeferred("auth://url"))
+        `when`(mockAccount.getProfile(anyBoolean())).thenReturn(exceptionalProfile)
+        `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(CompletableDeferred("auth://url"))
         // This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
         // and threads will deadlock since it'll never be resolved while state machine is waiting for it.
         // So we manually complete it here!
         val unitDeferred = CompletableDeferred<Unit>()
         unitDeferred.complete(Unit)
-        `when`(mockAccount.completeOAuthFlow(
-                ArgumentMatchers.anyString(), ArgumentMatchers.anyString())
-        ).thenReturn(unitDeferred)
+        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitDeferred)
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
 
@@ -477,7 +498,7 @@ class FxaAccountManagerTest {
         val profile = Profile(
             uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
 
-        `when`(mockAccount.getProfile(ArgumentMatchers.anyBoolean())).thenReturn(CompletableDeferred(profile))
+        `when`(mockAccount.getProfile(anyBoolean())).thenReturn(CompletableDeferred(profile))
 
         runBlocking {
             manager.updateProfileAsync().await()
@@ -488,5 +509,84 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any())
         verify(accountObserver, never()).onLoggedOut()
         assertEquals(profile, manager.accountProfile())
+    }
+
+    private fun prepareHappyAuthenticationFlow(
+        mockAccount: OAuthAccount,
+        profile: Profile,
+        accountStorage: AccountStorage,
+        accountObserver: AccountObserver
+    ): FxaAccountManager {
+
+        `when`(mockAccount.getProfile(anyBoolean())).thenReturn(CompletableDeferred(profile))
+        `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(CompletableDeferred("auth://url"))
+        `when`(mockAccount.beginPairingFlow(anyString(), any())).thenReturn(CompletableDeferred("auth://url"))
+        // This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
+        // and threads will deadlock since it'll never be resolved while state machine is waiting for it.
+        // So we manually complete it here!
+        val unitDeferred = CompletableDeferred<Unit>()
+        unitDeferred.complete(Unit)
+        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitDeferred)
+        // There's no account at the start.
+        `when`(accountStorage.read()).thenReturn(null)
+
+        val manager = TestableFxaAccountManager(
+                RuntimeEnvironment.application,
+                Config.release("dummyId", "bad://url"),
+                arrayOf("profile", "test-scope"),
+                accountStorage
+        ) {
+            mockAccount
+        }
+
+        manager.register(accountObserver)
+
+        runBlocking {
+            manager.initAsync().await()
+        }
+
+        return manager
+    }
+
+    private fun prepareUnhappyAuthenticationFlow(
+        mockAccount: OAuthAccount,
+        profile: Profile,
+        accountStorage: AccountStorage,
+        accountObserver: AccountObserver,
+        fxaException: FxaException
+    ): FxaAccountManager {
+        `when`(mockAccount.getProfile(anyBoolean())).thenReturn(CompletableDeferred(profile))
+
+        // Pretend we have a network problem while initiating an auth flow.
+        val exceptionalDeferred = CompletableDeferred<String>()
+        exceptionalDeferred.completeExceptionally(fxaException)
+        `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(exceptionalDeferred)
+        `when`(mockAccount.beginPairingFlow(anyString(), any())).thenReturn(exceptionalDeferred)
+
+        // This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
+        // and threads will deadlock since it'll never be resolved while state machine is waiting for it.
+        // So we manually complete it here!
+        val unitDeferred = CompletableDeferred<Unit>()
+        unitDeferred.complete(Unit)
+        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitDeferred)
+        // There's no account at the start.
+        `when`(accountStorage.read()).thenReturn(null)
+
+        val manager = TestableFxaAccountManager(
+                RuntimeEnvironment.application,
+                Config.release("dummyId", "bad://url"),
+                arrayOf("profile", "test-scope"),
+                accountStorage
+        ) {
+            mockAccount
+        }
+
+        manager.register(accountObserver)
+
+        runBlocking {
+            manager.initAsync().await()
+        }
+
+        return manager
     }
 }
