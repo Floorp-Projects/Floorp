@@ -111,7 +111,8 @@ static void SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
 
   // Don't bother caching the result of this URI load, but do not exempt
   // it from Safe Browsing.
-  chan->SetLoadFlags(nsIRequest::INHIBIT_CACHING);
+  chan->SetLoadFlags(nsIRequest::INHIBIT_CACHING |
+                     nsIChannel::LOAD_CLASSIFY_URI);
 
   nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(chan);
   if (!httpChan) {

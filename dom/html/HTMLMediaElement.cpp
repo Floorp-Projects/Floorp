@@ -1279,6 +1279,7 @@ class HTMLMediaElement::ChannelLoader final {
         nullptr,  // aCallbacks
         nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
             nsIChannel::LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE |
+            nsIChannel::LOAD_CLASSIFY_URI |
             nsIChannel::LOAD_CALL_CONTENT_SNIFFERS);
 
     if (NS_FAILED(rv)) {

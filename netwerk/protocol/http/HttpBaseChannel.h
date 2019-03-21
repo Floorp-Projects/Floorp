@@ -696,9 +696,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   uint32_t mReportTiming : 1;
   uint32_t mAllowSpdy : 1;
   uint32_t mAllowAltSvc : 1;
-  // !!! This is also used by the URL classifier to exempt channels from
-  // classification. If this is changed or removed, make sure we also update
-  // NS_ShouldClassifyChannel accordingly !!!
   uint32_t mBeConservative : 1;
   uint32_t mTRR : 1;
   uint32_t mResponseTimeoutEnabled : 1;

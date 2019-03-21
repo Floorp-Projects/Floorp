@@ -451,12 +451,9 @@ HashCompleterRequest.prototype = {
   },
 
   // Creates an nsIChannel for the request and fills the body.
-  // Enforce bypassing URL Classifier check because if the request is
-  // blocked, it means SafeBrowsing is malfunction.
   openChannel: function HCR_openChannel() {
     let loadFlags = Ci.nsIChannel.INHIBIT_CACHING |
-                    Ci.nsIChannel.LOAD_BYPASS_CACHE |
-                    Ci.nsIChannel.LOAD_BYPASS_URL_CLASSIFIER;
+                    Ci.nsIChannel.LOAD_BYPASS_CACHE;
 
     this.request = {
       url: this.gethashUrl,

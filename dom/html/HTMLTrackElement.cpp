@@ -313,11 +313,13 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
         nsCOMPtr<nsIChannel> channel;
         nsCOMPtr<nsILoadGroup> loadGroup =
             self->OwnerDoc()->GetDocumentLoadGroup();
-        nsresult rv = NS_NewChannel(getter_AddRefs(channel), uri,
-                                    static_cast<Element*>(self), secFlags,
-                                    nsIContentPolicy::TYPE_INTERNAL_TRACK,
-                                    nullptr,  // PerformanceStorage
-                                    loadGroup);
+        nsresult rv = NS_NewChannel(
+            getter_AddRefs(channel), uri, static_cast<Element*>(self), secFlags,
+            nsIContentPolicy::TYPE_INTERNAL_TRACK,
+            nullptr,  // PerformanceStorage
+            loadGroup,
+            nullptr,  // aCallbacks
+            nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI);
 
         NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
 
