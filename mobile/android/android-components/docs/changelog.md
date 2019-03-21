@@ -50,6 +50,13 @@ permalink: /changelog/
   * Added `Matchers.maybeInvertMatcher` to optionally apply `not` based on the Boolean argument
   * Added `ViewInteraction.click()` extension function for short-hand.
 
+* **service-glean**
+  * ⚠️ **This is a breaking API change!**: `Configuration` now accepts a Lazy<Client> to make sure the HTTP client (lib) is initialized lazily.
+    ```kotlin
+      val config = Configuration(httpClient = lazy { GeckoViewFetchClient(context, GeckoRuntime()) })
+      Glean.initialize(context, config)
+    ```
+
 # 0.47.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.46.0...v0.47.0)

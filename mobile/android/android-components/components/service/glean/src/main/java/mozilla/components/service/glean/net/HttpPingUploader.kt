@@ -68,7 +68,7 @@ internal class HttpPingUploader : PingUploader {
         val request = buildRequest(path, data, config)
 
         return try {
-            performUpload(config.httpClient, request)
+            performUpload(config.httpClient.value, request)
         } catch (e: IOException) {
             logger.warn("IOException while uploading ping", e)
             false

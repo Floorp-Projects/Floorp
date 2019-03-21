@@ -28,5 +28,5 @@ data class Configuration(
     val readTimeout: Long = 30000,
     val maxEvents: Int = 500,
     val logPings: Boolean = false,
-    val httpClient: Client = HttpURLConnectionClient()
+    val httpClient: Lazy<Client> = lazy { HttpURLConnectionClient() }
 )

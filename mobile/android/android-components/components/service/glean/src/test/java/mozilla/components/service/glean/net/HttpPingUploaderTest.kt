@@ -86,7 +86,7 @@ class HttpPingUploaderTest {
 
         val uploader = spy<HttpPingUploader>(HttpPingUploader())
 
-        val config = testDefaultConfig.copy(httpClient = mockClient)
+        val config = testDefaultConfig.copy(httpClient = lazy { mockClient })
 
         assertTrue(uploader.upload(testPath, testPing, config))
     }
@@ -99,7 +99,7 @@ class HttpPingUploaderTest {
 
             val uploader = spy<HttpPingUploader>(HttpPingUploader())
 
-            val config = testDefaultConfig.copy(httpClient = mockClient)
+            val config = testDefaultConfig.copy(httpClient = lazy { mockClient })
 
             assertFalse(uploader.upload(testPath, testPing, config))
         }
@@ -114,7 +114,7 @@ class HttpPingUploaderTest {
 
             val uploader = spy<HttpPingUploader>(HttpPingUploader())
 
-            val config = testDefaultConfig.copy(httpClient = mockClient)
+            val config = testDefaultConfig.copy(httpClient = lazy { mockClient })
 
             assertTrue(uploader.upload(testPath, testPing, config))
         }
@@ -129,7 +129,7 @@ class HttpPingUploaderTest {
 
             val uploader = spy<HttpPingUploader>(HttpPingUploader())
 
-            val config = testDefaultConfig.copy(httpClient = mockClient)
+            val config = testDefaultConfig.copy(httpClient = lazy { mockClient })
 
             assertTrue(uploader.upload(testPath, testPing, config))
         }
@@ -166,7 +166,7 @@ class HttpPingUploaderTest {
         val testConfig = testDefaultConfig.copy(
             userAgent = "Telemetry/42.23",
             serverEndpoint = "http://" + server.hostName + ":" + server.port,
-            httpClient = HttpURLConnectionClient()
+            httpClient = lazy { HttpURLConnectionClient() }
         )
 
         val client = HttpPingUploader()
@@ -191,7 +191,7 @@ class HttpPingUploaderTest {
         val testConfig = testDefaultConfig.copy(
             userAgent = "Telemetry/42.23",
             serverEndpoint = "http://" + server.hostName + ":" + server.port,
-            httpClient = OkHttpClient()
+            httpClient = lazy { OkHttpClient() }
         )
 
         val client = HttpPingUploader()
@@ -268,7 +268,7 @@ class HttpPingUploaderTest {
         val mockClient: Client = mock()
         `when`(mockClient.fetch(any())).thenThrow(IOException())
 
-        val config = testDefaultConfig.copy(httpClient = mockClient)
+        val config = testDefaultConfig.copy(httpClient = lazy { mockClient })
 
         val uploader = spy<HttpPingUploader>(HttpPingUploader())
 
