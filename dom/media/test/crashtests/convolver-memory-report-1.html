@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>Bug 1481745: Exercise ConvolverNode memory reporting</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script>
+let context = new AudioContext();
+let response = new AudioBuffer({length: 128,
+                                sampleRate: context.sampleRate});
+response.getChannelData(0)[response.length - 1] = 1;
+let convolver = new ConvolverNode(context,
+                                  {disableNormalization: true,
+                                   buffer: response});
+convolver.connect(context.destination);
+let osc = new OscillatorNode(context);
+osc.connect(convolver);
+osc.start();
+osc.stop(128/context.sampleRate);
+osc.onended = (e) => {
+  SpecialPowers.getMemoryReports();
+  document.documentElement.removeAttribute("class");
+};
+  </script>
+</head>
+</html>
