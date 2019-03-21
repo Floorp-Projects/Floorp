@@ -9,8 +9,10 @@ import android.arch.lifecycle.GenericLifecycleObserver
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.LifecycleOwner
+import android.content.Context
 import android.view.View
 import android.view.WindowManager
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -23,10 +25,12 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class ObserverRegistryTest {
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @Test
     fun `registered observer gets notified`() {
         val registry = ObserverRegistry<TestObserver>()
@@ -236,7 +240,7 @@ class ObserverRegistryTest {
     @Test
     fun `observer will get added once view is attached`() {
         val activity = Robolectric.buildActivity(Activity::class.java).create().get()
-        val view = View(RuntimeEnvironment.application)
+        val view = View(context)
 
         val registry = ObserverRegistry<TestObserver>()
         val observer = TestObserver()
@@ -263,7 +267,7 @@ class ObserverRegistryTest {
     @Test
     fun `observer will get unregistered if view gets detached`() {
         val activity = Robolectric.buildActivity(Activity::class.java).create().get()
-        val view = View(RuntimeEnvironment.application)
+        val view = View(context)
         activity.windowManager.addView(view, WindowManager.LayoutParams(100, 100))
 
         val registry = ObserverRegistry<TestObserver>()
