@@ -182,7 +182,7 @@ def update_environment(gecko_conf):
 def exec_run_task(args):
     """Executes run-task with a modified environment."""
     print_message("Executing: {}".format(pformat(args)))
-    os.execv(args[0], args[1:])
+    os.execv(args[0], args[0:])
 
 
 def main():
