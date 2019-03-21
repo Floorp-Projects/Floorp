@@ -2357,7 +2357,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
         }
         if (stack[eltPos]->name == name) {
           while (currentPtr >= eltPos) {
-            popForeign(origPos);
+            popForeign(origPos, eltPos);
           }
           NS_HTML5_BREAK(endtagloop);
         }
@@ -4088,9 +4088,9 @@ void nsHtml5TreeBuilder::pop() {
   node->release(this);
 }
 
-void nsHtml5TreeBuilder::popForeign(int32_t origPos) {
+void nsHtml5TreeBuilder::popForeign(int32_t origPos, int32_t eltPos) {
   nsHtml5StackNode* node = stack[currentPtr];
-  if (origPos != currentPtr) {
+  if (origPos != currentPtr || eltPos != currentPtr) {
     markMalformedIfScript(node->node);
   }
   MOZ_ASSERT(debugOnlyClearLastStackSlot());
