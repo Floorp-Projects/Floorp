@@ -577,7 +577,8 @@ public class GeckoSession implements Parcelable {
                 "GeckoView:PageStart",
                 "GeckoView:PageStop",
                 "GeckoView:ProgressChanged",
-                "GeckoView:SecurityChanged"
+                "GeckoView:SecurityChanged",
+                "GeckoView:StateUpdated"
             }
         ) {
             @Override
@@ -597,6 +598,8 @@ public class GeckoSession implements Parcelable {
                 } else if ("GeckoView:SecurityChanged".equals(event)) {
                     final GeckoBundle identity = message.getBundle("identity");
                     delegate.onSecurityChange(GeckoSession.this, new ProgressDelegate.SecurityInformation(identity));
+                } else if ("GeckoView:StateUpdated".equals(event)) {
+                    final GeckoBundle update = message.getBundle("data");
                 }
             }
         };
