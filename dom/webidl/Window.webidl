@@ -211,6 +211,7 @@ partial interface Window {
   [Throws] long requestAnimationFrame(FrameRequestCallback callback);
   [Throws] void cancelAnimationFrame(long handle);
 };
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback FrameRequestCallback = void (DOMHighResTimeStamp time);
 
 // https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html
@@ -396,6 +397,7 @@ partial interface Window {
 };
 #endif
 
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback PromiseDocumentFlushedCallback = any ();
 
 // Mozilla extensions for Chrome windows.
@@ -555,6 +557,7 @@ dictionary IdleRequestOptions {
   unsigned long timeout;
 };
 
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback IdleRequestCallback = void (IdleDeadline deadline);
 
 partial interface Window {

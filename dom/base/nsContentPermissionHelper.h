@@ -220,7 +220,9 @@ class RemotePermissionRequest final
   RemotePermissionRequest(nsIContentPermissionRequest* aRequest,
                           nsPIDOMWindowInner* aWindow);
 
-  // It will be called when prompt dismissed.
+  // It will be called when prompt dismissed.  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  // because we don't have MOZ_CAN_RUN_SCRIPT bits in IPC code yet.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvNotifyResult(
       const bool& aAllow, InfallibleTArray<PermissionChoice>&& aChoices);
 
@@ -243,7 +245,9 @@ class RemotePermissionRequest final
  private:
   virtual ~RemotePermissionRequest();
 
+  MOZ_CAN_RUN_SCRIPT
   void DoAllow(JS::HandleValue aChoices);
+  MOZ_CAN_RUN_SCRIPT
   void DoCancel();
 
   nsCOMPtr<nsIContentPermissionRequest> mRequest;

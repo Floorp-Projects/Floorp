@@ -7,7 +7,7 @@
 
 namespace mozilla {
 
-#if defined(__arm__)
+#if defined(__arm__) && defined(__ANDROID__)
 
 // Some (old) Linux kernels on ARM have a bug where a signal handler
 // can be called without clearing the IT bits in CPSR first. The result

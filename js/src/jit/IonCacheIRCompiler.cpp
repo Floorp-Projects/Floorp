@@ -2635,3 +2635,19 @@ bool IonCacheIRCompiler::emitCallStringObjectConcatResult() {
   masm.storeCallResultValue(output);
   return true;
 }
+
+bool IonCacheIRCompiler::emitCallScriptedFunction() {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
+bool IonCacheIRCompiler::emitCallNativeFunction() {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
+bool IonCacheIRCompiler::emitCallClassHook() {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
+bool IonCacheIRCompiler::emitGuardAndUpdateSpreadArgc() {
+  MOZ_CRASH("Call ICs not used in ion");
+}

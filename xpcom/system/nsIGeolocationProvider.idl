@@ -35,6 +35,7 @@ interface nsIGeolocationUpdate : nsISupports {
    * the nsIGeolocationProvider interface, just use the return
    * value.
    */
+  [can_run_script]
   void notifyError(in unsigned short error);
 };
 

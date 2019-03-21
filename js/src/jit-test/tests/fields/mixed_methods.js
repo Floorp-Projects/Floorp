@@ -1,4 +1,4 @@
-// * * * THIS TEST IS DISABLED - Fields are not fully implemented yet
+// |jit-test| --enable-experimental-fields
 
 class C {
     x;

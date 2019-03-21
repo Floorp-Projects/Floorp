@@ -6,9 +6,10 @@
 
 #include "nsNSSModule.h"
 
-#include "CertBlocklist.h"
 #include "ContentSignatureVerifier.h"
 #include "NSSErrorsService.h"
+#include "OSKeyStore.h"
+#include "OSReauthenticator.h"
 #include "PKCS11ModuleDB.h"
 #include "PSMContentListener.h"
 #include "SecretDecoderRing.h"
@@ -33,8 +34,6 @@
 #include "nsSecureBrowserUIImpl.h"
 #include "nsSiteSecurityService.h"
 #include "nsXULAppAPI.h"
-#include "OSKeyStore.h"
-#include "OSReauthenticator.h"
 
 #ifdef MOZ_XUL
 #  include "nsCertTree.h"
@@ -148,8 +147,6 @@ IMPL(nsRandomGenerator, nullptr, ProcessRestriction::AnyProcess)
 IMPL(TransportSecurityInfo, nullptr, ProcessRestriction::AnyProcess)
 IMPL(nsSiteSecurityService, &nsSiteSecurityService::Init,
      ProcessRestriction::AnyProcess, ThreadRestriction::MainThreadOnly)
-IMPL(CertBlocklist, &CertBlocklist::Init, ProcessRestriction::ParentProcessOnly,
-     ThreadRestriction::MainThreadOnly)
 IMPL(OSKeyStore, nullptr, ProcessRestriction::ParentProcessOnly,
      ThreadRestriction::MainThreadOnly)
 IMPL(OSReauthenticator, nullptr, ProcessRestriction::ParentProcessOnly,

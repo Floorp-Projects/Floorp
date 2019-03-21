@@ -88,7 +88,6 @@ async function openNotificationsPermissionDialog() {
 
 add_task(async function testExtensionControlledHomepage() {
   await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = gBrowser.contentDocument;
   is(gBrowser.currentURI.spec, "about:preferences#home",
      "#home should be in the URI for about:preferences");
@@ -158,7 +157,6 @@ add_task(async function testExtensionControlledHomepage() {
 
 add_task(async function testPrefLockedHomepage() {
   await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = gBrowser.contentDocument;
   is(gBrowser.currentURI.spec, "about:preferences#home",
      "#home should be in the URI for about:preferences");
@@ -305,7 +303,6 @@ add_task(async function testPrefLockedHomepage() {
 
 add_task(async function testExtensionControlledNewTab() {
   await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = gBrowser.contentDocument;
   is(gBrowser.currentURI.spec, "about:preferences#home",
      "#home should be in the URI for about:preferences");
@@ -533,7 +530,6 @@ add_task(async function testExtensionControlledDefaultSearch() {
 add_task(async function testExtensionControlledHomepageUninstalledAddon() {
   async function checkHomepageEnabled() {
     await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
-    // eslint-disable-next-line mozilla/no-cpows-in-tests
     let doc = gBrowser.contentDocument;
     is(gBrowser.currentURI.spec, "about:preferences#home",
       "#home should be in the URI for about:preferences");

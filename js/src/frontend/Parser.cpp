@@ -6733,8 +6733,8 @@ template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::classMember(
     YieldHandling yieldHandling, DefaultHandling defaultHandling,
     const ParseContext::ClassStatement& classStmt, HandlePropertyName className,
-    uint32_t classStartOffset, bool hasHeritage,
-    size_t& numFieldsWithInitializers, ListNodeType& classMembers, bool* done) {
+    uint32_t classStartOffset, bool hasHeritage, size_t& numFields,
+    size_t& numFieldKeys, ListNodeType& classMembers, bool* done) {
   *done = false;
 
   TokenKind tt;
@@ -6794,21 +6794,21 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
       return false;
     }
-    if (!tokenStream.getToken(&tt)) {
+
+    if (!abortIfSyntaxParser()) {
       return false;
     }
 
-    FunctionNodeType initializer = null();
-    if (tt == TokenKind::Assign) {
-      initializer = fieldInitializer(yieldHandling, propAtom);
-      if (!initializer) {
-        return false;
-      }
+    numFields++;
 
-      numFieldsWithInitializers++;
-      if (!tokenStream.getToken(&tt)) {
-        return false;
-      }
+    FunctionNodeType initializer =
+        fieldInitializerOpt(yieldHandling, propName, propAtom, numFieldKeys);
+    if (!initializer) {
+      return false;
+    }
+
+    if (!tokenStream.getToken(&tt)) {
+      return false;
     }
 
     // TODO(khyperia): Implement ASI
@@ -6885,12 +6885,12 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     const ParseContext::ClassStatement& classStmt, HandlePropertyName className,
-    uint32_t classStartOffset, uint32_t classEndOffset,
-    size_t numFieldsWithInitializers, ListNodeType& classMembers) {
+    uint32_t classStartOffset, uint32_t classEndOffset, size_t numFields,
+    ListNodeType& classMembers) {
   // Fields cannot re-use the constructor obtained via JSOP_CLASSCONSTRUCTOR or
   // JSOP_DERIVEDCONSTRUCTOR due to needing to emit calls to the field
   // initializers in the constructor. So, synthesize a new one.
-  if (classStmt.constructorBox == nullptr && numFieldsWithInitializers > 0) {
+  if (classStmt.constructorBox == nullptr && numFields > 0) {
     // synthesizeConstructor assigns to classStmt.constructorBox
     FunctionNodeType synthesizedCtor =
         synthesizeConstructor(className, classStartOffset);
@@ -6920,7 +6920,7 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     // finished parsing the class.
     ctorbox->toStringEnd = classEndOffset;
 
-    if (numFieldsWithInitializers > 0) {
+    if (numFields > 0) {
       // Field initialization need access to `this`.
       ctorbox->setHasThisBinding();
     }
@@ -6929,14 +6929,14 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     if (ctorbox->function()->isInterpretedLazy()) {
       ctorbox->function()->lazyScript()->setToStringEnd(classEndOffset);
 
-      if (numFieldsWithInitializers > 0) {
+      if (numFields > 0) {
         ctorbox->function()->lazyScript()->setHasThisBinding();
       }
 
       // Field initializers can be retrieved if the class and constructor are
       // being compiled at the same time, but we need to stash the field
       // information if the constructor is being compiled lazily.
-      FieldInitializers fieldInfo(numFieldsWithInitializers);
+      FieldInitializers fieldInfo(numFields);
       ctorbox->function()->lazyScript()->setFieldInitializers(fieldInfo);
     }
   }
@@ -7025,11 +7025,12 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       return null();
     }
 
-    size_t numFieldsWithInitializers = 0;
+    size_t numFields = 0;
+    size_t numFieldKeys = 0;
     for (;;) {
       bool done;
       if (!classMember(yieldHandling, defaultHandling, classStmt, className,
-                       classStartOffset, hasHeritage, numFieldsWithInitializers,
+                       classStartOffset, hasHeritage, numFields, numFieldKeys,
                        classMembers, &done)) {
         return null();
       }
@@ -7038,7 +7039,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       }
     }
 
-    if (numFieldsWithInitializers > 0) {
+    if (numFields > 0) {
       // .initializers is always closed over by the constructor when there are
       // fields with initializers. However, there's some strange circumstances
       // which prevents us from using the normal noteUsedName() system. We
@@ -7063,16 +7064,22 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
                                              pc_->innermostScope()->id())) {
         return null();
       }
-      if (!noteDeclaredName(cx_->names().dotInitializers,
-                            DeclarationKind::Const, namePos)) {
+      if (!noteDeclaredName(cx_->names().dotInitializers, DeclarationKind::Var,
+                            namePos)) {
+        return null();
+      }
+    }
+
+    if (numFieldKeys > 0) {
+      if (!noteDeclaredName(cx_->names().dotFieldKeys, DeclarationKind::Var,
+                            namePos)) {
         return null();
       }
     }
 
     classEndOffset = pos().end;
     if (!finishClassConstructor(classStmt, className, classStartOffset,
-                                classEndOffset, numFieldsWithInitializers,
-                                classMembers)) {
+                                classEndOffset, numFields, classMembers)) {
       return null();
     }
 
@@ -7216,9 +7223,26 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
 
 template <class ParseHandler, typename Unit>
 typename ParseHandler::FunctionNodeType
-GeneralParser<ParseHandler, Unit>::fieldInitializer(YieldHandling yieldHandling,
-                                                    HandleAtom propAtom) {
-  TokenPos firstTokenPos = pos();
+GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
+    YieldHandling yieldHandling, Node propName, HandleAtom propAtom,
+    size_t& numFieldKeys) {
+  bool hasInitializer = false;
+  if (!tokenStream.matchToken(&hasInitializer, TokenKind::Assign,
+                              TokenStream::None)) {
+    return null();
+  }
+
+  TokenPos firstTokenPos;
+  if (hasInitializer) {
+    firstTokenPos = pos();
+  } else {
+    // the location of the "initializer" should be a zero-width span:
+    // class C {
+    //   x /* here */ ;
+    // }
+    uint32_t endPos = pos().end;
+    firstTokenPos = TokenPos(endPos, endPos);
+  }
 
   // Create the function object.
   RootedFunction fun(cx_, newFunction(propAtom, FunctionSyntaxKind::Expression,
@@ -7245,7 +7269,15 @@ GeneralParser<ParseHandler, Unit>::fieldInitializer(YieldHandling yieldHandling,
   }
   funbox->initWithEnclosingParseContext(pc_, FunctionSyntaxKind::Expression);
   handler_.setFunctionBox(funNode, funbox);
-  tokenStream.setFunctionStart(funbox);
+
+  // We can't use tokenStream.setFunctionStart, because that uses pos().begin,
+  // which is incorrect for fields without initializers (pos() points to the
+  // field identifier)
+  uint32_t firstTokenLine, firstTokenColumn;
+  tokenStream.computeLineAndColumn(firstTokenPos.begin, &firstTokenLine,
+                                   &firstTokenColumn);
+
+  funbox->setStart(firstTokenPos.begin, firstTokenLine, firstTokenColumn);
 
   // Push a SourceParseContext on to the stack.
   SourceParseContext funpc(this, funbox, /* newDirectives = */ nullptr);
@@ -7265,15 +7297,23 @@ GeneralParser<ParseHandler, Unit>::fieldInitializer(YieldHandling yieldHandling,
     return null();
   }
 
-  // Parse the expression for the field initializer.
-  Node initializerExpr =
-      assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-  if (!initializerExpr) {
-    return null();
+  Node initializerExpr;
+  TokenPos wholeInitializerPos;
+  if (hasInitializer) {
+    // Parse the expression for the field initializer.
+    initializerExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+    if (!initializerExpr) {
+      return null();
+    }
+    wholeInitializerPos = pos();
+    wholeInitializerPos.begin = firstTokenPos.begin;
+  } else {
+    initializerExpr = handler_.newRawUndefinedLiteral(firstTokenPos);
+    if (!initializerExpr) {
+      return null();
+    }
+    wholeInitializerPos = firstTokenPos;
   }
-
-  TokenPos wholeInitializerPos = pos();
-  wholeInitializerPos.begin = firstTokenPos.begin;
 
   // Update the end position of the parse node.
   handler_.setEndPosition(funNode, wholeInitializerPos.end);
@@ -7301,16 +7341,53 @@ GeneralParser<ParseHandler, Unit>::fieldInitializer(YieldHandling yieldHandling,
     return null();
   }
 
-  NameNodeType propAssignName =
-      handler_.newPropertyName(propAtom->asPropertyName(), wholeInitializerPos);
-  if (!propAssignName) {
-    return null();
-  }
+  Node propAssignFieldAccess;
+  uint32_t indexValue;
+  if (!propAtom) {
+    // See BytecodeEmitter::emitCreateFieldKeys for an explanation of what
+    // .fieldKeys means and its purpose.
+    Node dotFieldKeys = newInternalDotName(cx_->names().dotFieldKeys);
+    if (!dotFieldKeys) {
+      return null();
+    }
 
-  PropertyAccessType propAssignFieldAccess =
-      handler_.newPropertyAccess(propAssignThis, propAssignName);
-  if (!propAssignFieldAccess) {
-    return null();
+    double fieldKeyIndex = numFieldKeys;
+    numFieldKeys++;
+    Node fieldKeyIndexNode = handler_.newNumber(
+        fieldKeyIndex, DecimalPoint::NoDecimal, wholeInitializerPos);
+    if (!fieldKeyIndexNode) {
+      return null();
+    }
+
+    Node fieldKeyValue = handler_.newPropertyByValue(
+        dotFieldKeys, fieldKeyIndexNode, wholeInitializerPos.end);
+    if (!fieldKeyValue) {
+      return null();
+    }
+
+    propAssignFieldAccess = handler_.newPropertyByValue(
+        propAssignThis, fieldKeyValue, wholeInitializerPos.end);
+    if (!propAssignFieldAccess) {
+      return null();
+    }
+  } else if (propAtom->isIndex(&indexValue)) {
+    propAssignFieldAccess = handler_.newPropertyByValue(
+        propAssignThis, propName, wholeInitializerPos.end);
+    if (!propAssignFieldAccess) {
+      return null();
+    }
+  } else {
+    NameNodeType propAssignName = handler_.newPropertyName(
+        propAtom->asPropertyName(), wholeInitializerPos);
+    if (!propAssignName) {
+      return null();
+    }
+
+    propAssignFieldAccess =
+        handler_.newPropertyAccess(propAssignThis, propAssignName);
+    if (!propAssignFieldAccess) {
+      return null();
+    }
   }
 
   // Synthesize an assignment expression for the property.
@@ -7326,7 +7403,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializer(YieldHandling yieldHandling,
   }
 
   UnaryNodeType exprStatement =
-      handler_.newExprStatement(initializerAssignment, pos().end);
+      handler_.newExprStatement(initializerAssignment, wholeInitializerPos.end);
   if (!exprStatement) {
     return null();
   }

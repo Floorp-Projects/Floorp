@@ -778,6 +778,59 @@ bool BaselineInspector::hasSeenDoubleResult(jsbytecode* pc) {
   return stub->toBinaryArith_Fallback()->sawDoubleResult();
 }
 
+static const CacheIRStubInfo* GetCacheIRStubInfo(ICStub* stub) {
+  const CacheIRStubInfo* stubInfo = nullptr;
+  switch (stub->kind()) {
+    case ICStub::Kind::CacheIR_Monitored:
+      stubInfo = stub->toCacheIR_Monitored()->stubInfo();
+      break;
+    case ICStub::Kind::CacheIR_Regular:
+      stubInfo = stub->toCacheIR_Regular()->stubInfo();
+      break;
+    case ICStub::Kind::CacheIR_Updated:
+      stubInfo = stub->toCacheIR_Updated()->stubInfo();
+      break;
+    default:
+      MOZ_CRASH("Only cache IR stubs supported");
+  }
+  return stubInfo;
+}
+
+static bool MaybeArgumentReader(ICStub* stub, CacheOp targetOp,
+                                mozilla::Maybe<CacheIRReader>& argReader) {
+  MOZ_ASSERT(ICStub::IsCacheIRKind(stub->kind()));
+
+  CacheIRReader stubReader(GetCacheIRStubInfo(stub));
+  while (stubReader.more()) {
+    CacheOp op = stubReader.readOp();
+    uint32_t argLength = CacheIROpFormat::ArgLengths[uint8_t(op)];
+
+    if (op == targetOp) {
+      MOZ_ASSERT(argReader.isNothing(),
+                 "Multiple instances of an op are not currently supported");
+      const uint8_t* argStart = stubReader.currentPosition();
+      argReader.emplace(argStart, argStart + argLength);
+    }
+
+    // Advance to next opcode.
+    stubReader.skip(argLength);
+  }
+  return argReader.isSome();
+}
+
+template <typename Filter>
+JSObject* MaybeTemplateObject(ICStub* stub, MetaTwoByteKind kind,
+                              Filter filter) {
+  const CacheIRStubInfo* stubInfo = GetCacheIRStubInfo(stub);
+  mozilla::Maybe<CacheIRReader> argReader;
+  if (!MaybeArgumentReader(stub, CacheOp::MetaTwoByte, argReader) ||
+      argReader->metaKind<MetaTwoByteKind>() != kind ||
+      !filter(*argReader, stubInfo)) {
+    return nullptr;
+  }
+  return stubInfo->getStubField<JSObject*>(stub, argReader->stubOffset());
+}
+
 JSObject* BaselineInspector::getTemplateObject(jsbytecode* pc) {
   if (!hasICScript()) {
     return nullptr;
@@ -797,6 +850,19 @@ JSObject* BaselineInspector::getTemplateObject(jsbytecode* pc) {
           return obj;
         }
         break;
+      case ICStub::CacheIR_Regular:
+      case ICStub::CacheIR_Monitored:
+      case ICStub::CacheIR_Updated: {
+        auto filter = [](CacheIRReader& reader, const CacheIRStubInfo* info) {
+          mozilla::Unused << reader.stubOffset();  // Skip callee
+          return true;
+        };
+        JSObject* result = MaybeTemplateObject(
+            stub, MetaTwoByteKind::ScriptedTemplateObject, filter);
+        if (result) {
+          return result;
+        }
+      } break;
       default:
         break;
     }
@@ -837,11 +903,26 @@ JSFunction* BaselineInspector::getSingleCallee(jsbytecode* pc) {
     return nullptr;
   }
 
-  if (!stub->isCall_Scripted() || stub->next() != entry.fallbackStub()) {
+  if (stub->next() != entry.fallbackStub()) {
     return nullptr;
   }
 
-  return stub->toCall_Scripted()->callee();
+  if (stub->isCall_Scripted()) {
+    return stub->toCall_Scripted()->callee();
+  }
+
+  if (ICStub::IsCacheIRKind(stub->kind())) {
+    const CacheIRStubInfo* stubInfo = GetCacheIRStubInfo(stub);
+    mozilla::Maybe<CacheIRReader> argReader;
+    if (!MaybeArgumentReader(stub, CacheOp::MetaTwoByte, argReader) ||
+        argReader->metaKind<MetaTwoByteKind>() !=
+            MetaTwoByteKind::ScriptedTemplateObject) {
+      return nullptr;
+    }
+    // The callee is the first stub field in a ScriptedTemplateObject meta op.
+    return stubInfo->getStubField<JSFunction*>(stub, argReader->stubOffset());
+  }
+  return nullptr;
 }
 
 JSObject* BaselineInspector::getTemplateObjectForNative(jsbytecode* pc,
@@ -855,6 +936,19 @@ JSObject* BaselineInspector::getTemplateObjectForNative(jsbytecode* pc,
     if (stub->isCall_Native() &&
         stub->toCall_Native()->callee()->native() == native) {
       return stub->toCall_Native()->templateObject();
+    }
+    if (ICStub::IsCacheIRKind(stub->kind())) {
+      auto filter = [stub, native](CacheIRReader& reader,
+                                   const CacheIRStubInfo* info) {
+        JSFunction* callee =
+            info->getStubField<JSFunction*>(stub, reader.stubOffset());
+        return callee->native() == native;
+      };
+      JSObject* result = MaybeTemplateObject(
+          stub, MetaTwoByteKind::NativeTemplateObject, filter);
+      if (result) {
+        return result;
+      }
     }
   }
 
@@ -898,6 +992,17 @@ JSObject* BaselineInspector::getTemplateObjectForClassHook(jsbytecode* pc,
     if (stub->isCall_ClassHook() &&
         stub->toCall_ClassHook()->clasp() == clasp) {
       return stub->toCall_ClassHook()->templateObject();
+    }
+    if (ICStub::IsCacheIRKind(stub->kind())) {
+      auto filter = [stub, clasp](CacheIRReader& args,
+                                  const CacheIRStubInfo* info) {
+        return info->getStubField<Class*>(stub, args.stubOffset()) == clasp;
+      };
+      JSObject* result = MaybeTemplateObject(
+          stub, MetaTwoByteKind::ClassTemplateObject, filter);
+      if (result) {
+        return result;
+      }
     }
   }
 

@@ -12,6 +12,7 @@
  */
 
 #include "mozilla/dom/CryptoBuffer.h"
+#include "mozilla/dom/WebAuthenticationBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -60,5 +61,30 @@ nsresult BuildTransactionHashes(const nsCString& aRpId,
 
 }  // namespace dom
 }  // namespace mozilla
+
+namespace IPC {
+
+template <>
+struct ParamTraits<mozilla::dom::AuthenticatorAttachment>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::AuthenticatorAttachment,
+          mozilla::dom::AuthenticatorAttachment::Platform,
+          mozilla::dom::AuthenticatorAttachment::EndGuard_> {};
+
+template <>
+struct ParamTraits<mozilla::dom::UserVerificationRequirement>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::UserVerificationRequirement,
+          mozilla::dom::UserVerificationRequirement::Required,
+          mozilla::dom::UserVerificationRequirement::EndGuard_> {};
+
+template <>
+struct ParamTraits<mozilla::dom::AttestationConveyancePreference>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::AttestationConveyancePreference,
+          mozilla::dom::AttestationConveyancePreference::None,
+          mozilla::dom::AttestationConveyancePreference::EndGuard_> {};
+
+}  // namespace IPC
 
 #endif  // mozilla_dom_WebAuthnUtil_h

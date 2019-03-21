@@ -16,20 +16,17 @@
 
 include protocol PBackground;
 
-using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+using mozilla::dom::AttestationConveyancePreference from "mozilla/dom/WebAuthnUtil.h";
+using mozilla::dom::AuthenticatorAttachment from "mozilla/dom/WebAuthnUtil.h";
+using mozilla::dom::UserVerificationRequirement from "mozilla/dom/WebAuthnUtil.h";
 
 namespace mozilla {
 namespace dom {
 
-union WebAuthnMaybeAuthenticatorAttachment {
-  uint8_t;
-  null_t;
-};
-
 struct WebAuthnAuthenticatorSelection {
   bool requireResidentKey;
-  uint8_t userVerificationRequirement;
-  WebAuthnMaybeAuthenticatorAttachment authenticatorAttachment;
+  UserVerificationRequirement userVerificationRequirement;
+  AuthenticatorAttachment? authenticatorAttachment;
 };
 
 struct WebAuthnScopedCredential {
@@ -76,12 +73,7 @@ struct WebAuthnMakeCredentialExtraInfo {
   CoseAlg[] coseAlgs;
   WebAuthnExtension[] Extensions;
   WebAuthnAuthenticatorSelection AuthenticatorSelection;
-  uint8_t attestationConveyancePreference;
-};
-
-union WebAuthnMaybeMakeCredentialExtraInfo {
-  WebAuthnMakeCredentialExtraInfo;
-  null_t;
+  AttestationConveyancePreference attestationConveyancePreference;
 };
 
 struct WebAuthnMakeCredentialInfo {
@@ -91,7 +83,7 @@ struct WebAuthnMakeCredentialInfo {
   nsCString ClientDataJSON;
   uint32_t TimeoutMS;
   WebAuthnScopedCredential[] ExcludeList;
-  WebAuthnMaybeMakeCredentialExtraInfo Extra;
+  WebAuthnMakeCredentialExtraInfo? Extra;
 };
 
 struct WebAuthnMakeCredentialResult {
@@ -104,12 +96,7 @@ struct WebAuthnMakeCredentialResult {
 
 struct WebAuthnGetAssertionExtraInfo {
   WebAuthnExtension[] Extensions;
-  uint8_t userVerificationRequirement;
-};
-
-union WebAuthnMaybeGetAssertionExtraInfo {
-  WebAuthnGetAssertionExtraInfo;
-  null_t;
+  UserVerificationRequirement userVerificationRequirement;
 };
 
 struct WebAuthnGetAssertionInfo {
@@ -119,7 +106,7 @@ struct WebAuthnGetAssertionInfo {
   nsCString ClientDataJSON;
   uint32_t TimeoutMS;
   WebAuthnScopedCredential[] AllowList;
-  WebAuthnMaybeGetAssertionExtraInfo Extra;
+  WebAuthnGetAssertionExtraInfo? Extra;
 };
 
 struct WebAuthnGetAssertionResult {

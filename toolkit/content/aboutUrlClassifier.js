@@ -231,9 +231,9 @@ var Provider = {
     if (aData.startsWith("success")) {
       document.l10n.setAttributes(elem, "url-classifier-success");
     } else if (aData.startsWith("update error")) {
-      document.l10n.setAttributes(elem, "url-classifier-update-error", {error: [aData.split(": ")[1]]});
+      document.l10n.setAttributes(elem, "url-classifier-update-error", {error: aData.split(": ")[1]});
     } else if (aData.startsWith("download error")) {
-      document.l10n.setAttributes(elem, "url-classifier-download-error", {error: [aData.split(": ")[1]]});
+      document.l10n.setAttributes(elem, "url-classifier-download-error", {error: aData.split(": ")[1]});
     } else {
       elem.childNodes[0].nodeValue = aData;
     }

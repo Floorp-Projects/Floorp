@@ -100,7 +100,7 @@ class CompactBufferReader {
   void seek(const uint8_t* start, uint32_t offset) {
     buffer_ = start + offset;
     MOZ_ASSERT(start < end_);
-    MOZ_ASSERT(buffer_ < end_);
+    MOZ_ASSERT(buffer_ <= end_);
   }
 
   const uint8_t* currentPosition() const { return buffer_; }

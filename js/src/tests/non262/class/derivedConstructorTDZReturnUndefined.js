@@ -7,7 +7,7 @@ class foo extends null {
 }
 
 for (let i = 0; i < 1100; i++)
-    assertThrownErrorContains(() => new foo(), "|this|");
+    assertThrownErrorContains(() => new foo(), "this");
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

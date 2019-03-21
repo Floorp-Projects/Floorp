@@ -389,12 +389,12 @@ class UrlbarQueryContext {
    *   Set to true if this query was started from a private browsing window.
    * @param {number} options.maxResults
    *   The maximum number of results that will be displayed for this query.
-   * @param {boolean} options.enableAutofill
-   *   Whether or not to include autofill results.
+   * @param {boolean} options.allowAutofill
+   *   Whether or not to allow providers to include autofill results.
    */
   constructor(options = {}) {
     this._checkRequiredOptions(options, [
-      "enableAutofill",
+      "allowAutofill",
       "isPrivate",
       "lastKey",
       "maxResults",

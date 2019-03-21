@@ -592,7 +592,7 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 
 %ifdef XP_UNIX
 %ifndef XP_MACOSX
-#customization-palette[whimsypong] > toolbarpaletteitem > toolbarspring {
+#customization-palette[whimsypong] > toolbarpaletteitem[id^="wrapper-customizableui-special-spring"] {
   font-size: 12px;
 }
 %endif
