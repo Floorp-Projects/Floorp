@@ -59,13 +59,13 @@ inline void DocAccessible::BindChildDocument(DocAccessible* aDocument) {
   mNotificationController->ScheduleChildDocBinding(aDocument);
 }
 
-template <class Class, class... Args>
+template <class Class, class Arg>
 inline void DocAccessible::HandleNotification(
-    Class* aInstance, typename TNotification<Class, Args...>::Callback aMethod,
-    Args*... aArgs) {
+    Class* aInstance, typename TNotification<Class, Arg>::Callback aMethod,
+    Arg* aArg) {
   if (mNotificationController) {
-    mNotificationController->HandleNotification<Class, Args...>(
-        aInstance, aMethod, aArgs...);
+    mNotificationController->HandleNotification<Class, Arg>(aInstance, aMethod,
+                                                            aArg);
   }
 }
 
