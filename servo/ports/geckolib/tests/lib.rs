@@ -13,10 +13,8 @@
 
 extern crate atomic_refcell;
 extern crate cssparser;
-#[macro_use]
 extern crate cstr;
 extern crate geckoservo;
-#[macro_use]
 extern crate log;
 extern crate malloc_size_of;
 extern crate num_traits;
