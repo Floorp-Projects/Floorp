@@ -19,8 +19,12 @@ class RenderCompositorEGL : public RenderCompositor {
   static UniquePtr<RenderCompositor> Create(
       RefPtr<widget::CompositorWidget> aWidget);
 
+#ifdef MOZ_WIDGET_ANDROID
+  explicit RenderCompositorEGL(RefPtr<widget::CompositorWidget> aWidget);
+#elif defined(MOZ_WAYLAND)
   RenderCompositorEGL(RefPtr<gl::GLContext> aGL,
                       RefPtr<widget::CompositorWidget> aWidget);
+#endif
   virtual ~RenderCompositorEGL();
 
   bool BeginFrame() override;
@@ -29,7 +33,7 @@ class RenderCompositorEGL : public RenderCompositor {
   void Pause() override;
   bool Resume() override;
 
-  gl::GLContext* gl() const override { return mGL; }
+  gl::GLContext* gl() const override;
 
   bool MakeCurrent() override;
 
@@ -38,12 +42,16 @@ class RenderCompositorEGL : public RenderCompositor {
   LayoutDeviceIntSize GetBufferSize() override;
 
  protected:
+#ifdef MOZ_WAYLAND
   static already_AddRefed<gl::GLContext> CreateGLContext();
+#endif
   EGLSurface CreateEGLSurface();
 
   void DestroyEGLSurface();
 
+#ifdef MOZ_WAYLAND
   const RefPtr<gl::GLContext> mGL;
+#endif
   EGLSurface mEGLSurface;
 };
 

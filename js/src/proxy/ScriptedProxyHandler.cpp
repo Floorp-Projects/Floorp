@@ -1540,9 +1540,8 @@ bool js::proxy_revocable(JSContext* cx, unsigned argc, Value* vp) {
   RootedValue proxyVal(cx, args.rval());
   MOZ_ASSERT(proxyVal.toObject().is<ProxyObject>());
 
-  HandlePropertyName funName = cx->names().revoke;
   RootedFunction revoker(
-      cx, NewNativeFunction(cx, RevokeProxy, 0, funName,
+      cx, NewNativeFunction(cx, RevokeProxy, 0, nullptr,
                             gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
   if (!revoker) {
     return false;

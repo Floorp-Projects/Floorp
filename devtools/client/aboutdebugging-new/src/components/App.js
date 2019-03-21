@@ -17,7 +17,7 @@ const Switch = createFactory(require("devtools/client/shared/vendor/react-router
 const Redirect = createFactory(require("devtools/client/shared/vendor/react-router-dom").Redirect);
 
 const Types = require("../types/index");
-const { RUNTIMES } = require("../constants");
+const { PAGE_TYPES, RUNTIMES } = require("../constants");
 
 const ConnectPage = createFactory(require("./connect/ConnectPage"));
 const RuntimePage = createFactory(require("./RuntimePage"));
@@ -34,13 +34,11 @@ class App extends PureComponent {
       // getString prop is injected by the withLocalization wrapper
       getString: PropTypes.func.isRequired,
       isScanningUsb: PropTypes.bool.isRequired,
-      networkEnabled: PropTypes.bool.isRequired,
       networkLocations: PropTypes.arrayOf(Types.location).isRequired,
       networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: Types.page,
       selectedRuntimeId: PropTypes.string,
       usbRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
-      wifiEnabled: PropTypes.bool.isRequired,
     };
   }
 
@@ -51,34 +49,24 @@ class App extends PureComponent {
   updateTitle() {
     const { getString, selectedPage, selectedRuntimeId } = this.props;
 
-    const runtimeTitle = selectedRuntimeId ?
-                          getString(
-                            "about-debugging-page-title-with-runtime",
-                            { selectedPage, selectedRuntimeId }
-                          )
-                          : getString(
-                            "about-debugging-page-title",
-                            { selectedPage }
-                          );
+    const pageTitle = selectedPage === PAGE_TYPES.RUNTIME ?
+      getString("about-debugging-page-title-runtime-page", { selectedRuntimeId }) :
+      getString("about-debugging-page-title-setup-page");
 
-    document.title = runtimeTitle;
+    document.title = pageTitle;
   }
 
   renderConnect() {
     const {
       adbAddonStatus,
       dispatch,
-      networkEnabled,
       networkLocations,
-      wifiEnabled,
     } = this.props;
 
     return ConnectPage({
       adbAddonStatus,
       dispatch,
-      networkEnabled,
       networkLocations,
-      wifiEnabled,
     });
   }
 
@@ -182,13 +170,11 @@ const mapStateToProps = state => {
   return {
     adbAddonStatus: state.ui.adbAddonStatus,
     isScanningUsb: state.ui.isScanningUsb,
-    networkEnabled: state.ui.networkEnabled,
     networkLocations: state.ui.networkLocations,
     networkRuntimes: state.runtimes.networkRuntimes,
     selectedPage: state.ui.selectedPage,
     selectedRuntimeId: state.runtimes.selectedRuntimeId,
     usbRuntimes: state.runtimes.usbRuntimes,
-    wifiEnabled: state.ui.wifiEnabled,
   };
 };
 

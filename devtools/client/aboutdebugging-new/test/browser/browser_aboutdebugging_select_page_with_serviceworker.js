@@ -44,7 +44,8 @@ add_task(async function() {
   await waitUntil(() => findDebugTargetByText(WORKER_NAME, document));
 
   info("Go to This Firefox again");
-  const thisFirefoxSidebarItem = findSidebarItemByText("This Firefox", document);
+  const thisFirefoxString = getThisFirefoxString(window);
+  const thisFirefoxSidebarItem = findSidebarItemByText(thisFirefoxString, document);
   const thisFirefoxLink = thisFirefoxSidebarItem.querySelector(".js-sidebar-link");
   info("Click on the ThisFirefox item in the sidebar");
   const requestsSuccess = waitForRequestsSuccess(window.AboutDebugging.store);

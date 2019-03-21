@@ -553,8 +553,13 @@ void ImplCycleCollectionUnlink(CallbackObjectHolder<T, U>& aField) {
 // subclass.  This class is used in bindings to safely handle Fast* callbacks;
 // it ensures that the callback is traced, and that if something is holding onto
 // the callback when we're done with it HoldJSObjects is called.
+//
+// Since we effectively hold a ref to a refcounted thing (like RefPtr or
+// OwningNonNull), we are also MOZ_IS_SMARTPTR_TO_REFCOUNTED for static analysis
+// purposes.
 template <typename T>
-class MOZ_RAII RootedCallback : public JS::Rooted<T> {
+class MOZ_RAII MOZ_IS_SMARTPTR_TO_REFCOUNTED RootedCallback
+    : public JS::Rooted<T> {
  public:
   explicit RootedCallback(JSContext* cx) : JS::Rooted<T>(cx), mCx(cx) {}
 

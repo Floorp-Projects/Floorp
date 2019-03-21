@@ -153,15 +153,6 @@ If the caller then uses the generator's `.next()` method, which may or
 may not happen right away depending on the debuggee code, the suspended
 generator will be resumed, firing `.onEnterFrame` again.
 
-**Stepping into async functions** — SpiderMonkey also performs an
-initial yield for async functions. This is not so easy to defend by
-citing the spec; we're just exposing internal SpiderMonkey
-implementation details. When the initial yield happens, you'll observe
-an extra `.onPop` returning a generator object that SpiderMonkey will
-use internally, followed immediately by a second `.onEnterFrame` event
-for the same frame.
-
-
 ## Accessor Properties of the Debugger.Frame Prototype Object
 
 A `Debugger.Frame` instance inherits the following accessor properties from

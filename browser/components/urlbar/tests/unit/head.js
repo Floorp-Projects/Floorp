@@ -35,7 +35,7 @@ const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
  */
 function createContext(searchString = "foo", properties = {}) {
   let context = new UrlbarQueryContext({
-    enableAutofill: UrlbarPrefs.get("autoFill"),
+    allowAutofill: UrlbarPrefs.get("autoFill"),
     isPrivate: true,
     lastKey: searchString ? searchString[searchString.length - 1] : "",
     maxResults: UrlbarPrefs.get("maxRichResults"),

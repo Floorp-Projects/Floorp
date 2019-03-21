@@ -8,7 +8,9 @@ dictionary WebrtcGlobalStatisticsReport {
   sequence<RTCStatsReportInternal> reports;
 };
 
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback WebrtcGlobalStatisticsCallback = void (WebrtcGlobalStatisticsReport reports);
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback WebrtcGlobalLoggingCallback = void (sequence<DOMString> logMessages);
 
 [ChromeOnly]

@@ -149,7 +149,7 @@ add_task(function test_handle_query_starts_search() {
   sandbox.resetHistory();
 });
 
-add_task(function test_handle_query_starts_search_sets_enableAutofill() {
+add_task(function test_handle_query_starts_search_sets_allowAutofill() {
   let originalValue = Services.prefs.getBoolPref("browser.urlbar.autoFill");
   Services.prefs.setBoolPref("browser.urlbar.autoFill", !originalValue);
 
@@ -161,7 +161,7 @@ add_task(function test_handle_query_starts_search_sets_enableAutofill() {
     "Should have called startQuery with two arguments");
 
   assertContextMatches(fPM.startQuery.args[0][0], {
-    enableAutofill: !originalValue,
+    allowAutofill: !originalValue,
   });
   Assert.equal(fPM.startQuery.args[0][1], controller,
     "Should have passed the controller as the second argument");

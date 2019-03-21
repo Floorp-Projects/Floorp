@@ -7,7 +7,7 @@
 import * as firefox from "./firefox";
 import * as chrome from "./chrome";
 
-import { prefs, asyncStore, verifyPrefSchema } from "../utils/prefs";
+import { asyncStore, verifyPrefSchema } from "../utils/prefs";
 import { setupHelper } from "../utils/dbg";
 
 import {
@@ -18,16 +18,6 @@ import {
 import { initialBreakpointsState } from "../reducers/breakpoints";
 
 import type { Panel } from "./firefox/types";
-
-function loadFromPrefs(actions: Object) {
-  const { pauseOnExceptions, pauseOnCaughtExceptions } = prefs;
-  if (pauseOnExceptions || pauseOnCaughtExceptions) {
-    return actions.pauseOnExceptions(
-      pauseOnExceptions,
-      pauseOnCaughtExceptions
-    );
-  }
-}
 
 async function syncBreakpoints() {
   const breakpoints = await asyncStore.pendingBreakpoints;
@@ -94,7 +84,6 @@ export async function onConnect(
   const workers = bootstrapWorkers();
   await client.onConnect(connection, actions);
 
-  await loadFromPrefs(actions);
   syncBreakpoints();
   syncXHRBreakpoints();
   setupHelper({

@@ -649,30 +649,6 @@ StyleEditorUI.prototype = {
           showEditor.onShow();
 
           this.emit("editor-selected", showEditor);
-
-          // Is there any CSS coverage markup to include?
-          const usage = await this._target.getFront("cssUsage");
-          if (usage == null) {
-            return;
-          }
-
-          const sheet = showEditor.styleSheet;
-          const {reports} = await usage.createEditorReportForSheet(sheet);
-
-          showEditor.removeAllUnusedRegions();
-
-          if (reports.length > 0) {
-            // Only apply if this file isn't compressed. We detect a
-            // compressed file if there are more rules than lines.
-            const editorText = showEditor.sourceEditor.getText();
-            const lineCount = editorText.split("\n").length;
-            const ruleCount = showEditor.styleSheet.ruleCount;
-            if (lineCount >= ruleCount) {
-              showEditor.addUnusedRegions(reports);
-            } else {
-              this.emit("error", { key: "error-compressed", level: "info" });
-            }
-          }
         }.bind(this))().catch(console.error);
       },
     });

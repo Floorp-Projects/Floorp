@@ -2,6 +2,8 @@
 #ifndef mozilla__ipdltest_IPDLUnitTestUtils
 #define mozilla__ipdltest_IPDLUnitTestUtils 1
 
+#include "ipc/IPCMessageUtils.h"
+
 namespace mozilla {
 namespace _ipdltest {
 

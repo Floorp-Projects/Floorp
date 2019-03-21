@@ -28,7 +28,6 @@ DevToolsModules(
     'changes.js',
     'common.js',
     'css-properties.js',
-    'csscoverage.js',
     'device.js',
     'emulation.js',
     'environment.js',
@@ -71,9 +70,6 @@ with Files('breakpoint.js'):
 
 with Files('css-properties.js'):
     BUG_COMPONENT = ('DevTools', 'Inspector: Rules')
-
-with Files('csscoverage.js'):
-    BUG_COMPONENT = ('DevTools', 'Graphics Commandline and Toolbar')
 
 with Files('memory.js'):
     BUG_COMPONENT = ('DevTools', 'Memory')

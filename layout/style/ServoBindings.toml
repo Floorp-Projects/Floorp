@@ -49,13 +49,6 @@ hide-types = [
     "nsString",
     ".*char_traits",
     ".*incompatible_char_type",
-    "mozilla::binding_danger::TErrorResult.*",
-    "mozilla::ErrorResult.*", # Causes JSWhyMagic to be included & handled incorrectly.
-    "mozilla::dom::CallbackFunction",
-    "mozilla::dom::CallbackObject.*",
-    "nsINode_ErrorResult",
-    "nsDOMAttributeMap_ErrorResult",
-    # End of JS::Value related types
     # https://github.com/rust-lang/rust-bindgen/issues/1503
     "mozilla::StyleTimingFunction.*",
 ]

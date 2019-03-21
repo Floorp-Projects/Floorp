@@ -1394,7 +1394,8 @@ bool TypedArrayConstructor(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 template <typename T>
-static bool GetTemplateObjectForNative(JSContext* cx, const CallArgs& args,
+static bool GetTemplateObjectForNative(JSContext* cx,
+                                       const JS::HandleValueArray args,
                                        MutableHandleObject res) {
   if (args.length() == 0) {
     return true;
@@ -1433,10 +1434,9 @@ static bool GetTemplateObjectForNative(JSContext* cx, const CallArgs& args,
   return true;
 }
 
-/* static */
-bool TypedArrayObject::GetTemplateObjectForNative(JSContext* cx, Native native,
-                                                  const CallArgs& args,
-                                                  MutableHandleObject res) {
+/* static */ bool TypedArrayObject::GetTemplateObjectForNative(
+    JSContext* cx, Native native, const JS::HandleValueArray args,
+    MutableHandleObject res) {
   MOZ_ASSERT(!res);
 #define CHECK_TYPED_ARRAY_CONSTRUCTOR(T, N)                        \
   if (native == &TypedArrayObjectTemplate<T>::class_constructor) { \

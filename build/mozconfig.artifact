@@ -2,6 +2,10 @@
 
 # Enable the artifact build.
 ac_add_options --enable-artifact-builds
-ac_add_options --enable-artifact-build-symbols
+if test -n "$MOZ_ARTIFACT_TASK_WIN32_OPT"; then
+  ac_add_options --enable-artifact-build-symbols=full
+else
+  ac_add_options --enable-artifact-build-symbols
+fi
 
 . "$topsrcdir/build/mozconfig.no-compile"

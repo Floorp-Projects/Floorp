@@ -41,7 +41,6 @@ registerCleanupFunction(async function() {
  */
 async function enableNewAboutDebugging() {
   await pushPref("devtools.aboutdebugging.new-enabled", true);
-  await pushPref("devtools.aboutdebugging.network", true);
 }
 
 async function openAboutDebugging({ enableWorkerUpdates } = {}) {
@@ -113,8 +112,8 @@ async function reloadAboutDebugging(tab) {
   const browser = tab.linkedBrowser;
   const document = browser.contentDocument;
   const window = browser.contentWindow;
-  info("wait for the initial about:debugging requests to be successful");
-  await waitForRequestsSuccess(window.AboutDebugging.store);
+  info("wait for the initial about:debugging requests to settle");
+  await waitForRequestsToSettle(window.AboutDebugging.store);
 
   return document;
 }
@@ -288,4 +287,14 @@ async function openProfilerDialog(client, doc) {
 
   info("Wait for the loadPerformanceProfiler callback to be executed on client-wrapper");
   return onProfilerLoaded;
+}
+
+/**
+ * The "This Firefox" string depends on the brandShortName, which will be different
+ * depending on the channel where tests are running.
+ */
+function getThisFirefoxString(aboutDebuggingWindow) {
+  const loader = aboutDebuggingWindow.getBrowserLoaderForWindow();
+  const { l10n } = loader.require("devtools/client/aboutdebugging-new/src/modules/l10n");
+  return l10n.getString("about-debugging-this-firefox-runtime-name");
 }

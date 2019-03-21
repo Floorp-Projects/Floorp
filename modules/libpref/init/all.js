@@ -663,7 +663,7 @@ pref("media.av1.enabled", true);
 pref("media.av1.use-dav1d", true);
 #elif defined(XP_UNIX)
 pref("media.av1.enabled", true);
-pref("media.av1.use-dav1d", false);
+pref("media.av1.use-dav1d", true);
 #else
 pref("media.av1.enabled", false);
 pref("media.av1.use-dav1d", false);
@@ -2752,6 +2752,11 @@ pref("services.settings.server", "https://firefox.settings.services.mozilla.com/
 pref("services.settings.changes.path", "/buckets/monitor/collections/changes/records");
 pref("services.settings.default_bucket", "main");
 pref("services.settings.default_signer", "remote-settings.content-signature.mozilla.org");
+
+// The percentage of clients who will report uptake telemetry as
+// events instead of just a histogram. This only applies on Release;
+// other channels always report events.
+pref("services.common.uptake.sampleRate", 1);   // 1%
 
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);
