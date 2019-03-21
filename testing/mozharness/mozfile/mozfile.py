@@ -38,10 +38,11 @@ def extract_tarball(src, dest):
     """extract a .tar file"""
 
     with tarfile.open(src) as bundle:
-        namelist = bundle.getnames()
+        namelist = []
 
-        for name in namelist:
-            bundle.extract(name, path=dest)
+        for m in bundle:
+            bundle.extract(m, path=dest)
+            namelist.append(m.name)
 
     return namelist
 
