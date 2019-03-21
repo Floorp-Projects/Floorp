@@ -218,7 +218,7 @@ fails == css-values/attr-px-valid.html css-values/reference/200-200-green.html
 == css-values/calc-parenthesis-stack.html css-values/reference/all-green.html
 fuzzy-if(OSX||Android,0-78,0-197) == css-values/ch-unit-001.html css-values/reference/ch-unit-001-ref.html
 fuzzy(0-50,0-160) == css-values/ch-unit-002.html css-values/reference/ch-unit-002-ref.html
-fails == css-values/ch-unit-003.html css-values/reference/ch-unit-001-ref.html
+fuzzy-if(OSX||Android,0-78,0-179) == css-values/ch-unit-003.html css-values/reference/ch-unit-001-ref.html
 fuzzy(0-78,0-197) fails-if(webrender&&cocoaWidget) == css-values/ch-unit-004.html css-values/reference/ch-unit-001-ref.html
 skip == css-values/ex-calc-expression-001.html css-values/ex-calc-expression-001-ref.html
 skip == css-values/ic-unit-001.html css-values/reference/ic-unit-001-ref.html
