@@ -148,8 +148,8 @@ function doPageNavigation(params) {
       }
     }
     if (!eventFound)
-      throw "Event type " + anEventType + " is specified in " +
-        "eventsToListenFor, but not in expectedEvents";
+      throw new Error(`Event type ${anEventType} is specified in ` +
+                      "eventsToListenFor, but not in expectedEvents");
   }
 
   // If the test explicitly sets .eventsToListenFor to [], don't wait for any
