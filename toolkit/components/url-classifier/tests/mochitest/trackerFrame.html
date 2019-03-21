@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+<title></title>
+</head>
+<body>
+
+<!--NewImageChannel-->
+<img src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=img-src">
+
+<!--nsObjectLoadingContent::OpenChannel-->
+<object data="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=object-data"></object>
+
+<!--ScriptLoader::StartLoad-->
+<script src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=script-src"></script>
+
+<!--nsDocShell::DoURILoad-->
+<iframe src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=iframe-src"></iframe>
+
+<!--Loader::LoadSheet-->
+<link rel="stylesheet" href="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=link-rel-stylesheet" />
+
+<!--nsPrefetchNode::OpenChannel-->
+<link rel="prefetch" href="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=link-rel-prefetch" />
+
+<!--HTMLMediaElement::ChannelLoader::LoadInternal-->
+<video src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=video-src">
+</video>
+
+<video src="http://mochi.test:8888/basic.vtt", crossorigin=use-credentials>
+  <track src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=track-src" ></track>
+</video>
+
+<!--SendPing-->
+<a ping="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=ping" id="a-ping" href="#"></a>
+<script>
+  (function() {
+    document.getElementById("a-ping").click();
+  })();
+</script>
+
+<script>
+
+// FetchDriver::HttpFetch
+(function() {
+  try {
+    fetch(new Request("http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=fetch"), {
+      credentials: "include",
+    });
+  } catch (err) {
+    console.log(err);
+  }
+})();
+
+// XMLHttpRequestMainThread::CreateChannel
+(function() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=xmlhttprequest");
+    xhr.withCredentials = true;
+    xhr.send();
+})();
+
+// Navigator::SendBeaconInternal
+(function() {
+    navigator.sendBeacon("http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=send-beacon");
+})();
+
+</script>
+</body>
+</html>
