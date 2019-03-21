@@ -440,6 +440,10 @@ class UrlbarView {
       content.appendChild(tagsContainer);
     }
 
+    let titleSeparator = this._createElement("span");
+    titleSeparator.className = "urlbarView-title-separator";
+    content.appendChild(titleSeparator);
+
     let action;
     let url;
     let setAction = text => {
