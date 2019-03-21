@@ -10364,7 +10364,7 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel* aChannel,
   }
 
   if (!aBypassClassifier) {
-    loadFlags |= nsIChannel::LOAD_CLASSIFY_URI;
+    // Keep this for later use
   }
 
   // If the user pressed shift-reload, then do not allow ServiceWorker

@@ -147,7 +147,6 @@ nsresult ChannelFromScriptURL(
     parentDoc = nullptr;
   }
 
-  aLoadFlags |= nsIChannel::LOAD_CLASSIFY_URI;
   uint32_t secFlags = aIsMainScript
                           ? nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
                           : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
