@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
+import mozilla.components.browser.icons.decoder.AndroidIconDecoder
 import mozilla.components.browser.icons.decoder.ICOIconDecoder
 import mozilla.components.browser.icons.decoder.IconDecoder
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
@@ -29,6 +30,7 @@ class BrowserIcons(
     private val context: Context,
     private val generator: IconGenerator = DefaultIconGenerator(context),
     private val decoders: List<IconDecoder> = listOf(
+        AndroidIconDecoder(),
         ICOIconDecoder()
     ),
     jobDispatcher: CoroutineDispatcher = Executors.newFixedThreadPool(THREADS).asCoroutineDispatcher()

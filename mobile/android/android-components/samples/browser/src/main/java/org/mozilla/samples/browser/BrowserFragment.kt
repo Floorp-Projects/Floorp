@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
+import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
@@ -83,7 +84,8 @@ class BrowserFragment : Fragment(), BackHandler {
             .addSearchProvider(
                 components.searchEngineManager.getDefaultSearchEngine(requireContext()),
                 components.searchUseCases.defaultSearch,
-                HttpURLConnectionClient())
+                HttpURLConnectionClient(),
+                SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS)
             .addClipboardProvider(requireContext(), components.sessionUseCases.loadUrl)
 
         downloadsFeature.set(
