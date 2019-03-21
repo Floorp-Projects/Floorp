@@ -160,6 +160,18 @@ const TESTS_SPACE_INDENT = [
       "}",
     ],
   },
+
+  { name: "Multiline comment in CSS",
+    input: "/*\n * comment\n */\n#example{display:grid;}",
+    expected: [
+      "/*",
+      " * comment",
+      " */",
+      "#example {",
+      " display:grid;",
+      "}",
+    ],
+  },
 ];
 
 function run_test() {
