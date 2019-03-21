@@ -73,8 +73,10 @@ class CrashReporterActivity : AppCompatActivity() {
 
         sendCrashReportIfNeeded {
             val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
-            launchIntent.flags = launchIntent.flags or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(launchIntent)
+            if (launchIntent != null) {
+                launchIntent.flags = launchIntent.flags or Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(launchIntent)
+            }
 
             finish()
         }

@@ -35,7 +35,6 @@ object KotlinCompiler {
         "feature-sitepermissions",
         "feature-tabs",
         "feature-toolbar",
-        "lib-crash",
         "lib-fetch-okhttp",
         "lib-jexl",
         "samples-toolbar",

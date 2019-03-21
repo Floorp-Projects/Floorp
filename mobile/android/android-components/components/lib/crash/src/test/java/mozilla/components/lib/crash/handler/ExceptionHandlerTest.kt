@@ -4,6 +4,8 @@
 
 package mozilla.components.lib.crash.handler
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
@@ -18,10 +20,12 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class ExceptionHandlerTest {
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @Test
     fun `ExceptionHandler forwards crashes to CrashReporter`() {
         var capturedCrash: Crash? = null
@@ -41,7 +45,7 @@ class ExceptionHandlerTest {
         ))
 
         val handler = ExceptionHandler(
-            RuntimeEnvironment.application,
+            context,
             crashReporter)
 
         val exception = RuntimeException("Hello World")
@@ -62,7 +66,7 @@ class ExceptionHandlerTest {
         val defaultExceptionHandler: Thread.UncaughtExceptionHandler = mock()
 
         val handler = ExceptionHandler(
-            RuntimeEnvironment.application,
+            context,
             mock(),
             defaultExceptionHandler
         )

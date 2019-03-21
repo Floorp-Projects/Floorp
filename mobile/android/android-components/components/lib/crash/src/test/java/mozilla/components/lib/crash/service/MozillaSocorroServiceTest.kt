@@ -4,6 +4,8 @@
 
 package mozilla.components.lib.crash.service
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.test.any
 import org.junit.Test
@@ -13,15 +15,16 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
-import java.lang.RuntimeException
 
 @RunWith(RobolectricTestRunner::class)
 class MozillaSocorroServiceTest {
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @Test
     fun `MozillaSocorroService sends native code crashes to GeckoView crash reporter`() {
         val service = spy(MozillaSocorroService(
-            RuntimeEnvironment.application,
+            context,
             "Test App"
         ))
         doNothing().`when`(service).sendViaGeckoViewCrashReporter(any())
@@ -36,7 +39,7 @@ class MozillaSocorroServiceTest {
     @Test
     fun `MozillaSocorroService does not send uncaught exception crashes`() {
         val service = spy(MozillaSocorroService(
-            RuntimeEnvironment.application,
+            context,
             "Test App"
         ))
         doNothing().`when`(service).sendViaGeckoViewCrashReporter(any())

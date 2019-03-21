@@ -4,6 +4,8 @@
 
 package mozilla.components.lib.crash.service
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import io.sentry.SentryClient
 import io.sentry.SentryClientFactory
 import io.sentry.dsn.Dsn
@@ -19,11 +21,12 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
-import java.lang.RuntimeException
 
 @RunWith(RobolectricTestRunner::class)
 class SentryServiceTest {
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @Test
     fun `SentryService disables exception handler and forwards tags`() {
         var usedDsn: Dsn? = null
@@ -38,7 +41,7 @@ class SentryServiceTest {
         }
 
         SentryService(
-            RuntimeEnvironment.application,
+            context,
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = factory,
             tags = mapOf(
@@ -66,7 +69,7 @@ class SentryServiceTest {
         }
 
         val service = SentryService(
-            RuntimeEnvironment.application,
+            context,
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = factory)
 
@@ -82,7 +85,7 @@ class SentryServiceTest {
         val client: SentryClient = mock()
 
         val service = SentryService(
-            RuntimeEnvironment.application,
+            context,
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
@@ -100,7 +103,7 @@ class SentryServiceTest {
         val client: SentryClient = mock()
 
         val service = SentryService(
-            RuntimeEnvironment.application,
+            context,
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client

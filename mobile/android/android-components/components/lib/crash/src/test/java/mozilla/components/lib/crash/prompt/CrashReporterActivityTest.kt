@@ -9,6 +9,7 @@ import android.content.Intent
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.TextView
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.crash.Crash
@@ -24,10 +25,12 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class CrashReporterActivityTest {
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @Test
     fun `Pressing close button sends report`() {
         val service: CrashReporterService = mock()
@@ -35,7 +38,7 @@ class CrashReporterActivityTest {
         CrashReporter(
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service)
-        ).install(RuntimeEnvironment.application)
+        ).install(context)
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"))
 
@@ -66,7 +69,7 @@ class CrashReporterActivityTest {
         CrashReporter(
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service)
-        ).install(RuntimeEnvironment.application)
+        ).install(context)
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"))
 
@@ -96,10 +99,10 @@ class CrashReporterActivityTest {
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             promptConfiguration = CrashReporter.PromptConfiguration(
                 message = "Hello World!",
-                theme = android.R.style.Theme_Holo_Dialog // Yolo!
+                theme = android.R.style.Theme_DeviceDefault // Yolo!
             ),
             services = listOf(mock())
-        ).install(RuntimeEnvironment.application)
+        ).install(context)
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"))
 
@@ -124,7 +127,7 @@ class CrashReporterActivityTest {
         CrashReporter(
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service)
-        ).install(RuntimeEnvironment.application)
+        ).install(context)
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"))
 

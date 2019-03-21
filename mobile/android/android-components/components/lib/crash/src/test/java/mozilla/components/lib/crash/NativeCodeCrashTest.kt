@@ -26,7 +26,7 @@ class NativeCodeCrashTest {
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra")
         intent.putExtra("minidumpSuccess", true)
 
-        val crash = Crash.NativeCodeCrash.fromBundle(intent.extras)
+        val crash = Crash.NativeCodeCrash.fromBundle(intent.extras!!)
 
         assertEquals(crash.minidumpSuccess, true)
         assertEquals(crash.isFatal, false)
