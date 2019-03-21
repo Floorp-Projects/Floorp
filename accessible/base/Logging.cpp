@@ -311,6 +311,9 @@ static void LogRequest(nsIRequest* aRequest) {
     if (loadFlags & nsIChannel::LOAD_TARGETED) printf("targeted; ");
     if (loadFlags & nsIChannel::LOAD_CALL_CONTENT_SNIFFERS)
       printf("call content sniffers; ");
+    if (loadFlags & nsIChannel::LOAD_BYPASS_URL_CLASSIFIER) {
+      printf("bypass classify uri; ");
+    }
   } else {
     printf("    no request");
   }

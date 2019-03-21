@@ -248,7 +248,11 @@ interface nsIChannel : nsIRequest
      */
     const unsigned long LOAD_CALL_CONTENT_SNIFFERS = 1 << 21;
 
-    // LOAD_BYPASS_URL_CLASSIFIER will be added
+    /**
+     * This flag tells the channel to bypass URL classifier service check
+     * when opening the channel.
+     */
+    const unsigned long LOAD_BYPASS_URL_CLASSIFIER = 1 << 22;
 
     /**
      * If this flag is set, the media-type content sniffer will be allowed
