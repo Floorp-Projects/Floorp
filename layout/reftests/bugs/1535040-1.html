@@ -1,0 +1,19 @@
+<html class="reftest-wait">
+  <svg width="400" height="300">
+    <text id="text" opacity="1" x="0" y="150" fill="black">
+      This text should disappear
+    </text>
+    <rect id="rect" width="100" height="100" fill="green" x="0" y="0"/>
+  </svg>
+
+  <script>
+  function doTest() {
+    var elt = document.getElementById("text");
+    elt.setAttribute("opacity", 0);
+    document.documentElement.removeAttribute("class");
+  }
+
+  window.addEventListener("MozReftestInvalidate", doTest, false);
+  setTimeout(doTest, 5000);
+  </script>
+</html>
