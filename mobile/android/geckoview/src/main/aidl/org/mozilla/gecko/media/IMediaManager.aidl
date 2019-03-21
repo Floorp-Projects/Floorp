@@ -15,4 +15,7 @@ interface IMediaManager {
     /** Creates a remote IMediaDrmBridge object. */
     IMediaDrmBridge createRemoteMediaDrmBridge(in String keySystem,
                                                in String stubId);
+
+    /** Called by client to indicate it no longer needs a requested codec or DRM bridge. */
+    oneway void endRequest();
 }
