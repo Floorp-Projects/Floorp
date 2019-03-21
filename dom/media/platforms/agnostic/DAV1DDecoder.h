@@ -38,7 +38,7 @@ class DAV1DDecoder : public MediaDataDecoder,
   int GetPicture(DecodedData& aData, MediaResult& aResult);
   already_AddRefed<VideoData> ConstructImage(const Dav1dPicture& aPicture);
 
-  Dav1dContext* mContext;
+  Dav1dContext* mContext = nullptr;
 
   const VideoInfo& mInfo;
   const RefPtr<TaskQueue> mTaskQueue;
