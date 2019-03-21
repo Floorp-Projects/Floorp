@@ -290,6 +290,8 @@ var gSync = {
       document.documentElement.removeAttribute("fxa_avatar_badged");
     }
 
+    this.enableSendTabIfValidTab();
+
     const anchor = document.getElementById("fxa-toolbar-menu-button");
     if (anchor.getAttribute("open") == "true") {
       PanelUI.hide();
@@ -343,6 +345,18 @@ var gSync = {
       document.getElementById("PanelUI-fxa").setAttribute("title", state.displayName ? state.displayName : defaultPanelTitle);
     }
     mainWindowEl.setAttribute("fxastatus", stateValue);
+  },
+
+  enableSendTabIfValidTab() {
+    // All tabs selected must be sendable for the Send Tab button to be enabled
+    // on the FxA menu.
+    let canSendAllURIs = gBrowser.selectedTabs.every(t => this.isSendableURI(t.linkedBrowser.currentURI.spec));
+
+    if (canSendAllURIs) {
+      document.getElementById("PanelUI-fxa-menu-sendtab-button").removeAttribute("disabled");
+    } else {
+      document.getElementById("PanelUI-fxa-menu-sendtab-button").setAttribute("disabled", true);
+    }
   },
 
   updatePanelPopup(state) {
