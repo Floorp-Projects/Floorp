@@ -12,7 +12,6 @@
 #include "gfxUtils.h"
 #include "nsContainerFrame.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsContentUtils.h"
 #include "nsCSSRendering.h"
 #include "nsPresContext.h"
 #include "nsPopupSetFrame.h"
@@ -84,15 +83,13 @@ nsresult nsCanvasFrame::CreateAnonymousContent(
   RefPtr<AccessibleCaretEventHub> eventHub =
       PresShell()->GetAccessibleCaretEventHub();
 
-  // AccessibleCaret uses Document::InsertAnonymousContent() to insert caret
-  // element into mCustomContentContainer. To prevent it from doing so before
-  // the mCustomContentContainer becoming a native anonymous root, run it in a
-  // ScriptRunner.
+  // This will go through InsertAnonymousContent and such, and we don't really
+  // want it to end up inserting into our content container.
+  //
+  // FIXME(emilio): The fact that this enters into InsertAnonymousContent is a
+  // bit nasty, can we avoid it, maybe doing this off a scriptrunner?
   if (eventHub) {
-    nsContentUtils::AddScriptRunner(
-      NewRunnableMethod("AccessibleCaretEventHub::Init",
-                        eventHub,
-                        &AccessibleCaretEventHub::Init));
+    eventHub->Init();
   }
 
   // Create the custom content container.
