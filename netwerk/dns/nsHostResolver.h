@@ -204,8 +204,8 @@ class AddrHostRecord final : public nsHostRecord {
 
   void Cancel() override;
 
-  bool RemoveOrRefresh();  // Mark records currently being resolved as needed
-                           // to resolve again.
+  bool RemoveOrRefresh(bool aTrrToo);  // Mark records currently being resolved
+                                       // as needed to resolve again.
 
   void ResolveComplete();
 
@@ -475,7 +475,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   /**
    * Flush the DNS cache.
    */
-  void FlushCache();
+  void FlushCache(bool aTrrToo);
 
   LookupStatus CompleteLookup(nsHostRecord *, nsresult,
                               mozilla::net::AddrInfo *, bool pb,
