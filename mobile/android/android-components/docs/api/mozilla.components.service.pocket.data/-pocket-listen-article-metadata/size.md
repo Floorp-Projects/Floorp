@@ -2,7 +2,7 @@
 
 # size
 
-`val size: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/pocket/src/main/java/mozilla/components/service/pocket/data/PocketListenArticleMetadata.kt#L30)
+`val size: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/pocket/src/main/java/mozilla/components/service/pocket/data/PocketListenArticleMetadata.kt#L32)
 
 size of the audio file in bytes.
 

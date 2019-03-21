@@ -2,4 +2,4 @@
 
 # reader
 
-`abstract fun reader(): ReadablePlacesConnectionInterface` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/Connection.kt#L28)
+`abstract fun reader(): ReadableHistoryConnection` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/Connection.kt#L26)

@@ -2,4 +2,4 @@
 
 # MAX_READ_TIMEOUT_MINUTES
 
-`const val MAX_READ_TIMEOUT_MINUTES: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/fetch/GeckoViewFetchClient.kt#L75)
+`const val MAX_READ_TIMEOUT_MINUTES: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/fetch/GeckoViewFetchClient.kt#L75)

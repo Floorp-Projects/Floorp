@@ -2,7 +2,7 @@
 
 # FindInPageFeature
 
-`class FindInPageFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`BackHandler`](../../mozilla.components.support.base.feature/-back-handler/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/FindInPageFeature.kt#L19)
+`class FindInPageFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`BackHandler`](../../mozilla.components.support.base.feature/-back-handler/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/FindInPageFeature.kt#L20)
 
 Feature implementation that will keep a [FindInPageView](../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.md) in sync with a bound [Session](../../mozilla.components.browser.session/-session/index.md).
 
@@ -10,7 +10,7 @@ Feature implementation that will keep a [FindInPageView](../../mozilla.component
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `FindInPageFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, view: `[`FindInPageView`](../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.md)`, onClose: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null)`<br>Feature implementation that will keep a [FindInPageView](../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.md) in sync with a bound [Session](../../mozilla.components.browser.session/-session/index.md). |
+| [&lt;init&gt;](-init-.md) | `FindInPageFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, view: `[`FindInPageView`](../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.md)`, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, onClose: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null)`<br>Feature implementation that will keep a [FindInPageView](../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.md) in sync with a bound [Session](../../mozilla.components.browser.session/-session/index.md). |
 
 ### Functions
 

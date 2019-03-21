@@ -2,7 +2,7 @@
 
 # settings
 
-`val settings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngine.kt#L67)
+`val settings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngine.kt#L101)
 
 Overrides [Engine.settings](../../mozilla.components.concept.engine/-engine/settings.md)
 

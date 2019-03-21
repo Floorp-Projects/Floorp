@@ -2,7 +2,7 @@
 
 # fetch
 
-`fun fetch(request: `[`Request`](../../mozilla.components.concept.fetch/-request/index.md)`): `[`Response`](../../mozilla.components.concept.fetch/-response/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/fetch/GeckoViewFetchClient.kt#L42)
+`fun fetch(request: `[`Request`](../../mozilla.components.concept.fetch/-request/index.md)`): `[`Response`](../../mozilla.components.concept.fetch/-response/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/fetch/GeckoViewFetchClient.kt#L42)
 
 Overrides [Client.fetch](../../mozilla.components.concept.fetch/-client/fetch.md)
 

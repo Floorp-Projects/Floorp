@@ -2,7 +2,7 @@
 
 # GeckoViewFetchClient
 
-`class GeckoViewFetchClient : `[`Client`](../../mozilla.components.concept.fetch/-client/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/fetch/GeckoViewFetchClient.kt#L31)
+`class GeckoViewFetchClient : `[`Client`](../../mozilla.components.concept.fetch/-client/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/fetch/GeckoViewFetchClient.kt#L31)
 
 GeckoView ([GeckoWebExecutor](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoWebExecutor.html)) based implementation of [Client](../../mozilla.components.concept.fetch/-client/index.md).
 

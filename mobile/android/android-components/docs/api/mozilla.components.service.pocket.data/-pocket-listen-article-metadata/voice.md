@@ -2,7 +2,7 @@
 
 # voice
 
-`val voice: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/pocket/src/main/java/mozilla/components/service/pocket/data/PocketListenArticleMetadata.kt#L28)
+`val voice: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/pocket/src/main/java/mozilla/components/service/pocket/data/PocketListenArticleMetadata.kt#L30)
 
 the voice name used to speak the article content, e.g. "Salli".
 

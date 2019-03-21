@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`SitePermissionsFeature(anchorView: `[`View`](https://developer.android.com/reference/android/view/View.html)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, storage: `[`SitePermissionsStorage`](../-site-permissions-storage/index.md)` = SitePermissionsStorage(anchorView.context), onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../-on-need-to-request-permissions.md)`)`
+`SitePermissionsFeature(anchorView: `[`View`](https://developer.android.com/reference/android/view/View.html)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, storage: `[`SitePermissionsStorage`](../-site-permissions-storage/index.md)` = SitePermissionsStorage(anchorView.context), sitePermissionsRules: `[`SitePermissionsRules`](../-site-permissions-rules/index.md)`? = null, onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../-on-need-to-request-permissions.md)`)`
 
 This feature will subscribe to the currently selected [Session](../../mozilla.components.browser.session/-session/index.md) and display
 a suitable dialogs based on [Session.Observer.onAppPermissionRequested](../../mozilla.components.browser.session/-session/-observer/on-app-permission-requested.md) or

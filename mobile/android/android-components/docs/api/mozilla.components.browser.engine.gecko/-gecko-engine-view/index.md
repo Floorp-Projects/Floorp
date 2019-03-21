@@ -2,7 +2,7 @@
 
 # GeckoEngineView
 
-`class GeckoEngineView : `[`FrameLayout`](https://developer.android.com/reference/android/widget/FrameLayout.html)`, `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineView.kt#L18)
+`class GeckoEngineView : `[`FrameLayout`](https://developer.android.com/reference/android/widget/FrameLayout.html)`, `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineView.kt#L20)
 
 Gecko-based EngineView implementation.
 

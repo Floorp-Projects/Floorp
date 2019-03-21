@@ -2,7 +2,7 @@
 
 # Connection
 
-`interface Connection : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/Connection.kt#L27)
+`interface Connection : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/Connection.kt#L25)
 
 A slight abstraction over [PlacesApi](#).
 
@@ -16,6 +16,6 @@ Writer is always the same, as guaranteed by [PlacesApi](#).
 
 | Name | Summary |
 |---|---|
-| [reader](reader.md) | `abstract fun reader(): ReadablePlacesConnectionInterface` |
-| [sync](sync.md) | `abstract fun sync(syncInfo: SyncAuthInfo): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [writer](writer.md) | `abstract fun writer(): WritablePlacesConnectionInterface` |
+| [reader](reader.md) | `abstract fun reader(): ReadableHistoryConnection` |
+| [sync](sync.md) | `abstract fun sync(syncInfo: `[`SyncAuthInfo`](../-sync-auth-info.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [writer](writer.md) | `abstract fun writer(): WritableHistoryConnection` |
