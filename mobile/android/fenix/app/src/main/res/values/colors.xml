@@ -8,6 +8,7 @@
     <color name="color_accent">#D81B60</color>
 
     <color name="history_delete_button_background">#F2F2F5</color>
+    <color name="light_mode_text_color">#20123A</color>
 
     <color name="awesome_bar_title_color">#212121</color>
     <color name="awesome_bar_description_color">#6b6b6b</color>
@@ -22,9 +23,11 @@
     <color name="search_text">#0C0C0D</color>
     <color name="off_white">#f9f9fa</color>
     <color name="url_box_view">#E9E9ED</color>
-    <color name="session_border_color">@color/photonInk70</color>
+    <color name="session_border_color">#592ACB</color>
+    <color name="save_session_button_color">#352F65</color>
+    <color name="light_mode_bottom_sheet_text_color">#232749</color>
 
-    <color name="icons_light_mode">#20233E</color>
+    <color name="icons_light_mode">#20123A</color>
     <color name="disabled_icons_light_mode">#8020233E</color>
 
     <color name="icons_dark_mode">@color/off_white</color>
@@ -67,7 +70,7 @@
     <color name="library_key_icon">#C13905</color>
 
     <color name="history_header_light_theme">#696A6A</color>
-    <color name="history_title_light_theme">#000000</color>
+    <color name="history_title_light_theme">@color/light_mode_text_color</color>
     <color name="history_url_light_theme">#696A6A</color>
 
     <color name="history_header_private_theme">@color/photonGrey40</color>

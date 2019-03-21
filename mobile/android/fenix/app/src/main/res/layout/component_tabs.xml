@@ -2,15 +2,15 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<merge
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/tabs_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:visibility="gone">
 
@@ -19,8 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/tabs_header_title"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:textColor="?attr/toolbarTextColor"
+            android:textAppearance="@style/headerText"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -30,9 +29,9 @@
             android:layout_width="@dimen/glyph_button_width"
             android:layout_height="@dimen/glyph_button_height"
             android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/add_tab"
             android:src="@drawable/ic_new"
             android:tint="?attr/toolbarTextColor"
-            android:contentDescription="@string/add_tab"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/tabs_overflow_button"
             app:layout_constraintTop_toTopOf="parent" />
@@ -42,72 +41,75 @@
             android:layout_width="@dimen/glyph_button_width"
             android:layout_height="@dimen/glyph_button_height"
             android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/tab_menu"
             android:src="@drawable/ic_menu"
             android:tint="?attr/toolbarTextColor"
-            android:contentDescription="@string/tab_menu"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-    <androidx.recyclerview.widget.RecyclerView
-        xmlns:android="http://schemas.android.com/apk/res/android"
+
+    <androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/tabs_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:clipToPadding="false"/>
+        android:clipToPadding="false"
+        android:padding="12dp"/>
 
     <FrameLayout
         android:id="@+id/save_session_button"
-        android:foreground="?android:attr/selectableItemBackground"
-        android:background="@drawable/button_background"
-        android:backgroundTint="@color/photonInk70"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
         android:layout_margin="16dp"
-        android:padding="6dp"
+        android:background="@drawable/button_background"
+        android:backgroundTint="@color/save_session_button_color"
         android:clickable="true"
         android:focusable="true"
-        android:visibility="gone"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:foreground="?android:attr/selectableItemBackground"
+        android:padding="6dp"
+        android:visibility="gone">
+
         <TextView
             android:id="@+id/save_session_button_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/session_save"
-            android:textColor="@color/photonWhite"
+            android:layout_gravity="center"
+            android:clickable="false"
             android:drawableStart="@drawable/ic_archive"
             android:drawablePadding="8dp"
-            android:textSize="16sp"
-            android:gravity="center"
-            android:clickable="false"
             android:focusable="false"
-            android:layout_gravity="center" />
+            android:gravity="center"
+            android:textStyle="bold"
+            android:text="@string/session_save"
+            android:textColor="@color/photonWhite" />
     </FrameLayout>
 
     <FrameLayout
         android:id="@+id/delete_session_button"
-        android:foreground="?android:attr/selectableItemBackground"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
         android:background="@drawable/button_background"
         android:backgroundTint="@color/delete_session_button_background"
-        android:layout_margin="16dp"
-        android:padding="6dp"
         android:clickable="true"
         android:focusable="true"
-        android:visibility="gone"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:foreground="?android:attr/selectableItemBackground"
+        android:padding="6dp"
+        android:visibility="gone">
+
         <TextView
             android:id="@+id/delete_session_button_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/session_delete"
-            android:textColor="@color/color_primary_dark"
+            android:layout_gravity="center"
+            android:clickable="false"
             android:drawableStart="@drawable/ic_delete"
             android:drawablePadding="8dp"
-            android:textSize="16sp"
-            android:gravity="center"
-            android:clickable="false"
             android:focusable="false"
-            android:layout_gravity="center" />
+            android:textStyle="bold"
+            android:gravity="center"
+            android:text="@string/session_delete"
+            android:textColor="@color/color_primary_dark"
+            android:textSize="16sp" />
     </FrameLayout>
 </merge>

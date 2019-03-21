@@ -52,7 +52,7 @@ import org.mozilla.fenix.settings.SupportUtils
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 
-@SuppressWarnings("TooManyFunctions")
+@SuppressWarnings("TooManyFunctions", "LargeClass")
 class HomeFragment : Fragment(), CoroutineScope {
     private val bus = ActionBusFactory.get(this)
     private var sessionObserver: SessionManager.Observer? = null
@@ -125,7 +125,9 @@ class HomeFragment : Fragment(), CoroutineScope {
                 orientation = BrowserMenu.Orientation.DOWN)
         }
 
-        view.toolbar.setCompoundDrawablesWithIntrinsicBounds(searchIcon, null, null, null)
+        val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
+        searchIcon.setBounds(0, 0, iconSize, iconSize)
+        view.toolbar.setCompoundDrawables(searchIcon, null, null, null)
         val roundToInt = (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
         view.toolbar.compoundDrawablePadding = roundToInt
         view.toolbar.setOnClickListener {

@@ -5,7 +5,7 @@
 <resources>
 
     <style name="LightThemeBase" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:statusBarColor">@color/off_white</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="android:colorPrimary">@color/off_white</item>
         <item name="android:windowBackground">@color/off_white</item>
@@ -33,9 +33,9 @@
         <item name="privateBrowsingButtonBackground">?android:attr/selectableItemBackgroundBorderless</item>
         <item name="privateBrowsingButtonTint">@color/off_white</item>
         <item name="fenixLogo">@drawable/ic_logo_wordmark</item>
-        <item name="menuButtonTint">@android:color/black</item>
+        <item name="menuButtonTint">@color/light_mode_text_color</item>
         <item name="toolbarWrapperBackground">@drawable/home_search_background_light</item>
-        <item name="toolbarTextColor">@color/search_text</item>
+        <item name="toolbarTextColor">@color/light_mode_text_color</item>
         <item name="homeDividerColor">@color/photonGrey30</item>
         <item name="sessionBackgroundColor">@color/photonWhite</item>
         <item name="sessionBorderColor">@color/session_border_color</item>
@@ -141,12 +141,26 @@
         <item name="android:background">@drawable/search_pill_background</item>
     </style>
 
-    <style name="CurrentSessionBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+    <style name="CurrentSessionBottomSheetDialogTheme" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
         <item name="bottomSheetStyle">@style/CurrentSessionBottomSheetStyle</item>
+        <item name="android:textColor">@color/light_mode_text_color</item>
+
+        <!-- This doesn't seem to work see https://issuetracker.google.com/issues/120426520 -->
+        <item name="scrimBackground">@drawable/session_sheet_background</item>
     </style>
 
-    <style name="CurrentSessionBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+    <style name="CurrentSessionBottomSheetStyle" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
         <item name="android:background">@android:color/transparent</item>
-        <item name="android:textColor">@android:color/black</item>
+        <item name="android:textColor">@color/light_mode_text_color</item>
+
+        <!-- This doesn't seem to work see https://issuetracker.google.com/issues/120426520 -->
+        <item name="scrimBackground">@drawable/session_sheet_background</item>
+    </style>
+
+    <style name="headerText" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">?attr/toolbarTextColor</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.03</item>
     </style>
 </resources>

@@ -21,8 +21,8 @@
             android:id="@+id/favicon_image"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/favicon_content_description"
             android:layout_margin="10dp"
+            android:contentDescription="@string/favicon_content_description"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -30,12 +30,13 @@
             android:id="@+id/text_url"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="?attr/toolbarTextColor"
-            android:textSize="18sp"
+            android:layout_marginStart="12dp"
             android:layout_marginTop="4dp"
-            android:layout_marginStart="10dp"
+            android:ellipsize="none"
+            android:requiresFadingEdge="horizontal"
+            android:singleLine="true"
+            android:textColor="?attr/toolbarTextColor"
+            android:textSize="16sp"
             app:layout_constraintEnd_toStartOf="@id/close_tab_button"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toEndOf="@id/favicon_image"
@@ -45,21 +46,22 @@
             android:id="@+id/close_tab_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
             android:contentDescription="@string/close_tab"
+            android:paddingStart="12dp"
             android:paddingEnd="10dp"
             android:src="@drawable/ic_close"
-            android:layout_marginTop="1dp"
-            app:layout_constraintTop_toTopOf="@id/text_url"
             app:layout_constraintBottom_toBottomOf="@id/text_url"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/text_url" />
 
         <ImageView
             android:id="@+id/tab_background"
             android:layout_width="0dp"
             android:layout_height="100dp"
             android:layout_marginTop="10dp"
-            android:focusable="false"
             android:adjustViewBounds="false"
+            android:focusable="false"
             android:scaleType="centerCrop"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -71,9 +73,9 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:background="@drawable/session_border"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>
