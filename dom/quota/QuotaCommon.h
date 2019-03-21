@@ -72,7 +72,12 @@
 
 class nsIEventTarget;
 
-BEGIN_QUOTA_NAMESPACE
+namespace mozilla {
+
+class LogModule;
+
+namespace dom {
+namespace quota {
 
 // Telemetry keys to indicate types of errors.
 #ifdef NIGHTLY_BUILD
@@ -113,6 +118,10 @@ bool IsOnIOThread();
 
 void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr);
 
-END_QUOTA_NAMESPACE
+LogModule* GetQuotaManagerLogger();
+
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // mozilla_dom_quota_quotacommon_h__
