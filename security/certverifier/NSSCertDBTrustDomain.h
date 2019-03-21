@@ -202,6 +202,15 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
       EncodedResponseSource responseSource, /*out*/ bool& expired);
   TimeDuration GetOCSPTimeout() const;
 
+  Result SynchronousCheckRevocationWithServer(
+      const mozilla::pkix::CertID& certID, const nsCString& aiaLocation,
+      mozilla::pkix::Time time, uint16_t maxOCSPLifetimeInDays,
+      const Result cachedResponseResult,
+      const Result stapledOCSPResponseResult);
+  Result HandleOCSPFailure(const Result cachedResponseResult,
+                           const Result stapledOCSPResponseResult,
+                           const Result error);
+
   const SECTrustType mCertDBTrustType;
   const OCSPFetching mOCSPFetching;
   OCSPCache& mOCSPCache;  // non-owning!
