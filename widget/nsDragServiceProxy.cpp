@@ -16,7 +16,6 @@
 using mozilla::CSSIntRegion;
 using mozilla::LayoutDeviceIntRect;
 using mozilla::Maybe;
-using mozilla::dom::OptionalShmem;
 using mozilla::dom::TabChild;
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SourceSurface;
@@ -68,7 +67,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
         }
 
         mozilla::Unused << child->SendInvokeDragSession(
-            dataTransfers, aActionType, std::move(surfaceData), stride,
+            dataTransfers, aActionType, Some(std::move(surfaceData)), stride,
             dataSurface->GetFormat(), dragRect, IPC::Principal(principal));
         StartDragSession();
         return NS_OK;
@@ -77,8 +76,8 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
   }
 
   mozilla::Unused << child->SendInvokeDragSession(
-      dataTransfers, aActionType, mozilla::void_t(), 0,
-      static_cast<SurfaceFormat>(0), dragRect, IPC::Principal(principal));
+      dataTransfers, aActionType, Nothing(), 0, static_cast<SurfaceFormat>(0),
+      dragRect, IPC::Principal(principal));
   StartDragSession();
   return NS_OK;
 }

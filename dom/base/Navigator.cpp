@@ -1240,8 +1240,8 @@ void Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
     return;
   }
 
-  MediaManager::GetUserMediaSuccessCallback onsuccess(&aOnSuccess);
-  MediaManager::GetUserMediaErrorCallback onerror(&aOnError);
+  RefPtr<NavigatorUserMediaSuccessCallback> onsuccess(&aOnSuccess);
+  RefPtr<NavigatorUserMediaErrorCallback> onerror(&aOnError);
 
   nsWeakPtr weakWindow = nsWeakPtr(do_GetWeakReference(mWindow));
 
@@ -1250,23 +1250,23 @@ void Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [weakWindow, onsuccess = std::move(onsuccess)](
-              const RefPtr<DOMMediaStream>& aStream) {
+              const RefPtr<DOMMediaStream>& aStream) MOZ_CAN_RUN_SCRIPT {
             nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(weakWindow);
             if (!window || !window->GetOuterWindow() ||
                 window->GetOuterWindow()->GetCurrentInnerWindow() != window) {
               return;  // Leave Promise pending after navigation by design.
             }
-            MediaManager::CallOnSuccess(&onsuccess, *aStream);
+            MediaManager::CallOnSuccess(*onsuccess, *aStream);
           },
-          [weakWindow,
-           onerror = std::move(onerror)](const RefPtr<MediaMgrError>& aError) {
+          [weakWindow, onerror = std::move(onerror)](
+              const RefPtr<MediaMgrError>& aError) MOZ_CAN_RUN_SCRIPT {
             nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(weakWindow);
             if (!window || !window->GetOuterWindow() ||
                 window->GetOuterWindow()->GetCurrentInnerWindow() != window) {
               return;  // Leave Promise pending after navigation by design.
             }
             auto error = MakeRefPtr<MediaStreamError>(window, *aError);
-            MediaManager::CallOnError(&onerror, *error);
+            MediaManager::CallOnError(*onerror, *error);
           });
 }
 
@@ -1281,9 +1281,10 @@ void Navigator::MozGetUserMediaDevices(
     return;
   }
 
-  MediaManager* manager = MediaManager::Get();
+  RefPtr<MediaManager> manager = MediaManager::Get();
   // XXXbz aOnError seems to be unused?
-  aRv = manager->GetUserMediaDevices(mWindow, aConstraints, aOnSuccess,
+  nsCOMPtr<nsPIDOMWindowInner> window(mWindow);
+  aRv = manager->GetUserMediaDevices(window, aConstraints, aOnSuccess,
                                      aInnerWindowID, aCallID);
 }
 

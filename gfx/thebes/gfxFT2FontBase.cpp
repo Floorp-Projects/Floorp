@@ -199,7 +199,7 @@ void gfxFT2FontBase::InitMetrics() {
     mMetrics.spaceWidth = spaceWidth;
     mMetrics.maxAdvance = spaceWidth;
     mMetrics.aveCharWidth = spaceWidth;
-    mMetrics.zeroOrAveCharWidth = spaceWidth;
+    mMetrics.zeroWidth = spaceWidth;
     const gfxFloat xHeight = 0.5 * emHeight;
     mMetrics.xHeight = xHeight;
     mMetrics.capHeight = mMetrics.maxAscent;
@@ -393,9 +393,9 @@ void gfxFT2FontBase::InitMetrics() {
   }
 
   if (GetCharWidth('0', &width)) {
-    mMetrics.zeroOrAveCharWidth = width;
+    mMetrics.zeroWidth = width;
   } else {
-    mMetrics.zeroOrAveCharWidth = 0.0;
+    mMetrics.zeroWidth = -1.0;  // indicates not found
   }
 
   // Prefering a measured x over sxHeight because sxHeight doesn't consider
@@ -412,13 +412,9 @@ void gfxFT2FontBase::InitMetrics() {
     mMetrics.capHeight = -extents.y_bearing;
   }
 
-  mMetrics.aveCharWidth =
-      std::max(mMetrics.aveCharWidth, mMetrics.zeroOrAveCharWidth);
+  mMetrics.aveCharWidth = std::max(mMetrics.aveCharWidth, mMetrics.zeroWidth);
   if (mMetrics.aveCharWidth == 0.0) {
     mMetrics.aveCharWidth = mMetrics.spaceWidth;
-  }
-  if (mMetrics.zeroOrAveCharWidth == 0.0) {
-    mMetrics.zeroOrAveCharWidth = mMetrics.aveCharWidth;
   }
   // Apparently hinting can mean that max_advance is not always accurate.
   mMetrics.maxAdvance = std::max(mMetrics.maxAdvance, mMetrics.aveCharWidth);

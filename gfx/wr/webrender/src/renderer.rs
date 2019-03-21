@@ -64,7 +64,7 @@ use gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 #[cfg(feature = "pathfinder")]
 use gpu_glyph_renderer::GpuGlyphRenderer;
-use gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, ScalingInstance, TransformData};
+use gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, ScalingInstance, TransformData, ResolveInstanceData};
 use internal_types::{TextureSource, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
 use internal_types::{CacheTextureId, DebugOutput, FastHashMap, LayerIndex, RenderedDocument, ResultMsg};
 use internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
@@ -647,6 +647,23 @@ pub(crate) mod desc {
         instance_attributes: &[],
     };
 
+    pub const RESOLVE: VertexDescriptor = VertexDescriptor {
+        vertex_attributes: &[
+            VertexAttribute {
+                name: "aPosition",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+        instance_attributes: &[
+            VertexAttribute {
+                name: "aRect",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+    };
+
     pub const VECTOR_STENCIL: VertexDescriptor = VertexDescriptor {
         vertex_attributes: &[
             VertexAttribute {
@@ -743,6 +760,7 @@ pub(crate) enum VertexArrayKind {
     Scale,
     LineDecoration,
     Gradient,
+    Resolve,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -1574,6 +1592,7 @@ pub struct RendererVAOs {
     line_vao: VAO,
     scale_vao: VAO,
     gradient_vao: VAO,
+    resolve_vao: VAO,
 }
 
 /// The renderer is responsible for submitting to the GPU the work prepared by the
@@ -1744,9 +1763,14 @@ impl Renderer {
             options.resource_override_path.clone(),
             options.upload_method.clone(),
             options.cached_programs.take(),
+            options.allow_pixel_local_storage_support,
         );
 
-        let ext_dual_source_blending = !options.disable_dual_source_blending &&
+        let ext_dual_source_blending =
+            !options.disable_dual_source_blending &&
+            // If using pixel local storage, subpixel AA isn't supported (we disable it on all
+            // mobile devices explicitly anyway).
+            !device.get_capabilities().supports_pixel_local_storage &&
             device.supports_extension("GL_ARB_blend_func_extended") &&
             device.supports_extension("GL_ARB_explicit_attrib_location");
 
@@ -1891,6 +1915,7 @@ impl Renderer {
         let scale_vao = device.create_vao_with_new_instances(&desc::SCALE, &prim_vao);
         let line_vao = device.create_vao_with_new_instances(&desc::LINE, &prim_vao);
         let gradient_vao = device.create_vao_with_new_instances(&desc::GRADIENT, &prim_vao);
+        let resolve_vao = device.create_vao_with_new_instances(&desc::RESOLVE, &prim_vao);
         let texture_cache_upload_pbo = device.create_pbo();
 
         let texture_resolver = TextureResolver::new(&mut device);
@@ -2095,6 +2120,7 @@ impl Renderer {
                 border_vao,
                 scale_vao,
                 gradient_vao,
+                resolve_vao,
                 line_vao,
             },
             transforms_texture,
@@ -2879,6 +2905,7 @@ impl Renderer {
             self.texture_resolver.end_frame(&mut self.device, cpu_frame_id);
             self.device.end_frame();
         });
+
         if framebuffer_size.is_some() {
             self.last_time = current_time;
         }
@@ -3527,6 +3554,23 @@ impl Renderer {
                 self.set_blend(true, framebuffer_kind);
                 let mut prev_blend_mode = BlendMode::None;
 
+                // If the device supports pixel local storage, initialize the PLS buffer for
+                // the transparent pass. This involves reading the current framebuffer value
+                // and storing that in PLS.
+                // TODO(gw): This is quite expensive and relies on framebuffer fetch being
+                //           available. We can probably switch the opaque pass over to use
+                //           PLS too, and remove this pass completely.
+                if self.device.get_capabilities().supports_pixel_local_storage {
+                    // TODO(gw): If using PLS, the fixed function blender is disabled. It's possible
+                    //           we could take advantage of this by skipping batching on the blend
+                    //           mode in these cases.
+                    self.init_pixel_local_storage(
+                        alpha_batch_container.task_rect,
+                        projection,
+                        stats,
+                    );
+                }
+
                 for batch in &alpha_batch_container.alpha_batches {
                     self.shaders.borrow_mut()
                         .get(&batch.key, self.debug_flags)
@@ -3629,6 +3673,17 @@ impl Renderer {
                     if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
                         prev_blend_mode = BlendMode::None;
                     }
+                }
+
+                // If the device supports pixel local storage, resolve the PLS values.
+                // This pass reads the final PLS color value, and writes it to a normal
+                // fragment output.
+                if self.device.get_capabilities().supports_pixel_local_storage {
+                    self.resolve_pixel_local_storage(
+                        alpha_batch_container.task_rect,
+                        projection,
+                        stats,
+                    );
                 }
 
                 self.device.disable_depth();
@@ -4490,6 +4545,66 @@ impl Renderer {
         frame.has_been_rendered = true;
     }
 
+    /// Initialize the PLS block, by reading the current framebuffer color.
+    pub fn init_pixel_local_storage(
+        &mut self,
+        task_rect: DeviceIntRect,
+        projection: &Transform3D<f32>,
+        stats: &mut RendererStats,
+    ) {
+        self.device.enable_pixel_local_storage(true);
+
+        self.shaders
+            .borrow_mut()
+            .pls_init
+            .bind(
+                &mut self.device,
+                projection,
+                &mut self.renderer_errors,
+            );
+
+        let instances = [
+            ResolveInstanceData::new(task_rect),
+        ];
+
+        self.draw_instanced_batch(
+            &instances,
+            VertexArrayKind::Resolve,
+            &BatchTextures::no_texture(),
+            stats,
+        );
+    }
+
+    /// Resolve the current PLS structure, writing it to a fragment color output.
+    pub fn resolve_pixel_local_storage(
+        &mut self,
+        task_rect: DeviceIntRect,
+        projection: &Transform3D<f32>,
+        stats: &mut RendererStats,
+    ) {
+        self.shaders
+            .borrow_mut()
+            .pls_resolve
+            .bind(
+                &mut self.device,
+                projection,
+                &mut self.renderer_errors,
+            );
+
+        let instances = [
+            ResolveInstanceData::new(task_rect),
+        ];
+
+        self.draw_instanced_batch(
+            &instances,
+            VertexArrayKind::Resolve,
+            &BatchTextures::no_texture(),
+            stats,
+        );
+
+        self.device.enable_pixel_local_storage(false);
+    }
+
     pub fn debug_renderer<'b>(&'b mut self) -> Option<&'b mut DebugRenderer> {
         self.debug.get_mut(&mut self.device)
     }
@@ -4916,6 +5031,7 @@ impl Renderer {
         self.device.delete_pbo(self.texture_cache_upload_pbo);
         self.texture_resolver.deinit(&mut self.device);
         self.device.delete_vao(self.vaos.prim_vao);
+        self.device.delete_vao(self.vaos.resolve_vao);
         self.device.delete_vao(self.vaos.clip_vao);
         self.device.delete_vao(self.vaos.gradient_vao);
         self.device.delete_vao(self.vaos.blur_vao);
@@ -5191,6 +5307,11 @@ pub struct RendererOptions {
     /// it is a performance win. The default is false, which tends to be best
     /// performance on lower end / integrated GPUs.
     pub gpu_supports_fast_clears: bool,
+    /// If true, allow WR to use pixel local storage if the device supports it.
+    /// For now, this defaults to false since the code is still experimental
+    /// and not complete. This option will probably be removed once support is
+    /// complete, and WR can implicitly choose whether to make use of PLS.
+    pub allow_pixel_local_storage_support: bool,
 }
 
 impl Default for RendererOptions {
@@ -5230,6 +5351,7 @@ impl Default for RendererOptions {
             enable_picture_caching: false,
             testing: false,
             gpu_supports_fast_clears: false,
+            allow_pixel_local_storage_support: false,
         }
     }
 }
@@ -5696,6 +5818,7 @@ fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
         VertexArrayKind::Scale => &vaos.scale_vao,
         VertexArrayKind::LineDecoration => &vaos.line_vao,
         VertexArrayKind::Gradient => &vaos.gradient_vao,
+        VertexArrayKind::Resolve => &vaos.resolve_vao,
     }
 }
 
@@ -5713,6 +5836,7 @@ fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
         VertexArrayKind::Scale => &vaos.scale_vao,
         VertexArrayKind::LineDecoration => &vaos.line_vao,
         VertexArrayKind::Gradient => &vaos.gradient_vao,
+        VertexArrayKind::Resolve => &vaos.resolve_vao,
     }
 }
 

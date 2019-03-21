@@ -696,7 +696,7 @@ RawServoAuthorStylesBorrowedOrNull Gecko_XBLBinding_GetRawServoStyles(
 bool Gecko_XBLBinding_InheritsStyle(RawGeckoXBLBindingBorrowed aXBLBinding);
 
 struct GeckoFontMetrics {
-  nscoord mChSize;
+  nscoord mChSize;  // -1.0 indicates not found
   nscoord mXSize;
 };
 

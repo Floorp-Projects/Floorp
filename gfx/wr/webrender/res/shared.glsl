@@ -2,6 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef WR_FEATURE_PIXEL_LOCAL_STORAGE
+// For now, we need both extensions here, in order to initialize
+// the PLS to the current framebuffer color. In future, we can
+// possibly remove that requirement, or at least support the
+// other framebuffer fetch extensions that provide the same
+// functionality.
+#extension GL_EXT_shader_pixel_local_storage : require
+#extension GL_ARM_shader_framebuffer_fetch : require
+#endif
+
 #ifdef WR_FEATURE_TEXTURE_EXTERNAL
 // Please check https://www.khronos.org/registry/OpenGL/extensions/OES/OES_EGL_image_external_essl3.txt
 // for this extension.
@@ -48,12 +58,62 @@
 #ifdef WR_FRAGMENT_SHADER
     // Uniform inputs
 
-    // Fragment shader outputs
-    #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
-        layout(location = 0, index = 0) out vec4 oFragColor;
-        layout(location = 0, index = 1) out vec4 oFragBlend;
+    #ifdef WR_FEATURE_PIXEL_LOCAL_STORAGE
+        // Define the storage class of the pixel local storage.
+        // If defined as writable, it's a compile time error to
+        // have a normal fragment output variable declared.
+        #if defined(PLS_READONLY)
+            #define PLS_BLOCK __pixel_local_inEXT
+        #elif defined(PLS_WRITEONLY)
+            #define PLS_BLOCK __pixel_local_outEXT
+        #else
+            #define PLS_BLOCK __pixel_localEXT
+        #endif
+
+        // The structure of pixel local storage. Right now, it's
+        // just the current framebuffer color. In future, we have
+        // (at least) 12 bytes of space we can store extra info
+        // here (such as clip mask values).
+        PLS_BLOCK FrameBuffer {
+            layout(rgba8) highp vec4 color;
+        } PLS;
+
+        #ifndef PLS_READONLY
+        // Write the output of a fragment shader to PLS. Applies
+        // premultipled alpha blending by default, since the blender
+        // is disabled when PLS is active.
+        // TODO(gw): Properly support alpha blend mode for webgl / canvas.
+        void write_output(vec4 color) {
+            PLS.color = color + PLS.color * (1.0 - color.a);
+        }
+
+        // Write a raw value straight to PLS, if the fragment shader has
+        // already applied blending.
+        void write_output_raw(vec4 color) {
+            PLS.color = color;
+        }
+        #endif
+
+        #ifndef PLS_WRITEONLY
+        // Retrieve the current framebuffer color. Useful in conjunction with
+        // the write_output_raw function.
+        vec4 get_current_framebuffer_color() {
+            return PLS.color;
+        }
+        #endif
     #else
-        out vec4 oFragColor;
+        // Fragment shader outputs
+        #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
+            layout(location = 0, index = 0) out vec4 oFragColor;
+            layout(location = 0, index = 1) out vec4 oFragBlend;
+        #else
+            out vec4 oFragColor;
+        #endif
+
+        // Write an output color in normal (non-PLS) shaders.
+        void write_output(vec4 color) {
+            oFragColor = color;
+        }
     #endif
 
     #define EPSILON                     0.0001

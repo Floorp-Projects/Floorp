@@ -241,12 +241,11 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
 
   UINT32 ucs = L' ';
   UINT16 glyph;
-  HRESULT hr = mFontFace->GetGlyphIndices(&ucs, 1, &glyph);
-  if (FAILED(hr)) {
-    mMetrics->spaceWidth = 0;
-  } else {
+  if (SUCCEEDED(mFontFace->GetGlyphIndices(&ucs, 1, &glyph)) && glyph != 0) {
     mSpaceGlyph = glyph;
     mMetrics->spaceWidth = MeasureGlyphWidth(glyph);
+  } else {
+    mMetrics->spaceWidth = 0;
   }
 
   // try to get aveCharWidth from the OS/2 table, fall back to measuring 'x'
@@ -271,7 +270,7 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
 
   if (mMetrics->aveCharWidth < 1) {
     ucs = L'x';
-    if (SUCCEEDED(mFontFace->GetGlyphIndices(&ucs, 1, &glyph))) {
+    if (SUCCEEDED(mFontFace->GetGlyphIndices(&ucs, 1, &glyph)) && glyph != 0) {
       mMetrics->aveCharWidth = MeasureGlyphWidth(glyph);
     }
     if (mMetrics->aveCharWidth < 1) {
@@ -281,11 +280,10 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
   }
 
   ucs = L'0';
-  if (SUCCEEDED(mFontFace->GetGlyphIndices(&ucs, 1, &glyph))) {
-    mMetrics->zeroOrAveCharWidth = MeasureGlyphWidth(glyph);
-  }
-  if (mMetrics->zeroOrAveCharWidth < 1) {
-    mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
+  if (SUCCEEDED(mFontFace->GetGlyphIndices(&ucs, 1, &glyph)) && glyph != 0) {
+    mMetrics->zeroWidth = MeasureGlyphWidth(glyph);
+  } else {
+    mMetrics->zeroWidth = -1.0;  // indicates not found
   }
 
   mMetrics->underlineOffset = fontMetrics.underlinePosition * mFUnitsConvFactor;
@@ -303,8 +301,8 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
     printf("    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics->emHeight, mMetrics->emAscent, mMetrics->emDescent);
     printf("    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics->maxAscent, mMetrics->maxDescent, mMetrics->maxAdvance);
     printf("    internalLeading: %f externalLeading: %f\n", mMetrics->internalLeading, mMetrics->externalLeading);
-    printf("    spaceWidth: %f aveCharWidth: %f zeroOrAve: %f\n",
-           mMetrics->spaceWidth, mMetrics->aveCharWidth, mMetrics->zeroOrAveCharWidth);
+    printf("    spaceWidth: %f aveCharWidth: %f zeroWidth: %f\n",
+           mMetrics->spaceWidth, mMetrics->aveCharWidth, mMetrics->zeroWidth);
     printf("    xHeight: %f capHeight: %f\n", mMetrics->xHeight, mMetrics->capHeight);
     printf("    uOff: %f uSize: %f stOff: %f stSize: %f\n",
            mMetrics->underlineOffset, mMetrics->underlineSize, mMetrics->strikeoutOffset, mMetrics->strikeoutSize);
@@ -611,7 +609,7 @@ gfxFloat gfxDWriteFont::MeasureGlyphWidth(uint16_t aGlyph) {
       }
     }
   }
-  return 0;
+  return 0.0;
 }
 
 void gfxDWriteFont::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,

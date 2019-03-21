@@ -1570,9 +1570,11 @@ class gfxFont {
 
     gfxFloat aveCharWidth;
     gfxFloat spaceWidth;
-    gfxFloat zeroOrAveCharWidth;  // width of '0', or if there is
-                                  // no '0' glyph in this font,
-                                  // equal to .aveCharWidth
+    gfxFloat zeroWidth;  // -1 if there was no zero glyph
+
+    gfxFloat ZeroOrAveCharWidth() const {
+      return zeroWidth >= 0 ? zeroWidth : aveCharWidth;
+    }
   };
 
   enum Orientation { eHorizontal, eVertical };

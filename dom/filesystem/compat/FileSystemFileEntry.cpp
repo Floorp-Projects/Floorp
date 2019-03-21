@@ -24,19 +24,21 @@ class FileCallbackRunnable final : public Runnable {
     MOZ_ASSERT(aFile);
   }
 
-  NS_IMETHOD
-  Run() override {
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.  See
+  // bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
     // Here we clone the File object.
 
     RefPtr<File> file = File::Create(mFile->GetParentObject(), mFile->Impl());
     MOZ_ASSERT(file);
 
-    mCallback->Call(*file);
+    // mCallback never changes (it's const) so MOZ_KnownLive is ok.
+    MOZ_KnownLive(mCallback)->Call(*file);
     return NS_OK;
   }
 
  private:
-  RefPtr<FileCallback> mCallback;
+  const RefPtr<FileCallback> mCallback;
   RefPtr<File> mFile;
 };
 

@@ -389,9 +389,9 @@ void gfxMacFont::InitMetrics() {
   }
   mSpaceGlyph = glyphID;
 
-  mMetrics.zeroOrAveCharWidth = GetCharWidth(cmap, '0', &glyphID, cgConvFactor);
+  mMetrics.zeroWidth = GetCharWidth(cmap, '0', &glyphID, cgConvFactor);
   if (glyphID == 0) {
-    mMetrics.zeroOrAveCharWidth = mMetrics.aveCharWidth;
+    mMetrics.zeroWidth = -1.0;  // indicates not found
   }
 
   if (cmap) {
