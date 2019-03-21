@@ -5,7 +5,7 @@
 
 extern crate mio_named_pipes;
 use std::os::windows::io::{IntoRawHandle, FromRawHandle, AsRawHandle, RawHandle};
-use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio_io::{AsyncRead, AsyncWrite};
 use tokio_named_pipes;
 
@@ -100,7 +100,7 @@ impl IntoRawHandle for MessageStream {
     }
 }
 
-static PIPE_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+static PIPE_ID: AtomicUsize = AtomicUsize::new(0);
 
 fn get_pipe_name() -> String {
     let pid = std::process::id();
