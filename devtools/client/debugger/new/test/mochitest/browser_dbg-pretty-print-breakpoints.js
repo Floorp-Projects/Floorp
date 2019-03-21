@@ -7,7 +7,7 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-pretty.html", "pretty.js");
 
-  await selectSource(dbg, "pretty.js")
+  await selectSource(dbg, "pretty.js");
   await prettyPrint(dbg);
 
   await addBreakpoint(dbg, "pretty.js:formatted", 5);

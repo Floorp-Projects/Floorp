@@ -6,7 +6,6 @@
  * https://wicg.github.io/entries-api/#idl-index
  */
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback FileCallback = void (File file);
 
 interface FileSystemFileEntry : FileSystemEntry {

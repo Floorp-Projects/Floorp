@@ -52,7 +52,6 @@ interface MutationObserver {
   attribute boolean mergeAttributeRecords;
 };
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback MutationCallback = void (sequence<MutationRecord> mutations, MutationObserver observer);
 
 dictionary MutationObserverInit {

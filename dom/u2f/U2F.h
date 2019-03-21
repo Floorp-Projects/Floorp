@@ -91,6 +91,7 @@ class U2F final : public WebAuthnManagerBase, public nsWrapperCache {
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
+  MOZ_CAN_RUN_SCRIPT
   void Register(const nsAString& aAppId,
                 const Sequence<RegisterRequest>& aRegisterRequests,
                 const Sequence<RegisteredKey>& aRegisteredKeys,
@@ -98,6 +99,7 @@ class U2F final : public WebAuthnManagerBase, public nsWrapperCache {
                 const Optional<Nullable<int32_t>>& opt_aTimeoutSeconds,
                 ErrorResult& aRv);
 
+  MOZ_CAN_RUN_SCRIPT
   void Sign(const nsAString& aAppId, const nsAString& aChallenge,
             const Sequence<RegisteredKey>& aRegisteredKeys,
             U2FSignCallback& aCallback,
@@ -106,31 +108,35 @@ class U2F final : public WebAuthnManagerBase, public nsWrapperCache {
 
   // WebAuthnManagerBase
 
+  MOZ_CAN_RUN_SCRIPT
   void FinishMakeCredential(
       const uint64_t& aTransactionId,
       const WebAuthnMakeCredentialResult& aResult) override;
 
+  MOZ_CAN_RUN_SCRIPT
   void FinishGetAssertion(const uint64_t& aTransactionId,
                           const WebAuthnGetAssertionResult& aResult) override;
 
+  MOZ_CAN_RUN_SCRIPT
   void RequestAborted(const uint64_t& aTransactionId,
                       const nsresult& aError) override;
 
  protected:
   // Cancels the current transaction (by sending a Cancel message to the
   // parent) and rejects it by calling RejectTransaction().
-  void CancelTransaction(const nsresult& aError) override;
+  MOZ_CAN_RUN_SCRIPT void CancelTransaction(const nsresult& aError) override;
 
  private:
-  ~U2F();
+  MOZ_CAN_RUN_SCRIPT ~U2F();
 
   template <typename T, typename C>
-  void ExecuteCallback(T& aResp, nsMainThreadPtrHandle<C>& aCb);
+  MOZ_CAN_RUN_SCRIPT void ExecuteCallback(T& aResp,
+                                          nsMainThreadPtrHandle<C>& aCb);
 
   // Clears all information we have about the current transaction.
   void ClearTransaction();
   // Rejects the current transaction and clears it.
-  void RejectTransaction(const nsresult& aError);
+  MOZ_CAN_RUN_SCRIPT void RejectTransaction(const nsresult& aError);
 
   nsString mOrigin;
 

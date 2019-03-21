@@ -7,10 +7,9 @@
  * Web IDL infrastructure.
  */
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback PromiseJobCallback = void();
 
-[TreatNonCallableAsNull, MOZ_CAN_RUN_SCRIPT_BOUNDARY]
+[TreatNonCallableAsNull]
 callback AnyCallback = any (any value);
 
 // Hack to allow us to have JS owning and properly tracing/CCing/etc a

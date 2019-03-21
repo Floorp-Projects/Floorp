@@ -3311,11 +3311,13 @@ NS_IMETHODIMP TabChild::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
   nsresult rv = PrepareProgressListenerData(aWebProgress, aRequest,
                                             webProgressData, requestData);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  Maybe<WebProgressData> maybeWebProgressData;
   if (aWebProgress) {
-    Unused << SendOnContentBlockingEvent(webProgressData, requestData, aEvent);
-  } else {
-    Unused << SendOnContentBlockingEvent(void_t(), requestData, aEvent);
+    maybeWebProgressData.emplace(webProgressData);
   }
+  Unused << SendOnContentBlockingEvent(maybeWebProgressData, requestData,
+                                       aEvent);
 
   return NS_OK;
 }

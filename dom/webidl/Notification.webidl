@@ -88,7 +88,6 @@ enum NotificationPermission {
   "granted"
 };
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback NotificationPermissionCallback = void (NotificationPermission permission);
 
 enum NotificationDirection {

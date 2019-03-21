@@ -1041,7 +1041,7 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>)
       None => None,
     };
 
-    Device::new(gl, resource_override_path, upload_method, cached_programs)
+    Device::new(gl, resource_override_path, upload_method, cached_programs, false)
 }
 
 // Call MakeCurrent before this.
@@ -1134,6 +1134,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         precache_flags,
         namespace_alloc_by_client: true,
         enable_picture_caching,
+        allow_pixel_local_storage_support: false,
         ..Default::default()
     };
 
@@ -2936,6 +2937,7 @@ pub extern "C" fn wr_shaders_new(gl_context: *mut c_void,
 
     let opts = RendererOptions {
         precache_flags,
+        allow_pixel_local_storage_support: false,
         ..Default::default()
     };
 

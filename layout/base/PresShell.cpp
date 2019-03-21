@@ -6524,9 +6524,9 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrameForPresShell,
   // we don't want the focus to be out of sync.
   if (!aFrameForPresShell) {
     if (!NS_EVENT_NEEDS_FRAME(aGUIEvent)) {
-      mPresShell->mCurrentEventFrame = nullptr;
-      // XXX Shouldn't we create AutoCurrentEventInfoSetter instance for this
-      //     call even if we set the target to nullptr.
+      // Push nullptr for both current event target content and frame since
+      // there is no frame but the event does not require a frame.
+      AutoCurrentEventInfoSetter eventInfoSetter(*this);
       return HandleEventWithCurrentEventInfo(aGUIEvent, aEventStatus, true,
                                              nullptr);
     }
