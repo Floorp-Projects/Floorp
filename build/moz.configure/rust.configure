@@ -272,16 +272,6 @@ set_config('RUST_TARGET', rust_target_triple)
 set_config('RUST_HOST_TARGET', rust_host_triple)
 
 
-@depends(rust_target_triple)
-def rust_target_env_name(triple):
-    return triple.upper().replace('-', '_')
-
-
-# We need this to form various Cargo environment variables, as there is no
-# uppercase function in make, and we don't want to shell out just for
-# converting a string to uppercase.
-set_config('RUST_TARGET_ENV_NAME', rust_target_env_name)
-
 # This is used for putting source info into symbol files.
 set_config('RUSTC_COMMIT', depends(rustc_info)(lambda i: i.commit))
 
