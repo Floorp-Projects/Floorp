@@ -12,8 +12,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ScriptSettings.h"
 
-#include "mprio.h"
-
 TEST(PrioEncoder, BadPublicKeys) {
   mozilla::dom::AutoJSAPI jsAPI;
   ASSERT_TRUE(jsAPI.Init(xpc::PrivilegedJunkScope()));
