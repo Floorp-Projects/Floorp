@@ -17,7 +17,6 @@ UNIFIED_SOURCES = [
     'TestCounters.cpp',
     'TestEvents.cpp',
     'TestHistograms.cpp',
-    'TestOrigins.cpp',
     'TestScalars.cpp'
 ]
 
