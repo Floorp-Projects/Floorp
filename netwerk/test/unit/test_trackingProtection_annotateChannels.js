@@ -246,7 +246,7 @@ var tests = [
   },
 
   // Annotations ON, system loading principal, topWinURI of example.com
-  // => trackers should be de-prioritized
+  // => trackers should not be de-prioritized
   function setupAnnotationsOnSystemPrincipal() {
     if (skipLowestPriority) {
       runTests();
@@ -277,16 +277,16 @@ var tests = [
         path: trackingOrigin + "/evil.css",
         loadingPrincipal: null, // system principal
         topWindowURI: defaultTopWindowURI,
-        expectedTracking: true,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST,
-        expectedThrottleable: true,
+        expectedTracking: false,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+        expectedThrottleable: false,
       },
       {
         path: trackingOrigin + "/evil.js",
         loadingPrincipal: null, // system principal
         topWindowURI: defaultTopWindowURI,
-        expectedTracking: true,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST,
+        expectedTracking: false,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
         expectedThrottleable: true,
       },
     ];
