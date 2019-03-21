@@ -24,59 +24,6 @@
         android:orientation="horizontal"
         android:layout_gravity="bottom"
         android:layout_width="match_parent"
-        android:layout_marginBottom="3dp"
-        android:layout_height="wrap_content"
-        android:background="?attr/toolbarColor">
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@string/quick_action_share"
-            android:src="@drawable/quick_action_icon_share"
-            android:background="?attr/toolbarColor"/>
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@string/quick_action_download"
-            android:src="@drawable/library_icon_downloads_circle_background"
-            android:background="?attr/toolbarColor"/>
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@string/quick_action_favorite"
-            android:src="@drawable/library_icon_favorites_circle_background"
-            android:background="?attr/toolbarColor"/>
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@string/quick_action_read"
-            android:src="@drawable/quick_action_icon_read"
-            android:background="?attr/toolbarColor"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_gravity="bottom"
-        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/toolbarColor">
 
@@ -84,6 +31,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_width="0dp"
+            android:drawableTop="@drawable/quick_action_icon_share"
+            android:drawablePadding="5dp"
             android:textAlignment="center"
             android:textSize="12sp"
             android:textColor="?attr/toolbarTextColor"
@@ -93,6 +42,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_width="0dp"
+            android:drawableTop="@drawable/library_icon_downloads_circle_background"
+            android:drawablePadding="5dp"
             android:textAlignment="center"
             android:textSize="12sp"
             android:textColor="?attr/toolbarTextColor"
@@ -102,6 +53,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_width="0dp"
+            android:drawableTop="@drawable/library_icon_favorites_circle_background"
+            android:drawablePadding="5dp"
             android:textAlignment="center"
             android:textSize="12sp"
             android:textColor="?attr/toolbarTextColor"
@@ -111,6 +64,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_width="0dp"
+            android:drawableTop="@drawable/quick_action_icon_read"
+            android:drawablePadding="5dp"
             android:textAlignment="center"
             android:textSize="12sp"
             android:textColor="?attr/toolbarTextColor"

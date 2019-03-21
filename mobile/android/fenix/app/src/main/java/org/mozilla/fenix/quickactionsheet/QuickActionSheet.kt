@@ -62,18 +62,19 @@ class QuickActionSheet @JvmOverloads constructor(
         val peakHeightMultiplier = if (duration == demoBounceAnimationLength)
             demoBounceAnimationPeekHeightMultiplier else bounceAnimationPeekHeightMultiplier
 
-        val valueAnimator = ValueAnimator.ofFloat(normalPeekHeight.toFloat(),
-            normalPeekHeight * peakHeightMultiplier)
+        ValueAnimator.ofFloat(normalPeekHeight.toFloat(),
+            normalPeekHeight * peakHeightMultiplier)?.let {
 
-        valueAnimator.addUpdateListener {
-            quickActionSheetBehavior.peekHeight = (it.animatedValue as Float).toInt()
+            it.addUpdateListener {
+                quickActionSheetBehavior.peekHeight = (it.animatedValue as Float).toInt()
+            }
+
+            it.repeatMode = ValueAnimator.REVERSE
+            it.repeatCount = 1
+            it.interpolator = FastOutSlowInInterpolator()
+            it.duration = duration
+            it.start()
         }
-
-        valueAnimator.repeatMode = ValueAnimator.REVERSE
-        valueAnimator.repeatCount = 1
-        valueAnimator.interpolator = FastOutSlowInInterpolator()
-        valueAnimator.duration = duration
-        valueAnimator.start()
     }
 
     companion object {
