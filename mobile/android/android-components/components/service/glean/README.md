@@ -135,6 +135,7 @@ To contact us you can:
 - Find us on the Mozilla Slack in *#glean*, on [Mozilla IRC](https://wiki.mozilla.org/IRC) in *#telemetry*.
 - To report issues or request changes, file a bug in [Bugzilla in Toolkit::Telemetry](https://bugzilla.mozilla.org/enter_bug.cgi?product=Toolkit&component=Telemetry&status_whiteboard=%5Btelemetry%3Amobilesdk%3Am%3F%5D) and mention Glean in the title.
 - Send an email to *glean-team@mozilla.com*.
+- The Glean Android team is: *:dexter*, *:travis*, *:mdroettboom*, *:gfritzsche*
 
 ## License
 
