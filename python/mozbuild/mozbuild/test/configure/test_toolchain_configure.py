@@ -13,7 +13,10 @@ from mozunit import main
 
 from common import BaseConfigureTest
 from mozbuild.configure.util import Version
-from mozbuild.util import memoize
+from mozbuild.util import (
+    memoize,
+    ReadOnlyNamespace,
+)
 from mozpack import path as mozpath
 from test_toolchain_helpers import (
     FakeCompiler,
@@ -1366,17 +1369,23 @@ class OpenBSDToolchainTest(BaseToolchainTest):
         })
 
 
-class RustTest(BaseConfigureTest):
-    def invoke_cargo(self, stdin, args):
+@memoize
+def gen_invoke_cargo(version):
+    def invoke_cargo(stdin, args):
         if args == ('--version', '--verbose'):
-            return 0, 'cargo 2.0\nrelease: 2.0', ''
+            return 0, 'cargo %s\nrelease: %s' % (version, version), ''
         raise NotImplementedError('unsupported arguments')
+    return invoke_cargo
 
-    def invoke_rustc(self, stdin, args):
+
+@memoize
+def gen_invoke_rustc(version):
+    def invoke_rustc(stdin, args):
         if args == ('--version', '--verbose'):
-            return 0, 'rustc 2.0\nrelease: 2.0\nhost: x86_64-unknown-linux-gnu', ''
+            return (0, 'rustc %s\nrelease: %s\nhost: x86_64-unknown-linux-gnu'
+                       % (version, version), '')
         if args == ('--print', 'target-list'):
-            # Raw list returned by rustc version 1.33, + ios, which somehow
+            # Raw list returned by rustc version 1.32, + ios, which somehow
             # don't appear in the default list.
             # https://github.com/rust-lang/rust/issues/36156
             rust_targets = [
@@ -1457,11 +1466,7 @@ class RustTest(BaseConfigureTest):
                 'thumbv7em-none-eabi',
                 'thumbv7em-none-eabihf',
                 'thumbv7m-none-eabi',
-                'thumbv7neon-linux-androideabi',
-                'thumbv7neon-unknown-linux-gnueabihf',
                 'thumbv8m.base-none-eabi',
-                'thumbv8m.main-none-eabi',
-                'thumbv8m.main-none-eabihf',
                 'wasm32-experimental-emscripten',
                 'wasm32-unknown-emscripten',
                 'wasm32-unknown-unknown',
@@ -1487,25 +1492,37 @@ class RustTest(BaseConfigureTest):
                 'x86_64-unknown-netbsd',
                 'x86_64-unknown-openbsd',
                 'x86_64-unknown-redox',
-                'x86_64-unknown-uefi',
             ]
-            return 0, '\n'.join(rust_targets), ''
+            # Additional targets from 1.33
+            if Version(version) >= '1.33.0':
+                rust_targets += [
+                    'thumbv7neon-linux-androideabi',
+                    'thumbv7neon-unknown-linux-gnueabihf',
+                    'x86_64-unknown-uefi',
+                    'thumbv8m.main-none-eabi',
+                    'thumbv8m.main-none-eabihf',
+                ]
+            return 0, '\n'.join(sorted(rust_targets)), ''
         if (len(args) == 6 and args[:2] == ('--crate-type', 'staticlib') and
             args[2].startswith('--target=') and args[3] == '-o'):
             with open(args[4], 'w') as fh:
                 fh.write('foo')
             return 0, '', ''
         raise NotImplementedError('unsupported arguments')
+    return invoke_rustc
 
-    def get_rust_target(self, target, compiler_type='gcc'):
+
+class RustTest(BaseConfigureTest):
+    def get_rust_target(self, target, compiler_type='gcc', version='1.33.0',
+                        arm_target=None):
         environ = {
             'PATH': os.pathsep.join(
                 mozpath.abspath(p) for p in ('/bin', '/usr/bin')),
         }
 
         paths = {
-            mozpath.abspath('/usr/bin/cargo'): self.invoke_cargo,
-            mozpath.abspath('/usr/bin/rustc'): self.invoke_rustc,
+            mozpath.abspath('/usr/bin/cargo'): gen_invoke_cargo(version),
+            mozpath.abspath('/usr/bin/rustc'): gen_invoke_rustc(version),
         }
 
         self.TARGET = target
@@ -1515,6 +1532,10 @@ class RustTest(BaseConfigureTest):
         dep = sandbox._depends[sandbox['c_compiler']]
         getattr(sandbox, '__value_for_depends')[(dep,)] = \
             CompilerResult(type=compiler_type)
+        # Same for the arm_target checks.
+        dep = sandbox._depends[sandbox['arm_target']]
+        getattr(sandbox, '__value_for_depends')[(dep,)] = \
+            arm_target or ReadOnlyNamespace(arm_arch=7, thumb2=False, fpu='vfpv2')
         return sandbox._value_for(sandbox['rust_target_triple'])
 
     def test_rust_target(self):
@@ -1572,6 +1593,57 @@ class RustTest(BaseConfigureTest):
             ('x86_64-pc-mingw32', 'clang', 'x86_64-pc-windows-gnu'),
         ):
             self.assertEqual(self.get_rust_target(autoconf, building_with_gcc), rust)
+
+        # Arm special cases
+        self.assertEqual(
+            self.get_rust_target('arm-unknown-linux-androideabi',
+                                 arm_target=ReadOnlyNamespace(
+                                     arm_arch=7, fpu='neon', thumb2=True)),
+            'thumbv7neon-linux-androideabi')
+
+        self.assertEqual(
+            self.get_rust_target('arm-unknown-linux-androideabi',
+                                 version='1.32.0',
+                                 arm_target=ReadOnlyNamespace(
+                                     arm_arch=7, fpu='neon', thumb2=True)),
+            'armv7-linux-androideabi')
+
+        self.assertEqual(
+            self.get_rust_target('arm-unknown-linux-androideabi',
+                                 arm_target=ReadOnlyNamespace(
+                                     arm_arch=7, fpu='neon', thumb2=False)),
+            'armv7-linux-androideabi')
+
+        self.assertEqual(
+            self.get_rust_target('arm-unknown-linux-androideabi',
+                                 arm_target=ReadOnlyNamespace(
+                                     arm_arch=7, fpu='vfpv2', thumb2=True)),
+            'armv7-linux-androideabi')
+
+        self.assertEqual(
+            self.get_rust_target('armv7-unknown-linux-gnueabihf',
+                                 arm_target=ReadOnlyNamespace(
+                                     arm_arch=7, fpu='neon', thumb2=True)),
+            'thumbv7neon-unknown-linux-gnueabihf')
+
+        self.assertEqual(
+            self.get_rust_target('armv7-unknown-linux-gnueabihf',
+                                 version='1.32.0',
+                                 arm_target=ReadOnlyNamespace(
+                                     arm_arch=7, fpu='neon', thumb2=True)),
+            'armv7-unknown-linux-gnueabihf')
+
+        self.assertEqual(
+            self.get_rust_target('armv7-unknown-linux-gnueabihf',
+                                 arm_target=ReadOnlyNamespace(
+                                     arm_arch=7, fpu='neon', thumb2=False)),
+            'armv7-unknown-linux-gnueabihf')
+
+        self.assertEqual(
+            self.get_rust_target('armv7-unknown-linux-gnueabihf',
+                                 arm_target=ReadOnlyNamespace(
+                                     arm_arch=7, fpu='vfpv2', thumb2=True)),
+            'armv7-unknown-linux-gnueabihf')
 
 
 if __name__ == '__main__':
