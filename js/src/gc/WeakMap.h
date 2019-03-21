@@ -160,7 +160,6 @@ class WeakMap
   using Base::clear;
   using Base::has;
   using Base::shallowSizeOfExcludingThis;
-  using Base::shallowSizeOfIncludingThis;
 
   // Resolve ambiguity with LinkedListElement<>::remove.
   using Base::remove;
