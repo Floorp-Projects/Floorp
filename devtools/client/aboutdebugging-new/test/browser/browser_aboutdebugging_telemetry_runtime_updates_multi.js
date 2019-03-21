@@ -77,8 +77,10 @@ add_task(async function() {
   mocks.removeRuntime(USB_RUNTIME_1.id);
   mocks.removeRuntime(USB_RUNTIME_2.id);
   mocks.emitUSBUpdate();
-  await waitUntil(() => !findSidebarItemByText(USB_RUNTIME_1.shortName, document));
-  await waitUntil(() => !findSidebarItemByText(USB_RUNTIME_2.shortName, document));
+  await waitUntil(() => !findSidebarItemByText(USB_RUNTIME_1.name, document) &&
+                        !findSidebarItemByText(USB_RUNTIME_1.shortName, document));
+  await waitUntil(() => !findSidebarItemByText(USB_RUNTIME_2.name, document) &&
+                        !findSidebarItemByText(USB_RUNTIME_2.shortName, document));
 
   checkTelemetryEvents([
     { method: "runtime_removed", extras: RUNTIME_1_EXTRAS },
