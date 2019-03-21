@@ -43,7 +43,6 @@ object KotlinCompiler {
         "service-firefox-accounts",
         "service-fretboard",
         "service-glean",
-        "support-ktx",
         "support-test",
         "support-utils",
         "tooling-lint",

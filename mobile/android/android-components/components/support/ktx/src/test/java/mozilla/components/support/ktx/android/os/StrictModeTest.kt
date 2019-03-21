@@ -39,7 +39,7 @@ class StrictModeTest {
                 StrictMode.setThreadPolicy(this)
             }
 
-        var exceptionCaught = false
+        val exceptionCaught: Boolean
 
         assertEquals(policy.toString(), StrictMode.getThreadPolicy().toString())
 

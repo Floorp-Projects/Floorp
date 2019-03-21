@@ -4,9 +4,11 @@
 
 package mozilla.components.support.ktx.android.view
 
+import android.content.Context
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.support.base.android.Padding
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -14,14 +16,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import org.robolectric.shadows.ShadowLooper
 
 @RunWith(RobolectricTestRunner::class)
 class ViewTest {
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @Test
     fun `showKeyboard should request focus`() {
-        val view = EditText(RuntimeEnvironment.application)
+        val view = EditText(context)
         assertFalse(view.hasFocus())
 
         view.showKeyboard()
@@ -32,7 +36,7 @@ class ViewTest {
 
     @Test
     fun `visibility helper methods`() {
-        val view = TextView(RuntimeEnvironment.application)
+        val view = TextView(context)
 
         view.visibility = View.GONE
 
@@ -55,7 +59,7 @@ class ViewTest {
 
     @Test
     fun `setPadding should set padding`() {
-        val view = TextView(RuntimeEnvironment.application)
+        val view = TextView(context)
 
         assertEquals(view.paddingLeft, 0)
         assertEquals(view.paddingTop, 0)
