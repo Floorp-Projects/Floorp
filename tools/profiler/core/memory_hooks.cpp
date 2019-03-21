@@ -214,6 +214,9 @@ void install_memory_counter(bool aInstall) {
       return;
     }
   }
+  if (aInstall) {
+    sCounter->Clear();
+  }
   // start counting memory allocations, or stop
   jemalloc_replace_dynamic(aInstall ? replace_init : nullptr);
 }
