@@ -292,21 +292,19 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       } = {},
     } = query || {};
 
-    let scripts;
-    if (Number.isFinite(endLine)) {
-      const found = new Set();
-      for (let line = startLine; line <= endLine; line++) {
-        for (const script of this._findDebuggeeScripts({ line })) {
-          found.add(script);
-        }
-      }
-      scripts = Array.from(found);
-    } else {
-      scripts = this._findDebuggeeScripts();
-    }
+    const scripts = this._findDebuggeeScripts();
 
     const positions = [];
     for (const script of scripts) {
+      // This purely a performance boost to avoid needing to build an array
+      // of breakable points for scripts when we know we don't need it.
+      if (
+        script.startLine > endLine ||
+        script.startLine + script.lineCount < startLine
+      ) {
+        continue;
+      }
+
       const offsets = script.getPossibleBreakpoints();
       for (const { lineNumber, columnNumber } of offsets) {
         if (
