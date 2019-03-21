@@ -5972,8 +5972,10 @@ pref("browser.sanitizer.loglevel", "Warn");
 // When a user cancels this number of authentication dialogs coming from
 // a single web page in a row, all following authentication dialogs will
 // be blocked (automatically canceled) for that page. The counter resets
-// when the page is reloaded. To turn this feature off, just set the limit to 0.
-pref("prompts.authentication_dialog_abuse_limit", 3);
+// when the page is reloaded.
+// To disable all auth prompting, set the limit to 0.
+// To disable blocking of auth prompts, set the limit to -1.
+pref("prompts.authentication_dialog_abuse_limit", 2);
 
 pref("dom.IntersectionObserver.enabled", true);
 

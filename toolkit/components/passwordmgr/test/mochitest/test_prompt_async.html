@@ -33,6 +33,7 @@
         const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
         Services.prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
+        Services.prefs.setIntPref("prompts.authentication_dialog_abuse_limit", -1);
 
         function initLogins(mozproxy) {
           function addLogin(host, realm, user, pass) {
