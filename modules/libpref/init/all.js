@@ -227,7 +227,7 @@ pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys", "");
 // non-zero keyCode or charCode value to the other).  The format is exactly
 // same as "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys". So,
 // check its explanation for the detail.
-pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode", "");
+pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode", "powerpoint.officeapps.live.com");
 
 // Whether InputEvent.data is enabled.
 pref("dom.inputevent.data.enabled", true);
