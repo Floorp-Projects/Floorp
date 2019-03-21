@@ -6,11 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["TabTarget"];
 
-const {Connection} = ChromeUtils.import("chrome://remote/content/Connection.jsm");
+const {Target} = ChromeUtils.import("chrome://remote/content/targets/Target.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {TabSession} = ChromeUtils.import("chrome://remote/content/sessions/TabSession.jsm");
-const {WebSocketDebuggerTransport} = ChromeUtils.import("chrome://remote/content/server/WebSocketTransport.jsm");
-const {WebSocketServer} = ChromeUtils.import("chrome://remote/content/server/WebSocket.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
@@ -19,15 +17,15 @@ XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
 /**
  * Target for a local tab or a remoted frame.
  */
-class TabTarget {
+class TabTarget extends Target {
   /**
    * @param Targets targets
    * @param BrowserElement browser
    */
   constructor(targets, browser) {
-    this.targets = targets;
+    super(targets, TabSession);
+
     this.browser = browser;
-    this.sessions = new Map();
   }
 
   connect() {
@@ -122,15 +120,6 @@ class TabTarget {
       url: this.url,
       webSocketDebuggerUrl: this.wsDebuggerURL,
     };
-  }
-
-  // nsIHttpRequestHandler
-
-  async handle(request, response) {
-    const so = await WebSocketServer.upgrade(request, response);
-    const transport = new WebSocketDebuggerTransport(so);
-    const conn = new Connection(transport);
-    this.sessions.set(conn, new TabSession(conn, this));
   }
 
   // nsIObserver
