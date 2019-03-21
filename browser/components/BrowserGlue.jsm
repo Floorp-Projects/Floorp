@@ -2615,8 +2615,7 @@ BrowserGlue.prototype = {
       return;
     }
 
-    let shouldCheck = AppConstants.DEBUG ? false :
-                                           ShellService.shouldCheckDefaultBrowser;
+    let shouldCheck = !AppConstants.DEBUG && ShellService.shouldCheckDefaultBrowser;
 
     const skipDefaultBrowserCheck =
       Services.prefs.getBoolPref("browser.shell.skipDefaultBrowserCheckOnFirstRun") &&
