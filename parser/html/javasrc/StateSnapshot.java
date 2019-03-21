@@ -60,21 +60,22 @@ public class StateSnapshot<T> implements TreeBuilderState<T> {
      * @param needToDropLF
      * @param quirks
      */
-    StateSnapshot(StackNode<T>[] stack, StackNode<T>[] listOfActiveFormattingElements,
-        int[] templateModeStack, T formPointer, T headPointer, int mode, int originalMode,
-        boolean framesetOk, boolean needToDropLF, boolean quirks) {
-      this.stack = stack;
-      this.listOfActiveFormattingElements = listOfActiveFormattingElements;
-      this.templateModeStack = templateModeStack;
-      this.formPointer = formPointer;
-      this.headPointer = headPointer;
-      this.mode = mode;
-      this.originalMode = originalMode;
-      this.framesetOk = framesetOk;
-      this.needToDropLF = needToDropLF;
-      this.quirks = quirks;
+    StateSnapshot(StackNode<T>[] stack,
+            StackNode<T>[] listOfActiveFormattingElements, int[] templateModeStack, T formPointer,
+            T headPointer, int mode, int originalMode,
+            boolean framesetOk, boolean needToDropLF, boolean quirks) {
+        this.stack = stack;
+        this.listOfActiveFormattingElements = listOfActiveFormattingElements;
+        this.templateModeStack = templateModeStack;
+        this.formPointer = formPointer;
+        this.headPointer = headPointer;
+        this.mode = mode;
+        this.originalMode = originalMode;
+        this.framesetOk = framesetOk;
+        this.needToDropLF = needToDropLF;
+        this.quirks = quirks;
     }
-
+    
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getStack()
      */
