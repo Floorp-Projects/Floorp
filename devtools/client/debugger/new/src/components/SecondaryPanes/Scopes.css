@@ -52,7 +52,7 @@ html[dir="rtl"] .object-node {
   white-space: nowrap;
 }
 
-.scopes-pane {
+.scopes-pane ._content {
   overflow: auto;
 }
 
