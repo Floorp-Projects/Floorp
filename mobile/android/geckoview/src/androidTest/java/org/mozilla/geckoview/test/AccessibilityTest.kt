@@ -253,6 +253,43 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
+    @Test fun testMoveCaretAccessibilityFocus() {
+        sessionRule.session.loadString("<p>Hello <a href='foo'>sweet</a>, sweet <span>world</span>", "text/html")
+        waitForInitialFocus(false)
+
+        mainSession.evaluateJS("""
+            function select(node, start, end) {
+                let r = new Range();
+                r.setStart(node, start);
+                r.setEnd(node, end);
+                let s = getSelection();
+                s.removeAllRanges();
+                s.addRange(r);
+            }
+            select($('p').childNodes[2], 2, 6);
+        """.trimIndent())
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                val node = createNodeInfo(getSourceId(event))
+                assertThat("Text node should match text", node.text as String, equalTo(", sweet "))
+            }
+        })
+
+        mainSession.evaluateJS("""
+            select($('p').lastElementChild.firstChild, 1, 2);
+        """.trimIndent())
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                val node = createNodeInfo(getSourceId(event))
+                assertThat("Text node should match text", node.text as String, equalTo("world"))
+            }
+        })
+    }
+
     private fun waitUntilTextSelectionChanged(fromIndex: Int, toIndex: Int) {
         var eventFromIndex = 0;
         var eventToIndex = 0;
