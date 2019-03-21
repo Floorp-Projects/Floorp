@@ -17,10 +17,11 @@
 <script class="testbody" type="text/javascript">
 
 var mainWindow = window.docShell.rootTreeItem.domWindow;
-var contentPage = "http://mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/classifiedAnnotatedPBFrame.html";
+var contentPage = "chrome://mochitests/content/chrome/toolkit/components/url-classifier/tests/mochitest/classifiedAnnotatedPBFrame.html";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
 function testOnWindow(aCallback) {
@@ -30,9 +31,7 @@ function testOnWindow(aCallback) {
                             subject => subject == win).then(() => {
       win.addEventListener("DOMContentLoaded", function onInnerLoad() {
         if (win.content.location.href != contentPage) {
-          win.gBrowser.loadURI(contentPage, {
-            triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
-          });
+          BrowserTestUtils.loadURI(win.gBrowser, contentPage);
           return;
         }
         win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
@@ -43,9 +42,7 @@ function testOnWindow(aCallback) {
         }, false, true);
       }, true);
       SimpleTest.executeSoon(function() {
-        win.gBrowser.loadURI(contentPage, {
-          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
-        });
+        BrowserTestUtils.loadURI(win.gBrowser, contentPage);
       });
     });
   }, {capture: true, once: true});
