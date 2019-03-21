@@ -7,23 +7,29 @@
 package mozilla.components.concept.push
 
 /**
- * An interface for all push services to implement that allows [Push] to manage.
+ * Implemented by push services like Firebase Cloud Messaging and Amazon Device Messaging SDKs to allow
+ * the [PushProcessor] to manage their lifecycle.
  */
 interface PushService {
 
     /**
-     * Start the push service.
+     * The instance of the running service. This can be useful for push SDKs that are started automatically and more
+     * control is needed.
+     */
+    val instance: PushService
+
+    /**
+     * Starts the push service.
      */
     fun start()
 
     /**
-     * Stop the push service.
+     * Stops the push service.
      */
     fun stop()
 
     /**
-     * Request registration renewal from push service. This leads to the Push service sending a new registration
-     * token if successful.
+     * Forces the push service to renew it's registration. This may lead to a new registration token being received.
      */
-    fun renewRegistration()
+    fun forceRegistrationRenewal()
 }

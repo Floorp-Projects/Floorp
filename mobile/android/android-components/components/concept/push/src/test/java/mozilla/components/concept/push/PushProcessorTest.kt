@@ -6,28 +6,34 @@
 
 package mozilla.components.concept.push
 
-import mozilla.components.support.test.mock
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 
-import org.mockito.Mockito.verify
-
-class PushTest {
-
-    private val service: PushService = mock()
+class PushProcessorTest {
 
     @Test
     fun init() {
-        val push = Push(service)
+        val push = TestPushProcessor()
 
-        push.init()
+        push.initialize()
 
-        verify(push.service).start()
-        assertNotNull(Push.requireInstance)
+        assertNotNull(PushProcessor.requireInstance)
     }
 
     @Test(expected = IllegalStateException::class)
     fun `requireInstance throws exception if not initialized`() {
-        Push.requireInstance
+        PushProcessor.requireInstance
+    }
+
+    class TestPushProcessor : PushProcessor() {
+        override fun start() {}
+
+        override fun stop() {}
+
+        override fun onNewToken(newToken: String) {}
+
+        override fun onMessageReceived(message: PushMessage) {}
+
+        override fun onError(error: Error) {}
     }
 }
