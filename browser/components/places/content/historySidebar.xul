@@ -35,8 +35,8 @@
           src="chrome://browser/content/contentTheme.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/places/places-tree.js"/>
-
-#include ../../../../toolkit/content/editMenuCommands.inc.xul
+  <script type="application/javascript"
+          src="chrome://global/content/editMenuOverlay.js"/>
 
 #include placesCommands.inc.xul
 

@@ -27,6 +27,7 @@
           src="chrome://devtools/content/shared/theme-switching.js"/>
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"/>
   <script type="application/javascript">
     function goUpdateSourceEditorMenuItems() {
       goUpdateGlobalEditMenuItems();
@@ -83,8 +84,6 @@
                 accesskey="&showMediaSidebar.accesskey;"/>
     </menupopup>
   </popupset>
-
-#include ../../../toolkit/content/editMenuCommands.inc.xul
 
   <commandset id="sourceEditorCommands">
     <command id="cmd_gotoLine" oncommand="goDoCommand('cmd_gotoLine')"/>

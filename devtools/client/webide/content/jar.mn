@@ -4,7 +4,7 @@
 
 webide.jar:
 %   content webide %content/
-*   content/webide.xul                (webide.xul)
+    content/webide.xul                (webide.xul)
     content/webide.js                 (webide.js)
     content/newapp.xul                (newapp.xul)
     content/newapp.js                 (newapp.js)
