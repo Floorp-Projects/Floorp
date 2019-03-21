@@ -89,7 +89,7 @@ ParseNode* ParseNode::appendOrCreateList(ParseNodeKind kind, ParseNode* left,
     }
   }
 
-  ListNode* list = handler->new_<ListNode>(kind, JSOP_NOP, left);
+  ListNode* list = handler->new_<ListNode>(kind, left);
   if (!list) {
     return nullptr;
   }
