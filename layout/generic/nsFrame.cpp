@@ -3831,7 +3831,10 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
     const bool differentAGR = buildingForChild.IsAnimatedGeometryRoot();
 
-    if (!awayFromCommonPath) {
+    if (!awayFromCommonPath &&
+        // Some SVG frames might change opacity without invalidating the frame,
+        // so exclude them from the fast-path.
+        !child->IsFrameOfType(nsIFrame::eSVG)) {
       // The shortcut is available for the child for next time.
       child->AddStateBits(NS_FRAME_SIMPLE_DISPLAYLIST);
     }
