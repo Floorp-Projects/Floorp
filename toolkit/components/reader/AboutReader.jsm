@@ -65,6 +65,7 @@ var AboutReader = function(mm, win, articlePromise) {
 
   this._scrollOffset = win.pageYOffset;
 
+  doc.addEventListener("mousedown", this);
   doc.addEventListener("click", this);
 
   win.addEventListener("pagehide", this);
@@ -274,13 +275,16 @@ AboutReader.prototype = {
     if (!aEvent.isTrusted)
       return;
 
+    let target = aEvent.target;
     switch (aEvent.type) {
+      case "mousedown":
+        if (!target.closest(".dropdown-popup")) {
+          this._closeDropdowns();
+        }
+        break;
       case "click":
-        let target = aEvent.target;
         if (target.classList.contains("dropdown-toggle")) {
           this._toggleDropdownClicked(aEvent);
-        } else if (!target.closest(".dropdown-popup")) {
-          this._closeDropdowns();
         }
         break;
       case "mozvisualscroll":

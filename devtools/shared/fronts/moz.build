@@ -17,7 +17,6 @@ DevToolsModules(
     'animation.js',
     'changes.js',
     'css-properties.js',
-    'csscoverage.js',
     'device.js',
     'emulation.js',
     'framerate.js',

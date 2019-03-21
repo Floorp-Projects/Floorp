@@ -584,7 +584,7 @@ devtools.main:
     extra_keys:
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   enter:
-    objects: ["accessibility", "application", "canvasdebugger", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "scratchpad", "shadereditor", "storage", "styleeditor", "webaudioeditor", "webconsole", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
+    objects: ["accessibility", "application", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "scratchpad", "storage", "styleeditor", "webconsole", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
     bug_numbers: [1441070]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
@@ -611,7 +611,7 @@ devtools.main:
       lines: The number of lines contained in the command.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   exit:
-    objects: ["accessibility", "application", "canvasdebugger", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "scratchpad", "shadereditor", "storage", "styleeditor", "webaudioeditor", "webconsole", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
+    objects: ["accessibility", "application", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "scratchpad", "storage", "styleeditor", "webconsole", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
     bug_numbers: [1455270]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]

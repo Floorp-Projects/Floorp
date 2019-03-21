@@ -28,6 +28,7 @@ class TestFunctions : public NonRefcountedDOMObject {
 
   static Promise* PassThroughPromise(GlobalObject& aGlobal, Promise& aPromise);
 
+  MOZ_CAN_RUN_SCRIPT
   static already_AddRefed<Promise> PassThroughCallbackPromise(
       GlobalObject& aGlobal, PromiseReturner& aCallback, ErrorResult& aRv);
 

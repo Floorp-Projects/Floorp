@@ -234,7 +234,9 @@ partial interface Navigator {
   Promise<MIDIAccess> requestMIDIAccess(optional MIDIOptions options);
 };
 
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback NavigatorUserMediaSuccessCallback = void (MediaStream stream);
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback NavigatorUserMediaErrorCallback = void (MediaStreamError error);
 
 partial interface Navigator {
@@ -251,6 +253,7 @@ partial interface Navigator {
 };
 
 // nsINavigatorUserMedia
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback MozGetUserMediaDevicesSuccessCallback = void (nsIVariant? devices);
 partial interface Navigator {
   [Throws, ChromeOnly]

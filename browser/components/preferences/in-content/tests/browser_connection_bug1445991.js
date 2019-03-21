@@ -17,7 +17,6 @@ add_task(async function testAutoconfigReloadButton() {
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
   const connectionURL = "chrome://browser/content/preferences/connection.xul";
   const promiseDialogLoaded = promiseLoadSubDialog(connectionURL);
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   gBrowser.contentDocument.getElementById("connectionSettings").click();
   const dialog = await promiseDialogLoaded;
 

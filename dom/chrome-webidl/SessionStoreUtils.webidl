@@ -8,6 +8,7 @@ interface nsISupports;
 /**
  * A callback passed to SessionStoreUtils.forEachNonDynamicChildFrame().
  */
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback SessionStoreUtilsFrameCallback = void (WindowProxy frame, unsigned long index);
 
 /**

@@ -2660,6 +2660,19 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
   return rv;
 }
 
+nsresult EditorBase::SelectEntireDocument() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  Element* rootElement = GetRoot();
+  if (!rootElement) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  ErrorResult errorResult;
+  SelectionRefPtr()->SelectAllChildren(*rootElement, errorResult);
+  return errorResult.StealNSResult();
+}
+
 nsINode* EditorBase::GetFirstEditableNode(nsINode* aRoot) {
   MOZ_ASSERT(aRoot);
 

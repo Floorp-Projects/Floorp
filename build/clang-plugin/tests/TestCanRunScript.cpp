@@ -282,3 +282,29 @@ struct AllowKnownLiveMemberArgs {
     test2(MOZ_KnownLive(mRefCounted));
   }
 };
+
+struct WeakPtrReturner : public RefCountedBase {
+  RefCountedBase* getWeakPtr() { return new RefCountedBase(); }
+};
+
+struct DisallowMemberCallsOnRandomKnownLive {
+  RefPtr<WeakPtrReturner> mWeakPtrReturner1;
+  WeakPtrReturner* mWeakPtrReturner2;
+
+  MOZ_CAN_RUN_SCRIPT void test_refptr_method() {
+    MOZ_KnownLive(mWeakPtrReturner1)->getWeakPtr()->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+
+  MOZ_CAN_RUN_SCRIPT void test_refptr_function() {
+    test2(MOZ_KnownLive(mWeakPtrReturner1)->getWeakPtr()); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+
+  MOZ_CAN_RUN_SCRIPT void test_raw_method() {
+    MOZ_KnownLive(mWeakPtrReturner2)->getWeakPtr()->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+
+  MOZ_CAN_RUN_SCRIPT void test_raw_function() {
+    test2(MOZ_KnownLive(mWeakPtrReturner2)->getWeakPtr()); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+};
+

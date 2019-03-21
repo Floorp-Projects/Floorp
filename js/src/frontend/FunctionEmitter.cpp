@@ -627,7 +627,10 @@ bool FunctionScriptEmitter::emitInitializeInstanceFields() {
       return false;
     }
 
-    if (!bce_->emit1(JSOP_CALLELEM)) {
+    // Don't use CALLELEM here, because the receiver of the call != the receiver
+    // of this getelem. (Specifically, the call receiver is `this`, and the
+    // receiver of this getelem is `.initializers`)
+    if (!bce_->emit1(JSOP_GETELEM)) {
       //            [stack] ARRAY? FUNC
       return false;
     }
