@@ -20,4 +20,19 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.site_permissions_preferences, rootKey)
     }
+
+    private fun setupPreferences() {
+        val keyRecommendSettings = getString(R.string.pref_key_recommended_settings)
+        val keyCustomSettings = getString(R.string.pref_key_custom_settings)
+        val radioRecommendSettings: RadioButtonPreference = requireNotNull(findPreference(keyRecommendSettings))
+        val radioCustomSettings: RadioButtonPreference = requireNotNull(findPreference(keyCustomSettings))
+
+        radioRecommendSettings.addToRadioGroup(radioCustomSettings)
+        radioCustomSettings.addToRadioGroup(radioRecommendSettings)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        setupPreferences()
+    }
 }

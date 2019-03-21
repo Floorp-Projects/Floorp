@@ -22,4 +22,8 @@
     <dimen name="radio_button_drawable_padding">32dp</dimen>
     <dimen name="radio_button_padding_horizontal">16dp</dimen>
     <dimen name="radio_button_padding_vertical">12dp</dimen>
+    <dimen name="radio_button_preference_height">48dp</dimen>
+    <dimen name="radio_button_preference_horizontal">16dp</dimen>
+    <dimen name="radio_button_preference_drawable_padding">16dp</dimen>
+    <dimen name="radio_button_preference_vertical">12dp</dimen>
 </resources>
