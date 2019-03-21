@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::PremultipliedColorF;
+use api::{DocumentLayer, PremultipliedColorF};
 use api::units::*;
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use gpu_cache::{GpuCacheAddress, GpuDataRequest};
@@ -22,6 +22,15 @@ pub const VECS_PER_TRANSFORM: usize = 8;
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ZBufferId(i32);
 
+// We get 24 bits of Z value - use up 22 bits of it to give us
+// 4 bits to account for GPU issues. This seems to manifest on
+// some GPUs under certain perspectives due to z interpolation
+// precision problems.
+const MAX_DOCUMENT_LAYERS : i8 = 1 << 3;
+const MAX_ITEMS_PER_DOCUMENT_LAYER : i32 = 1 << 19;
+const MAX_DOCUMENT_LAYER_VALUE : i8 = MAX_DOCUMENT_LAYERS / 2 - 1;
+const MIN_DOCUMENT_LAYER_VALUE : i8 = -MAX_DOCUMENT_LAYERS / 2;
+
 impl ZBufferId {
     pub fn invalid() -> Self {
         ZBufferId(i32::MAX)
@@ -32,18 +41,23 @@ impl ZBufferId {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ZBufferIdGenerator {
+    base: i32,
     next: i32,
 }
 
 impl ZBufferIdGenerator {
-    pub fn new() -> Self {
+    pub fn new(layer: DocumentLayer) -> Self {
+        debug_assert!(layer >= MIN_DOCUMENT_LAYER_VALUE);
+        debug_assert!(layer <= MAX_DOCUMENT_LAYER_VALUE);
         ZBufferIdGenerator {
+            base: layer as i32 * MAX_ITEMS_PER_DOCUMENT_LAYER,
             next: 0
         }
     }
 
     pub fn next(&mut self) -> ZBufferId {
-        let id = ZBufferId(self.next);
+        debug_assert!(self.next < MAX_ITEMS_PER_DOCUMENT_LAYER);
+        let id = ZBufferId(self.next + self.base);
         self.next += 1;
         id
     }
