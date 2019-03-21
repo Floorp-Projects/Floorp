@@ -44,7 +44,6 @@ interface IntersectionObserver {
   readonly attribute IntersectionCallback intersectionCallback;
 };
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback IntersectionCallback =
   void (sequence<IntersectionObserverEntry> entries, IntersectionObserver observer);
 

@@ -460,7 +460,8 @@ void DOMIntersectionObserver::Notify() {
     }
   }
   mQueuedEntries.Clear();
-  mCallback->Call(this, entries, *this);
+  RefPtr<dom::IntersectionCallback> callback(mCallback);
+  callback->Call(this, entries, *this);
 }
 
 }  // namespace dom

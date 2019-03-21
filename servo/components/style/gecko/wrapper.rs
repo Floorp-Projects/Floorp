@@ -20,7 +20,7 @@ use crate::context::{PostAnimationTasks, QuirksMode, SharedStyleContext, UpdateA
 use crate::data::ElementData;
 use crate::dom::{LayoutIterator, NodeInfo, OpaqueNode, TDocument, TElement, TNode, TShadowRoot};
 use crate::element_state::{DocumentState, ElementState};
-use crate::font_metrics::{FontMetrics, FontMetricsProvider, FontMetricsQueryResult};
+use crate::font_metrics::{FontMetrics, FontMetricsOrientation, FontMetricsProvider};
 use crate::gecko::data::GeckoStyleSheet;
 use crate::gecko::selector_parser::{NonTSPseudoClass, PseudoElement, SelectorImpl};
 use crate::gecko::snapshot_helpers;
@@ -1035,10 +1035,11 @@ impl FontMetricsProvider for GeckoFontMetricsProvider {
         &self,
         context: &crate::values::computed::Context,
         base_size: FontBaseSize,
-    ) -> FontMetricsQueryResult {
+        orientation: FontMetricsOrientation,
+    ) -> FontMetrics {
         let pc = match context.device().pres_context() {
             Some(pc) => pc,
-            None => return FontMetricsQueryResult::NotAvailable,
+            None => return Default::default(),
         };
 
         let size = base_size.resolve(context);
@@ -1056,21 +1057,28 @@ impl FontMetricsProvider for GeckoFontMetricsProvider {
             },
         };
 
+        let vertical_metrics = match orientation {
+            FontMetricsOrientation::MatchContext => wm.is_vertical() && wm.is_upright(),
+            FontMetricsOrientation::Horizontal => false,
+        };
         let gecko_metrics = unsafe {
             bindings::Gecko_GetFontMetrics(
                 pc,
-                wm.is_vertical() && !wm.is_sideways(),
+                vertical_metrics,
                 font.gecko(),
                 size.0,
                 // we don't use the user font set in a media query
                 !context.in_media_query,
             )
         };
-        let metrics = FontMetrics {
-            x_height: Au(gecko_metrics.mXSize),
-            zero_advance_measure: Au(gecko_metrics.mChSize),
-        };
-        FontMetricsQueryResult::Available(metrics)
+        FontMetrics {
+            x_height: Some(Au(gecko_metrics.mXSize)),
+            zero_advance_measure: if gecko_metrics.mChSize >= 0 {
+                Some(Au(gecko_metrics.mChSize))
+            } else {
+                None
+            },
+        }
     }
 }
 

@@ -54,7 +54,7 @@ class ReportingObserver final : public nsIObserver,
 
   void MaybeReport(Report* aReport);
 
-  void MaybeNotify();
+  MOZ_CAN_RUN_SCRIPT void MaybeNotify();
 
  private:
   ~ReportingObserver();

@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/MemoryReporting.h"
 
@@ -45,8 +46,8 @@ struct WebAudioDecodeJob final {
 
   typedef void (WebAudioDecodeJob::*ResultFn)(ErrorCode);
 
-  void OnSuccess(ErrorCode /* ignored */);
-  void OnFailure(ErrorCode aErrorCode);
+  MOZ_CAN_RUN_SCRIPT void OnSuccess(ErrorCode /* ignored */);
+  MOZ_CAN_RUN_SCRIPT void OnFailure(ErrorCode aErrorCode);
 
   bool AllocateBuffer();
 

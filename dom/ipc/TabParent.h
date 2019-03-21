@@ -166,7 +166,7 @@ class TabParent final : public PBrowserParent,
                                                       nsIURI* aDocURI);
 
   mozilla::ipc::IPCResult RecvOnContentBlockingEvent(
-      const OptionalWebProgressData& aWebProgressData,
+      const Maybe<WebProgressData>& aWebProgressData,
       const RequestData& aRequestData, const uint32_t& aEvent);
 
   mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(
@@ -572,7 +572,7 @@ class TabParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvInvokeDragSession(
       nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction,
-      const OptionalShmem& aVisualDnDData, const uint32_t& aStride,
+      Maybe<Shmem>&& aVisualDnDData, const uint32_t& aStride,
       const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
       const IPC::Principal& aPrincipal);
 

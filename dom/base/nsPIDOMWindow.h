@@ -555,7 +555,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   void BroadcastReport(mozilla::dom::Report* aReport);
 
-  void NotifyReportingObservers();
+  MOZ_CAN_RUN_SCRIPT void NotifyReportingObservers();
 
   void SaveStorageAccessGranted(const nsACString& aPermissionKey);
 

@@ -445,6 +445,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
 
   void RunFullscreenSteps();
   void DispatchAnimationEvents();
+  MOZ_CAN_RUN_SCRIPT
   void RunFrameRequestCallbacks(mozilla::TimeStamp aNowTime);
   void UpdateIntersectionObservations();
   MOZ_CAN_RUN_SCRIPT_BOUNDARY

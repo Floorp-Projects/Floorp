@@ -11,10 +11,8 @@ dictionary FileSystemFlags {
     boolean exclusive = false;
 };
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback FileSystemEntryCallback = void (FileSystemEntry entry);
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback ErrorCallback = void (DOMException err);
 
 interface FileSystem {

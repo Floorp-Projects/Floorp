@@ -97,9 +97,13 @@ class RequestManager {
     return nullptr;
   }
 
+  MOZ_CAN_RUN_SCRIPT
   void Complete() {
-    ErrorResult rv;
-    mCallback.get()->Call(mResult, rv);
+    IgnoredErrorResult rv;
+    using RealCallbackType =
+        typename RemovePointer<decltype(mCallback.get())>::Type;
+    RefPtr<RealCallbackType> callback(mCallback.get());
+    callback->Call(mResult, rv);
 
     if (rv.Failed()) {
       CSFLogError(LOGTAG, "Error firing stats observer callback");
@@ -215,6 +219,7 @@ static PeerConnectionCtx* GetPeerConnectionCtx() {
   return nullptr;
 }
 
+MOZ_CAN_RUN_SCRIPT
 static void OnStatsReport_m(WebrtcGlobalChild* aThisChild, const int aRequestId,
                             nsTArray<UniquePtr<RTCStatsQuery>>&& aQueryList) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -269,6 +274,7 @@ static void OnStatsReport_m(WebrtcGlobalChild* aThisChild, const int aRequestId,
   StatsRequest::Delete(aRequestId);
 }
 
+MOZ_CAN_RUN_SCRIPT
 static void OnGetLogging_m(WebrtcGlobalChild* aThisChild, const int aRequestId,
                            Sequence<nsString>&& aLogList) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -329,10 +335,13 @@ static void RunStatsQuery(
 
   RTCStatsQueryPromise::All(GetMainThreadSerialEventTarget(), promises)
       ->Then(GetMainThreadSerialEventTarget(), __func__,
+             // MOZ_CAN_RUN_SCRIPT_BOUNDARY because we're going to run that
+             // function async anyway.
              [aThisChild,
-              aRequestId](nsTArray<UniquePtr<RTCStatsQuery>>&& aQueries) {
-               OnStatsReport_m(aThisChild, aRequestId, std::move(aQueries));
-             },
+              aRequestId](nsTArray<UniquePtr<RTCStatsQuery>>&& aQueries)
+                 MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                   OnStatsReport_m(aThisChild, aRequestId, std::move(aQueries));
+                 },
              [=](nsresult) { MOZ_CRASH(); });
 }
 
@@ -421,6 +430,7 @@ void WebrtcGlobalInformation::GetAllStats(
   aRv = NS_OK;
 }
 
+MOZ_CAN_RUN_SCRIPT
 static nsresult RunLogQuery(const nsCString& aPattern,
                             WebrtcGlobalChild* aThisChild,
                             const int aRequestId) {
@@ -449,12 +459,18 @@ static nsresult RunLogQuery(const nsCString& aPattern,
                 return transportHandler->GetIceLog(aPattern);
               })
       ->Then(GetMainThreadSerialEventTarget(), __func__,
-             [aRequestId, aThisChild](Sequence<nsString>&& aLogLines) {
-               OnGetLogging_m(aThisChild, aRequestId, std::move(aLogLines));
-             },
-             [aRequestId, aThisChild](nsresult aError) {
-               OnGetLogging_m(aThisChild, aRequestId, Sequence<nsString>());
-             });
+             // MOZ_CAN_RUN_SCRIPT_BOUNDARY because we're going to run that
+             // function async anyway.
+             [aRequestId, aThisChild](Sequence<nsString>&& aLogLines)
+                 MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                   OnGetLogging_m(aThisChild, aRequestId, std::move(aLogLines));
+                 },
+             // MOZ_CAN_RUN_SCRIPT_BOUNDARY because we're going to run that
+             // function async anyway.
+             [aRequestId, aThisChild](nsresult aError)
+                 MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                   OnGetLogging_m(aThisChild, aRequestId, Sequence<nsString>());
+                 });
 
   return NS_OK;
 }

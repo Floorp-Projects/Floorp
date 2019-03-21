@@ -885,7 +885,10 @@ pub struct Capabilities {
     /// bound to a non-0th layer of a texture array. This is buggy on
     /// Adreno devices.
     pub supports_blit_to_texture_array: bool,
-
+    /// Whether we can use the pixel local storage functionality that
+    /// is available on some mobile GPUs. This allows fast access to
+    /// the per-pixel tile memory.
+    pub supports_pixel_local_storage: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -1114,6 +1117,7 @@ impl Device {
         resource_override_path: Option<PathBuf>,
         upload_method: UploadMethod,
         cached_programs: Option<Rc<ProgramCache>>,
+        allow_pixel_local_storage_support: bool,
     ) -> Device {
         // On debug builds, assert that each GL call is error-free. We don't do
         // this on release builds because the synchronous call can stall the
@@ -1229,6 +1233,17 @@ impl Device {
         // a non-0th layer of a texture array is not supported.
         let supports_blit_to_texture_array = !renderer_name.starts_with("Adreno");
 
+        // Check if the device supports the two extensions needed in order to use
+        // pixel local storage.
+        // TODO(gw): Consider if we can remove fb fetch / init, by using PLS for opaque pass too.
+        // TODO(gw): Support EXT_shader_framebuffer_fetch as well.
+        let ext_pixel_local_storage = supports_extension(&extensions, "GL_EXT_shader_pixel_local_storage");
+        let ext_framebuffer_fetch = supports_extension(&extensions, "GL_ARM_shader_framebuffer_fetch");
+        let supports_pixel_local_storage =
+            allow_pixel_local_storage_support &&
+            ext_framebuffer_fetch &&
+            ext_pixel_local_storage;
+
         // On Adreno GPUs PBO texture upload is only performed asynchronously
         // if the stride of the data in the PBO is a multiple of 256 bytes.
         // Other platforms may have similar requirements and should be added
@@ -1251,6 +1266,7 @@ impl Device {
                 supports_multisampling: false, //TODO
                 supports_copy_image_sub_data,
                 supports_blit_to_texture_array,
+                supports_pixel_local_storage,
             },
 
             bgra_format_internal,
@@ -2948,6 +2964,18 @@ impl Device {
 
     pub fn supports_extension(&self, extension: &str) -> bool {
         supports_extension(&self.extensions, extension)
+    }
+
+    /// Enable the pixel local storage functionality. Caller must
+    /// have already confirmed the device supports this.
+    pub fn enable_pixel_local_storage(&mut self, enable: bool) {
+        debug_assert!(self.capabilities.supports_pixel_local_storage);
+
+        if enable {
+            self.gl.enable(gl::SHADER_PIXEL_LOCAL_STORAGE_EXT);
+        } else {
+            self.gl.disable(gl::SHADER_PIXEL_LOCAL_STORAGE_EXT);
+        }
     }
 
     pub fn echo_driver_messages(gl: &gl::Gl) {

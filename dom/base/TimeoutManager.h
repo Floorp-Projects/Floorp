@@ -52,6 +52,7 @@ class TimeoutManager final {
                             bool aIsIdle);
 
   // The timeout implementation functions.
+  MOZ_CAN_RUN_SCRIPT
   void RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadline,
                   bool aProcessIdle);
 
