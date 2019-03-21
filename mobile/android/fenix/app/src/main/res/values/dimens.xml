@@ -14,7 +14,7 @@
     <dimen name="library_item_icon_margin_horizontal">16dp</dimen>
     <dimen name="library_item_icon_margin_vertical">8dp</dimen>
     <dimen name="history_favicon_width_height">40dp</dimen>
-    <dimen name="session_card_padding">16dp</dimen>
+    <dimen name="session_card_padding">14dp</dimen>
     <dimen name="tab_border_width">2dp</dimen>
     <dimen name="tab_corner_radius">8dp</dimen>
     <dimen name="preference_icon_drawable_size">24dp</dimen>

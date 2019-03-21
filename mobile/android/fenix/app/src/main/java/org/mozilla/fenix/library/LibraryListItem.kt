@@ -28,7 +28,7 @@ class LibraryListItem @JvmOverloads constructor(
                 try {
                     val id = getResourceId(
                         R.styleable.LibraryListItem_listItemIcon,
-                        R.drawable.library_icon_logins_circle_background
+                        R.drawable.library_icon_reading_list_circle_background
                     )
                     libraryIcon?.background = resources.getDrawable(id, context.theme)
                     libraryItemTitle?.text = resources.getString(

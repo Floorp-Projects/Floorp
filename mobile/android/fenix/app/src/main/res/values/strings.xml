@@ -186,11 +186,11 @@
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Downloads</string>
     <!-- Option in Library to open Favorites page -->
-    <string name="library_favorites">Favorites</string>
+    <string name="library_bookmarks">Bookmarks</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">History</string>
-    <!-- Option in Library to open Logins page -->
-    <string name="library_logins">Logins</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">Reading List</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Search</string>
     <!-- Library Page Title -->
@@ -259,4 +259,10 @@
     <string name="tab_crash_close">Close tab</string>
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Restore tab</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Session Options</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">Share Session</string>
 </resources>

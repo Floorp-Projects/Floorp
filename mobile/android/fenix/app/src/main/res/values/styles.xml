@@ -59,6 +59,9 @@
         <item name="historyTitleColor">@color/history_title_light_theme</item>
         <item name="historyURLColor">@color/history_url_light_theme</item>
         <item name="historyHeader">@color/history_header_light_theme</item>
+
+        <!-- Library Fragment -->
+        <item name="libraryListItemTextColor">@color/library_list_item_text_color_light_mode</item>
     </style>
 
     <style name="LightTheme" parent="LightThemeBase">
@@ -114,6 +117,9 @@
         <item name="historyTitleColor">@color/history_title_private_theme</item>
         <item name="historyURLColor">@color/history_url_private_theme</item>
         <item name="historyHeader">@color/history_header_private_theme</item>
+
+        <!-- Library Fragment -->
+        <item name="libraryListItemTextColor">@color/off_white</item>
     </style>
 
     <style name="PrivateTheme" parent="PrivateThemeBase">
@@ -159,10 +165,24 @@
         <item name="scrimBackground">@drawable/session_sheet_background</item>
     </style>
 
-    <style name="headerText" parent="TextAppearance.MaterialComponents.Subtitle1">
+    <style name="HeaderTextStyle" parent="TextAppearance.MaterialComponents.Subtitle1">
         <item name="android:textSize">18sp</item>
         <item name="android:textColor">?attr/toolbarTextColor</item>
         <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.03</item>
+    </style>
+
+    <style name="Header14TextStyle" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">?attr/toolbarTextColor</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="ToolbarTitleTextStyle" parent="HeaderTextStyle">
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="ListItemTextStyle" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textColor">?attr/libraryListItemTextColor</item>
     </style>
 </resources>

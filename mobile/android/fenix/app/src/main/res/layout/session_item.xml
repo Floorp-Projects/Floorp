@@ -5,7 +5,7 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="96dp"
     android:layout_marginTop="8dp"
     android:layout_marginBottom="8dp"
     android:background="@android:color/white"
@@ -31,9 +31,10 @@
             android:id="@+id/session_card_timestamp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="8dp"
             android:layout_marginEnd="12dp"
-            android:layout_marginBottom="2dp"
+            android:layout_marginBottom="5dp"
+            android:textAppearance="@style/Header14TextStyle"
             android:textColor="@color/photonInk80"
             android:textSize="16sp"
             app:layout_constraintEnd_toStartOf="@id/session_card_overflow_button"
@@ -44,8 +45,7 @@
             android:id="@+id/session_card_titles"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/photonGrey50"
-            android:textSize="12sp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
             app:layout_constraintEnd_toEndOf="@id/session_card_timestamp"
             app:layout_constraintStart_toStartOf="@id/session_card_timestamp"
             app:layout_constraintTop_toBottomOf="@+id/session_card_timestamp" />
@@ -54,8 +54,7 @@
             android:id="@+id/session_card_extras"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/photonGrey50"
-            android:textSize="12sp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
             app:layout_constraintStart_toStartOf="@id/session_card_titles"
             app:layout_constraintTop_toBottomOf="@+id/session_card_titles" />
 
@@ -71,10 +70,21 @@
             android:layout_width="@dimen/glyph_button_width"
             android:layout_height="@dimen/glyph_button_height"
             android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/content_description_session_menu"
             android:src="@drawable/ic_menu"
             android:tint="?attr/toolbarTextColor"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ImageButton
+        android:id="@+id/session_card_share_button"
+        android:layout_width="@dimen/glyph_button_width"
+        android:layout_height="@dimen/glyph_button_height"
+        android:layout_gravity="bottom|end"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/content_description_session_share"
+        android:src="@drawable/ic_send"
+        android:tint="?attr/toolbarTextColor" />
 </androidx.cardview.widget.CardView>

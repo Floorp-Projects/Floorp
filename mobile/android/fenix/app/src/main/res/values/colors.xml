@@ -51,23 +51,23 @@
     <color name="searchPillBackground">#FAFAFC</color>
     <color name="searchPillPrimary">#202340</color>
 
-    <color name="library_sessions_icon_background">#C0EBFF</color>
-    <color name="library_sessions_icon">#094490</color>
+    <color name="library_sessions_icon_background">#B9F0FD</color>
+    <color name="library_sessions_icon">#0E214A</color>
 
-    <color name="library_screenshots_icon_background">#A3FFFF</color>
-    <color name="library_screenshots_icon">#09616A</color>
+    <color name="library_screenshots_icon_background">#A5FCD4</color>
+    <color name="library_screenshots_icon">#1B3F36</color>
 
-    <color name="library_downloads_icon_background">#D6CEFF</color>
-    <color name="library_downloads_icon">#1E1562</color>
+    <color name="library_downloads_icon_background">#D4C1FA</color>
+    <color name="library_downloads_icon">#2E2060</color>
 
-    <color name="library_favorites_icon_background">#FDD4FF</color>
-    <color name="library_favorites_icon">#6E006E</color>
+    <color name="library_favorites_icon_background">#F4B8D9</color>
+    <color name="library_favorites_icon">#491949</color>
 
-    <color name="library_history_icon_background">#FFDAEC</color>
-    <color name="library_history_icon">#720028</color>
+    <color name="library_history_icon_background">#F5C0C6</color>
+    <color name="library_history_icon">#3E0909</color>
 
-    <color name="library_key_icon_background">#FFF4C3</color>
-    <color name="library_key_icon">#C13905</color>
+    <color name="library_reading_list_icon_background">#FCE98F</color>
+    <color name="library_reading_list_icon">#8A201F</color>
 
     <color name="history_header_light_theme">#696A6A</color>
     <color name="history_title_light_theme">@color/light_mode_text_color</color>
@@ -87,4 +87,6 @@
     <color name="quick_action_read_icon_background">#fce98f</color>
 
     <color name="quick_action_pull_tab">#2915141A</color>
+
+    <color name="library_list_item_text_color_light_mode">#202340</color>
 </resources>

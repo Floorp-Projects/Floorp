@@ -47,4 +47,7 @@
     <attr name="historyURLColor" format="reference" />
     <attr name="historyTitleColor" format="reference" />
     <attr name="historyHeader" format="reference" />
+
+    <!-- Library Fragment -->
+    <attr name="libraryListItemTextColor" format="reference" />
 </resources>

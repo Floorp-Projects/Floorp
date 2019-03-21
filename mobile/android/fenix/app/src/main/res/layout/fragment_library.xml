@@ -49,10 +49,21 @@
         android:layout_height="wrap_content"
         android:background="?android:attr/selectableItemBackground"
         android:clickable="true"
-        android:contentDescription="@string/library_favorites"
+        android:contentDescription="@string/library_bookmarks"
         android:focusable="true"
         app:listItemIcon="@drawable/library_icon_favorites_circle_background"
-        app:listItemTitle="@string/library_favorites" />
+        app:listItemTitle="@string/library_bookmarks" />
+
+    <org.mozilla.fenix.library.LibraryListItem
+        android:id="@+id/libraryReadingList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:contentDescription="@string/library_reading_list"
+        android:focusable="true"
+        app:listItemIcon="@drawable/library_icon_reading_list_circle_background"
+        app:listItemTitle="@string/library_reading_list" />
 
     <org.mozilla.fenix.library.LibraryListItem
         android:id="@+id/libraryHistory"
@@ -63,16 +74,4 @@
         android:focusable="true"
         app:listItemIcon="@drawable/library_icon_history_circle_background"
         app:listItemTitle="@string/library_history" />
-
-    <org.mozilla.fenix.library.LibraryListItem
-        android:id="@+id/libraryLogins"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:contentDescription="@string/library_logins"
-        android:focusable="true"
-        app:listItemIcon="@drawable/library_icon_logins_circle_background"
-        app:listItemTitle="@string/library_logins" />
-
 </LinearLayout>

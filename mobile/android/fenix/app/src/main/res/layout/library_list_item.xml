@@ -17,7 +17,7 @@
         android:layout_marginTop="@dimen/library_item_icon_margin_vertical"
         android:layout_marginEnd="@dimen/library_item_icon_margin_horizontal"
         android:layout_marginBottom="@dimen/library_item_icon_margin_vertical"
-        android:background="@drawable/library_icon_logins_circle_background"
+        android:background="@drawable/library_icon_reading_list_circle_background"
         android:clickable="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -30,7 +30,7 @@
         android:layout_marginStart="@dimen/library_item_icon_margin_horizontal"
         android:clickable="false"
         android:gravity="center_vertical"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:textAppearance="@style/ListItemTextStyle"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/libraryIcon"
         app:layout_constraintTop_toTopOf="parent" />
