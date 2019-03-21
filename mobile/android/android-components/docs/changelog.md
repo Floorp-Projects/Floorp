@@ -44,6 +44,12 @@ permalink: /changelog/
   * Blur controlled `EngineView` for better screen reader accessibility.
   * Announce result count for screen reader users.
 
+* **support-android-test**
+  * Added `ViewMatchers` that take Boolean arguments instead of requiring inversion via the `not` Matcher: e.g. `hasFocus(false)` instead of `not(hasFocus())`
+  * Added `ViewInteraction` extension functions like `assertHasFocus(Boolean)` for short-hand.
+  * Added `Matchers.maybeInvertMatcher` to optionally apply `not` based on the Boolean argument
+  * Added `ViewInteraction.click()` extension function for short-hand.
+
 # 0.47.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.46.0...v0.47.0)
