@@ -52,13 +52,6 @@
 #  define PREFIX 1
 #endif
 
-#if ARCH_x86_32 == 1 || \
-    (ARCH_X86_64 == 1 && defined(__linux__) && !defined(__ANDROID__))
-#  define STACK_ALIGNMENT 16
-#else
-#  define STACK_ALIGNMENT 32
-#endif
-
 #if defined(_WIN32) || defined(__CYGWIN__)
 // _WIN32_WINNT 0x0601 is set in global macros
 #  define UNICODE 1
