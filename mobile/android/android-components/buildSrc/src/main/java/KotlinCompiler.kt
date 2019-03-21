@@ -15,7 +15,6 @@ object KotlinCompiler {
         "browser-awesomebar",
         "browser-domains",
         "browser-engine-gecko",
-        "browser-engine-gecko-beta",
         "browser-engine-servo",
         "browser-engine-system",
         "browser-errorpages",
