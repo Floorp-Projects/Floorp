@@ -255,7 +255,7 @@ function addAccessibleTask(doc, task) {
 
     await BrowserTestUtils.withNewTab({
       gBrowser,
-      url: url
+      url
     }, async function(browser) {
       registerCleanupFunction(() => {
         if (browser) {

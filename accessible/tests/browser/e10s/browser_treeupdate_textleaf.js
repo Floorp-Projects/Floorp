@@ -9,7 +9,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 async function removeTextData(browser, accessible, id, role) {
   let tree = {
-    role: role,
+    role,
     children: [ { role: ROLE_TEXT_LEAF, name: "text" } ]
   };
   testAccessibleTree(accessible, tree);
@@ -20,7 +20,7 @@ async function removeTextData(browser, accessible, id, role) {
   });
   await onReorder;
 
-  tree = { role: role, children: [] };
+  tree = { role, children: [] };
   testAccessibleTree(accessible, tree);
 }
 
