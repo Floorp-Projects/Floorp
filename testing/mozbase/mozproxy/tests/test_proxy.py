@@ -6,7 +6,7 @@ import mock
 import mozunit
 import mozinfo
 from mozproxy import get_playback
-from mozproxy.backends import mitm
+from support import tempdir
 
 here = os.path.dirname(__file__)
 
@@ -29,8 +29,8 @@ class Process:
 
 @mock.patch("mozprocess.processhandler.ProcessHandlerMixin.Process", new=Process)
 @mock.patch("mozproxy.backends.mitm.tooltool_download", new=mock.DEFAULT)
+@mock.patch("mozproxy.backends.mitm.Mitmproxy.check_proxy", lambda x: True)
 def test_mitm(*args):
-    mitm.MITMDUMP_SLEEP = 0.1
     bin_name = "mitmproxy-rel-bin-{platform}.manifest"
     pageset_name = "mitmproxy-recordings-raptor-paypal.manifest"
 
@@ -41,13 +41,15 @@ def test_mitm(*args):
         "platform": mozinfo.os,
         "playback_recordings": os.path.join(here, "paypal.mp"),
         "run_local": True,
-        "obj_path": here,  # XXX tmp?
         "binary": "firefox",
         "app": "firefox",
         "host": "example.com",
     }
 
-    playback = get_playback(config)
+    with tempdir() as obj_path:
+        config["obj_path"] = obj_path
+        playback = get_playback(config)
+
     assert playback is not None
     try:
         playback.start()
@@ -57,6 +59,7 @@ def test_mitm(*args):
 
 @mock.patch("mozprocess.processhandler.ProcessHandlerMixin.Process", new=Process)
 @mock.patch("mozproxy.backends.mitm.tooltool_download", new=mock.DEFAULT)
+@mock.patch("mozproxy.backends.mitm.Mitmproxy.check_proxy", lambda x: True)
 def test_playback_setup_failed(*args):
     class SetupFailed(Exception):
         pass
@@ -67,7 +70,6 @@ def test_playback_setup_failed(*args):
 
         return _s
 
-    mitm.MITMDUMP_SLEEP = 0.1
     bin_name = "mitmproxy-rel-bin-{platform}.manifest"
     pageset_name = "mitmproxy-recordings-raptor-paypal.manifest"
 
@@ -78,22 +80,24 @@ def test_playback_setup_failed(*args):
         "platform": mozinfo.os,
         "playback_recordings": os.path.join(here, "paypal.mp"),
         "run_local": True,
-        "obj_path": here,  # XXX tmp?
         "binary": "firefox",
         "app": "firefox",
         "host": "example.com",
     }
 
     prefix = "mozproxy.backends.mitm.MitmproxyDesktop."
-    with mock.patch(prefix + "setup", new_callable=setup):
-        with mock.patch(prefix + "stop_mitmproxy_playback") as p:
-            try:
-                pb = get_playback(config)
-                pb.start()
-            except SetupFailed:
-                assert p.call_count == 1
-            except Exception:
-                raise
+
+    with tempdir() as obj_path:
+        config["obj_path"] = obj_path
+        with mock.patch(prefix + "setup", new_callable=setup):
+            with mock.patch(prefix + "stop_mitmproxy_playback") as p:
+                try:
+                    pb = get_playback(config)
+                    pb.start()
+                except SetupFailed:
+                    assert p.call_count == 1
+                except Exception:
+                    raise
 
 
 if __name__ == "__main__":
