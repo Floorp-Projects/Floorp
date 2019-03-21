@@ -90,19 +90,19 @@ class RequestTest {
     }
 
     @Test
-    fun `WHEN creating a request body from an empty params map THEN the empty string is returned`() {
-        assertEquals("", Request.Body.fromParamsForFormUrlEncoded(emptyMap()).readText())
+    fun `WHEN creating a request body from empty params THEN the empty string is returned`() {
+        assertEquals("", Request.Body.fromParamsForFormUrlEncoded().readText())
     }
 
     @Test
     fun `WHEN creating a request body from params with empty keys or values THEN they are represented as the empty string in the result`() {
         // In practice, we don't expect anyone to do this but this test is here as to documentation of what happens.
         val expected = "=value&hello=world&key="
-        val body = Request.Body.fromParamsForFormUrlEncoded(mapOf(
+        val body = Request.Body.fromParamsForFormUrlEncoded(
             "" to "value",
             "hello" to "world",
             "key" to ""
-        ))
+        )
         assertEquals(expected, body.readText())
     }
 
@@ -112,10 +112,10 @@ class RequestTest {
         val encodedURL = URLEncoder.encode(inputUrl, Charsets.UTF_8.name())
         val expected = "v=2&url=$encodedURL"
 
-        val body = Request.Body.fromParamsForFormUrlEncoded(mapOf(
+        val body = Request.Body.fromParamsForFormUrlEncoded(
             "v" to "2",
             "url" to inputUrl
-        ))
+        )
         assertEquals(expected, body.readText())
     }
 

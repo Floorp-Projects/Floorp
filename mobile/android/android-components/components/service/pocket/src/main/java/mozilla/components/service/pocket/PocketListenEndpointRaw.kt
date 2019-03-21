@@ -40,12 +40,12 @@ internal class PocketListenEndpointRaw(
                 CONTENT_TYPE to CONTENT_TYPE_FORM_URLENCODED,
                 X_ACCESS_TOKEN to accessToken
             ),
-            body = Request.Body.fromParamsForFormUrlEncoded(mapOf(
+            body = Request.Body.fromParamsForFormUrlEncoded(
                 "url" to articleUrl,
                 "article_id" to articleID.toString(),
                 "v" to "2",
                 "locale" to "en-US"
-            ))
+            )
         )
 
         // If an invalid body is sent to the server, 404 is returned.

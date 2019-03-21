@@ -74,7 +74,7 @@ data class Request(
              *
              * @see [Headers.Values.CONTENT_TYPE_FORM_URLENCODED]
              */
-            fun fromParamsForFormUrlEncoded(unencodedParams: Map<String, String>): Body {
+            fun fromParamsForFormUrlEncoded(vararg unencodedParams: Pair<String, String>): Body {
                 // It's unintuitive to use the Uri class format and encode
                 // but its GET query syntax is exactly what we need.
                 val uriBuilder = Uri.Builder()
