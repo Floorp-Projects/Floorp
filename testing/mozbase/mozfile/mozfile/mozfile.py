@@ -36,12 +36,13 @@ def extract_tarball(src, dest):
 
     import tarfile
 
-    bundle = tarfile.open(src)
-    namelist = bundle.getnames()
+    with tarfile.open(src) as bundle:
+        namelist = []
 
-    for name in namelist:
-        bundle.extract(name, path=dest)
-    bundle.close()
+        for m in bundle:
+            bundle.extract(m, path=dest)
+            namelist.append(m.name)
+
     return namelist
 
 
