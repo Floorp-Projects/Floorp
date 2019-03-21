@@ -1529,30 +1529,11 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
 
   bool apzEnabled = mManager->AsyncPanZoomEnabled();
 
-  FlattenedDisplayItemIterator iter(aDisplayListBuilder, aDisplayList);
-  while (nsDisplayItem* i = iter.GetNext()) {
-    nsDisplayItem* item = i;
+  FlattenedDisplayListIterator iter(aDisplayListBuilder, aDisplayList);
+  while (iter.HasNext()) {
+    nsDisplayItem* item = iter.GetNextItem();
+
     DisplayItemType itemType = item->GetType();
-
-    // Peek ahead to the next item and try merging with it or swapping with it
-    // if necessary.
-    AutoTArray<nsDisplayItem*, 1> mergedItems;
-    mergedItems.AppendElement(item);
-    while (nsDisplayItem* peek = iter.PeekNext()) {
-      if (!item->CanMerge(peek)) {
-        break;
-      }
-
-      mergedItems.AppendElement(peek);
-
-      // Move the iterator forward since we will merge this item.
-      i = iter.GetNext();
-    }
-
-    if (mergedItems.Length() > 1) {
-      item = aDisplayListBuilder->MergeItems(mergedItems);
-      MOZ_ASSERT(item && itemType == item->GetType());
-    }
 
     if (mForEventsAndPluginsOnly &&
         (itemType != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO &&
