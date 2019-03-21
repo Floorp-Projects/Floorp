@@ -461,13 +461,17 @@ def sdk_bin_path(valid_windows_sdk_dir, valid_ucrt_sdk_dir):
     return result
 
 
-mt = check_prog('MT', ('mt.exe',), input='MT',
+mt = check_prog('MT', ('llvm-mt', 'mt'), input='MT',
                 paths=sdk_bin_path)
 
 
+@depends(mt)
+def mt_not_llvm_mt(mt):
+    return not os.path.basename(mt).lower().startswith('llvm')
+
 # Check that MT is not something unexpected like "magnetic tape manipulation
 # utility".
-@depends(mt)
+@depends(mt, when=mt_not_llvm_mt)
 @checking('whether MT is really Microsoft Manifest Tool', lambda x: bool(x))
 @imports('subprocess')
 def valid_mt(path):
