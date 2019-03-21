@@ -193,10 +193,9 @@ MOZ_CAN_RUN_SCRIPT void test_ref_8() {
 }
 
 MOZ_CAN_RUN_SCRIPT void test_maybe() {
-  // FIXME(emilio): This should generate an error, but it's pre-existing!
   mozilla::Maybe<RefCountedBase*> unsafe;
   unsafe.emplace(new RefCountedBase);
-  (*unsafe)->method_test();
+  (*unsafe)->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_maybe_2() {
@@ -345,5 +344,34 @@ struct DisallowConstNonRefPtrMemberArgs {
   }
   MOZ_CAN_RUN_SCRIPT void bar() {
     test2(mRefCounted); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+};
+
+template<typename T>
+struct TArray {
+  TArray() {
+    mArray[0] = new RefCountedBase();
+  }
+  T& operator[](unsigned int index) { return mArray[index]; }
+  T mArray[1];
+};
+
+struct DisallowRawTArrayElement {
+  TArray<RefCountedBase*> mArray;
+  MOZ_CAN_RUN_SCRIPT void foo() {
+    mArray[0]->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+  MOZ_CAN_RUN_SCRIPT void bar() {
+    test2(mArray[0]); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+};
+
+struct DisallowRefPtrTArrayElement {
+  TArray<RefPtr<RefCountedBase>> mArray;
+  MOZ_CAN_RUN_SCRIPT void foo() {
+    mArray[0]->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+  MOZ_CAN_RUN_SCRIPT void bar() {
+    test2(mArray[0]); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
   }
 };

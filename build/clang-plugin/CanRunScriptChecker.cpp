@@ -67,7 +67,14 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
   //    reference until "this" gets destroyed.
   auto KnownLiveSmartPtr = anyOf(StackSmartPtr, ConstMemberOfThisSmartPtr);
   auto MozKnownLiveCall =
-    callExpr(callee(functionDecl(hasName("MOZ_KnownLive"))));
+    ignoreTrivials(callExpr(callee(functionDecl(hasName("MOZ_KnownLive")))));
+
+  // A matcher that matches some cases that are known live due to local
+  // information (as in, not relying on the rest of this analysius to guarantee
+  // their liveness).  There's some conceptual overlap with the set of unless()
+  // clauses in InvalidArg here, but for our purposes this limited set of cases
+  // is fine.
+  auto LocalKnownLive = anyOf(KnownLiveSmartPtr, MozKnownLiveCall);
 
   auto InvalidArg =
       // We want to find any expression,
@@ -85,14 +92,14 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
           unless(KnownLiveSmartPtr),
           // and which is not a method call on a stack smart ptr,
           unless(cxxMemberCallExpr(on(KnownLiveSmartPtr))),
-          // and which is not calling operator* on a stack smart ptr.
+          // and which is not calling operator* or operator-> on a thing that is
+          // already known to be live.
           unless(
-            allOf(
-              cxxOperatorCallExpr(hasOverloadedOperatorName("*")),
-              callExpr(allOf(
-                hasAnyArgument(KnownLiveSmartPtr),
-                argumentCountIs(1)
-              ))
+            cxxOperatorCallExpr(
+              anyOf(hasOverloadedOperatorName("*"),
+                    hasOverloadedOperatorName("->")),
+              hasAnyArgument(LocalKnownLive),
+              argumentCountIs(1)
             )
           ),
           // and which is not a parameter of the parent function,
@@ -141,6 +148,9 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
           ),
           expr().bind("invalidArg")));
 
+  // A matcher which will mark the first invalid argument it finds invalid, but
+  // will always match, even if it finds no invalid arguments, so it doesn't
+  // preclude other matchers from running and maybe finding invalid args.
   auto OptionalInvalidExplicitArg = anyOf(
       // We want to find any argument which is invalid.
       hasAnyArgument(InvalidArg),
@@ -159,15 +169,11 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
               cxxMemberCallExpr(
                   // which optionally has an invalid arg,
                   OptionalInvalidExplicitArg,
-                  // or which optionally has an invalid implicit this argument,
+                  // or which optionally has an invalid this argument,
                   anyOf(
-                      // which derefs into an invalid arg,
-                      on(cxxOperatorCallExpr(
-                          anyOf(hasAnyArgument(InvalidArg), anything()))),
-                      // or is an invalid arg.
-                      on(InvalidArg),
-
-                      anything()),
+                    on(InvalidArg),
+                    anything()
+                  ),
                   expr().bind("callExpr")),
               // or a regular call expression,
               callExpr(
