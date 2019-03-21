@@ -7,6 +7,7 @@
 #ifndef DOMIntersectionObserver_h
 #define DOMIntersectionObserver_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/IntersectionObserverBinding.h"
 #include "nsStyleCoord.h"
 #include "nsTArray.h"
@@ -132,7 +133,7 @@ class DOMIntersectionObserver final : public nsISupports,
   bool SetRootMargin(const nsAString& aString);
 
   void Update(Document* aDocument, DOMHighResTimeStamp time);
-  void Notify();
+  MOZ_CAN_RUN_SCRIPT void Notify();
 
  protected:
   void Connect();

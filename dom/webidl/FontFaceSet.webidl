@@ -23,7 +23,6 @@ interface FontFaceSetIterator {
   [Throws] FontFaceSetIteratorResult next();
 };
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback FontFaceSetForEachCallback = void (FontFace value, FontFace key, FontFaceSet set);
 
 enum FontFaceSetLoadStatus { "loading", "loaded" };

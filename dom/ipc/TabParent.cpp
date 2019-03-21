@@ -2210,26 +2210,24 @@ mozilla::ipc::IPCResult TabParent::RecvRegisterProtocolHandler(
 }
 
 mozilla::ipc::IPCResult TabParent::RecvOnContentBlockingEvent(
-    const OptionalWebProgressData& aWebProgressData,
+    const Maybe<WebProgressData>& aWebProgressData,
     const RequestData& aRequestData, const uint32_t& aEvent) {
   nsCOMPtr<nsIBrowser> browser =
       mFrameElement ? mFrameElement->AsBrowser() : nullptr;
   if (browser) {
-    MOZ_ASSERT(aWebProgressData.type() != OptionalWebProgressData::T__None);
-
-    if (aWebProgressData.type() == OptionalWebProgressData::Tvoid_t) {
+    if (aWebProgressData.isNothing()) {
       Unused << browser->CallWebProgressContentBlockingEventListeners(
           false, false, false, 0, 0, aRequestData.requestURI(),
           aRequestData.originalRequestURI(), aRequestData.matchedList(),
           aEvent);
     } else {
       Unused << browser->CallWebProgressContentBlockingEventListeners(
-          true, aWebProgressData.get_WebProgressData().isTopLevel(),
-          aWebProgressData.get_WebProgressData().isLoadingDocument(),
-          aWebProgressData.get_WebProgressData().loadType(),
-          aWebProgressData.get_WebProgressData().DOMWindowID(),
-          aRequestData.requestURI(), aRequestData.originalRequestURI(),
-          aRequestData.matchedList(), aEvent);
+          true, aWebProgressData.ref().isTopLevel(),
+          aWebProgressData.ref().isLoadingDocument(),
+          aWebProgressData.ref().loadType(),
+          aWebProgressData.ref().DOMWindowID(), aRequestData.requestURI(),
+          aRequestData.originalRequestURI(), aRequestData.matchedList(),
+          aEvent);
     }
   }
 
@@ -3301,7 +3299,7 @@ mozilla::ipc::IPCResult TabParent::RecvAsyncAuthPrompt(
 
 mozilla::ipc::IPCResult TabParent::RecvInvokeDragSession(
     nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction,
-    const OptionalShmem& aVisualDnDData, const uint32_t& aStride,
+    Maybe<Shmem>&& aVisualDnDData, const uint32_t& aStride,
     const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
     const IPC::Principal& aPrincipal) {
   mInitialDataTransferItems.Clear();
@@ -3326,14 +3324,13 @@ mozilla::ipc::IPCResult TabParent::RecvInvokeDragSession(
     dragService->MaybeAddChildProcess(Manager());
   }
 
-  if (aVisualDnDData.type() == OptionalShmem::Tvoid_t ||
-      !aVisualDnDData.get_Shmem().IsReadable() ||
-      aVisualDnDData.get_Shmem().Size<char>() < aDragRect.height * aStride) {
+  if (aVisualDnDData.isNothing() || !aVisualDnDData.ref().IsReadable() ||
+      aVisualDnDData.ref().Size<char>() < aDragRect.height * aStride) {
     mDnDVisualization = nullptr;
   } else {
     mDnDVisualization = gfx::CreateDataSourceSurfaceFromData(
         gfx::IntSize(aDragRect.width, aDragRect.height), aFormat,
-        aVisualDnDData.get_Shmem().get<uint8_t>(), aStride);
+        aVisualDnDData.ref().get<uint8_t>(), aStride);
   }
 
   mDragValid = true;
@@ -3342,8 +3339,8 @@ mozilla::ipc::IPCResult TabParent::RecvInvokeDragSession(
 
   esm->BeginTrackingRemoteDragGesture(mFrameElement);
 
-  if (aVisualDnDData.type() == OptionalShmem::TShmem) {
-    Unused << DeallocShmem(aVisualDnDData);
+  if (aVisualDnDData.isSome()) {
+    Unused << DeallocShmem(aVisualDnDData.ref());
   }
 
   return IPC_OK();

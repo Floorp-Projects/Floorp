@@ -12,7 +12,6 @@ dictionary PerformanceObserverInit {
   boolean buffered = false;
 };
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback PerformanceObserverCallback = void (PerformanceObserverEntryList entries,
                                              PerformanceObserver observer);
 

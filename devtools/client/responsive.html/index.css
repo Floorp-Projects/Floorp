@@ -362,6 +362,7 @@ body,
 .viewport-dimension-input {
   text-align: center;
   width: 3em;
+  -moz-appearance: textfield;
 }
 
 .viewport-dimension-separator {

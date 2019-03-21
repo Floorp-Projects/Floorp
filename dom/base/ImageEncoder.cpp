@@ -91,19 +91,22 @@ class EncodingCompleteEvent : public CancelableRunnable {
     }
   }
 
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.  See
+  // bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Run() override {
     nsresult rv = NS_OK;
 
+    // We want to null out mEncodeCompleteCallback no matter what.
+    RefPtr<EncodeCompleteCallback> callback(mEncodeCompleteCallback.forget());
     if (!mFailed) {
       // The correct parentObject has to be set by the mEncodeCompleteCallback.
       RefPtr<Blob> blob =
           Blob::CreateMemoryBlob(nullptr, mImgData, mImgSize, mType);
       MOZ_ASSERT(blob);
 
-      rv = mEncodeCompleteCallback->ReceiveBlob(blob.forget());
+      rv = callback->ReceiveBlob(blob.forget());
     }
-
-    mEncodeCompleteCallback = nullptr;
 
     return rv;
   }

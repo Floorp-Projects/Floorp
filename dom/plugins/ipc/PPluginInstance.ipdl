@@ -55,11 +55,6 @@ union SurfaceDescriptor {
   null_t;
 };
 
-union OptionalShmem {
-  Shmem;
-  null_t;
-};
-
 intr protocol PPluginInstance
 {
   manager PPluginModule;

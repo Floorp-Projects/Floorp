@@ -551,6 +551,9 @@ class TimerRunnable final : public WorkerRunnable,
     // Silence bad assertions.
   }
 
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until worker runnables are generally
+  // MOZ_CAN_RUN_SCRIPT.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual bool WorkerRun(JSContext* aCx,
                          WorkerPrivate* aWorkerPrivate) override {
     return aWorkerPrivate->RunExpiredTimeouts(aCx);
@@ -4267,8 +4270,8 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
     } else {
       ErrorResult rv;
       JS::Rooted<JS::Value> ignoredVal(aCx);
-      callback->Call(GlobalScope(), info->mHandler->GetArgs(), &ignoredVal, rv,
-                     reason);
+      RefPtr<WorkerGlobalScope> scope = GlobalScope();
+      callback->Call(scope, info->mHandler->GetArgs(), &ignoredVal, rv, reason);
       if (rv.IsUncatchableException()) {
         rv.SuppressException();
         retval = false;

@@ -66,7 +66,7 @@ class TimeoutExecutor final : public nsIRunnable,
   nsresult MaybeReschedule(const TimeStamp& aDeadline,
                            const TimeDuration& aMinDelay);
 
-  void MaybeExecute();
+  MOZ_CAN_RUN_SCRIPT void MaybeExecute();
 
  public:
   TimeoutExecutor(TimeoutManager* aOwner, bool aIsIdleQueue,

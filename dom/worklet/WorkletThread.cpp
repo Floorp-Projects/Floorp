@@ -9,6 +9,7 @@
 #include "nsContentUtils.h"
 #include "nsCycleCollector.h"
 #include "mozilla/dom/AtomList.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/ThreadEventQueue.h"
 
@@ -100,7 +101,10 @@ class WorkletJSContext final : public CycleCollectedJSContext {
     nsCycleCollector_startup();
   }
 
-  ~WorkletJSContext() override {
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY because otherwise we have to annotate the
+  // SpiderMonkey JS::JobQueue's destructor as MOZ_CAN_RUN_SCRIPT, which is a
+  // bit of a pain.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY ~WorkletJSContext() override {
     MOZ_ASSERT(!NS_IsMainThread());
 
     JSContext* cx = MaybeContext();

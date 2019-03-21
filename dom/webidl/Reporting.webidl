@@ -26,7 +26,6 @@ interface ReportingObserver {
   ReportList takeRecords();
 };
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback ReportingObserverCallback = void (sequence<Report> reports, ReportingObserver observer);
 
 dictionary ReportingObserverOptions {

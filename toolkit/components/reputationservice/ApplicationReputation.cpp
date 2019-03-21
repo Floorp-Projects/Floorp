@@ -298,6 +298,7 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".mim",    // MS Mail
     //".mkv",
     ".mmc",  // MS Office
+    ".mobileconfig",  // Configuration file for Apple systems
     ".mof",  // Windows
     //".mov",
     //".mp3",

@@ -300,7 +300,7 @@ void main(void) {
     oFragColor = vColor * alpha_mask;
     oFragBlend = alpha_mask * vColor.a;
 #else
-    oFragColor = vColor * mask * alpha;
+    write_output(vColor * mask * alpha);
 #endif
 }
 #endif

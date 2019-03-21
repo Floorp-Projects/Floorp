@@ -7,6 +7,7 @@
 #include "DataTransferItem.h"
 #include "DataTransferItemList.h"
 
+#include "mozilla/Attributes.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/DataTransferItemBinding.h"
@@ -430,15 +431,19 @@ void DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
           mCallback(aCallback),
           mStringData(aStringData) {}
 
+    // MOZ_CAN_RUN_SCRIPT_BOUNDARY until runnables are opted into
+    // MOZ_CAN_RUN_SCRIPT.  See bug 1535398.
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
     NS_IMETHOD Run() override {
       ErrorResult rv;
-      mCallback->Call(mStringData, rv);
+      // mCallback is const, so we never null it out until our destructor.
+      MOZ_KnownLive(mCallback)->Call(mStringData, rv);
       NS_WARNING_ASSERTION(!rv.Failed(), "callback failed");
       return rv.StealNSResult();
     }
 
    private:
-    RefPtr<FunctionStringCallback> mCallback;
+    const RefPtr<FunctionStringCallback> mCallback;
     nsString mStringData;
   };
 

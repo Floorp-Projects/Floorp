@@ -90,7 +90,7 @@ uint32_t GetFlagsForEvents(
 }
 
 template <class TWrapped, class TUnwrapped>
-void CallListeners(
+MOZ_CAN_RUN_SCRIPT void CallListeners(
     uint32_t aEventFlags, FlaggedArray<TWrapped>& aListeners,
     const Sequence<OwningNonNull<PlacesEvent>>& aEvents,
     const std::function<TUnwrapped(TWrapped&)>& aUnwrapListener,
@@ -283,7 +283,12 @@ void PlacesObservers::NotifyListeners(
 
   CallListeners<RefPtr<PlacesEventCallback>, RefPtr<PlacesEventCallback>>(
       flags, *JSListeners::GetListeners(), aEvents, [](auto& cb) { return cb; },
-      [&](auto& cb, const auto& events) { cb->Call(aEvents); });
+      // MOZ_CAN_RUN_SCRIPT_BOUNDARY because on Windows this gets called from
+      // some internals of the std::function implementation that we can't
+      // annotate.  We handle this by annotating CallListeners and making sure
+      // it holds a strong ref to the callback.
+      [&](auto& cb, const auto& events)
+          MOZ_CAN_RUN_SCRIPT_BOUNDARY { cb->Call(aEvents); });
 
   CallListeners<WeakPtr<places::INativePlacesEventCallback>,
                 RefPtr<places::INativePlacesEventCallback>>(
@@ -297,7 +302,14 @@ void PlacesObservers::NotifyListeners(
                 RefPtr<PlacesWeakCallbackWrapper>>(
       flags, *WeakJSListeners::GetListeners(), aEvents,
       [](auto& cb) { return cb.get(); },
-      [&](auto& cb, const auto& events) { cb->mCallback->Call(aEvents); });
+      // MOZ_CAN_RUN_SCRIPT_BOUNDARY because on Windows this gets called from
+      // some internals of the std::function implementation that we can't
+      // annotate.  We handle this by annotating CallListeners and making sure
+      // it holds a strong ref to the callback.
+      [&](auto& cb, const auto& events) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+        RefPtr<PlacesEventCallback> callback(cb->mCallback);
+        callback->Call(aEvents);
+      });
 
   auto& listenersToRemove = *JSListeners::GetListenersToRemove();
   if (listenersToRemove.Length() > 0) {

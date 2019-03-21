@@ -48,6 +48,7 @@
 #include "nsContentListDeclarations.h"
 #include "nsExpirationTracker.h"
 #include "nsClassHashtable.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentBlockingLog.h"
@@ -3487,7 +3488,7 @@ class Document : public nsINode,
 
   void UpdateIntersectionObservations();
   void ScheduleIntersectionObserverNotification();
-  void NotifyIntersectionObservers();
+  MOZ_CAN_RUN_SCRIPT void NotifyIntersectionObservers();
 
   // Dispatch a runnable related to the document.
   nsresult Dispatch(TaskCategory aCategory,
