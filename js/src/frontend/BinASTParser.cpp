@@ -2093,7 +2093,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
   }
 
   BINJS_TRY_DECL(result, handler_.newCall(callee, arguments));
-  result->setCallOp(op);
+  result->setOp(op);
   return result;
 }
 
@@ -4134,6 +4134,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceUnaryExpression(
     case UnaryOperator::Delete: {
       switch (operand->getKind()) {
         case ParseNodeKind::Name:
+          operand->setOp(JSOP_DELNAME);
           pnk = ParseNodeKind::DeleteNameExpr;
           BINJS_TRY(this->strictModeError(JSMSG_DEPRECATED_DELETE_OPERAND));
           pc_->sc()->setBindingsAccessedDynamically();

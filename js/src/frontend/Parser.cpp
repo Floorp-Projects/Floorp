@@ -5810,6 +5810,8 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
         return false;
       }
     }
+
+    handler_.adjustGetToSet(*forInitialPart);
   } else if (handler_.isPropertyAccess(*forInitialPart)) {
     // Permitted: no additional testing/fixup needed.
   } else if (handler_.isFunctionCall(*forInitialPart)) {
@@ -8421,6 +8423,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
         return null();
       }
     }
+
+    handler_.adjustGetToSet(lhs);
   } else if (handler_.isPropertyAccess(lhs)) {
     // Permitted: no additional testing/fixup needed.
   } else if (handler_.isFunctionCall(lhs)) {
@@ -8833,17 +8837,14 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
         return null();
       }
 
-      CallNodeType newExpression =
-          handler_.newNewExpression(newBegin, ctorExpr, args);
-      if (!newExpression) {
+      lhs = handler_.newNewExpression(newBegin, ctorExpr, args);
+      if (!lhs) {
         return null();
       }
 
       if (isSpread) {
-        handler_.setCallOp(newExpression, JSOP_SPREADNEW);
+        handler_.setOp(lhs, JSOP_SPREADNEW);
       }
-
-      lhs = newExpression;
     }
   } else if (tt == TokenKind::Super) {
     NameNodeType thisName = newThisName();
@@ -8946,16 +8947,14 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
           return null();
         }
 
-        CallNodeType superCall = handler_.newSuperCall(lhs, args);
-        if (!superCall) {
+        nextMember = handler_.newSuperCall(lhs, args);
+        if (!nextMember) {
           return null();
         }
 
         if (isSpread) {
-          handler_.setCallOp(superCall, JSOP_SPREADSUPERCALL);
+          handler_.setOp(nextMember, JSOP_SPREADSUPERCALL);
         }
-
-        nextMember = superCall;
 
         NameNodeType thisName = newThisName();
         if (!thisName) {
@@ -9015,7 +9014,6 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
           }
         }
 
-        CallNodeType callNode;
         if (tt == TokenKind::LeftParen) {
           bool isSpread = false;
           PossibleError* asyncPossibleError =
@@ -9035,8 +9033,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
             }
           }
 
-          callNode = handler_.newCall(lhs, args);
-          if (!callNode) {
+          nextMember = handler_.newCall(lhs, args);
+          if (!nextMember) {
             return null();
           }
         } else {
@@ -9049,13 +9047,12 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
             return null();
           }
 
-          callNode = handler_.newTaggedTemplate(lhs, args);
-          if (!callNode) {
+          nextMember = handler_.newTaggedTemplate(lhs, args);
+          if (!nextMember) {
             return null();
           }
         }
-        handler_.setCallOp(callNode, op);
-        nextMember = callNode;
+        handler_.setOp(nextMember, op);
       }
     } else {
       anyChars.ungetToken();
