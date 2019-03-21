@@ -8,12 +8,14 @@
 #include "TelemetryOrigin.h"
 
 #include "nsDataHashtable.h"
+#include "nsIXULAppInfo.h"
 #include "TelemetryCommon.h"
 #include "TelemetryOriginEnums.h"
 #include "TelemetryOriginData.h"
 
 #include "mozilla/Atomics.h"
-#include "mozilla/dom/Promise.h"
+#include "mozilla/Base64.h"
+#include "mozilla/dom/PrioEncoder.h"
 #include "mozilla/StaticMutex.h"
 
 #include <type_traits>
@@ -22,9 +24,26 @@ using mozilla::ErrorResult;
 using mozilla::MallocSizeOf;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
-using mozilla::dom::Promise;
+using mozilla::dom::PrioEncoder;
 using mozilla::Telemetry::OriginMetricID;
 using mozilla::Telemetry::Common::ToJSString;
+
+/***********************************************************************
+ *
+ * Firefox Origin Telemetry
+ * Docs:
+ * https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/origin.html
+ *
+ * Origin Telemetry stores pairs of information (metric, origin) which boils
+ * down to "$metric happened on $origin".
+ *
+ * Prio can only encode up-to-2046-length bit vectors. The process of
+ * transforming these pairs of information into bit vectors is called "App
+ * Encoding". The bit vectors are then "Prio Encoded" into binary goop. The
+ * binary goop is then "Base64 Encoded" into strings.
+ *
+ */
+
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -87,6 +106,12 @@ IdToOriginsMap* gMetricToOriginsMap;
 
 mozilla::Atomic<bool, mozilla::Relaxed> gInitDone(false);
 
+// Useful for app-encoded data
+typedef nsDataHashtable<OriginMetricIDHashKey, nsTArray<bool>> IdToBoolsMap;
+
+static nsCString gBatchID;
+#define CANARY_BATCH_ID "decaffcoffee"
+
 }  // namespace
 
 ////////////////////////////////////////////////////////////////////////
@@ -99,6 +124,34 @@ namespace {
 const char* GetNameForMetricID(OriginMetricID aId) {
   MOZ_ASSERT(aId < OriginMetricID::Count);
   return mozilla::Telemetry::MetricIDToString[static_cast<uint32_t>(aId)];
+}
+
+nsresult AppEncodeTo(const StaticMutexAutoLock& lock, IdToBoolsMap& aResult) {
+  // TODO: support sharding for an origins list longer than gNumBooleans.
+  // For now, assert that it's not a problem.
+  MOZ_ASSERT(gOriginsList.Length() <= PrioEncoder::gNumBooleans);
+
+  auto iter = gMetricToOriginsMap->ConstIter();
+  for (; !iter.Done(); iter.Next()) {
+    OriginMetricID id = iter.Key();
+
+    nsTArray<bool> metricData(gOriginsList.Length());
+    metricData.SetLength(gOriginsList.Length());
+    for (auto& metricDatum : metricData) {
+      metricDatum = false;
+    }
+
+    for (const auto& origin : iter.Data()) {
+      size_t index;
+      if (!gOriginToIndexMap->Get(origin, &index)) {
+        return NS_ERROR_FAILURE;
+      }
+      MOZ_ASSERT(index < gOriginsList.Length());
+      metricData[index] = true;
+    }
+    aResult.Put(id, metricData);
+  }
+  return NS_OK;
 }
 
 }  // anonymous namespace
@@ -131,6 +184,16 @@ void TelemetryOrigin::InitializeGlobalState() {
 #ifdef DEBUG
   gOriginToIndexMap->MarkImmutable();
 #endif  // DEBUG
+
+  // We use the app's buildid for the prio batch ID
+  nsCOMPtr<nsIXULAppInfo> appInfo =
+      do_GetService("@mozilla.org/xre/app-info;1");
+  if (!appInfo || NS_FAILED(appInfo->GetAppBuildID(gBatchID))) {
+    // Some tests forget to set either of build ID or xpc::IsInAutomation(),
+    // so all we can do is warn.
+    NS_WARNING("Cannot get app build ID. Defaulting to canary.");
+    gBatchID.AssignLiteral(CANARY_BATCH_ID);
+  }
 
   gInitDone = true;
 }
@@ -244,39 +307,102 @@ nsresult TelemetryOrigin::GetOriginSnapshot(bool aClear, JSContext* aCx,
   return NS_OK;
 }
 
-nsresult TelemetryOrigin::GetEncodedOriginSnapshot(bool aClear, JSContext* aCx,
-                                                   Promise** aResult) {
+nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
+    bool aClear, JSContext* aCx, JS::MutableHandleValue aSnapshot) {
   if (!XRE_IsParentProcess()) {
     return NS_ERROR_FAILURE;
   }
-  NS_ENSURE_ARG_POINTER(aResult);
+
   if (!gInitDone) {
-    *aResult = nullptr;
     return NS_OK;
   }
 
-  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
-  if (NS_WARN_IF(!global)) {
+  // Step 1: Take the lock and app-encode
+  nsresult rv;
+  IdToBoolsMap appEncodedMetricData;
+  {
+    StaticMutexAutoLock lock(gTelemetryOriginMutex);
+
+    rv = AppEncodeTo(lock, appEncodedMetricData);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  // Step 2: Don't need the lock to prio-encode and base64-encode and JS-encode
+
+  JS::RootedObject prioDataArray(
+      aCx, JS_NewArrayObject(aCx, appEncodedMetricData.Count()));
+  if (NS_WARN_IF(!prioDataArray)) {
     return NS_ERROR_FAILURE;
   }
 
-  ErrorResult rv;
-  RefPtr<Promise> promise = Promise::Create(global, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
+  auto it = appEncodedMetricData.ConstIter();
+  uint32_t i = 0;
+  for (; !it.Done(); it.Next()) {
+    nsCString aResult;
+    nsCString bResult;
+    rv = PrioEncoder::EncodeNative(gBatchID, it.Data(), aResult, bResult);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    nsCString aBase64;
+    rv = mozilla::Base64Encode(aResult, aBase64);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    nsCString bBase64;
+    rv = mozilla::Base64Encode(bResult, bBase64);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    JS::RootedObject rootObj(aCx, JS_NewPlainObject(aCx));
+    if (NS_WARN_IF(!rootObj)) {
+      return NS_ERROR_FAILURE;
+    }
+    JSString* metricName =
+        ToJSString(aCx, nsDependentCString(GetNameForMetricID(it.Key())));
+    JS::RootedString rootStr(aCx, metricName);
+    if (NS_WARN_IF(!JS_DefineProperty(aCx, rootObj, "encoding", rootStr,
+                                      JSPROP_ENUMERATE))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    JS::RootedObject prioObj(aCx, JS_NewPlainObject(aCx));
+    if (NS_WARN_IF(!prioObj)) {
+      return NS_ERROR_FAILURE;
+    }
+    if (NS_WARN_IF(!JS_DefineProperty(aCx, rootObj, "prio", prioObj,
+                                      JSPROP_ENUMERATE))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    JS::RootedString aRootStr(aCx, ToJSString(aCx, aBase64));
+    if (NS_WARN_IF(!JS_DefineProperty(aCx, prioObj, "a", aRootStr,
+                                      JSPROP_ENUMERATE))) {
+      return NS_ERROR_FAILURE;
+    }
+    JS::RootedString bRootStr(aCx, ToJSString(aCx, bBase64));
+    if (NS_WARN_IF(!JS_DefineProperty(aCx, prioObj, "b", bRootStr,
+                                      JSPROP_ENUMERATE))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (NS_WARN_IF(!JS_DefineElement(aCx, prioDataArray, i++, rootObj,
+                                     JSPROP_ENUMERATE))) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
-  // TODO: implement
-  // We'll be wanting a worker thread
-  // It'll need to take gMetricToOriginsMap and perform app-encoding
-  // Then pass it to PrioEncoder for prio-encoding
-  // Then base64 encoding
-  // And don't forget to clear if aClear
+  // Step 4: If we need to clear, we'll need that lock again
+  if (aClear) {
+    StaticMutexAutoLock lock(gTelemetryOriginMutex);
+    gMetricToOriginsMap->Clear();
+  }
 
-  // For now, just reject the Promise.
-  promise->MaybeReject(NS_ERROR_FAILURE);
+  aSnapshot.setObject(*prioDataArray);
 
-  promise.forget(aResult);
   return NS_OK;
 }
 

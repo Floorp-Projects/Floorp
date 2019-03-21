@@ -1736,7 +1736,31 @@ TelemetryImpl::GetOriginSnapshot(bool aClear, JSContext* aCx,
 NS_IMETHODIMP
 TelemetryImpl::GetEncodedOriginSnapshot(bool aClear, JSContext* aCx,
                                         Promise** aResult) {
-  return TelemetryOrigin::GetEncodedOriginSnapshot(aClear, aCx, aResult);
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_FAILURE;
+  }
+  NS_ENSURE_ARG_POINTER(aResult);
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!global)) {
+    return NS_ERROR_FAILURE;
+  }
+  ErrorResult erv;
+  RefPtr<Promise> promise = Promise::Create(global, erv);
+  if (NS_WARN_IF(erv.Failed())) {
+    return erv.StealNSResult();
+  }
+
+  // TODO: Put this all on a Worker Thread
+
+  JS::RootedValue snapshot(aCx);
+  nsresult rv;
+  rv = TelemetryOrigin::GetEncodedOriginSnapshot(aClear, aCx, &snapshot);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  promise->MaybeResolve(snapshot);
+  promise.forget(aResult);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
