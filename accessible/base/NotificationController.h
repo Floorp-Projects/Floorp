@@ -214,23 +214,22 @@ class NotificationController final : public EventQueue,
    * @note  The caller must guarantee that the given instance still exists when
    *        the notification is processed.
    */
-  template <class Class, class... Args>
+  template <class Class, class Arg>
   inline void HandleNotification(
-      Class* aInstance,
-      typename TNotification<Class, Args...>::Callback aMethod,
-      Args*... aArgs) {
+      Class* aInstance, typename TNotification<Class, Arg>::Callback aMethod,
+      Arg* aArg) {
     if (!IsUpdatePending()) {
 #ifdef A11Y_LOG
       if (mozilla::a11y::logging::IsEnabled(
               mozilla::a11y::logging::eNotifications))
         mozilla::a11y::logging::Text("sync notification processing");
 #endif
-      (aInstance->*aMethod)(aArgs...);
+      (aInstance->*aMethod)(aArg);
       return;
     }
 
     RefPtr<Notification> notification =
-        new TNotification<Class, Args...>(aInstance, aMethod, aArgs...);
+        new TNotification<Class, Arg>(aInstance, aMethod, aArg);
     if (notification && mNotifications.AppendElement(notification))
       ScheduleProcessing();
   }

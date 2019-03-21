@@ -121,7 +121,7 @@
         [ new invokerChecker(EVENT_TEXT_VALUE_CHANGE, getAccessible(aID)) ];
 
       this.invoke = function changeSelectValue_invoke() {
-        getAccessible(aID).takeFocus();
+        getNode(aID).focus();
         synthesizeKey(aKey, {}, window);
       };
 
@@ -166,12 +166,6 @@
 
       gQueue.push(new changeSelectValue("select", "VK_DOWN", "2nd"));
       gQueue.push(new changeSelectValue("select", "3", "3rd"));
-
-      let iframeSelect = getAccessible("selectIframe").firstChild.firstChild;
-      gQueue.push(new changeSelectValue(iframeSelect, "VK_DOWN", "2"));
-
-      let shadowSelect = getAccessible("selectShadow").firstChild;
-      gQueue.push(new changeSelectValue(shadowSelect, "VK_DOWN", "2"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -252,24 +246,5 @@
     <option>2nd</option>
     <option>3rd</option>
   </select>
-
-  <iframe id="selectIframe"
-    src="data:text/html,<select id='iframeSelect'><option>1</option><option>2</option></select>">
-  </iframe>
-
-  <div id="selectShadow"></div>
-  <script>
-    let host = document.getElementById("selectShadow");
-    let shadow = host.attachShadow({mode: "open"});
-    let select = document.createElement("select");
-    select.id = "shadowSelect";
-    let option = document.createElement("option");
-    option.textContent = "1";
-    select.appendChild(option);
-    option = document.createElement("option");
-    option.textContent = "2";
-    select.appendChild(option);
-    shadow.appendChild(select);
-  </script>
 </body>
 </html>

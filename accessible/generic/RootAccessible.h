@@ -54,7 +54,7 @@ class RootAccessible : public DocAccessibleWrap, public nsIDOMEventListener {
   /**
    * Process the DOM event.
    */
-  void ProcessDOMEvent(dom::Event* aDOMEvent, nsINode* aTarget);
+  void ProcessDOMEvent(dom::Event* aEvent);
 
   /**
    * Process "popupshown" event. Used by HandleEvent().

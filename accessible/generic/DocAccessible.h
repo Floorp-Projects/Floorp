@@ -226,10 +226,10 @@ class DocAccessible : public HyperTextAccessibleWrap,
    *          notification is processed.
    * @see   NotificationController::HandleNotification
    */
-  template <class Class, class... Args>
-  void HandleNotification(
-      Class* aInstance,
-      typename TNotification<Class, Args...>::Callback aMethod, Args*... aArgs);
+  template <class Class, class Arg>
+  void HandleNotification(Class* aInstance,
+                          typename TNotification<Class, Arg>::Callback aMethod,
+                          Arg* aArg);
 
   /**
    * Return the cached accessible by the given DOM node if it's in subtree of
