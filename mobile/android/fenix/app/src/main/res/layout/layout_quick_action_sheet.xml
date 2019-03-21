@@ -9,6 +9,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:contentDescription="@string/quick_action_sheet"
     android:background="?attr/toolbarColor">
 
     <androidx.appcompat.widget.AppCompatImageButton
@@ -17,6 +18,7 @@
         android:layout_width="24dp"
         android:layout_height="2dp"
         android:layout_gravity="center_horizontal"
+        android:contentDescription="@string/quick_action_sheet_handle"
         android:background="?attr/quickActionPullTabColor"
         android:src="@drawable/ic_drawer_pull_tab"/>
 

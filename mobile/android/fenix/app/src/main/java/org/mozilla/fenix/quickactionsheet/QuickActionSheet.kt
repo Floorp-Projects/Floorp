@@ -40,6 +40,18 @@ class QuickActionSheet @JvmOverloads constructor(
         val handle = findViewById<AppCompatImageButton>(R.id.quick_action_sheet_handle)
         val linearLayout = findViewById<LinearLayout>(R.id.quick_action_sheet)
         val quickActionSheetBehavior = BottomSheetBehavior.from(linearLayout.parent as View) as QuickActionSheetBehavior
+        val accessibilityManager = context
+            .getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+
+        if (accessibilityManager.isTouchExplorationEnabled) {
+            linearLayout.setOnClickListener {
+                quickActionSheetBehavior.state = when (quickActionSheetBehavior.state) {
+                    BottomSheetBehavior.STATE_EXPANDED -> BottomSheetBehavior.STATE_COLLAPSED
+                    else -> BottomSheetBehavior.STATE_EXPANDED
+                }
+            }
+            return
+        }
 
         handle.increaseTapArea(grabHandleIncreasedTapArea)
         handle.setOnClickListener {
@@ -113,14 +125,6 @@ class QuickActionSheetBehavior(
     }
 
     private fun repositionQuickActionSheet(quickActionSheetContainer: NestedScrollView, toolbar: BrowserToolbar) {
-        val accessibilityManager = quickActionSheetContainer.context
-            .getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-
-        state = when (accessibilityManager.isTouchExplorationEnabled) {
-            true -> BottomSheetBehavior.STATE_EXPANDED
-            false -> BottomSheetBehavior.STATE_COLLAPSED
-        }
-
         quickActionSheetContainer.translationY = (toolbar.translationY + toolbar.height * -1.0).toFloat()
     }
 }
