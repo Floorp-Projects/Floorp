@@ -67,20 +67,6 @@ class WorkerTargetFront extends
     return this._attach;
   }
 
-  async detach() {
-    if (this.isClosed) {
-      return {};
-    }
-    let response;
-    try {
-      response = await super.detach();
-    } catch (e) {
-      console.warn(`Error while detaching the worker target front: ${e.message}`);
-    }
-    this.destroy();
-    return response;
-  }
-
   reconfigure() {
     // Toolbox and options panel are calling this method but Worker Target can't be
     // reconfigured. So we ignore this call here.

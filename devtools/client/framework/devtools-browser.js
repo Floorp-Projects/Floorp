@@ -384,8 +384,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    *        The id of the default tool to show
    */
   async openWorkerToolbox(workerTarget, toolId) {
-    const toolbox = await gDevTools.showToolbox(workerTarget, toolId, Toolbox.HostType.WINDOW);
-    toolbox.once("destroy", () => workerTarget.detach());
+    await gDevTools.showToolbox(workerTarget, toolId, Toolbox.HostType.WINDOW);
   },
 
   /**
