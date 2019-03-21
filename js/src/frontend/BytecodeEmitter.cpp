@@ -3928,6 +3928,8 @@ bool BytecodeEmitter::emitTemplateString(ListNode* templateString) {
 }
 
 bool BytecodeEmitter::emitDeclarationList(ListNode* declList) {
+  MOZ_ASSERT(declList->isOp(JSOP_NOP));
+
   for (ParseNode* decl : declList->contents()) {
     ParseNode* pattern;
     ParseNode* initializer;
@@ -3935,6 +3937,8 @@ bool BytecodeEmitter::emitDeclarationList(ListNode* declList) {
       pattern = decl;
       initializer = nullptr;
     } else {
+      MOZ_ASSERT(decl->isOp(JSOP_NOP));
+
       AssignmentNode* assignNode = &decl->as<AssignmentNode>();
       pattern = assignNode->left();
       initializer = assignNode->right();
@@ -3947,6 +3951,7 @@ bool BytecodeEmitter::emitDeclarationList(ListNode* declList) {
         return false;
       }
     } else {
+      MOZ_ASSERT(decl->isOp(JSOP_NOP));
       MOZ_ASSERT(pattern->isKind(ParseNodeKind::ArrayExpr) ||
                  pattern->isKind(ParseNodeKind::ObjectExpr));
       MOZ_ASSERT(initializer != nullptr);
@@ -5350,6 +5355,8 @@ bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
 
 bool BytecodeEmitter::emitForIn(ForNode* forInLoop,
                                 const EmitterScope* headLexicalEmitterScope) {
+  MOZ_ASSERT(forInLoop->isOp(JSOP_ITER));
+
   TernaryNode* forInHead = forInLoop->head();
   MOZ_ASSERT(forInHead->isKind(ParseNodeKind::ForIn));
 
@@ -6598,6 +6605,8 @@ bool BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt) {
   }
 
   if (useful) {
+    MOZ_ASSERT_IF(expr->isKind(ParseNodeKind::AssignExpr),
+                  expr->isOp(JSOP_NOP));
     ValueUsage valueUsage =
         wantval ? ValueUsage::WantValue : ValueUsage::IgnoreValue;
     ExpressionStatementEmitter ese(this, valueUsage);
@@ -6787,7 +6796,7 @@ static const char* SelfHostedCallFunctionName(JSAtom* name, JSContext* cx) {
   MOZ_CRASH("Unknown self-hosted call function name");
 }
 
-bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedCallFunction(BinaryNode* callNode) {
   // Special-casing of callFunction to emit bytecode that directly
   // invokes the callee with the correct |this| object and arguments.
   // callFunction(fun, thisArg, arg0, arg1) thus becomes:
@@ -6807,7 +6816,7 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode) {
     return false;
   }
 
-  JSOp callOp = callNode->callOp();
+  JSOp callOp = callNode->getOp();
   if (callOp != JSOP_CALL) {
     reportError(callNode, JSMSG_NOT_CONSTRUCTOR, errorName);
     return false;
@@ -7204,7 +7213,7 @@ bool BytecodeEmitter::emitArguments(ListNode* argsList, bool isCall,
 }
 
 bool BytecodeEmitter::emitCallOrNew(
-    CallNode* callNode, ValueUsage valueUsage /* = ValueUsage::WantValue */) {
+    BinaryNode* callNode, ValueUsage valueUsage /* = ValueUsage::WantValue */) {
   /*
    * Emit callable invocation or operator new (constructor call) code.
    * First, emit code for the left operand to evaluate the callable or
@@ -7224,7 +7233,7 @@ bool BytecodeEmitter::emitCallOrNew(
                 callNode->isKind(ParseNodeKind::TaggedTemplateExpr);
   ParseNode* calleeNode = callNode->left();
   ListNode* argsList = &callNode->right()->as<ListNode>();
-  bool isSpread = JOF_OPTYPE(callNode->callOp()) == JOF_BYTE;
+  bool isSpread = JOF_OPTYPE(callNode->getOp()) == JOF_BYTE;
   if (calleeNode->isKind(ParseNodeKind::Name) &&
       emitterMode == BytecodeEmitter::SelfHosting && !isSpread) {
     // Calls to "forceInterpreter", "callFunction",
@@ -7258,7 +7267,7 @@ bool BytecodeEmitter::emitCallOrNew(
     // Fall through
   }
 
-  JSOp op = callNode->callOp();
+  JSOp op = callNode->getOp();
   uint32_t argc = argsList->count();
   CallOrNewEmitter cone(
       this, op,
@@ -8953,7 +8962,7 @@ bool BytecodeEmitter::emitTree(
     case ParseNodeKind::TaggedTemplateExpr:
     case ParseNodeKind::CallExpr:
     case ParseNodeKind::SuperCallExpr:
-      if (!emitCallOrNew(&pn->as<CallNode>(), valueUsage)) {
+      if (!emitCallOrNew(&pn->as<BinaryNode>(), valueUsage)) {
         return false;
       }
       break;
@@ -9054,22 +9063,10 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::TrueExpr:
-      if (!emit1(JSOP_TRUE)) {
-        return false;
-      }
-      break;
     case ParseNodeKind::FalseExpr:
-      if (!emit1(JSOP_FALSE)) {
-        return false;
-      }
-      break;
     case ParseNodeKind::NullExpr:
-      if (!emit1(JSOP_NULL)) {
-        return false;
-      }
-      break;
     case ParseNodeKind::RawUndefinedExpr:
-      if (!emit1(JSOP_UNDEFINED)) {
+      if (!emit1(pn->getOp())) {
         return false;
       }
       break;

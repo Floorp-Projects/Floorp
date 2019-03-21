@@ -89,7 +89,7 @@ ParseNode* ParseNode::appendOrCreateList(ParseNodeKind kind, ParseNode* left,
     }
   }
 
-  ListNode* list = handler->new_<ListNode>(kind, left);
+  ListNode* list = handler->new_<ListNode>(kind, JSOP_NOP, left);
   if (!list) {
     return nullptr;
   }
@@ -309,6 +309,10 @@ void NameNode::dumpImpl(GenericPrinter& out, int indent) {
     case ParseNodeKind::PropertyNameExpr:
       if (!atom()) {
         out.put("#<null name>");
+      } else if (getOp() == JSOP_GETARG && atom()->length() == 0) {
+        // Dump destructuring parameter.
+        static const char ZeroLengthName[] = "(#<zero-length name>)";
+        out.put(ZeroLengthName);
       } else {
         JS::AutoCheckCannotGC nogc;
         if (atom()->hasLatin1Chars()) {
