@@ -3683,7 +3683,7 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
     nsIFrame* maybeAbsoluteContainingBlock = newFrame;
     nsIFrame* possiblyLeafFrame = newFrame;
     if (bits & FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS) {
-      RefPtr<ComputedStyle> outerSC =
+      RefPtr<ComputedStyle> outerStyle =
           mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
               data->mAnonBoxPseudo, computedStyle);
 #ifdef DEBUG
@@ -3697,25 +3697,25 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
         switch (display->mDisplay) {
           case StyleDisplay::Flex:
           case StyleDisplay::InlineFlex:
-            outerFrame = NS_NewFlexContainerFrame(mPresShell, outerSC);
+            outerFrame = NS_NewFlexContainerFrame(mPresShell, outerStyle);
             InitAndRestoreFrame(aState, content, container, outerFrame);
             innerFrame = outerFrame;
             break;
           case StyleDisplay::Grid:
           case StyleDisplay::InlineGrid:
-            outerFrame = NS_NewGridContainerFrame(mPresShell, outerSC);
+            outerFrame = NS_NewGridContainerFrame(mPresShell, outerStyle);
             InitAndRestoreFrame(aState, content, container, outerFrame);
             innerFrame = outerFrame;
             break;
           default: {
-            innerFrame = NS_NewBlockFormattingContext(mPresShell, outerSC);
+            innerFrame = NS_NewBlockFormattingContext(mPresShell, outerStyle);
             outerFrame = InitAndWrapInColumnSetFrameIfNeeded(
-                aState, content, container, innerFrame, outerSC);
+                aState, content, container, innerFrame, outerStyle);
             break;
           }
         }
       } else {
-        innerFrame = NS_NewBlockFormattingContext(mPresShell, outerSC);
+        innerFrame = NS_NewBlockFormattingContext(mPresShell, outerStyle);
         InitAndRestoreFrame(aState, content, container, innerFrame);
         outerFrame = innerFrame;
       }
@@ -3726,7 +3726,7 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
 
       // Now figure out whether newFrame or outerFrame should be the
       // absolute container.
-      auto outerDisplay = outerSC->StyleDisplay();
+      auto outerDisplay = outerStyle->StyleDisplay();
       if (outerDisplay->IsAbsPosContainingBlock(outerFrame)) {
         maybeAbsoluteContainingBlock = outerFrame;
         maybeAbsoluteContainingBlockStyleFrame = outerFrame;
