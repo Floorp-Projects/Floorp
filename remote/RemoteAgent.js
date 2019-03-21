@@ -94,12 +94,15 @@ class ParentRemoteAgent {
   async close() {
     if (this.listening) {
       try {
+        // Disconnect the targets first in order to ensure closing all pending
+        // connection first. Otherwise Httpd's stop is not going to resolve.
+        this.targets.clear();
+
         await this.server.stop();
 
         Preferences.reset(Object.keys(RecommendedPreferences));
 
         this.tabs.stop();
-        this.targets.clear();
       } catch (e) {
         throw new Error(`Unable to stop agent: ${e.message}`, e);
       }
