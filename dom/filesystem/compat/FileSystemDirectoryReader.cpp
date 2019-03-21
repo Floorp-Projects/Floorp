@@ -87,7 +87,8 @@ class PromiseHandler final : public PromiseNativeHandler {
       sequence[i] = entry;
     }
 
-    mSuccessCallback->Call(sequence);
+    // mSuccessCallback never changes (it's const), so MOZ_KnownLive is ok.
+    MOZ_KnownLive(mSuccessCallback)->Call(sequence);
   }
 
   virtual void RejectedCallback(JSContext* aCx,

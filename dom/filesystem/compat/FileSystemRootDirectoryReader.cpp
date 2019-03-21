@@ -34,7 +34,8 @@ class EntriesCallbackRunnable final : public Runnable {
       }
     }
 
-    mCallback->Call(entries);
+    // mCallback never changes (it's const), so MOZ_KnownLive is ok.
+    MOZ_KnownLive(mCallback)->Call(entries);
     return NS_OK;
   }
 
