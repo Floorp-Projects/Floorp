@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1552492951595" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1553080348264" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2561,6 +2561,78 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="b57d9505-21bf-4a24-accb-05ceac50dadc" id="/^((\{86c18738-11ed-4c16-af92-786aa036c83c\})|(\{d0fee16a-f4eb-4dc1-9961-82b913e5943d\})|(\{1c4937a1-c678-4607-8665-a16384ee302e\})|(\{22caeb02-38a3-415d-b168-64fadccbb4a4\})|(\{1c9372e7-5f0e-4541-99cf-dfbf2ab00b01\})|(\{9fe66994-8ed1-4317-a20a-1d0544ca062f\})|(\{6df222d8-97c7-42bf-9683-1cf8119c1e9e\})|(\{4c2dda03-bad0-4160-a8a1-6d089200420e\})|(\{7aae7d4f-55b9-42eb-b683-932591265e17\})|(\{e6f8ab99-3c96-410c-95d1-267ad48ed3e2\})|(\{6d8c5068-d0cb-47a5-af5e-3f23064f4608\})|(\{90481f38-d06a-465e-a54c-206bbb1ee9ae\})|(\{4b75aeb8-f14a-4ef3-b1ad-09733b40dac3\})|(\{3a8ca495-f5ab-4320-b070-4f44266fe3d1\})|(\{84f8914f-0dec-48ed-a0fd-4a7712c06793\})|(\{aa613fce-603c-41df-bf49-9b09614cebe6\})|(\{30314350-199a-4951-9c05-c3537a946492\})|(\{a2edce1d-10ab-483d-8c01-5e5fe0c82902\})|(\{ec91a3d4-8311-4700-aa15-b3941f21a052\})|(\{e9049687-164a-4cf3-be1f-1291cfb0f44a\})|(\{2be73925-ebaf-43ca-8b26-bd820887f591\})|(\{840eadea-1c68-411f-b4e9-08d9f236385d\})|(\{0a89d040-5fb1-46d7-bf81-43b55e83695d\})|(\{6a1e76ed-4ac2-4a0c-8beb-43ae63558b36\})|(\{1b90c930-e7d7-486a-9085-8b57129489c7\})|(\{eab649ca-af76-4de9-95b0-8036e35a66cc\})|(\{0628e652-98f4-4e58-9ecb-ad996b061aef\})|(elfr@geckoaddon\.org)|(else@geckoaddon\.org)|(fr_b@iext\.pro)|(it_b@iext\.pro)|(sv_b@iext\.pro)|(no_b1@iext\.pro)|(fi_b@iext\.pro)|(au_b@iext\.pro)|(elfr12@geckoaddon\.org)|(test@informations\.to)|(se_pop@informations\.to)|(it@spongebog\.funny-ok\.com)|(it@tsunami\.funny-ok\.com)|(fi@spongebog\.funny-ok\.com)|(fi@tsunami\.funny-ok\.com)|(no@spongebog\.funny-ok\.com)|(no@tsunami\.funny-ok\.com)|(fr@tsunami\.funny-ok\.com)|(fr@spongebog\.funny-ok\.com)|(se@tsunami\.funny-ok\.com)|(se@spongebog\.funny-ok\.com)|(au@spongebog\.funny-ok\.com)|(au@tsunami\.funny-ok\.com)|(nz@spongebog\.funny-ok\.com)|(nz@tsunami\.funny-ok\.com)|(gr@spongebog\.funny-ok\.com)|(gr@tsunami\.funny-ok\.com)|(nz_fnew@tsunami\.funny-ok\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="67025e3b-860c-4680-949f-ec472cd72fae" id="/^((ads@firefox\.pl)|(adsfinland@firefox\.pl)|(adsfrance@firefox\.pl)|(dodateknowy@o2\.pl)|(dodateksuper1@firefox\.pl)|(dodateksuper2@firefox\.pl)|(dodateksuper3@firefox\.pl)|(dodateksuper5@firefox\.pl)|(dodateksuper6@firefox\.pl)|(dodateksuper@firefox\.pl)|(test_b@iext\.pro)|(\{697be03c-cdd2-430e-b6cf-0f9b5f0556ee\})|(\{c9ced03f-a5cf-4dbf-b5ba-67673e442590\})|(\{cbe59f66-a23a-45c1-81ac-d0cbedf9ea4e\})|(\{dbf0a186-d41c-40ae-8841-e9d8a6b49d8d\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3d52fe32-71e5-47bd-8eda-d98fa0c489e9" id="web-private@ext.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3cfd9af5-a7d0-49d3-971b-7af5e2eab78f" id="{ae5b30dd-b29d-4ae6-844b-5d7bfc3d7915}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="ed853ce8-83e0-42b7-8d93-7f48041d4987" id="{6fb28b6b-abf2-4937-af28-340851faa971}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="e9227d28-b627-48b8-8392-e9fb5a00d9b6" id="{7b6def45-d585-431a-a479-5bb2badf2506}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="4bec4aaf-dd5b-4754-bd01-461fdc7ea5ca" id="{54fc344c-e8ba-462a-a6d9-9ce1b794ce46}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="ce66baec-1237-481c-87db-ccc1bcf0359d" id="{fb62e856-f09b-4cbc-ba07-642ab55f6cb4}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="5027a1c1-e050-434f-ba77-56417bc2d7cf" id="{e19fed8c-637a-42e3-b62a-3a6c4040ded8}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="5b807d5f-a192-450a-a0b3-98113c4beff1" id="{b6f5f2d0-1aa3-4e43-b536-6db1b1bf7d1c}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="f9cd41dd-9e52-4506-bb58-a31e189f4ab9" id="/^((\{0f6b717d-1625-4434-b770-5ae33eb64b16\})|(\{6d092be7-0bad-46af-9489-04e4b3988644\})|(\{7f6049d6-e8b0-4c42-8028-204d1458ddb6\})|(\{12b75028-c038-40bd-be5b-2809b7d18d78\})|(\{46f35a01-faaf-4fab-95e6-7dfc8b6d8b73\})|(\{55d2c6f7-62fa-4091-988b-7f4c4b3c1bff\})|(\{75aeaeec-d415-404d-84ba-bd70bcc5e70c\})|(\{76b8cf24-227d-4e2b-af4c-39ec5b47babf\})|(\{77b725cc-5d0e-4b82-88f0-ec6961acd697\})|(\{90fc8426-06ba-43ab-8110-7478ff86f531\})|(\{90fc8426-06ba-43ab-8110-7478ff86f539\})|(\{157cd8f9-48f0-43a1-9bcf-c4316753e084\})|(\{157cd8f9-48f0-43a1-9bcf-c4316753e085\})|(\{201ec7f7-57b1-48dd-945c-b1ea7489195d\})|(\{280fc0f5-6dfb-4a3c-92ae-acb2d5352175\})|(\{388f6d65-4a1b-43ac-b791-387882c30599\})|(\{0575cabd-38f3-4964-bdc3-0141a2f062e9\})|(\{927e4189-4f56-437e-a0d4-5e232612b5c7\})|(\{7277d7cf-c598-420b-ab6e-ab066e1e2fdd\})|(\{67775ec2-c879-438b-9409-89fba7ffc684\})|(\{397386d2-bb76-4b69-8121-86fad15c5216\})|(\{bd7f03dc-b362-4744-b118-43ab916205f9\})|(\{c133fb29-c967-4aec-953a-4974e8cbdb26\})|(\{cc94c8a7-efa3-435c-91fe-ca305f70e39d\})|(\{cfd2ff68-6579-4448-8a26-561bdb63877c\})|(\{d00f0050-a66c-49fc-9236-1498d4d29f67\})|(\{daa287a2-5916-413e-9b61-52c00b5aa061\})|(\{dcfac76f-2fd2-4477-9a60-22d167cabcb4\})|(\{dd1bbcf4-bff3-4f15-8a2c-3d52ce987f70\})|(\{ddb546b5-6490-4af5-8813-8e701bc06e26\})|(\{ead6848b-4bd6-4f9a-93bd-b8460c6f6973\})|(\{eb8f7a97-ffb0-40f1-9321-5ab1de884f1c\})|(\{ec3e8a3d-df39-4f84-ab31-dae369a225e4\})|(\{ef986f55-2dc9-4e39-8c87-618cf4fe5e69\})|(\{f8b4b601-7917-40c1-94ec-8efbbf125a46\})|(\{f8bc456c-0fb4-4d5d-a85f-dfeb25459e76\})|(\{f0458469-cc09-407e-a891-be8606553341\})|(\{fa73622c-8b41-45b8-9d93-6d66e7633765\})|(@loveroms)|(loveroms-ash1280@jetpack)|(searchdimension@gmail\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="d2da9c45-59f8-4257-9d7e-07c4fa5de958" id="{a4491aab-e273-4bc3-b45e-a7b9b9414a5f}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="25f18cc5-6ecc-419f-b093-b79e9f261062" id="/^((\{1d758385-fddd-478e-85a0-13eef59f60e5\})|(\{1ec3e92a-fd3c-4e16-82e2-56d44bd7bdf4\})|(\{3dadda0d-d67c-4452-9475-246c33198192\})|(\{4a48f6a8-c9d6-4ae2-8513-a7e9fe785a56\})|(\{4d2da172-b160-42b5-9fea-0ede63e0ab52\})|(\{5bcd4feb-ce52-4e6f-9da6-eef2a75a4f70\})|(\{5eb45d74-0f46-4269-bc0e-8a2a49d64267\})|(\{7e8c27c0-b94c-4026-8068-2d152143f073\})|(\{9ede19b2-bb97-4d1c-abab-b1d72e7d4c74\})|(\{19abb7a0-fb4d-41ff-97d4-65f1680c1348\})|(\{25efbdeb-04fa-4998-a9f8-99c1293c7b7f\})|(\{0049a401-f02d-4d16-8b5e-5933e5855a4c\})|(\{65b91ca5-cd06-42a6-9637-8ecde3a69fd6\})|(\{146ec14e-f623-4cb2-88ed-7d3bb8101090\})|(\{790d2797-82f3-4bc3-8759-c00d426bbf2f\})|(\{865f42b5-e073-4a36-84b1-47d09096b48b\})|(\{90055a5b-45a8-45c1-b0a0-979ab2a9064f\})|(\{a4f5c163-7b64-46c4-bfd3-348ecc99873a\})|(\{a8c40ee7-a376-417b-8022-40909a10181b\})|(\{a1031346-14d3-464f-9e50-c30dfd88ad92\})|(\{abd16535-2fa8-4bfd-b84e-ed09c9c60e53\})|(\{b5ee8c58-b5e5-4ba0-a899-9a54a2f0e386\})|(\{b246bb42-577e-4587-adf2-7274b378b0b4\})|(\{bb43765b-fe06-4d50-9802-0c6742b220aa\})|(\{bf3f628d-9e52-4727-b940-054c65a5a304\})|(\{c6bc710d-8cc8-4224-9287-44ecfa452a81\})|(\{c232edce-83c9-4184-9782-22df800f65e2\})|(\{c5397be4-b756-45b8-a247-339846fada52\})|(\{c6675bc5-f7ea-4a11-8252-1152d3783ae3\})|(\{cc6a088b-5a84-4e48-8de8-d2f6be3abae7\})|(\{e6c12219-f67e-4ea0-a9c3-2c541febeff1\})|(\{eb3a7ef7-a4d0-49a4-8b21-2a91c1758100\})|(\{ec34588b-86b4-4de3-a3bf-f4d1d8386475\})|(\{f4fd8825-648f-4b63-a499-3fd702d42149\})|(\{fc4f31f6-c5ed-4afd-8c19-df96e107ce7d\})|(\{fe337ef5-bb69-44bf-82a8-ee5c13406165\})|(\{ff285a1c-5672-44c3-890e-6c4f25976b83\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="a3f5ce2f-d8ef-4dae-9fce-1d7fb69d2b37" id="amqp-dwn-all-vd@artur.brown">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="12874e4d-28b5-4e98-8c33-b6cf5eb032bf" id="{47610aad-982f-4822-93ca-8c27dc96a13b}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="6a7f932a-3911-4884-8cb9-d282d282c0cc" id="{3b52063a-0683-4de2-b6e1-6192c78b6ba3}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="81759002-967e-4856-9f55-61d7c30cdb3b" id="{781b89d4-fa53-45a1-bea4-151dd4c8b288}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="478d4acd-3c01-4dd5-b784-4e06b69d1c05" id="/^((\{9332d73d-7991-46bf-8b67-6db1a21f0167\})|(\{b33715d3-eff8-4186-a252-0af5094b8644\})|(\{eb7aff78-6145-4a31-a7f5-f3c353ddb312\})|(\{6c5cd693-2919-4458-b776-2ac5b6ab1cb0\})|(\{daacefee-aaba-4f10-8d4d-059904d8a153\})|(\{94d8d504-838c-4392-9971-cd2f6e21ca21\})|(\{6574bb31-c971-454f-b08c-a75bfee00855\})|(\{1688ecb0-e382-481f-8c70-541d70bdd2e9\})|(\{f7b9f777-7b01-4f73-8eb8-f2ad85d4da1c\})|(\{598d7ac6-1789-4573-ae6a-5798ed7f6d83\})|(\{c0eb4d03-d18e-40bf-b21b-8237ee1bed76\})|(\{d0513185-1f20-4045-a232-f3a4252af379\})|(\{9ae8269f-eea1-4097-87fd-b7d2f102184d\})|(\{5683f95b-2517-4ca7-9d19-83d7f309b62a\})|(\{013d3691-0dd6-471b-bf0d-2750d7406a22\})|(\{ae73a262-1a27-4d1d-9be7-4b41a84dfd23\})|(\{1d92fc5d-5353-401f-8c5f-373b3b6dae67\})|(\{e8a81b54-3728-4a9c-8c63-18ef803ef9be\})|(\{d604961b-3a3d-4f60-87ae-35977c10b787\})|(\{cbe9b620-fac0-407a-b3be-b0a61b319ef8\})|(\{1cdb403e-11c7-421b-9c87-0c0d90263626\})|(\{f5fa0bfe-a981-48ff-b809-8faa3126f0bc\})|(\{7dc6d0d2-b2f0-4334-979d-6ebeff77785a\})|(\{13623b47-de82-4226-85f8-d3ae343e619b\})|(\{db7b6ea7-2605-44c7-807b-2419d7eec531\})|(\{b9298a4a-acca-446d-aa72-d37f5e1576cd\})|(\{2e689bc0-735f-445c-bcc7-2cc495f5eb40\})|(\{04acd977-4c2b-4162-af33-8c585bea90c5\})|(\{2436dde0-3230-4933-9020-c15b3b9e693b\})|(\{dcb556aa-ef6e-4778-9f60-c5ae18a72cfb\})|(\{5a24385f-ada4-455d-95ad-62cb6256360d\})|(\{97f88a13-5b79-4345-a85e-2560d54f577c\})|(\{12f4cde8-7d1c-4a9e-9ef7-431f5ecd53a4\})|(\{18a93813-7deb-40cf-b3a6-402369e6d817\})|(\{9cee5c92-eb1e-4892-86ff-d2d1c627f5b9\})|(\{cb1c544e-d444-4c85-8224-64aa26e82230\})|(\{1c3b247f-2ef4-4483-93a6-0a3da7bc3548\})|(\{1f6913f2-dead-4f96-bf96-0e64affd46ae\})|(\{109adc7d-f308-43a5-aa0e-07ccdc5dad2c\})|(\{7170e23c-c706-48a7-919f-c1c22548dbfb\})|(\{6aa47f05-1f3f-4798-908a-0ed01b2361e0\})|(\{33ef0e7b-15ea-4b08-a779-173731ac20b3\})|(\{a0361564-9461-4da0-8ec0-7dc6f418f707\})|(\{c12631ed-993a-4c2e-9bf0-37867ae40491\})|(\{00b79649-3f0e-4b12-a8f0-376a7b2db716\})|(\{89096e44-c8b4-4ce5-aad2-f5bac765f608\})|(\{6f4eff89-0e32-42bd-a5c1-354adc8417fd\})|(\{482c54ae-e080-4596-bf7c-ae972fdff9a3\})|(\{04868575-532f-4b43-9325-7e707c109c25\})|(\{042c3065-1291-4409-bae5-8d11f3c268e2\})|(\{126e7fc4-bf2d-4467-88b1-f3b17bc10da4\})|(\{cea21739-b9ce-46c7-ad3e-3607b1ff6538\})|(\{06eea1e7-a8be-4794-8cd5-ed12e5f86161\})|(\{50993bc5-011c-4322-b522-41e6f3997163\})|(\{219a2146-5d9b-472a-8630-4c96a0994bec\})|(\{1db94c2f-d957-4b12-a1dc-903bb28f5ff5\})|(\{2f7d887c-7d56-41fa-bf9b-eadf6e500427\})|(\{2b16f4ab-a2a9-43fd-8fd6-ad6f354b0d28\})|(\{034d2b14-29e6-42ad-b2db-2c31286f3fb7\})|(\{77058195-5ae1-440c-8f86-c60a96d12ca9\})|(\{8082ff2f-2151-4281-8134-1423e5961ca1\})|(\{9fa797e8-d7d4-4851-b7e9-76b61ecf046f\})|(\{87178fbe-17a5-4d8d-b5ed-48d17179b101\})|(\{f010d9e9-0878-4c83-af45-df966cbe8d26\})|(\{2aa8c5cd-18fa-4991-b354-d6f459efeca9\})|(\{4021839d-3f4a-4866-94fb-9fa809c5245b\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="f60b3eec-b8b8-4bd7-8d2b-3f7912c3451f" id="{28ac81f1-b04d-448f-94be-1b8cc8fbd58d}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
