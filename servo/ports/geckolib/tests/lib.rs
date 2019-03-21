@@ -23,7 +23,7 @@ extern crate smallvec;
 #[cfg(target_pointer_width = "64")]
 #[macro_use]
 extern crate size_of_test;
-#[macro_use]
+#[cfg_attr(target_pointer_width = "64", macro_use)]
 extern crate style;
 extern crate style_traits;
 
