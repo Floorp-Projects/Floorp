@@ -600,7 +600,7 @@ class SyntaxParseHandler {
 
   bool isSuperBase(Node pn) { return pn == NodeSuperBase; }
 
-  void setCallOp(CallNodeType pn, JSOp op) {}
+  void setOp(Node pn, JSOp op) {}
   void setListHasNonConstInitializer(ListNodeType literal) {}
   MOZ_MUST_USE Node parenthesize(Node node) {
     // A number of nodes have different behavior upon parenthesization, but
@@ -677,6 +677,8 @@ class SyntaxParseHandler {
     MOZ_CRASH(
         "SyntaxParseHandler::canSkipLazyClosedOverBindings must return false");
   }
+
+  void adjustGetToSet(Node node) {}
 } JS_HAZ_ROOTED;  // See the top of SyntaxParseHandler for why this is safe.
 
 }  // namespace frontend
