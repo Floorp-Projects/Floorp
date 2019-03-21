@@ -166,7 +166,7 @@ class TabParent final : public PBrowserParent,
                                                       nsIURI* aDocURI);
 
   mozilla::ipc::IPCResult RecvOnContentBlockingEvent(
-      const OptionalWebProgressData& aWebProgressData,
+      const Maybe<WebProgressData>& aWebProgressData,
       const RequestData& aRequestData, const uint32_t& aEvent);
 
   mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(

@@ -112,12 +112,6 @@ struct WebProgressData
   uint64_t DOMWindowID;
 };
 
-union OptionalWebProgressData
-{
-  void_t;
-  WebProgressData;
-};
-
 struct RequestData
 {
   nsIURI requestURI;
@@ -550,7 +544,7 @@ parent:
     async RegisterProtocolHandler(nsString scheme, nsIURI handlerURI, nsString title,
                                   nsIURI documentURI);
 
-    async OnContentBlockingEvent(OptionalWebProgressData aWebProgressData,
+    async OnContentBlockingEvent(WebProgressData? aWebProgressData,
                                  RequestData aRequestData, uint32_t aEvent);
 
 child:
