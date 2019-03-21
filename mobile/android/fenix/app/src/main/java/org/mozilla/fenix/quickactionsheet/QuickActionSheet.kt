@@ -31,7 +31,8 @@ class QuickActionSheet @JvmOverloads constructor(
         inflate(getContext(), R.layout.layout_quick_action_sheet, this)
     }
 
-    fun afterInflate() {
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
         setupHandle()
     }
 
