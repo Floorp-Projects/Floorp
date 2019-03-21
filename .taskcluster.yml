@@ -213,14 +213,14 @@ tasks:
 
           # Note: This task is built server side without the context or tooling that
           # exist in tree so we must hard code the hash
-          image: 'taskcluster/decision:2.1.0@sha256:6db3b697d7a3c7aba440d72f04199331b872111cefff57206b8b8b1d53230360'
+          image: 'taskcluster/decision:2.2.0@sha256:0e9689e94605eb8395f5b49141a48148416b0d825f6f7be04c29642d1a85ee3d'
 
           maxRunTime: 1800
 
           command:
             - /builds/worker/bin/run-task
-            - '--vcs-checkout=/builds/worker/checkouts/gecko'
-            - '--sparse-profile=build/sparse-profiles/taskgraph'
+            - '--gecko-checkout=/builds/worker/checkouts/gecko'
+            - '--gecko-sparse-profile=build/sparse-profiles/taskgraph'
             - '--'
             - bash
             - -cx
