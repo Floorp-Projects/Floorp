@@ -25,6 +25,9 @@ CFLAGS += [
     '-I%s/dist/include/dav1d/' % TOPOBJDIR,
 ]
 
+# Default stack aligment is 16 bytes.
+stack_alignment = 16
+
 # Attaching config.asm file
 if CONFIG['CPU_ARCH'] == 'x86':
     if CONFIG['OS_TARGET'] == 'WINNT':
@@ -42,12 +45,16 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
     else:
         error('Platform %s is not expected' % CONFIG['OS_TARGET'])
 
-    if CONFIG['OS_TARGET'] in ('Darwin', 'WINNT'):
-        # Change the default stack alignment (16) to 32
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        # Change the default stack alignment (16) to 32 bytes.
+        stack_alignment = 32
         if CONFIG['CC_TYPE'] == 'clang':
             CFLAGS += ['-mstack-alignment=32']
         elif CONFIG['CC_TYPE'] == 'gcc':
             CFLAGS += ['-mpreferred-stack-boundary=5']
+
+# Set the macro here instead of config.h
+DEFINES['STACK_ALIGNMENT'] = stack_alignment
 
 if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
     SOURCES += [
