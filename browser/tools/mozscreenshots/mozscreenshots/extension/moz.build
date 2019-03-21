@@ -36,7 +36,6 @@ FINAL_TARGET_FILES.resources.configurations += [
 ]
 
 FINAL_TARGET_FILES.resources.lib += [
-    'lib/black_theme.png',
     'lib/borderify.xpi',
     'lib/mozscreenshots-script.js',
     'lib/mozscreenshots-style.css',
@@ -48,7 +47,6 @@ FINAL_TARGET_FILES.resources.lib += [
     'lib/robot_diagonal.png',
     'lib/robot_uncropped.png',
     'lib/robot_upperleft.png',
-    'lib/white_theme.png',
 ]
 
 FINAL_TARGET_FILES.resources.lib.controlCenter += [
