@@ -18,6 +18,11 @@
   width: 16px;
 }
 
+.content-blocking-category .checkbox-label-box {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
 #contentBlockingTrackingProtectionCheckbox > .checkbox-label-box {
   list-style-image: url("chrome://browser/skin/controlcenter/trackers.svg");
 }
@@ -97,13 +102,11 @@
 }
 
 #trackingProtectionShield {
-  background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
+  list-style-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
   -moz-context-properties: fill;
   fill: #737373;
   width: 64px;
   height: 64px;
-  background-repeat: no-repeat;
-  background-size: contain;
   margin-inline-end: 10px;
 }
 
