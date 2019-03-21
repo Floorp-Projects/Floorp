@@ -19,15 +19,13 @@ use std::os::raw::{c_int};
 use std::time::Duration;
 use gleam::gl;
 
-use webrender::api::*;
-use webrender::api::units::*;
-use webrender::{ReadPixelsFormat, Renderer, RendererOptions, RendererStats, ThreadListener};
-use webrender::{ExternalImage, ExternalImageHandler, ExternalImageSource};
-use webrender::DebugFlags;
-use webrender::{ApiRecordingReceiver, BinaryRecorder};
-use webrender::{AsyncPropertySampler, PipelineInfo, SceneBuilderHooks};
-use webrender::{UploadMethod, VertexUsageHint, ProfilerHooks, set_profiler_hooks};
-use webrender::{Device, Shaders, WrShaders, ShaderPrecacheFlags};
+use webrender::{
+    api::*, units::*, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
+    BinaryRecorder, DebugFlags, Device, ExternalImage, ExternalImageHandler, ExternalImageSource,
+    PipelineInfo, ProfilerHooks, ReadPixelsFormat, Renderer, RendererOptions, RendererStats,
+    SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint,
+    WrShaders, set_profiler_hooks,
+};
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dBlobImageHandler;
 use program_cache::{WrProgramCache, remove_disk_cache};
@@ -667,6 +665,54 @@ pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
             false
         },
     }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_renderer_get_screenshot_async(
+    renderer: &mut Renderer,
+    window_x: i32,
+    window_y: i32,
+    window_width: i32,
+    window_height: i32,
+    buffer_width: i32,
+    buffer_height: i32,
+    image_format: ImageFormat,
+    screenshot_width: *mut i32,
+    screenshot_height: *mut i32,
+) -> AsyncScreenshotHandle {
+    assert!(!screenshot_width.is_null());
+    assert!(!screenshot_height.is_null());
+
+    let (handle, size) = renderer.get_screenshot_async(
+        DeviceIntRect::new(
+            DeviceIntPoint::new(window_x, window_y),
+            DeviceIntSize::new(window_width, window_height),
+        ),
+        DeviceIntSize::new(buffer_width, buffer_height),
+        image_format,
+    );
+
+    unsafe {
+        *screenshot_width = size.width;
+        *screenshot_height = size.height;
+    }
+
+    handle
+}
+
+#[no_mangle]
+pub extern "C" fn wr_renderer_map_and_recycle_screenshot(
+    renderer: &mut Renderer,
+    handle: AsyncScreenshotHandle,
+    dst_buffer: *mut u8,
+    dst_buffer_len: usize,
+    dst_stride: usize,
+) -> bool {
+    renderer.map_and_recycle_screenshot(
+        handle,
+        make_slice_mut(dst_buffer, dst_buffer_len),
+        dst_stride,
+    )
 }
 
 // Call wr_renderer_render() before calling this function.
