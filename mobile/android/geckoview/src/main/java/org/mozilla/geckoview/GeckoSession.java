@@ -600,6 +600,10 @@ public class GeckoSession implements Parcelable {
                     delegate.onSecurityChange(GeckoSession.this, new ProgressDelegate.SecurityInformation(identity));
                 } else if ("GeckoView:StateUpdated".equals(event)) {
                     final GeckoBundle update = message.getBundle("data");
+                    if (update != null) {
+                        mStateCache.updateSessionState(update);
+                        delegate.onSessionStateChange(GeckoSession.this, new SessionState(mStateCache));
+                    }
                 }
             }
         };
@@ -1728,21 +1732,61 @@ public class GeckoSession implements Parcelable {
      */
     @AnyThread
     public static class SessionState implements Parcelable {
-        private String mState;
+        private GeckoBundle mState;
 
-        /**
-         * Construct a SessionState from a String.
-         *
-         * @param state A String representing a SessionState; should originate as output
-         *              of SessionState.toString().
-         */
-        public SessionState(final String state) {
-            mState = state;
+        private SessionState() {
+            mState = new GeckoBundle(3);
+        }
+
+        private SessionState(final @NonNull GeckoBundle state) {
+            mState = new GeckoBundle(state);
+        }
+
+        public SessionState(final @NonNull SessionState state) {
+            mState = new GeckoBundle(state.mState);
+        }
+
+        public void updateSessionState(final @NonNull GeckoBundle updateData) {
+            if (updateData == null) {
+                Log.w(LOGTAG, "Session state update has no data field.");
+                return;
+            }
+
+            final GeckoBundle history = updateData.getBundle("historychange");
+            final GeckoBundle scroll = updateData.getBundle("scroll");
+            final GeckoBundle formdata = updateData.getBundle("formdata");
+
+            if (history != null) {
+                mState.putBundle("history", history);
+            }
+
+            if (scroll != null) {
+                mState.putBundle("scrolldata", scroll);
+            }
+
+            if (formdata != null) {
+                mState.putBundle("formdata", formdata);
+            }
+
+            return;
         }
 
         @Override
         public String toString() {
-            return mState;
+            if (mState == null) {
+                Log.w(LOGTAG, "Can't convert SessionState with null state to string");
+                return null;
+            }
+
+            String res;
+            try {
+                res = mState.toJSONObject().toString();
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Could not convert session state to string.");
+                res = null;
+            }
+
+            return res;
         }
 
         @Override // Parcelable
@@ -1752,19 +1796,40 @@ public class GeckoSession implements Parcelable {
 
         @Override // Parcelable
         public void writeToParcel(final Parcel dest, final int flags) {
-            dest.writeString(mState);
+            dest.writeString(toString());
         }
 
         // AIDL code may call readFromParcel even though it's not part of Parcelable.
         public void readFromParcel(final @NonNull Parcel source) {
-            mState = source.readString();
+            if (source.readString() == null) {
+                Log.w(LOGTAG, "Can't reproduce session state from Parcel");
+            }
+
+            try {
+                mState = GeckoBundle.fromJSONObject(new JSONObject(source.readString()));
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Could not convert string to session state.");
+                mState = null;
+            }
         }
 
         public static final Parcelable.Creator<SessionState> CREATOR =
                 new Parcelable.Creator<SessionState>() {
             @Override
             public SessionState createFromParcel(final Parcel source) {
-                return new SessionState(source.readString());
+                if (source.readString() == null) {
+                    Log.w(LOGTAG, "Can't create session state from Parcel");
+                }
+
+                GeckoBundle res;
+                try {
+                    res = GeckoBundle.fromJSONObject(new JSONObject(source.readString()));
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "Could not convert parcel to session state.");
+                    res = null;
+                }
+
+                return new SessionState(res);
             }
 
             @Override
@@ -1774,38 +1839,18 @@ public class GeckoSession implements Parcelable {
         };
     }
 
-    /**
-     * Save the current browsing session state of this GeckoSession. This session state
-     * includes the history, scroll position, zoom, and any form data that has been entered,
-     * but does not include information pertaining to the GeckoSession itself (for example,
-     * this does not include settings on the GeckoSession).
-     *
-     * @return A {@link GeckoResult} containing the {@link SessionState}
-     */
-    @AnyThread
-    public @NonNull GeckoResult<SessionState> saveState() {
-        CallbackResult<SessionState> result = new CallbackResult<SessionState>() {
-            @Override
-            public void sendSuccess(final Object value) {
-                complete(new SessionState((String)value));
-            }
-        };
-        mEventDispatcher.dispatch("GeckoView:SaveState", null, result);
-        return result;
-    }
+    private SessionState mStateCache = new SessionState();
 
     /**
      * Restore a saved state to this GeckoSession; only data that is saved (history, scroll
      * position, zoom, and form data) will be restored. These will overwrite the corresponding
      * state of this GeckoSession.
      *
-     * @param state A saved session state; this should originate from GeckoSession.saveState().
+     * @param state A saved session state; this should originate from onSessionStateChange().
      */
     @AnyThread
     public void restoreState(final @NonNull SessionState state) {
-        final GeckoBundle msg = new GeckoBundle(1);
-        msg.putString("state", state.toString());
-        mEventDispatcher.dispatch("GeckoView:RestoreState", msg);
+        mEventDispatcher.dispatch("GeckoView:RestoreState", state.mState);
     }
 
     // This is the GeckoDisplay acquired via acquireDisplay(), if any.
@@ -2583,6 +2628,17 @@ public class GeckoSession implements Parcelable {
         @UiThread
         default void onSecurityChange(@NonNull GeckoSession session,
                                       @NonNull SecurityInformation securityInfo) {}
+
+        /**
+        * The browser session state has changed. This can happen in response to 
+        * navigation, scrolling, or form data changes; the session state passed
+        * includes the most up to date information on all of these.
+        * @param session GeckoSession that initiated the callback.
+        * @param sessionState SessionState representing the latest browser state.
+        */
+        @UiThread
+        default void onSessionStateChange(@NonNull GeckoSession session,
+                                          @NonNull SessionState sessionState) {}
     }
 
     /**
