@@ -64,9 +64,7 @@ dictionary SignResponse {
     DOMString? errorMessage;
 };
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback U2FRegisterCallback = void(RegisterResponse response);
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback U2FSignCallback = void(SignResponse response);
 
 [SecureContext, Pref="security.webauth.u2f"]

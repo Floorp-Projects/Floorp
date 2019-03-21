@@ -231,7 +231,7 @@ class NotificationPermissionRequest : public ContentPermissionRequestBase,
  protected:
   ~NotificationPermissionRequest() = default;
 
-  nsresult ResolvePromise();
+  MOZ_CAN_RUN_SCRIPT nsresult ResolvePromise();
   nsresult DispatchResolvePromise();
   NotificationPermission mPermission;
   RefPtr<Promise> mPromise;
@@ -575,7 +575,8 @@ nsresult NotificationPermissionRequest::ResolvePromise() {
   }
   if (mCallback) {
     ErrorResult error;
-    mCallback->Call(mPermission, error);
+    RefPtr<NotificationPermissionCallback> callback(mCallback);
+    callback->Call(mPermission, error);
     rv = error.StealNSResult();
   }
   mPromise->MaybeResolve(mPermission);

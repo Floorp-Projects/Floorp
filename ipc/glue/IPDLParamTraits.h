@@ -185,7 +185,7 @@ struct IPDLParamTraits<mozilla::Maybe<T>> {
     WriteIPDLParam(aMsg, aActor, isSome);
 
     if (isSome) {
-      WriteIPDLParam(aMsg, aActor, aParam.ref());
+      WriteIPDLParam(aMsg, aActor, std::move(aParam.value()));
     }
   }
 

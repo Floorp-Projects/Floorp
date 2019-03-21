@@ -2810,7 +2810,7 @@ html[dir="rtl"] .editor-mount {
 }
 
 .debug-expression,
-.new-debug-line .column-breakpoint {
+.debug-expression ~ .CodeMirror-widget {
   background-color: var(--debug-expression-background);
 }
 

@@ -23,9 +23,11 @@ class PromiseNativeHandler : public nsISupports {
   virtual ~PromiseNativeHandler() {}
 
  public:
+  MOZ_CAN_RUN_SCRIPT
   virtual void ResolvedCallback(JSContext* aCx,
                                 JS::Handle<JS::Value> aValue) = 0;
 
+  MOZ_CAN_RUN_SCRIPT
   virtual void RejectedCallback(JSContext* aCx,
                                 JS::Handle<JS::Value> aValue) = 0;
 };

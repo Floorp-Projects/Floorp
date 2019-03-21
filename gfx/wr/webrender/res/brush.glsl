@@ -156,8 +156,7 @@ void main(void) {
     #endif
 #endif
 
-    // TODO(gw): Handle pre-multiply common code here as required.
-    oFragColor = frag.color;
+    write_output(frag.color);
 #endif
 }
 #endif

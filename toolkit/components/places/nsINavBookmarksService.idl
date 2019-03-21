@@ -347,6 +347,7 @@ interface nsINavBookmarksService : nsISupports
    *        aURI will be truncated to URI_LENGTH_MAX.
    *  @throws if aGuid is malformed.
    */
+  [can_run_script]
   long long insertBookmark(in long long aParentId, in nsIURI aURI,
                            in long aIndex, in AUTF8String aTitle,
                            [optional] in ACString aGuid,
@@ -380,6 +381,7 @@ interface nsINavBookmarksService : nsISupports
    *  @return The ID of the newly-inserted folder.
    *  @throws if aGuid is malformed.
    */
+  [can_run_script]
   long long createFolder(in long long aParentFolder, in AUTF8String name,
                          in long index,
                          [optional] in ACString aGuid,

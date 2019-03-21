@@ -396,6 +396,9 @@ pub struct AlphaBatchContainer {
     /// in. Each region will have scissor rect set before drawing.
     pub regions: Vec<DeviceIntRect>,
     pub tile_blits: Vec<TileBlit>,
+    /// The rectangle of the owning render target that this
+    /// set of batches affects.
+    pub task_rect: DeviceIntRect,
 }
 
 impl AlphaBatchContainer {
@@ -409,6 +412,7 @@ impl AlphaBatchContainer {
             task_scissor_rect,
             regions,
             tile_blits: Vec::new(),
+            task_rect: DeviceIntRect::zero(),
         }
     }
 
@@ -417,7 +421,9 @@ impl AlphaBatchContainer {
         self.alpha_batches.is_empty()
     }
 
-    fn merge(&mut self, batch_list: BatchList) {
+    fn merge(&mut self, batch_list: BatchList, task_rect: &DeviceIntRect) {
+        self.task_rect = self.task_rect.union(task_rect);
+
         for other_batch in batch_list.opaque_batch_list.batches {
             let batch_index = self.opaque_batches.iter().position(|batch| {
                 batch.key.is_compatible_with(&other_batch.key)
@@ -517,6 +523,7 @@ impl AlphaBatchBuilder {
         mut self,
         batch_containers: &mut Vec<AlphaBatchContainer>,
         merged_batches: &mut AlphaBatchContainer,
+        task_rect: DeviceIntRect,
     ) {
         for batch_list in &mut self.batch_lists {
             batch_list.finalize();
@@ -525,7 +532,7 @@ impl AlphaBatchBuilder {
         if self.can_merge() {
             let batch_list = self.batch_lists.pop().unwrap();
             debug_assert!(batch_list.tile_blits.is_empty());
-            merged_batches.merge(batch_list);
+            merged_batches.merge(batch_list, &task_rect);
         } else {
             for batch_list in self.batch_lists {
                 batch_containers.push(AlphaBatchContainer {
@@ -534,6 +541,7 @@ impl AlphaBatchBuilder {
                     task_scissor_rect: self.task_scissor_rect,
                     regions: batch_list.regions,
                     tile_blits: batch_list.tile_blits,
+                    task_rect,
                 });
             }
         }

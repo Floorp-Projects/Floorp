@@ -3792,7 +3792,7 @@ UniquePtr<const gfxFont::Metrics> gfxFont::CreateVerticalMetrics() {
 
   // Somewhat arbitrary values for now, subject to future refinement...
   metrics->spaceWidth = metrics->aveCharWidth;
-  metrics->zeroOrAveCharWidth = metrics->aveCharWidth;
+  metrics->zeroWidth = metrics->aveCharWidth;
   metrics->maxHeight = metrics->maxAscent + metrics->maxDescent;
   metrics->xHeight = metrics->emHeight / 2;
   metrics->capHeight = metrics->maxAscent;
@@ -3818,7 +3818,7 @@ gfxFloat gfxFont::SynthesizeSpaceWidth(uint32_t aCh) {
     case 0x2006:
       return GetAdjustedSize() / 6;  // six-per-em space
     case 0x2007:
-      return GetMetrics(eHorizontal).zeroOrAveCharWidth;  // figure space
+      return GetMetrics(eHorizontal).ZeroOrAveCharWidth();  // figure space
     case 0x2008:
       return GetMetrics(eHorizontal).spaceWidth;  // punctuation space
     case 0x2009:

@@ -22,12 +22,10 @@ skip selectors/focus-within-shadow-*.html
 
 #### CSS Values 3 ####################################################
 
-# New failures need to be triged later
-fails css-values/ch-unit-003.html
-
 # Fuzzy
 fuzzy-if(OSX||Android,0-78,0-197) css-values/ch-unit-001.html
 fuzzy(0-50,0-160) css-values/ch-unit-002.html
+fuzzy-if(Android,78,179) css-values/ch-unit-003.html
 fuzzy(0-78,0-197) fails-if(webrender&&cocoaWidget) css-values/ch-unit-004.html
 
 # Bug 435426

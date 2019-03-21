@@ -51,19 +51,16 @@ uint32_t IdleRequest::GetTimeoutHandle() const {
   return mTimeoutHandle.value();
 }
 
-nsresult IdleRequest::IdleRun(nsPIDOMWindowInner* aWindow,
-                              DOMHighResTimeStamp aDeadline, bool aDidTimeout) {
+void IdleRequest::IdleRun(nsPIDOMWindowInner* aWindow,
+                          DOMHighResTimeStamp aDeadline, bool aDidTimeout) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(mCallback);
 
-  ErrorResult error;
   RefPtr<IdleDeadline> deadline =
       new IdleDeadline(aWindow, aDidTimeout, aDeadline);
-  mCallback->Call(*deadline, error, "requestIdleCallback handler");
-
-  mCallback = nullptr;
-  error.SuppressException();
-  return error.StealNSResult();
+  RefPtr<IdleRequestCallback> callback(mCallback.forget());
+  MOZ_ASSERT(!mCallback);
+  callback->Call(*deadline, "requestIdleCallback handler");
 }
 
 }  // namespace dom

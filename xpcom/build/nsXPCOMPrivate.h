@@ -9,6 +9,7 @@
 
 #include "nscore.h"
 #include "nsXPCOM.h"
+#include "mozilla/Attributes.h"
 
 /**
  * During this shutdown notification all threads which run XPCOM code must
@@ -30,6 +31,7 @@ namespace mozilla {
  *         other error codes indicate a failure during shutdown
  *
  */
+MOZ_CAN_RUN_SCRIPT
 nsresult ShutdownXPCOM(nsIServiceManager* aServMgr);
 
 void SetICUMemoryFunctions();

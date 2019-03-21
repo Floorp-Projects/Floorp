@@ -355,9 +355,9 @@ void gfxGDIFont::Initialize() {
                            GGI_MARK_NONEXISTING_GLYPHS);
     if (ret != GDI_ERROR && glyph != 0xFFFF) {
       GetTextExtentPoint32W(dc.GetDC(), L"0", 1, &size);
-      mMetrics->zeroOrAveCharWidth = ROUND(size.cx);
+      mMetrics->zeroWidth = ROUND(size.cx);
     } else {
-      mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
+      mMetrics->zeroWidth = -1.0;  // indicates not found
     }
 
     SanitizeMetrics(mMetrics, GetFontEntry()->mIsBadUnderlineFont);

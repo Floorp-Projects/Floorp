@@ -4,7 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback PlacesEventCallback = void (sequence<PlacesEvent> events);
 
 [ChromeOnly, Exposed=Window,

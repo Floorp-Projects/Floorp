@@ -439,7 +439,8 @@ nsCString WebExtensionPolicy::BackgroundPageHTML() const {
 
 void WebExtensionPolicy::Localize(const nsAString& aInput,
                                   nsString& aOutput) const {
-  mLocalizeCallback->Call(aInput, aOutput);
+  RefPtr<WebExtensionLocalizeCallback> callback(mLocalizeCallback);
+  callback->Call(aInput, aOutput);
 }
 
 JSObject* WebExtensionPolicy::WrapObject(JSContext* aCx,

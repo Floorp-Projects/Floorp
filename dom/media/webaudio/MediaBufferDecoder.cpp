@@ -85,6 +85,9 @@ class MediaDecodeTask final : public Runnable {
     MOZ_ASSERT(NS_IsMainThread());
   }
 
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.  See
+  // bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Run() override;
   bool CreateReader();
   MediaFormatReader* Reader() {
@@ -93,6 +96,7 @@ class MediaDecodeTask final : public Runnable {
   }
 
  private:
+  MOZ_CAN_RUN_SCRIPT
   void ReportFailureOnMainThread(WebAudioDecodeJob::ErrorCode aErrorCode) {
     if (NS_IsMainThread()) {
       Cleanup();
@@ -109,14 +113,14 @@ class MediaDecodeTask final : public Runnable {
   }
 
   void Decode();
-  void OnMetadataRead(MetadataHolder&& aMetadata);
-  void OnMetadataNotRead(const MediaResult& aError);
+  MOZ_CAN_RUN_SCRIPT void OnMetadataRead(MetadataHolder&& aMetadata);
+  MOZ_CAN_RUN_SCRIPT void OnMetadataNotRead(const MediaResult& aError);
   void RequestSample();
   void SampleDecoded(RefPtr<AudioData> aData);
-  void SampleNotDecoded(const MediaResult& aError);
-  void FinishDecode();
-  void AllocateBuffer();
-  void CallbackTheResult();
+  MOZ_CAN_RUN_SCRIPT void SampleNotDecoded(const MediaResult& aError);
+  MOZ_CAN_RUN_SCRIPT void FinishDecode();
+  MOZ_CAN_RUN_SCRIPT void AllocateBuffer();
+  MOZ_CAN_RUN_SCRIPT void CallbackTheResult();
 
   void Cleanup() {
     MOZ_ASSERT(NS_IsMainThread());
@@ -486,14 +490,14 @@ void WebAudioDecodeJob::OnSuccess(ErrorCode aErrorCode) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aErrorCode == NoError);
 
+  RefPtr<AudioBuffer> output(mOutput);
   if (mSuccessCallback) {
-    ErrorResult rv;
-    mSuccessCallback->Call(*mOutput, rv);
+    RefPtr<DecodeSuccessCallback> callback(mSuccessCallback);
     // Ignore errors in calling the callback, since there is not much that we
     // can do about it here.
-    rv.SuppressException();
+    callback->Call(*output);
   }
-  mPromise->MaybeResolve(mOutput);
+  mPromise->MaybeResolve(output);
 
   mContext->RemoveFromDecodeQueue(this);
 }
@@ -537,7 +541,8 @@ void WebAudioDecodeJob::OnFailure(ErrorCode aErrorCode) {
     nsAutoCString errorString(errorMessage);
     RefPtr<DOMException> exception = DOMException::Create(
         NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR, errorString);
-    mFailureCallback->Call(*exception);
+    RefPtr<DecodeErrorCallback> callback(mFailureCallback);
+    callback->Call(*exception);
   }
 
   mPromise->MaybeReject(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);

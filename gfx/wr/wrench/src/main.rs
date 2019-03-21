@@ -588,7 +588,7 @@ fn render<'a>(
 
     // Default the profile overlay on for android.
     if cfg!(target_os = "android") {
-        debug_flags.toggle(DebugFlags::PROFILER_DBG);
+        debug_flags.toggle(DebugFlags::PROFILER_DBG | DebugFlags::COMPACT_PROFILER);
         wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
     }
 

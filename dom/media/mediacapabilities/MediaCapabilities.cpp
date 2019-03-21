@@ -13,6 +13,7 @@
 #include "MediaRecorder.h"
 #include "PDMFactory.h"
 #include "VPXDecoder.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Move.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/TaskQueue.h"
@@ -243,81 +244,98 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
               *config, taskQueue, compositor,
               CreateDecoderParams::VideoFrameRate(frameRate),
               TrackInfo::kVideoTrack};
-          return AllocationWrapper::CreateDecoder(params)->Then(
-              taskQueue, __func__,
-              [taskQueue, frameRate, config = std::move(config)](
-                  AllocationWrapper::AllocateDecoderPromise::
-                      ResolveOrRejectValue&& aValue) mutable {
-                if (aValue.IsReject()) {
-                  return CapabilitiesPromise::CreateAndReject(
-                      std::move(aValue.RejectValue()), __func__);
-                }
-                RefPtr<MediaDataDecoder> decoder =
-                    std::move(aValue.ResolveValue());
-                // We now query the decoder to determine if it's power
-                // efficient.
-                RefPtr<CapabilitiesPromise> p = decoder->Init()->Then(
-                    taskQueue, __func__,
-                    [taskQueue, decoder, frameRate, config = std::move(config)](
-                        MediaDataDecoder::InitPromise::ResolveOrRejectValue&&
-                            aValue) mutable {
-                      RefPtr<CapabilitiesPromise> p;
-                      if (aValue.IsReject()) {
-                        p = CapabilitiesPromise::CreateAndReject(
-                            std::move(aValue.RejectValue()), __func__);
-                      } else {
-                        MOZ_ASSERT(config->IsVideo());
-                        nsAutoCString reason;
-                        bool powerEfficient = true;
-                        bool smooth = true;
-                        if (config->GetAsVideoInfo()->mImage.height > 480) {
-                          // Assume that we can do stuff at 480p or less in a
-                          // power efficient manner and smoothly. If greater
-                          // than 480p we assume that if the video decoding is
-                          // hardware accelerated it will be smooth and power
-                          // efficient, otherwise we use the benchmark to
-                          // estimate
-                          powerEfficient =
-                              decoder->IsHardwareAccelerated(reason);
-                          if (!powerEfficient &&
-                              VPXDecoder::IsVP9(config->mMimeType)) {
-                            smooth = VP9Benchmark::IsVP9DecodeFast(
-                                true /* default */);
-                            uint32_t fps = VP9Benchmark::MediaBenchmarkVp9Fps();
-                            if (!smooth && fps > 0) {
-                              // The VP9 estimizer decode a 1280x720 video.
-                              // Let's adjust the result for the resolution and
-                              // frame rate of what we actually want. If the
-                              // result is twice that we need we assume it will
-                              // be smooth.
-                              const auto& videoConfig =
-                                  *config->GetAsVideoInfo();
-                              double needed = ((1280.0 * 720.0) /
-                                               (videoConfig.mImage.width *
-                                                videoConfig.mImage.height) *
-                                               fps) /
-                                              frameRate;
-                              smooth = needed > 2;
+          // We want to ensure that all decoder's queries are occurring only
+          // once at a time as it can quickly exhaust the system resources
+          // otherwise.
+          static RefPtr<AllocPolicy> sVideoAllocPolicy = [&taskQueue]() {
+            SystemGroup::Dispatch(
+                TaskCategory::Other,
+                NS_NewRunnableFunction(
+                    "MediaCapabilities::AllocPolicy:Video", []() {
+                      ClearOnShutdown(&sVideoAllocPolicy,
+                                      ShutdownPhase::ShutdownThreads);
+                    }));
+            return new SingleAllocPolicy(TrackInfo::TrackType::kVideoTrack,
+                                         taskQueue);
+          }();
+          return AllocationWrapper::CreateDecoder(params, sVideoAllocPolicy)
+              ->Then(
+                  taskQueue, __func__,
+                  [taskQueue, frameRate, config = std::move(config)](
+                      AllocationWrapper::AllocateDecoderPromise::
+                          ResolveOrRejectValue&& aValue) mutable {
+                    if (aValue.IsReject()) {
+                      return CapabilitiesPromise::CreateAndReject(
+                          std::move(aValue.RejectValue()), __func__);
+                    }
+                    RefPtr<MediaDataDecoder> decoder =
+                        std::move(aValue.ResolveValue());
+                    // We now query the decoder to determine if it's power
+                    // efficient.
+                    RefPtr<CapabilitiesPromise> p = decoder->Init()->Then(
+                        taskQueue, __func__,
+                        [taskQueue, decoder, frameRate,
+                         config = std::move(config)](
+                            MediaDataDecoder::InitPromise::
+                                ResolveOrRejectValue&& aValue) mutable {
+                          RefPtr<CapabilitiesPromise> p;
+                          if (aValue.IsReject()) {
+                            p = CapabilitiesPromise::CreateAndReject(
+                                std::move(aValue.RejectValue()), __func__);
+                          } else {
+                            MOZ_ASSERT(config->IsVideo());
+                            nsAutoCString reason;
+                            bool powerEfficient = true;
+                            bool smooth = true;
+                            if (config->GetAsVideoInfo()->mImage.height > 480) {
+                              // Assume that we can do stuff at 480p or less in
+                              // a power efficient manner and smoothly. If
+                              // greater than 480p we assume that if the video
+                              // decoding is hardware accelerated it will be
+                              // smooth and power efficient, otherwise we use
+                              // the benchmark to estimate
+                              powerEfficient =
+                                  decoder->IsHardwareAccelerated(reason);
+                              if (!powerEfficient &&
+                                  VPXDecoder::IsVP9(config->mMimeType)) {
+                                smooth = VP9Benchmark::IsVP9DecodeFast(
+                                    true /* default */);
+                                uint32_t fps =
+                                    VP9Benchmark::MediaBenchmarkVp9Fps();
+                                if (!smooth && fps > 0) {
+                                  // The VP9 estimizer decode a 1280x720 video.
+                                  // Let's adjust the result for the resolution
+                                  // and frame rate of what we actually want. If
+                                  // the result is twice that we need we assume
+                                  // it will be smooth.
+                                  const auto& videoConfig =
+                                      *config->GetAsVideoInfo();
+                                  double needed = ((1280.0 * 720.0) /
+                                                   (videoConfig.mImage.width *
+                                                    videoConfig.mImage.height) *
+                                                   fps) /
+                                                  frameRate;
+                                  smooth = needed > 2;
+                                }
+                              }
                             }
+                            p = CapabilitiesPromise::CreateAndResolve(
+                                MediaCapabilitiesInfo(true /* supported */,
+                                                      smooth, powerEfficient),
+                                __func__);
                           }
-                        }
-                        p = CapabilitiesPromise::CreateAndResolve(
-                            MediaCapabilitiesInfo(true /* supported */, smooth,
-                                                  powerEfficient),
-                            __func__);
-                      }
-                      MOZ_ASSERT(p.get(), "the promise has been created");
-                      // Let's keep alive the decoder and the config object
-                      // until the decoder has shutdown.
-                      decoder->Shutdown()->Then(
-                          taskQueue, __func__,
-                          [taskQueue, decoder, config = std::move(config)](
-                              const ShutdownPromise::ResolveOrRejectValue&
-                                  aValue) {});
-                      return p;
-                    });
-                return p;
-              });
+                          MOZ_ASSERT(p.get(), "the promise has been created");
+                          // Let's keep alive the decoder and the config object
+                          // until the decoder has shutdown.
+                          decoder->Shutdown()->Then(
+                              taskQueue, __func__,
+                              [taskQueue, decoder, config = std::move(config)](
+                                  const ShutdownPromise::ResolveOrRejectValue&
+                                      aValue) {});
+                          return p;
+                        });
+                    return p;
+                  });
         }));
   }
 

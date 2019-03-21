@@ -301,26 +301,14 @@ static uint16_t FromCaptureState(CaptureState aState) {
   return static_cast<uint16_t>(aState);
 }
 
-void MediaManager::CallOnError(
-    const MediaManager::GetUserMediaErrorCallback* aCallback,
-    MediaStreamError& aError) {
-  MOZ_ASSERT(aCallback);
-  if (aCallback->HasWebIDLCallback()) {
-    aCallback->GetWebIDLCallback()->Call(aError);
-  } else {
-    aCallback->GetXPCOMCallback()->OnError(&aError);
-  }
+void MediaManager::CallOnError(GetUserMediaErrorCallback& aCallback,
+                               MediaStreamError& aError) {
+  aCallback.Call(aError);
 }
 
-void MediaManager::CallOnSuccess(
-    const MediaManager::GetUserMediaSuccessCallback* aCallback,
-    DOMMediaStream& aStream) {
-  MOZ_ASSERT(aCallback);
-  if (aCallback->HasWebIDLCallback()) {
-    aCallback->GetWebIDLCallback()->Call(aStream);
-  } else {
-    aCallback->GetXPCOMCallback()->OnSuccess(&aStream);
-  }
+void MediaManager::CallOnSuccess(GetUserMediaSuccessCallback& aCallback,
+                                 DOMMediaStream& aStream) {
+  aCallback.Call(aStream);
 }
 
 /**

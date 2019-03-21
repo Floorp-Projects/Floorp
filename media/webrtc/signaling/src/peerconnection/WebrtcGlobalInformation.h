@@ -20,6 +20,7 @@ class WebrtcGlobalLoggingCallback;
 
 class WebrtcGlobalInformation {
  public:
+  MOZ_CAN_RUN_SCRIPT
   static void GetAllStats(const GlobalObject& aGlobal,
                           WebrtcGlobalStatisticsCallback& aStatsCallback,
                           const Optional<nsAString>& pcIdFilter,
@@ -27,6 +28,7 @@ class WebrtcGlobalInformation {
 
   static void ClearAllStats(const GlobalObject& aGlobal);
 
+  MOZ_CAN_RUN_SCRIPT
   static void GetLogging(const GlobalObject& aGlobal, const nsAString& aPattern,
                          WebrtcGlobalLoggingCallback& aLoggingCallback,
                          ErrorResult& aRv);

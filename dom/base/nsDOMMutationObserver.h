@@ -467,7 +467,7 @@ class nsDOMMutationObserver final : public nsISupports, public nsWrapperCache {
 
   void TakeRecords(nsTArray<RefPtr<nsDOMMutationRecord>>& aRetVal);
 
-  void HandleMutation();
+  MOZ_CAN_RUN_SCRIPT void HandleMutation();
 
   void GetObservingInfo(
       nsTArray<mozilla::dom::Nullable<MutationObservingInfo>>& aResult,
@@ -514,6 +514,7 @@ class nsDOMMutationObserver final : public nsISupports, public nsWrapperCache {
   // static methods
   static void QueueMutationObserverMicroTask();
 
+  MOZ_CAN_RUN_SCRIPT
   static void HandleMutations(mozilla::AutoSlowOperation& aAso);
 
   static bool AllScheduledMutationObserversAreSuppressed() {
@@ -561,6 +562,7 @@ class nsDOMMutationObserver final : public nsISupports, public nsWrapperCache {
     return mOwner && nsGlobalWindowInner::Cast(mOwner)->IsInSyncOperation();
   }
 
+  MOZ_CAN_RUN_SCRIPT
   static void HandleMutationsInternal(mozilla::AutoSlowOperation& aAso);
 
   static void AddCurrentlyHandlingObserver(nsDOMMutationObserver* aObserver,
