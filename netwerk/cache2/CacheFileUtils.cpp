@@ -48,7 +48,7 @@ class KeyParser : protected Tokenizer {
   char lastTag;
 
   // Classifier for the 'tag' character valid range
-  static bool TagChar(const char aChar) { return aChar >= ' ' && aChar <= '~'; }
+  static bool TagChar(const char aChar) { return aChar >= ' ' && aChar <= '\x7f'; }
 
   bool ParseTags() {
     // Expects to be at the tag name or at the end
