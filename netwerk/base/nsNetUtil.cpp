@@ -3011,6 +3011,62 @@ bool NS_IsOffline() {
   return offline || !connectivity;
 }
 
+/**
+ * This function returns true if this channel should be classified by
+ * the URL Classifier, false otherwise.
+ *
+ * The idea of the algorithm to determine if a channel should be
+ * classified is based on:
+ * 1. Channels created by non-privileged code should be classified.
+ * 2. Top-level document’s channels, if loaded by privileged code
+ *    (system principal), should be classified.
+ * 3. Any other channel, created by privileged code, is considered safe.
+ *
+ * A bad/hacked/corrupted safebrowsing database, plus a mistakenly
+ * classified critical channel (this may result from a bug in the exemption
+ * rules or incorrect information being passed into) can cause serious
+ * problems. For example, if the updater channel is classified and blocked
+ * by the Safe Browsing, Firefox can't update itself, and there is no way to
+ * recover from that.
+ *
+ * So two safeguards are added to ensure critical channels are never
+ * automatically classified either because there is a bug in the algorithm
+ * or the data in loadinfo is wrong.
+ * 1. beConservative, this is set by ServiceRequest and we treat
+ *    channel created for ServiceRequest as critical channels.
+ * 2. nsIChannel::LOAD_BYPASS_URL_CLASSIFIER, channel's opener can use this
+ *    flag to enforce bypassing the URL classifier check.
+ */
+bool NS_ShouldClassifyChannel(nsIChannel *aChannel) {
+  nsCOMPtr<nsIHttpChannelInternal> httpChannel(do_QueryInterface(aChannel));
+  if (httpChannel) {
+    bool beConservative;
+    nsresult rv = httpChannel->GetBeConservative(&beConservative);
+
+    // beConservative flag, set by ServiceRequest to ensure channels that fetch
+    // update use conservative TLS setting, are used here to identify channels
+    // are critical to bypass classification. for channels don't support
+    // beConservative, continue to apply the exemption rules.
+    if (NS_SUCCEEDED(rv) && beConservative) {
+      return false;
+    }
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  if (loadInfo) {
+    nsContentPolicyType type = loadInfo->GetExternalContentPolicyType();
+
+    // Skip classifying channel triggered by system unless it is a top-level
+    // load.
+    if (nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal()) &&
+        nsIContentPolicy::TYPE_DOCUMENT != type) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 namespace mozilla {
 namespace net {
 
