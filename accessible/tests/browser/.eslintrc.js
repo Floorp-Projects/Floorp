@@ -4,9 +4,6 @@ module.exports = {
   "extends": [
     "plugin:mozilla/browser-test"
   ],
-  "globals": {
-    "gBrowser": false
-  },
   "rules": {
     "mozilla/no-aArgs": "error",
     "mozilla/reject-importGlobalProperties": ["error", "everything"],
@@ -31,17 +28,12 @@ module.exports = {
     "no-return-assign": "error",
     "no-shadow": "error",
     "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
-    "object-shorthand": "off",
     "one-var": ["error", "never"],
     "radix": "error",
     "semi-spacing": ["error", {"before": false, "after": true}],
     "space-in-parens": ["error", "never"],
     "strict": ["error", "global"],
     "yoda": "error",
-    "no-implied-eval": "off",
-    "no-iterator": "off",
-    "no-lone-blocks": "off",
-    "no-new-object": "off",
     "no-undef-init": "error",
     "operator-linebreak": ["error", "after"]
   }

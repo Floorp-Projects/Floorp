@@ -46,7 +46,7 @@ const attributesTests = [{
   }
 }, {
   desc: "@line-number attribute is present when textbox is focused",
-  action: async function(browser) {
+  async action(browser) {
     await invokeFocus(browser, "textbox");
   },
   waitFor: EVENT_FOCUS,

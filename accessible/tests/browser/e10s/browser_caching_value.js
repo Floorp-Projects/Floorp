@@ -25,7 +25,7 @@ const valueTests = [{
 }, {
   desc: "Value should update to 3rd when 3 is pressed",
   id: "select",
-  action: async function(browser) {
+  async action(browser) {
     await invokeFocus(browser, "select");
     await BrowserTestUtils.synthesizeKey("3", {}, browser);
   },
@@ -102,7 +102,7 @@ const valueTests = [{
 }, {
   desc: "Value should change when slider is moved",
   id: "range",
-  action: async function(browser) {
+  async action(browser) {
     await invokeFocus(browser, "range");
     await BrowserTestUtils.synthesizeKey("VK_LEFT", {}, browser);
   },
