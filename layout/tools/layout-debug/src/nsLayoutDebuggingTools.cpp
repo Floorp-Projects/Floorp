@@ -332,7 +332,7 @@ nsLayoutDebuggingTools::DumpContent() {
 }
 
 static void DumpFramesRecur(nsIDocShell* aDocShell, FILE* out) {
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   fprintf(out, "webshell=%p \n", static_cast<void*>(aDocShell));
   nsCOMPtr<nsIPresShell> shell(pres_shell(aDocShell));
   if (shell) {

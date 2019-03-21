@@ -1727,7 +1727,7 @@ HTMLEditor::SelectElement(Element* aElement) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsresult rv = SelectContentInternal(MOZ_KnownLive(*aElement));
+  nsresult rv = SelectContentInternal(*aElement);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1742,18 +1742,28 @@ nsresult HTMLEditor::SelectContentInternal(nsIContent& aContentToSelect) {
     return NS_ERROR_FAILURE;
   }
 
-  EditorRawDOMPoint newSelectionStart(&aContentToSelect);
-  if (NS_WARN_IF(!newSelectionStart.IsSet())) {
+  nsINode* parent = aContentToSelect.GetParentNode();
+  if (NS_WARN_IF(!parent)) {
     return NS_ERROR_FAILURE;
   }
-  EditorRawDOMPoint newSelectionEnd(&aContentToSelect);
-  MOZ_ASSERT(newSelectionEnd.IsSet());
-  DebugOnly<bool> advanced = newSelectionEnd.AdvanceOffset();
-  ErrorResult error;
-  MOZ_KnownLive(SelectionRefPtr())
-      ->SetStartAndEndInLimiter(newSelectionStart, newSelectionEnd, error);
-  NS_WARNING_ASSERTION(!error.Failed(), "Failed to select the given content");
-  return error.StealNSResult();
+
+  // Don't notify selection change at collapse.
+  AutoUpdateViewBatch notifySelectionChangeOnce(*this);
+
+  // XXX Perhaps, Selection should have SelectNode(nsIContent&).
+  int32_t offsetInParent = parent->ComputeIndexOf(&aContentToSelect);
+
+  // Collapse selection to just before desired element,
+  nsresult rv = SelectionRefPtr()->Collapse(parent, offsetInParent);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  // then extend it to just after
+  rv = SelectionRefPtr()->Extend(parent, offsetInParent + 1);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3593,31 +3603,23 @@ nsresult HTMLEditor::SelectEntireDocument() {
     return NS_ERROR_NULL_POINTER;
   }
 
-  RefPtr<Element> rootElement = GetRoot();
-  if (NS_WARN_IF(!rootElement)) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  // If we're empty, don't select all children because that would select the
-  // bogus node.
+  // is doc empty?
   if (rules->DocumentIsEmpty()) {
+    // get editor root node
+    Element* rootElement = GetRoot();
+
+    // if its empty dont select entire doc - that would select the bogus node
     nsresult rv = SelectionRefPtr()->Collapse(rootElement, 0);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "Failed to move caret to start of the editor root element");
-    return rv;
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
   }
 
-  // Otherwise, select all children.
-  ErrorResult error;
-  SelectionRefPtr()->SelectAllChildren(*rootElement, error);
-  NS_WARNING_ASSERTION(
-      !error.Failed(),
-      "Failed to select all children of the editor root element");
-  return error.StealNSResult();
+  return EditorBase::SelectEntireDocument();
 }
 
 nsresult HTMLEditor::SelectAllInternal() {

@@ -729,8 +729,11 @@ class FunctionCompiler {
   }
 
   MDefinition* derefTableElementPointer(MDefinition* base) {
+    // Table element storage may be moved by GC operations, so reads from that
+    // storage are not movable.
     MWasmLoadRef* load =
-        MWasmLoadRef::New(alloc(), base, AliasSet::WasmTableElement);
+        MWasmLoadRef::New(alloc(), base, AliasSet::WasmTableElement,
+                          /*isMovable=*/ false);
     curBlock_->add(load);
     return load;
   }
@@ -3160,8 +3163,8 @@ static bool EmitTableGet(FunctionCompiler& f) {
     return false;
   }
 
-  // The return value here is either null, denoting an error, or a pointer to an
-  // unmovable location containing a possibly-null ref.
+  // The return value here is either null, denoting an error, or a short-lived
+  // pointer to a location containing a possibly-null ref.
   MDefinition* result;
   if (!f.builtinInstanceMethodCall(SASigTableGet, lineOrBytecode, args,
                                    &result)) {

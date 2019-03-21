@@ -14,6 +14,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Span.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
@@ -65,9 +66,10 @@ const uint32_t KEA_NOT_SUPPORTED = 1;
 
 class OCSPRequest final : public nsIStreamLoaderObserver, public nsIRunnable {
  public:
-  OCSPRequest(const nsCString& aiaLocation,
+  OCSPRequest(const nsACString& aiaLocation,
               const OriginAttributes& originAttributes,
-              Vector<uint8_t>&& ocspRequest, TimeDuration timeout);
+              const uint8_t (&ocspRequest)[OCSP_REQUEST_MAX_LENGTH],
+              size_t ocspRequestLength, TimeDuration timeout);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTREAMLOADEROBSERVER
@@ -104,7 +106,7 @@ class OCSPRequest final : public nsIStreamLoaderObserver, public nsIRunnable {
   nsCOMPtr<nsIStreamLoader> mLoader;
   const nsCString mAIALocation;
   const OriginAttributes mOriginAttributes;
-  const Vector<uint8_t> mPOSTData;
+  const mozilla::Span<const char> mPOSTData;
   const TimeDuration mTimeout;
   nsCOMPtr<nsITimer> mTimeoutTimer;
   TimeStamp mStartTime;
@@ -114,20 +116,23 @@ class OCSPRequest final : public nsIStreamLoaderObserver, public nsIRunnable {
 
 NS_IMPL_ISUPPORTS(OCSPRequest, nsIStreamLoaderObserver, nsIRunnable)
 
-OCSPRequest::OCSPRequest(const nsCString& aiaLocation,
+OCSPRequest::OCSPRequest(const nsACString& aiaLocation,
                          const OriginAttributes& originAttributes,
-                         Vector<uint8_t>&& ocspRequest, TimeDuration timeout)
+                         const uint8_t (&ocspRequest)[OCSP_REQUEST_MAX_LENGTH],
+                         size_t ocspRequestLength, TimeDuration timeout)
     : mMonitor("OCSPRequest.mMonitor"),
       mNotifiedDone(false),
       mLoader(nullptr),
       mAIALocation(aiaLocation),
       mOriginAttributes(originAttributes),
-      mPOSTData(std::move(ocspRequest)),
+      mPOSTData(reinterpret_cast<const char*>(ocspRequest), ocspRequestLength),
       mTimeout(timeout),
       mTimeoutTimer(nullptr),
       mStartTime(),
       mResponseResult(NS_ERROR_FAILURE),
-      mResponseBytes() {}
+      mResponseBytes() {
+  MOZ_ASSERT(ocspRequestLength <= OCSP_REQUEST_MAX_LENGTH);
+}
 
 nsresult OCSPRequest::DispatchToMainThreadAndWait() {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -279,10 +284,7 @@ OCSPRequest::Run() {
   }
 
   nsCOMPtr<nsIInputStream> uploadStream;
-  rv = NS_NewByteInputStream(
-      getter_AddRefs(uploadStream),
-      MakeSpan(reinterpret_cast<const char*>(mPOSTData.begin()),
-               mPOSTData.length()));
+  rv = NS_NewByteInputStream(getter_AddRefs(uploadStream), mPOSTData);
   if (NS_FAILED(rv)) {
     return NotifyDone(rv, lock);
   }
@@ -425,14 +427,17 @@ void OCSPRequest::OnTimeout(nsITimer* timer, void* closure) {
   self->NotifyDone(NS_ERROR_NET_TIMEOUT, lock);
 }
 
-mozilla::pkix::Result DoOCSPRequest(const nsCString& aiaLocation,
-                                    const OriginAttributes& originAttributes,
-                                    Vector<uint8_t>&& ocspRequest,
-                                    TimeDuration timeout,
-                                    /*out*/ Vector<uint8_t>& result) {
+mozilla::pkix::Result DoOCSPRequest(
+    const nsCString& aiaLocation, const OriginAttributes& originAttributes,
+    uint8_t (&ocspRequest)[OCSP_REQUEST_MAX_LENGTH], size_t ocspRequestLength,
+    TimeDuration timeout, /*out*/ Vector<uint8_t>& result) {
   MOZ_ASSERT(!NS_IsMainThread());
   if (NS_IsMainThread()) {
     return mozilla::pkix::Result::ERROR_OCSP_UNKNOWN_CERT;
+  }
+
+  if (ocspRequestLength > OCSP_REQUEST_MAX_LENGTH) {
+    return mozilla::pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
   result.clear();
@@ -455,8 +460,8 @@ mozilla::pkix::Result DoOCSPRequest(const nsCString& aiaLocation,
     return mozilla::pkix::Result::FATAL_ERROR_INVALID_STATE;
   }
 
-  RefPtr<OCSPRequest> request(new OCSPRequest(aiaLocation, originAttributes,
-                                              std::move(ocspRequest), timeout));
+  RefPtr<OCSPRequest> request(new OCSPRequest(
+      aiaLocation, originAttributes, ocspRequest, ocspRequestLength, timeout));
   rv = request->DispatchToMainThreadAndWait();
   if (NS_FAILED(rv)) {
     return mozilla::pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;

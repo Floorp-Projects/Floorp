@@ -857,6 +857,10 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
 // Ion code has to hold a value that may or may not be a pointer to GC'd
 // storage, or where Ion has to pass in a pointer to storage where a return
 // value can be written.
+//
+// Note carefully that the pointer that is returned may not be valid past
+// operations that change the size of the table or cause GC work; it is strictly
+// to be used to retrieve the return value.
 
 /* static */ void* /* nullptr to signal trap; pointer to table location
                       otherwise */
@@ -868,7 +872,7 @@ Instance::tableGet(Instance* instance, uint32_t index, uint32_t tableIndex) {
                               JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
     return nullptr;
   }
-  return const_cast<void*>(table.getAnyRefLocForCompiledCode(index));
+  return const_cast<void*>(table.getShortlivedAnyRefLocForCompiledCode(index));
 }
 
 /* static */ uint32_t /* infallible */
