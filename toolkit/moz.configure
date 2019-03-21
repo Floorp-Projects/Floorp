@@ -1268,6 +1268,20 @@ set_config('MOZ_MAINTENANCE_SERVICE',
            depends_if('--enable-maintenance-service',
                       when=target_is_windows)(lambda _: True))
 
+# BITS download (Windows only)
+# ==============================================================
+
+option('--enable-bits-download',
+       when=target_is_windows, default=target_is_windows,
+       help='{Enable|Disable} building BITS download support')
+
+set_define('MOZ_BITS_DOWNLOAD',
+           depends_if('--enable-bits-download',
+                      when=target_is_windows)(lambda _: True))
+set_config('MOZ_BITS_DOWNLOAD',
+           depends_if('--enable-bits-download',
+                      when=target_is_windows)(lambda _: True))
+
 # Bundled fonts on desktop platform
 # ==============================================================
 
