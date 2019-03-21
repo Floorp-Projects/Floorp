@@ -26,8 +26,7 @@
 <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/javascript" src="chrome://pippki/content/clientauthask.js"/>
 <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-
-#include ../../../../../toolkit/content/editMenuCommands.inc.xul
+<script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"/>
 
 <description style="font-weight: bold;">&clientAuthAsk.message1;</description>
 <description id="hostname"/>

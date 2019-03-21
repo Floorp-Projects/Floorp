@@ -35,6 +35,29 @@ function goUpdatePasteMenuItems() {
   goUpdateCommand("cmd_paste");
 }
 
+// Inject the commandset here instead of relying on preprocessor to share this across documents.
+window.addEventListener("DOMContentLoaded", () => {
+  let container = document.querySelector("commandset") || document.documentElement;
+  container.appendChild(MozXULElement.parseXULToFragment(`
+    <commandset id="editMenuCommands">
+      <commandset id="editMenuCommandSetAll" commandupdater="true" events="focus,select"
+                  oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+      <commandset id="editMenuCommandSetUndo" commandupdater="true" events="undo"
+                  oncommandupdate="goUpdateUndoEditMenuItems()"/>
+      <commandset id="editMenuCommandSetPaste" commandupdater="true" events="clipboard"
+                  oncommandupdate="goUpdatePasteMenuItems()"/>
+      <command id="cmd_undo" oncommand="goDoCommand('cmd_undo')"/>
+      <command id="cmd_redo" oncommand="goDoCommand('cmd_redo')"/>
+      <command id="cmd_cut" oncommand="goDoCommand('cmd_cut')"/>
+      <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')"/>
+      <command id="cmd_paste" oncommand="goDoCommand('cmd_paste')"/>
+      <command id="cmd_delete" oncommand="goDoCommand('cmd_delete')"/>
+      <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')"/>
+      <command id="cmd_switchTextDirection" oncommand="goDoCommand('cmd_switchTextDirection');"/>
+    </commandset>
+  `));
+}, { once: true });
+
 // Support context menus on html textareas in the parent process:
 window.addEventListener("contextmenu", (e) => {
   // Note that there's not a risk of e.target being XBL anonymous content for <textbox> (which manages

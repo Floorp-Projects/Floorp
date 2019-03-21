@@ -14,7 +14,6 @@
 
 // Via index.xul
 /* import-globals-from ../../../toolkit/content/globalOverlay.js */
-// Via editMenuCommands.inc.xul
 /* import-globals-from ../../../toolkit/content/editMenuOverlay.js */
 
 "use strict";
