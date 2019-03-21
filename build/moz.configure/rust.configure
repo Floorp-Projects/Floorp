@@ -152,8 +152,11 @@ def rust_triple_alias(host_or_target):
     """
     assert host_or_target in {host, target}
 
+    host_or_target_str = {host: 'host', target: 'target'}[host_or_target]
+
     @depends(rustc, host_or_target, c_compiler, rust_supported_targets,
              when=rust_compiler)
+    @checking('for rust %s triplet' % host_or_target_str)
     @imports('os')
     @imports('subprocess')
     @imports(_from='mozbuild.configure.util', _import='LineIO')
