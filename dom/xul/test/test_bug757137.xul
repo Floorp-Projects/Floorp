@@ -17,13 +17,12 @@ SimpleTest.waitForExplicitFinish();
 // Force off out-of-process mozbrowser because we need to grab its
 // |window| synchronously from here.  Out-of-process docshell creation
 // for mozbrowser haves entirely differently.
-// XXX why doesn't pushPrefEnv() work here?
-var otherWindow = window.open("window_bug757137.xul", "", "chrome");
-ok(otherWindow.isChromeWindow, 'XUL window should be a ChromeWindow');
-
 SpecialPowers.pushPrefEnv({"set":[["dom.ipc.tabs.disabled", true]]}, startTest);
 
 function startTest() {
+  var otherWindow = window.open("window_bug757137.xul", "", "chrome");
+  ok(otherWindow.isChromeWindow, 'XUL window should be a ChromeWindow');
+
   otherWindow.onload = function () {
     var w = otherWindow.document.getElementById('f').contentWindow;
     ok(w !== null, 'got the |window| for a mozbrowser iframe');
