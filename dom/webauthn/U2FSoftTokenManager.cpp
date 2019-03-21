@@ -968,9 +968,11 @@ RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
     return U2FSignPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
+  nsTArray<uint8_t> userHandle;
+
   WebAuthnGetAssertionResult result(aInfo.ClientDataJSON(), keyHandle,
                                     signatureBuf, authenticatorData, extensions,
-                                    signatureDataBuf);
+                                    signatureDataBuf, userHandle);
   return U2FSignPromise::CreateAndResolve(std::move(result), __func__);
 }
 

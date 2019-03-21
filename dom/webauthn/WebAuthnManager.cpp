@@ -702,6 +702,11 @@ void WebAuthnManager::FinishGetAssertion(
     return;
   }
 
+  CryptoBuffer userHandleBuf;
+  // U2FTokenManager don't return user handle.
+  // Best effort.
+  userHandleBuf.Assign(aResult.UserHandle());
+
   // If any authenticator returns success:
 
   // Create a new PublicKeyCredential object named value and populate its fields
@@ -712,6 +717,9 @@ void WebAuthnManager::FinishGetAssertion(
   assertion->SetClientDataJSON(clientDataBuf);
   assertion->SetAuthenticatorData(authenticatorDataBuf);
   assertion->SetSignature(signatureBuf);
+  if (!userHandleBuf.IsEmpty()) {
+    assertion->SetUserHandle(userHandleBuf);
+  }
 
   RefPtr<PublicKeyCredential> credential = new PublicKeyCredential(mParent);
   credential->SetId(credentialBase64Url);
