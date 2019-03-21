@@ -3,21 +3,13 @@ from __future__ import absolute_import, print_function
 
 import os
 import shutil
-import contextlib
 import mock
 import mozunit
-import tempfile
 
 from mozproxy.utils import download_file_from_url
+from support import tempdir
 
 here = os.path.dirname(__file__)
-
-
-@contextlib.contextmanager
-def tempdir():
-    dest_dir = tempfile.mkdtemp()
-    yield dest_dir
-    shutil.rmtree(dest_dir, ignore_errors=True)
 
 
 def urlretrieve(*args, **kw):
