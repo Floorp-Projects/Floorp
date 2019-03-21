@@ -937,6 +937,11 @@ uint32_t NS_GetDefaultReferrerPolicy(nsIHttpChannel *aChannel = nullptr,
                                      nsIURI *aURI = nullptr,
                                      bool privateBrowsing = false);
 
+/**
+ * Return true if this channel should be classified by the URL classifier.
+ */
+bool NS_ShouldClassifyChannel(nsIChannel *aChannel);
+
 namespace mozilla {
 namespace net {
 
