@@ -14,6 +14,9 @@ interface nsIRemoteTab;
 interface nsIWebBrowserPersistResourceVisitor;
 interface nsIWebBrowserPersistWriteCompletion;
 interface nsIReferrerInfo;
+interface nsISHEntry;
+
+native SHEntryRef(already_AddRefed<nsISHEntry>);
 
 /**
  * Interface for the URI-mapping information that can be supplied when
@@ -120,6 +123,8 @@ interface nsIWebBrowserPersistDocument : nsISupports
                     in unsigned long aEncoderFlags,
                     in unsigned long aWrapColumn,
                     in nsIWebBrowserPersistWriteCompletion aCompletion);
+
+  [notxpcom, nostdcall] SHEntryRef GetHistory();
 };
 
 /**
