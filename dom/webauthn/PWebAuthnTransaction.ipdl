@@ -130,6 +130,7 @@ struct WebAuthnGetAssertionResult {
   WebAuthnExtensionResult[] Extensions;
   /* Might be empty if the token implementation doesn't support CTAP1. */
   uint8_t[] SignatureData;
+  uint8_t[] UserHandle;
 };
 
 async protocol PWebAuthnTransaction {
