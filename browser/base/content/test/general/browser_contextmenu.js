@@ -196,52 +196,25 @@ add_task(async function test_canvas() {
 });
 
 add_task(async function test_video_ok() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["media.videocontrols.picture-in-picture.enabled", true]],
-  });
   await test_contextmenu("#test-video-ok",
-    ["context-media-play",             true,
-     "context-media-mute",             true,
-     "context-media-playbackrate",     null,
+    ["context-media-play",         true,
+     "context-media-mute",         true,
+     "context-media-playbackrate", null,
          ["context-media-playbackrate-050x", true,
           "context-media-playbackrate-100x", true,
           "context-media-playbackrate-125x", true,
           "context-media-playbackrate-150x", true,
           "context-media-playbackrate-200x", true], null,
-     "context-media-loop",             true,
-     "context-media-hidecontrols",     true,
-     "context-video-fullscreen",       true,
-     "context-video-pictureinpicture", true,
-     "---",                            null,
-     "context-viewvideo",              true,
-     "context-copyvideourl",           true,
-     "---",                            null,
-     "context-savevideo",              true,
-     "context-video-saveimage",        true,
-     "context-sendvideo",              true,
-    ]
-  );
-  await SpecialPowers.popPrefEnv();
-
-  await test_contextmenu("#test-video-ok",
-    ["context-media-play",             true,
-     "context-media-mute",             true,
-     "context-media-playbackrate",     null,
-         ["context-media-playbackrate-050x", true,
-          "context-media-playbackrate-100x", true,
-          "context-media-playbackrate-125x", true,
-          "context-media-playbackrate-150x", true,
-          "context-media-playbackrate-200x", true], null,
-     "context-media-loop",             true,
-     "context-media-hidecontrols",     true,
-     "context-video-fullscreen",       true,
-     "---",                            null,
-     "context-viewvideo",              true,
-     "context-copyvideourl",           true,
-     "---",                            null,
-     "context-savevideo",              true,
-     "context-video-saveimage",        true,
-     "context-sendvideo",              true,
+     "context-media-loop",         true,
+     "context-media-hidecontrols", true,
+     "context-video-fullscreen",   true,
+     "---",                        null,
+     "context-viewvideo",          true,
+     "context-copyvideourl",       true,
+     "---",                        null,
+     "context-savevideo",          true,
+     "context-video-saveimage",    true,
+     "context-sendvideo",          true,
     ]
   );
 });
