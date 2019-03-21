@@ -8,6 +8,7 @@
 #include "WebBrowserPersistDocumentParent.h"
 #include "WebBrowserPersistResourcesParent.h"
 #include "WebBrowserPersistSerializeParent.h"
+#include "SHEntryParent.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 
@@ -23,6 +24,9 @@ WebBrowserPersistRemoteDocument ::WebBrowserPersistRemoteDocument(
     : mActor(aActor), mAttrs(aAttrs), mPostData(aPostData) {
   nsresult rv;
   mPrincipal = ipc::PrincipalInfoToPrincipal(mAttrs.principal(), &rv);
+  mSHEntry =
+      static_cast<dom::SHEntryParent*>(mAttrs.sessionHistoryEntryParent())
+          ->GetSHEntry();
 }
 
 WebBrowserPersistRemoteDocument::~WebBrowserPersistRemoteDocument() {
@@ -88,7 +92,10 @@ WebBrowserPersistRemoteDocument::GetContentDisposition(nsAString& aDisp) {
 
 NS_IMETHODIMP
 WebBrowserPersistRemoteDocument::GetCacheKey(uint32_t* aCacheKey) {
-  *aCacheKey = mAttrs.cacheKey();
+  *aCacheKey = 0;
+  if (mSHEntry) {
+    *aCacheKey = mSHEntry->GetCacheKey();
+  }
   return NS_OK;
 }
 
@@ -170,6 +177,14 @@ WebBrowserPersistRemoteDocument::WriteContent(
              subActor, map, requestedContentType, aEncoderFlags, aWrapColumn)
              ? NS_OK
              : NS_ERROR_FAILURE;
+}
+
+// Forcing WebBrowserPersistRemoteDocument to implement GetHistory is the
+// easiest way to ensure that we can call GetHistory in
+// WebBrowserPersistDocumentChild::Start
+already_AddRefed<nsISHEntry> WebBrowserPersistRemoteDocument::GetHistory() {
+  MOZ_CRASH("We should not call GetHistory on WebBrowserPersistRemoteDocument");
+  return nullptr;
 }
 
 }  // namespace mozilla

@@ -82,6 +82,8 @@ class SHEntryParent final : public PSHEntryParent {
   static void GetOrCreate(PContentParent* aManager, nsISHEntry* aSHEntry,
                           MaybeNewPSHEntry& aResult);
 
+  LegacySHEntry* GetSHEntry() { return mEntry; }
+
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
