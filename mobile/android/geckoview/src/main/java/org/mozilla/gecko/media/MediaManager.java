@@ -12,20 +12,15 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.util.Log;
 
-import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 
 public final class MediaManager extends Service {
     private static final String LOGTAG = "GeckoMediaManager";
-    private static final boolean DEBUG = !BuildConfig.MOZILLA_OFFICIAL;
     private static boolean sNativeLibLoaded;
-    private int mNumActiveRequests = 0;
 
     private Binder mBinder = new IMediaManager.Stub() {
         @Override
         public ICodec createCodec() throws RemoteException {
-            if (DEBUG) { Log.d(LOGTAG, "request codec. Current active requests:" + mNumActiveRequests); }
-            mNumActiveRequests++;
             return new Codec();
         }
 
@@ -33,20 +28,7 @@ public final class MediaManager extends Service {
         public IMediaDrmBridge createRemoteMediaDrmBridge(final String keySystem,
                                                           final String stubId)
             throws RemoteException {
-            if (DEBUG) { Log.d(LOGTAG, "request DRM bridge. Current active requests:" + mNumActiveRequests); }
-            mNumActiveRequests++;
             return new RemoteMediaDrmBridgeStub(keySystem, stubId);
-        }
-
-        @Override
-        public void endRequest() {
-            if (DEBUG) { Log.d(LOGTAG, "end request. Current active requests:" + mNumActiveRequests); }
-            if (mNumActiveRequests > 0) {
-                mNumActiveRequests--;
-            } else {
-                RuntimeException e = new RuntimeException("unmatched codec/DRM bridge creation and ending calls!");
-                Log.e(LOGTAG, "Error:", e);
-            }
         }
     };
 
@@ -68,11 +50,7 @@ public final class MediaManager extends Service {
     public boolean onUnbind(final Intent intent) {
         Log.i(LOGTAG, "Media service has been unbound. Stopping.");
         stopSelf();
-        if (mNumActiveRequests != 0) {
-            // Not unbound by RemoteManager -- caller process is dead.
-            Log.w(LOGTAG, "unbound while client still active.");
-            Process.killProcess(Process.myPid());
-        }
+        Process.killProcess(Process.myPid());
         return false;
     }
 }
