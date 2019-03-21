@@ -1006,6 +1006,7 @@ void AndroidDynamicToolbarAnimator::NotifyControllerAnimationStopped(
   }
 
   mControllerToolbarHeight = aHeight;
+  RequestComposite();
 }
 
 void AndroidDynamicToolbarAnimator::RequestComposite() {
