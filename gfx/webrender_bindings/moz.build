@@ -48,9 +48,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     EXPORTS.mozilla.webrender += [
         'RenderAndroidSurfaceTextureHostOGL.h',
+        'RenderCompositorEGL.h',
     ]
     UNIFIED_SOURCES += [
         'RenderAndroidSurfaceTextureHostOGL.cpp',
+        'RenderCompositorEGL.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_D3D10_LAYER']:

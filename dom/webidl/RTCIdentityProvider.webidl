@@ -35,10 +35,12 @@ dictionary RTCIdentityProvider {
   required ValidateAssertionCallback validateAssertion;
 };
 
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback GenerateAssertionCallback =
   Promise<RTCIdentityAssertionResult>
     (DOMString contents, DOMString origin,
      RTCIdentityProviderOptions options);
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback ValidateAssertionCallback =
   Promise<RTCIdentityValidationResult> (DOMString assertion, DOMString origin);
 

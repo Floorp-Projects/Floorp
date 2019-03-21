@@ -50,7 +50,10 @@ ValueExtractor.prototype = {
     const value = this.extractValue(spec);
     let color;
     if (InspectorUtils.isValidCSSColor(value)) {
-      color = value;
+      const rgba = InspectorUtils.colorToRGBA(value);
+      color = "#" + ((rgba.r << 16) |
+        (rgba.g << 8) |
+        rgba.b).toString(16);
     } else if (value) {
       this.console.warn(this.domBundle.formatStringFromName("ManifestInvalidCSSColor",
                                                             [spec.property, value],

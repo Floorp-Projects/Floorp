@@ -8,6 +8,7 @@
 #define mozilla_psm_PSMCOntentListener_h_
 
 #include "nsCOMPtr.h"
+#include "nsIStreamListener.h"
 #include "nsIURIContentListener.h"
 #include "nsIStreamListener.h"
 #include "nsWeakReference.h"

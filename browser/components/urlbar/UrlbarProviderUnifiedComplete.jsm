@@ -114,7 +114,7 @@ class ProviderUnifiedComplete extends UrlbarProvider {
     if (queryContext.userContextId) {
       params.push(`user-context-id:${queryContext.userContextId}}`);
     }
-    if (!queryContext.enableAutofill) {
+    if (!queryContext.allowAutofill) {
       params.push("prohibit-autofill");
     }
 

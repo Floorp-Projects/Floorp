@@ -16,7 +16,7 @@
 #  include "mozilla/webrender/RenderCompositorANGLE.h"
 #endif
 
-#ifdef MOZ_WAYLAND
+#if defined(MOZ_WAYLAND) || defined(MOZ_WIDGET_ANDROID)
 #  include "mozilla/webrender/RenderCompositorEGL.h"
 #endif
 
@@ -32,7 +32,7 @@ UniquePtr<RenderCompositor> RenderCompositor::Create(
   }
 #endif
 
-#ifdef MOZ_WAYLAND
+#if defined(MOZ_WAYLAND) || defined(MOZ_WIDGET_ANDROID)
   UniquePtr<RenderCompositor> eglCompositor =
       RenderCompositorEGL::Create(aWidget);
   if (eglCompositor) {

@@ -38,7 +38,7 @@ async function promiseSearch(searchtext) {
 }
 
 async function promiseTestResult(test) {
-  info("Searching for '${test.search}'");
+  info(`Searching for '${test.search}'`);
 
   await promiseSearch(test.search);
 
@@ -61,31 +61,34 @@ async function promiseTestResult(test) {
   Assert.equal(result.type, test.resultListType,
     `Autocomplete result should have searchengine for the type for search '${test.search}'`);
 
-  if (UrlbarPrefs.get("quantumbar")) {
-    Assert.equal(result.url, test.expectedUrl, "Should have the correct URL");
-  } else {
-    let actualValue = gURLBar.mController.getFinalCompleteValueAt(0);
-    let actualAction = PlacesUtils.parseActionUrl(actualValue);
-    let expectedAction = PlacesUtils.parseActionUrl(test.finalCompleteValue);
-    Assert.equal(!!actualAction, !!expectedAction,
-      "Should have an action if expected");
-    if (actualAction) {
-      Assert.deepEqual(actualAction, expectedAction,
-        "Should have the correct action details");
-    } else {
-      Assert.equal(actualValue, test.finalCompleteValue,
-        "Should have the correct action details");
+  Assert.equal(!!result.searchParams, !!test.searchParams,
+    "Should have search params if expected");
+  if (test.searchParams) {
+    let definedParams = {};
+    for (let [k, v] of Object.entries(result.searchParams)) {
+      if (v !== undefined) {
+        definedParams[k] = v;
+      }
     }
+    Assert.deepEqual(definedParams, test.searchParams,
+      "Shoud have the correct search params");
+  } else {
+    Assert.equal(result.url, test.finalCompleteValue,
+      "Should have the correct URL/finalCompleteValue");
   }
 }
 
-const tests = [{
+const tests = [
+  {
     search: "http://",
     autofilledValue: "http://",
     resultListDisplayTitle: "http://",
     resultListActionText: "Search with Google",
     resultListType: UrlbarUtils.RESULT_TYPE.SEARCH,
-    finalCompleteValue: 'moz-action:searchengine,{"engineName":"Google","input":"http%3A%2F%2F","searchQuery":"http%3A%2F%2F"}',
+    searchParams: {
+      engine: "Google",
+      query: "http://",
+    },
   },
   {
     search: "https://",
@@ -93,7 +96,10 @@ const tests = [{
     resultListDisplayTitle: "https://",
     resultListActionText: "Search with Google",
     resultListType: UrlbarUtils.RESULT_TYPE.SEARCH,
-    finalCompleteValue: 'moz-action:searchengine,{"engineName":"Google","input":"https%3A%2F%2F","searchQuery":"https%3A%2F%2F"}',
+    searchParams: {
+      engine: "Google",
+      query: "https://",
+    },
   },
   {
     search: "au",

@@ -55,7 +55,10 @@ It is augmented as it progresses through the system, with various information:
 .. code::
 
   UrlbarQueryContext {
-    enableAutofill; // {boolean} Whether or not to include autofill results.
+    allowAutofill; // {boolean} If true, providers are allowed to return
+                   // autofill results.  Even if true, it's up to providers
+                   // whether to include autofill results, but when false, no
+                   // provider should include them.
     isPrivate; // {boolean} Whether the search started in a private context.
     lastKey; // {string} The last key pressed by the user. This can affect the
              // behavior, for example by not autofilling again when the user

@@ -193,11 +193,6 @@ const ActorRegistry = {
       constructor: "CssPropertiesActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/csscoverage", {
-      prefix: "cssUsage",
-      constructor: "CSSUsageActor",
-      type: { target: true },
-    });
     if ("nsIProfiler" in Ci &&
         !Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false)) {
       this.registerModule("devtools/server/actors/performance", {

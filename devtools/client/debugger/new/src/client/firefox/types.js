@@ -159,7 +159,6 @@ export type TabPayload = {
   animationsActor: ActorId,
   consoleActor: ActorId,
   cssPropertiesActor: ActorId,
-  cssUsageActor: ActorId,
   directorManagerActor: ActorId,
   emulationActor: ActorId,
   eventLoopLagActor: ActorId,

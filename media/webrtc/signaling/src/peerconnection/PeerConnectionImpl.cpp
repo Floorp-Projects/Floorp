@@ -1388,6 +1388,7 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
     if (wasRestartingIce) {
       RecordIceRestartStatistics(sdpType);
     }
+    pco->SyncTransceivers(rv);
     UpdateSignalingState(sdpType == mozilla::kJsepSdpRollback);
     pco->OnSetLocalDescriptionSuccess(rv);
   }
@@ -1533,6 +1534,9 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
     if (wasRestartingIce) {
       RecordIceRestartStatistics(sdpType);
     }
+
+    pco->SyncTransceivers(jrv);
+
     UpdateSignalingState(sdpType == mozilla::kJsepSdpRollback);
 
     pco->OnSetRemoteDescriptionSuccess(jrv);

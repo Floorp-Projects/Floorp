@@ -53,11 +53,6 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/css-properties",
   },
   {
-    types: ["cssUsage"],
-    spec: "devtools/shared/specs/csscoverage",
-    front: "devtools/shared/fronts/csscoverage",
-  },
-  {
     types: ["device"],
     spec: "devtools/shared/specs/device",
     front: "devtools/shared/fronts/device",

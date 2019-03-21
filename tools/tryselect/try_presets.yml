@@ -38,4 +38,6 @@ sample-suites:
         harnesses themselves but are unlikely to break specific tests.
     query:
         - ^test- -1$
-        - ^test- !1$ !2$ !3$ !4$ !5$ !6$ !7$ !8$ !9$ !0$
+        # Only run a single talos + raptor suite per platform
+        - ^test- !1$ !2$ !3$ !4$ !5$ !6$ !7$ !8$ !9$ !0$ !raptor !talos
+        - ^test- 'raptor-speedometer | 'talos-g1-e10s

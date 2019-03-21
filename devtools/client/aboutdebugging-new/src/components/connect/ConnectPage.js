@@ -25,7 +25,7 @@ const ConnectSteps = createFactory(require("./ConnectSteps"));
 const NetworkLocationsForm = createFactory(require("./NetworkLocationsForm"));
 const NetworkLocationsList = createFactory(require("./NetworkLocationsList"));
 
-const { PREFERENCES, PAGE_TYPES, RUNTIMES } = require("../../constants");
+const { PAGE_TYPES, RUNTIMES } = require("../../constants");
 const Types = require("../../types/index");
 
 const USB_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-usb-icon.svg";
@@ -36,11 +36,7 @@ class ConnectPage extends PureComponent {
     return {
       adbAddonStatus: Types.adbAddonStatus,
       dispatch: PropTypes.func.isRequired,
-      // Provided by wrapping the component with FluentReact.withLocalization.
-      getString: PropTypes.func.isRequired,
-      networkEnabled: PropTypes.bool.isRequired,
       networkLocations: PropTypes.arrayOf(Types.location).isRequired,
-      wifiEnabled: PropTypes.bool.isRequired,
     };
   }
 
@@ -180,41 +176,23 @@ class ConnectPage extends PureComponent {
   }
 
   renderNetwork() {
-    const { dispatch, networkEnabled, networkLocations } = this.props;
+    const { dispatch, networkLocations } = this.props;
 
     return Localized(
       {
-        id: "about-debugging-connect-network",
+        id: "about-debugging-setup-network",
         attrs: { title: true },
       },
-      ConnectSection(
-        {
-          className: "connect-page__breather",
-          icon: GLOBE_ICON_SRC,
-          title: "Network Location",
-          extraContent: networkEnabled
-            ? dom.div(
-              {},
-              NetworkLocationsList({ dispatch, networkLocations }),
-              NetworkLocationsForm({ dispatch }),
-            )
-            : null,
-        },
-        networkEnabled
-          ? null
-          : Localized(
-            {
-                id: "about-debugging-connect-network-disabled",
-                $pref: PREFERENCES.NETWORK_ENABLED,
-            },
-            dom.div(
-              {
-                className: "connect-page__disabled-section",
-              },
-              "about-debugging-connect-network-disabled"
-            )
-          ),
-      )
+      ConnectSection({
+        className: "connect-page__breather",
+        icon: GLOBE_ICON_SRC,
+        title: "Network Location",
+        extraContent: dom.div(
+          {},
+          NetworkLocationsList({ dispatch, networkLocations }),
+          NetworkLocationsForm({ dispatch }),
+        ),
+      })
     );
   }
 
@@ -225,7 +203,7 @@ class ConnectPage extends PureComponent {
       },
       Localized(
         {
-          id: "about-debugging-connect-title",
+          id: "about-debugging-setup-title",
         },
         dom.h1(
           {
@@ -243,12 +221,12 @@ class ConnectPage extends PureComponent {
           "Configure the connection method you wish to remotely debug your device with."
         )
       ),
-      Localized(
-        {
-          id: "about-debugging-setup-link-android-devices",
-        },
-        dom.p(
-          {},
+      dom.p(
+        {},
+        Localized(
+          {
+            id: "about-debugging-setup-link-android-devices",
+          },
           dom.a(
             {
               href: "https://support.mozilla.org/kb/will-firefox-work-my-mobile-device#w_android-devices",

@@ -9,8 +9,6 @@
  %editMenuStrings;
 <!ENTITY % sourceEditorStrings SYSTEM "chrome://devtools/locale/sourceeditor.dtd">
  %sourceEditorStrings;
-<!ENTITY % csscoverageDTD SYSTEM "chrome://devtools-shared/locale/csscoverage.dtd">
- %csscoverageDTD;
 ]>
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
@@ -168,60 +166,6 @@
         </box>
       </html:div> <!-- #splitview-templates -->
     </box>   <!-- .splitview-root -->
-
-    <box class="csscoverage-template" hidden="true">
-      <toolbar class="devtools-toolbar csscoverage-toolbar">
-        <button class="devtools-toolbarbutton csscoverage-toolbarbutton"
-            label="&csscoverage.backButton;"
-            onclick="${onback}"/>
-      </toolbar>
-      <!-- The data for this comes from CSSUsageActor.createPageReport -->
-      <html:div class="csscoverage-report-container">
-        <html:div class="csscoverage-report-content">
-          <html:div class="csscoverage-report-summary">
-            <html:div class="csscoverage-report-chart"/>
-          </html:div>
-          <html:div class="csscoverage-report-unused">
-            <html:h2>&csscoverage.unused;</html:h2>
-            <html:p>&csscoverage.noMatches;</html:p>
-            <html:div foreach="page in ${unused}">
-              <html:h3>${page.url}</html:h3>
-              <html:code foreach="rule in ${page.rules}"
-                         href="${rule.url}"
-                         class="csscoverage-list">${rule.selectorText}</html:code>
-            </html:div>
-          </html:div>
-          <html:div class="csscoverage-report-optimize">
-            <html:h2>&csscoverage.optimize.header;</html:h2>
-            <html:p>
-              &csscoverage.optimize.body1;
-              <html:code>&lt;link ...></html:code>
-              &csscoverage.optimize.body2;
-              <html:code>&lt;style>...</html:code>
-              &csscoverage.optimize.body3;
-            </html:p>
-            <html:div if="${preload.length == 0}">&csscoverage.optimize.bodyX;</html:div>
-            <html:div if="${preload.length > 0}">
-              <html:div foreach="page in ${preload}">
-                <html:h3>${page.url}</html:h3>
-                <html:textarea>&lt;style>
-<html:loop foreach="rule in ${page.rules}"
-                      onclick="${rule.onclick}">${rule.formattedCssText}</html:loop>&lt;/style></html:textarea>
-              </html:div>
-            </html:div>
-            <html:p>
-              &csscoverage.footer1;
-              <html:a target="_blank" href="&csscoverage.footer2a;">&csscoverage.footer3;</html:a>
-              &csscoverage.footer4;
-            </html:p>
-          </html:div>
-          <html:p>&#160;</html:p>
-        </html:div>
-      </html:div>
-    </box>
-
-    <box class="csscoverage-report" hidden="true">
-    </box>
 
   </stack>
 

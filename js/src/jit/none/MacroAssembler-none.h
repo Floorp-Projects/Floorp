@@ -296,7 +296,7 @@ class MacroAssemblerNone : public Assembler {
   void tagValue(JSValueType, Register, ValueOperand) { MOZ_CRASH(); }
   void retn(Imm32 n) { MOZ_CRASH(); }
   template <typename T>
-  void push(T) {
+  void push(const T&) {
     MOZ_CRASH();
   }
   template <typename T>
@@ -340,7 +340,7 @@ class MacroAssemblerNone : public Assembler {
     MOZ_CRASH();
   }
   template <typename T>
-  void move32(T, Register) {
+  void move32(const T&, Register) {
     MOZ_CRASH();
   }
   template <typename T, typename S>
