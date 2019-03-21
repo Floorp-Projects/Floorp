@@ -581,11 +581,6 @@ public class GeckoViewActivity extends AppCompatActivity {
         public void onSecurityChange(GeckoSession session, SecurityInformation securityInfo) {
             Log.i(LOGTAG, "Security status changed to " + securityInfo.securityMode);
         }
-
-        @Override
-        public void onSessionStateChange(GeckoSession session, GeckoSession.SessionState state) {
-            Log.i(LOGTAG, "New Session state: " + state.toString());
-        }
     }
 
     private class ExamplePermissionDelegate implements GeckoSession.PermissionDelegate {

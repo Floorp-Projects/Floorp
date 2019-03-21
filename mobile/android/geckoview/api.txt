@@ -313,6 +313,7 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread public void releaseDisplay(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoDisplay);
     method @android.support.annotation.AnyThread public void reload();
     method @android.support.annotation.AnyThread public void restoreState(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession.SessionState);
+    method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoResult<org.mozilla.geckoview.GeckoSession.SessionState> saveState();
     method @android.support.annotation.AnyThread public void setActive(boolean);
     method @android.support.annotation.AnyThread public void setContentBlockingDelegate(@android.support.annotation.Nullable org.mozilla.geckoview.ContentBlocking.Delegate);
     method @android.support.annotation.UiThread public void setContentDelegate(@android.support.annotation.Nullable org.mozilla.geckoview.GeckoSession.ContentDelegate);
@@ -471,7 +472,6 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread default public void onPageStop(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, boolean);
     method @android.support.annotation.UiThread default public void onProgressChange(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, int);
     method @android.support.annotation.UiThread default public void onSecurityChange(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, @android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation);
-    method @android.support.annotation.UiThread default public void onSessionStateChange(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, @android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession.SessionState);
   }
 
   public static class GeckoSession.ProgressDelegate.SecurityInformation {
@@ -629,9 +629,8 @@ package org.mozilla.geckoview {
   }
 
   @android.support.annotation.AnyThread public static class GeckoSession.SessionState implements android.os.Parcelable {
-    ctor public SessionState(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession.SessionState);
+    ctor public SessionState(java.lang.String);
     method public void readFromParcel(@android.support.annotation.NonNull android.os.Parcel);
-    method public void updateSessionState(@android.support.annotation.NonNull org.mozilla.gecko.util.GeckoBundle);
     field public static final android.os.Parcelable.Creator<org.mozilla.geckoview.GeckoSession.SessionState> CREATOR;
   }
 
