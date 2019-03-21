@@ -404,9 +404,11 @@ void U2FHIDTokenManager::HandleSignResult(UniquePtr<U2FResult>&& aResult) {
     return;
   }
 
+  nsTArray<uint8_t> userHandle;
+
   WebAuthnGetAssertionResult result(mTransaction.ref().mClientDataJSON,
                                     keyHandle, signatureBuf, authenticatorData,
-                                    extensions, rawSignatureBuf);
+                                    extensions, rawSignatureBuf, userHandle);
   mSignPromise.Resolve(std::move(result), __func__);
 }
 
