@@ -457,11 +457,6 @@ function startup() {
     onEnable: {
       resource: "resource://gre/modules/GeckoViewContentBlocking.jsm",
     },
-  }, {
-    name: "SessionStateAggregator",
-    onInit: {
-      frameScript: "chrome://geckoview/content/SessionStateAggregator.js",
-    },
   }]);
 
   Services.tm.dispatchToMainThread(() => {

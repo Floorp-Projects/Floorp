@@ -7,8 +7,6 @@ package org.mozilla.geckoview.test
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
@@ -283,50 +281,5 @@ class ProgressDelegateTest : BaseSessionTest() {
                                           securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
             }
         })
-    }
-
-    @WithDevToolsAPI
-    @WithDisplay(width = 400, height = 400)
-    @Test fun saveAndRestoreState() {
-        val startUri = createTestUrl(SAVE_STATE_PATH)
-        mainSession.loadUri(startUri)
-        sessionRule.waitForPageStop()
-
-        mainSession.evaluateJS("$('#name').value = 'the name'; window.setTimeout(() => window.scrollBy(0, 100),0);")
-        mainSession.evaluateJS("$('#name').dispatchEvent(new Event('input'));")
-        sessionRule.waitUntilCalled(Callbacks.ScrollDelegate::class, "onScrollChanged")
-
-        var savedState : GeckoSession.SessionState? = null
-        sessionRule.waitUntilCalled(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count=1)
-            override fun onSessionStateChange(session: GeckoSession, state: GeckoSession.SessionState) {
-                savedState = state
-            }
-        })
-
-        assertThat("State should not be null", savedState, notNullValue())
-
-        mainSession.loadUri("about:blank")
-        sessionRule.waitForPageStop()
-
-        mainSession.restoreState(savedState!!)
-        sessionRule.waitForPageStop()
-
-        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
-            @AssertCalled
-            override fun onLocationChange(session: GeckoSession, url: String?) {
-                assertThat("URI should match", url, equalTo(startUri))
-            }
-        })
-
-        /* TODO: Reenable when we have a workaround for ContentSessionStore not
-                 saving in response to JS-driven formdata changes.
-        assertThat("'name' field should match",
-                mainSession.evaluateJS("$('#name').value").toString(),
-                equalTo("the name"))*/
-
-        assertThat("Scroll position should match",
-                mainSession.evaluateJS("window.visualViewport.pageTop") as Double,
-                closeTo(100.0, .5))
     }
 }

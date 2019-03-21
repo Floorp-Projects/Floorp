@@ -14,10 +14,6 @@ exclude: true
 
 [68.1]: ../GeckoRuntime.html#configurationChanged
 
-- Added `onSessionStateChange` to [`ProgressDelegate`][68.2] and removed `saveState`.
-
-[68.2]: ../GeckoSession.ProgressDelegate.html
-
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -224,4 +220,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: e8fa4ed799e78f64fddd3f2c463202942811de11
+[api-version]: 07af02921c277f9461d7532f2a6a78c527c9cb47
