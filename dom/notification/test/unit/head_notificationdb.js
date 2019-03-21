@@ -3,9 +3,10 @@
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-function getNotificationObject(app, id, tag) {
+function getNotificationObject(app, id, tag, includeScope) {
+  const origin = `https://${app}.gaiamobile.org/`;
   return {
-    origin: "https://" + app + ".gaiamobile.org/",
+    origin,
     id,
     title: app + "Notification:" + Date.now(),
     dir: "auto",
@@ -13,6 +14,7 @@ function getNotificationObject(app, id, tag) {
     body: app + " notification body",
     tag: tag || "",
     icon: "icon.png",
+    serviceWorkerRegistrationScope: includeScope ? origin : undefined,
   };
 }
 
