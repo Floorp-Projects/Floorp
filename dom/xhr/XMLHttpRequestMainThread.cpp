@@ -1370,6 +1370,21 @@ nsresult XMLHttpRequestMainThread::Open(const nsACString& aMethod,
   }
   NS_ENSURE_TRUE(mPrincipal, NS_ERROR_NOT_INITIALIZED);
 
+  // Gecko-specific
+  if (!aAsync && responsibleDocument && GetOwner()) {
+    // We have no extant document during unload, so the above general
+    // syncXHR warning will not display. But we do want to display a
+    // recommendation to use sendBeacon instead of syncXHR during unload.
+    nsCOMPtr<nsIDocShell> shell = responsibleDocument->GetDocShell();
+    if (shell) {
+      bool inUnload = false;
+      shell->GetIsInUnload(&inUnload);
+      if (inUnload) {
+        LogMessage("UseSendBeaconDuringUnloadAndPagehideWarning", GetOwner());
+      }
+    }
+  }
+
   // Steps 2-4
   nsAutoCString method;
   nsresult rv = FetchUtil::GetValidRequestMethod(aMethod, method);
