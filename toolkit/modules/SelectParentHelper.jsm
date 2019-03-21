@@ -17,13 +17,6 @@ const MAX_ROWS = 20;
 // Minimum elements required to show select search
 const SEARCH_MINIMUM_ELEMENTS = 40;
 
-// The properties that we should respect only when the item is not active.
-const PROPERTIES_RESET_WHEN_ACTIVE = [
-  "color",
-  "background-color",
-  "text-shadow",
-];
-
 // Make sure to clear these objects when the popup closes to avoid leaking.
 var currentBrowser = null;
 var currentMenulist = null;
@@ -359,10 +352,8 @@ function populateChildren(menulist, options, uniqueOptionStyles, selectedIndex,
       for (let property in style) {
         if (property == "direction" || property == "font-size")
           continue; // handled above
-        if (PROPERTIES_RESET_WHEN_ACTIVE.includes(property)) {
+        if (style[property] != selectStyle[property]) {
           ruleBody += `${property}: ${style[property]};`;
-        } else {
-          item.style.setProperty(property, style[property]);
         }
       }
 
