@@ -21,52 +21,50 @@ var TAB2_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attach-tab2.html";
 var WORKER1_URL = "code_WorkerTargetActor.attach-worker1.js";
 var WORKER2_URL = "code_WorkerTargetActor.attach-worker2.js";
 
-function test() {
-  Task.spawn(function* () {
-    const oldMaxTotalViewers = SpecialPowers.getIntPref(MAX_TOTAL_VIEWERS);
-    SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, 10);
+add_task(async function() {
+  const oldMaxTotalViewers = SpecialPowers.getIntPref(MAX_TOTAL_VIEWERS);
+  SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, 10);
 
-    const tab = yield addTab(TAB1_URL);
-    const target = yield TargetFactory.forTab(tab);
-    yield target.attach();
-    yield listWorkers(target);
+  const tab = await addTab(TAB1_URL);
+  const target = await TargetFactory.forTab(tab);
+  await target.attach();
+  await listWorkers(target);
 
-    // If a page still has pending network requests, it will not be moved into
-    // the bfcache. Consequently, we cannot use waitForWorkerListChanged here,
-    // because the worker is not guaranteed to have finished loading when it is
-    // registered. Instead, we have to wait for the promise returned by
-    // createWorker in the tab to be resolved.
-    yield createWorkerInTab(tab, WORKER1_URL);
-    let { workers } = yield listWorkers(target);
-    let workerTargetFront1 = findWorker(workers, WORKER1_URL);
-    yield workerTargetFront1.attach();
-    is(workerTargetFront1.isClosed, false, "worker in tab 1 should not be closed");
+  // If a page still has pending network requests, it will not be moved into
+  // the bfcache. Consequently, we cannot use waitForWorkerListChanged here,
+  // because the worker is not guaranteed to have finished loading when it is
+  // registered. Instead, we have to wait for the promise returned by
+  // createWorker in the tab to be resolved.
+  await createWorkerInTab(tab, WORKER1_URL);
+  let { workers } = await listWorkers(target);
+  let workerTargetFront1 = findWorker(workers, WORKER1_URL);
+  await workerTargetFront1.attach();
+  ok(workerTargetFront1.actorID, "front for worker in tab 1 has been attached");
 
-    executeSoon(() => {
-      BrowserTestUtils.loadURI(tab.linkedBrowser, TAB2_URL);
-    });
-    yield waitForWorkerClose(workerTargetFront1);
-    is(workerTargetFront1.isClosed, true, "worker in tab 1 should be closed");
-
-    yield createWorkerInTab(tab, WORKER2_URL);
-    ({ workers } = yield listWorkers(target));
-    const workerTargetFront2 = findWorker(workers, WORKER2_URL);
-    yield workerTargetFront2.attach();
-    is(workerTargetFront2.isClosed, false, "worker in tab 2 should not be closed");
-
-    executeSoon(() => {
-      tab.linkedBrowser.goBack();
-    });
-    yield waitForWorkerClose(workerTargetFront2);
-    is(workerTargetFront2.isClosed, true, "worker in tab 2 should be closed");
-
-    ({ workers } = yield listWorkers(target));
-    workerTargetFront1 = findWorker(workers, WORKER1_URL);
-    yield workerTargetFront1.attach();
-    is(workerTargetFront1.isClosed, false, "worker in tab 1 should not be closed");
-
-    yield target.destroy();
-    SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, oldMaxTotalViewers);
-    finish();
+  executeSoon(() => {
+    BrowserTestUtils.loadURI(tab.linkedBrowser, TAB2_URL);
   });
-}
+  await waitForWorkerClose(workerTargetFront1);
+  ok(!!workerTargetFront1.actorID, "front for worker in tab 1 has been closed");
+
+  await createWorkerInTab(tab, WORKER2_URL);
+  ({ workers } = await listWorkers(target));
+  const workerTargetFront2 = findWorker(workers, WORKER2_URL);
+  await workerTargetFront2.attach();
+  ok(workerTargetFront2.actorID, "front for worker in tab 2 has been attached");
+
+  executeSoon(() => {
+    tab.linkedBrowser.goBack();
+  });
+  await waitForWorkerClose(workerTargetFront2);
+  ok(!!workerTargetFront2.actorID, "front for worker in tab 2 has been closed");
+
+  ({ workers } = await listWorkers(target));
+  workerTargetFront1 = findWorker(workers, WORKER1_URL);
+  await workerTargetFront1.attach();
+  ok(workerTargetFront1.actorID, "front for worker in tab 1 has been attached");
+
+  await target.destroy();
+  SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, oldMaxTotalViewers);
+  finish();
+});
