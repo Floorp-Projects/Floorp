@@ -4,8 +4,6 @@ version = "0.0.1"
 authors = ["The Servo Project Developers"]
 license = "MPL-2.0"
 
-build = "build.rs"
-
 [lib]
 name = "stylo_tests"
 path = "lib.rs"
@@ -26,6 +24,3 @@ size_of_test = {path = "../../../components/size_of_test"}
 smallvec = "0.6"
 style_traits = {path = "../../../components/style_traits"}
 style = {path = "../../../components/style", features = ["gecko"]}
-
-[build-dependencies]
-regex = "1.0"
