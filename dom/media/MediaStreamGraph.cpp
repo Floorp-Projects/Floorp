@@ -2797,7 +2797,7 @@ void SourceMediaStream::AddDirectTrackListenerImpl(
         continue;
       }
       MOZ_ASSERT(!iter->mTimeStamp.IsNull());
-      bufferedVideo.AppendFrame(do_AddRef(iter->mFrame.GetImage()), 1,
+      bufferedVideo.AppendFrame(do_AddRef(iter->mFrame.GetImage()),
                                 iter->mFrame.GetIntrinsicSize(),
                                 iter->mFrame.GetPrincipalHandle(),
                                 iter->mFrame.GetForceBlack(), iter->mTimeStamp);
@@ -2811,9 +2811,9 @@ void SourceMediaStream::AddDirectTrackListenerImpl(
           continue;
         }
         bufferedVideo.AppendFrame(
-            do_AddRef(iter->mFrame.GetImage()), 1,
-            iter->mFrame.GetIntrinsicSize(), iter->mFrame.GetPrincipalHandle(),
-            iter->mFrame.GetForceBlack(), iter->mTimeStamp);
+            do_AddRef(iter->mFrame.GetImage()), iter->mFrame.GetIntrinsicSize(),
+            iter->mFrame.GetPrincipalHandle(), iter->mFrame.GetForceBlack(),
+            iter->mTimeStamp);
       }
     }
   }

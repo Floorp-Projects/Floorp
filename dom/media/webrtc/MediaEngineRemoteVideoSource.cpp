@@ -638,7 +638,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
     MOZ_ASSERT(mState == kStarted);
     VideoSegment segment;
     mImageSize = image->GetSize();
-    segment.AppendFrame(image.forget(), 1, mImageSize, mPrincipal);
+    segment.AppendFrame(image.forget(), mImageSize, mPrincipal);
     mStream->AppendToTrack(mTrackID, &segment);
   }
 

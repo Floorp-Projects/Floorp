@@ -86,11 +86,10 @@ already_AddRefed<Image> VideoFrame::CreateBlackImage(
 }
 
 void VideoSegment::AppendFrame(already_AddRefed<Image>&& aImage,
-                               StreamTime aDuration,
                                const IntSize& aIntrinsicSize,
                                const PrincipalHandle& aPrincipalHandle,
                                bool aForceBlack, TimeStamp aTimeStamp) {
-  VideoChunk* chunk = AppendChunk(aDuration);
+  VideoChunk* chunk = AppendChunk(0);
   chunk->mTimeStamp = aTimeStamp;
   VideoFrame frame(aImage, aIntrinsicSize);
   MOZ_ASSERT_IF(!IsNull(), !aTimeStamp.IsNull());
