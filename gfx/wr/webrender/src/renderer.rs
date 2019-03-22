@@ -104,7 +104,7 @@ use std::cell::RefCell;
 use texture_cache::TextureCache;
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use tiling::{AlphaRenderTarget, ColorRenderTarget};
-use tiling::{BlitJob, BlitJobSource, RenderPass, RenderPassKind, RenderTargetList};
+use tiling::{BlitJob, BlitJobSource, RenderPassKind, RenderTargetList};
 use tiling::{Frame, RenderTarget, RenderTargetKind, TextureCacheRenderTarget};
 #[cfg(not(feature = "pathfinder"))]
 use tiling::GlyphJob;
@@ -2602,32 +2602,6 @@ impl Renderer {
         (cpu_profiles, gpu_profiles)
     }
 
-    /// Returns `true` if the active rendered documents (that need depth buffer)
-    /// intersect on the main framebuffer, in which case we don't clear
-    /// the whole depth and instead clear each document area separately.
-    fn are_documents_intersecting_depth(&self) -> bool {
-        let document_rects = self.active_documents
-            .iter()
-            .filter_map(|&(_, ref render_doc)| {
-                match render_doc.frame.passes.last() {
-                    Some(&RenderPass { kind: RenderPassKind::MainFramebuffer(ref target), .. })
-                        if target.needs_depth() => Some(render_doc.frame.framebuffer_rect),
-                    _ => None,
-                }
-            })
-            .collect::<SmallVec<[_; 3]>>();
-
-        for (i, rect) in document_rects.iter().enumerate() {
-            for other in &document_rects[i+1 ..] {
-                if rect.intersects(other) {
-                    return true
-                }
-            }
-        }
-
-        false
-    }
-
     pub fn notify_slow_frame(&mut self) {
         self.slow_frame_indicator.changed();
     }
@@ -2717,10 +2691,6 @@ impl Renderer {
         });
 
         profile_timers.cpu_time.profile(|| {
-            // If the documents don't intersect for depth, we can just do
-            // a single, global depth clear.
-            let clear_depth_per_doc = self.are_documents_intersecting_depth();
-
             //Note: another borrowck dance
             let mut active_documents = mem::replace(&mut self.active_documents, Vec::default());
             // sort by the document layer id
@@ -2731,6 +2701,7 @@ impl Renderer {
                 self.owned_external_images.iter().map(|(key, value)| (*key, value.clone()))
             );
 
+            let last_document_index = active_documents.len() - 1;
             for (doc_index, (_, RenderedDocument { ref mut frame, .. })) in active_documents.iter_mut().enumerate() {
                 frame.profile_counters.reset_targets();
                 self.prepare_gpu_cache(frame);
@@ -2738,41 +2709,12 @@ impl Renderer {
                     "Received frame depends on a later GPU cache epoch ({:?}) than one we received last via `UpdateGpuCache` ({:?})",
                     frame.gpu_cache_frame_id, self.gpu_cache_frame_id);
 
-                // Work out what color to clear the frame buffer for this document.
-                // The document's supplied clear color is used, unless:
-                //  (a) The document has no specified clear color AND
-                //  (b) We are rendering the first document.
-                // If both those conditions are true, the overall renderer
-                // clear color will be used, if specified.
-
-                // Get the default clear color from the renderer.
-                let mut fb_clear_color = if doc_index == 0 {
-                    self.clear_color
-                } else {
-                    None
-                };
-
-                // Override with document clear color if no overall clear
-                // color or not on the first document.
-                if fb_clear_color.is_none() {
-                    fb_clear_color = frame.background_color;
-                }
-
-                // Only clear the depth buffer for this document if this is
-                // the first document, or we need to clear depth per document.
-                let fb_clear_depth = if clear_depth_per_doc || doc_index == 0 {
-                    Some(1.0)
-                } else {
-                    None
-                };
-
                 self.draw_tile_frame(
                     frame,
                     framebuffer_size,
                     cpu_frame_id,
                     &mut results.stats,
-                    fb_clear_color,
-                    fb_clear_depth,
+                    doc_index == 0,
                 );
 
                 if let Some(_) = framebuffer_size {
@@ -2785,6 +2727,14 @@ impl Renderer {
                 let dirty_regions =
                     mem::replace(&mut frame.recorded_dirty_regions, Vec::new());
                 results.recorded_dirty_regions.extend(dirty_regions);
+
+                // If we're the last document, don't call end_pass here, because we'll
+                // be moving on to drawing the debug overlays. See the comment above
+                // the end_pass call in draw_tile_frame about debug draw overlays
+                // for a bit more context.
+                if doc_index != last_document_index {
+                    self.texture_resolver.end_pass(&mut self.device, None, None);
+                }
             }
 
             self.unlock_external_images();
@@ -4361,8 +4311,7 @@ impl Renderer {
         framebuffer_size: Option<FramebufferIntSize>,
         frame_id: GpuFrameId,
         stats: &mut RendererStats,
-        fb_clear_color: Option<ColorF>,
-        fb_clear_depth: Option<f32>,
+        clear_framebuffer: bool,
     ) {
         let _gm = self.gpu_profile.start_marker("tile frame draw");
 
@@ -4407,15 +4356,24 @@ impl Renderer {
                             ORTHO_FAR_PLANE,
                         );
 
+                        let draw_target = DrawTarget::Default {
+                            rect: frame.framebuffer_rect,
+                            total_size: framebuffer_size,
+                        };
+                        if clear_framebuffer {
+                            self.device.bind_draw_target(draw_target);
+                            self.device.enable_depth_write();
+                            self.device.clear_target(self.clear_color.map(|color| color.to_array()),
+                                                     Some(1.0),
+                                                     None);
+                        }
+
                         self.draw_color_target(
-                            DrawTarget::Default {
-                                rect: frame.framebuffer_rect,
-                                total_size: framebuffer_size,
-                            },
+                            draw_target,
                             target,
                             frame.content_origin,
-                            fb_clear_color.map(|color| color.to_array()),
-                            fb_clear_depth,
+                            None,
+                            None,
                             &frame.render_tasks,
                             &projection,
                             frame_id,
