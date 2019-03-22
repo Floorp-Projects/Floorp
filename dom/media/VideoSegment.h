@@ -134,7 +134,7 @@ class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
     }
     return &c->mFrame;
   }
-  VideoChunk* FindChunkContainingTime(const TimeStamp& aTime) {
+  VideoChunk* FindChunkContaining(const TimeStamp& aTime) {
     VideoChunk* previousChunk = nullptr;
     for (VideoChunk& c : mChunks) {
       if (c.mTimeStamp.IsNull()) {
@@ -148,7 +148,7 @@ class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
     return previousChunk;
   }
   void ForgetUpToTime(const TimeStamp& aTime) {
-    VideoChunk* chunk = FindChunkContainingTime(aTime);
+    VideoChunk* chunk = FindChunkContaining(aTime);
     if (!chunk) {
       return;
     }

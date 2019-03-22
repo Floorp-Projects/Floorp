@@ -29,6 +29,7 @@ class MediaStreamTrack;
 class VideoStreamTrack;
 }  // namespace dom
 
+class DriftCompensator;
 class MediaEncoder;
 
 class MediaEncoderListener {
@@ -258,6 +259,7 @@ class MediaEncoder {
   nsresult CopyMetadataToMuxer(TrackEncoder* aTrackEncoder);
 
   const RefPtr<TaskQueue> mEncoderThread;
+  const RefPtr<DriftCompensator> mDriftCompensator;
 
   UniquePtr<ContainerWriter> mWriter;
   RefPtr<AudioTrackEncoder> mAudioEncoder;

@@ -167,8 +167,10 @@ class TrackEncoder {
 
   // How many times we have tried to initialize the encoder.
   uint32_t mInitCounter;
-  StreamTime mNotInitDuration;
 
+  /**
+   * True if this TrackEncoder is currently suspended.
+   */
   bool mSuspended;
 
   /**
@@ -190,6 +192,7 @@ class AudioTrackEncoder : public TrackEncoder {
       : TrackEncoder(aTrackRate),
         mChannels(0),
         mSamplingRate(0),
+        mNotInitDuration(0),
         mAudioBitrate(0) {}
 
   /**
@@ -317,8 +320,9 @@ class AudioTrackEncoder : public TrackEncoder {
    */
   AudioSegment mOutgoingBuffer;
 
-  uint32_t mAudioBitrate;
+  StreamTime mNotInitDuration;
 
+  uint32_t mAudioBitrate;
 };
 
 enum class FrameDroppingMode {
@@ -336,12 +340,12 @@ class VideoTrackEncoder : public TrackEncoder {
    * Suspends encoding from aTime, i.e., all video frame with a timestamp
    * between aTime and the timestamp of the next Resume() will be dropped.
    */
-  void Suspend(TimeStamp aTime);
+  void Suspend(const TimeStamp& aTime);
 
   /**
    * Resumes encoding starting at aTime.
    */
-  void Resume(TimeStamp aTime);
+  void Resume(const TimeStamp& aTime);
 
   /**
    * Appends source video frames to mIncomingBuffer. We only append the source
@@ -374,7 +378,7 @@ class VideoTrackEncoder : public TrackEncoder {
    * Failing to initiate the encoder for an accumulated aDuration of 30 seconds
    * is seen as an error and will cancel the current encoding.
    */
-  void Init(const VideoSegment& aSegment, StreamTime aDuration);
+  void Init(const VideoSegment& aSegment, const TimeStamp& aTime);
 
   StreamTime SecondsToMediaTime(double aS) const {
     NS_ASSERTION(0 <= aS && aS <= TRACK_TICKS_MAX / TRACK_RATE_MAX,
@@ -382,7 +386,11 @@ class VideoTrackEncoder : public TrackEncoder {
     return mTrackRate * aS;
   }
 
-  void SetStartOffset(StreamTime aStartOffset);
+  /**
+   * MediaStreamGraph notifies us about the time of the track's start.
+   * This gets called on the MediaEncoder thread after a dispatch.
+   */
+  void SetStartOffset(const TimeStamp& aStartOffset);
 
   void Cancel() override;
 
@@ -393,21 +401,10 @@ class VideoTrackEncoder : public TrackEncoder {
   void NotifyEndOfStream() override;
 
   /**
-   * Dispatched from MediaStreamGraph when it has run an iteration where the
-   * input track of the track this TrackEncoder is associated with didn't have
-   * any data.
-   *
-   * Since we use a direct listener for VideoSegments we miss periods of time
-   * for which the source didn't have any data. This ensures that the latest
-   * frame gets displayed while we wait for more data to be pushed.
-   */
-  void AdvanceBlockedInput(StreamTime aDuration);
-
-  /**
    * Dispatched from MediaStreamGraph when it has run an iteration so we can
    * hand more data to the encoder.
    */
-  void AdvanceCurrentTime(StreamTime aDuration);
+  void AdvanceCurrentTime(const TimeStamp& aTime);
 
   /**
    * Set desired keyframe interval defined in milliseconds.
@@ -459,8 +456,8 @@ class VideoTrackEncoder : public TrackEncoder {
 
   /**
    * A segment queue of incoming video track data, from listeners.
-   * The duration of mIncomingBuffer is strictly increasing as it gets fed more
-   * data. Consumed data is replaced by null data.
+   * The duration of mIncomingBuffer is irrelevant as we only look at TimeStamps
+   * of frames. Consumed data is replaced by null data.
    */
   VideoSegment mIncomingBuffer;
 
@@ -479,12 +476,14 @@ class VideoTrackEncoder : public TrackEncoder {
   StreamTime mEncodedTicks;
 
   /**
-   * The latest current time reported to us from the MSG.
+   * The time up to which we have forwarded data from mIncomingBuffer to
+   * mOutgoingBuffer.
    */
-  StreamTime mCurrentTime;
+  TimeStamp mCurrentTime;
 
   /**
-   * The time of the first real video frame passed to mOutgoingBuffer (at t=0).
+   * The time the video track started, so the start of the video track can be
+   * synced to the start of the audio track.
    *
    * Note that this time will progress during suspension, to make sure the
    * incoming frames stay in sync with the output.
