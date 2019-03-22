@@ -294,7 +294,7 @@ win32-shippable/opt:
         job-name: win32-opt
         type: shippable
     attributes:
-        nightly: true
+        shippable: true
         enable-full-crashsymbols: true
     stub-installer:
         by-project:
@@ -389,7 +389,7 @@ win64-shippable/opt:
         job-name: win64-opt
         type: shippable
     attributes:
-        nightly: true
+        shippable: true
         enable-full-crashsymbols: true
     shipping-phase: build
     shipping-product: firefox
@@ -1177,7 +1177,7 @@ win64-aarch64-shippable/opt:
         job-name: win64-aarch64-opt
         type: shippable
     attributes:
-        nightly: true
+        shippable: true
         enable-full-crashsymbols: true
     shipping-phase: build
     shipping-product: firefox
