@@ -167,6 +167,20 @@ bool EventPresent(JSContext* aCx, const JS::RootedValue& aSnapshot,
   return false;
 }
 
+void GetOriginSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                       bool aClear = false) {
+  nsCOMPtr<nsITelemetry> telemetry =
+      do_GetService("@mozilla.org/base/telemetry;1");
+
+  JS::RootedValue originSnapshot(aCx);
+  nsresult rv;
+  rv = telemetry->GetOriginSnapshot(aClear, aCx, &originSnapshot);
+  ASSERT_EQ(rv, NS_OK) << "Snapshotting origin data must not fail.";
+  ASSERT_TRUE(originSnapshot.isObject()) << "The snapshot must be an object.";
+
+  aResult.set(originSnapshot);
+}
+
 void GetEventSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
                       ProcessID aProcessType = ProcessID::Parent) {
   nsCOMPtr<nsITelemetry> telemetry =
