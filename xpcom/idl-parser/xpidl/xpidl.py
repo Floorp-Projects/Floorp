@@ -153,12 +153,12 @@ class Builtin(object):
     def rustType(self, calltype, shared=False, const=False):
         # We want to rewrite any *mut pointers to *const pointers if constness
         # was requested.
-        const = const or (calltype == 'in' and self.isPointer()) or shared
+        const = const or ('out' not in calltype and self.isPointer()) or shared
         rustname = self.rustname
         if const and self.isPointer():
             rustname = self.rustname.replace("*mut", "*const")
 
-        return "%s%s" % (calltype != 'in' and '*mut ' or '', rustname)
+        return "%s%s" % ('*mut ' if 'out' in calltype else '', rustname)
 
 
 builtinNames = [
@@ -469,7 +469,7 @@ class Forward(object):
             raise RustNoncompat("forward declaration %s is unsupported" % self.name)
         if calltype == 'element':
             return 'RefPtr<%s>' % self.name
-        return "%s*const %s" % (calltype != 'in' and '*mut ' or '',
+        return "%s*const %s" % ('*mut' if 'out' in calltype else '',
                                 self.name)
 
     def __str__(self):
