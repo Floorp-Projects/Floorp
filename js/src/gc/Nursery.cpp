@@ -142,7 +142,7 @@ bool js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock) {
   if (!allocateNextChunk(0, lock)) {
     return false;
   }
-  capacity_ = SubChunkLimit;
+  capacity_ = roundSize(tunables().gcMinNurseryBytes());
   /* After this point the Nursery has been enabled */
 
   setCurrentChunk(0, true);
@@ -194,7 +194,7 @@ void js::Nursery::enable() {
     if (!allocateNextChunk(0, lock)) {
       return;
     }
-    capacity_ = SubChunkLimit;
+    capacity_ = roundSize(tunables().gcMinNurseryBytes());
   }
 
   setCurrentChunk(0, true);
@@ -1198,10 +1198,12 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   MOZ_ASSERT((float(capacity()) * factor) <= SIZE_MAX);
   size_t newCapacity = size_t(float(capacity()) * factor);
 
+  const size_t minNurseryBytes = roundSize(tunables().gcMinNurseryBytes());
+
   // If one of these conditions is true then we always shrink or grow the
   // nursery.  This way the thresholds still have an effect even if the goal
   // seeking says the current size is ideal.
-  size_t lowLimit = Max(SubChunkLimit, capacity() / 2);
+  size_t lowLimit = Max(minNurseryBytes, capacity() / 2);
   size_t highLimit =
       Min((CheckedInt<size_t>(chunkCountLimit()) * ChunkSize).value(),
           (CheckedInt<size_t>(capacity()) * 2).value());
@@ -1210,16 +1212,10 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   if (maxChunkCount() < chunkCountLimit() && promotionRate > GrowThreshold &&
       newCapacity > capacity()) {
     growAllocableSpace(newCapacity);
-  } else if (capacity() >= SubChunkLimit + SubChunkStep &&
+  } else if (capacity() >= minNurseryBytes + SubChunkStep &&
              promotionRate < ShrinkThreshold && newCapacity < capacity()) {
     shrinkAllocableSpace(newCapacity);
   }
-
-  // Assert that the limits are set such that we can shrink the nursery below
-  // one chunk.
-  static_assert(
-      SubChunkLimit + SubChunkStep < NurseryChunkUsableSize,
-      "Nursery limit must be at least one step from the full chunk size");
 }
 
 bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
@@ -1243,7 +1239,7 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
   if (newMaxNurseryChunks != chunkCountLimit_) {
     chunkCountLimit_ = newMaxNurseryChunks;
     /* The configured maximum nursery size is changing */
-    if (maxChunkCount() > newMaxNurseryChunks) {
+    if (JS_HOWMANY(capacity_, gc::ChunkSize) > newMaxNurseryChunks) {
       /* We need to shrink the nursery */
       static_assert(NurseryChunkUsableSize < ChunkSize,
                     "Usable size must be smaller than total size or this "
@@ -1251,6 +1247,18 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
       shrinkAllocableSpace(newMaxNurseryChunks * ChunkSize);
       return true;
     }
+  }
+
+  const size_t minNurseryBytes = roundSize(tunables().gcMinNurseryBytes());
+
+  if (minNurseryBytes > capacity()) {
+    /*
+     * the configured minimum nursery size is changing and we need to grow the
+     * nursery
+     */
+    MOZ_ASSERT(minNurseryBytes <= roundSize(tunables().gcMaxNurseryBytes()));
+    growAllocableSpace(minNurseryBytes);
+    return true;
   }
 
   return false;
@@ -1296,10 +1304,10 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
   // clamping in maybeResizeNursery().
   MOZ_ASSERT(newCapacity != 0);
   // Don't attempt to shrink it to the same size.
-  if (newCapacity == capacity()) {
+  if (newCapacity == capacity_) {
     return;
   }
-  MOZ_ASSERT(newCapacity < capacity());
+  MOZ_ASSERT(newCapacity < capacity_);
 
   unsigned newCount = JS_HOWMANY(newCapacity, ChunkSize);
   if (newCount < allocatedChunkCount()) {
@@ -1311,7 +1319,7 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
 }
 
 void js::Nursery::minimizeAllocableSpace() {
-  shrinkAllocableSpace(SubChunkLimit);
+  shrinkAllocableSpace(tunables().gcMinNurseryBytes());
 }
 
 bool js::Nursery::queueDictionaryModeObjectToSweep(NativeObject* obj) {
