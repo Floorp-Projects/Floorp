@@ -386,11 +386,6 @@ nsresult MediaEngineRemoteVideoSource::Stop(
   {
     MutexAutoLock lock(mMutex);
     mState = kStopped;
-
-    // Drop any cached image so we don't start with a stale image on next
-    // usage.  Also, gfx gets very upset if these are held until this object
-    // is gc'd in final-cc during shutdown (bug 1374164)
-    mImage = nullptr;
   }
 
   return NS_OK;
@@ -492,37 +487,7 @@ void MediaEngineRemoteVideoSource::Pull(
     const RefPtr<const AllocationHandle>& aHandle,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
-    const PrincipalHandle& aPrincipalHandle) {
-  TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p track %i", aStream.get(),
-                               aTrackID);
-  MutexAutoLock lock(mMutex);
-  if (mState == kReleased) {
-    // We end the track before deallocating, so this is safe.
-    return;
-  }
-
-  MOZ_ASSERT(mState == kStarted || mState == kStopped);
-
-  StreamTime delta = aDesiredTime - aEndOfAppendedData;
-  MOZ_ASSERT(delta > 0);
-
-  VideoSegment segment;
-  RefPtr<layers::Image> image = mImage;
-  if (mState == kStarted) {
-    MOZ_ASSERT(!image || mImageSize == image->GetSize());
-    segment.AppendFrame(image.forget(), delta, mImageSize, aPrincipalHandle);
-  } else {
-    // nullptr images are allowed, but we force it to black and retain the size.
-    segment.AppendFrame(image.forget(), delta, mImageSize, aPrincipalHandle,
-                        true);
-  }
-
-  // This is safe from any thread, and is safe if the track is Finished
-  // or Destroyed.
-  // This can fail if either a) we haven't added the track yet, or b)
-  // we've removed or finished the track.
-  aStream->AppendToTrack(aTrackID, &segment);
-}
+    const PrincipalHandle& aPrincipalHandle) {}
 
 int MediaEngineRemoteVideoSource::DeliverFrame(
     uint8_t* aBuffer, const camera::VideoFrameProperties& aProps) {
@@ -670,14 +635,12 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
 
   {
     MutexAutoLock lock(mMutex);
-    // implicitly releases last image
-    mImage = image.forget();
-    mImageSize = mImage->GetSize();
+    MOZ_ASSERT(mState == kStarted);
+    VideoSegment segment;
+    mImageSize = image->GetSize();
+    segment.AppendFrame(image.forget(), 1, mImageSize, mPrincipal);
+    mStream->AppendToTrack(mTrackID, &segment);
   }
-
-  // We'll push the frame into the MSG on the next Pull. This will avoid
-  // swamping the MSG with frames should it be taking longer than normal to run
-  // an iteration.
 
   return 0;
 }

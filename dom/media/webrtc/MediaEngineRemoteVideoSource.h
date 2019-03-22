@@ -209,10 +209,6 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   // after Start() and before the end of Stop().
   RefPtr<layers::ImageContainer> mImageContainer;
 
-  // The latest frame delivered from the video capture backend.
-  // Protected by mMutex.
-  RefPtr<layers::Image> mImage;
-
   // A buffer pool used to manage the temporary buffer used when rescaling
   // incoming images. Cameras IPC thread only.
   webrtc::I420BufferPool mRescalingBufferPool;
