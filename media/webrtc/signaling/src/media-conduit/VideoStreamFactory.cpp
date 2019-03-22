@@ -124,6 +124,8 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
     int width, int height, const webrtc::VideoEncoderConfig& config) {
   size_t streamCount = config.number_of_streams;
 
+  MOZ_RELEASE_ASSERT(streamCount >= 1, "Should request at least one stream");
+
   // We only allow one layer when screensharing
   if (mCodecMode == webrtc::VideoCodecMode::kScreensharing) {
     streamCount = 1;
