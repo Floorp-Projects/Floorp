@@ -781,7 +781,9 @@ void XMLHttpRequestMainThread::GetResponseURL(nsAString& aUrl) {
   }
 
   nsCOMPtr<nsIURI> responseUrl;
-  if (NS_FAILED(NS_GetFinalChannelURI(mChannel, getter_AddRefs(responseUrl)))) {
+  mChannel->GetURI(getter_AddRefs(responseUrl));
+
+  if (!responseUrl) {
     return;
   }
 
