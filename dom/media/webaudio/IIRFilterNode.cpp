@@ -159,10 +159,6 @@ IIRFilterNode::IIRFilterNode(AudioContext* aContext,
 already_AddRefed<IIRFilterNode> IIRFilterNode::Create(
     AudioContext& aAudioContext, const IIRFilterOptions& aOptions,
     ErrorResult& aRv) {
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   if (aOptions.mFeedforward.Length() == 0 ||
       aOptions.mFeedforward.Length() > 20) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);

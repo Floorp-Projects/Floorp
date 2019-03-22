@@ -325,10 +325,6 @@ PannerNode::PannerNode(AudioContext* aContext)
 already_AddRefed<PannerNode> PannerNode::Create(AudioContext& aAudioContext,
                                                 const PannerOptions& aOptions,
                                                 ErrorResult& aRv) {
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   RefPtr<PannerNode> audioNode = new PannerNode(&aAudioContext);
 
   audioNode->Initialize(aOptions, aRv);

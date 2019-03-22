@@ -184,10 +184,6 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
 already_AddRefed<DynamicsCompressorNode> DynamicsCompressorNode::Create(
     AudioContext& aAudioContext, const DynamicsCompressorOptions& aOptions,
     ErrorResult& aRv) {
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   RefPtr<DynamicsCompressorNode> audioNode =
       new DynamicsCompressorNode(&aAudioContext);
 
