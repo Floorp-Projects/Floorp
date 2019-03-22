@@ -72,6 +72,7 @@ class SHistoryParent final : public PSHistoryParent {
   bool RecvRemoveDynEntries(int32_t aIndex, PSHEntryParent* aEntry);
   bool RecvRemoveEntries(nsTArray<nsID>&& ids, int32_t aIndex,
                          bool* aDidRemove);
+  bool RecvRemoveFrameEntries(PSHEntryParent* aEntry);
   bool RecvReload(const uint32_t& aReloadFlags, LoadSHEntryResult* aLoadResult);
   bool RecvGetAllEntries(nsTArray<MaybeNewPSHEntry>* aEntries);
   bool RecvFindEntryForBFCache(const uint64_t& aSharedID,

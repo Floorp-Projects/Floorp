@@ -3587,17 +3587,7 @@ void nsDocShell::ClearFrameHistory(nsISHEntry* aEntry) {
     return;
   }
 
-  int32_t count = aEntry->GetChildCount();
-  AutoTArray<nsID, 16> ids;
-  for (int32_t i = 0; i < count; ++i) {
-    nsCOMPtr<nsISHEntry> child;
-    aEntry->GetChildAt(i, getter_AddRefs(child));
-    if (child) {
-      child->GetDocshellID(*ids.AppendElement());
-    }
-  }
-  int32_t index = rootSH->Index();
-  rootSH->LegacySHistory()->RemoveEntries(ids, index);
+  rootSH->LegacySHistory()->RemoveFrameEntries(aEntry);
 }
 
 //-------------------------------------
