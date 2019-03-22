@@ -15,16 +15,16 @@
 wasmEvalText(`(module
     (memory 1)
     (func $run (param i64) (param i32) (param i32)
-        get_local 1
-        get_local 2
+        local.get 1
+        local.get 2
         i32.add
 
-        get_local 1
-        get_local 2
+        local.get 1
+        local.get 2
         i32.add
 
         i32.const 0
-        get_local 0
+        local.get 0
         i64.store8
 
         drop

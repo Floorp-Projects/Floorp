@@ -12,10 +12,10 @@ function Baguette(calories) {
     wasmEvalText(`(module
         (global (mut anyref) (ref.null))
         (func (export "f")
-            get_global 0
+            global.get 0
             ref.null
-            set_global 0
-            set_global 0
+            global.set 0
+            global.set 0
         )
     )`).exports.f();
 })();
@@ -23,14 +23,14 @@ function Baguette(calories) {
 let exportsPlain = wasmEvalText(`(module
     (global i32 (i32.const 42))
     (global $g (mut anyref) (ref.null))
-    (func (export "set") (param anyref) get_local 0 set_global $g)
-    (func (export "get") (result anyref) get_global $g)
+    (func (export "set") (param anyref) local.get 0 global.set $g)
+    (func (export "get") (result anyref) global.get $g)
 )`).exports;
 
 let exportsObj = wasmEvalText(`(module
     (global $g (export "g") (mut anyref) (ref.null))
-    (func (export "set") (param anyref) get_local 0 set_global $g)
-    (func (export "get") (result anyref) get_global $g)
+    (func (export "set") (param anyref) local.get 0 global.set $g)
+    (func (export "get") (result anyref) global.get $g)
 )`).exports;
 
 // 7 => Generational GC zeal.

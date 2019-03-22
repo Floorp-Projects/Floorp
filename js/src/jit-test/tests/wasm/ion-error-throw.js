@@ -7,15 +7,15 @@ enableGeckoProfiling();
 
 let { add } = wasmEvalText(`(module
     (func $add (export "add") (result i32) (param i32) (param i32)
-     get_local 0
+     local.get 0
      i32.const 42
      i32.eq
      if
          unreachable
      end
 
-     get_local 0
-     get_local 1
+     local.get 0
+     local.get 1
      i32.add
     )
 )`).exports;
