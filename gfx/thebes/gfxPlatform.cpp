@@ -948,10 +948,6 @@ void gfxPlatform::Init() {
     }
   };
   gfxPrefs::SetLayoutFrameRateChangeCallback(updateFrameRateCallback);
-  gfxPrefs::SetIsLowEndMachineDoNotUseDirectlyChangeCallback(
-      updateFrameRateCallback);
-  gfxPrefs::SetAdjustToMachineChangeCallback(updateFrameRateCallback);
-  gfxPrefs::SetResistFingerprintingChangeCallback(updateFrameRateCallback);
   // Set up the vsync source for the parent process.
   ReInitFrameRate();
 
@@ -2914,12 +2910,6 @@ bool gfxPlatform::ContentUsesTiling() const {
           contentUsesPOMTP);
 }
 
-/* static */
-bool gfxPlatform::ShouldAdjustForLowEndMachine() {
-  return gfxPrefs::AdjustToMachine() && !gfxPrefs::ResistFingerprinting() &&
-         gfxPrefs::IsLowEndMachineDoNotUseDirectly();
-}
-
 /***
  * The preference "layout.frame_rate" has 3 meanings depending on the value:
  *
@@ -2946,8 +2936,7 @@ bool gfxPlatform::IsInLayoutAsapMode() {
 
 /* static */
 bool gfxPlatform::ForceSoftwareVsync() {
-  return ShouldAdjustForLowEndMachine() || gfxPrefs::LayoutFrameRate() > 0 ||
-         recordreplay::IsRecordingOrReplaying();
+  return gfxPrefs::LayoutFrameRate() > 0 || recordreplay::IsRecordingOrReplaying();
 }
 
 /* static */
@@ -2961,7 +2950,7 @@ int gfxPlatform::GetSoftwareVsyncRate() {
 
 /* static */
 int gfxPlatform::GetDefaultFrameRate() {
-  return ShouldAdjustForLowEndMachine() ? 30 : 60;
+  return 60;
 }
 
 /* static */
