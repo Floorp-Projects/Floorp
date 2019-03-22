@@ -249,6 +249,28 @@ class MediaEncoder::VideoTrackListener : public DirectMediaStreamTrackListener {
     Unused << rv;
   }
 
+  void NotifyEnabledStateChanged(bool aEnabled) override {
+    MOZ_ASSERT(mEncoder);
+    MOZ_ASSERT(mEncoderThread);
+
+    if (mShutdown) {
+      return;
+    }
+
+    nsresult rv;
+    if (aEnabled) {
+      rv = mEncoderThread->Dispatch(NewRunnableMethod<TimeStamp>(
+          "mozilla::VideoTrackEncoder::Enable", mEncoder,
+          &VideoTrackEncoder::Enable, TimeStamp::Now()));
+    } else {
+      rv = mEncoderThread->Dispatch(NewRunnableMethod<TimeStamp>(
+          "mozilla::VideoTrackEncoder::Disable", mEncoder,
+          &VideoTrackEncoder::Disable, TimeStamp::Now()));
+    }
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
+  }
+
   void NotifyEnded() override {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);

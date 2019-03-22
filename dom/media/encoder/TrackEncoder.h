@@ -348,6 +348,18 @@ class VideoTrackEncoder : public TrackEncoder {
   void Resume(const TimeStamp& aTime);
 
   /**
+   * Makes the video black from aTime.
+   */
+  void Disable(const TimeStamp& aTime);
+
+  /**
+   * Makes the video non-black from aTime.
+   *
+   * NB that it could still be forced black for other reasons, like principals.
+   */
+  void Enable(const TimeStamp& aTime);
+
+  /**
    * Appends source video frames to mIncomingBuffer. We only append the source
    * chunk if the image is different from mLastChunk's image. Called on the
    * MediaStreamGraph thread.
@@ -508,6 +520,12 @@ class VideoTrackEncoder : public TrackEncoder {
    * The desired keyframe interval defined in milliseconds.
    */
   int32_t mKeyFrameInterval;
+
+  /**
+   * True if the video MediaStreamTrack this VideoTrackEncoder is attached to is
+   * currently enabled. While false, we encode all frames as black.
+   */
+  bool mEnabled;
 };
 
 }  // namespace mozilla
