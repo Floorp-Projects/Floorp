@@ -9,6 +9,7 @@
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TelemetryEventEnums.h"
 #include "mozilla/TelemetryHistogramEnums.h"
+#include "mozilla/TelemetryOriginEnums.h"
 #include "mozilla/TelemetryScalarEnums.h"
 #include "mozilla/TimeStamp.h"
 #include "nsString.h"
@@ -595,6 +596,18 @@ void RecordEvent(mozilla::Telemetry::EventID aId,
  * @param aEnabled Whether recording should be enabled or disabled.
  */
 void SetEventRecordingEnabled(const nsACString& aCategory, bool aEnabled);
+
+/**
+ * YOU PROBABLY SHOULDN'T USE THIS.
+ * THIS IS AN EXPERIMENTAL API NOT YET READY FOR GENERAL USE.
+ *
+ * Records that the metric is true for the stated origin.
+ *
+ * @param aId the metric.
+ * @param aOrigin the origin on which to record the metric as true.
+ */
+void RecordOrigin(mozilla::Telemetry::OriginMetricID aId,
+                  const nsACString& aOrigin);
 
 }  // namespace Telemetry
 }  // namespace mozilla
