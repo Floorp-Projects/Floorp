@@ -470,8 +470,14 @@ var View = {
     }
     row.appendChild(elt);
 
-    if (tooltip)
+    if (tooltip) {
+      for (let key of ["dispatchesSincePrevious", "durationSincePrevious"]) {
+        if (Number.isNaN(tooltip[key]) || tooltip[key] < 0) {
+          tooltip[key] = "–";
+        }
+      }
       document.l10n.setAttributes(row, "item", tooltip);
+    }
 
     elt = document.createElement("td");
     if (type == "tab") {
