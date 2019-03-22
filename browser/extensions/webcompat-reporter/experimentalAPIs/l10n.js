@@ -17,7 +17,7 @@ let l10nManifest;
 
 this.l10n = class extends ExtensionAPI {
   onShutdown(reason) {
-    if (reason !== "APP_SHUTDOWN" && l10nManifest) {
+    if (l10nManifest) {
       Components.manager.removeBootstrappedManifestLocation(l10nManifest);
     }
   }
