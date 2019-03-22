@@ -771,6 +771,14 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   display: none;
 }
 
+#PanelUI-fxa-menu-sendtab-button {
+  list-style-image: url("chrome://browser/skin/send-to-device.svg");
+}
+
+#PanelUI-fxa-menu-sendtab-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  transform: scaleX(-1);
+}
+
 .fxaChooseWhatToSyncDevices {
   height: 102px;
   width: 201px;
