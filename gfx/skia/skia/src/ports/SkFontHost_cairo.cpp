@@ -252,10 +252,11 @@ public:
         return 0;
     }
 
-    SkCairoFTTypeface(cairo_font_face_t* fontFace, FcPattern* pattern)
+    SkCairoFTTypeface(cairo_font_face_t* fontFace, FcPattern* pattern, FT_Face face)
         : SkTypeface(SkFontStyle::Normal())
         , fFontFace(fontFace)
         , fPattern(pattern)
+        , fFTFace(face)
     {
         cairo_font_face_reference(fFontFace);
 #ifdef CAIRO_HAS_FC_FONT
@@ -266,6 +267,26 @@ public:
     }
 
     cairo_font_face_t* GetCairoFontFace() const { return fFontFace; }
+
+    virtual bool hasColorGlyphs() const override
+    {
+        // Check if the font has scalable outlines, either using the FT_Face directly
+        // or the Fontconfig pattern, whichever is available. If not, then avoid trying
+        // to render it as a path.
+        if (fFTFace) {
+            return !FT_IS_SCALABLE(fFTFace);
+        }
+#ifdef CAIRO_HAS_FC_FONT
+        if (fPattern) {
+            FcBool outline;
+            if (FcPatternGetBool(fPattern, FC_OUTLINE, 0, &outline) != FcResultMatch ||
+                !outline) {
+                return true;
+            }
+        }
+#endif
+        return false;
+    }
 
    private:
     ~SkCairoFTTypeface()
@@ -280,6 +301,7 @@ public:
 
     cairo_font_face_t* fFontFace;
     FcPattern* fPattern;
+    FT_Face    fFTFace;
 };
 
 static bool FindByCairoFontFace(SkTypeface* typeface, void* context) {
@@ -287,7 +309,7 @@ static bool FindByCairoFontFace(SkTypeface* typeface, void* context) {
          static_cast<cairo_font_face_t*>(context);
 }
 
-SkTypeface* SkCreateTypefaceFromCairoFTFontWithFontconfig(cairo_scaled_font_t* scaledFont, FcPattern* pattern)
+SkTypeface* SkCreateTypefaceFromCairoFTFontWithFontconfig(cairo_scaled_font_t* scaledFont, FcPattern* pattern, FT_Face face)
 {
     cairo_font_face_t* fontFace = cairo_scaled_font_get_font_face(scaledFont);
     SkASSERT(cairo_font_face_status(fontFace) == CAIRO_STATUS_SUCCESS);
@@ -296,16 +318,16 @@ SkTypeface* SkCreateTypefaceFromCairoFTFontWithFontconfig(cairo_scaled_font_t* s
     SkTypeface* typeface =
         SkTypefaceCache::FindByProcAndRef(FindByCairoFontFace, fontFace);
     if (!typeface) {
-      typeface = new SkCairoFTTypeface(fontFace, pattern);
+      typeface = new SkCairoFTTypeface(fontFace, pattern, face);
       SkTypefaceCache::Add(typeface);
     }
 
     return typeface;
 }
 
-SkTypeface* SkCreateTypefaceFromCairoFTFont(cairo_scaled_font_t* scaledFont)
+SkTypeface* SkCreateTypefaceFromCairoFTFont(cairo_scaled_font_t* scaledFont, FT_Face face)
 {
-    return SkCreateTypefaceFromCairoFTFontWithFontconfig(scaledFont, nullptr);
+    return SkCreateTypefaceFromCairoFTFontWithFontconfig(scaledFont, nullptr, face);
 }
 
 SkScalerContext_CairoFT::SkScalerContext_CairoFT(sk_sp<SkTypeface> typeface, const SkScalerContextEffects& effects, const SkDescriptor* desc,
