@@ -1471,7 +1471,7 @@ class GenericReceiveListener : public MediaStreamTrackListener {
     }
     mListening = true;
     mMaybeTrackNeedsUnmute = true;
-    if (!mSource->IsDestroyed()) {
+    if (mTrack->AsAudioStreamTrack() && !mSource->IsDestroyed()) {
       mSource->SetPullingEnabled(mTrackId, true);
     }
   }
@@ -1481,7 +1481,7 @@ class GenericReceiveListener : public MediaStreamTrackListener {
       return;
     }
     mListening = false;
-    if (!mSource->IsDestroyed()) {
+    if (mTrack->AsAudioStreamTrack() && !mSource->IsDestroyed()) {
       mSource->SetPullingEnabled(mTrackId, false);
     }
   }
@@ -1733,93 +1733,61 @@ class MediaPipelineReceiveVideo::PipelineListener
  public:
   explicit PipelineListener(dom::MediaStreamTrack* aTrack)
       : GenericReceiveListener(aTrack),
-        mWidth(0),
-        mHeight(0),
         mImageContainer(
-            LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS)),
-        mMutex("Video PipelineListener") {
+            LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS)) {
     AddTrackToSource();
-  }
-
-  // Implement MediaStreamTrackListener
-  void NotifyPull(MediaStreamGraph* aGraph, StreamTime aEndOfAppendedData,
-                  StreamTime aDesiredTime) override {
-    TRACE_AUDIO_CALLBACK_COMMENT("Track %i", mTrackId);
-    MutexAutoLock lock(mMutex);
-
-    RefPtr<Image> image = mImage;
-    StreamTime delta = aDesiredTime - aEndOfAppendedData;
-    MOZ_ASSERT(delta > 0);
-
-    VideoSegment segment;
-    IntSize size = image ? image->GetSize() : IntSize(mWidth, mHeight);
-    segment.AppendFrame(image.forget(), delta, size, mPrincipalHandle);
-    DebugOnly<bool> appended = mSource->AppendToTrack(mTrackId, &segment);
-    MOZ_ASSERT(appended);
-  }
-
-  // Accessors for external writes from the renderer
-  void FrameSizeChange(unsigned int aWidth, unsigned int aHeight) {
-    MutexAutoLock enter(mMutex);
-
-    mWidth = aWidth;
-    mHeight = aHeight;
   }
 
   void RenderVideoFrame(const webrtc::VideoFrameBuffer& aBuffer,
                         uint32_t aTimeStamp, int64_t aRenderTime) {
+    RefPtr<Image> image;
     if (aBuffer.type() == webrtc::VideoFrameBuffer::Type::kNative) {
       // We assume that only native handles are used with the
       // WebrtcMediaDataDecoderCodec decoder.
       const ImageBuffer* imageBuffer =
           static_cast<const ImageBuffer*>(&aBuffer);
-      MutexAutoLock lock(mMutex);
-      mImage = imageBuffer->GetNativeImage();
-      return;
+      image = imageBuffer->GetNativeImage();
+    } else {
+      MOZ_ASSERT(aBuffer.type() == webrtc::VideoFrameBuffer::Type::kI420);
+      rtc::scoped_refptr<const webrtc::I420BufferInterface> i420 =
+          aBuffer.GetI420();
+
+      MOZ_ASSERT(i420->DataY());
+      // Create a video frame using |buffer|.
+      RefPtr<PlanarYCbCrImage> yuvImage =
+          mImageContainer->CreatePlanarYCbCrImage();
+
+      PlanarYCbCrData yuvData;
+      yuvData.mYChannel = const_cast<uint8_t*>(i420->DataY());
+      yuvData.mYSize = IntSize(i420->width(), i420->height());
+      yuvData.mYStride = i420->StrideY();
+      MOZ_ASSERT(i420->StrideU() == i420->StrideV());
+      yuvData.mCbCrStride = i420->StrideU();
+      yuvData.mCbChannel = const_cast<uint8_t*>(i420->DataU());
+      yuvData.mCrChannel = const_cast<uint8_t*>(i420->DataV());
+      yuvData.mCbCrSize =
+          IntSize((i420->width() + 1) >> 1, (i420->height() + 1) >> 1);
+      yuvData.mPicX = 0;
+      yuvData.mPicY = 0;
+      yuvData.mPicSize = IntSize(i420->width(), i420->height());
+      yuvData.mStereoMode = StereoMode::MONO;
+
+      if (!yuvImage->CopyData(yuvData)) {
+        MOZ_ASSERT(false);
+        return;
+      }
+
+      image = yuvImage.forget();
     }
 
-    MOZ_ASSERT(aBuffer.type() == webrtc::VideoFrameBuffer::Type::kI420);
-    rtc::scoped_refptr<const webrtc::I420BufferInterface> i420 =
-        aBuffer.GetI420();
-
-    MOZ_ASSERT(i420->DataY());
-    // Create a video frame using |buffer|.
-    RefPtr<PlanarYCbCrImage> yuvImage =
-        mImageContainer->CreatePlanarYCbCrImage();
-
-    PlanarYCbCrData yuvData;
-    yuvData.mYChannel = const_cast<uint8_t*>(i420->DataY());
-    yuvData.mYSize = IntSize(i420->width(), i420->height());
-    yuvData.mYStride = i420->StrideY();
-    MOZ_ASSERT(i420->StrideU() == i420->StrideV());
-    yuvData.mCbCrStride = i420->StrideU();
-    yuvData.mCbChannel = const_cast<uint8_t*>(i420->DataU());
-    yuvData.mCrChannel = const_cast<uint8_t*>(i420->DataV());
-    yuvData.mCbCrSize =
-        IntSize((i420->width() + 1) >> 1, (i420->height() + 1) >> 1);
-    yuvData.mPicX = 0;
-    yuvData.mPicY = 0;
-    yuvData.mPicSize = IntSize(i420->width(), i420->height());
-    yuvData.mStereoMode = StereoMode::MONO;
-
-    if (!yuvImage->CopyData(yuvData)) {
-      MOZ_ASSERT(false);
-      return;
-    }
-
-    MutexAutoLock lock(mMutex);
-    mImage = yuvImage;
+    VideoSegment segment;
+    auto size = image->GetSize();
+    segment.AppendFrame(image.forget(), 1, size, mPrincipalHandle);
+    mSource->AppendToTrack(mTrackId, &segment);
   }
 
  private:
-  int mWidth;
-  int mHeight;
   RefPtr<layers::ImageContainer> mImageContainer;
-  RefPtr<layers::Image> mImage;
-  Mutex mMutex;  // Mutex for processing WebRTC frames.
-                 // Protects mImage against:
-                 // - Writing from the GIPS thread
-                 // - Reading from the MSG thread
 };
 
 class MediaPipelineReceiveVideo::PipelineRenderer
@@ -1831,10 +1799,7 @@ class MediaPipelineReceiveVideo::PipelineRenderer
   void Detach() { mPipeline = nullptr; }
 
   // Implement VideoRenderer
-  void FrameSizeChange(unsigned int aWidth, unsigned int aHeight) override {
-    mPipeline->mListener->FrameSizeChange(aWidth, aHeight);
-  }
-
+  void FrameSizeChange(unsigned int aWidth, unsigned int aHeight) override {}
   void RenderVideoFrame(const webrtc::VideoFrameBuffer& aBuffer,
                         uint32_t aTimeStamp, int64_t aRenderTime) override {
     mPipeline->mListener->RenderVideoFrame(aBuffer, aTimeStamp, aRenderTime);
