@@ -10,18 +10,18 @@
 #include "ImageContainer.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "nsTArray.h"
-#include "Point.h" // mozilla::gfx::IntSize
+#include "Point.h"  // mozilla::gfx::IntSize
 
 // A helper object to generate of different YUV planes.
 class YUVBufferGenerator {
-public:
+ public:
   void Init(const mozilla::gfx::IntSize& aSize);
   mozilla::gfx::IntSize GetSize() const;
   already_AddRefed<mozilla::layers::Image> GenerateI420Image();
   already_AddRefed<mozilla::layers::Image> GenerateNV12Image();
   already_AddRefed<mozilla::layers::Image> GenerateNV21Image();
 
-private:
+ private:
   mozilla::layers::Image* CreateI420Image();
   mozilla::layers::Image* CreateNV12Image();
   mozilla::layers::Image* CreateNV21Image();
