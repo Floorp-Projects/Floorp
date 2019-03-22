@@ -183,21 +183,6 @@ class ObjectGroup : public gc::TenuredCell {
  public:
   const Class* clasp() const { return clasp_; }
 
-  void setClasp(const Class* clasp) {
-    MOZ_ASSERT(JS::StringIsASCII(clasp->name));
-    MOZ_ASSERT(hasUncacheableClass());
-    clasp_ = clasp;
-  }
-
-  // Certain optimizations may mutate the class of an ObjectGroup - and thus
-  // all objects in it - after it is created. If true, the JIT must not
-  // assume objects of a previously seen group have the same class as before.
-  //
-  // See: TryConvertToUnboxedLayout
-  //
-  // MG:Unboxed: Verify above comment still holds
-  bool hasUncacheableClass() const { return clasp_->isNative(); }
-
   bool hasDynamicPrototype() const { return proto_.isDynamic(); }
 
   const GCPtr<TaggedProto>& proto() const { return proto_; }

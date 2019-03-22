@@ -765,7 +765,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
   void guardGroupForLayout(ObjOperandId obj, ObjectGroup* group) {
     // NOTE: Comment in guardGroupForTypeBarrier also applies.
-    MOZ_ASSERT(!group->hasUncacheableClass());
     MOZ_ASSERT(IsTypedObjectClass(group->clasp()));
     guardGroup(obj, group);
   }
