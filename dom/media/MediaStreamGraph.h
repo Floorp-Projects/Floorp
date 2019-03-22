@@ -708,13 +708,6 @@ class SourceMediaStream : public MediaStream {
   virtual StreamTime AppendToTrack(TrackID aID, MediaSegment* aSegment,
                                    MediaSegment* aRawSegment = nullptr);
   /**
-   * Get the stream time of the end of the data that has been appended so far.
-   * Can be called from any thread but won't be useful if it can race with
-   * an AppendToTrack call, so should probably just be called from the thread
-   * that also calls AppendToTrack.
-   */
-  StreamTime GetEndOfAppendedData(TrackID aID);
-  /**
    * Indicate that a track has ended. Do not do any more API calls
    * affecting this track.
    * Ignored if the track does not exist.
