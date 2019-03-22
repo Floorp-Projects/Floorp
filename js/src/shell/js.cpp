@@ -10208,10 +10208,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setNativeRegExp(enableNativeRegExp)
       .setAsyncStack(enableAsyncStacks);
 
-  if (op.getBoolOption("no-unboxed-objects")) {
-    jit::JitOptions.disableUnboxedObjects = true;
-  }
-
   if (const char* str = op.getStringOption("cache-ir-stubs")) {
     if (strcmp(str, "on") == 0) {
       jit::JitOptions.disableCacheIR = false;
