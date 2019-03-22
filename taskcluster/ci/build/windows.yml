@@ -1170,7 +1170,6 @@ win64-aarch64-eme/opt:
     toolchains:
         - win64-node
 
-<<<<<<< working copy
 win64-aarch64-shippable/opt:
     description: "AArch64 Win64 Shippable"
     index:
