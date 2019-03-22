@@ -19,6 +19,7 @@
 namespace mozilla {
 
 class DriftCompensator;
+class Runnable;
 class TaskQueue;
 
 namespace dom {
@@ -115,13 +116,15 @@ class MediaEncoder {
                VideoTrackEncoder* aVideoEncoder, TrackRate aTrackRate,
                const nsAString& aMIMEType);
 
-  /* Note - called from control code, not on MSG threads. */
-  void Suspend(TimeStamp aTime);
+  /**
+   * Called on main thread from MediaRecorder::Pause.
+   */
+  void Suspend();
 
   /**
-   * Note - called from control code, not on MSG threads.
-   * Calculates time spent paused in order to offset frames. */
-  void Resume(TimeStamp aTime);
+   * Called on main thread from MediaRecorder::Resume.
+   */
+  void Resume();
 
   /**
    * Stops the current encoding, and disconnects the input tracks.
@@ -231,6 +234,12 @@ class MediaEncoder {
   ~MediaEncoder();
 
  private:
+  /**
+   * Takes a regular runnable and dispatches it to the graph wrapped in a
+   * ControlMessage.
+   */
+  void RunOnGraph(already_AddRefed<Runnable> aRunnable);
+
   /**
    * Shuts down the MediaEncoder and cleans up track encoders.
    * Listeners will be notified of the shutdown unless we were Cancel()ed first.
