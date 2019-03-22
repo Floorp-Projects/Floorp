@@ -432,12 +432,6 @@ class TabChild final : public TabChildBase,
 
   virtual bool DeallocPFilePickerChild(PFilePickerChild* aActor) override;
 
-  virtual PIndexedDBPermissionRequestChild*
-  AllocPIndexedDBPermissionRequestChild(const Principal& aPrincipal) override;
-
-  virtual bool DeallocPIndexedDBPermissionRequestChild(
-      PIndexedDBPermissionRequestChild* aActor) override;
-
   virtual nsIWebNavigation* WebNavigation() const override { return mWebNav; }
 
   virtual PuppetWidget* WebWidget() override { return mPuppetWidget; }

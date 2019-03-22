@@ -446,15 +446,9 @@ class TabParent final : public PBrowserParent,
 
   bool DeallocPFilePickerParent(PFilePickerParent* actor);
 
-  PIndexedDBPermissionRequestParent* AllocPIndexedDBPermissionRequestParent(
-      const Principal& aPrincipal);
-
-  virtual mozilla::ipc::IPCResult RecvPIndexedDBPermissionRequestConstructor(
-      PIndexedDBPermissionRequestParent* aActor,
-      const Principal& aPrincipal) override;
-
-  bool DeallocPIndexedDBPermissionRequestParent(
-      PIndexedDBPermissionRequestParent* aActor);
+  mozilla::ipc::IPCResult RecvIndexedDBPermissionRequest(
+      const Principal& aPrincipal,
+      IndexedDBPermissionRequestResolver&& aResolve);
 
   bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
