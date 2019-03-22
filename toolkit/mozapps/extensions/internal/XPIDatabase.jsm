@@ -264,7 +264,18 @@ class AddonInternal {
         this.addedToDatabase();
       }
 
-      this._sourceBundle = addonData._sourceBundle;
+      this.sourceBundle = addonData._sourceBundle;
+    }
+  }
+
+  get sourceBundle() {
+    return this._sourceBundle;
+  }
+
+  set sourceBundle(file) {
+    this._sourceBundle = file;
+    if (file) {
+      this.rootURI = XPIInternal.getURIForResourceInFile(file, "").spec;
     }
   }
 
@@ -1552,7 +1563,7 @@ this.XPIDatabase = {
 
       for (let addon of addons) {
         // The add-on might have vanished, we'll catch that on the next startup
-        if (!addon._sourceBundle.exists())
+        if (!addon._sourceBundle || !addon._sourceBundle.exists())
           continue;
 
         let signedState = await verifyBundleSignedState(addon._sourceBundle, addon);

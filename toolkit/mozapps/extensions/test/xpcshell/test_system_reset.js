@@ -75,12 +75,7 @@ async function check_installed(conditions) {
       Assert.ok(file.exists());
       Assert.ok(file.isFile());
 
-      let uri = addon.getResourceURI(null);
-      if (uri instanceof Ci.nsIJARURI) {
-        uri = uri.JARFile;
-      }
-      Assert.ok(uri instanceof Ci.nsIFileURL);
-      Assert.equal(uri.file.path, file.path);
+      Assert.equal(getAddonFile(addon).path, file.path);
 
       if (isUpgrade) {
         Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
