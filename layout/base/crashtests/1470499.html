@@ -1,0 +1,22 @@
+<script>
+function go() {
+  a.reset();
+}
+function eh1() {
+  var d = f.gradientTransform.baseVal.consolidate();
+  b.addEventListener("DOMSubtreeModified", eh1);
+  d.setRotate(0,0,6);
+}
+function eh2() {
+  var c = document.createElement("t");
+  b.insertAdjacentElement("beforeEnd",f);
+  var g = new MutationObserver(eh1);
+  g.observe(c, { attributes: true });
+  c.setAttribute("m", "");
+}
+</script>
+<body onload=go()>
+<form id="a" onreset="eh2()">
+<svg>
+<animateMotion id="b" />
+<radialGradient id="f" gradientTransform="matrix(0 2 0 0 0 0)">
