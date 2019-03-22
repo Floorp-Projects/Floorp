@@ -49,6 +49,10 @@ if CONFIG['MOZ_WEBM_ENCODER']:
     UNIFIED_SOURCES += [
         'TestVideoTrackEncoder.cpp',
         'TestWebMWriter.cpp',
+        'YUVBufferGenerator.cpp',
+    ]
+    LOCAL_INCLUDES += [
+        '/gfx/2d/',
     ]
 
 if CONFIG['MOZ_WEBRTC']:
