@@ -312,3 +312,23 @@ add_task(async function checkViewCertificate() {
   }
   Services.prefs.clearUserPref(PREF_NEW_CERT_ERRORS);
 });
+
+add_task(async function checkBadStsCertHeadline() {
+  info("Loading a bad sts cert error page and checking that the correct headline is shown");
+  for (let useFrame of [false, true]) {
+    let tab = await openErrorPage(BAD_CERT, useFrame);
+    let browser = tab.linkedBrowser;
+
+    let titleContent = await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
+      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+      let titleText = doc.querySelector(".title-text");
+      return titleText.textContent;
+    });
+    if (useFrame) {
+      ok(titleContent.endsWith("Security Issue"), "Did Not Connect: Potential Security Issue");
+    } else {
+      ok(titleContent.endsWith("Risk Ahead"), "Warning: Potential Security Risk Ahead");
+    }
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  }
+});
