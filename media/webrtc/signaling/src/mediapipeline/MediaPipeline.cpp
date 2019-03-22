@@ -690,6 +690,7 @@ class MediaPipelineTransmit::PipelineListener
   // Implement MediaStreamTrackListener
   void NotifyQueuedChanges(MediaStreamGraph* aGraph, StreamTime aTrackOffset,
                            const MediaSegment& aQueuedMedia) override;
+  void NotifyEnabledStateChanged(bool aEnabled) override;
 
   // Implement DirectMediaStreamTrackListener
   void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
@@ -828,6 +829,7 @@ void MediaPipelineTransmit::Stop() {
     mDomTrack->RemoveListener(mListener);
   } else if (mDomTrack->AsVideoStreamTrack()) {
     mDomTrack->RemoveDirectListener(mListener);
+    mDomTrack->RemoveListener(mListener);
   } else {
     MOZ_ASSERT(false, "Unknown track type");
   }
@@ -878,6 +880,7 @@ void MediaPipelineTransmit::Start() {
     mDomTrack->AddListener(mListener);
   } else if (mDomTrack->AsVideoStreamTrack()) {
     mDomTrack->AddDirectListener(mListener);
+    mDomTrack->AddListener(mListener);
   } else {
     MOZ_ASSERT(false, "Unknown track type");
   }
@@ -1069,6 +1072,15 @@ void MediaPipelineTransmit::PipelineListener::NotifyQueuedChanges(
     rate = 16000;
   }
   NewData(aQueuedMedia, rate);
+}
+
+void MediaPipelineTransmit::PipelineListener::NotifyEnabledStateChanged(
+    bool aEnabled) {
+  if (mConduit->type() != MediaSessionConduit::VIDEO) {
+    return;
+  }
+  MOZ_ASSERT(mConverter);
+  mConverter->SetTrackEnabled(aEnabled);
 }
 
 void MediaPipelineTransmit::PipelineListener::NotifyDirectListenerInstalled(

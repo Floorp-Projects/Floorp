@@ -61,7 +61,8 @@ class VideoFrameConverter {
         mPacingTimer(new MediaTimer()),
         mLastImage(-1),  // -1 is not a guaranteed invalid serial (Bug 1262134).
         mBufferPool(false, CONVERTER_BUFFER_POOL_SIZE),
-        mLastFrameQueuedForProcessing(TimeStamp::Now()) {
+        mLastFrameQueuedForProcessing(TimeStamp::Now()),
+        mEnabled(true) {
     MOZ_COUNT_CTOR(VideoFrameConverter);
   }
 
@@ -98,6 +99,26 @@ class VideoFrameConverter {
                  QueueForProcessing(std::move(image), t, size, aForceBlack);
                },
                [] {});
+  }
+
+  void SetTrackEnabled(bool aEnabled) {
+    nsresult rv = mTaskQueue->Dispatch(NS_NewRunnableFunction(
+        __func__, [self = RefPtr<VideoFrameConverter>(this), this, aEnabled] {
+          MOZ_LOG(gVideoFrameConverterLog, LogLevel::Debug,
+                  ("VideoFrameConverter Track is now %s",
+                   aEnabled ? "enabled" : "disabled"));
+          mEnabled = aEnabled;
+          if (!aEnabled && mLastFrameConverted) {
+            // After disabling, we re-send the last frame as black in case the
+            // source had already stopped and no frame is coming soon.
+            ProcessVideoFrame(nullptr, TimeStamp::Now(),
+                              gfx::IntSize(mLastFrameConverted->width(),
+                                           mLastFrameConverted->height()),
+                              true);
+          }
+        }));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   void AddListener(const RefPtr<VideoConverterListener>& aListener) {
@@ -178,7 +199,7 @@ class VideoFrameConverter {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
     int32_t serial;
-    if (aForceBlack) {
+    if (aForceBlack || !mEnabled) {
       // Set the last-img check to indicate black.
       // -1 is not a guaranteed invalid serial. See bug 1262134.
       serial = -1;
@@ -207,7 +228,7 @@ class VideoFrameConverter {
                           gfx::IntSize, bool>(
             "VideoFrameConverter::ProcessVideoFrame", this,
             &VideoFrameConverter::ProcessVideoFrame, std::move(aImage), aTime,
-            aSize, aForceBlack));
+            aSize, aForceBlack || !mEnabled));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
   }
@@ -317,6 +338,7 @@ class VideoFrameConverter {
   nsCOMPtr<nsITimer> mSameFrameTimer;
   TimeStamp mLastFrameQueuedForProcessing;
   UniquePtr<webrtc::VideoFrame> mLastFrameConverted;
+  bool mEnabled;
   nsTArray<RefPtr<VideoConverterListener>> mListeners;
 };
 
