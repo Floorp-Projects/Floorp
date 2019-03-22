@@ -40,9 +40,12 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
       mTarget(nullptr),
       mPaintSequenceNumber(0),
       mWebRenderCommandBuilder(this),
-      mLastDisplayListSize(0),
-      mStateManager(this) {
+      mLastDisplayListSizes{0} {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
+  for (auto renderRoot : wr::kRenderRoots) {
+    mStateManagers[renderRoot].mRenderRoot = renderRoot;
+    mStateManagers[renderRoot].mLayerManager = this;
+  }
 }
 
 KnowsCompositor* WebRenderLayerManager::AsKnowsCompositor() { return mWrChild; }
@@ -94,7 +97,9 @@ void WebRenderLayerManager::DoDestroy(bool aIsSync) {
 
   LayerManager::Destroy();
 
-  mStateManager.Destroy();
+  for (auto& stateManager : mStateManagers) {
+    stateManager.Destroy();
+  }
 
   if (WrBridge()) {
     WrBridge()->Destroy(aIsSync);
@@ -191,13 +196,21 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
       mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
 
   if (aFlags & EndTransactionFlags::END_NO_COMPOSITE &&
-      !mWebRenderCommandBuilder.NeedsEmptyTransaction() &&
-      mPendingScrollUpdates.empty()) {
-    MOZ_ASSERT(!mTarget);
-    WrBridge()->SendSetFocusTarget(mFocusTarget);
-    // Revoke TransactionId to trigger next paint.
-    mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
-    return true;
+      !mWebRenderCommandBuilder.NeedsEmptyTransaction()) {
+    bool haveScrollUpdates = false;
+    for (auto renderRoot : wr::kRenderRoots) {
+      if (!mPendingScrollUpdates[renderRoot].empty()) {
+        haveScrollUpdates = true;
+        break;
+      }
+    }
+    if (!haveScrollUpdates) {
+      MOZ_ASSERT(!mTarget);
+      WrBridge()->SendSetFocusTarget(mFocusTarget);
+      // Revoke TransactionId to trigger next paint.
+      mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
+      return true;
+    }
   }
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
@@ -221,15 +234,28 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
     }
   }
 
+  AutoTArray<RenderRootUpdates, wr::kRenderRootCount> renderRootUpdates;
+  for (auto& stateManager : mStateManagers) {
+    auto renderRoot = stateManager.GetRenderRoot();
+    if (stateManager.mAsyncResourceUpdates ||
+        !mPendingScrollUpdates[renderRoot].empty()) {
+      auto updates = renderRootUpdates.AppendElement();
+      updates->mRenderRoot = renderRoot;
+      if (stateManager.mAsyncResourceUpdates) {
+        stateManager.mAsyncResourceUpdates->Flush(updates->mResourceUpdates,
+                                                  updates->mSmallShmems,
+                                                  updates->mLargeShmems);
+      }
+      updates->mScrollUpdates = std::move(mPendingScrollUpdates[renderRoot]);
+    }
+  }
+
   Maybe<wr::IpcResourceUpdateQueue> nothing;
-  WrBridge()->EndEmptyTransaction(mFocusTarget, mPendingScrollUpdates,
-                                  mStateManager.mAsyncResourceUpdates,
+  WrBridge()->EndEmptyTransaction(mFocusTarget, renderRootUpdates,
                                   mPaintSequenceNumber, mLatestTransactionId,
                                   mTransactionIdAllocator->GetVsyncId(),
                                   mTransactionIdAllocator->GetVsyncStart(),
                                   refreshStart, mTransactionStart, mURL);
-  ClearPendingScrollInfoUpdate();
-
   mTransactionStart = TimeStamp();
 
   MakeSnapshotIfRequired(size);
@@ -255,9 +281,33 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   WrBridge()->BeginTransaction();
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
-  wr::LayoutSize contentSize{(float)size.width, (float)size.height};
-  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize,
-                                 mLastDisplayListSize);
+  if (aDisplayListBuilder) {
+    aDisplayListBuilder->ComputeDefaultRenderRootRect(size);
+  }
+
+  wr::RenderRootArray<LayoutDeviceRect> rects;
+  wr::RenderRootArray<wr::LayoutRect> wrRects;
+  for (auto renderRoot : wr::kRenderRoots) {
+    rects[renderRoot] =
+        aDisplayListBuilder
+            ? aDisplayListBuilder->GetRenderRootRect(renderRoot)
+            : LayoutDeviceRect(LayoutDevicePoint(),
+                               renderRoot == wr::RenderRoot::Default
+                                   ? LayoutDeviceSize(size)
+                                   : LayoutDeviceSize());
+    wrRects[renderRoot] = wr::ToRoundedLayoutRect(rects[renderRoot]);
+  }
+
+  wr::DisplayListBuilder builder(
+      WrBridge()->GetPipeline(), wrRects[wr::RenderRoot::Default].size,
+      mLastDisplayListSizes[wr::RenderRoot::Default]);
+  for (auto renderRoot : wr::kNonDefaultRenderRoots) {
+    if (!rects[renderRoot].IsEmpty()) {
+      builder.CreateSubBuilder(wrRects[renderRoot].size,
+                               mLastDisplayListSizes[renderRoot], renderRoot);
+    }
+  }
+
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
   wr::usize builderDumpIndex = 0;
   bool containsSVGGroup = false;
@@ -275,7 +325,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
 
     mWebRenderCommandBuilder.BuildWebRenderCommands(
         builder, resourceUpdates, aDisplayList, aDisplayListBuilder,
-        mScrollData, contentSize, std::move(aFilters));
+        mScrollDatas, std::move(aFilters));
     builderDumpIndex = mWebRenderCommandBuilder.GetBuilderDumpIndex();
     containsSVGGroup = mWebRenderCommandBuilder.GetContainsSVGGroup();
   } else {
@@ -297,16 +347,21 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     Unused << builder.Dump(/*indent*/ 1, Some(builderDumpIndex), Nothing());
   }
 
-  if (AsyncPanZoomEnabled()) {
-    mScrollData.SetFocusTarget(mFocusTarget);
-    mFocusTarget = FocusTarget();
+  for (auto& stateManager : mStateManagers) {
+    if (AsyncPanZoomEnabled()) {
+      auto& scrollData = mScrollDatas[stateManager.GetRenderRoot()];
 
-    if (mIsFirstPaint) {
-      mScrollData.SetIsFirstPaint();
-      mIsFirstPaint = false;
+      if (mIsFirstPaint) {
+        // Set the same flag on each scrollData instance (one per render root).
+        // We need to duplicate this because they will get processed by APZ at
+        // separate times and the flag state is relevant each time.
+        scrollData.SetIsFirstPaint();
+      }
+      scrollData.SetPaintSequenceNumber(mPaintSequenceNumber);
     }
-    mScrollData.SetPaintSequenceNumber(mPaintSequenceNumber);
   }
+  mIsFirstPaint = false;
+
   // Since we're sending a full mScrollData that will include the new scroll
   // offsets, and we can throw away the pending scroll updates we had kept for
   // an empty transaction.
@@ -322,21 +377,29 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     refreshStart = mTransactionStart;
   }
 
-  if (mStateManager.mAsyncResourceUpdates) {
-    if (resourceUpdates.IsEmpty()) {
-      resourceUpdates = std::move(mStateManager.mAsyncResourceUpdates.ref());
-    } else {
-      // If we can't just swap the queue, we need to take the slow path and
-      // send the update as a separate message. We don't need to schedule a
-      // composite however because that will happen with EndTransaction.
-      WrBridge()->UpdateResources(mStateManager.mAsyncResourceUpdates.ref());
+  for (auto& stateManager : mStateManagers) {
+    wr::RenderRoot renderRoot = stateManager.GetRenderRoot();
+    if (stateManager.mAsyncResourceUpdates) {
+      if (!resourceUpdates.HasSubQueue(renderRoot) ||
+          resourceUpdates.SubQueue(renderRoot).IsEmpty()) {
+        resourceUpdates.SubQueue(renderRoot)
+            .ReplaceResources(
+                std::move(stateManager.mAsyncResourceUpdates.ref()));
+      } else {
+        WrBridge()->UpdateResources(stateManager.mAsyncResourceUpdates.ref(),
+                                    stateManager.GetRenderRoot());
+      }
+      stateManager.mAsyncResourceUpdates.reset();
     }
-    mStateManager.mAsyncResourceUpdates.reset();
+    stateManager.DiscardImagesInTransaction(
+        resourceUpdates.SubQueue(renderRoot));
   }
 
-  mStateManager.DiscardImagesInTransaction(resourceUpdates);
-
-  WrBridge()->RemoveExpiredFontKeys(resourceUpdates);
+  for (auto renderRoot : wr::kRenderRoots) {
+    if (resourceUpdates.HasSubQueue(renderRoot)) {
+      WrBridge()->RemoveExpiredFontKeys(resourceUpdates.SubQueue(renderRoot));
+    }
+  }
 
   // Skip the synchronization for buffer since we also skip the painting during
   // device-reset status.
@@ -347,24 +410,38 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     }
   }
 
-  wr::BuiltDisplayList dl;
-  builder.Finalize(contentSize, dl);
-  mLastDisplayListSize = dl.dl.inner.capacity;
-
   {
     AUTO_PROFILER_TRACING("Paint", "ForwardDPTransaction", GRAPHICS);
-    WrBridge()->EndTransaction(contentSize, dl, resourceUpdates,
-                               size.ToUnknownSize(), mLatestTransactionId,
-                               mScrollData, containsSVGGroup,
+    InfallibleTArray<RenderRootDisplayListData> renderRootDLs;
+    for (auto renderRoot : wr::kRenderRoots) {
+      if (builder.GetSendSubBuilderDisplayList(renderRoot)) {
+        auto renderRootDL = renderRootDLs.AppendElement();
+        renderRootDL->mRenderRoot = renderRoot;
+        builder.Finalize(*renderRootDL);
+        mLastDisplayListSizes[renderRoot] = renderRootDL->mDL.mCapacity;
+        resourceUpdates.SubQueue(renderRoot)
+            .Flush(renderRootDL->mResourceUpdates, renderRootDL->mSmallShmems,
+                   renderRootDL->mLargeShmems);
+        renderRootDL->mRect = RoundedToInt(rects[renderRoot]).ToUnknownRect();
+        renderRootDL->mScrollData = std::move(mScrollDatas[renderRoot]);
+      }
+    }
+
+    WrBridge()->EndTransaction(renderRootDLs, mLatestTransactionId,
+                               containsSVGGroup,
                                mTransactionIdAllocator->GetVsyncId(),
                                mTransactionIdAllocator->GetVsyncStart(),
                                refreshStart, mTransactionStart, mURL);
+    WrBridge()->SendSetFocusTarget(mFocusTarget);
+    mFocusTarget = FocusTarget();
   }
 
   // Discard animations after calling WrBridge()->EndTransaction().
   // It updates mWrEpoch in WebRenderBridgeParent. The updated mWrEpoch is
   // necessary for deleting animations at the correct time.
-  mStateManager.DiscardCompositorAnimations();
+  for (auto& stateManager : mStateManagers) {
+    stateManager.DiscardCompositorAnimations();
+  }
 
   mTransactionStart = TimeStamp();
 
@@ -440,12 +517,17 @@ void WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize) {
 
 void WebRenderLayerManager::DiscardImages() {
   wr::IpcResourceUpdateQueue resources(WrBridge());
-  mStateManager.DiscardImagesInTransaction(resources);
-  WrBridge()->UpdateResources(resources);
+  for (auto& stateManager : mStateManagers) {
+    auto& subqueue = resources.SubQueue(stateManager.GetRenderRoot());
+    stateManager.DiscardImagesInTransaction(subqueue);
+    WrBridge()->UpdateResources(subqueue, stateManager.GetRenderRoot());
+  }
 }
 
 void WebRenderLayerManager::DiscardLocalImages() {
-  mStateManager.DiscardLocalImages();
+  for (auto& stateManager : mStateManagers) {
+    stateManager.DiscardLocalImages();
+  }
 }
 
 void WebRenderLayerManager::SetLayersObserverEpoch(LayersObserverEpoch aEpoch) {
@@ -500,7 +582,9 @@ void WebRenderLayerManager::ClearCachedResources(Layer* aSubtree) {
   WrBridge()->BeginClearCachedResources();
   mWebRenderCommandBuilder.ClearCachedResources();
   DiscardImages();
-  mStateManager.ClearCachedResources();
+  for (auto& stateManager : mStateManagers) {
+    stateManager.ClearCachedResources();
+  }
   WrBridge()->EndClearCachedResources();
 }
 
@@ -632,12 +716,16 @@ WebRenderLayerManager::CreatePersistentBufferProvider(
 }
 
 void WebRenderLayerManager::ClearAsyncAnimations() {
-  mStateManager.ClearAsyncAnimations();
+  for (auto& stateManager : mStateManagers) {
+    stateManager.ClearAsyncAnimations();
+  }
 }
 
 void WebRenderLayerManager::WrReleasedImages(
     const nsTArray<wr::ExternalImageKeyPair>& aPairs) {
-  mStateManager.WrReleasedImages(aPairs);
+  for (auto& stateManager : mStateManagers) {
+    stateManager.WrReleasedImages(aPairs);
+  }
 }
 
 }  // namespace layers

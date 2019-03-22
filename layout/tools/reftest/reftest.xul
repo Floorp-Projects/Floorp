@@ -8,6 +8,7 @@
         onload="OnRefTestLoad();"
         onunload="OnRefTestUnload();"
         style="background:white; overflow:hidden"
+        renderroot="content"
         >
     <script type="application/ecmascript" src="resource://reftest/reftest.jsm" />
     <!-- The reftest browser element is dynamically created, here -->

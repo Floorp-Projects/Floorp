@@ -2865,11 +2865,18 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
             // update, instead of a full transaction. This empty transaction
             // might still get squashed into a full transaction if something
             // happens to trigger one.
+            wr::RenderRoot renderRoot = wr::RenderRoot::Default;
+            if (XRE_IsContentProcess()) {
+              renderRoot = gfxUtils::GetContentRenderRoot();
+            } else {
+              renderRoot = gfxUtils::RecursivelyGetRenderRootForFrame(mOuter);
+            }
             success = manager->SetPendingScrollUpdateForNextTransaction(
                 id,
                 {mScrollGeneration, CSSPoint::FromAppUnits(GetScrollPosition()),
                  CSSPoint::FromAppUnits(GetApzScrollPosition()),
-                 mLastScrollOrigin == nsGkAtoms::relative});
+                 mLastScrollOrigin == nsGkAtoms::relative},
+                renderRoot);
             if (success) {
               schedulePaint = false;
               mOuter->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY);

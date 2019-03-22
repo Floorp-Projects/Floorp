@@ -471,7 +471,8 @@ void CompositorBridgeParent::StopAndClearResources() {
     }
     indirectBridgeParents.clear();
 
-    RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
+    RefPtr<wr::WebRenderAPI> api =
+        mWrBridge->GetWebRenderAPI(wr::RenderRoot::Default);
     // Ensure we are not holding the sIndirectLayerTreesLock here because we
     // are going to block on WR threads in order to shut it down properly.
     mWrBridge->Destroy();
@@ -647,11 +648,12 @@ void CompositorBridgeParent::ActorDestroy(ActorDestroyReason why) {
                         &CompositorBridgeParent::DeferredDestroy));
 }
 
-void CompositorBridgeParent::ScheduleRenderOnCompositorThread() {
+void CompositorBridgeParent::ScheduleRenderOnCompositorThread(
+    const Maybe<wr::RenderRoot>& aRenderRoot) {
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(
-      NewRunnableMethod("layers::CompositorBridgeParent::ScheduleComposition",
-                        this, &CompositorBridgeParent::ScheduleComposition));
+  CompositorLoop()->PostTask(NewRunnableMethod<Maybe<wr::RenderRoot>>(
+      "layers::CompositorBridgeParent::ScheduleComposition", this,
+      &CompositorBridgeParent::ScheduleComposition, aRenderRoot));
 }
 
 void CompositorBridgeParent::InvalidateOnCompositorThread() {
@@ -844,7 +846,8 @@ void CompositorBridgeParent::NotifyShadowTreeTransaction(
 #endif
 
     if (mApzUpdater) {
-      mApzUpdater->UpdateFocusState(mRootLayerTreeID, aId, aFocusTarget);
+      mApzUpdater->UpdateFocusState(mRootLayerTreeID,
+                                    WRRootId::NonWebRender(aId), aFocusTarget);
       if (aHitTestUpdate) {
         mApzUpdater->UpdateHitTestingTree(
             mRootLayerTreeID, mLayerManager->GetRoot(), aIsFirstPaint, aId,
@@ -859,14 +862,19 @@ void CompositorBridgeParent::NotifyShadowTreeTransaction(
   }
 }
 
-void CompositorBridgeParent::ScheduleComposition() {
+void CompositorBridgeParent::ScheduleComposition(
+    const Maybe<wr::RenderRoot>& aRenderRoot) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (mPaused) {
     return;
   }
 
   if (mWrBridge) {
-    mWrBridge->ScheduleGenerateFrame();
+    if (aRenderRoot.isSome()) {
+      mWrBridge->ScheduleGenerateFrame(aRenderRoot);
+    } else {
+      mWrBridge->ScheduleGenerateFrameAllRenderRoots();
+    }
   } else {
     mCompositorScheduler->ScheduleComposition();
   }
@@ -1097,7 +1105,8 @@ PAPZCTreeManagerParent* CompositorBridgeParent::AllocPAPZCTreeManagerParent(
   MOZ_ASSERT(state.mParent.get() == this);
   MOZ_ASSERT(!state.mApzcTreeManagerParent);
   state.mApzcTreeManagerParent = new APZCTreeManagerParent(
-      mRootLayerTreeID, mApzcTreeManager, mApzUpdater);
+      WRRootId(mRootLayerTreeID, wr::RenderRoot::Default), mApzcTreeManager,
+      mApzUpdater);
 
   return state.mApzcTreeManagerParent;
 }
@@ -1110,13 +1119,13 @@ bool CompositorBridgeParent::DeallocPAPZCTreeManagerParent(
 
 void CompositorBridgeParent::AllocateAPZCTreeManagerParent(
     const MonitorAutoLock& aProofOfLayerTreeStateLock,
-    const LayersId& aLayersId, LayerTreeState& aState) {
+    const WRRootId& aWrRootId, LayerTreeState& aState) {
   MOZ_ASSERT(aState.mParent == this);
   MOZ_ASSERT(mApzcTreeManager);
   MOZ_ASSERT(mApzUpdater);
   MOZ_ASSERT(!aState.mApzcTreeManagerParent);
   aState.mApzcTreeManagerParent =
-      new APZCTreeManagerParent(aLayersId, mApzcTreeManager, mApzUpdater);
+      new APZCTreeManagerParent(aWrRootId, mApzcTreeManager, mApzUpdater);
 }
 
 PAPZParent* CompositorBridgeParent::AllocPAPZParent(const LayersId& aLayersId) {
@@ -1182,7 +1191,8 @@ CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(
     // state->mWrBridge might be a root WebRenderBridgeParent or one of a
     // content process, but in either case the state->mParent will be the same.
     // So we don't need to distinguish between the two.
-    if (RefPtr<wr::WebRenderAPI> api = state->mWrBridge->GetWebRenderAPI()) {
+    if (RefPtr<wr::WebRenderAPI> api =
+            state->mWrBridge->GetWebRenderAPI(wr::RenderRoot::Default)) {
       if (api->GetId() == aWindowId) {
         return state->mParent;
       }
@@ -1233,7 +1243,8 @@ void CompositorBridgeParent::ShadowLayersUpdated(
   mLayerManager->SetRoot(root);
 
   if (mApzUpdater && !aInfo.isRepeatTransaction()) {
-    mApzUpdater->UpdateFocusState(mRootLayerTreeID, mRootLayerTreeID,
+    mApzUpdater->UpdateFocusState(mRootLayerTreeID,
+                                  WRRootId::NonWebRender(mRootLayerTreeID),
                                   aInfo.focusTarget());
 
     if (aHitTestUpdate) {
@@ -1350,55 +1361,60 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvGetFrameUniformity(
 }
 
 void CompositorBridgeParent::SetTestAsyncScrollOffset(
-    const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
+    const WRRootId& aWrRootId, const ScrollableLayerGuid::ViewID& aScrollId,
     const CSSPoint& aPoint) {
   if (mApzUpdater) {
-    MOZ_ASSERT(aLayersId.IsValid());
-    mApzUpdater->SetTestAsyncScrollOffset(aLayersId, aScrollId, aPoint);
+    MOZ_ASSERT(aWrRootId.IsValid());
+    mApzUpdater->SetTestAsyncScrollOffset(aWrRootId, aScrollId, aPoint);
   }
 }
 
 void CompositorBridgeParent::SetTestAsyncZoom(
-    const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
+    const WRRootId& aWrRootId, const ScrollableLayerGuid::ViewID& aScrollId,
     const LayerToParentLayerScale& aZoom) {
   if (mApzUpdater) {
-    MOZ_ASSERT(aLayersId.IsValid());
-    mApzUpdater->SetTestAsyncZoom(aLayersId, aScrollId, aZoom);
+    MOZ_ASSERT(aWrRootId.IsValid());
+    mApzUpdater->SetTestAsyncZoom(aWrRootId, aScrollId, aZoom);
   }
 }
 
-void CompositorBridgeParent::FlushApzRepaints(const LayersId& aLayersId) {
+void CompositorBridgeParent::FlushApzRepaints(const WRRootId& aWrRootId) {
   MOZ_ASSERT(mApzUpdater);
-  MOZ_ASSERT(aLayersId.IsValid());
+  MOZ_ASSERT(aWrRootId.IsValid());
   mApzUpdater->RunOnControllerThread(
-      aLayersId, NS_NewRunnableFunction(
-                     "layers::CompositorBridgeParent::FlushApzRepaints",
-                     [=]() { APZCTreeManager::FlushApzRepaints(aLayersId); }));
+      UpdaterQueueSelector(aWrRootId),
+      NS_NewRunnableFunction(
+          "layers::CompositorBridgeParent::FlushApzRepaints",
+          [=]() { APZCTreeManager::FlushApzRepaints(aWrRootId.mLayersId); }));
 }
 
-void CompositorBridgeParent::GetAPZTestData(const LayersId& aLayersId,
+void CompositorBridgeParent::GetAPZTestData(const WRRootId& aWrRootId,
                                             APZTestData* aOutData) {
   if (mApzUpdater) {
-    MOZ_ASSERT(aLayersId.IsValid());
-    mApzUpdater->GetAPZTestData(aLayersId, aOutData);
+    MOZ_ASSERT(aWrRootId.IsValid());
+    mApzUpdater->GetAPZTestData(aWrRootId, aOutData);
   }
 }
 
 void CompositorBridgeParent::SetConfirmedTargetAPZC(
     const LayersId& aLayersId, const uint64_t& aInputBlockId,
-    const nsTArray<ScrollableLayerGuid>& aTargets) {
+    const nsTArray<SLGuidAndRenderRoot>& aTargets) {
   if (!mApzcTreeManager || !mApzUpdater) {
     return;
   }
   // Need to specifically bind this since it's overloaded.
   void (APZCTreeManager::*setTargetApzcFunc)(
-      uint64_t, const nsTArray<ScrollableLayerGuid>&) =
+      uint64_t, const nsTArray<SLGuidAndRenderRoot>&) =
       &APZCTreeManager::SetTargetAPZC;
   RefPtr<Runnable> task = NewRunnableMethod<
-      uint64_t, StoreCopyPassByConstLRef<nsTArray<ScrollableLayerGuid>>>(
+      uint64_t, StoreCopyPassByConstLRef<nsTArray<SLGuidAndRenderRoot>>>(
       "layers::CompositorBridgeParent::SetConfirmedTargetAPZC",
       mApzcTreeManager.get(), setTargetApzcFunc, aInputBlockId, aTargets);
-  mApzUpdater->RunOnControllerThread(aLayersId, task.forget());
+  UpdaterQueueSelector selector(aLayersId);
+  for (size_t i = 0; i < aTargets.Length(); i++) {
+    selector.mRenderRoots += aTargets[i].mRenderRoot;
+  }
+  mApzUpdater->RunOnControllerThread(selector, task.forget());
 }
 
 void CompositorBridgeParent::InitializeLayerManager(
@@ -1691,11 +1707,13 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
 
   if (childWrBridge) {
     MOZ_ASSERT(mWrBridge);
-    RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
-    api = api->Clone();
+    nsTArray<RefPtr<wr::WebRenderAPI>> apis;
+    DebugOnly<bool> cloneSuccess = mWrBridge->CloneWebRenderAPIs(apis);
+    MOZ_ASSERT(cloneSuccess);
     wr::Epoch newEpoch = childWrBridge->UpdateWebRender(
-        mWrBridge->CompositorScheduler(), api, mWrBridge->AsyncImageManager(),
-        GetAnimationStorage(), mWrBridge->GetTextureFactoryIdentifier());
+        mWrBridge->CompositorScheduler(), std::move(apis),
+        mWrBridge->AsyncImageManager(), GetAnimationStorage(),
+        mWrBridge->GetTextureFactoryIdentifier());
     // Pretend we composited, since parent CompositorBridgeParent was replaced.
     TimeStamp now = TimeStamp::Now();
     NotifyPipelineRendered(childWrBridge->PipelineId(), newEpoch, VsyncId(),
@@ -1716,7 +1734,8 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
       MOZ_ASSERT(mApzcTreeManager);
       parent->ChildAdopted(mApzcTreeManager, mApzUpdater);
     }
-    mApzUpdater->NotifyLayerTreeAdopted(child, oldApzUpdater);
+    mApzUpdater->NotifyLayerTreeAdopted(
+        WRRootId(child, gfxUtils::GetContentRenderRoot()), oldApzUpdater);
   }
   return IPC_OK();
 }
@@ -1752,21 +1771,33 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
     // Same as for mApzUpdater, but for the sampler thread.
     mApzSampler->SetWebRenderWindowId(windowId);
   }
-  RefPtr<wr::WebRenderAPI> api =
-      wr::WebRenderAPI::Create(this, std::move(widget), windowId, aSize);
-  if (!api) {
+  InfallibleTArray<RefPtr<wr::WebRenderAPI>> apis;
+  apis.AppendElement(
+      wr::WebRenderAPI::Create(this, std::move(widget), windowId, aSize));
+  if (!apis[0]) {
     mWrBridge = WebRenderBridgeParent::CreateDestroyed(aPipelineId);
     mWrBridge.get()->AddRef();  // IPDL reference
     return mWrBridge;
   }
-  mAsyncImageManager = new AsyncImagePipelineManager(api->Clone());
+
+  if (gfxPrefs::WebRenderSplitRenderRoots()) {
+    apis.AppendElement(
+        apis[0]->CreateDocument(aSize, 1, wr::RenderRoot::Content));
+  }
+
+  InfallibleTArray<RefPtr<wr::WebRenderAPI>> clonedApis;
+  for (auto& api : apis) {
+    wr::TransactionBuilder txn;
+    txn.SetRootPipeline(aPipelineId);
+    api->SendTransaction(txn);
+    clonedApis.AppendElement(api->Clone());
+  }
+
+  mAsyncImageManager = new AsyncImagePipelineManager(std::move(clonedApis));
   RefPtr<AsyncImagePipelineManager> asyncMgr = mAsyncImageManager;
-  wr::TransactionBuilder txn;
-  txn.SetRootPipeline(aPipelineId);
-  api->SendTransaction(txn);
   RefPtr<CompositorAnimationStorage> animStorage = GetAnimationStorage();
   mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr,
-                                        std::move(api), std::move(asyncMgr),
+                                        std::move(apis), std::move(asyncMgr),
                                         std::move(animStorage), mVsyncRate);
   mWrBridge.get()->AddRef();  // IPDL reference
 
@@ -1801,7 +1832,8 @@ bool CompositorBridgeParent::DeallocPWebRenderBridgeParent(
 
 void CompositorBridgeParent::NotifyMemoryPressure() {
   if (mWrBridge) {
-    RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
+    RefPtr<wr::WebRenderAPI> api =
+        mWrBridge->GetWebRenderAPI(wr::RenderRoot::Default);
     if (api) {
       api->NotifyMemoryPressure();
     }
@@ -1810,7 +1842,8 @@ void CompositorBridgeParent::NotifyMemoryPressure() {
 
 void CompositorBridgeParent::AccumulateMemoryReport(wr::MemoryReport* aReport) {
   if (mWrBridge) {
-    RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
+    RefPtr<wr::WebRenderAPI> api =
+        mWrBridge->GetWebRenderAPI(wr::RenderRoot::Default);
     if (api) {
       api->AccumulateMemoryReport(aReport);
     }
@@ -1842,7 +1875,8 @@ static void EraseLayerState(LayersId aId) {
   }
 
   if (apz) {
-    apz->NotifyLayerTreeRemoved(aId);
+    apz->NotifyLayerTreeRemoved(
+        WRRootId(aId, gfxUtils::GetContentRenderRoot()));
   }
 }
 
@@ -2029,14 +2063,14 @@ void CompositorBridgeParent::DidComposite(const VsyncId& aId,
 }
 
 void CompositorBridgeParent::NotifyDidSceneBuild(
-    RefPtr<wr::WebRenderPipelineInfo> aInfo) {
+    wr::RenderRoot aRenderRoot, RefPtr<wr::WebRenderPipelineInfo> aInfo) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (mPaused) {
     return;
   }
 
   if (mWrBridge) {
-    mWrBridge->NotifyDidSceneBuild(aInfo);
+    mWrBridge->NotifyDidSceneBuild(aRenderRoot, aInfo);
   } else {
     mCompositorScheduler->ScheduleComposition();
   }
@@ -2247,7 +2281,8 @@ void CompositorBridgeParent::NotifyWebRenderError(wr::WebRenderError aError) {
 
 void CompositorBridgeParent::NotifyWebRenderContextPurge() {
   MOZ_ASSERT(CompositorLoop() == MessageLoop::current());
-  RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
+  RefPtr<wr::WebRenderAPI> api =
+      mWrBridge->GetWebRenderAPI(wr::RenderRoot::Default);
   api->ClearAllCaches();
 }
 

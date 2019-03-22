@@ -765,8 +765,8 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvSetAsyncScrollOffset(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mCompositorBridge->SetTestAsyncScrollOffset(GetId(), aScrollID,
-                                              CSSPoint(aX, aY));
+  mCompositorBridge->SetTestAsyncScrollOffset(WRRootId::NonWebRender(GetId()),
+                                              aScrollID, CSSPoint(aX, aY));
   return IPC_OK();
 }
 
@@ -776,19 +776,20 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvSetAsyncZoom(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mCompositorBridge->SetTestAsyncZoom(GetId(), aScrollID,
+  mCompositorBridge->SetTestAsyncZoom(WRRootId::NonWebRender(GetId()),
+                                      aScrollID,
                                       LayerToParentLayerScale(aValue));
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult LayerTransactionParent::RecvFlushApzRepaints() {
-  mCompositorBridge->FlushApzRepaints(GetId());
+  mCompositorBridge->FlushApzRepaints(WRRootId::NonWebRender(GetId()));
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult LayerTransactionParent::RecvGetAPZTestData(
     APZTestData* aOutData) {
-  mCompositorBridge->GetAPZTestData(GetId(), aOutData);
+  mCompositorBridge->GetAPZTestData(WRRootId::NonWebRender(GetId()), aOutData);
   return IPC_OK();
 }
 
@@ -799,10 +800,16 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvRequestProperty(
 }
 
 mozilla::ipc::IPCResult LayerTransactionParent::RecvSetConfirmedTargetAPZC(
-    const uint64_t& aBlockId, nsTArray<ScrollableLayerGuid>&& aTargets) {
+    const uint64_t& aBlockId, nsTArray<SLGuidAndRenderRoot>&& aTargets) {
   for (size_t i = 0; i < aTargets.Length(); i++) {
-    if (aTargets[i].mLayersId != GetId()) {
-      // Guard against bad data from hijacked child processes
+    // Guard against bad data from hijacked child processes
+    if (aTargets[i].mRenderRoot != wr::RenderRoot::Default) {
+      NS_ERROR(
+          "Unexpected render root in RecvSetConfirmedTargetAPZC; dropping "
+          "message...");
+      return IPC_FAIL(this, "Bad render root"); 
+    }
+    if (aTargets[i].mScrollableLayerGuid.mLayersId != GetId()) {
       NS_ERROR(
           "Unexpected layers id in RecvSetConfirmedTargetAPZC; dropping "
           "message...");

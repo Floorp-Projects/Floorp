@@ -631,6 +631,7 @@ STATIC_ATOMS = [
     Atom("meta", "meta"),
     Atom("referrer", "referrer"),
     Atom("referrerpolicy", "referrerpolicy"),
+    Atom("renderroot", "renderroot"),
     Atom("headerReferrerPolicy", "referrer-policy"),
     Atom("meter", "meter"),
     Atom("method", "method"),

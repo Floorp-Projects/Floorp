@@ -578,7 +578,7 @@ class TabChild final : public TabChildBase,
                                  uint64_t aInputBlockId,
                                  bool aPreventDefault) const;
   void SetTargetAPZC(uint64_t aInputBlockId,
-                     const nsTArray<ScrollableLayerGuid>& aTargets) const;
+                     const nsTArray<layers::SLGuidAndRenderRoot>& aTargets) const;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvHandleTap(
       const layers::GeckoContentController::TapType& aType,

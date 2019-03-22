@@ -114,18 +114,18 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   void LeaveTestMode(const LayersId& aId) override;
   void ApplyAsyncProperties(LayerTransactionParent* aLayerTree,
                             TransformsToSkip aSkip) override;
-  void SetTestAsyncScrollOffset(const LayersId& aLayersId,
+  void SetTestAsyncScrollOffset(const WRRootId& aLayersId,
                                 const ScrollableLayerGuid::ViewID& aScrollId,
                                 const CSSPoint& aPoint) override;
-  void SetTestAsyncZoom(const LayersId& aLayersId,
+  void SetTestAsyncZoom(const WRRootId& aLayersId,
                         const ScrollableLayerGuid::ViewID& aScrollId,
                         const LayerToParentLayerScale& aZoom) override;
-  void FlushApzRepaints(const LayersId& aLayersId) override;
-  void GetAPZTestData(const LayersId& aLayersId,
+  void FlushApzRepaints(const WRRootId& aLayersId) override;
+  void GetAPZTestData(const WRRootId& aLayersId,
                       APZTestData* aOutData) override;
   void SetConfirmedTargetAPZC(
       const LayersId& aLayersId, const uint64_t& aInputBlockId,
-      const nsTArray<ScrollableLayerGuid>& aTargets) override;
+      const nsTArray<SLGuidAndRenderRoot>& aTargets) override;
 
   AsyncCompositionManager* GetCompositionManager(
       LayerTransactionParent* aParent) override;

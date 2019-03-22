@@ -32,6 +32,7 @@ StackingContextHelper::StackingContextHelper(
       mIsPreserve3D(aParams.transform_style == wr::TransformStyle::Preserve3D),
       mRasterizeLocally(aParams.mRasterizeLocally ||
                         aParentSC.mRasterizeLocally) {
+  mOrigin = aParentSC.mOrigin + aBounds.TopLeft();
   // Compute scale for fallback rendering. We don't try to guess a scale for 3d
   // transformed items
   gfx::Matrix transform2d;
