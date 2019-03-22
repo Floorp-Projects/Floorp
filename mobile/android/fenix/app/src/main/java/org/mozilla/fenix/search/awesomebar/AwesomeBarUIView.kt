@@ -65,7 +65,8 @@ class AwesomeBarUIView(
                         searchEngine = components.search.searchEngineManager.getDefaultSearchEngine(this),
                         searchUseCase = searchUseCase,
                         fetchClient = components.core.client,
-                        mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
+                        mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
+                        limit = 3
                     )
                 )
             }
