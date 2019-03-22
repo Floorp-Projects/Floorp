@@ -61,8 +61,6 @@ static_assert((WEBRTC_MAX_SAMPLE_RATE / 100) * sizeof(uint16_t) * 2 <=
               "AUDIO_SAMPLE_BUFFER_MAX_BYTES is not large enough");
 
 // The number of frame buffers VideoFrameConverter may create before returning
-//
-// mLastFrameQueuedForProcessing = aTime;
 // errors.
 // Sometimes these are released synchronously but they can be forwarded all the
 // way to the encoder for asynchronous encoding. With a pool size of 5,
@@ -115,7 +113,8 @@ class VideoFrameConverter {
         mThrottleCount(0),
         mThrottleRecord(0)
 #endif
-  {
+        ,
+        mLastFrame(nullptr, 0, 0, webrtc::kVideoRotation_0) {
     MOZ_COUNT_CTOR(VideoFrameConverter);
   }
 
@@ -140,18 +139,11 @@ class VideoFrameConverter {
       serial = aChunk.mFrame.GetImage()->GetSerial();
     }
 
-    const double duplicateMinFps = 1.0;
     TimeStamp t = aChunk.mTimeStamp;
     MOZ_ASSERT(!t.IsNull());
-    if (!t.IsNull() && serial == mLastImage && !mLastFrameSent.IsNull() &&
-        (t - mLastFrameSent).ToSeconds() < (1.0 / duplicateMinFps)) {
-      // We get passed duplicate frames every ~10ms even with no frame change.
-
-      // After disabling, or when the source is not producing many frames,
-      // we still want *some* frames to flow to the other side.
-      // It could happen that we drop the packet that carried the first disabled
-      // frame, for instance. Note that this still requires the application to
-      // send a frame, or it doesn't trigger at all.
+    if (serial == mLastImage && !mLastFrameSent.IsNull()) {
+      // With a non-direct listener we get passed duplicate frames every ~10ms
+      // even with no frame change.
       return;
     }
     mLastFrameSent = t;
@@ -225,10 +217,14 @@ class VideoFrameConverter {
   }
 
   void Shutdown() {
-    nsresult rv = mTaskQueue->Dispatch(
-        NS_NewRunnableFunction("VideoFrameConverter::Shutdown",
-                               [self = RefPtr<VideoFrameConverter>(this),
-                                this] { mListeners.Clear(); }));
+    nsresult rv = mTaskQueue->Dispatch(NS_NewRunnableFunction(
+        "VideoFrameConverter::Shutdown",
+        [self = RefPtr<VideoFrameConverter>(this), this] {
+          if (mSameFrameTimer) {
+            mSameFrameTimer->Cancel();
+          }
+          mListeners.Clear();
+        }));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
   }
@@ -236,10 +232,34 @@ class VideoFrameConverter {
  protected:
   virtual ~VideoFrameConverter() { MOZ_COUNT_DTOR(VideoFrameConverter); }
 
-  static void DeleteBuffer(uint8_t* aData) { delete[] aData; }
+  static void SameFrameTick(nsITimer* aTimer, void* aClosure) {
+    MOZ_ASSERT(aClosure);
+    VideoFrameConverter* self = static_cast<VideoFrameConverter*>(aClosure);
+    MOZ_ASSERT(self->mTaskQueue->IsCurrentThreadIn());
+
+    if (!self->mLastFrame.video_frame_buffer()) {
+      return;
+    }
+
+    for (RefPtr<VideoConverterListener>& listener : self->mListeners) {
+      listener->OnVideoFrameConverted(self->mLastFrame);
+    }
+  }
 
   void VideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+
+    if (mSameFrameTimer) {
+      mSameFrameTimer->Cancel();
+    }
+
+    const int sameFrameIntervalInMs = 1000;
+    NS_NewTimerWithFuncCallback(
+        getter_AddRefs(mSameFrameTimer), &SameFrameTick, this,
+        sameFrameIntervalInMs, nsITimer::TYPE_REPEATING_SLACK,
+        "VideoFrameConverter::mSameFrameTimer", mTaskQueue);
+
+    mLastFrame = aVideoFrame;
 
     for (RefPtr<VideoConverterListener>& listener : mListeners) {
       listener->OnVideoFrameConverted(aVideoFrame);
@@ -340,6 +360,9 @@ class VideoFrameConverter {
   uint32_t mThrottleRecord;
 #endif
 
+  // Accessed only from mTaskQueue.
+  nsCOMPtr<nsITimer> mSameFrameTimer;
+  webrtc::VideoFrame mLastFrame;
   nsTArray<RefPtr<VideoConverterListener>> mListeners;
 };
 
