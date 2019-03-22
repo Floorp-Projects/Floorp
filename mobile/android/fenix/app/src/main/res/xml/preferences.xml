@@ -74,7 +74,8 @@
     </androidx.preference.PreferenceCategory>
 
     <PreferenceCategory
-        android:title="@string/developer_tools_category">
+        android:title="@string/developer_tools_category"
+        app:iconSpaceReserved="false">
         <androidx.preference.SwitchPreference
             android:icon="@drawable/ic_energy"
             android:key="@string/pref_key_remote_debugging"
