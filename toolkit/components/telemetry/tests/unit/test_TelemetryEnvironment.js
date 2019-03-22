@@ -632,7 +632,6 @@ function checkSystemSection(data) {
   let gfxData = data.system.gfx;
   Assert.ok("D2DEnabled" in gfxData);
   Assert.ok("DWriteEnabled" in gfxData);
-  Assert.equal(typeof gfxData.LowEndMachine, "boolean");
   // DWriteVersion is disabled due to main thread jank and will be enabled
   // again as part of bug 1154500.
   // Assert.ok("DWriteVersion" in gfxData);

@@ -434,7 +434,6 @@ var dataProviders = {
       ContentUsesTiling: "contentUsesTiling",
       OffMainThreadPaintEnabled: "offMainThreadPaintEnabled",
       OffMainThreadPaintWorkerCount: "offMainThreadPaintWorkerCount",
-      LowEndMachine: "lowEndMachine",
       TargetFrameRate: "targetFrameRate",
     };
 
