@@ -61,6 +61,8 @@ static_assert((WEBRTC_MAX_SAMPLE_RATE / 100) * sizeof(uint16_t) * 2 <=
               "AUDIO_SAMPLE_BUFFER_MAX_BYTES is not large enough");
 
 // The number of frame buffers VideoFrameConverter may create before returning
+//
+// mLastFrameQueuedForProcessing = aTime;
 // errors.
 // Sometimes these are released synchronously but they can be forwarded all the
 // way to the encoder for asynchronous encoding. With a pool size of 5,
@@ -113,8 +115,7 @@ class VideoFrameConverter {
         mThrottleCount(0),
         mThrottleRecord(0)
 #endif
-        ,
-        mMutex("VideoFrameConverter") {
+  {
     MOZ_COUNT_CTOR(VideoFrameConverter);
   }
 
@@ -202,22 +203,34 @@ class VideoFrameConverter {
     Unused << rv;
   }
 
-  void AddListener(VideoConverterListener* aListener) {
-    MutexAutoLock lock(mMutex);
-
-    MOZ_ASSERT(!mListeners.Contains(aListener));
-    mListeners.AppendElement(aListener);
+  void AddListener(const RefPtr<VideoConverterListener>& aListener) {
+    nsresult rv = mTaskQueue->Dispatch(NS_NewRunnableFunction(
+        "VideoFrameConverter::AddListener",
+        [self = RefPtr<VideoFrameConverter>(this), this, aListener] {
+          MOZ_ASSERT(!mListeners.Contains(aListener));
+          mListeners.AppendElement(aListener);
+        }));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
-  bool RemoveListener(VideoConverterListener* aListener) {
-    MutexAutoLock lock(mMutex);
-
-    return mListeners.RemoveElement(aListener);
+  void RemoveListener(const RefPtr<VideoConverterListener>& aListener) {
+    nsresult rv = mTaskQueue->Dispatch(NS_NewRunnableFunction(
+        "VideoFrameConverter::RemoveListener",
+        [self = RefPtr<VideoFrameConverter>(this), this, aListener] {
+          mListeners.RemoveElement(aListener);
+        }));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   void Shutdown() {
-    MutexAutoLock lock(mMutex);
-    mListeners.Clear();
+    nsresult rv = mTaskQueue->Dispatch(
+        NS_NewRunnableFunction("VideoFrameConverter::Shutdown",
+                               [self = RefPtr<VideoFrameConverter>(this),
+                                this] { mListeners.Clear(); }));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
  protected:
@@ -226,7 +239,7 @@ class VideoFrameConverter {
   static void DeleteBuffer(uint8_t* aData) { delete[] aData; }
 
   void VideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) {
-    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
     for (RefPtr<VideoConverterListener>& listener : mListeners) {
       listener->OnVideoFrameConverted(aVideoFrame);
@@ -327,8 +340,6 @@ class VideoFrameConverter {
   uint32_t mThrottleRecord;
 #endif
 
-  // mMutex guards the below variables.
-  Mutex mMutex;
   nsTArray<RefPtr<VideoConverterListener>> mListeners;
 };
 
