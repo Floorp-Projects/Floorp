@@ -223,7 +223,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return "[WalkerActor " + this.actorID + "]";
   },
 
-  getDocumentWalker: function(node, whatToShow, skipTo) {
+  getAnonymousDocumentWalker: function(node, whatToShow, skipTo) {
     // Allow native anon content (like <video> controls) if preffed on
     const filter = this.showAllAnonymousContent
                     ? allAnonymousContentTreeWalkerFilter
@@ -233,11 +233,23 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       {whatToShow, filter, skipTo, showAnonymousContent: true});
   },
 
-  getNonAnonymousWalker: function(node, whatToShow, skipTo) {
+  getNonAnonymousDocumentWalker: function(node, whatToShow, skipTo) {
     const nodeFilter = standardTreeWalkerFilter;
 
     return new DocumentWalker(node, this.rootWin,
       {whatToShow, nodeFilter, skipTo, showAnonymousContent: false});
+  },
+
+  /**
+   * Will first try to create a regular anonymous document walker. If it fails, will fall
+   * back on a non-anonymous walker.
+   */
+  getDocumentWalker: function(node, whatToShow, skipTo) {
+    try {
+      return this.getAnonymousDocumentWalker(node, whatToShow, skipTo);
+    } catch (e) {
+      return this.getNonAnonymousDocumentWalker(node, whatToShow, skipTo);
+    }
   },
 
   destroy: function() {
@@ -502,14 +514,14 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       // If the node is the child of a shadow host, we can not use an anonymous walker to
       // get the shadow host parent.
       const walker = isDirectShadowHostChild(node.rawNode)
-        ? this.getNonAnonymousWalker(node.rawNode)
-        : this.getDocumentWalker(node.rawNode);
+        ? this.getNonAnonymousDocumentWalker(node.rawNode)
+        : this.getAnonymousDocumentWalker(node.rawNode);
       parent = walker.parentNode();
     } catch (e) {
       // When getting the parent node for a child of a non-slotted shadow host child,
       // walker.parentNode() will throw if the walker is anonymous, because non-slotted
       // shadow host children are not accessible anywhere in the anonymous tree.
-      const walker = this.getNonAnonymousWalker(node.rawNode);
+      const walker = this.getNonAnonymousDocumentWalker(node.rawNode);
       parent = walker.parentNode();
     }
 
@@ -532,18 +544,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       return undefined;
     }
 
-    let walker;
-    try {
-      // By default always try to use an anonymous walker. Even for DirectShadowHostChild,
-      // children should be available through an anonymous walker (unless the child is not
-      // slotted, see catch block).
-      walker = this.getDocumentWalker(rawNode);
-    } catch (e) {
-      // Using an anonymous walker might throw, for instance on unslotted shadow host
-      // children.
-      walker = this.getNonAnonymousWalker(rawNode);
-    }
-
+    const walker = this.getDocumentWalker(rawNode);
     const firstChild = walker.firstChild();
 
     // Bail out if:
@@ -789,7 +790,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         //   while we want to return the direct children of the shadow host.
         // - unslotted host child: if a shadow host child is not slotted, it is not part
         //   of any anonymous tree and cannot be used with anonymous tree walkers.
-        return this.getNonAnonymousWalker(documentWalkerNode, whatToShow, skipTo);
+        return this.getNonAnonymousDocumentWalker(documentWalkerNode, whatToShow, skipTo);
       }
       return this.getDocumentWalker(documentWalkerNode, whatToShow, skipTo);
     };
