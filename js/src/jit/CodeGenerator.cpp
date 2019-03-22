@@ -3938,9 +3938,8 @@ void CodeGenerator::visitStoreSlotV(LStoreSlotV* lir) {
 }
 
 static void GuardReceiver(MacroAssembler& masm, const ReceiverGuard& guard,
-                          Register obj, Register expandoScratch,
-                          Register scratch, Label* miss,
-                          bool checkNullExpando) {
+                          Register obj,
+                          Register scratch, Label* miss) {
   if (guard.group) {
     masm.branchTestObjGroup(Assembler::NotEqual, obj, guard.group, scratch, obj,
                             miss);
@@ -3951,7 +3950,7 @@ static void GuardReceiver(MacroAssembler& masm, const ReceiverGuard& guard,
 }
 
 void CodeGenerator::emitGetPropertyPolymorphic(
-    LInstruction* ins, Register obj, Register expandoScratch, Register scratch,
+    LInstruction* ins, Register obj, Register scratch,
     const TypedOrValueRegister& output) {
   MGetPropertyPolymorphic* mir = ins->mirRaw()->toGetPropertyPolymorphic();
 
@@ -3962,14 +3961,11 @@ void CodeGenerator::emitGetPropertyPolymorphic(
 
     Label next;
     masm.comment("GuardReceiver");
-    GuardReceiver(masm, receiver, obj, expandoScratch, scratch, &next,
-                  /* checkNullExpando = */ false);
+    GuardReceiver(masm, receiver, obj, scratch, &next);
 
     if (receiver.shape) {
       masm.comment("loadTypedOrValue");
-      // If this is an unboxed expando access, GuardReceiver loaded the
-      // expando object into expandoScratch.
-      Register target = receiver.group ? expandoScratch : obj;
+      Register target = obj;
 
       Shape* shape = mir->shape(i);
       if (shape->slot() < shape->numFixedSlots()) {
@@ -4002,17 +3998,15 @@ void CodeGenerator::visitGetPropertyPolymorphicV(
   Register obj = ToRegister(ins->obj());
   ValueOperand output = ToOutValue(ins);
   Register temp = ToRegister(ins->temp());
-  emitGetPropertyPolymorphic(ins, obj, output.scratchReg(), temp, output);
+  emitGetPropertyPolymorphic(ins, obj, temp, output);
 }
 
 void CodeGenerator::visitGetPropertyPolymorphicT(
     LGetPropertyPolymorphicT* ins) {
   Register obj = ToRegister(ins->obj());
   TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->output()));
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = (output.type() == MIRType::Double) ? ToRegister(ins->temp2())
-                                                      : output.typedReg().gpr();
-  emitGetPropertyPolymorphic(ins, obj, temp1, temp2, output);
+  Register temp = ToRegister(ins->temp());
+  emitGetPropertyPolymorphic(ins, obj, temp, output);
 }
 
 template <typename T>
@@ -4026,7 +4020,7 @@ static void EmitUnboxedPreBarrier(MacroAssembler& masm, T address,
 }
 
 void CodeGenerator::emitSetPropertyPolymorphic(
-    LInstruction* ins, Register obj, Register expandoScratch, Register scratch,
+    LInstruction* ins, Register obj, Register scratch,
     const ConstantOrRegister& value) {
   MSetPropertyPolymorphic* mir = ins->mirRaw()->toSetPropertyPolymorphic();
 
@@ -4035,13 +4029,10 @@ void CodeGenerator::emitSetPropertyPolymorphic(
     ReceiverGuard receiver = mir->receiver(i);
 
     Label next;
-    GuardReceiver(masm, receiver, obj, expandoScratch, scratch, &next,
-                  /* checkNullExpando = */ false);
+    GuardReceiver(masm, receiver, obj, scratch, &next);
 
     if (receiver.shape) {
-      // If this is an unboxed expando access, GuardReceiver loaded the
-      // expando object into expandoScratch.
-      Register target = receiver.group ? expandoScratch : obj;
+      Register target = obj;
 
       Shape* shape = mir->shape(i);
       if (shape->slot() < shape->numFixedSlots()) {
@@ -4077,18 +4068,16 @@ void CodeGenerator::emitSetPropertyPolymorphic(
 void CodeGenerator::visitSetPropertyPolymorphicV(
     LSetPropertyPolymorphicV* ins) {
   Register obj = ToRegister(ins->obj());
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
+  Register temp1 = ToRegister(ins->temp());
   ValueOperand value = ToValue(ins, LSetPropertyPolymorphicV::Value);
-  emitSetPropertyPolymorphic(ins, obj, temp1, temp2,
+  emitSetPropertyPolymorphic(ins, obj, temp1,
                              TypedOrValueRegister(value));
 }
 
 void CodeGenerator::visitSetPropertyPolymorphicT(
     LSetPropertyPolymorphicT* ins) {
   Register obj = ToRegister(ins->obj());
-  Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
+  Register temp1 = ToRegister(ins->temp());
 
   mozilla::Maybe<ConstantOrRegister> value;
   if (ins->mir()->value()->isConstant()) {
@@ -4099,7 +4088,7 @@ void CodeGenerator::visitSetPropertyPolymorphicT(
                                        ToAnyRegister(ins->value())));
   }
 
-  emitSetPropertyPolymorphic(ins, obj, temp1, temp2, value.ref());
+  emitSetPropertyPolymorphic(ins, obj, temp1, value.ref());
 }
 
 void CodeGenerator::visitElements(LElements* lir) {
@@ -4248,8 +4237,7 @@ void CodeGenerator::visitGuardReceiverPolymorphic(
     LGuardReceiverPolymorphic* lir) {
   const MGuardReceiverPolymorphic* mir = lir->mir();
   Register obj = ToRegister(lir->object());
-  Register temp1 = ToRegister(lir->temp1());
-  Register temp2 = ToRegister(lir->temp2());
+  Register temp = ToRegister(lir->temp());
 
   Label done;
 
@@ -4257,8 +4245,7 @@ void CodeGenerator::visitGuardReceiverPolymorphic(
     const ReceiverGuard& receiver = mir->receiver(i);
 
     Label next;
-    GuardReceiver(masm, receiver, obj, temp1, temp2, &next,
-                  /* checkNullExpando = */ true);
+    GuardReceiver(masm, receiver, obj, temp, &next);
 
     if (i == mir->numReceivers() - 1) {
       bailoutFrom(&next, lir->snapshot());
