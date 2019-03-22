@@ -146,6 +146,12 @@ bool SHistoryParent::RecvRemoveEntries(nsTArray<nsID>&& aIds, int32_t aIndex,
   return true;
 }
 
+bool SHistoryParent::RecvRemoveFrameEntries(PSHEntryParent* aEntry) {
+  mHistory->RemoveFrameEntries(
+      static_cast<SHEntryParent*>(aEntry)->GetSHEntry());
+  return true;
+}
+
 bool SHistoryParent::RecvReload(const uint32_t& aReloadFlags,
                                 LoadSHEntryResult* aLoadResult) {
   nsSHistory::LoadEntryResult loadResult;

@@ -248,6 +248,16 @@ interface nsISHistory: nsISupports
   [noscript, notxpcom]
   void RemoveEntries(in nsDocshellIDArray aIDs, in long aStartIndex);
 
+  /**
+   * Collect docshellIDs from aEntry's children and remove those
+   * entries from history.
+   *
+   * @param aEntry           Children docshellID's will be collected from 
+   *                         this entry and passed to RemoveEntries as aIDs.
+  */
+  [noscript, notxpcom]
+  void RemoveFrameEntries(in nsISHEntry aEntry);
+
   [noscript]
   void Reload(in unsigned long aReloadFlags);
 };

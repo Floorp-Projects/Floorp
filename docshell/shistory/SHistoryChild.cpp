@@ -329,6 +329,11 @@ SHistoryChild::RemoveEntries(nsTArray<nsID>& aIDs, int32_t aStartIndex) {
   }
 }
 
+NS_IMETHODIMP_(void)
+SHistoryChild::RemoveFrameEntries(nsISHEntry* aEntry) {
+  SendRemoveFrameEntries(static_cast<SHEntryChild*>(aEntry));
+}
+
 NS_IMETHODIMP
 SHistoryChild::Reload(uint32_t aReloadFlags) {
   bool canNavigate = true;
