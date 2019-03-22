@@ -136,3 +136,17 @@ TEST_F(VideoFrameConverterTest, Duplication) {
   EXPECT_EQ(frames[1].first().height(), 480);
   EXPECT_GT(frames[1].second(), now + TimeDuration::FromMilliseconds(1100));
 }
+
+TEST_F(VideoFrameConverterTest, DropsOld) {
+  TimeStamp now = TimeStamp::Now();
+  TimeStamp future1 = now + TimeDuration::FromMilliseconds(1000);
+  TimeStamp future2 = now + TimeDuration::FromMilliseconds(100);
+  mConverter->QueueVideoChunk(GenerateChunk(800, 600, future1), false);
+  mConverter->QueueVideoChunk(GenerateChunk(640, 480, future2), false);
+  auto frames = WaitForNConverted(1);
+  EXPECT_GT(TimeStamp::Now(), future2);
+  ASSERT_EQ(frames.size(), 1U);
+  EXPECT_EQ(frames[0].first().width(), 640);
+  EXPECT_EQ(frames[0].first().height(), 480);
+  EXPECT_GT(frames[0].second(), future2);
+}
