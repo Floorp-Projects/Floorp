@@ -76,7 +76,6 @@
 #include "vm/StringObject-inl.h"
 #include "vm/TypedArrayObject-inl.h"
 #include "vm/TypeInference-inl.h"
-#include "vm/UnboxedObject-inl.h"
 
 using namespace js;
 
@@ -1038,16 +1037,10 @@ JSObject* js::CreateThis(JSContext* cx, const Class* newclasp,
 static inline JSObject* CreateThisForFunctionWithGroup(JSContext* cx,
                                                        HandleObjectGroup group,
                                                        NewObjectKind newKind) {
-  bool isUnboxed;
   TypeNewScript* maybeNewScript;
   {
     AutoSweepObjectGroup sweep(group);
-    isUnboxed = group->maybeUnboxedLayout(sweep);
     maybeNewScript = group->newScript(sweep);
-  }
-
-  if (isUnboxed && newKind != SingletonObject) {
-    return UnboxedPlainObject::create(cx, group, newKind);
   }
 
   if (maybeNewScript) {
@@ -1423,50 +1416,30 @@ static bool GetScriptArrayObjectElements(
 
 static bool GetScriptPlainObjectProperties(
     HandleObject obj, MutableHandle<IdValueVector> properties) {
-  if (obj->is<PlainObject>()) {
-    PlainObject* nobj = &obj->as<PlainObject>();
+  MOZ_ASSERT(obj->is<PlainObject>());
+  PlainObject* nobj = &obj->as<PlainObject>();
 
-    if (!properties.appendN(IdValuePair(), nobj->slotSpan())) {
-      return false;
-    }
-
-    for (Shape::Range<NoGC> r(nobj->lastProperty()); !r.empty(); r.popFront()) {
-      Shape& shape = r.front();
-      MOZ_ASSERT(shape.isDataDescriptor());
-      uint32_t slot = shape.slot();
-      properties[slot].get().id = shape.propid();
-      properties[slot].get().value = nobj->getSlot(slot);
-    }
-
-    for (size_t i = 0; i < nobj->getDenseInitializedLength(); i++) {
-      Value v = nobj->getDenseElement(i);
-      if (!v.isMagic(JS_ELEMENTS_HOLE) &&
-          !properties.append(IdValuePair(INT_TO_JSID(i), v))) {
-        return false;
-      }
-    }
-
-    return true;
+  if (!properties.appendN(IdValuePair(), nobj->slotSpan())) {
+    return false;
   }
 
-  if (obj->is<UnboxedPlainObject>()) {
-    UnboxedPlainObject* nobj = &obj->as<UnboxedPlainObject>();
-
-    const UnboxedLayout& layout = nobj->layout();
-    if (!properties.appendN(IdValuePair(), layout.properties().length())) {
-      return false;
-    }
-
-    for (size_t i = 0; i < layout.properties().length(); i++) {
-      const UnboxedLayout::Property& property = layout.properties()[i];
-      properties[i].get().id = NameToId(property.name);
-      properties[i].get().value = nobj->getValue(property);
-    }
-
-    return true;
+  for (Shape::Range<NoGC> r(nobj->lastProperty()); !r.empty(); r.popFront()) {
+    Shape& shape = r.front();
+    MOZ_ASSERT(shape.isDataDescriptor());
+    uint32_t slot = shape.slot();
+    properties[slot].get().id = shape.propid();
+    properties[slot].get().value = nobj->getSlot(slot);
   }
 
-  MOZ_CRASH("Bad object kind");
+  for (size_t i = 0; i < nobj->getDenseInitializedLength(); i++) {
+    Value v = nobj->getDenseElement(i);
+    if (!v.isMagic(JS_ELEMENTS_HOLE) &&
+        !properties.append(IdValuePair(INT_TO_JSID(i), v))) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 static bool DeepCloneValue(JSContext* cx, Value* vp, NewObjectKind newKind) {
@@ -1488,8 +1461,7 @@ JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj,
   /* NB: Keep this in sync with XDRObjectLiteral. */
   MOZ_ASSERT_IF(obj->isSingleton(),
                 cx->realm()->behaviors().getSingletonsAsTemplates());
-  MOZ_ASSERT(obj->is<PlainObject>() || obj->is<UnboxedPlainObject>() ||
-             obj->is<ArrayObject>());
+  MOZ_ASSERT(obj->is<PlainObject>() || obj->is<ArrayObject>());
   MOZ_ASSERT(newKind != SingletonObject);
 
   if (obj->is<ArrayObject>()) {
@@ -1612,8 +1584,7 @@ XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
   uint32_t isArray = 0;
   {
     if (mode == XDR_ENCODE) {
-      MOZ_ASSERT(obj->is<PlainObject>() || obj->is<UnboxedPlainObject>() ||
-                 obj->is<ArrayObject>());
+      MOZ_ASSERT(obj->is<PlainObject>() || obj->is<ArrayObject>());
       isArray = obj->is<ArrayObject>() ? 1 : 0;
     }
 
@@ -2575,12 +2546,6 @@ bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
     if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj)) {
       return false;
     }
-  } else if (obj->is<UnboxedPlainObject>()) {
-    if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx,
-                                                                       id)) {
-      propp->setNonNativeProperty();
-      return true;
-    }
   } else if (obj->is<TypedObject>()) {
     if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id)) {
       propp->setNonNativeProperty();
@@ -2617,25 +2582,6 @@ static inline bool NativeGetPureInline(NativeObject* pobj, jsid id,
   return true;
 }
 
-static inline bool UnboxedGetPureInline(JSObject* pobj, jsid id,
-                                        PropertyResult prop, Value* vp) {
-  MOZ_ASSERT(prop.isNonNativeProperty());
-
-  // This might be a TypedObject.
-  if (!pobj->is<UnboxedPlainObject>()) {
-    return false;
-  }
-
-  const UnboxedLayout& layout = pobj->as<UnboxedPlainObject>().layout();
-  if (const UnboxedLayout::Property* property = layout.lookup(id)) {
-    *vp = pobj->as<UnboxedPlainObject>().getValue(*property);
-    return true;
-  }
-
-  // Don't bother supporting expandos for now.
-  return false;
-}
-
 bool js::GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp) {
   JSObject* pobj;
   PropertyResult prop;
@@ -2648,10 +2594,7 @@ bool js::GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp) {
     return true;
   }
 
-  if (MOZ_LIKELY(pobj->isNative())) {
-    return NativeGetPureInline(&pobj->as<NativeObject>(), id, prop, vp);
-  }
-  return UnboxedGetPureInline(pobj, id, prop, vp);
+  return NativeGetPureInline(&pobj->as<NativeObject>(), id, prop, vp);
 }
 
 bool js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp,
@@ -2668,10 +2611,7 @@ bool js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp,
   }
 
   *found = true;
-  if (MOZ_LIKELY(obj->isNative())) {
-    return NativeGetPureInline(&obj->as<NativeObject>(), id, prop, vp);
-  }
-  return UnboxedGetPureInline(obj, id, prop, vp);
+  return NativeGetPureInline(&obj->as<NativeObject>(), id, prop, vp);
 }
 
 static inline bool NativeGetGetterPureInline(PropertyResult prop,
@@ -2848,12 +2788,6 @@ bool js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto,
     }
   }
 
-  // Convert unboxed objects to their native representations before changing
-  // their prototype/group, as they depend on the group for their layout.
-  if (!MaybeConvertUnboxedObjectToNative(cx, obj)) {
-    return false;
-  }
-
   Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
   if (!SetProto(cx, obj, taggedProto)) {
     return false;
@@ -2882,10 +2816,6 @@ bool js::PreventExtensions(JSContext* cx, HandleObject obj,
                       obj->as<NativeObject>().getDenseCapacity());
 
     return result.succeed();
-  }
-
-  if (!MaybeConvertUnboxedObjectToNative(cx, obj)) {
-    return false;
   }
 
   if (obj->isNative()) {
@@ -3938,12 +3868,6 @@ js::gc::AllocKind JSObject::allocKindForTenure(
     return GetBackgroundAllocKind(GetGCArrayKind(nelements));
   }
 
-  // Unboxed plain objects are sized according to the data they store.
-  if (is<UnboxedPlainObject>()) {
-    size_t nbytes = as<UnboxedPlainObject>().layoutDontCheckGeneration().size();
-    return GetGCObjectKindForBytes(UnboxedPlainObject::offsetOfData() + nbytes);
-  }
-
   if (is<JSFunction>()) {
     return as<JSFunction>().getAllocKind();
   }
@@ -4283,11 +4207,7 @@ void JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape,
   const js::Class* clasp = group->clasp();
   MOZ_ASSERT(clasp != &ArrayObject::class_);
 
-  if (shape) {
-    MOZ_ASSERT(clasp == shape->getObjectClass());
-  } else {
-    MOZ_ASSERT(clasp == &UnboxedPlainObject::class_);
-  }
+  MOZ_ASSERT_IF(shape, clasp == shape->getObjectClass());
 
   if (!ClassCanHaveFixedData(clasp)) {
     MOZ_ASSERT(shape);

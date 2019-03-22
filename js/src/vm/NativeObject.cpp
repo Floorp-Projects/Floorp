@@ -18,7 +18,6 @@
 #include "vm/Debugger.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/TypedArrayObject.h"
-#include "vm/UnboxedObject.h"
 
 #include "gc/Nursery-inl.h"
 #include "vm/ArrayObject-inl.h"
@@ -27,7 +26,6 @@
 #include "vm/JSScript-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/TypeInference-inl.h"
-#include "vm/UnboxedObject-inl.h"
 
 using namespace js;
 
@@ -341,6 +339,7 @@ void NativeObject::setLastPropertyMakeNonNative(Shape* shape) {
   setShape(shape);
 }
 
+//MG:Unbox:Remove
 void NativeObject::setLastPropertyMakeNative(JSContext* cx, Shape* shape) {
   MOZ_ASSERT(getClass()->isNative());
   MOZ_ASSERT(shape->getObjectClass()->isNative());
@@ -3157,68 +3156,6 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
     MOZ_ASSERT(from->lastProperty() == fromShape);
 
     value = from->getSlot(shape->slot());
-    if (targetHadNoOwnProperties) {
-      MOZ_ASSERT(!target->contains(cx, key),
-                 "didn't expect to find an existing property");
-
-      if (!AddDataPropertyNonDelegate(cx, target, key, value)) {
-        return false;
-      }
-    } else {
-      if (!NativeDefineDataProperty(cx, target, key, value, JSPROP_ENUMERATE)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
-bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
-                                  Handle<UnboxedPlainObject*> from,
-                                  HandlePlainObject excludedItems,
-                                  bool* optimized) {
-  MOZ_ASSERT(
-      !target->isDelegate(),
-      "CopyDataPropertiesNative should only be called during object literal "
-      "construction"
-      "which precludes that |target| is the prototype of any other object");
-
-  *optimized = false;
-
-  // Don't use the fast path for unboxed objects with expandos.
-  if (from->maybeExpando()) {
-    return true;
-  }
-
-  *optimized = true;
-
-  // If |target| contains no own properties, we can directly call
-  // addProperty instead of the slower putProperty.
-  const bool targetHadNoOwnProperties = target->lastProperty()->isEmptyShape();
-
-#ifdef DEBUG
-  RootedObjectGroup fromGroup(cx, from->group());
-#endif
-
-  RootedId key(cx);
-  RootedValue value(cx);
-  const UnboxedLayout& layout = from->layout();
-  for (size_t i = 0; i < layout.properties().length(); i++) {
-    const UnboxedLayout::Property& property = layout.properties()[i];
-    key = NameToId(property.name);
-    MOZ_ASSERT(!JSID_IS_INT(key));
-
-    if (excludedItems && excludedItems->contains(cx, key)) {
-      continue;
-    }
-
-    // Ensure the object stays unboxed.
-    MOZ_ASSERT(from->group() == fromGroup);
-
-    // All unboxed properties are enumerable.
-    value = from->getValue(property);
-
     if (targetHadNoOwnProperties) {
       MOZ_ASSERT(!target->contains(cx, key),
                  "didn't expect to find an existing property");

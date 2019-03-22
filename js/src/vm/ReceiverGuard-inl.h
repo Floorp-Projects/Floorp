@@ -12,21 +12,12 @@
 #include "builtin/TypedObject.h"
 #include "vm/JSObject.h"
 #include "vm/ShapedObject.h"
-#include "vm/UnboxedObject.h"
 
 namespace js {
 
 MOZ_ALWAYS_INLINE
 ReceiverGuard::ReceiverGuard(JSObject* obj) : group(nullptr), shape(nullptr) {
   if (!obj->isNative()) {
-    if (obj->is<UnboxedPlainObject>()) {
-      group = obj->group();
-      if (UnboxedExpandoObject* expando =
-              obj->as<UnboxedPlainObject>().maybeExpando()) {
-        shape = expando->lastProperty();
-      }
-      return;
-    }
     if (obj->is<TypedObject>()) {
       group = obj->group();
       return;
@@ -40,9 +31,7 @@ ReceiverGuard::ReceiverGuard(ObjectGroup* group, Shape* shape)
     : group(group), shape(shape) {
   if (group) {
     const Class* clasp = group->clasp();
-    if (clasp == &UnboxedPlainObject::class_) {
-      // Keep both group and shape.
-    } else if (IsTypedObjectClass(clasp)) {
+    if (IsTypedObjectClass(clasp)) {
       this->shape = nullptr;
     } else {
       this->group = nullptr;

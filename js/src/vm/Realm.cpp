@@ -34,7 +34,6 @@
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
-#include "vm/UnboxedObject-inl.h"
 
 using namespace js;
 
@@ -68,14 +67,6 @@ Realm::~Realm() {
   if (rt->lcovOutput().isEnabled()) {
     rt->lcovOutput().writeLCovResult(lcovOutput);
   }
-
-#ifdef DEBUG
-  // Avoid assertion destroying the unboxed layouts list if the embedding
-  // leaked GC things.
-  if (!runtime_->gc.shutdownCollectedEverything()) {
-    objectGroups_.unboxedLayouts.clear();
-  }
-#endif
 
   MOZ_ASSERT(runtime_->numRealms > 0);
   runtime_->numRealms--;
