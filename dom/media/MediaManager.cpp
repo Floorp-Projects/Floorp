@@ -4310,12 +4310,6 @@ SourceListener::InitializeAsync() {
                  state->mDeviceEnabled = true;
                  state->mTrackEnabled = true;
                  state->mTrackEnabledTime = TimeStamp::Now();
-
-                 if (state == mVideoDeviceState.get() &&
-                     state->mDevice->mSource->IsFake() &&
-                     !mStream->IsDestroyed()) {
-                   mStream->SetPullingEnabled(kVideoTrack, true);
-                 }
                }
                return SourceListenerPromise::CreateAndResolve(true, __func__);
              },
@@ -4397,7 +4391,6 @@ void SourceListener::Remove() {
       mStream->RemoveTrackListener(mAudioDeviceState->mListener, kAudioTrack);
     }
     if (mVideoDeviceState) {
-      mStream->SetPullingEnabled(kVideoTrack, false);
       mStream->RemoveTrackListener(mVideoDeviceState->mListener, kVideoTrack);
     }
   }
