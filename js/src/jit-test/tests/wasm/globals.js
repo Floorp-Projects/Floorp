@@ -11,7 +11,7 @@ wasmFailValidateText(`(module (global f64 (f32.const 13.37)))`, /type mismatch/)
 wasmFailValidateText(`(module (global i32 (i32.add (i32.const 13) (i32.const 37))))`, /failed to read end/);
 
 wasmFailValidateText(`(module (global i32 (global.get 0)))`, /out of range/);
-wasmFailValidateText(`(module (global i32 (get_global 1)) (global i32 (i32.const 1)))`, /out of range/);
+wasmFailValidateText(`(module (global i32 (global.get 1)) (global i32 (i32.const 1)))`, /out of range/);
 
 // Test a well-defined global section.
 function testInner(type, initialValue, nextValue, coercion)
@@ -20,10 +20,10 @@ function testInner(type, initialValue, nextValue, coercion)
         (global (mut ${type}) (${type}.const ${initialValue}))
         (global ${type} (${type}.const ${initialValue}))
 
-        (func $get (result ${type}) (get_global 0))
-        (func $set (param ${type}) (global.set 0 (get_local 0)))
+        (func $get (result ${type}) (global.get 0))
+        (func $set (param ${type}) (global.set 0 (local.get 0)))
 
-        (func $get_cst (result ${type}) (get_global 1))
+        (func $get_cst (result ${type}) (global.get 1))
 
         (export "get" $get)
         (export "get_cst" $get_cst)
@@ -43,15 +43,15 @@ testInner('f32', 13.37, 0.1989, Math.fround);
 testInner('f64', 13.37, 0.1989, x => +x);
 
 // Semantic errors.
-wasmFailValidateText(`(module (global (mut i32) (i32.const 1337)) (func (set_global 1 (i32.const 0))))`, /out of range/);
-wasmFailValidateText(`(module (global i32 (i32.const 1337)) (func (set_global 0 (i32.const 0))))`, /can't write an immutable global/);
+wasmFailValidateText(`(module (global (mut i32) (i32.const 1337)) (func (global.set 1 (i32.const 0))))`, /out of range/);
+wasmFailValidateText(`(module (global i32 (i32.const 1337)) (func (global.set 0 (i32.const 0))))`, /can't write an immutable global/);
 
 // Big module with many variables: test that setting one doesn't overwrite the
 // other ones.
 function get_set(i, type) {
     return `
-        (func $get_${i} (result ${type}) (get_global ${i}))
-        (func $set_${i} (param ${type}) (set_global ${i} (get_local 0)))
+        (func $get_${i} (result ${type}) (global.get ${i}))
+        (func $set_${i} (param ${type}) (global.set ${i} (local.get 0)))
     `;
 }
 
@@ -91,12 +91,12 @@ for (let i = 0; i < 5; i++) {
 }
 
 // Initializer expressions can also be used in elem section initializers.
-wasmFailValidateText(`(module (import "globals" "a" (global f32)) (table 4 funcref) (elem (get_global 0) $f) (func $f))`, /type mismatch/);
+wasmFailValidateText(`(module (import "globals" "a" (global f32)) (table 4 funcref) (elem (global.get 0) $f) (func $f))`, /type mismatch/);
 
 module = wasmEvalText(`(module
     (import "globals" "a" (global i32))
     (table (export "tbl") 4 funcref)
-    (elem (get_global 0) $f)
+    (elem (global.get 0) $f)
     (func $f)
     (export "f" $f)
 )`, {
@@ -109,7 +109,7 @@ assertEq(module.f, module.tbl.get(1));
 // Import/export semantics.
 module = wasmEvalText(`(module
  (import $g "globals" "x" (global i32))
- (func $get (result i32) (get_global $g))
+ (func $get (result i32) (global.get $g))
  (export "getter" $get)
  (export "value" global 0)
 )`, { globals: {x: 42} }).exports;
@@ -176,25 +176,25 @@ assertEq(Number(module.imported), 42);
 assertEq(Number(module.defined), 1337);
 
 // Initializer expressions can reference an imported immutable global.
-wasmFailValidateText(`(module (global f32 (f32.const 13.37)) (global i32 (get_global 0)))`, /must reference a global immutable import/);
-wasmFailValidateText(`(module (global (mut f32) (f32.const 13.37)) (global i32 (get_global 0)))`, /must reference a global immutable import/);
-wasmFailValidateText(`(module (global (mut i32) (i32.const 0)) (global i32 (get_global 0)))`, /must reference a global immutable import/);
+wasmFailValidateText(`(module (global f32 (f32.const 13.37)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
+wasmFailValidateText(`(module (global (mut f32) (f32.const 13.37)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
+wasmFailValidateText(`(module (global (mut i32) (i32.const 0)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
 
-wasmFailValidateText(`(module (import "globals" "a" (global f32)) (global i32 (get_global 0)))`, /type mismatch/);
+wasmFailValidateText(`(module (import "globals" "a" (global f32)) (global i32 (global.get 0)))`, /type mismatch/);
 
 function testInitExpr(type, initialValue, nextValue, coercion, assertFunc = assertEq) {
     var module = wasmEvalText(`(module
         (import "globals" "a" (global ${type}))
 
-        (global $glob_mut (mut ${type}) (get_global 0))
-        (global $glob_imm ${type} (get_global 0))
+        (global $glob_mut (mut ${type}) (global.get 0))
+        (global $glob_imm ${type} (global.get 0))
 
-        (func $get0 (result ${type}) (get_global 0))
+        (func $get0 (result ${type}) (global.get 0))
 
-        (func $get1 (result ${type}) (get_global 1))
-        (func $set1 (param ${type}) (set_global 1 (get_local 0)))
+        (func $get1 (result ${type}) (global.get 1))
+        (func $set1 (param ${type}) (global.set 1 (local.get 0)))
 
-        (func $get_cst (result ${type}) (get_global 2))
+        (func $get_cst (result ${type}) (global.get 2))
 
         (export "get0" $get0)
         (export "get1" $get1)
@@ -255,7 +255,7 @@ assertErrorMessage(() => wasmEvalText(`(module
     let j = wasmEvalText(`(module
                            (import "globals" "g" (global i64))
                            (func (export "f") (result i32)
-                            (i64.eq (get_global 0) (i64.const 37))))`,
+                            (i64.eq (global.get 0) (i64.const 37))))`,
                          {globals: {g: i.exports.g}});
 
     assertEq(j.exports.f(), 1);
@@ -277,9 +277,9 @@ var nextValue = '0x531642753864975F';
 wasmAssert(`(module
     (global (mut i64) (i64.const ${initialValue}))
     (global i64 (i64.const ${initialValue}))
-    (func $get (result i64) (get_global 0))
-    (func $set (param i64) (set_global 0 (get_local 0)))
-    (func $get_cst (result i64) (get_global 1))
+    (func $get (result i64) (global.get 0))
+    (func $set (param i64) (global.set 0 (local.get 0)))
+    (func $get_cst (result i64) (global.get 1))
     (export "get" $get)
     (export "get_cst" $get_cst)
     (export "set" $set)
@@ -338,7 +338,7 @@ wasmAssert(`(module
     let mod = wasmEvalText(`(module
                              (import "" "g" (global i64))
                              (func (export "f") (result i32)
-                              (i64.eqz (get_global 0))))`,
+                              (i64.eqz (global.get 0))))`,
                            {"":{g: new Global({value: "i64"})}});
     assertEq(mod.exports.f(), 1);
 
@@ -389,7 +389,7 @@ wasmAssert(`(module
         let j = wasmEvalText(`(module
                                (global (import "" "g") i32)
                                (func (export "f") (result i32)
-                                (get_global 0)))`,
+                                (global.get 0)))`,
                              { "": { "g": i.exports.g }});
 
         // And when it is then accessed it has the right value:
@@ -434,16 +434,16 @@ wasmAssert(`(module
         let i = wasmEvalText(`(module
                                (global (export "g") (mut i32) (i32.const 37))
                                (func (export "getter") (result i32)
-                                (get_global 0))
+                                (global.get 0))
                                (func (export "setter") (param i32)
-                                (set_global 0 (get_local 0))))`);
+                                (global.set 0 (local.get 0))))`);
 
         let j = wasmEvalText(`(module
                                (import "" "g" (global (mut i32)))
                                (func (export "getter") (result i32)
-                                (get_global 0))
+                                (global.get 0))
                                (func (export "setter") (param i32)
-                                (set_global 0 (get_local 0))))`,
+                                (global.set 0 (local.get 0))))`,
                              {"": {g: i.exports.g}});
 
         // Initial values
