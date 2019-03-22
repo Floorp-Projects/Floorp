@@ -22,7 +22,6 @@
 #include "AudioNodeStream.h"
 #include "AudioNodeExternalInputStream.h"
 #include "MediaStreamListener.h"
-#include "MediaStreamVideoSink.h"
 #include "mozilla/dom/BaseAudioContextBinding.h"
 #include "mozilla/media/MediaUtils.h"
 #include <algorithm>
@@ -1890,14 +1889,12 @@ size_t MediaStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   // - mGraph - Not reported here
   // - mConsumers - elements
   // Future:
-  // - mVideoOutputs - elements
   // - mLastPlayedVideoFrame
   // - mTrackListeners - elements
   // - mAudioOutputStream - elements
 
   amount += mTracks.SizeOfExcludingThis(aMallocSizeOf);
   amount += mAudioOutputs.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  amount += mVideoOutputs.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mTrackListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mMainThreadListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mDisabledTracks.ShallowSizeOfExcludingThis(aMallocSizeOf);
@@ -2015,12 +2012,6 @@ void MediaStream::RemoveAllListenersImpl() {
   mTrackListeners.Clear();
 
   RemoveAllDirectListenersImpl();
-
-  auto videoOutputs(mVideoOutputs);
-  for (auto& l : videoOutputs) {
-    l.mListener->NotifyRemoved();
-  }
-  mVideoOutputs.Clear();
 }
 
 void MediaStream::DestroyImpl() {
@@ -2132,71 +2123,6 @@ void MediaStream::RemoveAudioOutput(void* aKey) {
     void* mKey;
   };
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aKey));
-}
-
-void MediaStream::AddVideoOutputImpl(
-    already_AddRefed<MediaStreamVideoSink> aSink, TrackID aID) {
-  RefPtr<MediaStreamVideoSink> sink = aSink;
-  LOG(LogLevel::Info,
-      ("MediaStream %p Adding MediaStreamVideoSink %p as output", this,
-       sink.get()));
-  MOZ_ASSERT(aID != TRACK_NONE);
-  for (auto entry : mVideoOutputs) {
-    if (entry.mListener == sink &&
-        (entry.mTrackID == TRACK_ANY || entry.mTrackID == aID)) {
-      return;
-    }
-  }
-  TrackBound<MediaStreamVideoSink>* l = mVideoOutputs.AppendElement();
-  l->mListener = sink;
-  l->mTrackID = aID;
-
-  AddDirectTrackListenerImpl(sink.forget(), aID);
-}
-
-void MediaStream::RemoveVideoOutputImpl(MediaStreamVideoSink* aSink,
-                                        TrackID aID) {
-  LOG(LogLevel::Info,
-      ("MediaStream %p Removing MediaStreamVideoSink %p as output", this,
-       aSink));
-  MOZ_ASSERT(aID != TRACK_NONE);
-
-  // Ensure that any frames currently queued for playback by the compositor
-  // are removed.
-  aSink->ClearFrames();
-  for (size_t i = 0; i < mVideoOutputs.Length(); ++i) {
-    if (mVideoOutputs[i].mListener == aSink &&
-        (mVideoOutputs[i].mTrackID == TRACK_ANY ||
-         mVideoOutputs[i].mTrackID == aID)) {
-      mVideoOutputs.RemoveElementAt(i);
-    }
-  }
-
-  RemoveDirectTrackListenerImpl(aSink, aID);
-}
-
-void MediaStream::AddVideoOutput(MediaStreamVideoSink* aSink, TrackID aID) {
-  class Message : public ControlMessage {
-   public:
-    Message(MediaStream* aStream, MediaStreamVideoSink* aSink, TrackID aID)
-        : ControlMessage(aStream), mSink(aSink), mID(aID) {}
-    void Run() override { mStream->AddVideoOutputImpl(mSink.forget(), mID); }
-    RefPtr<MediaStreamVideoSink> mSink;
-    TrackID mID;
-  };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aSink, aID));
-}
-
-void MediaStream::RemoveVideoOutput(MediaStreamVideoSink* aSink, TrackID aID) {
-  class Message : public ControlMessage {
-   public:
-    Message(MediaStream* aStream, MediaStreamVideoSink* aSink, TrackID aID)
-        : ControlMessage(aStream), mSink(aSink), mID(aID) {}
-    void Run() override { mStream->RemoveVideoOutputImpl(mSink, mID); }
-    RefPtr<MediaStreamVideoSink> mSink;
-    TrackID mID;
-  };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aSink, aID));
 }
 
 void MediaStream::Suspend() {
