@@ -180,12 +180,11 @@ class DirectMediaStreamTrackListener : public MediaStreamTrackListener {
   void DecreaseDisabled(DisabledTrackMode aMode);
 
   // Matches the number of disabled streams to which this listener is attached.
-  // The number of streams are those between the stream the listener was added
-  // and the SourceMediaStream that is the input of the data.
+  // The number of streams are those between the stream where the listener was
+  // added and the SourceMediaStream that is the source of the data reaching
+  // this listener.
   Atomic<int32_t> mDisabledFreezeCount;
   Atomic<int32_t> mDisabledBlackCount;
-
-  nsAutoPtr<MediaSegment> mMedia;
 };
 
 }  // namespace mozilla
