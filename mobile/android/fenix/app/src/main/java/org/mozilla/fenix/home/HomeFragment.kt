@@ -252,7 +252,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                         is SessionsAction.MenuTapped ->
                             openSessionMenu(SessionBottomSheetFragment.SessionType.Archived(it.archivedSession))
                         is SessionsAction.ShareTapped ->
-                            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "244")
+                            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "244")
                     }
                 }
         }

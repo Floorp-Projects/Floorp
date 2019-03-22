@@ -48,19 +48,19 @@ class LibraryFragment : Fragment() {
             )
         )
         libraryDownloads.setOnClickListener {
-            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "348")
+            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "348")
         }
         libraryScreenshots.setOnClickListener {
-            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "89")
+            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "89")
         }
         libraryFavorites.setOnClickListener {
-            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "90")
+            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "90")
         }
         libraryReadingList.setOnClickListener {
-            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "913")
+            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "913")
         }
         librarySessions.setOnClickListener {
-            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "637")
+            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "637")
         }
     }
 
@@ -76,7 +76,7 @@ class LibraryFragment : Fragment() {
             }
             R.id.librarySearch -> {
                 // TODO Library Search
-                ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "1118")
+                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1118")
                 true
             }
             else -> super.onOptionsItemSelected(item)

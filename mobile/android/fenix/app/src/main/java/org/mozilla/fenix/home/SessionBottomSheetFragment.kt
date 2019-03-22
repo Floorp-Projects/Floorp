@@ -53,7 +53,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
         }
 
         view.send_and_share_session_button.setOnClickListener {
-            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "244")
+            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "244")
         }
 
         view.delete_session_button.setOnClickListener {

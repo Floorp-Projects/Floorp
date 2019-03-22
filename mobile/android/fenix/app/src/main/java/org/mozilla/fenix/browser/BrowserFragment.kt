@@ -309,7 +309,7 @@ class BrowserFragment : Fragment(), BackHandler {
             }
             ToolbarMenu.Item.Help -> {
                 // TODO Help #1016
-                ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "1016")
+                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1016")
             }
             ToolbarMenu.Item.NewTab -> {
                 val directions = BrowserFragmentDirections

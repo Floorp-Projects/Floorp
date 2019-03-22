@@ -40,6 +40,7 @@ import org.mozilla.fenix.R.string.pref_key_feedback
 import org.mozilla.fenix.R.string.pref_key_help
 import org.mozilla.fenix.R.string.pref_key_make_default_browser
 import org.mozilla.fenix.R.string.pref_key_rate
+import org.mozilla.fenix.R.string.pref_key_remote_debugging
 import org.mozilla.fenix.R.string.pref_key_site_permissions
 import org.mozilla.fenix.R.string.pref_key_accessibility
 import org.mozilla.fenix.R.string.pref_key_language
@@ -99,7 +100,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
             }
             resources.getString(pref_key_language) -> {
                 // TODO #220
-                ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "220")
+                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "220")
             }
             resources.getString(pref_key_data_choices) -> {
                 navigateToDataChoices()

@@ -52,7 +52,7 @@ class SearchFragment : Fragment() {
         } ?: ""
 
         view.search_scan_button.setOnClickListener {
-            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "113")
+            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "113")
         }
 
         toolbarComponent = ToolbarComponent(

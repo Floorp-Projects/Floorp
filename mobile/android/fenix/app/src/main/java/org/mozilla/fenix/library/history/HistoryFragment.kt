@@ -119,7 +119,7 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
             }
             R.id.librarySearch -> {
                 // TODO Library Search #1118
-                ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "1118")
+                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1118")
                 true
             }
             else -> super.onOptionsItemSelected(item)
