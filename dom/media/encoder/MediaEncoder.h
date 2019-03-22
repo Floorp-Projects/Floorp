@@ -18,6 +18,7 @@
 
 namespace mozilla {
 
+class DriftCompensator;
 class TaskQueue;
 
 namespace dom {
@@ -107,9 +108,12 @@ class MediaEncoder {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEncoder)
 
-  MediaEncoder(TaskQueue* aEncoderThread, UniquePtr<ContainerWriter> aWriter,
+  MediaEncoder(TaskQueue* aEncoderThread,
+               RefPtr<DriftCompensator> aDriftCompensator,
+               UniquePtr<ContainerWriter> aWriter,
                AudioTrackEncoder* aAudioEncoder,
-               VideoTrackEncoder* aVideoEncoder, const nsAString& aMIMEType);
+               VideoTrackEncoder* aVideoEncoder, TrackRate aTrackRate,
+               const nsAString& aMIMEType);
 
   /* Note - called from control code, not on MSG threads. */
   void Suspend(TimeStamp aTime);
