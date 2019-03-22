@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function redirectAndFireXHR() {
+  const XHR = new XMLHttpRequest();
+  document.location.assign('data:text/html,final iframe content');
+  XHR.open('GET', 'data:text/html,1', false);
+  XHR.send();
+}
+
+function handlePageHide() {
+  window.parent.finishTest();
+}
+</script>
+</head>
+<body onload="redirectAndFireXHR()"
+      onpagehide="handlePageHide()">
+initial iframe content
+</body>
+</html>
