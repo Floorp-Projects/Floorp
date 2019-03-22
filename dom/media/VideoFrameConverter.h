@@ -8,6 +8,7 @@
 
 #include "ImageContainer.h"
 #include "ImageToI420.h"
+#include "MediaTimer.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
 #include "nsISupportsImpl.h"
@@ -15,9 +16,11 @@
 #include "mozilla/TaskQueue.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageUtils.h"
+#include "webrtc/api/video/video_frame.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/rtc_base/keep_ref_until_done.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 // The number of frame buffers VideoFrameConverter may create before returning
 // errors.
@@ -29,7 +32,7 @@
 
 namespace mozilla {
 
-mozilla::LazyLogModule gVideoFrameConverterLog("VideoFrameConverter");
+static mozilla::LazyLogModule gVideoFrameConverterLog("VideoFrameConverter");
 
 class VideoConverterListener {
  public:
@@ -43,10 +46,7 @@ class VideoConverterListener {
 
 // An async video frame format converter.
 //
-// Input is typically a MediaStream(Track)Listener driven by MediaStreamGraph.
-//
-// We keep track of the size of the TaskQueue so we can drop frames if
-// conversion is taking too long.
+// Input is typically a MediaStreamTrackListener driven by MediaStreamGraph.
 //
 // Output is passed through to all added VideoConverterListeners on a TaskQueue
 // thread whenever a frame is converted.
@@ -55,20 +55,12 @@ class VideoFrameConverter {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoFrameConverter)
 
   VideoFrameConverter()
-      : mLength(0),
-        mTaskQueue(
+      : mTaskQueue(
             new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
                           "VideoFrameConverter")),
-        mBufferPool(false, CONVERTER_BUFFER_POOL_SIZE),
-        mLastImage(
-            -1)  // -1 is not a guaranteed invalid serial. See bug 1262134.
-#ifdef DEBUG
-        ,
-        mThrottleCount(0),
-        mThrottleRecord(0)
-#endif
-        ,
-        mLastFrame(nullptr, 0, 0, webrtc::kVideoRotation_0) {
+        mPacingTimer(new MediaTimer()),
+        mLastImage(-1),  // -1 is not a guaranteed invalid serial (Bug 1262134).
+        mBufferPool(false, CONVERTER_BUFFER_POOL_SIZE) {
     MOZ_COUNT_CTOR(VideoFrameConverter);
   }
 
@@ -78,75 +70,31 @@ class VideoFrameConverter {
       return;
     }
 
-    if (aChunk.IsNull()) {
-      aForceBlack = true;
-    } else {
-      aForceBlack = aChunk.mFrame.GetForceBlack();
-    }
-
-    int32_t serial;
-    if (aForceBlack) {
-      // Reset the last-img check.
-      // -1 is not a guaranteed invalid serial. See bug 1262134.
-      serial = -1;
-    } else {
-      serial = aChunk.mFrame.GetImage()->GetSerial();
-    }
-
     TimeStamp t = aChunk.mTimeStamp;
     MOZ_ASSERT(!t.IsNull());
-    if (serial == mLastImage && !mLastFrameSent.IsNull()) {
-      // With a non-direct listener we get passed duplicate frames every ~10ms
-      // even with no frame change.
-      return;
+
+    if (!mLastFrameSent.IsNull() && t < mLastFrameSent) {
+      // With a direct listener we can have buffered up future frames in
+      // mPacingTimer. The source could start sending us frames that start
+      // before some previously buffered frames (e.g., a MediaDecoder does that
+      // when it seeks). We don't want to just append these to the pacing timer,
+      // as frames at different times on the MediaDecoder timeline would get
+      // passed to the encoder in a mixed order. We don't have an explicit way
+      // of signaling this, so we must detect here if time goes backwards.
+      MOZ_LOG(gVideoFrameConverterLog, LogLevel::Debug,
+              ("Clearing pacer because of source reset (%.3f)",
+               (mLastFrameSent - t).ToSeconds()));
+      mPacingTimer->Cancel();
     }
     mLastFrameSent = t;
-    mLastImage = serial;
 
-    // A throttling limit of 1 allows us to convert 2 frames concurrently.
-    // It's short enough to not build up too significant a delay, while
-    // giving us a margin to not cause some machines to drop every other frame.
-    const int32_t queueThrottlingLimit = 1;
-    if (mLength > queueThrottlingLimit) {
-      MOZ_LOG(gVideoFrameConverterLog, LogLevel::Debug,
-              ("VideoFrameConverter %p queue is full. Throttling by "
-               "throwing away a frame.",
-               this));
-#ifdef DEBUG
-      ++mThrottleCount;
-      mThrottleRecord = std::max(mThrottleCount, mThrottleRecord);
-#endif
-      return;
-    }
-
-#ifdef DEBUG
-    if (mThrottleCount > 0) {
-      if (mThrottleCount > 5) {
-        // Log at a higher level when we have large drops.
-        MOZ_LOG(gVideoFrameConverterLog, LogLevel::Info,
-                ("VideoFrameConverter %p stopped throttling after throwing "
-                 "away %d frames. Longest throttle so far was %d frames.",
-                 this, mThrottleCount, mThrottleRecord));
-      } else {
-        MOZ_LOG(gVideoFrameConverterLog, LogLevel::Debug,
-                ("VideoFrameConverter %p stopped throttling after throwing "
-                 "away %d frames. Longest throttle so far was %d frames.",
-                 this, mThrottleCount, mThrottleRecord));
-      }
-      mThrottleCount = 0;
-    }
-#endif
-
-    ++mLength;  // Atomic
-
-    nsCOMPtr<nsIRunnable> runnable =
-        NewRunnableMethod<StoreRefPtrPassByPtr<layers::Image>, gfx::IntSize,
-                          bool>("VideoFrameConverter::ProcessVideoFrame", this,
-                                &VideoFrameConverter::ProcessVideoFrame,
-                                aChunk.mFrame.GetImage(), size, aForceBlack);
-    nsresult rv = mTaskQueue->Dispatch(runnable.forget());
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+    mPacingTimer->WaitUntil(t, __func__)
+        ->Then(mTaskQueue, __func__,
+               [self = RefPtr<VideoFrameConverter>(this), this,
+                image = RefPtr<layers::Image>(aChunk.mFrame.GetImage()),
+                t = std::move(t), size = std::move(size), aForceBlack] {
+                 ProcessVideoFrame(image, t, size, aForceBlack);
+               });
   }
 
   void AddListener(const RefPtr<VideoConverterListener>& aListener) {
@@ -171,6 +119,8 @@ class VideoFrameConverter {
   }
 
   void Shutdown() {
+    mPacingTimer->Cancel();
+
     nsresult rv = mTaskQueue->Dispatch(NS_NewRunnableFunction(
         "VideoFrameConverter::Shutdown",
         [self = RefPtr<VideoFrameConverter>(this), this] {
@@ -191,12 +141,12 @@ class VideoFrameConverter {
     VideoFrameConverter* self = static_cast<VideoFrameConverter*>(aClosure);
     MOZ_ASSERT(self->mTaskQueue->IsCurrentThreadIn());
 
-    if (!self->mLastFrame.video_frame_buffer()) {
+    if (!self->mLastFrame) {
       return;
     }
 
     for (RefPtr<VideoConverterListener>& listener : self->mListeners) {
-      listener->OnVideoFrameConverted(self->mLastFrame);
+      listener->OnVideoFrameConverted(*self->mLastFrame);
     }
   }
 
@@ -213,18 +163,33 @@ class VideoFrameConverter {
         sameFrameIntervalInMs, nsITimer::TYPE_REPEATING_SLACK,
         "VideoFrameConverter::mSameFrameTimer", mTaskQueue);
 
-    mLastFrame = aVideoFrame;
+    mLastFrame = MakeUnique<webrtc::VideoFrame>(aVideoFrame);
 
     for (RefPtr<VideoConverterListener>& listener : mListeners) {
       listener->OnVideoFrameConverted(aVideoFrame);
     }
   }
 
-  void ProcessVideoFrame(layers::Image* aImage, gfx::IntSize aSize,
-                         bool aForceBlack) {
-    --mLength;  // Atomic
-    MOZ_ASSERT(mLength >= 0);
+  void ProcessVideoFrame(layers::Image* aImage, TimeStamp aTime,
+                         gfx::IntSize aSize, bool aForceBlack) {
+    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
+    int32_t serial;
+    if (aForceBlack) {
+      // Set the last-img check to indicate black.
+      // -1 is not a guaranteed invalid serial. See bug 1262134.
+      serial = -1;
+    } else {
+      serial = aImage->GetSerial();
+    }
+
+    if (serial == mLastImage) {
+      // With a non-direct listener we get passed duplicate frames every ~10ms
+      // even with no frame change.
+      return;
+    }
+
+    mLastImage = serial;
     // See Bug 1529581 - Ideally we'd use the mTimestamp from the chunk
     // passed into QueueVideoChunk rather than the webrtc.org clock here.
     int64_t now = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
@@ -304,21 +269,20 @@ class VideoFrameConverter {
     VideoFrameConverted(frame);
   }
 
-  Atomic<int32_t, Relaxed> mLength;
   const RefPtr<TaskQueue> mTaskQueue;
-  webrtc::I420BufferPool mBufferPool;
+
+  // Used to pace future frames close to their rendering-time. Thread-safe.
+  const RefPtr<MediaTimer> mPacingTimer;
 
   // Written and read from the queueing thread (normally MSG).
-  int32_t mLastImage;        // serial number of last Image
-  TimeStamp mLastFrameSent;  // The time we sent the last frame.
-#ifdef DEBUG
-  uint32_t mThrottleCount;
-  uint32_t mThrottleRecord;
-#endif
+  // Last time we queued a frame in the pacer
+  TimeStamp mLastFrameSent;
 
   // Accessed only from mTaskQueue.
+  int32_t mLastImage;  // Serial number of last processed Image
+  webrtc::I420BufferPool mBufferPool;
   nsCOMPtr<nsITimer> mSameFrameTimer;
-  webrtc::VideoFrame mLastFrame;
+  UniquePtr<webrtc::VideoFrame> mLastFrame;
   nsTArray<RefPtr<VideoConverterListener>> mListeners;
 };
 

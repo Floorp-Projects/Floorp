@@ -21,7 +21,7 @@ class VideoFrame {
  public:
   typedef mozilla::layers::Image Image;
 
-  VideoFrame(already_AddRefed<Image>& aImage,
+  VideoFrame(already_AddRefed<Image> aImage,
              const gfx::IntSize& aIntrinsicSize);
   VideoFrame();
   ~VideoFrame();
