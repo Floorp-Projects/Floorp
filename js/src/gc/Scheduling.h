@@ -334,10 +334,12 @@ class GCSchedulingTunables {
   UnprotectedData<size_t> maxMallocBytes_;
 
   /*
+   * JSGC_MIN_NURSERY_BYTES
    * JSGC_MAX_NURSERY_BYTES
    *
-   * Maximum nursery size for each runtime.
+   * Minimum and maximum nursery size for each runtime.
    */
+  MainThreadData<size_t> gcMinNurseryBytes_;
   MainThreadData<size_t> gcMaxNurseryBytes_;
 
   /*
@@ -459,6 +461,7 @@ class GCSchedulingTunables {
 
   size_t gcMaxBytes() const { return gcMaxBytes_; }
   size_t maxMallocBytes() const { return maxMallocBytes_; }
+  size_t gcMinNurseryBytes() const { return gcMinNurseryBytes_; }
   size_t gcMaxNurseryBytes() const { return gcMaxNurseryBytes_; }
   size_t gcZoneAllocThresholdBase() const { return gcZoneAllocThresholdBase_; }
   double allocThresholdFactor() const { return allocThresholdFactor_; }
