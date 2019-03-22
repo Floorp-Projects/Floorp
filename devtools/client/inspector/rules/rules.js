@@ -450,15 +450,10 @@ CssRuleView.prototype = {
   },
 
   /**
-   * Retrieve the RuleEditor instance that should be stored on
-   * the offset parent of the node
+   * Retrieve the RuleEditor instance.
    */
   _getRuleEditorForNode: function(node) {
-    if (!node.offsetParent) {
-      // some nodes don't have an offsetParent, but their parentNode does
-      node = node.parentNode;
-    }
-    return node.offsetParent._ruleEditor;
+    return node.closest(".ruleview-rule")._ruleEditor;
   },
 
   /**
