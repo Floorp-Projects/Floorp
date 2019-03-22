@@ -228,7 +228,6 @@ export function breakpointItemActions(dispatch: Function) {
       disableBreakpointsAtLine: actions.disableBreakpointsAtLine,
       disableBreakpoint: actions.disableBreakpoint,
       toggleDisabledBreakpoint: actions.toggleDisabledBreakpoint,
-      toggleBreakpointsAtLine: actions.toggleBreakpointsAtLine,
       openConditionalPanel: actions.openConditionalPanel
     },
     dispatch
