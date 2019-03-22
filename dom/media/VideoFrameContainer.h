@@ -40,9 +40,6 @@ class VideoFrameContainer {
   VideoFrameContainer(MediaDecoderOwner* aOwner,
                       already_AddRefed<ImageContainer> aContainer);
 
-  // Call on any thread
-  virtual void SetCurrentFrames(const VideoSegment& aSegment);
-  virtual void ClearFrames();
   void SetCurrentFrame(const gfx::IntSize& aIntrinsicSize, Image* aImage,
                        const TimeStamp& aTargetTime);
   // Returns the last principalHandle we notified mElement about.
@@ -121,9 +118,6 @@ class VideoFrameContainer {
 
   // mMutex protects all the fields below.
   Mutex mMutex;
-  // Once the frame is forced to black, we initialize mBlackImage for following
-  // frames.
-  RefPtr<Image> mBlackImage;
   // The intrinsic size is the ideal size which we should render the
   // ImageContainer's current Image at.
   // This can differ from the Image's actual size when the media resource
@@ -133,9 +127,6 @@ class VideoFrameContainer {
   // We maintain our own mFrameID which is auto-incremented at every
   // SetCurrentFrame() or NewFrameID() call.
   ImageContainer::FrameID mFrameID;
-  // We record the last played video frame to avoid playing the frame again
-  // with a different frame id.
-  VideoFrame mLastPlayedVideoFrame;
   // The last PrincipalHandle we notified mElement about.
   PrincipalHandle mLastPrincipalHandle;
   // The PrincipalHandle the client has notified us is changing with FrameID
