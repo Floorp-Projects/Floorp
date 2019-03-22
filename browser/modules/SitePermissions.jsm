@@ -148,15 +148,23 @@ const GloballyBlockedPermissions = {
       entry[prePath] = {};
     }
 
+    if (entry[prePath][id]) {
+      return;
+    }
     entry[prePath][id] = true;
 
-    // Listen to any top level navigations, once we see one clear the flag
-    // and remove the listener.
+    // Clear the flag and remove the listener once the user has navigated.
+    // WebProgress will report various things including hashchanges to us, the
+    // navigation we care about is either leaving the current page or reloading.
     browser.addProgressListener({
       QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
                                               Ci.nsISupportsWeakReference]),
       onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
-        if (aWebProgress.isTopLevel) {
+        let hasLeftPage = aLocation.prePath != prePath ||
+            !(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT);
+        let isReload = !!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_RELOAD);
+
+        if (aWebProgress.isTopLevel && (hasLeftPage || isReload)) {
           GloballyBlockedPermissions.remove(browser, id, prePath);
           browser.removeProgressListener(this);
         }
