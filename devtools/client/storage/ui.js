@@ -38,6 +38,7 @@ const GENERIC_VARIABLES_VIEW_SETTINGS = {
    // ms
   lazyEmptyDelay: 10,
   searchEnabled: true,
+  contextMenuId: "variable-view-popup",
   searchPlaceholder: L10N.getStr("storage.search.placeholder"),
   preventDescriptorModifiers: true,
 };
@@ -180,8 +181,14 @@ class StorageUI {
     this._tablePopup = this._panelDoc.getElementById("storage-table-popup");
     this._tablePopup.addEventListener("popupshowing", this.onTablePopupShowing);
 
+    this.onVariableViewPopupShowing = this.onVariableViewPopupShowing.bind(this);
+    this._variableViewPopup = this._panelDoc.getElementById("variable-view-popup");
+    this._variableViewPopup.addEventListener("popupshowing",
+      this.onVariableViewPopupShowing);
+
     this.onRefreshTable = this.onRefreshTable.bind(this);
     this.onAddItem = this.onAddItem.bind(this);
+    this.onCopyItem = this.onCopyItem.bind(this);
     this.onRemoveItem = this.onRemoveItem.bind(this);
     this.onRemoveAllFrom = this.onRemoveAllFrom.bind(this);
     this.onRemoveAll = this.onRemoveAll.bind(this);
@@ -195,6 +202,10 @@ class StorageUI {
 
     this._addButton = this._panelDoc.getElementById("add-button");
     this._addButton.addEventListener("command", this.onAddItem);
+
+    this._variableViewPopupCopy = this._panelDoc.getElementById(
+      "variable-view-popup-copy");
+    this._variableViewPopupCopy.addEventListener("command", this.onCopyItem);
 
     this._tablePopupAddItem = this._panelDoc.getElementById(
       "storage-table-popup-add");
@@ -314,7 +325,6 @@ class StorageUI {
 
   getCurrentFront() {
     const type = this.table.datatype;
-
     return this.storageTypes[type];
   }
 
@@ -1281,6 +1291,11 @@ class StorageUI {
     }
   }
 
+  onVariableViewPopupShowing(event) {
+    const item = this.view.getFocusedItem();
+    this._variableViewPopupCopy.setAttribute("disabled", !item);
+  }
+
   /**
    * Handles refreshing the selected storage
    */
@@ -1304,6 +1319,13 @@ class StorageUI {
     this.table.scrollIntoViewOnUpdate = true;
     this.table.editBookmark = createGUID();
     front.addItem(this.table.editBookmark, host);
+  }
+
+  /**
+   * Handles copy an item from the storage
+   */
+  onCopyItem() {
+    this.view._copyItem();
   }
 
   /**

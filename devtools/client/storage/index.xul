@@ -28,6 +28,10 @@
                 label="&storage.popupMenu.deleteAllSessionCookiesLabel;"/>
       <menuitem id="storage-tree-popup-delete"/>
     </menupopup>
+    <menupopup id="variable-view-popup">
+      <menuitem id="variable-view-popup-copy"
+                label="&storage.popupMenu.copyLabel;"/>
+    </menupopup>
     <menupopup id="storage-table-popup">
       <menuitem id="storage-table-popup-add"/>
       <menuitem id="storage-table-popup-delete"/>

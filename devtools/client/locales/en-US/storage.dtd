@@ -12,3 +12,6 @@
 
 <!-- LOCALIZATION NOTE : Label of popup menu action to delete all session cookies. -->
 <!ENTITY storage.popupMenu.deleteAllSessionCookiesLabel "Delete All Session Cookies">
+
+<!-- LOCALIZATION NOTE : Label of popup menu action to copy a storage item. -->
+<!ENTITY storage.popupMenu.copyLabel "Copy">
