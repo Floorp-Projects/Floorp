@@ -48,7 +48,7 @@ void APZCTreeManagerChild::SetKeyboardMap(const KeyboardMap& aKeyboardMap) {
   SendSetKeyboardMap(aKeyboardMap);
 }
 
-void APZCTreeManagerChild::ZoomToRect(const ScrollableLayerGuid& aGuid,
+void APZCTreeManagerChild::ZoomToRect(const SLGuidAndRenderRoot& aGuid,
                                       const CSSRect& aRect,
                                       const uint32_t aFlags) {
   SendZoomToRect(aGuid, aRect, aFlags);
@@ -60,12 +60,12 @@ void APZCTreeManagerChild::ContentReceivedInputBlock(uint64_t aInputBlockId,
 }
 
 void APZCTreeManagerChild::SetTargetAPZC(
-    uint64_t aInputBlockId, const nsTArray<ScrollableLayerGuid>& aTargets) {
+    uint64_t aInputBlockId, const nsTArray<SLGuidAndRenderRoot>& aTargets) {
   SendSetTargetAPZC(aInputBlockId, aTargets);
 }
 
 void APZCTreeManagerChild::UpdateZoomConstraints(
-    const ScrollableLayerGuid& aGuid,
+    const SLGuidAndRenderRoot& aGuid,
     const Maybe<ZoomConstraints>& aConstraints) {
   if (mIPCOpen) {
     SendUpdateZoomConstraints(aGuid, aConstraints);
@@ -80,16 +80,16 @@ void APZCTreeManagerChild::SetAllowedTouchBehavior(
 }
 
 void APZCTreeManagerChild::StartScrollbarDrag(
-    const ScrollableLayerGuid& aGuid, const AsyncDragMetrics& aDragMetrics) {
+    const SLGuidAndRenderRoot& aGuid, const AsyncDragMetrics& aDragMetrics) {
   SendStartScrollbarDrag(aGuid, aDragMetrics);
 }
 
-bool APZCTreeManagerChild::StartAutoscroll(const ScrollableLayerGuid& aGuid,
+bool APZCTreeManagerChild::StartAutoscroll(const SLGuidAndRenderRoot& aGuid,
                                            const ScreenPoint& aAnchorLocation) {
   return SendStartAutoscroll(aGuid, aAnchorLocation);
 }
 
-void APZCTreeManagerChild::StopAutoscroll(const ScrollableLayerGuid& aGuid) {
+void APZCTreeManagerChild::StopAutoscroll(const SLGuidAndRenderRoot& aGuid) {
   SendStopAutoscroll(aGuid);
 }
 

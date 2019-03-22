@@ -126,6 +126,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   typedef mozilla::layers::CompositorBridgeParent CompositorBridgeParent;
   typedef mozilla::layers::IAPZCTreeManager IAPZCTreeManager;
   typedef mozilla::layers::GeckoContentController GeckoContentController;
+  typedef mozilla::layers::SLGuidAndRenderRoot SLGuidAndRenderRoot;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
   typedef mozilla::layers::APZEventState APZEventState;
   typedef mozilla::layers::SetAllowedTouchBehaviorCallback
@@ -323,7 +324,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   void SetConfirmedTargetAPZC(
       uint64_t aInputBlockId,
-      const nsTArray<ScrollableLayerGuid>& aTargets) const override;
+      const nsTArray<SLGuidAndRenderRoot>& aTargets) const override;
 
   void UpdateZoomConstraints(
       const uint32_t& aPresShellId, const ScrollableLayerGuid::ViewID& aViewId,
@@ -383,9 +384,9 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
       const AsyncDragMetrics& aDragMetrics) override;
 
   virtual bool StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
-                                    const ScrollableLayerGuid& aGuid) override;
+                                    const SLGuidAndRenderRoot& aGuid) override;
 
-  virtual void StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) override;
+  virtual void StopAsyncAutoscroll(const SLGuidAndRenderRoot& aGuid) override;
 
   /**
    * Use this when GetLayerManager() returns a BasicLayerManager

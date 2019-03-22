@@ -581,7 +581,7 @@ impl TextureCache {
     pub fn new_for_testing(max_texture_size: i32, max_texture_layers: usize) -> Self {
         let tile_size = DeviceIntSize::new(64, 64);
         let mut cache = Self::new(max_texture_size, max_texture_layers, tile_size);
-        let mut now = FrameStamp::first(DocumentId(IdNamespace(1), 1));
+        let mut now = FrameStamp::first(DocumentId::new(IdNamespace(1), 1));
         now.advance();
         cache.begin_frame(now);
         cache

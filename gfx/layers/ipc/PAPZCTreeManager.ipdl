@@ -16,10 +16,12 @@ using ScreenPoint from "Units.h";
 using mozilla::layers::MaybeZoomConstraints from "mozilla/layers/ZoomConstraints.h";
 using struct mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
 using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
+using struct mozilla::layers::SLGuidAndRenderRoot from "mozilla/layers/APZTypes.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h";
 using mozilla::layers::GeckoContentController::TapType from "mozilla/layers/GeckoContentController.h";
 using class mozilla::layers::KeyboardMap from "mozilla/layers/KeyboardMap.h";
+using mozilla::wr::RenderRoot from "mozilla/webrender/WebRenderTypes.h";
 
 using mozilla::Modifiers from "mozilla/EventForwards.h";
 using mozilla::PinchGestureInput::PinchGestureType from "InputData.h";
@@ -45,13 +47,13 @@ parent:
   // These messages correspond to the methods
   // on the IAPZCTreeManager interface
 
-  async ZoomToRect(ScrollableLayerGuid aGuid, CSSRect aRect, uint32_t Flags);
+  async ZoomToRect(SLGuidAndRenderRoot aGuid, CSSRect aRect, uint32_t Flags);
 
   async ContentReceivedInputBlock(uint64_t aInputBlockId, bool PreventDefault);
 
-  async SetTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] Targets);
+  async SetTargetAPZC(uint64_t aInputBlockId, SLGuidAndRenderRoot[] Targets);
 
-  async UpdateZoomConstraints(ScrollableLayerGuid aGuid, MaybeZoomConstraints aConstraints);
+  async UpdateZoomConstraints(SLGuidAndRenderRoot aGuid, MaybeZoomConstraints aConstraints);
 
   async SetKeyboardMap(KeyboardMap aKeyboardMap);
 
@@ -59,11 +61,11 @@ parent:
 
   async SetAllowedTouchBehavior(uint64_t aInputBlockId, TouchBehaviorFlags[] aValues);
 
-  async StartScrollbarDrag(ScrollableLayerGuid aGuid, AsyncDragMetrics aDragMetrics);
+  async StartScrollbarDrag(SLGuidAndRenderRoot aGuid, AsyncDragMetrics aDragMetrics);
 
-  async StartAutoscroll(ScrollableLayerGuid aGuid, ScreenPoint aAnchorLocation);
+  async StartAutoscroll(SLGuidAndRenderRoot aGuid, ScreenPoint aAnchorLocation);
 
-  async StopAutoscroll(ScrollableLayerGuid aGuid);
+  async StopAutoscroll(SLGuidAndRenderRoot aGuid);
 
   async SetLongTapEnabled(bool aTapGestureEnabled);
 
