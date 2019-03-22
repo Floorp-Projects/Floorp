@@ -24,12 +24,30 @@ class VideoOutput : public DirectMediaStreamTrackListener {
                                const MediaSegment& aMedia) override {
     MOZ_ASSERT(aMedia.GetType() == MediaSegment::VIDEO);
     const VideoSegment& video = static_cast<const VideoSegment&>(aMedia);
-    mVideoFrameContainer->SetCurrentFrames(video);
+    mSegment.ForgetUpToTime(TimeStamp::Now());
+    for (VideoSegment::ConstChunkIterator i(video); !i.IsEnded(); i.Next()) {
+      if (!mLastFrameTime.IsNull() && i->mTimeStamp < mLastFrameTime) {
+        // Time can go backwards if the source is a captured MediaDecoder and
+        // it seeks, as the previously buffered frames would stretch into the
+        // future. If this happens, we clear the buffered frames and start over.
+        mSegment.Clear();
+      }
+      const VideoFrame& f = i->mFrame;
+      mSegment.AppendFrame(do_AddRef(f.GetImage()), 0, f.GetIntrinsicSize(),
+                           f.GetPrincipalHandle(), f.GetForceBlack(),
+                           i->mTimeStamp);
+      mLastFrameTime = i->mTimeStamp;
+    }
+    mVideoFrameContainer->SetCurrentFrames(mSegment);
   }
-  void NotifyDirectListenerUninstalled() override {
+  void NotifyRemoved() override {
+    mSegment.Clear();
     mVideoFrameContainer->ClearFrames();
   }
+  void NotifyEnded() override { mSegment.Clear(); }
 
+  TimeStamp mLastFrameTime;
+  VideoSegment mSegment;
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
 };
 
@@ -56,14 +74,16 @@ void VideoStreamTrack::AddVideoOutput(VideoFrameContainer* aSink) {
   }
   RefPtr<VideoOutput>& output =
       *mVideoOutputs.AppendElement(MakeRefPtr<VideoOutput>(aSink));
-  GetOwnedStream()->AddDirectTrackListener(output, mTrackID);
+  AddDirectListener(output);
+  AddListener(output);
 }
 
 void VideoStreamTrack::RemoveVideoOutput(VideoFrameContainer* aSink) {
   for (const auto& output : nsTArray<RefPtr<VideoOutput>>(mVideoOutputs)) {
     if (output->mVideoFrameContainer == aSink) {
       mVideoOutputs.RemoveElement(output);
-      GetOwnedStream()->RemoveDirectTrackListener(output, mTrackID);
+      RemoveDirectListener(output);
+      RemoveListener(output);
     }
   }
 }

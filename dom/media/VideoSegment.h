@@ -123,6 +123,38 @@ class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
     }
     return &c->mFrame;
   }
+  VideoChunk* FindChunkContainingTime(const TimeStamp& aTime) {
+    VideoChunk* previousChunk = nullptr;
+    for (VideoChunk& c : mChunks) {
+      if (c.mTimeStamp.IsNull()) {
+        continue;
+      }
+      if (c.mTimeStamp > aTime) {
+        return previousChunk;
+      }
+      previousChunk = &c;
+    }
+    return previousChunk;
+  }
+  void ForgetUpToTime(const TimeStamp& aTime) {
+    VideoChunk* chunk = FindChunkContainingTime(aTime);
+    if (!chunk) {
+      return;
+    }
+    StreamTime duration = 0;
+    size_t chunksToRemove = 0;
+    for (const VideoChunk& c : mChunks) {
+      if (c.mTimeStamp >= chunk->mTimeStamp) {
+        break;
+      }
+      duration += c.GetDuration();
+      ++chunksToRemove;
+    }
+    mChunks.RemoveElementsAt(0, chunksToRemove);
+    mDuration -= duration;
+    MOZ_ASSERT(mChunks.Capacity() >= DEFAULT_SEGMENT_CAPACITY,
+               "Capacity must be retained after removing chunks");
+  }
   // Override default impl
   void ReplaceWithDisabled() override {
     for (ChunkIterator i(*this); !i.IsEnded(); i.Next()) {
