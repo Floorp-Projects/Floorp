@@ -249,3 +249,4 @@ load 1528675.html
 load structured_clone_container_throws.html
 load xhr_empty_datauri.html
 load xhr_html_nullresponse.html
+load xhr-with-pagehide-1.html
