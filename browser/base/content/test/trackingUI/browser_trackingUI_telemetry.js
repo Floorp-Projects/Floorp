@@ -56,24 +56,22 @@ add_task(async function testShieldHistogram() {
   is(getShieldCounts()[0], 1, "Page loads without tracking");
 
   await promiseTabLoadEvent(tab, TRACKING_PAGE);
-  // Note that right now the shield histogram is not measuring what
-  // you might think.  Since onContentBlockingEvent fires twice for a tracking page,
-  // the total page loads count is double counting, and the shield count
-  // (which is meant to measure times when the shield wasn't shown) fires even
-  // when tracking elements exist on the page.
-  todo_is(getShieldCounts()[0], 1, "FIXME: TOTAL PAGE LOADS WITHOUT TRACKING IS DOUBLE COUNTING");
+  is(getShieldCounts()[0], 2, "Adds one more page load");
+  is(getShieldCounts()[2], 1, "Counts one instance of the shield being shown");
 
   info("Disable TP for the page (which reloads the page)");
   let tabReloadPromise = promiseTabLoadEvent(tab);
   document.querySelector("#tracking-action-unblock").doCommand();
   await tabReloadPromise;
-  todo_is(getShieldCounts()[0], 1, "FIXME: TOTAL PAGE LOADS WITHOUT TRACKING IS DOUBLE COUNTING");
+  is(getShieldCounts()[0], 3, "Adds one more page load");
+  is(getShieldCounts()[1], 1, "Counts one instance of the shield being crossed out");
 
   info("Re-enable TP for the page (which reloads the page)");
   tabReloadPromise = promiseTabLoadEvent(tab);
   document.querySelector("#tracking-action-block").doCommand();
   await tabReloadPromise;
-  todo_is(getShieldCounts()[0], 1, "FIXME: TOTAL PAGE LOADS WITHOUT TRACKING IS DOUBLE COUNTING");
+  is(getShieldCounts()[0], 4, "Adds one more page load");
+  is(getShieldCounts()[2], 2, "Adds one more instance of the shield being shown");
 
   gBrowser.removeCurrentTab();
 
