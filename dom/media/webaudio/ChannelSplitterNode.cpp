@@ -58,10 +58,6 @@ ChannelSplitterNode::ChannelSplitterNode(AudioContext* aContext,
 already_AddRefed<ChannelSplitterNode> ChannelSplitterNode::Create(
     AudioContext& aAudioContext, const ChannelSplitterOptions& aOptions,
     ErrorResult& aRv) {
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   if (aOptions.mNumberOfOutputs == 0 ||
       aOptions.mNumberOfOutputs > WebAudioUtils::MaxChannelCount) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);

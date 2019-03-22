@@ -396,10 +396,6 @@ ConvolverNode::ConvolverNode(AudioContext* aContext)
 already_AddRefed<ConvolverNode> ConvolverNode::Create(
     JSContext* aCx, AudioContext& aAudioContext,
     const ConvolverOptions& aOptions, ErrorResult& aRv) {
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   RefPtr<ConvolverNode> audioNode = new ConvolverNode(&aAudioContext);
 
   audioNode->Initialize(aOptions, aRv);
