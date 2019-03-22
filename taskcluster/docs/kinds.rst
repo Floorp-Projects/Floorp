@@ -543,7 +543,7 @@ addon
 Tasks used to build/package add-ons.
 
 openh264-plugin
------
+---------------
 Tasks used to build the openh264 plugin.
 
 openh264-signing

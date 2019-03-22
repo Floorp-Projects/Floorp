@@ -247,7 +247,7 @@ rather than ``Components.utils.import`` and
 ``XPCOMUtils.defineLazyModuleGetter``.
 
 use-default-preference-values
----------------
+-----------------------------
 
 Require providing a second parameter to get*Pref methods instead of
 using a try/catch block.
