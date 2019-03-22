@@ -3311,23 +3311,6 @@ void LIRGenerator::visitStoreUnboxedString(MStoreUnboxedString* ins) {
   add(lir, ins);
 }
 
-void LIRGenerator::visitConvertUnboxedObjectToNative(
-    MConvertUnboxedObjectToNative* ins) {
-  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-
-  if (JitOptions.spectreObjectMitigationsMisc) {
-    auto* lir = new (alloc()) LConvertUnboxedObjectToNative(
-        useRegisterAtStart(ins->object()), temp());
-    defineReuseInput(lir, ins, 0);
-    assignSafepoint(lir, ins);
-  } else {
-    auto* lir = new (alloc()) LConvertUnboxedObjectToNative(
-        useRegister(ins->object()), LDefinition::BogusTemp());
-    add(lir, ins);
-    assignSafepoint(lir, ins);
-  }
-}
-
 void LIRGenerator::visitEffectiveAddress(MEffectiveAddress* ins) {
   define(new (alloc()) LEffectiveAddress(useRegister(ins->base()),
                                          useRegister(ins->index())),
@@ -3863,20 +3846,6 @@ void LIRGenerator::visitGuardReceiverPolymorphic(
     add(lir, ins);
     redefine(ins, ins->object());
   }
-}
-
-void LIRGenerator::visitGuardUnboxedExpando(MGuardUnboxedExpando* ins) {
-  LGuardUnboxedExpando* guard =
-      new (alloc()) LGuardUnboxedExpando(useRegister(ins->object()));
-  assignSnapshot(guard, ins->bailoutKind());
-  add(guard, ins);
-  redefine(ins, ins->object());
-}
-
-void LIRGenerator::visitLoadUnboxedExpando(MLoadUnboxedExpando* ins) {
-  LLoadUnboxedExpando* lir =
-      new (alloc()) LLoadUnboxedExpando(useRegisterAtStart(ins->object()));
-  define(lir, ins);
 }
 
 void LIRGenerator::visitAssertRange(MAssertRange* ins) {

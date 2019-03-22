@@ -33,7 +33,6 @@
 #include "vm/JSAtom-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
-#include "vm/UnboxedObject-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -2318,12 +2317,6 @@ bool jit::CanStoreUnboxedType(TempAllocator& alloc, JSValueType unboxedType,
   return TypeSetIncludes(&types, input, inputTypes);
 }
 
-static bool CanStoreUnboxedType(TempAllocator& alloc, JSValueType unboxedType,
-                                MDefinition* value) {
-  return CanStoreUnboxedType(alloc, unboxedType, value->type(),
-                             value->resultTypeSet());
-}
-
 bool MPhi::specializeType(TempAllocator& alloc) {
 #ifdef DEBUG
   MOZ_ASSERT(!specialized_);
@@ -4580,38 +4573,9 @@ void MBeta::printOpcode(GenericPrinter& out) const {
 #endif
 
 bool MCreateThisWithTemplate::canRecoverOnBailout() const {
-  MOZ_ASSERT(templateObject()->is<PlainObject>() ||
-             templateObject()->is<UnboxedPlainObject>());
-  MOZ_ASSERT_IF(
-      templateObject()->is<PlainObject>(),
+  MOZ_ASSERT(templateObject()->is<PlainObject>());
+  MOZ_ASSERT(
       !templateObject()->as<PlainObject>().denseElementsAreCopyOnWrite());
-  return true;
-}
-
-bool OperandIndexMap::init(TempAllocator& alloc, JSObject* templateObject) {
-  const UnboxedLayout& layout =
-      templateObject->as<UnboxedPlainObject>().layoutDontCheckGeneration();
-
-  const UnboxedLayout::PropertyVector& properties = layout.properties();
-  MOZ_ASSERT(properties.length() < 255);
-
-  // Allocate an array of indexes, where the top of each field correspond to
-  // the index of the operand in the MObjectState instance.
-  if (!map.init(alloc, layout.size())) {
-    return false;
-  }
-
-  // Reset all indexes to 0, which is an error code.
-  for (size_t i = 0; i < map.length(); i++) {
-    map[i] = 0;
-  }
-
-  // Map the property offsets to the indexes of MObjectState operands.
-  uint8_t index = 1;
-  for (size_t i = 0; i < properties.length(); i++, index++) {
-    map[properties[i].offset] = index;
-  }
-
   return true;
 }
 
@@ -4632,17 +4596,11 @@ MObjectState::MObjectState(JSObject* templateObject,
   setResultType(MIRType::Object);
   setRecoveredOnBailout();
 
-  if (templateObject->is<NativeObject>()) {
-    NativeObject* nativeObject = &templateObject->as<NativeObject>();
-    numSlots_ = nativeObject->slotSpan();
-    numFixedSlots_ = nativeObject->numFixedSlots();
-  } else {
-    const UnboxedLayout& layout =
-        templateObject->as<UnboxedPlainObject>().layoutDontCheckGeneration();
-    // Same as UnboxedLayout::makeNativeGroup
-    numSlots_ = layout.properties().length();
-    numFixedSlots_ = gc::GetGCKindSlots(layout.getAllocKind());
-  }
+  MOZ_ASSERT(templateObject->is<NativeObject>());
+
+  NativeObject* nativeObject = &templateObject->as<NativeObject>();
+  numSlots_ = nativeObject->slotSpan();
+  numFixedSlots_ = nativeObject->numFixedSlots();
 
   operandIndex_ = operandIndex;
 }
@@ -4678,42 +4636,24 @@ bool MObjectState::initFromTemplateObject(TempAllocator& alloc,
   // the template object. This is needed to account values which are baked in
   // the template objects and not visible in IonMonkey, such as the
   // uninitialized-lexical magic value of call objects.
-  if (templateObject->is<UnboxedPlainObject>()) {
-    UnboxedPlainObject& unboxedObject =
-        templateObject->as<UnboxedPlainObject>();
-    const UnboxedLayout& layout = unboxedObject.layoutDontCheckGeneration();
-    const UnboxedLayout::PropertyVector& properties = layout.properties();
 
-    for (size_t i = 0; i < properties.length(); i++) {
-      Value val = unboxedObject.getValue(properties[i],
-                                         /* maybeUninitialized = */ true);
-      MDefinition* def = undefinedVal;
-      if (!val.isUndefined()) {
-        MConstant* ins = val.isObject() ? MConstant::NewConstraintlessObject(
-                                              alloc, &val.toObject())
-                                        : MConstant::New(alloc, val);
-        block()->insertBefore(this, ins);
-        def = ins;
-      }
-      initSlot(i, def);
-    }
-  } else {
-    NativeObject& nativeObject = templateObject->as<NativeObject>();
-    MOZ_ASSERT(nativeObject.slotSpan() == numSlots());
+  MOZ_ASSERT(templateObject->is<NativeObject>());
+  NativeObject& nativeObject = templateObject->as<NativeObject>();
+  MOZ_ASSERT(nativeObject.slotSpan() == numSlots());
 
-    for (size_t i = 0; i < numSlots(); i++) {
-      Value val = nativeObject.getSlot(i);
-      MDefinition* def = undefinedVal;
-      if (!val.isUndefined()) {
-        MConstant* ins = val.isObject() ? MConstant::NewConstraintlessObject(
-                                              alloc, &val.toObject())
-                                        : MConstant::New(alloc, val);
-        block()->insertBefore(this, ins);
-        def = ins;
-      }
-      initSlot(i, def);
+  for (size_t i = 0; i < numSlots(); i++) {
+    Value val = nativeObject.getSlot(i);
+    MDefinition* def = undefinedVal;
+    if (!val.isUndefined()) {
+      MConstant* ins = val.isObject() ? MConstant::NewConstraintlessObject(
+                                            alloc, &val.toObject())
+                                      : MConstant::New(alloc, val);
+      block()->insertBefore(this, ins);
+      def = ins;
     }
+    initSlot(i, def);
   }
+
   return true;
 }
 
@@ -4721,15 +4661,7 @@ MObjectState* MObjectState::New(TempAllocator& alloc, MDefinition* obj) {
   JSObject* templateObject = templateObjectOf(obj);
   MOZ_ASSERT(templateObject, "Unexpected object creation.");
 
-  OperandIndexMap* operandIndex = nullptr;
-  if (templateObject->is<UnboxedPlainObject>()) {
-    operandIndex = new (alloc) OperandIndexMap;
-    if (!operandIndex || !operandIndex->init(alloc, templateObject)) {
-      return nullptr;
-    }
-  }
-
-  MObjectState* res = new (alloc) MObjectState(templateObject, operandIndex);
+  MObjectState* res = new (alloc) MObjectState(templateObject, nullptr);
   if (!res || !res->init(alloc, obj)) {
     return nullptr;
   }
@@ -5691,40 +5623,6 @@ MDefinition* MGetFirstDollarIndex::foldsTo(TempAllocator& alloc) {
   return MConstant::New(alloc, Int32Value(index));
 }
 
-MConvertUnboxedObjectToNative* MConvertUnboxedObjectToNative::New(
-    TempAllocator& alloc, MDefinition* obj, ObjectGroup* group) {
-  MConvertUnboxedObjectToNative* res =
-      new (alloc) MConvertUnboxedObjectToNative(obj, group);
-
-  AutoSweepObjectGroup sweep(group);
-  ObjectGroup* nativeGroup = group->unboxedLayout(sweep).nativeGroup();
-
-  // Make a new type set for the result of this instruction which replaces
-  // the input group with the native group we will convert it to.
-  TemporaryTypeSet* types = obj->resultTypeSet();
-  if (types && !types->unknownObject()) {
-    TemporaryTypeSet* newTypes = types->cloneWithoutObjects(alloc.lifoAlloc());
-    if (newTypes) {
-      for (size_t i = 0; i < types->getObjectCount(); i++) {
-        TypeSet::ObjectKey* key = types->getObject(i);
-        if (!key) {
-          continue;
-        }
-        if (key->unknownProperties() || !key->isGroup() ||
-            key->group() != group) {
-          newTypes->addType(TypeSet::ObjectType(key), alloc.lifoAlloc());
-        } else {
-          newTypes->addType(TypeSet::ObjectType(nativeGroup),
-                            alloc.lifoAlloc());
-        }
-      }
-      res->setResultTypeSet(newTypes);
-    }
-  }
-
-  return res;
-}
-
 bool jit::ElementAccessIsDenseNative(CompilerConstraintList* constraints,
                                      MDefinition* obj, MDefinition* id) {
   if (obj->mightBeType(MIRType::String)) {
@@ -6334,24 +6232,6 @@ bool jit::PropertyWriteNeedsTypeBarrier(TempAllocator& alloc,
     }
   }
 
-  // Perform additional filtering to make sure that any unboxed property
-  // being written can accommodate the value.
-  for (size_t i = 0; i < types->getObjectCount(); i++) {
-    TypeSet::ObjectKey* key = types->getObject(i);
-    if (!key || !key->isGroup()) {
-      continue;
-    }
-    AutoSweepObjectGroup sweep(key->group());
-    if (const auto* layout = key->group()->maybeUnboxedLayout(sweep)) {
-      if (name) {
-        const UnboxedLayout::Property* property = layout->lookup(name);
-        if (property && !CanStoreUnboxedType(alloc, property->type, *pvalue)) {
-          return true;
-        }
-      }
-    }
-  }
-
   if (success) {
     return false;
   }
@@ -6393,19 +6273,6 @@ bool jit::PropertyWriteNeedsTypeBarrier(TempAllocator& alloc,
   }
 
   MOZ_ASSERT(excluded);
-
-  // If the excluded object is a group with an unboxed layout, make sure it
-  // does not have a corresponding native group. Objects with the native
-  // group might appear even though they are not in the type set.
-  if (excluded->isGroup()) {
-    AutoSweepObjectGroup sweep(excluded->group());
-    if (UnboxedLayout* layout = excluded->group()->maybeUnboxedLayout(sweep)) {
-      if (layout->nativeGroup()) {
-        return true;
-      }
-      excluded->watchStateChangeForUnboxedConvertedToNative(constraints);
-    }
-  }
 
   *pobj = AddGroupGuard(alloc, current, *pobj, excluded,
                         /* bailOnEquality = */ true);

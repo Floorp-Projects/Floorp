@@ -2058,19 +2058,6 @@ void TypeSet::ObjectKey::watchStateChangeForTypedArrayData(
                      ConstraintDataFreezeObjectForTypedArrayData(tarray)));
 }
 
-void TypeSet::ObjectKey::watchStateChangeForUnboxedConvertedToNative(
-    CompilerConstraintList* constraints) {
-  HeapTypeSetKey objectProperty = property(JSID_EMPTY);
-  LifoAlloc* alloc = constraints->alloc();
-
-  typedef CompilerConstraintInstance<
-      ConstraintDataFreezeObjectForUnboxedConvertedToNative>
-      T;
-  constraints->add(
-      alloc->new_<T>(alloc, objectProperty,
-                     ConstraintDataFreezeObjectForUnboxedConvertedToNative()));
-}
-
 static void ObjectStateChange(const AutoSweepObjectGroup& sweep, JSContext* cx,
                               ObjectGroup* group, bool markingUnknown) {
   if (group->unknownProperties(sweep)) {

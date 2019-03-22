@@ -239,8 +239,6 @@ class IonBuilder : public MIRGenerator,
                               BailoutKind bailoutKind);
   MInstruction* addGroupGuard(MDefinition* obj, ObjectGroup* group,
                               BailoutKind bailoutKind);
-  MInstruction* addUnboxedExpandoGuard(MDefinition* obj, bool hasExpando,
-                                       BailoutKind bailoutKind);
   MInstruction* addSharedTypedArrayGuard(MDefinition* obj);
 
   MInstruction* addGuardReceiverPolymorphic(
@@ -285,9 +283,6 @@ class IonBuilder : public MIRGenerator,
                                               PropertyName* name,
                                               BarrierKind barrier,
                                               TemporaryTypeSet* types);
-  AbortReasonOr<Ok> getPropTryUnboxed(bool* emitted, MDefinition* obj,
-                                      PropertyName* name, BarrierKind barrier,
-                                      TemporaryTypeSet* types);
   AbortReasonOr<Ok> getPropTryCommonGetter(bool* emitted, MDefinition* obj,
                                            jsid id, TemporaryTypeSet* types,
                                            bool innerized = false);
@@ -327,9 +322,6 @@ class IonBuilder : public MIRGenerator,
   AbortReasonOr<Ok> setPropTryDefiniteSlot(bool* emitted, MDefinition* obj,
                                            PropertyName* name,
                                            MDefinition* value, bool barrier);
-  AbortReasonOr<Ok> setPropTryUnboxed(bool* emitted, MDefinition* obj,
-                                      PropertyName* name, MDefinition* value,
-                                      bool barrier);
   AbortReasonOr<Ok> setPropTryInlineAccess(bool* emitted, MDefinition* obj,
                                            PropertyName* name,
                                            MDefinition* value, bool barrier,
@@ -938,24 +930,6 @@ class IonBuilder : public MIRGenerator,
 
   uint32_t getDefiniteSlot(TemporaryTypeSet* types, jsid id, uint32_t* pnfixed);
 
-  uint32_t getUnboxedOffset(TemporaryTypeSet* types, jsid id,
-                            JSValueType* punboxedType);
-  MInstruction* loadUnboxedProperty(MDefinition* obj, size_t offset,
-                                    JSValueType unboxedType,
-                                    BarrierKind barrier,
-                                    TemporaryTypeSet* types);
-  MInstruction* loadUnboxedValue(MDefinition* elements, size_t elementsOffset,
-                                 MDefinition* scaledOffset,
-                                 JSValueType unboxedType, BarrierKind barrier,
-                                 TemporaryTypeSet* types);
-  MInstruction* storeUnboxedProperty(MDefinition* obj, size_t offset,
-                                     JSValueType unboxedType,
-                                     MDefinition* value);
-  MInstruction* storeUnboxedValue(MDefinition* obj, MDefinition* elements,
-                                  int32_t elementsOffset,
-                                  MDefinition* scaledOffset,
-                                  JSValueType unboxedType, MDefinition* value,
-                                  bool preBarrier = true);
   AbortReasonOr<Ok> checkPreliminaryGroups(MDefinition* obj);
   AbortReasonOr<Ok> freezePropTypeSets(TemporaryTypeSet* types,
                                        JSObject* foundProto,
