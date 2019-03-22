@@ -2168,6 +2168,9 @@ void MediaStream::AddTrackListenerImpl(
           GraphTimeToStreamTime(GraphImpl()->mStateComputedTime)) {
     l->mListener->NotifyEnded();
   }
+  if (GetDisabledTrackMode(aTrackID) == DisabledTrackMode::SILENCE_BLACK) {
+    l->mListener->NotifyEnabledStateChanged(false);
+  }
 }
 
 void MediaStream::AddTrackListener(MediaStreamTrackListener* aListener,
@@ -2305,6 +2308,11 @@ void MediaStream::SetTrackEnabledImpl(TrackID aTrackID,
     for (int32_t i = mDisabledTracks.Length() - 1; i >= 0; --i) {
       if (aTrackID == mDisabledTracks[i].mTrackID) {
         mDisabledTracks.RemoveElementAt(i);
+        for (TrackBound<MediaStreamTrackListener>& l : mTrackListeners) {
+          if (l.mTrackID == aTrackID) {
+            l.mListener->NotifyEnabledStateChanged(true);
+          }
+        }
         return;
       }
     }
@@ -2316,6 +2324,13 @@ void MediaStream::SetTrackEnabledImpl(TrackID aTrackID,
       }
     }
     mDisabledTracks.AppendElement(DisabledTrack(aTrackID, aMode));
+    if (aMode == DisabledTrackMode::SILENCE_BLACK) {
+      for (TrackBound<MediaStreamTrackListener>& l : mTrackListeners) {
+        if (l.mTrackID == aTrackID) {
+          l.mListener->NotifyEnabledStateChanged(false);
+        }
+      }
+    }
   }
 }
 

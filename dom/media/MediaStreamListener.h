@@ -72,6 +72,16 @@ class MediaStreamTrackListener {
       MediaStreamGraph* aGraph, const PrincipalHandle& aNewPrincipalHandle) {}
 
   /**
+   * Notify that the enabled state for the track this listener is attached to
+   * has changed.
+   *
+   * The enabled state here is referring to whether audio should be audible
+   * (enabled) or silent (not enabled); or whether video should be displayed as
+   * is (enabled), or black (not enabled).
+   */
+  virtual void NotifyEnabledStateChanged(bool aEnabled) {}
+
+  /**
    * Notify that the stream output is advancing. aCurrentTrackTime is the number
    * of samples that has been played out for this track in stream time.
    */
