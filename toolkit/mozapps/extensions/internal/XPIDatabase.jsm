@@ -1448,9 +1448,7 @@ this.XPIDatabase = {
       return this.addonDB;
     })();
 
-    this._dbPromise.then(() => {
-      Services.obs.notifyObservers(null, "xpi-database-loaded");
-    });
+    XPIInternal.resolveDBReady(this._dbPromise);
 
     return this._dbPromise;
   },

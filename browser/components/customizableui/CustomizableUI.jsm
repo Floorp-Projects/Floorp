@@ -184,10 +184,13 @@ var CustomizableUIInternal = {
   initialize() {
     log.debug("Initializing");
 
-    Services.obs.addObserver(this, "xpi-database-loaded");
-    if (AddonManagerPrivate.isDBLoaded()) {
-      this.observe(null, "xpi-database-loaded");
-    }
+    AddonManagerPrivate.databaseReady.then(async () => {
+      AddonManager.addAddonListener(this);
+
+      let addons = await AddonManager.getAddonsByTypes(["theme"]);
+      gDefaultTheme = addons.find(addon => addon.id == kDefaultThemeID);
+      gSelectedTheme = addons.find(addon => addon.isActive) || gDefaultTheme;
+    });
 
     this.addListener(this);
     this._defineBuiltInWidgets();
@@ -254,16 +257,6 @@ var CustomizableUIInternal = {
     }, true);
 
     SearchWidgetTracker.init();
-  },
-
-  async observe(subject, topic, data) {
-    if (topic == "xpi-database-loaded") {
-      AddonManager.addAddonListener(this);
-
-      let addons = await AddonManager.getAddonsByTypes(["theme"]);
-      gDefaultTheme = addons.find(addon => addon.id == kDefaultThemeID);
-      gSelectedTheme = addons.find(addon => addon.isActive) || gDefaultTheme;
-    }
   },
 
   onEnabled(addon) {

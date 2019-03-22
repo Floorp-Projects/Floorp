@@ -18,7 +18,7 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
 
 const Utils = TelemetryUtils;
 
-const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const {AddonManager, AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AttributionCode",
                                "resource:///modules/AttributionCode.jsm");
@@ -572,18 +572,9 @@ EnvironmentAddonBuilder.prototype = {
         await this._updateAddons(true);
 
         if (!this._environment._addonsAreFull) {
-          // The addon database has not been loaded, so listen for the event
-          // triggered by the AddonManager when it is loaded so we can
-          // immediately gather full data at that time.
-          await new Promise(resolve => {
-            const ADDON_LOAD_NOTIFICATION = "xpi-database-loaded";
-            Services.obs.addObserver({
-              observe(subject, topic, data) {
-                Services.obs.removeObserver(this, ADDON_LOAD_NOTIFICATION);
-                resolve();
-              },
-            }, ADDON_LOAD_NOTIFICATION);
-          });
+          // The addon database has not been loaded, wait for it to
+          // initialize and gather full data as soon as it does.
+          await AddonManagerPrivate.databaseReady;
 
           // Now gather complete addons details.
           await this._updateAddons();
