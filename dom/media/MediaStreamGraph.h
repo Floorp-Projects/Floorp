@@ -176,7 +176,6 @@ class DirectMediaStreamTrackListener;
 class MediaInputPort;
 class MediaStreamGraphImpl;
 class MediaStreamTrackListener;
-class MediaStreamVideoSink;
 class ProcessedMediaStream;
 class SourceMediaStream;
 class TrackUnionStream;
@@ -217,9 +216,8 @@ struct TrackBound {
  *
  * Any stream can have its audio and video playing when requested. The media
  * stream graph plays audio by constructing audio output streams as necessary.
- * Video is played by setting video frames into an MediaStreamVideoSink at the
- * right time. To ensure video plays in sync with audio, make sure that the same
- * stream is playing both the audio and video.
+ * Video is played through a DirectMediaStreamTrackListener managed by
+ * VideoStreamTrack.
  *
  * The data in a stream is managed by StreamTracks. It consists of a set of
  * tracks of various types that can start and end over time.
@@ -298,13 +296,6 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
   virtual void AddAudioOutput(void* aKey);
   virtual void SetAudioOutputVolume(void* aKey, float aVolume);
   virtual void RemoveAudioOutput(void* aKey);
-  // Since a stream can be played multiple ways, we need to be able to
-  // play to multiple MediaStreamVideoSinks.
-  // Only the first enabled video track is played.
-  virtual void AddVideoOutput(MediaStreamVideoSink* aSink,
-                              TrackID aID = TRACK_ANY);
-  virtual void RemoveVideoOutput(MediaStreamVideoSink* aSink,
-                                 TrackID aID = TRACK_ANY);
   // Explicitly suspend. Useful for example if a media element is pausing
   // and we need to stop its stream emitting its buffered data. As soon as the
   // Suspend message reaches the graph, the stream stops processing. It
@@ -421,9 +412,6 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
   void SetAudioOutputVolumeImpl(void* aKey, float aVolume);
   void AddAudioOutputImpl(void* aKey);
   void RemoveAudioOutputImpl(void* aKey);
-  void AddVideoOutputImpl(already_AddRefed<MediaStreamVideoSink> aSink,
-                          TrackID aID);
-  void RemoveVideoOutputImpl(MediaStreamVideoSink* aSink, TrackID aID);
 
   /**
    * Removes all direct listeners and signals to them that they have been
@@ -566,7 +554,6 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
     float mVolume;
   };
   nsTArray<AudioOutput> mAudioOutputs;
-  nsTArray<TrackBound<MediaStreamVideoSink>> mVideoOutputs;
   // We record the last played video frame to avoid playing the frame again
   // with a different frame id.
   VideoFrame mLastPlayedVideoFrame;

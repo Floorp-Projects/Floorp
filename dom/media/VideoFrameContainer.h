@@ -13,7 +13,6 @@
 #include "nsCOMPtr.h"
 #include "ImageContainer.h"
 #include "MediaSegment.h"
-#include "MediaStreamVideoSink.h"
 #include "VideoSegment.h"
 
 namespace mozilla {
@@ -29,8 +28,10 @@ class MediaDecoderOwner;
  * element itself ... well, maybe we could, but it could be risky and/or
  * confusing.
  */
-class VideoFrameContainer : public MediaStreamVideoSink {
+class VideoFrameContainer {
   virtual ~VideoFrameContainer();
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoFrameContainer)
 
  public:
   typedef layers::ImageContainer ImageContainer;
@@ -40,8 +41,8 @@ class VideoFrameContainer : public MediaStreamVideoSink {
                       already_AddRefed<ImageContainer> aContainer);
 
   // Call on any thread
-  virtual void SetCurrentFrames(const VideoSegment& aSegment) override;
-  virtual void ClearFrames() override;
+  virtual void SetCurrentFrames(const VideoSegment& aSegment);
+  virtual void ClearFrames();
   void SetCurrentFrame(const gfx::IntSize& aIntrinsicSize, Image* aImage,
                        const TimeStamp& aTargetTime);
   // Returns the last principalHandle we notified mElement about.
@@ -63,7 +64,6 @@ class VideoFrameContainer : public MediaStreamVideoSink {
     SetCurrentFrames(aIntrinsicSize,
                      nsTArray<ImageContainer::NonOwningImage>());
   }
-  VideoFrameContainer* AsVideoFrameContainer() override { return this; }
 
   void ClearCurrentFrame();
   // Make the current frame the only frame in the container, i.e. discard
@@ -84,7 +84,7 @@ class VideoFrameContainer : public MediaStreamVideoSink {
 
   // Call on main thread
   enum { INVALIDATE_DEFAULT, INVALIDATE_FORCE };
-  void Invalidate() override { InvalidateWithFlags(INVALIDATE_DEFAULT); }
+  void Invalidate() { InvalidateWithFlags(INVALIDATE_DEFAULT); }
   void InvalidateWithFlags(uint32_t aFlags);
   ImageContainer* GetImageContainer();
   void ForgetElement() { mOwner = nullptr; }
