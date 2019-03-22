@@ -561,7 +561,8 @@ def target_tasks_searchfox(full_task_graph, parameters, graph_config):
     return ['searchfox-linux64-searchfox/debug',
             'searchfox-macosx64-searchfox/debug',
             'searchfox-win64-searchfox/debug',
-            'searchfox-android-armv7-searchfox/debug']
+            'searchfox-android-armv7-searchfox/debug',
+            'source-test-file-metadata-bugzilla-components']
 
 
 @_target_task('customv8_update')
