@@ -2454,6 +2454,8 @@ void SourceMediaStream::SetPullingEnabled(TrackID aTrackID, bool aEnabled) {
                           mStream->mTracks.FindTrack(mTrackID)->IsEnded());
         return;
       }
+      MOZ_ASSERT(data->mData->GetType() == MediaSegment::AUDIO,
+                 "Pulling is not allowed for video");
       data->mPullingEnabled = mEnabled;
     }
     SourceMediaStream* mStream;
