@@ -74,7 +74,7 @@ async function test() {
     contributionURL: "http://foo.com",
     contributionAmount: null,
     updateDate: gDate,
-    permissions: 0,
+    permissions: AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS,
   }, {
     id: "addon-theme@tests.mozilla.org",
     name: "Test add-on theme",
@@ -140,6 +140,12 @@ async function test() {
     name: "Test add-on 12",
     signedState: AddonManager.SIGNEDSTATE_SIGNED,
     foreignInstall: true,
+    isCorrectlySigned: true,
+    permissions: AddonManager.PERM_CAN_UNINSTALL |
+                 AddonManager.PERM_CAN_ENABLE |
+                 AddonManager.PERM_CAN_DISABLE |
+                 AddonManager.PERM_CAN_UPGRADE &
+                 ~AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS,
   }]);
 
   let aWindow = await open_manager(null);
@@ -505,6 +511,12 @@ add_test(function() {
     is_element_hidden(get("detail-error"), "Error message should be hidden");
     is_element_hidden(get("detail-error-link"), "Error link should be hidden");
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
+
+    // Ensure that for a visible privileged addon (which is still going to be allowed
+    // on PB windows automatically on every extension startup) the private browsing
+    // row is hidden (See Bug 1533150 for a rationale).
+    is_element_hidden(get("detail-privateBrowsing-row"), "Private browsing should be hidden");
+    is_element_hidden(get("detail-privateBrowsing-row-footer"), "Private browsing footer should be hidden");
 
     run_next_test();
   });

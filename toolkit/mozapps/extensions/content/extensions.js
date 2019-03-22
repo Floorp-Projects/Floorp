@@ -2980,10 +2980,11 @@ var gDetailView = {
     let privateBrowsingRow = document.getElementById("detail-privateBrowsing-row");
     let privateBrowsingFooterRow = document.getElementById("detail-privateBrowsing-row-footer");
     if (allowPrivateBrowsingByDefault || aAddon.type != "extension" ||
-        aAddon.incognito == "not_allowed") {
+        !(aAddon.permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS)) {
       this._privateBrowsing.hidden = true;
       privateBrowsingRow.hidden = true;
       privateBrowsingFooterRow.hidden = true;
+      this._privateBrowsing.value = "0";
     } else {
       let perms = await ExtensionPermissions.get(aAddon.id);
       this._privateBrowsing.hidden = false;

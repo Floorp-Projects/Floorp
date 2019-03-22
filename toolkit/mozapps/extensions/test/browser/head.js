@@ -1012,7 +1012,8 @@ function MockAddon(aId, aName, aType, aOperationsRequiringRestart) {
   this._permissions = AddonManager.PERM_CAN_UNINSTALL |
                       AddonManager.PERM_CAN_ENABLE |
                       AddonManager.PERM_CAN_DISABLE |
-                      AddonManager.PERM_CAN_UPGRADE;
+                      AddonManager.PERM_CAN_UPGRADE |
+                      AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS;
   this.operationsRequiringRestart = (aOperationsRequiringRestart != undefined) ?
     aOperationsRequiringRestart :
     (AddonManager.OP_NEEDS_RESTART_INSTALL |
