@@ -79,8 +79,12 @@ add_task(async function test() {
 
   panel = await popupPromise;
   ok(PopupNotifications.isPanelOpen, "Permission popup should be visible");
+
+  let notificationPromise = acceptAppMenuNotificationWhenShown("addon-installed", "extension");
+
   panel.button.click();
   ok(!PopupNotifications.isPanelOpen, "Permission popup should be closed / closing");
+  await notificationPromise;
 
   addon = await AddonManager.getAddonByID(ADDON_ID);
   ok(addon.seen, "Seen flag should be true after permissions are accepted");
