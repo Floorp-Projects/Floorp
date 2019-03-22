@@ -24,7 +24,6 @@ browser.jar:
     content/browser/parent/ext-devtools-network.js (parent/ext-devtools-network.js)
     content/browser/parent/ext-devtools-panels.js (parent/ext-devtools-panels.js)
     content/browser/parent/ext-find.js (parent/ext-find.js)
-    content/browser/parent/ext-geckoProfiler.js (parent/ext-geckoProfiler.js)
     content/browser/parent/ext-history.js (parent/ext-history.js)
     content/browser/parent/ext-menus.js (parent/ext-menus.js)
     content/browser/parent/ext-omnibox.js (parent/ext-omnibox.js)

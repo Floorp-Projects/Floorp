@@ -17,6 +17,9 @@ toolkit.jar:
     content/extensions/parent/ext-dns.js (parent/ext-dns.js)
     content/extensions/parent/ext-downloads.js (parent/ext-downloads.js)
     content/extensions/parent/ext-extension.js (parent/ext-extension.js)
+#ifndef ANDROID
+    content/extensions/parent/ext-geckoProfiler.js (parent/ext-geckoProfiler.js)
+#endif
     content/extensions/parent/ext-i18n.js (parent/ext-i18n.js)
 #ifndef ANDROID
     content/extensions/parent/ext-identity.js (parent/ext-identity.js)

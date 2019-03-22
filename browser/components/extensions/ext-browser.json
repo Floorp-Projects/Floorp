@@ -140,8 +140,8 @@
     ]
   },
   "geckoProfiler": {
-    "url": "chrome://browser/content/parent/ext-geckoProfiler.js",
-    "schema": "chrome://browser/content/schemas/geckoProfiler.json",
+    "url": "chrome://extensions/content/parent/ext-geckoProfiler.js",
+    "schema": "chrome://extensions/content/schemas/geckoProfiler.json",
     "scopes": ["addon_parent"],
     "paths": [
       ["geckoProfiler"]
