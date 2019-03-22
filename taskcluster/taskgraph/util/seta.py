@@ -73,11 +73,7 @@ class SETA(object):
 
             if type(task_list) == dict and len(task_list) > 0:
                 if type(task_list.values()[0]) == list and len(task_list.values()[0]) > 0:
-                    low_value_tasks = task_list.values()[0]
-                    # bb job types return a list instead of a single string,
-                    # convert to a single string to match tc tasks format
-                    if type(low_value_tasks[0]) == list:
-                        low_value_tasks = [self._get_task_string(x) for x in low_value_tasks]
+                    low_value_tasks = set(task_list.values()[0])
 
             # hack seta tasks to run 'opt' jobs on 'pgo' builds - see Bug 1522111
             logger.debug("Retrieving high-value jobs list from SETA")
@@ -88,14 +84,14 @@ class SETA(object):
 
             if type(task_list) == dict and len(task_list) > 0:
                 if type(task_list.values()[0]) == list and len(task_list.values()[0]) > 0:
-                    high_value_tasks = task_list.values()[0]
+                    high_value_tasks = set(task_list.values()[0])
 
             # hack seta to treat all Android Raptor tasks as low value - see Bug 1535016
             def only_android_raptor(task):
                 return task.startswith('test-android') and 'raptor' in task
 
             high_value_android_tasks = list(filter(only_android_raptor, high_value_tasks))
-            low_value_tasks.extend(high_value_android_tasks)
+            low_value_tasks.update(high_value_android_tasks)
 
             seta_conversions = {
                 # old: new
@@ -106,17 +102,17 @@ class SETA(object):
                 'test-windows10-64/opt': 'test-windows10-64-pgo/opt',
                 'test-windows10-64-qr/opt': 'test-windows10-64-pgo-qr/opt',
                 }
-
             # Now add new variants to the low-value set
             for old, new in seta_conversions.iteritems():
                 if any(t.startswith(old) for t in low_value_tasks):
-                    low_value_tasks.extend(
+                    low_value_tasks.update(
                         [t.replace(old, new) for t in low_value_tasks]
                     )
+
             # ... and the high value list
             for old, new in seta_conversions.iteritems():
                 if any(t.startswith(old) for t in high_value_tasks):
-                    high_value_tasks.extend(
+                    high_value_tasks.update(
                         [t.replace(old, new) for t in high_value_tasks]
                     )
 
@@ -131,10 +127,10 @@ class SETA(object):
                 return False
 
             # Now rip out from low value things that were high value in opt
-            low_value_tasks = [x for x in low_value_tasks if not new_as_old_is_high_value(x)]
+            low_value_tasks = set([x for x in low_value_tasks if not new_as_old_is_high_value(x)])
 
             # ensure no build tasks slipped in, we never want to optimize out those
-            low_value_tasks = [x for x in low_value_tasks if 'build' not in x]
+            low_value_tasks = set([x for x in low_value_tasks if 'build' not in x])
 
         # In the event of request times out, requests will raise a TimeoutError.
         except exceptions.Timeout:
