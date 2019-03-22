@@ -275,6 +275,10 @@ class AddonInternal {
     return this._wrapper;
   }
 
+  get resolvedRootURI() {
+    return XPIInternal.maybeResolveURI(Services.io.newURI(this.rootURI));
+  }
+
   addedToDatabase() {
     this._key = `${this.location.name}:${this.id}`;
     this.inDatabase = true;

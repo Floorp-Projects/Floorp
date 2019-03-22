@@ -375,7 +375,7 @@ function waitForAllPromises(promises) {
  *         be read
  */
 async function loadManifestFromWebManifest(aPackage) {
-  let extension = new ExtensionData(aPackage.rootURI);
+  let extension = new ExtensionData(XPIInternal.maybeResolveURI(aPackage.rootURI));
 
   let manifest = await extension.loadManifest();
 
@@ -3656,14 +3656,9 @@ var XPIInstall = {
       throw new Error("Built-in addons must use resource: URLS");
     }
 
-    let root = Services.io.getProtocolHandler("resource")
-                       .QueryInterface(Ci.nsISubstitutingProtocolHandler)
-                       .resolveURI(baseURL);
-    let rootURI = Services.io.newURI(root);
-
     // Enough of the Package interface to allow loadManifest() to work.
     let pkg = {
-      rootURI,
+      rootURI: baseURL,
       filePath: baseURL,
       file: null,
       verifySignedState() {
@@ -3679,7 +3674,7 @@ var XPIInstall = {
     };
 
     let addon = await loadManifest(pkg, XPIInternal.BuiltInLocation);
-    addon.rootURI = root;
+    addon.rootURI = base;
     await this._activateAddon(addon);
   },
 
