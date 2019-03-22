@@ -24,6 +24,7 @@ import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import org.jetbrains.anko.image
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import kotlin.coroutines.CoroutineContext
 
@@ -111,7 +112,7 @@ class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
         fun updateUrl(url: String) {
             text_url.text = url
             launch(IO) {
-                val bitmap = BrowserIcons(favicon_image.context)
+                val bitmap = favicon_image.context.components.utils.icons
                     .loadIcon(IconRequest(url)).await().bitmap
                 launch(Main) {
                     favicon_image.setImageBitmap(bitmap)

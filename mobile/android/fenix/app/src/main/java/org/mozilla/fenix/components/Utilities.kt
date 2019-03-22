@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.search.SearchUseCases
@@ -29,5 +30,9 @@ class Utilities(
 
     val privateIntentProcessor by lazy {
         IntentProcessor(sessionUseCases, sessionManager, searchUseCases, context, isPrivate = true)
+    }
+
+    val icons by lazy {
+        BrowserIcons(context)
     }
 }
