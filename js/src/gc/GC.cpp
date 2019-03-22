@@ -8093,14 +8093,6 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
 
     group->setGeneration(target->zone()->types.generation);
     group->realm_ = target;
-
-    // Remove any unboxed layouts from the list in the off thread
-    // realm. These do not need to be reinserted in the target
-    // realm's list, as the list is not required to be complete.
-    if (UnboxedLayout* layout =
-            group->maybeUnboxedLayoutDontCheckGeneration()) {
-      layout->detachFromRealm();
-    }
   }
 
   // Fixup zone pointers in source's zone to refer to target's zone.
