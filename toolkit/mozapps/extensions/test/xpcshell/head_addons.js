@@ -439,6 +439,21 @@ function do_get_expected_addon_name(aId) {
 }
 
 /**
+ * Returns the file containing the add-on. For packed add-ons, this is
+ * an XPI file. For unpacked add-ons, it is the add-on's root directory.
+ *
+ * @param {Addon} addon
+ * @returns {nsIFile}
+ */
+function getAddonFile(addon) {
+  let uri = addon.getResourceURI("");
+  if (uri instanceof Ci.nsIJARURI) {
+    uri = uri.JARFile;
+  }
+  return uri.QueryInterface(Ci.nsIFileURL).file;
+}
+
+/**
  * Check that an array of actual add-ons is the same as an array of
  * expected add-ons.
  *

@@ -1503,8 +1503,7 @@ class AddonInstall {
         });
 
         // Update the metadata in the database
-        this.addon._sourceBundle = file;
-        this.addon.rootURI = getURIForResourceInFile(file, "").spec;
+        this.addon.sourceBundle = file;
         this.addon.visible = true;
 
         if (isUpgrade) {
@@ -1590,7 +1589,7 @@ class AddonInstall {
 
     if (restartRequired) {
       // Point the add-on to its extracted files as the xpi may get deleted
-      this.addon._sourceBundle = stagedAddon;
+      this.addon.sourceBundle = stagedAddon;
 
       // Cache the AddonInternal as it may have updated compatibility info
       this.location.stageAddon(this.addon.id, this.addon.toJSON());
@@ -3257,8 +3256,7 @@ var XPIInstall = {
     }
 
     // Install the add-on
-    addon._sourceBundle = location.installer.installAddon({ id, source: file, action: "copy" });
-    addon.rootURI = XPIInternal.getURIForResourceInFile(addon._sourceBundle, "").spec;
+    addon.sourceBundle = location.installer.installAddon({ id, source: file, action: "copy" });
 
     XPIStates.addAddon(addon);
     logger.debug(`Installed distribution add-on ${id}`);
@@ -3316,7 +3314,7 @@ var XPIInstall = {
     }
 
     try {
-      addon._sourceBundle = location.installer.installAddon({
+      addon.sourceBundle = location.installer.installAddon({
         id, source, existingAddonID: id,
       });
       XPIStates.addAddon(addon);
