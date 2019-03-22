@@ -26,7 +26,6 @@ void CompositorAnimationStorage::Clear() {
 
   mAnimatedValues.Clear();
   mAnimations.Clear();
-  mAnimationRenderRoots.Clear();
 }
 
 void CompositorAnimationStorage::ClearById(const uint64_t& aId) {
@@ -34,7 +33,6 @@ void CompositorAnimationStorage::ClearById(const uint64_t& aId) {
 
   mAnimatedValues.Remove(aId);
   mAnimations.Remove(aId);
-  mAnimationRenderRoots.Remove(aId);
 }
 
 AnimatedValue* CompositorAnimationStorage::GetAnimatedValue(
@@ -136,12 +134,10 @@ nsTArray<PropertyAnimationGroup>* CompositorAnimationStorage::GetAnimations(
 }
 
 void CompositorAnimationStorage::SetAnimations(uint64_t aId,
-                                               const AnimationArray& aValue,
-                                               wr::RenderRoot aRenderRoot) {
+                                               const AnimationArray& aValue) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mAnimations.Put(aId, new nsTArray<PropertyAnimationGroup>(
                            AnimationHelper::ExtractAnimations(aValue)));
-  mAnimationRenderRoots.Put(aId, aRenderRoot);
 }
 
 enum class CanSkipCompose {

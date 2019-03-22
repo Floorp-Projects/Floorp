@@ -37,7 +37,6 @@ namespace layers {
 class CompositorBridgeParent;
 class WebRenderBridgeParent;
 class RenderRootStateManager;
-struct RenderRootDisplayListData;
 }  // namespace layers
 
 namespace layout {
@@ -104,8 +103,7 @@ class TransactionBuilder {
       const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
       const nsTArray<wr::WrTransformProperty>& aTransformArray);
 
-  void SetDocumentView(const LayoutDeviceIntRect& aDocRect,
-                       const LayoutDeviceIntSize& aWidgetSize);
+  void SetDocumentView(const LayoutDeviceIntRect& aDocRect);
 
   void UpdateScrollPosition(
       const wr::WrPipelineId& aPipelineId,
@@ -210,8 +208,7 @@ class WebRenderAPI {
       const wr::WrWindowId& aWindowId, LayoutDeviceIntSize aSize);
 
   already_AddRefed<WebRenderAPI> CreateDocument(LayoutDeviceIntSize aSize,
-                                                int8_t aLayerIndex,
-                                                wr::RenderRoot aRenderRoot);
+                                                int8_t aLayerIndex);
 
   already_AddRefed<WebRenderAPI> Clone();
 
@@ -242,7 +239,6 @@ class WebRenderAPI {
   void AccumulateMemoryReport(wr::MemoryReport*);
 
   wr::WrIdNamespace GetNamespace();
-  wr::RenderRoot GetRenderRoot() const { return mRenderRoot; }
   uint32_t GetMaxTextureSize() const { return mMaxTextureSize; }
   bool GetUseANGLE() const { return mUseANGLE; }
   bool GetUseDComp() const { return mUseDComp; }
@@ -253,9 +249,16 @@ class WebRenderAPI {
 
  protected:
   WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
-               uint32_t aMaxTextureSize, bool aUseANGLE, bool aUseDComp,
-               bool aUseTripleBuffering, layers::SyncHandle aSyncHandle,
-               wr::RenderRoot aRenderRoot);
+               int32_t aMaxTextureSize, bool aUseANGLE, bool aUseDComp,
+               bool aUseTripleBuffering, layers::SyncHandle aSyncHandle)
+      : mDocHandle(aHandle),
+        mId(aId),
+        mMaxTextureSize(aMaxTextureSize),
+        mUseANGLE(aUseANGLE),
+        mUseDComp(aUseDComp),
+        mUseTripleBuffering(aUseTripleBuffering),
+        mSyncHandle(aSyncHandle),
+        mDebugFlags({0}) {}
 
   ~WebRenderAPI();
   // Should be used only for shutdown handling
@@ -271,7 +274,6 @@ class WebRenderAPI {
   bool mUseTripleBuffering;
   layers::SyncHandle mSyncHandle;
   wr::DebugFlags mDebugFlags;
-  wr::RenderRoot mRenderRoot;
 
   // We maintain alive the root api to know when to shut the render backend
   // down, and the root api for the document to know when to delete the
@@ -350,8 +352,7 @@ class DisplayListBuilder {
  public:
   explicit DisplayListBuilder(wr::PipelineId aId,
                               const wr::LayoutSize& aContentSize,
-                              size_t aCapacity = 0,
-                              RenderRoot aRenderRoot = RenderRoot::Default);
+                              size_t aCapacity = 0);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
   ~DisplayListBuilder();
@@ -362,28 +363,8 @@ class DisplayListBuilder {
   usize Dump(usize aIndent, const Maybe<usize>& aStart,
              const Maybe<usize>& aEnd);
 
-  void Finalize(wr::LayoutSize& aOutContentSizes,
+  void Finalize(wr::LayoutSize& aOutContentSize,
                 wr::BuiltDisplayList& aOutDisplayList);
-  void Finalize(layers::RenderRootDisplayListData& aOutTransaction);
-
-  RenderRoot GetRenderRoot() const { return mRenderRoot; }
-  bool HasSubBuilder(RenderRoot aRenderRoot);
-  DisplayListBuilder& CreateSubBuilder(const wr::LayoutSize& aContentSize,
-                                       size_t aCapacity,
-                                       RenderRoot aRenderRoot);
-  DisplayListBuilder& SubBuilder(RenderRoot aRenderRoot);
-
-  bool GetSendSubBuilderDisplayList(RenderRoot aRenderRoot) {
-    if (aRenderRoot == RenderRoot::Default) {
-      return true;
-    }
-    return mSubBuilders[aRenderRoot] &&
-           mSubBuilders[aRenderRoot]->mSendSubBuilderDisplayList;
-  }
-
-  void SetSendSubBuilderDisplayList(RenderRoot aRenderRoot) {
-    mSubBuilders[aRenderRoot]->mSendSubBuilderDisplayList = true;
-  }
 
   Maybe<wr::WrSpatialId> PushStackingContext(
       const StackingContextParams& aParams, const wr::LayoutRect& aBounds,
@@ -611,13 +592,6 @@ class DisplayListBuilder {
   RefPtr<gfxContext> mCachedContext;
 
   FixedPosScrollTargetTracker* mActiveFixedPosTracker;
-
-  NonDefaultRenderRootArray<UniquePtr<DisplayListBuilder>> mSubBuilders;
-  wr::PipelineId mPipelineId;
-  wr::LayoutSize mContentSize;
-
-  RenderRoot mRenderRoot;
-  bool mSendSubBuilderDisplayList;
 
   friend class WebRenderAPI;
   friend class SpaceAndClipChainHelper;

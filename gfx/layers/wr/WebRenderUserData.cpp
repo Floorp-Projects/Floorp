@@ -130,8 +130,7 @@ void WebRenderImageData::ClearImageKey() {
     if (mOwnsKey) {
       mManager->AddImageKeyForDiscard(mKey.value());
       if (mTextureOfImage) {
-        WrBridge()->ReleaseTextureOfImage(mKey.value(),
-                                          mManager->GetRenderRoot());
+        WrBridge()->ReleaseTextureOfImage(mKey.value());
         mTextureOfImage = nullptr;
       }
     }
@@ -180,8 +179,7 @@ Maybe<wr::ImageKey> WebRenderImageData::UpdateImageKey(
   ImageClientSingle* imageClient = mImageClient->AsImageClientSingle();
   uint32_t oldCounter = imageClient->GetLastUpdateGenerationCounter();
 
-  bool ret = imageClient->UpdateImage(aContainer, /* unused */ 0,
-                                      Some(mManager->GetRenderRoot()));
+  bool ret = imageClient->UpdateImage(aContainer, /* unused */ 0);
   RefPtr<TextureClient> currentTexture = imageClient->GetForwardedTexture();
   if (!ret || !currentTexture) {
     // Delete old key
@@ -239,8 +237,7 @@ void WebRenderImageData::CreateAsyncImageWebRenderCommands(
   if (mPipelineId.isSome() && mContainer != aContainer) {
     // In this case, we need to remove the existed pipeline and create new one
     // because the ImageContainer is changed.
-    WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref(),
-                                                mManager->GetRenderRoot());
+    WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
     mPipelineId.reset();
   }
 
@@ -249,8 +246,7 @@ void WebRenderImageData::CreateAsyncImageWebRenderCommands(
     mPipelineId =
         Some(WrBridge()->GetCompositorBridgeChild()->GetNextPipelineId());
     WrBridge()->AddPipelineIdForAsyncCompositable(
-        mPipelineId.ref(), aContainer->GetAsyncContainerHandle(),
-        mManager->GetRenderRoot());
+        mPipelineId.ref(), aContainer->GetAsyncContainerHandle());
     mContainer = aContainer;
   }
   MOZ_ASSERT(!mImageClient);
@@ -269,8 +265,7 @@ void WebRenderImageData::CreateAsyncImageWebRenderCommands(
 
   WrBridge()->AddWebRenderParentCommand(
       OpUpdateAsyncImagePipeline(mPipelineId.value(), aSCBounds, aSCTransform,
-                                 aScaleToSize, aFilter, aMixBlendMode),
-      mManager->GetRenderRoot());
+                                 aScaleToSize, aFilter, aMixBlendMode));
 }
 
 void WebRenderImageData::CreateImageClientIfNeeded() {
@@ -371,22 +366,6 @@ WebRenderCanvasRendererAsync* WebRenderCanvasData::CreateCanvasRenderer() {
   mCanvasRenderer = MakeUnique<WebRenderCanvasRendererAsync>(mManager);
   return mCanvasRenderer.get();
 }
-
-WebRenderRenderRootData::WebRenderRenderRootData(RenderRootStateManager* aManager,
-                                                 nsDisplayItem* aItem)
-    : WebRenderUserData(aManager, aItem) {}
-
-RenderRootBoundary& WebRenderRenderRootData::EnsureHasBoundary(
-    wr::RenderRoot aChildType) {
-  if (mBoundary) {
-    MOZ_ASSERT(mBoundary->GetChildType() == aChildType);
-  } else {
-    mBoundary.emplace(aChildType);
-  }
-  return mBoundary.ref();
-}
-
-WebRenderRenderRootData::~WebRenderRenderRootData() {}
 
 void DestroyWebRenderUserDataTable(WebRenderUserDataTable* aTable) {
   for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {

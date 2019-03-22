@@ -9,7 +9,6 @@
 
 #include "ImageTypes.h"
 #include "mozilla/webrender/webrender_ffi.h"
-#include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Types.h"
@@ -37,8 +36,6 @@ typedef uintptr_t usize;
 
 typedef wr::WrWindowId WindowId;
 typedef wr::WrPipelineId PipelineId;
-typedef wr::WrDocumentId DocumentId;
-typedef wr::WrRemovedPipeline RemovedPipeline;
 typedef wr::WrImageKey ImageKey;
 typedef wr::WrFontKey FontKey;
 typedef wr::WrFontInstanceKey FontInstanceKey;
@@ -59,75 +56,6 @@ struct ExternalImageKeyPair {
 
 /* Generate a brand new window id and return it. */
 WindowId NewWindowId();
-
-MOZ_DEFINE_ENUM_CLASS_WITH_BASE(RenderRoot, uint8_t, (
-  // The default render root - within the parent process, this refers
-  // to everything within the top chrome area (urlbar, tab strip, etc.).
-  // Within the content process, this refers to the content area. Any
-  // system that multiplexes data streams from different processes is
-  // responsible for converting RenderRoot::Default into
-  // RenderRoot::Content (or whatever value is appropriate)
-  Default,
-
-  // Everything below the chrome - even if it is not coming from a content
-  // process. For example. the devtools, sidebars, and status panel are
-  // traditionally part of the "chrome," but are assigned a renderroot of
-  // RenderRoot::Content because they occupy screen space in the "content"
-  // area of the browser (visually situated below the "chrome" area).
-  Content
-));
-
-typedef EnumSet<RenderRoot, uint8_t> RenderRootSet;
-
-// For simple iteration of all render roots
-const Array<RenderRoot, kRenderRootCount> kRenderRoots(
-    RenderRoot::Default,
-    RenderRoot::Content);
-
-const Array<RenderRoot, kRenderRootCount - 1> kNonDefaultRenderRoots(
-    RenderRoot::Content);
-
-template <typename T>
-class RenderRootArray : public Array<T, kRenderRootCount> {
-  typedef Array<T, kRenderRootCount> Super;
- public:
-  RenderRootArray() {}
-
-  explicit RenderRootArray(T aDefault) {
-    for (auto renderRoot : kRenderRoots) {
-      (*this)[renderRoot] = aDefault;
-    }
-  }
-
-  T& operator[](wr::RenderRoot aIndex) {
-    return (*(Super*)this)[(size_t)aIndex];
-  }
-
-  const T& operator[](wr::RenderRoot aIndex) const {
-    return (*(Super*)this)[(size_t)aIndex];
-  }
-
-  T& operator[](size_t aIndex) = delete;
-  const T& operator[](size_t aIndex) const = delete;
-};
-
-template <typename T>
-class NonDefaultRenderRootArray : public Array<T, kRenderRootCount - 1> {
-  typedef Array<T, kRenderRootCount - 1> Super;
- public:
-  T& operator[](wr::RenderRoot aIndex) {
-    return (*(Super*)this)[(size_t)aIndex - 1];
-  }
-
-  const T& operator[](wr::RenderRoot aIndex) const {
-    return (*(Super*)this)[(size_t)aIndex - 1];
-  }
-
-  T& operator[](size_t aIndex) = delete;
-  const T& operator[](size_t aIndex) const = delete;
-};
-
-RenderRoot RenderRootFromId(DocumentId id);
 
 inline DebugFlags NewDebugFlags(uint32_t aFlags) { return {aFlags}; }
 
