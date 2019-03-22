@@ -37,7 +37,6 @@ TrackEncoder::TrackEncoder(TrackRate aTrackRate)
       mInitialized(false),
       mEndOfStream(false),
       mCanceled(false),
-      mCurrentTime(0),
       mInitCounter(0),
       mNotInitDuration(0),
       mSuspended(false),
@@ -129,6 +128,7 @@ void AudioTrackEncoder::Resume(TimeStamp) {
 
 void AudioTrackEncoder::AppendAudioSegment(AudioSegment&& aSegment) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
+  AUTO_PROFILER_LABEL("AudioTrackEncoder::AppendAudioSegment", OTHER);
   TRACK_LOG(LogLevel::Verbose,
             ("[AudioTrackEncoder %p]: AppendAudioSegment() duration=%" PRIu64,
              this, aSegment.GetDuration()));
@@ -141,7 +141,15 @@ void AudioTrackEncoder::AppendAudioSegment(AudioSegment&& aSegment) {
     return;
   }
 
-  mIncomingBuffer.AppendFrom(&aSegment);
+  TryInit(mOutgoingBuffer, aSegment.GetDuration());
+
+  if (!mSuspended) {
+    mOutgoingBuffer.AppendFrom(&aSegment);
+  }
+
+  if (mInitialized && mOutgoingBuffer.GetDuration() >= GetPacketDuration()) {
+    OnDataAvailable();
+  }
 }
 
 void AudioTrackEncoder::TakeTrackData(AudioSegment& aSegment) {
@@ -216,20 +224,15 @@ void AudioTrackEncoder::TryInit(const AudioSegment& aSegment,
 
 void AudioTrackEncoder::Cancel() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
-  TRACK_LOG(LogLevel::Info,
-            ("[AudioTrackEncoder %p]: Cancel(), currentTime=%" PRIu64, this,
-             mCurrentTime));
+  TRACK_LOG(LogLevel::Info, ("[AudioTrackEncoder %p]: Cancel()", this));
   mCanceled = true;
-  mIncomingBuffer.Clear();
   mOutgoingBuffer.Clear();
 }
 
 void AudioTrackEncoder::NotifyEndOfStream() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
-  TRACK_LOG(
-      LogLevel::Info,
-      ("[AudioTrackEncoder %p]: NotifyEndOfStream(), currentTime=%" PRIu64,
-       this, mCurrentTime));
+  TRACK_LOG(LogLevel::Info,
+            ("[AudioTrackEncoder %p]: NotifyEndOfStream()", this));
 
   if (!mCanceled && !mInitialized) {
     // If source audio track is completely silent till the end of encoding,
@@ -239,82 +242,9 @@ void AudioTrackEncoder::NotifyEndOfStream() {
 
   mEndOfStream = true;
 
-  mIncomingBuffer.Clear();
-
   if (mInitialized && !mCanceled) {
     OnDataAvailable();
   }
-}
-
-void AudioTrackEncoder::SetStartOffset(StreamTime aStartOffset) {
-  MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
-  MOZ_ASSERT(mCurrentTime == 0);
-  TRACK_LOG(LogLevel::Info,
-            ("[AudioTrackEncoder %p]: SetStartOffset(), aStartOffset=%" PRIu64,
-             this, aStartOffset));
-  mIncomingBuffer.InsertNullDataAtStart(aStartOffset);
-  mCurrentTime = aStartOffset;
-}
-
-void AudioTrackEncoder::AdvanceBlockedInput(StreamTime aDuration) {
-  MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
-  TRACK_LOG(
-      LogLevel::Verbose,
-      ("[AudioTrackEncoder %p]: AdvanceBlockedInput(), aDuration=%" PRIu64,
-       this, aDuration));
-
-  // We call Init here so it can account for aDuration towards the Init timeout
-  TryInit(mOutgoingBuffer, aDuration);
-
-  mIncomingBuffer.InsertNullDataAtStart(aDuration);
-  mCurrentTime += aDuration;
-}
-
-void AudioTrackEncoder::AdvanceCurrentTime(StreamTime aDuration) {
-  AUTO_PROFILER_LABEL("AudioTrackEncoder::AdvanceCurrentTime", OTHER);
-
-  MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
-
-  if (mCanceled) {
-    return;
-  }
-
-  if (mEndOfStream) {
-    return;
-  }
-
-  TRACK_LOG(LogLevel::Verbose,
-            ("[AudioTrackEncoder %p]: AdvanceCurrentTime() %" PRIu64, this,
-             aDuration));
-
-  StreamTime currentTime = mCurrentTime + aDuration;
-
-  if (mSuspended) {
-    mCurrentTime = currentTime;
-    mIncomingBuffer.ForgetUpTo(mCurrentTime);
-    return;
-  }
-
-  if (currentTime <= mIncomingBuffer.GetDuration()) {
-    mOutgoingBuffer.AppendSlice(mIncomingBuffer, mCurrentTime, currentTime);
-
-    TryInit(mOutgoingBuffer, aDuration);
-    if (mInitialized && mOutgoingBuffer.GetDuration() >= GetPacketDuration()) {
-      OnDataAvailable();
-    }
-  } else {
-    NS_ASSERTION(false,
-                 "AudioTrackEncoder::AdvanceCurrentTime Not enough data");
-    TRACK_LOG(
-        LogLevel::Error,
-        ("[AudioTrackEncoder %p]: AdvanceCurrentTime() Not enough data. "
-         "In incoming=%" PRIu64 ", aDuration=%" PRIu64 ", currentTime=%" PRIu64,
-         this, mIncomingBuffer.GetDuration(), aDuration, currentTime));
-    OnError();
-  }
-
-  mCurrentTime = currentTime;
-  mIncomingBuffer.ForgetUpTo(mCurrentTime);
 }
 
 /*static*/
@@ -366,8 +296,7 @@ void AudioTrackEncoder::DeInterleaveTrackData(AudioDataValue* aInput,
 size_t AudioTrackEncoder::SizeOfExcludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
-  return mIncomingBuffer.SizeOfExcludingThis(aMallocSizeOf) +
-         mOutgoingBuffer.SizeOfExcludingThis(aMallocSizeOf);
+  return mOutgoingBuffer.SizeOfExcludingThis(aMallocSizeOf);
 }
 
 VideoTrackEncoder::VideoTrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,

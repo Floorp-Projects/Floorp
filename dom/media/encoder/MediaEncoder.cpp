@@ -95,64 +95,12 @@ class MediaEncoder::AudioTrackListener : public DirectMediaStreamTrackListener {
 
     if (!mInitialized) {
       mDriftCompensator->NotifyAudioStart(TimeStamp::Now());
-      nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<StreamTime>(
-          "mozilla::AudioTrackEncoder::SetStartOffset", mEncoder,
-          &AudioTrackEncoder::SetStartOffset, aTrackOffset));
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-      Unused << rv;
       mInitialized = true;
     }
 
     mDriftCompensator->NotifyAudio(aQueuedMedia.GetDuration());
 
-    if (!mDirectConnected) {
-      NotifyRealtimeTrackData(aGraph, aTrackOffset, aQueuedMedia);
-    }
-
-    AutoTArray<Pair<bool, StreamTime>, 2> nulledSequence;
-    for (AudioSegment::ConstChunkIterator iter(
-             static_cast<const AudioSegment&>(aQueuedMedia));
-         !iter.IsEnded(); iter.Next()) {
-      if (!nulledSequence.IsEmpty()) {
-        Pair<bool, StreamTime>& last = nulledSequence.LastElement();
-        if (last.first() == iter->IsNull()) {
-          last.second() += iter->GetDuration();
-          continue;
-        }
-      }
-      nulledSequence.AppendElement(
-          MakePair(iter->IsNull(), iter->GetDuration()));
-    }
-
-    for (const Pair<bool, StreamTime>& nulledRange : nulledSequence) {
-      if (nulledRange.first()) {
-        nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<StreamTime>(
-            "mozilla::AudioTrackEncoder::AdvanceBlockedInput", mEncoder,
-            &AudioTrackEncoder::AdvanceBlockedInput, nulledRange.second()));
-        MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-        Unused << rv;
-      } else {
-        nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<StreamTime>(
-            "mozilla::AudioTrackEncoder::AdvanceCurrentTime", mEncoder,
-            &AudioTrackEncoder::AdvanceCurrentTime, nulledRange.second()));
-        MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-        Unused << rv;
-      }
-    }
-  }
-
-  void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
-                               StreamTime aTrackOffset,
-                               const MediaSegment& aMedia) override {
-    TRACE_COMMENT("Encoder %p", mEncoder.get());
-    MOZ_ASSERT(mEncoder);
-    MOZ_ASSERT(mEncoderThread);
-
-    if (mShutdown) {
-      return;
-    }
-
-    const AudioSegment& audio = static_cast<const AudioSegment&>(aMedia);
+    const AudioSegment& audio = static_cast<const AudioSegment&>(aQueuedMedia);
 
     AudioSegment copy;
     copy.AppendSlice(audio, 0, audio.GetDuration());
