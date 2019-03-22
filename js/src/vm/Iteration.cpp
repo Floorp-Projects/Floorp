@@ -137,7 +137,6 @@ static inline bool Enumerate(JSContext* cx, HandleObject pobj, jsid id,
   return props->append(id);
 }
 
-template <bool CheckForDuplicates>
 static bool EnumerateExtraProperties(JSContext* cx, HandleObject obj,
                                      unsigned flags,
                                      MutableHandle<IdSet> visited,
@@ -160,7 +159,7 @@ static bool EnumerateExtraProperties(JSContext* cx, HandleObject obj,
     // `enumerableOnly` to the hook to filter out non-enumerable
     // properties, it doesn't really matter what we pass here.
     bool enumerable = true;
-    if (!Enumerate<CheckForDuplicates>(cx, obj, id, enumerable, flags, visited,
+    if (!Enumerate<true>(cx, obj, id, enumerable, flags, visited,
                                        props)) {
       return false;
     }
@@ -458,7 +457,7 @@ static bool Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags,
 
   do {
     if (pobj->getClass()->getNewEnumerate()) {
-      if (!EnumerateExtraProperties<true>(cx, pobj, flags, &visited, props)) {
+      if (!EnumerateExtraProperties(cx, pobj, flags, &visited, props)) {
         return false;
       }
 
