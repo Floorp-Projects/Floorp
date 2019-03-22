@@ -21,12 +21,12 @@ struct RenderRootDisplayListData {
   gfx::IntRect mRect;
   nsTArray<WebRenderParentCommand> mCommands;
   wr::LayoutSize mContentSize;
-  mozilla::ipc::ByteBuf mDL;
+  Maybe<mozilla::ipc::ByteBuf> mDL;
   wr::BuiltDisplayListDescriptor mDLDesc;
   nsTArray<OpUpdateResource> mResourceUpdates;
   nsTArray<RefCountedShmem> mSmallShmems;
   nsTArray<mozilla::ipc::Shmem> mLargeShmems;
-  WebRenderScrollData mScrollData;
+  Maybe<WebRenderScrollData> mScrollData;
 };
 
 struct RenderRootUpdates {
@@ -64,6 +64,5 @@ struct IPDLParamTraits<mozilla::layers::RenderRootUpdates> {
 
 }  // namespace ipc
 }  // namespace mozilla
-
 
 #endif /* GFX_RENDERROOTTYPES_H */
