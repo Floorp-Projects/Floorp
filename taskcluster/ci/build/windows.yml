@@ -1208,7 +1208,6 @@ win64-aarch64-shippable/opt:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
     run-on-projects: []  # Don't run by default yet
-    run-on-projects: []
     dependencies:
         win32-opt: build-win32-shippable/opt
         win64-aarch64-opt: build-win64-aarch64-nightly-no-eme/opt
