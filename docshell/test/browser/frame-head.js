@@ -12,20 +12,20 @@ const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 this.ok = function(value, message) {
   sendAsyncMessage("browser:test:ok", {
     value: !!value,
-    message: message});
-}
+    message});
+};
 
 this.is = function(v1, v2, message) {
   ok(v1 == v2, message);
-}
+};
 
 this.info = function(message) {
-  sendAsyncMessage("browser:test:info", {message: message});
-}
+  sendAsyncMessage("browser:test:info", {message});
+};
 
 this.finish = function() {
   sendAsyncMessage("browser:test:finish");
-}
+};
 
 /* Start a task that runs some timeline tests in the ordinary way.
  *
@@ -53,7 +53,6 @@ this.timelineContentTest = function(tests) {
     docShell.recordProfileTimelineMarkers = true;
 
     for (let {desc, searchFor, setup, check} of tests) {
-
       info("Running test: " + desc);
 
       info("Flushing the previous markers if any");
@@ -77,12 +76,12 @@ this.timelineContentTest = function(tests) {
     docShell.recordProfileTimelineMarkers = false;
     finish();
   })();
-}
+};
 
 function timelineWaitForMarkers(docshell, searchFor) {
   if (typeof(searchFor) == "string") {
     let searchForString = searchFor;
-    let f = function (markers) {
+    let f = function(markers) {
       return markers.some(m => m.name == searchForString);
     };
     searchFor = f;

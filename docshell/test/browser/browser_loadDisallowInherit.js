@@ -9,7 +9,7 @@ function test() {
   // data: URIs will only open at the top level when the pref is false
   //   or the use of system principal but we can't use that to test here.
   Services.prefs.setBoolPref("security.data_uri.block_toplevel_data_uri_navigations", false);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("security.data_uri.unique_opaque_origin");
     Services.prefs.clearUserPref("security.data_uri.block_toplevel_data_uri_navigations");
   });
@@ -36,17 +36,17 @@ function startTest() {
     let ios = Cc["@mozilla.org/network/io-service;1"].
                 getService(Ci.nsIIOService);
     let artificialPrincipal = secMan.createCodebasePrincipal(ios.newURI("http://example.com/"), {});
-    loadURL("http://example.com/", 0, artificialPrincipal, function () {
+    loadURL("http://example.com/", 0, artificialPrincipal, function() {
       let pagePrincipal = browser.contentPrincipal;
       ok(pagePrincipal, "got principal for http:// page");
 
       // Now load the URL normally
-      loadURL(url, 0, artificialPrincipal, function () {
+      loadURL(url, 0, artificialPrincipal, function() {
         ok(browser.contentPrincipal.equals(pagePrincipal), url + " should inherit principal");
 
         // Now load the URL and disallow inheriting the principal
         let webNav = Ci.nsIWebNavigation;
-        loadURL(url, webNav.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL, artificialPrincipal, function () {
+        loadURL(url, webNav.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL, artificialPrincipal, function() {
           let newPrincipal = browser.contentPrincipal;
           ok(newPrincipal, "got inner principal");
           ok(!newPrincipal.equals(pagePrincipal),

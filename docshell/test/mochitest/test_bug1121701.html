@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1121701
           testWin.onpagehide = null;
           ok(e.persisted, "test page 1 should have been persisted");
           is(testWin.document.body.innerHTML, "modified");
-        }
+        };
         testWin.location.href = testUrl2;
       });
     } else if (page1LoadCount == 2) {
@@ -44,10 +44,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1121701
       testWin.onmessage = function() {
         ok(true, "Got message");
         testWin.document.body.firstChild.src = location.href;
-      }
+      };
       testWin.onbeforeunload = function() {
         testWin.postMessage("foo", "*");
-      }
+      };
       testWin.history.back();
     });
   }

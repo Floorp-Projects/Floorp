@@ -5,14 +5,14 @@ add_task(async function() {
   let numLocationChanges = 0;
 
   let listener = {
-    onLocationChange: function(browser, wp, request, uri, flags) {
+    onLocationChange(browser, wp, request, uri, flags) {
       if (browser != tab.linkedBrowser) {
         return;
       }
       info("onLocationChange: " + uri.spec);
       numLocationChanges++;
       this.resolve();
-    }
+    },
   };
   let locationPromise = new Promise((resolve, reject) => {
     listener.resolve = resolve;

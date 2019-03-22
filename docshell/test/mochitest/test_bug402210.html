@@ -35,10 +35,10 @@ SimpleTest.waitForExplicitFinish();
 function runTest() {
   $("testlink").href = "https:example.com";
   is($("testlink").href, "https://example.com/", "Setting href on an anchor tag should fixup missing slashes after https protocol");
-  
+
   $("testlink").href = "ftp:example.com";
   is($("testlink").href, "ftp://example.com/", "Setting href on an anchor tag should fixup missing slashes after non-http protocol");
-  
+
   SimpleTest.finish();
 }
 

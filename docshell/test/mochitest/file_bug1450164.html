@@ -3,7 +3,7 @@
     <script>
      function go() {
        var a = window.history.state;
-       window.history.replaceState(a,"","1");
+       window.history.replaceState(a, "", "1");
        var ok = opener.ok;
        var SimpleTest = opener.SimpleTest;
        ok("Addition of history in unload did not crash browser");

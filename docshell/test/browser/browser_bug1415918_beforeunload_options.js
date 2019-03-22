@@ -9,7 +9,7 @@ add_task(async function test() {
   await SpecialPowers.pushPrefEnv({
     "set": [
       ["dom.require_user_interaction_for_beforeunload", false],
-    ]
+    ],
   });
 
   let url = TEST_PATH + "file_bug1415918_beforeunload.html";

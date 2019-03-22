@@ -17,8 +17,7 @@ var w = null;
 var phase = 0;
 var gotWrongPageOnTryAgainClick = false;
 
-function pollForPage(f, w)
-{
+function pollForPage(f, w) {
   // Start with polling after a delay, we might mistakenly take the current page
   // as an expected one.
   window.setTimeout(function() {
@@ -29,8 +28,7 @@ function pollForPage(f, w)
       var haveErrorPage = false;
       try {
         var title = w.document.title;
-      }
-      catch (ex) {
+      } catch (ex) {
         haveErrorPage = true;
       }
 
@@ -42,10 +40,8 @@ function pollForPage(f, w)
   }, 1000);
 }
 
-function windowLoaded()
-{
-  switch (phase)
-  {
+function windowLoaded() {
+  switch (phase) {
     case 0:
       /* 2. We have succeededfully loaded a page, now go to a faulty URL */
       window.setTimeout(function() {
@@ -82,8 +78,7 @@ function windowLoaded()
   }
 }
 
-function startTest()
-{
+function startTest() {
   /* 1. load a URL that leads to an error page */
   w = window.open(workingURL);
 }

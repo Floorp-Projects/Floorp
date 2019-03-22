@@ -28,7 +28,7 @@
 	window.setTimeout(function() {
           resolve(23);
 	}, 10);
-      }).then(function (val) {
+      }).then(function(val) {
         console.timeEnd("Bob");
       });
     }
@@ -41,7 +41,7 @@
 	console.time("Bob");
         globalResolver = resolve;
 	window.setTimeout("globalResolver(23);", 10);
-      }).then(function (val) {
+      }).then(function(val) {
         console.timeEnd("Bob");
       });
     }

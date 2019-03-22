@@ -26,10 +26,9 @@ function childLoad2() {
   let content = cw.document.getElementById("content");
 
   // Create a function to calculate an invariant.
-  let topPlusOffset = function()
-  {
+  let topPlusOffset = function() {
     return Math.round(content.getBoundingClientRect().top + cw.pageYOffset);
-  }
+  };
 
   let initialTPO = topPlusOffset();
 

@@ -8,13 +8,13 @@
 
 var TESTS = [{
   desc: "Event dispatch from XMLHttpRequest",
-  searchFor: function(markers) {
+  searchFor(markers) {
     return markers.filter(m => m.name == "DOMEvent").length >= 5;
   },
-  setup: function(docShell) {
+  setup(docShell) {
     content.dispatchEvent(new content.Event("dog"));
   },
-  check: function(markers) {
+  check(markers) {
     let domMarkers = markers.filter(m => m.name == "DOMEvent");
     // One subtlety here is that we have five events: the event we
     // inject in "setup", plus the four state transition events.  The
@@ -28,7 +28,7 @@ var TESTS = [{
     ok(jsMarkers.length > 0, "Got some Javascript markers");
     is(jsMarkers[0].stack.functionDisplayName, "do_xhr",
        "Javascript marker has entry point name");
-  }
+  },
 }];
 
 if (Services.prefs.getBoolPref("javascript.options.asyncstack")) {
@@ -38,10 +38,10 @@ if (Services.prefs.getBoolPref("javascript.options.asyncstack")) {
       return markers.some(m => (m.name == "Javascript" &&
                                 m.causeName == "promise callback"));
     },
-    setup: function(docShell) {
+    setup(docShell) {
       content.dispatchEvent(new content.Event("promisetest"));
     },
-    check: function(markers) {
+    check(markers) {
       markers = markers.filter(m => (m.name == "Javascript" &&
                                      m.causeName == "promise callback"));
       ok(markers.length > 0, "Found a Javascript marker");
@@ -52,21 +52,21 @@ if (Services.prefs.getBoolPref("javascript.options.asyncstack")) {
          "Async parent has correct cause");
       let asyncFrame = frame.asyncParent;
       // Skip over self-hosted parts of our Promise implementation.
-      while (asyncFrame.source === 'self-hosted')
+      while (asyncFrame.source === "self-hosted")
         asyncFrame = asyncFrame.parent;
       is(asyncFrame.functionDisplayName, "do_promise",
          "Async parent has correct function name");
-    }
+    },
   }, {
     desc: "Async stack trace on Javascript marker with script",
     searchFor: (markers) => {
       return markers.some(m => (m.name == "Javascript" &&
                                 m.causeName == "promise callback"));
     },
-    setup: function(docShell) {
+    setup(docShell) {
       content.dispatchEvent(new content.Event("promisescript"));
     },
-    check: function(markers) {
+    check(markers) {
       markers = markers.filter(m => (m.name == "Javascript" &&
                                      m.causeName == "promise callback"));
       ok(markers.length > 0, "Found a Javascript marker");
@@ -77,11 +77,11 @@ if (Services.prefs.getBoolPref("javascript.options.asyncstack")) {
          "Async parent has correct cause");
       let asyncFrame = frame.asyncParent;
       // Skip over self-hosted parts of our Promise implementation.
-      while (asyncFrame.source === 'self-hosted')
+      while (asyncFrame.source === "self-hosted")
         asyncFrame = asyncFrame.parent;
       is(asyncFrame.functionDisplayName, "do_promise_script",
          "Async parent has correct function name");
-    }
+    },
   });
 }
 

@@ -15,7 +15,7 @@ add_task(async function() {
       await ContentTask.spawn(browser, {base1: BASE1, base2: BASE2},
                               async function({base1, base2}) {
         let top = content.window;
-        top.name = 'top';
+        top.name = "top";
         top.location.href += "#top";
 
         let contexts = {
@@ -30,8 +30,8 @@ add_task(async function() {
 
         function addFrame(target, name) {
           let doc = (target.contentWindow || target).document;
-          let frame = doc.createElement('iframe');
-          let p = new Promise(resolve => (frame.onload = () =>resolve(frame)));
+          let frame = doc.createElement("iframe");
+          let p = new Promise(resolve => (frame.onload = () => resolve(frame)));
           doc.body.appendChild(frame);
           frame.name = name;
           frame.src = contexts[name];
@@ -43,7 +43,7 @@ add_task(async function() {
 
           return new Promise(
               resolve => target.contentWindow.addEventListener(
-                  'message', () => resolve(win)));
+                  "message", () => resolve(win)));
         }
 
         // Generate all lists of length length with every combination of
@@ -91,12 +91,12 @@ add_task(async function() {
           return (frame.contentWindow || frame).docShell.browsingContext;
         }
 
-        let first = await addFrame(top, 'first');
-        let second = await addFrame(top, 'second');
-        let third = await addFrame(first, 'third');
-        let fourth = await addFrame(first, 'fourth');
-        let fifth = await addFrame(fourth, 'fifth');
-        let sixth = await addWindow(fourth, 'sixth');
+        let first = await addFrame(top, "first");
+        let second = await addFrame(top, "second");
+        let third = await addFrame(first, "third");
+        let fourth = await addFrame(first, "fourth");
+        let fifth = await addFrame(fourth, "fifth");
+        let sixth = await addWindow(fourth, "sixth");
 
         let frames = [top, first, second, third, fourth, fifth, sixth];
         let browsingContexts = frames.map(bc);
@@ -114,9 +114,9 @@ add_task(async function() {
           }
 
           for (let i = 0; i < docShells.length; ++i) {
-            let docShell = docShells[i].findItemWithName('target', null, null, false);
-            let browsingContext = browsingContexts[i].findWithName('target');
-            is (docShell ? docShell.browsingContext : null, browsingContext,
+            let docShell = docShells[i].findItemWithName("target", null, null, false);
+            let browsingContext = browsingContexts[i].findWithName("target");
+            is(docShell ? docShell.browsingContext : null, browsingContext,
                 "findItemWithName should find same browsing context as findWithName");
           }
         }
@@ -125,7 +125,7 @@ add_task(async function() {
           for (let i = 0; i < docShells.length; ++i) {
             let docShell = docShells[i].findItemWithName(target, null, null, false);
             let browsingContext = browsingContexts[i].findWithName(target);
-            is (docShell ? docShell.browsingContext : null, browsingContext,
+            is(docShell ? docShell.browsingContext : null, browsingContext,
                 "findItemWithName should find same browsing context as findWithName for " + target);
           }
         }

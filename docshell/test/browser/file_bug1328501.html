@@ -6,11 +6,11 @@
     <script type="application/javascript">
     let promiseResolvers = {
       "testFrame1": {},
-      "testFrame2": {}
-    }
+      "testFrame2": {},
+    };
     let promises = [
-      new Promise(r => promiseResolvers["testFrame1"].resolve = r),
-      new Promise(r => promiseResolvers["testFrame2"].resolve = r)
+      new Promise(r => promiseResolvers.testFrame1.resolve = r),
+      new Promise(r => promiseResolvers.testFrame2.resolve = r),
     ];
     function frameLoaded(frame) {
       promiseResolvers[frame].resolve();

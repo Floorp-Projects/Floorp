@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=646641
 
 /** Test for Bug 646641 **/
 
-/* 
+/*
  * In a popup (because navigating the main frame confuses Mochitest), do the
  * following:
  *
@@ -35,36 +35,34 @@ SimpleTest.waitForExplicitFinish();
 
 function debug(msg) {
   // Wrap dump so we can turn debug messages on and off easily.
-  dump(msg + '\n');
+  dump(msg + "\n");
 }
 
 var expectedLoadNum = -1;
 function childLoad(n) {
   if (n == expectedLoadNum) {
-    debug('Got load ' + n);
+    debug("Got load " + n);
     expectedLoadNum = -1;
 
     // Spin the event loop before calling gGen.next() so the generator runs
     // outside the onload handler.  This prevents us from encountering all
     // sorts of docshell quirks.
-    setTimeout(function() { gGen.next() }, 0);
-  }
-  else {
-    debug('Got unexpected load ' + n);
-    ok(false, 'Got unexpected load ' + n);
+    setTimeout(function() { gGen.next(); }, 0);
+  } else {
+    debug("Got unexpected load " + n);
+    ok(false, "Got unexpected load " + n);
   }
 }
 
 var expectedPageshowNum = -1;
 function childPageshow(n) {
   if (n == expectedPageshowNum) {
-    debug('Got expected pageshow ' + n);
+    debug("Got expected pageshow " + n);
     expectedPageshowNum = -1;
-    ok(true, 'Got expected pageshow ' + n);
-    setTimeout(function() { gGen.next() }, 0);
-  }
-  else {
-    debug('Got pageshow ' + n);
+    ok(true, "Got expected pageshow " + n);
+    setTimeout(function() { gGen.next(); }, 0);
+  } else {
+    debug("Got pageshow " + n);
   }
 
   // Since a pageshow comes along with an onload, don't fail the test if we get
@@ -72,23 +70,23 @@ function childPageshow(n) {
 }
 
 function waitForLoad(n) {
-  debug('Waiting for load ' + n);
+  debug("Waiting for load " + n);
   expectedLoadNum = n;
 }
 
 function waitForShow(n) {
-  debug('Waiting for show ' + n);
+  debug("Waiting for show " + n);
   expectedPageshowNum = n;
 }
 
 function* test() {
-  var popup = window.open('file_bfcache_plus_hash_1.html');
+  var popup = window.open("file_bfcache_plus_hash_1.html");
   waitForLoad(1);
   yield undefined;
 
-  popup.history.pushState('', '', '');
+  popup.history.pushState("", "", "");
 
-  popup.location = 'file_bfcache_plus_hash_2.html';
+  popup.location = "file_bfcache_plus_hash_2.html";
   waitForLoad(2);
   yield undefined;
 

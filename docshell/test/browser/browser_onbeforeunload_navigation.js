@@ -144,7 +144,7 @@ var testTab;
 
 var loadStarted = false;
 var tabStateListener = {
-  onStateChange: function(webprogress, request, stateFlags, status) {
+  onStateChange(webprogress, request, stateFlags, status) {
     let startDocumentFlags = Ci.nsIWebProgressListener.STATE_START |
                              Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
     if ((stateFlags & startDocumentFlags) == startDocumentFlags) {
@@ -156,7 +156,7 @@ var tabStateListener = {
   onSecurityChange: () => {},
   onProgressChange: () => {},
   onContentBlockingEvent: () => {},
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener]),
 };
 
 function onTabModalDialogLoaded(node) {

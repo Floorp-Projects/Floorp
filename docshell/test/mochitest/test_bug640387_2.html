@@ -37,7 +37,7 @@ errorOnHashchange = false;
 callbackOnHashchange = false;
 function childHashchange() {
   if (errorOnHashchange) {
-    ok(false, 'Got unexpected hashchange.');
+    ok(false, "Got unexpected hashchange.");
   }
   if (callbackOnHashchange) {
     callbackOnHashchange = false;
@@ -46,21 +46,21 @@ function childHashchange() {
 }
 
 function* run_test() {
-  var iframe = $('iframe').contentWindow;
+  var iframe = $("iframe").contentWindow;
 
-  ok(true, 'Got first load');
+  ok(true, "Got first load");
 
   // Spin the event loop so we exit the onload handler.
-  SimpleTest.executeSoon(function() { gGen.next() });
+  SimpleTest.executeSoon(function() { gGen.next(); });
   yield undefined;
 
-  let origLocation = iframe.location + '';
+  let origLocation = iframe.location + "";
   callbackOnHashchange = true;
-  iframe.location.hash = '#1';
+  iframe.location.hash = "#1";
   // Wait for a hashchange event.
   yield undefined;
 
-  ok(true, 'Got hashchange.');
+  ok(true, "Got hashchange.");
 
   iframe.location = origLocation;
   // This should produce a load event and *not* a hashchange, because the
@@ -69,10 +69,10 @@ function* run_test() {
   errorOnHashchange = true;
   yield undefined;
 
-  ok(true, 'Got final load.');
+  ok(true, "Got final load.");
 
   // Spin the event loop to give hashchange a chance to fire, if it's going to.
-  SimpleTest.executeSoon(function() { gGen.next() });
+  SimpleTest.executeSoon(function() { gGen.next(); });
   yield undefined;
 
   SimpleTest.finish();

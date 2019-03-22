@@ -29,7 +29,7 @@ html5 sandboxed iframe should not run marquee attribute event handlers without a
   var numberOfMessagesExpected = 4;
   var unexpectedMessages = new Set();
 
-  window.onmessage = function (event) {
+  window.onmessage = function(event) {
     info(event.data + " message received");
     if (event.data.startsWith("if2") || event.data == "if1 chaser") {
       expectedMessages.add(event.data);
@@ -39,7 +39,7 @@ html5 sandboxed iframe should not run marquee attribute event handlers without a
     } else {
       unexpectedMessages.add(event.data);
     }
-  }
+  };
 
   function checkRecievedMessages() {
     // Check the expected messages explicitly as a cross-check.
@@ -54,7 +54,7 @@ html5 sandboxed iframe should not run marquee attribute event handlers without a
 
     unexpectedMessages.forEach(
       (v) => {
-        ok(false, v + " should NOT have run in iframe sandbox without allow-scripts")
+        ok(false, v + " should NOT have run in iframe sandbox without allow-scripts");
       }
     );
 

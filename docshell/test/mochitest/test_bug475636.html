@@ -33,7 +33,7 @@ window.addEventListener("message", function(e) {
 var url = "file_bug475636.sjs?";
 
 function* runTests() {
-  var loader = document.getElementById('loader');
+  var loader = document.getElementById("loader");
   for (var testNum = 1; ; ++testNum) {
     loader.src = url + testNum;
     let res = (yield);

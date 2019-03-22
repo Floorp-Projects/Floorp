@@ -21,7 +21,7 @@ add_task(async function test() {
       testDone.promise = new Promise(resolve => { testDone.resolve = resolve; });
 
       let listener = {
-        OnHistoryNewEntry: function (aNewURI) {
+        OnHistoryNewEntry(aNewURI) {
           if (aNewURI.spec == URL && 5 == ++count) {
             addEventListener("load", function onLoad() {
               removeEventListener("load", onLoad, true);
@@ -47,7 +47,7 @@ add_task(async function test() {
         },
 
         QueryInterface: ChromeUtils.generateQI([Ci.nsISHistoryListener,
-                                                Ci.nsISupportsWeakReference])
+                                                Ci.nsISupportsWeakReference]),
       };
 
       history.legacySHistory.addSHistoryListener(listener);

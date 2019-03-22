@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=680257
 
 SimpleTest.waitForExplicitFinish();
 
-var popup = window.open('file_bug680257.html');
+var popup = window.open("file_bug680257.html");
 
 // The popup will call into popupLoaded() once it loads.
 function popupLoaded() {
@@ -25,32 +25,31 @@ function popupLoaded() {
 }
 
 function runTests() {
-  checkPopupLinkStyle(false, 'Initial');
+  checkPopupLinkStyle(false, "Initial");
 
-  popup.location.hash = 'a';
-  checkPopupLinkStyle(true, 'After setting hash');
+  popup.location.hash = "a";
+  checkPopupLinkStyle(true, "After setting hash");
 
   popup.history.back();
-  checkPopupLinkStyle(false, 'After going back');
+  checkPopupLinkStyle(false, "After going back");
 
   popup.history.forward();
-  checkPopupLinkStyle(true, 'After going forward');
+  checkPopupLinkStyle(true, "After going forward");
 
   popup.close();
   SimpleTest.finish();
 }
 
 function checkPopupLinkStyle(isTarget, desc) {
-  var link = popup.document.getElementById('a');
+  var link = popup.document.getElementById("a");
   var style = popup.getComputedStyle(link);
-  var color = style.getPropertyValue('color');
+  var color = style.getPropertyValue("color");
 
   // Color is red if isTarget, black otherwise.
   if (isTarget) {
-    is(color, 'rgb(255, 0, 0)', desc);
-  }
-  else {
-    is(color, 'rgb(0, 0, 0)', desc);
+    is(color, "rgb(255, 0, 0)", desc);
+  } else {
+    is(color, "rgb(0, 0, 0)", desc);
   }
 }
 

@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=511449
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
-window.addEventListener('load', runTest);
+window.addEventListener("load", runTest);
 
 var win = null;
 
@@ -38,10 +38,10 @@ function runNextTest() {
   var didClose = false;
   win.onunload = function() {
     didClose = true;
-  }
-  synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_W, {metaKey:1}, "w", "w");
+  };
+  synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_W, {metaKey: 1}, "w", "w");
 
-  setTimeout(function () {
+  setTimeout(function() {
     ok(didClose, "Cmd+W should have closed the tab");
     if (!didClose) {
       win.close();
