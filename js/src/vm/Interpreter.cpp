@@ -4198,8 +4198,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
       /* Load the home object */
       ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
-      MOZ_ASSERT(obj->is<PlainObject>() || obj->is<UnboxedPlainObject>() ||
-                 obj->is<JSFunction>());
+      MOZ_ASSERT(obj->is<PlainObject>() || obj->is<JSFunction>());
 
       func->setExtendedSlot(FunctionExtended::METHOD_HOMEOBJECT_SLOT,
                             ObjectValue(*obj));
@@ -5138,28 +5137,16 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
       return nullptr;
     }
 
-    bool isUnboxed;
     {
       AutoSweepObjectGroup sweep(group);
       if (group->maybePreliminaryObjects(sweep)) {
         group->maybePreliminaryObjects(sweep)->maybeAnalyze(cx, group);
-        if (group->maybeUnboxedLayout(sweep)) {
-          // This sets the allocation site so that the template object
-          // can be read back but if op is NEWINIT, then the template
-          // is null.
-          MOZ_ASSERT(JSOp(*pc) != JSOP_NEWINIT);
-          group->maybeUnboxedLayout(sweep)->setAllocationSite(script, pc);
-        }
       }
 
       if (group->shouldPreTenure(sweep) ||
           group->maybePreliminaryObjects(sweep)) {
         newKind = TenuredObject;
       }
-      isUnboxed = group->maybeUnboxedLayout(sweep);
-    }
-    if (isUnboxed) {
-      return UnboxedPlainObject::create(cx, group, newKind);
     }
   }
 

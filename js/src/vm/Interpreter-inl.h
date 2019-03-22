@@ -25,7 +25,6 @@
 #include "vm/ObjectOperations-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/StringType-inl.h"
-#include "vm/UnboxedObject-inl.h"
 
 namespace js {
 
@@ -359,15 +358,10 @@ inline void InitGlobalLexicalOperation(JSContext* cx,
 
 inline bool InitPropertyOperation(JSContext* cx, JSOp op, HandleObject obj,
                                   HandlePropertyName name, HandleValue rhs) {
-  if (obj->is<PlainObject>() || obj->is<JSFunction>()) {
-    unsigned propAttrs = GetInitDataPropAttrs(op);
-    return NativeDefineDataProperty(cx, obj.as<NativeObject>(), name, rhs,
-                                    propAttrs);
-  }
-
-  MOZ_ASSERT(obj->as<UnboxedPlainObject>().layout().lookup(name));
-  RootedId id(cx, NameToId(name));
-  return PutProperty(cx, obj, id, rhs, false);
+  MOZ_ASSERT(obj->is<PlainObject>() || obj->is<JSFunction>());
+  unsigned propAttrs = GetInitDataPropAttrs(op);
+  return NativeDefineDataProperty(cx, obj.as<NativeObject>(), name, rhs,
+                                  propAttrs);
 }
 
 static MOZ_ALWAYS_INLINE bool NegOperation(JSContext* cx,
