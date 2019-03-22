@@ -117,7 +117,7 @@ class Vector;
 // |MACRO| appropriately to extract the relevant parts. Note that the number
 // values are used internally only and so can be changed without consequence.
 // Any changes to this list should also be applied to the feature list in
-// browser/components/extensions/schemas/geckoProfiler.json.
+// toolkit/components/extensions/schemas/geckoProfiler.json.
 #  define PROFILER_FOR_EACH_FEATURE(MACRO)                         \
     /* Profile Java code (Android only). */                        \
     MACRO(0, "java", Java)                                         \

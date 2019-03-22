@@ -11,7 +11,7 @@ const { recordingState: {
   REQUEST_TO_STOP_PROFILER,
 }} = require("devtools/client/performance-new/utils");
 const { OS } = require("resource://gre/modules/osfile.jsm");
-const { ProfilerGetSymbols } = require("resource://app/modules/ProfilerGetSymbols.jsm");
+const { ProfilerGetSymbols } = require("resource://gre/modules/ProfilerGetSymbols.jsm");
 
 /**
  * The recording state manages the current state of the recording panel.

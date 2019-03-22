@@ -81,7 +81,7 @@ this.ProfilerGetSymbols = {
 
     return new Promise((resolve, reject) => {
       const worker =
-        new ChromeWorker("resource://app/modules/ProfilerGetSymbols-worker.js");
+        new ChromeWorker("resource://gre/modules/ProfilerGetSymbols-worker.js");
       worker.onmessage = (e) => {
         if (e.data.error) {
           reject(e.data.error);

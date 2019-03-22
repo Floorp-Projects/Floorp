@@ -5,7 +5,7 @@
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "ProfilerGetSymbols", "resource://app/modules/ProfilerGetSymbols.jsm");
+ChromeUtils.defineModuleGetter(this, "ProfilerGetSymbols", "resource://gre/modules/ProfilerGetSymbols.jsm");
 
 const PREF_ASYNC_STACK = "javascript.options.asyncstack";
 
