@@ -414,13 +414,17 @@ bool VPXDecoder::GetStreamInfo(Span<const uint8_t> aBuffer,
   };
 
   auto frame_size = [&]() {
-    aInfo.mImage = gfx::IntSize(br.ReadBits(16) + 1, br.ReadBits(16) + 1);
+    int32_t width = static_cast<int32_t>(br.ReadBits(16)) + 1;
+    int32_t height = static_cast<int32_t>(br.ReadBits(16)) + 1;
+    aInfo.mImage = gfx::IntSize(width, height);
   };
 
   auto render_size = [&]() {
     bool render_and_frame_size_different = br.ReadBits(1);
     if (render_and_frame_size_different) {
-      aInfo.mDisplay = gfx::IntSize(br.ReadBits(16) + 1, br.ReadBits(16) + 1);
+      int32_t width = static_cast<int32_t>(br.ReadBits(16)) + 1;
+      int32_t height = static_cast<int32_t>(br.ReadBits(16)) + 1;
+      aInfo.mDisplay = gfx::IntSize(width, height);
     } else {
       aInfo.mDisplay = aInfo.mImage;
     }
