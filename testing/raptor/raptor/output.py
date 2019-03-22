@@ -60,6 +60,13 @@ class Output(object):
                 'alertThreshold': float(test.alert_threshold)
             }
 
+            # if cold load add that info to the suite result dict; this will be used later
+            # when combining the results from multiple browser cycles into one overall result
+            if test.cold is True:
+                suite['cold'] = True
+                suite['browser_cycle'] = int(test.browser_cycle)
+                suite['expected_browser_cycles'] = int(test.expected_browser_cycles)
+
             suites.append(suite)
 
             # process results for pageloader type of tests
@@ -86,10 +93,14 @@ class Output(object):
                     new_subtest['value'] = 0
                     new_subtest['unit'] = test.subtest_unit
 
-                    # ignore first value due to 1st pageload noise
-                    LOG.info("ignoring the first %s value due to initial pageload noise"
-                             % measurement_name)
-                    filtered_values = filter.ignore_first(new_subtest['replicates'], 1)
+                    if test.cold is False:
+                        # for warm page-load, ignore first value due to 1st pageload noise
+                        LOG.info("ignoring the first %s value due to initial pageload noise"
+                                 % measurement_name)
+                        filtered_values = filter.ignore_first(new_subtest['replicates'], 1)
+                    else:
+                        # for cold-load we want all the values
+                        filtered_values = new_subtest['replicates']
 
                     # for pageload tests that measure TTFI: TTFI is not guaranteed to be available
                     # everytime; the raptor measure.js webext will substitute a '-1' value in the
@@ -153,6 +164,119 @@ class Output(object):
                 suite['value'] = self.construct_summary(vals, testname=test.name)
 
         self.summarized_results = test_results
+
+    def combine_browser_cycles(self):
+        '''
+        At this point the results have been summarized; however there may have been multiple
+        browser cycles (i.e. cold load). In which case the results have one entry for each
+        test for each browser cycle. For each test we need to combine the results for all
+        browser cycles into one results entry.
+
+        For example, this is what the summarized results suites list looks like from a test that
+        was run with multiple (two) browser cycles:
+
+        [{'expected_browser_cycles': 2, 'extraOptions': [],
+            'name': u'raptor-tp6m-amazon-geckoview-cold', 'lowerIsBetter': True,
+            'alertThreshold': 2.0, 'value': 1776.94, 'browser_cycle': 1,
+            'subtests': [{'name': u'dcf', 'lowerIsBetter': True, 'alertThreshold': 2.0,
+                'value': 818, 'replicates': [818], 'unit': u'ms'}, {'name': u'fcp',
+                'lowerIsBetter': True, 'alertThreshold': 2.0, 'value': 1131, 'shouldAlert': True,
+                'replicates': [1131], 'unit': u'ms'}, {'name': u'fnbpaint', 'lowerIsBetter': True,
+                'alertThreshold': 2.0, 'value': 1056, 'replicates': [1056], 'unit': u'ms'},
+                {'name': u'ttfi', 'lowerIsBetter': True, 'alertThreshold': 2.0, 'value': 18074,
+                'replicates': [18074], 'unit': u'ms'}, {'name': u'loadtime', 'lowerIsBetter': True,
+                'alertThreshold': 2.0, 'value': 1002, 'shouldAlert': True, 'replicates': [1002],
+                'unit': u'ms'}],
+            'cold': True, 'type': u'pageload', 'unit': u'ms'},
+        {'expected_browser_cycles': 2, 'extraOptions': [],
+            'name': u'raptor-tp6m-amazon-geckoview-cold', 'lowerIsBetter': True,
+            'alertThreshold': 2.0, 'value': 840.25, 'browser_cycle': 2,
+            'subtests': [{'name': u'dcf', 'lowerIsBetter': True, 'alertThreshold': 2.0,
+                'value': 462, 'replicates': [462], 'unit': u'ms'}, {'name': u'fcp',
+                'lowerIsBetter': True, 'alertThreshold': 2.0, 'value': 718, 'shouldAlert': True,
+                'replicates': [718], 'unit': u'ms'}, {'name': u'fnbpaint', 'lowerIsBetter': True,
+                'alertThreshold': 2.0, 'value': 676, 'replicates': [676], 'unit': u'ms'},
+                {'name': u'ttfi', 'lowerIsBetter': True, 'alertThreshold': 2.0, 'value': 3084,
+                'replicates': [3084], 'unit': u'ms'}, {'name': u'loadtime', 'lowerIsBetter': True,
+                'alertThreshold': 2.0, 'value': 605, 'shouldAlert': True, 'replicates': [605],
+                'unit': u'ms'}],
+            'cold': True, 'type': u'pageload', 'unit': u'ms'}]
+
+        Need to combine those into a single entry.
+        '''
+        # first build a list of entries that need to be combined; and as we do that, mark the
+        # original suite entry as up for deletion, so once combined we know which ones to del
+        # note that summarized results are for all tests that were ran in the session, which
+        # could include cold and / or warm page-load and / or benchnarks combined
+        suites_to_be_combined = []
+        combined_suites = []
+
+        for _index, suite in enumerate(self.summarized_results['suites']):
+            if suite.get('cold') is None:
+                continue
+
+            if suite['expected_browser_cycles'] > 1:
+                _name = suite['name']
+                _details = suite.copy()
+                suites_to_be_combined.append({'name': _name, 'details': _details})
+                suite['to_be_deleted'] = True
+
+        # now create a new suite entry that will have all the results from
+        # all of the browser cycles, but in one result entry for each test
+        combined_suites = {}
+
+        for next_suite in suites_to_be_combined:
+            suite_name = next_suite['details']['name']
+            browser_cycle = next_suite['details']['browser_cycle']
+            LOG.info("combining results from browser cycle %d" % browser_cycle)
+            if browser_cycle == 1:
+                # first browser cycle so just take entire entry to start with
+                combined_suites[suite_name] = next_suite['details']
+                LOG.info("created new combined result with intial cycle replicates")
+                # remove the 'cold', 'browser_cycle', and 'expected_browser_cycles' info
+                # as we don't want that showing up in perfherder data output
+                del(combined_suites[suite_name]['cold'])
+                del(combined_suites[suite_name]['browser_cycle'])
+                del(combined_suites[suite_name]['expected_browser_cycles'])
+            else:
+                # subsequent browser cycles, already have an entry; just add subtest replicates
+                for next_subtest in next_suite['details']['subtests']:
+                    # find the existing entry for that subtest in our new combined test entry
+                    found_subtest = False
+                    for combined_subtest in combined_suites[suite_name]['subtests']:
+                        if combined_subtest['name'] == next_subtest['name']:
+                            # add subtest (measurement type) replicates to the combined entry
+                            LOG.info("adding replicates for %s" % next_subtest['name'])
+                            combined_subtest['replicates'].extend(next_subtest['replicates'])
+                            found_subtest = True
+                    # the subtest / measurement type wasn't found in our existing combined
+                    # result entry; if it is for the same suite name add it - this could happen
+                    # as ttfi may not be available in every browser cycle
+                    if not found_subtest:
+                        LOG.info("adding replicates for %s" % next_subtest['name'])
+                        combined_suites[next_suite['details']['name']]['subtests'] \
+                            .append(next_subtest)
+
+        # now we have a single entry for each test; with all replicates from all browser cycles
+        for i, name in enumerate(combined_suites):
+            vals = []
+            for next_sub in combined_suites[name]['subtests']:
+                # calculate sub-test results (i.e. each measurement type)
+                next_sub['value'] = filter.median(next_sub['replicates'])
+                # add to vals; vals is used to calculate overall suite result i.e. the
+                # geomean of all of the subtests / measurement types
+                vals.append([next_sub['value'], next_sub['name']])
+
+            # calculate overall suite result ('value') which is geomean of all measures
+            if len(combined_suites[name]['subtests']) > 1:
+                combined_suites[name]['value'] = self.construct_summary(vals, testname=name)
+
+            # now add the combined suite entry to our overall summarized results!
+            self.summarized_results['suites'].append(combined_suites[name])
+
+        # now it is safe to delete the original entries that were made by each cycle
+        self.summarized_results['suites'] = [item for item in self.summarized_results['suites']
+                                             if item.get('to_be_deleted') is not True]
 
     def summarize_supporting_data(self):
         '''

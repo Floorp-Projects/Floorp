@@ -33,6 +33,7 @@ var csPort = null;
 var host = null;
 var benchmarkPort = null;
 var testType;
+var browserCycle = 0;
 var pageCycles = 0;
 var pageCycle = 0;
 var testURL;
@@ -63,6 +64,9 @@ var screenCapture = false;
 var results = {"name": "",
                "page": "",
                "type": "",
+               "browser_cycle": 0,
+               "expected_browser_cycles": 0,
+               "cold": false,
                "lower_is_better": true,
                "alert_threshold": 2.0,
                "measurements": {}};
@@ -99,6 +103,9 @@ function getTestSettings() {
         results.page = testURL;
         results.type = testType;
         results.name = testName;
+        results.browser_cycle = browserCycle;
+        results.expected_browser_cycles = settings.expected_browser_cycles;
+        results.cold = settings.cold;
         results.unit = settings.unit;
         results.subtest_unit = settings.subtest_unit;
         results.lower_is_better = settings.lower_is_better === true;
@@ -582,6 +589,7 @@ function raptorRunner() {
   postStartupDelay = config.post_startup_delay;
   host = config.host;
   debugMode = config.debug_mode;
+  browserCycle = config.browser_cycle;
 
   postToControlServer("status", "raptor runner.js is loaded!");
 
