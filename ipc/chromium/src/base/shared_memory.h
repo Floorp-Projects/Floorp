@@ -67,7 +67,11 @@ class SharedMemory {
   // Maps the shared memory into the caller's address space.
   // Returns true on success, false otherwise.  The memory address
   // is accessed via the memory() accessor.
-  bool Map(size_t bytes);
+  //
+  // If the specified fixed address is not null, it is the address that the
+  // shared memory must be mapped at.  Returns false if the shared memory
+  // could not be mapped at that address.
+  bool Map(size_t bytes, void* fixed_address = nullptr);
 
   // Unmaps the shared memory from the caller's address space.
   // Returns true if successful; returns false on error or if the
@@ -93,6 +97,15 @@ class SharedMemory {
   // Closes the open shared memory segment.
   // It is safe to call Close repeatedly.
   void Close(bool unmap_view = true);
+
+  // Returns a page-aligned address at which the given number of bytes could
+  // probably be mapped.  Returns NULL on error or if there is insufficient
+  // contiguous address space to map the required number of pages.
+  //
+  // Note that there is no guarantee that the given address space will actually
+  // be free by the time this function returns, since another thread might map
+  // something there in the meantime.
+  static void* FindFreeAddressSpace(size_t size);
 
   // Share the shared memory to another process.  Attempts
   // to create a platform-specific new_handle which can be
