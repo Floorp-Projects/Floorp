@@ -12,24 +12,24 @@ for ( let prefix of ['', '(table $prefix 0 32 funcref)']) {
          (local $last i32)
          (local $iters i32)
          (local $tmp anyref)
-         (set_local $last (table.grow $tbl (i32.const 1) (ref.null)))
-         (table.set $tbl (get_local $last) (call $item))
+         (local.set $last (table.grow $tbl (i32.const 1) (ref.null)))
+         (table.set $tbl (local.get $last) (call $item))
          (loop $iter_continue
-           (set_local $i (i32.const 0))
-           (set_local $j (get_local $last))
+           (local.set $i (i32.const 0))
+           (local.set $j (local.get $last))
            (block $l_break
              (loop $l_continue
-               (br_if $l_break (i32.ge_s (get_local $j) (get_local $i)))
-               (set_local $tmp (table.get $tbl (get_local $i)))
-               (if (i32.eqz (i32.rem_s (get_local $i) (i32.const 3)))
-                   (set_local $tmp (call $item)))
-               (table.set $tbl (get_local $i) (table.get $tbl (get_local $j)))
-               (table.set $tbl (get_local $j) (get_local $tmp))
-               (set_local $i (i32.add (get_local $i) (i32.const 1)))
-               (set_local $j (i32.sub (get_local $j) (i32.const 1)))
+               (br_if $l_break (i32.ge_s (local.get $j) (local.get $i)))
+               (local.set $tmp (table.get $tbl (local.get $i)))
+               (if (i32.eqz (i32.rem_s (local.get $i) (i32.const 3)))
+                   (local.set $tmp (call $item)))
+               (table.set $tbl (local.get $i) (table.get $tbl (local.get $j)))
+               (table.set $tbl (local.get $j) (local.get $tmp))
+               (local.set $i (i32.add (local.get $i) (i32.const 1)))
+               (local.set $j (i32.sub (local.get $j) (i32.const 1)))
                (br $l_continue))
-           (set_local $iters (i32.add (get_local $iters) (i32.const 1)))
-           (br_if $iter_continue (i32.lt_s (get_local $iters) (get_local $numiters)))))))`));
+           (local.set $iters (i32.add (local.get $iters) (i32.const 1)))
+           (br_if $iter_continue (i32.lt_s (local.get $iters) (local.get $numiters)))))))`));
 
     for (let [mode,freq] of [[14,100],  // Compact every 100 allocations
                              [2,12],    // Collect every 12 allocations

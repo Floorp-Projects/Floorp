@@ -84,13 +84,13 @@ var mem = new Memory({initial:1});
 new Int32Array(mem.buffer)[0] = 42;
 var mod = new Module(wasmTextToBinary(`(module
     (import "" "mem" (memory 1))
-    (func $gm (param i32) (result i32) (memory.grow (get_local 0)))
+    (func $gm (param i32) (result i32) (memory.grow (local.get 0)))
     (export "grow_memory" $gm)
     (func $cm (result i32) (memory.size))
     (export "current_memory" $cm)
-    (func $ld (param i32) (result i32) (i32.load (get_local 0)))
+    (func $ld (param i32) (result i32) (i32.load (local.get 0)))
     (export "load" $ld)
-    (func $st (param i32) (param i32) (i32.store (get_local 0) (get_local 1)))
+    (func $st (param i32) (param i32) (i32.store (local.get 0) (local.get 1)))
     (export "store" $st)
 )`));
 var exp1 = new Instance(mod, {"":{mem}}).exports;
@@ -198,7 +198,7 @@ tbl.set(0, src.one);
 var mod = new Module(wasmTextToBinary(`(module
     (type $v2i (func (result i32)))
     (table (import "" "tbl") 1 funcref)
-    (func $ci (param i32) (result i32) (call_indirect $v2i (get_local 0)))
+    (func $ci (param i32) (result i32) (call_indirect $v2i (local.get 0)))
     (export "call_indirect" $ci)
 )`));
 var exp1 = new Instance(mod, {"":{tbl}}).exports;

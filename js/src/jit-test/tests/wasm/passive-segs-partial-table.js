@@ -33,7 +33,7 @@ function tbl_init(min, max, backup, write, segoffs=0) {
            (func $f14 (export "f14"))
            (func $f15 (export "f15"))
            (func (export "run") (param $offs i32) (param $len i32)
-             (table.init 0 (get_local $offs) (i32.const ${segoffs}) (get_local $len))))`);
+             (table.init 0 (local.get $offs) (i32.const ${segoffs}) (local.get $len))))`);
     // A fill writing past the end of the table should throw *and* have filled
     // all the way up to the end.
     //
@@ -109,7 +109,7 @@ function tbl_copy(min, max, srcOffs, targetOffs, len, copyDown=false) {
            (func $f14 (export "f14"))
            (func $f15 (export "f15"))
            (func (export "run") (param $targetOffs i32) (param $srcOffs i32) (param $len i32)
-             (table.copy (get_local $targetOffs) (get_local $srcOffs) (get_local $len))))`);
+             (table.copy (local.get $targetOffs) (local.get $srcOffs) (local.get $len))))`);
 
     let tbl = ins.exports.tbl;
 

@@ -244,7 +244,7 @@ assertErrorMessage(() => wasmCompile(
       (type $fn (func (param (ref $box))))
       (table (export "tbl") 1 funcref)
       (func (param i32)
-       (call_indirect $fn (ref.null) (get_local 0))))`),
+       (call_indirect $fn (ref.null) (local.get 0))))`),
                    WebAssembly.CompileError,
                    /cannot expose reference type/);
 
@@ -255,7 +255,7 @@ assertErrorMessage(() => wasmCompile(
       (type $fn (func (result (ref $box))))
       (table (export "tbl") 1 funcref)
       (func (param i32) (result (ref $box))
-       (call_indirect $fn (get_local 0))))`),
+       (call_indirect $fn (local.get 0))))`),
                    WebAssembly.CompileError,
                    /cannot expose reference type/);
 
@@ -264,7 +264,7 @@ assertEq(typeof wasmCompile(
       (type $fn (func (param anyref)))
       (table (export "tbl") 1 funcref)
       (func (param i32)
-       (call_indirect $fn (ref.null) (get_local 0))))`),
+       (call_indirect $fn (ref.null) (local.get 0))))`),
          "object");
 
 assertEq(typeof wasmCompile(
@@ -272,7 +272,7 @@ assertEq(typeof wasmCompile(
       (type $fn (func (result anyref)))
       (table (export "tbl") 1 funcref)
       (func (param i32) (result anyref)
-       (call_indirect $fn (get_local 0))))`),
+       (call_indirect $fn (local.get 0))))`),
          "object");
 
 // Can't call via imported table with type that is exposed for Ref, though anyref is OK.
@@ -284,7 +284,7 @@ assertErrorMessage(() => wasmCompile(
       (type $fn (func (param (ref $box))))
       (import "m" "tbl" (table 1 funcref))
       (func (param i32)
-       (call_indirect $fn (ref.null) (get_local 0))))`),
+       (call_indirect $fn (ref.null) (local.get 0))))`),
                    WebAssembly.CompileError,
                    /cannot expose reference type/);
 
@@ -295,7 +295,7 @@ assertErrorMessage(() => wasmCompile(
       (type $fn (func (result (ref $box))))
       (import "m" "tbl" (table 1 funcref))
       (func (param i32) (result (ref $box))
-       (call_indirect $fn (get_local 0))))`),
+       (call_indirect $fn (local.get 0))))`),
                    WebAssembly.CompileError,
                    /cannot expose reference type/);
 
@@ -304,7 +304,7 @@ assertEq(typeof wasmCompile(
       (type $fn (func (param anyref)))
       (import "m" "tbl" (table 1 funcref))
       (func (param i32)
-       (call_indirect $fn (ref.null) (get_local 0))))`),
+       (call_indirect $fn (ref.null) (local.get 0))))`),
          "object");
 
 assertEq(typeof wasmCompile(
@@ -312,7 +312,7 @@ assertEq(typeof wasmCompile(
       (type $fn (func (result anyref)))
       (import "m" "tbl" (table 1 funcref))
       (func (param i32) (result anyref)
-       (call_indirect $fn (get_local 0))))`),
+       (call_indirect $fn (local.get 0))))`),
          "object");
 
 // We can call via a private table with a type that is exposed for Ref.
@@ -327,7 +327,7 @@ assertEq(typeof wasmCompile(
           (elem (i32.const 0) $f1)
           (func $f1 (param (ref $box)) (result i32) (i32.const 37))
           (func (export "f") (param i32) (result i32)
-           (call_indirect $fn (ref.null) (get_local 0))))`);
+           (call_indirect $fn (ref.null) (local.get 0))))`);
     let i = new WebAssembly.Instance(m).exports;
     assertEq(i.f(0), 37);
 }
