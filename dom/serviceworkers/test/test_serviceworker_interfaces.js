@@ -27,6 +27,7 @@ var ecmaGlobals =
     "ArrayBuffer",
     {name: "Atomics", disabled: true},
     "Boolean",
+    {name: "BigInt", nightly: true},
     {name: "ByteLengthQueuingStrategy", optional: true},
     {name: "CountQueuingStrategy", optional: true},
     "DataView",

@@ -981,15 +981,6 @@ JSObject* DataViewObject::CreatePrototype(JSContext* cx, JSProtoKey key) {
                                             &DataViewObject::protoClass_);
 }
 
-// Add extra methods for BigInt if its run-time option is enabled.
-bool DataViewObject::finishInit(JSContext* cx, JS::HandleObject ctor,
-                                JS::HandleObject proto) {
-  if (cx->realm()->creationOptions().getBigIntEnabled()) {
-    return JS_DefineFunctions(cx, proto, bigIntMethods);
-  }
-  return true;
-}
-
 static const ClassOps DataViewObjectClassOps = {nullptr, /* addProperty */
                                                 nullptr, /* delProperty */
                                                 nullptr, /* enumerate */
@@ -1009,8 +1000,7 @@ const ClassSpec DataViewObject::classSpec_ = {
     nullptr,
     nullptr,
     DataViewObject::methods,
-    DataViewObject::properties,
-    DataViewObject::finishInit};
+    DataViewObject::properties};
 
 const Class DataViewObject::class_ = {
     "DataView",
@@ -1032,6 +1022,8 @@ const JSFunctionSpec DataViewObject::methods[] = {
     JS_FN("getUint32", DataViewObject::fun_getUint32, 1, 0),
     JS_FN("getFloat32", DataViewObject::fun_getFloat32, 1, 0),
     JS_FN("getFloat64", DataViewObject::fun_getFloat64, 1, 0),
+    JS_FN("getBigInt64", DataViewObject::fun_getBigInt64, 1, 0),
+    JS_FN("getBigUint64", DataViewObject::fun_getBigUint64, 1, 0),
     JS_FN("setInt8", DataViewObject::fun_setInt8, 2, 0),
     JS_FN("setUint8", DataViewObject::fun_setUint8, 2, 0),
     JS_FN("setInt16", DataViewObject::fun_setInt16, 2, 0),
@@ -1040,13 +1032,9 @@ const JSFunctionSpec DataViewObject::methods[] = {
     JS_FN("setUint32", DataViewObject::fun_setUint32, 2, 0),
     JS_FN("setFloat32", DataViewObject::fun_setFloat32, 2, 0),
     JS_FN("setFloat64", DataViewObject::fun_setFloat64, 2, 0),
-    JS_FS_END};
-
-const JSFunctionSpec DataViewObject::bigIntMethods[] = {
-    JS_FN("getBigInt64", DataViewObject::fun_getBigInt64, 1, 0),
-    JS_FN("getBigUint64", DataViewObject::fun_getBigUint64, 1, 0),
     JS_FN("setBigInt64", DataViewObject::fun_setBigInt64, 2, 0),
-    JS_FN("setBigUint64", DataViewObject::fun_setBigUint64, 2, 0), JS_FS_END};
+    JS_FN("setBigUint64", DataViewObject::fun_setBigUint64, 2, 0),
+    JS_FS_END};
 
 const JSPropertySpec DataViewObject::properties[] = {
     JS_PSG("buffer", DataViewObject::bufferGetter, 0),

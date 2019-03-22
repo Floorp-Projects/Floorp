@@ -3083,12 +3083,31 @@ extern bool PropertySpecNameToId(JSContext* cx, const char* name,
                                  MutableHandleId id,
                                  js::PinningBehavior pin = js::DoNotPinAtom);
 
+static bool ShouldIgnorePropertyDefinition(JSContext* cx, HandleObject obj,
+                                           HandleId id)
+{
+  if (StandardProtoKeyOrNull(obj) == JSProto_DataView &&
+      !cx->realm()->creationOptions().getBigIntEnabled() &&
+      (id == NameToId(cx->names().getBigInt64) ||
+       id == NameToId(cx->names().getBigUint64) ||
+       id == NameToId(cx->names().setBigInt64) ||
+       id == NameToId(cx->names().setBigUint64))) {
+    return true;
+  }
+
+  return false;
+}
+
 static bool DefineFunctionFromSpec(JSContext* cx, HandleObject obj,
                                    const JSFunctionSpec* fs, unsigned flags,
                                    DefineAsIntrinsic intrinsic) {
   RootedId id(cx);
   if (!PropertySpecNameToId(cx, fs->name, &id)) {
     return false;
+  }
+
+  if (ShouldIgnorePropertyDefinition(cx, obj, id)) {
+    return true;
   }
 
   JSFunction* fun = NewFunctionFromSpec(cx, fs, id);
