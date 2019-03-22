@@ -32,11 +32,11 @@ let t =
                              (param $arg4 anyref) (param $arg5 anyref) (param $arg6 i32)
        (call $alloc)
        drop
-       (i32.add (i32.add (get_local $arg1) (get_local $arg3)) (get_local $arg6))
+       (i32.add (i32.add (local.get $arg1) (local.get $arg3)) (local.get $arg6))
 
        ;; Poke the ref-typed arguments, to be sure that they got kept alive
        ;; properly across any GC that the |alloc| call might have done.
-       (call $check3 (get_local $arg2) (get_local $arg4) (get_local $arg5))
+       (call $check3 (local.get $arg2) (local.get $arg4) (local.get $arg5))
      )
 
      ;; -- fn 1
@@ -45,26 +45,26 @@ let t =
 
        (loop i32
          ;; call direct 0
-         (call $fn0 (i32.const 10) (get_local $arg1) (i32.const 12)
-                    (get_local $arg1) (get_local $arg1) (i32.const 15))
+         (call $fn0 (i32.const 10) (local.get $arg1) (i32.const 12)
+                    (local.get $arg1) (local.get $arg1) (i32.const 15))
 
          ;; call indirect 0
          (call_indirect $typeOfFn0
-                    (i32.const 10) (get_local $arg1) (i32.const 12)
-                    (get_local $arg1) (get_local $arg1) (i32.const 15)
+                    (i32.const 10) (local.get $arg1) (i32.const 12)
+                    (local.get $arg1) (local.get $arg1) (i32.const 15)
                     (i32.const 0)) ;; table index
 
          i32.add
 
          ;; Do 60k iterations of this loop, to get a good amount of allocation
-         (set_local $i (i32.add (get_local $i) (i32.const 1)))
-         (br_if 0 (i32.lt_s (get_local $i) (i32.const 60000)))
+         (local.set $i (i32.add (local.get $i) (i32.const 1)))
+         (br_if 0 (i32.lt_s (local.get $i) (i32.const 60000)))
        )
      )
 
      ;; -- fn 2
      (func $fn2 (export "fn2") (param $arg1 anyref) (result i32)
-       (call $fn1 (get_local $arg1))
+       (call $fn1 (local.get $arg1))
      )
    )`;
 

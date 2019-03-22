@@ -1,7 +1,7 @@
 /*
 (module
  (func (param i32) (result i32)
-       (i32.add (get_local 0) (get_local 0)))
+       (i32.add (local.get 0) (local.get 0)))
  (export "hello" (func 0)))
 */
 

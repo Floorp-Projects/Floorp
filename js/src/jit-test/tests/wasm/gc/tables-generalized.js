@@ -162,7 +162,7 @@ function dummy() { return 37 }
         `(module
            (table (export "t") 10 anyref)
            (func (export "f") (param i32) (result anyref)
-              (table.get (get_local 0))))`);
+              (table.get (local.get 0))))`);
     let x = {};
     ins.exports.t.set(0, x);
     assertEq(ins.exports.f(0), x);
@@ -177,7 +177,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (table 10 anyref)
        (func (export "f") (param f64) (result anyref)
-         (table.get (get_local 0))))`)),
+         (table.get (local.get 0))))`)),
                    WebAssembly.CompileError,
                    /type mismatch/);
 
@@ -188,7 +188,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (table 10 funcref)
        (func (export "f") (param i32)
-         (drop (table.get (get_local 0)))))`)),
+         (drop (table.get (local.get 0)))))`)),
                    WebAssembly.CompileError,
                    /table.get only on tables of anyref/);
 
@@ -196,7 +196,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (table 10 funcref)
        (func (export "f") (param i32)
-         (drop (table.get (get_local 0)))))`)),
+         (drop (table.get (local.get 0)))))`)),
                    WebAssembly.CompileError,
                    /table.get only on tables of anyref/);
 
@@ -205,7 +205,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (func (export "f") (param i32)
-         (drop (table.get (get_local 0)))))`)),
+         (drop (table.get (local.get 0)))))`)),
                    WebAssembly.CompileError,
                    /table index out of range for table.get/);
 
@@ -218,9 +218,9 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
         `(module
            (table (export "t") 10 anyref)
            (func (export "set_anyref") (param i32) (param anyref)
-             (table.set (get_local 0) (get_local 1)))
+             (table.set (local.get 0) (local.get 1)))
            (func (export "set_null") (param i32)
-             (table.set (get_local 0) (ref.null))))`);
+             (table.set (local.get 0) (ref.null))))`);
     let x = {};
     ins.exports.set_anyref(3, x);
     assertEq(ins.exports.t.get(3), x);
@@ -237,7 +237,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (table 10 anyref)
        (func (export "f") (param f64)
-         (table.set (get_local 0) (ref.null))))`)),
+         (table.set (local.get 0) (ref.null))))`)),
                    WebAssembly.CompileError,
                    /type mismatch/);
 
@@ -247,7 +247,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (table 10 anyref)
        (func (export "f") (param f64)
-         (table.set (i32.const 0) (get_local 0))))`)),
+         (table.set (i32.const 0) (local.get 0))))`)),
                    WebAssembly.CompileError,
                    /type mismatch/);
 
@@ -257,7 +257,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
       (table 10 funcref)
       (func (export "f") (param anyref)
-       (table.set (i32.const 0) (get_local 0))))`)),
+       (table.set (i32.const 0) (local.get 0))))`)),
                    WebAssembly.CompileError,
                    /table.set only on tables of anyref/);
 
@@ -266,7 +266,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
       (func (export "f") (param anyref)
-       (table.set (i32.const 0) (get_local 0))))`)),
+       (table.set (i32.const 0) (local.get 0))))`)),
                    WebAssembly.CompileError,
                    /table index out of range for table.set/);
 
@@ -280,7 +280,7 @@ let ins = wasmEvalText(
     `(module
       (table (export "t") 10 20 anyref)
       (func (export "grow") (param i32) (result i32)
-       (table.grow (get_local 0) (ref.null))))`);
+       (table.grow (local.get 0) (ref.null))))`);
 assertEq(ins.exports.grow(0), 10);
 assertEq(ins.exports.t.length, 10);
 assertEq(ins.exports.grow(1), 10);
@@ -308,7 +308,7 @@ assertEq(ins.exports.t.length, 20)
         `(module
           (table 10 anyref)
           (func (export "grow") (param i32) (result i32)
-           (table.grow (get_local 0) (ref.null))))`);
+           (table.grow (local.get 0) (ref.null))))`);
     assertEq(ins.exports.grow(0), 10);
     assertEq(ins.exports.grow(1), 10);
     assertEq(ins.exports.grow(9), 11);
@@ -331,7 +331,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (table 10 anyref)
        (func (export "f") (param f64)
-        (table.grow (get_local 0) (ref.null))))`)),
+        (table.grow (local.get 0) (ref.null))))`)),
                    WebAssembly.CompileError,
                    /type mismatch/);
 
@@ -340,7 +340,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (func (export "f") (param i32)
-        (table.grow (get_local 0) (ref.null))))`)),
+        (table.grow (local.get 0) (ref.null))))`)),
                    WebAssembly.CompileError,
                    /table index out of range for table.grow/);
 
@@ -354,7 +354,7 @@ for (let visibility of ['', '(export "t")', '(import "m" "t")']) {
         `(module
           (table ${visibility} 10 20 anyref)
           (func (export "grow") (param i32) (result i32)
-           (table.grow (get_local 0) (ref.null)))
+           (table.grow (local.get 0) (ref.null)))
           (func (export "size") (result i32)
            (table.size)))`,
         exp);
@@ -414,7 +414,7 @@ let VALUES = [null,
     let ins = wasmEvalText(
         `(module
            (func (export "f") (param i32) (result i32)
-             (get_local 0)))`);
+             (local.get 0)))`);
     t.grow(1);
     assertEq(t.get(t.length-1), null);
     t.grow(2, ins.exports.f);

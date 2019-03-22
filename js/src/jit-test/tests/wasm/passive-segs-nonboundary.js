@@ -60,7 +60,7 @@ function gen_tab_impmod_t(insn)
      (func (export "check") (param i32) (result i32)
        ;; call the selected table entry, which will either return a value,
        ;; or will cause an exception.
-       get_local 0      ;; callIx
+       local.get 0      ;; callIx
        call_indirect 0  ;; and its return value is our return value.
      )
    )`;
@@ -354,7 +354,7 @@ checkPassiveElemSegment("end", /failed to read end of initializer expression/);
            (func $g)
            (func $h)
            (func (export "doit") (param $idx i32)
-             (table.init 4 (get_local $idx) (i32.const 0) (i32.const 5))))`;
+             (table.init 4 (local.get $idx) (i32.const 0) (i32.const 5))))`;
     let ins = wasmEvalText(txt);
     ins.exports.doit(0);
     ins.exports.doit(5);

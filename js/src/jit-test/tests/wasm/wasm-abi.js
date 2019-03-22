@@ -8,8 +8,8 @@ for (let numLocals of [3, 4, 5, 6, 17, 18, 19]) {
         for (let i = 0; i < numLocals; i++) {
             sum += i + 1;
             locals += `i32 `;
-            setLocals += `       (set_local ${i + 1} (i32.add (get_local 0) (i32.const ${i + 1})))\n`;
-            getLocals += `       get_local ${i + 1}\n`;
+            setLocals += `       (local.set ${i + 1} (i32.add (local.get 0) (i32.const ${i + 1})))\n`;
+            getLocals += `       local.get ${i + 1}\n`;
             if (i > 0)
               adds += `       i32.add\n`;
         }

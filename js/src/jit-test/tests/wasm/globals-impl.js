@@ -16,25 +16,25 @@ let txt =
        (local $tmp64   i64)
        (local $tmp32   i32)
        (loop
-          (set_global $ind64 (i64.add (get_global $ind64) (i64.const 11)))
-          (set_global $ind32 (i32.add (get_global $ind32) (i32.const 22)))
-          (set_global $dir64 (i64.add (get_global $dir64) (i64.const 33)))
-          (set_global $dir32 (i32.add (get_global $dir32) (i32.const 44)))
+          (global.set $ind64 (i64.add (global.get $ind64) (i64.const 11)))
+          (global.set $ind32 (i32.add (global.get $ind32) (i32.const 22)))
+          (global.set $dir64 (i64.add (global.get $dir64) (i64.const 33)))
+          (global.set $dir32 (i32.add (global.get $dir32) (i32.const 44)))
 
-          (set_local $tmp64 (i64.and (get_global $ind64) (get_global $dir64)))
-          (set_local $tmp32 (i32.or  (get_global $ind32) (get_global $dir32)))
+          (local.set $tmp64 (i64.and (global.get $ind64) (global.get $dir64)))
+          (local.set $tmp32 (i32.or  (global.get $ind32) (global.get $dir32)))
 
-          (set_local $sum
-            (i32.sub (get_local $sum) (i32.xor (i32.wrap/i64 (get_local $tmp64))
-                                               (get_local $tmp32))))
+          (local.set $sum
+            (i32.sub (local.get $sum) (i32.xor (i32.wrap/i64 (local.get $tmp64))
+                                               (local.get $tmp32))))
 
-          (set_local $loopctr
-            (i32.add (get_local $loopctr) (i32.const 1)))
+          (local.set $loopctr
+            (i32.add (local.get $loopctr) (i32.const 1)))
           (br_if 0
-            (i32.lt_u (get_local $loopctr) (i32.const 10)))
+            (i32.lt_u (local.get $loopctr) (i32.const 10)))
 
        )
-       (get_local $sum)
+       (local.get $sum)
      )
    )`;
 
