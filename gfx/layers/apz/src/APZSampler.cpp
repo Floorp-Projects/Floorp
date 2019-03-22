@@ -66,10 +66,11 @@ void APZSampler::SetSamplerThread(const wr::WrWindowId& aWindowId) {
 
 /*static*/
 void APZSampler::SampleForWebRender(const wr::WrWindowId& aWindowId,
-                                    wr::Transaction* aTransaction) {
+                                    wr::Transaction* aTransaction,
+                                    const wr::DocumentId& aRenderRootId) {
   if (RefPtr<APZSampler> sampler = GetSampler(aWindowId)) {
     wr::TransactionWrapper txn(aTransaction);
-    sampler->SampleForWebRender(txn);
+    sampler->SampleForWebRender(txn, wr::RenderRootFromId(aRenderRootId));
   }
 }
 
@@ -79,7 +80,8 @@ void APZSampler::SetSampleTime(const TimeStamp& aSampleTime) {
   mSampleTime = aSampleTime;
 }
 
-void APZSampler::SampleForWebRender(wr::TransactionWrapper& aTxn) {
+void APZSampler::SampleForWebRender(wr::TransactionWrapper& aTxn,
+                                    wr::RenderRoot aRenderRoot) {
   AssertOnSamplerThread();
   TimeStamp sampleTime;
   {  // scope lock
@@ -91,7 +93,7 @@ void APZSampler::SampleForWebRender(wr::TransactionWrapper& aTxn) {
     // anyway, so using Timestamp::Now() should be fine.
     sampleTime = mSampleTime.IsNull() ? TimeStamp::Now() : mSampleTime;
   }
-  mApz->SampleForWebRender(aTxn, sampleTime);
+  mApz->SampleForWebRender(aTxn, sampleTime, aRenderRoot);
 }
 
 bool APZSampler::SampleAnimations(const LayerMetricsWrapper& aLayer,
@@ -270,8 +272,10 @@ void apz_register_sampler(mozilla::wr::WrWindowId aWindowId) {
 }
 
 void apz_sample_transforms(mozilla::wr::WrWindowId aWindowId,
-                           mozilla::wr::Transaction* aTransaction) {
-  mozilla::layers::APZSampler::SampleForWebRender(aWindowId, aTransaction);
+                           mozilla::wr::Transaction* aTransaction,
+                           mozilla::wr::DocumentId aDocumentId) {
+  mozilla::layers::APZSampler::SampleForWebRender(aWindowId, aTransaction,
+                                                  aDocumentId);
 }
 
 void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId) {}

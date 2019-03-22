@@ -221,9 +221,21 @@ class TestAPZCTreeManager : public APZCTreeManager {
    **/
   void CancelAnimation() { EXPECT_TRUE(false); }
 
+  using APZCTreeManager::SetTargetAPZC;  // silence clang warning about overload
+  void SetTargetAPZC(uint64_t aInputBlockId,
+                     const nsTArray<ScrollableLayerGuid>& aTargets) {
+    nsTArray<SLGuidAndRenderRoot> wrapped;
+    for (const ScrollableLayerGuid& target : aTargets) {
+      wrapped.AppendElement(
+          SLGuidAndRenderRoot(target, wr::RenderRoot::Default));
+    }
+    this->SetTargetAPZC(aInputBlockId, wrapped);
+  }
+
  protected:
-  AsyncPanZoomController* NewAPZCInstance(
-      LayersId aLayersId, GeckoContentController* aController) override;
+  AsyncPanZoomController* NewAPZCInstance(LayersId aLayersId,
+                                          GeckoContentController* aController,
+                                          wr::RenderRoot aRenderRoot) override;
 
   TimeStamp GetFrameTime() override { return mcc->Time(); }
 
@@ -236,9 +248,11 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
   TestAsyncPanZoomController(LayersId aLayersId,
                              MockContentControllerDelayed* aMcc,
                              TestAPZCTreeManager* aTreeManager,
+                             wr::RenderRoot aRenderRoot,
                              GestureBehavior aBehavior = DEFAULT_GESTURES)
       : AsyncPanZoomController(aLayersId, aTreeManager,
-                               aTreeManager->GetInputQueue(), aMcc, aBehavior),
+                               aTreeManager->GetInputQueue(), aMcc, aRenderRoot,
+                               aBehavior),
         mWaitForMainThread(false),
         mcc(aMcc) {}
 
@@ -873,11 +887,13 @@ void APZCTesterBase::PinchWithPinchInputAndCheckStatus(
 }
 
 AsyncPanZoomController* TestAPZCTreeManager::NewAPZCInstance(
-    LayersId aLayersId, GeckoContentController* aController) {
+    LayersId aLayersId, GeckoContentController* aController,
+    wr::RenderRoot aRenderRoot) {
   MockContentControllerDelayed* mcc =
       static_cast<MockContentControllerDelayed*>(aController);
   return new TestAsyncPanZoomController(
-      aLayersId, mcc, this, AsyncPanZoomController::USE_GESTURE_DETECTOR);
+      aLayersId, mcc, this, aRenderRoot,
+      AsyncPanZoomController::USE_GESTURE_DETECTOR);
 }
 
 inline FrameMetrics TestFrameMetrics() {

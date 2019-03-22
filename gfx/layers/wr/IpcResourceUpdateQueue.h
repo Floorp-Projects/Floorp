@@ -16,6 +16,10 @@ namespace mozilla {
 namespace ipc {
 class IShmemAllocator;
 }
+namespace layers {
+class TextureClient;
+}
+
 namespace wr {
 
 /// ShmSegmentsWriter pushes bytes in a sequence of fixed size shmems for small
@@ -47,6 +51,7 @@ class ShmSegmentsWriter {
   bool IsEmpty() const;
 
   layers::WebRenderBridgeChild* WrBridge() const { return mShmAllocator; }
+  size_t ChunkSize() const { return mChunkSize; }
 
  protected:
   bool AllocChunk();
@@ -82,8 +87,41 @@ class IpcResourceUpdateQueue {
   // we use here. The RefCountedShmem type used to allocate the chunks keeps a
   // 16 bytes header in the buffer which we account for here as well. So we pick
   // 64k - 2 * 4k - 16 = 57328 bytes as the default alloc size.
-  explicit IpcResourceUpdateQueue(layers::WebRenderBridgeChild* aAllocator,
-                                  size_t aChunkSize = 57328);
+  explicit IpcResourceUpdateQueue(
+      layers::WebRenderBridgeChild* aAllocator,
+      wr::RenderRoot aRenderRoot = wr::RenderRoot::Default,
+      size_t aChunkSize = 57328);
+
+  // Although resource updates don't belong to a particular document/render root
+  // in any concrete way, they still end up being tied to a render root because
+  // we need to know which WR document to generate a frame for when they change.
+  IpcResourceUpdateQueue& SubQueue(wr::RenderRoot aRenderRoot) {
+    MOZ_ASSERT(mRenderRoot == wr::RenderRoot::Default);
+    if (aRenderRoot == wr::RenderRoot::Default) {
+      MOZ_ASSERT(mRenderRoot == wr::RenderRoot::Default);
+      return *this;
+    }
+    if (!mSubQueues[aRenderRoot]) {
+      mSubQueues[aRenderRoot] = MakeUnique<IpcResourceUpdateQueue>(
+          mWriter.WrBridge(), aRenderRoot, mWriter.ChunkSize());
+    }
+    return *mSubQueues[aRenderRoot];
+  }
+
+  bool HasAnySubQueue() {
+    for (auto renderRoot : wr::kNonDefaultRenderRoots) {
+      if (mSubQueues[renderRoot]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool HasSubQueue(wr::RenderRoot aRenderRoot) {
+    return aRenderRoot == wr::RenderRoot::Default || !!mSubQueues[aRenderRoot];
+  }
+
+  wr::RenderRoot GetRenderRoot() { return mRenderRoot; }
 
   IpcResourceUpdateQueue(IpcResourceUpdateQueue&& aOther) noexcept;
   IpcResourceUpdateQueue& operator=(IpcResourceUpdateQueue&& aOther) noexcept;
@@ -91,6 +129,9 @@ class IpcResourceUpdateQueue {
   IpcResourceUpdateQueue(const IpcResourceUpdateQueue& aOther) = delete;
   IpcResourceUpdateQueue& operator=(const IpcResourceUpdateQueue& aOther) =
       delete;
+
+  // Moves over everything but the subqueues
+  void ReplaceResources(IpcResourceUpdateQueue&& aOther);
 
   bool AddImage(wr::ImageKey aKey, const ImageDescriptor& aDescriptor,
                 Range<uint8_t> aBytes);
@@ -152,6 +193,8 @@ class IpcResourceUpdateQueue {
  protected:
   ShmSegmentsWriter mWriter;
   nsTArray<layers::OpUpdateResource> mUpdates;
+  wr::NonDefaultRenderRootArray<UniquePtr<IpcResourceUpdateQueue>> mSubQueues;
+  wr::RenderRoot mRenderRoot;
 };
 
 }  // namespace wr

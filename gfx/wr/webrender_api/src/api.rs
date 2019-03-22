@@ -789,10 +789,20 @@ pub struct IdNamespace(pub u32);
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
-pub struct DocumentId(pub IdNamespace, pub u32);
+pub struct DocumentId {
+    pub namespace_id: IdNamespace,
+    pub id: u32,
+}
 
 impl DocumentId {
-    pub const INVALID: DocumentId = DocumentId(IdNamespace(0), 0);
+    pub fn new(namespace_id: IdNamespace, id: u32) -> Self {
+        DocumentId {
+            namespace_id,
+            id,
+        }
+    }
+
+    pub const INVALID: DocumentId = DocumentId { namespace_id: IdNamespace(0), id: 0 };
 }
 
 /// This type carries no valuable semantics for WR. However, it reflects the fact that
@@ -1066,7 +1076,14 @@ impl RenderApi {
 
     pub fn add_document(&self, initial_size: FramebufferIntSize, layer: DocumentLayer) -> DocumentId {
         let new_id = self.next_unique_id();
-        let document_id = DocumentId(self.namespace_id, new_id);
+        self.add_document_with_id(initial_size, layer, new_id)
+    }
+
+    pub fn add_document_with_id(&self,
+                                initial_size: FramebufferIntSize,
+                                layer: DocumentLayer,
+                                id: u32) -> DocumentId {
+        let document_id = DocumentId::new(self.namespace_id, id);
 
         let msg = ApiMsg::AddDocument(document_id, initial_size, layer);
         self.api_sender.send(msg).unwrap();

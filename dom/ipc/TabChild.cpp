@@ -32,6 +32,7 @@
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/layers/APZChild.h"
@@ -478,7 +479,7 @@ void TabChild::ContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
 
 void TabChild::SetTargetAPZC(
     uint64_t aInputBlockId,
-    const nsTArray<ScrollableLayerGuid>& aTargets) const {
+    const nsTArray<SLGuidAndRenderRoot>& aTargets) const {
   if (mApzcTreeManager) {
     mApzcTreeManager->SetTargetAPZC(aInputBlockId, aTargets);
   }
@@ -499,8 +500,8 @@ bool TabChild::DoUpdateZoomConstraints(
     return false;
   }
 
-  ScrollableLayerGuid guid =
-      ScrollableLayerGuid(mLayersId, aPresShellId, aViewId);
+  SLGuidAndRenderRoot guid = SLGuidAndRenderRoot(
+      mLayersId, aPresShellId, aViewId, gfxUtils::GetContentRenderRoot());
 
   mApzcTreeManager->UpdateZoomConstraints(guid, aConstraints);
   return true;
@@ -1238,7 +1239,8 @@ void TabChild::HandleDoubleTap(const CSSPoint& aPoint,
   if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(
           document->GetDocumentElement(), &presShellId, &viewId) &&
       mApzcTreeManager) {
-    ScrollableLayerGuid guid(mLayersId, presShellId, viewId);
+    SLGuidAndRenderRoot guid(mLayersId, presShellId, viewId,
+                             gfxUtils::GetContentRenderRoot());
 
     mApzcTreeManager->ZoomToRect(guid, zoomToRect, DEFAULT_BEHAVIOR);
   }
@@ -1324,8 +1326,9 @@ bool TabChild::NotifyAPZStateChange(
 
 void TabChild::StartScrollbarDrag(
     const layers::AsyncDragMetrics& aDragMetrics) {
-  ScrollableLayerGuid guid(mLayersId, aDragMetrics.mPresShellId,
-                           aDragMetrics.mViewId);
+  SLGuidAndRenderRoot guid(mLayersId, aDragMetrics.mPresShellId,
+                           aDragMetrics.mViewId,
+                           gfxUtils::GetContentRenderRoot());
 
   if (mApzcTreeManager) {
     mApzcTreeManager->StartScrollbarDrag(guid, aDragMetrics);
@@ -1335,7 +1338,8 @@ void TabChild::StartScrollbarDrag(
 void TabChild::ZoomToRect(const uint32_t& aPresShellId,
                           const ScrollableLayerGuid::ViewID& aViewId,
                           const CSSRect& aRect, const uint32_t& aFlags) {
-  ScrollableLayerGuid guid(mLayersId, aPresShellId, aViewId);
+  SLGuidAndRenderRoot guid(mLayersId, aPresShellId, aViewId,
+                           gfxUtils::GetContentRenderRoot());
 
   if (mApzcTreeManager) {
     mApzcTreeManager->ZoomToRect(guid, aRect, aFlags);
