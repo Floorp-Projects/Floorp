@@ -10498,34 +10498,6 @@ void nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame) {
 
 //----------------------------------------------------------------------
 
-nsContainerFrame* nsCSSFrameConstructor::InitAndWrapInColumnSetFrameIfNeeded(
-    nsFrameConstructorState& aState, nsIContent* aContent,
-    nsContainerFrame* aParentFrame, nsContainerFrame* aBlockFrame,
-    ComputedStyle* aComputedStyle) {
-  MOZ_ASSERT((aBlockFrame->IsBlockFrame() || aBlockFrame->IsDetailsFrame()),
-             "aBlockFrame should either be a block frame or a details frame.");
-
-  if (!aComputedStyle->StyleColumn()->IsColumnContainerStyle()) {
-    aBlockFrame->SetComputedStyleWithoutNotification(aComputedStyle);
-    InitAndRestoreFrame(aState, aContent, aParentFrame, aBlockFrame);
-    return aBlockFrame;
-  }
-
-  // Wrap the block frame in a ColumnSetFrame.
-  nsContainerFrame* columnSetFrame = NS_NewColumnSetFrame(
-      mPresShell, aComputedStyle, nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
-  InitAndRestoreFrame(aState, aContent, aParentFrame, columnSetFrame);
-  SetInitialSingleChild(columnSetFrame, aBlockFrame);
-
-  RefPtr<ComputedStyle> anonBlockStyle =
-      mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
-          PseudoStyleType::columnContent, aComputedStyle);
-  aBlockFrame->SetComputedStyleWithoutNotification(anonBlockStyle);
-  InitAndRestoreFrame(aState, aContent, columnSetFrame, aBlockFrame);
-
-  return columnSetFrame;
-}
-
 void nsCSSFrameConstructor::ConstructBlock(
     nsFrameConstructorState& aState, nsIContent* aContent,
     nsContainerFrame* aParentFrame, nsContainerFrame* aContentParentFrame,
