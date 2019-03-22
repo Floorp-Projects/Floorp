@@ -61,7 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
       "Can access content window.XPathEvaluator");
 
    var nativeToString =
-       ("" + String.replace).replace("replace", "EventTarget");
+       ("" + Math.sin).replace("sin", "EventTarget");
    var eventTargetToString = "" + win.EventTarget;
    ok(eventTargetToString.indexOf(nativeToString) > -1,
       "Stringifying a DOM interface object should return the same string as " +
