@@ -289,7 +289,7 @@ macosx64-add-on-devel/opt:
 macosx64-shippable/opt:
     description: "MacOS X x64 Cross-compile"
     attributes:
-        nightly: true
+        shippable: true
         enable-full-crashsymbols: true
     shipping-phase: build
     shipping-product: firefox
