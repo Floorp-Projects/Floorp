@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.session_bottom_sheet.view.*
+import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.sessions.ArchivedSession
 
@@ -49,6 +50,10 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
 
                 dismiss()
             }
+        }
+
+        view.send_and_share_session_button.setOnClickListener {
+            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "244")
         }
 
         view.delete_session_button.setOnClickListener {

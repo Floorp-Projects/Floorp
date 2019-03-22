@@ -39,6 +39,7 @@ import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
+import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.toolbar.SearchAction
@@ -307,7 +308,8 @@ class BrowserFragment : Fragment(), BackHandler {
                 sessionUseCases.loadUrl.invoke(reportUrl)
             }
             ToolbarMenu.Item.Help -> {
-                // TODO Help
+                // TODO Help #1016
+                ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "1016")
             }
             ToolbarMenu.Item.NewTab -> {
                 val directions = BrowserFragmentDirections

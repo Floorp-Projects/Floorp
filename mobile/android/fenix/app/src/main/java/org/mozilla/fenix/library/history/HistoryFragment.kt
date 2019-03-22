@@ -21,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.feature.BackHandler
+import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -117,7 +118,8 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
                 true
             }
             R.id.librarySearch -> {
-                // TODO Library Search
+                // TODO Library Search #1118
+                ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "1118")
                 true
             }
             else -> super.onOptionsItemSelected(item)

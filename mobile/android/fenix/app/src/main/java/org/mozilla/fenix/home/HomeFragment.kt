@@ -33,6 +33,7 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.archive
 import org.mozilla.fenix.ext.requireComponents
@@ -250,6 +251,8 @@ class HomeFragment : Fragment(), CoroutineScope {
                         }
                         is SessionsAction.MenuTapped ->
                             openSessionMenu(SessionBottomSheetFragment.SessionType.Archived(it.archivedSession))
+                        is SessionsAction.ShareTapped ->
+                            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "244")
                     }
                 }
         }

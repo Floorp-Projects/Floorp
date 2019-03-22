@@ -16,6 +16,7 @@ import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.SearchAction
 import org.mozilla.fenix.components.toolbar.SearchState
@@ -49,6 +50,10 @@ class SearchFragment : Fragment() {
                 session.url
             }
         } ?: ""
+
+        view.search_scan_button.setOnClickListener {
+            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "113")
+        }
 
         toolbarComponent = ToolbarComponent(
             view.toolbar_wrapper,

@@ -116,6 +116,7 @@ sealed class SessionsAction : Action {
     data class Select(val archivedSession: ArchivedSession) : SessionsAction()
     data class Delete(val archivedSession: ArchivedSession) : SessionsAction()
     data class MenuTapped(val archivedSession: ArchivedSession) : SessionsAction()
+    data class ShareTapped(val archivedSession: ArchivedSession) : SessionsAction()
 }
 
 sealed class SessionsChange : Change {

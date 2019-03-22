@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_library.*
+import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
 
 class LibraryFragment : Fragment() {
@@ -40,10 +41,27 @@ class LibraryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        libraryHistory.setOnClickListener(Navigation.createNavigateOnClickListener(
-            LibraryFragmentDirections.actionLibraryFragmentToHistoryFragment().actionId,
-            null)
+        libraryHistory.setOnClickListener(
+            Navigation.createNavigateOnClickListener(
+                LibraryFragmentDirections.actionLibraryFragmentToHistoryFragment().actionId,
+                null
+            )
         )
+        libraryDownloads.setOnClickListener {
+            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "348")
+        }
+        libraryScreenshots.setOnClickListener {
+            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "89")
+        }
+        libraryFavorites.setOnClickListener {
+            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "90")
+        }
+        libraryReadingList.setOnClickListener {
+            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "913")
+        }
+        librarySessions.setOnClickListener {
+            ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "637")
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -58,6 +76,7 @@ class LibraryFragment : Fragment() {
             }
             R.id.librarySearch -> {
                 // TODO Library Search
+                ItsNotBrokenSnack(context!!).showSnackbar(activity = activity!!, issueNumber = "1118")
                 true
             }
             else -> super.onOptionsItemSelected(item)
