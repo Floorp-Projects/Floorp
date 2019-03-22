@@ -661,6 +661,7 @@ def set_tier(config, tests):
                                          'linux64-nightly/opt',
                                          'linux64/debug',
                                          'linux64-pgo/opt',
+                                         'linux64-shippable/opt',
                                          'linux64-devedition/opt',
                                          'linux64-asan/opt',
                                          'linux64-qr/opt',
