@@ -616,7 +616,7 @@ linux-devedition-nightly/opt:
 linux-shippable/opt:
     description: "Linux32 Shippable"
     attributes:
-        nightly: true
+        shippable: true
         enable-full-crashsymbols: true
     shipping-phase: build
     shipping-product: firefox
@@ -914,7 +914,7 @@ linux64-shippable/opt:
     # Disabled because bug 1516114 shows up much more often
     # use-pgo: true
     attributes:
-        nightly: true
+        shippable: true
         enable-full-crashsymbols: true
     shipping-phase: build
     shipping-product: firefox
