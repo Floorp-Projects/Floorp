@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L28)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L29)
 
 Interface to be implemented by classes that want to observe this engine session.
 
@@ -22,6 +22,8 @@ Interface to be implemented by classes that want to observe this engine session.
 | [onLoadingStateChange](on-loading-state-change.md) | `open fun onLoadingStateChange(loading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onLocationChange](on-location-change.md) | `open fun onLocationChange(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onLongPress](on-long-press.md) | `open fun onLongPress(hitResult: `[`HitResult`](../../-hit-result/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onMediaAdded](on-media-added.md) | `open fun onMediaAdded(media: `[`Media`](../../../mozilla.components.concept.engine.media/-media/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onMediaRemoved](on-media-removed.md) | `open fun onMediaRemoved(media: `[`Media`](../../../mozilla.components.concept.engine.media/-media/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onNavigationStateChange](on-navigation-state-change.md) | `open fun onNavigationStateChange(canGoBack: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`? = null, canGoForward: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`? = null): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onOpenWindowRequest](on-open-window-request.md) | `open fun onOpenWindowRequest(windowRequest: `[`WindowRequest`](../../../mozilla.components.concept.engine.window/-window-request/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onProgress](on-progress.md) | `open fun onProgress(progress: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

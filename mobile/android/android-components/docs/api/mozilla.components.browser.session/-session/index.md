@@ -2,7 +2,7 @@
 
 # Session
 
-`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L25)
+`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L26)
 
 Value type that represents the state of a browser session. Changes can be observed.
 
@@ -38,6 +38,7 @@ Value type that represents the state of a browser session. Changes can be observ
 | [hitResult](hit-result.md) | `var hitResult: `[`Consumable`](../../mozilla.components.support.base.observer/-consumable/index.md)`<`[`HitResult`](../../mozilla.components.concept.engine/-hit-result/index.md)`>`<br>The target of the latest long click operation. |
 | [id](id.md) | `val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [loading](loading.md) | `var loading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Loading state, true if this session's url is currently loading, otherwise false. |
+| [media](media.md) | `var media: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Media`](../../mozilla.components.concept.engine.media/-media/index.md)`>`<br>List of [Media](../../mozilla.components.concept.engine.media/-media/index.md) on the currently visited page. |
 | [openWindowRequest](open-window-request.md) | `var openWindowRequest: `[`Consumable`](../../mozilla.components.support.base.observer/-consumable/index.md)`<`[`WindowRequest`](../../mozilla.components.concept.engine.window/-window-request/index.md)`>`<br>[Consumable](../../mozilla.components.support.base.observer/-consumable/index.md) request to open/create a window. |
 | [private](private.md) | `val private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [progress](progress.md) | `var progress: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The progress loading the current URL. |

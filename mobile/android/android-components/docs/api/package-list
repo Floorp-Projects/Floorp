@@ -105,12 +105,14 @@ mozilla.components.browser.toolbar.edit
 mozilla.components.concept.awesomebar
 mozilla.components.concept.engine
 mozilla.components.concept.engine.history
+mozilla.components.concept.engine.media
 mozilla.components.concept.engine.permission
 mozilla.components.concept.engine.prompt
 mozilla.components.concept.engine.request
 mozilla.components.concept.engine.webextension
 mozilla.components.concept.engine.window
 mozilla.components.concept.fetch
+mozilla.components.concept.push
 mozilla.components.concept.storage
 mozilla.components.concept.sync
 mozilla.components.concept.tabstray
@@ -125,6 +127,7 @@ mozilla.components.feature.findinpage
 mozilla.components.feature.findinpage.view
 mozilla.components.feature.intent
 mozilla.components.feature.prompts
+mozilla.components.feature.pwa
 mozilla.components.feature.pwa.ext
 mozilla.components.feature.search
 mozilla.components.feature.session
@@ -152,10 +155,6 @@ mozilla.components.lib.jexl.parser
 mozilla.components.lib.jexl.value
 mozilla.components.lib.publicsuffixlist
 mozilla.components.service.experiments
-mozilla.components.service.experiments.scheduler.jobscheduler
-mozilla.components.service.experiments.scheduler.workmanager
-mozilla.components.service.experiments.source.kinto
-mozilla.components.service.experiments.storage.flatfile
 mozilla.components.service.fretboard
 mozilla.components.service.fretboard.scheduler.jobscheduler
 mozilla.components.service.fretboard.scheduler.workmanager

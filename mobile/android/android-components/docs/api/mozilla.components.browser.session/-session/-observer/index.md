@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L47)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L48)
 
 Interface to be implemented by classes that want to observe a session.
 
@@ -20,6 +20,8 @@ Interface to be implemented by classes that want to observe a session.
 | [onFullScreenChanged](on-full-screen-changed.md) | `open fun onFullScreenChanged(session: `[`Session`](../index.md)`, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onLoadingStateChanged](on-loading-state-changed.md) | `open fun onLoadingStateChanged(session: `[`Session`](../index.md)`, loading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onLongPress](on-long-press.md) | `open fun onLongPress(session: `[`Session`](../index.md)`, hitResult: `[`HitResult`](../../../mozilla.components.concept.engine/-hit-result/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
+| [onMediaAdded](on-media-added.md) | `open fun onMediaAdded(session: `[`Session`](../index.md)`, media: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Media`](../../../mozilla.components.concept.engine.media/-media/index.md)`>, added: `[`Media`](../../../mozilla.components.concept.engine.media/-media/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onMediaRemoved](on-media-removed.md) | `open fun onMediaRemoved(session: `[`Session`](../index.md)`, media: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Media`](../../../mozilla.components.concept.engine.media/-media/index.md)`>, removed: `[`Media`](../../../mozilla.components.concept.engine.media/-media/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onNavigationStateChanged](on-navigation-state-changed.md) | `open fun onNavigationStateChanged(session: `[`Session`](../index.md)`, canGoBack: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, canGoForward: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onOpenWindowRequested](on-open-window-requested.md) | `open fun onOpenWindowRequested(session: `[`Session`](../index.md)`, windowRequest: `[`WindowRequest`](../../../mozilla.components.concept.engine.window/-window-request/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [onProgress](on-progress.md) | `open fun onProgress(session: `[`Session`](../index.md)`, progress: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
