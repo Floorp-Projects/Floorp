@@ -400,7 +400,6 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  * MulAssignExpr, DivAssignExpr, ModAssignExpr, PowAssignExpr (AssignmentNode)
  *   left: target of assignment
  *   right: value to assign
- *   pn_op: JSOP_ADD for +=, etc
  * ConditionalExpr (ConditionalExpression)
  *   (cond ? thenExpr : elseExpr)
  *   kid1: cond
@@ -471,9 +470,6 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *   kid: the AssignmentExpression inside the square brackets
  * Name (NameNode)
  *   atom: name, or object atom
- *   pn_op: JSOP_GETNAME, JSOP_STRING, or JSOP_OBJECT
- *          If JSOP_GETNAME, pn_op may be JSOP_*ARG or JSOP_*VAR telling
- *          const-ness and static analysis results
  * StringExpr (NameNode)
  *   atom: string
  * TemplateStringListExpr (ListNode)
@@ -974,9 +970,7 @@ class ForNode : public BinaryNode {
  public:
   ForNode(const TokenPos& pos, ParseNode* forHead, ParseNode* body,
           unsigned iflags)
-      : BinaryNode(ParseNodeKind::ForStmt,
-                   forHead->isKind(ParseNodeKind::ForIn) ? JSOP_ITER : JSOP_NOP,
-                   pos, forHead, body),
+      : BinaryNode(ParseNodeKind::ForStmt, JSOP_NOP, pos, forHead, body),
         iflags_(iflags) {
     MOZ_ASSERT(forHead->isKind(ParseNodeKind::ForIn) ||
                forHead->isKind(ParseNodeKind::ForOf) ||
@@ -1629,7 +1623,6 @@ class CaseClause : public BinaryNode {
   static bool test(const ParseNode& node) {
     bool match = node.isKind(ParseNodeKind::Case);
     MOZ_ASSERT_IF(match, node.is<BinaryNode>());
-    MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
     return match;
   }
 };
@@ -1675,7 +1668,6 @@ class BreakStatement : public LoopControlStatement {
   static bool test(const ParseNode& node) {
     bool match = node.isKind(ParseNodeKind::BreakStmt);
     MOZ_ASSERT_IF(match, node.is<LoopControlStatement>());
-    MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
     return match;
   }
 };
@@ -1688,7 +1680,6 @@ class ContinueStatement : public LoopControlStatement {
   static bool test(const ParseNode& node) {
     bool match = node.isKind(ParseNodeKind::ContinueStmt);
     MOZ_ASSERT_IF(match, node.is<LoopControlStatement>());
-    MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
     return match;
   }
 };
@@ -1726,7 +1717,6 @@ class ConditionalExpression : public TernaryNode {
   static bool test(const ParseNode& node) {
     bool match = node.isKind(ParseNodeKind::ConditionalExpr);
     MOZ_ASSERT_IF(match, node.is<TernaryNode>());
-    MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
     return match;
   }
 };
@@ -1788,7 +1778,7 @@ class NullLiteral : public NullaryNode {
 class RawUndefinedLiteral : public NullaryNode {
  public:
   explicit RawUndefinedLiteral(const TokenPos& pos)
-      : NullaryNode(ParseNodeKind::RawUndefinedExpr, JSOP_UNDEFINED, pos) {}
+      : NullaryNode(ParseNodeKind::RawUndefinedExpr, JSOP_NOP, pos) {}
 
   static bool test(const ParseNode& node) {
     bool match = node.isKind(ParseNodeKind::RawUndefinedExpr);
@@ -1801,7 +1791,7 @@ class BooleanLiteral : public NullaryNode {
  public:
   BooleanLiteral(bool b, const TokenPos& pos)
       : NullaryNode(b ? ParseNodeKind::TrueExpr : ParseNodeKind::FalseExpr,
-                    b ? JSOP_TRUE : JSOP_FALSE, pos) {}
+                    JSOP_NOP, pos) {}
 
   static bool test(const ParseNode& node) {
     bool match = node.isKind(ParseNodeKind::TrueExpr) ||
@@ -1816,8 +1806,7 @@ class RegExpLiteral : public ParseNode {
 
  public:
   RegExpLiteral(ObjectBox* reobj, const TokenPos& pos)
-      : ParseNode(ParseNodeKind::RegExpExpr, JSOP_REGEXP, pos),
-        objbox_(reobj) {}
+      : ParseNode(ParseNodeKind::RegExpExpr, JSOP_NOP, pos), objbox_(reobj) {}
 
   ObjectBox* objbox() const { return objbox_; }
 
