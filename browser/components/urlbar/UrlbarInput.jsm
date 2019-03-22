@@ -474,7 +474,8 @@ class UrlbarInput {
       if (canonizedUrl) {
         this.value = canonizedUrl;
       } else if (result.autofill) {
-        this._autofillValue(result.autofill);
+        let { value, selectionStart, selectionEnd } = result.autofill;
+        this._autofillValue(value, selectionStart, selectionEnd);
       } else {
         this.value = this._getValueFromResult(result);
       }
@@ -718,8 +719,15 @@ class UrlbarInput {
         !this._autofillPlaceholder.startsWith(value)) {
       this._autofillPlaceholder = "";
     }
-    if (this._autofillPlaceholder) {
-      this._autofillValueOnInput(this._autofillPlaceholder);
+
+    // Don't ever autofill on input if the caret/selection isn't at the end, or
+    // if the placeholder doesn't start with what the user typed.
+    if (this._autofillPlaceholder &&
+        this.selectionEnd == this.value.length &&
+        this._autofillPlaceholder.toLocaleLowerCase()
+          .startsWith(value.toLocaleLowerCase())) {
+      this._autofillValue(this._autofillPlaceholder, value.length,
+                          this._autofillPlaceholder.length);
     }
 
     return allowAutofill;
@@ -931,40 +939,17 @@ class UrlbarInput {
   }
 
   /**
-   * Autofills a value into the input in response to the user's typing.  The
-   * autofill value must start with the value that's already in the input.  If
-   * it doesn't, this method doesn't do anything.  If it does, this method will
-   * autofill and set the selection automatically.
-   *
-   * @param {string} value
-   *   The value to autofill.
-   */
-  _autofillValueOnInput(value) {
-    // Don't ever autofill on input if the caret/selection isn't at the end, or
-    // if the value doesn't start with what the user typed.
-    if (this.selectionEnd != this.value.length ||
-        !value.startsWith(this._lastSearchString)) {
-      return;
-    }
-    this._autofillValue({
-      value,
-      selectionStart: this._lastSearchString.length,
-      selectionEnd: value.length,
-    });
-  }
-
-  /**
    * Autofills a value into the input.  The value will be autofilled regardless
    * of the input's current value.
    *
-   * @param {string} options.value
+   * @param {string} value
    *   The value to autofill.
-   * @param {integer} options.selectionStart
+   * @param {integer} selectionStart
    *   The new selectionStart.
-   * @param {integer} options.selectionEnd
+   * @param {integer} selectionEnd
    *   The new selectionEnd.
    */
-  _autofillValue({ value, selectionStart, selectionEnd } = {}) {
+  _autofillValue(value, selectionStart, selectionEnd) {
     // The autofilled value may be a URL that includes a scheme at the
     // beginning.  Do not allow it to be trimmed.
     this._setValue(value, false);
