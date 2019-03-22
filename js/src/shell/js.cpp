@@ -99,6 +99,7 @@
 #include "js/Printf.h"
 #include "js/PropertySpec.h"
 #include "js/Realm.h"
+#include "js/RegExp.h"  // JS::ObjectIsRegExp
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
@@ -9250,7 +9251,7 @@ static bool Help(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
   bool isRegexp;
-  if (!JS_ObjectIsRegExp(cx, obj, &isRegexp)) {
+  if (!JS::ObjectIsRegExp(cx, obj, &isRegexp)) {
     return false;
   }
 
