@@ -187,12 +187,6 @@ function waitForWorkers(shouldWait: boolean) {
   shouldWaitForWorkers = shouldWait;
 }
 
-function detachWorkers() {
-  for (const thread of listWorkerThreadClients()) {
-    thread.detach();
-  }
-}
-
 function maybeGenerateLogGroupId(options) {
   if (options.logValue && tabTarget.traits && tabTarget.traits.canRewind) {
     return { ...options, logGroupId: `logGroup-${Math.random()}` };
@@ -491,8 +485,7 @@ const clientCommands = {
   sendPacket,
   setSkipPausing,
   setEventListenerBreakpoints,
-  waitForWorkers,
-  detachWorkers
+  waitForWorkers
 };
 
 export { setupCommands, clientCommands };
