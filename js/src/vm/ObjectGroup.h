@@ -195,6 +195,8 @@ class ObjectGroup : public gc::TenuredCell {
   // assume objects of a previously seen group have the same class as before.
   //
   // See: TryConvertToUnboxedLayout
+  //
+  // MG:Unboxed: Verify above comment still holds
   bool hasUncacheableClass() const { return clasp_->isNative(); }
 
   bool hasDynamicPrototype() const { return proto_.isDynamic(); }

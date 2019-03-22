@@ -84,9 +84,6 @@ bool SetImmutablePrototype(JSContext* cx, JS::HandleObject obj,
  *       as before.
  *       - JSObject::swap()
  *       - UnboxedPlainObject::convertToNative()
- *
- * NOTE: UnboxedObjects may change class without changing |group_|.
- *       - js::TryConvertToUnboxedLayout
  */
 class JSObject : public js::gc::Cell {
  protected:
