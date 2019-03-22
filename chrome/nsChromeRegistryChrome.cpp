@@ -28,7 +28,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/intl/LocaleService.h"
 
-#include "nsIAppStartup.h"
 #include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -274,12 +273,6 @@ nsChromeRegistryChrome::Observe(nsISupports* aSubject, const char* aTopic,
 
 NS_IMETHODIMP
 nsChromeRegistryChrome::CheckForNewChrome() {
-  nsCOMPtr<nsIAppStartup> appStartup = components::AppStartup::Service();
-  if (appStartup->GetShuttingDown()) {
-    MOZ_ASSERT(false, "checking for new chrome during shutdown");
-    return NS_ERROR_UNEXPECTED;
-  }
-
   mPackagesHash.Clear();
   mOverrideTable.Clear();
 
