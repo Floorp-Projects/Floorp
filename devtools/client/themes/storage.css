@@ -50,6 +50,19 @@
   min-width: 40px;
 }
 
+/* Text input in storage table */
+#storage-table textbox {
+  -moz-appearance: none;
+  /* make sure the outline is not cut off */
+  position: relative;
+  max-width: calc(100% - 1px);
+  padding: 3px 3px;
+  font: inherit;
+  line-height: 14px;
+  color: var(--theme-content-color1);
+  background-color: var(--theme-body-background);
+}
+
 /* Variables View Sidebar */
 
 #storage-sidebar {
@@ -85,9 +98,5 @@
 
   #storage-table #path {
     display: none;
-  }
-
-  #storage-table .table-widget-cell {
-    min-width: 100px;
   }
 }
