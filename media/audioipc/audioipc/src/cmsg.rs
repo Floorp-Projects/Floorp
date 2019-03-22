@@ -106,12 +106,16 @@ impl ControlMsgBuilder {
                 return Err(Error::NoSpace);
             }
 
+            // Some definitions of cmsghdr contain padding.  Rather
+            // than try to keep an up-to-date #cfg list to handle
+            // that, just use a pre-zeroed struct to fill out any
+            // fields we don't care about.
+            let zeroed = unsafe { mem::zeroed() };
             let cmsghdr = cmsghdr {
                 cmsg_len: cmsg_len as _,
-                #[cfg(target_env = "musl")]
-                __pad1: 0,
                 cmsg_level: level,
                 cmsg_type: kind,
+                ..zeroed
             };
 
             let cmsghdr = unsafe {

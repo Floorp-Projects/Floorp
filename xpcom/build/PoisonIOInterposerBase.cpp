@@ -19,12 +19,12 @@
 #endif
 
 // Auxiliary method to convert file descriptors to ids
-#if defined(XP_WIN32)
+#if defined(XP_WIN)
 #  include <io.h>
 inline intptr_t FileDescriptorToHandle(int aFd) { return _get_osfhandle(aFd); }
 #else
 inline intptr_t FileDescriptorToHandle(int aFd) { return aFd; }
-#endif /* if not XP_WIN32 */
+#endif /* if not XP_WIN */
 
 using namespace mozilla;
 

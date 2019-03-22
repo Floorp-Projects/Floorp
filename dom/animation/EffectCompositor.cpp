@@ -150,15 +150,8 @@ bool FindAnimationsForCompositor(
       AnimationPerformanceWarning::Type::None;
   if (!EffectCompositor::AllowCompositorAnimationsOnFrame(aFrame, warning)) {
     if (warning != AnimationPerformanceWarning::Type::None) {
-      // FIXME: Bug 1425837: We should set performance warning by a property set
-      // and write some test cases for this.
-      for (nsCSSPropertyID property : COMPOSITOR_ANIMATABLE_PROPERTY_LIST) {
-        if (!aPropertySet.HasProperty(property)) {
-          continue;
-        }
-        EffectCompositor::SetPerformanceWarning(
-            aFrame, property, AnimationPerformanceWarning(warning));
-      }
+      EffectCompositor::SetPerformanceWarning(
+          aFrame, aPropertySet, AnimationPerformanceWarning(warning));
     }
     return false;
   }
@@ -187,15 +180,8 @@ bool FindAnimationsForCompositor(
         effect->IsMatchForCompositor(aPropertySet, aFrame, *effects,
                                      effectWarning);
     if (effectWarning != AnimationPerformanceWarning::Type::None) {
-      // FIXME: Bug 1425837: We should set performance warning by a property set
-      // and write some test cases for this.
-      for (nsCSSPropertyID property : COMPOSITOR_ANIMATABLE_PROPERTY_LIST) {
-        if (!aPropertySet.HasProperty(property)) {
-          continue;
-        }
-        EffectCompositor::SetPerformanceWarning(
-            aFrame, property, AnimationPerformanceWarning(effectWarning));
-      }
+      EffectCompositor::SetPerformanceWarning(
+          aFrame, aPropertySet, AnimationPerformanceWarning(effectWarning));
     }
 
     if (matchResult ==
@@ -406,8 +392,7 @@ class EffectCompositeOrderComparator {
 
 bool EffectCompositor::GetServoAnimationRule(
     const dom::Element* aElement, PseudoStyleType aPseudoType,
-    CascadeLevel aCascadeLevel,
-    RawServoAnimationValueMapBorrowedMut aAnimationValues) {
+    CascadeLevel aCascadeLevel, RawServoAnimationValueMap* aAnimationValues) {
   MOZ_ASSERT(aAnimationValues);
   MOZ_ASSERT(mPresContext && mPresContext->IsDynamic(),
              "Should not be in print preview");
@@ -709,16 +694,15 @@ void EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
 
 /* static */
 void EffectCompositor::SetPerformanceWarning(
-    const nsIFrame* aFrame, nsCSSPropertyID aProperty,
+    const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet,
     const AnimationPerformanceWarning& aWarning) {
-  EffectSet* effects =
-      EffectSet::GetEffectSetForFrame(aFrame, nsCSSPropertyIDSet{aProperty});
+  EffectSet* effects = EffectSet::GetEffectSetForFrame(aFrame, aPropertySet);
   if (!effects) {
     return;
   }
 
   for (KeyframeEffect* effect : *effects) {
-    effect->SetPerformanceWarning(aProperty, aWarning);
+    effect->SetPerformanceWarning(aPropertySet, aWarning);
   }
 }
 

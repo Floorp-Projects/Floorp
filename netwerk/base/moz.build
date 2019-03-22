@@ -184,6 +184,7 @@ UNIFIED_SOURCES += [
     'ChannelDiverterParent.cpp',
     'Dashboard.cpp',
     'EventTokenBucket.cpp',
+    'FuzzyLayer.cpp',
     'IOActivityMonitor.cpp',
     'LoadContextInfo.cpp',
     'LoadInfo.cpp',
@@ -207,7 +208,6 @@ UNIFIED_SOURCES += [
     'nsIOService.cpp',
     'nsIURIMutatorUtils.cpp',
     'nsLoadGroup.cpp',
-    'nsMediaFragmentURIParser.cpp',
     'nsMIMEInputStream.cpp',
     'nsNetAddr.cpp',
     'nsNetUtil.cpp',
@@ -232,8 +232,6 @@ UNIFIED_SOURCES += [
     'nsSyncStreamListener.cpp',
     'nsTransportUtils.cpp',
     'nsUDPSocket.cpp',
-    'nsURLHelper.cpp',
-    'nsURLParsers.cpp',
     'PartiallySeekableInputStream.cpp',
     'PollableEvent.cpp',
     'Predictor.cpp',
@@ -248,6 +246,24 @@ UNIFIED_SOURCES += [
     'Tickler.cpp',
     'TLSServerSocket.cpp',
 ]
+
+if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
+    include('/tools/fuzzing/libfuzzer-flags.mozbuild')
+    SOURCES += [
+        'nsMediaFragmentURIParser.cpp',
+        'nsURLHelper.cpp',
+        'nsURLParsers.cpp',
+    ]
+    SOURCES['nsMediaFragmentURIParser.cpp'].flags += libfuzzer_flags
+    SOURCES['nsURLHelper.cpp'].flags += libfuzzer_flags
+    SOURCES['nsURLParsers.cpp'].flags += libfuzzer_flags
+else:
+    UNIFIED_SOURCES += [
+        'nsMediaFragmentURIParser.cpp',
+        'nsURLHelper.cpp',
+        'nsURLParsers.cpp',
+    ]
+
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [

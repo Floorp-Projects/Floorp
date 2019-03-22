@@ -31,7 +31,7 @@ inline int32_t NS_lround(double aNum) {
 /* NS_roundup30 rounds towards infinity for positive and       */
 /* negative numbers.                                           */
 
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__) && \
+#if defined(XP_WIN) && defined(_M_IX86) && !defined(__GNUC__) && \
     !defined(__clang__)
 inline int32_t NS_lroundup30(float x) {
   /* Code derived from Laurent de Soras' paper at             */
@@ -62,7 +62,7 @@ inline int32_t NS_lroundup30(float x) {
   }
   return i >> 1; /* divide by 2 */
 }
-#endif /* XP_WIN32 && _M_IX86 && !__GNUC__ */
+#endif /* XP_WIN && _M_IX86 && !__GNUC__ */
 
 inline int32_t NS_lroundf(float aNum) {
   return aNum >= 0.0f ? int32_t(aNum + 0.5f) : int32_t(aNum - 0.5f);

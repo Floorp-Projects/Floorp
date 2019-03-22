@@ -32,8 +32,12 @@ struct RepaintRequest {
   // clang-format off
   MOZ_DEFINE_ENUM_WITH_BASE_AT_CLASS_SCOPE(
     ScrollOffsetUpdateType, uint8_t, (
-      eNone,             // The default; the scroll offset was not updated.
-      eUserAction        // The scroll offset was updated by APZ.
+        eNone,             // The default; the scroll offset was not updated.
+        eUserAction,       // The scroll offset was updated by APZ in response
+                           // to user action.
+        eVisualUpdate      // The scroll offset was updated by APZ in response
+                           // to a visual scroll update request from the
+                           // main thread.
   ));
   // clang-format on
 

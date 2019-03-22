@@ -25,7 +25,8 @@ class FuzzingTraits {
    * the less mutations are being made.
    */
   static size_t Frequency(const size_t aSize, const uint64_t aFactor);
-  static std::mt19937_64 rng;
+
+  static std::mt19937_64& Rng();
 };
 
 /**
@@ -65,7 +66,7 @@ T RandomIntegerRange(T min, T max) {
                 "T must be an integral type");
   MOZ_ASSERT(min < max);
   std::uniform_int_distribution<T> d(min, max);
-  return d(FuzzingTraits::rng);
+  return d(FuzzingTraits::Rng());
 }
 /**
  * uniform_int_distribution is undefined for char/uchar. Need to handle them
@@ -75,13 +76,13 @@ template <>
 inline unsigned char RandomIntegerRange(unsigned char min, unsigned char max) {
   MOZ_ASSERT(min < max);
   std::uniform_int_distribution<unsigned short> d(min, max);
-  return static_cast<unsigned char>(d(FuzzingTraits::rng));
+  return static_cast<unsigned char>(d(FuzzingTraits::Rng()));
 }
 template <>
 inline char RandomIntegerRange(char min, char max) {
   MOZ_ASSERT(min < max);
   std::uniform_int_distribution<short> d(min, max);
-  return static_cast<char>(d(FuzzingTraits::rng));
+  return static_cast<char>(d(FuzzingTraits::Rng()));
 }
 
 /**
@@ -95,7 +96,7 @@ T RandomFloatingPointRange(T min, T max) {
   MOZ_ASSERT(min < max);
   std::uniform_real_distribution<T> d(
       min, std::nextafter(max, std::numeric_limits<T>::max()));
-  return d(FuzzingTraits::rng);
+  return d(FuzzingTraits::Rng());
 }
 
 /**

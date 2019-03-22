@@ -33,7 +33,7 @@ class ReadStream::Inner final : public ReadStream::Controllable {
  public:
   Inner(StreamControl* aControl, const nsID& aId, nsIInputStream* aStream);
 
-  void Serialize(CacheReadStreamOrVoid* aReadStreamOut,
+  void Serialize(Maybe<CacheReadStream>* aReadStreamOut,
                  nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList,
                  ErrorResult& aRv);
 
@@ -193,12 +193,12 @@ ReadStream::Inner::Inner(StreamControl* aControl, const nsID& aId,
 }
 
 void ReadStream::Inner::Serialize(
-    CacheReadStreamOrVoid* aReadStreamOut,
+    Maybe<CacheReadStream>* aReadStreamOut,
     nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList, ErrorResult& aRv) {
   MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
-  *aReadStreamOut = CacheReadStream();
-  Serialize(&aReadStreamOut->get_CacheReadStream(), aStreamCleanupList, aRv);
+  aReadStreamOut->emplace(CacheReadStream());
+  Serialize(&aReadStreamOut->ref(), aStreamCleanupList, aRv);
 }
 
 void ReadStream::Inner::Serialize(
@@ -502,12 +502,12 @@ NS_IMPL_ISUPPORTS(cache::ReadStream, nsIInputStream, ReadStream);
 
 // static
 already_AddRefed<ReadStream> ReadStream::Create(
-    const CacheReadStreamOrVoid& aReadStreamOrVoid) {
-  if (aReadStreamOrVoid.type() == CacheReadStreamOrVoid::Tvoid_t) {
+    const Maybe<CacheReadStream>& aMaybeReadStream) {
+  if (aMaybeReadStream.isNothing()) {
     return nullptr;
   }
 
-  return Create(aReadStreamOrVoid.get_CacheReadStream());
+  return Create(aMaybeReadStream.ref());
 }
 
 // static
@@ -568,7 +568,7 @@ already_AddRefed<ReadStream> ReadStream::Create(
 }
 
 void ReadStream::Serialize(
-    CacheReadStreamOrVoid* aReadStreamOut,
+    Maybe<CacheReadStream>* aReadStreamOut,
     nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList, ErrorResult& aRv) {
   mInner->Serialize(aReadStreamOut, aStreamCleanupList, aRv);
 }

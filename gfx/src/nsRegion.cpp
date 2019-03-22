@@ -994,7 +994,7 @@ std::ostream& operator<<(std::ostream& stream, const nsRegion& m) {
     if (!first) {
       stream << "; ";
     } else {
-      first = true;
+      first = false;
     }
     const nsRect& rect = iter.Get();
     stream << rect.X() << "," << rect.Y() << "," << rect.XMost() << ","

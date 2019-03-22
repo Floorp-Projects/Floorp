@@ -39,6 +39,7 @@ static struct {
 
 using namespace mozilla::ipc;
 using mozilla::Maybe;
+using mozilla::MutexAutoLock;
 using mozilla::Nothing;
 using mozilla::Some;
 

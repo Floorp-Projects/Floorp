@@ -22,7 +22,8 @@ void brush_vs(
     int prim_address,
     RectWithSize local_rect,
     RectWithSize segment_rect,
-    ivec4 user_data,
+    ivec4 prim_user_data,
+    int segment_user_data,
     mat4 transform,
     PictureTask pic_task,
     int brush_flags,
@@ -30,15 +31,15 @@ void brush_vs(
 ) {
     vec2 snapped_device_pos = snap_device_pos(vi, pic_task.device_pixel_scale);
     vec2 texture_size = vec2(textureSize(sPrevPassColor, 0));
-    vOp = user_data.x;
+    vOp = prim_user_data.x;
 
-    PictureTask src_task = fetch_picture_task(user_data.z);
+    PictureTask src_task = fetch_picture_task(prim_user_data.z);
     vec2 src_uv = snapped_device_pos +
                   src_task.common_data.task_rect.p0 -
                   src_task.content_origin;
     vSrcUv = vec3(src_uv / texture_size, src_task.common_data.texture_layer_index);
 
-    RenderTaskCommonData backdrop_task = fetch_render_task_common_data(user_data.y);
+    RenderTaskCommonData backdrop_task = fetch_render_task_common_data(prim_user_data.y);
     vec2 backdrop_uv = snapped_device_pos +
                        backdrop_task.task_rect.p0 -
                        src_task.content_origin;

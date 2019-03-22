@@ -150,7 +150,7 @@ void TypeUtils::ToCacheRequest(
   aOut.integrity() = aIn->GetIntegrity();
 
   if (aBodyAction == IgnoreBody) {
-    aOut.body() = void_t();
+    aOut.body() = Nothing();
     return;
   }
 
@@ -475,9 +475,9 @@ already_AddRefed<InternalRequest> TypeUtils::ToInternalRequest(
 }
 
 void TypeUtils::SerializeCacheStream(
-    nsIInputStream* aStream, CacheReadStreamOrVoid* aStreamOut,
+    nsIInputStream* aStream, Maybe<CacheReadStream>* aStreamOut,
     nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList, ErrorResult& aRv) {
-  *aStreamOut = void_t();
+  *aStreamOut = Nothing();
   if (!aStream) {
     return;
   }
@@ -488,8 +488,8 @@ void TypeUtils::SerializeCacheStream(
     return;
   }
 
-  *aStreamOut = CacheReadStream();
-  CacheReadStream& cacheStream = aStreamOut->get_CacheReadStream();
+  aStreamOut->emplace(CacheReadStream());
+  CacheReadStream& cacheStream = aStreamOut->ref();
 
   cacheStream.controlChild() = nullptr;
   cacheStream.controlParent() = nullptr;

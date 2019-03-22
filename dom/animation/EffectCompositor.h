@@ -25,7 +25,6 @@ class nsIFrame;
 class nsPresContext;
 enum class DisplayItemType : uint32_t;
 struct RawServoAnimationValueMap;
-typedef RawServoAnimationValueMap* RawServoAnimationValueMapBorrowedMut;
 
 namespace mozilla {
 
@@ -118,13 +117,13 @@ class EffectCompositor {
 
   // Get animation rule for stylo. This is an equivalent of GetAnimationRule
   // and will be called from servo side.
-  // The animation rule is stored in |RawServoAnimationValueMapBorrowed|.
+  // The animation rule is stored in |RawServoAnimationValueMap|.
   // We need to be careful while doing any modification because it may cause
   // some thread-safe issues.
-  bool GetServoAnimationRule(
-      const dom::Element* aElement, PseudoStyleType aPseudoType,
-      CascadeLevel aCascadeLevel,
-      RawServoAnimationValueMapBorrowedMut aAnimationValues);
+  bool GetServoAnimationRule(const dom::Element* aElement,
+                             PseudoStyleType aPseudoType,
+                             CascadeLevel aCascadeLevel,
+                             RawServoAnimationValueMap* aAnimationValues);
 
   bool HasPendingStyleUpdates() const;
 
@@ -183,9 +182,9 @@ class EffectCompositor {
       const nsIFrame* aFrame);
 
   // Associates a performance warning with effects on |aFrame| that animate
-  // |aProperty|.
+  // properties in |aPropertySet|.
   static void SetPerformanceWarning(
-      const nsIFrame* aFrame, nsCSSPropertyID aProperty,
+      const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet,
       const AnimationPerformanceWarning& aWarning);
 
   // Do a bunch of stuff that we should avoid doing during the parallel
