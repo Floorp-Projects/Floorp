@@ -295,6 +295,21 @@ windows10-64-nightly/opt:
         - raptor-chrome
         - raptor-profiling
 
+windows10-64-shippable/opt:
+    build-platform: win64-shippable/opt
+    test-sets:
+        - awsy
+        - desktop-screenshot-capture
+        - desktop-instrumentation
+        - windows-talos
+        - marionette-gpu-tests
+        - windows-tests
+        - web-platform-tests
+        - mochitest-headless
+        - raptor-firefox
+        - raptor-chrome
+        - raptor-profiling
+
 windows10-64-devedition/opt:
     build-platform: win64-devedition-nightly/opt
     test-sets:
