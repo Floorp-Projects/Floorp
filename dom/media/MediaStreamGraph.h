@@ -674,7 +674,7 @@ class SourceMediaStream : public MediaStream {
   /**
    * Extract any state updates pending in the stream, and apply them.
    */
-  void ExtractPendingInput(GraphTime aCurrentTime);
+  void ExtractPendingInput(GraphTime aCurrentTime, GraphTime aDesiredUpToTime);
 
   enum {
     ADDTRACK_QUEUED = 0x01  // Queue track add until FinishAddTracks()

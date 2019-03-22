@@ -1183,7 +1183,7 @@ void MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions) {
   for (MediaStream* stream : mStreams) {
     if (SourceMediaStream* is = stream->AsSourceStream()) {
       ensureNextIteration |= is->PullNewData(aEndBlockingDecisions);
-      is->ExtractPendingInput(mStateComputedTime);
+      is->ExtractPendingInput(mStateComputedTime, aEndBlockingDecisions);
     }
     if (stream->mFinished) {
       // The stream's not suspended, and since it's finished, underruns won't
@@ -2522,11 +2522,13 @@ bool SourceMediaStream::PullNewData(GraphTime aDesiredUpToTime) {
   return true;
 }
 
-void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime) {
+void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime,
+                                            GraphTime aDesiredUpToTime) {
   MutexAutoLock lock(mMutex);
 
   bool finished = mFinishPending;
   StreamTime streamCurrentTime = GraphTimeToStreamTime(aCurrentTime);
+  StreamTime streamDesiredUpToTime = GraphTimeToStreamTime(aDesiredUpToTime);
 
   for (int32_t i = mUpdateTracks.Length() - 1; i >= 0; --i) {
     SourceMediaStream::TrackData* data = &mUpdateTracks[i];
@@ -2574,6 +2576,16 @@ void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime) {
     if (data->mCommands & SourceMediaStream::TRACK_END) {
       mTracks.FindTrack(data->mID)->SetEnded();
       mUpdateTracks.RemoveElementAt(i);
+    } else if (!data->mPullingEnabled &&
+               data->mData->GetType() == MediaSegment::VIDEO) {
+      // This video track is pushed. Since we use timestamps rather than
+      // durations for video we avoid making the video track block the stream
+      // by extending the duration when there's not enough video data, so a
+      // video track always has valid data.
+      VideoSegment* segment = static_cast<VideoSegment*>(
+          mTracks.FindTrack(data->mID)->GetSegment());
+      StreamTime missingTime = streamDesiredUpToTime - segment->GetDuration();
+      segment->ExtendLastFrameBy(missingTime);
     }
   }
 
