@@ -22,8 +22,8 @@ class AndroidVelocityTracker : public VelocityTracker {
  public:
   explicit AndroidVelocityTracker();
   void StartTracking(ParentLayerCoord aPos, uint32_t aTimestamp) override;
-  Maybe<float> AddPosition(ParentLayerCoord aPos, uint32_t aTimestampMs,
-                           bool aIsAxisLocked) override;
+  Maybe<float> AddPosition(ParentLayerCoord aPos,
+                           uint32_t aTimestampMs) override;
   float HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
                                      uint32_t aEndTimestampMs,
                                      ParentLayerCoord aDelta) override;
