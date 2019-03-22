@@ -1234,7 +1234,7 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     }
     // else there is a race between APZ and the LayersId to TabParent mapping,
     // so fall back to delivering the event to the topmost child process.
-  } else {
+  } else if (aEvent->mClass == eKeyboardEventClass) {
     // APZ attaches a LayersId to hit-testable events, for keyboard events,
     // we use focus.
     TabParent* preciseRemote = TabParent::GetFocused();

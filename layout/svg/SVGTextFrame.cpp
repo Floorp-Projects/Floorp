@@ -3051,8 +3051,7 @@ void SVGTextFrame::ScheduleReflowSVGNonDisplayText(
         // reflowed soon anyway.  No need to call FrameNeedsReflow again, then.
         return;
       }
-      if (!f->IsFrameOfType(eSVG) ||
-          (f->GetStateBits() & NS_STATE_IS_OUTER_SVG)) {
+      if (!f->IsFrameOfType(eSVG) || f->IsSVGOuterSVGFrame()) {
         break;
       }
       f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);

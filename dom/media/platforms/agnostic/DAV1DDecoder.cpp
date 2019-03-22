@@ -31,6 +31,11 @@ RefPtr<MediaDataDecoder::InitPromise> DAV1DDecoder::Init() {
   }
   settings.n_frame_threads =
       static_cast<int>(std::min(decoder_threads, GetNumberOfProcessors()));
+  // There is not much improvement with more than 2 tile threads at least with
+  // the content being currently served. The ideal number of tile thread would
+  // much the tile count of the content. Maybe dav1d can help to do that in the
+  // future.
+  settings.n_tile_threads = 2;
 
   int res = dav1d_open(&mContext, &settings);
   if (res < 0) {

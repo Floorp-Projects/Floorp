@@ -132,11 +132,13 @@ sandbox_vars = {
     'NO_PGO': True,
 }
 if CONFIG['OS_TARGET'] == 'WINNT':
+    # We want to remove XP_WIN32 eventually. See bug 1535219 for details.
+    sandbox_vars['CFLAGS'] = ['-DXP_WIN32']
     if CONFIG['CPU_ARCH'] == 'x86':
         # This should really be the default.
         sandbox_vars['ASFLAGS'] = ['-safeseh']
     if CONFIG['MOZ_FOLD_LIBS_FLAGS']:
-        sandbox_vars['CFLAGS'] = CONFIG['MOZ_FOLD_LIBS_FLAGS']
+        sandbox_vars['CFLAGS'] += CONFIG['MOZ_FOLD_LIBS_FLAGS']
 if CONFIG['OS_TARGET'] == 'Android':
     sandbox_vars['CFLAGS'] = [
         '-include', TOPSRCDIR + '/security/manager/android_stub.h',

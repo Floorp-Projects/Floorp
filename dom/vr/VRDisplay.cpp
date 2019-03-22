@@ -246,7 +246,9 @@ void VRPose::GetPosition(JSContext* aCx, JS::MutableHandle<JSObject*> aRetval,
   SetFloat32Array(
       aCx, aRetval, mPosition, mVRState.pose.position, 3,
       !mPosition &&
-          bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position),
+          (bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position) ||
+           bool(mVRState.flags &
+                gfx::VRDisplayCapabilityFlags::Cap_PositionEmulated)),
       aRv);
 }
 

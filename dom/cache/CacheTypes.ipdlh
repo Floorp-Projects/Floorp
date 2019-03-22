@@ -41,12 +41,6 @@ struct CacheReadStream
   IPCStream? stream;
 };
 
-union CacheReadStreamOrVoid
-{
-  void_t;
-  CacheReadStream;
-};
-
 struct HeadersEntry
 {
   nsCString name;
@@ -64,17 +58,11 @@ struct CacheRequest
   ReferrerPolicy referrerPolicy;
   RequestMode mode;
   RequestCredentials credentials;
-  CacheReadStreamOrVoid body;
+  CacheReadStream? body;
   uint32_t contentPolicyType;
   RequestCache requestCache;
   RequestRedirect requestRedirect;
   nsString integrity;
-};
-
-union CacheRequestOrVoid
-{
-  void_t;
-  CacheRequest;
 };
 
 struct CacheResponse
@@ -85,17 +73,11 @@ struct CacheResponse
   nsCString statusText;
   HeadersEntry[] headers;
   HeadersGuardEnum headersGuard;
-  CacheReadStreamOrVoid body;
+  CacheReadStream? body;
   IPCChannelInfo channelInfo;
   PrincipalInfo? principalInfo;
   uint32_t paddingInfo;
   int64_t paddingSize;
-};
-
-union CacheResponseOrVoid
-{
-  void_t;
-  CacheResponse;
 };
 
 struct CacheRequestResponse
@@ -113,7 +95,7 @@ struct CacheMatchArgs
 
 struct CacheMatchAllArgs
 {
-  CacheRequestOrVoid requestOrVoid;
+  CacheRequest? maybeRequest;
   CacheQueryParams params;
   OpenMode openMode;
 };
@@ -131,7 +113,7 @@ struct CacheDeleteArgs
 
 struct CacheKeysArgs
 {
-  CacheRequestOrVoid requestOrVoid;
+  CacheRequest? maybeRequest;
   CacheQueryParams params;
   OpenMode openMode;
 };
@@ -178,7 +160,7 @@ union CacheOpArgs
 
 struct CacheMatchResult
 {
-  CacheResponseOrVoid responseOrVoid;
+  CacheResponse? maybeResponse;
 };
 
 struct CacheMatchAllResult
@@ -202,7 +184,7 @@ struct CacheKeysResult
 
 struct StorageMatchResult
 {
-  CacheResponseOrVoid responseOrVoid;
+  CacheResponse? maybeResponse;
 };
 
 struct StorageHasResult

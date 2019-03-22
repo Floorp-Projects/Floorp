@@ -45,7 +45,8 @@ void brush_vs(
     int prim_address,
     RectWithSize local_rect,
     RectWithSize segment_rect,
-    ivec4 user_data,
+    ivec4 prim_user_data,
+    int segment_user_data,
     mat4 transform,
     PictureTask pic_task,
     int brush_flags,
@@ -71,7 +72,7 @@ void brush_vs(
     vec2 tile_repeat = local_rect.size / gradient.stretch_size;
     vRepeatedSize = gradient.stretch_size;
 
-    vGradientAddress = user_data.x;
+    vGradientAddress = prim_user_data.x;
 
     // Whether to repeat the gradient along the line instead of clamping.
     vGradientRepeat = float(gradient.extend_mode != EXTEND_MODE_CLAMP);

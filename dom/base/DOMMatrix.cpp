@@ -650,7 +650,7 @@ DOMMatrixReadOnly* DOMMatrixReadOnly::SetMatrixValue(
   gfx::Matrix4x4 transform;
   bool contains3dTransform = false;
   if (!ServoCSSParser::ParseTransformIntoMatrix(
-          aTransformList, contains3dTransform, transform.components)) {
+          aTransformList, contains3dTransform, transform)) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return nullptr;
   }

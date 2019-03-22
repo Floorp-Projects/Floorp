@@ -4015,12 +4015,8 @@ class nsIFrame : public nsQueryFrame {
    * areas, because they're never painted.)
    */
   bool FrameMaintainsOverflow() const {
-    // The IsSVGElement() check below is necessary, because the
-    // NS_STATE_IS_OUTER_SVG bit has conflict in other frames due to lack
-    // of bits.
     return !HasAllStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY) &&
-           !(HasAllStateBits(NS_STATE_IS_OUTER_SVG | NS_FRAME_IS_NONDISPLAY) &&
-             GetContent()->IsSVGElement(nsGkAtoms::svg));
+           !(IsSVGOuterSVGFrame() && HasAnyStateBits(NS_FRAME_IS_NONDISPLAY));
   }
 
   /*

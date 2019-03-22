@@ -123,7 +123,10 @@ def rust_supported_targets(rustc):
     per_raw_os = {}
     for t in out:
         t = split_triplet(t, allow_unknown=True)
-        key = (t.cpu, t.endianness, t.os)
+        endianness = t.endianness
+        if t.cpu.startswith('thumb') and endianness not in ('big', 'little'):
+            endianness = 'little'
+        key = (t.cpu, endianness, t.os)
         if key in per_os:
             previous = per_os[key]
             per_raw_os[(previous.cpu, previous.endianness,
@@ -138,7 +141,7 @@ def rust_supported_targets(rustc):
             # normalize.
             if raw_os == 'androideabi':
                 raw_os = 'linux-androideabi'
-            per_raw_os[(t.cpu, t.endianness, raw_os)] = t
+            per_raw_os[(t.cpu, endianness, raw_os)] = t
         else:
             per_os[key] = t
     return namespace(per_os=per_os, per_raw_os=per_raw_os)
@@ -152,8 +155,11 @@ def rust_triple_alias(host_or_target):
     """
     assert host_or_target in {host, target}
 
+    host_or_target_str = {host: 'host', target: 'target'}[host_or_target]
+
     @depends(rustc, host_or_target, c_compiler, rust_supported_targets,
-             when=rust_compiler)
+             arm_target, when=rust_compiler)
+    @checking('for rust %s triplet' % host_or_target_str)
     @imports('os')
     @imports('subprocess')
     @imports(_from='mozbuild.configure.util', _import='LineIO')
@@ -161,7 +167,7 @@ def rust_triple_alias(host_or_target):
     @imports(_from='tempfile', _import='mkstemp')
     @imports(_from='textwrap', _import='dedent')
     def rust_target(rustc, host_or_target, compiler_info,
-                    rust_supported_targets):
+                    rust_supported_targets, arm_target):
         # Rust's --target options are similar to, but not exactly the same
         # as, the autoconf-derived targets we use.  An example would be that
         # Rust uses distinct target triples for targetting the GNU C++ ABI
@@ -181,13 +187,23 @@ def rust_triple_alias(host_or_target):
             host_or_target_os = host_or_target.os
             host_or_target_raw_os = host_or_target.raw_os
 
-        rustc_target = rust_supported_targets.per_os.get(
-            (host_or_target.cpu, host_or_target.endianness, host_or_target_os))
+        if host_or_target.cpu == 'arm' and arm_target.arm_arch == 7 and \
+                arm_target.fpu == 'neon' and arm_target.thumb2:
+            host_or_target_cpus = ('thumbv7neon', host_or_target.cpu)
+        else:
+            host_or_target_cpus = (host_or_target.cpu,)
 
-        if rustc_target is None:
+        for host_or_target_cpu in host_or_target_cpus:
+            rustc_target = rust_supported_targets.per_os.get(
+                (host_or_target_cpu, host_or_target.endianness, host_or_target_os))
+            if rustc_target:
+                break
+
             rustc_target = rust_supported_targets.per_raw_os.get(
-                (host_or_target.cpu, host_or_target.endianness,
+                (host_or_target_cpu, host_or_target.endianness,
                  host_or_target_raw_os))
+            if rustc_target:
+                break
 
         if rustc_target is None:
             die("Don't know how to translate {} for rustc".format(

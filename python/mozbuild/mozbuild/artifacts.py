@@ -1042,6 +1042,12 @@ class Artifacts(object):
                 num=NUM_REVISIONS_TO_QUERY)
         ], cwd=self._topsrcdir).splitlines()
 
+        if len(last_revs) == 0:
+            raise Exception("""\
+There are no public revisions.
+This can happen if the repository is created from bundle file and never pulled
+from remote.  Please run `hg pull` and build again.
+see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles""")
 
         self.log(logging.INFO, 'artifact',
             {'len': len(last_revs)},

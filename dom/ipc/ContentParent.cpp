@@ -1665,7 +1665,7 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
 
   mBlobURLs.Clear();
 
-#if defined(XP_WIN32) && defined(ACCESSIBILITY)
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
   a11y::AccessibleWrap::ReleaseContentProcessIdFor(ChildID());
 #endif
 
@@ -5197,7 +5197,7 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(
 
 mozilla::ipc::IPCResult ContentParent::RecvGetA11yContentId(
     uint32_t* aContentId) {
-#if defined(XP_WIN32) && defined(ACCESSIBILITY)
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
   *aContentId = a11y::AccessibleWrap::GetContentProcessIdFor(ChildID());
   MOZ_ASSERT(*aContentId);
   return IPC_OK();
@@ -5208,7 +5208,7 @@ mozilla::ipc::IPCResult ContentParent::RecvGetA11yContentId(
 
 mozilla::ipc::IPCResult ContentParent::RecvA11yHandlerControl(
     const uint32_t& aPid, const IHandlerControlHolder& aHandlerControl) {
-#if defined(XP_WIN32) && defined(ACCESSIBILITY)
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
   MOZ_ASSERT(!aHandlerControl.IsNull());
   RefPtr<IHandlerControl> proxy(aHandlerControl.Get());
   a11y::AccessibleWrap::SetHandlerControl(aPid, std::move(proxy));

@@ -5,6 +5,7 @@
 "use strict";
 
 const {
+  ADD_REQUEST,
   ADD_TIMING_MARKER,
   CLEAR_TIMING_MARKERS,
   CLEAR_REQUESTS,
@@ -14,7 +15,18 @@ function TimingMarkers() {
   return {
     firstDocumentDOMContentLoadedTimestamp: -1,
     firstDocumentLoadTimestamp: -1,
+    firstDocumentRequestStartTimestamp: +Infinity,
   };
+}
+
+function addRequest(state, action) {
+  const nextState = { ...state };
+  const { startedMillis } = action.data;
+  if (startedMillis < state.firstDocumentRequestStartTimestamp) {
+    nextState.firstDocumentRequestStartTimestamp = startedMillis;
+  }
+
+  return nextState;
 }
 
 function addTimingMarker(state, action) {
@@ -41,6 +53,9 @@ function clearTimingMarkers(state) {
 
 function timingMarkers(state = new TimingMarkers(), action) {
   switch (action.type) {
+    case ADD_REQUEST:
+      return addRequest(state, action);
+
     case ADD_TIMING_MARKER:
       return addTimingMarker(state, action);
 

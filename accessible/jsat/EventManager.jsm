@@ -81,6 +81,18 @@ this.EventManager.prototype = {
     }
 
     switch (aEvent.eventType) {
+      case Events.TEXT_CARET_MOVED:
+      {
+        if (aEvent.accessible != aEvent.accessibleDocument &&
+            !aEvent.isFromUserInput) {
+          // If caret moves in document without direct user
+          // we are probably stepping through results in find-in-page.
+          let acc = Utils.getTextLeafForOffset(aEvent.accessible,
+            aEvent.QueryInterface(Ci.nsIAccessibleCaretMoveEvent).caretOffset);
+          this.contentControl.autoMove(acc);
+        }
+        break;
+      }
       case Events.NAME_CHANGE:
       {
         // XXX: Port to Android

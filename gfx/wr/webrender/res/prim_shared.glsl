@@ -56,9 +56,8 @@ struct PrimitiveHeader {
     float z;
     int specific_prim_address;
     int render_task_index;
-    int clip_task_index;
     int transform_id;
-    ivec3 user_data;
+    ivec4 user_data;
 };
 
 PrimitiveHeader fetch_prim_header(int index) {
@@ -76,9 +75,8 @@ PrimitiveHeader fetch_prim_header(int index) {
     ph.z = float(data0.x);
     ph.render_task_index = data0.y;
     ph.specific_prim_address = data0.z;
-    ph.clip_task_index = data0.w;
-    ph.transform_id = data1.x;
-    ph.user_data = data1.yzw;
+    ph.transform_id = data0.w;
+    ph.user_data = data1;
 
     return ph;
 }

@@ -74,7 +74,6 @@ EXPORTS.mozilla += [
     '!ServoCSSPropList.h',
     'AnimationCollection.h',
     'BindingStyleRule.h',
-    'BorrowedTypeList.h',
     'CachedInheritingStyles.h',
     'ComputedStyle.h',
     'ComputedStyleInlines.h',

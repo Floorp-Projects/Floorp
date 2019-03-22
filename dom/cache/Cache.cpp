@@ -292,8 +292,8 @@ already_AddRefed<Promise> Cache::MatchAll(
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this, CacheMatchAllArgs(void_t(), params, GetOpenMode()),
-                       1);
+  AutoChildOpArgs args(this,
+                       CacheMatchAllArgs(Nothing(), params, GetOpenMode()), 1);
 
   if (aRequest.WasPassed()) {
     RefPtr<InternalRequest> ir =
@@ -468,7 +468,8 @@ already_AddRefed<Promise> Cache::Keys(
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this, CacheKeysArgs(void_t(), params, GetOpenMode()), 1);
+  AutoChildOpArgs args(this, CacheKeysArgs(Nothing(), params, GetOpenMode()),
+                       1);
 
   if (aRequest.WasPassed()) {
     RefPtr<InternalRequest> ir =
