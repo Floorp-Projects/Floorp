@@ -144,8 +144,6 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::GuardReceiverPolymorphic:
     case MDefinition::Opcode::GuardObjectGroup:
     case MDefinition::Opcode::GuardObjectIdentity:
-    case MDefinition::Opcode::GuardUnboxedExpando:
-    case MDefinition::Opcode::LoadUnboxedExpando:
     case MDefinition::Opcode::LoadSlot:
     case MDefinition::Opcode::StoreSlot:
     case MDefinition::Opcode::InArray:

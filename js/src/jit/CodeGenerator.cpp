@@ -3944,16 +3944,6 @@ static void GuardReceiver(MacroAssembler& masm, const ReceiverGuard& guard,
   if (guard.group) {
     masm.branchTestObjGroup(Assembler::NotEqual, obj, guard.group, scratch, obj,
                             miss);
-
-    Address expandoAddress(obj, UnboxedPlainObject::offsetOfExpando());
-    if (guard.shape) {
-      masm.loadPtr(expandoAddress, expandoScratch);
-      masm.branchPtr(Assembler::Equal, expandoScratch, ImmWord(0), miss);
-      masm.branchTestObjShape(Assembler::NotEqual, expandoScratch, guard.shape,
-                              scratch, expandoScratch, miss);
-    } else if (checkNullExpando) {
-      masm.branchPtr(Assembler::NotEqual, expandoAddress, ImmWord(0), miss);
-    }
   } else {
     masm.branchTestObjShape(Assembler::NotEqual, obj, guard.shape, scratch, obj,
                             miss);
@@ -3994,15 +3984,6 @@ void CodeGenerator::emitGetPropertyPolymorphic(
         masm.loadPtr(Address(target, NativeObject::offsetOfSlots()), scratch);
         masm.loadTypedOrValue(Address(scratch, offset), output);
       }
-    } else {
-      masm.comment("loadUnboxedProperty");
-      const UnboxedLayout::Property* property =
-          receiver.group->unboxedLayoutDontCheckGeneration().lookup(
-              mir->name());
-      Address propertyAddr(
-          obj, UnboxedPlainObject::offsetOfData() + property->offset);
-
-      masm.loadUnboxedProperty(propertyAddr, property->type, output);
     }
 
     if (i == mir->numReceivers() - 1) {
@@ -4041,8 +4022,6 @@ static void EmitUnboxedPreBarrier(MacroAssembler& masm, T address,
     masm.guardedCallPreBarrier(address, MIRType::Object);
   } else if (type == JSVAL_TYPE_STRING) {
     masm.guardedCallPreBarrier(address, MIRType::String);
-  } else {
-    MOZ_ASSERT(!UnboxedTypeNeedsPreBarrier(type));
   }
 }
 
@@ -4082,15 +4061,6 @@ void CodeGenerator::emitSetPropertyPolymorphic(
         }
         masm.storeConstantOrRegister(value, addr);
       }
-    } else {
-      const UnboxedLayout::Property* property =
-          receiver.group->unboxedLayoutDontCheckGeneration().lookup(
-              mir->name());
-      Address propertyAddr(
-          obj, UnboxedPlainObject::offsetOfData() + property->offset);
-
-      EmitUnboxedPreBarrier(masm, propertyAddr, property->type);
-      masm.storeUnboxedProperty(propertyAddr, property->type, value, nullptr);
     }
 
     if (i == mir->numReceivers() - 1) {
@@ -4299,24 +4269,6 @@ void CodeGenerator::visitGuardReceiverPolymorphic(
   }
 
   masm.bind(&done);
-}
-
-void CodeGenerator::visitGuardUnboxedExpando(LGuardUnboxedExpando* lir) {
-  Label miss;
-
-  Register obj = ToRegister(lir->object());
-  masm.branchPtr(
-      lir->mir()->requireExpando() ? Assembler::Equal : Assembler::NotEqual,
-      Address(obj, UnboxedPlainObject::offsetOfExpando()), ImmWord(0), &miss);
-
-  bailoutFrom(&miss, lir->snapshot());
-}
-
-void CodeGenerator::visitLoadUnboxedExpando(LLoadUnboxedExpando* lir) {
-  Register obj = ToRegister(lir->object());
-  Register result = ToRegister(lir->getDef(0));
-
-  masm.loadPtr(Address(obj, UnboxedPlainObject::offsetOfExpando()), result);
 }
 
 void CodeGenerator::visitToNumeric(LToNumeric* lir) {
@@ -9879,21 +9831,6 @@ void CodeGenerator::visitStoreUnboxedPointer(LStoreUnboxedPointer* lir) {
                       offsetAdjustment);
     StoreUnboxedPointer(masm, address, type, value, preBarrier);
   }
-}
-
-void CodeGenerator::visitConvertUnboxedObjectToNative(
-    LConvertUnboxedObjectToNative* lir) {
-  Register object = ToRegister(lir->getOperand(0));
-  Register temp = ToTempRegisterOrInvalid(lir->temp());
-
-  // The call will return the same object so StoreRegisterTo(object) is safe.
-  using Fn = NativeObject* (*)(JSContext*, JSObject*);
-  OutOfLineCode* ool = oolCallVM<Fn, UnboxedPlainObject::convertToNative>(
-      lir, ArgList(object), StoreRegisterTo(object));
-
-  masm.branchTestObjGroup(Assembler::Equal, object, lir->mir()->group(), temp,
-                          object, ool->entry());
-  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::emitArrayPopShift(LInstruction* lir,
