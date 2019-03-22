@@ -213,9 +213,6 @@ class DecodedStreamData {
   // The decoder is responsible for calling Destroy() on this stream.
   const RefPtr<SourceMediaStream> mStream;
   const RefPtr<DecodedStreamGraphListener> mListener;
-  // True if we need to send a compensation video frame to ensure the
-  // StreamTime going forward.
-  bool mEOSVideoCompensation;
 
   const RefPtr<OutputStreamManager> mOutputStreamManager;
   const RefPtr<AbstractThread> mAbstractMainThread;
@@ -238,7 +235,6 @@ DecodedStreamData::DecodedStreamData(
       mListener(MakeRefPtr<DecodedStreamGraphListener>(
           mStream, aInit.mAudioTrackID, std::move(aAudioEndedPromise),
           aInit.mVideoTrackID, std::move(aVideoEndedPromise), aMainThread)),
-      mEOSVideoCompensation(false),
       mOutputStreamManager(aOutputStreamManager),
       mAbstractMainThread(aMainThread) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -673,8 +669,9 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
   }
 
   // Check the output is not empty.
+  bool compensateEOS = false;
   if (output.GetLastFrame()) {
-    mData->mEOSVideoCompensation = ZeroDurationAtLastChunk(output);
+    compensateEOS = ZeroDurationAtLastChunk(output);
   }
 
   if (!aIsSameOrigin) {
@@ -687,7 +684,7 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
   }
 
   if (mVideoQueue.IsFinished() && !mData->mHaveSentFinishVideo) {
-    if (mData->mEOSVideoCompensation) {
+    if (compensateEOS) {
       VideoSegment endSegment;
       // Calculate the deviation clock time from DecodedStream.
       auto deviation =
