@@ -401,8 +401,17 @@ void MobileViewportManager::UpdateResolution(
       // Even in other scenarios, we want to ensure that zoom level is
       // not _smaller_ than the intrinsic scale, otherwise we might be
       // trying to show regions where there is no content to show.
-      if (zoom < intrinsicScale) {
-        newZoom = Some(intrinsicScale);
+      CSSToScreenScale clampedZoom = zoom;
+
+      if (clampedZoom < intrinsicScale) {
+        clampedZoom = intrinsicScale;
+      }
+
+      // Also clamp to the restrictions imposed by aViewportInfo.
+      clampedZoom = ClampZoom(clampedZoom, aViewportInfo);
+
+      if (clampedZoom != zoom) {
+        newZoom = Some(clampedZoom);
       }
     }
   }
