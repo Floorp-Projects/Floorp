@@ -630,263 +630,315 @@ function promiseWriteWebManifestForExtension(aData, aDir, aId = aData.applicatio
   return AddonTestUtils.promiseWriteFilesToExtension(aDir.path, aId, files);
 }
 
-var gExpectedEvents = {};
-var gExpectedInstalls = [];
-var gNext = null;
-
-function getExpectedEvent(aId) {
-  if (!(aId in gExpectedEvents))
-    do_throw("Wasn't expecting events for " + aId);
-  if (gExpectedEvents[aId].length == 0)
-    do_throw("Too many events for " + aId);
-  let event = gExpectedEvents[aId].shift();
-  if (event instanceof Array)
-    return event;
-  return [event, true];
-}
-
-function getExpectedInstall(aAddon) {
-  if (gExpectedInstalls instanceof Array)
-    return gExpectedInstalls.shift();
-  if (!aAddon || !aAddon.id)
-    return gExpectedInstalls.NO_ID.shift();
-  let id = aAddon.id;
-  if (!(id in gExpectedInstalls) || !(gExpectedInstalls[id] instanceof Array))
-    do_throw("Wasn't expecting events for " + id);
-  if (gExpectedInstalls[id].length == 0)
-    do_throw("Too many events for " + id);
-  return gExpectedInstalls[id].shift();
-}
-
-const AddonListener = {
-  onPropertyChanged(aAddon, aProperties) {
-    info(`Got onPropertyChanged event for ${aAddon.id}`);
-    let [event, properties] = getExpectedEvent(aAddon.id);
-    Assert.equal("onPropertyChanged", event);
-    Assert.equal(aProperties.length, properties.length);
-    properties.forEach(function(aProperty) {
-      // Only test that the expected properties are listed, having additional
-      // properties listed is not necessary a problem
-      if (!aProperties.includes(aProperty))
-        do_throw("Did not see property change for " + aProperty);
-    });
-    return check_test_completed(arguments);
-  },
-
-  onEnabling(aAddon, aRequiresRestart) {
-    info(`Got onEnabling event for ${aAddon.id}`);
-    let [event, expectedRestart] = getExpectedEvent(aAddon.id);
-    Assert.equal("onEnabling", event);
-    Assert.equal(aRequiresRestart, expectedRestart);
-    if (expectedRestart)
-      Assert.ok(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_ENABLE));
-    Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
-    return check_test_completed(arguments);
-  },
-
-  onEnabled(aAddon) {
-    info(`Got onEnabled event for ${aAddon.id}`);
-    let [event] = getExpectedEvent(aAddon.id);
-    Assert.equal("onEnabled", event);
-    Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
-    return check_test_completed(arguments);
-  },
-
-  onDisabling(aAddon, aRequiresRestart) {
-    info(`Got onDisabling event for ${aAddon.id}`);
-    let [event, expectedRestart] = getExpectedEvent(aAddon.id);
-    Assert.equal("onDisabling", event);
-    Assert.equal(aRequiresRestart, expectedRestart);
-    if (expectedRestart)
-      Assert.ok(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_DISABLE));
-    Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
-    return check_test_completed(arguments);
-  },
-
-  onDisabled(aAddon) {
-    info(`Got onDisabled event for ${aAddon.id}`);
-    let [event] = getExpectedEvent(aAddon.id);
-    Assert.equal("onDisabled", event);
-    Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
-    return check_test_completed(arguments);
-  },
-
-  onInstalling(aAddon, aRequiresRestart) {
-    info(`Got onInstalling event for ${aAddon.id}`);
-    let [event, expectedRestart] = getExpectedEvent(aAddon.id);
-    Assert.equal("onInstalling", event);
-    Assert.equal(aRequiresRestart, expectedRestart);
-    if (expectedRestart)
-      Assert.ok(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_INSTALL));
-    return check_test_completed(arguments);
-  },
-
-  onInstalled(aAddon) {
-    info(`Got onInstalled event for ${aAddon.id}`);
-    let [event] = getExpectedEvent(aAddon.id);
-    Assert.equal("onInstalled", event);
-    return check_test_completed(arguments);
-  },
-
-  onUninstalling(aAddon, aRequiresRestart) {
-    info(`Got onUninstalling event for ${aAddon.id}`);
-    let [event, expectedRestart] = getExpectedEvent(aAddon.id);
-    Assert.equal("onUninstalling", event);
-    Assert.equal(aRequiresRestart, expectedRestart);
-    if (expectedRestart)
-      Assert.ok(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_UNINSTALL));
-    return check_test_completed(arguments);
-  },
-
-  onUninstalled(aAddon) {
-    info(`Got onUninstalled event for ${aAddon.id}`);
-    let [event] = getExpectedEvent(aAddon.id);
-    Assert.equal("onUninstalled", event);
-    return check_test_completed(arguments);
-  },
-
-  onOperationCancelled(aAddon) {
-    info(`Got onOperationCancelled event for ${aAddon.id}`);
-    let [event] = getExpectedEvent(aAddon.id);
-    Assert.equal("onOperationCancelled", event);
-    return check_test_completed(arguments);
-  },
-};
-
-const InstallListener = {
-  onNewInstall(install) {
-    if (install.state != AddonManager.STATE_DOWNLOADED &&
-        install.state != AddonManager.STATE_DOWNLOAD_FAILED &&
-        install.state != AddonManager.STATE_AVAILABLE)
-      do_throw("Bad install state " + install.state);
-    if (install.state != AddonManager.STATE_DOWNLOAD_FAILED)
-      Assert.equal(install.error, 0);
-    else
-      Assert.notEqual(install.error, 0);
-    Assert.equal("onNewInstall", getExpectedInstall());
-    return check_test_completed(arguments);
-  },
-
-  onDownloadStarted(install) {
-    Assert.equal(install.state, AddonManager.STATE_DOWNLOADING);
-    Assert.equal(install.error, 0);
-    Assert.equal("onDownloadStarted", getExpectedInstall());
-    return check_test_completed(arguments);
-  },
-
-  onDownloadEnded(install) {
-    Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
-    Assert.equal(install.error, 0);
-    Assert.equal("onDownloadEnded", getExpectedInstall());
-    return check_test_completed(arguments);
-  },
-
-  onDownloadFailed(install) {
-    Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-    Assert.equal("onDownloadFailed", getExpectedInstall());
-    return check_test_completed(arguments);
-  },
-
-  onDownloadCancelled(install) {
-    Assert.equal(install.state, AddonManager.STATE_CANCELLED);
-    Assert.equal(install.error, 0);
-    Assert.equal("onDownloadCancelled", getExpectedInstall());
-    return check_test_completed(arguments);
-  },
-
-  onInstallStarted(install) {
-    Assert.equal(install.state, AddonManager.STATE_INSTALLING);
-    Assert.equal(install.error, 0);
-    Assert.equal("onInstallStarted", getExpectedInstall(install.addon));
-    return check_test_completed(arguments);
-  },
-
-  onInstallEnded(install, newAddon) {
-    Assert.equal(install.state, AddonManager.STATE_INSTALLED);
-    Assert.equal(install.error, 0);
-    Assert.equal("onInstallEnded", getExpectedInstall(install.addon));
-    return check_test_completed(arguments);
-  },
-
-  onInstallFailed(install) {
-    Assert.equal(install.state, AddonManager.STATE_INSTALL_FAILED);
-    Assert.equal("onInstallFailed", getExpectedInstall(install.addon));
-    return check_test_completed(arguments);
-  },
-
-  onInstallCancelled(install) {
-    // If the install was cancelled by a listener returning false from
-    // onInstallStarted, then the state will revert to STATE_DOWNLOADED.
-    let possibleStates = [AddonManager.STATE_CANCELLED,
-                          AddonManager.STATE_DOWNLOADED];
-    Assert.ok(possibleStates.includes(install.state));
-    Assert.equal(install.error, 0);
-    Assert.equal("onInstallCancelled", getExpectedInstall(install.addon));
-    return check_test_completed(arguments);
-  },
-
-  onExternalInstall(aAddon, existingAddon, aRequiresRestart) {
-    Assert.equal("onExternalInstall", getExpectedInstall(aAddon));
-    Assert.ok(!aRequiresRestart);
-    return check_test_completed(arguments);
-  },
-};
-
 function hasFlag(aBits, aFlag) {
   return (aBits & aFlag) != 0;
 }
 
-// Just a wrapper around setting the expected events
-function prepare_test(aExpectedEvents, aExpectedInstalls, aNext) {
-  AddonManager.addAddonListener(AddonListener);
-  AddonManager.addInstallListener(InstallListener);
+class EventChecker {
+  constructor(options) {
+    this.expectedEvents = options.addonEvents || {};
+    this.expectedInstalls = options.installEvents || null;
 
-  gExpectedInstalls = aExpectedInstalls;
-  gExpectedEvents = aExpectedEvents;
-  gNext = aNext;
-}
+    this.finished = new Promise(resolve => {
+      this.resolveFinished = resolve;
+    });
 
-function clearListeners() {
-  AddonManager.removeAddonListener(AddonListener);
-  AddonManager.removeInstallListener(InstallListener);
-}
+    AddonManager.addAddonListener(this);
+    if (this.expectedInstalls) {
+      AddonManager.addInstallListener(this);
+    }
+  }
 
-function end_test() {
-  clearListeners();
-}
+  cleanup() {
+    AddonManager.removeAddonListener(this);
+    if (this.expectedInstalls) {
+      AddonManager.removeInstallListener(this);
+    }
+  }
 
-// Checks if all expected events have been seen and if so calls the callback
-function check_test_completed(aArgs) {
-  if (!gNext)
-    return undefined;
+  checkValue(prop, value, flagName) {
+    if (Array.isArray(flagName)) {
+      let names = flagName.map(name => `AddonManager.${name}`);
 
-  if (gExpectedInstalls instanceof Array &&
-      gExpectedInstalls.length > 0)
-    return undefined;
+      Assert.ok(flagName.map(name => AddonManager[name]).includes(value),
+                `${prop} value \`${value}\` should be one of [${names.join(", ")}`);
+    } else {
+      Assert.equal(value, AddonManager[flagName],
+                   `${prop} should have value AddonManager.${flagName}`);
+    }
+  }
 
-  for (let id in gExpectedInstalls) {
-    let installList = gExpectedInstalls[id];
-    if (installList.length > 0)
+  checkFlag(prop, value, flagName) {
+    Assert.equal(value & AddonManager[flagName], AddonManager[flagName],
+                 `${prop} should have flag AddonManager.${flagName}`);
+  }
+
+  checkNoFlag(prop, value, flagName) {
+    Assert.ok(!(value & AddonManager[flagName]),
+              `${prop} should not have flag AddonManager.${flagName}`);
+  }
+
+  checkComplete() {
+    if (this.expectedInstalls && this.expectedInstalls.length) {
+      return;
+    }
+
+    if (Object.values(this.expectedEvents).some(events => events.length)) {
+      return;
+    }
+
+    info("Test complete");
+    this.cleanup();
+    this.resolveFinished();
+  }
+
+  ensureComplete() {
+    this.cleanup();
+
+    for (let [id, events] of Object.entries(this.expectedEvents)) {
+      Assert.equal(events.length, 0, `Should have no remaining events for ${id}`);
+    }
+    if (this.expectedInstalls) {
+      Assert.deepEqual(this.expectedInstalls, [], "Should have no remaining install events");
+    }
+  }
+
+  // Add-on listener events
+  getExpectedEvent(aId) {
+    if (!(aId in this.expectedEvents)) {
+      return null;
+    }
+
+    let events = this.expectedEvents[aId];
+    Assert.ok(events.length > 0, `Should be expecting events for ${aId}`);
+
+    return events.shift();
+  }
+
+  checkAddonEvent(event, addon, details = {}) {
+    info(`Got event "${event}" for add-on ${addon.id}`);
+
+    if ("requiresRestart" in details) {
+      Assert.equal(details.requiresRestart, false,
+                   "requiresRestart should always be false");
+    }
+
+    let expected = this.getExpectedEvent(addon.id);
+    if (!expected) {
       return undefined;
+    }
+
+    Assert.equal(expected.event, event,
+                 `Expecting event "${expected.event}" got "${event}"`);
+
+    for (let prop of ["properties"]) {
+      if (prop in expected) {
+        Assert.deepEqual(expected[prop], details[prop],
+                         `Expected value for ${prop}`);
+      }
+    }
+
+    this.checkComplete();
+
+    if ("returnValue" in expected) {
+      return expected.returnValue;
+    }
+    return undefined;
   }
 
-  for (let id in gExpectedEvents) {
-    if (gExpectedEvents[id].length > 0)
-      return undefined;
+  onPropertyChanged(addon, properties) {
+    return this.checkAddonEvent("onPropertyChanged", addon, {properties});
   }
 
-  return gNext.apply(null, aArgs);
+  onEnabling(addon, requiresRestart) {
+    let result = this.checkAddonEvent("onEnabling", addon, {requiresRestart});
+
+    this.checkNoFlag("addon.permissions", addon.permissions,
+                     "PERM_CAN_ENABLE");
+
+    return result;
+  }
+
+  onEnabled(addon) {
+    let result = this.checkAddonEvent("onEnabled", addon);
+
+    this.checkNoFlag("addon.permissions", addon.permissions,
+                     "PERM_CAN_ENABLE");
+
+    return result;
+  }
+
+  onDisabling(addon, requiresRestart) {
+    let result = this.checkAddonEvent("onDisabling", addon, {requiresRestart});
+
+    this.checkNoFlag("addon.permissions", addon.permissions,
+                     "PERM_CAN_DISABLE");
+    return result;
+  }
+
+  onDisabled(addon) {
+    let result = this.checkAddonEvent("onDisabled", addon);
+
+    this.checkNoFlag("addon.permissions", addon.permissions,
+                     "PERM_CAN_DISABLE");
+
+    return result;
+  }
+
+  onInstalling(addon, requiresRestart) {
+    return this.checkAddonEvent("onInstalling", addon, {requiresRestart});
+  }
+
+  onInstalled(addon) {
+    return this.checkAddonEvent("onInstalled", addon);
+  }
+
+  onUninstalling(addon, requiresRestart) {
+    return this.checkAddonEvent("onUninstalling", addon);
+  }
+
+  onUninstalled(addon) {
+    return this.checkAddonEvent("onUninstalled", addon);
+  }
+
+  onOperationCancelled(addon) {
+    return this.checkAddonEvent("onOperationCancelled", addon);
+  }
+
+  // Install listener events.
+  checkInstall(event, install, details = {}) {
+    info(`Got install event "${event}"`);
+
+    let expected = this.expectedInstalls.shift();
+    Assert.ok(expected, "Should be expecting install event");
+
+    Assert.equal(expected.event, event, "Should be expecting onExternalInstall event");
+
+    if ("state" in details) {
+      this.checkValue("install.state", install.state, details.state);
+    }
+
+    this.checkComplete();
+
+    if ("callback" in expected) {
+      expected.callback(install);
+    }
+
+    if ("returnValue" in expected) {
+      return expected.returnValue;
+    }
+    return undefined;
+  }
+
+  onNewInstall(install) {
+    let result = this.checkInstall("onNewInstall", install,
+                                   {state: ["STATE_DOWNLOADED",
+                                            "STATE_DOWNLOAD_FAILED",
+                                            "STATE_AVAILABLE"]});
+
+    if (install.state != AddonManager.STATE_DOWNLOAD_FAILED)
+      Assert.equal(install.error, 0, "Should have no error");
+    else
+      Assert.notEqual(install.error, 0, "Should have error");
+
+    return result;
+  }
+
+  onDownloadStarted(install) {
+    return this.checkInstall("onDownloadStarted", install,
+                             {state: "STATE_DOWNLOADING",
+                              error: 0});
+  }
+
+  onDownloadEnded(install) {
+    return this.checkInstall("onDownloadEnded", install,
+                             {state: "STATE_DOWNLOADED",
+                              error: 0});
+  }
+
+  onDownloadFailed(install) {
+    return this.checkInstall("onDownloadFailed", install,
+                             {state: "STATE_FAILED"});
+  }
+
+  onDownloadCancelled(install) {
+    return this.checkInstall("onDownloadCancelled", install,
+                             {state: "STATE_CANCELLED",
+                              error: 0});
+  }
+
+  onInstallStarted(install) {
+    return this.checkInstall("onInstallStarted", install,
+                             {state: "STATE_INSTALLING",
+                              error: 0});
+  }
+
+  onInstallEnded(install, newAddon) {
+    return this.checkInstall("onInstallEnded", install,
+                             {state: "STATE_INSTALLED",
+                              error: 0});
+  }
+
+  onInstallFailed(install) {
+    return this.checkInstall("onInstallFailed", install,
+                             {state: "STATE_FAILED"});
+  }
+
+  onInstallCancelled(install) {
+    // If the install was cancelled by a listener returning false from
+    // onInstallStarted, then the state will revert to STATE_DOWNLOADED.
+    return this.checkInstall("onInstallCancelled", install,
+                             {state: ["STATE_CANCELED", "STATE_DOWNLOADED"],
+                              error: 0});
+  }
+
+  onExternalInstall(addon, existingAddon, requiresRestart) {
+    let expected = this.expectedInstalls.shift();
+    Assert.ok(expected, "Should be expecting install event");
+
+    Assert.equal(expected.event, "onExternalInstall", "Should be expecting onExternalInstall event");
+    Assert.ok(!requiresRestart, "Should never require restart");
+
+    this.checkComplete();
+    if ("returnValue" in expected) {
+      return expected.returnValue;
+    }
+    return undefined;
+  }
 }
 
-// Verifies that all the expected events for all add-ons were seen
-function ensure_test_completed() {
-  for (let i in gExpectedEvents) {
-    if (gExpectedEvents[i].length > 0)
-      do_throw(`Didn't see all the expected events for ${i}: Still expecting ${gExpectedEvents[i]}`);
+/**
+ * Run the giving callback function, and expect the given set of add-on
+ * and install listener events to be emitted, and returns a promise
+ * which resolves when they have all been observed.
+ *
+ * If `callback` returns a promise, all events are expected to be
+ * observed by the time the promise resolves. If not, simply waits for
+ * all events to be observed before resolving the returned promise.
+ *
+ * @param {object} details
+ * @param {function} callback
+ * @returns {Promise}
+ */
+/* exported expectEvents */
+async function expectEvents(details, callback) {
+  let checker = new EventChecker(details);
+
+  try {
+    let result = callback();
+
+    if (result && typeof result === "object" && typeof result.then === "function") {
+      result = await result;
+      checker.ensureComplete();
+    } else {
+      await checker.finished;
+    }
+
+    return result;
+  } catch (e) {
+    do_throw(e);
+    return undefined;
   }
-  gExpectedEvents = {};
-  if (gExpectedInstalls)
-    Assert.equal(gExpectedInstalls.length, 0);
 }
 
 const EXTENSIONS_DB = "extensions.json";
