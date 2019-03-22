@@ -238,7 +238,8 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
   for (auto& stateManager : mStateManagers) {
     auto renderRoot = stateManager.GetRenderRoot();
     if (stateManager.mAsyncResourceUpdates ||
-        !mPendingScrollUpdates[renderRoot].empty()) {
+        !mPendingScrollUpdates[renderRoot].empty() ||
+        WrBridge()->HasWebRenderParentCommands(renderRoot)) {
       auto updates = renderRootUpdates.AppendElement();
       updates->mRenderRoot = renderRoot;
       if (stateManager.mAsyncResourceUpdates) {
@@ -418,12 +419,15 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
         auto renderRootDL = renderRootDLs.AppendElement();
         renderRootDL->mRenderRoot = renderRoot;
         builder.Finalize(*renderRootDL);
-        mLastDisplayListSizes[renderRoot] = renderRootDL->mDL.mCapacity;
+        mLastDisplayListSizes[renderRoot] = renderRootDL->mDL->mCapacity;
         resourceUpdates.SubQueue(renderRoot)
             .Flush(renderRootDL->mResourceUpdates, renderRootDL->mSmallShmems,
                    renderRootDL->mLargeShmems);
         renderRootDL->mRect = RoundedToInt(rects[renderRoot]).ToUnknownRect();
-        renderRootDL->mScrollData = std::move(mScrollDatas[renderRoot]);
+        renderRootDL->mScrollData.emplace(std::move(mScrollDatas[renderRoot]));
+      } else if (WrBridge()->HasWebRenderParentCommands(renderRoot)) {
+        auto renderRootDL = renderRootDLs.AppendElement();
+        renderRootDL->mRenderRoot = renderRoot;
       }
     }
 

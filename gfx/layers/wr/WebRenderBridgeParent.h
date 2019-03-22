@@ -296,17 +296,14 @@ class WebRenderBridgeParent final
   }
 
   bool SetDisplayList(wr::RenderRoot aRenderRoot, const gfx::IntRect& aRect,
-                      const nsTArray<WebRenderParentCommand>& aCommands,
                       const wr::LayoutSize& aContentSize, ipc::ByteBuf&& aDL,
                       const wr::BuiltDisplayListDescriptor& aDLDesc,
                       const nsTArray<OpUpdateResource>& aResourceUpdates,
                       const nsTArray<RefCountedShmem>& aSmallShmems,
                       const nsTArray<ipc::Shmem>& aLargeShmems,
                       const TimeStamp& aTxnStartTime,
-                      wr::TransactionBuilder& aTxn,
-                      Maybe<wr::AutoTransactionSender>& aTxnSender,
-                      wr::Epoch aWrEpoch, bool aValidTransaction,
-                      bool aObserveLayersUpdate);
+                      wr::TransactionBuilder& aTxn, wr::Epoch aWrEpoch,
+                      bool aValidTransaction, bool aObserveLayersUpdate);
 
   void UpdateAPZFocusState(const FocusTarget& aFocus);
   void UpdateAPZScrollData(const wr::Epoch& aEpoch, WebRenderScrollData&& aData,
