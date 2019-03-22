@@ -324,6 +324,17 @@ macosx64-nightly/opt:
         - raptor-chrome
         - raptor-profiling
 
+macosx64-shippable/opt:
+    build-platform: macosx64-shippable/opt
+    test-sets:
+        - macosx64-talos
+        - macosx64-tests
+        - desktop-screenshot-capture
+        - awsy
+        - raptor-chrome
+        - raptor-firefox
+        - raptor-profiling
+
 macosx64-devedition/opt:
     build-platform: macosx64-devedition-nightly/opt
     test-sets:
