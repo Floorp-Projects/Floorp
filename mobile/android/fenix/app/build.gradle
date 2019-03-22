@@ -316,6 +316,9 @@ dependencies {
 
     implementation Deps.glide
     annotationProcessor Deps.glideAnnotationProcessor
+
+    debugImplementation Deps.flipper
+    debugImplementation Deps.soLoader
 }
 
 if (project.hasProperty("raptor")) {

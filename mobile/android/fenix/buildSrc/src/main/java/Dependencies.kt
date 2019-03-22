@@ -35,6 +35,8 @@ private object Versions {
     const val mockito = "2.23.0"
     const val mockk = "1.9.kotlin12"
     const val glide = "4.9.0"
+    const val flipper = "0.18.0"
+    const val soLoader = "0.5.1"
 }
 
 @Suppress("unused")
@@ -141,4 +143,7 @@ object Deps {
 
     const val glide = "com.github.bumptech.glide:glide:${Versions.glide}"
     const val glideAnnotationProcessor = "com.github.bumptech.glide:compiler:${Versions.glide}"
+
+    const val flipper = "com.facebook.flipper:flipper:${Versions.flipper}"
+    const val soLoader = "com.facebook.soloader:soloader:${Versions.soLoader}"
 }

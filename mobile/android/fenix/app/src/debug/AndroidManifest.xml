@@ -3,8 +3,15 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
     <application
             tools:replace="android:name"
-            android:name="org.mozilla.fenix.DebugFenixApplication"/>
+            android:name="org.mozilla.fenix.DebugFenixApplication">
+
+        <activity android:name="com.facebook.flipper.android.diagnostics.FlipperDiagnosticActivity"
+                  android:exported="true"/>
+        <service android:name="com.facebook.flipper.plugins.leakcanary.RecordLeakService" />
+    </application>
 
 </manifest>
