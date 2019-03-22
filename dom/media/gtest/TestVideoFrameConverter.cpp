@@ -150,3 +150,26 @@ TEST_F(VideoFrameConverterTest, DropsOld) {
   EXPECT_EQ(frames[0].first().height(), 480);
   EXPECT_GT(frames[0].second(), future2);
 }
+
+// We check that the disabling code was triggered by sending multiple,
+// different, frames to the converter within one second. While black, it shall
+// treat all frames identical and issue one black frame per second.
+TEST_F(VideoFrameConverterTest, BlackOnDisable) {
+  TimeStamp now = TimeStamp::Now();
+  TimeStamp future1 = now + TimeDuration::FromMilliseconds(100);
+  TimeStamp future2 = now + TimeDuration::FromMilliseconds(200);
+  TimeStamp future3 = now + TimeDuration::FromMilliseconds(400);
+  mConverter->SetTrackEnabled(false);
+  mConverter->QueueVideoChunk(GenerateChunk(640, 480, future1), false);
+  mConverter->QueueVideoChunk(GenerateChunk(640, 480, future2), false);
+  mConverter->QueueVideoChunk(GenerateChunk(640, 480, future3), false);
+  auto frames = WaitForNConverted(2);
+  EXPECT_GT(TimeStamp::Now(), now + TimeDuration::FromMilliseconds(1100));
+  ASSERT_EQ(frames.size(), 2U);
+  EXPECT_EQ(frames[0].first().width(), 640);
+  EXPECT_EQ(frames[0].first().height(), 480);
+  EXPECT_GT(frames[0].second(), future1);
+  EXPECT_EQ(frames[1].first().width(), 640);
+  EXPECT_EQ(frames[1].first().height(), 480);
+  EXPECT_GT(frames[1].second(), now + TimeDuration::FromMilliseconds(1100));
+}
