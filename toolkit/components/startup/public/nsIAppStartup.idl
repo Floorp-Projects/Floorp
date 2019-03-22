@@ -7,8 +7,7 @@
 
 interface nsIToolkitProfile;
 
-[scriptable, uuid(6621f6d5-6c04-4a0e-9e74-447db221484e)]
-
+[scriptable, builtinclass, uuid(6621f6d5-6c04-4a0e-9e74-447db221484e)]
 interface nsIAppStartup : nsISupports
 {
     /**
@@ -142,7 +141,7 @@ interface nsIAppStartup : nsISupports
     /**
      * True if the application is in the process of shutting down.
      */
-    readonly attribute boolean shuttingDown;
+    [infallible] readonly attribute boolean shuttingDown;
 
     /**
      * True if the application is in the process of starting up.
