@@ -12,6 +12,7 @@ job-defaults:
     run-on-projects:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
+            .*shippable(?:-qr)?/opt: built-projects
             default: ['try', 'trunk', 'mozilla-beta']
     tier:
         by-test-platform:
@@ -58,7 +59,10 @@ raptor-tp6-1-chrome:
     description: "Raptor tp6-1 on Chrome"
     try-name: raptor-tp6-1-chrome
     treeherder-symbol: Rap-C(tp6-1)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     max-run-time: 1200
     mozharness:
@@ -70,7 +74,10 @@ raptor-tp6-2-chrome:
     description: "Raptor tp6-2 on Chrome"
     try-name: raptor-tp6-2-chrome
     treeherder-symbol: Rap-C(tp6-2)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -81,7 +88,10 @@ raptor-tp6-3-chrome:
     description: "Raptor tp6-3 on Chrome"
     try-name: raptor-tp6-3-chrome
     treeherder-symbol: Rap-C(tp6-3)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     max-run-time: 2400
     mozharness:
@@ -93,7 +103,10 @@ raptor-tp6-4-chrome:
     description: "Raptor tp6-4 on Chrome"
     try-name: raptor-tp6-4-chrome
     treeherder-symbol: Rap-C(tp6-4)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -104,7 +117,10 @@ raptor-tp6-5-chrome:
     description: "Raptor tp6-5 on Chrome"
     try-name: raptor-tp6-5-chrome
     treeherder-symbol: Rap-C(tp6-5)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -115,7 +131,10 @@ raptor-tp6-6-chrome:
     description: "Raptor tp6-6 on Chrome"
     try-name: raptor-tp6-6-chrome
     treeherder-symbol: Rap-C(tp6-6)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -126,7 +145,10 @@ raptor-tp6-7-chrome:
     description: "Raptor tp6-7 on Chrome"
     try-name: raptor-tp6-7-chrome
     treeherder-symbol: Rap-C(tp6-7)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -137,7 +159,10 @@ raptor-tp6-8-chrome:
     description: "Raptor tp6-8 on Chrome"
     try-name: raptor-tp6-8-chrome
     treeherder-symbol: Rap-C(tp6-8)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -148,7 +173,10 @@ raptor-tp6-9-chrome:
     description: "Raptor tp6-9 on Chrome"
     try-name: raptor-tp6-9-chrome
     treeherder-symbol: Rap-C(tp6-9)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -159,7 +187,10 @@ raptor-tp6-10-chrome:
     description: "Raptor tp6-10 on Chrome"
     try-name: raptor-tp6-10-chrome
     treeherder-symbol: Rap-C(tp6-10)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -170,7 +201,10 @@ raptor-speedometer-chrome:
     description: "Raptor Speedometer on Chrome"
     try-name: raptor-speedometer-chrome
     treeherder-symbol: Rap-C(sp)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     max-run-time: 1500
     mozharness:
@@ -182,7 +216,10 @@ raptor-stylebench-chrome:
     description: "Raptor StyleBench on Chrome"
     try-name: raptor-stylebench-chrome
     treeherder-symbol: Rap-C(sb)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -193,7 +230,10 @@ raptor-motionmark-htmlsuite-chrome:
     description: "Raptor MotionMark HtmlSuite on Chrome"
     try-name: raptor-motionmark-htmlsuite-chrome
     treeherder-symbol: Rap-C(mm-h)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -204,7 +244,10 @@ raptor-motionmark-animometer-chrome:
     description: "Raptor MotionMark Animometer on Chrome"
     try-name: raptor-motionmark-animometer-chrome
     treeherder-symbol: Rap-C(mm-a)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -225,7 +268,10 @@ raptor-sunspider-chrome:
     description: "Raptor SunSpider on Chrome"
     try-name: raptor-sunspider-chrome
     treeherder-symbol: Rap-C(ss)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -236,7 +282,10 @@ raptor-unity-webgl-chrome:
     description: "Raptor Unity WebGL on Chrome"
     try-name: raptor-unity-webgl-chrome
     treeherder-symbol: Rap-C(ugl)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -265,7 +314,10 @@ raptor-wasm-misc-chrome:
     description: "Raptor WASM Misc on Chrome"
     try-name: raptor-wasm-misc-chrome
     treeherder-symbol: Rap-C(wm)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -294,7 +346,10 @@ raptor-assorted-dom-chrome:
     description: "Raptor Assorted-Dom on Chrome"
     try-name: raptor-assorted-dom-chrome
     treeherder-symbol: Rap-C(dom)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     max-run-time: 1500
     mozharness:
@@ -324,7 +379,10 @@ raptor-wasm-godot-chrome:
     description: "Raptor Wasm Godot on Chrome"
     try-name: raptor-wasm-godot-chrome
     treeherder-symbol: Rap-C(godot)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     max-run-time: 1500
     mozharness:

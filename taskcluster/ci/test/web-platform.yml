@@ -51,7 +51,8 @@ web-platform-tests:
         by-test-platform:
             android.*: ['mozilla-central', 'try']
             windows10-aarch64/opt: ['try', 'mozilla-central']
-            .*-qr/.*: ['release', 'try']  # skip on integration branches due to high load
+            .*(?<!shippable)-qr/.*: ['release', 'try']  # skip on integration branches due to high load
+            .*shippable/opt: built-projects
             default: built-projects
     tier:
         by-test-platform:
@@ -156,7 +157,8 @@ web-platform-tests-wdspec:
         by-test-platform:
             windows10-aarch64/opt: ['try', 'mozilla-central']
             android.*: ['mozilla-central', 'try']
-            .*-qr/.*: ['release', 'try']  # skip on integration branches due to high load
+            .*(?<!shippable)-qr/.*: ['release', 'try']  # skip on integration branches due to high load
+            .*shippable(?:-qr)?/opt: built-projects
             default: built-projects
     tier:
         by-test-platform:
@@ -193,6 +195,7 @@ test-verify-wpt:
             .*-ccov/.*: []
             .*-asan/.*: []
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            .*shippable/opt: built-projects
             # do not run on beta or release: usually just confirms earlier results
             default: ['trunk', 'try']
     tier: 2

@@ -253,7 +253,8 @@ mochitest-devtools-webreplay:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
-            macosx64.*/opt: ['trunk', 'try']
+            macosx64(!-shippable)*/opt: ['trunk', 'try']
+            .*shippable/opt: built-projects
             default: []
 
 mochitest-gpu:
