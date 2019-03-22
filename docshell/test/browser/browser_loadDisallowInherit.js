@@ -31,10 +31,8 @@ function startTest() {
 
   // Load a normal http URL
   function testURL(url, func) {
-    let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                   getService(Ci.nsIScriptSecurityManager);
-    let ios = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
+    let secMan = Services.scriptSecurityManager;
+    let ios = Services.io;
     let artificialPrincipal = secMan.createCodebasePrincipal(ios.newURI("http://example.com/"), {});
     loadURL("http://example.com/", 0, artificialPrincipal, function() {
       let pagePrincipal = browser.contentPrincipal;

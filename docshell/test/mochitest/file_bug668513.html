@@ -24,7 +24,7 @@
     }
 
     // do this with a timeout to see the visuals of the navigations.
-    setTimeout("nav_frame();", 100);
+    setTimeout(nav_frame, 100);
   }
 
   var step = 1;
@@ -76,7 +76,7 @@
           break;
         }
         ok(timing.navigationStart > 0, "navigationStart should be > 0");
-        sequence = ["navigationStart", "redirectStart", "redirectEnd", "fetchStart"];
+        var sequence = ["navigationStart", "redirectStart", "redirectEnd", "fetchStart"];
         for (var j = 1; j < sequence.length; ++j) {
           var prop = sequence[j];
           var prevProp = sequence[j - 1];

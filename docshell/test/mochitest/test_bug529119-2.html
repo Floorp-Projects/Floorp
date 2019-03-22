@@ -17,7 +17,7 @@ var w = null;
 var phase = 0;
 var isWindowLoaded = false;
 
-function pollForPage(expectErrorPage, f, w) {
+function pollForPage(expectErrorPage, f, win) {
   // Start with polling after a delay, we might mistakenly take the current page
   // as an expected one.
   window.setTimeout(function() {
@@ -27,7 +27,7 @@ function pollForPage(expectErrorPage, f, w) {
 
       var haveErrorPage = false;
       try {
-        var title = w.document.title;
+        win.document.title;
       } catch (ex) {
         haveErrorPage = true;
       }
@@ -53,8 +53,8 @@ function windowLoaded() {
     w.location.href = faultyURL;
   }, 0);
 
-  pollForPage(true, function(succeeded) {
-    ok(succeeded, "Waiting for error page succeeded");
+  pollForPage(true, function(errorSucceeded) {
+    ok(errorSucceeded, "Waiting for error page succeeded");
     /* 3. now, while we are on the error page, navigate back */
     try {
       // We need the SpecialPowers bit, because this is a cross-origin window
@@ -64,8 +64,8 @@ function windowLoaded() {
       ok(false, "w.history.back() threw " + ex);
     }
 
-    pollForPage(false, function(succeeded) {
-      ok(succeeded, "Waiting for original page succeeded");
+    pollForPage(false, function(originalSucceeded) {
+      ok(originalSucceeded, "Waiting for original page succeeded");
       /* 4-finish, check we are back at the original page */
       isnot(SpecialPowers.wrap(w).location.href, faultyURL, "Is on an error page");
       is(SpecialPowers.wrap(w).location.href, workingURL, "Is not on the previous page");

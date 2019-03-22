@@ -41,9 +41,9 @@ add_task(async function() {
   // "are you sure you want to refresh a page with POST data?" dialog. If it
   // does, this test will hang and fail, and we'll see 'Refreshing iframe...' at
   // the end of the test log.
-  iframeCw.history.replaceState('', '', '?replaced');
+  iframeCw.history.replaceState("", "", "?replaced");
 
-  info('Refreshing iframe...\n');
+  info("Refreshing iframe...\n");
   iframeCw.location.reload();
   let method2 = await new Promise(resolve => {
     window.page2Load = resolve;

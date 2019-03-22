@@ -1,4 +1,7 @@
 // Forward iframe loaded event.
+
+/* eslint-env mozilla/frame-script */
+
 addEventListener("frames-loaded",
   e => sendAsyncMessage("test:frames-loaded"), true, true);
 
@@ -8,9 +11,9 @@ let requestObserver = {
       // Get DOMWindow on all child docshells to force about:blank
       // content viewers being created.
       getChildDocShells().map(ds => {
-        let window = ds.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsILoadContext)
-                      .associatedWindow;
+        ds.QueryInterface(Ci.nsIInterfaceRequestor)
+          .getInterface(Ci.nsILoadContext)
+          .associatedWindow;
       });
     }
   },

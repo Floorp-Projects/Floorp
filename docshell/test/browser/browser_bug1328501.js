@@ -29,6 +29,7 @@ add_task(async function testMultiFrameRestore() {
 
     browser.goBack();
     await framesLoaded;
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     await new Promise(r => setTimeout(r, 1000));
     await ContentTask.spawn(browser, FRAME_URL, (FRAME_URL) => {
       is(content.document.querySelector("#testFrame1").contentWindow.location.href, FRAME_URL);

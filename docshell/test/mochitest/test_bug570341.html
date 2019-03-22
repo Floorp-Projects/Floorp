@@ -17,10 +17,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=570341
   function collectMoments() {
     var win = frames[0];
     var timing = (win.performance && win.performance.timing) || {};
-    for (var p in timing) {
+    for (let p in timing) {
       moments[p] = timing[p];
     }
-    for (var p in win) {
+    for (let p in win) {
       if (p.substring(0, 9) == "_testing_") {
         moments[p.substring(9)] = win[p];
       }
@@ -40,11 +40,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=570341
     sequence.sort(function(a, b) {
       return moments[a] - moments[b];
     });
-    table = document.createElement("table");
+    var table = document.createElement("table");
     node.appendChild(table);
-    row = document.createElement("tr");
+    var row = document.createElement("tr");
     table.appendChild(row);
-    cell = document.createElement("td");
+    var cell = document.createElement("td");
     row.appendChild(cell);
     cell.appendChild(document.createTextNode("start"));
     cell = document.createElement("td");
