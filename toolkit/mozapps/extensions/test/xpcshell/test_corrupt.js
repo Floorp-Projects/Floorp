@@ -183,13 +183,8 @@ add_task(async function test_after_corruption() {
 
   await promiseStartupManager();
 
-  await new Promise(resolve => {
-    Services.obs.addObserver(function listener() {
-      Services.obs.removeObserver(listener, "xpi-database-loaded");
-      resolve();
-    }, "xpi-database-loaded");
-    Services.obs.notifyObservers(null, "sessionstore-windows-restored");
-  });
+  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+  await AddonManagerPrivate.databaseReady;
 
   // Accessing the add-ons should open and recover the database
   info("Test add-on state after corruption");
