@@ -8,47 +8,158 @@
 #include "MediaStreamGraph.h"
 #include "MediaStreamListener.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowInner.h"
 #include "VideoFrameContainer.h"
 
 namespace mozilla {
+
+using layers::Image;
+using layers::ImageContainer;
+using layers::PlanarYCbCrData;
+using layers::PlanarYCbCrImage;
+
+static bool SetImageToBlackPixel(PlanarYCbCrImage* aImage) {
+  uint8_t blackPixel[] = {0x10, 0x80, 0x80};
+
+  PlanarYCbCrData data;
+  data.mYChannel = blackPixel;
+  data.mCbChannel = blackPixel + 1;
+  data.mCrChannel = blackPixel + 2;
+  data.mYStride = data.mCbCrStride = 1;
+  data.mPicSize = data.mYSize = data.mCbCrSize = gfx::IntSize(1, 1);
+  return aImage->CopyData(data);
+}
 
 class VideoOutput : public DirectMediaStreamTrackListener {
  protected:
   virtual ~VideoOutput() = default;
 
+  void DropPastFrames() {
+    TimeStamp now = TimeStamp::Now();
+    size_t nrChunksInPast = 0;
+    for (const auto& idChunkPair : mFrames) {
+      const VideoChunk& chunk = idChunkPair.second();
+      if (chunk.mTimeStamp > now) {
+        break;
+      }
+      ++nrChunksInPast;
+    }
+    if (nrChunksInPast > 1) {
+      // We need to keep one frame that starts in the past, because it only ends
+      // when the next frame starts (which also needs to be in the past for it
+      // to drop).
+      mFrames.RemoveElementsAt(0, nrChunksInPast - 1);
+    }
+  }
+
+  void SendFrames() {
+    DropPastFrames();
+
+    if (mFrames.IsEmpty()) {
+      return;
+    }
+
+    // Collect any new frames produced in this iteration.
+    AutoTArray<ImageContainer::NonOwningImage, 16> images;
+    PrincipalHandle lastPrincipalHandle = PRINCIPAL_HANDLE_NONE;
+
+    for (const auto& idChunkPair : mFrames) {
+      ImageContainer::FrameID frameId = idChunkPair.first();
+      const VideoChunk& chunk = idChunkPair.second();
+      const VideoFrame& frame = chunk.mFrame;
+      Image* image = frame.GetImage();
+      if (frame.GetForceBlack()) {
+        if (!mBlackImage) {
+          RefPtr<Image> blackImage = mVideoFrameContainer->GetImageContainer()
+                                         ->CreatePlanarYCbCrImage();
+          if (blackImage) {
+            // Sets the image to a single black pixel, which will be scaled to
+            // fill the rendered size.
+            if (SetImageToBlackPixel(blackImage->AsPlanarYCbCrImage())) {
+              mBlackImage = blackImage;
+            }
+          }
+        }
+        if (mBlackImage) {
+          image = mBlackImage;
+        }
+      }
+      if (!image) {
+        // We ignore null images.
+        continue;
+      }
+      images.AppendElement(
+          ImageContainer::NonOwningImage(image, chunk.mTimeStamp, frameId));
+
+      lastPrincipalHandle = chunk.GetPrincipalHandle();
+    }
+
+    // Don't update if there are no changes.
+    if (images.IsEmpty()) {
+      return;
+    }
+
+    bool principalHandleChanged =
+        lastPrincipalHandle != PRINCIPAL_HANDLE_NONE &&
+        lastPrincipalHandle != mVideoFrameContainer->GetLastPrincipalHandle();
+
+    if (principalHandleChanged) {
+      mVideoFrameContainer->UpdatePrincipalHandleForFrameID(
+          lastPrincipalHandle, images.LastElement().mFrameID);
+    }
+
+    mVideoFrameContainer->SetCurrentFrames(
+        mFrames[0].second().mFrame.GetIntrinsicSize(), images);
+    mMainThread->Dispatch(NewRunnableMethod("VideoFrameContainer::Invalidate",
+                                            mVideoFrameContainer,
+                                            &VideoFrameContainer::Invalidate));
+
+    images.ClearAndRetainStorage();
+  }
+
  public:
-  explicit VideoOutput(VideoFrameContainer* aContainer)
-      : mVideoFrameContainer(aContainer) {}
+  VideoOutput(VideoFrameContainer* aContainer, AbstractThread* aMainThread)
+      : mMutex("VideoOutput::mMutex"),
+        mVideoFrameContainer(aContainer),
+        mMainThread(aMainThread) {}
   void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
                                StreamTime aTrackOffset,
                                const MediaSegment& aMedia) override {
     MOZ_ASSERT(aMedia.GetType() == MediaSegment::VIDEO);
     const VideoSegment& video = static_cast<const VideoSegment&>(aMedia);
-    mSegment.ForgetUpToTime(TimeStamp::Now());
     for (VideoSegment::ConstChunkIterator i(video); !i.IsEnded(); i.Next()) {
       if (!mLastFrameTime.IsNull() && i->mTimeStamp < mLastFrameTime) {
         // Time can go backwards if the source is a captured MediaDecoder and
         // it seeks, as the previously buffered frames would stretch into the
         // future. If this happens, we clear the buffered frames and start over.
-        mSegment.Clear();
+        mFrames.ClearAndRetainStorage();
       }
-      const VideoFrame& f = i->mFrame;
-      mSegment.AppendFrame(do_AddRef(f.GetImage()), f.GetIntrinsicSize(),
-                           f.GetPrincipalHandle(), f.GetForceBlack(),
-                           i->mTimeStamp);
+      mFrames.AppendElement(MakePair(mVideoFrameContainer->NewFrameID(), *i));
       mLastFrameTime = i->mTimeStamp;
     }
-    mVideoFrameContainer->SetCurrentFrames(mSegment);
+
+    SendFrames();
   }
   void NotifyRemoved() override {
-    mSegment.Clear();
-    mVideoFrameContainer->ClearFrames();
+    // Doesn't need locking by mMutex, since the direct listener is removed from
+    // the track before we get notified.
+    mFrames.ClearAndRetainStorage();
+    mVideoFrameContainer->ClearFutureFrames();
   }
-  void NotifyEnded() override { mSegment.Clear(); }
+  void NotifyEnded() override {
+    // Doesn't need locking by mMutex, since for the track to end, it must have
+    // been ended by the source, meaning that the source won't append more data.
+    mFrames.ClearAndRetainStorage();
+  }
 
   TimeStamp mLastFrameTime;
-  VideoSegment mSegment;
+  // Once the frame is forced to black, we initialize mBlackImage for use in any
+  // following forced-black frames.
+  RefPtr<Image> mBlackImage;
+  bool mEnabled = true;
+  nsTArray<Pair<ImageContainer::FrameID, VideoChunk>> mFrames;
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
+  const RefPtr<AbstractThread> mMainThread;
 };
 
 namespace dom {
@@ -73,7 +184,9 @@ void VideoStreamTrack::AddVideoOutput(VideoFrameContainer* aSink) {
     }
   }
   RefPtr<VideoOutput>& output =
-      *mVideoOutputs.AppendElement(MakeRefPtr<VideoOutput>(aSink));
+      *mVideoOutputs.AppendElement(MakeRefPtr<VideoOutput>(
+          aSink, nsGlobalWindowInner::Cast(GetParentObject())
+                     ->AbstractMainThreadFor(TaskCategory::Other)));
   AddDirectListener(output);
   AddListener(output);
 }
