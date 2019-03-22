@@ -3427,10 +3427,12 @@ public class BrowserApp extends GeckoApp
 
         charEncoding.setVisible(GeckoPreferences.getCharEncodingState());
 
+        // Bug - 1536866. We are hiding the enter guest mode option but we need to leave the exit option available
+        // for users that are currently using it.
         if (getProfile().inGuestMode()) {
             exitGuestMode.setVisible(true);
         } else {
-            enterGuestMode.setVisible(true);
+            enterGuestMode.setVisible(false);
         }
 
         if (!Restrictions.isAllowed(this, Restrictable.GUEST_BROWSING)) {
