@@ -257,7 +257,7 @@ nsresult nsNSSCertificateDB::handleCACertDownload(NotNull<nsIArray*> x509Certs,
   uint32_t numCerts;
 
   x509Certs->GetLength(&numCerts);
-  MOZ_ASSERT(numCerts > 0, "Didn't get any certs to import.");
+
   if (numCerts == 0) return NS_OK;  // Nothing to import, so nothing to do.
 
   nsCOMPtr<nsIX509Cert> certToShow;
