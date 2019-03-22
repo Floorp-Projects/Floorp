@@ -109,17 +109,19 @@ bool SharedMemory::Create(size_t size) {
   return true;
 }
 
-bool SharedMemory::Map(size_t bytes) {
+bool SharedMemory::Map(size_t bytes, void* fixed_address) {
   if (mapped_file_ == NULL) return false;
 
   if (external_section_ && !IsSectionSafeToMap(mapped_file_)) {
     return false;
   }
 
-  memory_ = MapViewOfFile(
+  memory_ = MapViewOfFileEx(
       mapped_file_, read_only_ ? FILE_MAP_READ : FILE_MAP_READ | FILE_MAP_WRITE,
-      0, 0, bytes);
+      0, 0, bytes, fixed_address);
   if (memory_ != NULL) {
+    MOZ_ASSERT(!fixed_address || memory_ == fixed_address,
+               "MapViewOfFileEx returned an expected address");
     return true;
   }
   return false;
@@ -131,6 +133,14 @@ bool SharedMemory::Unmap() {
   UnmapViewOfFile(memory_);
   memory_ = NULL;
   return true;
+}
+
+void* SharedMemory::FindFreeAddressSpace(size_t size) {
+  void* memory = VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_NOACCESS);
+  if (memory) {
+    VirtualFree(memory, 0, MEM_RELEASE);
+  }
+  return memory;
 }
 
 bool SharedMemory::ShareToProcessCommon(ProcessId processId,

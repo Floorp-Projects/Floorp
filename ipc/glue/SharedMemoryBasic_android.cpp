@@ -68,7 +68,7 @@ bool SharedMemoryBasic::Create(size_t aNbytes) {
   return true;
 }
 
-bool SharedMemoryBasic::Map(size_t nBytes) {
+bool SharedMemoryBasic::Map(size_t nBytes, void* fixed_address) {
   MOZ_ASSERT(nullptr == mMemory, "Already Map()d");
 
   int prot = PROT_READ;
@@ -76,15 +76,35 @@ bool SharedMemoryBasic::Map(size_t nBytes) {
     prot |= PROT_WRITE;
   }
 
-  mMemory = mmap(nullptr, nBytes, prot, MAP_SHARED, mShmFd, 0);
+  // Don't use MAP_FIXED when a fixed_address was specified, since that can
+  // replace pages that are alread mapped at that address.
+  mMemory = mmap(fixed_address, nBytes, prot, MAP_SHARED, mShmFd, 0);
+
   if (MAP_FAILED == mMemory) {
-    LogError("ShmemAndroid::Map()");
+    if (!fixed_address) {
+      LogError("ShmemAndroid::Map()");
+    }
     mMemory = nullptr;
     return false;
   }
 
+  if (fixed_address && mMemory != fixed_address) {
+    if (munmap(mMemory, nBytes)) {
+      LogError("ShmemAndroid::Map():unmap");
+      mMemory = nullptr;
+      return false;
+    }
+  }
+
   Mapped(nBytes);
   return true;
+}
+
+void* SharedMemoryBasic::FindFreeAddressSpace(size_t size) {
+  void* memory =
+      mmap(NULL, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  munmap(memory, size);
+  return memory != (void*)-1 ? memory : NULL;
 }
 
 bool SharedMemoryBasic::ShareToProcess(base::ProcessId /*unused*/,
