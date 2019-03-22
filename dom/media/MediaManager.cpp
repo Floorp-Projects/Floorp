@@ -4291,54 +4291,55 @@ SourceListener::InitializeAsync() {
                LOG("started all sources");
                aHolder.Resolve(true, __func__);
              })
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [self = RefPtr<SourceListener>(this), this]() {
-            if (mStopped) {
-              // We were shut down during the async init
-              return SourceListenerPromise::CreateAndResolve(true, __func__);
-            }
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [self = RefPtr<SourceListener>(this), this]() {
+               if (mStopped) {
+                 // We were shut down during the async init
+                 return SourceListenerPromise::CreateAndResolve(true, __func__);
+               }
 
-            for (DeviceState* state :
-                 {mAudioDeviceState.get(), mVideoDeviceState.get()}) {
-              if (!state) {
-                continue;
-              }
-              MOZ_DIAGNOSTIC_ASSERT(!state->mTrackEnabled);
-              MOZ_DIAGNOSTIC_ASSERT(!state->mDeviceEnabled);
-              MOZ_DIAGNOSTIC_ASSERT(!state->mStopped);
+               for (DeviceState* state :
+                    {mAudioDeviceState.get(), mVideoDeviceState.get()}) {
+                 if (!state) {
+                   continue;
+                 }
+                 MOZ_DIAGNOSTIC_ASSERT(!state->mTrackEnabled);
+                 MOZ_DIAGNOSTIC_ASSERT(!state->mDeviceEnabled);
+                 MOZ_DIAGNOSTIC_ASSERT(!state->mStopped);
 
-              state->mDeviceEnabled = true;
-              state->mTrackEnabled = true;
-              state->mTrackEnabledTime = TimeStamp::Now();
+                 state->mDeviceEnabled = true;
+                 state->mTrackEnabled = true;
+                 state->mTrackEnabledTime = TimeStamp::Now();
 
-              if (state == mVideoDeviceState.get() && !mStream->IsDestroyed()) {
-                mStream->SetPullingEnabled(kVideoTrack, true);
-              }
-            }
-            return SourceListenerPromise::CreateAndResolve(true, __func__);
-          },
-          [self = RefPtr<SourceListener>(this),
-           this](RefPtr<MediaMgrError>&& aResult) {
-            if (mStopped) {
-              return SourceListenerPromise::CreateAndReject(std::move(aResult),
-                                                            __func__);
-            }
+                 if (state == mVideoDeviceState.get() &&
+                     state->mDevice->mSource->IsFake() &&
+                     !mStream->IsDestroyed()) {
+                   mStream->SetPullingEnabled(kVideoTrack, true);
+                 }
+               }
+               return SourceListenerPromise::CreateAndResolve(true, __func__);
+             },
+             [self = RefPtr<SourceListener>(this),
+              this](RefPtr<MediaMgrError>&& aResult) {
+               if (mStopped) {
+                 return SourceListenerPromise::CreateAndReject(
+                     std::move(aResult), __func__);
+               }
 
-            for (DeviceState* state :
-                 {mAudioDeviceState.get(), mVideoDeviceState.get()}) {
-              if (!state) {
-                continue;
-              }
-              MOZ_DIAGNOSTIC_ASSERT(!state->mTrackEnabled);
-              MOZ_DIAGNOSTIC_ASSERT(!state->mDeviceEnabled);
-              MOZ_DIAGNOSTIC_ASSERT(!state->mStopped);
+               for (DeviceState* state :
+                    {mAudioDeviceState.get(), mVideoDeviceState.get()}) {
+                 if (!state) {
+                   continue;
+                 }
+                 MOZ_DIAGNOSTIC_ASSERT(!state->mTrackEnabled);
+                 MOZ_DIAGNOSTIC_ASSERT(!state->mDeviceEnabled);
+                 MOZ_DIAGNOSTIC_ASSERT(!state->mStopped);
 
-              state->mStopped = true;
-            }
-            return SourceListenerPromise::CreateAndReject(std::move(aResult),
-                                                          __func__);
-          });
+                 state->mStopped = true;
+               }
+               return SourceListenerPromise::CreateAndReject(std::move(aResult),
+                                                             __func__);
+             });
 }
 
 void SourceListener::Stop() {
