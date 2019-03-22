@@ -235,7 +235,7 @@ class MediaEncoder::VideoTrackListener : public DirectMediaStreamTrackListener {
     VideoSegment copy;
     for (VideoSegment::ConstChunkIterator iter(video); !iter.IsEnded();
          iter.Next()) {
-      copy.AppendFrame(do_AddRef(iter->mFrame.GetImage()), 1,
+      copy.AppendFrame(do_AddRef(iter->mFrame.GetImage()),
                        iter->mFrame.GetIntrinsicSize(),
                        iter->mFrame.GetPrincipalHandle(),
                        iter->mFrame.GetForceBlack(), iter->mTimeStamp);

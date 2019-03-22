@@ -482,9 +482,10 @@ void VideoTrackEncoder::NotifyEndOfStream() {
                  (mLastChunk.mTimeStamp - mStartTime).ToSeconds(),
                  absoluteEndTime.ToSeconds()));
       mOutgoingBuffer.AppendFrame(
-          lastImage.forget(), duration.value(),
-          mLastChunk.mFrame.GetIntrinsicSize(), PRINCIPAL_HANDLE_NONE,
-          mLastChunk.mFrame.GetForceBlack(), mLastChunk.mTimeStamp);
+          lastImage.forget(), mLastChunk.mFrame.GetIntrinsicSize(),
+          PRINCIPAL_HANDLE_NONE, mLastChunk.mFrame.GetForceBlack(),
+          mLastChunk.mTimeStamp);
+      mOutgoingBuffer.ExtendLastFrameBy(duration.value());
     }
   }
 
@@ -544,7 +545,7 @@ void VideoTrackEncoder::AdvanceCurrentTime(const TimeStamp& aTime) {
         // We encode at least one frame per second, even if there are none
         // flowing.
         previousChunk->mTimeStamp += TimeDuration::FromSeconds(1.0);
-        tempSegment.AppendFrame(do_AddRef(previousChunk->mFrame.GetImage()), 1,
+        tempSegment.AppendFrame(do_AddRef(previousChunk->mFrame.GetImage()),
                                 previousChunk->mFrame.GetIntrinsicSize(),
                                 previousChunk->mFrame.GetPrincipalHandle(),
                                 previousChunk->mFrame.GetForceBlack(),
@@ -571,7 +572,7 @@ void VideoTrackEncoder::AdvanceCurrentTime(const TimeStamp& aTime) {
       if (!previousChunk->IsNull()) {
         appendDupes(iter->mTimeStamp);
       }
-      tempSegment.AppendFrame(do_AddRef(iter->mFrame.GetImage()), 1,
+      tempSegment.AppendFrame(do_AddRef(iter->mFrame.GetImage()),
                               iter->mFrame.GetIntrinsicSize(),
                               iter->mFrame.GetPrincipalHandle(),
                               iter->mFrame.GetForceBlack(), iter->mTimeStamp);
@@ -654,9 +655,10 @@ void VideoTrackEncoder::AdvanceCurrentTime(const TimeStamp& aTime) {
 
     mEncodedTicks += duration.value();
     mOutgoingBuffer.AppendFrame(
-        do_AddRef(mLastChunk.mFrame.GetImage()), duration.value(),
+        do_AddRef(mLastChunk.mFrame.GetImage()),
         mLastChunk.mFrame.GetIntrinsicSize(), PRINCIPAL_HANDLE_NONE,
         mLastChunk.mFrame.GetForceBlack(), mLastChunk.mTimeStamp);
+    mOutgoingBuffer.ExtendLastFrameBy(duration.value());
     chunkAppended = true;
     mLastChunk = chunk;
   }

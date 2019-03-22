@@ -384,7 +384,7 @@ void MediaEngineTabVideoSource::Draw() {
   }
 
   VideoSegment segment;
-  segment.AppendFrame(do_AddRef(rgbImage), 1, size, mPrincipalHandle);
+  segment.AppendFrame(do_AddRef(rgbImage), size, mPrincipalHandle);
   // This can fail if either a) we haven't added the track yet, or b)
   // we've removed or ended the track.
   mStreamMain->AppendToTrack(mTrackIDMain, &segment);

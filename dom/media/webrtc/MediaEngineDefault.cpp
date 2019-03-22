@@ -323,7 +323,7 @@ void MediaEngineDefaultVideoSource::GenerateFrame() {
   }
 
   VideoSegment segment;
-  segment.AppendFrame(ycbcr_image.forget(), 1,
+  segment.AppendFrame(ycbcr_image.forget(),
                       gfx::IntSize(mOpts.mWidth, mOpts.mHeight),
                       mPrincipalHandle);
   ;

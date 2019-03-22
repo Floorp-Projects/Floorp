@@ -108,7 +108,7 @@ class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
 
   ~VideoSegment();
 
-  void AppendFrame(already_AddRefed<Image>&& aImage, StreamTime aDuration,
+  void AppendFrame(already_AddRefed<Image>&& aImage,
                    const IntSize& aIntrinsicSize,
                    const PrincipalHandle& aPrincipalHandle,
                    bool aForceBlack = false,

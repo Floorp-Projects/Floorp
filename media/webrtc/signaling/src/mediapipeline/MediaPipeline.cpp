@@ -1782,7 +1782,7 @@ class MediaPipelineReceiveVideo::PipelineListener
 
     VideoSegment segment;
     auto size = image->GetSize();
-    segment.AppendFrame(image.forget(), 1, size, mPrincipalHandle);
+    segment.AppendFrame(image.forget(), size, mPrincipalHandle);
     mSource->AppendToTrack(mTrackId, &segment);
   }
 
