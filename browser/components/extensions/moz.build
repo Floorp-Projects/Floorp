@@ -16,9 +16,6 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES += [
     'ExtensionControlledPopup.jsm',
     'ExtensionPopups.jsm',
-    'profiler_get_symbols.js',
-    'ProfilerGetSymbols-worker.js',
-    'ProfilerGetSymbols.jsm',
 ]
 
 DIRS += ['schemas']

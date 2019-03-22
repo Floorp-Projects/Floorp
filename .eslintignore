@@ -57,8 +57,6 @@ browser/components/sessionstore/test/unit/data/sessionstore_invalid.js
 # for documentation purposes (policies.json) but to be accessed by the
 # code as a .jsm (schema.jsm)
 browser/components/enterprisepolicies/schemas/schema.jsm
-# Ignore generated code from wasm-bindgen
-browser/components/extensions/profiler_get_symbols.js
 # generated & special files in cld2
 browser/components/translation/cld2/**
 # Screenshots is imported as a system add-on and has
@@ -362,3 +360,6 @@ tools/tryselect/selectors/chooser/templates/chooser.html
 # Third party
 toolkit/modules/third_party/**
 third_party/**
+
+# Ignore generated code from wasm-bindgen
+toolkit/components/extensions/profiler_get_symbols.js
