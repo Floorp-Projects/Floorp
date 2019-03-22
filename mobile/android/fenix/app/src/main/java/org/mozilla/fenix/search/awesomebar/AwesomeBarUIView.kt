@@ -73,11 +73,13 @@ class AwesomeBarUIView(
             view.addProviders(
                 SessionSuggestionProvider(
                     components.core.sessionManager,
-                    components.useCases.tabsUseCases.selectTab
+                    components.useCases.tabsUseCases.selectTab,
+                    components.utils.icons
                 ),
                 HistoryStorageSuggestionProvider(
                     components.core.historyStorage,
-                    loadUrlUseCase
+                    loadUrlUseCase,
+                    components.utils.icons
                 )
             )
         }
