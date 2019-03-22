@@ -216,9 +216,7 @@ TEST(OpusAudioTrackEncoder, FrameEncode) {
   const int32_t samples = sampleRate * 5;
   generator.Generate(segment, samples);
 
-  encoder.SetStartOffset(0);
   encoder.AppendAudioSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(samples);
 
   EncodedFrameContainer container;
   EXPECT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
