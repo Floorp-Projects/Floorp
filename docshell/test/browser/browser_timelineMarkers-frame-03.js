@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// This file expects frame-head.js to be loaded in the environment.
+/* import-globals-from frame-head.js */
+
 "use strict";
 
 // Test that the docShell profile timeline API returns the right
@@ -75,7 +78,7 @@ var TESTS = [{
     return markers.filter(m => m.name == "DOMEvent").length >= 2;
   },
   setup(docShell) {
-    let doc = content.window.addEventListener("aardvark", function(e) {
+    content.window.addEventListener("aardvark", function(e) {
       console.log("I like ants!");
     });
 

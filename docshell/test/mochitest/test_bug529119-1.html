@@ -17,7 +17,7 @@ var w = null;
 var phase = 0;
 var gotWrongPageOnTryAgainClick = false;
 
-function pollForPage(f, w) {
+function pollForPage(f, win) {
   // Start with polling after a delay, we might mistakenly take the current page
   // as an expected one.
   window.setTimeout(function() {
@@ -27,7 +27,7 @@ function pollForPage(f, w) {
 
       var haveErrorPage = false;
       try {
-        var title = w.document.title;
+        win.document.title;
       } catch (ex) {
         haveErrorPage = true;
       }
@@ -50,15 +50,15 @@ function windowLoaded() {
 
       phase = 1;
 
-      pollForPage(function(succeeded) {
-        ok(succeeded, "Waiting for error page succeeded");
+      pollForPage(function(enterErrorSucceeded) {
+        ok(enterErrorSucceeded, "Waiting for error page succeeded");
 
         /* 3. now, while we are on the error page, try to reload it, actually
            click the "Try Again" button */
         SpecialPowers.wrap(w).location.reload();
 
-        pollForPage(function(succeeded) {
-          ok(succeeded, "Waiting for error page succeeded");
+        pollForPage(function(continueErrorSucceeded) {
+          ok(continueErrorSucceeded, "Waiting for error page succeeded");
 
           /* 4-finish, check we are still on the error page */
           is(SpecialPowers.wrap(w).location.href, faultyURL, "Is on an error page");

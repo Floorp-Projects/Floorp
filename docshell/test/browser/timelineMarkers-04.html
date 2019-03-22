@@ -12,7 +12,7 @@
     function do_xhr() {
       const theURL = "timelineMarkers-04.html";
 
-      xhr = new XMLHttpRequest();
+      var xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function() {
         dump("ReadyState = " + xhr.readyState + "\n");
       };
@@ -24,10 +24,10 @@
 
     function do_promise() {
       new Promise(function(resolve, reject) {
-	console.time("Bob");
-	window.setTimeout(function() {
+        console.time("Bob");
+        window.setTimeout(function() {
           resolve(23);
-	}, 10);
+        }, 10);
       }).then(function(val) {
         console.timeEnd("Bob");
       });
@@ -38,9 +38,10 @@
     var globalResolver;
     function do_promise_script() {
       new Promise(function(resolve, reject) {
-	console.time("Bob");
+        console.time("Bob");
         globalResolver = resolve;
-	window.setTimeout("globalResolver(23);", 10);
+        // eslint-disable-next-line no-implied-eval
+        window.setTimeout("globalResolver(23)", 10);
       }).then(function(val) {
         console.timeEnd("Bob");
       });

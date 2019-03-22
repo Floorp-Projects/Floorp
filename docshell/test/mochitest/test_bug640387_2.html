@@ -25,7 +25,7 @@ via a non-history load, we do a true load, rather than a scroll. -->
 <script type='application/javascript'>
 SimpleTest.waitForExplicitFinish();
 
-callbackOnLoad = false;
+var callbackOnLoad = false;
 function childLoad() {
   if (callbackOnLoad) {
     callbackOnLoad = false;
@@ -33,8 +33,8 @@ function childLoad() {
   }
 }
 
-errorOnHashchange = false;
-callbackOnHashchange = false;
+var errorOnHashchange = false;
+var callbackOnHashchange = false;
 function childHashchange() {
   if (errorOnHashchange) {
     ok(false, "Got unexpected hashchange.");
@@ -79,7 +79,7 @@ function* run_test() {
 }
 
 callbackOnLoad = true;
-gGen = run_test();
+var gGen = run_test();
 
 </script>
 

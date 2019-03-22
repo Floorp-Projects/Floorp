@@ -6,7 +6,7 @@
 const URL = "about:blank";
 
 async function getBrowsingContextId(browser, id) {
-  return await ContentTask.spawn(
+  return ContentTask.spawn(
     browser,
     id,
     async function(id) {
@@ -29,7 +29,7 @@ async function getBrowsingContextId(browser, id) {
 }
 
 async function addFrame(browser, id, parentId) {
-  return await ContentTask.spawn(
+  return ContentTask.spawn(
     browser,
     {parentId, id},
     async function({ parentId, id }) {
@@ -59,7 +59,7 @@ async function addFrame(browser, id, parentId) {
 }
 
 async function removeFrame(browser, id) {
-  return await ContentTask.spawn(
+  return ContentTask.spawn(
     browser,
     id,
     async function(id) {

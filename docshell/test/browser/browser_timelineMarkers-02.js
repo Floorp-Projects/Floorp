@@ -3,13 +3,13 @@
 
 "use strict";
 
-var URL = "<!DOCTYPE html><style>" +
+var TEST_URL = "<!DOCTYPE html><style>" +
           "body {margin:0; padding: 0;} " +
           "div {width:100px;height:100px;background:red;} " +
           ".resize-change-color {width:50px;height:50px;background:blue;} " +
           ".change-color {width:50px;height:50px;background:yellow;} " +
           ".add-class {}" +
           "</style><div></div>";
-URL = "data:text/html;charset=utf8," + encodeURIComponent(URL);
+TEST_URL = "data:text/html;charset=utf8," + encodeURIComponent(TEST_URL);
 
-var test = makeTimelineTest("browser_timelineMarkers-frame-02.js", URL);
+var test = makeTimelineTest("browser_timelineMarkers-frame-02.js", TEST_URL);

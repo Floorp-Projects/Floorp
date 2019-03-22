@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// This file expects frame-head.js to be loaded in the environment.
+/* import-globals-from frame-head.js */
+
 "use strict";
 
 // Test that the docShell profile timeline API returns the right markers when
@@ -103,7 +106,7 @@ var TESTS = [{
 }, {
   desc: "Timestamps created by console.timeStamp()",
   searchFor: "Timestamp",
-  setup(docshell) {
+  setup(docShell) {
     content.console.timeStamp("rock");
     let markers = docShell.popProfileTimelineMarkers();
     is(markers.length, 1, "Got one marker");

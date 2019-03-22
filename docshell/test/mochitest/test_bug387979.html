@@ -18,26 +18,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=387979
 
 /** Test for Bug 387979 **/
 function a(s) {
-	var r;
-	try { r = frames[0].document.body; } catch (e) { r = e; }
-        is(r instanceof frames[0].HTMLBodyElement, true,
-           "Can't get body" + s);
+  var r;
+  try { r = frames[0].document.body; } catch (e) { r = e; }
+  is(r instanceof frames[0].HTMLBodyElement, true, "Can't get body" + s);
 }
 var p = 0;
 function b() {
-	switch (++p) {
-	case 1:
-		frames[0].location = "about:blank";
-		break;
-	case 2:
-		a("before reload");
-		frames[0].location.reload();
-		break;
-	case 3:
-		a("after reload");
-                SimpleTest.finish();
-		break;
-	}
+  switch (++p) {
+    case 1:
+      frames[0].location = "about:blank";
+    break;
+    case 2:
+      a("before reload");
+      frames[0].location.reload();
+    break;
+    case 3:
+      a("after reload");
+      SimpleTest.finish();
+    break;
+  }
 }
 
 SimpleTest.waitForExplicitFinish();

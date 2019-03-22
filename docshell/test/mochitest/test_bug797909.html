@@ -22,9 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=797909
   SimpleTest.waitForExplicitFinish();
 
   function runTest() {
-    iframe = document.getElementById("ifr");
+    var iframe = document.getElementById("ifr");
     try {
-      var iframeDoc = iframe.contentWindow.document;
+      iframe.contentWindow.document;
       ok(false, "Should have thrown an exception");
     } catch (ex) {
       ok(true, "Got an exception");
@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=797909
     document.body.appendChild(iframe);
 
     try {
-      var iframeDoc = iframe.contentWindow.document;
+      iframe.contentWindow.document;
       ok(false, "Should have thrown an exception");
     } catch (ex) {
       ok(true, "Got an exception");
@@ -50,7 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=797909
     document.body.appendChild(iframe);
 
     try {
-      var iframeDoc = iframe.contentWindow.document;
+      iframe.contentWindow.document;
       ok(true, "Shouldn't have thrown an exception");
     } catch (ex) {
       ok(false, "Got an unexpected exception");
