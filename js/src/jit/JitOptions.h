@@ -110,9 +110,6 @@ struct DefaultJitOptions {
   bool spectreValueMasking;
   bool spectreJitToCxxCalls;
 
-  // The options below affect the rest of the VM, and not just the JIT.
-  bool disableUnboxedObjects;
-
   DefaultJitOptions();
   bool isSmallFunction(JSScript* script) const;
   void setEagerCompilation();
