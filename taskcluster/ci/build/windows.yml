@@ -1191,6 +1191,9 @@ win64-aarch64-shippable/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64
+            MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
+            MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
+            USE_ARTIFACT: '1'
     run:
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
@@ -1204,12 +1207,22 @@ win64-aarch64-shippable/opt:
         extra-config:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
+    dependencies:
+        win32-opt: build-win32-nightly/opt
+        win64-aarch64-opt: build-win64-aarch64-nightly-no-eme/opt
+    fetches:
+        # Abuse fetches to copy the generated-files artifact from the non-eme
+        # build directly to the artifacts directory of this build. Likewise
+        # for target.langpack.xpi
+        win64-aarch64-opt:
+            - artifact: target.generated-files.tar.gz
+              extract: false
+              dest: ../public/build
+            - artifact: target.langpack.xpi
+              extract: false
+              dest: ../public/build
     run-on-projects: []  # Don't run by default yet
     toolchains:
-        - win64-clang-cl
-        - win64-aarch64-rust
-        - win64-cbindgen
-        - win64-nasm
         - win64-node
 
 win64-aarch64-nightly-no-eme/opt:
