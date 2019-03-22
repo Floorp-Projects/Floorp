@@ -3061,20 +3061,13 @@ void ObjectGroup::markUnknown(const AutoSweepObjectGroup& sweep,
   clearProperties(sweep);
 }
 
-TypeNewScript* ObjectGroup::anyNewScript(const AutoSweepObjectGroup& sweep) {
-  if (newScript(sweep)) {
-    return newScript(sweep);
-  }
-  return nullptr;
-}
-
 void ObjectGroup::detachNewScript(bool writeBarrier, ObjectGroup* replacement) {
   // Clear the TypeNewScript from this ObjectGroup and, if it has been
   // analyzed, remove it from the newObjectGroups table so that it will not be
   // produced by calling 'new' on the associated function anymore.
   // The TypeNewScript is not actually destroyed.
   AutoSweepObjectGroup sweep(this);
-  TypeNewScript* newScript = anyNewScript(sweep);
+  TypeNewScript* newScript = this->newScript(sweep);
   MOZ_ASSERT(newScript);
 
   if (newScript->analyzed()) {
@@ -3108,7 +3101,7 @@ void ObjectGroup::maybeClearNewScriptOnOOM() {
   }
 
   AutoSweepObjectGroup sweep(this);
-  TypeNewScript* newScript = anyNewScript(sweep);
+  TypeNewScript* newScript = this->newScript(sweep);
   if (!newScript) {
     return;
   }
@@ -3124,7 +3117,7 @@ void ObjectGroup::maybeClearNewScriptOnOOM() {
 void ObjectGroup::clearNewScript(JSContext* cx,
                                  ObjectGroup* replacement /* = nullptr*/) {
   AutoSweepObjectGroup sweep(this);
-  TypeNewScript* newScript = anyNewScript(sweep);
+  TypeNewScript* newScript = this->newScript(sweep);
   if (!newScript) {
     return;
   }
