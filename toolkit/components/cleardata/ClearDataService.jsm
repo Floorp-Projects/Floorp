@@ -369,12 +369,9 @@ const QuotaCleaner = {
         }));
         if (Services.lsm.nextGenLocalStorageEnabled) {
           // deleteByHost has the semantics that "foo.example.com" should be
-          // wiped if we are provided an aHost of "example.com".  QuotaManager
-          // doesn't have a way to directly do this, so we use getUsage() to
-          // get a list of all of the origins known to QuotaManager and then
-          // check whether the domain is a sub-domain of aHost.
+          // wiped if we are provided an aHost of "example.com".
           promises.push(new Promise((aResolve, aReject) => {
-            Services.qms.getUsage(aRequest => {
+            Services.qms.listInitializedOrigins(aRequest => {
               if (aRequest.resultCode != Cr.NS_OK) {
                 aReject({message: "Delete by host failed"});
                 return;
