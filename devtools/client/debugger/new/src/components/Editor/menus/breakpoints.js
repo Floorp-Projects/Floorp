@@ -215,6 +215,7 @@ export type BreakpointItemActions = {
   enableBreakpointsAtLine: typeof actions.enableBreakpointsAtLine,
   disableBreakpointsAtLine: typeof actions.disableBreakpointsAtLine,
   toggleDisabledBreakpoint: typeof actions.toggleDisabledBreakpoint,
+  toggleBreakpointsAtLine: typeof actions.toggleBreakpointsAtLine,
   openConditionalPanel: typeof actions.openConditionalPanel
 };
 
@@ -228,6 +229,7 @@ export function breakpointItemActions(dispatch: Function) {
       disableBreakpointsAtLine: actions.disableBreakpointsAtLine,
       disableBreakpoint: actions.disableBreakpoint,
       toggleDisabledBreakpoint: actions.toggleDisabledBreakpoint,
+      toggleBreakpointsAtLine: actions.toggleBreakpointsAtLine,
       openConditionalPanel: actions.openConditionalPanel
     },
     dispatch
