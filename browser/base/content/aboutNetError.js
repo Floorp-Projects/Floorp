@@ -170,7 +170,7 @@ function initPage() {
     document.body.classList.add(className);
   }
 
-  if (gNewErrorPagesEnabled && gIsCertError && className == "badStsCert") {
+  if (gNewErrorPagesEnabled && gIsCertError && (window !== window.top || className == "badStsCert")) {
     l10nErrId += "_sts";
   }
 
