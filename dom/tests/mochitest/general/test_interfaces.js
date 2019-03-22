@@ -44,6 +44,7 @@ var ecmaGlobals =
     {name: "Array", insecureContext: true},
     {name: "ArrayBuffer", insecureContext: true},
     {name: "Atomics", insecureContext: true, disabled: true},
+    {name: "BigInt", insecureContext: true, nightly: true},
     {name: "Boolean", insecureContext: true},
     {name: "ByteLengthQueuingStrategy", insecureContext: true},
     {name: "CountQueuingStrategy", insecureContext: true},

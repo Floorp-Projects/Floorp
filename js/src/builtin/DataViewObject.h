@@ -153,10 +153,6 @@ class DataViewObject : public ArrayBufferViewObject {
  private:
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
-
-  static const JSFunctionSpec bigIntMethods[];
-  static bool finishInit(JSContext* cx, JS::HandleObject ctor,
-                         JS::HandleObject proto);
 };
 
 }  // namespace js

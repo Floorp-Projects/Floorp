@@ -176,6 +176,8 @@
   MACRO(GeneratorThrow, GeneratorThrow, "GeneratorThrow")                      \
   MACRO(get, get, "get")                                                       \
   MACRO(GetInternalError, GetInternalError, "GetInternalError")                \
+  MACRO(getBigInt64, getBigInt64, "getBigInt64")                               \
+  MACRO(getBigUint64, getBigUint64, "getBigUint64")                            \
   MACRO(getInternals, getInternals, "getInternals")                            \
   MACRO(GetModuleNamespace, GetModuleNamespace, "GetModuleNamespace")          \
   MACRO(getOwnPropertyDescriptor, getOwnPropertyDescriptor,                    \
@@ -363,6 +365,8 @@
   MACRO(selfHosted, selfHosted, "self-hosted")                                 \
   MACRO(sensitivity, sensitivity, "sensitivity")                               \
   MACRO(set, set, "set")                                                       \
+  MACRO(setBigInt64, setBigInt64, "setBigInt64")                               \
+  MACRO(setBigUint64, setBigUint64, "setBigUint64")                            \
   MACRO(SetConstructorInit, SetConstructorInit, "SetConstructorInit")          \
   MACRO(SetIterator, SetIterator, "Set Iterator")                              \
   MACRO(setPrefix, setPrefix, "set ")                                          \
