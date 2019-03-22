@@ -23,6 +23,7 @@ transforms:
 # generated for each build.
 job-defaults:
   args: >-
+    --output-empty
     --no-default-limits
     --max-page-size 100000000
     --max-page-diff-block-lines 10000
