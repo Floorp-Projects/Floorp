@@ -4399,7 +4399,7 @@ bool SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup,
   // shape guard below) to ensure class is unchanged. This group guard may also
   // implay maybeInterpretedFunction() for the special-case of function
   // prototype property set.
-  MOZ_ASSERT(!oldGroup->hasUncacheableClass() || obj->is<ShapedObject>());
+  MOZ_ASSERT(obj->is<ShapedObject>());
   writer.guardGroup(objId, oldGroup);
 
   // If we are adding a property to an object for which the new script
