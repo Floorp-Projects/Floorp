@@ -84,6 +84,24 @@ for (const injection of [
       matches: ["*://*.sreedharscce.in/authenticate"],
       css: [{file: "injections/css/bug1526977-sreedharscce.in-login-fix.css"}],
     },
+  }, {
+    id: "bug1518781",
+    platform: "desktop",
+    domain: "twitch.tv",
+    bug: "1518781",
+    contentScripts: {
+      matches: ["*://*.twitch.tv/*"],
+      css: [{file: "injections/css/bug1518781-twitch.tv-webkit-scrollbar.css"}],
+    },
+  }, {
+    id: "bug1305028",
+    platform: "desktop",
+    domain: "gaming.youtube.com",
+    bug: "1305028",
+    contentScripts: {
+      matches: ["*://gaming.youtube.com/*"],
+      css: [{file: "injections/css/bug1305028-gaming.youtube.com-webkit-scrollbar.css"}],
+    },
   },
 ]) {
   Injections.push(injection);
