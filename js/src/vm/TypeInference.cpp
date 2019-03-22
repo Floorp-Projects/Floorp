@@ -3855,8 +3855,6 @@ void PreliminaryObjectArrayWithTemplate::maybeAnalyze(JSContext* cx,
     }
   }
 
-  TryConvertToUnboxedLayout(cx, enter, shape(), group,
-                            preliminaryObjects.get());
   AutoSweepObjectGroup sweep(group);
   if (group->maybeUnboxedLayout(sweep)) {
     return;
@@ -4154,12 +4152,6 @@ bool TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group,
     }
     PodCopy(initializerList, initializerVector.begin(),
             initializerVector.length());
-  }
-
-  // Try to use an unboxed representation for the group.
-  if (!TryConvertToUnboxedLayout(cx, enter, templateObject()->lastProperty(),
-                                 group, preliminaryObjects)) {
-    return false;
   }
 
   js_delete(preliminaryObjects);
