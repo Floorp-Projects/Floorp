@@ -16,7 +16,6 @@ kind-dependencies:
     - build
     - build-signing
     - repackage
-    - repackage-signing
     - toolchain
 
 primary-dependency: build
@@ -117,8 +116,6 @@ job-template:
                 EN_US_PACKAGE_NAME: target.zip
                 EN_US_BINARY_URL:
                     artifact-reference: <build-signing/{artifact_prefix}>
-                EN_US_INSTALLER_BINARY_URL:
-                    artifact-reference: <repackage-signing/{artifact_prefix}>
             android-api-16:
                 EN_US_PACKAGE_NAME: target.apk
                 EN_US_BINARY_URL:

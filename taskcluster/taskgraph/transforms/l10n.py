@@ -221,10 +221,6 @@ def setup_nightly_dependency(config, jobs):
             job['dependencies'].update({
                 'repackage': job['dependent-tasks']['repackage'].label
             })
-        if job['attributes']['build_platform'].startswith('win'):
-            job['dependencies'].update({
-                'repackage-signing': job['dependent-tasks']['repackage-signing'].label
-            })
         yield job
 
 
