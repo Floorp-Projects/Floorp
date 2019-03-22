@@ -1,5 +1,6 @@
 <window id="reftest"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         hidechrome="true"
-        style="background-color:white; overflow:hidden">
+        style="background-color:white; overflow:hidden"
+        renderroot="content">
 </window>

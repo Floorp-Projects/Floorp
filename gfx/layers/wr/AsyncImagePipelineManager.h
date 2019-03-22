@@ -38,7 +38,8 @@ class AsyncImagePipelineManager final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncImagePipelineManager)
 
-  explicit AsyncImagePipelineManager(already_AddRefed<wr::WebRenderAPI>&& aApi);
+  explicit AsyncImagePipelineManager(
+      nsTArray<RefPtr<wr::WebRenderAPI>>&& aApis);
 
  protected:
   ~AsyncImagePipelineManager();
@@ -87,7 +88,8 @@ class AsyncImagePipelineManager final {
   TimeStamp GetCompositeUntilTime() const { return mCompositeUntilTime; }
 
   void AddAsyncImagePipeline(const wr::PipelineId& aPipelineId,
-                             WebRenderImageHost* aImageHost);
+                             WebRenderImageHost* aImageHost,
+                             wr::RenderRoot aRenderRoot);
   void RemoveAsyncImagePipeline(const wr::PipelineId& aPipelineId,
                                 wr::TransactionBuilder& aTxn);
 
@@ -97,11 +99,13 @@ class AsyncImagePipelineManager final {
                                 const gfx::MaybeIntSize& aScaleToSize,
                                 const wr::ImageRendering& aFilter,
                                 const wr::MixBlendMode& aMixBlendMode);
-  void ApplyAsyncImagesOfImageBridge(wr::TransactionBuilder& aSceneBuilderTxn,
-                                     wr::TransactionBuilder& aFastTxn);
+  void ApplyAsyncImagesOfImageBridge(
+      wr::RenderRootArray<Maybe<wr::TransactionBuilder>>& aSceneBuilderTxns,
+      wr::RenderRootArray<Maybe<wr::TransactionBuilder>>& aFastTxns);
   void ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId,
                                   wr::TransactionBuilder& aTxn,
-                                  wr::TransactionBuilder& aTxnForImageBridge);
+                                  wr::TransactionBuilder& aTxnForImageBridge,
+                                  wr::RenderRoot aRenderRoot);
 
   void SetEmptyDisplayList(const wr::PipelineId& aPipelineId,
                            wr::TransactionBuilder& aTxn,
@@ -117,8 +121,9 @@ class AsyncImagePipelineManager final {
     aNotifications->AppendElements(std::move(mImageCompositeNotifications));
   }
 
-  void SetWillGenerateFrame();
-  bool GetAndResetWillGenerateFrame();
+  void SetWillGenerateFrameAllRenderRoots();
+  void SetWillGenerateFrame(wr::RenderRoot aRenderRoot);
+  bool GetAndResetWillGenerateFrame(wr::RenderRoot aRenderRoot);
 
   wr::ExternalImageId GetNextExternalImageId();
 
@@ -126,7 +131,7 @@ class AsyncImagePipelineManager final {
   void ProcessPipelineRendered(const wr::PipelineId& aPipelineId,
                                const wr::Epoch& aEpoch,
                                const uint64_t aUpdatesCount);
-  void ProcessPipelineRemoved(const wr::PipelineId& aPipelineId,
+  void ProcessPipelineRemoved(const wr::RemovedPipeline& aRemovedPipeline,
                               const uint64_t aUpdatesCount);
 
   wr::Epoch GetNextImageEpoch();
@@ -191,6 +196,7 @@ class AsyncImagePipelineManager final {
     }
 
     bool mInitialised;
+    wr::RenderRoot mRenderRoot;
     bool mIsChanged;
     bool mUseExternalImage;
     LayoutDeviceRect mScBounds;
@@ -223,7 +229,7 @@ class AsyncImagePipelineManager final {
                              uint64_t aUpdatesCount);
   void CheckForTextureHostsNotUsedByGPU();
 
-  RefPtr<wr::WebRenderAPI> mApi;
+  nsTArray<RefPtr<wr::WebRenderAPI>> mApis;
   const wr::IdNamespace mIdNamespace;
   const bool mUseTripleBuffering;
   uint32_t mResourceId;
@@ -232,7 +238,7 @@ class AsyncImagePipelineManager final {
       mPipelineTexturesHolders;
   nsClassHashtable<nsUint64HashKey, AsyncImagePipeline> mAsyncImagePipelines;
   wr::Epoch mAsyncImageEpoch;
-  bool mWillGenerateFrame;
+  wr::RenderRootArray<bool> mWillGenerateFrame;
   bool mDestroyed;
 
   // Render time for the current composition.

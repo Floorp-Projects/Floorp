@@ -791,13 +791,14 @@ class LayerManager : public FrameRecorder {
    */
   virtual bool SetPendingScrollUpdateForNextTransaction(
       ScrollableLayerGuid::ViewID aScrollId,
-      const ScrollUpdateInfo& aUpdateInfo);
+      const ScrollUpdateInfo& aUpdateInfo,
+      wr::RenderRoot aRenderRoot);
   Maybe<ScrollUpdateInfo> GetPendingScrollInfoUpdate(
       ScrollableLayerGuid::ViewID aScrollId);
   void ClearPendingScrollInfoUpdate();
 
  protected:
-  ScrollUpdatesMap mPendingScrollUpdates;
+  wr::RenderRootArray<ScrollUpdatesMap> mPendingScrollUpdates;
 };
 
 /**

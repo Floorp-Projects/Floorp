@@ -108,6 +108,8 @@ type WrEpoch = Epoch;
 pub type WrIdNamespace = IdNamespace;
 
 /// cbindgen:field-names=[mNamespace, mHandle]
+type WrDocumentId = DocumentId;
+/// cbindgen:field-names=[mNamespace, mHandle]
 type WrPipelineId = PipelineId;
 /// cbindgen:field-names=[mNamespace, mHandle]
 /// cbindgen:derive-neq=true
@@ -210,6 +212,14 @@ pub struct DocumentHandle {
 impl DocumentHandle {
     pub fn new(api: RenderApi, size: FramebufferIntSize, layer: i8) -> DocumentHandle {
         let doc = api.add_document(size, layer);
+        DocumentHandle {
+            api: api,
+            document_id: doc
+        }
+    }
+
+    pub fn new_with_id(api: RenderApi, size: FramebufferIntSize, layer: i8, id: u32) -> DocumentHandle {
+        let doc = api.add_document_with_id(size, layer, id);
         DocumentHandle {
             api: api,
             document_id: doc
@@ -568,8 +578,8 @@ extern "C" {
     fn wr_notifier_nop_frame_done(window_id: WrWindowId);
     fn wr_notifier_external_event(window_id: WrWindowId,
                                   raw_event: usize);
-    fn wr_schedule_render(window_id: WrWindowId);
-    fn wr_finished_scene_build(window_id: WrWindowId, pipeline_info: WrPipelineInfo);
+    fn wr_schedule_render(window_id: WrWindowId, document_id: WrDocumentId);
+    fn wr_finished_scene_build(window_id: WrWindowId, document_id: WrDocumentId, pipeline_info: WrPipelineInfo);
 
     fn wr_transaction_notification_notified(handler: usize, when: Checkpoint);
 }
@@ -674,18 +684,6 @@ pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut Renderer,
                               &mut slice);
 }
 
-#[no_mangle]
-pub extern "C" fn wr_renderer_current_epoch(renderer: &mut Renderer,
-                                            pipeline_id: WrPipelineId,
-                                            out_epoch: &mut WrEpoch)
-                                            -> bool {
-    if let Some(epoch) = renderer.current_epoch(pipeline_id) {
-        *out_epoch = epoch;
-        return true;
-    }
-    return false;
-}
-
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_renderer_delete(renderer: *mut Renderer) {
@@ -705,14 +703,31 @@ pub unsafe extern "C" fn wr_renderer_accumulate_memory_report(renderer: &mut Ren
 #[repr(C)]
 pub struct WrPipelineEpoch {
     pipeline_id: WrPipelineId,
+    document_id: WrDocumentId,
     epoch: WrEpoch,
 }
 
-impl<'a> From<(&'a WrPipelineId, &'a WrEpoch)> for WrPipelineEpoch {
-    fn from(tuple: (&WrPipelineId, &WrEpoch)) -> WrPipelineEpoch {
+impl<'a> From<(&'a(WrPipelineId, WrDocumentId), &'a WrEpoch)> for WrPipelineEpoch {
+    fn from(tuple: (&(WrPipelineId, WrDocumentId), &WrEpoch)) -> WrPipelineEpoch {
         WrPipelineEpoch {
-            pipeline_id: *tuple.0,
+            pipeline_id: (tuple.0).0,
+            document_id: (tuple.0).1,
             epoch: *tuple.1
+        }
+    }
+}
+
+#[repr(C)]
+pub struct WrRemovedPipeline {
+    pipeline_id: WrPipelineId,
+    document_id: WrDocumentId,
+}
+
+impl<'a> From<&'a (WrPipelineId, WrDocumentId)> for WrRemovedPipeline {
+    fn from(tuple: &(WrPipelineId, WrDocumentId)) -> WrRemovedPipeline {
+        WrRemovedPipeline {
+            pipeline_id: tuple.0,
+            document_id: tuple.1,
         }
     }
 }
@@ -730,14 +745,15 @@ pub struct WrPipelineInfo {
     // up in this array means that the data structures have been torn down on
     // the webrender side, and so any remaining data structures on the caller
     // side can now be torn down also.
-    removed_pipelines: FfiVec<PipelineId>,
+    removed_pipelines: FfiVec<WrRemovedPipeline>,
 }
 
 impl WrPipelineInfo {
     fn new(info: &PipelineInfo) -> Self {
         WrPipelineInfo {
             epochs: FfiVec::from_vec(info.epochs.iter().map(WrPipelineEpoch::from).collect()),
-            removed_pipelines: FfiVec::from_vec(info.removed_pipelines.clone()),
+            removed_pipelines: FfiVec::from_vec(info.removed_pipelines.iter()
+                                                .map(WrRemovedPipeline::from).collect()),
         }
     }
 }
@@ -811,7 +827,8 @@ extern "C" {
     // These callbacks are invoked from the render backend thread (aka the APZ
     // sampler thread)
     fn apz_register_sampler(window_id: WrWindowId);
-    fn apz_sample_transforms(window_id: WrWindowId, transaction: &mut Transaction);
+    fn apz_sample_transforms(window_id: WrWindowId, transaction: &mut Transaction,
+                             document_id: WrDocumentId);
     fn apz_deregister_sampler(window_id: WrWindowId);
 }
 
@@ -843,7 +860,7 @@ impl SceneBuilderHooks for APZCallbacks {
         }
     }
 
-    fn post_scene_swap(&self, info: PipelineInfo, sceneswap_time: u64) {
+    fn post_scene_swap(&self, document_id: DocumentId, info: PipelineInfo, sceneswap_time: u64) {
         unsafe {
             let info = WrPipelineInfo::new(&info);
             record_telemetry_time(TelemetryProbe::SceneSwapTime, sceneswap_time);
@@ -854,12 +871,12 @@ impl SceneBuilderHooks for APZCallbacks {
         // After a scene swap we should schedule a render for the next vsync,
         // otherwise there's no guarantee that the new scene will get rendered
         // anytime soon
-        unsafe { wr_finished_scene_build(self.window_id, info) }
+        unsafe { wr_finished_scene_build(self.window_id, document_id, info) }
         unsafe { gecko_profiler_end_marker(b"SceneBuilding\0".as_ptr() as *const c_char); }
     }
 
-    fn post_resource_update(&self) {
-        unsafe { wr_schedule_render(self.window_id) }
+    fn post_resource_update(&self, document_id: DocumentId) {
+        unsafe { wr_schedule_render(self.window_id, document_id) }
         unsafe { gecko_profiler_end_marker(b"SceneBuilding\0".as_ptr() as *const c_char); }
     }
 
@@ -893,9 +910,9 @@ impl AsyncPropertySampler for SamplerCallback {
         unsafe { apz_register_sampler(self.window_id) }
     }
 
-    fn sample(&self) -> Vec<FrameMsg> {
+    fn sample(&self, document_id: DocumentId) -> Vec<FrameMsg> {
         let mut transaction = Transaction::new();
-        unsafe { apz_sample_transforms(self.window_id, &mut transaction) };
+        unsafe { apz_sample_transforms(self.window_id, &mut transaction, document_id) };
         // TODO: also omta_sample_transforms(...)
         transaction.get_frame_ops()
     }
@@ -1057,6 +1074,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 thread_pool: *mut WrThreadPool,
                                 size_of_op: VoidPtrToSizeFn,
                                 enclosing_size_of_op: VoidPtrToSizeFn,
+                                document_id: u32,
                                 out_handle: &mut *mut DocumentHandle,
                                 out_renderer: &mut *mut Renderer,
                                 out_max_texture_size: *mut i32)
@@ -1162,7 +1180,8 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     let window_size = FramebufferIntSize::new(window_width, window_height);
     let layer = 0;
     *out_handle = Box::into_raw(Box::new(
-            DocumentHandle::new(sender.create_api_by_client(next_namespace_id()), window_size, layer)));
+            DocumentHandle::new_with_id(sender.create_api_by_client(next_namespace_id()),
+                                        window_size, layer, document_id)));
     *out_renderer = Box::into_raw(Box::new(renderer));
 
     return true;
@@ -1174,13 +1193,15 @@ pub extern "C" fn wr_api_create_document(
     out_handle: &mut *mut DocumentHandle,
     doc_size: FramebufferIntSize,
     layer: i8,
+    document_id: u32
 ) {
     assert!(unsafe { is_in_compositor_thread() });
 
-    *out_handle = Box::into_raw(Box::new(DocumentHandle::new(
+    *out_handle = Box::into_raw(Box::new(DocumentHandle::new_with_id(
         root_dh.api.clone_sender().create_api_by_client(next_namespace_id()),
         doc_size,
-        layer
+        layer,
+        document_id
     )));
 }
 
@@ -1367,7 +1388,8 @@ pub extern "C" fn wr_transaction_set_document_view(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_transaction_generate_frame(txn: &mut Transaction) {
+pub extern "C" fn wr_transaction_generate_frame(
+    txn: &mut Transaction) {
     txn.generate_frame();
 }
 

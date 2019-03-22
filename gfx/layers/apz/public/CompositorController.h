@@ -8,6 +8,8 @@
 #define mozilla_layers_CompositorController_h
 
 #include "nsISupportsImpl.h"  // for NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+#include "mozilla/Maybe.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
 namespace layers {
@@ -16,7 +18,8 @@ class CompositorController {
  public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  virtual void ScheduleRenderOnCompositorThread() = 0;
+  virtual void ScheduleRenderOnCompositorThread(
+      const Maybe<wr::RenderRoot>& aRenderRootid = Nothing()) = 0;
   virtual void ScheduleHideAllPluginWindows() = 0;
   virtual void ScheduleShowAllPluginWindows() = 0;
 

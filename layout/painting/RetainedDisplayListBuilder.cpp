@@ -364,7 +364,7 @@ class MergeState {
           if (mBuilder->MergeDisplayLists(
                   aNewItem->GetChildren(), oldItem->GetChildren(),
                   destItem->GetChildren(), containerASRForChildren, aNewItem)) {
-            destItem->InvalidateCachedChildInfo();
+            destItem->InvalidateCachedChildInfo(mBuilder->Builder());
             mResultIsModified = true;
           }
           UpdateASR(destItem, containerASRForChildren);
@@ -504,6 +504,7 @@ class MergeState {
       Span<const MergedListIndex> aDirectPredecessors,
       const Maybe<MergedListIndex>& aExtraDirectPredecessor) {
     UpdateContainerASR(aItem);
+    aItem->NotifyUsed(mBuilder->Builder());
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     nsIFrame::DisplayItemArray* items =
@@ -542,7 +543,7 @@ class MergeState {
         if (mBuilder->MergeDisplayLists(&empty, item->GetChildren(),
                                         item->GetChildren(),
                                         containerASRForChildren, item)) {
-          item->InvalidateCachedChildInfo();
+          item->InvalidateCachedChildInfo(mBuilder->Builder());
           mResultIsModified = true;
         }
         UpdateASR(item, containerASRForChildren);

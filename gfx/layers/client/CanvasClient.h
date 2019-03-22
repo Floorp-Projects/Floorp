@@ -63,7 +63,8 @@ class CanvasClient : public CompositableClient {
   virtual void Clear(){};
 
   virtual void Update(gfx::IntSize aSize,
-                      ShareableCanvasRenderer* aCanvasRenderer) = 0;
+                      ShareableCanvasRenderer* aCanvasRenderer,
+                      wr::RenderRoot aRenderRoot) = 0;
 
   virtual bool AddTextureClient(TextureClient* aTexture) override {
     ++mFrameID;
@@ -72,9 +73,10 @@ class CanvasClient : public CompositableClient {
 
   virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) {}
 
-  virtual void UpdateFromTexture(TextureClient* aTexture) {}
+  virtual void UpdateFromTexture(TextureClient* aTexture,
+                                 wr::RenderRoot aRenderRoot) {}
 
-  virtual void Updated() {}
+  virtual void Updated(wr::RenderRoot aRenderRoot) {}
 
  protected:
   int32_t mFrameID;
@@ -96,9 +98,11 @@ class CanvasClient2D : public CanvasClient {
   }
 
   virtual void Update(gfx::IntSize aSize,
-                      ShareableCanvasRenderer* aCanvasRenderer) override;
+                      ShareableCanvasRenderer* aCanvasRenderer,
+                      wr::RenderRoot aRenderRoot) override;
 
-  virtual void UpdateFromTexture(TextureClient* aBuffer) override;
+  virtual void UpdateFromTexture(TextureClient* aBuffer,
+                                 wr::RenderRoot aRenderRoot) override;
 
   virtual bool AddTextureClient(TextureClient* aTexture) override {
     return CanvasClient::AddTextureClient(aTexture);
@@ -145,12 +149,13 @@ class CanvasClientSharedSurface : public CanvasClient {
   virtual void Clear() override { ClearSurfaces(); }
 
   virtual void Update(gfx::IntSize aSize,
-                      ShareableCanvasRenderer* aCanvasRenderer) override;
+                      ShareableCanvasRenderer* aCanvasRenderer,
+                      wr::RenderRoot aRenderRoot) override;
   void UpdateRenderer(gfx::IntSize aSize, Renderer& aRenderer);
 
   virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) override;
 
-  virtual void Updated() override;
+  virtual void Updated(wr::RenderRoot aRenderRoot) override;
 
   virtual void OnDetach() override;
 };
@@ -171,7 +176,8 @@ class CanvasClientBridge final : public CanvasClient {
   }
 
   virtual void Update(gfx::IntSize aSize,
-                      ShareableCanvasRenderer* aCanvasRenderer) override {}
+                      ShareableCanvasRenderer* aCanvasRenderer,
+                      wr::RenderRoot aRenderRoot) override {}
 
   virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) override;
 

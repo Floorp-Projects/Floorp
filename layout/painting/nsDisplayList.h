@@ -40,6 +40,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/gfx/UserData.h"
 #include "mozilla/layers/LayerAttributes.h"
+#include "mozilla/layers/RenderRootBoundary.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "nsCSSRenderingBorders.h"
 #include "nsPresArena.h"
@@ -375,7 +376,9 @@ enum class nsDisplayListBuilderMode : uint8_t {
  */
 class nsDisplayListBuilder {
   typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
+  typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
   typedef mozilla::LayoutDeviceIntRegion LayoutDeviceIntRegion;
+  typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
 
   /**
    * This manages status of a 3d context to collect visible rects of
@@ -907,6 +910,41 @@ class nsDisplayListBuilder {
    */
   void SubtractFromVisibleRegion(nsRegion* aVisibleRegion,
                                  const nsRegion& aRegion);
+
+  void SetNeedsDisplayListBuild(mozilla::wr::RenderRoot aRenderRoot) {
+    MOZ_ASSERT(aRenderRoot != mozilla::wr::RenderRoot::Default);
+    mNeedsDisplayListBuild[aRenderRoot] = true;
+  }
+
+  void ExpandRenderRootRect(LayoutDeviceRect aRect,
+                            mozilla::wr::RenderRoot aRenderRoot) {
+    mRenderRootRects[aRenderRoot] = mRenderRootRects[aRenderRoot].Union(aRect);
+  }
+
+  bool GetNeedsDisplayListBuild(mozilla::wr::RenderRoot aRenderRoot) {
+    if (aRenderRoot == mozilla::wr::RenderRoot::Default) {
+      return true;
+    }
+    return mNeedsDisplayListBuild[aRenderRoot];
+  }
+
+  void ComputeDefaultRenderRootRect(LayoutDeviceIntSize aClientSize) {
+    nsRegion cutout;
+    nsRect clientRect(nsPoint(),
+                      mozilla::LayoutDevicePixel::ToAppUnits(aClientSize, 1));
+    cutout.OrWith(clientRect);
+    for (auto renderRoot : mozilla::wr::kRenderRoots) {
+      cutout.SubWith(mozilla::LayoutDevicePixel::ToAppUnits(
+          mRenderRootRects[renderRoot], 1));
+    }
+
+    mRenderRootRects[mozilla::wr::RenderRoot::Default] =
+        mozilla::LayoutDevicePixel::FromAppUnits(cutout.GetBounds(), 1);
+  }
+
+  LayoutDeviceRect GetRenderRootRect(mozilla::wr::RenderRoot aRenderRoot) {
+    return mRenderRootRects[aRenderRoot];
+  }
 
   /**
    * Mark the frames in aFrames to be displayed if they intersect aDirtyRect
@@ -1891,6 +1929,9 @@ class nsDisplayListBuilder {
   // The offset from mCurrentFrame to mCurrentReferenceFrame.
   nsPoint mCurrentOffsetToReferenceFrame;
 
+  mozilla::wr::RenderRootArray<LayoutDeviceRect> mRenderRootRects;
+  mozilla::wr::NonDefaultRenderRootArray<bool> mNeedsDisplayListBuild;
+
   RefPtr<AnimatedGeometryRoot> mRootAGR;
   RefPtr<AnimatedGeometryRoot> mCurrentAGR;
 
@@ -2404,7 +2445,7 @@ class nsDisplayItem : public nsDisplayItemLink {
    * This function is called when an item's list of children has been omdified
    * by RetaineDisplayListBuilder.
    */
-  virtual void InvalidateCachedChildInfo() {}
+  virtual void InvalidateCachedChildInfo(nsDisplayListBuilder* aBuilder) {}
 
   /**
    * @param aSnap set to true if the edges of the rectangles of the opaque
@@ -2868,6 +2909,7 @@ class nsDisplayItem : public nsDisplayItemLink {
       mCanBeReused = false;
     }
   }
+  virtual void NotifyUsed(nsDisplayListBuilder* aBuilder) {}
 
   virtual nsIFrame* GetDependentFrame() { return nullptr; }
 
@@ -5367,7 +5409,7 @@ class nsDisplayOpacity : public nsDisplayWrapList {
     return MakeDisplayItem<nsDisplayOpacity>(aBuilder, *this);
   }
 
-  void InvalidateCachedChildInfo() override {
+  void InvalidateCachedChildInfo(nsDisplayListBuilder* aBuilder) override {
     mChildOpacityState = ChildOpacityState::Unknown;
   }
 
@@ -5830,6 +5872,43 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
   ScrollbarData mScrollbarData;
   bool mForceActive;
   uint64_t mWrAnimationId;
+};
+
+class nsDisplayRenderRoot : public nsDisplayWrapList {
+  nsDisplayRenderRoot(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                      nsDisplayList* aList,
+                      const ActiveScrolledRoot* aActiveScrolledRoot,
+                      mozilla::wr::RenderRoot aRenderRoot);
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+  ~nsDisplayRenderRoot() override { MOZ_COUNT_DTOR(nsDisplayRenderRoot); }
+#endif
+
+  NS_DISPLAY_DECL_NAME("RenderRoot", TYPE_RENDER_ROOT)
+
+  void InvalidateCachedChildInfo(nsDisplayListBuilder* aBuilder) override;
+  void Destroy(nsDisplayListBuilder* aBuilder) override;
+  void NotifyUsed(nsDisplayListBuilder* aBuilder) override;
+
+  bool UpdateScrollData(
+      mozilla::layers::WebRenderScrollData* aData,
+      mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
+
+  bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
+    return false;
+  }
+
+  bool CreateWebRenderCommands(
+      mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResources,
+      const StackingContextHelper& aSc,
+      mozilla::layers::RenderRootStateManager* aManager,
+      nsDisplayListBuilder* aDisplayListBuilder) override;
+
+ protected:
+  mozilla::wr::RenderRoot mRenderRoot;
+  bool mBuiltWRCommands;
+  mozilla::Maybe<mozilla::layers::RenderRootBoundary> mBoundary;
 };
 
 /**
