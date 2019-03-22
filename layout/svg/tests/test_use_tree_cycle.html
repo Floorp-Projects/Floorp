@@ -1,0 +1,37 @@
+<!doctype html>
+<title>Test for bug 1531333</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<style>
+  symbol { display: block }
+</style>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="10" height="10">
+  <symbol id="svg-sprite" viewBox="0 0 133 230866">
+    <title>svg-sprite</title>
+    <symbol id="svg-sprite" viewBox="0 0 133 230866">
+        <title>svg-sprite</title>
+        <use xlink:href="#svg-sprite" width="500" height="500" />
+    </symbol>
+    <use xlink:href="#svg-sprite" y="1601" width="133" height="228958" />
+  </symbol>
+  <use xlink:href="#svg-sprite" y="1601" width="133" height="230866" />
+</svg>
+<script>
+function countUseElements(subtreeRoot) {
+  if (!subtreeRoot)
+    return 0;
+
+  let i = 0;
+  for (const use of subtreeRoot.querySelectorAll("use"))
+    i += 1 + countUseElements(SpecialPowers.wrap(use).openOrClosedShadowRoot);
+  return i;
+}
+SimpleTest.waitForExplicitFinish();
+onload = function() {
+  document.body.offsetTop;
+  // The three in the document, plus the two created from the element that's
+  // not in the <symbol> subtree.
+  is(countUseElements(document), 5, "Shouldn't create more than 5 use elements");
+  SimpleTest.finish();
+}
+</script>
