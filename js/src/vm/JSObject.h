@@ -83,7 +83,6 @@ bool SetImmutablePrototype(JSContext* cx, JS::HandleObject obj,
  *       in-place so avoid assuming an object with same pointer has same class
  *       as before.
  *       - JSObject::swap()
- *       - UnboxedPlainObject::convertToNative()
  */
 class JSObject : public js::gc::Cell {
  protected:

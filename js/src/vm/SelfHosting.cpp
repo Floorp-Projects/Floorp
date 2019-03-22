@@ -2341,22 +2341,6 @@ static bool intrinsic_CopyDataPropertiesOrGetOwnKeys(JSContext* cx,
     }
   }
 
-  if (from->is<UnboxedPlainObject>() && target->is<PlainObject>() &&
-      (!excludedItems || excludedItems->is<PlainObject>())) {
-    bool optimized;
-    if (!CopyDataPropertiesNative(
-            cx, target.as<PlainObject>(), from.as<UnboxedPlainObject>(),
-            (excludedItems ? excludedItems.as<PlainObject>() : nullptr),
-            &optimized)) {
-      return false;
-    }
-
-    if (optimized) {
-      args.rval().setNull();
-      return true;
-    }
-  }
-
   return GetOwnPropertyKeys(
       cx, from, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, args.rval());
 }

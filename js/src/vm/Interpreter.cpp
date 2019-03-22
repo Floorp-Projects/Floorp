@@ -5188,16 +5188,10 @@ JSObject* js::NewObjectOperationWithTemplate(JSContext* cx,
   MOZ_ASSERT(cx->realm() == templateObject->nonCCWRealm());
 
   NewObjectKind newKind;
-  bool isUnboxed;
   {
     ObjectGroup* group = templateObject->group();
     AutoSweepObjectGroup sweep(group);
     newKind = group->shouldPreTenure(sweep) ? TenuredObject : GenericObject;
-    isUnboxed = group->maybeUnboxedLayout(sweep);
-  }
-  if (isUnboxed) {
-    RootedObjectGroup group(cx, templateObject->group());
-    return UnboxedPlainObject::create(cx, group, newKind);
   }
 
   JSObject* obj =

@@ -7,7 +7,6 @@
 #include "vm/ReceiverGuard.h"
 
 #include "builtin/TypedObject.h"
-#include "vm/UnboxedObject.h"
 
 #include "vm/JSObject-inl.h"
 
