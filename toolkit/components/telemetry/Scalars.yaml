@@ -98,7 +98,6 @@ browser.engagement:
   total_uri_count:
     bug_numbers:
       - 1271313
-      - 1529232
     description: >
       The count of the total non-unique http(s) URIs visited in a subsession, including
       page reloads, after the session has been restored. This does not include background
@@ -107,13 +106,9 @@ browser.engagement:
     kind: uint
     notification_emails:
       - rweiss@mozilla.com
-      - loines@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
       - 'main'
-    record_into_store:
-      - 'main'
-      - 'pre-account'
 
   unfiltered_uri_count:
     bug_numbers:
