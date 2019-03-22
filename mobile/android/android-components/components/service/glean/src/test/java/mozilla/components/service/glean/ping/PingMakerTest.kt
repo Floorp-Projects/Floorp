@@ -29,8 +29,15 @@ import java.time.format.DateTimeFormatter
 class PingMakerTest {
     private val mockApplicationContext = mock(Context::class.java)
 
+    // This test requires us to test against the minSdk of 21 in order to make sure that a date
+    // related issue is not regressed. We do this using @Config(sdk = [21, 28]) annotation which
+    // accepts an array of sdk versions to test against. Since loading the sdk versions is time
+    // consuming, we only test the minSdk to reduce test overhead of glean.
+    //
+    // If the minSdk gets changed to >= 24, this can be removed, and DateUtils.getISOTimeString()
+    // can be updated to remove the workaround.
     @Test
-    @Config(minSdk = 21)
+    @Config(sdk = [ 21, 28 ])
     fun `"ping_info" must contain a non-empty start_time and end_time`() {
         val maker = PingMaker(
             StorageEngineManager(
