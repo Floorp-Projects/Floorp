@@ -38,6 +38,9 @@ class Settings private constructor(context: Context) {
     val defaultSearchEngineName: String
         get() = preferences.getString(appContext.getPreferenceKey(R.string.pref_key_search_engine), "") ?: ""
 
+    val isCrashReportingEnabled: Boolean
+        get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_crash_reporter), true)
+
     val isTelemetryEnabled: Boolean
         get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_telemetry), true)
 
@@ -59,11 +62,6 @@ class Settings private constructor(context: Context) {
 
     fun showSearchSuggestions(): Boolean = preferences.getBoolean(
         appContext.getPreferenceKey(R.string.pref_key_show_search_suggestions),
-        true
-    )
-
-    fun crashReportingEnabled(): Boolean = preferences.getBoolean(
-        appContext.getPreferenceKey(R.string.pref_key_crash_reporter),
         true
     )
 }

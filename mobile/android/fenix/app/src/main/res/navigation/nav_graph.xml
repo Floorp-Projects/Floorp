@@ -70,7 +70,6 @@
             app:destination="@id/libraryFragment" />
     </fragment>
 
-
     <fragment
         android:id="@+id/libraryFragment"
         android:name="org.mozilla.fenix.library.LibraryFragment"
@@ -80,8 +79,6 @@
             android:id="@+id/action_libraryFragment_to_historyFragment"
             app:destination="@+id/historyFragment" />
     </fragment>
-
-
 
     <fragment
         android:id="@+id/historyFragment"

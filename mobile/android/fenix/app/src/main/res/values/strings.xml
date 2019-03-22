@@ -250,7 +250,7 @@
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page -->
-    <string name="tab_crash_title">Sorry. We\'re having a problem with this tab.</string>
+    <string name="tab_crash_title">Sorry. %1$s can\'t get that tab back</string>
     <!-- Description text displayed on the tab crash page -->
     <string name="tab_crash_description">You can attempt to restore or close this tab below.</string>
     <!-- Send crash report checkbox text on the tab crash page -->

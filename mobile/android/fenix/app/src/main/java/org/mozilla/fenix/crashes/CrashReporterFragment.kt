@@ -8,12 +8,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_crash_reporter.*
 import mozilla.components.lib.crash.Crash
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.utils.Settings
 
 class CrashReporterFragment : Fragment() {
     override fun onCreateView(
@@ -24,20 +26,21 @@ class CrashReporterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         val crashIntent = CrashReporterFragmentArgs.fromBundle(arguments!!).crashIntent
-
         val crash = Crash.fromIntent(CrashReporterFragmentArgs.fromBundle(arguments!!).crashIntent)
+
+        view.findViewById<TextView>(R.id.title).text =
+            getString(R.string.tab_crash_title, context!!.getString(R.string.app_name))
+
         // TODO TelemetryWrapper.crashReporterOpened()
 
         closeTabButton.setOnClickListener {
-            val wantsToSubmitCrashReport = sendCrashCheckbox.isChecked
             val selectedSession = requireComponents.core.sessionManager.selectedSession
 
             selectedSession?.let { session -> requireComponents.useCases.tabsUseCases.removeTab.invoke(session) }
             // TODO TelemetryWrapper.crashReporterClosed(wantsSubmitCrashReport)
 
-            if (wantsToSubmitCrashReport) {
+            if (Settings.getInstance(context!!).isCrashReportingEnabled) {
                 requireComponents.analytics.crashReporter.submitReport(crash)
             }
 

@@ -77,8 +77,8 @@
     <color name="history_title_private_theme">@color/off_white</color>
     <color name="history_url_private_theme">@color/photonGrey40</color>
 
-    <color name="crash_page_accent">#45a1ff</color>
-    <color name="crash_page_off_accent">@color/photonGrey30</color>
+    <color name="crash_page_accent">#312a65</color>
+    <color name="crash_page_off_accent">#efeff2</color>
 
     <color name="quick_action_share_icon">#174291</color>
     <color name="quick_action_share_icon_background">#b9f0fd</color>
