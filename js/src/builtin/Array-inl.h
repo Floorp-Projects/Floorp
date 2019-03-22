@@ -13,7 +13,6 @@
 #include "vm/JSObject.h"
 
 #include "vm/ArgumentsObject-inl.h"
-#include "vm/UnboxedObject-inl.h"
 
 namespace js {
 
