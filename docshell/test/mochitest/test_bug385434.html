@@ -35,7 +35,7 @@ function statusMsg(msg) {
 }
 
 function longWait() {
-  setTimeout(function() { gGen.next() }, 1000);
+  setTimeout(function() { gGen.next(); }, 1000);
 }
 
 // onIframeHashchange, onIframeLoad, and onIframeScroll are all called by the

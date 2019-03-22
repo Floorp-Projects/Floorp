@@ -1,6 +1,6 @@
 "use strict";
 
-const REDIRECTURL = "http://www.example.com/browser/docshell/test/browser/redirect_to_example.sjs"
+const REDIRECTURL = "http://www.example.com/browser/docshell/test/browser/redirect_to_example.sjs";
 
 add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");

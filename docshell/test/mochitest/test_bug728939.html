@@ -17,20 +17,20 @@ SimpleTest.waitForExplicitFinish();
 
 // Called when the popup finishes loading.
 function popupLoaded() {
-  popup.location.hash = '#foo';
-  is(popup.document.URL, popup.location.href, 'After hashchange.');
+  popup.location.hash = "#foo";
+  is(popup.document.URL, popup.location.href, "After hashchange.");
 
-  popup.history.pushState('', '', 'bar');
-  is(popup.document.URL, popup.location.href, 'After pushState.');
+  popup.history.pushState("", "", "bar");
+  is(popup.document.URL, popup.location.href, "After pushState.");
 
-  popup.history.replaceState('', '', 'baz');
-  is(popup.document.URL, popup.location.href, 'After replaceState.');
+  popup.history.replaceState("", "", "baz");
+  is(popup.document.URL, popup.location.href, "After replaceState.");
 
   popup.close();
   SimpleTest.finish();
 }
 
-var popup = window.open('file_bug728939.html');
+var popup = window.open("file_bug728939.html");
 
 </script>
 </body>

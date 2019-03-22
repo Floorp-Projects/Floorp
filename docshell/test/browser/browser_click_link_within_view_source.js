@@ -43,7 +43,7 @@ add_task(async function test_click_link_within_view_source() {
       }
       // document.getElementById() does not work on a view-source page, hence we use document.links
       let linksOnPage = content.document.links;
-      is (linksOnPage.length, 1, "sanity check: make sure only one link is present on page");
+      is(linksOnPage.length, 1, "sanity check: make sure only one link is present on page");
       let myLink = content.document.links[0];
       myLink.click();
     });

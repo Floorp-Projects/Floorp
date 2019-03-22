@@ -46,19 +46,19 @@ function test() {
     function clickLinkIfReady() {
       _clickLinkTimes++;
       if (_clickLinkTimes == 2) {
-        BrowserTestUtils.synthesizeMouseAtCenter('#firefox-link', {},
+        BrowserTestUtils.synthesizeMouseAtCenter("#firefox-link", {},
                                                  gBrowser.selectedBrowser);
       }
     }
 
     /* Global history observer that triggers for the two test URLs above. */
     var historyObserver = {
-        onBeginUpdateBatch: function() {},
-        onEndUpdateBatch: function() {},
-        onTitleChanged: function(aURI, aPageTitle) {},
-        onDeleteURI: function(aURI) {},
-        onClearHistory: function() {},
-        onPageChanged: function(aURI, aWhat, aValue) {
+        onBeginUpdateBatch() {},
+        onEndUpdateBatch() {},
+        onTitleChanged(aURI, aPageTitle) {},
+        onDeleteURI(aURI) {},
+        onClearHistory() {},
+        onPageChanged(aURI, aWhat, aValue) {
             if (aWhat != Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON) {
                 return;
             }
@@ -89,14 +89,8 @@ function test() {
                 finish();
             }
         },
-        onPageExpired: function(aURI, aVisitTime, aWholeEntry) {},
-        QueryInterface: function(iid) {
-            if (iid.equals(Ci.nsINavHistoryObserver) ||
-                iid.equals(Ci.nsISupports)) {
-                return this;
-            }
-            throw Cr.NS_ERROR_NO_INTERFACE;
-        }
+        onPageExpired(aURI, aVisitTime, aWholeEntry) {},
+        QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
     };
     historyService.addObserver(historyObserver);
 

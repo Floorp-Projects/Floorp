@@ -23,21 +23,21 @@ function childLoad() {
 }
 
 function childLoad2() {
-  let cw = $('iframe').contentWindow;
+  let cw = $("iframe").contentWindow;
 
   // Save the Y offset.  For sanity's sake, make sure it's not 0, because we
   // should be at the bottom of the page!
   let origYOffset = Math.round(cw.pageYOffset);
-  ok(origYOffset != 0, 'Original Y offset is not 0.');
+  ok(origYOffset != 0, "Original Y offset is not 0.");
 
   // Scroll the iframe to the top, then navigate to #bottom again.
   cw.scrollTo(0, 0);
 
   // Our current location is #bottom, so this should scroll us down to the
   // bottom again.
-  cw.location = cw.location + '';
+  cw.location = cw.location + "";
 
-  is(Math.round(cw.pageYOffset), origYOffset, 'Correct offset after reloading page.');
+  is(Math.round(cw.pageYOffset), origYOffset, "Correct offset after reloading page.");
   SimpleTest.finish();
 }
 

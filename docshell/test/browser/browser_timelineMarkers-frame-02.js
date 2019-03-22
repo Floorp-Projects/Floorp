@@ -20,11 +20,11 @@ function sanitizeMarkers(list) {
 var TESTS = [{
   desc: "Changing the width of the test element",
   searchFor: "Paint",
-  setup: function(docShell) {
+  setup(docShell) {
     let div = content.document.querySelector("div");
     div.setAttribute("class", "resize-change-color");
   },
-  check: function(markers) {
+  check(markers) {
     markers = sanitizeMarkers(markers);
     ok(markers.length > 0, "markers were returned");
     console.log(markers);
@@ -38,15 +38,15 @@ var TESTS = [{
       ok(marker.rectangles.some(r => rectangleContains(r, 0, 0, 100, 100)));
     }
     ok(markers.some(m => m.name == "Styles"), "markers includes Restyle");
-  }
+  },
 }, {
   desc: "Changing the test element's background color",
   searchFor: "Paint",
-  setup: function(docShell) {
+  setup(docShell) {
     let div = content.document.querySelector("div");
     div.setAttribute("class", "change-color");
   },
-  check: function(markers) {
+  check(markers) {
     markers = sanitizeMarkers(markers);
     ok(markers.length > 0, "markers were returned");
     ok(!markers.some(m => m.name == "Reflow"), "markers doesn't include Reflow");
@@ -58,25 +58,25 @@ var TESTS = [{
       ok(marker.rectangles.some(r => rectangleContains(r, 0, 0, 50, 50)));
     }
     ok(markers.some(m => m.name == "Styles"), "markers includes Restyle");
-  }
+  },
 }, {
   desc: "Changing the test element's classname",
   searchFor: "Paint",
-  setup: function(docShell) {
+  setup(docShell) {
     let div = content.document.querySelector("div");
     div.setAttribute("class", "change-color add-class");
   },
-  check: function(markers) {
+  check(markers) {
     markers = sanitizeMarkers(markers);
     ok(markers.length > 0, "markers were returned");
     ok(!markers.some(m => m.name == "Reflow"), "markers doesn't include Reflow");
     ok(!markers.some(m => m.name == "Paint"), "markers doesn't include Paint");
     ok(markers.some(m => m.name == "Styles"), "markers includes Restyle");
-  }
+  },
 }, {
   desc: "sync console.time/timeEnd",
   searchFor: "ConsoleTime",
-  setup: function(docShell) {
+  setup(docShell) {
     content.console.time("FOOBAR");
     content.console.timeEnd("FOOBAR");
     let markers = docShell.popProfileTimelineMarkers();
@@ -92,18 +92,18 @@ var TESTS = [{
       }, 100);
     }, 100);
   },
-  check: function(markers) {
+  check(markers) {
     markers = sanitizeMarkers(markers);
     is(markers.length, 2, "Got 2 markers");
     is(markers[0].name, "ConsoleTime", "Got first ConsoleTime marker");
     is(markers[0].causeName, "FOO", "Got ConsoleTime FOO detail");
     is(markers[1].name, "ConsoleTime", "Got second ConsoleTime marker");
     is(markers[1].causeName, "BAR", "Got ConsoleTime BAR detail");
-  }
+  },
 }, {
   desc: "Timestamps created by console.timeStamp()",
   searchFor: "Timestamp",
-  setup: function(docshell) {
+  setup(docshell) {
     content.console.timeStamp("rock");
     let markers = docShell.popProfileTimelineMarkers();
     is(markers.length, 1, "Got one marker");
@@ -114,7 +114,7 @@ var TESTS = [{
     content.console.timeStamp();
     content.console.timeStamp(undefined);
   },
-  check: function (markers) {
+  check(markers) {
     markers = sanitizeMarkers(markers);
     is(markers.length, 4, "Got 4 markers");
     is(markers[0].name, "TimeStamp", "Got Timestamp marker");
@@ -127,7 +127,7 @@ var TESTS = [{
     is(markers[3].causeName, void 0, "Got empty Timestamp label value");
     markers.forEach(m => is(m.end, m.start,
       "All Timestamp markers should have identical start/end times"));
-  }
+  },
 }];
 
 timelineContentTest(TESTS);

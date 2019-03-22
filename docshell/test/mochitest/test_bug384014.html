@@ -23,11 +23,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=384014
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  $("f").onload = function () {
+  $("f").onload = function() {
     is($("f").contentDocument.documentElement.textContent, "PASS",
       "We fail");
     SimpleTest.finish();
-  }
+  };
 
   $("f").contentWindow.location.reload();
 }

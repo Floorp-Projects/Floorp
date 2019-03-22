@@ -16,7 +16,7 @@ add_task(async function() {
       await ContentTask.spawn(browser, {base1: BASE1, base2: BASE2},
                               async function({base1, base2}) {
         let top = content.window;
-        top.name = 'top';
+        top.name = "top";
         top.location.href += "#top";
 
         let contexts = {
@@ -27,13 +27,13 @@ add_task(async function() {
           fourth: base2 + "dummy_page.html#fourth",
           fifth: base1 + "dummy_page.html#fifth",
           sixth: base1 + "onload_message.html#sixth",
-          seventh: base1 + "onload_message.html#seventh"
+          seventh: base1 + "onload_message.html#seventh",
         };
 
         function addFrame(target, name) {
           let doc = (target.contentWindow || target).document;
-          let frame = doc.createElement('iframe');
-          let p = new Promise(resolve => (frame.onload = () =>resolve(frame)));
+          let frame = doc.createElement("iframe");
+          let p = new Promise(resolve => (frame.onload = () => resolve(frame)));
           doc.body.appendChild(frame);
           frame.name = name;
           frame.src = contexts[name];
@@ -46,10 +46,9 @@ add_task(async function() {
           if (resolve) {
             return new Promise(
                 resolve => target.contentWindow.addEventListener(
-                    'message', () => resolve(win)));
-          } else {
-            return Promise.resolve({name: name});
+                    "message", () => resolve(win)));
           }
+          return Promise.resolve({name});
         }
 
         // We're going to create a tree that looks like the
@@ -81,29 +80,29 @@ add_task(async function() {
         function reachable(start, targets) {
           for (let target of targets) {
             is(bc(start).findWithName(target.name), bc(target),
-               [bc(start).name, 'can reach', target.name].join(' '));
+               [bc(start).name, "can reach", target.name].join(" "));
           }
         }
 
         function unreachable(start, target) {
           is(bc(start).findWithName(target.name), null,
-             [bc(start).name, "can't reach", target.name].join(' '));
+             [bc(start).name, "can't reach", target.name].join(" "));
         }
 
-        let first = await addFrame(top, 'first');
-        info('first');
-        let second = await addFrame(top, 'second');
-        info('second');
-        let third = await addFrame(first, 'third');
-        info('third');
-        let fourth = await addFrame(first, 'fourth');
-        info('fourth');
-        let fifth = await addFrame(fourth, 'fifth');
-        info('fifth');
-        let sixth = await addWindow(fourth, 'sixth', { resolve: true });
-        info('sixth');
-        let seventh = await addWindow(fourth, 'seventh', { options: ['noopener'] });
-        info('seventh');
+        let first = await addFrame(top, "first");
+        info("first");
+        let second = await addFrame(top, "second");
+        info("second");
+        let third = await addFrame(first, "third");
+        info("third");
+        let fourth = await addFrame(first, "fourth");
+        info("fourth");
+        let fifth = await addFrame(fourth, "fifth");
+        info("fifth");
+        let sixth = await addWindow(fourth, "sixth", { resolve: true });
+        info("sixth");
+        let seventh = await addWindow(fourth, "seventh", { options: ["noopener"] });
+        info("seventh");
 
         let frames = [top, first, second, third, fourth, fifth, sixth];
         for (let start of frames) {

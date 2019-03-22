@@ -1,5 +1,5 @@
 function test() {
-  waitForExplicitFinish(); 
+  waitForExplicitFinish();
 
   var w;
   const secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);

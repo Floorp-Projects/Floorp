@@ -5,11 +5,11 @@
 <title>Test window for top navigation by location tests</title>
 <script>
   function onBlock() {
-    opener.postMessage({ name: window.name, blocked: true }, '*');
+    opener.postMessage({ name: window.name, blocked: true }, "*");
   }
 
   function onNav() {
-    opener.postMessage({ name: window.name, blocked: false }, '*');
+    opener.postMessage({ name: window.name, blocked: false }, "*");
   }
 
   function setOwnHref() {

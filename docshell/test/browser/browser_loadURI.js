@@ -7,7 +7,7 @@ function test() {
   waitForExplicitFinish();
 
   let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     gBrowser.removeTab(tab);
   });
 

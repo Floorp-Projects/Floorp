@@ -17,11 +17,11 @@ SimpleTest.waitForExplicitFinish();
 
 function* test() {
   /* Spin the event loop so we get out of the onload handler. */
-  SimpleTest.executeSoon(function() { gGen.next() });
+  SimpleTest.executeSoon(function() { gGen.next(); });
   yield undefined;
 
-  popup.history.pushState('', '', '#hash1');
-  popup.history.pushState('', '', '#hash2');
+  popup.history.pushState("", "", "#hash1");
+  popup.history.pushState("", "", "#hash2");
 
   // Now the history looks like:
   //   file_bug640387.html
@@ -32,12 +32,12 @@ function* test() {
   // yield.
   popup.history.back();
   yield undefined;
-  ok(true, 'Got first hashchange.');
+  ok(true, "Got first hashchange.");
 
   // Going back should wake us up again.
   popup.history.back();
   yield undefined;
-  ok(true, 'Got second hashchange.');
+  ok(true, "Got second hashchange.");
 
   // Now the history looks like:
   //   file_bug640387.html        <-- current
@@ -47,26 +47,26 @@ function* test() {
   // Going forward should trigger a hashchange.
   popup.history.forward();
   yield undefined;
-  ok(true, 'Got third hashchange.');
+  ok(true, "Got third hashchange.");
 
   // Now modify the history so it looks like:
   //   file_bug640387.html
   //   file_bug640387.html#hash1
   //   file_bug640387.html#hash1  <-- current
-  popup.history.pushState('', '', '#hash1');
+  popup.history.pushState("", "", "#hash1");
 
   // Now when we go back, we should not get a hashchange.  Instead, wait for a
   // popstate.  We need to asynchronously go back because popstate is fired
   // sync.
   gHashchangeExpected = false;
   gCallbackOnPopstate = true;
-  SimpleTest.executeSoon(function() { popup.history.back() });
+  SimpleTest.executeSoon(function() { popup.history.back(); });
   yield undefined;
-  ok(true, 'Got popstate.');
+  ok(true, "Got popstate.");
   gCallbackOnPopstate = false;
 
   // Spin the event loop so hashchange has a chance to fire, if it's going to.
-  SimpleTest.executeSoon(function() { gGen.next() });
+  SimpleTest.executeSoon(function() { gGen.next(); });
   yield undefined;
 
   popup.close();
@@ -83,8 +83,7 @@ gHashchangeExpected = true;
 function childHashchange() {
   if (gHashchangeExpected) {
     gGen.next();
-  }
-  else {
+  } else {
     ok(false, "Got hashchange when we weren't expecting one.");
   }
 }
@@ -98,7 +97,7 @@ function childPopstate() {
 
 /* We need to run this test in a popup, because navigating an iframe
  * back/forwards tends to cause intermittent orange. */
-popup = window.open('file_bug640387.html');
+popup = window.open("file_bug640387.html");
 
 /* Control now flows up to childLoad(), called once the popup loads. */
 

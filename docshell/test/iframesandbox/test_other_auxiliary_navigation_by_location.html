@@ -22,8 +22,8 @@ html5 sandboxed iframe should not be able to perform top navigation with scripts
       runNextTest();
     };
     try {
-      window["testIframe"].eval(testCase.script);
-    } catch(e) {
+      window.testIframe.eval(testCase.script);
+    } catch (e) {
       ok(true, testCase.desc + " - " + e.message);
       runNextTest();
     }
@@ -33,20 +33,20 @@ html5 sandboxed iframe should not be able to perform top navigation with scripts
   testCases = [
     {
       desc: "Test 1: location.replace on auxiliary NOT opened by us should be blocked",
-      script: "parent.openedWindow.location.replace('file_other_auxiliary_navigation_by_location.html')"
+      script: "parent.openedWindow.location.replace('file_other_auxiliary_navigation_by_location.html')",
     },
     {
       desc: "Test 2: location.assign on auxiliary NOT opened by us should be blocked",
-      script: "parent.openedWindow.location.assign('file_other_auxiliary_navigation_by_location.html')"
+      script: "parent.openedWindow.location.assign('file_other_auxiliary_navigation_by_location.html')",
     },
     {
       desc: "Test 3: location.href on auxiliary NOT opened by us should be blocked",
-      script: "parent.openedWindow.location.href = 'file_other_auxiliary_navigation_by_location.html'"
+      script: "parent.openedWindow.location.href = 'file_other_auxiliary_navigation_by_location.html'",
     },
     {
       desc: "Test 4: location.hash on auxiliary NOT opened by us should be blocked",
-      script: "parent.openedWindow.location.hash = 'wibble'"
-    }
+      script: "parent.openedWindow.location.hash = 'wibble'",
+    },
   ];
 
   function runNextTest() {
@@ -64,7 +64,7 @@ html5 sandboxed iframe should not be able to perform top navigation with scripts
 
   window.onload = function() {
     window.openedWindow = window.open("file_other_auxiliary_navigation_by_location.html", "otherWindow");
-  }
+  };
 </script>
 
 </head>

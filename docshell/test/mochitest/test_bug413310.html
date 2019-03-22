@@ -25,9 +25,9 @@ if (navigator.platform.startsWith("Mac")) {
 // modified accordingly!  It assumes that subframes do NOT get bfcached.
 var onloadCount = 0;
 
-var step = -1;  // One increment will come from the initial subframe onload.
-                // Note that this script should come before the subframe,
-                // so that doNextStep is defined when its onload handler fires.
+var step = -1; // One increment will come from the initial subframe onload.
+               // Note that this script should come before the subframe,
+               // so that doNextStep is defined when its onload handler fires.
 
 var textContent;
 
@@ -60,7 +60,7 @@ function doNextStep() {
       $("i").contentWindow.location.hash = "foo";
       setTimeout(doNextStep, 0);
       break;
-    case 3: 
+    case 3:
       is(onloadCount, 2, "Anchor scroll should not fire onload");
       is($("i").contentWindow.location.href,
          location.href.replace(/test_bug413310.html/,
@@ -68,7 +68,7 @@ function doNextStep() {
          "Unexpected subframe location after anchor scroll");
       is(textContent, $("i").contentDocument.body.textContent,
          "Did a load when scrolling?");
-      $("i").contentWindow.location.href = "bug413310-subframe.html";;
+      $("i").contentWindow.location.href = "bug413310-subframe.html";
       break;
     case 4:
       is(onloadCount, 3, "Done new load");

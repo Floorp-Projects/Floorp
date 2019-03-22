@@ -46,47 +46,44 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=669671
 SimpleTest.requestLongerTimeout(2);
 SimpleTest.waitForExplicitFinish();
 
-function onChildLoad()
-{
-  SimpleTest.executeSoon(function() { gGen.next() });
+function onChildLoad() {
+  SimpleTest.executeSoon(function() { gGen.next(); });
 }
 
 var _loadCount = 0;
-function checkPopupLoadCount()
-{
-  is(popup.document.body.innerHTML, _loadCount + '', 'Load count');
+function checkPopupLoadCount() {
+  is(popup.document.body.innerHTML, _loadCount + "", "Load count");
 
   // We normally want to increment _loadCount here.  But if the test fails
   // because we didn't do a load we should have, let's not cause a cascade of
   // failures by incrementing _loadCount.
   var origCount = _loadCount;
-  if (popup.document.body.innerHTML >= _loadCount + '')
+  if (popup.document.body.innerHTML >= _loadCount + "")
     _loadCount++;
   return origCount;
 }
 
-function* test()
-{
+function* test() {
   // Step 0 - Make sure the count is reset to 0 in case of reload
-  popup.location = 'file_bug669671.sjs?countreset';
+  popup.location = "file_bug669671.sjs?countreset";
   yield;
-  is(popup.document.body.innerHTML, '0',
-     'Load count should be reset to 0');
+  is(popup.document.body.innerHTML, "0",
+     "Load count should be reset to 0");
 
   // Step 1 - The popup's body counts how many times we've requested the
   // resource.  This is the first time we've requested it, so it should be '0'.
   checkPopupLoadCount();
 
   // Step 2 - We'll get another onChildLoad when this finishes.
-  popup.location = 'file_bug669671.sjs';
+  popup.location = "file_bug669671.sjs";
   yield undefined;
 
   // Step 3 - Call pushState and change the URI back to ?pushed.
   checkPopupLoadCount();
-  popup.history.pushState('', '', '?pushed');
+  popup.history.pushState("", "", "?pushed");
 
   // Step 4 - Navigate away.  This should trigger another onChildLoad.
-  popup.location = 'file_bug669671.sjs?navigated-1';
+  popup.location = "file_bug669671.sjs?navigated-1";
   yield undefined;
 
   // Step 5 - Go back.  This should result in another onload (because the file is
@@ -101,14 +98,14 @@ function* test()
   popup.close();
 
   // Do the whole thing again, but with replaceState.
-  popup = window.open('file_bug669671.sjs?replaced');
+  popup = window.open("file_bug669671.sjs?replaced");
   yield undefined;
   checkPopupLoadCount();
-  popup.location = 'file_bug669671.sjs';
+  popup.location = "file_bug669671.sjs";
   yield undefined;
   checkPopupLoadCount();
-  popup.history.replaceState('', '', '?replaced');
-  popup.location = 'file_bug669671.sjs?navigated-2';
+  popup.history.replaceState("", "", "?replaced");
+  popup.location = "file_bug669671.sjs?navigated-2";
   yield undefined;
   checkPopupLoadCount();
   popup.history.back();
@@ -118,17 +115,17 @@ function* test()
 
   // Once more, with feeling.  Notice that we don't have to prime the cache
   // with an extra load here, because X and X#hash share the same cache entry.
-  popup = window.open('file_bug669671.sjs?hash-test');
+  popup = window.open("file_bug669671.sjs?hash-test");
   yield undefined;
   var initialCount = checkPopupLoadCount();
-  popup.history.replaceState('', '', '#hash');
-  popup.location = 'file_bug669671.sjs?navigated-3';
+  popup.history.replaceState("", "", "#hash");
+  popup.location = "file_bug669671.sjs?navigated-3";
   yield undefined;
   checkPopupLoadCount();
   popup.history.back();
   yield undefined;
-  is(popup.document.body.innerHTML, initialCount + '',
-     'Load count (should be cached)');
+  is(popup.document.body.innerHTML, initialCount + "",
+     "Load count (should be cached)");
   popup.close();
 
   SimpleTest.finish();
@@ -140,7 +137,7 @@ var popup;
 // Disable RCWN to make cache behavior deterministic.
 SpecialPowers.pushPrefEnv({set: [["network.http.rcwn.enabled", false]]}, () => {
   // This will call into onChildLoad once it loads.
-  popup = window.open('file_bug669671.sjs?pushed');
+  popup = window.open("file_bug669671.sjs?pushed");
 });
 </script>
 </pre>

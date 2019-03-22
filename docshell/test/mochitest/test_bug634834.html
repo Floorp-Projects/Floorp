@@ -17,30 +17,28 @@ SimpleTest.waitForExplicitFinish();
 
 function iframe_loaded() {
   var loadedAfterPushstate = false;
-  $('iframe').onload = function() {
+  $("iframe").onload = function() {
     loadedAfterPushstate = true;
-  }
+  };
 
-  var obj = { name: 'name' };
-  obj.__defineGetter__('a', function() {
-    $('iframe').contentWindow.location = 'http://example.com';
+  var obj = { name: "name" };
+  obj.__defineGetter__("a", function() {
+    $("iframe").contentWindow.location = "http://example.com";
 
     // Wait until we've loaded example.com.
     do {
         var r = new XMLHttpRequest();
         r.open("GET", location.href, false);
         r.overrideMimeType("text/plain");
-        try { r.send(null); }
-        catch (e) {}
+        try { r.send(null); } catch (e) {}
     } while (!loadedAfterPushstate);
   });
 
   try {
-    $('iframe').contentWindow.history.pushState(obj, '');
-    ok(false, 'pushState should throw exception.');
-  }
-  catch(e) {
-    ok(true, 'pushState threw an exception.');
+    $("iframe").contentWindow.history.pushState(obj, "");
+    ok(false, "pushState should throw exception.");
+  } catch (e) {
+    ok(true, "pushState threw an exception.");
   }
   SimpleTest.finish();
 }

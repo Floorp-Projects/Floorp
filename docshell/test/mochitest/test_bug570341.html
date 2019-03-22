@@ -21,93 +21,93 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=570341
       moments[p] = timing[p];
     }
     for (var p in win) {
-      if (p.substring(0,9) == '_testing_') {
+      if (p.substring(0, 9) == "_testing_") {
         moments[p.substring(9)] = win[p];
       }
     }
-    moments['evt_unload'] = unload;
+    moments.evt_unload = unload;
     return moments;
   }
 
-  function showSequence(node){
-    while(node.firstChild) {
+  function showSequence(node) {
+    while (node.firstChild) {
       node.firstChild.remove();
     }
     var sequence = [];
     for (var p in moments) {
       sequence.push(p);
     }
-    sequence.sort(function(a, b){
+    sequence.sort(function(a, b) {
       return moments[a] - moments[b];
     });
-    table = document.createElement('table');
+    table = document.createElement("table");
     node.appendChild(table);
-    row = document.createElement('tr');
+    row = document.createElement("tr");
     table.appendChild(row);
-    cell = document.createElement('td');
+    cell = document.createElement("td");
     row.appendChild(cell);
-    cell.appendChild(document.createTextNode('start'));
-    cell = document.createElement('td');
+    cell.appendChild(document.createTextNode("start"));
+    cell = document.createElement("td");
     row.appendChild(cell);
     cell.appendChild(document.createTextNode(start));
     for (var i = 0; i < sequence.length; ++i) {
       var prop = sequence[i];
-      row = document.createElement('tr');
+      row = document.createElement("tr");
       table.appendChild(row);
-      cell = document.createElement('td');
+      cell = document.createElement("td");
       row.appendChild(cell);
       cell.appendChild(document.createTextNode(prop));
-      cell = document.createElement('td');
+      cell = document.createElement("td");
       row.appendChild(cell);
       cell.appendChild(document.createTextNode(moments[prop]));
     }
   }
 
-  function checkValues(){
+  function checkValues() {
     var win = frames[0];
-    ok(win.performance, 
-        'window.performance is missing or not accessible for frame');
-    ok(!win.performance || win.performance.timing, 
-        'window.performance.timing is missing or not accessible for frame');
+    ok(win.performance,
+        "window.performance is missing or not accessible for frame");
+    ok(!win.performance || win.performance.timing,
+        "window.performance.timing is missing or not accessible for frame");
     collectMoments();
 
     var sequences = [
-      ['navigationStart', 'unloadEventStart', 'unloadEventEnd'],
-      ['navigationStart', 'fetchStart', 'domainLookupStart', 'domainLookupEnd',
-       'connectStart', 'connectEnd', 'requestStart', 'responseStart', 'responseEnd'],
-      ['responseStart', 'domLoading', 'domInteractive', 'domComplete'],
-      ['domContentLoadedEventStart', 'domContentLoadedEventEnd',
-       'loadEventStart', 'loadEventEnd']
-    ]
+      ["navigationStart", "unloadEventStart", "unloadEventEnd"],
+      ["navigationStart", "fetchStart", "domainLookupStart", "domainLookupEnd",
+       "connectStart", "connectEnd", "requestStart", "responseStart", "responseEnd"],
+      ["responseStart", "domLoading", "domInteractive", "domComplete"],
+      ["domContentLoadedEventStart", "domContentLoadedEventEnd",
+       "loadEventStart", "loadEventEnd"],
+    ];
 
     for (var i = 0; i < sequences.length; ++i) {
       var seq = sequences[i];
       for (var j = 0; j < seq.length; ++j) {
         var prop = seq[j];
         if (j > 0) {
-          var prevProp = seq[j-1];
+          var prevProp = seq[j - 1];
           ok(moments[prevProp] <= moments[prop],
-              ['Expected ', prevProp, ' to happen before ', prop,
-              ', got ', prevProp, ' = ', moments[prevProp],
-              ', ', prop, ' = ', moments[prop]].join(''));
+              ["Expected ", prevProp, " to happen before ", prop,
+              ", got ", prevProp, " = ", moments[prevProp],
+              ", ", prop, " = ", moments[prop]].join(""));
         }
       }
     }
 
-    SimpleTest.finish()
+    SimpleTest.finish();
   }
 
 window.onload = function() {
   var win = frames[0];
-  win.addEventListener('unload', function(){
+  win.addEventListener("unload", function() {
     unload = Date.now();
   }, true);
   var seenLoad = 0;
-  win.addEventListener('load', function (){
+  win.addEventListener("load", function() {
     seenLoad = Date.now();
   }, true);
-  frames[0].location = 'bug570341_recordevents.html'
-  var interval = setInterval(function () {
+  frames[0].location = "bug570341_recordevents.html";
+  var interval = setInterval(function() {
     // time constants here are arbitrary, chosen to allow the test to pass
     var stopPolling = (win.performance && win.performance.loadEventEnd) ||
                       (seenLoad && Date.now() >= seenLoad + 3000) ||
@@ -119,7 +119,7 @@ window.onload = function() {
       seenLoad = Date.now();
     }
   }, 100);
-}
+};
 </script>
 </head>
 <body>

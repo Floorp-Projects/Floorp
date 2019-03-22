@@ -27,14 +27,14 @@ function continueTest() {
   SimpleTest.executeSoon(function() {
     w.onpagehide = function(ev) {
       is(ev.persisted, true, "Should be bfcached when navigating to multipart");
-    }
+    };
     w.location.href = "file_bug660404";
   });
 }
 
 function finishTest() {
   is(w.document.documentElement.textContent, "opener.finishTest();");
-  is(w.document.documentElement.innerHTML, "<head><script>opener.finishTest();</"+"script></head>");
+  is(w.document.documentElement.innerHTML, "<head><script>opener.finishTest();</" + "script></head>");
   w.close();
   SimpleTest.finish();
 }

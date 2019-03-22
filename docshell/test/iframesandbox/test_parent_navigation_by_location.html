@@ -22,8 +22,8 @@ html5 sandboxed iframe should not be able to perform top navigation with scripts
       runNextTest();
     };
     try {
-      window["parentIframe"]["childIframe"].eval(testCase.script);
-    } catch(e) {
+      window.parentIframe.childIframe.eval(testCase.script);
+    } catch (e) {
       ok(true, testCase.desc + " - " + e.message);
       runNextTest();
     }
@@ -33,20 +33,20 @@ html5 sandboxed iframe should not be able to perform top navigation with scripts
   testCases = [
     {
       desc: "Test 1: parent.location.replace should be blocked even when sandboxed with allow-same-origin allow-top-navigation",
-      script: "parent.location.replace('file_parent_navigation_by_location.html')"
+      script: "parent.location.replace('file_parent_navigation_by_location.html')",
     },
     {
       desc: "Test 2: parent.location.assign should be blocked even when sandboxed with allow-same-origin allow-top-navigation",
-      script: "parent.location.assign('file_parent_navigation_by_location.html')"
+      script: "parent.location.assign('file_parent_navigation_by_location.html')",
     },
     {
       desc: "Test 3: parent.location.href should be blocked even when sandboxed with allow-same-origin allow-top-navigation",
-      script: "parent.location.href = 'file_parent_navigation_by_location.html'"
+      script: "parent.location.href = 'file_parent_navigation_by_location.html'",
     },
     {
       desc: "Test 4: parent.location.hash should be blocked even when sandboxed with allow-same-origin allow-top-navigation",
-      script: "parent.location.hash = 'wibble'"
-    }
+      script: "parent.location.hash = 'wibble'",
+    },
   ];
 
   function runNextTest() {

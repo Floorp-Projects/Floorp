@@ -14,7 +14,7 @@ var doc = "data:text/html,<html><body onload='load()'>" +
  "    iframe.src = 'data:text/html,Hello!';" +
  "  }" +
  "</script>" +
- "</body></html>"
+ "</body></html>";
 
 function test() {
   waitForExplicitFinish();
@@ -26,14 +26,13 @@ function test() {
       return new Promise(resolve => {
         addEventListener("load", function() {
           // The main page has loaded.  Now wait for the iframe to load.
-          let iframe = content.document.getElementById('iframe');
-          iframe.addEventListener('load', function listener(aEvent) {
-
+          let iframe = content.document.getElementById("iframe");
+          iframe.addEventListener("load", function listener(aEvent) {
             // Wait for the iframe to load the new document, not about:blank.
             if (!iframe.src)
               return;
 
-            iframe.removeEventListener('load', listener, true);
+            iframe.removeEventListener("load", listener, true);
             let shistory = content.docShell
                             .QueryInterface(Ci.nsIWebNavigation)
                             .sessionHistory;

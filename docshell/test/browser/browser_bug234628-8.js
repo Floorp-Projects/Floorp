@@ -4,8 +4,8 @@ function test() {
 }
 
 function afterOpen() {
-  is(content.document.documentElement.textContent.indexOf('\u0402'), 156, "Parent doc should be windows-1251");
+  is(content.document.documentElement.textContent.indexOf("\u0402"), 156, "Parent doc should be windows-1251");
 
-  is(content.frames[0].document.documentElement.textContent.indexOf('\u0402'), 99, "Child doc should be windows-1251");
+  is(content.frames[0].document.documentElement.textContent.indexOf("\u0402"), 99, "Child doc should be windows-1251");
 }
 
