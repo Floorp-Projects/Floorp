@@ -1033,15 +1033,6 @@
     "n_buckets": 10,
     "description": "Time elapsed between the moment a function is lazy-parsed (end of parsing of the ScriptSource) and the moment it is recompiled as non-lazy (start of compilation), in milliseconds, for web code."
   },
-  "JS_DEPRECATED_STRING_GENERICS": {
-    "record_in_processes": ["content"],
-    "alert_emails": ["jdemooij@mozilla.com"],
-    "expires_in_version": "72",
-    "bug_numbers": [1339777],
-    "kind": "enumerated",
-    "n_values": 25,
-    "description": "A string generic function was called, like String.join etc. See STRING_GENERICS_* defines in SelfHostingDefines.h for the meaning of values."
-  },
   "XUL_CACHE_DISABLED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "default",
