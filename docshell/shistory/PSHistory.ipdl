@@ -51,6 +51,7 @@ parent:
   sync EvictAllContentViewers();
   sync RemoveDynEntries(int32_t index, PSHEntry entry);
   sync RemoveEntries(nsID[] ids, int32_t index) returns (bool didRemove);
+  sync RemoveFrameEntries(PSHEntry entry);
   sync Reload(uint32_t reloadFlags) returns (LoadSHEntryResult load);
   sync GetAllEntries() returns (MaybeNewPSHEntry[] entries);
   sync FindEntryForBFCache(uint64_t sharedID, bool includeCurrentEntry) returns (MaybeNewPSHEntry entries, int32_t startIndex);

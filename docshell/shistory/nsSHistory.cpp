@@ -1300,6 +1300,19 @@ void nsSHistory::RemoveEntries(nsTArray<nsID>& aIDs, int32_t aStartIndex,
   }
 }
 
+void nsSHistory::RemoveFrameEntries(nsISHEntry* aEntry) {
+  int32_t count = aEntry->GetChildCount();
+  AutoTArray<nsID, 16> ids;
+  for (int32_t i = 0; i < count; ++i) {
+    nsCOMPtr<nsISHEntry> child;
+    aEntry->GetChildAt(i, getter_AddRefs(child));
+    if (child) {
+      child->GetDocshellID(*ids.AppendElement());
+    }
+  }
+  RemoveEntries(ids, mIndex);
+}
+
 void nsSHistory::RemoveDynEntries(int32_t aIndex, nsISHEntry* aEntry) {
   // Remove dynamic entries which are at the index and belongs to the container.
   nsCOMPtr<nsISHEntry> entry(aEntry);
