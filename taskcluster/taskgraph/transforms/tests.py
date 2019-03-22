@@ -67,6 +67,11 @@ WINDOWS_WORKER_TYPES = {
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
     },
+    'windows7-32-shippable': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win7-32',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
+      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+    },
     'windows7-32-devedition': {
       'virtual': 'aws-provisioner-v1/gecko-t-win7-32',
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
@@ -672,6 +677,7 @@ def set_tier(config, tests):
                                          'windows7-32-pgo/opt',
                                          'windows7-32-devedition/opt',
                                          'windows7-32-nightly/opt',
+                                         'windows7-32-shippable/opt',
                                          'windows10-aarch64/opt',
                                          'windows10-64/debug',
                                          'windows10-64/opt',
