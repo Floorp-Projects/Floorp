@@ -126,6 +126,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "type": "int",
             "help": "How long to wait (ms) for one page_cycle to complete, before timing out"
         }],
+        [["--browser-cycles"], {
+            "dest": "browser_cycles",
+            "type": "int",
+            "help": "The number of times a cold load test is repeated (for cold load tests only, "
+                    "where the browser is shutdown and restarted between test iterations)"
+        }],
         [["--host"], {
             "dest": "host",
             "help": "Hostname from which to serve urls (default: 127.0.0.1). "
