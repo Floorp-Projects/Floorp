@@ -629,9 +629,9 @@
   top: 0;
   width: 100%;
   margin: 0;
-  padding: 5px 0 0 !important;
+  padding: 5px 4px 0 !important;
   color: inherit;
-  text-align: center;
+  text-align: start;
   font-weight: inherit !important;
   border-image: linear-gradient(transparent 15%,
                                 var(--theme-splitter-color) 15%,

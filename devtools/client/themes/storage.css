@@ -43,11 +43,11 @@
 #hostOnly,
 #isHttpOnly,
 #sameSite {
-  min-width: 50px;
+  min-width: 58px;
 }
 
 #isSecure {
-  min-width: 40px;
+  min-width: 48px;
 }
 
 /* Text input in storage table */
