@@ -99,6 +99,8 @@ impl SecurityState {
     fn migrate(&mut self, revocations_path: &PathBuf) -> Result<(), SecurityStateError> {
         let f = File::open(revocations_path)?;
         let file = BufReader::new(f);
+        let value = Value::I64(nsICertStorage::STATE_ENFORCE as i64);
+        let mut writer = self.env.write()?;
 
         // Add the data from revocations.txt
         let mut dn: Option<Vec<u8>> = None;
@@ -133,20 +135,22 @@ impl SecurityState {
             };
             if let Some(name) = &dn {
                 if leading_char == '\t' {
-                    let _ = self.set_revocation_by_subject_and_pub_key(
-                        name,
-                        &l_sans_prefix,
-                        nsICertStorage::STATE_ENFORCE as i16,
+                    let _ = self.store.put(
+                        &mut writer,
+                        &make_key(PREFIX_REV_SPK, name, &l_sans_prefix),
+                        &value,
                     );
                 } else {
-                    let _ = self.set_revocation_by_issuer_and_serial(
-                        name,
-                        &l_sans_prefix,
-                        nsICertStorage::STATE_ENFORCE as i16,
+                    let _ = self.store.put(
+                        &mut writer,
+                        &make_key(PREFIX_REV_IS, name, &l_sans_prefix),
+                        &value,
                     );
                 }
             }
         }
+
+        writer.commit()?;
 
         Ok(())
     }
