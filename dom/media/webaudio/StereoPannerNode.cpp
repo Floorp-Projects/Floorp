@@ -168,10 +168,6 @@ StereoPannerNode::StereoPannerNode(AudioContext* aContext)
 already_AddRefed<StereoPannerNode> StereoPannerNode::Create(
     AudioContext& aAudioContext, const StereoPannerOptions& aOptions,
     ErrorResult& aRv) {
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   RefPtr<StereoPannerNode> audioNode = new StereoPannerNode(&aAudioContext);
 
   audioNode->Initialize(aOptions, aRv);

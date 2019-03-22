@@ -159,6 +159,11 @@ nightly
 Signals whether the task is part of a nightly graph. Useful when filtering
 out nightly tasks from full task set at target stage.
 
+shippable
+=========
+Signals whether the task is considered "shippable", that it should get signed and is ok to
+be used for nightlies or releases.
+
 all_locales
 ===========
 

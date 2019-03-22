@@ -21,3 +21,6 @@ if CONFIG['CPU_ARCH'] != 'x86':
     # malloc_size_of_derive is a build dependency, so if we are doing
     # cross-compile for x86, this may not run correctly.
     RUST_TESTS += ['malloc_size_of_derive']
+
+if CONFIG['MOZ_BITS_DOWNLOAD']:
+    RUST_TESTS += ['bits_client']

@@ -446,9 +446,6 @@ const SNAPSHOT_SCHEMA = {
             },
           },
         },
-        lowEndMachine: {
-          type: "boolean",
-        },
         targetFrameRate: {
           type: "number",
         },

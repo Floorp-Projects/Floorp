@@ -380,7 +380,7 @@ nsresult JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
   }
 
   *offer = sdp->ToString();
-  mGeneratedLocalDescription = std::move(sdp);
+  mGeneratedOffer = std::move(sdp);
   ++mSessionVersion;
 
   return NS_OK;
@@ -511,7 +511,7 @@ nsresult JsepSessionImpl::CreateAnswer(const JsepAnswerOptions& options,
   }
 
   *answer = sdp->ToString();
-  mGeneratedLocalDescription = std::move(sdp);
+  mGeneratedAnswer = std::move(sdp);
   ++mSessionVersion;
 
   return NS_OK;
@@ -663,7 +663,7 @@ nsresult JsepSessionImpl::SetLocalDescription(JsepSdpType type,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Check that content hasn't done anything unsupported with the SDP
-  rv = ValidateLocalDescription(*parsed);
+  rv = ValidateLocalDescription(*parsed, type);
   NS_ENSURE_SUCCESS(rv, rv);
 
   switch (type) {
@@ -946,9 +946,11 @@ nsresult JsepSessionImpl::HandleNegotiatedSession(
   }
   JsepTrack::SetUniquePayloadTypes(remoteTracks);
 
-  mGeneratedLocalDescription.reset();
-
   mNegotiations++;
+
+  mGeneratedAnswer.reset();
+  mGeneratedOffer.reset();
+
   return NS_OK;
 }
 
@@ -1543,23 +1545,30 @@ void JsepSessionImpl::RollbackRemoteOffer() {
   mOldTransceivers.clear();
 }
 
-nsresult JsepSessionImpl::ValidateLocalDescription(const Sdp& description) {
+nsresult JsepSessionImpl::ValidateLocalDescription(const Sdp& description,
+                                                   JsepSdpType type) {
+  Sdp* generated = nullptr;
   // TODO(bug 1095226): Better checking.
-  if (!mGeneratedLocalDescription) {
+  if (type == kJsepSdpOffer) {
+    generated = mGeneratedOffer.get();
+  } else {
+    generated = mGeneratedAnswer.get();
+  }
+
+  if (!generated) {
     JSEP_SET_ERROR(
         "Calling SetLocal without first calling CreateOffer/Answer"
         " is not supported.");
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (description.GetMediaSectionCount() !=
-      mGeneratedLocalDescription->GetMediaSectionCount()) {
+  if (description.GetMediaSectionCount() != generated->GetMediaSectionCount()) {
     JSEP_SET_ERROR("Changing the number of m-sections is not allowed");
     return NS_ERROR_INVALID_ARG;
   }
 
   for (size_t i = 0; i < description.GetMediaSectionCount(); ++i) {
-    auto& origMsection = mGeneratedLocalDescription->GetMediaSection(i);
+    auto& origMsection = generated->GetMediaSection(i);
     auto& finalMsection = description.GetMediaSection(i);
     if (origMsection.GetMediaType() != finalMsection.GetMediaType()) {
       JSEP_SET_ERROR("Changing the media-type of m-sections is not allowed");

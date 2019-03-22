@@ -616,6 +616,16 @@ class AddonInternal {
       permissions |= AddonManager.PERM_CAN_UNINSTALL;
     }
 
+    // The permission to "toggle the private browsing access" is locked down
+    // when the extension has opted out or it gets the permission automatically
+    // on every extension startup (as system, privileged and builtin addons).
+    if (this.incognito !== "not_allowed" &&
+        this.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED &&
+        this.signedState !== AddonManager.SIGNEDSTATE_SYSTEM &&
+        !this.location.isBuiltin) {
+      permissions |= AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS;
+    }
+
     if (Services.policies &&
         !Services.policies.isAllowed(`modify-extension:${this.id}`)) {
       permissions &= ~AddonManager.PERM_CAN_UNINSTALL;

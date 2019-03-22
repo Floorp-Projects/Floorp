@@ -21,7 +21,7 @@ class VideoFrame {
  public:
   typedef mozilla::layers::Image Image;
 
-  VideoFrame(already_AddRefed<Image>& aImage,
+  VideoFrame(already_AddRefed<Image> aImage,
              const gfx::IntSize& aIntrinsicSize);
   VideoFrame();
   ~VideoFrame();
@@ -108,11 +108,22 @@ class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
 
   ~VideoSegment();
 
-  void AppendFrame(already_AddRefed<Image>&& aImage, StreamTime aDuration,
+  void AppendFrame(already_AddRefed<Image>&& aImage,
                    const IntSize& aIntrinsicSize,
                    const PrincipalHandle& aPrincipalHandle,
                    bool aForceBlack = false,
                    TimeStamp aTimeStamp = TimeStamp::Now());
+  void ExtendLastFrameBy(StreamTime aDuration) {
+    if (aDuration <= 0) {
+      return;
+    }
+    if (mChunks.IsEmpty()) {
+      mChunks.AppendElement()->SetNull(aDuration);
+    } else {
+      mChunks[mChunks.Length() - 1].mDuration += aDuration;
+    }
+    mDuration += aDuration;
+  }
   const VideoFrame* GetLastFrame(StreamTime* aStart = nullptr) {
     VideoChunk* c = GetLastChunk();
     if (!c) {
@@ -122,6 +133,38 @@ class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
       *aStart = mDuration - c->mDuration;
     }
     return &c->mFrame;
+  }
+  VideoChunk* FindChunkContaining(const TimeStamp& aTime) {
+    VideoChunk* previousChunk = nullptr;
+    for (VideoChunk& c : mChunks) {
+      if (c.mTimeStamp.IsNull()) {
+        continue;
+      }
+      if (c.mTimeStamp > aTime) {
+        return previousChunk;
+      }
+      previousChunk = &c;
+    }
+    return previousChunk;
+  }
+  void ForgetUpToTime(const TimeStamp& aTime) {
+    VideoChunk* chunk = FindChunkContaining(aTime);
+    if (!chunk) {
+      return;
+    }
+    StreamTime duration = 0;
+    size_t chunksToRemove = 0;
+    for (const VideoChunk& c : mChunks) {
+      if (c.mTimeStamp >= chunk->mTimeStamp) {
+        break;
+      }
+      duration += c.GetDuration();
+      ++chunksToRemove;
+    }
+    mChunks.RemoveElementsAt(0, chunksToRemove);
+    mDuration -= duration;
+    MOZ_ASSERT(mChunks.Capacity() >= DEFAULT_SEGMENT_CAPACITY,
+               "Capacity must be retained after removing chunks");
   }
   // Override default impl
   void ReplaceWithDisabled() override {

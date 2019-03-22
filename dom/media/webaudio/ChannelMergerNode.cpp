@@ -68,10 +68,6 @@ ChannelMergerNode::ChannelMergerNode(AudioContext* aContext,
 already_AddRefed<ChannelMergerNode> ChannelMergerNode::Create(
     AudioContext& aAudioContext, const ChannelMergerOptions& aOptions,
     ErrorResult& aRv) {
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   if (aOptions.mNumberOfInputs == 0 ||
       aOptions.mNumberOfInputs > WebAudioUtils::MaxChannelCount) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);

@@ -455,7 +455,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState {
   bool isInStack(nsHtml5StackNode* node);
   void popTemplateMode();
   void pop();
-  void popForeign(int32_t origPos);
+  void popForeign(int32_t origPos, int32_t eltPos);
   void silentPop();
   void popOnEof();
   void appendHtmlElementToDocumentAndPush(nsHtml5HtmlAttributes* attributes);

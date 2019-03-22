@@ -79,6 +79,17 @@ OriginUsageResult::GetLimit(uint64_t* aLimit) {
   return NS_OK;
 }
 
+InitializedOriginsResult::InitializedOriginsResult(const nsACString& aOrigin)
+    : mOrigin(aOrigin) {}
+
+NS_IMPL_ISUPPORTS(InitializedOriginsResult, nsIQuotaInitializedOriginsResult)
+
+NS_IMETHODIMP
+InitializedOriginsResult::GetOrigin(nsACString& aOrigin) {
+  aOrigin = mOrigin;
+  return NS_OK;
+}
+
 }  // namespace quota
 }  // namespace dom
 }  // namespace mozilla

@@ -1,0 +1,8 @@
+[package]
+name = "bitsdownload"
+version = "0.1.0"
+authors = ["nobody@mozilla.org"]
+license = "MPL-2.0"
+
+[dependencies]
+bits_client = { path = "./bits_client" }

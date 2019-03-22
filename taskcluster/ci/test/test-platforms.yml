@@ -29,6 +29,11 @@ linux32-nightly/opt:
     test-sets:
         - linux32-tests
         - linux32-opt-tests
+linux32-shippable/opt:
+    build-platform: linux-shippable/opt
+    test-sets:
+        - linux32-tests
+        - linux32-opt-tests
 linux32-devedition/opt:
     build-platform: linux-devedition-nightly/opt
     test-sets:
@@ -64,6 +69,23 @@ linux64-nightly/opt:
         - awsy
         - raptor-chrome
         - raptor-fetch-chrome
+        - raptor-profiling
+        - raptor-fetch-profiling
+linux64-shippable/opt:
+    build-platform: linux64-shippable/opt
+    test-sets:
+        - common-tests
+        - web-platform-tests
+        - opt-only-tests
+        - desktop-screenshot-capture
+        - talos
+        - awsy
+        - mochitest-headless
+        - linux-talos-flex
+        - raptor-chrome
+        - raptor-fetch-chrome
+        - raptor-firefox
+        - raptor-fetch-firefox
         - raptor-profiling
         - raptor-fetch-profiling
 linux64-devedition/opt:
@@ -113,6 +135,15 @@ linux64-qr/opt:
         - raptor-fetch-firefox
 linux64-pgo-qr/opt:
     build-platform: linux64-pgo/opt
+    test-sets:
+        - linux-qr-tests
+        - talos
+        - awsy
+        - web-platform-tests
+        - raptor-firefox
+        - raptor-fetch-firefox
+linux64-shippable-qr/opt:
+    build-platform: linux64-shippable/opt
     test-sets:
         - linux-qr-tests
         - talos
@@ -177,6 +208,18 @@ windows7-32-nightly/opt:
         - windows-tests
         - web-platform-tests
         - raptor-chrome
+
+windows7-32-shippable/opt:
+    build-platform: win32-shippable/opt
+    test-sets:
+        - awsy
+        - desktop-screenshot-capture
+        - windows-reftest-gpu
+        - windows-talos
+        - windows-tests
+        - web-platform-tests
+        - raptor-chrome
+        - raptor-firefox
 
 windows7-32-devedition/opt:
     build-platform: win32-devedition-nightly/opt
@@ -261,6 +304,21 @@ windows10-64-nightly/opt:
         - raptor-chrome
         - raptor-profiling
 
+windows10-64-shippable/opt:
+    build-platform: win64-shippable/opt
+    test-sets:
+        - awsy
+        - desktop-screenshot-capture
+        - desktop-instrumentation
+        - windows-talos
+        - marionette-gpu-tests
+        - windows-tests
+        - web-platform-tests
+        - mochitest-headless
+        - raptor-firefox
+        - raptor-chrome
+        - raptor-profiling
+
 windows10-64-devedition/opt:
     build-platform: win64-devedition-nightly/opt
     test-sets:
@@ -299,6 +357,15 @@ windows10-64-pgo-qr/opt:
         - raptor-firefox
         - web-platform-tests
 
+windows10-64-shippable-qr/opt:
+    build-platform: win64-shippable/opt
+    test-sets:
+        - awsy
+        - windows-qr-tests
+        - windows-talos
+        - raptor-firefox
+        - web-platform-tests
+
 ##
 # MacOS X platforms (matching /macosx.*/)
 
@@ -324,6 +391,17 @@ macosx64-nightly/opt:
         - raptor-chrome
         - raptor-profiling
 
+macosx64-shippable/opt:
+    build-platform: macosx64-shippable/opt
+    test-sets:
+        - macosx64-talos
+        - macosx64-tests
+        - desktop-screenshot-capture
+        - awsy
+        - raptor-chrome
+        - raptor-firefox
+        - raptor-profiling
+
 macosx64-devedition/opt:
     build-platform: macosx64-devedition-nightly/opt
     test-sets:
@@ -333,6 +411,12 @@ macosx64-qr/opt:
     build-platform: macosx64/opt
     test-sets:
         - macosx64-qr-tests
+
+macosx64-shippable-qr/opt:
+    build-platform: macosx64-shippable/opt
+    test-sets:
+        - macosx64-qr-tests
+
 macosx64-qr/debug:
     build-platform: macosx64/debug
     test-sets:

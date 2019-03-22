@@ -41,7 +41,7 @@ function tryToCreateNodeOnClosedContext(ctx) {
         return;
       }
 
-      expectException(function() {
+      expectNoException(function() {
         ctx[e.name].apply(ctx, e.args);
       }, DOMException.INVALID_STATE_ERR);
     });

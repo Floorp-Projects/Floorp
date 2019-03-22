@@ -205,8 +205,8 @@ class StructuredLogger(object):
         """
         rv = []
         for handler in self._state.handlers:
-            if hasattr(handler, "handle_message"):
-                rv += handler.handle_message(topic, command, *args)
+            if hasattr(handler, "message_handler"):
+                rv += handler.message_handler.handle_message(topic, command, *args)
         return rv
 
     @property

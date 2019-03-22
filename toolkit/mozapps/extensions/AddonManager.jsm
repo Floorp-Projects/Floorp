@@ -3138,6 +3138,9 @@ var AddonManager = {
   // Indicates that the Addon can be set to be optionally enabled
   // on a case-by-case basis.
   PERM_CAN_ASK_TO_ACTIVATE: 16,
+  // Indicates that the Addon can be set to be allowed/disallowed
+  // in private browsing windows.
+  PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS: 32,
 
   // General descriptions of where items are installed.
   // Installed in this profile.

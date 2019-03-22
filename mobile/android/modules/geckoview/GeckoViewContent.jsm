@@ -21,15 +21,12 @@ class GeckoViewContent extends GeckoViewModule {
         "GeckoView:DisplayMatches",
         "GeckoView:FindInPage",
         "GeckoView:RestoreState",
-        "GeckoView:SaveState",
         "GeckoView:SetActive",
         "GeckoView:SetFocused",
         "GeckoView:ZoomToInput",
         "GeckoView:ScrollBy",
         "GeckoView:ScrollTo",
     ]);
-
-    this.messageManager.addMessageListener("GeckoView:SaveStateFinish", this);
   }
 
   onEnable() {
@@ -106,17 +103,8 @@ class GeckoViewContent extends GeckoViewModule {
           this.browser.blur();
         }
         break;
-      case "GeckoView:SaveState":
-        if (!this._saveStateCallbacks) {
-          this._saveStateCallbacks = new Map();
-          this._saveStateNextId = 0;
-        }
-        this._saveStateCallbacks.set(this._saveStateNextId, aCallback);
-        this.messageManager.sendAsyncMessage("GeckoView:SaveState", {id: this._saveStateNextId});
-        this._saveStateNextId++;
-        break;
       case "GeckoView:RestoreState":
-        this.messageManager.sendAsyncMessage("GeckoView:RestoreState", {state: aData.state});
+        this.messageManager.sendAsyncMessage("GeckoView:RestoreState", aData);
         break;
     }
   }
@@ -150,20 +138,6 @@ class GeckoViewContent extends GeckoViewModule {
       case "GeckoView:DOMFullscreenRequest":
         this.window.windowUtils
                    .remoteFrameFullscreenChanged(aMsg.target);
-        break;
-      case "GeckoView:SaveStateFinish":
-        if (!this._saveStateCallbacks || !this._saveStateCallbacks.has(aMsg.data.id)) {
-          warn `Failed to save state due to missing callback`;
-          return;
-        }
-
-        const callback = this._saveStateCallbacks.get(aMsg.data.id);
-        if (aMsg.data.error) {
-          callback.onError(aMsg.data.error);
-        } else {
-          callback.onSuccess(aMsg.data.state);
-        }
-        this._saveStateCallbacks.delete(aMsg.data.id);
         break;
     }
   }

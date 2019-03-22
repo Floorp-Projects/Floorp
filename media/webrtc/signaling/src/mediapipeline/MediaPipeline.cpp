@@ -14,7 +14,6 @@
 #include "AudioConverter.h"
 #include "DOMMediaStream.h"
 #include "ImageContainer.h"
-#include "ImageToI420.h"
 #include "ImageTypes.h"
 #include "Layers.h"
 #include "LayersLogging.h"
@@ -24,8 +23,8 @@
 #include "MediaStreamGraphImpl.h"
 #include "MediaStreamListener.h"
 #include "MediaStreamTrack.h"
-#include "MediaStreamVideoSink.h"
 #include "RtpLogger.h"
+#include "VideoFrameConverter.h"
 #include "VideoSegment.h"
 #include "VideoStreamTrack.h"
 #include "VideoUtils.h"
@@ -37,8 +36,6 @@
 #include "mozilla/TaskQueue.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
-#include "mozilla/dom/ImageBitmapBinding.h"
-#include "mozilla/dom/ImageUtils.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Types.h"
@@ -48,10 +45,6 @@
 #include "signaling/src/peerconnection/MediaTransportHandler.h"
 #include "Tracing.h"
 #include "WebrtcImageBuffer.h"
-
-#include "webrtc/rtc_base/bind.h"
-#include "webrtc/rtc_base/keep_ref_until_done.h"
-#include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 
 // Max size given stereo is 480*2*2 = 1920 (10ms of 16-bits stereo audio at
@@ -61,14 +54,6 @@ static_assert((WEBRTC_MAX_SAMPLE_RATE / 100) * sizeof(uint16_t) * 2 <=
                   AUDIO_SAMPLE_BUFFER_MAX_BYTES,
               "AUDIO_SAMPLE_BUFFER_MAX_BYTES is not large enough");
 
-// The number of frame buffers VideoFrameConverter may create before returning
-// errors.
-// Sometimes these are released synchronously but they can be forwarded all the
-// way to the encoder for asynchronous encoding. With a pool size of 5,
-// we allow 1 buffer for the current conversion, and 4 buffers to be queued at
-// the encoder.
-#define CONVERTER_BUFFER_POOL_SIZE 5
-
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -77,261 +62,6 @@ using namespace mozilla::layers;
 mozilla::LazyLogModule gMediaPipelineLog("MediaPipeline");
 
 namespace mozilla {
-
-class VideoConverterListener {
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoConverterListener)
-
-  virtual void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) = 0;
-
- protected:
-  virtual ~VideoConverterListener() {}
-};
-
-// An async video frame format converter.
-//
-// Input is typically a MediaStream(Track)Listener driven by MediaStreamGraph.
-//
-// We keep track of the size of the TaskQueue so we can drop frames if
-// conversion is taking too long.
-//
-// Output is passed through to all added VideoConverterListeners on a TaskQueue
-// thread whenever a frame is converted.
-class VideoFrameConverter {
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoFrameConverter)
-
-  VideoFrameConverter()
-      : mLength(0),
-        mTaskQueue(
-            new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
-                          "VideoFrameConverter")),
-        mBufferPool(false, CONVERTER_BUFFER_POOL_SIZE),
-        mLastImage(
-            -1)  // -1 is not a guaranteed invalid serial. See bug 1262134.
-#ifdef DEBUG
-        ,
-        mThrottleCount(0),
-        mThrottleRecord(0)
-#endif
-        ,
-        mMutex("VideoFrameConverter") {
-    MOZ_COUNT_CTOR(VideoFrameConverter);
-  }
-
-  void QueueVideoChunk(const VideoChunk& aChunk, bool aForceBlack) {
-    IntSize size = aChunk.mFrame.GetIntrinsicSize();
-    if (size.width == 0 || size.width == 0) {
-      return;
-    }
-
-    if (aChunk.IsNull()) {
-      aForceBlack = true;
-    } else {
-      aForceBlack = aChunk.mFrame.GetForceBlack();
-    }
-
-    int32_t serial;
-    if (aForceBlack) {
-      // Reset the last-img check.
-      // -1 is not a guaranteed invalid serial. See bug 1262134.
-      serial = -1;
-    } else {
-      serial = aChunk.mFrame.GetImage()->GetSerial();
-    }
-
-    const double duplicateMinFps = 1.0;
-    TimeStamp t = aChunk.mTimeStamp;
-    MOZ_ASSERT(!t.IsNull());
-    if (!t.IsNull() && serial == mLastImage && !mLastFrameSent.IsNull() &&
-        (t - mLastFrameSent).ToSeconds() < (1.0 / duplicateMinFps)) {
-      // We get passed duplicate frames every ~10ms even with no frame change.
-
-      // After disabling, or when the source is not producing many frames,
-      // we still want *some* frames to flow to the other side.
-      // It could happen that we drop the packet that carried the first disabled
-      // frame, for instance. Note that this still requires the application to
-      // send a frame, or it doesn't trigger at all.
-      return;
-    }
-    mLastFrameSent = t;
-    mLastImage = serial;
-
-    // A throttling limit of 1 allows us to convert 2 frames concurrently.
-    // It's short enough to not build up too significant a delay, while
-    // giving us a margin to not cause some machines to drop every other frame.
-    const int32_t queueThrottlingLimit = 1;
-    if (mLength > queueThrottlingLimit) {
-      MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
-              ("VideoFrameConverter %p queue is full. Throttling by "
-               "throwing away a frame.",
-               this));
-#ifdef DEBUG
-      ++mThrottleCount;
-      mThrottleRecord = std::max(mThrottleCount, mThrottleRecord);
-#endif
-      return;
-    }
-
-#ifdef DEBUG
-    if (mThrottleCount > 0) {
-      if (mThrottleCount > 5) {
-        // Log at a higher level when we have large drops.
-        MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
-                ("VideoFrameConverter %p stopped throttling after throwing "
-                 "away %d frames. Longest throttle so far was %d frames.",
-                 this, mThrottleCount, mThrottleRecord));
-      } else {
-        MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
-                ("VideoFrameConverter %p stopped throttling after throwing "
-                 "away %d frames. Longest throttle so far was %d frames.",
-                 this, mThrottleCount, mThrottleRecord));
-      }
-      mThrottleCount = 0;
-    }
-#endif
-
-    ++mLength;  // Atomic
-
-    nsCOMPtr<nsIRunnable> runnable =
-        NewRunnableMethod<StoreRefPtrPassByPtr<Image>, IntSize, bool>(
-            "VideoFrameConverter::ProcessVideoFrame", this,
-            &VideoFrameConverter::ProcessVideoFrame, aChunk.mFrame.GetImage(),
-            size, aForceBlack);
-    nsresult rv = mTaskQueue->Dispatch(runnable.forget());
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
-  }
-
-  void AddListener(VideoConverterListener* aListener) {
-    MutexAutoLock lock(mMutex);
-
-    MOZ_ASSERT(!mListeners.Contains(aListener));
-    mListeners.AppendElement(aListener);
-  }
-
-  bool RemoveListener(VideoConverterListener* aListener) {
-    MutexAutoLock lock(mMutex);
-
-    return mListeners.RemoveElement(aListener);
-  }
-
-  void Shutdown() {
-    MutexAutoLock lock(mMutex);
-    mListeners.Clear();
-  }
-
- protected:
-  virtual ~VideoFrameConverter() { MOZ_COUNT_DTOR(VideoFrameConverter); }
-
-  static void DeleteBuffer(uint8_t* aData) { delete[] aData; }
-
-  void VideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) {
-    MutexAutoLock lock(mMutex);
-
-    for (RefPtr<VideoConverterListener>& listener : mListeners) {
-      listener->OnVideoFrameConverted(aVideoFrame);
-    }
-  }
-
-  void ProcessVideoFrame(Image* aImage, IntSize aSize, bool aForceBlack) {
-    --mLength;  // Atomic
-    MOZ_ASSERT(mLength >= 0);
-
-    // See Bug 1529581 - Ideally we'd use the mTimestamp from the chunk
-    // passed into QueueVideoChunk rather than the webrtc.org clock here.
-    int64_t now = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
-
-    if (aForceBlack) {
-      // Send a black image.
-      rtc::scoped_refptr<webrtc::I420Buffer> buffer =
-          mBufferPool.CreateBuffer(aSize.width, aSize.height);
-      if (!buffer) {
-        MOZ_DIAGNOSTIC_ASSERT(false,
-                              "Buffers not leaving scope except for "
-                              "reconfig, should never leak");
-        MOZ_LOG(gMediaPipelineLog, LogLevel::Warning,
-                ("Creating a buffer for a black video frame failed"));
-        return;
-      }
-
-      MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
-              ("Sending a black video frame"));
-      webrtc::I420Buffer::SetBlack(buffer);
-
-      webrtc::VideoFrame frame(buffer, 0,  // not setting rtp timestamp
-                               now, webrtc::kVideoRotation_0);
-      VideoFrameConverted(frame);
-      return;
-    }
-
-    MOZ_RELEASE_ASSERT(aImage, "Must have image if not forcing black");
-    MOZ_ASSERT(aImage->GetSize() == aSize);
-
-    if (PlanarYCbCrImage* image = aImage->AsPlanarYCbCrImage()) {
-      ImageUtils utils(image);
-      if (utils.GetFormat() == ImageBitmapFormat::YUV420P && image->GetData()) {
-        const PlanarYCbCrData* data = image->GetData();
-        rtc::scoped_refptr<webrtc::WrappedI420Buffer> video_frame_buffer(
-            new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
-                aImage->GetSize().width, aImage->GetSize().height,
-                data->mYChannel, data->mYStride, data->mCbChannel,
-                data->mCbCrStride, data->mCrChannel, data->mCbCrStride,
-                rtc::KeepRefUntilDone(image)));
-
-        webrtc::VideoFrame i420_frame(video_frame_buffer,
-                                      0,  // not setting rtp timestamp
-                                      now, webrtc::kVideoRotation_0);
-        MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
-                ("Sending an I420 video frame"));
-        VideoFrameConverted(i420_frame);
-        return;
-      }
-    }
-
-    rtc::scoped_refptr<webrtc::I420Buffer> buffer =
-        mBufferPool.CreateBuffer(aSize.width, aSize.height);
-    if (!buffer) {
-      MOZ_DIAGNOSTIC_ASSERT(false,
-                            "Buffers not leaving scope except for "
-                            "reconfig, should never leak");
-      MOZ_LOG(gMediaPipelineLog, LogLevel::Warning,
-              ("Creating a buffer for a black video frame failed"));
-      return;
-    }
-
-    nsresult rv =
-        ConvertToI420(aImage, buffer->MutableDataY(), buffer->StrideY(),
-                      buffer->MutableDataU(), buffer->StrideU(),
-                      buffer->MutableDataV(), buffer->StrideV());
-
-    if (NS_FAILED(rv)) {
-      MOZ_LOG(gMediaPipelineLog, LogLevel::Warning,
-              ("Image conversion failed"));
-      return;
-    }
-
-    webrtc::VideoFrame frame(buffer, 0,  // not setting rtp timestamp
-                             now, webrtc::kVideoRotation_0);
-    VideoFrameConverted(frame);
-  }
-
-  Atomic<int32_t, Relaxed> mLength;
-  const RefPtr<TaskQueue> mTaskQueue;
-  webrtc::I420BufferPool mBufferPool;
-
-  // Written and read from the queueing thread (normally MSG).
-  int32_t mLastImage;        // serial number of last Image
-  TimeStamp mLastFrameSent;  // The time we sent the last frame.
-#ifdef DEBUG
-  uint32_t mThrottleCount;
-  uint32_t mThrottleRecord;
-#endif
-
-  // mMutex guards the below variables.
-  Mutex mMutex;
-  nsTArray<RefPtr<VideoConverterListener>> mListeners;
-};
 
 // An async inserter for audio data, to avoid running audio codec encoders
 // on the MSG/input audio thread.  Basically just bounces all the audio
@@ -919,7 +649,8 @@ void MediaPipeline::EncryptedPacketSending(const std::string& aTransportId,
   }
 }
 
-class MediaPipelineTransmit::PipelineListener : public MediaStreamVideoSink {
+class MediaPipelineTransmit::PipelineListener
+    : public DirectMediaStreamTrackListener {
   friend class MediaPipelineTransmit;
 
  public:
@@ -959,6 +690,7 @@ class MediaPipelineTransmit::PipelineListener : public MediaStreamVideoSink {
   // Implement MediaStreamTrackListener
   void NotifyQueuedChanges(MediaStreamGraph* aGraph, StreamTime aTrackOffset,
                            const MediaSegment& aQueuedMedia) override;
+  void NotifyEnabledStateChanged(bool aEnabled) override;
 
   // Implement DirectMediaStreamTrackListener
   void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
@@ -966,10 +698,6 @@ class MediaPipelineTransmit::PipelineListener : public MediaStreamVideoSink {
                                const MediaSegment& aMedia) override;
   void NotifyDirectListenerInstalled(InstallationResult aResult) override;
   void NotifyDirectListenerUninstalled() override;
-
-  // Implement MediaStreamVideoSink
-  void SetCurrentFrames(const VideoSegment& aSegment) override;
-  void ClearFrames() override {}
 
  private:
   void NewData(const MediaSegment& aMedia, TrackRate aRate = 0);
@@ -1099,8 +827,9 @@ void MediaPipelineTransmit::Stop() {
   if (mDomTrack->AsAudioStreamTrack()) {
     mDomTrack->RemoveDirectListener(mListener);
     mDomTrack->RemoveListener(mListener);
-  } else if (VideoStreamTrack* video = mDomTrack->AsVideoStreamTrack()) {
-    video->RemoveVideoOutput(mListener);
+  } else if (mDomTrack->AsVideoStreamTrack()) {
+    mDomTrack->RemoveDirectListener(mListener);
+    mDomTrack->RemoveListener(mListener);
   } else {
     MOZ_ASSERT(false, "Unknown track type");
   }
@@ -1149,8 +878,9 @@ void MediaPipelineTransmit::Start() {
       mDomTrack->AddDirectListener(mListener);
     }
     mDomTrack->AddListener(mListener);
-  } else if (VideoStreamTrack* video = mDomTrack->AsVideoStreamTrack()) {
-    video->AddVideoOutput(mListener);
+  } else if (mDomTrack->AsVideoStreamTrack()) {
+    mDomTrack->AddDirectListener(mListener);
+    mDomTrack->AddListener(mListener);
   } else {
     MOZ_ASSERT(false, "Unknown track type");
   }
@@ -1311,15 +1041,8 @@ void MediaPipelineTransmit::PipelineListener::NotifyRealtimeTrackData(
       ("MediaPipeline::NotifyRealtimeTrackData() listener=%p, offset=%" PRId64
        ", duration=%" PRId64,
        this, aOffset, aMedia.GetDuration()));
-
-  if (aMedia.GetType() == MediaSegment::VIDEO) {
-    TRACE_COMMENT("Video");
-    // We have to call the upstream NotifyRealtimeTrackData and
-    // MediaStreamVideoSink will route them to SetCurrentFrames.
-    MediaStreamVideoSink::NotifyRealtimeTrackData(aGraph, aOffset, aMedia);
-    return;
-  }
-  TRACE_COMMENT("Audio");
+  TRACE_COMMENT("%s",
+                aMedia.GetType() == MediaSegment::VIDEO ? "Video" : "Audio");
   NewData(aMedia, aGraph->GraphRate());
 }
 
@@ -1330,7 +1053,7 @@ void MediaPipelineTransmit::PipelineListener::NotifyQueuedChanges(
           ("MediaPipeline::NotifyQueuedChanges()"));
 
   if (aQueuedMedia.GetType() == MediaSegment::VIDEO) {
-    // We always get video from SetCurrentFrames().
+    // We always get video from the direct listener.
     return;
   }
 
@@ -1349,6 +1072,15 @@ void MediaPipelineTransmit::PipelineListener::NotifyQueuedChanges(
     rate = 16000;
   }
   NewData(aQueuedMedia, rate);
+}
+
+void MediaPipelineTransmit::PipelineListener::NotifyEnabledStateChanged(
+    bool aEnabled) {
+  if (mConduit->type() != MediaSessionConduit::VIDEO) {
+    return;
+  }
+  MOZ_ASSERT(mConverter);
+  mConverter->SetTrackEnabled(aEnabled);
 }
 
 void MediaPipelineTransmit::PipelineListener::NotifyDirectListenerInstalled(
@@ -1408,11 +1140,6 @@ void MediaPipelineTransmit::PipelineListener::NewData(
   }
 }
 
-void MediaPipelineTransmit::PipelineListener::SetCurrentFrames(
-    const VideoSegment& aSegment) {
-  NewData(aSegment);
-}
-
 class GenericReceiveListener : public MediaStreamTrackListener {
  public:
   explicit GenericReceiveListener(dom::MediaStreamTrack* aTrack)
@@ -1453,7 +1180,7 @@ class GenericReceiveListener : public MediaStreamTrackListener {
     }
     mListening = true;
     mMaybeTrackNeedsUnmute = true;
-    if (!mSource->IsDestroyed()) {
+    if (mTrack->AsAudioStreamTrack() && !mSource->IsDestroyed()) {
       mSource->SetPullingEnabled(mTrackId, true);
     }
   }
@@ -1463,7 +1190,7 @@ class GenericReceiveListener : public MediaStreamTrackListener {
       return;
     }
     mListening = false;
-    if (!mSource->IsDestroyed()) {
+    if (mTrack->AsAudioStreamTrack() && !mSource->IsDestroyed()) {
       mSource->SetPullingEnabled(mTrackId, false);
     }
   }
@@ -1715,93 +1442,61 @@ class MediaPipelineReceiveVideo::PipelineListener
  public:
   explicit PipelineListener(dom::MediaStreamTrack* aTrack)
       : GenericReceiveListener(aTrack),
-        mWidth(0),
-        mHeight(0),
         mImageContainer(
-            LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS)),
-        mMutex("Video PipelineListener") {
+            LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS)) {
     AddTrackToSource();
-  }
-
-  // Implement MediaStreamTrackListener
-  void NotifyPull(MediaStreamGraph* aGraph, StreamTime aEndOfAppendedData,
-                  StreamTime aDesiredTime) override {
-    TRACE_AUDIO_CALLBACK_COMMENT("Track %i", mTrackId);
-    MutexAutoLock lock(mMutex);
-
-    RefPtr<Image> image = mImage;
-    StreamTime delta = aDesiredTime - aEndOfAppendedData;
-    MOZ_ASSERT(delta > 0);
-
-    VideoSegment segment;
-    IntSize size = image ? image->GetSize() : IntSize(mWidth, mHeight);
-    segment.AppendFrame(image.forget(), delta, size, mPrincipalHandle);
-    DebugOnly<bool> appended = mSource->AppendToTrack(mTrackId, &segment);
-    MOZ_ASSERT(appended);
-  }
-
-  // Accessors for external writes from the renderer
-  void FrameSizeChange(unsigned int aWidth, unsigned int aHeight) {
-    MutexAutoLock enter(mMutex);
-
-    mWidth = aWidth;
-    mHeight = aHeight;
   }
 
   void RenderVideoFrame(const webrtc::VideoFrameBuffer& aBuffer,
                         uint32_t aTimeStamp, int64_t aRenderTime) {
+    RefPtr<Image> image;
     if (aBuffer.type() == webrtc::VideoFrameBuffer::Type::kNative) {
       // We assume that only native handles are used with the
       // WebrtcMediaDataDecoderCodec decoder.
       const ImageBuffer* imageBuffer =
           static_cast<const ImageBuffer*>(&aBuffer);
-      MutexAutoLock lock(mMutex);
-      mImage = imageBuffer->GetNativeImage();
-      return;
+      image = imageBuffer->GetNativeImage();
+    } else {
+      MOZ_ASSERT(aBuffer.type() == webrtc::VideoFrameBuffer::Type::kI420);
+      rtc::scoped_refptr<const webrtc::I420BufferInterface> i420 =
+          aBuffer.GetI420();
+
+      MOZ_ASSERT(i420->DataY());
+      // Create a video frame using |buffer|.
+      RefPtr<PlanarYCbCrImage> yuvImage =
+          mImageContainer->CreatePlanarYCbCrImage();
+
+      PlanarYCbCrData yuvData;
+      yuvData.mYChannel = const_cast<uint8_t*>(i420->DataY());
+      yuvData.mYSize = IntSize(i420->width(), i420->height());
+      yuvData.mYStride = i420->StrideY();
+      MOZ_ASSERT(i420->StrideU() == i420->StrideV());
+      yuvData.mCbCrStride = i420->StrideU();
+      yuvData.mCbChannel = const_cast<uint8_t*>(i420->DataU());
+      yuvData.mCrChannel = const_cast<uint8_t*>(i420->DataV());
+      yuvData.mCbCrSize =
+          IntSize((i420->width() + 1) >> 1, (i420->height() + 1) >> 1);
+      yuvData.mPicX = 0;
+      yuvData.mPicY = 0;
+      yuvData.mPicSize = IntSize(i420->width(), i420->height());
+      yuvData.mStereoMode = StereoMode::MONO;
+
+      if (!yuvImage->CopyData(yuvData)) {
+        MOZ_ASSERT(false);
+        return;
+      }
+
+      image = yuvImage.forget();
     }
 
-    MOZ_ASSERT(aBuffer.type() == webrtc::VideoFrameBuffer::Type::kI420);
-    rtc::scoped_refptr<const webrtc::I420BufferInterface> i420 =
-        aBuffer.GetI420();
-
-    MOZ_ASSERT(i420->DataY());
-    // Create a video frame using |buffer|.
-    RefPtr<PlanarYCbCrImage> yuvImage =
-        mImageContainer->CreatePlanarYCbCrImage();
-
-    PlanarYCbCrData yuvData;
-    yuvData.mYChannel = const_cast<uint8_t*>(i420->DataY());
-    yuvData.mYSize = IntSize(i420->width(), i420->height());
-    yuvData.mYStride = i420->StrideY();
-    MOZ_ASSERT(i420->StrideU() == i420->StrideV());
-    yuvData.mCbCrStride = i420->StrideU();
-    yuvData.mCbChannel = const_cast<uint8_t*>(i420->DataU());
-    yuvData.mCrChannel = const_cast<uint8_t*>(i420->DataV());
-    yuvData.mCbCrSize =
-        IntSize((i420->width() + 1) >> 1, (i420->height() + 1) >> 1);
-    yuvData.mPicX = 0;
-    yuvData.mPicY = 0;
-    yuvData.mPicSize = IntSize(i420->width(), i420->height());
-    yuvData.mStereoMode = StereoMode::MONO;
-
-    if (!yuvImage->CopyData(yuvData)) {
-      MOZ_ASSERT(false);
-      return;
-    }
-
-    MutexAutoLock lock(mMutex);
-    mImage = yuvImage;
+    VideoSegment segment;
+    auto size = image->GetSize();
+    segment.AppendFrame(image.forget(), size, mPrincipalHandle);
+    mSource->AppendToTrack(mTrackId, &segment);
   }
 
  private:
-  int mWidth;
-  int mHeight;
   RefPtr<layers::ImageContainer> mImageContainer;
-  RefPtr<layers::Image> mImage;
-  Mutex mMutex;  // Mutex for processing WebRTC frames.
-                 // Protects mImage against:
-                 // - Writing from the GIPS thread
-                 // - Reading from the MSG thread
 };
 
 class MediaPipelineReceiveVideo::PipelineRenderer
@@ -1813,10 +1508,7 @@ class MediaPipelineReceiveVideo::PipelineRenderer
   void Detach() { mPipeline = nullptr; }
 
   // Implement VideoRenderer
-  void FrameSizeChange(unsigned int aWidth, unsigned int aHeight) override {
-    mPipeline->mListener->FrameSizeChange(aWidth, aHeight);
-  }
-
+  void FrameSizeChange(unsigned int aWidth, unsigned int aHeight) override {}
   void RenderVideoFrame(const webrtc::VideoFrameBuffer& aBuffer,
                         uint32_t aTimeStamp, int64_t aRenderTime) override {
     mPipeline->mListener->RenderVideoFrame(aBuffer, aTimeStamp, aRenderTime);

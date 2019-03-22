@@ -9,42 +9,18 @@ import codecs
 
 from mozlog.structuredlog import log_levels
 import six
+from mozlog.handlers.messagehandler import MessageHandler
 
 
 class BaseHandler(object):
     """A base handler providing message handling facilities to
     derived classes.
-
-    :param inner: A handler-like callable that may receive messages
-                  from a log user.
     """
 
     def __init__(self, inner):
-        self.wrapped = []
-        if hasattr(inner, "handle_message"):
-            self.wrapped.append(inner)
-        self.message_handlers = {}
-
-    def register_message_handlers(self, topic, handlers):
-        self.message_handlers[topic] = handlers
-
-    def handle_message(self, topic, cmd, *args):
-        """Handles a message for the given topic by calling a subclass-defined
-        callback for the command.
-
-        :param topic: The topic of the broadcasted message. Handlers opt-in to
-                      receiving messages by identifying a topic when calling
-                      register_message_handlers.
-        :param command: The command to issue. This is a string that corresponds
-                        to a callback provided by the target.
-        :param arg: Arguments to pass to the identified message callback, if any.
-        """
-        rv = []
-        if topic in self.message_handlers and cmd in self.message_handlers[topic]:
-            rv.append(self.message_handlers[topic][cmd](*args))
-        for inner in self.wrapped:
-            rv.extend(inner.handle_message(topic, cmd, *args))
-        return rv
+        self.message_handler = MessageHandler()
+        if hasattr(inner, "message_handler"):
+            self.message_handler.wrapped.append(inner)
 
 
 class LogLevelFilter(BaseHandler):
