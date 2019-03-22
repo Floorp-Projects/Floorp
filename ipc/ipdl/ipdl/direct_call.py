@@ -595,9 +595,6 @@ VIRTUAL_CALL_CLASSES = set([
     ("PSessionStorageObserver", "child"),
     ("PSessionStorageObserver", "parent"),
 
-    # bug 1513911
-    ("PIndexedDBPermissionRequest", "child"),
-
     # Recv* methods are MOZ_CAN_RUN_SCRIPT and OnMessageReceived is not, so
     # it's not allowed to call them.
     ("PBrowser", "child"),

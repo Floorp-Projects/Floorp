@@ -44,6 +44,7 @@ EXPORTS.mozilla.dom.indexedDB += [
     'FileSnapshot.h',
     'Key.h',
     'KeyPath.h',
+    'PermissionRequestBase.h',
     'SerializationHelpers.h',
 ]
 
@@ -88,7 +89,6 @@ IPDL_SOURCES += [
     'PBackgroundIDBTransaction.ipdl',
     'PBackgroundIDBVersionChangeTransaction.ipdl',
     'PBackgroundIndexedDBUtils.ipdl',
-    'PIndexedDBPermissionRequest.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
