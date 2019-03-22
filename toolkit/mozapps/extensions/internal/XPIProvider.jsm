@@ -108,6 +108,18 @@ const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
 const DB_SCHEMA = 29;
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "enabledScopesPref",
+                                      PREF_EM_ENABLED_SCOPES,
+                                      AddonManager.SCOPE_ALL);
+
+Object.defineProperty(this, "enabledScopes", {
+  get() {
+    // The profile location is always enabled
+    return enabledScopesPref | AddonManager.SCOPE_PROFILE;
+  },
+});
+
+
 function encoded(strings, ...values) {
   let result = [];
 
@@ -2115,11 +2127,6 @@ var XPIProvider = {
       }
     }
 
-    let enabledScopes = Services.prefs.getIntPref(PREF_EM_ENABLED_SCOPES,
-                                                  AddonManager.SCOPE_ALL);
-    // The profile location is always enabled
-    enabledScopes |= AddonManager.SCOPE_PROFILE;
-
     // These must be in order of priority, highest to lowest,
     // for processFileChanges etc. to work
     let locations = [
@@ -2134,7 +2141,7 @@ var XPIProvider = {
       [SystemDefaultsLoc, KEY_APP_SYSTEM_DEFAULTS, AddonManager.SCOPE_PROFILE,
        KEY_APP_FEATURES, []],
 
-      [() => BuiltInLocation, KEY_APP_BUILTINS, AddonManager.SCOPE_SYSTEM],
+      [() => BuiltInLocation, KEY_APP_BUILTINS, AddonManager.SCOPE_APPLICATION],
 
       [DirectoryLoc, KEY_APP_SYSTEM_USER, AddonManager.SCOPE_USER,
        "XREUSysExt", [Services.appinfo.ID], true],
@@ -2612,6 +2619,10 @@ var XPIProvider = {
   },
 
   maybeInstallBuiltinAddon(aID, aVersion, aBase) {
+    if (!(enabledScopes & BuiltInLocation.scope)) {
+      return;
+    }
+
     let existing = BuiltInLocation.get(aID);
     if (!existing || existing.version != aVersion) {
       this.startupPromises.push(this.installBuiltinAddon(aBase));
