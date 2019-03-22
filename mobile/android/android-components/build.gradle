@@ -15,9 +15,6 @@ buildscript {
         classpath Dependencies.tools_kotlingradle
         classpath Dependencies.tools_dokka
         classpath Dependencies.tools_androidmavenpublish
-        // Mozilla Android gradle plugin. For details, see the repo:
-        // https://github.com/mozilla-mobile/android-automation-tools/tree/master/gradle-plugin
-        classpath "org.mozilla.android:gradle-plugin:0.2"
     }
 }
 
@@ -29,6 +26,13 @@ allprojects {
     repositories {
         google()
         jcenter()
+
+        // Currently the main repository where appservices artifacts are published.
+        // This will eventually move to maven.mozilla.org
+        // See https://github.com/mozilla/application-services/issues/252
+        maven {
+            url "https://dl.bintray.com/mozilla-appservices/application-services"
+        }
 
         maven {
             url "https://maven.mozilla.org/maven2"
@@ -42,9 +46,6 @@ allprojects {
             url "https://download.servo.org/nightly/maven"
         }
     }
-
-    // Apply necessary Mozilla repositories as defined by the shared plugin.
-    apply plugin: 'org.mozilla.android'
 }
 
 subprojects {
