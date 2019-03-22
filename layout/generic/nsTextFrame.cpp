@@ -7479,7 +7479,7 @@ void nsTextFrame::UpdateIteratorFromOffset(const PropertyProvider& aProperties,
 
   if (aInOffset < trimmedEnd && !aIter.IsOriginalCharSkipped() &&
       !mTextRun->IsClusterStart(aIter.GetSkippedOffset())) {
-    NS_WARNING("called for non-cluster boundary");
+    // Called for non-cluster boundary
     FindClusterStart(mTextRun, trimmedOffset, &aIter);
   }
 }
