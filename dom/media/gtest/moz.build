@@ -39,7 +39,6 @@ UNIFIED_SOURCES += [
     'TestMP4Demuxer.cpp',
     'TestOpusParser.cpp',
     'TestRust.cpp',
-    'TestVideoFrameConverter.cpp',
     'TestVideoSegment.cpp',
     'TestVideoUtils.cpp',
     'TestVPXDecoding.cpp',
@@ -57,10 +56,9 @@ if CONFIG['MOZ_WEBM_ENCODER']:
     ]
 
 if CONFIG['MOZ_WEBRTC']:
-    if CONFIG["OS_TARGET"] == "WINNT":
-        DEFINES["WEBRTC_WIN"] = True
     UNIFIED_SOURCES += [
         'TestAudioDeviceEnumerator.cpp',
+        'TestVideoFrameConverter.cpp',
     ]
 
 TEST_HARNESS_FILES.gtest += [
