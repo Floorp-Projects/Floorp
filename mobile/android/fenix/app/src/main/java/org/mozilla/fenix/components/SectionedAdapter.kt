@@ -46,9 +46,13 @@ abstract class SectionedAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(
         return sectionTypeForPosition(position).viewType
     }
 
-    override fun getItemCount(): Int {
-        val numberOfSections = numberOfSections()
-        return numberOfSections + (0..numberOfSections).reduce { a, b -> a + numberOfRowsInSection(b) }
+    final override fun getItemCount(): Int {
+        var count = 0
+        for (i in 0 until numberOfSections()) {
+            count += numberOfRowsInSection(i) + 1
+        }
+
+        return count
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
@@ -61,16 +65,18 @@ abstract class SectionedAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(
     }
 
     private fun sectionTypeForPosition(position: Int): SectionType {
-        var counter = 0
+        var currentPosition = 0
 
-        for (section in 0..numberOfSections()) {
-            if (counter == position) { return SectionType.Header(section) }
-            counter += 1
+        for (sectionIndex in 0 until numberOfSections()) {
+            if (position == currentPosition) { return SectionType.Header(sectionIndex) }
+            currentPosition +=1
 
-            for (row in 0..numberOfRowsInSection(section)) {
-                if (counter == position) { return SectionType.Row(section, row) }
-                counter += 1
-            }
+            for (rowIndex in 0 until numberOfRowsInSection(sectionIndex)) {
+                if (currentPosition == position) { return SectionType.Row(sectionIndex, rowIndex) }
+                currentPosition += 1
+           }
         }
+
+        throw IllegalStateException("hello world!")
     }
 }
