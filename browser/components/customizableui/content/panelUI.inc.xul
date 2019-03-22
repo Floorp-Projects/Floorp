@@ -737,10 +737,8 @@
           <toolbarbutton class="PanelUI-fxa-signin-button" label="&fxa.unverified.button.label;" oncommand="gSync.openPrefs('fxa_discoverability_native');"/>
         </vbox>
         <vbox id="PanelUI-fxa-menu">
-          <hbox flex="1" pack="center" class="fxa-avatar-subpanel">
-            <toolbarbutton align="left" oncommand="gSync.openFxAChangeAvatar('fxa_discoverability_native');">
-              <image id="fxa-menu-avatar"/>
-            </toolbarbutton>
+          <hbox flex="1" align="center" class="fxa-avatar-subpanel">
+            <image role="presentation" id="fxa-menu-avatar"/>
             <vbox flex="1">
               <label class="fxa-avatar-subpanel-description" >&fxa.menu.signedInAs.label;</label>
               <label id="fxa-menu-email"></label>
