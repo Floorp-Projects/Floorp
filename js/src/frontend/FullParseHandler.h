@@ -306,22 +306,22 @@ class FullParseHandler {
     addList(/* list = */ literal, /* kid = */ element);
   }
 
-  BinaryNodeType newCall(Node callee, Node args) {
-    return new_<BinaryNode>(ParseNodeKind::CallExpr, JSOP_CALL, callee, args);
+  CallNodeType newCall(Node callee, Node args) {
+    return new_<CallNode>(ParseNodeKind::CallExpr, JSOP_CALL, callee, args);
   }
 
   ListNodeType newArguments(const TokenPos& pos) {
     return new_<ListNode>(ParseNodeKind::Arguments, JSOP_NOP, pos);
   }
 
-  BinaryNodeType newSuperCall(Node callee, Node args) {
-    return new_<BinaryNode>(ParseNodeKind::SuperCallExpr, JSOP_SUPERCALL,
-                            callee, args);
+  CallNodeType newSuperCall(Node callee, Node args) {
+    return new_<CallNode>(ParseNodeKind::SuperCallExpr, JSOP_SUPERCALL, callee,
+                          args);
   }
 
-  BinaryNodeType newTaggedTemplate(Node tag, Node args) {
-    return new_<BinaryNode>(ParseNodeKind::TaggedTemplateExpr, JSOP_CALL, tag,
-                            args);
+  CallNodeType newTaggedTemplate(Node tag, Node args) {
+    return new_<CallNode>(ParseNodeKind::TaggedTemplateExpr, JSOP_CALL, tag,
+                          args);
   }
 
   ListNodeType newObjectLiteral(uint32_t begin) {
@@ -619,9 +619,9 @@ class FullParseHandler {
                             importHolder, metaHolder);
   }
 
-  BinaryNodeType newCallImport(NullaryNodeType importHolder, Node singleArg) {
-    return new_<BinaryNode>(ParseNodeKind::CallImportExpr, JSOP_DYNAMIC_IMPORT,
-                            importHolder, singleArg);
+  CallNodeType newCallImport(NullaryNodeType importHolder, Node singleArg) {
+    return new_<CallNode>(ParseNodeKind::CallImportExpr, JSOP_DYNAMIC_IMPORT,
+                          importHolder, singleArg);
   }
 
   UnaryNodeType newExprStatement(Node expr, uint32_t end) {
@@ -813,9 +813,9 @@ class FullParseHandler {
     return new_<LexicalScopeNode>(bindings, body);
   }
 
-  BinaryNodeType newNewExpression(uint32_t begin, Node ctor, Node args) {
-    return new_<BinaryNode>(ParseNodeKind::NewExpr, JSOP_NEW,
-                            TokenPos(begin, args->pn_pos.end), ctor, args);
+  CallNodeType newNewExpression(uint32_t begin, Node ctor, Node args) {
+    return new_<CallNode>(ParseNodeKind::NewExpr, JSOP_NEW,
+                          TokenPos(begin, args->pn_pos.end), ctor, args);
   }
 
   AssignmentNodeType newAssignment(ParseNodeKind kind, Node lhs, Node rhs) {
@@ -940,7 +940,7 @@ class FullParseHandler {
     }
   }
 
-  void setOp(Node pn, JSOp op) { pn->setOp(op); }
+  void setCallOp(CallNodeType pn, JSOp op) { pn->setCallOp(op); }
   void setListHasNonConstInitializer(ListNodeType literal) {
     literal->setHasNonConstInitializer();
   }

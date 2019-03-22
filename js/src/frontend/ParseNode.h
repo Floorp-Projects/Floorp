@@ -530,6 +530,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
   MACRO(CaseClause, CaseClauseType, asCaseClause)                            \
   MACRO(ClassMethod, ClassMethodType, asClassMethod)                         \
   MACRO(ClassField, ClassFieldType, asClassField)                            \
+  MACRO(PropertyDefinition, PropertyDefinitionType, asPropertyDefinition)    \
   MACRO(ClassNames, ClassNamesType, asClassNames)                            \
   MACRO(ForNode, ForNodeType, asFor)                                         \
   MACRO(PropertyAccess, PropertyAccessType, asPropertyAccess)                \
@@ -543,6 +544,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
                                                                              \
   MACRO(ListNode, ListNodeType, asList)                                      \
   MACRO(CallSiteNode, CallSiteNodeType, asCallSite)                          \
+  MACRO(CallNode, CallNodeType, asCallNode)                                  \
                                                                              \
   MACRO(LoopControlStatement, LoopControlStatementType,                      \
         asLoopControlStatement)                                              \
@@ -642,7 +644,6 @@ class ParseNode {
   }
 
   JSOp getOp() const { return JSOp(pn_op); }
-  void setOp(JSOp op) { pn_op = op; }
   bool isOp(JSOp op) const { return getOp() == op; }
 
   ParseNodeKind getKind() const {
@@ -1911,6 +1912,34 @@ class CallSiteNode : public ListNode {
     MOZ_ASSERT(head());
     return &head()->as<ListNode>();
   }
+};
+
+class CallNode : public BinaryNode {
+  JSOp callOp_;
+
+ public:
+  CallNode(ParseNodeKind kind, JSOp callOp, ParseNode* left, ParseNode* right)
+      : CallNode(kind, callOp, TokenPos(left->pn_pos.begin, right->pn_pos.end),
+                 left, right) {}
+
+  CallNode(ParseNodeKind kind, JSOp callOp, TokenPos pos, ParseNode* left,
+           ParseNode* right)
+      : BinaryNode(kind, JSOP_NOP, pos, left, right), callOp_(callOp) {
+    MOZ_ASSERT(is<CallNode>());
+  }
+
+  static bool test(const ParseNode& node) {
+    bool match = node.isKind(ParseNodeKind::CallExpr) ||
+                 node.isKind(ParseNodeKind::SuperCallExpr) ||
+                 node.isKind(ParseNodeKind::TaggedTemplateExpr) ||
+                 node.isKind(ParseNodeKind::CallImportExpr) ||
+                 node.isKind(ParseNodeKind::NewExpr);
+    MOZ_ASSERT_IF(match, node.is<BinaryNode>());
+    return match;
+  }
+
+  JSOp callOp() { return callOp_; }
+  void setCallOp(JSOp callOp) { callOp_ = callOp; }
 };
 
 class ClassMethod : public BinaryNode {
