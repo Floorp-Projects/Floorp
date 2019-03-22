@@ -3682,6 +3682,7 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
     nsIFrame* maybeAbsoluteContainingBlockStyleFrame = primaryFrame;
     nsIFrame* maybeAbsoluteContainingBlock = newFrame;
     nsIFrame* possiblyLeafFrame = newFrame;
+    nsContainerFrame* outerFrame = nullptr;
     if (bits & FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS) {
       RefPtr<ComputedStyle> outerStyle =
           mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
@@ -3691,7 +3692,6 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
       MOZ_ASSERT(containerFrame);
 #endif
       nsContainerFrame* container = static_cast<nsContainerFrame*>(newFrame);
-      nsContainerFrame* outerFrame;
       nsContainerFrame* innerFrame;
       if (bits & FCDATA_ALLOW_GRID_FLEX_COLUMN) {
         switch (display->mDisplay) {
@@ -3709,8 +3709,14 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
             break;
           default: {
             innerFrame = NS_NewBlockFormattingContext(mPresShell, outerStyle);
-            outerFrame = InitAndWrapInColumnSetFrameIfNeeded(
-                aState, content, container, innerFrame, outerStyle);
+            if (outerStyle->StyleColumn()->IsColumnContainerStyle()) {
+              outerFrame = BeginBuildingColumns(aState, content, container,
+                                                innerFrame, outerStyle);
+            } else {
+              // No need to create column container. Initialize innerFrame.
+              InitAndRestoreFrame(aState, content, container, innerFrame);
+              outerFrame = innerFrame;
+            }
             break;
           }
         }
@@ -3820,10 +3826,34 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
         childItems = newItems;
       }
 
-      // Set the frame's initial child list
-      // Note that MathML depends on this being called even if
-      // childItems is empty!
-      newFrameAsContainer->SetInitialChildList(kPrincipalList, childItems);
+      if (!StaticPrefs::layout_css_column_span_enabled() ||
+          !(bits & FCDATA_ALLOW_GRID_FLEX_COLUMN) ||
+          !MayNeedToCreateColumnSpanSiblings(newFrameAsContainer, childItems)) {
+        // Set the frame's initial child list. Note that MathML depends on this
+        // being called even if childItems is empty!
+        newFrameAsContainer->SetInitialChildList(kPrincipalList, childItems);
+      } else {
+        // Extract any initial non-column-span kids, and put them in inner
+        // frame's child list.
+        nsFrameList initialNonColumnSpanKids =
+            childItems.Split([](nsIFrame* f) { return f->IsColumnSpan(); });
+        newFrameAsContainer->SetInitialChildList(kPrincipalList,
+                                                 initialNonColumnSpanKids);
+
+        if (childItems.NotEmpty()) {
+          nsFrameList columnSpanSiblings = CreateColumnSpanSiblings(
+              aState, newFrameAsContainer, childItems,
+              // Column content should never be a absolute/fixed positioned
+              // containing block. Pass nullptr as aPositionedFrame.
+              nullptr);
+
+          MOZ_ASSERT(outerFrame,
+                     "outerFrame should be non-null if multi-column container "
+                     "is created.");
+          FinishBuildingColumns(aState, outerFrame, newFrameAsContainer,
+                                columnSpanSiblings);
+        }
+      }
 
       if (bits & FCDATA_MAY_NEED_BULLET) {
         nsBlockFrame* block = do_QueryFrame(newFrameAsContainer);
