@@ -71,6 +71,23 @@ linux64-nightly/opt:
         - raptor-fetch-chrome
         - raptor-profiling
         - raptor-fetch-profiling
+linux64-shippable/opt:
+    build-platform: linux64-shippable/opt
+    test-sets:
+        - common-tests
+        - web-platform-tests
+        - opt-only-tests
+        - desktop-screenshot-capture
+        - talos
+        - awsy
+        - mochitest-headless
+        - linux-talos-flex
+        - raptor-chrome
+        - raptor-fetch-chrome
+        - raptor-firefox
+        - raptor-fetch-firefox
+        - raptor-profiling
+        - raptor-fetch-profiling
 linux64-devedition/opt:
     build-platform: linux64-devedition-nightly/opt
     test-sets:
