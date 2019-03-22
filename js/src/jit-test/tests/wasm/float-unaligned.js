@@ -35,7 +35,7 @@ function makeLoadStore(numBallast, ty, offset) {
               (i32.store (i32.const 8) (i32.add (i32.load (i32.const 8)) (i32.const 1)))
               (${ty}.load (i32.const 8))`)}
 
-         (${ty}.store (i32.const 0) (${ty}.load offset=${offset} (get_local $p)))
+         (${ty}.store (i32.const 0) (${ty}.load offset=${offset} (local.get $p)))
 
          ${ballast(() => `
              ${ty}.store`)}
@@ -51,12 +51,12 @@ function makeLoadStore(numBallast, ty, offset) {
               (i32.store (i32.const 8) (i32.add (i32.load (i32.const 8)) (i32.const 1)))
               (${ty}.load (i32.const 8))`)}
 
-         (set_local $tmp (${ty}.add (get_local $v) (${ty}.load (i32.const 16))))
-         (${ty}.store offset=${offset} (get_local $p) (get_local $tmp))
+         (local.set $tmp (${ty}.add (local.get $v) (${ty}.load (i32.const 16))))
+         (${ty}.store offset=${offset} (local.get $p) (local.get $tmp))
 
          ${ballast(() => `
              ${ty}.store`)}
-         (${ty}.store (i32.const 8) (get_local $v)))`;
+         (${ty}.store (i32.const 8) (local.get $v)))`;
 
     return `${loadtxt}
             ${storetxt}`;

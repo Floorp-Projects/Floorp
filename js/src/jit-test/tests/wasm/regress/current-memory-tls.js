@@ -22,7 +22,7 @@ let i = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
      i64.mul
 
      ;; get the last byte index accessed by an int32 access.
-     get_local $i
+     local.get $i
      i32.const 3
      i32.add
      tee_local $i
@@ -32,7 +32,7 @@ let i = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
      i64.le_u
      if
          ;; get the floor of the accessed *page* index.
-         get_local $i
+         local.get $i
          i64.extend_u/i32
          i64.const 65536
          i64.div_u
@@ -56,15 +56,15 @@ let i = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
     )
 
     (func (export "set") (param $i i32) (param $v i32)
-     get_local $i
+     local.get $i
      call $maybeGrow
-     get_local $i
-     get_local $v
+     local.get $i
+     local.get $v
      i32.store
     )
 
     (func (export "get") (param $i i32) (result i32)
-     get_local $i
+     local.get $i
      i32.load
     )
 )

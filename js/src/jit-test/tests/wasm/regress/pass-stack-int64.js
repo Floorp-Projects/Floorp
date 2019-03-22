@@ -2,7 +2,7 @@ var params = '';
 var locals = '';
 for (let i = 0; i < 20; i++) {
     params += '(param i64) ';
-    locals += `(get_local ${i}) `;
+    locals += `(local.get ${i}) `;
 }
 
 wasmEvalText(`

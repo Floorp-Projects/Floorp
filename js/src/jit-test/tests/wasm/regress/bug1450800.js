@@ -9,14 +9,14 @@ function wasmEvalText(str, imports) {
 assertEq(wasmEvalText(`(module
                         (global (import "a" "b") i32)
                         (export "g" (global 0))
-                        (func (export "get") (result i32) get_global 0))`,
+                        (func (export "get") (result i32) global.get 0))`,
                       { a: { b: 42 }}).exports.get(),
          42);
 for (let v of []) {}
 function testInitExpr(type, initialValue, nextValue, coercion, assertFunc = assertEq) {
     var module = wasmEvalText(`(module
         (import "globals" "a" (global ${type}))
-        (global $glob_imm ${type} (get_global 0))
+        (global $glob_imm ${type} (global.get 0))
         (export "global_imm" (global $glob_imm))
     )`, {
         globals: {

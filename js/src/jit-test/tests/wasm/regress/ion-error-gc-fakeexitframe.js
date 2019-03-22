@@ -22,12 +22,12 @@ var letext =`(module
   (export "load" $func1)
   (export "assert_0" $func2)
   (func $func0 (param $var0 i32) (param $var1 i64)
-    get_local $var0
-    get_local $var1
+    local.get $var0
+    local.get $var1
     i64.store16 offset=16
   )
   (func $func1 (param $var0 i32) (result i64)
-    get_local $var0
+    local.get $var0
     i64.load16_s offset=16
   )
   (func $func2 (result i32)

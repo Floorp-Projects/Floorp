@@ -20,14 +20,14 @@
           ;; as a return value.  See ref-restrict.js.
 
           (func (export "get") (result anyref)
-           (get_global $g1))
+           (global.get $g1))
 
           (func (export "copy")
-           (set_global $g2 (get_global $g1)))
+           (global.set $g2 (global.get $g1)))
 
           (func (export "clear")
-           (set_global $g1 (get_global $g3))
-           (set_global $g2 (ref.null))))`);
+           (global.set $g1 (global.get $g3))
+           (global.set $g2 (ref.null))))`);
 
     let mod = new WebAssembly.Module(bin);
     let ins = new WebAssembly.Instance(mod).exports;
@@ -51,19 +51,19 @@
           (global $glob (mut (ref $point)) (ref.null))
 
           (func (export "init")
-           (set_global $glob (struct.new $point (f64.const 0.5) (f64.const 2.75))))
+           (global.set $glob (struct.new $point (f64.const 0.5) (f64.const 2.75))))
 
           (func (export "change")
-           (set_global $glob (struct.new $point (f64.const 3.5) (f64.const 37.25))))
+           (global.set $glob (struct.new $point (f64.const 3.5) (f64.const 37.25))))
 
           (func (export "clear")
-           (set_global $glob (ref.null)))
+           (global.set $glob (ref.null)))
 
           (func (export "x") (result f64)
-           (struct.get $point 0 (get_global $glob)))
+           (struct.get $point 0 (global.get $glob)))
 
           (func (export "y") (result f64)
-           (struct.get $point 1 (get_global $glob))))`);
+           (struct.get $point 1 (global.get $glob))))`);
 
     let mod = new WebAssembly.Module(bin);
     let ins = new WebAssembly.Instance(mod).exports;
@@ -89,9 +89,9 @@
         `(module
           (gc_feature_opt_in 3)
           (import $g "" "g" (global anyref))
-          (global $glob anyref (get_global $g))
+          (global $glob anyref (global.get $g))
           (func (export "get") (result anyref)
-           (get_global $glob)))`);
+           (global.get $glob)))`);
 
     let mod = new WebAssembly.Module(bin);
     let obj = {zappa:37};
