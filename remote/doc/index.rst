@@ -1,6 +1,6 @@
-===
-CDP
-===
+===============
+Remote Protocol
+===============
 
 In addition to the Firefox Developer Tools _Remote Debugging Protocol_,
 also known as RDP, Firefox also has a partial implementation of
