@@ -23,7 +23,6 @@
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/ObjectOperations-inl.h"
-#include "vm/UnboxedObject-inl.h"
 
 using namespace js;
 
