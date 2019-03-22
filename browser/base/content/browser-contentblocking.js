@@ -1056,7 +1056,10 @@ var ContentBlocking = {
     Services.telemetry.getHistogramById("FINGERPRINTERS_BLOCKED_COUNT").add(value);
   },
 
+  // This triggers from top level location changes.
   onLocationChange() {
+    // Reset blocking and exception status so that we can send telemetry
+    this.hadShieldState = false;
     let baseURI = this._baseURIForChannelClassifier;
 
     // Don't deal with about:, file: etc.
@@ -1069,6 +1072,7 @@ var ContentBlocking = {
     // Add to telemetry per page load as a baseline measurement.
     this.fingerprintersHistogramAdd("pageLoad");
     this.cryptominersHistogramAdd("pageLoad");
+    this.shieldHistogramAdd(0);
   },
 
   onContentBlockingEvent(event, webProgress, isSimulated) {
@@ -1147,13 +1151,18 @@ var ContentBlocking = {
 
     if (hasException) {
       this.iconBox.setAttribute("tooltiptext", this.strings.disabledTooltipText);
-      this.shieldHistogramAdd(1);
+      if (!this.hadShieldState && !isSimulated) {
+        this.hadShieldState = true;
+        this.shieldHistogramAdd(1);
+      }
     } else if (anyBlocking) {
       this.iconBox.setAttribute("tooltiptext", this.strings.activeTooltipText);
-      this.shieldHistogramAdd(2);
+      if (!this.hadShieldState && !isSimulated) {
+        this.hadShieldState = true;
+        this.shieldHistogramAdd(2);
+      }
     } else {
       this.iconBox.removeAttribute("tooltiptext");
-      this.shieldHistogramAdd(0);
     }
 
     // We report up to one instance of fingerprinting and cryptomining
