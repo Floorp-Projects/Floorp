@@ -34,7 +34,6 @@ GraphDriver::GraphDriver(MediaStreamGraphImpl* aGraphImpl)
     : mIterationStart(0),
       mIterationEnd(0),
       mGraphImpl(aGraphImpl),
-      mCurrentTimeStamp(TimeStamp::Now()),
       mPreviousDriver(nullptr),
       mNextDriver(nullptr) {}
 
@@ -263,6 +262,7 @@ void ThreadedDriver::Shutdown() {
 SystemClockDriver::SystemClockDriver(MediaStreamGraphImpl* aGraphImpl)
     : ThreadedDriver(aGraphImpl),
       mInitialTimeStamp(TimeStamp::Now()),
+      mCurrentTimeStamp(TimeStamp::Now()),
       mLastTimeStamp(TimeStamp::Now()),
       mIsFallback(false) {}
 
@@ -343,11 +343,6 @@ MediaTime SystemClockDriver::GetIntervalForIteration() {
        GraphImpl()->MediaTimeToSeconds(StateComputedTime())));
 
   return interval;
-}
-
-TimeStamp OfflineClockDriver::GetCurrentTimeStamp() {
-  MOZ_CRASH("This driver does not support getting the current timestamp.");
-  return TimeStamp();
 }
 
 void ThreadedDriver::WaitForNextIteration() {
@@ -871,8 +866,6 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
        (long)stateComputedTime, (long)nextStateComputedTime, (long)aFrames,
        (uint32_t)durationMS,
        (long)(nextStateComputedTime - stateComputedTime)));
-
-  mCurrentTimeStamp = TimeStamp::Now();
 
   if (stateComputedTime < mIterationEnd) {
     LOG(LogLevel::Error,
