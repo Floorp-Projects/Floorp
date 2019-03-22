@@ -25,6 +25,7 @@ UNIFIED_SOURCES += [
     'TestBlankVideoDataCreator.cpp',
     'TestCDMStorage.cpp',
     'TestDataMutex.cpp',
+    'TestDriftCompensation.cpp',
     'TestGMPCrossOrigin.cpp',
     'TestGMPRemoveAndDelete.cpp',
     'TestGMPUtils.cpp',
