@@ -24,7 +24,6 @@
 #include "MediaStreamGraphImpl.h"
 #include "MediaStreamListener.h"
 #include "MediaStreamTrack.h"
-#include "MediaStreamVideoSink.h"
 #include "RtpLogger.h"
 #include "VideoSegment.h"
 #include "VideoStreamTrack.h"
@@ -919,7 +918,8 @@ void MediaPipeline::EncryptedPacketSending(const std::string& aTransportId,
   }
 }
 
-class MediaPipelineTransmit::PipelineListener : public MediaStreamVideoSink {
+class MediaPipelineTransmit::PipelineListener
+    : public DirectMediaStreamTrackListener {
   friend class MediaPipelineTransmit;
 
  public:
@@ -966,10 +966,6 @@ class MediaPipelineTransmit::PipelineListener : public MediaStreamVideoSink {
                                const MediaSegment& aMedia) override;
   void NotifyDirectListenerInstalled(InstallationResult aResult) override;
   void NotifyDirectListenerUninstalled() override;
-
-  // Implement MediaStreamVideoSink
-  void SetCurrentFrames(const VideoSegment& aSegment) override;
-  void ClearFrames() override {}
 
  private:
   void NewData(const MediaSegment& aMedia, TrackRate aRate = 0);
@@ -1099,8 +1095,8 @@ void MediaPipelineTransmit::Stop() {
   if (mDomTrack->AsAudioStreamTrack()) {
     mDomTrack->RemoveDirectListener(mListener);
     mDomTrack->RemoveListener(mListener);
-  } else if (VideoStreamTrack* video = mDomTrack->AsVideoStreamTrack()) {
-    video->RemoveVideoOutput(mListener);
+  } else if (mDomTrack->AsVideoStreamTrack()) {
+    mDomTrack->RemoveDirectListener(mListener);
   } else {
     MOZ_ASSERT(false, "Unknown track type");
   }
@@ -1149,8 +1145,8 @@ void MediaPipelineTransmit::Start() {
       mDomTrack->AddDirectListener(mListener);
     }
     mDomTrack->AddListener(mListener);
-  } else if (VideoStreamTrack* video = mDomTrack->AsVideoStreamTrack()) {
-    video->AddVideoOutput(mListener);
+  } else if (mDomTrack->AsVideoStreamTrack()) {
+    mDomTrack->AddDirectListener(mListener);
   } else {
     MOZ_ASSERT(false, "Unknown track type");
   }
@@ -1311,15 +1307,8 @@ void MediaPipelineTransmit::PipelineListener::NotifyRealtimeTrackData(
       ("MediaPipeline::NotifyRealtimeTrackData() listener=%p, offset=%" PRId64
        ", duration=%" PRId64,
        this, aOffset, aMedia.GetDuration()));
-
-  if (aMedia.GetType() == MediaSegment::VIDEO) {
-    TRACE_COMMENT("Video");
-    // We have to call the upstream NotifyRealtimeTrackData and
-    // MediaStreamVideoSink will route them to SetCurrentFrames.
-    MediaStreamVideoSink::NotifyRealtimeTrackData(aGraph, aOffset, aMedia);
-    return;
-  }
-  TRACE_COMMENT("Audio");
+  TRACE_COMMENT("%s",
+                aMedia.GetType() == MediaSegment::VIDEO ? "Video" : "Audio");
   NewData(aMedia, aGraph->GraphRate());
 }
 
@@ -1330,7 +1319,7 @@ void MediaPipelineTransmit::PipelineListener::NotifyQueuedChanges(
           ("MediaPipeline::NotifyQueuedChanges()"));
 
   if (aQueuedMedia.GetType() == MediaSegment::VIDEO) {
-    // We always get video from SetCurrentFrames().
+    // We always get video from the direct listener.
     return;
   }
 
@@ -1406,11 +1395,6 @@ void MediaPipelineTransmit::PipelineListener::NewData(
       mConverter->QueueVideoChunk(*iter, !mEnabled);
     }
   }
-}
-
-void MediaPipelineTransmit::PipelineListener::SetCurrentFrames(
-    const VideoSegment& aSegment) {
-  NewData(aSegment);
 }
 
 class GenericReceiveListener : public MediaStreamTrackListener {

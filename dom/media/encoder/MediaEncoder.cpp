@@ -10,7 +10,7 @@
 #include "AudioNodeStream.h"
 #include "GeckoProfiler.h"
 #include "MediaDecoder.h"
-#include "MediaStreamVideoSink.h"
+#include "MediaStreamListener.h"
 #include "mozilla/dom/AudioNode.h"
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/MediaStreamTrack.h"
@@ -201,7 +201,7 @@ class MediaEncoder::AudioTrackListener : public DirectMediaStreamTrackListener {
   RefPtr<TaskQueue> mEncoderThread;
 };
 
-class MediaEncoder::VideoTrackListener : public MediaStreamVideoSink {
+class MediaEncoder::VideoTrackListener : public DirectMediaStreamTrackListener {
  public:
   VideoTrackListener(VideoTrackEncoder* aEncoder, TaskQueue* aEncoderThread)
       : mDirectConnected(false),
@@ -286,17 +286,21 @@ class MediaEncoder::VideoTrackListener : public MediaStreamVideoSink {
     }
   }
 
-  void SetCurrentFrames(const VideoSegment& aMedia) override {
+  void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
+                               StreamTime aTrackOffset,
+                               const MediaSegment& aMedia) override {
     TRACE_COMMENT("Encoder %p", mEncoder.get());
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
+    MOZ_ASSERT(aMedia.GetType() == MediaSegment::VIDEO);
 
     if (mShutdown) {
       return;
     }
 
+    const VideoSegment& video = static_cast<const VideoSegment&>(aMedia);
     VideoSegment copy;
-    copy.AppendSlice(aMedia, 0, aMedia.GetDuration());
+    copy.AppendSlice(video, 0, video.GetDuration());
 
     nsresult rv = mEncoderThread->Dispatch(
         NewRunnableMethod<StoreCopyPassByRRef<VideoSegment>>(
@@ -305,8 +309,6 @@ class MediaEncoder::VideoTrackListener : public MediaStreamVideoSink {
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
   }
-
-  void ClearFrames() override {}
 
   void NotifyEnded() override {
     MOZ_ASSERT(mEncoder);
@@ -583,7 +585,7 @@ void MediaEncoder::ConnectMediaStreamTrack(MediaStreamTrack* aTrack) {
     }
 
     mVideoTrack = video;
-    video->AddVideoOutput(mVideoListener);
+    video->AddDirectListener(mVideoListener);
     video->AddListener(mVideoListener);
   } else {
     MOZ_ASSERT(false, "Unknown track type");
@@ -614,7 +616,7 @@ void MediaEncoder::RemoveMediaStreamTrack(MediaStreamTrack* aTrack) {
     }
 
     if (mVideoListener) {
-      video->RemoveVideoOutput(mVideoListener);
+      video->RemoveDirectListener(mVideoListener);
       video->RemoveListener(mVideoListener);
     }
     mVideoTrack = nullptr;

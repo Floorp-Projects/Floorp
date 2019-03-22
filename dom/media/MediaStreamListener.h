@@ -156,8 +156,6 @@ class DirectMediaStreamTrackListener : public MediaStreamTrackListener {
   virtual void NotifyDirectListenerInstalled(InstallationResult aResult) {}
   virtual void NotifyDirectListenerUninstalled() {}
 
-  virtual MediaStreamVideoSink* AsMediaStreamVideoSink() { return nullptr; }
-
  protected:
   virtual ~DirectMediaStreamTrackListener() {}
 
