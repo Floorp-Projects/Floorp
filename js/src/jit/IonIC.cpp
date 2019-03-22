@@ -264,13 +264,6 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     if (!oldGroup) {
       return false;
     }
-    if (obj->is<UnboxedPlainObject>()) {
-      MOZ_ASSERT(!oldShape);
-      if (UnboxedExpandoObject* expando =
-              obj->as<UnboxedPlainObject>().maybeExpando()) {
-        oldShape = expando->lastProperty();
-      }
-    }
 
     RootedValue objv(cx, ObjectValue(*obj));
     RootedScript script(cx, ic->script());

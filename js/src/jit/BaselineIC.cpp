@@ -48,7 +48,6 @@
 #include "vm/Interpreter-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/StringObject-inl.h"
-#include "vm/UnboxedObject-inl.h"
 
 using mozilla::DebugOnly;
 
@@ -1714,16 +1713,10 @@ bool DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame,
   RootedId id(cx, stub->toCacheIR_Updated()->updateStubId());
   MOZ_ASSERT(id.get() != JSID_EMPTY);
 
-  // The group should match the object's group, except when the object is
-  // an unboxed expando object: in that case, the group is the group of
-  // the unboxed object.
+  // The group should match the object's group.
   RootedObjectGroup group(cx, stub->toCacheIR_Updated()->updateStubGroup());
 #ifdef DEBUG
-  if (obj->is<UnboxedExpandoObject>()) {
-    MOZ_ASSERT(group->clasp() == &UnboxedPlainObject::class_);
-  } else {
-    MOZ_ASSERT(obj->group() == group);
-  }
+  MOZ_ASSERT(obj->group() == group);
 #endif
 
   // If we're storing null/undefined to a typed object property, check if
@@ -2224,14 +2217,6 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
     return false;
   }
 
-  if (obj->is<UnboxedPlainObject>()) {
-    MOZ_ASSERT(!oldShape);
-    if (UnboxedExpandoObject* expando =
-            obj->as<UnboxedPlainObject>().maybeExpando()) {
-      oldShape = expando->lastProperty();
-    }
-  }
-
   bool isTemporarilyUnoptimizable = false;
   bool canAddSlot = false;
   bool attached = false;
@@ -2386,25 +2371,6 @@ void ICScript::noteHasDenseAdd(uint32_t pcOffset) {
     stub->toSetElem_Fallback()->noteHasDenseAdd();
   }
 }
-
-template <typename T>
-void EmitICUnboxedPreBarrier(MacroAssembler& masm, const T& address,
-                             JSValueType type) {
-  if (type == JSVAL_TYPE_OBJECT) {
-    EmitPreBarrier(masm, address, MIRType::Object);
-  } else if (type == JSVAL_TYPE_STRING) {
-    EmitPreBarrier(masm, address, MIRType::String);
-  } else {
-    MOZ_ASSERT(!UnboxedTypeNeedsPreBarrier(type));
-  }
-}
-
-template void EmitICUnboxedPreBarrier(MacroAssembler& masm,
-                                      const Address& address, JSValueType type);
-
-template void EmitICUnboxedPreBarrier(MacroAssembler& masm,
-                                      const BaseIndex& address,
-                                      JSValueType type);
 
 template <typename T>
 void StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
@@ -2966,14 +2932,6 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
   RootedObjectGroup oldGroup(cx, JSObject::getGroup(cx, obj));
   if (!oldGroup) {
     return false;
-  }
-
-  if (obj->is<UnboxedPlainObject>()) {
-    MOZ_ASSERT(!oldShape);
-    if (UnboxedExpandoObject* expando =
-            obj->as<UnboxedPlainObject>().maybeExpando()) {
-      oldShape = expando->lastProperty();
-    }
   }
 
   // There are some reasons we can fail to attach a stub that are temporary.
@@ -3552,8 +3510,7 @@ static bool TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub,
 
       MOZ_ASSERT(thisObject->nonCCWRealm() == fun->realm());
 
-      if (thisObject->is<PlainObject>() ||
-          thisObject->is<UnboxedPlainObject>()) {
+      if (thisObject->is<PlainObject>()) {
         templateObject = thisObject;
       }
     }
