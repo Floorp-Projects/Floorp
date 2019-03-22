@@ -11,6 +11,7 @@
 #include "DriftCompensation.h"
 #include "GeckoProfiler.h"
 #include "MediaDecoder.h"
+#include "MediaStreamGraphImpl.h"
 #include "MediaStreamListener.h"
 #include "mozilla/dom/AudioNode.h"
 #include "mozilla/dom/AudioStreamTrack.h"
@@ -26,6 +27,7 @@
 #include "mozilla/Unused.h"
 #include "nsIPrincipal.h"
 #include "nsMimeTypes.h"
+#include "nsThreadUtils.h"
 #include "OggWriter.h"
 #include "OpusTrackEncoder.h"
 #include "TimeUnits.h"
@@ -434,36 +436,66 @@ MediaEncoder::MediaEncoder(TaskQueue* aEncoderThread,
 
 MediaEncoder::~MediaEncoder() { MOZ_ASSERT(mListeners.IsEmpty()); }
 
-void MediaEncoder::Suspend(TimeStamp aTime) {
-  auto& ae = mAudioEncoder;
-  auto& ve = mVideoEncoder;
-  nsresult rv = mEncoderThread->Dispatch(NewRunnableFrom([ae, ve, aTime]() {
-    if (ae) {
-      ae->Suspend(aTime);
-    }
-    if (ve) {
-      ve->Suspend(aTime);
-    }
-    return NS_OK;
-  }));
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  Unused << rv;
+void MediaEncoder::RunOnGraph(already_AddRefed<Runnable> aRunnable) {
+  MediaStreamGraphImpl* graph;
+  if (mAudioTrack) {
+    graph = mAudioTrack->GraphImpl();
+  } else if (mVideoTrack) {
+    graph = mVideoTrack->GraphImpl();
+  } else if (mPipeStream) {
+    graph = mPipeStream->GraphImpl();
+  } else {
+    MOZ_CRASH("No graph");
+  }
+  class Message : public ControlMessage {
+   public:
+    explicit Message(already_AddRefed<Runnable> aRunnable)
+        : ControlMessage(nullptr), mRunnable(aRunnable) {}
+    void Run() override { mRunnable->Run(); }
+    const RefPtr<Runnable> mRunnable;
+  };
+  graph->AppendMessage(MakeUnique<Message>(std::move(aRunnable)));
 }
 
-void MediaEncoder::Resume(TimeStamp aTime) {
-  auto& ae = mAudioEncoder;
-  auto& ve = mVideoEncoder;
-  nsresult rv = mEncoderThread->Dispatch(NewRunnableFrom([ae, ve, aTime]() {
-    if (ae) {
-      ae->Resume(aTime);
-    }
-    if (ve) {
-      ve->Resume(aTime);
-    }
-    return NS_OK;
-  }));
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  Unused << rv;
+void MediaEncoder::Suspend() {
+  RunOnGraph(NS_NewRunnableFunction(
+      "MediaEncoder::Suspend",
+      [thread = mEncoderThread, audio = mAudioEncoder, video = mVideoEncoder] {
+        if (audio) {
+          nsresult rv = thread->Dispatch(
+              NewRunnableMethod("AudioTrackEncoder::Suspend", audio,
+                                &AudioTrackEncoder::Suspend));
+          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+          Unused << rv;
+        }
+        if (video) {
+          nsresult rv = thread->Dispatch(NewRunnableMethod<TimeStamp>(
+              "VideoTrackEncoder::Suspend", video, &VideoTrackEncoder::Suspend,
+              TimeStamp::Now()));
+          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+          Unused << rv;
+        }
+      }));
+}
+
+void MediaEncoder::Resume() {
+  RunOnGraph(NS_NewRunnableFunction(
+      "MediaEncoder::Resume",
+      [thread = mEncoderThread, audio = mAudioEncoder, video = mVideoEncoder] {
+        if (audio) {
+          nsresult rv = thread->Dispatch(NewRunnableMethod(
+              "AudioTrackEncoder::Resume", audio, &AudioTrackEncoder::Resume));
+          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+          Unused << rv;
+        }
+        if (video) {
+          nsresult rv = thread->Dispatch(NewRunnableMethod<TimeStamp>(
+              "VideoTrackEncoder::Resume", video, &VideoTrackEncoder::Resume,
+              TimeStamp::Now()));
+          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+          Unused << rv;
+        }
+      }));
 }
 
 void MediaEncoder::ConnectAudioNode(AudioNode* aNode, uint32_t aOutput) {
