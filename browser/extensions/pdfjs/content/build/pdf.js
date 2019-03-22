@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.71';
-var pdfjsBuild = '80135378';
+var pdfjsVersion = '2.2.91';
+var pdfjsBuild = 'bce9ff73';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1301,7 +1301,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.2.71',
+    apiVersion: '2.2.91',
     source: {
       data: source.data,
       url: source.url,
@@ -2537,6 +2537,7 @@ class WorkerTransport {
 
             img.onerror = function () {
               reject(new Error('Error during JPEG image loading'));
+              (0, _display_utils.releaseImageResources)(img);
             };
 
             img.src = imageData;
@@ -2643,6 +2644,7 @@ class WorkerTransport {
             width,
             height
           });
+          (0, _display_utils.releaseImageResources)(img);
           tmpCanvas.width = 0;
           tmpCanvas.height = 0;
           tmpCanvas = null;
@@ -2651,6 +2653,7 @@ class WorkerTransport {
 
         img.onerror = function () {
           reject(new Error('JpegDecode failed to load image'));
+          (0, _display_utils.releaseImageResources)(img);
         };
 
         img.src = imageUrl;
@@ -2854,6 +2857,16 @@ class PDFObjects {
   }
 
   clear() {
+    for (const objId in this._objs) {
+      const {
+        data
+      } = this._objs[objId];
+
+      if (typeof Image !== 'undefined' && data instanceof Image) {
+        (0, _display_utils.releaseImageResources)(data);
+      }
+    }
+
     this._objs = Object.create(null);
   }
 
@@ -3046,9 +3059,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.2.71';
+const version = '2.2.91';
 exports.version = version;
-const build = '80135378';
+const build = 'bce9ff73';
 exports.build = build;
 
 /***/ }),
@@ -3067,6 +3080,7 @@ exports.isFetchSupported = isFetchSupported;
 exports.isValidFetchUrl = isValidFetchUrl;
 exports.loadScript = loadScript;
 exports.deprecated = deprecated;
+exports.releaseImageResources = releaseImageResources;
 exports.DummyStatTimer = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.RenderingCancelledException = exports.PageViewport = void 0;
 
 var _util = __w_pdfjs_require__(1);
@@ -3451,6 +3465,17 @@ function loadScript(src) {
 
 function deprecated(details) {
   console.log('Deprecated API usage: ' + details);
+}
+
+function releaseImageResources(img) {
+  (0, _util.assert)(img instanceof Image, 'Invalid `img` parameter.');
+  const url = img.src;
+
+  if (typeof url === 'string' && url.startsWith('blob:') && _util.URL.revokeObjectURL) {
+    _util.URL.revokeObjectURL(url);
+  }
+
+  img.removeAttribute('src');
 }
 
 /***/ }),
