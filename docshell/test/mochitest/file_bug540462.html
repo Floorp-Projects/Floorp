@@ -1,13 +1,22 @@
 <html>
   <head>
     <script>
-    //<!--
+    // <!--
     function test() {
       document.open();
-      document.write("<html><body onload='opener.documentWriteLoad(); rel();'><a href='foo.html'>foo</a><script>function rel() { setTimeout('location.reload()', 0); }</script></body></html>");
+      document.write(
+      `<html>
+        <body onload='opener.documentWriteLoad(); rel();'>
+          <a href='foo.html'>foo</a>
+          <script>
+            function rel() { setTimeout('location.reload()', 0); }
+          <\/script>
+        </body>
+      </html>`
+      );
       document.close();
     }
-    //-->
+    // -->
     </script>
   </head>
   <body onload="setTimeout('test()', 0)">

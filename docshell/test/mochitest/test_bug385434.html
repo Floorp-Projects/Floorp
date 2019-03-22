@@ -26,6 +26,7 @@ SimpleTest.expectAssertions(0, 1); // bug 1333702
 
 var gNumHashchanges = 0;
 var gCallbackOnIframeLoad = false;
+var gSampleEvent;
 
 function statusMsg(msg) {
   var msgElem = document.createElement("p");
@@ -169,6 +170,7 @@ function* run_test() {
    *     the event is targeted at the window object
    *     the event's cancelable, bubbles settings are correct
    */
+
   enableIframeLoadCallback();
   frameCw.document.location = "file_bug385434_2.html";
   yield undefined;

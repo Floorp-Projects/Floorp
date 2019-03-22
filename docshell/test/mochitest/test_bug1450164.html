@@ -13,7 +13,7 @@
      /** Test for Bug 1450164 **/
 
      function runTest() {
-       child = window.open("file_bug1450164.html", "", "width=100,height=100");
+       var child = window.open("file_bug1450164.html", "", "width=100,height=100");
        child.onload = function() {
          // After the window loads, close it. If we don't crash in debug, consider that a pass.
          child.close();

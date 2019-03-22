@@ -48,7 +48,7 @@ var originalTiming = {};
 
 function runTest() {
   var timing = $("f").contentWindow.performance.timing;
-  for (i in timingAttributes) {
+  for (let i in timingAttributes) {
     originalTiming[timingAttributes[i]] = timing[timingAttributes[i]];
   }
 
@@ -59,8 +59,8 @@ function runTest() {
 
   SimpleTest.executeSoon(function() {
     var newTiming = $("f").contentWindow.performance.timing;
-    for (var i in timingAttributes) {
-      is(timing[timingAttributes[i]], originalTiming[timingAttributes[i]],
+    for (let i in timingAttributes) {
+      is(newTiming[timingAttributes[i]], originalTiming[timingAttributes[i]],
          "document.open should not affect value of " + timingAttributes[i]);
     }
     SimpleTest.finish();

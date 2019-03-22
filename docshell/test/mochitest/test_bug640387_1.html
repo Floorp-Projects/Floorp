@@ -73,13 +73,13 @@ function* test() {
   SimpleTest.finish();
 }
 
-gGen = null;
+var gGen = null;
 function childLoad() {
   gGen = test();
   gGen.next();
 }
 
-gHashchangeExpected = true;
+var gHashchangeExpected = true;
 function childHashchange() {
   if (gHashchangeExpected) {
     gGen.next();
@@ -88,7 +88,7 @@ function childHashchange() {
   }
 }
 
-gCallbackOnPopstate = false;
+var gCallbackOnPopstate = false;
 function childPopstate() {
   if (gCallbackOnPopstate) {
     gGen.next();
@@ -97,7 +97,7 @@ function childPopstate() {
 
 /* We need to run this test in a popup, because navigating an iframe
  * back/forwards tends to cause intermittent orange. */
-popup = window.open("file_bug640387.html");
+var popup = window.open("file_bug640387.html");
 
 /* Control now flows up to childLoad(), called once the popup loads. */
 

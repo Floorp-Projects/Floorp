@@ -23,9 +23,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1121701
       SimpleTest.executeSoon(function() {
         is(e.persisted, false, "Initial page load shouldn't be persisted.");
         testWin.document.body.innerHTML = "modified";
-        testWin.onpagehide = function(e) {
+        testWin.onpagehide = function(event) {
           testWin.onpagehide = null;
-          ok(e.persisted, "test page 1 should have been persisted");
+          ok(event.persisted, "test page 1 should have been persisted");
           is(testWin.document.body.innerHTML, "modified");
         };
         testWin.location.href = testUrl2;

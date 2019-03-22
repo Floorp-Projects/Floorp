@@ -34,7 +34,8 @@ function continueTest() {
 
 function finishTest() {
   is(w.document.documentElement.textContent, "opener.finishTest();");
-  is(w.document.documentElement.innerHTML, "<head><script>opener.finishTest();</" + "script></head>");
+  is(w.document.documentElement.innerHTML, "<head><script>opener.finishTest();</" +
+                                           "script></head>");
   w.close();
   SimpleTest.finish();
 }

@@ -1,5 +1,5 @@
 add_task(async function test() {
-  const secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
+  const secMan = Services.scriptSecurityManager;
   const uris = [undefined, "about:blank"];
 
   function checkContentProcess(newBrowser, uri) {
@@ -8,8 +8,7 @@ add_task(async function test() {
       Assert.notEqual(prin, null, "Loaded principal must not be null when adding " + uri);
       Assert.notEqual(prin, undefined, "Loaded principal must not be undefined when loading " + uri);
 
-      const secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                       .getService(Ci.nsIScriptSecurityManager);
+      const secMan = Services.scriptSecurityManager;
       Assert.equal(secMan.isSystemPrincipal(prin), false,
          "Loaded principal must not be system when loading " + uri);
     });
