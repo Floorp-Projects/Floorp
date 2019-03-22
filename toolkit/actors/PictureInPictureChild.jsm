@@ -8,7 +8,11 @@ var EXPORTED_SYMBOLS = ["PictureInPictureChild"];
 
 const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
+// A weak reference to the most recent <video> in this content
+// process that is being viewed in Picture-in-Picture.
 var gWeakVideo = null;
+// A weak reference to the content window of the most recent
+// Picture-in-Picture window for this content process.
 var gWeakPlayerContent = null;
 
 class PictureInPictureChild extends ActorChild {
@@ -18,6 +22,12 @@ class PictureInPictureChild extends ActorChild {
         if (event.isTrusted) {
           this.togglePictureInPicture(event.target);
         }
+        break;
+      }
+      case "pagehide": {
+        // The originating video's content document has unloaded,
+        // so close Picture-in-Picture.
+        this.closePictureInPicture();
         break;
       }
     }
@@ -37,6 +47,19 @@ class PictureInPictureChild extends ActorChild {
     return null;
   }
 
+  /**
+   * Tells the parent to open a Picture-in-Picture window hosting
+   * a clone of the passed video. If we know about a pre-existing
+   * Picture-in-Picture window existing, this tells the parent to
+   * close it before opening the new one.
+   *
+   * @param {Element} video The <video> element to view in a Picture
+   * in Picture window.
+   *
+   * @return {Promise}
+   * @resolves {undefined} Once the new Picture-in-Picture window
+   * has been requested.
+   */
   async togglePictureInPicture(video) {
     if (this.inPictureInPicture(video)) {
       await this.closePictureInPicture();
@@ -48,15 +71,39 @@ class PictureInPictureChild extends ActorChild {
         await this.closePictureInPicture();
       }
 
-      this.requestPictureInPicture(video);
+      gWeakVideo = Cu.getWeakReference(video);
+      this.mm.sendAsyncMessage("PictureInPicture:Request", {
+        videoHeight: video.videoHeight,
+        videoWidth: video.videoWidth,
+      });
     }
   }
 
+  /**
+   * Returns true if the passed video happens to be the one that this
+   * content process is running in a Picture-in-Picture window.
+   *
+   * @param {Element} video The <video> element to check.
+   *
+   * @return {Boolean}
+   */
   inPictureInPicture(video) {
     return this.weakVideo === video;
   }
 
+  /**
+   * Tells the parent to close a pre-existing Picture-in-Picture
+   * window.
+   *
+   * @return {Promise}
+   *
+   * @resolves {undefined} Once the pre-existing Picture-in-Picture
+   * window has unloaded.
+   */
   async closePictureInPicture() {
+    if (this.weakVideo) {
+      this.untrackOriginatingVideo(this.weakVideo);
+    }
 
     this.mm.sendAsyncMessage("PictureInPicture:Close", {
       browingContextId: this.docShell.browsingContext.id,
@@ -75,14 +122,6 @@ class PictureInPictureChild extends ActorChild {
     }
   }
 
-  requestPictureInPicture(video) {
-    gWeakVideo = Cu.getWeakReference(video);
-    this.mm.sendAsyncMessage("PictureInPicture:Request", {
-      videoHeight: video.videoHeight,
-      videoWidth: video.videoWidth,
-    });
-  }
-
   receiveMessage(message) {
     switch (message.name) {
       case "PictureInPicture:SetupPlayer": {
@@ -92,6 +131,43 @@ class PictureInPictureChild extends ActorChild {
     }
   }
 
+  /**
+   * Keeps an eye on the originating video's document. If it ever
+   * goes away, this will cause the Picture-in-Picture window for any
+   * of its content to go away as well.
+   */
+  trackOriginatingVideo(originatingVideo) {
+    let originatingWindow = originatingVideo.ownerGlobal;
+    if (originatingWindow) {
+      originatingWindow.addEventListener("pagehide", this);
+    }
+  }
+
+  /**
+   * Stops tracking the originating video's document. This should
+   * happen once the Picture-in-Picture window goes away (or is about
+   * to go away), and we no longer care about hearing when the originating
+   * window's document unloads.
+   */
+  untrackOriginatingVideo(originatingVideo) {
+    let originatingWindow = originatingVideo.ownerGlobal;
+    if (originatingWindow) {
+      originatingWindow.removeEventListener("pagehide", this);
+    }
+  }
+
+  /**
+   * Runs in an instance of PictureInPictureChild for the
+   * player window's content, and not the originating video
+   * content. Sets up the player so that it clones the originating
+   * video. If anything goes wrong during set up, a message is
+   * sent to the parent to close the Picture-in-Picture window.
+   *
+   * @return {Promise}
+   * @resolves {undefined} Once the player window has been set up
+   * properly, or a pre-existing Picture-in-Picture window has gone
+   * away due to an unexpected error.
+   */
   async setupPlayer() {
     let originatingVideo = this.weakVideo;
     if (!originatingVideo) {
@@ -137,15 +213,11 @@ class PictureInPictureChild extends ActorChild {
 
     originatingVideo.cloneElementVisually(playerVideo);
 
-    let originatingWindow = originatingVideo.ownerGlobal;
-    originatingWindow.addEventListener("unload", (e) => {
-      this.closePictureInPicture(originatingVideo);
-    }, { once: true });
+    this.trackOriginatingVideo(originatingVideo);
 
     this.content.addEventListener("unload", () => {
-      let video = gWeakVideo && gWeakVideo.get();
-      if (video) {
-        video.stopCloningElementVisually();
+      if (this.weakVideo) {
+        this.weakVideo.stopCloningElementVisually();
       }
       gWeakVideo = null;
     }, { once: true });
