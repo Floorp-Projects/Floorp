@@ -66,7 +66,7 @@ add_task(async function test_new_pointer_install() {
   notEqual(addon, null);
   equal(addon.version, "1.0");
 
-  let file = addon.getResourceURI().QueryInterface(Ci.nsIFileURL).file;
+  let file = getAddonFile(addon);
   equal(file.parent.path, sourceDir.path);
 
   let rootUri = do_get_addon_root_uri(sourceDir, ID1);

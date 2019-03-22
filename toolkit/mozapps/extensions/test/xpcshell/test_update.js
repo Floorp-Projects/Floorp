@@ -187,11 +187,7 @@ add_task(async function test_apply_update() {
   equal(originalSyncGUID, a1.syncGUID);
 
   // Make sure that the extension lastModifiedTime was updated.
-  let testURI = a1.getResourceURI();
-  if (testURI instanceof Ci.nsIJARURI) {
-    testURI = testURI.JARFile;
-  }
-  let testFile = testURI.QueryInterface(Ci.nsIFileURL).file;
+  let testFile = getAddonFile(a1);
   let difference = testFile.lastModifiedTime - startupTime;
   ok(Math.abs(difference) < MAX_TIME_DIFFERENCE);
 
