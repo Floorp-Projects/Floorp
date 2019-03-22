@@ -24,6 +24,7 @@ The current data collection possibilities include:
 * :doc:`Remote content uptake <uptake>`
 * :doc:`Hybrid Content Telemetry <hybrid-content>` allows recording telemetry from semi-privileged hosted content
 * :doc:`WebExtension API <webextension-api>` can be used in privileged webextensions
+* :doc:`Origin Telemetry <origin>` Experimental prototype. For use by Content Blocking only for now.
 
 .. toctree::
    :maxdepth: 2
