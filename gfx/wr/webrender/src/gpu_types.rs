@@ -213,7 +213,7 @@ impl PrimitiveHeaders {
         &mut self,
         prim_header: &PrimitiveHeader,
         z: ZBufferId,
-        user_data: [i32; 3],
+        user_data: [i32; 4],
     ) -> PrimitiveHeaderIndex {
         debug_assert_eq!(self.headers_int.len(), self.headers_float.len());
         let id = self.headers_float.len();
@@ -227,7 +227,6 @@ impl PrimitiveHeaders {
             z,
             task_address: prim_header.task_address,
             specific_prim_address: prim_header.specific_prim_address.as_int(),
-            clip_task_address: prim_header.clip_task_address,
             transform_id: prim_header.transform_id,
             user_data,
         });
@@ -244,7 +243,6 @@ pub struct PrimitiveHeader {
     pub local_clip_rect: LayoutRect,
     pub task_address: RenderTaskAddress,
     pub specific_prim_address: GpuCacheAddress,
-    pub clip_task_address: RenderTaskAddress,
     pub transform_id: TransformPaletteId,
 }
 
@@ -268,9 +266,8 @@ pub struct PrimitiveHeaderI {
     pub z: ZBufferId,
     pub task_address: RenderTaskAddress,
     pub specific_prim_address: i32,
-    pub clip_task_address: RenderTaskAddress,
     pub transform_id: TransformPaletteId,
-    pub user_data: [i32; 3],
+    pub user_data: [i32; 4],
 }
 
 pub struct GlyphInstance {

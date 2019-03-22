@@ -24,7 +24,6 @@ namespace dom {
 namespace cache {
 
 class CacheReadStream;
-class CacheReadStreamOrVoid;
 class PCacheStreamControlParent;
 
 // IID for the dom::cache::ReadStream interface
@@ -68,7 +67,7 @@ class ReadStream final : public nsIInputStream {
   };
 
   static already_AddRefed<ReadStream> Create(
-      const CacheReadStreamOrVoid& aReadStreamOrVoid);
+      const Maybe<CacheReadStream>& aMaybeReadStream);
 
   static already_AddRefed<ReadStream> Create(
       const CacheReadStream& aReadStream);
@@ -78,7 +77,7 @@ class ReadStream final : public nsIInputStream {
       nsIInputStream* aStream);
 
   void Serialize(
-      CacheReadStreamOrVoid* aReadStreamOut,
+      Maybe<CacheReadStream>* aReadStreamOut,
       nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList,
       ErrorResult& aRv);
   void Serialize(

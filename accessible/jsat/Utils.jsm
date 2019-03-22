@@ -339,6 +339,26 @@ var Utils = { // jshint ignore:line
     return parent.role === Roles.LISTITEM && parent.childCount > 1 &&
       aStaticText.indexInParent === 0;
   },
+
+  getTextLeafForOffset: function getTextLeafForOffset(aAccessible, aOffset) {
+    let ht = aAccessible.QueryInterface(Ci.nsIAccessibleHyperText);
+    let offset = 0;
+    for (let child = aAccessible.firstChild; child; child = child.nextSibling) {
+      if (ht.getLinkIndexAtOffset(offset) != -1) {
+        // This is an embedded character, increment by one.
+        offset++;
+      } else {
+        offset += child.name.length;
+      }
+
+      if (offset >= aOffset) {
+        return child;
+      }
+    }
+
+    // This is probably a single child.
+    return aAccessible.lastChild;
+  },
 };
 
 /**

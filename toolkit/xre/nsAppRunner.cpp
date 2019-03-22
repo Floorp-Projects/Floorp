@@ -191,7 +191,7 @@
 #  include "nsRemoteService.h"
 #endif
 
-#if defined(DEBUG) && defined(XP_WIN32)
+#if defined(DEBUG) && defined(XP_WIN)
 #  include <malloc.h>
 #endif
 
@@ -1100,7 +1100,7 @@ nsXULAppInfo::RegisterAppMemory(uint64_t pointer, uint64_t len) {
 
 NS_IMETHODIMP
 nsXULAppInfo::WriteMinidumpForException(void* aExceptionInfo) {
-#ifdef XP_WIN32
+#ifdef XP_WIN
   return CrashReporter::WriteMinidumpForException(
       static_cast<EXCEPTION_POINTERS*>(aExceptionInfo));
 #else
@@ -5040,7 +5040,7 @@ void SetupErrorHandling(const char* progname) {
   if (_SetProcessDEPPolicy) _SetProcessDEPPolicy(PROCESS_DEP_ENABLE);
 #endif
 
-#ifdef XP_WIN32
+#ifdef XP_WIN
   // Suppress the "DLL Foo could not be found" dialog, such that if dependent
   // libraries (such as GDI+) are not preset, we gracefully fail to load those
   // XPCOM components, instead of being ungraceful.

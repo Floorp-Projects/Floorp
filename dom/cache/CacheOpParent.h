@@ -55,7 +55,7 @@ class CacheOpParent final : public PCacheOpParent,
 
   // utility methods
   already_AddRefed<nsIInputStream> DeserializeCacheStream(
-      const CacheReadStreamOrVoid& aStreamOrVoid);
+      const Maybe<CacheReadStream>& aMaybeStream);
 
   mozilla::ipc::PBackgroundParent* mIpcManager;
   const CacheId mCacheId;

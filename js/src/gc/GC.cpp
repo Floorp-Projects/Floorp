@@ -286,6 +286,14 @@ static const size_t GCZoneAllocThresholdBase = 30 * 1024 * 1024;
 /* JSGC_MAX_MALLOC_BYTES */
 static const size_t MaxMallocBytes = 128 * 1024 * 1024;
 
+/*
+ * JSGC_MIN_NURSERY_BYTES
+ *
+ * 192K is conservative, not too low that root marking dominates. The Limit
+ * should be a multiple of Nursery::SubChunkStep.
+ */
+static const size_t GCMinNurseryBytes = 192 * 1024;
+
 /* JSGC_ALLOCATION_THRESHOLD_FACTOR */
 static const float AllocThresholdFactor = 0.9f;
 
@@ -1394,7 +1402,19 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
     case JSGC_MAX_BYTES:
       gcMaxBytes_ = value;
       break;
+    case JSGC_MIN_NURSERY_BYTES:
+      if (value > gcMaxNurseryBytes_ && gcMaxNurseryBytes_ != 0) {
+        // We make an exception for gcMaxNurseryBytes_ == 0 since that special
+        // value is used to disable generational GC.
+        return false;
+      }
+      gcMinNurseryBytes_ = value;
+      break;
     case JSGC_MAX_NURSERY_BYTES:
+      if ((value < gcMinNurseryBytes_) && (value != 0)) {
+        // Note that we make an exception for value == 0 as above.
+        return false;
+      }
       gcMaxNurseryBytes_ = value;
       break;
     case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
@@ -1569,6 +1589,7 @@ void GCSchedulingTunables::setMaxEmptyChunkCount(uint32_t value) {
 GCSchedulingTunables::GCSchedulingTunables()
     : gcMaxBytes_(0),
       maxMallocBytes_(TuningDefaults::MaxMallocBytes),
+      gcMinNurseryBytes_(TuningDefaults::GCMinNurseryBytes),
       gcMaxNurseryBytes_(0),
       gcZoneAllocThresholdBase_(TuningDefaults::GCZoneAllocThresholdBase),
       allocThresholdFactor_(TuningDefaults::AllocThresholdFactor),
@@ -1625,7 +1646,10 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
     case JSGC_MAX_BYTES:
       gcMaxBytes_ = 0xffffffff;
       break;
+    case JSGC_MIN_NURSERY_BYTES:
     case JSGC_MAX_NURSERY_BYTES:
+      // Reset these togeather to maintain their min <= max invariant.
+      gcMinNurseryBytes_ = TuningDefaults::GCMinNurseryBytes;
       gcMaxNurseryBytes_ = JS::DefaultNurseryBytes;
       break;
     case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
@@ -1694,8 +1718,16 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return uint32_t(tunables.gcMaxBytes());
     case JSGC_MAX_MALLOC_BYTES:
       return mallocCounter.maxBytes();
+    case JSGC_MIN_NURSERY_BYTES:
+      MOZ_ASSERT(tunables.gcMinNurseryBytes() < UINT32_MAX);
+      return uint32_t(tunables.gcMinNurseryBytes());
+    case JSGC_MAX_NURSERY_BYTES:
+      MOZ_ASSERT(tunables.gcMaxNurseryBytes() < UINT32_MAX);
+      return uint32_t(tunables.gcMaxNurseryBytes());
     case JSGC_BYTES:
       return uint32_t(heapSize.gcBytes());
+    case JSGC_NUMBER:
+      return uint32_t(number);
     case JSGC_MODE:
       return uint32_t(mode);
     case JSGC_UNUSED_CHUNKS:
@@ -1741,13 +1773,17 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return tunables.maxEmptyChunkCount();
     case JSGC_COMPACTING_ENABLED:
       return compactingEnabled;
+    case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
+      return tunables.nurseryFreeThresholdForIdleCollection();
+    case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT:
+      return uint32_t(tunables.nurseryFreeThresholdForIdleCollectionFraction() *
+                      100.0f);
     case JSGC_PRETENURE_THRESHOLD:
       return uint32_t(tunables.pretenureThreshold() * 100);
     case JSGC_PRETENURE_GROUP_THRESHOLD:
       return tunables.pretenureGroupThreshold();
     default:
-      MOZ_ASSERT(key == JSGC_NUMBER);
-      return uint32_t(number);
+      MOZ_CRASH("Unknown parameter key");
   }
 }
 

@@ -98,6 +98,9 @@ struct AnimationProperty {
   bool operator!=(const AnimationProperty& aOther) const {
     return !(*this == aOther);
   }
+
+  void SetPerformanceWarning(const AnimationPerformanceWarning& aWarning,
+                             const Element* aElement);
 };
 
 struct ElementPropertyTransition;
@@ -282,11 +285,11 @@ class KeyframeEffect : public AnimationEffect {
   Document* GetRenderedDocument() const;
   nsIPresShell* GetPresShell() const;
 
-  // Associates a warning with the animated property on the specified frame
+  // Associates a warning with the animated property set on the specified frame
   // indicating why, for example, the property could not be animated on the
   // compositor. |aParams| and |aParamsLength| are optional parameters which
   // will be used to generate a localized message for devtools.
-  void SetPerformanceWarning(nsCSSPropertyID aProperty,
+  void SetPerformanceWarning(const nsCSSPropertyIDSet& aPropertySet,
                              const AnimationPerformanceWarning& aWarning);
 
   // Cumulative change hint on each segment for each property.
