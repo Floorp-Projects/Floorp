@@ -84,8 +84,8 @@ class BrowserFragment : Fragment(), BackHandler {
             .addSearchProvider(
                 components.searchEngineManager.getDefaultSearchEngine(requireContext()),
                 components.searchUseCases.defaultSearch,
-                HttpURLConnectionClient(),
-                SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS)
+                fetchClient = HttpURLConnectionClient(),
+                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS)
             .addClipboardProvider(requireContext(), components.sessionUseCases.loadUrl)
 
         downloadsFeature.set(
