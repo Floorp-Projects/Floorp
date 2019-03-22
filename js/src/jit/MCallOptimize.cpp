@@ -911,7 +911,7 @@ IonBuilder::InliningResult IonBuilder::inlineArrayPopShift(
       OBJECT_FLAG_SPARSE_INDEXES | OBJECT_FLAG_LENGTH_OVERFLOW |
       OBJECT_FLAG_ITERATED | OBJECT_FLAG_NON_EXTENSIBLE_ELEMENTS;
 
-  MDefinition* obj = convertUnboxedObjects(callInfo.thisArg());
+  MDefinition* obj = callInfo.thisArg();
   TemporaryTypeSet* thisTypes = obj->resultTypeSet();
   if (!thisTypes) {
     return InliningStatus_NotInlined;
@@ -1018,7 +1018,7 @@ IonBuilder::InliningResult IonBuilder::inlineArrayPush(CallInfo& callInfo) {
     return InliningStatus_NotInlined;
   }
 
-  MDefinition* obj = convertUnboxedObjects(callInfo.thisArg());
+  MDefinition* obj = callInfo.thisArg();
   for (uint32_t i = 0; i < callInfo.argc(); i++) {
     MDefinition* value = callInfo.getArg(i);
     if (PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current, &obj,
@@ -1149,7 +1149,7 @@ IonBuilder::InliningResult IonBuilder::inlineArraySlice(CallInfo& callInfo) {
     return InliningStatus_NotInlined;
   }
 
-  MDefinition* obj = convertUnboxedObjects(callInfo.thisArg());
+  MDefinition* obj = callInfo.thisArg();
 
   // Ensure |this| and result are objects.
   if (getInlineReturnType() != MIRType::Object) {
