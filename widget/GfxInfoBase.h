@@ -73,7 +73,6 @@ class GfxInfoBase : public nsIGfxInfo,
       bool* aOffMainThreadPaintEnabled) override;
   NS_IMETHOD GetOffMainThreadPaintWorkerCount(
       int32_t* aOffMainThreadPaintWorkerCount) override;
-  NS_IMETHOD GetLowEndMachine(bool* aLowEndMachine) override;
   NS_IMETHOD GetTargetFrameRate(uint32_t* aTargetFrameRate) override;
 
   // Initialization function. If you override this, you must call this class's

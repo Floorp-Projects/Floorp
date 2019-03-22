@@ -296,10 +296,6 @@ WaveShaperNode::WaveShaperNode(AudioContext* aContext)
 already_AddRefed<WaveShaperNode> WaveShaperNode::Create(
     AudioContext& aAudioContext, const WaveShaperOptions& aOptions,
     ErrorResult& aRv) {
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   RefPtr<WaveShaperNode> audioNode = new WaveShaperNode(&aAudioContext);
 
   audioNode->Initialize(aOptions, aRv);

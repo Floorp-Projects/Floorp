@@ -263,6 +263,35 @@ void QuotaRequestChild::HandleResponse(bool aResponse) {
   mRequest->SetResult(variant);
 }
 
+void QuotaRequestChild::HandleResponse(const nsTArray<nsCString>& aResponse) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mRequest);
+
+  RefPtr<nsVariant> variant = new nsVariant();
+
+  if (aResponse.IsEmpty()) {
+    variant->SetAsEmptyArray();
+  } else {
+    nsTArray<RefPtr<InitializedOriginsResult>> initializedOriginsResults(
+        aResponse.Length());
+    for (auto& origin : aResponse) {
+      RefPtr<InitializedOriginsResult> initializedOriginsResult =
+          new InitializedOriginsResult(origin);
+
+      initializedOriginsResults.AppendElement(
+          initializedOriginsResult.forget());
+    }
+
+    variant->SetAsArray(
+        nsIDataType::VTYPE_INTERFACE_IS,
+        &NS_GET_IID(nsIQuotaInitializedOriginsResult),
+        initializedOriginsResults.Length(),
+        static_cast<void*>(initializedOriginsResults.Elements()));
+  }
+
+  mRequest->SetResult(variant);
+}
+
 void QuotaRequestChild::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 }
@@ -294,6 +323,10 @@ mozilla::ipc::IPCResult QuotaRequestChild::Recv__delete__(
 
     case RequestResponse::TPersistedResponse:
       HandleResponse(aResponse.get_PersistedResponse().persisted());
+      break;
+
+    case RequestResponse::TListInitializedOriginsResponse:
+      HandleResponse(aResponse.get_ListInitializedOriginsResponse().origins());
       break;
 
     default:

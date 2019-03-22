@@ -222,7 +222,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'QuartzSupport.mm',
     ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc') and (CONFIG['CPU_ARCH'] == 'aarch64' or CONFIG['BUILD_ARM_NEON']):
+if CONFIG['CPU_ARCH'] == 'aarch64' or CONFIG['BUILD_ARM_NEON']:
     SOURCES += [
         'BlurNEON.cpp',
         'LuminanceNEON.cpp',

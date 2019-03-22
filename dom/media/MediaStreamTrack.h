@@ -566,7 +566,7 @@ class MediaStreamTrack : public DOMEventTargetHelper,
    */
   void SetMuted(bool aMuted) { mMuted = aMuted; }
 
-  void Destroy();
+  virtual void Destroy();
 
   // Returns the owning DOMMediaStream's underlying owned stream.
   ProcessedMediaStream* GetOwnedStream();

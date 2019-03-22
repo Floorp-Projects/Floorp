@@ -4,6 +4,8 @@
 
 "use strict";
 
+var EXPORTED_SYMBOLS = ["RemoteAgent"];
+
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -28,8 +30,15 @@ const DEFAULT_HOST = "localhost";
 const DEFAULT_PORT = 9222;
 const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
 
-class ParentRemoteAgent {
-  constructor() {
+class RemoteAgentClass {
+  init() {
+    if (!Preferences.get(ENABLED, false)) {
+      throw new Error("Remote agent is disabled by its preference");
+    }
+    if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+      throw new Error("Remote agent can only be instantiated from the parent process");
+    }
+
     this.server = new HttpServer();
     this.targets = new Targets();
 
@@ -52,10 +61,6 @@ class ParentRemoteAgent {
     this.targets.on("disconnect", (eventName, target) => {
       // TODO(ato): removing a handler is currently not possible
     });
-
-    // This allows getting access to the underlying JS object
-    // of the @mozilla.org/remote/agent XPCOM components
-    this.wrappedJSObject = this;
   }
 
   get listening() {
@@ -173,6 +178,8 @@ class ParentRemoteAgent {
       return;
     }
 
+    this.init();
+
     await Observer.once("sessionstore-windows-restored");
     await this.tabs.start();
 
@@ -198,35 +205,4 @@ class ParentRemoteAgent {
   }
 }
 
-const RemoteAgentFactory = {
-  instance_: null,
-
-  createInstance(outer, iid) {
-    if (outer) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    }
-    if (!Preferences.get(ENABLED, false)) {
-      return null;
-    }
-
-    if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    if (!this.instance_) {
-      this.instance_ = new ParentRemoteAgent();
-    }
-    return this.instance_.QueryInterface(iid);
-  },
-};
-
-function RemoteAgent() {}
-
-RemoteAgent.prototype = {
-    classDescription: "Remote Agent",
-    classID: Components.ID("{8f685a9d-8181-46d6-a71d-869289099c6d}"),
-    contractID: "@mozilla.org/remote/agent",
-    _xpcom_factory: RemoteAgentFactory,  /* eslint-disable-line */
-};
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RemoteAgent]);
+var RemoteAgent = new RemoteAgentClass();

@@ -22,7 +22,6 @@
 #include "AudioNodeStream.h"
 #include "AudioNodeExternalInputStream.h"
 #include "MediaStreamListener.h"
-#include "MediaStreamVideoSink.h"
 #include "mozilla/dom/BaseAudioContextBinding.h"
 #include "mozilla/media/MediaUtils.h"
 #include <algorithm>
@@ -80,15 +79,6 @@ MediaStreamGraphImpl::~MediaStreamGraphImpl() {
 void MediaStreamGraphImpl::AddStreamGraphThread(MediaStream* aStream) {
   MOZ_ASSERT(OnGraphThreadOrNotRunning());
   aStream->mTracksStartTime = mProcessedTime;
-
-  if (aStream->AsSourceStream()) {
-    SourceMediaStream* source = aStream->AsSourceStream();
-    TimeStamp currentTimeStamp = CurrentDriver()->GetCurrentTimeStamp();
-    TimeStamp processedTimeStamp =
-        currentTimeStamp + TimeDuration::FromSeconds(MediaTimeToSeconds(
-                               mProcessedTime - IterationEnd()));
-    source->SetStreamTracksStartTimeStamp(processedTimeStamp);
-  }
 
   if (aStream->IsSuspended()) {
     mSuspendedStreams.AppendElement(aStream);
@@ -1193,7 +1183,7 @@ void MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions) {
   for (MediaStream* stream : mStreams) {
     if (SourceMediaStream* is = stream->AsSourceStream()) {
       ensureNextIteration |= is->PullNewData(aEndBlockingDecisions);
-      is->ExtractPendingInput(mStateComputedTime);
+      is->ExtractPendingInput(mStateComputedTime, aEndBlockingDecisions);
     }
     if (stream->mFinished) {
       // The stream's not suspended, and since it's finished, underruns won't
@@ -1890,14 +1880,12 @@ size_t MediaStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   // - mGraph - Not reported here
   // - mConsumers - elements
   // Future:
-  // - mVideoOutputs - elements
   // - mLastPlayedVideoFrame
   // - mTrackListeners - elements
   // - mAudioOutputStream - elements
 
   amount += mTracks.SizeOfExcludingThis(aMallocSizeOf);
   amount += mAudioOutputs.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  amount += mVideoOutputs.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mTrackListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mMainThreadListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mDisabledTracks.ShallowSizeOfExcludingThis(aMallocSizeOf);
@@ -2015,12 +2003,6 @@ void MediaStream::RemoveAllListenersImpl() {
   mTrackListeners.Clear();
 
   RemoveAllDirectListenersImpl();
-
-  auto videoOutputs(mVideoOutputs);
-  for (auto& l : videoOutputs) {
-    l.mListener->NotifyRemoved();
-  }
-  mVideoOutputs.Clear();
 }
 
 void MediaStream::DestroyImpl() {
@@ -2134,71 +2116,6 @@ void MediaStream::RemoveAudioOutput(void* aKey) {
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aKey));
 }
 
-void MediaStream::AddVideoOutputImpl(
-    already_AddRefed<MediaStreamVideoSink> aSink, TrackID aID) {
-  RefPtr<MediaStreamVideoSink> sink = aSink;
-  LOG(LogLevel::Info,
-      ("MediaStream %p Adding MediaStreamVideoSink %p as output", this,
-       sink.get()));
-  MOZ_ASSERT(aID != TRACK_NONE);
-  for (auto entry : mVideoOutputs) {
-    if (entry.mListener == sink &&
-        (entry.mTrackID == TRACK_ANY || entry.mTrackID == aID)) {
-      return;
-    }
-  }
-  TrackBound<MediaStreamVideoSink>* l = mVideoOutputs.AppendElement();
-  l->mListener = sink;
-  l->mTrackID = aID;
-
-  AddDirectTrackListenerImpl(sink.forget(), aID);
-}
-
-void MediaStream::RemoveVideoOutputImpl(MediaStreamVideoSink* aSink,
-                                        TrackID aID) {
-  LOG(LogLevel::Info,
-      ("MediaStream %p Removing MediaStreamVideoSink %p as output", this,
-       aSink));
-  MOZ_ASSERT(aID != TRACK_NONE);
-
-  // Ensure that any frames currently queued for playback by the compositor
-  // are removed.
-  aSink->ClearFrames();
-  for (size_t i = 0; i < mVideoOutputs.Length(); ++i) {
-    if (mVideoOutputs[i].mListener == aSink &&
-        (mVideoOutputs[i].mTrackID == TRACK_ANY ||
-         mVideoOutputs[i].mTrackID == aID)) {
-      mVideoOutputs.RemoveElementAt(i);
-    }
-  }
-
-  RemoveDirectTrackListenerImpl(aSink, aID);
-}
-
-void MediaStream::AddVideoOutput(MediaStreamVideoSink* aSink, TrackID aID) {
-  class Message : public ControlMessage {
-   public:
-    Message(MediaStream* aStream, MediaStreamVideoSink* aSink, TrackID aID)
-        : ControlMessage(aStream), mSink(aSink), mID(aID) {}
-    void Run() override { mStream->AddVideoOutputImpl(mSink.forget(), mID); }
-    RefPtr<MediaStreamVideoSink> mSink;
-    TrackID mID;
-  };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aSink, aID));
-}
-
-void MediaStream::RemoveVideoOutput(MediaStreamVideoSink* aSink, TrackID aID) {
-  class Message : public ControlMessage {
-   public:
-    Message(MediaStream* aStream, MediaStreamVideoSink* aSink, TrackID aID)
-        : ControlMessage(aStream), mSink(aSink), mID(aID) {}
-    void Run() override { mStream->RemoveVideoOutputImpl(mSink, mID); }
-    RefPtr<MediaStreamVideoSink> mSink;
-    TrackID mID;
-  };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aSink, aID));
-}
-
 void MediaStream::Suspend() {
   class Message : public ControlMessage {
    public:
@@ -2250,6 +2167,9 @@ void MediaStream::AddTrackListenerImpl(
       track->GetEnd() <=
           GraphTimeToStreamTime(GraphImpl()->mStateComputedTime)) {
     l->mListener->NotifyEnded();
+  }
+  if (GetDisabledTrackMode(aTrackID) == DisabledTrackMode::SILENCE_BLACK) {
+    l->mListener->NotifyEnabledStateChanged(false);
   }
 }
 
@@ -2388,6 +2308,11 @@ void MediaStream::SetTrackEnabledImpl(TrackID aTrackID,
     for (int32_t i = mDisabledTracks.Length() - 1; i >= 0; --i) {
       if (aTrackID == mDisabledTracks[i].mTrackID) {
         mDisabledTracks.RemoveElementAt(i);
+        for (TrackBound<MediaStreamTrackListener>& l : mTrackListeners) {
+          if (l.mTrackID == aTrackID) {
+            l.mListener->NotifyEnabledStateChanged(true);
+          }
+        }
         return;
       }
     }
@@ -2399,6 +2324,13 @@ void MediaStream::SetTrackEnabledImpl(TrackID aTrackID,
       }
     }
     mDisabledTracks.AppendElement(DisabledTrack(aTrackID, aMode));
+    if (aMode == DisabledTrackMode::SILENCE_BLACK) {
+      for (TrackBound<MediaStreamTrackListener>& l : mTrackListeners) {
+        if (l.mTrackID == aTrackID) {
+          l.mListener->NotifyEnabledStateChanged(false);
+        }
+      }
+    }
   }
 }
 
@@ -2537,6 +2469,8 @@ void SourceMediaStream::SetPullingEnabled(TrackID aTrackID, bool aEnabled) {
                           mStream->mTracks.FindTrack(mTrackID)->IsEnded());
         return;
       }
+      MOZ_ASSERT(data->mData->GetType() == MediaSegment::AUDIO,
+                 "Pulling is not allowed for video");
       data->mPullingEnabled = mEnabled;
     }
     SourceMediaStream* mStream;
@@ -2605,11 +2539,13 @@ bool SourceMediaStream::PullNewData(GraphTime aDesiredUpToTime) {
   return true;
 }
 
-void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime) {
+void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime,
+                                            GraphTime aDesiredUpToTime) {
   MutexAutoLock lock(mMutex);
 
   bool finished = mFinishPending;
   StreamTime streamCurrentTime = GraphTimeToStreamTime(aCurrentTime);
+  StreamTime streamDesiredUpToTime = GraphTimeToStreamTime(aDesiredUpToTime);
 
   for (int32_t i = mUpdateTracks.Length() - 1; i >= 0; --i) {
     SourceMediaStream::TrackData* data = &mUpdateTracks[i];
@@ -2644,7 +2580,7 @@ void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime) {
       // data->mData with an empty clone.
       data->mData = segment->CreateEmptyClone();
       data->mCommands &= ~SourceMediaStream::TRACK_CREATE;
-    } else if (data->mData->GetDuration() > 0) {
+    } else {
       MediaSegment* dest = mTracks.FindTrack(data->mID)->GetSegment();
       LOG(LogLevel::Verbose,
           ("%p: SourceMediaStream %p track %d, advancing end from %" PRId64
@@ -2657,6 +2593,16 @@ void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime) {
     if (data->mCommands & SourceMediaStream::TRACK_END) {
       mTracks.FindTrack(data->mID)->SetEnded();
       mUpdateTracks.RemoveElementAt(i);
+    } else if (!data->mPullingEnabled &&
+               data->mData->GetType() == MediaSegment::VIDEO) {
+      // This video track is pushed. Since we use timestamps rather than
+      // durations for video we avoid making the video track block the stream
+      // by extending the duration when there's not enough video data, so a
+      // video track always has valid data.
+      VideoSegment* segment = static_cast<VideoSegment*>(
+          mTracks.FindTrack(data->mID)->GetSegment());
+      StreamTime missingTime = streamDesiredUpToTime - segment->GetDuration();
+      segment->ExtendLastFrameBy(missingTime);
     }
   }
 
@@ -2737,8 +2683,6 @@ void SourceMediaStream::AdvanceTimeVaryingValuesToCurrentTime(
     GraphTime aCurrentTime, GraphTime aBlockedTime) {
   MutexAutoLock lock(mMutex);
   mTracksStartTime += aBlockedTime;
-  mStreamTracksStartTimeStamp +=
-      TimeDuration::FromSeconds(GraphImpl()->MediaTimeToSeconds(aBlockedTime));
   mTracks.ForgetUpTo(aCurrentTime - mTracksStartTime);
 }
 
@@ -2815,16 +2759,7 @@ void SourceMediaStream::AddDirectTrackListenerImpl(
     return;
   }
 
-  bool isAudio = track->GetType() == MediaSegment::AUDIO;
-  bool isVideo = track->GetType() == MediaSegment::VIDEO;
-  if (!isAudio && !isVideo) {
-    LOG(LogLevel::Warning,
-        ("%p: Source track for direct track listener %p is unknown",
-         GraphImpl(), listener.get()));
-    MOZ_ASSERT(false);
-    return;
-  }
-
+  MOZ_ASSERT(track->GetType() == MediaSegment::VIDEO);
   for (auto entry : mDirectTrackListeners) {
     if (entry.mListener == listener &&
         (entry.mTrackID == TRACK_ANY || entry.mTrackID == aTrackID)) {
@@ -2845,24 +2780,44 @@ void SourceMediaStream::AddDirectTrackListenerImpl(
       DirectMediaStreamTrackListener::InstallationResult::SUCCESS);
 
   // Pass buffered data to the listener
-  AudioSegment bufferedAudio;
-  VideoSegment bufferedVideo;
-  MediaSegment& bufferedData = isAudio
-                                   ? static_cast<MediaSegment&>(bufferedAudio)
-                                   : static_cast<MediaSegment&>(bufferedVideo);
-
-  MediaSegment& trackSegment = *track->GetSegment();
-  if (mTracks.GetForgottenDuration() < trackSegment.GetDuration()) {
-    bufferedData.AppendSlice(trackSegment, mTracks.GetForgottenDuration(),
-                             trackSegment.GetDuration());
+  VideoSegment bufferedData;
+  size_t videoFrames = 0;
+  // For video we append all non-null chunks, as we're only interested in
+  // real frames and their timestamps.
+  VideoSegment& trackSegment = static_cast<VideoSegment&>(*track->GetSegment());
+  for (VideoSegment::ConstChunkIterator iter(trackSegment); !iter.IsEnded();
+       iter.Next()) {
+    if (iter->IsNull()) {
+      continue;
+    }
+    ++videoFrames;
+    MOZ_ASSERT(!iter->mTimeStamp.IsNull());
+    bufferedData.AppendFrame(do_AddRef(iter->mFrame.GetImage()),
+                             iter->mFrame.GetIntrinsicSize(),
+                             iter->mFrame.GetPrincipalHandle(),
+                             iter->mFrame.GetForceBlack(), iter->mTimeStamp);
   }
 
   if (TrackData* updateData = FindDataForTrack(aTrackID)) {
-    bufferedData.AppendSlice(*updateData->mData, 0,
-                             updateData->mData->GetDuration());
+    VideoSegment& video = static_cast<VideoSegment&>(*updateData->mData);
+    for (VideoSegment::ConstChunkIterator iter(video); !iter.IsEnded();
+         iter.Next()) {
+      if (iter->IsNull()) {
+        continue;
+      }
+      ++videoFrames;
+      bufferedData.AppendFrame(do_AddRef(iter->mFrame.GetImage()),
+                               iter->mFrame.GetIntrinsicSize(),
+                               iter->mFrame.GetPrincipalHandle(),
+                               iter->mFrame.GetForceBlack(), iter->mTimeStamp);
+    }
   }
 
-  if (bufferedData.GetDuration() != 0) {
+  LOG(LogLevel::Info,
+      ("%p: Notifying direct listener %p of %zu video frames and duration "
+       "%" PRId64,
+       GraphImpl(), listener.get(), videoFrames, bufferedData.GetDuration()));
+  if (!bufferedData.IsNull()) {
     listener->NotifyRealtimeTrackData(Graph(), 0, bufferedData);
   }
 }
@@ -2878,16 +2833,6 @@ void SourceMediaStream::RemoveDirectTrackListenerImpl(
       mDirectTrackListeners.RemoveElementAt(i);
     }
   }
-}
-
-StreamTime SourceMediaStream::GetEndOfAppendedData(TrackID aID) {
-  MutexAutoLock lock(mMutex);
-  TrackData* track = FindDataForTrack(aID);
-  if (track) {
-    return track->mEndOfFlushedData + track->mData->GetDuration();
-  }
-  MOZ_CRASH("Track not found");
-  return 0;
 }
 
 void SourceMediaStream::EndTrack(TrackID aID) {

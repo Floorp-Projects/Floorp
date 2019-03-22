@@ -66,6 +66,10 @@ runTestWhenReady(async () => {
   await haveEvent(mediaRecorder, "start", wait(5000, new Error("Timeout")));
   info("onstart fired");
 
+  // The recording can be too short to cause any checks with
+  // waitForAnalysisSuccess(). Waiting a bit here solves this.
+  await wait(500);
+
   is(mediaRecorder.state, "recording",
      "Media recorder is recording before being stopped");
   mediaRecorder.stop();

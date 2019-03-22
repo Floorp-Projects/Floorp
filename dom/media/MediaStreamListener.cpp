@@ -19,18 +19,17 @@ namespace mozilla {
 
 void DirectMediaStreamTrackListener::MirrorAndDisableSegment(
     AudioSegment& aFrom, AudioSegment& aTo) {
-  aTo.Clear();
   aTo.AppendNullData(aFrom.GetDuration());
 }
 
 void DirectMediaStreamTrackListener::MirrorAndDisableSegment(
     VideoSegment& aFrom, VideoSegment& aTo, DisabledTrackMode aMode) {
-  aTo.Clear();
   if (aMode == DisabledTrackMode::SILENCE_BLACK) {
     for (VideoSegment::ChunkIterator it(aFrom); !it.IsEnded(); it.Next()) {
-      aTo.AppendFrame(do_AddRef(it->mFrame.GetImage()), it->GetDuration(),
+      aTo.AppendFrame(do_AddRef(it->mFrame.GetImage()),
                       it->mFrame.GetIntrinsicSize(), it->GetPrincipalHandle(),
                       true);
+      aTo.ExtendLastFrameBy(it->GetDuration());
     }
   } else if (aMode == DisabledTrackMode::SILENCE_FREEZE) {
     aTo.AppendNullData(aFrom.GetDuration());
@@ -49,19 +48,17 @@ void DirectMediaStreamTrackListener::
   DisabledTrackMode mode = mDisabledBlackCount > 0
                                ? DisabledTrackMode::SILENCE_BLACK
                                : DisabledTrackMode::SILENCE_FREEZE;
-  if (!mMedia) {
-    mMedia = aMedia.CreateEmptyClone();
-  }
+  UniquePtr<MediaSegment> media(aMedia.CreateEmptyClone());
   if (aMedia.GetType() == MediaSegment::AUDIO) {
     MirrorAndDisableSegment(static_cast<AudioSegment&>(aMedia),
-                            static_cast<AudioSegment&>(*mMedia));
+                            static_cast<AudioSegment&>(*media));
   } else if (aMedia.GetType() == MediaSegment::VIDEO) {
     MirrorAndDisableSegment(static_cast<VideoSegment&>(aMedia),
-                            static_cast<VideoSegment&>(*mMedia), mode);
+                            static_cast<VideoSegment&>(*media), mode);
   } else {
     MOZ_CRASH("Unsupported media type");
   }
-  NotifyRealtimeTrackData(aGraph, aTrackOffset, *mMedia);
+  NotifyRealtimeTrackData(aGraph, aTrackOffset, *media);
 }
 
 void DirectMediaStreamTrackListener::IncreaseDisabled(DisabledTrackMode aMode) {

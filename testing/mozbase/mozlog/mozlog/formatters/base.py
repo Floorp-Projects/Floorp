@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 from ..reader import LogHandler
+from mozlog.handlers.messagehandler import MessageHandler
 
 
 class BaseFormatter(LogHandler):
@@ -20,3 +21,6 @@ class BaseFormatter(LogHandler):
               #For simplicity in the example pretend the id is always a string
               return data["test"]
     """
+
+    def __init__(self):
+        self.message_handler = MessageHandler()

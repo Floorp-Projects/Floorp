@@ -8,6 +8,7 @@
 
 interface nsIPrincipal;
 interface nsIQuotaRequest;
+interface nsIQuotaCallback;
 interface nsIQuotaUsageCallback;
 interface nsIQuotaUsageRequest;
 
@@ -84,6 +85,16 @@ interface nsIQuotaManagerService : nsISupports
   getUsageForPrincipal(in nsIPrincipal aPrincipal,
                        in nsIQuotaUsageCallback aCallback,
                        [optional] in boolean aGetGroupUsage);
+
+  /**
+   * Schedules an asynchronous callback that will inspect all origins and
+   * just returns the origin strings of initialized origins.
+   *
+   * @param aCallback
+   *        The callback that will be called when the origin is collected.
+   */
+  [must_use] nsIQuotaRequest
+  listInitializedOrigins(in nsIQuotaCallback aCallback);
 
   /**
    * Removes all storages. The files may not be deleted immediately depending

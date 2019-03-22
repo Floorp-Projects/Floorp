@@ -33,7 +33,7 @@ class BufferHandler(BaseHandler):
         else:
             self._buffer = []
 
-        self.register_message_handlers("buffer", {
+        self.message_handler.register_message_handlers("buffer", {
             "on": self._enable_buffering,
             "off": self._disable_buffering,
             "flush": self._flush_buffered,

@@ -7,7 +7,6 @@
 #include "VideoFrameContainer.h"
 #include "mozilla/Telemetry.h"
 #include "MediaDecoderOwner.h"
-#include "Tracing.h"
 
 using namespace mozilla::layers;
 
@@ -43,7 +42,6 @@ VideoFrameContainer::VideoFrameContainer(
     : mOwner(aOwner),
       mImageContainer(aContainer),
       mMutex("nsVideoFrameContainer"),
-      mBlackImage(nullptr),
       mFrameID(0),
       mPendingPrincipalHandle(PRINCIPAL_HANDLE_NONE),
       mFrameIDForPendingPrincipalHandle(0),
@@ -79,127 +77,6 @@ void VideoFrameContainer::UpdatePrincipalHandleForFrameIDLocked(
   mPendingPrincipalHandle = aPrincipalHandle;
   mFrameIDForPendingPrincipalHandle = aFrameID;
 }
-
-static bool SetImageToBlackPixel(PlanarYCbCrImage* aImage) {
-  uint8_t blackPixel[] = {0x10, 0x80, 0x80};
-
-  PlanarYCbCrData data;
-  data.mYChannel = blackPixel;
-  data.mCbChannel = blackPixel + 1;
-  data.mCrChannel = blackPixel + 2;
-  data.mYStride = data.mCbCrStride = 1;
-  data.mPicSize = data.mYSize = data.mCbCrSize = gfx::IntSize(1, 1);
-  return aImage->CopyData(data);
-}
-
-class VideoFrameContainerInvalidateRunnable : public Runnable {
- public:
-  explicit VideoFrameContainerInvalidateRunnable(
-      VideoFrameContainer* aVideoFrameContainer)
-      : Runnable("VideoFrameContainerInvalidateRunnable"),
-        mVideoFrameContainer(aVideoFrameContainer) {}
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    mVideoFrameContainer->Invalidate();
-
-    return NS_OK;
-  }
-
- private:
-  RefPtr<VideoFrameContainer> mVideoFrameContainer;
-};
-
-void VideoFrameContainer::SetCurrentFrames(const VideoSegment& aSegment) {
-  TRACE();
-
-  if (aSegment.IsEmpty()) {
-    return;
-  }
-
-  MutexAutoLock lock(mMutex);
-  AutoTimer<Telemetry::VFC_SETVIDEOSEGMENT_LOCK_HOLD_MS> lockHold;
-
-  // Collect any new frames produced in this iteration.
-  AutoTArray<ImageContainer::NonOwningImage, 4> newImages;
-  PrincipalHandle lastPrincipalHandle = PRINCIPAL_HANDLE_NONE;
-
-  VideoSegment::ConstChunkIterator iter(aSegment);
-  while (!iter.IsEnded()) {
-    VideoChunk chunk = *iter;
-
-    const VideoFrame* frame = &chunk.mFrame;
-    if (*frame == mLastPlayedVideoFrame) {
-      iter.Next();
-      continue;
-    }
-
-    Image* image = frame->GetImage();
-    CONTAINER_LOG(
-        LogLevel::Verbose,
-        ("VideoFrameContainer %p writing video frame %p (%d x %d)", this, image,
-         frame->GetIntrinsicSize().width, frame->GetIntrinsicSize().height));
-
-    if (frame->GetForceBlack()) {
-      if (!mBlackImage) {
-        RefPtr<Image> blackImage =
-            GetImageContainer()->CreatePlanarYCbCrImage();
-        if (blackImage) {
-          // Sets the image to a single black pixel, which will be scaled to
-          // fill the rendered size.
-          if (SetImageToBlackPixel(blackImage->AsPlanarYCbCrImage())) {
-            mBlackImage = blackImage;
-          }
-        }
-      }
-      if (mBlackImage) {
-        image = mBlackImage;
-      }
-    }
-    // Don't append null image to the newImages.
-    if (!image) {
-      iter.Next();
-      continue;
-    }
-    newImages.AppendElement(
-        ImageContainer::NonOwningImage(image, chunk.mTimeStamp));
-
-    lastPrincipalHandle = chunk.GetPrincipalHandle();
-
-    mLastPlayedVideoFrame = *frame;
-    iter.Next();
-  }
-
-  // Don't update if there are no changes.
-  if (newImages.IsEmpty()) {
-    return;
-  }
-
-  AutoTArray<ImageContainer::NonOwningImage, 4> images;
-
-  bool principalHandleChanged =
-      lastPrincipalHandle != PRINCIPAL_HANDLE_NONE &&
-      lastPrincipalHandle != GetLastPrincipalHandleLocked();
-
-  // Add the frames from this iteration.
-  for (auto& image : newImages) {
-    image.mFrameID = NewFrameID();
-    images.AppendElement(image);
-  }
-
-  if (principalHandleChanged) {
-    UpdatePrincipalHandleForFrameIDLocked(lastPrincipalHandle,
-                                          newImages.LastElement().mFrameID);
-  }
-
-  SetCurrentFramesLocked(mLastPlayedVideoFrame.GetIntrinsicSize(), images);
-  nsCOMPtr<nsIRunnable> event = new VideoFrameContainerInvalidateRunnable(this);
-  mMainThread->Dispatch(event.forget());
-
-  images.ClearAndRetainStorage();
-}
-
-void VideoFrameContainer::ClearFrames() { ClearFutureFrames(); }
 
 void VideoFrameContainer::SetCurrentFrame(const gfx::IntSize& aIntrinsicSize,
                                           Image* aImage,

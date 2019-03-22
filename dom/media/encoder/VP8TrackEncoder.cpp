@@ -33,9 +33,11 @@ using namespace mozilla::layers;
 using namespace mozilla::media;
 using namespace mozilla::dom;
 
-VP8TrackEncoder::VP8TrackEncoder(TrackRate aTrackRate,
+VP8TrackEncoder::VP8TrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
+                                 TrackRate aTrackRate,
                                  FrameDroppingMode aFrameDroppingMode)
-    : VideoTrackEncoder(aTrackRate, aFrameDroppingMode),
+    : VideoTrackEncoder(std::move(aDriftCompensator), aTrackRate,
+                        aFrameDroppingMode),
       mVPXContext(new vpx_codec_ctx_t()),
       mVPXImageWrapper(new vpx_image_t()) {
   MOZ_COUNT_CTOR(VP8TrackEncoder);

@@ -390,10 +390,6 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
 already_AddRefed<OscillatorNode> OscillatorNode::Create(
     AudioContext& aAudioContext, const OscillatorOptions& aOptions,
     ErrorResult& aRv) {
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   RefPtr<OscillatorNode> audioNode = new OscillatorNode(&aAudioContext);
 
   audioNode->Initialize(aOptions, aRv);

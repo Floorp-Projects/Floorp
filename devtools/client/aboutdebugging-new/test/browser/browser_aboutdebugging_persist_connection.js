@@ -64,7 +64,8 @@ async function testRemoteClientPersistConnection(mocks,
 
   info("Emit 'closed' on the client and wait for the sidebar item to disappear");
   client._eventEmitter.emit("closed");
-  await waitUntil(() => !findSidebarItemByText(sidebarName, document));
+  await waitUntil(() => !findSidebarItemByText(sidebarName, document) &&
+                      !findSidebarItemByText(runtimeName, document));
 
   info("Remove the tab");
   await removeTab(tab);

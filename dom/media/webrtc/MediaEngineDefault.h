@@ -86,15 +86,12 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
 
   RefPtr<layers::ImageContainer> mImageContainer;
 
-  // mMutex protects mState, mImage, mStream, mTrackID
-  Mutex mMutex;
-
   // Current state of this source.
-  // Set under mMutex on the owning thread. Accessed under one of the two.
   MediaEngineSourceState mState = kReleased;
   RefPtr<layers::Image> mImage;
   RefPtr<SourceMediaStream> mStream;
   TrackID mTrackID = TRACK_NONE;
+  PrincipalHandle mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
 
   MediaEnginePrefs mOpts;
   int mCb = 16;

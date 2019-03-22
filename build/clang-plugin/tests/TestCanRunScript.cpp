@@ -210,10 +210,14 @@ MOZ_CAN_RUN_SCRIPT void test_ref_9() {
   test_ref(*(RefCountedBase*)x); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '*(RefCountedBase*)x' is neither.}}
 }
 
+// Ignore warning not related to static analysis here
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvoid-ptr-dereference"
 MOZ_CAN_RUN_SCRIPT void test_ref_10() {
   void* x = new RefCountedBase();
-  test_ref((RefCountedBase&)*x); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '*x' is neither.}}  expected-error {{ISO C++ does not allow indirection on operand of type 'void *'}}
+  test_ref((RefCountedBase&)*x); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '*x' is neither.}}
 }
+#pragma GCC diagnostic pop
 
 MOZ_CAN_RUN_SCRIPT void test_maybe() {
   mozilla::Maybe<RefCountedBase*> unsafe;

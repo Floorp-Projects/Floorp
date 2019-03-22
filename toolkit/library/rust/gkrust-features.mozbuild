@@ -42,3 +42,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
 
 if CONFIG['MOZ_GECKO_PROFILER_PARSE_ELF']:
     gkrust_features += ['gecko_profiler_parse_elf']
+
+if CONFIG['MOZ_BITS_DOWNLOAD']:
+    gkrust_features += ['bitsdownload']

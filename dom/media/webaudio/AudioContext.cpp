@@ -328,15 +328,6 @@ already_AddRefed<AudioContext> AudioContext::Constructor(
   return object.forget();
 }
 
-bool AudioContext::CheckClosed(ErrorResult& aRv) {
-  if (mAudioContextState == AudioContextState::Closed || mIsShutDown ||
-      mIsDisconnecting) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return true;
-  }
-  return false;
-}
-
 already_AddRefed<AudioBufferSourceNode> AudioContext::CreateBufferSource(
     ErrorResult& aRv) {
   return AudioBufferSourceNode::Create(nullptr, *this,
@@ -345,10 +336,6 @@ already_AddRefed<AudioBufferSourceNode> AudioContext::CreateBufferSource(
 
 already_AddRefed<ConstantSourceNode> AudioContext::CreateConstantSource(
     ErrorResult& aRv) {
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   RefPtr<ConstantSourceNode> constantSourceNode = new ConstantSourceNode(this);
   return constantSourceNode.forget();
 }
@@ -399,10 +386,6 @@ already_AddRefed<ScriptProcessorNode> AudioContext::CreateScriptProcessor(
       aNumberOfOutputChannels > WebAudioUtils::MaxChannelCount ||
       !IsValidBufferSize(aBufferSize)) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-    return nullptr;
-  }
-
-  if (CheckClosed(aRv)) {
     return nullptr;
   }
 

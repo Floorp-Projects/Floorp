@@ -213,9 +213,6 @@ class DecodedStreamData {
   // The decoder is responsible for calling Destroy() on this stream.
   const RefPtr<SourceMediaStream> mStream;
   const RefPtr<DecodedStreamGraphListener> mListener;
-  // True if we need to send a compensation video frame to ensure the
-  // StreamTime going forward.
-  bool mEOSVideoCompensation;
 
   const RefPtr<OutputStreamManager> mOutputStreamManager;
   const RefPtr<AbstractThread> mAbstractMainThread;
@@ -238,7 +235,6 @@ DecodedStreamData::DecodedStreamData(
       mListener(MakeRefPtr<DecodedStreamGraphListener>(
           mStream, aInit.mAudioTrackID, std::move(aAudioEndedPromise),
           aInit.mVideoTrackID, std::move(aVideoEndedPromise), aMainThread)),
-      mEOSVideoCompensation(false),
       mOutputStreamManager(aOutputStreamManager),
       mAbstractMainThread(aMainThread) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -425,9 +421,10 @@ void DecodedStream::Stop() {
   AssertOwnerThread();
   MOZ_ASSERT(mStartTime.isSome(), "playback not started.");
 
+  DisconnectListener();
+  ResetVideo(mPrincipalHandle);
   mStreamTimeOffset += SentDuration();
   mStartTime.reset();
-  DisconnectListener();
   mAudioEndedPromise = nullptr;
   mVideoEndedPromise = nullptr;
 
@@ -586,8 +583,8 @@ void DecodedStream::SendAudio(double aVolume, bool aIsSameOrigin,
 }
 
 static void WriteVideoToMediaStream(MediaStream* aStream, layers::Image* aImage,
-                                    const TimeUnit& aEnd,
                                     const TimeUnit& aStart,
+                                    const TimeUnit& aEnd,
                                     const mozilla::gfx::IntSize& aIntrinsicSize,
                                     const TimeStamp& aTimeStamp,
                                     VideoSegment* aOutput,
@@ -596,9 +593,12 @@ static void WriteVideoToMediaStream(MediaStream* aStream, layers::Image* aImage,
   auto end = aStream->MicrosecondsToStreamTimeRoundDown(aEnd.ToMicroseconds());
   auto start =
       aStream->MicrosecondsToStreamTimeRoundDown(aStart.ToMicroseconds());
-  StreamTime duration = end - start;
-  aOutput->AppendFrame(image.forget(), duration, aIntrinsicSize,
-                       aPrincipalHandle, false, aTimeStamp);
+  aOutput->AppendFrame(image.forget(), aIntrinsicSize, aPrincipalHandle, false,
+                       aTimeStamp);
+  // Extend this so we get accurate durations for all frames.
+  // Because this track is pushed, we need durations so the graph can track
+  // when playout of the track has finished.
+  aOutput->ExtendLastFrameBy(end - start);
 }
 
 static bool ZeroDurationAtLastChunk(VideoSegment& aInput) {
@@ -608,6 +608,43 @@ static bool ZeroDurationAtLastChunk(VideoSegment& aInput) {
   StreamTime lastVideoStratTime;
   aInput.GetLastFrame(&lastVideoStratTime);
   return lastVideoStratTime == aInput.GetDuration();
+}
+
+void DecodedStream::ResetVideo(const PrincipalHandle& aPrincipalHandle) {
+  AssertOwnerThread();
+
+  if (!mData) {
+    return;
+  }
+
+  if (!mInfo.HasVideo()) {
+    return;
+  }
+
+  VideoSegment resetter;
+  TimeStamp currentTime;
+  TimeUnit currentPosition = GetPosition(&currentTime);
+
+  // Giving direct consumers a frame (really *any* frame, so in this case:
+  // nullptr) at an earlier time than the previous, will signal to that consumer
+  // to discard any frames ahead in time of the new frame. To be honest, this is
+  // an ugly hack because the direct listeners of the MediaStreamGraph do not
+  // have an API that supports clearing the future frames. ImageContainer and
+  // VideoFrameContainer do though, and we will need to move to a similar API
+  // for video tracks as part of bug 1493618.
+  resetter.AppendFrame(nullptr, mData->mLastVideoImageDisplaySize,
+                       aPrincipalHandle, false, currentTime);
+  mData->mStream->AppendToTrack(mInfo.mVideo.mTrackId, &resetter);
+
+  // Consumer buffers have been reset. We now set mNextVideoTime to the start
+  // time of the current frame, so that it can be displayed again on resuming.
+  if (RefPtr<VideoData> v = mVideoQueue.PeekFront()) {
+    mData->mNextVideoTime = v->mTime;
+  } else {
+    // There was no current frame in the queue. We set the next time to push to
+    // the current time, so we at least don't resume starting in the future.
+    mData->mNextVideoTime = currentPosition;
+  }
 }
 
 void DecodedStream::SendVideo(bool aIsSameOrigin,
@@ -631,13 +668,8 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
   // is ref-counted.
   mVideoQueue.GetElementsAfter(mData->mNextVideoTime, &video);
 
-  // tracksStartTimeStamp might be null when the SourceMediaStream not yet
-  // be added to MediaStreamGraph.
-  TimeStamp tracksStartTimeStamp =
-      sourceStream->GetStreamTracksStrartTimeStamp();
-  if (tracksStartTimeStamp.IsNull()) {
-    tracksStartTimeStamp = TimeStamp::Now();
-  }
+  TimeStamp currentTime;
+  TimeUnit currentPosition = GetPosition(&currentTime);
 
   for (uint32_t i = 0; i < video.Length(); ++i) {
     VideoData* v = video[i];
@@ -652,18 +684,21 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
       // video frame). E.g. if we have a video frame that is 30 sec long
       // and capture happens at 15 sec, we'll have to append a black frame
       // that is 15 sec long.
-      WriteVideoToMediaStream(sourceStream, mData->mLastVideoImage, v->mTime,
-                              mData->mNextVideoTime,
-                              mData->mLastVideoImageDisplaySize,
-                              tracksStartTimeStamp + v->mTime.ToTimeDuration(),
-                              &output, aPrincipalHandle);
+      WriteVideoToMediaStream(
+          sourceStream, mData->mLastVideoImage, mData->mNextVideoTime, v->mTime,
+          mData->mLastVideoImageDisplaySize,
+          currentTime +
+              (mData->mNextVideoTime - currentPosition).ToTimeDuration(),
+          &output, aPrincipalHandle);
       mData->mNextVideoTime = v->mTime;
     }
 
     if (mData->mNextVideoTime < v->GetEndTime()) {
       WriteVideoToMediaStream(
-          sourceStream, v->mImage, v->GetEndTime(), mData->mNextVideoTime,
-          v->mDisplay, tracksStartTimeStamp + v->GetEndTime().ToTimeDuration(),
+          sourceStream, v->mImage, mData->mNextVideoTime, v->GetEndTime(),
+          v->mDisplay,
+          currentTime +
+              (mData->mNextVideoTime - currentPosition).ToTimeDuration(),
           &output, aPrincipalHandle);
       mData->mNextVideoTime = v->GetEndTime();
       mData->mLastVideoImage = v->mImage;
@@ -672,8 +707,9 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
   }
 
   // Check the output is not empty.
+  bool compensateEOS = false;
   if (output.GetLastFrame()) {
-    mData->mEOSVideoCompensation = ZeroDurationAtLastChunk(output);
+    compensateEOS = ZeroDurationAtLastChunk(output);
   }
 
   if (!aIsSameOrigin) {
@@ -686,17 +722,16 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
   }
 
   if (mVideoQueue.IsFinished() && !mData->mHaveSentFinishVideo) {
-    if (mData->mEOSVideoCompensation) {
+    if (compensateEOS) {
       VideoSegment endSegment;
       // Calculate the deviation clock time from DecodedStream.
       auto deviation =
           FromMicroseconds(sourceStream->StreamTimeToMicroseconds(1));
       WriteVideoToMediaStream(
-          sourceStream, mData->mLastVideoImage,
-          mData->mNextVideoTime + deviation, mData->mNextVideoTime,
-          mData->mLastVideoImageDisplaySize,
-          tracksStartTimeStamp +
-              (mData->mNextVideoTime + deviation).ToTimeDuration(),
+          sourceStream, mData->mLastVideoImage, mData->mNextVideoTime,
+          mData->mNextVideoTime + deviation, mData->mLastVideoImageDisplaySize,
+          currentTime + (mData->mNextVideoTime + deviation - currentPosition)
+                            .ToTimeDuration(),
           &endSegment, aPrincipalHandle);
       mData->mNextVideoTime += deviation;
       MOZ_ASSERT(endSegment.GetDuration() > 0);
@@ -727,6 +762,10 @@ void DecodedStream::SendData() {
 
   // Not yet created on the main thread. MDSM will try again later.
   if (!mData) {
+    return;
+  }
+
+  if (!mPlaying) {
     return;
   }
 
@@ -774,6 +813,11 @@ void DecodedStream::NotifyOutput(int64_t aTime) {
 
 void DecodedStream::PlayingChanged() {
   AssertOwnerThread();
+
+  if (!mPlaying) {
+    // On seek or pause we discard future frames.
+    ResetVideo(mPrincipalHandle);
+  }
 
   mAbstractMainThread->Dispatch(NewRunnableMethod<bool>(
       "OutputStreamManager::SetPlaying", mOutputStreamManager,

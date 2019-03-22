@@ -80,6 +80,7 @@ class DecodedStream : public MediaSink {
   void SendAudio(double aVolume, bool aIsSameOrigin,
                  const PrincipalHandle& aPrincipalHandle);
   void SendVideo(bool aIsSameOrigin, const PrincipalHandle& aPrincipalHandle);
+  void ResetVideo(const PrincipalHandle& aPrincipalHandle);
   StreamTime SentDuration();
   void SendData();
   void NotifyOutput(int64_t aTime);

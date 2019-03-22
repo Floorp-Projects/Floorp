@@ -72,6 +72,16 @@ class MediaStreamTrackListener {
       MediaStreamGraph* aGraph, const PrincipalHandle& aNewPrincipalHandle) {}
 
   /**
+   * Notify that the enabled state for the track this listener is attached to
+   * has changed.
+   *
+   * The enabled state here is referring to whether audio should be audible
+   * (enabled) or silent (not enabled); or whether video should be displayed as
+   * is (enabled), or black (not enabled).
+   */
+  virtual void NotifyEnabledStateChanged(bool aEnabled) {}
+
+  /**
    * Notify that the stream output is advancing. aCurrentTrackTime is the number
    * of samples that has been played out for this track in stream time.
    */
@@ -156,8 +166,6 @@ class DirectMediaStreamTrackListener : public MediaStreamTrackListener {
   virtual void NotifyDirectListenerInstalled(InstallationResult aResult) {}
   virtual void NotifyDirectListenerUninstalled() {}
 
-  virtual MediaStreamVideoSink* AsMediaStreamVideoSink() { return nullptr; }
-
  protected:
   virtual ~DirectMediaStreamTrackListener() {}
 
@@ -172,12 +180,11 @@ class DirectMediaStreamTrackListener : public MediaStreamTrackListener {
   void DecreaseDisabled(DisabledTrackMode aMode);
 
   // Matches the number of disabled streams to which this listener is attached.
-  // The number of streams are those between the stream the listener was added
-  // and the SourceMediaStream that is the input of the data.
+  // The number of streams are those between the stream where the listener was
+  // added and the SourceMediaStream that is the source of the data reaching
+  // this listener.
   Atomic<int32_t> mDisabledFreezeCount;
   Atomic<int32_t> mDisabledBlackCount;
-
-  nsAutoPtr<MediaSegment> mMedia;
 };
 
 }  // namespace mozilla

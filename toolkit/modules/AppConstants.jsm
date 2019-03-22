@@ -187,6 +187,13 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  MOZ_BITS_DOWNLOAD:
+#ifdef MOZ_BITS_DOWNLOAD
+  true,
+#else
+  false,
+#endif
+
   DEBUG:
 #ifdef DEBUG
   true,

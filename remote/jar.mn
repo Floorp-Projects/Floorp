@@ -4,6 +4,8 @@
 
 remote.jar:
 % content remote %content/
+  content/RemoteAgent.jsm (RemoteAgent.jsm)
+
   content/Connection.jsm (Connection.jsm)
   content/Error.jsm (Error.jsm)
   content/JSONHandler.jsm (JSONHandler.jsm)
