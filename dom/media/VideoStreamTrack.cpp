@@ -35,6 +35,8 @@ class VideoOutput : public DirectMediaStreamTrackListener {
   virtual ~VideoOutput() = default;
 
   void DropPastFrames() {
+    mMutex.AssertCurrentThreadOwns();
+
     TimeStamp now = TimeStamp::Now();
     size_t nrChunksInPast = 0;
     for (const auto& idChunkPair : mFrames) {
@@ -53,6 +55,8 @@ class VideoOutput : public DirectMediaStreamTrackListener {
   }
 
   void SendFrames() {
+    mMutex.AssertCurrentThreadOwns();
+
     DropPastFrames();
 
     if (mFrames.IsEmpty()) {
@@ -68,7 +72,7 @@ class VideoOutput : public DirectMediaStreamTrackListener {
       const VideoChunk& chunk = idChunkPair.second();
       const VideoFrame& frame = chunk.mFrame;
       Image* image = frame.GetImage();
-      if (frame.GetForceBlack()) {
+      if (frame.GetForceBlack() || !mEnabled) {
         if (!mBlackImage) {
           RefPtr<Image> blackImage = mVideoFrameContainer->GetImageContainer()
                                          ->CreatePlanarYCbCrImage();
@@ -127,6 +131,7 @@ class VideoOutput : public DirectMediaStreamTrackListener {
                                const MediaSegment& aMedia) override {
     MOZ_ASSERT(aMedia.GetType() == MediaSegment::VIDEO);
     const VideoSegment& video = static_cast<const VideoSegment&>(aMedia);
+    MutexAutoLock lock(mMutex);
     for (VideoSegment::ConstChunkIterator i(video); !i.IsEnded(); i.Next()) {
       if (!mLastFrameTime.IsNull() && i->mTimeStamp < mLastFrameTime) {
         // Time can go backwards if the source is a captured MediaDecoder and
@@ -151,12 +156,25 @@ class VideoOutput : public DirectMediaStreamTrackListener {
     // been ended by the source, meaning that the source won't append more data.
     mFrames.ClearAndRetainStorage();
   }
+  void NotifyEnabledStateChanged(bool aEnabled) override {
+    MutexAutoLock lock(mMutex);
+    mEnabled = aEnabled;
+    // Since mEnabled will affect whether frames are real, or black, we assign
+    // new FrameIDs whenever this changes.
+    for (auto& idChunkPair : mFrames) {
+      idChunkPair.first() = mVideoFrameContainer->NewFrameID();
+    }
+    SendFrames();
+  }
 
+  Mutex mMutex;
   TimeStamp mLastFrameTime;
   // Once the frame is forced to black, we initialize mBlackImage for use in any
   // following forced-black frames.
   RefPtr<Image> mBlackImage;
   bool mEnabled = true;
+  // This array is accessed from both the direct video thread, and the graph
+  // thread. Protected by mMutex.
   nsTArray<Pair<ImageContainer::FrameID, VideoChunk>> mFrames;
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
   const RefPtr<AbstractThread> mMainThread;
