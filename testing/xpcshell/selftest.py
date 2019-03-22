@@ -471,6 +471,7 @@ class XPCShellTestsTests(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
+        self.x.shutdownNode()
 
     def writeFile(self, name, contents):
         """
