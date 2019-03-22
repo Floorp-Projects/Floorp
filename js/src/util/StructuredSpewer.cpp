@@ -117,7 +117,10 @@ bool StructuredSpewer::enabled(JSScript* script) {
 
 bool StructuredSpewer::enabled(JSContext* cx, const JSScript* script,
                                SpewChannel channel) const {
-  return script->spewEnabled() && cx->spewer().filter().enabled(channel);
+  if (script && !script->spewEnabled()) {
+    return false;
+  }
+  return cx->spewer().filter().enabled(channel);
 }
 
 // Attempt to setup a common header for objects based on script/channel.
@@ -131,13 +134,14 @@ void StructuredSpewer::startObject(JSContext* cx, const JSScript* script,
 
   json.beginObject();
   json.property("channel", getName(channel));
-  json.beginObjectProperty("location");
+  if (script)
   {
+    json.beginObjectProperty("location");
     json.property("filename", script->filename());
     json.property("line", script->lineno());
     json.property("column", script->column());
+    json.endObject();
   }
-  json.endObject();
 }
 
 /* static */
