@@ -25,6 +25,7 @@ not-for-build-platforms:
    - win64-nightly/opt
    - win64-shippable/opt
    - win64-aarch64-nightly/opt
+   - win64-aarch64-shippable/opt
    - linux-devedition-nightly/opt
    - linux64-devedition-nightly/opt
    - macosx64-devedition-nightly/opt
