@@ -684,11 +684,12 @@ class nsCSSFrameConstructor final : public nsFrameManager {
      an SVG text frame. */
 #define FCDATA_IS_SVG_TEXT 0x80000
   /**
-   * When FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS is set, this bit says
-   * if we should create a grid/flex/columnset container instead of
-   * a block wrapper when the styles says so.
+   * If FCDATA_ALLOW_GRID_FLEX_COLUMN is set, then we should create a
+   * grid/flex/column container instead of a block wrapper when the styles says
+   * so. This bit is meaningful only if FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS
+   * is also set.
    */
-#define FCDATA_ALLOW_GRID_FLEX_COLUMNSET 0x200000
+#define FCDATA_ALLOW_GRID_FLEX_COLUMN 0x200000
   /**
    * Whether the kids of this FrameConstructionData should be flagged as having
    * a wrapper anon box parent.  This should only be set if
