@@ -13,7 +13,11 @@ import { generatedToOriginalId } from "devtools-source-map";
 import { flatten } from "lodash";
 
 import { toggleBlackBox } from "./blackbox";
-import { syncBreakpoint, addBreakpoint } from "../breakpoints";
+import {
+  syncBreakpoint,
+  addBreakpoint,
+  setBreakpointPositions
+} from "../breakpoints";
 import { loadSourceText } from "./loadSourceText";
 import { togglePrettyPrint } from "./prettyPrint";
 import { selectLocation } from "../sources";
@@ -22,7 +26,8 @@ import {
   getBlackBoxList,
   getSource,
   getPendingSelectedLocation,
-  getPendingBreakpointsForSource
+  getPendingBreakpointsForSource,
+  hasBreakpointPositions
 } from "../../selectors";
 
 import { prefs } from "../../utils/prefs";
@@ -45,6 +50,7 @@ function createOriginalSource(
     isBlackBoxed: false,
     loadedState: "unloaded",
     introductionUrl: null,
+    introductionType: undefined,
     isExtension: false,
     actors: []
   };
@@ -55,10 +61,6 @@ function loadSourceMaps(sources: Source[]) {
     dispatch,
     sourceMaps
   }: ThunkArgs): Promise<Promise<Source>[]> {
-    if (!prefs.clientSourceMapsEnabled) {
-      return [];
-    }
-
     const sourceList = await Promise.all(
       sources.map(async ({ id }) => {
         const originalSources = await dispatch(loadSourceMap(id));
@@ -92,7 +94,12 @@ function loadSourceMap(sourceId: SourceId) {
   }: ThunkArgs): Promise<Source[]> {
     const source = getSource(getState(), sourceId);
 
-    if (!source || isOriginal(source) || !source.sourceMapURL) {
+    if (
+      !prefs.clientSourceMapsEnabled ||
+      !source ||
+      isOriginal(source) ||
+      !source.sourceMapURL
+    ) {
       return [];
     }
 
@@ -231,13 +238,28 @@ export function newSource(source: Source) {
 export function newSources(sources: Source[]) {
   return async ({ dispatch, getState }: ThunkArgs) => {
     const _newSources = sources.filter(
-      source => !getSource(getState(), source.id)
+      source =>
+        !getSource(getState(), source.id) ||
+        source.introductionType === "scriptElement"
+    );
+
+    const sourcesNeedingPositions = _newSources.filter(source =>
+      hasBreakpointPositions(getState(), source.id)
     );
 
     dispatch({ type: "ADD_SOURCES", sources });
 
     for (const source of _newSources) {
       dispatch(checkSelectedSource(source.id));
+    }
+
+    // Adding new sources may have cleared this file's breakpoint positions
+    // in cases where a new <script> loaded in the HTML, so we manually
+    // re-request new breakpoint positions.
+    for (const source of sourcesNeedingPositions) {
+      if (!hasBreakpointPositions(getState(), source.id)) {
+        dispatch(setBreakpointPositions(source.id));
+      }
     }
 
     dispatch(restoreBlackBoxedSources(_newSources));
