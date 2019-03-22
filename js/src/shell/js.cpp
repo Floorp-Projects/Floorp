@@ -6562,16 +6562,13 @@ static bool UnboxedObjectsEnabled(JSContext* cx, unsigned argc, Value* vp) {
   // JITs are disabled, since that affects how unboxed objects are used.
 
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(!jit::JitOptions.disableUnboxedObjects &&
-                         !jit::JitOptions.eagerCompilation &&
-                         jit::IsIonEnabled(cx));
+  args.rval().setBoolean(false);
   return true;
 }
 
 static bool IsUnboxedObject(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(args.get(0).isObject() &&
-                         args[0].toObject().is<UnboxedPlainObject>());
+  args.rval().setBoolean(false);
   return true;
 }
 

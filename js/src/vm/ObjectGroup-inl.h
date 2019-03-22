@@ -84,18 +84,6 @@ inline PreliminaryObjectArrayWithTemplate* ObjectGroup::maybePreliminaryObjects(
   return maybePreliminaryObjectsDontCheckGeneration();
 }
 
-inline UnboxedLayout* ObjectGroup::maybeUnboxedLayout(
-    const AutoSweepObjectGroup& sweep) {
-  MOZ_ASSERT(sweep.group() == this);
-  return maybeUnboxedLayoutDontCheckGeneration();
-}
-
-inline UnboxedLayout& ObjectGroup::unboxedLayout(
-    const AutoSweepObjectGroup& sweep) {
-  MOZ_ASSERT(sweep.group() == this);
-  return unboxedLayoutDontCheckGeneration();
-}
-
 }  // namespace js
 
 #endif /* vm_ObjectGroup_inl_h */

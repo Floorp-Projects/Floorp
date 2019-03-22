@@ -272,7 +272,7 @@ JS_FRIEND_API bool js::GetBuiltinClass(JSContext* cx, HandleObject obj,
     return Proxy::getBuiltinClass(cx, obj, cls);
   }
 
-  if (obj->is<PlainObject>() || obj->is<UnboxedPlainObject>()) {
+  if (obj->is<PlainObject>()) {
     *cls = ESClass::Object;
   } else if (obj->is<ArrayObject>()) {
     *cls = ESClass::Array;

@@ -34,18 +34,6 @@
 #include "vm/ShapedObject-inl.h"
 #include "vm/TypeInference-inl.h"
 
-namespace js {
-
-// This is needed here for ensureShape() below.
-inline bool MaybeConvertUnboxedObjectToNative(JSContext* cx, JSObject* obj) {
-  if (obj->is<UnboxedPlainObject>()) {
-    return UnboxedPlainObject::convertToNative(cx, obj);
-  }
-  return true;
-}
-
-}  // namespace js
-
 inline js::Shape* JSObject::maybeShape() const {
   if (!is<js::ShapedObject>()) {
     return nullptr;
@@ -55,9 +43,6 @@ inline js::Shape* JSObject::maybeShape() const {
 }
 
 inline js::Shape* JSObject::ensureShape(JSContext* cx) {
-  if (!js::MaybeConvertUnboxedObjectToNative(cx, this)) {
-    return nullptr;
-  }
   js::Shape* shape = maybeShape();
   MOZ_ASSERT(shape);
   return shape;
@@ -271,19 +256,10 @@ inline bool JSObject::hasUncacheableProto() const {
 }
 
 MOZ_ALWAYS_INLINE bool JSObject::maybeHasInterestingSymbolProperty() const {
-  const js::NativeObject* nobj;
   if (isNative()) {
-    nobj = &as<js::NativeObject>();
-  } else if (is<js::UnboxedPlainObject>()) {
-    nobj = as<js::UnboxedPlainObject>().maybeExpando();
-    if (!nobj) {
-      return false;
-    }
-  } else {
-    return true;
+    return as<js::NativeObject>().hasInterestingSymbol();
   }
-
-  return nobj->hasInterestingSymbol();
+  return true;
 }
 
 inline bool JSObject::staticPrototypeIsImmutable() const {
