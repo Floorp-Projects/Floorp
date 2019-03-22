@@ -2700,7 +2700,7 @@ var XPIProvider = {
       Array.from(XPIStates.sideLoadedAddons.keys(),
                  id => this.getAddonByID(id)));
 
-    return addons.filter(addon => (addon.seen === false &&
+    return addons.filter(addon => (addon && addon.seen === false &&
                                    addon.permissions & AddonManager.PERM_CAN_ENABLE));
   },
 
