@@ -10,9 +10,9 @@ for ( let i=0; i < 8; i++) {
         `(module
            (func (export "f") (param i32) (result i32)
            ${adds(i)}
-           (set_local 0 (i32.extend8_s (i32.add (get_local 0) (i32.const 1))))
+           (local.set 0 (i32.extend8_s (i32.add (local.get 0) (i32.const 1))))
            ${drops(i)}
-           (get_local 0)))`;
+           (local.get 0)))`;
     let ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(txt)));
     assertEq(ins.exports.f(254), -1);
 }
@@ -20,7 +20,7 @@ for ( let i=0; i < 8; i++) {
 function adds(n) {
     let s = ""
     for ( let i=0; i < n; i++ )
-        s += "(i32.add (get_local 0) (i32.const 1))\n";
+        s += "(i32.add (local.get 0) (i32.const 1))\n";
     return s;
 }
 

@@ -2,8 +2,8 @@ for (let type of ['i32', 'f32', 'f64']) {
     assertEq(wasmEvalText(`
         (module
          (func $test (result ${type}) (param $p ${type}) (param $p2 ${type})
-            get_local $p
-            get_local $p2
+            local.get $p
+            local.get $p2
             (block)
             drop
          )
@@ -15,10 +15,10 @@ for (let type of ['i32', 'f32', 'f64']) {
 assertEq(wasmEvalText(`
     (module
      (func $test (result i32) (param $p i32) (param $p2 f32) (param $p3 f64) (param $p4 i32)
-        get_local $p
-        get_local $p2
-        get_local $p3
-        get_local $p4
+        local.get $p
+        local.get $p2
+        local.get $p3
+        local.get $p4
         (block)
         drop
         (block)
@@ -33,8 +33,8 @@ assertEq(wasmEvalText(`
 wasmAssert(`
     (module
      (func $test (result i64) (param $p i64) (param $p2 i64)
-        get_local $p
-        get_local $p2
+        local.get $p
+        local.get $p2
         (block)
         drop
      )

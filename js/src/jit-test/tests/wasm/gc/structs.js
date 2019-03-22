@@ -44,19 +44,19 @@ var bin = wasmTextToBinary(
       (func $x2 (import "m" "x2") (type $f2))
 
       (func (export "hello") (param f64) (param i32) (result f64)
-       (call_indirect $f2 (get_local 0) (get_local 1)))
+       (call_indirect $f2 (local.get 0) (local.get 1)))
 
       (func $doit (param f64) (result f64)
-       (f64.sqrt (get_local 0)))
+       (f64.sqrt (local.get 0)))
 
       (func $doitagain (param f64) (result f64)
-       (f64.mul (get_local 0) (get_local 0)))
+       (f64.mul (local.get 0) (local.get 0)))
 
       (func (export "x1") (param i32) (result i32)
-       (call $x1 (get_local 0)))
+       (call $x1 (local.get 0)))
 
       (func (export "x2") (param f64) (result f64)
-       (call $x2 (get_local 0)))
+       (call $x2 (local.get 0)))
 
       ;; Useful for testing to ensure that the type is not type #0 here.
 
@@ -64,7 +64,7 @@ var bin = wasmTextToBinary(
        (struct.new $point (i32.const 37) (i32.const 42)))
 
       (func (export "mk_int_node") (param i32) (param anyref) (result anyref)
-       (struct.new $int_node (get_local 0) (get_local 1)))
+       (struct.new $int_node (local.get 0) (local.get 1)))
 
       ;; Too big to fit in an InlineTypedObject.
 
@@ -187,7 +187,7 @@ var bin = wasmTextToBinary(
       (func (export "mk_withfloats")
             (param f32) (param f64) (param anyref) (param f32) (param i32)
             (result anyref)
-            (struct.new $withfloats (get_local 0) (get_local 1) (get_local 2) (get_local 3) (get_local 4)))
+            (struct.new $withfloats (local.get 0) (local.get 1) (local.get 2) (local.get 3) (local.get 4)))
 
      )`)
 
@@ -232,11 +232,11 @@ var stress = wasmTextToBinary(
        (local $list (ref $node))
        (block $exit
         (loop $loop
-         (br_if $exit (i32.eqz (get_local $n)))
-         (set_local $list (struct.new $node (get_local $n) (get_local $list)))
-         (set_local $n (i32.sub (get_local $n) (i32.const 1)))
+         (br_if $exit (i32.eqz (local.get $n)))
+         (local.set $list (struct.new $node (local.get $n) (local.get $list)))
+         (local.set $n (i32.sub (local.get $n) (i32.const 1)))
          (br $loop)))
-       (get_local $list)))`);
+       (local.get $list)))`);
 var stressIns = new WebAssembly.Instance(new WebAssembly.Module(stress)).exports;
 var stressLevel = conf.x64 && !conf.tsan && !conf.asan && !conf.valgrind ? 100000 : 1000;
 var the_list = stressIns.iota1(stressLevel);
@@ -263,20 +263,20 @@ assertEq(the_list, null);
 
           (func (export "set") (param anyref)
            (local (ref $big))
-           (set_local 1 (struct.narrow anyref (ref $big) (get_local 0)))
-           (struct.set $big 1 (get_local 1) (i64.const 0x3333333376544567)))
+           (local.set 1 (struct.narrow anyref (ref $big) (local.get 0)))
+           (struct.set $big 1 (local.get 1) (i64.const 0x3333333376544567)))
 
           (func (export "set2") (param $p anyref)
            (struct.set $big 1
-            (struct.narrow anyref (ref $big) (get_local $p))
+            (struct.narrow anyref (ref $big) (local.get $p))
             (i64.const 0x3141592653589793)))
 
           (func (export "low") (param $p anyref) (result i32)
-           (i32.wrap/i64 (struct.get $big 1 (struct.narrow anyref (ref $big) (get_local $p)))))
+           (i32.wrap/i64 (struct.get $big 1 (struct.narrow anyref (ref $big) (local.get $p)))))
 
           (func (export "high") (param $p anyref) (result i32)
            (i32.wrap/i64 (i64.shr_u
-                          (struct.get $big 1 (struct.narrow anyref (ref $big) (get_local $p)))
+                          (struct.get $big 1 (struct.narrow anyref (ref $big) (local.get $p)))
                           (i64.const 32))))
 
           (func (export "mk") (result anyref)
@@ -324,34 +324,34 @@ assertEq(the_list, null);
           (global $g (mut (ref $big)) (ref.null))
 
           (func (export "make") (result anyref)
-           (set_global $g
+           (global.set $g
             (struct.new $big (i32.const 0x7aaaaaaa) (i64.const 0x4201020337) (i32.const 0x6bbbbbbb)))
-           (get_global $g))
+           (global.get $g))
 
           (func (export "update0") (param $x i32)
-           (struct.set $big 0 (get_global $g) (get_local $x)))
+           (struct.set $big 0 (global.get $g) (local.get $x)))
 
           (func (export "get0") (result i32)
-           (struct.get $big 0 (get_global $g)))
+           (struct.get $big 0 (global.get $g)))
 
           (func (export "update1") (param $hi i32) (param $lo i32)
-           (struct.set $big 1 (get_global $g)
+           (struct.set $big 1 (global.get $g)
             (i64.or
-             (i64.shl (i64.extend_u/i32 (get_local $hi)) (i64.const 32))
-             (i64.extend_u/i32 (get_local $lo)))))
+             (i64.shl (i64.extend_u/i32 (local.get $hi)) (i64.const 32))
+             (i64.extend_u/i32 (local.get $lo)))))
 
           (func (export "get1_low") (result i32)
-           (i32.wrap/i64 (struct.get $big 1 (get_global $g))))
+           (i32.wrap/i64 (struct.get $big 1 (global.get $g))))
 
           (func (export "get1_high") (result i32)
            (i32.wrap/i64
-            (i64.shr_u (struct.get $big 1 (get_global $g)) (i64.const 32))))
+            (i64.shr_u (struct.get $big 1 (global.get $g)) (i64.const 32))))
 
           (func (export "update2") (param $x i32)
-           (struct.set $big 2 (get_global $g) (get_local $x)))
+           (struct.set $big 2 (global.get $g) (local.get $x)))
 
           (func (export "get2") (result i32)
-           (struct.get $big 2 (get_global $g)))
+           (struct.get $big 2 (global.get $g)))
 
          )`;
 
@@ -396,16 +396,16 @@ var bin = wasmTextToBinary(
       (global $g (mut (ref $cons)) (ref.null))
 
       (func (export "push") (param i32)
-       (set_global $g (struct.new $cons (get_local 0) (get_global $g))))
+       (global.set $g (struct.new $cons (local.get 0) (global.get $g))))
 
       (func (export "top") (result i32)
-       (struct.get $cons 0 (get_global $g)))
+       (struct.get $cons 0 (global.get $g)))
 
       (func (export "pop")
-       (set_global $g (struct.get $cons 1 (get_global $g))))
+       (global.set $g (struct.get $cons 1 (global.get $g))))
 
       (func (export "is_empty") (result i32)
-       (ref.is_null (get_global $g)))
+       (ref.is_null (global.get $g)))
 
       )`);
 
@@ -437,7 +437,7 @@ assertErrorMessage(() => ins.pop(),
           (func (export "mk") (result anyref)
            (struct.new $Node (i32.const 37)))
           (func (export "f") (param $n anyref) (result anyref)
-           (struct.narrow anyref (ref $Node) (get_local $n))))`).exports;
+           (struct.narrow anyref (ref $Node) (local.get $n))))`).exports;
     var n = ins.mk();
     assertEq(ins.f(n), n);
     assertEq(ins.f(wrapWithProto(n, {})), null);
@@ -457,16 +457,16 @@ assertErrorMessage(() => ins.pop(),
                     (field $y i32)))
 
           (func $f (param $p (ref $s)) (result i32)
-           (struct.get $s $x (get_local $p)))
+           (struct.get $s $x (local.get $p)))
 
           (func $g (param $p (ref $s)) (result i32)
-           (struct.get $s $y (get_local $p)))
+           (struct.get $s $y (local.get $p)))
 
           (func (export "testf") (param $n i32) (result i32)
-           (call $f (struct.new $s (get_local $n) (i32.mul (get_local $n) (i32.const 2)))))
+           (call $f (struct.new $s (local.get $n) (i32.mul (local.get $n) (i32.const 2)))))
 
           (func (export "testg") (param $n i32) (result i32)
-           (call $g (struct.new $s (get_local $n) (i32.mul (get_local $n) (i32.const 2)))))
+           (call $g (struct.new $s (local.get $n) (i32.mul (local.get $n) (i32.const 2)))))
 
          )`))).exports;
 
@@ -495,7 +495,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
   (gc_feature_opt_in 3)
   (type $r (struct (field i32)))
   (func $f (param f64) (result anyref)
-    (struct.new $r (get_local 0)))
+    (struct.new $r (local.get 0)))
 )`)),
 WebAssembly.CompileError, /type mismatch/);
 

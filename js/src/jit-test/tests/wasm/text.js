@@ -12,11 +12,11 @@ assertErrorMessage(() => wasmEvalText('(module (func $a) (func) (export "a" $a) 
 assertErrorMessage(() => wasmEvalText('(module (import $foo "a" "b") (import $foo "a" "b"))'), SyntaxError, /duplicate import/);
 assertErrorMessage(() => wasmEvalText('(module (func $foo) (func $foo))'), SyntaxError, /duplicate function/);
 assertErrorMessage(() => wasmEvalText('(module (func (param $a i32) (local $a i32)))'), SyntaxError, /duplicate var/);
-assertErrorMessage(() => wasmEvalText('(module (func (get_local $a)))'), SyntaxError, /Local label '\$a' not found/);
+assertErrorMessage(() => wasmEvalText('(module (func (local.get $a)))'), SyntaxError, /Local label '\$a' not found/);
 assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (type $a (func (param i32))))'), SyntaxError, /duplicate signature/);
 assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call $abc)))'), SyntaxError, /Function label '\$abc' not found/);
 assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (func (type $b) (i32.const 13)))'), SyntaxError, /Signature label '\$b' not found/);
-assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (func (call_indirect $c (i32.const 0) (get_local 0))))'), SyntaxError, /Signature label '\$c' not found/);
+assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (func (call_indirect $c (i32.const 0) (local.get 0))))'), SyntaxError, /Signature label '\$c' not found/);
 assertErrorMessage(() => wasmEvalText('(module (func (br $a)))'), SyntaxError, /branch target label '\$a' not found/);
 assertErrorMessage(() => wasmEvalText('(module (func (block $a ) (br $a)))'), SyntaxError, /branch target label '\$a' not found/);
 
@@ -80,7 +80,7 @@ wasmEvalText('(module (type $t (func)) (func $t (import "mod" "func") (type $t))
 assertErrorMessage(() => wasmEvalText('(module (func $t (export))))'), SyntaxError, parsingError);
 wasmEvalText('(module (func (export "f")))');
 wasmEvalText('(module (func $f (export "f")))');
-wasmEvalText('(module (func $f (export "f") (result i32) (param i32) (i32.add (get_local 0) (i32.const 42))))');
+wasmEvalText('(module (func $f (export "f") (result i32) (param i32) (i32.add (local.get 0) (i32.const 42))))');
 
 assertErrorMessage(() => wasmEvalText(`
     (module

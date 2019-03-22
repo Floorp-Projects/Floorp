@@ -12,9 +12,9 @@ var prog = wasmEvalText(
          (local $x f64)
          (local $y f64)
          (local $z f64)
-         (set_local $x (get_local $a))
-         (set_local $y (get_local $b))
-         (set_local $z (f64.floor (f64.div (get_local $x) (get_local $y))))
-         (get_local $z)))`);
+         (local.set $x (local.get $a))
+         (local.set $y (local.get $b))
+         (local.set $z (f64.floor (f64.div (local.get $x) (local.get $y))))
+         (local.get $z)))`);
 
 assertEq(prog.exports.test(16096, 32), 503);

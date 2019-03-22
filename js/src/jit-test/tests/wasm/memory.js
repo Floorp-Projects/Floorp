@@ -11,7 +11,7 @@ function loadModuleSrc(type, ext, offset, align, drop = false) {
          (${type}.load${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
-          (get_local 0)
+          (local.get 0)
          )
          ${maybeDrop}
        ) (export "" 0))`;
@@ -30,15 +30,15 @@ function storeModuleSrc(type, ext, offset, align) {
          (${type}.store${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
-          (get_local 0)
-          (get_local 1)
+          (local.get 0)
+          (local.get 1)
          )
        ) (export "store" 0)
        (func $load (param i32) (result ${type})
         (${type}.load${load_ext}
          offset=${offset}
          ${align != 0 ? 'align=' + align : ''}
-         (get_local 0)
+         (local.get 0)
         )
        ) (export "load" 1))`;
 }
@@ -56,7 +56,7 @@ function storeModuleCstSrc(type, ext, offset, align, value) {
          (${type}.store${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
-          (get_local 0)
+          (local.get 0)
           (${type}.const ${value})
          )
        ) (export "store" 0)
@@ -64,7 +64,7 @@ function storeModuleCstSrc(type, ext, offset, align, value) {
         (${type}.load${load_ext}
          offset=${offset}
          ${align != 0 ? 'align=' + align : ''}
-         (get_local 0)
+         (local.get 0)
         )
        ) (export "load" 1))`;
 }
@@ -122,11 +122,11 @@ function testStoreOOB(type, ext, base, offset, align, value) {
 }
 
 function badLoadModule(type, ext) {
-    wasmFailValidateText( `(module (func (param i32) (${type}.load${ext} (get_local 0))) (export "" 0))`, /can't touch memory/);
+    wasmFailValidateText( `(module (func (param i32) (${type}.load${ext} (local.get 0))) (export "" 0))`, /can't touch memory/);
 }
 
 function badStoreModule(type, ext) {
-    wasmFailValidateText(`(module (func (param i32) (${type}.store${ext} (get_local 0) (${type}.const 0))) (export "" 0))`, /can't touch memory/);
+    wasmFailValidateText(`(module (func (param i32) (${type}.store${ext} (local.get 0) (${type}.const 0))) (export "" 0))`, /can't touch memory/);
 }
 
 // Can't touch memory.
@@ -310,30 +310,30 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
               (data (i32.const 0) "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
               (data (i32.const 16) "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
               (func (param i32) (local i32 i32 i32 i32 f32 f64) (result i32)
-               (set_local 1 (i32.load8_s offset=4 (get_local 0)))
-               (set_local 2 (i32.load16_s (get_local 1)))
-               (i32.store8 offset=4 (get_local 0) (get_local 1))
-               (set_local 3 (i32.load16_u (get_local 2)))
-               (i32.store16 (get_local 1) (get_local 2))
-               (set_local 4 (i32.load (get_local 2)))
-               (i32.store (get_local 1) (get_local 2))
-               (set_local 5 (f32.load (get_local 4)))
-               (f32.store (get_local 4) (get_local 5))
-               (set_local 6 (f64.load (get_local 4)))
-               (f64.store (get_local 4) (get_local 6))
+               (local.set 1 (i32.load8_s offset=4 (local.get 0)))
+               (local.set 2 (i32.load16_s (local.get 1)))
+               (i32.store8 offset=4 (local.get 0) (local.get 1))
+               (local.set 3 (i32.load16_u (local.get 2)))
+               (i32.store16 (local.get 1) (local.get 2))
+               (local.set 4 (i32.load (local.get 2)))
+               (i32.store (local.get 1) (local.get 2))
+               (local.set 5 (f32.load (local.get 4)))
+               (f32.store (local.get 4) (local.get 5))
+               (local.set 6 (f64.load (local.get 4)))
+               (f64.store (local.get 4) (local.get 6))
                (i32.add
                 (i32.add
-                 (get_local 0)
-                 (get_local 1)
+                 (local.get 0)
+                 (local.get 1)
                 )
                 (i32.add
                  (i32.add
-                  (get_local 2)
-                  (get_local 3)
+                  (local.get 2)
+                  (local.get 3)
                  )
                  (i32.add
-                  (get_local 4)
-                  (i32.reinterpret/f32 (get_local 5))
+                  (local.get 4)
+                  (i32.reinterpret/f32 (local.get 5))
                  )
                 )
                )

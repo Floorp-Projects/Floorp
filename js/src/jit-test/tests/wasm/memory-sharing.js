@@ -65,7 +65,7 @@ const WASMPAGE = 65536;
 {
     let text = `(module
 		 (memory (import "" "memory") 1 1 shared)
-		 (func (export "id") (param i32) (result i32) (get_local 0)))`;
+		 (func (export "id") (param i32) (result i32) (local.get 0)))`;
     let mod = new WebAssembly.Module(wasmTextToBinary(text));
     let mem = new WebAssembly.Memory({initial: 1, maximum: 1, shared: true});
     let ins = new WebAssembly.Instance(mod, {"": {memory: mem}});
@@ -77,7 +77,7 @@ const WASMPAGE = 65536;
 {
     let text = `(module
 		 (memory (import "" "memory") 1 1 shared)
-		 (func (export "id") (param i32) (result i32) (get_local 0)))`;
+		 (func (export "id") (param i32) (result i32) (local.get 0)))`;
     let mod = new WebAssembly.Module(wasmTextToBinary(text));
     let mem = new WebAssembly.Memory({initial: 1, maximum: 1});
     assertErrorMessage(() => new WebAssembly.Instance(mod, {"": {memory: mem}}),
@@ -90,7 +90,7 @@ const WASMPAGE = 65536;
 {
     let text = `(module
 		 (memory (import "" "memory") 1 1)
-		 (func (export "id") (param i32) (result i32) (get_local 0)))`;
+		 (func (export "id") (param i32) (result i32) (local.get 0)))`;
     let mod = new WebAssembly.Module(wasmTextToBinary(text));
     let mem = new WebAssembly.Memory({initial: 1, maximum: 1, shared: true});
     assertErrorMessage(() => new WebAssembly.Instance(mod, {"": {memory: mem}}),
@@ -104,7 +104,7 @@ const WASMPAGE = 65536;
 {
     let text = `(module
 		 (memory (import "" "memory") 2 4 shared)
-		 (func (export "id") (param i32) (result i32) (get_local 0)))`;
+		 (func (export "id") (param i32) (result i32) (local.get 0)))`;
     let mod = new WebAssembly.Module(wasmTextToBinary(text));
 
     // some cases that are non-matching are allowed, eg, initial > declared min
@@ -137,8 +137,8 @@ const WASMPAGE = 65536;
 		 (memory (export "memory") 2 4 shared)
 		 (func (export "c") (result i32) memory.size)
 		 (func (export "g") (result i32) (memory.grow (i32.const 1)))
-		 (func (export "l") (param i32) (result i32) (i32.load (get_local 0)))
-		 (func (export "s") (param i32) (param i32) (i32.store (get_local 0) (get_local 1))))`;
+		 (func (export "l") (param i32) (result i32) (i32.load (local.get 0)))
+		 (func (export "s") (param i32) (param i32) (i32.store (local.get 0) (local.get 1))))`;
     let mod = new WebAssembly.Module(wasmTextToBinary(text));
     let ins = new WebAssembly.Instance(mod);
     let exp = ins.exports;
@@ -200,7 +200,7 @@ const WASMPAGE = 65536;
     let text = `(module
 		 (memory (import "" "memory") 2 4 shared)
 		 (data (i32.const 0) "abcdefghijklmnopqrstuvwxyz")
-		 (func (export "l") (param i32) (result i32) (i32.load8_u (get_local 0))))`;
+		 (func (export "l") (param i32) (result i32) (i32.load8_u (local.get 0))))`;
     let mod = new WebAssembly.Module(wasmTextToBinary(text));
     let mem = new WebAssembly.Memory({initial: 2, maximum: 4, shared: true});
     let ins = new WebAssembly.Instance(mod, {"": {memory: mem}});

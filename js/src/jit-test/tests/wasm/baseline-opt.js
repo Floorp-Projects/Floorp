@@ -15,12 +15,12 @@ function testEqzBrIf(value, type, untaken, taken, expected) {
 			   (func (result i32)
 			    (local ${type})
 			    (local i32)
-			    (set_local 0 (${type}.const ${value}))
-			    (set_local 1 (i32.const ${taken}))
+			    (local.set 0 (${type}.const ${value}))
+			    (local.set 1 (i32.const ${taken}))
 			    (block $b
-			     (br_if $b (${type}.eqz (get_local 0)))
-			     (set_local 1 (i32.const ${untaken})))
-			    (get_local 1))
+			     (br_if $b (${type}.eqz (local.get 0)))
+			     (local.set 1 (i32.const ${untaken})))
+			    (local.get 1))
 			   (export "f" 0))`).exports["f"];
     assertEq(f(), expected);
 }
@@ -33,11 +33,11 @@ function testCmpBrIf(value, type, untaken, taken, expected) {
 			   (func (result i32)
 			    (local ${type})
 			    (local i32)
-			    (set_local 1 (i32.const ${taken}))
+			    (local.set 1 (i32.const ${taken}))
 			    (block $b
-			     (br_if $b (${type}.eq (get_local 0) (${type}.const ${value})))
-			     (set_local 1 (i32.const ${untaken})))
-			    (get_local 1))
+			     (br_if $b (${type}.eq (local.get 0) (${type}.const ${value})))
+			     (local.set 1 (i32.const ${untaken})))
+			    (local.get 1))
 			   (export "f" 0))`).exports["f"];
     assertEq(f(), expected);
 }
@@ -49,10 +49,10 @@ function testEqzSelect(value, type, iftrue, iffalse, expected) {
     var f = wasmEvalText(`(module
 			   (func (result i32)
 			    (local ${type})
-			    (set_local 0 (${type}.const ${value}))
+			    (local.set 0 (${type}.const ${value}))
 			    (select (i32.const ${iftrue})
 			            (i32.const ${iffalse})
-			            (${type}.eqz (get_local 0))))
+			            (${type}.eqz (local.get 0))))
 			   (export "f" 0))`).exports["f"];
     assertEq(f(), expected);
 }
@@ -66,7 +66,7 @@ function testCmpSelect(value, type, iftrue, iffalse, expected) {
 			    (local ${type})
 			    (select (i32.const ${iftrue})
 			            (i32.const ${iffalse})
-			            (${type}.eq (get_local 0) (${type}.const ${value}))))
+			            (${type}.eq (local.get 0) (${type}.const ${value}))))
 			   (export "f" 0))`).exports["f"];
     assertEq(f(), expected);
 }
@@ -79,11 +79,11 @@ function testEqzIf(value, type, trueBranch, falseBranch, expected) {
 			   (func (result i32)
 			    (local ${type})
 			    (local i32)
-			    (set_local 0 (${type}.const ${value}))
-			    (if (${type}.eqz (get_local 0))
-				(set_local 1 (i32.const ${trueBranch}))
-			        (set_local 1 (i32.const ${falseBranch})))
-			    (get_local 1))
+			    (local.set 0 (${type}.const ${value}))
+			    (if (${type}.eqz (local.get 0))
+				(local.set 1 (i32.const ${trueBranch}))
+			        (local.set 1 (i32.const ${falseBranch})))
+			    (local.get 1))
 			   (export "f" 0))`).exports["f"];
     assertEq(f(), expected);
 }
@@ -96,10 +96,10 @@ function testCmpIf(value, type, trueBranch, falseBranch, expected) {
 			   (func (result i32)
 			    (local ${type})
 			    (local i32)
-			    (if (${type}.eq (get_local 0) (${type}.const ${value}))
-				(set_local 1 (i32.const ${trueBranch}))
-			        (set_local 1 (i32.const ${falseBranch})))
-			    (get_local 1))
+			    (if (${type}.eq (local.get 0) (${type}.const ${value}))
+				(local.set 1 (i32.const ${trueBranch}))
+			        (local.set 1 (i32.const ${falseBranch})))
+			    (local.get 1))
 			   (export "f" 0))`).exports["f"];
     assertEq(f(), expected);
 }

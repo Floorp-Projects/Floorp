@@ -559,7 +559,7 @@ class NativeObject : public ShapedObject {
       js::HandleShape shape, js::HandleObjectGroup group);
 
   static inline JS::Result<NativeObject*, JS::OOM&> createWithTemplate(
-      JSContext* cx, js::gc::InitialHeap heap, HandleObject templateObject);
+      JSContext* cx, HandleObject templateObject);
 
 #ifdef DEBUG
   static void enableShapeConsistencyChecks();

@@ -6,10 +6,10 @@ const {innerWasm} = new Instance(new Module(wasmTextToBinary(`(module
     (func (export "innerWasm") (result i32)
         (local i32)
         (loop $top
-            (set_local 0 (i32.add (get_local 0) (i32.const 1)))
-            (br_if $top (i32.lt_u (get_local 0) (i32.const 100000)))
+            (local.set 0 (i32.add (local.get 0) (i32.const 1)))
+            (br_if $top (i32.lt_u (local.get 0) (i32.const 100000)))
         )
-        (get_local 0)
+        (local.get 0)
     )
 )`))).exports;
 
