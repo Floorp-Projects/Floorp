@@ -312,7 +312,7 @@ static void BroadcastSetThreadSandbox(const sock_fprog* aFilter) {
   taskdp = opendir("/proc/self/task");
   if (taskdp == nullptr) {
     SANDBOX_LOG_ERROR("opendir /proc/self/task: %s\n", strerror(errno));
-    MOZ_CRASH();
+    MOZ_CRASH("failed while trying to open directory /proc/self/task");
   }
 
   // In case this races with a not-yet-deprivileged thread cloning
@@ -348,7 +348,7 @@ static void BroadcastSetThreadSandbox(const sock_fprog* aFilter) {
           continue;
         }
         SANDBOX_LOG_ERROR("tgkill(%d,%d): %s\n", pid, tid, strerror(errno));
-        MOZ_CRASH();
+        MOZ_CRASH("failed while trying to send a signal to a thread");
       }
       // It's unlikely, but if the thread somehow manages to exit
       // after receiving the signal but before entering the signal
@@ -376,7 +376,7 @@ static void BroadcastSetThreadSandbox(const sock_fprog* aFilter) {
                     FUTEX_WAIT, 0, &futexTimeout) != 0) {
           if (errno != EWOULDBLOCK && errno != ETIMEDOUT && errno != EINTR) {
             SANDBOX_LOG_ERROR("FUTEX_WAIT: %s\n", strerror(errno));
-            MOZ_CRASH();
+            MOZ_CRASH("failed during FUTEX_WAIT");
           }
         }
         // Did the handler finish?
@@ -406,7 +406,8 @@ static void BroadcastSetThreadSandbox(const sock_fprog* aFilter) {
               "Thread %d unresponsive for %d seconds."
               "  Killing process.",
               tid, crashDelay);
-          MOZ_CRASH();
+
+          MOZ_CRASH("failed while waiting for unresponsive thread");
         }
       }
     }
@@ -419,7 +420,7 @@ static void BroadcastSetThreadSandbox(const sock_fprog* aFilter) {
     // See the comment on FindFreeSignalNumber about race conditions.
     SANDBOX_LOG_ERROR("handler for signal %d was changed to %p!", tsyncSignum,
                       oldHandler);
-    MOZ_CRASH();
+    MOZ_CRASH("handler for the signal was changed to another");
   }
   gSeccompTsyncBroadcastSignum = 0;
   Unused << closedir(taskdp);
@@ -434,7 +435,7 @@ static void ApplySandboxWithTSync(sock_fprog* aFilter) {
   // other threads (see SandboxHooks.cpp), so there's no attempt to
   // fall back to the non-tsync path.
   if (!InstallSyscallFilter(aFilter, true)) {
-    MOZ_CRASH();
+    MOZ_CRASH("failed while trying to install syscall filter");
   }
 }
 
@@ -476,7 +477,7 @@ void SandboxEarlyInit() {
     const int tsyncSignum = FindFreeSignalNumber();
     if (tsyncSignum == 0) {
       SANDBOX_LOG_ERROR("No available signal numbers!");
-      MOZ_CRASH();
+      MOZ_CRASH("failed while trying to find a free signal number");
     }
     gSeccompTsyncBroadcastSignum = tsyncSignum;
 
@@ -487,9 +488,13 @@ void SandboxEarlyInit() {
     oldHandler = signal(tsyncSignum, SetThreadSandboxHandler);
     if (oldHandler != SIG_DFL) {
       // See the comment on FindFreeSignalNumber about race conditions.
+      if (oldHandler == SIG_ERR) {
+        MOZ_CRASH("failed while registering the signal handler");
+      } else {
+        MOZ_CRASH("failed because the signal is in use by another handler");
+      }
       SANDBOX_LOG_ERROR("signal %d in use by handler %p!\n", tsyncSignum,
                         oldHandler);
-      MOZ_CRASH();
     }
   }
 }
@@ -629,7 +634,7 @@ void SetMediaPluginSandbox(const char* aFilePath) {
   if (!plugin.IsOpen()) {
     SANDBOX_LOG_ERROR("failed to open plugin file %s: %s", aFilePath,
                       strerror(errno));
-    MOZ_CRASH();
+    MOZ_CRASH("failed while trying to open the plugin file ");
   }
 
   auto files = new SandboxOpenedFiles();
