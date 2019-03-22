@@ -18,7 +18,8 @@ import {
   getBreakpointAtLocation,
   getConditionalPanelLocation,
   getBreakpointsForSource,
-  isEmptyLineInSource
+  isEmptyLineInSource,
+  getBreakpointsAtLine
 } from "../../selectors";
 import {
   assertBreakpoint,
@@ -205,6 +206,16 @@ export function toggleBreakpoints(
     );
 
     await Promise.all(promises);
+  };
+}
+
+export function toggleBreakpointsAtLine(
+  shouldDisableBreakpoints: boolean,
+  line: number
+) {
+  return async ({ dispatch, getState }: ThunkArgs) => {
+    const breakpoints = await getBreakpointsAtLine(getState(), line);
+    return dispatch(toggleBreakpoints(shouldDisableBreakpoints, breakpoints));
   };
 }
 
