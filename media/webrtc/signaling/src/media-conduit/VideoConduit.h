@@ -412,43 +412,6 @@ class WebrtcVideoConduit
     uint32_t mSsrc = 0;
   };
 
-  /**
-   * Stores encoder configuration information and produces
-   * a VideoEncoderConfig from it.
-   */
-  class VideoEncoderConfigBuilder {
-   public:
-    /**
-     * Stores extended data for Simulcast Streams
-     */
-    class SimulcastStreamConfig {
-     public:
-      int jsMaxBitrate;            // user-controlled max bitrate
-      double jsScaleDownBy = 1.0;  // user-controlled downscale
-    };
-    void SetEncoderSpecificSettings(
-        rtc::scoped_refptr<webrtc::VideoEncoderConfig::EncoderSpecificSettings>
-            aSettings);
-    void SetVideoStreamFactory(rtc::scoped_refptr<VideoStreamFactory> aFactory);
-    void SetMinTransmitBitrateBps(int aXmitMinBps);
-    void SetContentType(webrtc::VideoEncoderConfig::ContentType aContentType);
-    void SetMaxEncodings(size_t aMaxStreams);
-    void AddStream(webrtc::VideoStream aStream);
-    void AddStream(webrtc::VideoStream aStream,
-                   const SimulcastStreamConfig& aSimulcastConfig);
-    size_t StreamCount() const;
-    void ClearStreams();
-    void ForEachStream(
-        const std::function<void(webrtc::VideoStream&, SimulcastStreamConfig&,
-                                 const size_t index)>&& f);
-    webrtc::VideoEncoderConfig CopyConfig() const { return mConfig.Copy(); }
-    size_t NumberOfStreams() const { return mConfig.number_of_streams; }
-
-   private:
-    webrtc::VideoEncoderConfig mConfig;
-    std::vector<SimulcastStreamConfig> mSimulcastStreams;
-  };
-
   // Utility function to dump recv codec database
   void DumpCodecDB() const;
 
@@ -463,7 +426,7 @@ class WebrtcVideoConduit
   std::unique_ptr<webrtc::VideoDecoder> CreateDecoder(
       webrtc::VideoCodecType aType);
   std::unique_ptr<webrtc::VideoEncoder> CreateEncoder(
-      webrtc::VideoCodecType aType, bool enable_simulcast);
+      webrtc::VideoCodecType aType);
 
   // webrtc::VideoEncoderFactory
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
@@ -608,7 +571,7 @@ class WebrtcVideoConduit
   webrtc::VideoSendStream::Config mSendStreamConfig;
 
   // Main thread only.
-  VideoEncoderConfigBuilder mEncoderConfig;
+  webrtc::VideoEncoderConfig mEncoderConfig;
 
   // Written only on main thread. Guarded by mMutex, except for reads on main.
   // Calls can happen on any thread.
