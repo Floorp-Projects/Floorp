@@ -202,45 +202,21 @@ class MediaEncoder::VideoTrackListener : public DirectMediaStreamTrackListener {
       return;
     }
 
+    const TimeStamp now = TimeStamp::Now();
     if (!mInitialized) {
-      nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<StreamTime>(
+      nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<TimeStamp>(
           "mozilla::VideoTrackEncoder::SetStartOffset", mEncoder,
-          &VideoTrackEncoder::SetStartOffset, aTrackOffset));
+          &VideoTrackEncoder::SetStartOffset, now));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
       Unused << rv;
       mInitialized = true;
     }
 
-    AutoTArray<Pair<bool, StreamTime>, 2> nulledSequence;
-    for (VideoSegment::ConstChunkIterator iter(
-             static_cast<const VideoSegment&>(aQueuedMedia));
-         !iter.IsEnded(); iter.Next()) {
-      if (!nulledSequence.IsEmpty()) {
-        Pair<bool, StreamTime>& last = nulledSequence.LastElement();
-        if (last.first() == iter->IsNull()) {
-          last.second() += iter->GetDuration();
-          continue;
-        }
-      }
-      nulledSequence.AppendElement(
-          MakePair(iter->IsNull(), iter->GetDuration()));
-    }
-
-    for (const Pair<bool, StreamTime>& nulledRange : nulledSequence) {
-      if (nulledRange.first()) {
-        nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<StreamTime>(
-            "mozilla::VideoTrackEncoder::AdvanceBlockedInput", mEncoder,
-            &VideoTrackEncoder::AdvanceBlockedInput, nulledRange.second()));
-        MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-        Unused << rv;
-      } else {
-        nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<StreamTime>(
-            "mozilla::VideoTrackEncoder::AdvanceCurrentTime", mEncoder,
-            &VideoTrackEncoder::AdvanceCurrentTime, nulledRange.second()));
-        MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-        Unused << rv;
-      }
-    }
+    nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<TimeStamp>(
+        "mozilla::VideoTrackEncoder::AdvanceCurrentTime", mEncoder,
+        &VideoTrackEncoder::AdvanceCurrentTime, now));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
