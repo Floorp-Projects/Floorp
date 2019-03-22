@@ -70,12 +70,12 @@ function testAccess(opcode, text, width, type, msg) {
 }
 
 function testLoad(opcode, optext, width, type, msg) {
-    var text = `(module (memory 1) (func (export "") (param i32) (drop (${optext} (get_local 0)))))`;
+    var text = `(module (memory 1) (func (export "") (param i32) (drop (${optext} (local.get 0)))))`;
     testAccess(opcode, text, width, type, msg);
 }
 
 function testStore(opcode, optext, consttext, width, type, msg) {
-    var text = `(module (memory 1) (func (export "") (param i32) (${optext} (get_local 0) (${consttext}.const 0))))`;
+    var text = `(module (memory 1) (func (export "") (param i32) (${optext} (local.get 0) (${consttext}.const 0))))`;
     testAccess(opcode, text, width, type, msg);
 }
 

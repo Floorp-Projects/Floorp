@@ -1,21 +1,21 @@
 let { exports } = wasmEvalText(`(module
     (func (export "i32") (result i32) (param i32)
-     get_local 0
+     local.get 0
     )
 
     (func (export "f32") (result f32) (param f32)
-     get_local 0
+     local.get 0
     )
 
     (func (export "f64") (result f64) (param f64)
-     get_local 0
+     local.get 0
     )
 
     (func (export "mixed_args") (result f64)
         (param i32) (param i32) (param i32) (param i32) (param i32) ;; 5 i32
         (param $f64 f64) ;; 1 f64
         (param i32)
-     get_local $f64
+     local.get $f64
     )
 )`);
 
@@ -82,7 +82,7 @@ let {func} = wasmEvalText(`(module
     (func (export "func") (result i32)
         ${Array(32).join('(param i32)')}
         (param $last i32)
-     get_local $last
+     local.get $last
     )
 )`).exports;
 
@@ -99,7 +99,7 @@ func = wasmEvalText(`(module
     (func (export "func") (result i32)
         ${Array(32).join('(param f64)')}
         (param $last i32)
-     get_local $last
+     local.get $last
     )
 )`).exports.func;
 
@@ -124,7 +124,7 @@ func = wasmEvalText(`(module
     (func (export "func") (result i32)
         ${Array(32).join('(param f64)')}
         (param $last i32)
-     get_local $last
+     local.get $last
     )
 )`).exports.func;
 

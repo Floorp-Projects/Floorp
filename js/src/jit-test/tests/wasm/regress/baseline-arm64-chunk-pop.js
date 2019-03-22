@@ -4,19 +4,19 @@ var bin = wasmTextToBinary(
          (local i32 i64 i64 i64 f32)
          i32.const 1
          tee_local 0
-         get_local 0
-         get_local 0
-         get_local 0
-         get_local 0
-         get_local 0
-         get_local 0
-         get_local 0
+         local.get 0
+         local.get 0
+         local.get 0
+         local.get 0
+         local.get 0
+         local.get 0
+         local.get 0
          if i32
-           get_local 0
+           local.get 0
          else
-           get_local 0
+           local.get 0
            tee_local 0
-           get_local 0
+           local.get 0
            br_if 1
          end
          drop

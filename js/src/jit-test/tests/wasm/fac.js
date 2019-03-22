@@ -3,16 +3,16 @@
 assertEq(wasmEvalText(`(module
   (func $fac-opt (param i32) (result i32)
     (local i32)
-    (set_local 1 (i32.const 1))
+    (local.set 1 (i32.const 1))
     (block
-      (br_if 0 (i32.lt_s (get_local 0) (i32.const 2)))
+      (br_if 0 (i32.lt_s (local.get 0) (i32.const 2)))
       (loop
-        (set_local 1 (i32.mul (get_local 1) (get_local 0)))
-        (set_local 0 (i32.add (get_local 0) (i32.const -1)))
-        (br_if 0 (i32.gt_s (get_local 0) (i32.const 1)))
+        (local.set 1 (i32.mul (local.get 1) (local.get 0)))
+        (local.set 0 (i32.add (local.get 0) (i32.const -1)))
+        (br_if 0 (i32.gt_s (local.get 0) (i32.const 1)))
       )
     )
-    (get_local 1)
+    (local.get 1)
   )
 
   (export "" 0)

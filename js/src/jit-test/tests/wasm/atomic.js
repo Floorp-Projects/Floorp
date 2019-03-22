@@ -177,7 +177,7 @@ var RMWOperation =
 	      (func $ld (param i32) (result ${type})
 	       (${type}.atomic.load${view} ${address}))
 	      (func (export "ld") (param i32) (result i32)
-	       (${type}.eq (call $ld (get_local 0)) ${operand})))`);
+	       (${type}.eq (call $ld (local.get 0)) ${operand})))`);
 	let mod = new WebAssembly.Module(bin);
 	let mem = new WebAssembly.Memory({initial: 1, maximum: 1, shared: true});
 	let ins = new WebAssembly.Instance(mod, {"": {memory: mem}});
@@ -204,7 +204,7 @@ var RMWOperation =
 	      (func $_f (param i32) (result ${type})
 	       (${type}.atomic.rmw${view}.${op} ${address} ${operand}))
 	      (func (export "f") (param i32) (result i32)
-	       (${type}.eq (call $_f (get_local 0)) (${type}.const ${expected}))))`);
+	       (${type}.eq (call $_f (local.get 0)) (${type}.const ${expected}))))`);
 	let mod = new WebAssembly.Module(bin);
 	let mem = new WebAssembly.Memory({initial: 1, maximum: 1, shared: true});
 	let ins = new WebAssembly.Instance(mod, {"": {memory: mem}});
@@ -230,7 +230,7 @@ var RMWOperation =
 	      (func $_f (param i32) (result ${type})
 	       (${type}.atomic.rmw${view}.cmpxchg ${address} ${operand1} ${operand2}))
 	      (func (export "f") (param i32) (result i32)
-	       (${type}.eq (call $_f (get_local 0)) (${type}.const ${expected}))))`);
+	       (${type}.eq (call $_f (local.get 0)) (${type}.const ${expected}))))`);
 	let mod = new WebAssembly.Module(bin);
 	let mem = new WebAssembly.Memory({initial: 1, maximum: 1, shared: true});
 	let ins = new WebAssembly.Instance(mod, {"": {memory: mem}});
@@ -256,7 +256,7 @@ var RMWOperation =
 	    for ( let [TA, view] of variations )
 	    {
 		for ( let addr of [`(i32.const ${LOC * TA.BYTES_PER_ELEMENT})`,
-				   `(get_local 0)`] )
+				   `(local.get 0)`] )
 		{
 		    for ( let [initial, operand] of [[0x12, 0x37]] )
 		    {
@@ -369,9 +369,9 @@ var BoundsAndAlignment =
 	    `(module
 	      (memory 1 1 shared)
 	      (func $0 (param i32) (result ${type})
-	       (${type}.atomic.load${ext} offset=${offset} (get_local 0)))
+	       (${type}.atomic.load${ext} offset=${offset} (local.get 0)))
 	      (func (export "f") (param i32)
-	       (drop (call $0 (get_local 0)))))
+	       (drop (call $0 (local.get 0)))))
 	    `).exports.f;
     },
 
@@ -380,7 +380,7 @@ var BoundsAndAlignment =
 	    `(module
 	      (memory 1 1 shared)
 	      (func (export "f") (param i32)
-	       (drop (${type}.atomic.load${ext} offset=${offset} (get_local 0)))))
+	       (drop (${type}.atomic.load${ext} offset=${offset} (local.get 0)))))
 	    `).exports.f;
     },
 
@@ -389,7 +389,7 @@ var BoundsAndAlignment =
 	    `(module
 	      (memory 1 1 shared)
 	      (func (export "f") (param i32)
-	       (${type}.atomic.store${ext} offset=${offset} (get_local 0) (${type}.const 37))))
+	       (${type}.atomic.store${ext} offset=${offset} (local.get 0) (${type}.const 37))))
 	    `).exports.f;
     },
 
@@ -398,9 +398,9 @@ var BoundsAndAlignment =
 	    `(module
 	      (memory 1 1 shared)
 	      (func $0 (param i32) (result ${type})
-	       (${type}.atomic.rmw${ext}.${op} offset=${offset} (get_local 0) (${type}.const 37)))
+	       (${type}.atomic.rmw${ext}.${op} offset=${offset} (local.get 0) (${type}.const 37)))
 	      (func (export "f") (param i32)
-	       (drop (call $0 (get_local 0)))))
+	       (drop (call $0 (local.get 0)))))
 	    `).exports.f;
     },
 
@@ -409,7 +409,7 @@ var BoundsAndAlignment =
 	    `(module
 	      (memory 1 1 shared)
 	      (func (export "f") (param i32)
-	       (drop (${type}.atomic.rmw${ext}.${op} offset=${offset} (get_local 0) (${type}.const 37)))))
+	       (drop (${type}.atomic.rmw${ext}.${op} offset=${offset} (local.get 0) (${type}.const 37)))))
 	    `).exports.f;
     },
 
@@ -418,9 +418,9 @@ var BoundsAndAlignment =
 	    `(module
 	      (memory 1 1 shared)
 	      (func $0 (param i32) (result ${type})
-	       (${type}.atomic.rmw${ext}.cmpxchg offset=${offset} (get_local 0) (${type}.const 37) (${type}.const 42)))
+	       (${type}.atomic.rmw${ext}.cmpxchg offset=${offset} (local.get 0) (${type}.const 37) (${type}.const 42)))
 	      (func (export "f") (param i32)
-	       (drop (call $0 (get_local 0)))))
+	       (drop (call $0 (local.get 0)))))
 	    `).exports.f;
     },
 
@@ -471,31 +471,31 @@ BoundsAndAlignment.run();
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
-					 (i32.atomic.wait (get_local 0) (i32.const 1) (i64.const -1)))
+					 (i32.atomic.wait (local.get 0) (i32.const 1) (i64.const -1)))
 					(export "" 0))`).exports[""](65536),
 		   RuntimeError, oob);
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
-					 (i64.atomic.wait (get_local 0) (i64.const 1) (i64.const -1)))
+					 (i64.atomic.wait (local.get 0) (i64.const 1) (i64.const -1)))
 					(export "" 0))`).exports[""](65536),
 		   RuntimeError, oob);
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
-					 (i32.atomic.wait (get_local 0) (i32.const 1) (i64.const -1)))
+					 (i32.atomic.wait (local.get 0) (i32.const 1) (i64.const -1)))
 					(export "" 0))`).exports[""](65501),
 		   RuntimeError, unaligned);
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
-					 (i64.atomic.wait (get_local 0) (i64.const 1) (i64.const -1)))
+					 (i64.atomic.wait (local.get 0) (i64.const 1) (i64.const -1)))
 					(export "" 0))`).exports[""](65501),
 		   RuntimeError, unaligned);
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
-					 (atomic.notify (get_local 0) (i32.const 1)))
+					 (atomic.notify (local.get 0) (i32.const 1)))
 					(export "" 0))`).exports[""](65536),
 		   RuntimeError, oob);
 
@@ -503,7 +503,7 @@ assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 for (let addr of [1,2,3,5,6,7]) {
     assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					    (func (export "f") (param i32) (result i32)
-					     (atomic.notify (get_local 0) (i32.const 1))))`).exports.f(addr),
+					     (atomic.notify (local.get 0) (i32.const 1))))`).exports.f(addr),
 		       RuntimeError, unaligned);
 }
 

@@ -46,7 +46,7 @@ for (let v of VALUES)
            (gc_feature_opt_in 3)
            (type $S (struct (field $S.x (mut anyref))))
            (func (export "make") (param $v anyref) (result anyref)
-             (struct.new $S (get_local $v))))`);
+             (struct.new $S (local.get $v))))`);
     let x = ins.exports.make(v);
     assertEq(x._0, v);
 }
@@ -62,7 +62,7 @@ for (let v of VALUES)
            (func (export "make") (result anyref)
              (struct.new $S (ref.null)))
            (func (export "get") (param $o anyref) (result anyref)
-             (struct.get $S 0 (struct.narrow anyref (ref $S) (get_local $o)))))`);
+             (struct.get $S 0 (struct.narrow anyref (ref $S) (local.get $o)))))`);
     let x = ins.exports.make();
     x._0 = v;
     assertEq(ins.exports.get(x), v);
@@ -79,7 +79,7 @@ for (let v of VALUES)
            (func (export "make") (result anyref)
              (struct.new $S (ref.null)))
            (func (export "get") (param $o anyref) (result anyref)
-             (struct.get $S 0 (struct.narrow anyref (ref $S) (get_local $o)))))`);
+             (struct.get $S 0 (struct.narrow anyref (ref $S) (local.get $o)))))`);
     let constructor = ins.exports.make().constructor;
     let x = new constructor({_0: v});
     assertEq(ins.exports.get(x), v);
@@ -147,7 +147,7 @@ for (let v of VALUES) {
 {
     let fields = iota(10).map(() => `(field anyref)`).join(' ');
     let params = iota(10).map((i) => `(param $${i} anyref)`).join(' ');
-    let args = iota(10).map((i) => `(get_local $${i})`).join(' ');
+    let args = iota(10).map((i) => `(local.get $${i})`).join(' ');
     let txt = `(module
                  (gc_feature_opt_in 3)
                  (type $S (struct ${fields}))
