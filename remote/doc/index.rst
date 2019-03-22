@@ -2,15 +2,19 @@
 Remote Protocol
 ===============
 
-In addition to the Firefox Developer Tools _Remote Debugging Protocol_,
-also known as RDP, Firefox also has a partial implementation of
-the Chrome DevTools Protocol (CDP).
+The Firefox **remote protocol** is a low-level debugging interface
+you can use to inspect the state and control execution of documents
+running in web content, instrument the browser in interesting ways,
+simulate user interaction for automation purposes, and for subscribing
+to updates in the browser such as network- or console logs.
 
-The Firefox remote agent is a low-level debugging interface based on
-the CDP protocol.  With it, you can inspect the state and control
-execution of documents running in web content, instrument Gecko in
-interesting ways, simulate user interaction for automation purposes,
-and debug JavaScript execution.
+It complements the existing Firefox Developer Tools `Remote Debugging
+Protocol`_ (RDP) by implementing a subset of the `Chrome DevTools
+Protocol`_ (CDP).
+
+.. _Remote Debugging Protocol: https://docs.firefox-dev.tools/backend/protocol.html
+.. _Chrome DevTools Protocol: https://chromedevtools.github.io/devtools-protocol/
+
 
 Users
 =====
@@ -20,6 +24,7 @@ Users
 
   Usage.md
   Prefs.md
+
 
 Developers
 ==========
