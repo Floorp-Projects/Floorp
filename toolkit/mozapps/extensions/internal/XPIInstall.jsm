@@ -3659,7 +3659,7 @@ var XPIInstall = {
     // Enough of the Package interface to allow loadManifest() to work.
     let pkg = {
       rootURI: baseURL,
-      filePath: baseURL,
+      filePath: baseURL.spec,
       file: null,
       verifySignedState() {
         return {
