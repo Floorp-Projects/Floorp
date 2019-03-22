@@ -261,7 +261,7 @@ class VideoFrameConverter {
         return;
       }
 
-      MOZ_LOG(gVideoFrameConverterLog, LogLevel::Debug,
+      MOZ_LOG(gVideoFrameConverterLog, LogLevel::Verbose,
               ("Sending a black video frame"));
       webrtc::I420Buffer::SetBlack(buffer);
 
@@ -289,7 +289,7 @@ class VideoFrameConverter {
         webrtc::VideoFrame i420_frame(video_frame_buffer,
                                       0, // not setting rtp timestamp
                                       now, webrtc::kVideoRotation_0);
-        MOZ_LOG(gVideoFrameConverterLog, LogLevel::Debug,
+        MOZ_LOG(gVideoFrameConverterLog, LogLevel::Verbose,
                 ("Sending an I420 video frame"));
         VideoFrameConverted(i420_frame);
         return;
@@ -303,7 +303,7 @@ class VideoFrameConverter {
                             "Buffers not leaving scope except for "
                             "reconfig, should never leak");
       MOZ_LOG(gVideoFrameConverterLog, LogLevel::Warning,
-              ("Creating a buffer for a black video frame failed"));
+              ("Creating a buffer failed"));
       return;
     }
 
