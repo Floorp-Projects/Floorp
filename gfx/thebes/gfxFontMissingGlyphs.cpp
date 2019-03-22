@@ -164,7 +164,12 @@ class WRUserData : public layers::LayerUserData,
   static UserDataKey sWRUserDataKey;
 };
 
-static RefPtr<SourceSurface> gWRGlyphAtlas[8];
+// If we add more render roots, this will need to be updated to accomodate
+// more than two render roots, at which point simply adding a bit to an
+// array index is probably not how we want to do things.
+static const int CONTENT_RECT_GLYPH_ATLAS = 8;
+
+static RefPtr<SourceSurface> gWRGlyphAtlas[16];
 static LinkedList<WRUserData> gWRUsers;
 UserDataKey WRUserData::sWRUserDataKey;
 
@@ -218,13 +223,17 @@ static void PurgeWRGlyphAtlas() {
   // from the layer manager.
   for (WRUserData* user : gWRUsers) {
     auto* manager = user->mManager;
-    for (size_t i = 0; i < 8; i++) {
+    for (size_t i = 0; i < 16; i++) {
       if (gWRGlyphAtlas[i]) {
         uint32_t handle = (uint32_t)(uintptr_t)gWRGlyphAtlas[i]->GetUserData(
             reinterpret_cast<UserDataKey*>(manager));
         if (handle) {
-          manager->GetRenderRootStateManager()->AddImageKeyForDiscard(
-              wr::ImageKey{manager->WrBridge()->GetNamespace(), handle});
+          wr::RenderRoot renderRoot = (i & CONTENT_RECT_GLYPH_ATLAS)
+                                          ? wr::RenderRoot::Content
+                                          : wr::RenderRoot::Default;
+          manager->GetRenderRootStateManager(renderRoot)
+              ->AddImageKeyForDiscard(
+                  wr::ImageKey{manager->WrBridge()->GetNamespace(), handle});
         }
       }
     }
@@ -235,7 +244,7 @@ static void PurgeWRGlyphAtlas() {
     gWRUsers.popFirst()->Remove();
   }
   // Finally, clear out the atlases.
-  for (size_t i = 0; i < 8; i++) {
+  for (size_t i = 0; i < 16; i++) {
     gWRGlyphAtlas[i] = nullptr;
   }
 }
@@ -249,7 +258,7 @@ WRUserData::~WRUserData() {
   // When the layer manager is destroyed, we need go through each
   // atlas and remove any assigned image keys.
   if (isInList()) {
-    for (size_t i = 0; i < 8; i++) {
+    for (size_t i = 0; i < 16; i++) {
       if (gWRGlyphAtlas[i]) {
         gWRGlyphAtlas[i]->RemoveUserData(
             reinterpret_cast<UserDataKey*>(mManager));
@@ -269,15 +278,20 @@ static already_AddRefed<SourceSurface> GetWRGlyphAtlas(DrawTarget& aDrawTarget,
       key |= (aMat->_11 < 0 ? 1 : 0) | (aMat->_22 < 0 ? 2 : 0);
     }
   }
+  // The atlas may exist, but an image key may not be assigned for it to
+  // the given layer manager.
+  auto* tdt = static_cast<layout::TextDrawTarget*>(&aDrawTarget);
+  if (tdt->GetRenderRoot() == wr::RenderRoot::Content) {
+    key |= CONTENT_RECT_GLYPH_ATLAS;
+  }
+
   // Check if an atlas was already created, or create one if necessary.
   RefPtr<SourceSurface> atlas = gWRGlyphAtlas[key];
   if (!atlas) {
     atlas = MakeWRGlyphAtlas(aMat);
     gWRGlyphAtlas[key] = atlas;
   }
-  // The atlas may exist, but an image key may not be assigned for it to
-  // the given layer manager.
-  auto* tdt = static_cast<layout::TextDrawTarget*>(&aDrawTarget);
+
   auto* manager = tdt->WrLayerManager();
   if (!atlas->GetUserData(reinterpret_cast<UserDataKey*>(manager))) {
     // No image key, so we need to map the atlas' data for transfer to WR.

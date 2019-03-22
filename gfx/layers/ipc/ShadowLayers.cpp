@@ -404,7 +404,8 @@ void ShadowLayerForwarder::UpdateTextureRegion(
 
 void ShadowLayerForwarder::UseTextures(
     CompositableClient* aCompositable,
-    const nsTArray<TimedTextureClient>& aTextures) {
+    const nsTArray<TimedTextureClient>& aTextures,
+    const Maybe<wr::RenderRoot>& aRenderRoot) {
   MOZ_ASSERT(aCompositable);
 
   if (!aCompositable->IsConnected()) {
@@ -483,7 +484,8 @@ bool ShadowLayerForwarder::DestroyInTransaction(
 }
 
 void ShadowLayerForwarder::RemoveTextureFromCompositable(
-    CompositableClient* aCompositable, TextureClient* aTexture) {
+    CompositableClient* aCompositable, TextureClient* aTexture,
+    const Maybe<wr::RenderRoot>& aRenderRoot) {
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aTexture);
   MOZ_ASSERT(aTexture->GetIPDLActor());

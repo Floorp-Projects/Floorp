@@ -205,11 +205,13 @@ class RenderThread final {
   bool TooManyPendingFrames(wr::WindowId aWindowId);
   /// Can be called from any thread.
   void IncPendingFrameCount(wr::WindowId aWindowId, const VsyncId& aStartId,
-                            const TimeStamp& aStartTime);
+                            const TimeStamp& aStartTime,
+                            uint8_t aDocFrameCount);
   /// Can be called from any thread.
   void DecPendingFrameCount(wr::WindowId aWindowId);
   /// Can be called from any thread.
-  void IncRenderingFrameCount(wr::WindowId aWindowId);
+  mozilla::Pair<bool, bool> IncRenderingFrameCount(wr::WindowId aWindowId,
+                                                   bool aRender);
   /// Can be called from any thread.
   void FrameRenderingComplete(wr::WindowId aWindowId);
 
@@ -273,12 +275,15 @@ class RenderThread final {
 
   struct WindowInfo {
     bool mIsDestroyed = false;
+    bool mRender = false;
     int64_t mPendingCount = 0;
     int64_t mRenderingCount = 0;
+    uint8_t mDocFramesSeen = 0;
     // One entry in this queue for each pending frame, so the length
     // should always equal mPendingCount
     std::queue<TimeStamp> mStartTimes;
     std::queue<VsyncId> mStartIds;
+    std::queue<uint8_t> mDocFrameCounts;
     bool mHadSlowFrame = false;
   };
 

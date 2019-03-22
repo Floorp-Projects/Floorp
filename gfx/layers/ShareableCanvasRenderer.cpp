@@ -177,7 +177,8 @@ CanvasClient::CanvasClientType ShareableCanvasRenderer::GetCanvasClientType() {
   return CanvasClient::CanvasClientSurface;
 }
 
-void ShareableCanvasRenderer::UpdateCompositableClient() {
+void ShareableCanvasRenderer::UpdateCompositableClient(
+    wr::RenderRoot aRenderRoot) {
   if (!CreateCompositable()) {
     return;
   }
@@ -197,14 +198,16 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
       gfxCriticalNote << "BufferProvider::SetForwarder failed";
       return;
     }
-    mCanvasClient->UpdateFromTexture(mBufferProvider->GetTextureClient());
+    mCanvasClient->UpdateFromTexture(mBufferProvider->GetTextureClient(),
+                                     aRenderRoot);
   } else {
-    mCanvasClient->Update(gfx::IntSize(mSize.width, mSize.height), this);
+    mCanvasClient->Update(gfx::IntSize(mSize.width, mSize.height), this,
+                          aRenderRoot);
   }
 
   FireDidTransactionCallback();
 
-  mCanvasClient->Updated();
+  mCanvasClient->Updated(aRenderRoot);
 }
 
 }  // namespace layers
