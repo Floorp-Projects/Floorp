@@ -421,9 +421,10 @@ void DecodedStream::Stop() {
   AssertOwnerThread();
   MOZ_ASSERT(mStartTime.isSome(), "playback not started.");
 
+  DisconnectListener();
+  ResetVideo(mPrincipalHandle);
   mStreamTimeOffset += SentDuration();
   mStartTime.reset();
-  DisconnectListener();
   mAudioEndedPromise = nullptr;
   mVideoEndedPromise = nullptr;
 
@@ -609,6 +610,43 @@ static bool ZeroDurationAtLastChunk(VideoSegment& aInput) {
   return lastVideoStratTime == aInput.GetDuration();
 }
 
+void DecodedStream::ResetVideo(const PrincipalHandle& aPrincipalHandle) {
+  AssertOwnerThread();
+
+  if (!mData) {
+    return;
+  }
+
+  if (!mInfo.HasVideo()) {
+    return;
+  }
+
+  VideoSegment resetter;
+  TimeStamp currentTime;
+  TimeUnit currentPosition = GetPosition(&currentTime);
+
+  // Giving direct consumers a frame (really *any* frame, so in this case:
+  // nullptr) at an earlier time than the previous, will signal to that consumer
+  // to discard any frames ahead in time of the new frame. To be honest, this is
+  // an ugly hack because the direct listeners of the MediaStreamGraph do not
+  // have an API that supports clearing the future frames. ImageContainer and
+  // VideoFrameContainer do though, and we will need to move to a similar API
+  // for video tracks as part of bug 1493618.
+  resetter.AppendFrame(nullptr, mData->mLastVideoImageDisplaySize,
+                       aPrincipalHandle, false, currentTime);
+  mData->mStream->AppendToTrack(mInfo.mVideo.mTrackId, &resetter);
+
+  // Consumer buffers have been reset. We now set mNextVideoTime to the start
+  // time of the current frame, so that it can be displayed again on resuming.
+  if (RefPtr<VideoData> v = mVideoQueue.PeekFront()) {
+    mData->mNextVideoTime = v->mTime;
+  } else {
+    // There was no current frame in the queue. We set the next time to push to
+    // the current time, so we at least don't resume starting in the future.
+    mData->mNextVideoTime = currentPosition;
+  }
+}
+
 void DecodedStream::SendVideo(bool aIsSameOrigin,
                               const PrincipalHandle& aPrincipalHandle) {
   AssertOwnerThread();
@@ -727,6 +765,10 @@ void DecodedStream::SendData() {
     return;
   }
 
+  if (!mPlaying) {
+    return;
+  }
+
   SendAudio(mParams.mVolume, mSameOrigin, mPrincipalHandle);
   SendVideo(mSameOrigin, mPrincipalHandle);
 }
@@ -771,6 +813,11 @@ void DecodedStream::NotifyOutput(int64_t aTime) {
 
 void DecodedStream::PlayingChanged() {
   AssertOwnerThread();
+
+  if (!mPlaying) {
+    // On seek or pause we discard future frames.
+    ResetVideo(mPrincipalHandle);
+  }
 
   mAbstractMainThread->Dispatch(NewRunnableMethod<bool>(
       "OutputStreamManager::SetPlaying", mOutputStreamManager,
