@@ -157,76 +157,11 @@ void gc::TraceCycleCollectorChildren(JS::CallbackTracer* trc, Shape* shape) {
   } while (shape);
 }
 
-// Object groups can point to other object groups via an UnboxedLayout or the
-// the original unboxed group link. There can potentially be deep or cyclic
-// chains of such groups to trace through without going through a thing that
-// participates in cycle collection. These need to be handled iteratively to
-// avoid blowing the stack when running the cycle collector's callback tracer.
-struct ObjectGroupCycleCollectorTracer : public JS::CallbackTracer {
-  explicit ObjectGroupCycleCollectorTracer(JS::CallbackTracer* innerTracer)
-      : JS::CallbackTracer(innerTracer->runtime(), DoNotTraceWeakMaps),
-        innerTracer(innerTracer) {}
-
-  void onChild(const JS::GCCellPtr& thing) override;
-
-  JS::CallbackTracer* innerTracer;
-  Vector<ObjectGroup*, 4, SystemAllocPolicy> seen, worklist;
-};
-
-void ObjectGroupCycleCollectorTracer::onChild(const JS::GCCellPtr& thing) {
-  if (thing.is<BaseShape>()) {
-    // The CC does not care about BaseShapes, and no additional GC things
-    // will be reached by following this edge.
-    return;
-  }
-
-  if (thing.is<JSObject>() || thing.is<JSScript>()) {
-    // Invoke the inner cycle collector callback on this child. It will not
-    // recurse back into TraceChildren.
-    innerTracer->onChild(thing);
-    return;
-  }
-
-  if (thing.is<ObjectGroup>()) {
-    // If this group is required to be in an ObjectGroup chain, trace it
-    // via the provided worklist rather than continuing to recurse.
-    ObjectGroup& group = thing.as<ObjectGroup>();
-    AutoSweepObjectGroup sweep(&group);
-    if (group.maybeUnboxedLayout(sweep)) {
-      for (size_t i = 0; i < seen.length(); i++) {
-        if (seen[i] == &group) {
-          return;
-        }
-      }
-      if (seen.append(&group) && worklist.append(&group)) {
-        return;
-      } else {
-        // If append fails, keep tracing normally. The worst that will
-        // happen is we end up overrecursing.
-      }
-    }
-  }
-
-  TraceChildren(this, thing.asCell(), thing.kind());
-}
-
 void gc::TraceCycleCollectorChildren(JS::CallbackTracer* trc,
                                      ObjectGroup* group) {
   MOZ_ASSERT(trc->isCallbackTracer());
 
-  // Early return if this group is not required to be in an ObjectGroup chain.
-  AutoSweepObjectGroup sweep(group);
-  if (!group->maybeUnboxedLayout(sweep)) {
-    return group->traceChildren(trc);
-  }
-
-  ObjectGroupCycleCollectorTracer groupTracer(trc->asCallbackTracer());
-  group->traceChildren(&groupTracer);
-
-  while (!groupTracer.worklist.empty()) {
-    ObjectGroup* innerGroup = groupTracer.worklist.popCopy();
-    innerGroup->traceChildren(&groupTracer);
-  }
+  group->traceChildren(trc);
 }
 
 /*** Traced Edge Printer ****************************************************/

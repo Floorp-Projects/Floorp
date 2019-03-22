@@ -30,7 +30,6 @@
 #include "vm/Shape.h"
 #include "vm/SymbolType.h"
 #include "vm/TypedArrayObject.h"
-#include "vm/UnboxedObject.h"
 #include "wasm/WasmJS.h"
 
 #include "gc/GC-inl.h"
@@ -41,7 +40,6 @@
 #include "vm/NativeObject-inl.h"
 #include "vm/Realm-inl.h"
 #include "vm/StringType-inl.h"
-#include "vm/UnboxedObject-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -1427,16 +1425,6 @@ void js::ObjectGroup::traceChildren(JSTracer* trc) {
     maybePreliminaryObjects(sweep)->trace(trc);
   }
 
-  if (maybeUnboxedLayout(sweep)) {
-    unboxedLayout(sweep).trace(trc);
-  }
-
-  if (ObjectGroup* unboxedGroup = maybeOriginalUnboxedGroup()) {
-    TraceManuallyBarrieredEdge(trc, &unboxedGroup,
-                               "group_original_unboxed_group");
-    setOriginalUnboxedGroup(unboxedGroup);
-  }
-
   if (JSObject* descr = maybeTypeDescr()) {
     TraceManuallyBarrieredEdge(trc, &descr, "group_type_descr");
     setTypeDescr(&descr->as<TypeDescr>());
@@ -1472,14 +1460,6 @@ void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
 
   if (group->maybePreliminaryObjects(sweep)) {
     group->maybePreliminaryObjects(sweep)->trace(this);
-  }
-
-  if (group->maybeUnboxedLayout(sweep)) {
-    group->unboxedLayout(sweep).trace(this);
-  }
-
-  if (ObjectGroup* unboxedGroup = group->maybeOriginalUnboxedGroup()) {
-    traverseEdge(group, unboxedGroup);
   }
 
   if (TypeDescr* descr = group->maybeTypeDescr()) {
@@ -1520,23 +1500,6 @@ static inline NativeObject* CallTraceHook(Functor&& f, JSTracer* trc,
     if (tobj.typeDescr().hasTraceList()) {
       VisitTraceList(f, tobj.typeDescr().traceList(),
                      tobj.inlineTypedMemForGC());
-    }
-
-    return nullptr;
-  }
-
-  if (clasp == &UnboxedPlainObject::class_) {
-    JSObject** pexpando = obj->as<UnboxedPlainObject>().addressOfExpando();
-    if (*pexpando) {
-      f(pexpando);
-    }
-
-    UnboxedPlainObject& unboxed = obj->as<UnboxedPlainObject>();
-    const UnboxedLayout& layout = check == CheckGeneration::DoChecks
-                                      ? unboxed.layout()
-                                      : unboxed.layoutDontCheckGeneration();
-    if (layout.traceList()) {
-      VisitTraceList(f, layout.traceList(), unboxed.data());
     }
 
     return nullptr;
@@ -2796,20 +2759,6 @@ void js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const {
 
 static inline void TraceWholeCell(TenuringTracer& mover, JSObject* object) {
   mover.traceObject(object);
-
-  // Additionally trace the expando object attached to any unboxed plain
-  // objects. Baseline and Ion can write properties to the expando while
-  // only adding a post barrier to the owning unboxed object. Note that
-  // it isn't possible for a nursery unboxed object to have a tenured
-  // expando, so that adding a post barrier on the original object will
-  // capture any tenured->nursery edges in the expando as well.
-
-  if (object->is<UnboxedPlainObject>()) {
-    if (UnboxedExpandoObject* expando =
-            object->as<UnboxedPlainObject>().maybeExpando()) {
-      expando->traceChildren(&mover);
-    }
-  }
 }
 
 static inline void TraceWholeCell(TenuringTracer& mover, JSString* str) {
