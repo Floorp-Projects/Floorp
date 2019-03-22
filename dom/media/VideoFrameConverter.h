@@ -59,7 +59,8 @@ class VideoFrameConverter {
             new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
                           "VideoFrameConverter")),
         mPacingTimer(new MediaTimer()),
-        mLastImage(-1),  // -1 is not a guaranteed invalid serial (Bug 1262134).
+        mLastImage(
+            -2),  // -2 or -1 are not guaranteed invalid serials (Bug 1262134).
         mBufferPool(false, CONVERTER_BUFFER_POOL_SIZE),
         mLastFrameQueuedForProcessing(TimeStamp::Now()),
         mEnabled(true) {
@@ -203,6 +204,10 @@ class VideoFrameConverter {
       // Set the last-img check to indicate black.
       // -1 is not a guaranteed invalid serial. See bug 1262134.
       serial = -1;
+    } else if (!aImage) {
+      // Set the last-img check to indicate reset.
+      // -2 is not a guaranteed invalid serial. See bug 1262134.
+      serial = -2;
     } else {
       serial = aImage->GetSerial();
     }
@@ -271,7 +276,11 @@ class VideoFrameConverter {
       return;
     }
 
-    MOZ_RELEASE_ASSERT(aImage, "Must have image if not forcing black");
+    if (!aImage) {
+      // Don't send anything for null images.
+      return;
+    }
+
     MOZ_ASSERT(aImage->GetSize() == aSize);
 
     if (layers::PlanarYCbCrImage* image = aImage->AsPlanarYCbCrImage()) {
