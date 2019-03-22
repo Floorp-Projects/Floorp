@@ -281,14 +281,14 @@ TEST(VP8VideoTrackEncoder, FrameEncode) {
   TimeStamp now = TimeStamp::Now();
   for (nsTArray<RefPtr<Image>>::size_type i = 0; i < images.Length(); i++) {
     RefPtr<Image> image = images[i];
-    segment.AppendFrame(image.forget(), mozilla::StreamTime(VIDEO_TRACK_RATE),
-                        generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
+    segment.AppendFrame(image.forget(), 1, generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
                         now + TimeDuration::FromSeconds(i));
   }
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(images.Length() * VIDEO_TRACK_RATE);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(images.Length()));
 
   // Pull Encoded Data back from encoder.
   EncodedFrameContainer container;
@@ -303,13 +303,13 @@ TEST(VP8VideoTrackEncoder, SingleFrameEncode) {
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
   VideoSegment segment;
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE / 2),  // 1/2 second
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE);
+  TimeStamp now = TimeStamp::Now();
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(0.5));
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -340,15 +340,14 @@ TEST(VP8VideoTrackEncoder, SameFrameEncode) {
   TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
   for (uint32_t i = 0; i < 15; ++i) {
-    segment.AppendFrame(do_AddRef(image),
-                        mozilla::StreamTime(VIDEO_TRACK_RATE / 10),  // 100ms
-                        generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
+    segment.AppendFrame(do_AddRef(image), 1, generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
                         now + TimeDuration::FromSeconds(i * 0.1));
   }
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime((VIDEO_TRACK_RATE / 10) * 15);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(1.5));
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -365,48 +364,6 @@ TEST(VP8VideoTrackEncoder, SameFrameEncode) {
   EXPECT_EQ(oneAndAHalf, totalDuration);
 }
 
-// Test encoding a track that starts with null data
-TEST(VP8VideoTrackEncoder, NullFrameFirst) {
-  TestVP8TrackEncoder encoder;
-  YUVBufferGenerator generator;
-  generator.Init(mozilla::gfx::IntSize(640, 480));
-  RefPtr<Image> image = generator.GenerateI420Image();
-  TimeStamp now = TimeStamp::Now();
-  VideoSegment segment;
-
-  // Pass 2 100ms null frames to the encoder.
-  for (uint32_t i = 0; i < 2; ++i) {
-    segment.AppendFrame(nullptr,
-                        mozilla::StreamTime(VIDEO_TRACK_RATE / 10),  // 100ms
-                        generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-                        now + TimeDuration::FromSeconds(i * 0.1));
-  }
-
-  // Pass a real 100ms frame to the encoder.
-  segment.AppendFrame(image.forget(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE / 10),  // 100ms
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-                      now + TimeDuration::FromSeconds(0.3));
-
-  encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(3 * VIDEO_TRACK_RATE / 10);
-  encoder.NotifyEndOfStream();
-
-  EncodedFrameContainer container;
-  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
-
-  EXPECT_TRUE(encoder.IsEncodingComplete());
-
-  // Verify total duration being 0.3s.
-  uint64_t totalDuration = 0;
-  for (auto& frame : container.GetEncodedFrames()) {
-    totalDuration += frame->GetDuration();
-  }
-  const uint64_t pointThree = (PR_USEC_PER_SEC / 10) * 3;
-  EXPECT_EQ(pointThree, totalDuration);
-}
-
 // Test encoding a track that has to skip frames.
 TEST(VP8VideoTrackEncoder, SkippedFrames) {
   TestVP8TrackEncoder encoder;
@@ -418,15 +375,14 @@ TEST(VP8VideoTrackEncoder, SkippedFrames) {
   // Pass 100 frames of the shortest possible duration where we don't get
   // rounding errors between input/output rate.
   for (uint32_t i = 0; i < 100; ++i) {
-    segment.AppendFrame(generator.GenerateI420Image(),
-                        mozilla::StreamTime(90),  // 1ms
-                        generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
+    segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
                         now + TimeDuration::FromMilliseconds(i));
   }
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(100 * 90);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(100));
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -455,21 +411,19 @@ TEST(VP8VideoTrackEncoder, RoundingErrorFramesEncode) {
   // then one frame to make the total duration one second.
   uint32_t usPerFrame = 99999;  // 99.999ms
   for (uint32_t i = 0; i < 9; ++i) {
-    segment.AppendFrame(generator.GenerateI420Image(),
-                        mozilla::StreamTime(VIDEO_TRACK_RATE / 10),  // 100ms
-                        generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
+    segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
                         now + TimeDuration::FromMicroseconds(i * usPerFrame));
   }
 
   // This last frame has timestamp start + 0.9s and duration 0.1s.
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE / 10),  // 100ms
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
                       now + TimeDuration::FromSeconds(0.9));
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(10 * VIDEO_TRACK_RATE / 10);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(1));
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -490,27 +444,22 @@ TEST(VP8VideoTrackEncoder, RoundingErrorFramesEncode) {
 TEST(VP8VideoTrackEncoder, TimestampFrameEncode) {
   TestVP8TrackEncoder encoder;
 
-  // Pass 3 frames with duration 0.1s, but varying timestamps to the encoder.
-  // Total duration of the segment should be the same for both.
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE / 10),  // 0.1s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE / 10),  // 0.1s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
                       now + TimeDuration::FromSeconds(0.05));
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE / 10),  // 0.1s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
                       now + TimeDuration::FromSeconds(0.2));
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(3 * VIDEO_TRACK_RATE / 10);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(0.3));
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -518,8 +467,8 @@ TEST(VP8VideoTrackEncoder, TimestampFrameEncode) {
 
   EXPECT_TRUE(encoder.IsEncodingComplete());
 
-  // Verify total duration being 4s and individual frames being [0.5s, 1.5s, 1s,
-  // 1s]
+  // Verify total duration being 0.3s and individual frames being [0.05s, 0.15s,
+  // 0.1s]
   uint64_t expectedDurations[] = {(PR_USEC_PER_SEC / 10) / 2,
                                   (PR_USEC_PER_SEC / 10) * 3 / 2,
                                   (PR_USEC_PER_SEC / 10)};
@@ -533,6 +482,55 @@ TEST(VP8VideoTrackEncoder, TimestampFrameEncode) {
   EXPECT_EQ(pointThree, totalDuration);
 }
 
+// Test that we're compensating for drift when encoding.
+TEST(VP8VideoTrackEncoder, DriftingFrameEncode) {
+  TestVP8TrackEncoder encoder;
+
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  TimeStamp now = TimeStamp::Now();
+
+  // Set up major drift -- audio that goes twice as fast as video.
+  // This should make the given video durations double as they get encoded.
+  EXPECT_CALL(*encoder.DriftCompensator(), GetVideoTime(_, _))
+      .WillRepeatedly(Invoke(
+          [&](TimeStamp, TimeStamp aTime) { return now + (aTime - now) * 2; }));
+
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromSeconds(0.05));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromSeconds(0.2));
+
+  encoder.SetStartOffset(now);
+  encoder.AppendVideoSegment(std::move(segment));
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(0.3));
+  encoder.NotifyEndOfStream();
+
+  EncodedFrameContainer container;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  // Verify total duration being 0.6s and individual frames being [0.1s, 0.3s,
+  // 0.2s]
+  uint64_t expectedDurations[] = {(PR_USEC_PER_SEC / 10),
+                                  (PR_USEC_PER_SEC / 10) * 3,
+                                  (PR_USEC_PER_SEC / 10) * 2};
+  uint64_t totalDuration = 0;
+  size_t i = 0;
+  for (auto& frame : container.GetEncodedFrames()) {
+    EXPECT_EQ(expectedDurations[i++], frame->GetDuration());
+    totalDuration += frame->GetDuration();
+  }
+  const uint64_t pointSix = (PR_USEC_PER_SEC / 10) * 6;
+  EXPECT_EQ(pointSix, totalDuration);
+}
+
 // Test that suspending an encoding works.
 TEST(VP8VideoTrackEncoder, Suspended) {
   TestVP8TrackEncoder encoder;
@@ -543,31 +541,28 @@ TEST(VP8VideoTrackEncoder, Suspended) {
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE / 10),  // 0.1s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(0.1));
 
   encoder.Suspend(now + TimeDuration::FromSeconds(0.1));
 
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE / 10),  // 0.1s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
                       now + TimeDuration::FromSeconds(0.1));
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(0.2));
 
   encoder.Resume(now + TimeDuration::FromSeconds(0.2));
 
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE / 10),  // 0.1s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
                       now + TimeDuration::FromSeconds(0.2));
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(0.3));
 
   encoder.NotifyEndOfStream();
 
@@ -597,22 +592,20 @@ TEST(VP8VideoTrackEncoder, SuspendedUntilEnd) {
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE / 10),  // 0.1s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(0.1));
 
   encoder.Suspend(now + TimeDuration::FromSeconds(0.1));
 
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE / 10),  // 0.1s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
                       now + TimeDuration::FromSeconds(0.1));
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(0.2));
 
   encoder.NotifyEndOfStream();
 
@@ -646,13 +639,12 @@ TEST(VP8VideoTrackEncoder, AlwaysSuspended) {
   encoder.Suspend(now);
 
   VideoSegment segment;
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(2 * VIDEO_TRACK_RATE),  // 2s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(2 * VIDEO_TRACK_RATE);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(2));
 
   encoder.NotifyEndOfStream();
 
@@ -661,7 +653,7 @@ TEST(VP8VideoTrackEncoder, AlwaysSuspended) {
 
   EXPECT_TRUE(encoder.IsEncodingComplete());
 
-  // Verify that we have one encoded frames and a total duration of 0.1s.
+  // Verify that we have no encoded frames.
   const uint64_t none = 0;
   EXPECT_EQ(none, container.GetEncodedFrames().Length());
 }
@@ -677,22 +669,20 @@ TEST(VP8VideoTrackEncoder, SuspendedBeginning) {
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
   VideoSegment segment;
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE / 2),  // 0.5s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(0.5));
 
   encoder.Resume(now + TimeDuration::FromSeconds(0.5));
 
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE / 2),  // 0.5s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
                       now + TimeDuration::FromSeconds(0.5));
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(1));
 
   encoder.NotifyEndOfStream();
 
@@ -723,25 +713,23 @@ TEST(VP8VideoTrackEncoder, SuspendedOverlap) {
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE),  // 1s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
 
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(0.5));
   encoder.Suspend(now + TimeDuration::FromSeconds(0.5));
 
   // Pass another 1s frame and resume after 0.3 of this new frame.
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE),  // 1s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
                       now + TimeDuration::FromSeconds(1));
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime((VIDEO_TRACK_RATE / 10) * 8);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(1.3));
   encoder.Resume(now + TimeDuration::FromSeconds(1.3));
-  encoder.AdvanceCurrentTime((VIDEO_TRACK_RATE / 10) * 7);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(2));
 
   encoder.NotifyEndOfStream();
 
@@ -771,13 +759,12 @@ TEST(VP8VideoTrackEncoder, PrematureEnding) {
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE),  // 1s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(0.5));
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -803,13 +790,12 @@ TEST(VP8VideoTrackEncoder, DelayedStart) {
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(2 * VIDEO_TRACK_RATE),  // 2s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
 
-  encoder.SetStartOffset(VIDEO_TRACK_RATE / 2);
+  encoder.SetStartOffset(now + TimeDuration::FromSeconds(0.5));
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(1));
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -836,13 +822,12 @@ TEST(VP8VideoTrackEncoder, DelayedStartOtherEventOrder) {
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(2 * VIDEO_TRACK_RATE),  // 2s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
 
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.SetStartOffset(VIDEO_TRACK_RATE / 2);
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
+  encoder.SetStartOffset(now + TimeDuration::FromSeconds(0.5));
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(1));
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -868,13 +853,12 @@ TEST(VP8VideoTrackEncoder, VeryDelayedStart) {
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
-  segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(VIDEO_TRACK_RATE),  // 1s
-                      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
 
-  encoder.SetStartOffset(VIDEO_TRACK_RATE * 10);
+  encoder.SetStartOffset(now + TimeDuration::FromSeconds(10));
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(10.5));
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -890,6 +874,59 @@ TEST(VP8VideoTrackEncoder, VeryDelayedStart) {
   EXPECT_EQ(half, totalDuration);
 }
 
+// Test that a video frame that hangs around for a long time gets encoded every
+// second.
+TEST(VP8VideoTrackEncoder, LongFramesReEncoded) {
+  TestVP8TrackEncoder encoder;
+
+  // Pass a frame at t=0 and start encoding.
+  // Advancing the current time by 1.5s should encode a 1s frame.
+  // Advancing the current time by another 9.5s should encode another 10 1s
+  // frames.
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
+
+  encoder.SetStartOffset(now);
+  encoder.AppendVideoSegment(std::move(segment));
+
+  {
+    encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(1.5));
+
+    EncodedFrameContainer container;
+    ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+    EXPECT_FALSE(encoder.IsEncodingComplete());
+
+    uint64_t totalDuration = 0;
+    for (auto& frame : container.GetEncodedFrames()) {
+      totalDuration += frame->GetDuration();
+    }
+    const uint64_t oneSec = PR_USEC_PER_SEC;
+    EXPECT_EQ(oneSec, totalDuration);
+    EXPECT_EQ(1U, container.GetEncodedFrames().Length());
+  }
+
+  {
+    encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(11));
+    encoder.NotifyEndOfStream();
+
+    EncodedFrameContainer container;
+    ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+    EXPECT_TRUE(encoder.IsEncodingComplete());
+
+    uint64_t totalDuration = 0;
+    for (auto& frame : container.GetEncodedFrames()) {
+      totalDuration += frame->GetDuration();
+    }
+    const uint64_t tenSec = PR_USEC_PER_SEC * 10;
+    EXPECT_EQ(tenSec, totalDuration);
+    EXPECT_EQ(10U, container.GetEncodedFrames().Length());
+  }
+}
+
 // Test that an encoding with a defined key frame interval encodes keyframes
 // as expected. Short here means shorter than the default (1s).
 TEST(VP8VideoTrackEncoder, ShortKeyFrameInterval) {
@@ -902,40 +939,28 @@ TEST(VP8VideoTrackEncoder, ShortKeyFrameInterval) {
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 400),  // 400ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 200),  // 200ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(400));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 150),  // 150ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(600));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 150),  // 150ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(750));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 200),  // 200ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(900));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 100),  // 100ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(1100));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(400));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(600));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(750));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(900));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(1100));
 
   encoder.SetKeyFrameInterval(500);
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10 * 12);  // 1200ms
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(1.2));
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -983,40 +1008,28 @@ TEST(VP8VideoTrackEncoder, LongKeyFrameInterval) {
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 600),  // 600ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 300),  // 300ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(600));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 200),  // 200ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(900));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 800),  // 800ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(1100));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 200),  // 200ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(1900));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 100),  // 100ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(2100));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(600));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(900));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(1100));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(1900));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(2100));
 
   encoder.SetKeyFrameInterval(2000);
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10 * 22);  // 2200ms
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(2.2));
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -1063,39 +1076,27 @@ TEST(VP8VideoTrackEncoder, DefaultKeyFrameInterval) {
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 600),  // 600ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 300),  // 300ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(600));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 200),  // 200ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(900));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 800),  // 800ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(1100));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 200),  // 200ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(1900));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 100),  // 100ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(2100));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(600));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(900));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(1100));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(1900));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(2100));
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10 * 22);  // 2200ms
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(2.2));
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -1152,106 +1153,78 @@ TEST(VP8VideoTrackEncoder, DynamicKeyFrameIntervalChanges) {
   EncodedFrameContainer container;
   TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 100),  // 100ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false, now);
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 20),  // 20ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(100));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 10),  // 10ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(120));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 70),  // 70ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(130));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 100),  // 100ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(200));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 200),  // 200ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(300));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(100));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(120));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(130));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(200));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(300));
 
   // The underlying encoder only gets passed frame N when frame N+1 is known,
   // so we pass in the next frame *before* the keyframe interval change.
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 800),  // 800ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(500));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(500));
 
-  encoder.SetStartOffset(0);
+  encoder.SetStartOffset(now);
   encoder.SetKeyFrameInterval(100);
   encoder.AppendVideoSegment(std::move(segment));
 
   // Advancing 501ms, so the first bit of the frame starting at 500ms is
-  // included. Note the need to compensate this at the end.
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 1000 * 501);
+  // included.
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(501));
   ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
 
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 100),  // 100ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(1300));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 1000),  // 1000ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(1400));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 100),  // 100ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(2400));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(1300));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(1400));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(2400));
 
   // The underlying encoder only gets passed frame N when frame N+1 is known,
   // so we pass in the next frame *before* the keyframe interval change.
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 100),  // 100ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(2500));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(2500));
 
   encoder.SetKeyFrameInterval(1100);
   encoder.AppendVideoSegment(std::move(segment));
 
   // Advancing 2000ms from 501ms to 2501ms
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 1000 * 2000);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(2501));
   ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
 
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 200),  // 200ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(2600));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 100),  // 100ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(2800));
-  segment.AppendFrame(
-      generator.GenerateI420Image(),
-      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 100),  // 100ms
-      generator.GetSize(), PRINCIPAL_HANDLE_NONE, false,
-      now + TimeDuration::FromMilliseconds(2900));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(2600));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(2800));
+  segment.AppendFrame(generator.GenerateI420Image(), 1, generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(2900));
 
   encoder.SetKeyFrameInterval(200);
   encoder.AppendVideoSegment(std::move(segment));
 
   // Advancing 499ms (compensating back 1ms from the first advancement)
   // from 2501ms to 3000ms.
-  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 1000 * 499);
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(3000));
 
   encoder.NotifyEndOfStream();
 

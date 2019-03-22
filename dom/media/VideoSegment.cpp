@@ -93,6 +93,7 @@ void VideoSegment::AppendFrame(already_AddRefed<Image>&& aImage,
   VideoChunk* chunk = AppendChunk(aDuration);
   chunk->mTimeStamp = aTimeStamp;
   VideoFrame frame(aImage, aIntrinsicSize);
+  MOZ_ASSERT_IF(!IsNull(), !aTimeStamp.IsNull());
   frame.SetForceBlack(aForceBlack);
   frame.SetPrincipalHandle(aPrincipalHandle);
   chunk->mFrame.TakeFrom(&frame);
