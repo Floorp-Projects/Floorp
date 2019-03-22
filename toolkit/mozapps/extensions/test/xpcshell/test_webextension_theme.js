@@ -80,26 +80,26 @@ async function setDisabledStateAndCheck(which, disabled = false) {
     [themeToDisable]: true,
     [themeToEnable]: false,
   };
-  let expectedEvents = {
+  let addonEvents = {
     [themeToDisable]: [
-      [ "onDisabling", false ],
-      [ "onDisabled", false ],
+      {event: "onDisabling"},
+      {event: "onDisabled"},
     ],
     [themeToEnable]: [
-      [ "onEnabling", false ],
-      [ "onEnabled", false ],
+      {event: "onEnabling"},
+      {event: "onEnabled"},
     ],
   };
 
   // Set the state of the theme to change.
   let theme = await promiseAddonByID(which);
-  prepare_test(expectedEvents);
-  let enabledPromise = promiseAddonEvent("onEnabled");
-  if (disabled) {
-    await theme.disable();
-  } else {
-    await theme.enable();
-  }
+  await expectEvents({addonEvents}, () => {
+    if (disabled) {
+      theme.disable();
+    } else {
+      theme.enable();
+    }
+  });
 
   let isDisabled;
   for (theme of await promiseAddonsByIDs(REAL_THEME_IDS)) {
@@ -111,8 +111,6 @@ async function setDisabledStateAndCheck(which, disabled = false) {
     Assert.equal(theme.isActive, !isDisabled,
       `Theme '${theme.id} should be ${isDisabled ? "in" : ""}active`);
   }
-
-  await enabledPromise;
 
   await promiseRestartManager();
 
@@ -128,8 +126,6 @@ async function setDisabledStateAndCheck(which, disabled = false) {
     if (!isDisabled)
       gActiveTheme = theme.id;
   }
-
-  ensure_test_completed();
 }
 
 add_task(async function test_WebExtension_themes() {
