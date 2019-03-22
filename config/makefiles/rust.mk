@@ -137,8 +137,6 @@ HOST_RECIPES := \
 
 $(HOST_RECIPES): RUSTFLAGS:=$(rustflags_override)
 
-cargo_env = $(subst -,_,$(subst a,A,$(subst b,B,$(subst c,C,$(subst d,D,$(subst e,E,$(subst f,F,$(subst g,G,$(subst h,H,$(subst i,I,$(subst j,J,$(subst k,K,$(subst l,L,$(subst m,M,$(subst n,N,$(subst o,O,$(subst p,P,$(subst q,Q,$(subst r,R,$(subst s,S,$(subst t,T,$(subst u,U,$(subst v,V,$(subst w,W,$(subst x,X,$(subst y,Y,$(subst z,Z,$1)))))))))))))))))))))))))))
-
 # We use the + prefix to pass down the jobserver fds to cargo, but we
 # don't use the prefix when make -n is used, so that cargo doesn't run
 # in that case)
@@ -161,8 +159,14 @@ define CARGO_CHECK
 $(call RUN_CARGO,check)
 endef
 
-cargo_host_linker_env_var := CARGO_TARGET_$(call cargo_env,$(RUST_HOST_TARGET))_LINKER
-cargo_linker_env_var := CARGO_TARGET_$(call cargo_env,$(RUST_TARGET))_LINKER
+cargo_linker_env_var := CARGO_TARGET_$(RUST_TARGET_ENV_NAME)_LINKER
+
+# Don't define a custom linker on Windows, as it's difficult to have a
+# non-binary file that will get executed correctly by Cargo.  We don't
+# have to worry about a cross-compiling (besides x86-64 -> x86, which
+# already works with the current setup) setup on Windows, and we don't
+# have to pass in any special linker options on Windows.
+ifneq (WINNT,$(OS_ARCH))
 
 # Defining all of this for ASan/TSan builds results in crashes while running
 # some crates's build scripts (!), so disable it for now.
@@ -176,49 +180,23 @@ ifndef FUZZING_INTERFACES
 # Also, we don't want to pass PGO flags until cargo supports them.
 export MOZ_CARGO_WRAP_LDFLAGS
 export MOZ_CARGO_WRAP_LD
-export MOZ_CARGO_WRAP_HOST_LDFLAGS
-export MOZ_CARGO_WRAP_HOST_LD
 # Exporting from make always exports a value. Setting a value per-recipe
 # would export an empty value for the host recipes. When not doing a
 # cross-compile, the --target for those is the same, and cargo will use
-# CARGO_TARGET_*_LINKER for its linker, so we always pass the
-# cargo-linker wrapper, and fill MOZ_CARGO_WRAP_{HOST_,}LD* more or less
+# $(cargo_linker_env_var) for its linker, so we always pass the
+# cargo-linker wrapper, and fill MOZ_CARGO_WRAP_LD* more or less
 # appropriately for all recipes.
-ifeq (WINNT,$(HOST_OS_ARCH))
-# Use .bat wrapping on Windows hosts, and shell wrapping on other hosts.
-# Like for CC/C*FLAGS, we want the target values to trump the host values when
-# both variables are the same.
-export $(cargo_host_linker_env_var):=$(topsrcdir)/build/cargo-host-linker.bat
-export $(cargo_linker_env_var):=$(topsrcdir)/build/cargo-linker.bat
-WRAP_HOST_LINKER_LIBPATHS:=$(HOST_LINKER_LIBPATHS_BAT)
-else
-export $(cargo_host_linker_env_var):=$(topsrcdir)/build/cargo-host-linker
 export $(cargo_linker_env_var):=$(topsrcdir)/build/cargo-linker
-WRAP_HOST_LINKER_LIBPATHS:=$(HOST_LINKER_LIBPATHS)
-endif
 $(TARGET_RECIPES): MOZ_CARGO_WRAP_LDFLAGS:=$(filter-out -fsanitize=cfi% -framework Cocoa -lobjc AudioToolbox ExceptionHandling -fprofile-%,$(LDFLAGS))
-
-$(HOST_RECIPES): MOZ_CARGO_WRAP_LDFLAGS:=$(HOST_LDFLAGS) $(WRAP_HOST_LINKER_LIBPATHS)
-$(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LDFLAGS:=$(HOST_LDFLAGS) $(WRAP_HOST_LINKER_LIBPATHS)
-
-ifeq (,$(filter clang-cl,$(CC_TYPE)))
 $(TARGET_RECIPES): MOZ_CARGO_WRAP_LD:=$(CC)
-else
-$(TARGET_RECIPES): MOZ_CARGO_WRAP_LD:=$(LINKER)
-endif
-
-ifeq (,$(filter clang-cl,$(HOST_CC_TYPE)))
+$(HOST_RECIPES): MOZ_CARGO_WRAP_LDFLAGS:=$(HOST_LDFLAGS)
 $(HOST_RECIPES): MOZ_CARGO_WRAP_LD:=$(HOST_CC)
-$(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LD:=$(HOST_CC)
-else
-$(HOST_RECIPES): MOZ_CARGO_WRAP_LD:=$(HOST_LINKER)
-$(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LD:=$(HOST_LINKER)
-endif
-
 endif # FUZZING_INTERFACES
 endif # MOZ_UBSAN
 endif # MOZ_TSAN
 endif # MOZ_ASAN
+
+endif # ifneq WINNT
 
 ifdef RUST_LIBRARY_FILE
 
