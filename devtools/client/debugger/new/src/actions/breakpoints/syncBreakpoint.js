@@ -173,7 +173,15 @@ export async function syncBreakpointPromise(
   }
 
   if (!newGeneratedLocation) {
-    return { previousLocation, breakpoint: null };
+    return {
+      previousLocation,
+      // We return the original bp here for HTML scripts because there may
+      // be multiple <script> elements in a source and not all of them may
+      // have loaded yet to allow synching. This means we need to leave
+      // breakpoints on these pages pending.
+      breakpoint:
+        generatedSource.introductionType === "scriptElement" ? bp : null
+    };
   }
 
   /** ******* Case 2: Add New Breakpoint ***********/
