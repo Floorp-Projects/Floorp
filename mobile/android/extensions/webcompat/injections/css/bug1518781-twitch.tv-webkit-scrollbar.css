@@ -1,0 +1,14 @@
+/**
+ * twitch.tv - Comment interaction button is overlayed by scrollbar
+ * Bug #1518781 - https://bugzilla.mozilla.org/show_bug.cgi?id=1518781
+ *
+ * The interaction buttons in Twitch' chat are partly overlayed by the
+ * scrollbar, which makes them hard to use. Twitch uses
+ * ::-webkit-scrollbar to make the scrollbar thinner, which isn't working in
+ * Firefox.
+ * Given that even scrollbar-width: thin; is not enough (see Bugzilla), let's
+ * remove it entirely.
+ */
+.video-chat__message-list-wrapper {
+  scrollbar-width: none;
+}
