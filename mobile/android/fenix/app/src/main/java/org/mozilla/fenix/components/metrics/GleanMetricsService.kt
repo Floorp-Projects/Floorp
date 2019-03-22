@@ -12,12 +12,27 @@ import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.debug.GleanMetrics.Metrics
 import org.mozilla.fenix.debug.GleanMetrics.Events
 
-private val Event.metricType: EventMetricType?
+private class EventWrapper<T : Enum<T>>(
+    private val event: EventMetricType<T>,
+    private val keyMapper: ((String) -> T)? = null
+) {
+    fun track(event: Event) {
+        val extras = if (keyMapper != null) {
+            event.extras?.mapKeys { keyMapper.invoke(it.key) }
+        } else {
+            null
+        }
+
+        this.event.record(extras)
+    }
+}
+
+private val Event.wrapper
     get() = when (this) {
-        is Event.OpenedApp -> Events.appOpened
-        is Event.SearchBarTapped -> Events.searchBarTapped
-        is Event.EnteredUrl -> Events.enteredUrl
-        is Event.PerformedSearch -> Events.performedSearch
+        is Event.OpenedApp -> EventWrapper(Events.appOpened) { Events.appOpenedKeys.valueOf(it) }
+        is Event.SearchBarTapped -> EventWrapper(Events.searchBarTapped) { Events.searchBarTappedKeys.valueOf(it) }
+        is Event.EnteredUrl -> EventWrapper(Events.enteredUrl) { Events.enteredUrlKeys.valueOf(it) }
+        is Event.PerformedSearch -> EventWrapper(Events.performedSearch) { Events.performedSearchKeys.valueOf(it) }
         else -> null
     }
 
@@ -32,11 +47,11 @@ class GleanMetricsService(private val context: Context) : MetricsService {
     }
 
     override fun track(event: Event) {
-        event.metricType?.record(event.extras)
+        event.wrapper?.track(event)
     }
 
     override fun shouldTrack(event: Event): Boolean {
-        return Settings.getInstance(context).isTelemetryEnabled && event.metricType != null
+        return Settings.getInstance(context).isTelemetryEnabled && event.wrapper != null
     }
 
     companion object {

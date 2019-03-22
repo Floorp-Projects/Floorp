@@ -1,6 +1,7 @@
-# This file defines the metrics that are recorded by glean telemetry. They are
-# automatically converted to Kotlin code at build time using the `glean_parser`
-# PyPI package.
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
@@ -10,53 +11,57 @@ events:
     description: >
       A user opened the app
     extra_keys:
-      source: "The source from which the app was opened"
+      source:
+        description: "The method used to open Fenix. Possible values are: `app_icon`, `custom_tab` or `link`"
     bugs:
     - 968
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
     - telemetry-client-dev@mozilla.com
-    expires: never
+    expires: "2020-03-01"
   search_bar_tapped:
     type: event
     description: >
       A user tapped the search bar
     extra_keys:
-      source: "The source from which the search bar was tapped"
+      source:
+        description: "The view the user was on when they initiated the search (For example: `Home` or `Browser`)"
     bugs:
     - 959
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
     - telemetry-client-dev@mozilla.com
-    expires: never
+    expires: "2020-03-01"
   entered_url:
     type: event
     description: >
       A user entered a url
     extra_keys:
-      autocomplete: "The url was filled by the autocomplete"
+      autocomplete:
+        description: "A boolean that tells us whether the URL was autofilled by an Autocomplete suggestion"
     bugs:
     - 959
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
     - telemetry-client-dev@mozilla.com
-    expires: never
+    expires: "2020-03-01"
   performed_search:
     type: event
     description: >
       A user performed a search
     extra_keys:
-      search_suggestion: "The search was initiated from a search suggestion"
+      search_suggestion:
+        description: "A boolean that tells us whether or not the search term was suggested by the Awesomebar"
     bugs:
     - 959
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
     - telemetry-client-dev@mozilla.com
-    expires: never
+    expires: "2020-03-01"
 
 metrics:
   default_browser:
@@ -71,4 +76,4 @@ metrics:
     - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
     - telemetry-client-dev@mozilla.com
-    expires: never
+    expires: "2020-03-01"

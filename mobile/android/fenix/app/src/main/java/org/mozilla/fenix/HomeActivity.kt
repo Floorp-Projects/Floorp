@@ -76,7 +76,7 @@ open class HomeActivity : AppCompatActivity() {
 
         handleOpenedFromExternalSourceIfNecessary(intent)
     }
-    
+
     override fun onResume() {
         super.onResume()
         // There is no session, or it has timed out; we should pop everything to home

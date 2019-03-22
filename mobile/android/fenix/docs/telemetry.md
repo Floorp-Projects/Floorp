@@ -12,16 +12,12 @@ Fenix creates and tries to send a "baseline" ping. It is defined inside the [`me
 
 ## Events
 
-Fenix sends event pings that allows us to measure feature performance.
+Fenix sends event pings that allows us to measure feature performance. These are defined inside the [`metrics.yaml`](https://github.com/mozilla-mobile/fenix/blob/master/app/metrics.yaml) file.
 
-| Event           | Glean Key         | Leanplum Key | extras                |
-|-----------------|-------------------|--------------|-----------------------|
-| OpenedApp       | app_opened        | E_Opened_App | source*               |
-| SearchBarTapped | search_bar_tapped |              | source**              |
-| EnteredUrl      | entered_url       |              | autocomplete***       |
-| PerformedSearch | performed_search  |              | search_suggestion**** |
+## Leanplum Events
 
-* `source`: The method used to open Fenix (For exmaple: `app_icon` or `link`)
-** `source`: The view the user was on when they initiated the search (For example: `Home` or `Browser`)
-*** `autocomplete`: A boolean that tells us wether the URL was autofilled by an Autocomplete suggestion
-**** `search_suggestion`: A boolean that tells us wether or not the search term was suggested by the Awesomebar
+| Event           |  Leanplum Key | extras                |
+|-----------------|---------------|-----------------------|
+| OpenedApp       | E_Opened_App  | source*               |
+
+* `source`: The method used to open Fenix (For exmaple: `app_icon`, `custom_tab` or `link`)
