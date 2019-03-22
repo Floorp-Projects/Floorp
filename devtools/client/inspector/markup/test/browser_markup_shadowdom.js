@@ -230,6 +230,40 @@ const TEST_DATA = [
           #shadow-root
             short-text-inside
           short-text-outside`,
+  }, {
+    // Test for Bug 1537877, crash with nested custom elements without slot.
+    title: "nested components without slot",
+    url: `data:text/html;charset=utf-8,
+      <test-component>
+        <inner-component slot="non-existing-slot"></inner-component>
+      </test-component>
+
+      <script>
+        "use strict";
+
+        customElements.define('test-component', class extends HTMLElement {
+          constructor() {
+            super();
+            let shadowRoot = this.attachShadow({mode: "#MODE#"});
+            shadowRoot.innerHTML = '<div>test-component-content</div>'
+          }
+        });
+
+        customElements.define('inner-component', class extends HTMLElement {
+          constructor() {
+            super();
+            let shadowRoot = this.attachShadow({mode: "#MODE#"});
+            shadowRoot.innerHTML = 'inner-component-content'
+          }
+        });
+      </script>`,
+    tree: `
+      test-component
+        #shadow-root
+          div
+        inner-component
+          #shadow-root
+            inner-component-content`,
   },
 ];
 
