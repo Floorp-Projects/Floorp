@@ -127,7 +127,7 @@ task_description_schema = Schema({
 
         # Type of gecko v2 index to use
         'type': Any('generic', 'nightly', 'l10n', 'nightly-with-multi-l10n',
-                    'release', 'nightly-l10n'),
+                    'release', 'nightly-l10n', 'shippable'),
 
         # The rank that the task will receive in the TaskCluster
         # index.  A newly completed task supercedes the currently
@@ -1456,6 +1456,12 @@ def add_nightly_index_routes(config, task):
     # Also add routes for en-US
     task = add_l10n_index_routes(config, task, force_locale="en-US")
 
+    return task
+
+
+@index_builder('shippable')
+def add_shippable_index_routes(config, task):
+    # Don't do any shippable index's yet.
     return task
 
 
