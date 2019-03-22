@@ -41,6 +41,9 @@ class Settings private constructor(context: Context) {
     val isCrashReportingEnabled: Boolean
         get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_crash_reporter), true)
 
+    val isRemoteDebuggingEnabled: Boolean
+        get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_remote_debugging), false)
+
     val isTelemetryEnabled: Boolean
         get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_telemetry), true)
 
@@ -54,6 +57,7 @@ class Settings private constructor(context: Context) {
         preferences.edit().putInt(appContext.getPreferenceKey(R.string.pref_key_bounce_quick_action),
             autoBounceQuickActionSheetCount + 1).apply()
     }
+
     fun setDefaultSearchEngineByName(name: String) {
         preferences.edit()
             .putString(appContext.getPreferenceKey(R.string.pref_key_search_engine), name)

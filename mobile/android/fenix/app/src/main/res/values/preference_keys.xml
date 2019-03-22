@@ -20,6 +20,7 @@
     <string name="pref_key_private_mode" translatable="false">pref_key_private_mode</string>
     <string name="pref_key_theme" translatable="false">pref_key_theme</string>
     <string name="pref_key_leakcanary" translatable="false">pref_key_leakcanary</string>
+    <string name="pref_key_remote_debugging" translatable="false">pref_key_remote_debugging</string>
 
     <!-- Data Choices -->
     <string name="pref_key_telemetry" translatable="false">pref_key_telemetry</string>

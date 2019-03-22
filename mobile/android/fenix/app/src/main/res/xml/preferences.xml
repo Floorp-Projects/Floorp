@@ -73,6 +73,15 @@
             android:defaultValue="false" />
     </androidx.preference.PreferenceCategory>
 
+    <PreferenceCategory
+        android:title="@string/developer_tools_category">
+        <androidx.preference.SwitchPreference
+            android:icon="@drawable/ic_energy"
+            android:key="@string/pref_key_remote_debugging"
+            android:title="@string/preferences_remote_debugging"
+            android:defaultValue="false" />
+    </PreferenceCategory>
+
     <androidx.preference.PreferenceCategory
         android:title="@string/preferences_category_about"
         app:iconSpaceReserved="false">

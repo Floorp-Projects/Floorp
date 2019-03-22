@@ -25,7 +25,7 @@ import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.bundling.SessionBundleStorage
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import org.mozilla.fenix.AppRequestInterceptor
-import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.utils.Settings
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import java.util.concurrent.TimeUnit
@@ -60,7 +60,7 @@ class Core(private val context: Context) {
 
         val defaultSettings = DefaultSettings(
             requestInterceptor = AppRequestInterceptor(context),
-            remoteDebuggingEnabled = false,
+            remoteDebuggingEnabled = Settings.getInstance(context).isRemoteDebuggingEnabled,
             testingModeEnabled = false,
             trackingProtectionPolicy = createTrackingProtectionPolicy(prefs),
             historyTrackingDelegate = HistoryDelegate(historyStorage)

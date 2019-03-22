@@ -24,31 +24,32 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import kotlin.coroutines.CoroutineContext
-import java.io.File
 import mozilla.components.service.fxa.FxaUnauthorizedException
 import mozilla.components.support.ktx.android.graphics.toDataUri
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.R.string.pref_key_leakcanary
-import org.mozilla.fenix.R.string.pref_key_feedback
-import org.mozilla.fenix.R.string.pref_key_help
-import org.mozilla.fenix.R.string.pref_key_make_default_browser
-import org.mozilla.fenix.R.string.pref_key_rate
-import org.mozilla.fenix.R.string.pref_key_site_permissions
-import org.mozilla.fenix.R.string.pref_key_accessibility
-import org.mozilla.fenix.R.string.pref_key_language
-import org.mozilla.fenix.R.string.pref_key_data_choices
 import org.mozilla.fenix.R.string.pref_key_about
-import org.mozilla.fenix.R.string.pref_key_sign_in
+import org.mozilla.fenix.R.string.pref_key_accessibility
 import org.mozilla.fenix.R.string.pref_key_account
 import org.mozilla.fenix.R.string.pref_key_account_category
+import org.mozilla.fenix.R.string.pref_key_data_choices
+import org.mozilla.fenix.R.string.pref_key_feedback
+import org.mozilla.fenix.R.string.pref_key_help
+import org.mozilla.fenix.R.string.pref_key_language
+import org.mozilla.fenix.R.string.pref_key_leakcanary
+import org.mozilla.fenix.R.string.pref_key_make_default_browser
+import org.mozilla.fenix.R.string.pref_key_rate
+import org.mozilla.fenix.R.string.pref_key_remote_debugging
 import org.mozilla.fenix.R.string.pref_key_search_engine_settings
+import org.mozilla.fenix.R.string.pref_key_sign_in
+import org.mozilla.fenix.R.string.pref_key_site_permissions
+import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.requireComponents
+import java.io.File
+import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions")
 class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObserver {
@@ -184,9 +185,11 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     private fun setupPreferences() {
         val makeDefaultBrowserKey = context!!.getPreferenceKey(pref_key_make_default_browser)
         val leakKey = context!!.getPreferenceKey(pref_key_leakcanary)
+        val debuggingKey = context!!.getPreferenceKey(pref_key_remote_debugging)
 
         val preferenceMakeDefaultBrowser = findPreference<Preference>(makeDefaultBrowserKey)
         val preferenceLeakCanary = findPreference<Preference>(leakKey)
+        val preferenceRemoteDebugging = findPreference<Preference>(debuggingKey)
 
         preferenceMakeDefaultBrowser?.onPreferenceClickListener =
             getClickListenerForMakeDefaultBrowser()
@@ -199,6 +202,12 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
                     true
                 }
         }
+
+        preferenceRemoteDebugging?.onPreferenceChangeListener =
+            Preference.OnPreferenceChangeListener { _, newValue ->
+                requireComponents.core.engine.settings.remoteDebuggingEnabled = newValue as Boolean
+                true
+            }
     }
 
     private val defaultClickListener = OnPreferenceClickListener { preference ->
@@ -261,7 +270,8 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     override fun onError(error: Exception) {
         // TODO we could display some error states in this UI.
         when (error) {
-            is FxaUnauthorizedException -> {}
+            is FxaUnauthorizedException -> {
+            }
         }
     }
 
