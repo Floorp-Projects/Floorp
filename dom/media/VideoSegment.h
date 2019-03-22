@@ -113,6 +113,17 @@ class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
                    const PrincipalHandle& aPrincipalHandle,
                    bool aForceBlack = false,
                    TimeStamp aTimeStamp = TimeStamp::Now());
+  void ExtendLastFrameBy(StreamTime aDuration) {
+    if (aDuration <= 0) {
+      return;
+    }
+    if (mChunks.IsEmpty()) {
+      mChunks.AppendElement()->SetNull(aDuration);
+    } else {
+      mChunks[mChunks.Length() - 1].mDuration += aDuration;
+    }
+    mDuration += aDuration;
+  }
   const VideoFrame* GetLastFrame(StreamTime* aStart = nullptr) {
     VideoChunk* c = GetLastChunk();
     if (!c) {
