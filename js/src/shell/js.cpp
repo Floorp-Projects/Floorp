@@ -11177,7 +11177,7 @@ int main(int argc, char** argv, char** envp) {
   nurseryBytes = op.getIntOption("nursery-size") * 1024L * 1024L;
 
   /* Use the same parameters as the browser in xpcjsruntime.cpp. */
-  JSContext* cx = JS_NewContext(JS::DefaultHeapMaxBytes, nurseryBytes);
+  JSContext* const cx = JS_NewContext(JS::DefaultHeapMaxBytes, nurseryBytes);
   if (!cx) {
     return 1;
   }

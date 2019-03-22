@@ -10,7 +10,7 @@ function getDisplayedTimingMarker(state, marker) {
     return value;
   }
 
-  return value - state.requests.firstStartedMillis;
+  return value - state.timingMarkers.firstDocumentRequestStartTimestamp;
 }
 
 module.exports = {

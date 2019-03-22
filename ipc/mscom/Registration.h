@@ -44,6 +44,8 @@ class RegisteredProxy {
   RegisteredProxy(RegisteredProxy&) = delete;
   RegisteredProxy& operator=(RegisteredProxy&) = delete;
 
+  void Clear();
+
   static void AddToRegistry(RegisteredProxy* aProxy);
   static void DeleteFromRegistry(RegisteredProxy* aProxy);
 

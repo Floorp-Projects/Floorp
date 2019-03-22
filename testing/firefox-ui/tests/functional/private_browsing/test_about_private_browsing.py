@@ -37,10 +37,11 @@ class TestAboutPrivateBrowsing(PuppeteerMixin, MarionetteTestCase):
         with self.marionette.using_context('content'):
             self.marionette.navigate('about:privatebrowsing')
 
-            status_node = self.marionette.find_element(By.CSS_SELECTOR, 'p.showNormal')
-            self.assertEqual(status_node.text,
-                             self.browser.localize_entity('aboutPrivateBrowsing.notPrivate'),
-                             'Status text indicates we are not in private browsing mode')
+            # Disabled awaiting support for Fluent strings in firefox-ui tests (bug 1534310)
+            # status_node = self.marionette.find_element(By.CSS_SELECTOR, 'p.showNormal')
+            # self.assertEqual(status_node.text,
+            #                 self.browser.localize_entity('aboutPrivateBrowsing.notPrivate'),
+            #                 'Status text indicates we are not in private browsing mode')
 
         def window_opener(win):
             with win.marionette.using_context('content'):
@@ -95,10 +96,11 @@ class TestAboutPrivateBrowsingWithSearch(PuppeteerMixin, MarionetteTestCase):
         with self.marionette.using_context('content'):
             self.marionette.navigate('about:privatebrowsing')
 
-            status_node = self.marionette.find_element(By.CSS_SELECTOR, 'p.showNormal')
-            self.assertEqual(status_node.text,
-                             self.browser.localize_entity('aboutPrivateBrowsing.notPrivate'),
-                             'Status text indicates we are not in private browsing mode')
+            # Disabled awaiting support for Fluent strings in firefox-ui tests (bug 1534310)
+            # status_node = self.marionette.find_element(By.CSS_SELECTOR, 'p.showNormal')
+            # self.assertEqual(status_node.text,
+            #                 self.browser.localize_entity('aboutPrivateBrowsing.notPrivate'),
+            #                 'Status text indicates we are not in private browsing mode')
 
         def window_opener(win):
             with win.marionette.using_context('content'):

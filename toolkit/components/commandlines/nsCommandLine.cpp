@@ -254,7 +254,7 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile** aResult) {
   lf.forget(aResult);
   return NS_OK;
 
-#elif defined(XP_WIN32)
+#elif defined(XP_WIN)
   nsCOMPtr<nsIFile> lf(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
   NS_ENSURE_TRUE(lf, NS_ERROR_OUT_OF_MEMORY);
 

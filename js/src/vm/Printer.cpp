@@ -434,7 +434,7 @@ bool Fprinter::put(const char* s, size_t len) {
     reportOutOfMemory();
     return false;
   }
-#ifdef XP_WIN32
+#ifdef XP_WIN
   if ((file_ == stderr) && (IsDebuggerPresent())) {
     UniqueChars buf = DuplicateString(s, len);
     if (!buf) {

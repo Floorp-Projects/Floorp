@@ -110,6 +110,8 @@
 ***********************************************************************/
 #define JS_HOWMANY(x, y) (((x) + (y)-1) / (y))
 #define JS_ROUNDUP(x, y) (JS_HOWMANY(x, y) * (y))
+#define JS_ROUNDDOWN(x, y) (((x) / (y)) * (y))
+#define JS_ROUND(x, y) ((((x) + (y) / 2) / (y)) * (y))
 
 #if defined(JS_64BIT)
 #  define JS_BITS_PER_WORD 64

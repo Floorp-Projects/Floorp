@@ -185,11 +185,11 @@ bool IsHeadRequest(const CacheRequest& aRequest,
          aRequest.method().LowerCaseEqualsLiteral("head");
 }
 
-bool IsHeadRequest(const CacheRequestOrVoid& aRequest,
+bool IsHeadRequest(const Maybe<CacheRequest>& aRequest,
                    const CacheQueryParams& aParams) {
-  if (aRequest.type() == CacheRequestOrVoid::TCacheRequest) {
+  if (aRequest.isSome()) {
     return !aParams.ignoreMethod() &&
-           aRequest.get_CacheRequest().method().LowerCaseEqualsLiteral("head");
+           aRequest.ref().method().LowerCaseEqualsLiteral("head");
   }
   return false;
 }
@@ -551,10 +551,10 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
 
   virtual void Complete(Listener* aListener, ErrorResult&& aRv) override {
     if (!mFoundResponse) {
-      aListener->OnOpComplete(std::move(aRv), CacheMatchResult(void_t()));
+      aListener->OnOpComplete(std::move(aRv), CacheMatchResult(Nothing()));
     } else {
       mStreamList->Activate(mCacheId);
-      aListener->OnOpComplete(std::move(aRv), CacheMatchResult(void_t()),
+      aListener->OnOpComplete(std::move(aRv), CacheMatchResult(Nothing()),
                               mResponse, mStreamList);
     }
     mStreamList = nullptr;
@@ -587,7 +587,7 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
-    nsresult rv = db::CacheMatchAll(aConn, mCacheId, mArgs.requestOrVoid(),
+    nsresult rv = db::CacheMatchAll(aConn, mCacheId, mArgs.maybeRequest(),
                                     mArgs.params(), mSavedResponses);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -595,7 +595,7 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
 
     for (uint32_t i = 0; i < mSavedResponses.Length(); ++i) {
       if (!mSavedResponses[i].mHasBodyId ||
-          IsHeadRequest(mArgs.requestOrVoid(), mArgs.params())) {
+          IsHeadRequest(mArgs.maybeRequest(), mArgs.params())) {
         mSavedResponses[i].mHasBodyId = false;
         continue;
       }
@@ -1120,7 +1120,7 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
-    nsresult rv = db::CacheKeys(aConn, mCacheId, mArgs.requestOrVoid(),
+    nsresult rv = db::CacheKeys(aConn, mCacheId, mArgs.maybeRequest(),
                                 mArgs.params(), mSavedRequests);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1128,7 +1128,7 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
 
     for (uint32_t i = 0; i < mSavedRequests.Length(); ++i) {
       if (!mSavedRequests[i].mHasBodyId ||
-          IsHeadRequest(mArgs.requestOrVoid(), mArgs.params())) {
+          IsHeadRequest(mArgs.maybeRequest(), mArgs.params())) {
         mSavedRequests[i].mHasBodyId = false;
         continue;
       }
@@ -1217,10 +1217,10 @@ class Manager::StorageMatchAction final : public Manager::BaseAction {
 
   virtual void Complete(Listener* aListener, ErrorResult&& aRv) override {
     if (!mFoundResponse) {
-      aListener->OnOpComplete(std::move(aRv), StorageMatchResult(void_t()));
+      aListener->OnOpComplete(std::move(aRv), StorageMatchResult(Nothing()));
     } else {
       mStreamList->Activate(mSavedResponse.mCacheId);
-      aListener->OnOpComplete(std::move(aRv), StorageMatchResult(void_t()),
+      aListener->OnOpComplete(std::move(aRv), StorageMatchResult(Nothing()),
                               mSavedResponse, mStreamList);
     }
     mStreamList = nullptr;

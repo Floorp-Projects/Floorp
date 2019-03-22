@@ -8,6 +8,7 @@
 #include <climits>
 #include <cmath>
 #include <fstream>
+#include <mutex>
 #include <prinrval.h>
 #ifdef _WINDOWS
 #  include <process.h>
@@ -46,9 +47,6 @@ namespace mozilla {
 namespace ipc {
 
 using namespace mozilla::fuzzing;
-
-const unsigned int Faulty::sDefaultProbability = Faulty::DefaultProbability();
-const bool Faulty::sIsLoggingEnabled = Faulty::Logging();
 
 /**
  * FuzzIntegralType mutates an incercepted integral type of a pickled message.
@@ -179,7 +177,7 @@ Faulty::Faulty()
         randomSeed = static_cast<unsigned long>(n);
       }
     }
-    FuzzingTraits::rng.seed(randomSeed);
+    FuzzingTraits::Rng().seed(randomSeed);
 
     /* Setup directory for dumping messages. */
     mMessagePath = PR_GetEnv("FAULTY_MESSAGE_PATH");
@@ -201,7 +199,7 @@ Faulty::Faulty()
                mFuzzPickle ? "enabled" : "disabled");
     FAULTY_LOG("* Fuzzing strategy: pipe     = %s",
                mFuzzPipes ? "enabled" : "disabled");
-    FAULTY_LOG("* Fuzzing probability        = %u", sDefaultProbability);
+    FAULTY_LOG("* Fuzzing probability        = %u", DefaultProbability());
     FAULTY_LOG("* Fuzzing mutation factor    = %u", MutationFactor());
     FAULTY_LOG("* RNG seed                   = %lu", randomSeed);
 
@@ -239,22 +237,30 @@ bool Faulty::IsValidProcessType(void) {
 }
 
 // static
-unsigned int Faulty::DefaultProbability(void) {
-  // Defines the likelihood of fuzzing a message.
-  const char* probability = PR_GetEnv("FAULTY_PROBABILITY");
-  if (probability) {
-    long n = std::strtol(probability, nullptr, 10);
-    if (n != 0) {
-      return n;
+unsigned int Faulty::DefaultProbability() {
+  static std::once_flag flag;
+  static unsigned probability;
+
+  std::call_once(flag, [&] {
+    probability = FAULTY_DEFAULT_PROBABILITY;
+    // Defines the likelihood of fuzzing a message.
+    if (const char* p = PR_GetEnv("FAULTY_PROBABILITY")) {
+      long n = std::strtol(p, nullptr, 10);
+      if (n != 0) {
+        probability = n;
+      }
     }
-  }
-  return FAULTY_DEFAULT_PROBABILITY;
+  });
+
+  return probability;
 }
 
 // static
-bool Faulty::Logging(void) {
-  // Enables logging of sendmsg() calls even in optimized builds.
-  return !!PR_GetEnv("FAULTY_ENABLE_LOGGING");
+bool Faulty::IsLoggingEnabled(void) {
+  static bool enabled;
+  static std::once_flag flag;
+  std::call_once(flag, [&] { enabled = !!PR_GetEnv("FAULTY_ENABLE_LOGGING"); });
+  return enabled;
 }
 
 // static

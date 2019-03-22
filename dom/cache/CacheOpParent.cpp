@@ -185,13 +185,13 @@ void CacheOpParent::OnOpComplete(
 }
 
 already_AddRefed<nsIInputStream> CacheOpParent::DeserializeCacheStream(
-    const CacheReadStreamOrVoid& aStreamOrVoid) {
-  if (aStreamOrVoid.type() == CacheReadStreamOrVoid::Tvoid_t) {
+    const Maybe<CacheReadStream>& aMaybeStream) {
+  if (aMaybeStream.isNothing()) {
     return nullptr;
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  const CacheReadStream& readStream = aStreamOrVoid.get_CacheReadStream();
+  const CacheReadStream& readStream = aMaybeStream.ref();
 
   // Option 1: One of our own ReadStreams was passed back to us with a stream
   //           control actor.

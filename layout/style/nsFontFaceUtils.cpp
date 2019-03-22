@@ -101,9 +101,8 @@ static void ScheduleReflow(nsIPresShell* aShell, nsIFrame* aFrame) {
             // FrameNeedsReflow again, then.
             return;
           }
-          if (f->GetStateBits() & NS_STATE_IS_OUTER_SVG ||
-              !(f->IsFrameOfType(nsIFrame::eSVG) ||
-                nsSVGUtils::IsInSVGTextSubtree(f))) {
+          if (f->IsSVGOuterSVGFrame() || !(f->IsFrameOfType(nsIFrame::eSVG) ||
+                                           nsSVGUtils::IsInSVGTextSubtree(f))) {
             break;
           }
           f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);

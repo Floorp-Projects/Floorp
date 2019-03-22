@@ -92,10 +92,8 @@ class CSSStyleSheet;
 
 // Forward declaration copied here since ServoBindings.h #includes nsCSSValue.h.
 extern "C" {
-RawGeckoURLExtraDataBorrowedMut Servo_CssUrlData_GetExtraData(
-    RawServoCssUrlDataBorrowed url);
-
-bool Servo_CssUrlData_IsLocalRef(RawServoCssUrlDataBorrowed url);
+mozilla::URLExtraData* Servo_CssUrlData_GetExtraData(const RawServoCssUrlData*);
+bool Servo_CssUrlData_IsLocalRef(const RawServoCssUrlData* url);
 }
 
 namespace mozilla {

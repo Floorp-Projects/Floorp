@@ -989,7 +989,6 @@ def target_is_windows(target):
 set_define('_WINDOWS', target_is_windows)
 set_define('WIN32', target_is_windows)
 set_define('XP_WIN', target_is_windows)
-set_define('XP_WIN32', target_is_windows)
 
 
 @depends(target)
