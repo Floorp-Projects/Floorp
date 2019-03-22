@@ -28,7 +28,6 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseFileChild.h"
-#include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestChild.h"
 #include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -494,27 +493,6 @@ class PermissionRequestMainProcessHelper final : public PermissionRequestBase {
   virtual void OnPromptComplete(PermissionValue aPermissionValue) override;
 };
 
-class PermissionRequestChildProcessActor final
-    : public PIndexedDBPermissionRequestChild {
-  BackgroundFactoryRequestChild* mActor;
-  RefPtr<IDBFactory> mFactory;
-
- public:
-  PermissionRequestChildProcessActor(BackgroundFactoryRequestChild* aActor,
-                                     IDBFactory* aFactory)
-      : mActor(aActor), mFactory(aFactory) {
-    MOZ_ASSERT(aActor);
-    MOZ_ASSERT(aFactory);
-    aActor->AssertIsOnOwningThread();
-  }
-
- protected:
-  ~PermissionRequestChildProcessActor() {}
-
-  virtual mozilla::ipc::IPCResult Recv__delete__(
-      const uint32_t& aPermission) override;
-};
-
 void DeserializeStructuredCloneFiles(
     IDBDatabase* aDatabase,
     const nsTArray<SerializedStructuredCloneFile>& aSerializedFiles,
@@ -855,27 +833,6 @@ class WorkerPermissionRequest final : public PermissionRequestBase {
   virtual void OnPromptComplete(PermissionValue aPermissionValue) override;
 };
 
-// This class is used in the main thread of all child processes.
-class WorkerPermissionRequestChildProcessActor final
-    : public PIndexedDBPermissionRequestChild {
-  RefPtr<WorkerPermissionChallenge> mChallenge;
-
- public:
-  explicit WorkerPermissionRequestChildProcessActor(
-      WorkerPermissionChallenge* aChallenge)
-      : mChallenge(aChallenge) {
-    MOZ_ASSERT(!XRE_IsParentProcess());
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(aChallenge);
-  }
-
- protected:
-  ~WorkerPermissionRequestChildProcessActor() {}
-
-  virtual mozilla::ipc::IPCResult Recv__delete__(
-      const uint32_t& aPermission) override;
-};
-
 class WorkerPermissionChallenge final : public Runnable {
  public:
   WorkerPermissionChallenge(WorkerPrivate* aWorkerPrivate,
@@ -990,10 +947,12 @@ class WorkerPermissionChallenge final : public Runnable {
 
     IPC::Principal ipcPrincipal(principal);
 
-    auto* actor = new WorkerPermissionRequestChildProcessActor(this);
-    tabChild->SetEventTargetForActor(actor, wp->MainThreadEventTarget());
-    MOZ_ASSERT(actor->GetActorEventTarget());
-    tabChild->SendPIndexedDBPermissionRequestConstructor(actor, ipcPrincipal);
+    RefPtr<WorkerPermissionChallenge> self(this);
+    tabChild->SendIndexedDBPermissionRequest(ipcPrincipal)
+        ->Then(
+            GetCurrentThreadSerialEventTarget(), __func__,
+            [self](const uint32_t& aPermission) { self->OperationCompleted(); },
+            [](const mozilla::ipc::ResponseRejectReason) {});
     return false;
   }
 
@@ -1015,14 +974,6 @@ bool WorkerPermissionOperationCompleted::WorkerRun(
   aWorkerPrivate->AssertIsOnWorkerThread();
   mChallenge->OperationCompleted();
   return true;
-}
-
-mozilla::ipc::IPCResult
-WorkerPermissionRequestChildProcessActor::Recv__delete__(
-    const uint32_t& /* aPermission */) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mChallenge->OperationCompleted();
-  return IPC_OK();
 }
 
 class MOZ_STACK_CLASS AutoSetCurrentFileHandle final {
@@ -1420,23 +1371,6 @@ void PermissionRequestMainProcessHelper::OnPromptComplete(
   mFactory = nullptr;
 }
 
-mozilla::ipc::IPCResult PermissionRequestChildProcessActor::Recv__delete__(
-    const uint32_t& /* aPermission */) {
-  MOZ_ASSERT(mActor);
-  mActor->AssertIsOnOwningThread();
-  MOZ_ASSERT(mFactory);
-
-  MaybeCollectGarbageOnIPCMessage();
-
-  RefPtr<IDBFactory> factory;
-  mFactory.swap(factory);
-
-  mActor->SendPermissionRetry();
-  mActor = nullptr;
-
-  return IPC_OK();
-}
-
 /*******************************************************************************
  * BackgroundRequestChildBase
  ******************************************************************************/
@@ -1781,11 +1715,14 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
 
   IPC::Principal ipcPrincipal(principal);
 
-  auto* actor = new PermissionRequestChildProcessActor(this, mFactory);
-
-  tabChild->SetEventTargetForActor(actor, this->GetActorEventTarget());
-  MOZ_ASSERT(actor->GetActorEventTarget());
-  tabChild->SendPIndexedDBPermissionRequestConstructor(actor, ipcPrincipal);
+  tabChild->SendIndexedDBPermissionRequest(ipcPrincipal)
+      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+             [this](const uint32_t& aPermission) {
+               this->AssertIsOnOwningThread();
+               MaybeCollectGarbageOnIPCMessage();
+               this->SendPermissionRetry();
+             },
+             [](const mozilla::ipc::ResponseRejectReason) {});
 
   return IPC_OK();
 }

@@ -9,7 +9,6 @@ include protocol PColorPicker;
 include protocol PContent;
 include protocol PDocAccessible;
 include protocol PFilePicker;
-include protocol PIndexedDBPermissionRequest;
 include protocol PPluginWidget;
 include protocol PRemotePrintJob;
 include protocol PChildToParentStream;
@@ -126,7 +125,6 @@ nested(upto inside_cpow) sync protocol PBrowser
     manages PColorPicker;
     manages PDocAccessible;
     manages PFilePicker;
-    manages PIndexedDBPermissionRequest;
     manages PPluginWidget;
     manages PPaymentRequest;
     manages PWindowGlobal;
@@ -441,7 +439,7 @@ parent:
      *       principals that can live in the content process should
      *       provided.
      */
-    async PIndexedDBPermissionRequest(Principal principal);
+    async IndexedDBPermissionRequest(Principal aPrincipal) returns (uint32_t permission);
 
     /**
      * window.open from inside <iframe mozbrowser> is special.  When the child

@@ -22,7 +22,6 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestChild.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
@@ -2034,20 +2033,6 @@ PFilePickerChild* TabChild::AllocPFilePickerChild(const nsString&,
 bool TabChild::DeallocPFilePickerChild(PFilePickerChild* actor) {
   nsFilePickerProxy* filePicker = static_cast<nsFilePickerProxy*>(actor);
   NS_RELEASE(filePicker);
-  return true;
-}
-
-auto TabChild::AllocPIndexedDBPermissionRequestChild(
-    const Principal& aPrincipal) -> PIndexedDBPermissionRequestChild* {
-  MOZ_CRASH(
-      "PIndexedDBPermissionRequestChild actors should always be created "
-      "manually!");
-}
-
-bool TabChild::DeallocPIndexedDBPermissionRequestChild(
-    PIndexedDBPermissionRequestChild* aActor) {
-  MOZ_ASSERT(aActor);
-  delete aActor;
   return true;
 }
 
