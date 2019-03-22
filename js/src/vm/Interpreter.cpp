@@ -5284,7 +5284,7 @@ ArrayObject* js::NewArrayCopyOnWriteOperation(JSContext* cx,
     return nullptr;
   }
 
-  return NewDenseCopyOnWriteArray(cx, baseobj);
+  return NewDenseCopyOnWriteArray(cx, baseobj, gc::DefaultHeap);
 }
 
 void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,

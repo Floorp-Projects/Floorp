@@ -184,7 +184,7 @@ void ProxyObject::nuke() {
     realm->newProxyCache.add(group, shape);
   }
 
-  gc::InitialHeap heap = GetInitialHeap(newKind, group);
+  gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
   debugCheckNewObject(group, shape, allocKind, heap);
 
   JSObject* obj =
