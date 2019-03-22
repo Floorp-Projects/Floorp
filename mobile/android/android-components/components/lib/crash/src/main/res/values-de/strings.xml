@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_dialog_title">Es tut uns leid. %1$s hatte ein Problem und ist abgestürzt.</string>
+
+    <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_crash_dialog_checkbox">Absturzbericht an %1$s senden</string>
+
+    <!-- Label of the button closing the crash reporter dialog. -->
+    <string name="mozac_lib_crash_dialog_button_close">Schließen</string>
+
+    <!-- Label of the button closing the crash reporter dialog and restarting the app. -->
+    <string name="mozac_lib_crash_dialog_button_restart">%1$s neu starten</string>
+</resources>

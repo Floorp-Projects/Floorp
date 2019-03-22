@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for context menu item to open the link in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_new_tab">新建标签页打开链接</string>
+
+    <!-- Text for context menu item to open the link in a private tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">新建隐私标签页打开链接</string>
+
+    <!-- Text for context menu item to open the image in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_image_in_new_tab">在新标签页中打开图像</string>
+
+    <!-- Text for context menu item to share the link with an other app. -->
+    <string name="mozac_feature_contextmenu_share_link">分享链接</string>
+
+    <!-- Text for context menu item to copy the link to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_link">复制链接</string>
+
+    <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image_location">复制图像地址</string>
+
+    <!-- Text for context menu item to save / download the image. -->
+    <string name="mozac_feature_contextmenu_save_image">保存图像</string>
+
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">已打开新标签页</string>
+
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">已新建隐私标签页</string>
+
+    <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_text_copied">文本已复制到剪贴板</string>
+
+    <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
+    <string name="mozac_feature_contextmenu_snackbar_action_switch">切换</string>
+</resources>

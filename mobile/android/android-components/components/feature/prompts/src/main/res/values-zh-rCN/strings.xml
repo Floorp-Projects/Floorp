@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for confirmation for a positive action in dialog  -->
+    <string name="mozac_feature_prompts_ok">确定</string>
+
+    <!-- Text for confirmation for a negative action in dialog.  -->
+    <string name="mozac_feature_prompts_cancel">取消</string>
+
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">阻止此页面创建更多对话框</string>
+
+    <!-- Title of a date picker dialog, this text is shown above a date picker. -->
+    <string name="mozac_feature_prompts_pick_a_date">选择日期</string>
+
+    <!-- Title of a time picker dialog, this text is shown above a time picker. -->
+    <string name="mozac_feature_prompts_pick_a_time">选择时间</string>
+
+    <!-- Title of a date and time picker dialog, this text is shown above the picker. -->
+    <string name="mozac_feature_prompts_pick_a_date_and_time">选择日期和时间</string>
+
+    <!-- Text for a positive button, when an user selects a date in date/time picker. -->
+    <string name="mozac_feature_prompts_set_date">设置</string>
+
+    <!-- Text for a button that clears the selected input in the date/time picker. -->
+    <string name="mozac_feature_prompts_clear">清除</string>
+
+    <!-- Text for the title of an authentication dialog. -->
+    <string name="mozac_feature_prompt_sign_in">登录</string>
+
+    <!-- Text for username field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_username_hint">用户名</string>
+
+    <!-- Text for password field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_password_hint">密码</string>
+
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">文本输入字段的标签</string>
+
+    <!-- Title of a color picker dialog, this text is shown above a color picker. -->
+    <string name="mozac_feature_prompts_choose_a_color">选择颜色</string>
+
+    <!-- Text of a confirm button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_allow">允许</string>
+
+    <!-- Text of a negative button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_deny">拒绝</string>
+
+    <!-- Text of the title of a dialog when a page is requesting to open a new window. -->
+    <string name="mozac_feature_prompts_popup_dialog_title">要阻止此站点打开此弹出式窗口吗？</string>
+</resources>

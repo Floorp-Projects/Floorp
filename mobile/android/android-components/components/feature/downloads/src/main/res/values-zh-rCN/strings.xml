@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Alert dialog confirmation before download a file, this is the title. -->
+    <string name="mozac_feature_downloads_dialog_title">下载文件</string>
+
+    <!-- Alert dialog confirmation before download a file, this is the positive action. -->
+    <string name="mozac_feature_downloads_dialog_download">下载</string>
+
+    <!-- Alert dialog confirmation before download a file, this is the negative action. -->
+    <string name="mozac_feature_downloads_dialog_cancel">取消</string>
+
+    <!-- Error shown when the user is trying to download a invalid file. -->
+    <string name="mozac_feature_downloads_file_not_supported">不支持该下载协议</string>
+</resources>

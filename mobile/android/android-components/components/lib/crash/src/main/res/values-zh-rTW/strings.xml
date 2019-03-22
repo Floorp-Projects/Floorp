@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_dialog_title">很抱歉，%1$s 遇到問題，發生錯誤。</string>
+
+    <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_crash_dialog_checkbox">傳送錯誤報告給 %1$s</string>
+
+    <!-- Label of the button closing the crash reporter dialog. -->
+    <string name="mozac_lib_crash_dialog_button_close">關閉</string>
+
+    <!-- Label of the button closing the crash reporter dialog and restarting the app. -->
+    <string name="mozac_lib_crash_dialog_button_restart">重新啟動 %1$s</string>
+</resources>

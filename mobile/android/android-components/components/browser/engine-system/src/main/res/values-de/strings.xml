@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for a title dialog on web page. -->
+    <string name="mozac_browser_engine_system_alert_title">Die Seite mit der Adresse %1$s meldet:</string>
+</resources>
