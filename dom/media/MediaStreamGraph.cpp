@@ -2841,16 +2841,6 @@ void SourceMediaStream::RemoveDirectTrackListenerImpl(
   }
 }
 
-StreamTime SourceMediaStream::GetEndOfAppendedData(TrackID aID) {
-  MutexAutoLock lock(mMutex);
-  TrackData* track = FindDataForTrack(aID);
-  if (track) {
-    return track->mEndOfFlushedData + track->mData->GetDuration();
-  }
-  MOZ_CRASH("Track not found");
-  return 0;
-}
-
 void SourceMediaStream::EndTrack(TrackID aID) {
   MutexAutoLock lock(mMutex);
   TrackData* track = FindDataForTrack(aID);
