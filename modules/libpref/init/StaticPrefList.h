@@ -2146,17 +2146,11 @@ VARCACHE_PREF(
 )
 
 // Maximum client-side cookie life-time cap
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE 604800 // 7 days
-#else
-# define PREF_VALUE 0
-#endif
 VARCACHE_PREF(
   "privacy.documentCookies.maxage",
    privacy_documentCookies_maxage,
-  uint32_t, PREF_VALUE // (in seconds, set to 0 to disable)
+  uint32_t, 0 // Disabled (in seconds, set to 0 to disable)
 )
-#undef PREF_VALUE
 
 // Anti-fingerprinting, disabled by default
 VARCACHE_PREF(
