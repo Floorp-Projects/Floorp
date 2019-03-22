@@ -19,6 +19,8 @@ class RadioButtonPreference : Preference {
     private lateinit var summaryView: TextView
     private lateinit var radioButton: RadioButton
 
+    private var clickListener: (() -> Unit)? = null
+
     init {
         layoutResource = R.layout.preference_widget_radiobutton
     }
@@ -35,6 +37,10 @@ class RadioButtonPreference : Preference {
         radioGroups.add(radioPreference)
     }
 
+    fun onClickListener(listener: (() -> Unit)) {
+        clickListener = listener
+    }
+
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
 
@@ -48,6 +54,7 @@ class RadioButtonPreference : Preference {
             updateRadioValue(true)
 
             toggleRadioGroups()
+            clickListener?.invoke()
             true
         }
     }

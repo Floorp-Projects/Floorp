@@ -6,10 +6,16 @@ package org.mozilla.fenix.settings
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import org.jetbrains.anko.support.v4.defaultSharedPreferences
 import org.mozilla.fenix.R
 
 class SitePermissionsFragment : PreferenceFragmentCompat() {
+
+    private lateinit var categoryPhoneFeatures: Preference
+    private lateinit var radioRecommendSettings: RadioButtonPreference
+    private lateinit var radioCustomSettings: RadioButtonPreference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,18 +27,57 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
         setPreferencesFromResource(R.xml.site_permissions_preferences, rootKey)
     }
 
-    private fun setupPreferences() {
-        val keyRecommendSettings = getString(R.string.pref_key_recommended_settings)
-        val keyCustomSettings = getString(R.string.pref_key_custom_settings)
-        val radioRecommendSettings: RadioButtonPreference = requireNotNull(findPreference(keyRecommendSettings))
-        val radioCustomSettings: RadioButtonPreference = requireNotNull(findPreference(keyCustomSettings))
+    override fun onResume() {
+        super.onResume()
+        setupPreferences()
+    }
 
+    private fun setupPreferences() {
+
+        bindRadioRecommendedSettings()
+
+        bindRadioCustomSettings()
+
+        bindCategoryPhoneFeatures()
+
+        setupRadioGroups()
+    }
+
+    private fun setupRadioGroups() {
         radioRecommendSettings.addToRadioGroup(radioCustomSettings)
         radioCustomSettings.addToRadioGroup(radioRecommendSettings)
     }
 
-    override fun onResume() {
-        super.onResume()
-        setupPreferences()
+    private fun bindRadioCustomSettings() {
+        val keyCustomSettings = getString(R.string.pref_key_custom_settings)
+        radioCustomSettings = requireNotNull(findPreference(keyCustomSettings))
+
+        radioCustomSettings.onClickListener {
+            toggleCategoryPhoneFeatureVisibility()
+        }
+    }
+
+    private fun bindRadioRecommendedSettings() {
+        val keyRecommendSettings = getString(R.string.pref_key_recommended_settings)
+        radioRecommendSettings = requireNotNull(findPreference(keyRecommendSettings))
+
+        radioRecommendSettings.onClickListener {
+            toggleCategoryPhoneFeatureVisibility()
+        }
+    }
+
+    private fun bindCategoryPhoneFeatures() {
+        val keyCategoryPhoneFeatures = getString(R.string.pref_key_category_phone_feature)
+
+        categoryPhoneFeatures = requireNotNull(findPreference(keyCategoryPhoneFeatures))
+
+        val isCategoryActivate = defaultSharedPreferences.getBoolean(radioCustomSettings.key, false)
+        if (isCategoryActivate) {
+            categoryPhoneFeatures.isVisible = true
+        }
+    }
+
+    private fun toggleCategoryPhoneFeatureVisibility() {
+        categoryPhoneFeatures.isVisible = !categoryPhoneFeatures.isVisible
     }
 }

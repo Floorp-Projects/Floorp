@@ -28,4 +28,36 @@
             android:title="@string/preference_custom_settings"
             android:defaultValue="false"/>
 
+    <androidx.preference.PreferenceCategory
+            android:key="@string/pref_key_category_phone_feature"
+            android:title="@string/preference_category_phone_feature"
+            app:iconSpaceReserved="false"
+            app:isPreferenceVisible="false">
+
+        <androidx.preference.Preference
+                android:icon="@drawable/ic_camera"
+                android:key="@string/pref_key_phone_feature_camera"
+                android:title="@string/preference_phone_feature_camera"
+                android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
+
+        <androidx.preference.Preference
+                android:icon="@drawable/ic_location"
+                android:key="@string/pref_key_phone_feature_location"
+                android:title="@string/preference_phone_feature_location"
+                android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
+
+        <androidx.preference.Preference
+                android:icon="@drawable/ic_microphone"
+                android:key="@string/pref_key_phone_feature_microphone"
+                android:title="@string/preference_phone_feature_microphone"
+                android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
+
+        <androidx.preference.Preference
+                android:icon="@drawable/ic_notification"
+                android:key="@string/pref_key_phone_feature_microphone"
+                android:title="@string/preference_phone_feature_microphone"
+                android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
+
+    </androidx.preference.PreferenceCategory>
+
 </androidx.preference.PreferenceScreen>

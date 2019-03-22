@@ -137,6 +137,18 @@
     <string name="preference_recommended_settings_summary"><b>Blocked</b>\n Ads, autoplay sound and video (block playing media with sound), cookies (block third-party trackers cookies), trackers (allow some trackers), pop-up, website redirects. \n\n <b>Ask to allow</b> \n Camera, location, microphone and notification. \n\n <b>Allowed</b> \n DRM audio and video, JavaScript, cache and site data, images.</string>
     <!-- Preference for applying custom rules to all sites -->
     <string name="preference_custom_settings">Use custom settings</string>
+    <!-- Preference category for feature phone permissions likes Camera,Microphone, Location ... etc -->
+    <string name="preference_category_phone_feature">Phone Feature</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Camera</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Microphone</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Location</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Notification</string>
+    <!-- Preference option for altering the notification access for all websites -->
+    <string name="preference_option_phone_feature_ask_to_allow">Ask to allow</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->

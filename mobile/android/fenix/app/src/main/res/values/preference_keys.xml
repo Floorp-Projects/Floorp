@@ -43,5 +43,10 @@
     <string name="pref_key_show_site_exceptions" translatable="false">pref_key_show_site_exceptions</string>
     <string name="pref_key_recommended_settings" translatable="false">pref_key_recommended_settings</string>
     <string name="pref_key_custom_settings" translatable="false">pref_key_custom_settings</string>
+    <string name="pref_key_phone_feature_camera" translatable="false">pref_key_phone_feature_camera</string>
+    <string name="pref_key_phone_feature_location" translatable="false">pref_key_phone_feature_location</string>
+    <string name="pref_key_phone_feature_microphone" translatable="false">pref_key_phone_feature_microphone</string>
+    <string name="pref_key_phone_feature_notification" translatable="false">pref_key_phone_feature_notification</string>
+    <string name="pref_key_category_phone_feature" translatable="false">pref_key_category_phone_feature</string>
 
 </resources>
