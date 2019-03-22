@@ -370,9 +370,11 @@ size_t AudioTrackEncoder::SizeOfExcludingThis(
          mOutgoingBuffer.SizeOfExcludingThis(aMallocSizeOf);
 }
 
-VideoTrackEncoder::VideoTrackEncoder(TrackRate aTrackRate,
+VideoTrackEncoder::VideoTrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
+                                     TrackRate aTrackRate,
                                      FrameDroppingMode aFrameDroppingMode)
     : TrackEncoder(aTrackRate),
+      mDriftCompensator(std::move(aDriftCompensator)),
       mFrameWidth(0),
       mFrameHeight(0),
       mDisplayWidth(0),

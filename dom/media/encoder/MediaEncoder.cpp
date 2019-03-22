@@ -8,6 +8,7 @@
 #include <algorithm>
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
+#include "DriftCompensation.h"
 #include "GeckoProfiler.h"
 #include "MediaDecoder.h"
 #include "MediaStreamListener.h"
@@ -49,10 +50,12 @@ using namespace media;
 
 class MediaEncoder::AudioTrackListener : public DirectMediaStreamTrackListener {
  public:
-  AudioTrackListener(AudioTrackEncoder* aEncoder, TaskQueue* aEncoderThread)
+  AudioTrackListener(DriftCompensator* aDriftCompensator,
+                     AudioTrackEncoder* aEncoder, TaskQueue* aEncoderThread)
       : mDirectConnected(false),
         mInitialized(false),
         mRemoved(false),
+        mDriftCompensator(aDriftCompensator),
         mEncoder(aEncoder),
         mEncoderThread(aEncoderThread) {
     MOZ_ASSERT(mEncoder);
@@ -91,6 +94,7 @@ class MediaEncoder::AudioTrackListener : public DirectMediaStreamTrackListener {
     }
 
     if (!mInitialized) {
+      mDriftCompensator->NotifyAudioStart(TimeStamp::Now());
       nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<StreamTime>(
           "mozilla::AudioTrackEncoder::SetStartOffset", mEncoder,
           &AudioTrackEncoder::SetStartOffset, aTrackOffset));
@@ -98,6 +102,8 @@ class MediaEncoder::AudioTrackListener : public DirectMediaStreamTrackListener {
       Unused << rv;
       mInitialized = true;
     }
+
+    mDriftCompensator->NotifyAudio(aQueuedMedia.GetDuration());
 
     if (!mDirectConnected) {
       NotifyRealtimeTrackData(aGraph, aTrackOffset, aQueuedMedia);
@@ -197,6 +203,7 @@ class MediaEncoder::AudioTrackListener : public DirectMediaStreamTrackListener {
   bool mDirectConnected;
   bool mInitialized;
   bool mRemoved;
+  const RefPtr<DriftCompensator> mDriftCompensator;
   RefPtr<AudioTrackEncoder> mEncoder;
   RefPtr<TaskQueue> mEncoderThread;
 };
@@ -300,7 +307,13 @@ class MediaEncoder::VideoTrackListener : public DirectMediaStreamTrackListener {
 
     const VideoSegment& video = static_cast<const VideoSegment&>(aMedia);
     VideoSegment copy;
-    copy.AppendSlice(video, 0, video.GetDuration());
+    for (VideoSegment::ConstChunkIterator iter(video); !iter.IsEnded();
+         iter.Next()) {
+      copy.AppendFrame(do_AddRef(iter->mFrame.GetImage()), 1,
+                       iter->mFrame.GetIntrinsicSize(),
+                       iter->mFrame.GetPrincipalHandle(),
+                       iter->mFrame.GetForceBlack(), iter->mTimeStamp);
+    }
 
     nsresult rv = mEncoderThread->Dispatch(
         NewRunnableMethod<StoreCopyPassByRRef<VideoSegment>>(
@@ -431,10 +444,11 @@ class MediaEncoder::EncoderListener : public TrackEncoderListener {
 };
 
 MediaEncoder::MediaEncoder(TaskQueue* aEncoderThread,
+                           RefPtr<DriftCompensator> aDriftCompensator,
                            UniquePtr<ContainerWriter> aWriter,
                            AudioTrackEncoder* aAudioEncoder,
                            VideoTrackEncoder* aVideoEncoder,
-                           const nsAString& aMIMEType)
+                           TrackRate aTrackRate, const nsAString& aMIMEType)
     : mEncoderThread(aEncoderThread),
       mWriter(std::move(aWriter)),
       mAudioEncoder(aAudioEncoder),
@@ -449,8 +463,8 @@ MediaEncoder::MediaEncoder(TaskQueue* aEncoderThread,
       mCanceled(false),
       mShutdown(false) {
   if (mAudioEncoder) {
-    mAudioListener =
-        MakeAndAddRef<AudioTrackListener>(mAudioEncoder, mEncoderThread);
+    mAudioListener = MakeAndAddRef<AudioTrackListener>(
+        aDriftCompensator, mAudioEncoder, mEncoderThread);
     nsresult rv =
         mEncoderThread->Dispatch(NewRunnableMethod<RefPtr<EncoderListener>>(
             "mozilla::AudioTrackEncoder::RegisterListener", mAudioEncoder,
@@ -633,6 +647,8 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
   UniquePtr<ContainerWriter> writer;
   RefPtr<AudioTrackEncoder> audioEncoder;
   RefPtr<VideoTrackEncoder> videoEncoder;
+  auto driftCompensator =
+      MakeRefPtr<DriftCompensator>(aEncoderThread, aTrackRate);
   nsString mimeType;
 
   if (!aTrackTypes) {
@@ -650,11 +666,11 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
       NS_ENSURE_TRUE(audioEncoder, nullptr);
     }
     if (Preferences::GetBool("media.recorder.video.frame_drops", true)) {
-      videoEncoder =
-          MakeAndAddRef<VP8TrackEncoder>(aTrackRate, FrameDroppingMode::ALLOW);
+      videoEncoder = MakeAndAddRef<VP8TrackEncoder>(
+          driftCompensator, aTrackRate, FrameDroppingMode::ALLOW);
     } else {
       videoEncoder = MakeAndAddRef<VP8TrackEncoder>(
-          aTrackRate, FrameDroppingMode::DISALLOW);
+          driftCompensator, aTrackRate, FrameDroppingMode::DISALLOW);
     }
     writer = MakeUnique<WebMWriter>(aTrackTypes);
     NS_ENSURE_TRUE(writer, nullptr);
@@ -693,8 +709,9 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
       videoEncoder->SetBitrate(aVideoBitrate);
     }
   }
-  return MakeAndAddRef<MediaEncoder>(aEncoderThread, std::move(writer),
-                                     audioEncoder, videoEncoder, mimeType);
+  return MakeAndAddRef<MediaEncoder>(
+      aEncoderThread, std::move(driftCompensator), std::move(writer),
+      audioEncoder, videoEncoder, aTrackRate, mimeType);
 }
 
 nsresult MediaEncoder::GetEncodedMetadata(
