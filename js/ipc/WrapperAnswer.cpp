@@ -11,6 +11,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "xpcprivate.h"
 #include "js/Class.h"
+#include "js/RegExp.h"
 #include "jsfriendapi.h"
 
 using namespace JS;
@@ -761,7 +762,7 @@ bool WrapperAnswer::RecvRegExpToShared(const ObjectId& objId, ReturnStatus* rs,
     return deadCPOW(jsapi, rs);
   }
 
-  RootedString sourceJSStr(cx, JS_GetRegExpSource(cx, obj));
+  RootedString sourceJSStr(cx, JS::GetRegExpSource(cx, obj));
   if (!sourceJSStr) {
     return fail(jsapi, rs);
   }
@@ -771,7 +772,7 @@ bool WrapperAnswer::RecvRegExpToShared(const ObjectId& objId, ReturnStatus* rs,
   }
   source->Assign(sourceStr);
 
-  *flags = JS_GetRegExpFlags(cx, obj);
+  *flags = JS::GetRegExpFlags(cx, obj);
 
   return ok(rs);
 }

@@ -6,6 +6,7 @@
 #include "mozilla/extensions/MatchPattern.h"
 #include "mozilla/extensions/MatchGlob.h"
 
+#include "js/RegExp.h"  // JS::NewUCRegExpObject, JS::ExecuteRegExpNoStatics
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/Unused.h"
@@ -660,7 +661,7 @@ void MatchGlob::Init(JSContext* aCx, const nsAString& aGlob,
   // TODO: Switch to the Rust regexp crate, when Rust integration is easier.
   // It uses a much more efficient, linear time matching algorithm, and
   // doesn't require special casing for the literal and prefix cases.
-  mRegExp = JS_NewUCRegExpObject(aCx, escaped.get(), escaped.Length(), 0);
+  mRegExp = JS::NewUCRegExpObject(aCx, escaped.get(), escaped.Length(), 0);
   if (mRegExp) {
     mozilla::HoldJSObjects(this);
   } else {
@@ -682,8 +683,8 @@ bool MatchGlob::Matches(const nsAString& aString) const {
     nsString input(aString);
 
     size_t index = 0;
-    if (!JS_ExecuteRegExpNoStatics(cx, regexp, input.BeginWriting(),
-                                   aString.Length(), &index, true, &result)) {
+    if (!JS::ExecuteRegExpNoStatics(cx, regexp, input.BeginWriting(),
+                                    aString.Length(), &index, true, &result)) {
       return false;
     }
 
