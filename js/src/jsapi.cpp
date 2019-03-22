@@ -5562,9 +5562,6 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
     case JSJITCOMPILER_TRACK_OPTIMIZATIONS:
       jit::JitOptions.disableOptimizationTracking = !value;
       break;
-    case JSJITCOMPILER_UNBOXED_OBJECTS:
-      jit::JitOptions.disableUnboxedObjects = !value;
-      break;
     case JSJITCOMPILER_SPECTRE_INDEX_MASKING:
       jit::JitOptions.spectreIndexMasking = !!value;
       break;
