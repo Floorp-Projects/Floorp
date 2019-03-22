@@ -1138,6 +1138,182 @@ TEST(VP8VideoTrackEncoder, DynamicKeyFrameIntervalChanges) {
   EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[13]->GetFrameType());
 }
 
+// Test that an encoding which is disabled on a frame timestamp encodes
+// frames as expected.
+TEST(VP8VideoTrackEncoder, DisableOnFrameTime) {
+  TestVP8TrackEncoder encoder;
+
+  // Pass a frame in at t=0.
+  // Pass another frame in at t=100ms.
+  // Disable the track at t=100ms.
+  // Stop encoding at t=200ms.
+  // Should yield 2 frames, 1 real; 1 black.
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  EncodedFrameContainer container;
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(100));
+
+  encoder.SetStartOffset(now);
+  encoder.AppendVideoSegment(std::move(segment));
+
+  // Advancing 100ms, for simplicity.
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(100));
+
+  encoder.Disable(now + TimeDuration::FromMilliseconds(100));
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(200));
+  encoder.NotifyEndOfStream();
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  const nsTArray<RefPtr<EncodedFrame>>& frames = container.GetEncodedFrames();
+  ASSERT_EQ(2UL, frames.Length());
+
+  // [0, 100ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[0]->GetDuration());
+
+  // [100ms, 200ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[1]->GetDuration());
+}
+
+// Test that an encoding which is disabled between two frame timestamps encodes
+// frames as expected.
+TEST(VP8VideoTrackEncoder, DisableBetweenFrames) {
+  TestVP8TrackEncoder encoder;
+
+  // Pass a frame in at t=0.
+  // Disable the track at t=50ms.
+  // Pass another frame in at t=100ms.
+  // Stop encoding at t=200ms.
+  // Should yield 3 frames, 1 real [0, 50); 2 black [50, 100) and [100, 200).
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  EncodedFrameContainer container;
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(100));
+
+  encoder.SetStartOffset(now);
+  encoder.AppendVideoSegment(std::move(segment));
+
+  encoder.Disable(now + TimeDuration::FromMilliseconds(50));
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(200));
+  encoder.NotifyEndOfStream();
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  const nsTArray<RefPtr<EncodedFrame>>& frames = container.GetEncodedFrames();
+  ASSERT_EQ(3UL, frames.Length());
+
+  // [0, 50ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 50UL, frames[0]->GetDuration());
+
+  // [50ms, 100ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 50UL, frames[1]->GetDuration());
+
+  // [100ms, 200ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[2]->GetDuration());
+}
+
+// Test that an encoding which is enabled on a frame timestamp encodes
+// frames as expected.
+TEST(VP8VideoTrackEncoder, EnableOnFrameTime) {
+  TestVP8TrackEncoder encoder;
+
+  // Disable the track at t=0.
+  // Pass a frame in at t=0.
+  // Pass another frame in at t=100ms.
+  // Enable the track at t=100ms.
+  // Stop encoding at t=200ms.
+  // Should yield 2 frames, 1 black; 1 real.
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  EncodedFrameContainer container;
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(100));
+
+  encoder.SetStartOffset(now);
+  encoder.Disable(now);
+  encoder.AppendVideoSegment(std::move(segment));
+
+  // Advancing 100ms, for simplicity.
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(100));
+
+  encoder.Enable(now + TimeDuration::FromMilliseconds(100));
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(200));
+  encoder.NotifyEndOfStream();
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  const nsTArray<RefPtr<EncodedFrame>>& frames = container.GetEncodedFrames();
+  ASSERT_EQ(2UL, frames.Length());
+
+  // [0, 100ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[0]->GetDuration());
+
+  // [100ms, 200ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[1]->GetDuration());
+}
+
+// Test that an encoding which is enabled between two frame timestamps encodes
+// frames as expected.
+TEST(VP8VideoTrackEncoder, EnableBetweenFrames) {
+  TestVP8TrackEncoder encoder;
+
+  // Disable the track at t=0.
+  // Pass a frame in at t=0.
+  // Enable the track at t=50ms.
+  // Pass another frame in at t=100ms.
+  // Stop encoding at t=200ms.
+  // Should yield 3 frames, 1 black [0, 50); 2 real [50, 100) and [100, 200).
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  EncodedFrameContainer container;
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false, now);
+  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(100));
+
+  encoder.SetStartOffset(now);
+  encoder.Disable(now);
+  encoder.AppendVideoSegment(std::move(segment));
+
+  encoder.Enable(now + TimeDuration::FromMilliseconds(50));
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(200));
+  encoder.NotifyEndOfStream();
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  const nsTArray<RefPtr<EncodedFrame>>& frames = container.GetEncodedFrames();
+  ASSERT_EQ(3UL, frames.Length());
+
+  // [0, 50ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 50UL, frames[0]->GetDuration());
+
+  // [50ms, 100ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 50UL, frames[1]->GetDuration());
+
+  // [100ms, 200ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[2]->GetDuration());
+}
+
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete) {
   TestVP8TrackEncoder encoder;

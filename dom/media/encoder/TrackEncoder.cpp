@@ -310,7 +310,8 @@ VideoTrackEncoder::VideoTrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
       mEncodedTicks(0),
       mVideoBitrate(0),
       mFrameDroppingMode(aFrameDroppingMode),
-      mKeyFrameInterval(DEFAULT_KEYFRAME_INTERVAL_MS) {
+      mKeyFrameInterval(DEFAULT_KEYFRAME_INTERVAL_MS),
+      mEnabled(true) {
   mLastChunk.mDuration = 0;
 }
 
@@ -357,6 +358,60 @@ void VideoTrackEncoder::Resume(const TimeStamp& aTime) {
   }
 
   mSuspendTime = TimeStamp();
+}
+
+void VideoTrackEncoder::Disable(const TimeStamp& aTime) {
+  MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
+  TRACK_LOG(LogLevel::Debug, ("[VideoTrackEncoder %p]: Disable()", this));
+
+  if (mStartTime.IsNull()) {
+    // We haven't started yet. No need to touch future frames.
+    mEnabled = false;
+    return;
+  }
+
+  // Advancing currentTime to process any frames in mIncomingBuffer between
+  // mCurrentTime and aTime.
+  AdvanceCurrentTime(aTime);
+  if (!mLastChunk.mTimeStamp.IsNull()) {
+    // Insert a black frame at t=aTime into mIncomingBuffer, to trigger the
+    // shift to black at the right moment.
+    VideoSegment tempSegment;
+    tempSegment.AppendFrom(&mIncomingBuffer);
+    mIncomingBuffer.AppendFrame(do_AddRef(mLastChunk.mFrame.GetImage()),
+                                mLastChunk.mFrame.GetIntrinsicSize(),
+                                mLastChunk.mFrame.GetPrincipalHandle(), true,
+                                aTime);
+    mIncomingBuffer.AppendFrom(&tempSegment);
+  }
+  mEnabled = false;
+}
+
+void VideoTrackEncoder::Enable(const TimeStamp& aTime) {
+  MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
+  TRACK_LOG(LogLevel::Debug, ("[VideoTrackEncoder %p]: Enable()", this));
+
+  if (mStartTime.IsNull()) {
+    // We haven't started yet. No need to touch future frames.
+    mEnabled = true;
+    return;
+  }
+
+  // Advancing currentTime to process any frames in mIncomingBuffer between
+  // mCurrentTime and aTime.
+  AdvanceCurrentTime(aTime);
+  if (!mLastChunk.mTimeStamp.IsNull()) {
+    // Insert a real frame at t=aTime into mIncomingBuffer, to trigger the
+    // shift from black at the right moment.
+    VideoSegment tempSegment;
+    tempSegment.AppendFrom(&mIncomingBuffer);
+    mIncomingBuffer.AppendFrame(do_AddRef(mLastChunk.mFrame.GetImage()),
+                                mLastChunk.mFrame.GetIntrinsicSize(),
+                                mLastChunk.mFrame.GetPrincipalHandle(),
+                                mLastChunk.mFrame.GetForceBlack(), aTime);
+    mIncomingBuffer.AppendFrom(&tempSegment);
+  }
+  mEnabled = true;
 }
 
 void VideoTrackEncoder::AppendVideoSegment(VideoSegment&& aSegment) {
@@ -483,7 +538,7 @@ void VideoTrackEncoder::NotifyEndOfStream() {
                  absoluteEndTime.ToSeconds()));
       mOutgoingBuffer.AppendFrame(
           lastImage.forget(), mLastChunk.mFrame.GetIntrinsicSize(),
-          PRINCIPAL_HANDLE_NONE, mLastChunk.mFrame.GetForceBlack(),
+          PRINCIPAL_HANDLE_NONE, mLastChunk.mFrame.GetForceBlack() || !mEnabled,
           mLastChunk.mTimeStamp);
       mOutgoingBuffer.ExtendLastFrameBy(duration.value());
     }
@@ -545,11 +600,12 @@ void VideoTrackEncoder::AdvanceCurrentTime(const TimeStamp& aTime) {
         // We encode at least one frame per second, even if there are none
         // flowing.
         previousChunk->mTimeStamp += TimeDuration::FromSeconds(1.0);
-        tempSegment.AppendFrame(do_AddRef(previousChunk->mFrame.GetImage()),
-                                previousChunk->mFrame.GetIntrinsicSize(),
-                                previousChunk->mFrame.GetPrincipalHandle(),
-                                previousChunk->mFrame.GetForceBlack(),
-                                previousChunk->mTimeStamp);
+        tempSegment.AppendFrame(
+            do_AddRef(previousChunk->mFrame.GetImage()),
+            previousChunk->mFrame.GetIntrinsicSize(),
+            previousChunk->mFrame.GetPrincipalHandle(),
+            previousChunk->mFrame.GetForceBlack() || !mEnabled,
+            previousChunk->mTimeStamp);
         TRACK_LOG(
             LogLevel::Verbose,
             ("[VideoTrackEncoder %p]: Duplicating video frame (%p) at pos %.3f",
@@ -572,10 +628,10 @@ void VideoTrackEncoder::AdvanceCurrentTime(const TimeStamp& aTime) {
       if (!previousChunk->IsNull()) {
         appendDupes(iter->mTimeStamp);
       }
-      tempSegment.AppendFrame(do_AddRef(iter->mFrame.GetImage()),
-                              iter->mFrame.GetIntrinsicSize(),
-                              iter->mFrame.GetPrincipalHandle(),
-                              iter->mFrame.GetForceBlack(), iter->mTimeStamp);
+      tempSegment.AppendFrame(
+          do_AddRef(iter->mFrame.GetImage()), iter->mFrame.GetIntrinsicSize(),
+          iter->mFrame.GetPrincipalHandle(),
+          iter->mFrame.GetForceBlack() || !mEnabled, iter->mTimeStamp);
       TRACK_LOG(LogLevel::Verbose,
                 ("[VideoTrackEncoder %p]: Taking video frame (%p) at pos %.3f",
                  this, iter->mFrame.GetImage(),
@@ -657,7 +713,7 @@ void VideoTrackEncoder::AdvanceCurrentTime(const TimeStamp& aTime) {
     mOutgoingBuffer.AppendFrame(
         do_AddRef(mLastChunk.mFrame.GetImage()),
         mLastChunk.mFrame.GetIntrinsicSize(), PRINCIPAL_HANDLE_NONE,
-        mLastChunk.mFrame.GetForceBlack(), mLastChunk.mTimeStamp);
+        mLastChunk.mFrame.GetForceBlack() || !mEnabled, mLastChunk.mTimeStamp);
     mOutgoingBuffer.ExtendLastFrameBy(duration.value());
     chunkAppended = true;
     mLastChunk = chunk;
