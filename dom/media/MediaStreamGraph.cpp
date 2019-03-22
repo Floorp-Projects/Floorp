@@ -80,15 +80,6 @@ void MediaStreamGraphImpl::AddStreamGraphThread(MediaStream* aStream) {
   MOZ_ASSERT(OnGraphThreadOrNotRunning());
   aStream->mTracksStartTime = mProcessedTime;
 
-  if (aStream->AsSourceStream()) {
-    SourceMediaStream* source = aStream->AsSourceStream();
-    TimeStamp currentTimeStamp = CurrentDriver()->GetCurrentTimeStamp();
-    TimeStamp processedTimeStamp =
-        currentTimeStamp + TimeDuration::FromSeconds(MediaTimeToSeconds(
-                               mProcessedTime - IterationEnd()));
-    source->SetStreamTracksStartTimeStamp(processedTimeStamp);
-  }
-
   if (aStream->IsSuspended()) {
     mSuspendedStreams.AppendElement(aStream);
     LOG(LogLevel::Debug,
@@ -2663,8 +2654,6 @@ void SourceMediaStream::AdvanceTimeVaryingValuesToCurrentTime(
     GraphTime aCurrentTime, GraphTime aBlockedTime) {
   MutexAutoLock lock(mMutex);
   mTracksStartTime += aBlockedTime;
-  mStreamTracksStartTimeStamp +=
-      TimeDuration::FromSeconds(GraphImpl()->MediaTimeToSeconds(aBlockedTime));
   mTracks.ForgetUpTo(aCurrentTime - mTracksStartTime);
 }
 

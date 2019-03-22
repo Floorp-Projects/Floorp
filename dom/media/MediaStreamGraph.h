@@ -758,11 +758,6 @@ class SourceMediaStream : public MediaStream {
    */
   bool HasPendingAudioTrack();
 
-  TimeStamp GetStreamTracksStrartTimeStamp() {
-    MutexAutoLock lock(mMutex);
-    return mStreamTracksStartTimeStamp;
-  }
-
   // XXX need a Reset API
 
   friend class MediaStreamGraphImpl;
@@ -829,10 +824,6 @@ class SourceMediaStream : public MediaStream {
 
   virtual void AdvanceTimeVaryingValuesToCurrentTime(
       GraphTime aCurrentTime, GraphTime aBlockedTime) override;
-  void SetStreamTracksStartTimeStamp(const TimeStamp& aTimeStamp) {
-    MutexAutoLock lock(mMutex);
-    mStreamTracksStartTimeStamp = aTimeStamp;
-  }
 
   // Only accessed on the MSG thread.  Used so to ask the MSGImpl to usecount
   // users of a specific input.
@@ -844,10 +835,6 @@ class SourceMediaStream : public MediaStream {
   // held together.
   Mutex mMutex;
   // protected by mMutex
-  // This time stamp will be updated in adding and blocked SourceMediaStream,
-  // |AddStreamGraphThread| and |AdvanceTimeVaryingValuesToCurrentTime| in
-  // particularly.
-  TimeStamp mStreamTracksStartTimeStamp;
   nsTArray<TrackData> mUpdateTracks;
   nsTArray<TrackData> mPendingTracks;
   nsTArray<TrackBound<DirectMediaStreamTrackListener>> mDirectTrackListeners;
