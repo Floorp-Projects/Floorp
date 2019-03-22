@@ -102,7 +102,7 @@ void TrackEncoder::SetWorkerThread(AbstractThread* aWorkerThread) {
   mWorkerThread = aWorkerThread;
 }
 
-void AudioTrackEncoder::Suspend(TimeStamp) {
+void AudioTrackEncoder::Suspend() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   TRACK_LOG(LogLevel::Info, ("[AudioTrackEncoder %p]: Suspend(), was %s", this,
                              mSuspended ? "suspended" : "live"));
@@ -114,7 +114,7 @@ void AudioTrackEncoder::Suspend(TimeStamp) {
   mSuspended = true;
 }
 
-void AudioTrackEncoder::Resume(TimeStamp) {
+void AudioTrackEncoder::Resume() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   TRACK_LOG(LogLevel::Info, ("[AudioTrackEncoder %p]: Resume(), was %s", this,
                              mSuspended ? "suspended" : "live"));

@@ -592,7 +592,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       return NS_ERROR_FAILURE;
     }
 
-    mEncoder->Suspend(TimeStamp::Now());
+    mEncoder->Suspend();
     NS_DispatchToMainThread(
         new DispatchEventRunnable(this, NS_LITERAL_STRING("pause")));
     return NS_OK;
@@ -606,7 +606,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       return NS_ERROR_FAILURE;
     }
 
-    mEncoder->Resume(TimeStamp::Now());
+    mEncoder->Resume();
     NS_DispatchToMainThread(
         new DispatchEventRunnable(this, NS_LITERAL_STRING("resume")));
     return NS_OK;

@@ -61,10 +61,6 @@ class TrackEncoder {
  public:
   explicit TrackEncoder(TrackRate aTrackRate);
 
-  virtual void Suspend(TimeStamp aTime) = 0;
-
-  virtual void Resume(TimeStamp aTime) = 0;
-
   /**
    * Called by MediaEncoder to cancel the encoding.
    */
@@ -200,13 +196,13 @@ class AudioTrackEncoder : public TrackEncoder {
    * Suspends encoding from now, i.e., all future audio data received through
    * AppendAudioSegment() until the next Resume() will be dropped.
    */
-  void Suspend(TimeStamp aTime) override;
+  void Suspend();
 
   /**
    * Resumes encoding starting now, i.e., data from the next
    * AppendAudioSegment() will get encoded.
    */
-  void Resume(TimeStamp aTime) override;
+  void Resume();
 
   /**
    * Appends and consumes track data from aSegment.
@@ -340,12 +336,12 @@ class VideoTrackEncoder : public TrackEncoder {
    * Suspends encoding from aTime, i.e., all video frame with a timestamp
    * between aTime and the timestamp of the next Resume() will be dropped.
    */
-  void Suspend(TimeStamp aTime) override;
+  void Suspend(TimeStamp aTime);
 
   /**
    * Resumes encoding starting at aTime.
    */
-  void Resume(TimeStamp aTime) override;
+  void Resume(TimeStamp aTime);
 
   /**
    * Appends source video frames to mIncomingBuffer. We only append the source
