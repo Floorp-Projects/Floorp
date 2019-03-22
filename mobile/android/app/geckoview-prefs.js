@@ -42,3 +42,6 @@ pref("browser.safebrowsing.features.malware.update", true);
 // Enable Tracking Protection blocklist updates
 pref("browser.safebrowsing.features.trackingAnnotation.update", true);
 pref("browser.safebrowsing.features.trackingProtection.update", true);
+
+// Enable cryptomining protection blocklist updates
+pref("browser.safebrowsing.features.cryptomining.update", true);
