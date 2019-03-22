@@ -99,6 +99,12 @@ VARCACHE_PREF(
    fuzzing_enabled,
   bool, false
 )
+
+VARCACHE_PREF(
+  "fuzzing.necko.enabled",
+   fuzzing_necko_enabled,
+  RelaxedAtomicBool, false
+)
 #endif
 
 //---------------------------------------------------------------------------
