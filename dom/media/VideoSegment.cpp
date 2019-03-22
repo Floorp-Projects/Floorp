@@ -14,7 +14,7 @@ namespace mozilla {
 
 using namespace layers;
 
-VideoFrame::VideoFrame(already_AddRefed<Image>& aImage,
+VideoFrame::VideoFrame(already_AddRefed<Image> aImage,
                        const gfx::IntSize& aIntrinsicSize)
     : mImage(aImage),
       mIntrinsicSize(aIntrinsicSize),
@@ -91,7 +91,7 @@ void VideoSegment::AppendFrame(already_AddRefed<Image>&& aImage,
                                bool aForceBlack, TimeStamp aTimeStamp) {
   VideoChunk* chunk = AppendChunk(0);
   chunk->mTimeStamp = aTimeStamp;
-  VideoFrame frame(aImage, aIntrinsicSize);
+  VideoFrame frame(std::move(aImage), aIntrinsicSize);
   MOZ_ASSERT_IF(!IsNull(), !aTimeStamp.IsNull());
   frame.SetForceBlack(aForceBlack);
   frame.SetPrincipalHandle(aPrincipalHandle);
