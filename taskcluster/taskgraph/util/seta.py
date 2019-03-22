@@ -95,12 +95,19 @@ class SETA(object):
 
             seta_conversions = {
                 # old: new
-                'test-linux64/opt': 'test-linux64-pgo/opt',
-                'test-linux64-qr/opt': 'test-linux64-pgo-qr/opt',
-                'test-windows7-32/opt': 'test-windows7-32-pgo/opt',
-                'test-windows7-32-qr/opt': 'test-windows7-32-pgo-qr/opt',
-                'test-windows10-64/opt': 'test-windows10-64-pgo/opt',
-                'test-windows10-64-qr/opt': 'test-windows10-64-pgo-qr/opt',
+                'test-linux32/opt': 'test-linux32-shippable/opt',
+                'test-linux64/opt': 'test-linux64-shippable/opt',
+                'test-linux64-pgo/opt': 'test-linux64-shippable/opt',
+                'test-linux64-pgo-qr/opt': 'test-linux64-shippable-qr/opt',
+                'test-linux64-qr/opt': 'test-linux64-shippable-qr/opt',
+                'test-macosx64/opt': 'test-macosx64-shippable/opt',
+                'test-macosx64-qr/opt': 'test-macosx64-shippable-qr',
+                'test-windows7-32/opt': 'test-windows7-32-shippable/opt',
+                'test-windows7-32-pgo/opt': 'test-windows7-32-shippable/opt',
+                'test-windows10-64/opt': 'test-windows10-64-shippable/opt',
+                'test-windows10-64-pgo/opt': 'test-windows10-64-shippable/opt',
+                'test-windows10-64-pgo-qr/opt': 'test-windows10-64-shippable-qr/opt',
+                'test-windows10-64-qr/opt': 'test-windows10-64-shippable-qr/opt',
                 }
             # Now add new variants to the low-value set
             for old, new in seta_conversions.iteritems():
@@ -131,6 +138,9 @@ class SETA(object):
 
             # ensure no build tasks slipped in, we never want to optimize out those
             low_value_tasks = set([x for x in low_value_tasks if 'build' not in x])
+
+            # Strip out any duplicates from the above conversions
+            low_value_tasks = list(set(low_value_tasks))
 
         # In the event of request times out, requests will raise a TimeoutError.
         except exceptions.Timeout:
