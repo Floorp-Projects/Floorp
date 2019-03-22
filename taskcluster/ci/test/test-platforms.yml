@@ -200,6 +200,18 @@ windows7-32-nightly/opt:
         - web-platform-tests
         - raptor-chrome
 
+windows7-32-shippable/opt:
+    build-platform: win32-shippable/opt
+    test-sets:
+        - awsy
+        - desktop-screenshot-capture
+        - windows-reftest-gpu
+        - windows-talos
+        - windows-tests
+        - web-platform-tests
+        - raptor-chrome
+        - raptor-firefox
+
 windows7-32-devedition/opt:
     build-platform: win32-devedition-nightly/opt
     test-sets:
