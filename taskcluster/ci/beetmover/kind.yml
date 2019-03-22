@@ -19,6 +19,7 @@ not-for-build-platforms:
     - linux-nightly/opt
     - linux-shippable/opt
     - linux64-nightly/opt
+    - linux64-shippable/opt
     - macosx64-nightly/opt
     - macosx64-shippable/opt
     - win32-nightly/opt
