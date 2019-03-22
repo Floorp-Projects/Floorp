@@ -3017,6 +3017,11 @@ var AddonManagerPrivate = {
     let provider = AddonManagerInternal._getProviderByName("XPIProvider");
     return provider ? provider.isDBLoaded : false;
   },
+
+  get databaseReady() {
+    let provider = AddonManagerInternal._getProviderByName("XPIProvider");
+    return provider ? provider.databaseReady : new Promise(() => {});
+  },
 };
 
 /**
