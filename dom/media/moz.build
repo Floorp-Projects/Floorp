@@ -115,6 +115,7 @@ EXPORTS += [
     'CubebUtils.h',
     'DecoderTraits.h',
     'DOMMediaStream.h',
+    'DriftCompensation.h',
     'FileBlockCache.h',
     'FrameStatistics.h',
     'ImageToI420.h',
