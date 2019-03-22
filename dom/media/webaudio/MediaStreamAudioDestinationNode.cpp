@@ -100,10 +100,6 @@ MediaStreamAudioDestinationNode::Create(AudioContext& aAudioContext,
     return nullptr;
   }
 
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   RefPtr<MediaStreamAudioDestinationNode> audioNode =
       new MediaStreamAudioDestinationNode(&aAudioContext);
 

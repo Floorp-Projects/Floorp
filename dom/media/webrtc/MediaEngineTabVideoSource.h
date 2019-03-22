@@ -63,11 +63,19 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
 
   class StartRunnable : public Runnable {
    public:
-    explicit StartRunnable(MediaEngineTabVideoSource* videoSource)
+    StartRunnable(MediaEngineTabVideoSource* videoSource,
+                  SourceMediaStream* aStream, TrackID aTrackID,
+                  const PrincipalHandle& aPrincipal)
         : Runnable("MediaEngineTabVideoSource::StartRunnable"),
-          mVideoSource(videoSource) {}
+          mVideoSource(videoSource),
+          mStream(aStream),
+          mTrackID(aTrackID),
+          mPrincipal(aPrincipal) {}
     NS_IMETHOD Run() override;
-    RefPtr<MediaEngineTabVideoSource> mVideoSource;
+    const RefPtr<MediaEngineTabVideoSource> mVideoSource;
+    const RefPtr<SourceMediaStream> mStream;
+    const TrackID mTrackID;
+    const PrincipalHandle mPrincipal;
   };
 
   class StopRunnable : public Runnable {
@@ -76,16 +84,24 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
         : Runnable("MediaEngineTabVideoSource::StopRunnable"),
           mVideoSource(videoSource) {}
     NS_IMETHOD Run() override;
-    RefPtr<MediaEngineTabVideoSource> mVideoSource;
+    const RefPtr<MediaEngineTabVideoSource> mVideoSource;
   };
 
   class InitRunnable : public Runnable {
    public:
-    explicit InitRunnable(MediaEngineTabVideoSource* videoSource)
+    InitRunnable(MediaEngineTabVideoSource* videoSource,
+                 SourceMediaStream* aStream, TrackID aTrackID,
+                 const PrincipalHandle& aPrincipal)
         : Runnable("MediaEngineTabVideoSource::InitRunnable"),
-          mVideoSource(videoSource) {}
+          mVideoSource(videoSource),
+          mStream(aStream),
+          mTrackID(aTrackID),
+          mPrincipal(aPrincipal) {}
     NS_IMETHOD Run() override;
-    RefPtr<MediaEngineTabVideoSource> mVideoSource;
+    const RefPtr<MediaEngineTabVideoSource> mVideoSource;
+    const RefPtr<SourceMediaStream> mStream;
+    const TrackID mTrackID;
+    const PrincipalHandle mPrincipal;
   };
 
   class DestroyRunnable : public Runnable {
@@ -94,13 +110,14 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
         : Runnable("MediaEngineTabVideoSource::DestroyRunnable"),
           mVideoSource(videoSource) {}
     NS_IMETHOD Run() override;
-    RefPtr<MediaEngineTabVideoSource> mVideoSource;
+    const RefPtr<MediaEngineTabVideoSource> mVideoSource;
   };
 
  protected:
   ~MediaEngineTabVideoSource() {}
 
  private:
+  // These are accessed only on main thread.
   int32_t mBufWidthMax = 0;
   int32_t mBufHeightMax = 0;
   int64_t mWindowId = 0;
@@ -113,22 +130,21 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
   RefPtr<layers::ImageContainer> mImageContainer;
 
   nsCOMPtr<nsPIDOMWindowOuter> mWindow;
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsITabSource> mTabSource;
+  RefPtr<SourceMediaStream> mStreamMain;
+  TrackID mTrackIDMain = TRACK_NONE;
+  PrincipalHandle mPrincipalHandleMain = PRINCIPAL_HANDLE_NONE;
   // If this is set, we will run despite mWindow == nullptr.
   bool mBlackedoutWindow = false;
-  // Current state of this source.
-  // Written on owning thread *and* under mMutex.
-  // Can be read on owning thread *or* under mMutex.
+
+  // Current state of this source. Accessed on owning thread only.
   MediaEngineSourceState mState = kReleased;
   // mStream and mTrackID are set in SetTrack() to keep track of what to end
-  // in Deallocate().
-  // Owning thread only.
+  // in Deallocate(). Owning thread only.
   RefPtr<SourceMediaStream> mStream;
   TrackID mTrackID = TRACK_NONE;
-  // mImage is Protected by mMutex.
-  RefPtr<layers::Image> mImage;
-  nsCOMPtr<nsITimer> mTimer;
-  Mutex mMutex;
-  nsCOMPtr<nsITabSource> mTabSource;
+  PrincipalHandle mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
 };
 
 }  // namespace mozilla

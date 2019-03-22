@@ -10,6 +10,7 @@ const {Target} = ChromeUtils.import("chrome://remote/content/targets/Target.jsm"
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {TabSession} = ChromeUtils.import("chrome://remote/content/sessions/TabSession.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {RemoteAgent} = ChromeUtils.import("chrome://remote/content/RemoteAgent.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
     "@mozilla.org/browser/favicon-service;1", "nsIFaviconService");
@@ -101,8 +102,6 @@ class TabTarget extends Target {
   }
 
   get wsDebuggerURL() {
-    const RemoteAgent = Cc["@mozilla.org/remote/agent"]
-        .getService(Ci.nsISupports).wrappedJSObject;
     const {host, port} = RemoteAgent;
     return `ws://${host}:${port}${this.path}`;
   }

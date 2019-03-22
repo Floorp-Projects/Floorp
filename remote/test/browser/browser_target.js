@@ -5,6 +5,8 @@
 
 /* global getCDP */
 
+const {RemoteAgent} = ChromeUtils.import("chrome://remote/content/RemoteAgent.jsm");
+
 // Test the Target domain
 
 add_task(async function() {
@@ -23,7 +25,7 @@ add_task(async function() {
 
 async function testCDP() {
   // Start the CDP server
-  const RemoteAgent = Cc["@mozilla.org/remote/agent"].getService(Ci.nsISupports).wrappedJSObject;
+  RemoteAgent.init();
   RemoteAgent.tabs.start();
   RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
 

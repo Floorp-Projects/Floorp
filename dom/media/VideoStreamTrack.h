@@ -11,7 +11,8 @@
 
 namespace mozilla {
 
-class MediaStreamVideoSink;
+class VideoFrameContainer;
+class VideoOutput;
 
 namespace dom {
 
@@ -20,15 +21,15 @@ class VideoStreamTrack : public MediaStreamTrack {
   VideoStreamTrack(
       DOMMediaStream* aStream, TrackID aTrackID, TrackID aInputTrackID,
       MediaStreamTrackSource* aSource,
-      const MediaTrackConstraints& aConstraints = MediaTrackConstraints())
-      : MediaStreamTrack(aStream, aTrackID, aInputTrackID, aSource,
-                         aConstraints) {}
+      const MediaTrackConstraints& aConstraints = MediaTrackConstraints());
+
+  void Destroy() override;
 
   VideoStreamTrack* AsVideoStreamTrack() override { return this; }
   const VideoStreamTrack* AsVideoStreamTrack() const override { return this; }
 
-  void AddVideoOutput(MediaStreamVideoSink* aSink);
-  void RemoveVideoOutput(MediaStreamVideoSink* aSink);
+  void AddVideoOutput(VideoFrameContainer* aSink);
+  void RemoveVideoOutput(VideoFrameContainer* aSink);
 
   // WebIDL
   void GetKind(nsAString& aKind) override { aKind.AssignLiteral("video"); }
@@ -41,6 +42,9 @@ class VideoStreamTrack : public MediaStreamTrack {
     return do_AddRef(new VideoStreamTrack(
         aOwningStream, aTrackID, mInputTrackID, mSource, mConstraints));
   }
+
+ private:
+  nsTArray<RefPtr<VideoOutput>> mVideoOutputs;
 };
 
 }  // namespace dom

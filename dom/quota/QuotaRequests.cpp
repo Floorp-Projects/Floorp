@@ -192,6 +192,11 @@ Request::Request(nsIPrincipal* aPrincipal) : RequestBase(aPrincipal) {
   MOZ_ASSERT(aPrincipal);
 }
 
+Request::Request(nsIQuotaCallback* aCallback) : mCallback(aCallback) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aCallback);
+}
+
 Request::~Request() { AssertIsOnOwningThread(); }
 
 void Request::SetResult(nsIVariant* aResult) {

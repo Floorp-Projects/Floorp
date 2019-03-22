@@ -100,6 +100,8 @@ class Request final : public RequestBase, public nsIQuotaRequest {
 
   explicit Request(nsIPrincipal* aPrincipal);
 
+  explicit Request(nsIQuotaCallback* aCallback);
+
   void SetResult(nsIVariant* aResult);
 
   NS_DECL_ISUPPORTS_INHERITED

@@ -100,6 +100,10 @@ struct PersistParams
   PrincipalInfo principalInfo;
 };
 
+struct ListInitializedOriginsParams
+{
+};
+
 union RequestParams
 {
   InitParams;
@@ -112,6 +116,7 @@ union RequestParams
   ResetAllParams;
   PersistedParams;
   PersistParams;
+  ListInitializedOriginsParams;
 };
 
 protocol PQuota

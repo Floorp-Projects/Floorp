@@ -151,12 +151,6 @@ class GraphDriver {
   GraphDriver* PreviousDriver();
   void SetPreviousDriver(GraphDriver* aPreviousDriver);
 
-  /**
-   * If we are running a real time graph, get the current time stamp to schedule
-   * video frames. This has to be reimplemented by real time drivers.
-   */
-  virtual TimeStamp GetCurrentTimeStamp() { return mCurrentTimeStamp; }
-
   GraphTime IterationEnd() { return mIterationEnd; }
 
   virtual AudioCallbackDriver* AsAudioCallbackDriver() { return nullptr; }
@@ -210,10 +204,6 @@ class GraphDriver {
   // The MediaStreamGraphImpl associated with this driver.
   const RefPtr<MediaStreamGraphImpl> mGraphImpl;
 
-  // This is used on the main thread (during initialization), and the graph
-  // thread. No monitor needed because we know the graph thread does not run
-  // during the initialization.
-  TimeStamp mCurrentTimeStamp;
   // This is non-null only when this driver has recently switched from an other
   // driver, and has not cleaned it up yet (for example because the audio stream
   // is currently calling the callback during initialization).
@@ -297,6 +287,7 @@ class SystemClockDriver : public ThreadedDriver {
   // Those are only modified (after initialization) on the graph thread. The
   // graph thread does not run during the initialization.
   TimeStamp mInitialTimeStamp;
+  TimeStamp mCurrentTimeStamp;
   TimeStamp mLastTimeStamp;
 
   // This is true if this SystemClockDriver runs the graph because we could not
@@ -314,7 +305,6 @@ class OfflineClockDriver : public ThreadedDriver {
   virtual ~OfflineClockDriver();
   TimeDuration WaitInterval() override;
   MediaTime GetIntervalForIteration() override;
-  TimeStamp GetCurrentTimeStamp() override;
   OfflineClockDriver* AsOfflineClockDriver() override { return this; }
 
  private:

@@ -45,6 +45,19 @@ class OriginUsageResult : public nsIQuotaOriginUsageResult {
   NS_DECL_NSIQUOTAORIGINUSAGERESULT
 };
 
+class InitializedOriginsResult : public nsIQuotaInitializedOriginsResult {
+  nsCString mOrigin;
+
+ public:
+  explicit InitializedOriginsResult(const nsACString& aOrigin);
+
+ private:
+  virtual ~InitializedOriginsResult() = default;
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIQUOTAINITIALIZEDORIGINSRESULT
+};
+
 }  // namespace quota
 }  // namespace dom
 }  // namespace mozilla

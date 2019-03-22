@@ -8,7 +8,7 @@ DIRS += [
 ]
 
 EXTRA_COMPONENTS += [
-    "RemoteAgent.js",
+    "command-line-handler.js",
     "RemoteAgent.manifest",
 ]
 

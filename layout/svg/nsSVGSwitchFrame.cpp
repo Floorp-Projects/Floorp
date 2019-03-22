@@ -10,6 +10,8 @@
 #include "nsSVGGFrame.h"
 #include "mozilla/dom/SVGSwitchElement.h"
 #include "nsSVGUtils.h"
+#include "SVGTextFrame.h"
+#include "nsSVGContainerFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -51,6 +53,8 @@ class nsSVGSwitchFrame final : public nsSVGGFrame {
 
  private:
   nsIFrame* GetActiveChildFrame();
+  void ReflowAllSVGTextFramesInsideNonActiveChildren(nsIFrame* aActiveChild);
+  static void AlwaysReflowSVGTextFrameDoForOneKid(nsIFrame* aKid);
 };
 
 //----------------------------------------------------------------------
@@ -135,6 +139,47 @@ nsIFrame* nsSVGSwitchFrame::GetFrameForPoint(const gfxPoint& aPoint) {
   return nullptr;
 }
 
+void nsSVGSwitchFrame::AlwaysReflowSVGTextFrameDoForOneKid(nsIFrame* aKid) {
+  if (!NS_SUBTREE_DIRTY(aKid)) {
+    return;
+  }
+
+  LayoutFrameType type = aKid->Type();
+  if (type == LayoutFrameType::SVGText) {
+    MOZ_ASSERT(!aKid->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
+               "A non-display SVGTextFrame directly contained in a display "
+               "container?");
+    static_cast<SVGTextFrame*>(aKid)->ReflowSVG();
+  } else if (aKid->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer) ||
+             type == LayoutFrameType::SVGForeignObject ||
+             !aKid->IsFrameOfType(nsIFrame::eSVG)) {
+    if (!aKid->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
+      for (nsIFrame* kid : aKid->PrincipalChildList()) {
+        AlwaysReflowSVGTextFrameDoForOneKid(kid);
+      }
+    } else {
+      // This child is in a nondisplay context, something like:
+      // <switch>
+      //   ...
+      //   <g><mask><text></text></mask></g>
+      // </switch>
+      // We should not call ReflowSVG on it.
+      nsSVGContainerFrame::ReflowSVGNonDisplayText(aKid);
+    }
+  }
+}
+
+void nsSVGSwitchFrame::ReflowAllSVGTextFramesInsideNonActiveChildren(
+    nsIFrame* aActiveChild) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
+    if (aActiveChild == kid) {
+      continue;
+    }
+
+    AlwaysReflowSVGTextFrameDoForOneKid(kid);
+  }
+}
+
 void nsSVGSwitchFrame::ReflowSVG() {
   NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
                "This call is probably a wasteful mistake");
@@ -165,6 +210,8 @@ void nsSVGSwitchFrame::ReflowSVG() {
   nsOverflowAreas overflowRects;
 
   nsIFrame* child = GetActiveChildFrame();
+  ReflowAllSVGTextFramesInsideNonActiveChildren(child);
+
   nsSVGDisplayableFrame* svgChild = do_QueryFrame(child);
   if (svgChild) {
     MOZ_ASSERT(!(child->GetStateBits() & NS_FRAME_IS_NONDISPLAY),

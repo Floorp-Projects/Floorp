@@ -14,7 +14,7 @@
 #   frequently has additional arguments in addition to the compiler
 #   itself.
 # * MOZ_CARGO_WRAP_LDFLAGS contains space-separated arguments to pass,
-#   and not quoting it ensures that either of those arguments is passed
+#   and not quoting it ensures that each of those arguments is passed
 #   as a separate argument to the actual LD.
 #
 # $@ is doubly quoted for the eval. See bug 1418598.
