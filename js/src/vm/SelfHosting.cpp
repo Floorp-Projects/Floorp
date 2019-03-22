@@ -2059,46 +2059,6 @@ static bool intrinsic_GetBuiltinIntlConstructor(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_WarnDeprecatedStringMethod(JSContext* cx, unsigned argc,
-                                                 Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  MOZ_RELEASE_ASSERT(args[0].isInt32());
-  MOZ_ASSERT(args[1].isString());
-
-  uint32_t id = uint32_t(args[0].toInt32());
-  MOZ_ASSERT(id < STRING_GENERICS_METHODS_LIMIT);
-
-  uint32_t mask = (1 << id);
-  if (!(cx->realm()->warnedAboutStringGenericsMethods & mask)) {
-    JSFlatString* name = args[1].toString()->ensureFlat(cx);
-    if (!name) {
-      return false;
-    }
-
-    AutoStableStringChars stableChars(cx);
-    if (!stableChars.initTwoByte(cx, name)) {
-      return false;
-    }
-    const char16_t* nameChars = stableChars.twoByteRange().begin().get();
-
-    if (!JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_WARNING, GetErrorMessage,
-                                        nullptr, JSMSG_DEPRECATED_STRING_METHOD,
-                                        nameChars, nameChars)) {
-      return false;
-    }
-
-    if (!cx->realm()->isProbablySystemCode()) {
-      cx->runtime()->addTelemetry(JS_TELEMETRY_DEPRECATED_STRING_GENERICS, id);
-    }
-
-    cx->realm()->warnedAboutStringGenericsMethods |= mask;
-  }
-
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool intrinsic_ThrowArgTypeNotObject(JSContext* cx, unsigned argc,
                                             Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2807,8 +2767,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("StringSplitString", intrinsic_StringSplitString, 2, 0,
                     IntrinsicStringSplitString),
     JS_FN("StringSplitStringLimit", intrinsic_StringSplitStringLimit, 3, 0),
-    JS_FN("WarnDeprecatedStringMethod", intrinsic_WarnDeprecatedStringMethod, 2,
-          0),
     JS_FN("ThrowArgTypeNotObject", intrinsic_ThrowArgTypeNotObject, 2, 0),
 
     // See builtin/RegExp.h for descriptions of the regexp_* functions.

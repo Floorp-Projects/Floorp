@@ -25,16 +25,6 @@ function testArrayGeneric()
   assertEq(mapped[0], true);
 }
 
-function testStringGeneric()
-{
-  var global = "psych!";
-  var eval = String.replace;
-
-  var newString = eval(directCheckCode, directCheckCode, originalEval);
-  assertEq(newString, "true");
-}
-testStringGeneric();
-
 /******************************************************************************/
 
 if (typeof reportCompare === "function")
