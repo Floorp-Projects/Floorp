@@ -590,22 +590,21 @@ MediaConduitErrorCode WebrtcVideoConduit::CreateSendStream() {
     return kMediaConduitInvalidSendCodec;
   }
 
-  std::unique_ptr<webrtc::VideoEncoder> encoder(
-      CreateEncoder(encoder_type, mEncoderConfig.StreamCount() > 0));
+  std::unique_ptr<webrtc::VideoEncoder> encoder(CreateEncoder(encoder_type));
   if (!encoder) {
     return kMediaConduitInvalidSendCodec;
   }
 
   mSendStreamConfig.encoder_settings.encoder = encoder.get();
 
-  MOZ_RELEASE_ASSERT(mEncoderConfig.NumberOfStreams() != 0,
+  MOZ_RELEASE_ASSERT(mEncoderConfig.number_of_streams != 0,
                      "mEncoderConfig - There are no configured streams!");
   MOZ_ASSERT(
-      mSendStreamConfig.rtp.ssrcs.size() == mEncoderConfig.NumberOfStreams(),
+      mSendStreamConfig.rtp.ssrcs.size() == mEncoderConfig.number_of_streams,
       "Each video substream must have a corresponding ssrc.");
 
-  mSendStream = mCall->Call()->CreateVideoSendStream(
-      mSendStreamConfig.Copy(), mEncoderConfig.CopyConfig());
+  mSendStream = mCall->Call()->CreateVideoSendStream(mSendStreamConfig.Copy(),
+                                                     mEncoderConfig.Copy());
 
   if (!mSendStream) {
     return kMediaConduitVideoSendStreamError;
@@ -793,7 +792,6 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
               this, streamCount);
 
   mSendingFramerate = 0;
-  mEncoderConfig.ClearStreams();
   mSendStreamConfig.rtp.rids.clear();
 
   int max_framerate;
@@ -827,7 +825,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
   mVideoStreamFactory = new rtc::RefCountedObject<VideoStreamFactory>(
       *codecConfig, mCodecMode, mMinBitrate, mStartBitrate, mPrefMaxBitrate,
       mNegotiatedMaxBitrate, mSendingFramerate);
-  mEncoderConfig.SetVideoStreamFactory(mVideoStreamFactory.get());
+  mEncoderConfig.video_stream_factory = mVideoStreamFactory.get();
 
   // Reset the VideoAdapter. SelectResolution will ensure limits are set.
   mVideoAdapter = MakeUnique<cricket::VideoAdapter>(
@@ -839,17 +837,17 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
           : rtc::Optional<float>());
 
   // XXX parse the encoded SPS/PPS data and set spsData/spsLen/ppsData/ppsLen
-  mEncoderConfig.SetEncoderSpecificSettings(
-      ConfigureVideoEncoderSettings(codecConfig, this));
+  mEncoderConfig.encoder_specific_settings =
+      ConfigureVideoEncoderSettings(codecConfig, this);
 
-  mEncoderConfig.SetContentType(
+  mEncoderConfig.content_type =
       mCodecMode == webrtc::kRealtimeVideo
           ? webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo
-          : webrtc::VideoEncoderConfig::ContentType::kScreen);
+          : webrtc::VideoEncoderConfig::ContentType::kScreen;
   // for the GMP H.264 encoder/decoder!!
-  mEncoderConfig.SetMinTransmitBitrateBps(0);
+  mEncoderConfig.min_transmit_bitrate_bps = 0;
   // Expected max number of encodings
-  mEncoderConfig.SetMaxEncodings(streamCount);
+  mEncoderConfig.number_of_streams = streamCount;
 
   // If only encoder stream attibutes have been changed, there is no need to
   // stop, create a new webrtc::VideoSendStream, and restart. Recreating on
@@ -860,7 +858,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
       mCurSendCodecConfig->mEncodingConstraints =
           codecConfig->mEncodingConstraints;
       mCurSendCodecConfig->mEncodings = codecConfig->mEncodings;
-      mSendStream->ReconfigureVideoEncoder(mEncoderConfig.CopyConfig());
+      mSendStream->ReconfigureVideoEncoder(mEncoderConfig.Copy());
       return kMediaConduitNoError;
     }
 
@@ -1627,7 +1625,7 @@ std::unique_ptr<webrtc::VideoDecoder> WebrtcVideoConduit::CreateDecoder(
 }
 
 std::unique_ptr<webrtc::VideoEncoder> WebrtcVideoConduit::CreateEncoder(
-    webrtc::VideoCodecType aType, bool enable_simulcast) {
+    webrtc::VideoCodecType aType) {
   MOZ_ASSERT(NS_IsMainThread());
 
   std::unique_ptr<webrtc::VideoEncoder> encoder = nullptr;
@@ -2244,71 +2242,6 @@ bool WebrtcVideoConduit::RequiresNewSendStream(
         !CompatibleH264Config(mEncoderSpecificH264, newConfig))
 #endif
       ;
-}
-
-void WebrtcVideoConduit::VideoEncoderConfigBuilder::SetEncoderSpecificSettings(
-    rtc::scoped_refptr<webrtc::VideoEncoderConfig::EncoderSpecificSettings>
-        aSettings) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mConfig.encoder_specific_settings = aSettings;
-}
-
-void WebrtcVideoConduit::VideoEncoderConfigBuilder::SetVideoStreamFactory(
-    rtc::scoped_refptr<VideoStreamFactory> aFactory) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mConfig.video_stream_factory = aFactory;
-}
-
-void WebrtcVideoConduit::VideoEncoderConfigBuilder::SetMinTransmitBitrateBps(
-    int aXmitMinBps) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mConfig.min_transmit_bitrate_bps = aXmitMinBps;
-}
-
-void WebrtcVideoConduit::VideoEncoderConfigBuilder::SetContentType(
-    webrtc::VideoEncoderConfig::ContentType aContentType) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mConfig.content_type = aContentType;
-}
-
-void WebrtcVideoConduit::VideoEncoderConfigBuilder::SetMaxEncodings(
-    size_t aMaxStreams) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mConfig.number_of_streams = aMaxStreams;
-}
-
-void WebrtcVideoConduit::VideoEncoderConfigBuilder::AddStream(
-    webrtc::VideoStream aStream) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mSimulcastStreams.push_back(SimulcastStreamConfig());
-  MOZ_ASSERT(mSimulcastStreams.size() <= mConfig.number_of_streams);
-}
-
-void WebrtcVideoConduit::VideoEncoderConfigBuilder::AddStream(
-    webrtc::VideoStream aStream,
-    const SimulcastStreamConfig& aSimulcastConfig) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mSimulcastStreams.push_back(aSimulcastConfig);
-  MOZ_ASSERT(mSimulcastStreams.size() <= mConfig.number_of_streams);
-}
-
-size_t WebrtcVideoConduit::VideoEncoderConfigBuilder::StreamCount() const {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  return mSimulcastStreams.size();
-}
-
-void WebrtcVideoConduit::VideoEncoderConfigBuilder::ClearStreams() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mSimulcastStreams.clear();
 }
 
 }  // namespace mozilla
