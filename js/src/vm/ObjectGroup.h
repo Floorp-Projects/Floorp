@@ -252,7 +252,6 @@ class ObjectGroup : public gc::TenuredCell {
     return nullptr;
   }
 
-  TypeNewScript* anyNewScript(const AutoSweepObjectGroup& sweep);
   void detachNewScript(bool writeBarrier, ObjectGroup* replacement);
 
   ObjectGroupFlags flagsDontCheckGeneration() const { return flags_; }
