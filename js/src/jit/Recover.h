@@ -617,6 +617,9 @@ class RNewArray final : public RInstruction {
 };
 
 class RNewArrayCopyOnWrite final : public RInstruction {
+ private:
+  gc::InitialHeap initialHeap_;
+
  public:
   RINSTRUCTION_HEADER_NUM_OP_(NewArrayCopyOnWrite, 1)
 
