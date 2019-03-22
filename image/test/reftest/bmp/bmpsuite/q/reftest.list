@@ -82,7 +82,7 @@ fuzzy(0-1,0-996) == pal8os2-hs.bmp pal8.png
 # [We reject it. Chromium accepts it but draws nothing. Rejecting seems
 # preferable given that the color and pixel data must overlap, which can only
 # lead to rubbish results.]
-== wrapper.html?pal8os2sp.bmp about:blank
+fuzzy(0-245,0-8128) == wrapper.html?pal8os2sp.bmp about:blank
 
 # BMP: bihsize=64, 127 x 64, bpp=8, compression=0, colors=252
 # "My attempt to make an OS/2v2 bitmap."
