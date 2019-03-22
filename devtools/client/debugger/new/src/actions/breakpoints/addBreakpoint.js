@@ -5,7 +5,6 @@
 // @flow
 
 import {
-  breakpointExists,
   assertBreakpoint,
   createBreakpoint,
   getASTLocation,
@@ -36,12 +35,6 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
   const { location, generatedLocation } = breakpoint;
   const source = getSourceFromId(state, location.sourceId);
   const generatedSource = getSourceFromId(state, generatedLocation.sourceId);
-
-  if (breakpointExists(state, location)) {
-    const newBreakpoint = { ...breakpoint, location, generatedLocation };
-    assertBreakpoint(newBreakpoint);
-    return newBreakpoint;
-  }
 
   const breakpointLocation = makeBreakpointLocation(
     getState(),
