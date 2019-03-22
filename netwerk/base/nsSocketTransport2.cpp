@@ -7,6 +7,7 @@
 #include "nsSocketTransport2.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "nsIOService.h"
 #include "nsStreamUtils.h"
@@ -1352,8 +1353,8 @@ nsresult nsSocketTransport::InitiateSocket() {
   // create proxy via IOActivityMonitor
   IOActivityMonitor::MonitorSocket(fd);
 
-#if defined(FUZZING)
-  if (Preferences::GetBool("fuzzing.necko.enabled")) {
+#ifdef FUZZING
+  if (StaticPrefs::fuzzing_necko_enabled()) {
     rv = AttachFuzzyIOLayer(fd);
     if (NS_FAILED(rv)) {
       SOCKET_LOG(("Failed to attach fuzzing IOLayer [rv=%" PRIx32 "].\n",
