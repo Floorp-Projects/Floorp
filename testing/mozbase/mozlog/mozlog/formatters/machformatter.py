@@ -69,6 +69,17 @@ class MachFormatter(base.BaseFormatter):
         self.summary = SummaryHandler()
         self.summary_on_shutdown = summary_on_shutdown
 
+        message_handlers = {"colors": {
+            "on": self._enable_colors,
+            "off": self._disable_colors,
+        }, "summary_on_shutdown": {
+            "on": self._enable_summary_on_shutdown,
+            "off": self._disable_summary_on_shutdown
+        }}
+
+        for topic, handlers in message_handlers.items():
+            self.message_handler.register_message_handlers(topic, handlers)
+
     def __call__(self, data):
         self.summary(data)
 
@@ -78,6 +89,18 @@ class MachFormatter(base.BaseFormatter):
 
         time = self.color_formatter.time(format_seconds(self._time(data)))
         return "%s %s\n" % (time, s)
+
+    def _enable_colors(self):
+        self.disable_colors = False
+
+    def _disable_colors(self):
+        self.disable_colors = True
+
+    def _enable_summary_on_shutdown(self):
+        self.summary_on_shutdown = True
+
+    def _disable_summary_on_shutdown(self):
+        self.summary_on_shutdown = False
 
     def _get_test_id(self, data):
         test_id = data.get("test")
