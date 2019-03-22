@@ -656,6 +656,7 @@ def set_tier(config, tests):
                                          'linux32/debug',
                                          'linux32-nightly/opt',
                                          'linux32-devedition/opt',
+                                         'linux32-shippable/opt',
                                          'linux64/opt',
                                          'linux64-nightly/opt',
                                          'linux64/debug',
