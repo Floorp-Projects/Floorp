@@ -757,7 +757,9 @@
           <toolbarbutton id="PanelUI-fxa-menu-view-sidebar"
                          class="subviewbutton subviewbutton-iconic"
                          label="&appMenuRemoteTabs.sidebar.label;"
-                         oncommand="SidebarUI.toggle('viewTabsSidebar');"/>
+                         oncommand="SidebarUI.toggle('viewTabsSidebar');">
+            <observes element="sidebar-box" attribute="positionend"/>
+          </toolbarbutton>
           <toolbarseparator/>
           <toolbarbutton class="subviewbutton" label="&fxa.menu.connectAnotherDevice.label;" oncommand="gSync.openConnectAnotherDevice('fxa_discoverability_native');"/>
           <toolbarbutton class="subviewbutton" label="&fxa.menu.manageAccount.label;" oncommand="gSync.openFxAManagePage('fxa_discoverability_native');"/>
