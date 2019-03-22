@@ -6627,11 +6627,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
     case Unknown: {
       nsAutoString viewport;
       GetHeaderData(nsGkAtoms::viewport, viewport);
-      // We might early exit if the viewport is empty. Even if we don't,
-      // at the end of this case we'll note that it was empty. Later, when
-      // we're using the cached values, this will trigger alternate code paths.
-      bool viewportIsEmpty = viewport.IsEmpty();
-      if (viewportIsEmpty) {
+      if (viewport.IsEmpty()) {
         // If the docType specifies that we are on a site optimized for mobile,
         // then we want to return specially crafted defaults for the viewport
         // info.
@@ -6725,12 +6721,11 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       mValidMaxScale =
           !maxScaleStr.IsEmpty() && NS_SUCCEEDED(scaleMaxErrorCode);
 
-      mViewportType = viewportIsEmpty ? Empty : Specified;
+      mViewportType = Specified;
       mViewportOverflowType = ViewportOverflowType::NoOverflow;
       MOZ_FALLTHROUGH;
     }
     case Specified:
-    case Empty:
     default:
       LayoutDeviceToScreenScale effectiveMinScale = mScaleMinFloat;
       LayoutDeviceToScreenScale effectiveMaxScale = mScaleMaxFloat;
@@ -6835,28 +6830,18 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       // https://drafts.csswg.org/css-device-adapt/#resolve-width
       if (width == nsViewportInfo::Auto) {
         if (height == nsViewportInfo::Auto || aDisplaySize.height == 0) {
-          // What we do in this situation deviates somewhat from the spec. We
-          // want to consider the case where no viewport information has been
-          // provided, in which case we want to assume that the document is not
-          // optimized for aDisplaySize, and we should instead force a useful
-          // size.
-          if (mViewportType == Empty) {
-            // If we don't have any applicable viewport width constraints, this
-            // is most likely a desktop page written without mobile devices in
-            // mind. We use the desktop mode viewport for those pages by
-            // default, because a narrow viewport based on typical mobile device
-            // screen sizes (especially in portrait mode) will frequently break
-            // the layout of such pages. To keep text readable in that case, we
-            // rely on font inflation instead.
+          // If we don't have any applicable viewport width constraints, this is
+          // most likely a desktop page written without mobile devices in mind.
+          // We use the desktop mode viewport for those pages by default,
+          // because a narrow viewport based on typical mobile device screen
+          // sizes (especially in portrait mode) will frequently break the
+          // layout of such pages. To keep text readable in that case, we rely
+          // on font inflation instead.
 
-            // Divide by fullZoom to stretch CSS pixel size of viewport in order
-            // to keep device pixel size unchanged after full zoom applied.
-            // See bug 974242.
-            width = gfxPrefs::DesktopViewportWidth() / fullZoom;
-          } else {
-            // Some viewport information was provided; follow the spec.
-            width = displaySize.width;
-          }
+          // Divide by fullZoom to stretch CSS pixel size of viewport in order
+          // to keep device pixel size unchanged after full zoom applied.
+          // See bug 974242.
+          width = gfxPrefs::DesktopViewportWidth() / fullZoom;
         } else {
           width = height * aDisplaySize.width / aDisplaySize.height;
         }

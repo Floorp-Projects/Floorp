@@ -4480,7 +4480,7 @@ class Document : public nsINode,
   // Our update nesting level
   uint32_t mUpdateNestLevel;
 
-  enum ViewportType : uint8_t { DisplayWidthHeight, Specified, Unknown, Empty };
+  enum ViewportType : uint8_t { DisplayWidthHeight, Specified, Unknown };
 
   ViewportType mViewportType;
 

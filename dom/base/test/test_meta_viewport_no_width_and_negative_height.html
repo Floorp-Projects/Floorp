@@ -18,8 +18,9 @@
       await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
 
       let info = getViewportInfo(800, 480);
-      is(info.width, 800, "width should be the display width");
-      is(info.height, 480, "height should be the display height");
+      // See comments in test_meta_viewport_maximum_scale_2.html.
+      todo_is(info.width, 800, "width should be the display width");
+      todo_is(info.height, 480, "height should be the display height");
     });
   </script>
 </body>
