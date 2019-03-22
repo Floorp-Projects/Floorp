@@ -21,7 +21,7 @@
 
 #define MAX_COMMENT_LENGTH 500
 
-#if defined(XP_WIN32)
+#if defined(XP_WIN)
 
 #  include <windows.h>
 

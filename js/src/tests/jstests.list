@@ -31,6 +31,16 @@ skip script test262/built-ins/Function/prototype/restricted-property-arguments.j
 skip script test262/built-ins/Function/prototype/restricted-property-caller.js
 skip script test262/built-ins/ThrowTypeError/unique-per-realm-function-proto.js
 
+# https://github.com/tc39/ecma262/issues/1049
+# The "name" property is present on all functions. V8 and JSC agree, but the
+# spec and tests say anonymous functions simply have no own .name property. The
+# spec should change.
+skip script test262/built-ins/Proxy/revocable/revocation-function-name.js
+skip script test262/built-ins/Promise/reject-function-name.js
+skip script test262/built-ins/Promise/resolve-function-name.js
+skip script test262/built-ins/Promise/executor-function-name.js
+skip script test262/built-ins/Promise/all/resolve-element-function-name.js
+
 
 #########################################################################
 # Test262 tests disabled when features are only conditionally available #
@@ -996,15 +1006,6 @@ skip script test262/language/expressions/prefix-increment/S11.4.4_A6_T2.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1288457
 skip script test262/built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1296236
-skip script test262/built-ins/Proxy/revocable/revocation-function-name.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1296235
-skip script test262/built-ins/Promise/all/resolve-element-function-name.js
-skip script test262/built-ins/Promise/executor-function-name.js
-skip script test262/built-ins/Promise/reject-function-name.js
-skip script test262/built-ins/Promise/resolve-function-name.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=944846
 skip script test262/built-ins/Number/prototype/toExponential/return-values.js

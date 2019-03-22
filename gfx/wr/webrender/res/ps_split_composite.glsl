@@ -61,7 +61,7 @@ void main(void) {
     PictureTask dest_task = fetch_picture_task(ph.render_task_index);
     Transform transform = fetch_transform(ph.transform_id);
     ImageResource res = fetch_image_resource(ph.user_data.x);
-    ClipArea clip_area = fetch_clip_area(ph.clip_task_index);
+    ClipArea clip_area = fetch_clip_area(ph.user_data.w);
 
     vec2 dest_origin = dest_task.common_data.task_rect.p0 -
                        dest_task.content_origin;

@@ -110,7 +110,8 @@ void brush_vs(
     int prim_address,
     RectWithSize local_rect,
     RectWithSize segment_rect,
-    ivec4 user_data,
+    ivec4 prim_user_data,
+    int segment_user_data,
     mat4 transform,
     PictureTask pic_task,
     int brush_flags,
@@ -133,14 +134,14 @@ void brush_vs(
 #endif
 
     if (vFormat == YUV_FORMAT_PLANAR) {
-        write_uv_rect(user_data.x, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
-        write_uv_rect(user_data.y, f, TEX_SIZE(sColor1), vUv_U, vUvBounds_U);
-        write_uv_rect(user_data.z, f, TEX_SIZE(sColor2), vUv_V, vUvBounds_V);
+        write_uv_rect(prim_user_data.x, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
+        write_uv_rect(prim_user_data.y, f, TEX_SIZE(sColor1), vUv_U, vUvBounds_U);
+        write_uv_rect(prim_user_data.z, f, TEX_SIZE(sColor2), vUv_V, vUvBounds_V);
     } else if (vFormat == YUV_FORMAT_NV12) {
-        write_uv_rect(user_data.x, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
-        write_uv_rect(user_data.y, f, TEX_SIZE(sColor1), vUv_U, vUvBounds_U);
+        write_uv_rect(prim_user_data.x, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
+        write_uv_rect(prim_user_data.y, f, TEX_SIZE(sColor1), vUv_U, vUvBounds_U);
     } else if (vFormat == YUV_FORMAT_INTERLEAVED) {
-        write_uv_rect(user_data.x, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
+        write_uv_rect(prim_user_data.x, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
     }
 }
 #endif

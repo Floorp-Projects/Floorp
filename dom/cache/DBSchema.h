@@ -22,7 +22,6 @@ namespace cache {
 
 class CacheQueryParams;
 class CacheRequest;
-class CacheRequestOrVoid;
 class CacheResponse;
 struct SavedRequest;
 struct SavedResponse;
@@ -61,7 +60,7 @@ nsresult CacheMatch(mozIStorageConnection* aConn, CacheId aCacheId,
                     SavedResponse* aSavedResponseOut);
 
 nsresult CacheMatchAll(mozIStorageConnection* aConn, CacheId aCacheId,
-                       const CacheRequestOrVoid& aRequestOrVoid,
+                       const Maybe<CacheRequest>& aMaybeRequest,
                        const CacheQueryParams& aParams,
                        nsTArray<SavedResponse>& aSavedResponsesOut);
 
@@ -78,7 +77,7 @@ nsresult CacheDelete(mozIStorageConnection* aConn, CacheId aCacheId,
                      int64_t* aDeletedPaddingSizeOut, bool* aSuccessOut);
 
 nsresult CacheKeys(mozIStorageConnection* aConn, CacheId aCacheId,
-                   const CacheRequestOrVoid& aRequestOrVoid,
+                   const Maybe<CacheRequest>& aMaybeRequest,
                    const CacheQueryParams& aParams,
                    nsTArray<SavedRequest>& aSavedRequestsOut);
 

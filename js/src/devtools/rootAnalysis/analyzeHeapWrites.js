@@ -28,7 +28,6 @@ function checkExternalFunction(entry)
         "atof",
         /memchr/,
         "strlen",
-        "Servo_ComputedValues_EqualCustomProperties",
         /Servo_DeclarationBlock_GetCssText/,
         "Servo_GetArcStringData",
         "Servo_IsWorkerThread",

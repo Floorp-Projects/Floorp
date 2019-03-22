@@ -101,7 +101,7 @@ void RegisterChildCrashAnnotationFileDescriptor(ProcessId aProcess,
 
 void DeregisterChildCrashAnnotationFileDescriptor(ProcessId aProcess) {}
 
-#ifdef XP_WIN32
+#ifdef XP_WIN
 nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

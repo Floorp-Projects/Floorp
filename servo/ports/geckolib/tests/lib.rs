@@ -13,10 +13,8 @@
 
 extern crate atomic_refcell;
 extern crate cssparser;
-#[macro_use]
 extern crate cstr;
 extern crate geckoservo;
-#[macro_use]
 extern crate log;
 extern crate malloc_size_of;
 extern crate num_traits;
@@ -25,19 +23,10 @@ extern crate smallvec;
 #[cfg(target_pointer_width = "64")]
 #[macro_use]
 extern crate size_of_test;
-#[macro_use]
+#[cfg_attr(target_pointer_width = "64", macro_use)]
 extern crate style;
 extern crate style_traits;
 
 #[cfg(target_pointer_width = "64")]
 mod size_of;
 mod specified_values;
-
-mod servo_function_signatures;
-
-use style::*;
-
-#[allow(dead_code, improper_ctypes)]
-mod bindings {
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}

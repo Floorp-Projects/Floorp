@@ -87,7 +87,7 @@
 #else
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
 #endif
-#ifdef XP_WIN32
+#ifdef XP_WIN
 @BINPATH@/plugin-hang-ui@BIN_SUFFIX@
 #if MOZ_PACKAGE_MSVC_DLLS
 @BINPATH@/@MSVC_C_RUNTIME_DLL@
@@ -151,7 +151,7 @@
 
 ; [Components]
 #ifdef ACCESSIBILITY
-#ifdef XP_WIN32
+#ifdef XP_WIN
 @BINPATH@/Accessible.tlb
 @BINPATH@/AccessibleHandler.dll
 @BINPATH@/AccessibleMarshal.dll
