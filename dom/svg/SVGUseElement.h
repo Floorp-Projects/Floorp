@@ -98,6 +98,8 @@ class SVGUseElement final : public SVGUseElementBase,
                         nsIPrincipal* aSubjectPrincipal, bool aNotify) final;
 
  protected:
+  bool IsCyclicReferenceTo(const Element& aTarget) const;
+
   /**
    * Helper that provides a reference to the element with the ID that is
    * referenced by the 'use' element's 'href' attribute, and that will update
@@ -145,7 +147,7 @@ class SVGUseElement final : public SVGUseElementBase,
   SVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 
-  nsCOMPtr<nsIContent> mOriginal;  // if we've been cloned, our "real" copy
+  RefPtr<SVGUseElement> mOriginal;  // if we've been cloned, our "real" copy
   ElementTracker mReferencedElementTracker;
   RefPtr<URLExtraData> mContentURLData;  // URL data for its anonymous content
 };
