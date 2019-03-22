@@ -88,7 +88,7 @@ advantages:
   (sub)manifests as appropriate to your needs.
 
 Manifest Format
-````````
+```````````````
 
 Manifests are .ini file with the section names denoting the path
 relative to the manifest:
