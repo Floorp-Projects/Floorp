@@ -1,0 +1,5 @@
+<script>
+  window.indexedDB.open("hello").onsuccess = function(event) {
+    event.target.result.createMutableFile("");
+  }
+</script>
