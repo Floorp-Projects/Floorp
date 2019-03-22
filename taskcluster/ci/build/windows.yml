@@ -381,6 +381,48 @@ win32-nightly/opt:
         - win64-nasm
         - win64-node
 
+
+win64-shippable/opt:
+    description: "Win64 Shippable"
+    index:
+        product: firefox
+        job-name: win64-opt
+        type: shippable
+    attributes:
+        nightly: true
+        enable-full-crashsymbols: true
+    shipping-phase: build
+    shipping-product: firefox
+    treeherder:
+        platform: windows2012-64-shippable/opt
+        symbol: B
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 10800
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+    run:
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win64.py
+            - taskcluster_nightly.py
+        extra-config:
+            stage_platform: win64
+    run-on-projects: []  # Don't run by default yet
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-rust-size
+        - win64-cbindgen
+        - win64-nasm
+        - win64-node
+
+
 win64-nightly/opt:
     description: "Win64 Nightly"
     index:
