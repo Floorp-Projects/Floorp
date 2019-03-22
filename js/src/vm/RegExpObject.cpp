@@ -22,6 +22,7 @@
 #endif
 #include "irregexp/RegExpParser.h"
 #include "jit/VMFunctions.h"
+#include "js/RegExp.h"
 #include "js/StableStringChars.h"
 #include "util/StringBuffer.h"
 #include "vm/MatchPairs.h"
@@ -48,11 +49,16 @@ using mozilla::PodCopy;
 
 using JS::AutoCheckCannotGC;
 
-JS_STATIC_ASSERT(IgnoreCaseFlag == JSREG_FOLD);
-JS_STATIC_ASSERT(GlobalFlag == JSREG_GLOB);
-JS_STATIC_ASSERT(MultilineFlag == JSREG_MULTILINE);
-JS_STATIC_ASSERT(StickyFlag == JSREG_STICKY);
-JS_STATIC_ASSERT(UnicodeFlag == JSREG_UNICODE);
+static_assert(IgnoreCaseFlag == JS::RegExpFlags::IgnoreCase,
+              "public/internal /i flag bits must agree");
+static_assert(GlobalFlag == JS::RegExpFlags::Global,
+              "public/internal /g flag bits must agree");
+static_assert(MultilineFlag == JS::RegExpFlags::Multiline,
+              "public/internal /m flag bits must agree");
+static_assert(StickyFlag == JS::RegExpFlags::Sticky,
+              "public/internal /y flag bits must agree");
+static_assert(UnicodeFlag == JS::RegExpFlags::Unicode,
+              "public/internal /u flag bits must agree");
 
 RegExpObject* js::RegExpAlloc(JSContext* cx, NewObjectKind newKind,
                               HandleObject proto /* = nullptr */) {
@@ -1431,4 +1437,135 @@ JS::ubi::Node::Size JS::ubi::Concrete<RegExpShared>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {
   return js::gc::Arena::thingSize(gc::AllocKind::REGEXP_SHARED) +
          get().sizeOfExcludingThis(mallocSizeOf);
+}
+
+/*
+ * Regular Expressions.
+ */
+JS_PUBLIC_API JSObject* JS::NewRegExpObject(JSContext* cx, const char* bytes,
+                                            size_t length, unsigned flags) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  UniqueTwoByteChars chars(InflateString(cx, bytes, length));
+  if (!chars) {
+    return nullptr;
+  }
+
+  return RegExpObject::create(cx, chars.get(), length, RegExpFlag(flags),
+                              GenericObject);
+}
+
+JS_PUBLIC_API JSObject* JS::NewUCRegExpObject(JSContext* cx,
+                                              const char16_t* chars,
+                                              size_t length, unsigned flags) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  return RegExpObject::create(cx, chars, length, RegExpFlag(flags),
+                              GenericObject);
+}
+
+JS_PUBLIC_API bool JS::SetRegExpInput(JSContext* cx, HandleObject obj,
+                                      HandleString input) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(input);
+
+  Handle<GlobalObject*> global = obj.as<GlobalObject>();
+  RegExpStatics* res = GlobalObject::getRegExpStatics(cx, global);
+  if (!res) {
+    return false;
+  }
+
+  res->reset(input);
+  return true;
+}
+
+JS_PUBLIC_API bool JS::ClearRegExpStatics(JSContext* cx, HandleObject obj) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  MOZ_ASSERT(obj);
+
+  Handle<GlobalObject*> global = obj.as<GlobalObject>();
+  RegExpStatics* res = GlobalObject::getRegExpStatics(cx, global);
+  if (!res) {
+    return false;
+  }
+
+  res->clear();
+  return true;
+}
+
+JS_PUBLIC_API bool JS::ExecuteRegExp(JSContext* cx, HandleObject obj,
+                                     HandleObject reobj, char16_t* chars,
+                                     size_t length, size_t* indexp, bool test,
+                                     MutableHandleValue rval) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  Handle<GlobalObject*> global = obj.as<GlobalObject>();
+  RegExpStatics* res = GlobalObject::getRegExpStatics(cx, global);
+  if (!res) {
+    return false;
+  }
+
+  RootedLinearString input(cx, NewStringCopyN<CanGC>(cx, chars, length));
+  if (!input) {
+    return false;
+  }
+
+  return ExecuteRegExpLegacy(cx, res, reobj.as<RegExpObject>(), input, indexp,
+                             test, rval);
+}
+
+JS_PUBLIC_API bool JS::ExecuteRegExpNoStatics(JSContext* cx, HandleObject obj,
+                                              char16_t* chars, size_t length,
+                                              size_t* indexp, bool test,
+                                              MutableHandleValue rval) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  RootedLinearString input(cx, NewStringCopyN<CanGC>(cx, chars, length));
+  if (!input) {
+    return false;
+  }
+
+  return ExecuteRegExpLegacy(cx, nullptr, obj.as<RegExpObject>(), input, indexp,
+                             test, rval);
+}
+
+JS_PUBLIC_API bool JS::ObjectIsRegExp(JSContext* cx, HandleObject obj,
+                                      bool* isRegExp) {
+  cx->check(obj);
+
+  ESClass cls;
+  if (!GetBuiltinClass(cx, obj, &cls)) {
+    return false;
+  }
+
+  *isRegExp = cls == ESClass::RegExp;
+  return true;
+}
+
+JS_PUBLIC_API unsigned JS::GetRegExpFlags(JSContext* cx, HandleObject obj) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  RegExpShared* shared = RegExpToShared(cx, obj);
+  if (!shared) {
+    return false;
+  }
+  return shared->getFlags();
+}
+
+JS_PUBLIC_API JSString* JS::GetRegExpSource(JSContext* cx, HandleObject obj) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  RegExpShared* shared = RegExpToShared(cx, obj);
+  if (!shared) {
+    return nullptr;
+  }
+  return shared->getSource();
 }
