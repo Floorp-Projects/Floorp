@@ -2,11 +2,11 @@ var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     `(module
        (memory (export "mem") 1 1)
        (func (export "store_32_1") (param $ptr i32)
-         (i64.store32 align=1 (get_local $ptr) (i64.const 0xabba1337)))
+         (i64.store32 align=1 (local.get $ptr) (i64.const 0xabba1337)))
        (func (export "store_32_2") (param $ptr i32)
-         (i64.store32 align=2 (get_local $ptr) (i64.const 0xabba1337)))
+         (i64.store32 align=2 (local.get $ptr) (i64.const 0xabba1337)))
        (func (export "store_16") (param $ptr i32)
-         (i64.store16 align=1 (get_local $ptr) (i64.const 0x1337))))`))).exports;
+         (i64.store16 align=1 (local.get $ptr) (i64.const 0x1337))))`))).exports;
 
 var mem = new Uint8Array(ins.mem.buffer);
 

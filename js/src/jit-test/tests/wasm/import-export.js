@@ -408,7 +408,7 @@ assertEq(e4.baz, e4.tbl.get(2));
 
 // i64 is fully allowed for imported wasm functions
 
-var code1 = wasmTextToBinary('(module (func $exp (param i64) (result i64) (i64.add (get_local 0) (i64.const 10))) (export "exp" $exp))');
+var code1 = wasmTextToBinary('(module (func $exp (param i64) (result i64) (i64.add (local.get 0) (i64.const 10))) (export "exp" $exp))');
 var e1 = new Instance(new Module(code1)).exports;
 var code2 = wasmTextToBinary('(module (import $i "a" "b" (param i64) (result i64)) (func $f (result i32) (i32.wrap/i64 (call $i (i64.const 42)))) (export "f" $f))');
 var e2 = new Instance(new Module(code2), {a:{b:e1.exp}}).exports;
@@ -462,7 +462,7 @@ var m = new Module(wasmTextToBinary(`
         (data (i32.const 0) "\\0a\\0b")
         (data (i32.const 100) "\\0c\\0d")
         (func $get (param $p i32) (result i32)
-            (i32.load8_u (get_local $p)))
+            (i32.load8_u (local.get $p)))
         (export "get" $get))
 `));
 var mem = new Memory({initial:1, maximum:1});
@@ -487,7 +487,7 @@ var m = new Module(wasmTextToBinary(`
     (module
         (import "glob" "a" (global i32))
         (memory 1)
-        (data (get_global 0) "\\0a\\0b"))
+        (data (global.get 0) "\\0a\\0b"))
 `));
 assertEq(new Instance(m, {glob:{a:0}}) instanceof Instance, true);
 assertEq(new Instance(m, {glob:{a:(64*1024 - 2)}}) instanceof Instance, true);
@@ -522,8 +522,8 @@ var m = new Module(wasmTextToBinary(`
         (func $g)
         (data (i32.const 0) "\\01")
         (elem (i32.const 0) $f)
-        (data (get_global $memOff) "\\02")
-        (elem (get_global $tblOff) $g)
+        (data (global.get $memOff) "\\02")
+        (elem (global.get $tblOff) $g)
         (export "f" $f)
         (export "g" $g))
 `));
@@ -678,7 +678,7 @@ assertEq(tbl.get(3)(), undefined);
 
 // Cross-instance calls
 
-var i1 = new Instance(new Module(wasmTextToBinary(`(module (func) (func (param i32) (result i32) (i32.add (get_local 0) (i32.const 1))) (func) (export "f" 1))`)));
+var i1 = new Instance(new Module(wasmTextToBinary(`(module (func) (func (param i32) (result i32) (i32.add (local.get 0) (i32.const 1))) (func) (export "f" 1))`)));
 var i2 = new Instance(new Module(wasmTextToBinary(`(module (import $imp "a" "b" (param i32) (result i32)) (func $g (result i32) (call $imp (i32.const 13))) (export "g" $g))`)), {a:{b:i1.exports.f}});
 assertEq(i2.exports.g(), 14);
 
@@ -696,7 +696,7 @@ var i2 = new Instance(new Module(wasmTextToBinary(`(module
     (elem (i32.const 0) $imp $def)
     (func $def (result i32) (i32.load (i32.const 0)))
     (type $v2i (func (result i32)))
-    (func $call (param i32) (result i32) (call_indirect $v2i (get_local 0)))
+    (func $call (param i32) (result i32) (call_indirect $v2i (local.get 0)))
     (export "call" $call)
 )`)), {a:{b:i1.exports.f}});
 assertEq(i2.exports.call(0), 0x42);
@@ -706,11 +706,11 @@ var m = new Module(wasmTextToBinary(`(module
     (import $val "a" "val" (global i32))
     (import $next "a" "next" (result i32))
     (memory 1)
-    (func $start (i32.store (i32.const 0) (get_global $val)))
+    (func $start (i32.store (i32.const 0) (global.get $val)))
     (start $start)
     (func $call (result i32)
         (i32.add
-            (get_global $val)
+            (global.get $val)
             (i32.add
                 (i32.load (i32.const 0))
                 (call $next))))
@@ -760,7 +760,7 @@ assertEq(e.call(), 1090);
         (import $missingThreeArgs "a" "sum" (result i32))
 
         (func (export "foo") (param i32) (result i32)
-         get_local 0
+         local.get 0
          call $ffi
         )
 
@@ -769,13 +769,13 @@ assertEq(e.call(), 1090);
         )
 
         (func (export "missTwo") (param i32) (result i32)
-         get_local 0
+         local.get 0
          call $missingTwoArgs
         )
 
         (func (export "missOne") (param i32) (param i32) (result i32)
-         get_local 0
-         get_local 1
+         local.get 0
+         local.get 1
          call $missingOneArg
         )
     )`, imports).exports;

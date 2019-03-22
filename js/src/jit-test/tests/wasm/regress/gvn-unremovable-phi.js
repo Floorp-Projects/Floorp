@@ -3,14 +3,14 @@ wasmEvalText(`(module
   (func $f (param $p i32)
     (local $x i32) (local $y i32)
     loop $top
-      get_local $x
-      get_local $p
-      get_local $x
+      local.get $x
+      local.get $p
+      local.get $x
       br_if $top
       i32.const 1
       tee_local $p
-      get_local $y
-      set_local $x
+      local.get $y
+      local.set $x
       i32.add
       call $f
       br_if $top

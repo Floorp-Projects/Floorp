@@ -14,7 +14,7 @@ const { exports } = wasmEvalText(`
     (module
         (import "global" "func" (param i32) (result i32))
         (func (export "func_0") (param i32)(result i32)
-         get_local 0
+         local.get 0
          call 0
         )
     )

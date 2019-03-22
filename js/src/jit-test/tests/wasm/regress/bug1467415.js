@@ -13,12 +13,12 @@ let mt = `
     (local i32)
     (local i32)
     (block i32
-      (set_local 0 (get_global 0))
+      (local.set 0 (global.get 0))
       (block i32
-        (set_global 1 (i32.const 37))
+        (global.set 1 (i32.const 37))
         (block i32
-          (set_local 1 (get_global 0))
-          (i32.add (get_local 0) (get_local 1)))))))
+          (local.set 1 (global.get 0))
+          (i32.add (local.get 0) (local.get 1)))))))
 `;
 
 let glob = new WebAssembly.Global({value:'i32', mutable:true}, 88);

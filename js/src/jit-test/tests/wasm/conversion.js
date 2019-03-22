@@ -2,7 +2,7 @@ function testConversion0(resultType, opcode, paramType, op, expect) {
     if (resultType === 'i64') {
         wasmFullPassI64(`(module
             (func $run (param ${paramType}) (result ${resultType})
-                (${opcode} (get_local 0))
+                (${opcode} (local.get 0))
             )
         )`, expect, {}, `${paramType}.const ${op}`);
 
@@ -15,7 +15,7 @@ function testConversion0(resultType, opcode, paramType, op, expect) {
     } else if (paramType === 'i64') {
         wasmFullPass(`(module
            (func $f (param ${paramType}) (result ${resultType})
-            (${opcode} (get_local 0))
+            (${opcode} (local.get 0))
            )
            (func (export "run") (result ${resultType})
             i64.const ${op}
@@ -25,7 +25,7 @@ function testConversion0(resultType, opcode, paramType, op, expect) {
     } else {
         wasmFullPass(`(module
            (func (param ${paramType}) (result ${resultType})
-            (${opcode} (get_local 0)))
+            (${opcode} (local.get 0)))
             (export "run" 0)
         )`, expect, {}, op);
     }
@@ -33,14 +33,14 @@ function testConversion0(resultType, opcode, paramType, op, expect) {
     for (var bad of ['i32', 'f32', 'f64', 'i64']) {
         if (bad !== resultType) {
             wasmFailValidateText(
-                `(module (func (param ${paramType}) (result ${bad}) (${opcode} (get_local 0))))`,
+                `(module (func (param ${paramType}) (result ${bad}) (${opcode} (local.get 0))))`,
                 mismatchError(resultType, bad)
             );
         }
 
         if (bad !== paramType) {
             wasmFailValidateText(
-                `(module (func (param ${bad}) (result ${resultType}) (${opcode} (get_local 0))))`,
+                `(module (func (param ${bad}) (result ${resultType}) (${opcode} (local.get 0))))`,
                 mismatchError(bad, paramType)
             );
         }
@@ -60,11 +60,11 @@ function testTrap(resultType, opcode, paramType, op) {
         (func
             (param ${paramType})
             (result ${resultType})
-            (${resultType}.${opcode}/${paramType} (get_local 0))
+            (${resultType}.${opcode}/${paramType} (local.get 0))
         )
         (func
             (param ${paramType})
-            get_local 0
+            local.get 0
             call 0
             drop
         )
@@ -367,4 +367,4 @@ testConversion('f64', 'promote', 'f32', 40.1, 40.099998474121094);
 
 // Non-canonical NaNs.
 wasmFullPass('(module (func (result i32) (i32.reinterpret/f32 (f32.demote/f64 (f64.const -nan:0x4444444444444)))) (export "run" 0))', -0x1dddde);
-wasmFullPass('(module (func (result i32) (local i64) (set_local 0 (i64.reinterpret/f64 (f64.promote/f32 (f32.const -nan:0x222222)))) (i32.xor (i32.wrap/i64 (get_local 0)) (i32.wrap/i64 (i64.shr_u (get_local 0) (i64.const 32))))) (export "run" 0))', -0x4003bbbc);
+wasmFullPass('(module (func (result i32) (local i64) (local.set 0 (i64.reinterpret/f64 (f64.promote/f32 (f32.const -nan:0x222222)))) (i32.xor (i32.wrap/i64 (local.get 0)) (i32.wrap/i64 (i64.shr_u (local.get 0) (i64.const 32))))) (export "run" 0))', -0x4003bbbc);

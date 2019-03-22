@@ -399,6 +399,33 @@ inline bool IsInternalFunctionObject(JSObject& funobj) {
   return fun.isInterpreted() && !fun.environment();
 }
 
+inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
+                                      const Class* clasp) {
+  if (newKind == NurseryAllocatedProxy) {
+    MOZ_ASSERT(clasp->isProxy());
+    MOZ_ASSERT(clasp->hasFinalize());
+    MOZ_ASSERT(!CanNurseryAllocateFinalizedClass(clasp));
+    return gc::DefaultHeap;
+  }
+  if (newKind != GenericObject) {
+    return gc::TenuredHeap;
+  }
+  if (clasp->hasFinalize() && !CanNurseryAllocateFinalizedClass(clasp)) {
+    return gc::TenuredHeap;
+  }
+  return gc::DefaultHeap;
+}
+
+inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
+                                      ObjectGroup* group) {
+  AutoSweepObjectGroup sweep(group);
+  if (group->shouldPreTenure(sweep)) {
+    return gc::TenuredHeap;
+  }
+
+  return GetInitialHeap(newKind, group->clasp());
+}
+
 /*
  * Make an object with the specified prototype. If parent is null, it will
  * default to the prototype's global if the prototype is non-null.

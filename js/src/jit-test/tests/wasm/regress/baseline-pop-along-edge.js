@@ -1,7 +1,7 @@
 // Bug 1316181
 
 // There are locals with different values here to ensure that the
-// get_local at the end picks up the right one even if the stack might
+// local.get at the end picks up the right one even if the stack might
 // have become unbalanced by a failure to adjust SP along the branch
 // edge.  The logic is that we use SP-relative addressing, and if the
 // actual SP is not what the compiler thinks it is we will read
@@ -19,16 +19,16 @@ var o = wasmEvalText(
        (local $v6 i32)
        (local $v7 i32)
        (local $res i32)
-       (set_local $v0 (i32.const 0xDEADBEEF))
-       (set_local $v1 (i32.const 0xFDEADBEE))
-       (set_local $v2 (i32.const 0xEFDEADBE))
-       (set_local $v3 (i32.const 0xEEFDEADB))
-       (set_local $v4 (i32.const 0xBEEFDEAD))
-       (set_local $v5 (i32.const 0xDBEEFDEA))
-       (set_local $v6 (i32.const 0xADBEEFDE))
-       (set_local $v7 (i32.const 0xEADBEEFD))
+       (local.set $v0 (i32.const 0xDEADBEEF))
+       (local.set $v1 (i32.const 0xFDEADBEE))
+       (local.set $v2 (i32.const 0xEFDEADBE))
+       (local.set $v3 (i32.const 0xEEFDEADB))
+       (local.set $v4 (i32.const 0xBEEFDEAD))
+       (local.set $v5 (i32.const 0xDBEEFDEA))
+       (local.set $v6 (i32.const 0xADBEEFDE))
+       (local.set $v7 (i32.const 0xEADBEEFD))
        (block $b
-	(set_local $res
+	(local.set $res
 	 (i32.add
 	  (i32.add (i32.const 1) (i32.const 2))
 	  (i32.add
@@ -60,7 +60,7 @@ var o = wasmEvalText(
 		       (i32.add
 			(i32.add (i32.const 29) (i32.const 30))
 			(br_if $b (i32.const 31) (i32.const 1)))))))))))))))))))
-       (return (get_local $v3)))
+       (return (local.get $v3)))
       (export "a" 0))`).exports;
 
 assertEq(o["a"](), 0xEEFDEADB|0);

@@ -37,7 +37,7 @@ function testCached(code, imports, test) {
 
 testCached(`(module
     (func $test (param i64) (result f64)
-        get_local 0
+        local.get 0
         f64.convert_u/i64
     )
     (func (export "run") (result i32)
@@ -68,7 +68,7 @@ testCached(
        (func $t4 (type $T) (i32.const 40))
        (table funcref (elem $t1 $t2 $t3 $t4))
        (func (export "run") (param i32) (result i32)
-         (call_indirect $T (get_local 0))))`,
+         (call_indirect $T (local.get 0))))`,
     {'':{ t1() { return 10 }, t2() { return 20 } }},
     i => {
         assertEq(i.exports.run(0), 10);

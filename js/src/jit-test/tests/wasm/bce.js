@@ -67,12 +67,12 @@ function loadTwiceModule(type, ext, offset, align) {
          (drop (${type}.load${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
-          (get_local 0)
+          (local.get 0)
          ))
          (${type}.load${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
-          (get_local 1)
+          (local.get 1)
          )
        ) (export "" 0))`
     ).exports[""];
@@ -89,12 +89,12 @@ function loadTwiceSameBasePlusConstModule(type, ext, offset, align, addConst) {
          (drop (${type}.load${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
-          (get_local 0)
+          (local.get 0)
          ))
          (${type}.load${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
-          (i32.add (get_local 0) (i32.const ${addConst}))
+          (i32.add (local.get 0) (i32.const ${addConst}))
          )
        ) (export "" 0))`
     ).exports[""];
@@ -111,12 +111,12 @@ function loadTwiceSameBasePlusNonConstModule(type, ext, offset, align) {
          (drop (${type}.load${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
-          (get_local 0)
+          (local.get 0)
          ))
          (${type}.load${ext}
           offset=${offset}
           ${align != 0 ? 'align=' + align : ''}
-          (i32.add (get_local 0) (get_local 1))
+          (i32.add (local.get 0) (local.get 1))
          )
        ) (export "" 0))`
     ).exports[""];

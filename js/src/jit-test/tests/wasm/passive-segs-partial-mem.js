@@ -23,7 +23,7 @@ function mem_fill(min, max, shared, backup, write=backup*2) {
         `(module
            (memory (export "mem") ${min} ${max} ${shared})
            (func (export "run") (param $offs i32) (param $val i32) (param $len i32)
-             (memory.fill (get_local $offs) (get_local $val) (get_local $len))))`);
+             (memory.fill (local.get $offs) (local.get $val) (local.get $len))))`);
     // A fill past the end should throw *and* have filled all the way up to the end
     let offs = min*PAGESIZE - backup;
     let val = 37;
@@ -60,7 +60,7 @@ function mem_init(min, max, shared, backup, write) {
            (memory (export "mem") ${min} ${max} ${shared})
            (data passive "\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42")
            (func (export "run") (param $offs i32) (param $len i32)
-             (memory.init 0 (get_local $offs) (i32.const 0) (get_local $len))))`);
+             (memory.init 0 (local.get $offs) (i32.const 0) (local.get $len))))`);
     // A fill writing past the end of the memory should throw *and* have filled
     // all the way up to the end.
     //
@@ -118,7 +118,7 @@ function mem_copy(min, max, shared, srcOffs, targetOffs, len, copyDown=false) {
         `(module
            (memory (export "mem") ${min} ${max} ${shared})
            (func (export "run") (param $targetOffs i32) (param $srcOffs i32) (param $len i32)
-             (memory.copy (get_local $targetOffs) (get_local $srcOffs) (get_local $len))))`);
+             (memory.copy (local.get $targetOffs) (local.get $srcOffs) (local.get $len))))`);
 
     let v = new Uint8Array(ins.exports.mem.buffer);
 

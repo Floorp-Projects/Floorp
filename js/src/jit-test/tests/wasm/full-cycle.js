@@ -1,5 +1,5 @@
 wasmFullPass(`(module
-    (func $test (result i32) (param i32) (param i32) (i32.add (get_local 0) (get_local 1)))
+    (func $test (result i32) (param i32) (param i32) (i32.add (local.get 0) (local.get 1)))
     (func $run (result i32) (call $test (i32.const 1) (i32.const ${Math.pow(2, 31) - 1})))
     (export "run" $run)
 )`, -Math.pow(2, 31));
@@ -23,7 +23,7 @@ wasmFullPass(`
 (module
   (import "env" "a" (global $a i32))
   (import "env" "b" (func $b (param i32) (result i32)))
-  (func (export "run") (param $0 i32) (result i32) get_local 0 call $b)
+  (func (export "run") (param $0 i32) (result i32) local.get 0 call $b)
 )`, 43, { env: { a: 1337, b: x => x+1 } }, 42);
 
 // Global section.
@@ -31,16 +31,16 @@ wasmFullPass(`(module
  (import $imported "globals" "x" (global i32))
  (global $mut_local (mut i32) (i32.const 0))
  (global $imm_local i32 (i32.const 37))
- (global $imm_local_2 i32 (get_global 0))
+ (global $imm_local_2 i32 (global.get 0))
  (func $get (result i32)
   i32.const 13
-  set_global $mut_local
-  get_global $imported
-  get_global $mut_local
+  global.set $mut_local
+  global.get $imported
+  global.get $mut_local
   i32.add
-  get_global $imm_local
+  global.get $imm_local
   i32.add
-  get_global $imm_local_2
+  global.get $imm_local_2
   i32.add
  )
  (export "run" $get)
@@ -79,7 +79,7 @@ wasmFullPass(`(module
     (elem (i32.const 0) $baz $bar)
     (elem (i32.const 2) $foo)
     (func (export "run") (param i32) (result i32)
-        get_local 0
+        local.get 0
         call_indirect $t
     )
 )`, 3, {}, 0);
@@ -95,7 +95,7 @@ wasmFullPass(`(module
     (elem (i32.const 0) $baz $bar)
     (elem (i32.const 2) $foo)
     (func (export "run") (param i32) (result i32)
-        get_local 0
+        local.get 0
         call_indirect $t
     )
 )`, 3, {"":{table}}, 0);
@@ -104,14 +104,14 @@ wasmFullPass(`(module
 wasmFullPass(`(module
     (global $g (mut i32) (i32.const 0))
     (func $start
-        get_global $g
+        global.get $g
         i32.const 1
         i32.add
-        set_global $g
+        global.set $g
     )
     (start $start)
     (func (export "run") (result i32)
-        get_global $g
+        global.get $g
     )
 )`, 1);
 
@@ -125,22 +125,22 @@ for (let [p, result] of [
     wasmFullPass(`(module
         (func (export "run") (result i32) (param $p i32) (local $n i32)
             i32.const 0
-            set_local $n
+            local.set $n
             block $c block $b block $a
-                get_local $p
+                local.get $p
                 br_table $a $b $c
             end $a
-                get_local $n
+                local.get $n
                 i32.const 1
                 i32.add
-                set_local $n
+                local.set $n
             end $b
-                get_local $n
+                local.get $n
                 i32.const 2
                 i32.add
-                set_local $n
+                local.set $n
             end $c
-            get_local $n
+            local.get $n
             i32.const 4
             i32.add
         )

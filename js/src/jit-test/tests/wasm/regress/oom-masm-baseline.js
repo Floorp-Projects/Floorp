@@ -8,7 +8,7 @@ try {
     var bin = wasmTextToBinary(
 	`(module (func (result i32) (param f64) (param f32)
                 i64.const 0
-                get_local 0
+                local.get 0
                 drop
                 i32.wrap/i64
                 f64.const 0
