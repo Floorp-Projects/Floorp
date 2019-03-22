@@ -77,25 +77,6 @@ class TrackEncoder {
   virtual void NotifyEndOfStream() = 0;
 
   /**
-   * MediaStreamGraph notifies us about the time of the track's start.
-   * This gets called on the MediaEncoder thread after a dispatch.
-   */
-  virtual void SetStartOffset(StreamTime aStartOffset) = 0;
-
-  /**
-   * Dispatched from MediaStreamGraph when it has run an iteration where the
-   * input track of the track this TrackEncoder is associated with didn't have
-   * any data.
-   */
-  virtual void AdvanceBlockedInput(StreamTime aDuration) = 0;
-
-  /**
-   * MediaStreamGraph notifies us about the duration of data that has just been
-   * processed. This gets called on the MediaEncoder thread after a dispatch.
-   */
-  virtual void AdvanceCurrentTime(StreamTime aDuration) = 0;
-
-  /**
    * Creates and sets up meta data for a specific codec, called on the worker
    * thread.
    */
@@ -188,11 +169,6 @@ class TrackEncoder {
    */
   bool mCanceled;
 
-  /**
-   * The latest current time reported to us from the MSG.
-   */
-  StreamTime mCurrentTime;
-
   // How many times we have tried to initialize the encoder.
   uint32_t mInitCounter;
   StreamTime mNotInitDuration;
@@ -218,17 +194,17 @@ class AudioTrackEncoder : public TrackEncoder {
       : TrackEncoder(aTrackRate),
         mChannels(0),
         mSamplingRate(0),
-        mAudioBitrate(0),
-        mDirectConnected(false) {}
+        mAudioBitrate(0) {}
 
   /**
-   * Suspends encoding from mCurrentTime, i.e., all audio data until the next
-   * Resume() will be dropped.
+   * Suspends encoding from now, i.e., all future audio data received through
+   * AppendAudioSegment() until the next Resume() will be dropped.
    */
   void Suspend(TimeStamp aTime) override;
 
   /**
-   * Resumes encoding starting at mCurrentTime.
+   * Resumes encoding starting now, i.e., data from the next
+   * AppendAudioSegment() will get encoded.
    */
   void Resume(TimeStamp aTime) override;
 
@@ -238,8 +214,8 @@ class AudioTrackEncoder : public TrackEncoder {
   void AppendAudioSegment(AudioSegment&& aSegment);
 
   /**
-   * Takes track data from the last time TakeTrackData ran until mCurrentTime
-   * and moves it to aSegment.
+   * Takes all track data that has been played out from the last time
+   * TakeTrackData ran and moves it to aSegment.
    */
   void TakeTrackData(AudioSegment& aSegment);
 
@@ -311,25 +287,6 @@ class AudioTrackEncoder : public TrackEncoder {
    */
   void NotifyEndOfStream() override;
 
-  void SetStartOffset(StreamTime aStartOffset) override;
-
-  /**
-   * Dispatched from MediaStreamGraph when it has run an iteration where the
-   * input track of the track this TrackEncoder is associated with didn't have
-   * any data.
-   *
-   * Since we sometimes use a direct listener for AudioSegments we miss periods
-   * of time for which the source didn't have any data. This ensures that the
-   * latest frame gets displayed while we wait for more data to be pushed.
-   */
-  void AdvanceBlockedInput(StreamTime aDuration) override;
-
-  /**
-   * Dispatched from MediaStreamGraph when it has run an iteration so we can
-   * hand more data to the encoder.
-   */
-  void AdvanceCurrentTime(StreamTime aDuration) override;
-
  protected:
   /**
    * Number of samples per channel in a pcm buffer. This is also the value of
@@ -358,26 +315,14 @@ class AudioTrackEncoder : public TrackEncoder {
   int mSamplingRate;
 
   /**
-   * A segment queue of incoming audio track data, from listeners.
-   * The duration of mIncomingBuffer is strictly increasing as it gets fed more
-   * data. Consumed data is replaced by null data.
-   */
-  AudioSegment mIncomingBuffer;
-
-  /**
    * A segment queue of outgoing audio track data to the encoder.
-   * The contents of mOutgoingBuffer will always be what has been consumed from
-   * mIncomingBuffer (up to mCurrentTime) but not yet consumed by the encoder
-   * sub class.
+   * The contents of mOutgoingBuffer will always be what has been appended on
+   * the encoder thread but not yet consumed by the encoder sub class.
    */
   AudioSegment mOutgoingBuffer;
 
   uint32_t mAudioBitrate;
 
-  // This may only be accessed on the MSG thread.
-  // I.e., in the regular NotifyQueuedChanges for audio to avoid adding data
-  // from that callback when the direct one is active.
-  bool mDirectConnected;
 };
 
 enum class FrameDroppingMode {
@@ -441,6 +386,8 @@ class VideoTrackEncoder : public TrackEncoder {
     return mTrackRate * aS;
   }
 
+  void SetStartOffset(StreamTime aStartOffset);
+
   void Cancel() override;
 
   /**
@@ -448,8 +395,6 @@ class VideoTrackEncoder : public TrackEncoder {
    * will be appended to mIncomingBuffer.
    */
   void NotifyEndOfStream() override;
-
-  void SetStartOffset(StreamTime aStartOffset) override;
 
   /**
    * Dispatched from MediaStreamGraph when it has run an iteration where the
@@ -460,13 +405,13 @@ class VideoTrackEncoder : public TrackEncoder {
    * for which the source didn't have any data. This ensures that the latest
    * frame gets displayed while we wait for more data to be pushed.
    */
-  void AdvanceBlockedInput(StreamTime aDuration) override;
+  void AdvanceBlockedInput(StreamTime aDuration);
 
   /**
    * Dispatched from MediaStreamGraph when it has run an iteration so we can
    * hand more data to the encoder.
    */
-  void AdvanceCurrentTime(StreamTime aDuration) override;
+  void AdvanceCurrentTime(StreamTime aDuration);
 
   /**
    * Set desired keyframe interval defined in milliseconds.
@@ -536,6 +481,11 @@ class VideoTrackEncoder : public TrackEncoder {
    * The number of mTrackRate ticks we have passed to mOutgoingBuffer.
    */
   StreamTime mEncodedTicks;
+
+  /**
+   * The latest current time reported to us from the MSG.
+   */
+  StreamTime mCurrentTime;
 
   /**
    * The time of the first real video frame passed to mOutgoingBuffer (at t=0).
