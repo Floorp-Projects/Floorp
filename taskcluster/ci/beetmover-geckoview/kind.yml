@@ -17,6 +17,7 @@ only-for-attributes:
 
 not-for-build-platforms:
    - linux-nightly/opt
+   - linux-shippable/opt
    - linux64-nightly/opt
    - macosx64-nightly/opt
    - macosx64-shippable/opt
