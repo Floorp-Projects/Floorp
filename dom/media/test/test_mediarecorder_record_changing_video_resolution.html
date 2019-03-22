@@ -144,11 +144,7 @@ function startTest() {
     previous_time = timestamp;
 
     if (countFrames == resolution_change.length) {
-      // There's a race between this stop() and feeding the last frame to the
-      // recorder, see bug 1407650. We wait a bit with the stop() as a stop-gap
-      // measure.
-      SimpleTest.requestFlakyTimeout("Fixes intermittent bug 1407650");
-      new Promise(r => setTimeout(r, 1000)).then(() => mediaRecorder.stop());
+      mediaRecorder.stop();
       return;
     }
 
