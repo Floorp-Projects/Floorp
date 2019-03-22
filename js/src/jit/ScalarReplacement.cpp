@@ -316,8 +316,6 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitLambdaArrow(MLambdaArrow* ins);
 
  private:
-  void storeOffset(MInstruction* ins, size_t offset, MDefinition* value);
-  void loadOffset(MInstruction* ins, size_t offset);
   void visitObjectGuard(MInstruction* ins, MDefinition* operand);
 };
 
@@ -673,32 +671,6 @@ void ObjectMemoryView::visitLambdaArrow(MLambdaArrow* ins) {
   }
 
   ins->setIncompleteObject();
-}
-
-void ObjectMemoryView::storeOffset(MInstruction* ins, size_t offset,
-                                   MDefinition* value) {
-  // Clone the state and update the slot value.
-  MOZ_ASSERT(state_->hasOffset(offset));
-  state_ = BlockState::Copy(alloc_, state_);
-  if (!state_) {
-    oom_ = true;
-    return;
-  }
-
-  state_->setOffset(offset, value);
-  ins->block()->insertBefore(ins, state_);
-
-  // Remove original instruction.
-  ins->block()->discard(ins);
-}
-
-void ObjectMemoryView::loadOffset(MInstruction* ins, size_t offset) {
-  // Replace load by the slot value.
-  MOZ_ASSERT(state_->hasOffset(offset));
-  ins->replaceAllUsesWith(state_->getOffset(offset));
-
-  // Remove original instruction.
-  ins->block()->discard(ins);
 }
 
 static bool IndexOf(MDefinition* ins, int32_t* res) {
