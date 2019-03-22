@@ -483,11 +483,6 @@ var gSync = {
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
-  async openFxAChangeAvatar(entryPoint) {
-    const url = await FxAccounts.config.promiseChangeAvatarURI(entryPoint);
-    switchToTabHavingURI(url, true, { replaceQueryString: true });
-  },
-
   async openFxAEmailFirstPage(entryPoint) {
     const url = await FxAccounts.config.promiseEmailFirstURI(entryPoint);
     switchToTabHavingURI(url, true, { replaceQueryString: true });

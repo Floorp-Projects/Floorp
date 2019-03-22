@@ -674,7 +674,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 /* Firefox Account Toolbar Panel */
 
-#fxa-menu-avatar,
 #fxa-avatar-image {
   width: 16px;
   height: 16px;
@@ -748,8 +747,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 #fxa-menu-avatar {
   height: 32px;
   width: 32px;
-  pointer-events: none;
   margin-inline-start: 20px;
+  margin-inline-end: 5px;
   -moz-context-properties: fill, fill-opacity;
   fill: var(--arrowpanel-color);
 }
