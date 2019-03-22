@@ -217,9 +217,8 @@ class ShadowLayerForwarder final : public LayersIPCActor,
   bool DestroyInTransaction(PTextureChild* aTexture) override;
   bool DestroyInTransaction(const CompositableHandle& aHandle);
 
-  virtual void RemoveTextureFromCompositable(
-      CompositableClient* aCompositable, TextureClient* aTexture,
-      const Maybe<wr::RenderRoot>& aRenderRoot) override;
+  virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
+                                             TextureClient* aTexture) override;
 
   /**
    * Communicate to the compositor that aRegion in the texture identified by
@@ -232,9 +231,9 @@ class ShadowLayerForwarder final : public LayersIPCActor,
   /**
    * See CompositableForwarder::UseTextures
    */
-  virtual void UseTextures(CompositableClient* aCompositable,
-                           const nsTArray<TimedTextureClient>& aTextures,
-                           const Maybe<wr::RenderRoot>& aRenderRoot) override;
+  virtual void UseTextures(
+      CompositableClient* aCompositable,
+      const nsTArray<TimedTextureClient>& aTextures) override;
   virtual void UseComponentAlphaTextures(
       CompositableClient* aCompositable, TextureClient* aClientOnBlack,
       TextureClient* aClientOnWhite) override;

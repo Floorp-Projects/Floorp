@@ -265,9 +265,9 @@ class ImageBridgeChild final : public PImageBridgeChild,
   /**
    * See CompositableForwarder::UseTextures
    */
-  virtual void UseTextures(CompositableClient* aCompositable,
-                           const nsTArray<TimedTextureClient>& aTextures,
-                           const Maybe<wr::RenderRoot>& aRenderRoot) override;
+  virtual void UseTextures(
+      CompositableClient* aCompositable,
+      const nsTArray<TimedTextureClient>& aTextures) override;
   virtual void UseComponentAlphaTextures(
       CompositableClient* aCompositable, TextureClient* aClientOnBlack,
       TextureClient* aClientOnWhite) override;
@@ -294,9 +294,8 @@ class ImageBridgeChild final : public PImageBridgeChild,
   virtual bool DestroyInTransaction(PTextureChild* aTexture) override;
   bool DestroyInTransaction(const CompositableHandle& aHandle);
 
-  virtual void RemoveTextureFromCompositable(
-      CompositableClient* aCompositable, TextureClient* aTexture,
-      const Maybe<wr::RenderRoot>& aRenderRoot) override;
+  virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
+                                             TextureClient* aTexture) override;
 
   virtual void UseTiledLayerBuffer(
       CompositableClient* aCompositable,

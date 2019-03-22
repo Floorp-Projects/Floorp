@@ -249,41 +249,20 @@ bool ShmSegmentsReader::Read(const layers::OffsetRange& aRange,
 }
 
 IpcResourceUpdateQueue::IpcResourceUpdateQueue(
-    layers::WebRenderBridgeChild* aAllocator,
-    wr::RenderRoot aRenderRoot,
-    size_t aChunkSize)
-    : mWriter(aAllocator, aChunkSize), mRenderRoot(aRenderRoot) {}
+    layers::WebRenderBridgeChild* aAllocator, size_t aChunkSize)
+    : mWriter(aAllocator, aChunkSize) {}
 
 IpcResourceUpdateQueue::IpcResourceUpdateQueue(
     IpcResourceUpdateQueue&& aOther) noexcept
     : mWriter(std::move(aOther.mWriter)),
-      mUpdates(std::move(aOther.mUpdates)),
-      mRenderRoot(aOther.mRenderRoot) {
-  for (auto renderRoot : wr::kNonDefaultRenderRoots) {
-    mSubQueues[renderRoot] = std::move(aOther.mSubQueues[renderRoot]);
-  }
-}
+      mUpdates(std::move(aOther.mUpdates)) {}
 
 IpcResourceUpdateQueue& IpcResourceUpdateQueue::operator=(
     IpcResourceUpdateQueue&& aOther) noexcept {
   MOZ_ASSERT(IsEmpty(), "Will forget existing updates!");
   mWriter = std::move(aOther.mWriter);
   mUpdates = std::move(aOther.mUpdates);
-  mRenderRoot = aOther.mRenderRoot;
-  for (auto renderRoot : wr::kNonDefaultRenderRoots) {
-    mSubQueues[renderRoot] = std::move(aOther.mSubQueues[renderRoot]);
-  }
   return *this;
-}
-
-void IpcResourceUpdateQueue::ReplaceResources(
-    IpcResourceUpdateQueue&& aOther) {
-  MOZ_ASSERT(IsEmpty(), "Will forget existing updates!");
-  MOZ_ASSERT(!aOther.HasAnySubQueue(), "Subqueues will be lost!");
-  MOZ_ASSERT(mRenderRoot == aOther.mRenderRoot);
-  mWriter = std::move(aOther.mWriter);
-  mUpdates = std::move(aOther.mUpdates);
-  mRenderRoot = aOther.mRenderRoot;
 }
 
 bool IpcResourceUpdateQueue::AddImage(ImageKey key,
@@ -429,12 +408,6 @@ bool IpcResourceUpdateQueue::IsEmpty() const {
 void IpcResourceUpdateQueue::Clear() {
   mWriter.Clear();
   mUpdates.Clear();
-
-  for (auto& subQueue : mSubQueues) {
-    if (subQueue) {
-      subQueue->Clear();
-    }
-  }
 }
 
 // static

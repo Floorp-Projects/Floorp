@@ -239,7 +239,6 @@ class BasePopup {
 
     let stack = document.createXULElement("stack");
     stack.setAttribute("class", "webextension-popup-stack");
-    stack.setAttribute("renderroot", "content");
 
     let browser = document.createXULElement("browser");
     browser.setAttribute("type", "content");

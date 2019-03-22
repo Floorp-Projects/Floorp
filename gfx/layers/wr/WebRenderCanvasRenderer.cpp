@@ -83,7 +83,7 @@ void WebRenderCanvasRendererAsync::Destroy() {
 
 void WebRenderCanvasRendererAsync::
     UpdateCompositableClientForEmptyTransaction() {
-  UpdateCompositableClient(mManager->GetRenderRoot());
+  UpdateCompositableClient();
   if (mPipelineId.isSome()) {
     // Notify an update of async image pipeline during empty transaction.
     // During non empty transaction, WebRenderBridgeParent receives

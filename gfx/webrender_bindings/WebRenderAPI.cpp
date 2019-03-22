@@ -8,7 +8,6 @@
 
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
-#include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -81,9 +80,8 @@ class NewRenderer : public RendererEvent {
                            ? aRenderThread.GetShaders()->RawShaders()
                            : nullptr,
                        aRenderThread.ThreadPool().Raw(), &WebRenderMallocSizeOf,
-                       &WebRenderMallocEnclosingSizeOf,
-                       (uint32_t)wr::RenderRoot::Default,
-                       mDocHandle, &wrRenderer, mMaxTextureSize)) {
+                       &WebRenderMallocEnclosingSizeOf, mDocHandle, &wrRenderer,
+                       mMaxTextureSize)) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false
       return;
     }
@@ -207,12 +205,10 @@ bool TransactionBuilder::IsRenderedFrameInvalidated() const {
 }
 
 void TransactionBuilder::SetDocumentView(
-    const LayoutDeviceIntRect& aDocumentRect,
-    const LayoutDeviceIntSize& aWidgetSize) {
+    const LayoutDeviceIntRect& aDocumentRect) {
   wr::FramebufferIntRect wrDocRect;
   wrDocRect.origin.x = aDocumentRect.x;
-  wrDocRect.origin.y =
-      aWidgetSize.height - aDocumentRect.y - aDocumentRect.height;
+  wrDocRect.origin.y = aDocumentRect.y;
   wrDocRect.size.width = aDocumentRect.width;
   wrDocRect.size.height = aDocumentRect.height;
   wr_transaction_set_document_view(mTxn, &wrDocRect);
@@ -280,8 +276,7 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
 
   return RefPtr<WebRenderAPI>(
              new WebRenderAPI(docHandle, aWindowId, maxTextureSize, useANGLE,
-                              useDComp, useTripleBuffering, syncHandle,
-                              wr::RenderRoot::Default))
+                              useDComp, useTripleBuffering, syncHandle))
       .forget();
 }
 
@@ -291,25 +286,24 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Clone() {
 
   RefPtr<WebRenderAPI> renderApi =
       new WebRenderAPI(docHandle, mId, mMaxTextureSize, mUseANGLE, mUseDComp,
-                       mUseTripleBuffering, mSyncHandle, mRenderRoot);
+                       mUseTripleBuffering, mSyncHandle);
   renderApi->mRootApi = this;  // Hold root api
   renderApi->mRootDocumentApi = this;
   return renderApi.forget();
 }
 
 already_AddRefed<WebRenderAPI> WebRenderAPI::CreateDocument(
-    LayoutDeviceIntSize aSize, int8_t aLayerIndex, wr::RenderRoot aRenderRoot) {
+    LayoutDeviceIntSize aSize, int8_t aLayerIndex) {
   wr::FramebufferIntSize wrSize;
   wrSize.width = aSize.width;
   wrSize.height = aSize.height;
   wr::DocumentHandle* newDoc;
 
-  wr_api_create_document(mDocHandle, &newDoc, wrSize, aLayerIndex,
-                         (uint32_t)aRenderRoot);
+  wr_api_create_document(mDocHandle, &newDoc, wrSize, aLayerIndex);
 
-  RefPtr<WebRenderAPI> api(
-      new WebRenderAPI(newDoc, mId, mMaxTextureSize, mUseANGLE, mUseDComp,
-                       mUseTripleBuffering, mSyncHandle, aRenderRoot));
+  RefPtr<WebRenderAPI> api(new WebRenderAPI(newDoc, mId, mMaxTextureSize,
+                                            mUseANGLE, mUseDComp,
+                                            mUseTripleBuffering, mSyncHandle));
   api->mRootApi = this;
   return api.forget();
 }
@@ -317,21 +311,6 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::CreateDocument(
 wr::WrIdNamespace WebRenderAPI::GetNamespace() {
   return wr_api_get_namespace(mDocHandle);
 }
-
-WebRenderAPI::WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
-                           uint32_t aMaxTextureSize, bool aUseANGLE,
-                           bool aUseDComp, bool aUseTripleBuffering,
-                           layers::SyncHandle aSyncHandle,
-                           wr::RenderRoot aRenderRoot)
-    : mDocHandle(aHandle),
-      mId(aId),
-      mMaxTextureSize(aMaxTextureSize),
-      mUseANGLE(aUseANGLE),
-      mUseDComp(aUseDComp),
-      mUseTripleBuffering(aUseTripleBuffering),
-      mSyncHandle(aSyncHandle),
-      mDebugFlags({0}),
-      mRenderRoot(aRenderRoot) {}
 
 WebRenderAPI::~WebRenderAPI() {
   if (!mRootDocumentApi) {
@@ -666,13 +645,9 @@ void WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent) {
 
 DisplayListBuilder::DisplayListBuilder(PipelineId aId,
                                        const wr::LayoutSize& aContentSize,
-                                       size_t aCapacity, RenderRoot aRenderRoot)
+                                       size_t aCapacity)
     : mCurrentSpaceAndClipChain(wr::RootScrollNodeWithChain()),
-      mActiveFixedPosTracker(nullptr),
-      mPipelineId(aId),
-      mContentSize(aContentSize),
-      mRenderRoot(aRenderRoot),
-      mSendSubBuilderDisplayList(aRenderRoot == wr::RenderRoot::Default) {
+      mActiveFixedPosTracker(nullptr) {
   MOZ_COUNT_CTOR(DisplayListBuilder);
   mWrState = wr_state_new(aId, aContentSize, aCapacity);
 }
@@ -686,31 +661,6 @@ void DisplayListBuilder::Save() { wr_dp_save(mWrState); }
 void DisplayListBuilder::Restore() { wr_dp_restore(mWrState); }
 void DisplayListBuilder::ClearSave() { wr_dp_clear_save(mWrState); }
 
-DisplayListBuilder& DisplayListBuilder::CreateSubBuilder(
-    const wr::LayoutSize& aContentSize, size_t aCapacity,
-    wr::RenderRoot aRenderRoot) {
-  MOZ_ASSERT(mRenderRoot == wr::RenderRoot::Default);
-  MOZ_ASSERT(!mSubBuilders[aRenderRoot]);
-  mSubBuilders[aRenderRoot] = MakeUnique<DisplayListBuilder>(
-      mPipelineId, aContentSize, aCapacity, aRenderRoot);
-  return *mSubBuilders[aRenderRoot];
-}
-
-DisplayListBuilder& DisplayListBuilder::SubBuilder(RenderRoot aRenderRoot) {
-  if (aRenderRoot == mRenderRoot) {
-    return *this;
-  }
-  return *mSubBuilders[aRenderRoot];
-}
-
-bool DisplayListBuilder::HasSubBuilder(RenderRoot aRenderRoot) {
-  if (aRenderRoot == RenderRoot::Default) {
-    MOZ_ASSERT(mRenderRoot == RenderRoot::Default);
-    return true;
-  }
-  return !!mSubBuilders[aRenderRoot];
-}
-
 usize DisplayListBuilder::Dump(usize aIndent, const Maybe<usize>& aStart,
                                const Maybe<usize>& aEnd) {
   return wr_dump_display_list(mWrState, aIndent, aStart.ptrOr(nullptr),
@@ -721,19 +671,6 @@ void DisplayListBuilder::Finalize(wr::LayoutSize& aOutContentSize,
                                   BuiltDisplayList& aOutDisplayList) {
   wr_api_finalize_builder(mWrState, &aOutContentSize, &aOutDisplayList.dl_desc,
                           &aOutDisplayList.dl.inner);
-}
-
-void DisplayListBuilder::Finalize(
-    layers::RenderRootDisplayListData& aOutTransaction) {
-  MOZ_ASSERT(mRenderRoot == wr::RenderRoot::Default);
-  wr::VecU8 dl;
-  wr_api_finalize_builder(SubBuilder(aOutTransaction.mRenderRoot).mWrState,
-                          &aOutTransaction.mContentSize,
-                          &aOutTransaction.mDLDesc, &dl.inner);
-  aOutTransaction.mDL.emplace(dl.inner.data, dl.inner.length,
-                              dl.inner.capacity);
-  dl.inner.capacity = 0;
-  dl.inner.data = nullptr;
 }
 
 Maybe<wr::WrSpatialId> DisplayListBuilder::PushStackingContext(

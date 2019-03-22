@@ -714,7 +714,7 @@ impl GpuCache {
     #[cfg(test)]
     pub fn new_for_testing() -> Self {
         let mut cache = Self::new();
-        let mut now = FrameStamp::first(DocumentId::new(IdNamespace(1), 1));
+        let mut now = FrameStamp::first(DocumentId(IdNamespace(1), 1));
         now.advance();
         cache.begin_frame(now);
         cache

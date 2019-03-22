@@ -12,7 +12,6 @@
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/layers/AnimationInfo.h"
-#include "mozilla/layers/RenderRootBoundary.h"
 #include "nsIFrame.h"
 #include "ImageTypes.h"
 
@@ -80,7 +79,6 @@ class WebRenderUserData {
     eCanvas,
     eGroup,
     eMask,
-    eRenderRoot,
   };
 
   virtual UserDataType GetType() = 0;
@@ -245,21 +243,6 @@ class WebRenderCanvasData : public WebRenderUserData {
 
  protected:
   UniquePtr<WebRenderCanvasRendererAsync> mCanvasRenderer;
-};
-
-class WebRenderRenderRootData : public WebRenderUserData {
- public:
-  WebRenderRenderRootData(RenderRootStateManager* aManager,
-                          nsDisplayItem* aItem);
-  virtual ~WebRenderRenderRootData();
-
-  virtual UserDataType GetType() override { return UserDataType::eRenderRoot; }
-  static UserDataType Type() { return UserDataType::eRenderRoot; }
-
-  RenderRootBoundary& EnsureHasBoundary(wr::RenderRoot aChildType);
-
- protected:
-  Maybe<RenderRootBoundary> mBoundary;
 };
 
 extern void DestroyWebRenderUserDataTable(WebRenderUserDataTable* aTable);

@@ -47,8 +47,6 @@ class nsRegion;
 namespace mozilla {
 namespace layers {
 struct TileClient;
-struct RenderRootDisplayListData;
-struct RenderRootUpdates;
 }  // namespace layers
 }  // namespace mozilla
 
@@ -686,8 +684,6 @@ DECLARE_USE_COPY_CONSTRUCTORS_FOR_TEMPLATE(std::function)
 DECLARE_USE_COPY_CONSTRUCTORS(nsRegion)
 DECLARE_USE_COPY_CONSTRUCTORS(nsIntRegion)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::layers::TileClient)
-DECLARE_USE_COPY_CONSTRUCTORS(mozilla::layers::RenderRootDisplayListData)
-DECLARE_USE_COPY_CONSTRUCTORS(mozilla::layers::RenderRootUpdates)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::SerializedStructuredCloneBuffer)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::ipc::StructuredCloneData)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::ClonedMessageData)

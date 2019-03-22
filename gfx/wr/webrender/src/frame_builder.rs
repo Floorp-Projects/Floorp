@@ -612,7 +612,7 @@ impl FrameBuilder {
             }
 
             // Used to generated a unique z-buffer value per primitive.
-            let mut z_generator = ZBufferIdGenerator::new(layer);
+            let mut z_generator = ZBufferIdGenerator::new();
             let use_dual_source_blending = self.config.dual_source_blending_is_enabled &&
                                            self.config.dual_source_blending_is_supported;
 
