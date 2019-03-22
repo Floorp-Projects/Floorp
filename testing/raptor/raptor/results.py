@@ -75,6 +75,9 @@ class RaptorResultsHandler():
         LOG.info("summarizing raptor test results")
         output = Output(self.results, self.supporting_data, test_config['subtest_alert_on'])
         output.summarize(test_names)
+        # that has each browser cycle separate; need to check if there were multiple browser
+        # cycles, and if so need to combine results from all cycles into one overall result
+        output.combine_browser_cycles()
         output.summarize_screenshots(self.images)
         # only dump out supporting data (i.e. power) if actual Raptor test completed
         if self.supporting_data is not None and len(self.results) != 0:

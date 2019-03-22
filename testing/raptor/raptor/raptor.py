@@ -131,7 +131,8 @@ class Raptor(object):
                         self.post_startup_delay,
                         host=self.config['host'],
                         b_port=self.benchmark_port,
-                        debug_mode=1 if self.debug_mode else 0)
+                        debug_mode=1 if self.debug_mode else 0,
+                        browser_cycle=test['browser_cycle'])
 
         self.install_raptor_webext()
 
@@ -604,7 +605,122 @@ class RaptorAndroid(Raptor):
         self.control_server.device = self.device
         self.control_server.app_name = self.config['binary']
 
+    def copy_cert_db(self, source_dir, target_dir):
+        # copy browser cert db (that was previously created via certutil) from source to target
+        cert_db_files = ['pkcs11.txt', 'key4.db', 'cert9.db']
+        for next_file in cert_db_files:
+            _source = os.path.join(source_dir, next_file)
+            _dest = os.path.join(target_dir, next_file)
+            if os.path.exists(_source):
+                self.log.info("copying %s to %s" % (_source, _dest))
+                shutil.copyfile(_source, _dest)
+            else:
+                self.log.critical("unable to find ssl cert db file: %s" % _source)
+
     def run_test(self, test, timeout=None):
+        # tests will be run warm (i.e. NO browser restart between page-cycles)
+        # unless otheriwse specified in the test INI by using 'cold = true'
+        if test.get('cold', False) is True:
+            self.run_test_cold(test, timeout)
+        else:
+            self.run_test_warm(test, timeout)
+
+    def run_test_cold(self, test, timeout=None):
+        '''
+        Run the Raptor test but restart the entire browser app between page-cycles.
+
+        Note: For page-load tests, playback will only be started once - at the beginning of all
+        browser cycles, and then stopped after all cycles are finished. The proxy is set via prefs
+        in the browser profile so those will need to be set again in each new profile/cycle.
+        Note that instead of using the certutil tool each time to create a db and import the
+        mitmproxy SSL cert (it's done in mozbase/mozproxy) we will simply copy the existing
+        cert db from the first cycle's browser profile into the new clean profile; this way
+        we don't have to re-create the cert db on each browser cycle.
+
+        Since we're running in cold-mode, before this point (in manifest.py) the
+        'expected-browser-cycles' value was already set to the initial 'page-cycles' value;
+        and the 'page-cycles' value was set to 1 as we want to perform one page-cycle per
+        browser restart.
+
+        The 'browser-cycle' value is the current overall browser start iteration. The control
+        server will receive the current 'browser-cycle' and the 'expected-browser-cycles' in
+        each results set received; and will pass that on as part of the results so that the
+        results processing will know results for multiple browser cycles are being received.
+
+        The default will be to run in warm mode; unless 'cold = true' is set in the test INI.
+        '''
+        self.log.info("test %s is running in cold mode; browser WILL be restarted between "
+                      "page cycles" % test['name'])
+
+        if self.config['power_test']:
+            init_geckoview_power_test(self)
+
+        for test['browser_cycle'] in range(1, test['expected_browser_cycles'] + 1):
+
+            self.log.info("begin browser cycle %d of %d for test %s"
+                          % (test['browser_cycle'], test['expected_browser_cycles'], test['name']))
+
+            self.run_test_setup(test)
+
+            if test['browser_cycle'] == 1:
+                self.create_raptor_sdcard_folder()
+
+                if test.get('playback', None) is not None:
+                    self.start_playback(test)
+
+                    # an ssl cert db has now been created in the profile; copy it out so we
+                    # can use the same cert db in future test cycles / browser restarts
+                    local_cert_db_dir = tempfile.mkdtemp()
+                    self.log.info("backing up browser ssl cert db that was created via certutil")
+                    self.copy_cert_db(self.config['local_profile_dir'], local_cert_db_dir)
+
+                if self.config['host'] not in ('localhost', '127.0.0.1'):
+                    self.delete_proxy_settings_from_profile()
+
+            else:
+                # double-check to ensure app has been shutdown
+                self.device.stop_application(self.config['binary'])
+
+                # clear the android app data before the next app startup
+                self.clear_app_data()
+
+                # initial browser profile was already created before run_test was called;
+                # now additional browser cycles we want to create a new one each time
+                self.create_browser_profile()
+
+                # get cert db from previous cycle profile and copy into new clean profile
+                # this saves us from having to start playback again / recreate cert db etc.
+                self.log.info("copying existing ssl cert db into new browser profile")
+                self.copy_cert_db(local_cert_db_dir, self.config['local_profile_dir'])
+
+                self.run_test_setup(test)
+
+            if test.get('playback', None) is not None:
+                self.turn_on_android_app_proxy()
+
+            self.copy_profile_onto_device()
+
+            # now start the browser/app under test
+            self.launch_firefox_android_app()
+
+            # set our control server flag to indicate we are running the browser/app
+            self.control_server._finished = False
+
+            self.wait_for_test_finish(test, timeout)
+
+            # in debug mode, and running locally, leave the browser running
+            if self.debug_mode and self.config['run_local']:
+                self.log.info("* debug-mode enabled - please shutdown the browser manually...")
+                self.runner.wait(timeout=None)
+
+        if self.config['power_test']:
+            finish_geckoview_power_test(self)
+
+        self.run_test_teardown()
+
+    def run_test_warm(self, test, timeout=None):
+        self.log.info("test %s is running in warm mode; browser will NOT be restarted between "
+                      "page cycles" % test['name'])
         if self.config['power_test']:
             init_geckoview_power_test(self)
 
