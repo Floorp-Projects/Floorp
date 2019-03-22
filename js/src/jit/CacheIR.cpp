@@ -20,9 +20,9 @@
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
+#include "vm/NativeObject-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/TypeInference-inl.h"
-#include "vm/UnboxedObject-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -268,12 +268,6 @@ bool GetPropIRGenerator::tryAttachStub() {
       if (tryAttachNative(obj, objId, id)) {
         return true;
       }
-      if (tryAttachUnboxed(obj, objId, id)) {
-        return true;
-      }
-      if (tryAttachUnboxedExpando(obj, objId, id)) {
-        return true;
-      }
       if (tryAttachTypedObject(obj, objId, id)) {
         return true;
       }
@@ -320,9 +314,6 @@ bool GetPropIRGenerator::tryAttachStub() {
         return true;
       }
       if (tryAttachSparseElement(obj, objId, index, indexId)) {
-        return true;
-      }
-      if (tryAttachUnboxedElementHole(obj, objId, index, indexId)) {
         return true;
       }
       if (tryAttachArgumentsObjectArg(obj, objId, indexId)) {
@@ -519,11 +510,6 @@ static bool CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id) {
     if (obj->as<NativeObject>().contains(cx, id)) {
       return false;
     }
-  } else if (obj->is<UnboxedPlainObject>()) {
-    if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx,
-                                                                       id)) {
-      return false;
-    }
   } else if (obj->is<TypedObject>()) {
     if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id)) {
       return false;
@@ -674,23 +660,10 @@ static void GuardGroupProto(CacheIRWriter& writer, JSObject* obj,
 }
 
 // Guard that a given object has same class and same OwnProperties (excluding
-// dense elements and dynamic properties). Returns an OperandId for the unboxed
-// expando if it exists.
+// dense elements and dynamic properties).
 static void TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj,
-                                 ObjOperandId objId,
-                                 Maybe<ObjOperandId>* expandoId) {
-  if (obj->is<UnboxedPlainObject>()) {
-    writer.guardGroupForLayout(objId, obj->group());
-
-    if (UnboxedExpandoObject* expando =
-            obj->as<UnboxedPlainObject>().maybeExpando()) {
-      expandoId->emplace(writer.guardAndLoadUnboxedExpando(objId));
-      writer.guardShapeForOwnProperties(expandoId->ref(),
-                                        expando->lastProperty());
-    } else {
-      writer.guardNoUnboxedExpando(objId);
-    }
-  } else if (obj->is<TypedObject>()) {
+                                 ObjOperandId objId) {
+  if (obj->is<TypedObject>()) {
     writer.guardGroupForLayout(objId, obj->group());
   } else if (obj->is<ProxyObject>()) {
     writer.guardShapeForClass(objId, obj->as<ProxyObject>().shape());
@@ -728,9 +701,7 @@ static void GeneratePrototypeGuardsForReceiver(CacheIRWriter& writer,
 
 #ifdef DEBUG
   // The following cases already guaranteed the prototype is unchanged.
-  if (obj->is<UnboxedPlainObject>()) {
-    MOZ_ASSERT(!obj->group()->hasUncacheableProto());
-  } else if (obj->is<TypedObject>()) {
+  if (obj->is<TypedObject>()) {
     MOZ_ASSERT(!obj->group()->hasUncacheableProto());
   } else if (obj->is<ProxyObject>()) {
     MOZ_ASSERT(!obj->hasUncacheableProto());
@@ -956,8 +927,7 @@ template <SlotReadType MaybeCrossCompartment = SlotReadType::Normal>
 static void EmitReadSlotGuard(CacheIRWriter& writer, JSObject* obj,
                               JSObject* holder, ObjOperandId objId,
                               Maybe<ObjOperandId>* holderId) {
-  Maybe<ObjOperandId> expandoId;
-  TestMatchingReceiver(writer, obj, objId, &expandoId);
+  TestMatchingReceiver(writer, obj, objId);
 
   if (obj != holder) {
     if (holder) {
@@ -981,8 +951,6 @@ static void EmitReadSlotGuard(CacheIRWriter& writer, JSObject* obj,
       // CanAttachNativeGetProp().
       ShapeGuardProtoChain(writer, obj, objId);
     }
-  } else if (obj->is<UnboxedPlainObject>()) {
-    holderId->emplace(*expandoId);
   } else {
     holderId->emplace(objId);
   }
@@ -995,10 +963,6 @@ static void EmitReadSlotResult(CacheIRWriter& writer, JSObject* obj,
   Maybe<ObjOperandId> holderId;
   EmitReadSlotGuard<MaybeCrossCompartment>(writer, obj, holder, objId,
                                            &holderId);
-
-  if (obj == holder && obj->is<UnboxedPlainObject>()) {
-    holder = obj->as<UnboxedPlainObject>().maybeExpando();
-  }
 
   // Slot access.
   if (holder) {
@@ -1056,8 +1020,7 @@ static void EmitCallGetterResult(CacheIRWriter& writer, JSObject* obj,
   // is a Window as GuardHasGetterSetter doesn't support this yet (Window may
   // require outerizing).
   if (mode == ICState::Mode::Specialized || IsWindow(obj)) {
-    Maybe<ObjOperandId> expandoId;
-    TestMatchingReceiver(writer, obj, objId, &expandoId);
+    TestMatchingReceiver(writer, obj, objId);
 
     if (obj != holder) {
       GeneratePrototypeGuards(writer, obj, holder, objId);
@@ -1734,60 +1697,6 @@ bool GetPropIRGenerator::tryAttachProxy(HandleObject obj, ObjOperandId objId,
   MOZ_CRASH("Unexpected ProxyStubType");
 }
 
-bool GetPropIRGenerator::tryAttachUnboxed(HandleObject obj, ObjOperandId objId,
-                                          HandleId id) {
-  if (!obj->is<UnboxedPlainObject>()) {
-    return false;
-  }
-
-  const UnboxedLayout::Property* property =
-      obj->as<UnboxedPlainObject>().layout().lookup(id);
-  if (!property) {
-    return false;
-  }
-
-  maybeEmitIdGuard(id);
-  writer.guardGroupForLayout(objId, obj->group());
-  writer.loadUnboxedPropertyResult(
-      objId, property->type,
-      UnboxedPlainObject::offsetOfData() + property->offset);
-  if (property->type == JSVAL_TYPE_OBJECT) {
-    writer.typeMonitorResult();
-  } else {
-    writer.returnFromIC();
-  }
-
-  preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
-
-  trackAttached("Unboxed");
-  return true;
-}
-
-bool GetPropIRGenerator::tryAttachUnboxedExpando(HandleObject obj,
-                                                 ObjOperandId objId,
-                                                 HandleId id) {
-  if (!obj->is<UnboxedPlainObject>()) {
-    return false;
-  }
-
-  UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
-  if (!expando) {
-    return false;
-  }
-
-  Shape* shape = expando->lookup(cx_, id);
-  if (!shape || !shape->isDataProperty()) {
-    return false;
-  }
-
-  maybeEmitIdGuard(id);
-  EmitReadSlotResult(writer, obj, obj, shape, objId);
-  EmitReadSlotReturn(writer, obj, obj, shape);
-
-  trackAttached("UnboxedExpando");
-  return true;
-}
-
 static TypedThingLayout GetTypedThingLayout(const Class* clasp) {
   if (IsTypedArrayClass(clasp)) {
     return Layout_TypedArray;
@@ -2395,52 +2304,6 @@ bool GetPropIRGenerator::tryAttachTypedElement(HandleObject obj,
   }
 
   trackAttached("TypedElement");
-  return true;
-}
-
-bool GetPropIRGenerator::tryAttachUnboxedElementHole(HandleObject obj,
-                                                     ObjOperandId objId,
-                                                     uint32_t index,
-                                                     Int32OperandId indexId) {
-  if (!obj->is<UnboxedPlainObject>()) {
-    return false;
-  }
-
-  // Only support unboxed objects with no elements (i.e. no expando)
-  UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
-  if (expando) {
-    return false;
-  }
-
-  if (JSObject* proto = obj->staticPrototype()) {
-    // Start the check at the first object on the [[Prototype]],
-    // which must be native now.
-    if (!proto->isNative()) {
-      return false;
-    }
-
-    if (proto->as<NativeObject>().getDenseInitializedLength() != 0) {
-      return false;
-    }
-
-    if (!CanAttachDenseElementHole(&proto->as<NativeObject>(), false)) {
-      return false;
-    }
-  }
-
-  // Guard on the group and prevent expandos from appearing.
-  Maybe<ObjOperandId> tempId;
-  TestMatchingReceiver(writer, obj, objId, &tempId);
-
-  // Guard that the prototype chain has no elements.
-  GeneratePrototypeHoleGuards(writer, obj, objId,
-                              /* alwaysGuardFirstProto = */ false);
-
-  writer.loadUndefinedResult();
-  // No monitor: We know undefined must be in the typeset already.
-  writer.returnFromIC();
-
-  trackAttached("UnboxedElementHole");
   return true;
 }
 
@@ -3091,13 +2954,7 @@ bool HasPropIRGenerator::tryAttachNamedProp(HandleObject obj,
   if (tryAttachNative(obj, objId, key, keyId, prop, holder)) {
     return true;
   }
-  if (tryAttachUnboxed(obj, objId, key, keyId)) {
-    return true;
-  }
   if (tryAttachTypedObject(obj, objId, key, keyId)) {
-    return true;
-  }
-  if (tryAttachUnboxedExpando(obj, objId, key, keyId)) {
     return true;
   }
 
@@ -3137,54 +2994,6 @@ bool HasPropIRGenerator::tryAttachNative(JSObject* obj, ObjOperandId objId,
   writer.returnFromIC();
 
   trackAttached("NativeHasProp");
-  return true;
-}
-
-bool HasPropIRGenerator::tryAttachUnboxed(JSObject* obj, ObjOperandId objId,
-                                          jsid key, ValOperandId keyId) {
-  if (!obj->is<UnboxedPlainObject>()) {
-    return false;
-  }
-
-  const UnboxedLayout::Property* prop =
-      obj->as<UnboxedPlainObject>().layout().lookup(key);
-  if (!prop) {
-    return false;
-  }
-
-  emitIdGuard(keyId, key);
-  writer.guardGroupForLayout(objId, obj->group());
-  writer.loadBooleanResult(true);
-  writer.returnFromIC();
-
-  trackAttached("UnboxedHasProp");
-  return true;
-}
-
-bool HasPropIRGenerator::tryAttachUnboxedExpando(JSObject* obj,
-                                                 ObjOperandId objId, jsid key,
-                                                 ValOperandId keyId) {
-  if (!obj->is<UnboxedPlainObject>()) {
-    return false;
-  }
-
-  UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
-  if (!expando) {
-    return false;
-  }
-
-  Shape* shape = expando->lookup(cx_, key);
-  if (!shape) {
-    return false;
-  }
-
-  Maybe<ObjOperandId> tempId;
-  emitIdGuard(keyId, key);
-  EmitReadSlotGuard(writer, obj, obj, objId, &tempId);
-  writer.loadBooleanResult(true);
-  writer.returnFromIC();
-
-  trackAttached("UnboxedExpandoHasProp");
   return true;
 }
 
@@ -3237,8 +3046,7 @@ bool HasPropIRGenerator::tryAttachSlotDoesNotExist(JSObject* obj,
 
   emitIdGuard(keyId, key);
   if (hasOwn) {
-    Maybe<ObjOperandId> tempId;
-    TestMatchingReceiver(writer, obj, objId, &tempId);
+    TestMatchingReceiver(writer, obj, objId);
   } else {
     Maybe<ObjOperandId> tempId;
     EmitReadSlotGuard(writer, obj, nullptr, objId, &tempId);
@@ -3256,7 +3064,7 @@ bool HasPropIRGenerator::tryAttachDoesNotExist(HandleObject obj,
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
   // Check that property doesn't exist on |obj| or it's prototype chain. These
-  // checks allow Native/Unboxed/Typed objects with a NativeObject prototype
+  // checks allow Native/Typed objects with a NativeObject prototype
   // chain. They return false if unknown such as resolve hooks or proxies.
   if (hasOwn) {
     if (!CheckHasNoSuchOwnProperty(cx_, obj, key)) {
@@ -3456,12 +3264,6 @@ bool SetPropIRGenerator::tryAttachStub() {
       if (tryAttachNativeSetSlot(obj, objId, id, rhsValId)) {
         return true;
       }
-      if (tryAttachUnboxedExpandoSetSlot(obj, objId, id, rhsValId)) {
-        return true;
-      }
-      if (tryAttachUnboxedProperty(obj, objId, id, rhsValId)) {
-        return true;
-      }
       if (tryAttachTypedObjectProperty(obj, objId, id, rhsValId)) {
         return true;
       }
@@ -3614,79 +3416,6 @@ bool SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
   EmitStoreSlotAndReturn(writer, objId, nobj, propShape, rhsId);
 
   trackAttached("NativeSlot");
-  return true;
-}
-
-bool SetPropIRGenerator::tryAttachUnboxedExpandoSetSlot(HandleObject obj,
-                                                        ObjOperandId objId,
-                                                        HandleId id,
-                                                        ValOperandId rhsId) {
-  if (!obj->is<UnboxedPlainObject>()) {
-    return false;
-  }
-
-  UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
-  if (!expando) {
-    return false;
-  }
-
-  Shape* propShape = LookupShapeForSetSlot(JSOp(*pc_), expando, id);
-  if (!propShape) {
-    return false;
-  }
-
-  maybeEmitIdGuard(id);
-
-  Maybe<ObjOperandId> expandoId;
-  TestMatchingReceiver(writer, obj, objId, &expandoId);
-
-  // Property types must be added to the unboxed object's group, not the
-  // expando's group (it has unknown properties).
-  typeCheckInfo_.set(obj->group(), id);
-  EmitStoreSlotAndReturn(writer, expandoId.ref(), expando, propShape, rhsId);
-
-  trackAttached("UnboxedExpando");
-  return true;
-}
-
-static void EmitGuardUnboxedPropertyType(CacheIRWriter& writer,
-                                         JSValueType propType,
-                                         ValOperandId valId) {
-  if (propType == JSVAL_TYPE_OBJECT) {
-    // Unboxed objects store NullValue as nullptr object.
-    writer.guardIsObjectOrNull(valId);
-  } else {
-    MOZ_ASSERT(propType <= JSVAL_TYPE_OBJECT);
-    writer.guardType(valId, ValueType(propType));
-  }
-}
-
-bool SetPropIRGenerator::tryAttachUnboxedProperty(HandleObject obj,
-                                                  ObjOperandId objId,
-                                                  HandleId id,
-                                                  ValOperandId rhsId) {
-  if (!obj->is<UnboxedPlainObject>()) {
-    return false;
-  }
-
-  const UnboxedLayout::Property* property =
-      obj->as<UnboxedPlainObject>().layout().lookup(id);
-  if (!property) {
-    return false;
-  }
-
-  maybeEmitIdGuard(id);
-  writer.guardGroupForLayout(objId, obj->group());
-  EmitGuardUnboxedPropertyType(writer, property->type, rhsId);
-  writer.storeUnboxedProperty(
-      objId, property->type,
-      UnboxedPlainObject::offsetOfData() + property->offset, rhsId);
-  writer.returnFromIC();
-
-  typeCheckInfo_.set(obj->group(), id);
-  preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
-
-  trackAttached("Unboxed");
   return true;
 }
 
@@ -3915,8 +3644,7 @@ bool SetPropIRGenerator::tryAttachSetter(HandleObject obj, ObjOperandId objId,
   // is a Window as GuardHasGetterSetter doesn't support this yet (Window may
   // require outerizing).
   if (mode_ == ICState::Mode::Specialized || IsWindow(obj)) {
-    Maybe<ObjOperandId> expandoId;
-    TestMatchingReceiver(writer, obj, objId, &expandoId);
+    TestMatchingReceiver(writer, obj, objId);
 
     if (obj != holder) {
       GeneratePrototypeGuards(writer, obj, holder, objId);
@@ -4639,32 +4367,17 @@ bool SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup,
     return false;
   }
 
-  Shape* propShape = nullptr;
-  NativeObject* holderOrExpando = nullptr;
-
-  if (obj->isNative()) {
-    propShape = prop.shape();
-    holderOrExpando = &obj->as<NativeObject>();
-  } else {
-    if (!obj->is<UnboxedPlainObject>()) {
-      return false;
-    }
-    UnboxedExpandoObject* expando =
-        obj->as<UnboxedPlainObject>().maybeExpando();
-    if (!expando) {
-      return false;
-    }
-    propShape = expando->lookupPure(id);
-    if (!propShape) {
-      return false;
-    }
-    holderOrExpando = expando;
+  if (!obj->isNative()) {
+    return false;
   }
+
+  Shape* propShape = prop.shape();
+  NativeObject* holder = &obj->as<NativeObject>();
 
   MOZ_ASSERT(propShape);
 
   // The property must be the last added property of the object.
-  MOZ_RELEASE_ASSERT(holderOrExpando->lastProperty() == propShape);
+  MOZ_RELEASE_ASSERT(holder->lastProperty() == propShape);
 
   // Old shape should be parent of new shape. Object flag updates may make this
   // false even for simple data properties. It may be possible to support these
@@ -4705,31 +4418,25 @@ bool SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup,
 
   // Shape guard the holder.
   ObjOperandId holderId = objId;
-  if (!obj->isNative()) {
-    MOZ_ASSERT(obj->as<UnboxedPlainObject>().maybeExpando());
-    holderId = writer.guardAndLoadUnboxedExpando(objId);
-  }
   writer.guardShape(holderId, oldShape);
 
   ShapeGuardProtoChain(writer, obj, objId);
 
   ObjectGroup* newGroup = obj->group();
 
-  // Check if we have to change the object's group. If we're adding an
-  // unboxed expando property, we pass the expando object to AddAndStore*Slot.
-  // That's okay because we only have to do a group change if the object is a
-  // PlainObject.
+  // Check if we have to change the object's group. We only have to change from
+  // a partially to fully initialized group if the object is a PlainObject.
   bool changeGroup = oldGroup != newGroup;
   MOZ_ASSERT_IF(changeGroup, obj->is<PlainObject>());
 
-  if (holderOrExpando->isFixedSlot(propShape->slot())) {
+  if (holder->isFixedSlot(propShape->slot())) {
     size_t offset = NativeObject::getFixedSlotOffset(propShape->slot());
     writer.addAndStoreFixedSlot(holderId, offset, rhsValId, propShape,
                                 changeGroup, newGroup);
     trackAttached("AddSlot");
   } else {
     size_t offset =
-        holderOrExpando->dynamicSlotIndex(propShape->slot()) * sizeof(Value);
+        holder->dynamicSlotIndex(propShape->slot()) * sizeof(Value);
     uint32_t numOldSlots = NativeObject::dynamicSlotsCount(oldShape);
     uint32_t numNewSlots = NativeObject::dynamicSlotsCount(propShape);
     if (numOldSlots == numNewSlots) {
@@ -4939,18 +4646,13 @@ bool GetIteratorIRGenerator::tryAttachNativeIterator(ObjOperandId objId,
     return false;
   }
 
-  MOZ_ASSERT(obj->isNative() || obj->is<UnboxedPlainObject>());
+  MOZ_ASSERT(obj->isNative());
 
-  // Guard on the receiver's shape/group.
-  Maybe<ObjOperandId> expandoId;
-  TestMatchingReceiver(writer, obj, objId, &expandoId);
+  // Guard on the receiver's shape.
+  TestMatchingNativeReceiver(writer, &obj->as<NativeObject>(), objId);
 
-  // Ensure the receiver or its expando object has no dense elements.
-  if (obj->isNative()) {
-    writer.guardNoDenseElements(objId);
-  } else if (expandoId) {
-    writer.guardNoDenseElements(*expandoId);
-  }
+  // Ensure the receiver has no dense elements.
+  writer.guardNoDenseElements(objId);
 
   // Do the same for the objects on the proto chain.
   GeneratePrototypeHoleGuards(writer, obj, objId,
@@ -5341,7 +5043,7 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
 
   MOZ_ASSERT(thisObject->nonCCWRealm() == calleeFunc->realm());
 
-  if (thisObject->is<PlainObject>() || thisObject->is<UnboxedPlainObject>()) {
+  if (thisObject->is<PlainObject>()) {
     result.set(thisObject);
   }
 
@@ -6710,8 +6412,7 @@ void NewObjectIRGenerator::trackAttached(const char* name) {
 
 bool NewObjectIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
-  if (!templateObject_->is<UnboxedPlainObject>() &&
-      templateObject_->as<PlainObject>().hasDynamicSlots()) {
+  if (templateObject_->as<PlainObject>().hasDynamicSlots()) {
     trackAttached(IRGenerator::NotAttached);
     return false;
   }
