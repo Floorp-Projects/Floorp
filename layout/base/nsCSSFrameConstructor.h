@@ -1775,22 +1775,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                    bool* aHaveFirstLetterStyle,
                                    bool* aHaveFirstLineStyle);
 
-  // Initialize aBlockFrame, and wrap it in a ColumnSetFrame if needed.
-  //
-  // If a ColumnSetFrame needs to be created, then this function will create
-  // one, and set aBlockFrame as its child (with an updated "columnContent"
-  // ComputedStyle() pointer), and initialize both frames. Otherwise, it
-  // initializes aBlockFrame.
-  //
-  // @return the new ColumnSetFrame if needed; otherwise aBlockFrame.
-  //
-  // FIXME (Bug 1489295): Callers using this function to create multi-column
-  // hierarchy should be revised to support column-span.
-  nsContainerFrame* InitAndWrapInColumnSetFrameIfNeeded(
-      nsFrameConstructorState& aState, nsIContent* aContent,
-      nsContainerFrame* aParentFrame, nsContainerFrame* aBlockFrame,
-      ComputedStyle* aComputedStyle);
-
   // |aContentParentFrame| should be null if it's really the same as
   // |aParentFrame|.
   // @param aFrameItems where we want to put the block in case it's in-flow.
