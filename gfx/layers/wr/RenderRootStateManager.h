@@ -10,6 +10,7 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
+#include "mozilla/layers/SharedSurfacesChild.h"
 #include "mozilla/layers/WebRenderCommandBuilder.h"
 
 namespace mozilla {
@@ -24,10 +25,14 @@ class RenderRootStateManager {
   void AddRef();
   void Release();
 
-  explicit RenderRootStateManager(WebRenderLayerManager* aLayerManager);
+  RenderRootStateManager()
+      : mLayerManager(nullptr),
+        mRenderRoot(wr::RenderRoot::Default),
+        mDestroyed(false) {}
 
   void Destroy();
   bool IsDestroyed() { return mDestroyed; }
+  wr::RenderRoot GetRenderRoot() { return mRenderRoot; }
   wr::IpcResourceUpdateQueue& AsyncResourceUpdates();
   WebRenderBridgeChild* WrBridge() const;
   WebRenderCommandBuilder& CommandBuilder();
@@ -74,7 +79,6 @@ class RenderRootStateManager {
   void FlushAsyncResourceUpdates();
 
  private:
-  ~RenderRootStateManager();
   WebRenderLayerManager* mLayerManager;
   Maybe<wr::IpcResourceUpdateQueue> mAsyncResourceUpdates;
   nsTArray<wr::ImageKey> mImageKeysToDelete;
@@ -89,6 +93,7 @@ class RenderRootStateManager {
   // the compositor to discard information for.
   nsTArray<uint64_t> mDiscardedCompositorAnimationsIds;
 
+  wr::RenderRoot mRenderRoot;
   bool mDestroyed;
 
   friend class WebRenderLayerManager;

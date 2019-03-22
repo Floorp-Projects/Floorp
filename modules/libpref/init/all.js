@@ -974,6 +974,7 @@ pref("gfx.webrender.debug.small-screen", false);
 pref("gfx.webrender.dl.dump-parent", false);
 pref("gfx.webrender.dl.dump-content", false);
 pref("gfx.webrender.picture-caching", true);
+pref("gfx.webrender.split-render-roots", false);
 
 #ifdef NIGHTLY_BUILD
 pref("performance.adjust_to_machine", true);

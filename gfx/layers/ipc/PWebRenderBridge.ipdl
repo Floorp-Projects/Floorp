@@ -15,8 +15,7 @@ include protocol PCompositorBridge;
 include protocol PTexture;
 
 using mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
-using mozilla::layers::ScrollUpdatesMap from "FrameMetrics.h";
-using struct mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
+using struct mozilla::layers::SLGuidAndRenderRoot from "mozilla/layers/APZTypes.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
@@ -24,7 +23,9 @@ using mozilla::wr::BuiltDisplayListDescriptor from "mozilla/webrender/webrender_
 using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::MaybeIdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ExternalImageKeyPair from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::layers::WebRenderScrollData from "mozilla/layers/WebRenderScrollData.h";
+using mozilla::wr::RenderRoot from "mozilla/webrender/WebRenderTypes.h";
+using moveonly mozilla::layers::RenderRootDisplayListData from "mozilla/layers/RenderRootTypes.h";
+using moveonly mozilla::layers::RenderRootUpdates from "mozilla/layers/RenderRootTypes.h";
 using mozilla::layers::FocusTarget from "mozilla/layers/FocusTarget.h";
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
@@ -45,18 +46,23 @@ parent:
   async ReleaseCompositable(CompositableHandle compositable);
 
   async DeleteCompositorAnimations(uint64_t[] aIds);
-  async SetDisplayList(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
-                       LayoutSize aContentSize, ByteBuf aDL, BuiltDisplayListDescriptor aDLDesc,
-                       WebRenderScrollData aScrollData,
-                       OpUpdateResource[] aResourceUpdates, RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems,
-                       IdNamespace aIdNamespace, bool containsSVGGroup, VsyncId vsyncId, TimeStamp vsyncStartTime, TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime);
-  async EmptyTransaction(FocusTarget focusTarget, ScrollUpdatesMap scrollUpdates, uint32_t aPaintSequenceNumber,
-                         WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
-                         OpUpdateResource[] aResourceUpdates, RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems,
-                         IdNamespace aIdNamespace, VsyncId vsyncId, TimeStamp vsyncStartTime, TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime);
+  async SetDisplayList(RenderRootDisplayListData[] displayLists,
+                       OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
+                       IdNamespace aIdNamespace, bool containsSVGGroup,
+                       VsyncId vsyncId, TimeStamp vsyncStartTime,
+                       TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime);
+  async EmptyTransaction(FocusTarget focusTarget, uint32_t aPaintSequenceNumber,
+                         RenderRootUpdates[] renderRootUpdates,
+                         OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
+                         IdNamespace aIdNamespace,
+                         VsyncId vsyncId, TimeStamp vsyncStartTime,
+                         TimeStamp refreshStartTime, TimeStamp txnStartTime,
+                         nsCString txnURL, TimeStamp fwdTime);
   async SetFocusTarget(FocusTarget focusTarget);
-  async UpdateResources(OpUpdateResource[] aResourceUpdates, RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems);
-  async ParentCommands(WebRenderParentCommand[] commands);
+  async UpdateResources(OpUpdateResource[] aResourceUpdates,
+                        RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems,
+                        RenderRoot aRenderRoot);
+  async ParentCommands(WebRenderParentCommand[] commands, RenderRoot aRenderRoot);
   sync GetSnapshot(PTexture texture);
   async SetLayersObserverEpoch(LayersObserverEpoch childEpoch);
   async ClearCachedResources();
@@ -72,7 +78,7 @@ parent:
 
   // These correspond exactly to the equivalent APIs in PLayerTransaction -
   // see those for documentation.
-  async SetConfirmedTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
+  async SetConfirmedTargetAPZC(uint64_t aInputBlockId, SLGuidAndRenderRoot[] aTargets);
   // More copied from PLayerTransaction, but these are only used for testing.
   sync SetTestSampleTime(TimeStamp sampleTime);
   sync LeaveTestMode();

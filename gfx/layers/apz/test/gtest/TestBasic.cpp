@@ -59,7 +59,8 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   // sides.
 
   RefPtr<TestAsyncPanZoomController> childApzc =
-      new TestAsyncPanZoomController(LayersId{0}, mcc, tm);
+      new TestAsyncPanZoomController(LayersId{0}, mcc, tm,
+                                     wr::RenderRoot::Default);
 
   const char* layerTreeSyntax = "c(c)";
   // LayerID                     0 1
