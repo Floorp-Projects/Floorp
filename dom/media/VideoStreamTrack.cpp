@@ -33,7 +33,7 @@ class VideoOutput : public DirectMediaStreamTrackListener {
         mSegment.Clear();
       }
       const VideoFrame& f = i->mFrame;
-      mSegment.AppendFrame(do_AddRef(f.GetImage()), 0, f.GetIntrinsicSize(),
+      mSegment.AppendFrame(do_AddRef(f.GetImage()), f.GetIntrinsicSize(),
                            f.GetPrincipalHandle(), f.GetForceBlack(),
                            i->mTimeStamp);
       mLastFrameTime = i->mTimeStamp;

@@ -54,7 +54,7 @@ void OutputStreamDriver::SetImage(const RefPtr<layers::Image>& aImage,
   TRACE_COMMENT("SourceMediaStream %p track %i", mSourceStream.get(), mTrackId);
 
   VideoSegment segment;
-  segment.AppendFrame(do_AddRef(aImage), 1, aImage->GetSize(), mPrincipalHandle,
+  segment.AppendFrame(do_AddRef(aImage), aImage->GetSize(), mPrincipalHandle,
                       false, aTime);
   mSourceStream->AppendToTrack(mTrackId, &segment);
 }
