@@ -254,7 +254,7 @@ dependencies {
     implementation Deps.mozilla_feature_downloads
     implementation Deps.mozilla_browser_domains
     implementation Deps.mozilla_browser_icons
-    implementation Deps.mozilla_browser_engine_gecko_nightly
+    implementation Deps.mozilla_browser_engine_gecko_beta
     implementation Deps.mozilla_browser_session
     implementation Deps.mozilla_browser_storage_sync
     implementation Deps.mozilla_browser_toolbar
@@ -288,9 +288,9 @@ dependencies {
     debugImplementation Deps.leakcanary
     releaseImplementation Deps.leakcanary_noop
 
-    armImplementation Deps.geckoview_nightly_arm
-    x86Implementation Deps.geckoview_nightly_x86
-    aarch64Implementation Deps.geckoview_nightly_aarch64
+    armImplementation Gecko.geckoview_beta_arm
+    x86Implementation Gecko.geckoview_beta_x86
+    aarch64Implementation Gecko.geckoview_beta_aarch64
 
     implementation Deps.androidx_legacy
     implementation Deps.androidx_preference

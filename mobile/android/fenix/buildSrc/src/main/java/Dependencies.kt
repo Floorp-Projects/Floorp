@@ -5,7 +5,6 @@
 private object Versions {
     const val kotlin = "1.3.11"
     const val android_gradle_plugin = "3.3.2"
-    const val geckoNightly = "67.0.20190312095443"
     const val rxAndroid = "2.1.0"
     const val rxKotlin = "2.3.0"
     const val anko = "0.10.8"
@@ -55,10 +54,6 @@ object Deps {
     const val anko_appcompat = "org.jetbrains.anko:anko-appcompat-v7:${Versions.anko}"
     const val anko_constraintlayout = "org.jetbrains.anko:anko-constraint-layout:${Versions.anko}"
 
-    const val geckoview_nightly_arm = "org.mozilla.geckoview:geckoview-nightly-armeabi-v7a:${Versions.geckoNightly}"
-    const val geckoview_nightly_x86 = "org.mozilla.geckoview:geckoview-nightly-x86:${Versions.geckoNightly}"
-    const val geckoview_nightly_aarch64 = "org.mozilla.geckoview:geckoview-nightly-arm64-v8a:${Versions.geckoNightly}"
-
     const val mozilla_concept_engine = "org.mozilla.components:concept-engine:${Versions.mozilla_android_components}"
     const val mozilla_concept_tabstray = "org.mozilla.components:concept-tabstray:${Versions.mozilla_android_components}"
     const val mozilla_concept_toolbar = "org.mozilla.components:concept-toolbar:${Versions.mozilla_android_components}"
@@ -67,6 +62,7 @@ object Deps {
 
     const val mozilla_browser_awesomebar = "org.mozilla.components:browser-awesomebar:${Versions.mozilla_android_components}"
     const val mozilla_browser_engine_gecko_nightly = "org.mozilla.components:browser-engine-gecko-nightly:${Versions.mozilla_android_components}"
+    const val mozilla_browser_engine_gecko_beta = "org.mozilla.components:browser-engine-gecko-beta:${Versions.mozilla_android_components}"
     const val mozilla_browser_domains = "org.mozilla.components:browser-domains:${Versions.mozilla_android_components}"
     const val mozilla_browser_icons = "org.mozilla.components:browser-icons:${Versions.mozilla_android_components}"
     const val mozilla_browser_search = "org.mozilla.components:browser-search:${Versions.mozilla_android_components}"
