@@ -821,8 +821,12 @@ var ContentBlocking = {
 
     get appMenuTooltip() {
       delete this.appMenuTooltip;
+      if (AppConstants.platform == "win") {
+        return this.appMenuTooltip =
+          gNavigatorBundle.getString("contentBlocking.tooltipWin");
+      }
       return this.appMenuTooltip =
-        gNavigatorBundle.getString("contentBlocking.tooltip");
+        gNavigatorBundle.getString("contentBlocking.tooltipOther");
     },
 
     get activeTooltipText() {

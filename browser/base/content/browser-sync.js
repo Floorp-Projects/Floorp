@@ -289,7 +289,7 @@ var gSync = {
     if (anchor.getAttribute("open") == "true") {
       PanelUI.hide();
     } else {
-      PanelUI.showSubView(viewId, anchor);
+      PanelUI.showSubView(viewId, anchor, aEvent);
     }
   },
 

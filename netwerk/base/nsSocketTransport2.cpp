@@ -41,6 +41,10 @@
 #include "nsPrintfCString.h"
 #include "xpcpublic.h"
 
+#if defined(FUZZING)
+#  include "FuzzyLayer.h"
+#endif
+
 #if defined(XP_WIN)
 #  include "ShutdownLayer.h"
 #endif
@@ -1347,6 +1351,18 @@ nsresult nsSocketTransport::InitiateSocket() {
 
   // create proxy via IOActivityMonitor
   IOActivityMonitor::MonitorSocket(fd);
+
+#if defined(FUZZING)
+  if (Preferences::GetBool("fuzzing.necko.enabled")) {
+    rv = AttachFuzzyIOLayer(fd);
+    if (NS_FAILED(rv)) {
+      SOCKET_LOG(("Failed to attach fuzzing IOLayer [rv=%" PRIx32 "].\n",
+                  static_cast<uint32_t>(rv)));
+      return rv;
+    }
+    SOCKET_LOG(("Successfully attached fuzzing IOLayer.\n"));
+  }
+#endif
 
   PRStatus status;
 

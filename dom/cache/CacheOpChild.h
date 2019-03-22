@@ -54,7 +54,7 @@ class CacheOpChild final : public PCacheOpChild,
   virtual mozilla::ipc::PBackgroundChild* GetIPCManager() override;
 
   // Utility methods
-  void HandleResponse(const CacheResponseOrVoid& aResponseOrVoid);
+  void HandleResponse(const Maybe<CacheResponse>& aMaybeResponse);
 
   void HandleResponseList(const nsTArray<CacheResponse>& aResponseList);
 

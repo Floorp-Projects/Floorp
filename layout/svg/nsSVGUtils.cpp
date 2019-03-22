@@ -189,13 +189,13 @@ void nsSVGUtils::ScheduleReflowSVG(nsIFrame* aFrame) {
 
   // We must not add dirty bits to the nsSVGOuterSVGFrame or else
   // PresShell::FrameNeedsReflow won't work when we pass it in below.
-  if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG) {
+  if (aFrame->IsSVGOuterSVGFrame()) {
     outerSVGFrame = static_cast<nsSVGOuterSVGFrame*>(aFrame);
   } else {
     aFrame->AddStateBits(NS_FRAME_IS_DIRTY);
 
     nsIFrame* f = aFrame->GetParent();
-    while (f && !(f->GetStateBits() & NS_STATE_IS_OUTER_SVG)) {
+    while (f && !f->IsSVGOuterSVGFrame()) {
       if (f->GetStateBits() &
           (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) {
         return;
@@ -203,7 +203,7 @@ void nsSVGUtils::ScheduleReflowSVG(nsIFrame* aFrame) {
       f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
       f = f->GetParent();
       MOZ_ASSERT(f->IsFrameOfType(nsIFrame::eSVG),
-                 "NS_STATE_IS_OUTER_SVG check above not valid!");
+                 "IsSVGOuterSVGFrame check above not valid!");
     }
 
     outerSVGFrame = static_cast<nsSVGOuterSVGFrame*>(f);
@@ -295,7 +295,7 @@ float nsSVGUtils::UserSpace(const UserSpaceMetrics& aMetrics,
 
 nsSVGOuterSVGFrame* nsSVGUtils::GetOuterSVGFrame(nsIFrame* aFrame) {
   while (aFrame) {
-    if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG) {
+    if (aFrame->IsSVGOuterSVGFrame()) {
       return static_cast<nsSVGOuterSVGFrame*>(aFrame);
     }
     aFrame = aFrame->GetParent();

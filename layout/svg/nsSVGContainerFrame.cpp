@@ -123,7 +123,7 @@ void nsSVGContainerFrame::ReflowSVGNonDisplayText(nsIFrame* aContainer) {
 void nsSVGDisplayContainerFrame::Init(nsIContent* aContent,
                                       nsContainerFrame* aParent,
                                       nsIFrame* aPrevInFlow) {
-  if (!(GetStateBits() & NS_STATE_IS_OUTER_SVG)) {
+  if (!IsSVGOuterSVGFrame()) {
     AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD);
   }
   nsSVGContainerFrame::Init(aContent, aParent, aPrevInFlow);

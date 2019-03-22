@@ -24,7 +24,7 @@
 #include "mozilla/FStream.h"
 #include "mozilla/Unused.h"
 
-#if defined(XP_WIN32)
+#if defined(XP_WIN)
 
 #  include <windows.h>
 #  include "mozilla/glue/WindowsDllServices.h"

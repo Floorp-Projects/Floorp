@@ -26,7 +26,7 @@ struct SavedRequest {
     mBodyId.m1 = 0;
     mBodyId.m2 = 0;
     memset(mBodyId.m3, 0, sizeof(mBodyId.m3));
-    mValue.body() = void_t();
+    mValue.body() = Nothing();
   }
   CacheRequest mValue;
   bool mHasBodyId;
@@ -40,7 +40,7 @@ struct SavedResponse {
     mBodyId.m1 = 0;
     mBodyId.m2 = 0;
     memset(mBodyId.m3, 0, sizeof(mBodyId.m3));
-    mValue.body() = void_t();
+    mValue.body() = Nothing();
   }
   CacheResponse mValue;
   bool mHasBodyId;
