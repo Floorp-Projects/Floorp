@@ -119,10 +119,6 @@ GainNode::GainNode(AudioContext* aContext)
 already_AddRefed<GainNode> GainNode::Create(AudioContext& aAudioContext,
                                             const GainOptions& aOptions,
                                             ErrorResult& aRv) {
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   RefPtr<GainNode> audioNode = new GainNode(&aAudioContext);
 
   audioNode->Initialize(aOptions, aRv);

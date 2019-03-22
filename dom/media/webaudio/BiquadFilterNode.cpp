@@ -243,10 +243,6 @@ BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
 already_AddRefed<BiquadFilterNode> BiquadFilterNode::Create(
     AudioContext& aAudioContext, const BiquadFilterOptions& aOptions,
     ErrorResult& aRv) {
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   RefPtr<BiquadFilterNode> audioNode = new BiquadFilterNode(&aAudioContext);
 
   audioNode->Initialize(aOptions, aRv);

@@ -90,10 +90,6 @@ class AnalyserNodeEngine final : public AudioNodeEngine {
 already_AddRefed<AnalyserNode> AnalyserNode::Create(
     AudioContext& aAudioContext, const AnalyserOptions& aOptions,
     ErrorResult& aRv) {
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   RefPtr<AnalyserNode> analyserNode = new AnalyserNode(&aAudioContext);
 
   analyserNode->Initialize(aOptions, aRv);

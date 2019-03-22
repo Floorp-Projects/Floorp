@@ -50,10 +50,6 @@ already_AddRefed<MediaStreamAudioSourceNode> MediaStreamAudioSourceNode::Create(
     return nullptr;
   }
 
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   if (aAudioContext.Graph() !=
       aOptions.mMediaStream->GetPlaybackStream()->Graph()) {
     nsCOMPtr<nsPIDOMWindowInner> pWindow = aAudioContext.GetParentObject();

@@ -26,10 +26,6 @@ MediaElementAudioSourceNode::Create(
     return nullptr;
   }
 
-  if (aAudioContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   RefPtr<MediaElementAudioSourceNode> node =
       new MediaElementAudioSourceNode(&aAudioContext);
 
