@@ -544,11 +544,6 @@ class NativeObject : public ShapedObject {
   // that are (temporarily) inconsistent.
   void setLastPropertyMakeNonNative(Shape* shape);
 
-  // As for setLastProperty(), but changes the class associated with the
-  // object to a native one. The object's type has already been changed, and
-  // this brings the shape into sync with it.
-  void setLastPropertyMakeNative(JSContext* cx, Shape* shape);
-
   // Newly-created TypedArrays that map a SharedArrayBuffer are
   // marked as shared by giving them an ObjectElements that has the
   // ObjectElements::SHARED_MEMORY flag set.

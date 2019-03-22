@@ -31,7 +31,6 @@
 #include "vm/SharedArrayObject.h"
 #include "vm/StringObject.h"
 #include "vm/TypedArrayObject.h"
-#include "vm/UnboxedObject.h"
 
 #include "vm/JSContext-inl.h"
 #include "vm/ObjectGroup-inl.h"
@@ -291,9 +290,7 @@ class TypeNewScript {
   // After the new script properties analyses have been performed, a template
   // object to use for newly constructed objects. The shape of this object
   // reflects all definite properties the object will have, and the
-  // allocation kind to use. This is null if the new objects have an unboxed
-  // layout, in which case the UnboxedLayout provides the initial structure
-  // of the object.
+  // allocation kind to use.
   HeapPtr<PlainObject*> templateObject_ = {};
 
   // Order in which definite properties become initialized. We need this in
@@ -365,18 +362,6 @@ class TypeNewScript {
   }
 };
 
-inline UnboxedLayout::~UnboxedLayout() {
-  if (newScript_) {
-    newScript_->clear();
-  }
-  js_delete(newScript_);
-  js_free(traceList_);
-
-  nativeGroup_.init(nullptr);
-  nativeShape_.init(nullptr);
-  replacementGroup_.init(nullptr);
-  constructorCode_.init(nullptr);
-}
 
 inline bool ObjectGroup::hasUnanalyzedPreliminaryObjects() {
   return (newScriptDontCheckGeneration() &&
@@ -394,10 +379,6 @@ inline bool ObjectGroup::hasUnanalyzedPreliminaryObjects() {
  * is not reentrant and that recompilations occur properly.
  */
 struct MOZ_RAII AutoEnterAnalysis {
-  // For use when initializing an UnboxedLayout.  The UniquePtr's destructor
-  // must run when GC is not suppressed.
-  UniquePtr<UnboxedLayout> unboxedLayoutToCleanUp;
-
   // Prevent GC activity in the middle of analysis.
   gc::AutoSuppressGC suppressGC;
 
