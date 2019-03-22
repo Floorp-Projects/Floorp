@@ -53,6 +53,10 @@ bool TransportLayerSrtp::Setup() {
 }
 
 TransportResult TransportLayerSrtp::SendPacket(MediaPacket& packet) {
+  if (state() != TS_OPEN) {
+    return TE_ERROR;
+  }
+
   if (packet.len() < 4) {
     MOZ_ASSERT(false);
     return TE_ERROR;
