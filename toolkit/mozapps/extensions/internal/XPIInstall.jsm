@@ -3668,8 +3668,12 @@ var XPIInstall = {
         };
       },
       async hasResource(path) {
-        let response = await fetch(this.rootURI.resolve(path));
-        return response.ok;
+        try {
+          let response = await fetch(this.rootURI.resolve(path));
+          return response.ok;
+        } catch (e) {
+          return false;
+        }
       },
     };
 
