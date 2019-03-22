@@ -12,21 +12,21 @@ wasmFullPass('(module (func (result f64) (f64.const -9223372036854775808)) (expo
 wasmFullPass('(module (func (result f64) (f64.const 1797693134862315708145274e284)) (export "run" 0))', 1797693134862315708145274e284);
 
 function testUnary(type, opcode, op, expect) {
-    wasmFullPass('(module (func (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (get_local 0))) (export "run" 0))',
+    wasmFullPass('(module (func (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (local.get 0))) (export "run" 0))',
                  expect,
                  {},
                  op);
 }
 
 function testBinary(type, opcode, lhs, rhs, expect) {
-    wasmFullPass('(module (func (param ' + type + ') (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (get_local 0) (get_local 1))) (export "run" 0))',
+    wasmFullPass('(module (func (param ' + type + ') (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (local.get 0) (local.get 1))) (export "run" 0))',
                  expect,
                  {},
                  lhs, rhs);
 }
 
 function testComparison(type, opcode, lhs, rhs, expect) {
-    wasmFullPass('(module (func (param ' + type + ') (param ' + type + ') (result i32) (' + type + '.' + opcode + ' (get_local 0) (get_local 1))) (export "run" 0))',
+    wasmFullPass('(module (func (param ' + type + ') (param ' + type + ') (result i32) (' + type + '.' + opcode + ' (local.get 0) (local.get 1))) (export "run" 0))',
                  expect,
                  {},
                  lhs, rhs);
@@ -78,26 +78,26 @@ testComparison('f64', 'le', 40, 40, 1);
 testComparison('f64', 'gt', 40, 40, 0);
 testComparison('f64', 'ge', 40, 40, 1);
 
-wasmFailValidateText('(module (func (param i32) (result f32) (f32.sqrt (get_local 0))))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (param f32) (result i32) (f32.sqrt (get_local 0))))', mismatchError("f32", "i32"));
-wasmFailValidateText('(module (func (param i32) (result i32) (f32.sqrt (get_local 0))))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (param i32) (result f64) (f64.sqrt (get_local 0))))', mismatchError("i32", "f64"));
-wasmFailValidateText('(module (func (param f64) (result i32) (f64.sqrt (get_local 0))))', mismatchError("f64", "i32"));
-wasmFailValidateText('(module (func (param i32) (result i32) (f64.sqrt (get_local 0))))', mismatchError("i32", "f64"));
+wasmFailValidateText('(module (func (param i32) (result f32) (f32.sqrt (local.get 0))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (param f32) (result i32) (f32.sqrt (local.get 0))))', mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (param i32) (result i32) (f32.sqrt (local.get 0))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (param i32) (result f64) (f64.sqrt (local.get 0))))', mismatchError("i32", "f64"));
+wasmFailValidateText('(module (func (param f64) (result i32) (f64.sqrt (local.get 0))))', mismatchError("f64", "i32"));
+wasmFailValidateText('(module (func (param i32) (result i32) (f64.sqrt (local.get 0))))', mismatchError("i32", "f64"));
 wasmFailValidateText('(module (func (f32.sqrt (nop))))', /popping value from empty stack/);
 
-wasmFailValidateText('(module (func (param i32) (param f32) (result f32) (f32.add (get_local 0) (get_local 1))))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (param f32) (param i32) (result f32) (f32.add (get_local 0) (get_local 1))))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (param f32) (param f32) (result i32) (f32.add (get_local 0) (get_local 1))))', mismatchError("f32", "i32"));
-wasmFailValidateText('(module (func (param i32) (param i32) (result i32) (f32.add (get_local 0) (get_local 1))))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (param i32) (param f64) (result f64) (f64.add (get_local 0) (get_local 1))))', mismatchError("i32", "f64"));
-wasmFailValidateText('(module (func (param f64) (param i32) (result f64) (f64.add (get_local 0) (get_local 1))))', mismatchError("i32", "f64"));
-wasmFailValidateText('(module (func (param f64) (param f64) (result i32) (f64.add (get_local 0) (get_local 1))))', mismatchError("f64", "i32"));
-wasmFailValidateText('(module (func (param i32) (param i32) (result i32) (f64.add (get_local 0) (get_local 1))))', mismatchError("i32", "f64"));
+wasmFailValidateText('(module (func (param i32) (param f32) (result f32) (f32.add (local.get 0) (local.get 1))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (param f32) (param i32) (result f32) (f32.add (local.get 0) (local.get 1))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (param f32) (param f32) (result i32) (f32.add (local.get 0) (local.get 1))))', mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (param i32) (param i32) (result i32) (f32.add (local.get 0) (local.get 1))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (param i32) (param f64) (result f64) (f64.add (local.get 0) (local.get 1))))', mismatchError("i32", "f64"));
+wasmFailValidateText('(module (func (param f64) (param i32) (result f64) (f64.add (local.get 0) (local.get 1))))', mismatchError("i32", "f64"));
+wasmFailValidateText('(module (func (param f64) (param f64) (result i32) (f64.add (local.get 0) (local.get 1))))', mismatchError("f64", "i32"));
+wasmFailValidateText('(module (func (param i32) (param i32) (result i32) (f64.add (local.get 0) (local.get 1))))', mismatchError("i32", "f64"));
 
-wasmFailValidateText('(module (func (param i32) (param f32) (result f32) (f32.eq (get_local 0) (get_local 1))))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (param f32) (param i32) (result f32) (f32.eq (get_local 0) (get_local 1))))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (param f32) (param f32) (result f32) (f32.eq (get_local 0) (get_local 1))))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (param i32) (param f64) (result f64) (f64.eq (get_local 0) (get_local 1))))', mismatchError("i32", "f64"));
-wasmFailValidateText('(module (func (param f64) (param i32) (result f64) (f64.eq (get_local 0) (get_local 1))))', mismatchError("i32", "f64"));
-wasmFailValidateText('(module (func (param f64) (param f64) (result f64) (f64.eq (get_local 0) (get_local 1))))', mismatchError("i32", "f64"));
+wasmFailValidateText('(module (func (param i32) (param f32) (result f32) (f32.eq (local.get 0) (local.get 1))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (param f32) (param i32) (result f32) (f32.eq (local.get 0) (local.get 1))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (param f32) (param f32) (result f32) (f32.eq (local.get 0) (local.get 1))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (func (param i32) (param f64) (result f64) (f64.eq (local.get 0) (local.get 1))))', mismatchError("i32", "f64"));
+wasmFailValidateText('(module (func (param f64) (param i32) (result f64) (f64.eq (local.get 0) (local.get 1))))', mismatchError("i32", "f64"));
+wasmFailValidateText('(module (func (param f64) (param f64) (result f64) (f64.eq (local.get 0) (local.get 1))))', mismatchError("i32", "f64"));

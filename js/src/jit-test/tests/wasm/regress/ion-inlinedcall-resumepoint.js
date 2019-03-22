@@ -26,7 +26,7 @@ let { exports } = new WebAssembly.Instance(
         (module
             (func $imp (import "env" "importedFunc") (param i32))
             (func (export "exp") (param i32)
-                get_local 0
+                local.get 0
                 call $imp
             )
         )

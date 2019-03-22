@@ -34,8 +34,8 @@ let t =
 
      (func $mkConsIgnoringScalar (result anyref)
               (param $hd anyref) (param i32) (param $tl anyref)
-        (get_local $hd)
-        (get_local $tl)
+        (local.get $hd)
+        (local.get $tl)
         call $mkCons
      )
 
@@ -48,14 +48,14 @@ let t =
        ;; scalars for added confusion
        (local $scalar99 i32)
        (local $scalar97 i32)
-       (set_local $scalar99 (i32.const 99))
-       (set_local $scalar97 (i32.const 97))
+       (local.set $scalar99 (i32.const 99))
+       (local.set $scalar97 (i32.const 97))
 
        call $mkBoxedInt
-       get_local $scalar99
+       local.get $scalar99
        call $mkBoxedInt
        call $mkBoxedInt
-       get_local $scalar97
+       local.get $scalar97
        call $mkBoxedInt
        call $mkBoxedInt
        call $mkBoxedInt

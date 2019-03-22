@@ -57,6 +57,9 @@
 #  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
 #endif
 
+#define LS_LOG_TEST() MOZ_LOG_TEST(GetLocalStorageLogger(), LogLevel::Info)
+#define LS_LOG(_args) MOZ_LOG(GetLocalStorageLogger(), LogLevel::Info, _args)
+
 #if defined(MOZ_WIDGET_ANDROID)
 #  define LS_MOBILE
 #endif
@@ -2159,6 +2162,10 @@ class LSRequestBase : public DatastoreOperationBase,
 
   virtual void Cleanup() {}
 
+  void LogState();
+
+  virtual void LogNestedState() {}
+
  private:
   void SendReadyMessage();
 
@@ -2172,9 +2179,9 @@ class LSRequestBase : public DatastoreOperationBase,
   // IPDL methods.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvCancel() override;
-
  private:
+  mozilla::ipc::IPCResult RecvCancel() final;
+
   mozilla::ipc::IPCResult RecvFinish() final;
 };
 
@@ -2231,6 +2238,7 @@ class PrepareDatastoreOp : public LSRequestBase, public OpenDirectoryListener {
 
   nsCOMPtr<nsIEventTarget> mMainEventTarget;
   RefPtr<PrepareDatastoreOp> mDelayedOp;
+  RefPtr<DirectoryLock> mPendingDirectoryLock;
   RefPtr<DirectoryLock> mDirectoryLock;
   RefPtr<Connection> mConnection;
   RefPtr<Datastore> mDatastore;
@@ -2339,12 +2347,12 @@ class PrepareDatastoreOp : public LSRequestBase, public OpenDirectoryListener {
 
   void CleanupMetadata();
 
+  void LogNestedState() override;
+
   NS_DECL_ISUPPORTS_INHERITED
 
   // IPDL overrides.
   void ActorDestroy(ActorDestroyReason aWhy) override;
-
-  mozilla::ipc::IPCResult RecvCancel() final;
 
   // OpenDirectoryListener overrides.
   void DirectoryLockAcquired(DirectoryLock* aLock) override;
@@ -2741,8 +2749,6 @@ StaticAutoPtr<ArchivedOriginHashtable> gArchivedOrigins;
 
 // Can only be touched on the Quota Manager I/O thread.
 bool gInitializedShadowStorage = false;
-
-LazyLogModule gLogger("LocalStorage");
 
 bool IsOnConnectionThread() {
   MOZ_ASSERT(gConnectionThread);
@@ -5628,6 +5634,61 @@ void LSRequestBase::Dispatch() {
 
 nsresult LSRequestBase::NestedRun() { return NS_OK; }
 
+void LSRequestBase::LogState() {
+  AssertIsOnOwningThread();
+
+  if (!LS_LOG_TEST()) {
+    return;
+  }
+
+  LS_LOG(("LSRequestBase [%p]", this));
+
+  nsCString state;
+
+  switch (mState) {
+    case State::Initial:
+      state.AssignLiteral("Initial");
+      break;
+
+    case State::Opening:
+      state.AssignLiteral("Opening");
+      break;
+
+    case State::Nesting:
+      state.AssignLiteral("Nesting");
+      break;
+
+    case State::SendingReadyMessage:
+      state.AssignLiteral("SendingReadyMessage");
+      break;
+
+    case State::WaitingForFinish:
+      state.AssignLiteral("WaitingForFinish");
+      break;
+
+    case State::SendingResults:
+      state.AssignLiteral("SendingResults");
+      break;
+
+    case State::Completed:
+      state.AssignLiteral("Completed");
+      break;
+
+    default:
+      MOZ_CRASH("Bad state!");
+  }
+
+  LS_LOG(("  mState: %s", state.get()));
+
+  switch (mState) {
+    case State::Nesting:
+      LogNestedState();
+      break;
+
+    default:;
+  }
+}
+
 void LSRequestBase::SendReadyMessage() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::SendingReadyMessage);
@@ -5726,46 +5787,7 @@ void LSRequestBase::ActorDestroy(ActorDestroyReason aWhy) {
 mozilla::ipc::IPCResult LSRequestBase::RecvCancel() {
   AssertIsOnOwningThread();
 
-  if (MOZ_LOG_TEST(gLogger, LogLevel::Info)) {
-    MOZ_LOG(gLogger, LogLevel::Info, ("LSRequestBase::RecvCancel"));
-
-    nsCString state;
-
-    switch (mState) {
-      case State::Initial:
-        state.AssignLiteral("Initial");
-        break;
-
-      case State::Opening:
-        state.AssignLiteral("Opening");
-        break;
-
-      case State::Nesting:
-        state.AssignLiteral("Nesting");
-        break;
-
-      case State::SendingReadyMessage:
-        state.AssignLiteral("SendingReadyMessage");
-        break;
-
-      case State::WaitingForFinish:
-        state.AssignLiteral("WaitingForFinish");
-        break;
-
-      case State::SendingResults:
-        state.AssignLiteral("SendingResults");
-        break;
-
-      case State::Completed:
-        state.AssignLiteral("Completed");
-        break;
-
-      default:
-        MOZ_CRASH("Bad state!");
-    }
-
-    MOZ_LOG(gLogger, LogLevel::Info, ("  mState: %s", state.get()));
-  }
+  LogState();
 
   const char* crashOnCancel = PR_GetEnv("LSNG_CRASH_ON_CANCEL");
   if (crashOnCancel) {
@@ -6066,9 +6088,16 @@ nsresult PrepareDatastoreOp::OpenDirectory() {
   MOZ_ASSERT(QuotaManager::Get());
 
   mNestedState = NestedState::DirectoryOpenPending;
-  QuotaManager::Get()->OpenDirectory(PERSISTENCE_TYPE_DEFAULT, mGroup, mOrigin,
-                                     mozilla::dom::quota::Client::LS,
-                                     /* aExclusive */ false, this);
+  RefPtr<DirectoryLock> pendingDirectoryLock =
+      QuotaManager::Get()->CreateDirectoryLock(PERSISTENCE_TYPE_DEFAULT, mGroup,
+                                               mOrigin,
+                                               mozilla::dom::quota::Client::LS,
+                                               /* aExclusive */ false, this);
+  MOZ_ASSERT(pendingDirectoryLock);
+
+  if (mNestedState == NestedState::DirectoryOpenPending) {
+    mPendingDirectoryLock = pendingDirectoryLock.forget();
+  }
 
   mRequestedDirectoryLock = true;
 
@@ -6719,6 +6748,90 @@ void PrepareDatastoreOp::CleanupMetadata() {
   }
 }
 
+void PrepareDatastoreOp::LogNestedState() {
+  AssertIsOnOwningThread();
+
+  nsCString nestedState;
+
+  switch (mNestedState) {
+    case NestedState::BeforeNesting:
+      nestedState.AssignLiteral("BeforeNesting");
+      break;
+
+    case NestedState::CheckExistingOperations:
+      nestedState.AssignLiteral("CheckExistingOperations");
+      break;
+
+    case NestedState::CheckClosingDatastore:
+      nestedState.AssignLiteral("CheckClosingDatastore");
+      break;
+
+    case NestedState::PreparationPending:
+      nestedState.AssignLiteral("PreparationPending");
+      break;
+
+    case NestedState::QuotaManagerPending:
+      nestedState.AssignLiteral("QuotaManagerPending");
+      break;
+
+    case NestedState::DirectoryOpenPending:
+      nestedState.AssignLiteral("DirectoryOpenPending");
+      break;
+
+    case NestedState::DatabaseWorkOpen:
+      nestedState.AssignLiteral("DatabaseWorkOpen");
+      break;
+
+    case NestedState::BeginLoadData:
+      nestedState.AssignLiteral("BeginLoadData");
+      break;
+
+    case NestedState::DatabaseWorkLoadData:
+      nestedState.AssignLiteral("DatabaseWorkLoadData");
+      break;
+
+    case NestedState::AfterNesting:
+      nestedState.AssignLiteral("AfterNesting");
+      break;
+
+    default:
+      MOZ_CRASH("Bad state!");
+  }
+
+  LS_LOG(("  mNestedState: %s", nestedState.get()));
+
+  switch (mNestedState) {
+    case NestedState::CheckClosingDatastore: {
+      for (uint32_t index = gPrepareDatastoreOps->Length(); index > 0;
+           index--) {
+        PrepareDatastoreOp* existingOp = (*gPrepareDatastoreOps)[index - 1];
+
+        if (existingOp->mDelayedOp == this) {
+          LS_LOG(("  mDelayedBy: [%p]", existingOp));
+
+          existingOp->LogState();
+
+          break;
+        }
+      }
+
+      break;
+    }
+
+    case NestedState::DirectoryOpenPending: {
+      MOZ_ASSERT(mPendingDirectoryLock);
+
+      LS_LOG(("  mPendingDirectoryLock: [%p]", mPendingDirectoryLock.get()));
+
+      mPendingDirectoryLock->LogState();
+
+      break;
+    }
+
+    default:;
+  }
+}
+
 NS_IMPL_ISUPPORTS_INHERITED0(PrepareDatastoreOp, LSRequestBase)
 
 void PrepareDatastoreOp::ActorDestroy(ActorDestroyReason aWhy) {
@@ -6731,70 +6844,13 @@ void PrepareDatastoreOp::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-mozilla::ipc::IPCResult PrepareDatastoreOp::RecvCancel() {
-  AssertIsOnOwningThread();
-
-  if (MOZ_LOG_TEST(gLogger, LogLevel::Info)) {
-    MOZ_LOG(gLogger, LogLevel::Info, ("PrepareDatastoreOp::RecvCancel"));
-
-    nsCString nestedState;
-
-    switch (mNestedState) {
-      case NestedState::BeforeNesting:
-        nestedState.AssignLiteral("BeforeNesting");
-        break;
-
-      case NestedState::CheckExistingOperations:
-        nestedState.AssignLiteral("CheckExistingOperations");
-        break;
-
-      case NestedState::CheckClosingDatastore:
-        nestedState.AssignLiteral("CheckClosingDatastore");
-        break;
-
-      case NestedState::PreparationPending:
-        nestedState.AssignLiteral("PreparationPending");
-        break;
-
-      case NestedState::QuotaManagerPending:
-        nestedState.AssignLiteral("QuotaManagerPending");
-        break;
-
-      case NestedState::DirectoryOpenPending:
-        nestedState.AssignLiteral("DirectoryOpenPending");
-        break;
-
-      case NestedState::DatabaseWorkOpen:
-        nestedState.AssignLiteral("DatabaseWorkOpen");
-        break;
-
-      case NestedState::BeginLoadData:
-        nestedState.AssignLiteral("BeginLoadData");
-        break;
-
-      case NestedState::DatabaseWorkLoadData:
-        nestedState.AssignLiteral("DatabaseWorkLoadData");
-        break;
-
-      case NestedState::AfterNesting:
-        nestedState.AssignLiteral("AfterNesting");
-        break;
-
-      default:
-        MOZ_CRASH("Bad state!");
-    }
-
-    MOZ_LOG(gLogger, LogLevel::Info, ("  mNestedState: %s", nestedState.get()));
-  }
-
-  return LSRequestBase::RecvCancel();
-}
-
 void PrepareDatastoreOp::DirectoryLockAcquired(DirectoryLock* aLock) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::Nesting);
   MOZ_ASSERT(mNestedState == NestedState::DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
+
+  mPendingDirectoryLock = nullptr;
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
@@ -6815,6 +6871,8 @@ void PrepareDatastoreOp::DirectoryLockFailed() {
   MOZ_ASSERT(mState == State::Nesting);
   MOZ_ASSERT(mNestedState == NestedState::DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
+
+  mPendingDirectoryLock = nullptr;
 
   MaybeSetFailureCode(NS_ERROR_FAILURE);
 

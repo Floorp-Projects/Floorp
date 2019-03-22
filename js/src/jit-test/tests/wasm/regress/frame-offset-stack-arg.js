@@ -24,8 +24,8 @@ var bin = wasmTextToBinary(
                                 (param i32) (param i32) (param i32) (param i32) (param i32)))
        (func (export "test") (param $a i32) (param $b i32) (param $c i32) (param $d i32) (param $e i32)
                              (param $f i32) (param $g i32) (param $h i32) (param $i i32) (param $j i32)
-         (call $f (get_local $a) (get_local $b) (get_local $c) (get_local $d) (get_local $e)
-                  (get_local $f) (get_local $g) (get_local $h) (get_local $i) (get_local $j))))`);
+         (call $f (local.get $a) (local.get $b) (local.get $c) (local.get $d) (local.get $e)
+                  (local.get $f) (local.get $g) (local.get $h) (local.get $i) (local.get $j))))`);
 
 var mod = new WebAssembly.Module(bin);
 var ins = new WebAssembly.Instance(mod, {m:{f}});

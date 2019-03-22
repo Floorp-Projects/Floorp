@@ -1,24 +1,24 @@
 wasmFailValidateText(`(module
    (func (result i32) (param i32)
-     (loop (if (i32.const 0) (br 0)) (get_local 0)))
+     (loop (if (i32.const 0) (br 0)) (local.get 0)))
    (export "" 0)
 )`, /unused values not explicitly dropped by end of block/);
 
 wasmFailValidateText(`(module
    (func (param i32)
-     (loop (if (i32.const 0) (br 0)) (get_local 0)))
+     (loop (if (i32.const 0) (br 0)) (local.get 0)))
    (export "" 0)
 )`, /unused values not explicitly dropped by end of block/);
 
 wasmFailValidateText(`(module
    (func (result i32) (param i32)
-     (loop (if (i32.const 0) (br 0)) (drop (get_local 0))))
+     (loop (if (i32.const 0) (br 0)) (drop (local.get 0))))
    (export "" 0)
 )`, emptyStackError);
 
 assertEq(wasmEvalText(`(module
    (func (result i32) (param i32)
-     (loop (if (i32.const 0) (br 0))) (get_local 0))
+     (loop (if (i32.const 0) (br 0))) (local.get 0))
    (export "" 0)
 )`).exports[""](42), 42);
 
@@ -85,8 +85,8 @@ wasmEvalText(`
 (module
     (import "check" "one" (param i32))
     (import "check" "two" (param i32) (param i32))
-    (func (param i32) (call 0 (get_local 0)))
-    (func (param i32) (param i32) (call 1 (get_local 0) (get_local 1)))
+    (func (param i32) (call 0 (local.get 0)))
+    (func (param i32) (param i32) (call 1 (local.get 0) (local.get 1)))
     (func
         (call 1
             (i32.const 43)
