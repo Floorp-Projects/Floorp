@@ -98,6 +98,13 @@ To learn more, see [adding new metrics](docs/metrics/adding-new-metrics.md).
 documentation and data-review. This is also required for any new metric automatically collected
 by glean.
 
+### Testing metrics
+
+In order to make testing metrics easier 'out of the box', all metrics include a set of test API 
+functions in order to facilitate unit testing.  These include functions to test whether a value has
+been stored, and functions to retrieve the stored value for validation.  For more information, 
+please refer to [Unit testing glean metrics](docs/metrics/testing-metrics.md).
+
 ### Providing UI to enable / disable metrics
 
 Every application must provide a way to disable and re-enable data collection and upload. This is
