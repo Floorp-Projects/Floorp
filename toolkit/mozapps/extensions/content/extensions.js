@@ -1272,9 +1272,11 @@ var gViewController = {
         if (aAddon.isWebExtension && !aAddon.seen && WEBEXT_PERMISSION_PROMPTS) {
           let perms = aAddon.userPermissions;
           if (perms.origins.length > 0 || perms.permissions.length > 0) {
+            const target = getBrowserElement();
+
             let subject = {
               wrappedJSObject: {
-                target: getBrowserElement(),
+                target,
                 info: {
                   type: "sideload",
                   addon: aAddon,
@@ -1282,7 +1284,17 @@ var gViewController = {
                   permissions: perms,
                   resolve() {
                     aAddon.markAsSeen();
-                    aAddon.enable();
+                    aAddon.enable().then(() => {
+                      // If private browsing access is not allowed by default,
+                      // show the post-install doorhanger notification to
+                      // allow the user to give the extension access from the
+                      // checkbox included in the doorhanger.
+                      if (!allowPrivateBrowsingByDefault && aAddon.incognito !== "not_allowed") {
+                        Services.obs.notifyObservers({
+                          addon: aAddon, target,
+                        }, "webextension-install-notify");
+                      }
+                    });
                   },
                   reject() {},
                 },
