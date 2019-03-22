@@ -667,6 +667,11 @@ already_AddRefed<IDBRequest> IDBDatabase::CreateMutableFile(
     ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
+  if (aName.IsEmpty()) {
+    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    return nullptr;
+  }
+
   if (QuotaManager::IsShuttingDown()) {
     IDB_REPORT_INTERNAL_ERR();
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
