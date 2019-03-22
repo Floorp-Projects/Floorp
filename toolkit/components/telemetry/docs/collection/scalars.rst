@@ -18,8 +18,8 @@ The serialized scalar data is submitted with the :doc:`main pings <../data/main-
 
 The API
 =======
-Scalar probes can be managed either through the `nsITelemetry interface <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/nsITelemetry.idl>`_
-or the `C++ API <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Telemetry.h>`_.
+Scalar probes can be managed either through the `nsITelemetry interface <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/core/nsITelemetry.idl>`_
+or the `C++ API <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/core/Telemetry.h>`_.
 
 JS API
 ------
@@ -86,7 +86,7 @@ Example:
 
 C++ API
 -------
-Probes in native code can use the more convenient helper functions declared in `Telemetry.h <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Telemetry.h>`_:
+Probes in native code can use the more convenient helper functions declared in `Telemetry.h <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/core/Telemetry.h>`_:
 
 .. code-block:: cpp
 
