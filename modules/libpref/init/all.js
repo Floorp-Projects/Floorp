@@ -663,7 +663,7 @@ pref("media.av1.use-dav1d", true);
 #elif defined(XP_MACOSX)
 pref("media.av1.enabled", true);
 pref("media.av1.use-dav1d", true);
-#elif defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
+#elif defined(XP_UNIX) && !defined(MOZ_WIDGET_ANDROID)
 pref("media.av1.enabled", true);
 pref("media.av1.use-dav1d", true);
 #else
