@@ -248,11 +248,6 @@ class ObjectGroup : public gc::TenuredCell {
     // PreliminaryObjectArrayWithTemplate.
     Addendum_PreliminaryObjects,
 
-    // If this group is used by objects that have been converted from an
-    // unboxed representation and/or have the same allocation kind as such
-    // objects, the addendum points to that unboxed group.
-    Addendum_OriginalUnboxedGroup,
-
     // When used by typed objects, the addendum stores a TypeDescr.
     Addendum_TypeDescr
   };
@@ -311,17 +306,6 @@ class ObjectGroup : public gc::TenuredCell {
   }
 
   inline bool hasUnanalyzedPreliminaryObjects();
-
-  ObjectGroup* maybeOriginalUnboxedGroup() const {
-    if (addendumKind() == Addendum_OriginalUnboxedGroup) {
-      return reinterpret_cast<ObjectGroup*>(addendum_);
-    }
-    return nullptr;
-  }
-
-  void setOriginalUnboxedGroup(ObjectGroup* group) {
-    setAddendum(Addendum_OriginalUnboxedGroup, group);
-  }
 
   TypeDescr* maybeTypeDescr() {
     // Note: there is no need to sweep when accessing the type descriptor
@@ -468,12 +452,6 @@ class ObjectGroup : public gc::TenuredCell {
 
  public:
   const ObjectGroupFlags* addressOfFlags() const { return &flags_; }
-
-  // Get the bit pattern stored in an object's addendum when it has an
-  // original unboxed group.
-  static inline int32_t addendumOriginalUnboxedGroupValue() {
-    return Addendum_OriginalUnboxedGroup << OBJECT_FLAG_ADDENDUM_SHIFT;
-  }
 
   inline uint32_t basePropertyCount(const AutoSweepObjectGroup& sweep);
   inline uint32_t basePropertyCountDontCheckGeneration();
