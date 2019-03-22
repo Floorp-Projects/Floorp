@@ -47,8 +47,13 @@ class KeyParser : protected Tokenizer {
   // Keeps the last tag name, used for alphabetical sort checking
   char lastTag;
 
-  // Classifier for the 'tag' character valid range
-  static bool TagChar(const char aChar) { return aChar >= ' ' && aChar <= '~'; }
+  // Classifier for the 'tag' character valid range.
+  // Explicitly using unsigned char as 127 is -1 when signed and it would only
+  // produce a warning.
+  static bool TagChar(const char aChar) {
+    unsigned char c = static_cast<unsigned char>(aChar);
+    return c >= ' ' && c <= '\x7f';
+  }
 
   bool ParseTags() {
     // Expects to be at the tag name or at the end
