@@ -654,6 +654,9 @@ int32_t IToplevelProtocol::ToplevelState::NextId() {
     tag |= 1 << 1;
   }
 
+  // Check any overflow
+  MOZ_RELEASE_ASSERT(mLastLocalId < (1 << 29));
+
   // Compute the ID to use with the low two bits as our tag, and the remaining
   // bits as a monotonic.
   return (++mLastLocalId << 2) | tag;
