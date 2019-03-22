@@ -272,6 +272,16 @@ set_config('RUST_TARGET', rust_target_triple)
 set_config('RUST_HOST_TARGET', rust_host_triple)
 
 
+@depends(rust_target_triple)
+def rust_target_env_name(triple):
+    return triple.upper().replace('-', '_')
+
+
+# We need this to form various Cargo environment variables, as there is no
+# uppercase function in make, and we don't want to shell out just for
+# converting a string to uppercase.
+set_config('RUST_TARGET_ENV_NAME', rust_target_env_name)
+
 # This is used for putting source info into symbol files.
 set_config('RUSTC_COMMIT', depends(rustc_info)(lambda i: i.commit))
 
@@ -295,6 +305,37 @@ def rust_tests(enable_rust_tests, rustdoc):
 
 
 set_config('MOZ_RUST_TESTS', rust_tests)
+
+
+@depends(target, rustc_info, c_compiler)
+def win64_cargo_linker(target, rustc_info, compiler_info):
+    # When we're building a 32-bit Windows build with a 64-bit rustc, we
+    # need to configure the linker it will use for host binaries (build scripts)
+    # specially because the compiler configuration we use for the build is for
+    # MSVC targeting 32-bit binaries.
+    if target.kernel == 'WINNT' and \
+       target.cpu in ('x86', 'aarch64') and \
+       compiler_info.type in ('msvc', 'clang-cl') and \
+       rustc_info.host == 'x86_64-pc-windows-msvc':
+        return True
+
+
+set_config('WIN64_CARGO_LINKER', win64_cargo_linker)
+
+
+@depends(win64_cargo_linker, check_build_environment)
+@imports(_from='textwrap', _import='dedent')
+def win64_cargo_linker_config(linker, env):
+    if linker:
+        return dedent('''\
+        [target.x86_64-pc-windows-msvc]
+        linker = "{objdir}/build/win64/cargo-linker.bat"
+        '''.format(objdir=env.topobjdir))
+    # We want an empty string here so we don't leave the @ variable in the config file.
+    return ''
+
+
+set_config('WIN64_CARGO_LINKER_CONFIG', win64_cargo_linker_config)
 
 
 @depends(target, c_compiler, rustc)
