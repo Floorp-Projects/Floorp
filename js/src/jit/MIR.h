@@ -2493,12 +2493,9 @@ class MObjectState : public MVariadicInstruction,
                      public NoFloatPolicyAfter<1>::Data {
  private:
   uint32_t numSlots_;
-  uint32_t numFixedSlots_;         // valid if isUnboxed() == false.
-  OperandIndexMap* operandIndex_;  // valid if isUnboxed() == true.
+  uint32_t numFixedSlots_;
 
-  bool isUnboxed() const { return operandIndex_ != nullptr; }
-
-  MObjectState(JSObject* templateObject, OperandIndexMap* operandIndex);
+  explicit MObjectState(JSObject* templateObject);
   explicit MObjectState(MObjectState* state);
 
   MOZ_MUST_USE bool init(TempAllocator& alloc, MDefinition* obj);
@@ -2522,7 +2519,6 @@ class MObjectState : public MVariadicInstruction,
                                            MDefinition* undefinedVal);
 
   size_t numFixedSlots() const {
-    MOZ_ASSERT(!isUnboxed());
     return numFixedSlots_;
   }
   size_t numSlots() const { return numSlots_; }
@@ -2552,19 +2548,6 @@ class MObjectState : public MVariadicInstruction,
   }
   void setDynamicSlot(uint32_t slot, MDefinition* def) {
     setSlot(slot + numFixedSlots(), def);
-  }
-
-  // Interface reserved for unboxed objects.
-  bool hasOffset(uint32_t offset) const {
-    MOZ_ASSERT(isUnboxed());
-    return offset < operandIndex_->map.length() &&
-           operandIndex_->map[offset] != 0;
-  }
-  MDefinition* getOffset(uint32_t offset) const {
-    return getOperand(operandIndex_->map[offset]);
-  }
-  void setOffset(uint32_t offset, MDefinition* def) {
-    replaceOperand(operandIndex_->map[offset], def);
   }
 
   MOZ_MUST_USE bool writeRecoverData(
