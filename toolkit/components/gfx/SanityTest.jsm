@@ -6,9 +6,6 @@
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-  "resource://gre/modules/AppConstants.jsm");
-
 const FRAME_SCRIPT_URL = "chrome://gfxsanity/content/gfxFrameScript.js";
 
 const PAGE_WIDTH = 160;
@@ -27,8 +24,6 @@ const VERSION_PREF = "sanity-test.version";
 const ADVANCED_LAYERS_PREF = "sanity-test.advanced-layers";
 const DISABLE_VIDEO_PREF = "media.hardware-video-decoding.failed";
 const RUNNING_PREF = "sanity-test.running";
-const PERF_ADJUSTMENT_PREF = "performance.adjust_to_machine";
-const LOWEND_DEVICE_PREF = "performance.low_end_machine";
 const TIMEOUT_SEC = 20;
 
 const AL_ENABLED_PREF = "layers.mlgpu.enabled";
@@ -335,24 +330,6 @@ SanityTest.prototype = {
     return true;
   },
 
-  _updateLowEndState() {
-    // If we want to adjust performance based on the machine characteristics...
-    if (Services.prefs.getBoolPref(PERF_ADJUSTMENT_PREF, AppConstants.EARLY_BETA_OR_EARLIER)) {
-      // ... treat any machines with 1-2 cores and a clock speed under 1.8GHz
-      // as "low-end". This will trigger use of a lower frame-rate to help free
-      // the CPU for other work by reducing the amount of painting/compositing
-      // we do.
-      // The cut-off here is based on a combination of telemetry info, running
-      // performance tests on the 2018 reference hardware, and gut instinct.
-      // Ideally, we should replace it with one that's entirely powered by
-      // data correlations from telemetry - see bug 1475242 for more.
-      let isLowEnd = Services.sysinfo.get("cpucores") <= 2 && Services.sysinfo.get("cpuspeed") < 1800;
-      Services.prefs.setBoolPref(LOWEND_DEVICE_PREF, isLowEnd);
-    } else {
-      Services.prefs.clearUserPref(LOWEND_DEVICE_PREF);
-    }
-  },
-
   observe(subject, topic, data) {
     if (topic != "profile-after-change") return;
 
@@ -364,8 +341,6 @@ SanityTest.prototype = {
     if (!this.shouldRunTest()) return;
 
     annotateCrashReport();
-
-    this._updateLowEndState();
 
     // Open a tiny window to render our test page, and notify us when it's loaded
     var sanityTest = Services.ww.openWindow(null,
