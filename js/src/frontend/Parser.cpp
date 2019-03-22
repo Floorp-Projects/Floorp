@@ -8833,14 +8833,17 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
         return null();
       }
 
-      lhs = handler_.newNewExpression(newBegin, ctorExpr, args);
-      if (!lhs) {
+      CallNodeType newExpression =
+          handler_.newNewExpression(newBegin, ctorExpr, args);
+      if (!newExpression) {
         return null();
       }
 
       if (isSpread) {
-        handler_.setOp(lhs, JSOP_SPREADNEW);
+        handler_.setCallOp(newExpression, JSOP_SPREADNEW);
       }
+
+      lhs = newExpression;
     }
   } else if (tt == TokenKind::Super) {
     NameNodeType thisName = newThisName();
@@ -8943,14 +8946,16 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
           return null();
         }
 
-        nextMember = handler_.newSuperCall(lhs, args);
-        if (!nextMember) {
+        CallNodeType superCall = handler_.newSuperCall(lhs, args);
+        if (!superCall) {
           return null();
         }
 
         if (isSpread) {
-          handler_.setOp(nextMember, JSOP_SPREADSUPERCALL);
+          handler_.setCallOp(superCall, JSOP_SPREADSUPERCALL);
         }
+
+        nextMember = superCall;
 
         NameNodeType thisName = newThisName();
         if (!thisName) {
@@ -9010,6 +9015,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
           }
         }
 
+        CallNodeType callNode;
         if (tt == TokenKind::LeftParen) {
           bool isSpread = false;
           PossibleError* asyncPossibleError =
@@ -9029,8 +9035,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
             }
           }
 
-          nextMember = handler_.newCall(lhs, args);
-          if (!nextMember) {
+          callNode = handler_.newCall(lhs, args);
+          if (!callNode) {
             return null();
           }
         } else {
@@ -9043,12 +9049,13 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
             return null();
           }
 
-          nextMember = handler_.newTaggedTemplate(lhs, args);
-          if (!nextMember) {
+          callNode = handler_.newTaggedTemplate(lhs, args);
+          if (!callNode) {
             return null();
           }
         }
-        handler_.setOp(nextMember, op);
+        handler_.setCallOp(callNode, op);
+        nextMember = callNode;
       }
     } else {
       anyChars.ungetToken();
