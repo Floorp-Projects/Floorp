@@ -8,6 +8,7 @@ var EXPORTED_SYMBOLS = ["MainProcessTarget"];
 
 const {Target} = ChromeUtils.import("chrome://remote/content/targets/Target.jsm");
 const {Session} = ChromeUtils.import("chrome://remote/content/sessions/Session.jsm");
+const {RemoteAgent} = ChromeUtils.import("chrome://remote/content/RemoteAgent.jsm");
 
 /**
  * The main process Target.
@@ -29,8 +30,6 @@ class MainProcessTarget extends Target {
   }
 
   get wsDebuggerURL() {
-    const RemoteAgent = Cc["@mozilla.org/remote/agent"]
-        .getService(Ci.nsISupports).wrappedJSObject;
     const {host, port} = RemoteAgent;
     return `ws://${host}:${port}${this.path}`;
   }
