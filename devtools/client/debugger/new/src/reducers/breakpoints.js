@@ -57,6 +57,28 @@ function update(
   action: Action
 ): BreakpointsState {
   switch (action.type) {
+    case "ADD_SOURCES": {
+      const { sources } = action;
+
+      const scriptSources = sources.filter(
+        source => source.introductionType === "scriptElement"
+      );
+
+      if (scriptSources.length > 0) {
+        const { ...breakpointPositions } = state.breakpointPositions;
+
+        // If new HTML sources are being added, we need to clear the breakpoint
+        // positions since the new source is a <script> with new breakpoints.
+        for (const source of scriptSources) {
+          delete breakpointPositions[source.id];
+        }
+
+        state = { ...state, breakpointPositions };
+      }
+
+      return state;
+    }
+
     case "ADD_BREAKPOINT": {
       return addBreakpoint(state, action);
     }
