@@ -462,6 +462,13 @@ class RefTest(object):
 
         self._populate_logger(options)
 
+        # options.log has done its work, in _populate_logger; remove it so that
+        # options can be deepcopied. An alternative would be to modify
+        # mozlog.structuredlog.StructuredLogger to support copy.deepcopy,
+        # https://docs.python.org/2.7/library/copy.html
+        if hasattr(options, 'log'):
+            delattr(options, 'log')
+
         # Number of times to repeat test(s) when running with --repeat
         VERIFY_REPEAT = 10
         # Number of times to repeat test(s) when running test in separate browser
