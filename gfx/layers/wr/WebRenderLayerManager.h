@@ -173,9 +173,7 @@ class WebRenderLayerManager final : public LayerManager {
   WebRenderUserDataRefTable* GetWebRenderUserDataTable() {
     return mWebRenderCommandBuilder.GetWebRenderUserDataTable();
   }
-  WebRenderScrollData& GetScrollData(wr::RenderRoot aRenderRoot) {
-    return mScrollDatas[aRenderRoot];
-  }
+  WebRenderScrollData& GetScrollData() { return mScrollData; }
 
   void WrUpdated();
   void WindowOverlayChanged() { mWindowOverlayChanged = true; }
@@ -187,10 +185,7 @@ class WebRenderLayerManager final : public LayerManager {
   void StopFrameTimeRecording(uint32_t aStartIndex,
                               nsTArray<float>& aFrameIntervals) override;
 
-  RenderRootStateManager* GetRenderRootStateManager(
-      wr::RenderRoot aRenderRoot) {
-    return &mStateManagers[aRenderRoot];
-  }
+  RenderRootStateManager* GetRenderRootStateManager() { return &mStateManager; }
 
  private:
   /**
@@ -211,7 +206,7 @@ class WebRenderLayerManager final : public LayerManager {
 
   // This holds the scroll data that we need to send to the compositor for
   // APZ to do it's job
-  wr::RenderRootArray<WebRenderScrollData> mScrollDatas;
+  WebRenderScrollData mScrollData;
 
   bool mWindowOverlayChanged;
   bool mNeedsComposite;
@@ -236,8 +231,9 @@ class WebRenderLayerManager final : public LayerManager {
   nsCString mURL;
   WebRenderCommandBuilder mWebRenderCommandBuilder;
 
-  wr::RenderRootArray<size_t> mLastDisplayListSizes;
-  wr::RenderRootArray<RenderRootStateManager> mStateManagers;
+  size_t mLastDisplayListSize;
+
+  RenderRootStateManager mStateManager;
 };
 
 }  // namespace layers

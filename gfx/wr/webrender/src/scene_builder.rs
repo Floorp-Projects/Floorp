@@ -40,7 +40,7 @@ use std::time::Duration;
 pub struct Transaction {
     pub document_id: DocumentId,
     pub display_list_updates: Vec<DisplayListUpdate>,
-    pub removed_pipelines: Vec<(PipelineId, DocumentId)>,
+    pub removed_pipelines: Vec<PipelineId>,
     pub epoch_updates: Vec<(PipelineId, Epoch)>,
     pub request_scene_build: Option<SceneRequest>,
     pub blob_requests: Vec<BlobImageParams>,
@@ -91,7 +91,7 @@ pub struct BuiltTransaction {
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
     pub blob_rasterizer: Option<(Box<AsyncBlobImageRasterizer>, AsyncBlobImageInfo)>,
     pub frame_ops: Vec<FrameMsg>,
-    pub removed_pipelines: Vec<(PipelineId, DocumentId)>,
+    pub removed_pipelines: Vec<PipelineId>,
     pub notifications: Vec<NotificationRequest>,
     pub interner_updates: Option<InternerUpdates>,
     pub scene_build_start_time: u64,
@@ -332,7 +332,7 @@ impl SceneBuilder {
                     self.config = cfg;
                 }
                 Ok(SceneBuilderRequest::ClearNamespace(id)) => {
-                    self.documents.retain(|doc_id, _doc| doc_id.namespace_id != id);
+                    self.documents.retain(|doc_id, _doc| doc_id.0 != id);
                     self.send(SceneBuilderResult::ClearNamespace(id));
                 }
                 #[cfg(feature = "replay")]
@@ -378,7 +378,7 @@ impl SceneBuilder {
     #[cfg(feature = "capture")]
     fn save_scene(&mut self, config: CaptureConfig) {
         for (id, doc) in &self.documents {
-            let interners_name = format!("interners-{}-{}", id.namespace_id.0, id.id);
+            let interners_name = format!("interners-{}-{}", (id.0).0, id.1);
             config.serialize(&doc.interners, interners_name);
         }
     }
@@ -481,8 +481,8 @@ impl SceneBuilder {
             scene.set_root_pipeline_id(id);
         }
 
-        for &(pipeline_id, _) in &txn.removed_pipelines {
-            scene.remove_pipeline(pipeline_id)
+        for pipeline_id in &txn.removed_pipelines {
+            scene.remove_pipeline(*pipeline_id)
         }
 
         let mut built_scene = None;
@@ -560,9 +560,7 @@ impl SceneBuilder {
         let (pipeline_info, result_tx, result_rx) = match (&self.hooks, &txn.built_scene) {
             (&Some(ref hooks), &Some(ref built)) => {
                 let info = PipelineInfo {
-                    epochs: built.scene.pipeline_epochs.iter()
-                        .map(|(&pipeline_id, &epoch)| ((pipeline_id, txn.document_id), epoch))
-                        .collect(),
+                    epochs: built.scene.pipeline_epochs.clone(),
                     removed_pipelines: txn.removed_pipelines.clone(),
                 };
                 let (tx, rx) = channel();
@@ -574,7 +572,6 @@ impl SceneBuilder {
             _ => (None, None, None),
         };
 
-        let document_id = txn.document_id;
         let scene_swap_start_time = precise_time_ns();
         let has_resources_updates = !txn.resource_updates.is_empty();
         let invalidate_rendered_frame = txn.invalidate_rendered_frame;
@@ -587,8 +584,7 @@ impl SceneBuilder {
             // Block until the swap is done, then invoke the hook.
             let swap_result = result_rx.unwrap().recv();
             let scene_swap_time = precise_time_ns() - scene_swap_start_time;
-            self.hooks.as_ref().unwrap().post_scene_swap(document_id,
-                                                         pipeline_info, scene_swap_time);
+            self.hooks.as_ref().unwrap().post_scene_swap(pipeline_info, scene_swap_time);
             // Once the hook is done, allow the RB thread to resume
             match swap_result {
                 Ok(SceneSwapResult::Complete(resume_tx)) => {
@@ -598,7 +594,7 @@ impl SceneBuilder {
             };
         } else if has_resources_updates || invalidate_rendered_frame {
             if let &Some(ref hooks) = &self.hooks {
-                hooks.post_resource_update(document_id);
+                hooks.post_resource_update();
             }
         } else {
             if let &Some(ref hooks) = &self.hooks {

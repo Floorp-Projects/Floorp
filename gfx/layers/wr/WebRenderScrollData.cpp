@@ -21,8 +21,7 @@ WebRenderLayerScrollData::WebRenderLayerScrollData()
     : mDescendantCount(-1),
       mTransformIsPerspective(false),
       mEventRegionsOverride(EventRegionsOverride::NoOverride),
-      mFixedPosScrollContainerId(ScrollableLayerGuid::NULL_SCROLL_ID),
-      mRenderRoot(wr::RenderRoot::Default) {}
+      mFixedPosScrollContainerId(ScrollableLayerGuid::NULL_SCROLL_ID) {}
 
 WebRenderLayerScrollData::~WebRenderLayerScrollData() {}
 
@@ -33,13 +32,11 @@ void WebRenderLayerScrollData::InitializeRoot(int32_t aDescendantCount) {
 void WebRenderLayerScrollData::Initialize(
     WebRenderScrollData& aOwner, nsDisplayItem* aItem, int32_t aDescendantCount,
     const ActiveScrolledRoot* aStopAtAsr,
-    const Maybe<gfx::Matrix4x4>& aAncestorTransform,
-    wr::RenderRoot aRenderRoot) {
+    const Maybe<gfx::Matrix4x4>& aAncestorTransform) {
   MOZ_ASSERT(aDescendantCount >= 0);  // Ensure value is valid
   MOZ_ASSERT(mDescendantCount ==
              -1);  // Don't allow re-setting an already set value
   mDescendantCount = aDescendantCount;
-  mRenderRoot = aRenderRoot;
 
   MOZ_ASSERT(aItem);
   aItem->UpdateScrollData(&aOwner, this);
@@ -189,6 +186,10 @@ Maybe<size_t> WebRenderScrollData::HasMetadataFor(
     const ScrollableLayerGuid::ViewID& aScrollId) const {
   auto it = mScrollIdMap.find(aScrollId);
   return (it == mScrollIdMap.end() ? Nothing() : Some(it->second));
+}
+
+void WebRenderScrollData::SetFocusTarget(const FocusTarget& aFocusTarget) {
+  mFocusTarget = aFocusTarget;
 }
 
 void WebRenderScrollData::SetIsFirstPaint() { mIsFirstPaint = true; }

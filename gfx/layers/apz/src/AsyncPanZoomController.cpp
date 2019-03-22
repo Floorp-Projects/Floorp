@@ -795,10 +795,8 @@ void AsyncPanZoomController::InitializeGlobalState() {
 AsyncPanZoomController::AsyncPanZoomController(
     LayersId aLayersId, APZCTreeManager* aTreeManager,
     const RefPtr<InputQueue>& aInputQueue,
-    GeckoContentController* aGeckoContentController, wr::RenderRoot aRenderRoot,
-    GestureBehavior aGestures)
+    GeckoContentController* aGeckoContentController, GestureBehavior aGestures)
     : mLayersId(aLayersId),
-      mRenderRoot(aRenderRoot),
       mGeckoContentController(aGeckoContentController),
       mRefPtrMonitor("RefPtrMonitor"),
       // mTreeManager must be initialized before GetFrameTime() is called

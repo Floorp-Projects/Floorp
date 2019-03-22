@@ -27,7 +27,6 @@ AsyncImagePipelineManager::ForwardingExternalImage::~ForwardingExternalImage() {
 
 AsyncImagePipelineManager::AsyncImagePipeline::AsyncImagePipeline()
     : mInitialised(false),
-      mRenderRoot(wr::RenderRoot::Default),
       mIsChanged(false),
       mUseExternalImage(false),
       mFilter(wr::ImageRendering::Auto),
@@ -41,13 +40,13 @@ AsyncImagePipelineManager::PipelineUpdates::PipelineUpdates(
       mRendered(aRendered) {}
 
 AsyncImagePipelineManager::AsyncImagePipelineManager(
-    nsTArray<RefPtr<wr::WebRenderAPI>>&& aApis)
-    : mApis(aApis),
-      mIdNamespace(mApis[0]->GetNamespace()),
-      mUseTripleBuffering(mApis[0]->GetUseTripleBuffering()),
+    already_AddRefed<wr::WebRenderAPI>&& aApi)
+    : mApi(aApi),
+      mIdNamespace(mApi->GetNamespace()),
+      mUseTripleBuffering(mApi->GetUseTripleBuffering()),
       mResourceId(0),
       mAsyncImageEpoch{0},
-      mWillGenerateFrame{},
+      mWillGenerateFrame(false),
       mDestroyed(false),
       mUpdatesLock("UpdatesLock"),
       mUpdatesCount(0) {
@@ -60,30 +59,22 @@ AsyncImagePipelineManager::~AsyncImagePipelineManager() {
 
 void AsyncImagePipelineManager::Destroy() {
   MOZ_ASSERT(!mDestroyed);
-  mApis.Clear();
+  mApi = nullptr;
   mPipelineTexturesHolders.Clear();
   mDestroyed = true;
 }
 
-void AsyncImagePipelineManager::SetWillGenerateFrameAllRenderRoots() {
-  for (auto renderRoot : wr::kRenderRoots) {
-    SetWillGenerateFrame(renderRoot);
-  }
-}
-
-void AsyncImagePipelineManager::SetWillGenerateFrame(
-    wr::RenderRoot aRenderRoot) {
+void AsyncImagePipelineManager::SetWillGenerateFrame() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 
-  mWillGenerateFrame[aRenderRoot] = true;
+  mWillGenerateFrame = true;
 }
 
-bool AsyncImagePipelineManager::GetAndResetWillGenerateFrame(
-    wr::RenderRoot aRenderRoot) {
+bool AsyncImagePipelineManager::GetAndResetWillGenerateFrame() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 
-  bool ret = mWillGenerateFrame[aRenderRoot];
-  mWillGenerateFrame[aRenderRoot] = false;
+  bool ret = mWillGenerateFrame;
+  mWillGenerateFrame = false;
   return ret;
 }
 
@@ -154,8 +145,7 @@ WebRenderBridgeParent* AsyncImagePipelineManager::GetWrBridge(
 }
 
 void AsyncImagePipelineManager::AddAsyncImagePipeline(
-    const wr::PipelineId& aPipelineId, WebRenderImageHost* aImageHost,
-    wr::RenderRoot aRenderRoot) {
+    const wr::PipelineId& aPipelineId, WebRenderImageHost* aImageHost) {
   if (mDestroyed) {
     return;
   }
@@ -164,7 +154,6 @@ void AsyncImagePipelineManager::AddAsyncImagePipeline(
 
   MOZ_ASSERT(!mAsyncImagePipelines.Get(id));
   AsyncImagePipeline* holder = new AsyncImagePipeline();
-  holder->mRenderRoot = aRenderRoot;
   holder->mImageHost = aImageHost;
   mAsyncImagePipelines.Put(id, holder);
   AddPipeline(aPipelineId, /* aWrBridge */ nullptr);
@@ -297,7 +286,7 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
     aPipeline->mWrTextureWrapper->UpdateWebRenderTextureHost(aMaybeFastTxn,
                                                              wrTexture);
     // Ensure frame generation.
-    SetWillGenerateFrame(aPipeline->mRenderRoot);
+    SetWillGenerateFrame();
   } else {
     if (useWrTextureWrapper) {
       aPipeline->mWrTextureWrapper = new WebRenderTextureHostWrapper(this);
@@ -358,8 +347,8 @@ AsyncImagePipelineManager::UpdateWithoutExternalImage(
 }
 
 void AsyncImagePipelineManager::ApplyAsyncImagesOfImageBridge(
-    wr::RenderRootArray<Maybe<wr::TransactionBuilder>>& aSceneBuilderTxns,
-    wr::RenderRootArray<Maybe<wr::TransactionBuilder>>& aFastTxns) {
+    wr::TransactionBuilder& aSceneBuilderTxn,
+    wr::TransactionBuilder& aFastTxn) {
   if (mDestroyed || mAsyncImagePipelines.Count() == 0) {
     return;
   }
@@ -375,9 +364,8 @@ void AsyncImagePipelineManager::ApplyAsyncImagesOfImageBridge(
     if (!pipeline->mImageHost->GetAsyncRef()) {
       continue;
     }
-    ApplyAsyncImageForPipeline(epoch, pipelineId, pipeline,
-                               *aSceneBuilderTxns[pipeline->mRenderRoot],
-                               *aFastTxns[pipeline->mRenderRoot]);
+    ApplyAsyncImageForPipeline(epoch, pipelineId, pipeline, aSceneBuilderTxn,
+                               aFastTxn);
   }
 }
 
@@ -468,15 +456,14 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
 
 void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
     const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn,
-    wr::TransactionBuilder& aTxnForImageBridge, wr::RenderRoot aRenderRoot) {
+    wr::TransactionBuilder& aTxnForImageBridge) {
   AsyncImagePipeline* pipeline =
       mAsyncImagePipelines.Get(wr::AsUint64(aPipelineId));
   if (!pipeline) {
     return;
   }
-  wr::WebRenderAPI* api = mApis[(size_t)pipeline->mRenderRoot];
   wr::TransactionBuilder fastTxn(/* aUseSceneBuilderThread */ false);
-  wr::AutoTransactionSender sender(api, &fastTxn);
+  wr::AutoTransactionSender sender(mApi, &fastTxn);
 
   // Transaction for async image pipeline that uses ImageBridge always need to
   // be non low priority.
@@ -683,12 +670,11 @@ void AsyncImagePipelineManager::ProcessPipelineRendered(
 }
 
 void AsyncImagePipelineManager::ProcessPipelineRemoved(
-    const wr::RemovedPipeline& aRemovedPipeline, const uint64_t aUpdatesCount) {
+    const wr::PipelineId& aPipelineId, const uint64_t aUpdatesCount) {
   if (mDestroyed) {
     return;
   }
-  if (auto entry = mPipelineTexturesHolders.Lookup(
-          wr::AsUint64(aRemovedPipeline.pipeline_id))) {
+  if (auto entry = mPipelineTexturesHolders.Lookup(wr::AsUint64(aPipelineId))) {
     PipelineTexturesHolder* holder = entry.Data();
     if (holder->mDestroyedEpoch.isSome()) {
       while (!holder->mTextureHosts.empty()) {

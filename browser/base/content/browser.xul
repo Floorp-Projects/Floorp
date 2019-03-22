@@ -696,7 +696,7 @@
                 id="syncedTabsRefreshFilter"/>
     </menupopup>
 
-    <hbox id="statuspanel" inactive="true" renderroot="content">
+    <hbox id="statuspanel" inactive="true" layer="true">
       <hbox id="statuspanel-inner">
         <label id="statuspanel-label"
                role="status"
@@ -1331,7 +1331,7 @@
 
   <hbox id="fullscr-toggler" hidden="true"/>
 
-  <deck id="content-deck" flex="1" renderroot="content">
+  <deck id="content-deck" flex="1">
     <hbox flex="1" id="browser">
       <vbox id="browser-border-start" hidden="true" layer="true"/>
       <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
@@ -1367,7 +1367,7 @@
 #include ../../components/customizableui/content/customizeMode.inc.xul
   </deck>
 
-  <html:div id="fullscreen-warning" class="pointerlockfswarning" hidden="true" renderroot="content">
+  <html:div id="fullscreen-warning" class="pointerlockfswarning" hidden="true">
     <html:div class="pointerlockfswarning-domain-text">
       &fullscreenWarning.beforeDomain.label;
       <html:span class="pointerlockfswarning-domain"/>
@@ -1386,7 +1386,7 @@
     </html:button>
   </html:div>
 
-  <html:div id="pointerlock-warning" class="pointerlockfswarning" hidden="true" renderroot="content">
+  <html:div id="pointerlock-warning" class="pointerlockfswarning" hidden="true">
     <html:div class="pointerlockfswarning-domain-text">
       &pointerlockWarning.beforeDomain.label;
       <html:span class="pointerlockfswarning-domain"/>
@@ -1397,7 +1397,8 @@
     </html:div>
   </html:div>
 
-  <vbox id="browser-bottombox" layer="true" renderroot="content">
+  <vbox id="browser-bottombox" layer="true">
     <!-- gNotificationBox will be added here lazily. -->
   </vbox>
+
 </window>

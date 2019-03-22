@@ -189,16 +189,6 @@ struct IPDLParamTraits<mozilla::Maybe<T>> {
     }
   }
 
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    mozilla::Maybe<T>&& aParam) {
-    bool isSome = aParam.isSome();
-    WriteIPDLParam(aMsg, aActor, isSome);
-
-    if (isSome) {
-      WriteIPDLParam(aMsg, aActor, std::move(aParam.ref()));
-    }
-  }
-
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
                    IProtocol* aActor, mozilla::Maybe<T>* aResult) {
     bool isSome;

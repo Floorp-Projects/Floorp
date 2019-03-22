@@ -91,7 +91,6 @@
 #include "nsAuthInformationHolder.h"
 #include "nsICancelable.h"
 #include "gfxPrefs.h"
-#include "gfxUtils.h"
 #include "nsILoginManagerPrompter.h"
 #include "nsPIWindowRoot.h"
 #include "nsIAuthPrompt2.h"
@@ -3440,8 +3439,7 @@ TabParent::StartApzAutoscroll(float aAnchorX, float aAnchorY,
   if (mRenderFrame.IsInitialized()) {
     layers::LayersId layersId = mRenderFrame.GetLayersId();
     if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
-      SLGuidAndRenderRoot guid(layersId, aPresShellId, aScrollId,
-                               gfxUtils::GetContentRenderRoot());
+      ScrollableLayerGuid guid{layersId, aPresShellId, aScrollId};
 
       // The anchor coordinates that are passed in are relative to the origin
       // of the screen, but we are sending them to APZ which only knows about
@@ -3470,9 +3468,7 @@ TabParent::StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId) {
   if (mRenderFrame.IsInitialized()) {
     layers::LayersId layersId = mRenderFrame.GetLayersId();
     if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
-      SLGuidAndRenderRoot guid(layersId, aPresShellId, aScrollId,
-                               gfxUtils::GetContentRenderRoot());
-
+      ScrollableLayerGuid guid{layersId, aPresShellId, aScrollId};
       widget->StopAsyncAutoscroll(guid);
     }
   }

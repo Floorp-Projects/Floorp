@@ -59,12 +59,10 @@ class APZSampler {
    */
   static void SetSamplerThread(const wr::WrWindowId& aWindowId);
   static void SampleForWebRender(const wr::WrWindowId& aWindowId,
-                                 wr::Transaction* aTxn,
-                                 const wr::DocumentId& aRenderRootId);
+                                 wr::Transaction* aTxn);
 
   void SetSampleTime(const TimeStamp& aSampleTime);
-  void SampleForWebRender(wr::TransactionWrapper& aTxn,
-                          wr::RenderRoot aRenderRoot);
+  void SampleForWebRender(wr::TransactionWrapper& aTxn);
 
   bool SampleAnimations(const LayerMetricsWrapper& aLayer,
                         const TimeStamp& aSampleTime);

@@ -48,10 +48,6 @@ class MOZ_RAII StackingContextHelper {
   // Export the inherited scale
   gfx::Size GetInheritedScale() const { return mScale; }
 
-  const gfx::Matrix& GetInheritedTransform() const {
-    return mInheritedTransform;
-  }
-
   const gfx::Matrix& GetSnappingSurfaceTransform() const {
     return mSnappingSurfaceTransform;
   }
@@ -62,13 +58,10 @@ class MOZ_RAII StackingContextHelper {
   bool AffectsClipPositioning() const { return mAffectsClipPositioning; }
   Maybe<wr::WrSpatialId> ReferenceFrameId() const { return mReferenceFrameId; }
 
-  const LayoutDevicePoint& GetOrigin() const { return mOrigin; }
-
  private:
   wr::DisplayListBuilder* mBuilder;
   gfx::Size mScale;
   gfx::Matrix mInheritedTransform;
-  LayoutDevicePoint mOrigin;
 
   // The "snapping surface" defines the space that we want to snap in.
   // You can think of it as the nearest physical surface.

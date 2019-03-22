@@ -33,9 +33,7 @@ class APZCBasicTester : public APZCTesterBase {
     updater = new APZUpdater(tm, false);
     sampler = new APZSampler(tm, false);
     apzc =
-        new TestAsyncPanZoomController(LayersId{0}, mcc, tm,
-                                       wr::RenderRoot::Default,
-                                       mGestureBehavior);
+        new TestAsyncPanZoomController(LayersId{0}, mcc, tm, mGestureBehavior);
     apzc->SetFrameMetrics(TestFrameMetrics());
     apzc->GetScrollMetadata().SetIsLayersIdRoot(true);
   }

@@ -607,12 +607,12 @@ impl FontContexts {
     }
 }
 
-pub trait AsyncForEach<T> {
-    fn async_for_each<F: Fn(MutexGuard<T>) + Send + 'static>(&self, f: F);
+pub trait ForEach<T> {
+    fn for_each<F: Fn(MutexGuard<T>) + Send + 'static>(&self, f: F);
 }
 
-impl AsyncForEach<FontContext> for Arc<FontContexts> {
-    fn async_for_each<F: Fn(MutexGuard<FontContext>) + Send + 'static>(&self, f: F) {
+impl ForEach<FontContext> for Arc<FontContexts> {
+    fn for_each<F: Fn(MutexGuard<FontContext>) + Send + 'static>(&self, f: F) {
         // Reset the locked condition.
         let mut locked = self.locked_mutex.lock().unwrap();
         *locked = false;
@@ -718,7 +718,7 @@ impl GlyphRasterizer {
         #[cfg(feature = "pathfinder")]
         self.add_font_to_pathfinder(&font_key, &template);
 
-        self.font_contexts.async_for_each(move |mut context| {
+        self.font_contexts.for_each(move |mut context| {
             context.add_font(&font_key, &template);
         });
     }
@@ -771,7 +771,7 @@ impl GlyphRasterizer {
 
         let fonts_to_remove = mem::replace(&mut self.fonts_to_remove, Vec::new());
         let font_instances_to_remove = mem::replace(& mut self.font_instances_to_remove, Vec::new());
-        self.font_contexts.async_for_each(move |mut context| {
+        self.font_contexts.for_each(move |mut context| {
             for font_key in &fonts_to_remove {
                 context.delete_font(font_key);
             }
