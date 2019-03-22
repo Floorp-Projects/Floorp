@@ -41,8 +41,6 @@ namespace jit {
   _(GuardNotDOMProxy)                     \
   _(GuardSpecificInt32Immediate)          \
   _(GuardMagicValue)                      \
-  _(GuardNoUnboxedExpando)                \
-  _(GuardAndLoadUnboxedExpando)           \
   _(GuardNoDetachedTypedObjects)          \
   _(GuardNoDenseElements)                 \
   _(GuardAndGetNumberFromString)          \
