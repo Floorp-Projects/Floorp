@@ -6787,7 +6787,7 @@ static const char* SelfHostedCallFunctionName(JSAtom* name, JSContext* cx) {
   MOZ_CRASH("Unknown self-hosted call function name");
 }
 
-bool BytecodeEmitter::emitSelfHostedCallFunction(BinaryNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode) {
   // Special-casing of callFunction to emit bytecode that directly
   // invokes the callee with the correct |this| object and arguments.
   // callFunction(fun, thisArg, arg0, arg1) thus becomes:
@@ -6807,7 +6807,7 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(BinaryNode* callNode) {
     return false;
   }
 
-  JSOp callOp = callNode->getOp();
+  JSOp callOp = callNode->callOp();
   if (callOp != JSOP_CALL) {
     reportError(callNode, JSMSG_NOT_CONSTRUCTOR, errorName);
     return false;
@@ -7204,7 +7204,7 @@ bool BytecodeEmitter::emitArguments(ListNode* argsList, bool isCall,
 }
 
 bool BytecodeEmitter::emitCallOrNew(
-    BinaryNode* callNode, ValueUsage valueUsage /* = ValueUsage::WantValue */) {
+    CallNode* callNode, ValueUsage valueUsage /* = ValueUsage::WantValue */) {
   /*
    * Emit callable invocation or operator new (constructor call) code.
    * First, emit code for the left operand to evaluate the callable or
@@ -7224,7 +7224,7 @@ bool BytecodeEmitter::emitCallOrNew(
                 callNode->isKind(ParseNodeKind::TaggedTemplateExpr);
   ParseNode* calleeNode = callNode->left();
   ListNode* argsList = &callNode->right()->as<ListNode>();
-  bool isSpread = JOF_OPTYPE(callNode->getOp()) == JOF_BYTE;
+  bool isSpread = JOF_OPTYPE(callNode->callOp()) == JOF_BYTE;
   if (calleeNode->isKind(ParseNodeKind::Name) &&
       emitterMode == BytecodeEmitter::SelfHosting && !isSpread) {
     // Calls to "forceInterpreter", "callFunction",
@@ -7258,7 +7258,7 @@ bool BytecodeEmitter::emitCallOrNew(
     // Fall through
   }
 
-  JSOp op = callNode->getOp();
+  JSOp op = callNode->callOp();
   uint32_t argc = argsList->count();
   CallOrNewEmitter cone(
       this, op,
@@ -8953,7 +8953,7 @@ bool BytecodeEmitter::emitTree(
     case ParseNodeKind::TaggedTemplateExpr:
     case ParseNodeKind::CallExpr:
     case ParseNodeKind::SuperCallExpr:
-      if (!emitCallOrNew(&pn->as<BinaryNode>(), valueUsage)) {
+      if (!emitCallOrNew(&pn->as<CallNode>(), valueUsage)) {
         return false;
       }
       break;

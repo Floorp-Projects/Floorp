@@ -810,8 +810,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitArguments(ListNode* argsList, bool isCall,
                                   bool isSpread, CallOrNewEmitter& cone);
   MOZ_MUST_USE bool emitCallOrNew(
-      BinaryNode* callNode, ValueUsage valueUsage = ValueUsage::WantValue);
-  MOZ_MUST_USE bool emitSelfHostedCallFunction(BinaryNode* callNode);
+      CallNode* callNode, ValueUsage valueUsage = ValueUsage::WantValue);
+  MOZ_MUST_USE bool emitSelfHostedCallFunction(CallNode* callNode);
   MOZ_MUST_USE bool emitSelfHostedResumeGenerator(BinaryNode* callNode);
   MOZ_MUST_USE bool emitSelfHostedForceInterpreter();
   MOZ_MUST_USE bool emitSelfHostedAllowContentIter(BinaryNode* callNode);
