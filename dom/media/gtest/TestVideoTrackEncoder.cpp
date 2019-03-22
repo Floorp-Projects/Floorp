@@ -740,14 +740,11 @@ TEST(VP8VideoTrackEncoder, SuspendedOverlap) {
 
   // Verify that we have two encoded frames and a total duration of 0.1s.
   const uint64_t two = 2;
-  EXPECT_EQ(two, container.GetEncodedFrames().Length());
-
-  uint64_t totalDuration = 0;
-  for (auto& frame : container.GetEncodedFrames()) {
-    totalDuration += frame->GetDuration();
-  }
-  const uint64_t onePointTwo = (PR_USEC_PER_SEC / 10) * 12;
-  EXPECT_EQ(onePointTwo, totalDuration);
+  ASSERT_EQ(two, container.GetEncodedFrames().Length());
+  const uint64_t pointFive = (PR_USEC_PER_SEC / 10) * 5;
+  EXPECT_EQ(pointFive, container.GetEncodedFrames()[0]->GetDuration());
+  const uint64_t pointSeven = (PR_USEC_PER_SEC / 10) * 7;
+  EXPECT_EQ(pointSeven, container.GetEncodedFrames()[1]->GetDuration());
 }
 
 // Test that ending a track in the middle of already pushed data works.
