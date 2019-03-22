@@ -112,7 +112,7 @@
   border-inline-start-width: 1px;
   width: 100%;
   min-height: 23px;
-  text-align: left;
+  text-align: start;
   color: inherit;
   padding: 1px 4px;
 }
@@ -128,7 +128,6 @@
 
 .requests-list-header-button > .button-text {
   display: inline-block;
-  text-align: left;
   vertical-align: middle;
   width: 100%;
   overflow: hidden;
