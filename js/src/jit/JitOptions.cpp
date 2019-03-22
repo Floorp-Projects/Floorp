@@ -247,9 +247,6 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(spectreJitToCxxCalls, true);
 #endif
 
-  // Toggles whether unboxed plain objects can be created by the VM.
-  SET_DEFAULT(disableUnboxedObjects, true);
-
   // Toggles the optimization whereby offsets are folded into loads and not
   // included in the bounds check.
   SET_DEFAULT(wasmFoldOffsets, true);
