@@ -2573,9 +2573,10 @@ bool BaselineCompilerCodeGen::emit_JSOP_NEWARRAY_COPYONWRITE() {
 
   prepareVMCall();
 
+  pushArg(Imm32(gc::DefaultHeap));
   pushArg(ImmGCPtr(obj));
 
-  using Fn = ArrayObject* (*)(JSContext*, HandleArrayObject);
+  using Fn = ArrayObject* (*)(JSContext*, HandleArrayObject, gc::InitialHeap);
   if (!callVM<Fn, js::NewDenseCopyOnWriteArray>()) {
     return false;
   }
