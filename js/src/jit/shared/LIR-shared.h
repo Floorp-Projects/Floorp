@@ -4325,24 +4325,6 @@ class LStoreUnboxedPointer : public LInstructionHelper<0, 3, 0> {
   const LAllocation* value() { return getOperand(2); }
 };
 
-// If necessary, convert an unboxed object in a particular group to its native
-// representation.
-class LConvertUnboxedObjectToNative : public LInstructionHelper<1, 1, 1> {
- public:
-  LIR_HEADER(ConvertUnboxedObjectToNative)
-
-  LConvertUnboxedObjectToNative(const LAllocation& object,
-                                const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, object);
-    setTemp(0, temp);
-  }
-  const LDefinition* temp() { return getTemp(0); }
-  MConvertUnboxedObjectToNative* mir() {
-    return mir_->toConvertUnboxedObjectToNative();
-  }
-};
-
 class LArrayPopShiftV : public LInstructionHelper<BOX_PIECES, 1, 2> {
  public:
   LIR_HEADER(ArrayPopShiftV)
@@ -5689,34 +5671,6 @@ class LGuardReceiverPolymorphic : public LInstructionHelper<1, 1, 2> {
   const LDefinition* temp2() { return getTemp(1); }
   const MGuardReceiverPolymorphic* mir() const {
     return mir_->toGuardReceiverPolymorphic();
-  }
-};
-
-class LGuardUnboxedExpando : public LInstructionHelper<0, 1, 0> {
- public:
-  LIR_HEADER(GuardUnboxedExpando)
-
-  explicit LGuardUnboxedExpando(const LAllocation& in)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-  }
-  const LAllocation* object() { return getOperand(0); }
-  const MGuardUnboxedExpando* mir() const {
-    return mir_->toGuardUnboxedExpando();
-  }
-};
-
-class LLoadUnboxedExpando : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(LoadUnboxedExpando)
-
-  explicit LLoadUnboxedExpando(const LAllocation& in)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-  }
-  const LAllocation* object() { return getOperand(0); }
-  const MLoadUnboxedExpando* mir() const {
-    return mir_->toLoadUnboxedExpando();
   }
 };
 

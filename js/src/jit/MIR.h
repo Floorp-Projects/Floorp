@@ -32,7 +32,6 @@
 #include "vm/RegExpObject.h"
 #include "vm/SharedMem.h"
 #include "vm/TypedArrayObject.h"
-#include "vm/UnboxedObject.h"
 
 namespace js {
 
@@ -7954,55 +7953,6 @@ class MStoreUnboxedString : public MQuaternaryInstruction,
   ALLOW_CLONE(MStoreUnboxedString)
 };
 
-// Passes through an object, after ensuring it is converted from an unboxed
-// object to a native representation.
-class MConvertUnboxedObjectToNative : public MUnaryInstruction,
-                                      public SingleObjectPolicy::Data {
-  CompilerObjectGroup group_;
-
-  explicit MConvertUnboxedObjectToNative(MDefinition* obj, ObjectGroup* group)
-      : MUnaryInstruction(classOpcode, obj), group_(group) {
-    setGuard();
-    setMovable();
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(ConvertUnboxedObjectToNative)
-  NAMED_OPERANDS((0, object))
-
-  static MConvertUnboxedObjectToNative* New(TempAllocator& alloc,
-                                            MDefinition* obj,
-                                            ObjectGroup* group);
-
-  ObjectGroup* group() const { return group_; }
-  bool congruentTo(const MDefinition* ins) const override {
-    if (!congruentIfOperandsEqual(ins)) {
-      return false;
-    }
-    return ins->toConvertUnboxedObjectToNative()->group() == group();
-  }
-  AliasSet getAliasSet() const override {
-    // This instruction can read and write to all parts of the object, but
-    // is marked as non-effectful so it can be consolidated by LICM and GVN
-    // and avoid inhibiting other optimizations.
-    //
-    // This is valid to do because when unboxed objects might have a native
-    // group they can be converted to, we do not optimize accesses to the
-    // unboxed objects and do not guard on their group or shape (other than
-    // in this opcode).
-    //
-    // Later accesses can assume the object has a native representation
-    // and optimize accordingly. Those accesses cannot be reordered before
-    // this instruction, however. This is prevented by chaining this
-    // instruction with the object itself, in the same way as MBoundsCheck.
-    return AliasSet::None();
-  }
-  bool appendRoots(MRootList& roots) const override {
-    return roots.append(group_);
-  }
-};
-
 // Array.prototype.pop or Array.prototype.shift on a dense array.
 class MArrayPopShift : public MUnaryInstruction,
                        public SingleObjectPolicy::Data {
@@ -9096,11 +9046,6 @@ class MGuardShape : public MUnaryInstruction, public SingleObjectPolicy::Data {
     setMovable();
     setResultType(MIRType::Object);
     setResultTypeSet(obj->resultTypeSet());
-
-    // Disallow guarding on unboxed object shapes. The group is better to
-    // guard on, and guarding on the shape can interact badly with
-    // MConvertUnboxedObjectToNative.
-    MOZ_ASSERT(shape->getObjectClass() != &UnboxedPlainObject::class_);
   }
 
  public:
@@ -9183,11 +9128,6 @@ class MGuardObjectGroup : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-
-    // Unboxed groups which might be converted to natives can't be guarded
-    // on, due to MConvertUnboxedObjectToNative.
-    MOZ_ASSERT_IF(group->maybeUnboxedLayoutDontCheckGeneration(),
-                  !group->unboxedLayoutDontCheckGeneration().nativeGroup());
   }
 
  public:
@@ -9248,66 +9188,6 @@ class MGuardObjectIdentity : public MBinaryInstruction,
     if (bailOnEquality() != ins->toGuardObjectIdentity()->bailOnEquality()) {
       return false;
     }
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::ObjectFields);
-  }
-};
-
-// Guard on the presence or absence of an unboxed object's expando.
-class MGuardUnboxedExpando : public MUnaryInstruction,
-                             public SingleObjectPolicy::Data {
-  bool requireExpando_;
-  BailoutKind bailoutKind_;
-
-  MGuardUnboxedExpando(MDefinition* obj, bool requireExpando,
-                       BailoutKind bailoutKind)
-      : MUnaryInstruction(classOpcode, obj),
-        requireExpando_(requireExpando),
-        bailoutKind_(bailoutKind) {
-    setGuard();
-    setMovable();
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(GuardUnboxedExpando)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object))
-
-  bool requireExpando() const { return requireExpando_; }
-  BailoutKind bailoutKind() const { return bailoutKind_; }
-  bool congruentTo(const MDefinition* ins) const override {
-    if (!congruentIfOperandsEqual(ins)) {
-      return false;
-    }
-    if (requireExpando() != ins->toGuardUnboxedExpando()->requireExpando()) {
-      return false;
-    }
-    return true;
-  }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::ObjectFields);
-  }
-};
-
-// Load an unboxed plain object's expando.
-class MLoadUnboxedExpando : public MUnaryInstruction,
-                            public SingleObjectPolicy::Data {
- private:
-  explicit MLoadUnboxedExpando(MDefinition* object)
-      : MUnaryInstruction(classOpcode, object) {
-    setResultType(MIRType::Object);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(LoadUnboxedExpando)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object))
-
-  bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override {
