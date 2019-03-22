@@ -9,10 +9,6 @@ var EXPORTED_SYMBOLS = ["GeckoViewSettings"];
 const {GeckoViewModule} = ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
-});
-
 XPCOMUtils.defineLazyGetter(
   this, "MOBILE_USER_AGENT",
   function() {
@@ -45,11 +41,9 @@ const USER_AGENT_MODE_VR = 2;
 class GeckoViewSettings extends GeckoViewModule {
   onInit() {
     debug `onInit`;
-    this._useTrackingProtection = false;
     this._userAgentMode = USER_AGENT_MODE_MOBILE;
     this._userAgentOverride = null;
     // Required for safe browsing and tracking protection.
-    SafeBrowsing.init();
 
     this.registerListener([
       "GeckoView:GetUserAgent",
