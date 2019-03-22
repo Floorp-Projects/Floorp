@@ -5,7 +5,6 @@
 #include <algorithm>
 
 #include "DriftCompensation.h"
-#include "ImageContainer.h"
 #include "MediaStreamGraph.h"
 #include "MediaStreamListener.h"
 #include "VP8TrackEncoder.h"
@@ -14,6 +13,8 @@
 #include "gtest/gtest.h"
 #include "mozilla/ArrayUtils.h"
 #include "prtime.h"
+
+#include "YUVBufferGenerator.h"
 
 #define VIDEO_TRACK_RATE 90000
 
@@ -25,158 +26,6 @@ using ::testing::Values;
 
 using namespace mozilla::layers;
 using namespace mozilla;
-
-// A helper object to generate of different YUV planes.
-class YUVBufferGenerator {
- public:
-  YUVBufferGenerator() {}
-
-  void Init(const mozilla::gfx::IntSize& aSize) {
-    mImageSize = aSize;
-
-    int yPlaneLen = aSize.width * aSize.height;
-    int cbcrPlaneLen = (yPlaneLen + 1) / 2;
-    int frameLen = yPlaneLen + cbcrPlaneLen;
-
-    // Generate source buffer.
-    mSourceBuffer.SetLength(frameLen);
-
-    // Fill Y plane.
-    memset(mSourceBuffer.Elements(), 0x10, yPlaneLen);
-
-    // Fill Cb/Cr planes.
-    memset(mSourceBuffer.Elements() + yPlaneLen, 0x80, cbcrPlaneLen);
-  }
-
-  mozilla::gfx::IntSize GetSize() const { return mImageSize; }
-
-  already_AddRefed<Image> GenerateI420Image() {
-    return do_AddRef(CreateI420Image());
-  }
-
-  already_AddRefed<Image> GenerateNV12Image() {
-    return do_AddRef(CreateNV12Image());
-  }
-
-  already_AddRefed<Image> GenerateNV21Image() {
-    return do_AddRef(CreateNV21Image());
-  }
-
- private:
-  Image* CreateI420Image() {
-    PlanarYCbCrImage* image =
-        new RecyclingPlanarYCbCrImage(new BufferRecycleBin());
-    PlanarYCbCrData data;
-    data.mPicSize = mImageSize;
-
-    const uint32_t yPlaneSize = mImageSize.width * mImageSize.height;
-    const uint32_t halfWidth = (mImageSize.width + 1) / 2;
-    const uint32_t halfHeight = (mImageSize.height + 1) / 2;
-    const uint32_t uvPlaneSize = halfWidth * halfHeight;
-
-    // Y plane.
-    uint8_t* y = mSourceBuffer.Elements();
-    data.mYChannel = y;
-    data.mYSize.width = mImageSize.width;
-    data.mYSize.height = mImageSize.height;
-    data.mYStride = mImageSize.width;
-    data.mYSkip = 0;
-
-    // Cr plane.
-    uint8_t* cr = y + yPlaneSize + uvPlaneSize;
-    data.mCrChannel = cr;
-    data.mCrSkip = 0;
-
-    // Cb plane
-    uint8_t* cb = y + yPlaneSize;
-    data.mCbChannel = cb;
-    data.mCbSkip = 0;
-
-    // CrCb plane vectors.
-    data.mCbCrStride = halfWidth;
-    data.mCbCrSize.width = halfWidth;
-    data.mCbCrSize.height = halfHeight;
-
-    image->CopyData(data);
-    return image;
-  }
-
-  Image* CreateNV12Image() {
-    NVImage* image = new NVImage();
-    PlanarYCbCrData data;
-    data.mPicSize = mImageSize;
-
-    const uint32_t yPlaneSize = mImageSize.width * mImageSize.height;
-    const uint32_t halfWidth = (mImageSize.width + 1) / 2;
-    const uint32_t halfHeight = (mImageSize.height + 1) / 2;
-
-    // Y plane.
-    uint8_t* y = mSourceBuffer.Elements();
-    data.mYChannel = y;
-    data.mYSize.width = mImageSize.width;
-    data.mYSize.height = mImageSize.height;
-    data.mYStride = mImageSize.width;
-    data.mYSkip = 0;
-
-    // Cr plane.
-    uint8_t* cr = y + yPlaneSize;
-    data.mCrChannel = cr;
-    data.mCrSkip = 1;
-
-    // Cb plane
-    uint8_t* cb = y + yPlaneSize + 1;
-    data.mCbChannel = cb;
-    data.mCbSkip = 1;
-
-    // 4:2:0.
-    data.mCbCrStride = mImageSize.width;
-    data.mCbCrSize.width = halfWidth;
-    data.mCbCrSize.height = halfHeight;
-
-    image->SetData(data);
-    return image;
-  }
-
-  Image* CreateNV21Image() {
-    NVImage* image = new NVImage();
-    PlanarYCbCrData data;
-    data.mPicSize = mImageSize;
-
-    const uint32_t yPlaneSize = mImageSize.width * mImageSize.height;
-    const uint32_t halfWidth = (mImageSize.width + 1) / 2;
-    const uint32_t halfHeight = (mImageSize.height + 1) / 2;
-
-    // Y plane.
-    uint8_t* y = mSourceBuffer.Elements();
-    data.mYChannel = y;
-    data.mYSize.width = mImageSize.width;
-    data.mYSize.height = mImageSize.height;
-    data.mYStride = mImageSize.width;
-    data.mYSkip = 0;
-
-    // Cr plane.
-    uint8_t* cr = y + yPlaneSize + 1;
-    data.mCrChannel = cr;
-    data.mCrSkip = 1;
-
-    // Cb plane
-    uint8_t* cb = y + yPlaneSize;
-    data.mCbChannel = cb;
-    data.mCbSkip = 1;
-
-    // 4:2:0.
-    data.mCbCrStride = mImageSize.width;
-    data.mCbCrSize.width = halfWidth;
-    data.mCbCrSize.height = halfHeight;
-
-    image->SetData(data);
-    return image;
-  }
-
- private:
-  mozilla::gfx::IntSize mImageSize;
-  nsTArray<uint8_t> mSourceBuffer;
-};
 
 struct InitParam {
   bool mShouldSucceed;  // This parameter should cause success or fail result
