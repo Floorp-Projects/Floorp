@@ -86,7 +86,7 @@ var ExtensionsUI = {
             }
 
             this.sideloaded.delete(addon);
-              this._updateNotifications();
+            this._updateNotifications();
 
             if (this.sideloaded.size == 0) {
               AddonManager.removeAddonListener(this.sideloadListener);
@@ -140,6 +140,16 @@ var ExtensionsUI = {
         .then(async answer => {
           if (answer) {
             await addon.enable();
+
+            this._updateNotifications();
+
+            // If private browsing access is not allowed by default,
+            // show the post-install doorhanger notification to
+            // allow the user to give the extension access from the
+            // checkbox included in the doorhanger.
+            if (!allowPrivateBrowsingByDefault && addon.incognito !== "not_allowed") {
+              this.showInstallNotification(browser, addon);
+            }
           }
           this.emit("sideload-response");
         });
