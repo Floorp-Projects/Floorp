@@ -382,6 +382,11 @@ var ReaderMode = {
       pathBase: Services.io.newURI(".", null, doc.baseURIObject).spec,
     };
 
+    // convert text/plain document, if any, to XHTML format
+    if (this._isDocumentPlainText(doc)) {
+      doc = this._convertPlainTextDocument(doc);
+    }
+
     let serializer = new XMLSerializer();
     let serializedDoc = serializer.serializeToString(doc);
 
@@ -539,6 +544,41 @@ var ReaderMode = {
     ]);
 
     return readingSpeed.get(lang) || readingSpeed.get("en");
+  },
+  /**
+   *
+   * Check if the document to be parsed is text document.
+   * @param doc the doc object to be parsed.
+   * @return boolean
+   *
+   */
+  _isDocumentPlainText(doc) {
+    return doc.contentType == "text/plain";
+  },
+  /**
+   *
+   * The document to be parsed is text document and is converted to HTML format.
+   * @param doc the doc object to be parsed.
+   * @return doc
+   *
+   */
+  _convertPlainTextDocument(doc) {
+    let preTag = doc.querySelector("pre");
+    let docFrag = doc.createDocumentFragment();
+    let content = preTag.textContent;
+    let paragraphs = content.split(/\r?\n\r?\n/);
+    for (let para of paragraphs) {
+      let pElem = doc.createElement("p");
+      let lines = para.split(/\n/);
+      for (let line of lines) {
+        pElem.append(line);
+        let brElem = doc.createElement("br");
+        pElem.append(brElem);
+      }
+      docFrag.append(pElem);
+    }
+    preTag.parentNode.replaceChild(docFrag, preTag);
+    return doc;
   },
 };
 
