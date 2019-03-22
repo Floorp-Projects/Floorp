@@ -18,12 +18,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=957479
     is(frames[0].location.pathname, "/tests/docshell/test/mochitest/file_pushState_after_document_open.html",
        "Should have the right path here");
     is(frames[0].location.hash, "", "Should have the right hash here");
-    frames[0].history.pushState({}, '', frames[0].document.URL + "#foopy");
+    frames[0].history.pushState({}, "", frames[0].document.URL + "#foopy");
     is(frames[0].location.pathname, "/tests/docshell/test/mochitest/file_pushState_after_document_open.html",
        "Pathname should not have changed");
     is(frames[0].location.hash, "#foopy", "Hash should have changed");
     SimpleTest.finish();
-  }
+  };
 
   </script>
 </head>

@@ -34,7 +34,6 @@ add_task(async function() {
   let method1 = await new Promise(resolve => {
     window.page2Load = resolve;
   });
-
   info("iframe's location is: " + iframeCw.location + ", method is " + method1 + "\n");
   is(method1, "POST", "Method for first load should be POST.");
 

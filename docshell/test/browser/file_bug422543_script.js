@@ -5,27 +5,27 @@ SHistoryListener.prototype = {
   retval: true,
   last: "initial",
 
-  OnHistoryNewEntry: function (aNewURI) {
+  OnHistoryNewEntry(aNewURI) {
     this.last = "newentry";
   },
 
-  OnHistoryGotoIndex: function (aIndex, aGotoURI) {
+  OnHistoryGotoIndex(aIndex, aGotoURI) {
     this.last = "gotoindex";
   },
 
-  OnHistoryPurge: function (aNumEntries) {
+  OnHistoryPurge(aNumEntries) {
     this.last = "purge";
   },
 
-  OnHistoryReload: function (aReloadURI, aReloadFlags) {
+  OnHistoryReload(aReloadURI, aReloadFlags) {
     this.last = "reload";
     return this.retval;
   },
 
-  OnHistoryReplaceEntry: function (aIndex) {},
+  OnHistoryReplaceEntry(aIndex) {},
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsISHistoryListener,
-                                          Ci.nsISupportsWeakReference])
+                                          Ci.nsISupportsWeakReference]),
 };
 
 let testAPI = {

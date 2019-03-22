@@ -25,13 +25,13 @@ function runTest() {
       child.scrollTo(0, 6000);
       child.history.back();
     });
-  }
+  };
 
   child.onpopstate = function() {
-    is(Math.round(child.scrollY),  6000, "Shouldn't have scrolled before popstate");
+    is(Math.round(child.scrollY), 6000, "Shouldn't have scrolled before popstate");
     child.close();
     SimpleTest.finish();
-  }
+  };
 }
 
 SimpleTest.waitForExplicitFinish();

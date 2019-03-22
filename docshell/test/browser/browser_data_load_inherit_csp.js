@@ -9,10 +9,10 @@ function setDataHrefOnLink(aBrowser, aDataURI) {
     let link = content.document.getElementById("testlink");
     link.href = uri;
   });
-};
+}
 
 function verifyCSP(aTestName, aBrowser, aDataURI) {
-  return ContentTask.spawn(aBrowser, {aTestName, aDataURI}, async function ({aTestName, aDataURI}) {
+  return ContentTask.spawn(aBrowser, {aTestName, aDataURI}, async function({aTestName, aDataURI}) {
     let channel = content.docShell.currentDocumentChannel;
     is(channel.URI.spec, aDataURI, "testing CSP for " + aTestName);
     let principal = channel.loadInfo.triggeringPrincipal;
@@ -21,9 +21,9 @@ function verifyCSP(aTestName, aBrowser, aDataURI) {
     let policies = cspOBJ["csp-policies"];
     is(policies.length, 1, "should be one policy");
     let policy = policies[0];
-    is(policy['script-src'], "'unsafe-inline'", "script-src directive matches");
+    is(policy["script-src"], "'unsafe-inline'", "script-src directive matches");
   });
-};
+}
 
 add_task(async function setup() {
   // allow top level data: URI navigations, otherwise clicking data: link fails

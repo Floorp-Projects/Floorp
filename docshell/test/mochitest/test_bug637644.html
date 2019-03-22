@@ -27,7 +27,7 @@ win1.document.body.textContent = "Should show";
 
 var windowsLoaded = 0;
 
-window.onmessage = function (ev) {
+window.onmessage = function(ev) {
   is(ev.data, "loaded", "Message should be 'loaded'");
   if (++windowsLoaded == 2) {
     var one = snapshotWindow(win1);
@@ -41,7 +41,7 @@ window.onmessage = function (ev) {
 
     SimpleTest.finish();
   }
-}
+};
 
 var win2 = window.open("file_bug637644_1.html", "", "height=500,width=500");
 var win3 = window.open("file_bug637644_2.html", "", "height=500,width=500");

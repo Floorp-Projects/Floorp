@@ -89,7 +89,7 @@ function setListenerRetval(num, val) {
 function setup() {
   return BrowserTestUtils.openNewForegroundTab(gBrowser,
                                                "http://mochi.test:8888")
-                         .then(function (tab) {
+                         .then(function(tab) {
     let browser = tab.linkedBrowser;
     registerCleanupFunction(async function() {
       await listenOnce("bug422543:cleanup");
@@ -102,7 +102,7 @@ function setup() {
 }
 
 function whenPageShown(aBrowser, aNavigation) {
-  let listener = ContentTask.spawn(aBrowser, null, function () {
+  let listener = ContentTask.spawn(aBrowser, null, function() {
     return new Promise(resolve => {
       addEventListener("pageshow", function onLoad() {
         removeEventListener("pageshow", onLoad, true);

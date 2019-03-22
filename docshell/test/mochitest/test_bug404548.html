@@ -27,7 +27,7 @@ SimpleTest.waitForExplicitFinish();
 var w = window.open("bug404548-subframe.html", "", "width=10,height=10");
 
 function finishTest() {
-  is(firstRemoved, true, "Should have removed iframe from the DOM")
+  is(firstRemoved, true, "Should have removed iframe from the DOM");
   is(secondHidden, true, "Should have fired pagehide on second kid");
   w.close();
   SimpleTest.finish();

@@ -17,15 +17,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=551225
 /** Test for Bug 551225 **/
 
 obj = {
-  a: new Date('1/1/2000'),
+  a: new Date("1/1/2000"),
   b: /^foo$/,
-  c: 'bar'
+  c: "bar",
 };
 
-history.replaceState(obj, '', '');
-is(history.state.a.toString(), new Date('1/1/2000').toString(), 'Date object.');
-is(history.state.b.toString(), '/^foo$/', 'Regex');
-is(history.state.c, 'bar', 'Other state');
+history.replaceState(obj, "", "");
+is(history.state.a.toString(), new Date("1/1/2000").toString(), "Date object.");
+is(history.state.b.toString(), "/^foo$/", "Regex");
+is(history.state.c, "bar", "Other state");
 
 </script>
 </body>

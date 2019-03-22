@@ -17,8 +17,7 @@ var w = null;
 var phase = 0;
 var isWindowLoaded = false;
 
-function pollForPage(expectErrorPage, f, w)
-{
+function pollForPage(expectErrorPage, f, w) {
   // Start with polling after a delay, we might mistakenly take the current page
   // as an expected one.
   window.setTimeout(function() {
@@ -29,8 +28,7 @@ function pollForPage(expectErrorPage, f, w)
       var haveErrorPage = false;
       try {
         var title = w.document.title;
-      }
-      catch (ex) {
+      } catch (ex) {
         haveErrorPage = true;
       }
 
@@ -42,8 +40,7 @@ function pollForPage(expectErrorPage, f, w)
   }, 1000);
 }
 
-function windowLoaded()
-{
+function windowLoaded() {
   // The code under here should only be run once
   // The test popup window workingURL was already opened
   if (isWindowLoaded)
@@ -63,8 +60,7 @@ function windowLoaded()
       // We need the SpecialPowers bit, because this is a cross-origin window
       // and we normally can't touch .history on those.
       SpecialPowers.wrap(w).history.back();
-    }
-    catch(ex) {
+    } catch (ex) {
       ok(false, "w.history.back() threw " + ex);
     }
 
@@ -79,8 +75,7 @@ function windowLoaded()
   }, w);
 }
 
-function startTest()
-{
+function startTest() {
   /* 1. load a URL that leads to an error page */
   w = window.open(workingURL);
 }

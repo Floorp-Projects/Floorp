@@ -33,6 +33,6 @@ add_task(async function testMultiFrameRestore() {
     await ContentTask.spawn(browser, FRAME_URL, (FRAME_URL) => {
       is(content.document.querySelector("#testFrame1").contentWindow.location.href, FRAME_URL);
       is(content.document.querySelector("#testFrame2").contentWindow.location.href, FRAME_URL);
-    })
-  })
+    });
+  });
 });

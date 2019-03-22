@@ -13,9 +13,9 @@ add_task(async function() {
     let fragmentPromise = new Promise(resolve => {
         /* Global history observer that triggers for the two test URLs above. */
         var historyObserver = {
-            onBeginUpdateBatch: function() {},
-            onEndUpdateBatch: function() {},
-            onTitleChanged: function(aURI, aPageTitle) {
+            onBeginUpdateBatch() {},
+            onEndUpdateBatch() {},
+            onTitleChanged(aURI, aPageTitle) {
                 aURI = aURI.spec;
                 switch (aURI) {
                 case pageurl:
@@ -30,17 +30,11 @@ add_task(async function() {
                     resolve();
                 }
             },
-            onDeleteURI: function(aURI) {},
-            onClearHistory: function() {},
-            onPageChanged: function(aURI, aWhat, aValue) {},
-            onDeleteVisits: function () {},
-            QueryInterface: function(iid) {
-                if (iid.equals(Ci.nsINavHistoryObserver) ||
-                    iid.equals(Ci.nsISupports)) {
-                    return this;
-                }
-                throw Cr.NS_ERROR_NO_INTERFACE;
-            }
+            onDeleteURI(aURI) {},
+            onClearHistory() {},
+            onPageChanged(aURI, aWhat, aValue) {},
+            onDeleteVisits() {},
+            QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
         };
 
         historyService.addObserver(historyObserver);

@@ -122,7 +122,7 @@ add_task(async function() {
         function waitForMessage(command) {
           let r;
           let p = new Promise(resolve => {
-            content.window.addEventListener('message', e => resolve({result: r, event: e}),
+            content.window.addEventListener("message", e => resolve({result: r, event: e}),
                                             {once: true});
           });
           r = command();
@@ -138,7 +138,7 @@ add_task(async function() {
 
         {
           // Create, attach and load an iframe into the window's document.
-          let frame = win.document.createElement('iframe');
+          let frame = win.document.createElement("iframe");
           win.document.body.appendChild(frame);
           frame.src = "dummy_page.html";
           await ContentTaskUtils.waitForEvent(frame, "load");

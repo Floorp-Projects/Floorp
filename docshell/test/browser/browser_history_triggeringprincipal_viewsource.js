@@ -23,7 +23,7 @@ add_task(async function() {
     is(gBrowser.selectedBrowser.currentURI.spec, VIEW_SRC_URI,
        "loading view-source of html succeeded");
 
-    info ("load html file again before going .back()");
+    info("load html file again before going .back()");
     let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, HTML_URI);
     await ContentTask.spawn(tab.linkedBrowser, HTML_URI, HTML_URI => {
       content.document.location = HTML_URI;

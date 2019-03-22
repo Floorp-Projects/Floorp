@@ -15,9 +15,9 @@ let requestObserver = {
     }
   },
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver
-  ])
-}
+    Ci.nsIObserver,
+  ]),
+};
 Services.obs.addObserver(requestObserver, "http-on-opening-request");
 addEventListener("unload", e => {
   if (e.target == this) {

@@ -22,8 +22,8 @@ html5 sandboxed iframe should not be able to perform top navigation with scripts
       runNextTest();
     };
     try {
-      SpecialPowers.wrap(window["testIframe"]).eval(testCase.script);
-    } catch(e) {
+      SpecialPowers.wrap(window.testIframe).eval(testCase.script);
+    } catch (e) {
       ok(testCase.shouldBeBlocked, testCase.desc + " - " + SpecialPowers.wrap(e).message);
       runNextTest();
     }
@@ -34,29 +34,29 @@ html5 sandboxed iframe should not be able to perform top navigation with scripts
     {
       desc: "Test 1: location.replace on auxiliary opened by us should NOT be blocked",
       script: "openedWindow.location.replace('file_our_auxiliary_navigation_by_location.html')",
-      shouldBeBlocked: false
+      shouldBeBlocked: false,
     },
     {
       desc: "Test 2: location.assign on auxiliary opened by us should be blocked without allow-same-origin",
       script: "openedWindow.location.assign('file_our_auxiliary_navigation_by_location.html')",
-      shouldBeBlocked: true
+      shouldBeBlocked: true,
     },
     {
       desc: "Test 3: location.href on auxiliary opened by us should NOT be blocked",
       script: "openedWindow.location.href = 'file_our_auxiliary_navigation_by_location.html'",
-      shouldBeBlocked: false
+      shouldBeBlocked: false,
     },
     {
       desc: "Test 4: location.hash on auxiliary opened by us should be blocked without allow-same-origin",
       script: "openedWindow.location.hash = 'wibble'",
-      shouldBeBlocked: true
-    }
+      shouldBeBlocked: true,
+    },
   ];
 
   function runNextTest() {
     ++testCaseIndex;
     if (testCaseIndex == testCases.length) {
-      SpecialPowers.wrap(window["testIframe"]).eval("openedWindow.close()");
+      SpecialPowers.wrap(window.testIframe).eval("openedWindow.close()");
       SimpleTest.finish();
       return;
     }
@@ -67,8 +67,8 @@ html5 sandboxed iframe should not be able to perform top navigation with scripts
   window.onmessage = runNextTest;
 
   window.onload = function() {
-    SpecialPowers.wrap(window["testIframe"]).eval("var openedWindow = window.open('file_our_auxiliary_navigation_by_location.html', 'ourWindow')");
-  }
+    SpecialPowers.wrap(window.testIframe).eval("var openedWindow = window.open('file_our_auxiliary_navigation_by_location.html', 'ourWindow')");
+  };
 </script>
 
 </head>

@@ -7,7 +7,7 @@
 add_task(async function testValidCache() {
   // Make an unrealistic large timeout.
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.sessionhistory.contentViewerTimeout", 86400]]
+    set: [["browser.sessionhistory.contentViewerTimeout", 86400]],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -36,7 +36,7 @@ add_task(async function testValidCache() {
 add_task(async function testExpiredCache() {
   // Make bfcache timeout in 1 sec.
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.sessionhistory.contentViewerTimeout", 1]]
+    set: [["browser.sessionhistory.contentViewerTimeout", 1]],
   });
 
   await BrowserTestUtils.withNewTab(

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(async function () {
+add_task(async function() {
   const kSearchEngineID = "test_urifixup_search_engine";
   const kSearchEngineURL = "http://localhost/?search={searchTerms}";
   await Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get", kSearchEngineURL);

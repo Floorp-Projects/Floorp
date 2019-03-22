@@ -1,5 +1,5 @@
 /* Make sure that netError won't allow HTML injection through badcert parameters.  See bug 441169. */
-var newBrowser
+var newBrowser;
 
 function task() {
   let resolve;

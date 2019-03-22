@@ -16,15 +16,15 @@ add_task(async function test() {
       await ContentTask.spawn(browser, null, async function() {
         let cw = content;
         let oldTitle = cw.document.title;
-        ok(oldTitle, 'Content window should initially have a title.');
-        cw.history.pushState('', '', 'new_page');
+        ok(oldTitle, "Content window should initially have a title.");
+        cw.history.pushState("", "", "new_page");
 
         let shistory = cw.docShell
                          .QueryInterface(Ci.nsIWebNavigation)
                          .sessionHistory;
 
         is(shistory.legacySHistory.getEntryAtIndex(shistory.index).title,
-           oldTitle, 'SHEntry title after pushstate.');
+           oldTitle, "SHEntry title after pushstate.");
       });
     });
 });
