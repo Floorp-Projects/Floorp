@@ -2025,7 +2025,7 @@ nsresult nsMathMLChar::PaintVertically(nsPresContext* aPresContext,
   unionRect.x += mBoundingMetrics.leftBearing;
   unionRect.width =
       mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing;
-  unionRect.Inflate(oneDevPixel, oneDevPixel);
+  unionRect.Inflate(oneDevPixel);
 
   gfxTextRun::DrawParams params(aThebesContext);
 
@@ -2187,7 +2187,7 @@ nsresult nsMathMLChar::PaintHorizontally(nsPresContext* aPresContext,
   }
 
   nsRect unionRect = aRect;
-  unionRect.Inflate(oneDevPixel, oneDevPixel);
+  unionRect.Inflate(oneDevPixel);
 
   gfxTextRun::DrawParams params(aThebesContext);
 
