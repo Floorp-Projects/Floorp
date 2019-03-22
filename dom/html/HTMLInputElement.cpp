@@ -5662,6 +5662,7 @@ nsresult HTMLInputElement::SetDefaultValueAsValue() {
   GetDefaultValue(resetVal);
 
   // SetValueInternal is going to sanitize the value.
+  // TODO(mbrodesser): sanitizing will only happen if `mDoneCreating` is true.
   return SetValueInternal(resetVal, nsTextEditorState::eSetValue_Internal);
 }
 
@@ -5673,6 +5674,14 @@ void HTMLInputElement::SetDirectionFromValue(bool aNotify) {
   }
 }
 
+namespace {
+
+bool IsDateOrTime(uint8_t aType) {
+  return (aType == NS_FORM_INPUT_DATE) || (aType == NS_FORM_INPUT_TIME);
+}
+
+}  // namespace
+
 NS_IMETHODIMP
 HTMLInputElement::Reset() {
   // We should be able to reset all dirty flags regardless of the type.
@@ -5681,8 +5690,15 @@ HTMLInputElement::Reset() {
   mLastValueChangeWasInteractive = false;
 
   switch (GetValueMode()) {
-    case VALUE_MODE_VALUE:
-      return SetDefaultValueAsValue();
+    case VALUE_MODE_VALUE: {
+      nsresult result = SetDefaultValueAsValue();
+      if (IsDateOrTime(mType)) {
+        // mFocusedValue has to be set here, so that `FireChangeEventIfNeeded`
+        // can fire a change event if necessary.
+        GetValue(mFocusedValue, CallerType::System);
+      }
+      return result;
+    }
     case VALUE_MODE_DEFAULT_ON:
       DoSetChecked(DefaultChecked(), true, false);
       return NS_OK;
@@ -5917,7 +5933,7 @@ void HTMLInputElement::DoneCreatingElement() {
     DoSetChecked(DefaultChecked(), false, false);
   }
 
-  // Sanitize the value.
+  // Sanitize the value and potentially set mFocusedValue.
   if (GetValueMode() == VALUE_MODE_VALUE) {
     nsAutoString aValue;
     GetValue(aValue, CallerType::System);
@@ -5925,6 +5941,12 @@ void HTMLInputElement::DoneCreatingElement() {
     // may potentially be big, but most likely we've failed to allocate
     // before the type change.)
     SetValueInternal(aValue, nsTextEditorState::eSetValue_Internal);
+
+    if (IsDateOrTime(mType)) {
+      // mFocusedValue has to be set here, so that `FireChangeEventIfNeeded` can
+      // fire a change event if necessary.
+      mFocusedValue = aValue;
+    }
   }
 
   mShouldInitChecked = false;

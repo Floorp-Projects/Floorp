@@ -412,7 +412,9 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
   void UpdateValidityUIBits(bool aIsFocused);
 
   /**
-   * Fires change event if mFocusedValue and current value held are unequal.
+   * Fires change event if mFocusedValue and current value held are unequal and
+   * if a change event may be fired on bluring.
+   * Sets mFocusedValue to value, if a change event is fired.
    */
   void FireChangeEventIfNeeded();
 
@@ -1465,7 +1467,8 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
    * when the element is either changed through a script, focused or dispatches
    * a change event. This is to ensure correct future change event firing.
    * NB: This is ONLY applicable where the element is a text control. ie,
-   * where type= "text", "email", "search", "tel", "url" or "password".
+   * where type= "date", "time", "text", "email", "search", "tel", "url" or
+   * "password".
    */
   nsString mFocusedValue;
 
