@@ -56,6 +56,24 @@ class MergeTest(unittest.TestCase):
         self.assertEqual(second, {'b': 20, 'c': 30})
         self.assertEqual(third, {'c': 300, 'd': 400})
 
+    def test_merge_by(self):
+        source = {'x': 'abc', 'y': {'by-foo': {'quick': 'fox', 'default': ['a', 'b', 'c']}}}
+        dest = {'y': {'by-foo': {'purple': 'rain', 'default': ['x', 'y', 'z']}}}
+        expected = {
+            'x': 'abc',
+            'y': {'by-foo': {'quick': 'fox', 'default': ['a', 'b', 'c']}}
+            }  # source wins
+        self.assertEqual(merge_to(source, dest), expected)
+        self.assertEqual(dest, expected)
+
+    def test_merge_multiple_by(self):
+        source = {'x': {'by-foo': {'quick': 'fox', 'default': ['a', 'b', 'c']}}}
+        dest = {'x': {'by-bar': {'purple': 'rain', 'default': ['x', 'y', 'z']}}}
+        expected = {
+            'x': {'by-foo': {'quick': 'fox', 'default': ['a', 'b', 'c']}}
+            }  # source wins
+        self.assertEqual(merge_to(source, dest), expected)
+
 
 if __name__ == '__main__':
     mozunit.main()
