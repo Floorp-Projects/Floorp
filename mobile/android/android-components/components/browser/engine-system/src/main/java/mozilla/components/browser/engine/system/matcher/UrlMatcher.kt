@@ -124,6 +124,10 @@ class UrlMatcher {
             return true
         }
 
+        if (resourceHost == null) {
+            return false
+        }
+
         for ((key, value) in categories) {
             if (enabledCategories.contains(key) && value.findNode(resourceHost.reverse()) != null) {
                 previouslyMatched.add(resourceURLString)

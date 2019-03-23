@@ -15,14 +15,14 @@ import android.view.View
 import android.webkit.JsPromptResult
 import android.webkit.JsResult
 import android.webkit.SslErrorHandler
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
-import android.webkit.ValueCallback
-import android.webkit.WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE
-import android.webkit.WebViewClient
 import android.webkit.WebView.HitTestResult
+import android.webkit.WebViewClient
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import kotlinx.coroutines.runBlocking
@@ -235,7 +235,7 @@ class SystemEngineViewTest {
             override fun onProgress(progress: Int) { observedProgress = progress }
         })
 
-        engineSession.webView.webChromeClient.onProgressChanged(null, 100)
+        engineSession.webView.webChromeClient!!.onProgressChanged(null, 100)
         assertEquals(100, observedProgress)
     }
 
@@ -320,13 +320,13 @@ class SystemEngineViewTest {
         engineView.render(engineSession)
 
         // Nothing breaks if delegate isn't set.
-        engineSession.webView.webChromeClient.getVisitedHistory(mock())
+        engineSession.webView.webChromeClient!!.getVisitedHistory(mock())
 
         engineSession.settings.historyTrackingDelegate = historyDelegate
 
         val historyValueCallback: ValueCallback<Array<String>> = mock()
         runBlocking {
-            engineSession.webView.webChromeClient.getVisitedHistory(historyValueCallback)
+            engineSession.webView.webChromeClient!!.getVisitedHistory(historyValueCallback)
         }
         verify(historyValueCallback).onReceiveValue(arrayOf("https://www.mozilla.com"))
     }
@@ -342,26 +342,26 @@ class SystemEngineViewTest {
         engineView.render(engineSession)
 
         // Nothing breaks if delegate isn't set.
-        engineSession.webView.webChromeClient.onReceivedTitle(webView, "New title!")
+        engineSession.webView.webChromeClient!!.onReceivedTitle(webView, "New title!")
 
         // We can now set the delegate. Were it set before the render call,
         // it'll get overwritten during settings initialization.
         engineSession.settings.historyTrackingDelegate = historyDelegate
 
         // Delegate not notified if, somehow, there's no currentUrl present in the view.
-        engineSession.webView.webChromeClient.onReceivedTitle(webView, "New title!")
+        engineSession.webView.webChromeClient!!.onReceivedTitle(webView, "New title!")
         verify(historyDelegate, never()).onTitleChanged(eq(""), eq("New title!"))
 
         // This sets the currentUrl.
         engineSession.webView.webViewClient.onPageStarted(webView, "https://www.mozilla.org/", null)
 
-        engineSession.webView.webChromeClient.onReceivedTitle(webView, "New title!")
+        engineSession.webView.webChromeClient!!.onReceivedTitle(webView, "New title!")
         verify(historyDelegate).onTitleChanged(eq("https://www.mozilla.org/"), eq("New title!"))
 
         reset(historyDelegate)
 
         // Empty title when none provided
-        engineSession.webView.webChromeClient.onReceivedTitle(webView, null)
+        engineSession.webView.webChromeClient!!.onReceivedTitle(webView, null)
         verify(historyDelegate).onTitleChanged(eq("https://www.mozilla.org/"), eq(""))
     }
 
@@ -377,14 +377,14 @@ class SystemEngineViewTest {
 
         engineSession.register(observer)
         engineView.render(engineSession)
-        engineSession.webView.webChromeClient.onReceivedTitle(webView, "Hello World!")
+        engineSession.webView.webChromeClient!!.onReceivedTitle(webView, "Hello World!")
         verify(observer).onTitleChange(eq("Hello World!"))
         verify(observer).onNavigationStateChange(true, true)
 
         reset(observer)
 
         // Empty title when none provided.
-        engineSession.webView.webChromeClient.onReceivedTitle(webView, null)
+        engineSession.webView.webChromeClient!!.onReceivedTitle(webView, null)
         verify(observer).onTitleChange(eq(""))
         verify(observer).onNavigationStateChange(true, true)
     }
@@ -446,7 +446,7 @@ class SystemEngineViewTest {
         engineSession.trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all()
         response = webViewClient.shouldInterceptRequest(engineSession.webView, invalidRequest)
         assertNotNull(response)
-        assertNull(response.data)
+        assertNull(response!!.data)
         assertNull(response.encoding)
         assertNull(response.mimeType)
 
@@ -455,7 +455,7 @@ class SystemEngineViewTest {
         `when`(faviconRequest.url).thenReturn(Uri.parse("http://foo/favicon.ico"))
         response = webViewClient.shouldInterceptRequest(engineSession.webView, faviconRequest)
         assertNotNull(response)
-        assertNull(response.data)
+        assertNull(response!!.data)
         assertNull(response.encoding)
         assertNull(response.mimeType)
 
@@ -464,7 +464,7 @@ class SystemEngineViewTest {
         `when`(blockedRequest.url).thenReturn(Uri.parse("http://blocked.random"))
         response = webViewClient.shouldInterceptRequest(engineSession.webView, blockedRequest)
         assertNotNull(response)
-        assertNull(response.data)
+        assertNull(response!!.data)
         assertNull(response.encoding)
         assertNull(response.mimeType)
     }
@@ -678,7 +678,7 @@ class SystemEngineViewTest {
 
         val response = webViewClient.shouldInterceptRequest(engineSession.webView, webFontRequest)
         assertNotNull(response)
-        assertNull(response.data)
+        assertNull(response!!.data)
         assertNull(response.encoding)
         assertNull(response.mimeType)
     }
@@ -749,7 +749,7 @@ class SystemEngineViewTest {
 
         val view = mock(View::class.java)
         val customViewCallback = mock(WebChromeClient.CustomViewCallback::class.java)
-        engineSession.webView.webChromeClient.onShowCustomView(view, customViewCallback)
+        engineSession.webView.webChromeClient!!.onShowCustomView(view, customViewCallback)
 
         verify(observer).onFullScreenChange(true)
     }
@@ -765,13 +765,13 @@ class SystemEngineViewTest {
 
         assertNull(engineSession.fullScreenCallback)
 
-        engineSession.webView.webChromeClient.onShowCustomView(view, customViewCallback)
+        engineSession.webView.webChromeClient!!.onShowCustomView(view, customViewCallback)
 
         assertNotNull(engineSession.fullScreenCallback)
         assertEquals(customViewCallback, engineSession.fullScreenCallback)
         assertEquals("mozac_system_engine_fullscreen", view.tag)
 
-        engineSession.webView.webChromeClient.onHideCustomView()
+        engineSession.webView.webChromeClient!!.onHideCustomView()
         assertEquals(View.VISIBLE, engineSession.webView.visibility)
     }
 
@@ -785,7 +785,7 @@ class SystemEngineViewTest {
         val customViewCallback = mock(WebChromeClient.CustomViewCallback::class.java)
 
         engineSession.webView.tag = "not_webview"
-        engineSession.webView.webChromeClient.onShowCustomView(view, customViewCallback)
+        engineSession.webView.webChromeClient!!.onShowCustomView(view, customViewCallback)
 
         assertNotEquals(View.INVISIBLE, engineSession.webView.visibility)
     }
@@ -800,10 +800,10 @@ class SystemEngineViewTest {
         val customViewCallback = mock(WebChromeClient.CustomViewCallback::class.java)
 
         // When the fullscreen view isn't available
-        engineSession.webView.webChromeClient.onShowCustomView(view, customViewCallback)
+        engineSession.webView.webChromeClient!!.onShowCustomView(view, customViewCallback)
         engineView.findViewWithTag<View>("mozac_system_engine_fullscreen").tag = "not_fullscreen"
 
-        engineSession.webView.webChromeClient.onHideCustomView()
+        engineSession.webView.webChromeClient!!.onHideCustomView()
 
         assertNotNull(engineSession.fullScreenCallback)
         verify(engineSession.fullScreenCallback, never())?.onCustomViewHidden()
@@ -813,7 +813,7 @@ class SystemEngineViewTest {
         engineView.findViewWithTag<View>("not_fullscreen").tag = "mozac_system_engine_fullscreen"
         engineSession.webView.tag = "not_webView"
 
-        engineSession.webView.webChromeClient.onHideCustomView()
+        engineSession.webView.webChromeClient!!.onHideCustomView()
 
         assertEquals(View.INVISIBLE, engineSession.webView.visibility)
     }
@@ -824,7 +824,7 @@ class SystemEngineViewTest {
         val engineView = SystemEngineView(getApplicationContext())
         engineView.render(engineSession)
 
-        engineSession.webView.webChromeClient.onHideCustomView()
+        engineSession.webView.webChromeClient!!.onHideCustomView()
         assertNull(engineSession.fullScreenCallback)
     }
 
@@ -897,10 +897,10 @@ class SystemEngineViewTest {
             }
         })
 
-        engineSession.webView.webChromeClient.onPermissionRequest(permissionRequest)
+        engineSession.webView.webChromeClient!!.onPermissionRequest(permissionRequest)
         assertNotNull(observedPermissionRequest)
 
-        engineSession.webView.webChromeClient.onPermissionRequestCanceled(permissionRequest)
+        engineSession.webView.webChromeClient!!.onPermissionRequestCanceled(permissionRequest)
         assertNotNull(cancelledPermissionRequest)
     }
 
@@ -926,10 +926,10 @@ class SystemEngineViewTest {
             }
         })
 
-        engineSession.webView.webChromeClient.onCreateWindow(mock(WebView::class.java), false, false, null)
+        engineSession.webView.webChromeClient!!.onCreateWindow(mock(WebView::class.java), false, false, null)
         assertNotNull(createWindowRequest)
 
-        engineSession.webView.webChromeClient.onCloseWindow(mock(WebView::class.java))
+        engineSession.webView.webChromeClient!!.onCloseWindow(mock(WebView::class.java))
         assertNotNull(closeWindowRequest)
     }
 
@@ -1356,6 +1356,8 @@ class SystemEngineViewTest {
     }
 
     @Test
+    @Suppress("Deprecation")
+    // TODO remove suppression when fixed: https://github.com/mozilla-mobile/android-components/issues/888
     fun captureThumbnail() {
         val engineView = SystemEngineView(getApplicationContext())
 

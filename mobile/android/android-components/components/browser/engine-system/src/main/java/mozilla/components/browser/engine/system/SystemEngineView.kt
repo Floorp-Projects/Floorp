@@ -80,7 +80,7 @@ class SystemEngineView @JvmOverloads constructor(
 
     override fun onLongClick(view: View?): Boolean {
         val result = session?.webView?.hitTestResult
-        return result?.let { handleLongClick(result.type, result.extra) } ?: false
+        return result?.let { handleLongClick(result.type, result.extra ?: "") } ?: false
     }
 
     override fun onPause() {
@@ -580,6 +580,8 @@ class SystemEngineView @JvmOverloads constructor(
 
     override fun canScrollVerticallyDown() = session?.webView?.canScrollVertically(1) ?: false
 
+    @Suppress("Deprecation")
+    // TODO remove suppression when fixed: https://github.com/mozilla-mobile/android-components/issues/888
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
         val webView = session?.webView
 

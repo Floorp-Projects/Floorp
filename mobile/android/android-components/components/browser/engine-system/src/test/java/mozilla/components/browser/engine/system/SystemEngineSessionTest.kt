@@ -56,7 +56,7 @@ class SystemEngineSessionTest {
             override fun onProgress(progress: Int) { observedProgress = progress }
         })
 
-        engineSession.webView.webChromeClient.onProgressChanged(null, 100)
+        engineSession.webView.webChromeClient!!.onProgressChanged(null, 100)
         assertEquals(100, observedProgress)
     }
 
@@ -257,6 +257,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
+    @Suppress("Deprecation")
     fun initSettings() {
         val engineSession = spy(SystemEngineSession(getApplicationContext()))
         assertNotNull(engineSession.internalSettings)
@@ -434,7 +435,7 @@ class SystemEngineSessionTest {
 
         assertNotNull(response)
 
-        assertEquals("<h1>Hello World</h1>", response.data.bufferedReader().use { it.readText() })
+        assertEquals("<h1>Hello World</h1>", response!!.data.bufferedReader().use { it.readText() })
         assertEquals("text/html", response.mimeType)
         assertEquals("UTF-8", response.encoding)
     }

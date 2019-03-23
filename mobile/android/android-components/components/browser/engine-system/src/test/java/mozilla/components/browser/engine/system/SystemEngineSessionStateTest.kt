@@ -5,10 +5,10 @@
 package mozilla.components.browser.engine.system
 
 import android.os.Bundle
-import junit.framework.Assert.assertTrue
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner

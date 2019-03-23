@@ -4,6 +4,8 @@
 
 package mozilla.components.browser.engine.system
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
 import org.junit.Assert.assertEquals
@@ -14,12 +16,11 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class SystemEngineTest {
 
-    private val context = RuntimeEnvironment.application
+    private val context: Context = ApplicationProvider.getApplicationContext()
 
     @Before
     fun setup() {

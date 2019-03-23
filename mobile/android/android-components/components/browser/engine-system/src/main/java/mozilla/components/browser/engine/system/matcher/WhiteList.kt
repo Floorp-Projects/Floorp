@@ -44,8 +44,9 @@ internal class WhiteList {
     fun contains(hostUri: Uri, resource: Uri): Boolean {
         return if (TextUtils.isEmpty(hostUri.host) || TextUtils.isEmpty(resource.host) || hostUri.scheme == "data") {
             false
-        } else if (resource.scheme.isPermittedResourceProtocol() && hostUri.scheme.isSupportedProtocol()) {
-            contains(hostUri.host.reverse(), resource.host.reverse(), rootNode)
+        } else if (resource.scheme?.isPermittedResourceProtocol() == true &&
+                hostUri.scheme?.isSupportedProtocol() == true) {
+            contains(hostUri.host!!.reverse(), resource.host!!.reverse(), rootNode)
         } else {
             false
         }
