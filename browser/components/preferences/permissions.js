@@ -206,7 +206,7 @@ var gPermissionManager = {
 
   addPermission(capability) {
     let textbox = document.getElementById("url");
-    let input_url = textbox.value.replace(/^\s*/, ""); // trim any leading space
+    let input_url = textbox.value.trim(); // trim any leading and trailing space
     let principals = [];
     try {
       // The origin accessor on the principal object will throw if the
