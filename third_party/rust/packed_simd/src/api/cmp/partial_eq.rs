@@ -7,7 +7,7 @@ macro_rules! impl_cmp_partial_eq {
         ($true:expr, $false:expr)
     ) => {
         // FIXME: https://github.com/rust-lang-nursery/rust-clippy/issues/2892
-        #[cfg_attr(feature = "cargo-clippy", allow(clippy::partialeq_ne_impl))]
+        #[allow(clippy::partialeq_ne_impl)]
         impl crate::cmp::PartialEq<$id> for $id {
             #[inline]
             fn eq(&self, other: &Self) -> bool {
@@ -20,7 +20,7 @@ macro_rules! impl_cmp_partial_eq {
         }
 
         // FIXME: https://github.com/rust-lang-nursery/rust-clippy/issues/2892
-        #[cfg_attr(feature = "cargo-clippy", allow(clippy::partialeq_ne_impl))]
+        #[allow(clippy::partialeq_ne_impl)]
         impl crate::cmp::PartialEq<LexicographicallyOrdered<$id>>
             for LexicographicallyOrdered<$id>
         {
@@ -34,12 +34,13 @@ macro_rules! impl_cmp_partial_eq {
             }
         }
 
-        test_if!{
+        test_if! {
             $test_tt:
             paste::item! {
                 pub mod [<$id _cmp_PartialEq>] {
                     use super::*;
-                    #[cfg_attr(not(target_arch = "wasm32"), test)] #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+                    #[cfg_attr(not(target_arch = "wasm32"), test)]
+                    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
                     fn partial_eq() {
                         let a = $id::splat($false);
                         let b = $id::splat($true);

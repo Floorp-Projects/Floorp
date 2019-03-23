@@ -24,7 +24,7 @@ macro_rules! impl_swap_bytes {
         $(
             impl SwapBytes for $id {
                 #[inline]
-                #[cfg_attr(feature = "cargo-clippy", allow(clippy::useless_transmute))]
+                #[allow(clippy::useless_transmute)]
                 fn swap_bytes(self) -> Self {
                     unsafe {
                         let bytes: u8x4 = crate::mem::transmute(self);
@@ -39,7 +39,7 @@ macro_rules! impl_swap_bytes {
         $(
             impl SwapBytes for $id {
                 #[inline]
-                #[cfg_attr(feature = "cargo-clippy", allow(clippy::useless_transmute))]
+                #[allow(clippy::useless_transmute)]
                 fn swap_bytes(self) -> Self {
                     unsafe {
                         let bytes: u8x8 = crate::mem::transmute(self);
@@ -56,7 +56,7 @@ macro_rules! impl_swap_bytes {
         $(
             impl SwapBytes for $id {
                 #[inline]
-                #[cfg_attr(feature = "cargo-clippy", allow(clippy::useless_transmute))]
+                #[allow(clippy::useless_transmute)]
                 fn swap_bytes(self) -> Self {
                     unsafe {
                         let bytes: u8x16 = crate::mem::transmute(self);
@@ -74,7 +74,7 @@ macro_rules! impl_swap_bytes {
         $(
             impl SwapBytes for $id {
                 #[inline]
-                #[cfg_attr(feature = "cargo-clippy", allow(clippy::useless_transmute))]
+                #[allow(clippy::useless_transmute)]
                 fn swap_bytes(self) -> Self {
                     unsafe {
                         let bytes: u8x32 = crate::mem::transmute(self);
@@ -94,7 +94,7 @@ macro_rules! impl_swap_bytes {
         $(
             impl SwapBytes for $id {
                 #[inline]
-                #[cfg_attr(feature = "cargo-clippy", allow(clippy::useless_transmute))]
+                #[allow(clippy::useless_transmute)]
                 fn swap_bytes(self) -> Self {
                     unsafe {
                         let bytes: u8x64 = crate::mem::transmute(self);

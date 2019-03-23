@@ -53,10 +53,7 @@ macro_rules! impl_slice_from_slice {
                     0
                 );
 
-                #[cfg_attr(
-                    feature = "cargo-clippy",
-                    allow(clippy::cast_ptr_alignment)
-                )]
+                #[allow(clippy::cast_ptr_alignment)]
                 *(target_ptr as *const Self)
             }
 
