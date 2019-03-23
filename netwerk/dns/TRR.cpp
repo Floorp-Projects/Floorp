@@ -399,7 +399,6 @@ nsresult TRR::DohDecodeQuery(const nsCString &query, nsCString &host,
   uint16_t i16 = 0;
   i16 += binary[index] << 8;
   i16 += binary[index + 1];
-  index += 4;  // skip question's type, class
   type = (enum TrrType)i16;
 
   LOG(("TRR::DohDecodeQuery type %d\n", (int)type));
