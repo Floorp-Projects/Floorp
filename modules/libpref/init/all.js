@@ -647,7 +647,7 @@ pref("media.video_stats.enabled", true);
 pref("media.cubeb.logging_level", "");
 
 // Cubeb sandbox (remoting) control
-#ifdef XP_LINUX
+#if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
 pref("media.cubeb.sandbox", true);
 pref("media.audioipc.pool_size", 2);
 // 64 * 4 kB stack per pool thread.
@@ -663,7 +663,7 @@ pref("media.av1.use-dav1d", true);
 #elif defined(XP_MACOSX)
 pref("media.av1.enabled", true);
 pref("media.av1.use-dav1d", true);
-#elif defined(XP_UNIX)
+#elif defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
 pref("media.av1.enabled", true);
 pref("media.av1.use-dav1d", false);
 #else
