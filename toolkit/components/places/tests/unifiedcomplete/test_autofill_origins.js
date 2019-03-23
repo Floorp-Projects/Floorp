@@ -173,6 +173,31 @@ add_task(async function multidotted() {
   await cleanup();
 });
 
+add_task(async function test_ip() {
+  for (let str of [
+    "192.168.1.1/",
+    "255.255.255.255:8080/",
+    "[2001:db8::1428:57ab]/",
+    "[::c0a8:5909]/",
+    "[::1]/",
+  ]) {
+    info("testing " + str);
+    await PlacesTestUtils.addVisits("http://" + str);
+    for (let i = 1; i < str.length; ++i) {
+      await check_autocomplete({
+        search: str.substring(0, i),
+        completed: "http://" + str,
+        matches: [{
+          value: str,
+          comment: str.replace(/\/$/, ""), // strip trailing slash
+          style: ["autofill", "heuristic"],
+        }],
+      });
+    }
+    await cleanup();
+  }
+});
+
 // When determining which origins should be autofilled, all the origins sharing
 // a host should be added together to get their combined frecency -- i.e.,
 // prefixes should be collapsed.  And then from that list, the origin with the
