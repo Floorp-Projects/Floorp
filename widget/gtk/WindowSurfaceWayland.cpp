@@ -385,7 +385,8 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
       mPendingCommit(false),
       mWaylandBufferFullScreenDamage(false),
       mIsMainThread(NS_IsMainThread()),
-      mNeedScaleFactorUpdate(true) {
+      mNeedScaleFactorUpdate(true),
+      mWaitToFullScreenUpdate(true) {
   for (int i = 0; i < BACK_BUFFER_NUM; i++) mBackupBuffer[i] = nullptr;
 }
 
@@ -431,6 +432,7 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferToDraw(int aWidth,
                 aWidth, aHeight));
 
     mWaylandBuffer = new WindowBackBuffer(mWaylandDisplay, aWidth, aHeight);
+    mWaitToFullScreenUpdate = true;
     return mWaylandBuffer;
   }
 
@@ -439,7 +441,7 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferToDraw(int aWidth,
       mWaylandBuffer->Resize(aWidth, aHeight);
       // There's a chance that scale factor has been changed
       // when buffer size changed
-      mNeedScaleFactorUpdate = true;
+      mWaitToFullScreenUpdate = true;
     }
     LOGWAYLAND(("%s [%p] Reuse buffer [%d x %d]\n", __PRETTY_FUNCTION__,
                 (void*)this, aWidth, aHeight));
@@ -492,6 +494,7 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferToDraw(int aWidth,
     // Former buffer has different size from the new request. Only resize
     // the new buffer and leave gecko to render new whole content.
     mWaylandBuffer->Resize(aWidth, aHeight);
+    mWaitToFullScreenUpdate = true;
   }
 
   return mWaylandBuffer;
@@ -566,6 +569,13 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
         LockWaylandBuffer(screenRect.width, screenRect.height,
                           mWindow->WaylandSurfaceNeedsClear());
     if (dt) {
+      // When we have a request to update whole screen at once
+      // (surface was created, resized or changed somehow)
+      // we also need update scale factor of the screen.
+      if (mWaitToFullScreenUpdate) {
+        mWaitToFullScreenUpdate = false;
+        mNeedScaleFactorUpdate = true;
+      }
       return dt.forget();
     }
 
@@ -632,6 +642,10 @@ static void WaylandBufferDelayCommitHandler(WindowSurfaceWayland** aSurface) {
 void WindowSurfaceWayland::CommitWaylandBuffer() {
   MOZ_ASSERT(mPendingCommit, "Committing empty surface!");
 
+  if (mWaitToFullScreenUpdate) {
+    return;
+  }
+
   wl_surface* waylandSurface = mWindow->GetWaylandSurface();
   if (!waylandSurface) {
     // Target window is not created yet - delay the commit. This can happen only
@@ -675,6 +689,7 @@ void WindowSurfaceWayland::CommitWaylandBuffer() {
     LayoutDeviceIntRect rect = mWindow->GetBounds();
     wl_surface_damage(waylandSurface, 0, 0, rect.width, rect.height);
     mWaylandBufferFullScreenDamage = false;
+    mNeedScaleFactorUpdate = true;
   } else {
     gint scaleFactor = mWindow->GdkScaleFactor();
     for (auto iter = mWaylandBufferDamage.RectIter(); !iter.Done();
