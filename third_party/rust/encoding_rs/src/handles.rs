@@ -34,7 +34,7 @@ use simd_funcs::*;
         all(target_endian = "little", target_feature = "neon")
     )
 ))]
-use simd::u16x8;
+use packed_simd::u16x8;
 
 use super::DecoderResult;
 use super::EncoderResult;
