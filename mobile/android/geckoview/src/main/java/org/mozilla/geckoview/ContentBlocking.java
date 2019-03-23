@@ -75,12 +75,6 @@ public class ContentBlocking {
             "urlclassifier.trackingTable",
             ContentBlocking.catToAtPref(
                 AT_TEST | AT_ANALYTIC | AT_SOCIAL | AT_AD));
-        /* package */ final Pref<Boolean> mCm = new Pref<Boolean>(
-            "privacy.trackingprotection.cryptomining.enabled", false);
-        /* package */ final Pref<String> mCmList = new Pref<String>(
-            "urlclassifier.features.cryptomining.blacklistTables",
-            ContentBlocking.catToCmListPref(NONE));
-
         /* package */ final Pref<Boolean> mSbMalware = new Pref<Boolean>(
             "browser.safebrowsing.malware.enabled", true);
         /* package */ final Pref<Boolean> mSbPhishing = new Pref<Boolean>(
@@ -136,10 +130,6 @@ public class ContentBlocking {
          */
         public @NonNull Settings setCategories(final @Category int cat) {
             mAt.commit(ContentBlocking.catToAtPref(cat));
-
-            mCm.commit(ContentBlocking.catToCmPref(cat));
-            mCmList.commit(ContentBlocking.catToCmListPref(cat));
-
             mSbMalware.commit(ContentBlocking.catToSbMalware(cat));
             mSbPhishing.commit(ContentBlocking.catToSbPhishing(cat));
             return this;
@@ -151,8 +141,7 @@ public class ContentBlocking {
          * @return The categories of resources to be blocked.
          */
         public @Category int getCategories() {
-            return ContentBlocking.atListToCat(mAt.get())
-                   | ContentBlocking.cmListToCat(mCmList.get())
+            return ContentBlocking.listToCat(mAt.get())
                    | ContentBlocking.sbMalwareToCat(mSbMalware.get())
                    | ContentBlocking.sbPhishingToCat(mSbPhishing.get());
         }
@@ -206,7 +195,7 @@ public class ContentBlocking {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef(flag = true,
             value = { NONE, AT_AD, AT_ANALYTIC, AT_SOCIAL, AT_CONTENT,
-                      AT_ALL, AT_TEST, AT_CRYPTOMINING,
+                      AT_ALL, AT_TEST,
                       SB_MALWARE, SB_UNWANTED,
                       SB_HARMFUL, SB_PHISHING })
     /* package */ @interface Category {}
@@ -240,16 +229,10 @@ public class ContentBlocking {
     public static final int AT_TEST = 1 << 5;
 
     /**
-     * Block cryptocurrency miners.
-     */
-    public static final int AT_CRYPTOMINING = 1 << 6;
-
-    /**
      * Block all known trackers.
-     * Blocks all {@link #AT_AD AT_*} types.
      */
     public static final int AT_ALL =
-        AT_AD | AT_ANALYTIC | AT_SOCIAL | AT_CONTENT | AT_TEST | AT_CRYPTOMINING;
+        AT_AD | AT_ANALYTIC | AT_SOCIAL | AT_CONTENT | AT_TEST;
 
     // Safe browsing
     /**
@@ -367,8 +350,7 @@ public class ContentBlocking {
             @Category int cats = NONE;
 
             if (matchedList != null) {
-                cats = ContentBlocking.atListToCat(matchedList) |
-                       ContentBlocking.cmListToCat(matchedList);
+                cats = ContentBlocking.listToCat(matchedList);
             } else if (error != 0L) {
                 cats = ContentBlocking.errorToCat(error);
             }
@@ -401,8 +383,6 @@ public class ContentBlocking {
     private static final String ANALYTIC = "analytics-track-digest256";
     private static final String SOCIAL = "social-track-digest256";
     private static final String CONTENT = "content-track-digest256";
-    private static final String CRYPTOMINING =
-        "base-cryptomining-track-digest256";
 
     /* package */ static @Category int sbMalwareToCat(final boolean enabled) {
         return enabled ? (SB_MALWARE | SB_UNWANTED | SB_HARMFUL)
@@ -447,20 +427,7 @@ public class ContentBlocking {
         return builder.substring(0, builder.length() - 1);
     }
 
-    /* package */ static boolean catToCmPref(@Category int cat) {
-        return (cat & AT_CRYPTOMINING) != 0;
-    }
-
-    /* package */ static String catToCmListPref(@Category int cat) {
-        StringBuilder builder = new StringBuilder();
-
-        if ((cat & AT_CRYPTOMINING) != 0) {
-            builder.append(CRYPTOMINING);
-        }
-        return builder.toString();
-    }
-
-    /* package */ static @Category int atListToCat(final String list) {
+    /* package */ static @Category int listToCat(final String list) {
         int cat = 0;
         if (list.indexOf(TEST) != -1) {
             cat |= AT_TEST;
@@ -476,14 +443,6 @@ public class ContentBlocking {
         }
         if (list.indexOf(CONTENT) != -1) {
             cat |= AT_CONTENT;
-        }
-        return cat;
-    }
-
-    /* package */ static @Category int cmListToCat(final String list) {
-        int cat = 0;
-        if (list.indexOf(CRYPTOMINING) != -1) {
-            cat |= AT_CRYPTOMINING;
         }
         return cat;
     }
