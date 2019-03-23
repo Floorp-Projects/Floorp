@@ -113,12 +113,9 @@
   list-style-image: url(chrome://browser/skin/notification-icons/indexedDB.svg);
 }
 
+.popup-notification-icon[popupid="password"],
 .login-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/login.svg);
-}
-
-.popup-notification-icon[popupid="password"] {
-  list-style-image: url(chrome://browser/skin/notification-icons/login-detailed.svg);
+  list-style-image: url(chrome://browser/skin/login.svg);
 }
 
 .camera-icon {
