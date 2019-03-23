@@ -405,7 +405,7 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult MaybeUpgradeIndexedDBDirectory();
 
-  nsresult MaybeUpgradePersistentStorageDirectory();
+  nsresult MaybeUpgradePersistentStorageDirectory(int32_t aStorageVersion);
 
   nsresult MaybeRemoveOldDirectories();
 
