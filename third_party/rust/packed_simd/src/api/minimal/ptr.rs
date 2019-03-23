@@ -19,8 +19,7 @@ macro_rules! impl_minimal_p {
             /// Creates a new instance with each vector elements initialized
             /// with the provided values.
             #[inline]
-            #[cfg_attr(feature = "cargo-clippy",
-                       allow(clippy::too_many_arguments))]
+            #[allow(clippy::too_many_arguments)]
             pub const fn new($($elem_name: $elem_ty),*) -> Self {
                 Simd(codegen::$id($($elem_name),*))
             }
@@ -89,8 +88,7 @@ macro_rules! impl_minimal_p {
                           it returns a new vector with the value at `index` \
                           replaced by `new_value`d"
             ]
-            #[cfg_attr(feature = "cargo-clippy",
-                       allow(clippy::not_unsafe_ptr_arg_deref))]
+            #[allow(clippy::not_unsafe_ptr_arg_deref)]
             pub fn replace(self, index: usize, new_value: $elem_ty) -> Self {
                 assert!(index < $elem_count);
                 unsafe { self.replace_unchecked(index, new_value) }
@@ -210,8 +208,7 @@ macro_rules! impl_minimal_p {
         }
 
         impl<T> crate::fmt::Debug for $id<T> {
-            #[cfg_attr(feature = "cargo-clippy",
-                       allow(clippy::missing_inline_in_public_items))]
+            #[allow(clippy::missing_inline_in_public_items)]
             fn fmt(&self, f: &mut crate::fmt::Formatter<'_>)
                    -> crate::fmt::Result {
                 write!(
@@ -424,7 +421,7 @@ macro_rules! impl_minimal_p {
             }
         }
 
-        #[cfg_attr(feature = "cargo-clippy", allow(clippy::partialeq_ne_impl))]
+        #[allow(clippy::partialeq_ne_impl)]
         impl<T> crate::cmp::PartialEq<$id<T>> for $id<T> {
             #[inline]
             fn eq(&self, other: &Self) -> bool {
@@ -437,7 +434,7 @@ macro_rules! impl_minimal_p {
         }
 
         // FIXME: https://github.com/rust-lang-nursery/rust-clippy/issues/2892
-        #[cfg_attr(feature = "cargo-clippy", allow(clippy::partialeq_ne_impl))]
+        #[allow(clippy::partialeq_ne_impl)]
         impl<T> crate::cmp::PartialEq<LexicographicallyOrdered<$id<T>>>
             for LexicographicallyOrdered<$id<T>>
         {
@@ -621,8 +618,7 @@ macro_rules! impl_minimal_p {
             #[inline]
             pub unsafe fn from_slice_aligned_unchecked(slice: &[$elem_ty])
                                                        -> Self {
-                #[cfg_attr(feature = "cargo-clippy",
-                           allow(clippy::cast_ptr_alignment))]
+                #[allow(clippy::cast_ptr_alignment)]
                 *(slice.get_unchecked(0) as *const $elem_ty as *const Self)
             }
 
@@ -840,8 +836,7 @@ macro_rules! impl_minimal_p {
             pub unsafe fn write_to_slice_aligned_unchecked(
                 self, slice: &mut [$elem_ty],
             ) {
-                #[cfg_attr(feature = "cargo-clippy",
-                           allow(clippy::cast_ptr_alignment))]
+                #[allow(clippy::cast_ptr_alignment)]
                 *(slice.get_unchecked_mut(0) as *mut $elem_ty as *mut Self) =
                     self;
             }
@@ -1225,8 +1220,7 @@ macro_rules! impl_minimal_p {
             /// are difficult to satisfy. The only advantage of this method is
             /// that it enables more aggressive compiler optimizations.
             #[inline]
-            #[cfg_attr(feature = "cargo-clippy",
-                       allow(clippy::should_implement_trait))]
+            #[allow(clippy::should_implement_trait)]
             pub unsafe fn add(self, count: $usize_ty) -> Self {
                 self.offset(count.cast())
             }
@@ -1271,8 +1265,7 @@ macro_rules! impl_minimal_p {
             /// are difficult to satisfy. The only advantage of this method is
             /// that it enables more aggressive compiler optimizations.
             #[inline]
-            #[cfg_attr(feature = "cargo-clippy",
-                       allow(clippy::should_implement_trait))]
+            #[allow(clippy::should_implement_trait)]
             pub unsafe fn sub(self, count: $usize_ty) -> Self {
                 let x: $isize_ty = count.cast();
                 // note: - is currently wrapping_neg

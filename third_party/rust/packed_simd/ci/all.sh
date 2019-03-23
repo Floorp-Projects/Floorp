@@ -4,7 +4,7 @@
 
 set -ex
 
-: ${1?"The all.sh script requires one argument."}
+: "${1?The all.sh script requires one argument.}"
 
 op=$1
 
@@ -54,11 +54,18 @@ $CMD
 for dir in examples/*/
 do
     dir=${dir%*/}
-    cd ${dir%*/}
-    $CMD
-    cd -
+    (
+        cd "${dir%*/}"
+        $CMD
+    )
 done
 
-cd verify/verify
-$CMD
-cd -
+(
+    cd verify/verify
+    $CMD
+)
+
+(
+    cd micro_benchmarks
+    $CMD
+)

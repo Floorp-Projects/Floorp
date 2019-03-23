@@ -96,6 +96,4 @@ extern "platform-intrinsic" {
 
     crate fn simd_gather<T, P, M>(value: T, pointers: P, mask: M) -> T;
     crate fn simd_scatter<T, P, M>(value: T, pointers: P, mask: M);
-
-    crate fn simd_bitmask<T, U>(value: T) -> U;
 }

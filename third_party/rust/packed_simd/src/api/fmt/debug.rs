@@ -2,12 +2,13 @@
 
 macro_rules! impl_fmt_debug_tests {
     ([$elem_ty:ty; $elem_count:expr]: $id:ident | $test_tt:tt) => {
-        test_if!{
+        test_if! {
             $test_tt:
             paste::item! {
                 pub mod [<$id _fmt_debug>] {
                     use super::*;
-                    #[cfg_attr(not(target_arch = "wasm32"), test)] #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+                    #[cfg_attr(not(target_arch = "wasm32"), test)]
+                    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
                     fn debug() {
                         use arrayvec::{ArrayString,ArrayVec};
                         type TinyString = ArrayString<[u8; 512]>;
@@ -42,10 +43,7 @@ macro_rules! impl_fmt_debug_tests {
 macro_rules! impl_fmt_debug {
     ([$elem_ty:ty; $elem_count:expr]: $id:ident | $test_tt:tt) => {
         impl crate::fmt::Debug for $id {
-            #[cfg_attr(
-                feature = "cargo-clippy",
-                allow(clippy::missing_inline_in_public_items)
-            )]
+            #[allow(clippy::missing_inline_in_public_items)]
             fn fmt(
                 &self, f: &mut crate::fmt::Formatter<'_>,
             ) -> crate::fmt::Result {

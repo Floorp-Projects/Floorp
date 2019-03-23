@@ -18,8 +18,7 @@ macro_rules! impl_minimal_iuf {
             /// Creates a new instance with each vector elements initialized
             /// with the provided values.
             #[inline]
-            #[cfg_attr(feature = "cargo-clippy",
-                       allow(clippy::too_many_arguments))]
+            #[allow(clippy::too_many_arguments)]
             pub const fn new($($elem_name: $elem_ty),*) -> Self {
                 Simd(codegen::$id($($elem_name as $ielem_ty),*))
             }
