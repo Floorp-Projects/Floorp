@@ -129,6 +129,10 @@ void WeakMapBase::restoreMarkedWeakMaps(WeakMapSet& markedWeakMaps) {
   }
 }
 
+size_t ObjectValueMap::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+  return mallocSizeOf(this) + shallowSizeOfExcludingThis(mallocSizeOf);
+}
+
 bool ObjectValueMap::findZoneEdges() {
   /*
    * For unmarked weakmap keys with delegates in a different zone, add a zone
