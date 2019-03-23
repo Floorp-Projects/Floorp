@@ -5660,8 +5660,8 @@ nsresult nsDocShell::SetCurScrollPosEx(int32_t aCurHorizontalPos,
   // TODO: If scrollMode == SMOOTH_MSD, this will effectively override that
   // and jump to the target position instantly. A proper solution here would
   // involve giving nsIScrollableFrame a visual viewport smooth scrolling API.
-  shell->SetPendingVisualScrollUpdate(targetPos,
-                                      layers::FrameMetrics::eMainThread);
+  shell->ScrollToVisual(targetPos, layers::FrameMetrics::eMainThread,
+                        nsIPresShell::ScrollMode::eInstant);
 
   return NS_OK;
 }

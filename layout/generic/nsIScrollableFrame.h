@@ -573,6 +573,10 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual const ScrollAnchorContainer* Anchor() const = 0;
   virtual ScrollAnchorContainer* Anchor() = 0;
+
+  virtual bool SmoothScrollVisual(
+      const nsPoint& aVisualViewportOffset,
+      mozilla::layers::FrameMetrics::ScrollOffsetUpdateType aUpdateType) = 0;
 };
 
 #endif

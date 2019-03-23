@@ -1421,8 +1421,9 @@ nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY,
       return NS_ERROR_INVALID_ARG;
   }
 
-  presContext->PresShell()->SetPendingVisualScrollUpdate(
-      CSSPoint::ToAppUnits(CSSPoint(aOffsetX, aOffsetY)), updateType);
+  presContext->PresShell()->ScrollToVisual(
+      CSSPoint::ToAppUnits(CSSPoint(aOffsetX, aOffsetY)), updateType,
+      nsIPresShell::ScrollMode::eInstant);
 
   return NS_OK;
 }
