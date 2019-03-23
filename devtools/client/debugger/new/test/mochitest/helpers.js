@@ -1507,21 +1507,6 @@ async function assertPreviews(dbg, previews) {
   }
 }
 
-async function waitForBreakableLine(dbg, source, lineNumber) {
-  await waitForState(
-    dbg,
-    state => {
-      const currentSource = findSource(dbg, source);
-
-      const emptyLines =
-        currentSource && dbg.selectors.getEmptyLines(state, currentSource.id);
-
-      return emptyLines && !emptyLines.includes(lineNumber);
-    },
-    `waiting for breakable line ${lineNumber}`
-  );
-}
-
 async function waitForSourceCount(dbg, i) {
   // We are forced to wait until the DOM nodes appear because the
   // source tree batches its rendering.

@@ -15,7 +15,6 @@ describe("sources", () => {
       id: sourceId,
       url: "http://example.org/some.source.js",
       introductionUrl: "",
-      introductionType: undefined,
       relativeUrl: "",
       isBlackBoxed: false,
       isPrettyPrinted: false,
