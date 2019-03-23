@@ -6,6 +6,7 @@
 
 #include "ExtensionProtocolHandler.h"
 
+#include "mozilla/BinarySearch.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Promise.h"
@@ -41,6 +42,7 @@
 #include "nsIOutputStream.h"
 #include "nsIStreamConverterService.h"
 #include "nsNetUtil.h"
+#include "nsReadableUtils.h"
 #include "nsURLHelper.h"
 #include "prio.h"
 #include "SimpleChannel.h"
@@ -53,6 +55,30 @@
 #define EXTENSION_SCHEME "moz-extension"
 using mozilla::dom::Promise;
 using mozilla::ipc::FileDescriptor;
+
+// A list of file extensions containing purely static data, which can be loaded
+// from an extension before the extension is fully ready. The main purpose of
+// this is to allow image resources from theme XPIs to load quickly during
+// browser startup.
+//
+// The layout of this array is chosen in order to prevent the need for runtime
+// relocation, which an array of char* pointers would require. It also has the
+// benefit of being more compact when the difference in length between the
+// longest and average string is less than 8 bytes. The length of the
+// char[] array must match the size of the longest entry in the list.
+//
+// This list must be kept sorted.
+static const char sStaticFileExtensions[][5] = {
+  // clang-format off
+  "bmp",
+  "gif",
+  "ico",
+  "jpeg",
+  "jpg",
+  "png",
+  "svg",
+  // clang-format on
+};
 
 namespace mozilla {
 
@@ -460,9 +486,10 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
 
   nsAutoCString ext;
   MOZ_TRY(url->GetFileExtension(ext));
+  ToLowerCase(ext);
 
   nsCOMPtr<nsIChannel> channel;
-  if (ext.LowerCaseEqualsLiteral("css")) {
+  if (ext.EqualsLiteral("css")) {
     // Filter CSS files to replace locale message tokens with localized strings.
     static const auto convert = [](nsIStreamListener* listener,
                                    nsIChannel* channel,
@@ -502,6 +529,16 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
           return RequestOrReason(origChannel);
         });
   } else if (readyPromise) {
+    size_t matchIdx;
+    if (BinarySearchIf(
+            sStaticFileExtensions, 0, ArrayLength(sStaticFileExtensions),
+            [&ext](const char* aOther) { return ext.Compare(aOther); },
+            &matchIdx)) {
+      // This is a static resource that shouldn't depend on the extension being
+      // ready. Don't bother waiting for it.
+      return NS_OK;
+    }
+
     channel = NS_NewSimpleChannel(
         aURI, aLoadInfo, *result,
         [readyPromise](nsIStreamListener* listener, nsIChannel* channel,
