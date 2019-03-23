@@ -21,6 +21,11 @@ class WeakCollectionObject : public NativeObject {
     return static_cast<ObjectValueMap*>(getPrivate());
   }
 
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) {
+    ObjectValueMap* map = getMap();
+    return map ? map->sizeOfIncludingThis(aMallocSizeOf) : 0;
+  }
+
   static MOZ_MUST_USE bool nondeterministicGetKeys(
       JSContext* cx, Handle<WeakCollectionObject*> obj,
       MutableHandleObject ret);
