@@ -11,7 +11,7 @@
     feature = "cargo-clippy",
     allow(doc_markdown, inline_always, new_ret_no_self)
 )]
-#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.14")]
+#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.16")]
 
 //! encoding_rs is a Gecko-oriented Free Software / Open Source implementation
 //! of the [Encoding Standard](https://encoding.spec.whatwg.org/) in Rust.
@@ -665,7 +665,7 @@
 //! See the section [_UTF-16LE, UTF-16BE and Unicode Encoding Schemes_](#utf-16le-utf-16be-and-unicode-encoding-schemes)
 //! for discussion about the UTF-16 family.
 
-#![cfg_attr(feature = "simd-accel", feature(platform_intrinsics, core_intrinsics))]
+#![cfg_attr(feature = "simd-accel", feature(stdsimd, core_intrinsics))]
 
 #[macro_use]
 extern crate cfg_if;
@@ -678,7 +678,8 @@ extern crate cfg_if;
         all(target_endian = "little", target_feature = "neon")
     )
 ))]
-extern crate simd;
+#[macro_use(shuffle)]
+extern crate packed_simd;
 
 #[cfg(feature = "serde")]
 extern crate serde;
