@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/alexcrichton/cfg-if.svg?branch=master)](https://travis-ci.org/alexcrichton/cfg-if)
 
-[Documentation](http://alexcrichton.com/cfg-if)
+[Documentation](https://docs.rs/cfg-if)
 
 A macro to ergonomically define an item depending on a large number of #[cfg]
 parameters. Structured like an if-else chain, the first matching branch is the
@@ -36,9 +36,17 @@ fn main() {
 
 # License
 
-`cfg-if` is primarily distributed under the terms of both the MIT license and
-the Apache License (Version 2.0), with portions covered by various BSD-like
-licenses.
+This project is licensed under either of
 
-See LICENSE-APACHE, and LICENSE-MIT for details.
+ * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
+   http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license ([LICENSE-MIT](LICENSE-MIT) or
+   http://opensource.org/licenses/MIT)
 
+at your option.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in Serde by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
