@@ -29,7 +29,8 @@ function setScrollPosition(browser,
   if (frame !== null) {
     window.scrollTo(x, y);
   } else {
-    topLevelUtils.scrollToVisual(x, y, topLevelUtils.UPDATE_TYPE_MAIN_THREAD);
+    topLevelUtils.scrollToVisual(x, y, topLevelUtils.UPDATE_TYPE_MAIN_THREAD,
+                                 topLevelUtils.SCROLL_MODE_INSTANT);
   }
 }
 

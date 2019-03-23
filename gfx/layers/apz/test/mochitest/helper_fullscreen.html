@@ -36,7 +36,8 @@
          "The target element should have been fullscreen-ed");
 
       // Try to move rightward, but it should NOT happen.
-      utils.scrollToVisual(200, 0, utils.UPDATE_TYPE_MAIN_THREAD);
+      utils.scrollToVisual(200, 0, utils.UPDATE_TYPE_MAIN_THREAD,
+                           utils.SCROLL_MODE_INSTANT);
 
       await waitUntilApzStable();
 

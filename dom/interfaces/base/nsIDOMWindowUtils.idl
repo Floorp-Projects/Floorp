@@ -842,7 +842,10 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   const long UPDATE_TYPE_RESTORE = 0;
   const long UPDATE_TYPE_MAIN_THREAD = 1;
-  void scrollToVisual(in float aOffsetX, in float aOffsetY, in long aUpdateType);
+  const long SCROLL_MODE_INSTANT = 0;
+  const long SCROLL_MODE_SMOOTH = 1;
+  void scrollToVisual(in float aOffsetX, in float aOffsetY,
+                      in long aUpdateType, in long aScrollMode);
 
   /**
    * Returns the offset of the window's visual viewport relative to the
