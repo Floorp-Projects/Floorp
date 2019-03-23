@@ -327,6 +327,11 @@
                        label="&places.library.title;"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('appMenu-libraryView', this)"/>
+        <toolbarbutton id="appMenu-logins-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&logins.label;"
+                       oncommand="LoginHelper.openPasswordManager(window)"
+                       />
         <toolbarbutton id="appMenu-addons-button"
                        class="subviewbutton subviewbutton-iconic"
                        label="&addons.label;"
