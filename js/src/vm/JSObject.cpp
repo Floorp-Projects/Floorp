@@ -31,6 +31,7 @@
 #include "builtin/Object.h"
 #include "builtin/String.h"
 #include "builtin/Symbol.h"
+#include "builtin/WeakSetObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Policy.h"
 #include "jit/BaselineJIT.h"
@@ -3958,6 +3959,9 @@ void JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
     ArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info);
   } else if (is<SharedArrayBufferObject>()) {
     SharedArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info);
+  } else if (is<WeakCollectionObject>()) {
+    info->objectsMallocHeapMisc +=
+        as<WeakCollectionObject>().sizeOfExcludingThis(mallocSizeOf);
 #ifdef JS_HAS_CTYPES
   } else {
     // This must be the last case.
