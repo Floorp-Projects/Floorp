@@ -44,7 +44,7 @@ BaseTraversalRule.prototype = {
     match: function BaseTraversalRule_match(aAccessible) {
       let role = aAccessible.role;
       if (role == Roles.INTERNAL_FRAME) {
-        return (Utils.getMessageManager(aAccessible.DOMNode)) ?
+        return (Utils.getMessageManagerForFrame(aAccessible.DOMNode)) ?
           Filters.MATCH | Filters.IGNORE_SUBTREE : Filters.IGNORE;
       }
 
