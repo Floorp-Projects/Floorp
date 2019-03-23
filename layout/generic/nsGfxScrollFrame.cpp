@@ -4466,8 +4466,9 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
         return;
       }
       if (mIsRoot && mOuter->PresContext()->IsRootContentDocument()) {
-        mOuter->PresShell()->SetPendingVisualScrollUpdate(
-            visualScrollToPos, FrameMetrics::eRestore);
+        mOuter->PresShell()->ScrollToVisual(visualScrollToPos,
+                                            FrameMetrics::eRestore,
+                                            nsIPresShell::ScrollMode::eInstant);
       }
       if (state == LoadingState::Loading || NS_SUBTREE_DIRTY(mOuter)) {
         // If we're trying to do a history scroll restore, then we want to
@@ -6671,4 +6672,29 @@ void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
   // Schedule a paint to ensure that the frame metrics get updated on
   // the compositor thread.
   mOuter->SchedulePaint();
+}
+
+bool ScrollFrameHelper::SmoothScrollVisual(
+    const nsPoint& aVisualViewportOffset,
+    FrameMetrics::ScrollOffsetUpdateType aUpdateType) {
+  bool canDoApzSmoothScroll = gfxPrefs::ScrollBehaviorEnabled() &&
+                              nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
+                              WantAsyncScroll();
+  if (!canDoApzSmoothScroll) {
+    return false;
+  }
+
+  // Clamp the destination to the visual scroll range.
+  nsPoint destination =
+      GetScrollRangeForClamping().ClampPoint(aVisualViewportOffset);
+
+  // We also want to set mDestination to that subsequent ScrollBy()s work
+  // correctly, but mDestination needs to be clamped to the layout scroll range.
+  mDestination = GetScrollRange().ClampPoint(destination);
+
+  // Perform the scroll.
+  ApzSmoothScrollTo(destination, aUpdateType == FrameMetrics::eRestore
+                                     ? nsGkAtoms::restore
+                                     : nsGkAtoms::other);
+  return true;
 }

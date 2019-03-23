@@ -10699,6 +10699,22 @@ bool nsIPresShell::SetVisualViewportOffset(
   return didChange;
 }
 
+void nsIPresShell::ScrollToVisual(
+    const nsPoint& aVisualViewportOffset,
+    FrameMetrics::ScrollOffsetUpdateType aUpdateType, ScrollMode aMode) {
+  if (aMode == ScrollMode::eSmooth) {
+    if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
+      if (sf->SmoothScrollVisual(aVisualViewportOffset, aUpdateType)) {
+        return;
+      }
+    }
+  }
+
+  // If the caller asked for instant scroll, or if we failed
+  // to do a smooth scroll, do an instant scroll.
+  SetPendingVisualScrollUpdate(aVisualViewportOffset, aUpdateType);
+}
+
 void nsIPresShell::SetPendingVisualScrollUpdate(
     const nsPoint& aVisualViewportOffset,
     FrameMetrics::ScrollOffsetUpdateType aUpdateType) {
