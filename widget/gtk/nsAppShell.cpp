@@ -40,6 +40,7 @@ LazyLogModule gWidgetLog("Widget");
 LazyLogModule gWidgetFocusLog("WidgetFocus");
 LazyLogModule gWidgetDragLog("WidgetDrag");
 LazyLogModule gWidgetDrawLog("WidgetDraw");
+LazyLogModule gWidgetWaylandLog("WidgetWayland");
 
 static GPollFunc sPollFunc;
 

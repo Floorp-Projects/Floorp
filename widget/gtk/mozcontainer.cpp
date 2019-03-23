@@ -26,12 +26,14 @@
 #  include "mozilla/Logging.h"
 #  include "nsTArray.h"
 #  include "Units.h"
-
 extern mozilla::LazyLogModule gWidgetLog;
-
+extern mozilla::LazyLogModule gWidgetWaylandLog;
 #  define LOG(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
+#  define LOGWAYLAND(args) \
+    MOZ_LOG(gWidgetWaylandLog, mozilla::LogLevel::Debug, args)
 #else
 #  define LOG(args)
+#  define LOGWAYLAND(args)
 #endif /* MOZ_LOGGING */
 
 #ifdef MOZ_WAYLAND
@@ -195,9 +197,9 @@ static wl_surface *moz_container_get_gtk_container_surface(
   GdkWindow *window = gtk_widget_get_window(GTK_WIDGET(container));
   wl_surface *surface = sGdkWaylandWindowGetWlSurface(window);
 
-  LOG(("%s [%p] wl_surface %p ID %d\n", __FUNCTION__, (void *)container,
-       (void *)surface,
-       surface ? wl_proxy_get_id((struct wl_proxy *)surface) : -1));
+  LOGWAYLAND(("%s [%p] wl_surface %p ID %d\n", __FUNCTION__, (void *)container,
+              (void *)surface,
+              surface ? wl_proxy_get_id((struct wl_proxy *)surface) : -1));
 
   return surface;
 }
@@ -206,9 +208,9 @@ static void frame_callback_handler(void *data, struct wl_callback *callback,
                                    uint32_t time) {
   MozContainer *container = MOZ_CONTAINER(data);
 
-  LOG(
-      ("%s [%p] frame_callback_handler %p ready_to_draw %d (set to true) "
-       "inital_draw callback %d\n",
+  LOGWAYLAND(
+      ("%s [%p] frame_callback_handler %p ready_to_draw %d (set to true)"
+       " inital_draw callback %d\n",
        __FUNCTION__, (void *)container,
        (void *)container->frame_callback_handler, container->ready_to_draw,
        container->inital_draw_cb ? 1 : 0));
@@ -234,7 +236,7 @@ static void moz_container_request_parent_frame_callback(
           ? wl_proxy_get_id((struct wl_proxy *)gtk_container_surface)
           : -1;
 
-  LOG(
+  LOGWAYLAND(
       ("%s [%p] frame_callback_handler %p "
        "frame_callback_handler_surface_id %d\n",
        __FUNCTION__, (void *)container, container->frame_callback_handler,
@@ -265,8 +267,8 @@ static gboolean moz_container_map_wayland(GtkWidget *widget,
                                           GdkEventAny *event) {
   MozContainer *container = MOZ_CONTAINER(widget);
 
-  LOG(("%s begin [%p] ready_to_draw %d\n", __FUNCTION__, (void *)container,
-       container->ready_to_draw));
+  LOGWAYLAND(("%s begin [%p] ready_to_draw %d\n", __FUNCTION__,
+              (void *)container, container->ready_to_draw));
 
   if (container->ready_to_draw) {
     return FALSE;
@@ -286,7 +288,7 @@ static void moz_container_unmap_wayland(MozContainer *container) {
   container->surface_needs_clear = true;
   container->ready_to_draw = false;
 
-  LOG(("%s [%p]\n", __FUNCTION__, (void *)container));
+  LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void *)container));
 }
 
 static gint moz_container_get_scale(MozContainer *container) {
@@ -303,8 +305,9 @@ static gint moz_container_get_scale(MozContainer *container) {
 
 void moz_container_scale_changed(MozContainer *container,
                                  GtkAllocation *aAllocation) {
-  LOG(("%s [%p] surface %p eglwindow %p\n", __FUNCTION__, (void *)container,
-       (void *)container->surface, (void *)container->eglwindow));
+  LOGWAYLAND(("%s [%p] surface %p eglwindow %p\n", __FUNCTION__,
+              (void *)container, (void *)container->surface,
+              (void *)container->eglwindow));
 
   if (!container->surface) {
     return;
@@ -566,8 +569,9 @@ static void moz_container_add(GtkContainer *container, GtkWidget *widget) {
 
 #ifdef MOZ_WAYLAND
 struct wl_surface *moz_container_get_wl_surface(MozContainer *container) {
-  LOG(("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__, (void *)container,
-       (void *)container->surface, container->ready_to_draw));
+  LOGWAYLAND(("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__,
+              (void *)container, (void *)container->surface,
+              container->ready_to_draw));
 
   if (!container->surface) {
     if (!container->ready_to_draw) {
@@ -609,15 +613,15 @@ struct wl_surface *moz_container_get_wl_surface(MozContainer *container) {
     WaylandDisplayRelease(waylandDisplay);
   }
 
-  LOG(("%s [%p] created surface %p\n", __FUNCTION__, (void *)container,
-       (void *)container->surface));
+  LOGWAYLAND(("%s [%p] created surface %p\n", __FUNCTION__, (void *)container,
+              (void *)container->surface));
 
   return container->surface;
 }
 
 struct wl_egl_window *moz_container_get_wl_egl_window(MozContainer *container) {
-  LOG(("%s [%p] eglwindow %p\n", __FUNCTION__, (void *)container,
-       (void *)container->eglwindow));
+  LOGWAYLAND(("%s [%p] eglwindow %p\n", __FUNCTION__, (void *)container,
+              (void *)container->eglwindow));
 
   if (!container->eglwindow) {
     wl_surface *surface = moz_container_get_wl_surface(container);
@@ -633,8 +637,8 @@ struct wl_egl_window *moz_container_get_wl_egl_window(MozContainer *container) {
     wl_surface_set_buffer_scale(surface, scale);
   }
 
-  LOG(("%s [%p] created eglwindow %p\n", __FUNCTION__, (void *)container,
-       (void *)container->eglwindow));
+  LOGWAYLAND(("%s [%p] created eglwindow %p\n", __FUNCTION__, (void *)container,
+              (void *)container->eglwindow));
 
   return container->eglwindow;
 }
