@@ -2905,6 +2905,7 @@ static bool CheckForUserMismatch() { return false; }
 static void IncreaseDescriptorLimits() {
 #ifdef XP_UNIX
   // Increase the fd limit to accomodate IPC resources like shared memory.
+  // See also the Darwin case in config/external/nspr/pr/moz.build
   static const rlim_t kFDs = 4096;
   struct rlimit rlim;
 
