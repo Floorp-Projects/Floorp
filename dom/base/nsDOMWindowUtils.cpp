@@ -438,8 +438,9 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
   bool hadDisplayPort = false;
   nsRect oldDisplayPort;
   {
-    DisplayPortPropertyData* currentData = static_cast<DisplayPortPropertyData*>(
-        aElement->GetProperty(nsGkAtoms::DisplayPort));
+    DisplayPortPropertyData* currentData =
+        static_cast<DisplayPortPropertyData*>(
+            aElement->GetProperty(nsGkAtoms::DisplayPort));
     if (currentData) {
       if (currentData->mPriority > aPriority) {
         return NS_OK;
@@ -468,8 +469,8 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
     }
   }
 
-  nsLayoutUtils::InvalidateForDisplayPortChange(
-      aElement, hadDisplayPort, oldDisplayPort, displayport);
+  nsLayoutUtils::InvalidateForDisplayPortChange(aElement, hadDisplayPort,
+                                                oldDisplayPort, displayport);
 
   nsIFrame* rootFrame = presShell->GetRootFrame();
   if (rootFrame) {
@@ -1399,7 +1400,7 @@ nsDOMWindowUtils::GetScrollXYFloat(bool aFlushLayout, float* aScrollX,
 
 NS_IMETHODIMP
 nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY,
-                                 int32_t aUpdateType) {
+                                 int32_t aUpdateType, int32_t aScrollMode) {
   nsCOMPtr<Document> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
@@ -1421,9 +1422,21 @@ nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY,
       return NS_ERROR_INVALID_ARG;
   }
 
+  nsIPresShell::ScrollMode scrollMode;
+  switch (aScrollMode) {
+    case SCROLL_MODE_INSTANT:
+      scrollMode = nsIPresShell::ScrollMode::eInstant;
+      break;
+    case SCROLL_MODE_SMOOTH:
+      scrollMode = nsIPresShell::ScrollMode::eSmooth;
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
   presContext->PresShell()->ScrollToVisual(
       CSSPoint::ToAppUnits(CSSPoint(aOffsetX, aOffsetY)), updateType,
-      nsIPresShell::ScrollMode::eInstant);
+      scrollMode);
 
   return NS_OK;
 }
