@@ -437,26 +437,14 @@ async function getBreakpointPositions(
   source: Source,
   range: ?Range
 ): Promise<{ [string]: number[] }> {
-  const sourcePositions = {};
-
-  for (const { thread, actor } of source.actors) {
-    const sourceThreadClient = lookupThreadClient(thread);
-    const sourceClient = sourceThreadClient.source({ actor });
-    const { positions } = await sourceClient.getBreakpointPositionsCompressed(
-      range
-    );
-
-    for (const line of Object.keys(positions)) {
-      let columns = positions[line];
-      const existing = sourcePositions[line];
-      if (existing) {
-        columns = [...new Set([...existing, ...columns])];
-      }
-
-      sourcePositions[line] = columns;
-    }
-  }
-  return sourcePositions;
+  const sourceActor = source.actors[0];
+  const { thread, actor } = sourceActor;
+  const sourceThreadClient = lookupThreadClient(thread);
+  const sourceClient = sourceThreadClient.source({ actor });
+  const { positions } = await sourceClient.getBreakpointPositionsCompressed(
+    range
+  );
+  return positions;
 }
 
 const clientCommands = {
