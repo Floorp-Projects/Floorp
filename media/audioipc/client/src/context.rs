@@ -136,7 +136,9 @@ impl ContextOps for ClientContext {
             .stack_size(params.stack_size)
             .create();
 
-        send_recv!(rpc, ClientConnect(std::process::id()) => ClientConnected)?;
+        // Don't let errors bubble from here.  Later calls against this context
+        // will return errors the caller expects to handle.
+        let _ = send_recv!(rpc, ClientConnect(std::process::id()) => ClientConnected);
 
         let ctx = Box::new(ClientContext {
             _ops: &CLIENT_OPS as *const _,
