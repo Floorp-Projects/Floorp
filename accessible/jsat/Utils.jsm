@@ -76,10 +76,7 @@ var Utils = { // jshint ignore:line
   },
 
   getCurrentBrowser: function getCurrentBrowser(aWindow) {
-    let win = aWindow ||
-      Services.wm.getMostRecentWindow("navigator:browser") ||
-      Services.wm.getMostRecentWindow("navigator:geckoview");
-    return win.document.querySelector("browser[type=content][primary=true]");
+    return aWindow.document.querySelector("browser[type=content][primary=true]");
   },
 
   get isContentProcess() {
@@ -133,10 +130,17 @@ var Utils = { // jshint ignore:line
     return this.stringBundle;
   },
 
-  getMessageManager: function getMessageManager(aBrowser) {
-    let browser = aBrowser || this.getCurrentBrowser();
+  getCurrentMessageManager: function getCurrentMessageManager(aWindow) {
     try {
-      return browser.frameLoader.messageManager;
+      return this.getCurrentBrowser(aWindow).frameLoader.messageManager;
+    } catch (x) {
+      return null;
+    }
+  },
+
+  getMessageManagerForFrame: function getMessageManagerForFrame(aFrame) {
+    try {
+      return aFrame.frameLoader.messageManager;
     } catch (x) {
       return null;
     }

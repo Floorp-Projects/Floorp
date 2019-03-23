@@ -131,7 +131,7 @@ this.ContentControl.prototype = {
     if (moved) {
       if (origin === "child") {
         // We just stepped out of a child, clear child cursor.
-        Utils.getMessageManager(aMessage.target).sendAsyncMessage(
+        Utils.getMessageManagerForFrame(aMessage.target).sendAsyncMessage(
           "AccessFu:ClearCursor", {});
       } else {
         // We potentially landed on a new child cursor. If so, we want to
@@ -378,7 +378,7 @@ this.ContentControl.prototype = {
       let domNode = acc.DOMNode;
       let mm = this._childMessageSenders.get(domNode, null);
       if (!mm) {
-        mm = Utils.getMessageManager(domNode);
+        mm = Utils.getMessageManagerForFrame(domNode);
         mm.addWeakMessageListener("AccessFu:MoveCursor", this);
         this._childMessageSenders.set(domNode, mm);
       }
