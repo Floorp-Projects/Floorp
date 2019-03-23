@@ -2288,49 +2288,7 @@ void ScrollFrameHelper::ScrollToWithOrigin(
         }
 
         if (nsLayoutUtils::AsyncPanZoomEnabled(mOuter) && WantAsyncScroll()) {
-          if (mApzSmoothScrollDestination == Some(mDestination) &&
-              mScrollGeneration == sScrollGenerationCounter) {
-            // If we already sent APZ a smooth-scroll request to this
-            // destination with this generation (i.e. it was the last request
-            // we sent), then don't send another one because it is redundant.
-            // This is to avoid a scenario where pages do repeated scrollBy
-            // calls, incrementing the generation counter, and blocking APZ from
-            // syncing the scroll offset back to the main thread.
-            // Note that if we get two smooth-scroll requests to the same
-            // destination with some other scroll in between,
-            // mApzSmoothScrollDestination will get reset to Nothing() and so
-            // we shouldn't have the problem where this check discards a
-            // legitimate smooth-scroll.
-            // Note: if there are two separate scrollframes both getting smooth
-            // scrolled at the same time, sScrollGenerationCounter can get
-            // incremented and this early-exit won't get taken. Bug 1231177 is
-            // on file for this.
-            return;
-          }
-
-          // The animation will be handled in the compositor, pass the
-          // information needed to start the animation and skip the main-thread
-          // animation for this scroll.
-          mLastSmoothScrollOrigin = aOrigin;
-          mApzSmoothScrollDestination = Some(mDestination);
-          mScrollGeneration = ++sScrollGenerationCounter;
-
-          if (!nsLayoutUtils::HasDisplayPort(mOuter->GetContent())) {
-            // If this frame doesn't have a displayport then there won't be an
-            // APZC instance for it and so there won't be anything to process
-            // this smooth scroll request. We should set a displayport on this
-            // frame to force an APZC which can handle the request.
-            nsLayoutUtils::CalculateAndSetDisplayPortMargins(
-                mOuter->GetScrollTargetFrame(),
-                nsLayoutUtils::RepaintMode::DoNotRepaint);
-            nsIFrame* frame = do_QueryFrame(mOuter->GetScrollTargetFrame());
-            nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
-                frame, nsLayoutUtils::RepaintMode::DoNotRepaint);
-          }
-
-          // Schedule a paint to ensure that the frame metrics get updated on
-          // the compositor thread.
-          mOuter->SchedulePaint();
+          ApzSmoothScrollTo(mDestination, aOrigin);
           return;
         }
 
@@ -6666,4 +6624,51 @@ void ScrollFrameHelper::AsyncScrollbarDragRejected() {
   // so we notify both.
   ::AsyncScrollbarDragRejected(mHScrollbarBox);
   ::AsyncScrollbarDragRejected(mVScrollbarBox);
+}
+
+void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
+                                          nsAtom* aOrigin) {
+  if (mApzSmoothScrollDestination == Some(aDestination) &&
+      mScrollGeneration == sScrollGenerationCounter) {
+    // If we already sent APZ a smooth-scroll request to this
+    // destination with this generation (i.e. it was the last request
+    // we sent), then don't send another one because it is redundant.
+    // This is to avoid a scenario where pages do repeated scrollBy
+    // calls, incrementing the generation counter, and blocking APZ from
+    // syncing the scroll offset back to the main thread.
+    // Note that if we get two smooth-scroll requests to the same
+    // destination with some other scroll in between,
+    // mApzSmoothScrollDestination will get reset to Nothing() and so
+    // we shouldn't have the problem where this check discards a
+    // legitimate smooth-scroll.
+    // Note: if there are two separate scrollframes both getting smooth
+    // scrolled at the same time, sScrollGenerationCounter can get
+    // incremented and this early-exit won't get taken. Bug 1231177 is
+    // on file for this.
+    return;
+  }
+
+  // The animation will be handled in the compositor, pass the
+  // information needed to start the animation and skip the main-thread
+  // animation for this scroll.
+  mLastSmoothScrollOrigin = aOrigin;
+  mApzSmoothScrollDestination = Some(aDestination);
+  mScrollGeneration = ++sScrollGenerationCounter;
+
+  if (!nsLayoutUtils::HasDisplayPort(mOuter->GetContent())) {
+    // If this frame doesn't have a displayport then there won't be an
+    // APZC instance for it and so there won't be anything to process
+    // this smooth scroll request. We should set a displayport on this
+    // frame to force an APZC which can handle the request.
+    nsLayoutUtils::CalculateAndSetDisplayPortMargins(
+        mOuter->GetScrollTargetFrame(),
+        nsLayoutUtils::RepaintMode::DoNotRepaint);
+    nsIFrame* frame = do_QueryFrame(mOuter->GetScrollTargetFrame());
+    nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
+        frame, nsLayoutUtils::RepaintMode::DoNotRepaint);
+  }
+
+  // Schedule a paint to ensure that the frame metrics get updated on
+  // the compositor thread.
+  mOuter->SchedulePaint();
 }
