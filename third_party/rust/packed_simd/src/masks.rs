@@ -36,7 +36,7 @@ macro_rules! impl_mask_ty {
             }
         }
 
-        #[cfg_attr(feature = "cargo-clippy", allow(clippy::partialeq_ne_impl))]
+        #[allow(clippy::partialeq_ne_impl)]
         impl PartialEq<$id> for $id {
             #[inline]
             fn eq(&self, other: &Self) -> bool {

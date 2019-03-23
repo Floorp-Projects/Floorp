@@ -20,12 +20,13 @@ macro_rules! impl_reduction_mask {
             }
         }
 
-        test_if!{
+        test_if! {
             $test_tt:
             paste::item! {
                 pub mod [<$id _reduction>] {
                     use super::*;
-                    #[cfg_attr(not(target_arch = "wasm32"), test)] #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+                    #[cfg_attr(not(target_arch = "wasm32"), test)]
+                    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
                     fn all() {
                         let a = $id::splat(true);
                         assert!(a.all());
@@ -43,7 +44,8 @@ macro_rules! impl_reduction_mask {
                             }
                         }
                     }
-                    #[cfg_attr(not(target_arch = "wasm32"), test)] #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+                    #[cfg_attr(not(target_arch = "wasm32"), test)]
+                    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
                     fn any() {
                         let a = $id::splat(true);
                         assert!(a.any());
@@ -61,7 +63,8 @@ macro_rules! impl_reduction_mask {
                             }
                         }
                     }
-                    #[cfg_attr(not(target_arch = "wasm32"), test)] #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+                    #[cfg_attr(not(target_arch = "wasm32"), test)]
+                    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
                     fn none() {
                         let a = $id::splat(true);
                         assert!(!a.none());

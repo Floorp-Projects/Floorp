@@ -97,6 +97,7 @@ the full testsuite passes on the target.
 | `powerpc64le-unknown-linux-gnu`   | ✗         | ✗       |
 | `s390x-unknown-linux-gnu`         | ✓         | ✓*      |
 | `sparc64-unknown-linux-gnu`       | ✓         | ✓*      |
+| `thumbv7neon-unknown-linux-gnueabihf` | ✓         | ✓      |
 | **MacOSX targets:**               | **build** | **run** |
 | `x86_64-apple-darwin`             | ✓         | ✓       |
 | `i686-apple-darwin`               | ✓         | ✓       |
@@ -111,6 +112,7 @@ the full testsuite passes on the target.
 | `x86_64-linux-android`            | ✓         | ✓       |
 | `arm-linux-androideabi`           | ✓         | ✓       |
 | `aarch64-linux-android`           | ✓         | ✗       |
+| `thumbv7neon-linux-androideabi`  | ✓         | ✓       |
 | **iOS targets:**                  | **build** | **run** |
 | `i386-apple-ios`                  | ✓         | ✗       |
 | `x86_64-apple-ios`                | ✓         | ✗       |

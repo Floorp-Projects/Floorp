@@ -214,25 +214,17 @@
     crate_visibility_modifier,
     custom_inner_attributes
 )]
-#![allow(non_camel_case_types, non_snake_case)]
+#![allow(non_camel_case_types, non_snake_case,
+         clippy::cast_possible_truncation,
+         clippy::cast_lossless,
+         clippy::cast_possible_wrap,
+         clippy::cast_precision_loss,
+         // This lint is currently broken for generic code
+         // See https://github.com/rust-lang/rust-clippy/issues/3410
+         clippy::use_self
+)]
 #![cfg_attr(test, feature(hashmap_internals))]
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(
-        clippy::cast_possible_truncation,
-        clippy::cast_lossless,
-        clippy::cast_possible_wrap,
-        clippy::cast_precision_loss,
-        // This lint is currently broken for generic code
-        // See https://github.com/rust-lang/rust-clippy/issues/3410
-        clippy::use_self
-    )
-)]
-#![cfg_attr(
-    feature = "cargo-clippy",
-    deny(clippy::missing_inline_in_public_items)
-)]
-#![deny(warnings, rust_2018_idioms)]
+#![deny(warnings, rust_2018_idioms, clippy::missing_inline_in_public_items)]
 #![no_std]
 
 use cfg_if::cfg_if;
@@ -288,10 +280,7 @@ pub struct Simd<A: sealed::SimdArray>(
 /// and/or `Ord` traits.
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug)]
-#[cfg_attr(
-    feature = "cargo-clippy",
-    allow(clippy::missing_inline_in_public_items)
-)]
+#[allow(clippy::missing_inline_in_public_items)]
 pub struct LexicographicallyOrdered<T>(T);
 
 mod masks;
