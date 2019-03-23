@@ -30,6 +30,8 @@ function* testSteps()
   // 1. Remove the folder "storage/temporary".
   // 2. Copy the content under the "storage/default/chrome" to
   //    "storage/default/http+++www.mozilla.org".
+  // 3. Manually create an asmjs folder under the
+  //    "storage/default/http+++www.mozilla.org/".
   installPackage("version2_1upgrade_profile");
 
   info("Checking padding file before upgrade (QM version 2.0)");
