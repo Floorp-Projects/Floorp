@@ -118,6 +118,7 @@ class WindowSurfaceWayland : public WindowSurface {
   bool mWaylandBufferFullScreenDamage;
   bool mIsMainThread;
   bool mNeedScaleFactorUpdate;
+  bool mWaitToFullScreenUpdate;
 };
 
 }  // namespace widget
