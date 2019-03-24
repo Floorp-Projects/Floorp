@@ -56,7 +56,7 @@ void nsCounterUseNode::Calc(nsCounterList* aList) {
 // Should be called immediately after calling |Insert|.
 void nsCounterChangeNode::Calc(nsCounterList* aList) {
   NS_ASSERTION(!aList->IsDirty(), "Why are we calculating with a dirty list?");
-  if (mType == RESET) {
+  if (mType == RESET || mType == SET) {
     mValueAfter = mChangeValue;
   } else {
     NS_ASSERTION(mType == INCREMENT, "invalid type");
@@ -174,10 +174,11 @@ void nsCounterList::RecalcAll() {
   }
 }
 
-bool nsCounterManager::AddCounterResetsAndIncrements(nsIFrame* aFrame) {
+bool nsCounterManager::AddCounterChanges(nsIFrame* aFrame) {
   const nsStyleContent* styleContent = aFrame->StyleContent();
   if (!styleContent->CounterIncrementCount() &&
-      !styleContent->CounterResetCount()) {
+      !styleContent->CounterResetCount() &&
+      !styleContent->CounterSetCount()) {
     MOZ_ASSERT(!aFrame->HasAnyStateBits(NS_FRAME_HAS_CSS_COUNTER_STYLE));
     return false;
   }
@@ -189,17 +190,21 @@ bool nsCounterManager::AddCounterResetsAndIncrements(nsIFrame* aFrame) {
   int32_t i, i_end;
   bool dirty = false;
   for (i = 0, i_end = styleContent->CounterResetCount(); i != i_end; ++i) {
-    dirty |= AddResetOrIncrement(aFrame, i, styleContent->CounterResetAt(i),
-                                 nsCounterChangeNode::RESET);
+    dirty |= AddCounterChangeNode(aFrame, i, styleContent->CounterResetAt(i),
+                                  nsCounterChangeNode::RESET);
+  }
+  for (i = 0, i_end = styleContent->CounterSetCount(); i != i_end; ++i) {
+    dirty |= AddCounterChangeNode(aFrame, i, styleContent->CounterSetAt(i),
+                                  nsCounterChangeNode::SET);
   }
   for (i = 0, i_end = styleContent->CounterIncrementCount(); i != i_end; ++i) {
-    dirty |= AddResetOrIncrement(aFrame, i, styleContent->CounterIncrementAt(i),
-                                 nsCounterChangeNode::INCREMENT);
+    dirty |= AddCounterChangeNode(aFrame, i, styleContent->CounterIncrementAt(i),
+                                  nsCounterChangeNode::INCREMENT);
   }
   return dirty;
 }
 
-bool nsCounterManager::AddResetOrIncrement(
+bool nsCounterManager::AddCounterChangeNode(
     nsIFrame* aFrame, int32_t aIndex, const nsStyleCounterData& aCounterData,
     nsCounterNode::Type aType) {
   nsCounterChangeNode* node =
@@ -266,7 +271,7 @@ void nsCounterManager::Dump() {
     nsCounterList* list = iter.UserData();
     int32_t i = 0;
     for (nsCounterNode* node = list->First(); node; node = list->Next(node)) {
-      const char* types[] = {"RESET", "INCREMENT", "USE"};
+      const char* types[] = {"RESET", "SET", "INCREMENT", "USE"};
       printf(
           "  Node #%d @%p frame=%p index=%d type=%s valAfter=%d\n"
           "       scope-start=%p scope-prev=%p",

@@ -2485,10 +2485,27 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleContent {
     mResets[aIndex].mValue = aValue;
   }
 
+  uint32_t CounterSetCount() const { return mSets.Length(); }
+  const nsStyleCounterData& CounterSetAt(uint32_t aIndex) const {
+    return mSets[aIndex];
+  }
+
+  void AllocateCounterSets(uint32_t aCount) {
+    mSets.Clear();
+    mSets.SetLength(aCount);
+  }
+
+  void SetCounterSetAt(uint32_t aIndex, const nsString& aCounter,
+                       int32_t aValue) {
+    mSets[aIndex].mCounter = aCounter;
+    mSets[aIndex].mValue = aValue;
+  }
+
  protected:
   nsTArray<nsStyleContentData> mContents;
   nsTArray<nsStyleCounterData> mIncrements;
   nsTArray<nsStyleCounterData> mResets;
+  nsTArray<nsStyleCounterData> mSets;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {

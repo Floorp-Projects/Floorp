@@ -48,6 +48,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
     "content",
     "counter-increment",
     "counter-reset",
+    "counter-set",
     "cursor",
     "direction",
     "dominant-baseline",
