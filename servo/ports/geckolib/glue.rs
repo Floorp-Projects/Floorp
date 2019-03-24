@@ -4382,6 +4382,57 @@ pub extern "C" fn Servo_DeclarationBlock_SetIntValue(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_DeclarationBlock_SetCounterResetListItem(
+    declarations: &RawServoDeclarationBlock,
+    counter_value: i32,
+) {
+    use style::values::generics::counters::{CounterPair, CounterSetOrReset};
+    use style::properties::{PropertyDeclaration};
+
+    let prop = PropertyDeclaration::CounterReset(CounterSetOrReset::new(vec![CounterPair {
+        name: CustomIdent(atom!("list-item")),
+        value: style::values::specified::Integer::new(counter_value),
+    }]));
+    write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
+        decls.push(prop, Importance::Normal);
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_DeclarationBlock_SetCounterSetListItem(
+    declarations: &RawServoDeclarationBlock,
+    counter_value: i32,
+) {
+    use style::values::generics::counters::{CounterPair, CounterSetOrReset};
+    use style::properties::{PropertyDeclaration};
+
+    let prop = PropertyDeclaration::CounterSet(CounterSetOrReset::new(vec![CounterPair {
+        name: CustomIdent(atom!("list-item")),
+        value: style::values::specified::Integer::new(counter_value),
+    }]));
+    write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
+        decls.push(prop, Importance::Normal);
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_DeclarationBlock_SetCounterIncrementListItem(
+    declarations: &RawServoDeclarationBlock,
+    counter_value: i32,
+) {
+    use style::values::generics::counters::{CounterPair, CounterIncrement};
+    use style::properties::{PropertyDeclaration};
+
+    let prop = PropertyDeclaration::CounterIncrement(CounterIncrement::new(vec![CounterPair {
+        name: CustomIdent(atom!("list-item")),
+        value: style::values::specified::Integer::new(counter_value),
+    }]));
+    write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
+        decls.push(prop, Importance::Normal);
+    })
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
     declarations: &RawServoDeclarationBlock,
     property: nsCSSPropertyID,
