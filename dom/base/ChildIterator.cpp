@@ -295,6 +295,12 @@ nsIContent* ExplicitChildIterator::GetPreviousChild() {
 
 nsIContent* AllChildrenIterator::Get() const {
   switch (mPhase) {
+    case eAtMarkerKid: {
+      Element* marker = nsLayoutUtils::GetMarkerPseudo(mOriginalContent);
+      MOZ_ASSERT(marker, "No content marker frame at eAtMarkerKid phase");
+      return marker;
+    }
+
     case eAtBeforeKid: {
       Element* before = nsLayoutUtils::GetBeforePseudo(mOriginalContent);
       MOZ_ASSERT(before, "No content before frame at eAtBeforeKid phase");
@@ -319,7 +325,15 @@ nsIContent* AllChildrenIterator::Get() const {
 }
 
 bool AllChildrenIterator::Seek(const nsIContent* aChildToFind) {
-  if (mPhase == eAtBegin || mPhase == eAtBeforeKid) {
+  if (mPhase == eAtBegin || mPhase == eAtMarkerKid) {
+    mPhase = eAtBeforeKid;
+    Element* markerPseudo = nsLayoutUtils::GetMarkerPseudo(mOriginalContent);
+    if (markerPseudo && markerPseudo == aChildToFind) {
+      mPhase = eAtMarkerKid;
+      return true;
+    }
+  }
+  if (mPhase == eAtBeforeKid) {
     mPhase = eAtExplicitKids;
     Element* beforePseudo = nsLayoutUtils::GetBeforePseudo(mOriginalContent);
     if (beforePseudo && beforePseudo == aChildToFind) {
@@ -350,6 +364,14 @@ void AllChildrenIterator::AppendNativeAnonymousChildren() {
 
 nsIContent* AllChildrenIterator::GetNextChild() {
   if (mPhase == eAtBegin) {
+    Element* markerContent = nsLayoutUtils::GetMarkerPseudo(mOriginalContent);
+    if (markerContent) {
+      mPhase = eAtMarkerKid;
+      return markerContent;
+    }
+  }
+
+  if (mPhase == eAtBegin || mPhase == eAtMarkerKid) {
     mPhase = eAtExplicitKids;
     Element* beforeContent = nsLayoutUtils::GetBeforePseudo(mOriginalContent);
     if (beforeContent) {
@@ -439,6 +461,14 @@ nsIContent* AllChildrenIterator::GetPreviousChild() {
     if (beforeContent) {
       mPhase = eAtBeforeKid;
       return beforeContent;
+    }
+  }
+
+  if (mPhase == eAtExplicitKids || mPhase == eAtBeforeKid) {
+    Element* markerContent = nsLayoutUtils::GetMarkerPseudo(mOriginalContent);
+    if (markerContent) {
+      mPhase = eAtMarkerKid;
+      return markerContent;
     }
   }
 

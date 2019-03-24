@@ -126,14 +126,11 @@
   unicode-bidi: isolate;
 }
 
-/* Lists */
-
-*|*::-moz-list-bullet, *|*::-moz-list-number {
-  display: inline;
-  vertical-align: baseline;
+/* https://drafts.csswg.org/css-lists-3/#ua-stylesheet */
+*|*::marker {
+  text-align: end;
+  unicode-bidi: isolate;
   font-variant-numeric: tabular-nums;
-  /* Prevent the element from being selected when clicking on the marker. */
-  -moz-user-select: none;
 }
 
 /* SVG documents don't always load this file but they do have links.

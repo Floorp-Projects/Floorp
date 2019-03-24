@@ -33,7 +33,7 @@
   list-style-type: '−';
 }
 
-.expandable-opening::-moz-list-bullet {
+.expandable-opening::marker {
   cursor: pointer;
   padding-inline-end: 2px;
   /* Don't want to inherit the styling from pi and comment elements */

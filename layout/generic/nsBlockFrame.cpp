@@ -1243,10 +1243,9 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 #endif
   }
 
-  // Place the "marker" (bullet) frame if it is placed next to a block
-  // child.
+  // Place the ::marker's frame if it is placed next to a block child.
   //
-  // According to the CSS2 spec, section 12.6.1, the "marker" box
+  // According to the CSS2 spec, section 12.6.1, the ::marker's box
   // participates in the height calculation of the list-item box's
   // first line box.
   //
@@ -5159,12 +5158,6 @@ void nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling) {
     return;
   }
 
-  // If we're inserting at the beginning of our list and we have an
-  // inside bullet, insert after that bullet.
-  if (!aPrevSibling && HasInsideBullet()) {
-    aPrevSibling = GetInsideBullet();
-  }
-
   // Attempt to find the line that contains the previous sibling
   nsLineList* lineList = &mLines;
   nsFrameList* frames = &mFrames;
@@ -6747,38 +6740,19 @@ void nsBlockFrame::SetInitialChildList(ChildListID aListID,
   }
 }
 
-void nsBlockFrame::CreateBulletFrameForListItem() {
+void nsBlockFrame::SetMarkerFrameForListItem(nsIFrame* aMarkerFrame) {
+  MOZ_ASSERT(aMarkerFrame && aMarkerFrame->IsBulletFrame());
   MOZ_ASSERT((GetStateBits() & (NS_BLOCK_FRAME_HAS_INSIDE_BULLET |
                                 NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)) == 0,
              "How can we have a bullet already?");
 
-  nsPresContext* pc = PresContext();
-  nsIPresShell* shell = pc->PresShell();
-  const nsStyleList* styleList = StyleList();
-  CounterStyle* style =
-      pc->CounterStyleManager()->ResolveCounterStyle(styleList->mCounterStyle);
-
-  PseudoStyleType pseudoType = style->IsBullet()
-                                   ? PseudoStyleType::mozListBullet
-                                   : PseudoStyleType::mozListNumber;
-
-  RefPtr<ComputedStyle> kidSC =
-      ResolveBulletStyle(pseudoType, shell->StyleSet());
-
-  // Create bullet frame
-  nsBulletFrame* bullet = new (shell) nsBulletFrame(kidSC, pc);
-  bullet->Init(mContent, this, nullptr);
-
-  // If the list bullet frame should be positioned inside then add
-  // it to the flow now.
-  if (styleList->mListStylePosition == NS_STYLE_LIST_STYLE_POSITION_INSIDE) {
-    nsFrameList bulletList(bullet, bullet);
-    AddFrames(bulletList, nullptr);
+  auto bullet = static_cast<nsBulletFrame*>(aMarkerFrame);
+  if (StyleList()->mListStylePosition == NS_STYLE_LIST_STYLE_POSITION_INSIDE) {
     SetProperty(InsideBulletProperty(), bullet);
     AddStateBits(NS_BLOCK_FRAME_HAS_INSIDE_BULLET);
   } else {
-    nsFrameList* bulletList = new (shell) nsFrameList(bullet, bullet);
-    SetProperty(OutsideBulletProperty(), bulletList);
+    SetProperty(OutsideBulletProperty(),
+                new (PresShell()) nsFrameList(bullet, bullet));
     AddStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
   }
 }
@@ -6819,10 +6793,8 @@ void nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
   availSize.ISize(bulletWM) = aState.ContentISize();
   availSize.BSize(bulletWM) = NS_UNCONSTRAINEDSIZE;
 
-  // Get the reason right.
-  // XXXwaterson Should this look just like the logic in
-  // nsBlockReflowContext::ReflowBlock and nsLineLayout::ReflowFrame?
-  ReflowInput reflowInput(aState.mPresContext, ri, aBulletFrame, availSize);
+  ReflowInput reflowInput(aState.mPresContext, ri, aBulletFrame, availSize,
+                          nullptr, ReflowInput::COMPUTE_SIZE_SHRINK_WRAP);
   nsReflowStatus status;
   aBulletFrame->Reflow(aState.mPresContext, aMetrics, reflowInput, status);
 
@@ -7134,13 +7106,6 @@ void nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState) {
     UpdateFirstLetterStyle(aRestyleState);
   }
 
-  if (nsBulletFrame* bullet = GetBullet()) {
-    PseudoStyleType type = bullet->Style()->GetPseudoType();
-    RefPtr<ComputedStyle> newBulletStyle =
-        ResolveBulletStyle(type, &aRestyleState.StyleSet());
-    UpdateStyleOfOwnedChildFrame(bullet, newBulletStyle, aRestyleState);
-  }
-
   if (nsIFrame* firstLineFrame = GetFirstLineFrame()) {
     nsIFrame* styleParent = CorrectStyleParentFrame(firstLineFrame->GetParent(),
                                                     PseudoStyleType::firstLine);
@@ -7170,13 +7135,6 @@ void nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState) {
   }
 }
 
-already_AddRefed<ComputedStyle> nsBlockFrame::ResolveBulletStyle(
-    PseudoStyleType aType, ServoStyleSet* aStyleSet) {
-  ComputedStyle* parentStyle = CorrectStyleParentFrame(this, aType)->Style();
-  return aStyleSet->ResolvePseudoElementStyle(mContent->AsElement(), aType,
-                                              parentStyle, nullptr);
-}
-
 nsIFrame* nsBlockFrame::GetFirstLetter() const {
   if (!(GetStateBits() & NS_BLOCK_HAS_FIRST_LETTER_STYLE)) {
     // Certainly no first-letter frame.
@@ -7187,16 +7145,7 @@ nsIFrame* nsBlockFrame::GetFirstLetter() const {
 }
 
 nsIFrame* nsBlockFrame::GetFirstLineFrame() const {
-  // Our ::first-line frame is either the first thing on our principal child
-  // list, or the second one if we have an inside bullet.
-  nsIFrame* bullet = GetInsideBullet();
-  nsIFrame* maybeFirstLine;
-  if (bullet) {
-    maybeFirstLine = bullet->GetNextSibling();
-  } else {
-    maybeFirstLine = PrincipalChildList().FirstChild();
-  }
-
+  nsIFrame* maybeFirstLine = PrincipalChildList().FirstChild();
   if (maybeFirstLine && maybeFirstLine->IsLineFrame()) {
     return maybeFirstLine;
   }

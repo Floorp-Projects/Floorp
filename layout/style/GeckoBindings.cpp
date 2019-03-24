@@ -158,6 +158,13 @@ const Element* Gecko_GetBeforeOrAfterPseudo(const Element* aElement,
                    : nsLayoutUtils::GetAfterPseudo(aElement);
 }
 
+const Element* Gecko_GetMarkerPseudo(const Element* aElement) {
+  MOZ_ASSERT(aElement);
+  MOZ_ASSERT(aElement->HasProperties());
+
+  return nsLayoutUtils::GetMarkerPseudo(aElement);
+}
+
 nsTArray<nsIContent*>* Gecko_GetAnonymousContentForElement(
     const Element* aElement) {
   nsIAnonymousContentCreator* ac = do_QueryFrame(aElement->GetPrimaryFrame());

@@ -501,9 +501,9 @@ class nsBlockFrame : public nsContainerFrame {
 
  public:
   /**
-   * Helper function to create bullet frame.
+   * Helper function for the frame ctor to register a ::marker frame.
    */
-  void CreateBulletFrameForListItem();
+  void SetMarkerFrameForListItem(nsIFrame* aMarkerFrame);
 
   /**
    * Does all the real work for removing aDeletedFrame
@@ -895,12 +895,6 @@ class nsBlockFrame : public nsContainerFrame {
   nsFrameList* EnsurePushedFloats();
   // Remove and return the pushed floats list.
   nsFrameList* RemovePushedFloats();
-
-  // Resolve a ComputedStyle for our bullet frame.  aType should be
-  // mozListBullet or mozListNumber.  Passing in the style set is an
-  // optimization, because all callsites have it.
-  already_AddRefed<ComputedStyle> ResolveBulletStyle(
-      mozilla::PseudoStyleType aType, mozilla::ServoStyleSet* aStyleSet);
 
 #ifdef DEBUG
   void VerifyLines(bool aFinalCheckOK);
