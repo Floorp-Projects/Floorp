@@ -125,12 +125,12 @@ static Bool checkEventProc(Display *display, XEvent *event, XPointer arg) {
       gdk_window_get_user_data(cbWindow, (gpointer *)&cbWidget);
       if (cbWidget && GTK_IS_WIDGET(cbWidget)) {
         context->cbWidget = cbWidget;
-        return True;
+        return X11True;
       }
     }
   }
 
-  return False;
+  return X11False;
 }
 
 bool nsRetrievalContextX11::WaitForX11Content() {

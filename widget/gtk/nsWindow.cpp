@@ -4831,7 +4831,7 @@ void nsWindow::SetWindowDecoration(nsBorderStyle aStyle) {
     // and GetWindowPos is called)
 #ifdef MOZ_X11
   if (mIsX11Display) {
-    XSync(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), False);
+    XSync(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), X11False);
   } else
 #endif /* MOZ_X11 */
   {

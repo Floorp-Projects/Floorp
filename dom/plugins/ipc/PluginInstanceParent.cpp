@@ -1075,7 +1075,7 @@ nsresult PluginInstanceParent::EndUpdateBackground(const nsIntRect& aRect) {
   // view of its background, but it does mean that the plugin is
   // drawing onto pixels no older than those in the latest
   // EndUpdateBackground().
-  XSync(DefaultXDisplay(), False);
+  XSync(DefaultXDisplay(), X11False);
 #endif
 
   Unused << SendUpdateBackground(BackgroundDescriptor(), aRect);
@@ -1494,7 +1494,7 @@ int16_t PluginInstanceParent::NPP_HandleEvent(void* event) {
       XUngrabPointer(dpy, npevent->xbutton.time);
 #  endif
       // Wait for the ungrab to complete.
-      XSync(dpy, False);
+      XSync(dpy, X11False);
       break;
   }
 #endif
