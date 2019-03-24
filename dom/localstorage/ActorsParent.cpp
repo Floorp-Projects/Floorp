@@ -2141,6 +2141,7 @@ class LSRequestBase : public DatastoreOperationBase,
 
   nsCOMPtr<nsIEventTarget> mMainEventTarget;
   State mState;
+  bool mWaitingForFinish;
 
  public:
   explicit LSRequestBase(nsIEventTarget* aMainEventTarget);
@@ -2160,6 +2161,8 @@ class LSRequestBase : public DatastoreOperationBase,
 
  private:
   void SendReadyMessage();
+
+  void Finish();
 
   void SendResults();
 
@@ -3873,12 +3876,12 @@ void ConnectionDatastoreOperationBase::RunOnOwningThread() {
 
   if (!MayProceed()) {
     MaybeSetFailureCode(NS_ERROR_FAILURE);
+  }
+
+  if (NS_SUCCEEDED(ResultCode())) {
+    OnSuccess();
   } else {
-    if (NS_SUCCEEDED(ResultCode())) {
-      OnSuccess();
-    } else {
-      OnFailure(ResultCode());
-    }
+    OnFailure(ResultCode());
   }
 
   Cleanup();
@@ -5606,7 +5609,9 @@ mozilla::ipc::IPCResult Observer::RecvDeleteMe() {
  ******************************************************************************/
 
 LSRequestBase::LSRequestBase(nsIEventTarget* aMainEventTarget)
-    : mMainEventTarget(aMainEventTarget), mState(State::Initial) {}
+    : mMainEventTarget(aMainEventTarget),
+      mState(State::Initial),
+      mWaitingForFinish(false) {}
 
 LSRequestBase::~LSRequestBase() {
   MOZ_ASSERT_IF(MayProceedOnNonOwningThread(),
@@ -5636,11 +5641,28 @@ void LSRequestBase::SendReadyMessage() {
     Unused << SendReady();
 
     mState = State::WaitingForFinish;
+
+    mWaitingForFinish = true;
   } else {
     Cleanup();
 
     mState = State::Completed;
   }
+}
+
+void LSRequestBase::Finish() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::WaitingForFinish);
+
+  mState = State::SendingResults;
+
+  mWaitingForFinish = false;
+
+  // This LSRequestBase can only be held alive by the IPDL. Run() can end up
+  // with clearing that last reference. So we need to add a self reference here.
+  RefPtr<LSRequestBase> kungFuDeathGrip = this;
+
+  MOZ_ALWAYS_SUCCEEDS(this->Run());
 }
 
 void LSRequestBase::SendResults() {
@@ -5716,6 +5738,23 @@ void LSRequestBase::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 
   NoteComplete();
+
+  // Assume ActorDestroy can happen at any time, so we can't probe the current
+  // state since mState can be modified on any thread (only one thread at a time
+  // based on the state machine).  However we can use mWaitingForFinish which is
+  // only touched on the owning thread.  If mWaitingForFinisg is true, we can
+  // also modify mState since we are guaranteed that there are no pending
+  // runnables which would probe mState to decide what code needs to run (there
+  // shouldn't be any running runnables on other threads either).
+
+  if (mWaitingForFinish) {
+    Finish();
+  }
+
+  // We don't have to handle the case when mWaitingForFinish is not true since
+  // it means that either nothing has been initialized yet, so nothing to
+  // cleanup or there are pending runnables that will detect that the actor has
+  // been destroyed and cleanup accordingly.
 }
 
 mozilla::ipc::IPCResult LSRequestBase::RecvCancel() {
@@ -5731,15 +5770,8 @@ mozilla::ipc::IPCResult LSRequestBase::RecvCancel() {
 
 mozilla::ipc::IPCResult LSRequestBase::RecvFinish() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::WaitingForFinish);
 
-  mState = State::SendingResults;
-
-  // This LSRequestBase can only be held alive by the IPDL. Run() can end up
-  // with clearing that last reference. So we need to add a self reference here.
-  RefPtr<LSRequestBase> kungFuDeathGrip = this;
-
-  MOZ_ALWAYS_SUCCEEDS(this->Run());
+  Finish();
 
   return IPC_OK();
 }
