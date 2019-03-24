@@ -263,14 +263,14 @@ GLXPixmap GLXLibrary::CreatePixmap(gfxASurface* aSurface) {
                "Unexpected render format with non-adjacent alpha bits");
 
   int attribs[] = {LOCAL_GLX_DOUBLEBUFFER,
-                   False,
+                   X11False,
                    LOCAL_GLX_DRAWABLE_TYPE,
                    LOCAL_GLX_PIXMAP_BIT,
                    LOCAL_GLX_ALPHA_SIZE,
                    alphaSize,
                    (alphaSize ? LOCAL_GLX_BIND_TO_TEXTURE_RGBA_EXT
                               : LOCAL_GLX_BIND_TO_TEXTURE_RGB_EXT),
-                   True,
+                   X11True,
                    LOCAL_GLX_RENDER_TYPE,
                    LOCAL_GLX_RGBA_BIT,
                    X11None};
@@ -517,11 +517,11 @@ already_AddRefed<GLContextGLX> GLContextGLX::CreateGLContext(
       };
       attrib_list.AppendElement(0);
 
-      context = glx.fCreateContextAttribs(display, cfg, nullptr, True,
+      context = glx.fCreateContextAttribs(display, cfg, nullptr, X11True,
                                           attrib_list.Elements());
     } else {
       context = glx.fCreateNewContext(display, cfg, LOCAL_GLX_RGBA_TYPE,
-                                      nullptr, True);
+                                      nullptr, X11True);
     }
 
     if (context) {
@@ -778,7 +778,7 @@ static bool ChooseConfig(GLXLibrary* glx, Display* display, int screen,
   int attribs[] = {LOCAL_GLX_DRAWABLE_TYPE,
                    LOCAL_GLX_PIXMAP_BIT,
                    LOCAL_GLX_X_RENDERABLE,
-                   True,
+                   X11True,
                    LOCAL_GLX_RED_SIZE,
                    8,
                    LOCAL_GLX_GREEN_SIZE,
@@ -918,7 +918,7 @@ bool GLContextGLX::FindFBConfigForWindow(
                                   LOCAL_GLX_DEPTH_SIZE,
                                   24,
                                   LOCAL_GLX_DOUBLEBUFFER,
-                                  True,
+                                  X11True,
                                   0};
 
   if (aWebRender) {

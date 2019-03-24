@@ -1110,6 +1110,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
  public:
   RefPtr<RawServoQuotes> mQuotes;
   nsRect mImageRegion;  // the rect to use within an image
+  mozilla::StyleMozListReversed mMozListReversed; // true in an <ol reversed> scope
 };
 
 struct nsStyleGridLine {

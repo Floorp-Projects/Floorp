@@ -453,6 +453,7 @@ cbindgen-types = [
     { gecko = "StyleTouchAction", servo = "values::computed::TouchAction" },
     { gecko = "StyleWillChangeBits", servo = "values::specified::box_::WillChangeBits" },
     { gecko = "StyleTextDecorationLine", servo = "values::computed::TextDecorationLine" },
+    { gecko = "StyleMozListReversed", servo = "values::computed::MozListReversed" },
 ]
 
 mapped-generic-types = [
