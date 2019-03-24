@@ -275,8 +275,8 @@ NS_DECLARE_FRAME_PROPERTY_WITH_DTOR_NEVER_CALLED(OverflowLinesProperty,
                                                  nsBlockFrame::FrameLines)
 NS_DECLARE_FRAME_PROPERTY_FRAMELIST(OverflowOutOfFlowsProperty)
 NS_DECLARE_FRAME_PROPERTY_FRAMELIST(PushedFloatProperty)
-NS_DECLARE_FRAME_PROPERTY_FRAMELIST(OutsideBulletProperty)
-NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(InsideBulletProperty, nsIFrame)
+NS_DECLARE_FRAME_PROPERTY_FRAMELIST(OutsideMarkerProperty)
+NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(InsideMarkerProperty, nsIFrame)
 NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BlockEndEdgeOfChildrenProperty, nscoord)
 
 //----------------------------------------------------------------------
@@ -346,10 +346,10 @@ void nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot,
     RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   }
 
-  if (HasOutsideBullet()) {
+  if (HasOutsideMarker()) {
     SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
-                               OutsideBulletProperty());
-    RemoveStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
+                               OutsideMarkerProperty());
+    RemoveStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER);
   }
 
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
@@ -546,7 +546,7 @@ const nsFrameList& nsBlockFrame::GetChildList(ChildListID aListID) const {
       return list ? *list : nsFrameList::EmptyList();
     }
     case kBulletList: {
-      const nsFrameList* list = GetOutsideBulletList();
+      const nsFrameList* list = GetOutsideMarkerList();
       return list ? *list : nsFrameList::EmptyList();
     }
     default:
@@ -565,7 +565,7 @@ void nsBlockFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
     list->AppendIfNonempty(aLists, kOverflowOutOfFlowList);
   }
   mFloats.AppendIfNonempty(aLists, kFloatList);
-  list = GetOutsideBulletList();
+  list = GetOutsideMarkerList();
   if (list) {
     list->AppendIfNonempty(aLists, kBulletList);
   }
@@ -1249,16 +1249,16 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   // participates in the height calculation of the list-item box's
   // first line box.
   //
-  // There are exactly two places a bullet can be placed: near the
+  // There are exactly two places a ::marker can be placed: near the
   // first or second line. It's only placed on the second line in a
   // rare case: an empty first line followed by a second line that
   // contains a block (example: <LI>\n<P>... ). This is where
   // the second case can happen.
-  if (HasOutsideBullet() && !mLines.empty() &&
+  if (HasOutsideMarker() && !mLines.empty() &&
       (mLines.front()->IsBlock() ||
        (0 == mLines.front()->BSize() && mLines.front() != mLines.back() &&
         mLines.begin().next()->IsBlock()))) {
-    // Reflow the bullet
+    // Reflow the ::marker's frame.
     ReflowOutput reflowOutput(aReflowInput);
     // XXX Use the entire line when we fix bug 25888.
     nsLayoutUtils::LinePosition position;
@@ -1268,24 +1268,24 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     nscoord lineBStart =
         havePosition ? position.mBStart
                      : reflowInput->ComputedLogicalBorderPadding().BStart(wm);
-    nsIFrame* bullet = GetOutsideBullet();
-    ReflowBullet(bullet, state, reflowOutput, lineBStart);
-    NS_ASSERTION(!BulletIsEmpty() || reflowOutput.BSize(wm) == 0,
-                 "empty bullet took up space");
+    nsIFrame* marker = GetOutsideMarker();
+    ReflowOutsideMarker(marker, state, reflowOutput, lineBStart);
+    NS_ASSERTION(!MarkerIsEmpty() || reflowOutput.BSize(wm) == 0,
+                 "empty ::marker frame took up space");
 
-    if (havePosition && !BulletIsEmpty()) {
-      // We have some lines to align the bullet with.
+    if (havePosition && !MarkerIsEmpty()) {
+      // We have some lines to align the ::marker with.
 
       // Doing the alignment using the baseline will also cater for
-      // bullets that are placed next to a child block (bug 92896)
+      // ::markers that are placed next to a child block (bug 92896)
 
-      // Tall bullets won't look particularly nice here...
+      // Tall ::markers won't look particularly nice here...
       LogicalRect bbox =
-          bullet->GetLogicalRect(wm, reflowOutput.PhysicalSize());
+          marker->GetLogicalRect(wm, reflowOutput.PhysicalSize());
       bbox.BStart(wm) = position.mBaseline - reflowOutput.BlockStartAscent();
-      bullet->SetRect(wm, bbox, reflowOutput.PhysicalSize());
+      marker->SetRect(wm, bbox, reflowOutput.PhysicalSize());
     }
-    // Otherwise just leave the bullet where it is, up against our
+    // Otherwise just leave the ::marker where it is, up against our
     // block-start padding.
   }
 
@@ -1319,10 +1319,10 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
         nsPoint physicalDelta(deltaX, 0);
         f->MovePositionBy(physicalDelta);
       }
-      nsFrameList* bulletList = GetOutsideBulletList();
-      if (bulletList) {
+      nsFrameList* markerList = GetOutsideMarkerList();
+      if (markerList) {
         nsPoint physicalDelta(deltaX, 0);
-        for (nsIFrame* f : *bulletList) {
+        for (nsIFrame* f : *markerList) {
           f->MovePositionBy(physicalDelta);
         }
       }
@@ -1766,14 +1766,13 @@ void nsBlockFrame::ComputeOverflowAreas(const nsRect& aBounds,
       }
     }
 
-    // Factor an outside bullet in; normally the bullet will be factored into
-    // the line-box's overflow areas. However, if the line is a block
+    // Factor an outside ::marker in; normally the ::marker will be factored
+    // into the line-box's overflow areas. However, if the line is a block
     // line then it won't; if there are no lines, it won't. So just
     // factor it in anyway (it can't hurt if it was already done).
     // XXXldb Can we just fix GetOverflowArea instead?
-    nsIFrame* outsideBullet = GetOutsideBullet();
-    if (outsideBullet) {
-      areas.UnionAllWith(outsideBullet->GetRect());
+    if (nsIFrame* outsideMarker = GetOutsideMarker()) {
+      areas.UnionAllWith(outsideMarker->GetRect());
     }
 
     ConsiderBlockEndEdgeOfChildren(GetWritingMode(), aBEndEdgeOfChildren, areas,
@@ -2661,23 +2660,23 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
   }
 
   // Handle an odd-ball case: a list-item with no lines
-  if (HasOutsideBullet() && mLines.empty()) {
+  if (HasOutsideMarker() && mLines.empty()) {
     ReflowOutput metrics(aState.mReflowInput);
-    nsIFrame* bullet = GetOutsideBullet();
+    nsIFrame* marker = GetOutsideMarker();
     WritingMode wm = aState.mReflowInput.GetWritingMode();
-    ReflowBullet(bullet, aState, metrics,
-                 aState.mReflowInput.ComputedPhysicalBorderPadding().top);
-    NS_ASSERTION(!BulletIsEmpty() || metrics.BSize(wm) == 0,
-                 "empty bullet took up space");
+    ReflowOutsideMarker(marker, aState, metrics,
+                        aState.mReflowInput.ComputedPhysicalBorderPadding().top);
+    NS_ASSERTION(!MarkerIsEmpty() || metrics.BSize(wm) == 0,
+                 "empty ::marker frame took up space");
 
-    if (!BulletIsEmpty()) {
+    if (!MarkerIsEmpty()) {
       // There are no lines so we have to fake up some y motion so that
       // we end up with *some* height.
 
       if (metrics.BlockStartAscent() == ReflowOutput::ASK_FOR_BASELINE) {
         nscoord ascent;
         WritingMode wm = aState.mReflowInput.GetWritingMode();
-        if (nsLayoutUtils::GetFirstLineBaseline(wm, bullet, &ascent)) {
+        if (nsLayoutUtils::GetFirstLineBaseline(wm, marker, &ascent)) {
           metrics.SetBlockStartAscent(ascent);
         } else {
           metrics.SetBlockStartAscent(metrics.BSize(wm));
@@ -2697,7 +2696,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
 
       nscoord offset = minAscent - metrics.BlockStartAscent();
       if (offset > 0) {
-        bullet->SetRect(bullet->GetRect() + nsPoint(0, offset));
+        marker->SetRect(marker->GetRect() + nsPoint(0, offset));
       }
     }
   }
@@ -3024,7 +3023,7 @@ bool nsBlockFrame::IsSelfEmpty() {
     return false;
   }
 
-  if (HasOutsideBullet() && !BulletIsEmpty()) {
+  if (HasOutsideMarker() && !MarkerIsEmpty()) {
     return false;
   }
 
@@ -4363,23 +4362,23 @@ bool nsBlockFrame::PlaceLine(BlockReflowInput& aState,
   // participates in the height calculation of the list-item box's
   // first line box.
   //
-  // There are exactly two places a bullet can be placed: near the
+  // There are exactly two places a ::marker can be placed: near the
   // first or second line. It's only placed on the second line in a
   // rare case: when the first line is empty.
   WritingMode wm = aState.mReflowInput.GetWritingMode();
-  bool addedBullet = false;
-  if (HasOutsideBullet() &&
+  bool addedMarker = false;
+  if (HasOutsideMarker() &&
       ((aLine == mLines.front() &&
         (!aLineLayout.IsZeroBSize() || (aLine == mLines.back()))) ||
        (mLines.front() != mLines.back() && 0 == mLines.front()->BSize() &&
         aLine == mLines.begin().next()))) {
     ReflowOutput metrics(aState.mReflowInput);
-    nsIFrame* bullet = GetOutsideBullet();
-    ReflowBullet(bullet, aState, metrics, aState.mBCoord);
-    NS_ASSERTION(!BulletIsEmpty() || metrics.BSize(wm) == 0,
-                 "empty bullet took up space");
-    aLineLayout.AddBulletFrame(bullet, metrics);
-    addedBullet = true;
+    nsIFrame* marker = GetOutsideMarker();
+    ReflowOutsideMarker(marker, aState, metrics, aState.mBCoord);
+    NS_ASSERTION(!MarkerIsEmpty() || metrics.BSize(wm) == 0,
+                 "empty ::marker frame took up space");
+    aLineLayout.AddMarkerFrame(marker, metrics);
+    addedMarker = true;
   }
   aLineLayout.VerticalAlignLine();
 
@@ -4490,8 +4489,8 @@ bool nsBlockFrame::PlaceLine(BlockReflowInput& aState,
   nsOverflowAreas overflowAreas;
   aLineLayout.RelativePositionFrames(overflowAreas);
   aLine->SetOverflowAreas(overflowAreas);
-  if (addedBullet) {
-    aLineLayout.RemoveBulletFrame(GetOutsideBullet());
+  if (addedMarker) {
+    aLineLayout.RemoveMarkerFrame(GetOutsideMarker());
   }
 
   // Inline lines do not have margins themselves; however they are
@@ -4954,28 +4953,28 @@ void nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList,
   }
 }
 
-nsIFrame* nsBlockFrame::GetInsideBullet() const {
-  if (!HasInsideBullet()) {
+nsIFrame* nsBlockFrame::GetInsideMarker() const {
+  if (!HasInsideMarker()) {
     return nullptr;
   }
-  NS_ASSERTION(!HasOutsideBullet(), "invalid bullet state");
-  nsIFrame* frame = GetProperty(InsideBulletProperty());
-  NS_ASSERTION(frame, "bogus inside bullet frame");
+  NS_ASSERTION(!HasOutsideMarker(), "invalid marker state");
+  nsIFrame* frame = GetProperty(InsideMarkerProperty());
+  NS_ASSERTION(frame, "bogus inside ::marker frame");
   return frame;
 }
 
-nsIFrame* nsBlockFrame::GetOutsideBullet() const {
-  nsFrameList* list = GetOutsideBulletList();
+nsIFrame* nsBlockFrame::GetOutsideMarker() const {
+  nsFrameList* list = GetOutsideMarkerList();
   return list ? list->FirstChild() : nullptr;
 }
 
-nsFrameList* nsBlockFrame::GetOutsideBulletList() const {
-  if (!HasOutsideBullet()) {
+nsFrameList* nsBlockFrame::GetOutsideMarkerList() const {
+  if (!HasOutsideMarker()) {
     return nullptr;
   }
-  NS_ASSERTION(!HasInsideBullet(), "invalid bullet state");
-  nsFrameList* list = GetProperty(OutsideBulletProperty());
-  NS_ASSERTION(list && list->GetLength() == 1, "bogus outside bullet list");
+  NS_ASSERTION(!HasInsideMarker(), "invalid marker state");
+  nsFrameList* list = GetProperty(OutsideMarkerProperty());
+  NS_ASSERTION(list && list->GetLength() == 1, "bogus outside ::marker list");
   return list;
 }
 
@@ -6486,10 +6485,9 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     aLists.Content()->AppendToTop(&textOverflow->GetMarkers());
   }
 
-  if (HasOutsideBullet()) {
-    // Display outside bullets manually
-    nsIFrame* bullet = GetOutsideBullet();
-    BuildDisplayListForChild(aBuilder, bullet, aLists);
+  if (HasOutsideMarker()) {
+    // Display outside ::marker manually.
+    BuildDisplayListForChild(aBuilder, GetOutsideMarker(), aLists);
   }
 
 #ifdef DEBUG
@@ -6526,7 +6524,7 @@ a11y::AccType nsBlockFrame::AccessibleType() {
     return a11y::eHTMLHRType;
   }
 
-  if (!HasBullet() || !PresContext()) {
+  if (!HasMarker() || !PresContext()) {
     // XXXsmaug What if we're in the shadow dom?
     if (!mContent->GetParent()) {
       // Don't create accessible objects for the root content node, they are
@@ -6541,11 +6539,11 @@ a11y::AccType nsBlockFrame::AccessibleType() {
       return a11y::eNoType;
     }
 
-    // Not a bullet, treat as normal HTML container
+    // Not a list item with a ::marker, treat as normal HTML container.
     return a11y::eHyperTextType;
   }
 
-  // Create special list bullet accessible
+  // Create special list item accessible since we have a ::marker.
   return a11y::eHTMLLiType;
 }
 #endif
@@ -6601,21 +6599,21 @@ void nsBlockFrame::ChildIsDirty(nsIFrame* aChild) {
   if (aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW &&
       aChild->IsAbsolutelyPositioned()) {
     // do nothing
-  } else if (aChild == GetOutsideBullet()) {
-    // The bullet lives in the first line, unless the first line has
+  } else if (aChild == GetOutsideMarker()) {
+    // The ::marker lives in the first line, unless the first line has
     // height 0 and there is a second line, in which case it lives
     // in the second line.
-    LineIterator bulletLine = LinesBegin();
-    if (bulletLine != LinesEnd() && bulletLine->BSize() == 0 &&
-        bulletLine != mLines.back()) {
-      bulletLine = bulletLine.next();
+    LineIterator markerLine = LinesBegin();
+    if (markerLine != LinesEnd() && markerLine->BSize() == 0 &&
+        markerLine != mLines.back()) {
+      markerLine = markerLine.next();
     }
 
-    if (bulletLine != LinesEnd()) {
-      MarkLineDirty(bulletLine, &mLines);
+    if (markerLine != LinesEnd()) {
+      MarkLineDirty(markerLine, &mLines);
     }
     // otherwise we have an empty line list, and ReflowDirtyLines
-    // will handle reflowing the bullet.
+    // will handle reflowing the ::marker.
   } else {
     // Note that we should go through our children to mark lines dirty
     // before the next reflow.  Doing it now could make things O(N^2)
@@ -6740,41 +6738,39 @@ void nsBlockFrame::SetInitialChildList(ChildListID aListID,
 
 void nsBlockFrame::SetMarkerFrameForListItem(nsIFrame* aMarkerFrame) {
   MOZ_ASSERT(aMarkerFrame);
-  MOZ_ASSERT((GetStateBits() & (NS_BLOCK_FRAME_HAS_INSIDE_BULLET |
-                                NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)) == 0,
-             "How can we have a bullet already?");
+  MOZ_ASSERT((GetStateBits() & (NS_BLOCK_FRAME_HAS_INSIDE_MARKER |
+                                NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER)) == 0,
+             "How can we have a ::marker frame already?");
 
-  auto bullet = aMarkerFrame;
   if (StyleList()->mListStylePosition == NS_STYLE_LIST_STYLE_POSITION_INSIDE) {
-    SetProperty(InsideBulletProperty(), bullet);
-    AddStateBits(NS_BLOCK_FRAME_HAS_INSIDE_BULLET);
+    SetProperty(InsideMarkerProperty(), aMarkerFrame);
+    AddStateBits(NS_BLOCK_FRAME_HAS_INSIDE_MARKER);
   } else {
-    SetProperty(OutsideBulletProperty(),
-                new (PresShell()) nsFrameList(bullet, bullet));
-    AddStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
+    SetProperty(OutsideMarkerProperty(),
+                new (PresShell()) nsFrameList(aMarkerFrame, aMarkerFrame));
+    AddStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER);
   }
 }
 
-bool nsBlockFrame::BulletIsEmpty() const {
+bool nsBlockFrame::MarkerIsEmpty() const {
   NS_ASSERTION(mContent->GetPrimaryFrame()->StyleDisplay()->mDisplay ==
                        mozilla::StyleDisplay::ListItem &&
-                   HasOutsideBullet(),
-               "should only care when we have an outside bullet");
-  nsIFrame* marker = GetBullet();
+                   HasOutsideMarker(),
+               "should only care when we have an outside ::marker");
+  nsIFrame* marker = GetMarker();
   const nsStyleList* list = marker->StyleList();
   return list->mCounterStyle.IsNone() && !list->GetListStyleImage() &&
          marker->StyleContent()->ContentCount() == 0;
 }
 
-void nsBlockFrame::GetSpokenBulletText(nsAString& aText) const {
+void nsBlockFrame::GetSpokenMarkerText(nsAString& aText) const {
   const nsStyleList* myList = StyleList();
   if (myList->GetListStyleImage()) {
     aText.Assign(kDiscCharacter);
     aText.Append(' ');
   } else {
-    if (nsIFrame* marker = GetBullet()) {
-      nsBulletFrame* bullet = do_QueryFrame(marker);
-      if (bullet) {
+    if (nsIFrame* marker = GetMarker()) {
+      if (nsBulletFrame* bullet = do_QueryFrame(marker)) {
         bullet->GetSpokenText(aText);
       } else {
         ErrorResult err;
@@ -6789,22 +6785,21 @@ void nsBlockFrame::GetSpokenBulletText(nsAString& aText) const {
   }
 }
 
-void nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
-                                BlockReflowInput& aState,
-                                ReflowOutput& aMetrics, nscoord aLineTop) {
+void nsBlockFrame::ReflowOutsideMarker(nsIFrame* aMarkerFrame,
+                                       BlockReflowInput& aState,
+                                       ReflowOutput& aMetrics, nscoord aLineTop) {
   const ReflowInput& ri = aState.mReflowInput;
 
-  // Reflow the bullet now
-  WritingMode bulletWM = aBulletFrame->GetWritingMode();
-  LogicalSize availSize(bulletWM);
+  WritingMode markerWM = aMarkerFrame->GetWritingMode();
+  LogicalSize availSize(markerWM);
   // Make up an inline-size since it doesn't really matter (XXX).
-  availSize.ISize(bulletWM) = aState.ContentISize();
-  availSize.BSize(bulletWM) = NS_UNCONSTRAINEDSIZE;
+  availSize.ISize(markerWM) = aState.ContentISize();
+  availSize.BSize(markerWM) = NS_UNCONSTRAINEDSIZE;
 
-  ReflowInput reflowInput(aState.mPresContext, ri, aBulletFrame, availSize,
+  ReflowInput reflowInput(aState.mPresContext, ri, aMarkerFrame, availSize,
                           nullptr, ReflowInput::COMPUTE_SIZE_SHRINK_WRAP);
   nsReflowStatus status;
-  aBulletFrame->Reflow(aState.mPresContext, aMetrics, reflowInput, status);
+  aMarkerFrame->Reflow(aState.mPresContext, aMetrics, reflowInput, status);
 
   // Get the float available space using our saved state from before we
   // started reflowing the block, so that we ignore any floats inside
@@ -6819,36 +6814,36 @@ void nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
   // FIXME (bug 25888): need to check the entire region that the first
   // line overlaps, not just the top pixel.
 
-  // Place the bullet now.  We want to place the bullet relative to the
+  // Place the ::marker now.  We want to place the ::marker relative to the
   // border-box of the associated block (using the right/left margin of
-  // the bullet frame as separation).  However, if a line box would be
+  // the ::marker frame as separation).  However, if a line box would be
   // displaced by floats that are *outside* the associated block, we
   // want to displace it by the same amount.  That is, we act as though
   // the edge of the floats is the content-edge of the block, and place
-  // the bullet at a position offset from there by the block's padding,
-  // the block's border, and the bullet frame's margin.
+  // the ::marker at a position offset from there by the block's padding,
+  // the block's border, and the ::marker frame's margin.
 
   // IStart from floatAvailSpace gives us the content/float start edge
   // in the current writing mode. Then we subtract out the start
-  // border/padding and the bullet's width and margin to offset the position.
+  // border/padding and the ::marker's width and margin to offset the position.
   WritingMode wm = ri.GetWritingMode();
-  // Get the bullet's margin, converted to our writing mode so that we can
+  // Get the ::marker's margin, converted to our writing mode so that we can
   // combine it with other logical values here.
-  LogicalMargin bulletMargin =
-      reflowInput.ComputedLogicalMargin().ConvertTo(wm, bulletWM);
+  LogicalMargin markerMargin =
+      reflowInput.ComputedLogicalMargin().ConvertTo(wm, markerWM);
   nscoord iStart = floatAvailSpace.IStart(wm) -
                    ri.ComputedLogicalBorderPadding().IStart(wm) -
-                   bulletMargin.IEnd(wm) - aMetrics.ISize(wm);
+                   markerMargin.IEnd(wm) - aMetrics.ISize(wm);
 
-  // Approximate the bullets position; vertical alignment will provide
+  // Approximate the ::marker's position; vertical alignment will provide
   // the final vertical location. We pass our writing-mode here, because
-  // it may be different from the bullet frame's mode.
+  // it may be different from the ::marker frame's mode.
   nscoord bStart = floatAvailSpace.BStart(wm);
-  aBulletFrame->SetRect(
+  aMarkerFrame->SetRect(
       wm,
       LogicalRect(wm, iStart, bStart, aMetrics.ISize(wm), aMetrics.BSize(wm)),
       aState.ContainerSize());
-  aBulletFrame->DidReflow(aState.mPresContext, &aState.mReflowInput);
+  aMarkerFrame->DidReflow(aState.mPresContext, &aState.mReflowInput);
 }
 
 // This is used to scan frames for any float placeholders, add their

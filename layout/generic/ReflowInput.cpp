@@ -131,7 +131,7 @@ static nscoord FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame) {
 
   // We only want to adjust the margins if we're dealing with an ordered list.
   const nsBlockFrame* blockFrame = static_cast<const nsBlockFrame*>(aFrame);
-  if (!blockFrame->HasBullet()) {
+  if (!blockFrame->HasMarker()) {
     return 0;
   }
 
