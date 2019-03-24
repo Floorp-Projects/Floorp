@@ -8833,17 +8833,10 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
         return null();
       }
 
-      CallNodeType newExpression =
-          handler_.newNewExpression(newBegin, ctorExpr, args);
-      if (!newExpression) {
+      lhs = handler_.newNewExpression(newBegin, ctorExpr, args, isSpread);
+      if (!lhs) {
         return null();
       }
-
-      if (isSpread) {
-        handler_.setCallOp(newExpression, JSOP_SPREADNEW);
-      }
-
-      lhs = newExpression;
     }
   } else if (tt == TokenKind::Super) {
     NameNodeType thisName = newThisName();
@@ -8946,13 +8939,9 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
           return null();
         }
 
-        CallNodeType superCall = handler_.newSuperCall(lhs, args);
+        CallNodeType superCall = handler_.newSuperCall(lhs, args, isSpread);
         if (!superCall) {
           return null();
-        }
-
-        if (isSpread) {
-          handler_.setCallOp(superCall, JSOP_SPREADSUPERCALL);
         }
 
         nextMember = superCall;
@@ -9015,7 +9004,6 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
           }
         }
 
-        CallNodeType callNode;
         if (tt == TokenKind::LeftParen) {
           bool isSpread = false;
           PossibleError* asyncPossibleError =
@@ -9035,8 +9023,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
             }
           }
 
-          callNode = handler_.newCall(lhs, args);
-          if (!callNode) {
+          nextMember = handler_.newCall(lhs, args, op);
+          if (!nextMember) {
             return null();
           }
         } else {
@@ -9049,13 +9037,11 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
             return null();
           }
 
-          callNode = handler_.newTaggedTemplate(lhs, args);
-          if (!callNode) {
+          nextMember = handler_.newTaggedTemplate(lhs, args, op);
+          if (!nextMember) {
             return null();
           }
         }
-        handler_.setCallOp(callNode, op);
-        nextMember = callNode;
       }
     } else {
       anyChars.ungetToken();

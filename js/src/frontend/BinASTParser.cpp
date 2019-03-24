@@ -2092,8 +2092,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
     }
   }
 
-  BINJS_TRY_DECL(result, handler_.newCall(callee, arguments));
-  result->setCallOp(op);
+  BINJS_TRY_DECL(result, handler_.newCall(callee, arguments, op));
   return result;
 }
 
@@ -3591,8 +3590,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceNewExpression(
 
   BINJS_MOZ_TRY_DECL(arguments, parseArguments());
 
-  BINJS_TRY_DECL(result, handler_.newNewExpression(tokenizer_->pos(start).begin,
-                                                   callee, arguments));
+  BINJS_TRY_DECL(result,
+                 handler_.newNewExpression(tokenizer_->pos(start).begin, callee,
+                                           arguments, /* isSpread = */ false));
   return result;
 }
 
