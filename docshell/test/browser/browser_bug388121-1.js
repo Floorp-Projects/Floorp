@@ -5,8 +5,7 @@ add_task(async function test() {
       Assert.notEqual(prin, null, "Loaded principal must not be null");
       Assert.notEqual(prin, undefined, "Loaded principal must not be undefined");
 
-      const secMan = Services.scriptSecurityManager;
-      Assert.equal(secMan.isSystemPrincipal(prin), false,
+      Assert.equal(prin.isSystemPrincipal, false,
         "Loaded principal must not be system");
     });
   });

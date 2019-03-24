@@ -5,7 +5,6 @@
 "use strict";
 
 const {Ci} = require("chrome");
-const Services = require("Services");
 const defer = require("devtools/shared/defer");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
@@ -730,10 +729,9 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
       // StyleSheetApplicableStateChanged events.  See Document.webidl.
       doc.styleSheetChangeEventsEnabled = true;
 
-      const isChrome =
-        Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
-      const documentOnly = !isChrome;
+      const documentOnly = !doc.nodePrincipal.isSystemPrincipal;
       const styleSheets = InspectorUtils.getAllStyleSheets(doc, documentOnly);
+
       let actors = [];
       for (let i = 0; i < styleSheets.length; i++) {
         const sheet = styleSheets[i];

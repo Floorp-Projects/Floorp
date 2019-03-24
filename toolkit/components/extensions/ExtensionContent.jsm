@@ -622,7 +622,7 @@ class UserScript extends Script {
     const ssm = Services.scriptSecurityManager;
 
     let principal;
-    if (ssm.isSystemPrincipal(contentPrincipal)) {
+    if (contentPrincipal.isSystemPrincipal) {
       principal = ssm.createNullPrincipal(contentPrincipal.originAttributes);
     } else {
       principal = [contentPrincipal];
@@ -697,7 +697,7 @@ class ContentScriptContextChild extends BaseContext {
       });
     } else {
       let principal;
-      if (ssm.isSystemPrincipal(contentPrincipal)) {
+      if (contentPrincipal.isSystemPrincipal) {
         // Make sure we don't hand out the system principal by accident.
         // Also make sure that the null principal has the right origin attributes.
         principal = ssm.createNullPrincipal(attrs);
