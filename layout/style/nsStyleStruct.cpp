@@ -454,7 +454,8 @@ nsChangeHint nsStyleOutline::CalcDifference(
 // nsStyleList
 //
 nsStyleList::nsStyleList(const Document& aDocument)
-    : mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE) {
+    : mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE),
+      mMozListReversed(StyleMozListReversed::False) {
   MOZ_COUNT_CTOR(nsStyleList);
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -469,7 +470,8 @@ nsStyleList::nsStyleList(const nsStyleList& aSource)
       mListStyleImage(aSource.mListStyleImage),
       mCounterStyle(aSource.mCounterStyle),
       mQuotes(aSource.mQuotes),
-      mImageRegion(aSource.mImageRegion) {
+      mImageRegion(aSource.mImageRegion),
+      mMozListReversed(aSource.mMozListReversed) {
   MOZ_COUNT_CTOR(nsStyleList);
 }
 
@@ -508,6 +510,11 @@ nsChangeHint nsStyleList::CalcDifference(
   } else if (mListStylePosition != aNewData.mListStylePosition ||
              mCounterStyle != aNewData.mCounterStyle) {
     hint = nsChangeHint_NeutralChange;
+  }
+  // This is an internal UA-sheet property that is true only for <ol reversed>
+  // so hopefully it changes rarely.
+  if (mMozListReversed != aNewData.mMozListReversed) {
+    return NS_STYLE_HINT_REFLOW;
   }
   // list-style-image and -moz-image-region may affect some XUL elements
   // regardless of display value, so we still need to check them.
