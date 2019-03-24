@@ -4,5 +4,5 @@
 
 `PlacesHistoryStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`
 
-Implementation of the [HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesConnection](#).
+Implementation of the [HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#).
 

@@ -2,7 +2,7 @@
 
 # NOT_A_VISIT
 
-`NOT_A_VISIT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L90)
+`NOT_A_VISIT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L125)
 
 ### Inherited Properties
 

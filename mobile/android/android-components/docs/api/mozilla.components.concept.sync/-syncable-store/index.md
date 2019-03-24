@@ -16,5 +16,5 @@ Describes a "sync" entry point for a storage layer.
 
 | Name | Summary |
 |---|---|
-| [PlacesHistoryStorage](../../mozilla.components.browser.storage.sync/-places-history-storage/index.md) | `open class PlacesHistoryStorage : `[`HistoryStorage`](../../mozilla.components.concept.storage/-history-storage/index.md)`, `[`SyncableStore`](./index.md)<br>Implementation of the [HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesConnection](#). |
+| [PlacesHistoryStorage](../../mozilla.components.browser.storage.sync/-places-history-storage/index.md) | `open class PlacesHistoryStorage : `[`HistoryStorage`](../../mozilla.components.concept.storage/-history-storage/index.md)`, `[`SyncableStore`](./index.md)<br>Implementation of the [HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
 | [SyncableLoginsStore](../../mozilla.components.service.sync.logins/-syncable-logins-store/index.md) | `data class SyncableLoginsStore : `[`SyncableStore`](./index.md)<br>Wraps [AsyncLoginsStorage](../../mozilla.components.service.sync.logins/-async-logins-storage/index.md) instance along with a lazy encryption key. |

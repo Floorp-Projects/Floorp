@@ -24,3 +24,4 @@ authentication flow.
 | Name | Summary |
 |---|---|
 | [beginAuthentication](begin-authentication.md) | `fun beginAuthentication(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [beginPairingAuthentication](begin-pairing-authentication.md) | `fun beginPairingAuthentication(pairingUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

@@ -2,7 +2,7 @@
 
 # FailedToLoadAccountException
 
-`class FailedToLoadAccountException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaAccountManager.kt#L74)
+`class FailedToLoadAccountException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaAccountManager.kt#L82)
 
 Propagated via [AccountObserver.onError](../../mozilla.components.concept.sync/-account-observer/on-error.md) if we fail to load a locally stored account during
 initialization. No action is necessary from consumers.

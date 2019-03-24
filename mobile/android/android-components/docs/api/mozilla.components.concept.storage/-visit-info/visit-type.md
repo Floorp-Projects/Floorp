@@ -2,7 +2,7 @@
 
 # visitType
 
-`val visitType: `[`VisitType`](../-visit-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L81)
+`val visitType: `[`VisitType`](../-visit-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L116)
 
 What the transition type of the visit is, expressed as [VisitType](../-visit-type/index.md).
 

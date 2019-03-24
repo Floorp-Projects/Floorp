@@ -2,7 +2,7 @@
 
 # REDIRECT_TEMPORARY
 
-`REDIRECT_TEMPORARY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L98)
+`REDIRECT_TEMPORARY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L133)
 
 ### Inherited Properties
 

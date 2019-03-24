@@ -15,6 +15,12 @@ $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclien
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Profile)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-profile/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.ScopedKey)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-scoped-key/into.md
 $dokka.location:mozilla.components.support.android.test$awaitValue(android.arch.lifecycle.LiveData((mozilla.components.support.android.test.awaitValue.T)), kotlin.Long, java.util.concurrent.TimeUnit)mozilla.components.support.android.test/android.arch.lifecycle.-live-data/await-value.md
+$dokka.location:mozilla.components.support.android.test.espresso$assertHasFocus(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-has-focus.md
+$dokka.location:mozilla.components.support.android.test.espresso$assertIsChecked(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-is-checked.md
+$dokka.location:mozilla.components.support.android.test.espresso$assertIsDisplayed(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-is-displayed.md
+$dokka.location:mozilla.components.support.android.test.espresso$assertIsEnabled(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-is-enabled.md
+$dokka.location:mozilla.components.support.android.test.espresso$assertIsSelected(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-is-selected.md
+$dokka.location:mozilla.components.support.android.test.espresso$click(androidx.test.espresso.ViewInteraction)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/click.md
 $dokka.location:mozilla.components.support.ktx.android.arch.lifecycle$addObservers(android.arch.lifecycle.Lifecycle, kotlin.Array((android.arch.lifecycle.LifecycleObserver)))mozilla.components.support.ktx.android.arch.lifecycle/android.arch.lifecycle.-lifecycle/add-observers.md
 $dokka.location:mozilla.components.support.ktx.android.content$appVersionName#android.content.Contextmozilla.components.support.ktx.android.content/android.content.-context/app-version-name.md
 $dokka.location:mozilla.components.support.ktx.android.content$isMainProcess(android.content.Context)mozilla.components.support.ktx.android.content/android.content.-context/is-main-process.md
@@ -172,6 +178,8 @@ mozilla.components.service.pocket.data
 mozilla.components.service.pocket.net
 mozilla.components.service.sync.logins
 mozilla.components.support.android.test
+mozilla.components.support.android.test.espresso
+mozilla.components.support.android.test.espresso.matcher
 mozilla.components.support.base.android
 mozilla.components.support.base.facts
 mozilla.components.support.base.facts.processor
