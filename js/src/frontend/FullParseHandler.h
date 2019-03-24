@@ -303,22 +303,22 @@ class FullParseHandler {
     addList(/* list = */ literal, /* kid = */ element);
   }
 
-  CallNodeType newCall(Node callee, Node args) {
-    return new_<CallNode>(ParseNodeKind::CallExpr, JSOP_CALL, callee, args);
+  CallNodeType newCall(Node callee, Node args, JSOp callOp) {
+    return new_<CallNode>(ParseNodeKind::CallExpr, callOp, callee, args);
   }
 
   ListNodeType newArguments(const TokenPos& pos) {
     return new_<ListNode>(ParseNodeKind::Arguments, pos);
   }
 
-  CallNodeType newSuperCall(Node callee, Node args) {
-    return new_<CallNode>(ParseNodeKind::SuperCallExpr, JSOP_SUPERCALL, callee,
-                          args);
+  CallNodeType newSuperCall(Node callee, Node args, bool isSpread) {
+    return new_<CallNode>(ParseNodeKind::SuperCallExpr,
+                          isSpread ? JSOP_SPREADSUPERCALL : JSOP_SUPERCALL,
+                          callee, args);
   }
 
-  CallNodeType newTaggedTemplate(Node tag, Node args) {
-    return new_<CallNode>(ParseNodeKind::TaggedTemplateExpr, JSOP_CALL, tag,
-                          args);
+  CallNodeType newTaggedTemplate(Node tag, Node args, JSOp callOp) {
+    return new_<CallNode>(ParseNodeKind::TaggedTemplateExpr, callOp, tag, args);
   }
 
   ListNodeType newObjectLiteral(uint32_t begin) {
@@ -615,9 +615,9 @@ class FullParseHandler {
                             metaHolder);
   }
 
-  CallNodeType newCallImport(NullaryNodeType importHolder, Node singleArg) {
-    return new_<CallNode>(ParseNodeKind::CallImportExpr, JSOP_DYNAMIC_IMPORT,
-                          importHolder, singleArg);
+  BinaryNodeType newCallImport(NullaryNodeType importHolder, Node singleArg) {
+    return new_<BinaryNode>(ParseNodeKind::CallImportExpr, importHolder,
+                            singleArg);
   }
 
   UnaryNodeType newExprStatement(Node expr, uint32_t end) {
@@ -807,8 +807,10 @@ class FullParseHandler {
     return new_<LexicalScopeNode>(bindings, body);
   }
 
-  CallNodeType newNewExpression(uint32_t begin, Node ctor, Node args) {
-    return new_<CallNode>(ParseNodeKind::NewExpr, JSOP_NEW,
+  CallNodeType newNewExpression(uint32_t begin, Node ctor, Node args,
+                                bool isSpread) {
+    return new_<CallNode>(ParseNodeKind::NewExpr,
+                          isSpread ? JSOP_SPREADNEW : JSOP_NEW,
                           TokenPos(begin, args->pn_pos.end), ctor, args);
   }
 
@@ -934,7 +936,6 @@ class FullParseHandler {
     }
   }
 
-  void setCallOp(CallNodeType pn, JSOp op) { pn->setCallOp(op); }
   void setListHasNonConstInitializer(ListNodeType literal) {
     literal->setHasNonConstInitializer();
   }

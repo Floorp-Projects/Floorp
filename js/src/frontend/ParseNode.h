@@ -1888,7 +1888,7 @@ class CallSiteNode : public ListNode {
 };
 
 class CallNode : public BinaryNode {
-  JSOp callOp_;
+  const JSOp callOp_;
 
  public:
   CallNode(ParseNodeKind kind, JSOp callOp, ParseNode* left, ParseNode* right)
@@ -1912,7 +1912,6 @@ class CallNode : public BinaryNode {
   }
 
   JSOp callOp() { return callOp_; }
-  void setCallOp(JSOp callOp) { callOp_ = callOp; }
 };
 
 class ClassMethod : public BinaryNode {
