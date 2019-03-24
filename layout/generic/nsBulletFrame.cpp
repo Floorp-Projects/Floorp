@@ -54,6 +54,10 @@ using namespace mozilla::image;
 using namespace mozilla::layout;
 using mozilla::dom::Document;
 
+nsIFrame* NS_NewBulletFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+  return new (aPresShell) nsBulletFrame(aStyle, aPresShell->GetPresContext());
+}
+
 NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(FontSizeInflationProperty, float)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBulletFrame)
@@ -159,8 +163,9 @@ void nsBulletFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
                        !newStyleList->mCounterStyle.IsNone();
 
       if (hadBullet != hasBullet) {
-        accService->UpdateListBullet(PresContext()->GetPresShell(), mContent,
-                                     hasBullet);
+          nsIContent* listItem = mContent->GetParent();
+          accService->UpdateListBullet(PresContext()->GetPresShell(), listItem,
+                                       hasBullet);
       }
     }
   }

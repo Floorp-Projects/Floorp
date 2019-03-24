@@ -93,9 +93,9 @@ class nsLineLayout {
   void ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
                    ReflowOutput* aMetrics, bool& aPushedFrame);
 
-  void AddBulletFrame(nsBulletFrame* aFrame, const ReflowOutput& aMetrics);
+  void AddBulletFrame(nsIFrame* aFrame, const ReflowOutput& aMetrics);
 
-  void RemoveBulletFrame(nsBulletFrame* aFrame);
+  void RemoveBulletFrame(nsIFrame* aFrame);
 
   /**
    * Place frames in the block direction (CSS property vertical-align)

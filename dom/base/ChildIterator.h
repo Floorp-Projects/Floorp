@@ -236,6 +236,7 @@ class AllChildrenIterator : private FlattenedChildIterator {
 
   enum IteratorPhase {
     eAtBegin,
+    eAtMarkerKid,
     eAtBeforeKid,
     eAtExplicitKids,
     eAtAnonKids,

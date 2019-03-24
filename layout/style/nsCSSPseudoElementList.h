@@ -33,6 +33,7 @@ CSS_PSEUDO_ELEMENT(after, ":after", CSS_PSEUDO_ELEMENT_IS_CSS2 |
                                     CSS_PSEUDO_ELEMENT_IS_FLEX_OR_GRID_ITEM)
 CSS_PSEUDO_ELEMENT(before, ":before", CSS_PSEUDO_ELEMENT_IS_CSS2 |
                                       CSS_PSEUDO_ELEMENT_IS_FLEX_OR_GRID_ITEM)
+CSS_PSEUDO_ELEMENT(marker, ":marker", 0)
 
 CSS_PSEUDO_ELEMENT(backdrop, ":backdrop", 0)
 
@@ -53,11 +54,6 @@ CSS_PSEUDO_ELEMENT(selection, ":selection",
 // use our flags to prevent that?
 CSS_PSEUDO_ELEMENT(mozFocusInner, ":-moz-focus-inner", 0)
 CSS_PSEUDO_ELEMENT(mozFocusOuter, ":-moz-focus-outer", 0)
-
-// XXXbz should we really allow random content to style these?  Maybe
-// use our flags to prevent that?
-CSS_PSEUDO_ELEMENT(mozListBullet, ":-moz-list-bullet", 0)
-CSS_PSEUDO_ELEMENT(mozListNumber, ":-moz-list-number", 0)
 
 // FIXME(emilio): It's unclear why this needs to exist at all, we don't ever
 // style them.
