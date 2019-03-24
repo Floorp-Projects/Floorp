@@ -229,41 +229,41 @@ class nsBlockFrame : public nsContainerFrame {
   bool CachedIsEmpty() override;
   bool IsSelfEmpty() override;
 
-  // Given that we have a bullet, does it actually draw something, i.e.,
+  // Given that we have a ::marker frame, does it actually draw something, i.e.,
   // do we have either a 'list-style-type' or 'list-style-image' that is
-  // not 'none'?
-  bool BulletIsEmpty() const;
+  // not 'none', and no 'content'?
+  bool MarkerIsEmpty() const;
 
   /**
-   * Return the bullet text equivalent.
+   * Return the ::marker text equivalent.
    */
-  void GetSpokenBulletText(nsAString& aText) const;
+  void GetSpokenMarkerText(nsAString& aText) const;
 
   /**
-   * Return true if there's a bullet.
+   * Return true if this frame has a ::marker frame.
    */
-  bool HasBullet() const { return HasOutsideBullet() || HasInsideBullet(); }
+  bool HasMarker() const { return HasOutsideMarker() || HasInsideMarker(); }
 
   /**
-   * @return true if this frame has an inside bullet frame.
+   * @return true if this frame has an inside ::marker frame.
    */
-  bool HasInsideBullet() const {
-    return 0 != (mState & NS_BLOCK_FRAME_HAS_INSIDE_BULLET);
+  bool HasInsideMarker() const {
+    return 0 != (mState & NS_BLOCK_FRAME_HAS_INSIDE_MARKER);
   }
 
   /**
-   * @return true if this frame has an outside bullet frame.
+   * @return true if this frame has an outside ::marker frame.
    */
-  bool HasOutsideBullet() const {
-    return 0 != (mState & NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
+  bool HasOutsideMarker() const {
+    return 0 != (mState & NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER);
   }
 
   /**
-   * @return the bullet frame or nullptr if we don't have one.
+   * @return the ::marker frame or nullptr if we don't have one.
    */
-  nsIFrame* GetBullet() const {
-    nsIFrame* outside = GetOutsideBullet();
-    return outside ? outside : GetInsideBullet();
+  nsIFrame* GetMarker() const {
+    nsIFrame* outside = GetOutsideMarker();
+    return outside ? outside : GetInsideMarker();
   }
 
   /**
@@ -395,7 +395,7 @@ class nsBlockFrame : public nsContainerFrame {
   };
 
   /**
-   * Update the styles of our various pseudo-elements (bullets, first-line,
+   * Update the styles of our various pseudo-elements (marker, first-line,
    * etc, but _not_ first-letter).
    */
   void UpdatePseudoElementStyles(mozilla::ServoRestyleState& aRestyleState);
@@ -819,8 +819,8 @@ class nsBlockFrame : public nsContainerFrame {
   //----------------------------------------
   // List handling kludge
 
-  void ReflowBullet(nsIFrame* aBulletFrame, BlockReflowInput& aState,
-                    ReflowOutput& aMetrics, nscoord aLineTop);
+  void ReflowOutsideMarker(nsIFrame* aMarkerFrame, BlockReflowInput& aState,
+                           ReflowOutput& aMetrics, nscoord aLineTop);
 
   //----------------------------------------
 
@@ -864,19 +864,19 @@ class nsBlockFrame : public nsContainerFrame {
   void SetOverflowOutOfFlows(const nsFrameList& aList, nsFrameList* aPropValue);
 
   /**
-   * @return the inside bullet frame or nullptr if we don't have one.
+   * @return the inside ::marker frame or nullptr if we don't have one.
    */
-  nsIFrame* GetInsideBullet() const;
+  nsIFrame* GetInsideMarker() const;
 
   /**
-   * @return the outside bullet frame or nullptr if we don't have one.
+   * @return the outside ::marker frame or nullptr if we don't have one.
    */
-  nsIFrame* GetOutsideBullet() const;
+  nsIFrame* GetOutsideMarker() const;
 
   /**
-   * @return the outside bullet frame list frame property.
+   * @return the outside ::marker frame list frame property.
    */
-  nsFrameList* GetOutsideBulletList() const;
+  nsFrameList* GetOutsideMarkerList() const;
 
   /**
    * @return true if this frame has pushed floats.
