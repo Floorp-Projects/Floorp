@@ -350,6 +350,9 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 
+  // temporary - please don't add external uses outside of nsBulletFrame
+  nsCounterManager* CounterManager() { return &mCounterManager; }
+
  private:
   struct FrameConstructionItem;
   class FrameConstructionItemList;

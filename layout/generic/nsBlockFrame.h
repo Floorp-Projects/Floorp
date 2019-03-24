@@ -317,9 +317,6 @@ class nsBlockFrame : public nsContainerFrame {
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
 
-  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                            int32_t aModType) override;
-
   /**
    * Move any frames on our overflow list to the end of our principal list.
    * @return true if there were any overflow frames
@@ -576,10 +573,6 @@ class nsBlockFrame : public nsContainerFrame {
     }
     return false;
   }
-
-  virtual bool RenumberChildFrames(int32_t* aOrdinal, int32_t aDepth,
-                                   int32_t aIncrement,
-                                   bool aForCounting) override;
 
   // @see nsIFrame::AddSizeOfExcludingThisForTree
   void AddSizeOfExcludingThisForTree(nsWindowSizes&) const override;
