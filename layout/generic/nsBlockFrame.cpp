@@ -741,9 +741,6 @@ nscoord nsBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
     curFrame->LazyMarkLinesDirty();
   }
 
-  if (RenumberList()) {
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  }
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION) ResolveBidi();
   InlineMinISizeData data;
   for (nsBlockFrame* curFrame = this; curFrame;
@@ -822,9 +819,6 @@ nscoord nsBlockFrame::GetPrefISize(gfxContext* aRenderingContext) {
     curFrame->LazyMarkLinesDirty();
   }
 
-  if (RenumberList()) {
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  }
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION) ResolveBidi();
   InlinePrefISizeData data;
   for (nsBlockFrame* curFrame = this; curFrame;
@@ -1160,10 +1154,6 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
     static_cast<nsBlockFrame*>(FirstContinuation())->ResolveBidi();
-
-  if (RenumberList()) {
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  }
 
   // Handle paginated overflow (see nsContainerFrame.h)
   nsOverflowAreas ocBounds;
@@ -2980,42 +2970,6 @@ void nsBlockFrame::MoveChildFramesOfLine(nsLineBox* aLine,
       kid = kid->GetNextSibling();
     }
   }
-}
-
-nsresult nsBlockFrame::AttributeChanged(int32_t aNameSpaceID,
-                                        nsAtom* aAttribute, int32_t aModType) {
-  nsresult rv =
-      nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (nsGkAtoms::value == aAttribute) {
-    const nsStyleDisplay* styleDisplay = StyleDisplay();
-    if (mozilla::StyleDisplay::ListItem == styleDisplay->mDisplay) {
-      // Search for the closest ancestor that's a block frame. We
-      // make the assumption that all related list items share a
-      // common block/grid/flex ancestor.
-      // XXXldb I think that's a bad assumption.
-      nsContainerFrame* ancestor = GetParent();
-      for (; ancestor; ancestor = ancestor->GetParent()) {
-        auto frameType = ancestor->Type();
-        if (frameType == LayoutFrameType::Block ||
-            frameType == LayoutFrameType::FlexContainer ||
-            frameType == LayoutFrameType::GridContainer) {
-          break;
-        }
-      }
-      // Tell the ancestor to renumber list items within itself.
-      if (ancestor) {
-        // XXX Not sure if this is necessary anymore
-        if (ancestor->RenumberList()) {
-          PresShell()->FrameNeedsReflow(ancestor, nsIPresShell::eStyleChange,
-                                        NS_FRAME_HAS_DIRTY_CHILDREN);
-        }
-      }
-    }
-  }
-  return rv;
 }
 
 static inline bool IsNonAutoNonZeroBSize(const StyleSize& aCoord) {
@@ -6851,43 +6805,6 @@ void nsBlockFrame::GetSpokenBulletText(nsAString& aText) const {
       aText.Truncate();
     }
   }
-}
-
-bool nsBlockFrame::RenumberChildFrames(int32_t* aOrdinal, int32_t aDepth,
-                                       int32_t aIncrement, bool aForCounting) {
-  // Examine each line in the block
-  bool foundValidLine;
-  nsBlockInFlowLineIterator bifLineIter(this, &foundValidLine);
-  if (!foundValidLine) {
-    return false;
-  }
-
-  bool renumberedABullet = false;
-  do {
-    nsLineList::iterator line = bifLineIter.GetLine();
-    nsIFrame* kid = line->mFirstChild;
-    int32_t n = line->GetChildCount();
-    while (--n >= 0) {
-      bool kidRenumberedABullet = kid->RenumberFrameAndDescendants(
-          aOrdinal, aDepth, aIncrement, aForCounting);
-      if (!aForCounting && kidRenumberedABullet) {
-        line->MarkDirty();
-        renumberedABullet = true;
-      }
-      kid = kid->GetNextSibling();
-    }
-  } while (bifLineIter.Next());
-
-  // We need to set NS_FRAME_HAS_DIRTY_CHILDREN bits up the tree between
-  // the bullet and the caller of RenumberList.  But the caller itself
-  // has to be responsible for setting the bit itself, since that caller
-  // might be making a FrameNeedsReflow call, which requires that the
-  // bit not be set yet.
-  if (renumberedABullet && aDepth != 0) {
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  }
-
-  return renumberedABullet;
 }
 
 void nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,

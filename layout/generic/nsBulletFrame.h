@@ -53,7 +53,6 @@ class nsBulletFrame final : public nsFrame {
       : nsFrame(aStyle, aPresContext, kClassID),
         mPadding(GetWritingMode()),
         mIntrinsicSize(GetWritingMode()),
-        mOrdinal(0),
         mRequestRegistered(false) {}
 
   virtual ~nsBulletFrame();
@@ -89,8 +88,6 @@ class nsBulletFrame final : public nsFrame {
   }
 
   // nsBulletFrame
-  int32_t SetListItemOrdinal(int32_t aNextOrdinal, bool* aChanged,
-                             int32_t aIncrement);
 
   /* get list item text, with prefix & suffix */
   static void GetListItemText(mozilla::CounterStyle*, mozilla::WritingMode,
@@ -115,7 +112,7 @@ class nsBulletFrame final : public nsFrame {
   }
   void SetFontSizeInflation(float aInflation);
 
-  int32_t GetOrdinal() { return mOrdinal; }
+  int32_t Ordinal() const;
 
   already_AddRefed<imgIContainer> GetImage() const;
 
@@ -137,7 +134,6 @@ class nsBulletFrame final : public nsFrame {
   RefPtr<nsBulletListener> mListener;
 
   mozilla::LogicalSize mIntrinsicSize;
-  int32_t mOrdinal;
 
  private:
   mozilla::CounterStyle* ResolveCounterStyle();
