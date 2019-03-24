@@ -72,6 +72,9 @@ struct nsCounterNode : public nsGenConNode {
 
   // to avoid virtual function calls in the common case
   inline void Calc(nsCounterList* aList);
+
+  // Is this a <ol reversed> RESET node?
+  inline bool IsContentBasedReset();
 };
 
 struct nsCounterUseNode : public nsCounterNode {
@@ -150,6 +153,11 @@ inline void nsCounterNode::Calc(nsCounterList* aList) {
     ChangeNode()->Calc(aList);
 }
 
+inline bool nsCounterNode::IsContentBasedReset() {
+  return mType == RESET &&
+         ChangeNode()->mChangeValue == std::numeric_limits<int32_t>::min();
+}
+  
 class nsCounterList : public nsGenConList {
  public:
   nsCounterList() : nsGenConList(), mDirty(false) {}

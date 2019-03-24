@@ -580,6 +580,7 @@ menu[type="context"] {
 }
 
 ul, ol, menu {
+  counter-reset: list-item;
   -moz-list-reversed: false;
 }
 
@@ -783,6 +784,7 @@ video > .caption-box {
 details > summary:first-of-type,
 details > summary:-moz-native-anonymous {
   display: list-item;
+  counter-increment: list-item 0;
   list-style: disclosure-closed inside;
 }
 

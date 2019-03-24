@@ -18,6 +18,7 @@
 #include "mozilla/dom/GeneratedImageContent.h"
 #include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
+#include "mozilla/dom/HTMLSharedListElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Likely.h"
@@ -9589,9 +9590,21 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
   CreateNeededPseudoInternalRubyBoxes(aState, aItems, aParentFrame);
   CreateNeededPseudoSiblings(aState, aItems, aParentFrame);
 
+  bool listItemListIsDirty = false;
   for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
     NS_ASSERTION(iter.item().DesiredParentType() == GetParentType(aParentFrame),
                  "Needed pseudos didn't get created; expect bad things");
+    // display:list-item boxes affects the start value of the "list-item" counter
+    // when an <ol reversed> element doesn't have an explicit start value.
+    if (!listItemListIsDirty &&
+        iter.item().mComputedStyle->StyleList()->mMozListReversed
+            == StyleMozListReversed::True &&
+        iter.item().mComputedStyle->StyleDisplay()->mDisplay == StyleDisplay::ListItem) {
+      auto* list = mCounterManager.CounterListFor(NS_LITERAL_STRING("list-item"));
+      list->SetDirty();
+      CountersDirty();
+      listItemListIsDirty = true;
+    }
     ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
   }
 

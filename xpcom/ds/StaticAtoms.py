@@ -1411,6 +1411,7 @@ STATIC_ATOMS = [
     Atom("limitingConeAngle", "limitingConeAngle"),
     Atom("linear", "linear"),
     Atom("linearGradient", "linearGradient"),
+    Atom("list_item", "list-item"),
     Atom("list_style_type", "list-style-type"),
     Atom("luminanceToAlpha", "luminanceToAlpha"),
     Atom("luminosity", "luminosity"),
