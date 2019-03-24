@@ -323,7 +323,7 @@ exports.isSafeJSObject = function(obj) {
 
   // If there aren't Xrays, only allow chrome objects.
   const principal = Cu.getObjectPrincipal(obj);
-  if (!Services.scriptSecurityManager.isSystemPrincipal(principal)) {
+  if (!principal.isSystemPrincipal) {
     return false;
   }
 

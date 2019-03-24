@@ -7571,8 +7571,8 @@ function checkEmptyPageOrigin(browser = gBrowser.selectedBrowser,
   }
   // ... so for those that don't have them, enforce that the page has the
   // system principal (this matches e.g. on about:newtab).
-  let ssm = Services.scriptSecurityManager;
-  return ssm.isSystemPrincipal(contentPrincipal);
+
+  return contentPrincipal.isSystemPrincipal;
 }
 
 function ReportFalseDeceptiveSite() {

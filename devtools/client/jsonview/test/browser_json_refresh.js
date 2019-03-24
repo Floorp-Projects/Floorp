@@ -29,7 +29,7 @@ add_task(async function() {
     const loadingPrincipal = channel.loadInfo.loadingPrincipal;
     is(loadingPrincipal, null, "sanity: correct loadingPrincipal");
     const triggeringPrincipal = channel.loadInfo.triggeringPrincipal;
-    ok(Services.scriptSecurityManager.isSystemPrincipal(triggeringPrincipal),
+    ok(triggeringPrincipal.isSystemPrincipal,
        "sanity: correct triggeringPrincipal");
     const principalToInherit = channel.loadInfo.principalToInherit;
     ok(principalToInherit.isNullPrincipal, "sanity: correct principalToInherit");
@@ -55,7 +55,7 @@ add_task(async function() {
     const loadingPrincipal = channel.loadInfo.loadingPrincipal;
     is(loadingPrincipal, null, "reloaded: correct loadingPrincipal");
     const triggeringPrincipal = channel.loadInfo.triggeringPrincipal;
-    ok(Services.scriptSecurityManager.isSystemPrincipal(triggeringPrincipal),
+    ok(triggeringPrincipal.isSystemPrincipal,
        "reloaded: correct triggeringPrincipal");
     const principalToInherit = channel.loadInfo.principalToInherit;
     ok(principalToInherit.isNullPrincipal, "reloaded: correct principalToInherit");

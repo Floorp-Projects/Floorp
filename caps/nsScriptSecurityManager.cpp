@@ -447,12 +447,6 @@ nsScriptSecurityManager::GetChannelURIPrincipal(nsIChannel* aChannel,
   return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsScriptSecurityManager::IsSystemPrincipal(nsIPrincipal* aPrincipal,
-                                           bool* aIsSystem) {
-  *aIsSystem = (aPrincipal == mSystemPrincipal);
-  return NS_OK;
-}
 
 /////////////////////////////
 // nsScriptSecurityManager //
@@ -472,7 +466,7 @@ NS_IMPL_ISUPPORTS(nsScriptSecurityManager, nsIScriptSecurityManager)
 #if defined(DEBUG) && !defined(ANDROID)
 static void AssertEvalNotUsingSystemPrincipal(nsIPrincipal* subjectPrincipal,
                                               JSContext* cx) {
-  if (!nsContentUtils::IsSystemPrincipal(subjectPrincipal)) {
+  if (!subjectPrincipal->IsSystemPrincipal()) {
     return;
   }
 

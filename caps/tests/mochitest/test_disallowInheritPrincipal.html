@@ -28,7 +28,7 @@ var secMan = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
 var sysPrincipal = secMan.getSystemPrincipal();
 isnot(sysPrincipal, undefined, "Should have a principal");
 isnot(sysPrincipal, null, "Should have a non-null principal");
-is(secMan.isSystemPrincipal(sysPrincipal), true,
+is(sysPrincipal.isSystemPrincipal, true,
    "Should have system principal here");
 
 

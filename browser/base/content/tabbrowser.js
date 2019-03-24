@@ -2226,7 +2226,7 @@ window._gBrowser = {
         userContextId: params.userContextId,
       });
     }
-    if (Services.scriptSecurityManager.isSystemPrincipal(params.triggeringPrincipal)) {
+    if (params.triggeringPrincipal.isSystemPrincipal) {
       throw new Error("System principal should never be passed into addWebTab()");
     }
     return this.addTab(aURI, params);
@@ -4581,7 +4581,7 @@ window._gBrowser = {
 
         // For non-system/expanded principals, we bail and show the checkbox
         if (promptPrincipal.URI &&
-            !Services.scriptSecurityManager.isSystemPrincipal(promptPrincipal)) {
+            !promptPrincipal.isSystemPrincipal) {
           let permission = Services.perms.testPermissionFromPrincipal(promptPrincipal,
             "focus-tab-by-prompt");
           if (permission != Services.perms.ALLOW_ACTION) {
