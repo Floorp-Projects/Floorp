@@ -26,7 +26,7 @@ var secMan = SpecialPowers.Services.scriptSecurityManager;
 var principal = SpecialPowers.wrap(document).nodePrincipal;
 isnot(principal, undefined, "Should have a principal");
 isnot(principal, null, "Should have a non-null principal");
-is(secMan.isSystemPrincipal(principal), false,
+is(principal.isSystemPrincipal, false,
    "Shouldn't have system principal here");
 try {
   secMan.checkLoadURIWithPrincipal(principal, null,
