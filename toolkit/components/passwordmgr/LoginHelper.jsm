@@ -272,7 +272,6 @@ var LoginHelper = {
    */
   isOriginMatching(aLoginOrigin, aSearchOrigin, aOptions = {
     schemeUpgrades: false,
-    acceptWildcardMatch: false,
   }) {
     if (aLoginOrigin == aSearchOrigin) {
       return true;
@@ -280,10 +279,6 @@ var LoginHelper = {
 
     if (!aOptions) {
       return false;
-    }
-
-    if (aOptions.acceptWildcardMatch && aLoginOrigin == "") {
-      return true;
     }
 
     if (aOptions.schemeUpgrades) {
@@ -485,17 +480,12 @@ var LoginHelper = {
    *        String representing the origin to use for preferring one login over
    *        another when they are dupes. This is used with "scheme" for
    *        `resolveBy` so the scheme from this origin will be preferred.
-   * @param {string} [preferredFormActionOrigin = undefined]
-   *        String representing the action origin to use for preferring one login over
-   *        another when they are dupes. This is used with "actionOrigin" for
-   *        `resolveBy` so the scheme from this action origin will be preferred.
    *
    * @returns {nsILoginInfo[]} list of unique logins.
    */
   dedupeLogins(logins, uniqueKeys = ["username", "password"],
                resolveBy = ["timeLastUsed"],
-               preferredOrigin = undefined,
-               preferredFormActionOrigin = undefined) {
+               preferredOrigin = undefined) {
     const KEY_DELIMITER = ":";
 
     if (!preferredOrigin && resolveBy.includes("scheme")) {
@@ -540,16 +530,6 @@ var LoginHelper = {
 
       for (let preference of resolveBy) {
         switch (preference) {
-          case "actionOrigin": {
-            if (!preferredFormActionOrigin) {
-              break;
-            }
-            if (LoginHelper.isOriginMatching(existingLogin.formSubmitURL, preferredFormActionOrigin, {schemeUpgrades: LoginHelper.schemeUpgrades}) &&
-                !LoginHelper.isOriginMatching(login.formSubmitURL, preferredFormActionOrigin, {schemeUpgrades: LoginHelper.schemeUpgrades})) {
-              return false;
-            }
-            break;
-          }
           case "scheme": {
             if (!preferredOriginScheme) {
               break;

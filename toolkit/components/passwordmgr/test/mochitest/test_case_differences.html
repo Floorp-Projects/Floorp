@@ -23,13 +23,13 @@ SpecialPowers.loadChromeScript(function addLogins() {
   var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                            Ci.nsILoginInfo, "init");
 
-  var login0 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
+  var login0 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
                                "name", "pass", "uname", "pword");
 
-  var login1 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
+  var login1 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
                                "Name", "Pass", "uname", "pword");
 
-  var login2 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
+  var login2 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
                                "USER", "PASS", "uname", "pword");
 
   try {
@@ -47,7 +47,7 @@ SpecialPowers.loadChromeScript(function addLogins() {
 <div id="content">
 
   <!-- form1 tests multiple matching logins -->
-  <form id="form1" action="https://autocomplete:8888/formtest.js" onsubmit="return false;">
+  <form id="form1" action="http://autocomplete:8888/formtest.js" onsubmit="return false;">
     <input  type="text"       name="uname">
     <input  type="password"   name="pword">
     <button type="submit">Submit</button>
@@ -90,7 +90,7 @@ add_task(async function test_empty_first_entry() {
   let results = await shownPromise;
   popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected");
-  checkAutoCompleteResults(results, ["name", "Name", "USER"], "example.com", "initial");
+  checkAutoCompleteResults(results, ["name", "Name", "USER"], "mochi.test", "initial");
 
   // Check first entry
   let index0Promise = notifySelectedIndex(0);
