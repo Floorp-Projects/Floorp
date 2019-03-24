@@ -276,7 +276,7 @@ NS_DECLARE_FRAME_PROPERTY_WITH_DTOR_NEVER_CALLED(OverflowLinesProperty,
 NS_DECLARE_FRAME_PROPERTY_FRAMELIST(OverflowOutOfFlowsProperty)
 NS_DECLARE_FRAME_PROPERTY_FRAMELIST(PushedFloatProperty)
 NS_DECLARE_FRAME_PROPERTY_FRAMELIST(OutsideBulletProperty)
-NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(InsideBulletProperty, nsBulletFrame)
+NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(InsideBulletProperty, nsIFrame)
 NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BlockEndEdgeOfChildrenProperty, nscoord)
 
 //----------------------------------------------------------------------
@@ -4374,7 +4374,7 @@ bool nsBlockFrame::PlaceLine(BlockReflowInput& aState,
        (mLines.front() != mLines.back() && 0 == mLines.front()->BSize() &&
         aLine == mLines.begin().next()))) {
     ReflowOutput metrics(aState.mReflowInput);
-    nsBulletFrame* bullet = GetOutsideBullet();
+    nsIFrame* bullet = GetOutsideBullet();
     ReflowBullet(bullet, aState, metrics, aState.mBCoord);
     NS_ASSERTION(!BulletIsEmpty() || metrics.BSize(wm) == 0,
                  "empty bullet took up space");
@@ -4954,19 +4954,19 @@ void nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList,
   }
 }
 
-nsBulletFrame* nsBlockFrame::GetInsideBullet() const {
+nsIFrame* nsBlockFrame::GetInsideBullet() const {
   if (!HasInsideBullet()) {
     return nullptr;
   }
   NS_ASSERTION(!HasOutsideBullet(), "invalid bullet state");
-  nsBulletFrame* frame = GetProperty(InsideBulletProperty());
-  NS_ASSERTION(frame && frame->IsBulletFrame(), "bogus inside bullet frame");
+  nsIFrame* frame = GetProperty(InsideBulletProperty());
+  NS_ASSERTION(frame, "bogus inside bullet frame");
   return frame;
 }
 
-nsBulletFrame* nsBlockFrame::GetOutsideBullet() const {
+nsIFrame* nsBlockFrame::GetOutsideBullet() const {
   nsFrameList* list = GetOutsideBulletList();
-  return list ? static_cast<nsBulletFrame*>(list->FirstChild()) : nullptr;
+  return list ? list->FirstChild() : nullptr;
 }
 
 nsFrameList* nsBlockFrame::GetOutsideBulletList() const {
@@ -4975,9 +4975,7 @@ nsFrameList* nsBlockFrame::GetOutsideBulletList() const {
   }
   NS_ASSERTION(!HasInsideBullet(), "invalid bullet state");
   nsFrameList* list = GetProperty(OutsideBulletProperty());
-  NS_ASSERTION(
-      list && list->GetLength() == 1 && list->FirstChild()->IsBulletFrame(),
-      "bogus outside bullet list");
+  NS_ASSERTION(list && list->GetLength() == 1, "bogus outside bullet list");
   return list;
 }
 
@@ -6741,12 +6739,12 @@ void nsBlockFrame::SetInitialChildList(ChildListID aListID,
 }
 
 void nsBlockFrame::SetMarkerFrameForListItem(nsIFrame* aMarkerFrame) {
-  MOZ_ASSERT(aMarkerFrame && aMarkerFrame->IsBulletFrame());
+  MOZ_ASSERT(aMarkerFrame);
   MOZ_ASSERT((GetStateBits() & (NS_BLOCK_FRAME_HAS_INSIDE_BULLET |
                                 NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)) == 0,
              "How can we have a bullet already?");
 
-  auto bullet = static_cast<nsBulletFrame*>(aMarkerFrame);
+  auto bullet = aMarkerFrame;
   if (StyleList()->mListStylePosition == NS_STYLE_LIST_STYLE_POSITION_INSIDE) {
     SetProperty(InsideBulletProperty(), bullet);
     AddStateBits(NS_BLOCK_FRAME_HAS_INSIDE_BULLET);
@@ -6762,8 +6760,10 @@ bool nsBlockFrame::BulletIsEmpty() const {
                        mozilla::StyleDisplay::ListItem &&
                    HasOutsideBullet(),
                "should only care when we have an outside bullet");
-  const nsStyleList* list = StyleList();
-  return list->mCounterStyle.IsNone() && !list->GetListStyleImage();
+  nsIFrame* marker = GetBullet();
+  const nsStyleList* list = marker->StyleList();
+  return list->mCounterStyle.IsNone() && !list->GetListStyleImage() &&
+         marker->StyleContent()->ContentCount() == 0;
 }
 
 void nsBlockFrame::GetSpokenBulletText(nsAString& aText) const {
@@ -6772,9 +6772,17 @@ void nsBlockFrame::GetSpokenBulletText(nsAString& aText) const {
     aText.Assign(kDiscCharacter);
     aText.Append(' ');
   } else {
-    nsBulletFrame* bullet = GetBullet();
-    if (bullet) {
-      bullet->GetSpokenText(aText);
+    if (nsIFrame* marker = GetBullet()) {
+      nsBulletFrame* bullet = do_QueryFrame(marker);
+      if (bullet) {
+        bullet->GetSpokenText(aText);
+      } else {
+        ErrorResult err;
+        marker->GetContent()->GetTextContent(aText, err);
+        if (err.Failed()) {
+          aText.Truncate();
+        }
+      }
     } else {
       aText.Truncate();
     }

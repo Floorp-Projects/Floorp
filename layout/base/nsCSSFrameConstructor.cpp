@@ -5348,8 +5348,9 @@ nsCSSFrameConstructor::FindElementTagData(const Element& aElement,
                                           ComputedStyle& aStyle,
                                           nsIFrame* aParentFrame,
                                           uint32_t aFlags) {
-  // A ::marker pseudo creates a nsBulletFrame.
-  if (aStyle.GetPseudoType() == PseudoStyleType::marker) {
+  // A ::marker pseudo creates a nsBulletFrame, unless 'content' was set.
+  if (aStyle.GetPseudoType() == PseudoStyleType::marker &&
+      aStyle.StyleContent()->ContentCount() == 0) {
     static const FrameConstructionData data = FCDATA_DECL(
         FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_SKIP_ABSPOS_PUSH |
             FCDATA_DISALLOW_GENERATED_CONTENT | FCDATA_IS_LINE_PARTICIPANT |

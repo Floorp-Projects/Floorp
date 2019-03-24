@@ -42,7 +42,6 @@ enum class LineReflowStatus {
 };
 
 class nsBlockInFlowLineIterator;
-class nsBulletFrame;
 namespace mozilla {
 class BlockReflowInput;
 class ServoRestyleState;
@@ -262,8 +261,8 @@ class nsBlockFrame : public nsContainerFrame {
   /**
    * @return the bullet frame or nullptr if we don't have one.
    */
-  nsBulletFrame* GetBullet() const {
-    nsBulletFrame* outside = GetOutsideBullet();
+  nsIFrame* GetBullet() const {
+    nsIFrame* outside = GetOutsideBullet();
     return outside ? outside : GetInsideBullet();
   }
 
@@ -867,12 +866,12 @@ class nsBlockFrame : public nsContainerFrame {
   /**
    * @return the inside bullet frame or nullptr if we don't have one.
    */
-  nsBulletFrame* GetInsideBullet() const;
+  nsIFrame* GetInsideBullet() const;
 
   /**
    * @return the outside bullet frame or nullptr if we don't have one.
    */
-  nsBulletFrame* GetOutsideBullet() const;
+  nsIFrame* GetOutsideBullet() const;
 
   /**
    * @return the outside bullet frame list frame property.
