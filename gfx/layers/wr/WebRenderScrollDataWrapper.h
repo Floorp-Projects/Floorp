@@ -189,7 +189,7 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper {
       if (!layerIndex) {
         // It's possible that there's no wrapper root. In that case there are
         // no descendants
-        return WebRenderScrollDataWrapper(*mUpdater, mWrRootId);
+        return WebRenderScrollDataWrapper(*mUpdater, newWrRootId);
       }
       return WebRenderScrollDataWrapper(mUpdater, newWrRootId, childData,
                                         *layerIndex,
