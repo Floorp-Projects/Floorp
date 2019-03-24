@@ -4838,7 +4838,12 @@ nsRegion nsDisplayBackgroundColor::GetOpaqueRegion(
     nsDisplayListBuilder* aBuilder, bool* aSnap) const {
   *aSnap = false;
 
-  if (mColor.a != 1) {
+  if (mColor.a != 1 ||
+      // Even if the current alpha channel is 1, we treat this item as if it's
+      // non-opaque if there is a background-color animation since the animation
+      // might change the alpha channel.
+      EffectCompositor::HasAnimationsForCompositor(
+          mFrame, DisplayItemType::TYPE_BACKGROUND_COLOR)) {
     return nsRegion();
   }
 
