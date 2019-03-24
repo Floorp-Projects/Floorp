@@ -678,8 +678,7 @@ CallExpression:
       }
     }
 
-    BINJS_TRY_DECL(result, handler_.newCall(callee, arguments));
-    result->setCallOp(op);
+    BINJS_TRY_DECL(result, handler_.newCall(callee, arguments, op));
 
 CatchClause:
   type-ok:
@@ -1316,7 +1315,7 @@ NewExpression:
   build: |
     BINJS_TRY_DECL(result,
                    handler_.newNewExpression(tokenizer_->pos(start).begin,
-                                             callee, arguments));
+                                             callee, arguments, /* isSpread = */ false));
 
 ObjectExpression:
   build:
