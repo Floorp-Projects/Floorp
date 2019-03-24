@@ -166,6 +166,8 @@ nsIFrame* NS_NewDateTimeControlFrame(nsIPresShell* aPresShell,
                                      mozilla::ComputedStyle* aStyle);
 nsBlockFrame* NS_NewDetailsFrame(nsIPresShell* aPresShell,
                                  mozilla::ComputedStyle* aStyle);
+nsIFrame* NS_NewBulletFrame(nsIPresShell* aPresShell,
+                            mozilla::ComputedStyle* aStyle);
 
 // Table frame factories
 class nsTableWrapperFrame;

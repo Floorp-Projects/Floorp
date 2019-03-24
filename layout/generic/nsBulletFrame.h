@@ -84,7 +84,7 @@ class nsBulletFrame final : public nsFrame {
     if (aFlags & (eSupportsCSSTransforms | eSupportsContainLayoutAndPaint)) {
       return false;
     }
-    return nsFrame::IsFrameOfType(aFlags);
+    return nsFrame::IsFrameOfType(aFlags & ~nsIFrame::eLineParticipant);
   }
 
   // nsBulletFrame

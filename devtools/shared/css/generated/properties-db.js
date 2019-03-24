@@ -10224,6 +10224,7 @@ exports.CSS_PROPERTIES = {
 exports.PSEUDO_ELEMENTS = [
   ":after",
   ":before",
+  ":marker",
   ":backdrop",
   ":cue",
   ":first-letter",
@@ -10231,8 +10232,6 @@ exports.PSEUDO_ELEMENTS = [
   ":selection",
   ":-moz-focus-inner",
   ":-moz-focus-outer",
-  ":-moz-list-bullet",
-  ":-moz-list-number",
   ":-moz-progress-bar",
   ":-moz-range-track",
   ":-moz-range-progress",

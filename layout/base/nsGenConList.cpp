@@ -48,12 +48,16 @@ bool nsGenConList::DestroyNodesFor(nsIFrame* aFrame) {
  * Compute the type of the pseudo and the content for the pseudo that
  * we'll use for comparison purposes.
  * @param aContent the content to use is stored here; it's the element
- * that generated the ::before or ::after content, or (if not for generated
- * content), the frame's own element
- * @return -1 for ::before, +1 for ::after, and 0 otherwise.
+ * that generated the pseudo, or (if not for generated content), the frame's
+ * own element
+ * @return -2 for ::marker, -1 for ::before, +1 for ::after, and 0 otherwise.
  */
 inline int32_t PseudoCompareType(nsIFrame* aFrame, nsIContent** aContent) {
   auto pseudo = aFrame->Style()->GetPseudoType();
+  if (pseudo == mozilla::PseudoStyleType::marker) {
+    *aContent = aFrame->GetContent()->GetParent();
+    return -2;
+  }
   if (pseudo == mozilla::PseudoStyleType::before) {
     *aContent = aFrame->GetContent()->GetParent();
     return -1;
@@ -84,14 +88,30 @@ bool nsGenConList::NodeAfter(const nsGenConNode* aNode1,
       NS_ASSERTION(pseudoType1 != pseudoType2, "identical");
       return pseudoType2 == 0;
     }
-    // We want to treat an element as coming before its :before (preorder
-    // traversal), so treating both as :before now works.
-    if (pseudoType1 == 0) pseudoType1 = -1;
-    if (pseudoType2 == 0) pseudoType2 = -1;
+    // We want to treat an element as coming before its :before and ::marker
+    // (preorder traversal), so treating both as :before now works.
+    if (pseudoType1 == 0) {
+      pseudoType1 = -1;
+      if (pseudoType2 == -2) {
+        pseudoType2 = -1;
+      }
+    }
+    if (pseudoType2 == 0) {
+      pseudoType2 = -1;
+      if (pseudoType1 == -2) {
+        pseudoType1 = -1;
+      }
+    }
   } else {
     if (content1 == content2) {
       NS_ASSERTION(pseudoType1 != pseudoType2, "identical");
-      return pseudoType1 == 1;
+      return pseudoType1 > pseudoType2;
+    }
+    if (pseudoType1 == -2) {
+      pseudoType1 = -1;
+    }
+    if (pseudoType2 == -2) {
+      pseudoType2 = -1;
     }
   }
 

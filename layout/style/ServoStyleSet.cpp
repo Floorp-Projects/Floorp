@@ -828,6 +828,17 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ProbePseudoElementStyle(
     }
   }
 
+  if (aType == PseudoStyleType::marker) {
+    // ::marker only exist for list items (for now).
+    if (aParentStyle->StyleDisplay()->mDisplay != StyleDisplay::ListItem) {
+      return nullptr;
+    }
+    // display:none is equivalent to not having the pseudo-element at all.
+    if (computedValues->StyleDisplay()->mDisplay == StyleDisplay::None) {
+      return nullptr;
+    }
+  }
+
   // For :before and :after pseudo-elements, having display: none or no
   // 'content' property is equivalent to not having the pseudo-element
   // at all.

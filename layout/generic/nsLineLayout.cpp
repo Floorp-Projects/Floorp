@@ -1384,7 +1384,7 @@ void nsLineLayout::PlaceFrame(PerFrameData* pfd, ReflowOutput& aMetrics) {
   }
 }
 
-void nsLineLayout::AddBulletFrame(nsBulletFrame* aFrame,
+void nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
                                   const ReflowOutput& aMetrics) {
   NS_ASSERTION(mCurrentSpan == mRootSpan, "bad linelayout user");
   NS_ASSERTION(mGotLineBox, "must have line box");
@@ -1418,7 +1418,7 @@ void nsLineLayout::AddBulletFrame(nsBulletFrame* aFrame,
   pfd->mOverflowAreas = aMetrics.mOverflowAreas;
 }
 
-void nsLineLayout::RemoveBulletFrame(nsBulletFrame* aFrame) {
+void nsLineLayout::RemoveBulletFrame(nsIFrame* aFrame) {
   PerSpanData* psd = mCurrentSpan;
   MOZ_ASSERT(psd == mRootSpan, "bullet on non-root span?");
   MOZ_ASSERT(psd->mFirstFrame->mFrame == aFrame,
