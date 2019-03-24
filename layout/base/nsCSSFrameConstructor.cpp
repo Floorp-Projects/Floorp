@@ -4680,8 +4680,7 @@ void nsCSSFrameConstructor::InitAndRestoreFrame(
     RestoreFrameStateFor(aNewFrame, aState.mFrameState);
   }
 
-  if (aAllowCounters &&
-      mCounterManager.AddCounterResetsAndIncrements(aNewFrame)) {
+  if (aAllowCounters && mCounterManager.AddCounterChanges(aNewFrame)) {
     CountersDirty();
   }
 }
