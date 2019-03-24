@@ -3,7 +3,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
-<ShortName>Uiquipedia (ast)</ShortName>
+<ShortName>Wikipedia (ast)</ShortName>
 <Description>La enciclopedia llibre</Description>
 <InputEncoding>UTF-8</InputEncoding>
 <Image width="16" height="16">resource://search-plugins/images/wikipedia.ico</Image>
