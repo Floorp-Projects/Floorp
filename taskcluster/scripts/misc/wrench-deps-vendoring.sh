@@ -22,10 +22,11 @@ mv vendor .cargo wrench-deps/
 mkdir wrench-deps/cargo-apk
 # Until there's a version of cargo-apk published on crates.io that has
 # https://github.com/tomaka/android-rs-glue/pull/205 and
+# https://github.com/tomaka/android-rs-glue/pull/207 and
 # https://github.com/tomaka/android-rs-glue/pull/171 (see also
 # https://github.com/tomaka/android-rs-glue/issues/204), we need to use
 # an unpublished version.
-cargo install --git https://github.com/staktrace/android-rs-glue --rev 6b2be25bd536a453e233cd7aea9d22974db63a49 --root wrench-deps/cargo-apk cargo-apk
+cargo install --git https://github.com/staktrace/android-rs-glue --rev 486491e81819c3346d364a93fc1f3c0206d3ece0 --root wrench-deps/cargo-apk cargo-apk
 tar caf wrench-deps.tar.bz2 wrench-deps
 
 mkdir -p $UPLOAD_DIR
