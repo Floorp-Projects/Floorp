@@ -310,7 +310,7 @@ bool nsLineBox::IsEmpty() const {
        --n, kid = kid->GetNextSibling()) {
     if (!kid->IsEmpty()) return false;
   }
-  if (HasBullet()) {
+  if (HasMarker()) {
     return false;
   }
   return true;
@@ -339,7 +339,7 @@ bool nsLineBox::CachedIsEmpty() {
         break;
       }
     }
-    if (HasBullet()) {
+    if (HasMarker()) {
       result = false;
     }
   }

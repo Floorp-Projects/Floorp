@@ -247,16 +247,16 @@ class nsLineBox final : public nsLineLink {
     return mFlags.mResizeReflowOptimizationDisabled;
   }
 
-  // mHasBullet bit
-  void SetHasBullet() {
-    mFlags.mHasBullet = true;
+  // mHasMarker bit
+  void SetHasMarker() {
+    mFlags.mHasMarker = true;
     InvalidateCachedIsEmpty();
   }
-  void ClearHasBullet() {
-    mFlags.mHasBullet = false;
+  void ClearHasMarker() {
+    mFlags.mHasMarker = false;
     InvalidateCachedIsEmpty();
   }
-  bool HasBullet() const { return mFlags.mHasBullet; }
+  bool HasMarker() const { return mFlags.mHasMarker; }
 
   // mHadFloatPushed bit
   void SetHadFloatPushed() { mFlags.mHadFloatPushed = true; }
@@ -597,9 +597,9 @@ class nsLineBox final : public nsLineLink {
     bool mResizeReflowOptimizationDisabled : 1;
     bool mEmptyCacheValid : 1;
     bool mEmptyCacheState : 1;
-    // mHasBullet indicates that this is an inline line whose block's
-    // bullet is adjacent to this line and non-empty.
-    bool mHasBullet : 1;
+    // mHasMarker indicates that this is an inline line whose block's
+    // ::marker is adjacent to this line and non-empty.
+    bool mHasMarker : 1;
     // Indicates that this line *may* have a placeholder for a float
     // that was pushed to a later column or page.
     bool mHadFloatPushed : 1;

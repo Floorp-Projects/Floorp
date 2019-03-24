@@ -16,7 +16,6 @@
 #include "BlockReflowInput.h"
 #include "nsLineBox.h"
 
-class nsBulletFrame;
 class nsFloatManager;
 struct nsStyleText;
 
@@ -93,9 +92,9 @@ class nsLineLayout {
   void ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
                    ReflowOutput* aMetrics, bool& aPushedFrame);
 
-  void AddBulletFrame(nsIFrame* aFrame, const ReflowOutput& aMetrics);
+  void AddMarkerFrame(nsIFrame* aFrame, const ReflowOutput& aMetrics);
 
-  void RemoveBulletFrame(nsIFrame* aFrame);
+  void RemoveMarkerFrame(nsIFrame* aFrame);
 
   /**
    * Place frames in the block direction (CSS property vertical-align)
@@ -424,7 +423,7 @@ class nsLineLayout {
     bool mIsNonWhitespaceTextFrame : 1;
     bool mIsLetterFrame : 1;
     bool mRecomputeOverflow : 1;
-    bool mIsBullet : 1;
+    bool mIsMarker : 1;
     bool mSkipWhenTrimmingWhitespace : 1;
     bool mIsEmpty : 1;
     bool mIsPlaceholder : 1;
@@ -570,7 +569,7 @@ class nsLineLayout {
   bool mInFirstLine : 1;
   bool mGotLineBox : 1;
   bool mInFirstLetter : 1;
-  bool mHasBullet : 1;
+  bool mHasMarker : 1;
   bool mDirtyNextLine : 1;
   bool mLineAtStart : 1;
   bool mHasRuby : 1;
