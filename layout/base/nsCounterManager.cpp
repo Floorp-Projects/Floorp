@@ -56,7 +56,9 @@ void nsCounterUseNode::Calc(nsCounterList* aList) {
 // Should be called immediately after calling |Insert|.
 void nsCounterChangeNode::Calc(nsCounterList* aList) {
   NS_ASSERTION(!aList->IsDirty(), "Why are we calculating with a dirty list?");
-  if (mType == RESET || mType == SET) {
+  if (IsContentBasedReset()) {
+    // RecalcAll takes care of this case.
+  } else if (mType == RESET || mType == SET) {
     mValueAfter = mChangeValue;
   } else {
     NS_ASSERTION(mType == INCREMENT, "invalid type");
@@ -156,8 +158,21 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
 void nsCounterList::RecalcAll() {
   mDirty = false;
 
+  // Setup the scope and calculate the default start value for <ol reversed>.
   for (nsCounterNode* node = First(); node; node = Next(node)) {
     SetScope(node);
+    if (node->IsContentBasedReset()) {
+      node->mValueAfter = 1;
+    } else if ((node->mType == nsCounterChangeNode::INCREMENT ||
+                node->mType == nsCounterChangeNode::SET) &&
+               node->mScopeStart &&
+               node->mScopeStart->IsContentBasedReset()) {
+      ++node->mScopeStart->mValueAfter;
+    }
+  }
+
+  for (nsCounterNode* node = First(); node; node = Next(node)) {
+    auto oldValue = node->mValueAfter;
     node->Calc(this);
 
     if (node->mType == nsCounterNode::USE) {
@@ -170,6 +185,14 @@ void nsCounterList::RecalcAll() {
         useNode->GetText(text);
         useNode->mText->SetData(text, IgnoreErrors());
       }
+    }
+
+    if (oldValue != node->mValueAfter && node->mPseudoFrame &&
+        node->mPseudoFrame->StyleDisplay()->mDisplay == StyleDisplay::ListItem) {
+      auto* shell = node->mPseudoFrame->PresShell();
+      shell->FrameNeedsReflow(node->mPseudoFrame,
+                              nsIPresShell::eStyleChange,
+                              NS_FRAME_IS_DIRTY);
     }
   }
 }

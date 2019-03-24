@@ -999,8 +999,8 @@ fuzzy-if(Android,0-11,0-17) fuzzy-if(webrender,0-1,0-10) == 413361-1.html 413361
 == 417178-1.html 417178-1-ref.html
 == 417246-1.html 417246-1-ref.html
 == 417676.html 417676-ref.html
-asserts(1) == 418574-1.html 418574-1-ref.html # bug 478135
-asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
+== 418574-1.html 418574-1-ref.html
+== 418574-2.html 418574-2-ref.html
 == 418766-1a.html 418766-1-ref.html
 == 418766-1b.html 418766-1-ref.html
 == 419060.html 419060-ref.html

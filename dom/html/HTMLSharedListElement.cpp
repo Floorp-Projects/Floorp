@@ -59,6 +59,8 @@ bool HTMLSharedListElement::ParseAttribute(
         return aResult.ParseEnumValue(aValue, kListTypeTable, false) ||
                aResult.ParseEnumValue(aValue, kOldListTypeTable, true);
       }
+    }
+    if (mNodeInfo->Equals(nsGkAtoms::ol)) {
       if (aAttribute == nsGkAtoms::start) {
         return aResult.ParseIntValue(aValue);
       }
@@ -72,7 +74,6 @@ bool HTMLSharedListElement::ParseAttribute(
 void HTMLSharedListElement::MapAttributesIntoRule(
     const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
   if (!aDecls.PropertyIsSet(eCSSProperty_list_style_type)) {
-    // type: enum
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
     if (value && value->Type() == nsAttrValue::eEnum) {
       aDecls.SetKeywordValue(eCSSProperty_list_style_type,
@@ -83,10 +84,49 @@ void HTMLSharedListElement::MapAttributesIntoRule(
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
+void HTMLSharedListElement::MapOLAttributesIntoRule(
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_counter_reset)) {
+    const nsAttrValue* startAttr = aAttributes->GetAttr(nsGkAtoms::start);
+    bool haveStart = startAttr && startAttr->Type() == nsAttrValue::eInteger;
+    int32_t start = 0;
+    if (haveStart) {
+      start = startAttr->GetIntegerValue() - 1;
+    }
+    bool haveReversed = !!aAttributes->GetAttr(nsGkAtoms::reversed);
+    if (haveReversed) {
+      if (haveStart) {
+        start += 2; // i.e. the attr value + 1
+      } else {
+        start = std::numeric_limits<int32_t>::min();
+      }
+    }
+    if (haveStart || haveReversed) {
+      aDecls.SetCounterResetListItem(start);
+    }
+  }
+
+  HTMLSharedListElement::MapAttributesIntoRule(aAttributes, aDecls);
+}
+
 NS_IMETHODIMP_(bool)
 HTMLSharedListElement::IsAttributeMapped(const nsAtom* aAttribute) const {
-  if (mNodeInfo->Equals(nsGkAtoms::ol) || mNodeInfo->Equals(nsGkAtoms::ul)) {
+  if (mNodeInfo->Equals(nsGkAtoms::ul)) {
     static const MappedAttributeEntry attributes[] = {{nsGkAtoms::type},
+                                                      {nullptr}};
+
+    static const MappedAttributeEntry* const map[] = {
+        attributes,
+        sCommonAttributeMap,
+    };
+
+    return FindAttributeDependence(aAttribute, map);
+  }
+
+  if (mNodeInfo->Equals(nsGkAtoms::ol)) {
+    static const MappedAttributeEntry attributes[] = {{nsGkAtoms::type},
+                                                      {nsGkAtoms::start},
+                                                      {nsGkAtoms::reversed},
                                                       {nullptr}};
 
     static const MappedAttributeEntry* const map[] = {
@@ -102,8 +142,11 @@ HTMLSharedListElement::IsAttributeMapped(const nsAtom* aAttribute) const {
 
 nsMapRuleToAttributesFunc HTMLSharedListElement::GetAttributeMappingFunction()
     const {
-  if (mNodeInfo->Equals(nsGkAtoms::ol) || mNodeInfo->Equals(nsGkAtoms::ul)) {
+  if (mNodeInfo->Equals(nsGkAtoms::ul)) {
     return &MapAttributesIntoRule;
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::ol)) {
+    return &MapOLAttributesIntoRule;
   }
 
   return nsGenericHTMLElement::GetAttributeMappingFunction();
