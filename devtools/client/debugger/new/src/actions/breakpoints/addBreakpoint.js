@@ -50,7 +50,6 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
   const newBreakpoint = {
     id: makeBreakpointId(generatedLocation),
     disabled: false,
-    loading: false,
     options: breakpoint.options,
     location,
     astLocation,
@@ -72,10 +71,6 @@ export function addHiddenBreakpoint(location: SourceLocation) {
 
 export function enableBreakpoint(breakpoint: Breakpoint) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
-    if (breakpoint.loading) {
-      return;
-    }
-
     // To instantly reflect in the UI, we optimistically enable the breakpoint
     const enabledBreakpoint = { ...breakpoint, disabled: false };
 
