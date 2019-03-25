@@ -52,7 +52,7 @@ class NormalizedConstraintSet {
         aList->AppendElement(aMemberPtr);
       }
     }
-    virtual ~BaseRange() {}
+    virtual ~BaseRange() = default;
 
    public:
     virtual bool Merge(const BaseRange& aOther) = 0;
@@ -76,7 +76,7 @@ class NormalizedConstraintSet {
           mMin(aMin),
           mMax(aMax),
           mMergeDenominator(0) {}
-    virtual ~Range(){};
+    virtual ~Range() = default;
 
     template <class ConstrainRange>
     void SetFrom(const ConstrainRange& aOther);
@@ -206,7 +206,7 @@ class NormalizedConstraintSet {
       mIdeal.insert(aOther);
     }
 
-    ~StringRange() {}
+    ~StringRange() = default;
 
     void SetFrom(const dom::ConstrainDOMStringParameters& aOther);
     ValueType Clamp(const ValueType& n) const;
@@ -311,7 +311,7 @@ class MediaConstraintsHelper {
   static uint32_t FeasibilityDistance(ValueType aN,
                                       const NormalizedRange& aRange);
   static uint32_t FitnessDistance(
-      nsString aN, const NormalizedConstraintSet::StringRange& aConstraint);
+      const nsString& aN, const NormalizedConstraintSet::StringRange& aParams);
 
  protected:
   static bool SomeSettingsFit(const NormalizedConstraints& aConstraints,
