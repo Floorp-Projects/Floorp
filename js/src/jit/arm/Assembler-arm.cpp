@@ -1619,8 +1619,10 @@ BufferOffset Assembler::as_BranchPool(uint32_t value, RepatchLabel* label,
   if (label->bound()) {
     BufferOffset dest(label);
     BOffImm offset = dest.diffB<BOffImm>(ret);
-    MOZ_RELEASE_ASSERT(!offset.isInvalid(),
-                       "Buffer size limit should prevent this");
+    if (offset.isInvalid()) {
+      m_buffer.fail_bail();
+      return ret;
+    }
     as_b(offset, c, ret);
   } else if (!oom()) {
     label->use(ret.getOffset());
@@ -1825,10 +1827,12 @@ BufferOffset Assembler::as_b(Label* l, Condition c) {
       return BufferOffset();
     }
 
-    BOffImm offset = BufferOffset(l).diffB<BOffImm>(ret);
-    MOZ_RELEASE_ASSERT(!offset.isInvalid(),
-                       "Buffer size limit should prevent this");
-    as_b(offset, c, ret);
+    BOffImm off = BufferOffset(l).diffB<BOffImm>(ret);
+    if (off.isInvalid()) {
+      m_buffer.fail_bail();
+      return BufferOffset();
+    }
+    as_b(off, c, ret);
 #ifdef JS_DISASM_ARM
     spewBranch(m_buffer.getInstOrNull(ret), refLabel(l));
 #endif
@@ -1842,8 +1846,12 @@ BufferOffset Assembler::as_b(Label* l, Condition c) {
   BufferOffset ret;
   if (l->used()) {
     int32_t old = l->offset();
-    MOZ_RELEASE_ASSERT(BOffImm::IsInRange(old),
-                       "Buffer size limit should prevent this");
+    // This will currently throw an assertion if we couldn't actually
+    // encode the offset of the branch.
+    if (!BOffImm::IsInRange(old)) {
+      m_buffer.fail_bail();
+      return ret;
+    }
     ret = as_b(BOffImm(old), c, l);
   } else {
     BOffImm inv;
@@ -1891,8 +1899,10 @@ BufferOffset Assembler::as_bl(Label* l, Condition c) {
     }
 
     BOffImm offset = BufferOffset(l).diffB<BOffImm>(ret);
-    MOZ_RELEASE_ASSERT(!offset.isInvalid(),
-                       "Buffer size limit should prevent this");
+    if (offset.isInvalid()) {
+      m_buffer.fail_bail();
+      return BufferOffset();
+    }
 
     as_bl(offset, c, ret);
 #ifdef JS_DISASM_ARM
@@ -1908,9 +1918,13 @@ BufferOffset Assembler::as_bl(Label* l, Condition c) {
   BufferOffset ret;
   // See if the list was empty.
   if (l->used()) {
+    // This will currently throw an assertion if we couldn't actually encode
+    // the offset of the branch.
     int32_t old = l->offset();
-    MOZ_RELEASE_ASSERT(BOffImm::IsInRange(old),
-                       "Buffer size limit should prevent this");
+    if (!BOffImm::IsInRange(old)) {
+      m_buffer.fail_bail();
+      return ret;
+    }
     ret = as_bl(BOffImm(old), c, l);
   } else {
     BOffImm inv;
@@ -2219,8 +2233,10 @@ void Assembler::bind(Label* label, BufferOffset boff) {
       Instruction branch = *editSrc(b);
       Condition c = branch.extractCond();
       BOffImm offset = dest.diffB<BOffImm>(b);
-      MOZ_RELEASE_ASSERT(!offset.isInvalid(),
-                         "Buffer size limit should prevent this");
+      if (offset.isInvalid()) {
+        m_buffer.fail_bail();
+        return;
+      }
       if (branch.is<InstBImm>()) {
         as_b(offset, c, b);
       } else if (branch.is<InstBLImm>()) {
@@ -2257,8 +2273,10 @@ void Assembler::bind(RepatchLabel* label) {
     }
 
     BOffImm offset = dest.diffB<BOffImm>(branchOff);
-    MOZ_RELEASE_ASSERT(!offset.isInvalid(),
-                       "Buffer size limit should prevent this");
+    if (offset.isInvalid()) {
+      m_buffer.fail_bail();
+      return;
+    }
     as_b(offset, cond, branchOff);
   }
   label->bind(dest.getOffset());
