@@ -158,6 +158,13 @@ const Element* Gecko_GetBeforeOrAfterPseudo(const Element* aElement,
                    : nsLayoutUtils::GetAfterPseudo(aElement);
 }
 
+const Element* Gecko_GetMarkerPseudo(const Element* aElement) {
+  MOZ_ASSERT(aElement);
+  MOZ_ASSERT(aElement->HasProperties());
+
+  return nsLayoutUtils::GetMarkerPseudo(aElement);
+}
+
 nsTArray<nsIContent*>* Gecko_GetAnonymousContentForElement(
     const Element* aElement) {
   nsIAnonymousContentCreator* ac = do_QueryFrame(aElement->GetPrimaryFrame());
@@ -1375,6 +1382,23 @@ void Gecko_CopyCounterResetsFrom(nsStyleContent* aContent,
   for (uint32_t i = 0; i < count; ++i) {
     const nsStyleCounterData& data = aOther->CounterResetAt(i);
     aContent->SetCounterResetAt(i, data.mCounter, data.mValue);
+  }
+}
+
+void Gecko_ClearAndResizeCounterSets(nsStyleContent* aContent,
+                                     uint32_t aHowMany) {
+  aContent->AllocateCounterSets(aHowMany);
+}
+
+void Gecko_CopyCounterSetsFrom(nsStyleContent* aContent,
+                               const nsStyleContent* aOther) {
+  uint32_t count = aOther->CounterSetCount();
+
+  aContent->AllocateCounterSets(count);
+
+  for (uint32_t i = 0; i < count; ++i) {
+    const nsStyleCounterData& data = aOther->CounterSetAt(i);
+    aContent->SetCounterSetAt(i, data.mCounter, data.mValue);
   }
 }
 

@@ -26,3 +26,14 @@
 #ifdef Always
 #  undef Always
 #endif
+
+// X11/Xlib.h also defines True and False, get rid of those too for
+// the same reasons as above...
+#ifdef True
+#  undef True
+#  define X11True 1
+#endif
+#ifdef False
+#  undef False
+#  define X11False 0
+#endif
