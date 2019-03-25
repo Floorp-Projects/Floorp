@@ -17,8 +17,7 @@ linux64-grcov:
     treeherder:
         symbol: TL(grcov)
     toolchains:
-        - linux64-rust-1.28
-        - linux64-clang-7
+        - linux64-rust-1.32
 
 macosx64-grcov:
     treeherder:
@@ -27,8 +26,7 @@ macosx64-grcov:
         - trunk
         - try
     toolchains:
-        - linux64-rust-1.28
-        - linux64-clang-7
+        - linux64-rust-1.32
 
 win64-grcov:
     treeherder:
@@ -40,5 +38,4 @@ win64-grcov:
     run:
         toolchain-artifact: public/build/grcov.tar.bz2
     toolchains:
-        - win64-rust-1.28
-        - win64-clang-cl
+        - win64-rust-1.32
