@@ -27,8 +27,6 @@ namespace JS {
 template <typename T>
 class AutoVector;
 using AutoIdVector = AutoVector<jsid>;
-using AutoValueVector = AutoVector<Value>;
-using AutoObjectVector = AutoVector<JSObject*>;
 
 class CallArgs;
 

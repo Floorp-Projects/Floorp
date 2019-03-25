@@ -131,9 +131,6 @@ class HandleValueArray {
   explicit HandleValueArray(HandleValue value)
       : length_(1), elements_(value.address()) {}
 
-  MOZ_IMPLICIT HandleValueArray(const AutoValueVector& values)
-      : length_(values.length()), elements_(values.begin()) {}
-
   MOZ_IMPLICIT HandleValueArray(const RootedValueVector& values)
       : length_(values.length()), elements_(values.begin()) {}
 

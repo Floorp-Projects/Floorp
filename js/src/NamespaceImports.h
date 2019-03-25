@@ -31,9 +31,7 @@ class UTF8Chars;
 class WTF8Chars;
 class UTF8CharsZ;
 
-using AutoValueVector = AutoVector<Value>;
 using AutoIdVector = AutoVector<jsid>;
-using AutoObjectVector = AutoVector<JSObject*>;
 
 using ValueVector = JS::GCVector<JS::Value>;
 using IdVector = JS::GCVector<jsid>;
@@ -88,8 +86,6 @@ using JS::OOM;
 using JS::Result;
 
 using JS::AutoIdVector;
-using JS::AutoObjectVector;
-using JS::AutoValueVector;
 
 using JS::HandleObjectVector;
 using JS::HandleValueVector;
