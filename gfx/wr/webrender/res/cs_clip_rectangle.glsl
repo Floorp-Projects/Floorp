@@ -9,12 +9,13 @@ varying vec2 vLocalPos;
 flat varying vec3 vClipParams;      // xy = box size, z = radius
 #else
 varying vec3 vLocalPos;
-flat varying float vClipMode;
 flat varying vec4 vClipCenter_Radius_TL;
 flat varying vec4 vClipCenter_Radius_TR;
 flat varying vec4 vClipCenter_Radius_BL;
 flat varying vec4 vClipCenter_Radius_BR;
 #endif
+
+flat varying float vClipMode;
 
 #ifdef WR_VERTEX_SHADER
 struct ClipRect {
@@ -82,6 +83,8 @@ void main(void) {
         cmi.device_pixel_scale
     );
 
+    vClipMode = clip.rect.mode.x;
+
 #ifdef WR_FEATURE_FAST_PATH
     // If the radii are all uniform, we can use a much simpler 2d
     // signed distance function to get a rounded rect clip.
@@ -92,7 +95,6 @@ void main(void) {
     vClipParams.z = radius;
 #else
     vLocalPos = vi.local_pos;
-    vClipMode = clip.rect.mode.x;
 
     RectWithEndpoint clip_rect = to_rect_with_endpoint(local_rect);
 
@@ -137,7 +139,8 @@ void main(void) {
 #ifdef WR_FEATURE_FAST_PATH
     float d = sdf_rounded_rect(local_pos, vClipParams);
     float f = distance_aa(aa_range, d);
-    oFragColor = vec4(f);
+    float r = mix(f, 1.0 - f, vClipMode);
+    oFragColor = vec4(r);
 #else
     float alpha = init_transform_fs(local_pos.xy);
 
