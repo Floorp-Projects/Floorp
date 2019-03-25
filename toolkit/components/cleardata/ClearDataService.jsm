@@ -798,12 +798,24 @@ const FLAGS_MAP = [
    cleaner: ReportsCleaner },
 ];
 
-this.ClearDataService = function() {};
+this.ClearDataService = function() {
+  this._initialize();
+};
 
 ClearDataService.prototype = Object.freeze({
   classID: Components.ID("{0c06583d-7dd8-4293-b1a5-912205f779aa}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIClearDataService]),
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(ClearDataService),
+
+  _initialize() {
+    // Let's start all the service we need to cleanup data.
+
+    // This is mainly needed for GeckoView that doesn't start QMS on startup
+    // time.
+    if (!Services.qms) {
+      Cu.reportError("Failed initializiation of QuotaManagerService.");
+    }
+  },
 
   deleteDataFromHost(aHost, aIsUserRequest, aFlags, aCallback) {
     if (!aHost || !aCallback) {
