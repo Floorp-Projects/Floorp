@@ -21,6 +21,7 @@ There are different metrics to choose from, depending on what you want to achiev
 * [Events](#Events): These allow recording of e.g. individual occurences of user actions, say every time a view was open and from where.
 * [Counters](#Counters): Used to count how often something happens, say how often a certain button was pressed.
 * [Labeled metrics](#labeled-metrics): Used to record multiple metrics of the same type under different string labels, say every time you want to get a count of different error types in one metric.
+* [Timing Distributions](#Timing-Distributions): Used to count multiple time measurements.
 
 ## Events
 
@@ -99,15 +100,13 @@ There are test APIs available too:
 
 ```Kotlin
 import org.mozilla.yourApplication.GleanMetrics.Controls
+Glean.enableTestingMode()
 
 // Was anything recorded?
 assertTrue(Controls.refreshPressed.testHasValue())
 // Does the counter have the expected value?
 assertEquals(6, Controls.refreshPressed.testGetValue())
 ```
-
-NOTE: Using the testing API requires calling `Glean.enableTestingMode()` first,
-such as from a `@Before` method.
 
 ## Labeled metrics
 
@@ -154,4 +153,56 @@ assertTrue(Updater.loadError["timeout"].testHasValue())
 assertTrue(Updater.loadError["not_found"].testHasValue())
 // Does the counter have the expected value?
 assertEquals(2, Updater.loadError["not_found"].testGetValue())
+```
+
+## Timing Distributions
+
+Used to accumulate and store time measurement, for analyzing distributions of the timing data.
+
+If you wanted to create a timing distribution to measure page load times, first you need to add an 
+entry for it to the `metrics.yaml` file:
+
+```YAML
+pages:
+  page_load:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Counts how long each page takes to load
+    ...
+```
+
+Note that `time_unit` is required and allows for values like `millisecond` and `second`. Which range 
+of values is recorded in detail depends on the `time_unit`, e.g. for milliseconds all values greater 
+60000 are recorded as overflow values.
+
+Now that the timing distribution is defined in `metrics.yaml` you can use the metric to record data
+in the application code:
+```Kotlin
+import org.mozilla.yourApplication.GleanMetrics.Pages
+
+// ...
+pages.pageLoad.accumulate(1L) // Accumulates a sample of 1 millisecond
+pages.pageLoad.accumulate(10L) // Accumulates a sample of 10 milliseconds
+```
+
+There are test APIs available too.  For convenience, properties `sum` and `count` are exposed to 
+facilitate validating that data was recorded correctly.  Continuing the `pageLoad` example above,
+at this point the metric should have a `sum == 11` and a `count == 2`:
+```Kotlin
+import org.mozilla.yourApplication.GleanMetrics.Pages
+Glean.enableTestingMode()
+
+// Was anything recorded?
+assertTrue(pages.pageLoad.testHasValue())
+
+// Get snapshot
+val snapshot = pages.pageLoad.testGetValue()
+
+// Does the sum have the expected value?
+assertEquals(11, snapshot.sum)
+
+// Usually you don't know the exact timing values, but how many should have been recorded.
+assertEquals(2L, snapshot.count())
+
 ```

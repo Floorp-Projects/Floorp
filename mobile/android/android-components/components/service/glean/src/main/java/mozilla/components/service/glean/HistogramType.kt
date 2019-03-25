@@ -5,15 +5,9 @@
 package mozilla.components.service.glean
 
 /**
- * Enumeration of different resolutions supported by
- * the Timespan and TimingDistribution metric types.
+ * Enumeration of the different kinds of histograms supported by metrics based on histograms.
  */
-enum class TimeUnit {
-    Nanosecond,
-    Microsecond,
-    Millisecond,
-    Second,
-    Minute,
-    Hour,
-    Day
+enum class HistogramType {
+    Linear,
+    Exponential
 }

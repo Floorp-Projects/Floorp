@@ -11,6 +11,7 @@ import mozilla.components.service.glean.CounterMetricType
 import mozilla.components.service.glean.DatetimeMetricType
 import mozilla.components.service.glean.StringListMetricType
 import mozilla.components.service.glean.StringMetricType
+import mozilla.components.service.glean.TimingDistributionMetricType
 import mozilla.components.service.glean.TimespanMetricType
 import mozilla.components.service.glean.UuidMetricType
 import org.json.JSONArray
@@ -31,6 +32,7 @@ internal class StorageEngineManager(
         "string" to StringsStorageEngine,
         "string_list" to StringListsStorageEngine,
         "timespan" to TimespansStorageEngine,
+        "timing_distribution" to TimingDistributionsStorageEngine,
         "uuid" to UuidsStorageEngine
     ),
     applicationContext: Context
@@ -135,6 +137,7 @@ internal class StorageEngineManager(
         *
         * @return A storage engine, or null if none exists
         */
+        @Suppress("ComplexMethod")
         internal fun <T> getStorageEngineForMetric(subMetric: T): StorageEngine? {
             // Every metric that supports labels needs an entry here
             return when (subMetric) {
@@ -143,6 +146,7 @@ internal class StorageEngineManager(
                 is DatetimeMetricType -> DatetimesStorageEngine
                 is StringListMetricType -> StringListsStorageEngine
                 is StringMetricType -> StringsStorageEngine
+                is TimingDistributionMetricType -> TimingDistributionsStorageEngine
                 is TimespanMetricType -> TimespansStorageEngine
                 is UuidMetricType -> UuidsStorageEngine
                 else -> null
