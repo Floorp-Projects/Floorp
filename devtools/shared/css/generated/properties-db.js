@@ -3116,6 +3116,7 @@ exports.CSS_PROPERTIES = {
       "content",
       "counter-increment",
       "counter-reset",
+      "counter-set",
       "opacity",
       "box-shadow",
       "clip",
@@ -5739,6 +5740,20 @@ exports.CSS_PROPERTIES = {
     "isInherited": false,
     "subproperties": [
       "counter-reset"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "unset"
+    ]
+  },
+  "counter-set": {
+    "isInherited": false,
+    "subproperties": [
+      "counter-set"
     ],
     "supports": [],
     "values": [
@@ -10209,6 +10224,7 @@ exports.CSS_PROPERTIES = {
 exports.PSEUDO_ELEMENTS = [
   ":after",
   ":before",
+  ":marker",
   ":backdrop",
   ":cue",
   ":first-letter",
@@ -10216,8 +10232,6 @@ exports.PSEUDO_ELEMENTS = [
   ":selection",
   ":-moz-focus-inner",
   ":-moz-focus-outer",
-  ":-moz-list-bullet",
-  ":-moz-list-number",
   ":-moz-progress-bar",
   ":-moz-range-track",
   ":-moz-range-progress",

@@ -79,9 +79,11 @@ CallObject* CallObject::create(JSContext* cx, HandleShape shape,
   MOZ_ASSERT(CanBeFinalizedInBackground(kind, &CallObject::class_));
   kind = gc::GetBackgroundAllocKind(kind);
 
+  gc::InitialHeap heap = GetInitialHeap(GenericObject, group);
+
   JSObject* obj;
-  JS_TRY_VAR_OR_RETURN_NULL(
-      cx, obj, NativeObject::create(cx, kind, gc::DefaultHeap, shape, group));
+  JS_TRY_VAR_OR_RETURN_NULL(cx, obj,
+                            NativeObject::create(cx, kind, heap, shape, group));
 
   return &obj->as<CallObject>();
 }
@@ -107,6 +109,9 @@ CallObject* CallObject::createTemplateObject(JSContext* cx, HandleScript script,
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
   MOZ_ASSERT(CanBeFinalizedInBackground(kind, &class_));
   kind = gc::GetBackgroundAllocKind(kind);
+
+  // The JITs assume the result is nursery allocated unless we collected the
+  // nursery, so don't change |heap| here.
 
   JSObject* obj;
   JS_TRY_VAR_OR_RETURN_NULL(cx, obj,
@@ -243,6 +248,13 @@ VarEnvironmentObject* VarEnvironmentObject::create(JSContext* cx,
   MOZ_ASSERT(CanBeFinalizedInBackground(kind, &class_));
   kind = gc::GetBackgroundAllocKind(kind);
 
+  {
+    AutoSweepObjectGroup sweep(group);
+    if (group->shouldPreTenure(sweep)) {
+      heap = gc::TenuredHeap;
+    }
+  }
+
   JSObject* obj;
   JS_TRY_VAR_OR_RETURN_NULL(cx, obj,
                             NativeObject::create(cx, kind, heap, shape, group));
@@ -277,9 +289,8 @@ VarEnvironmentObject* VarEnvironmentObject::create(JSContext* cx,
 
   RootedScript script(cx, frame.script());
   RootedObject envChain(cx, frame.environmentChain());
-  gc::InitialHeap heap = gc::DefaultHeap;
   RootedShape shape(cx, scope->environmentShape());
-  VarEnvironmentObject* env = create(cx, shape, envChain, heap);
+  VarEnvironmentObject* env = create(cx, shape, envChain, gc::DefaultHeap);
   if (!env) {
     return nullptr;
   }
@@ -886,6 +897,9 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createTemplateObject(
   if (!group) {
     return nullptr;
   }
+
+  // The JITs assume the result is nursery allocated unless we collected the
+  // nursery, so don't change |heap| here.
 
   gc::AllocKind allocKind = gc::GetGCObjectKind(shape->numFixedSlots());
   MOZ_ASSERT(

@@ -2050,10 +2050,6 @@ static const nsIFrame* ExpectedOwnerForChild(const nsIFrame* aFrame) {
                                      : FirstContinuationOrPartOfIBSplit(parent);
   }
 
-  if (aFrame->IsBulletFrame()) {
-    return FirstContinuationOrPartOfIBSplit(parent);
-  }
-
   if (aFrame->IsLineFrame()) {
     // A ::first-line always ends up here via its block, which is therefore the
     // right expected owner.  That block can be an
@@ -2743,6 +2739,20 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
         maybeAnonBoxChild->ParentIsWrapperAnonBox()) {
       aRestyleState.AddPendingWrapperRestyle(
           ServoRestyleState::TableAwareParentFor(maybeAnonBoxChild));
+    }
+
+    // If we don't have a ::marker pseudo-element, but need it, then
+    // reconstruct the frame.  (The opposite situation implies 'display'
+    // changes so doesn't need to be handled explicitly here.)
+    if (styleFrame->StyleDisplay()->mDisplay == StyleDisplay::ListItem &&
+        styleFrame->IsBlockFrameOrSubclass() &&
+        !nsLayoutUtils::GetMarkerPseudo(aElement)) {
+      RefPtr<ComputedStyle> pseudoStyle =
+          aRestyleState.StyleSet().ProbePseudoElementStyle(
+              *aElement, PseudoStyleType::marker, styleFrame->Style());
+      if (pseudoStyle) {
+        changeHint |= nsChangeHint_ReconstructFrame;
+      }
     }
   }
 

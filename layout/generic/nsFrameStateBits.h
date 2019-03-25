@@ -562,10 +562,10 @@ FRAME_STATE_BIT(Block, 28, NS_BLOCK_CLIP_PAGINATED_OVERFLOW)
 // even if it has no actual first-letter frame among its descendants.
 FRAME_STATE_BIT(Block, 29, NS_BLOCK_HAS_FIRST_LETTER_STYLE)
 
-// NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET and NS_BLOCK_FRAME_HAS_INSIDE_BULLET
-// means the block has an associated bullet frame, they are mutually exclusive.
-FRAME_STATE_BIT(Block, 30, NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)
-FRAME_STATE_BIT(Block, 31, NS_BLOCK_FRAME_HAS_INSIDE_BULLET)
+// NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER and NS_BLOCK_FRAME_HAS_INSIDE_MARKER
+// means the block has an associated ::marker frame, they are mutually exclusive.
+FRAME_STATE_BIT(Block, 30, NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER)
+FRAME_STATE_BIT(Block, 31, NS_BLOCK_FRAME_HAS_INSIDE_MARKER)
 
 // This block has had a child marked dirty, so before we reflow we need
 // to look through the lines to find any such children and mark
