@@ -7647,9 +7647,14 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
       return;
     }
 
-    UsageInfo usageInfo;
     bool initialized;
-    Client::Type clientType;
+    if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
+      initialized = aQuotaManager->IsOriginInitialized(origin);
+    } else {
+      initialized = aQuotaManager->IsTemporaryStorageInitialized();
+    }
+
+    UsageInfo usageInfo;
 
     if (!mClientType.IsNull()) {
       // Checking whether there is any other client in the directory is needed.
@@ -7682,6 +7687,7 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
           return;
         }
 
+        Client::Type clientType;
         rv = Client::TypeFromText(leafName, clientType);
         if (NS_FAILED(rv)) {
           UNKNOWN_FILE_WARNING(leafName);
@@ -7695,10 +7701,8 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
       }
 
       if (hasOtherClient) {
-        Client::Type clientType = mClientType.Value();
-
         nsAutoString clientDirectoryName;
-        rv = Client::TypeToText(clientType, clientDirectoryName);
+        rv = Client::TypeToText(mClientType.Value(), clientDirectoryName);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return;
         }
@@ -7719,22 +7723,16 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
         }
       }
 
-      if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-        initialized = aQuotaManager->IsOriginInitialized(origin);
-      } else {
-        initialized = aQuotaManager->IsTemporaryStorageInitialized();
-      }
-
-      Client* client = aQuotaManager->GetClient(clientType);
-      MOZ_ASSERT(client);
-
-      Atomic<bool> dummy(false);
       if (initialized) {
+        Client* client = aQuotaManager->GetClient(mClientType.Value());
+        MOZ_ASSERT(client);
+
+        Atomic<bool> dummy(false);
         rv = client->GetUsageForOrigin(aPersistenceType, group, origin, dummy,
                                        &usageInfo);
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return;
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
+        }
       }
     }
 
