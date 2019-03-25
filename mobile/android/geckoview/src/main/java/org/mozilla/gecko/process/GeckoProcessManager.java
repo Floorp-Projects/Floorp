@@ -86,7 +86,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             intent.setClassName(context,
                                 GeckoServiceChildProcess.class.getName() + '$' + mType);
 
-            if (context.bindService(intent, this, Context.BIND_AUTO_CREATE)) {
+            if (context.bindService(intent, this, Context.BIND_AUTO_CREATE | Context.BIND_IMPORTANT)) {
                 waitForChildLocked();
                 if (mChild != null) {
                     return mChild;
