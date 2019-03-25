@@ -9,7 +9,6 @@
 
 #ifdef MOZ_AV1
 #  include "AOMDecoder.h"
-#  include "DAV1DDecoder.h"
 #endif
 #include "ImageContainer.h"  // for PlanarYCbCrData and BufferRecycleBin
 #include "RemoteDecoderManagerChild.h"
@@ -152,11 +151,7 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
 
 #ifdef MOZ_AV1
   if (AOMDecoder::IsAV1(params.mConfig.mMimeType)) {
-    if (StaticPrefs::MediaAv1UseDav1d()) {
-      mDecoder = new DAV1DDecoder(params);
-    } else {
-      mDecoder = new AOMDecoder(params);
-    }
+    mDecoder = new AOMDecoder(params);
   }
 #endif
 

@@ -1657,7 +1657,7 @@ VARCACHE_PREF(
 # define PREF_VALUE true
 #elif defined(XP_MACOSX)
 # define PREF_VALUE true
-#elif defined(XP_UNIX) && !defined(Android)
+#elif defined(XP_UNIX)
 # define PREF_VALUE true
 #else
 # define PREF_VALUE false
@@ -1668,19 +1668,10 @@ VARCACHE_PREF(
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
-
 VARCACHE_PREF(
   "media.av1.use-dav1d",
    MediaAv1UseDav1d,
-#if defined(XP_WIN) && !defined(_ARM64_)
-  RelaxedAtomicBool, true
-#elif defined(XP_MACOSX)
-  RelaxedAtomicBool, true
-#elif defined(XP_UNIX) && !defined(Android)
-  RelaxedAtomicBool, true
-#else
   RelaxedAtomicBool, false
-#endif
 )
 
 VARCACHE_PREF(
