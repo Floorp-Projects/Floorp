@@ -1,5 +1,4 @@
 add_task(async function test() {
-  const secMan = Services.scriptSecurityManager;
   const uris = [undefined, "about:blank"];
 
   function checkContentProcess(newBrowser, uri) {
@@ -8,8 +7,7 @@ add_task(async function test() {
       Assert.notEqual(prin, null, "Loaded principal must not be null when adding " + uri);
       Assert.notEqual(prin, undefined, "Loaded principal must not be undefined when loading " + uri);
 
-      const secMan = Services.scriptSecurityManager;
-      Assert.equal(secMan.isSystemPrincipal(prin), false,
+      Assert.equal(prin.isSystemPrincipal, false,
          "Loaded principal must not be system when loading " + uri);
     });
   }
@@ -23,7 +21,7 @@ add_task(async function test() {
       isnot(prin, null, "Forced principal must not be null when loading " + uri);
       isnot(prin, undefined,
             "Forced principal must not be undefined when loading " + uri);
-      is(secMan.isSystemPrincipal(prin), false,
+      is(prin.isSystemPrincipal, false,
          "Forced principal must not be system when loading " + uri);
 
       // Belt-and-suspenders e10s check: make sure that the same checks hold
@@ -35,7 +33,7 @@ add_task(async function test() {
       prin = newBrowser.contentPrincipal;
       isnot(prin, null, "Loaded principal must not be null when adding " + uri);
       isnot(prin, undefined, "Loaded principal must not be undefined when loading " + uri);
-      is(secMan.isSystemPrincipal(prin), false,
+      is(prin.isSystemPrincipal, false,
          "Loaded principal must not be system when loading " + uri);
 
       // Belt-and-suspenders e10s check: make sure that the same checks hold

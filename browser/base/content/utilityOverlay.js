@@ -245,7 +245,7 @@ function openWebLinkIn(url, where, params) {
   if (!params.triggeringPrincipal) {
     params.triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal({});
   }
-  if (Services.scriptSecurityManager.isSystemPrincipal(params.triggeringPrincipal)) {
+  if (params.triggeringPrincipal.isSystemPrincipal) {
     throw new Error("System principal should never be passed into openWebLinkIn()");
   }
 

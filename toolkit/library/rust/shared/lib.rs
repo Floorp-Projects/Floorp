@@ -38,6 +38,9 @@ extern crate rsdparsa_capi;
 extern crate jsrust_shared;
 #[cfg(feature = "bitsdownload")]
 extern crate bitsdownload;
+extern crate storage;
+#[cfg(feature = "moz_places")]
+extern crate bookmark_sync;
 
 extern crate arrayvec;
 

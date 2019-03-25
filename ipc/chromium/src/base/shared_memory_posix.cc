@@ -156,16 +156,30 @@ bool SharedMemory::Create(size_t size) {
   return true;
 }
 
-bool SharedMemory::Map(size_t bytes) {
+bool SharedMemory::Map(size_t bytes, void* fixed_address) {
   if (mapped_file_ == -1) return false;
 
-  memory_ = mmap(NULL, bytes, PROT_READ | (read_only_ ? 0 : PROT_WRITE),
-                 MAP_SHARED, mapped_file_, 0);
-
-  if (memory_) max_size_ = bytes;
+  // Don't use MAP_FIXED when a fixed_address was specified, since that can
+  // replace pages that are alread mapped at that address.
+  memory_ =
+      mmap(fixed_address, bytes, PROT_READ | (read_only_ ? 0 : PROT_WRITE),
+           MAP_SHARED, mapped_file_, 0);
 
   bool mmap_succeeded = (memory_ != (void*)-1);
+
   DCHECK(mmap_succeeded) << "Call to mmap failed, errno=" << errno;
+
+  if (mmap_succeeded) {
+    if (fixed_address && memory_ != fixed_address) {
+      bool munmap_succeeded = munmap(memory_, bytes) == 0;
+      DCHECK(munmap_succeeded) << "Call to munmap failed, errno=" << errno;
+      memory_ = NULL;
+      return false;
+    }
+
+    max_size_ = bytes;
+  }
+
   return mmap_succeeded;
 }
 
@@ -176,6 +190,13 @@ bool SharedMemory::Unmap() {
   memory_ = NULL;
   max_size_ = 0;
   return true;
+}
+
+void* SharedMemory::FindFreeAddressSpace(size_t size) {
+  void* memory =
+      mmap(NULL, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  munmap(memory, size);
+  return memory != MAP_FAILED ? memory : NULL;
 }
 
 bool SharedMemory::ShareToProcessCommon(ProcessId processId,

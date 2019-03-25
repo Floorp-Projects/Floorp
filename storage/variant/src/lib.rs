@@ -142,6 +142,21 @@ impl VariantType for () {
     }
 }
 
+impl<T> VariantType for Option<T> where T: VariantType {
+    fn into_variant(self) -> RefPtr<nsIVariant> {
+        match self {
+            Some(v) => v.into_variant(),
+            None => ().into_variant(),
+        }
+    }
+    fn from_variant(variant: &nsIVariant) -> Result<Self, nsresult> {
+        match variant.get_data_type() {
+            DATA_TYPE_EMPTY => Ok(None),
+            _ => Ok(Some(VariantType::from_variant(variant)?)),
+        }
+    }
+}
+
 variant!(bool, NS_NewStorageBooleanVariant, GetAsBool);
 variant!(i32, NS_NewStorageIntegerVariant, GetAsInt32);
 variant!(i64, NS_NewStorageIntegerVariant, GetAsInt64);

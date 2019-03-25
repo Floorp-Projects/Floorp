@@ -93,12 +93,9 @@ bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
       break;
     }
 
-    bool system = false;
     topDoc = parentDocShellItem->GetDocument();
     if (topDoc) {
-      if (NS_SUCCEEDED(
-              ssm->IsSystemPrincipal(topDoc->NodePrincipal(), &system)) &&
-          system) {
+      if (topDoc->NodePrincipal()->IsSystemPrincipal()) {
         // Found a system-principled doc: last docshell was top.
         break;
       }

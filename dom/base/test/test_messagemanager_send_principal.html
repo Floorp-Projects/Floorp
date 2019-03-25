@@ -21,8 +21,6 @@
     function childFrameScript() {
       "use strict";
 
-      const secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
-        getService(Ci.nsIScriptSecurityManager);
 
       addMessageListener("test:content", function(message) {
         sendAsyncMessage("test:result", "is nsIPrincipal: " +
@@ -40,7 +38,7 @@
 
       addMessageListener("test:system", function(message) {
         sendAsyncMessage("test:result", "isSystemPrincipal: " +
-                         (secMan.isSystemPrincipal(message.data) ? "OK" : "KO"));
+                         (message.data.isSystemPrincipal ? "OK" : "KO"));
       });
 
       addMessageListener("test:ep", function(message) {

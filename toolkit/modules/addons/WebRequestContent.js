@@ -92,7 +92,7 @@ var ContentPolicy = {
     }
 
     if (requestPrincipal &&
-        Services.scriptSecurityManager.isSystemPrincipal(requestPrincipal)) {
+        requestPrincipal.isSystemPrincipal) {
       return Ci.nsIContentPolicy.ACCEPT;
     }
     let url = contentLocation.spec;

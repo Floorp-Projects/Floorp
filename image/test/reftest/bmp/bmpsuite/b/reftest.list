@@ -36,7 +36,7 @@ fuzzy(0-1,0-926) == badbitssize.bmp pal1.png
 # number of colors."
 # [We reject it. Chromium accepts it but draws nothing. Rejecting seems
 # preferable give that the data is clearly untrustworthy.]
-== wrapper.html?badpalettesize.bmp about:blank
+fuzzy(0-245,0-8128) == wrapper.html?badpalettesize.bmp about:blank
 
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "The 'planes' setting, which is required to be 1, is not 1."

@@ -312,7 +312,7 @@ const Preferences = window.Preferences = (function() {
 
       if (Preferences.type == "child" && window.opener &&
           window.opener.Preferences &&
-          Services.scriptSecurityManager.isSystemPrincipal(window.opener.document.nodePrincipal)) {
+          window.opener.document.nodePrincipal.isSystemPrincipal) {
         // Try to find the preference in the parent window.
         const preference = window.opener.Preferences.get(this.name);
 
