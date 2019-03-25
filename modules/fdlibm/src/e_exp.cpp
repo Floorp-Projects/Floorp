@@ -96,6 +96,8 @@ P3   =  6.61375632143793436117e-05, /* 0x3F11566A, 0xAF25DE2C */
 P4   = -1.65339022054652515390e-06, /* 0xBEBBBD41, 0xC5D26BF1 */
 P5   =  4.13813679705723846039e-08; /* 0x3E663769, 0x72BEA4D0 */
 
+static const double E = 2.7182818284590452354;	/* e */
+
 static volatile double
 huge	= 1.0e+300,
 twom1000= 9.33263618503218878990e-302;     /* 2**-1000=0x01700000,0*/
@@ -127,6 +129,7 @@ __ieee754_exp(double x)	/* default IEEE double exp */
     /* argument reduction */
 	if(hx > 0x3fd62e42) {		/* if  |x| > 0.5 ln2 */ 
 	    if(hx < 0x3FF0A2B2) {	/* and |x| < 1.5 ln2 */
+		if (x == 1.0) return E;
 		hi = x-ln2HI[xsb]; lo=ln2LO[xsb]; k = 1-xsb-xsb;
 	    } else {
 		k  = (int)(invln2*x+halF[xsb]);
