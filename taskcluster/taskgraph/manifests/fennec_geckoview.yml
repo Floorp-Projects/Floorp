@@ -9,6 +9,7 @@ base_artifact_prefix: ''
 platform_names:
   path_platform: ''
   filename_platform: ''
+  stage_platform: ''
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
@@ -18,7 +19,7 @@ default: &default
     - build
   locale_prefix: ''
   source_path_modifier: org/mozilla/geckoview/${artifact_id}/${major_version}.${minor_version}.${build_date}
-  description: ""
+  description: "TO_BE_OVERRIDDEN"
   destinations:  # locale_prefix is appended
     - org/mozilla/geckoview/${artifact_id}/${major_version}.${minor_version}.${build_date}
 

@@ -97,7 +97,7 @@ def get_builds(release_history, platform, locale):
     return release_history.get(platform, {}).get(locale, {})
 
 
-def get_partials_artifacts(release_history, platform, locale):
+def get_partials_artifacts_from_params(release_history, platform, locale):
     platform = _sanitize_platform(platform)
     return [
         (artifact, details.get('previousVersion', None))
@@ -105,7 +105,7 @@ def get_partials_artifacts(release_history, platform, locale):
     ]
 
 
-def get_partials_artifact_map(release_history, platform, locale):
+def get_partials_info_from_params(release_history, platform, locale):
     platform = _sanitize_platform(platform)
 
     artifact_map = {}

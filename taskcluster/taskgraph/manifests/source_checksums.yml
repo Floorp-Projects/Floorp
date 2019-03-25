@@ -14,6 +14,7 @@ tasktype_map:  # Map task reference to task type.
 platform_names:
   path_platform: ''
   filename_platform: ''
+  stage_platform: ''
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
@@ -22,7 +23,7 @@ default: &default
   from:
     - release-source-checksums-signing
   all_locales: false
-  description: "TODO"
+  description: "TO_BE_OVERRIDDEN"
   locale_prefix: ''
   source_path_modifier: ''
   destinations:  # locale_prefix is appended
