@@ -5616,8 +5616,6 @@ pref("network.trr.early-AAAA", false);
 pref("network.trr.disable-ECS", true);
 // After this many failed TRR requests in a row, consider TRR borked
 pref("network.trr.max-fails", 5);
-// Comma separated list of domains that we should not use TRR for
-pref("network.trr.excluded-domains", "");
 
 pref("captivedetect.canonicalURL", "http://detectportal.firefox.com/success.txt");
 pref("captivedetect.canonicalContent", "success\n");

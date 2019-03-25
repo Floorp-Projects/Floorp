@@ -96,9 +96,6 @@ class TRRService : public nsIObserver,
   RefPtr<DataStorage> mTRRBLStorage;
   Atomic<bool, Relaxed> mClearTRRBLStorage;
 
-  // A set of domains that we should not use TRR for.
-  nsTHashtable<nsCStringHashKey> mExcludedDomains;
-
   enum ConfirmationState {
     CONFIRM_INIT = 0,
     CONFIRM_TRYING = 1,
