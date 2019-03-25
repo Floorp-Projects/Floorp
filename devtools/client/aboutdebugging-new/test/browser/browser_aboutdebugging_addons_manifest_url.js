@@ -54,7 +54,7 @@ add_task(async function() {
   info("Uninstall the adb extension and wait for the message to udpate");
   adbAddon.uninstall();
   await waitUntil(() => usbStatusElement.textContent.includes("USB disabled"));
-  await waitForAdbStop();
+  await stopAdbProcess();
 
   await waitForRequestsToSettle(window.AboutDebugging.store);
   await removeTab(tab);
