@@ -260,6 +260,11 @@ class MediaPipeline : public sigslot::has_slots<> {
   bool IsRtp(const unsigned char* aData, size_t aLen) const;
   // Must be called on the STS thread.  Must be called after DetachMedia().
   void DetachTransport_s();
+
+  // Cached preferences are not tolerant of being registered more than once
+  static Atomic<bool, ReleaseAcquire> sPrefsRegistered;
+  // Cached pref media.webrtc.net.force_disable_rtcp_reception
+  static Atomic<bool, ReleaseAcquire> sForceDisableRtcpReceptionPref;
 };
 
 // A specialization of pipeline for reading from an input device
