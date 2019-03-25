@@ -30,6 +30,15 @@ val Context.appVersionName: String?
     }
 
 /**
+ * Returns the name (label) of the application or the package name as a fallback.
+ */
+val Context.appName: String
+    get() {
+        return packageManager.getApplicationLabel(applicationInfo)?.toString()
+            ?: packageName
+    }
+
+/**
  * Returns the handle to a system-level service by name.
  */
 inline fun <reified T> Context.systemService(name: String): T {

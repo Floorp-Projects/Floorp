@@ -505,7 +505,8 @@ class SitePermissionsFeature(
     }
 
     private fun createDoNotAskAgainCheckBox(context: Context): CheckBox {
-        val doNotAskAgainTitle = context.getString(R.string.mozac_feature_sitepermissions_do_not_ask_again_on_this_site)
+        val doNotAskAgainTitle = context.getString(
+            R.string.mozac_feature_sitepermissions_do_not_ask_again_on_this_site2)
         return CheckBox(doNotAskAgainTitle, true)
     }
 
@@ -576,15 +577,15 @@ class SitePermissionsFeature(
     private fun getCameraTextOptions(cameraPermissions: List<Permission>): Pair<String, String> {
         val context = anchorView.context
         val option1Text = if (cameraPermissions[0].isBackCamera) {
-            R.string.mozac_feature_sitepermissions_back_facing_camera
+            R.string.mozac_feature_sitepermissions_back_facing_camera2
         } else {
-            R.string.mozac_feature_sitepermissions_selfie_camera
+            R.string.mozac_feature_sitepermissions_selfie_camera2
         }
 
         val option2Text = if (cameraPermissions[1].isBackCamera) {
-            R.string.mozac_feature_sitepermissions_back_facing_camera
+            R.string.mozac_feature_sitepermissions_back_facing_camera2
         } else {
-            R.string.mozac_feature_sitepermissions_selfie_camera
+            R.string.mozac_feature_sitepermissions_selfie_camera2
         }
         return context.getString(option1Text) to context.getString(option2Text)
     }

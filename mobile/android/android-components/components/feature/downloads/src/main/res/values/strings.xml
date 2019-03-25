@@ -1,17 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <!-- Alert dialog confirmation before download a file, this is the title. -->
-    <string name="mozac_feature_downloads_dialog_title">Download File</string>
-
+    <string name="mozac_feature_downloads_dialog_title">Download file</string>
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">Download</string>
-
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">Cancel</string>
-
-    <!-- Error shown when the user is trying to download a invalid file. -->
-    <string name="mozac_feature_downloads_file_not_supported">Download protocol not supported</string>
+    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s can’t download this file type</string>
 </resources>

@@ -1,54 +1,39 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <!-- Text for confirmation for a positive action in dialog  -->
     <string name="mozac_feature_prompts_ok">OK</string>
-
     <!-- Text for confirmation for a negative action in dialog.  -->
     <string name="mozac_feature_prompts_cancel">Cancel</string>
-
     <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
     <string name="mozac_feature_prompts_no_more_dialogs">Prevent this page from creating additional dialogs</string>
-
     <!-- Title of a date picker dialog, this text is shown above a date picker. -->
     <string name="mozac_feature_prompts_pick_a_date">Pick a date</string>
-
     <!-- Title of a time picker dialog, this text is shown above a time picker. -->
     <string name="mozac_feature_prompts_pick_a_time">Pick a time</string>
-
     <!-- Title of a date and time picker dialog, this text is shown above the picker. -->
     <string name="mozac_feature_prompts_pick_a_date_and_time">Pick a date and time</string>
-
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">Set</string>
-
     <!-- Text for a button that clears the selected input in the date/time picker. -->
     <string name="mozac_feature_prompts_clear">Clear</string>
-
     <!-- Text for the title of an authentication dialog. -->
-    <string name="mozac_feature_prompt_sign_in">Sign In</string>
-
+    <string name="mozac_feature_prompt_sign_in">Sign in</string>
     <!-- Text for username field in an authentication dialog. -->
     <string name="mozac_feature_prompt_username_hint">Username</string>
-
     <!-- Text for password field in an authentication dialog. -->
     <string name="mozac_feature_prompt_password_hint">Password</string>
-
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
     <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
     <string name="mozac_feature_prompts_content_description_input_label">Label for entering a text input field</string>
-
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Choose a color</string>
-
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Allow</string>
-
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">Deny</string>
-
     <!-- Text of the title of a dialog when a page is requesting to open a new window. -->
-    <string name="mozac_feature_prompts_popup_dialog_title">Prevent this site from opening this pop-up window?</string>
+    <string name="mozac_feature_prompts_popup_dialog_title">Prevent this site from opening a pop-up window?</string>
 </resources>

@@ -19,6 +19,7 @@ import android.net.Uri
 import android.support.annotation.RequiresPermission
 import android.widget.Toast
 import mozilla.components.browser.session.Download
+import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.utils.DownloadUtils
 
@@ -155,7 +156,11 @@ class DownloadManager(
     }
 
     private fun showUnSupportFileErrorMessage() {
-        Toast.makeText(applicationContext, R.string.mozac_feature_downloads_file_not_supported, Toast.LENGTH_LONG)
+        val text = applicationContext.getString(
+            R.string.mozac_feature_downloads_file_not_supported2,
+            applicationContext.appName)
+
+        Toast.makeText(applicationContext, text, Toast.LENGTH_LONG)
             .show()
     }
 }

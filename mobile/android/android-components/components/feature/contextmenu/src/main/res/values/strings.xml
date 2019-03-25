@@ -1,38 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <!-- Text for context menu item to open the link in a new tab. -->
-    <string name="mozac_feature_contextmenu_open_link_in_new_tab">Open Link in New Tab</string>
-
+    <string name="mozac_feature_contextmenu_open_link_in_new_tab">Open link in new tab</string>
     <!-- Text for context menu item to open the link in a private tab. -->
-    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Open Link in Private Tab</string>
-
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Open link in private tab</string>
     <!-- Text for context menu item to open the image in a new tab. -->
-    <string name="mozac_feature_contextmenu_open_image_in_new_tab">Open Image in New Tab</string>
-
+    <string name="mozac_feature_contextmenu_open_image_in_new_tab">Open image in new tab</string>
     <!-- Text for context menu item to share the link with an other app. -->
-    <string name="mozac_feature_contextmenu_share_link">Share Link</string>
-
+    <string name="mozac_feature_contextmenu_share_link">Share link</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
-    <string name="mozac_feature_contextmenu_copy_link">Copy Link</string>
-
+    <string name="mozac_feature_contextmenu_copy_link">Copy link</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
-    <string name="mozac_feature_contextmenu_copy_image_location">Copy Image Location</string>
-
+    <string name="mozac_feature_contextmenu_copy_image_location">Copy image location</string>
     <!-- Text for context menu item to save / download the image. -->
-    <string name="mozac_feature_contextmenu_save_image">Save Image</string>
-
+    <string name="mozac_feature_contextmenu_save_image">Save image</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">New tab opened</string>
-
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">New private tab opened</string>
-
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
     <string name="mozac_feature_contextmenu_snackbar_text_copied">Text copied to clipboard</string>
-
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Switch</string>
 </resources>
