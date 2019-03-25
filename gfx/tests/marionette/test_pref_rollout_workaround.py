@@ -3,6 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import platform
+from unittest import skipIf
+
 from marionette_driver.by import By
 from marionette_harness.marionette_test import MarionetteTestCase
 
@@ -59,7 +62,7 @@ class WrPrefRolloutWorkAroundTestCase(MarionetteTestCase):
         self.assertEqual(status, 'opt-in', 'WR rollback of rollout should revert to opt-in on non-qualifying hardware.')
         self.assertTrue(compositor != 'webrender', 'After roll back on non-qualifying HW, WR should not be used.')
 
-
+    @skipIf(platform.machine() == "ARM64" and platform.system() == "Windows", "Bug 1536369 - Crashes on Windows 10 aarch64")
     def test_wr_rollout_workaround_on_qualifying_hw(self):
         # Override the gfxPref so that WR is not enabled, as it would be before a rollout.
         self.marionette.set_pref(pref=gfx_rollout_override, value=False)
