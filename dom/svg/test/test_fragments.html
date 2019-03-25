@@ -20,14 +20,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=759124
 SimpleTest.waitForExplicitFinish();
 
 function Test(svgFragmentIdentifier, valid, viewBoxString,
-              preserveAspectRatioString, zoomAndPanString)
-{
+              preserveAspectRatioString, zoomAndPanString) {
     this.svgFragmentIdentifier = svgFragmentIdentifier;
     this.valid = valid;
 }
 
-function runTests()
-{
+function runTests() {
   var svg = $("svg");
   var doc = svg.contentWindow.document;
   var rootElement = doc.documentElement;
@@ -58,7 +56,7 @@ function runTests()
       new Test("svgView(zoomAndPan(disable)", false),
       new Test("svgView(zoomAndPan(disable) ", false),
       new Test("svgView(zoomAndPan(disable)]", false),
-      new Test("svgView(zoomAndPan(disable)))", false)
+      new Test("svgView(zoomAndPan(disable)))", false),
   ];
 
   var src = svg.getAttribute("src");

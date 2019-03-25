@@ -22,8 +22,7 @@ var text = document.getElementById("text"),
     poly = document.getElementById("poly");
     g    = document.getElementById("g");
 
-function CheckList(aListObject, aExpectedListLength, aListDescription)
-{
+function CheckList(aListObject, aExpectedListLength, aListDescription) {
   is(aListObject.numberOfItems, aExpectedListLength, aListDescription + ".numberOfItems");
   is(aListObject.length, aExpectedListLength, aListDescription + ".length");
   for (let i = 0; i < aListObject.length; i++) {
@@ -69,7 +68,7 @@ var tests = [
     type: "SVGStringList",
     subtests: [ { values: null, length: 3 },
                 { values: "foo", length: 1 },
-                { values: "foo bar baz qux", length: 4 } ] }
+                { values: "foo bar baz qux", length: 4 } ] },
 ];
 
 for (let test of tests) {

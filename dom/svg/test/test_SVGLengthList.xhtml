@@ -30,14 +30,13 @@ tests can be found in test_SVGxxxList.xhtml. Anything that can be generalized
 to other list types belongs there.
 */
 
-function run_tests()
-{
-  document.getElementById('svg').pauseAnimations();
+function run_tests() {
+  document.getElementById("svg").pauseAnimations();
 
   var text = document.getElementById("text");
   var lengths = text.x.baseVal;
 
-  is(lengths.numberOfItems, 0, 'Checking numberOfItems');
+  is(lengths.numberOfItems, 0, "Checking numberOfItems");
 
   // Test mutation events
   // --- Initialization
@@ -46,7 +45,7 @@ function run_tests()
   eventChecker.expect("modify");
   text.textContent = "abc";
   text.setAttribute("x", "10 20 30");
-  is(lengths.numberOfItems, 3, 'Checking numberOfItems');
+  is(lengths.numberOfItems, 3, "Checking numberOfItems");
   // -- Actual changes
   eventChecker.expect("modify modify modify modify modify");
   lengths[0].value = 8;
@@ -66,7 +65,7 @@ function run_tests()
   // -- Invalid attribute
   eventChecker.expect("modify");
   text.setAttribute("x", ",20");
-  is(lengths.numberOfItems, 0, 'Checking that parsing stops at invalid token');
+  is(lengths.numberOfItems, 0, "Checking that parsing stops at invalid token");
   // -- Attribute removal
   eventChecker.expect("remove");
   text.removeAttribute("x");
@@ -96,7 +95,7 @@ function run_tests()
     function appendItem(aItem) {
       text.removeAttribute("x");
       return lengths.appendItem(aItem);
-    }
+    },
   ];
   subtests.forEach(function(aFunction) {
     // -- Adding an unowned SVGLength

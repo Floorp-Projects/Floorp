@@ -19,21 +19,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420243
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-function runTests(text, charWidth)
-{
+function runTests(text, charWidth) {
   function chars(n) { return charWidth * n; }
 
-  function expectThrow(charnum, nchars)
-  {
-    try
-    {
+  function expectThrow(charnum, nchars) {
+    try {
       text.getSubStringLength(charnum, nchars);
       ok(false,
          "text.getSubStringLength(" + charnum + "," + nchars + ") " +
          "should have thrown");
-    }
-    catch (e)
-    {
+    } catch (e) {
       is(e.name, "IndexSizeError",
          "expected an index error for " +
          "text.getSubStringLength(" + charnum + "," + nchars + ")");
@@ -42,17 +37,13 @@ function runTests(text, charWidth)
          "text.getSubStringLength(" + charnum + "," + nchars + ")");
     }
   }
-  
-  function expectValue(charnum, nchars, expected)
-  {
-    try
-    {
+
+  function expectValue(charnum, nchars, expected) {
+    try {
       is(text.getSubStringLength(charnum, nchars), expected,
          "text.getSubStringLength(" + charnum + "," + nchars + ") " +
          "returned wrong value");
-    }
-    catch (e)
-    {
+    } catch (e) {
       ok(false,
          "unexpected exception for " +
          "text.getSubStringLength(" + charnum + "," + nchars + ")");
@@ -80,24 +71,20 @@ function runTests(text, charWidth)
 }
 
 
-function run()
-{
-  try
-  {
+function run() {
+  try {
     var document = $("svg").contentWindow.document;
     var text = document.getElementById("text");
 
     runTests(text, text.getSubStringLength(0, 1));
-  }
-  catch (e)
-  {
+  } catch (e) {
     ok(false, "threw error: " + e);
   }
 
   SimpleTest.finish();
 }
 
-window.addEventListener("load", run, false);
+window.addEventListener("load", run);
 </script>
 </pre>
 </body>

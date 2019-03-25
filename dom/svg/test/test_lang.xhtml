@@ -41,7 +41,7 @@ var elts = [
   document.getElementById("s0"),
   document.getElementById("s4"),
   document.getElementById("s12"),
-  document.getElementById("s28")
+  document.getElementById("s28"),
 ];
 
 function fs(idx) {
@@ -53,7 +53,7 @@ function fs(idx) {
   return getComputedStyle(elts[idx], "").wordSpacing;
 }
 
-SpecialPowers.pushPrefEnv({'clear': [['font.minimum-size.zh-CN']]}, step1);
+SpecialPowers.pushPrefEnv({"clear": [["font.minimum-size.zh-CN"]]}, step1);
 
 function step1() {
     is(fs(0), "0px", "at min font size 0, 0px should compute to 0px");
@@ -61,7 +61,7 @@ function step1() {
     is(fs(2), "12px", "at min font size 0, 12px should compute to 12px");
     is(fs(3), "28px", "at min font size 0, 28px should compute to 28px");
 
-    SpecialPowers.pushPrefEnv({'set': [['font.minimum-size.zh-CN', 7]]}, step2);
+    SpecialPowers.pushPrefEnv({"set": [["font.minimum-size.zh-CN", 7]]}, step2);
 }
 
 function step2() {
@@ -70,7 +70,7 @@ function step2() {
     is(fs(2), "12px", "at min font size 7, 12px should compute to 12px");
     is(fs(3), "28px", "at min font size 7, 28px should compute to 28px");
 
-    SpecialPowers.pushPrefEnv({'set': [['font.minimum-size.zh-CN', 18]]}, step3);
+    SpecialPowers.pushPrefEnv({"set": [["font.minimum-size.zh-CN", 18]]}, step3);
 }
 
 function step3() {
@@ -79,7 +79,7 @@ function step3() {
     is(fs(2), "18px", "at min font size 18, 12px should compute to 18px");
     is(fs(3), "28px", "at min font size 18, 28px should compute to 28px");
 
-    SpecialPowers.pushPrefEnv({'clear': [['font.minimum-size.zh-CN']]}, SimpleTest.finish);
+    SpecialPowers.pushPrefEnv({"clear": [["font.minimum-size.zh-CN"]]}, SimpleTest.finish);
 }
 
 //]]>

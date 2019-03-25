@@ -25,9 +25,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=508496
 /** Test object identity of animated lengths **/
 
 /* Global Variables */
-const svgns="http://www.w3.org/2000/svg";
+const svgns = "http://www.w3.org/2000/svg";
 var svg = document.getElementById("svg");
-var circle = document.getElementById('circle');
+var circle = document.getElementById("circle");
 
 SimpleTest.waitForExplicitFinish();
 
@@ -47,7 +47,7 @@ function main() {
   ok(animVal === circle.cx.animVal,
     "Got different animVal SVGLength objects at startup");
 
-  var animate = document.getElementById('animate');
+  var animate = document.getElementById("animate");
   if (animate && animate.targetElement) {
     // Sample mid-way through the animation
     svg.setCurrentTime(5);

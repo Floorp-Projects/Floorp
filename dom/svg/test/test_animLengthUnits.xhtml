@@ -27,10 +27,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=507067
 /** Test units of animated lengths **/
 
 /* Global Variables */
-const svgns="http://www.w3.org/2000/svg";
+const svgns = "http://www.w3.org/2000/svg";
 var svg = document.getElementById("svg");
-var circle = document.getElementById('circle');
-var animate = document.getElementById('animate');
+var circle = document.getElementById("circle");
+var animate = document.getElementById("animate");
 
 SimpleTest.waitForExplicitFinish();
 
@@ -74,7 +74,7 @@ function main() {
     "(1) Unexpected value for animVal during animation");
 
   // Change font-size and check
-  circle.parentNode.setAttribute('font-size', '5px');
+  circle.parentNode.setAttribute("font-size", "5px");
 
   // Currently, changing the font-size on a parent doesn't force a resample (see
   // bug 508206) so we have to give the animation a chance to run
@@ -93,7 +93,7 @@ function checkAfterChangeFontSize() {
 
   // Do the same again, when the animation is frozen
   svg.setCurrentTime(10);
-  circle.parentNode.setAttribute('font-size', '7px');
+  circle.parentNode.setAttribute("font-size", "7px");
 
   // Again, due to bug 508206 we need to give the animation a chance to resample
   window.requestAnimationFrame(checkWhilstFrozen);
@@ -112,7 +112,7 @@ function checkWhilstFrozen() {
   SimpleTest.finish();
 }
 
-var animate = document.getElementById('animate');
+var animate = document.getElementById("animate");
 if (animate && animate.targetElement) {
   window.addEventListener("load", main);
 } else {
