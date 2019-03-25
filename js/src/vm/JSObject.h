@@ -798,23 +798,6 @@ using ClassInitializerOp = JSObject* (*)(JSContext* cx,
 
 namespace js {
 
-inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
-                                      const Class* clasp) {
-  if (newKind == NurseryAllocatedProxy) {
-    MOZ_ASSERT(clasp->isProxy());
-    MOZ_ASSERT(clasp->hasFinalize());
-    MOZ_ASSERT(!CanNurseryAllocateFinalizedClass(clasp));
-    return gc::DefaultHeap;
-  }
-  if (newKind != GenericObject) {
-    return gc::TenuredHeap;
-  }
-  if (clasp->hasFinalize() && !CanNurseryAllocateFinalizedClass(clasp)) {
-    return gc::TenuredHeap;
-  }
-  return gc::DefaultHeap;
-}
-
 bool NewObjectWithTaggedProtoIsCachable(JSContext* cx,
                                         Handle<TaggedProto> proto,
                                         NewObjectKind newKind,

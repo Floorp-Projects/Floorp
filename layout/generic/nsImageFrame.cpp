@@ -331,6 +331,7 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     const nsStyleContent* styleContent = StyleContent();
     if (mKind == Kind::ContentPropertyAtIndex) {
       MOZ_RELEASE_ASSERT(
+          aParent->GetContent()->IsGeneratedContentContainerForMarker() ||
           aParent->GetContent()->IsGeneratedContentContainerForAfter() ||
           aParent->GetContent()->IsGeneratedContentContainerForBefore());
       MOZ_RELEASE_ASSERT(

@@ -1247,6 +1247,7 @@ impl Clone for ${style_struct.gecko_struct_name} {
         "Length": impl_absolute_length,
         "LengthOrNormal": impl_style_coord,
         "LengthPercentageOrAuto": impl_style_coord,
+        "MozListReversed": impl_simple,
         "MozScriptMinSize": impl_absolute_length,
         "RGBAColor": impl_rgba_color,
         "SVGLength": impl_svg_length,
@@ -4559,7 +4560,7 @@ clip-path
 </%self:impl_trait>
 
 <%self:impl_trait style_struct_name="Counters"
-                  skip_longhands="content counter-increment counter-reset">
+                  skip_longhands="content counter-increment counter-reset counter-set">
     pub fn ineffective_content_property(&self) -> bool {
         self.gecko.mContents.is_empty()
     }
@@ -4788,7 +4789,7 @@ clip-path
         )
     }
 
-    % for counter_property in ["Increment", "Reset"]:
+    % for counter_property in ["Increment", "Reset", "Set"]:
         pub fn set_counter_${counter_property.lower()}(
             &mut self,
             v: longhands::counter_${counter_property.lower()}::computed_value::T
