@@ -59,9 +59,9 @@ format:
         command: >-
             source $HOME/checkouts/gecko/taskcluster/scripts/misc/source-test-clang-setup.sh &&
             cd $HOME/checkouts/gecko &&
-            ./mach --log-no-times clang-format --path $TRY_MODIFIED_FILES --output $HOME/clang-format.diff
+            ./mach --log-no-times clang-format --path $TRY_MODIFIED_FILES --output $HOME/clang-format.json --format json
     worker:
         artifacts:
             - type: file
-              name: public/code-review/clang-format.diff
-              path: /builds/worker/clang-format.diff
+              name: public/code-review/clang-format.json
+              path: /builds/worker/clang-format.json
