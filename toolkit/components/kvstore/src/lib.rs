@@ -14,7 +14,6 @@ extern crate nserror;
 extern crate nsstring;
 extern crate rkv;
 extern crate storage_variant;
-#[macro_use]
 extern crate xpcom;
 
 mod error;
@@ -40,7 +39,7 @@ use xpcom::{
         nsIKeyValueDatabaseCallback, nsIKeyValueEnumeratorCallback, nsIKeyValuePair,
         nsIKeyValueVariantCallback, nsIKeyValueVoidCallback, nsISupports, nsIThread, nsIVariant,
     },
-    nsIID, RefPtr, ThreadBoundRefPtr,
+    nsIID, RefPtr, ThreadBoundRefPtr, xpcom, xpcom_method,
 };
 
 type KeyValuePairResult = Result<(String, OwnedValue), KeyValueError>;
