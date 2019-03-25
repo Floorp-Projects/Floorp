@@ -46,7 +46,7 @@ class WindowBackBuffer {
   already_AddRefed<gfx::DrawTarget> Lock();
 
   void Attach(wl_surface* aSurface);
-  void Detach();
+  void Detach(wl_buffer* aBuffer);
   bool IsAttached() { return mAttached; }
 
   void Clear();
@@ -118,6 +118,7 @@ class WindowSurfaceWayland : public WindowSurface {
   bool mWaylandBufferFullScreenDamage;
   bool mIsMainThread;
   bool mNeedScaleFactorUpdate;
+  bool mWaitToFullScreenUpdate;
 };
 
 }  // namespace widget

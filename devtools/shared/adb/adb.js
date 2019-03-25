@@ -68,7 +68,7 @@ class Adb extends EventEmitter {
     return this._runtimes;
   }
 
-  async _startAdb() {
+  async _startTracking() {
     this._isTrackingDevices = true;
     await adbProcess.start();
 
@@ -79,11 +79,10 @@ class Adb extends EventEmitter {
     this._timer = setInterval(this.updateRuntimes.bind(this), UPDATE_RUNTIMES_INTERVAL);
   }
 
-  async _stopAdb() {
+  async _stopTracking() {
     clearInterval(this._timer);
     this._isTrackingDevices = false;
     this._trackDevicesCommand.stop();
-    await adbProcess.stop();
 
     this._devices = new Map();
     this._runtimes = [];
@@ -96,9 +95,9 @@ class Adb extends EventEmitter {
 
   _updateAdbProcess() {
     if (!this._isTrackingDevices && this._shouldTrack()) {
-      this._startAdb();
+      this._startTracking();
     } else if (this._isTrackingDevices && !this._shouldTrack()) {
-      this._stopAdb();
+      this._stopTracking();
     }
   }
 
