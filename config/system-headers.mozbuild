@@ -1320,6 +1320,7 @@ if CONFIG['MOZ_SYSTEM_ICU']:
         'unicode/locid.h',
         'unicode/numsys.h',
         'unicode/plurrule.h',
+        'unicode/putil.h',
         'unicode/timezone.h',
         'unicode/ucal.h',
         'unicode/uchar.h',

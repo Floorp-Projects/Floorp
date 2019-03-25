@@ -10787,7 +10787,8 @@ int main(int argc, char** argv, char** envp) {
   SetOutputFile("JS_STDERR", &rcStderr, &gErrFile);
 
   // Start the engine.
-  if (!JS_Init()) {
+  if (const char* message = JS_InitWithFailureDiagnostic()) {
+    fprintf(gErrFile->fp, "JS_Init failed: %s\n", message);
     return 1;
   }
 
