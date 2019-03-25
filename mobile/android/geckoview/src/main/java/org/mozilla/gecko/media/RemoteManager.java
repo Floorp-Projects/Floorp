@@ -65,7 +65,7 @@ public final class RemoteManager implements IBinder.DeathRecipient {
         private boolean connect() {
             Context appCtxt = GeckoAppShell.getApplicationContext();
             appCtxt.bindService(new Intent(appCtxt, MediaManager.class),
-                    mConnection, Context.BIND_AUTO_CREATE);
+                    mConnection, Context.BIND_AUTO_CREATE | Context.BIND_IMPORTANT);
             waitConnect();
             return mRemote != null;
         }
