@@ -88,10 +88,10 @@ use nserror::{nsresult, NS_ERROR_NULL_POINTER};
 /// a custom error type, which the XPCOM stub will convert to nsresult.
 ///
 /// This macro assumes that all non-null pointer arguments are valid!
-/// It does ensure that they aren't null, returning NS_ERROR_NULL_POINTER
-/// for null pointers.  But it doesn't otherwise check their validity.
-/// That makes the function unsafe, so callers must ensure that they only
-/// call it with valid pointer arguments.
+/// It does ensure that they aren't null, using the `ensure_param` macro.
+/// But it doesn't otherwise check their validity. That makes the function
+/// unsafe, so callers must ensure that they only call it with valid pointer
+/// arguments.
 #[macro_export]
 macro_rules! xpcom_method {
     // `#[allow(non_snake_case)]` is used for each method because `$xpcom_name`
@@ -187,9 +187,14 @@ macro_rules! xpcom_method {
     };
 }
 
-/// The ensure_param macro converts raw pointer arguments to references,
-/// returning NS_ERROR_NULL_POINTER if the argument is_null().  It isn't
+/// The ensure_param macro converts raw pointer arguments to references, and
+/// passes them to a Rustic implementation of an XPCOM method. This macro isn't
 /// intended to be used directly but rather via the xpcom_method macro.
+///
+/// If the argument `is_null()`, and the corresponding Rustic method parameter
+/// is `&T`, the macro returns `NS_ERROR_NULL_POINTER`. However, if the
+/// parameter is `Option<&T>`, the macro passes `None` instead. This makes it
+/// easy to use optional arguments safely.
 ///
 /// Given the appropriate extern crate and use declarations (which include
 /// using the Ensure trait from this module):
@@ -200,22 +205,36 @@ macro_rules! xpcom_method {
 /// use xpcom::Ensure;
 /// ```
 ///
-/// Invoking the macro with a parameter like `foo: *const nsIBar`:
+/// Invoking the macro like this:
 ///
 /// ```ignore
-/// ensure_param!(foo: *const nsIBar);
+/// fn do_something_with_foo(foo: &nsIBar) {}
+/// fn DoSomethingWithFoo(foo: *const nsIBar) -> nsresult {
+///     let foo = ensure_param!(foo);
+///     do_something_with_foo(foo);
+/// }
 /// ```
 ///
-/// Results in the macro generating a code block like the following:
+/// Expands to code like this:
 ///
 /// ```ignore
-/// let foo = match Ensure::ensure(foo) {
-///     Ok(val) => val,
-///     Err(result) => return result,
-/// };
+/// fn do_something_with_foo(foo: &nsIBar) {}
+/// fn DoSomethingWithFoo(foo: *const nsIBar) -> nsresult {
+///     let foo = match Ensure::ensure(foo) {
+///         Ok(val) => val,
+///         Err(result) => return result,
+///     };
+///     do_something_with_foo(foo);
+/// }
 /// ```
 ///
-/// Which converts `foo` from a `*const nsIBar` to a `&nsIBar`.
+/// Which converts `foo` from a `*const nsIBar` to a `&nsIBar`, or returns
+/// `NS_ERROR_NULL_POINTER` if `foo` is null.
+///
+/// To pass an optional argument, we only need to change
+/// `do_something_with_foo` to take an `Option<&nsIBar> instead. The macro
+/// generates the same code, but `do_something_with_foo` receives `None` if
+/// `foo` is null.
 ///
 /// Notes:
 ///
@@ -256,6 +275,16 @@ impl<'a, T: 'a> Ensure<*const T> for Result<&'a T, nsresult> {
         } else {
             Ok(&*ptr)
         }
+    }
+}
+
+impl<'a, T: 'a> Ensure<*const T> for Result<Option<&'a T>, nsresult> {
+    unsafe fn ensure(ptr: *const T) -> Result<Option<&'a T>, nsresult> {
+        Ok(if ptr.is_null() {
+            None
+        } else {
+            Some(&*ptr)
+        })
     }
 }
 

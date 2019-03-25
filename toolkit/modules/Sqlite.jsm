@@ -1042,7 +1042,7 @@ function cloneStorageConnection(options) {
   }
 
   if (isClosed) {
-    throw new Error("Sqlite.jsm has been shutdown. Cannot clone connection to: " + source.database.path);
+    throw new Error("Sqlite.jsm has been shutdown. Cannot clone connection to: " + source.databaseFile.path);
   }
 
   let openedOptions = {};
@@ -1107,7 +1107,7 @@ function wrapStorageConnection(options) {
   }
 
   if (isClosed) {
-    throw new Error("Sqlite.jsm has been shutdown. Cannot wrap connection to: " + connection.database.path);
+    throw new Error("Sqlite.jsm has been shutdown. Cannot wrap connection to: " + connection.databaseFile.path);
   }
 
   let identifier = getIdentifierByFileName(connection.databaseFile.leafName);
@@ -1212,6 +1212,28 @@ OpenedConnection.prototype = Object.freeze({
   TRANSACTION_DEFERRED: "DEFERRED",
   TRANSACTION_IMMEDIATE: "IMMEDIATE",
   TRANSACTION_EXCLUSIVE: "EXCLUSIVE",
+
+  /**
+   * Returns a handle to the underlying `mozIStorageAsyncConnection`. This is
+   * ⚠️ **extremely unsafe** ⚠️ because `Sqlite.jsm` continues to manage the
+   * connection's lifecycle, including transactions and shutdown blockers.
+   * Misusing the raw connection can easily lead to data loss, memory leaks,
+   * and errors.
+   *
+   * Consumers of the raw connection **must not** close or re-wrap it,
+   * and should not run statements concurrently with `Sqlite.jsm`.
+   *
+   * It's _much_ safer to open a `mozIStorage{Async}Connection` yourself,
+   * and access it from JavaScript via `Sqlite.wrapStorageConnection`.
+   * `unsafeRawConnection` is an escape hatch for cases where you can't
+   * do that.
+   *
+   * Please do _not_ add new uses of `unsafeRawConnection` without review
+   * from a storage peer.
+   */
+  get unsafeRawConnection() {
+    return this._connectionData._dbConn;
+  },
 
   /**
    * The integer schema version of the database.

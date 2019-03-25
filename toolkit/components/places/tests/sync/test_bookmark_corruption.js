@@ -288,9 +288,9 @@ add_task(async function test_missing_children() {
 
     let idsToUpload = inspectChangeRecords(changesToUpload);
     deepEqual(idsToUpload, {
-      updated: [],
+      updated: ["menu"],
       deleted: [],
-    }, "Should not reupload menu with missing children (B D E)");
+    }, "Should reupload menu without missing children (B D E)");
     await assertLocalTree(PlacesUtils.bookmarks.menuGuid, {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -332,26 +332,26 @@ add_task(async function test_missing_children() {
 
     let idsToUpload = inspectChangeRecords(changesToUpload);
     deepEqual(idsToUpload, {
-      updated: [],
+      updated: ["bookmarkBBBB", "bookmarkEEEE", "menu"],
       deleted: [],
-    }, "Should not reupload menu with missing child D");
+    }, "Should reupload menu and restored children");
     await assertLocalTree(PlacesUtils.bookmarks.menuGuid, {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
       title: BookmarksMenuTitle,
       children: [{
-        guid: "bookmarkBBBB",
-        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        index: 0,
-        title: "B",
-        url: "http://example.com/b",
-      }, {
         guid: "bookmarkCCCC",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        index: 1,
+        index: 0,
         title: "C",
         url: "http://example.com/c",
+      }, {
+        guid: "bookmarkBBBB",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 1,
+        title: "B",
+        url: "http://example.com/b",
       }, {
         guid: "bookmarkEEEE",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -359,12 +359,13 @@ add_task(async function test_missing_children() {
         title: "E",
         url: "http://example.com/e",
       }],
-    }, "Menu children should be (B C E)");
+    }, "Menu children should be (C B E)");
     deepEqual(await buf.fetchRemoteOrphans(), {
-      missingChildren: ["bookmarkDDDD"],
-      missingParents: [],
+      missingChildren: [],
+      missingParents: ["bookmarkBBBB", "bookmarkEEEE"],
       parentsWithGaps: [],
-    }, "Should report (D) as missing");
+    }, "Should report missing parents for (B E)");
+    await storeChangesInMirror(buf, changesToUpload);
   }
 
   info("Add D to remote");
@@ -381,45 +382,46 @@ add_task(async function test_missing_children() {
 
     let idsToUpload = inspectChangeRecords(changesToUpload);
     deepEqual(idsToUpload, {
-      updated: [],
+      updated: ["bookmarkDDDD", "menu"],
       deleted: [],
-    }, "Should not reupload complete menu");
+    }, "Should reupload complete menu");
     await assertLocalTree(PlacesUtils.bookmarks.menuGuid, {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
       title: BookmarksMenuTitle,
       children: [{
-        guid: "bookmarkBBBB",
-        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        index: 0,
-        title: "B",
-        url: "http://example.com/b",
-      }, {
         guid: "bookmarkCCCC",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        index: 1,
+        index: 0,
         title: "C",
         url: "http://example.com/c",
       }, {
-        guid: "bookmarkDDDD",
+        guid: "bookmarkBBBB",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        index: 2,
-        title: "D",
-        url: "http://example.com/d",
+        index: 1,
+        title: "B",
+        url: "http://example.com/b",
       }, {
         guid: "bookmarkEEEE",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        index: 3,
+        index: 2,
         title: "E",
         url: "http://example.com/e",
+      }, {
+        guid: "bookmarkDDDD",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 3,
+        title: "D",
+        url: "http://example.com/d",
       }],
-    }, "Menu children should be (B C D E)");
+    }, "Menu children should be (C B E D)");
     deepEqual(await buf.fetchRemoteOrphans(), {
       missingChildren: [],
-      missingParents: [],
+      missingParents: ["bookmarkDDDD"],
       parentsWithGaps: [],
-    }, "Should not report any missing children");
+    }, "Should report missing parent for D");
+    await storeChangesInMirror(buf, changesToUpload);
   }
 
   await buf.finalize();
@@ -463,9 +465,10 @@ add_task(async function test_new_orphan_without_local_parent() {
     deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
     let idsToUpload = inspectChangeRecords(changesToUpload);
     deepEqual(idsToUpload, {
-      updated: [],
+      updated: ["bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD", "unfiled"],
       deleted: [],
-    }, "Should not reupload orphans (B C D)");
+    }, "Should reupload orphans (B C D)");
+    await storeChangesInMirror(buf, changesToUpload);
   }
 
   await assertLocalTree(PlacesUtils.bookmarks.unfiledGuid, {
@@ -511,9 +514,10 @@ add_task(async function test_new_orphan_without_local_parent() {
     deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
     let idsToUpload = inspectChangeRecords(changesToUpload);
     deepEqual(idsToUpload, {
-      updated: [],
+      updated: ["bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD", "folderAAAAAA", "unfiled"],
       deleted: [],
-    }, "Should not reupload orphan A");
+    }, "Should reupload A and its children");
+    await storeChangesInMirror(buf, changesToUpload);
   }
 
   await assertLocalTree(PlacesUtils.bookmarks.unfiledGuid, {
@@ -563,17 +567,18 @@ add_task(async function test_new_orphan_without_local_parent() {
     deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
     let idsToUpload = inspectChangeRecords(changesToUpload);
     deepEqual(idsToUpload, {
-      updated: [],
+      updated: ["folderAAAAAA", "folderEEEEEE", "menu"],
       deleted: [],
-    }, "Should not reupload orphan E");
+    }, "...");
+    await storeChangesInMirror(buf, changesToUpload);
   }
 
   // E is still in unfiled because we don't have a record for the menu.
-  await assertLocalTree(PlacesUtils.bookmarks.unfiledGuid, {
-    guid: PlacesUtils.bookmarks.unfiledGuid,
+  await assertLocalTree(PlacesUtils.bookmarks.menuGuid, {
+    guid: PlacesUtils.bookmarks.menuGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    index: 3,
-    title: UnfiledBookmarksTitle,
+    index: 0,
+    title: BookmarksMenuTitle,
     children: [{
       guid: "folderEEEEEE",
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -605,7 +610,7 @@ add_task(async function test_new_orphan_without_local_parent() {
         }],
       }],
     }],
-  }, "Should move A into E");
+  }, "Should move Menu > E > A");
 
   info("Add Menu > E to remote");
   await storeRecords(buf, [{
@@ -806,9 +811,9 @@ add_task(async function test_move_into_orphaned() {
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {
-    updated: ["bookmarkIIII", "folderCCCCCC", "folderEEEEEE"],
+    updated: ["bookmarkAAAA", "bookmarkIIII", "folderCCCCCC", "folderEEEEEE", "menu"],
     deleted: ["bookmarkDDDD"],
-  }, "Should upload records for (I C E); tombstone for D");
+  }, "Should upload records for (A I C E); tombstone for D");
 
   await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
     guid: PlacesUtils.bookmarks.rootGuid,
@@ -962,9 +967,10 @@ add_task(async function test_new_orphan_with_local_parent() {
     deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
     let idsToUpload = inspectChangeRecords(changesToUpload);
     deepEqual(idsToUpload, {
-      updated: [],
+      updated: ["bookmarkCCCC", "bookmarkDDDD", "folderAAAAAA"],
       deleted: [],
-    }, "Should not reupload orphans (C D)");
+    }, "Should reupload orphans (C D) and folder A");
+    await storeChangesInMirror(buf, changesToUpload);
   }
 
   await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
@@ -994,6 +1000,18 @@ add_task(async function test_new_orphan_with_local_parent() {
           index: 1,
           title: "E",
           url: "http://example.com/e",
+        }, {
+          guid: "bookmarkCCCC",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 2,
+          title: "C (remote)",
+          url: "http://example.com/c-remote",
+        }, {
+          guid: "bookmarkDDDD",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 3,
+          title: "D (remote)",
+          url: "http://example.com/d-remote",
         }],
       }],
     }, {
@@ -1006,26 +1024,13 @@ add_task(async function test_new_orphan_with_local_parent() {
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
       title: UnfiledBookmarksTitle,
-      children: [{
-        guid: "bookmarkCCCC",
-        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        index: 0,
-        title: "C (remote)",
-        url: "http://example.com/c-remote",
-      }, {
-        guid: "bookmarkDDDD",
-        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        index: 1,
-        title: "D (remote)",
-        url: "http://example.com/d-remote",
-      }],
     }, {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
       title: MobileBookmarksTitle,
     }],
-  }, "Should move (C D) to unfiled");
+  }, "Should move (C D) to end of A");
 
   // The partial uploader returns and uploads A.
   info("Add A to remote");
@@ -1123,10 +1128,7 @@ add_task(async function test_tombstone_as_child() {
   let changesToUpload = await buf.apply();
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload.deleted, [], "no new tombstones were created.");
-  // Note that we do not attempt to re-upload the folder with the correct
-  // list of children - but we might take some action in the future around
-  // this.
-  deepEqual(idsToUpload.updated, [], "parent is not re-uploaded");
+  deepEqual(idsToUpload.updated, ["folderAAAAAA"], "parent is re-uploaded");
 
   await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
     guid: PlacesUtils.bookmarks.rootGuid,
@@ -1670,8 +1672,7 @@ add_task(async function test_partial_cycle() {
   await PlacesTestUtils.markBookmarksAsSynced();
 
   // Try to create a cycle: move A into B, and B into the menu, but don't upload
-  // a record for the menu. B is still a child of A locally. Since we ignore the
-  // `parentid`, we'll move (B A) into unfiled.
+  // a record for the menu.
   info("Make remote changes: A > C");
   await storeRecords(buf, [{
     id: "folderAAAAAA",
@@ -1687,60 +1688,8 @@ add_task(async function test_partial_cycle() {
     children: ["folderAAAAAA"],
   }]);
 
-  info("Apply remote");
-  let changesToUpload = await buf.apply();
-  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
-
-  let idsToUpload = inspectChangeRecords(changesToUpload);
-  deepEqual(idsToUpload, { updated: [], deleted: [] },
-    "Should not mark any local items for upload");
-
-  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
-    guid: PlacesUtils.bookmarks.rootGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    index: 0,
-    title: "",
-    children: [{
-      guid: PlacesUtils.bookmarks.menuGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 0,
-      title: BookmarksMenuTitle,
-    }, {
-      guid: PlacesUtils.bookmarks.toolbarGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 1,
-      title: BookmarksToolbarTitle,
-    }, {
-      guid: PlacesUtils.bookmarks.unfiledGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 3,
-      title: UnfiledBookmarksTitle,
-      children: [{
-        guid: "folderBBBBBB",
-        type: PlacesUtils.bookmarks.TYPE_FOLDER,
-        index: 0,
-        title: "B (remote)",
-        children: [{
-          guid: "folderAAAAAA",
-          type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          index: 0,
-          title: "A (remote)",
-          children: [{
-            guid: "bookmarkCCCC",
-            type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-            index: 0,
-            title: "C",
-            url: "http://example.com/c",
-          }],
-        }],
-      }],
-    }, {
-      guid: PlacesUtils.bookmarks.mobileGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 4,
-      title: MobileBookmarksTitle,
-    }],
-  }, "Should move A and B to unfiled");
+  await Assert.rejects(buf.apply(), /Item folderBBBBBB can't contain itself/,
+    "Should abort merge if remote tree parents form `parentid` cycle");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -1789,43 +1738,8 @@ add_task(async function test_complete_cycle() {
     children: ["folderAAAAAA"],
   }]);
 
-  info("Apply remote");
-  let changesToUpload = await buf.apply();
-  deepEqual((await buf.fetchUnmergedGuids()).sort(), ["folderAAAAAA",
-    "folderBBBBBB", "folderCCCCCC", "folderDDDDDD"],
-    "Should leave items in circular subtree unmerged");
-
-  let idsToUpload = inspectChangeRecords(changesToUpload);
-  deepEqual(idsToUpload, { updated: [], deleted: [] },
-    "Should not mark any local items for upload");
-
-  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
-    guid: PlacesUtils.bookmarks.rootGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    index: 0,
-    title: "",
-    children: [{
-      guid: PlacesUtils.bookmarks.menuGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 0,
-      title: BookmarksMenuTitle,
-    }, {
-      guid: PlacesUtils.bookmarks.toolbarGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 1,
-      title: BookmarksToolbarTitle,
-    }, {
-      guid: PlacesUtils.bookmarks.unfiledGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 3,
-      title: UnfiledBookmarksTitle,
-    }, {
-      guid: PlacesUtils.bookmarks.mobileGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 4,
-      title: MobileBookmarksTitle,
-    }],
-  }, "Should not be confused into creating a cycle");
+  await Assert.rejects(buf.apply(), /Item folderAAAAAA can't contain itself/,
+    "Should abort merge if remote tree parents form cycle through `children`");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -1833,6 +1747,8 @@ add_task(async function test_complete_cycle() {
 });
 
 add_task(async function test_invalid_guid() {
+  let now = new Date();
+
   let buf = await openMirror("invalid_guid");
 
   info("Set up empty mirror");
@@ -1851,12 +1767,12 @@ add_task(async function test_invalid_guid() {
     title: "A",
     bmkUri: "http://example.com/a",
   }, {
-    // Should be ignored.
     id: "bad!guid~",
     parentid: "menu",
     type: "bookmark",
-    title: "Bad GUID",
-    bmkUri: "http://example.com/bad-guid",
+    title: "C",
+    bmkUri: "http://example.com/c",
+    dateAdded: now.getTime(),
   }, {
     id: "bookmarkBBBB",
     parentid: "menu",
@@ -1868,13 +1784,88 @@ add_task(async function test_invalid_guid() {
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
-  deepEqual(changesToUpload, {}, "Should not reupload menu with gaps");
+  let datesAdded = await promiseManyDatesAdded([PlacesUtils.bookmarks.menuGuid]);
+
+  let recordIdsToUpload = Object.keys(changesToUpload);
+  let newGuid = recordIdsToUpload.find(recordId =>
+    !["bad!guid~", "menu"].includes(recordId));
+
+  equal(recordIdsToUpload.length, 3,
+    "Should reupload menu, C, and tombstone for bad GUID");
+
+  deepEqual(changesToUpload["bad!guid~"], {
+    tombstone: true,
+    counter: 1,
+    synced: false,
+    cleartext: {
+      id: "bad!guid~",
+      deleted: true,
+    },
+  }, "Should upload tombstone for C's invalid GUID");
+
+  deepEqual(changesToUpload[newGuid], {
+    tombstone: false,
+    counter: 1,
+    synced: false,
+    cleartext: {
+      id: newGuid,
+      type: "bookmark",
+      parentid: "menu",
+      hasDupe: true,
+      parentName: BookmarksMenuTitle,
+      dateAdded: now.getTime(),
+      bmkUri: "http://example.com/c",
+      title: "C",
+    },
+  }, "Should reupload C with new GUID");
+
+  deepEqual(changesToUpload.menu, {
+    tombstone: false,
+    counter: 1,
+    synced: false,
+    cleartext: {
+      id: "menu",
+      type: "folder",
+      parentid: "places",
+      hasDupe: true,
+      parentName: "",
+      dateAdded: datesAdded.get(PlacesUtils.bookmarks.menuGuid),
+      title: BookmarksMenuTitle,
+      children: ["bookmarkAAAA", newGuid, "bookmarkBBBB"],
+    },
+  }, "Should reupload menu with new child GUID for C");
 
   deepEqual(await buf.fetchRemoteOrphans(), {
     missingChildren: [],
     missingParents: [],
-    parentsWithGaps: [PlacesUtils.bookmarks.menuGuid],
-  }, "Should report gaps in menu");
+    parentsWithGaps: [],
+  }, "Should not report problems");
+
+  await assertLocalTree(PlacesUtils.bookmarks.menuGuid, {
+    guid: PlacesUtils.bookmarks.menuGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    index: 0,
+    title: BookmarksMenuTitle,
+    children: [{
+      guid: "bookmarkAAAA",
+      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      index: 0,
+      title: "A",
+      url: "http://example.com/a",
+    }, {
+      guid: newGuid,
+      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      index: 1,
+      title: "C",
+      url: "http://example.com/c",
+    }, {
+      guid: "bookmarkBBBB",
+      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      index: 2,
+      title: "B",
+      url: "http://example.com/b",
+    }],
+  });
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();

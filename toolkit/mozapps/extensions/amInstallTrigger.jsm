@@ -73,8 +73,7 @@ RemoteMediator.prototype = {
       // in-content UI page, walk up to find the first frame element in a chrome
       // privileged document
       let element = window.frameElement;
-      let ssm = Services.scriptSecurityManager;
-      while (element && !ssm.isSystemPrincipal(element.ownerDocument.nodePrincipal))
+      while (element && !element.ownerDocument.nodePrincipal.isSystemPrincipal)
         element = element.ownerGlobal.frameElement;
 
       if (element) {

@@ -30,7 +30,7 @@ add_task(async function test_principal_click() {
          "sanity check - make sure we test the principal for the correct URI");
 
       let triggeringPrincipal = channel.loadInfo.triggeringPrincipal;
-      ok(Services.scriptSecurityManager.isSystemPrincipal(triggeringPrincipal),
+      ok(triggeringPrincipal.isSystemPrincipal,
          "loading about: from privileged page must have a triggering of System");
 
       let contentPolicyType = channel.loadInfo.externalContentPolicyType;
@@ -66,7 +66,7 @@ add_task(async function test_principal_ctrl_click() {
          "sanity check - make sure we test the principal for the correct URI");
 
       let triggeringPrincipal = channel.loadInfo.triggeringPrincipal;
-      ok(Services.scriptSecurityManager.isSystemPrincipal(triggeringPrincipal),
+      ok(triggeringPrincipal.isSystemPrincipal,
          "loading about: from privileged page must have a triggering of System");
 
       let contentPolicyType = channel.loadInfo.externalContentPolicyType;
@@ -111,7 +111,7 @@ add_task(async function test_principal_right_click_open_link_in_new_tab() {
          "sanity check - make sure we test the principal for the correct URI");
 
       let triggeringPrincipal = channel.loadInfo.triggeringPrincipal;
-      ok(Services.scriptSecurityManager.isSystemPrincipal(triggeringPrincipal),
+      ok(triggeringPrincipal.isSystemPrincipal,
          "loading about: from privileged page must have a triggering of System");
 
       let contentPolicyType = channel.loadInfo.externalContentPolicyType;

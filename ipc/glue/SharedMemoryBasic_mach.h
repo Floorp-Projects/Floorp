@@ -70,7 +70,7 @@ class SharedMemoryBasic final : public SharedMemoryCommon<mach_port_t> {
 
   virtual bool Create(size_t aNbytes) override;
 
-  virtual bool Map(size_t nBytes) override;
+  virtual bool Map(size_t nBytes, void* fixed_address = nullptr) override;
 
   virtual void CloseHandle() override;
 
@@ -85,6 +85,8 @@ class SharedMemoryBasic final : public SharedMemoryCommon<mach_port_t> {
   virtual SharedMemoryType Type() const override { return TYPE_BASIC; }
 
   static Handle NULLHandle() { return Handle(); }
+
+  static void* FindFreeAddressSpace(size_t aSize);
 
   virtual bool IsHandleValid(const Handle& aHandle) const override;
 

@@ -95,8 +95,8 @@ interface mozIStorageAsyncConnection : nsISupports {
    *
    * @note If your connection is already read-only, you will get a read-only
    *       clone.
-   * @note The resulting connection will NOT implement mozIStorageConnection,
-   *       it will only implement mozIStorageAsyncConnection.
+   * @note The resulting connection will implement `mozIStorageConnection`, but
+   *       all synchronous methods will throw if called from the main thread.
    * @note Due to a bug in SQLite, if you use the shared cache
    *       (see mozIStorageService), you end up with the same privileges as the
    *       first connection opened regardless of what is specified in aReadOnly.

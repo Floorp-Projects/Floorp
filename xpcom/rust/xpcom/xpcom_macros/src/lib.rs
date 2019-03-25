@@ -22,7 +22,7 @@
 //!
 //! // Implementing methods on an XPCOM Struct
 //! impl ImplRunnable {
-//!     pub fn Run(&self) -> nsresult {
+//!     unsafe fn Run(&self) -> nsresult {
 //!         println!("{}", self.i);
 //!         NS_OK
 //!     }
@@ -110,7 +110,7 @@
 //! // implemented manually.
 //! impl ImplRunnable {
 //!     // The method should have the same name as the corresponding C++ method.
-//!     pub fn Run(&self) -> nsresult {
+//!     unsafe fn Run(&self) -> nsresult {
 //!         // Fields defined on the `Init` struct will be directly on the
 //!         // generated struct.
 //!         println!("{}", self.i);
@@ -118,6 +118,22 @@
 //!     }
 //! }
 //! ```
+//!
+//! XPCOM methods implemented in Rust have signatures similar to methods
+//! implemented in C++.
+//!
+//! ```ignore
+//! // nsISupports foo(in long long bar, in AString baz);
+//! unsafe fn Foo(&self, bar: libc::int64_t, baz: *const nsAString,
+//!               _retval: *mut *const nsISupports) -> nsresult;
+//!
+//! // AString qux(in nsISupports ham);
+//! unsafe fn Qux(&self, ham: *const nsISupports,
+//!               _retval: *mut nsAString) -> nsresult;
+//! ```
+//!
+//! This is a little tedious, so the `xpcom_method!` macro provides a convenient
+//! way to generate wrappers around more idiomatic Rust methods.
 //!
 //! [`xpcom`]: ../xpcom/index.html
 //! [`nsIRunnable`]: ../xpcom/struct.nsIRunnable.html

@@ -1,0 +1,70 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIStorageConnection;
+
+[scriptable, uuid(d23fdfea-92c8-409d-a516-08ae395d578f)]
+interface mozISyncedBookmarksMirrorCallback : nsISupports {
+  void handleResult(in nsISupports result);
+  void handleError(in nsresult code, in AString message);
+};
+
+[scriptable, uuid(37485984-a6ab-46e3-9b0c-e8b613413ef3)]
+interface mozISyncedBookmarksMirrorLogger : nsISupports {
+  const short LEVEL_OFF = 0;
+  const short LEVEL_ERROR = 1;
+  const short LEVEL_WARN = 2;
+  const short LEVEL_DEBUG = 3;
+  const short LEVEL_TRACE = 4;
+
+  attribute short maxLevel;
+
+  void error(in AString message);
+  void warn(in AString message);
+  void debug(in AString message);
+  void trace(in AString message);
+};
+
+[scriptable, builtinclass, uuid(f0a6217d-8344-4e68-9995-bbf5554be86e)]
+interface mozISyncedBookmarksMerger : nsISupports {
+  // Synced item kinds. These are stored in the mirror database.
+  const short KIND_BOOKMARK = 1;
+  const short KIND_QUERY = 2;
+  const short KIND_FOLDER = 3;
+  const short KIND_LIVEMARK = 4;
+  const short KIND_SEPARATOR = 5;
+
+  // Synced item validity states. These are also stored in the mirror
+  // database. `REUPLOAD` means a remote item can be fixed up and applied,
+  // and should be reuploaded. `REPLACE` means a remote item isn't valid
+  // at all, and should either be replaced with a valid local copy, or deleted
+  // if a valid local copy doesn't exist.
+  const short VALIDITY_VALID = 1;
+  const short VALIDITY_REUPLOAD = 2;
+  const short VALIDITY_REPLACE = 3;
+
+  // The mirror database connection to use for merging. The merge runs on the
+  // connection's async thread, to avoid blocking the main thread. The database
+  // schema, temp tables, and triggers must be set up before calling
+  // `merge`.
+  attribute mozIStorageConnection db;
+
+  // Optional; used for logging.
+  attribute mozISyncedBookmarksMirrorLogger logger;
+
+  // Merges the local and remote bookmark trees. Stores the merged tree in the
+  // `mergeStates` table. Calls `callback.handleResult(nsIPropertyBag2)` with
+  // telemetry stats on success, or `callback.handleError(error)` if an error
+  // occurs.
+  void merge(in long long localTimeSeconds,
+             in long long remoteTimeSeconds,
+             in Array<AString> weakUploads,
+             in mozISyncedBookmarksMirrorCallback callback);
+
+  // Finalizes the merger. This does _not_ automatically close the database
+  // connection.
+  void finalize();
+};

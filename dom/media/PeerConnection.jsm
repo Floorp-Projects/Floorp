@@ -412,7 +412,7 @@ class RTCPeerConnection {
         "RTCPeerConnection constructor passed invalid RTCConfiguration");
     }
     var principal = Cu.getWebIDLCallerPrincipal();
-    this._isChrome = Services.scriptSecurityManager.isSystemPrincipal(principal);
+    this._isChrome = principal.isSystemPrincipal;
 
     if (_globalPCList._networkdown) {
       throw new this._win.DOMException(
