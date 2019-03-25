@@ -261,9 +261,9 @@ extern "C" {
     pub fn AppendToAutoIdVector(v: *mut JS::AutoIdVector, id: jsid) -> bool;
     pub fn SliceAutoIdVector(v: *const JS::AutoIdVector, length: *mut usize) -> *const jsid;
     pub fn DestroyAutoIdVector(v: *mut JS::AutoIdVector);
-    pub fn CreateAutoObjectVector(aCx: *mut JSContext) -> *mut JS::AutoObjectVector;
-    pub fn AppendToAutoObjectVector(v: *mut JS::AutoObjectVector, obj: *mut JSObject) -> bool;
-    pub fn DeleteAutoObjectVector(v: *mut JS::AutoObjectVector);
+    pub fn CreateRootedObjectVector(aCx: *mut JSContext) -> *mut JS::RootedObjectVector;
+    pub fn AppendToRootedObjectVector(v: *mut JS::RootedObjectVector, obj: *mut JSObject) -> bool;
+    pub fn DeleteRootedObjectVector(v: *mut JS::RootedObjectVector);
     pub fn CollectServoSizes(rt: *mut JSRuntime, sizes: *mut JS::ServoSizes) -> bool;
     pub fn CallIdTracer(trc: *mut JSTracer, idp: *mut Heap<jsid>, name: *const ::libc::c_char);
     pub fn CallValueTracer(trc: *mut JSTracer,

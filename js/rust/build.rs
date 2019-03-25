@@ -153,7 +153,6 @@ const EXTRA_CLANG_FLAGS: &'static [&'static str] = &[
 const WHITELIST_TYPES: &'static [&'static str] = &[
     "JS::AutoCheckCannotGC",
     "JS::AutoIdVector",
-    "JS::AutoObjectVector",
     "JS::CallArgs",
     "js::Class",
     "JS::RealmOptions",
@@ -221,6 +220,7 @@ const WHITELIST_TYPES: &'static [&'static str] = &[
     "JS::PropertyDescriptor",
     "JS::Rooted",
     "JS::RootedObject",
+    "JS::RootedObjectVector",
     "JS::RootingContext",
     "JS::RootKind",
     "js::Scalar::Type",
