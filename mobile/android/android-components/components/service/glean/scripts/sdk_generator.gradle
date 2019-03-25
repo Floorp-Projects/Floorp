@@ -112,7 +112,13 @@ ext.gleanGenerateMetricsAPI = {
     variant ->
 
     def sourceOutputDir =  "$buildDir/telemetry/src/${variant.name}/kotlin"
-    def fullNamespace = "${variant.applicationId}.GleanMetrics"
+    // Get the name of the package as if it were to be used in the R or BuildConfig
+    // files. This is required since applications can define different application ids
+    // depending on the variant type: the generated API definitions don't need to be
+    // different due to that.
+    Task buildConfig = variant.generateBuildConfig
+    def originalPackageName = buildConfig.getBuildConfigPackageName()
+    def fullNamespace = "${originalPackageName}.GleanMetrics"
     def generateKotlinAPI = task("generateMetricsSourceFor${variant.name.capitalize()}", type: Exec) {
         description = "Generate the Kotlin code for the Metrics API"
 
