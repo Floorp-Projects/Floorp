@@ -284,7 +284,8 @@ OCSPRequest::Run() {
   }
 
   nsCOMPtr<nsIInputStream> uploadStream;
-  rv = NS_NewByteInputStream(getter_AddRefs(uploadStream), mPOSTData);
+  rv = NS_NewByteInputStream(getter_AddRefs(uploadStream), mPOSTData,
+                             NS_ASSIGNMENT_COPY);
   if (NS_FAILED(rv)) {
     return NotifyDone(rv, lock);
   }
