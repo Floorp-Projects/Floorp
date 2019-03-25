@@ -310,14 +310,14 @@ MutableModule Module::deserialize(const uint8_t* begin, size_t size,
 
 void Module::serialize(const LinkData& linkData,
                        JS::OptimizedEncodingListener& listener) const {
-  Vector<uint8_t, 0, SystemAllocPolicy> bytes;
-  if (!bytes.resize(serializedSize(linkData))) {
+  auto bytes = MakeUnique<JS::OptimizedEncodingBytes>();
+  if (!bytes || !bytes->resize(serializedSize(linkData))) {
     return;
   }
 
-  serialize(linkData, bytes.begin(), bytes.length());
+  serialize(linkData, bytes->begin(), bytes->length());
 
-  listener.storeOptimizedEncoding(bytes.begin(), bytes.length());
+  listener.storeOptimizedEncoding(std::move(bytes));
 }
 
 /* virtual */

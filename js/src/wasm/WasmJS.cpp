@@ -474,11 +474,11 @@ struct MOZ_STACK_CLASS SerializeListener : JS::OptimizedEncodingListener {
   Bytes* serialized;
   explicit SerializeListener(Bytes* serialized) : serialized(serialized) {}
 
-  void storeOptimizedEncoding(const uint8_t* bytes, size_t length) override {
+  void storeOptimizedEncoding(JS::UniqueOptimizedEncodingBytes bytes) override {
     MOZ_ASSERT(!called);
     called = true;
-    if (serialized->resize(length)) {
-      memcpy(serialized->begin(), bytes, length);
+    if (serialized->resize(bytes->length())) {
+      memcpy(serialized->begin(), bytes->begin(), bytes->length());
     }
   }
 };
