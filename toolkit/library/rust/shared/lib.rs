@@ -38,6 +38,7 @@ extern crate rsdparsa_capi;
 extern crate jsrust_shared;
 #[cfg(feature = "bitsdownload")]
 extern crate bitsdownload;
+extern crate storage;
 
 extern crate arrayvec;
 

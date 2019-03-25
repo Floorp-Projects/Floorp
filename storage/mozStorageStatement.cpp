@@ -676,6 +676,52 @@ Statement::GetString(uint32_t aIndex, nsAString &_value) {
 }
 
 NS_IMETHODIMP
+Statement::GetVariant(uint32_t aIndex, nsIVariant **_value) {
+  if (!mDBStatement) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  ENSURE_INDEX_VALUE(aIndex, mResultColumnCount);
+
+  if (!mExecuting) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIVariant> variant;
+  int type = ::sqlite3_column_type(mDBStatement, aIndex);
+  switch (type) {
+    case SQLITE_INTEGER:
+      variant =
+          new IntegerVariant(::sqlite3_column_int64(mDBStatement, aIndex));
+      break;
+    case SQLITE_FLOAT:
+      variant = new FloatVariant(::sqlite3_column_double(mDBStatement, aIndex));
+      break;
+    case SQLITE_TEXT: {
+      const char16_t *value = static_cast<const char16_t *>(
+          ::sqlite3_column_text16(mDBStatement, aIndex));
+      nsDependentString str(value,
+                            ::sqlite3_column_bytes16(mDBStatement, aIndex) / 2);
+      variant = new TextVariant(str);
+      break;
+    }
+    case SQLITE_NULL:
+      variant = new NullVariant();
+      break;
+    case SQLITE_BLOB: {
+      int size = ::sqlite3_column_bytes(mDBStatement, aIndex);
+      const void *data = ::sqlite3_column_blob(mDBStatement, aIndex);
+      variant = new BlobVariant(std::pair<const void *, int>(data, size));
+      break;
+    }
+  }
+  NS_ENSURE_TRUE(variant, NS_ERROR_UNEXPECTED);
+
+  variant.forget(_value);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 Statement::GetBlob(uint32_t aIndex, uint32_t *_size, uint8_t **_blob) {
   if (!mDBStatement) return NS_ERROR_NOT_INITIALIZED;
 

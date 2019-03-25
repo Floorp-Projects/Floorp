@@ -45,6 +45,15 @@ class Connection final : public mozIStorageConnection,
   NS_DECL_NSIINTERFACEREQUESTOR
 
   /**
+   * Indicates if a database operation is synchronous or asynchronous.
+   *
+   * - Async operations may be called from any thread for all connections.
+   * - Sync operations may be called from any thread for sync connections, and
+   *   from background threads for async connections.
+   */
+  enum ConnectionOperation { ASYNCHRONOUS, SYNCHRONOUS };
+
+  /**
    * Structure used to describe user functions on the database connection.
    */
   struct FunctionInfo {
@@ -61,11 +70,11 @@ class Connection final : public mozIStorageConnection,
    *        connection.
    * @param aFlags
    *        The flags to pass to sqlite3_open_v2.
-   * @param aAsyncOnly
-   *        If |true|, the Connection only implements asynchronous interface:
-   *        - |mozIStorageAsyncConnection|;
-   *        If |false|, the result also implements synchronous interface:
-   *        - |mozIStorageConnection|.
+   * @param aSupportedOperations
+   *        The operation types supported on this connection. All connections
+   *        implement both the async (`mozIStorageAsyncConnection`) and sync
+   *        (`mozIStorageConnection`) interfaces, but async connections may not
+   *        call sync operations from the main thread.
    * @param aIgnoreLockingMode
    *        If |true|, ignore locks in force on the file. Only usable with
    *        read-only connections. Defaults to false.
@@ -74,7 +83,8 @@ class Connection final : public mozIStorageConnection,
    *        corrupt) or produce wrong results without any indication that has
    *        happened.
    */
-  Connection(Service *aService, int aFlags, bool aAsyncOnly,
+  Connection(Service *aService, int aFlags,
+             ConnectionOperation aSupportedOperations,
              bool aIgnoreLockingMode = false);
 
   /**
@@ -225,7 +235,17 @@ class Connection final : public mozIStorageConnection,
   nsresult commitTransactionInternal(sqlite3 *aNativeConnection);
   nsresult rollbackTransactionInternal(sqlite3 *aNativeConnection);
 
-  bool connectionReady();
+  /**
+   * Indicates if this database connection is ready and supports the given
+   * operation.
+   *
+   * @param  aOperationType
+   *         The operation type, sync or async.
+   * @throws NS_ERROR_NOT_AVAILABLE if the operation isn't supported on this
+   *         connection.
+   * @throws NS_ERROR_NOT_INITIALIZED if the connection isn't set up.
+   */
+  nsresult connectionReady(ConnectionOperation aOperationType);
 
   /**
    * Thread-aware version of connectionReady, results per caller's thread are:
@@ -418,10 +438,11 @@ class Connection final : public mozIStorageConnection,
   RefPtr<Service> mStorageService;
 
   /**
-   * If |false|, this instance supports synchronous operations
-   * and it can be cast to |mozIStorageConnection|.
+   * Indicates which operations are supported on this connection.
    */
-  const bool mAsyncOnly;
+  const ConnectionOperation mSupportedOperations;
+
+  nsresult synchronousClose();
 };
 
 /**
