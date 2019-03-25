@@ -5,16 +5,19 @@
 package org.mozilla.fenix.search
 
 import android.content.Context
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
+import org.jetbrains.anko.backgroundDrawable
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
@@ -58,12 +61,13 @@ class SearchFragment : Fragment() {
         }
 
         toolbarComponent = ToolbarComponent(
-            view.toolbar_wrapper,
+            view.toolbar_component_wrapper,
             ActionBusFactory.get(this),
             sessionId,
             isPrivate,
             SearchState(url, isEditing = true)
         )
+
         awesomeBarComponent = AwesomeBarComponent(view.search_layout, ActionBusFactory.get(this))
         ActionBusFactory.get(this).logMergedObservables()
         return view
@@ -77,6 +81,16 @@ class SearchFragment : Fragment() {
         lifecycle.addObserver((toolbarComponent.uiView as ToolbarUIView).toolbarIntegration)
 
         view.toolbar_wrapper.clipToOutline = false
+
+        val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(
+            requireContext()
+        ).let {
+            BitmapDrawable(resources, it.icon)
+        }
+
+        val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
+        searchIcon.setBounds(0, 0, iconSize, iconSize)
+        search_engine_icon.backgroundDrawable = searchIcon
     }
 
     override fun onResume() {
