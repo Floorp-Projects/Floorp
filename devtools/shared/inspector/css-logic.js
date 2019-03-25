@@ -112,14 +112,36 @@ exports.CSSRuleTypeName = {
 exports.l10n = name => styleInspectorL10N.getStr(name);
 
 /**
- * Is the given property sheet a content stylesheet?
+ * Is the given property sheet an author stylesheet?
  *
  * @param {CSSStyleSheet} sheet a stylesheet
- * @return {boolean} true if the given stylesheet is a content stylesheet,
+ * @return {boolean} true if the given stylesheet is an author stylesheet,
  * false otherwise.
  */
-exports.isContentStylesheet = function(sheet) {
-  return sheet.parsingMode !== "agent";
+exports.isAuthorStylesheet = function(sheet) {
+  return sheet.parsingMode === "author";
+};
+
+/**
+ * Is the given property sheet a user stylesheet?
+ *
+ * @param {CSSStyleSheet} sheet a stylesheet
+ * @return {boolean} true if the given stylesheet is a user stylesheet,
+ * false otherwise.
+ */
+exports.isUserStylesheet = function(sheet) {
+  return sheet.parsingMode === "user";
+};
+
+/**
+ * Is the given property sheet a agent stylesheet?
+ *
+ * @param {CSSStyleSheet} sheet a stylesheet
+ * @return {boolean} true if the given stylesheet is a agent stylesheet,
+ * false otherwise.
+ */
+exports.isAgentStylesheet = function(sheet) {
+  return sheet.parsingMode === "agent";
 };
 
 /**
