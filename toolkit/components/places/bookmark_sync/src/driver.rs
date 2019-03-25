@@ -8,8 +8,22 @@ use dogear::Guid;
 use log::{Level, LevelFilter, Log, Metadata, Record};
 use moz_task::{Task, TaskRunnable, ThreadPtrHandle};
 use nserror::nsresult;
-use nsstring::nsString;
+use nsstring::{nsACString, nsCString, nsString};
 use xpcom::interfaces::mozISyncedBookmarksMirrorLogger;
+
+extern "C" {
+    fn NS_GeneratePlacesGUID(guid: *mut nsACString) -> nsresult;
+}
+
+fn generate_guid() -> Result<nsCString, nsresult> {
+    let mut guid = nsCString::new();
+    let rv = unsafe { NS_GeneratePlacesGUID(&mut *guid) };
+    if rv.succeeded() {
+        Ok(guid)
+    } else {
+        Err(rv)
+    }
+}
 
 /// The merger driver, created and used on the storage thread.
 pub struct Driver {
@@ -25,7 +39,9 @@ impl Driver {
 
 impl dogear::Driver for Driver {
     fn generate_new_guid(&self, invalid_guid: &Guid) -> dogear::Result<Guid> {
-        Ok(invalid_guid.clone())
+        generate_guid()
+            .map_err(|_| dogear::ErrorKind::InvalidGuid(invalid_guid.clone()).into())
+            .and_then(|s| Guid::from_utf8(s.as_ref()))
     }
 
     #[inline]
