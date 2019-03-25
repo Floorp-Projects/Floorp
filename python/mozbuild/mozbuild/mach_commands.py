@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import xml.etree.ElementTree as ET
 import yaml
 
 from collections import OrderedDict
@@ -2367,7 +2368,10 @@ class StaticAnalysis(MachCommandBase):
     @CommandArgument('--output', '-o', default=None, dest='output_path',
                      help='Specify a file handle to write clang-format raw output instead of '
                           'applying changes. This can be stdout or a file path.')
-    def clang_format(self, assume_filename, path, commit, output_path=None, verbose=False):
+    @CommandArgument('--format', '-f', choices=('diff', 'json'), default='diff', dest='output_format',
+                     help='Specify the output format used: diff is the raw patch provided by '
+                     'clang-format, json is a list of atomic changes to process.')
+    def clang_format(self, assume_filename, path, commit, output_path=None, output_format='diff', verbose=False):
         # Run clang-format or clang-format-diff on the local changes
         # or files/directories
         if path is not None:
@@ -2408,7 +2412,7 @@ class StaticAnalysis(MachCommandBase):
         if assume_filename:
             return self._run_clang_format_in_console(self._clang_format_path, path, assume_filename)
 
-        return self._run_clang_format_path(self._clang_format_path, path, output)
+        return self._run_clang_format_path(self._clang_format_path, path, output, output_format)
 
     def _verify_checker(self, item):
         check = item['name']
@@ -2873,12 +2877,16 @@ class StaticAnalysis(MachCommandBase):
             process.wait();
             return 0
 
-    def _run_clang_format_path(self, clang_format, paths, output_file):
+    def _run_clang_format_path(self, clang_format, paths, output_file, output_format):
 
         # Run clang-format on files or directories directly
         from subprocess import check_output, CalledProcessError
 
-        args = [clang_format, "-i"]
+        if output_format == 'json':
+            # Get replacements in xml, then process to json
+            args = [clang_format, '-output-replacements-xml']
+        else:
+            args = [clang_format, '-i']
 
         if output_file:
             # We just want to show the diff, we create the directory to copy it
@@ -2894,6 +2902,7 @@ class StaticAnalysis(MachCommandBase):
         print("Processing %d file(s)..." % len(path_list))
 
         if output_file:
+            patches = {}
             for i in range(0, len(path_list)):
                 l = path_list[i: (i + 1)]
 
@@ -2911,22 +2920,35 @@ class StaticAnalysis(MachCommandBase):
 
                 # Run clang-format on the list
                 try:
-                    check_output(args + l)
+                    output = check_output(args + l)
+                    if output and output_format == 'json':
+                        patches[original_path] = self._parse_xml_output(original_path, output)
                 except CalledProcessError as e:
                     # Something wrong happend
                     print("clang-format: An error occured while running clang-format.")
                     return e.returncode
 
                 # show the diff
-                diff_command = ["diff", "-u", original_path, target_file]
-                try:
-                    output = check_output(diff_command)
-                except CalledProcessError as e:
-                    # diff -u returns 0 when no change
-                    # here, we expect changes. if we are here, this means that
-                    # there is a diff to show
-                    if e.output:
-                        print(e.output, file=output_file)
+                if output_format == 'diff':
+                    diff_command = ["diff", "-u", original_path, target_file]
+                    try:
+                        output = check_output(diff_command)
+                    except CalledProcessError as e:
+                        # diff -u returns 0 when no change
+                        # here, we expect changes. if we are here, this means that
+                        # there is a diff to show
+                        if e.output:
+                            # Replace the temp path by its original path to display a valid patch
+                            patches[original_path] = e.output.replace(target_file, original_path)
+
+            if output_format == 'json':
+                output = json.dumps(patches, indent=4)
+            else:
+                # Display all the patches at once
+                output = '\n'.join(patches.values())
+
+            # Output to specified file or stdout
+            print(output, file=output_file)
 
             shutil.rmtree(tmpdir)
             return 0
@@ -2971,6 +2993,35 @@ class StaticAnalysis(MachCommandBase):
             if error_code is not None:
                 return error_code
         return 0
+
+    def _parse_xml_output(self, path, clang_output):
+        '''
+        Parse the clang-format XML output to convert it in a JSON compatible
+        list of patches, and calculates line level informations from the
+        character level provided changes.
+        '''
+        content = open(path, 'r').read().decode('utf-8')
+
+        def _nb_of_lines(start, end):
+            return len(content[start:end].splitlines())
+
+        def _build(replacement):
+            offset = int(replacement.attrib['offset'])
+            length = int(replacement.attrib['length'])
+            last_line = content.rfind('\n', 0, offset)
+            return {
+                'replacement': replacement.text,
+                'char_offset': offset,
+                'char_length': length,
+                'line': _nb_of_lines(0, offset),
+                'line_offset': last_line != -1 and (offset - last_line) or 0,
+                'lines_modified': _nb_of_lines(offset, offset + length),
+            }
+
+        return [
+            _build(replacement)
+            for replacement in ET.fromstring(clang_output).findall('replacement')
+        ]
 
 
 @CommandProvider
