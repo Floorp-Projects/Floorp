@@ -88,9 +88,32 @@ class PingMakerTest {
         val pingInfo = jsonData["ping_info"] as JSONObject
 
         assertEquals("test", pingInfo.getString("ping_type"))
-        assertEquals(BuildConfig.LIBRARY_VERSION, pingInfo.getString("telemetry_sdk_build"))
         assertTrue(pingInfo.has("start_time"))
         assertTrue(pingInfo.has("end_time"))
+        assertTrue(pingInfo.has("seq"))
+    }
+
+    @Test
+    fun `getClientInfo() must report all the available data`() {
+        val maker = PingMaker(
+            StorageEngineManager(
+                storageEngines = mapOf(
+                    "engine2" to MockStorageEngine(JSONArray(listOf("a", "b", "c")))
+                ),
+                applicationContext = ApplicationProvider.getApplicationContext()
+            ),
+            ApplicationProvider.getApplicationContext()
+        )
+
+        // Gather the data. We expect an empty ping with the "ping_info" information
+        val data = maker.collect("test")
+        assertTrue("We expect a non-empty JSON blob", "{}" != data)
+
+        // Parse the data so that we can easily check the other fields
+        val jsonData = JSONObject(data)
+        val clientInfo = jsonData["client_info"] as JSONObject
+
+        assertEquals(BuildConfig.LIBRARY_VERSION, clientInfo.getString("telemetry_sdk_build"))
     }
 
     @Test

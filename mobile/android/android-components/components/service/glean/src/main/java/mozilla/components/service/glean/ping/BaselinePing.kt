@@ -4,37 +4,18 @@
 
 package mozilla.components.service.glean.ping
 
-import android.os.Build
 import mozilla.components.service.glean.GleanMetrics.GleanBaseline
-import mozilla.components.support.base.log.logger.Logger
 import java.util.Locale
 
 /**
  * BaselinePing facilitates setup and initialization of baseline pings.
  */
 internal class BaselinePing {
-    private val logger = Logger("glean/BaselinePing")
-
     companion object {
         const val STORE_NAME = "baseline"
     }
 
     init {
-        // Set the OS type
-        GleanBaseline.os.set("Android")
-
-        // Set the OS version
-        // https://developer.android.com/reference/android/os/Build.VERSION
-        GleanBaseline.osVersion.set(Build.VERSION.SDK_INT.toString())
-
-        // Set the device strings
-        // https://developer.android.com/reference/android/os/Build
-        GleanBaseline.deviceManufacturer.set(Build.MANUFACTURER)
-        GleanBaseline.deviceModel.set(Build.MODEL)
-
-        // Set the CPU architecture
-        GleanBaseline.architecture.set(Build.SUPPORTED_ABIS[0])
-
         GleanBaseline.locale.set(getLanguageTag())
     }
 

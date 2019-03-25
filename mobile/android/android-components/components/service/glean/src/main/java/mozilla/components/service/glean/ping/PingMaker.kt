@@ -64,14 +64,11 @@ internal class PingMaker(
     fun getPingInfo(pingName: String): JSONObject {
         val pingInfo = JSONObject()
         pingInfo.put("ping_type", pingName)
-        pingInfo.put("telemetry_sdk_build", BuildConfig.LIBRARY_VERSION)
 
         // Experiments belong in ping_info, because they must appear in every ping
         pingInfo.put("experiments", ExperimentsStorageEngine.getSnapshotAsJSON("", false))
 
         pingInfo.put("seq", getPingSeq(pingName))
-
-        pingInfo.mergeWith(getPingInfoMetrics())
 
         // This needs to be a bit more involved for start-end times. "start_time" is
         // the time the ping was generated the last time. If not available, we use the
@@ -86,17 +83,30 @@ internal class PingMaker(
     }
 
     /**
-     * Collect the metrics stored in the "glean_ping_info" bucket.
+     * Return the object containing the "client_info" section of a ping.
      *
-     * @return a [JSONObject] containing the metrics belonging to the "ping_info"
+     * @return a [JSONObject] containing the "client_info" data
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun getClientInfo(): JSONObject {
+        val clientInfo = JSONObject()
+        clientInfo.put("telemetry_sdk_build", BuildConfig.LIBRARY_VERSION)
+        clientInfo.mergeWith(getClientInfoMetrics())
+        return clientInfo
+    }
+
+    /**
+     * Collect the metrics stored in the "glean_client_info" bucket.
+     *
+     * @return a [JSONObject] containing the metrics belonging to the "client_info"
      *         section of the ping.
      */
-    private fun getPingInfoMetrics(): JSONObject {
-        val pingInfoData = storageManager.collect("glean_ping_info")
+    private fun getClientInfoMetrics(): JSONObject {
+        val pingInfoData = storageManager.collect("glean_client_info")
 
         // The data returned by the manager is keyed by the storage engine name.
         // For example, the client id will live in the "uuid" object, within
-        // `pingInfoData`. Remove the first level of indirection and return
+        // `clientInfoData`. Remove the first level of indirection and return
         // the flattened data to the caller.
         val flattenedData = JSONObject()
         try {
@@ -105,7 +115,7 @@ internal class PingMaker(
                 flattenedData.mergeWith(metricsData.getJSONObject(key))
             }
         } catch (e: JSONException) {
-            logger.warn("Empty ping info data.")
+            logger.warn("Empty client info data.")
         }
 
         return flattenedData
@@ -129,6 +139,7 @@ internal class PingMaker(
         }
 
         jsonPing.put("ping_info", getPingInfo(storage))
+        jsonPing.put("client_info", getClientInfo())
 
         return jsonPing.toString()
     }

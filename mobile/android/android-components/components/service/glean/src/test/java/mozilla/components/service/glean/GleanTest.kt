@@ -157,20 +157,10 @@ class GleanTest {
             assertEquals("baseline", baselineJson.getJSONObject("ping_info")["ping_type"])
             checkPingSchema(baselineJson)
 
-            val expectedBaselineStringMetrics = arrayOf(
-                "glean.baseline.os",
-                "glean.baseline.os_version",
-                "glean.baseline.device_manufacturer",
-                "glean.baseline.device_model",
-                "glean.baseline.architecture",
-                "glean.baseline.locale"
-            )
             val baselineMetricsObject = baselineJson.getJSONObject("metrics")!!
             val baselineStringMetrics = baselineMetricsObject.getJSONObject("string")!!
-            assertEquals(expectedBaselineStringMetrics.size, baselineStringMetrics.length())
-            for (metric in expectedBaselineStringMetrics) {
-                assertNotNull(baselineStringMetrics.get(metric))
-            }
+            assertEquals(1, baselineStringMetrics.length())
+            assertNotNull(baselineStringMetrics.get("glean.baseline.locale"))
 
             val baselineTimespanMetrics = baselineMetricsObject.getJSONObject("timespan")!!
             assertEquals(1, baselineTimespanMetrics.length())
