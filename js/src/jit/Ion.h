@@ -80,6 +80,8 @@ class JitContext {
 
 #ifdef DEBUG
   bool isCompilingWasm() { return isCompilingWasm_; }
+  bool hasOOM() { return oom_; }
+  void setOOM() { oom_ = true; }
 #endif
 
  private:
@@ -87,6 +89,7 @@ class JitContext {
   CompileRealm* realm_;
 #ifdef DEBUG
   bool isCompilingWasm_;
+  bool oom_;
 #endif
   int assemblerCount_;
 };

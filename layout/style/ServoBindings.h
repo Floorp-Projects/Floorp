@@ -700,6 +700,15 @@ void Servo_DeclarationBlock_SetIntValue(
     const RawServoDeclarationBlock* declarations, nsCSSPropertyID property,
     int32_t value);
 
+void Servo_DeclarationBlock_SetCounterResetListItem(
+    const RawServoDeclarationBlock* declarations, int32_t value);
+
+void Servo_DeclarationBlock_SetCounterSetListItem(
+    const RawServoDeclarationBlock* declarations, int32_t value);
+
+void Servo_DeclarationBlock_SetCounterIncrementListItem(
+    const RawServoDeclarationBlock* declarations, int32_t value);
+
 void Servo_DeclarationBlock_SetPixelValue(
     const RawServoDeclarationBlock* declarations, nsCSSPropertyID property,
     float value);

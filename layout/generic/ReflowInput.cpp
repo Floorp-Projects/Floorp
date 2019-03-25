@@ -131,7 +131,7 @@ static nscoord FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame) {
 
   // We only want to adjust the margins if we're dealing with an ordered list.
   const nsBlockFrame* blockFrame = static_cast<const nsBlockFrame*>(aFrame);
-  if (!blockFrame->HasBullet()) {
+  if (!blockFrame->HasMarker()) {
     return 0;
   }
 
@@ -2534,11 +2534,13 @@ void ReflowInput::InitConstraints(nsPresContext* aPresContext,
           ComputedBSize() == NS_UNCONSTRAINEDSIZE || ComputedBSize() >= 0,
           "Bogus block-size");
 
-      // Exclude inline tables, side captions, flex and grid items from block
-      // margin calculations.
+      // Exclude inline tables, side captions, outside ::markers, flex and grid
+      // items from block margin calculations.
       if (isBlock && !IsSideCaption(mFrame, mStyleDisplay, cbwm) &&
           mStyleDisplay->mDisplay != StyleDisplay::InlineTable &&
-          !alignCB->IsFlexOrGridContainer()) {
+          !alignCB->IsFlexOrGridContainer() &&
+          !(mFrame->Style()->GetPseudoType() == PseudoStyleType::marker &&
+            mFrame->GetParent()->StyleList()->mListStylePosition == NS_STYLE_LIST_STYLE_POSITION_OUTSIDE)) {
         CalculateBlockSideMargins(aFrameType);
       }
     }

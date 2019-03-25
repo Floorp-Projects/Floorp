@@ -141,11 +141,15 @@ class AssemblerBuffer {
   Slice* tail;
 
   bool m_oom;
-  bool m_bail;
 
   // How many bytes has been committed to the buffer thus far.
   // Does not include tail.
   uint32_t bufferSize;
+
+  // How many bytes can be in the buffer.  Normally this is
+  // MaxCodeBytesPerBuffer, but for pasteup buffers where we handle far jumps
+  // explicitly it can be larger.
+  uint32_t maxSize;
 
   // Finger for speeding up accesses.
   Slice* finger;
@@ -158,8 +162,8 @@ class AssemblerBuffer {
       : head(nullptr),
         tail(nullptr),
         m_oom(false),
-        m_bail(false),
         bufferSize(0),
+        maxSize(MaxCodeBytesPerBuffer),
         finger(nullptr),
         finger_offset(0),
         lifoAlloc_(8192) {}
@@ -170,9 +174,13 @@ class AssemblerBuffer {
     return !(size() & (alignment - 1));
   }
 
+  void setUnlimited() {
+    maxSize = MaxCodeBytesPerProcess;
+  }
+
  private:
   Slice* newSlice(LifoAlloc& a) {
-    if (size() > MaxCodeBytesPerProcess - sizeof(Slice)) {
+    if (size() > maxSize - sizeof(Slice)) {
       fail_oom();
       return nullptr;
     }
@@ -281,15 +289,16 @@ class AssemblerBuffer {
   }
   BufferOffset nextOffset() const { return BufferOffset(size()); }
 
-  bool oom() const { return m_oom || m_bail; }
-  bool bail() const { return m_bail; }
+  bool oom() const { return m_oom; }
 
   bool fail_oom() {
     m_oom = true;
-    return false;
-  }
-  bool fail_bail() {
-    m_bail = true;
+#ifdef DEBUG
+    JitContext* context = MaybeGetJitContext();
+    if (context) {
+      context->setOOM();
+    }
+#endif
     return false;
   }
 

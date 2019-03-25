@@ -39,7 +39,7 @@ HTMLLIAccessible::HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc)
   mType = eHTMLLiType;
 
   nsBlockFrame* blockFrame = do_QueryFrame(GetFrame());
-  if (blockFrame && blockFrame->HasBullet()) {
+  if (blockFrame && blockFrame->HasMarker()) {
     mBullet = new HTMLListBulletAccessible(mContent, mDoc);
     Document()->BindToDocument(mBullet, nullptr);
     AppendChild(mBullet);
@@ -120,7 +120,7 @@ HTMLListBulletAccessible::HTMLListBulletAccessible(nsIContent* aContent,
 
 nsIFrame* HTMLListBulletAccessible::GetFrame() const {
   nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  return blockFrame ? blockFrame->GetBullet() : nullptr;
+  return blockFrame ? blockFrame->GetMarker() : nullptr;
 }
 
 ENameValueFlag HTMLListBulletAccessible::Name(nsString& aName) const {
@@ -129,7 +129,7 @@ ENameValueFlag HTMLListBulletAccessible::Name(nsString& aName) const {
   // Native anonymous content, ARIA can't be used. Get list bullet text.
   nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
   if (blockFrame) {
-    blockFrame->GetSpokenBulletText(aName);
+    blockFrame->GetSpokenMarkerText(aName);
   }
 
   return eNameOK;
@@ -146,7 +146,7 @@ void HTMLListBulletAccessible::AppendTextTo(nsAString& aText,
                                             uint32_t aLength) {
   nsAutoString bulletText;
   nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (blockFrame) blockFrame->GetSpokenBulletText(bulletText);
+  if (blockFrame) blockFrame->GetSpokenMarkerText(bulletText);
 
   aText.Append(Substring(bulletText, aStartOffset, aLength));
 }
@@ -156,5 +156,5 @@ void HTMLListBulletAccessible::AppendTextTo(nsAString& aText,
 
 bool HTMLListBulletAccessible::IsInside() const {
   nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  return blockFrame ? blockFrame->HasInsideBullet() : false;
+  return blockFrame ? blockFrame->HasInsideMarker() : false;
 }

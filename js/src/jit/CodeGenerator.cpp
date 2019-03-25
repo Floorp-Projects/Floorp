@@ -6434,10 +6434,9 @@ void CodeGenerator::visitNewArrayCopyOnWrite(LNewArrayCopyOnWrite* lir) {
   gc::InitialHeap initialHeap = lir->mir()->initialHeap();
 
   // If we have a template object, we can inline call object creation.
-  using Fn = ArrayObject* (*)(JSContext*, HandleArrayObject, gc::InitialHeap);
+  using Fn = ArrayObject* (*)(JSContext*, HandleArrayObject);
   OutOfLineCode* ool = oolCallVM<Fn, js::NewDenseCopyOnWriteArray>(
-      lir, ArgList(ImmGCPtr(templateObject), Imm32(initialHeap)),
-      StoreRegisterTo(objReg));
+      lir, ArgList(ImmGCPtr(templateObject)), StoreRegisterTo(objReg));
 
   TemplateObject templateObj(templateObject);
   templateObj.setDenseElementsAreCopyOnWrite();
