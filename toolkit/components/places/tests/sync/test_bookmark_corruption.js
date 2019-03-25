@@ -1670,8 +1670,7 @@ add_task(async function test_partial_cycle() {
   await PlacesTestUtils.markBookmarksAsSynced();
 
   // Try to create a cycle: move A into B, and B into the menu, but don't upload
-  // a record for the menu. B is still a child of A locally. Since we ignore the
-  // `parentid`, we'll move (B A) into unfiled.
+  // a record for the menu.
   info("Make remote changes: A > C");
   await storeRecords(buf, [{
     id: "folderAAAAAA",
@@ -1687,60 +1686,8 @@ add_task(async function test_partial_cycle() {
     children: ["folderAAAAAA"],
   }]);
 
-  info("Apply remote");
-  let changesToUpload = await buf.apply();
-  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
-
-  let idsToUpload = inspectChangeRecords(changesToUpload);
-  deepEqual(idsToUpload, { updated: [], deleted: [] },
-    "Should not mark any local items for upload");
-
-  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
-    guid: PlacesUtils.bookmarks.rootGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    index: 0,
-    title: "",
-    children: [{
-      guid: PlacesUtils.bookmarks.menuGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 0,
-      title: BookmarksMenuTitle,
-    }, {
-      guid: PlacesUtils.bookmarks.toolbarGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 1,
-      title: BookmarksToolbarTitle,
-    }, {
-      guid: PlacesUtils.bookmarks.unfiledGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 3,
-      title: UnfiledBookmarksTitle,
-      children: [{
-        guid: "folderBBBBBB",
-        type: PlacesUtils.bookmarks.TYPE_FOLDER,
-        index: 0,
-        title: "B (remote)",
-        children: [{
-          guid: "folderAAAAAA",
-          type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          index: 0,
-          title: "A (remote)",
-          children: [{
-            guid: "bookmarkCCCC",
-            type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-            index: 0,
-            title: "C",
-            url: "http://example.com/c",
-          }],
-        }],
-      }],
-    }, {
-      guid: PlacesUtils.bookmarks.mobileGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 4,
-      title: MobileBookmarksTitle,
-    }],
-  }, "Should move A and B to unfiled");
+  await Assert.rejects(buf.apply(), /Item folderBBBBBB can't contain itself/,
+    "Should abort merge if remote tree parents form `parentid` cycle");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -1789,43 +1736,8 @@ add_task(async function test_complete_cycle() {
     children: ["folderAAAAAA"],
   }]);
 
-  info("Apply remote");
-  let changesToUpload = await buf.apply();
-  deepEqual((await buf.fetchUnmergedGuids()).sort(), ["folderAAAAAA",
-    "folderBBBBBB", "folderCCCCCC", "folderDDDDDD"],
-    "Should leave items in circular subtree unmerged");
-
-  let idsToUpload = inspectChangeRecords(changesToUpload);
-  deepEqual(idsToUpload, { updated: [], deleted: [] },
-    "Should not mark any local items for upload");
-
-  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
-    guid: PlacesUtils.bookmarks.rootGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    index: 0,
-    title: "",
-    children: [{
-      guid: PlacesUtils.bookmarks.menuGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 0,
-      title: BookmarksMenuTitle,
-    }, {
-      guid: PlacesUtils.bookmarks.toolbarGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 1,
-      title: BookmarksToolbarTitle,
-    }, {
-      guid: PlacesUtils.bookmarks.unfiledGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 3,
-      title: UnfiledBookmarksTitle,
-    }, {
-      guid: PlacesUtils.bookmarks.mobileGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 4,
-      title: MobileBookmarksTitle,
-    }],
-  }, "Should not be confused into creating a cycle");
+  await Assert.rejects(buf.apply(), /Item folderAAAAAA can't contain itself/,
+    "Should abort merge if remote tree parents form cycle through `children`");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();

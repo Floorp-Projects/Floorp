@@ -1387,7 +1387,7 @@ add_task(async function test_duplicate_url_rows() {
         INSERT INTO items(guid, needsMerge, kind, title, urlId)
         VALUES(:guid, 1, :kind, :remoteTitle,
                (SELECT id FROM urls WHERE guid = :placeGuid))`,
-        { guid, placeGuid, kind: SyncedBookmarksMirror.KIND.BOOKMARK,
+        { guid, placeGuid, kind: Ci.mozISyncedBookmarksMerger.KIND_BOOKMARK,
           remoteTitle });
 
       await buf.db.executeCached(`
