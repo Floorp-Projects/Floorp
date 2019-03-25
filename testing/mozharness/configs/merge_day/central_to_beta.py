@@ -14,7 +14,7 @@ config = {
         ("{}{}".format(d, f),
         "ac_add_options --with-branding=mobile/android/branding/nightly",
         "ac_add_options --with-branding=mobile/android/branding/beta")
-        for d in ["mobile/android/config/mozconfigs/android-aarch64/"
+        for d in ["mobile/android/config/mozconfigs/android-aarch64/",
                   "mobile/android/config/mozconfigs/android-api-16/",
                   "mobile/android/config/mozconfigs/android-x86/",
                   "mobile/android/config/mozconfigs/android-x86_64/"]
