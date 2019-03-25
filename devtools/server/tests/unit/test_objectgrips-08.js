@@ -8,7 +8,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
 });
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
+add_task(threadClientTest(async ({ threadClient, debuggee }) => {
   return new Promise(resolve => {
     threadClient.addOneTimeListener("paused", function(event, packet) {
       const args = packet.frame.arguments;
@@ -17,25 +17,15 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
 
       const objClient = threadClient.pauseGrip(args[0]);
       objClient.getPrototypeAndProperties(function(response) {
-        Assert.equal(response.ownProperties.a.configurable, true);
-        Assert.equal(response.ownProperties.a.enumerable, true);
-        Assert.equal(response.ownProperties.a.writable, true);
-        Assert.equal(response.ownProperties.a.value.type, "Infinity");
+        const {a, b, c, d, e, f, g} = response.ownProperties;
 
-        Assert.equal(response.ownProperties.b.configurable, true);
-        Assert.equal(response.ownProperties.b.enumerable, true);
-        Assert.equal(response.ownProperties.b.writable, true);
-        Assert.equal(response.ownProperties.b.value.type, "-Infinity");
-
-        Assert.equal(response.ownProperties.c.configurable, true);
-        Assert.equal(response.ownProperties.c.enumerable, true);
-        Assert.equal(response.ownProperties.c.writable, true);
-        Assert.equal(response.ownProperties.c.value.type, "NaN");
-
-        Assert.equal(response.ownProperties.d.configurable, true);
-        Assert.equal(response.ownProperties.d.enumerable, true);
-        Assert.equal(response.ownProperties.d.writable, true);
-        Assert.equal(response.ownProperties.d.value.type, "-0");
+        testPropertyType(a, "Infinity");
+        testPropertyType(b, "-Infinity");
+        testPropertyType(c, "NaN");
+        testPropertyType(d, "-0");
+        testPropertyType(e, "BigInt");
+        testPropertyType(f, "BigInt");
+        testPropertyType(g, "BigInt");
 
         threadClient.resume(resolve);
       });
@@ -44,7 +34,21 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
     debuggee.eval(function stopMe(arg1) {
       debugger;
     }.toString());
-    debuggee.eval("stopMe({ a: Infinity, b: -Infinity, c: NaN, d: -0 })");
+    debuggee.eval(`stopMe({
+      a: Infinity,
+      b: -Infinity,
+      c: NaN,
+      d: -0,
+      e: 1n,
+      f: -2n,
+      g: 0n,
+    })`);
   });
 }));
 
+function testPropertyType(prop, expectedType) {
+  Assert.equal(prop.configurable, true);
+  Assert.equal(prop.enumerable, true);
+  Assert.equal(prop.writable, true);
+  Assert.equal(prop.value.type, expectedType);
+}
