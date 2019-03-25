@@ -7,6 +7,7 @@
 #define nsBaseChannel_h__
 
 #include "mozilla/net/NeckoTargetHolder.h"
+#include "mozilla/MozPromise.h"
 #include "nsString.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -73,6 +74,8 @@ class nsBaseChannel
 
   virtual ~nsBaseChannel();
 
+  using BlockingPromise = mozilla::MozPromise<nsresult, nsresult, true>;
+
  private:
   // Implemented by subclass to supply data stream.  The parameter, async, is
   // true when called from nsIChannel::AsyncOpen and false otherwise.  When
@@ -104,6 +107,20 @@ class nsBaseChannel
   virtual nsresult BeginAsyncRead(nsIStreamListener *listener,
                                   nsIRequest **request) {
     return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  // This method may return a promise that will keep the input stream pump
+  // suspended until the promise is resolved or rejected.  On resolution the
+  // pump is resumed.  On rejection the channel is canceled with the resulting
+  // error and then the pump is also resumed to propagate the error to the
+  // channel listener.  Use it to do any asynchronous/background tasks you need
+  // to finish prior calling OnStartRequest of the listener.  This method is
+  // called right after OpenContentStream() with async == true, after the input
+  // stream pump has already been called asyncRead().
+  virtual nsresult ListenerBlockingPromise(BlockingPromise **aPromise) {
+    NS_ENSURE_ARG(aPromise);
+    *aPromise = nullptr;
+    return NS_OK;
   }
 
   // The basechannel calls this method from its OnTransportStatus method to
