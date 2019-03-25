@@ -31,15 +31,12 @@ config = {
     "mozilla-central": {
     },
     'mozilla-release': {
-        'enable_release_promotion': True,
         'branch_uses_per_checkin_strategy': True,
     },
     'mozilla-esr60': {
-        'enable_release_promotion': True,
         'branch_uses_per_checkin_strategy': True,
     },
     'mozilla-beta': {
-        'enable_release_promotion': 1,
         'branch_uses_per_checkin_strategy': True,
     },
     'try': {
@@ -72,7 +69,6 @@ config = {
     'graphics': {},
     # 'holly': {},
     'jamun': {
-        'enable_release_promotion': 1,
     },
     'larch': {},
     # 'maple': {},

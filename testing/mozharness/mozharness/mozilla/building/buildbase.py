@@ -816,8 +816,6 @@ or run without that action (ie: --no-{action})"
                 if isinstance(update_channel, unicode):
                     update_channel = update_channel.encode("utf-8")
                 env["MOZ_UPDATE_CHANNEL"] = update_channel
-            elif c.get('enable_release_promotion'):
-                env["MOZ_UPDATE_CHANNEL"] = self.branch
             else:  # let's just give the generic channel based on branch
                 env["MOZ_UPDATE_CHANNEL"] = "nightly-%s" % (self.branch,)
             self.info("Update channel set to: {}".format(env["MOZ_UPDATE_CHANNEL"]))
