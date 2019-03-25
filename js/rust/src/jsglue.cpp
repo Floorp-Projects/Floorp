@@ -553,16 +553,16 @@ const jsid* SliceAutoIdVector(const JS::AutoIdVector* v, size_t* length) {
 
 void DestroyAutoIdVector(JS::AutoIdVector* v) { delete v; }
 
-JS::AutoObjectVector* CreateAutoObjectVector(JSContext* aCx) {
-  JS::AutoObjectVector* vec = new JS::AutoObjectVector(aCx);
+JS::RootedObjectVector* CreateRootedObjectVector(JSContext* aCx) {
+  JS::RootedObjectVector* vec = new JS::RootedObjectVector(aCx);
   return vec;
 }
 
-bool AppendToAutoObjectVector(JS::AutoObjectVector* v, JSObject* obj) {
+bool AppendToRootedObjectVector(JS::RootedObjectVector* v, JSObject* obj) {
   return v->append(obj);
 }
 
-void DeleteAutoObjectVector(JS::AutoObjectVector* v) { delete v; }
+void DeleteRootedObjectVector(JS::RootedObjectVector* v) { delete v; }
 
 #if defined(__linux__)
 #  include <malloc.h>
