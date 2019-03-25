@@ -31,9 +31,9 @@ if (f2Main(100) !== 4950)
     throw new Error("f2.main(100)");
 var sum = (((i32.length - 1) * i32.length) / 2);
 if (f2Main(i32.length) !== sum)
-    throw "f2.main(" + i32.length + ")";
+    throw new Error(`f2.main(${i32.length})`);
 if (f2Main(i32.length + 100) !== sum)
-    throw "f2.main(" + i32.length + ")";
+    throw new Error(`f2.main(${i32.length})`);
 
 /* eslint-disable no-unused-vars,no-shadow */
 function f3(stdlib, foreign, buffer) {
@@ -59,7 +59,7 @@ var begin;
 var lastSum;
 function done(sumInner) {
     if (sumInner !== ((lastSum + 499500)|0))
-        throw "bad sum: " + sumInner + ", " + lastSum + ", " + ((lastSum + 499500)|0);
+        throw new Error(`bad sum: ${sumInner}, ${lastSum}, ${((lastSum + 499500)|0)}`);
     lastSum = sumInner;
     return (Date.now() - begin) > 3000;
 }
