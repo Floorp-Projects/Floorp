@@ -6600,7 +6600,7 @@ nsresult nsHttpChannel::BeginConnect() {
     return mStatus;
   }
 
-  if (!(mLoadFlags & LOAD_CLASSIFY_URI)) {
+  if (!NS_ShouldClassifyChannel(this)) {
     MaybeStartDNSPrefetch();
     return ContinueBeginConnectWithResult();
   }
