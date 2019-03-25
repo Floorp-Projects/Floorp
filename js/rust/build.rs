@@ -473,8 +473,10 @@ const OPAQUE_TYPES: &'static [&'static str] = &[
     "JS::ReadOnlyCompileOptions",
     "mozilla::BufferList",
     "mozilla::UniquePtr.*",
+    "JS::RootedVector",
     "JS::Rooted<JS::Auto.*Vector.*>",
-    "JS::Auto.*Vector"
+    "JS::Auto.*Vector",
+    "JS::StackGCVector"
 ];
 
 /// Types for which we should NEVER generate bindings, even if it is used within
