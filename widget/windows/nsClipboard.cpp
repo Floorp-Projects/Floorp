@@ -287,16 +287,20 @@ nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void** aData,
   nsresult result = NS_ERROR_FAILURE;
   if (aHGBL != nullptr) {
     LPSTR lpStr = (LPSTR)GlobalLock(aHGBL);
-    DWORD allocSize = GlobalSize(aHGBL);
-    char* data = static_cast<char*>(malloc(allocSize + 3));
+    CheckedInt<uint32_t> allocSize = CheckedInt<uint32_t>(GlobalSize(aHGBL)) + 3;
+    if (!allocSize.isValid()) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    char* data = static_cast<char*>(malloc(allocSize.value()));
     if (data) {
-      memcpy(data, lpStr, allocSize);
-      data[allocSize] = data[allocSize + 1] = data[allocSize + 2] =
-          '\0';  // null terminate for safety
+      uint32_t size = allocSize.value() - 3;
+      memcpy(data, lpStr, size);
+      // null terminate for safety
+      data[size] = data[size + 1] = data[size + 2] = '\0';
 
       GlobalUnlock(aHGBL);
       *aData = data;
-      *aLen = allocSize;
+      *aLen = size;
 
       result = NS_OK;
     }
