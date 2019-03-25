@@ -22,8 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=629200
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-function runTests()
-{
+function runTests() {
   var doc = $("svg").contentWindow.document;
   var filter = doc.getElementById("filter");
   var convolve = doc.getElementById("convolve");
@@ -32,7 +31,7 @@ function runTests()
   var eventChecker = new MutationEventChecker;
 
   // class attribute
- 
+
   eventChecker.watchAttr(filter, "class");
   eventChecker.expect("add modify remove add");
   filter.setAttribute("class", "foo");

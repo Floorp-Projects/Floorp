@@ -19,8 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=437448
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-function runTests()
-{
+function runTests() {
   var doc = $("svg").contentWindow.document;
   var filter = doc.getElementById("filter");
   var convolve = doc.getElementById("convolve");
@@ -253,7 +252,7 @@ function runTests()
   is(3, SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMIDYMIN, "SVG_PRESERVEASPECTRATIO_XMIDYMIN value");
   is(5, SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMINYMID, "SVG_PRESERVEASPECTRATIO_XMINYMID value");
   is(7, SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMAXYMID, "SVG_PRESERVEASPECTRATIO_XMAXYMID value");
-  is(10, SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMAXYMAX , "SVG_PRESERVEASPECTRATIO_XMAXYMAX value");
+  is(10, SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMAXYMAX, "SVG_PRESERVEASPECTRATIO_XMAXYMAX value");
 
   is(0, SVGPreserveAspectRatio.SVG_MEETORSLICE_UNKNOWN, "SVG_MEETORSLICE_UNKNOWN value");
   is(1, SVGPreserveAspectRatio.SVG_MEETORSLICE_MEET, "SVG_MEETORSLICE_MEET value");
@@ -272,7 +271,7 @@ function runTests()
     SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMIDYMIN;
   is(marker.preserveAspectRatio.animVal.align,
      SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMIDYMIN, "preserveAspectRatio animVal");
-  is(marker.preserveAspectRatio.animVal.meetOrSlice, 
+  is(marker.preserveAspectRatio.animVal.meetOrSlice,
      SVGPreserveAspectRatio.SVG_MEETORSLICE_SLICE, "preserveAspectRatio.meetOrSlice animVal");
   marker.preserveAspectRatio.baseVal.meetOrSlice = SVGPreserveAspectRatio.SVG_MEETORSLICE_MEET;
   is(marker.preserveAspectRatio.animVal.align,

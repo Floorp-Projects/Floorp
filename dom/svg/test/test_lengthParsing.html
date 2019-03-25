@@ -51,7 +51,7 @@ function checkParseOk(spec, valueInUnits, units) {
   const tolerance = 1 / 65535;
   var actual = rect.x.baseVal.valueInSpecifiedUnits;
   ok(Math.abs(actual - valueInUnits) < tolerance,
-     spec + ' (value) - got ' + actual + ', expected ' + valueInUnits);
+     spec + " (value) - got " + actual + ", expected " + valueInUnits);
 
   // Check unit part
   var unitMapping = {
@@ -65,7 +65,7 @@ function checkParseOk(spec, valueInUnits, units) {
     "mm": SVGLength.SVG_LENGTHTYPE_MM,
     "in": SVGLength.SVG_LENGTHTYPE_IN,
     "pt": SVGLength.SVG_LENGTHTYPE_PT,
-    "pc": SVGLength.SVG_LENGTHTYPE_PC
+    "pc": SVGLength.SVG_LENGTHTYPE_PC,
   };
   if (typeof units == "undefined") {
     units = "";

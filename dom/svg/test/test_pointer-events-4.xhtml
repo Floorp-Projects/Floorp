@@ -13,72 +13,71 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=820506
 
 SimpleTest.waitForExplicitFinish();
 
-function run()
-{
-  var svgDoc = document.getElementById('svg');
+function run() {
+  var svgDoc = document.getElementById("svg");
   var div = document.getElementById("div");
   // Get the coords of the origin of the SVG canvas:
   var originX = div.offsetLeft;
   var originY = div.offsetTop;
-  var r1 = document.getElementById('r1');
-  var r2 = document.getElementById('r2');
+  var r1 = document.getElementById("r1");
+  var r2 = document.getElementById("r2");
   var element;
 
   // Test r1 just outsite the clip area:
 
   element = document.elementFromPoint(originX + 19, originY + 19);
-  is(element, background, 'Should not hit top-left of r1');
+  is(element, background, "Should not hit top-left of r1");
 
   element = document.elementFromPoint(originX + 101, originY + 19);
-  is(element, background, 'Should not hit top-right of r1');
+  is(element, background, "Should not hit top-right of r1");
 
   element = document.elementFromPoint(originX + 101, originY + 101);
-  is(element, background, 'Should not hit bottom-right of r1');
+  is(element, background, "Should not hit bottom-right of r1");
 
   element = document.elementFromPoint(originX + 19, originY + 101);
-  is(element, background, 'Should not hit bottom-left of r1');
+  is(element, background, "Should not hit bottom-left of r1");
 
   // Test r1 just inside the clip area:
 
   element = document.elementFromPoint(originX + 21, originY + 21);
-  is(element, r1, 'Should hit top-left of r1');
+  is(element, r1, "Should hit top-left of r1");
 
   element = document.elementFromPoint(originX + 99, originY + 21);
-  is(element, r1, 'Should hit top-right of r1');
+  is(element, r1, "Should hit top-right of r1");
 
   element = document.elementFromPoint(originX + 99, originY + 99);
-  is(element, r1, 'Should hit bottom-right of r1');
+  is(element, r1, "Should hit bottom-right of r1");
 
   element = document.elementFromPoint(originX + 21, originY + 99);
-  is(element, r1, 'Should hit bottom-left of r1');
+  is(element, r1, "Should hit bottom-left of r1");
 
   // Test r2 just outsite the clip area:
 
   element = document.elementFromPoint(originX + 109, originY + 19);
-  is(element, background, 'Should not hit top-left of r2');
+  is(element, background, "Should not hit top-left of r2");
 
   element = document.elementFromPoint(originX + 201, originY + 19);
-  is(element, background, 'Should not hit top-right of r2');
+  is(element, background, "Should not hit top-right of r2");
 
   element = document.elementFromPoint(originX + 201, originY + 101);
-  is(element, background, 'Should not hit bottom-right of r2');
+  is(element, background, "Should not hit bottom-right of r2");
 
   element = document.elementFromPoint(originX + 109, originY + 101);
-  is(element, background, 'Should not hit bottom-left of r2');
+  is(element, background, "Should not hit bottom-left of r2");
 
   // Test r2 just inside the clip area:
 
   element = document.elementFromPoint(originX + 121, originY + 21);
-  is(element, r2, 'Should hit top-left of r2');
+  is(element, r2, "Should hit top-left of r2");
 
   element = document.elementFromPoint(originX + 199, originY + 21);
-  is(element, r2, 'Should hit top-right of r2');
+  is(element, r2, "Should hit top-right of r2");
 
   element = document.elementFromPoint(originX + 199, originY + 99);
-  is(element, r2, 'Should hit bottom-right of r2');
+  is(element, r2, "Should hit bottom-right of r2");
 
   element = document.elementFromPoint(originX + 121, originY + 99);
-  is(element, r2, 'Should hit bottom-left of r2');
+  is(element, r2, "Should hit bottom-left of r2");
 
   SimpleTest.finish();
 }

@@ -23,12 +23,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=512636
 
 SimpleTest.waitForExplicitFinish();
 
-function run()
-{
+function run() {
   var g, svg, t, m, m2;
 
-  svg = $('svg');
-  g = $('g');
+  svg = $("svg");
+  g = $("g");
 
   t = g.transform.baseVal.getItem(0);
   m = t.matrix;
@@ -61,7 +60,7 @@ function run()
   t.setMatrix(m2);
 
   // check that setMatrix() took a copy of m
-  ok(m != m2, 't.matrix identity');
+  ok(m != m2, "t.matrix identity");
 
   // test that the SVGTransform now reflects the matrix value
   checkTransform(t, SVGTransform.SVG_TRANSFORM_MATRIX,
@@ -80,9 +79,9 @@ function run()
                  0, 1,
                  0, 10,
                  0, "matrix");
-                 
+
   // If ty is not supplied it is assumed to be zero
-  g.setAttribute("transform", "translate(5)");                
+  g.setAttribute("transform", "translate(5)");
 
   // test that the SVGTransform now reflects the matrix value
   checkTransform(t, SVGTransform.SVG_TRANSFORM_TRANSLATE,
@@ -96,8 +95,8 @@ function run()
 
   // test that the SVGTransform now reflects the matrix value
   checkTransform(t, SVGTransform.SVG_TRANSFORM_ROTATE,
-                 Math.cos(Math.PI/2), Math.sin(Math.PI/2),
-                 -Math.sin(Math.PI/2), Math.cos(Math.PI/2),
+                 Math.cos(Math.PI / 2), Math.sin(Math.PI / 2),
+                 -Math.sin(Math.PI / 2), Math.cos(Math.PI / 2),
                  0, 0,
                  90, "rotate");
 
@@ -107,7 +106,7 @@ function run()
   // test that the SVGTransform now reflects the matrix value
   checkTransform(t, SVGTransform.SVG_TRANSFORM_SKEWX,
                  1, 0,
-                 Math.tan(Math.PI/4), Math.tan(Math.PI/4),
+                 Math.tan(Math.PI / 4), Math.tan(Math.PI / 4),
                  0, 0,
                  45, "skewX");
 
@@ -116,7 +115,7 @@ function run()
 
   // test that the SVGTransform now reflects the matrix value
   checkTransform(t, SVGTransform.SVG_TRANSFORM_SKEWY,
-                 Math.tan(Math.PI/4), Math.tan(Math.PI/4),
+                 Math.tan(Math.PI / 4), Math.tan(Math.PI / 4),
                  0, 1,
                  0, 0,
                  45, "skewY");
@@ -145,9 +144,8 @@ function run()
   SimpleTest.finish();
 }
 
-function testCreateTransform()
-{
-  svg = $('svg');
+function testCreateTransform() {
+  svg = $("svg");
   var t = svg.createSVGTransform();
   ok(t != svg.createSVGTransform(),
      "Got identical objects when creating new transform");
@@ -163,30 +161,28 @@ function testCreateTransform()
   m.f = 6;
   t = svg.createSVGTransformFromMatrix(m);
   ok(t.matrix != m,
-     'createSVGTransformFromMatrix should copy matrix not adopt it');
+     "createSVGTransformFromMatrix should copy matrix not adopt it");
   m.a = 7; // Just to be sure, changing m should not affect t
   checkTransform(t, SVGTransform.SVG_TRANSFORM_MATRIX,
                  1, 2, 3, 4, 5, 6, 0, "createSVGTransformFromMatrix");
 }
 
-function checkTransform(transform, type, a, b, c, d, e, f, angle, forWhat)
-{
+function checkTransform(transform, type, a, b, c, d, e, f, angle, forWhat) {
   var m = transform.matrix;
-  is(transform.type, type, 'transform.type for ' + forWhat);
-  roughlyEqual(m.a, a, 'matrix.a for ' + forWhat);
-  roughlyEqual(m.b, b, 'matrix.b for ' + forWhat);
-  roughlyEqual(m.c, c, 'matrix.c for ' + forWhat);
-  roughlyEqual(m.d, d, 'matrix.d for ' + forWhat);
-  roughlyEqual(m.e, e, 'matrix.e for ' + forWhat);
-  roughlyEqual(m.f, f, 'matrix.f for ' + forWhat);
-  is(transform.angle, angle, 'transform.angle for ' + forWhat);
+  is(transform.type, type, "transform.type for " + forWhat);
+  roughlyEqual(m.a, a, "matrix.a for " + forWhat);
+  roughlyEqual(m.b, b, "matrix.b for " + forWhat);
+  roughlyEqual(m.c, c, "matrix.c for " + forWhat);
+  roughlyEqual(m.d, d, "matrix.d for " + forWhat);
+  roughlyEqual(m.e, e, "matrix.e for " + forWhat);
+  roughlyEqual(m.f, f, "matrix.f for " + forWhat);
+  is(transform.angle, angle, "transform.angle for " + forWhat);
 }
 
-function roughlyEqual(value, expected, msg)
-{
+function roughlyEqual(value, expected, msg) {
   const tolerance = 1 / 65535;
   ok(Math.abs(value - expected) < tolerance,
-     msg + ' - got ' + value + ', expected ' + expected);
+     msg + " - got " + value + ", expected " + expected);
 }
 
 window.addEventListener("load", run);
