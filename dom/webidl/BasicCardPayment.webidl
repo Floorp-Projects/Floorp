@@ -8,7 +8,7 @@
  */
 
 dictionary BasicCardRequest {
-  sequence<DOMString> supportedNetworks;
+  sequence<DOMString> supportedNetworks = [];
 };
 
 dictionary BasicCardResponse {
