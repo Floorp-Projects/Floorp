@@ -175,13 +175,11 @@
                 accesskey="&leaveDOMFullScreen.accesskey;"
                 label="&leaveDOMFullScreen.label;"
                 oncommand="gContextMenu.leaveDOMFullScreen();"/>
-#ifdef NIGHTLY_BUILD
       <menuitem id="context-video-pictureinpicture"
                 accesskey="&pictureInPicture.accesskey;"
                 label="&pictureInPicture.label;"
                 type="checkbox"
                 oncommand="gContextMenu.mediaCommand('pictureinpicture');"/>
-#endif
       <menuseparator id="context-media-sep-commands"/>
       <menuitem id="context-reloadimage"
                 label="&reloadImageCmd.label;"
