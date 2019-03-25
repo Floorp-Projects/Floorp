@@ -4,10 +4,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import string
+import sys
+import os
 
+# Add this directory to the import path.
+sys.path.append(os.path.dirname(__file__))
+
+from selection import (
+    SelectionManager,
+)
 from marionette_driver.by import By
 from marionette_driver.legacy_actions import Actions
-from marionette_driver.selection import SelectionManager
 from marionette_harness.marionette_test import (
     MarionetteTestCase,
     parameterized,
