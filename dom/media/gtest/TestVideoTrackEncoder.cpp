@@ -1351,6 +1351,146 @@ TEST(VP8VideoTrackEncoder, EnableBetweenFrames) {
   EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[2]->GetDuration());
 }
 
+// Test that making time go backwards removes any future frames in the encoder.
+TEST(VP8VideoTrackEncoder, BackwardsTimeResets) {
+  TestVP8TrackEncoder encoder;
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  EncodedFrameContainer container;
+  TimeStamp now = TimeStamp::Now();
+
+  encoder.SetStartOffset(now);
+
+  // Pass frames in at t=0, t=100ms, t=200ms, t=300ms.
+  // Advance time to t=125ms.
+  // Pass frames in at t=150ms, t=250ms, t=350ms.
+  // Stop encoding at t=300ms.
+  // Should yield 4 frames, at t=0, t=100ms, t=150ms, t=250ms.
+
+  {
+    VideoSegment segment;
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false, now);
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(100));
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(200));
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(300));
+
+    encoder.AppendVideoSegment(std::move(segment));
+  }
+
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(125));
+
+  {
+    VideoSegment segment;
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(150));
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(250));
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(350));
+
+    encoder.AppendVideoSegment(std::move(segment));
+  }
+
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(300));
+  encoder.NotifyEndOfStream();
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  const nsTArray<RefPtr<EncodedFrame>>& frames = container.GetEncodedFrames();
+  ASSERT_EQ(4UL, frames.Length());
+
+  // [0, 100ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[0]->GetDuration());
+
+  // [100ms, 150ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 50UL, frames[1]->GetDuration());
+
+  // [150ms, 250ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[2]->GetDuration());
+
+  // [250ms, 300ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 50UL, frames[3]->GetDuration());
+}
+
+// Test that trying to encode a null image removes any future frames in the
+// encoder.
+TEST(VP8VideoTrackEncoder, NullImageResets) {
+  TestVP8TrackEncoder encoder;
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  EncodedFrameContainer container;
+  TimeStamp now = TimeStamp::Now();
+
+  encoder.SetStartOffset(now);
+
+  // Pass frames in at t=0, t=100ms, t=200ms, t=300ms.
+  // Advance time to t=125ms.
+  // Pass in a null image at t=125ms.
+  // Pass frames in at t=250ms, t=350ms.
+  // Stop encoding at t=300ms.
+  // Should yield 3 frames, at t=0, t=100ms, t=250ms.
+
+  {
+    VideoSegment segment;
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false, now);
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(100));
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(200));
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(300));
+
+    encoder.AppendVideoSegment(std::move(segment));
+  }
+
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(125));
+
+  {
+    VideoSegment segment;
+    segment.AppendFrame(nullptr, generator.GetSize(), PRINCIPAL_HANDLE_NONE,
+                        false, now + TimeDuration::FromMilliseconds(125));
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(250));
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(350));
+
+    encoder.AppendVideoSegment(std::move(segment));
+  }
+
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(300));
+  encoder.NotifyEndOfStream();
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  const nsTArray<RefPtr<EncodedFrame>>& frames = container.GetEncodedFrames();
+  ASSERT_EQ(3UL, frames.Length());
+
+  // [0, 100ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[0]->GetDuration());
+
+  // [100ms, 250ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 150UL, frames[1]->GetDuration());
+
+  // [250ms, 300ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 50UL, frames[2]->GetDuration());
+}
+
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete) {
   TestVP8TrackEncoder encoder;
