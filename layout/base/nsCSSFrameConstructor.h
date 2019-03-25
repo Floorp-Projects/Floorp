@@ -350,6 +350,9 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 
+  // temporary - please don't add external uses outside of nsBulletFrame
+  nsCounterManager* CounterManager() { return &mCounterManager; }
+
  private:
   struct FrameConstructionItem;
   class FrameConstructionItemList;
@@ -696,12 +699,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
    * FCDATA_USE_CHILD_ITEMS is set.
    */
 #define FCDATA_IS_WRAPPER_ANON_BOX 0x400000
-  /**
-   * If FCDATA_MAY_NEED_BULLET is set, then the frame will be checked
-   * whether an nsBulletFrame needs to be created for it or not. Only the
-   * frames inherited from nsBlockFrame should have this bit set.
-   */
-#define FCDATA_MAY_NEED_BULLET 0x800000
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -1798,8 +1795,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                       nsContainerFrame** aNewFrame, nsFrameItems& aFrameItems,
                       nsIFrame* aPositionedFrameForAbsPosContainer,
                       PendingBinding* aPendingBinding);
-
-  void CreateBulletFrameForListItemIfNeeded(nsBlockFrame* aBlockFrame);
 
   // Build the initial column hierarchy around aColumnContent. This function
   // should be called before constructing aColumnContent's children.

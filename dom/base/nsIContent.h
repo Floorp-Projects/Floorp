@@ -303,6 +303,11 @@ class nsIContent : public nsINode {
            mNodeInfo->NameAtom() == nsGkAtoms::mozgeneratedcontentafter;
   }
 
+  bool IsGeneratedContentContainerForMarker() const {
+    return IsRootOfNativeAnonymousSubtree() &&
+           mNodeInfo->NameAtom() == nsGkAtoms::mozgeneratedcontentmarker;
+  }
+
   /**
    * Get direct access (but read only) to the text in the text content.
    * NOTE: For elements this is *not* the concatenation of all text children,

@@ -46,6 +46,7 @@ STATIC_ATOMS = [
     Atom("mozeditorbogusnode", "_moz_editor_bogus_node"),
     Atom("mozgeneratedcontentbefore", "_moz_generated_content_before"),
     Atom("mozgeneratedcontentafter", "_moz_generated_content_after"),
+    Atom("mozgeneratedcontentmarker", "_moz_generated_content_marker"),
     Atom("mozgeneratedcontentimage", "_moz_generated_content_image"),
     Atom("mozquote", "_moz_quote"),
     Atom("mozsignature", "moz-signature"),
@@ -1411,6 +1412,7 @@ STATIC_ATOMS = [
     Atom("limitingConeAngle", "limitingConeAngle"),
     Atom("linear", "linear"),
     Atom("linearGradient", "linearGradient"),
+    Atom("list_item", "list-item"),
     Atom("list_style_type", "list-style-type"),
     Atom("luminanceToAlpha", "luminanceToAlpha"),
     Atom("luminosity", "luminosity"),
@@ -2065,6 +2067,7 @@ STATIC_ATOMS = [
     Atom("paintRequestTime", "PaintRequestTime"),
     Atom("pseudoProperty", "PseudoProperty"),  # PseudoStyleType
     Atom("manualNACProperty", "ManualNACProperty"),  # ManualNAC*
+    Atom("markerPseudoProperty", "markerPseudoProperty"),  # nsXMLElement*
 
     # Languages for lang-specific transforms
     Atom("Japanese", "ja"),
@@ -2380,6 +2383,7 @@ STATIC_ATOMS = [
     # in nsCSSPseudoElementList.h
     PseudoElementAtom("PseudoElement_after", ":after"),
     PseudoElementAtom("PseudoElement_before", ":before"),
+    PseudoElementAtom("PseudoElement_marker", ":marker"),
     PseudoElementAtom("PseudoElement_backdrop", ":backdrop"),
     PseudoElementAtom("PseudoElement_cue", ":cue"),
     PseudoElementAtom("PseudoElement_firstLetter", ":first-letter"),
@@ -2387,8 +2391,6 @@ STATIC_ATOMS = [
     PseudoElementAtom("PseudoElement_selection", ":selection"),
     PseudoElementAtom("PseudoElement_mozFocusInner", ":-moz-focus-inner"),
     PseudoElementAtom("PseudoElement_mozFocusOuter", ":-moz-focus-outer"),
-    PseudoElementAtom("PseudoElement_mozListBullet", ":-moz-list-bullet"),
-    PseudoElementAtom("PseudoElement_mozListNumber", ":-moz-list-number"),
     PseudoElementAtom("PseudoElement_mozMathAnonymous", ":-moz-math-anonymous"),
     PseudoElementAtom("PseudoElement_mozNumberWrapper", ":-moz-number-wrapper"),
     PseudoElementAtom("PseudoElement_mozNumberText", ":-moz-number-text"),

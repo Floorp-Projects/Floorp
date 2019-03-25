@@ -36,7 +36,7 @@ void FinishX(Display* aDisplay) {
   unsigned long lastRequest = NextRequest(aDisplay) - 1;
   if (lastRequest == LastKnownRequestProcessed(aDisplay)) return;
 
-  XSync(aDisplay, False);
+  XSync(aDisplay, X11False);
 }
 
 ScopedXErrorHandler::ErrorEvent* ScopedXErrorHandler::sXErrorPtr;
