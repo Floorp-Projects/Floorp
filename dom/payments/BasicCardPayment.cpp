@@ -57,13 +57,11 @@ bool BasicCardService::IsValidBasicCardRequest(JSContext* aCx, JSObject* aData,
     return false;
   }
 
-  if (request.mSupportedNetworks.WasPassed()) {
-    for (const nsString& network : request.mSupportedNetworks.Value()) {
-      if (!IsValidNetwork(network)) {
-        aErrorMsg.Assign(network +
-                         NS_LITERAL_STRING(" is not an valid network."));
-        return false;
-      }
+  for (const nsString& network : request.mSupportedNetworks) {
+    if (!IsValidNetwork(network)) {
+      aErrorMsg.Assign(network +
+                       NS_LITERAL_STRING(" is not an valid network."));
+      return false;
     }
   }
   return true;
