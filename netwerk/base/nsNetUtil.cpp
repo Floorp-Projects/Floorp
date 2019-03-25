@@ -3038,15 +3038,23 @@ bool NS_IsOffline() {
  *    flag to enforce bypassing the URL classifier check.
  */
 bool NS_ShouldClassifyChannel(nsIChannel *aChannel) {
+  nsLoadFlags loadFlags;
+  Unused << aChannel->GetLoadFlags(&loadFlags);
+  //  If our load flags dictate that we must let this channel through without
+  //  URL classification, obey that here without performing more checks.
+  if (loadFlags & nsIChannel::LOAD_BYPASS_URL_CLASSIFIER) {
+    return false;
+  }
+
   nsCOMPtr<nsIHttpChannelInternal> httpChannel(do_QueryInterface(aChannel));
   if (httpChannel) {
     bool beConservative;
     nsresult rv = httpChannel->GetBeConservative(&beConservative);
 
-    // beConservative flag, set by ServiceRequest to ensure channels that fetch
-    // update use conservative TLS setting, are used here to identify channels
-    // are critical to bypass classification. for channels don't support
-    // beConservative, continue to apply the exemption rules.
+    // beConservative flag, set by ServiceRequest to ensure channels that
+    // fetch update use conservative TLS setting, are used here to identify
+    // channels are critical to bypass classification. for channels don't
+    // support beConservative, continue to apply the exemption rules.
     if (NS_SUCCEEDED(rv) && beConservative) {
       return false;
     }
