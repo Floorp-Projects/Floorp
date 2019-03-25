@@ -154,6 +154,11 @@ Bug_1086977:
     loading a facebook plugin.
   type: string
 
+Bug_1537883:
+  description: >
+    Dump JS Stack in case aPrincipal is null within SpeculativeConnect().
+  type: string
+
 BuildID:
   description: >
     Application build ID, the format is YYYYMMDDHHMMSS.
