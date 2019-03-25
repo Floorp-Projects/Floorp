@@ -133,9 +133,14 @@ var gSync = {
     let label = this.syncStrings.GetStringFromName("syncnow.label");
     syncIcon.setAttribute("label", label);
     syncNow.setAttribute("label", label);
-    // We start with every menuitem hidden, so that we don't need to init
-    // the sync UI on windows like pageInfo.xul (see bug 1384856).
+    // We start with every menuitem hidden (except for the "setup sync" state),
+    // so that we don't need to init the sync UI on windows like pageInfo.xul
+    // (see bug 1384856).
+    // maybeUpdateUIState() also optimizes for this - if we should be in the
+    // "setup sync" state, that function assumes we are already in it and
+    // doesn't re-initialize the UI elements.
     document.getElementById("sync-setup").hidden = false;
+    document.getElementById("PanelUI-remotetabs-setupsync").hidden = false;
 
     for (let topic of this._obs) {
       Services.obs.addObserver(this, topic, true);
