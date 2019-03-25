@@ -825,6 +825,7 @@ AsyncPanZoomController::AsyncPanZoomController(
       mPinchPaintTimerSet(false),
       mAPZCId(sAsyncPanZoomControllerCount++),
       mSharedLock(nullptr),
+      mTestAttributeAppliers(0),
       mAsyncTransformAppliedToContent(false),
       mTestHasAsyncKeyScrolled(false),
       mCheckerboardEventLock("APZCBELock") {
@@ -4133,24 +4134,29 @@ bool AsyncPanZoomController::SampleCompositedAsyncTransform() {
 
 void AsyncPanZoomController::ApplyAsyncTestAttributes() {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  if (mTestAsyncScrollOffset == CSSPoint() &&
-      mTestAsyncZoom == LayerToParentLayerScale()) {
-    return;
+  if (mTestAttributeAppliers == 0) {
+    if (mTestAsyncScrollOffset != CSSPoint() ||
+        mTestAsyncZoom != LayerToParentLayerScale()) {
+      Metrics().ZoomBy(mTestAsyncZoom.scale);
+      ScrollBy(mTestAsyncScrollOffset);
+      SampleCompositedAsyncTransform();
+    }
   }
-  Metrics().ZoomBy(mTestAsyncZoom.scale);
-  ScrollBy(mTestAsyncScrollOffset);
-  SampleCompositedAsyncTransform();
+  ++mTestAttributeAppliers;
 }
 
 void AsyncPanZoomController::UnapplyAsyncTestAttributes(
     const FrameMetrics& aPrevFrameMetrics) {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  if (mTestAsyncScrollOffset == CSSPoint() &&
-      mTestAsyncZoom == LayerToParentLayerScale()) {
-    return;
+  MOZ_ASSERT(mTestAttributeAppliers >= 1);
+  --mTestAttributeAppliers;
+  if (mTestAttributeAppliers == 0) {
+    if (mTestAsyncScrollOffset != CSSPoint() ||
+        mTestAsyncZoom != LayerToParentLayerScale()) {
+      Metrics() = aPrevFrameMetrics;
+      SampleCompositedAsyncTransform();
+    }
   }
-  Metrics() = aPrevFrameMetrics;
-  SampleCompositedAsyncTransform();
 }
 
 Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
