@@ -23,7 +23,6 @@ Array [
           "sourceUrl": "http://localhost:8000/examples/a",
         },
         "id": "a:2:1",
-        "loading": false,
         "location": Object {
           "column": 1,
           "line": 2,
@@ -81,7 +80,6 @@ Object {
     "sourceUrl": "http://localhost:8000/examples/a.js",
   },
   "id": "a.js:1:",
-  "loading": false,
   "location": Object {
     "column": 0,
     "line": 1,
@@ -121,7 +119,6 @@ Array [
           "sourceUrl": "http://localhost:8000/examples/a",
         },
         "id": "a:5:1",
-        "loading": false,
         "location": Object {
           "column": 1,
           "line": 5,
