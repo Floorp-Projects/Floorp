@@ -1216,6 +1216,7 @@ dependencies = [
  "profiler_helper 0.1.0",
  "rsdparsa_capi 0.1.0",
  "rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "storage 0.1.0",
  "u2fhid 0.2.3",
  "webrender_bindings 0.1.0",
  "xpcom 0.1.0",
@@ -2562,6 +2563,17 @@ dependencies = [
 name = "stable_deref_trait"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "storage"
+version = "0.1.0"
+dependencies = [
+ "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nserror 0.1.0",
+ "nsstring 0.1.0",
+ "storage_variant 0.1.0",
+ "xpcom 0.1.0",
+]
 
 [[package]]
 name = "storage_variant"

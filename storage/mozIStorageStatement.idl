@@ -150,6 +150,16 @@ interface mozIStorageStatement : mozIStorageBaseStatement {
   long getTypeOfIndex(in unsigned long aIndex);
 
   /**
+   * Retrieve the contents of a column from the current result row as a
+   * variant.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return A variant with the type of the column value.
+   */
+  nsIVariant getVariant(in unsigned long aIndex);
+
+  /**
    * Retrieve the contents of a column from the current result row as an
    * integer.
    *

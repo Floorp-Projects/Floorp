@@ -314,7 +314,7 @@ async function standardAsyncTest(promisedDB, name, shouldInit = false) {
 
   let adb = await promisedDB;
   Assert.ok(adb instanceof Ci.mozIStorageAsyncConnection);
-  Assert.equal(false, adb instanceof Ci.mozIStorageConnection);
+  Assert.ok(adb instanceof Ci.mozIStorageConnection);
 
   if (shouldInit) {
     let stmt = adb.createAsyncStatement("CREATE TABLE test(name TEXT)");
@@ -440,7 +440,7 @@ add_task(async function test_clone_trivial_async() {
   info("AsyncClone connection");
   let clone = await asyncClone(db, true);
   Assert.ok(clone instanceof Ci.mozIStorageAsyncConnection);
-  Assert.equal(false, clone instanceof Ci.mozIStorageConnection);
+  Assert.ok(clone instanceof Ci.mozIStorageConnection);
   info("Close connection");
   await asyncClose(db);
   info("Close clone");
@@ -452,7 +452,7 @@ add_task(async function test_clone_no_optional_param_async() {
   info("Testing async cloning");
   let adb1 = await openAsyncDatabase(getTestDB(), null);
   Assert.ok(adb1 instanceof Ci.mozIStorageAsyncConnection);
-  Assert.equal(false, adb1 instanceof Ci.mozIStorageConnection);
+  Assert.ok(adb1 instanceof Ci.mozIStorageConnection);
 
   info("Cloning database");
 
@@ -460,7 +460,7 @@ add_task(async function test_clone_no_optional_param_async() {
   info("Testing that the cloned db is a mozIStorageAsyncConnection " +
        "and not a mozIStorageConnection");
   Assert.ok(adb2 instanceof Ci.mozIStorageAsyncConnection);
-  Assert.equal(false, adb2 instanceof Ci.mozIStorageConnection);
+  Assert.ok(adb2 instanceof Ci.mozIStorageConnection);
 
   info("Inserting data into source db");
   let stmt = adb1.
