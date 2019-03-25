@@ -73,7 +73,7 @@ TestArray.addTest(
 
     function doDerive(x) {
       if (!hasKeyFields(x)) {
-        throw "Invalid key; missing field(s)";
+        throw new Error("Invalid key; missing field(s)");
       }
 
       var algo = {
@@ -101,7 +101,7 @@ TestArray.addTest(
 
     function doDerive(x) {
       if (!hasKeyFields(x)) {
-        throw "Invalid key; missing field(s)";
+        throw new Error("Invalid key; missing field(s)");
       }
 
       var algo = {
@@ -130,7 +130,7 @@ TestArray.addTest(
 
     function doDerive(x) {
       if (!hasKeyFields(x)) {
-        throw "Invalid key; missing field(s)";
+        throw new Error("Invalid key; missing field(s)");
       }
 
       var algo = {
@@ -148,11 +148,11 @@ TestArray.addTest(
       return crypto.subtle.deriveKey(algo, x, algDerived, false, ["sign", "verify"])
         .then(function(y) {
           if (!hasKeyFields(y)) {
-            throw "Invalid key; missing field(s)";
+            throw new Error("Invalid key; missing field(s)");
           }
 
           if (y.algorithm.length != 512) {
-            throw "Invalid key; incorrect length";
+            throw new Error("Invalid key; incorrect length");
           }
 
           return y;
@@ -214,7 +214,7 @@ TestArray.addTest(
 
     function doDerive(x) {
       if (!hasKeyFields(x)) {
-        throw "Invalid key; missing field(s)";
+        throw new Error("Invalid key; missing field(s)");
       }
 
       var algo = {
@@ -243,7 +243,7 @@ TestArray.addTest(
 
     function doDerive(x) {
       if (!hasKeyFields(x)) {
-        throw "Invalid key; missing field(s)";
+        throw new Error("Invalid key; missing field(s)");
       }
 
       var algo = {
@@ -272,7 +272,7 @@ TestArray.addTest(
 
     function doDerive(x) {
       if (!hasKeyFields(x)) {
-        throw "Invalid key; missing field(s)";
+        throw new Error("Invalid key; missing field(s)");
       }
 
       var deriveAlg = {

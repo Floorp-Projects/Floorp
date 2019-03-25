@@ -54,30 +54,30 @@ async function testCreateTonsOfFD() {
   try {
     cached_response_array = await Promise.all(promise_array);
   } catch (e) {
-    throw ("Fail to open tons of files with error: " + e);
+    throw new Error("Fail to open tons of files with error: " + e);
   }
 
   if (cached_response_array.length != number_of_fd) {
-    throw ("Fail to cache.match the cached responses");
+    throw new Error("Fail to cache.match the cached responses");
   }
 
   info("Stage C: Consume the cached body");
   for (let i = 0; i < number_of_fd; ++i) {
     if (!cached_response_array[i]) {
       // Reduce the checking message.
-      throw ("The cached response doesn't exist");
+      throw new Error("The cached response doesn't exist");
     }
 
     let bodyText = "";
     try {
       bodyText = await cached_response_array[i].text();
     } catch (e) {
-      throw ("Fail to consume the cached response's body with error: " + e);
+      throw new Error("Fail to consume the cached response's body with error: " + e);
     }
 
     if (bodyText != body) {
       // Reduce the checking message.
-      throw ("The cached body doeen't be the same as original one");
+      throw new Error("The cached body doeen't be the same as original one");
     }
   }
 
