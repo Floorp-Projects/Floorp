@@ -15,6 +15,7 @@
 #include "DisplayItemClip.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScrollStyles.h"
+#include "mozilla/ScrollTypes.h"
 #include "mozilla/gfx/Point.h"
 #include "nsIScrollbarMediator.h"
 #include "Units.h"
@@ -55,6 +56,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::layers::ScrollSnapInfo ScrollSnapInfo;
   typedef mozilla::layout::ScrollAnchorContainer ScrollAnchorContainer;
+  typedef mozilla::ScrollMode ScrollMode;
 
   NS_DECL_QUERYFRAME_TARGET(nsIScrollableFrame)
 
@@ -191,34 +193,6 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual nsSize GetPageScrollAmount() const = 0;
 
   /**
-   * When a scroll operation is requested, we ask for instant, smooth,
-   * smooth msd, or normal scrolling.
-   *
-   * SMOOTH scrolls have a symmetrical acceleration and deceleration curve
-   * modeled with a set of splines that guarantee that the destination will be
-   * reached over a fixed time interval.  SMOOTH will only be smooth if smooth
-   * scrolling is actually enabled.  This behavior is utilized by keyboard and
-   * mouse wheel scrolling events.
-   *
-   * SMOOTH_MSD implements a physically based model that approximates the
-   * behavior of a mass-spring-damper system.  SMOOTH_MSD scrolls have a
-   * non-symmetrical acceleration and deceleration curve, can potentially
-   * overshoot the destination on intermediate frames, and complete over a
-   * variable time interval.  SMOOTH_MSD will only be smooth if cssom-view
-   * smooth-scrolling is enabled.
-   *
-   * INSTANT is always synchronous, NORMAL can be asynchronous.
-   *
-   * If an INSTANT scroll request happens while a SMOOTH or async scroll is
-   * already in progress, the async scroll is interrupted and we instantly
-   * scroll to the destination.
-   *
-   * If an INSTANT or SMOOTH scroll request happens while a SMOOTH_MSD scroll
-   * is already in progress, the SMOOTH_MSD scroll is interrupted without
-   * first scrolling to the destination.
-   */
-  enum ScrollMode { INSTANT, SMOOTH, SMOOTH_MSD, NORMAL };
-  /**
    * Some platforms (OSX) may generate additional scrolling events even
    * after the user has stopped scrolling, simulating a momentum scrolling
    * effect resulting from fling gestures.
@@ -257,10 +231,9 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * exactly aScrollPosition at the end of the scroll animation unless the
    * SMOOTH_MSD animation is interrupted.
    */
-  virtual void ScrollToCSSPixels(
-      const CSSIntPoint& aScrollPosition,
-      nsIScrollableFrame::ScrollMode aMode = nsIScrollableFrame::INSTANT,
-      nsAtom* aOrigin = nullptr) = 0;
+  virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
+                                 ScrollMode aMode = ScrollMode::eInstant,
+                                 nsAtom* aOrigin = nullptr) = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * Scrolls to a particular position in float CSS pixels.
@@ -298,10 +271,9 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
                         nsIScrollbarMediator::ScrollSnapMode aSnap =
                             nsIScrollbarMediator::DISABLE_SNAP) = 0;
 
-  virtual void ScrollByCSSPixels(
-      const CSSIntPoint& aDelta,
-      nsIScrollableFrame::ScrollMode aMode = nsIScrollableFrame::INSTANT,
-      nsAtom* aOrigin = nullptr) = 0;
+  virtual void ScrollByCSSPixels(const CSSIntPoint& aDelta,
+                                 ScrollMode aMode = ScrollMode::eInstant,
+                                 nsAtom* aOrigin = nullptr) = 0;
 
   /**
    * Perform scroll snapping, possibly resulting in a smooth scroll to
