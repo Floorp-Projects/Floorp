@@ -31,13 +31,10 @@ config = {
     "mozilla-central": {
     },
     'mozilla-release': {
-        'branch_uses_per_checkin_strategy': True,
     },
     'mozilla-esr60': {
-        'branch_uses_per_checkin_strategy': True,
     },
     'mozilla-beta': {
-        'branch_uses_per_checkin_strategy': True,
     },
     'try': {
         'branch_supports_uploadsymbols': False,
@@ -46,7 +43,6 @@ config = {
     ### project branches
     #'fx-team': {},   #Bug 1296396
     'gum': {
-        'branch_uses_per_checkin_strategy': True,
     },
     'mozilla-inbound': {
     },
@@ -54,8 +50,6 @@ config = {
     },
     'ux': {},
     'cypress': {
-        # bug 1164935
-        'branch_uses_per_checkin_strategy': True,
     },
 
     ### other branches that do not require anything special:
