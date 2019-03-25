@@ -20,6 +20,7 @@ PYTHON_UNITTEST_MANIFESTS += [
     'mozprofile/tests/manifest.ini',
     'mozproxy/tests/manifest.ini',
     'mozrunner/tests/manifest.ini',
+    'mozsystemmonitor/tests/manifest.ini',
     'moztest/tests/manifest.ini',
     'mozversion/tests/manifest.ini',
 ]
