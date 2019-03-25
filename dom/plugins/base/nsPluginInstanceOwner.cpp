@@ -2286,7 +2286,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
           event.subwindow = X11None;
           event.mode = -1;
           event.detail = NotifyDetailNone;
-          event.same_screen = True;
+          event.same_screen = X11True;
           event.focus = mContentFocused;
         } break;
         case eMouseMove: {
@@ -2302,7 +2302,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
           // information lost
           event.subwindow = X11None;
           event.is_hint = NotifyNormal;
-          event.same_screen = True;
+          event.same_screen = X11True;
         } break;
         case eMouseDown:
         case eMouseUp: {
@@ -2329,7 +2329,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
           }
           // information lost:
           event.subwindow = X11None;
-          event.same_screen = True;
+          event.same_screen = X11True;
         } break;
         default:
           break;
@@ -2372,7 +2372,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
         event.y = 0;
         event.x_root = -1;
         event.y_root = -1;
-        event.same_screen = False;
+        event.same_screen = X11False;
       } else {
         // If we need to send synthesized key events, then
         // DOMKeyCodeToGdkKeyCode(keyEvent.keyCode) and
@@ -2409,7 +2409,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
   event.window = X11None;  // not a real window
   // information lost:
   event.serial = 0;
-  event.send_event = False;
+  event.send_event = X11False;
 
   int16_t response = kNPEventNotHandled;
   mInstance->HandleEvent(&pluginEvent, &response,
@@ -2702,7 +2702,7 @@ nsresult nsPluginInstanceOwner::Renderer::DrawWithXlib(
     exposeEvent.count = 0;
     // information not set:
     exposeEvent.serial = 0;
-    exposeEvent.send_event = False;
+    exposeEvent.send_event = X11False;
     exposeEvent.major_code = 0;
     exposeEvent.minor_code = 0;
 

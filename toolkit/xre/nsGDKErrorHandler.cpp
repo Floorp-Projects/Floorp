@@ -104,6 +104,6 @@ void InstallGdkErrorHandler() {
                                      G_LOG_FLAG_RECURSION),
                     GdkErrorHandler, nullptr);
   if (PR_GetEnv("MOZ_X_SYNC")) {
-    XSynchronize(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), True);
+    XSynchronize(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), X11True);
   }
 }

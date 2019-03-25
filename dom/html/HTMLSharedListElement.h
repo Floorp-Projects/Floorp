@@ -58,6 +58,8 @@ class HTMLSharedListElement final : public nsGenericHTMLElement {
  private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     MappedDeclarations&);
+  static void MapOLAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                      MappedDeclarations&);
 };
 
 }  // namespace dom

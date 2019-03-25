@@ -349,6 +349,17 @@ class nsLayoutUtils {
   static nsIFrame* GetAfterFrame(const nsIContent* aContent);
 
   /**
+   * Returns the ::marker pseudo-element for aContent, if any.
+   */
+  static mozilla::dom::Element* GetMarkerPseudo(const nsIContent* aContent);
+
+  /**
+   * Returns the frame corresponding to the ::marker pseudo-element for
+   * aContent, if any.
+   */
+  static nsIFrame* GetMarkerFrame(const nsIContent* aContent);
+
+  /**
    * Given a frame, search up the frame tree until we find an
    * ancestor that (or the frame itself) is of type aFrameType, if any.
    *

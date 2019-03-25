@@ -66,9 +66,6 @@ class nsContainerFrame : public nsSplittableFrame {
       PeekOffsetCharacterOptions aOptions =
           PeekOffsetCharacterOptions()) override;
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
-
 #ifdef DEBUG_FRAME_DUMP
   void List(FILE* out = stderr, const char* aPrefix = "",
             uint32_t aFlags = 0) const override;
@@ -414,49 +411,6 @@ class nsContainerFrame : public nsSplittableFrame {
     else
       nsContainerFrame::PositionChildViews(aFrame);
   }
-
-  static bool FrameStartsCounterScope(nsIFrame* aFrame);
-
-  /**
-   * Renumber the list of the counter scope started by this frame, if any.
-   * If this returns true, the frame it's called on should get the
-   * NS_FRAME_HAS_DIRTY_CHILDREN bit set on it by the caller; either directly
-   * if it's already in reflow, or via calling FrameNeedsReflow() to schedule
-   * a reflow.
-   */
-  bool RenumberList();
-
-  /**
-   * Renumber this frame if it's a list-item, then call RenumberChildFrames.
-   * @param aOrdinal Ordinal number to start counting at.
-   *        Modifies this number for each associated list
-   *        item. Changes in the numbering due to setting
-   *        the |value| attribute are included if |aForCounting|
-   *        is false. This value is both an input and output
-   *        of this function, with the output value being the
-   *        next ordinal number to be used.
-   * @param aDepth Current depth in frame tree from root list element.
-   * @param aIncrement Amount to increase by after visiting each associated
-   *        list item, unless overridden by |value|.
-   * @param aForCounting Whether we are counting the elements or actually
-   *        restyling them. When true, this simply visits all children,
-   *        ignoring |<li value="..">| changes, effectively counting them
-   *        and storing the result in |aOrdinal|. This is useful for
-   *        |<ol reversed>|, where we need to count the number of
-   *        applicable child list elements before numbering. When false,
-   *        this will restyle all applicable descendants, and the next
-   *        ordinal value will be stored in |aOrdinal|, taking into account
-   *        any changes from |<li value="..">|.
-   */
-  bool RenumberFrameAndDescendants(int32_t* aOrdinal, int32_t aDepth,
-                                   int32_t aIncrement,
-                                   bool aForCounting) override;
-  /**
-   * Renumber the child frames using RenumberFrameAndDescendants.
-   * See RenumberFrameAndDescendants for description of parameters.
-   */
-  virtual bool RenumberChildFrames(int32_t* aOrdinal, int32_t aDepth,
-                                   int32_t aIncrement, bool aForCounting);
 
   /**
    * Returns a CSS Box Alignment constant which the caller can use to align

@@ -77,6 +77,8 @@ const nsINode* Gecko_GetPreviousSibling(const nsINode*);
 const nsINode* Gecko_GetFlattenedTreeParentNode(const nsINode*);
 const mozilla::dom::Element* Gecko_GetBeforeOrAfterPseudo(
     const mozilla::dom::Element*, bool is_before);
+const mozilla::dom::Element* Gecko_GetMarkerPseudo(
+    const mozilla::dom::Element*);
 
 nsTArray<nsIContent*>* Gecko_GetAnonymousContentForElement(
     const mozilla::dom::Element*);
@@ -433,9 +435,9 @@ mozilla::css::GridTemplateAreasValue* Gecko_NewGridTemplateAreasValue(
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::GridTemplateAreasValue,
                                    GridTemplateAreasValue);
 
-// Clear the mContents, mCounterIncrements, or mCounterResets field in
-// nsStyleContent. This is needed to run the destructors, otherwise we'd
-// leak the images, strings, and whatnot.
+// Clear the mContents, mCounterIncrements, mCounterResets, or mCounterSets
+// field in nsStyleContent. This is needed to run the destructors, otherwise
+// we'd leak the images, strings, and whatnot.
 void Gecko_ClearAndResizeStyleContents(nsStyleContent* content,
                                        uint32_t how_many);
 
@@ -445,11 +447,17 @@ void Gecko_ClearAndResizeCounterIncrements(nsStyleContent* content,
 void Gecko_ClearAndResizeCounterResets(nsStyleContent* content,
                                        uint32_t how_many);
 
+void Gecko_ClearAndResizeCounterSets(nsStyleContent* content,
+                                     uint32_t how_many);
+
 void Gecko_CopyStyleContentsFrom(nsStyleContent* content,
                                  const nsStyleContent* other);
 
 void Gecko_CopyCounterResetsFrom(nsStyleContent* content,
                                  const nsStyleContent* other);
+
+void Gecko_CopyCounterSetsFrom(nsStyleContent* content,
+                               const nsStyleContent* other);
 
 void Gecko_CopyCounterIncrementsFrom(nsStyleContent* content,
                                      const nsStyleContent* other);

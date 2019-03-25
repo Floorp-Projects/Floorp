@@ -4208,8 +4208,6 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
   }
 
-  RenumberList();
-
   const FlexboxAxisTracker axisTracker(this, aReflowInput.GetWritingMode());
 
   // Check to see if we need to create a computed info structure, to
@@ -5147,8 +5145,6 @@ void nsFlexContainerFrame::ReflowPlaceholders(
 nscoord nsFlexContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
                                              IntrinsicISizeType aType) {
   nscoord containerISize = 0;
-  RenumberList();
-
   const nsStylePosition* stylePos = StylePosition();
   const FlexboxAxisTracker axisTracker(this, GetWritingMode());
 

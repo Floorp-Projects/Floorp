@@ -526,6 +526,8 @@ already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
       element = nsLayoutUtils::GetBeforePseudo(aElement);
     } else if (aPseudo == nsCSSPseudoElements::after()) {
       element = nsLayoutUtils::GetAfterPseudo(aElement);
+    } else if (aPseudo == nsCSSPseudoElements::marker()) {
+      element = nsLayoutUtils::GetMarkerPseudo(aElement);
     } else if (!aPseudo) {
       element = aElement;
     }
@@ -863,14 +865,19 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
 
     if (!mPseudo) {
       mOuterFrame = mElement->GetPrimaryFrame();
-    } else if (mPseudo == nsCSSPseudoElements::before() ||
-               mPseudo == nsCSSPseudoElements::after()) {
-      nsAtom* property = mPseudo == nsCSSPseudoElements::before()
-                             ? nsGkAtoms::beforePseudoProperty
-                             : nsGkAtoms::afterPseudoProperty;
-
-      auto* pseudo = static_cast<Element*>(mElement->GetProperty(property));
-      mOuterFrame = pseudo ? pseudo->GetPrimaryFrame() : nullptr;
+    } else {
+      nsAtom* property = nullptr;
+      if (mPseudo == nsCSSPseudoElements::before()) {
+        property = nsGkAtoms::beforePseudoProperty;
+      } else if (mPseudo == nsCSSPseudoElements::after()) {
+        property = nsGkAtoms::afterPseudoProperty;
+      } else if (mPseudo == nsCSSPseudoElements::marker()) {
+        property = nsGkAtoms::markerPseudoProperty;
+      }
+      if (property) {
+        auto* pseudo = static_cast<Element*>(mElement->GetProperty(property));
+        mOuterFrame = pseudo ? pseudo->GetPrimaryFrame() : nullptr;
+      }
     }
 
     mInnerFrame = mOuterFrame;

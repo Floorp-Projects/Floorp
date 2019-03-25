@@ -4,7 +4,7 @@ fuzzy-if(OSX,0-11,0-1) == numbering-3.html numbering-3-ref.html
 fuzzy-if(OSX,0-76,0-2) == numbering-4.html numbering-4-ref.html
 == numbering-5.html numbering-5-ref.html
 == ol-reversed-1a.html ol-reversed-1-ref.html
-asserts(1) == ol-reversed-1b.html ol-reversed-1-ref.html # bug 478135
+== ol-reversed-1b.html ol-reversed-1-ref.html
 == ol-reversed-1c.html ol-reversed-1-ref.html
 == ol-reversed-2.html ol-reversed-2-ref.html
 == ol-reversed-3.html ol-reversed-3-ref.html
