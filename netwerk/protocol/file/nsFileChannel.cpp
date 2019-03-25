@@ -29,6 +29,7 @@
 #include "prio.h"
 #include <algorithm>
 
+#include "mozilla/TaskQueue.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;
@@ -391,24 +392,77 @@ nsresult nsFileChannel::OpenContentStream(bool async, nsIInputStream **result,
     EnableSynthesizedProgressEvents(true);
 
     // fixup content length and type
-    if (mContentLength < 0) {
-      int64_t size;
-      rv = file->GetFileSize(&size);
+
+    // when we are called from asyncOpen, the content length fixup will be
+    // performed on a background thread and block the listener invocation via
+    // ListenerBlockingPromise method
+    if (!async && mContentLength < 0) {
+      rv = FixupContentLength(false);
       if (NS_FAILED(rv)) {
-        if (async && (NS_ERROR_FILE_NOT_FOUND == rv ||
-                      NS_ERROR_FILE_TARGET_DOES_NOT_EXIST == rv)) {
-          size = 0;
-        } else {
-          return rv;
-        }
+        return rv;
       }
-      mContentLength = size;
     }
-    if (!contentType.IsEmpty()) SetContentType(contentType);
+
+    if (!contentType.IsEmpty()) {
+      SetContentType(contentType);
+    }
   }
 
   *result = nullptr;
   stream.swap(*result);
+  return NS_OK;
+}
+
+nsresult nsFileChannel::ListenerBlockingPromise(BlockingPromise **aPromise) {
+  NS_ENSURE_ARG(aPromise);
+  *aPromise = nullptr;
+
+  if (mContentLength >= 0) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIEventTarget> sts(
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID));
+  if (!sts) {
+    return FixupContentLength(true);
+  }
+
+  RefPtr<TaskQueue> taskQueue = new TaskQueue(sts.forget());
+  RefPtr<nsFileChannel> self = this;
+  RefPtr<BlockingPromise> promise =
+      mozilla::InvokeAsync(taskQueue, __func__, [self{std::move(self)}]() {
+        nsresult rv = self->FixupContentLength(true);
+        if (NS_FAILED(rv)) {
+          return BlockingPromise::CreateAndReject(rv, __func__);
+        }
+        return BlockingPromise::CreateAndResolve(NS_OK, __func__);
+      });
+
+  promise.forget(aPromise);
+  return NS_OK;
+}
+
+nsresult nsFileChannel::FixupContentLength(bool async) {
+  MOZ_ASSERT(mContentLength < 0);
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = GetFile(getter_AddRefs(file));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  int64_t size;
+  rv = file->GetFileSize(&size);
+  if (NS_FAILED(rv)) {
+    if (async && (NS_ERROR_FILE_NOT_FOUND == rv ||
+                  NS_ERROR_FILE_TARGET_DOES_NOT_EXIST == rv)) {
+      size = 0;
+    } else {
+      return rv;
+    }
+  }
+  mContentLength = size;
+
   return NS_OK;
 }
 

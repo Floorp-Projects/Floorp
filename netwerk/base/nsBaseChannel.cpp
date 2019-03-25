@@ -250,13 +250,45 @@ nsresult nsBaseChannel::BeginPumpingData() {
   nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
   rv = nsInputStreamPump::Create(getter_AddRefs(mPump), stream, 0, 0, true,
                                  target);
-  if (NS_SUCCEEDED(rv)) {
-    mPumpingData = true;
-    mRequest = mPump;
-    rv = mPump->AsyncRead(this, nullptr);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  return rv;
+  mPumpingData = true;
+  mRequest = mPump;
+  rv = mPump->AsyncRead(this, nullptr);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  RefPtr<BlockingPromise> promise;
+  rv = ListenerBlockingPromise(getter_AddRefs(promise));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (promise) {
+    mPump->Suspend();
+
+    RefPtr<nsBaseChannel> self(this);
+    nsCOMPtr<nsISerialEventTarget> serialTarget(do_QueryInterface(target));
+    MOZ_ASSERT(serialTarget);
+
+    promise->Then(serialTarget, __func__,
+                  [self, this](nsresult rv) {
+                    MOZ_ASSERT(mPump);
+                    MOZ_ASSERT(NS_SUCCEEDED(rv));
+                    mPump->Resume();
+                  },
+                  [self, this](nsresult rv) {
+                    MOZ_ASSERT(mPump);
+                    MOZ_ASSERT(NS_FAILED(rv));
+                    Cancel(rv);
+                    mPump->Resume();
+                  });
+  }
+
+  return NS_OK;
 }
 
 void nsBaseChannel::HandleAsyncRedirect(nsIChannel *newChannel) {
