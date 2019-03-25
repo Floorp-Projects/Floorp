@@ -42,10 +42,13 @@ class MozlintParser(ArgumentParser):
           'help': "Display and fail on warnings in addition to errors.",
           }],
         [['-f', '--format'],
-         {'dest': 'fmt',
-          'default': 'stylish',
-          'choices': all_formatters.keys(),
-          'help': "Formatter to use. Defaults to 'stylish'.",
+         {'dest': 'formats',
+          'action': 'append',
+          'help': "Formatter to use. Defaults to 'stylish' on stdout. "
+                  "You can specify an optional path as --format formatter:path "
+                  "that will be used instead of stdout. "
+                  "You can also use multiple formatters at the same time. "
+                  "Formatters available: {}.".format(', '.join(all_formatters.keys())),
           }],
         [['-n', '--no-filter'],
          {'dest': 'use_filters',
@@ -126,6 +129,29 @@ class MozlintParser(ArgumentParser):
             if invalid:
                 self.error("the following paths do not exist:\n{}".format("\n".join(invalid)))
 
+        if args.formats:
+            formats = []
+            for fmt in args.formats:
+                path = None
+                if ':' in fmt:
+                    # Detect optional formatter path
+                    pos = fmt.index(':')
+                    fmt, path = fmt[:pos], os.path.realpath(fmt[pos+1:])
+
+                    # Check path is writable
+                    fmt_dir = os.path.dirname(path)
+                    if not os.access(fmt_dir, os.W_OK | os.X_OK):
+                        self.error("the following directory is not writable: {}".format(fmt_dir))
+
+                if fmt not in all_formatters.keys():
+                    self.error('the following formatter is not available: {}'.format(fmt))
+
+                formats.append((fmt, path))
+            args.formats = formats
+        else:
+            # Can't use argparse default or this choice will be always present
+            args.formats = [('stylish', None)]
+
 
 def find_linters(linters=None):
     lints = []
@@ -150,7 +176,7 @@ def find_linters(linters=None):
     return lints
 
 
-def run(paths, linters, fmt, outgoing, workdir, edit,
+def run(paths, linters, formats, outgoing, workdir, edit,
         setup=False, list_linters=False, **lintargs):
     from mozlint import LintRoller, formatters
     from mozlint.editor import edit_issues
@@ -177,13 +203,16 @@ def run(paths, linters, fmt, outgoing, workdir, edit,
         edit_issues(result)
         result = lint.roll(result.issues.keys())
 
-    formatter = formatters.get(fmt)
+    for formatter_name, path in formats:
+        formatter = formatters.get(formatter_name)
 
-    # Encode output with 'replace' to avoid UnicodeEncodeErrors on
-    # environments that aren't using utf-8.
-    out = formatter(result).encode(sys.stdout.encoding or 'ascii', 'replace')
-    if out:
-        print(out)
+        # Encode output with 'replace' to avoid UnicodeEncodeErrors on
+        # environments that aren't using utf-8.
+        out = formatter(result).encode(sys.stdout.encoding or 'ascii', 'replace')
+        if out:
+            output_file = open(path, 'w') if path else sys.stdout
+            print(out, file=output_file)
+
     return result.returncode
 
 
