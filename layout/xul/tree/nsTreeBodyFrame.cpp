@@ -3821,7 +3821,7 @@ nsresult nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts,
   // Update the column scroll view
   AutoWeakFrame weakFrame(this);
   aParts.mColumnsScrollFrame->ScrollTo(nsPoint(mHorzPosition, 0),
-                                       nsIScrollableFrame::INSTANT);
+                                       ScrollMode::eInstant);
   if (!weakFrame.IsAlive()) {
     return NS_ERROR_FAILURE;
   }

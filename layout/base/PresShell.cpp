@@ -2277,10 +2277,10 @@ PresShell::ScrollPage(bool aForward) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(nsIPresShell::eVertical);
   if (scrollFrame) {
-    scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                          nsIScrollableFrame::PAGES, nsIScrollableFrame::SMOOTH,
-                          nullptr, nullptr, nsIScrollableFrame::NOT_MOMENTUM,
-                          nsIScrollableFrame::ENABLE_SNAP);
+    scrollFrame->ScrollBy(
+        nsIntPoint(0, aForward ? 1 : -1), nsIScrollableFrame::PAGES,
+        mozilla::ScrollMode::eSmooth, nullptr, nullptr,
+        nsIScrollableFrame::NOT_MOMENTUM, nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -2294,8 +2294,9 @@ PresShell::ScrollLine(bool aForward) {
         Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
                             NS_DEFAULT_VERTICAL_SCROLL_DISTANCE);
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? lineCount : -lineCount),
-                          nsIScrollableFrame::LINES, nsIScrollableFrame::SMOOTH,
-                          nullptr, nullptr, nsIScrollableFrame::NOT_MOMENTUM,
+                          nsIScrollableFrame::LINES,
+                          mozilla::ScrollMode::eSmooth, nullptr, nullptr,
+                          nsIScrollableFrame::NOT_MOMENTUM,
                           nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
@@ -2309,10 +2310,10 @@ PresShell::ScrollCharacter(bool aRight) {
     int32_t h =
         Preferences::GetInt("toolkit.scrollbox.horizontalScrollDistance",
                             NS_DEFAULT_HORIZONTAL_SCROLL_DISTANCE);
-    scrollFrame->ScrollBy(nsIntPoint(aRight ? h : -h, 0),
-                          nsIScrollableFrame::LINES, nsIScrollableFrame::SMOOTH,
-                          nullptr, nullptr, nsIScrollableFrame::NOT_MOMENTUM,
-                          nsIScrollableFrame::ENABLE_SNAP);
+    scrollFrame->ScrollBy(
+        nsIntPoint(aRight ? h : -h, 0), nsIScrollableFrame::LINES,
+        mozilla::ScrollMode::eSmooth, nullptr, nullptr,
+        nsIScrollableFrame::NOT_MOMENTUM, nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -2322,10 +2323,10 @@ PresShell::CompleteScroll(bool aForward) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(nsIPresShell::eVertical);
   if (scrollFrame) {
-    scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                          nsIScrollableFrame::WHOLE, nsIScrollableFrame::SMOOTH,
-                          nullptr, nullptr, nsIScrollableFrame::NOT_MOMENTUM,
-                          nsIScrollableFrame::ENABLE_SNAP);
+    scrollFrame->ScrollBy(
+        nsIntPoint(0, aForward ? 1 : -1), nsIScrollableFrame::WHOLE,
+        mozilla::ScrollMode::eSmooth, nullptr, nullptr,
+        nsIScrollableFrame::NOT_MOMENTUM, nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -3147,7 +3148,7 @@ nsresult nsIPresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
       // thing whether or not |aScroll| is true.
       if (aScroll && sf) {
         // Scroll to the top of the page
-        sf->ScrollTo(nsPoint(0, 0), nsIScrollableFrame::INSTANT);
+        sf->ScrollTo(nsPoint(0, 0), mozilla::ScrollMode::eInstant);
       }
     }
   }
@@ -3376,7 +3377,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   // If we don't need to scroll, then don't try since it might cancel
   // a current smooth scroll operation.
   if (needToScroll) {
-    nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
+    mozilla::ScrollMode scrollMode = ScrollMode::eInstant;
     bool autoBehaviorIsSmooth =
         (aFrameAsScrollable->GetScrollStyles().mScrollBehavior ==
          NS_STYLE_SCROLL_BEHAVIOR_SMOOTH);
@@ -3384,7 +3385,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
         (aFlags & nsIPresShell::SCROLL_SMOOTH) ||
         ((aFlags & nsIPresShell::SCROLL_SMOOTH_AUTO) && autoBehaviorIsSmooth);
     if (gfxPrefs::ScrollBehaviorEnabled() && smoothScroll) {
-      scrollMode = nsIScrollableFrame::SMOOTH_MSD;
+      scrollMode = ScrollMode::eSmoothMsd;
     }
     aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange);
   }
