@@ -2268,7 +2268,6 @@ ContentParent::ContentParent(ContentParent* aOpener,
       mRemoteWorkerActors(0),
       mNumDestroyingTabs(0),
       mLifecycleState(LifecycleState::LAUNCHING),
-      mShuttingDown(false),
       mIsForBrowser(!mRemoteType.IsEmpty()),
       mRecordReplayState(aRecordReplayState),
       mRecordingFile(aRecordingFile),
@@ -5736,7 +5735,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
 
   if (!child) {
     RefPtr<BrowsingContextGroup> group =
-        BrowsingContextGroup::Select(aInit.mParentId, aInit.mOpenerId);
+      BrowsingContextGroup::Select(aInit.mParentId, aInit.mOpenerId);
     child = BrowsingContext::CreateFromIPC(std::move(aInit), group, this);
   }
 
