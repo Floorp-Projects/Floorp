@@ -32,7 +32,6 @@ function getBreakpointsForSource(
     .filter(
       bp =>
         !bp.options.hidden &&
-        !bp.loading &&
         (bp.text || bp.originalText || bp.options.condition || bp.disabled)
     )
     .filter(
