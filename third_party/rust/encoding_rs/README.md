@@ -126,17 +126,39 @@ There are currently these optional cargo features:
 
 ### `simd-accel`
 
-Enables SSE2 acceleration on x86 and x86_64 and NEON acceleration on Aarch64
-and ARMv7. _Enabling this cargo feature is recommended when building for x86,
-x86_64, ARMv7 or Aarch64._ The intention is for the functionality enabled by
-this feature to become the normal on-by-default behavior once
-[portable SIMD](https://github.com/rust-lang/rfcs/pull/2366) becames part of
-stable Rust.
+Enables SIMD acceleration using the nightly-dependent `packed_simd` crate.
 
-Enabling this feature breaks the build unless the target is x86 with SSE2
-(Rust's default 32-bit x86 target, `i686`, has SSE2, but Linux distros may
-use an x86 target without SSE2, i.e. `i586` in `rustup` terms), ARMv7 or
-thumbv7 with NEON (`-C target_feature=+neon`), x86_64 or Aarch64.
+This is an opt-in feature, because enabling this feature _opts out_ of Rust's
+guarantees of future compilers compiling old code (aka. "stability story").
+
+Currently, this has not been tested to be an improvement except for these
+targets:
+
+* x86_64
+* i686
+* aarch64
+* thumbv7neon
+
+If you use nightly Rust, you use targets whose first component is one of the
+above, and you are prepared _to have to revise your configuration when updating
+Rust_, you should enable this feature. Otherwise, please _do not_ enable this
+feature.
+
+_Note!_ If you are compiling for a target that does not have 128-bit SIMD
+enabled as part of the target definition and you are enabling 128-bit SIMD
+using `-C target_feature`, you need to enable the `core_arch` Cargo feature
+for `packed_simd` to compile a crates.io snapshot of `core_arch` instead of
+using the standard-library copy of `core::arch`, because the `core::arch`
+module of the pre-compiled standard library has been compiled with the
+assumption that the CPU doesn't have 128-bit SIMD. At present this applies
+mainly to 32-bit ARM targets whose first component does not include the
+substring `neon`.
+
+The encoding_rs side of things has not been properly set up for POWER,
+PowerPC, MIPS, etc., SIMD at this time, so even if you were to follow
+the advice from the previous paragraph, you probably shouldn't use
+the `simd-accel` option on the less mainstream architectures at this
+time.
 
 Used by Firefox.
 
@@ -381,6 +403,14 @@ To regenerate the generated code:
 - [ ] ~Investigate [Bob Steagall's lookup table acceleration for UTF-8](https://github.com/BobSteagall/CppNow2018/blob/master/FastConversionFromUTF-8/Fast%20Conversion%20From%20UTF-8%20with%20C%2B%2B%2C%20DFAs%2C%20and%20SSE%20Intrinsics%20-%20Bob%20Steagall%20-%20C%2B%2BNow%202018.pdf).~
 
 ## Release Notes
+
+### 0.8.16
+
+* Switch from the `simd` crate to `packed_simd`.
+
+### 0.8.15
+
+* Adjust documentation for `simd-accel` (README-only release).
 
 ### 0.8.14
 

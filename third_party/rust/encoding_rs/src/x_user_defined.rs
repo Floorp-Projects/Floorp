@@ -14,15 +14,12 @@ use variant::*;
 cfg_if! {
     if #[cfg(feature = "simd-accel")] {
         use simd_funcs::*;
-        use simd::u16x8;
+        use packed_simd::u16x8;
 
         #[inline(always)]
         fn shift_upper(unpacked: u16x8) -> u16x8 {
             let highest_ascii = u16x8::splat(0x7F);
-            let offset = u16x8::splat(0xF700);
-            let mask = unpacked.gt(highest_ascii).to_repr().to_u16();
-            unpacked + (offset & mask)
-        }
+            unpacked + unpacked.gt(highest_ascii).select(u16x8::splat(0xF700), u16x8::splat(0))        }
     } else {
     }
 }

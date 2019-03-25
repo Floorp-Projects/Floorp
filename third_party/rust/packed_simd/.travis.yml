@@ -1,0 +1,308 @@
+language: rust
+sudo: false
+rust: nightly
+
+stages:
+  - tools
+  - linux-tier1
+  - osx-tier1
+  - osx-tier2
+  - linux-tier2
+  - android
+
+matrix:
+  fast_finish: true    
+  include:
+    # Android:
+    - env: TARGET=x86_64-linux-android NOVERIFY=1
+      name: "x86_64-unknown-linux-android + SSE2"
+      stage: android
+    - env: TARGET=arm-linux-androideabi
+      name: "arm-linux-androideabi"
+      stage: android
+    - env: TARGET=arm-linux-androideabi RUSTFLAGS="-C target-feature=+v7,+neon"
+      name: "arm-linux-androideabi + NEON"
+      stage: android
+    - env: TARGET=aarch64-linux-android
+      name: "aarch64-unknown-linux-android"
+      stage: android
+    - env: TARGET=aarch64-linux-android RUSTFLAGS="-C target-feature=+neon"
+      name: "aarch64-unknown-linux-android + NEON"
+      stage: android
+    - env: TARGET="thumbv7neon-linux-androideabi"
+      name: "thumbv7neon-linux-androideabi"
+      stage: android
+    # Linux:
+    - env: TARGET=i586-unknown-linux-gnu
+      name: "i586-unknown-linux-gnu"
+      stage: linux-tier2
+    - env: TARGET=i586-unknown-linux-gnu RUSTFLAGS="-C target-feature=+sse"
+      name: "i586-unknown-linux-gnu + SSE"
+      stage: linux-tier2
+    - env: TARGET=i586-unknown-linux-gnu RUSTFLAGS="-C target-feature=+sse2"
+      name: "i586-unknown-linux-gnu + SSE2"
+      stage: linux-tier2
+    - env: TARGET=i686-unknown-linux-gnu
+      name: "i686-unknown-linux-gnu + SSE2"
+      stage: linux-tier1
+    - env: TARGET=i686-unknown-linux-gnu RUSTFLAGS="-C target-feature=+sse4.2"
+      name: "i686-unknown-linux-gnu + SSE4.2"
+      stage: linux-tier1
+    - env: TARGET=i686-unknown-linux-gnu RUSTFLAGS="-C target-feature=+avx2"
+      name: "i686-unknown-linux-gnu + AVX2"
+      stage: linux-tier1
+    - env: TARGET=x86_64-unknown-linux-gnu
+      name: "x86_64-unknown-linux-gnu + SSE2"
+      install: rustup component add rustfmt-preview
+      stage: linux-tier1
+    - env: TARGET=x86_64-unknown-linux-gnu RUSTFLAGS="-C target-feature=+sse4.2"
+      name: "x86_64-unknown-linux-gnu + SSE4.2"
+      install: rustup component add rustfmt-preview
+      stage: linux-tier1
+    - env: TARGET=x86_64-unknown-linux-gnu RUSTFLAGS="-C target-feature=+avx"
+      name: "x86_64-unknown-linux-gnu + AVX"
+      install: rustup component add rustfmt-preview
+      stage: linux-tier1
+    - env: TARGET=x86_64-unknown-linux-gnu RUSTFLAGS="-C target-feature=+avx2"
+      name: "x86_64-unknown-linux-gnu + AVX2"
+      install: rustup component add rustfmt-preview
+      stage: linux-tier1
+    - env: TARGET=x86_64-unknown-linux-gnu-emulated
+      name: "Intel SDE + SSE2"
+      install: true
+      stage: linux-tier1
+    - env: TARGET=x86_64-unknown-linux-gnu-emulated RUSTFLAGS="-C target-feature=+sse4.2"
+      name: "Intel SDE + SSE4.2"
+      install: true
+      stage: linux-tier1
+    - env: TARGET=x86_64-unknown-linux-gnu-emulated RUSTFLAGS="-C target-feature=+avx"
+      name: "Intel SDE + AVX"
+      install: true
+      stage: linux-tier1
+    - env: TARGET=x86_64-unknown-linux-gnu-emulated RUSTFLAGS="-C target-feature=+avx2"
+      name: "Intel SDE + AVX2"
+      install: true
+      stage: linux-tier1
+    - env: TARGET=x86_64-unknown-linux-gnu-emulated RUSTFLAGS="-C target-feature=+avx-512f"
+      name: "Intel SDE + AVX-512"
+      install: true
+      stage: linux-tier1
+    - env: TARGET=arm-unknown-linux-gnueabi
+      name: "arm-unknown-linux-gnueabi"
+      stage: linux-tier2
+    - env: TARGET=arm-unknown-linux-gnueabi RUSTFLAGS="-C target-feature=+v7,+neon"
+      name: "arm-unknown-linux-gnueabi + NEON"
+      stage: linux-tier2
+    - env: TARGET=arm-unknown-linux-gnueabihf
+      name: "arm-unknown-linux-gnueabihf"
+      stage: linux-tier2
+    - env: TARGET=arm-unknown-linux-gnueabihf RUSTFLAGS="-C target-feature=+v7,+neon"
+      name: "arm-unknown-linux-gnueabihf + NEON"
+      stage: linux-tier2
+    - env: TARGET=armv7-unknown-linux-gnueabihf
+      name: "armv7-unknown-linux-gnueabihf"
+      stage: linux-tier2
+    - env: TARGET=armv7-unknown-linux-gnueabihf RUSTFLAGS="-C target-feature=+neon"
+      name: "armv7-unknown-linux-gnueabihf + NEON"
+      stage: linux-tier2
+    - env: TARGET="thumbv7neon-unknown-linux-gnueabihf"
+      name: "thumbv7neon-unknown-linux-gnueabihf"
+      stage: linux-tier2
+    - env: TARGET=aarch64-unknown-linux-gnu
+      name: "aarch64-unknown-linux-gnu"
+      stage: linux-tier2
+    - env: TARGET=aarch64-unknown-linux-gnu RUSTFLAGS="-C target-feature=+neon"
+      name: "aarch64-unknown-linux-gnu + NEON"
+      stage: linux-tier2
+    - env: TARGET=mips-unknown-linux-gnu
+      name: "mips-unknown-linux-gnu"
+      stage: linux-tier2
+    - env: TARGET=mipsel-unknown-linux-musl
+      name: "mipsel-unknown-linux-musl"
+      stage: linux-tier2
+    - env: TARGET=mips64-unknown-linux-gnuabi64
+      name: "mips64-unknown-linux-gnuabi64"
+      stage: linux-tier2
+    - env: TARGET=mips64el-unknown-linux-gnuabi64
+      name: "mips64el-unknown-linux-gnuabi64"
+      stage: linux-tier2
+      # FIXME: https://github.com/rust-lang-nursery/packed_simd/issues/18
+      # env: TARGET=mips64el-unknown-linux-gnuabi64 RUSTFLAGS="-C target-feature=+msa -C target-cpu=mips64r6"
+    - env: TARGET=powerpc-unknown-linux-gnu
+      name: "powerpc-unknown-linux-gnu"
+      stage: linux-tier2
+    - env: TARGET=powerpc64-unknown-linux-gnu
+      name: "powerpc64-unknown-linux-gnu"
+      stage: linux-tier2
+    - env: TARGET=powerpc64le-unknown-linux-gnu
+      name: "powerpc64le-unknown-linux-gnu"
+      stage: linux-tier2
+    - env: TARGET=powerpc64le-unknown-linux-gnu RUSTFLAGS="-C target-feature=+altivec"
+      name: "powerpc64le-unknown-linux-gnu + ALTIVEC"
+      stage: linux-tier2
+    - env: TARGET=powerpc64le-unknown-linux-gnu RUSTFLAGS="-C target-feature=+vsx"
+      name: "powerpc64le-unknown-linux-gnu + VSX"
+      stage: linux-tier2
+    - env: TARGET=s390x-unknown-linux-gnu
+      name: "s390x-unknown-linux-gnu"
+      stage: linux-tier2
+    - env: TARGET=sparc64-unknown-linux-gnu
+      name: "sparc64-unknown-linux-gnu"
+      stage: linux-tier2
+    # WebAssembly:
+    - env: TARGET=wasm32-unknown-unknown
+      name: "wasm32-unknown-unknown"
+      stage: osx-tier1 # For now
+    # MacOSX:
+    - os: osx
+      env: TARGET=i686-apple-darwin
+      name: "i686-apple-darwin + SSE2"
+      script: ci/run.sh
+      osx_image: xcode10
+      stage: osx-tier1
+    - os: osx
+      env: TARGET=i686-apple-darwin RUSTFLAGS="-C target-feature=+sse4.2"
+      name: "i686-apple-darwin + SSE4.2"
+      script: ci/run.sh
+      osx_image: xcode10
+      stage: osx-tier1
+      # Travis-CI OSX build bots do not support AVX2:
+    - os: osx
+      env: TARGET=i686-apple-darwin RUSTFLAGS="-C target-feature=+avx"
+      name: "i686-apple-darwin + AVX"
+      script: ci/run.sh
+      osx_image: xcode10
+      stage: osx-tier1
+    - os: osx
+      env: TARGET=x86_64-apple-darwin
+      name: "x86_64-apple-darwin + SSE2"
+      install: true
+      script: ci/run.sh
+      osx_image: xcode10
+      stage: osx-tier1
+    - os: osx
+      env: TARGET=x86_64-apple-darwin RUSTFLAGS="-C target-feature=+sse4.2"
+      name: "x86_64-apple-darwin + SSE4.2"
+      install: true
+      script: ci/run.sh
+      osx_image: xcode10
+      stage: osx-tier1
+      # Travis-CI OSX build bots do not support AVX2:
+    - os: osx
+      env: TARGET=x86_64-apple-darwin RUSTFLAGS="-C target-feature=+avx"
+      name: "x86_64-apple-darwin + AVX"
+      install: true
+      script: ci/run.sh
+      osx_image: xcode10
+      stage: osx-tier1
+    # *BSDs:
+    #- env: TARGET=i686-unknown-freebsd NORUN=1
+    #  script: ci/run.sh
+    #- env: TARGET=x86_64-unknown-freebsd NORUN=1
+    #  script: ci/run.sh
+    #- env: TARGET=x86_64-unknown-netbsd NORUN=1
+    #  script: ci/run.sh
+    # Solaris:
+    #- env: TARGET=x86_64-sun-solaris NORUN=1
+    #  script: ci/run.sh
+    # iOS:
+    - os: osx
+      env: TARGET=i386-apple-ios
+      name: "i386-apple-ios"
+      script: ci/run.sh
+      osx_image: xcode9.4
+      stage: osx-tier2
+    - os: osx
+      env: TARGET=x86_64-apple-ios
+      name: "x86_64-apple-ios + SSE2"
+      script: ci/run.sh
+      osx_image: xcode9.4
+      stage: osx-tier2
+    - os: osx
+      env: TARGET=armv7-apple-ios NORUN=1
+      name: "armv7-apple-ios [Build only]"
+      script: ci/run.sh
+      osx_image: xcode9.4
+      stage: osx-tier2
+    - os: osx
+      env: TARGET=aarch64-apple-ios NORUN=1
+      name: "aarch64-apple-ios [Build only]"
+      script: ci/run.sh
+      osx_image: xcode9.4
+      stage: osx-tier2
+    # BENCHMARKS:
+    - name: "Benchmarks - x86_64-unknown-linux-gnu"
+      install: TARGET=x86_64-unknown-linux-gnu ./ci/setup_benchmarks.sh
+      script: PATH=$(pwd):$PATH NORUN=1 VERIFY=1 FEATURES=core_arch,ispc,sleef-sys ci/benchmark.sh
+      stage: tools
+    - name: "Benchmarks - x86_64-apple-darwin"
+      install: TARGET=x86_64-apple-darwin ./ci/setup_benchmarks.sh
+      script: PATH=$(pwd):$PATH NORUN=1 VERIFY=1 FEATURES=core_arch,ispc,sleef-sys ci/benchmark.sh
+      os: osx
+      osx_image: xcode9.4
+      stage: tools
+    # TOOLS:
+    - name: "Documentation"
+      install: cargo install mdbook
+      script: ci/dox.sh
+      stage: tools
+    - name: "rustfmt"
+      install: true
+      before_script: rustup component add rustfmt-preview
+      script: ci/all.sh check_fmt || true
+      stage: tools
+    - name: "clippy"
+      install: true
+      before_script: rustup component add clippy-preview
+      script: ci/all.sh clippy
+      stage: tools
+
+  allow_failures:
+    # FIXME: ISPC cannot be found?
+    - name: "Benchmarks - x86_64-apple-darwin"
+    # FIXME: TBD
+    - env: TARGET=powerpc-unknown-linux-gnu
+    - env: TARGET=powerpc64-unknown-linux-gnu
+    - env: TARGET=powerpc64le-unknown-linux-gnu
+    - env: TARGET=powerpc64le-unknown-linux-gnu RUSTFLAGS="-C target-feature=+altivec"
+    - env: TARGET=powerpc64le-unknown-linux-gnu RUSTFLAGS="-C target-feature=+vsx"
+    #- env: TARGET=i686-unknown-freebsd NORUN=1
+    #- env: TARGET=x86_64-unknown-freebsd NORUN=1
+    #- env: TARGET=x86_64-unknown-netbsd NORUN=1
+    #- env: TARGET=x86_64-sun-solaris NORUN=1
+
+    # FIXME: TBD
+    - env: TARGET=arm-linux-androideabi
+    - env: TARGET=arm-linux-androideabi RUSTFLAGS="-C target-feature=+v7,+neon"
+    - env: TARGET=aarch64-linux-android
+    - env: TARGET=aarch64-linux-android RUSTFLAGS="-C target-feature=+neon"
+
+    # FIXME: iOS
+    # https://github.com/rust-lang-nursery/packed_simd/issues/26
+    - env: TARGET=i386-apple-ios
+    - env: TARGET=x86_64-apple-ios
+
+    # FIXME: https://github.com/rust-lang-nursery/packed_simd/issues/182
+    - env: TARGET=arm-unknown-linux-gnueabi RUSTFLAGS="-C target-feature=+v7,+neon"
+    - env: TARGET=arm-unknown-linux-gnueabihf RUSTFLAGS="-C target-feature=+v7,+neon"
+    - env: TARGET=armv7-unknown-linux-gnueabihf RUSTFLAGS="-C target-feature=+neon"
+
+    # FIXME: https://github.com/rust-lang-nursery/packed_simd/issues/183
+    - env: TARGET=wasm32-unknown-unknown
+
+install: travis_retry rustup target add $TARGET
+before_script: cargo generate-lockfile
+script: travis_wait 50 ci/run-docker.sh
+after_script: sleep 5
+
+env:
+  global:
+    secure: "lPHv7s6+AxQYNaFncycVFQt++Y1asQmMhOikQU1ztlP8CK7+hn2m98cg/euOJyzIOb2iJ3ZX4cGZkzw4lc59MQBByb1GtDbazQoUOzVDbVfe9BDD2f8JVoIFh1CMfjPKQ7Gg/rJqWlwrUlSd5GNxPCutKjY7qZhJuR6SQbJjlWaGN2Vd4fVCzKXz8fHRXgMEZS+d+CR4Nsrkb83J3Z4s5kSdJmhYxJ61AWjuzJVwUh4l3/HEYlSL5XXpuh5R2i7W16h1PlNdaTUgkZli1lHzO8+6Q8LzX9+XiLIEVX9lw3A2NdIKGz8E/+7Qs5oYOkwYhjROsDQxIK7xkSM30bQuN7cwMBybAVIyOPJkqXQ1dQyp83KSdsOj7JMyDDRvcEDLI6ehRlm5EcdH7YrReuboN81iUo0Sa7VsuUmgj5hjERCt9r30f9aWuitABai7vKRtjglg7Sp5CrEVPA4PQs6PqKCCRogoggbXJ/Z5Dyw/RZaXPeNR9+qIKN1Vjm9Gew1sRN2JK/3+vXTKtyJXH/uBxgJt4jQlbuShOJuF+BSfTF88sMe67a/357SSOIb4JkaCyd0flDCWYE8576kaHPlVVMT2peXee0LeRXm1e13nG3Na0t3LS/orJLPHOShNQGoDj7qAP5aEKggRya896JGwtvlaBHHTmSQh65G7cyNErZo="
+branches:
+  only:
+    - staging # bors r+
+    - trying  # bors try
+    - master
+notifications:
+  email:
+    on_success: never
