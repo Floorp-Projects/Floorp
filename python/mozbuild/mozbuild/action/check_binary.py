@@ -22,7 +22,7 @@ from mozpack.executables import (
 )
 
 
-STDCXX_MAX_VERSION = Version('3.4.16')
+STDCXX_MAX_VERSION = Version('3.4.17')
 GLIBC_MAX_VERSION = Version('2.12')
 LIBGCC_MAX_VERSION = Version('4.8')
 
