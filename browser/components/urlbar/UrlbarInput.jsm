@@ -856,10 +856,15 @@ class UrlbarInput {
         this.view.panel.setAttribute("actionoverride", "true");
       } else if (this._actionOverrideKeyCount &&
                  --this._actionOverrideKeyCount == 0) {
-        this.removeAttribute("actionoverride");
-        this.view.panel.removeAttribute("actionoverride");
+        this._clearActionOverride();
       }
     }
+  }
+
+  _clearActionOverride() {
+    this._actionOverrideKeyCount = 0;
+    this.removeAttribute("actionoverride");
+    this.view.panel.removeAttribute("actionoverride");
   }
 
   /**
@@ -1145,6 +1150,10 @@ class UrlbarInput {
   // Event handlers below.
 
   _on_blur(event) {
+    // In certain cases, like holding an override key and confirming an entry,
+    // we don't key a keyup event for the override key, thus we make this
+    // additional cleanup on blur.
+    this._clearActionOverride();
     this.formatValue();
     // Respect the autohide preference for easier inspecting/debugging via
     // the browser toolbox.

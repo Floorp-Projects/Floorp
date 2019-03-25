@@ -1,0 +1,4 @@
+code {
+    /* "Source Code Pro" breaks ASCII art */
+    font-family: Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace;
+}

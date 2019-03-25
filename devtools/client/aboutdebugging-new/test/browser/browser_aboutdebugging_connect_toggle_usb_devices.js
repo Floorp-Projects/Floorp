@@ -60,7 +60,7 @@ add_task(async function() {
   ok(document.querySelector(".js-connect-usb-disabled-message"),
     "The message about enabling USB devices is rendered again");
 
-  await waitForAdbStop();
+  await stopAdbProcess();
 
   await removeTab(tab);
 });

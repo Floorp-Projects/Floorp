@@ -17,7 +17,7 @@ add_task(async function test_switchtab_override() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   info("Opening and selecting second tab");
-  let secondTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  let secondTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   registerCleanupFunction(() => {
     try {
       gBrowser.removeTab(tab);
@@ -48,13 +48,24 @@ add_task(async function test_switchtab_override() {
   BrowserTestUtils.browserLoaded(secondTab.linkedBrowser).then(deferred.resolve);
 
   EventUtils.synthesizeKey("KEY_Shift", {type: "keydown"});
+  registerCleanupFunction(() => {
+    // Avoid confusing next tests by leaving a pending keydown.
+    EventUtils.synthesizeKey("KEY_Shift", {type: "keyup"});
+  });
+
+  let attribute = UrlbarPrefs.get("quantumbar") ? "actionoverride" : "noactions";
+  Assert.ok(UrlbarTestUtils.getPanel(window).hasAttribute(attribute),
+            "We should be overriding");
+
   EventUtils.synthesizeKey("KEY_Enter");
   info(`gURLBar.value = ${gURLBar.value}`);
   await deferred.promise;
-  // Loading the page may move focus, thus ensure the urlbar receives the keyup
-  // event, to avoid confusing next tests.
-  gURLBar.focus();
-  EventUtils.synthesizeKey("KEY_Shift", {type: "keyup"});
+
+  // Blurring the urlbar should have cleared the override.
+  Assert.ok(!UrlbarTestUtils.getPanel(window).hasAttribute(attribute),
+            "We should not be overriding anymore");
 
   await PlacesUtils.history.clear();
+  gBrowser.removeTab(tab);
+  gBrowser.removeTab(secondTab);
 });
