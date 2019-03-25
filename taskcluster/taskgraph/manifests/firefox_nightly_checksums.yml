@@ -13,11 +13,15 @@ platform_names:
   path_platform: ''
   filename_platform:
     by-platform:
-      linux-.*: 'linux-i686'
-      linux64.*: 'linux-x86_64'
-      macosx64.*: 'mac'
-      win32.*: 'win32'
-      win64.*: 'win64'
+      linux-nightly: 'linux-i686'
+      linux64-nightly: 'linux-x86_64'
+      linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
+      macosx64-nightly: 'mac'
+      win32-nightly: 'win32'
+      win64-nightly: 'win64'
+      win64-aarch64-nightly: 'win64-aarch64'
+      win64-asan-reporter-nightly: 'win64-asan-reporter'
+  stage_platform: ''
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
@@ -26,18 +30,18 @@ default: &default
   from:
     - checksums-signing
   all_locales: true
-  description: "TODO"
+  description: "TO_BE_OVERRIDDEN"
   locale_prefix: ''
   source_path_modifier: ''
   destinations:  # locale_prefix is appended
     by-locale:
       en-US:
+        - ${year}/${month}/${upload_date}-${branch}
         - latest-${branch}
         - latest-${branch}-l10n
-        - ${year}/${month}/${upload_date}-${branch}-${path_platform}
       default:
-        - latest-${branch}-l10n
         - ${year}/${month}/${upload_date}-${branch}-l10n
+        - latest-${branch}-l10n
 
 # Configuration for individual files. Extends 'default', above.
 mapping:

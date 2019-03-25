@@ -21,6 +21,7 @@ platform_names:
       android-x86_64-nightly: 'android-x86_64'
       android-api-16-nightly: 'android-arm'
       android-aarch64-nightly: 'android-aarch64'
+  stage_platform: ''
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
@@ -29,7 +30,7 @@ default: &default
   from:
     - build
   all_locales: false
-  description: "TODO"
+  description: "TO_BE_OVERRIDDEN"
   locale_prefix: '${locale}/'
   # anything between artifact prefix and filename within upstream task
   source_path_modifier:
