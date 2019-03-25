@@ -131,6 +131,9 @@ subprojects {
                 lintOptions {
                     warningsAsErrors true
                     abortOnError (project.name != "support-test")
+
+                    // With our L10N process its totally possible to have missing or (temporarily) extra translations.
+                    disable 'MissingTranslation', 'ExtraTranslation'
                 }
             }
 
