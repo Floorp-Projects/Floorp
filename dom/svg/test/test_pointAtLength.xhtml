@@ -13,8 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=643419
 
 SimpleTest.waitForExplicitFinish();
 
-function run()
-{
+function run() {
   var p1 = document.getElementById("p1");
   var point = p1.getPointAtLength(200);
   is(point.x, 200);

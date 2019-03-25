@@ -28,14 +28,13 @@ tests can be found in test_SVGxxxList.xhtml. Anything that can be generalized
 to other list types belongs there.
 */
 
-function run_tests()
-{
-  document.getElementById('svg').pauseAnimations();
+function run_tests() {
+  document.getElementById("svg").pauseAnimations();
 
   var text = document.getElementById("text");
   var numbers = text.rotate.baseVal;
 
-  is(numbers.numberOfItems, 3, 'Checking numberOfItems');
+  is(numbers.numberOfItems, 3, "Checking numberOfItems");
 
   // Test mutation events
   // --- Initialization
@@ -53,7 +52,7 @@ function run_tests()
   // -- Invalid attribute
   eventChecker.expect("modify");
   text.setAttribute("rotate", ",20");
-  is(numbers.numberOfItems, 0, 'Checking that parsing stops at invalid token');
+  is(numbers.numberOfItems, 0, "Checking that parsing stops at invalid token");
   // -- Attribute removal
   eventChecker.expect("remove");
   text.removeAttribute("rotate");

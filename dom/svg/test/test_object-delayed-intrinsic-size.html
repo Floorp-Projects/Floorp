@@ -17,8 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1063073
 
 SimpleTest.waitForExplicitFinish();
 
-function runTest()
-{
+function runTest() {
   var object = document.querySelector("object");
   var cs = document.defaultView.getComputedStyle(object);
   var width = cs.getPropertyValue("width");

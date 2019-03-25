@@ -40,32 +40,31 @@ function checkBBox(id, options, x, y, width, height, msg) {
   is(bbox.height, height, id + ".getBBox().height" + msg);
 }
 
-function run()
-{
+function run() {
   // First call getBBox on 'rect1' with stroke included:
   $("rect1").setAttribute("stroke", "black");
   $("rect1").setAttribute("stroke-width", "10");
-  checkBBox("rect1", { fill:true, stroke:true }, 5, 5, 20, 20, " with stroke");
+  checkBBox("rect1", { fill: true, stroke: true }, 5, 5, 20, 20, " with stroke");
 
   // Now remove the stroke from 'rect1' and check again:
   $("rect1").removeAttribute("stroke");
   $("rect1").removeAttribute("stroke-width");
-  checkBBox("rect1", { fill:true }, 10, 10, 10, 10, " after stroke removed");
+  checkBBox("rect1", { fill: true }, 10, 10, 10, 10, " after stroke removed");
 
   // First call getBBox on 'rect2' without a stroke included:
-  checkBBox("rect2", { fill:true }, 30, 10, 10, 10, " with stroke");
+  checkBBox("rect2", { fill: true }, 30, 10, 10, 10, " with stroke");
 
   // Now add a stroke to 'rect2' and check again:
   $("rect2").setAttribute("stroke", "black");
   $("rect2").setAttribute("stroke-width", "10");
-  checkBBox("rect2", { fill:true, stroke:true }, 25, 5, 20, 20, " with stroke");
+  checkBBox("rect2", { fill: true, stroke: true }, 25, 5, 20, 20, " with stroke");
 
   // Check the initial result for getBBox on the group:
-  checkBBox("g", { fill:true }, 55, 15, 70, 10, " before child moves");
+  checkBBox("g", { fill: true }, 55, 15, 70, 10, " before child moves");
 
   // Now move one of the circle children and check again:
   $("circle2").setAttribute("cx", "110");
-  checkBBox("g", { fill:true }, 55, 15, 60, 10, " after child moves");
+  checkBBox("g", { fill: true }, 55, 15, 60, 10, " after child moves");
 
   SimpleTest.finish();
 }

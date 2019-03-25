@@ -18,8 +18,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function main()
-{
+function main() {
   var tests =
     [ testCreateMatrix,
       testMultiply,
@@ -32,7 +31,7 @@ function main()
       testFlipX,
       testFlipY,
       testSkewX,
-      testSkewY
+      testSkewY,
     ];
   for (var i = 0; i < tests.length; i++) {
     tests[i]();
@@ -40,9 +39,8 @@ function main()
   SimpleTest.finish();
 }
 
-function testCreateMatrix()
-{
-  svg = $('svg');
+function testCreateMatrix() {
+  svg = $("svg");
   var m = svg.createSVGMatrix();
 
   // Should be initialised to identity
@@ -55,8 +53,7 @@ function testCreateMatrix()
 }
 
 // SVGMatrix multiply(in SVGMatrix secondMatrix);
-function testMultiply()
-{
+function testMultiply() {
   // This is the example from SVG 1.1 section 7.5
   var m1 = createMatrix(1, 0, 0, 1, 50, 90);
   var m2 = createMatrix(0.707, -0.707, 0.707, 0.707, 0, 0);
@@ -73,8 +70,7 @@ function testMultiply()
 }
 
 // SVGMatrix inverse() raises(SVGException);
-function testInverse()
-{
+function testInverse() {
   // Test inversion
   var m = createMatrix(2, 0, 0, 4, 110, -50);
   roughCmpMatrix(m.inverse(), [0.5, 0, 0, 0.25, -55, 12.5],
@@ -92,49 +88,44 @@ function testInverse()
 }
 
 // SVGMatrix translate(in float x, in float y);
-function testTranslate()
-{
+function testTranslate() {
   var m = createMatrix(2, 0, 0, 1, 120, 100);
   roughCmpMatrix(m.translate(100, -50), [2, 0, 0, 1, 320, 50],
     "Unexpected result after translate");
 }
 
 // SVGMatrix scale(in float scaleFactor);
-function testScale()
-{
+function testScale() {
   var m = createMatrix(2, 0, 0, 1, 120, 100);
   roughCmpMatrix(m.scale(0.5), [1, 0, 0, 0.5, 120, 100],
     "Unexpected result after scale");
 }
 
 // SVGMatrix scaleNonUniform(in float scaleFactorX, in float scaleFactorY);
-function testScaleNonUniform()
-{
+function testScaleNonUniform() {
   var m = createMatrix(2, 0, 0, 1, 120, 100);
   roughCmpMatrix(m.scaleNonUniform(0.5, -3), [1, 0, 0, -3, 120, 100],
     "Unexpected result after scaleNonUniform");
 }
 
 // SVGMatrix rotate(in float angle);
-function testRotate()
-{
+function testRotate() {
   var m = createMatrix(2, 0, 0, 1, 120, 100);
   roughCmpMatrix(m.rotate(45),
-                 [2*Math.cos(Math.PI/4), Math.sin(Math.PI/4),
-                  2*-Math.sin(Math.PI/4), Math.cos(Math.PI/4),
+                 [2 * Math.cos(Math.PI / 4), Math.sin(Math.PI / 4),
+                  2 * -Math.sin(Math.PI / 4), Math.cos(Math.PI / 4),
                   120, 100],
                  "Unexpected result after rotate");
 }
 
 // SVGMatrix rotateFromVector(in float x, in float y) raises(SVGException);
-function testRotateFromVector()
-{
+function testRotateFromVector() {
   var m = createMatrix(2, 0, 0, 1, 120, 100);
   // Make a 150 degree angle
   var result = m.rotateFromVector(-2, 1.1547);
   roughCmpMatrix(result,
-                 [2*Math.cos(5*Math.PI/6), Math.sin(5*Math.PI/6),
-                  2*-Math.sin(5*Math.PI/6), Math.cos(5*Math.PI/6),
+                 [2 * Math.cos(5 * Math.PI / 6), Math.sin(5 * Math.PI / 6),
+                  2 * -Math.sin(5 * Math.PI / 6), Math.cos(5 * Math.PI / 6),
                   120, 100],
                  "Unexpected result after rotateFromVector");
 
@@ -155,32 +146,28 @@ function testRotateFromVector()
 }
 
 // SVGMatrix flipX();
-function testFlipX()
-{
+function testFlipX() {
   var m = createMatrix(1, 2, 3, 4, 5, 6);
   cmpMatrix(m.flipX(), [-1, -2, 3, 4, 5, 6], "Unexpected result after flipX");
 }
 
 // SVGMatrix flipY();
-function testFlipY()
-{
+function testFlipY() {
   var m = createMatrix(1, 2, 3, 4, 5, 6);
   cmpMatrix(m.flipY(), [1, 2, -3, -4, 5, 6], "Unexpected result after flipY");
 }
 
 // SVGMatrix skewX(in float angle);
-function testSkewX()
-{
+function testSkewX() {
   var m = createMatrix(2, 0, 0, 1, 120, 100);
-  roughCmpMatrix(m.skewX(30), [2, 0, 2*Math.tan(Math.PI/6), 1, 120, 100],
+  roughCmpMatrix(m.skewX(30), [2, 0, 2 * Math.tan(Math.PI / 6), 1, 120, 100],
                  "Unexpected result after skewX");
 }
 
 // SVGMatrix skewY(in float angle);
-function testSkewY()
-{
+function testSkewY() {
   var m = createMatrix(2, 0, 0, 1, 120, 100);
-  roughCmpMatrix(m.skewY(30), [2, Math.tan(Math.PI/6), 0, 1, 120, 100],
+  roughCmpMatrix(m.skewY(30), [2, Math.tan(Math.PI / 6), 0, 1, 120, 100],
                  "Unexpected result after skewY");
 }
 

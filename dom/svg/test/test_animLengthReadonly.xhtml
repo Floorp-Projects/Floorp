@@ -38,9 +38,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=506856
 /** Test read-only times of animated lengths **/
 
 /* Global Variables */
-const svgns="http://www.w3.org/2000/svg";
+const svgns = "http://www.w3.org/2000/svg";
 var svg = document.getElementById("svg");
-var circle = document.getElementById('circle');
+var circle = document.getElementById("circle");
 
 SimpleTest.waitForExplicitFinish();
 
@@ -124,7 +124,7 @@ function checkReadOnly(animLength) {
   // newValueSpecifiedUnits
   try {
     exceptionCaught = false;
-    animLength.animVal.newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX,-100);
+    animLength.animVal.newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX, -100);
   } catch (e) { exceptionCaught = true; }
   ok(exceptionCaught, "animVal.newValueSpecifiedUnits failed to throw.");
   if (!exceptionCaught) return false;
@@ -139,8 +139,7 @@ function checkReadOnly(animLength) {
   return exceptionCaught;
 }
 
-function checkSameValue(animLength)
-{
+function checkSameValue(animLength) {
   // value
   animLength.baseVal.value = 1;
   is(animLength.animVal.value, 1,
@@ -151,7 +150,7 @@ function checkSameValue(animLength)
   is(animLength.animVal.value, 2,
     "un-animated animVal.value not changed after setting "
     + "baseValue.valueInSpecifiedUnits");
-   
+
   // valueAsString
   animLength.baseVal.valueAsString = "3";
   is(animLength.animVal.value, 3,
@@ -171,8 +170,7 @@ function checkSameValue(animLength)
     + "baseValue.convertToSpecifiedUnits");
 }
 
-function checkDiffValue(animLength)
-{
+function checkDiffValue(animLength) {
   // We assume here that the animation is not additive and hence changing the
   // baseValue will not be reflected in the animValue
   var origValue = animLength.animVal.value;
@@ -187,7 +185,7 @@ function checkDiffValue(animLength)
   is(animLength.animVal.value, origValue,
     "animated animVal.value changed after setting "
     + "baseValue.valueInSpecifiedUnits");
-   
+
   // valueAsString
   animLength.baseVal.valueAsString = "3";
   is(animLength.animVal.value, origValue,

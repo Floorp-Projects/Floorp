@@ -23,8 +23,7 @@ SimpleTest.waitForExplicitFinish();
 
 var svg, doc, win, text, dragstart, dragend;
 
-function drag(fromX, fromY, toX, toY, show)
-{
+function drag(fromX, fromY, toX, toY, show) {
   synthesizeMouse(doc.documentElement, fromX, fromY, { type: "mousemove" }, win);
   synthesizeMouse(doc.documentElement, fromX, fromY, { type: "mousedown" }, win);
   synthesizeMouse(doc.documentElement, toX, toY, { type: "mousemove" }, win);
@@ -40,27 +39,23 @@ function drag(fromX, fromY, toX, toY, show)
   }
 }
 
-function click(x, y)
-{
+function click(x, y) {
   synthesizeMouse(doc.documentElement, x, y, { type: "mousemove" }, win);
   synthesizeMouse(doc.documentElement, x, y, { type: "mousedown" }, win);
   synthesizeMouse(doc.documentElement, x, y, { type: "mouseup" }, win);
 }
 
-function selection_is(s, text)
-{
+function selection_is(s, text) {
   is(win.getSelection().toString(), s, text);
 }
 
-function deselect()
-{
+function deselect() {
   // Click outside text (and outside all <rect> elements>) to deselect.
   click(15, 15);
   selection_is("", "deselecting by clicking outside text");
 }
 
-function testSelection()
-{
+function testSelection() {
   svg = document.getElementsByTagName("iframe")[0];
   doc = svg.contentDocument;
   win = svg.contentWindow;
@@ -128,8 +123,7 @@ function testSelection()
   SimpleTest.finish();
 }
 
-function runTest()
-{
+function runTest() {
   SimpleTest.executeSoon(testSelection);
 }
 

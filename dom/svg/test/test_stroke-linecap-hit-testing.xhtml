@@ -13,17 +13,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=589648
 
 SimpleTest.waitForExplicitFinish();
 
-function run()
-{
-  var svg = document.getElementById('svg');
+function run() {
+  var svg = document.getElementById("svg");
   var div = document.getElementById("div");
   var x = div.offsetLeft;
   var y = div.offsetTop;
   var got, expected;
 
   got = document.elementFromPoint(5 + x, 5 + y);
-  expected = document.getElementById('zero-length-square-caps');
-  is(got, expected, 'Check hit on zero length subpath\'s square caps');
+  expected = document.getElementById("zero-length-square-caps");
+  is(got, expected, "Check hit on zero length subpath's square caps");
 
   SimpleTest.finish();
 }

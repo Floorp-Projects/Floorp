@@ -19,22 +19,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=398825
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-function runTests()
-{
+function runTests() {
   var document = $("svg").contentWindow.document;
   var text = document.getElementById("text");
 
-  function expectThrow(charnum, nchars)
-  {
-    try
-    {
+  function expectThrow(charnum, nchars) {
+    try {
       text.selectSubString(charnum, nchars);
       ok(false,
          "text.selectSubString(" + charnum + "," + nchars + ") " +
          "should have thrown");
-    }
-    catch (e)
-    {
+    } catch (e) {
       is(e.name, "IndexSizeError",
          "expected an index error for " +
          "text.selectSubString(" + charnum + "," + nchars + ")");
@@ -44,23 +39,19 @@ function runTests()
     }
   }
 
-  function expectNoThrow(charnum, nchars, expected)
-  {
-    try
-    {
+  function expectNoThrow(charnum, nchars, expected) {
+    try {
       text.selectSubString(charnum, nchars);
       ok(true,
          "text.selectSubString(" + charnum + "," + nchars + ") " +
          "should not have thrown");
-    }
-    catch (e)
-    {
+    } catch (e) {
       ok(false,
          "unexpected exception for " +
          "text.selectSubString(" + charnum + "," + nchars + ")");
     }
   }
-  
+
   expectThrow(100, 2);
   expectThrow(100, 0);
   expectThrow(3, 0);
@@ -76,7 +67,7 @@ function runTests()
   SimpleTest.finish();
 }
 
-window.addEventListener("load", runTests, false);
+window.addEventListener("load", runTests);
 </script>
 </pre>
 </body>
