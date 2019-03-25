@@ -576,7 +576,7 @@ bool AudioCallbackDriver::Init() {
     RefPtr<CubebDeviceEnumerator> enumerator = Enumerator::GetInstance();
     RefPtr<AudioDeviceInfo> device = enumerator->DeviceInfoFromName(
         NS_ConvertUTF8toUTF16(forcedOutputDeviceName), EnumeratorSide::OUTPUT);
-    if (device->DeviceID()) {
+    if (device && device->DeviceID()) {
       forcedOutputDeviceId = device->DeviceID();
     }
   }
