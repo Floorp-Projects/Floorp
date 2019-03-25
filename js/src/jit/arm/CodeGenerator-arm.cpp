@@ -172,6 +172,10 @@ void CodeGeneratorARM::bailoutIf(Assembler::Condition condition,
 }
 
 void CodeGeneratorARM::bailoutFrom(Label* label, LSnapshot* snapshot) {
+  if (masm.bailed()) {
+    return;
+  }
+
   MOZ_ASSERT_IF(!masm.oom(), label->used());
   MOZ_ASSERT_IF(!masm.oom(), !label->bound());
 

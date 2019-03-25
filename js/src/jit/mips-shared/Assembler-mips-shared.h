@@ -814,9 +814,6 @@ class AssemblerMIPSShared : public AssemblerShared {
   }
 
  public:
-  void setUnlimitedBuffer() {
-    m_buffer.setUnlimited();
-  }
   bool oom() const;
 
   void setPrinter(Sprinter* sp) {
@@ -1219,6 +1216,8 @@ class AssemblerMIPSShared : public AssemblerShared {
 
   static void UpdateLuiOriValue(Instruction* inst0, Instruction* inst1,
                                 uint32_t value);
+
+  bool bailed() { return m_buffer.bail(); }
 
   void verifyHeapAccessDisassembly(uint32_t begin, uint32_t end,
                                    const Disassembler::HeapAccess& heapAccess) {

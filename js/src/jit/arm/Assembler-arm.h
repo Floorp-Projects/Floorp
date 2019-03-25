@@ -1251,10 +1251,6 @@ class Assembler : public AssemblerShared {
   // MacroAssembler, before allocating any space.
   void initWithAllocator() { m_buffer.initWithAllocator(); }
 
-  void setUnlimitedBuffer() {
-    m_buffer.setUnlimited();
-  }
-
   static Condition InvertCondition(Condition cond);
   static Condition UnsignedCondition(Condition cond);
   static Condition ConditionWithoutEqual(Condition cond);
@@ -1881,6 +1877,8 @@ class Assembler : public AssemblerShared {
   static void ToggleCall(CodeLocationLabel inst_, bool enabled);
 
   void processCodeLabels(uint8_t* rawCode);
+
+  bool bailed() { return m_buffer.bail(); }
 
   void verifyHeapAccessDisassembly(uint32_t begin, uint32_t end,
                                    const Disassembler::HeapAccess& heapAccess) {
