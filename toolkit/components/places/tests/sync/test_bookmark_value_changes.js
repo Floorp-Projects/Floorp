@@ -1169,7 +1169,40 @@ add_task(async function test_rewrite_tag_queries() {
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
-  deepEqual(changesToUpload, {}, "Should not reupload any local records");
+  deepEqual(changesToUpload, {
+    queryBBBBBBB: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "queryBBBBBBB",
+        type: "query",
+        parentid: "toolbar",
+        hasDupe: true,
+        parentName: BookmarksToolbarTitle,
+        dateAdded: undefined,
+        bmkUri: "place:tag=taggy",
+        title: "Tagged stuff",
+        folderName: "taggy",
+      },
+    },
+    queryCCCCCCC: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "queryCCCCCCC",
+        type: "query",
+        parentid: "toolbar",
+        hasDupe: true,
+        parentName: BookmarksToolbarTitle,
+        dateAdded: undefined,
+        bmkUri: "place:tag=kitty",
+        title: "Cats",
+        folderName: "kitty",
+      },
+    },
+  }, "Should reupload (E C) with rewritten URLs");
 
   let bmWithTaggy = await PlacesUtils.bookmarks.fetch({tags: ["taggy"]});
   equal(bmWithTaggy.url.href, "http://example.com/e",
@@ -1384,11 +1417,11 @@ add_task(async function test_duplicate_url_rows() {
           syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW });
 
       await buf.db.executeCached(`
-        INSERT INTO items(guid, needsMerge, kind, title, urlId)
-        VALUES(:guid, 1, :kind, :remoteTitle,
+        INSERT INTO items(guid, parentGuid, needsMerge, kind, title, urlId)
+        VALUES(:guid, :parentGuid, 1, :kind, :remoteTitle,
                (SELECT id FROM urls WHERE guid = :placeGuid))`,
-        { guid, placeGuid, kind: SyncedBookmarksMirror.KIND.BOOKMARK,
-          remoteTitle });
+        { guid, parentGuid, placeGuid,
+          kind: Ci.mozISyncedBookmarksMerger.KIND_BOOKMARK, remoteTitle });
 
       await buf.db.executeCached(`
         INSERT INTO structure(guid, parentGuid, position)

@@ -167,6 +167,10 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper {
           mWrRootId.mLayersId, mLayer->GetReferentRenderRoot()->GetChildType());
       const WebRenderScrollData* childData =
           mUpdater->GetScrollData(newWrRootId);
+      if (!childData) {
+        // The other tree might not exist yet if the scene hasn't been built.
+        return WebRenderScrollDataWrapper(*mUpdater, newWrRootId);
+      }
       // See the comment above RenderRootBoundary for more context on what's
       // happening here. We need to fish out the appropriate wrapper root from
       // inside the dummy root. Note that the wrapper root should always be a
@@ -185,7 +189,7 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper {
       if (!layerIndex) {
         // It's possible that there's no wrapper root. In that case there are
         // no descendants
-        return WebRenderScrollDataWrapper(*mUpdater, mWrRootId);
+        return WebRenderScrollDataWrapper(*mUpdater, newWrRootId);
       }
       return WebRenderScrollDataWrapper(mUpdater, newWrRootId, childData,
                                         *layerIndex,

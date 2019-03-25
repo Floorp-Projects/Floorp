@@ -2,7 +2,9 @@
  * Test that a blocked request to autoplay media is shown to the user
  */
 
-const AUTOPLAY_PAGE  = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "browser_autoplay_blocked.html";
+const AUTOPLAY_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "browser_autoplay_blocked.html";
+
+const SLOW_AUTOPLAY_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "browser_autoplay_blocked_slow.sjs";
 
 const AUTOPLAY_PREF = "media.autoplay.default";
 const AUTOPLAY_PERM = "autoplay-media";
@@ -169,6 +171,25 @@ add_task(async function testChangingBlockingSettingDuringNavigation() {
     await sleep(100);
     ok(BrowserTestUtils.is_hidden(autoplayBlockedIcon()), "Blocked icon is hidden");
   });
+
+  Services.perms.removeAll();
+});
+
+add_task(async function testSlowLoadingPage() {
+  Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
+
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SLOW_AUTOPLAY_PAGE);
+  await BrowserTestUtils.switchTab(gBrowser, tab1);
+  // Wait until the blocked icon is hidden by switching tabs
+  await TestUtils.waitForCondition(() => {
+    return BrowserTestUtils.is_hidden(autoplayBlockedIcon());
+  });
+  await BrowserTestUtils.switchTab(gBrowser, tab2);
+  await blockedIconShown(tab2.linkedBrowser);
+
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
 
   Services.perms.removeAll();
 });

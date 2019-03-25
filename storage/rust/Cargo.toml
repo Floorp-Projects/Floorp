@@ -1,0 +1,13 @@
+[package]
+name = "storage"
+description = "Rust bindings for mozStorage."
+version = "0.1.0"
+authors = ["Lina Cambridge <lina@yakshaving.ninja>"]
+edition = "2018"
+
+[dependencies]
+libc = "0.2"
+nserror = { path = "../../xpcom/rust/nserror" }
+nsstring = { path = "../../xpcom/rust/nsstring" }
+storage_variant = { path = "../variant" }
+xpcom = { path = "../../xpcom/rust/xpcom" }

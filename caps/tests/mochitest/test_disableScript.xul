@@ -143,7 +143,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
     checkScriptEnabled(rootWin, true);
 
     // Privileged frames are immune to docshell flags.
-    ok(ssm.isSystemPrincipal(chromeWin.document.nodePrincipal), "Sanity check for System Principal");
+    ok(chromeWin.document.nodePrincipal.isSystemPrincipal, "Sanity check for System Principal");
     setScriptEnabledForDocShell(chromeWin, false);
     checkScriptEnabled(chromeWin, true);
     setScriptEnabledForDocShell(chromeWin, true);

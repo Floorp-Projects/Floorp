@@ -18,6 +18,7 @@ if CONFIG['MOZ_PLACES']:
         'mozIAsyncHistory.idl',
         'mozIPlacesAutoComplete.idl',
         'mozIPlacesPendingOperation.idl',
+        'mozISyncedBookmarksMirror.idl',
         'nsIAnnotationService.idl',
         'nsIFaviconService.idl',
         'nsINavBookmarksService.idl',
@@ -29,6 +30,7 @@ if CONFIG['MOZ_PLACES']:
         'History.h',
         'INativePlacesEventCallback.h',
         'Shutdown.h',
+        'SyncedBookmarksMirror.h',
     ]
 
     UNIFIED_SOURCES += [

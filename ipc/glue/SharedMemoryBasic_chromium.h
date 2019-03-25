@@ -41,8 +41,8 @@ class SharedMemoryBasic final
     return ok;
   }
 
-  virtual bool Map(size_t nBytes) override {
-    bool ok = mSharedMemory.Map(nBytes);
+  virtual bool Map(size_t nBytes, void* fixed_address = nullptr) override {
+    bool ok = mSharedMemory.Map(nBytes, fixed_address);
     if (ok) {
       Mapped(nBytes);
     }
@@ -74,6 +74,10 @@ class SharedMemoryBasic final
     bool ret = mSharedMemory.ShareToProcess(aProcessId, &handle);
     if (ret) *new_handle = handle;
     return ret;
+  }
+
+  static void* FindFreeAddressSpace(size_t size) {
+    return base::SharedMemory::FindFreeAddressSpace(size);
   }
 
  private:

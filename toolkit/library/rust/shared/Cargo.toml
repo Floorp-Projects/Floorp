@@ -34,6 +34,8 @@ jsrust_shared = { path = "../../../../js/src/rust/shared", optional = true }
 arrayvec = "0.4"
 cert_storage = { path = "../../../../security/manager/ssl/cert_storage" }
 bitsdownload = { path = "../../../components/bitsdownload", optional = true }
+storage = { path = "../../../../storage/rust" }
+bookmark_sync = { path = "../../../components/places/bookmark_sync", optional = true }
 
 [build-dependencies]
 rustc_version = "0.2"
@@ -48,6 +50,7 @@ cubeb_pulse_rust = ["cubeb-sys", "cubeb-pulse"]
 gecko_debug = ["geckoservo/gecko_debug", "nsstring/gecko_debug"]
 simd-accel = ["encoding_c/simd-accel", "encoding_glue/simd-accel"]
 moz_memory = ["mp4parse_capi/mp4parse_fallible"]
+moz_places = ["bookmark_sync"]
 spidermonkey_rust = ["jsrust_shared"]
 cranelift_x86 = ["jsrust_shared/cranelift_x86"]
 cranelift_arm32 = ["jsrust_shared/cranelift_arm32"]

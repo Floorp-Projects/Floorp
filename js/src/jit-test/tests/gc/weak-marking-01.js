@@ -4,6 +4,8 @@
 // its object literals.
 
 gczeal(0);
+gcparam('minNurseryBytes', 1024 * 1024);
+gcparam('maxNurseryBytes', 1024 * 1024);
 
 // All reachable keys should be found, and the rest should be swept.
 function basicSweeping() {

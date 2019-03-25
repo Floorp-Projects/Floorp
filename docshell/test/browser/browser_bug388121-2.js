@@ -2,7 +2,6 @@ function test() {
   waitForExplicitFinish();
 
   var w;
-  const secMan = Services.scriptSecurityManager;
   var iteration = 1;
   const uris = ["", "about:blank"];
   var uri;
@@ -18,7 +17,7 @@ function test() {
     var prin = w.document.nodePrincipal;
     isnot(prin, null, "Loaded principal must not be null when adding " + uri);
     isnot(prin, undefined, "Loaded principal must not be undefined when loading " + uri);
-    is(secMan.isSystemPrincipal(prin), false,
+    is(prin.isSystemPrincipal, false,
        "Loaded principal must not be system when loading " + uri);
     w.close();
 
@@ -40,7 +39,7 @@ function test() {
     isnot(prin, null, "Forced principal must not be null when loading " + uri);
     isnot(prin, undefined,
           "Forced principal must not be undefined when loading " + uri);
-    is(secMan.isSystemPrincipal(prin), false,
+    is(prin.isSystemPrincipal, false,
        "Forced principal must not be system when loading " + uri);
     if (uri == undefined) {
       // No actual load here, so just move along.

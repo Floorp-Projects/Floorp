@@ -512,7 +512,7 @@ bool SharedMemoryBasic::Create(size_t size) {
   return true;
 }
 
-bool SharedMemoryBasic::Map(size_t size) {
+bool SharedMemoryBasic::Map(size_t size, void* fixed_address) {
   MOZ_ASSERT(mMemory == nullptr);
 
   if (MACH_PORT_NULL == mPort) {
@@ -520,24 +520,49 @@ bool SharedMemoryBasic::Map(size_t size) {
   }
 
   kern_return_t kr;
-  mach_vm_address_t address = 0;
+  mach_vm_address_t address = toVMAddress(fixed_address);
 
   vm_prot_t vmProtection = VM_PROT_READ;
   if (mOpenRights == RightsReadWrite) {
     vmProtection |= VM_PROT_WRITE;
   }
 
-  kr = mach_vm_map(mach_task_self(), &address, round_page(size), 0, VM_FLAGS_ANYWHERE, mPort, 0,
-                   false, vmProtection, vmProtection, VM_INHERIT_NONE);
+  kr = mach_vm_map(mach_task_self(), &address, round_page(size), 0,
+                   fixed_address ? VM_FLAGS_FIXED : VM_FLAGS_ANYWHERE,
+                   mPort, 0, false, vmProtection, vmProtection, VM_INHERIT_NONE);
   if (kr != KERN_SUCCESS) {
-    LOG_ERROR("Failed to map shared memory (%zu bytes) into %x, port %x. %s (%x)\n", size,
-              mach_task_self(), mPort, mach_error_string(kr), kr);
+    if (!fixed_address) {
+      LOG_ERROR("Failed to map shared memory (%zu bytes) into %x, port %x. %s (%x)\n",
+                size, mach_task_self(), mPort, mach_error_string(kr), kr);
+    }
+    return false;
+  }
+
+  if (fixed_address && fixed_address != toPointer(address)) {
+    kr = vm_deallocate(mach_task_self(), address, size);
+    if (kr != KERN_SUCCESS) {
+      LOG_ERROR("Failed to unmap shared memory at unsuitable address "
+                "(%zu bytes) from %x, port %x. %s (%x)\n",
+                size, mach_task_self(), mPort, mach_error_string(kr), kr);
+    }
     return false;
   }
 
   mMemory = toPointer(address);
   Mapped(size);
   return true;
+}
+
+void* SharedMemoryBasic::FindFreeAddressSpace(size_t size) {
+  mach_vm_address_t address = 0;
+  size = round_page(size);
+  if (mach_vm_map(mach_task_self(), &address, size, 0,
+                  VM_FLAGS_ANYWHERE, MEMORY_OBJECT_NULL, 0, false, VM_PROT_NONE,
+                  VM_PROT_NONE, VM_INHERIT_NONE) != KERN_SUCCESS ||
+      vm_deallocate(mach_task_self(), address, size) != KERN_SUCCESS) {
+    return nullptr;
+  }
+  return toPointer(address);
 }
 
 bool SharedMemoryBasic::ShareToProcess(base::ProcessId pid, Handle* aNewHandle) {

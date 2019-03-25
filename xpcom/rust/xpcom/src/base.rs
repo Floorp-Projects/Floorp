@@ -7,7 +7,7 @@ use {
     RefPtr,
     GetterAddrefs
 };
-use interfaces::nsISupports;
+use interfaces::{nsIInterfaceRequestor, nsISupports};
 
 #[repr(C)]
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -38,6 +38,22 @@ pub unsafe trait XpCom : RefCounted {
                 &T::IID,
                 ga.void_ptr(),
             ).succeeded() {
+                ga.refptr()
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Perform a `GetInterface` call on this object, returning `None` if the
+    /// object doesn't implement `nsIInterfaceRequestor`, or can't access the
+    /// interface `T`.
+    fn get_interface<T: XpCom>(&self) -> Option<RefPtr<T>> {
+        let ireq = self.query_interface::<nsIInterfaceRequestor>()?;
+
+        let mut ga = GetterAddrefs::<T>::new();
+        unsafe {
+            if ireq.GetInterface(&T::IID, ga.void_ptr()).succeeded() {
                 ga.refptr()
             } else {
                 None
