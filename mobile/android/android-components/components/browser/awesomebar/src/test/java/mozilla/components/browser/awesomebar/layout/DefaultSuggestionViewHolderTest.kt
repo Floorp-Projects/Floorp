@@ -6,6 +6,7 @@ package mozilla.components.browser.awesomebar.layout
 
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
@@ -49,6 +50,30 @@ class DefaultSuggestionViewHolderTest {
 
         val descriptionView = view.findViewById<TextView>(R.id.mozac_browser_awesomebar_description)
         assertEquals("https://www.mozilla.org", descriptionView.text)
+        assertEquals(View.VISIBLE, descriptionView.visibility)
+    }
+
+    @Test
+    fun `DefaultViewHolder without description hides description view`() {
+        val view = LayoutInflater.from(context).inflate(
+                R.layout.mozac_browser_awesomebar_item_generic, null, false)
+
+        val awesomeBar = BrowserAwesomeBar(context)
+        val viewHolder = DefaultSuggestionViewHolder.Default(awesomeBar, view)
+
+        val suggestion = AwesomeBar.Suggestion(
+                mock(),
+                title = "Hello World")
+
+        viewHolder.bind(suggestion) {
+            // Do nothing
+        }
+
+        val titleView = view.findViewById<TextView>(R.id.mozac_browser_awesomebar_title)
+        assertEquals("Hello World", titleView.text)
+
+        val descriptionView = view.findViewById<TextView>(R.id.mozac_browser_awesomebar_description)
+        assertEquals(View.GONE, descriptionView.visibility)
     }
 
     @Test

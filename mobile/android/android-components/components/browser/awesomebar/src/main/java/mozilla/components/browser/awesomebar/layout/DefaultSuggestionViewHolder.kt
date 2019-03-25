@@ -42,7 +42,13 @@ internal sealed class DefaultSuggestionViewHolder {
             iconLoader.load(suggestion)
 
             titleView.text = title
-            descriptionView.text = suggestion.description
+
+            if (suggestion.description.isNullOrEmpty()) {
+                descriptionView.visibility = View.GONE
+            } else {
+                descriptionView.visibility = View.VISIBLE
+                descriptionView.text = suggestion.description
+            }
 
             view.setOnClickListener {
                 suggestion.onSuggestionClicked?.invoke()
