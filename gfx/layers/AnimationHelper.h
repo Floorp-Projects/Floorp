@@ -52,7 +52,7 @@ struct PropertyAnimation {
   dom::Nullable<double> mPortionInSegmentOnLastCompose;
 
   TimeStamp mOriginTime;
-  MaybeTimeDuration mStartTime;
+  Maybe<TimeDuration> mStartTime;
   TimeDuration mHoldTime;
   float mPlaybackRate;
   dom::IterationCompositeOperation mIterationComposite;
