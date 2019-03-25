@@ -7,8 +7,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingStart="20dp"
-    android:layout_marginTop="24dp"
-    android:layout_marginBottom="24dp">
+    android:layout_marginTop="16dp"
+    android:layout_marginBottom="8dp">
 
     <TextView
         android:id="@+id/history_header_title"

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.library.history
 
 import android.content.Context
+import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,13 +19,15 @@ import kotlinx.android.synthetic.main.history_header.view.*
 import kotlinx.android.synthetic.main.history_list_item.view.*
 import mozilla.components.browser.menu.BrowserMenu
 import org.mozilla.fenix.components.SectionedAdapter
-import java.util.*
+import java.lang.IllegalStateException
+import java.util.Date
+import java.util.Calendar
 
-class HistoryList(val history: List<HistoryItem>) {
+private class HistoryList(val history: List<HistoryItem>) {
     enum class Range {
         Today, ThisWeek, ThisMonth, Older;
-        
-        fun humanReadable(context: Context) : String = when (this) {
+
+        fun humanReadable(context: Context): String = when (this) {
             Today -> context.getString(R.string.history_today)
             ThisWeek -> context.getString(R.string.history_this_week)
             ThisMonth -> context.getString(R.string.history_this_month)
@@ -39,19 +42,21 @@ class HistoryList(val history: List<HistoryItem>) {
         return grouped[range] ?: listOf()
     }
 
+    fun item(range: Range, index: Int): HistoryItem? = grouped[range]?.let { it[index] }
+
     private val grouped: Map<Range, List<HistoryItem>>
 
     init {
-        val oneDayAgo = getDaysAgo(1).time
-        val sevenDaysAgo = getDaysAgo(7).time
-        val thirtyDaysAgo = getDaysAgo(30).time
+        val oneDayAgo = getDaysAgo(zero_days).time
+        val sevenDaysAgo = getDaysAgo(seven_days).time
+        val thirtyDaysAgo = getDaysAgo(thirty_days).time
 
         val lastWeek = LongRange(sevenDaysAgo, oneDayAgo)
         val lastMonth = LongRange(thirtyDaysAgo, sevenDaysAgo)
 
         grouped = history.groupBy { item ->
             when {
-                item.visitedAt > oneDayAgo  -> Range.Today
+                DateUtils.isToday(item.visitedAt) -> Range.Today
                 lastWeek.contains(item.visitedAt) -> Range.ThisWeek
                 lastMonth.contains(item.visitedAt) -> Range.ThisMonth
                 else -> Range.Older
@@ -64,6 +69,12 @@ class HistoryList(val history: List<HistoryItem>) {
         calendar.add(Calendar.DAY_OF_YEAR, -daysAgo)
 
         return calendar.time
+    }
+
+    companion object {
+        private const val zero_days = 0
+        private const val seven_days = 7
+        private const val thirty_days = 30
     }
 }
 
@@ -81,19 +92,24 @@ class HistoryAdapter(
 
     override fun onBindHeaderViewHolder(holder: RecyclerView.ViewHolder, header: SectionType.Header) {
         val sectionTitle = historyList.ranges[header.index].humanReadable(holder.itemView.context)
-        
+
         when (holder) {
             is HistoryHeaderViewHolder -> holder.bind(sectionTitle)
         }
     }
 
     override fun onCreateItemViewHolder(parent: ViewGroup): RecyclerView.ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(HistoryListItemViewHolder.LAYOUT_ID, parent, false)
+        val view = LayoutInflater
+            .from(parent.context)
+            .inflate(HistoryListItemViewHolder.LAYOUT_ID, parent, false)
         return HistoryListItemViewHolder(view, actionEmitter)
     }
 
     override fun onBindItemViewHolder(holder: RecyclerView.ViewHolder, row: SectionType.Row) {
-        (holder as? HistoryListItemViewHolder)?.bind(historyList.itemsInRange(historyList.ranges[row.section])[row.row], mode)
+        val item = historyList.ranges[row.section]
+            .let { historyList.item(it, row.row) } ?: throw IllegalStateException("No item for row: $row")
+
+        (holder as? HistoryListItemViewHolder)?.bind(item, mode)
     }
 
     class HistoryListItemViewHolder(

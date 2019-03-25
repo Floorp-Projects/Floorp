@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import java.lang.IllegalStateException
 
+@SuppressWarnings("TooManyFunctions")
 abstract class SectionedAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     sealed class SectionType {
         data class Header(val index: Int) : SectionType()
@@ -33,9 +34,8 @@ abstract class SectionedAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(
     abstract fun onCreateItemViewHolder(parent: ViewGroup): RecyclerView.ViewHolder
     abstract fun onBindItemViewHolder(holder: RecyclerView.ViewHolder, row: SectionType.Row)
 
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return when  (viewType) {
+        return when (viewType) {
             SectionType.HeaderViewType -> onCreateHeaderViewHolder(parent)
             SectionType.RowViewType -> onCreateItemViewHolder(parent)
             else -> throw IllegalStateException("ViewType: $viewType is invalid ")
@@ -69,14 +69,14 @@ abstract class SectionedAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(
 
         for (sectionIndex in 0 until numberOfSections()) {
             if (position == currentPosition) { return SectionType.Header(sectionIndex) }
-            currentPosition +=1
+            currentPosition += 1
 
             for (rowIndex in 0 until numberOfRowsInSection(sectionIndex)) {
                 if (currentPosition == position) { return SectionType.Row(sectionIndex, rowIndex) }
                 currentPosition += 1
-           }
+            }
         }
 
-        throw IllegalStateException("hello world!")
+        throw IllegalStateException("Position $position is out of bounds!")
     }
 }
