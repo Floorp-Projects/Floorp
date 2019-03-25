@@ -22,6 +22,16 @@
 // for slightly more efficient SELECTs.
 #define MAX_CHARS_TO_HASH 1500U
 
+extern "C" {
+
+// Generates a new Places GUID. This function uses C linkage because it's
+// called from the Rust synced bookmarks mirror, on the storage thread.
+nsresult NS_GeneratePlacesGUID(nsACString* _guid) {
+  return mozilla::places::GenerateGUID(*_guid);
+}
+
+}  // extern "C"
+
 namespace mozilla {
 namespace places {
 

@@ -5,7 +5,8 @@
 use std::{collections::HashMap, fmt};
 
 use dogear::{
-    Content, Deletion, Guid, IntoTree, Item, Kind, MergedDescendant, MergedRoot, Tree, UploadReason,
+    Content, Deletion, Guid, IntoTree, Item, Kind, MergedDescendant, MergedRoot, Tree,
+    UploadReason, Validity,
 };
 use nsstring::{nsCString, nsString};
 use storage::{Conn, Step};
@@ -97,6 +98,9 @@ impl<'s> Store<'s> {
 
         let needs_merge: i32 = step.get_by_name("needsMerge")?;
         item.needs_merge = needs_merge == 1;
+
+        let raw_validity: i64 = step.get_by_name("validity")?;
+        item.validity = Validity::from_column(raw_validity)?;
 
         Ok(item)
     }
@@ -221,7 +225,7 @@ impl<'s> dogear::Store<Error> for Store<'s> {
     /// mirror.
     fn fetch_remote_tree(&self) -> Result<Tree> {
         let mut root_statement = self.db.prepare(
-            "SELECT guid, serverModified, kind, needsMerge
+            "SELECT guid, serverModified, kind, needsMerge, validity
              FROM items
              WHERE NOT isDeleted AND
                    guid = :rootGuid",
@@ -234,14 +238,18 @@ impl<'s> dogear::Store<Error> for Store<'s> {
         builder.reparent_orphans_to(&dogear::UNFILED_GUID);
 
         let mut items_statement = self.db.prepare(
-            "SELECT guid, serverModified, kind, needsMerge
+            "SELECT guid, parentGuid, serverModified, kind, needsMerge, validity
              FROM items
              WHERE NOT isDeleted AND
                    guid <> :rootGuid",
         )?;
         items_statement.bind_by_name("rootGuid", nsCString::from(&*dogear::ROOT_GUID))?;
         while let Some(step) = items_statement.step()? {
-            builder.item(self.remote_row_to_item(&step)?)?;
+            let p = builder.item(self.remote_row_to_item(&step)?)?;
+            let raw_parent_guid: Option<nsString> = step.get_by_name("parentGuid")?;
+            if let Some(raw_parent_guid) = raw_parent_guid {
+                p.by_parent_guid(Guid::from_utf16(&*raw_parent_guid)?)?;
+            }
         }
 
         let mut structure_statement = self.db.prepare(
@@ -257,7 +265,7 @@ impl<'s> dogear::Store<Error> for Store<'s> {
             let raw_parent_guid: nsString = step.get_by_name("parentGuid")?;
             let parent_guid = Guid::from_utf16(&*raw_parent_guid)?;
 
-            builder.parent_for(&guid).by_structure(&parent_guid)?;
+            builder.parent_for(&guid).by_children(&parent_guid)?;
         }
 
         let mut tree = builder.into_tree()?;
@@ -373,14 +381,14 @@ fn update_local_items_in_places<'t>(
 ) -> Result<()> {
     for chunk in descendants.chunks(999 / 3) {
         let mut statement = db.prepare(format!(
-            "INSERT INTO mergeStates(localGuid, mergedGuid, parentGuid, level,
+            "INSERT INTO mergeStates(localGuid, remoteGuid, mergedGuid, mergedParentGuid, level,
                                      position, useRemote, shouldUpload)
              VALUES {}",
             repeat_display(chunk.len(), ",", |index, f| {
                 let d = &chunk[index];
                 write!(
                     f,
-                    "(?, ?, ?, {}, {}, {}, {})",
+                    "(?, ?, ?, ?, {}, {}, {}, {})",
                     d.level,
                     d.position,
                     d.merged_node.merge_state.should_apply() as i8,
@@ -389,20 +397,25 @@ fn update_local_items_in_places<'t>(
             })
         ))?;
         for (index, d) in chunk.iter().enumerate() {
-            let offset = (index * 3) as u32;
+            let offset = (index * 4) as u32;
 
             let local_guid = d
                 .merged_node
                 .merge_state
                 .local_node()
-                .map(|node| nsString::from(node.guid.as_str()))
-                .unwrap_or_else(|| nsString::from(d.merged_node.guid.as_str()));
+                .map(|node| nsString::from(node.guid.as_str()));
+            let remote_guid = d
+                .merged_node
+                .merge_state
+                .remote_node()
+                .map(|node| nsString::from(node.guid.as_str()));
             let merged_guid = nsString::from(d.merged_node.guid.as_str());
             let merged_parent_guid = nsString::from(d.merged_parent_node.guid.as_str());
 
             statement.bind_by_index(offset, local_guid)?;
-            statement.bind_by_index(offset + 1, merged_guid)?;
-            statement.bind_by_index(offset + 2, merged_parent_guid)?;
+            statement.bind_by_index(offset + 1, remote_guid)?;
+            statement.bind_by_index(offset + 2, merged_guid)?;
+            statement.bind_by_index(offset + 3, merged_parent_guid)?;
         }
         statement.execute()?;
     }
@@ -459,7 +472,7 @@ fn insert_new_urls_into_places(db: &Conn) -> Result<()> {
                               h.url = u.url), u.guid)
          FROM items v
          JOIN urls u ON u.id = v.urlId
-         JOIN mergeStates r ON r.mergedGuid = v.guid
+         JOIN mergeStates r ON r.remoteGuid = v.guid
          WHERE r.useRemote",
     )?;
     statement.bind_by_name("queryKind", mozISyncedBookmarksMerger::KIND_QUERY)?;
@@ -511,7 +524,7 @@ fn stage_items_to_upload(db: &Conn, weak_upload: &[nsString]) -> Result<()> {
         SELECT b.id
         FROM moz_bookmarks b
         JOIN mergeStates r ON r.mergedGuid = b.guid
-        JOIN items v ON v.guid = r.mergedGuid
+        JOIN items v ON v.guid = r.remoteGuid
         WHERE r.useRemote AND
               /* "b.dateAdded" is in microseconds; "v.dateAdded" is in
                  milliseconds. */
@@ -646,6 +659,25 @@ impl Column<i64> for Kind {
             Kind::Folder => mozISyncedBookmarksMerger::KIND_FOLDER,
             Kind::Livemark => mozISyncedBookmarksMerger::KIND_LIVEMARK,
             Kind::Separator => mozISyncedBookmarksMerger::KIND_SEPARATOR,
+        }
+    }
+}
+
+impl Column<i64> for Validity {
+    fn from_column(raw: i64) -> Result<Validity> {
+        Ok(match raw {
+            mozISyncedBookmarksMerger::VALIDITY_VALID => Validity::Valid,
+            mozISyncedBookmarksMerger::VALIDITY_REUPLOAD => Validity::Reupload,
+            mozISyncedBookmarksMerger::VALIDITY_REPLACE => Validity::Replace,
+            _ => return Err(Error::UnknownItemValidity(raw).into()),
+        })
+    }
+
+    fn into_column(self) -> i64 {
+        match self {
+            Validity::Valid => mozISyncedBookmarksMerger::VALIDITY_VALID,
+            Validity::Reupload => mozISyncedBookmarksMerger::VALIDITY_REUPLOAD,
+            Validity::Replace => mozISyncedBookmarksMerger::VALIDITY_REPLACE,
         }
     }
 }
