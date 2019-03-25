@@ -36,8 +36,12 @@ class ConditionVariableImpl {
   // Wake all threads that are waiting on this condition.
   MFBT_API void notify_all();
 
-  // Block the current thread of execution until this condition variable is
-  // woken from another thread via notify_one or notify_all.
+  // Atomically release |lock| and sleep the current thread of execution on
+  // this condition variable.
+  // |lock| will be re-acquired before this function returns.
+  // The thread may be woken from sleep from another thread via notify_one()
+  // or notify_all(), but may also wake spuriously.  The caller should recheck
+  // its predicate after this function returns, typically in a while loop.
   MFBT_API void wait(MutexImpl& lock);
 
   MFBT_API CVStatus wait_for(MutexImpl& lock,
