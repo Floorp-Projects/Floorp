@@ -40,11 +40,6 @@ function runTest() {
     ok(Math.abs(a - b) < epsilon, str + " - " + b + " should be close to " + a);
   }
 
-  function isPoint(pt1, x, y, str) {
-    is(pt1.x, x, str + " x");
-    is(pt1.y, y, str + " y");
-  }
-
   function isPointCloseX(pt1, x, y, str) {
     isClose(pt1.x, x, str + " x");
     is(pt1.y, y, str + " y");
@@ -52,10 +47,6 @@ function runTest() {
 
   function ymost(r) {
     return r.y + r.height;
-  }
-
-  function xmost(r) {
-    return r.x + r.width;
   }
 
   var p = text1.getStartPositionOfChar(0);

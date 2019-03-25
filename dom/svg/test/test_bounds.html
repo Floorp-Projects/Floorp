@@ -116,7 +116,7 @@ function runTest() {
   is(rect1Bounds.width, 50, "rect1.getBoundingClientRect().width");
   is(rect1Bounds.height, 50, "rect1.getBoundingClientRect().height");
 
-  rect = new Rect(175 - 50 * sin45, 75 - 50 * sin45, 50 * sin45 * 2, 50 * sin45 * 2);
+  var rect = new Rect(175 - 50 * sin45, 75 - 50 * sin45, 50 * sin45 * 2, 50 * sin45 * 2);
   isWithAbsTolerance(rect2Bounds.left, rect.left, 0.1, "rect2.getBoundingClientRect().left");
   isWithAbsTolerance(rect2Bounds.top, rect.top, 0.1, "rect2.getBoundingClientRect().top");
   isWithAbsTolerance(rect2Bounds.width, rect.width, 0.1, "rect2.getBoundingClientRect().width");
@@ -245,7 +245,7 @@ function runTest() {
 
   var nonScalingStrokedLine3Bounds =
     doc.getElementById("nonScalingStrokedLine3").getBoundingClientRect();
-  var capDelta = 5 / Math.SQRT2;
+  capDelta = 5 / Math.SQRT2;
   rect = new Rect(280 - capDelta, 15 - capDelta, 20 / Math.SQRT2 + 2 * capDelta,
                   20 / Math.SQRT2 + 2 * capDelta);
   isWithAbsTolerance(nonScalingStrokedLine3Bounds.left, rect.left, 0.1,

@@ -17,9 +17,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=631437
      requiredFeatures="foo bar baz"/>
 </svg>
 <script type="text/javascript"><![CDATA[
+
 var text = document.getElementById("text"),
     path = document.getElementById("path"),
-    poly = document.getElementById("poly");
+    poly = document.getElementById("poly"),
     g    = document.getElementById("g");
 
 function CheckList(aListObject, aExpectedListLength, aListDescription) {

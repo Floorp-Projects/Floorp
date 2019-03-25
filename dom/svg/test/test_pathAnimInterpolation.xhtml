@@ -223,9 +223,9 @@ function addTest(aPrefixLength, aPrefix, aFromType, aFromArguments,
   var animate =
     newSVGElement("animate", { attributeName: "d",
                                from: fromPath,
-			       to: toPath,
-			       dur: "8s",
-			       additive: aAdditive ? "sum" : "replace" });
+                               to: toPath,
+                               dur: "8s",
+                               additive: aAdditive ? "sum" : "replace" });
   path.appendChild(animate);
   gSVG.appendChild(path);
 
@@ -275,7 +275,7 @@ function run() {
       for (let prefixEntry of gPrefixes) {
         let [prefixLength, prefix] = prefixEntry;
         addTest(prefixLength, prefix, fromType, fromArguments,
-	        toType, toArguments, toType, expectedArguments, additive);
+                toType, toArguments, toType, expectedArguments, additive);
       }
     }
 
@@ -284,11 +284,11 @@ function run() {
     addTest(1, "M100,100",
             "A", [10, 20, 30, 0, 0, 40, 50],
             "a", [60, 70, 80, 0, 1, 90, 100],
-	    "a", [60, 70, 80, 0, 1, 90, 100], additive);
+            "a", [60, 70, 80, 0, 1, 90, 100], additive);
     addTest(1, "M100,100",
             "A", [10, 20, 30, 0, 0, 40, 50],
             "a", [60, 70, 80, 1, 0, 90, 100],
-	    "a", [60, 70, 80, 1, 0, 90, 100], additive);
+            "a", [60, 70, 80, 1, 0, 90, 100], additive);
 
     // Test all pairs of segment types that cannot be interpolated between.
     for (let fromType of gTypes) {
@@ -297,7 +297,7 @@ function run() {
         if (!isValidInterpolation(fromType, toType)) {
           let toArguments = generatePathSegmentArguments(toType, 1000);
           addTest(1, "M100,100", fromType, fromArguments,
-	          toType, toArguments, toType, toArguments, additive);
+          toType, toArguments, toType, toArguments, additive);
         }
       }
     }
@@ -312,7 +312,7 @@ function run() {
     is(list.numberOfItems, test.prefixLength + 1,
        "Length of animatedPathSegList for interpolation " +
          (test.usesAddition ? "with addition " : "") +
-	 " from " + test.from + " to " + test.to);
+         " from " + test.from + " to " + test.to);
 
     let seg = list.getItem(list.numberOfItems - 1);
     let propertyNames = argumentNames(test.expectedType);

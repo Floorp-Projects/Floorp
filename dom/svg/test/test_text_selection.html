@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=655877
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-var svg, doc, win, text, dragstart, dragend;
+var svg, doc, win, dragstart, dragend;
 
 function drag(fromX, fromY, toX, toY, show) {
   synthesizeMouse(doc.documentElement, fromX, fromY, { type: "mousemove" }, win);

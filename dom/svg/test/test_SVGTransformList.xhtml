@@ -328,7 +328,6 @@ function testOrphan(g) {
   }
   ok(exception === null,
      "Unexpected exception " + exception + " modifying orphaned transform");
-  uexception = null;
 
   // So should matrix
   exception = null;
@@ -364,7 +363,7 @@ function testMutationEvents(g) {
   g.setAttribute("transform", "translate(50 90)");
   var list = g.transform.baseVal;
   is(list.numberOfItems, 1, "Unexpected initial length of list");
-  eventChecker = new MutationEventChecker;
+  var eventChecker = new MutationEventChecker;
   eventChecker.watchAttr(g, "transform");
 
   // consolidate

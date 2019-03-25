@@ -19,61 +19,60 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=302971
 <script class="testbody" type="application/javascript">
 	SimpleTest.waitForExplicitFinish();
 
-	function runTests() 	{
-	var doc = $("svg").contentWindow.document;
-	var rect = doc.getElementById("rect");
-	var text = doc.getElementById("text");
+	function runTests() {
+	  var doc = $("svg").contentWindow.document;
+	  var rect = doc.getElementById("rect");
 
-	// ordinary
+	  // ordinary
 
-	rect.setAttribute("stroke-width", "5");
-	is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "5px", "Ordinary");
+	  rect.setAttribute("stroke-width", "5");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "5px", "Ordinary");
 
-	// valid exponential notation
+	  // valid exponential notation
 
-	rect.setAttribute("stroke-width", "4E1");
-	is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "40px", "Exponent");
+	  rect.setAttribute("stroke-width", "4E1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "40px", "Exponent");
 
-	rect.setAttribute("stroke-width", "6e1");
-	is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "60px", "Lower-case Exponent");
+	  rect.setAttribute("stroke-width", "6e1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "60px", "Lower-case Exponent");
 
-	rect.setAttribute("stroke-width", "2E+1");
-	is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "20px", "Positive Exponent");
+	  rect.setAttribute("stroke-width", "2E+1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "20px", "Positive Exponent");
 
-	rect.setAttribute("stroke-width", "100E-1");
-	is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "10px", "Negative Exponent");
+	  rect.setAttribute("stroke-width", "100E-1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "10px", "Negative Exponent");
 
-	rect.setAttribute("stroke-width", "0.7E1");
-	is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "7px", "Floating Point with Exponent");
+	  rect.setAttribute("stroke-width", "0.7E1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "7px", "Floating Point with Exponent");
 
-	rect.setAttribute("stroke-width", "50.0E-1");
-	is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "5px", "Floating Point with Negative Exponent");
+	  rect.setAttribute("stroke-width", "50.0E-1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "5px", "Floating Point with Negative Exponent");
 
-	rect.setAttribute("stroke-width", "0.8E+1");
-	is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "8px", "Floating Point with Positive Exponent");
+	  rect.setAttribute("stroke-width", "0.8E+1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "8px", "Floating Point with Positive Exponent");
 
-	rect.setAttribute("stroke-width", "4E1px");
-	is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "40px", "Units");
+	  rect.setAttribute("stroke-width", "4E1px");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "40px", "Units");
 
-	// check units that begin with the letter e
+	  // check units that begin with the letter e
 
-	var font_size = doc.defaultView.getComputedStyle(rect).getPropertyValue("font-size");
+	  var font_size = doc.defaultView.getComputedStyle(rect).getPropertyValue("font-size");
 
-	rect.setAttribute("stroke-width", "1em");
-	is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), font_size, "em Units");
+	  rect.setAttribute("stroke-width", "1em");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), font_size, "em Units");
 
-	// invalid exponential notation
+	  // invalid exponential notation
 
-	rect.setAttribute("stroke-width", "1E1.1");
-	is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "1px", "Floating Point Exponent");
+	  rect.setAttribute("stroke-width", "1E1.1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "1px", "Floating Point Exponent");
 
-	rect.setAttribute("stroke-width", "E1");
-	is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "1px", "No Mantissa");
+	  rect.setAttribute("stroke-width", "E1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "1px", "No Mantissa");
 
-	rect.setAttribute("stroke-width", "1 e");
-	is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "1px", "Spaces");
+	  rect.setAttribute("stroke-width", "1 e");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "1px", "Spaces");
 
-	SimpleTest.finish();
+	  SimpleTest.finish();
 	}
 
 	window.addEventListener("load", runTests);
