@@ -26,9 +26,9 @@ var f2Main = f2(this, null, i32.buffer);
 if (this.jsFuns)
     ok(jsFuns.isAsmJSFunction(f2Main), "f2.main is an asm.js function");
 if (f2Main(4) !== 6)
-    throw "f2Main(4)";
+    throw new Error("f2Main(4)");
 if (f2Main(100) !== 4950)
-    throw "f2.main(100)";
+    throw new Error("f2.main(100)");
 var sum = (((i32.length - 1) * i32.length) / 2);
 if (f2Main(i32.length) !== sum)
     throw "f2.main(" + i32.length + ")";
@@ -70,7 +70,7 @@ if (this.jsFuns)
 begin = Date.now();
 lastSum = 0;
 if (f3Main() !== lastSum)
-    throw "f3.main()";
+    throw new Error("f3.main()");
 
 if (!this.jsFuns)
     postMessage("ok");

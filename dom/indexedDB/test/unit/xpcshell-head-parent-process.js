@@ -188,22 +188,22 @@ function compareKeys(k1, k2) {
 
 function addPermission(permission, url)
 {
-  throw "addPermission";
+  throw new Error("addPermission");
 }
 
 function removePermission(permission, url)
 {
-  throw "removePermission";
+  throw new Error("removePermission");
 }
 
 function allowIndexedDB(url)
 {
-  throw "allowIndexedDB";
+  throw new Error("allowIndexedDB");
 }
 
 function disallowIndexedDB(url)
 {
-  throw "disallowIndexedDB";
+  throw new Error("disallowIndexedDB");
 }
 
 function enableExperimental()

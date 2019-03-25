@@ -56,7 +56,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941830
               document.body.appendChild(script);
               break;
             default:
-              throw "Huh?";
+              throw new Error("Huh?");
           }
       };
 
