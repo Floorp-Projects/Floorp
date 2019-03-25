@@ -108,8 +108,9 @@ class VPXDecoder : public MediaDataDecoder,
 
     bool IsCompatible(const VPXStreamInfo& aOther) const {
       return mImage == aOther.mImage && mProfile == aOther.mProfile &&
-             mBitDepth == aOther.mBitDepth && mSubSampling_x &&
-             aOther.mSubSampling_x && mSubSampling_y == aOther.mSubSampling_y;
+             mBitDepth == aOther.mBitDepth &&
+             mSubSampling_x == aOther.mSubSampling_x &&
+             mSubSampling_y == aOther.mSubSampling_y;
     }
   };
 
