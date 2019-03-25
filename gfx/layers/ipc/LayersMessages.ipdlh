@@ -452,11 +452,6 @@ struct OpUseComponentAlphaTextures {
   bool readLockedWhite;
 };
 
-union MaybeRegion {
-  nsIntRegion;
-  null_t;
-};
-
 struct OpNotifyNotUsed {
   uint64_t TextureId;
   uint64_t fwdTransactionId;
