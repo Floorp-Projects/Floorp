@@ -44,8 +44,7 @@ var CompactTheme = {
 
   observe(subject, topic, data) {
     if (topic == "lightweight-theme-styling-update") {
-      let { theme } = JSON.parse(data) || {};
-      if (this.isCompactTheme(theme)) {
+      if (this.isCompactTheme(subject.wrappedJSObject.theme)) {
         // We are using the theme ID on this object instead of always referencing
         // LightweightThemeManager.currentTheme in case this is a preview
         this._toggleStyleSheet(true);

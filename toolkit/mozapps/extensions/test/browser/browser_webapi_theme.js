@@ -14,7 +14,7 @@ add_task(async function test_theme_install() {
   await BrowserTestUtils.withNewTab(TESTPAGE, async (browser) => {
     let updates = [];
     function observer(subject, topic, data) {
-      updates.push(data);
+      updates.push(JSON.stringify(subject.wrappedJSObject));
     }
     Services.obs.addObserver(observer, "lightweight-theme-styling-update");
     registerCleanupFunction(() => {
