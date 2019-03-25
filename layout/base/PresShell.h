@@ -15,6 +15,7 @@
 #include "mozilla/dom/HTMLDocumentBinding.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ScrollTypes.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
