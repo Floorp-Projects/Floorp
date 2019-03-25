@@ -631,4 +631,9 @@ nsresult NS_NewNamedThreadWithDefaultStackSize(const nsACString& aName,
                                                nsIRunnable* aEvent) {
   return NS_NewNamedThread(aName, aResult, aEvent);
 }
+
+bool NS_IsCurrentThread(nsIEventTarget* aThread) {
+  return aThread->IsOnCurrentThread();
 }
+
+}  // extern "C"

@@ -17,3 +17,14 @@ namespace detail {
 }
 
 }  // namespace detail
+
+extern "C" {
+
+// This function uses C linkage because it's exposed to Rust to support the
+// `ThreadPtrHolder` wrapper in the `moz_task` crate.
+void NS_ProxyReleaseISupports(const char* aName, nsIEventTarget* aTarget,
+                              nsISupports* aDoomed, bool aAlwaysProxy) {
+  NS_ProxyRelease(aName, aTarget, dont_AddRef(aDoomed), aAlwaysProxy);
+}
+
+}  // extern "C"

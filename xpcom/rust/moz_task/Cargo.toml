@@ -6,6 +6,8 @@ license = "MPL-2.0"
 description = "Rust wrappers around XPCOM threading functions"
 
 [dependencies]
+libc = "0.2"
+memchr = "2.0"
 nserror = { path = "../nserror" }
 nsstring = { path = "../nsstring" }
 xpcom = { path = "../xpcom" }

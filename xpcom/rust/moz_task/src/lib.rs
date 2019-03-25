@@ -7,6 +7,8 @@
 //! It also provides the Task trait and TaskRunnable struct,
 //! which make it easier to dispatch tasks to threads.
 
+extern crate libc;
+extern crate memchr;
 extern crate nserror;
 extern crate nsstring;
 #[macro_use]
@@ -15,13 +17,14 @@ extern crate xpcom;
 use nserror::{nsresult, NS_OK};
 use nsstring::{nsACString, nsCString};
 use std::{
-    ptr,
+    marker::PhantomData,
+    mem, ptr,
     sync::atomic::{AtomicBool, Ordering},
 };
 use xpcom::{
     getter_addrefs,
-    interfaces::{nsIEventTarget, nsIRunnable, nsIThread},
-    RefPtr,
+    interfaces::{nsIEventTarget, nsIRunnable, nsISupports, nsIThread},
+    AtomicRefcnt, RefCounted, RefPtr, XpCom,
 };
 
 extern "C" {
@@ -33,6 +36,13 @@ extern "C" {
         result: *mut *const nsIThread,
         event: *const nsIRunnable,
     ) -> nsresult;
+    fn NS_IsCurrentThread(thread: *const nsIEventTarget) -> bool;
+    fn NS_ProxyReleaseISupports(
+        name: *const libc::c_char,
+        target: *const nsIEventTarget,
+        doomed: *const nsISupports,
+        always_proxy: bool,
+    );
 }
 
 pub fn get_current_thread() -> Result<RefPtr<nsIThread>, nsresult> {
@@ -53,8 +63,12 @@ pub fn create_thread(name: &str) -> Result<RefPtr<nsIThread>, nsresult> {
     })
 }
 
-/// A database operation that is executed asynchronously on a database thread
-/// and returns its result to the original thread from which it was dispatched.
+pub fn is_current_thread(thread: &RefPtr<nsIThread>) -> bool {
+    unsafe { NS_IsCurrentThread(thread.coerce()) }
+}
+
+/// A task represents an operation that asynchronously executes on a target
+/// thread, and returns its result to the original thread.
 pub trait Task {
     fn run(&self);
     fn done(&self) -> Result<(), nsresult>;
@@ -72,6 +86,7 @@ pub trait Task {
 #[refcnt = "atomic"]
 pub struct InitTaskRunnable {
     name: &'static str,
+    original_thread: RefPtr<nsIThread>,
     task: Box<dyn Task + Send + Sync>,
     has_run: AtomicBool,
 }
@@ -81,14 +96,15 @@ impl TaskRunnable {
         name: &'static str,
         task: Box<dyn Task + Send + Sync>,
     ) -> Result<RefPtr<TaskRunnable>, nsresult> {
-        assert!(is_main_thread());
         Ok(TaskRunnable::allocate(InitTaskRunnable {
             name,
+            original_thread: get_current_thread()?,
             task,
             has_run: AtomicBool::new(false),
         }))
     }
-    pub fn dispatch(&self, target_thread: RefPtr<nsIThread>) -> Result<(), nsresult> {
+
+    pub fn dispatch(&self, target_thread: &nsIThread) -> Result<(), nsresult> {
         unsafe {
             target_thread.DispatchFromScript(self.coerce(), nsIEventTarget::DISPATCH_NORMAL as u32)
         }
@@ -102,12 +118,12 @@ impl TaskRunnable {
             .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
         {
             Ok(_) => {
-                assert!(!is_main_thread());
+                assert!(!is_current_thread(&self.original_thread));
                 self.task.run();
-                self.dispatch(get_main_thread()?)
+                self.dispatch(&self.original_thread)
             }
             Err(_) => {
-                assert!(is_main_thread());
+                assert!(is_current_thread(&self.original_thread));
                 self.task.done()
             }
         }
@@ -116,5 +132,93 @@ impl TaskRunnable {
     xpcom_method!(get_name => GetName() -> nsACString);
     fn get_name(&self) -> Result<nsCString, nsresult> {
         Ok(nsCString::from(self.name))
+    }
+}
+
+pub type ThreadPtrHandle<T> = RefPtr<ThreadPtrHolder<T>>;
+
+/// A Rust analog to `nsMainThreadPtrHolder` that wraps an `nsISupports` object
+/// with thread-safe refcounting. The holder keeps one reference to the wrapped
+/// object that's released when the holder's refcount reaches zero.
+pub struct ThreadPtrHolder<T: XpCom + 'static> {
+    ptr: *const T,
+    marker: PhantomData<T>,
+    name: &'static str,
+    owning_thread: RefPtr<nsIThread>,
+    refcnt: AtomicRefcnt,
+}
+
+unsafe impl<T: XpCom + 'static> Send for ThreadPtrHolder<T> {}
+unsafe impl<T: XpCom + 'static> Sync for ThreadPtrHolder<T> {}
+
+unsafe impl<T: XpCom + 'static> RefCounted for ThreadPtrHolder<T> {
+    unsafe fn addref(&self) {
+        self.refcnt.inc();
+    }
+
+    unsafe fn release(&self) {
+        let rc = self.refcnt.dec();
+        if rc == 0 {
+            // Once the holder's count reaches zero, release the wrapped
+            // object...
+            if !self.ptr.is_null() {
+                // The holder can be released on any thread. If we're on the
+                // owning thread, we can release the object directly. Otherwise,
+                // we need to post a proxy release event to release the object
+                // on the owning thread.
+                if is_current_thread(&self.owning_thread) {
+                    (*self.ptr).release()
+                } else {
+                    let name = self.name.as_bytes() as *const [u8] as *const libc::c_char;
+                    NS_ProxyReleaseISupports(
+                        name,
+                        self.owning_thread.coerce(),
+                        self.ptr as *const T as *const nsISupports,
+                        false,
+                    );
+                }
+            }
+            // ...And deallocate the holder.
+            Box::from_raw(self as *const Self as *mut Self);
+        }
+    }
+}
+
+impl<T: XpCom + 'static> ThreadPtrHolder<T> {
+    /// Creates a new owning thread pointer holder. Returns an error if the
+    /// thread manager has shut down. Panics if `name` isn't a valid C string.
+    pub fn new(name: &'static str, ptr: RefPtr<T>) -> Result<RefPtr<Self>, nsresult> {
+        assert!(memchr::memchr(0, name.as_bytes()).is_none());
+        let owning_thread = get_current_thread()?;
+        // Take ownership of the `RefPtr`. This does _not_ decrement its
+        // refcount, which is what we want. Once we've released all references
+        // to the holder, we'll release the wrapped `RefPtr`.
+        let raw: *const T = &*ptr;
+        mem::forget(ptr);
+        unsafe {
+            let boxed = Box::new(ThreadPtrHolder {
+                name,
+                ptr: raw,
+                marker: PhantomData,
+                owning_thread,
+                refcnt: AtomicRefcnt::new(),
+            });
+            Ok(RefPtr::from_raw(Box::into_raw(boxed)).unwrap())
+        }
+    }
+
+    /// Returns the wrapped object's owning thread.
+    pub fn owning_thread(&self) -> &nsIThread {
+        &self.owning_thread
+    }
+
+    /// Returns the wrapped object if called from the owning thread, or
+    /// `None` if called from any other thread.
+    pub fn get(&self) -> Option<&T> {
+        if is_current_thread(&self.owning_thread) && !self.ptr.is_null() {
+            unsafe { Some(&*self.ptr) }
+        } else {
+            None
+        }
     }
 }
