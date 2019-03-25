@@ -13,6 +13,11 @@ function isProcessDebuggingSupported() {
   return Services.prefs.getBoolPref(PREFERENCES.PROCESS_DEBUGGING_ENABLED, false);
 }
 
+// Process target debugging is disabled by default.
+function isLocalTabDebuggingSupported() {
+  return Services.prefs.getBoolPref(PREFERENCES.LOCAL_TAB_DEBUGGING_ENABLED, false);
+}
+
 const ALL_DEBUG_TARGET_PANES = [
   DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
   ...(isProcessDebuggingSupported() ? [DEBUG_TARGET_PANE.PROCESSES] : []),
@@ -27,11 +32,13 @@ const ALL_DEBUG_TARGET_PANES = [
 const REMOTE_DEBUG_TARGET_PANES = ALL_DEBUG_TARGET_PANES.filter(p =>
   p !== DEBUG_TARGET_PANE.TEMPORARY_EXTENSION);
 
-// Main process debugging is not available for This Firefox.
-// At the moment only the main process is listed under processes, so remove the category
-// for this runtime.
-const THIS_FIREFOX_DEBUG_TARGET_PANES = ALL_DEBUG_TARGET_PANES.filter(p =>
-  p !== DEBUG_TARGET_PANE.PROCESSES);
+const THIS_FIREFOX_DEBUG_TARGET_PANES = ALL_DEBUG_TARGET_PANES
+  // Main process debugging is not available for This Firefox.
+  // At the moment only the main process is listed under processes, so remove the category
+  // for this runtime.
+  .filter(p => p !== DEBUG_TARGET_PANE.PROCESSES)
+  // Showing tab targets for This Firefox is behind a preference.
+  .filter(p => p !== DEBUG_TARGET_PANE.TAB || isLocalTabDebuggingSupported());
 
 const SUPPORTED_TARGET_PANE_BY_RUNTIME = {
   [RUNTIMES.THIS_FIREFOX]: THIS_FIREFOX_DEBUG_TARGET_PANES,
