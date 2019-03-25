@@ -34,6 +34,19 @@ const int32_t nsNavBookmarks::kGetChildrenIndex_SyncStatus = 22;
 
 using namespace mozilla::places;
 
+extern "C" {
+
+// Returns the total number of Sync changes recorded since Places startup for
+// all bookmarks. This function uses C linkage because it's called from the
+// Rust synced bookmarks mirror, on the storage thread. Using `get_service` to
+// access the bookmarks service from Rust trips a thread-safety assertion, so
+// we can't use `nsNavBookmarks::GetTotalSyncChanges`.
+int64_t NS_NavBookmarksTotalSyncChanges() {
+  return nsNavBookmarks::sTotalSyncChanges;
+}
+
+}  // extern "C"
+
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavBookmarks, gBookmarksService)
 
 #define BOOKMARKS_ANNO_PREFIX "bookmarks/"
