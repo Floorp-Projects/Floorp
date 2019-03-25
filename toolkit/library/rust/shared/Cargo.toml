@@ -34,6 +34,7 @@ jsrust_shared = { path = "../../../../js/src/rust/shared", optional = true }
 arrayvec = "0.4"
 cert_storage = { path = "../../../../security/manager/ssl/cert_storage" }
 bitsdownload = { path = "../../../components/bitsdownload", optional = true }
+storage = { path = "../../../../storage/rust" }
 
 [build-dependencies]
 rustc_version = "0.2"
