@@ -388,7 +388,7 @@ uint32_t MediaConstraintsHelper::FeasibilityDistance(
 
 /* static */
 uint32_t MediaConstraintsHelper::FitnessDistance(
-    nsString aN, const NormalizedConstraintSet::StringRange& aParams) {
+    const nsString& aN, const NormalizedConstraintSet::StringRange& aParams) {
   if (!aParams.mExact.empty() &&
       aParams.mExact.find(aN) == aParams.mExact.end()) {
     return UINT32_MAX;
@@ -440,8 +440,8 @@ uint32_t MediaConstraintsHelper::FitnessDistance(
 
   // Then apply advanced constraints.
 
-  for (int i = 0; i < int(c.mAdvanced.size()); i++) {
-    aggregateConstraints.AppendElement(&c.mAdvanced[i]);
+  for (const auto& advanced : c.mAdvanced) {
+    aggregateConstraints.AppendElement(&advanced);
     nsTArray<RefPtr<MediaDevice>> rejects;
     for (uint32_t j = 0; j < aDevices.Length();) {
       uint32_t distance =
@@ -527,12 +527,12 @@ static void LogConstraintStringRange(
     const NormalizedConstraintSet::StringRange& aRange) {
   if (aRange.mExact.size() <= 1 && aRange.mIdeal.size() <= 1) {
     LOG("  %s: { exact: [%s], ideal: [%s] }", aRange.mName,
-        (aRange.mExact.size()
-             ? NS_ConvertUTF16toUTF8(*aRange.mExact.begin()).get()
-             : ""),
-        (aRange.mIdeal.size()
-             ? NS_ConvertUTF16toUTF8(*aRange.mIdeal.begin()).get()
-             : ""));
+        (aRange.mExact.empty()
+             ? ""
+             : NS_ConvertUTF16toUTF8(*aRange.mExact.begin()).get()),
+        (aRange.mIdeal.empty()
+             ? ""
+             : NS_ConvertUTF16toUTF8(*aRange.mIdeal.begin()).get()));
   } else {
     LOG("  %s: { exact: [", aRange.mName);
     for (auto& entry : aRange.mExact) {
