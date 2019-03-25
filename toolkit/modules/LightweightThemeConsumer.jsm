@@ -153,16 +153,12 @@ LightweightThemeConsumer.prototype = {
     if (aTopic != "lightweight-theme-styling-update")
       return;
 
-    let parsedData = JSON.parse(aData);
-    if (!parsedData) {
-      parsedData = { theme: null, experiment: null };
-    }
-
-    if (parsedData.window && parsedData.window !== this._winId) {
+    let data = aSubject.wrappedJSObject;
+    if (data.window && data.window !== this._winId) {
       return;
     }
 
-    this._update(parsedData, parsedData.experiment);
+    this._update(data, data.experiment);
   },
 
   handleEvent(aEvent) {

@@ -122,9 +122,8 @@ class Theme {
     }
     onUpdatedEmitter.emit("theme-updated", this.details, this.windowId);
 
-    Services.obs.notifyObservers(null,
-                                 "lightweight-theme-styling-update",
-                                 JSON.stringify(this.lwtData));
+    Services.obs.notifyObservers(this.lwtData,
+                                 "lightweight-theme-styling-update");
   }
 
   /**
@@ -402,9 +401,8 @@ class Theme {
     }
     onUpdatedEmitter.emit("theme-updated", {}, windowId);
 
-    Services.obs.notifyObservers(null,
-                                 "lightweight-theme-styling-update",
-                                 JSON.stringify(lwtData));
+    Services.obs.notifyObservers(lwtData,
+                                 "lightweight-theme-styling-update");
   }
 }
 

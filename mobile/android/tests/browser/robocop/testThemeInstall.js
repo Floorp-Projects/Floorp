@@ -38,7 +38,7 @@ add_task(async function testThemeInstall() {
 
   let updates = [];
   function observer(subject, topic, data) {
-    updates.push(data);
+    updates.push(JSON.stringify(subject.wrappedJSObject));
   }
   Services.obs.addObserver(observer, "lightweight-theme-styling-update");
 
