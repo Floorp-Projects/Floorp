@@ -12,7 +12,7 @@ import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.ViewState
 import java.net.URL
 
-data class HistoryItem(val id: Int, val url: String) {
+data class HistoryItem(val id: Int, val url: String, val visitedAt: Long) {
     val title: String
         get() = siteTitle()
 

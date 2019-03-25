@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library.history
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,10 +17,85 @@ import kotlinx.android.synthetic.main.history_delete.view.*
 import kotlinx.android.synthetic.main.history_header.view.*
 import kotlinx.android.synthetic.main.history_list_item.view.*
 import mozilla.components.browser.menu.BrowserMenu
+import org.mozilla.fenix.components.SectionedAdapter
+import java.util.*
+
+class HistoryList(val history: List<HistoryItem>) {
+    enum class Range {
+        Today, ThisWeek, ThisMonth, Older;
+        
+        fun humanReadable(context: Context) : String = when (this) {
+            Today -> context.getString(R.string.history_today)
+            ThisWeek -> context.getString(R.string.history_this_week)
+            ThisMonth -> context.getString(R.string.history_this_month)
+            Older -> context.getString(R.string.history_older)
+        }
+    }
+
+    val ranges: List<Range>
+        get() = grouped.keys.toList()
+
+    fun itemsInRange(range: Range): List<HistoryItem> {
+        return grouped[range] ?: listOf()
+    }
+
+    private val grouped: Map<Range, List<HistoryItem>>
+
+    init {
+        val oneDayAgo = getDaysAgo(1).time
+        val sevenDaysAgo = getDaysAgo(7).time
+        val thirtyDaysAgo = getDaysAgo(30).time
+
+        val lastWeek = LongRange(sevenDaysAgo, oneDayAgo)
+        val lastMonth = LongRange(thirtyDaysAgo, sevenDaysAgo)
+
+        grouped = history.groupBy { item ->
+            when {
+                item.visitedAt > oneDayAgo  -> Range.Today
+                lastWeek.contains(item.visitedAt) -> Range.ThisWeek
+                lastMonth.contains(item.visitedAt) -> Range.ThisMonth
+                else -> Range.Older
+            }
+        }
+    }
+
+    private fun getDaysAgo(daysAgo: Int): Date {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, -daysAgo)
+
+        return calendar.time
+    }
+}
 
 class HistoryAdapter(
     private val actionEmitter: Observer<HistoryAction>
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+) : SectionedAdapter() {
+    override fun numberOfSections(): Int = historyList.ranges.size
+
+    override fun numberOfRowsInSection(section: Int): Int = historyList.itemsInRange(historyList.ranges[section]).size
+
+    override fun onCreateHeaderViewHolder(parent: ViewGroup): RecyclerView.ViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(HistoryHeaderViewHolder.LAYOUT_ID, parent, false)
+        return HistoryHeaderViewHolder(view)
+    }
+
+    override fun onBindHeaderViewHolder(holder: RecyclerView.ViewHolder, header: SectionType.Header) {
+        val sectionTitle = historyList.ranges[header.index].humanReadable(holder.itemView.context)
+        
+        when (holder) {
+            is HistoryHeaderViewHolder -> holder.bind(sectionTitle)
+        }
+    }
+
+    override fun onCreateItemViewHolder(parent: ViewGroup): RecyclerView.ViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(HistoryListItemViewHolder.LAYOUT_ID, parent, false)
+        return HistoryListItemViewHolder(view, actionEmitter)
+    }
+
+    override fun onBindItemViewHolder(holder: RecyclerView.ViewHolder, row: SectionType.Row) {
+        (holder as? HistoryListItemViewHolder)?.bind(historyList.itemsInRange(historyList.ranges[row.section])[row.row], mode)
+    }
+
     class HistoryListItemViewHolder(
         view: View,
         private val actionEmitter: Observer<HistoryAction>
@@ -176,49 +252,12 @@ class HistoryAdapter(
         }
     }
 
-    private var items: List<HistoryItem> = emptyList()
+    private var historyList: HistoryList = HistoryList(emptyList())
     private var mode: HistoryState.Mode = HistoryState.Mode.Normal
 
     fun updateData(items: List<HistoryItem>, mode: HistoryState.Mode) {
-        this.items = items
+        this.historyList = HistoryList(items)
         this.mode = mode
         notifyDataSetChanged()
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
-
-        return when (viewType) {
-            HistoryDeleteViewHolder.LAYOUT_ID -> HistoryDeleteViewHolder(view, actionEmitter)
-            HistoryHeaderViewHolder.LAYOUT_ID -> HistoryHeaderViewHolder(view)
-            HistoryListItemViewHolder.LAYOUT_ID -> HistoryListItemViewHolder(view, actionEmitter)
-            else -> throw IllegalStateException("viewType $viewType does not match to a ViewHolder")
-        }
-    }
-
-    override fun getItemViewType(position: Int): Int {
-        return when (position) {
-            0 -> HistoryDeleteViewHolder.LAYOUT_ID
-            1 -> HistoryHeaderViewHolder.LAYOUT_ID
-            else -> HistoryListItemViewHolder.LAYOUT_ID
-        }
-    }
-
-    override fun getItemCount(): Int = items.count() + NUMBER_OF_SECTIONS
-
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (holder) {
-            is HistoryDeleteViewHolder -> holder.bind(mode)
-            // Temporarily hard code the header until
-            // we build out support for time based sections
-            is HistoryHeaderViewHolder -> holder.bind("Today")
-            is HistoryListItemViewHolder -> holder.bind(items[position - NUMBER_OF_SECTIONS], mode)
-        }
-    }
-
-    companion object {
-        // Temporarily hard code the number of sections until
-        // we build out support for time based sections
-        private const val NUMBER_OF_SECTIONS = 2
     }
 }

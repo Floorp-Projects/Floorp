@@ -83,8 +83,9 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
         super.onViewCreated(view, savedInstanceState)
 
         launch(Dispatchers.IO) {
-            val items = requireComponents.core.historyStorage.getVisited()
-                .mapIndexed { id, item -> HistoryItem(id, item) }
+            val items = requireComponents.core.historyStorage.getDetailedVisits(0)
+                .asReversed()
+                .mapIndexed { id, item -> HistoryItem(id, item.url, item.visitTime) }
 
             launch(Dispatchers.Main) {
                 getManagedEmitter<HistoryChange>().onNext(HistoryChange.Change(items))

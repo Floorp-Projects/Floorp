@@ -261,6 +261,15 @@
         is the number of items you have selected -->
     <string name="history_delete_some">Delete %1$d items</string>
 
+    <!-- Text for the header that groups the history for Today -->
+    <string name="history_today">Today</string>
+    <!-- Text for the header that groups the history the past week -->
+    <string name="history_this_week">This Week</string>
+    <!-- Text for the header that groups the history the past month -->
+    <string name="history_this_month">This Month</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Older</string>
+
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Entering full screen mode</string>
 
@@ -281,4 +290,5 @@
 
     <!-- Content Description for session item share button -->
     <string name="content_description_session_share">Share Session</string>
+
 </resources>
