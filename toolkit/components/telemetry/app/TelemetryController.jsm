@@ -64,7 +64,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UpdatePing: "resource://gre/modules/UpdatePing.jsm",
   TelemetryHealthPing: "resource://gre/modules/HealthPing.jsm",
   TelemetryEventPing: "resource://gre/modules/EventPing.jsm",
-  EcosystemTelemetry: "resource://gre/modules/EcosystemTelemetry.jsm",
   OS: "resource://gre/modules/osfile.jsm",
 });
 
@@ -727,7 +726,6 @@ var Impl = {
         }
 
         TelemetryEventPing.startup();
-        EcosystemTelemetry.startup();
 
         this._delayedInitTaskDeferred.resolve();
       } catch (e) {
@@ -788,7 +786,6 @@ var Impl = {
       UpdatePing.shutdown();
 
       TelemetryEventPing.shutdown();
-      EcosystemTelemetry.shutdown();
 
       // Stop the datachoices infobar display.
       TelemetryReportingPolicy.shutdown();

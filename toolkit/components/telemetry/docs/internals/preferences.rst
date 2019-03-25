@@ -163,11 +163,6 @@ Preferences
   The maximum frequency at which an :doc:`../data/event-ping` will be sent.
   Default is 10 (minutes).
 
-``toolkit.telemetry.ecosystemtelemetry.enabled``
-
-  Whether :doc:`../data/ecosystem-telemetry` is enabled.
-  Default is false. Change requires restart.
-
 ``toolkit.telemetry.overrideUpdateChannel``
 
   Override the ``channel`` value that is reported via Telemetry.
