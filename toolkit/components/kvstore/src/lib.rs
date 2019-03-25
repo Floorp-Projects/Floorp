@@ -126,7 +126,7 @@ impl KeyValueService {
             nsCString::from(name),
         ));
 
-        TaskRunnable::new("KVService::GetOrCreate", task)?.dispatch(RefPtr::new(thread))
+        TaskRunnable::new("KVService::GetOrCreate", task)?.dispatch(thread)
     }
 }
 
@@ -177,7 +177,7 @@ impl KeyValueDatabase {
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
 
-        TaskRunnable::new("KVDatabase::Put", task)?.dispatch(RefPtr::new(thread))
+        TaskRunnable::new("KVDatabase::Put", task)?.dispatch(thread)
     }
 
     xpcom_method!(
@@ -204,7 +204,7 @@ impl KeyValueDatabase {
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
 
-        TaskRunnable::new("KVDatabase::Get", task)?.dispatch(RefPtr::new(thread))
+        TaskRunnable::new("KVDatabase::Get", task)?.dispatch(thread)
     }
 
     xpcom_method!(
@@ -221,7 +221,7 @@ impl KeyValueDatabase {
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
 
-        TaskRunnable::new("KVDatabase::Has", task)?.dispatch(RefPtr::new(thread))
+        TaskRunnable::new("KVDatabase::Has", task)?.dispatch(thread)
     }
 
     xpcom_method!(
@@ -238,7 +238,7 @@ impl KeyValueDatabase {
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
 
-        TaskRunnable::new("KVDatabase::Delete", task)?.dispatch(RefPtr::new(thread))
+        TaskRunnable::new("KVDatabase::Delete", task)?.dispatch(thread)
     }
 
     xpcom_method!(
@@ -265,7 +265,7 @@ impl KeyValueDatabase {
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
 
-        TaskRunnable::new("KVDatabase::Enumerate", task)?.dispatch(RefPtr::new(thread))
+        TaskRunnable::new("KVDatabase::Enumerate", task)?.dispatch(thread)
     }
 }
 
