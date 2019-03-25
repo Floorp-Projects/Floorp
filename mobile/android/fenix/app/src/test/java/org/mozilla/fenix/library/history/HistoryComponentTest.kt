@@ -40,7 +40,7 @@ class HistoryComponentTest {
 
     @Test
     fun `add and remove one history item normally`() {
-        val historyItem = HistoryItem(123, "http://mozilla.org")
+        val historyItem = HistoryItem(123, "http://mozilla.org", 0)
 
         emitter.onNext(HistoryChange.Change(listOf(historyItem)))
         emitter.onNext(HistoryChange.EnterEditMode(historyItem))
@@ -62,8 +62,8 @@ class HistoryComponentTest {
     @Test
     fun `try making changes when not in edit mode`() {
         val historyItems = listOf(
-            HistoryItem(1337, "http://reddit.com"),
-            HistoryItem(31337, "http://leethaxor.com")
+            HistoryItem(1337, "http://reddit.com", 0),
+            HistoryItem(31337, "http://leethaxor.com", 0)
         )
 
         emitter.onNext(HistoryChange.Change(historyItems))
