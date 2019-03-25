@@ -17,6 +17,7 @@ pub enum Error {
     UnknownItemKind(i64),
     MalformedString(Box<dyn error::Error + Send + Sync + 'static>),
     MergeConflict,
+    UnknownItemValidity(i64),
 }
 
 impl error::Error for Error {
@@ -53,7 +54,9 @@ impl From<Error> for nsresult {
                 NS_ERROR_UNEXPECTED
             }
             Error::Nsresult(result) => result.clone(),
-            Error::UnknownItemKind(_) | Error::MalformedString(_) => NS_ERROR_INVALID_ARG,
+            Error::UnknownItemKind(_)
+            | Error::MalformedString(_)
+            | Error::UnknownItemValidity(_) => NS_ERROR_INVALID_ARG,
             Error::MergeConflict => NS_ERROR_STORAGE_BUSY,
         }
     }
@@ -71,6 +74,9 @@ impl fmt::Display for Error {
             Error::UnknownItemKind(kind) => write!(f, "Unknown item kind {} in database", kind),
             Error::MalformedString(err) => err.fmt(f),
             Error::MergeConflict => f.write_str("Local tree changed during merge"),
+            Error::UnknownItemValidity(validity) => {
+                write!(f, "Unknown item validity {} in database", validity)
+            }
         }
     }
 }
