@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "mozilla/CheckedInt.h"
-#include "mozilla/EndianUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Move.h"
 #include "mozilla/SyncRunnable.h"
@@ -513,12 +512,6 @@ void WebrtcGmpVideoEncoder::Encoded(
     // plus a buffer) in combination with H264 packetization changes in
     // webrtc/trunk code
     uint8_t* buffer = aEncodedFrame->Buffer();
-
-    if (!buffer) {
-      LOG(LogLevel::Error, ("GMP plugin returned null buffer"));
-      return;
-    }
-
     uint8_t* end = aEncodedFrame->Buffer() + aEncodedFrame->Size();
     size_t size_bytes;
     switch (aEncodedFrame->BufferType()) {
@@ -562,12 +555,8 @@ void WebrtcGmpVideoEncoder::Encoded(
           size = *buffer++;
           break;
         case GMP_BufferLength16:
-// The plugin is expected to encode data in native byte order
-#ifdef MOZ_LITTLE_ENDIAN
-          size = LittleEndian::readUint16(buffer);
-#else
-          size = BigEndian::readUint16(buffer);
-#endif
+          // presumes we can do unaligned loads
+          size = *(reinterpret_cast<uint16_t*>(buffer));
           buffer += 2;
           break;
         case GMP_BufferLength24:
@@ -579,12 +568,8 @@ void WebrtcGmpVideoEncoder::Encoded(
           buffer += 3;
           break;
         case GMP_BufferLength32:
-// The plugin is expected to encode data in native byte order
-#ifdef MOZ_LITTLE_ENDIAN
-          size = LittleEndian::readUint32(buffer);
-#else
-          size = BigEndian::readUint32(buffer);
-#endif
+          // presumes we can do unaligned loads
+          size = *(reinterpret_cast<uint32_t*>(buffer));
           buffer += 4;
           break;
         default:
