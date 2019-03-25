@@ -9,8 +9,8 @@ import mozilla.components.service.glean.Glean
 import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.fenix.debug.GleanMetrics.Metrics
-import org.mozilla.fenix.debug.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.GleanMetrics.Events
 
 private class EventWrapper<T : Enum<T>>(
     private val event: EventMetricType<T>,
