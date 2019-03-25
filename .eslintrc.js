@@ -55,7 +55,6 @@ module.exports = {
   }, {
     // TODO: Bug 1246594. Empty this list once the rule has landed for all dirs
     "files": [
-      "gfx/layers/apz/test/mochitest/**",
       "mobile/android/components/**",
       "mobile/android/modules/**",
       "modules/libmar/tests/unit/head_libmar.js",
