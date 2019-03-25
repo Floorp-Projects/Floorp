@@ -16,10 +16,22 @@
 /******************************************************************************/
 /* TreeView Table*/
 
-.treeTable .treeLabelCell {
+.treeTable {
+  color: var(--theme-highlight-blue);
+}
+
+.treeTable .treeLabelCell,
+.treeTable .treeValueCell {
   padding: 2px 0;
+  line-height: 16px; /* make rows 20px tall */
+  padding-inline-start: 4px;
   vertical-align: top;
+  overflow: hidden;
+}
+
+.treeTable .treeLabelCell {
   white-space: nowrap;
+  cursor: default;
 }
 
 .treeTable .treeLabelCell::after {
@@ -27,36 +39,27 @@
   color: var(--object-color);
 }
 
-.treeTable .treeValueCell {
-  padding: 2px 0;
-  padding-inline-start: 5px;
-  overflow: hidden;
-}
-
 .treeTable .treeValueCell.inputEnabled {
   padding-top: 0;
   padding-bottom: 0;
 }
 
-.treeTable .treeValueCell input {
+.treeTable .treeValueCell.inputEnabled input {
   width: 100%;
-  background: none;
-  border: none;
-  color: inherit;
-  margin-inline-end: 2px;
-}
-
-.treeTable .treeValueCell input:focus {
+  height: 20px;
+  margin: 0;
+  margin-inline-start: -2px;
+  border: solid 1px transparent;
   outline: none;
-  box-shadow: var(--theme-focus-box-shadow-textbox);
-  transition: all 0.2s ease-in-out;
+  box-shadow: none;
+  padding: 0 1px;
+  color: var(--theme-content-color1);
+  background: var(--theme-sidebar-background);
 }
 
-.treeTable .treeLabelCell {
-  cursor: default;
-  overflow: hidden;
-  padding-inline-start: 4px;
-  white-space: nowrap;
+.treeTable .treeValueCell.inputEnabled input:focus {
+  border-color: var(--theme-textbox-box-shadow);
+  transition: all 150ms ease-in-out;
 }
 
 .treeTable .treeValueCell > [aria-labelledby],
@@ -72,6 +75,12 @@
 .treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
   cursor: pointer;
   text-decoration: underline;
+}
+
+/* :not(.selected) is used because row selection styles should have
+   more precedence than row hovering. */
+.treeTable .treeRow:not(.selected):hover {
+  background-color: var(--theme-selection-background-hover) !important;
 }
 
 .treeTable .treeRow.selected {
@@ -177,19 +186,4 @@
       radial-gradient(1px 60% at right,
           rgba(0, 0, 0, 0.8) 0%,
           transparent 80%);
-}
-
-/******************************************************************************/
-/* Themes */
-
-/* :not(.selected) is used because row selection styles should have
-   more precedence than row hovering. */
-.theme-light .treeTable .treeRow:not(.selected):hover,
-.theme-dark .treeTable .treeRow:not(.selected):hover {
-  background-color: var(--theme-selection-background-hover) !important;
-}
-
-.theme-light .treeTable,
-.theme-dark .treeTable {
-  color: var(--theme-highlight-blue);
 }
