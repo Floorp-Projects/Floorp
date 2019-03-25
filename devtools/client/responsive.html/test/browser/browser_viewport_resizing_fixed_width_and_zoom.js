@@ -62,12 +62,12 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
       before: {
         zoom: 1.0,
         width: 300,
-        height: 600
+        height: 600,
       },
       after: {
         zoom: 1.0,
         width: 600,
-        height: 300
+        height: 300,
       },
     },
     {
@@ -75,12 +75,12 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
       before: {
         zoom: 1.0,
         width: 300,
-        height: 600
+        height: 600,
       },
       after: {
         zoom: 1.0,
         width: 600,
-        height: 300
+        height: 300,
       },
     },
   ];
