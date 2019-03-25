@@ -7648,32 +7648,77 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
     }
 
     UsageInfo usageInfo;
+    bool initialized;
+    Client::Type clientType;
 
     if (!mClientType.IsNull()) {
-      Client::Type clientType = mClientType.Value();
-
-      nsAutoString clientDirectoryName;
-      rv = Client::TypeToText(clientType, clientDirectoryName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      // Checking whether there is any other client in the directory is needed.
+      // If there is not, removing whole directory is needed.
+      nsCOMPtr<nsIDirectoryEnumerator> originEntries;
+      bool hasOtherClient = false;
+      if (NS_WARN_IF(NS_FAILED(
+              file->GetDirectoryEntries(getter_AddRefs(originEntries)))) ||
+          !originEntries) {
         return;
       }
 
-      rv = file->Append(clientDirectoryName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return;
+      nsCOMPtr<nsIFile> clientFile;
+      while (NS_SUCCEEDED((rv = originEntries->GetNextFile(
+                               getter_AddRefs(clientFile)))) &&
+             clientFile) {
+        bool isDirectory;
+        rv = clientFile->IsDirectory(&isDirectory);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
+        }
+
+        if (!isDirectory) {
+          continue;
+        }
+
+        nsString leafName;
+        rv = clientFile->GetLeafName(leafName);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
+        }
+
+        rv = Client::TypeFromText(leafName, clientType);
+        if (NS_FAILED(rv)) {
+          UNKNOWN_FILE_WARNING(leafName);
+          continue;
+        }
+
+        if (clientType != mClientType.Value()) {
+          hasOtherClient = true;
+          break;
+        }
       }
 
-      bool exists;
-      rv = file->Exists(&exists);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return;
+      if (hasOtherClient) {
+        Client::Type clientType = mClientType.Value();
+
+        nsAutoString clientDirectoryName;
+        rv = Client::TypeToText(clientType, clientDirectoryName);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
+        }
+
+        rv = file->Append(clientDirectoryName);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
+        }
+
+        bool exists;
+        rv = file->Exists(&exists);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
+        }
+
+        if (!exists) {
+          continue;
+        }
       }
 
-      if (!exists) {
-        continue;
-      }
-
-      bool initialized;
       if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
         initialized = aQuotaManager->IsOriginInitialized(origin);
       } else {
@@ -7687,9 +7732,6 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
       if (initialized) {
         rv = client->GetUsageForOrigin(aPersistenceType, group, origin, dummy,
                                        &usageInfo);
-      } else {
-        rv = client->InitOrigin(aPersistenceType, group, origin, dummy,
-                                &usageInfo);
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return;
@@ -7709,6 +7751,12 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
 
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to remove directory, giving up!");
+    }
+
+    // If it hasn't been initialized, we don't need to update the quota and
+    // notify the removing client.
+    if (!initialized) {
+      return;
     }
 
     if (aPersistenceType != PERSISTENCE_TYPE_PERSISTENT) {
