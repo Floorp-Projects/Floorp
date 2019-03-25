@@ -369,14 +369,9 @@ union ReadLockDescriptor {
   null_t;
 };
 
-union MaybeTexture {
-  PTexture;
-  null_t;
-};
-
 struct TexturedTileDescriptor {
   PTexture texture;
-  MaybeTexture textureOnWhite;
+  PTexture? textureOnWhite;
   IntRect updateRect;
   bool readLocked;
   bool readLockedOnWhite;
