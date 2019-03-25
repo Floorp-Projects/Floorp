@@ -10,6 +10,8 @@ const {colorUtils} = require("devtools/shared/css/color.js");
 
 const ComputedStylePath = require("./ComputedStylePath");
 
+const DEFAULT_COLOR = {r: 0, g: 0, b: 0, a: 1};
+
 /* Count for linearGradient ID */
 let LINEAR_GRADIENT_ID_COUNT = 0;
 
@@ -32,13 +34,13 @@ class ColorPath extends ComputedStylePath {
     return keyframe.value;
   }
 
-  propToState({ keyframes }) {
+  propToState({ keyframes, name }) {
     const maxObject = { distance: -Number.MAX_VALUE };
 
     for (let i = 0; i < keyframes.length - 1; i++) {
-      const value1 = getRGBA(keyframes[i].value);
+      const value1 = getRGBA(name, keyframes[i].value);
       for (let j = i + 1; j < keyframes.length; j++) {
-        const value2 = getRGBA(keyframes[j].value);
+        const value2 = getRGBA(name, keyframes[j].value);
         const distance = getRGBADistance(value1, value2);
 
         if (maxObject.distance >= distance) {
@@ -55,12 +57,12 @@ class ColorPath extends ComputedStylePath {
     const baseValue =
       maxObject.value1 < maxObject.value2 ? maxObject.value1 : maxObject.value2;
 
-    return { baseValue, maxDistance };
+    return { baseValue, maxDistance, name };
   }
 
   toSegmentValue(computedStyle) {
-    const { baseValue, maxDistance } = this.state;
-    const value = getRGBA(computedStyle);
+    const { baseValue, maxDistance, name } = this.state;
+    const value = getRGBA(name, computedStyle);
     return getRGBADistance(baseValue, value) / maxDistance;
   }
 
@@ -153,12 +155,32 @@ class ColorPath extends ComputedStylePath {
 /**
  * Parse given RGBA string.
  *
+ * @param {String} propertyName
  * @param {String} colorString
  *        e.g. rgb(0, 0, 0) or rgba(0, 0, 0, 0.5) and so on.
  * @return {Object}
  *         RGBA {r: r, g: g, b: b, a: a}.
  */
-function getRGBA(colorString) {
+function getRGBA(propertyName, colorString) {
+  // Special handling for CSS property which can specify the not normal CSS color value.
+  switch (propertyName) {
+    case "caret-color": {
+      // This property can specify "auto" keyword.
+      if (colorString === "auto") {
+        return DEFAULT_COLOR;
+      }
+      break;
+    }
+    case "scrollbar-color": {
+      // This property can specify "auto", "dark", "light" keywords and multiple colors.
+      if (["auto", "dark", "light"].includes(colorString) ||
+          colorString.indexOf(" ") > 0) {
+        return DEFAULT_COLOR;
+      }
+      break;
+    }
+  }
+
   const color = new colorUtils.CssColor(colorString);
   return color.getRGBATuple();
 }
