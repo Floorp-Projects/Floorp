@@ -14,7 +14,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=820506
 SimpleTest.waitForExplicitFinish();
 
 function run() {
-  var svgDoc = document.getElementById("svg");
   var div = document.getElementById("div");
   // Get the coords of the origin of the SVG canvas:
   var originX = div.offsetLeft;
@@ -22,6 +21,7 @@ function run() {
   var r1 = document.getElementById("r1");
   var r2 = document.getElementById("r2");
   var element;
+  var background = document.getElementById("background");
 
   // Test r1 just outsite the clip area:
 

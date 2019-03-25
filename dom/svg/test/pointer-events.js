@@ -225,7 +225,7 @@ function make_log_msg(over, tag, attributes) {
   } else if (over == POINT_OVER_STROKE) {
     target = "stroke";
   } else {
-    throw "unexpected bit combination in 'over'";
+    throw new Error("unexpected bit combination in 'over'");
   }
   var msg = "Check if events are intercepted at a point over the " + target + " on <" + tag + "> for";
   for (var attr in attributes) {
@@ -258,7 +258,7 @@ function test_element(id, x, y, over /* bit flags indicating which area(s) of th
   } else if (over == POINT_OVER_STROKE) {
     inputs = hit_test_inputs.stroke;
   } else {
-    throw "unexpected bit combination in 'over'";
+    throw new Error("unexpected bit combination in 'over'");
   }
 
   for_all_permutations(inputs, test_permutation);
@@ -286,7 +286,7 @@ function run_tests(subtest) {
       pointer_events_values.splice(0, partition);
       break;
     case 2:
-      throw "unexpected subtest number";
+      throw new Error("unexpected subtest number");
   }
 
   test_element("rect", 30, 30, POINT_OVER_FILL);

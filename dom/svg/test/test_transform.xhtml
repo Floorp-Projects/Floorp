@@ -145,7 +145,7 @@ function run() {
 }
 
 function testCreateTransform() {
-  svg = $("svg");
+  var svg = $("svg");
   var t = svg.createSVGTransform();
   ok(t != svg.createSVGTransform(),
      "Got identical objects when creating new transform");

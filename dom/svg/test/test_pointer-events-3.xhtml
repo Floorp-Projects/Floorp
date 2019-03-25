@@ -14,7 +14,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=762679
 SimpleTest.waitForExplicitFinish();
 
 function run() {
-  var svgDoc = document.getElementById("svg");
   var div = document.getElementById("div");
   // Get the coords of the origin of the SVG canvas:
   var originX = div.offsetLeft;
@@ -24,13 +23,13 @@ function run() {
   var elementFromPoint = document.elementFromPoint(originX + 150, originY + 52);
   is(elementFromPoint, circle, "Top of circle should hit");
 
-  var elementFromPoint = document.elementFromPoint(originX + 249, originY + 150);
+  elementFromPoint = document.elementFromPoint(originX + 249, originY + 150);
   is(elementFromPoint, circle, "Right of circle should hit");
 
-  var elementFromPoint = document.elementFromPoint(originX + 150, originY + 249);
+  elementFromPoint = document.elementFromPoint(originX + 150, originY + 249);
   is(elementFromPoint, circle, "Bottom of circle should hit");
 
-  var elementFromPoint = document.elementFromPoint(originX + 51, originY + 150);
+  elementFromPoint = document.elementFromPoint(originX + 51, originY + 150);
   is(elementFromPoint, circle, "Left of circle should hit");
 
   SimpleTest.finish();

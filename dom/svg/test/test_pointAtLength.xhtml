@@ -22,7 +22,7 @@ function run() {
   // set the pathLength to twice its actual length
   // and check that makes no difference
   p1.setAttribute("pathLength", "800");
-  var point = p1.getPointAtLength(200);
+  point = p1.getPointAtLength(200);
   is(point.x, 200);
   is(point.y, 50);
 
