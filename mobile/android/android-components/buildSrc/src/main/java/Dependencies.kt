@@ -33,7 +33,7 @@ object Versions {
     const val room = "1.1.1"
     const val paging = "1.0.1"
 
-    const val mozilla_appservices = "0.20.2"
+    const val mozilla_appservices = "0.22.0"
     const val servo = "0.0.1.20181017.aa95911"
 }
 
