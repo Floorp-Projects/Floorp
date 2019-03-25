@@ -1181,19 +1181,15 @@ class AsyncPanZoomController {
    * AsyncPanZoomController. Calls |SampleCompositedAsyncTransform| to ensure
    * that the GetCurrentAsync* functions consider the test offset and zoom in
    * their computations.
-   *
-   * Returns false if neither test value is set, and true otherwise.
    */
-  bool ApplyAsyncTestAttributes();
+  void ApplyAsyncTestAttributes();
 
   /**
    * Sets this AsyncPanZoomController's FrameMetrics to |aPrevFrameMetrics| and
    * calls |SampleCompositedAsyncTransform| to unapply any test values applied
    * by |ApplyAsyncTestAttributes|.
-   *
-   * Returns false if neither test value is set, and true otherwise.
    */
-  bool UnapplyAsyncTestAttributes(const FrameMetrics& aPrevFrameMetrics);
+  void UnapplyAsyncTestAttributes(const FrameMetrics& aPrevFrameMetrics);
 
   /* ===================================================================
    * The functions and members in this section are used to manage

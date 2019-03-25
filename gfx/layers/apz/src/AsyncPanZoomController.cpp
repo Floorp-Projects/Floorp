@@ -4131,28 +4131,26 @@ bool AsyncPanZoomController::SampleCompositedAsyncTransform() {
   return false;
 }
 
-bool AsyncPanZoomController::ApplyAsyncTestAttributes() {
+void AsyncPanZoomController::ApplyAsyncTestAttributes() {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   if (mTestAsyncScrollOffset == CSSPoint() &&
       mTestAsyncZoom == LayerToParentLayerScale()) {
-    return false;
+    return;
   }
   Metrics().ZoomBy(mTestAsyncZoom.scale);
   ScrollBy(mTestAsyncScrollOffset);
   SampleCompositedAsyncTransform();
-  return true;
 }
 
-bool AsyncPanZoomController::UnapplyAsyncTestAttributes(
+void AsyncPanZoomController::UnapplyAsyncTestAttributes(
     const FrameMetrics& aPrevFrameMetrics) {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   if (mTestAsyncScrollOffset == CSSPoint() &&
       mTestAsyncZoom == LayerToParentLayerScale()) {
-    return false;
+    return;
   }
   Metrics() = aPrevFrameMetrics;
   SampleCompositedAsyncTransform();
-  return true;
 }
 
 Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
