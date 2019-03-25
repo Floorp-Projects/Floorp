@@ -336,6 +336,7 @@ class AudioContext final : public DOMEventTargetHelper,
 
   void ResumeInternal();
   void SuspendInternal(void* aPromise);
+  void CloseInternal(void* aPromise);
 
   // Will report error message to console and dispatch testing event if needed
   // when AudioContext is blocked by autoplay policy.
