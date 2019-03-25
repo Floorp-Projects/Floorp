@@ -192,6 +192,7 @@ function parseFormData(stream, channel, lenient = false) {
   const BUFFER_SIZE = 8192;
 
   let touchedStreams = new Set();
+  let converterStreams = [];
 
   /**
    * Creates a converter input stream from the given raw input stream,
@@ -210,10 +211,12 @@ function parseFormData(stream, channel, lenient = false) {
     }
 
     touchedStreams.add(stream);
-    return ConverterInputStream(
+    let converterStream = ConverterInputStream(
       stream, "UTF-8", 0,
       lenient ? Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER
               : 0);
+    converterStreams.push(converterStream);
+    return converterStream;
   }
 
   /**
@@ -381,6 +384,12 @@ function parseFormData(stream, channel, lenient = false) {
   } finally {
     for (let stream of touchedStreams) {
       rewind(stream);
+    }
+    for (let converterStream of converterStreams) {
+      // Release the reference to the underlying input stream, to prevent the
+      // destructor of nsConverterInputStream from closing the stream, which
+      // would cause uploads to break.
+      converterStream.init(null, null, 0, 0);
     }
   }
 
