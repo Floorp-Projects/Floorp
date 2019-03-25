@@ -65,7 +65,8 @@ def generate_build_task(apks, is_staging):
         scopes=[
             "secrets:get:{}".format(sentry_secret),
             "secrets:get:{}".format(leanplum_secret)
-        ]
+        ],
+        routes=["notify.email.fenix-eng-notifications@mozilla.com.on-failed"]
     )
 
 
