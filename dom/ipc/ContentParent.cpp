@@ -1187,58 +1187,32 @@ mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
     isPreloadBrowser = isPreloadBrowserStr.EqualsLiteral("preloaded");
   }
 
-<<<<<<< local
   RefPtr<nsIContentParent> constructorSender;
   if (isInContentProcess) {
     MOZ_ASSERT(aContext.IsMozBrowserElement() || aContext.IsJSPlugin());
     constructorSender = CreateContentBridgeParent(aContext, initialPriority,
                                                   openerTabId, tabId);
-=======
-  RefPtr<ContentParent> constructorSender;
-  MOZ_RELEASE_ASSERT(XRE_IsParentProcess(),
-                     "Cannot allocate TabParent in content process");
-  if (aOpenerContentParent) {
-    constructorSender = aOpenerContentParent;
->>>>>>> graft
   } else {
     if (aOpenerContentParent) {
       constructorSender = aOpenerContentParent;
     } else {
-<<<<<<< local
       if (aContext.IsJSPlugin()) {
         constructorSender =
             GetNewOrUsedJSPluginProcess(aContext.JSPluginId(), initialPriority);
       } else {
-        constructorSender = GetNewOrUsedBrowserProcess(
-            aFrameElement, remoteType, initialPriority, nullptr,
-            isPreloadBrowser);
+        constructorSender =
+            GetNewOrUsedBrowserProcess(aFrameElement, remoteType, initialPriority,
+                                       nullptr, isPreloadBrowser);
       }
       if (!constructorSender) {
         return nullptr;
       }
-=======
-      constructorSender =
-          GetNewOrUsedBrowserProcess(aFrameElement, remoteType, initialPriority,
-                                     nullptr, isPreloadBrowser);
     }
-    if (!constructorSender) {
-      return nullptr;
->>>>>>> graft
-    }
-<<<<<<< local
     ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
     cpm->RegisterRemoteFrame(tabId, ContentParentId(0), openerTabId,
                              aContext.AsIPCTabContext(),
                              constructorSender->ChildID());
   }
-=======
-  }
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  cpm->RegisterRemoteFrame(tabId, ContentParentId(0), openerTabId,
-                           aContext.AsIPCTabContext(),
-                           constructorSender->ChildID());
-
->>>>>>> graft
   if (constructorSender) {
     nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
     docShell->GetTreeOwner(getter_AddRefs(treeOwner));
@@ -3589,12 +3563,7 @@ PParentToChildStreamParent* ContentParent::SendPParentToChildStreamConstructor(
 }
 
 PParentToChildStreamParent* ContentParent::AllocPParentToChildStreamParent() {
-<<<<<<< local
   return nsIContentParent::AllocPParentToChildStreamParent();
-=======
-  MOZ_CRASH(
-      "PParentToChildStreamParent actors should be manually constructed!");
->>>>>>> graft
 }
 
 bool ContentParent::DeallocPParentToChildStreamParent(
