@@ -264,17 +264,6 @@ nsresult TRRService::ReadPrefs(const char *name) {
       mDisableAfterFails = fails;
     }
   }
-  if (!name || !strcmp(name, TRR_PREF("excluded-domains"))) {
-    nsAutoCString excludedDomains;
-    Preferences::GetCString(TRR_PREF("excluded-domains"), excludedDomains);
-
-    nsCCharSeparatedTokenizer tokenizer(
-        excludedDomains, ',', nsCCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
-    while (tokenizer.hasMoreTokens()) {
-      nsAutoCString token(tokenizer.nextToken());
-      mExcludedDomains.PutEntry(token);
-    }
-  }
 
   return NS_OK;
 }
@@ -440,20 +429,23 @@ bool TRRService::IsTRRBlacklisted(const nsACString &aHost,
     return false;  // might as well try
   }
 
-  LOG(("Checking if host [%s] is blacklisted", aHost.BeginReading()));
   // hardcode these so as to not worry about expiration
   if (StringEndsWith(aHost, NS_LITERAL_CSTRING(".local")) ||
       aHost.Equals(NS_LITERAL_CSTRING("localhost"))) {
     return true;
   }
 
-  if (mExcludedDomains.GetEntry(aHost)) {
-    LOG(("Host [%s] is TRR blacklisted via pref\n", aHost.BeginReading()));
-    return true;
-  }
-
   if (!Enabled()) {
     return true;
+  }
+  if (!mTRRBLStorage) {
+    return false;
+  }
+
+  if (mClearTRRBLStorage) {
+    mTRRBLStorage->Clear();
+    mClearTRRBLStorage = false;
+    return false;  // just cleared!
   }
 
   int32_t dot = aHost.FindChar('.');
@@ -472,18 +464,6 @@ bool TRRService::IsTRRBlacklisted(const nsACString &aHost,
       // the domain name of this name is already TRR blacklisted
       return true;
     }
-  }
-
-  // These checks need to happen after the recursive result, otherwise we
-  // might not check the pref for parent domains.
-  if (!mTRRBLStorage) {
-    return false;
-  }
-
-  if (mClearTRRBLStorage) {
-    mTRRBLStorage->Clear();
-    mClearTRRBLStorage = false;
-    return false;  // just cleared!
   }
 
   // use a unified casing for the hashkey

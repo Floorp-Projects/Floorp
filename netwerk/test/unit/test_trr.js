@@ -429,35 +429,6 @@ function test23()
   listen = dns.asyncResolve("cname-a.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
 }
 
-// TRR-first check that TRR result is used
-function test24()
-{
-  dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 2); // TRR-first
-  prefs.setCharPref("network.trr.excluded-domains", "");
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-ip");
-  test_answer = "192.192.192.192";
-  listen = dns.asyncResolve("bar.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
-
-// TRR-first check that DNS result is used if domain is part of the excluded-domains pref
-function test24b()
-{
-  dns.clearCache(true);
-  prefs.setCharPref("network.trr.excluded-domains", "bar.example.com");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("bar.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
-
-// TRR-first check that DNS result is used if domain is part of the excluded-domains pref
-function test24c()
-{
-  dns.clearCache(true);
-  prefs.setCharPref("network.trr.excluded-domains", "example.com");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("bar.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
-
 var tests = [ test1,
               test1b,
               test2,
@@ -485,9 +456,6 @@ var tests = [ test1,
               test21,
               test22,
               test23,
-              test24,
-              test24b,
-              test24c,
               testsDone
             ];
 
@@ -496,7 +464,7 @@ var current_test = 0;
 function run_dns_tests()
 {
   if (current_test < tests.length) {
-    dump(`starting test ${tests[current_test].name}`);
+    dump("starting test " + current_test + "\n");
     do_test_pending();
     tests[current_test++]();
   }
