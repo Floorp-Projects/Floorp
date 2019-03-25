@@ -11,11 +11,22 @@
 Login Manager test: simple form fill
 
 <script>
+gTestDependsOnDeprecatedLogin = true;
 runChecksAfterCommonInit(startTest);
 
 /** Test for Login Manager: form fill, multiple forms. **/
 
-function startTest() {
+async function startTest() {
+  await setFormAndWaitForFieldFilled(`
+    <form id="form1" action="formtest.js">
+      <p>This is form 1.</p>
+      <input  type="text"       name="uname">
+      <input  type="password"   name="pword">
+
+      <button type="submit">Submit</button>
+      <button type="reset"> Reset </button>
+    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "testuser"});
+
   is($_(1, "uname").value, "testuser", "Checking for filled username");
   is($_(1, "pword").value, "testpass", "Checking for filled password");
 
@@ -27,14 +38,6 @@ function startTest() {
 
 <div id="content" style="display: none">
 
-  <form id="form1" action="formtest.js">
-    <p>This is form 1.</p>
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-
-    <button type="submit">Submit</button>
-    <button type="reset"> Reset </button>
-  </form>
 
 </div>
 
