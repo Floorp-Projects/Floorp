@@ -27,79 +27,6 @@ var badids = [
   "badcss",
 ];
 
-function checkLoads() {
-  window.parent.is(
-    scriptItem1, "untouched", "Should not load tracking javascript");
-  window.parent.is(
-    scriptItem2, "untouched", "Should not load tracking javascript (2)");
-
-  window.parent.is(
-    imageItem1, "untouched", "Should not load tracking images");
-  window.parent.is(
-    imageItem2, "untouched", "Should not load tracking images (2)");
-
-  window.parent.is(
-    frameItem1, "untouched", "Should not load tracking iframes");
-  window.parent.is(
-    frameItem2, "untouched", "Should not load tracking iframes (2)");
-  window.parent.is(
-    mediaItem1, "error", "Should not load tracking videos");
-  window.parent.is(
-    xhrItem, "failed", "Should not load tracking XHRs");
-  window.parent.is(
-    fetchItem, "error", "Should not fetch from tracking URLs");
-
-  var elt = document.getElementById("styleCheck");
-  var style = document.defaultView.getComputedStyle(elt);
-  window.parent.isnot(
-    style.visibility, "hidden", "Should not load tracking css");
-
-  window.parent.is(window.document.blockedNodeByClassifierCount, badids.length,
-    "Should identify all tracking elements");
-
-  var blockedNodes = window.document.blockedNodesByClassifier;
-
-  // Make sure that every node in blockedNodes exists in the tree
-  // (that may not always be the case but do not expect any nodes to disappear
-  // from the tree here)
-  var allNodeMatch = true;
-  for (let i = 0; i < blockedNodes.length; i++) {
-    let nodeMatch = false;
-    for (let j = 0; j < badids.length && !nodeMatch; j++) {
-      nodeMatch = nodeMatch ||
-        (blockedNodes[i] == document.getElementById(badids[j]));
-    }
-
-    allNodeMatch = allNodeMatch && nodeMatch;
-  }
-  window.parent.ok(allNodeMatch,
-    "All annotated nodes are expected in the tree");
-
-  // Make sure that every node with a badid (see badids) is found in the
-  // blockedNodes. This tells us if we are neglecting to annotate
-  // some nodes
-  allNodeMatch = true;
-  for (let j = 0; j < badids.length; j++) {
-    let nodeMatch = false;
-    for (let i = 0; i < blockedNodes.length && !nodeMatch; i++) {
-      nodeMatch = nodeMatch ||
-        (blockedNodes[i] == document.getElementById(badids[j]));
-    }
-
-    if (!nodeMatch) {
-      console.log(badids[j] + " was not found in blockedNodes");
-    }
-    allNodeMatch = allNodeMatch && nodeMatch;
-  }
-  window.parent.ok(allNodeMatch,
-    "All tracking nodes are expected to be annotated as such");
-
-  // Unset prefs, etc.
-  window.parent.cleanup();
-  // End (parent) test.
-  window.parent.SimpleTest.finish();
-}
-
 var onloadCalled = false;
 var xhrFinished = false;
 var fetchFinished = false;
@@ -115,7 +42,21 @@ function loaded(type) {
       videoLoaded = true;
   }
   if (onloadCalled && xhrFinished && fetchFinished && videoLoaded) {
-      checkLoads();
+    var msg = new window.CustomEvent("OnLoadComplete", {
+      detail: JSON.stringify({
+        scriptItem,
+        scriptItem1,
+        scriptItem2,
+        imageItem1,
+        imageItem2,
+        frameItem1,
+        frameItem2,
+        xhrItem,
+        fetchItem,
+        mediaItem1,
+      }),
+    });
+    window.dispatchEvent(msg);
   }
 }
 </script>
