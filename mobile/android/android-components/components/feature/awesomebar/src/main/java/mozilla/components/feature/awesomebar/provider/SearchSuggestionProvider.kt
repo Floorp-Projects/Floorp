@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import android.graphics.Bitmap
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.suggestions.SearchSuggestionClient
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -25,13 +26,15 @@ import java.util.concurrent.TimeUnit
  * @param fetchClient The HTTP client for requesting suggestions from the search engine.
  * @param limit The maximum number of suggestions that should be returned. It needs to be >= 1.
  * @param mode Whether to return a single search suggestion (with chips) or one suggestion per item.
+ * @param icon The image to display next to the result. If not specified, the engine icon is used
  */
 class SearchSuggestionProvider(
     private val searchEngine: SearchEngine,
     private val searchUseCase: SearchUseCases.SearchUseCase,
     private val fetchClient: Client,
     private val limit: Int = 15,
-    private val mode: Mode = Mode.SINGLE_SUGGESTION
+    private val mode: Mode = Mode.SINGLE_SUGGESTION,
+    private val icon: Bitmap? = null
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -97,7 +100,7 @@ class SearchSuggestionProvider(
                 title = item,
                 description = searchEngine.name,
                 icon = { _, _ ->
-                    searchEngine.icon
+                    icon ?: searchEngine.icon
                 },
                 score = Int.MAX_VALUE - index,
                 onSuggestionClicked = {
@@ -128,7 +131,7 @@ class SearchSuggestionProvider(
             chips = chips,
             score = Int.MAX_VALUE,
             icon = { _, _ ->
-                searchEngine.icon
+                icon ?: searchEngine.icon
             },
             onChipClicked = { chip ->
                 searchUseCase.invoke(chip.title)
