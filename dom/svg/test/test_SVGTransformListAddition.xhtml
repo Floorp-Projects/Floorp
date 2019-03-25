@@ -170,7 +170,7 @@ function createAnim(attrs) {
   anim.setAttribute("attributeName", "transform");
   anim.setAttribute("dur", "1s");
   anim.setAttribute("fill", "freeze");
-  for (attr in attrs) {
+  for (let attr in attrs) {
     anim.setAttribute(attr, attrs[attr]);
   }
   return anim;

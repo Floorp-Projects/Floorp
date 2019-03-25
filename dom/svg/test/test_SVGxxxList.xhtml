@@ -370,7 +370,7 @@ function is_transform_attr(attr_name) {
 }
 
 function get_array_of_list_items(list) {
-  array = [];
+  let array = [];
   for (var i = 0; i < list.numberOfItems; ++i) {
     array.push(list.getItem(i));
   }
@@ -394,7 +394,7 @@ function get_array_of_list_items(list) {
  * @param t A test from the 'tests' array.
  */
 function run_baseVal_API_tests() {
-  var res, threw, items;
+  var res, threw;
   var eventChecker = new MutationEventChecker;
 
   for (var t of tests) {
@@ -453,7 +453,7 @@ function run_baseVal_API_tests() {
     var expectedModEvents =
       t.item_type == "DOMString" ? "modify" : "modify modify";
     eventChecker.expect(expectedModEvents);
-    var res = t.baseVal.initialize(item);
+    res = t.baseVal.initialize(item);
     eventChecker.ignoreEvents();
 
 
@@ -815,7 +815,7 @@ function run_animVal_API_tests() {
 
     // Test .getItem():
 
-    var item = t.animVal.getItem(2);
+    item = t.animVal.getItem(2);
     ok(item != null && item === t.animVal.getItem(2),
        "The method " + t.list_type + ".getItem() should work when called on an " +
        "anim val list, and always return the exact same object.");
@@ -913,6 +913,7 @@ function run_basic_setAttribute_tests() {
          t.bv_path + " and " + t.av_path + " should be different objects.");
     }
 
+    // eslint-disable-next-line no-self-compare
     ok(t.baseVal.getItem(0) === t.baseVal.getItem(0),
        "The exact same " + t.item_type + " DOM object should be returned each " +
        "time the item at a given index in the " + t.list_type + " for " +
@@ -920,6 +921,7 @@ function run_basic_setAttribute_tests() {
        "by a change in list length between the successive accesses.");
 
     if (t.animVal) {
+      // eslint-disable-next-line no-self-compare
       ok(t.animVal.getItem(0) === t.animVal.getItem(0),
          "The exact same " + t.item_type + " DOM object should be returned each " +
          "time the item at a given index in the " + t.list_type + " for " +
@@ -1299,7 +1301,7 @@ function run_animation_timeline_tests() {
 function run_tests() {
   // Initialize each test object with some useful properties, and create their
   // 'animate' elements. Note that 'prop' and 'animVal' may be null.
-  for (var t of tests) {
+  for (let t of tests) {
     t.element = document.getElementById(t.target_element_id);
     t.prop = t.prop_name ? t.element[t.prop_name] : null;
     t.baseVal = ( t.prop || t.element )[t.bv_name];
@@ -1340,7 +1342,7 @@ function run_tests() {
   // After all the other test manipulations, we check that the following
   // objects have still not changed, since they never should:
 
-  for (var t of tests) {
+  for (let t of tests) {
     if (t.prop) {
       ok(t.prop === t.element[t.prop_name],
          "The same " + t.prop_type + " object should ALWAYS be returned for " +

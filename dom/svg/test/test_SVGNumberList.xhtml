@@ -38,7 +38,7 @@ function run_tests() {
 
   // Test mutation events
   // --- Initialization
-  eventChecker = new MutationEventChecker;
+  var eventChecker = new MutationEventChecker;
   eventChecker.watchAttr(text, "rotate");
   // -- Actual changes
   eventChecker.expect("modify modify");

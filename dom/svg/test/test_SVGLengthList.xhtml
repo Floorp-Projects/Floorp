@@ -40,7 +40,7 @@ function run_tests() {
 
   // Test mutation events
   // --- Initialization
-  eventChecker = new MutationEventChecker;
+  var eventChecker = new MutationEventChecker;
   eventChecker.watchAttr(text, "x");
   eventChecker.expect("modify");
   text.textContent = "abc";

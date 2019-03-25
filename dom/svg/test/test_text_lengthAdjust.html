@@ -36,7 +36,7 @@ function runTest() {
   var startPositions = [],
       endPositions = [],
       extents = [];
-  for (var i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     startPositions.push(text.getStartPositionOfChar(i));
     endPositions.push(text.getEndPositionOfChar(i));
     extents.push(text.getExtentOfChar(i));
@@ -54,7 +54,7 @@ function runTest() {
   };
 
   var checkPositions = function(start, end, width) {
-    for (var i = 0; i < 3; i++) {
+    for (let i = 0; i < 3; i++) {
       // check their positions
       close(text.getStartPositionOfChar(i).x, start[i], "start position of glyph " + i);
       close(text.getEndPositionOfChar(i).x, end[i], "end position of glyph " + i);

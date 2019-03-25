@@ -201,6 +201,7 @@ function MutationEventChecker() {
     case MutationEvent.REMOVAL:
       return "removal";
     }
+    return "Unknown MutationEvent Type";
   };
 
   this._argToEventId = function(arg) {
