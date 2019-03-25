@@ -33,7 +33,7 @@ namespace mozilla {
 
 using namespace mozilla::gfx;
 
-MediaEngineTabVideoSource::MediaEngineTabVideoSource() {}
+MediaEngineTabVideoSource::MediaEngineTabVideoSource() = default;
 
 nsresult MediaEngineTabVideoSource::StartRunnable::Run() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -95,7 +95,9 @@ nsresult MediaEngineTabVideoSource::InitRunnable::Run() {
     nsCOMPtr<mozIDOMWindowProxy> win;
     rv = mVideoSource->mTabSource->GetTabToStream(getter_AddRefs(win));
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!win) return NS_OK;
+    if (!win) {
+      return NS_OK;
+    }
 
     mVideoSource->mWindow = nsPIDOMWindowOuter::From(win);
     MOZ_ASSERT(mVideoSource->mWindow);

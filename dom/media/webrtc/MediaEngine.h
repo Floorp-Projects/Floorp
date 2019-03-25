@@ -51,7 +51,7 @@ class MediaEngine : public DeviceChangeCallback {
   virtual void SetFakeDeviceChangeEvents() {}
 
  protected:
-  virtual ~MediaEngine() {}
+  virtual ~MediaEngine() = default;
 };
 
 }  // namespace mozilla

@@ -64,7 +64,7 @@ MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
     : mTimer(nullptr),
       mName(DefaultVideoName()) {}
 
-MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource() {}
+MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource() = default;
 
 nsString MediaEngineDefaultVideoSource::GetName() const { return mName; }
 
@@ -343,7 +343,7 @@ void MediaEngineDefaultVideoSource::Pull(
 MediaEngineDefaultAudioSource::MediaEngineDefaultAudioSource()
     : mMutex("MediaEngineDefaultAudioSource::mMutex") {}
 
-MediaEngineDefaultAudioSource::~MediaEngineDefaultAudioSource() {}
+MediaEngineDefaultAudioSource::~MediaEngineDefaultAudioSource() = default;
 
 nsString MediaEngineDefaultAudioSource::GetName() const {
   return NS_LITERAL_STRING(u"Default Audio Device");
