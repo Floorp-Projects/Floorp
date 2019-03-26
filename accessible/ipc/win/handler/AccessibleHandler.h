@@ -9,11 +9,6 @@
 
 #define NEWEST_IA2_BASENAME Accessible2_3
 
-#define __QUOTE(idl) #idl
-#define __GENIDL(base) __QUOTE(base##.idl)
-#define IDLFOR(base) __GENIDL(base)
-#define NEWEST_IA2_IDL IDLFOR(NEWEST_IA2_BASENAME)
-
 #define __GENIFACE(base) I##base
 #define INTERFACEFOR(base) __GENIFACE(base)
 #define NEWEST_IA2_INTERFACE INTERFACEFOR(NEWEST_IA2_BASENAME)
@@ -24,7 +19,7 @@
 
 #if defined(__midl) || defined(__WIDL__)
 
-import NEWEST_IA2_IDL;
+import "Accessible2_3.idl";
 
 #else
 
