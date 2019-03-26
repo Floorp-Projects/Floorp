@@ -223,7 +223,7 @@ bool ResponsiveImageSelector::SetSizesFromDescriptor(const nsAString& aSizes) {
   ClearSelectedCandidate();
 
   NS_ConvertUTF16toUTF8 sizes(aSizes);
-  mServoSourceSizeList.reset(Servo_SourceSizeList_Parse(&sizes));
+  mServoSourceSizeList = Servo_SourceSizeList_Parse(&sizes).Consume();
   return !!mServoSourceSizeList;
 }
 

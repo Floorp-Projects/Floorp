@@ -2061,8 +2061,8 @@ NS_IMPL_THREADSAFE_FFI_REFCOUNTING(SheetLoadDataHolder, SheetLoadDataHolder);
 
 void Gecko_StyleSheet_FinishAsyncParse(
     SheetLoadDataHolder* aData, RawServoStyleSheetContentsStrong aSheetContents,
-    StyleUseCountersOwned aUseCounters) {
-  UniquePtr<StyleUseCounters> useCounters(aUseCounters);
+    StyleOwnedOrNull<StyleUseCounters> aUseCounters) {
+  UniquePtr<StyleUseCounters> useCounters = aUseCounters.Consume();
   RefPtr<SheetLoadDataHolder> loadData = aData;
   RefPtr<RawServoStyleSheetContents> sheetContents = aSheetContents.Consume();
   NS_DispatchToMainThread(NS_NewRunnableFunction(
