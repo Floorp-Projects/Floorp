@@ -21,7 +21,8 @@ import mozilla.components.service.glean.BuildConfig
  * @property logPings whether to log ping contents to the console.
  * @property httpClient The HTTP client implementation to use for uploading pings.
  * @property pingTag String tag to be applied to headers when uploading pings for debug view
- */
+ * @property channel the release channel the application is on, if known. This will be
+ *           sent along with all the pings, in the `client_info` section. */
 data class Configuration(
     val serverEndpoint: String = DEFAULT_TELEMETRY_ENDPOINT,
     val userAgent: String = "Glean/${BuildConfig.LIBRARY_VERSION} (Android)",
@@ -30,7 +31,8 @@ data class Configuration(
     val maxEvents: Int = 500,
     val logPings: Boolean = false,
     val httpClient: Lazy<Client> = lazy { HttpURLConnectionClient() },
-    val pingTag: String? = null
+    val pingTag: String? = null,
+    val channel: String? = null
 ) {
     companion object {
         const val DEFAULT_TELEMETRY_ENDPOINT = "https://incoming.telemetry.mozilla.org"

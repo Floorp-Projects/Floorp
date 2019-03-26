@@ -87,6 +87,14 @@ Glean should be initialized as soon as possible, and importantly, before any
 other libraries in the application start using Glean. Library code should never
 call `Glean.initialize`, since it should be called exactly once per application.
 
+**Note**: if the application has the concept of release channels and knows which channel it is on at
+run-time, then it can provide glean with this information by setting it as part of the `Configuration`
+object parameter of the `Glean.initialize` method. For example:
+
+```Kotlin
+Glean.initialize(applicationContext, Configuration(channel = "beta"))
+```
+
 ### Adding new metrics
 
 All metrics that your application collects must be defined in a `metrics.yaml`

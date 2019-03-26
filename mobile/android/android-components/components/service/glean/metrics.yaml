@@ -156,6 +156,21 @@ glean.internal.metrics:
       - telemetry-client-dev@mozilla.com
     expires: never
 
+  app_channel:
+    type: string
+    lifetime: application
+    send_in_pings:
+      - glean_client_info
+    description: |
+      The channel the application is being distributed on.
+    bugs:
+      - 1520741
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1520741#c18
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    expires: never
+
   first_run_date:
     type: datetime
     lifetime: user
@@ -171,7 +186,7 @@ glean.internal.metrics:
     notification_emails:
       - telemetry-client-dev@mozilla.com
     expires: never
-      
+
 glean.error:
   invalid_value:
     type: counter

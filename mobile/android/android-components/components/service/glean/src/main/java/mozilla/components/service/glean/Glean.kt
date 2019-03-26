@@ -229,6 +229,10 @@ open class GleanInternalAPI internal constructor () {
         StringsStorageEngine.record(GleanInternalMetrics.deviceModel, Build.MODEL)
         StringsStorageEngine.record(GleanInternalMetrics.architecture, Build.SUPPORTED_ABIS[0])
 
+        configuration.channel?.let {
+            StringsStorageEngine.record(GleanInternalMetrics.appChannel, it)
+        }
+
         try {
             val packageInfo = applicationContext.packageManager.getPackageInfo(
                 applicationContext.packageName, 0

@@ -13,6 +13,8 @@ import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import mozilla.components.service.glean.GleanMetrics.GleanInternalMetrics
+import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.scheduler.PingUploadWorker
@@ -280,13 +282,19 @@ class GleanTest {
             Glean.sanitizeApplicationId("org-mozilla-test-app")
         )
     }
-/*
-    @Test
-    fun `metricsPingScheduler is properly initialized`() {
-        Glean.metricsPingScheduler.clearSchedulerData()
-        Glean.metricsPingScheduler.updateSentTimestamp()
 
-        // Should return false since we just updated the last time the ping was sent above
-        assertFalse(Glean.metricsPingScheduler.canSendPing())
-    }*/
+    @Test
+    fun `The appChannel must be correctly set, if requested`() {
+        // No appChannel must be set if nothing was provided through the config
+        // options.
+        resetGlean(getContextWithMockedInfo(), Configuration())
+        assertFalse(GleanInternalMetrics.appChannel.testHasValue())
+
+        // The appChannel must be correctly reported if a channel value
+        // was provided.
+        val testChannelName = "my-test-channel"
+        resetGlean(getContextWithMockedInfo(), Configuration(channel = testChannelName))
+        assertTrue(GleanInternalMetrics.appChannel.testHasValue())
+        assertEquals(testChannelName, GleanInternalMetrics.appChannel.testGetValue())
+    }
 }
