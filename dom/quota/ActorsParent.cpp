@@ -1375,7 +1375,7 @@ void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
 
 namespace {
 
-nsString gBaseDirPath;
+StaticAutoPtr<nsString> gBaseDirPath;
 
 #ifdef DEBUG
 bool gQuotaManagerInitialized = false;
@@ -2499,6 +2499,9 @@ QuotaManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
   nsresult rv;
 
   if (!strcmp(aTopic, kProfileDoChangeTopic)) {
+    MOZ_ASSERT(!gBaseDirPath);
+    gBaseDirPath = new nsString();
+
     nsCOMPtr<nsIFile> baseDir;
     rv = NS_GetSpecialDirectory(NS_APP_INDEXEDDB_PARENT_DIR,
                                 getter_AddRefs(baseDir));
@@ -2510,7 +2513,7 @@ QuotaManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
       return rv;
     }
 
-    rv = baseDir->GetPath(gBaseDirPath);
+    rv = baseDir->GetPath(*gBaseDirPath);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2542,7 +2545,8 @@ QuotaManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
 
     MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return mShutdownComplete; }));
 
-    gBaseDirPath.Truncate();
+    MOZ_ASSERT(gBaseDirPath);
+    gBaseDirPath = nullptr;
 
     return NS_OK;
   }
@@ -2903,6 +2907,7 @@ nsresult QuotaManager::Initialize() {
 void QuotaManager::GetOrCreate(nsIRunnable* aCallback,
                                nsIEventTarget* aMainEventTarget) {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(gBaseDirPath);
 
   if (IsShuttingDown()) {
     MOZ_ASSERT(false, "Calling GetOrCreate() after shutdown!");
@@ -2914,7 +2919,7 @@ void QuotaManager::GetOrCreate(nsIRunnable* aCallback,
   } else {
     RefPtr<QuotaManager> manager = new QuotaManager();
 
-    nsresult rv = manager->Init(gBaseDirPath);
+    nsresult rv = manager->Init(*gBaseDirPath);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       gCreateFailed = true;
     } else {
