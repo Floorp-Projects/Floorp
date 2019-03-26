@@ -8,17 +8,53 @@ import unittest
 
 from taskgraph.parameters import (
     Parameters,
-    ParameterMismatch,
     load_parameters_file,
-    PARAMETERS,
-    COMM_PARAMETERS,
 )
 from mozunit import main, MockedOpen
 
 
 class TestParameters(unittest.TestCase):
 
-    vals = {n: n for n in PARAMETERS.keys()}
+    vals = {
+        'app_version': 'app_version',
+        'base_repository': 'base_repository',
+        'build_date': 0,
+        'build_number': 0,
+        'do_not_optimize': [],
+        'existing_tasks': {},
+        'filters': [],
+        'head_ref': 'head_ref',
+        'head_repository': 'head_repository',
+        'head_rev': 'head_rev',
+        'hg_branch': 'hg_branch',
+        'level': 'level',
+        'message': 'message',
+        'moz_build_date': 'moz_build_date',
+        'next_version': 'next_version',
+        'optimize_target_tasks': False,
+        'owner': 'owner',
+        'phabricator_diff': 'phabricator_diff',
+        'project': 'project',
+        'pushdate': 0,
+        'pushlog_id': 'pushlog_id',
+        'release_enable_emefree': False,
+        'release_enable_partners': False,
+        'release_eta': None,
+        'release_history': {},
+        'release_partners': [],
+        'release_partner_config': None,
+        'release_partner_build_number': 1,
+        'release_type': 'release_type',
+        'release_product': None,
+        'required_signoffs': [],
+        'signoff_urls': {},
+        'target_tasks_method': 'target_tasks_method',
+        'tasks_for': 'tasks_for',
+        'try_mode': 'try_mode',
+        'try_options': None,
+        'try_task_config': None,
+        'version': 'version',
+    }
 
     def test_Parameters_immutable(self):
         p = Parameters(**self.vals)
@@ -33,8 +69,8 @@ class TestParameters(unittest.TestCase):
 
     def test_Parameters_invalid_KeyError(self):
         """even if the value is present, if it's not a valid property, raise KeyError"""
-        p = Parameters(xyz=10, **self.vals)
-        self.assertRaises(KeyError, lambda: p['xyz'])
+        p = Parameters(xyz=10, strict=True, **self.vals)
+        self.assertRaises(Exception, lambda: p.check())
 
     def test_Parameters_get(self):
         p = Parameters(head_ref=10, level=20)
@@ -46,14 +82,14 @@ class TestParameters(unittest.TestCase):
 
     def test_Parameters_check_missing(self):
         p = Parameters()
-        self.assertRaises(ParameterMismatch, lambda: p.check())
+        self.assertRaises(Exception, lambda: p.check())
 
         p = Parameters(strict=False)
         p.check()  # should not raise
 
     def test_Parameters_check_extra(self):
         p = Parameters(xyz=10, **self.vals)
-        self.assertRaises(ParameterMismatch, lambda: p.check())
+        self.assertRaises(Exception, lambda: p.check())
 
         p = Parameters(strict=False, xyz=10, **self.vals)
         p.check()  # should not raise
@@ -91,7 +127,12 @@ class TestParameters(unittest.TestCase):
 
 
 class TestCommParameters(unittest.TestCase):
-    vals = {n: n for n in PARAMETERS.keys() + COMM_PARAMETERS.keys()}
+    vals = dict({
+        'comm_base_repository': 'comm_base_repository',
+        'comm_head_ref': 'comm_head_ref',
+        'comm_head_repository': 'comm_head_repository',
+        'comm_head_rev': 'comm_head_rev',
+    }.items() + TestParameters.vals.items())
 
     def test_Parameters_check(self):
         """
@@ -105,7 +146,7 @@ class TestCommParameters(unittest.TestCase):
         If any of the comm parameters are specified, all of them must be specified.
         """
         vals = self.vals.copy()
-        del vals[next(iter(COMM_PARAMETERS.keys()))]
+        del vals['comm_base_repository']
         p = Parameters(**vals)
         self.assertRaises(Exception, p.check)
 
