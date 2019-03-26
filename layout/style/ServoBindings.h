@@ -50,6 +50,13 @@ namespace nsStyleTransformMatrix {
 enum class MatrixTransformOperator : uint8_t;
 }
 
+// The clang we use on windows complains about returning StyleStrong<> and
+// StyleOwned<>, since the template parameters are incomplete.
+//
+// But they only contain pointers so it is ok.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
+
 extern "C" {
 
 // Element data
@@ -993,5 +1000,7 @@ void Servo_Quotes_GetQuote(const RawServoQuotes* quotes, int32_t depth,
                            nsAString* result);
 
 }  // extern "C"
+
+#pragma GCC diagnostic pop
 
 #endif  // mozilla_ServoBindings_h
