@@ -1261,7 +1261,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
 
   *optimized = true;
 
-  AutoValueVector properties(cx);
+  RootedValueVector properties(cx);
   RootedValue key(cx);
   RootedValue value(cx);
 
@@ -1514,7 +1514,7 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
   }
 
   // Step 3.
-  AutoValueVector properties(cx);
+  RootedValueVector properties(cx);
   size_t len = ids.length();
   if (!properties.resize(len)) {
     return false;

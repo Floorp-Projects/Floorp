@@ -3391,7 +3391,7 @@ bool ForEachHandler(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
       aCx, js::GetFunctionNativeReserved(&args.callee(),
                                          FOREACH_MAPLIKEORSETLIKEOBJ_SLOT));
   MOZ_ASSERT(aArgc == 3);
-  JS::AutoValueVector newArgs(aCx);
+  JS::RootedVector<JS::Value> newArgs(aCx);
   // Arguments are passed in as value, key, object. Keep value and key, replace
   // object with the maplike/setlike object.
   if (!newArgs.append(args.get(0))) {
