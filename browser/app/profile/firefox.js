@@ -1211,8 +1211,6 @@ pref("services.sync.prefs.sync.extensions.personas.current", true);
 pref("services.sync.prefs.sync.extensions.update.enabled", true);
 pref("services.sync.prefs.sync.intl.accept_languages", true);
 pref("services.sync.prefs.sync.layout.spellcheckDefault", true);
-pref("services.sync.prefs.sync.lightweightThemes.selectedThemeID", true);
-pref("services.sync.prefs.sync.lightweightThemes.usedThemes", true);
 pref("services.sync.prefs.sync.media.autoplay.default", true);
 pref("services.sync.prefs.sync.media.eme.enabled", true);
 pref("services.sync.prefs.sync.network.cookie.cookieBehavior", true);
@@ -1260,14 +1258,6 @@ pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 // fetching these icons to show remote tabs may leak information about that
 // user's tabs and bookmarks. Note this pref is also synced.
 pref("services.sync.syncedTabs.showRemoteIcons", true);
-
-// Developer edition preferences
-#ifdef MOZ_DEV_EDITION
-pref("lightweightThemes.selectedThemeID", "firefox-compact-dark@mozilla.org",
-     sticky);
-#else
-pref("lightweightThemes.selectedThemeID", "default-theme@mozilla.org", sticky);
-#endif
 
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.
