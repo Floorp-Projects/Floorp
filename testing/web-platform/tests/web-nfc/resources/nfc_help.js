@@ -47,7 +47,7 @@ function createUrlRecord(url) {
   return createRecord('url', 'text/plain', url);
 }
 
-function assertWebNFCMessagesEqual(a, b) {
+function assertWebNDEFMessagesEqual(a, b) {
   assert_equals(a.records.length, b.records.length);
   for(let i in a.records) {
     let recordA = a.records[i];
@@ -67,14 +67,14 @@ function assertWebNFCMessagesEqual(a, b) {
   }
 }
 
-function testNFCMessage(pushedMessage, watchOptions, desc) {
+function testNDEFMessage(pushedMessage, watchOptions, desc) {
   promise_test(t => {
     return navigator.nfc.push(pushedMessage)
       .then(() => {
         return new Promise(resolve => {
           navigator.nfc.watch((message) => resolve(message), watchOptions);
         }).then((message) => {
-          assertWebNFCMessagesEqual(message, pushedMessage);
+          assertWebNDEFMessagesEqual(message, pushedMessage);
         });
       });
   }, desc);
