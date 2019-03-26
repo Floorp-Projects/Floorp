@@ -371,6 +371,7 @@ void nsHttpChannel::ReleaseMainThreadOnlyReferences() {
   arrayToRelease.AppendElement(mRedirectURI.forget());
   arrayToRelease.AppendElement(mRedirectChannel.forget());
   arrayToRelease.AppendElement(mPreflightChannel.forget());
+  arrayToRelease.AppendElement(mDNSPrefetch.forget());
 
   NS_DispatchToMainThread(new ProxyReleaseRunnable(std::move(arrayToRelease)));
 }
@@ -6599,7 +6600,7 @@ nsresult nsHttpChannel::BeginConnect() {
     return mStatus;
   }
 
-  if (!(mLoadFlags & LOAD_CLASSIFY_URI)) {
+  if (!NS_ShouldClassifyChannel(this)) {
     MaybeStartDNSPrefetch();
     return ContinueBeginConnectWithResult();
   }
@@ -7805,7 +7806,6 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsresult status) {
       mTransactionTimings.domainLookupStart = mDNSPrefetch->StartTimestamp();
       mTransactionTimings.domainLookupEnd = mDNSPrefetch->EndTimestamp();
     }
-    mDNSPrefetch = nullptr;
 
     // handle auth retry...
     if (authRetry) {

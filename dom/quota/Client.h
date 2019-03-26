@@ -24,7 +24,6 @@ class nsIRunnable;
 
 // Deprecated
 #define ASMJSCACHE_DIRECTORY_NAME "asmjs"
-const int32_t kDeprecatedAsmJsVersion = int32_t((2 << 16) + 2);
 
 BEGIN_QUOTA_NAMESPACE
 
@@ -90,8 +89,7 @@ class Client {
     return NS_OK;
   }
 
-  static nsresult TypeFromText(const nsAString& aText, Type& aType,
-                               int32_t aStorageVersion) {
+  static nsresult TypeFromText(const nsAString& aText, Type& aType) {
     if (aText.EqualsLiteral(IDB_DIRECTORY_NAME)) {
       aType = IDB;
     } else if (aText.EqualsLiteral(DOMCACHE_DIRECTORY_NAME)) {
@@ -102,10 +100,6 @@ class Client {
                aText.EqualsLiteral(LS_DIRECTORY_NAME)) {
       aType = LS;
     } else {
-      // Only enable the assert after the certain version.
-      if (aStorageVersion >= kDeprecatedAsmJsVersion) {
-        MOZ_RELEASE_ASSERT(!IsDeprecatedClient(aText));
-      }
       return NS_ERROR_FAILURE;
     }
 
@@ -120,10 +114,7 @@ class Client {
     }
 
     Type type;
-    // This function is only called by QuotaManagerService, so disable the
-    // assert on TypeFromText because client name will be checked during
-    // initialization anyway.
-    nsresult rv = TypeFromText(aText, type, /* Disable the version check */ 0);
+    nsresult rv = TypeFromText(aText, type);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
