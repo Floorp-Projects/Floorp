@@ -60,9 +60,8 @@ interface nsIContentSecurityPolicy : nsISerializable
   const unsigned short UPGRADE_IF_INSECURE_DIRECTIVE  = 16;
   const unsigned short CHILD_SRC_DIRECTIVE            = 17;
   const unsigned short BLOCK_ALL_MIXED_CONTENT        = 18;
-  const unsigned short REQUIRE_SRI_FOR                = 19;
-  const unsigned short SANDBOX_DIRECTIVE              = 20;
-  const unsigned short WORKER_SRC_DIRECTIVE           = 21;
+  const unsigned short SANDBOX_DIRECTIVE              = 19;
+  const unsigned short WORKER_SRC_DIRECTIVE           = 20;
 
   /**
    * Accessor method for a read-only string version of the policy at a given
@@ -232,12 +231,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   [noscript] void ensureEventTarget(in nsIEventTarget aEventTarget);
 
-  /*
-   * Checks if a CSP requires Subresource Integrity (SRI)
-   * for a given nsContentPolicyType.
-   */
-  bool requireSRIForType(in nsContentPolicyType aContentType);
-
+ 
   /**
    * Verifies ancestry as permitted by the policy.
    *
