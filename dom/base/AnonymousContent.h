@@ -8,6 +8,7 @@
 #define mozilla_dom_AnonymousContent_h
 
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsICSSDeclaration.h"
 #include "mozilla/dom/Document.h"
@@ -67,6 +68,8 @@ class AnonymousContent final {
   void GetComputedStylePropertyValue(const nsAString& aElementId,
                                      const nsAString& aPropertyName,
                                      DOMString& aResult, ErrorResult& aRv);
+
+  void GetTargetIdForEvent(Event& aEvent, DOMString& aResult);
 
  private:
   ~AnonymousContent();
