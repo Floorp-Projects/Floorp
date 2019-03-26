@@ -49,6 +49,7 @@ function configureStore(webConsoleUI, options = {}) {
     || Math.max(getIntPref("devtools.hud.loglimit"), 1);
   const sidebarToggle = getBoolPref(PREFS.FEATURES.SIDEBAR_TOGGLE);
   const jstermCodeMirror = getBoolPref(PREFS.FEATURES.JSTERM_CODE_MIRROR);
+  const autocomplete = getBoolPref(PREFS.FEATURES.AUTOCOMPLETE);
   const historyCount = getIntPref(PREFS.UI.INPUT_HISTORY_COUNT);
 
   const initialState = {
@@ -56,6 +57,7 @@ function configureStore(webConsoleUI, options = {}) {
       logLimit,
       sidebarToggle,
       jstermCodeMirror,
+      autocomplete,
       historyCount,
     }),
     filters: FilterState({
@@ -137,4 +139,3 @@ function createRootReducer() {
 // Provide the store factory for test code so that each test is working with
 // its own instance.
 module.exports.configureStore = configureStore;
-
