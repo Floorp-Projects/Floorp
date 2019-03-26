@@ -19,11 +19,6 @@ linux32/debug:
     build-platform: linux/debug
     test-sets:
         - linux32-tests
-linux32-nightly/opt:
-    build-platform: linux-nightly/opt
-    test-sets:
-        - linux32-tests
-        - linux32-opt-tests
 linux32-shippable/opt:
     build-platform: linux-shippable/opt
     test-sets:
@@ -54,18 +49,6 @@ linux64/opt:
         - linux-talos-flex
         - raptor-firefox
         - raptor-fetch-firefox
-linux64-nightly/opt:
-    build-platform: linux64-nightly/opt
-    test-sets:
-        - common-tests
-        - web-platform-tests
-        - opt-only-tests
-        - desktop-screenshot-capture
-        - awsy
-        - raptor-chrome
-        - raptor-fetch-chrome
-        - raptor-profiling
-        - raptor-fetch-profiling
 linux64-shippable/opt:
     build-platform: linux64-shippable/opt
     test-sets:
@@ -160,16 +143,6 @@ windows7-32/opt:
         - web-platform-tests
         - raptor-firefox
 
-windows7-32-nightly/opt:
-    build-platform: win32-nightly/opt
-    test-sets:
-        - awsy
-        - desktop-screenshot-capture
-        - windows-reftest-gpu
-        - windows-tests
-        - web-platform-tests
-        - raptor-chrome
-
 windows7-32-shippable/opt:
     build-platform: win32-shippable/opt
     test-sets:
@@ -236,22 +209,10 @@ windows10-64/opt:
 #         - raptor-firefox
 
 windows10-64-ux/opt:
-    build-platform: win64-nightly/opt
+    build-platform: win64-shippable/opt
     test-sets:
         - raptor-firefox
         - talos-ux
-
-windows10-64-nightly/opt:
-    build-platform: win64-nightly/opt
-    test-sets:
-        - awsy
-        - desktop-screenshot-capture
-        - desktop-instrumentation
-        - marionette-gpu-tests
-        - windows-tests
-        - web-platform-tests
-        - raptor-chrome
-        - raptor-profiling
 
 windows10-64-shippable/opt:
     build-platform: win64-shippable/opt
@@ -313,14 +274,6 @@ macosx64/debug:
     build-platform: macosx64/debug
     test-sets:
         - macosx64-tests
-
-macosx64-nightly/opt:
-    build-platform: macosx64-nightly/opt
-    test-sets:
-        - macosx64-tests
-        - awsy
-        - raptor-chrome
-        - raptor-profiling
 
 macosx64-shippable/opt:
     build-platform: macosx64-shippable/opt
