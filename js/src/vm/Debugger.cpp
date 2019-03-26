@@ -1609,9 +1609,9 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
     Rooted<AbstractGeneratorObject*> genObj(
         cx, GetGeneratorObjectForFrame(cx, frame));
     if (genObj) {
-      // 1.  `return <value>` creates and returns a new object,
-      //     `{value: <value>, done: true}`.
-      if (!genObj->isBeforeInitialYield()) {
+      // 1.  `return <value>` creates and returns a new object in non-async
+      //     generators, `{value: <value>, done: true}`.
+      if (!frame.callee()->isAsync() && !genObj->isBeforeInitialYield()) {
         JSObject* pair = CreateIterResultObject(cx, vp, true);
         if (!pair) {
           getAndClearExceptionThenThrow();
