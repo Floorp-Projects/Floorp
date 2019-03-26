@@ -14,20 +14,18 @@
 #include "GrSemaphore.h"
 #include "SkRefCnt.h"
 
+class GrRecordingContext;
+
 class GrSemaphoreOp : public GrOp {
 public:
-    static std::unique_ptr<GrOp> MakeSignal(GrContext*,
-                                            sk_sp<GrSemaphore>,
-                                            GrRenderTargetProxy*,
-                                            bool forceFlush);
-
-    static std::unique_ptr<GrOp> MakeWait(GrContext*,
+    static std::unique_ptr<GrOp> MakeWait(GrRecordingContext*,
                                           sk_sp<GrSemaphore>,
                                           GrRenderTargetProxy*);
 
 protected:
     GrSemaphoreOp(uint32_t classId, sk_sp<GrSemaphore> semaphore, GrRenderTargetProxy* proxy)
-        : INHERITED(classId), fSemaphore(std::move(semaphore)) {
+            : INHERITED(classId)
+            , fSemaphore(std::move(semaphore)) {
         this->makeFullScreen(proxy);
     }
 

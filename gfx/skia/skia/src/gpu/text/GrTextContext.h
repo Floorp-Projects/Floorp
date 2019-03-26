@@ -10,7 +10,6 @@
 
 #include "GrDistanceFieldAdjustTable.h"
 #include "GrGeometryProcessor.h"
-#include "GrTextBlob.h"
 #include "GrTextTarget.h"
 #include "SkGlyphRun.h"
 
@@ -19,8 +18,10 @@
 #endif
 
 class GrDrawOp;
+class GrRecordingContext;
 class GrTextBlobCache;
 class SkGlyph;
+class GrTextBlob;
 
 /*
  * Renders text using some kind of an atlas, ie BitmapText or DistanceField text
@@ -44,29 +45,34 @@ public:
 
     static std::unique_ptr<GrTextContext> Make(const Options& options);
 
-    void drawGlyphRunList(GrContext*, GrTextTarget*, const GrClip&,
+    void drawGlyphRunList(GrRecordingContext*, GrTextTarget*, const GrClip&,
                           const SkMatrix& viewMatrix, const SkSurfaceProps&, const SkGlyphRunList&);
 
-    std::unique_ptr<GrDrawOp> createOp_TestingOnly(GrContext*,
+    std::unique_ptr<GrDrawOp> createOp_TestingOnly(GrRecordingContext*,
                                                    GrTextContext*,
                                                    GrRenderTargetContext*,
-                                                   const SkPaint&,
+                                                   const SkPaint&, const SkFont&,
                                                    const SkMatrix& viewMatrix,
                                                    const char* text,
                                                    int x,
                                                    int y);
 
     static void SanitizeOptions(Options* options);
-    static bool CanDrawAsDistanceFields(const SkPaint& skPaint, const SkMatrix& viewMatrix,
+    static bool CanDrawAsDistanceFields(const SkPaint&, const SkFont&, const SkMatrix& viewMatrix,
                                         const SkSurfaceProps& props,
                                         bool contextSupportsDistanceFieldText,
                                         const Options& options);
-    static void InitDistanceFieldPaint(GrTextBlob* blob,
-                                       SkPaint* skPaint,
-                                       const SkMatrix& viewMatrix,
-                                       const Options& options,
-                                       SkScalar* textRatio,
-                                       SkScalerContextFlags* flags);
+
+    static SkFont InitDistanceFieldFont(const SkFont& font,
+                                        const SkMatrix& viewMatrix,
+                                        const Options& options,
+                                        SkScalar* textRatio);
+
+    static SkPaint InitDistanceFieldPaint(const SkPaint& paint);
+
+    static std::pair<SkScalar, SkScalar> InitDistanceFieldMinMaxScale(SkScalar textSize,
+                                                                      const SkMatrix& viewMatrix,
+                                                                      const Options& options);
 
 private:
     GrTextContext(const Options& options);
@@ -75,24 +81,6 @@ private:
     static SkColor ComputeCanonicalColor(const SkPaint&, bool lcd);
     // Determines if we need to use fake gamma (and contrast boost):
     static SkScalerContextFlags ComputeScalerContextFlags(const GrColorSpaceInfo&);
-
-    void regenerateGlyphRunList(GrTextBlob* bmp,
-                            GrGlyphCache*,
-                            const GrShaderCaps&,
-                            const SkPaint&,
-                            GrColor filteredColor,
-                            SkScalerContextFlags scalerContextFlags,
-                            const SkMatrix& viewMatrix,
-                            const SkSurfaceProps&,
-                            const SkGlyphRunList& glyphRunList,
-                            SkGlyphRunListPainter* glyphPainter);
-
-    static void AppendGlyph(GrTextBlob*, int runIndex,
-                            const sk_sp<GrTextStrike>&, const SkGlyph&,
-                            GrGlyph::MaskStyle maskStyle, SkScalar sx, SkScalar sy,
-                            GrColor color, SkGlyphCache*, SkScalar textRatio,
-                            bool needsTransform);
-
 
     const GrDistanceFieldAdjustTable* dfAdjustTable() const { return fDistanceAdjustTable.get(); }
 

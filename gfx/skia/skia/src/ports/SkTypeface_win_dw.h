@@ -89,6 +89,19 @@ public:
     SkTScopedComPtr<IDWriteFontFace2> fDWriteFontFace2;
     SkTScopedComPtr<IDWriteFontFace4> fDWriteFontFace4;
 
+    static sk_sp<DWriteFontTypeface> Make(
+        IDWriteFactory* factory,
+        IDWriteFontFace* fontFace,
+        IDWriteFont* font,
+        IDWriteFontFamily* fontFamily,
+        IDWriteFontFileLoader* fontFileLoader = nullptr,
+        IDWriteFontCollectionLoader* fontCollectionLoader = nullptr)
+    {
+        return sk_sp<DWriteFontTypeface>(
+            new DWriteFontTypeface(get_style(font), factory, fontFace, font, fontFamily,
+                                   fontFileLoader, fontCollectionLoader));
+    }
+
     static DWriteFontTypeface* Create(IDWriteFactory* factory,
                                       IDWriteFontFace* fontFace,
                                       SkFontStyle aStyle,
@@ -103,16 +116,6 @@ public:
         typeface->fGamma = aGamma;
         typeface->fContrast = aContrast;
         return typeface;
-    }
-
-    static DWriteFontTypeface* Create(IDWriteFactory* factory,
-                                      IDWriteFontFace* fontFace,
-                                      IDWriteFont* font,
-                                      IDWriteFontFamily* fontFamily,
-                                      IDWriteFontFileLoader* fontFileLoader = nullptr,
-                                      IDWriteFontCollectionLoader* fontCollectionLoader = nullptr) {
-        return new DWriteFontTypeface(get_style(font), factory, fontFace, font, fontFamily,
-                                      fontFileLoader, fontCollectionLoader);
     }
 
     bool ForceGDI() const { return fForceGDI; }
@@ -131,7 +134,7 @@ protected:
     }
 
     sk_sp<SkTypeface> onMakeClone(const SkFontArguments&) const override;
-    SkStreamAsset* onOpenStream(int* ttcIndex) const override;
+    std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const override;
     SkScalerContext* onCreateScalerContext(const SkScalerContextEffects&,
                                            const SkDescriptor*) const override;
     void onFilterRec(SkScalerContextRec*) const override;

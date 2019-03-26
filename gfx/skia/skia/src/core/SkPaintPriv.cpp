@@ -5,13 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "SkBitmap.h"
 #include "SkColorFilter.h"
 #include "SkPaintPriv.h"
-#include "SkImage.h"
 #include "SkPaint.h"
 #include "SkShaderBase.h"
-#include "SkUTF.h"
 #include "SkXfermodePriv.h"
 
 static bool changes_alpha(const SkPaint& paint) {
@@ -46,34 +43,6 @@ bool SkPaintPriv::Overwrites(const SkPaint* paint, ShaderOverrideOpacity overrid
     return SkXfermode::IsOpaque(paint->getBlendMode(), opacityType);
 }
 
-bool SkPaintPriv::Overwrites(const SkBitmap& bitmap, const SkPaint* paint) {
-    return Overwrites(paint, bitmap.isOpaque() ? kOpaque_ShaderOverrideOpacity
-                                               : kNotOpaque_ShaderOverrideOpacity);
-}
-
-bool SkPaintPriv::Overwrites(const SkImage* image, const SkPaint* paint) {
-    return Overwrites(paint, image->isOpaque() ? kOpaque_ShaderOverrideOpacity
-                                               : kNotOpaque_ShaderOverrideOpacity);
-}
-
-void SkPaintPriv::ScaleFontMetrics(SkPaint::FontMetrics* metrics, SkScalar scale) {
-    metrics->fTop *= scale;
-    metrics->fAscent *= scale;
-    metrics->fDescent *= scale;
-    metrics->fBottom *= scale;
-    metrics->fLeading *= scale;
-    metrics->fAvgCharWidth *= scale;
-    metrics->fMaxCharWidth *= scale;
-    metrics->fXMin *= scale;
-    metrics->fXMax *= scale;
-    metrics->fXHeight *= scale;
-    metrics->fCapHeight *= scale;
-    metrics->fUnderlineThickness *= scale;
-    metrics->fUnderlinePosition *= scale;
-    metrics->fStrikeoutThickness *= scale;
-    metrics->fStrikeoutPosition *= scale;
-}
-
 bool SkPaintPriv::ShouldDither(const SkPaint& p, SkColorType dstCT) {
     // The paint dither flag can veto.
     if (!p.isDither()) {
@@ -90,17 +59,28 @@ bool SkPaintPriv::ShouldDither(const SkPaint& p, SkColorType dstCT) {
         || !p.getShader() || !as_SB(p.getShader())->isConstant();
 }
 
-int SkPaintPriv::ValidCountText(const void* text, size_t length, SkPaint::TextEncoding encoding) {
-    switch (encoding) {
-        case SkPaint::kUTF8_TextEncoding: return SkUTF::CountUTF8((const char*)text, length);
-        case SkPaint::kUTF16_TextEncoding: return SkUTF::CountUTF16((const uint16_t*)text, length);
-        case SkPaint::kUTF32_TextEncoding: return SkUTF::CountUTF32((const int32_t*)text, length);
-        case SkPaint::kGlyphID_TextEncoding:
-            if (!SkIsAlign2(intptr_t(text)) || !SkIsAlign2(length)) {
-                return -1;
-            }
-            return length >> 1;
+// return true if the paint is just a single color (i.e. not a shader). If its
+// a shader, then we can't compute a const luminance for it :(
+static bool just_a_color(const SkPaint& paint, SkColor* color) {
+    SkColor c = paint.getColor();
+
+    const auto* shader = as_SB(paint.getShader());
+    if (shader && !shader->asLuminanceColor(&c)) {
+        return false;
     }
-    return -1;
+    if (paint.getColorFilter()) {
+        c = paint.getColorFilter()->filterColor(c);
+    }
+    if (color) {
+        *color = c;
+    }
+    return true;
 }
 
+SkColor SkPaintPriv::ComputeLuminanceColor(const SkPaint& paint) {
+    SkColor c;
+    if (!just_a_color(paint, &c)) {
+        c = SkColorSetRGB(0x7F, 0x80, 0x7F);
+    }
+    return c;
+}

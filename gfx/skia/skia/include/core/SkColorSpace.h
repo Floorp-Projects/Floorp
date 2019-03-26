@@ -8,20 +8,14 @@
 #ifndef SkColorSpace_DEFINED
 #define SkColorSpace_DEFINED
 
+#include "../private/SkFixed.h"
 #include "../private/SkOnce.h"
+#include "../../third_party/skcms/skcms.h"
 #include "SkMatrix44.h"
 #include "SkRefCnt.h"
 #include <memory>
 
 class SkData;
-struct skcms_ICCProfile;
-
-enum SkGammaNamed {
-    kLinear_SkGammaNamed,
-    kSRGB_SkGammaNamed,
-    k2Dot2Curve_SkGammaNamed,
-    kNonStandard_SkGammaNamed,
-};
 
 /**
  *  Describes a color gamut with primaries and a white point.
@@ -40,27 +34,64 @@ struct SK_API SkColorSpacePrimaries {
      *  Convert primaries and a white point to a toXYZD50 matrix, the preferred color gamut
      *  representation of SkColorSpace.
      */
-    bool toXYZD50(SkMatrix44* toXYZD50) const;
+    bool toXYZD50(skcms_Matrix3x3* toXYZD50) const;
 };
 
-/**
- *  Contains the coefficients for a common transfer function equation, specified as
- *  a transformation from a curved space to linear.
- *
- *  LinearVal = sign(InputVal) * (  C*|InputVal| + F       ), for 0.0f <= |InputVal| <  D
- *  LinearVal = sign(InputVal) * ( (A*|InputVal| + B)^G + E), for D    <= |InputVal|
- *
- *  Function must be positive and increasing.
- */
-struct SK_API SkColorSpaceTransferFn {
-    float fG;
-    float fA;
-    float fB;
-    float fC;
-    float fD;
-    float fE;
-    float fF;
-};
+namespace SkNamedTransferFn {
+
+// Like SkNamedGamut::kSRGB, keeping this bitwise exactly the same as skcms makes things fastest.
+static constexpr skcms_TransferFunction kSRGB =
+    { 2.4f, (float)(1/1.055), (float)(0.055/1.055), (float)(1/12.92), 0.04045f, 0.0f, 0.0f };
+
+static constexpr skcms_TransferFunction k2Dot2 =
+    { 2.2f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+
+static constexpr skcms_TransferFunction kLinear =
+    { 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+
+}
+
+namespace SkNamedGamut {
+
+static constexpr skcms_Matrix3x3 kSRGB = {{
+    // ICC fixed-point (16.16) representation, taken from skcms. Please keep them exactly in sync.
+    // 0.436065674f, 0.385147095f, 0.143066406f,
+    // 0.222488403f, 0.716873169f, 0.060607910f,
+    // 0.013916016f, 0.097076416f, 0.714096069f,
+    { SkFixedToFloat(0x6FA2), SkFixedToFloat(0x6299), SkFixedToFloat(0x24A0) },
+    { SkFixedToFloat(0x38F5), SkFixedToFloat(0xB785), SkFixedToFloat(0x0F84) },
+    { SkFixedToFloat(0x0390), SkFixedToFloat(0x18DA), SkFixedToFloat(0xB6CF) },
+}};
+
+static constexpr skcms_Matrix3x3 kAdobeRGB = {{
+    // ICC fixed-point (16.16) repesentation of:
+    // 0.60974, 0.20528, 0.14919,
+    // 0.31111, 0.62567, 0.06322,
+    // 0.01947, 0.06087, 0.74457,
+    { SkFixedToFloat(0x9c18), SkFixedToFloat(0x348d), SkFixedToFloat(0x2631) },
+    { SkFixedToFloat(0x4fa5), SkFixedToFloat(0xa02c), SkFixedToFloat(0x102f) },
+    { SkFixedToFloat(0x04fc), SkFixedToFloat(0x0f95), SkFixedToFloat(0xbe9c) },
+}};
+
+static constexpr skcms_Matrix3x3 kDCIP3 = {{
+    {  0.515102f,   0.291965f,  0.157153f  },
+    {  0.241182f,   0.692236f,  0.0665819f },
+    { -0.00104941f, 0.0418818f, 0.784378f  },
+}};
+
+static constexpr skcms_Matrix3x3 kRec2020 = {{
+    {  0.673459f,   0.165661f,  0.125100f  },
+    {  0.279033f,   0.675338f,  0.0456288f },
+    { -0.00193139f, 0.0299794f, 0.797162f  },
+}};
+
+static constexpr skcms_Matrix3x3 kXYZ = {{
+    { 1.0f, 0.0f, 0.0f },
+    { 0.0f, 1.0f, 0.0f },
+    { 0.0f, 0.0f, 1.0f },
+}};
+
+}
 
 class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
 public:
@@ -70,41 +101,15 @@ public:
     static sk_sp<SkColorSpace> MakeSRGB();
 
     /**
-     *  Colorspace with the sRGB primaries, but a linear (1.0) gamma. Commonly used for
-     *  half-float surfaces, and high precision individual colors (gradient stops, etc...)
+     *  Colorspace with the sRGB primaries, but a linear (1.0) gamma.
      */
     static sk_sp<SkColorSpace> MakeSRGBLinear();
 
-    enum RenderTargetGamma : uint8_t {
-        kLinear_RenderTargetGamma,
-
-        /**
-         *  Transfer function is the canonical sRGB curve, which has a short linear segment
-         *  followed by a 2.4f exponential.
-         */
-        kSRGB_RenderTargetGamma,
-    };
-
-    enum Gamut {
-        kSRGB_Gamut,
-        kAdobeRGB_Gamut,
-        kDCIP3_D65_Gamut,
-        kRec2020_Gamut,
-    };
-
     /**
-     *  Create an SkColorSpace from a transfer function and a color gamut.
-     *
-     *  Transfer function can be specified as an enum or as the coefficients to an equation.
-     *  Gamut can be specified as an enum or as the matrix transformation to XYZ D50.
+     *  Create an SkColorSpace from a transfer function and a row-major 3x3 transformation to XYZ.
      */
-    static sk_sp<SkColorSpace> MakeRGB(RenderTargetGamma gamma, Gamut gamut);
-    static sk_sp<SkColorSpace> MakeRGB(RenderTargetGamma gamma, const SkMatrix44& toXYZD50);
-    static sk_sp<SkColorSpace> MakeRGB(const SkColorSpaceTransferFn& coeffs, Gamut gamut);
-    static sk_sp<SkColorSpace> MakeRGB(const SkColorSpaceTransferFn& coeffs,
-                                       const SkMatrix44& toXYZD50);
-
-    static sk_sp<SkColorSpace> MakeRGB(SkGammaNamed gammaNamed, const SkMatrix44& toXYZD50);
+    static sk_sp<SkColorSpace> MakeRGB(const skcms_TransferFunction& transferFn,
+                                       const skcms_Matrix3x3& toXYZ);
 
     /**
      *  Create an SkColorSpace from a parsed (skcms) ICC profile.
@@ -116,17 +121,15 @@ public:
      */
     void toProfile(skcms_ICCProfile*) const;
 
-    SkGammaNamed gammaNamed() const { return fGammaNamed; }
-
     /**
      *  Returns true if the color space gamma is near enough to be approximated as sRGB.
      */
-    bool gammaCloseToSRGB() const { return kSRGB_SkGammaNamed == fGammaNamed; }
+    bool gammaCloseToSRGB() const;
 
     /**
      *  Returns true if the color space gamma is linear.
      */
-    bool gammaIsLinear() const { return kLinear_SkGammaNamed == fGammaNamed; }
+    bool gammaIsLinear() const;
 
     /**
      *  If the transfer function can be represented as coefficients to the standard
@@ -134,13 +137,15 @@ public:
      *
      *  If not, returns false.
      */
-    bool isNumericalTransferFn(SkColorSpaceTransferFn* fn) const;
+    bool isNumericalTransferFn(skcms_TransferFunction* fn) const;
 
     /**
      *  Returns true and sets |toXYZD50| if the color gamut can be described as a matrix.
      *  Returns false otherwise.
      */
     bool toXYZD50(SkMatrix44* toXYZD50) const;
+
+    bool toXYZD50(skcms_Matrix3x3* toXYZD50) const;
 
     /**
      *  Returns a hash of the gamut transformation to XYZ D50. Allows for fast equality checking
@@ -216,13 +221,11 @@ public:
 private:
     friend class SkColorSpaceSingletonFactory;
 
-    SkColorSpace(SkGammaNamed gammaNamed,
-                 const float transferFn[7],
-                 const SkMatrix44& toXYZ);
+    SkColorSpace(const float transferFn[7],
+                 const skcms_Matrix3x3& toXYZ);
 
     void computeLazyDstFields() const;
 
-    SkGammaNamed                        fGammaNamed;         // TODO: 2-bit, pack tightly?  drop?
     uint32_t                            fTransferFnHash;
     uint32_t                            fToXYZD50Hash;
 

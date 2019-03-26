@@ -80,10 +80,7 @@ static int contains_edge(SkPoint pts[4], SkPath::Verb verb, SkScalar weight, con
         // TODO : other cases need discriminating. need op angle code to figure it out
         // example: edge ends 45 degree diagonal going up. If pts is to the left of edge, keep.
         // if pts is to the right of edge, discard. With code as is, can't distiguish the two cases.
-        if (intersectX < edge.fX) {
-            tVals[index] = tVals[--count];
-            continue;
-        }
+        tVals[index] = tVals[--count];
     }
     // use first derivative to determine if intersection is contributing +1 or -1 to winding
     for (int index = 0; index < count; ++index) {
@@ -252,7 +249,9 @@ public:
                     continue;
                 }
                 // incomplete: must sort edges to find the one most to left
-                SkDebugf("incomplete\n");
+                // File a bug if this code path is triggered and AsWinding was
+                // expected to succeed.
+                SkDEBUGF("incomplete\n");
                 // TODO: add edges as opangle and sort
             }
             contour.fMinXY = minXY;
@@ -261,7 +260,7 @@ public:
         return winding;
     }
 
-    void containerContains(Contour& contour, Contour& test) {
+    bool containerContains(Contour& contour, Contour& test) {
         // find outside point on lesser contour
         // arbitrarily, choose non-horizontal edge where point <= bounds left
         // note that if leftmost point is control point, may need tight bounds
@@ -274,8 +273,8 @@ public:
         int winding = this->nextEdge(contour, Edge::kCompare);
         // if edge is up, mark contour cw, otherwise, ccw
         // sum of greater edges direction should be cw, 0, ccw
-        SkASSERT(-1 <= winding && winding <= 1);
         test.fContained = winding != 0;
+        return -1 <= winding && winding <= 1;
     }
 
     void inParent(Contour& contour, Contour& parent) {
@@ -298,13 +297,18 @@ public:
         parent.fChildren.push_back(&contour);
     }
 
-    void checkContainerChildren(Contour* parent, Contour* child) {
+    bool checkContainerChildren(Contour* parent, Contour* child) {
         for (auto grandChild : child->fChildren) {
-            checkContainerChildren(child, grandChild);
+            if (!checkContainerChildren(child, grandChild)) {
+                return false;
+            }
         }
         if (parent) {
-            containerContains(*parent, *child);
+            if (!containerContains(*parent, *child)) {
+                return false;
+            }
         }
+        return true;
     }
 
     bool markReverse(Contour* parent, Contour* child) {
@@ -403,7 +407,9 @@ bool SK_API AsWinding(const SkPath& path, SkPath* result) {
     // starting with outermost and moving inward, see if one path contains another
     for (auto contour : sorted.fChildren) {
         winder.nextEdge(*contour, OpAsWinding::Edge::kInitial);
-        winder.checkContainerChildren(nullptr, contour);
+        if (!winder.checkContainerChildren(nullptr, contour)) {
+            return false;
+        }
     }
     // starting with outermost and moving inward, mark paths to reverse
     bool reversed = false;

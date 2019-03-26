@@ -9,7 +9,6 @@
 #include "GrBuffer.h"
 #include "GrCaps.h"
 #include "GrClip.h"
-#include "GrContext.h"
 #include "GrDefaultGeoProcFactory.h"
 #include "GrDrawOpTest.h"
 #include "GrOpFlushState.h"
@@ -318,7 +317,7 @@ static int gather_lines_and_quads(const SkPath& path,
                 if (convertConicsToQuads) {
                     SkScalar weight = iter.conicWeight();
                     SkAutoConicToQuads converter;
-                    const SkPoint* quadPts = converter.computeQuads(pathPts, weight, 0.5f);
+                    const SkPoint* quadPts = converter.computeQuads(pathPts, weight, 0.25f);
                     for (int i = 0; i < converter.countQuads(); ++i) {
                         addSrcChoppedQuad(quadPts + 2 * i, !verbsInContour && 0 == i);
                     }
@@ -514,7 +513,7 @@ static void intersect_lines(const SkPoint& ptA, const SkVector& normA,
 static void set_uv_quad(const SkPoint qpts[3], BezierVertex verts[kQuadNumVertices]) {
     // this should be in the src space, not dev coords, when we have perspective
     GrPathUtils::QuadUVMatrix DevToUV(qpts);
-    DevToUV.apply<kQuadNumVertices, sizeof(BezierVertex), sizeof(SkPoint)>(verts);
+    DevToUV.apply(verts, kQuadNumVertices, sizeof(BezierVertex), sizeof(SkPoint));
 }
 
 static void bloat_quad(const SkPoint qpts[3], const SkMatrix* toDevice,
@@ -781,7 +780,7 @@ private:
 public:
     DEFINE_OP_CLASS_ID
 
-    static std::unique_ptr<GrDrawOp> Make(GrContext* context,
+    static std::unique_ptr<GrDrawOp> Make(GrRecordingContext* context,
                                           GrPaint&& paint,
                                           const SkMatrix& viewMatrix,
                                           const SkPath& path,
@@ -803,7 +802,7 @@ public:
     }
 
     AAHairlineOp(const Helper::MakeArgs& helperArgs,
-                 GrColor color,
+                 const SkPMColor4f& color,
                  uint8_t coverage,
                  const SkMatrix& viewMatrix,
                  const SkPath& path,
@@ -822,28 +821,32 @@ public:
 
     const char* name() const override { return "AAHairlineOp"; }
 
-    void visitProxies(const VisitProxyFunc& func) const override {
+    void visitProxies(const VisitProxyFunc& func, VisitorType) const override {
         fHelper.visitProxies(func);
     }
 
+#ifdef SK_DEBUG
     SkString dumpInfo() const override {
         SkString string;
-        string.appendf("Color: 0x%08x Coverage: 0x%02x, Count: %d\n", fColor, fCoverage,
-                       fPaths.count());
+        string.appendf("Color: 0x%08x Coverage: 0x%02x, Count: %d\n", fColor.toBytes_RGBA(),
+                       fCoverage, fPaths.count());
         string += INHERITED::dumpInfo();
         string += fHelper.dumpInfo();
         return string;
     }
+#endif
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
-    RequiresDstTexture finalize(const GrCaps& caps, const GrAppliedClip* clip) override {
-        return fHelper.xpRequiresDstTexture(caps, clip, GrProcessorAnalysisCoverage::kSingleChannel,
-                                            &fColor);
+    GrProcessorSet::Analysis finalize(
+            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
+        return fHelper.finalizeProcessors(
+                caps, clip, fsaaType, GrProcessorAnalysisCoverage::kSingleChannel, &fColor);
     }
 
 private:
     void onPrepareDraws(Target*) override;
+    void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
     typedef SkTArray<SkPoint, true> PtArray;
     typedef SkTArray<int, true> IntArray;
@@ -882,11 +885,10 @@ private:
         }
 
         fPaths.push_back_n(that->fPaths.count(), that->fPaths.begin());
-        this->joinBounds(*that);
         return CombineResult::kMerged;
     }
 
-    GrColor color() const { return fColor; }
+    const SkPMColor4f& color() const { return fColor; }
     uint8_t coverage() const { return fCoverage; }
     const SkMatrix& viewMatrix() const { return fPaths[0].fViewMatrix; }
 
@@ -899,7 +901,7 @@ private:
 
     SkSTArray<1, PathData, true> fPaths;
     Helper fHelper;
-    GrColor fColor;
+    SkPMColor4f fColor;
     uint8_t fCoverage;
 
     typedef GrMeshDrawOp INHERITED;
@@ -954,7 +956,6 @@ void AAHairlineOp::onPrepareDraws(Target* target) {
         return;
     }
 
-    auto pipe = fHelper.makePipeline(target);
     // do lines first
     if (lineCount) {
         sk_sp<GrGeometryProcessor> lineGP;
@@ -972,10 +973,10 @@ void AAHairlineOp::onPrepareDraws(Target* target) {
 
         sk_sp<const GrBuffer> linesIndexBuffer = get_lines_index_buffer(target->resourceProvider());
 
-        const GrBuffer* vertexBuffer;
+        sk_sp<const GrBuffer> vertexBuffer;
         int firstVertex;
 
-        SkASSERT(sizeof(LineVertex) == lineGP->debugOnly_vertexStride());
+        SkASSERT(sizeof(LineVertex) == lineGP->vertexStride());
         int vertexCount = kLineSegNumVertices * lineCount;
         LineVertex* verts = reinterpret_cast<LineVertex*>(target->makeVertexSpace(
                 sizeof(LineVertex), vertexCount, &vertexBuffer, &firstVertex));
@@ -990,10 +991,10 @@ void AAHairlineOp::onPrepareDraws(Target* target) {
         }
 
         GrMesh* mesh = target->allocMesh(GrPrimitiveType::kTriangles);
-        mesh->setIndexedPatterned(linesIndexBuffer.get(), kIdxsPerLineSeg, kLineSegNumVertices,
+        mesh->setIndexedPatterned(std::move(linesIndexBuffer), kIdxsPerLineSeg, kLineSegNumVertices,
                                   lineCount, kLineSegsNumInIdxBuffer);
-        mesh->setVertexData(vertexBuffer, firstVertex);
-        target->draw(std::move(lineGP), pipe.fPipeline, pipe.fFixedDynamicState, mesh);
+        mesh->setVertexData(std::move(vertexBuffer), firstVertex);
+        target->recordDraw(std::move(lineGP), mesh);
     }
 
     if (quadCount || conicCount) {
@@ -1013,13 +1014,13 @@ void AAHairlineOp::onPrepareDraws(Target* target) {
                                                                fHelper.usesLocalCoords(),
                                                                this->coverage()));
 
-        const GrBuffer* vertexBuffer;
+        sk_sp<const GrBuffer> vertexBuffer;
         int firstVertex;
 
         sk_sp<const GrBuffer> quadsIndexBuffer = get_quads_index_buffer(target->resourceProvider());
 
-        SkASSERT(sizeof(BezierVertex) == quadGP->debugOnly_vertexStride());
-        SkASSERT(sizeof(BezierVertex) == conicGP->debugOnly_vertexStride());
+        SkASSERT(sizeof(BezierVertex) == quadGP->vertexStride());
+        SkASSERT(sizeof(BezierVertex) == conicGP->vertexStride());
         int vertexCount = kQuadNumVertices * quadAndConicCount;
         void* vertices = target->makeVertexSpace(sizeof(BezierVertex), vertexCount, &vertexBuffer,
                                                  &firstVertex);
@@ -1045,21 +1046,25 @@ void AAHairlineOp::onPrepareDraws(Target* target) {
 
         if (quadCount > 0) {
             GrMesh* mesh = target->allocMesh(GrPrimitiveType::kTriangles);
-            mesh->setIndexedPatterned(quadsIndexBuffer.get(), kIdxsPerQuad, kQuadNumVertices,
-                                      quadCount, kQuadsNumInIdxBuffer);
+            mesh->setIndexedPatterned(quadsIndexBuffer, kIdxsPerQuad, kQuadNumVertices, quadCount,
+                                      kQuadsNumInIdxBuffer);
             mesh->setVertexData(vertexBuffer, firstVertex);
-            target->draw(std::move(quadGP), pipe.fPipeline, pipe.fFixedDynamicState, mesh);
+            target->recordDraw(std::move(quadGP), mesh);
             firstVertex += quadCount * kQuadNumVertices;
         }
 
         if (conicCount > 0) {
             GrMesh* mesh = target->allocMesh(GrPrimitiveType::kTriangles);
-            mesh->setIndexedPatterned(quadsIndexBuffer.get(), kIdxsPerQuad, kQuadNumVertices,
+            mesh->setIndexedPatterned(std::move(quadsIndexBuffer), kIdxsPerQuad, kQuadNumVertices,
                                       conicCount, kQuadsNumInIdxBuffer);
-            mesh->setVertexData(vertexBuffer, firstVertex);
-            target->draw(std::move(conicGP), pipe.fPipeline, pipe.fFixedDynamicState, mesh);
+            mesh->setVertexData(std::move(vertexBuffer), firstVertex);
+            target->recordDraw(std::move(conicGP), mesh);
         }
     }
+}
+
+void AAHairlineOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {
+    fHelper.executeDrawsAndUploads(this, flushState, chainBounds);
 }
 
 bool GrAAHairLinePathRenderer::onDrawPath(const DrawPathArgs& args) {

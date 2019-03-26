@@ -12,23 +12,25 @@
 #include "GrOp.h"
 
 class GrOpFlushState;
+class GrRecordingContext;
 
 class GrClearOp final : public GrOp {
 public:
     DEFINE_OP_CLASS_ID
 
-    static std::unique_ptr<GrClearOp> Make(GrContext* context,
+    static std::unique_ptr<GrClearOp> Make(GrRecordingContext* context,
                                            const GrFixedClip& clip,
-                                           GrColor color,
+                                           const SkPMColor4f& color,
                                            GrSurfaceProxy* dstProxy);
 
-    static std::unique_ptr<GrClearOp> Make(GrContext* context,
+    static std::unique_ptr<GrClearOp> Make(GrRecordingContext* context,
                                            const SkIRect& rect,
-                                           GrColor color,
+                                           const SkPMColor4f& color,
                                            bool fullScreen);
 
     const char* name() const override { return "Clear"; }
 
+#ifdef SK_DEBUG
     SkString dumpInfo() const override {
         SkString string;
         string.append(INHERITED::dumpInfo());
@@ -39,19 +41,20 @@ public:
         } else {
             string.append("disabled");
         }
-        string.appendf("], Color: 0x%08x\n", fColor);
+        string.appendf("], Color: 0x%08x\n", fColor.toBytes_RGBA());
         return string;
     }
+#endif
 
-    GrColor color() const { return fColor; }
-    void setColor(GrColor color) { fColor = color; }
+    const SkPMColor4f& color() const { return fColor; }
+    void setColor(const SkPMColor4f& color) { fColor = color; }
 
 private:
     friend class GrOpMemoryPool; // for ctors
 
-    GrClearOp(const GrFixedClip& clip, GrColor color, GrSurfaceProxy* proxy);
+    GrClearOp(const GrFixedClip& clip, const SkPMColor4f& color, GrSurfaceProxy* proxy);
 
-    GrClearOp(const SkIRect& rect, GrColor color, bool fullScreen)
+    GrClearOp(const SkIRect& rect, const SkPMColor4f& color, bool fullScreen)
         : INHERITED(ClassID())
         , fClip(GrFixedClip(rect))
         , fColor(color) {
@@ -72,7 +75,6 @@ private:
         }
         if (cb->contains(this)) {
             fClip = cb->fClip;
-            this->replaceBounds(*t);
             fColor = cb->fColor;
             return CombineResult::kMerged;
         } else if (cb->fColor == fColor && this->contains(cb)) {
@@ -90,10 +92,10 @@ private:
 
     void onPrepare(GrOpFlushState*) override {}
 
-    void onExecute(GrOpFlushState* state) override;
+    void onExecute(GrOpFlushState* state, const SkRect& chainBounds) override;
 
     GrFixedClip fClip;
-    GrColor     fColor;
+    SkPMColor4f fColor;
 
     typedef GrOp INHERITED;
 };

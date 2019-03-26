@@ -25,6 +25,13 @@
 
 #include <utility>
 
+#if defined(SK_DISABLE_AAA)
+void SkScan::AAAFillPath(const SkPath& path, SkBlitter* blitter, const SkIRect& ir,
+                         const SkIRect& clipBounds, bool forceRLE) {
+    SkDEBUGFAIL("AAA Disabled");
+    return;
+}
+#else
 ///////////////////////////////////////////////////////////////////////////////
 
 /*
@@ -629,7 +636,7 @@ static inline void computeAlphaBelowLine(
         alphas[R-1] = SkFixedMul(last, lastH) >> 9; // triangle alpha
         SkFixed alpha16 = lastH + (dY >> 1); // rectangle plus triangle
         for (int i = R - 2; i > 0; i--) {
-            alphas[i] = alpha16 >> 8;
+            alphas[i] = (alpha16 >> 8) & 0xFF;
             alpha16 += dY;
         }
         alphas[0] = fullAlpha - partialTriangleToAlpha(first, dY);
@@ -1587,9 +1594,8 @@ static SK_ALWAYS_INLINE void aaa_fill_path(const SkPath& path, const SkIRect& cl
         bool isUsingMask, bool forceRLE) { // forceRLE implies that SkAAClip is calling us
     SkASSERT(blitter);
 
-    SkEdgeBuilder builder;
-    int count = builder.build_edges(path, &clipRect, 0, pathContainedInClip,
-                                    SkEdgeBuilder::kAnalyticEdge);
+    SkAnalyticEdgeBuilder builder;
+    int count = builder.buildEdges(path, pathContainedInClip ? nullptr : &clipRect);
     SkAnalyticEdge** list = builder.analyticEdgeList();
 
     SkIRect rect = clipRect;
@@ -1715,3 +1721,4 @@ void SkScan::AAAFillPath(const SkPath& path, SkBlitter* blitter, const SkIRect& 
                 containedInClip, false, forceRLE);
     }
 }
+#endif //defined(SK_DISABLE_AAA)

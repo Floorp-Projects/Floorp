@@ -40,8 +40,8 @@ protected:
     bool onIsValid(GrContext*) const override { return true; }
 
     TexGenType onCanGenerateTexture() const override { return TexGenType::kCheap; }
-    sk_sp<GrTextureProxy> onGenerateTexture(GrContext*, const SkImageInfo&, const SkIPoint&,
-                                            bool willNeedMipMaps) override;
+    sk_sp<GrTextureProxy> onGenerateTexture(GrRecordingContext*, const SkImageInfo&,
+                                            const SkIPoint&, bool willNeedMipMaps) override;
 
 private:
     GrBackendTextureImageGenerator(const SkImageInfo& info, GrTexture*, GrSurfaceOrigin,
@@ -73,7 +73,7 @@ private:
         // texture are finished on the borrowing context before we open this back up to other
         // contexts. In general a ref to this release proc is owned by all proxies and gpu uses of
         // the backend texture.
-        GrReleaseProcHelper* fBorrowingContextReleaseProc;
+        GrRefCntedCallback*  fBorrowingContextReleaseProc;
         uint32_t             fBorrowingContextID;
     };
 

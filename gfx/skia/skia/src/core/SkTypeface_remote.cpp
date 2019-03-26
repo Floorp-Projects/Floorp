@@ -6,9 +6,9 @@
  */
 
 #include "SkTypeface_remote.h"
-#include "SkGlyphCache.h"
 #include "SkPaint.h"
 #include "SkRemoteGlyphCache.h"
+#include "SkStrike.h"
 #include "SkStrikeCache.h"
 #include "SkTraceEvent.h"
 
@@ -19,7 +19,7 @@ SkScalerContextProxy::SkScalerContextProxy(sk_sp<SkTypeface> tf,
         : SkScalerContext{std::move(tf), effects, desc}
         , fDiscardableManager{std::move(manager)} {}
 
-void SkScalerContextProxy::initCache(SkGlyphCache* cache, SkStrikeCache* strikeCache) {
+void SkScalerContextProxy::initCache(SkStrike* cache, SkStrikeCache* strikeCache) {
     SkASSERT(fCache == nullptr);
     SkASSERT(cache != nullptr);
 
@@ -100,7 +100,7 @@ bool SkScalerContextProxy::generatePath(SkGlyphID glyphID, SkPath* path) {
     return foundPath;
 }
 
-void SkScalerContextProxy::generateFontMetrics(SkPaint::FontMetrics* metrics) {
+void SkScalerContextProxy::generateFontMetrics(SkFontMetrics* metrics) {
     TRACE_EVENT1(
             "skia", "generateFontMetrics", "rec", TRACE_STR_COPY(this->getRec().dump().c_str()));
     if (this->getProxyTypeface()->isLogging()) {

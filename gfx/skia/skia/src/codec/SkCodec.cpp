@@ -11,7 +11,6 @@
 #include "SkColorSpace.h"
 #include "SkData.h"
 #include "SkFrameHolder.h"
-#include "SkGifCodec.h"
 #include "SkHalf.h"
 #ifdef SK_HAS_HEIF_LIBRARY
 #include "SkHeifCodec.h"
@@ -25,6 +24,11 @@
 #include "SkStream.h"
 #include "SkWbmpCodec.h"
 #include "SkWebpCodec.h"
+#ifdef SK_HAS_WUFFS_LIBRARY
+#include "SkWuffsCodec.h"
+#else
+#include "SkGifCodec.h"
+#endif
 
 struct DecoderProc {
     bool (*IsFormat)(const void*, size_t);
@@ -38,7 +42,11 @@ static constexpr DecoderProc gDecoderProcs[] = {
 #ifdef SK_HAS_WEBP_LIBRARY
     { SkWebpCodec::IsWebp, SkWebpCodec::MakeFromStream },
 #endif
+#ifdef SK_HAS_WUFFS_LIBRARY
+    { SkWuffsCodec_IsFormat, SkWuffsCodec_MakeFromStream },
+#else
     { SkGifCodec::IsGif, SkGifCodec::MakeFromStream },
+#endif
 #ifdef SK_HAS_PNG_LIBRARY
     { SkIcoCodec::IsIco, SkIcoCodec::MakeFromStream },
 #endif
@@ -559,45 +567,26 @@ int SkCodec::onOutputScanline(int inputScanline) const {
     }
 }
 
-static void fill_proc(const SkImageInfo& info, void* dst, size_t rowBytes,
-                      SkCodec::ZeroInitialized zeroInit, SkSampler* sampler) {
-    if (sampler) {
-        sampler->fill(info, dst, rowBytes, zeroInit);
-    } else {
-        SkSampler::Fill(info, dst, rowBytes, zeroInit);
-    }
-}
-
 void SkCodec::fillIncompleteImage(const SkImageInfo& info, void* dst, size_t rowBytes,
         ZeroInitialized zeroInit, int linesRequested, int linesDecoded) {
+    if (kYes_ZeroInitialized == zeroInit) {
+        return;
+    }
 
-    void* fillDst;
     const int linesRemaining = linesRequested - linesDecoded;
     SkSampler* sampler = this->getSampler(false);
 
-    int fillWidth = info.width();
-    if (fOptions.fSubset) {
-        fillWidth = fOptions.fSubset->width();
-    }
-
-    switch (this->getScanlineOrder()) {
-        case kTopDown_SkScanlineOrder: {
-            const SkImageInfo fillInfo = info.makeWH(fillWidth, linesRemaining);
-            fillDst = SkTAddOffset<void>(dst, linesDecoded * rowBytes);
-            fill_proc(fillInfo, fillDst, rowBytes, zeroInit, sampler);
-            break;
-        }
-        case kBottomUp_SkScanlineOrder: {
-            fillDst = dst;
-            const SkImageInfo fillInfo = info.makeWH(fillWidth, linesRemaining);
-            fill_proc(fillInfo, fillDst, rowBytes, zeroInit, sampler);
-            break;
-        }
-    }
+    const int fillWidth = sampler          ? sampler->fillWidth()      :
+                          fOptions.fSubset ? fOptions.fSubset->width() :
+                                             info.width()              ;
+    void* fillDst = this->getScanlineOrder() == kBottomUp_SkScanlineOrder ? dst :
+                        SkTAddOffset<void>(dst, linesDecoded * rowBytes);
+    const auto fillInfo = info.makeWH(fillWidth, linesRemaining);
+    SkSampler::Fill(fillInfo, fillDst, rowBytes, kNo_ZeroInitialized);
 }
 
-static inline bool select_xform_format(SkColorType colorType, bool forColorTable,
-                                       skcms_PixelFormat* outFormat) {
+bool sk_select_xform_format(SkColorType colorType, bool forColorTable,
+                            skcms_PixelFormat* outFormat) {
     SkASSERT(outFormat);
 
     switch (colorType) {
@@ -657,8 +646,8 @@ bool SkCodec::initializeColorXform(const SkImageInfo& dstInfo, SkEncodedInfo::Al
         fXformTime = SkEncodedInfo::kPalette_Color != fEncodedInfo.color()
                           || kRGBA_F16_SkColorType == dstInfo.colorType()
                 ? kDecodeRow_XformTime : kPalette_XformTime;
-        if (!select_xform_format(dstInfo.colorType(), fXformTime == kPalette_XformTime,
-                                 &fDstXformFormat)) {
+        if (!sk_select_xform_format(dstInfo.colorType(), fXformTime == kPalette_XformTime,
+                                    &fDstXformFormat)) {
             return false;
         }
         if (encodedAlpha == SkEncodedInfo::kUnpremul_Alpha

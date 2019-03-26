@@ -299,7 +299,7 @@ int DWriteFontTypeface::onGetTableTags(SkFontTableTag tags[]) const {
     }
 
     int ttcIndex;
-    std::unique_ptr<SkStream> stream(this->openStream(&ttcIndex));
+    std::unique_ptr<SkStreamAsset> stream = this->openStream(&ttcIndex);
     return stream.get() ? SkFontStream::GetTableTags(stream.get(), ttcIndex, tags) : 0;
 }
 
@@ -357,12 +357,12 @@ sk_sp<SkTypeface> DWriteFontTypeface::onMakeClone(const SkFontArguments& args) c
 
         SkTScopedComPtr<IDWriteFontFace> newFontFace;
         HRN(newFontFace5->QueryInterface(&newFontFace));
-        return sk_sp<SkTypeface>(DWriteFontTypeface::Create(fFactory.get(),
-                                                            newFontFace.get(),
-                                                            fDWriteFont.get(),
-                                                            fDWriteFontFamily.get(),
-                                                            fDWriteFontFileLoader.get(),
-                                                            fDWriteFontCollectionLoader.get()));
+        return DWriteFontTypeface::Make(fFactory.get(),
+                                        newFontFace.get(),
+                                        fDWriteFont.get(),
+                                        fDWriteFontFamily.get(),
+                                        fDWriteFontFileLoader.get(),
+                                        fDWriteFontCollectionLoader.get());
     }
 
 #endif
@@ -370,7 +370,7 @@ sk_sp<SkTypeface> DWriteFontTypeface::onMakeClone(const SkFontArguments& args) c
     return sk_ref_sp(this);
 }
 
-SkStreamAsset* DWriteFontTypeface::onOpenStream(int* ttcIndex) const {
+std::unique_ptr<SkStreamAsset> DWriteFontTypeface::onOpenStream(int* ttcIndex) const {
     *ttcIndex = fDWriteFontFace->GetIndex();
 
     UINT32 numFiles;
@@ -396,7 +396,7 @@ SkStreamAsset* DWriteFontTypeface::onOpenStream(int* ttcIndex) const {
                                              &fontFileStream),
          "Could not create font file stream.");
 
-    return new SkDWriteFontFileStream(fontFileStream.get());
+    return std::unique_ptr<SkStreamAsset>(new SkDWriteFontFileStream(fontFileStream.get()));
 }
 
 SkScalerContext* DWriteFontTypeface::onCreateScalerContext(const SkScalerContextEffects& effects,
@@ -410,16 +410,15 @@ void DWriteFontTypeface::onFilterRec(SkScalerContextRec* rec) const {
         rec->fFlags |= SkScalerContext::kGenA8FromLCD_Flag;
     }
 
-    unsigned flagsWeDontSupport = SkScalerContext::kVertical_Flag |
-                                  SkScalerContext::kForceAutohinting_Flag |
+    unsigned flagsWeDontSupport = SkScalerContext::kForceAutohinting_Flag |
                                   SkScalerContext::kEmbolden_Flag |
                                   SkScalerContext::kLCD_Vertical_Flag;
     rec->fFlags &= ~flagsWeDontSupport;
 
-    SkPaint::Hinting h = rec->getHinting();
+    SkFontHinting h = rec->getHinting();
     // DirectWrite2 allows for hinting to be turned off. Force everything else to normal.
-    if (h != SkPaint::kNo_Hinting || !fFactory2 || !fDWriteFontFace2) {
-        h = SkPaint::kNormal_Hinting;
+    if (h != kNo_SkFontHinting || !fFactory2 || !fDWriteFontFace2) {
+        h = kNormal_SkFontHinting;
     }
     rec->setHinting(h);
 

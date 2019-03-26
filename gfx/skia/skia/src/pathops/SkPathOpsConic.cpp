@@ -9,6 +9,7 @@
 #include "SkPathOpsConic.h"
 #include "SkPathOpsCubic.h"
 #include "SkPathOpsQuad.h"
+#include "SkPathOpsRect.h"
 
 // cribbed from the float version in SkGeometry.cpp
 static void conic_deriv_coeff(const double src[],
@@ -93,8 +94,8 @@ SkDPoint SkDConic::ptAtT(double t) const {
     }
     double denominator = conic_eval_denominator(fWeight, t);
     SkDPoint result = {
-        conic_eval_numerator(&fPts[0].fX, fWeight, t) / denominator,
-        conic_eval_numerator(&fPts[0].fY, fWeight, t) / denominator
+        sk_ieee_double_divide(conic_eval_numerator(&fPts[0].fX, fWeight, t), denominator),
+        sk_ieee_double_divide(conic_eval_numerator(&fPts[0].fY, fWeight, t), denominator)
     };
     return result;
 }
@@ -170,4 +171,20 @@ SkDPoint SkDConic::subDivide(const SkDPoint& a, const SkDPoint& c, double t1, do
     SkDConic chopped = this->subDivide(t1, t2);
     *weight = chopped.fWeight;
     return chopped[1];
+}
+
+int SkTConic::intersectRay(SkIntersections* i, const SkDLine& line) const {
+    return i->intersectRay(fConic, line);
+}
+
+bool SkTConic::hullIntersects(const SkDQuad& quad, bool* isLinear) const  {
+    return quad.hullIntersects(fConic, isLinear);
+}
+
+bool SkTConic::hullIntersects(const SkDCubic& cubic, bool* isLinear) const {
+    return cubic.hullIntersects(fConic, isLinear);
+}
+
+void SkTConic::setBounds(SkDRect* rect) const {
+    rect->setBounds(fConic);
 }

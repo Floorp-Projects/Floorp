@@ -26,11 +26,11 @@ public:
 
     void computeFastBounds(const SkRect&, SkRect*) const override;
 
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(GrSDFMaskFilterImpl)
-
 protected:
 
 private:
+    SK_FLATTENABLE_HOOKS(GrSDFMaskFilterImpl)
+
     typedef SkMaskFilter INHERITED;
     friend void gr_register_sdf_maskfilter_createproc();
 };
@@ -45,7 +45,9 @@ SkMask::Format GrSDFMaskFilterImpl::getFormat() const {
 
 bool GrSDFMaskFilterImpl::filterMask(SkMask* dst, const SkMask& src,
                                      const SkMatrix& matrix, SkIPoint* margin) const {
-    if (src.fFormat != SkMask::kA8_Format && src.fFormat != SkMask::kBW_Format) {
+    if (src.fFormat != SkMask::kA8_Format
+        && src.fFormat != SkMask::kBW_Format
+        && src.fFormat != SkMask::kLCD16_Format) {
         return false;
     }
 
@@ -68,7 +70,10 @@ bool GrSDFMaskFilterImpl::filterMask(SkMask* dst, const SkMask& src,
         return SkGenerateDistanceFieldFromA8Image(dst->fImage, src.fImage,
                                                   src.fBounds.width(), src.fBounds.height(),
                                                   src.fRowBytes);
-
+    } else if (src.fFormat == SkMask::kLCD16_Format) {
+        return SkGenerateDistanceFieldFromLCD16Mask(dst->fImage, src.fImage,
+                                                     src.fBounds.width(), src.fBounds.height(),
+                                                     src.fRowBytes);
     } else {
         return SkGenerateDistanceFieldFromBWImage(dst->fImage, src.fImage,
                                                   src.fBounds.width(), src.fBounds.height(),
@@ -86,9 +91,7 @@ sk_sp<SkFlattenable> GrSDFMaskFilterImpl::CreateProc(SkReadBuffer& buffer) {
     return GrSDFMaskFilter::Make();
 }
 
-void gr_register_sdf_maskfilter_createproc() {
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(GrSDFMaskFilterImpl)
-}
+void gr_register_sdf_maskfilter_createproc() { SK_REGISTER_FLATTENABLE(GrSDFMaskFilterImpl); }
 
 ///////////////////////////////////////////////////////////////////////////////
 

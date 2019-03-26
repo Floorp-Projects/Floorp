@@ -8,41 +8,28 @@
 #ifndef SkTextToPathIter_DEFINED
 #define SkTextToPathIter_DEFINED
 
+#include "SkFontPriv.h"
 #include "SkPaint.h"
 #include "SkStrikeCache.h"
 
-
 class SkTextBaseIter {
-protected:
-    SkTextBaseIter(const char text[], size_t length, const SkPaint& paint,
-                   bool applyStrokeAndPathEffects);
-
-    SkExclusiveStrikePtr fCache;
-    SkPaint              fPaint;
-    SkScalar             fScale;
-    SkScalar             fPrevAdvance;
-    const char*          fText;
-    const char*          fStop;
-    SkPaint::GlyphCacheProc fGlyphCacheProc;
-
-    SkScalar        fXPos;      // accumulated xpos, returned in next
-    int             fXYIndex;   // cache for horizontal -vs- vertical text
-};
-
-class SkTextToPathIter : SkTextBaseIter {
 public:
-    SkTextToPathIter(const char text[], size_t length, const SkPaint& paint,
-                     bool applyStrokeAndPathEffects)
-                     : SkTextBaseIter(text, length, paint, applyStrokeAndPathEffects) {
-    }
-
+    const SkFont&   getFont() const { return fFont; }
     const SkPaint&  getPaint() const { return fPaint; }
     SkScalar        getPathScale() const { return fScale; }
 
-    /**
-     *  Returns false when all of the text has been consumed
-     */
-    bool next(const SkPath** path, SkScalar* xpos);
+protected:
+    SkTextBaseIter(const SkGlyphID glyphs[], int count, const SkFont&, const SkPaint*);
+
+    SkExclusiveStrikePtr fCache;
+    SkFont               fFont;
+    SkPaint              fPaint;
+    SkScalar             fScale;
+    SkScalar             fPrevAdvance;
+    const SkGlyphID*     fGlyphs;
+    const SkGlyphID*     fStop;
+
+    SkScalar        fXPos;      // accumulated xpos, returned in next
 };
 
 class SkTextInterceptsIter : SkTextBaseIter {
@@ -52,10 +39,11 @@ public:
         kPosText
     };
 
-    SkTextInterceptsIter(const char text[], size_t length, const SkPaint& paint,
-                         const SkScalar bounds[2], SkScalar x, SkScalar y, TextType textType)
-                         : SkTextBaseIter(text, length, paint, false)
-                         , fTextType(textType) {
+    SkTextInterceptsIter(const SkGlyphID glyphs[], int count, const SkFont& font,
+                         const SkPaint* paint, const SkScalar bounds[2], SkScalar x, SkScalar y,
+                         TextType textType)
+         : SkTextBaseIter(glyphs, count, font, paint)
+    {
         fBoundsBase[0] = bounds[0];
         fBoundsBase[1] = bounds[1];
         this->setPosition(x, y);
@@ -67,34 +55,19 @@ public:
     bool next(SkScalar* array, int* count);
 
     void setPosition(SkScalar x, SkScalar y) {
-        SkScalar xOffset = TextType::kText == fTextType && fXYIndex ? fXPos : 0;
-        if (TextType::kPosText == fTextType
-                && fPaint.getTextAlign() != SkPaint::kLeft_Align) { // need to measure first
-            const char* text = fText;
-            const SkGlyph& glyph = fGlyphCacheProc(fCache.get(), &text, fStop);
-            SkScalar width = (&glyph.fAdvanceX)[0] * fScale;
-            if (fPaint.getTextAlign() == SkPaint::kCenter_Align) {
-                width = SkScalarHalf(width);
-            }
-            xOffset = width;
-        }
-
+        SkScalar xOffset = 0;
         for (int i = 0; i < (int) SK_ARRAY_COUNT(fBounds); ++i) {
-            SkScalar bound = fBoundsBase[i] - (fXYIndex ? x : y);
-            if (fXYIndex) {
-                bound += xOffset;
-            }
+            SkScalar bound = fBoundsBase[i] - y;
             fBounds[i] = bound / fScale;
         }
 
-        fXPos = xOffset + (fXYIndex ? y : x);
+        fXPos = xOffset + x;
         fPrevAdvance = 0;
     }
 
 private:
     SkScalar fBounds[2];
     SkScalar fBoundsBase[2];
-    TextType fTextType;
 };
 
 #endif

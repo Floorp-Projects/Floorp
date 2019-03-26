@@ -37,7 +37,7 @@ GrVkPipelineState::GrVkPipelineState(
         const UniformInfoArray& uniforms,
         uint32_t geometryUniformSize,
         uint32_t fragmentUniformSize,
-        uint32_t numSamplers,
+        const UniformInfoArray& samplers,
         std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
         std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
         std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors,
@@ -60,7 +60,13 @@ GrVkPipelineState::GrVkPipelineState(
     fGeometryUniformBuffer.reset(GrVkUniformBuffer::Create(gpu, geometryUniformSize));
     fFragmentUniformBuffer.reset(GrVkUniformBuffer::Create(gpu, fragmentUniformSize));
 
-    fNumSamplers = numSamplers;
+    fNumSamplers = samplers.count();
+
+    for (int i = 0; i < fNumSamplers; ++i) {
+        // We store the immutable samplers here and take ownership of the ref from the
+        // GrVkUnformHandler.
+        fImmutableSamplers.push_back(samplers[i].fImmutableSampler);
+    }
 }
 
 GrVkPipelineState::~GrVkPipelineState() {
@@ -69,7 +75,7 @@ GrVkPipelineState::~GrVkPipelineState() {
     SkASSERT(!fPipelineLayout);
 }
 
-void GrVkPipelineState::freeGPUResources(const GrVkGpu* gpu) {
+void GrVkPipelineState::freeGPUResources(GrVkGpu* gpu) {
     if (fPipeline) {
         fPipeline->unref(gpu);
         fPipeline = nullptr;
@@ -134,10 +140,12 @@ void GrVkPipelineState::abandonGPUResources() {
 }
 
 void GrVkPipelineState::setAndBindUniforms(GrVkGpu* gpu,
+                                           const GrRenderTarget* renderTarget,
+                                           GrSurfaceOrigin origin,
                                            const GrPrimitiveProcessor& primProc,
                                            const GrPipeline& pipeline,
                                            GrVkCommandBuffer* commandBuffer) {
-    this->setRenderTargetState(pipeline.proxy());
+    this->setRenderTargetState(renderTarget, origin);
 
     fGeometryProcessor->setData(fDataManager, primProc,
                                 GrFragmentProcessor::CoordTransformIter(pipeline));
@@ -243,8 +251,14 @@ void GrVkPipelineState::setAndBindTextures(GrVkGpu* gpu,
             GrVkTexture* texture = samplerBindings[i].fTexture;
 
             const GrVkImageView* textureView = texture->textureView();
-            GrVkSampler* sampler = gpu->resourceProvider().findOrCreateCompatibleSampler(
-                    state, texture->texturePriv().maxMipMapLevel());
+            const GrVkSampler* sampler = nullptr;
+            if (fImmutableSamplers[i]) {
+                sampler = fImmutableSamplers[i];
+            } else {
+                sampler = gpu->resourceProvider().findOrCreateCompatibleSampler(
+                    state, texture->ycbcrConversionInfo());
+            }
+            SkASSERT(sampler);
 
             VkDescriptorImageInfo imageInfo;
             memset(&imageInfo, 0, sizeof(VkDescriptorImageInfo));
@@ -268,7 +282,9 @@ void GrVkPipelineState::setAndBindTextures(GrVkGpu* gpu,
             GR_VK_CALL(gpu->vkInterface(),
                        UpdateDescriptorSets(gpu->device(), 1, &writeInfo, 0, nullptr));
             commandBuffer->addResource(sampler);
-            sampler->unref(gpu);
+            if (!fImmutableSamplers[i]) {
+                sampler->unref(gpu);
+            }
             commandBuffer->addResource(samplerBindings[i].fTexture->textureView());
             commandBuffer->addResource(samplerBindings[i].fTexture->resource());
         }
@@ -337,8 +353,7 @@ void GrVkPipelineState::writeUniformBuffers(const GrVkGpu* gpu) {
     }
 }
 
-void GrVkPipelineState::setRenderTargetState(const GrRenderTargetProxy* proxy) {
-    GrRenderTarget* rt = proxy->peekRenderTarget();
+void GrVkPipelineState::setRenderTargetState(const GrRenderTarget* rt, GrSurfaceOrigin origin) {
 
     // Load the RT height uniform if it is needed to y-flip gl_FragCoord.
     if (fBuiltinUniformHandles.fRTHeightUni.isValid() &&
@@ -350,10 +365,10 @@ void GrVkPipelineState::setRenderTargetState(const GrRenderTargetProxy* proxy) {
     SkISize size;
     size.set(rt->width(), rt->height());
     SkASSERT(fBuiltinUniformHandles.fRTAdjustmentUni.isValid());
-    if (fRenderTargetState.fRenderTargetOrigin != proxy->origin() ||
+    if (fRenderTargetState.fRenderTargetOrigin != origin ||
         fRenderTargetState.fRenderTargetSize != size) {
         fRenderTargetState.fRenderTargetSize = size;
-        fRenderTargetState.fRenderTargetOrigin = proxy->origin();
+        fRenderTargetState.fRenderTargetOrigin = origin;
 
         float rtAdjustmentVec[4];
         fRenderTargetState.getRTAdjustmentVec(rtAdjustmentVec);

@@ -8,9 +8,8 @@
 #ifndef GrProcessor_DEFINED
 #define GrProcessor_DEFINED
 
-#include "../private/SkAtomics.h"
-#include "GrBuffer.h"
 #include "GrColor.h"
+#include "GrGpuBuffer.h"
 #include "GrProcessorUnitTest.h"
 #include "GrSamplerState.h"
 #include "GrShaderVar.h"
@@ -84,6 +83,7 @@ public:
         kEllipticalRRectEffect_ClassID,
         kGP_ClassID,
         kVertexColorSpaceBenchGP_ClassID,
+        kGrAAFillRRectOp_Processor_ClassID,
         kGrAARectEffect_ClassID,
         kGrAlphaThresholdFragmentProcessor_ClassID,
         kGrArithmeticFP_ClassID,
@@ -101,7 +101,6 @@ public:
         kGrConicEffect_ClassID,
         kGrConstColorProcessor_ClassID,
         kGrConvexPolyEffect_ClassID,
-        kGrCubicEffect_ClassID,
         kGrDeviceSpaceTextureDecalFragmentProcessor_ClassID,
         kGrDiffuseLightingEffect_ClassID,
         kGrDisplacementMapEffect_ClassID,
@@ -121,6 +120,7 @@ public:
         kGrMatrixConvolutionEffect_ClassID,
         kGrMeshTestProcessor_ClassID,
         kGrMorphologyEffect_ClassID,
+        kGrMixerEffect_ClassID,
         kGrOverdrawFragmentProcessor_ClassID,
         kGrPathProcessor_ClassID,
         kGrPerlinNoise2Effect_ClassID,
@@ -155,10 +155,12 @@ public:
         kPorterDuffXferProcessor_ClassID,
         kPremulFragmentProcessor_ClassID,
         kQuadEdgeEffect_ClassID,
+        kQuadPerEdgeAAGeometryProcessor_ClassID,
         kReplaceInputFragmentProcessor_ClassID,
         kRRectsGaussianEdgeFP_ClassID,
         kSeriesFragmentProcessor_ClassID,
         kShaderPDXferProcessor_ClassID,
+        kFwidthSquircleTestProcessor_ClassID,
         kSwizzleFragmentProcessor_ClassID,
         kTestFP_ClassID,
         kTextureGeometryProcessor_ClassID,
@@ -175,11 +177,15 @@ public:
     virtual const char* name() const = 0;
 
     /** Human-readable dump of all information */
+#ifdef SK_DEBUG
     virtual SkString dumpInfo() const {
         SkString str;
         str.appendf("Missing data");
         return str;
     }
+#else
+    SkString dumpInfo() const { return SkString("<Processor information unavailable>"); }
+#endif
 
     void* operator new(size_t size);
     void operator delete(void* target);

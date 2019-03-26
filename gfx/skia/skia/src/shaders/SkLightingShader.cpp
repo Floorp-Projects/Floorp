@@ -80,14 +80,16 @@ public:
         typedef Context INHERITED;
     };
 
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkLightingShaderImpl)
-
 protected:
     void flatten(SkWriteBuffer&) const override;
+#ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
     Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
+#endif
     sk_sp<SkShader> onMakeColorSpace(SkColorSpaceXformer* xformer) const override;
 
 private:
+    SK_FLATTENABLE_HOOKS(SkLightingShaderImpl)
+
     sk_sp<SkShader> fDiffuseShader;
     sk_sp<SkNormalSource> fNormalSource;
     sk_sp<SkLights> fLights;
@@ -166,32 +168,33 @@ private:
                                                           kFloat3_GrSLType, kDefault_GrSLPrecision,
                                                           "AmbientColor", &ambientColorUniName);
 
-            fragBuilder->codeAppendf("float4 diffuseColor = %s;", args.fInputColor);
+            fragBuilder->codeAppendf("half4 diffuseColor = %s;", args.fInputColor);
 
             SkString dstNormalName("dstNormal");
             this->emitChild(0, &dstNormalName, args);
 
             fragBuilder->codeAppendf("float3 normal = %s.xyz;", dstNormalName.c_str());
 
-            fragBuilder->codeAppend( "float3 result = float3(0.0);");
+            fragBuilder->codeAppend( "half3 result = half3(0.0);");
 
             // diffuse light
             if (lightingFP.fDirectionalLights.count() != 0) {
                 fragBuilder->codeAppendf("for (int i = 0; i < %d; i++) {",
                                          lightingFP.fDirectionalLights.count());
                 // TODO: modulate the contribution from each light based on the shadow map
-                fragBuilder->codeAppendf("    float NdotL = saturate(dot(normal, %s[i]));",
+                fragBuilder->codeAppendf("    half NdotL = saturate(half(dot(normal, %s[i])));",
                                          lightDirsUniName);
-                fragBuilder->codeAppendf("    result += %s[i]*diffuseColor.rgb*NdotL;",
+                fragBuilder->codeAppendf("    result += half3(%s[i])*diffuseColor.rgb*NdotL;",
                                          lightColorsUniName);
                 fragBuilder->codeAppend("}");
             }
 
             // ambient light
-            fragBuilder->codeAppendf("result += %s * diffuseColor.rgb;", ambientColorUniName);
+            fragBuilder->codeAppendf("result += half3(%s) * diffuseColor.rgb;",
+                                     ambientColorUniName);
 
             // Clamping to alpha (equivalent to an unpremul'd clamp to 1.0)
-            fragBuilder->codeAppendf("%s = float4(clamp(result.rgb, 0.0, diffuseColor.a), "
+            fragBuilder->codeAppendf("%s = half4(clamp(result.rgb, 0.0, diffuseColor.a), "
                                                "diffuseColor.a);", args.fOutputColor);
         }
 
@@ -450,6 +453,7 @@ void SkLightingShaderImpl::flatten(SkWriteBuffer& buf) const {
     }
 }
 
+#ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
 SkShaderBase::Context* SkLightingShaderImpl::onMakeContext(
     const ContextRec& rec, SkArenaAlloc* alloc) const
 {
@@ -466,8 +470,11 @@ SkShaderBase::Context* SkLightingShaderImpl::onMakeContext(
         return nullptr;
     }
 
+    // The diffuse shader can inspect the rec and make its decision about rec's colorspace.
+    // What about the lighting shader? Is lighting sensitive to the rec's (device) colorspace?
     return alloc->make<LightingShaderContext>(*this, rec, diffuseContext, normalProvider, nullptr);
 }
+#endif
 
 sk_sp<SkShader> SkLightingShaderImpl::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
     sk_sp<SkShader> xformedDiffuseShader =
@@ -492,8 +499,4 @@ sk_sp<SkShader> SkLightingShader::Make(sk_sp<SkShader> diffuseShader,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_START(SkLightingShader)
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkLightingShaderImpl)
-SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_END
-
-///////////////////////////////////////////////////////////////////////////////
+void SkLightingShader::RegisterFlattenables() { SK_REGISTER_FLATTENABLE(SkLightingShaderImpl); }

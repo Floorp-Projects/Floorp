@@ -326,8 +326,8 @@ bool GrCCFiller::prepareToDraw(GrOnFlushResourceProvider* onFlushRP) {
     fBaseInstances[1].fConics = fBaseInstances[0].fConics + fTotalPrimitiveCounts[0].fConics;
     int quadEndIdx = fBaseInstances[1].fConics + fTotalPrimitiveCounts[1].fConics;
 
-    fInstanceBuffer = onFlushRP->makeBuffer(kVertex_GrBufferType,
-                                            quadEndIdx * sizeof(QuadPointInstance));
+    fInstanceBuffer =
+            onFlushRP->makeBuffer(GrGpuBufferType::kVertex, quadEndIdx * sizeof(QuadPointInstance));
     if (!fInstanceBuffer) {
         SkDebugf("WARNING: failed to allocate CCPR fill instance buffer.\n");
         return false;
@@ -467,8 +467,7 @@ void GrCCFiller::drawFills(GrOpFlushState* flushState, BatchID batchID,
 
     const PrimitiveTallies& batchTotalCounts = fBatches[batchID].fTotalPrimitiveCounts;
 
-    GrPipeline pipeline(flushState->drawOpArgs().fProxy, GrScissorTest::kEnabled,
-                        SkBlendMode::kPlus);
+    GrPipeline pipeline(GrScissorTest::kEnabled, SkBlendMode::kPlus);
 
     if (batchTotalCounts.fTriangles) {
         this->drawPrimitives(flushState, pipeline, batchID, PrimitiveType::kTriangles,
@@ -519,7 +518,7 @@ void GrCCFiller::drawPrimitives(GrOpFlushState* flushState, const GrPipeline& pi
         SkASSERT(instanceCount > 0);
         int baseInstance = fBaseInstances[(int)GrScissorTest::kDisabled].*instanceType +
                            previousBatch.fEndNonScissorIndices.*instanceType;
-        proc.appendMesh(fInstanceBuffer.get(), instanceCount, baseInstance, &fMeshesScratchBuffer);
+        proc.appendMesh(fInstanceBuffer, instanceCount, baseInstance, &fMeshesScratchBuffer);
         fScissorRectScratchBuffer.push_back().setXYWH(0, 0, drawBounds.width(),
                                                       drawBounds.height());
         SkDEBUGCODE(totalInstanceCount += instanceCount);
@@ -537,8 +536,8 @@ void GrCCFiller::drawPrimitives(GrOpFlushState* flushState, const GrPipeline& pi
             continue;
         }
         SkASSERT(instanceCount > 0);
-        proc.appendMesh(fInstanceBuffer.get(), instanceCount,
-                        baseScissorInstance + startIndex, &fMeshesScratchBuffer);
+        proc.appendMesh(fInstanceBuffer, instanceCount, baseScissorInstance + startIndex,
+                        &fMeshesScratchBuffer);
         fScissorRectScratchBuffer.push_back() = scissorSubBatch.fScissor;
         SkDEBUGCODE(totalInstanceCount += instanceCount);
     }

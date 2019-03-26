@@ -44,8 +44,8 @@ namespace SkPDFUtils {
 
 const char* BlendModeName(SkBlendMode);
 
-sk_sp<SkPDFArray> RectToArray(const SkRect& rect);
-sk_sp<SkPDFArray> MatrixToArray(const SkMatrix& matrix);
+std::unique_ptr<SkPDFArray> RectToArray(const SkRect& rect);
+std::unique_ptr<SkPDFArray> MatrixToArray(const SkMatrix& matrix);
 
 void MoveTo(SkScalar x, SkScalar y, SkWStream* content);
 void AppendLine(SkScalar x, SkScalar y, SkWStream* content);
@@ -121,10 +121,15 @@ inline SkMatrix GetShaderLocalMatrix(const SkShader* shader) {
 bool InverseTransformBBox(const SkMatrix& matrix, SkRect* bbox);
 void PopulateTilingPatternDict(SkPDFDict* pattern,
                                SkRect& bbox,
-                               sk_sp<SkPDFDict> resources,
+                               std::unique_ptr<SkPDFDict> resources,
                                const SkMatrix& matrix);
 
 bool ToBitmap(const SkImage* img, SkBitmap* dst);
+
+#ifdef SK_PDF_BASE85_BINARY
+void Base85Encode(std::unique_ptr<SkStreamAsset> src, SkDynamicMemoryWStream* dst);
+#endif //  SK_PDF_BASE85_BINARY
+
 }  // namespace SkPDFUtils
 
 #endif
