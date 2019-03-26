@@ -20,7 +20,7 @@ const DEFAULT_WEIGHT = 100;
 // See bug 915424
 function resolveGeckoURI(aURI) {
   if (!aURI)
-    throw "Can't resolve an empty uri";
+    throw new Error("Can't resolve an empty uri");
 
   if (aURI.startsWith("chrome://")) {
     let registry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
@@ -168,7 +168,7 @@ var HomeBanner = (function() {
      */
     remove: function(id) {
       if (!(id in _messages)) {
-        throw "Home.banner: Can't remove message that doesn't exist: id = " + id;
+        throw new Error("Home.banner: Can't remove message that doesn't exist: id = " + id);
       }
 
       delete _messages[id];
@@ -220,10 +220,10 @@ var HomePanels = (function() {
       let id = data.id;
       let options = _registeredPanels[id]();
       if (!options.auth) {
-        throw "Home.panels: Invalid auth for panel.id = " + id;
+        throw new Error("Home.panels: Invalid auth for panel.id = " + id);
       }
       if (!options.auth.authenticate || typeof options.auth.authenticate !== "function") {
-        throw "Home.panels: Invalid auth authenticate function: panel.id = " + this.id;
+        throw new Error("Home.panels: Invalid auth authenticate function: panel.id = " + this.id);
       }
       options.auth.authenticate();
     },
@@ -254,7 +254,7 @@ var HomePanels = (function() {
         return;
       }
       if (typeof options.oninstall !== "function") {
-        throw "Home.panels: Invalid oninstall function: panel.id = " + this.id;
+        throw new Error("Home.panels: Invalid oninstall function: panel.id = " + this.id);
       }
       options.oninstall();
     },
@@ -268,7 +268,7 @@ var HomePanels = (function() {
         return;
       }
       if (typeof options.onuninstall !== "function") {
-        throw "Home.panels: Invalid onuninstall function: panel.id = " + this.id;
+        throw new Error("Home.panels: Invalid onuninstall function: panel.id = " + this.id);
       }
       options.onuninstall();
     },
@@ -314,7 +314,7 @@ var HomePanels = (function() {
     this.default = !!options.default;
 
     if (!this.id || !this.title) {
-      throw "Home.panels: Can't create a home panel without an id and title!";
+      throw new Error("Home.panels: Can't create a home panel without an id and title!");
     }
 
     if (!this.layout) {
@@ -359,10 +359,10 @@ var HomePanels = (function() {
 
     if (options.auth) {
       if (!options.auth.messageText) {
-        throw "Home.panels: Invalid auth messageText: panel.id = " + this.id;
+        throw new Error("Home.panels: Invalid auth messageText: panel.id = " + this.id);
       }
       if (!options.auth.buttonText) {
-        throw "Home.panels: Invalid auth buttonText: panel.id = " + this.id;
+        throw new Error("Home.panels: Invalid auth buttonText: panel.id = " + this.id);
       }
 
       this.authConfig = {
@@ -398,7 +398,7 @@ var HomePanels = (function() {
 
   let _assertPanelExists = function(id) {
     if (!(id in _registeredPanels)) {
-      throw "Home.panels: Panel doesn't exist: id = " + id;
+      throw new Error("Home.panels: Panel doesn't exist: id = " + id);
     }
   };
 
@@ -411,11 +411,11 @@ var HomePanels = (function() {
     register: function(id, optionsCallback) {
       // Bail if the panel already exists
       if (id in _registeredPanels) {
-        throw "Home.panels: Panel already exists: id = " + id;
+        throw new Error("Home.panels: Panel already exists: id = " + id);
       }
 
       if (!optionsCallback || typeof optionsCallback !== "function") {
-        throw "Home.panels: Panel callback must be a function: id = " + id;
+        throw new Error("Home.panels: Panel callback must be a function: id = " + id);
       }
 
       _registeredPanels[id] = optionsCallback;
