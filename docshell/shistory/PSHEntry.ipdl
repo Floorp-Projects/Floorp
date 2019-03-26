@@ -85,8 +85,12 @@ parent:
   sync Create(nsIURI URI, nsString title, nsIInputStream inputStream,
               uint32_t cacheKey, nsCString contentType,
               nsIPrincipal triggeringPrincipal, nsIPrincipal principalToInherit,
+              nsIPrincipal storagePrincipalToInherit,
               nsIContentSecurityPolicy csp, nsID docshellID,
-              bool dynamicCreation);
+              bool dynamicCreation, nsIURI originalUri, nsIURI resultPrincipalURI,
+              bool loadReplace, nsIReferrerInfo referrerInfo,
+              nsString srcdoc, bool srcdocEntry, nsIURI baseURI,
+              bool saveLayoutState, bool expired);
   sync HasDetachedEditor() returns (bool hasDetachedEditor);
   sync IsDynamicallyAdded() returns (bool isDynamicallyAdded);
   sync HasDynamicallyAddedChild() returns (bool hasDynamicallyAddedChild);

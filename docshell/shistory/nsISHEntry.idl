@@ -300,7 +300,16 @@ interface nsISHEntry : nsISupports
                            in nsIPrincipal storagePrincipalToInherit,
                            in nsIContentSecurityPolicy aCsp,
                            in nsIDRef docshellID,
-                           in boolean dynamicCreation);
+                           in boolean dynamicCreation,
+                           in nsIURI originalURI,
+                           in nsIURI resultPrincipalURI,
+                           in bool loadReplace,
+                           in nsIReferrerInfo referrerInfo,
+                           in AString srcdoc,
+                           in bool srcdocEntry,
+                           in nsIURI baseURI,
+                           in bool saveLayoutState,
+                           in bool expired);
 
     nsISHEntry clone();
 

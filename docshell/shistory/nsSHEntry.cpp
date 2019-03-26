@@ -345,14 +345,15 @@ nsSHEntry::SetContentType(const nsACString& aContentType) {
 }
 
 NS_IMETHODIMP
-nsSHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
-                  nsIInputStream* aInputStream, uint32_t aCacheKey,
-                  const nsACString& aContentType,
-                  nsIPrincipal* aTriggeringPrincipal,
-                  nsIPrincipal* aPrincipalToInherit,
-                  nsIPrincipal* aStoragePrincipalToInherit,
-                  nsIContentSecurityPolicy* aCsp, const nsID& aDocShellID,
-                  bool aDynamicCreation) {
+nsSHEntry::Create(
+    nsIURI* aURI, const nsAString& aTitle, nsIInputStream* aInputStream,
+    uint32_t aCacheKey, const nsACString& aContentType,
+    nsIPrincipal* aTriggeringPrincipal, nsIPrincipal* aPrincipalToInherit,
+    nsIPrincipal* aStoragePrincipalToInherit, nsIContentSecurityPolicy* aCsp,
+    const nsID& aDocShellID, bool aDynamicCreation, nsIURI* aOriginalURI,
+    nsIURI* aResultPrincipalURI, bool aLoadReplace,
+    nsIReferrerInfo* aReferrerInfo, const nsAString& aSrcdocData,
+    bool aSrcdocEntry, nsIURI* aBaseURI, bool aSaveLayoutState, bool aExpired) {
   MOZ_ASSERT(
       aTriggeringPrincipal,
       "need a valid triggeringPrincipal to create a session history entry");
@@ -378,14 +379,19 @@ nsSHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
   // all subframe navigations, sets the flag to true.
   mShared->mIsFrameNavigation = false;
 
-  // By default the page is not expired
-  mShared->mExpired = false;
+  mShared->mExpired = aExpired;
 
-  mIsSrcdocEntry = false;
-  mSrcdocData = VoidString();
+  mIsSrcdocEntry = aSrcdocEntry;
+  mSrcdocData = aSrcdocData;
+
+  mBaseURI = aBaseURI;
 
   mLoadedInThisProcess = true;
 
+  mOriginalURI = aOriginalURI;
+  mResultPrincipalURI = aResultPrincipalURI;
+  mLoadReplace = aLoadReplace;
+  mReferrerInfo = aReferrerInfo;
   return NS_OK;
 }
 
@@ -977,21 +983,25 @@ nsLegacySHEntry::InitLayoutHistoryState(nsILayoutHistoryState** aState) {
 }
 
 NS_IMETHODIMP
-nsLegacySHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
-                        nsIInputStream* aInputStream, uint32_t aCacheKey,
-                        const nsACString& aContentType,
-                        nsIPrincipal* aTriggeringPrincipal,
-                        nsIPrincipal* aPrincipalToInherit,
-                        nsIContentSecurityPolicy* aCsp, const nsID& aDocShellID,
-                        bool aDynamicCreation) {
+nsLegacySHEntry::Create(
+    nsIURI* aURI, const nsAString& aTitle, nsIInputStream* aInputStream,
+    uint32_t aCacheKey, const nsACString& aContentType,
+    nsIPrincipal* aTriggeringPrincipal, nsIPrincipal* aPrincipalToInherit,
+    nsIPrincipal* aStoragePrincipalToInherit, nsIContentSecurityPolicy* aCsp,
+    const nsID& aDocShellID, bool aDynamicCreation, nsIURI* aOriginalURI,
+    nsIURI* aResultPrincipalURI, bool aLoadReplace,
+    nsIReferrerInfo* aReferrerInfo, const nsAString& aSrcdocData,
+    bool aSrcdocEntry, nsIURI* aBaseURI, bool aSaveLayoutState, bool aExpired) {
   GetState()->mLayoutHistoryState = nullptr;
 
-  // By default we save LayoutHistoryState
-  GetState()->mSaveLayoutState = true;
+  GetState()->mSaveLayoutState = aSaveLayoutState;
 
   return nsSHEntry::Create(aURI, aTitle, aInputStream, aCacheKey, aContentType,
-                           aTriggeringPrincipal, aPrincipalToInherit, aCsp,
-                           aDocShellID, aDynamicCreation);
+                           aTriggeringPrincipal, aPrincipalToInherit,
+                           aStoragePrincipalToInherit, aCsp, aDocShellID,
+                           aDynamicCreation, aOriginalURI, aResultPrincipalURI,
+                           aLoadReplace, aReferrerInfo, aSrcdocData,
+                           aSrcdocEntry, aBaseURI, aSaveLayoutState, aExpired);
 }
 
 NS_IMETHODIMP
