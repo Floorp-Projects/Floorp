@@ -87,7 +87,7 @@ class EventMetricTypeTest {
         assertEquals("click", secondEvent.name)
 
         assertTrue("The sequence of the events must be preserved",
-            firstEvent.timestamp < secondEvent.timestamp)
+            firstEvent.msSinceStart < secondEvent.msSinceStart)
     }
 
     @Test
@@ -121,7 +121,7 @@ class EventMetricTypeTest {
         assertEquals("click", secondEvent.name)
 
         assertTrue("The sequence of the events must be preserved",
-            firstEvent.timestamp < secondEvent.timestamp)
+            firstEvent.msSinceStart < secondEvent.msSinceStart)
     }
 
     @Test
@@ -189,7 +189,7 @@ class EventMetricTypeTest {
         assertEquals("click", secondEvent.name)
 
         assertTrue("The sequence of the events must be preserved",
-            firstEvent.timestamp < secondEvent.timestamp)
+            firstEvent.msSinceStart < secondEvent.msSinceStart)
     }
 
     @Test

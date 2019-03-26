@@ -18,14 +18,12 @@ import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.triggerWorkManager
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.json.JSONObject
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Assert.assertNotNull
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.TimeUnit
@@ -120,8 +118,8 @@ class EventsStorageEngineTest {
     }
 
     @Test
-    fun `record() computes the correct time between events`() {
-        val delayTime: Long = 37
+    fun `record() computes the correct time since process start`() {
+        val expectedTimeSinceStart: Long = 37
 
         val event = EventMetricType<NoExtraKeys>(
             disabled = false,
@@ -132,24 +130,19 @@ class EventsStorageEngineTest {
         )
 
         // Sleep a bit Record the event in the store.
-        EventsStorageEngine.record(
-            metricData = event,
-            monotonicElapsedMs = SystemClock.elapsedRealtime()
-        )
-        SystemClock.sleep(delayTime)
+        SystemClock.sleep(expectedTimeSinceStart)
         EventsStorageEngine.record(
             metricData = event,
             monotonicElapsedMs = SystemClock.elapsedRealtime()
         )
 
         val snapshot = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertEquals(2, snapshot!!.size)
+        assertEquals(1, snapshot!!.size)
         assertEquals("telemetry", snapshot.first().category)
         assertEquals("test_event_time", snapshot.first().name)
         assertNull("The 'extra' must be null if not provided",
                 snapshot.first().extra)
-        assertEquals(0, snapshot.first().timestamp)
-        assertEquals(delayTime, snapshot[1].timestamp)
+        assertEquals(expectedTimeSinceStart, snapshot.first().msSinceStart)
     }
 
     @Test
@@ -178,17 +171,9 @@ class EventsStorageEngineTest {
 
         // Get the snapshot from "store1" and clear it.
         val snapshot = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = true)
-        EventsStorageEngine.testWaitForWrites()
         // Check that getting a new snapshot for "store1" returns an empty store.
         assertNull("The engine must report 'null' on empty stores",
                 EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false))
-        val files = EventsStorageEngine.storageDirectory.listFiles()
-        assertEquals(1, files.size)
-        assertEquals(
-            "There should be no events on disk for store1, but there are for store2",
-            "store2",
-            EventsStorageEngine.storageDirectory.listFiles().first().name
-        )
 
         // Check that we get the right data from both the stores. Clearing "store1" must
         // not clear "store2" as well.
@@ -338,119 +323,5 @@ class EventsStorageEngineTest {
                 "truncatedExtra" to (testValue.repeat(10)).substring(0, EventsStorageEngine.MAX_LENGTH_EXTRA_KEY_VALUE)
             ) == snapshot.first().extra)
         assertEquals(1, testGetNumRecordedErrors(testEvent, ErrorType.InvalidValue))
-    }
-
-    @Test
-    fun `flush queued events on startup`() {
-        assertEquals(
-            "There should be no events on disk to start",
-            0,
-            EventsStorageEngine.storageDirectory.listFiles().size
-        )
-
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
-
-        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
-            serverEndpoint = "http://" + server.hostName + ":" + server.port,
-            logPings = true
-        ))
-
-        val event = EventMetricType<SomeExtraKeys>(
-            disabled = false,
-            category = "telemetry",
-            name = "test_event",
-            lifetime = Lifetime.Ping,
-            sendInPings = listOf("store1")
-        )
-
-        event.record(extra = mapOf(SomeExtraKeys.SomeExtra to "bar"))
-        assertEquals(1, event.testGetValue().size)
-
-        // Clear the in-memory storage only to mock being loaded in a fresh process
-        EventsStorageEngine.eventStores.clear()
-        resetGlean(
-            getContextWithMockedInfo(),
-            Glean.configuration.copy(
-                serverEndpoint = "http://" + server.hostName + ":" + server.port,
-                logPings = true
-            ),
-            clearStores = false
-        )
-
-        // Trigger worker task to upload the pings in the background
-        triggerWorkManager()
-
-        val request = server.takeRequest(20L, TimeUnit.SECONDS)
-        assertEquals("POST", request.method)
-        val applicationId = "mozilla-components-service-glean"
-        assert(
-            request.path.startsWith("/submit/$applicationId/store1/${Glean.SCHEMA_VERSION}/")
-        )
-        val pingJsonData = request.body.readUtf8()
-        val pingJson = JSONObject(pingJsonData)
-        checkPingSchema(pingJson)
-        assertNotNull(pingJson.opt("events"))
-        assertEquals(
-            1,
-            pingJson.getJSONArray("events").length()
-        )
-    }
-
-    @Test
-    fun `handle truncated events on disk`() {
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
-
-        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
-            serverEndpoint = "http://" + server.hostName + ":" + server.port,
-            logPings = true
-        ))
-
-        val event = EventMetricType<ExtraKeys>(
-            disabled = false,
-            category = "telemetry",
-            name = "test_event",
-            lifetime = Lifetime.Ping,
-            sendInPings = listOf("store1")
-        )
-
-        // Record the event in the store, without providing optional arguments.
-        event.record(mapOf(ExtraKeys.Key1 to "bar"))
-        // Add a couple of truncated events to disk. One is still valid JSON, the other isn't.
-        // These event should be skipped, all others intact.
-        EventsStorageEngine.writeEventToDisk("store1", "[500]")
-        EventsStorageEngine.writeEventToDisk("store1", "[500, \"foo")
-        event.record(mapOf(ExtraKeys.Key1 to "baz"))
-        assertEquals(2, event.testGetValue().size)
-
-        // Clear the in-memory storage only to mock being loaded in a fresh process
-        EventsStorageEngine.eventStores.clear()
-        resetGlean(
-            getContextWithMockedInfo(),
-                Glean.configuration.copy(
-                serverEndpoint = "http://" + server.hostName + ":" + server.port,
-                logPings = true
-            ),
-            clearStores = false
-        )
-        triggerWorkManager()
-
-        event.record(mapOf(ExtraKeys.Key1 to "bip"))
-
-        val request = server.takeRequest(20L, TimeUnit.SECONDS)
-        assertEquals("POST", request.method)
-        val applicationId = "mozilla-components-service-glean"
-        assert(
-            request.path.startsWith("/submit/$applicationId/store1/${Glean.SCHEMA_VERSION}/")
-        )
-        val pingJsonData = request.body.readUtf8()
-        val pingJson = JSONObject(pingJsonData)
-        checkPingSchema(pingJson)
-        assertNotNull(pingJson.opt("events"))
-        val events = pingJson.getJSONArray("events")
-        assertEquals(2, events.length())
-        assertEquals("bar", events.getJSONArray(0)!!.getJSONObject(3)!!.getString("key1"))
-        assertEquals("baz", events.getJSONArray(1)!!.getJSONObject(3)!!.getString("key1"))
     }
 }

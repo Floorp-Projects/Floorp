@@ -25,10 +25,8 @@ import mozilla.components.service.glean.storages.PingStorageEngine
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.UuidsStorageEngine
 import mozilla.components.service.glean.storages.DatetimesStorageEngine
-import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.RecordedExperimentData
 import mozilla.components.service.glean.storages.StringsStorageEngine
-import mozilla.components.service.glean.utils.ensureDirectoryExists
 import mozilla.components.support.base.log.logger.Logger
 
 @Suppress("TooManyFunctions")
@@ -92,9 +90,6 @@ open class GleanInternalAPI internal constructor () {
         // API. For this reason we're safe to set `initialized = true` right after it.
         initializeCoreMetrics(applicationContext)
 
-        // Deal with any pending events so we can start recording new ones
-        EventsStorageEngine.onReadyToSendPings(applicationContext)
-
         // Set up information and scheduling for glean owned pings. Ideally, the "metrics"
         // ping startup check should be performed before any other ping, since it relies
         // on being dispatched to the API context before any other metric.
@@ -106,7 +101,6 @@ open class GleanInternalAPI internal constructor () {
         // so we need to be initialized by now.
         baselinePing = BaselinePing()
 
-        // At this point, all metrics and events can be recorded.
         ProcessLifecycleOwner.get().lifecycle.addObserver(gleanLifecycleObserver)
     }
 
@@ -207,7 +201,16 @@ open class GleanInternalAPI internal constructor () {
 
         val gleanDataDir = File(applicationContext.applicationInfo.dataDir, Glean.GLEAN_DATA_DIR)
 
-        ensureDirectoryExists(gleanDataDir)
+        // Make sure the data directory exists and is writable.
+        if (!gleanDataDir.exists() && !gleanDataDir.mkdirs()) {
+            logger.error("Failed to create Glean's data dir ${gleanDataDir.absolutePath}")
+            return
+        }
+
+        if (!gleanDataDir.isDirectory || !gleanDataDir.canWrite()) {
+            logger.error("Glean's data directory is not a writable directory ${gleanDataDir.absolutePath}")
+            return
+        }
 
         // The first time Glean runs, we set the client id and other internal
         // one-time only metrics.

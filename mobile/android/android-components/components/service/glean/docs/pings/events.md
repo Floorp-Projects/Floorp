@@ -4,23 +4,10 @@
 The events ping's purpose is to transport all of the event metric information.
 
 ## Scheduling
-
-The `events` ping is sent under the following circumstances:
-
-- Normally, it is sent when the application goes into the
-  [background](pings.md#defining-background-state), if there
-  are any recorded events to send.
-
-- When the queue of events exceeds `Glean.configuration.maxEvents` (default
-  500).
-
-- If there are any unsent events found on disk when starting the application. It
-  would be impossible to coordinate the timestamps across a reboot, so it's best
-  to just collect all events from the previous run into their own ping, and
-  start over.
-
-All of these cases are handled automatically, with no intervention or
-configuration required by the application.
+The `events` ping is normally sent when the application goes into the
+[background](pings.md#defining-background-state). It is also sent when the queue of events exceeds
+`Glean.configuration.maxEvents` (default 500). This happens automatically, with
+no intervention or configuration required by the application.
 
 ## Contents
 At the top-level, this ping contains the following keys:
@@ -32,7 +19,7 @@ At the top-level, this ping contains the following keys:
 
 Each entry in the `events` array is an array with the following items:
 
-- [0]: `timestamp`: The milliseconds relative to the first event in the ping.
+- [0]: `msSinceStart`: The milliseconds since the start of the process.
 
 - [1]: `category`: The category of the event, as defined by its location in the
   `metrics.yaml` file.
@@ -40,5 +27,5 @@ Each entry in the `events` array is an array with the following items:
 - [2]: `name`: The name of the event, as definded in the `metrics.yaml` file.
 
 - [3]: `extra` (optional): A mapping of strings to strings providing additional
-  data about the event. The keys are restricted to 40 characters and values in
+  data about the event. The keys are restricted to 40 characters and values in 
   this map will never exceed 100 characters.

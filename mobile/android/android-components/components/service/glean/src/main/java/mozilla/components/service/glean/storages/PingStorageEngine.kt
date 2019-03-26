@@ -14,7 +14,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
-import mozilla.components.service.glean.utils.ensureDirectoryExists
 import mozilla.components.support.base.log.logger.Logger
 import java.io.BufferedReader
 import java.io.File
@@ -140,6 +139,23 @@ internal class PingStorageEngine(context: Context) {
                 logger.error("IO Exception when reading file ${file.name}")
                 return false
             }
+        }
+    }
+
+    /**
+     * Helper function to determine if the ping directory exists and attempts to create them if
+     * they don't
+     *
+     * @param directory File representing the directory path in which to store pings.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun ensureDirectoryExists(directory: File) {
+        if (!directory.exists() && !directory.mkdirs()) {
+            logger.error("Directory doesn't exist and can't be created: " + directory.absolutePath)
+        }
+
+        if (!directory.isDirectory || !directory.canWrite()) {
+            logger.error("Directory is not writable directory: " + directory.absolutePath)
         }
     }
 
