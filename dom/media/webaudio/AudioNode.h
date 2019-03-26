@@ -198,7 +198,9 @@ class AudioNode : public DOMEventTargetHelper, public nsSupportsWeakReference {
   // type.
   virtual const char* NodeType() const = 0;
 
-  AbstractThread* AbstractMainThread() const { return mAbstractMainThread; }
+  // This can return nullptr, but only when the AudioNode has been created
+  // during document shutdown.
+  AbstractThread* GetAbstractMainThread() const { return mAbstractMainThread; }
 
  private:
   // Given:

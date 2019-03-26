@@ -344,6 +344,7 @@ class WebConsoleWrapper {
       const {prefs} = store.getState();
       const jstermCodeMirror = prefs.jstermCodeMirror
         && !Services.appinfo.accessibilityEnabled;
+      const autocomplete = prefs.autocomplete;
 
       const app = App({
         attachRefToWebConsoleUI,
@@ -352,6 +353,7 @@ class WebConsoleWrapper {
         onFirstMeaningfulPaint: resolve,
         closeSplitConsole: this.closeSplitConsole.bind(this),
         jstermCodeMirror,
+        autocomplete,
       });
 
       // Render the root Application component.

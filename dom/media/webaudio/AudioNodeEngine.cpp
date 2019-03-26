@@ -367,8 +367,9 @@ AudioNodeEngine::AudioNodeEngine(dom::AudioNode* aNode)
       mNodeType(aNode ? aNode->NodeType() : nullptr),
       mInputCount(aNode ? aNode->NumberOfInputs() : 1),
       mOutputCount(aNode ? aNode->NumberOfOutputs() : 0),
-      mAbstractMainThread(aNode ? aNode->AbstractMainThread()
-                                : AbstractThread::MainThread()) {
+      mAbstractMainThread(aNode && aNode->GetAbstractMainThread()
+                              ? aNode->GetAbstractMainThread()
+                              : AbstractThread::MainThread()) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(AudioNodeEngine);
 }

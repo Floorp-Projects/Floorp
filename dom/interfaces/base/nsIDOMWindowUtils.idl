@@ -937,7 +937,8 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute float fullZoom;
 
   /**
-   * Dispatches aEvent via the nsIPresShell object of the window's document.
+   * Dispatches aEvent as a trusted event via the nsIPresShell object of the
+   * window's document.
    * The event is dispatched to aTarget, which should be an object
    * which implements nsIContent interface (#element, #text, etc).
    *
@@ -948,9 +949,9 @@ interface nsIDOMWindowUtils : nsISupports {
    * @note Event handlers won't get aEvent as parameter, but a similar event.
    *       Also, aEvent should not be reused.
    */
+  [can_run_script]
   boolean dispatchDOMEventViaPresShell(in Node aTarget,
-                                       in Event aEvent,
-                                       in boolean aTrusted);
+                                       in Event aEvent);
 
   /**
    * Sets WidgetEvent::mFlags::mOnlyChromeDispatch to true to ensure that

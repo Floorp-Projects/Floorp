@@ -1021,7 +1021,7 @@ void nsRange::SetSelection(mozilla::dom::Selection* aSelection) {
     nsINode* commonAncestor = GetCommonAncestor();
     NS_ASSERTION(commonAncestor, "unexpected disconnected nodes");
     RegisterCommonAncestor(commonAncestor);
-  } else {
+  } else if (mRegisteredCommonAncestor) {
     UnregisterCommonAncestor(mRegisteredCommonAncestor, false);
     MOZ_DIAGNOSTIC_ASSERT(
         !mRegisteredCommonAncestor,

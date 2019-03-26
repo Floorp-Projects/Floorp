@@ -1,6 +1,6 @@
 ---
 target: obj-x86_64-pc-linux-gnu
-# It is used by 'mach static-analysis' and 'mozreview static-analysis bot'
+# It is used by 'mach static-analysis' and 'phabricator static-analysis bot'
 # in order to have consistency across the used checkers.
 # All the clang checks used by the static-analysis tools.
 #
@@ -63,8 +63,11 @@ clang_checkers:
   - name: clang-analyzer-security.insecureAPI.mkstemp
   - name: clang-analyzer-security.insecureAPI.mktemp
   - name: clang-analyzer-security.insecureAPI.rand
+    # C checker, that is outdated and doesn't check for the new std::rand calls.
     publish: !!bool no
   - name: clang-analyzer-security.insecureAPI.strcpy
+    # The functions that should be used differ on POSIX and Windows, and there
+    # isn't a consensus on how we should approach this.
     publish: !!bool no
   - name: clang-analyzer-security.insecureAPI.UncheckedReturn
   - name: clang-analyzer-security.insecureAPI.vfork
@@ -82,6 +85,8 @@ clang_checkers:
   - name: modernize-loop-convert
   - name: modernize-raw-string-literal
   - name: modernize-redundant-void-arg
+    # We still have some old C code that is built with a C compiler, so this
+    # might break the build.
     publish: !!bool no
   - name: modernize-shrink-to-fit
   - name: modernize-use-auto

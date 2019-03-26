@@ -77,6 +77,18 @@ add_task(async function actionURILosslessDecode() {
   gURLBar.blur();
 });
 
+add_task(async function test_resultsDisplayDecoded() {
+  await PlacesUtils.history.clear();
+
+  await PlacesTestUtils.addVisits("http://example.com/%E9%A1%B5");
+
+  await promiseAutocompleteResultPopup("example");
+
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  Assert.equal(result.displayed.url, "example.com/\u9875",
+    "Should be displayed the correctly unescaped URL");
+});
+
 async function checkInput(inputStr) {
   await promiseAutocompleteResultPopup(inputStr);
 
