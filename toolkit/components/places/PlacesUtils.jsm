@@ -1208,31 +1208,6 @@ var PlacesUtils = {
     return result;
   },
 
-  /**
-   * Annotate an item with a batch of annotations.
-   * @param aItemId
-   *        The identifier of the item for which annotations are to be set
-   * @param aAnnotations
-   *        Array of objects, each containing the following properties:
-   *        name, flags, expires.
-   *        If the value for an annotation is not set it will be removed.
-   */
-  setAnnotationsForItem: function PU_setAnnotationsForItem(aItemId, aAnnos, aSource, aDontUpdateLastModified) {
-    var annosvc = this.annotations;
-
-    aAnnos.forEach(function(anno) {
-      if (anno.value === undefined || anno.value === null) {
-        annosvc.removeItemAnnotation(aItemId, anno.name, aSource);
-      } else {
-        let flags = ("flags" in anno) ? anno.flags : 0;
-        let expires = ("expires" in anno) ?
-          anno.expires : Ci.nsIAnnotationService.EXPIRE_NEVER;
-        annosvc.setItemAnnotation(aItemId, anno.name, anno.value, flags,
-                                  expires, aSource, aDontUpdateLastModified);
-      }
-    });
-  },
-
   // Identifier getters for special folders.
   // You should use these everywhere PlacesUtils is available to avoid XPCOM
   // traversal just to get roots' ids.
