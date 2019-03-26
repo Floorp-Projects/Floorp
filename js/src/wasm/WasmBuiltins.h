@@ -93,7 +93,7 @@ void* HandleThrow(JSContext* cx, WasmFrameIter& iter);
 
 void* SymbolicAddressTarget(SymbolicAddress sym);
 
-void* MaybeGetBuiltinThunk(HandleFunction f, const FuncType& funcType);
+void* MaybeGetBuiltinThunk(JSFunction* f, const FuncType& funcType);
 
 void ReleaseBuiltinThunks();
 
