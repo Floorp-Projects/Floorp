@@ -60,10 +60,13 @@ class Git(object):
     def for_path(cls, path, url_base, cache_path, manifest_path=None, rebuild=False):
         git = Git.get_func(path)
         try:
-            return cls(git("rev-parse", "--show-toplevel").rstrip(), url_base, cache_path,
-                       manifest_path=manifest_path, rebuild=rebuild)
+            # this needs to be a command that fails if we aren't in a git repo
+            git("rev-parse", "--show-toplevel")
         except (subprocess.CalledProcessError, OSError):
             return None
+        else:
+            return cls(path, url_base, cache_path,
+                       manifest_path=manifest_path, rebuild=rebuild)
 
     def _local_changes(self):
         changes = {}
