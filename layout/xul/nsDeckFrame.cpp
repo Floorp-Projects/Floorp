@@ -28,6 +28,8 @@
 #include "nsContainerFrame.h"
 #include "nsContentUtils.h"
 #include "nsXULPopupManager.h"
+#include "nsImageBoxFrame.h"
+#include "nsImageFrame.h"
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
@@ -72,13 +74,17 @@ void nsDeckFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   mIndex = GetSelectedIndex();
 }
 
+void nsDeckFrame::ShowBox(nsIFrame* aBox) { Animate(aBox, true); }
+
 void nsDeckFrame::HideBox(nsIFrame* aBox) {
   nsIPresShell::ClearMouseCapture(aBox);
+  Animate(aBox, false);
 }
 
 void nsDeckFrame::IndexChanged() {
   // did the index change?
   int32_t index = GetSelectedIndex();
+
   if (index == mIndex) return;
 
   // redraw
@@ -90,6 +96,8 @@ void nsDeckFrame::IndexChanged() {
     HideBox(currentBox);
 
   mIndex = index;
+
+  ShowBox(GetSelectedBox());
 
 #ifdef ACCESSIBILITY
   nsAccessibilityService* accService = GetAccService();
@@ -169,6 +177,34 @@ void nsDeckFrame::BuildDisplayListForChildren(nsDisplayListBuilder* aBuilder,
   // it matches what we were doing before.
   nsDisplayListSet set(aLists, aLists.BlockBorderBackgrounds());
   BuildDisplayListForChild(aBuilder, box, set);
+}
+
+void nsDeckFrame::Animate(nsIFrame* aParentBox, bool start) {
+  if (!aParentBox) return;
+
+  nsImageBoxFrame* imgBoxFrame = do_QueryFrame(aParentBox);
+  nsImageFrame* imgFrame = do_QueryFrame(aParentBox);
+
+  if (imgBoxFrame) {
+    if (start)
+      imgBoxFrame->RestartAnimation();
+    else
+      imgBoxFrame->StopAnimation();
+  }
+
+  if (imgFrame) {
+    if (start)
+      imgFrame->RestartAnimation();
+    else
+      imgFrame->StopAnimation();
+  }
+
+  for (nsIFrame::ChildListIterator childLists(aParentBox); !childLists.IsDone();
+       childLists.Next()) {
+    for (nsIFrame* child : childLists.CurrentList()) {
+      Animate(child, start);
+    }
+  }
 }
 
 NS_IMETHODIMP

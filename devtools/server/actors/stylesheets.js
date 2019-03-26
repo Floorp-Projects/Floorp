@@ -398,7 +398,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       nodeHref: docHref,
       disabled: this.rawSheet.disabled,
       title: this.rawSheet.title,
-      system: !CssLogic.isContentStylesheet(this.rawSheet),
+      system: !CssLogic.isAuthorStylesheet(this.rawSheet),
       styleSheetIndex: this.styleSheetIndex,
       sourceMapURL: this.rawSheet.sourceMapURL,
     };

@@ -55,7 +55,7 @@ function nativeVerticalWheelEventMsg() {
     case "mac": return 0; // value is unused, can be anything
     case "linux": return 4; // value is unused, pass GDK_SCROLL_SMOOTH anyway
   }
-  throw "Native wheel events not supported on platform " + getPlatform();
+  throw new Error("Native wheel events not supported on platform " + getPlatform());
 }
 
 /**

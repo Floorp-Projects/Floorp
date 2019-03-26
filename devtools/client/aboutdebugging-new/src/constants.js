@@ -95,6 +95,8 @@ const PAGE_TYPES = {
 };
 
 const PREFERENCES = {
+  // Preference that drives the display of the "Tabs" category on This Firefox.
+  LOCAL_TAB_DEBUGGING_ENABLED: "devtools.aboutdebugging.local-tab-debugging",
   // Preference that drives the display of the "Processes" debug target category.
   PROCESS_DEBUGGING_ENABLED: "devtools.aboutdebugging.process-debugging",
   // Preference that drives the display of system addons in about:debugging.

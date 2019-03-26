@@ -10,6 +10,7 @@
 <body>
 Login Manager test: forms and logins without a username.
 <script>
+gTestDependsOnDeprecatedLogin = true;
 runChecksAfterCommonInit(() => startTest());
 runInParent(() => {
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");

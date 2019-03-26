@@ -732,7 +732,14 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 .PanelUI-fxa-signin-instruction-label {
+  /* Use 'lighter' font for this to de-emphasize it compared to the title.
+   * We use 300 on Linux because 100 is too light (lacks contrast with
+   * the background) for some fonts in combination with anti-aliasing. */
+%if defined(XP_MACOSX) || defined(XP_WIN)
   font-weight: lighter;
+%else
+  font-weight: 300;
+%endif
 }
 
 .fxa-avatar-subpanel {

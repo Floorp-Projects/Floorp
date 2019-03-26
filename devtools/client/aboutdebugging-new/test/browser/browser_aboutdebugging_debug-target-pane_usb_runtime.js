@@ -13,8 +13,15 @@ const RUNTIME_APP_NAME = "TestApp";
 // Test that the expected supported categories are displayed for USB runtimes.
 add_task(async function() {
   const mocks = new Mocks();
+  await checkTargetPanes({ enableLocalTabs: false }, mocks);
 
-  const { document, tab, window } = await openAboutDebugging();
+  info("Check that enableLocalTabs has no impact on the categories displayed for remote" +
+    " runtimes.");
+  await checkTargetPanes({ enableLocalTabs: true }, mocks);
+});
+
+async function checkTargetPanes({ enableLocalTabs }, mocks) {
+  const { document, tab, window } = await openAboutDebugging({ enableLocalTabs });
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   mocks.createUSBRuntime(RUNTIME_ID, {
@@ -51,4 +58,4 @@ add_task(async function() {
   await waitUntil(() => !findSidebarItemByText(RUNTIME_DEVICE_NAME, document));
 
   await removeTab(tab);
-});
+}

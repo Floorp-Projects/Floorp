@@ -427,7 +427,28 @@ void VideoTrackEncoder::AppendVideoSegment(VideoSegment&& aSegment) {
     return;
   }
 
-  mIncomingBuffer.AppendFrom(&aSegment);
+  for (VideoSegment::ConstChunkIterator iter(aSegment); !iter.IsEnded();
+       iter.Next()) {
+    if (iter->IsNull()) {
+      // A null image was sent. This is a signal from the source that we should
+      // clear any images buffered in the future.
+      mIncomingBuffer.Clear();
+      continue;  // Don't append iter, as it is null.
+    }
+    if (VideoChunk* c = mIncomingBuffer.GetLastChunk()) {
+      if (iter->mTimeStamp < c->mTimeStamp) {
+        // Time went backwards. This can happen when a MediaDecoder seeks.
+        // We need to handle this by removing any frames buffered in the future
+        // and start over at iter->mTimeStamp.
+        mIncomingBuffer.Clear();
+      }
+    }
+    mIncomingBuffer.AppendFrame(do_AddRef(iter->mFrame.GetImage()),
+                                iter->mFrame.GetIntrinsicSize(),
+                                iter->mFrame.GetPrincipalHandle(),
+                                iter->mFrame.GetForceBlack(), iter->mTimeStamp);
+  }
+  aSegment.Clear();
 }
 
 void VideoTrackEncoder::TakeTrackData(VideoSegment& aSegment) {
@@ -574,8 +595,6 @@ void VideoTrackEncoder::AdvanceCurrentTime(const TimeStamp& aTime) {
   if (mEndOfStream) {
     return;
   }
-
-  MOZ_ASSERT(!mStartTime.IsNull());
 
   if (mSuspended) {
     TRACK_LOG(

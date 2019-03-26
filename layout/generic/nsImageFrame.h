@@ -134,6 +134,9 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
     NS_IF_RELEASE(sIOService);
   }
 
+  virtual nsresult RestartAnimation();
+  virtual nsresult StopAnimation();
+
   already_AddRefed<imgIRequest> GetCurrentRequest() const;
   nsresult Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData);
 

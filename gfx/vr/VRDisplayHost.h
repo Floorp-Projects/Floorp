@@ -85,6 +85,7 @@ class VRDisplayHost {
                            const gfx::Rect& aRightEyeRect) = 0;
 
   VRDisplayInfo mDisplayInfo;
+  TimeStamp mLastFrameStart[kVRMaxLatencyFrames];
 
   nsTArray<VRLayerParent*> mLayers;
   // Weak reference to mLayers entries are cleared in

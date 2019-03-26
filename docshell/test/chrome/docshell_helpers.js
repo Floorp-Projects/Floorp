@@ -112,25 +112,25 @@ function doPageNavigation(params) {
 
   // Do some sanity checking on arguments.
   if (back && forward)
-    throw "Can't specify both back and forward";
+    throw new Error("Can't specify both back and forward");
   if (back && uri)
-    throw "Can't specify both back and a uri";
+    throw new Error("Can't specify both back and a uri");
   if (forward && uri)
-    throw "Can't specify both forward and a uri";
+    throw new Error("Can't specify both forward and a uri");
   if (reload && (forward || back || uri))
-    throw "Can't specify reload and another navigation type";
+    throw new Error("Can't specify reload and another navigation type");
   if (!back && !forward && !uri && !reload && !waitOnly)
-    throw "Must specify back or foward or reload or uri";
+    throw new Error("Must specify back or foward or reload or uri");
   if (params.onNavComplete && eventsToListenFor.length == 0)
-    throw "Can't use onNavComplete when eventsToListenFor == []";
+    throw new Error("Can't use onNavComplete when eventsToListenFor == []");
   if (params.preventBFCache && eventsToListenFor.length == 0)
-    throw "Can't use preventBFCache when eventsToListenFor == []";
+    throw new Error("Can't use preventBFCache when eventsToListenFor == []");
   if (params.preventBFCache && waitOnly)
-    throw "Can't prevent bfcaching when only waiting for events";
+    throw new Error("Can't prevent bfcaching when only waiting for events");
   if (waitOnly && typeof(params.onNavComplete) == "undefined")
-    throw "Must specify onNavComplete when specifying waitForEventsOnly";
+    throw new Error("Must specify onNavComplete when specifying waitForEventsOnly");
   if (waitOnly && (back || forward || reload || uri))
-    throw "Can't specify a navigation type when using waitForEventsOnly";
+    throw new Error("Can't specify a navigation type when using waitForEventsOnly");
   for (let anEventType of eventsToListenFor) {
     let eventFound = false;
     if ( (anEventType == "pageshow") && (!gExpectedEvents) )
@@ -148,8 +148,8 @@ function doPageNavigation(params) {
       }
     }
     if (!eventFound)
-      throw "Event type " + anEventType + " is specified in " +
-        "eventsToListenFor, but not in expectedEvents";
+      throw new Error(`Event type ${anEventType} is specified in ` +
+                      "eventsToListenFor, but not in expectedEvents");
   }
 
   // If the test explicitly sets .eventsToListenFor to [], don't wait for any
@@ -180,7 +180,7 @@ function doPageNavigation(params) {
   } else if (waitOnly) {
     gNavType = NAV_NONE;
   } else {
-    throw "No valid navigation type passed to doPageNavigation!";
+    throw new Error("No valid navigation type passed to doPageNavigation!");
   }
 
   // If we're listening for events and there is an .onNavComplete callback,

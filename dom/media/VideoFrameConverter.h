@@ -41,7 +41,7 @@ class VideoConverterListener {
   virtual void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) = 0;
 
  protected:
-  virtual ~VideoConverterListener() {}
+  virtual ~VideoConverterListener() = default;
 };
 
 // An async video frame format converter.
@@ -69,7 +69,7 @@ class VideoFrameConverter {
 
   void QueueVideoChunk(const VideoChunk& aChunk, bool aForceBlack) {
     gfx::IntSize size = aChunk.mFrame.GetIntrinsicSize();
-    if (size.width == 0 || size.width == 0) {
+    if (size.width == 0 || size.height == 0) {
       return;
     }
 
@@ -95,8 +95,8 @@ class VideoFrameConverter {
     mPacingTimer->WaitUntil(t, __func__)
         ->Then(mTaskQueue, __func__,
                [self = RefPtr<VideoFrameConverter>(this), this,
-                image = RefPtr<layers::Image>(aChunk.mFrame.GetImage()),
-                t = std::move(t), size = std::move(size), aForceBlack] {
+                image = RefPtr<layers::Image>(aChunk.mFrame.GetImage()), t,
+                size, aForceBlack]() mutable {
                  QueueForProcessing(std::move(image), t, size, aForceBlack);
                },
                [] {});
@@ -229,7 +229,7 @@ class VideoFrameConverter {
     mLastFrameQueuedForProcessing = aTime;
 
     nsresult rv = mTaskQueue->Dispatch(
-        NewRunnableMethod<StoreCopyPassByRRef<RefPtr<layers::Image>>, TimeStamp,
+        NewRunnableMethod<StoreCopyPassByLRef<RefPtr<layers::Image>>, TimeStamp,
                           gfx::IntSize, bool>(
             "VideoFrameConverter::ProcessVideoFrame", this,
             &VideoFrameConverter::ProcessVideoFrame, std::move(aImage), aTime,
@@ -238,7 +238,7 @@ class VideoFrameConverter {
     Unused << rv;
   }
 
-  void ProcessVideoFrame(RefPtr<layers::Image> aImage, TimeStamp aTime,
+  void ProcessVideoFrame(const RefPtr<layers::Image>& aImage, TimeStamp aTime,
                          gfx::IntSize aSize, bool aForceBlack) {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 

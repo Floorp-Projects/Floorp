@@ -309,9 +309,9 @@ bool TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
       }
     }
 
-    if (texturedDesc.textureOnWhite().type() == MaybeTexture::TPTextureParent) {
-      tile.mTextureHostOnWhite = TextureHost::AsTextureHost(
-          texturedDesc.textureOnWhite().get_PTextureParent());
+    if (texturedDesc.textureOnWhiteParent().isSome()) {
+      tile.mTextureHostOnWhite =
+          TextureHost::AsTextureHost(texturedDesc.textureOnWhiteParent().ref());
       if (texturedDesc.readLockedOnWhite()) {
         tile.mTextureHostOnWhite->SetReadLocked();
         auto actor = tile.mTextureHostOnWhite->GetIPDLActor();

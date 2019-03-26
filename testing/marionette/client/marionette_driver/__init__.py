@@ -18,7 +18,6 @@ from marionette_driver import (
     keys,
     localization,
     marionette,
-    selection,
     wait,
 )
 from marionette_driver.by import By

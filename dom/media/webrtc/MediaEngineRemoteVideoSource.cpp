@@ -872,7 +872,7 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
         continue;
       }
       LogCapability("Hardcoded capability", cap, 0);
-      candidateSet.AppendElement(CapabilityCandidate(std::move(cap)));
+      candidateSet.AppendElement(cap);
     }
   }
 

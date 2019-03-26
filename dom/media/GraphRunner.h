@@ -65,13 +65,22 @@ class GraphRunner {
   GraphTime mStateEnd;
   // Reply from mGraph's OneIteration. Protected by mMonitor.
   bool mStillProcessing;
-  // True after Shutdown(). Protected by mMonitor.
-  bool mShutdown;
-  // True after mThread has started running and has entered its main loop.
-  // Protected by mMonitor.
-  bool mStarted;
-  // The thread running mGraph.
-  PRThread* const mThread;
+
+  enum class ThreadState {
+    Wait,      // Waiting for a message.  This is the initial state.
+               // A transition from Run back to Wait occurs on the runner
+               // thread after it processes as far as mStateEnd and sets
+               // mStillProcessing.
+    Run,       // Set on driver thread after each mStateEnd update.
+    Shutdown,  // Set when Shutdown() is called on main thread.
+  };
+  // Protected by mMonitor until set to Shutdown, after which this is not
+  // modified.
+  ThreadState mThreadState;
+
+  // The thread running mGraph.  Set on construction, after other members are
+  // initialized.  Cleared at the end of Shutdown().
+  PRThread* mThread;
 
 #ifdef DEBUG
   // Set to mGraph's audio callback driver's thread id, if run by an
