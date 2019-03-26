@@ -2277,10 +2277,10 @@ PresShell::ScrollPage(bool aForward) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(nsIPresShell::eVertical);
   if (scrollFrame) {
-    scrollFrame->ScrollBy(
-        nsIntPoint(0, aForward ? 1 : -1), nsIScrollableFrame::PAGES,
-        mozilla::ScrollMode::eSmooth, nullptr, nullptr,
-        nsIScrollableFrame::NOT_MOMENTUM, nsIScrollableFrame::ENABLE_SNAP);
+    scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
+                          nsIScrollableFrame::PAGES, ScrollMode::eSmooth,
+                          nullptr, nullptr, nsIScrollableFrame::NOT_MOMENTUM,
+                          nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -2294,9 +2294,8 @@ PresShell::ScrollLine(bool aForward) {
         Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
                             NS_DEFAULT_VERTICAL_SCROLL_DISTANCE);
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? lineCount : -lineCount),
-                          nsIScrollableFrame::LINES,
-                          mozilla::ScrollMode::eSmooth, nullptr, nullptr,
-                          nsIScrollableFrame::NOT_MOMENTUM,
+                          nsIScrollableFrame::LINES, ScrollMode::eSmooth,
+                          nullptr, nullptr, nsIScrollableFrame::NOT_MOMENTUM,
                           nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
@@ -2310,10 +2309,10 @@ PresShell::ScrollCharacter(bool aRight) {
     int32_t h =
         Preferences::GetInt("toolkit.scrollbox.horizontalScrollDistance",
                             NS_DEFAULT_HORIZONTAL_SCROLL_DISTANCE);
-    scrollFrame->ScrollBy(
-        nsIntPoint(aRight ? h : -h, 0), nsIScrollableFrame::LINES,
-        mozilla::ScrollMode::eSmooth, nullptr, nullptr,
-        nsIScrollableFrame::NOT_MOMENTUM, nsIScrollableFrame::ENABLE_SNAP);
+    scrollFrame->ScrollBy(nsIntPoint(aRight ? h : -h, 0),
+                          nsIScrollableFrame::LINES, ScrollMode::eSmooth,
+                          nullptr, nullptr, nsIScrollableFrame::NOT_MOMENTUM,
+                          nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -2323,10 +2322,10 @@ PresShell::CompleteScroll(bool aForward) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(nsIPresShell::eVertical);
   if (scrollFrame) {
-    scrollFrame->ScrollBy(
-        nsIntPoint(0, aForward ? 1 : -1), nsIScrollableFrame::WHOLE,
-        mozilla::ScrollMode::eSmooth, nullptr, nullptr,
-        nsIScrollableFrame::NOT_MOMENTUM, nsIScrollableFrame::ENABLE_SNAP);
+    scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
+                          nsIScrollableFrame::WHOLE, ScrollMode::eSmooth,
+                          nullptr, nullptr, nsIScrollableFrame::NOT_MOMENTUM,
+                          nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -3148,7 +3147,7 @@ nsresult nsIPresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
       // thing whether or not |aScroll| is true.
       if (aScroll && sf) {
         // Scroll to the top of the page
-        sf->ScrollTo(nsPoint(0, 0), mozilla::ScrollMode::eInstant);
+        sf->ScrollTo(nsPoint(0, 0), ScrollMode::eInstant);
       }
     }
   }
@@ -3377,7 +3376,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   // If we don't need to scroll, then don't try since it might cancel
   // a current smooth scroll operation.
   if (needToScroll) {
-    mozilla::ScrollMode scrollMode = ScrollMode::eInstant;
+    ScrollMode scrollMode = ScrollMode::eInstant;
     bool autoBehaviorIsSmooth =
         (aFrameAsScrollable->GetScrollStyles().mScrollBehavior ==
          NS_STYLE_SCROLL_BEHAVIOR_SMOOTH);
@@ -10720,7 +10719,9 @@ bool nsIPresShell::SetVisualViewportOffset(
 void nsIPresShell::ScrollToVisual(
     const nsPoint& aVisualViewportOffset,
     FrameMetrics::ScrollOffsetUpdateType aUpdateType, ScrollMode aMode) {
-  if (aMode == ScrollMode::eSmooth) {
+  MOZ_ASSERT(aMode == ScrollMode::eInstant || aMode == ScrollMode::eSmoothMsd);
+
+  if (aMode == ScrollMode::eSmoothMsd) {
     if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
       if (sf->SmoothScrollVisual(aVisualViewportOffset, aUpdateType)) {
         return;

@@ -4471,9 +4471,8 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
         return;
       }
       if (mIsRoot && mOuter->PresContext()->IsRootContentDocument()) {
-        mOuter->PresShell()->ScrollToVisual(visualScrollToPos,
-                                            FrameMetrics::eRestore,
-                                            nsIPresShell::ScrollMode::eInstant);
+        mOuter->PresShell()->ScrollToVisual(
+            visualScrollToPos, FrameMetrics::eRestore, ScrollMode::eInstant);
       }
       if (state == LoadingState::Loading || NS_SUBTREE_DIRTY(mOuter)) {
         // If we're trying to do a history scroll restore, then we want to
