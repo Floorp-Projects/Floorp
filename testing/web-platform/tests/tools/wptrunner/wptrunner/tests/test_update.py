@@ -5,6 +5,8 @@ import sys
 from io import BytesIO
 
 from .. import metadata, manifestupdate
+from ..update import WPTUpdate
+from ..update.base import StepRunner, Step
 from mozlog import structuredlog, handlers, formatters
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir))
@@ -702,3 +704,29 @@ leak-total: 110""")]
 
     assert not new_manifest.is_empty
     assert new_manifest.has_key("leak-threshold") is False
+
+
+class TestStep(Step):
+    def create(self, state):
+        test_id = "/path/to/test.htm"
+        tests = [("path/to/test.htm", [test_id], "testharness", "")]
+        state.foo = create_test_manifest(tests)
+
+class UpdateRunner(StepRunner):
+    steps = [TestStep]
+
+def test_update_pickle():
+    logger = structuredlog.StructuredLogger("expected_test")
+    args = {
+        "test_paths": {
+            "/": {"tests_path": ""},
+        },
+        "abort": False,
+        "continue": False,
+        "sync": False,
+    }
+    args2 = args.copy()
+    args2["abort"] = True
+    wptupdate = WPTUpdate(logger, **args2)
+    wptupdate = WPTUpdate(logger, runner_cls=UpdateRunner, **args)
+    wptupdate.run()
