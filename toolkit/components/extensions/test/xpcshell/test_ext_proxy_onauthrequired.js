@@ -38,16 +38,26 @@ function getExtension(background) {
 
 add_task(async function test_webRequest_auth_proxy() {
   async function background(port) {
+    let expecting = ["onBeforeSendHeaders", "onSendHeaders",
+                     "onAuthRequired", "onBeforeSendHeaders", "onSendHeaders",
+                     "onCompleted"];
     browser.webRequest.onBeforeSendHeaders.addListener(details => {
       browser.test.log(`onBeforeSendHeaders ${JSON.stringify(details)}\n`);
+      browser.test.assertEq("onBeforeSendHeaders", expecting.shift(), "got expected event");
       browser.test.assertEq("localhost", details.proxyInfo.host, "proxy host");
       browser.test.assertEq(port, details.proxyInfo.port, "proxy port");
       browser.test.assertEq("http", details.proxyInfo.type, "proxy type");
       browser.test.assertEq("", details.proxyInfo.username, "proxy username not set");
     }, {urls: ["<all_urls>"]});
 
+    browser.webRequest.onSendHeaders.addListener(details => {
+      browser.test.log(`onSendHeaders ${JSON.stringify(details)}\n`);
+      browser.test.assertEq("onSendHeaders", expecting.shift(), "got expected event");
+    }, {urls: ["<all_urls>"]});
+
     browser.webRequest.onAuthRequired.addListener(details => {
       browser.test.log(`onAuthRequired ${JSON.stringify(details)}\n`);
+      browser.test.assertEq("onAuthRequired", expecting.shift(), "got expected event");
       browser.test.assertTrue(details.isProxy, "proxied request");
       browser.test.assertEq("localhost", details.proxyInfo.host, "proxy host");
       browser.test.assertEq(port, details.proxyInfo.port, "proxy port");
@@ -59,11 +69,13 @@ add_task(async function test_webRequest_auth_proxy() {
 
     browser.webRequest.onCompleted.addListener(details => {
       browser.test.log(`onCompleted ${JSON.stringify(details)}\n`);
+      browser.test.assertEq("onCompleted", expecting.shift(), "got expected event");
       browser.test.assertEq("localhost", details.proxyInfo.host, "proxy host");
       browser.test.assertEq(port, details.proxyInfo.port, "proxy port");
       browser.test.assertEq("http", details.proxyInfo.type, "proxy type");
       browser.test.assertEq("", details.proxyInfo.username, "proxy username not set by onAuthRequired");
       browser.test.assertEq(undefined, details.proxyInfo.password, "no proxy password");
+      browser.test.assertEq(expecting.length, 0, "got all expected events");
       browser.test.sendMessage("done");
     }, {urls: ["<all_urls>"]});
 
