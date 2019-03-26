@@ -526,5 +526,11 @@ void SHEntryParent::GetOrCreate(PContentParent* aManager, nsISHEntry* aSHEntry,
   }
 }
 
+bool SHEntryParent::RecvClearEntry(const uint64_t& aNewSharedID) {
+  mEntry->ClearEntry();
+  mEntry->AbandonBFCacheEntry(aNewSharedID);
+  return true;
+}
+
 }  // namespace dom
 }  // namespace mozilla
