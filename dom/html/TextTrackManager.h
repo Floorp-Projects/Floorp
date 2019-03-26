@@ -12,6 +12,7 @@
 #include "mozilla/dom/TextTrackCueList.h"
 #include "mozilla/StaticPtr.h"
 #include "nsContentUtils.h"
+#include "TimeUnits.h"
 
 class nsIWebVTTParserWrapper;
 
@@ -118,14 +119,12 @@ class TextTrackManager final : public nsIDOMEventListener {
 
   // Contain all cues for a MediaElement. Not sorted.
   RefPtr<TextTrackCueList> mNewCues;
-  // The active cues for the last TimeMarchesOn iteration.
-  RefPtr<TextTrackCueList> mLastActiveCues;
 
   // True if the media player playback changed due to seeking prior to and
   // during running the "Time Marches On" algorithm.
   bool mHasSeeked;
   // Playback position at the time of last "Time Marches On" call
-  double mLastTimeMarchesOnCalled;
+  media::TimeUnit mLastTimeMarchesOnCalled;
 
   bool mTimeMarchesOnDispatched;
   bool mUpdateCueDisplayDispatched;
