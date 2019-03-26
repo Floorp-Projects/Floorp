@@ -7343,6 +7343,9 @@ class CGCallGenerator(CGThing):
 
         needResultDecl = False
 
+        # Build up our actual call
+        self.cgRoot = CGList([])
+
         # Return values that go in outparams go here
         if resultOutParam is not None:
             if resultVar is None:
@@ -7355,64 +7358,6 @@ class CGCallGenerator(CGThing):
                 args.append(CGGeneric("&" + resultVar))
 
         needsSubjectPrincipal = "needsSubjectPrincipal" in extendedAttributes
-        if needsSubjectPrincipal:
-            args.append(CGGeneric("subjectPrincipal"))
-
-        if needsCallerType:
-            if isChromeOnly:
-                args.append(CGGeneric("SystemCallerGuarantee()"))
-            else:
-                args.append(CGGeneric(callerTypeGetterForDescriptor(descriptor)))
-
-        canOOM = "canOOM" in extendedAttributes
-        if isFallible or canOOM:
-            args.append(CGGeneric("rv"))
-        args.extend(CGGeneric(arg) for arg in argsPost)
-
-        # Build up our actual call
-        self.cgRoot = CGList([])
-
-        call = CGGeneric(nativeMethodName)
-        if not static:
-            call = CGWrapper(call, pre="%s->" % object)
-        call = CGList([call, CGWrapper(args, pre="(", post=")")])
-        if (returnType is None or returnType.isVoid() or
-            resultOutParam is not None):
-            assert resultConversion is None
-            call = CGList([
-                CGWrapper(
-                    call,
-                    pre=("// NOTE: This assert does NOT call the function.\n"
-                         "static_assert(mozilla::IsVoid<decltype("),
-                    post=')>::value, "Should be returning void here");'),
-                call], "\n")
-        elif resultConversion is not None:
-            call = CGList([resultConversion, CGWrapper(call, pre="(", post=")")])
-        if resultVar is None and result is not None:
-            needResultDecl = True
-            resultVar = "result"
-
-        if needResultDecl:
-            if resultRooter is not None:
-                self.cgRoot.prepend(resultRooter)
-            if resultArgs is not None:
-                resultArgsStr = "(%s)" % resultArgs
-            else:
-                resultArgsStr = ""
-            result = CGWrapper(result, post=(" %s%s" % (resultVar, resultArgsStr)))
-            if resultOutParam is None and resultArgs is None:
-                call = CGList([result, CGWrapper(call, pre="(", post=")")])
-            else:
-                self.cgRoot.prepend(CGWrapper(result, post=";\n"))
-                if resultOutParam is None:
-                    call = CGWrapper(call, pre=resultVar + " = ")
-        elif result is not None:
-            assert resultOutParam is None
-            call = CGWrapper(call, pre=resultVar + " = ")
-
-        call = CGWrapper(call, post=";\n")
-        self.cgRoot.append(call)
-
         if needsSubjectPrincipal:
             needsNonSystemPrincipal = (
                 "needsNonSystemSubjectPrincipal" in extendedAttributes)
@@ -7437,7 +7382,7 @@ class CGCallGenerator(CGThing):
                 checkPrincipal=checkPrincipal)
 
             if descriptor.interface.isExposedInAnyWorker():
-                self.cgRoot.prepend(CGGeneric(fill(
+                self.cgRoot.append(CGGeneric(fill(
                     """
                     Maybe<nsIPrincipal*> subjectPrincipal;
                     if (NS_IsMainThread()) {
@@ -7446,13 +7391,16 @@ class CGCallGenerator(CGThing):
                     }
                     """,
                     getPrincipal=getPrincipal)))
+                subjectPrincipalArg = "subjectPrincipal"
             else:
                 if needsNonSystemPrincipal:
                     principalType = "nsIPrincipal*";
+                    subjectPrincipalArg = "subjectPrincipal"
                 else:
                     principalType = "NonNull<nsIPrincipal>"
+                    subjectPrincipalArg = "NonNullHelper(subjectPrincipal)"
 
-                self.cgRoot.prepend(CGGeneric(fill(
+                self.cgRoot.append(CGGeneric(fill(
                     """
                     ${principalType} subjectPrincipal;
                     {
@@ -7462,6 +7410,60 @@ class CGCallGenerator(CGThing):
                     """,
                     principalType=principalType,
                     getPrincipal=getPrincipal)))
+
+            args.append(CGGeneric(subjectPrincipalArg))
+
+        if needsCallerType:
+            if isChromeOnly:
+                args.append(CGGeneric("SystemCallerGuarantee()"))
+            else:
+                args.append(CGGeneric(callerTypeGetterForDescriptor(descriptor)))
+
+        canOOM = "canOOM" in extendedAttributes
+        if isFallible or canOOM:
+            args.append(CGGeneric("rv"))
+        args.extend(CGGeneric(arg) for arg in argsPost)
+
+        call = CGGeneric(nativeMethodName)
+        if not static:
+            call = CGWrapper(call, pre="%s->" % object)
+        call = CGList([call, CGWrapper(args, pre="(", post=")")])
+        if (returnType is None or returnType.isVoid() or
+            resultOutParam is not None):
+            assert resultConversion is None
+            call = CGList([
+                CGWrapper(
+                    call,
+                    pre=("// NOTE: This assert does NOT call the function.\n"
+                         "static_assert(mozilla::IsVoid<decltype("),
+                    post=')>::value, "Should be returning void here");'),
+                call], "\n")
+        elif resultConversion is not None:
+            call = CGList([resultConversion, CGWrapper(call, pre="(", post=")")])
+        if resultVar is None and result is not None:
+            needResultDecl = True
+            resultVar = "result"
+
+        if needResultDecl:
+            if resultArgs is not None:
+                resultArgsStr = "(%s)" % resultArgs
+            else:
+                resultArgsStr = ""
+            result = CGWrapper(result, post=(" %s%s" % (resultVar, resultArgsStr)))
+            if resultOutParam is None and resultArgs is None:
+                call = CGList([result, CGWrapper(call, pre="(", post=")")])
+            else:
+                self.cgRoot.append(CGWrapper(result, post=";\n"))
+                if resultOutParam is None:
+                    call = CGWrapper(call, pre=resultVar + " = ")
+            if resultRooter is not None:
+                self.cgRoot.append(resultRooter)
+        elif result is not None:
+            assert resultOutParam is None
+            call = CGWrapper(call, pre=resultVar + " = ")
+
+        call = CGWrapper(call, post=";\n")
+        self.cgRoot.append(call)
 
         if isFallible or canOOM:
             if isFallible:
