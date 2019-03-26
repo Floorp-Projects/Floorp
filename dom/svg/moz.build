@@ -19,7 +19,6 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     'SVGAElement.h',
-    'SVGAnimatedPathSegList.h',
     'SVGAnimatedRect.h',
     'SVGAnimateElement.h',
     'SVGAnimateMotionElement.h',
