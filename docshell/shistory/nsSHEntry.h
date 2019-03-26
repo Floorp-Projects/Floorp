@@ -102,13 +102,16 @@ class nsLegacySHEntry final : public nsSHEntry {
   NS_IMETHOD_(void) ClearChildShells() override;
   NS_IMETHOD_(void) SyncPresentationState() override;
   NS_IMETHOD InitLayoutHistoryState(nsILayoutHistoryState** aState) override;
-  NS_IMETHOD Create(nsIURI* aURI, const nsAString& aTitle,
-                    nsIInputStream* aInputStream, uint32_t aCacheKey,
-                    const nsACString& aContentType,
-                    nsIPrincipal* aTriggeringPrincipal,
-                    nsIPrincipal* aPrincipalToInherit,
-                    nsIContentSecurityPolicy* aCsp, const nsID& aDocshellID,
-                    bool aDynamicCreation) override;
+  NS_IMETHOD Create(
+      nsIURI* aURI, const nsAString& aTitle, nsIInputStream* aInputStream,
+      uint32_t aCacheKey, const nsACString& aContentType,
+      nsIPrincipal* aTriggeringPrincipal, nsIPrincipal* aPrincipalToInherit,
+      nsIPrincipal* aStoragePrincipalToInherit, nsIContentSecurityPolicy* aCsp,
+      const nsID& aDocshellID, bool aDynamicCreation, nsIURI* aOriginalURI,
+      nsIURI* aResultPrincipalURI, bool aLoadReplace,
+      nsIReferrerInfo* aReferrerInfo, const nsAString& aSrcdocData,
+      bool aSrcdocEntry, nsIURI* aBaseURI, bool aSaveLayoutState,
+      bool aExpired) override;
   NS_IMETHOD Clone(nsISHEntry** aResult) override;
   NS_IMETHOD_(nsDocShellEditorData*) ForgetEditorData(void) override;
   NS_IMETHOD_(void) SetEditorData(nsDocShellEditorData* aData) override;
