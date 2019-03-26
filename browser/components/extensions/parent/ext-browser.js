@@ -460,17 +460,26 @@ class TabTracker extends TabTrackerBase {
             });
           }
         } else {
-          if (!event.originalTarget.parentNode) {
-            // If the tab is already be destroyed, do nothing.
-            return;
-          }
+          // Save the size of the current tab, since the newly-created tab will
+          // likely be active by the time the promise below resolves and the
+          // event is dispatched.
           const currentTab = nativeTab.ownerGlobal.gBrowser.selectedTab;
           const {frameLoader} = currentTab.linkedBrowser;
           const currentTabSize = {
             width: frameLoader.lazyWidth,
             height: frameLoader.lazyHeight,
           };
-          this.emitCreated(event.originalTarget, currentTabSize);
+
+          // We need to delay sending this event until the next tick, since the
+          // tab could have been created with a lazy browser but still not have
+          // been assigned a SessionStore tab state with the URL and title.
+          Promise.resolve().then(() => {
+            if (!event.originalTarget.parentNode) {
+              // If the tab is already be destroyed, do nothing.
+              return;
+            }
+            this.emitCreated(event.originalTarget, currentTabSize);
+          });
         }
         break;
 
@@ -488,8 +497,8 @@ class TabTracker extends TabTrackerBase {
         break;
 
       case "TabSelect":
-        // We need to delay sending this event because it shouldn't fire before
-        // onRemoved when the active tab is removed.
+        // Because we are delaying calling emitCreated above, we also need to
+        // delay sending this event because it shouldn't fire before onCreated.
         Promise.resolve().then(() => {
           if (!nativeTab.parentNode) {
             // If the tab is already be destroyed, do nothing.
@@ -501,8 +510,8 @@ class TabTracker extends TabTrackerBase {
 
       case "TabMultiSelect":
         if (this.has("tabs-highlighted")) {
-          // Because we are delaying calling emitActivated above, we also need to
-          // delay sending this event because it shouldn't fire before onActivated.
+          // Because we are delaying calling emitCreated above, we also need to
+          // delay sending this event because it shouldn't fire before onCreated.
           Promise.resolve().then(() => {
             this.emitHighlighted(event.target.ownerGlobal);
           });
