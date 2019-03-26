@@ -183,6 +183,7 @@ interface nsIHTMLEditor : nsISupports
     *
     * @param aElement   An element in the document
     */
+  [can_run_script]
   void selectElement(in Element aElement);
 
   /**
