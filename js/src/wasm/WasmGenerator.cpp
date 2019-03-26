@@ -52,7 +52,6 @@ bool CompiledCode::swap(MacroAssembler& masm) {
   callSites.swap(masm.callSites());
   callSiteTargets.swap(masm.callSiteTargets());
   trapSites.swap(masm.trapSites());
-  callFarJumps.swap(masm.callFarJumps());
   symbolicAccesses.swap(masm.symbolicAccesses());
   codeLabels.swap(masm.codeLabels());
   return true;
@@ -668,13 +667,6 @@ bool ModuleGenerator::linkCompiledCode(CompiledCode& code) {
     }
   }
 
-  auto callFarJumpOp = [=](uint32_t, CallFarJump* cfj) {
-    cfj->offsetBy(offsetInModule);
-  };
-  if (!AppendForEach(&callFarJumps_, code.callFarJumps, callFarJumpOp)) {
-    return false;
-  }
-
   for (const SymbolicAccess& access : code.symbolicAccesses) {
     uint32_t patchAt = offsetInModule + access.patchAt.offset();
     if (!linkData_->symbolicLinks[access.target].append(patchAt)) {
@@ -923,7 +915,6 @@ bool ModuleGenerator::finishCodegen() {
   MOZ_ASSERT(masm_.callSites().empty());
   MOZ_ASSERT(masm_.callSiteTargets().empty());
   MOZ_ASSERT(masm_.trapSites().empty());
-  MOZ_ASSERT(masm_.callFarJumps().empty());
   MOZ_ASSERT(masm_.symbolicAccesses().empty());
   MOZ_ASSERT(masm_.codeLabels().empty());
 
@@ -1262,7 +1253,6 @@ size_t CompiledCode::sizeOfExcludingThis(
          codeRanges.sizeOfExcludingThis(mallocSizeOf) +
          callSites.sizeOfExcludingThis(mallocSizeOf) +
          callSiteTargets.sizeOfExcludingThis(mallocSizeOf) + trapSitesSize +
-         callFarJumps.sizeOfExcludingThis(mallocSizeOf) +
          symbolicAccesses.sizeOfExcludingThis(mallocSizeOf) +
          codeLabels.sizeOfExcludingThis(mallocSizeOf);
 }
