@@ -298,54 +298,6 @@ win32-shippable/opt:
         - win64-nasm
         - win64-node
 
-
-win32-nightly/opt:
-    description: "Win32 Nightly"
-    index:
-        product: firefox
-        job-name: win32-opt
-        type: nightly
-    attributes:
-        nightly: true
-        enable-full-crashsymbols: true
-    stub-installer:
-        by-project:
-            default: false
-            mozilla-central: true
-            try: true
-            mozilla-beta: true
-            mozilla-release: true
-    shipping-phase: build
-    shipping-product: firefox
-    treeherder:
-        platform: windows2012-32/opt
-        symbol: N
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
-    worker:
-        max-run-time: 10800
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
-    run:
-        options: [append-env-variables-from-configs]
-        script: mozharness/scripts/fx_desktop_build.py
-        secrets: true
-        config:
-            - builds/releng_base_firefox.py
-            - builds/taskcluster_base_windows.py
-            - builds/taskcluster_base_win32.py
-            - taskcluster_nightly.py
-        extra-config:
-            stage_platform: win32
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-nasm
-        - win64-node
-
-
 win64-shippable/opt:
     description: "Win64 Shippable"
     index:
@@ -360,46 +312,6 @@ win64-shippable/opt:
     treeherder:
         platform: windows2012-64-shippable/opt
         symbol: B
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
-    worker:
-        max-run-time: 10800
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
-    run:
-        options: [append-env-variables-from-configs]
-        script: mozharness/scripts/fx_desktop_build.py
-        secrets: true
-        config:
-            - builds/releng_base_firefox.py
-            - builds/taskcluster_base_windows.py
-            - builds/taskcluster_base_win64.py
-            - taskcluster_nightly.py
-        extra-config:
-            stage_platform: win64
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-nasm
-        - win64-node
-
-
-win64-nightly/opt:
-    description: "Win64 Nightly"
-    index:
-        product: firefox
-        job-name: win64-opt
-        type: nightly
-    attributes:
-        nightly: true
-        enable-full-crashsymbols: true
-    shipping-phase: build
-    shipping-product: firefox
-    treeherder:
-        platform: windows2012-64/opt
-        symbol: N
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -1136,8 +1048,8 @@ win64-aarch64-shippable/opt:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
     dependencies:
-        win32-opt: build-win32-nightly/opt
-        win64-aarch64-opt: build-win64-aarch64-nightly-no-eme/opt
+        win32-opt: build-win32-shippable/opt
+        win64-aarch64-opt: build-win64-aarch64-shippable-no-eme/opt
     fetches:
         # Abuse fetches to copy the generated-files artifact from the non-eme
         # build directly to the artifacts directory of this build. Likewise
@@ -1152,12 +1064,12 @@ win64-aarch64-shippable/opt:
     toolchains:
         - win64-node
 
-win64-aarch64-nightly-no-eme/opt:
-    description: "AArch64 Win64 Nightly w/o EME"
+win64-aarch64-shippable-no-eme/opt:
+    description: "AArch64 Win64 Shippable w/o EME"
     index:
         product: firefox
         job-name: win64-aarch64-no-eme-opt
-        type: nightly
+        type: shippable
     attributes:
         enable-full-crashsymbols: true
     shipping-phase: build
@@ -1190,59 +1102,6 @@ win64-aarch64-nightly-no-eme/opt:
         - win64-aarch64-rust
         - win64-cbindgen
         - win64-nasm
-        - win64-node
-
-win64-aarch64-nightly/opt:
-    description: "AArch64 Win64 Nightly"
-    index:
-        product: firefox
-        job-name: win64-aarch64-opt
-        type: nightly
-    attributes:
-        nightly: true
-        enable-full-crashsymbols: true
-    shipping-phase: build
-    shipping-product: firefox
-    treeherder:
-        platform: windows2012-aarch64/opt
-        symbol: N
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
-    worker:
-        max-run-time: 7200
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
-            PERFHERDER_EXTRA_OPTIONS: aarch64
-            MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
-            MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
-            USE_ARTIFACT: '1'
-    run:
-        actions: [get-secrets, build]
-        options: [append-env-variables-from-configs]
-        script: mozharness/scripts/fx_desktop_build.py
-        secrets: true
-        config:
-            - builds/releng_base_firefox.py
-            - builds/taskcluster_base_windows.py
-            - taskcluster_nightly.py
-        extra-config:
-            stage_platform: win64-aarch64
-            mozconfig_platform: win64-aarch64
-    dependencies:
-        win32-opt: build-win32-nightly/opt
-        win64-aarch64-opt: build-win64-aarch64-nightly-no-eme/opt
-    fetches:
-        # Abuse fetches to copy the generated-files artifact from the non-eme
-        # build directly to the artifacts directory of this build. Likewise
-        # for target.langpack.xpi
-        win64-aarch64-opt:
-            - artifact: target.generated-files.tar.gz
-              extract: false
-              dest: ../public/build
-            - artifact: target.langpack.xpi
-              extract: false
-              dest: ../public/build
-    toolchains:
         - win64-node
 
 
