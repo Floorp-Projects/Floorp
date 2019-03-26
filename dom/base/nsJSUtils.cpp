@@ -69,7 +69,7 @@ uint64_t nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(JSContext* aContext) {
 }
 
 nsresult nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
-                                    JS::AutoObjectVector& aScopeChain,
+                                    JS::HandleVector<JSObject*> aScopeChain,
                                     JS::CompileOptions& aOptions,
                                     const nsACString& aName, uint32_t aArgCount,
                                     const char** aArgArray,
@@ -150,7 +150,7 @@ nsJSUtils::ExecutionContext::ExecutionContext(JSContext* aCx,
 }
 
 void nsJSUtils::ExecutionContext::SetScopeChain(
-    const JS::AutoObjectVector& aScopeChain) {
+    JS::HandleVector<JSObject*> aScopeChain) {
   if (mSkip) {
     return;
   }
@@ -532,7 +532,7 @@ nsresult nsJSUtils::ModuleEvaluate(JSContext* aCx,
 }
 
 static bool AddScopeChainItem(JSContext* aCx, nsINode* aNode,
-                              JS::AutoObjectVector& aScopeChain) {
+                              JS::MutableHandleVector<JSObject*> aScopeChain) {
   JS::RootedValue val(aCx);
   if (!GetOrCreateDOMReflector(aCx, aNode, &val)) {
     return false;
@@ -546,8 +546,9 @@ static bool AddScopeChainItem(JSContext* aCx, nsINode* aNode,
 }
 
 /* static */
-bool nsJSUtils::GetScopeChainForElement(JSContext* aCx, Element* aElement,
-                                        JS::AutoObjectVector& aScopeChain) {
+bool nsJSUtils::GetScopeChainForElement(
+    JSContext* aCx, Element* aElement,
+    JS::MutableHandleVector<JSObject*> aScopeChain) {
   for (nsINode* cur = aElement; cur; cur = cur->GetScopeChainParent()) {
     if (!AddScopeChainItem(aCx, cur, aScopeChain)) {
       return false;
@@ -560,7 +561,7 @@ bool nsJSUtils::GetScopeChainForElement(JSContext* aCx, Element* aElement,
 /* static */
 bool nsJSUtils::GetScopeChainForXBL(JSContext* aCx, Element* aElement,
                                     const nsXBLPrototypeBinding& aProtoBinding,
-                                    JS::AutoObjectVector& aScopeChain) {
+                                    JS::MutableHandleVector<JSObject*> aScopeChain) {
   if (!aElement) {
     return true;
   }

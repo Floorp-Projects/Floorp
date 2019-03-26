@@ -184,8 +184,8 @@ class MOZ_STACK_CLASS StackScopedCloneData : public StructuredCloneHolderBase {
   }
 
   StackScopedCloneOptions* mOptions;
-  AutoObjectVector mReflectors;
-  AutoObjectVector mFunctions;
+  RootedObjectVector mReflectors;
+  RootedObjectVector mFunctions;
   nsTArray<RefPtr<BlobImpl>> mBlobImpls;
 };
 

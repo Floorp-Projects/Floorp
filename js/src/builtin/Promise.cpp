@@ -2319,7 +2319,7 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
 
 // Unforgeable version of ES2016, 25.4.4.1.
 MOZ_MUST_USE JSObject* js::GetWaitForAllPromise(
-    JSContext* cx, const JS::AutoObjectVector& promises) {
+    JSContext* cx, JS::HandleObjectVector promises) {
 #ifdef DEBUG
   for (size_t i = 0, len = promises.length(); i < len; i++) {
     JSObject* obj = promises[i];

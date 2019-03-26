@@ -91,9 +91,12 @@ using JS::AutoIdVector;
 using JS::AutoObjectVector;
 using JS::AutoValueVector;
 
-using JS::RootedValueVector;
+using JS::HandleObjectVector;
 using JS::HandleValueVector;
+using JS::MutableHandleObjectVector;
 using JS::MutableHandleValueVector;
+using JS::RootedObjectVector;
+using JS::RootedValueVector;
 
 using JS::IdVector;
 using JS::ScriptVector;

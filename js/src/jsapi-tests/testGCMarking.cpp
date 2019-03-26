@@ -334,7 +334,7 @@ BEGIN_TEST(testIncrementalRoots) {
   }
 
   // This is marked during markRuntime
-  JS::AutoObjectVector vec(cx);
+  JS::RootedObjectVector vec(cx);
   if (!vec.append(root)) {
     return false;
   }
@@ -343,7 +343,7 @@ BEGIN_TEST(testIncrementalRoots) {
   // can use them.
   cx->runtime()->gc.minorGC(JS::GCReason::API);
 
-  // Release all roots except for the AutoObjectVector.
+  // Release all roots except for the RootedObjectVector.
   obj = root = nullptr;
 
   // We need to manipulate interior nodes, but the JSAPI understandably wants

@@ -35,7 +35,7 @@ struct JSFreeOp;
 
 namespace js {
 class TempAllocPolicy;
-}; // namespace js
+};  // namespace js
 
 namespace JS {
 
@@ -74,6 +74,7 @@ typedef Handle<JS::Symbol*> HandleSymbol;
 typedef Handle<JS::BigInt*> HandleBigInt;
 typedef Handle<Value> HandleValue;
 typedef Handle<StackGCVector<Value>> HandleValueVector;
+typedef Handle<StackGCVector<JSObject*>> HandleObjectVector;
 
 typedef MutableHandle<JSFunction*> MutableHandleFunction;
 typedef MutableHandle<PropertyKey> MutableHandleId;
@@ -84,6 +85,7 @@ typedef MutableHandle<JS::Symbol*> MutableHandleSymbol;
 typedef MutableHandle<JS::BigInt*> MutableHandleBigInt;
 typedef MutableHandle<Value> MutableHandleValue;
 typedef MutableHandle<StackGCVector<Value>> MutableHandleValueVector;
+typedef MutableHandle<StackGCVector<JSObject*>> MutableHandleObjectVector;
 
 typedef Rooted<JSObject*> RootedObject;
 typedef Rooted<JSFunction*> RootedFunction;
@@ -95,6 +97,7 @@ typedef Rooted<PropertyKey> RootedId;
 typedef Rooted<JS::Value> RootedValue;
 
 typedef RootedVector<JS::Value> RootedValueVector;
+typedef RootedVector<JSObject*> RootedObjectVector;
 
 typedef PersistentRooted<JSFunction*> PersistentRootedFunction;
 typedef PersistentRooted<PropertyKey> PersistentRootedId;

@@ -333,7 +333,7 @@ static MOZ_MUST_USE bool BuildFunctionString(const char* name, size_t nameLen,
 }
 
 JS_PUBLIC_API bool JS::CompileFunction(JSContext* cx,
-                                       AutoObjectVector& envChain,
+                                       HandleObjectVector envChain,
                                        const ReadOnlyCompileOptions& options,
                                        const char* name, unsigned nargs,
                                        const char* const* argnames,
@@ -385,7 +385,7 @@ JS_PUBLIC_API bool JS::CompileFunction(JSContext* cx,
 }
 
 JS_PUBLIC_API bool JS::CompileFunctionUtf8(
-    JSContext* cx, AutoObjectVector& envChain,
+    JSContext* cx, HandleObjectVector envChain,
     const ReadOnlyCompileOptions& options, const char* name, unsigned nargs,
     const char* const* argnames, const char* bytes, size_t length,
     MutableHandleFunction fun) {
@@ -438,7 +438,7 @@ MOZ_NEVER_INLINE static bool ExecuteScript(JSContext* cx, HandleObject scope,
   return Execute(cx, script, *scope, rval);
 }
 
-static bool ExecuteScript(JSContext* cx, AutoObjectVector& envChain,
+static bool ExecuteScript(JSContext* cx, HandleObjectVector envChain,
                           HandleScript scriptArg, Value* rval) {
   RootedObject env(cx);
   RootedScope dummy(cx);
@@ -471,16 +471,14 @@ MOZ_NEVER_INLINE JS_PUBLIC_API bool JS_ExecuteScript(JSContext* cx,
   return ExecuteScript(cx, globalLexical, scriptArg, nullptr);
 }
 
-MOZ_NEVER_INLINE JS_PUBLIC_API bool JS_ExecuteScript(JSContext* cx,
-                                                     AutoObjectVector& envChain,
-                                                     HandleScript scriptArg,
-                                                     MutableHandleValue rval) {
+MOZ_NEVER_INLINE JS_PUBLIC_API bool JS_ExecuteScript(
+    JSContext* cx, HandleObjectVector envChain, HandleScript scriptArg,
+    MutableHandleValue rval) {
   return ExecuteScript(cx, envChain, scriptArg, rval.address());
 }
 
-MOZ_NEVER_INLINE JS_PUBLIC_API bool JS_ExecuteScript(JSContext* cx,
-                                                     AutoObjectVector& envChain,
-                                                     HandleScript scriptArg) {
+MOZ_NEVER_INLINE JS_PUBLIC_API bool JS_ExecuteScript(
+    JSContext* cx, HandleObjectVector envChain, HandleScript scriptArg) {
   return ExecuteScript(cx, envChain, scriptArg, nullptr);
 }
 
@@ -502,7 +500,7 @@ JS_PUBLIC_API bool JS::CloneAndExecuteScript(JSContext* cx,
 }
 
 JS_PUBLIC_API bool JS::CloneAndExecuteScript(JSContext* cx,
-                                             JS::AutoObjectVector& envChain,
+                                             JS::HandleObjectVector envChain,
                                              HandleScript scriptArg,
                                              JS::MutableHandleValue rval) {
   CHECK_THREAD(cx);
@@ -544,7 +542,7 @@ static bool Evaluate(JSContext* cx, ScopeKind scopeKind, HandleObject env,
                  options.noScriptRval ? nullptr : rval.address());
 }
 
-static bool Evaluate(JSContext* cx, AutoObjectVector& envChain,
+static bool Evaluate(JSContext* cx, HandleObjectVector envChain,
                      const ReadOnlyCompileOptions& optionsArg,
                      SourceText<char16_t>& srcBuf, MutableHandleValue rval) {
   RootedObject env(cx);
@@ -583,7 +581,7 @@ JS_PUBLIC_API bool JS::Evaluate(JSContext* cx,
                     rval);
 }
 
-JS_PUBLIC_API bool JS::Evaluate(JSContext* cx, AutoObjectVector& envChain,
+JS_PUBLIC_API bool JS::Evaluate(JSContext* cx, HandleObjectVector envChain,
                                 const ReadOnlyCompileOptions& optionsArg,
                                 SourceText<char16_t>& srcBuf,
                                 MutableHandleValue rval) {

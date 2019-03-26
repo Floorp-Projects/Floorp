@@ -409,9 +409,9 @@ nsresult nsXBLProtoImplField::InstallField(
   JS::Rooted<JS::Value> result(cx);
   JS::CompileOptions options(cx);
   options.setFileAndLine(uriSpec.get(), mLineNumber);
-  JS::AutoObjectVector scopeChain(cx);
+  JS::RootedVector<JSObject*> scopeChain(cx);
   if (!nsJSUtils::GetScopeChainForXBL(cx, boundElement, aProtoBinding,
-                                      scopeChain)) {
+                                      &scopeChain)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   rv = NS_OK;
