@@ -92,8 +92,6 @@ open class GleanInternalAPI internal constructor () {
         // API. For this reason we're safe to set `initialized = true` right after it.
         initializeCoreMetrics(applicationContext)
 
-        initialized = true
-
         // Deal with any pending events so we can start recording new ones
         EventsStorageEngine.onReadyToSendPings(applicationContext)
 
@@ -102,6 +100,7 @@ open class GleanInternalAPI internal constructor () {
         // on being dispatched to the API context before any other metric.
         metricsPingScheduler = MetricsPingScheduler(applicationContext)
         metricsPingScheduler.startupCheck()
+        initialized = true
 
         // Other pings might set some other metrics (i.e. the baseline metrics),
         // so we need to be initialized by now.
