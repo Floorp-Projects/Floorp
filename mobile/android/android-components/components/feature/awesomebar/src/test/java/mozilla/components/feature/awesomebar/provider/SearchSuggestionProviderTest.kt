@@ -12,8 +12,10 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
+import mozilla.components.support.ktx.android.graphics.drawable.toBitmap
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -242,6 +244,62 @@ class SearchSuggestionProviderTest {
                 assertEquals("firefox for mac", suggestion.chips[2].title)
                 assertEquals("firefox quantum", suggestion.chips[3].title)
                 assertEquals("firefox update", suggestion.chips[4].title)
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    @Test
+    fun `Provider should use engine icon by default`() {
+        runBlocking {
+            val server = MockWebServer()
+            server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
+            server.start()
+
+            val searchEngine: SearchEngine = mock()
+            val engineIcon = context.getDrawable(R.drawable.mozac_ic_device_desktop)!!.toBitmap()
+
+            doReturn(engineIcon).`when`(searchEngine).icon
+            doReturn("/").`when`(searchEngine).buildSuggestionsURL("fire")
+            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
+            doReturn("google").`when`(searchEngine).name
+
+            val provider = SearchSuggestionProvider(searchEngine, mock(), HttpURLConnectionClient())
+            try {
+                val suggestions = provider.onInputChanged("fire")
+                assertEquals(1, suggestions.size)
+                assertTrue(suggestions[0].icon?.invoke(20, 20)?.sameAs(engineIcon)!!)
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    @Test
+    fun `Provider should use icon parameter when available`() {
+        runBlocking {
+            val server = MockWebServer()
+            server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
+            server.start()
+
+            val searchEngine: SearchEngine = mock()
+            val engineIcon = context.getDrawable(R.drawable.mozac_ic_device_desktop)!!.toBitmap()
+
+            doReturn(engineIcon).`when`(searchEngine).icon
+            doReturn("/").`when`(searchEngine).buildSuggestionsURL("fire")
+            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
+            doReturn("google").`when`(searchEngine).name
+
+            val paramIcon = context.getDrawable(R.drawable.mozac_ic_search)!!.toBitmap()
+
+            val provider = SearchSuggestionProvider(searchEngine, mock(), HttpURLConnectionClient(),
+                    icon = paramIcon)
+
+            try {
+                val suggestions = provider.onInputChanged("fire")
+                assertEquals(1, suggestions.size)
+                assertTrue(suggestions[0].icon?.invoke(20, 20)?.sameAs(paramIcon)!!)
             } finally {
                 server.shutdown()
             }
