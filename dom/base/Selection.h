@@ -698,6 +698,12 @@ class Selection final : public nsSupportsWeakReference,
                         bool aSelect);
 
   /**
+   * SelectFramesInAllRanges() calls SelectFrames() for all current
+   * ranges.
+   */
+  void SelectFramesInAllRanges(nsPresContext* aPresContext);
+
+  /**
    * Test whether the supplied range points to a single table element.
    * Result is one of the TableSelection constants. "None" means
    * a table element isn't selected.

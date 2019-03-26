@@ -1509,6 +1509,14 @@ nsresult Selection::SelectAllFramesForContent(
   return NS_OK;
 }
 
+void Selection::SelectFramesInAllRanges(nsPresContext* aPresContext) {
+  for (size_t i = 0; i < mRanges.Length(); ++i) {
+    nsRange* range = mRanges[i].mRange;
+    MOZ_ASSERT(range->IsInSelection());
+    SelectFrames(aPresContext, range, range->IsInSelection());
+  }
+}
+
 /**
  * The idea of this helper method is to select or deselect "top to bottom",
  * traversing through the frames
@@ -2716,11 +2724,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
   }
 
   if (mRanges.Length() > 1) {
-    for (size_t i = 0; i < mRanges.Length(); ++i) {
-      nsRange* range = mRanges[i].mRange;
-      MOZ_ASSERT(range->IsInSelection());
-      SelectFrames(presContext, range, range->IsInSelection());
-    }
+    SelectFramesInAllRanges(presContext);
   }
 
   DEBUG_OUT_RANGE(range);
@@ -3485,6 +3489,16 @@ void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
   AddRange(*newRange, aRv);
   if (aRv.Failed()) {
     return;
+  }
+
+  // Adding a range may set 2 or more ranges if there are non-selectable
+  // contents only when this change is caused by a user operation.  Therefore,
+  // we need to select frames with the result in such case.
+  if (mUserInitiated) {
+    RefPtr<nsPresContext> presContext = GetPresContext();
+    if (mRanges.Length() > 1 && presContext) {
+      SelectFramesInAllRanges(presContext);
+    }
   }
 
   SetDirection(aDirection);
