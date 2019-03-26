@@ -42,3 +42,9 @@ if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS || Cu.isInAutomation) {
 } else {
   makeConstant("ALLOW_LEGACY_EXTENSIONS", false);
 }
+
+if (AppConstants.MOZ_DEV_EDITION) {
+  makeConstant("DEFAULT_THEME_ID", "firefox-compact-dark@mozilla.org");
+} else {
+  makeConstant("DEFAULT_THEME_ID", "default-theme@mozilla.org");
+}
