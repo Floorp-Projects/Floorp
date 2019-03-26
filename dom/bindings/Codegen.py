@@ -7411,7 +7411,7 @@ class CGCallGenerator(CGThing):
                     principalType=principalType,
                     getPrincipal=getPrincipal)))
 
-            args.append(CGGeneric(subjectPrincipalArg))
+            args.append(CGGeneric("MOZ_KnownLive(%s)" % subjectPrincipalArg))
 
         if needsCallerType:
             if isChromeOnly:
