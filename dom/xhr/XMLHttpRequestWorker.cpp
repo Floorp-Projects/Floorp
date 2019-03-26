@@ -780,6 +780,7 @@ bool Proxy::Init() {
   mXHR->Construct(mWorkerPrivate->GetPrincipal(),
                   ownerWindow ? ownerWindow->AsGlobal() : nullptr,
                   mWorkerPrivate->CookieSettings(),
+                  true,
                   mWorkerPrivate->GetBaseURI(), mWorkerPrivate->GetLoadGroup(),
                   mWorkerPrivate->GetPerformanceStorage(),
                   mWorkerPrivate->CSPEventListener());
