@@ -8,12 +8,14 @@
 #include "SkAdvancedTypefaceMetrics.h"
 #include "SkEndian.h"
 #include "SkFontDescriptor.h"
+#include "SkFontMetrics.h"
 #include "SkFontMgr.h"
 #include "SkMakeUnique.h"
 #include "SkMutex.h"
 #include "SkOTTable_OS_2.h"
 #include "SkOnce.h"
 #include "SkStream.h"
+#include "SkSurfacePriv.h"
 #include "SkTypeface.h"
 #include "SkTypefaceCache.h"
 
@@ -42,7 +44,7 @@ public:
 protected:
     SkEmptyTypeface() : SkTypeface(SkFontStyle(), true) { }
 
-    SkStreamAsset* onOpenStream(int* ttcIndex) const override { return nullptr; }
+    std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const override { return nullptr; }
     sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
         return sk_ref_sp(this);
     }
@@ -260,7 +262,7 @@ size_t SkTypeface::getTableData(SkFontTableTag tag, size_t offset, size_t length
     return this->onGetTableData(tag, offset, length, data);
 }
 
-SkStreamAsset* SkTypeface::openStream(int* ttcIndex) const {
+std::unique_ptr<SkStreamAsset> SkTypeface::openStream(int* ttcIndex) const {
     int ttcIndexStorage;
     if (nullptr == ttcIndex) {
         // So our subclasses don't need to check for null param
@@ -295,6 +297,11 @@ int SkTypeface::charsToGlyphs(const void* chars, Encoding encoding,
         return 0;
     }
     return this->onCharsToGlyphs(chars, encoding, glyphs, glyphCount);
+}
+
+SkGlyphID SkTypeface::unicharToGlyph(SkUnichar uni) const {
+    SkGlyphID glyphs[1];
+    return this->onCharsToGlyphs(&uni, kUTF32_Encoding, glyphs, 1) == 1 ? glyphs[0] : 0;
 }
 
 int SkTypeface::countGlyphs() const {
@@ -388,16 +395,15 @@ bool SkTypeface::onComputeBounds(SkRect* bounds) const {
     const SkScalar textSize = 2048;
     const SkScalar invTextSize = 1 / textSize;
 
-    SkPaint paint;
-    paint.setTypeface(sk_ref_sp(const_cast<SkTypeface*>(this)));
-    paint.setTextSize(textSize);
-    paint.setLinearText(true);
+    SkFont font;
+    font.setTypeface(sk_ref_sp(const_cast<SkTypeface*>(this)));
+    font.setSize(textSize);
+    font.setLinearMetrics(true);
 
     SkScalerContextRec rec;
     SkScalerContextEffects effects;
 
-    SkScalerContext::MakeRecAndEffects(
-        paint, nullptr, nullptr, SkScalerContextFlags::kNone, &rec, &effects);
+    SkScalerContext::MakeRecAndEffectsFromFont(font, &rec, &effects);
 
     SkAutoDescriptor ad;
     SkScalerContextEffects noeffects;
@@ -408,7 +414,7 @@ bool SkTypeface::onComputeBounds(SkRect* bounds) const {
         return false;
     }
 
-    SkPaint::FontMetrics fm;
+    SkFontMetrics fm;
     ctx->getFontMetrics(&fm);
     bounds->set(fm.fXMin * invTextSize, fm.fTop * invTextSize,
                 fm.fXMax * invTextSize, fm.fBottom * invTextSize);

@@ -17,14 +17,42 @@ class GrGLGpu;
 
 class GrGLTexture : public GrTexture {
 public:
-    struct TexParams {
-        GrGLenum fMinFilter;
-        GrGLenum fMagFilter;
-        GrGLenum fWrapS;
-        GrGLenum fWrapT;
-        GrGLenum fMaxMipMapLevel;
-        GrGLenum fSwizzleRGBA[4];
-        void invalidate() { memset(this, 0xff, sizeof(TexParams)); }
+    // Texture state that overlaps with sampler object state. We don't need to track this if we
+    // are using sampler objects.
+    struct SamplerParams {
+        // These are the OpenGL defaults.
+        GrGLenum fMinFilter = GR_GL_NEAREST_MIPMAP_LINEAR;
+        GrGLenum fMagFilter = GR_GL_LINEAR;
+        GrGLenum fWrapS = GR_GL_REPEAT;
+        GrGLenum fWrapT = GR_GL_REPEAT;
+        GrGLfloat fMinLOD = -1000.f;
+        GrGLfloat fMaxLOD = 1000.f;
+        // We always want the border color to be transparent black, so no need to store 4 floats.
+        // Just track if it's been invalidated and no longer the default
+        bool fBorderColorInvalid = false;
+
+        void invalidate() {
+            fMinFilter = ~0U;
+            fMagFilter = ~0U;
+            fWrapS = ~0U;
+            fWrapT = ~0U;
+            fMinLOD = SK_ScalarNaN;
+            fMaxLOD = SK_ScalarNaN;
+            fBorderColorInvalid = true;
+        }
+    };
+
+    // Texture state that does not overlap with sampler object state.
+    struct NonSamplerParams {
+        // These are the OpenGL defaults.
+        uint32_t fSwizzleKey = GrSwizzle::RGBA().asKey();
+        GrGLint fBaseMipMapLevel = 0;
+        GrGLint fMaxMipMapLevel = 1000;
+        void invalidate() {
+            fSwizzleKey = ~0U;
+            fBaseMipMapLevel = ~0;
+            fMaxMipMapLevel = ~0;
+        }
     };
 
     struct IDDesc {
@@ -36,29 +64,30 @@ public:
 
     GrGLTexture(GrGLGpu*, SkBudgeted, const GrSurfaceDesc&, const IDDesc&, GrMipMapsStatus);
 
-    ~GrGLTexture() override {
-        // check that invokeReleaseProc has been called (if needed)
-        SkASSERT(!fReleaseHelper);
-    }
+    ~GrGLTexture() override {}
 
     GrBackendTexture getBackendTexture() const override;
 
-    void textureParamsModified() override { fTexParams.invalidate(); }
+    GrBackendFormat backendFormat() const override;
 
-    void setRelease(sk_sp<GrReleaseProcHelper> releaseHelper) override {
-        fReleaseHelper = std::move(releaseHelper);
+    void textureParamsModified() override {
+        fSamplerParams.invalidate();
+        fNonSamplerParams.invalidate();
     }
 
     // These functions are used to track the texture parameters associated with the texture.
-    const TexParams& getCachedTexParams(GrGpu::ResetTimestamp* timestamp) const {
-        *timestamp = fTexParamsTimestamp;
-        return fTexParams;
-    }
+    GrGpu::ResetTimestamp getCachedParamsTimestamp() const { return fParamsTimestamp; }
+    const SamplerParams& getCachedSamplerParams() const { return fSamplerParams; }
+    const NonSamplerParams& getCachedNonSamplerParams() const { return fNonSamplerParams; }
 
-    void setCachedTexParams(const TexParams& texParams,
-                            GrGpu::ResetTimestamp timestamp) {
-        fTexParams = texParams;
-        fTexParamsTimestamp = timestamp;
+    void setCachedParams(const SamplerParams* samplerParams,
+                         const NonSamplerParams& nonSamplerParams,
+                         GrGpu::ResetTimestamp currTimestamp) {
+        if (samplerParams) {
+            fSamplerParams = *samplerParams;
+        }
+        fNonSamplerParams = nonSamplerParams;
+        fParamsTimestamp = currTimestamp;
     }
 
     GrGLuint textureID() const { return fID; }
@@ -69,7 +98,7 @@ public:
     void baseLevelWasBoundToFBO() { fBaseLevelHasBeenBoundToFBO = true; }
 
     static sk_sp<GrGLTexture> MakeWrapped(GrGLGpu*, const GrSurfaceDesc&, GrMipMapsStatus,
-                                          const IDDesc&);
+                                          const IDDesc&, GrWrapCacheable, GrIOType);
 
     void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
 
@@ -77,9 +106,9 @@ protected:
     // Constructor for subclasses.
     GrGLTexture(GrGLGpu*, const GrSurfaceDesc&, const IDDesc&, GrMipMapsStatus);
 
-    enum Wrapped { kWrapped };
     // Constructor for instances wrapping backend objects.
-    GrGLTexture(GrGLGpu*, Wrapped, const GrSurfaceDesc&, GrMipMapsStatus, const IDDesc&);
+    GrGLTexture(GrGLGpu*, const GrSurfaceDesc&, GrMipMapsStatus, const IDDesc&, GrWrapCacheable,
+                GrIOType);
 
     void init(const GrSurfaceDesc&, const IDDesc&);
 
@@ -89,22 +118,13 @@ protected:
     bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) override;
 
 private:
-    void invokeReleaseProc() {
-        if (fReleaseHelper) {
-            // Depending on the ref count of fReleaseHelper this may or may not actually trigger the
-            // ReleaseProc to be called.
-            fReleaseHelper.reset();
-        }
-    }
-
-    TexParams                       fTexParams;
-    GrGpu::ResetTimestamp           fTexParamsTimestamp;
-    GrGLuint                        fID;
-    GrGLenum                        fFormat;
-    GrBackendObjectOwnership        fTextureIDOwnership;
-    bool                            fBaseLevelHasBeenBoundToFBO = false;
-
-    sk_sp<GrReleaseProcHelper>      fReleaseHelper;
+    SamplerParams fSamplerParams;
+    NonSamplerParams fNonSamplerParams;
+    GrGpu::ResetTimestamp fParamsTimestamp;
+    GrGLuint fID;
+    GrGLenum fFormat;
+    GrBackendObjectOwnership fTextureIDOwnership;
+    bool fBaseLevelHasBeenBoundToFBO = false;
 
     typedef GrTexture INHERITED;
 };

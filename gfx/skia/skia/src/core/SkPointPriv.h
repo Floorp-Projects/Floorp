@@ -26,11 +26,7 @@ public:
     static const SkScalar* AsScalars(const SkPoint& pt) { return &pt.fX; }
 
     static bool CanNormalize(SkScalar dx, SkScalar dy) {
-        if (!SkScalarsAreFinite(dx, dy)) {
-            return false;
-        }
-        // Simple enough (and performance critical sometimes) so we inline it.
-        return (dx*dx + dy*dy) > (SK_ScalarNearlyZero * SK_ScalarNearlyZero);
+        return SkScalarsAreFinite(dx, dy) && (dx || dy);
     }
 
     static SkScalar DistanceToLineBetweenSqd(const SkPoint& pt, const SkPoint& a,

@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+
 #include "GrProcessor.h"
 #include "GrRenderTargetPriv.h"  // TODO: remove once refPipelineState gets passed stencil settings.
 #include "GrStencilSettings.h"
@@ -74,7 +75,10 @@ void GrVkResourceProvider::PipelineStateCache::release() {
 }
 
 GrVkPipelineState* GrVkResourceProvider::PipelineStateCache::refPipelineState(
+        GrRenderTarget* renderTarget,
+        GrSurfaceOrigin origin,
         const GrPrimitiveProcessor& primProc,
+        const GrTextureProxy* const primProcProxies[],
         const GrPipeline& pipeline,
         GrPrimitiveType primitiveType,
         VkRenderPass compatibleRenderPass) {
@@ -83,28 +87,24 @@ GrVkPipelineState* GrVkResourceProvider::PipelineStateCache::refPipelineState(
 #endif
     GrStencilSettings stencil;
     if (pipeline.isStencilEnabled()) {
-        GrRenderTarget* rt = pipeline.renderTarget();
         // TODO: attach stencil and create settings during render target flush.
-        SkASSERT(rt->renderTargetPriv().getStencilAttachment());
+        SkASSERT(renderTarget->renderTargetPriv().getStencilAttachment());
         stencil.reset(*pipeline.getUserStencil(), pipeline.hasStencilClip(),
-                      rt->renderTargetPriv().numStencilBits());
+                      renderTarget->renderTargetPriv().numStencilBits());
     }
 
     // Get GrVkProgramDesc
     GrVkPipelineStateBuilder::Desc desc;
-    if (!GrVkPipelineStateBuilder::Desc::Build(&desc, primProc, pipeline, stencil, primitiveType,
-                                               *fGpu->caps()->shaderCaps())) {
+    if (!GrVkPipelineStateBuilder::Desc::Build(&desc, renderTarget, primProc, pipeline, stencil,
+                                               primitiveType, fGpu)) {
         GrCapsDebugf(fGpu->caps(), "Failed to build vk program descriptor!\n");
         return nullptr;
     }
-    desc.finalize();
 
     std::unique_ptr<Entry>* entry = fMap.find(desc);
     if (!entry) {
         // Didn't find an origin-independent version, check with the specific origin
-        GrSurfaceOrigin origin = pipeline.proxy()->origin();
         desc.setSurfaceOriginKey(GrGLSLFragmentShaderBuilder::KeyForSurfaceOrigin(origin));
-        desc.finalize();
         entry = fMap.find(desc);
     }
     if (!entry) {
@@ -112,7 +112,8 @@ GrVkPipelineState* GrVkResourceProvider::PipelineStateCache::refPipelineState(
         ++fCacheMisses;
 #endif
         GrVkPipelineState* pipelineState(GrVkPipelineStateBuilder::CreatePipelineState(
-                fGpu, primProc, pipeline, stencil, primitiveType, &desc, compatibleRenderPass));
+                fGpu, renderTarget, origin, primProc, primProcProxies, pipeline, stencil,
+                primitiveType, &desc, compatibleRenderPass));
         if (nullptr == pipelineState) {
             return nullptr;
         }

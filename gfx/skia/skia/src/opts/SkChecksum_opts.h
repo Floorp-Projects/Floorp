@@ -17,9 +17,15 @@
     #include <arm_acle.h>
 #endif
 
-#include "../jumper/SkJumper_misc.h"
-
 namespace SK_OPTS_NS {
+
+#define unaligned_load checksum_unaligned_load
+template <typename T, typename P>
+static inline T unaligned_load(const P* p) {
+    T v;
+    memcpy(&v, p, sizeof(v));
+    return v;
+}
 
 #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE42 && (defined(__x86_64__) || defined(_M_X64))
     // This is not a CRC32.  It's Just A Hash that uses those instructions because they're fast.
@@ -205,6 +211,8 @@ namespace SK_OPTS_NS {
         return SkChecksum::Mix(hash);
     }
 #endif
+
+#undef unaligned_load
 
 }  // namespace SK_OPTS_NS
 

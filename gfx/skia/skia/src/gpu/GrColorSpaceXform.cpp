@@ -8,7 +8,6 @@
 #include "GrColorSpaceXform.h"
 #include "SkColorSpace.h"
 #include "SkColorSpacePriv.h"
-#include "SkMatrix44.h"
 #include "glsl/GrGLSLColorSpaceXformHelper.h"
 #include "glsl/GrGLSLFragmentProcessor.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
@@ -46,12 +45,6 @@ bool GrColorSpaceXform::Equals(const GrColorSpaceXform* a, const GrColorSpaceXfo
     }
 
     return true;
-}
-
-GrColor4f GrColorSpaceXform::apply(const GrColor4f& srcColor) {
-    GrColor4f result = srcColor;
-    fSteps.apply(result.fRGBA);
-    return result;
 }
 
 SkColor4f GrColorSpaceXform::apply(const SkColor4f& srcColor) {
@@ -177,4 +170,17 @@ std::unique_ptr<GrFragmentProcessor> GrColorSpaceXformEffect::Make(
 
     return std::unique_ptr<GrFragmentProcessor>(new GrColorSpaceXformEffect(std::move(child),
                                                                             std::move(xform)));
+}
+
+std::unique_ptr<GrFragmentProcessor> GrColorSpaceXformEffect::Make(
+        std::unique_ptr<GrFragmentProcessor> child, sk_sp<GrColorSpaceXform> colorXform) {
+    if (!child) {
+        return nullptr;
+    }
+    if (!colorXform) {
+        return child;
+    }
+
+    return std::unique_ptr<GrFragmentProcessor>(new GrColorSpaceXformEffect(std::move(child),
+                                                                            std::move(colorXform)));
 }

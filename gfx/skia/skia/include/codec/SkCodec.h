@@ -20,7 +20,7 @@
 #include "SkSize.h"
 #include "SkStream.h"
 #include "SkTypes.h"
-#include "SkYUVSizeInfo.h"
+#include "SkYUVASizeInfo.h"
 
 #include <vector>
 
@@ -351,16 +351,28 @@ public:
      *  returns false and does not modify any of the parameters.
      *
      *  @param sizeInfo   Output parameter indicating the sizes and required
-     *                    allocation widths of the Y, U, and V planes.
+     *                    allocation widths of the Y, U, V, and A planes. Given current codec
+     *                    limitations the size of the A plane will always be 0 and the Y, U, V
+     *                    channels will always be planar.
      *  @param colorSpace Output parameter.  If non-NULL this is set to kJPEG,
      *                    otherwise this is ignored.
      */
-    bool queryYUV8(SkYUVSizeInfo* sizeInfo, SkYUVColorSpace* colorSpace) const {
+    bool queryYUV8(SkYUVASizeInfo* sizeInfo, SkYUVColorSpace* colorSpace) const {
         if (nullptr == sizeInfo) {
             return false;
         }
 
-        return this->onQueryYUV8(sizeInfo, colorSpace);
+        bool result = this->onQueryYUV8(sizeInfo, colorSpace);
+        if (result) {
+            for (int i = 0; i <= 2; ++i) {
+                SkASSERT(sizeInfo->fSizes[i].fWidth > 0 && sizeInfo->fSizes[i].fHeight > 0 &&
+                         sizeInfo->fWidthBytes[i] > 0);
+            }
+            SkASSERT(!sizeInfo->fSizes[3].fWidth &&
+                     !sizeInfo->fSizes[3].fHeight &&
+                     !sizeInfo->fWidthBytes[3]);
+        }
+        return result;
     }
 
     /**
@@ -373,11 +385,11 @@ public:
      *                    recommendation (but not smaller).
      *  @param planes     Memory for each of the Y, U, and V planes.
      */
-    Result getYUV8Planes(const SkYUVSizeInfo& sizeInfo, void* planes[3]) {
-        if (nullptr == planes || nullptr == planes[0] || nullptr == planes[1] ||
-                nullptr == planes[2]) {
+    Result getYUV8Planes(const SkYUVASizeInfo& sizeInfo, void* planes[SkYUVASizeInfo::kMaxCount]) {
+        if (!planes || !planes[0] || !planes[1] || !planes[2]) {
             return kInvalidInput;
         }
+        SkASSERT(!planes[3]); // TODO: is this a fair assumption?
 
         if (!this->rewindIfNeeded()) {
             return kCouldNotRewind;
@@ -390,6 +402,9 @@ public:
      *  Prepare for an incremental decode with the specified options.
      *
      *  This may require a rewind.
+     *
+     *  If kIncompleteInput is returned, may be called again after more data has
+     *  been provided to the source SkStream.
      *
      *  @param dstInfo Info of the destination. If the dimensions do not match
      *      those of getInfo, this implies a scale.
@@ -409,10 +424,11 @@ public:
     /**
      *  Start/continue the incremental decode.
      *
-     *  Not valid to call before calling startIncrementalDecode().
+     *  Not valid to call before a call to startIncrementalDecode() returns
+     *  kSuccess.
      *
-     *  After the first call, should only be called again if more data has been
-     *  provided to the source SkStream.
+     *  If kIncompleteInput is returned, may be called again after more data has
+     *  been provided to the source SkStream.
      *
      *  Unlike getPixels and getScanlines, this does not do any filling. This is
      *  left up to the caller, since they may be skipping lines or continuing the
@@ -708,11 +724,12 @@ protected:
                                void* pixels, size_t rowBytes, const Options&,
                                int* rowsDecoded) = 0;
 
-    virtual bool onQueryYUV8(SkYUVSizeInfo*, SkYUVColorSpace*) const {
+    virtual bool onQueryYUV8(SkYUVASizeInfo*, SkYUVColorSpace*) const {
         return false;
     }
 
-    virtual Result onGetYUV8Planes(const SkYUVSizeInfo&, void*[3] /*planes*/) {
+    virtual Result onGetYUV8Planes(const SkYUVASizeInfo&,
+                                   void*[SkYUVASizeInfo::kMaxCount] /*planes*/) {
         return kUnimplemented;
     }
 
@@ -772,6 +789,14 @@ protected:
 
     virtual int onOutputScanline(int inputScanline) const;
 
+    /**
+     *  Return whether we can convert to dst.
+     *
+     *  Will be called for the appropriate frame, prior to initializing the colorXform.
+     */
+    virtual bool conversionSupported(const SkImageInfo& dst, bool srcIsOpaque,
+                                     bool needsColorXform);
+
     // Some classes never need a colorXform e.g.
     // - ICO uses its embedded codec's colorXform
     // - WBMP is just Black/White
@@ -817,14 +842,6 @@ private:
     int                                fCurrScanline;
 
     bool                               fStartedIncrementalDecode;
-
-    /**
-     *  Return whether we can convert to dst.
-     *
-     *  Will be called for the appropriate frame, prior to initializing the colorXform.
-     */
-    virtual bool conversionSupported(const SkImageInfo& dst, bool srcIsOpaque,
-                                     bool needsColorXform);
 
     bool initializeColorXform(const SkImageInfo& dstInfo, SkEncodedInfo::Alpha, bool srcIsOpaque);
 

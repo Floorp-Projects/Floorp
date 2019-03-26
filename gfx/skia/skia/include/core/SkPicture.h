@@ -49,9 +49,9 @@ public:
         if successful; otherwise, returns nullptr. Fails if data does not permit
         constructing valid SkPicture.
 
-        procs.fPictureProc permits supplying a custom function to decode SkPicture.
-        If procs.fPictureProc is nullptr, default decoding is used. procs.fPictureCtx
-        may be used to provide user context to procs.fPictureProc; procs.fPictureProc
+        procs->fPictureProc permits supplying a custom function to decode SkPicture.
+        If procs->fPictureProc is nullptr, default decoding is used. procs->fPictureCtx
+        may be used to provide user context to procs->fPictureProc; procs->fPictureProc
         is called with a pointer to data, data byte length, and user context.
 
         @param stream  container for serial data
@@ -65,9 +65,9 @@ public:
         if successful; otherwise, returns nullptr. Fails if data does not permit
         constructing valid SkPicture.
 
-        procs.fPictureProc permits supplying a custom function to decode SkPicture.
-        If procs.fPictureProc is nullptr, default decoding is used. procs.fPictureCtx
-        may be used to provide user context to procs.fPictureProc; procs.fPictureProc
+        procs->fPictureProc permits supplying a custom function to decode SkPicture.
+        If procs->fPictureProc is nullptr, default decoding is used. procs->fPictureCtx
+        may be used to provide user context to procs->fPictureProc; procs->fPictureProc
         is called with a pointer to data, data byte length, and user context.
 
         @param data   container for serial data
@@ -148,14 +148,14 @@ public:
 
         @return  identifier for SkPicture
     */
-    uint32_t uniqueID() const;
+    uint32_t uniqueID() const { return fUniqueID; }
 
     /** Returns storage containing SkData describing SkPicture, using optional custom
         encoders.
 
-        procs.fPictureProc permits supplying a custom function to encode SkPicture.
-        If procs.fPictureProc is nullptr, default encoding is used. procs.fPictureCtx
-        may be used to provide user context to procs.fPictureProc; procs.fPictureProc
+        procs->fPictureProc permits supplying a custom function to encode SkPicture.
+        If procs->fPictureProc is nullptr, default encoding is used. procs->fPictureCtx
+        may be used to provide user context to procs->fPictureProc; procs->fPictureProc
         is called with a pointer to SkPicture and user context.
 
         @param procs  custom serial data encoders; may be nullptr
@@ -165,9 +165,9 @@ public:
 
     /** Writes picture to stream, using optional custom encoders.
 
-        procs.fPictureProc permits supplying a custom function to encode SkPicture.
-        If procs.fPictureProc is nullptr, default encoding is used. procs.fPictureCtx
-        may be used to provide user context to procs.fPictureProc; procs.fPictureProc
+        procs->fPictureProc permits supplying a custom function to encode SkPicture.
+        If procs->fPictureProc is nullptr, default encoding is used. procs->fPictureCtx
+        may be used to provide user context to procs->fPictureProc; procs->fPictureProc
         is called with a pointer to SkPicture and user context.
 
         @param stream  writable serial data stream
@@ -263,10 +263,14 @@ private:
     // V62: Don't negate size of custom encoded images (don't write origin x,y either)
     // V63: Store image bounds (including origin) instead of just width/height to support subsets
     // V64: Remove occluder feature from blur maskFilter
+    // V65: Float4 paint color
+    // V66: Add saveBehind
+    // V67: Blobs serialize fonts instead of paints
+    // V68: Paint doesn't serialize font-related stuff
 
     // Only SKPs within the min/current picture version range (inclusive) can be read.
     static const uint32_t     MIN_PICTURE_VERSION = 56;     // august 2017
-    static const uint32_t CURRENT_PICTURE_VERSION = 65;
+    static const uint32_t CURRENT_PICTURE_VERSION = 68;
 
     static_assert(MIN_PICTURE_VERSION <= 62, "Remove kFontAxes_bad from SkFontDescriptor.cpp");
 
@@ -278,7 +282,7 @@ private:
     struct SkPictInfo createHeader() const;
     class SkPictureData* backport() const;
 
-    mutable uint32_t fUniqueID;
+    uint32_t fUniqueID;
 };
 
 #endif

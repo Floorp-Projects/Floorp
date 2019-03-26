@@ -6,6 +6,8 @@
 */
 
 #include "GrMtlUniformHandler.h"
+#include "GrTexture.h"
+#include "GrTexturePriv.h"
 #include "glsl/GrGLSLProgramBuilder.h"
 
 // TODO: this class is basically copy and pasted from GrVklUniformHandler so that we can have
@@ -16,7 +18,7 @@
 // To determine whether a current offset is aligned, we can just 'and' the lowest bits with the
 // alignment mask. A value of 0 means aligned, any other value is how many bytes past alignment we
 // are. This works since all alignments are powers of 2. The mask is always (alignment - 1).
-uint32_t grsltype_to_alignment_mask(GrSLType type) {
+static uint32_t grsltype_to_alignment_mask(GrSLType type) {
     switch(type) {
         case kByte_GrSLType: // fall through
         case kUByte_GrSLType:
@@ -170,11 +172,15 @@ static inline uint32_t grsltype_to_mtl_size(GrSLType type) {
 // Given the current offset into the ubo, calculate the offset for the uniform we're trying to add
 // taking into consideration all alignment requirements. The uniformOffset is set to the offset for
 // the new uniform, and currentOffset is updated to be the offset to the end of the new uniform.
-void get_ubo_aligned_offset(uint32_t* uniformOffset,
-                            uint32_t* currentOffset,
-                            GrSLType type,
-                            int arrayCount) {
+static void get_ubo_aligned_offset(uint32_t* uniformOffset,
+                                   uint32_t* currentOffset,
+                                   uint32_t* maxAlignment,
+                                   GrSLType type,
+                                   int arrayCount) {
     uint32_t alignmentMask = grsltype_to_alignment_mask(type);
+    if (alignmentMask > *maxAlignment) {
+        *maxAlignment = alignmentMask;
+    }
     uint32_t offsetDiff = *currentOffset & alignmentMask;
     if (offsetDiff != 0) {
         offsetDiff = alignmentMask - offsetDiff + 1;
@@ -229,14 +235,17 @@ GrGLSLUniformHandler::UniformHandle GrMtlUniformHandler::internalAddUniformArray
     uni.fVariable.setTypeModifier(GrShaderVar::kNone_TypeModifier);
 
     uint32_t* currentOffset;
+    uint32_t* maxAlignment;
     uint32_t geomStages = kVertex_GrShaderFlag | kGeometry_GrShaderFlag;
     if (geomStages & visibility) {
         currentOffset = &fCurrentGeometryUBOOffset;
+        maxAlignment = &fCurrentGeometryUBOMaxAlignment;
     } else {
         SkASSERT(kFragment_GrShaderFlag == visibility);
         currentOffset = &fCurrentFragmentUBOOffset;
+        maxAlignment = &fCurrentFragmentUBOMaxAlignment;
     }
-    get_ubo_aligned_offset(&uni.fUBOffset, currentOffset, type, arrayCount);
+    get_ubo_aligned_offset(&uni.fUBOffset, currentOffset, maxAlignment, type, arrayCount);
 
     SkString layoutQualifier;
     layoutQualifier.appendf("offset=%d", uni.fUBOffset);
@@ -249,14 +258,18 @@ GrGLSLUniformHandler::UniformHandle GrMtlUniformHandler::internalAddUniformArray
     return GrGLSLUniformHandler::UniformHandle(fUniforms.count() - 1);
 }
 
-GrGLSLUniformHandler::SamplerHandle GrMtlUniformHandler::addSampler(GrSwizzle swizzle,
-                                                                    GrTextureType type,
-                                                                    GrSLPrecision precision,
-                                                                    const char* name) {
+GrGLSLUniformHandler::SamplerHandle GrMtlUniformHandler::addSampler(const GrTexture* texture,
+                                                                    const GrSamplerState&,
+                                                                    const char* name,
+                                                                    const GrShaderCaps* caps) {
     SkASSERT(name && strlen(name));
     SkString mangleName;
     char prefix = 'u';
     fProgramBuilder->nameVariable(&mangleName, prefix, name, true);
+
+    GrSLPrecision precision = GrSLSamplerPrecision(texture->config());
+    GrSwizzle swizzle = caps->configTextureSwizzle(texture->config());
+    GrTextureType type = texture->texturePriv().textureType();
 
     UniformInfo& info = fSamplers.push_back();
     info.fVariable.setType(GrSLCombinedSamplerTypeForTextureType(type));

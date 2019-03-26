@@ -9,10 +9,10 @@
 #include "GrAppliedClip.h"
 #include "GrClip.h"
 #include "GrColor.h"
-#include "GrContextPriv.h"
 #include "GrDrawingManager.h"
 #include "GrFixedClip.h"
 #include "GrPathRenderer.h"
+#include "GrRecordingContextPriv.h"
 #include "GrRenderTargetContext.h"
 #include "GrRenderTargetContextPriv.h"
 #include "GrShape.h"
@@ -66,16 +66,19 @@ GrReducedClip::GrReducedClip(const SkClipStack& stack, const SkRect& queryBounds
         // "Is intersection of rects" means the clip is a single rect indicated by the stack bounds.
         // This should only be true if aa/non-aa status matches among all elements.
         SkASSERT(SkClipStack::kNormal_BoundsType == stackBoundsType);
+
+        if (GrClip::IsInsideClip(stackBounds, queryBounds)) {
+            fInitialState = InitialState::kAllIn;
+            return;
+        }
+
         SkClipStack::Iter iter(stack, SkClipStack::Iter::kTop_IterStart);
+
         if (!iter.prev()->isAA() || GrClip::IsPixelAligned(stackBounds)) {
             // The clip is a non-aa rect. Here we just implement the entire thing using fScissor.
             stackBounds.round(&fScissor);
             fHasScissor = true;
             fInitialState = fScissor.isEmpty() ? InitialState::kAllOut : InitialState::kAllIn;
-            return;
-        }
-        if (GrClip::IsInsideClip(stackBounds, queryBounds)) {
-            fInitialState = InitialState::kAllIn;
             return;
         }
 
@@ -747,7 +750,8 @@ bool GrReducedClip::drawAlphaClipMask(GrRenderTargetContext* rtc) const {
 
     // The scratch texture that we are drawing into can be substantially larger than the mask. Only
     // clear the part that we care about.
-    GrColor initialCoverage = InitialState::kAllIn == this->initialState() ? -1 : 0;
+    SkPMColor4f initialCoverage =
+        InitialState::kAllIn == this->initialState() ? SK_PMColor4fWHITE : SK_PMColor4fTRANSPARENT;
     rtc->priv().clear(clip, initialCoverage, GrRenderTargetContext::CanClearFullscreen::kYes);
 
     // Set the matrix so that rendered clip elements are transformed to mask space from clip space.
@@ -805,7 +809,7 @@ bool GrReducedClip::drawAlphaClipMask(GrRenderTargetContext* rtc) const {
 ////////////////////////////////////////////////////////////////////////////////
 // Create a 1-bit clip mask in the stencil buffer.
 
-bool GrReducedClip::drawStencilClipMask(GrContext* context,
+bool GrReducedClip::drawStencilClipMask(GrRecordingContext* context,
                                         GrRenderTargetContext* renderTargetContext) const {
     // We set the current clip to the bounds so that our recursive draws are scissored to them.
     GrStencilClip stencilClip(fScissor, this->maskGenID());
@@ -848,14 +852,15 @@ bool GrReducedClip::drawStencilClipMask(GrContext* context,
 
             GrShape shape(clipPath, GrStyle::SimpleFill());
             GrPathRenderer::CanDrawPathArgs canDrawArgs;
-            canDrawArgs.fCaps = context->contextPriv().caps();
+            canDrawArgs.fCaps = context->priv().caps();
             canDrawArgs.fClipConservativeBounds = &stencilClip.fixedClip().scissorRect();
             canDrawArgs.fViewMatrix = &SkMatrix::I();
             canDrawArgs.fShape = &shape;
             canDrawArgs.fAAType = aaType;
             canDrawArgs.fHasUserStencilSettings = false;
+            canDrawArgs.fTargetIsWrappedVkSecondaryCB = renderTargetContext->wrapsVkSecondaryCB();
 
-            GrDrawingManager* dm = context->contextPriv().drawingManager();
+            GrDrawingManager* dm = context->priv().drawingManager();
             pr = dm->getPathRenderer(canDrawArgs, false, GrPathRendererChain::DrawType::kStencil,
                                      &stencilSupport);
             if (!pr) {

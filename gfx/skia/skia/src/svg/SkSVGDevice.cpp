@@ -21,7 +21,6 @@
 #include "SkImageEncoder.h"
 #include "SkJpegCodec.h"
 #include "SkPaint.h"
-#include "SkPaintPriv.h"
 #include "SkParsePath.h"
 #include "SkPngCodec.h"
 #include "SkShader.h"
@@ -69,19 +68,6 @@ static_assert(SK_ARRAY_COUNT(join_map) == SkPaint::kJoinCount, "missing_join_map
 static const char* svg_join(SkPaint::Join join) {
     SkASSERT(join < SK_ARRAY_COUNT(join_map));
     return join_map[join];
-}
-
-// Keep in sync with SkPaint::Align
-static const char* text_align_map[] = {
-    nullptr,     // kLeft_Align (default)
-    "middle", // kCenter_Align
-    "end"     // kRight_Align
-};
-static_assert(SK_ARRAY_COUNT(text_align_map) == SkPaint::kAlignCount,
-              "missing_text_align_map_entry");
-static const char* svg_text_align(SkPaint::Align align) {
-    SkASSERT(align < SK_ARRAY_COUNT(text_align_map));
-    return text_align_map[align];
 }
 
 static SkString svg_transform(const SkMatrix& t) {
@@ -204,9 +190,12 @@ public:
         fWriter->startElement(name);
     }
 
-    AutoElement(const char name[], SkXMLWriter* writer, ResourceBucket* bucket,
-                const MxCp& mc, const SkPaint& paint)
-        : fWriter(writer)
+    AutoElement(const char name[], const std::unique_ptr<SkXMLWriter>& writer)
+        : AutoElement(name, writer.get()) {}
+
+    AutoElement(const char name[], const std::unique_ptr<SkXMLWriter>& writer,
+                ResourceBucket* bucket, const MxCp& mc, const SkPaint& paint)
+        : fWriter(writer.get())
         , fResourceBucket(bucket) {
 
         Resources res = this->addResources(mc, paint);
@@ -253,7 +242,7 @@ public:
 
     void addRectAttributes(const SkRect&);
     void addPathAttributes(const SkPath&);
-    void addTextAttributes(const SkPaint&);
+    void addTextAttributes(const SkFont&);
 
 private:
     Resources addResources(const MxCp&, const SkPaint& paint);
@@ -601,16 +590,12 @@ void SkSVGDevice::AutoElement::addPathAttributes(const SkPath& path) {
     this->addAttribute("d", pathData);
 }
 
-void SkSVGDevice::AutoElement::addTextAttributes(const SkPaint& paint) {
-    this->addAttribute("font-size", paint.getTextSize());
-
-    if (const char* textAlign = svg_text_align(paint.getTextAlign())) {
-        this->addAttribute("text-anchor", textAlign);
-    }
+void SkSVGDevice::AutoElement::addTextAttributes(const SkFont& font) {
+    this->addAttribute("font-size", font.getSize());
 
     SkString familyName;
     SkTHashSet<SkString> familySet;
-    sk_sp<SkTypeface> tface = SkPaintPriv::RefTypefaceOrDefault(paint);
+    sk_sp<SkTypeface> tface = font.refTypefaceOrDefault();
 
     SkASSERT(tface);
     SkFontStyle style = tface->fontStyle();
@@ -652,21 +637,18 @@ void SkSVGDevice::AutoElement::addTextAttributes(const SkPaint& paint) {
     }
 }
 
-SkBaseDevice* SkSVGDevice::Create(const SkISize& size, SkXMLWriter* writer) {
-    if (!writer) {
-        return nullptr;
-    }
-
-    return new SkSVGDevice(size, writer);
+sk_sp<SkBaseDevice> SkSVGDevice::Make(const SkISize& size, std::unique_ptr<SkXMLWriter> writer) {
+    return writer ? sk_sp<SkBaseDevice>(new SkSVGDevice(size, std::move(writer)))
+                  : nullptr;
 }
 
-SkSVGDevice::SkSVGDevice(const SkISize& size, SkXMLWriter* writer)
+SkSVGDevice::SkSVGDevice(const SkISize& size, std::unique_ptr<SkXMLWriter> writer)
     : INHERITED(SkImageInfo::MakeUnknown(size.fWidth, size.fHeight),
                 SkSurfaceProps(0, kUnknown_SkPixelGeometry))
-    , fWriter(writer)
+    , fWriter(std::move(writer))
     , fResourceBucket(new ResourceBucket)
 {
-    SkASSERT(writer);
+    SkASSERT(fWriter);
 
     fWriter->writeHeader();
 
@@ -679,8 +661,7 @@ SkSVGDevice::SkSVGDevice(const SkISize& size, SkXMLWriter* writer)
     fRootElement->addAttribute("height", size.height());
 }
 
-SkSVGDevice::~SkSVGDevice() {
-}
+SkSVGDevice::~SkSVGDevice() = default;
 
 void SkSVGDevice::drawPaint(const SkPaint& paint) {
     AutoElement rect("rect", fWriter, fResourceBucket.get(), MxCp(this), paint);
@@ -825,16 +806,6 @@ void SkSVGDevice::drawBitmapCommon(const MxCp& mc, const SkBitmap& bm, const SkP
     }
 }
 
-void SkSVGDevice::drawBitmap(const SkBitmap& bitmap, SkScalar x, SkScalar y,
-                             const SkPaint& paint) {
-    MxCp mc(this);
-    SkMatrix adjustedMatrix = *mc.fMatrix;
-    adjustedMatrix.preTranslate(x, y);
-    mc.fMatrix = &adjustedMatrix;
-
-    drawBitmapCommon(mc, bitmap, paint);
-}
-
 void SkSVGDevice::drawSprite(const SkBitmap& bitmap,
                              int x, int y, const SkPaint& paint) {
     MxCp mc(this);
@@ -869,10 +840,9 @@ public:
     SVGTextBuilder(SkPoint origin, const SkGlyphRun& glyphRun)
             : fOrigin(origin)
             , fLastCharWasWhitespace(true) { // start off in whitespace mode to strip all leadingspace
-        const SkPaint& paint = glyphRun.paint();
         auto runSize = glyphRun.runSize();
         SkAutoSTArray<64, SkUnichar> unichars(runSize);
-        paint.glyphsToUnichars(glyphRun.shuntGlyphsIDs().data(), runSize, unichars.get());
+        glyphRun.font().glyphsToUnichars(glyphRun.glyphsIDs().data(), runSize, unichars.get());
         auto positions = glyphRun.positions();
         for (size_t i = 0; i < runSize; ++i) {
             this->appendUnichar(unichars[i], positions[i]);
@@ -946,10 +916,10 @@ private:
 
 void SkSVGDevice::drawGlyphRunList(const SkGlyphRunList& glyphRunList)  {
 
-    auto processGlyphRun = [this](SkPoint origin, const SkGlyphRun& glyphRun) {
-        const SkPaint& paint = glyphRun.paint();
-        AutoElement elem("text", fWriter, fResourceBucket.get(), MxCp(this), paint);
-        elem.addTextAttributes(paint);
+    auto processGlyphRun = [this]
+                           (SkPoint origin, const SkGlyphRun& glyphRun, const SkPaint& runPaint) {
+        AutoElement elem("text", fWriter, fResourceBucket.get(), MxCp(this), runPaint);
+        elem.addTextAttributes(glyphRun.font());
 
         SVGTextBuilder builder(origin, glyphRun);
         elem.addAttribute("x", builder.posX());
@@ -958,7 +928,7 @@ void SkSVGDevice::drawGlyphRunList(const SkGlyphRunList& glyphRunList)  {
     };
 
     for (auto& glyphRun : glyphRunList) {
-        processGlyphRun(glyphRunList.origin(), glyphRun);
+        processGlyphRun(glyphRunList.origin(), glyphRun, glyphRunList.paint());
     }
 }
 

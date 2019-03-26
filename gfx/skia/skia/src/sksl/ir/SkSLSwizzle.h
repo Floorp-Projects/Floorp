@@ -16,10 +16,16 @@
 
 namespace SkSL {
 
+// represents a swizzle component of constant 0, as in x.rgb0
+const int SKSL_SWIZZLE_0 = -2;
+
+// represents a swizzle component of constant 1, as in x.rgb1
+const int SKSL_SWIZZLE_1 = -1;
+
 /**
  * Given a type and a swizzle component count, returns the type that will result from swizzling. For
- * instance, swizzling a float3with two components will result in a float2 It is possible to swizzle
- * with more components than the source vector, as in 'float21).xxxx'.
+ * instance, swizzling a float3 with two components will result in a float2. It is possible to
+ * swizzle with more components than the source vector, as in 'float2(1).xxxx'.
  */
 static const Type& get_type(const Context& context, Expression& value, size_t count) {
     const Type& base = value.fType.componentType();
@@ -106,13 +112,13 @@ struct Swizzle : public Expression {
         if (fBase->fKind == Expression::kConstructor_Kind && fBase->isConstant()) {
             // we're swizzling a constant vector, e.g. float4(1).x. Simplify it.
             SkASSERT(fBase->fKind == Expression::kConstructor_Kind);
-            if (fType == *irGenerator.fContext.fInt_Type) {
+            if (fType.isInteger()) {
                 SkASSERT(fComponents.size() == 1);
                 int64_t value = ((Constructor&) *fBase).getIVecComponent(fComponents[0]);
                 return std::unique_ptr<Expression>(new IntLiteral(irGenerator.fContext,
                                                                   -1,
                                                                   value));
-            } else if (fType == *irGenerator.fContext.fFloat_Type) {
+            } else if (fType.isFloat()) {
                 SkASSERT(fComponents.size() == 1);
                 double value = ((Constructor&) *fBase).getFVecComponent(fComponents[0]);
                 return std::unique_ptr<Expression>(new FloatLiteral(irGenerator.fContext,
@@ -134,7 +140,7 @@ struct Swizzle : public Expression {
     String description() const override {
         String result = fBase->description() + ".";
         for (int x : fComponents) {
-            result += "xyzw"[x];
+            result += "01xyzw"[x + 2];
         }
         return result;
     }

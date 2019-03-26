@@ -8,8 +8,8 @@
 #ifndef GrGpuCommandBuffer_DEFINED
 #define GrGpuCommandBuffer_DEFINED
 
-#include "GrColor.h"
 #include "GrPipeline.h"
+#include "SkDrawable.h"
 #include "ops/GrDrawOp.h"
 
 class GrOpFlushState;
@@ -19,6 +19,7 @@ class GrMesh;
 class GrPipeline;
 class GrPrimitiveProcessor;
 class GrRenderTarget;
+class GrSemaphore;
 struct SkIRect;
 struct SkRect;
 
@@ -71,9 +72,9 @@ private:
 class GrGpuRTCommandBuffer : public GrGpuCommandBuffer {
 public:
     struct LoadAndStoreInfo {
-        GrLoadOp  fLoadOp;
-        GrStoreOp fStoreOp;
-        GrColor   fClearColor;
+        GrLoadOp    fLoadOp;
+        GrStoreOp   fStoreOp;
+        SkPMColor4f fClearColor;
     };
 
     // Load-time clears of the stencil buffer are always to 0 so we don't store
@@ -107,7 +108,7 @@ public:
     /**
      * Clear the owned render target. Ignores the draw state and clip.
      */
-    void clear(const GrFixedClip&, GrColor);
+    void clear(const GrFixedClip&, const SkPMColor4f&);
 
     void clearStencilClip(const GrFixedClip&, bool insideStencilMask);
 
@@ -116,6 +117,11 @@ public:
      */
     // TODO: This should be removed in the future to favor using the load and store ops for discard
     virtual void discard() = 0;
+
+    /**
+     * Executes the SkDrawable object for the underlying backend.
+     */
+    virtual void executeDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>) {}
 
 protected:
     GrGpuRTCommandBuffer() : fOrigin(kTopLeft_GrSurfaceOrigin), fRenderTarget(nullptr) {}
@@ -148,7 +154,7 @@ private:
                         const SkRect& bounds) = 0;
 
     // overridden by backend-specific derived class to perform the clear.
-    virtual void onClear(const GrFixedClip&, GrColor) = 0;
+    virtual void onClear(const GrFixedClip&, const SkPMColor4f&) = 0;
 
     virtual void onClearStencilClip(const GrFixedClip&, bool insideStencilMask) = 0;
 

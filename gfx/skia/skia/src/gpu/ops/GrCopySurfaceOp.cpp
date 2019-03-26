@@ -7,10 +7,10 @@
 
 #include "GrCopySurfaceOp.h"
 
-#include "GrContext.h"
-#include "GrContextPriv.h"
 #include "GrGpu.h"
 #include "GrMemoryPool.h"
+#include "GrRecordingContext.h"
+#include "GrRecordingContextPriv.h"
 
 // returns true if the read/written rect intersects the src/dst and false if not.
 static bool clip_src_rect_and_dst_point(const GrSurfaceProxy* dst,
@@ -63,7 +63,7 @@ static bool clip_src_rect_and_dst_point(const GrSurfaceProxy* dst,
     return !clippedSrcRect->isEmpty();
 }
 
-std::unique_ptr<GrOp> GrCopySurfaceOp::Make(GrContext* context,
+std::unique_ptr<GrOp> GrCopySurfaceOp::Make(GrRecordingContext* context,
                                             GrSurfaceProxy* dstProxy,
                                             GrSurfaceProxy* srcProxy,
                                             const SkIRect& srcRect,
@@ -77,13 +77,16 @@ std::unique_ptr<GrOp> GrCopySurfaceOp::Make(GrContext* context,
                                      &clippedSrcRect, &clippedDstPoint)) {
         return nullptr;
     }
+    if (GrPixelConfigIsCompressed(dstProxy->config())) {
+        return nullptr;
+    }
 
-    GrOpMemoryPool* pool = context->contextPriv().opMemoryPool();
+    GrOpMemoryPool* pool = context->priv().opMemoryPool();
 
     return pool->allocate<GrCopySurfaceOp>(dstProxy, srcProxy, clippedSrcRect, clippedDstPoint);
 }
 
-void GrCopySurfaceOp::onExecute(GrOpFlushState* state) {
+void GrCopySurfaceOp::onExecute(GrOpFlushState* state, const SkRect& chainBounds) {
     if (!fSrc.get()->instantiate(state->resourceProvider())) {
         return;
     }

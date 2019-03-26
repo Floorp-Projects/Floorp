@@ -23,9 +23,9 @@
 // These macros help with packing and unpacking a single byte value and
 // a 3 byte value into/out of a uint32_t
 #define MASK_24 0x00FFFFFF
-#define UNPACK_8_24(combined, small, large)             \
-    small = (combined >> 24) & 0xFF;                    \
-    large = combined & MASK_24;
+#define UNPACK_8_24(combined, small, large) \
+    small = (combined >> 24) & 0xFF;        \
+    large = combined & MASK_24
 #define PACK_8_24(small, large) ((small << 24) | large)
 
 
@@ -157,6 +157,7 @@ protected:
 
     void willSave() override;
     SaveLayerStrategy getSaveLayerStrategy(const SaveLayerRec&) override;
+    bool onDoSaveBehind(const SkRect*) override;
     void willRestore() override;
 
     void didConcat(const SkMatrix&) override;
@@ -164,12 +165,6 @@ protected:
 
     void onDrawDRRect(const SkRRect&, const SkRRect&, const SkPaint&) override;
 
-    void onDrawText(const void* text, size_t, SkScalar x, SkScalar y, const SkPaint&) override;
-    void onDrawPosText(const void* text, size_t, const SkPoint pos[], const SkPaint&) override;
-    void onDrawPosTextH(const void* text, size_t, const SkScalar xpos[], SkScalar constY,
-                        const SkPaint&) override;
-    void onDrawTextRSXform(const void* text, size_t byteLength, const SkRSXform xform[],
-                           const SkRect* cull, const SkPaint&) override;
     void onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y,
                                 const SkPaint& paint) override;
 
@@ -181,6 +176,7 @@ protected:
     void onDrawPaint(const SkPaint&) override;
     void onDrawPoints(PointMode, size_t count, const SkPoint pts[], const SkPaint&) override;
     void onDrawRect(const SkRect&, const SkPaint&) override;
+    void onDrawEdgeAARect(const SkRect&, SkCanvas::QuadAAFlags, SkColor, SkBlendMode) override;
     void onDrawRegion(const SkRegion&, const SkPaint&) override;
     void onDrawOval(const SkRect&, const SkPaint&) override;
     void onDrawArc(const SkRect&, SkScalar, SkScalar, bool, const SkPaint&) override;
@@ -193,6 +189,8 @@ protected:
                          const SkPaint*) override;
     void onDrawImageLattice(const SkImage*, const SkCanvas::Lattice& lattice, const SkRect& dst,
                             const SkPaint*) override;
+    void onDrawImageSet(const SkCanvas::ImageSetEntry[], int count, SkFilterQuality,
+                        SkBlendMode) override;
     void onDrawShadowRec(const SkPath&, const SkDrawShadowRec&) override;
     void onDrawVerticesObject(const SkVertices*, const SkVertices::Bone bones[], int boneCount,
                               SkBlendMode, const SkPaint&) override;

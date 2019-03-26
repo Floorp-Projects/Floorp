@@ -75,8 +75,8 @@ void GrGLBicubicEffect::emitCode(EmitArgs& args) {
     // starting coords are near a texel boundary and accumulations of imgInc would cause us to skip/
     // double hit a texel.
     fragBuilder->codeAppendf("coord /= %s;", imgInc);
-    fragBuilder->codeAppend("float2 f = fract(coord);");
-    fragBuilder->codeAppendf("coord = (coord - f + float2(0.5)) * %s;", imgInc);
+    fragBuilder->codeAppend("half2 f = half2(fract(coord));");
+    fragBuilder->codeAppendf("coord = (coord - f + half2(0.5)) * %s;", imgInc);
     fragBuilder->codeAppend("half4 wx = kMitchellCoefficients * half4(1.0, f.x, f.x * f.x, f.x * f.x * f.x);");
     fragBuilder->codeAppend("half4 wy = kMitchellCoefficients * half4(1.0, f.y, f.y * f.y, f.y * f.y * f.y);");
     fragBuilder->codeAppend("half4 rowColors[4];");
@@ -106,35 +106,28 @@ void GrGLBicubicEffect::emitCode(EmitArgs& args) {
 void GrGLBicubicEffect::onSetData(const GrGLSLProgramDataManager& pdman,
                                   const GrFragmentProcessor& processor) {
     const GrBicubicEffect& bicubicEffect = processor.cast<GrBicubicEffect>();
-    GrSurfaceProxy* proxy = processor.textureSampler(0).proxy();
+    GrTextureProxy* proxy = processor.textureSampler(0).proxy();
     GrTexture* texture = proxy->peekTexture();
 
     float imageIncrement[2];
     imageIncrement[0] = 1.0f / texture->width();
     imageIncrement[1] = 1.0f / texture->height();
     pdman.set2fv(fImageIncrementUni, 1, imageIncrement);
-    fDomain.setData(pdman, bicubicEffect.domain(), proxy);
+    fDomain.setData(pdman, bicubicEffect.domain(), proxy,
+                    processor.textureSampler(0).samplerState());
 }
 
 GrBicubicEffect::GrBicubicEffect(sk_sp<GrTextureProxy> proxy,
-                                 const SkMatrix& matrix,
-                                 const GrSamplerState::WrapMode wrapModes[2])
-        : INHERITED{kGrBicubicEffect_ClassID, ModulateByConfigOptimizationFlags(proxy->config())}
+                                 const SkMatrix& matrix, const SkRect& domain,
+                                 const GrSamplerState::WrapMode wrapModes[2],
+                                 GrTextureDomain::Mode modeX, GrTextureDomain::Mode modeY)
+        : INHERITED{kGrBicubicEffect_ClassID,
+                    ModulateForSamplerOptFlags(proxy->config(),
+                            GrTextureDomain::IsDecalSampled(wrapModes, modeX,modeY))}
         , fCoordTransform(matrix, proxy.get())
-        , fDomain(GrTextureDomain::IgnoredDomain())
+        , fDomain(proxy.get(), domain, modeX, modeY)
         , fTextureSampler(std::move(proxy),
                           GrSamplerState(wrapModes, GrSamplerState::Filter::kNearest)) {
-    this->addCoordTransform(&fCoordTransform);
-    this->setTextureSamplerCnt(1);
-}
-
-GrBicubicEffect::GrBicubicEffect(sk_sp<GrTextureProxy> proxy,
-                                 const SkMatrix& matrix,
-                                 const SkRect& domain)
-        : INHERITED(kGrBicubicEffect_ClassID, ModulateByConfigOptimizationFlags(proxy->config()))
-        , fCoordTransform(matrix, proxy.get())
-        , fDomain(proxy.get(), domain, GrTextureDomain::kClamp_Mode)
-        , fTextureSampler(std::move(proxy)) {
     this->addCoordTransform(&fCoordTransform);
     this->setTextureSamplerCnt(1);
 }

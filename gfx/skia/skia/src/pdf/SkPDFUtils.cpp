@@ -44,11 +44,11 @@ const char* SkPDFUtils::BlendModeName(SkBlendMode mode) {
     }
 }
 
-sk_sp<SkPDFArray> SkPDFUtils::RectToArray(const SkRect& r) {
+std::unique_ptr<SkPDFArray> SkPDFUtils::RectToArray(const SkRect& r) {
     return SkPDFMakeArray(r.left(), r.top(), r.right(), r.bottom());
 }
 
-sk_sp<SkPDFArray> SkPDFUtils::MatrixToArray(const SkMatrix& matrix) {
+std::unique_ptr<SkPDFArray> SkPDFUtils::MatrixToArray(const SkMatrix& matrix) {
     SkScalar a[6];
     if (!matrix.asAffine(a)) {
         SkMatrix::SetAffineIdentity(a);
@@ -304,7 +304,7 @@ bool SkPDFUtils::InverseTransformBBox(const SkMatrix& matrix, SkRect* bbox) {
 
 void SkPDFUtils::PopulateTilingPatternDict(SkPDFDict* pattern,
                                            SkRect& bbox,
-                                           sk_sp<SkPDFDict> resources,
+                                           std::unique_ptr<SkPDFDict> resources,
                                            const SkMatrix& matrix) {
     const int kTiling_PatternType = 1;
     const int kColoredTilingPattern_PaintType = 1;
@@ -327,7 +327,7 @@ bool SkPDFUtils::ToBitmap(const SkImage* img, SkBitmap* dst) {
     SkASSERT(img);
     SkASSERT(dst);
     SkBitmap bitmap;
-    if(as_IB(img)->getROPixels(&bitmap, nullptr)) {
+    if(as_IB(img)->getROPixels(&bitmap)) {
         SkASSERT(bitmap.dimensions() == img->dimensions());
         SkASSERT(!bitmap.drawsNothing());
         *dst = std::move(bitmap);
@@ -335,3 +335,40 @@ bool SkPDFUtils::ToBitmap(const SkImage* img, SkBitmap* dst) {
     }
     return false;
 }
+
+#ifdef SK_PDF_BASE85_BINARY
+void SkPDFUtils::Base85Encode(std::unique_ptr<SkStreamAsset> stream, SkDynamicMemoryWStream* dst) {
+    SkASSERT(dst);
+    SkASSERT(stream);
+    dst->writeText("\n");
+    int column = 0;
+    while (true) {
+        uint8_t src[4] = {0, 0, 0, 0};
+        size_t count = stream->read(src, 4);
+        SkASSERT(count < 5);
+        if (0 == count) {
+            dst->writeText("~>\n");
+            return;
+        }
+        uint32_t v = ((uint32_t)src[0] << 24) | ((uint32_t)src[1] << 16) |
+                     ((uint32_t)src[2] <<  8) | src[3];
+        if (v == 0 && count == 4) {
+            dst->writeText("z");
+            column += 1;
+        } else {
+            char buffer[5];
+            for (int n = 4; n > 0; --n) {
+                buffer[n] = (v % 85) + '!';
+                v /= 85;
+            }
+            buffer[0] = v + '!';
+            dst->write(buffer, count + 1);
+            column += count + 1;
+        }
+        if (column > 74) {
+            dst->writeText("\n");
+            column = 0;
+        }
+    }
+}
+#endif //  SK_PDF_BASE85_BINARY

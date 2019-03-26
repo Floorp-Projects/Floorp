@@ -125,7 +125,7 @@ void GrGLMatrixConvolutionEffect::GenKey(const GrProcessor& processor,
 void GrGLMatrixConvolutionEffect::onSetData(const GrGLSLProgramDataManager& pdman,
                                             const GrFragmentProcessor& processor) {
     const GrMatrixConvolutionEffect& conv = processor.cast<GrMatrixConvolutionEffect>();
-    GrSurfaceProxy* proxy = conv.textureSampler(0).proxy();
+    GrTextureProxy* proxy = conv.textureSampler(0).proxy();
     GrTexture* texture = proxy->peekTexture();
 
     float imageIncrement[2];
@@ -140,7 +140,7 @@ void GrGLMatrixConvolutionEffect::onSetData(const GrGLSLProgramDataManager& pdma
     pdman.set4fv(fKernelUni, arrayCount, conv.kernel());
     pdman.set1f(fGainUni, conv.gain());
     pdman.set1f(fBiasUni, conv.bias());
-    fDomain.setData(pdman, conv.domain(), proxy);
+    fDomain.setData(pdman, conv.domain(), proxy, conv.textureSampler(0).samplerState());
 }
 
 GrMatrixConvolutionEffect::GrMatrixConvolutionEffect(sk_sp<GrTextureProxy> srcProxy,
@@ -156,9 +156,8 @@ GrMatrixConvolutionEffect::GrMatrixConvolutionEffect(sk_sp<GrTextureProxy> srcPr
         // parameters.
         : INHERITED(kGrMatrixConvolutionEffect_ClassID, kNone_OptimizationFlags)
         , fCoordTransform(srcProxy.get())
-        , fDomain(srcProxy.get(),
-                  GrTextureDomain::MakeTexelDomainForMode(srcBounds, tileMode),
-                  tileMode)
+        , fDomain(srcProxy.get(), GrTextureDomain::MakeTexelDomain(srcBounds, tileMode),
+                  tileMode, tileMode)
         , fTextureSampler(std::move(srcProxy))
         , fKernelSize(kernelSize)
         , fGain(SkScalarToFloat(gain))

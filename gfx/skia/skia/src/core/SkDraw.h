@@ -29,7 +29,7 @@ class SkRasterClip;
 struct SkRect;
 class SkRRect;
 
-class SkDraw {
+class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
 public:
     SkDraw();
 
@@ -82,6 +82,12 @@ public:
         this->drawPath(src, paint, nullptr, false, !isHairline, customBlitter);
     }
 
+    void paintPaths(SkSpan<const SkGlyphRunListPainter::PathAndPos> pathsAndPositions,
+                    SkScalar scale,
+                    const SkPaint& paint) const override;
+
+    void paintMasks(SkSpan<const SkMask> masks, const SkPaint& paint) const override;
+
     static bool ComputeMaskBounds(const SkRect& devPathBounds, const SkIRect* clipBounds,
                                   const SkMaskFilter* filter, const SkMatrix* filterMatrix,
                                   SkIRect* bounds);
@@ -116,24 +122,27 @@ public:
     static RectType ComputeRectType(const SkPaint&, const SkMatrix&,
                                     SkPoint* strokeSize);
 
-    static bool ShouldDrawTextAsPaths(const SkPaint&, const SkMatrix&, SkScalar sizeLimit = 1024);
-    void        drawPosText_asPaths(const char text[], size_t byteLength, const SkScalar pos[],
-                                    int scalarsPerPosition, const SkPoint& offset,
-                                    const SkPaint&, const SkSurfaceProps*) const;
+    static bool ShouldDrawTextAsPaths(const SkFont&, const SkPaint&, const SkMatrix&,
+                                      SkScalar sizeLimit = 1024);
+
     static SkScalar ComputeResScaleForStroking(const SkMatrix& matrix, SkScalar* overscale = nullptr);
 private:
-    void blitARGB32Mask(const SkMask& mask, const SkPaint& paint) const;
-    SkGlyphRunListPainter::PerMask drawOneMaskCreator(
-            const SkPaint& paint, SkArenaAlloc* alloc) const;
-    void    drawBitmapAsMask(const SkBitmap&, const SkPaint&) const;
+    void drawBitmapAsMask(const SkBitmap&, const SkPaint&) const;
 
-    void    drawPath(const SkPath&, const SkPaint&, const SkMatrix* preMatrix,
-                     bool pathIsMutable, bool drawCoverage,
-                     SkBlitter* customBlitter = nullptr) const;
+    void drawPath(const SkPath&,
+                  const SkPaint&,
+                  const SkMatrix* preMatrix,
+                  bool pathIsMutable,
+                  bool drawCoverage,
+                  SkBlitter* customBlitter = nullptr) const;
 
     void drawLine(const SkPoint[2], const SkPaint&) const;
-    void drawDevPath(const SkPath& devPath, const SkPaint& paint, bool drawCoverage,
-                     SkBlitter* customBlitter, bool doFill) const;
+
+    void drawDevPath(const SkPath& devPath,
+                     const SkPaint& paint,
+                     bool drawCoverage,
+                     SkBlitter* customBlitter,
+                     bool doFill) const;
     /**
      *  Return the current clip bounds, in local coordinates, with slop to account
      *  for antialiasing or hairlines (i.e. device-bounds outset by 1, and then
@@ -142,8 +151,7 @@ private:
      *  If the matrix cannot be inverted, or the current clip is empty, return
      *  false and ignore bounds parameter.
      */
-    bool SK_WARN_UNUSED_RESULT
-    computeConservativeLocalClipBounds(SkRect* bounds) const;
+    bool SK_WARN_UNUSED_RESULT computeConservativeLocalClipBounds(SkRect* bounds) const;
 
 public:
     SkPixmap        fDst;

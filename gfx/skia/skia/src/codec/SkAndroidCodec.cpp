@@ -6,14 +6,13 @@
  */
 
 #include "SkAndroidCodec.h"
+#include "SkAndroidCodecAdapter.h"
 #include "SkCodec.h"
 #include "SkCodecPriv.h"
 #include "SkMakeUnique.h"
 #include "SkPixmap.h"
 #include "SkPixmapPriv.h"
-#include "SkRawAdapterCodec.h"
 #include "SkSampledCodec.h"
-#include "SkWebpAdapterCodec.h"
 
 static bool is_valid_sample_size(int sampleSize) {
     // FIXME: As Leon has mentioned elsewhere, surely there is also a maximum sampleSize?
@@ -89,30 +88,25 @@ std::unique_ptr<SkAndroidCodec> SkAndroidCodec::MakeFromCodec(std::unique_ptr<Sk
     }
 
     switch ((SkEncodedImageFormat)codec->getEncodedFormat()) {
-#ifdef SK_HAS_PNG_LIBRARY
         case SkEncodedImageFormat::kPNG:
         case SkEncodedImageFormat::kICO:
-#endif
-#ifdef SK_HAS_JPEG_LIBRARY
         case SkEncodedImageFormat::kJPEG:
-#endif
         case SkEncodedImageFormat::kGIF:
         case SkEncodedImageFormat::kBMP:
         case SkEncodedImageFormat::kWBMP:
-#ifdef SK_HAS_HEIF_LIBRARY
         case SkEncodedImageFormat::kHEIF:
-#endif
             return skstd::make_unique<SkSampledCodec>(codec.release(), orientationBehavior);
+
 #ifdef SK_HAS_WEBP_LIBRARY
         case SkEncodedImageFormat::kWEBP:
-            return skstd::make_unique<SkWebpAdapterCodec>((SkWebpCodec*) codec.release(),
-                    orientationBehavior);
 #endif
 #ifdef SK_CODEC_DECODES_RAW
         case SkEncodedImageFormat::kDNG:
-            return skstd::make_unique<SkRawAdapterCodec>((SkRawCodec*)codec.release(),
-                    orientationBehavior);
 #endif
+#if defined(SK_HAS_WEBP_LIBRARY) || defined(SK_CODEC_DECODES_RAW)
+            return skstd::make_unique<SkAndroidCodecAdapter>(codec.release(), orientationBehavior);
+#endif
+
         default:
             return nullptr;
     }
@@ -168,11 +162,12 @@ SkAlphaType SkAndroidCodec::computeOutputAlphaType(bool requestedUnpremul) {
 sk_sp<SkColorSpace> SkAndroidCodec::computeOutputColorSpace(SkColorType outputColorType,
                                                             sk_sp<SkColorSpace> prefColorSpace) {
     switch (outputColorType) {
+        case kRGBA_F16_SkColorType:
+        case kRGB_565_SkColorType:
         case kRGBA_8888_SkColorType:
         case kBGRA_8888_SkColorType: {
-            // If |prefColorSpace| is supported, choose it.
-            SkColorSpaceTransferFn fn;
-            if (prefColorSpace && prefColorSpace->isNumericalTransferFn(&fn)) {
+            // If |prefColorSpace| is supplied, choose it.
+            if (prefColorSpace) {
                 return prefColorSpace;
             }
 
@@ -185,19 +180,12 @@ sk_sp<SkColorSpace> SkAndroidCodec::computeOutputColorSpace(SkColorType outputCo
                 }
 
                 if (is_wide_gamut(*encodedProfile)) {
-                    return SkColorSpace::MakeRGB(SkColorSpace::kSRGB_RenderTargetGamma,
-                                                 SkColorSpace::kDCIP3_D65_Gamut);
+                    return SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDCIP3);
                 }
             }
 
             return SkColorSpace::MakeSRGB();
         }
-        case kRGBA_F16_SkColorType:
-            // Note that |prefColorSpace| is ignored, F16 is always linear sRGB.
-            return SkColorSpace::MakeSRGBLinear();
-        case kRGB_565_SkColorType:
-            // Note that |prefColorSpace| is ignored, 565 is always sRGB.
-            return SkColorSpace::MakeSRGB();
         default:
             // Color correction not supported for kGray.
             return nullptr;
@@ -308,7 +296,13 @@ SkISize SkAndroidCodec::getSampledDimensions(int sampleSize) const {
         return fInfo.dimensions();
     }
 
-    return this->onGetSampledDimensions(sampleSize);
+    auto dims = this->onGetSampledDimensions(sampleSize);
+    if (fOrientationBehavior == SkAndroidCodec::ExifOrientationBehavior::kIgnore
+            || !SkPixmapPriv::ShouldSwapWidthHeight(fCodec->getOrigin())) {
+        return dims;
+    }
+
+    return { dims.height(), dims.width() };
 }
 
 bool SkAndroidCodec::getSupportedSubset(SkIRect* desiredSubset) const {

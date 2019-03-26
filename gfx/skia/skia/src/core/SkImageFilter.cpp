@@ -22,11 +22,15 @@
 #if SK_SUPPORT_GPU
 #include "GrColorSpaceXform.h"
 #include "GrContext.h"
+#include "GrContextPriv.h"
 #include "GrFixedClip.h"
+#include "GrRecordingContext.h"
+#include "GrRecordingContextPriv.h"
 #include "GrRenderTargetContext.h"
 #include "GrTextureProxy.h"
 #include "SkGr.h"
 #endif
+#include <atomic>
 
 void SkImageFilter::CropRect::applyTo(const SkIRect& imageBounds,
                                       const SkMatrix& ctm,
@@ -69,13 +73,12 @@ void SkImageFilter::CropRect::applyTo(const SkIRect& imageBounds,
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 static int32_t next_image_filter_unique_id() {
-    static int32_t gImageFilterUniqueID;
+    static std::atomic<int32_t> nextID{1};
 
-    // Never return 0.
     int32_t id;
     do {
-        id = sk_atomic_inc(&gImageFilterUniqueID) + 1;
-    } while (0 == id);
+        id = nextID++;
+    } while (id == 0);
     return id;
 }
 
@@ -181,7 +184,7 @@ sk_sp<SkSpecialImage> SkImageFilter::filterImage(SkSpecialImage* src, const Cont
     if (src->isTextureBacked() && result && !result->isTextureBacked()) {
         // Keep the result on the GPU - this is still required for some
         // image filters that don't support GPU in all cases
-        GrContext* context = src->getContext();
+        auto context = src->getContext();
         result = result->makeTextureImage(context);
     }
 #endif
@@ -238,7 +241,7 @@ bool SkImageFilter::canComputeFastBounds() const {
 }
 
 #if SK_SUPPORT_GPU
-sk_sp<SkSpecialImage> SkImageFilter::DrawWithFP(GrContext* context,
+sk_sp<SkSpecialImage> SkImageFilter::DrawWithFP(GrRecordingContext* context,
                                                 std::unique_ptr<GrFragmentProcessor> fp,
                                                 const SkIRect& bounds,
                                                 const OutputProperties& outputProperties) {
@@ -248,9 +251,12 @@ sk_sp<SkSpecialImage> SkImageFilter::DrawWithFP(GrContext* context,
 
     sk_sp<SkColorSpace> colorSpace = sk_ref_sp(outputProperties.colorSpace());
     GrPixelConfig config = SkColorType2GrPixelConfig(outputProperties.colorType());
+    GrBackendFormat format =
+            context->priv().caps()->getBackendFormatFromColorType(
+                    outputProperties.colorType());
     sk_sp<GrRenderTargetContext> renderTargetContext(
-        context->contextPriv().makeDeferredRenderTargetContext(
-                                SkBackingFit::kApprox, bounds.width(), bounds.height(),
+        context->priv().makeDeferredRenderTargetContext(
+                                format, SkBackingFit::kApprox, bounds.width(), bounds.height(),
                                 config, std::move(colorSpace)));
     if (!renderTargetContext) {
         return nullptr;

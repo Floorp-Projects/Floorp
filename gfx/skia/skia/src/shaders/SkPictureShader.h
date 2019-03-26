@@ -28,8 +28,6 @@ public:
     static sk_sp<SkShader> Make(sk_sp<SkPicture>, TileMode, TileMode, const SkMatrix*,
                                 const SkRect*);
 
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkPictureShader)
-
 #if SK_SUPPORT_GPU
     std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
@@ -38,15 +36,19 @@ protected:
     SkPictureShader(SkReadBuffer&);
     void flatten(SkWriteBuffer&) const override;
     bool onAppendStages(const StageRec&) const override;
+#ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
     Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
+#endif
     sk_sp<SkShader> onMakeColorSpace(SkColorSpaceXformer* xformer) const override;
 
 private:
+    SK_FLATTENABLE_HOOKS(SkPictureShader)
+
     SkPictureShader(sk_sp<SkPicture>, TileMode, TileMode, const SkMatrix*, const SkRect*,
                     sk_sp<SkColorSpace>);
 
     sk_sp<SkShader> refBitmapShader(const SkMatrix&, SkTCopyOnFirstWrite<SkMatrix>* localMatrix,
-                                    SkColorSpace* dstColorSpace,
+                                    SkColorType dstColorType, SkColorSpace* dstColorSpace,
                                     const int maxTextureSize = 0) const;
 
     class PictureShaderContext : public Context {

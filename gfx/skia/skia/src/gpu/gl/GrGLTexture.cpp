@@ -48,14 +48,20 @@ GrGLTexture::GrGLTexture(GrGLGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc&
         , INHERITED(gpu, desc, TextureTypeFromTarget(idDesc.fInfo.fTarget), mipMapsStatus) {
     this->init(desc, idDesc);
     this->registerWithCache(budgeted);
+    if (GrPixelConfigIsCompressed(desc.fConfig)) {
+        this->setReadOnly();
+    }
 }
 
-GrGLTexture::GrGLTexture(GrGLGpu* gpu, Wrapped, const GrSurfaceDesc& desc,
-                         GrMipMapsStatus mipMapsStatus, const IDDesc& idDesc)
+GrGLTexture::GrGLTexture(GrGLGpu* gpu, const GrSurfaceDesc& desc, GrMipMapsStatus mipMapsStatus,
+                         const IDDesc& idDesc, GrWrapCacheable cacheable, GrIOType ioType)
         : GrSurface(gpu, desc)
         , INHERITED(gpu, desc, TextureTypeFromTarget(idDesc.fInfo.fTarget), mipMapsStatus) {
     this->init(desc, idDesc);
-    this->registerWithCacheWrapped();
+    this->registerWithCacheWrapped(cacheable);
+    if (ioType == kRead_GrIOType) {
+        this->setReadOnly();
+    }
 }
 
 GrGLTexture::GrGLTexture(GrGLGpu* gpu, const GrSurfaceDesc& desc, const IDDesc& idDesc,
@@ -68,8 +74,7 @@ GrGLTexture::GrGLTexture(GrGLGpu* gpu, const GrSurfaceDesc& desc, const IDDesc& 
 void GrGLTexture::init(const GrSurfaceDesc& desc, const IDDesc& idDesc) {
     SkASSERT(0 != idDesc.fInfo.fID);
     SkASSERT(0 != idDesc.fInfo.fFormat);
-    fTexParams.invalidate();
-    fTexParamsTimestamp = GrGpu::kExpiredTimestamp;
+    fParamsTimestamp = GrGpu::kExpiredTimestamp;
     fID = idDesc.fInfo.fID;
     fFormat = idDesc.fInfo.fFormat;
     fTextureIDOwnership = idDesc.fOwnership;
@@ -86,13 +91,11 @@ void GrGLTexture::onRelease() {
         }
         fID = 0;
     }
-    this->invokeReleaseProc();
     INHERITED::onRelease();
 }
 
 void GrGLTexture::onAbandon() {
     fID = 0;
-    this->invokeReleaseProc();
     INHERITED::onAbandon();
 }
 
@@ -104,9 +107,15 @@ GrBackendTexture GrGLTexture::getBackendTexture() const {
     return GrBackendTexture(this->width(), this->height(), this->texturePriv().mipMapped(), info);
 }
 
+GrBackendFormat GrGLTexture::backendFormat() const {
+    return GrBackendFormat::MakeGL(fFormat,
+                                   target_from_texture_type(this->texturePriv().textureType()));
+}
+
 sk_sp<GrGLTexture> GrGLTexture::MakeWrapped(GrGLGpu* gpu, const GrSurfaceDesc& desc,
-                                            GrMipMapsStatus mipMapsStatus, const IDDesc& idDesc) {
-    return sk_sp<GrGLTexture>(new GrGLTexture(gpu, kWrapped, desc, mipMapsStatus, idDesc));
+                                            GrMipMapsStatus mipMapsStatus, const IDDesc& idDesc,
+                                            GrWrapCacheable cacheable, GrIOType ioType) {
+    return sk_sp<GrGLTexture>(new GrGLTexture(gpu, desc, mipMapsStatus, idDesc, cacheable, ioType));
 }
 
 bool GrGLTexture::onStealBackendTexture(GrBackendTexture* backendTexture,

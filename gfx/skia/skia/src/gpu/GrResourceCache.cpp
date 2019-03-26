@@ -6,16 +6,19 @@
  */
 
 #include "GrResourceCache.h"
-
+#include <atomic>
 #include "GrCaps.h"
 #include "GrGpuResourceCacheAccess.h"
 #include "GrProxyProvider.h"
+#include "GrSingleOwner.h"
 #include "GrTexture.h"
 #include "GrTextureProxyCacheAccess.h"
 #include "GrTracing.h"
 #include "SkGr.h"
 #include "SkMessageBus.h"
 #include "SkOpts.h"
+#include "SkRandom.h"
+#include "SkScopeExit.h"
 #include "SkTSort.h"
 #include "SkTo.h"
 
@@ -23,12 +26,15 @@ DECLARE_SKMESSAGEBUS_MESSAGE(GrUniqueKeyInvalidatedMessage);
 
 DECLARE_SKMESSAGEBUS_MESSAGE(GrGpuResourceFreedMessage);
 
+#define ASSERT_SINGLE_OWNER \
+    SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fSingleOwner);)
+
 //////////////////////////////////////////////////////////////////////////////
 
 GrScratchKey::ResourceType GrScratchKey::GenerateResourceType() {
-    static int32_t gType = INHERITED::kInvalidDomain + 1;
+    static std::atomic<int32_t> nextType{INHERITED::kInvalidDomain + 1};
 
-    int32_t type = sk_atomic_inc(&gType);
+    int32_t type = nextType++;
     if (type > SkTo<int32_t>(UINT16_MAX)) {
         SK_ABORT("Too many Resource Types");
     }
@@ -37,9 +43,9 @@ GrScratchKey::ResourceType GrScratchKey::GenerateResourceType() {
 }
 
 GrUniqueKey::Domain GrUniqueKey::GenerateDomain() {
-    static int32_t gDomain = INHERITED::kInvalidDomain + 1;
+    static std::atomic<int32_t> nextDomain{INHERITED::kInvalidDomain + 1};
 
-    int32_t domain = sk_atomic_inc(&gDomain);
+    int32_t domain = nextDomain++;
     if (domain > SkTo<int32_t>(UINT16_MAX)) {
         SK_ABORT("Too many GrUniqueKey Domains");
     }
@@ -63,7 +69,8 @@ private:
 
  //////////////////////////////////////////////////////////////////////////////
 
-GrResourceCache::GrResourceCache(const GrCaps* caps, uint32_t contextUniqueID)
+GrResourceCache::GrResourceCache(const GrCaps* caps, GrSingleOwner* singleOwner,
+                                 uint32_t contextUniqueID)
         : fProxyProvider(nullptr)
         , fTimestamp(0)
         , fMaxCount(kDefaultMaxCount)
@@ -81,6 +88,7 @@ GrResourceCache::GrResourceCache(const GrCaps* caps, uint32_t contextUniqueID)
         , fInvalidUniqueKeyInbox(contextUniqueID)
         , fFreedGpuResourceInbox(contextUniqueID)
         , fContextUniqueID(contextUniqueID)
+        , fSingleOwner(singleOwner)
         , fPreferVRAMUseOverFlushes(caps->preferVRAMUseOverFlushes()) {
     SkASSERT(contextUniqueID != SK_InvalidUniqueID);
     SkDEBUGCODE(fCount = 0;)
@@ -98,10 +106,11 @@ void GrResourceCache::setLimits(int count, size_t bytes) {
 }
 
 void GrResourceCache::insertResource(GrGpuResource* resource) {
+    ASSERT_SINGLE_OWNER
     SkASSERT(resource);
     SkASSERT(!this->isInCache(resource));
     SkASSERT(!resource->wasDestroyed());
-    SkASSERT(!resource->isPurgeable());
+    SkASSERT(!resource->resourcePriv().isPurgeable());
 
     // We must set the timestamp before adding to the array in case the timestamp wraps and we wind
     // up iterating over all the resources that already have timestamps.
@@ -116,7 +125,7 @@ void GrResourceCache::insertResource(GrGpuResource* resource) {
     fHighWaterCount = SkTMax(this->getResourceCount(), fHighWaterCount);
     fHighWaterBytes = SkTMax(fBytes, fHighWaterBytes);
 #endif
-    if (SkBudgeted::kYes == resource->resourcePriv().isBudgeted()) {
+    if (GrBudgetedType::kBudgeted == resource->resourcePriv().budgetedType()) {
         ++fBudgetedCount;
         fBudgetedBytes += size;
         TRACE_COUNTER2("skia.gpu.cache", "skia budget", "used",
@@ -136,11 +145,12 @@ void GrResourceCache::insertResource(GrGpuResource* resource) {
 }
 
 void GrResourceCache::removeResource(GrGpuResource* resource) {
+    ASSERT_SINGLE_OWNER
     this->validate();
     SkASSERT(this->isInCache(resource));
 
     size_t size = resource->gpuMemorySize();
-    if (resource->isPurgeable()) {
+    if (resource->resourcePriv().isPurgeable()) {
         fPurgeableQueue.remove(resource);
         fPurgeableBytes -= size;
     } else {
@@ -149,7 +159,7 @@ void GrResourceCache::removeResource(GrGpuResource* resource) {
 
     SkDEBUGCODE(--fCount;)
     fBytes -= size;
-    if (SkBudgeted::kYes == resource->resourcePriv().isBudgeted()) {
+    if (GrBudgetedType::kBudgeted == resource->resourcePriv().budgetedType()) {
         --fBudgetedCount;
         fBudgetedBytes -= size;
         TRACE_COUNTER2("skia.gpu.cache", "skia budget", "used",
@@ -170,7 +180,7 @@ void GrResourceCache::abandonAll() {
     AutoValidate av(this);
 
     for (int i = 0; i < fResourcesWaitingForFreeMsg.count(); ++i) {
-        fResourcesWaitingForFreeMsg[i]->abandon();
+        fResourcesWaitingForFreeMsg[i]->cacheAccess().abandon();
     }
     fResourcesWaitingForFreeMsg.reset();
 
@@ -214,7 +224,7 @@ void GrResourceCache::releaseAll() {
     // they also have a raw pointer back to this class (which is presumably going away)!
     fProxyProvider->removeAllUniqueKeys();
 
-    while(fNonpurgeableResources.count()) {
+    while (fNonpurgeableResources.count()) {
         GrGpuResource* back = *(fNonpurgeableResources.end() - 1);
         SkASSERT(!back->wasDestroyed());
         back->cacheAccess().release();
@@ -287,6 +297,7 @@ GrGpuResource* GrResourceCache::findAndRefScratchResource(const GrScratchKey& sc
 }
 
 void GrResourceCache::willRemoveScratchKey(const GrGpuResource* resource) {
+    ASSERT_SINGLE_OWNER
     SkASSERT(resource->resourcePriv().getScratchKey().isValid());
     if (!resource->getUniqueKey().isValid()) {
         fScratchMap.remove(resource->resourcePriv().getScratchKey(), resource);
@@ -294,6 +305,7 @@ void GrResourceCache::willRemoveScratchKey(const GrGpuResource* resource) {
 }
 
 void GrResourceCache::removeUniqueKey(GrGpuResource* resource) {
+    ASSERT_SINGLE_OWNER
     // Someone has a ref to this resource in order to have removed the key. When the ref count
     // reaches zero we will get a ref cnt notification and figure out what to do with it.
     if (resource->getUniqueKey().isValid()) {
@@ -301,15 +313,19 @@ void GrResourceCache::removeUniqueKey(GrGpuResource* resource) {
         fUniqueHash.remove(resource->getUniqueKey());
     }
     resource->cacheAccess().removeUniqueKey();
-
     if (resource->resourcePriv().getScratchKey().isValid()) {
         fScratchMap.insert(resource->resourcePriv().getScratchKey(), resource);
     }
 
+    // Removing a unique key from a kUnbudgetedCacheable resource would make the resource
+    // require purging. However, the resource must be ref'ed to get here and therefore can't
+    // be purgeable. We'll purge it when the refs reach zero.
+    SkASSERT(!resource->resourcePriv().isPurgeable());
     this->validate();
 }
 
 void GrResourceCache::changeUniqueKey(GrGpuResource* resource, const GrUniqueKey& newKey) {
+    ASSERT_SINGLE_OWNER
     SkASSERT(resource);
     SkASSERT(this->isInCache(resource));
 
@@ -317,10 +333,12 @@ void GrResourceCache::changeUniqueKey(GrGpuResource* resource, const GrUniqueKey
     if (newKey.isValid()) {
         if (GrGpuResource* old = fUniqueHash.find(newKey)) {
             // If the old resource using the key is purgeable and is unreachable, then remove it.
-            if (!old->resourcePriv().getScratchKey().isValid() && old->isPurgeable()) {
+            if (!old->resourcePriv().getScratchKey().isValid() &&
+                old->resourcePriv().isPurgeable()) {
                 old->cacheAccess().release();
             } else {
-                this->removeUniqueKey(old);
+                // removeUniqueKey expects an external owner of the resource.
+                this->removeUniqueKey(sk_ref_sp(old).get());
             }
         }
         SkASSERT(nullptr == fUniqueHash.find(newKey));
@@ -348,10 +366,11 @@ void GrResourceCache::changeUniqueKey(GrGpuResource* resource, const GrUniqueKey
 }
 
 void GrResourceCache::refAndMakeResourceMRU(GrGpuResource* resource) {
+    ASSERT_SINGLE_OWNER
     SkASSERT(resource);
     SkASSERT(this->isInCache(resource));
 
-    if (resource->isPurgeable()) {
+    if (resource->resourcePriv().isPurgeable()) {
         // It's about to become unpurgeable.
         fPurgeableBytes -= resource->gpuMemorySize();
         fPurgeableQueue.remove(resource);
@@ -364,6 +383,7 @@ void GrResourceCache::refAndMakeResourceMRU(GrGpuResource* resource) {
 }
 
 void GrResourceCache::notifyCntReachedZero(GrGpuResource* resource, uint32_t flags) {
+    ASSERT_SINGLE_OWNER
     SkASSERT(resource);
     SkASSERT(!resource->wasDestroyed());
     SkASSERT(flags);
@@ -377,7 +397,7 @@ void GrResourceCache::notifyCntReachedZero(GrGpuResource* resource, uint32_t fla
         // When the timestamp overflows validate() is called. validate() checks that resources in
         // the nonpurgeable array are indeed not purgeable. However, the movement from the array to
         // the purgeable queue happens just below in this function. So we mark it as an exception.
-        if (resource->isPurgeable()) {
+        if (resource->resourcePriv().isPurgeable()) {
             fNewlyPurgeableResourceForValidation = resource;
         }
 #endif
@@ -386,11 +406,15 @@ void GrResourceCache::notifyCntReachedZero(GrGpuResource* resource, uint32_t fla
     }
 
     if (!SkToBool(ResourceAccess::kAllCntsReachedZero_RefNotificationFlag & flags)) {
-        SkASSERT(!resource->isPurgeable());
+        SkASSERT(!resource->resourcePriv().isPurgeable());
         return;
     }
 
-    SkASSERT(resource->isPurgeable());
+    if (!resource->resourcePriv().isPurgeable()) {
+        this->validate();
+        return;
+    }
+
     this->removeFromNonpurgeableArray(resource);
     fPurgeableQueue.insert(resource);
     resource->cacheAccess().setTimeWhenResourceBecomePurgeable();
@@ -398,10 +422,19 @@ void GrResourceCache::notifyCntReachedZero(GrGpuResource* resource, uint32_t fla
 
     bool hasUniqueKey = resource->getUniqueKey().isValid();
 
-    if (SkBudgeted::kNo == resource->resourcePriv().isBudgeted()) {
-        // We keep unbudgeted resources with a unique key in the purgable queue of the cache so they
-        // can be reused again by the image connected to the unique key.
-        if (hasUniqueKey) {
+    GrBudgetedType budgetedType = resource->resourcePriv().budgetedType();
+
+    if (budgetedType == GrBudgetedType::kBudgeted) {
+        // Purge the resource immediately if we're over budget
+        // Also purge if the resource has neither a valid scratch key nor a unique key.
+        bool hasKey = resource->resourcePriv().getScratchKey().isValid() || hasUniqueKey;
+        if (!this->overBudget() && hasKey) {
+            return;
+        }
+    } else {
+        // We keep unbudgeted resources with a unique key in the purgeable queue of the cache so
+        // they can be reused again by the image connected to the unique key.
+        if (hasUniqueKey && budgetedType == GrBudgetedType::kUnbudgetedCacheable) {
             return;
         }
         // Check whether this resource could still be used as a scratch resource.
@@ -414,14 +447,6 @@ void GrResourceCache::notifyCntReachedZero(GrGpuResource* resource, uint32_t fla
                 return;
             }
         }
-    } else {
-        // Purge the resource immediately if we're over budget
-        // Also purge if the resource has neither a valid scratch key nor a unique key.
-        bool hasKey = resource->resourcePriv().getScratchKey().isValid() ||
-                      hasUniqueKey;
-        if (!this->overBudget() && hasKey) {
-            return;
-        }
     }
 
     SkDEBUGCODE(int beforeCount = this->getResourceCount();)
@@ -432,12 +457,17 @@ void GrResourceCache::notifyCntReachedZero(GrGpuResource* resource, uint32_t fla
 }
 
 void GrResourceCache::didChangeBudgetStatus(GrGpuResource* resource) {
+    ASSERT_SINGLE_OWNER
     SkASSERT(resource);
     SkASSERT(this->isInCache(resource));
 
     size_t size = resource->gpuMemorySize();
-
-    if (SkBudgeted::kYes == resource->resourcePriv().isBudgeted()) {
+    // Changing from BudgetedType::kUnbudgetedCacheable to another budgeted type could make
+    // resource become purgeable. However, we should never allow that transition. Wrapped
+    // resources are the only resources that can be in that state and they aren't allowed to
+    // transition from one budgeted state to another.
+    SkDEBUGCODE(bool wasPurgeable = resource->resourcePriv().isPurgeable());
+    if (resource->resourcePriv().budgetedType() == GrBudgetedType::kBudgeted) {
         ++fBudgetedCount;
         fBudgetedBytes += size;
 #if GR_CACHE_STATS
@@ -446,9 +476,11 @@ void GrResourceCache::didChangeBudgetStatus(GrGpuResource* resource) {
 #endif
         this->purgeAsNeeded();
     } else {
+        SkASSERT(resource->resourcePriv().budgetedType() != GrBudgetedType::kUnbudgetedCacheable);
         --fBudgetedCount;
         fBudgetedBytes -= size;
     }
+    SkASSERT(wasPurgeable == resource->resourcePriv().isPurgeable());
     TRACE_COUNTER2("skia.gpu.cache", "skia budget", "used",
                    fBudgetedBytes, "free", fMaxBytes - fBudgetedBytes);
 
@@ -459,7 +491,13 @@ void GrResourceCache::purgeAsNeeded() {
     SkTArray<GrUniqueKeyInvalidatedMessage> invalidKeyMsgs;
     fInvalidUniqueKeyInbox.poll(&invalidKeyMsgs);
     if (invalidKeyMsgs.count()) {
-        this->processInvalidUniqueKeys(invalidKeyMsgs);
+        SkASSERT(fProxyProvider);
+
+        for (int i = 0; i < invalidKeyMsgs.count(); ++i) {
+            fProxyProvider->processInvalidUniqueKey(invalidKeyMsgs[i].key(), nullptr,
+                                                    GrProxyProvider::InvalidateGPUResource::kYes);
+            SkASSERT(!this->findAndRefUniqueResource(invalidKeyMsgs[i].key()));
+        }
     }
 
     this->processFreedGpuResources();
@@ -467,7 +505,7 @@ void GrResourceCache::purgeAsNeeded() {
     bool stillOverbudget = this->overBudget();
     while (stillOverbudget && fPurgeableQueue.count()) {
         GrGpuResource* resource = fPurgeableQueue.peek();
-        SkASSERT(resource->isPurgeable());
+        SkASSERT(resource->resourcePriv().isPurgeable());
         resource->cacheAccess().release();
         stillOverbudget = this->overBudget();
     }
@@ -481,7 +519,7 @@ void GrResourceCache::purgeUnlockedResources(bool scratchResourcesOnly) {
         // complexity. Moreover, this is rarely called.
         while (fPurgeableQueue.count()) {
             GrGpuResource* resource = fPurgeableQueue.peek();
-            SkASSERT(resource->isPurgeable());
+            SkASSERT(resource->resourcePriv().isPurgeable());
             resource->cacheAccess().release();
         }
     } else {
@@ -492,7 +530,7 @@ void GrResourceCache::purgeUnlockedResources(bool scratchResourcesOnly) {
         SkTDArray<GrGpuResource*> scratchResources;
         for (int i = 0; i < fPurgeableQueue.count(); i++) {
             GrGpuResource* resource = fPurgeableQueue.at(i);
-            SkASSERT(resource->isPurgeable());
+            SkASSERT(resource->resourcePriv().isPurgeable());
             if (!resource->getUniqueKey().isValid()) {
                 *scratchResources.append() = resource;
             }
@@ -521,7 +559,7 @@ void GrResourceCache::purgeResourcesNotUsedSince(GrStdSteadyClock::time_point pu
             break;
         }
         GrGpuResource* resource = fPurgeableQueue.peek();
-        SkASSERT(resource->isPurgeable());
+        SkASSERT(resource->resourcePriv().isPurgeable());
         resource->cacheAccess().release();
     }
 }
@@ -540,7 +578,7 @@ void GrResourceCache::purgeUnlockedResources(size_t bytesToPurge, bool preferScr
         size_t scratchByteCount = 0;
         for (int i = 0; i < fPurgeableQueue.count() && stillOverbudget; i++) {
             GrGpuResource* resource = fPurgeableQueue.at(i);
-            SkASSERT(resource->isPurgeable());
+            SkASSERT(resource->resourcePriv().isPurgeable());
             if (!resource->getUniqueKey().isValid()) {
                 *scratchResources.append() = resource;
                 scratchByteCount += resource->gpuMemorySize();
@@ -564,21 +602,6 @@ void GrResourceCache::purgeUnlockedResources(size_t bytesToPurge, bool preferScr
         fMaxBytes = tmpByteBudget;
         this->purgeAsNeeded();
         fMaxBytes = cachedByteCount;
-    }
-}
-
-void GrResourceCache::processInvalidUniqueKeys(
-                                            const SkTArray<GrUniqueKeyInvalidatedMessage>& msgs) {
-    SkASSERT(fProxyProvider); // better have called setProxyProvider
-
-    for (int i = 0; i < msgs.count(); ++i) {
-        fProxyProvider->processInvalidProxyUniqueKey(msgs[i].key());
-
-        GrGpuResource* resource = this->findAndRefUniqueResource(msgs[i].key());
-        if (resource) {
-            resource->resourcePriv().removeUniqueKey();
-            resource->unref(); // If this resource is now purgeable, the cache will be notified.
-        }
     }
 }
 
@@ -694,6 +717,56 @@ void GrResourceCache::dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) c
     }
 }
 
+#if GR_CACHE_STATS
+void GrResourceCache::getStats(Stats* stats) const {
+    stats->reset();
+
+    stats->fTotal = this->getResourceCount();
+    stats->fNumNonPurgeable = fNonpurgeableResources.count();
+    stats->fNumPurgeable = fPurgeableQueue.count();
+
+    for (int i = 0; i < fNonpurgeableResources.count(); ++i) {
+        stats->update(fNonpurgeableResources[i]);
+    }
+    for (int i = 0; i < fPurgeableQueue.count(); ++i) {
+        stats->update(fPurgeableQueue.at(i));
+    }
+}
+
+#if GR_TEST_UTILS
+void GrResourceCache::dumpStats(SkString* out) const {
+    this->validate();
+
+    Stats stats;
+
+    this->getStats(&stats);
+
+    float countUtilization = (100.f * fBudgetedCount) / fMaxCount;
+    float byteUtilization = (100.f * fBudgetedBytes) / fMaxBytes;
+
+    out->appendf("Budget: %d items %d bytes\n", fMaxCount, (int)fMaxBytes);
+    out->appendf("\t\tEntry Count: current %d"
+                 " (%d budgeted, %d wrapped, %d locked, %d scratch %.2g%% full), high %d\n",
+                 stats.fTotal, fBudgetedCount, stats.fWrapped, stats.fNumNonPurgeable,
+                 stats.fScratch, countUtilization, fHighWaterCount);
+    out->appendf("\t\tEntry Bytes: current %d (budgeted %d, %.2g%% full, %d unbudgeted) high %d\n",
+                 SkToInt(fBytes), SkToInt(fBudgetedBytes), byteUtilization,
+                 SkToInt(stats.fUnbudgetedSize), SkToInt(fHighWaterBytes));
+}
+
+void GrResourceCache::dumpStatsKeyValuePairs(SkTArray<SkString>* keys,
+                                             SkTArray<double>* values) const {
+    this->validate();
+
+    Stats stats;
+    this->getStats(&stats);
+
+    keys->push_back(SkString("gpu_cache_purgable_entries")); values->push_back(stats.fNumPurgeable);
+}
+#endif
+
+#endif
+
 #ifdef SK_DEBUG
 void GrResourceCache::validate() const {
     // Reduce the frequency of validations for large resource counts.
@@ -723,7 +796,7 @@ void GrResourceCache::validate() const {
         void update(GrGpuResource* resource) {
             fBytes += resource->gpuMemorySize();
 
-            if (!resource->isPurgeable()) {
+            if (!resource->resourcePriv().isPurgeable()) {
                 ++fLocked;
             }
 
@@ -736,7 +809,7 @@ void GrResourceCache::validate() const {
                 SkASSERT(fScratchMap->countForKey(scratchKey));
                 SkASSERT(!resource->resourcePriv().refsWrappedObjects());
             } else if (scratchKey.isValid()) {
-                SkASSERT(SkBudgeted::kNo == resource->resourcePriv().isBudgeted() ||
+                SkASSERT(GrBudgetedType::kBudgeted != resource->resourcePriv().budgetedType() ||
                          uniqueKey.isValid());
                 if (!uniqueKey.isValid()) {
                     ++fCouldBeScratch;
@@ -747,7 +820,7 @@ void GrResourceCache::validate() const {
             if (uniqueKey.isValid()) {
                 ++fContent;
                 SkASSERT(fUniqueHash->find(uniqueKey) == resource);
-                SkASSERT(SkBudgeted::kYes == resource->resourcePriv().isBudgeted() ||
+                SkASSERT(GrBudgetedType::kBudgeted == resource->resourcePriv().budgetedType() ||
                          resource->resourcePriv().refsWrappedObjects());
 
                 if (scratchKey.isValid()) {
@@ -755,7 +828,7 @@ void GrResourceCache::validate() const {
                 }
             }
 
-            if (SkBudgeted::kYes == resource->resourcePriv().isBudgeted()) {
+            if (GrBudgetedType::kBudgeted == resource->resourcePriv().budgetedType()) {
                 ++fBudgetedCount;
                 fBudgetedBytes += resource->gpuMemorySize();
             }
@@ -779,14 +852,14 @@ void GrResourceCache::validate() const {
     size_t purgeableBytes = 0;
 
     for (int i = 0; i < fNonpurgeableResources.count(); ++i) {
-        SkASSERT(!fNonpurgeableResources[i]->isPurgeable() ||
+        SkASSERT(!fNonpurgeableResources[i]->resourcePriv().isPurgeable() ||
                  fNewlyPurgeableResourceForValidation == fNonpurgeableResources[i]);
         SkASSERT(*fNonpurgeableResources[i]->cacheAccess().accessCacheIndex() == i);
         SkASSERT(!fNonpurgeableResources[i]->wasDestroyed());
         stats.update(fNonpurgeableResources[i]);
     }
     for (int i = 0; i < fPurgeableQueue.count(); ++i) {
-        SkASSERT(fPurgeableQueue.at(i)->isPurgeable());
+        SkASSERT(fPurgeableQueue.at(i)->resourcePriv().isPurgeable());
         SkASSERT(*fPurgeableQueue.at(i)->cacheAccess().accessCacheIndex() == i);
         SkASSERT(!fPurgeableQueue.at(i)->wasDestroyed());
         stats.update(fPurgeableQueue.at(i));

@@ -64,6 +64,17 @@ void SkPaintFilterCanvas::onDrawRect(const SkRect& rect, const SkPaint& paint) {
     }
 }
 
+void SkPaintFilterCanvas::onDrawEdgeAARect(const SkRect& rect, SkCanvas::QuadAAFlags aa,
+                                           SkColor color, SkBlendMode mode) {
+    SkPaint paint;
+    paint.setColor(color);
+    paint.setBlendMode(mode);
+    AutoPaintFilter apf(this, kRect_Type, paint);
+    if (apf.shouldDraw()) {
+        this->SkNWayCanvas::onDrawEdgeAARect(rect, aa, paint.getColor(), paint.getBlendMode());
+    }
+}
+
 void SkPaintFilterCanvas::onDrawRRect(const SkRRect& rrect, const SkPaint& paint) {
     AutoPaintFilter apf(this, kRRect_Type, paint);
     if (apf.shouldDraw()) {
@@ -173,6 +184,17 @@ void SkPaintFilterCanvas::onDrawImageLattice(const SkImage* image, const Lattice
     }
 }
 
+void SkPaintFilterCanvas::onDrawImageSet(const SkCanvas::ImageSetEntry set[], int count,
+                                         SkFilterQuality filterQuality, SkBlendMode mode) {
+    SkPaint paint;
+    paint.setBlendMode(mode);
+    AutoPaintFilter apf(this, kBitmap_Type, &paint);
+    mode = paint.getBlendMode();
+    if (apf.shouldDraw()) {
+        this->SkNWayCanvas::onDrawImageSet(set, count, filterQuality, mode);
+    }
+}
+
 void SkPaintFilterCanvas::onDrawVerticesObject(const SkVertices* vertices,
                                                const SkVertices::Bone bones[], int boneCount,
                                                SkBlendMode bmode, const SkPaint& paint) {
@@ -206,39 +228,6 @@ void SkPaintFilterCanvas::onDrawDrawable(SkDrawable* drawable, const SkMatrix* m
     AutoPaintFilter apf(this, kDrawable_Type, nullptr);
     if (apf.shouldDraw()) {
         this->SkNWayCanvas::onDrawDrawable(drawable, matrix);
-    }
-}
-
-void SkPaintFilterCanvas::onDrawText(const void* text, size_t byteLength, SkScalar x, SkScalar y,
-                                     const SkPaint& paint) {
-    AutoPaintFilter apf(this, kText_Type, paint);
-    if (apf.shouldDraw()) {
-        this->SkNWayCanvas::onDrawText(text, byteLength, x, y, *apf.paint());
-    }
-}
-
-void SkPaintFilterCanvas::onDrawPosText(const void* text, size_t byteLength, const SkPoint pos[],
-                                        const SkPaint& paint) {
-    AutoPaintFilter apf(this, kText_Type, paint);
-    if (apf.shouldDraw()) {
-        this->SkNWayCanvas::onDrawPosText(text, byteLength, pos, *apf.paint());
-    }
-}
-
-void SkPaintFilterCanvas::onDrawPosTextH(const void* text, size_t byteLength, const SkScalar xpos[],
-                                         SkScalar constY, const SkPaint& paint) {
-    AutoPaintFilter apf(this, kText_Type, paint);
-    if (apf.shouldDraw()) {
-        this->SkNWayCanvas::onDrawPosTextH(text, byteLength, xpos, constY, *apf.paint());
-    }
-}
-
-void SkPaintFilterCanvas::onDrawTextRSXform(const void* text, size_t byteLength,
-                                            const SkRSXform xform[], const SkRect* cull,
-                                            const SkPaint& paint) {
-    AutoPaintFilter apf(this, kText_Type, paint);
-    if (apf.shouldDraw()) {
-        this->SkNWayCanvas::onDrawTextRSXform(text, byteLength, xform, cull, *apf.paint());
     }
 }
 

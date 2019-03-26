@@ -8,8 +8,8 @@
 #ifndef GrResourceProvider_DEFINED
 #define GrResourceProvider_DEFINED
 
-#include "GrBuffer.h"
 #include "GrContextOptions.h"
+#include "GrGpuBuffer.h"
 #include "GrResourceCache.h"
 #include "SkImageInfoPriv.h"
 #include "SkScalerContext.h"
@@ -25,6 +25,7 @@ class GrSemaphore;
 class GrSingleOwner;
 class GrStencilAttachment;
 class GrTexture;
+struct GrVkDrawableInfo;
 
 class GrStyle;
 class SkDescriptor;
@@ -50,23 +51,19 @@ public:
          *  Make this automatic: https://bug.skia.org/4156
          */
         kNoPendingIO     = 0x1,
-
-        /** Normally the caps may indicate a preference for client-side buffers. Set this flag when
-         *  creating a buffer to guarantee it resides in GPU memory.
-         */
-        kRequireGpuMemory = 0x2,
     };
 
     GrResourceProvider(GrGpu*, GrResourceCache*, GrSingleOwner*,
-                       GrContextOptions::Enable explicitlyAllocateGPUResources);
+                       bool explicitlyAllocateGPUResources);
 
     /**
      * Finds a resource in the cache, based on the specified key. Prior to calling this, the caller
      * must be sure that if a resource of exists in the cache with the given unique key then it is
      * of type T.
      */
-    template <typename T>
-    sk_sp<T> findByUniqueKey(const GrUniqueKey& key) {
+    template <typename T = GrGpuResource>
+    typename std::enable_if<std::is_base_of<GrGpuResource, T>::value, sk_sp<T>>::type
+    findByUniqueKey(const GrUniqueKey& key) {
         return sk_sp<T>(static_cast<T*>(this->findResourceByUniqueKey(key).release()));
     }
 
@@ -98,13 +95,16 @@ public:
     /**
      * Wraps an existing texture with a GrTexture object.
      *
+     * GrIOType must either be kRead or kRW. kRead blocks any operations that would modify the
+     * pixels (e.g. dst for a copy, regenerating MIP levels, write pixels).
+     *
      * OpenGL: if the object is a texture Gr may change its GL texture params
      *         when it is drawn.
      *
      * @return GrTexture object or NULL on failure.
      */
-    sk_sp<GrTexture> wrapBackendTexture(const GrBackendTexture& tex,
-                                        GrWrapOwnership = kBorrow_GrWrapOwnership);
+    sk_sp<GrTexture> wrapBackendTexture(const GrBackendTexture& tex, GrWrapOwnership,
+                                        GrWrapCacheable, GrIOType);
 
     /**
      * This makes the backend texture be renderable. If sampleCnt is > 1 and the underlying API
@@ -113,18 +113,22 @@ public:
      */
     sk_sp<GrTexture> wrapRenderableBackendTexture(const GrBackendTexture& tex,
                                                   int sampleCnt,
-                                                  GrWrapOwnership = kBorrow_GrWrapOwnership);
+                                                  GrWrapOwnership,
+                                                  GrWrapCacheable);
 
     /**
      * Wraps an existing render target with a GrRenderTarget object. It is
      * similar to wrapBackendTexture but can be used to draw into surfaces
      * that are not also textures (e.g. FBO 0 in OpenGL, or an MSAA buffer that
      * the client will resolve to a texture). Currently wrapped render targets
-     * always use the kBorrow_GrWrapOwnership semantics.
+     * always use the kBorrow_GrWrapOwnership and GrWrapCacheable::kNo semantics.
      *
      * @return GrRenderTarget object or NULL on failure.
      */
     sk_sp<GrRenderTarget> wrapBackendRenderTarget(const GrBackendRenderTarget&);
+
+    sk_sp<GrRenderTarget> wrapVulkanSecondaryCBAsRenderTarget(const SkImageInfo&,
+                                                              const GrVkDrawableInfo&);
 
     static const uint32_t kMinScratchTextureSize;
 
@@ -138,8 +142,8 @@ public:
      *
      * @return The buffer if successful, otherwise nullptr.
      */
-    sk_sp<const GrBuffer> findOrMakeStaticBuffer(GrBufferType intendedType, size_t size,
-                                                 const void* data, const GrUniqueKey& key);
+    sk_sp<const GrGpuBuffer> findOrMakeStaticBuffer(GrGpuBufferType intendedType, size_t size,
+                                                    const void* data, const GrUniqueKey& key);
 
     /**
      * Either finds and refs, or creates an index buffer with a repeating pattern for drawing
@@ -154,15 +158,15 @@ public:
      *
      * @return The index buffer if successful, otherwise nullptr.
      */
-    sk_sp<const GrBuffer> findOrCreatePatternedIndexBuffer(const uint16_t* pattern,
-                                                           int patternSize,
-                                                           int reps,
-                                                           int vertCount,
-                                                           const GrUniqueKey& key) {
-        if (auto buffer = this->findByUniqueKey<GrBuffer>(key)) {
-            return std::move(buffer);
+    sk_sp<const GrGpuBuffer> findOrCreatePatternedIndexBuffer(const uint16_t* pattern,
+                                                              int patternSize,
+                                                              int reps,
+                                                              int vertCount,
+                                                              const GrUniqueKey& key) {
+        if (auto buffer = this->findByUniqueKey<const GrGpuBuffer>(key)) {
+            return buffer;
         }
-        return this->createPatternedIndexBuffer(pattern, patternSize, reps, vertCount, key);
+        return this->createPatternedIndexBuffer(pattern, patternSize, reps, vertCount, &key);
     }
 
     /**
@@ -172,11 +176,11 @@ public:
      * Draw with GrPrimitiveType::kTriangles
      * @ return the quad index buffer
      */
-    sk_sp<const GrBuffer> refQuadIndexBuffer() {
-        if (auto buffer = this->findByUniqueKey<const GrBuffer>(fQuadIndexBufferKey)) {
-            return buffer;
+    sk_sp<const GrGpuBuffer> refQuadIndexBuffer() {
+        if (!fQuadIndexBuffer) {
+            fQuadIndexBuffer = this->createQuadIndexBuffer();
         }
-        return this->createQuadIndexBuffer();
+        return fQuadIndexBuffer;
     }
 
     static int QuadCountOfQuadBuffer();
@@ -198,9 +202,8 @@ public:
      *
      * @return the buffer if successful, otherwise nullptr.
      */
-    GrBuffer* createBuffer(size_t size, GrBufferType intendedType, GrAccessPattern, Flags,
-                           const void* data = nullptr);
-
+    sk_sp<GrGpuBuffer> createBuffer(size_t size, GrGpuBufferType intendedType, GrAccessPattern,
+                                    const void* data = nullptr);
 
     /**
      * If passed in render target already has a stencil buffer, return true. Otherwise attempt to
@@ -280,19 +283,19 @@ private:
         return !SkToBool(fCache);
     }
 
-    sk_sp<const GrBuffer> createPatternedIndexBuffer(const uint16_t* pattern,
-                                                     int patternSize,
-                                                     int reps,
-                                                     int vertCount,
-                                                     const GrUniqueKey& key);
+    sk_sp<const GrGpuBuffer> createPatternedIndexBuffer(const uint16_t* pattern,
+                                                        int patternSize,
+                                                        int reps,
+                                                        int vertCount,
+                                                        const GrUniqueKey* key);
 
-    sk_sp<const GrBuffer> createQuadIndexBuffer();
+    sk_sp<const GrGpuBuffer> createQuadIndexBuffer();
 
-    GrResourceCache*    fCache;
-    GrGpu*              fGpu;
+    GrResourceCache* fCache;
+    GrGpu* fGpu;
     sk_sp<const GrCaps> fCaps;
-    GrUniqueKey         fQuadIndexBufferKey;
-    bool                fExplicitlyAllocateGPUResources;
+    sk_sp<const GrGpuBuffer> fQuadIndexBuffer;
+    bool fExplicitlyAllocateGPUResources;
 
     // In debug builds we guard against improper thread handling
     SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner;)

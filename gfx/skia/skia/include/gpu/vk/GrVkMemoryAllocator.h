@@ -10,7 +10,6 @@
 
 #include "SkRefCnt.h"
 #include "GrTypes.h"
-#include "GrVkDefines.h"
 #include "GrVkTypes.h"
 
 class GrVkMemoryAllocator : public SkRefCnt {
@@ -84,6 +83,6 @@ public:
     virtual uint64_t totalAllocatedMemory() const = 0;
 };
 
-GR_MAKE_BITFIELD_CLASS_OPS(GrVkMemoryAllocator::AllocationPropertyFlags);
+GR_MAKE_BITFIELD_CLASS_OPS(GrVkMemoryAllocator::AllocationPropertyFlags)
 
 #endif

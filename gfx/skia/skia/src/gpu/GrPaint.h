@@ -47,13 +47,8 @@ public:
     /**
      * The initial color of the drawn primitive. Defaults to solid white.
      */
-    void setColor4f(const GrColor4f& color) { fColor = color; }
-    const GrColor4f& getColor4f() const { return fColor; }
-
-    /**
-     * Legacy getter, until all code handles 4f directly.
-     */
-    GrColor getColor() const { return fColor.toGrColor(); }
+    void setColor4f(const SkPMColor4f& color) { fColor = color; }
+    const SkPMColor4f& getColor4f() const { return fColor; }
 
     void setXPFactory(const GrXPFactory* xpFactory) {
         fXPFactory = xpFactory;
@@ -112,13 +107,17 @@ public:
      * coverage and color, so the actual values written to pixels with partial coverage may still
      * not seem constant, even if this function returns true.
      */
-    bool isConstantBlendedColor(GrColor* constantColor) const;
+    bool isConstantBlendedColor(SkPMColor4f* constantColor) const;
 
     /**
      * A trivial paint is one that uses src-over and has no fragment processors.
      * It may have variable sRGB settings.
      **/
     bool isTrivial() const { return fTrivial; }
+
+    friend void assert_alive(GrPaint& p) {
+        SkASSERT(p.fAlive);
+    }
 
 private:
     // Since paint copying is expensive if there are fragment processors, we require going through
@@ -132,7 +131,8 @@ private:
     SkSTArray<4, std::unique_ptr<GrFragmentProcessor>> fColorFragmentProcessors;
     SkSTArray<2, std::unique_ptr<GrFragmentProcessor>> fCoverageFragmentProcessors;
     bool fTrivial = true;
-    GrColor4f fColor = GrColor4f::OpaqueWhite();
+    SkPMColor4f fColor = SK_PMColor4fWHITE;
+    SkDEBUGCODE(bool fAlive = true;)  // Set false after moved from.
 };
 
 #endif

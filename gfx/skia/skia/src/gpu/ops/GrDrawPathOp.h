@@ -17,6 +17,7 @@
 #include "GrStencilSettings.h"
 
 class GrPaint;
+class GrRecordingContext;
 
 class GrDrawPathOpBase : public GrDrawOp {
 protected:
@@ -29,29 +30,24 @@ protected:
         }
         return FixedFunctionFlags::kUsesStencil;
     }
-    RequiresDstTexture finalize(const GrCaps& caps, const GrAppliedClip* clip) override {
-        return this->doProcessorAnalysis(caps, clip).requiresDstTexture()
-                ? RequiresDstTexture::kYes : RequiresDstTexture::kNo;
+    GrProcessorSet::Analysis finalize(
+            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
+        return this->doProcessorAnalysis(caps, clip, fsaaType);
     }
 
-    void visitProxies(const VisitProxyFunc& func) const override {
+    void visitProxies(const VisitProxyFunc& func, VisitorType) const override {
         fProcessorSet.visitProxies(func);
     }
 
 protected:
     const SkMatrix& viewMatrix() const { return fViewMatrix; }
-    GrColor color() const { return fInputColor; }
+    const SkPMColor4f& color() const { return fInputColor; }
     GrPathRendering::FillType fillType() const { return fFillType; }
     const GrProcessorSet& processors() const { return fProcessorSet; }
     GrProcessorSet detachProcessors() { return std::move(fProcessorSet); }
     inline GrPipeline::InitArgs pipelineInitArgs(const GrOpFlushState&);
-    const GrProcessorSet::Analysis& doProcessorAnalysis(const GrCaps& caps,
-                                                        const GrAppliedClip* clip) {
-        bool isMixedSamples = GrAAType::kMixedSamples == fAAType;
-        fAnalysis = fProcessorSet.finalize(fInputColor, GrProcessorAnalysisCoverage::kNone, clip,
-                                           isMixedSamples, caps, &fInputColor);
-        return fAnalysis;
-    }
+    const GrProcessorSet::Analysis& doProcessorAnalysis(
+            const GrCaps&, const GrAppliedClip*, GrFSAAType);
     const GrProcessorSet::Analysis& processorAnalysis() const {
         SkASSERT(fAnalysis.isInitialized());
         return fAnalysis;
@@ -61,7 +57,7 @@ private:
     void onPrepare(GrOpFlushState*) final {}
 
     SkMatrix fViewMatrix;
-    GrColor fInputColor;
+    SkPMColor4f fInputColor;
     GrProcessorSet::Analysis fAnalysis;
     GrPathRendering::FillType fFillType;
     GrAAType fAAType;
@@ -74,7 +70,7 @@ class GrDrawPathOp final : public GrDrawPathOpBase {
 public:
     DEFINE_OP_CLASS_ID
 
-    static std::unique_ptr<GrDrawOp> Make(GrContext*,
+    static std::unique_ptr<GrDrawOp> Make(GrRecordingContext*,
                                           const SkMatrix& viewMatrix,
                                           GrPaint&&,
                                           GrAAType,
@@ -82,7 +78,9 @@ public:
 
     const char* name() const override { return "DrawPath"; }
 
+#ifdef SK_DEBUG
     SkString dumpInfo() const override;
+#endif
 
 private:
     friend class GrOpMemoryPool; // for ctor
@@ -93,7 +91,7 @@ private:
         this->setTransformedBounds(path->getBounds(), viewMatrix, HasAABloat::kNo, IsZeroArea::kNo);
     }
 
-    void onExecute(GrOpFlushState* state) override;
+    void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
     GrPendingIOResource<const GrPath, kRead_GrIOType> fPath;
 

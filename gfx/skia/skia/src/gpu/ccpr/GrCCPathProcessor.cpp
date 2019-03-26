@@ -34,9 +34,9 @@ static constexpr float kOctoEdgeNorms[8 * 4] = {
 
 GR_DECLARE_STATIC_UNIQUE_KEY(gVertexBufferKey);
 
-sk_sp<const GrBuffer> GrCCPathProcessor::FindVertexBuffer(GrOnFlushResourceProvider* onFlushRP) {
+sk_sp<const GrGpuBuffer> GrCCPathProcessor::FindVertexBuffer(GrOnFlushResourceProvider* onFlushRP) {
     GR_DEFINE_STATIC_UNIQUE_KEY(gVertexBufferKey);
-    return onFlushRP->findOrMakeStaticBuffer(kVertex_GrBufferType, sizeof(kOctoEdgeNorms),
+    return onFlushRP->findOrMakeStaticBuffer(GrGpuBufferType::kVertex, sizeof(kOctoEdgeNorms),
                                              kOctoEdgeNorms, gVertexBufferKey);
 }
 
@@ -64,14 +64,16 @@ GR_DECLARE_STATIC_UNIQUE_KEY(gIndexBufferKey);
 constexpr GrPrimitiveProcessor::Attribute GrCCPathProcessor::kInstanceAttribs[];
 constexpr GrPrimitiveProcessor::Attribute GrCCPathProcessor::kEdgeNormsAttrib;
 
-sk_sp<const GrBuffer> GrCCPathProcessor::FindIndexBuffer(GrOnFlushResourceProvider* onFlushRP) {
+sk_sp<const GrGpuBuffer> GrCCPathProcessor::FindIndexBuffer(GrOnFlushResourceProvider* onFlushRP) {
     GR_DEFINE_STATIC_UNIQUE_KEY(gIndexBufferKey);
     if (onFlushRP->caps()->usePrimitiveRestart()) {
-        return onFlushRP->findOrMakeStaticBuffer(kIndex_GrBufferType, sizeof(kOctoIndicesAsStrips),
-                                                 kOctoIndicesAsStrips, gIndexBufferKey);
+        return onFlushRP->findOrMakeStaticBuffer(GrGpuBufferType::kIndex,
+                                                 sizeof(kOctoIndicesAsStrips), kOctoIndicesAsStrips,
+                                                 gIndexBufferKey);
     } else {
-        return onFlushRP->findOrMakeStaticBuffer(kIndex_GrBufferType, sizeof(kOctoIndicesAsTris),
-                                                 kOctoIndicesAsTris, gIndexBufferKey);
+        return onFlushRP->findOrMakeStaticBuffer(GrGpuBufferType::kIndex,
+                                                 sizeof(kOctoIndicesAsTris), kOctoIndicesAsTris,
+                                                 gIndexBufferKey);
     }
 }
 
@@ -83,19 +85,10 @@ GrCCPathProcessor::GrCCPathProcessor(const GrTextureProxy* atlas,
         , fAtlasSize(atlas->isize())
         , fAtlasOrigin(atlas->origin()) {
     // TODO: Can we just assert that atlas has GrCCAtlas::kTextureOrigin and remove fAtlasOrigin?
-    this->setInstanceAttributeCnt(kNumInstanceAttribs);
-    // Check that instance attributes exactly match Instance struct layout.
-    SkASSERT(!strcmp(this->instanceAttribute(0).name(), "devbounds"));
-    SkASSERT(!strcmp(this->instanceAttribute(1).name(), "devbounds45"));
-    SkASSERT(!strcmp(this->instanceAttribute(2).name(), "dev_to_atlas_offset"));
-    SkASSERT(!strcmp(this->instanceAttribute(3).name(), "color"));
-    SkASSERT(this->debugOnly_instanceAttributeOffset(0) == offsetof(Instance, fDevBounds));
-    SkASSERT(this->debugOnly_instanceAttributeOffset(1) == offsetof(Instance, fDevBounds45));
-    SkASSERT(this->debugOnly_instanceAttributeOffset(2) == offsetof(Instance, fDevToAtlasOffset));
-    SkASSERT(this->debugOnly_instanceAttributeOffset(3) == offsetof(Instance, fColor));
-    SkASSERT(this->debugOnly_instanceStride() == sizeof(Instance));
+    this->setInstanceAttributes(kInstanceAttribs, kNumInstanceAttribs);
+    SkASSERT(this->instanceStride() == sizeof(Instance));
 
-    this->setVertexAttributeCnt(1);
+    this->setVertexAttributes(&kEdgeNormsAttrib, 1);
     this->setTextureSamplerCnt(1);
 
     if (!viewMatrixIfUsingLocalCoords.invert(&fLocalMatrix)) {
@@ -139,10 +132,10 @@ void GrCCPathProcessor::drawPaths(GrOpFlushState* flushState, const GrPipeline& 
     GrMesh mesh(primitiveType);
     auto enablePrimitiveRestart = GrPrimitiveRestart(flushState->caps().usePrimitiveRestart());
 
-    mesh.setIndexedInstanced(resources.indexBuffer(), numIndicesPerInstance,
-                             resources.instanceBuffer(), endInstance - baseInstance, baseInstance,
-                             enablePrimitiveRestart);
-    mesh.setVertexData(resources.vertexBuffer());
+    mesh.setIndexedInstanced(resources.refIndexBuffer(), numIndicesPerInstance,
+                             resources.refInstanceBuffer(), endInstance - baseInstance,
+                             baseInstance, enablePrimitiveRestart);
+    mesh.setVertexData(resources.refVertexBuffer());
 
     flushState->rtCommandBuffer()->draw(*this, pipeline, fixedDynamicState, nullptr, &mesh, 1,
                                         bounds);
@@ -205,8 +198,9 @@ void GLSLPathProcessor::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
     // NOTE: If we were just drawing a rect, ceil/floor would be enough. But since there are also
     // diagonals in the octagon that cross through pixel centers, we need to outset by another
     // quarter px to ensure those pixels get rasterized.
-    v->codeAppend ("float2 bloatdir = (0 != N[0].x) "
-                           "? half2(N[0].x, N[1].y) : half2(N[1].x, N[0].y);");
+    v->codeAppend ("half2 bloatdir = (0 != N[0].x) "
+                           "? half2(half(N[0].x), half(N[1].y))"
+                           ": half2(half(N[1].x), half(N[0].y));");
     v->codeAppend ("octocoord = (ceil(octocoord * bloatdir - 1e-4) + 0.25) * bloatdir;");
 
     gpArgs->fPositionVar.set(kFloat2_GrSLType, "octocoord");
@@ -239,7 +233,7 @@ void GLSLPathProcessor::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
 
     // Scale coverage count by .5. Make it negative for even-odd paths and positive for winding
     // ones. Clamp winding coverage counts at 1.0 (i.e. min(coverage/2, .5)).
-    f->codeAppendf("coverage = min(abs(coverage) * %s.z, .5);", texcoord.fsIn());
+    f->codeAppendf("coverage = min(abs(coverage) * half(%s.z), .5);", texcoord.fsIn());
 
     // For negative values, this finishes the even-odd sawtooth function. Since positive (winding)
     // values were clamped at "coverage/2 = .5", this only undoes the previous multiply by .5.

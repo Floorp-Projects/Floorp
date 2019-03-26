@@ -166,8 +166,8 @@ bool GrMtlCaps::canCopyAsDrawThenBlit(GrPixelConfig dstConfig, GrPixelConfig src
     return true;
 }
 
-bool GrMtlCaps::canCopySurface(const GrSurfaceProxy* dst, const GrSurfaceProxy* src,
-                               const SkIRect& srcRect, const SkIPoint& dstPoint) const {
+bool GrMtlCaps::onCanCopySurface(const GrSurfaceProxy* dst, const GrSurfaceProxy* src,
+                                 const SkIRect& srcRect, const SkIPoint& dstPoint) const {
     GrSurfaceOrigin dstOrigin = dst->origin();
     GrSurfaceOrigin srcOrigin = src->origin();
 
@@ -195,6 +195,9 @@ void GrMtlCaps::initGrCaps(const id<MTLDevice> device) {
     // Max vertex attribs is the same on all devices
     fMaxVertexAttributes = 31;
 
+    // Metal does not support scissor + clear
+    fPerformPartialClearsAsDraws = true;
+
     // RenderTarget and Texture size
     if (this->isMac()) {
         fMaxRenderTargetSize = 16384;
@@ -221,6 +224,16 @@ void GrMtlCaps::initGrCaps(const id<MTLDevice> device) {
         }
     }
 
+    // Clamp to border is supported on Mac 10.12 and higher (gpu family.version >= 1.2). It is not
+    // supported on iOS.
+    if (this->isMac()) {
+        if (fFamilyGroup == 1 && fVersion < 2) {
+            fClampToBorderSupport = false;
+        }
+    } else {
+        fClampToBorderSupport = false;
+    }
+
     // Starting with the assumption that there isn't a reason to not map small buffers.
     fBufferMapThreshold = 0;
 
@@ -228,10 +241,6 @@ void GrMtlCaps::initGrCaps(const id<MTLDevice> device) {
     fMapBufferFlags = kCanMap_MapFlag;
 
     fOversizedStencilSupport = true;
-
-    // Looks like there is a field called rasterSampleCount labeled as beta in the Metal docs. This
-    // may be what we eventually need here, but it has no description.
-    fSampleShadingSupport = false;
 
     fSRGBSupport = true;   // always available in Metal
     fSRGBWriteControl = false;
@@ -295,6 +304,8 @@ void GrMtlCaps::initShaderCaps() {
         } else {
             if (kGray_8_GrPixelConfig == config) {
                 shaderCaps->fConfigTextureSwizzle[i] = GrSwizzle::RRRA();
+            } else if (kRGB_888X_GrPixelConfig == config) {
+                shaderCaps->fConfigTextureSwizzle[i] = GrSwizzle::RGB1();
             } else {
                 shaderCaps->fConfigTextureSwizzle[i] = GrSwizzle::RGBA();
             }
@@ -373,6 +384,10 @@ void GrMtlCaps::initConfigTable() {
     info = &fConfigTable[kRGBA_8888_GrPixelConfig];
     info->fFlags = ConfigInfo::kAllFlags;
 
+    // RGB_888X uses RGBA8Unorm and we will swizzle the 1
+    info = &fConfigTable[kRGB_888X_GrPixelConfig];
+    info->fFlags = ConfigInfo::kTextureable_Flag;
+
     // BGRA_8888 uses BGRA8Unorm
     info = &fConfigTable[kBGRA_8888_GrPixelConfig];
     info->fFlags = ConfigInfo::kAllFlags;
@@ -414,14 +429,147 @@ void GrMtlCaps::initStencilFormat(id<MTLDevice> physDev) {
     fPreferredStencilFormat = StencilFormat{ MTLPixelFormatStencil8, 8, 8, true };
 }
 
-#ifdef GR_TEST_UTILS
-GrBackendFormat GrMtlCaps::onCreateFormatFromBackendTexture(
-        const GrBackendTexture& backendTex) const {
-    GrMtlTextureInfo mtlInfo;
-    SkAssertResult(backendTex.getMtlTextureInfo(&mtlInfo));
-    id<MTLTexture> mtlTexture = GrGetMTLTexture(mtlInfo.fTexture,
-                                                GrWrapOwnership::kBorrow_GrWrapOwnership);
-    return GrBackendFormat::MakeMtl(mtlTexture.pixelFormat);
-}
+GrPixelConfig validate_sized_format(GrMTLPixelFormat grFormat, SkColorType ct) {
+    MTLPixelFormat format = static_cast<MTLPixelFormat>(grFormat);
+    switch (ct) {
+        case kUnknown_SkColorType:
+            return kUnknown_GrPixelConfig;
+        case kAlpha_8_SkColorType:
+            if (MTLPixelFormatA8Unorm == format) {
+                return kAlpha_8_as_Alpha_GrPixelConfig;
+            } else if (MTLPixelFormatR8Unorm == format) {
+                return kAlpha_8_as_Red_GrPixelConfig;
+            }
+            break;
+#ifdef SK_BUILD_FOR_MAC
+        case kRGB_565_SkColorType:
+        case kARGB_4444_SkColorType:
+            return kUnknown_GrPixelConfig;
+            break;
+#else
+        case kRGB_565_SkColorType:
+            if (MTLPixelFormatB5G6R5Unorm == format) {
+                return kRGB_565_GrPixelConfig;
+            }
+            break;
+        case kARGB_4444_SkColorType:
+            if (MTLPixelFormatABGR4Unorm == format) {
+                return kRGBA_4444_GrPixelConfig;
+            }
+            break;
 #endif
+        case kRGBA_8888_SkColorType:
+            if (MTLPixelFormatRGBA8Unorm == format) {
+                return kRGBA_8888_GrPixelConfig;
+            } else if (MTLPixelFormatRGBA8Unorm_sRGB == format) {
+                return kSRGBA_8888_GrPixelConfig;
+            }
+            break;
+        case kRGB_888x_SkColorType:
+            if (MTLPixelFormatRGBA8Unorm == format) {
+                return kRGB_888X_GrPixelConfig;
+            }
+            break;
+        case kBGRA_8888_SkColorType:
+            if (MTLPixelFormatBGRA8Unorm == format) {
+                return kBGRA_8888_GrPixelConfig;
+            } else if (MTLPixelFormatBGRA8Unorm_sRGB == format) {
+                return kSBGRA_8888_GrPixelConfig;
+            }
+            break;
+        case kRGBA_1010102_SkColorType:
+            if (MTLPixelFormatRGB10A2Unorm == format) {
+                return kRGBA_1010102_GrPixelConfig;
+            }
+            break;
+        case kRGB_101010x_SkColorType:
+            break;
+        case kGray_8_SkColorType:
+            if (MTLPixelFormatR8Unorm == format) {
+                return kGray_8_as_Red_GrPixelConfig;
+            }
+            break;
+        case kRGBA_F16Norm_SkColorType:  // TODO(brianosman): ?
+            if (MTLPixelFormatRG16Float == format) {
+                return kRGBA_half_GrPixelConfig;
+            }
+            break;
+        case kRGBA_F16_SkColorType:
+            if (MTLPixelFormatRG16Float == format) {
+                return kRGBA_half_GrPixelConfig;
+            }
+            break;
+        case kRGBA_F32_SkColorType:
+            if (MTLPixelFormatR32Float == format) {
+                return kRGBA_float_GrPixelConfig;
+            }
+            break;
+    }
+
+    return kUnknown_GrPixelConfig;
+}
+
+GrPixelConfig GrMtlCaps::validateBackendRenderTarget(const GrBackendRenderTarget& rt,
+                                                     SkColorType ct) const {
+    GrMtlTextureInfo fbInfo;
+    if (!rt.getMtlTextureInfo(&fbInfo)) {
+        return kUnknown_GrPixelConfig;
+    }
+
+    id<MTLTexture> texture = (__bridge id<MTLTexture>)fbInfo.fTexture;
+    return validate_sized_format(texture.pixelFormat, ct);
+}
+
+GrPixelConfig GrMtlCaps::getConfigFromBackendFormat(const GrBackendFormat& format,
+                                                    SkColorType ct) const {
+    const GrMTLPixelFormat* mtlFormat = format.getMtlFormat();
+    if (!mtlFormat) {
+        return kUnknown_GrPixelConfig;
+    }
+    return validate_sized_format(*mtlFormat, ct);
+}
+
+static GrPixelConfig get_yuva_config(GrMTLPixelFormat grFormat) {
+    MTLPixelFormat format = static_cast<MTLPixelFormat>(grFormat);
+
+    switch (format) {
+        case MTLPixelFormatA8Unorm:
+            return kAlpha_8_as_Alpha_GrPixelConfig;
+            break;
+        case MTLPixelFormatR8Unorm:
+            return kAlpha_8_as_Red_GrPixelConfig;
+            break;
+        // TODO: Add RG_88 format here
+        case MTLPixelFormatRGBA8Unorm:
+            return kRGBA_8888_GrPixelConfig;
+            break;
+        case MTLPixelFormatBGRA8Unorm:
+            return kBGRA_8888_GrPixelConfig;
+            break;
+        default:
+            return kUnknown_GrPixelConfig;
+            break;
+    }
+}
+
+GrPixelConfig GrMtlCaps::getYUVAConfigFromBackendFormat(const GrBackendFormat& format) const {
+    const GrMTLPixelFormat* mtlFormat = format.getMtlFormat();
+    if (!mtlFormat) {
+        return kUnknown_GrPixelConfig;
+    }
+    return get_yuva_config(*mtlFormat);
+}
+
+GrBackendFormat GrMtlCaps::getBackendFormatFromGrColorType(GrColorType ct,
+                                                           GrSRGBEncoded srgbEncoded) const {
+    GrPixelConfig config = GrColorTypeToPixelConfig(ct, srgbEncoded);
+    if (config == kUnknown_GrPixelConfig) {
+        return GrBackendFormat();
+    }
+    MTLPixelFormat format;
+    if (!GrPixelConfigToMTLFormat(config, &format)) {
+        return GrBackendFormat();
+    }
+    return GrBackendFormat::MakeMtl(format);
+}
 
