@@ -110,7 +110,7 @@ NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::SheetLoadDataHolder,
 void Gecko_StyleSheet_FinishAsyncParse(
     mozilla::css::SheetLoadDataHolder* data,
     RawServoStyleSheetContentsStrong sheet_contents,
-    StyleUseCountersOwnedOrNull use_counters);
+    mozilla::StyleOwnedOrNull<StyleUseCounters> use_counters);
 
 mozilla::StyleSheet* Gecko_LoadStyleSheet(
     mozilla::css::Loader* loader, mozilla::StyleSheet* parent,
