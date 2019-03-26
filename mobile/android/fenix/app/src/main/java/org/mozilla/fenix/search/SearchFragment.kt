@@ -84,9 +84,15 @@ class SearchFragment : Fragment() {
         view.toolbar_wrapper.clipToOutline = false
 
         search_shortcuts_button.setOnClickListener {
-            getManagedEmitter<AwesomeBarChange>().onNext(AwesomeBarChange
-                .SearchShortcutEnginePicker(!(
-                        (awesomeBarComponent.uiView as AwesomeBarUIView).state?.showShortcutEnginePicker ?: true)))
+            val isOpen = (awesomeBarComponent.uiView as AwesomeBarUIView).state?.showShortcutEnginePicker ?: false
+
+            getManagedEmitter<AwesomeBarChange>().onNext(AwesomeBarChange.SearchShortcutEnginePicker(!isOpen))
+
+            if (isOpen) {
+                requireComponents.analytics.metrics.track(Event.SearchShortcutMenuClosed)
+            } else {
+                requireComponents.analytics.metrics.track(Event.SearchShortcutMenuOpened)
+            }
         }
     }
 
@@ -113,7 +119,9 @@ class SearchFragment : Fragment() {
                             val event = if (it.url.isUrl()) {
                                 Event.EnteredUrl(false)
                             } else {
-                                Event.PerformedSearch(false)
+                                val isSearchShortcut = it.engine !=
+                                        requireComponents.search.searchEngineManager.defaultSearchEngine
+                                Event.PerformedSearch(false, isSearchShortcut)
                             }
 
                             requireComponents.analytics.metrics.track(event)
@@ -142,13 +150,20 @@ class SearchFragment : Fragment() {
                         getSearchUseCase(requireContext(), sessionId == null)
                             .invoke(it.searchTerms, it.engine)
                         (activity as HomeActivity).openToBrowser(sessionId, BrowserDirection.FromSearch)
-                        requireComponents.analytics.metrics.track(Event.PerformedSearch(true))
+
+                        val isSearchShortcut = it.engine !=
+                                requireComponents.search.searchEngineManager.defaultSearchEngine
+
+                        requireComponents.analytics.metrics
+                            .track(Event.PerformedSearch(true, isSearchShortcut))
                     }
                     is AwesomeBarAction.SearchShortcutEngineSelected -> {
                         getManagedEmitter<AwesomeBarChange>()
                             .onNext(AwesomeBarChange.SearchShortcutEngineSelected(it.engine))
                         getManagedEmitter<SearchChange>()
                             .onNext(SearchChange.SearchShortcutEngineSelected(it.engine))
+
+                        requireComponents.analytics.metrics.track(Event.SearchShortcutSelected(it.engine.name))
                     }
                 }
             }

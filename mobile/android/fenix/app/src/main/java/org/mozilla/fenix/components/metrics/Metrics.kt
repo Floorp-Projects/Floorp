@@ -43,6 +43,8 @@ sealed class Event {
     object UserDownloadedSend : Event()
     object OpenedPocketStory : Event()
     object DarkModeEnabled : Event()
+    object SearchShortcutMenuOpened : Event()
+    object SearchShortcutMenuClosed : Event()
 
     // Interaction Events
     data class SearchBarTapped(val source: Source) : Event() {
@@ -56,9 +58,16 @@ sealed class Event {
             get() = mapOf("autocomplete" to autoCompleted.toString())
     }
 
-    data class PerformedSearch(val fromSearchSuggestion: Boolean) : Event() {
+    data class PerformedSearch(val fromSearchSuggestion: Boolean, val fromSearchShortcut: Boolean) : Event() {
         override val extras: Map<String, String>?
-            get() = mapOf("search_suggestion" to fromSearchSuggestion.toString())
+            get() = mapOf("search_suggestion" to fromSearchSuggestion.toString(),
+                "search_shortcut" to fromSearchShortcut.toString())
+    }
+
+    // Track only built-in engine selection. Do not track user-added engines!
+    data class SearchShortcutSelected(val engine: String) : Event() {
+        override val extras: Map<String, String>?
+            get() = mapOf("engine" to engine)
     }
 
     open val extras: Map<String, String>?

@@ -55,10 +55,48 @@ events:
     extra_keys:
       search_suggestion:
         description: "A boolean that tells us whether or not the search term was suggested by the Awesomebar"
+      search_shortcut:
+        description: "A boolean that tells us whether or not the search was conducted through a search shortcut"
     bugs:
     - 959
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
+    notification_emails:
+    - telemetry-client-dev@mozilla.com
+    expires: "2020-03-01"
+  ss_menu_opened:
+    type: event
+    description: >
+      A user opened the search shortcut menu in the search view by pressing the shortcuts button
+    bugs:
+    - 793
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449
+    notification_emails:
+    - telemetry-client-dev@mozilla.com
+    expires: "2020-03-01"
+  ss_menu_closed:
+    type: event
+    description: >
+      A user closed the search shortcut menu in the search view by pressing the shortcuts button
+    bugs:
+    - 793
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449
+    notification_emails:
+    - telemetry-client-dev@mozilla.com
+    expires: "2020-03-01"
+  ss_selected:
+    type: event
+    description: >
+      A user selected a search shortcut engine to use
+    extra_keys:
+      engine:
+        description: "The name of the built-in search engine the user selected as a string"
+    bugs:
+    - 793
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449
     notification_emails:
     - telemetry-client-dev@mozilla.com
     expires: "2020-03-01"

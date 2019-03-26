@@ -49,6 +49,9 @@ private val Event.name: String?
         is Event.SearchBarTapped -> ""
         is Event.EnteredUrl -> ""
         is Event.PerformedSearch -> ""
+        is Event.SearchShortcutMenuOpened -> ""
+        is Event.SearchShortcutMenuClosed -> ""
+        is Event.SearchShortcutSelected -> ""
     }
 
 class LeanplumMetricsService(private val application: Application) : MetricsService {
