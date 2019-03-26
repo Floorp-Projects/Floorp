@@ -5,7 +5,7 @@
 
 enum WakeLockType { "screen", "system" };
 
-[Constructor(WakeLockType type), SecureContext, Exposed=(DedicatedWorker, Window)]
+[Constructor(WakeLockType type), SecureContext, Exposed=(DedicatedWorker,Window)]
 interface WakeLock : EventTarget {
   readonly attribute WakeLockType type;
   readonly attribute boolean active;
