@@ -1582,7 +1582,7 @@ inline bool NativeGetProperty(JSContext* cx, HandleNativeObject obj,
 }
 
 extern bool NativeGetElement(JSContext* cx, HandleNativeObject obj,
-                             HandleValue reciever, int32_t index,
+                             HandleValue receiver, int32_t index,
                              MutableHandleValue vp);
 
 bool GetSparseElementHelper(JSContext* cx, HandleArrayObject obj,
