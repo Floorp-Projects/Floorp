@@ -40,7 +40,6 @@ class nsCSPParser {
   void directive();
   nsCSPDirective* directiveName();
   void directiveValue(nsTArray<nsCSPBaseSrc*>& outSrcs);
-  void requireSRIForDirectiveValue(nsRequireSRIForDirective* aDir);
   void referrerDirectiveValue(nsCSPDirective* aDir);
   void reportURIList(nsCSPDirective* aDir);
   void sandboxFlagList(nsCSPDirective* aDir);
