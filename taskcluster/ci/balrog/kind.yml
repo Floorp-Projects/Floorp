@@ -17,7 +17,6 @@ kind-dependencies:
 
 only-for-attributes:
     - nightly
-    - signed
 
 not-for-build-platforms:
     - android-api-16-nightly/opt
