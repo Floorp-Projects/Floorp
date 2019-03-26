@@ -578,6 +578,13 @@ class ExtensionData {
     if (!this.type || !this.localeData) {
       throw new Error("The extension has not been initialized.");
     }
+    // Upon update or reinstall, the Extension.manifest may be read from
+    // StartupCache.manifest, however rawManifest is *not*.  We need the
+    // raw manifest in order to get a localized manifest.
+    if (!this.rawManifest) {
+      this.rawManifest = await this.readJSON("manifest.json");
+    }
+
     if (!this.localeData.has(locale)) {
       // Locales are not avialable until some additional
       // initialization is done.  We could just call initAllLocales,
