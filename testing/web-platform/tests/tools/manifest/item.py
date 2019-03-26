@@ -70,7 +70,7 @@ class URLManifestItem(ManifestItem):
         super(URLManifestItem, self).__init__(tests_root, path)
         self.url_base = url_base
         self._url = url
-        self._extras = extras or {}
+        self._extras = extras
 
     @property
     def _source_file(self):
@@ -155,7 +155,10 @@ class RefTestBase(URLManifestItem):
 
     def __init__(self, tests_root, path, url_base, url, references=None, **extras):
         super(RefTestBase, self).__init__(tests_root, path, url_base, url, **extras)
-        self.references = references or []
+        if references is None:
+            self.references = []
+        else:
+            self.references = references
 
     @property
     def timeout(self):
