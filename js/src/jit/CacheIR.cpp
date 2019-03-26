@@ -2316,7 +2316,7 @@ bool GetPropIRGenerator::tryAttachGenericElement(HandleObject obj,
   }
 
   // To allow other types to attach in the non-megamorphic case we test the
-  // specific matching native reciever; however, once megamorphic we can attach
+  // specific matching native receiver; however, once megamorphic we can attach
   // for any native
   if (mode_ == ICState::Mode::Megamorphic) {
     writer.guardIsNativeObject(objId);
