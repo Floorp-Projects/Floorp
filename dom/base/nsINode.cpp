@@ -12,7 +12,8 @@
 
 #include "AccessCheck.h"
 #include "jsapi.h"
-#include "js/JSON.h"
+#include "js/ForOfIterator.h"  // JS::ForOfIterator
+#include "js/JSON.h"           // JS_ParseJSON
 #include "mozAutoDocUpdate.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/CORSMode.h"
