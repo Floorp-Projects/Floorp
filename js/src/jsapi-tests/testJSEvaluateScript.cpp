@@ -16,7 +16,7 @@ BEGIN_TEST(testJSEvaluateScript) {
 
   JS::RootedValue retval(cx);
   JS::CompileOptions opts(cx);
-  JS::AutoObjectVector scopeChain(cx);
+  JS::RootedObjectVector scopeChain(cx);
   CHECK(scopeChain.append(obj));
 
   JS::SourceText<char16_t> srcBuf;

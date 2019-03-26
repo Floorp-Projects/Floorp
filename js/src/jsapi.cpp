@@ -3308,7 +3308,7 @@ JS_PUBLIC_API JSObject* JS::CloneFunctionObject(JSContext* cx,
 }
 
 extern JS_PUBLIC_API JSObject* JS::CloneFunctionObject(
-    JSContext* cx, HandleObject funobj, AutoObjectVector& envChain) {
+    JSContext* cx, HandleObject funobj, HandleObjectVector envChain) {
   RootedObject env(cx);
   RootedScope scope(cx);
   if (!CreateNonSyntacticEnvironmentChain(cx, envChain, &env, &scope)) {
@@ -4135,7 +4135,7 @@ JS_PUBLIC_API bool JS::SetPromiseUserInputEventHandlingState(
  * Asserts that the array is dense and all entries are Promise objects.
  */
 JS_PUBLIC_API JSObject* JS::GetWaitForAllPromise(
-    JSContext* cx, const JS::AutoObjectVector& promises) {
+    JSContext* cx, JS::HandleObjectVector promises) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 

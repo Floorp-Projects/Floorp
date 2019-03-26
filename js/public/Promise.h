@@ -490,7 +490,7 @@ extern JS_PUBLIC_API bool SetPromiseUserInputEventHandlingState(
 /**
  * Unforgeable version of the JS builtin Promise.all.
  *
- * Takes an AutoObjectVector of Promise objects and returns a promise that's
+ * Takes a HandleObjectVector of Promise objects and returns a promise that's
  * resolved with an array of resolution values when all those promises have
  * been resolved, or rejected with the rejection value of the first rejected
  * promise.
@@ -499,7 +499,7 @@ extern JS_PUBLIC_API bool SetPromiseUserInputEventHandlingState(
  * instances of `Promise` or a subclass of `Promise`.
  */
 extern JS_PUBLIC_API JSObject* GetWaitForAllPromise(
-    JSContext* cx, const JS::AutoObjectVector& promises);
+    JSContext* cx, JS::HandleObjectVector promises);
 
 /**
  * The Dispatchable interface allows the embedding to call SpiderMonkey

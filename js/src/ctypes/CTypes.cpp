@@ -2029,7 +2029,7 @@ static JSObject* InitInt64Class(JSContext* cx, HandleObject parent,
   return prototype;
 }
 
-static void AttachProtos(JSObject* proto, const AutoObjectVector& protos) {
+static void AttachProtos(JSObject* proto, HandleObjectVector protos) {
   // For a given 'proto' of [[Class]] "CTypeProto", attach each of the 'protos'
   // to the appropriate CTypeProtoSlot. (SLOT_CTYPES is the last slot
   // of [[Class]] "CTypeProto" that we fill in this automated manner.)
@@ -2102,7 +2102,7 @@ static bool InitTypeClasses(JSContext* cx, HandleObject ctypesObj) {
   //     * [[Class]] "CDataProto"
   //     * __proto__ === 'p', the prototype object from above
   //     * 'constructor' property === 't'
-  AutoObjectVector protos(cx);
+  RootedObjectVector protos(cx);
   if (!protos.resize(CTYPEPROTO_SLOTS)) {
     return false;
   }

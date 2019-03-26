@@ -175,7 +175,7 @@ class PromiseObject : public NativeObject {
 /**
  * Unforgeable version of the JS builtin Promise.all.
  *
- * Takes an AutoObjectVector of Promise objects and returns a promise that's
+ * Takes a HandleValueVector of Promise objects and returns a promise that's
  * resolved with an array of resolution values when all those promises have
  * been resolved, or rejected with the rejection value of the first rejected
  * promise.
@@ -183,8 +183,8 @@ class PromiseObject : public NativeObject {
  * Asserts that all objects in the `promises` vector are, maybe wrapped,
  * instances of `Promise` or a subclass of `Promise`.
  */
-MOZ_MUST_USE JSObject* GetWaitForAllPromise(
-    JSContext* cx, const JS::AutoObjectVector& promises);
+MOZ_MUST_USE JSObject* GetWaitForAllPromise(JSContext* cx,
+                                            JS::HandleObjectVector promises);
 
 // Whether to create a promise as the return value of Promise#{then,catch}.
 // If the return value is known to be unused, and if the operation is known

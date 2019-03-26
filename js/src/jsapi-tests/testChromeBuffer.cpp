@@ -69,7 +69,7 @@ BEGIN_TEST(testChromeBuffer) {
       JS::CompileOptions options(cx);
       options.setFileAndLine("", 0);
 
-      JS::AutoObjectVector emptyScopeChain(cx);
+      JS::RootedObjectVector emptyScopeChain(cx);
       CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "trusted", 1,
                                     &paramName, bytes, strlen(bytes), &fun));
       CHECK(JS_DefineProperty(cx, trusted_glob, "trusted", fun,
@@ -95,7 +95,7 @@ BEGIN_TEST(testChromeBuffer) {
     JS::CompileOptions options(cx);
     options.setFileAndLine("", 0);
 
-    JS::AutoObjectVector emptyScopeChain(cx);
+    JS::RootedObjectVector emptyScopeChain(cx);
     CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "untrusted", 1,
                                   &paramName, bytes, strlen(bytes), &fun));
     CHECK(JS_DefineProperty(cx, global, "untrusted", fun, JSPROP_ENUMERATE));
@@ -130,7 +130,7 @@ BEGIN_TEST(testChromeBuffer) {
       JS::CompileOptions options(cx);
       options.setFileAndLine("", 0);
 
-      JS::AutoObjectVector emptyScopeChain(cx);
+      JS::RootedObjectVector emptyScopeChain(cx);
       CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "trusted", 1,
                                     &paramName, bytes, strlen(bytes), &fun));
       CHECK(JS_DefineProperty(cx, trusted_glob, "trusted", fun,
@@ -152,7 +152,7 @@ BEGIN_TEST(testChromeBuffer) {
     JS::CompileOptions options(cx);
     options.setFileAndLine("", 0);
 
-    JS::AutoObjectVector emptyScopeChain(cx);
+    JS::RootedObjectVector emptyScopeChain(cx);
     CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "untrusted", 1,
                                   &paramName, bytes, strlen(bytes), &fun));
     CHECK(JS_DefineProperty(cx, global, "untrusted", fun, JSPROP_ENUMERATE));
@@ -181,7 +181,7 @@ BEGIN_TEST(testChromeBuffer) {
       JS::CompileOptions options(cx);
       options.setFileAndLine("", 0);
 
-      JS::AutoObjectVector emptyScopeChain(cx);
+      JS::RootedObjectVector emptyScopeChain(cx);
       CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "trusted", 0,
                                     nullptr, bytes, strlen(bytes), &fun));
       CHECK(JS_DefineProperty(cx, trusted_glob, "trusted", fun,
@@ -204,7 +204,7 @@ BEGIN_TEST(testChromeBuffer) {
     JS::CompileOptions options(cx);
     options.setFileAndLine("", 0);
 
-    JS::AutoObjectVector emptyScopeChain(cx);
+    JS::RootedObjectVector emptyScopeChain(cx);
     CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "untrusted", 1,
                                   &paramName, bytes, strlen(bytes), &fun));
     CHECK(JS_DefineProperty(cx, global, "untrusted", fun, JSPROP_ENUMERATE));

@@ -159,7 +159,7 @@ already_AddRefed<Promise> Promise::All(
     return nullptr;
   }
 
-  JS::AutoObjectVector promises(aCx);
+  JS::RootedVector<JSObject*> promises(aCx);
   if (!promises.reserve(aPromiseList.Length())) {
     aRv.NoteJSContextException(aCx);
     return nullptr;

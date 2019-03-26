@@ -1226,7 +1226,7 @@ void nsMessageManagerScriptExecutor::LoadScriptInternal(
       }
     } else {
       JS::RootedValue rval(cx);
-      JS::AutoObjectVector envChain(cx);
+      JS::RootedVector<JSObject*> envChain(cx);
       if (!envChain.append(aMessageManager)) {
         return;
       }

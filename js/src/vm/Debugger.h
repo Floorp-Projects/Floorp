@@ -339,7 +339,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   friend bool(::JS_DefineDebuggerObject)(JSContext* cx, JS::HandleObject obj);
   friend bool(::JS::dbg::IsDebugger)(JSObject&);
   friend bool(::JS::dbg::GetDebuggeeGlobals)(JSContext*, JSObject&,
-                                             AutoObjectVector&);
+                                             MutableHandleObjectVector);
   friend bool JS::dbg::FireOnGarbageCollectionHookRequired(JSContext* cx);
   friend bool JS::dbg::FireOnGarbageCollectionHook(
       JSContext* cx, JS::dbg::GarbageCollectionEvent::Ptr&& data);

@@ -4101,7 +4101,7 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
 
   /* Objects */
 
-  AutoObjectVector objects(cx);
+  RootedObjectVector objects(cx);
   if (nobjects != 0) {
     RootedObject obj(cx);
     RootedObject clone(cx);
