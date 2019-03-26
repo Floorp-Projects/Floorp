@@ -776,8 +776,8 @@ JSObject* StructMetaTypeDescr::create(JSContext* cx, HandleObject metaTypeDescr,
   // Iterate through each field. Collect values for the various
   // vectors below and also track total size and alignment. Be wary
   // of overflow!
-  AutoValueVector fieldTypeObjs(cx);  // Type descriptor of each field.
-  bool opaque = false;                // Opacity of struct.
+  RootedValueVector fieldTypeObjs(cx);  // Type descriptor of each field.
+  bool opaque = false;                  // Opacity of struct.
 
   Vector<StructFieldProps> fieldProps(cx);
 
@@ -838,15 +838,15 @@ JSObject* StructMetaTypeDescr::create(JSContext* cx, HandleObject metaTypeDescr,
 /* static */
 StructTypeDescr* StructMetaTypeDescr::createFromArrays(
     JSContext* cx, HandleObject structTypePrototype, bool opaque,
-    bool allowConstruct, AutoIdVector& ids, AutoValueVector& fieldTypeObjs,
+    bool allowConstruct, AutoIdVector& ids, JS::HandleValueVector fieldTypeObjs,
     Vector<StructFieldProps>& fieldProps) {
-  StringBuffer stringBuffer(cx);      // Canonical string repr
-  AutoValueVector fieldNames(cx);     // Name of each field.
-  AutoValueVector fieldOffsets(cx);   // Offset of each field field.
-  AutoValueVector fieldMuts(cx);      // Mutability of each field.
-  RootedObject userFieldOffsets(cx);  // User-exposed {f:offset} object
-  RootedObject userFieldTypes(cx);    // User-exposed {f:descr} object.
-  Layout layout;                      // Field offsetter
+  StringBuffer stringBuffer(cx);       // Canonical string repr
+  RootedValueVector fieldNames(cx);    // Name of each field.
+  RootedValueVector fieldOffsets(cx);  // Offset of each field field.
+  RootedValueVector fieldMuts(cx);     // Mutability of each field.
+  RootedObject userFieldOffsets(cx);   // User-exposed {f:offset} object
+  RootedObject userFieldTypes(cx);     // User-exposed {f:descr} object.
+  Layout layout;                       // Field offsetter
 
   userFieldOffsets = NewBuiltinClassInstance<PlainObject>(cx, TenuredObject);
   if (!userFieldOffsets) {

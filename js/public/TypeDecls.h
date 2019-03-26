@@ -105,6 +105,10 @@ typedef PersistentRooted<JS::Symbol*> PersistentRootedSymbol;
 typedef PersistentRooted<JS::BigInt*> PersistentRootedBigInt;
 typedef PersistentRooted<Value> PersistentRootedValue;
 
+template <typename T>
+using HandleVector = Handle<StackGCVector<T>>;
+template <typename T>
+using MutableHandleVector = MutableHandle<StackGCVector<T>>;
 }  // namespace JS
 
 using jsid = JS::PropertyKey;

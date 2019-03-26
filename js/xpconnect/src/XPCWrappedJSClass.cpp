@@ -842,7 +842,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
   RootedValue fval(cx);
   RootedObject thisObj(cx, obj);
 
-  AutoValueVector args(cx);
+  RootedValueVector args(cx);
   AutoScriptEvaluate scriptEval(cx);
 
   XPCJSContext* xpccx = ccx.GetContext();

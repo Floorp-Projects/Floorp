@@ -6526,7 +6526,7 @@ static bool DisableSingleStepProfiling(JSContext* cx, unsigned argc,
 
   ShellContext* sc = GetShellContext(cx);
 
-  AutoValueVector elems(cx);
+  RootedValueVector elems(cx);
   for (size_t i = 0; i < sc->stacks.length(); i++) {
     JSString* stack =
         JS_NewUCStringCopyN(cx, sc->stacks[i].begin(), sc->stacks[i].length());

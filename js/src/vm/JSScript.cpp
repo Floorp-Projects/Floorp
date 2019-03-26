@@ -4070,7 +4070,7 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
 
   /* Constants */
 
-  AutoValueVector consts(cx);
+  RootedValueVector consts(cx);
   if (nconsts != 0) {
     RootedValue val(cx);
     RootedValue clone(cx);

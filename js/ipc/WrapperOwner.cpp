@@ -580,7 +580,7 @@ bool WrapperOwner::callOrConstruct(JSContext* cx, HandleObject proxy,
   ObjectId objId = idOf(proxy);
 
   InfallibleTArray<JSParam> vals;
-  AutoValueVector outobjects(cx);
+  RootedValueVector outobjects(cx);
 
   RootedValue v(cx);
   for (size_t i = 0; i < args.length() + 2; i++) {
