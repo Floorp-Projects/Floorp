@@ -9,9 +9,15 @@ import {
   selectors,
   watchForState,
   createStore,
+  makeOriginalSource,
   makeSource
 } from "../../../utils/test-head";
-import { sourceThreadClient } from "../../tests/helpers/threadClient.js";
+import {
+  createSource,
+  sourceThreadClient
+} from "../../tests/helpers/threadClient.js";
+import { addBreakpoint } from "../../breakpoints/addBreakpoint";
+import { getBreakpointsList } from "../../../selectors";
 
 describe("loadSourceText", () => {
   it("should load source text", async () => {
@@ -37,6 +43,64 @@ describe("loadSourceText", () => {
       throw new Error("bad fooSource");
     }
     expect(foo2Source.text.indexOf("return foo2")).not.toBe(-1);
+  });
+
+  it("should update breakpoint text when a source loads", async () => {
+    const fooOrigSource = makeOriginalSource("fooGen");
+    const fooGenSource = makeSource("fooGen");
+
+    const fooOrigContent = createSource("fooOrig", "var fooOrig = 42;");
+    const fooGenContent = createSource("fooGen", "var fooGen = 42;");
+
+    const store = createStore(
+      {
+        ...sourceThreadClient,
+        sourceContents: async () => fooGenContent,
+        getBreakpointPositions: async () => ({ "1": [0] })
+      },
+      {},
+      {
+        getGeneratedRangesForOriginal: async () => [
+          { start: { line: 1, column: 0 }, end: { line: 1, column: 1 } }
+        ],
+        getOriginalLocations: async items =>
+          items.map(item => ({
+            ...item,
+            sourceId: fooOrigSource.id
+          })),
+        getOriginalSourceText: async s => ({
+          text: fooOrigContent.source,
+          contentType: fooOrigContent.contentType
+        })
+      }
+    );
+    const { dispatch, getState } = store;
+
+    await dispatch(actions.newSource(fooOrigSource));
+    await dispatch(actions.newSource(fooGenSource));
+
+    const breakpoint = await dispatch(
+      addBreakpoint({
+        sourceId: fooOrigSource.id,
+        line: 1,
+        column: 0
+      })
+    );
+
+    expect(breakpoint.text).toBe("");
+    expect(breakpoint.originalText).toBe("");
+
+    await dispatch(actions.loadSourceText(fooOrigSource));
+
+    const breakpoint1 = getBreakpointsList(getState())[0];
+    expect(breakpoint1.text).toBe("");
+    expect(breakpoint1.originalText).toBe("var fooOrig = 42;");
+
+    await dispatch(actions.loadSourceText(fooGenSource));
+
+    const breakpoint2 = getBreakpointsList(getState())[0];
+    expect(breakpoint2.text).toBe("var fooGen = 42;");
+    expect(breakpoint2.originalText).toBe("var fooOrig = 42;");
   });
 
   it("loads two sources w/ one request", async () => {
