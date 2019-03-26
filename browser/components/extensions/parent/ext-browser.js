@@ -471,8 +471,8 @@ class TabTracker extends TabTrackerBase {
           };
 
           // We need to delay sending this event until the next tick, since the
-          // tab could have been created with a lazy browser but still not have
-          // been assigned a SessionStore tab state with the URL and title.
+          // tab can become selected immediately after "TabOpen", then onCreated
+          // should be fired with `active: true`.
           Promise.resolve().then(() => {
             if (!event.originalTarget.parentNode) {
               // If the tab is already be destroyed, do nothing.
