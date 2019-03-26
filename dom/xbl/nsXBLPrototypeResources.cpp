@@ -120,7 +120,7 @@ void nsXBLPrototypeResources::ClearLoader() { mLoader = nullptr; }
 
 void nsXBLPrototypeResources::SyncServoStyles() {
   mStyleRuleMap.reset(nullptr);
-  mServoStyles.reset(Servo_AuthorStyles_Create());
+  mServoStyles = Servo_AuthorStyles_Create().Consume();
   for (auto& sheet : mStyleSheetList) {
     Servo_AuthorStyles_AppendStyleSheet(mServoStyles.get(), sheet);
   }
