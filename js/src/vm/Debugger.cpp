@@ -2087,7 +2087,7 @@ ResumeMode Debugger::dispatchHook(JSContext* cx, HookIsEnabledFun hookIsEnabled,
   //
   // Note: In the general case, 'triggered' contains references to objects in
   // different compartments--every compartment *except* this one.
-  AutoValueVector triggered(cx);
+  RootedValueVector triggered(cx);
   Handle<GlobalObject*> global = cx->global();
   if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
     for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
@@ -4047,7 +4047,7 @@ bool Debugger::getDebuggees(JSContext* cx, unsigned argc, Value* vp) {
   // Obtain the list of debuggees before wrapping each debuggee, as a GC could
   // update the debuggees set while we are iterating it.
   unsigned count = dbg->debuggees.count();
-  AutoValueVector debuggees(cx);
+  RootedValueVector debuggees(cx);
   if (!debuggees.resize(count)) {
     return false;
   }
@@ -9295,7 +9295,7 @@ static bool DebuggerGenericEval(JSContext* cx,
   // Gather keys and values of bindings, if any. This must be done in the
   // debugger compartment, since that is where any exceptions must be thrown.
   AutoIdVector keys(cx);
-  AutoValueVector values(cx);
+  RootedValueVector values(cx);
   if (bindings) {
     if (!GetPropertyKeys(cx, bindings, JSITER_OWNONLY, &keys) ||
         !values.growBy(keys.length())) {

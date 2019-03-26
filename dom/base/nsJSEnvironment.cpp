@@ -651,10 +651,10 @@ nsresult nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget,
   }
   JSContext* cx = jsapi.cx();
 
-  JS::AutoValueVector args(cx);
+  JS::RootedVector<JS::Value> args(cx);
 
   JS::Rooted<JSObject*> global(cx, GetWindowProxy());
-  nsresult rv = ConvertSupportsTojsvals(aArgs, global, args);
+  nsresult rv = ConvertSupportsTojsvals(aArgs, global, &args);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // got the arguments, now attach them.
@@ -674,9 +674,9 @@ nsresult nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget,
                                                              : NS_ERROR_FAILURE;
 }
 
-nsresult nsJSContext::ConvertSupportsTojsvals(nsISupports* aArgs,
-                                              JS::Handle<JSObject*> aScope,
-                                              JS::AutoValueVector& aArgsOut) {
+nsresult nsJSContext::ConvertSupportsTojsvals(
+    nsISupports* aArgs, JS::Handle<JSObject*> aScope,
+    JS::MutableHandleVector<JS::Value> aArgsOut) {
   nsresult rv = NS_OK;
 
   // If the array implements nsIJSArgArray, copy the contents and return.

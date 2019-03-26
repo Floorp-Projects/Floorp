@@ -27,7 +27,7 @@ BEGIN_TEST(test_functionBinding) {
                                 s1chars, strlen(s1chars), &fun));
   CHECK(fun);
 
-  JS::AutoValueVector args(cx);
+  JS::RootedValueVector args(cx);
   RootedValue rval(cx);
   CHECK(JS::Call(cx, UndefinedHandleValue, fun, args, &rval));
   CHECK(rval.isBoolean());

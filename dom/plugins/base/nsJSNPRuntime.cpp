@@ -723,7 +723,7 @@ static bool doInvoke(NPObject *npobj, NPIdentifier method,
   }
 
   // Convert args
-  JS::AutoValueVector jsargs(cx);
+  JS::RootedVector<JS::Value> jsargs(cx);
   if (!jsargs.reserve(argCount)) {
     ::JS_ReportOutOfMemory(cx);
     return false;

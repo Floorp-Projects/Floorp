@@ -918,7 +918,7 @@ template <MaybeConstruct Construct>
 class GenericArgsBase : public mozilla::Conditional<Construct, AnyConstructArgs,
                                                     AnyInvokeArgs>::Type {
  protected:
-  AutoValueVector v_;
+  RootedValueVector v_;
 
   explicit GenericArgsBase(JSContext* cx) : v_(cx) {}
 

@@ -594,10 +594,10 @@ void HeapSnapshot::ComputeShortestPaths(JSContext* cx, uint64_t start,
 
   for (auto iter = shortestPaths.targetIter(); !iter.done(); iter.next()) {
     JS::RootedValue key(cx, JS::NumberValue(iter.get().identifier()));
-    JS::AutoValueVector paths(cx);
+    JS::RootedValueVector paths(cx);
 
     bool ok = shortestPaths.forEachPath(iter.get(), [&](JS::ubi::Path& path) {
-      JS::AutoValueVector pathValues(cx);
+      JS::RootedValueVector pathValues(cx);
 
       for (JS::ubi::BackEdge* edge : path) {
         JS::RootedObject pathPart(cx, JS_NewPlainObject(cx));

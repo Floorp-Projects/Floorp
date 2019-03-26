@@ -203,7 +203,7 @@ static const char* const callbackNames[] = {
 
 enum YieldKind { Delegating, NotDelegating };
 
-typedef AutoValueVector NodeVector;
+typedef RootedValueVector NodeVector;
 
 /*
  * ParseNode is a somewhat intricate data structure, and its invariants have

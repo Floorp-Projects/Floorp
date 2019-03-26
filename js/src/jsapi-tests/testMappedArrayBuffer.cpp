@@ -161,7 +161,7 @@ bool TestTransferObject() {
   JS::RootedValue v1(cx, JS::ObjectValue(*obj1));
 
   // Create an Array of transferable values.
-  JS::AutoValueVector argv(cx);
+  JS::RootedValueVector argv(cx);
   if (!argv.append(v1)) {
     return false;
   }

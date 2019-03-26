@@ -1234,7 +1234,7 @@ class CGHeaders(CGWrapper):
         # Now for non-callback descriptors make sure we include any
         # headers needed by Func declarations and other things like that.
         for desc in descriptors:
-            # If this is an iterator interface generated for a seperate
+            # If this is an iterator interface generated for a separate
             # iterable interface, skip generating type includes, as we have
             # what we need in IterableIterator.h
             if desc.interface.isExternal() or desc.interface.isIteratorInterface():
@@ -16462,7 +16462,7 @@ class CallbackMember(CGNativeMember):
         if self.argCount > 0:
             argvDecl = fill(
                 """
-                JS::AutoValueVector argv(cx);
+                JS::RootedVector<JS::Value> argv(cx);
                 if (!argv.resize(${argCount})) {
                   aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
                   return${errorReturn};
@@ -17097,7 +17097,7 @@ class CGMaplikeOrSetlikeMethodGenerator(CGThing):
     def appendKeyArgConversion(self):
         """
         Generates the key argument for methods. Helper functions will use
-        an AutoValueVector, while interface methods have seperate JS::Values.
+        a RootedVector<JS::Value>, while interface methods have separate JS::Values.
         """
         if self.helperImpl:
             return ([], ["argv[0]"], [])
@@ -17106,8 +17106,8 @@ class CGMaplikeOrSetlikeMethodGenerator(CGThing):
     def appendKeyAndValueArgConversion(self):
         """
         Generates arguments for methods that require a key and value. Helper
-        functions will use an AutoValueVector, while interface methods have
-        seperate JS::Values.
+        functions will use a RootedVector<JS::Value>, while interface methods have
+        separate JS::Values.
         """
         r = self.appendKeyArgConversion()
         if self.helperImpl:
