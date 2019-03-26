@@ -260,7 +260,7 @@ function sendDragEvent(aEvent, aTarget, aWindow = window) {
   }
 
   var utils = _getDOMWindowUtils(aWindow);
-  return utils.dispatchDOMEventViaPresShell(aTarget, event, true);
+  return utils.dispatchDOMEventViaPresShell(aTarget, event);
 }
 
 /**

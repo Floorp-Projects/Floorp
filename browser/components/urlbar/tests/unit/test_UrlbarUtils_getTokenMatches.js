@@ -30,6 +30,11 @@ add_task(function test() {
       expected: [[0, 7]],
     },
     {
+      tokens: ["\u9996"],
+      phrase: "Test \u9996\u9875 Test",
+      expected: [[5, 1]],
+    },
+    {
       tokens: ["mo", "zilla"],
       phrase: "mozilla",
       expected: [[0, 7]],

@@ -81,6 +81,7 @@ class JSTerm extends Component {
       autocompleteData: PropTypes.object.isRequired,
       // Is the input in editor mode.
       editorMode: PropTypes.bool,
+      autocomplete: PropTypes.bool,
     };
   }
 
@@ -804,7 +805,9 @@ class JSTerm extends Component {
     const value = this._getValue();
     if (this.lastInputValue !== value) {
       this.resizeInput();
-      this.props.autocompleteUpdate();
+      if (this.props.autocomplete) {
+        this.props.autocompleteUpdate();
+      }
       this.lastInputValue = value;
     }
   }

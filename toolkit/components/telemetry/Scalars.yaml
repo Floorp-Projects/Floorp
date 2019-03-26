@@ -95,6 +95,36 @@ browser.engagement:
     record_in_processes:
       - 'main'
 
+  max_concurrent_tab_pinned_count:
+    bug_numbers:
+      - 1505535
+    description: >
+      The count of maximum number of pinned tabs open during a subsession. This
+      includes private windows and the ones opened when starting the browser.
+    expires: never
+    kind: uint
+    notification_emails:
+      - bmiroglio@mozilla.com
+      - aoprea@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  tab_pinned_event_count:
+    bug_numbers:
+      - 1505535
+    description: >
+      The count of tab pinned events per subsession, across all windows, after the
+      session has been restored. This includes tab pinned events from private windows.
+    expires: never
+    kind: uint
+    notification_emails:
+      - bmiroglio@mozilla.com
+      - aoprea@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
   total_uri_count:
     bug_numbers:
       - 1271313

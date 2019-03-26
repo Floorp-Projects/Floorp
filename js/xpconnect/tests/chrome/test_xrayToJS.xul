@@ -1089,7 +1089,7 @@ for (var prop of props) {
       if (isNightlyBuild) {
         for (const f of ["getBigInt64", "getBigUint64"]) {
           let x = t[f](0);
-          is(x, 0n, `${f} is 0n for "${constructor}"`);
+          is(x, BigInt(0), `${f} is 0n for "${constructor}"`);
           is(typeof x, 'bigint', `typeof ${f} is bigint for "${constructor}"`);
         }
       } else {
@@ -1107,8 +1107,8 @@ for (var prop of props) {
 
       if (isNightlyBuild) {
         for (const k of ["BigInt64", "BigUint64"]) {
-          t["set" + k](0, 13n);
-          is(t["get" + k](0), 13n, `get${k}(0) afer set${k}(0, 13n) is 13n for "${constructor}"`);
+          t["set" + k](0, BigInt(13));
+          is(t["get" + k](0), BigInt(13), `get${k}(0) afer set${k}(0, 13n) is 13n for "${constructor}"`);
         }
       }
     }

@@ -53,8 +53,11 @@ AudioNode::AudioNode(AudioContext* aContext, uint32_t aChannelCount,
       mChannelInterpretation(aChannelInterpretation),
       mId(gId++),
       mPassThrough(false),
-      mAbstractMainThread(aContext->GetOwnerGlobal()->AbstractMainThreadFor(
-          TaskCategory::Other)) {
+      mAbstractMainThread(
+          aContext->GetOwnerGlobal()
+              ? aContext->GetOwnerGlobal()->AbstractMainThreadFor(
+                    TaskCategory::Other)
+              : nullptr) {
   MOZ_ASSERT(aContext);
   aContext->RegisterNode(this);
 }

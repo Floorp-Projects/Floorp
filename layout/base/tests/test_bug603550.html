@@ -49,7 +49,7 @@ function sendMouseUp(el) {
 
 function fireEvent(target, event) {
   var utils = SpecialPowers.getDOMWindowUtils(window);
-  utils.dispatchDOMEventViaPresShell(target, event, true);
+  utils.dispatchDOMEventViaPresShell(target, event);
 }
 
 function fireDrop(element) {
