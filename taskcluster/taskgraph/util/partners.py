@@ -121,12 +121,12 @@ REPACK_CFG_QUERY = """query{
 
 # Map platforms in repack.cfg into their equivalents in taskcluster
 TC_PLATFORM_PER_FTP = {
-    'linux-i686': 'linux-nightly',
-    'linux-x86_64': 'linux64-nightly',
-    'mac': 'macosx64-nightly',
-    'win32': 'win32-nightly',
-    'win64': 'win64-nightly',
-    'win64-aarch64': 'win64-aarch64-nightly',
+    'linux-i686': 'linux-shippable',
+    'linux-x86_64': 'linux64-shippable',
+    'mac': 'macosx64-shippable',
+    'win32': 'win32-shippable',
+    'win64': 'win64-shippable',
+    'win64-aarch64': 'win64-aarch64-shippable',
 }
 
 TASKCLUSTER_PROXY_SECRET_ROOT = 'http://taskcluster/secrets/v1/secret'
