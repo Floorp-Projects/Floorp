@@ -6492,6 +6492,21 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER RESULT FTYPE FVALUE
     return false;
   }
+  if (iterKind == IteratorKind::Async) {
+    // Step 7.c.iii.2.
+    if (!emit1(JSOP_GETRVAL)) {
+      //            [stack] NEXT ITER RESULT FTYPE FVALUE RVAL
+      return false;
+    }
+    if (!emitAwaitInInnermostScope()) {
+      //            [stack] NEXT ITER RESULT FTYPE FVALUE NEWRVAL
+      return false;
+    }
+    if (!emit1(JSOP_SETRVAL)) {
+      //            [stack] NEXT ITER RESULT FTYPE FVALUE
+      return false;
+    }
+  }
   if (!ifReturnMethodIsDefined.emitEnd()) {
     return false;
   }
