@@ -43,7 +43,7 @@
   align-self: center;
   grid-area: name;
   font-size: var(--body-20-font-size);
-  font-weight: var(--body-20-font-weight);
+  font-weight: var(--body-20-font-weight-bold);
   line-height: 1.5;
   margin-inline-start: calc(var(--base-unit) * 3);
 }

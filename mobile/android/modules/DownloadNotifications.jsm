@@ -132,7 +132,7 @@ var DownloadNotifications = {
           }
         }
 
-        throw "Couldn't find download for " + cookie;
+        throw new Error("Couldn't find download for " + cookie);
       });
   },
 

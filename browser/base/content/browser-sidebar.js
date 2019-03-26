@@ -65,6 +65,12 @@ var SidebarUI = {
   _switcherArrow: null,
   _inited: false,
 
+  _initDeferred: PromiseUtils.defer(),
+
+  get promiseInitialized() {
+    return this._initDeferred.promise;
+  },
+
   get initialized() {
     return this._inited;
   },
@@ -83,6 +89,8 @@ var SidebarUI = {
     });
 
     this._inited = true;
+
+    this._initDeferred.resolve();
   },
 
   uninit() {

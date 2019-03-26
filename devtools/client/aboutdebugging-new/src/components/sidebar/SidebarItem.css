@@ -11,17 +11,29 @@
 .sidebar-item {
   color: var(--sidebar-text-color);
   border-radius: 2px;
-  height: var(--category-height);
   padding-inline-end: var(--category-padding);
   padding-inline-start: var(--category-padding);
   transition: background-color var(--category-transition-duration);
   -moz-user-select: none;
 }
 
-.sidebar-item--overflow {
+.sidebar-item--tall {
+  height: var(--category-height);
+}
+
+.sidebar-item--condensed {
+  height: calc(var(--base-unit) * 9);
+}
+
+.sidebar-item--full-width {
+  padding-inline-start: 0;
+  padding-inline-end: 0;
+}
+
+/* .sidebar-item--overflow {
   min-height: var(--category-height);
   height: auto;
-}
+} */
 
 .sidebar-item__link {
   display: block;

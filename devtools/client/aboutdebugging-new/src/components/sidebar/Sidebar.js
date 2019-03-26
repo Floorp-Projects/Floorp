@@ -63,9 +63,7 @@ class Sidebar extends PureComponent {
 
   renderDevicesEmpty() {
     return SidebarItem(
-      {
-        isSelected: false,
-      },
+      {},
       Localized(
         {
           id: "about-debugging-sidebar-no-devices",
@@ -89,12 +87,12 @@ class Sidebar extends PureComponent {
     }
     // render all devices otherwise
     return [
-      ...this.renderSidebarItems(GLOBE_ICON, networkRuntimes),
-      ...this.renderSidebarItems(USB_ICON, usbRuntimes),
+      ...this.renderRuntimeItems(GLOBE_ICON, networkRuntimes),
+      ...this.renderRuntimeItems(USB_ICON, usbRuntimes),
     ];
   }
 
-  renderSidebarItems(icon, runtimes) {
+  renderRuntimeItems(icon, runtimes) {
     const { dispatch, selectedPage, selectedRuntimeId } = this.props;
 
     return runtimes.map(runtime => {
@@ -121,6 +119,51 @@ class Sidebar extends PureComponent {
         runtimeId: runtime.id,
       });
     });
+  }
+
+  renderFooter() {
+    const HELP_ICON_SRC = "chrome://global/skin/icons/help.svg";
+    const SUPPORT_URL = "https://developer.mozilla.org/docs/Tools/about:debugging";
+
+    return dom.footer(
+      {
+        className: "sidebar__footer",
+      },
+      dom.ul(
+        {},
+        SidebarItem(
+          {
+            className: "sidebar-item--condensed",
+            to: SUPPORT_URL,
+          },
+          dom.span(
+            {
+              className: "sidebar__footer__support-help",
+            },
+            Localized(
+              {
+                id: "about-debugging-sidebar-support-icon",
+                attrs: {
+                  alt: true,
+                },
+              },
+              dom.img(
+                {
+                  className: "sidebar__footer__icon",
+                  src: HELP_ICON_SRC,
+                }
+              ),
+            ),
+            Localized(
+              {
+                id: "about-debugging-sidebar-support",
+              },
+              dom.span({}, "about-debugging-sidebar-support"),
+            )
+          )
+        ),
+      )
+    );
   }
 
   render() {
@@ -156,17 +199,15 @@ class Sidebar extends PureComponent {
         ),
         SidebarItem(
           {
-            className: "sidebar-item--overflow",
-            isSelected: false,
+            className: "sidebar-item--overflow sidebar-item--full-width",
           },
-          dom.hr({ className: "separator" }),
+          dom.hr({ className: "separator separator--breathe" }),
           this.renderAdbAddonStatus(),
         ),
         this.renderDevices(),
         SidebarItem(
           {
             className: "sidebar-item--breathe sidebar__refresh-usb",
-            isSelected: false,
             key: "refresh-devices",
           },
           RefreshDevicesButton({
@@ -174,7 +215,8 @@ class Sidebar extends PureComponent {
             isScanning: isScanningUsb,
           })
         ),
-      )
+      ),
+      this.renderFooter(),
     );
   }
 }

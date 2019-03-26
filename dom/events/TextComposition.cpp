@@ -651,7 +651,7 @@ void TextComposition::EndHandlingComposition(EditorBase* aEditorBase) {
 
 #ifdef DEBUG
   RefPtr<EditorBase> editorBase = GetEditorBase();
-  MOZ_ASSERT(editorBase == aEditorBase,
+  MOZ_ASSERT(!editorBase || editorBase == aEditorBase,
              "Another editor handled the composition?");
 #endif  // #ifdef DEBUG
   mEditorBaseWeak = nullptr;

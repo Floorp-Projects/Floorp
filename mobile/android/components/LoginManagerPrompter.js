@@ -48,7 +48,7 @@ LoginManagerPrompter.prototype = {
       };
 
       if (!this.__strBundle)
-        throw "String bundle for Login Manager not present!";
+        throw new Error("String bundle for Login Manager not present!");
     }
 
     return this.__strBundle;

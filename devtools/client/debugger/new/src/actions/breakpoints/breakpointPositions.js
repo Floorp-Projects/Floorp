@@ -34,6 +34,14 @@ async function mapLocations(
   );
 }
 
+// Filter out positions, that are not in the original source Id
+function filterBySource(positions, sourceId) {
+  if (!isOriginalId(sourceId)) {
+    return positions;
+  }
+  return positions.filter(position => position.location.sourceId == sourceId);
+}
+
 function filterByUniqLocation(positions: MappedLocation[]) {
   return uniqBy(positions, ({ location }) => makeBreakpointId(location));
 }
@@ -96,6 +104,8 @@ async function _setBreakpointPositions(sourceId, thunkArgs) {
 
   let positions = convertToList(results, generatedSource);
   positions = await mapLocations(positions, thunkArgs);
+
+  positions = filterBySource(positions, sourceId);
   positions = filterByUniqLocation(positions);
 
   const source = getSource(getState(), sourceId);

@@ -1149,9 +1149,7 @@ bool wasm::EnsureBuiltinThunksInitialized() {
 
   MOZ_ASSERT(masm.callSites().empty());
   MOZ_ASSERT(masm.callSiteTargets().empty());
-  MOZ_ASSERT(masm.callFarJumps().empty());
   MOZ_ASSERT(masm.trapSites().empty());
-  MOZ_ASSERT(masm.callFarJumps().empty());
 
   ExecutableAllocator::cacheFlush(thunks->codeBase, thunks->codeSize);
   if (!ExecutableAllocator::makeExecutable(thunks->codeBase,

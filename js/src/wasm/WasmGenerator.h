@@ -62,7 +62,6 @@ struct CompiledCode {
   CallSiteVector callSites;
   CallSiteTargetVector callSiteTargets;
   TrapSiteVectorArray trapSites;
-  CallFarJumpVector callFarJumps;
   SymbolicAccessVector symbolicAccesses;
   jit::CodeLabelVector codeLabels;
   StackMaps stackMaps;
@@ -75,7 +74,6 @@ struct CompiledCode {
     callSites.clear();
     callSiteTargets.clear();
     trapSites.clear();
-    callFarJumps.clear();
     symbolicAccesses.clear();
     codeLabels.clear();
     stackMaps.clear();
@@ -85,8 +83,7 @@ struct CompiledCode {
   bool empty() {
     return bytes.empty() && codeRanges.empty() && callSites.empty() &&
            callSiteTargets.empty() && trapSites.empty() &&
-           callFarJumps.empty() && symbolicAccesses.empty() &&
-           codeLabels.empty() && stackMaps.empty();
+           symbolicAccesses.empty() && codeLabels.empty() && stackMaps.empty();
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -137,6 +134,12 @@ struct CompileTask {
 class MOZ_STACK_CLASS ModuleGenerator {
   typedef Vector<CompileTask, 0, SystemAllocPolicy> CompileTaskVector;
   typedef Vector<jit::CodeOffset, 0, SystemAllocPolicy> CodeOffsetVector;
+  struct CallFarJump {
+    uint32_t funcIndex;
+    jit::CodeOffset jump;
+    CallFarJump(uint32_t fi, jit::CodeOffset j) : funcIndex(fi), jump(j) {}
+  };
+  typedef Vector<CallFarJump, 0, SystemAllocPolicy> CallFarJumpVector;
 
   // Constant parameters
   SharedCompileArgs const compileArgs_;

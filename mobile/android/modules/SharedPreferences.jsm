@@ -61,7 +61,7 @@ function SharedPreferencesImpl(options = {}) {
   }
 
   if (options.scope == null || options.scope == undefined) {
-    throw "Shared Preferences must specifiy a scope.";
+    throw new Error("Shared Preferences must specifiy a scope.");
   }
 
   this._scope = options.scope;

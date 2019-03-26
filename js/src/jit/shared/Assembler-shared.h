@@ -693,21 +693,6 @@ struct GlobalAccess {
 
 typedef Vector<GlobalAccess, 0, SystemAllocPolicy> GlobalAccessVector;
 
-// A CallFarJump records the offset of a jump that needs to be patched to a
-// call at the end of the module when all calls have been emitted.
-
-struct CallFarJump {
-  uint32_t funcIndex;
-  jit::CodeOffset jump;
-
-  CallFarJump(uint32_t funcIndex, jit::CodeOffset jump)
-      : funcIndex(funcIndex), jump(jump) {}
-
-  void offsetBy(size_t delta) { jump.offsetBy(delta); }
-};
-
-typedef Vector<CallFarJump, 0, SystemAllocPolicy> CallFarJumpVector;
-
 }  // namespace wasm
 
 namespace jit {
@@ -717,7 +702,6 @@ class AssemblerShared {
   wasm::CallSiteVector callSites_;
   wasm::CallSiteTargetVector callSiteTargets_;
   wasm::TrapSiteVectorArray trapSites_;
-  wasm::CallFarJumpVector callFarJumps_;
   wasm::SymbolicAccessVector symbolicAccesses_;
 
  protected:
@@ -756,9 +740,6 @@ class AssemblerShared {
   void append(wasm::Trap trap, wasm::TrapSite site) {
     enoughMemory_ &= trapSites_[trap].append(site);
   }
-  void append(wasm::CallFarJump jmp) {
-    enoughMemory_ &= callFarJumps_.append(jmp);
-  }
   void append(const wasm::MemoryAccessDesc& access, uint32_t pcOffset) {
     appendOutOfBoundsTrap(access.trapOffset(), pcOffset);
   }
@@ -773,7 +754,6 @@ class AssemblerShared {
   wasm::CallSiteVector& callSites() { return callSites_; }
   wasm::CallSiteTargetVector& callSiteTargets() { return callSiteTargets_; }
   wasm::TrapSiteVectorArray& trapSites() { return trapSites_; }
-  wasm::CallFarJumpVector& callFarJumps() { return callFarJumps_; }
   wasm::SymbolicAccessVector& symbolicAccesses() { return symbolicAccesses_; }
 };
 

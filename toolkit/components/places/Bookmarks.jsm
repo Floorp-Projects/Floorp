@@ -1847,15 +1847,6 @@ function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
  * @param {Object} item The bookmark item with possible special data to be inserted.
  */
 async function handleBookmarkItemSpecialData(itemId, item) {
-  if (item.annos && item.annos.length) {
-    // Note: for annotations, we intentionally skip updating the last modified
-    // value for the bookmark, to avoid a second update of the added bookmark.
-    try {
-      PlacesUtils.setAnnotationsForItem(itemId, item.annos, item.source, true);
-    } catch (ex) {
-      Cu.reportError(`Failed to insert annotations for item: ${ex}`);
-    }
-  }
   if ("keyword" in item && item.keyword) {
     try {
       await PlacesUtils.keywords.insert({

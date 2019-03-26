@@ -109,7 +109,7 @@ NSSDialogs.prototype = {
   setPKCS12FilePassword: function(aCtx, aPassword) {
     // this dialog is never shown in Fennec; in Desktop it is shown while backing up a personal
     // certificate to a file via Preferences->Advanced->Encryption->View Certificates->Your Certificates
-    throw "Unimplemented";
+    throw new Error("Unimplemented");
   },
 
   getPKCS12FilePassword: function(aCtx, aPassword) {

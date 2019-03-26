@@ -19,6 +19,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsHTMLTags.h"
 #include "jsapi.h"
+#include "js/ForOfIterator.h"  // JS::ForOfIterator
 #include "xpcprivate.h"
 #include "nsGlobalWindow.h"
 
