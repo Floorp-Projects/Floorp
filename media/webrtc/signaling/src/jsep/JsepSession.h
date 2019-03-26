@@ -139,6 +139,7 @@ class JsepSession {
   virtual nsresult AddRemoteIceCandidate(const std::string& candidate,
                                          const std::string& mid,
                                          const Maybe<uint16_t>& level,
+                                         const std::string& ufrag,
                                          std::string* transportId) = 0;
   virtual nsresult AddLocalIceCandidate(const std::string& candidate,
                                         const std::string& transportId,
