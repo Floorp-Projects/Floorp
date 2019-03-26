@@ -220,14 +220,14 @@ pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_i
 // can limit the path.  E.g., "example.com/foo" means "example.com/foo*".  So,
 // if you need to limit under a directory, the path should end with "/" like
 // "example.com/foo/".  Note that this cannot limit port number for now.
-pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys", "");
+pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys", "www.icloud.com");
 
 // Blacklist of domains of web apps which handle keyCode and charCode of
 // keypress events with a path only for Firefox (i.e., broken if we set
 // non-zero keyCode or charCode value to the other).  The format is exactly
 // same as "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys". So,
 // check its explanation for the detail.
-pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode", "");
+pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode", "*.gov.online.office365.us,*.officeapps-df.live.com.,*.officeapps.live.com,*.online.office.de,*.partner.officewebapps.cn,mail.notes.na.collabserv.com");
 
 // Whether InputEvent.data is enabled.
 pref("dom.inputevent.data.enabled", true);
