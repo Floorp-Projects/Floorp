@@ -606,6 +606,15 @@ dictionary WindowActorOptions {
    */
   boolean includeChrome = false;
 
+  /**
+   * An array of URL match patterns (as accepted by the MatchPattern
+   * class in MatchPattern.webidl) which restrict which pages the actor
+   * may be instantiated for. If this is defined, only documents URL which match
+   * are allowed to have the given actor created for them. Other
+   * documents will fail to have their actor constructed, returning nullptr.
+   **/
+  sequence<DOMString> matches;
+
   /** This fields are used for configuring individual sides of the actor. */
   required WindowActorSidedOptions parent;
   required WindowActorChildOptions child;

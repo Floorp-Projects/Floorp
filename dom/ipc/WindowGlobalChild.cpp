@@ -167,7 +167,7 @@ already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
 
   JS::RootedObject obj(RootingCx());
   actorSvc->ConstructActor(aName, /* aChildSide */ false, mBrowsingContext,
-                           &obj, aRv);
+                           mWindowGlobal->GetDocumentURI(), &obj, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
