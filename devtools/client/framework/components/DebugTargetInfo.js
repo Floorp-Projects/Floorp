@@ -70,7 +70,7 @@ class DebugTargetInfo extends PureComponent {
 
     return dom.span(
       {
-        className: "iconized-label",
+        className: "iconized-label js-connection-info",
       },
       dom.img({ src: image, alt: `${connectionType} icon`}),
       this.props.L10N.getStr(l10nId),
@@ -108,7 +108,7 @@ class DebugTargetInfo extends PureComponent {
         className: "iconized-label",
       },
       dom.img({ src: favicon, alt: "favicon"}),
-      title ? dom.b({ className: "devtools-ellipsis-text"}, title) : null,
+      title ? dom.b({ className: "devtools-ellipsis-text js-target-title"}, title) : null,
       dom.span({ className: "devtools-ellipsis-text" }, url),
     );
   }

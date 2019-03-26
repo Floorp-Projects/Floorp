@@ -32,7 +32,7 @@ function nativeVerticalWheelEventMsg() {
     case "mac": return 0; // value is unused, can be anything
     case "linux": return 4; // value is unused, pass GDK_SCROLL_SMOOTH anyway
   }
-  throw "Native wheel events not supported on platform " + getPlatform();
+  throw new Error("Native wheel events not supported on platform " + getPlatform());
 }
 
 function nativeHorizontalWheelEventMsg() {
@@ -41,7 +41,7 @@ function nativeHorizontalWheelEventMsg() {
     case "mac": return 0; // value is unused, can be anything
     case "linux": return 4; // value is unused, pass GDK_SCROLL_SMOOTH anyway
   }
-  throw "Native wheel events not supported on platform " + getPlatform();
+  throw new Error("Native wheel events not supported on platform " + getPlatform());
 }
 
 // Given an event target which may be a window or an element, get the associated window.
@@ -81,7 +81,7 @@ function nativeMouseDownEventMsg() {
     case "linux": return 4; // GDK_BUTTON_PRESS
     case "android": return 5; // ACTION_POINTER_DOWN
   }
-  throw "Native mouse-down events not supported on platform " + getPlatform();
+  throw new Error("Native mouse-down events not supported on platform " + getPlatform());
 }
 
 function nativeMouseMoveEventMsg() {
@@ -91,7 +91,7 @@ function nativeMouseMoveEventMsg() {
     case "linux": return 3; // GDK_MOTION_NOTIFY
     case "android": return 7; // ACTION_HOVER_MOVE
   }
-  throw "Native mouse-move events not supported on platform " + getPlatform();
+  throw new Error("Native mouse-move events not supported on platform " + getPlatform());
 }
 
 function nativeMouseUpEventMsg() {
@@ -101,7 +101,7 @@ function nativeMouseUpEventMsg() {
     case "linux": return 7; // GDK_BUTTON_RELEASE
     case "android": return 6; // ACTION_POINTER_UP
   }
-  throw "Native mouse-up events not supported on platform " + getPlatform();
+  throw new Error("Native mouse-up events not supported on platform " + getPlatform());
 }
 
 function getBoundingClientRectRelativeToVisualViewport(aElement) {
@@ -164,7 +164,7 @@ function rectRelativeToScreen(aElement) {
 function synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY, aObserver) {
   var pt = coordinatesRelativeToScreen(aX, aY, aTarget);
   if (aDeltaX && aDeltaY) {
-    throw "Simultaneous wheeling of horizontal and vertical is not supported on all platforms.";
+    throw new Error("Simultaneous wheeling of horizontal and vertical is not supported on all platforms.");
   }
   aDeltaX = nativeScrollUnits(aTarget, aDeltaX);
   aDeltaY = nativeScrollUnits(aTarget, aDeltaY);
@@ -277,7 +277,10 @@ function* synthesizeNativeTouchSequences(aTarget, aPositions, aObserver = null, 
       continue;
     }
     if (aPositions[i].length != aTouchIds.length) {
-      throw "aPositions[" + i + "] did not have the expected number of positions; expected " + aTouchIds.length + " touch points but found " + aPositions[i].length;
+      throw new Error(
+        `aPositions[${i}] did not have the expected number of positions; ` +
+        `expected ${aTouchIds.length} touch points but found ${aPositions[i].length}`
+      );
     }
     for (let j = 0; j < aTouchIds.length; j++) {
       if (aPositions[i][j] != null) {
@@ -286,7 +289,7 @@ function* synthesizeNativeTouchSequences(aTarget, aPositions, aObserver = null, 
     }
   }
   if (lastNonNullValue < 0) {
-    throw "All values in positions array were null!";
+    throw new Error("All values in positions array were null!");
   }
 
   // Insert a row of nulls at the end of aPositions, to ensure that all

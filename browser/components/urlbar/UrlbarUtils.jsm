@@ -395,6 +395,8 @@ class UrlbarQueryContext {
    *   The maximum number of results that will be displayed for this query.
    * @param {boolean} options.allowAutofill
    *   Whether or not to allow providers to include autofill results.
+   * @param {number} options.userContextId
+   *   The container id where this context was generated, if any.
    */
   constructor(options = {}) {
     this._checkRequiredOptions(options, [
@@ -418,6 +420,8 @@ class UrlbarQueryContext {
         (!Array.isArray(options.sources) || !options.sources.length)) {
       throw new Error(`Invalid sources list`);
     }
+
+    this.userContextId = options.userContextId;
   }
 
   /**

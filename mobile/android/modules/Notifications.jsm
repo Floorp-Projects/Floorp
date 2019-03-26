@@ -22,12 +22,12 @@ Notification.prototype = {
     if ("icon" in aOptions && aOptions.icon != null)
       this._icon = aOptions.icon;
     else
-      throw "Notification icon is mandatory";
+      throw new Error("Notification icon is mandatory");
 
     if ("title" in aOptions && aOptions.title != null)
       this._title = aOptions.title;
     else
-      throw "Notification title is mandatory";
+      throw new Error("Notification title is mandatory");
 
     if ("message" in aOptions && aOptions.message != null)
       this._message = aOptions.message;
@@ -39,7 +39,7 @@ Notification.prototype = {
 
     if ("buttons" in aOptions && aOptions.buttons != null) {
       if (aOptions.buttons.length > 3)
-        throw "Too many buttons provided. The max number is 3";
+        throw new Error("Too many buttons provided. The max number is 3");
 
       this._buttons = {};
       for (let i = 0; i < aOptions.buttons.length; i++) {
@@ -184,7 +184,7 @@ var Notifications = {
   update: function notif_update(aId, aOptions) {
     let notification = _notificationsMap[aId];
     if (!notification)
-      throw "Unknown notification id";
+      throw new Error("Unknown notification id");
     notification.fillWithOptions(aOptions);
     notification.show();
   },

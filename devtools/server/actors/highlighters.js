@@ -510,6 +510,13 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
   release: function() {},
 
   /**
+   * Get current instance of the highlighter object.
+   */
+  get instance() {
+    return this._highlighter;
+  },
+
+  /**
    * Show the highlighter.
    * This calls through to the highlighter instance's |show(node, options)|
    * method.

@@ -70,6 +70,8 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
   MOZ_RELEASE_ASSERT(!entry, "Duplicate WindowGlobalChild entry for ID!");
   entry.OrInsert([&] { return wgc; });
 
+  // Send down our initial document URI.
+  wgc->SendUpdateDocumentURI(aWindow->GetDocumentURI());
   return wgc.forget();
 }
 
@@ -167,7 +169,7 @@ already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
 
   JS::RootedObject obj(RootingCx());
   actorSvc->ConstructActor(aName, /* aChildSide */ false, mBrowsingContext,
-                           &obj, aRv);
+                           mWindowGlobal->GetDocumentURI(), &obj, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

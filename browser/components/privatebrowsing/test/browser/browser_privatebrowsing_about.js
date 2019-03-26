@@ -4,6 +4,8 @@
 
 const TP_PB_ENABLED_PREF = "privacy.trackingprotection.pbmode.enabled";
 
+const {UrlbarTestUtils} = ChromeUtils.import("resource://testing-common/UrlbarTestUtils.jsm");
+
 /**
  * Opens a new private window and loads "about:privatebrowsing" there.
  */
@@ -133,12 +135,15 @@ add_task(async function test_search_handoff_on_keydown() {
   });
   ok(urlBarHasNormalFocus(win), "url bar has normal focused");
   is(win.gURLBar.value, "@google f", "url bar has search text");
+  await UrlbarTestUtils.promiseSearchComplete(win);
+  // Close the popup.
+  await UrlbarTestUtils.promisePopupClose(win);
 
   // Hitting ESC should reshow the in-content search
   await new Promise(r => EventUtils.synthesizeKey("KEY_Escape", {}, win, r));
   await ContentTask.spawn(tab, null, async function() {
     ok(!content.document.getElementById("search-handoff-button").classList.contains("hidden"),
-      "in-content search is not");
+      "in-content search is not hidden");
   });
 
   await BrowserTestUtils.closeWindow(win);
@@ -176,6 +181,11 @@ add_task(async function test_search_handoff_on_paste() {
      .getService(SpecialPowers.Ci.nsIClipboardHelper);
   helper.copyString("words");
   await new Promise(r => EventUtils.synthesizeKey("v", {accelKey: true}, win, r));
+  // TODO: Bug 1539199 We should be able to wait for search complete for AwesomeBar
+  // as well.
+  if (UrlbarPrefs.get("quantumbar")) {
+    await UrlbarTestUtils.promiseSearchComplete(win);
+  }
   ok(urlBarHasNormalFocus(win), "url bar has normal focused");
   is(win.gURLBar.value, "@google words", "url bar has search text");
 
