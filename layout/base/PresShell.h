@@ -519,7 +519,8 @@ class PresShell final : public nsIPresShell,
      *                                  PresShell should be set instead.  I.e.,
      *                                  in the latter case, the frame is in
      *                                  a parent document.
-     * @param aGUIEvent                 Event to be handled.
+     * @param aGUIEvent                 Event to be handled.  Must be a trusted
+     *                                  event.
      * @param aDontRetargetEvents       true if this shouldn't redirect the
      *                                  event to different PresShell.
      *                                  false if this can redirect the event to
@@ -538,7 +539,8 @@ class PresShell final : public nsIPresShell,
      * WidgetEvent, not WidgetGUIEvent.  So, you can dispatch a simple event
      * with this.
      *
-     * @param aEvent                    Event to be dispatched.
+     * @param aEvent                    Event to be dispatched.  Must be a
+     *                                  trusted event.
      * @param aNewEventFrame            Temporal new event frame.
      * @param aNewEventContent          Temporal new event content.
      * @param aEventStatus              [in/out] EventStuatus of aEvent.
@@ -1102,13 +1104,16 @@ class PresShell final : public nsIPresShell,
     /**
      * PrepareToDispatchEvent() prepares to dispatch aEvent.
      *
-     * @param aEvent            The handling event.
-     * @return                  true if the event is user interaction.  I.e.,
-     *                          enough obvious input to allow to open popup,
-     *                          etc.  false, otherwise.
+     * @param aEvent                    The handling event.
+     * @param aIsUserInteraction        [out] Set to true if the event is user
+     *                                  interaction.  I.e., enough obvious input
+     *                                  to allow to open popup, etc.  Otherwise,
+     *                                  set to false.
+     * @return                          true if the caller can dispatch the
+     *                                  event into the DOM.
      */
     MOZ_CAN_RUN_SCRIPT
-    bool PrepareToDispatchEvent(WidgetEvent* aEvent);
+    bool PrepareToDispatchEvent(WidgetEvent* aEvent, bool* aIsUserInteraction);
 
     /**
      * MaybeHandleKeyboardEventBeforeDispatch() may handle aKeyboardEvent
@@ -1119,16 +1124,6 @@ class PresShell final : public nsIPresShell,
     MOZ_CAN_RUN_SCRIPT
     void MaybeHandleKeyboardEventBeforeDispatch(
         WidgetKeyboardEvent* aKeyboardEvent);
-
-    /**
-     * PrepareToDispatchContextMenuEvent() prepares to dispatch aEvent into
-     * the DOM.
-     *
-     * @param aEvent            Must be eContextMenu event.
-     * @return                  true if it can be dispatched into the DOM.
-     *                          Otherwise, false.
-     */
-    bool PrepareToDispatchContextMenuEvent(WidgetEvent* aEvent);
 
     /**
      * This and the next two helper methods are used to target and position the

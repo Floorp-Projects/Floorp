@@ -405,7 +405,8 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
       const nsCString& aSecurityInfoSerialization, const NetAddr& aSelfAddr,
       const NetAddr& aPeerAddr, const uint32_t& aCacheKey,
       const nsCString& altDataType, const int64_t& altDataLen,
-      const bool& aApplyConversion, const ResourceTimingStruct& aTiming)
+      const bool& deliveringAltData, const bool& aApplyConversion,
+      const ResourceTimingStruct& aTiming)
       : NeckoTargetChannelEvent<HttpChannelChild>(aChild),
         mChannelStatus(aChannelStatus),
         mResponseHead(aResponseHead),
@@ -424,6 +425,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
         mCacheKey(aCacheKey),
         mAltDataType(altDataType),
         mAltDataLen(altDataLen),
+        mDeliveringAltData(deliveringAltData),
         mLoadInfoForwarder(loadInfoForwarder),
         mTiming(aTiming) {}
 
@@ -434,7 +436,8 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
         mLoadInfoForwarder, mIsFromCache, mCacheEntryAvailable, mCacheEntryId,
         mCacheFetchCount, mCacheExpirationTime, mCachedCharset,
         mSecurityInfoSerialization, mSelfAddr, mPeerAddr, mCacheKey,
-        mAltDataType, mAltDataLen, mApplyConversion, mTiming);
+        mAltDataType, mAltDataLen, mDeliveringAltData, mApplyConversion,
+        mTiming);
   }
 
  private:
@@ -455,6 +458,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
   uint32_t mCacheKey;
   nsCString mAltDataType;
   int64_t mAltDataLen;
+  bool mDeliveringAltData;
   ParentLoadInfoForwarderArgs mLoadInfoForwarder;
   ResourceTimingStruct mTiming;
 };
@@ -469,8 +473,8 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
     const nsCString& securityInfoSerialization, const NetAddr& selfAddr,
     const NetAddr& peerAddr, const int16_t& redirectCount,
     const uint32_t& cacheKey, const nsCString& altDataType,
-    const int64_t& altDataLen, const bool& aApplyConversion,
-    const ResourceTimingStruct& aTiming) {
+    const int64_t& altDataLen, const bool& deliveringAltData,
+    const bool& aApplyConversion, const ResourceTimingStruct& aTiming) {
   AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStartRequest", NETWORK);
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -489,7 +493,7 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
       loadInfoForwarder, isFromCache, cacheEntryAvailable, cacheEntryId,
       cacheFetchCount, cacheExpirationTime, cachedCharset,
       securityInfoSerialization, selfAddr, peerAddr, cacheKey, altDataType,
-      altDataLen, aApplyConversion, aTiming));
+      altDataLen, deliveringAltData, aApplyConversion, aTiming));
 
   {
     // Child's mEventQ is to control the execution order of the IPC messages
@@ -522,7 +526,8 @@ void HttpChannelChild::OnStartRequest(
     const nsCString& securityInfoSerialization, const NetAddr& selfAddr,
     const NetAddr& peerAddr, const uint32_t& cacheKey,
     const nsCString& altDataType, const int64_t& altDataLen,
-    const bool& aApplyConversion, const ResourceTimingStruct& aTiming) {
+    const bool& deliveringAltData, const bool& aApplyConversion,
+    const ResourceTimingStruct& aTiming) {
   LOG(("HttpChannelChild::OnStartRequest [this=%p]\n", this));
 
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -573,6 +578,7 @@ void HttpChannelChild::OnStartRequest(
   mPeerAddr = peerAddr;
 
   mAvailableCachedAltDataType = altDataType;
+  mDeliveringAltData = deliveringAltData;
   mAltDataLength = altDataLen;
 
   SetApplyConversion(aApplyConversion);

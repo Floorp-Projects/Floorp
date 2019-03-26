@@ -10,6 +10,7 @@ const NCB_PREF = "network.cookie.cookieBehavior";
 const CAT_PREF = "browser.contentblocking.category";
 const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
+const PREF_TEST_NOTIFICATIONS = "browser.safebrowsing.test-notifications.enabled";
 
 const {
   EnterprisePolicyTesting,
@@ -17,6 +18,33 @@ const {
 } = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm", null);
 
 requestLongerTimeout(2);
+
+add_task(async function testListUpdate() {
+  SpecialPowers.pushPrefEnv({set: [
+    [PREF_TEST_NOTIFICATIONS, true],
+  ]});
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  let doc = gBrowser.contentDocument;
+
+  let fingerprintersCheckbox = doc.getElementById("contentBlockingFingerprintersCheckbox");
+  let updateObserved = TestUtils.topicObserved("safebrowsing-update-attempt");
+  fingerprintersCheckbox.click();
+  let url = (await updateObserved)[1];
+
+  ok(true, "Has tried to update after the fingerprinting checkbox was toggled");
+  is(url, "http://127.0.0.1:8888/safebrowsing-dummy/update", "Using the correct list url to update");
+
+  let cryptominersCheckbox = doc.getElementById("contentBlockingCryptominersCheckbox");
+  updateObserved = TestUtils.topicObserved("safebrowsing-update-attempt");
+  cryptominersCheckbox.click();
+  url = (await updateObserved)[1];
+
+  ok(true, "Has tried to update after the cryptomining checkbox was toggled");
+  is(url, "http://127.0.0.1:8888/safebrowsing-dummy/update", "Using the correct list url to update");
+
+  gBrowser.removeCurrentTab();
+});
 
 // Tests that the content blocking main category checkboxes have the correct default state.
 add_task(async function testContentBlockingMainCategory() {

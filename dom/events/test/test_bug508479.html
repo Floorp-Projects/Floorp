@@ -13,7 +13,7 @@ var gGotNotHandlingDrop = false;
 SimpleTest.waitForExplicitFinish();
 
 function fireEvent(target, event) {
-  SpecialPowers.DOMWindowUtils.dispatchDOMEventViaPresShell(target, event, true);
+  SpecialPowers.DOMWindowUtils.dispatchDOMEventViaPresShell(target, event);
 }
 
 function fireDrop(element, shouldAllowDrop, shouldAllowOnlyChromeDrop) {

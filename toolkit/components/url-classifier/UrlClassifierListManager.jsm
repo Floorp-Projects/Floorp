@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // This is the only implementation of nsIUrlListManager.
 // A class that manages lists, namely white and black lists for
@@ -19,6 +20,7 @@ const minDelayMs = 5 * 60 * 1000;
 const maxDelayMs = 24 * 60 * 60 * 1000;
 const defaultUpdateIntervalMs = 30 * 60 * 1000;
 const PREF_DEBUG_ENABLED = "browser.safebrowsing.debug";
+const PREF_TEST_NOTIFICATIONS = "browser.safebrowsing.test-notifications.enabled";
 
 let loggingEnabled = false;
 
@@ -380,6 +382,11 @@ PROT_ListManager.prototype.checkForUpdates = function(updateUrl) {
   if (!updateUrl) {
     return false;
   }
+
+  if (enableTestNotifications) {
+    Services.obs.notifyObservers(null, "safebrowsing-update-attempt", updateUrl);
+  }
+
   if (!this.requestBackoffs_[updateUrl] ||
       !this.requestBackoffs_[updateUrl].canMakeRequest()) {
     log("Can't make update request");
@@ -699,5 +706,8 @@ function RegistrationData() {
   Init();
   return new PROT_ListManager();
 }
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "enableTestNotifications",
+  PREF_TEST_NOTIFICATIONS, false);
 
 var EXPORTED_SYMBOLS = ["RegistrationData"];
