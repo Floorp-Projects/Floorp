@@ -634,16 +634,12 @@ void Assembler::TraceDataRelocations(JSTracer* trc, JitCode* code,
         // is not writable if we're not moving objects.
         *literalAddr = v.asRawBits();
       }
-
-      // TODO: When we can, flush caches here if a pointer was moved.
       continue;
     }
 
     // No barriers needed since the pointers are constants.
     TraceManuallyBarrieredGenericPointerEdge(
         trc, reinterpret_cast<gc::Cell**>(literalAddr), "ion-masm-ptr");
-
-    // TODO: Flush caches at end?
   }
 }
 
