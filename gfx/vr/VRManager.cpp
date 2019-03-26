@@ -118,8 +118,8 @@ VRManager::~VRManager() {
 
 void VRManager::Destroy() {
   StopTasks();
-  mVRDisplays.Clear();
-  mVRControllers.Clear();
+  mVRDisplayIDs.Clear();
+  mVRControllerIDs.Clear();
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
     mManagers[i]->Destroy();
   }
@@ -133,8 +133,8 @@ void VRManager::Destroy() {
 }
 
 void VRManager::Shutdown() {
-  mVRDisplays.Clear();
-  mVRControllers.Clear();
+  mVRDisplayIDs.Clear();
+  mVRControllerIDs.Clear();
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
     mManagers[i]->Shutdown();
   }
@@ -295,7 +295,7 @@ uint32_t VRManager::GetOptimalTaskInterval() {
    * frequently.
    */
   bool wantGranularTasks = mVRDisplaysRequested || mVRControllersRequested ||
-                           mVRDisplays.Count() || mVRControllers.Count();
+                           mVRDisplayIDs.Length() || mVRControllerIDs.Length();
   if (wantGranularTasks) {
     return kVRActiveTaskInterval;
   }
@@ -315,9 +315,11 @@ void VRManager::Run1msTasks(double aDeltaTime) {
     manager->Run1msTasks(aDeltaTime);
   }
 
-  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
-    gfx::VRDisplayHost* display = iter.UserData();
-    display->Run1msTasks(aDeltaTime);
+  for (const auto& displayID : mVRDisplayIDs) {
+    RefPtr<VRDisplayHost> display(GetDisplay(displayID));
+    if (display) {
+      display->Run1msTasks(aDeltaTime);
+    }
   }
 }
 
@@ -335,9 +337,11 @@ void VRManager::Run10msTasks() {
     manager->Run10msTasks();
   }
 
-  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
-    gfx::VRDisplayHost* display = iter.UserData();
-    display->Run10msTasks();
+  for (const auto& displayID : mVRDisplayIDs) {
+    RefPtr<VRDisplayHost> display(GetDisplay(displayID));
+    if (display) {
+      display->Run10msTasks();
+    }
   }
 }
 
@@ -365,9 +369,11 @@ void VRManager::Run100msTasks() {
     manager->Run100msTasks();
   }
 
-  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
-    gfx::VRDisplayHost* display = iter.UserData();
-    display->Run100msTasks();
+  for (const auto& displayID : mVRDisplayIDs) {
+    RefPtr<VRDisplayHost> display(GetDisplay(displayID));
+    if (display) {
+      display->Run100msTasks();
+    }
   }
 }
 
@@ -481,6 +487,27 @@ void VRManager::EnumerateVRDisplays() {
       return;
     }
   }
+
+  nsTArray<RefPtr<gfx::VRDisplayHost>> displays;
+  for (const auto& manager : mManagers) {
+    manager->GetHMDs(displays);
+  }
+
+  mVRDisplayIDs.Clear();
+  for (const auto& display : displays) {
+    mVRDisplayIDs.AppendElement(display->GetDisplayInfo().GetDisplayID());
+  }
+
+  nsTArray<RefPtr<gfx::VRControllerHost>> controllers;
+  for (const auto& manager : mManagers) {
+    manager->GetControllers(controllers);
+  }
+
+  mVRControllerIDs.Clear();
+  for (const auto& controller : controllers) {
+    mVRControllerIDs.AppendElement(
+        controller->GetControllerInfo().GetControllerID());
+  }
 }
 
 void VRManager::RefreshVRDisplays(bool aMustDispatch) {
@@ -510,7 +537,7 @@ void VRManager::RefreshVRDisplays(bool aMustDispatch) {
   bool displayInfoChanged = false;
   bool displaySetChanged = false;
 
-  if (displays.Length() != mVRDisplays.Count()) {
+  if (displays.Length() != mVRDisplayIDs.Length()) {
     // Catch cases where a VR display has been removed
     displaySetChanged = true;
   }
@@ -531,9 +558,9 @@ void VRManager::RefreshVRDisplays(bool aMustDispatch) {
 
   // Rebuild the HashMap if there are additions or removals
   if (displaySetChanged) {
-    mVRDisplays.Clear();
+    mVRDisplayIDs.Clear();
     for (const auto& display : displays) {
-      mVRDisplays.Put(display->GetDisplayInfo().GetDisplayID(), display);
+      mVRDisplayIDs.AppendElement(display->GetDisplayInfo().GetDisplayID());
     }
   }
 
@@ -557,36 +584,77 @@ void VRManager::DispatchVRDisplayInfoUpdate() {
  */
 void VRManager::GetVRDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayInfo) {
   aDisplayInfo.Clear();
-  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
-    gfx::VRDisplayHost* display = iter.UserData();
-    aDisplayInfo.AppendElement(VRDisplayInfo(display->GetDisplayInfo()));
+  for (const auto& displayID : mVRDisplayIDs) {
+    RefPtr<VRDisplayHost> display(GetDisplay(displayID));
+    if (display) {
+      aDisplayInfo.AppendElement(display->GetDisplayInfo());
+    }
   }
 }
 
+// Verify aDisplayID matches the exisiting displayID from mVRDisplayIDs list,
+// then using the exiting displayID to get VRDisplayHost from VRManagers.
 RefPtr<gfx::VRDisplayHost> VRManager::GetDisplay(const uint32_t& aDisplayID) {
-  RefPtr<gfx::VRDisplayHost> display;
-  if (mVRDisplays.Get(aDisplayID, getter_AddRefs(display))) {
-    return display;
+  bool found = false;
+  for (const auto& displayID : mVRDisplayIDs) {
+    if (displayID == aDisplayID) {
+      found = true;
+      break;
+    }
   }
+
+  if (found) {
+    nsTArray<RefPtr<gfx::VRDisplayHost>> displays;
+    for (const auto& manager : mManagers) {
+      manager->GetHMDs(displays);
+      for (const auto& display : displays) {
+        if (display->GetDisplayInfo().GetDisplayID() == aDisplayID) {
+          return display;
+        }
+      }
+    }
+  }
+
   return nullptr;
 }
 
+// Verify aControllerID matches the exisiting controllerID from mVRControllerIDs
+// list, then using the exiting controllerID to get VRControllerHost from
+// VRManagers.
 RefPtr<gfx::VRControllerHost> VRManager::GetController(
     const uint32_t& aControllerID) {
-  RefPtr<gfx::VRControllerHost> controller;
-  if (mVRControllers.Get(aControllerID, getter_AddRefs(controller))) {
-    return controller;
+  bool found = false;
+  for (const auto& controllerID : mVRControllerIDs) {
+    if (controllerID == aControllerID) {
+      found = true;
+      break;
+    }
   }
+
+  if (found) {
+    nsTArray<RefPtr<gfx::VRControllerHost>> controllers;
+    for (const auto& manager : mManagers) {
+      manager->GetControllers(controllers);
+      for (const auto& controller : controllers) {
+        if (controller->GetControllerInfo().GetControllerID() ==
+            aControllerID) {
+          return controller;
+        }
+      }
+    }
+  }
+
   return nullptr;
 }
 
 void VRManager::GetVRControllerInfo(
     nsTArray<VRControllerInfo>& aControllerInfo) {
   aControllerInfo.Clear();
-  for (auto iter = mVRControllers.Iter(); !iter.Done(); iter.Next()) {
-    gfx::VRControllerHost* controller = iter.UserData();
-    aControllerInfo.AppendElement(
-        VRControllerInfo(controller->GetControllerInfo()));
+  for (const auto& controllerID : mVRControllerIDs) {
+    RefPtr<VRControllerHost> controller(GetController(controllerID));
+    if (controller) {
+      aControllerInfo.AppendElement(controller->GetControllerInfo());
+    }
   }
 }
 
@@ -602,7 +670,7 @@ void VRManager::RefreshVRControllers() {
 
   bool controllerInfoChanged = false;
 
-  if (controllers.Length() != mVRControllers.Count()) {
+  if (controllers.Length() != mVRControllerIDs.Length()) {
     // Catch cases where VR controllers has been removed
     controllerInfoChanged = true;
   }
@@ -616,10 +684,10 @@ void VRManager::RefreshVRControllers() {
   }
 
   if (controllerInfoChanged) {
-    mVRControllers.Clear();
+    mVRControllerIDs.Clear();
     for (const auto& controller : controllers) {
-      mVRControllers.Put(controller->GetControllerInfo().GetControllerID(),
-                         controller);
+      mVRControllerIDs.AppendElement(
+          controller->GetControllerInfo().GetControllerID());
     }
   }
 }
@@ -650,7 +718,7 @@ void VRManager::RemoveControllers() {
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
     mManagers[i]->RemoveControllers();
   }
-  mVRControllers.Clear();
+  mVRControllerIDs.Clear();
 }
 
 void VRManager::CreateVRTestSystem() {

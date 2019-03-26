@@ -2548,6 +2548,38 @@ void nsImageFrame::IconLoad::GetPrefs() {
       "browser.display.show_loading_image_placeholder", true);
 }
 
+nsresult nsImageFrame::RestartAnimation() {
+  nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest();
+  /*
+   * We cannot count on mContentURLRequestRegistered to make
+   * the deregistration work. So, we are going to force it.
+   */
+  bool deregister = true;
+
+  if (currentRequest && !mContentURLRequestRegistered) {
+    nsLayoutUtils::RegisterImageRequestIfAnimated(PresContext(), currentRequest,
+                                                  &deregister);
+    return currentRequest->StartDecoding(imgIContainer::FLAG_NONE);
+  }
+  return NS_OK;
+}
+
+nsresult nsImageFrame::StopAnimation() {
+  nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest();
+  /*
+   * We cannot count on mContentURLRequestRegistered to make
+   * the deregistration work. So, we are going to force it.
+   */
+  bool deregister = true;
+
+  if (currentRequest) {
+    nsLayoutUtils::DeregisterImageRequest(PresContext(), currentRequest,
+                                          &deregister);
+    return currentRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsImageFrame::IconLoad::Notify(imgIRequest* aRequest, int32_t aType,
                                const nsIntRect* aData) {

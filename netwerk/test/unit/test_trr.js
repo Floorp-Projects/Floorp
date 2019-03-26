@@ -82,7 +82,7 @@ var test_answer="127.0.0.1";
 var listenerFine = {
   onLookupComplete: function(inRequest, inRecord, inStatus) {
     if (inRequest == listen) {
-      Assert.ok(!inStatus);
+      Assert.equal(inStatus, Cr.NS_OK);
       var answer = inRecord.getNextAddrAsString();
       Assert.equal(answer, test_answer);
       do_test_finished();
@@ -102,7 +102,7 @@ var listenerFine = {
 var listenerFails = {
   onLookupComplete: function(inRequest, inRecord, inStatus) {
     if (inRequest == listen) {
-      Assert.ok(!Components.isSuccessCode(inStatus));
+      Assert.ok(!Components.isSuccessCode(inStatus), `must be failure code: ${inStatus}`);
       do_test_finished();
       run_dns_tests();
     }
@@ -150,6 +150,7 @@ var listen;
 // verify basic A record
 function test1()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 2); // TRR-first
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns");
   test_answer="127.0.0.1";
@@ -159,6 +160,7 @@ function test1()
 // verify basic A record - without bootstrapping
 function test1b()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns");
   prefs.clearUserPref("network.trr.bootstrapAddress");
@@ -170,6 +172,7 @@ function test1b()
 // verify that the name was put in cache - it works with bad DNS URI
 function test2()
 {
+  // Don't clear the cache. That is what we're checking.
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   //prefs.clearUserPref("network.trr.bootstrapAddress");
   //prefs.setCharPref("network.dns.localDomains", "foo.example.com");
@@ -181,6 +184,7 @@ function test2()
 // verify working credentials in DOH request
 function test3()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-auth");
   prefs.setCharPref("network.trr.credentials", "user:password");
@@ -191,6 +195,7 @@ function test3()
 // verify failing credentials in DOH request
 function test4()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-auth");
   prefs.setCharPref("network.trr.credentials", "evil:person");
@@ -201,6 +206,7 @@ function test4()
 // verify DOH push, part A
 function test5()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-push");
   test_answer = "127.0.0.1";
@@ -211,6 +217,7 @@ function test5b()
 {
   // At this point the second host name should've been pushed and we can resolve it using
   // cache only. Set back the URI to a path that fails.
+  // Don't clear the cache, otherwise we lose the pushed record.
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/404");
   dump("test5b - resolve push.example.now please\n");
   test_answer = "2018::2018";
@@ -220,6 +227,7 @@ function test5b()
 // verify AAAA entry
 function test6()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-aaaa");
   test_answer = "2020:2020::2020";
@@ -229,6 +237,7 @@ function test6()
 // verify RFC1918 address from the server is rejected
 function test7()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-rfc1918");
   listen = dns.asyncResolve("rfc1918.example.com", 0, listenerFails, mainThread, defaultOriginAttributes);
@@ -237,6 +246,7 @@ function test7()
 // verify RFC1918 address from the server is fine when told so
 function test8()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-rfc1918");
   prefs.setBoolPref("network.trr.allow-rfc1918", true);
@@ -248,6 +258,7 @@ function test8()
 // verify URI template cutoff
 function test8b()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-ecs{?dns}");
   prefs.clearUserPref("network.trr.allow-rfc1918");
@@ -260,6 +271,7 @@ function test8b()
 // use GET
 function test9()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-get");
   prefs.clearUserPref("network.trr.allow-rfc1918");
@@ -273,6 +285,7 @@ function test9()
 // NOTE: this requires test9 to run before, as the http2 server resets state there
 function test10()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.clearUserPref("network.trr.useGET");
   prefs.clearUserPref("network.trr.disable-ECS");
@@ -293,6 +306,7 @@ function test10()
 // confirmationNS, retry until the confirmed NS works
 function test10b()
 {
+  dns.clearCache(true);
   print("test confirmationNS, retry until the confirmed NS works");
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   // same URI as in test10
@@ -311,6 +325,7 @@ function test10b()
 // use a slow server and short timeout!
 function test11()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.setCharPref("network.trr.confirmationNS", "skip");
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-750ms");
@@ -321,6 +336,7 @@ function test11()
 // gets an NS back from DOH
 function test12()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 2); // TRR-first
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-ns");
   prefs.clearUserPref("network.trr.request-timeout");
@@ -331,6 +347,7 @@ function test12()
 // TRR-first gets a 404 back from DOH
 function test13()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 2); // TRR-first
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/404");
   test_answer = "127.0.0.1";
@@ -340,6 +357,7 @@ function test13()
 // TRR-shadow gets a 404 back from DOH
 function test14()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 4); // TRR-shadow
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/404");
   test_answer = "127.0.0.1";
@@ -349,6 +367,7 @@ function test14()
 // TRR-shadow and timed out TRR
 function test15()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 4); // TRR-shadow
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-750ms");
   prefs.setIntPref("network.trr.request-timeout", 10);
@@ -359,6 +378,7 @@ function test15()
 // TRR-first and timed out TRR
 function test16()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 2); // TRR-first
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-750ms");
   prefs.setIntPref("network.trr.request-timeout", 10);
@@ -369,6 +389,7 @@ function test16()
 // TRR-only and chase CNAME
 function test17()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-cname");
   prefs.clearUserPref("network.trr.request-timeout");
@@ -379,6 +400,7 @@ function test17()
 // TRR-only and a CNAME loop
 function test18()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-cname-loop");
   listen = dns.asyncResolve("test18.example.com", 0, listenerFails, mainThread, defaultOriginAttributes);
@@ -387,6 +409,7 @@ function test18()
 // TRR-race and a CNAME loop
 function test19()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 1); // Race them!
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-cname-loop");
   test_answer = "127.0.0.1";
@@ -396,6 +419,7 @@ function test19()
 // TRR-first and a CNAME loop
 function test20()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 2); // TRR-first
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-cname-loop");
   test_answer = "127.0.0.1";
@@ -405,6 +429,7 @@ function test20()
 // TRR-shadow and a CNAME loop
 function test21()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 4); // shadow
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-cname-loop");
   test_answer = "127.0.0.1";
@@ -415,6 +440,7 @@ function test21()
 // response back as test1
 function test22()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only to avoid native fallback
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns");
   listen = dns.asyncResolve("mismatch.example.com", 0, listenerFails, mainThread, defaultOriginAttributes);
@@ -423,6 +449,7 @@ function test22()
 // TRR-only, with a CNAME response with a bundled A record for that CNAME!
 function test23()
 {
+  dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
   prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-cname-a");
   test_answer = "9.8.7.6";

@@ -9,15 +9,7 @@
 #include <stdio.h>
 #include <mozilla/Assertions.h>
 
-/* GLIBCXX_3.4.8  is from gcc 4.1.1 (111691)
-   GLIBCXX_3.4.9  is from gcc 4.2.0 (111690)
-   GLIBCXX_3.4.10 is from gcc 4.3.0 (126287)
-   GLIBCXX_3.4.11 is from gcc 4.4.0 (133006)
-   GLIBCXX_3.4.12 is from gcc 4.4.1 (147138)
-   GLIBCXX_3.4.13 is from gcc 4.4.2 (151127)
-   GLIBCXX_3.4.14 is from gcc 4.5.0 (151126)
-   GLIBCXX_3.4.15 is from gcc 4.6.0 (160071)
-   GLIBCXX_3.4.16 is from gcc 4.6.1 (172240)
+/* GLIBCXX_3.4.16 is from gcc 4.6.1 (172240)
    GLIBCXX_3.4.17 is from gcc 4.7.0 (174383)
    GLIBCXX_3.4.18 is from gcc 4.8.0 (190787)
    GLIBCXX_3.4.19 is from gcc 4.8.1 (199309)
@@ -26,8 +18,8 @@
    GLIBCXX_3.4.22 is from gcc 6.0 (222482)
 
 This file adds the necessary compatibility tricks to avoid symbols with
-version GLIBCXX_3.4.16 and bigger, keeping binary compatibility with
-libstdc++ 4.6.1.
+version GLIBCXX_3.4.17 and bigger, keeping binary compatibility with
+libstdc++ 4.7.
 
 WARNING: all symbols from this file must be defined weak when they
 overlap with libstdc++.

@@ -28,7 +28,7 @@ RTCIdentityProviderRegistrar::RTCIdentityProviderRegistrar(
       mGenerateAssertionCallback(nullptr),
       mValidateAssertionCallback(nullptr) {}
 
-RTCIdentityProviderRegistrar::~RTCIdentityProviderRegistrar() {}
+RTCIdentityProviderRegistrar::~RTCIdentityProviderRegistrar() = default;
 
 nsIGlobalObject* RTCIdentityProviderRegistrar::GetParentObject() const {
   return mGlobal;

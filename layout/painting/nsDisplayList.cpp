@@ -570,9 +570,9 @@ static void AddAnimationForProperty(nsIFrame* aFrame,
 
   Nullable<TimeDuration> startTime = aAnimation->GetCurrentOrPendingStartTime();
   if (startTime.IsNull()) {
-    animation->startTime() = null_t();
+    animation->startTime() = Nothing();
   } else {
-    animation->startTime() = startTime.Value();
+    animation->startTime() = Some(startTime.Value());
   }
 
   animation->holdTime() = aAnimation->GetCurrentTimeAsDuration().Value();

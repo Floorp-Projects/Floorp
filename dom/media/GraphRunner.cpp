@@ -26,8 +26,7 @@ GraphRunner::GraphRunner(MediaStreamGraphImpl* aGraph)
       mGraph(aGraph),
       mStateEnd(0),
       mStillProcessing(true),
-      mShutdown(false),
-      mStarted(false),
+      mThreadState(ThreadState::Wait),
       // Note that mThread needs to be initialized last, as it may pre-empt the
       // thread running this ctor and enter Run() with uninitialized members.
       mThread(PR_CreateThread(PR_SYSTEM_THREAD, &Start, this,
@@ -38,32 +37,30 @@ GraphRunner::GraphRunner(MediaStreamGraphImpl* aGraph)
 
 GraphRunner::~GraphRunner() {
   MOZ_COUNT_DTOR(GraphRunner);
-#ifdef DEBUG
-  {
-    MonitorAutoLock lock(mMonitor);
-    MOZ_ASSERT(mShutdown);
-  }
-#endif
-  PR_JoinThread(mThread);
+  MOZ_ASSERT(mThreadState == ThreadState::Shutdown);
 }
 
 void GraphRunner::Shutdown() {
-  MonitorAutoLock lock(mMonitor);
-  mShutdown = true;
-  mMonitor.Notify();
+  {
+    MonitorAutoLock lock(mMonitor);
+    MOZ_ASSERT(mThreadState == ThreadState::Wait);
+    mThreadState = ThreadState::Shutdown;
+    mMonitor.Notify();
+  }
+  // We need to wait for runner thread shutdown here for the sake of the
+  // xpcomWillShutdown case, so that the main thread is not shut down before
+  // cleanup messages are sent for objects destroyed in
+  // CycleCollectedJSContext shutdown.
+  PR_JoinThread(mThread);
+  mThread = nullptr;
 }
 
 bool GraphRunner::OneIteration(GraphTime aStateEnd) {
   TRACE_AUDIO_CALLBACK();
 
   MonitorAutoLock lock(mMonitor);
-  MOZ_ASSERT(!mShutdown);
+  MOZ_ASSERT(mThreadState == ThreadState::Wait);
   mStateEnd = aStateEnd;
-
-  if (!mStarted) {
-    mMonitor.Wait();
-    MOZ_ASSERT(mStarted);
-  }
 
 #ifdef DEBUG
   if (auto audioDriver = mGraph->CurrentDriver()->AsAudioCallbackDriver()) {
@@ -75,9 +72,13 @@ bool GraphRunner::OneIteration(GraphTime aStateEnd) {
     MOZ_CRASH("Unknown GraphDriver");
   }
 #endif
-
-  mMonitor.Notify();  // Signal that mStateEnd was updated
-  mMonitor.Wait();    // Wait for mStillProcessing to update
+  // Signal that mStateEnd was updated
+  mThreadState = ThreadState::Run;
+  mMonitor.Notify();
+  // Wait for mStillProcessing to update
+  do {
+    mMonitor.Wait();
+  } while (mThreadState == ThreadState::Run);
 
 #ifdef DEBUG
   mAudioDriverThreadId = std::thread::id();
@@ -90,17 +91,18 @@ bool GraphRunner::OneIteration(GraphTime aStateEnd) {
 void GraphRunner::Run() {
   PR_SetCurrentThreadName("GraphRunner");
   MonitorAutoLock lock(mMonitor);
-  mStarted = true;
-  mMonitor.Notify();  // Signal that mStarted was set, in case the audio
-                      // callback is already waiting for us
   while (true) {
-    mMonitor.Wait();  // Wait for mStateEnd or mShutdown to update
-    if (mShutdown) {
+    while (mThreadState == ThreadState::Wait) {
+      mMonitor.Wait();  // Wait for mStateEnd to update or for shutdown
+    }
+    if (mThreadState == ThreadState::Shutdown) {
       break;
     }
     TRACE();
     mStillProcessing = mGraph->OneIterationImpl(mStateEnd);
-    mMonitor.Notify();  // Signal that mStillProcessing was updated
+    // Signal that mStillProcessing was updated
+    mThreadState = ThreadState::Wait;
+    mMonitor.Notify();
   }
 
   dom::WorkletThread::DeleteCycleCollectedJSContext();

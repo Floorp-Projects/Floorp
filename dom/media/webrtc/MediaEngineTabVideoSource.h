@@ -114,14 +114,14 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
   };
 
  protected:
-  ~MediaEngineTabVideoSource() {}
+  ~MediaEngineTabVideoSource() = default;
 
  private:
   // These are accessed only on main thread.
   int32_t mBufWidthMax = 0;
   int32_t mBufHeightMax = 0;
   int64_t mWindowId = 0;
-  bool mScrollWithPage = 0;
+  bool mScrollWithPage = false;
   int32_t mViewportOffsetX = 0;
   int32_t mViewportOffsetY = 0;
   int32_t mViewportWidth = 0;
