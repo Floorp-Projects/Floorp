@@ -133,6 +133,18 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
               // just use ignoreTrivials to strip off the cast.
               ignoreTrivials(KnownLiveBase))));
 
+  auto KnownLive = anyOf(
+      // Anything above, of course.
+      KnownLiveSimple,
+      // Conditional operators where both arms are live.
+      conditionalOperator(
+          hasFalseExpression(ignoreTrivials(KnownLiveSimple)),
+          hasTrueExpression(ignoreTrivials(KnownLiveSimple)))
+      // We're not handling cases like a dereference of a conditional operator,
+      // mostly because handling a dereference in general is so ugly.  I
+      // _really_ wish I could just write a recursive matcher here easily.
+      );
+
   auto InvalidArg =
       ignoreTrivialsConditional(
         // We want to consider things if there is anything refcounted involved,
@@ -146,7 +158,7 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
         // We want to find any expression,
         expr(
           // which is not known live,
-          unless(KnownLiveSimple),
+          unless(KnownLive),
           // and which is not a default arg with value nullptr, since those are
           // always safe,
           unless(cxxDefaultArgExpr(isNullDefaultArg())),
