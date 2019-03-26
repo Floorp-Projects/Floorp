@@ -185,10 +185,12 @@ ToolbarKeyboardNavigator = {
 
     switch (aEvent.key) {
       case "ArrowLeft":
-        this.navigateButtons(aEvent.currentTarget, true);
+        // Previous if UI is LTR, next if UI is RTL.
+        this.navigateButtons(aEvent.currentTarget, !window.RTL_UI);
         break;
       case "ArrowRight":
-        this.navigateButtons(aEvent.currentTarget, false);
+        // Previous if UI is RTL, next if UI is LTR.
+        this.navigateButtons(aEvent.currentTarget, window.RTL_UI);
         break;
       default:
         return;
