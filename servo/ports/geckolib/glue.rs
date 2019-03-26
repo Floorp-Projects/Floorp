@@ -96,7 +96,7 @@ use style::gecko_bindings::structs::StyleRuleInclusion;
 use style::gecko_bindings::structs::StyleSheet as DomStyleSheet;
 use style::gecko_bindings::structs::URLExtraData;
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasArcFFI, HasFFI};
-use style::gecko_bindings::sugar::ownership::{HasSimpleFFI, Strong};
+use style::gecko_bindings::sugar::ownership::{HasSimpleFFI, HasBoxFFI, Strong, Owned, OwnedOrNull};
 use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::gecko_properties;
 use style::global_style_data::{GlobalStyleData, GLOBAL_STYLE_DATA, STYLE_THREAD_POOL};
@@ -1427,12 +1427,12 @@ pub extern "C" fn Servo_StyleSet_AppendStyleSheet(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AuthorStyles_Create() -> *mut RawServoAuthorStyles {
-    Box::into_raw(Box::new(AuthorStyles::<GeckoStyleSheet>::new())) as *mut _
+pub extern "C" fn Servo_AuthorStyles_Create() -> Owned<RawServoAuthorStyles> {
+    Box::new(AuthorStyles::<GeckoStyleSheet>::new()).into_ffi()
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AuthorStyles_Drop(styles: bindings::RawServoAuthorStylesOwned) {
+pub extern "C" fn Servo_AuthorStyles_Drop(styles: Owned<RawServoAuthorStyles>) {
     let _ = styles.into_box::<AuthorStyles<_>>();
 }
 
@@ -3514,7 +3514,7 @@ pub extern "C" fn Servo_StyleSet_RebuildCachedData(raw_data: &RawServoStyleSet) 
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleSet_Drop(data: bindings::RawServoStyleSetOwned) {
+pub extern "C" fn Servo_StyleSet_Drop(data: Owned<RawServoStyleSet>) {
     let _ = data.into_box::<PerDocumentStyleData>();
 }
 
@@ -5888,7 +5888,7 @@ pub extern "C" fn Servo_HasPendingRestyleAncestor(element: &RawGeckoElement) -> 
 #[no_mangle]
 pub unsafe extern "C" fn Servo_SelectorList_Parse(
     selector_list: *const nsACString,
-) -> *mut RawServoSelectorList {
+) -> OwnedOrNull<RawServoSelectorList> {
     use style::selector_parser::SelectorParser;
 
     debug_assert!(!selector_list.is_null());
@@ -5896,14 +5896,14 @@ pub unsafe extern "C" fn Servo_SelectorList_Parse(
     let input = (*selector_list).as_str_unchecked();
     let selector_list = match SelectorParser::parse_author_origin_no_namespace(&input) {
         Ok(selector_list) => selector_list,
-        Err(..) => return ptr::null_mut(),
+        Err(..) => return OwnedOrNull::null(),
     };
 
-    Box::into_raw(Box::new(selector_list)) as *mut RawServoSelectorList
+    Box::new(selector_list).into_ffi().maybe()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_SelectorList_Drop(list: bindings::RawServoSelectorListOwned) {
+pub unsafe extern "C" fn Servo_SelectorList_Drop(list: Owned<RawServoSelectorList>) {
     let _ = list.into_box::<::selectors::SelectorList<SelectorImpl>>();
 }
 
@@ -6161,7 +6161,7 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
 #[no_mangle]
 pub unsafe extern "C" fn Servo_SourceSizeList_Parse(
     value: *const nsACString,
-) -> *mut RawServoSourceSizeList {
+) -> Owned<RawServoSourceSizeList> {
     let value = (*value).as_str_unchecked();
     let mut input = ParserInput::new(value);
     let mut parser = Parser::new(&mut input);
@@ -6178,7 +6178,7 @@ pub unsafe extern "C" fn Servo_SourceSizeList_Parse(
 
     // NB: Intentionally not calling parse_entirely.
     let list = SourceSizeList::parse(&context, &mut parser);
-    Box::into_raw(Box::new(list)) as *mut _
+    Box::new(list).into_ffi()
 }
 
 #[no_mangle]
@@ -6199,7 +6199,7 @@ pub unsafe extern "C" fn Servo_SourceSizeList_Evaluate(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_SourceSizeList_Drop(list: bindings::RawServoSourceSizeListOwned) {
+pub unsafe extern "C" fn Servo_SourceSizeList_Drop(list: Owned<RawServoSourceSizeList>) {
     let _ = list.into_box::<SourceSizeList>();
 }
 
@@ -6255,12 +6255,12 @@ pub unsafe extern "C" fn Servo_PseudoClass_GetStates(name: *const nsACString) ->
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_UseCounters_Create() -> *mut structs::StyleUseCounters {
-    Box::into_raw(Box::<UseCounters>::default()) as *mut _
+pub unsafe extern "C" fn Servo_UseCounters_Create() -> Owned<structs::StyleUseCounters> {
+    Box::<UseCounters>::default().into_ffi()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_UseCounters_Drop(c: bindings::StyleUseCountersOwned) {
+pub unsafe extern "C" fn Servo_UseCounters_Drop(c: Owned<structs::StyleUseCounters>) {
     let _ = c.into_box::<UseCounters>();
 }
 
