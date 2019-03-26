@@ -393,5 +393,10 @@ interface nsISHEntry : nsISupports
      * @throw if nothing was replaced.
      */
     [noscript] void ReplaceChild(in nsISHEntry aNewChild);
+
+    /**
+    * Remove all children of this entry and call abandonBFCacheEntry.
+    */
+    [notxpcom] void ClearEntry();
 };
 

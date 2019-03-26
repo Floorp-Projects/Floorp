@@ -172,6 +172,7 @@ class SHEntryParent final : public PSHEntryParent {
   bool RecvRemoveChild(PSHEntryParent* aChild, nsresult* aResult);
   bool RecvGetChildAt(const int32_t& aIndex, MaybeNewPSHEntry* aChild);
   bool RecvReplaceChild(PSHEntryParent* aNewChild, nsresult* aResult);
+  bool RecvClearEntry(const uint64_t& aNewSharedID);
 
   void GetOrCreate(nsISHEntry* aSHEntry, MaybeNewPSHEntry* aResult) {
     GetOrCreate(Manager(), aSHEntry, *aResult);
