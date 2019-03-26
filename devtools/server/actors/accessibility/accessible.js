@@ -407,16 +407,27 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
    *         Audit results for the accessible object.
   */
   async audit() {
-    // More audit steps will be added here in the near future. In addition to colour
-    // contrast ratio we will add autits for to the missing names, invalid states, etc.
-    // (For example see bug 1518808).
-    const [ contrastRatio ] = await Promise.all([
-      this._getContrastRatio(),
-    ]);
+    if (this._auditing) {
+      return this._auditing;
+    }
 
-    return this.isDefunct ? null : {
+    // More audit steps will be added here in the near future. In addition to
+    // colour contrast ratio we will add autits for to the missing names,
+    // invalid states, etc. (For example see bug 1518808).
+    this._auditing = Promise.all([
+      this._getContrastRatio(),
+    ]).then(([
       contrastRatio,
-    };
+    ]) => {
+      const audit = this.isDefunct ? null : {
+        contrastRatio,
+      };
+
+      this._auditing = null;
+      return audit;
+    });
+
+    return this._auditing;
   },
 
   snapshot() {
