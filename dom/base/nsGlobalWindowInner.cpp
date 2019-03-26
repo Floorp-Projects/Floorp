@@ -1230,6 +1230,8 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   mExternal = nullptr;
   mInstallTrigger = nullptr;
 
+  mLocalStorage = nullptr;
+  mSessionStorage = nullptr;
   mPerformance = nullptr;
 
   mSharedWorkers.Clear();
