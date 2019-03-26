@@ -313,7 +313,13 @@ NS_IMETHODIMP JSWindowActorProtocol::Observe(nsISupports* aSubject,
   ErrorResult error;
   RefPtr<JSWindowActorChild> actor = wgc->GetActor(mName, error);
   if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
+    nsresult rv = error.StealNSResult();
+
+    // Don't raise an error if creation of our actor was vetoed.
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+      return NS_OK;
+    }
+    return rv;
   }
 
   // Get the wrapper for our actor. If we don't have a wrapper, the target
