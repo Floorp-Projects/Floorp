@@ -78,8 +78,9 @@ class GraphRunner {
   // modified.
   ThreadState mThreadState;
 
-  // The thread running mGraph.
-  PRThread* const mThread;
+  // The thread running mGraph.  Set on construction, after other members are
+  // initialized.  Cleared at the end of Shutdown().
+  PRThread* mThread;
 
 #ifdef DEBUG
   // Set to mGraph's audio callback driver's thread id, if run by an
