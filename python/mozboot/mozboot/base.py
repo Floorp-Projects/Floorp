@@ -712,7 +712,7 @@ class BaseBootstrapper(object):
 
         if 'mobile_android' in self.application:
             # Let's add the most common targets.
-            android_targets = ('armv7-linux-androideabi',
+            android_targets = ('thumbv7neon-linux-androideabi',
                                'aarch64-linux-android',
                                'i686-linux-android',
                                'x86_64-linux-android', )
