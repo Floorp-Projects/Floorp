@@ -102,6 +102,7 @@ class JsepSessionImpl : public JsepSession {
   virtual nsresult AddRemoteIceCandidate(const std::string& candidate,
                                          const std::string& mid,
                                          const Maybe<uint16_t>& level,
+                                         const std::string& ufrag,
                                          std::string* transportId) override;
 
   virtual nsresult AddLocalIceCandidate(const std::string& candidate,
