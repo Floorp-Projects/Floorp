@@ -1441,17 +1441,17 @@ void MediaStreamGraphImpl::ForceShutDown(
         nsITimer::TYPE_ONE_SHOT);
   }
   mForceShutdownTicket = aShutdownTicket;
-  MonitorAutoLock lock(mMonitor);
-  mForceShutDown = true;
-  if (LifecycleStateRef() == LIFECYCLE_THREAD_NOT_STARTED) {
-    // We *could* have just sent this a message to start up, so don't
-    // yank the rug out from under it.  Tell it to startup and let it
-    // shut down.
-    RefPtr<GraphDriver> driver = CurrentDriver();
-    MonitorAutoUnlock unlock(mMonitor);
-    driver->Start();
-  }
-  EnsureNextIterationLocked();
+
+  class Message final : public ControlMessage {
+   public:
+    explicit Message(MediaStreamGraphImpl* aGraph)
+        : ControlMessage(nullptr), mGraph(aGraph) {}
+    void Run() override { mGraph->mForceShutDown = true; }
+    // The graph owns this message.
+    MediaStreamGraphImpl* MOZ_NON_OWNING_REF mGraph;
+  };
+
+  AppendMessage(MakeUnique<Message>(this));
 }
 
 NS_IMETHODIMP
@@ -1729,8 +1729,8 @@ void MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG) {
       }
     }
 
-    if (mForceShutDown &&
-        LifecycleStateRef() == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
+    if (LifecycleStateRef() == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP &&
+        mForceShutDown) {
       // Defer calls to RunDuringShutdown() to happen while mMonitor is not
       // held.
       for (uint32_t i = 0; i < mBackMessageQueue.Length(); ++i) {
