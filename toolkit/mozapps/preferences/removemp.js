@@ -23,6 +23,7 @@ var gRemovePasswordDialog = {
     // Initialize the enabled state of the Remove button by checking the
     // initial value of the password ("" should be incorrect).
     this.validateInput();
+    document.addEventListener("dialogaccept", function() { gRemovePasswordDialog.removePassword(); });
   },
 
   validateInput() {

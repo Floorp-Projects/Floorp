@@ -39,7 +39,7 @@ var gSetBackground = {
         document.getElementById("fitPosition").hidden = true;
       }
     }
-
+    document.addEventListener("dialogaccept", function() { gSetBackground.setDesktopBackground(); });
     // make sure that the correct dimensions will be used
     setTimeout(function(self) {
       self.init(window.arguments[0], window.arguments[1]);

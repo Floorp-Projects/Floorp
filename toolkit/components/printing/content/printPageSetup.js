@@ -53,6 +53,8 @@ function initDialog() {
   gDialog.scalingInput    = document.getElementById("scalingInput");
 
   gDialog.enabled         = false;
+
+  document.addEventListener("dialogaccept", onAccept);
 }
 
 // ---------------------------------------------------
@@ -424,8 +426,6 @@ function onAccept() {
               gPrintSettingsInterface.kInitSaveScaling;
 
   gPrintService.savePrintSettingsToPrefs(gPrintSettings, true, flags);
-
-  return true;
 }
 
 // ---------------------------------------------------

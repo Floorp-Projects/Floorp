@@ -15,8 +15,6 @@
     buttons="accept,cancel,extra2"
     buttonlabelextra2="&BrowseButton.label;"
     defaultButton="cancel"
-    ondialogaccept="return g_dialog.appPickerOK();"
-    ondialogcancel="return g_dialog.appPickerCancel();"
     aria-describedby="content-description suggested-filename"
     persist="screenX screenY">
 

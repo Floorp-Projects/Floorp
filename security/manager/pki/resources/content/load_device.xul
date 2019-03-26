@@ -11,8 +11,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="load-device"
-        buttons="accept,cancel"
-        ondialogaccept="return onDialogAccept();">
+        buttons="accept,cancel">
 
   <linkset>
     <html:link rel="localization" href="security/certificates/deviceManager.ftl"/>

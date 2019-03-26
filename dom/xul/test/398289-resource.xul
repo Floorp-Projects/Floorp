@@ -4,9 +4,12 @@
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         buttonlabelaccept="OK"
-        ondialogaccept="alert('OK');"
-        buttonlabelcancel="Cancel"
-        ondialogcancel="alert('Cancel');">
+        buttonlabelcancel="Cancel">
+
+  <script>
+    document.addEventListener("dialogaccept", function() { alert('OK') });
+    document.addEventListener("dialogcancel", function() { alert('Cancel') });
+  </script>
 
   <tabbox id="test" flex="1" persist="selectedIndex">
 

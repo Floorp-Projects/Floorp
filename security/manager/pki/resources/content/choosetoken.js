@@ -24,6 +24,8 @@ function onLoad() {
       selectElement.selectedItem = menuItemNode;
     }
   }
+  document.addEventListener("dialogaccept", doOK);
+  document.addEventListener("dialogcancel", doCancel);
 }
 
 function doOK() {
@@ -32,10 +34,8 @@ function doOK() {
   dialogParams.SetInt(0, 1);
   // Signal the name of the token the user chose.
   dialogParams.SetString(0, tokenList.value);
-  return true;
 }
 
 function doCancel() {
   dialogParams.SetInt(0, 0); // Signal that the user cancelled.
-  return true;
 }

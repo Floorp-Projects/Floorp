@@ -12,8 +12,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 46em;"
         buttons="accept,cancel"
-        ondialogaccept="return onDialogAccept();"
-        ondialogcancel="return onDialogCancel();"
         onload="onLoad();">
 
 <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>

@@ -17,8 +17,6 @@
 <dialog id="bookmarkproperties"
         buttons="accept, cancel"
         buttoniconaccept="save"
-        ondialogaccept="BookmarkPropertiesPanel.onDialogAccept();"
-        ondialogcancel="BookmarkPropertiesPanel.onDialogCancel();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="BookmarkPropertiesPanel.onDialogLoad();"
         onunload="BookmarkPropertiesPanel.onDialogUnload();"
