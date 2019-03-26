@@ -52,11 +52,11 @@ function tryEnsureSanity()
 for (let iters = 0; iters < 2000; ++iters) { 
   count=27745; tryItOut("with({x: (c) = (x2 = [])})false;");
   tryEnsureSanity();
-  count=35594; tryItOut("switch(null) { case this.__defineSetter__(\"window\", function () { yield  \"\"  } ): break; }");
+  count=35594; tryItOut("switch(null) { case this.__defineSetter__(\"window\", function* () { yield  \"\"  } ): break; }");
   tryEnsureSanity();
-  count=45020; tryItOut("with({}) { (this.__defineGetter__(\"x\", function (y)this)); } ");
+  count=45020; tryItOut("with({}) { (this.__defineGetter__(\"x\", function (y) { return this; })); } ");
   tryEnsureSanity();
-  count=45197; tryItOut("M:with((p={}, (p.z = <x/> ===  '' )()))/*TUUL*/for (let y of [true, {}, {}, (void 0), true, true, true, (void 0), true, (void 0)]) { return; }");
+  count=45197; tryItOut("M:with((p={}, (p.z = false )()))/*TUUL*/for (let y of [true, {}, {}, (void 0), true, true, true, (void 0), true, (void 0)]) { return; }");
   tryEnsureSanity();
   gc();
   tryEnsureSanity();
