@@ -34,6 +34,8 @@ consoleListener.prototype  = {
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "console-api-log-event") {
       var obj = aSubject.wrappedJSObject;
+      ok(obj.chromeContext, "JSM is always a chrome context");
+
       if (obj.innerID == JSM) {
         is(obj.ID, "jsm", "ID and InnerID are correctly set.");
         is(obj.arguments[0], "Hello world!", "Message matches");
