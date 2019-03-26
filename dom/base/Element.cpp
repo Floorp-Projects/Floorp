@@ -1104,7 +1104,7 @@ void Element::GetSlot(nsAString& aName) {
 // https://dom.spec.whatwg.org/#dom-element-shadowroot
 ShadowRoot* Element::GetShadowRootByMode() const {
   /**
-   * 1. Let shadow be context object’s shadow root.
+   * 1. Let shadow be context object's shadow root.
    * 2. If shadow is null or its mode is "closed", then return null.
    */
   ShadowRoot* shadowRoot = GetShadowRoot();
@@ -1120,7 +1120,7 @@ ShadowRoot* Element::GetShadowRootByMode() const {
 
 bool Element::CanAttachShadowDOM() const {
   /**
-   * If context object’s namespace is not the HTML namespace,
+   * If context object's namespace is not the HTML namespace,
    * return false.
    *
    * Deviate from the spec here to allow shadow dom attachement to
@@ -1133,7 +1133,7 @@ bool Element::CanAttachShadowDOM() const {
   }
 
   /**
-   * If context object’s local name is not
+   * If context object's local name is not
    *    a valid custom element name, "article", "aside", "blockquote",
    *    "body", "div", "footer", "h1", "h2", "h3", "h4", "h5", "h6",
    *    "header", "main" "nav", "p", "section", or "span",
@@ -1161,9 +1161,9 @@ bool Element::CanAttachShadowDOM() const {
 already_AddRefed<ShadowRoot> Element::AttachShadow(const ShadowRootInit& aInit,
                                                    ErrorResult& aError) {
   /**
-   * 1. If context object’s namespace is not the HTML namespace,
+   * 1. If context object's namespace is not the HTML namespace,
    *    then throw a "NotSupportedError" DOMException.
-   * 2. If context object’s local name is not valid to attach shadow DOM to,
+   * 2. If context object's local name is not valid to attach shadow DOM to,
    *    then throw a "NotSupportedError" DOMException.
    */
   if (!CanAttachShadowDOM()) {
@@ -1205,8 +1205,8 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
 
   /**
    * 4. Let shadow be a new shadow root whose node document is
-   *    context object’s node document, host is context object,
-   *    and mode is init’s mode.
+   *    context object's node document, host is context object,
+   *    and mode is init's mode.
    */
   RefPtr<ShadowRoot> shadowRoot =
       new ShadowRoot(this, aMode, nodeInfo.forget());
@@ -1216,7 +1216,7 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
   }
 
   /**
-   * 5. Set context object’s shadow root to shadow.
+   * 5. Set context object's shadow root to shadow.
    */
   SetShadowRoot(shadowRoot);
 
