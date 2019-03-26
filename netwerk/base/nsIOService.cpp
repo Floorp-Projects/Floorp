@@ -59,6 +59,7 @@
 #include "ReferrerPolicy.h"
 #include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
+#include "nsExceptionHandler.h"
 
 namespace mozilla {
 namespace net {
@@ -1763,6 +1764,22 @@ nsresult nsIOService::SpeculativeConnectInternal(
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aPrincipal;
 
   MOZ_ASSERT(aPrincipal, "We expect passing a principal here.");
+
+  // Bug 1537883: Remove the code for dumping the JS Stack in case aPrincipal
+  // is null. It's only used to determine the JS callsite which passes null
+  // as the principal to SpeculativeConnect().
+  if (!aPrincipal) {
+    JSContext *cx = nsContentUtils::GetCurrentJSContext();
+    if (cx) {
+      JS::UniqueChars chars = xpc_PrintJSStack(cx,
+                                               /*showArgs=*/false,
+                                               /*showLocals=*/false,
+                                               /*showThisProps=*/false);
+      CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::Bug_1537883,
+                                         chars.get());
+      MOZ_CRASH("aPrincipal can not be null");
+    }
+  }
 
   // dummy channel used to create a TCP connection.
   // we perform security checks on the *real* channel, responsible

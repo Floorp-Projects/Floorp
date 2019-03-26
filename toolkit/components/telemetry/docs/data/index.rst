@@ -17,5 +17,6 @@ Data documentation
    anonymous-ping
    first-shutdown-ping
    *-ping
+   ecosystem-telemetry
 
 The `mozilla-pipeline-schemas repository <https://github.com/mozilla-services/mozilla-pipeline-schemas/>`_ contains schemas for some of the pings.

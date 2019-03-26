@@ -1112,9 +1112,6 @@ var TelemetrySendImpl = {
 
     this._pendingPingRequests.set(id, request);
 
-    // Prevent the request channel from running though URLClassifier (bug 1296802)
-    request.channel.loadFlags &= ~Ci.nsIChannel.LOAD_CLASSIFY_URI;
-
     const monotonicStartTime = Utils.monotonicNow();
     let deferred = PromiseUtils.defer();
 

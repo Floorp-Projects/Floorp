@@ -572,11 +572,15 @@ bool BackgroundHangMonitor::ShouldDisableOnBeta(const nsCString& clientID) {
 }
 
 bool BackgroundHangMonitor::IsDisabled() {
-#ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
-  return BackgroundHangManager::sDisabled;
-#else
-  return true;
-#endif
+  static bool sPrefCached = false;
+  static bool sPrefCacheValue = false;
+  if (!sPrefCached) {
+    sPrefCached = true;
+    Preferences::AddBoolVarCache(
+        &sPrefCacheValue, "toolkit.content-background-hang-monitor.disabled");
+  }
+
+  return sPrefCacheValue;
 }
 
 bool BackgroundHangMonitor::DisableOnBeta() {
@@ -602,6 +606,11 @@ void BackgroundHangMonitor::Startup() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 #ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   MOZ_ASSERT(!BackgroundHangManager::sInstance, "Already initialized");
+
+  if (XRE_IsContentProcess() && IsDisabled()) {
+    BackgroundHangManager::sDisabled = true;
+    return;
+  }
 
   if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta")) {
     if (XRE_IsParentProcess()) {  // cached ClientID hasn't been read yet
