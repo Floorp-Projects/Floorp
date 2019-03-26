@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Message component renders the expected snapshot for INFO level 1`] = `
+<aside
+  className="message message--level-info js-message some-classname"
+>
+  <img
+    className="message__icon"
+    src="chrome://devtools/skin/images/aboutdebugging-information.svg"
+  />
+  <div
+    className="message__body"
+  >
+    <div>
+      Message content
+    </div>
+  </div>
+</aside>
+`;
