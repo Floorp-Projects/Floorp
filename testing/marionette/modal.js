@@ -152,10 +152,12 @@ modal.Dialog = class {
   }
 
   get args() {
-    return this.tabModal.args;
+    let tm = this.tabModal;
+    return tm ? tm.args : null;
   }
 
   get ui() {
-    return this.tabModal.ui;
+    let tm = this.tabModal;
+    return tm ? tm.ui : null;
   }
 };
