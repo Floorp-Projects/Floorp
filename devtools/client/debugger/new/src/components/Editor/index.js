@@ -217,7 +217,11 @@ class Editor extends PureComponent<Props, State> {
 
     shortcuts.on(L10N.getStr("toggleBreakpoint.key"), this.onToggleBreakpoint);
     shortcuts.on(
-      L10N.getStr("toggleCondPanel.key"),
+      L10N.getStr("toggleCondPanel.breakpoint.key"),
+      this.onToggleConditionalPanel
+    );
+    shortcuts.on(
+      L10N.getStr("toggleCondPanel.logPoint.key"),
       this.onToggleConditionalPanel
     );
     shortcuts.on(L10N.getStr("sourceTabs.closeTab.key"), this.onClosePress);
@@ -249,7 +253,8 @@ class Editor extends PureComponent<Props, State> {
     const shortcuts = this.context.shortcuts;
     shortcuts.off(L10N.getStr("sourceTabs.closeTab.key"));
     shortcuts.off(L10N.getStr("toggleBreakpoint.key"));
-    shortcuts.off(L10N.getStr("toggleCondPanel.key"));
+    shortcuts.off(L10N.getStr("toggleCondPanel.breakpoint.key"));
+    shortcuts.off(L10N.getStr("toggleCondPanel.logPoint.key"));
     shortcuts.off(searchAgainPrevKey);
     shortcuts.off(searchAgainKey);
   }
@@ -301,11 +306,13 @@ class Editor extends PureComponent<Props, State> {
     e.stopPropagation();
     e.preventDefault();
     const line = this.getCurrentLine();
+
     if (typeof line !== "number") {
       return;
     }
 
-    this.toggleConditionalPanel(line);
+    const isLog = key === L10N.getStr("toggleCondPanel.logPoint.key");
+    this.toggleConditionalPanel(line, isLog);
   };
 
   onEditorScroll = throttle(this.props.updateViewport, 100);
@@ -454,7 +461,7 @@ class Editor extends PureComponent<Props, State> {
     }
   }
 
-  toggleConditionalPanel = line => {
+  toggleConditionalPanel = (line, log: boolean = false) => {
     const {
       conditionalPanelLocation,
       closeConditionalPanel,
@@ -470,11 +477,14 @@ class Editor extends PureComponent<Props, State> {
       return;
     }
 
-    return openConditionalPanel({
-      line: line,
-      sourceId: selectedSource.id,
-      sourceUrl: selectedSource.url
-    });
+    return openConditionalPanel(
+      {
+        line: line,
+        sourceId: selectedSource.id,
+        sourceUrl: selectedSource.url
+      },
+      log
+    );
   };
 
   shouldScrollToLocation(nextProps) {
