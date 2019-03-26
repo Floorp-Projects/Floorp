@@ -6909,9 +6909,8 @@ class StreamCacheEntry : public AtomicRefCounted<StreamCacheEntry>,
 
   const Uint8Vector& bytes() const { return bytes_; }
 
-  void storeOptimizedEncoding(const uint8_t* srcBytes,
-                              size_t srcLength) override {
-    MOZ_ASSERT(srcLength > 0);
+  void storeOptimizedEncoding(JS::UniqueOptimizedEncodingBytes src) override {
+    MOZ_ASSERT(src->length() > 0);
 
     // Tolerate races since a single StreamCacheEntry object can be used as
     // the source of multiple streaming compilations.
@@ -6920,10 +6919,10 @@ class StreamCacheEntry : public AtomicRefCounted<StreamCacheEntry>,
       return;
     }
 
-    if (!dstBytes->resize(srcLength)) {
+    if (!dstBytes->resize(src->length())) {
       return;
     }
-    memcpy(dstBytes->begin(), srcBytes, srcLength);
+    memcpy(dstBytes->begin(), src->begin(), src->length());
   }
 
   bool hasOptimizedEncoding() const { return !optimized_.lock()->empty(); }
