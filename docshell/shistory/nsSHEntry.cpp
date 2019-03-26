@@ -755,6 +755,16 @@ nsSHEntry::ReplaceChild(nsISHEntry* aNewEntry) {
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP_(void) nsSHEntry::ClearEntry() {
+  int32_t childCount = GetChildCount();
+  // Remove all children of this entry
+  for (int32_t i = childCount - 1; i >= 0; i--) {
+    nsCOMPtr<nsISHEntry> child;
+    GetChildAt(i, getter_AddRefs(child));
+    RemoveChild(child);
+  }
+}
+
 NS_IMETHODIMP_(void)
 nsSHEntry::AddChildShell(nsIDocShellTreeItem* aShell) {
   MOZ_CRASH(

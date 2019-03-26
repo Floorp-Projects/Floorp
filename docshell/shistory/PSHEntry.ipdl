@@ -99,6 +99,7 @@ parent:
   sync RemoveChild(PSHEntry childEntry) returns (nsresult result);
   sync GetChildAt(int32_t index) returns (MaybeNewPSHEntry childEntry);
   sync ReplaceChild(PSHEntry newChildEntry) returns (nsresult result);
+  sync ClearEntry(uint64_t aNewSharedID);
 
   sync __delete__();
 };
