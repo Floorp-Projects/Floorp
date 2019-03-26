@@ -17,7 +17,6 @@ import org.mozilla.fenix.R
 import android.animation.ValueAnimator
 import android.view.accessibility.AccessibilityManager
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
-import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.utils.Settings
 
 class QuickActionSheet @JvmOverloads constructor(
@@ -53,7 +52,6 @@ class QuickActionSheet @JvmOverloads constructor(
             return
         }
 
-        handle.increaseTapArea(grabHandleIncreasedTapArea)
         handle.setOnClickListener {
             bounceSheet(quickActionSheetBehavior)
         }
@@ -90,7 +88,6 @@ class QuickActionSheet @JvmOverloads constructor(
     }
 
     companion object {
-        const val grabHandleIncreasedTapArea = 50
         const val demoBounceAnimationLength = 600L
         const val bounceAnimationLength = 400L
         const val demoBounceAnimationPeekHeightMultiplier = 4.5f

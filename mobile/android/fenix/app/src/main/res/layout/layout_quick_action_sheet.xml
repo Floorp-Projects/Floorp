@@ -14,12 +14,10 @@
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/quick_action_sheet_handle"
-        android:layout_marginBottom="10dp"
-        android:layout_width="24dp"
-        android:layout_height="2dp"
-        android:layout_gravity="center_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="12dp"
         android:contentDescription="@string/quick_action_sheet_handle"
-        android:background="?attr/quickActionPullTabColor"
+        android:background="@null"
         android:src="@drawable/ic_drawer_pull_tab"/>
 
     <LinearLayout
