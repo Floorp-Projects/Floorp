@@ -7,7 +7,6 @@
     background-color: green;
     transform: translate(0, 100px);
     opacity: 0.5;
-    will-change: transform; /* force compositing */
   }
 
   #covered {
@@ -20,7 +19,8 @@
     overflow: auto;
     height: 100px;
     width: 100px;
-    will-change: transform; /* force compositing */
+    /* TODO(yigu): Rewrite the test to not rely on compositing. */
+    will-change: transform;
   }
 
   #contents {
