@@ -1703,13 +1703,13 @@ class PeerConnectionObserver {
     this._dompc._onAddIceCandidateError(this.newError(message, code));
   }
 
-  onIceCandidate(sdpMLineIndex, sdpMid, candidate, ufrag) {
+  onIceCandidate(sdpMLineIndex, sdpMid, candidate, usernameFragment) {
     let win = this._dompc._win;
-    if (candidate) {
+    if (candidate || sdpMid || usernameFragment) {
       if (candidate.includes(" typ relay ")) {
         this._dompc._iceGatheredRelayCandidates = true;
       }
-      candidate = new win.RTCIceCandidate({ candidate, sdpMid, sdpMLineIndex, ufrag });
+      candidate = new win.RTCIceCandidate({ candidate, sdpMid, sdpMLineIndex, usernameFragment });
     } else {
       candidate = null;
     }
