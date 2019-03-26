@@ -64,6 +64,7 @@ macosx64/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: internal
+    run-on-projects: ['mozilla-central', 'try']
     toolchains:
         - linux64-binutils
         - linux64-cctools-port
