@@ -49,6 +49,8 @@ enum class RoundingMode;
 
 // This is a widespread header, so lets keep out the core wasm impl types.
 
+typedef GCVector<JSFunction*, 0, SystemAllocPolicy> JSFunctionVector;
+
 class WasmMemoryObject;
 typedef GCPtr<WasmMemoryObject*> GCPtrWasmMemoryObject;
 typedef Rooted<WasmMemoryObject*> RootedWasmMemoryObject;
@@ -748,11 +750,10 @@ class LitVal {
   }
 };
 
-// A Val is a LitVal that can contain pointers to JSObjects, thanks to their
-// trace implementation. Since a Val is able to store a pointer to a JSObject,
-// it needs to be traced during compilation in case the pointee is moved.
-// The classic shorthands for Rooted things are defined after this class, for
-// easier usage.
+// A Val is a LitVal that can contain (non-null) pointers to GC things. All Vals
+// must be stored in Rooteds so that their trace() methods are called during
+// stack marking. Vals do not implement barriers and thus may not be stored on
+// the heap.
 
 class MOZ_NON_PARAM Val : public LitVal {
  public:
@@ -773,10 +774,10 @@ typedef Rooted<Val> RootedVal;
 typedef Handle<Val> HandleVal;
 typedef MutableHandle<Val> MutableHandleVal;
 
-typedef GCVector<Val, 0, SystemAllocPolicy> GCVectorVal;
-typedef Rooted<GCVectorVal> RootedValVector;
-typedef Handle<GCVectorVal> HandleValVector;
-typedef MutableHandle<GCVectorVal> MutableHandleValVector;
+typedef GCVector<Val, 0, SystemAllocPolicy> ValVector;
+typedef Rooted<ValVector> RootedValVector;
+typedef Handle<ValVector> HandleValVector;
+typedef MutableHandle<ValVector> MutableHandleValVector;
 
 // The FuncType class represents a WebAssembly function signature which takes a
 // list of value types and returns an expression type. The engine uses two

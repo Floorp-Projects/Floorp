@@ -1223,7 +1223,7 @@ static Maybe<ABIFunctionType> ToBuiltinABIFunctionType(
   return Some(ABIFunctionType(abiType));
 }
 
-void* wasm::MaybeGetBuiltinThunk(HandleFunction f, const FuncType& funcType) {
+void* wasm::MaybeGetBuiltinThunk(JSFunction* f, const FuncType& funcType) {
   MOZ_ASSERT(builtinThunks);
 
   if (!f->isNative() || !f->hasJitInfo() ||
