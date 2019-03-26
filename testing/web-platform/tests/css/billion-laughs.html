@@ -1,0 +1,48 @@
+<!doctype html>
+<title>Billion Laughs</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style>
+
+body {
+    --0:lol;
+    --1:var(--0) var(--0) var(--0) var(--0) var(--0) var(--0) var(--0) var(--0) var(--0) var(--0);
+    --2:var(--1) var(--1) var(--1) var(--1) var(--1) var(--1) var(--1) var(--1) var(--1) var(--1);
+    --3:var(--2) var(--2) var(--2) var(--2) var(--2) var(--2) var(--2) var(--2) var(--2) var(--2);
+    --4:var(--3) var(--3) var(--3) var(--3) var(--3) var(--3) var(--3) var(--3) var(--3) var(--3);
+    --5:var(--4) var(--4) var(--4) var(--4) var(--4) var(--4) var(--4) var(--4) var(--4) var(--4);
+    --6:var(--5) var(--5) var(--5) var(--5) var(--5) var(--5) var(--5) var(--5) var(--5) var(--5);
+    --7:var(--6) var(--6) var(--6) var(--6) var(--6) var(--6) var(--6) var(--6) var(--6) var(--6);
+    --8:var(--7) var(--7) var(--7) var(--7) var(--7) var(--7) var(--7) var(--7) var(--7) var(--7);
+    --9:var(--8) var(--8) var(--8) var(--8) var(--8) var(--8) var(--8) var(--8) var(--8) var(--8);
+    --10:var(--9) var(--9) var(--9) var(--9) var(--9) var(--9) var(--9) var(--9) var(--9) var(--9);
+    --11:var(--10) var(--10) var(--10) var(--10) var(--10) var(--10) var(--10) var(--10) var(--10) var(--10);
+    --12:var(--11) var(--11) var(--11) var(--11) var(--11) var(--11) var(--11) var(--11) var(--11) var(--11);
+    --13:var(--12) var(--12) var(--12) var(--12) var(--12) var(--12) var(--12) var(--12) var(--12) var(--12);
+    --14:var(--13) var(--13) var(--13) var(--13) var(--13) var(--13) var(--13) var(--13) var(--13) var(--13);
+    --15:var(--14) var(--14) var(--14) var(--14) var(--14) var(--14) var(--14) var(--14) var(--14) var(--14);
+    --16:var(--15) var(--15) var(--15) var(--15) var(--15) var(--15) var(--15) var(--15) var(--15) var(--15);
+    --17:var(--16) var(--16) var(--16) var(--16) var(--16) var(--16) var(--16) var(--16) var(--16) var(--16);
+    --18:var(--17) var(--17) var(--17) var(--17) var(--17) var(--17) var(--17) var(--17) var(--17) var(--17);
+    --19:var(--18) var(--18) var(--18) var(--18) var(--18) var(--18) var(--18) var(--18) var(--18) var(--18);
+    --20:var(--19) var(--19) var(--19) var(--19) var(--19) var(--19) var(--19) var(--19) var(--19) var(--19);
+}
+
+</style>
+
+<meta name=author title="Tab Atkins-Bittner">
+<link rel=help href="https://drafts.csswg.org/css-variables/#long-variables">
+<!--
+This is an implementation of the "billion laughs attack"
+https://en.wikipedia.org/wiki/Billion_laughs_attack
+via CSS variables.
+
+A naive implementation will expand every var() reference,
+leading --20 to contain 10^20 "lol"s,
+crashing the browser with an OOM.
+
+This crash should be caught by the test harness as a failure;
+an impl that correctly implements the mitigation described in the spec
+will instead execute this no-op page
+and thus "pass" it by default.
+-->
