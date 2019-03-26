@@ -1436,9 +1436,7 @@ nsresult Loader::LoadSheet(SheetLoadData* aLoadData,
         getter_AddRefs(channel), aLoadData->mURI, aLoadData->mRequestingNode,
         aLoadData->mLoaderPrincipal, securityFlags, contentPolicyType,
         nullptr,  // Performancestorage
-        loadGroup,
-        nullptr,  // aCallbacks
-        nsIChannel::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI);
+        loadGroup);
   } else {
     // either we are loading something inside a document, in which case
     // we should always have a requestingNode, or we are loading something
@@ -1448,9 +1446,7 @@ nsresult Loader::LoadSheet(SheetLoadData* aLoadData,
                        nsContentUtils::GetSystemPrincipal(), securityFlags,
                        contentPolicyType, cookieSettings,
                        nullptr,  // aPerformanceStorage
-                       loadGroup,
-                       nullptr,  // aCallbacks
-                       nsIChannel::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI);
+                       loadGroup);
   }
 
   if (NS_FAILED(rv)) {

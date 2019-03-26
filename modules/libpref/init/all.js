@@ -1114,6 +1114,8 @@ pref("toolkit.asyncshutdown.crash_timeout", 180000); // 3 minutes
 // Extra logging for AsyncShutdown barriers and phases
 pref("toolkit.asyncshutdown.log", false);
 
+pref("toolkit.content-background-hang-monitor.disabled", false);
+
 // Enable JS dump() function.
 // IMPORTANT: Keep this in condition in sync with StaticPrefList.h. The value
 // of MOZILLA_OFFICIAL is different between full and artifact builds, so without

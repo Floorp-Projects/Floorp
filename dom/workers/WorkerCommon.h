@@ -32,6 +32,8 @@ JSContext* GetCurrentWorkerThreadJSContext();
 
 JSObject* GetCurrentThreadWorkerGlobal();
 
+JSObject* GetCurrentThreadWorkerDebuggerGlobal();
+
 void CancelWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
 void FreezeWorkersForWindow(nsPIDOMWindowInner* aWindow);

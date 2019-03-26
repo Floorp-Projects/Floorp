@@ -2491,5 +2491,17 @@ JSObject* GetCurrentThreadWorkerGlobal() {
   return scope->GetGlobalJSObject();
 }
 
+JSObject* GetCurrentThreadWorkerDebuggerGlobal() {
+  WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
+  if (!wp) {
+    return nullptr;
+  }
+  WorkerDebuggerGlobalScope* scope = wp->DebuggerGlobalScope();
+  if (!scope) {
+    return nullptr;
+  }
+  return scope->GetGlobalJSObject();
+}
+
 }  // namespace dom
 }  // namespace mozilla

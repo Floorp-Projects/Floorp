@@ -1,35 +1,11 @@
 <html>
 <head>
 <title></title>
-
-<script type="text/javascript">
-
-var scriptItem = "untouched";
-
-function checkLoads() {
-  // Make sure the javascript did not load.
-  window.parent.is(scriptItem, "untouched", "Should not load bad javascript");
-
-  // Call parent.loadTestFrame again to test classification metadata in HTTP
-  // cache entries.
-  if (window.parent.firstLoad) {
-    window.parent.info("Reloading from cache...");
-    window.parent.firstLoad = false;
-    window.parent.loadTestFrame();
-    return;
-  }
-
-  // End (parent) test.
-  window.parent.SimpleTest.finish();
-}
-
-</script>
+</head>
+<body>
 
 <!-- Try loading from a malware javascript URI -->
-<script type="text/javascript" src="http://bug1281083.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js"></script>
+<script id="badscript" data-touched="not sure" src="http://bug1281083.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"></script>
 
-</head>
-
-<body onload="checkLoads()">
 </body>
 </html>

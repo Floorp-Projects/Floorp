@@ -1541,6 +1541,12 @@ pref("toolkit.telemetry.updatePing.enabled", true);
 pref("toolkit.telemetry.bhrPing.enabled", true);
 // Enables using Hybrid Content Telemetry from Mozilla privileged pages.
 pref("toolkit.telemetry.hybridContent.enabled", true);
+// Whether to enable Ecosystem Telemetry, requires a restart.
+#ifdef NIGHTLY_BUILD
+pref("toolkit.telemetry.ecosystemtelemetry.enabled", true);
+#else
+pref("toolkit.telemetry.ecosystemtelemetry.enabled", false);
+#endif
 
 // Ping Centre Telemetry settings.
 pref("browser.ping-centre.telemetry", true);

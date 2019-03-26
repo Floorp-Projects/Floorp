@@ -1264,8 +1264,7 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
       getter_AddRefs(channel), aRequest->mURI, context,
       aRequest->TriggeringPrincipal(), securityFlags, contentPolicyType,
       nullptr,  // aPerformanceStorage
-      loadGroup, prompter,
-      nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI);
+      loadGroup, prompter);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
