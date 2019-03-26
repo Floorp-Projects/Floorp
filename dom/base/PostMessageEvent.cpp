@@ -18,6 +18,7 @@
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/UnionConversions.h"
 #include "mozilla/EventDispatcher.h"
+#include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsGlobalWindow.h"
 #include "nsIConsoleService.h"
@@ -135,10 +136,9 @@ PostMessageEvent::Run() {
         rv = NS_GetSanitizedURIStringFromURI(callerDocumentURI, uriSpec);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = errorObject->Init(
-            errorText, uriSpec, EmptyString(), 0, 0, nsIScriptError::errorFlag,
-            "DOM Window", mIsFromPrivateWindow,
-            nsContentUtils::IsSystemPrincipal(mProvidedPrincipal));
+        rv = errorObject->Init(errorText, uriSpec, EmptyString(), 0, 0,
+                               nsIScriptError::errorFlag, "DOM Window",
+                               mIsFromPrivateWindow);
       }
       NS_ENSURE_SUCCESS(rv, rv);
 

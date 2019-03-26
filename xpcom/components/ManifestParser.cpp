@@ -158,8 +158,7 @@ void LogMessageWithContext(FileLocation& aFile, uint32_t aLineNumber,
   nsresult rv = error->Init(
       NS_ConvertUTF8toUTF16(formatted.get()), NS_ConvertUTF8toUTF16(file),
       EmptyString(), aLineNumber, 0, nsIScriptError::warningFlag,
-      "chrome registration", false /* from private window */,
-      true /* from chrome context */);
+      "chrome registration", false /* from private window */);
   if (NS_FAILED(rv)) {
     return;
   }

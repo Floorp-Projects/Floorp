@@ -44,8 +44,7 @@ nsScriptErrorBase::nsScriptErrorBase()
       mTimeStamp(0),
       mTimeWarpTarget(0),
       mInitializedOnMainThread(false),
-      mIsFromPrivateWindow(false),
-      mIsFromChromeContext(false) {}
+      mIsFromPrivateWindow(false) {}
 
 nsScriptErrorBase::~nsScriptErrorBase() {}
 
@@ -63,7 +62,7 @@ void nsScriptErrorBase::InitializeOnMainThread() {
     if (window) {
       nsPIDOMWindowOuter* outer = window->GetOuterWindow();
       if (outer) mOuterWindowID = outer->WindowID();
-      mIsFromChromeContext = ComputeIsFromChromeContext(window);
+
       mIsFromPrivateWindow = ComputeIsFromPrivateWindow(window);
     }
   }
@@ -205,15 +204,13 @@ NS_IMETHODIMP
 nsScriptErrorBase::Init(const nsAString& message, const nsAString& sourceName,
                         const nsAString& sourceLine, uint32_t lineNumber,
                         uint32_t columnNumber, uint32_t flags,
-                        const char* category, bool fromPrivateWindow,
-                        bool fromChromeContext) {
+                        const char* category, bool fromPrivateWindow) {
   InitializationHelper(message, sourceLine, lineNumber, columnNumber, flags,
                        category ? nsDependentCString(category) : EmptyCString(),
                        0 /* inner Window ID */);
   AssignSourceNameHelper(mSourceName, sourceName);
 
   mIsFromPrivateWindow = fromPrivateWindow;
-  mIsFromChromeContext = fromChromeContext;
   return NS_OK;
 }
 
@@ -384,18 +381,6 @@ nsScriptErrorBase::GetTimeWarpTarget(uint64_t* aTarget) {
 }
 
 NS_IMETHODIMP
-nsScriptErrorBase::GetIsFromChromeContext(bool* aIsFromChromeContext) {
-  NS_WARNING_ASSERTION(NS_IsMainThread() || mInitializedOnMainThread,
-                       "This can't be safely determined off the main thread, "
-                       "returning an inaccurate value!");
-  if (!mInitializedOnMainThread && NS_IsMainThread()) {
-    InitializeOnMainThread();
-  }
-  *aIsFromChromeContext = mIsFromChromeContext;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsScriptErrorBase::GetNotes(nsIArray** aNotes) {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMutableArray> array = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
@@ -416,13 +401,6 @@ bool nsScriptErrorBase::ComputeIsFromPrivateWindow(
   nsIPrincipal* winPrincipal = aWindow->GetPrincipal();
   return aWindow->IsPrivateBrowsing() &&
          !nsContentUtils::IsSystemPrincipal(winPrincipal);
-}
-
-/* static */
-bool nsScriptErrorBase::ComputeIsFromChromeContext(
-    nsGlobalWindowInner* aWindow) {
-  nsIPrincipal* winPrincipal = aWindow->GetPrincipal();
-  return nsContentUtils::IsSystemPrincipal(winPrincipal);
 }
 
 NS_IMPL_ISUPPORTS(nsScriptError, nsIConsoleMessage, nsIScriptError)
