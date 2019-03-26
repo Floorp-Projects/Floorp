@@ -1400,12 +1400,12 @@ function promisePopupNotificationShown(name = "addon-webext-permissions") {
   });
 }
 
-function waitAppMenuNotificationShown(id, type, accept = false, win = window) {
+function waitAppMenuNotificationShown(id, addonId, accept = false, win = window) {
   const {AppMenuNotifications} = ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
   return new Promise(resolve => {
     let {document, PanelUI} = win;
 
-    function popupshown() {
+    async function popupshown() {
       let notification = AppMenuNotifications.activeNotification;
       if (!notification) { return; }
 
@@ -1414,9 +1414,12 @@ function waitAppMenuNotificationShown(id, type, accept = false, win = window) {
 
       PanelUI.notificationPanel.removeEventListener("popupshown", popupshown);
 
-      if (id == "addon-installed" && type) {
-        let hidden = type !== "extension" ||
-                     Services.prefs.getBoolPref("extensions.allowPrivateBrowsingByDefault", true);
+      if (id == "addon-installed" && addonId) {
+        let addon = await AddonManager.getAddonByID(addonId);
+        if (!addon) {
+          ok(false, `Addon with id "${addonId}" not found`);
+        }
+        let hidden = !(addon.permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS);
         let checkbox = document.getElementById("addon-incognito-checkbox");
         is(checkbox.hidden, hidden, "checkbox visibility is correct");
       }
@@ -1438,8 +1441,8 @@ function waitAppMenuNotificationShown(id, type, accept = false, win = window) {
   });
 }
 
-function acceptAppMenuNotificationWhenShown(id, type) {
-  return waitAppMenuNotificationShown(id, type, true);
+function acceptAppMenuNotificationWhenShown(id, addonId) {
+  return waitAppMenuNotificationShown(id, addonId, true);
 }
 
 function assertTelemetryMatches(events, {filterMethods} = {}) {
