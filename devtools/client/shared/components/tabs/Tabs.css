@@ -12,25 +12,72 @@
   flex-direction: column;
 }
 
+/* Hides the tab strip in the TabBar */
+div[hidetabs=true] .tabs .tabs-navigation {
+  display: none;
+}
+
+.tabs .tabs-navigation {
+  display: flex;
+  line-height: 15px;
+  height: 24px;
+  position: relative;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  background: var(--theme-tab-toolbar-background);
+}
+
 .tabs .tabs-menu {
   list-style: none;
   padding: 0;
   margin: 0;
+  flex-grow: 1;
+}
+
+/* The tab takes entire horizontal space and individual tabs
+  should stretch accordingly. Use flexbox for the behavior.
+  Use also `overflow: hidden` so, 'overflow' and 'underflow'
+  events are fired (it's utilized by the all-tabs-menu). */
+.tabs .tabs-navigation .tabs-menu {
+  overflow: hidden;
+  display: flex;
 }
 
 .tabs .tabs-menu-item {
   display: inline-block;
   position: relative;
+  margin: 0;
+  padding: 0;
+  color: var(--theme-toolbar-color);
+}
+
+.tabs .tabs-menu-item.is-active {
+  color: var(--theme-toolbar-selected-color);
+}
+
+.tabs .tabs-menu-item:hover {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.tabs .tabs-menu-item:hover:active:not(.is-active) {
+  background-color: var(--theme-toolbar-hover-active);
 }
 
 .tabs .tabs-menu-item a {
   display: flex;
   justify-content: center;
-  padding: 4px 8px;
+  padding: 3px 10px;
   border: 1px solid transparent;
   font-size: 12px;
   text-decoration: none;
   white-space: nowrap;
+  cursor: default;
+  -moz-user-select: none;
+  text-align: center;
+}
+
+/* Remove the outline focusring from tabs-menu-item. */
+.tabs .tabs-navigation .tabs-menu-item > a:-moz-focusring {
+  outline: none;
 }
 
 .tabs .tabs-menu-item .tab-badge {
@@ -54,11 +101,6 @@
   -moz-user-select: none !important;
 }
 
-.tabs .tabs-menu-item a {
-  cursor: default;
-  -moz-user-select: none;
-}
-
 /* Make sure panel content takes entire vertical space. */
 .tabs .panels {
   flex: 1;
@@ -69,43 +111,4 @@
   height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
-}
-
-.tabs .tabs-navigation,
-.tabs .tabs-navigation {
-  position: relative;
-  border-bottom: 1px solid var(--theme-splitter-color);
-  background: var(--theme-tab-toolbar-background);
-}
-
-.theme-dark .tabs .tabs-menu-item,
-.theme-light .tabs .tabs-menu-item {
-  margin: 0;
-  padding: 0;
-  color: var(--theme-toolbar-color);
-}
-
-.theme-dark .tabs .tabs-menu-item.is-active,
-.theme-light .tabs .tabs-menu-item.is-active {
-  color: var(--theme-toolbar-selected-color);
-}
-
-.theme-dark .tabs .tabs-menu-item:last-child,
-.theme-light .tabs .tabs-menu-item:last-child {
-  border-inline-end-width: 1px;
-}
-
-.theme-dark .tabs .tabs-menu-item a,
-.theme-light .tabs .tabs-menu-item a {
-  padding: 3px 10px;
-}
-
-.theme-dark .tabs .tabs-menu-item:hover,
-.theme-light .tabs .tabs-menu-item:hover {
-  background-color: var(--theme-toolbar-hover);
-}
-
-.theme-dark .tabs .tabs-menu-item:hover:active:not(.is-active),
-.theme-light .tabs .tabs-menu-item:hover:active:not(.is-active) {
-  background-color: var(--theme-toolbar-hover-active);
 }

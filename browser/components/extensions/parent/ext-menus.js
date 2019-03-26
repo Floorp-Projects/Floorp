@@ -983,7 +983,7 @@ const menuTracker = {
     gMenuBuilder.build(subject);
   },
 
-  onWindowOpen(window) {
+  async onWindowOpen(window) {
     for (const id of menuTracker.menuIds) {
       const menu = window.document.getElementById(id);
       menu.addEventListener("popupshowing", menuTracker);
@@ -991,7 +991,10 @@ const menuTracker = {
 
     const sidebarHeader = window.document.getElementById("sidebar-switcher-target");
     sidebarHeader.addEventListener("SidebarShown", menuTracker.onSidebarShown);
-    if (window.SidebarUI.currentID === "viewBookmarksSidebar") {
+
+    await window.SidebarUI.promiseInitialized;
+
+    if (!window.closed && window.SidebarUI.currentID === "viewBookmarksSidebar") {
       menuTracker.onSidebarShown({currentTarget: sidebarHeader});
     }
   },

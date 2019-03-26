@@ -1134,11 +1134,18 @@ class CGHeaders(CGWrapper):
                 headerSet = declareIncludes
             else:
                 headerSet = bindingHeaders
-            if t.nullable():
-                # Need to make sure that Nullable as a dictionary
-                # member works.
-                headerSet.add("mozilla/dom/Nullable.h")
-            unrolled = t.unroll()
+            # Strip off outer layers and add headers they might (conservatively:
+            # only nullable non-pointer types need Nullable.h, and only
+            # sequences outside unions require ForOfIterator.h) require.
+            unrolled = t
+            while True:
+                if unrolled.nullable():
+                    headerSet.add("mozilla/dom/Nullable.h")
+                elif unrolled.isSequence():
+                    bindingHeaders.add("js/ForOfIterator.h")
+                else:
+                    break
+                unrolled = unrolled.inner
             if unrolled.isUnion():
                 headerSet.add(self.getUnionDeclarationFilename(config, unrolled))
                 bindingHeaders.add("mozilla/dom/UnionConversions.h")
@@ -1371,6 +1378,10 @@ def UnionTypes(unionTypes, config):
                 if f.nullable():
                     headers.add("mozilla/dom/Nullable.h")
                 isSequence = f.isSequence()
+                if isSequence:
+                    # Dealing with sequences requires for-of-compatible
+                    # iteration.
+                    implheaders.add("js/ForOfIterator.h")
                 f = f.unroll()
                 if f.isPromise():
                     headers.add("mozilla/dom/Promise.h")
@@ -1471,6 +1482,10 @@ def UnionConversions(unionTypes, config):
             unionConversions[name] = CGUnionConversionStruct(t, config)
 
             def addHeadersForType(f):
+                if f.isSequence():
+                    # Sequences require JSAPI C++ for-of iteration code to fill
+                    # them.
+                    headers.add("js/ForOfIterator.h")
                 f = f.unroll()
                 if f.isPromise():
                     headers.add("mozilla/dom/Promise.h")

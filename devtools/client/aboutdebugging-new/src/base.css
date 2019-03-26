@@ -45,10 +45,14 @@
   --white-100: #fff; /* for ui, no special semantic */
 
   /* Typography from Photon */
+  /* See https://firefox-dev.tools/photon/visuals/typography.html */
   --body-10-font-size: 13px;
   --body-10-font-weight: 400;
   --body-20-font-size: 15px;
-  --body-20-font-weight: 700;
+  --body-20-font-weight: 400;
+  --body-20-font-weight-bold: 700;
+  --caption-10-font-size: 11px;
+  --caption-10-font-weight: 400;
   --caption-20-font-size: 13px;
   --caption-20-font-weight: 400;
   --caption-20-color: var(--grey-50);
@@ -245,7 +249,7 @@ p, h1 {
 
 /* adds breathing space to the separator */
 .separator--breathe {
-  margin: calc(var(--base-unit) * 4) 0;
+  margin: calc(var(--base-unit) * 5) 0;
 }
 
 /* a series of button-like elements, layed out horizontally */

@@ -5528,6 +5528,26 @@ TEST_F(JsepSessionTest, AudioCallAnswererUsesActpass) {
   ASSERT_EQ(kJsepStateHaveLocalOffer, mSessionOff->GetState());
 }
 
+// Verify that 'actpass' in reoffer from previous answerer doesn't result
+// in a role switch.
+TEST_F(JsepSessionTest, AudioCallPreviousAnswererUsesActpassInReoffer) {
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(*mSessionOff, "audio");
+  AddTracks(*mSessionAns, "audio");
+
+  OfferAnswer();
+
+  ValidateSetupAttribute(*mSessionOff, SdpSetupAttribute::kActpass);
+  ValidateSetupAttribute(*mSessionAns, SdpSetupAttribute::kActive);
+
+  SwapOfferAnswerRoles();
+
+  OfferAnswer();
+
+  ValidateSetupAttribute(*mSessionOff, SdpSetupAttribute::kActpass);
+  ValidateSetupAttribute(*mSessionAns, SdpSetupAttribute::kPassive);
+}
+
 // Disabled: See Bug 1329028
 TEST_F(JsepSessionTest, DISABLED_AudioCallOffererAttemptsSetupRoleSwitch) {
   types.push_back(SdpMediaSection::kAudio);

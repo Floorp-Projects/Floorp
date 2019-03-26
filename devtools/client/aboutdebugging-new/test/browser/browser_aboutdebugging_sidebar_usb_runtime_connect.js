@@ -34,7 +34,7 @@ add_task(async function() {
   await waitUntil(() => !usbRuntimeSidebarItem.querySelector(".js-connect-button"));
 
   info("Check whether the label of item is updated after connecting");
-  ok(usbRuntimeSidebarItem.textContent.startsWith(RUNTIME_NAME), "Label of item updated");
+  ok(usbRuntimeSidebarItem.textContent.includes(RUNTIME_NAME), "Label of item updated");
 
   info("Remove all USB runtimes");
   mocks.removeUSBRuntime(RUNTIME_ID);
