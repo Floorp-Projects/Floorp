@@ -879,7 +879,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/margin
 == css-writing-modes/ortho-htb-alongside-vrl-floats-006.xht css-writing-modes/ortho-htb-alongside-vrl-floats-006-ref.xht
 == css-writing-modes/ortho-htb-alongside-vrl-floats-010.xht css-writing-modes/ortho-htb-alongside-vrl-floats-010-ref.xht
 == css-writing-modes/ortho-htb-alongside-vrl-floats-014.xht css-writing-modes/ortho-htb-alongside-vrl-floats-014-ref.xht
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/outline-inline-block-vrl-006.html css-writing-modes/reference/outline-inline-block-vrl-006.html
+fuzzy-if(OSX,0-1,0-144) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/outline-inline-block-vrl-006.html css-writing-modes/reference/outline-inline-block-vrl-006.html
 == css-writing-modes/outline-inline-vlr-006.html css-writing-modes/reference/outline-inline-vlr-006.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/outline-inline-vrl-006.html css-writing-modes/reference/outline-inline-vrl-006.html
 == css-writing-modes/overconstrained-rel-pos-ltr-left-right-vlr-005.xht css-writing-modes/overconstrained-rel-pos-ltr-left-right-vlr-005-ref.xht
@@ -1034,7 +1034,7 @@ fuzzy-if(OSX||winWidget,0-110,0-1200) == css-writing-modes/table-column-order-00
 fuzzy-if(OSX||winWidget,0-110,0-1200) == css-writing-modes/table-column-order-003.xht css-writing-modes/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,0-110,0-1200) == css-writing-modes/table-column-order-004.xht css-writing-modes/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,0-110,0-1200) == css-writing-modes/table-column-order-005.xht css-writing-modes/block-flow-direction-001-ref.xht
-fuzzy-if(winWidget,0-110,0-1200) fuzzy-if(webrender&&cocoaWidget,1-1,2-2) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/table-column-order-slr-007.xht css-writing-modes/block-flow-direction-001-ref.xht
+fuzzy-if(winWidget,0-110,0-1200) fuzzy-if(OSX,1-1,2-2) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/table-column-order-slr-007.xht css-writing-modes/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,0-110,0-1200) == css-writing-modes/table-column-order-srl-006.xht css-writing-modes/block-flow-direction-001-ref.xht
 == css-writing-modes/table-progression-slr-001.html css-writing-modes/table-progression-slr-001-ref.html
 fails == css-writing-modes/table-progression-slr-002.html css-writing-modes/table-progression-002-ref.html
@@ -1162,7 +1162,7 @@ fails == css-writing-modes/wm-propagation-body-015.xht css-writing-modes/block-f
 fuzzy-if(OSX||winWidget,0-158,0-624) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-lr-002.xht css-writing-modes/reftest/writing-mode-vertical-lr-002-ref.xht
 fuzzy-if(OSX||winWidget,0-158,0-624) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-001.xht css-writing-modes/reftest/writing-mode-vertical-rl-001-ref.xht
 fuzzy-if(OSX||winWidget,0-158,0-624) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-002.xht css-writing-modes/reftest/writing-mode-vertical-rl-002-ref.xht
-fuzzy-if(OSX||winWidget,0-158,0-624) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-003.htm css-writing-modes/writing-mode-vertical-rl-003-ref.htm
+fuzzy-if(OSX||winWidget,0-158,0-719) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-003.htm css-writing-modes/writing-mode-vertical-rl-003-ref.htm
 skip == selectors/any-link-dynamic-001.html selectors/any-link-dynamic-001-ref.html
 needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/focus-within-001.html selectors/focus-within-001-ref.html
 needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/focus-within-002.html selectors/focus-within-001-ref.html
