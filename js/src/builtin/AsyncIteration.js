@@ -21,6 +21,5 @@ function AsyncGeneratorThrow(val) {
 function AsyncGeneratorReturn(val) {
     assert(IsAsyncGeneratorObject(this),
            "ThisArgument must be a generator object for async generators");
-    var rval = { value: val, done: true };
-    return resumeGenerator(this, rval, "return");
+    return resumeGenerator(this, val, "return");
 }

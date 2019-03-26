@@ -381,30 +381,13 @@ MOZ_MUST_USE bool js::AsyncGeneratorResume(
     return AsyncGeneratorAwait(cx, asyncGenObj, thisOrRval);
   }
 
-  // The following code corresponds to the following 3 cases:
-  //   * yield
-  //   * yield*
-  //   * return
-  // For yield and return, property access is done on an internal result
-  // object and it's not observable.
-  // For yield*, it's done on a possibly user-provided result object, and
-  // it's observable.
-  //
-  // Note that IteratorComplete steps in 8.2.1 are done in bytecode.
-
-  // 8.2.1 yield* steps 6.a.vii, 6.b.ii.7, 6.c.ix.
-  RootedObject resultObj(cx, &thisOrRval.toObject());
-  RootedValue value(cx);
-  if (!GetProperty(cx, resultObj, resultObj, cx->names().value, &value)) {
-    return false;
-  }
-
+  // 25.5.3.7, steps 5-6, 9.
   if (asyncGenObj->isAfterYield()) {
-    return AsyncGeneratorYield(cx, asyncGenObj, value);
+    return AsyncGeneratorYield(cx, asyncGenObj, thisOrRval);
   }
 
-  // 11.4.3.2 step 5.d-g.
-  return AsyncGeneratorReturned(cx, asyncGenObj, value);
+  // 25.5.3.2, steps 5.d-g.
+  return AsyncGeneratorReturned(cx, asyncGenObj, thisOrRval);
 }
 
 static const JSFunctionSpec async_iterator_proto_methods[] = {
