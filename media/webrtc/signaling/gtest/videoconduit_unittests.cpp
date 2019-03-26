@@ -307,11 +307,11 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsTmmbr) {
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodec) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
 
   // defaults
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
@@ -355,11 +355,11 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodec) {
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecMaxFps) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
 
   constraints.maxFps = 0;
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
@@ -371,7 +371,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecMaxFps) {
 
   constraints.maxFps = 42;
   VideoCodecConfig codecConfig2(120, "VP8", constraints);
-  codecConfig2.mSimulcastEncodings.push_back(encoding);
+  codecConfig2.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig2);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
@@ -384,11 +384,11 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecMaxFps) {
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecMaxMbps) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
 
   constraints.maxMbps = 0;
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
@@ -401,7 +401,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecMaxMbps) {
 
   constraints.maxMbps = 10000;
   VideoCodecConfig codecConfig2(120, "VP8", constraints);
-  codecConfig2.mSimulcastEncodings.push_back(encoding);
+  codecConfig2.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig2);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
@@ -415,11 +415,11 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecMaxMbps) {
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecDefaults) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
   std::vector<webrtc::VideoStream> videoStreams;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
@@ -442,12 +442,12 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecDefaults) {
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecTias) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
   std::vector<webrtc::VideoStream> videoStreams;
 
   // TIAS
   VideoCodecConfig codecConfigTias(120, "VP8", constraints);
-  codecConfigTias.mSimulcastEncodings.push_back(encoding);
+  codecConfigTias.mEncodings.push_back(encoding);
   codecConfigTias.mTias = 1000000;
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigTias);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -462,7 +462,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecTias) {
 
   // TIAS (too low)
   VideoCodecConfig codecConfigTiasLow(120, "VP8", constraints);
-  codecConfigTiasLow.mSimulcastEncodings.push_back(encoding);
+  codecConfigTiasLow.mEncodings.push_back(encoding);
   codecConfigTiasLow.mTias = 1000;
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigTiasLow);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -479,12 +479,12 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecTias) {
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecMaxBr) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
   std::vector<webrtc::VideoStream> videoStreams;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
   encoding.constraints.maxBr = 50000;
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
@@ -500,7 +500,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecMaxBr) {
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecScaleResolutionBy) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
   std::vector<webrtc::VideoStream> videoStreams;
 
   std::vector<unsigned int> ssrcs = {42, 1729};
@@ -508,9 +508,9 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecScaleResolutionBy) {
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
   encoding.constraints.scaleDownBy = 2;
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   encoding.constraints.scaleDownBy = 4;
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
 
@@ -533,13 +533,13 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecScaleResolutionBy) {
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecCodecMode) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
   std::vector<webrtc::VideoStream> videoStreams;
 
   mVideoConduit->ConfigureCodecMode(webrtc::VideoCodecMode::kScreensharing);
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
@@ -551,13 +551,13 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecCodecMode) {
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecFEC) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
 
   WebrtcGmpPCHandleSetter setter("hi there");
 
   // H264 + FEC
   VideoCodecConfig codecConfig(120, "H264", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   codecConfig.mFECFbSet = true;
   codecConfig.mULPFECPayloadType = 1;
   codecConfig.mREDPayloadType = 2;
@@ -589,7 +589,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecFEC) {
 
   // VP8 + FEC + Nack
   VideoCodecConfig codecConfig2(120, "VP8", constraints);
-  codecConfig2.mSimulcastEncodings.push_back(encoding);
+  codecConfig2.mEncodings.push_back(encoding);
   codecConfig2.mFECFbSet = true;
   codecConfig2.mNackFbTypes.push_back("");
   codecConfig2.mULPFECPayloadType = 1;
@@ -610,10 +610,10 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecFEC) {
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecNack) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
@@ -631,10 +631,10 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecNack) {
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecRids) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
@@ -644,11 +644,11 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecRids) {
   std::vector<unsigned int> ssrcs = {42, 1729};
   mVideoConduit->SetLocalSSRCs(ssrcs);
 
-  codecConfig.mSimulcastEncodings.clear();
+  codecConfig.mEncodings.clear();
   encoding.rid = "1";
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   encoding.rid = "2";
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
@@ -665,9 +665,9 @@ TEST_F(VideoConduitTest, TestOnSinkWantsChanged) {
 
   wants.max_pixel_count = 256000;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   std::vector<webrtc::VideoStream> videoStreams;
 
   codecConfig.mEncodingConstraints.maxFs = 0;
@@ -727,16 +727,16 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastOddScreen) {
 
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
-  VideoCodecConfig::SimulcastEncoding encoding2;
-  VideoCodecConfig::SimulcastEncoding encoding3;
+  VideoCodecConfig::Encoding encoding;
+  VideoCodecConfig::Encoding encoding2;
+  VideoCodecConfig::Encoding encoding3;
   encoding2.constraints.scaleDownBy = 2;
   encoding3.constraints.scaleDownBy = 4;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
-  codecConfig.mSimulcastEncodings.push_back(encoding2);
-  codecConfig.mSimulcastEncodings.push_back(encoding3);
+  codecConfig.mEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding2);
+  codecConfig.mEncodings.push_back(encoding3);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
 
@@ -759,8 +759,8 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastOddScreen) {
   EXPECT_EQ(videoStreams[0].height, 4U);
 
   // Test that we are able to remove the 16-alignment cropping (non-simulcast)
-  codecConfig.mSimulcastEncodings.clear();
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.clear();
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   mVideoConduit->SetLocalSSRCs({42});
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -780,17 +780,17 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastAllScaling) {
 
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
-  VideoCodecConfig::SimulcastEncoding encoding2;
-  VideoCodecConfig::SimulcastEncoding encoding3;
+  VideoCodecConfig::Encoding encoding;
+  VideoCodecConfig::Encoding encoding2;
+  VideoCodecConfig::Encoding encoding3;
   encoding.constraints.scaleDownBy = 2;
   encoding2.constraints.scaleDownBy = 4;
   encoding3.constraints.scaleDownBy = 6;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
-  codecConfig.mSimulcastEncodings.push_back(encoding2);
-  codecConfig.mSimulcastEncodings.push_back(encoding3);
+  codecConfig.mEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding2);
+  codecConfig.mEncodings.push_back(encoding3);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
 
@@ -834,9 +834,9 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastAllScaling) {
   EXPECT_EQ(videoStreams[0].width, 160U);
   EXPECT_EQ(videoStreams[0].height, 88U);
 
-  codecConfig.mSimulcastEncodings[0].constraints.scaleDownBy = 1;
-  codecConfig.mSimulcastEncodings[1].constraints.scaleDownBy = 2;
-  codecConfig.mSimulcastEncodings[2].constraints.scaleDownBy = 4;
+  codecConfig.mEncodings[0].constraints.scaleDownBy = 1;
+  codecConfig.mEncodings[1].constraints.scaleDownBy = 2;
+  codecConfig.mEncodings[2].constraints.scaleDownBy = 4;
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   SendVideoFrame(1280, 720, 4);
@@ -859,16 +859,16 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastScreenshare) {
 
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
-  VideoCodecConfig::SimulcastEncoding encoding2;
-  VideoCodecConfig::SimulcastEncoding encoding3;
+  VideoCodecConfig::Encoding encoding;
+  VideoCodecConfig::Encoding encoding2;
+  VideoCodecConfig::Encoding encoding3;
   encoding2.constraints.scaleDownBy = 2;
   encoding3.constraints.scaleDownBy = 4;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
-  codecConfig.mSimulcastEncodings.push_back(encoding2);
-  codecConfig.mSimulcastEncodings.push_back(encoding3);
+  codecConfig.mEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding2);
+  codecConfig.mEncodings.push_back(encoding3);
   ec =
       mVideoConduit->ConfigureCodecMode(webrtc::VideoCodecMode::kScreensharing);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -884,7 +884,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastScreenshare) {
 TEST_F(VideoConduitTest, TestReconfigureReceiveMediaCodecs) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
   std::vector<UniquePtr<mozilla::VideoCodecConfig>> codecs;
 
   WebrtcGmpPCHandleSetter setter("hi there");
@@ -1041,13 +1041,13 @@ TEST_F(VideoConduitTest, TestReconfigureReceiveMediaCodecs) {
 TEST_F(VideoConduitTest, TestReconfigureSendMediaCodec) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
   std::vector<webrtc::VideoStream> videoStreams;
 
   WebrtcGmpPCHandleSetter setter("hi there");
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
 
@@ -1074,7 +1074,7 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodec) {
 
   // FEC
   VideoCodecConfig codecConfigFEC(120, "VP8", constraints);
-  codecConfigFEC.mSimulcastEncodings.push_back(encoding);
+  codecConfigFEC.mEncodings.push_back(encoding);
   codecConfigFEC.mFECFbSet = true;
   codecConfigFEC.mNackFbTypes.push_back("");
   codecConfigFEC.mULPFECPayloadType = 1;
@@ -1093,7 +1093,7 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodec) {
 
   // H264
   VideoCodecConfig codecConfigH264(120, "H264", constraints);
-  codecConfigH264.mSimulcastEncodings.push_back(encoding);
+  codecConfigH264.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigH264);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
@@ -1103,7 +1103,7 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodec) {
 
   // TIAS
   VideoCodecConfig codecConfigTias(120, "VP8", constraints);
-  codecConfigTias.mSimulcastEncodings.push_back(encoding);
+  codecConfigTias.mEncodings.push_back(encoding);
   codecConfigTias.mTias = 1000000;
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigTias);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -1120,7 +1120,7 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodec) {
   // MaxBr
   VideoCodecConfig codecConfigMaxBr(120, "VP8", constraints);
   encoding.constraints.maxBr = 50000;
-  codecConfigMaxBr.mSimulcastEncodings.push_back(encoding);
+  codecConfigMaxBr.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigMaxBr);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
@@ -1136,7 +1136,7 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodec) {
   VideoCodecConfig codecConfigMaxFs(120, "VP8", constraints);
   codecConfigMaxFs.mEncodingConstraints.maxFs = 3600;
   encoding.constraints.maxBr = 0;
-  codecConfigMaxFs.mSimulcastEncodings.push_back(encoding);
+  codecConfigMaxFs.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigMaxFs);
   ASSERT_EQ(ec, kMediaConduitNoError);
 
@@ -1168,13 +1168,13 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodec) {
 TEST_F(VideoConduitTest, TestReconfigureSendMediaCodecWhileTransmitting) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
   std::vector<webrtc::VideoStream> videoStreams;
 
   WebrtcGmpPCHandleSetter setter("hi there");
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
 
@@ -1203,7 +1203,7 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodecWhileTransmitting) {
 
   // TIAS
   VideoCodecConfig codecConfigTias(120, "VP8", constraints);
-  codecConfigTias.mSimulcastEncodings.push_back(encoding);
+  codecConfigTias.mEncodings.push_back(encoding);
   codecConfigTias.mTias = 1000000;
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigTias);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -1218,7 +1218,7 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodecWhileTransmitting) {
   // MaxBr
   VideoCodecConfig codecConfigMaxBr(120, "VP8", constraints);
   encoding.constraints.maxBr = 50000;
-  codecConfigMaxBr.mSimulcastEncodings.push_back(encoding);
+  codecConfigMaxBr.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigMaxBr);
   ASSERT_EQ(ec, kMediaConduitNoError);
   SendVideoFrame(1280, 720, 1);
@@ -1232,7 +1232,7 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodecWhileTransmitting) {
   VideoCodecConfig codecConfigMaxFs(120, "VP8", constraints);
   codecConfigMaxFs.mEncodingConstraints.maxFs = 3600;
   encoding.constraints.maxBr = 0;
-  codecConfigMaxFs.mSimulcastEncodings.push_back(encoding);
+  codecConfigMaxFs.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigMaxFs);
   ASSERT_EQ(ec, kMediaConduitNoError);
 
@@ -1262,7 +1262,7 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodecWhileTransmitting) {
   VideoCodecConfig codecConfigScaleDownBy(120, "VP8", constraints);
   encoding.constraints.maxFs = 0;
   encoding.constraints.scaleDownBy = 3.7;
-  codecConfigScaleDownBy.mSimulcastEncodings.push_back(encoding);
+  codecConfigScaleDownBy.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigScaleDownBy);
   ASSERT_EQ(ec, kMediaConduitNoError);
 
@@ -1272,7 +1272,7 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodecWhileTransmitting) {
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 4000U);
   ASSERT_EQ(sink->mOnFrameCount, 4U);
 
-  codecConfigScaleDownBy.mSimulcastEncodings[0].constraints.scaleDownBy = 1.3;
+  codecConfigScaleDownBy.mEncodings[0].constraints.scaleDownBy = 1.3;
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigScaleDownBy);
   ASSERT_EQ(ec, kMediaConduitNoError);
 
@@ -1288,11 +1288,11 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodecWhileTransmitting) {
 TEST_F(VideoConduitTest, TestVideoEncode) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
   std::vector<webrtc::VideoStream> videoStreams;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
 
@@ -1326,12 +1326,12 @@ TEST_F(VideoConduitTest, TestVideoEncode) {
 TEST_F(VideoConduitTest, TestVideoEncodeMaxFs) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
   std::vector<webrtc::VideoStream> videoStreams;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
   codecConfig.mEncodingConstraints.maxFs = 3600;
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
 
@@ -1389,13 +1389,13 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFs) {
 TEST_F(VideoConduitTest, DISABLED_TestVideoEncodeMaxWidthAndHeight) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
   std::vector<webrtc::VideoStream> videoStreams;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
   codecConfig.mEncodingConstraints.maxWidth = 1280;
   codecConfig.mEncodingConstraints.maxHeight = 720;
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
 
@@ -1429,13 +1429,13 @@ TEST_F(VideoConduitTest, DISABLED_TestVideoEncodeMaxWidthAndHeight) {
 TEST_F(VideoConduitTest, TestVideoEncodeScaleResolutionBy) {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::Encoding encoding;
   encoding.constraints.scaleDownBy = 2;
   std::vector<webrtc::VideoStream> videoStreams;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
   codecConfig.mEncodingConstraints.maxFs = 3600;
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
 
@@ -1465,17 +1465,17 @@ TEST_F(VideoConduitTest, TestVideoEncodeSimulcastScaleResolutionBy) {
 
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  VideoCodecConfig::SimulcastEncoding encoding;
-  VideoCodecConfig::SimulcastEncoding encoding2;
-  VideoCodecConfig::SimulcastEncoding encoding3;
+  VideoCodecConfig::Encoding encoding;
+  VideoCodecConfig::Encoding encoding2;
+  VideoCodecConfig::Encoding encoding3;
   encoding.constraints.scaleDownBy = 2;
   encoding2.constraints.scaleDownBy = 3;
   encoding3.constraints.scaleDownBy = 4;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
-  codecConfig.mSimulcastEncodings.push_back(encoding2);
-  codecConfig.mSimulcastEncodings.push_back(encoding3);
+  codecConfig.mEncodings.push_back(encoding);
+  codecConfig.mEncodings.push_back(encoding2);
+  codecConfig.mEncodings.push_back(encoding3);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
 

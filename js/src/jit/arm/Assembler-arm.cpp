@@ -1188,8 +1188,8 @@ void Assembler::WriteInstStatic(uint32_t x, uint32_t* dest) {
 }
 
 void Assembler::haltingAlign(int alignment) {
-  // TODO: Implement a proper halting align.
-  nopAlign(alignment);
+  // HLT with payload 0xBAAD
+  m_buffer.align(alignment, 0xE1000070 | (0xBAA << 8) | 0xD);
 }
 
 void Assembler::nopAlign(int alignment) { m_buffer.align(alignment); }
