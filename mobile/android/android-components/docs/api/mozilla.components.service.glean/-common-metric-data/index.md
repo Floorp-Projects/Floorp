@@ -38,4 +38,5 @@ metric types.
 | [StringListMetricType](../-string-list-metric-type/index.md) | `data class StringListMetricType : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording string list metrics. |
 | [StringMetricType](../-string-metric-type/index.md) | `data class StringMetricType : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording string metrics. |
 | [TimespanMetricType](../-timespan-metric-type/index.md) | `data class TimespanMetricType : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording timespans. |
+| [TimingDistributionMetricType](../-timing-distribution-metric-type/index.md) | `data class TimingDistributionMetricType : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording timing distribution metrics. |
 | [UuidMetricType](../-uuid-metric-type/index.md) | `data class UuidMetricType : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording uuids. |

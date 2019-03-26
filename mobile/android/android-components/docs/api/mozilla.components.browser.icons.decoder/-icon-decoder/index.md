@@ -25,4 +25,5 @@ the decoder implementation to return the best [Bitmap](https://developer.android
 
 | Name | Summary |
 |---|---|
+| [AndroidIconDecoder](../-android-icon-decoder/index.md) | `class AndroidIconDecoder : `[`IconDecoder`](./index.md)<br>[IconDecoder](./index.md) that will use Android's [BitmapFactory](https://developer.android.com/reference/android/graphics/BitmapFactory.html) in order to decode the byte data. |
 | [ICOIconDecoder](../-i-c-o-icon-decoder/index.md) | `class ICOIconDecoder : `[`IconDecoder`](./index.md)<br>[IconDecoder](./index.md) implementation for decoding ICO files. |

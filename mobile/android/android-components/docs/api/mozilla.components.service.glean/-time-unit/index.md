@@ -5,7 +5,7 @@
 `enum class TimeUnit` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/TimeUnit.kt#L11)
 
 Enumeration of different resolutions supported by
-the Timespan metric type.
+the Timespan and TimingDistribution metric types.
 
 ### Enum Values
 

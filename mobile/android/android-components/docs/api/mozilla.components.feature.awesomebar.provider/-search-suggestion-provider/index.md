@@ -15,7 +15,7 @@ chips) from the passed in [SearchEngine](../../mozilla.components.browser.search
 
 `fetchClient` - The HTTP client for requesting suggestions from the search engine.
 
-`limit` - The maximum number of suggestions that should be returned.
+`limit` - The maximum number of suggestions that should be returned. It needs to be &gt;= 1.
 
 `mode` - Whether to return a single search suggestion (with chips) or one suggestion per item.
 

@@ -2,7 +2,7 @@
 
 # isWebFont
 
-`fun isWebFont(uri: `[`Uri`](https://developer.android.com/reference/android/net/Uri.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/matcher/UrlMatcher.kt#L207)
+`fun isWebFont(uri: `[`Uri`](https://developer.android.com/reference/android/net/Uri.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/matcher/UrlMatcher.kt#L211)
 
 Checks if the given URI points to a Web font.
 
