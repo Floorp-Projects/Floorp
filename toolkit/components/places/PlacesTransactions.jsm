@@ -67,10 +67,6 @@ var EXPORTED_SYMBOLS = ["PlacesTransactions"];
  *  - index, newIndex: the position of an item in its containing folder,
  *    starting from 0.
  *    integer and PlacesUtils.bookmarks.DEFAULT_INDEX
- *  - annotation: see PlacesUtils.setAnnotationsForItem
- *  - annotations: an array of annotation objects as above.
- *  - excludingAnnotation: a string (annotation name).
- *  - excludingAnnotations: an array of string (annotation names).
  *
  * If a required property is missing in the input object (e.g. not specifying
  * parentGuid for NewBookmark), or if the value for any of the input properties
@@ -885,8 +881,7 @@ DefineTransaction.defineInputProps(["guid", "parentGuid", "newParentGuid"],
                                    DefineTransaction.guidValidate);
 DefineTransaction.defineInputProps(["title", "postData"],
                                    DefineTransaction.strOrNullValidate, null);
-DefineTransaction.defineInputProps(["keyword", "oldKeyword", "oldTag", "tag",
-                                    "excludingAnnotation"],
+DefineTransaction.defineInputProps(["keyword", "oldKeyword", "oldTag", "tag"],
                                    DefineTransaction.strValidate, "");
 DefineTransaction.defineInputProps(["index", "newIndex"],
                                    DefineTransaction.indexValidate,
@@ -897,8 +892,6 @@ DefineTransaction.defineArrayInputProp("guids", "guid");
 DefineTransaction.defineArrayInputProp("urls", "url");
 DefineTransaction.defineArrayInputProp("tags", "tag");
 DefineTransaction.defineArrayInputProp("children", "child");
-DefineTransaction.defineArrayInputProp("excludingAnnotations",
-                                       "excludingAnnotation");
 
 /**
  * Creates items (all types) from a bookmarks tree representation, as defined
@@ -910,9 +903,6 @@ DefineTransaction.defineArrayInputProp("excludingAnnotations",
  * @param [optional] restoring (default: false)
  *        Whether or not the items are restored.  Only in restore mode, are
  *        the guid, dateAdded and lastModified properties honored.
- * @param [optional] excludingAnnotations
- *        Array of annotations names to ignore in aBookmarksTree. This argument
- *        is ignored if aRestoring is set.
  * @note the id, root and charset properties of items in aBookmarksTree are
  *       always ignored.  The index property is ignored for all items but the
  *       root one.
@@ -920,8 +910,7 @@ DefineTransaction.defineArrayInputProp("excludingAnnotations",
  * @resolves to the guid of the new item.
  */
 // TODO: Replace most of this with insertTree.
-function createItemsFromBookmarksTree(tree, restoring = false,
-                                      excludingAnnotations = []) {
+function createItemsFromBookmarksTree(tree, restoring = false) {
   async function createItem(item,
                             parentGuid,
                             index = PlacesUtils.bookmarks.DEFAULT_INDEX) {
@@ -932,7 +921,6 @@ function createItemsFromBookmarksTree(tree, restoring = false,
       info.dateAdded = PlacesUtils.toDate(item.dateAdded);
       info.lastModified = PlacesUtils.toDate(item.lastModified);
     }
-    let annos = item.annos ? [...item.annos] : [];
     let shouldResetLastModified = false;
     switch (item.type) {
       case PlacesUtils.TYPE_X_MOZ_PLACE: {
@@ -972,17 +960,6 @@ function createItemsFromBookmarksTree(tree, restoring = false,
         break;
       }
     }
-    if (annos.length > 0) {
-      if (!restoring && excludingAnnotations.length > 0) {
-        annos = annos.filter(a => !excludingAnnotations.includes(a.name));
-      }
-
-      if (annos.length > 0) {
-        let itemId = await PlacesUtils.promiseItemId(guid);
-        PlacesUtils.setAnnotationsForItem(itemId, annos,
-          Ci.nsINavBookmarksService.SOURCE_DEFAULT, true);
-      }
-    }
 
     if (shouldResetLastModified) {
       let lastModified = PlacesUtils.toDate(item.lastModified);
@@ -1009,7 +986,7 @@ var PT = PlacesTransactions;
  * Transaction for creating a bookmark.
  *
  * Required Input Properties: url, parentGuid.
- * Optional Input Properties: index, title, keyword, annotations, tags.
+ * Optional Input Properties: index, title, keyword, tags.
  *
  * When this transaction is executed, it's resolved to the new bookmark's GUID.
  */
@@ -1053,7 +1030,7 @@ PT.NewBookmark.prototype = Object.seal({
  * Transaction for creating a folder.
  *
  * Required Input Properties: title, parentGuid.
- * Optional Input Properties: index, annotations, children
+ * Optional Input Properties: index, children
  *
  * When this transaction is executed, it's resolved to the new folder's GUID.
  */
@@ -1567,12 +1544,12 @@ PT.RenameTag.prototype = {
  * Transaction for copying an item.
  *
  * Required Input Properties: guid, newParentGuid
- * Optional Input Properties: newIndex, excludingAnnotations.
+ * Optional Input Properties: newIndex.
  */
 PT.Copy = DefineTransaction(["guid", "newParentGuid"],
-                            ["newIndex", "excludingAnnotations"]);
+                            ["newIndex"]);
 PT.Copy.prototype = {
-  async execute({ guid, newParentGuid, newIndex, excludingAnnotations }) {
+  async execute({ guid, newParentGuid, newIndex }) {
     let creationInfo = null;
     try {
       creationInfo = await PlacesUtils.promiseBookmarksTree(guid);
@@ -1583,8 +1560,7 @@ PT.Copy.prototype = {
     creationInfo.parentGuid = newParentGuid;
     creationInfo.index = newIndex;
 
-    let newItemGuid = await createItemsFromBookmarksTree(creationInfo, false,
-                                                         excludingAnnotations);
+    let newItemGuid = await createItemsFromBookmarksTree(creationInfo, false);
     let newItemInfo = null;
     this.undo = async function() {
       if (!newItemInfo) {
