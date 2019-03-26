@@ -88,7 +88,7 @@ class EditToolbar(
         val padding = resources.pxToDp(CANCEL_PADDING_DP)
         setPadding(padding, padding, padding, padding)
         setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_clear)
-        contentDescription = context.getString(R.string.mozac_close_button_description)
+        contentDescription = context.getString(R.string.mozac_clear_button_description)
         scaleType = ImageView.ScaleType.CENTER
 
         setOnClickListener {

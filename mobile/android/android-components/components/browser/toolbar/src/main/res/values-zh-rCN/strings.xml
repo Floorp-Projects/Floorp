@@ -2,5 +2,5 @@
 <resources>
     <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
     <string name="mozac_browser_toolbar_menu_button">菜单</string>
-    <string name="mozac_close_button_description">关闭</string>
+    <string name="mozac_clear_button_description">清除</string>
 </resources>
