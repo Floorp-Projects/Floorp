@@ -1273,6 +1273,7 @@ pub enum PrimitiveInstanceKind {
         /// Handle to the common interned data for this primitive.
         data_handle: PictureDataHandle,
         pic_index: PictureIndex,
+        segment_instance_index: SegmentInstanceIndex,
     },
     /// A run of glyphs, with associated font parameters.
     TextRun {
@@ -1823,6 +1824,17 @@ impl PrimitiveStore {
 
                     let pic = &self.pictures[pic_index.0];
 
+                    // The local rect of pictures is calculated dynamically based on
+                    // the content of children, which may move due to the spatial
+                    // node they are attached to. Other parts of the code (such as
+                    // segment generation) reads the origin from the prim instance,
+                    // so ensure that is kept up to date here.
+                    // TODO(gw): It's unfortunate that the prim origin is duplicated
+                    //           this way. In future, we could perhaps just store the
+                    //           size in the picture primitive, to that there isn't
+                    //           any duplicated data.
+                    prim_instance.prim_origin = pic.local_rect.origin;
+
                     // Similar to above, pop either the clip chain or root entry off the current clip stack.
                     match pic.raster_config {
                         Some(_) => {
@@ -2286,7 +2298,7 @@ impl PrimitiveStore {
         }
 
         match prim_instance.kind {
-            PrimitiveInstanceKind::Picture { pic_index, .. } => {
+            PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, .. } => {
                 let pic = &mut self.pictures[pic_index.0];
                 let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
                 if pic.prepare_for_render(
@@ -2307,6 +2319,29 @@ impl PrimitiveStore {
                             &prim_info.combined_local_clip_rect,
                             frame_context.screen_world_rect,
                             plane_split_anchor,
+                        );
+                    }
+
+                    // If this picture uses segments, ensure the GPU cache is
+                    // up to date with segment local rects.
+                    // TODO(gw): This entire match statement above can now be
+                    //           refactored into prepare_interned_prim_for_render.
+                    if pic.can_use_segments() {
+                        write_segment(
+                            segment_instance_index,
+                            frame_state,
+                            &mut scratch.segments,
+                            &mut scratch.segment_instances,
+                            |request| {
+                                request.push(PremultipliedColorF::WHITE);
+                                request.push(PremultipliedColorF::WHITE);
+                                request.push([
+                                    -1.0,       // -ve means use prim rect for stretch size
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                ]);
+                            }
                         );
                     }
                 } else {
@@ -2622,11 +2657,17 @@ impl PrimitiveStore {
                     frame_context.scene_properties,
                 );
 
-                write_segment(*segment_instance_index, frame_state, scratch, |request| {
-                    prim_data.kind.write_prim_gpu_blocks(
-                        request,
-                    );
-                });
+                write_segment(
+                    *segment_instance_index,
+                    frame_state,
+                    &mut scratch.segments,
+                    &mut scratch.segment_instances,
+                    |request| {
+                        prim_data.kind.write_prim_gpu_blocks(
+                            request,
+                        );
+                    }
+                );
             }
             PrimitiveInstanceKind::YuvImage { data_handle, segment_instance_index, .. } => {
                 let yuv_image_data = &mut data_stores.yuv_image[*data_handle];
@@ -2635,9 +2676,15 @@ impl PrimitiveStore {
                 // cache with any shared template data.
                 yuv_image_data.kind.update(&mut yuv_image_data.common, frame_state);
 
-                write_segment(*segment_instance_index, frame_state, scratch, |request| {
-                    yuv_image_data.kind.write_prim_gpu_blocks(request);
-                });
+                write_segment(
+                    *segment_instance_index,
+                    frame_state,
+                    &mut scratch.segments,
+                    &mut scratch.segment_instances,
+                    |request| {
+                        yuv_image_data.kind.write_prim_gpu_blocks(request);
+                    }
+                );
             }
             PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
                 let prim_data = &mut data_stores.image[*data_handle];
@@ -2736,9 +2783,15 @@ impl PrimitiveStore {
                     }
                 }
 
-                write_segment(image_instance.segment_instance_index, frame_state, scratch, |request| {
-                    image_data.write_prim_gpu_blocks(request);
-                });
+                write_segment(
+                    image_instance.segment_instance_index,
+                    frame_state,
+                    &mut scratch.segments,
+                    &mut scratch.segment_instances,
+                    |request| {
+                        image_data.write_prim_gpu_blocks(request);
+                    },
+                );
             }
             PrimitiveInstanceKind::LinearGradient { data_handle, gradient_index, .. } => {
                 let prim_data = &mut data_stores.linear_grad[*data_handle];
@@ -2915,15 +2968,16 @@ impl PrimitiveStore {
 fn write_segment<F>(
     segment_instance_index: SegmentInstanceIndex,
     frame_state: &mut FrameBuildingState,
-    scratch: &mut PrimitiveScratchBuffer,
+    segments: &mut SegmentStorage,
+    segment_instances: &mut SegmentInstanceStorage,
     f: F,
 ) where F: Fn(&mut GpuDataRequest) {
     debug_assert_ne!(segment_instance_index, SegmentInstanceIndex::INVALID);
     if segment_instance_index != SegmentInstanceIndex::UNUSED {
-        let segment_instance = &mut scratch.segment_instances[segment_instance_index];
+        let segment_instance = &mut segment_instances[segment_instance_index];
 
         if let Some(mut request) = frame_state.gpu_cache.request(&mut segment_instance.gpu_cache_handle) {
-            let segments = &scratch.segments[segment_instance.segments_range];
+            let segments = &segments[segment_instance.segments_range];
 
             f(&mut request);
 
@@ -3176,10 +3230,11 @@ impl PrimitiveInstance {
         segments_store: &mut SegmentStorage,
         segment_instances_store: &mut SegmentInstanceStorage,
     ) {
-        let prim_data = &data_stores.as_common_data(self);
-        let prim_local_rect = LayoutRect::new(
+        // Usually, the primitive rect can be found from information
+        // in the instance and primitive template.
+        let mut prim_local_rect = LayoutRect::new(
             self.prim_origin,
-            prim_data.prim_size,
+            data_stores.as_common_data(self).prim_size,
         );
 
         let segment_instance_index = match self.kind {
@@ -3203,7 +3258,28 @@ impl PrimitiveInstance {
                 }
                 &mut image_instance.segment_instance_index
             }
-            PrimitiveInstanceKind::Picture { .. } |
+            PrimitiveInstanceKind::Picture { ref mut segment_instance_index, pic_index, .. } => {
+                let pic = &mut prim_store.pictures[pic_index.0];
+
+                // If this picture supports segment rendering
+                if pic.can_use_segments() {
+                    // If the segments have been invalidated, ensure the current
+                    // index of segments is invalid. This ensures that the segment
+                    // building logic below will be run.
+                    if !pic.segments_are_valid {
+                        *segment_instance_index = SegmentInstanceIndex::INVALID;
+                        pic.segments_are_valid = true;
+                    }
+
+                    // Override the prim local rect with the dynamically calculated
+                    // local rect for the picture.
+                    prim_local_rect = pic.local_rect;
+
+                    segment_instance_index
+                } else {
+                    return;
+                }
+            }
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
             PrimitiveInstanceKind::ImageBorder { .. } |
@@ -3274,7 +3350,6 @@ impl PrimitiveInstance {
         device_pixel_scale: DevicePixelScale,
     ) -> bool {
         let segments = match self.kind {
-            PrimitiveInstanceKind::Picture { .. } |
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::Clear { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } => {
@@ -3291,6 +3366,18 @@ impl PrimitiveInstance {
 
                 let segment_instance = &segment_instances_store[segment_instance_index];
 
+                &segments_store[segment_instance.segments_range]
+            }
+            PrimitiveInstanceKind::Picture { segment_instance_index, .. } => {
+                // Pictures may not support segment rendering at all (INVALID)
+                // or support segment rendering but choose not to due to size
+                // or some other factor (UNUSED).
+                if segment_instance_index == SegmentInstanceIndex::UNUSED ||
+                   segment_instance_index == SegmentInstanceIndex::INVALID {
+                    return false;
+                }
+
+                let segment_instance = &segment_instances_store[segment_instance_index];
                 &segments_store[segment_instance.segments_range]
             }
             PrimitiveInstanceKind::YuvImage { segment_instance_index, .. } |
