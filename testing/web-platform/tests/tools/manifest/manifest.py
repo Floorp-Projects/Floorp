@@ -281,18 +281,20 @@ class Manifest(object):
                         hash_changed = True
                         if new_type != old_type:
                             del self._data[old_type][rel_path]
+                            if old_type in reftest_types:
+                                reftest_changes = True
                     else:
-                        new_type, manifest_items = old_type, self._data[old_type][rel_path]
-                    if old_type in reftest_types and new_type != old_type:
-                        reftest_changes = True
+                        new_type = old_type
+                        if old_type in reftest_types:
+                            manifest_items = self._data[old_type][rel_path]
                 else:
                     new_type, manifest_items = source_file.manifest_items()
 
-                if new_type in ("reftest", "reftest_node"):
+                if new_type in reftest_types:
                     reftest_nodes.extend((item, file_hash) for item in manifest_items)
                     if is_new or hash_changed:
                         reftest_changes = True
-                else:
+                elif is_new or hash_changed:
                     self._data[new_type][rel_path] = set(manifest_items)
 
                 self._path_hash[rel_path] = (file_hash, new_type)
