@@ -32,18 +32,27 @@
 }
 
 .search-field .img.search {
+  --icon-mask-size: 12px;
+  --icon-inset-inline-start: 6px;
   position: absolute;
   z-index: 1;
-  inset-inline-start: 6px;
   top: calc(50% - 8px);
-  mask-size: 12px;
+  mask-size: var(--icon-mask-size);
   background-color: var(--theme-icon-dimmed-color);
   pointer-events: none;
 }
 
 .search-field.big .img.search {
-  inset-inline-start: 12px;
-  mask-size: 16px;
+  --icon-mask-size: 16px;
+  --icon-inset-inline-start: 12px;
+}
+
+[dir="ltr"] .search-field .img.search {
+  left: var(--icon-inset-inline-start);
+}
+
+[dir="rtl"] .search-field .img.search {
+  right: var(--icon-inset-inline-start);
 }
 
 .search-field .img.loader {
