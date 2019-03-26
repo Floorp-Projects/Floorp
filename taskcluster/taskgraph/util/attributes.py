@@ -43,7 +43,6 @@ _OPTIONAL_ATTRIBUTES = (
     'shipping_product',
     'stub-installer',
     'update-channel',
-    'shippable',
 )
 
 

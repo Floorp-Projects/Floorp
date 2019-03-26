@@ -89,7 +89,7 @@ def make_repackage_signing_description(config, jobs):
         )
 
         build_platform = dep_job.attributes.get('build_platform')
-        is_nightly = dep_job.attributes.get('nightly', dep_job.attributes.get('shippable'))
+        is_nightly = dep_job.attributes.get('nightly')
         signing_cert_scope = get_signing_cert_scope_per_platform(
             build_platform, is_nightly, config
         )

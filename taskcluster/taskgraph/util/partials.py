@@ -18,7 +18,6 @@ PLATFORM_RENAMES = {
     'windows2012-64': 'win64',
     'windows2012-aarch64': 'win64-aarch64',
     'osx-cross': 'macosx64',
-    'osx': 'macosx64',
 }
 
 BALROG_PLATFORM_MAP = {
@@ -81,8 +80,6 @@ def get_balrog_platform_name(platform):
         platform = platform.replace('-nightly', '')
     if '-devedition' in platform:
         platform = platform.replace('-devedition', '')
-    if '-shippable' in platform:
-        platform = platform.replace('-shippable', '')
     return PLATFORM_RENAMES.get(platform, platform)
 
 

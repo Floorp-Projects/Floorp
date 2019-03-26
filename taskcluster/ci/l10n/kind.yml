@@ -21,12 +21,12 @@ kind-dependencies:
 primary-dependency: build
 
 only-for-build-platforms:
+    - linux64-pgo/opt
+    - linux/opt
     - android-api-16/opt
-    - linux64-shippable/opt
-    - linux-shippable/opt
-    - macosx64-shippable/opt
-    - win32-shippable/opt
-    - win64-shippable/opt
+    - macosx64/opt
+    - win32-pgo/opt
+    - win64-pgo/opt
 
 job-template:
     description:
@@ -55,7 +55,7 @@ job-template:
     toolchains:
         by-build-platform:
             default: []
-            macosx64.*:
+            macosx64:
                 - linux64-libdmg
                 - linux64-hfsplus
             android-api-16:
@@ -73,9 +73,9 @@ job-template:
                 android-api-16: mobile
         job-name:
             by-build-platform:
-                linux(?!64).*: linux-opt
+                linux: linux-opt
                 linux64.*: linux64-opt
-                macosx64.*: macosx64-opt
+                macosx64: macosx64-opt
                 win32.*: win32-opt
                 win64.*: win64-opt
                 android-api-16: android-api-16-opt
@@ -95,17 +95,12 @@ job-template:
             by-build-platform:
                 linux64: linux64/opt
                 linux64-pgo: linux64-pgo/opt
-                linux64-shippable: linux64-shippable/opt
                 linux: linux32/opt
-                linux-shippable: linux32-shippable/opt
                 macosx64: osx-cross/opt
-                macosx64-shippable: osx-shippable/opt
                 win32: windows2012-32/opt
                 win32-pgo: windows2012-32-pgo/opt
-                win32-shippable: windows2012-32-shippable/opt
                 win64: windows2012-64/opt
                 win64-pgo: windows2012-64-pgo/opt
-                win64-shippable: windows2012-64-shippable/opt
                 android-api-16: android-4-0-armv7-api16/opt
     env:
         by-build-platform:
@@ -113,7 +108,7 @@ job-template:
                 EN_US_PACKAGE_NAME: target.tar.bz2
                 EN_US_BINARY_URL:
                     artifact-reference: <build-signing/{artifact_prefix}>
-            macosx64.*:
+            macosx64:
                 EN_US_PACKAGE_NAME: target.dmg
                 EN_US_BINARY_URL:
                     artifact-reference: <repackage/{artifact_prefix}>
@@ -128,7 +123,7 @@ job-template:
     mozharness:
         config:
             by-build-platform:
-                linux(?!64).*:
+                linux:
                     - single_locale/firefox.py
                     - single_locale/linux32.py
                     - single_locale/tc_common.py
@@ -138,7 +133,7 @@ job-template:
                     - single_locale/linux64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_linux_common.py
-                macosx64.*:
+                macosx64:
                     - single_locale/firefox.py
                     - single_locale/macosx64.py
                     - single_locale/tc_common.py

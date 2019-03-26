@@ -88,8 +88,7 @@ def make_task_description(config, jobs):
                 add_scope_prefix(config, 'signing:format:{}'.format(format))
             )
 
-        is_nightly = dep_job.attributes.get(
-            'nightly', dep_job.attributes.get('shippable', False))
+        is_nightly = dep_job.attributes.get('nightly', False)
         treeherder = None
         if 'partner' not in config.kind and 'eme-free' not in config.kind:
             treeherder = job.get('treeherder', {})

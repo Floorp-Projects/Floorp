@@ -55,8 +55,8 @@ def loader(kind, path, config, params, loaded_tasks):
 
         if only_attributes:
             config_attrs = set(only_attributes)
-            if not config_attrs & set(task.attributes):
-                # make sure any attribute exists
+            if config_attrs - set(task.attributes):
+                # make sure all attributes exist
                 continue
 
         job = {
