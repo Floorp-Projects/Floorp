@@ -455,7 +455,7 @@ var ExtensionsUI = {
       function setCheckbox(win) {
         let checkbox = win.document.getElementById("addon-incognito-checkbox");
         checkbox.checked = false;
-        checkbox.hidden = allowPrivateBrowsingByDefault || addon.type !== "extension";
+        checkbox.hidden = !(addon.permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS);
       }
       setCheckbox(window);
 
