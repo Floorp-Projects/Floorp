@@ -92,6 +92,7 @@ open class GleanInternalAPI internal constructor () {
         // API. For this reason we're safe to set `initialized = true` right after it.
         initializeCoreMetrics(applicationContext)
 
+        // This must be set before anything that might trigger the sending of pings.
         initialized = true
 
         // Deal with any pending events so we can start recording new ones
