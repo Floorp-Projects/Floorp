@@ -72,7 +72,7 @@ TestArray.addTest(
       .then(function(x) {
         // Deriving less bytes works.
         if (x.byteLength != 2) {
-          throw "should have derived two bytes";
+          throw new Error("should have derived two bytes");
         }
       })
       // Deriving more than the curve yields doesn't.
@@ -257,7 +257,7 @@ TestArray.addTest(
             (tp.crv != x.crv) &&
             (tp.x != x.x) &&
             (tp.y != x.y)) {
-          throw "exported public key doesn't match";
+          throw new Error("exported public key doesn't match");
         }
       }, error(that))
       .then(doExportPriv, error(that))
@@ -341,12 +341,12 @@ TestArray.addTest(
       return crypto.subtle.deriveKey({ name: "ECDH", public: pubKey }, privKey, algDerived, false, ["sign", "verify"])
         .then(function(x) {
           if (!hasKeyFields(x)) {
-            throw "Invalid key; missing field(s)";
+            throw new Error("Invalid key; missing field(s)");
           }
 
           // 512 bit is the default for HMAC-SHA1.
           if (x.algorithm.length != 512) {
-            throw "Invalid key; incorrect length";
+            throw new Error("Invalid key; incorrect length");
           }
 
           return x;
@@ -395,7 +395,7 @@ TestArray.addTest(
 
       return derived.then(function(x) {
         if (!util.memcmp(x, tv.ecdh_p256.spki)) {
-          throw "exported key is invalid";
+          throw new Error("exported key is invalid");
         }
 
         if (keys.length) {

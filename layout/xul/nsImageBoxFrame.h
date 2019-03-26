@@ -41,6 +41,7 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
 
   friend class nsDisplayXULImage;
   NS_DECL_FRAMEARENA_HELPERS(nsImageBoxFrame)
+  NS_DECL_QUERYFRAME
 
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
@@ -79,6 +80,9 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
    * image using the new load flags.
    */
   void UpdateLoadFlags();
+
+  void RestartAnimation();
+  void StopAnimation();
 
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;

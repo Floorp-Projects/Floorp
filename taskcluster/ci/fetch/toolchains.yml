@@ -181,9 +181,9 @@ grcov-osx-x86_64:
   description: grcov binary release
   fetch:
     type: static-url
-    url: https://github.com/mozilla/grcov/releases/download/v0.3.2/grcov-osx-x86_64.tar.bz2
-    sha256: 6a810f782efb207234ef418ab136edd1c0ffa61aa84d8c4545042a6fa3b9dd13
-    size: 915948
+    url: https://github.com/mozilla/grcov/releases/download/v0.4.3/grcov-osx-x86_64.tar.bz2
+    sha256: 801b8d9ea07bbb73602f762a3da20420a299f709534e469ae74f74d486e3cfa8
+    size: 885425
 
 zlib-1.2.11:
   description: zlib 1.2.11 source code

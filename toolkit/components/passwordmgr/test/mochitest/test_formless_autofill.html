@@ -13,7 +13,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("loginFrame").addEventListener("load", (evt) => {
     // Tell the parent to setup test logins.
-    PWMGR_COMMON_PARENT.sendAsyncMessage("setupParent", { selfFilling: true });
+    PWMGR_COMMON_PARENT.sendAsyncMessage("setupParent", { selfFilling: true, testDependsOnDeprecatedLogin: true });
   });
 });
 

@@ -53,7 +53,7 @@ with Files("test/performance/browser_appmenu.js"):
     BUG_COMPONENT = ("Firefox", "Menus")
 
 with Files("test/permissions/**"):
-    BUG_COMPONENT = ("Firefox", "Preferences")
+    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
 with Files("test/plugins/**"):
     BUG_COMPONENT = ("Core", "Plug-ins")
@@ -62,7 +62,7 @@ with Files("test/popupNotifications/**"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
 with Files("test/popups/**"):
-    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
 with Files("test/referrer/**"):
     BUG_COMPONENT = ("Core", "Document Navigation")

@@ -56,9 +56,12 @@ class nsDeckFrame final : public nsBoxFrame {
   void IndexChanged();
   int32_t GetSelectedIndex();
   void HideBox(nsIFrame* aBox);
+  void ShowBox(nsIFrame* aBox);
 
  private:
   int32_t mIndex;
+
+  void Animate(nsIFrame*, bool);
 
 };  // class nsDeckFrame
 

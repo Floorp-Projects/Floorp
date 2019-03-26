@@ -40,14 +40,17 @@ var LoginManagerParent = {
   // to avoid spamming master password prompts on autocomplete searches.
   _lastMPLoginCancelled: Math.NEGATIVE_INFINITY,
 
-  _searchAndDedupeLogins(formOrigin, actionOrigin) {
+  _searchAndDedupeLogins(formOrigin, actionOrigin, {looseActionOriginMatch} = {}) {
     let logins;
+    let matchData = {
+      hostname: formOrigin,
+      schemeUpgrades: LoginHelper.schemeUpgrades,
+    };
+    if (!looseActionOriginMatch) {
+      matchData.formSubmitURL = actionOrigin;
+    }
     try {
-      logins = LoginHelper.searchLoginsWithObject({
-        hostname: formOrigin,
-        formSubmitURL: actionOrigin,
-        schemeUpgrades: LoginHelper.schemeUpgrades,
-      });
+      logins = LoginHelper.searchLoginsWithObject(matchData);
     } catch (e) {
       // Record the last time the user cancelled the MP prompt
       // to avoid spamming them with MP prompts for autocomplete.
@@ -61,10 +64,11 @@ var LoginManagerParent = {
 
     // Dedupe so the length checks below still make sense with scheme upgrades.
     let resolveBy = [
+      "actionOrigin",
       "scheme",
       "timePasswordChanged",
     ];
-    return LoginHelper.dedupeLogins(logins, ["username"], resolveBy, formOrigin);
+    return LoginHelper.dedupeLogins(logins, ["username"], resolveBy, formOrigin, actionOrigin);
   },
 
   // Listeners are added in BrowserGlue.jsm on desktop
@@ -222,7 +226,8 @@ var LoginManagerParent = {
       return;
     }
 
-    let logins = this._searchAndDedupeLogins(formOrigin, actionOrigin);
+    // Autocomplete results do not need to match actionOrigin.
+    let logins = this._searchAndDedupeLogins(formOrigin, actionOrigin, {looseActionOriginMatch: true});
 
     log("sendLoginDataToChild:", logins.length, "deduped logins");
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
@@ -270,7 +275,8 @@ var LoginManagerParent = {
     } else {
       log("Creating new autocomplete search result.");
 
-      logins = this._searchAndDedupeLogins(formOrigin, actionOrigin);
+      // Autocomplete results do not need to match actionOrigin.
+      logins = this._searchAndDedupeLogins(formOrigin, actionOrigin, {looseActionOriginMatch: true});
     }
 
     let matchingLogins = logins.filter(function(fullMatch) {

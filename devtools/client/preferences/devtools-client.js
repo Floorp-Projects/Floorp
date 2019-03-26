@@ -341,6 +341,14 @@ pref("devtools.responsive.showUserAgentInput", false);
 
 // Enable new about:debugging.
 pref("devtools.aboutdebugging.new-enabled", false);
+
+// Show tab debug targets for This Firefox (on by default for local builds).
+#ifdef MOZILLA_OFFICIAL
+  pref("devtools.aboutdebugging.local-tab-debugging", false);
+#else
+  pref("devtools.aboutdebugging.local-tab-debugging", true);
+#endif
+
 // Show process debug targets.
 pref("devtools.aboutdebugging.process-debugging", false);
 // Stringified array of network locations that users can connect to.

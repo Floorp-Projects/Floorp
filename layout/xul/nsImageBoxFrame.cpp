@@ -124,6 +124,9 @@ nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsImageBoxFrame)
+NS_QUERYFRAME_HEAD(nsImageBoxFrame)
+  NS_QUERYFRAME_ENTRY(nsImageBoxFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsLeafBoxFrame)
 
 nsresult nsImageBoxFrame::AttributeChanged(int32_t aNameSpaceID,
                                            nsAtom* aAttribute,
@@ -193,6 +196,16 @@ void nsImageBoxFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   UpdateLoadFlags();
   UpdateImage();
+}
+
+void nsImageBoxFrame::RestartAnimation() { UpdateImage(); }
+
+void nsImageBoxFrame::StopAnimation() {
+  if (mImageRequest && mRequestRegistered) {
+    nsLayoutUtils::DeregisterImageRequest(PresContext(), mImageRequest,
+                                          &mRequestRegistered);
+    mImageRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
+  }
 }
 
 void nsImageBoxFrame::UpdateImage() {

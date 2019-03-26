@@ -5,6 +5,66 @@
 
 from __future__ import absolute_import
 
+from marionette_driver.marionette import Actions
+
+
+class CaretActions(Actions):
+    def __init__(self, marionette):
+        super(CaretActions, self).__init__(marionette)
+        self._reset_action_chain()
+
+    def _reset_action_chain(self):
+        self.mouse_chain = self.sequence("pointer", "pointer_id", {"pointerType": "mouse"})
+        self.key_chain = self.sequence("key", "keyboard_id")
+
+    def flick(self, element, x1, y1, x2, y2, duration=200):
+        """Perform a flick gesture on the target element.
+
+        :param element: The element to perform the flick gesture on.
+        :param x1: Starting x-coordinate of flick, relative to the top left
+                   corner of the element.
+        :param y1: Starting y-coordinate of flick, relative to the top left
+                   corner of the element.
+        :param x2: Ending x-coordinate of flick, relative to the top left
+                   corner of the element.
+        :param y2: Ending y-coordinate of flick, relative to the top left
+                   corner of the element.
+
+        """
+        rect = element.rect
+        el_x, el_y = rect['x'], rect['y']
+
+        # Add element's (x, y) to make the coordinate relative to the viewport.
+        from_x, from_y = int(el_x + x1), int(el_y + y1)
+        to_x, to_y = int(el_x + x2), int(el_y + y2)
+
+        self.mouse_chain.pointer_move(from_x, from_y) \
+                        .pointer_down() \
+                        .pointer_move(to_x, to_y, duration=duration) \
+                        .pointer_up()
+        return self
+
+    def send_keys(self, keys):
+        """Perform a keyDown and keyUp action for each character in `keys`.
+
+        :param keys: String of keys to perform key actions with.
+
+        """
+        self.key_chain.send_keys(keys)
+        return self
+
+    def perform(self):
+        """Perform the action chain built so far to the server side for execution
+        and clears the current chain of actions.
+
+        Warning: This method performs all the mouse actions before all the key
+        actions!
+
+        """
+        self.mouse_chain.perform()
+        self.key_chain.perform()
+        self._reset_action_chain()
+
 
 class SelectionManager(object):
     '''Interface for manipulating the selection and carets of the element.

@@ -7,6 +7,7 @@
 #include "mozilla/Compiler.h"
 #include "mozilla/FloatingPoint.h"
 
+#include <cmath>  // exp2
 #include <float.h>
 #include <math.h>
 
@@ -28,6 +29,8 @@ using mozilla::NumbersAreIdentical;
 using mozilla::PositiveInfinity;
 using mozilla::SpecificNaN;
 using mozilla::UnspecifiedNaN;
+using std::exp2;
+using std::exp2f;
 
 #define A(a) MOZ_RELEASE_ASSERT(a)
 
@@ -308,25 +311,21 @@ static void TestDoublesPredicates() {
   A(NumberEqualsInt32(double(INT32_MAX), &i));
   A(i == INT32_MAX);
 
-  // MSVC seems to compile 2**-1075, which should be half of the smallest
-  // IEEE-754 double precision value, to equal 2**-1074 right now.  This might
-  // be the result of a missing compiler flag to force more-accurate floating
-  // point calculations; bug 1440184 has been filed as a followup to fix this,
-  // so that only the first half of this condition is necessary.
-  A(pow(2.0, -1075.0) == 0.0 ||
-    (MOZ_IS_MSVC && pow(2.0, -1075.0) == pow(2.0, -1074.0)));
+  // Sanity-check that the IEEE-754 double-precision-derived literals used in
+  // testing here work as we intend them to.
+  A(exp2(-1075.0) == 0.0);
+  A(exp2(-1074.0) != 0.0);
 
-  A(pow(2.0, -1074.0) != 0.0);
-  A(!NumberIsInt32(pow(2.0, -1074.0), &i));
-  A(!NumberIsInt32(2 * pow(2.0, -1074.0), &i));
+  A(!NumberIsInt32(exp2(-1074.0), &i));
+  A(!NumberIsInt32(2 * exp2(-1074.0), &i));
   A(!NumberIsInt32(0.5, &i));
-  A(1.0 - pow(2.0, -54.0) == 1.0);
-  A(1.0 - pow(2.0, -53.0) != 1.0);
-  A(!NumberIsInt32(1.0 - pow(2.0, -53.0), &i));
-  A(!NumberIsInt32(1.0 - pow(2.0, -52.0), &i));
-  A(1.0 + pow(2.0, -53.0) == 1.0f);
-  A(1.0 + pow(2.0, -52.0) != 1.0f);
-  A(!NumberIsInt32(1.0 + pow(2.0, -52.0), &i));
+  A(1.0 - exp2(-54.0) == 1.0);
+  A(1.0 - exp2(-53.0) != 1.0);
+  A(!NumberIsInt32(1.0 - exp2(-53.0), &i));
+  A(!NumberIsInt32(1.0 - exp2(-52.0), &i));
+  A(1.0 + exp2(-53.0) == 1.0f);
+  A(1.0 + exp2(-52.0) != 1.0f);
+  A(!NumberIsInt32(1.0 + exp2(-52.0), &i));
   A(!NumberIsInt32(1.5f, &i));
   A(!NumberIsInt32(-double(2147483649), &i));
   A(!NumberIsInt32(double(2147483648), &i));
@@ -626,30 +625,30 @@ static void TestIsFloat32Representable() {
   A(IsFloat32Representable(PositiveInfinity<double>()));
   A(IsFloat32Representable(NegativeInfinity<double>()));
 
-  // MSVC seems to compile 2**-1075, which should be half of the smallest
-  // IEEE-754 double precision value, to equal 2**-1074 right now.  This might
-  // be the result of a missing compiler flag to force more-accurate floating
-  // point calculations; bug 1440184 has been filed as a followup to fix this,
-  // so that only the first half of this condition is necessary.
-  A(pow(2.0, -1075.0) == 0.0 ||
-    (MOZ_IS_MSVC && pow(2.0, -1075.0) == pow(2.0, -1074.0)));
-
-  A(powf(2.0f, -150.0f) == 0.0);
-  A(powf(2.0f, -149.0f) != 0.0);
+  // Sanity-check that the IEEE-754 double-precision-derived literals used in
+  // testing here work as we intend them to.
+  A(exp2(-1075.0) == 0.0);
+  A(exp2(-1074.0) != 0.0);
 
   for (double littleExp = -1074.0; littleExp < -149.0; littleExp++) {
-    // Powers of two below the available range aren't representable.
-    A(!IsFloat32Representable(pow(2.0, littleExp)));
+    // Powers of two representable as doubles but not as floats aren't
+    // representable.
+    A(!IsFloat32Representable(exp2(littleExp)));
   }
+
+  // Sanity-check that the IEEE-754 single-precision-derived literals used in
+  // testing here work as we intend them to.
+  A(exp2f(-150.0f) == 0.0);
+  A(exp2f(-149.0f) != 0.0);
 
   // Exact powers of two within the available range are representable.
   for (double exponent = -149.0; exponent < 128.0; exponent++) {
-    A(IsFloat32Representable(pow(2.0, exponent)));
+    A(IsFloat32Representable(exp2(exponent)));
   }
 
   // Powers of two above the available range aren't representable.
   for (double bigExp = 128.0; bigExp < 1024.0; bigExp++) {
-    A(!IsFloat32Representable(pow(2.0, bigExp)));
+    A(!IsFloat32Representable(exp2(bigExp)));
   }
 
   // Various denormal (i.e. super-small) doubles with MSB and LSB as far apart
@@ -660,11 +659,11 @@ static void TestIsFloat32Representable() {
   // containing (biased) 1, as |oneTooSmall| and |widestPossible| happen still
   // to be correct for that exponent due to the extra bit of precision in the
   // implicit-one bit.
-  double oneTooSmall = pow(2.0, -150.0);
+  double oneTooSmall = exp2(-150.0);
   for (double denormExp = -149.0;
        denormExp < 1 - double(FloatingPoint<double>::kExponentBias) + 1;
        denormExp++) {
-    double baseDenorm = pow(2.0, denormExp);
+    double baseDenorm = exp2(denormExp);
     double tooWide = baseDenorm + oneTooSmall;
     A(!IsFloat32Representable(tooWide));
 

@@ -1174,9 +1174,10 @@ var LoginManagerContent = {
    *
    * @param {LoginForm} form
    * @param {nsILoginInfo[]} foundLogins an array of nsILoginInfo that could be
-            used for the form
+   *        used for the form, including ones with a different form action origin
+   *        which are only used when the fill is userTriggered
    * @param {Set} recipes a set of recipes that could be used to affect how the
-            form is filled
+   *        form is filled
    * @param {Object} [options = {}] a list of options for this method
    * @param {HTMLInputElement} [options.inputElement = null] an optional target
    *        input element we want to fill
@@ -1224,8 +1225,9 @@ var LoginManagerContent = {
     };
 
     try {
-      // Nothing to do if we have no matching logins available,
-      // and there isn't a need to show the insecure form warning.
+      // Nothing to do if we have no matching (excluding form action
+      // checks) logins available, and there isn't a need to show
+      // the insecure form warning.
       if (foundLogins.length == 0 &&
           (InsecurePasswordUtils.isFormSecure(form) ||
           !LoginHelper.showInsecureFieldWarning)) {
@@ -1279,6 +1281,19 @@ var LoginManagerContent = {
       if (usernameField) {
         this._formFillService.markAsLoginManagerField(usernameField);
         usernameField.addEventListener("keydown", observer);
+      }
+
+      if (!userTriggered) {
+        // Only autofill logins that match the form's action. In the above code
+        // we have attached autocomplete for logins that don't match the form action.
+        foundLogins = foundLogins.filter(l => {
+          return LoginHelper.isOriginMatching(l.formSubmitURL,
+                                              LoginHelper.getFormActionOrigin(form),
+                                              {
+                                                schemeUpgrades: LoginHelper.schemeUpgrades,
+                                                acceptWildcardMatch: true,
+                                              });
+        });
       }
 
       // Nothing to do if we have no matching logins available.

@@ -9,8 +9,7 @@
 using namespace mozilla::layers;
 using namespace mozilla;
 
-void YUVBufferGenerator::Init(const mozilla::gfx::IntSize& aSize)
-{
+void YUVBufferGenerator::Init(const mozilla::gfx::IntSize& aSize) {
   mImageSize = aSize;
 
   int yPlaneLen = aSize.width * aSize.height;
@@ -27,29 +26,23 @@ void YUVBufferGenerator::Init(const mozilla::gfx::IntSize& aSize)
   memset(mSourceBuffer.Elements() + yPlaneLen, 0x80, cbcrPlaneLen);
 }
 
-mozilla::gfx::IntSize YUVBufferGenerator::GetSize() const
-{
-  return mImageSize;
-}
+mozilla::gfx::IntSize YUVBufferGenerator::GetSize() const { return mImageSize; }
 
-already_AddRefed<Image> YUVBufferGenerator::GenerateI420Image()
-{
+already_AddRefed<Image> YUVBufferGenerator::GenerateI420Image() {
   return do_AddRef(CreateI420Image());
 }
 
-already_AddRefed<Image> YUVBufferGenerator::GenerateNV12Image()
-{
+already_AddRefed<Image> YUVBufferGenerator::GenerateNV12Image() {
   return do_AddRef(CreateNV12Image());
 }
 
-already_AddRefed<Image> YUVBufferGenerator::GenerateNV21Image()
-{
+already_AddRefed<Image> YUVBufferGenerator::GenerateNV21Image() {
   return do_AddRef(CreateNV21Image());
 }
 
-Image* YUVBufferGenerator::CreateI420Image()
-{
-  PlanarYCbCrImage* image = new RecyclingPlanarYCbCrImage(new BufferRecycleBin());
+Image* YUVBufferGenerator::CreateI420Image() {
+  PlanarYCbCrImage* image =
+      new RecyclingPlanarYCbCrImage(new BufferRecycleBin());
   PlanarYCbCrData data;
   data.mPicSize = mImageSize;
 
@@ -85,8 +78,7 @@ Image* YUVBufferGenerator::CreateI420Image()
   return image;
 }
 
-Image* YUVBufferGenerator::CreateNV12Image()
-{
+Image* YUVBufferGenerator::CreateNV12Image() {
   NVImage* image = new NVImage();
   PlanarYCbCrData data;
   data.mPicSize = mImageSize;
@@ -122,8 +114,7 @@ Image* YUVBufferGenerator::CreateNV12Image()
   return image;
 }
 
-Image* YUVBufferGenerator::CreateNV21Image()
-{
+Image* YUVBufferGenerator::CreateNV21Image() {
   NVImage* image = new NVImage();
   PlanarYCbCrData data;
   data.mPicSize = mImageSize;
