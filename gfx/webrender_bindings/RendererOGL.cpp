@@ -130,8 +130,6 @@ bool RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
                          aReadbackBuffer.ref().length());
   }
 
-  mScreenshotGrabber.MaybeGrabScreenshot(mRenderer, size.ToUnknownSize());
-
   mCompositor->EndFrame();
 
   mCompositor->GetWidget()->PostRender(&widgetContext);
@@ -145,8 +143,6 @@ bool RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
   // Clear frame start time
   mFrameStartTime = TimeStamp();
 #endif
-
-  mScreenshotGrabber.MaybeProcessQueue(mRenderer);
 
   // TODO: Flush pending actions such as texture deletions/unlocks and
   //       textureHosts recycling.
