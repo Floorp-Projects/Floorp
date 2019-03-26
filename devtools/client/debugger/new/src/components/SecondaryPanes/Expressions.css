@@ -94,8 +94,15 @@
 
 .expression-container__close-btn {
   position: absolute;
-  inset-inline-end: 0px;
-  top: 1px;
+  top: calc(50% - 8px);
+}
+
+[dir="ltr"] .expression-container__close-btn {
+  right: 0;
+}
+
+[dir="rtl"] .expression-container__close-btn {
+  left: 0;
 }
 
 .expression-content {
