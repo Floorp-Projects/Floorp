@@ -226,6 +226,17 @@ var UrlbarTestUtils = {
     let urlbar = getUrlbarAbstraction(win);
     return urlbar.isPopupOpen();
   },
+
+  /**
+   * Returns the userContextId (container id) for the last search.
+   * @param {object} win The browser window
+   * @returns {Promise} resolved when fetching is complete
+   * @resolves {number} a userContextId
+   */
+  promiseUserContextId(win) {
+    let urlbar = getUrlbarAbstraction(win);
+    return urlbar.promiseUserContextId();
+  },
 };
 
 /**
@@ -338,6 +349,15 @@ class UrlbarAbstraction {
       () => this.urlbar.controller.searchStatus >=
               Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH,
       "waiting urlbar search to complete", 100, 50);
+  }
+
+  async promiseUserContextId() {
+    const defaultId = Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
+    if (this.quantumbar) {
+      let context = await this.urlbar.lastQueryContextPromise;
+      return context.userContextId || defaultId;
+    }
+    return this.urlbar.userContextId || defaultId;
   }
 
   async promiseResultAt(index) {
