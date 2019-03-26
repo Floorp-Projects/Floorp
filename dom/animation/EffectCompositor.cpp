@@ -335,18 +335,22 @@ void EffectCompositor::ClearRestyleRequestsFor(Element* aElement) {
 
   PseudoStyleType pseudoType = aElement->GetPseudoElementType();
   if (pseudoType == PseudoStyleType::NotPseudo) {
-    PseudoElementHashEntry::KeyType notPseudoKey = {aElement,
-                                                    PseudoStyleType::NotPseudo};
-    PseudoElementHashEntry::KeyType beforePseudoKey = {aElement,
-                                                       PseudoStyleType::before};
-    PseudoElementHashEntry::KeyType afterPseudoKey = {aElement,
-                                                      PseudoStyleType::after};
+    PseudoElementHashEntry::KeyType notPseudoKey =
+      {aElement, PseudoStyleType::NotPseudo};
+    PseudoElementHashEntry::KeyType beforePseudoKey =
+      {aElement, PseudoStyleType::before};
+    PseudoElementHashEntry::KeyType afterPseudoKey =
+      {aElement, PseudoStyleType::after};
+    PseudoElementHashEntry::KeyType markerPseudoKey =
+      {aElement, PseudoStyleType::marker};
 
     elementsToRestyle.Remove(notPseudoKey);
     elementsToRestyle.Remove(beforePseudoKey);
     elementsToRestyle.Remove(afterPseudoKey);
+    elementsToRestyle.Remove(markerPseudoKey);
   } else if (pseudoType == PseudoStyleType::before ||
-             pseudoType == PseudoStyleType::after) {
+             pseudoType == PseudoStyleType::after ||
+             pseudoType == PseudoStyleType::marker) {
     Element* parentElement = aElement->GetParentElement();
     MOZ_ASSERT(parentElement);
     PseudoElementHashEntry::KeyType key = {parentElement, pseudoType};
@@ -444,9 +448,13 @@ bool EffectCompositor::GetServoAnimationRule(
     return nsLayoutUtils::GetAfterPseudo(aElement);
   }
 
+  if (aPseudoType == PseudoStyleType::marker) {
+    return nsLayoutUtils::GetMarkerPseudo(aElement);
+  }
+
   MOZ_ASSERT_UNREACHABLE(
       "Should not try to get the element to restyle for "
-      "a pseudo other that :before or :after");
+      "a pseudo other that :before, :after or ::marker");
   return nullptr;
 }
 
@@ -520,7 +528,8 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame) {
 
   if (pseudoType != PseudoStyleType::NotPseudo &&
       pseudoType != PseudoStyleType::before &&
-      pseudoType != PseudoStyleType::after) {
+      pseudoType != PseudoStyleType::after &&
+      pseudoType != PseudoStyleType::marker) {
     return result;
   }
 
@@ -530,7 +539,8 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame) {
   }
 
   if (pseudoType == PseudoStyleType::before ||
-      pseudoType == PseudoStyleType::after) {
+      pseudoType == PseudoStyleType::after ||
+      pseudoType == PseudoStyleType::marker) {
     content = content->GetParent();
     if (!content) {
       return result;
@@ -722,7 +732,8 @@ bool EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
   // of the root element later in this function, but for pseudo elements the
   // element in mElementsToRestyle is the parent of the pseudo.
   if (aRoot && (aRoot->IsGeneratedContentContainerForBefore() ||
-                aRoot->IsGeneratedContentContainerForAfter())) {
+                aRoot->IsGeneratedContentContainerForAfter() ||
+                aRoot->IsGeneratedContentContainerForMarker())) {
     aRoot = aRoot->GetParentElement();
   }
 
@@ -865,7 +876,8 @@ bool EffectCompositor::PreTraverse(dom::Element* aElement,
   bool found = false;
   if (aPseudoType != PseudoStyleType::NotPseudo &&
       aPseudoType != PseudoStyleType::before &&
-      aPseudoType != PseudoStyleType::after) {
+      aPseudoType != PseudoStyleType::after &&
+      aPseudoType != PseudoStyleType::marker) {
     return found;
   }
 

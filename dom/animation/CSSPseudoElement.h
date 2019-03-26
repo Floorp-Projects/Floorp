@@ -69,7 +69,7 @@ class CSSPseudoElement final : public nsWrapperCache {
       dom::Element* aElement, PseudoStyleType aType);
 
  private:
-  // Only ::before and ::after are supported.
+  // Only ::before, ::after and ::marker are supported.
   CSSPseudoElement(dom::Element* aElement, PseudoStyleType aType);
 
   static nsAtom* GetCSSPseudoElementPropertyAtom(PseudoStyleType aType);

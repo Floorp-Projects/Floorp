@@ -47,7 +47,7 @@ class CommonAnimationManager {
   /**
    * Stop animations on the element. This method takes the real element
    * rather than the element for the generated content for animations on
-   * ::before and ::after.
+   * ::before, ::after and ::marker.
    */
   void StopAnimationsForElement(dom::Element* aElement,
                                 PseudoStyleType aPseudoType) {
@@ -123,6 +123,10 @@ class OwningElementRef final {
 
     return mTarget.mPseudoType == PseudoStyleType::NotPseudo ||
            (mTarget.mPseudoType == PseudoStyleType::before &&
+            aOther.mTarget.mPseudoType == PseudoStyleType::after) ||
+           (mTarget.mPseudoType == PseudoStyleType::marker &&
+            aOther.mTarget.mPseudoType == PseudoStyleType::before) ||
+           (mTarget.mPseudoType == PseudoStyleType::marker &&
             aOther.mTarget.mPseudoType == PseudoStyleType::after);
   }
 

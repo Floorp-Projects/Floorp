@@ -255,6 +255,9 @@ struct AnimationTypeTraits<dom::CSSAnimation> {
   static nsAtom* AfterPropertyAtom() {
     return nsGkAtoms::animationsOfAfterProperty;
   }
+  static nsAtom* MarkerPropertyAtom() {
+    return nsGkAtoms::animationsOfMarkerProperty;
+  }
 };
 
 } /* namespace mozilla */
