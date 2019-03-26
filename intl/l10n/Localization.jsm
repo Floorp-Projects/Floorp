@@ -191,6 +191,18 @@ function defaultGenerateBundlesSync(resourceIds) {
   return L10nRegistry.generateBundlesSync(appLocales, resourceIds);
 }
 
+function maybeReportErrorToGecko(error) {
+  if (AppConstants.NIGHTLY_BUILD || Cu.isInAutomation) {
+    if (Cu.isInAutomation) {
+      // We throw a string, rather than Error
+      // to allow the C++ Promise handler
+      // to clone it
+      throw error;
+    }
+    console.warn(error);
+  }
+}
+
 /**
  * The `Localization` class is a central high-level API for vanilla
  * JavaScript use of Fluent.
@@ -246,23 +258,24 @@ class Localization {
    * @private
    */
   async formatWithFallback(keys, method) {
-    const translations = [];
+    const translations = new Array(keys.length);
+    let hasAtLeastOneBundle = false;
 
     for await (const bundle of this.bundles) {
+      hasAtLeastOneBundle = true;
       const missingIds = keysFromBundle(method, bundle, keys, translations);
 
       if (missingIds.size === 0) {
         break;
       }
 
-      if (AppConstants.NIGHTLY_BUILD || Cu.isInAutomation) {
-        const locale = bundle.locales[0];
-        const ids = Array.from(missingIds).join(", ");
-        if (Cu.isInAutomation) {
-          throw new Error(`Missing translations in ${locale}: ${ids}`);
-        }
-        console.warn(`Missing translations in ${locale}: ${ids}`);
-      }
+      const locale = bundle.locales[0];
+      const ids = Array.from(missingIds).join(", ");
+      maybeReportErrorToGecko(`[fluent] Missing translations in ${locale}: ${ids}.`);
+    }
+
+    if (!hasAtLeastOneBundle) {
+      maybeReportErrorToGecko(`[fluent] Request for keys failed because no resource bundles got generated.\n keys: ${JSON.stringify(keys)}.\n resourceIds: ${JSON.stringify(this.resourceIds)}.`);
     }
 
     return translations;
@@ -416,23 +429,24 @@ class LocalizationSync extends Localization {
   }
 
   formatWithFallback(keys, method) {
-    const translations = [];
+    const translations = new Array(keys.length);
+    let hasAtLeastOneBundle = false;
 
     for (const bundle of this.bundles) {
+      hasAtLeastOneBundle = true;
       const missingIds = keysFromBundle(method, bundle, keys, translations);
 
       if (missingIds.size === 0) {
         break;
       }
 
-      if (AppConstants.NIGHTLY_BUILD || Cu.isInAutomation) {
-        const locale = bundle.locales[0];
-        const ids = Array.from(missingIds).join(", ");
-        if (Cu.isInAutomation) {
-          throw new Error(`Missing translations in ${locale}: ${ids}`);
-        }
-        console.warn(`Missing translations in ${locale}: ${ids}`);
-      }
+      const locale = bundle.locales[0];
+      const ids = Array.from(missingIds).join(", ");
+      maybeReportErrorToGecko(`[fluent] Missing translations in ${locale}: ${ids}.`);
+    }
+
+    if (!hasAtLeastOneBundle) {
+      maybeReportErrorToGecko(`[fluent] Request for keys failed because no resource bundles got generated.\n keys: ${JSON.stringify(keys)}.\n resourceIds: ${JSON.stringify(this.resourceIds)}.`);
     }
 
     return translations;
@@ -554,11 +568,16 @@ function keysFromBundle(method, bundle, keys, translations) {
     if (bundle.hasMessage(id)) {
       messageErrors.length = 0;
       translations[i] = method(bundle, messageErrors, id, args);
-      // XXX: Report resolver errors
+      if (messageErrors.length > 0) {
+        const locale = bundle.locales[0];
+        const errors = messageErrors.join(", ");
+        maybeReportErrorToGecko(`[fluent][resolver] errors in ${locale}/${id}: ${errors}.`);
+      }
     } else {
       missingIds.add(id);
     }
   });
+
 
   return missingIds;
 }
