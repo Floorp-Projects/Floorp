@@ -546,8 +546,15 @@ nsresult JsepSessionImpl::CreateAnswerMsection(
   MOZ_ASSERT(transceiver.GetMid() == msection.GetAttributeList().GetMid());
 
   SdpSetupAttribute::Role role;
-  rv = DetermineAnswererSetupRole(remoteMsection, &role);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (transceiver.mTransport.mDtls && !IsIceRestarting()) {
+    role = (transceiver.mTransport.mDtls->mRole ==
+            JsepDtlsTransport::kJsepDtlsClient)
+               ? SdpSetupAttribute::kActive
+               : SdpSetupAttribute::kPassive;
+  } else {
+    rv = DetermineAnswererSetupRole(remoteMsection, &role);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   rv = AddTransportAttributes(&msection, role);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1072,6 +1079,7 @@ nsresult JsepSessionImpl::FinalizeTransport(const SdpAttributeList& remote,
   if (!transport->mIce || transport->mIce->mUfrag != remote.GetIceUfrag() ||
       transport->mIce->mPwd != remote.GetIcePwd()) {
     UniquePtr<JsepIceTransport> ice = MakeUnique<JsepIceTransport>();
+    transport->mDtls = nullptr;
 
     // We do sanity-checking for these in ParseSdp
     ice->mUfrag = remote.GetIceUfrag();
