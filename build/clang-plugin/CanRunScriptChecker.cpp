@@ -131,7 +131,22 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
               // matcher (none of the built-in matchers seem to match on the
               // thing being cast for an implicitCastExpr), but it's simpler to
               // just use ignoreTrivials to strip off the cast.
-              ignoreTrivials(KnownLiveBase))));
+              ignoreTrivials(KnownLiveBase))),
+      // Taking a pointer to a live reference.  We explicitly want to exclude
+      // things that are not of type reference-to-refcounted or type refcounted,
+      // because if someone takes a pointer to a pointer to refcounted or a
+      // pointer to a smart ptr and passes those in to a callee that definitely
+      // does not guarantee liveness; in fact the callee could modify those
+      // things!  In practice they would be the wrong type anyway, though, so
+      // it's hard to add a test for this.
+      unaryOperator(
+          hasOperatorName("&"),
+          hasUnaryOperand(allOf(
+              anyOf(
+                  hasType(references(Refcounted)),
+                  hasType(Refcounted)),
+              ignoreTrivials(KnownLiveBase))))
+      );
 
   auto KnownLive = anyOf(
       // Anything above, of course.

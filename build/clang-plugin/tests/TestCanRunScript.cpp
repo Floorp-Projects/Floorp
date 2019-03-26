@@ -520,6 +520,14 @@ MOZ_CAN_RUN_SCRIPT void test_ternary_12(RefCountedBase* arg) {
   test_ref(arg ? *arg : *AllowConstexprMembers::mRefCounted);
 }
 
+MOZ_CAN_RUN_SCRIPT void test_ternary_13(RefCountedBase* arg1, RefCountedBase& arg2) {
+  (arg1 ? arg1 : &arg2)->method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_44(RefCountedBase* arg1, RefCountedBase& arg2) {
+  test2(arg1 ? arg1 : &arg2);
+}
+
 MOZ_CAN_RUN_SCRIPT void test_ternary_13(bool arg) {
   (arg ?
    AllowConstexprMembers::mRefCounted :
@@ -542,4 +550,12 @@ MOZ_CAN_RUN_SCRIPT void test_ternary_16(bool arg) {
   test_ref(arg ?
 	   *AllowConstexprMembers::mRefCounted :
 	   *AllowConstexprMembers::mRefCounted2);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_pointer_to_ref_1(RefCountedBase& arg) {
+  (&arg)->method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_pointer_to_ref_2(RefCountedBase& arg) {
+  test2(&arg);
 }
