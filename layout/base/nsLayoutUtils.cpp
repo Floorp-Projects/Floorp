@@ -9595,8 +9595,7 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
         //    system established by the `viewBox` attribute.
         // 2. The dimension of the reference box is set to the width and height
         //    values of the `viewBox` attribute.
-        SVGViewBox* viewBox = svgElement->GetViewBox();
-        const SVGViewBoxRect& value = viewBox->GetAnimValue();
+        const SVGViewBoxRect& value = svgElement->GetViewBox()->GetAnimValue();
         r = nsRect(nsPresContext::CSSPixelsToAppUnits(value.x),
                    nsPresContext::CSSPixelsToAppUnits(value.y),
                    nsPresContext::CSSPixelsToAppUnits(value.width),
