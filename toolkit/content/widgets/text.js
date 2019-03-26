@@ -9,7 +9,7 @@
 {
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-class MozTextLink extends MozElementMixin(XULTextElement) {
+class MozTextLink extends MozElements.MozElementMixin(XULTextElement) {
   constructor() {
     super();
 

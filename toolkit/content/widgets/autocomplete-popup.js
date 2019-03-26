@@ -7,7 +7,7 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-const MozPopupElement = MozElementMixin(XULPopupElement);
+const MozPopupElement = MozElements.MozElementMixin(XULPopupElement);
 MozElements.MozAutocompleteRichlistboxPopup = class MozAutocompleteRichlistboxPopup extends MozPopupElement {
   constructor() {
     super();
