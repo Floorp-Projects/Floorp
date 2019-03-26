@@ -21,6 +21,9 @@ indexeddb_test(
       configurable: true,
       set: t.step_func((value) => { setter_called = true; }),
     });
+    t.add_cleanup(function() {
+      delete Object.prototype['10'];
+    });
     request.onerror = t.unreached_func('request should not fail');
     request.onsuccess = t.step_func(() => {
       const result = request.result;
@@ -31,8 +34,6 @@ indexeddb_test(
           'Result should have own-property overriding prototype setter.');
       assert_equals(result[10], 'key',
                     'Result should have expected property.');
-
-      delete Object.prototype['10'];
       t.done();
     });
   },
@@ -53,6 +54,9 @@ indexeddb_test(
       configurable: true,
       set: t.step_func(function(value) { setter_called = true; }),
     });
+    t.add_cleanup(function() {
+      delete Object.prototype['id'];
+    });
     request.onerror = t.unreached_func('request should not fail');
     request.onsuccess = t.step_func(function() {
         const result = request.result;
@@ -63,8 +67,6 @@ indexeddb_test(
           'Result should have own-property overriding prototype setter.');
       assert_equals(result.id, 1,
                     'Own property should match primary key generator value');
-
-      delete Object.prototype['id'];
       t.done();
     });
   },
@@ -81,6 +83,11 @@ indexeddb_test(
     const request = tx.objectStore('store').get(1);
 
     Object.prototype.a = {b: {c: 'on proto'}};
+    t.add_cleanup(function() {
+      delete Object.prototype.a;
+    });
+    assert_equals(Object.prototype.a.b.c, 'on proto',
+                  'Prototype should be configured for test');
 
     request.onerror = t.unreached_func('request should not fail');
     request.onsuccess = t.step_func(function() {
@@ -94,7 +101,7 @@ indexeddb_test(
       assert_equals(result.a.b.c, 1,
                     'Own property should match primary key generator value');
       assert_equals(Object.prototype.a.b.c, 'on proto',
-                  'Prototype should not be modified');
+                    'Prototype should not be modified');
       t.done();
     });
   },
