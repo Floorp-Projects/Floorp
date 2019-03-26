@@ -1064,6 +1064,14 @@ mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
       Preferences::GetBool("media.rdd-process.enabled", false)) {
     RDDProcessManager* rdd = RDDProcessManager::Get();
     if (rdd) {
+      // If there is already an RDDChild, then we've already launched the
+      // RDD process.  We don't need to do anything else.  Specifically,
+      // we want to avoid calling CreateContentBridge again because that
+      // causes the RemoteDecoderManagerParent to rebuild needlessly.
+      if (rdd->GetRDDChild()) {
+        return IPC_OK();
+      }
+
       rdd->LaunchRDDProcess();
 
       bool rddOpened = rdd->CreateContentBridge(OtherPid(), aEndpoint);
