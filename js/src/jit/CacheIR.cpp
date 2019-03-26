@@ -5742,8 +5742,7 @@ bool CompareIRGenerator::tryAttachStringNumber(ValOperandId lhsId,
 
 bool CompareIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
-  MOZ_ASSERT(IsEqualityOp(op_) || op_ == JSOP_LE || op_ == JSOP_LT ||
-             op_ == JSOP_GE || op_ == JSOP_GT);
+  MOZ_ASSERT(IsEqualityOp(op_) || IsRelationalOp(op_));
 
   AutoAssertNoPendingException aanpe(cx_);
 

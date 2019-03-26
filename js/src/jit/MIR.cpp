@@ -3473,9 +3473,8 @@ MCompare::CompareType MCompare::determineCompareType(JSOp op, MDefinition* left,
     return Compare_Object;
   }
 
-  // Handle string comparisons. (Relational string compares are still
-  // unsupported).
-  if (!relationalEq && lhs == MIRType::String && rhs == MIRType::String) {
+  // Handle string comparisons.
+  if (lhs == MIRType::String && rhs == MIRType::String) {
     return Compare_String;
   }
 

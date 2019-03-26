@@ -8045,10 +8045,26 @@ void CodeGenerator::emitCompareS(LInstruction* lir, JSOp op, Register left,
   if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
     ool = oolCallVM<Fn, jit::StringsEqual<true>>(lir, ArgList(left, right),
                                                  StoreRegisterTo(output));
-  } else {
-    MOZ_ASSERT(op == JSOP_NE || op == JSOP_STRICTNE);
+  } else if (op == JSOP_NE || op == JSOP_STRICTNE) {
     ool = oolCallVM<Fn, jit::StringsEqual<false>>(lir, ArgList(left, right),
                                                   StoreRegisterTo(output));
+  } else if (op == JSOP_LT) {
+    ool = oolCallVM<Fn, jit::StringsCompare<true>>(lir, ArgList(left, right),
+                                                   StoreRegisterTo(output));
+  } else if (op == JSOP_LE) {
+    // Push the operands in reverse order for JSOP_LE:
+    // - |left <= right| is implemented as |right >= left|.
+    ool = oolCallVM<Fn, jit::StringsCompare<false>>(lir, ArgList(right, left),
+                                                    StoreRegisterTo(output));
+  } else if (op == JSOP_GT) {
+    // Push the operands in reverse order for JSOP_GT:
+    // - |left > right| is implemented as |right < left|.
+    ool = oolCallVM<Fn, jit::StringsCompare<true>>(lir, ArgList(right, left),
+                                                   StoreRegisterTo(output));
+  } else {
+    MOZ_ASSERT(op == JSOP_GE);
+    ool = oolCallVM<Fn, jit::StringsCompare<false>>(lir, ArgList(left, right),
+                                                    StoreRegisterTo(output));
   }
 
   masm.compareStrings(op, left, right, output, ool->entry());
