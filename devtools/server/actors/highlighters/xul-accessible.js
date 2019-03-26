@@ -338,10 +338,38 @@ class XULWindowAccessibleHighlighter {
   }
 
   /**
+   * Public API method to temporarily hide accessible bounds for things like
+   * color contrast calculation.
+   */
+  hideAccessibleBounds() {
+    if (this.container.hasAttribute("hidden")) {
+      return;
+    }
+
+    this._hideAccessibleBounds();
+    this._shouldRestoreBoundsVisibility = true;
+  }
+
+  /**
+   * Public API method to show accessible bounds in case they were temporarily
+   * hidden.
+   */
+  showAccessibleBounds() {
+    if (this._shouldRestoreBoundsVisibility) {
+      this._showAccessibleBounds();
+    }
+  }
+
+  /**
    * Show accessible bounds highlighter.
    */
   _showAccessibleBounds() {
+    this._shouldRestoreBoundsVisibility = null;
     if (this.container) {
+      if (!this.currentNode || !this.highlighterEnv.window) {
+        return;
+      }
+
       this.container.removeAttribute("hidden");
     }
   }
@@ -350,6 +378,7 @@ class XULWindowAccessibleHighlighter {
    * Hide accessible bounds highlighter.
    */
   _hideAccessibleBounds() {
+    this._shouldRestoreBoundsVisibility = null;
     if (this.container) {
       this.container.setAttribute("hidden", "true");
     }
