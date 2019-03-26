@@ -5,6 +5,9 @@
     <title>Click targets the nearest common ancestor</title>
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
+    <script src="/resources/testdriver.js"></script>
+    <script src="/resources/testdriver-actions.js"></script>
+    <script src="/resources/testdriver-vendor.js"></script>
     <style>
     div {
       padding: 10px;
@@ -70,6 +73,25 @@
       });
       test_click_target.done();
     });
+
+    // Inject mouse events.
+    var actions = new test_driver.Actions();
+    actions.pointerMove(0, 0, {origin: document.getElementById('red_div')})
+           .pointerDown()
+           .pointerMove(0, 0, {origin: document.getElementById('blue_div')})
+           .pointerUp()
+           .pointerMove(0, 0, {origin: document.getElementById('button1')})
+           .pointerDown()
+           .pointerMove(0, 0, {origin: document.getElementById('button2')})
+           .pointerUp()
+           .pointerMove(0, 0, {origin: document.getElementById('link1')})
+           .pointerDown()
+           .pointerMove(0, 0, {origin: document.getElementById('link2')})
+           .pointerUp()
+           .pointerMove(0, 0, {origin: document.getElementById('done')})
+           .pointerDown()
+           .pointerUp()
+           .send();
     </script>
   </body>
 </html>
