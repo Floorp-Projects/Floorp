@@ -209,8 +209,6 @@ TEST(CSPParser, Directives) {
       "script-src 'sha256-a'" },
     { "script-src 'sha256-siVR8vAcqP06h2ppeNwqgjr0yZ6yned4X2VF84j4GmI='",
       "script-src 'sha256-siVR8vAcqP06h2ppeNwqgjr0yZ6yned4X2VF84j4GmI='" },
-    { "require-sri-for script style",
-      "require-sri-for script style"},
     { "script-src 'nonce-foo' 'unsafe-inline' ",
       "script-src 'nonce-foo' 'unsafe-inline'" },
     { "script-src 'nonce-foo' 'strict-dynamic' 'unsafe-inline' https:  ",
@@ -287,8 +285,6 @@ TEST(CSPParser, IgnoreUpperLowerCasePolicies) {
       "upgrade-insecure-requests" },
     { "sanDBox alloW-foRMs",
       "sandbox allow-forms"},
-    { "require-SRI-for sCript stYle",
-      "require-sri-for script style"},
       // clang-format on
   };
 
@@ -553,8 +549,6 @@ TEST(CSPParser, PoliciesWithInvalidSrc) {
       "connect-src 'none'" },
     { "script-src https://foo.com/%$",
       "script-src 'none'" },
-    { "require-SRI-for script elephants",
-      "require-sri-for script"},
     { "sandbox    foo",
       "sandbox"},
       // clang-format on
@@ -576,10 +570,10 @@ TEST(CSPParser, BadPolicies) {
     { "defaut-src asdf", "" },
     { "default-src: aaa", "" },
     { "asdf http://test.com", ""},
-    { "require-sri-for", ""},
-    { "require-sri-for foo", ""},
     { "report-uri", ""},
     { "report-uri http://:foo", ""},
+    { "require-sri-for", ""},
+    { "require-sri-for style", ""},
       // clang-format on
   };
 

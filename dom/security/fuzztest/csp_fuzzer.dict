@@ -41,7 +41,6 @@
 "upgrade-insecure-requests"
 "child-src"
 "block-all-mixed-content"
-"require-sri-for"
 "sandbox"
 "worker-src"
 "plugin-types"

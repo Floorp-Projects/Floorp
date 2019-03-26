@@ -679,12 +679,6 @@ nsCSPContext::LogViolationDetails(
                             SCRIPT_HASH_VIOLATION_OBSERVER_TOPIC);
       CASE_CHECK_AND_REPORT(HASH_STYLE, STYLESHEET, aContent, CSP_UNSAFE_INLINE,
                             STYLE_HASH_VIOLATION_OBSERVER_TOPIC);
-      CASE_CHECK_AND_REPORT(REQUIRE_SRI_FOR_STYLE, STYLESHEET,
-                            NS_LITERAL_STRING(""), CSP_REQUIRE_SRI_FOR,
-                            REQUIRE_SRI_STYLE_VIOLATION_OBSERVER_TOPIC);
-      CASE_CHECK_AND_REPORT(REQUIRE_SRI_FOR_SCRIPT, SCRIPT,
-                            NS_LITERAL_STRING(""), CSP_REQUIRE_SRI_FOR,
-                            REQUIRE_SRI_SCRIPT_VIOLATION_OBSERVER_TOPIC);
 
       default:
         NS_ASSERTION(false, "LogViolationDetails with invalid type");
@@ -1383,22 +1377,6 @@ nsresult nsCSPContext::AsyncReportViolation(
   }
 
   NS_DispatchToMainThread(task.forget());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSPContext::RequireSRIForType(nsContentPolicyType aContentType,
-                                bool* outRequiresSRIForType) {
-  EnsureIPCPoliciesRead();
-  *outRequiresSRIForType = false;
-  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
-    if (mPolicies[i]->hasDirective(REQUIRE_SRI_FOR)) {
-      if (mPolicies[i]->requireSRIForType(aContentType)) {
-        *outRequiresSRIForType = true;
-        return NS_OK;
-      }
-    }
-  }
   return NS_OK;
 }
 
