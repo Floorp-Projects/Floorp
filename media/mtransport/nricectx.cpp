@@ -427,6 +427,11 @@ void NrIceCtx::trickle_cb(void *arg, nr_ice_ctx *ice_ctx,
     return;
   }
 
+  if (!candidate) {
+    s->SignalCandidate(s, "", stream->ufrag);
+    return;
+  }
+
   // Format the candidate.
   char candidate_str[NR_ICE_MAX_ATTRIBUTE_SIZE];
   int r = nr_ice_format_candidate_attribute(candidate, candidate_str,

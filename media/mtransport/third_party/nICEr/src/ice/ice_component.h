@@ -87,6 +87,7 @@ int nr_ice_component_create(struct nr_ice_media_stream_ *stream, int component_i
 int nr_ice_component_destroy(nr_ice_component **componentp);
 int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *component);
 void nr_ice_component_stop_gathering(nr_ice_component *component);
+int nr_ice_component_is_done_gathering(nr_ice_component *comp);
 int nr_ice_component_maybe_prune_candidate(nr_ice_ctx *ctx, nr_ice_component *comp, nr_ice_candidate *c1, int *was_pruned);
 int nr_ice_component_pair_candidate(nr_ice_peer_ctx *pctx, nr_ice_component *pcomp, nr_ice_candidate *lcand, int pair_all_remote);
 int nr_ice_component_pair_candidates(nr_ice_peer_ctx *pctx, nr_ice_component *lcomp, nr_ice_component *pcomp);
