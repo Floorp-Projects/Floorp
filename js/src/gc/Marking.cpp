@@ -2079,6 +2079,7 @@ bool MarkStack::setCapacityForMode(JSGCMode mode) {
     case JSGC_MODE_ZONE:
       capacity = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
       break;
+    case JSGC_MODE_INCREMENTAL:
     case JSGC_MODE_ZONE_INCREMENTAL:
       capacity = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
       break;
