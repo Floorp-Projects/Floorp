@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /* We can remove the outline since we do add our own focus style on nodes */
+/* We can remove the outline since we do add our own focus style on nodes */
 .tree:focus {
   outline: none;
 }
@@ -35,7 +35,7 @@
   display: inline-block;
   width: 12px;
   margin-inline-start: 5px;
-  border-inline-start: 1px solid #A2D1FF;
+  border-inline-start: 1px solid #a2d1ff;
   flex-shrink: 0;
 }
 
@@ -47,7 +47,7 @@
 /* For non expandable root nodes, we don't have .tree-indent elements, so we declare
    the margin on the start of the node */
 .tree-node[data-expandable="false"][aria-level="1"] {
-  padding-inline-start: 15px
+  padding-inline-start: 15px;
 }
 
 .tree .tree-node[data-expandable="true"] {
@@ -135,6 +135,7 @@ html[dir="rtl"] .tree-node button:not(.expanded) {
 }
 
 .split-box.vert > .splitter {
+  /* prettier-ignore */
   min-width: calc(var(--devtools-splitter-inline-start-width) +
     var(--devtools-splitter-inline-end-width) + 1px);
 
@@ -148,6 +149,7 @@ html[dir="rtl"] .tree-node button:not(.expanded) {
 }
 
 .split-box.horz > .splitter {
+  /* prettier-ignore */
   min-height: calc(var(--devtools-splitter-top-width) +
     var(--devtools-splitter-bottom-width) + 1px);
   border-top-width: var(--devtools-splitter-top-width);
