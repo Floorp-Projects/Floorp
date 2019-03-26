@@ -11,9 +11,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.testing.WorkManagerTestInitHelper
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers
 import mozilla.components.concept.fetch.MutableHeaders
@@ -197,9 +194,7 @@ internal fun triggerWorkManager() {
         isWorkScheduled(PingUploadWorker.PING_WORKER_TAG))
 
     // Since WorkManager does not properly run in tests, simulate the work being done
-    GlobalScope.launch(Dispatchers.IO) {
-        PingUploadWorker.uploadPings()
-    }
+    PingUploadWorker.uploadPings()
 }
 
 /**
