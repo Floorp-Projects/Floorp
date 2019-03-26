@@ -215,6 +215,12 @@ extern void CERT_DestroyCertificate(CERTCertificate *cert);
 */
 extern CERTCertificate *CERT_DupCertificate(CERTCertificate *c);
 
+/* Access the DER of the certificate. This only creates a reference to the DER
+ * in the outparam not a copy.  To avoid the pointer becoming invalid, use
+ * CERT_DupCertificate() and keep a reference to the duplicate alive.
+ */
+extern SECStatus CERT_GetCertificateDer(const CERTCertificate *c, SECItem *der);
+
 /*
 ** Create a new certificate request. This result must be wrapped with an
 ** CERTSignedData to create a signed certificate request.

@@ -23,6 +23,7 @@
 gtest_init()
 {
   cd "$(dirname "$1")"
+  pwd
   SOURCE_DIR="$PWD"/../..
   if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
       cd ../common
@@ -30,11 +31,14 @@ gtest_init()
   fi
 
   SCRIPTNAME=gtests.sh
+  . "${QADIR}"/common/certsetup.sh
 
   if [ -z "${CLEANUP}" ] ; then   # if nobody else is responsible for
     CLEANUP="${SCRIPTNAME}"       # cleaning this script will do it
   fi
 
+  mkdir -p "${GTESTDIR}"
+  cd "${GTESTDIR}"
 }
 
 ########################## gtest_start #############################
@@ -48,20 +52,22 @@ gtest_start()
       html_unknown "Skipping $i (not built)"
       continue
     fi
-    GTESTDIR="${HOSTDIR}/$i"
+    DIR="${GTESTDIR}/$i"
     html_head "$i"
-    if [ ! -d "$GTESTDIR" ]; then
-      mkdir -p "$GTESTDIR"
-      echo "${BINDIR}/certutil" -N -d "$GTESTDIR" --empty-password 2>&1
-      "${BINDIR}/certutil" -N -d "$GTESTDIR" --empty-password 2>&1
+    if [ ! -d "$DIR" ]; then
+      mkdir -p "$DIR"
+      echo "${BINDIR}/certutil" -N -d "$DIR" --empty-password 2>&1
+      "${BINDIR}/certutil" -N -d "$DIR" --empty-password 2>&1
+
+      PROFILEDIR="$DIR" make_cert dummy p256 sign
     fi
-    cd "$GTESTDIR"
-    GTESTREPORT="$GTESTDIR/report.xml"
-    PARSED_REPORT="$GTESTDIR/report.parsed"
+    pushd "$DIR"
+    GTESTREPORT="$DIR/report.xml"
+    PARSED_REPORT="$DIR/report.parsed"
     echo "executing $i"
     "${BINDIR}/$i" "${SOURCE_DIR}/gtests/freebl_gtest/kat/Hash_DRBG.rsp" \
-                 -d "$GTESTDIR" -w --gtest_output=xml:"${GTESTREPORT}" \
-                                   --gtest_filter="${GTESTFILTER:-*}"
+                 -d "$DIR" -w --gtest_output=xml:"${GTESTREPORT}" \
+                              --gtest_filter="${GTESTFILTER:-*}"
     html_msg $? 0 "$i run successfully"
     echo "test output dir: ${GTESTREPORT}"
     echo "executing sed to parse the xml report"
@@ -76,14 +82,14 @@ gtest_start()
         html_failed_ignore_core "$name"
       fi
     done
+    popd
   done
 }
 
 gtest_cleanup()
 {
   html "</TABLE><BR>"
-  cd "${QADIR}"
-  . common/cleanup.sh
+  . "${QADIR}"/common/cleanup.sh
 }
 
 ################## main #################################################

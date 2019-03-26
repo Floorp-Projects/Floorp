@@ -981,13 +981,13 @@ tls13_RecoverWrappedSharedSecret(sslSocket *ss, sslSessionID *sid)
     wrappedMS.len = sid->u.ssl3.keys.wrapped_master_secret_len;
 
     /* unwrap the "master secret" which is actually RMS. */
-    ss->ssl3.hs.resumptionMasterSecret = PK11_UnwrapSymKeyWithFlags(
+    ss->ssl3.hs.resumptionMasterSecret = ssl_unwrapSymKey(
         wrapKey, sid->u.ssl3.masterWrapMech,
         NULL, &wrappedMS,
         CKM_SSL3_MASTER_KEY_DERIVE,
         CKA_DERIVE,
         tls13_GetHashSizeForHash(hashType),
-        CKF_SIGN | CKF_VERIFY);
+        CKF_SIGN | CKF_VERIFY, ss->pkcs11PinArg);
     PK11_FreeSymKey(wrapKey);
     if (!ss->ssl3.hs.resumptionMasterSecret) {
         return SECFailure;

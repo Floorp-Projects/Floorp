@@ -92,23 +92,32 @@ CheckX86CPUSupport()
 #endif /* NSS_X86_OR_X64 */
 
 /* clang-format off */
-#if (defined(__aarch64__) || defined(__arm__)) && !defined(__ANDROID__)
+#if defined(__aarch64__) || defined(__arm__)
 #ifndef __has_include
 #define __has_include(x) 0
 #endif
 #if (__has_include(<sys/auxv.h>) || defined(__linux__)) && \
     defined(__GNUC__) && __GNUC__ >= 2 && defined(__ELF__)
+/* This might be conflict with host compiler */
+#if !defined(__ANDROID__)
 #include <sys/auxv.h>
+#endif
 extern unsigned long getauxval(unsigned long type) __attribute__((weak));
 #else
 static unsigned long (*getauxval)(unsigned long) = NULL;
-#define AT_HWCAP2 0
-#define AT_HWCAP 0
 #endif /* defined(__GNUC__) && __GNUC__ >= 2 && defined(__ELF__)*/
-#endif /* (defined(__aarch64__) || defined(__arm__)) && !defined(__ANDROID__) */
+
+#ifndef AT_HWCAP2
+#define AT_HWCAP2 26
+#endif
+#ifndef AT_HWCAP
+#define AT_HWCAP 16
+#endif
+
+#endif /* defined(__aarch64__) || defined(__arm__) */
 /* clang-format on */
 
-#if defined(__aarch64__) && !defined(__ANDROID__)
+#if defined(__aarch64__)
 // Defines from hwcap.h in Linux kernel - ARM64
 #ifndef HWCAP_AES
 #define HWCAP_AES (1 << 3)
@@ -138,9 +147,9 @@ CheckARMSupport()
     /* aarch64 must support NEON. */
     arm_neon_support_ = disable_arm_neon == NULL;
 }
-#endif /* defined(__aarch64__) && !defined(__ANDROID__) */
+#endif /* defined(__aarch64__) */
 
-#if defined(__arm__) && !defined(__ANDROID__)
+#if defined(__arm__)
 // Defines from hwcap.h in Linux kernel - ARM
 /*
  * HWCAP flags - for elf_hwcap (in kernel) and AT_HWCAP
@@ -165,23 +174,58 @@ CheckARMSupport()
 #define HWCAP2_SHA2 (1 << 3)
 #endif
 
+PRBool
+GetNeonSupport()
+{
+    char *disable_arm_neon = PR_GetEnvSecure("NSS_DISABLE_ARM_NEON");
+    if (disable_arm_neon) {
+        return PR_FALSE;
+    }
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+    // Compiler generates NEON instruction as default option.
+    // If no getauxval, compiler generate NEON instruction by default,
+    // we should allow NOEN support.
+    return PR_TRUE;
+#elif !defined(__ANDROID__)
+    // Android's cpu-features.c detects features by the following logic
+    //
+    // - Call getauxval(AT_HWCAP)
+    // - Parse /proc/self/auxv if getauxval is nothing or returns 0
+    // - Parse /proc/cpuinfo if both cannot detect features
+    //
+    // But we don't use it for Android since Android document
+    // (https://developer.android.com/ndk/guides/cpu-features) says
+    // one problem with AT_HWCAP sometimes devices (Nexus 4 and emulator)
+    // are mistaken for IDIV.
+    if (getauxval) {
+        return (getauxval(AT_HWCAP) & HWCAP_NEON);
+    }
+#endif /* defined(__ARM_NEON) || defined(__ARM_NEON__) */
+    return PR_FALSE;
+}
+
 void
 CheckARMSupport()
 {
-    char *disable_arm_neon = PR_GetEnvSecure("NSS_DISABLE_ARM_NEON");
     char *disable_hw_aes = PR_GetEnvSecure("NSS_DISABLE_HW_AES");
     if (getauxval) {
+        // Android's cpu-features.c uses AT_HWCAP2 for newer features.
+        // AT_HWCAP2 is implemented on newer devices / kernel, so we can trust
+        // it since cpu-features.c doesn't have workaround / fallback.
+        // Also, AT_HWCAP2 is supported by glibc 2.18+ on Linux/arm, If
+        // AT_HWCAP2 isn't supported by glibc or Linux kernel, getauxval will
+        // returns 0.
         long hwcaps = getauxval(AT_HWCAP2);
         arm_aes_support_ = hwcaps & HWCAP2_AES && disable_hw_aes == NULL;
         arm_pmull_support_ = hwcaps & HWCAP2_PMULL;
         arm_sha1_support_ = hwcaps & HWCAP2_SHA1;
         arm_sha2_support_ = hwcaps & HWCAP2_SHA2;
-        arm_neon_support_ = hwcaps & HWCAP_NEON && disable_arm_neon == NULL;
     }
+    arm_neon_support_ = GetNeonSupport();
 }
-#endif /* defined(__arm__) && !defined(__ANDROID__) */
+#endif /* defined(__arm__) */
 
-// Enable when Firefox can use it.
+// Enable when Firefox can use it for Android API 16 and 17.
 // #if defined(__ANDROID__) && (defined(__arm__) || defined(__aarch64__))
 // #include <cpu-features.h>
 // void
@@ -262,7 +306,7 @@ FreeblInit(void)
 {
 #ifdef NSS_X86_OR_X64
     CheckX86CPUSupport();
-#elif (defined(__aarch64__) || defined(__arm__)) && !defined(__ANDROID__)
+#elif (defined(__aarch64__) || defined(__arm__))
     CheckARMSupport();
 #endif
     return PR_SUCCESS;
