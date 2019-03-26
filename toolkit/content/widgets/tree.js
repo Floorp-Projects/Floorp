@@ -506,7 +506,7 @@
 
   customElements.define("treecols", MozTreecols);
 
-  class MozTree extends BaseControlMixin(MozElementMixin(XULTreeElement)) {
+  class MozTree extends MozElements.BaseControlMixin(MozElements.MozElementMixin(XULTreeElement)) {
     constructor() {
       super();
 

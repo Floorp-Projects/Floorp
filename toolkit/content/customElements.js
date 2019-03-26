@@ -4,7 +4,7 @@
 
  // This file defines these globals on the window object.
  // Define them here so that ESLint can find them:
-/* globals BaseControlMixin, MozElementMixin, MozXULElement, MozElements */
+/* globals MozXULElement, MozElements */
 
 "use strict";
 
@@ -46,7 +46,7 @@ gXULDOMParser.forceEnableXULXBL();
 
 const MozElements = {};
 
-const MozElementMixin = Base => class MozElement extends Base {
+MozElements.MozElementMixin = Base => class MozElement extends Base {
   /*
    * A declarative way to wire up attribute inheritance and automatically generate
    * the `observedAttributes` getter.  For example, if you returned:
@@ -374,7 +374,7 @@ const MozElementMixin = Base => class MozElement extends Base {
   }
 };
 
-const MozXULElement = MozElementMixin(XULElement);
+const MozXULElement = MozElements.MozElementMixin(XULElement);
 
 /**
  * Given an object, add a proxy that reflects interface implementations
@@ -402,7 +402,7 @@ function getInterfaceProxy(obj) {
   return obj._customInterfaceProxy;
 }
 
-const BaseControlMixin = Base => {
+MozElements.BaseControlMixin = Base => {
   class BaseControl extends Base {
     get disabled() {
       return this.getAttribute("disabled") == "true";
@@ -433,9 +433,9 @@ const BaseControlMixin = Base => {
                                 [Ci.nsIDOMXULControlElement]);
   return BaseControl;
 };
-MozElements.BaseControl = BaseControlMixin(MozXULElement);
+MozElements.BaseControl = MozElements.BaseControlMixin(MozXULElement);
 
-const BaseTextMixin = Base => class extends BaseControlMixin(Base) {
+const BaseTextMixin = Base => class extends MozElements.BaseControlMixin(Base) {
   set label(val) {
     this.setAttribute("label", val);
     return val;
@@ -490,8 +490,6 @@ const BaseTextMixin = Base => class extends BaseControlMixin(Base) {
 MozElements.BaseText = BaseTextMixin(MozXULElement);
 
 // Attach the base class to the window so other scripts can use it:
-window.BaseControlMixin = BaseControlMixin;
-window.MozElementMixin = MozElementMixin;
 window.MozXULElement = MozXULElement;
 window.MozElements = MozElements;
 
