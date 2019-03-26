@@ -49,19 +49,26 @@ enum PromiseHandler {
   PromiseHandlerAsyncFunctionAwaitedFulfilled,
   PromiseHandlerAsyncFunctionAwaitedRejected,
 
-  // Async Iteration proposal 4.1.
+  // ES2019 draft rev 49b781ec80117b60f73327ef3054703a3111e40c
+  // 6.2.3.1.1 Await Fulfilled Functions
+  // 6.2.3.1.2 Await Rejected Functions
   PromiseHandlerAsyncGeneratorAwaitedFulfilled,
   PromiseHandlerAsyncGeneratorAwaitedRejected,
 
-  // Async Iteration proposal 11.4.3.5.1-2.
+  // ES2019 draft rev 49b781ec80117b60f73327ef3054703a3111e40c
+  // 25.5.3.5.1 AsyncGeneratorResumeNext Return Processor Fulfilled Functions
+  // 25.5.3.5.2 AsyncGeneratorResumeNext Return Processor Rejected Functions
   PromiseHandlerAsyncGeneratorResumeNextReturnFulfilled,
   PromiseHandlerAsyncGeneratorResumeNextReturnRejected,
 
-  // Async Iteration proposal 11.4.3.7 steps 8.c-e.
+  // ES2019 draft rev 49b781ec80117b60f73327ef3054703a3111e40c
+  // 25.5.3.7 AsyncGeneratorYield, steps 8.c-e.
   PromiseHandlerAsyncGeneratorYieldReturnAwaitedFulfilled,
   PromiseHandlerAsyncGeneratorYieldReturnAwaitedRejected,
 
-  // Async Iteration proposal 11.1.3.2.5.
+  // ES2019 draft rev 49b781ec80117b60f73327ef3054703a3111e40c
+  // 25.1.4.2.5 Async-from-Sync Iterator Value Unwrap Functions
+  //
   // Async-from-Sync iterator handlers take the resolved value and create new
   // iterator objects.  To do so it needs to forward whether the iterator is
   // done. In spec, this is achieved via the [[Done]] internal slot. We
@@ -1645,7 +1652,7 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp) {
 
       bool done =
           handlerNum == PromiseHandlerAsyncFromSyncIteratorValueUnwrapDone;
-      // Async Iteration proposal 11.1.3.2.5 step 1.
+      // 25.1.4.2.5 Async-from-Sync Iterator Value Unwrap Functions, steps 1-2.
       JSObject* resultObj = CreateIterResultObject(cx, argument, done);
       if (!resultObj) {
         return false;
