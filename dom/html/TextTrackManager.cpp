@@ -23,10 +23,12 @@
 
 mozilla::LazyLogModule gTextTrackLog("WebVTT");
 
-#define WEBVTT_LOG(msg, ...) \
-  MOZ_LOG(gTextTrackLog, LogLevel::Debug, ("TextTrackManager=%p, " msg, this, ##__VA_ARGS__))
-#define WEBVTT_LOGV(msg, ...) \
-  MOZ_LOG(gTextTrackLog, LogLevel::Verbose, ("TextTrackManager=%p, " msg, this, ##__VA_ARGS__))
+#define WEBVTT_LOG(msg, ...)              \
+  MOZ_LOG(gTextTrackLog, LogLevel::Debug, \
+          ("TextTrackManager=%p, " msg, this, ##__VA_ARGS__))
+#define WEBVTT_LOGV(msg, ...)               \
+  MOZ_LOG(gTextTrackLog, LogLevel::Verbose, \
+          ("TextTrackManager=%p, " msg, this, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {
@@ -155,7 +157,8 @@ already_AddRefed<TextTrack> TextTrackManager::AddTextTrack(
       aKind, aLabel, aLanguage, aMode, aReadyState, aTextTrackSource,
       CompareTextTracks(mMediaElement));
   WEBVTT_LOG("AddTextTrack %p kind %" PRIu32 " Label %s Language %s",
-             track.get(), static_cast<uint32_t>(aKind), NS_ConvertUTF16toUTF8(aLabel).get(),
+             track.get(), static_cast<uint32_t>(aKind),
+             NS_ConvertUTF16toUTF8(aLabel).get(),
              NS_ConvertUTF16toUTF8(aLanguage).get());
   AddCues(track);
   ReportTelemetryForTrack(track);
@@ -220,8 +223,7 @@ void TextTrackManager::RemoveTextTrack(TextTrack* aTextTrack,
   // Remove the cues in mNewCues belong to aTextTrack.
   TextTrackCueList* removeCueList = aTextTrack->GetCues();
   if (removeCueList) {
-    WEBVTT_LOGV("RemoveTextTrack removeCuesNum=%d",
-                removeCueList->Length());
+    WEBVTT_LOGV("RemoveTextTrack removeCuesNum=%d", removeCueList->Length());
     for (uint32_t i = 0; i < removeCueList->Length(); ++i) {
       mNewCues->RemoveCue(*((*removeCueList)[i]));
     }
@@ -755,6 +757,8 @@ void TextTrackManager::TimeMarchesOn() {
   for (uint32_t i = 0; i < missedCues->Length(); ++i) {
     TextTrackCue* cue = (*missedCues)[i];
     if (cue) {
+      WEBVTT_LOG("Prepare 'enter' event for cue %p [%f, %f] in missing cues",
+                 cue, cue->StartTime(), cue->EndTime());
       SimpleTextTrackEvent* event = new SimpleTextTrackEvent(
           NS_LITERAL_STRING("enter"), cue->StartTime(), cue->GetTrack(), cue);
       eventList.InsertElementSorted(
@@ -770,6 +774,8 @@ void TextTrackManager::TimeMarchesOn() {
     if (cue->GetActive() || missedCues->IsCueExist(cue)) {
       double time =
           cue->StartTime() > cue->EndTime() ? cue->StartTime() : cue->EndTime();
+      WEBVTT_LOG("Prepare 'exit' event for cue %p [%f, %f] in other cues", cue,
+                 cue->StartTime(), cue->EndTime());
       SimpleTextTrackEvent* event = new SimpleTextTrackEvent(
           NS_LITERAL_STRING("exit"), time, cue->GetTrack(), cue);
       eventList.InsertElementSorted(
@@ -784,6 +790,8 @@ void TextTrackManager::TimeMarchesOn() {
   for (uint32_t i = 0; i < currentCues->Length(); ++i) {
     TextTrackCue* cue = (*currentCues)[i];
     if (!cue->GetActive()) {
+      WEBVTT_LOG("Prepare 'enter' event for cue %p [%f, %f] in current cues",
+                 cue, cue->StartTime(), cue->EndTime());
       SimpleTextTrackEvent* event = new SimpleTextTrackEvent(
           NS_LITERAL_STRING("enter"), cue->StartTime(), cue->GetTrack(), cue);
       eventList.InsertElementSorted(
