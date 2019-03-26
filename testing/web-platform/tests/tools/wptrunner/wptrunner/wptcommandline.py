@@ -8,7 +8,7 @@ from datetime import timedelta
 
 import config
 import wpttest
-import formatters
+from formatters import wptreport, wptscreenshot
 
 
 def abs_path(path):
@@ -326,8 +326,8 @@ scheme host and port.""")
                         help="List of URLs for tests to run, or paths including tests to run. "
                              "(equivalent to --include)")
 
-    commandline.log_formatters["wptreport"] = (formatters.WptreportFormatter, "wptreport format")
-    commandline.log_formatters["wptscreenshot"] = (formatters.WptscreenshotFormatter, "wpt.fyi screenshots")
+    commandline.log_formatters["wptreport"] = (wptreport.WptreportFormatter, "wptreport format")
+    commandline.log_formatters["wptscreenshot"] = (wptscreenshot.WptscreenshotFormatter, "wpt.fyi screenshots")
 
     commandline.add_logging_group(parser)
     return parser
