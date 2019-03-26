@@ -2,9 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
 
 var gManagerWindow;
+
+AddonTestUtils.initMochitest(this);
 
 function get_test_items() {
   var items = {};
@@ -273,4 +276,95 @@ add_task(async function test_addon_preferences_button() {
   // run tests in private and non-private windows.
   await runTest(true);
   await runTest(false);
+});
+
+add_task(async function test_addon_postinstall_incognito_hidden_checkbox() {
+  await SpecialPowers.pushPrefEnv({set: [
+    ["extensions.allowPrivateBrowsingByDefault", false],
+    ["extensions.langpacks.signatures.required", false],
+  ]});
+
+  const TEST_ADDONS = [
+    {
+      manifest: {
+        name: "Extension incognito default opt-in",
+        applications: {gecko: {id: "ext-incognito-default-opt-in@mozilla.com"}},
+      },
+    },
+    {
+      manifest: {
+        name: "Extension incognito not_allowed",
+        applications: {gecko: {id: "ext-incognito-not-allowed@mozilla.com"}},
+        incognito: "not_allowed",
+      },
+    },
+    {
+      manifest: {
+        name: "Static Theme",
+        applications: {gecko: {id: "static-theme@mozilla.com"}},
+        theme: {
+          colors: {
+            accentcolor: "#FFFFFF",
+            textcolor: "#000",
+          },
+        },
+      },
+    },
+    {
+      manifest: {
+        name: "Dictionary",
+        applications: {gecko: {id: "dictionary@mozilla.com"}},
+        dictionaries: {
+          "und": "dictionaries/und.dic",
+        },
+      },
+      files: {
+        "dictionaries/und.dic": "",
+        "dictionaries/und.aff": "",
+      },
+    },
+    {
+      manifest: {
+        name: "Langpack",
+        applications: {gecko: {id: "langpack@mozilla.com"}},
+        langpack_id: "und",
+        languages: {
+          und: {
+            chrome_resources: {
+              global: "chrome/und/locale/und/global",
+            },
+            version: "20190326174300",
+          },
+        },
+      },
+    },
+  ];
+
+  for (let definition of TEST_ADDONS) {
+    let {id} = definition.manifest.applications.gecko;
+    info(`Testing incognito checkbox visibility on ${id} post install notification`);
+
+    const xpi = AddonTestUtils.createTempWebExtensionFile(definition);
+    let install = await AddonManager.getInstallForFile(xpi);
+
+    await Promise.all([
+      waitAppMenuNotificationShown("addon-installed", id, true),
+      install.install().then(() => {
+        Services.obs.notifyObservers({
+          addon: install.addon, target: gBrowser.selectedBrowser,
+        }, "webextension-install-notify");
+      }),
+    ]);
+
+    const {permissions} = install.addon;
+    const canChangePBAccess = Boolean(permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS);
+
+    if (id === "ext-incognito-default-opt-in@mozilla.com") {
+      ok(canChangePBAccess, `${id} should have the PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS permission`);
+    } else {
+      ok(!canChangePBAccess, `${id} should not have the PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS permission`);
+    }
+
+    await install.addon.uninstall();
+  }
 });
