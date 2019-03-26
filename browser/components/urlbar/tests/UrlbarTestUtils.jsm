@@ -423,11 +423,13 @@ class UrlbarAbstraction {
         context.results[index].payload.tags :
         [];
       let actions = element.getElementsByClassName("urlbarView-action");
+      let urls = element.getElementsByClassName("urlbarView-url");
       let typeIcon = element.querySelector(".urlbarView-type-icon");
       let typeIconStyle = this.window.getComputedStyle(typeIcon);
       details.displayed = {
         title: element.getElementsByClassName("urlbarView-title")[0].textContent,
         action: actions.length > 0 ? actions[0].textContent : null,
+        url: urls.length > 0 ? urls[0].textContent : null,
         typeIcon: typeIconStyle["background-image"],
       };
       let actionElement = element.getElementsByClassName("urlbarView-action")[0];
@@ -462,6 +464,7 @@ class UrlbarAbstraction {
       details.displayed = {
         title: element._titleText.textContent,
         action: action ? element._actionText.textContent : "",
+        url: element._urlText.textContent,
         typeIcon: typeIconStyle.listStyleImage,
       };
       details.element = {
