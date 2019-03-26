@@ -248,10 +248,6 @@ def get_raptor_test_list(args, oskey):
         if args.page_timeout is not None:
             LOG.info("setting page-timeout to %d as specified on cmd line" % args.page_timeout)
             next_test['page_timeout'] = args.page_timeout
-        # if --browser-cycles was provided on the command line, use that instead of INI
-        if args.browser_cycles is not None:
-            LOG.info("setting browser-cycles to %d as specified on cmd line" % args.browser_cycles)
-            next_test['browser_cycles'] = args.browser_cycles
 
         if next_test.get("cold", "false") == "true":
             # when running in cold mode, set browser-cycles to the page-cycles value; as we want
