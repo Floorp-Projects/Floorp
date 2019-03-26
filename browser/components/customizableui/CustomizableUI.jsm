@@ -4658,12 +4658,15 @@ OverflowableToolbar.prototype = {
 
     // If this wasn't overflowed before...
     if (!wasOverflowed) {
-      // ... but it is now, then we added to the overflow panel. Exciting stuff:
+      // ... but it is now, then we added to the overflow panel.
       if (nowOverflowed) {
-        // NB: we're guaranteed that it has a previousSibling, because if it didn't,
-        // we would have added it to the toolbar instead. See getOverflowedNextNode.
-        let prevId = aNode.previousElementSibling.id;
-        let minSize = this._collapsed.get(prevId);
+        // We could be the first item in the overflow panel if we're being inserted
+        // before the previous first item in it. We can't assume the minimum
+        // size is the same (because the other item might be much wider), so if
+        // there is no previous item, just allow this item to be put back in the
+        // toolbar immediately by specifying a very low minimum size.
+        let sourceOfMinSize = aNode.previousElementSibling;
+        let minSize = sourceOfMinSize ? this._collapsed.get(sourceOfMinSize.id) : 1;
         this._collapsed.set(aNode.id, minSize);
         aNode.setAttribute("cui-anchorid", this._chevron.id);
         aNode.setAttribute("overflowedItem", true);
