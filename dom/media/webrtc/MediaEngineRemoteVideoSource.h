@@ -66,10 +66,9 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   ~MediaEngineRemoteVideoSource();
 
   struct CapabilityCandidate {
-    explicit CapabilityCandidate(webrtc::CaptureCapability&& aCapability,
+    explicit CapabilityCandidate(webrtc::CaptureCapability aCapability,
                                  uint32_t aDistance = 0)
-        : mCapability(std::forward<webrtc::CaptureCapability>(aCapability)),
-          mDistance(aDistance) {}
+        : mCapability(aCapability), mDistance(aDistance) {}
 
     const webrtc::CaptureCapability mCapability;
     uint32_t mDistance;
@@ -113,8 +112,8 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
                                bool aScary);
 
   // ExternalRenderer
-  int DeliverFrame(uint8_t* buffer,
-                   const camera::VideoFrameProperties& properties) override;
+  int DeliverFrame(uint8_t* aBuffer,
+                   const camera::VideoFrameProperties& aProps) override;
 
   // MediaEngineSource
   dom::MediaSourceEnum GetMediaSource() const override;

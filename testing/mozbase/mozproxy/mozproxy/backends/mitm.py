@@ -42,6 +42,9 @@ except Exception:
 if os.name == "nt" and "/" in DEFAULT_CERT_PATH:
     DEFAULT_CERT_PATH = DEFAULT_CERT_PATH.replace("/", "\\")
 
+# maximal allowed runtime of a mitmproxy command
+MITMDUMP_COMMAND_TIMEOUT = 30
+
 # to install mitmproxy certificate into Firefox and turn on/off proxy
 POLICIES_CONTENT_ON = """{
   "policies": {
@@ -114,11 +117,6 @@ class Mitmproxy(Playback):
             self.stop()
             raise
 
-    @property
-    def mitmdump_sleep_seconds(self):
-        """Time to sleep, in seconds, after issuing a `mitmdump` command."""
-        return 10 if not self.config['run_local'] else 1
-
     def download(self):
         """Download and unpack mitmproxy binary and pageset using tooltool"""
         if not os.path.exists(self.mozproxy_dir):
@@ -179,9 +177,9 @@ class Mitmproxy(Playback):
                                                                   "mitmproxy.log"),
                                              env=env)
         self.mitmproxy_proc.run()
-        max_wait = time.time() + self.mitmdump_sleep_seconds
+        end_time = time.time() + MITMDUMP_COMMAND_TIMEOUT
         ready = False
-        while time.time() < max_wait:
+        while time.time() < end_time:
             ready = self.check_proxy()
             if ready:
                 LOG.info(
@@ -189,9 +187,9 @@ class Mitmproxy(Playback):
                     % self.mitmproxy_proc.pid
                 )
                 return
-            time.sleep(1)
+            time.sleep(0.25)
         # cannot continue as we won't be able to playback the pages
-        LOG.error("Aborting: mitmproxy playback process failed to work")
+        LOG.error("Aborting: Mitmproxy process did not startup")
         self.stop_mitmproxy_playback()
         sys.exit()  # XXX why do we need to do that? a raise is not enough?
 

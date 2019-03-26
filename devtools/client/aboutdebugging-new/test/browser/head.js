@@ -43,10 +43,14 @@ async function enableNewAboutDebugging() {
   await pushPref("devtools.aboutdebugging.new-enabled", true);
 }
 
-async function openAboutDebugging({ enableWorkerUpdates } = {}) {
+async function openAboutDebugging({ enableWorkerUpdates, enableLocalTabs = true } = {}) {
   if (!enableWorkerUpdates) {
     silenceWorkerUpdates();
   }
+
+  // This preference changes value depending on the build type, tests need to use a
+  // consistent value regarless of the build used.
+  await pushPref("devtools.aboutdebugging.local-tab-debugging", enableLocalTabs);
 
   await enableNewAboutDebugging();
 

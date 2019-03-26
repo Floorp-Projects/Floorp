@@ -30,13 +30,11 @@ use nserror::{nsresult, NS_ERROR_NULL_POINTER};
 /// }
 /// ```
 ///
-/// With the appropriate extern crate and use declarations (which include
-/// using the Ensure trait from this module):
+/// With the appropriate extern crate and use declarations
 ///
 /// ```ignore
-/// #[macro_use]
 /// extern crate xpcom;
-/// use xpcom::Ensure;
+/// use xpcom::xpcom_method;
 /// ```
 ///
 /// Invoking the macro with the name of the XPCOM method, the name of its
@@ -44,7 +42,6 @@ use nserror::{nsresult, NS_ERROR_NULL_POINTER};
 ///
 /// ```ignore
 /// impl FooBarBaz {
-///   xpcom_method(Foo, foo, { bar: *const nsACString, baz: bool }, *mut *const nsIVariant);
 ///   xpcom_method!(
 ///       foo => Foo(bar: *const nsACString, baz: bool) -> *const nsIVariant
 ///   );
@@ -55,8 +52,14 @@ use nserror::{nsresult, NS_ERROR_NULL_POINTER};
 ///
 /// ```ignore
 /// unsafe fn Foo(&self, bar: *const nsACString, baz: bool, retval: *mut *const nsIVariant) -> nsresult {
-///     ensure_param!(bar);
-///     ensure_param!(baz);
+///     let bar = match Ensure::ensure(bar) {
+///         Ok(val) => val,
+///         Err(result) => return result,
+///     };
+///     let baz = match Ensure::ensure(baz) {
+///         Ok(val) => val,
+///         Err(result) => return result,
+///     };
 ///
 ///     match self.foo(bar, baz) {
 ///         Ok(val) => {
@@ -94,6 +97,29 @@ use nserror::{nsresult, NS_ERROR_NULL_POINTER};
 /// arguments.
 #[macro_export]
 macro_rules! xpcom_method {
+    // This rule is provided to ensure external modules don't need to import
+    // internal implementation details of xpcom_method.
+    // The @ensure_param rule converts raw pointer arguments to references,
+    // returning NS_ERROR_NULL_POINTER if the argument is_null().
+    //
+    // Notes:
+    //
+    // This rule can be called on a non-pointer copy parameter, but there's no
+    // benefit to doing so.  The macro will just set the value of the parameter
+    // to itself. (This macro does this anyway due to limitations in declarative
+    // macros; it isn't currently possible to distinguish between pointer and
+    // copy types when processing a set of parameters.)
+    //
+    // The macro currently supports only in-parameters (*const nsIFoo); It
+    // doesn't (yet?) support out-parameters (*mut nsIFoo).  The xpcom_method
+    // macro itself does, however, support the return value out-parameter.
+    (@ensure_param $name:ident) => {
+        let $name = match $crate::Ensure::ensure($name) {
+            Ok(val) => val,
+            Err(result) => return result,
+        };
+    };
+
     // `#[allow(non_snake_case)]` is used for each method because `$xpcom_name`
     // is almost always UpperCamelCase, and Rust gives a warning that it should
     // be snake_case. It isn't reasonable to rename the XPCOM methods, so
@@ -104,7 +130,7 @@ macro_rules! xpcom_method {
     ($rust_name:ident => $xpcom_name:ident($($param_name:ident: $param_type:ty),*) -> *const $retval:ty) => {
         #[allow(non_snake_case)]
         unsafe fn $xpcom_name(&self, $($param_name: $param_type,)* retval: *mut *const $retval) -> nsresult {
-            $(ensure_param!($param_name);)*
+            $(xpcom_method!(@ensure_param $param_name);)*
             match self.$rust_name($($param_name, )*) {
                 Ok(val) => {
                     val.forget(&mut *retval);
@@ -122,7 +148,7 @@ macro_rules! xpcom_method {
     ($rust_name:ident => $xpcom_name:ident($($param_name:ident: $param_type:ty),*) -> nsAString) => {
         #[allow(non_snake_case)]
         unsafe fn $xpcom_name(&self, $($param_name: $param_type,)* retval: *mut nsAString) -> nsresult {
-            $(ensure_param!($param_name);)*
+            $(xpcom_method!(@ensure_param $param_name);)*
             match self.$rust_name($($param_name, )*) {
                 Ok(val) => {
                     (*retval).assign(&val);
@@ -140,7 +166,7 @@ macro_rules! xpcom_method {
     ($rust_name:ident => $xpcom_name:ident($($param_name:ident: $param_type:ty),*) -> nsACString) => {
         #[allow(non_snake_case)]
         unsafe fn $xpcom_name(&self, $($param_name: $param_type,)* retval: *mut nsACString) -> nsresult {
-            $(ensure_param!($param_name);)*
+            $(xpcom_method!(@ensure_param $param_name);)*
             match self.$rust_name($($param_name, )*) {
                 Ok(val) => {
                     (*retval).assign(&val);
@@ -158,7 +184,7 @@ macro_rules! xpcom_method {
     ($rust_name:ident => $xpcom_name:ident($($param_name:ident: $param_type:ty),*) -> $retval:ty) => {
         #[allow(non_snake_case)]
         unsafe fn $xpcom_name(&self, $($param_name: $param_type,)* retval: *mut $retval) -> nsresult {
-            $(ensure_param!($param_name);)*
+            $(xpcom_method!(@ensure_param $param_name);)*
             match self.$rust_name($($param_name, )*) {
                 Ok(val) => {
                     *retval = val;
@@ -176,7 +202,7 @@ macro_rules! xpcom_method {
     ($rust_name:ident => $xpcom_name:ident($($param_name:ident: $param_type:ty),*)) => {
         #[allow(non_snake_case)]
         unsafe fn $xpcom_name(&self, $($param_name: $param_type,)*) -> nsresult {
-            $(ensure_param!($param_name);)*
+            $(xpcom_method!(@ensure_param $param_name);)*
             match self.$rust_name($($param_name, )*) {
                 Ok(_) => NS_OK,
                 Err(error) => {
@@ -187,82 +213,10 @@ macro_rules! xpcom_method {
     };
 }
 
-/// The ensure_param macro converts raw pointer arguments to references, and
-/// passes them to a Rustic implementation of an XPCOM method. This macro isn't
-/// intended to be used directly but rather via the xpcom_method macro.
-///
-/// If the argument `is_null()`, and the corresponding Rustic method parameter
-/// is `&T`, the macro returns `NS_ERROR_NULL_POINTER`. However, if the
-/// parameter is `Option<&T>`, the macro passes `None` instead. This makes it
-/// easy to use optional arguments safely.
-///
-/// Given the appropriate extern crate and use declarations (which include
-/// using the Ensure trait from this module):
-///
-/// ```ignore
-/// #[macro_use]
-/// extern crate xpcom;
-/// use xpcom::Ensure;
-/// ```
-///
-/// Invoking the macro like this:
-///
-/// ```ignore
-/// fn do_something_with_foo(foo: &nsIBar) {}
-/// fn DoSomethingWithFoo(foo: *const nsIBar) -> nsresult {
-///     let foo = ensure_param!(foo);
-///     do_something_with_foo(foo);
-/// }
-/// ```
-///
-/// Expands to code like this:
-///
-/// ```ignore
-/// fn do_something_with_foo(foo: &nsIBar) {}
-/// fn DoSomethingWithFoo(foo: *const nsIBar) -> nsresult {
-///     let foo = match Ensure::ensure(foo) {
-///         Ok(val) => val,
-///         Err(result) => return result,
-///     };
-///     do_something_with_foo(foo);
-/// }
-/// ```
-///
-/// Which converts `foo` from a `*const nsIBar` to a `&nsIBar`, or returns
-/// `NS_ERROR_NULL_POINTER` if `foo` is null.
-///
-/// To pass an optional argument, we only need to change
-/// `do_something_with_foo` to take an `Option<&nsIBar> instead. The macro
-/// generates the same code, but `do_something_with_foo` receives `None` if
-/// `foo` is null.
-///
-/// Notes:
-///
-/// You can call the macro on a non-pointer copy parameter, but there's no
-/// benefit to doing so.  The macro will just set the value of the parameter
-/// to itself.  (The xpcom_method macro does this anyway due to limitations
-/// in declarative macros; it isn't currently possible to distinguish between
-/// pointer and copy types when processing a set of parameters.)
-///
-/// The macro currently supports only inparameters (*const nsIFoo); It doesn't
-/// (yet?) support outparameters (*mut nsIFoo).  The xpcom_method macro itself
-/// does, however, support the return value outparameter.
-///
-#[doc(hidden)]
-#[macro_export]
-macro_rules! ensure_param {
-    ($name:ident) => {
-        let $name = match $crate::Ensure::ensure($name) {
-            Ok(val) => val,
-            Err(result) => return result,
-        };
-    };
-}
-
 /// A trait that ensures that a raw pointer isn't null and converts it to
-/// a reference.  Because of limitations in declarative macros (see the docs
-/// for the ensure_param macro), this includes an implementation for types
-/// that are Copy, which simply returns the value itself.
+/// a reference.  Because of limitations in declarative macros, this includes an
+/// implementation for types that are Copy, which simply returns the value
+/// itself.
 #[doc(hidden)]
 pub trait Ensure<T> {
     unsafe fn ensure(T) -> Self;

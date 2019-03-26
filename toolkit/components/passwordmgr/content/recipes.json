@@ -43,6 +43,13 @@
       "hosts": ["mabanque.fortuneo.fr"],
       "pathRegex": "\\/identification\\.jsp$",
       "usernameSelector": "input[name='LOGIN']"
+    },
+    {
+      "description": "Merrill's benefits website has six type=password fields which is over our threshold for filling (Bug 1538026)",
+      "hosts": ["www.benefits.ml.com"],
+      "usernameSelector": "#SFText_UserName",
+      "passwordSelector": "#SFText_Password",
+      "pathRegex": "^\/login\/login$"
     }
   ]
 }

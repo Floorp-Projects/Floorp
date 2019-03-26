@@ -3,11 +3,6 @@
 
 "use strict";
 
-/**
- * Check that the This Firefox page is displayed by default when opening the new
- * about:debugging and that it contains the expected categories.
- */
-
 const EXPECTED_TARGET_PANES = [
   "Temporary Extensions",
   "Extensions",
@@ -17,30 +12,56 @@ const EXPECTED_TARGET_PANES = [
   "Other Workers",
 ];
 
-add_task(async function() {
-  const { document, tab, window } = await openAboutDebugging();
+/**
+ * Check that the This Firefox runtime page contains the expected categories if
+ * the preference to enable local tab debugging is true.
+ */
+add_task(async function testThisFirefoxWithLocalTab() {
+  const { document, tab, window } = await openAboutDebugging({ enableLocalTabs: true });
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
+  // Expect all target panes to be displayed including tabs.
+  await checkThisFirefoxTargetPanes(document, EXPECTED_TARGET_PANES);
+
+  await removeTab(tab);
+});
+
+/**
+ * Check that the This Firefox runtime page contains the expected categories if
+ * the preference to enable local tab debugging is false.
+ */
+add_task(async function testThisFirefoxWithoutLocalTab() {
+  const { document, tab, window } = await openAboutDebugging({ enableLocalTabs: false });
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
+
+  // Expect all target panes but tabs to be displayed.
+  const expectedTargetPanesWithoutTabs = EXPECTED_TARGET_PANES.filter(p => p !== "Tabs");
+  await checkThisFirefoxTargetPanes(document, expectedTargetPanesWithoutTabs);
+
+  await removeTab(tab);
+});
+
+async function checkThisFirefoxTargetPanes(doc, expectedTargetPanes) {
+  const win = doc.ownerGlobal;
   // Check that the selected sidebar item is "This Firefox"/"This Nightly"/...
-  const selectedSidebarItem = document.querySelector(".js-sidebar-item-selected");
+  const selectedSidebarItem = doc.querySelector(".js-sidebar-item-selected");
   ok(selectedSidebarItem, "An item is selected in the sidebar");
 
-  const thisFirefoxString = getThisFirefoxString(window);
+  const thisFirefoxString = getThisFirefoxString(win);
   is(selectedSidebarItem.textContent, thisFirefoxString,
     "The selected sidebar item is " + thisFirefoxString);
 
-  const paneTitlesEls = document.querySelectorAll(".js-debug-target-pane-title");
-  is(paneTitlesEls.length, EXPECTED_TARGET_PANES.length,
-    "This Firefox has the expecte number of debug target categories");
+  const paneTitlesEls = doc.querySelectorAll(".js-debug-target-pane-title");
+  is(paneTitlesEls.length, expectedTargetPanes.length,
+    "This Firefox has the expected number of debug target categories");
 
   const paneTitles = [...paneTitlesEls].map(el => el.textContent);
 
-  for (let i = 0; i < EXPECTED_TARGET_PANES.length; i++) {
-    const expectedPaneTitle = EXPECTED_TARGET_PANES[i];
+  for (let i = 0; i < expectedTargetPanes.length; i++) {
+    const expectedPaneTitle = expectedTargetPanes[i];
     const actualPaneTitle = paneTitles[i];
     ok(actualPaneTitle.startsWith(expectedPaneTitle),
        `Expected debug target category found: ${ expectedPaneTitle }`);
   }
+}
 
-  await removeTab(tab);
-});

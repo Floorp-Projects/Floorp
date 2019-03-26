@@ -37,7 +37,13 @@ class nsFileChannel : public nsBaseChannel,
   virtual MOZ_MUST_USE nsresult OpenContentStream(
       bool async, nsIInputStream **result, nsIChannel **channel) override;
 
+  // Implementing the pump blocking promise to fixup content length on a
+  // background thread prior to calling on mListener
+  virtual nsresult ListenerBlockingPromise(BlockingPromise **promise) override;
+
  private:
+  nsresult FixupContentLength(bool async);
+
   nsCOMPtr<nsIInputStream> mUploadStream;
   int64_t mUploadLength;
   nsCOMPtr<nsIURI> mFileURI;

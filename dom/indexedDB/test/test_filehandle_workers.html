@@ -45,7 +45,7 @@
     function dummyWorkerScript() {
       /* eslint-env worker */
       onmessage = function(event) {
-        throw ("Shouldn't be called!");
+        throw new Error("Shouldn't be called!");
       };
     }
 

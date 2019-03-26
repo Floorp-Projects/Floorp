@@ -121,8 +121,7 @@ void PaymentMethodChangeEvent::GetMethodDetails(
             !rawDetails.billingAddress.phone.IsEmpty()) {
           nsCOMPtr<nsPIDOMWindowInner> window =
               do_QueryInterface(GetParentObject());
-          basicCardDetails.mBillingAddress.Construct();
-          basicCardDetails.mBillingAddress.Value() =
+          basicCardDetails.mBillingAddress =
               new PaymentAddress(window, rawDetails.billingAddress.country,
                                  rawDetails.billingAddress.addressLine,
                                  rawDetails.billingAddress.region,

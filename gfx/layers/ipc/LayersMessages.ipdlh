@@ -162,11 +162,6 @@ union TransformFunction {
   TransformMatrix;
 };
 
-union MaybeTimeDuration {
-  null_t;
-  TimeDuration;
-};
-
 union Animatable {
   null_t;
   float;
@@ -214,7 +209,7 @@ struct Animation {
   TimeStamp originTime;
   // The start time is relative to the originTime. This allows us to represent
   // start times in the distant past that cannot be expressed using a TimeStamp.
-  MaybeTimeDuration startTime;
+  TimeDuration? startTime;
   TimeDuration delay;
   TimeDuration endDelay;
   // The value of the animation's current time at the moment it was sent to the
@@ -374,14 +369,9 @@ union ReadLockDescriptor {
   null_t;
 };
 
-union MaybeTexture {
-  PTexture;
-  null_t;
-};
-
 struct TexturedTileDescriptor {
   PTexture texture;
-  MaybeTexture textureOnWhite;
+  PTexture? textureOnWhite;
   IntRect updateRect;
   bool readLocked;
   bool readLockedOnWhite;
@@ -455,11 +445,6 @@ struct OpUseComponentAlphaTextures {
   PTexture textureOnWhite;
   bool readLockedBlack;
   bool readLockedWhite;
-};
-
-union MaybeRegion {
-  nsIntRegion;
-  null_t;
 };
 
 struct OpNotifyNotUsed {

@@ -11,7 +11,6 @@ extern crate libc;
 extern crate memchr;
 extern crate nserror;
 extern crate nsstring;
-#[macro_use]
 extern crate xpcom;
 
 use nserror::{nsresult, NS_OK};
@@ -24,7 +23,7 @@ use std::{
 use xpcom::{
     getter_addrefs,
     interfaces::{nsIEventTarget, nsIRunnable, nsISupports, nsIThread},
-    AtomicRefcnt, RefCounted, RefPtr, XpCom,
+    AtomicRefcnt, RefCounted, RefPtr, XpCom, xpcom, xpcom_method,
 };
 
 extern "C" {

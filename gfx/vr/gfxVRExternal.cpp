@@ -335,8 +335,7 @@ void VRDisplayExternal::VibrateHaptic(uint32_t aControllerIdx,
       mDisplayInfo.mLastSensorState[bufferIndex].inputFrameID;
   bestSlot.controllerIndex = aControllerIdx;
   bestSlot.hapticIndex = aHapticIndex;
-  bestSlot.pulseStart =
-      (now - mDisplayInfo.mLastFrameStart[bufferIndex]).ToSeconds();
+  bestSlot.pulseStart = (now - mLastFrameStart[bufferIndex]).ToSeconds();
   bestSlot.pulseDuration = aDuration;
   bestSlot.pulseIntensity = aIntensity;
   // Convert from seconds to ms

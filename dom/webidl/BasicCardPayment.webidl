@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this WebIDL file is
- *   https://www.w3.org/TR/payment-request/#paymentrequest-interface
+ *   https://www.w3.org/TR/payment-method-basic-card/
  */
 
 dictionary BasicCardRequest {
@@ -12,16 +12,16 @@ dictionary BasicCardRequest {
 };
 
 dictionary BasicCardResponse {
-           DOMString cardholderName;
+           DOMString cardholderName = "";
   required DOMString cardNumber;
-           DOMString expiryMonth;
-           DOMString expiryYear;
-           DOMString cardSecurityCode;
-           PaymentAddress? billingAddress;
+           DOMString expiryMonth = "";
+           DOMString expiryYear = "";
+           DOMString cardSecurityCode = "";
+           PaymentAddress? billingAddress = null;
 };
 
 dictionary BasicCardChangeDetails {
-  PaymentAddress? billingAddress;
+  PaymentAddress? billingAddress = null;
 };
 
 dictionary BasicCardErrors {

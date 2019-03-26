@@ -97,21 +97,17 @@ void PaymentResponse::GetDetails(JSContext* aCx,
       const BasicCardData& rawData = mDetails.basicCardData();
       BasicCardResponse basicCardResponse;
       if (!rawData.cardholderName.IsEmpty()) {
-        basicCardResponse.mCardholderName.Construct();
-        basicCardResponse.mCardholderName.Value() = rawData.cardholderName;
+        basicCardResponse.mCardholderName = rawData.cardholderName;
       }
       basicCardResponse.mCardNumber = rawData.cardNumber;
       if (!rawData.expiryMonth.IsEmpty()) {
-        basicCardResponse.mExpiryMonth.Construct();
-        basicCardResponse.mExpiryMonth.Value() = rawData.expiryMonth;
+        basicCardResponse.mExpiryMonth = rawData.expiryMonth;
       }
       if (!rawData.expiryYear.IsEmpty()) {
-        basicCardResponse.mExpiryYear.Construct();
-        basicCardResponse.mExpiryYear.Value() = rawData.expiryYear;
+        basicCardResponse.mExpiryYear = rawData.expiryYear;
       }
       if (!rawData.cardSecurityCode.IsEmpty()) {
-        basicCardResponse.mCardSecurityCode.Construct();
-        basicCardResponse.mCardSecurityCode.Value() = rawData.cardSecurityCode;
+        basicCardResponse.mCardSecurityCode = rawData.cardSecurityCode;
       }
       if (!rawData.billingAddress.country.IsEmpty() ||
           !rawData.billingAddress.addressLine.IsEmpty() ||
@@ -124,8 +120,7 @@ void PaymentResponse::GetDetails(JSContext* aCx,
           !rawData.billingAddress.organization.IsEmpty() ||
           !rawData.billingAddress.recipient.IsEmpty() ||
           !rawData.billingAddress.phone.IsEmpty()) {
-        basicCardResponse.mBillingAddress.Construct();
-        basicCardResponse.mBillingAddress.Value() = new PaymentAddress(
+        basicCardResponse.mBillingAddress = new PaymentAddress(
             GetOwner(), rawData.billingAddress.country,
             rawData.billingAddress.addressLine, rawData.billingAddress.region,
             rawData.billingAddress.regionCode, rawData.billingAddress.city,
