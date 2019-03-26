@@ -37,7 +37,6 @@ pub enum Architecture {
     Thumbv6m,
     Thumbv7em,
     Thumbv7m,
-    Thumbv7neon,
     Wasm32,
     X86_64,
 }
@@ -140,7 +139,6 @@ impl Architecture {
             | Architecture::Thumbv6m
             | Architecture::Thumbv7em
             | Architecture::Thumbv7m
-            | Architecture::Thumbv7neon
             | Architecture::Wasm32
             | Architecture::X86_64 => Ok(Endianness::Little),
             Architecture::Mips
@@ -174,7 +172,6 @@ impl Architecture {
             | Architecture::Thumbv6m
             | Architecture::Thumbv7em
             | Architecture::Thumbv7m
-            | Architecture::Thumbv7neon
             | Architecture::Wasm32
             | Architecture::Mips
             | Architecture::Powerpc => Ok(PointerWidth::U32),
@@ -239,7 +236,6 @@ impl fmt::Display for Architecture {
             Architecture::Thumbv6m => "thumbv6m",
             Architecture::Thumbv7em => "thumbv7em",
             Architecture::Thumbv7m => "thumbv7m",
-            Architecture::Thumbv7neon => "thumbv7neon",
             Architecture::Wasm32 => "wasm32",
             Architecture::X86_64 => "x86_64",
         };
@@ -280,7 +276,6 @@ impl FromStr for Architecture {
             "thumbv6m" => Architecture::Thumbv6m,
             "thumbv7em" => Architecture::Thumbv7em,
             "thumbv7m" => Architecture::Thumbv7m,
-            "thumbv7neon" => Architecture::Thumbv7neon,
             "wasm32" => Architecture::Wasm32,
             "x86_64" => Architecture::X86_64,
             _ => return Err(()),
