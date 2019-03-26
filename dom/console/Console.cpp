@@ -1276,6 +1276,7 @@ void Console::ProfileMethodMainthread(JSContext* aCx, const nsAString& aAction,
 
   RootedDictionary<ConsoleProfileEvent> event(aCx);
   event.mAction = aAction;
+  event.mChromeContext = nsContentUtils::ThreadsafeIsSystemCaller(aCx);
 
   event.mArguments.Construct();
   Sequence<JS::Value>& sequence = event.mArguments.Value();
@@ -1682,6 +1683,8 @@ bool Console::PopulateConsoleNotificationInTheTargetScope(
 
   event.mID.Construct();
   event.mInnerID.Construct();
+
+  event.mChromeContext = nsContentUtils::ThreadsafeIsSystemCaller(aCx);
 
   if (aData->mIDType == ConsoleCallData::eString) {
     event.mID.Value().SetAsString() = aData->mOuterIDString;

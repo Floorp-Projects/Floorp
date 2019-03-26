@@ -15,6 +15,7 @@ function consoleListener(expected) {
     let observer = {
       observe: function listener(aSubject, aTopic, aData) {
         var obj = aSubject.wrappedJSObject;
+        ok(!obj.chromeContext, "This is not a chrome context");
         messages.push(parseInt(obj.arguments[0]));
         if (messages.length == expected) {
           SpecialPowers.removeObserver(observer, "console-api-log-event");

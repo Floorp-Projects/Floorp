@@ -1024,7 +1024,8 @@ class nsContentUtils {
    */
   static void LogSimpleConsoleError(const nsAString& aErrorText,
                                     const char* classification,
-                                    bool aFromPrivateWindow);
+                                    bool aFromPrivateWindow,
+                                    bool aFromChromeContext);
 
   /**
    * Report a non-localized error message to the error console.
