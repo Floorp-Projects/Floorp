@@ -1090,10 +1090,9 @@ nsresult nsHttpChannel::SetupTransaction() {
     }
 
     if (mIgnoreCacheEntry) {
-      if (!mAvailableCachedAltDataType.IsEmpty()) {
-        mAvailableCachedAltDataType.Truncate();
-        mAltDataLength = 0;
-      }
+      mAvailableCachedAltDataType.Truncate();
+      mDeliveringAltData = false;
+      mAltDataLength = -1;
       mCacheInputStream.CloseAndRelease();
     }
   }
@@ -4969,12 +4968,14 @@ nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry *cacheEntry,
       LOG(("Opened alt-data input stream type=%s", altDataType.get()));
       // We have succeeded.
       mAvailableCachedAltDataType = altDataType;
+      mDeliveringAltData = deliverAltData;
+
+      // Set the correct data size on the channel.
+      Unused << cacheEntry->GetAltDataSize(&altDataSize);
+      mAltDataLength = altDataSize;
 
       if (deliverAltData) {
-        // Set the correct data size on the channel.
-        Unused << cacheEntry->GetAltDataSize(&altDataSize);
         stream = altData;
-        mAltDataLength = altDataSize;
       }
     }
   }
@@ -5296,6 +5297,7 @@ nsresult nsHttpChannel::InitCacheEntry() {
          "recreating cache entry\n"));
     // clean the altData cache and reset this to avoid wrong content length
     mAvailableCachedAltDataType.Truncate();
+    mDeliveringAltData = false;
 
     nsCOMPtr<nsICacheEntry> currentEntry;
     currentEntry.swap(mCacheEntry);
@@ -7478,6 +7480,7 @@ nsHttpChannel::OnStartRequest(nsIRequest *request) {
         }
       }
       mAvailableCachedAltDataType.Truncate();
+      mDeliveringAltData = false;
     } else if (WRONG_RACING_RESPONSE_SOURCE(request)) {
       LOG(("  Early return when racing. This response not needed."));
       return NS_OK;

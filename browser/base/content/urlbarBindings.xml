@@ -570,7 +570,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <body><![CDATA[
           // This method must not modify the given URL such that calling
           // nsIURIFixup::createFixupURI with the result will produce a different URI.
-          return this._mayTrimURLs ? trimURL(aURL) : aURL;
+          return this._mayTrimURLs ? BrowserUtils.trimURL(aURL) : aURL;
         ]]></body>
       </method>
 
