@@ -290,7 +290,11 @@ var EcosystemTelemetry = {
       },
       system: {
         memoryMB: currentEnv.system.memoryMB,
-        os: currentEnv.system.os,
+        os: {
+          name: currentEnv.system.os.name,
+          version: currentEnv.system.os.version,
+          locale: currentEnv.system.os.locale,
+        },
         cpu: {
           speedMHz: currentEnv.system.cpu.speedMHz,
         },
