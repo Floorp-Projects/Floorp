@@ -9,5 +9,5 @@
 
 %define PREFIX 1
 
-%define STACK_ALIGNMENT 16
+%define STACK_ALIGNMENT 4
 
