@@ -98,8 +98,7 @@ bool JavaScriptParent::allowMessage(JSContext* cx) {
           do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
       error->Init(NS_LITERAL_STRING("unsafe/forbidden CPOW usage"), filename,
                   EmptyString(), lineno, column, nsIScriptError::warningFlag,
-                  "chrome javascript", false /* from private window */,
-                  true /* from chrome context */);
+                  "chrome javascript", false /* from private window */);
       console->LogMessage(error);
     } else {
       NS_WARNING("Unsafe synchronous IPC message");

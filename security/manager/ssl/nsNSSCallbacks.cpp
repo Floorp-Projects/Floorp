@@ -1330,8 +1330,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     msg.AppendLiteral(" : server does not support RFC 5746, see CVE-2009-3555");
 
     nsContentUtils::LogSimpleConsoleError(
-        msg, "SSL", !!infoObject->GetOriginAttributes().mPrivateBrowsingId,
-        true /* from chrome context */);
+        msg, "SSL", !!infoObject->GetOriginAttributes().mPrivateBrowsingId);
   }
 
   infoObject->NoteTimeUntilReady();
