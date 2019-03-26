@@ -97,4 +97,8 @@ export type BreakpointAction =
       type: "ADD_BREAKPOINT_POSITIONS",
       positions: BreakpointPositions,
       source: Source
+    |}
+  | {|
+      +type: "UPDATE_BREAKPOINT_TEXT",
+      +source: Source
     |};
