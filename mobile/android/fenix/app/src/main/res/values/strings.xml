@@ -4,7 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <!-- Name of the application -->
-    <string name="app_name">GeckoView Preview</string>
+    <string name="app_name">Fenix</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">More options</string>
@@ -16,13 +17,16 @@
     <string name="sessions_intro_description">Sessions help you return to the sites you visit often and those you\'ve just discovered. Start browsing and they\'ll begin to appear here. </string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Search or enter address</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">You\'re in a private session</string>
-    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode -->
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_explanation">%1$s clears your search and browsing history when you close your private session. While this doesn\'t make you anonymous to websites or your internet service provider, it makes it easier to keep what you do online private from anyone else who uses this device.\n\nCommon myths about private browsing</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Delete session</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate home -->
     <string name="browser_home_button">Home</string>
@@ -54,10 +58,13 @@
     <string name="browser_menu_share">Share</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
     <string name="menu_share_with">Share with…</string>
-    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix -->
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Open in %1$s</string>
-    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab -->
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by">POWERED BY %1$s</string>
+
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Scan</string>
@@ -65,9 +72,11 @@
     <string name="search_shortcuts_button">Shortcuts</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Fill link from clipboard</string>
+
     <!-- Settings Fragment -->
     <!-- Title for the settings page-->
     <string name="settings">Settings</string>
+
     <!-- Preferences -->
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Basics</string>
@@ -81,7 +90,8 @@
     <string name="preferences_rate">Rate on Google Play</string>
     <!-- Preference for giving feedback about Fenix -->
     <string name="preferences_feedback">Give feedback</string>
-    <!-- Preference linking to about page for Fenix -->
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">About %1$s</string>
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">Passwords</string>
@@ -117,6 +127,7 @@
     <string name="preferences_show_search_suggestions">Show search suggestions</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Account settings</string>
+
     <!-- Site Permissions Preferences -->
     <!-- Preference for reducing image sizes, bandwidth and platform-level optimizations -->
     <string name="preference_optimize">Optimize</string>
@@ -149,6 +160,7 @@
     <string name="preference_phone_feature_notification">Notification</string>
     <!-- Preference option for altering the notification access for all websites -->
     <string name="preference_option_phone_feature_ask_to_allow">Ask to allow</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sync now</string>
@@ -168,6 +180,7 @@
     <string name="sync_last_synced_summary">Last synced: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Last synced: never</string>
+
     <!-- Advanced Preferences -->
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
@@ -177,6 +190,7 @@
     <string name="preferences_mozilla_location_service">Mozilla location service</string>
     <!-- Preference switch for app health report. -->
     <string name="preferences_fenix_health_report">Fenix health report</string>
+
     <!-- Quick Action Sheet -->
     <!-- Option in Quick Action Sheet in the browser to share the current page -->
     <string name="quick_action_share">Share</string>
@@ -190,6 +204,7 @@
     <string name="quick_action_sheet">Quick action sheet</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle -->
     <string name="quick_action_sheet_handle">Quick action sheet handle</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">Sessions</string>
@@ -216,6 +231,7 @@
 <p>%1$s puts you in control.</p>
 <p>%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>
     ]]></string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs in the current session -->
     <string name="tabs_header_title">Current session</string>
@@ -246,6 +262,7 @@
     <!-- Text to tell the user how many more tabs this session has.
         The first parameter is how many extra tabs the session has. -->
     <string name="session_items_more">%1$d sites…</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Delete history</string>
@@ -264,6 +281,7 @@
     <string name="history_older">Older</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Entering full screen mode</string>
+
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page -->
     <string name="tab_crash_title">Sorry. %1$s can\'t get that tab back</string>
@@ -275,8 +293,10 @@
     <string name="tab_crash_close">Close tab</string>
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Restore tab</string>
+
     <!-- Content Description for session item menu button -->
     <string name="content_description_session_menu">Session options</string>
+
     <!-- Content Description for session item share button -->
     <string name="content_description_session_share">Share session</string>
 </resources>

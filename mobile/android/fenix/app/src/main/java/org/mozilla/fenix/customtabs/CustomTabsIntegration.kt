@@ -106,13 +106,19 @@ class CustomTabsIntegration(
     private val menuItems by lazy {
         listOf(
             SimpleBrowserMenuItem(
-                context.getString(R.string.browser_menu_powered_by),
+                {
+                    val appName = context.getString(R.string.app_name)
+                    context.getString(R.string.browser_menu_powered_by, appName).toUpperCase()
+                }(),
                 ToolbarMenu.CAPTION_TEXT_SIZE,
                 DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ),
             BrowserMenuDivider(),
             SimpleBrowserMenuItem(
-                context.getString(R.string.browser_menu_open_in_fenix),
+                {
+                    val appName = context.getString(R.string.app_name)
+                    context.getString(R.string.browser_menu_open_in_fenix, appName)
+                }(),
                 textColorResource = DefaultThemeManager.resolveAttribute(
                     R.attr.browserToolbarMenuIcons,
                     context

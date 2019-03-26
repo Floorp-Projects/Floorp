@@ -81,6 +81,10 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
             requireComponents.search.searchEngineManager.getDefaultSearchEngine(it).name
         }
 
+        val aboutPreference = findPreference<Preference>(getString(R.string.pref_key_about))
+        val appName = getString(R.string.app_name)
+        aboutPreference?.title = getString(R.string.preferences_about, appName)
+
         generateWordmark()
         setupPreferences()
         setupAccountUI()

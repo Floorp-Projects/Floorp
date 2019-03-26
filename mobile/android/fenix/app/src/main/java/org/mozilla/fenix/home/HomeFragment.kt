@@ -293,6 +293,8 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     private fun setupPrivateBrowsingDescription() {
         // Format the description text to include a hyperlink
+        val appName = resources.getString(R.string.app_name)
+        private_session_description.text = resources.getString(R.string.private_browsing_explanation, appName)
         val descriptionText = String
             .format(private_session_description.text.toString(), System.getProperty("line.separator"))
         val linkStartIndex = descriptionText.indexOf("\n\n") + 2
