@@ -327,7 +327,9 @@ test! {
         let (StartJobSuccess {guid}, mut monitor) =
             client.start_job(server.format_url(name), name.into(), BitsProxyUsage::Preconfig, interval).unwrap();
 
-        // get status reports until transfer finishes (~500ms)
+        let start = Instant::now();
+
+        // Get status reports until transfer finishes (~500ms)
         let mut completed = false;
         loop {
             match monitor.get_status(timeout) {
@@ -339,7 +341,7 @@ test! {
                     }
                 }
                 Ok(Ok(status)) => match BitsJobState::from(status.state) {
-                    BitsJobState::Connecting
+                    BitsJobState::Queued | BitsJobState::Connecting
                         | BitsJobState::Transferring => {
                             //eprintln!("{:?}", BitsJobState::from(status.state));
                             //eprintln!("{:?}", status);
@@ -354,6 +356,9 @@ test! {
                 }
                 Ok(Err(e)) => panic!(format!("{:?}", e)),
             }
+
+            // Timeout to prevent waiting forever
+            assert!(start.elapsed() < Duration::from_millis(60_000));
         }
 
 
