@@ -159,6 +159,10 @@ class Element;
 SERVO_ARC_TYPE(ComputedStyle, mozilla::ComputedStyle)
 #undef SERVO_ARC_TYPE
 
+// See the comment in ServoBindings.h about the same.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
+
 #define SERVO_BOXED_TYPE(name_, type_)                              \
   struct type_;                                                     \
   extern "C" void Servo_##name_##_Drop(mozilla::StyleOwned<type_>); \
@@ -177,6 +181,8 @@ SERVO_BOXED_TYPE(SelectorList, RawServoSelectorList)
 SERVO_BOXED_TYPE(SourceSizeList, RawServoSourceSizeList)
 SERVO_BOXED_TYPE(UseCounters, StyleUseCounters)
 #undef SERVO_BOXED_TYPE
+
+#pragma GCC diagnostic pop
 
 // Other special cases.
 
