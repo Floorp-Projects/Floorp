@@ -33,6 +33,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["TextDecoder", "TextEncoder", "fetch"]
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
+  AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   CertUtils: "resource://gre/modules/CertUtils.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
@@ -85,8 +86,6 @@ const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 const PREF_SELECTED_LWT               = "lightweightThemes.selectedThemeID";
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
-
-const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
 /* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, XPI_PERMISSION, XPIStates, getURIForResourceInFile, iterDirectory */
 const XPI_INTERNAL_SYMBOLS = [
@@ -3708,7 +3707,7 @@ var XPIInstall = {
     if (addon.type === "theme") {
       if (addon.id === lastLightweightTheme ||
           (!lastLightweightTheme.endsWith("@mozilla.org") &&
-           addon.id === DEFAULT_THEME_ID &&
+           addon.id === AddonSettings.DEFAULT_THEME_ID &&
            !XPIDatabase.getAddonsByType("theme").some(theme => !theme.disabled))) {
         addon.userDisabled = false;
       }
