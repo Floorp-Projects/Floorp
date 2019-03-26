@@ -8,6 +8,7 @@ fails != print-no-animations.html print-no-animations-notref.html # reftest harn
 == animation-on-empty-height-frame.html about:blank
 == in-visibility-hidden-animation.html in-visibility-hidden-animation-ref.html
 == in-visibility-hidden-animation-pseudo-element.html in-visibility-hidden-animation-pseudo-element-ref.html
+== in-visibility-hidden-animation-marker-pseudo-element.html in-visibility-hidden-animation-marker-pseudo-element-ref.html
 == partially-out-of-view-animation.html partially-out-of-view-animation-ref.html
 == animate-display-table-opacity.html animate-display-table-opacity-ref.html
 # We need to run 100% opacity test case when OMTA is disabled to check that the animation creates a stacking context even if the animation is not running on the compositor
@@ -57,9 +58,13 @@ fails-if(layerChecksEnabled) == background-position-important.html background-po
 == stop-animation-on-discarded-pseudo-element.html about:blank
 
 == updating-animation-on-pseudo-element.html updating-animation-on-pseudo-element-ref.html
+== updating-animation-on-marker-pseudo-element.html updating-animation-on-marker-pseudo-element-ref.html
 == content-on-pseudo-element-at-beginning.html content-on-pseudo-element-ref.html
 == content-on-pseudo-element-at-half.html content-on-pseudo-element-ref.html
+== content-on-marker-pseudo-element-at-beginning.html content-on-marker-pseudo-element-at-beginning-ref.html
+== content-on-marker-pseudo-element-at-half.html content-on-marker-pseudo-element-at-beginning-ref.html
 == reframe-and-animation-starts-at-the-same-time.html reframe-and-animation-starts-at-the-same-time-ref.html
+== marker-reframe-and-animation-starts-at-the-same-time.html marker-reframe-and-animation-starts-at-the-same-time-ref.html
 == change-animation-name-to-none-in-rule.html change-animation-name-in-rule-ref.html
 == change-animation-name-to-other-in-rule.html change-animation-name-in-rule-ref.html
 == change-animation-name-to-non-existent-in-rule.html change-animation-name-in-rule-ref.html
