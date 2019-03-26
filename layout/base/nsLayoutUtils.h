@@ -2988,13 +2988,6 @@ class nsLayoutUtils {
       nsPresContext* aPresContext, bool aIsVertical,
       const nsStyleFont* aStyleFont, nscoord aFontSize, bool aUseUserFontSet);
 
-  /**
-   * Appropriately add the correct font if we are using DocumentFonts or
-   * overriding for XUL
-   */
-  static void FixupNoneGeneric(nsFont* aFont, uint8_t aGenericFontID,
-                               const nsFont* aDefaultVariableFont);
-
   static void ComputeSystemFont(nsFont* aSystemFont,
                                 mozilla::LookAndFeel::FontID aFontID,
                                 const nsFont* aDefaultVariableFont);
