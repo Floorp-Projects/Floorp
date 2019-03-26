@@ -14,9 +14,9 @@ kind-dependencies:
 
 
 only-for-build-platforms:
-   - linux64-nightly/opt    # addons.mozilla.org only support 1 platform per locale. That's why we use linux64
+   - linux64-shippable/opt  # addons.mozilla.org only support 1 platform per locale. That's why we use linux64
    - linux64-devedition-nightly/opt
-   - macosx64-nightly/opt   # Although, we need the special locale "ja-JP-Mac" from this platform
+   - macosx64-shippable/opt  # Although, we need the special locale "ja-JP-Mac" from this platform
    - macosx64-devedition-nightly/opt
 
 
@@ -39,6 +39,7 @@ job-template:
                by-platform:
                   # ja-JP-mac is only langpack on mac, and is unlisted always
                   macosx64-nightly.*: unlisted
+                  macosx64-shippable.*: unlisted
                   macosx64-devedition.*: unlisted
                   linux.*-devedition.*: unlisted
                   default: listed

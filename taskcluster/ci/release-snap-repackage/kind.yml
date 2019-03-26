@@ -19,7 +19,7 @@ job-defaults:
    shipping-phase: promote
    scopes: []
    treeherder:
-      platform: linux64/opt
+      platform: linux64-shippable/opt
       kind: build
       tier: 2
    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
@@ -59,6 +59,6 @@ jobs:
    firefox:
       shipping-product: firefox
       attributes:
-         build_platform: linux64-nightly
+         build_platform: linux64-shippable
       treeherder:
          symbol: Snap(r)
