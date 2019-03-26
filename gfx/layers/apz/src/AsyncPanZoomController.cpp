@@ -572,6 +572,40 @@ class MOZ_STACK_CLASS StateChangeNotificationBlocker {
   AsyncPanZoomController::PanZoomState mInitialState;
 };
 
+/**
+ * An RAII class to temporarily apply async test attributes to the provided
+ * AsyncPanZoomController.
+ *
+ * This class should be used in the implementation of any AsyncPanZoomController
+ * method that queries the async scroll offset or async zoom (this includes
+ * the async layout viewport offset, since modifying the async scroll offset
+ * may result in the layout viewport moving as well).
+ */
+class MOZ_RAII AutoApplyAsyncTestAttributes {
+ public:
+  explicit AutoApplyAsyncTestAttributes(const AsyncPanZoomController*);
+  ~AutoApplyAsyncTestAttributes();
+
+ private:
+  AsyncPanZoomController* mApzc;
+  FrameMetrics mPrevFrameMetrics;
+};
+
+AutoApplyAsyncTestAttributes::AutoApplyAsyncTestAttributes(
+    const AsyncPanZoomController* aApzc)
+    // Having to use const_cast here seems less ugly than the alternatives
+    // of making several members of AsyncPanZoomController that
+    // ApplyAsyncTestAttributes() modifies |mutable|, or several methods that
+    // query the async transforms non-const.
+    : mApzc(const_cast<AsyncPanZoomController*>(aApzc)),
+      mPrevFrameMetrics(aApzc->Metrics()) {
+  mApzc->ApplyAsyncTestAttributes();
+}
+
+AutoApplyAsyncTestAttributes::~AutoApplyAsyncTestAttributes() {
+  mApzc->UnapplyAsyncTestAttributes(mPrevFrameMetrics);
+}
+
 class ZoomAnimation : public AsyncPanZoomAnimation {
  public:
   ZoomAnimation(AsyncPanZoomController& aApzc, const CSSPoint& aStartOffset,
