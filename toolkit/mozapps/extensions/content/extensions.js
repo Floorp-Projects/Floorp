@@ -1580,6 +1580,17 @@ var gViewController = {
   onEvent() {},
 };
 
+async function isAddonAllowedInCurrentWindow(aAddon) {
+  if (allowPrivateBrowsingByDefault ||
+      aAddon.type !== "extension" ||
+      !PrivateBrowsingUtils.isContentWindowPrivate(window)) {
+    return true;
+  }
+
+  const perms = await ExtensionPermissions.get(aAddon.id);
+  return perms.permissions.includes("internal:privateBrowsingAllowed");
+}
+
 function hasInlineOptions(aAddon) {
   return aAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE_BROWSER ||
          aAddon.type == "plugin";
@@ -2991,6 +3002,7 @@ var gDetailView = {
     // currently active.
     let privateBrowsingRow = document.getElementById("detail-privateBrowsing-row");
     let privateBrowsingFooterRow = document.getElementById("detail-privateBrowsing-row-footer");
+
     if (allowPrivateBrowsingByDefault || aAddon.type != "extension" ||
         !(aAddon.permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS)) {
       this._privateBrowsing.hidden = true;
@@ -3005,8 +3017,12 @@ var gDetailView = {
       this._privateBrowsing.value = perms.permissions.includes("internal:privateBrowsingAllowed") ? "1" : "0";
     }
 
-    document.getElementById("detail-prefs-btn").hidden = !aIsRemote &&
-      !gViewController.commands.cmd_showItemPreferences.isEnabled(aAddon);
+    // While updating the addon details view, also check if the preferences button should be disabled because
+    // we are in a private window and the addon is not allowed to access it.
+    let hidePreferences = (!aIsRemote &&
+      !gViewController.commands.cmd_showItemPreferences.isEnabled(aAddon)) ||
+      !await isAddonAllowedInCurrentWindow(aAddon);
+    document.getElementById("detail-prefs-btn").hidden = hidePreferences;
 
     var gridRows = document.querySelectorAll("#detail-grid rows row");
     let first = true;
@@ -3285,6 +3301,12 @@ var gDetailView = {
       whenViewLoaded(async () => {
         const addon = this._addon;
         await addon.startupPromise;
+
+        // Do not create the inline addon options if about:addons is opened in a private window
+        // and the addon is not allowed to access it.
+        if (!await isAddonAllowedInCurrentWindow(addon)) {
+          return;
+        }
 
         const browserContainer = await this.createOptionsBrowser(rows);
 
