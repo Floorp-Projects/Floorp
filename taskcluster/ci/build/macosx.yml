@@ -316,7 +316,6 @@ macosx64-shippable/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: internal
-    run-on-projects: []  # Don't run by default yet
     toolchains:
         - linux64-binutils
         - linux64-cctools-port
