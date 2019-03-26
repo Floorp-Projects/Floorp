@@ -47,6 +47,12 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
   nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
       do_GetService("@mozilla.org/gfx/printsettings-service;1");
 
+  // Set the printer name and then read the saved printer settings
+  // from prefs. Reading printer-specific prefs requires the printer
+  // name to be set.
+  settingsX->SetPrinterNameFromPrintInfo();
+  printSettingsSvc->InitPrintSettingsFromPrefs(settingsX, true,
+                                               nsIPrintSettings::kInitSaveAll);
   // Set the print job title
   char16_t** docTitles;
   uint32_t titleCount;
@@ -72,9 +78,6 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
     titleCount = 0;
   }
 
-  // Read default print settings from prefs
-  printSettingsSvc->InitPrintSettingsFromPrefs(settingsX, true,
-                                               nsIPrintSettings::kInitSaveNativeData);
   NSPrintInfo* printInfo = settingsX->GetCocoaPrintInfo();
 
   // Put the print info into the current print operation, since that's where

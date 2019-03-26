@@ -85,6 +85,9 @@ class nsPrintSettingsX : public nsPrintSettings {
   void GetAdjustedPaperSize(double *aWidth, double *aHeight);
   nsresult SetCocoaPaperSize(double aWidth, double aHeight);
 
+  // Set the printer name using the native PrintInfo data.
+  void SetPrinterNameFromPrintInfo();
+
  protected:
   virtual ~nsPrintSettingsX();
 
