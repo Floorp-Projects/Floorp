@@ -13,7 +13,6 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
@@ -115,12 +114,6 @@ void PrincipalVerifier::VerifyOnMainThread() {
   // We disallow null principal on the client side, but double-check here.
   if (NS_WARN_IF(principal->GetIsNullPrincipal())) {
     DispatchToInitiatingThread(NS_ERROR_FAILURE);
-    return;
-  }
-
-  nsCOMPtr<nsIScriptSecurityManager> ssm = nsContentUtils::GetSecurityManager();
-  if (NS_WARN_IF(!ssm)) {
-    DispatchToInitiatingThread(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
     return;
   }
 
