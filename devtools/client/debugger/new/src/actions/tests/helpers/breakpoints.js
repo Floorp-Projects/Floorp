@@ -45,7 +45,7 @@ export function generateBreakpoint(
     text: "",
     location: {
       sourceUrl: `http://localhost:8000/examples/${filename}`,
-      sourceId: `${filename}/originalSource`,
+      sourceId: `${filename}`,
       line,
       column
     },
