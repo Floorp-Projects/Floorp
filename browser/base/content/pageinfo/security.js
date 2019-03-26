@@ -344,7 +344,7 @@ function realmHasPasswords(uri) {
  */
 function previousVisitCount(host, endTimeReference) {
   if (!host)
-    return false;
+    return 0;
 
   var historyService = Cc["@mozilla.org/browser/nav-history-service;1"]
                          .getService(Ci.nsINavHistoryService);
