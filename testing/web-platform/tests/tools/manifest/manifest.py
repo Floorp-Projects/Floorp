@@ -265,6 +265,11 @@ class Manifest(object):
             if not update:
                 rel_path = source_file
                 seen_files.add(rel_path)
+                assert rel_path in self._path_hash
+                old_hash, old_type = self._path_hash[rel_path]
+                if old_type in reftest_types:
+                    manifest_items = self._data[old_type][rel_path]
+                    reftest_nodes.extend((item, old_hash) for item in manifest_items)
             else:
                 rel_path = source_file.rel_path
                 seen_files.add(rel_path)
