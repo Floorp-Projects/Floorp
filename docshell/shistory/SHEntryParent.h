@@ -156,8 +156,14 @@ class SHEntryParent final : public PSHEntryParent {
                   const nsCString& aContentType,
                   nsIPrincipal* aTriggeringPrincipal,
                   nsIPrincipal* aPrincipalToInherit,
+                  nsIPrincipal* aStoragePrincipalToInherit,
                   nsIContentSecurityPolicy* aCsp, const nsID& aDocshellID,
-                  const bool& aDynamicCreation);
+                  const bool& aDynamicCreation, nsIURI* aOriginalURI,
+                  nsIURI* aResultPrincipalURI, const bool& aLoadReplace,
+                  nsIReferrerInfo* aReferrerInfo, const nsAString& srcdoc,
+                  const bool& srcdocEntry, nsIURI* aBaseURI,
+                  const bool& aSaveLayoutState, const bool& aExpired);
+  bool RecvClone(PSHEntryParent** aCloneEntry);
   bool RecvHasDetachedEditor(bool* aHasDetachedEditor);
   bool RecvIsDynamicallyAdded(bool* aIsDynamicallyAdded);
   bool RecvHasDynamicallyAddedChild(bool* aHasDynamicallyAddedChild);

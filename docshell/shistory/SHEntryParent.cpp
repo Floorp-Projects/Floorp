@@ -428,11 +428,17 @@ bool SHEntryParent::RecvCreate(
     nsIURI* aURI, const nsString& aTitle, nsIInputStream* aInputStream,
     const uint32_t& aCacheKey, const nsCString& aContentType,
     nsIPrincipal* aTriggeringPrincipal, nsIPrincipal* aPrincipalToInherit,
-    nsIContentSecurityPolicy* aCsp, const nsID& aDocshellID,
-    const bool& aDynamicCreation) {
+    nsIPrincipal* aStoragePrincipalToInherit, nsIContentSecurityPolicy* aCsp,
+    const nsID& aDocshellID, const bool& aDynamicCreation, nsIURI* aOriginalURI,
+    nsIURI* aResultPrincipalURI, const bool& aLoadReplace,
+    nsIReferrerInfo* aReferrerInfo, const nsAString& srcdoc,
+    const bool& srcdocEntry, nsIURI* aBaseURI, const bool& aSaveLayoutState,
+    const bool& aExpired) {
   DebugOnly<nsresult> rv = mEntry->Create(
       aURI, aTitle, aInputStream, aCacheKey, aContentType, aTriggeringPrincipal,
-      aPrincipalToInherit, aCsp, aDocshellID, aDynamicCreation);
+      aPrincipalToInherit, aStoragePrincipalToInherit, aCsp, aDocshellID,
+      aDynamicCreation, aOriginalURI, aResultPrincipalURI, aLoadReplace,
+      aReferrerInfo, srcdoc, srcdocEntry, aBaseURI, aSaveLayoutState, aExpired);
   MOZ_ASSERT(NS_SUCCEEDED(rv), "Didn't expect this to fail.");
   return true;
 }

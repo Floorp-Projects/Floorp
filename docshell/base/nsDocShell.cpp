@@ -11412,7 +11412,7 @@ nsresult nsDocShell::AddToSessionHistory(
   nsCOMPtr<nsIPrincipal> principalToInherit = aPrincipalToInherit;
   nsCOMPtr<nsIPrincipal> storagePrincipalToInherit = aStoragePrincipalToInherit;
   nsCOMPtr<nsIContentSecurityPolicy> csp = aCsp;
-  bool expired = false;
+  bool expired = false;  // by default the page is not expired
   bool discardLayoutState = false;
   nsCOMPtr<nsICacheInfoChannel> cacheChannel;
   if (aChannel) {
@@ -11481,40 +11481,28 @@ nsresult nsDocShell::AddToSessionHistory(
     }
   }
 
-  // Title is set in nsDocShell::SetTitle()
-  entry->Create(aURI,                 // uri
-                EmptyString(),        // Title
-                inputStream,          // Post data stream
-                cacheKey,             // CacheKey
-                mContentTypeHint,     // Content-type
-                triggeringPrincipal,  // Channel or provided principal
-                principalToInherit, storagePrincipalToInherit, csp, HistoryID(),
-                mDynamicallyCreated);
+  nsAutoString srcdoc;
+  bool srcdocEntry = false;
+  nsCOMPtr<nsIURI> baseURI;
 
-  entry->SetOriginalURI(originalURI);
-  entry->SetResultPrincipalURI(resultPrincipalURI);
-  entry->SetLoadReplace(loadReplace);
-  entry->SetReferrerInfo(referrerInfo);
   nsCOMPtr<nsIInputStreamChannel> inStrmChan = do_QueryInterface(aChannel);
   if (inStrmChan) {
     bool isSrcdocChannel;
     inStrmChan->GetIsSrcdocChannel(&isSrcdocChannel);
     if (isSrcdocChannel) {
-      nsAutoString srcdoc;
       inStrmChan->GetSrcdocData(srcdoc);
-      entry->SetSrcdocData(srcdoc);
-      nsCOMPtr<nsIURI> baseURI;
+      srcdocEntry = true;
       inStrmChan->GetBaseURI(getter_AddRefs(baseURI));
-      entry->SetBaseURI(baseURI);
+    } else {
+      srcdoc.SetIsVoid(true);
     }
   }
   /* If cache got a 'no-store', ask SH not to store
    * HistoryLayoutState. By default, SH will set this
    * flag to true and save HistoryLayoutState.
    */
-  if (discardLayoutState) {
-    entry->SetSaveLayoutStateFlag(false);
-  }
+  bool saveLayoutState = !discardLayoutState;
+
   if (cacheChannel) {
     // Check if the page has expired from cache
     uint32_t expTime = 0;
@@ -11524,9 +11512,18 @@ nsresult nsDocShell::AddToSessionHistory(
       expired = true;
     }
   }
-  if (expired) {
-    entry->SetExpirationStatus(true);
-  }
+
+  // Title is set in nsDocShell::SetTitle()
+  entry->Create(aURI,                 // uri
+                EmptyString(),        // Title
+                inputStream,          // Post data stream
+                cacheKey,             // CacheKey
+                mContentTypeHint,     // Content-type
+                triggeringPrincipal,  // Channel or provided principal
+                principalToInherit, storagePrincipalToInherit, csp, HistoryID(),
+                mDynamicallyCreated, originalURI, resultPrincipalURI,
+                loadReplace, referrerInfo, srcdoc, srcdocEntry, baseURI,
+                saveLayoutState, expired);
 
   if (root == static_cast<nsIDocShellTreeItem*>(this) && mSessionHistory) {
     // If we need to clone our children onto the new session
