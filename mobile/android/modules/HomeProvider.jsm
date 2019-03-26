@@ -333,8 +333,8 @@ HomeStorage.prototype = {
    */
   async save(data, options) {
     if (data && data.length > MAX_SAVE_COUNT) {
-      throw "save failed for dataset = " + this.datasetId +
-        ": you cannot save more than " + MAX_SAVE_COUNT + " items at once";
+      throw new Error(`save failed for dataset = ${this.datasetId}: ` +
+        `you cannot save more than ${MAX_SAVE_COUNT} items at once`);
     }
 
     let db = await getDatabaseConnection();

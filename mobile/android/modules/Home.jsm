@@ -233,13 +233,13 @@ var HomePanels = (function() {
       let view = options.views[data.viewIndex];
 
       if (!view) {
-        throw "Home.panels: Invalid view for panel.id = " + data.panelId
-            + ", view.index = " + data.viewIndex;
+        throw new Error("Home.panels: Invalid view for panel.id = " +
+          `${data.panelId}, view.index = ${data.viewIndex}`);
       }
 
       if (!view.onrefresh || typeof view.onrefresh !== "function") {
-        throw "Home.panels: Invalid onrefresh for panel.id = " + data.panelId
-            + ", view.index = " + data.viewIndex;
+        throw new Error("Home.panels: Invalid onrefresh for panel.id = " +
+          `${data.panelId}, view.index = ${data.viewIndex}`);
       }
 
       view.onrefresh();
@@ -321,12 +321,14 @@ var HomePanels = (function() {
       // Use FRAME layout by default
       this.layout = Layout.FRAME;
     } else if (!_valueExists(Layout, this.layout)) {
-      throw "Home.panels: Invalid layout for panel: panel.id = " + this.id + ", panel.layout =" + this.layout;
+      throw new Error("Home.panels: Invalid layout for panel: panel.id = " +
+          `${this.id}, panel.layout =${this.layout}`);
     }
 
     for (let view of this.views) {
       if (!_valueExists(View, view.type)) {
-        throw "Home.panels: Invalid view type: panel.id = " + this.id + ", view.type = " + view.type;
+        throw new Error("Home.panels: Invalid view type: panel.id = " +
+          `${this.id}, view.type = ${view.type}`);
       }
 
       if (!view.itemType) {
@@ -338,18 +340,21 @@ var HomePanels = (function() {
           view.itemType = Item.IMAGE;
         }
       } else if (!_valueExists(Item, view.itemType)) {
-        throw "Home.panels: Invalid item type: panel.id = " + this.id + ", view.itemType = " + view.itemType;
+        throw new Error("Home.panels: Invalid item type: panel.id = " +
+          `${this.id}, view.itemType = ${view.itemType}`);
       }
 
       if (!view.itemHandler) {
         // Use BROWSER item handler by default
         view.itemHandler = ItemHandler.BROWSER;
       } else if (!_valueExists(ItemHandler, view.itemHandler)) {
-        throw "Home.panels: Invalid item handler: panel.id = " + this.id + ", view.itemHandler = " + view.itemHandler;
+        throw new Error("Home.panels: Invalid item handler: panel.id = " +
+          `${this.id}, view.itemHandler = ${view.itemHandler}`);
       }
 
       if (!view.dataset) {
-        throw "Home.panels: No dataset provided for view: panel.id = " + this.id + ", view.type = " + view.type;
+        throw new Error("Home.panels: No dataset provided for view: panel.id = " +
+          `${this.id}, view.type = ${view.type}`);
       }
 
       if (view.onrefresh) {
