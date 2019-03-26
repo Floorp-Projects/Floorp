@@ -564,7 +564,11 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
               pctx->Document()->GetReadyStateEnum() <
                   Document::READYSTATE_COMPLETE) {
             nsPIDOMWindowInner* win = pctx->Document()->GetInnerWindow();
-            if (win) {
+            uint32_t frameRateMultiplier = pctx->GetNextFrameRateMultiplier();
+            if (!frameRateMultiplier) {
+              pctx->DidUseFrameRateMultiplier();
+            }
+            if (win && frameRateMultiplier) {
               dom::Performance* perf = win->GetPerformance();
               // Limit slower refresh rate to 5 seconds between the
               // first contentful paint and page load.
@@ -575,7 +579,9 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
                   // use idle queue.
                   TimeDuration rate = mVsyncRefreshDriverTimer->GetTimerRate();
                   uint32_t slowRate =
-                      static_cast<uint32_t>(rate.ToMilliseconds() * 4);
+                      static_cast<uint32_t>(rate.ToMilliseconds() *
+                                            frameRateMultiplier);
+                  pctx->DidUseFrameRateMultiplier();
                   nsCOMPtr<nsIRunnable> vsyncEvent = NewRunnableMethod<>(
                       "RefreshDriverVsyncObserver::NormalPriorityNotify[IDLE]",
                       this, &RefreshDriverVsyncObserver::NormalPriorityNotify);
