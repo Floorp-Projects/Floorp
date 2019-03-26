@@ -1054,10 +1054,12 @@ void JsepSessionImpl::EnsureHasOwnTransport(const SdpMediaSection& msection,
 
   transceiver->ClearBundleLevel();
 
-  if (mSdpHelper.HasRtcp(msection.GetProtocol())) {
-    transport.mComponents = 2;
-  } else {
-    transport.mComponents = 1;
+  if (!transport.mComponents) {
+    if (mSdpHelper.HasRtcp(msection.GetProtocol())) {
+      transport.mComponents = 2;
+    } else {
+      transport.mComponents = 1;
+    }
   }
 
   if (transport.mTransportId.empty()) {
