@@ -35,16 +35,16 @@ function showResetDialog() {
   restartApp();
 }
 
-function onDefaultButton() {
+function onDefaultButton(event) {
   if (defaultToReset) {
+    // Prevent starting into safe mode while restarting.
+    event.preventDefault();
     // Restart to reset the profile.
     resetProfile();
     restartApp();
-    // Return false to prevent starting into safe mode while restarting.
-    return false;
   }
+  // Dialog will be closed by default Event handler.
   // Continue in safe mode. No restart needed.
-  return true;
 }
 
 function onCancel() {
@@ -75,5 +75,7 @@ function onLoad() {
     document.documentElement.getButton("extra1").hidden = true;
     document.getElementById("resetProfileInstead").hidden = true;
   }
+  document.addEventListener("dialogaccept", onDefaultButton);
+  document.addEventListener("dialogcancel", onCancel);
   document.addEventListener("dialogextra1", onExtra1);
 }

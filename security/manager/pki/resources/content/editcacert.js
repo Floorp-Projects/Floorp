@@ -18,6 +18,8 @@ var gCert;
 function onLoad() {
   gCert = window.arguments[0];
 
+  document.addEventListener("dialogaccept", onDialogAccept);
+
   let certMsg = document.getElementById("certmsg");
   document.l10n.setAttributes(certMsg, "edit-trust-ca", { certName: gCert.commonName});
 
@@ -32,8 +34,6 @@ function onLoad() {
 
 /**
  * ondialogaccept() handler.
- *
- * @returns {Boolean} true to make the dialog close, false otherwise.
  */
 function onDialogAccept() {
   let sslCheckbox = document.getElementById("trustSSL");
@@ -42,5 +42,4 @@ function onDialogAccept() {
   let trustEmail = emailCheckbox.checked ? Ci.nsIX509CertDB.TRUSTED_EMAIL : 0;
 
   gCertDB.setCertTrust(gCert, Ci.nsIX509Cert.CA_CERT, trustSSL | trustEmail);
-  return true;
 }

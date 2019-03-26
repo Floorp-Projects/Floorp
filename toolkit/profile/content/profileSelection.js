@@ -55,9 +55,11 @@ function startup() {
     window.close();
     throw (e);
   }
+  document.addEventListener("dialogaccept", acceptDialog);
+  document.addEventListener("dialogcancel", exitDialog);
 }
 
-function acceptDialog() {
+function acceptDialog(event) {
   var appName = gBrandBundle.getString("brandShortName");
 
   var profilesElement = document.getElementById("profiles");
@@ -67,8 +69,8 @@ function acceptDialog() {
     var pleaseSelect =
       gProfileManagerBundle.getFormattedString("pleaseSelect", [appName]);
     Services.prompt.alert(window, pleaseSelectTitle, pleaseSelect);
-
-    return false;
+    event.preventDefault();
+    return;
   }
 
   gDialogParams.objects.insertElementAt(selectedProfile.profile.rootDir, 0);
@@ -85,14 +87,10 @@ function acceptDialog() {
   gDialogParams.SetInt(0, 1);
   /* Bug 257777 */
   gDialogParams.SetInt(1, document.getElementById("offlineState").checked ? 1 : 0);
-
-  return true;
 }
 
 function exitDialog() {
   updateStartupPrefs();
-
-  return true;
 }
 
 function updateStartupPrefs() {

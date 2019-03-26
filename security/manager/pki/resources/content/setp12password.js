@@ -28,12 +28,12 @@
 function onLoad() {
   // Ensure the first password textbox has focus.
   document.getElementById("pw1").focus();
+  document.addEventListener("dialogaccept", onDialogAccept);
+  document.addEventListener("dialogcancel", onDialogCancel);
 }
 
 /**
  * ondialogaccept() handler.
- *
- * @returns {Boolean} true to make the dialog close, false otherwise.
  */
 function onDialogAccept() {
   let password = document.getElementById("pw1").value;
@@ -41,18 +41,14 @@ function onDialogAccept() {
   let retVals = window.arguments[0].QueryInterface(Ci.nsIWritablePropertyBag2);
   retVals.setPropertyAsBool("confirmedPassword", true);
   retVals.setPropertyAsAString("password", password);
-  return true;
 }
 
 /**
  * ondialogcancel() handler.
- *
- * @returns {Boolean} true to make the dialog close, false otherwise.
  */
 function onDialogCancel() {
   let retVals = window.arguments[0].QueryInterface(Ci.nsIWritablePropertyBag2);
   retVals.setPropertyAsBool("confirmedPassword", false);
-  return true;
 }
 
 /**

@@ -22,8 +22,7 @@
         role="dialog"
         data-l10n-id="dialog-title"
         data-l10n-attrs="style"
-        onload="gSanitizePromptDialog.init();"
-        ondialogaccept="return gSanitizePromptDialog.sanitize();">
+        onload="gSanitizePromptDialog.init();">
 
   <linkset>
     <html:link rel="localization" href="browser/sanitize.ftl"/>

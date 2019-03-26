@@ -15,8 +15,7 @@
         data-l10n-id="select-bookmark-window"
         data-l10n-attrs="title, style"
         persist="screenX screenY width height" screenX="24" screenY="24"
-        onload="SelectBookmarkDialog.init();"
-        ondialogaccept="SelectBookmarkDialog.accept();">
+        onload="SelectBookmarkDialog.init();">
 
   <linkset>
     <html:link rel="localization" href="browser/preferences/selectBookmark.ftl"/>

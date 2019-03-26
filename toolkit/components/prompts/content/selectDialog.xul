@@ -8,8 +8,7 @@
 <!DOCTYPE dialog SYSTEM "chrome://global/locale/commonDialog.dtd">
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="dialogOnLoad()"
-      ondialogaccept="return dialogOK();">
+      onload="dialogOnLoad()">
 
   <script type="application/javascript" src="chrome://global/content/selectDialog.js" />
   <keyset id="dialogKeys"/>
