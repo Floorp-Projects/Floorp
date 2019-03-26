@@ -191,7 +191,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
         mSendChannel(-1),
         mDtmfEnabled(false),
         mMutex("WebrtcAudioConduit::mMutex"),
-        mCaptureDelay(150),
         mStsThread(aStsThread) {}
 
   virtual ~WebrtcAudioConduit();
@@ -341,10 +340,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   bool mDtmfEnabled;
 
   Mutex mMutex;
-
-  // Current "capture" delay (really output plus input delay)
-  // Written from main thread. Read from audio thread.
-  int32_t mCaptureDelay;
 
   // Accessed from audio thread.
   webrtc::AudioFrame mAudioFrame;  // for output pulls

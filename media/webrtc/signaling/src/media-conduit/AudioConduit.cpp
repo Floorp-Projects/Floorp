@@ -364,18 +364,6 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureSendMediaCodec(
 
   mDtmfEnabled = codecConfig->mDtmfEnabled;
 
-  // TEMPORARY - see bug 694814 comment 2
-  nsresult rv;
-  nsCOMPtr<nsIPrefService> prefs =
-      do_GetService("@mozilla.org/preferences-service;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
-
-    if (branch) {
-      branch->GetIntPref("media.peerconnection.capture_delay", &mCaptureDelay);
-    }
-  }
-
   condError = StartTransmitting();
   if (condError != kMediaConduitNoError) {
     return condError;
@@ -571,7 +559,6 @@ MediaConduitErrorCode WebrtcAudioConduit::SendAudioFrame(
     return kMediaConduitSessionNotInited;
   }
 
-  capture_delay = mCaptureDelay;
   // Insert the samples
   mPtrVoEBase->audio_transport()->PushCaptureData(
       mSendChannel, audio_data,
