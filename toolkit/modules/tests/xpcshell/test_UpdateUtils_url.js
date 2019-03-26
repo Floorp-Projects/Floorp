@@ -224,8 +224,8 @@ add_task(async function test_locale() {
   do_get_profile();
 
   let url = URL_PREFIX + "%LOCALE%/";
-  Assert.equal(await getResult(url), AppConstants.INSTALL_LOCALE,
-               "the url param for %LOCALE%" + MSG_SHOULD_EQUAL);
+  Assert.equal(await getResult(url), "en-US",
+               "Assuming we are built with en-US, the url param for %LOCALE%" + MSG_SHOULD_EQUAL);
 });
 
 // url constructed with %CHANNEL%
