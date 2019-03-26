@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
-<title>Web NFC: Test exceptions in nfc.push</title>
+<title>Web NFC: Test exceptions in NFCWriter.push</title>
 <link rel="author" title="Intel" href="http://www.intel.com"/>
 <link rel="help" href="https://w3c.github.io/web-nfc/"/>
 <script src="/resources/testharness.js"></script>
@@ -75,73 +75,89 @@ const invalid_syntax_messages =
     ];
 
 promise_test(t => {
-  let promises = [];
+  const writer = new NFCWriter();
+  const promises = [];
   invalid_type_messages.forEach(message => {
     promises.push(
-      promise_rejects(t, new TypeError(), navigator.nfc.push(message)));
+      promise_rejects(t, new TypeError(), writer.push(message)));
   });
   return Promise.all(promises);
-}, "Test that promise is rejected with TypeError if NDEFMessage is invalid.");
+}, "Test that promise is rejected with TypeError if NDEFMessageSource is invalid.");
 
 promise_test(t => {
-  let promises = [];
+  const writer = new NFCWriter();
+  const promises = [];
   invalid_syntax_messages.forEach(message => {
     promises.push(
-      promise_rejects(t, 'SyntaxError', navigator.nfc.push(message)));
+      promise_rejects(t, 'SyntaxError', writer.push(message)));
   });
   return Promise.all(promises);
-}, "'Test that promise is rejected with SyntaxError if NDEFMessage contains invalid records.");
+}, "'Test that promise is rejected with SyntaxError if NDEFMessageSource contains invalid records.");
 
 promise_test(t => {
-  return promise_rejects(t, new TypeError(), navigator.nfc.push(test_text_data, { timeout: "invalid"}));
-}, "nfc.push should fail with TypeError when invalid timeout is provided.");
+  const writer = new NFCWriter();
+  const controller = new AbortController();
+  const p = writer.push(test_text_data, { signal: controller.signal });
+  controller.abort();
+  return promise_rejects(t, 'NoModificationAllowedError', p);
+}, "NFCWriter.push should fail if the instance has already initiated NFC data transfer.");
 
 promise_test(t => {
-  return promise_rejects(t, new TypeError(), navigator.nfc.push(test_text_data, { timeout: -1 }));
-}, "nfc.push should fail with TypeError when invalid negative timeout value is provided.");
+  const writer = new NFCWriter();
+  const controller = new AbortController();
+  assert_false(controller.signal.aborted);
+  controller.abort();
+  assert_true(controller.signal.aborted);
+  return promise_rejects(t, 'AbortError', writer.push(test_text_data, { signal: controller.signal }));
+}, "NFCWriter.push should fail if signal's aborted flag is set.");
 
 promise_test(t => {
-  return promise_rejects(t, 'TimeoutError', navigator.nfc.push(test_text_data, { timeout: 1 }));
-}, "nfc.push should fail with TimeoutError when timer expires.");
+  const writer = new NFCWriter();
+  return promise_rejects(t, new TypeError(), writer.push(test_text_data, { timeout: "invalid"}));
+}, "NFCWriter.push should fail with TypeError when invalid timeout is provided.");
 
 promise_test(t => {
-  let promise = navigator.nfc.push(test_text_data, { timeout: 100 });
-  navigator.nfc.cancelPush();
-  return promise_rejects(t, 'AbortError', promise);
-}, "nfc.cancelPush should reject pending promise with AbortError.");
+  const writer = new NFCWriter();
+  return promise_rejects(t, new TypeError(), writer.push(test_text_data, { timeout: -1 }));
+}, "NFCWriter.push should fail with TypeError when invalid negative timeout value is provided.");
 
 promise_test(t => {
-  return promise_rejects(t, 'NotSupportedError', navigator.nfc.push(new ArrayBuffer(32 * 1024 + 1)));
+  const writer = new NFCWriter();
+  return promise_rejects(t, 'TimeoutError', writer.push(test_text_data, { timeout: 1 }));
+}, "NFCWriter.push should fail with TimeoutError when timer expires.");
+
+promise_test(t => {
+  const writer = new NFCWriter();
+  return promise_rejects(t, 'NotSupportedError', writer.push(new ArrayBuffer(32 * 1024 + 1)));
 }, "Reject promise with NotSupportedError if NFC message size exceeds 32KB.");
 
 promise_test(t => {
-  let message = createMessage([createTextRecord(test_text_data)]);
+  const writer = new NFCWriter();
+  const message = createMessage([createTextRecord(test_text_data)]);
   message.url = '%00/invalid/ path';
-  return promise_rejects(t, 'SyntaxError', navigator.nfc.push(message));
+  return promise_rejects(t, 'SyntaxError', writer.push(message));
 }, "Reject promise with SyntaxError if WebNFC Id cannot be created from provided URL.");
 
 promise_test(t => {
-  let message = createMessage([createRecord('json','application/json',
+  const writer = new NFCWriter();
+  const message = createMessage([createRecord('json','application/json',
       { get x(){ return this; } })]);
-  return promise_rejects(t, 'SyntaxError', navigator.nfc.push(message));
+  return promise_rejects(t, 'SyntaxError', writer.push(message));
 }, "Reject promise with SyntaxError if 'json' record cannot be serialized.");
 
 promise_test(t => {
-  return promise_rejects(t, new TypeError(), navigator.nfc.push(test_text_data, {target: "invalid"}));
-}, "nfc.push should fail with TypeError when invalid target value is provided.");
-
-promise_test(t => {
-  return promise_rejects(t, new TypeError(), navigator.nfc.cancelPush("invalid"));
-}, "nfc.cancelPush should fail with TypeError when invalid id value is provided.");
+  const writer = new NFCWriter();
+  return promise_rejects(t, new TypeError(), writer.push(test_text_data, {target: "invalid"}));
+}, "NFCWriter.push should fail with TypeError when invalid target value is provided.");
 
 promise_test(() => {
   return new Promise((resolve,reject) => {
-    let iframe = document.createElement('iframe');
+    const iframe = document.createElement('iframe');
     iframe.srcdoc = `<script>
                       window.onmessage = message => {
                         if (message.data === "Ready") {
-                          let onSuccess = () => { parent.postMessage("Failure", "*"); };
-                          let onError = error => {
+                          const onSuccess = () => { parent.postMessage("Failure", "*"); };
+                          const onError = error => {
                             if (error.name == "SecurityError") {
                               parent.postMessage("Success", "*");
                             } else {
@@ -149,7 +165,8 @@ promise_test(() => {
                             }
                           };
                           try {
-                            navigator.nfc.push("Test").then(onSuccess, onError);
+                            const writer = new NFCWriter();
+                            writer.push("Test").then(onSuccess, onError);
                           } catch(e) {
                             parent.postMessage("Failure", "*");
                           }
