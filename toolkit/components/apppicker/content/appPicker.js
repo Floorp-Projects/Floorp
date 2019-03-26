@@ -18,6 +18,8 @@ AppPicker.prototype =
     appPickerLoad: function appPickerLoad() {
         const nsILocalHandlerApp = Ci.nsILocalHandlerApp;
 
+        document.addEventListener("dialogextra2", function() { g_dialog.appPickerBrowse(); });
+
         this._incomingParams = window.arguments[0];
         this._incomingParams.handlerApp = null;
 
@@ -96,8 +98,6 @@ AppPicker.prototype =
           // display a message saying nothing is configured
           document.getElementById("app-picker-notfound").removeAttribute("hidden");
         }
-
-        document.addEventListener("dialogextra2", function() { g_dialog.appPickerBrowse(); });
     },
 
     /**
