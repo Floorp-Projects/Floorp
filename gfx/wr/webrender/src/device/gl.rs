@@ -658,13 +658,6 @@ impl Drop for VAO {
 
 pub struct PBO {
     id: gl::GLuint,
-    reserved_size: usize,
-}
-
-impl PBO {
-    pub fn get_reserved_size(&self) -> usize {
-        self.reserved_size
-    }
 }
 
 impl Drop for PBO {
@@ -673,17 +666,6 @@ impl Drop for PBO {
             thread::panicking() || self.id == 0,
             "renderer::deinit not called"
         );
-    }
-}
-
-pub struct BoundPBO<'a> {
-    device: &'a mut Device,
-    pub data: &'a [u8]
-}
-
-impl<'a> Drop for BoundPBO<'a> {
-    fn drop(&mut self) {
-        self.device.gl.unmap_buffer(gl::PIXEL_PACK_BUFFER);
     }
 }
 
@@ -2347,92 +2329,12 @@ impl Device {
 
     pub fn create_pbo(&mut self) -> PBO {
         let id = self.gl.gen_buffers(1)[0];
-        PBO {
-            id,
-            reserved_size: 0,
-        }
-    }
-
-    pub fn create_pbo_with_size(&mut self, size: usize) -> PBO {
-        let mut pbo = self.create_pbo();
-
-        self.gl.bind_buffer(gl::PIXEL_PACK_BUFFER, pbo.id);
-        self.gl.pixel_store_i(gl::PACK_ALIGNMENT, 1);
-        self.gl.buffer_data_untyped(
-            gl::PIXEL_PACK_BUFFER,
-            size as _,
-            ptr::null(),
-            gl::STREAM_READ,
-        );
-        self.gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, 0);
-
-        pbo.reserved_size = size;
-        pbo
-    }
-
-    pub fn read_pixels_into_pbo(
-        &mut self,
-        read_target: ReadTarget,
-        rect: DeviceIntRect,
-        format: ImageFormat,
-        pbo: &PBO,
-    ) {
-        let byte_size = rect.size.area() as usize * format.bytes_per_pixel() as usize;
-
-        assert!(byte_size <= pbo.reserved_size);
-
-        self.bind_read_target(read_target);
-
-        self.gl.bind_buffer(gl::PIXEL_PACK_BUFFER, pbo.id);
-        self.gl.pixel_store_i(gl::PACK_ALIGNMENT, 1);
-
-        let gl_format = self.gl_describe_format(format);
-
-        unsafe {
-            self.gl.read_pixels_into_pbo(
-                rect.origin.x as _,
-                rect.origin.y as _,
-                rect.size.width as _,
-                rect.size.height as _,
-                gl_format.external,
-                gl_format.pixel_type,
-            );
-        }
-
-        self.gl.bind_buffer(gl::PIXEL_PACK_BUFFER, 0);
-    }
-
-    pub fn map_pbo_for_readback<'a>(&'a mut self, pbo: &'a PBO) -> Option<BoundPBO<'a>> {
-        let buf_ptr = match self.gl.get_type() {
-            gl::GlType::Gl => {
-                self.gl.map_buffer(gl::PIXEL_PACK_BUFFER, gl::READ_ONLY)
-            }
-
-            gl::GlType::Gles => {
-                self.gl.map_buffer_range(
-                    gl::PIXEL_PACK_BUFFER,
-                    0,
-                    pbo.reserved_size as _,
-                    gl::READ_ONLY)
-            }
-        };
-
-        if buf_ptr.is_null() {
-            return None;
-        }
-
-        let buffer = unsafe { slice::from_raw_parts(buf_ptr as *const u8, pbo.reserved_size) };
-
-        Some(BoundPBO {
-            device: self,
-            data: buffer,
-        })
+        PBO { id }
     }
 
     pub fn delete_pbo(&mut self, mut pbo: PBO) {
         self.gl.delete_buffers(&[pbo.id]);
         pbo.id = 0;
-        pbo.reserved_size = 0
     }
 
     pub fn upload_texture<'a, T>(

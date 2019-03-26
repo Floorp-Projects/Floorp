@@ -12,7 +12,6 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/webrender/webrender_ffi.h"
-#include "mozilla/webrender/RendererScreenshotGrabber.h"
 
 namespace mozilla {
 
@@ -111,8 +110,6 @@ class RendererOGL {
   layers::CompositorBridgeParent* mBridge;
   wr::WindowId mWindowId;
   TimeStamp mFrameStartTime;
-
-  RendererScreenshotGrabber mScreenshotGrabber;
 };
 
 }  // namespace wr
