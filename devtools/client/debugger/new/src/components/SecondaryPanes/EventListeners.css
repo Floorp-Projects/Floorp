@@ -3,56 +3,56 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .event-listeners-content {
-	padding-top: 4px;
-	padding-bottom: 4px;
-	padding-inline-start: 14px;
-	padding-inline-end: 20px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-inline-start: 14px;
+  padding-inline-end: 20px;
 }
 
 .event-listeners-content ul {
-	padding: 0;
-	list-style-type: none;
+  padding: 0;
+  list-style-type: none;
 }
 
 .event-listener-group {
-	user-select: none;
+  user-select: none;
 }
 
 .event-listener-header {
-	display: flex;
-	align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .event-listener-expand {
-	border: none;
-	background: none;
-	padding: 4px 5px;
-	line-height: 12px;
+  border: none;
+  background: none;
+  padding: 4px 5px;
+  line-height: 12px;
 }
 
 .event-listener-expand:hover {
-	background: transparent;
+  background: transparent;
 }
 
 .event-listener-group input[type="checkbox"] {
-	margin: 0px;
-	margin-inline-end: 4px;
+  margin: 0px;
+  margin-inline-end: 4px;
 }
 
 .event-listener-label {
-	display: flex;
-	align-items: center;
-	padding-inline-start: 2px;
-	padding-inline-end: 10px;
+  display: flex;
+  align-items: center;
+  padding-inline-start: 2px;
+  padding-inline-end: 10px;
 }
 
 .event-listener-category {
-	padding: 3px 0px;
-	line-height: 14px;
+  padding: 3px 0px;
+  line-height: 14px;
 }
 
 .event-listeners-content .arrow {
-	margin-inline-end: 0;
+  margin-inline-end: 0;
 }
 
 html[dir="ltr"] .event-listeners-content .arrow.expanded {
@@ -64,19 +64,19 @@ html[dir="rtl"] .event-listeners-content .arrow.expanded {
 }
 
 .event-listener-event {
-	display: flex;
-	align-items: center;
-	margin-inline-start: 30px;
+  display: flex;
+  align-items: center;
+  margin-inline-start: 30px;
 }
 
 .event-listener-name {
-	line-height: 14px;
-	padding: 3px 0px;
+  line-height: 14px;
+  padding: 3px 0px;
 }
 
 .event-listener-event input {
-	margin-inline-end: 4px;
-	margin-inline-start: 0px;
-	margin-top: 0px;
-	margin-bottom: 0px;
+  margin-inline-end: 4px;
+  margin-inline-start: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
