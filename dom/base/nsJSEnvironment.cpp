@@ -2357,11 +2357,17 @@ static void SetMemoryGCModePrefChangedCallback(const char* aPrefName,
       Preferences::GetBool("javascript.options.mem.gc_incremental");
   JSGCMode mode;
   if (enableIncrementalGC) {
-    mode = JSGC_MODE_ZONE_INCREMENTAL;
-  } else if (enableZoneGC) {
-    mode = JSGC_MODE_ZONE;
+    if (enableZoneGC) {
+      mode = JSGC_MODE_ZONE_INCREMENTAL;
+    } else {
+      mode = JSGC_MODE_INCREMENTAL;
+    }
   } else {
-    mode = JSGC_MODE_GLOBAL;
+    if (enableZoneGC) {
+      mode = JSGC_MODE_ZONE;
+    } else {
+      mode = JSGC_MODE_GLOBAL;
+    }
   }
 
   SetGCParameter(JSGC_MODE, mode);
