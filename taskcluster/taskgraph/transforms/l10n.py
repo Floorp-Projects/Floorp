@@ -277,7 +277,8 @@ def handle_artifact_prefix(config, jobs):
 @transforms.add
 def all_locales_attribute(config, jobs):
     for job in jobs:
-        locales_platform = job['attributes']['build_platform'].replace("-nightly", "")
+        locales_platform = job['attributes']['build_platform'].replace("-shippable", "")
+        locales_platform = locales_platform.replace("-nightly", "")
         locales_platform = locales_platform.replace("-pgo", "")
         locales_with_changesets = parse_locales_file(job["locales-file"],
                                                      platform=locales_platform)
