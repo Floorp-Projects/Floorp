@@ -3736,17 +3736,16 @@ nsresult nsContentUtils::FormatLocalizedString(
 /* static */
 void nsContentUtils::LogSimpleConsoleError(const nsAString& aErrorText,
                                            const char* classification,
-                                           bool aFromPrivateWindow,
-                                           bool aFromChromeContext) {
+                                           bool aFromPrivateWindow) {
   nsCOMPtr<nsIScriptError> scriptError =
       do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
   if (scriptError) {
     nsCOMPtr<nsIConsoleService> console =
         do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    if (console && NS_SUCCEEDED(scriptError->Init(
-                       aErrorText, EmptyString(), EmptyString(), 0, 0,
-                       nsIScriptError::errorFlag, classification,
-                       aFromPrivateWindow, aFromChromeContext))) {
+    if (console &&
+        NS_SUCCEEDED(scriptError->Init(aErrorText, EmptyString(), EmptyString(),
+                                       0, 0, nsIScriptError::errorFlag,
+                                       classification, aFromPrivateWindow))) {
       console->LogMessage(scriptError);
     }
   }
@@ -5300,7 +5299,6 @@ nsContentUtils::GetMostRecentNonPBWindow() {
 void nsContentUtils::WarnScriptWasIgnored(Document* aDocument) {
   nsAutoString msg;
   bool privateBrowsing = false;
-  bool chromeContext = false;
 
   if (aDocument) {
     nsCOMPtr<nsIURI> uri = aDocument->GetDocumentURI();
@@ -5310,12 +5308,11 @@ void nsContentUtils::WarnScriptWasIgnored(Document* aDocument) {
     }
     privateBrowsing =
         !!aDocument->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId;
-    chromeContext = IsSystemPrincipal(aDocument->NodePrincipal());
   }
 
   msg.AppendLiteral(
       "Unable to run script because scripts are blocked internally.");
-  LogSimpleConsoleError(msg, "DOM", privateBrowsing, chromeContext);
+  LogSimpleConsoleError(msg, "DOM", privateBrowsing);
 }
 
 /* static */

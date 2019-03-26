@@ -443,7 +443,7 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage) {
     nsAutoString msg, sourceName, sourceLine;
     nsCString category;
     uint32_t lineNum, colNum, flags;
-    bool fromPrivateWindow, fromChromeContext;
+    bool fromPrivateWindow;
 
     nsresult rv = scriptError->GetErrorMessage(msg);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -464,8 +464,6 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage) {
     rv = scriptError->GetFlags(&flags);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = scriptError->GetIsFromPrivateWindow(&fromPrivateWindow);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = scriptError->GetIsFromChromeContext(&fromChromeContext);
     NS_ENSURE_SUCCESS(rv, rv);
 
     {
@@ -498,15 +496,15 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage) {
           return NS_ERROR_FAILURE;
         }
 
-        mChild->SendScriptErrorWithStack(
-            msg, sourceName, sourceLine, lineNum, colNum, flags, category,
-            fromPrivateWindow, fromChromeContext, cloned);
+        mChild->SendScriptErrorWithStack(msg, sourceName, sourceLine, lineNum,
+                                         colNum, flags, category,
+                                         fromPrivateWindow, cloned);
         return NS_OK;
       }
     }
 
     mChild->SendScriptError(msg, sourceName, sourceLine, lineNum, colNum, flags,
-                            category, fromPrivateWindow, fromChromeContext);
+                            category, fromPrivateWindow);
     return NS_OK;
   }
 
@@ -1757,9 +1755,9 @@ bool ContentChild::SendPBrowserConstructor(
     return false;
   }
 
-  return PContentChild::SendPBrowserConstructor(
-      aActor, aTabId, aSameTabGroupAs, aContext, aChromeFlags, aCpID,
-      aBrowsingContext, aIsForBrowser);
+  return PContentChild::SendPBrowserConstructor(aActor, aTabId, aSameTabGroupAs,
+                                                aContext, aChromeFlags, aCpID,
+                                                aBrowsingContext, aIsForBrowser);
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvPBrowserConstructor(
@@ -3757,8 +3755,7 @@ mozilla::ipc::IPCResult ContentChild::RecvRegisterBrowsingContextGroup(
     MOZ_ASSERT_IF(parent, parent->Group() == group);
 #endif
 
-    RefPtr<BrowsingContext> ctxt =
-        BrowsingContext::CreateFromIPC(std::move(init), group, nullptr);
+    RefPtr<BrowsingContext> ctxt = BrowsingContext::CreateFromIPC(std::move(init), group, nullptr);
 
     // FIXME: We should deal with cached & detached contexts as well.
     ctxt->Attach(/* aFromIPC */ true);
