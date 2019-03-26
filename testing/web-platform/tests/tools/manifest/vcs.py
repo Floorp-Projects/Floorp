@@ -100,16 +100,15 @@ class Git(object):
         for result in self.git(*cmd).split("\0")[:-1]:
             rel_path = result.split("\t")[-1]
             hash = result.split()[2]
-            if not os.path.isdir(os.path.join(self.root, rel_path)):
-                if rel_path in local_changes:
-                    contents = self._show_file(rel_path)
-                else:
-                    contents = None
-                yield SourceFile(self.root,
-                                 rel_path,
-                                 self.url_base,
-                                 hash,
-                                 contents=contents), True
+            if rel_path in local_changes:
+                contents = self._show_file(rel_path)
+            else:
+                contents = None
+            yield SourceFile(self.root,
+                             rel_path,
+                             self.url_base,
+                             hash,
+                             contents=contents), True
 
     def dump_caches(self):
         pass
