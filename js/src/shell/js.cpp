@@ -11241,7 +11241,7 @@ int main(int argc, char** argv, char** envp) {
 
   EnvironmentPreparer environmentPreparer(cx);
 
-  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_INCREMENTAL);
+  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE_INCREMENTAL);
 
   JS::SetProcessLargeAllocationFailureCallback(my_LargeAllocFailCallback);
 
