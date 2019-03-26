@@ -1789,6 +1789,14 @@ bool CanvasRenderingContext2D::TryBasicTarget(
     return false;
   }
 
+  // See Bug 1524554 - this forces DT initialization.
+  aOutDT->ClearRect(gfx::Rect());
+
+  if (!aOutDT->IsValid()) {
+    aOutDT = nullptr;
+    return false;
+  }
+
   aOutProvider = new PersistentBufferProviderBasic(aOutDT);
   return true;
 }
