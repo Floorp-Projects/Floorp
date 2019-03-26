@@ -28,7 +28,6 @@
 #include "mozilla/dom/ServiceWorkerManagerParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/StorageActivityService.h"
-#include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
@@ -88,7 +87,6 @@ using mozilla::dom::PServiceWorkerParent;
 using mozilla::dom::PServiceWorkerRegistrationParent;
 using mozilla::dom::UDPSocketParent;
 using mozilla::dom::WebAuthnTransactionParent;
-using mozilla::dom::asmjscache::PAsmJSCacheEntryParent;
 using mozilla::dom::cache::PCacheParent;
 using mozilla::dom::cache::PCacheStorageParent;
 using mozilla::dom::cache::PCacheStreamControlParent;
@@ -947,26 +945,6 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvMessagePortForceClose(
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
-}
-
-PAsmJSCacheEntryParent* BackgroundParentImpl::AllocPAsmJSCacheEntryParent(
-    const dom::asmjscache::OpenMode& aOpenMode,
-    const dom::asmjscache::WriteParams& aWriteParams,
-    const PrincipalInfo& aPrincipalInfo) {
-  AssertIsInMainOrSocketProcess();
-  AssertIsOnBackgroundThread();
-
-  return dom::asmjscache::AllocEntryParent(aOpenMode, aWriteParams,
-                                           aPrincipalInfo);
-}
-
-bool BackgroundParentImpl::DeallocPAsmJSCacheEntryParent(
-    PAsmJSCacheEntryParent* aActor) {
-  AssertIsInMainOrSocketProcess();
-  AssertIsOnBackgroundThread();
-
-  dom::asmjscache::DeallocEntryParent(aActor);
-  return true;
 }
 
 BackgroundParentImpl::PQuotaParent* BackgroundParentImpl::AllocPQuotaParent() {

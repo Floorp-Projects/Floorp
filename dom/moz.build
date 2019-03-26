@@ -56,7 +56,6 @@ DIRS += [
     'grid',
     'html',
     'jsurl',
-    'asmjscache',
     'mathml',
     'media',
     'midi',

@@ -24,7 +24,6 @@
 #include "mozilla/dom/PFileSystemRequestChild.h"
 #include "mozilla/dom/EndpointForReportChild.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
-#include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
@@ -89,7 +88,6 @@ using mozilla::dom::PServiceWorkerChild;
 using mozilla::dom::PServiceWorkerContainerChild;
 using mozilla::dom::PServiceWorkerRegistrationChild;
 using mozilla::dom::StorageDBChild;
-using mozilla::dom::asmjscache::PAsmJSCacheEntryChild;
 using mozilla::dom::cache::PCacheChild;
 using mozilla::dom::cache::PCacheStorageChild;
 using mozilla::dom::cache::PCacheStreamControlChild;
@@ -569,21 +567,6 @@ BackgroundChildImpl::AllocPParentToChildStreamChild() {
 bool BackgroundChildImpl::DeallocPParentToChildStreamChild(
     PParentToChildStreamChild* aActor) {
   delete aActor;
-  return true;
-}
-
-PAsmJSCacheEntryChild* BackgroundChildImpl::AllocPAsmJSCacheEntryChild(
-    const dom::asmjscache::OpenMode& aOpenMode,
-    const dom::asmjscache::WriteParams& aWriteParams,
-    const PrincipalInfo& aPrincipalInfo) {
-  MOZ_CRASH("PAsmJSCacheEntryChild actors should be manually constructed!");
-}
-
-bool BackgroundChildImpl::DeallocPAsmJSCacheEntryChild(
-    PAsmJSCacheEntryChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  dom::asmjscache::DeallocEntryChild(aActor);
   return true;
 }
 
