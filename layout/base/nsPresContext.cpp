@@ -163,6 +163,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       // mImageAnimationMode is initialised below, in constructor body
       mImageAnimationModePref(imgIContainer::kNormalAnimMode),
       mInterruptChecksToSkip(0),
+      mNextFrameRateMultiplier(0),
       mElementsRestyled(0),
       mFramesConstructed(0),
       mFramesReflowed(0),
