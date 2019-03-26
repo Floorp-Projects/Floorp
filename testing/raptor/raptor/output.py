@@ -204,11 +204,6 @@ class Output(object):
 
         Need to combine those into a single entry.
         '''
-        # check if we actually have any results
-        if len(self.results) == 0:
-            LOG.info("error: no raptor test results found, so no need to combine browser cycles")
-            return
-
         # first build a list of entries that need to be combined; and as we do that, mark the
         # original suite entry as up for deletion, so once combined we know which ones to del
         # note that summarized results are for all tests that were ran in the session, which
@@ -216,7 +211,7 @@ class Output(object):
         suites_to_be_combined = []
         combined_suites = []
 
-        for _index, suite in enumerate(self.summarized_results.get('suites', [])):
+        for _index, suite in enumerate(self.summarized_results['suites']):
             if suite.get('cold') is None:
                 continue
 
