@@ -662,7 +662,7 @@ void HeapSnapshot::ComputeShortestPaths(JSContext* cx, uint64_t start,
 // globals, find the set of compartments the globals are allocated
 // within. Returns false on OOM failure.
 static bool PopulateCompartmentsWithGlobals(CompartmentSet& compartments,
-                                            AutoObjectVector& globals) {
+                                            HandleObjectVector globals) {
   unsigned length = globals.length();
   for (unsigned i = 0; i < length; i++) {
     if (!compartments.put(GetObjectCompartment(globals[i]))) return false;
@@ -673,7 +673,8 @@ static bool PopulateCompartmentsWithGlobals(CompartmentSet& compartments,
 
 // Add the given set of globals as explicit roots in the given roots
 // list. Returns false on OOM failure.
-static bool AddGlobalsAsRoots(AutoObjectVector& globals, ubi::RootList& roots) {
+static bool AddGlobalsAsRoots(HandleObjectVector globals,
+                              ubi::RootList& roots) {
   unsigned length = globals.length();
   for (unsigned i = 0; i < length; i++) {
     if (!roots.addRoot(ubi::Node(globals[i].get()), u"heap snapshot global")) {
@@ -729,8 +730,8 @@ static bool EstablishBoundaries(JSContext* cx, ErrorResult& rv,
       return false;
     }
 
-    AutoObjectVector globals(cx);
-    if (!dbg::GetDebuggeeGlobals(cx, *dbgObj, globals) ||
+    RootedObjectVector globals(cx);
+    if (!dbg::GetDebuggeeGlobals(cx, *dbgObj, &globals) ||
         !PopulateCompartmentsWithGlobals(compartments, globals) ||
         !roots.init(compartments) || !AddGlobalsAsRoots(globals, roots)) {
       rv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -751,7 +752,7 @@ static bool EstablishBoundaries(JSContext* cx, ErrorResult& rv,
       return false;
     }
 
-    AutoObjectVector globals(cx);
+    RootedObjectVector globals(cx);
     for (uint32_t i = 0; i < length; i++) {
       JSObject* global = boundaries.mGlobals.Value().ElementAt(i);
       if (!JS_IsGlobalObject(global)) {

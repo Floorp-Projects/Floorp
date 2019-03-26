@@ -651,8 +651,8 @@ void Realm::setNewObjectMetadata(JSContext* cx, HandleObject obj) {
   }
 }
 
-static bool AddInnerLazyFunctionsFromScript(JSScript* script,
-                                            AutoObjectVector& lazyFunctions) {
+static bool AddInnerLazyFunctionsFromScript(
+    JSScript* script, MutableHandleObjectVector lazyFunctions) {
   if (!script->hasObjects()) {
     return true;
   }
@@ -667,7 +667,7 @@ static bool AddInnerLazyFunctionsFromScript(JSScript* script,
 }
 
 static bool AddLazyFunctionsForRealm(JSContext* cx,
-                                     AutoObjectVector& lazyFunctions,
+                                     MutableHandleObjectVector lazyFunctions,
                                      gc::AllocKind kind) {
   // Find all live root lazy functions in the realm: those which have a
   // non-lazy enclosing script, and which do not have an uncompiled enclosing
@@ -700,15 +700,15 @@ static bool AddLazyFunctionsForRealm(JSContext* cx,
 }
 
 static bool CreateLazyScriptsForRealm(JSContext* cx) {
-  AutoObjectVector lazyFunctions(cx);
+  RootedObjectVector lazyFunctions(cx);
 
-  if (!AddLazyFunctionsForRealm(cx, lazyFunctions, gc::AllocKind::FUNCTION)) {
+  if (!AddLazyFunctionsForRealm(cx, &lazyFunctions, gc::AllocKind::FUNCTION)) {
     return false;
   }
 
   // Methods, for instance {get method() {}}, are extended functions that can
   // be relazified, so we need to handle those as well.
-  if (!AddLazyFunctionsForRealm(cx, lazyFunctions,
+  if (!AddLazyFunctionsForRealm(cx, &lazyFunctions,
                                 gc::AllocKind::FUNCTION_EXTENDED)) {
     return false;
   }
@@ -733,7 +733,7 @@ static bool CreateLazyScriptsForRealm(JSContext* cx) {
       return false;
     }
     if (lazyScriptHadNoScript &&
-        !AddInnerLazyFunctionsFromScript(script, lazyFunctions)) {
+        !AddInnerLazyFunctionsFromScript(script, &lazyFunctions)) {
       return false;
     }
   }

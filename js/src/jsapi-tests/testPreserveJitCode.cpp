@@ -63,7 +63,7 @@ bool testPreserveJitCode(bool preserveJitCode, unsigned remainingIonScripts) {
   options.setFileAndLine(__FILE__, 1);
 
   JS::RootedFunction fun(cx);
-  JS::AutoObjectVector emptyScopeChain(cx);
+  JS::RootedObjectVector emptyScopeChain(cx);
   CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "f", 0, nullptr,
                                 source, length, &fun));
 

@@ -27,7 +27,7 @@ BEGIN_TEST(testBug795104) {
   CHECK(JS::EvaluateUtf8(cx, opts, s, strLen, &unused));
 
   JS::RootedFunction fun(cx);
-  JS::AutoObjectVector emptyScopeChain(cx);
+  JS::RootedObjectVector emptyScopeChain(cx);
 
   // But when compiling a function we don't want to use no-rval
   // mode, since it's not supported for functions.

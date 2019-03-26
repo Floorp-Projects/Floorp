@@ -838,7 +838,7 @@ const Class NonSyntacticVariablesObject::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(NonSyntacticVariablesObject::RESERVED_SLOTS)};
 
 bool js::CreateNonSyntacticEnvironmentChain(JSContext* cx,
-                                            AutoObjectVector& envChain,
+                                            HandleObjectVector envChain,
                                             MutableHandleObject env,
                                             MutableHandleScope scope) {
   RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
@@ -3248,7 +3248,7 @@ JSObject* js::GetDebugEnvironmentForGlobalLexicalEnvironment(JSContext* cx) {
 }
 
 bool js::CreateObjectsForEnvironmentChain(JSContext* cx,
-                                          AutoObjectVector& chain,
+                                          HandleObjectVector chain,
                                           HandleObject terminatingEnv,
                                           MutableHandleObject envObj) {
 #ifdef DEBUG

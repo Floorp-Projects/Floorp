@@ -617,7 +617,7 @@ class NonSyntacticVariablesObject : public EnvironmentObject {
 };
 
 extern bool CreateNonSyntacticEnvironmentChain(JSContext* cx,
-                                               JS::AutoObjectVector& envChain,
+                                               JS::HandleObjectVector envChain,
                                                MutableHandleObject env,
                                                MutableHandleScope scope);
 
@@ -1141,7 +1141,7 @@ inline bool IsFrameInitialEnvironment(AbstractFramePtr frame,
 }
 
 extern bool CreateObjectsForEnvironmentChain(JSContext* cx,
-                                             AutoObjectVector& chain,
+                                             HandleObjectVector chain,
                                              HandleObject terminatingEnv,
                                              MutableHandleObject envObj);
 

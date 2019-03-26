@@ -2008,7 +2008,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   bool saveBytecode = false;
   bool saveIncrementalBytecode = false;
   bool assertEqBytecode = false;
-  JS::AutoObjectVector envChain(cx);
+  JS::RootedObjectVector envChain(cx);
   RootedObject callerGlobal(cx, cx->global());
 
   options.setIntroductionType("js shell evaluate")
@@ -3650,7 +3650,7 @@ static bool Clone(JSContext* cx, unsigned argc, Value* vp) {
 
   // Should it worry us that we might be getting with wrappers
   // around with wrappers here?
-  JS::AutoObjectVector envChain(cx);
+  JS::RootedObjectVector envChain(cx);
   if (env && !env->is<GlobalObject>() && !envChain.append(env)) {
     return false;
   }
