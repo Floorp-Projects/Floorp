@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 
+#include "CryptoTask.h"
 #include "ExtendedValidation.h"
 #include "NSSErrorsService.h"
 #include "OCSPVerificationTrustDomain.h"
@@ -19,9 +20,11 @@
 #include "mozilla/Casting.h"
 #include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Services.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "nsCRTGlue.h"
+#include "nsIObserverService.h"
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertValidity.h"
 #include "nsNSSCertificate.h"
@@ -1284,6 +1287,46 @@ nsresult BuildRevocationCheckStrings(const CERTCertificate* cert,
   return NS_OK;
 }
 
+// Helper for SaveIntermediateCerts. Does the actual importing work on a
+// background thread so certificate verification can return its result.
+class BackgroundSaveIntermediateCertsTask final : public CryptoTask {
+ public:
+  explicit BackgroundSaveIntermediateCertsTask(
+      UniqueCERTCertList&& intermediates)
+      : mIntermediates(std::move(intermediates)) {}
+
+ private:
+  virtual nsresult CalculateResult() override {
+    UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
+    if (!slot) {
+      return NS_ERROR_FAILURE;
+    }
+    for (CERTCertListNode* node = CERT_LIST_HEAD(mIntermediates);
+         !CERT_LIST_END(node, mIntermediates); node = CERT_LIST_NEXT(node)) {
+      // This is a best-effort attempt at avoiding unknown issuer errors in the
+      // future, so ignore failures here.
+      nsAutoCString nickname;
+      if (NS_FAILED(DefaultServerNicknameForCert(node->cert, nickname))) {
+        continue;
+      }
+      Unused << PK11_ImportCert(slot.get(), node->cert, CK_INVALID_HANDLE,
+                                nickname.get(), false);
+    }
+    return NS_OK;
+  }
+
+  virtual void CallCallback(nsresult rv) override {
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    if (observerService) {
+      observerService->NotifyObservers(nullptr, "psm:intermediate-certs-cached",
+                                       nullptr);
+    }
+  }
+
+  UniqueCERTCertList mIntermediates;
+};
+
 /**
  * Given a list of certificates representing a verified certificate path from an
  * end-entity certificate to a trust anchor, imports the intermediate
@@ -1298,12 +1341,13 @@ void SaveIntermediateCerts(const UniqueCERTCertList& certList) {
     return;
   }
 
-  UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
-  if (!slot) {
+  UniqueCERTCertList intermediates(CERT_NewCertList());
+  if (!intermediates) {
     return;
   }
 
   bool isEndEntity = true;
+  size_t numIntermediates = 0;
   for (CERTCertListNode* node = CERT_LIST_HEAD(certList);
        !CERT_LIST_END(node, certList); node = CERT_LIST_NEXT(node)) {
     if (isEndEntity) {
@@ -1333,17 +1377,20 @@ void SaveIntermediateCerts(const UniqueCERTCertList& certList) {
       continue;
     }
 
-    nsAutoCString nickname;
-    nsresult rv = DefaultServerNicknameForCert(node->cert, nickname);
-    if (NS_FAILED(rv)) {
-      continue;
+    UniqueCERTCertificate certHandle(CERT_DupCertificate(node->cert));
+    if (CERT_AddCertToListTail(intermediates.get(), certHandle.get()) !=
+        SECSuccess) {
+      // If this fails, we're probably out of memory. Just return.
+      return;
     }
+    certHandle.release();  // intermediates now owns the reference
+    numIntermediates++;
+  }
 
-    // As mentioned in the documentation of this function, we're importing only
-    // to cope with misconfigured servers. As such, we ignore the return value
-    // below, since it doesn't really matter if the import fails.
-    Unused << PK11_ImportCert(slot.get(), node->cert, CK_INVALID_HANDLE,
-                              nickname.get(), false);
+  if (numIntermediates > 0) {
+    RefPtr<BackgroundSaveIntermediateCertsTask> task =
+        new BackgroundSaveIntermediateCertsTask(std::move(intermediates));
+    Unused << task->Dispatch("ImportInts");
   }
 }
 
