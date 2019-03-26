@@ -452,7 +452,7 @@ bool TestCCWs() {
   CHECK(IsMarkedGray(wrapper));
   CHECK(IsMarkedBlack(target));
 
-  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_INCREMENTAL);
+  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE_INCREMENTAL);
   JS::PrepareForFullGC(cx);
   js::SliceBudget budget(js::WorkBudget(1));
   cx->runtime()->gc.startDebugGC(GC_NORMAL, budget);
@@ -478,7 +478,7 @@ bool TestCCWs() {
   CHECK(IsMarkedGray(target));
 
   // Incremental zone GC started: the source is now unmarked.
-  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_INCREMENTAL);
+  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE_INCREMENTAL);
   JS::PrepareZoneForGC(wrapper->zone());
   budget = js::SliceBudget(js::WorkBudget(1));
   cx->runtime()->gc.startDebugGC(GC_NORMAL, budget);
