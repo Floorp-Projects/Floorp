@@ -46,6 +46,10 @@ XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
   }
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "listManager",
+                                   "@mozilla.org/url-classifier/listmanager;1",
+                                   "nsIUrlListManager");
+
 Preferences.addAll([
   // Content blocking / Tracking Protection
   { id: "privacy.trackingprotection.enabled", type: "bool" },
@@ -456,6 +460,10 @@ var gPrivacyPane = {
       this.trackingProtectionWritePrefs);
     setEventListener("contentBlockingTrackingProtectionCheckbox", "command",
       this._updateTrackingProtectionUI);
+    setEventListener("contentBlockingCryptominersCheckbox", "command",
+      this.updateCryptominingLists);
+    setEventListener("contentBlockingFingerprintersCheckbox", "command",
+      this.updateFingerprintingLists);
     setEventListener("trackingProtectionMenu", "command",
       this.trackingProtectionWritePrefs);
     setEventListener("standardArrow", "command", this.toggleExpansion);
@@ -521,6 +529,26 @@ var gPrivacyPane = {
         standardEl.classList.add("selected");
         break;
     }
+  },
+
+  updateCryptominingLists() {
+    let listPrefs = [
+      "urlclassifier.features.cryptomining.blacklistTables",
+      "urlclassifier.features.cryptomining.whitelistTables",
+    ];
+
+    let listValue = listPrefs.map(l => Services.prefs.getStringPref(l)).join(",");
+    listManager.forceUpdates(listValue);
+  },
+
+  updateFingerprintingLists() {
+    let listPrefs = [
+      "urlclassifier.features.fingerprinting.blacklistTables",
+      "urlclassifier.features.fingerprinting.whitelistTables",
+    ];
+
+    let listValue = listPrefs.map(l => Services.prefs.getStringPref(l)).join(",");
+    listManager.forceUpdates(listValue);
   },
 
   // TRACKING PROTECTION MODE
@@ -1420,11 +1448,7 @@ var gPrivacyPane = {
       malwareTable.value = malware.join(",");
 
       // Force an update after changing the malware table.
-      let listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"]
-                        .getService(Ci.nsIUrlListManager);
-      if (listmanager) {
-        listmanager.forceUpdates(malwareTable.value);
-      }
+      listManager.forceUpdates(malwareTable.value);
     });
 
     // set initial values

@@ -454,9 +454,8 @@ class UrlbarView {
     let setURL = () => {
       url = this._createElement("span");
       url.className = "urlbarView-secondary urlbarView-url";
-      let val = this.window.trimURL(result.payload.url || "");
-      this._addTextContentWithHighlights(url, val,
-                                         result.payloadHighlights.url || []);
+      this._addTextContentWithHighlights(url, result.payload.displayUrl,
+                                         result.payloadHighlights.displayUrl || []);
     };
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
