@@ -58,17 +58,12 @@ def create_updater(tests, url_base="/", **kwargs):
     expected_data = {}
     metadata.load_expected = lambda _, __, test_path, *args: expected_data[test_path]
 
+    id_test_map = metadata.create_test_tree(None, m)
+
     for test_path, test_ids, test_type, manifest_str in tests:
-        tests = list(m.iterpath(test_path))
-        if isinstance(test_ids, (str, unicode)):
-            test_ids = [test_ids]
-        test_data = metadata.TestFileData("/", "testharness", None, test_path, tests)
         expected_data[test_path] = manifestupdate.compile(BytesIO(manifest_str),
                                                           test_path,
                                                           url_base)
-
-        for test_id in test_ids:
-            id_test_map[test_id] = test_data
 
     return id_test_map, metadata.ExpectedUpdater(id_test_map, **kwargs)
 
@@ -598,7 +593,8 @@ def test_update_wptreport_0():
 
 
 def test_update_wptreport_1():
-    tests = [("path/to/__dir__", ["path/to/__dir__"], None, "")]
+    tests = [("path/to/test.htm", ["/path/to/test.htm"], "testharness", ""),
+             ("path/to/__dir__", ["path/to/__dir__"], None, "")]
 
     log = {"run_info": {},
            "results": [],
