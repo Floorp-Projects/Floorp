@@ -327,6 +327,7 @@ scheme host and port.""")
                              "(equivalent to --include)")
 
     commandline.log_formatters["wptreport"] = (formatters.WptreportFormatter, "wptreport format")
+    commandline.log_formatters["wptscreenshot"] = (formatters.WptscreenshotFormatter, "wpt.fyi screenshots")
 
     commandline.add_logging_group(parser)
     return parser
