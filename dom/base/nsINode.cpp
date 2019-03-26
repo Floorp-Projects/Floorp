@@ -2816,24 +2816,13 @@ class LocalizationHandler : public PromiseNativeHandler {
         }
       }
     }
-
-    JS::RootedObject sourceScope(aCx, JS::CurrentGlobalOrNull(aCx));
-
-    AutoEntryScript aes(mReturnValuePromise->GetParentObject(),
-                        "Promise resolution");
-    JSContext* cx = aes.cx();
-    JS::Rooted<JS::Value> result(cx, JS::ObjectValue(*untranslatedElements));
-
-    xpc::StackScopedCloneOptions options;
-    options.wrapReflectors = true;
-    StackScopedClone(cx, options, sourceScope, &result);
-
-    mReturnValuePromise->MaybeResolve(result);
+    JS::Rooted<JS::Value> result(aCx, JS::ObjectValue(*untranslatedElements));
+    mReturnValuePromise->MaybeResolveWithClone(aCx, result);
   }
 
   virtual void RejectedCallback(JSContext* aCx,
                                 JS::Handle<JS::Value> aValue) override {
-    mReturnValuePromise->MaybeRejectWithUndefined();
+    mReturnValuePromise->MaybeRejectWithClone(aCx, aValue);
   }
 
  private:

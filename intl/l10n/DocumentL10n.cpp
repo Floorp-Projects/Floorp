@@ -369,12 +369,12 @@ class L10nReadyHandler final : public PromiseNativeHandler {
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     mDocumentL10n->InitialDocumentTranslationCompleted();
-    mPromise->MaybeResolveWithUndefined();
+    mPromise->MaybeResolveWithClone(aCx, aValue);
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     mDocumentL10n->InitialDocumentTranslationCompleted();
-    mPromise->MaybeRejectWithUndefined();
+    mPromise->MaybeRejectWithClone(aCx, aValue);
   }
 
  private:
