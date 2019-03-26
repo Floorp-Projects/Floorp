@@ -103,6 +103,7 @@ int nr_ice_media_stream_check_if_connected(nr_ice_media_stream *stream);
 int nr_ice_media_stream_set_state(nr_ice_media_stream *str, int state);
 void nr_ice_media_stream_stop_checking(nr_ice_media_stream *str);
 void nr_ice_media_stream_set_obsolete(nr_ice_media_stream *str);
+int nr_ice_media_stream_is_done_gathering(nr_ice_media_stream *str);
 int nr_ice_media_stream_get_best_candidate(nr_ice_media_stream *str, int component, nr_ice_candidate **candp);
 int nr_ice_media_stream_send(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, int component, UCHAR *data, int len);
 int nr_ice_media_stream_get_active(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, int component, nr_ice_candidate **local, nr_ice_candidate **remote);

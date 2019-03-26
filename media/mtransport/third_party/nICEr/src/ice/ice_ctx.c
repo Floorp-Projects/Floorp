@@ -511,12 +511,16 @@ void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg)
     int r;
     nr_ice_candidate *cand=cb_arg;
     nr_ice_ctx *ctx;
+    nr_ice_media_stream *stream;
+    int component_id;
 
 
     assert(cb_arg);
     if (!cb_arg)
       return;
     ctx = cand->ctx;
+    stream = cand->stream;
+    component_id = cand->component_id;
 
     ctx->uninitialized_candidates--;
     if (cand->state == NR_ICE_CAND_STATE_FAILED) {
@@ -540,9 +544,13 @@ void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg)
           r_log(LOG_ICE, LOG_NOTICE, "ICE(%s): Problem pruning candidates",ctx->label);
       }
 
+      if (was_pruned) {
+        cand = NULL;
+      }
+
       /* If we are initialized, the candidate wasn't pruned,
          and we have a trickle ICE callback fire the callback */
-      if (ctx->trickle_cb && !was_pruned &&
+      if (ctx->trickle_cb && cand &&
           !nr_ice_ctx_hide_candidate(ctx, cand)) {
         ctx->trickle_cb(ctx->trickle_cb_arg, ctx, cand->stream, cand->component_id, cand);
 
@@ -550,6 +558,11 @@ void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg)
           r_log(LOG_ICE,LOG_ERR, "ICE(%s): All could not pair new trickle candidate",ctx->label);
           /* But continue */
         }
+      }
+
+      if (nr_ice_media_stream_is_done_gathering(stream) &&
+          ctx->trickle_cb) {
+        ctx->trickle_cb(ctx->trickle_cb_arg, ctx, stream, component_id, NULL);
       }
     }
 
