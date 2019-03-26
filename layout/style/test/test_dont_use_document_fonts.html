@@ -1,0 +1,64 @@
+<!doctype html>
+<title>Test for preference to not use document fonts</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<link rel='stylesheet' href='/resources/testharness.css'>
+<div id="content"></div>
+<script>
+const content = document.getElementById("content");
+
+setup({explicit_done: true })
+
+content.style.fontFamily = "initial";
+const kInitialFamily = getComputedStyle(content).fontFamily;
+content.style.fontFamily = "";
+
+const kTests = [
+  {
+    specified: "monospace",
+    computed: "monospace",
+    description: "Single generic family should not be changed",
+  },
+  {
+    specified: "monospace, sans-serif",
+    computed: "monospace, sans-serif",
+    description: "Generic families should not be changed",
+  },
+  {
+    specified: "Courier, monospace",
+    computed: "monospace, Courier",
+    description: "Generics are preferred, but may still fall back to document fonts",
+  },
+  {
+    specified: "Courier, something-else",
+    computed: `${kInitialFamily}, Courier, something-else`,
+    description: "Generic is prepended to the font-family if none is found",
+  },
+];
+
+// compute expectations while the pref is not active yet.
+test(function() {
+  for (const test of kTests) {
+    content.style.fontFamily = "";
+    content.style.fontFamily = test.computed;
+    assert_not_equals(content.style.fontFamily, "", `computed font ${test.computed} was invalid`);
+    test.expected = getComputedStyle(content).fontFamily;
+  }
+  content.style.font = "";
+}, "Sanity");
+
+function runTest({ specified, computed, description, expected }) {
+  test(function() {
+    content.style.fontFamily = "";
+    content.style.fontFamily = specified;
+    assert_equals(getComputedStyle(content).fontFamily, expected);
+  }, description);
+}
+
+(async function() {
+  await SpecialPowers.pushPrefEnv({'set': [['browser.display.use_document_fonts', 0]]});
+  for (const test of kTests)
+    runTest(test);
+  done();
+})();
+</script>

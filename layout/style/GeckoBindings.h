@@ -672,8 +672,13 @@ void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsAtom* atom);
 void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont,
                                     const nsStyleFont* aSource);
 
-void Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* font,
-                                        const mozilla::dom::Document*);
+// Moves the generic family in the font-family to the front, or prepends
+// aDefaultGeneric, so that user-configured fonts take precedent over document
+// fonts.
+//
+// Document fonts may still be used as fallback for unsupported glyphs though.
+void Gecko_nsStyleFont_PrioritizeUserFonts(
+    nsStyleFont* font, mozilla::FontFamilyType aDefaultGeneric);
 
 void Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* font,
                                                 const mozilla::dom::Document*,

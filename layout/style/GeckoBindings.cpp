@@ -1887,12 +1887,13 @@ void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont,
   aFont->mLanguage = aSource->mLanguage;
 }
 
-void Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* aFont,
-                                        const Document* aDocument) {
-  const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(
-      *aDocument, aFont->mLanguage, kPresContext_DefaultVariableFont_ID);
-  nsLayoutUtils::FixupNoneGeneric(&aFont->mFont, aFont->mGenericID,
-                                  defaultVariableFont);
+void Gecko_nsStyleFont_PrioritizeUserFonts(nsStyleFont* aFont,
+                                           FontFamilyType aDefaultGeneric) {
+  MOZ_ASSERT(!StaticPrefs::browser_display_use_document_fonts());
+  MOZ_ASSERT(aDefaultGeneric != eFamily_none);
+  if (!aFont->mFont.fontlist.PrioritizeFirstGeneric()) {
+    aFont->mFont.fontlist.PrependGeneric(aDefaultGeneric);
+  }
 }
 
 void Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* aFont,
