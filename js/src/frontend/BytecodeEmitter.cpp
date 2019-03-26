@@ -6007,6 +6007,7 @@ bool BytecodeEmitter::emitInitialYield(UnaryNode* yieldNode) {
 
 bool BytecodeEmitter::emitYield(UnaryNode* yieldNode) {
   MOZ_ASSERT(sc->isFunctionBox());
+  MOZ_ASSERT(sc->asFunctionBox()->isGenerator());
   MOZ_ASSERT(yieldNode->isKind(ParseNodeKind::YieldExpr));
 
   bool needsIteratorResult = sc->asFunctionBox()->needsIteratorResult();
@@ -6018,20 +6019,21 @@ bool BytecodeEmitter::emitYield(UnaryNode* yieldNode) {
   }
   if (ParseNode* expr = yieldNode->kid()) {
     if (!emitTree(expr)) {
-      //            [stack] ITEROBJ VAL
+      //            [stack] ITEROBJ? VAL
       return false;
     }
   } else {
     if (!emit1(JSOP_UNDEFINED)) {
-      //            [stack] ITEROBJ UNDEFINED
+      //            [stack] ITEROBJ? UNDEFINED
       return false;
     }
   }
 
   // 25.5.3.7 AsyncGeneratorYield step 5.
   if (sc->asFunctionBox()->isAsync()) {
+    MOZ_ASSERT(!needsIteratorResult);
     if (!emitAwaitInInnermostScope()) {
-      //            [stack] ITEROBJ RESULT
+      //            [stack] RESULT
       return false;
     }
   }
@@ -6044,7 +6046,10 @@ bool BytecodeEmitter::emitYield(UnaryNode* yieldNode) {
   }
 
   if (!emitGetDotGeneratorInInnermostScope()) {
+    //              [stack] # if needsIteratorResult
     //              [stack] ITEROBJ .GENERATOR
+    //              [stack] # else
+    //              [stack] RESULT .GENERATOR
     return false;
   }
 
@@ -6122,6 +6127,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
   // Step 1.
   IteratorKind iterKind =
       sc->asFunctionBox()->isAsync() ? IteratorKind::Async : IteratorKind::Sync;
+  bool needsIteratorResult = sc->asFunctionBox()->needsIteratorResult();
 
   // Steps 2-5.
   if (!emitTree(iter)) {
@@ -6160,7 +6166,19 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
 
   JumpTarget tryStart;
   if (!emitJumpTarget(&tryStart)) {
+    //              [stack] NEXT ITER RESULT
     return false;
+  }
+
+  if (iterKind == IteratorKind::Async) {
+    // Step 7.a.vi.
+    // Step 7.b.ii.7.
+    // Step 7.c.ix.
+    //   Call to IteratorValue.
+    if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) {
+      //            [stack] NEXT ITER RESULT
+      return false;
+    }
   }
 
   if (!tryCatch.emitTry()) {
@@ -6374,10 +6392,12 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE RET ITER RVAL
     return false;
   }
-  if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) {
-    //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE RET ITER
-    //                    VALUE
-    return false;
+  if (needsIteratorResult) {
+    if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) {
+      //            [stack] NEXT ITER OLDRESULT FTYPE FVALUE RET ITER
+      //                  VALUE
+      return false;
+    }
   }
   if (!emitCall(JSOP_CALL, 1)) {
     //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE RESULT
@@ -6419,18 +6439,19 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE VALUE
     return false;
   }
-
-  if (!emitPrepareIteratorResult()) {
-    //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE VALUE RESULT
-    return false;
-  }
-  if (!emit1(JSOP_SWAP)) {
-    //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE RESULT VALUE
-    return false;
-  }
-  if (!emitFinishIteratorResult(true)) {
-    //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE RESULT
-    return false;
+  if (needsIteratorResult) {
+    if (!emitPrepareIteratorResult()) {
+      //            [stack] NEXT ITER OLDRESULT FTYPE FVALUE VALUE RESULT
+      return false;
+    }
+    if (!emit1(JSOP_SWAP)) {
+      //            [stack] NEXT ITER OLDRESULT FTYPE FVALUE RESULT VALUE
+      return false;
+    }
+    if (!emitFinishIteratorResult(true)) {
+      //            [stack] NEXT ITER OLDRESULT FTYPE FVALUE RESULT
+      return false;
+    }
   }
   if (!emit1(JSOP_SETRVAL)) {
     //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE
