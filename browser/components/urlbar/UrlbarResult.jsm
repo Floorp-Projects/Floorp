@@ -16,6 +16,7 @@ var EXPORTED_SYMBOLS = ["UrlbarResult"];
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -162,6 +163,12 @@ class UrlbarResult {
       try {
         payloadInfo.title[0] = new URL(payloadInfo.url[0]).host;
       } catch (e) {}
+    }
+
+    if (payloadInfo.url) {
+      // For display purposes we need to unescape the url.
+      payloadInfo.displayUrl = [...payloadInfo.url];
+      payloadInfo.displayUrl[0] = Services.textToSubURI.unEscapeURIForUI("UTF-8", payloadInfo.displayUrl[0]);
     }
 
     let entries = Object.entries(payloadInfo);
