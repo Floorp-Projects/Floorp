@@ -241,4 +241,24 @@ add_task(async function testArrowsOverflowButton() {
   });
 });
 
+// Test that toolbar keyboard navigation doesn't interfere with PanelMultiView
+// keyboard navigation.
+// We do this by opening the Library menu and ensuring that pressing left arrow
+// does nothing.
+add_task(async function testArrowsInPanelMultiView() {
+  let button = document.getElementById("library-button");
+  forceFocus(button);
+  let view = document.getElementById("appMenu-libraryView");
+  let focused = BrowserTestUtils.waitForEvent(view, "focus", true);
+  EventUtils.synthesizeKey(" ");
+  let focusEvt = await focused;
+  ok(true, "Focus inside Library menu after toolbar button pressed");
+  EventUtils.synthesizeKey("KEY_ArrowLeft");
+  is(document.activeElement, focusEvt.target,
+     "ArrowLeft inside panel does nothing");
+  let hidden = BrowserTestUtils.waitForEvent(document, "popuphidden", true);
+  view.closest("panel").hidePopup();
+  await hidden;
+});
+
 registerCleanupFunction(() => CustomizableUI.reset());
