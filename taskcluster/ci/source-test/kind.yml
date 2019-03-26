@@ -32,4 +32,4 @@ jobs-from:
 dependent-build-platforms:
    linux64-asan/opt: build-linux64-asan/opt
    linux64/debug: build-linux64/debug
-   linux64.*: build-linux64-shippable/opt
+   linux64.*: build-linux64/pgo

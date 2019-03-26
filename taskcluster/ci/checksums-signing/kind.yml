@@ -16,4 +16,3 @@ kind-dependencies:
 
 only-for-attributes:
    - nightly
-   - shippable

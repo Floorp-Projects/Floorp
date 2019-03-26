@@ -820,12 +820,12 @@ def should_use_artifact_map(platform, project):
         return True
 
     platforms = [
-        'linux-shippable',
-        'linux64-shippable',
-        'macosx64-shippable',
-        'win32-shippable',
-        'win64-shippable',
-        'win64-aarch64-shippable',
+        'linux-nightly',
+        'linux64-nightly',
+        'macosx64-nightly',
+        'win32-nightly',
+        'win64-nightly',
+        'win64-aarch64-nightly',
         'win64-asan-reporter-nightly',
         'linux64-asan-reporter-nightly',
     ]
