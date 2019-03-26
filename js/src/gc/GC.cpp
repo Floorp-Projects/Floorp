@@ -26,8 +26,8 @@
  * For a collection to be carried out incrementally the following conditions
  * must be met:
  *  - the collection must be run by calling js::GCSlice() rather than js::GC()
- *  - the GC mode must have been set to JSGC_MODE_ZONE_INCREMENTAL with
- *    JS_SetGCParameter()
+ *  - the GC mode must have been set to JSGC_MODE_INCREMENTAL or
+ *    JSGC_MODE_ZONE_INCREMENTAL with JS_SetGCParameter()
  *  - no thread may have an AutoKeepAtoms instance on the stack
  *
  * The last condition is an engine-internal mechanism to ensure that incremental
@@ -1372,7 +1372,7 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
       break;
     case JSGC_MODE:
       if (mode != JSGC_MODE_GLOBAL && mode != JSGC_MODE_ZONE &&
-          mode != JSGC_MODE_ZONE_INCREMENTAL) {
+          mode != JSGC_MODE_INCREMENTAL && mode != JSGC_MODE_ZONE_INCREMENTAL) {
         return false;
       }
       mode = JSGCMode(value);
@@ -7234,7 +7234,8 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
   if (unsafeReason == AbortReason::None) {
     if (reason == JS::GCReason::COMPARTMENT_REVIVED) {
       unsafeReason = gc::AbortReason::CompartmentRevived;
-    } else if (mode != JSGC_MODE_ZONE_INCREMENTAL) {
+    } else if (mode != JSGC_MODE_INCREMENTAL &&
+               mode != JSGC_MODE_ZONE_INCREMENTAL) {
       unsafeReason = gc::AbortReason::ModeChange;
     }
   }
@@ -7299,7 +7300,8 @@ static void ScheduleZones(GCRuntime* gc) {
       continue;
     }
 
-    if (gc->gcMode() == JSGC_MODE_GLOBAL) {
+    if (gc->gcMode() == JSGC_MODE_GLOBAL ||
+        gc->gcMode() == JSGC_MODE_INCREMENTAL) {
       zone->scheduleGC();
     }
 
