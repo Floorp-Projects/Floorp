@@ -137,6 +137,12 @@ class InMemoryHistoryStorage : HistoryStorage {
         Unit
     }
 
+    override suspend fun deleteVisit(url: String, timestamp: Long) = synchronized(pages) {
+        if (pages.containsKey(url)) {
+            pages[url] = pages[url]!!.filter { it.timestamp != timestamp }.toMutableList()
+        }
+    }
+
     override suspend fun prune() {
         // Not applicable.
     }

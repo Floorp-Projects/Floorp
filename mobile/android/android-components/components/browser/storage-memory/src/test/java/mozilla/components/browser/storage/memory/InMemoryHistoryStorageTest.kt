@@ -329,4 +329,48 @@ class InMemoryHistoryStorageTest {
         assertEquals("http://www.mozilla.org/1", visits[0].url)
         assertEquals("http://www.mozilla.org/3", visits[1].url)
     }
+
+    @Test
+    fun `store can delete visit by 'url' and 'timestamp'`() {
+        val history = InMemoryHistoryStorage()
+
+        runBlocking {
+            history.recordVisit("http://www.mozilla.org/1", VisitType.TYPED)
+            sleep(10)
+            history.recordVisit("http://www.mozilla.org/2", VisitType.DOWNLOAD)
+            sleep(10)
+            history.recordVisit("http://www.mozilla.org/3", VisitType.BOOKMARK)
+        }
+
+        val ts = runBlocking {
+            val visits = history.getDetailedVisits(0, Long.MAX_VALUE)
+
+            assertEquals(3, visits.size)
+            visits[1].visitTime
+        }
+
+        runBlocking {
+            history.deleteVisit("http://www.mozilla.org/4", 111)
+            // There are no visits for this url, delete is a no-op.
+            assertEquals(3, history.getDetailedVisits(0, Long.MAX_VALUE).size)
+        }
+
+        runBlocking {
+            history.deleteVisit("http://www.mozilla.org/1", ts)
+            // There is no such visit for this url, delete is a no-op.
+            assertEquals(3, history.getDetailedVisits(0, Long.MAX_VALUE).size)
+        }
+
+        runBlocking {
+            history.deleteVisit("http://www.mozilla.org/2", ts)
+        }
+
+        val visits = runBlocking {
+            history.getDetailedVisits(0, Long.MAX_VALUE)
+        }
+        assertEquals(2, visits.size)
+
+        assertEquals("http://www.mozilla.org/1", visits[0].url)
+        assertEquals("http://www.mozilla.org/3", visits[1].url)
+    }
 }

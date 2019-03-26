@@ -84,6 +84,13 @@ interface HistoryStorage : Storage {
     suspend fun deleteVisitsFor(url: String)
 
     /**
+     * Remove a specific visit for a given [url].
+     * @param url A page URL for which to remove a visit.
+     * @param timestamp A unix timestamp, milliseconds, of a visit to be removed.
+     */
+    suspend fun deleteVisit(url: String, timestamp: Long)
+
+    /**
      * Prune history storage, removing stale history.
      */
     suspend fun prune()

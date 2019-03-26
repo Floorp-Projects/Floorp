@@ -97,6 +97,10 @@ class HistoryDelegateTest {
                 fail()
             }
 
+            override suspend fun deleteVisit(url: String, timestamp: Long) {
+                fail()
+            }
+
             override suspend fun prune() {
                 fail()
             }

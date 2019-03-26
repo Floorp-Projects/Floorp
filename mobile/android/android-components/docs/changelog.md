@@ -18,6 +18,13 @@ permalink: /changelog/
 * **feature-awesomebar**
   * Added optional `icon` parameter to `SearchSuggestionProvider`
 
+* **concept-storage**
+  * ⚠️ **This is a breaking API change!** for non-component implementations of `HistoryStorage`.
+  * `HistoryStorage` got new API: `deleteVisit`.
+
+* **browser-storage-sync**, **browser-storage-memory**
+  * Implementations of `concept-storage`/`HistoryStorage` expose newly added `deleteVisit`.
+
 # 0.48.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.47.0...v0.48.0)

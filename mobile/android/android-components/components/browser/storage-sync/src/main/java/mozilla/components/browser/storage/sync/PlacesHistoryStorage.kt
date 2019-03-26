@@ -127,6 +127,16 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
     }
 
     /**
+     * Sync behaviour: will remove history from remote devices if this was the only visit for [url].
+     * Otherwise, remote devices are not affected.
+     */
+    override suspend fun deleteVisit(url: String, timestamp: Long) {
+        withContext(scope.coroutineContext) {
+            places.writer().deleteVisit(url, timestamp)
+        }
+    }
+
+    /**
      * Should only be called in response to severe disk storage pressure. May delete all of the data,
      * or some subset of it.
      * Sync behaviour: will not remove history from remote clients.
