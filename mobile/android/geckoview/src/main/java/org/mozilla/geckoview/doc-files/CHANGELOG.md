@@ -18,6 +18,10 @@ exclude: true
 
 [68.2]: ../GeckoSession.ProgressDelegate.html
 
+- Added [`ContentBlocking#AT_CRYPTOMINING`][68.3] for cryptocurrency miner blocking.
+
+[68.3]: ../ContentBlocking.html#AT_CRYPTOMINING
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -224,4 +228,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: e8fa4ed799e78f64fddd3f2c463202942811de11
+[api-version]: e48935ac13c3a907d46d50bb2b00f5e84d30ef4b

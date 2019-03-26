@@ -2147,6 +2147,9 @@ namespace JS {
  * as when it is later consumed.
  */
 
+using OptimizedEncodingBytes = js::Vector<uint8_t, 0, js::SystemAllocPolicy>;
+using UniqueOptimizedEncodingBytes = js::UniquePtr<OptimizedEncodingBytes>;
+
 class OptimizedEncodingListener {
  protected:
   virtual ~OptimizedEncodingListener() {}
@@ -2159,7 +2162,7 @@ class OptimizedEncodingListener {
 
   // SpiderMonkey may optionally call storeOptimizedEncoding() after it has
   // finished processing a streamed resource.
-  virtual void storeOptimizedEncoding(const uint8_t* bytes, size_t length) = 0;
+  virtual void storeOptimizedEncoding(UniqueOptimizedEncodingBytes bytes) = 0;
 };
 
 class JS_PUBLIC_API StreamConsumer {

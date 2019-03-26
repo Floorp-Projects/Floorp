@@ -1078,8 +1078,8 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
                    SharedCode code, UniqueTlsData tlsDataIn,
                    HandleWasmMemoryObject memory, SharedTableVector&& tables,
                    StructTypeDescrVector&& structTypeDescrs,
-                   Handle<FunctionVector> funcImports,
-                   HandleValVector globalImportValues,
+                   const JSFunctionVector& funcImports,
+                   const ValVector& globalImportValues,
                    const WasmGlobalObjectVector& globalObjs,
                    UniqueDebugState maybeDebug)
     : realm_(cx->realm()),
@@ -1120,7 +1120,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
 
   Tier callerTier = code_->bestTier();
   for (size_t i = 0; i < metadata(callerTier).funcImports.length(); i++) {
-    HandleFunction f = funcImports[i];
+    JSFunction* f = funcImports[i];
     const FuncImport& fi = metadata(callerTier).funcImports[i];
     FuncImportTls& import = funcImportTls(fi);
     import.fun = f;
@@ -1171,7 +1171,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
         if (global.isIndirect()) {
           *(void**)globalAddr = globalObjs[imported]->cell();
         } else {
-          CopyValPostBarriered(globalAddr, globalImportValues[imported].get());
+          CopyValPostBarriered(globalAddr, globalImportValues[imported]);
         }
         break;
       }
@@ -1193,8 +1193,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
             // the source global should never be indirect.
             MOZ_ASSERT(!imported.isIndirect());
 
-            RootedVal dest(cx,
-                           globalImportValues[imported.importIndex()].get());
+            RootedVal dest(cx, globalImportValues[imported.importIndex()]);
             if (global.isIndirect()) {
               void* address = globalObjs[i]->cell();
               *(void**)globalAddr = address;
