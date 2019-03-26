@@ -116,7 +116,7 @@ createSignedCert() {
 
     echo Creating cert $certName-$keyType with SN=$certSN
 
-    CU_SUBJECT="CN=$certName, E=${certName}-${keyType}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+    CU_SUBJECT="CN=$certName, E=${certName}-${keyType}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
     repAndExec \
         certutil -R -d $dir -f "${PW_FILE}" -z "${NOISE_FILE}" \
                   -k $keyType -o $dir/req  2>&1
@@ -267,7 +267,7 @@ generateAndExportCACert() {
 
     certName=TestCA
     [ "$caName" ] && certName=$caName
-    CU_SUBJECT="CN=NSS IOPR Test CA $$, E=${certName}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+    CU_SUBJECT="CN=NSS IOPR Test CA $$, E=${certName}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
     repAndExec \
         certutil -S -n $certName -t "CTu,CTu,CTu" -v 600 -x -d ${dir} -1 -2 \
         -f ${PW_FILE} -z ${NOISE_FILE} -m `expr $$ + 2238` >&1 <<EOF

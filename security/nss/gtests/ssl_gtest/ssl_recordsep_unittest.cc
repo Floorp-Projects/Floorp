@@ -442,6 +442,48 @@ TEST_P(TlsConnectStream, ReplaceRecordLayerAsyncLateAuth) {
   SendForwardReceive(client_, client_stage, server_);
 }
 
+TEST_F(TlsConnectStreamTls13, ReplaceRecordLayerAsyncPostHandshake) {
+  StartConnect();
+  client_->SetServerKeyBits(server_->server_key_bits());
+
+  BadPrSocket bad_layer_client(client_);
+  BadPrSocket bad_layer_server(server_);
+  StagedRecords client_stage(client_);
+  StagedRecords server_stage(server_);
+
+  client_->SetAuthCertificateCallback(AuthCompleteBlock);
+
+  server_stage.ForwardAll(client_, TlsAgent::STATE_CONNECTING);
+  client_stage.ForwardAll(server_, TlsAgent::STATE_CONNECTING);
+  server_stage.ForwardAll(client_, TlsAgent::STATE_CONNECTING);
+
+  ASSERT_TRUE(client_stage.empty());
+  client_->Handshake();
+  ASSERT_TRUE(client_stage.empty());
+  EXPECT_EQ(TlsAgent::STATE_CONNECTING, client_->state());
+
+  // Now declare the certificate good.
+  EXPECT_EQ(SECSuccess, SSL_AuthCertificateComplete(client_->ssl_fd(), 0));
+  client_->Handshake();
+  ASSERT_FALSE(client_stage.empty());
+
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    EXPECT_EQ(TlsAgent::STATE_CONNECTED, client_->state());
+    client_stage.ForwardAll(server_, TlsAgent::STATE_CONNECTED);
+  } else {
+    client_stage.ForwardAll(server_, TlsAgent::STATE_CONNECTED);
+    server_stage.ForwardAll(client_, TlsAgent::STATE_CONNECTED);
+  }
+  CheckKeys();
+
+  // Reading and writing application data should work.
+  SendForwardReceive(client_, client_stage, server_);
+
+  // Post-handshake messages should work here.
+  EXPECT_EQ(SECSuccess, SSL_SendSessionTicket(server_->ssl_fd(), nullptr, 0));
+  SendForwardReceive(server_, server_stage, client_);
+}
+
 // This test ensures that data is correctly forwarded when the handshake is
 // resumed after asynchronous server certificate authentication, when
 // SSL_AuthCertificateComplete() is called.  The logic for resuming the

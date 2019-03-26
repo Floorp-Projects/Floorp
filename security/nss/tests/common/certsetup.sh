@@ -47,11 +47,12 @@ make_cert() {
     rsa_ca_rsapss_chain) type_args=(-g 1024 --pss-sign);sign=(-c rsa_ca);type=rsa;;
     ecdh_rsa) type_args=(-q nistp256);sign=(-c rsa_ca);type=ec ;;
   esac
+  msg="create certificate: $@"
   shift 2
   counter=$(($counter + 1))
   certscript $@ | ${BINDIR}/certutil -S \
-    -z ${R_NOISE_FILE} -d "${PROFILEDIR}" \
+    -z "$R_NOISE_FILE" -d "$PROFILEDIR" \
     -n $name -s "CN=$name" -t "$trust" "${sign[@]}" -m "$counter" \
     -w -2 -v 120 -k "$type" "${type_args[@]}" "${sighash[@]}" -1 -2
-  html_msg $? 0 "create certificate: $@"
+  html_msg $? 0 "$msg"
 }

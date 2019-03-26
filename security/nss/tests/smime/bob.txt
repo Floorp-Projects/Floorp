@@ -1,6 +1,6 @@
 Date: Wed, 20 Sep 2000 00:00:01 -0700 (PDT)
-From: bob@bogus.com
+From: bob@example.com
 Subject: message Bob --> Alice
-To: alice@bogus.com
+To: alice@example.com
 
 This is a test message from Bob to Alice.
