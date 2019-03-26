@@ -3387,7 +3387,9 @@ bool SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
     return false;
   }
 
-  if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp) {
+  // Don't attach a megamorphic store slot stub for ops like JSOP_INITELEM.
+  if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp &&
+      IsPropertySetOp(JSOp(*pc_))) {
     writer.megamorphicStoreSlot(objId, JSID_TO_ATOM(id)->asPropertyName(),
                                 rhsId, typeCheckInfo_.needsTypeBarrier());
     writer.returnFromIC();
