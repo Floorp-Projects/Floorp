@@ -519,7 +519,8 @@ class PresShell final : public nsIPresShell,
      *                                  PresShell should be set instead.  I.e.,
      *                                  in the latter case, the frame is in
      *                                  a parent document.
-     * @param aGUIEvent                 Event to be handled.
+     * @param aGUIEvent                 Event to be handled.  Must be a trusted
+     *                                  event.
      * @param aDontRetargetEvents       true if this shouldn't redirect the
      *                                  event to different PresShell.
      *                                  false if this can redirect the event to
@@ -538,7 +539,8 @@ class PresShell final : public nsIPresShell,
      * WidgetEvent, not WidgetGUIEvent.  So, you can dispatch a simple event
      * with this.
      *
-     * @param aEvent                    Event to be dispatched.
+     * @param aEvent                    Event to be dispatched.  Must be a
+     *                                  trusted event.
      * @param aNewEventFrame            Temporal new event frame.
      * @param aNewEventContent          Temporal new event content.
      * @param aEventStatus              [in/out] EventStuatus of aEvent.

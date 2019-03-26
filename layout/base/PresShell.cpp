@@ -6452,6 +6452,8 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrameForPresShell,
                                               WidgetGUIEvent* aGUIEvent,
                                               bool aDontRetargetEvents,
                                               nsEventStatus* aEventStatus) {
+  MOZ_ASSERT(aGUIEvent);
+  MOZ_DIAGNOSTIC_ASSERT(aGUIEvent->IsTrusted());
   MOZ_ASSERT(aEventStatus);
 
 #ifdef MOZ_TASK_TRACER
@@ -7613,6 +7615,9 @@ nsresult PresShell::EventHandler::HandleEventWithTarget(
     WidgetEvent* aEvent, nsIFrame* aNewEventFrame, nsIContent* aNewEventContent,
     nsEventStatus* aEventStatus, bool aIsHandlingNativeEvent,
     nsIContent** aTargetContent, nsIContent* aOverrideClickTarget) {
+  MOZ_ASSERT(aEvent);
+  MOZ_DIAGNOSTIC_ASSERT(aEvent->IsTrusted());
+
 #if DEBUG
   MOZ_ASSERT(!aNewEventFrame ||
                  aNewEventFrame->PresContext()->GetPresShell() == mPresShell,
@@ -7793,9 +7798,7 @@ nsresult PresShell::EventHandler::DispatchEvent(
 }
 
 bool PresShell::EventHandler::PrepareToDispatchEvent(WidgetEvent* aEvent) {
-  if (!aEvent->IsTrusted()) {
-    return false;
-  }
+  MOZ_ASSERT(aEvent->IsTrusted());
 
   if (aEvent->IsUserAction()) {
     mPresShell->mHasHandledUserInput = true;
@@ -7896,8 +7899,7 @@ bool PresShell::EventHandler::PrepareToDispatchContextMenuEvent(
     WidgetEvent* aEvent) {
   MOZ_ASSERT(aEvent);
   MOZ_ASSERT(aEvent->mMessage == eContextMenu);
-
-  // XXX Why do we treat untrusted eContextMenu here?
+  MOZ_ASSERT(aEvent->IsTrusted());
 
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
   if (mouseEvent->IsContextMenuKeyEvent() &&
@@ -7973,10 +7975,6 @@ void PresShell::EventHandler::RecordEventPreparationPerformance(
     const WidgetEvent* aEvent) {
   MOZ_ASSERT(aEvent);
 
-  if (!aEvent->IsTrusted()) {
-    return;
-  }
-
   switch (aEvent->mMessage) {
     case eKeyPress:
     case eKeyDown:
@@ -8035,9 +8033,6 @@ void PresShell::EventHandler::RecordEventPreparationPerformance(
 
 void PresShell::EventHandler::RecordEventHandlingResponsePerformance(
     const WidgetEvent* aEvent) {
-  // XXX Why we include the peformance of untrusted events only here?
-  //     We don't include it at recoding the preparation performance.
-
   if (!Telemetry::CanRecordBase() || aEvent->mTimeStamp.IsNull() ||
       aEvent->mTimeStamp <= mPresShell->mLastOSWake ||
       !aEvent->AsInputEvent()) {
@@ -8230,8 +8225,8 @@ void PresShell::EventHandler::DispatchTouchEventToDOM(
       content = capturingContent;
     }
     // copy the event
-    WidgetTouchEvent newEvent(touchEvent->IsTrusted(), touchEvent->mMessage,
-                              touchEvent->mWidget);
+    MOZ_ASSERT(touchEvent->IsTrusted());
+    WidgetTouchEvent newEvent(true, touchEvent->mMessage, touchEvent->mWidget);
     newEvent.AssignTouchEventData(*touchEvent, false);
     newEvent.mTarget = targetPtr;
     newEvent.mFlags.mHandledByAPZ = touchEvent->mFlags.mHandledByAPZ;
@@ -9578,17 +9573,19 @@ void PresShell::DelayedInputEvent::Dispatch() {
 
 PresShell::DelayedMouseEvent::DelayedMouseEvent(WidgetMouseEvent* aEvent)
     : DelayedInputEvent() {
-  WidgetMouseEvent* mouseEvent = new WidgetMouseEvent(
-      aEvent->IsTrusted(), aEvent->mMessage, aEvent->mWidget, aEvent->mReason,
-      aEvent->mContextMenuTrigger);
+  MOZ_DIAGNOSTIC_ASSERT(aEvent->IsTrusted());
+  WidgetMouseEvent* mouseEvent =
+      new WidgetMouseEvent(true, aEvent->mMessage, aEvent->mWidget,
+                           aEvent->mReason, aEvent->mContextMenuTrigger);
   mouseEvent->AssignMouseEventData(*aEvent, false);
   mEvent = mouseEvent;
 }
 
 PresShell::DelayedKeyEvent::DelayedKeyEvent(WidgetKeyboardEvent* aEvent)
     : DelayedInputEvent() {
-  WidgetKeyboardEvent* keyEvent = new WidgetKeyboardEvent(
-      aEvent->IsTrusted(), aEvent->mMessage, aEvent->mWidget);
+  MOZ_DIAGNOSTIC_ASSERT(aEvent->IsTrusted());
+  WidgetKeyboardEvent* keyEvent =
+      new WidgetKeyboardEvent(true, aEvent->mMessage, aEvent->mWidget);
   keyEvent->AssignKeyEventData(*aEvent, false);
   keyEvent->mFlags.mIsSynthesizedForTests =
       aEvent->mFlags.mIsSynthesizedForTests;
@@ -11092,11 +11089,11 @@ PresShell::EventHandler::HandlingTimeAccumulator::HandlingTimeAccumulator(
       mEvent(aEvent),
       mHandlingStartTime(TimeStamp::Now()) {
   MOZ_ASSERT(mEvent);
+  MOZ_ASSERT(mEvent->IsTrusted());
 }
 
 PresShell::EventHandler::HandlingTimeAccumulator::~HandlingTimeAccumulator() {
-  if (!mEvent->IsTrusted() ||
-      mEvent->mTimeStamp <= mEventHandler.mPresShell->mLastOSWake) {
+  if (mEvent->mTimeStamp <= mEventHandler.mPresShell->mLastOSWake) {
     return;
   }
 
