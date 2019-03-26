@@ -2501,11 +2501,6 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
                                         const std::string& ufrag) {
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
-  if (candidate.empty()) {
-    mJsepSession->EndOfLocalCandidates(transportId);
-    return;
-  }
-
   if (mForceIceTcp && std::string::npos != candidate.find(" UDP ")) {
     CSFLogWarn(LOGTAG, "Blocking local UDP candidate: %s", candidate.c_str());
     return;
@@ -2515,8 +2510,8 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
   uint16_t level = 0;
   std::string mid;
   bool skipped = false;
-  nsresult res = mJsepSession->AddLocalIceCandidate(candidate, transportId,
-                                                    &level, &mid, &skipped);
+  nsresult res = mJsepSession->AddLocalIceCandidate(
+      candidate, transportId, ufrag, &level, &mid, &skipped);
 
   if (NS_FAILED(res)) {
     std::string errorString = mJsepSession->GetLastError();
