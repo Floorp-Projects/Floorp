@@ -974,7 +974,7 @@ class JsepSessionTest : public JsepSessionTestBase,
         uint16_t level = 0;
         bool skipped;
         session.AddLocalIceCandidate(kAEqualsCandidate + candidate.str(),
-                                     transportId, &level, &mid, &skipped);
+                                     transportId, "", &level, &mid, &skipped);
         if (!skipped) {
           mCandidatesToTrickle.push_back(Tuple<Level, Mid, Candidate>(
               level, mid, kAEqualsCandidate + candidate.str()));
@@ -1010,7 +1010,11 @@ class JsepSessionTest : public JsepSessionTestBase,
             // that there is no default for RTCP
             idAndCandidates.second[RTCP].first,
             idAndCandidates.second[RTCP].second, idAndCandidates.first);
-        session.EndOfLocalCandidates(idAndCandidates.first);
+        std::string mid;
+        uint16_t level = 0;
+        bool skipped;
+        session.AddLocalIceCandidate("", idAndCandidates.first, "", &level,
+                                     &mid, &skipped);
       }
     }
 
@@ -2704,8 +2708,9 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates) {
         "Local reoffer before gathering should not have a default RTCP "
         "candidate.");
     CheckEndOfCandidates(
-        false, parsedOffer->GetMediaSection(i),
-        "Local reoffer before gathering should not have an end-of-candidates.");
+        i == 0, parsedOffer->GetMediaSection(i),
+        "Local reoffer before gathering should have an end-of-candidates "
+        "(level 0 only)");
   }
 
   // mSessionAns should generate a reoffer that is similar
@@ -2734,9 +2739,9 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates) {
         "Local reoffer before gathering should not have a default RTCP "
         "candidate. (previous answerer)");
     CheckEndOfCandidates(
-        false, parsedOffer->GetMediaSection(i),
-        "Local reoffer before gathering should not have an end-of-candidates. "
-        "(previous answerer)");
+        i == 0, parsedOffer->GetMediaSection(i),
+        "Local reoffer before gathering should have an end-of-candidates "
+        "(level 0 only)");
   }
 
   // Ok, let's continue with the renegotiation
@@ -4813,7 +4818,7 @@ TEST_F(JsepSessionTest, CreateOfferAddCandidate) {
   bool skipped;
   nsresult rv;
   rv = mSessionOff->AddLocalIceCandidate(strSampleCandidate,
-                                         GetTransportId(*mSessionOff, 0),
+                                         GetTransportId(*mSessionOff, 0), "",
                                          &level, &mid, &skipped);
   ASSERT_EQ(NS_OK, rv);
 }
@@ -4824,7 +4829,7 @@ TEST_F(JsepSessionTest, AddIceCandidateEarly) {
   bool skipped;
   nsresult rv;
   rv = mSessionOff->AddLocalIceCandidate(strSampleCandidate,
-                                         GetTransportId(*mSessionOff, 0),
+                                         GetTransportId(*mSessionOff, 0), "",
                                          &level, &mid, &skipped);
 
   // This can't succeed without a local description
