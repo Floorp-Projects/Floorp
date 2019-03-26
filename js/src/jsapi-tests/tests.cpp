@@ -82,7 +82,8 @@ JSObject* JSAPITest::createGlobal(JSPrincipals* principals) {
   options.creationOptions()
       .setStreamsEnabled(true)
       .setBigIntEnabled(true)
-      .setFieldsEnabled(true);
+      .setFieldsEnabled(true)
+      .setAwaitFixEnabled(true);
   newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), principals,
                                  JS::FireOnNewGlobalHook, options);
   if (!newGlobal) {
