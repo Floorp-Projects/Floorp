@@ -219,14 +219,14 @@ class ProcessHandlerMixin(object):
 
             return subprocess.Popen.poll(self)
 
-        def wait(self):
+        def wait(self, timeout=None):
             """ Popen.wait
                 Called to wait for a running process to shut down and return
                 its exit code
                 Returns the main process's exit code
             """
             # This call will be different for each OS
-            self.returncode = self._wait()
+            self.returncode = self._custom_wait(timeout=timeout)
             self._cleanup()
             return self.returncode
 
@@ -517,7 +517,12 @@ falling back to not using job objects for managing child processes""", file=sys.
                             self.debug("We got a message %s" % msgid.value)
                             pass
 
-            def _wait(self):
+            def _custom_wait(self, timeout=None):
+                """ Custom implementation of wait.
+
+                - timeout: number of seconds before timing out. If None,
+                  will wait indefinitely.
+                """
                 # First, check to see if the process is still running
                 if self._handle:
                     self.returncode = winprocess.GetExitCodeProcess(self._handle)
@@ -530,6 +535,9 @@ falling back to not using job objects for managing child processes""", file=sys.
                     threadalive = self._procmgrthread.is_alive()
                 if self._job and threadalive and threading.current_thread() != self._procmgrthread:
                     self.debug("waiting with IO completion port")
+                    if timeout is None:
+                        timeout = (self.MAX_IOCOMPLETION_PORT_NOTIFICATION_DELAY +
+                                   self.MAX_PROCESS_KILL_DELAY)
                     # Then we are managing with IO Completion Ports
                     # wait on a signal so we know when we have seen the last
                     # process come through.
@@ -539,9 +547,7 @@ falling back to not using job objects for managing child processes""", file=sys.
                     try:
                         # timeout is the max amount of time the procmgr thread will wait for
                         # child processes to shutdown before killing them with extreme prejudice.
-                        item = self._process_events.get(
-                            timeout=self.MAX_IOCOMPLETION_PORT_NOTIFICATION_DELAY +
-                            self.MAX_PROCESS_KILL_DELAY)
+                        item = self._process_events.get(timeout=timeout)
                         if item[self.pid] == 'FINISHED':
                             self.debug("received 'FINISHED' from _procmgrthread")
                             self._process_events.task_done()
@@ -567,7 +573,13 @@ falling back to not using job objects for managing child processes""", file=sys.
 
                     rc = None
                     if self._handle:
-                        rc = winprocess.WaitForSingleObject(self._handle, -1)
+                        if timeout is None:
+                            timeout = -1
+                        else:
+                            # timeout for WaitForSingleObject is in ms
+                            timeout = timeout * 1000
+
+                        rc = winprocess.WaitForSingleObject(self._handle, timeout)
 
                     if rc == winprocess.WAIT_TIMEOUT:
                         # The process isn't dead, so kill it
@@ -627,10 +639,10 @@ falling back to not using job objects for managing child processes""", file=sys.
 
         elif isPosix:
 
-            def _wait(self):
+            def _custom_wait(self, timeout=None):
                 """ Haven't found any reason to differentiate between these platforms
                     so they all use the same wait callback.  If it is necessary to
-                    craft different styles of wait, then a new _wait method
+                    craft different styles of wait, then a new _custom_wait method
                     could be easily implemented.
                 """
 
@@ -662,7 +674,11 @@ falling back to not using job objects for managing child processes""", file=sys.
 
                 else:
                     # For non-group wait, call base class
-                    subprocess.Popen.wait(self)
+                    if six.PY2:
+                        subprocess.Popen.wait(self)
+                    else:
+                        # timeout was introduced in Python 3.3
+                        subprocess.Popen.wait(self, timeout=timeout)
                     return self.returncode
 
             def _cleanup(self):
@@ -673,8 +689,12 @@ falling back to not using job objects for managing child processes""", file=sys.
             print("Unrecognized platform, process groups may not "
                   "be managed properly", file=sys.stderr)
 
-            def _wait(self):
-                self.returncode = subprocess.Popen.wait(self)
+            def _custom_wait(self, timeout=None):
+                if six.PY2:
+                    self.returncode = subprocess.Popen.wait(self)
+                else:
+                    # timeout was introduced in Python 3.3
+                    self.returncode = subprocess.Popen.wait(self, timeout=timeout)
                 return self.returncode
 
             def _cleanup(self):
