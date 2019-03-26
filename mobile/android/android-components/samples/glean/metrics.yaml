@@ -21,6 +21,18 @@ browser.engagement:
       key2:
         description: "This is key two"
     expires: never
+    
+  event_no_keys:
+    type: event
+    description: >
+      Just testing events without keys
+    bugs:
+      - 123456789
+    data_reviews:
+      - N/A 
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    expires: never
 
 basic:
   os:
