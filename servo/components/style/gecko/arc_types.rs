@@ -18,6 +18,8 @@ use crate::gecko_bindings::structs::RawServoMediaRule;
 use crate::gecko_bindings::structs::RawServoMozDocumentRule;
 use crate::gecko_bindings::structs::RawServoNamespaceRule;
 use crate::gecko_bindings::structs::RawServoPageRule;
+use crate::gecko_bindings::structs::RawServoRuleNode;
+use crate::gecko_bindings::structs::RawServoRuleNodeStrong;
 use crate::gecko_bindings::structs::RawServoSupportsRule;
 use crate::gecko_bindings::structs::ServoCssRules;
 use crate::gecko_bindings::structs::RawServoAnimationValue;
@@ -32,6 +34,7 @@ use crate::gecko_bindings::sugar::ownership::{HasArcFFI, HasFFI, Strong};
 use crate::media_queries::MediaList;
 use crate::properties::animated_properties::AnimationValue;
 use crate::properties::{ComputedValues, PropertyDeclarationBlock};
+use crate::rule_tree::StrongRuleNode;
 use crate::shared_lock::Locked;
 use crate::stylesheets::keyframes_rule::Keyframe;
 use crate::stylesheets::{CounterStyleRule, CssRules, FontFaceRule, FontFeatureValuesRule};
@@ -117,6 +120,31 @@ impl_arc_ffi!(CssUrlData => RawServoCssUrlData
 
 impl_arc_ffi!(Box<[QuotePair]> => RawServoQuotes
               [Servo_Quotes_AddRef, Servo_Quotes_Release]);
+
+// RuleNode is a Arc-like type but it does not use Arc.
+
+impl StrongRuleNode {
+    pub fn into_strong(self) -> RawServoRuleNodeStrong {
+        let ptr = self.ptr();
+        mem::forget(self);
+        unsafe { mem::transmute(ptr) }
+    }
+
+    pub fn from_ffi<'a>(ffi: &'a &RawServoRuleNode) -> &'a Self {
+        unsafe { &*(ffi as *const &RawServoRuleNode as *const StrongRuleNode) }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_RuleNode_AddRef(obj: &RawServoRuleNode) {
+    mem::forget(StrongRuleNode::from_ffi(&obj).clone());
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_RuleNode_Release(obj: &RawServoRuleNode) {
+    let ptr = StrongRuleNode::from_ffi(&obj);
+    ptr::read(ptr as *const StrongRuleNode);
+}
 
 // ComputedStyle is not an opaque type on any side of FFI.
 // This means that doing the HasArcFFI type trick is actually unsound,
