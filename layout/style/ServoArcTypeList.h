@@ -37,9 +37,9 @@ SERVO_ARC_TYPE(PageRule, RawServoPageRule)
 SERVO_ARC_TYPE(SupportsRule, RawServoSupportsRule)
 SERVO_ARC_TYPE(DocumentRule, RawServoMozDocumentRule)
 SERVO_ARC_TYPE(FontFeatureValuesRule, RawServoFontFeatureValuesRule)
-SERVO_ARC_TYPE(RuleNode, RawServoRuleNode)
 SERVO_ARC_TYPE(FontFaceRule, RawServoFontFaceRule)
 SERVO_ARC_TYPE(CounterStyleRule, RawServoCounterStyleRule)
 SERVO_ARC_TYPE(CssUrlData, RawServoCssUrlData)
 SERVO_ARC_TYPE(Quotes, RawServoQuotes)
+
 // clang-format on
