@@ -86,47 +86,9 @@ dictionary RTCRemoteOutboundRtpStreamStats : RTCSentRtpStreamStats {
   DOMString localId;
 };
 
-dictionary RTCMediaStreamTrackStats : RTCStats {
-  DOMString trackIdentifier;      // track.id property
-  boolean remoteSource;
-  sequence<DOMString> ssrcIds;
-  // Stuff that makes sense for video
-  unsigned long frameWidth;
-  unsigned long frameHeight;
-  double framesPerSecond;        // The nominal FPS value
-  unsigned long framesSent;
-  unsigned long framesReceived;  // Only for remoteSource=true
-  unsigned long framesDecoded;
-  unsigned long framesDropped;   // See VideoPlaybackQuality.droppedVideoFrames
-  unsigned long framesCorrupted; // as above.
-  // Stuff that makes sense for audio
-  double audioLevel;               // linear, 1.0 = 0 dBov (from RFC 6464).
-  // AEC stuff on audio tracks sourced from a microphone where AEC is applied
-  double echoReturnLoss;           // in decibels from G.168 (2012) section 3.14
-  double echoReturnLossEnhancement; // as above, section 3.15
-};
-
-dictionary RTCMediaStreamStats : RTCStats {
-  DOMString streamIdentifier;     // stream.id property
-  sequence<DOMString> trackIds;   // Note: stats object ids, not track.id
-};
-
 dictionary RTCRTPContributingSourceStats : RTCStats {
   unsigned long contributorSsrc;
   DOMString     inboundRtpStreamId;
-};
-
-dictionary RTCTransportStats: RTCStats {
-  unsigned long bytesSent;
-  unsigned long bytesReceived;
-};
-
-dictionary RTCIceComponentStats : RTCStats {
-  DOMString transportId;
-  long component;
-  unsigned long bytesSent;
-  unsigned long bytesReceived;
-  boolean activeConnection;
 };
 
 enum RTCStatsIceCandidatePairState {
@@ -176,14 +138,6 @@ dictionary RTCIceCandidateStats : RTCStats {
   DOMString transportId;
 };
 
-dictionary RTCCodecStats : RTCStats {
-  unsigned long payloadType;       // As used in RTP encoding.
-  DOMString codec;                 // video/vp8 or equivalent
-  unsigned long clockRate;
-  unsigned long channels;          // 2=stereo, missing for most other cases.
-  DOMString parameters;            // From SDP description line
-};
-
 // This is the internal representation of the report in this implementation
 // to be received from c++
 
@@ -194,13 +148,8 @@ dictionary RTCStatsReportInternal {
   sequence<RTCRemoteInboundRtpStreamStats>  remoteInboundRtpStreamStats;
   sequence<RTCRemoteOutboundRtpStreamStats> remoteOutboundRtpStreamStats;
   sequence<RTCRTPContributingSourceStats>   rtpContributingSourceStats;
-  sequence<RTCMediaStreamTrackStats>        mediaStreamTrackStats;
-  sequence<RTCMediaStreamStats>             mediaStreamStats;
-  sequence<RTCTransportStats>               transportStats;
-  sequence<RTCIceComponentStats>            iceComponentStats;
   sequence<RTCIceCandidatePairStats>        iceCandidatePairStats;
   sequence<RTCIceCandidateStats>            iceCandidateStats;
-  sequence<RTCCodecStats>                   codecStats;
   DOMString                                 localSdp;
   DOMString                                 remoteSdp;
   DOMHighResTimeStamp                       timestamp;
