@@ -32,6 +32,7 @@ mod bindings {
     use toml::value::Table;
 
     const STRUCTS_FILE: &'static str = "structs.rs";
+    const BINDINGS_FILE: &'static str = "bindings.rs";
 
     fn read_config(path: &PathBuf) -> Table {
         println!("cargo:rerun-if-changed={}", path.to_str().unwrap());
@@ -219,6 +220,51 @@ mod bindings {
             .expect("Unable to write output");
     }
 
+    fn get_types(filename: &str, macro_pat: &str) -> Vec<(String, String)> {
+        // Read the file
+        let path = DISTDIR_PATH.join("include/mozilla/").join(filename);
+        let mut list_file = File::open(path).expect(&format!("Unable to open {}", filename));
+        let mut content = String::new();
+        list_file
+            .read_to_string(&mut content)
+            .expect(&format!("Failed to read {}", filename));
+        // Remove comments
+        let block_comment_re = Regex::new(r#"(?s)/\*.*?\*/"#).unwrap();
+        let line_comment_re = Regex::new(r#"//.*"#).unwrap();
+        let content = block_comment_re.replace_all(&content, "");
+        let content = line_comment_re.replace_all(&content, "");
+        // Extract the list
+        let re_string = format!(r#"^({})\(.+,\s*(\w+)\)$"#, macro_pat);
+        let re = Regex::new(&re_string).unwrap();
+        content
+            .lines()
+            .map(|line| line.trim())
+            .filter(|line| !line.is_empty())
+            .map(|line| {
+                let captures = re
+                    .captures(&line)
+                    .expect(&format!("Unrecognized line in {}: '{}'", filename, line));
+                let macro_name = captures.get(1).unwrap().as_str().to_string();
+                let type_name = captures.get(2).unwrap().as_str().to_string();
+                (macro_name, type_name)
+            })
+            .collect()
+    }
+
+    fn get_arc_types() -> Vec<String> {
+        get_types("ServoArcTypeList.h", "SERVO_ARC_TYPE")
+            .into_iter()
+            .map(|(_, type_name)| type_name)
+            .collect()
+    }
+
+    fn get_boxed_types() -> Vec<String> {
+        get_types("ServoBoxedTypeList.h", "SERVO_BOXED_TYPE")
+            .into_iter()
+            .map(|(_, type_name)| type_name)
+            .collect()
+    }
+
     struct BuilderWithConfig<'a> {
         builder: Builder,
         config: &'a Table,
@@ -294,11 +340,10 @@ mod bindings {
     fn generate_structs() {
         let builder = Builder::get_initial_builder()
             .enable_cxx_namespaces()
-            .with_codegen_config(CodegenConfig::TYPES | CodegenConfig::VARS | CodegenConfig::FUNCTIONS);
+            .with_codegen_config(CodegenConfig::TYPES | CodegenConfig::VARS);
         let mut fixups = vec![];
         let builder = BuilderWithConfig::new(builder, CONFIG["structs"].as_table().unwrap())
             .handle_common(&mut fixups)
-            .handle_str_items("whitelist-functions", |b, item| b.whitelist_function(item))
             .handle_str_items("bitfield-enums", |b, item| b.bitfield_enum(item))
             .handle_str_items("rusty-enums", |b, item| b.rustified_enum(item))
             .handle_str_items("whitelist-vars", |b, item| b.whitelist_var(item))
@@ -389,6 +434,44 @@ mod bindings {
         }
     }
 
+    // FIXME(emilio): Avoid this altogether.
+    fn generate_bindings() {
+        let builder = Builder::get_initial_builder()
+            .disable_name_namespacing()
+            .with_codegen_config(CodegenConfig::FUNCTIONS);
+        let config = CONFIG["bindings"].as_table().unwrap();
+        let mut fixups = vec![];
+        let mut builder = BuilderWithConfig::new(builder, config)
+            .handle_common(&mut fixups)
+            .handle_str_items("whitelist-functions", |b, item| b.whitelist_function(item))
+            .get_builder();
+        for ty in get_arc_types().iter() {
+            builder = builder
+                .blacklist_type(format!("{}Strong", ty))
+                .raw_line(format!(
+                    "pub type {0}Strong = ::gecko_bindings::sugar::ownership::Strong<{0}>;",
+                    ty
+                ));
+        }
+        for ty in get_boxed_types().iter() {
+            builder = builder
+                .blacklist_type(format!("{}Owned", ty))
+                .raw_line(format!(
+                    "pub type {0}Owned = ::gecko_bindings::sugar::ownership::Owned<{0}>;",
+                    ty
+                ))
+                .blacklist_type(format!("{}OwnedOrNull", ty))
+                .raw_line(format!(
+                    concat!(
+                        "pub type {0}OwnedOrNull = ",
+                        "::gecko_bindings::sugar::ownership::OwnedOrNull<{0}>;"
+                    ),
+                    ty
+                ));
+        }
+        write_binding_file(builder, BINDINGS_FILE, &fixups);
+    }
+
     fn generate_atoms() {
         let script = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap())
             .join("gecko")
@@ -406,9 +489,24 @@ mod bindings {
     }
 
     pub fn generate() {
-        setup_logging();
-        generate_structs();
-        generate_atoms();
+        use std::thread;
+        macro_rules! run_tasks {
+            ($($task:expr,)+) => {
+                if setup_logging() {
+                    $($task;)+
+                } else {
+                    let threads = vec![$( thread::spawn(|| $task) ),+];
+                    for thread in threads.into_iter() {
+                        thread.join().unwrap();
+                    }
+                }
+            }
+        }
+        run_tasks! {
+            generate_structs(),
+            generate_bindings(),
+            generate_atoms(),
+        }
 
         for path in ADDED_PATHS.lock().unwrap().iter() {
             println!("cargo:rerun-if-changed={}", path.to_str().unwrap());

@@ -50,13 +50,6 @@ namespace nsStyleTransformMatrix {
 enum class MatrixTransformOperator : uint8_t;
 }
 
-// The clang we use on windows complains about returning StyleStrong<> and
-// StyleOwned<>, since the template parameters are incomplete.
-//
-// But they only contain pointers so it is ok.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
-
 extern "C" {
 
 // Element data
@@ -69,15 +62,14 @@ size_t Servo_Element_SizeOfExcludingThisAndCVs(
 
 bool Servo_Element_HasPrimaryComputedValues(const mozilla::dom::Element* node);
 
-mozilla::StyleStrong<mozilla::ComputedStyle>
-Servo_Element_GetPrimaryComputedValues(const mozilla::dom::Element* node);
+ComputedStyleStrong Servo_Element_GetPrimaryComputedValues(
+    const mozilla::dom::Element* node);
 
 bool Servo_Element_HasPseudoComputedValues(const mozilla::dom::Element* node,
                                            size_t index);
 
-mozilla::StyleStrong<mozilla::ComputedStyle>
-Servo_Element_GetPseudoComputedValues(const mozilla::dom::Element* node,
-                                      size_t index);
+ComputedStyleStrong Servo_Element_GetPseudoComputedValues(
+    const mozilla::dom::Element* node, size_t index);
 
 bool Servo_Element_IsDisplayNone(const mozilla::dom::Element* element);
 bool Servo_Element_IsDisplayContents(const mozilla::dom::Element* element);
@@ -92,7 +84,7 @@ void Servo_InvalidateStyleForDocStateChanges(
 
 // Styleset and Stylesheet management
 
-mozilla::StyleStrong<RawServoStyleSheetContents> Servo_StyleSheet_FromUTF8Bytes(
+RawServoStyleSheetContentsStrong Servo_StyleSheet_FromUTF8Bytes(
     mozilla::css::Loader* loader, mozilla::StyleSheet* gecko_stylesheet,
     mozilla::css::SheetLoadData* load_data, const nsACString* bytes,
     mozilla::css::SheetParsingMode parsing_mode,
@@ -107,15 +99,15 @@ void Servo_StyleSheet_FromUTF8BytesAsync(
     mozilla::css::SheetParsingMode parsing_mode, uint32_t line_number_offset,
     nsCompatibility quirks_mode, bool should_record_use_counters);
 
-mozilla::StyleStrong<RawServoStyleSheetContents> Servo_StyleSheet_Empty(
+RawServoStyleSheetContentsStrong Servo_StyleSheet_Empty(
     mozilla::css::SheetParsingMode parsing_mode);
 
 bool Servo_StyleSheet_HasRules(const RawServoStyleSheetContents* sheet);
 
-mozilla::StyleStrong<ServoCssRules> Servo_StyleSheet_GetRules(
+ServoCssRulesStrong Servo_StyleSheet_GetRules(
     const RawServoStyleSheetContents* sheet);
 
-mozilla::StyleStrong<RawServoStyleSheetContents> Servo_StyleSheet_Clone(
+RawServoStyleSheetContentsStrong Servo_StyleSheet_Clone(
     const RawServoStyleSheetContents* sheet,
     const mozilla::StyleSheet* reference_sheet);
 
@@ -146,6 +138,7 @@ mozilla::MediumFeaturesChangedResult Servo_StyleSet_MediumFeaturesChanged(
     nsTArray<RawServoAuthorStyles*>* non_document_sets,
     bool may_affect_default_style);
 
+void Servo_StyleSet_Drop(RawServoStyleSetOwned set);
 void Servo_StyleSet_CompatModeChanged(const RawServoStyleSet* raw_data);
 
 void Servo_StyleSet_AppendStyleSheet(const RawServoStyleSet* set,
@@ -185,18 +178,18 @@ const RawServoCounterStyleRule* Servo_StyleSet_GetCounterStyleRule(
 gfxFontFeatureValueSet* Servo_StyleSet_BuildFontFeatureValueSet(
     const RawServoStyleSet* set);
 
-mozilla::StyleStrong<mozilla::ComputedStyle>
-Servo_StyleSet_ResolveForDeclarations(
+ComputedStyleStrong Servo_StyleSet_ResolveForDeclarations(
     const RawServoStyleSet* set, const mozilla::ComputedStyle* parent_style,
     const RawServoDeclarationBlock* declarations);
 
-mozilla::StyleOwnedOrNull<RawServoSelectorList> Servo_SelectorList_Parse(
-    const nsACString* selector_list);
-mozilla::StyleOwned<RawServoSourceSizeList> Servo_SourceSizeList_Parse(
-    const nsACString* value);
+void Servo_SelectorList_Drop(RawServoSelectorList*);
+RawServoSelectorList* Servo_SelectorList_Parse(const nsACString* selector_list);
+RawServoSourceSizeList* Servo_SourceSizeList_Parse(const nsACString* value);
 
 int32_t Servo_SourceSizeList_Evaluate(const RawServoStyleSet* set,
                                       const RawServoSourceSizeList*);
+
+void Servo_SourceSizeList_Drop(RawServoSourceSizeList*);
 
 bool Servo_SelectorList_Matches(const mozilla::dom::Element*,
                                 const RawServoSelectorList*);
@@ -222,7 +215,8 @@ void Servo_UACache_AddSizeOf(mozilla::MallocSizeOf malloc_size_of,
 
 // AuthorStyles
 
-mozilla::StyleOwned<RawServoAuthorStyles> Servo_AuthorStyles_Create();
+RawServoAuthorStyles* Servo_AuthorStyles_Create();
+void Servo_AuthorStyles_Drop(RawServoAuthorStyles*);
 
 void Servo_AuthorStyles_AppendStyleSheet(RawServoAuthorStyles*,
                                          const mozilla::StyleSheet*);
@@ -245,6 +239,10 @@ size_t Servo_AuthorStyles_SizeOfIncludingThis(
     mozilla::MallocSizeOf malloc_size_of,
     mozilla::MallocSizeOf malloc_enclosing_size_of,
     const RawServoAuthorStyles* self);
+
+void Servo_ComputedStyle_AddRef(const mozilla::ComputedStyle* ctx);
+
+void Servo_ComputedStyle_Release(const mozilla::ComputedStyle* ctx);
 
 bool Servo_StyleSet_MightHaveAttributeDependency(
     const RawServoStyleSet* set, const mozilla::dom::Element* element,
@@ -277,16 +275,15 @@ nsresult Servo_CssRules_DeleteRule(const ServoCssRules* rules, uint32_t index);
   void Servo_##type_##_Debug(const RawServo##type_*, nsACString* result); \
   void Servo_##type_##_GetCssText(const RawServo##type_*, nsAString* result);
 
-#define BASIC_RULE_FUNCS(type_)                                         \
-  mozilla::StyleStrong<RawServo##type_##Rule>                           \
-      Servo_CssRules_Get##type_##RuleAt(const ServoCssRules* rules,     \
-                                        uint32_t index, uint32_t* line, \
-                                        uint32_t* column);              \
+#define BASIC_RULE_FUNCS(type_)                                   \
+  RawServo##type_##RuleStrong Servo_CssRules_Get##type_##RuleAt(  \
+      const ServoCssRules* rules, uint32_t index, uint32_t* line, \
+      uint32_t* column);                                          \
   BASIC_RULE_FUNCS_WITHOUT_GETTER(type_##Rule)
 
-#define GROUP_RULE_FUNCS(type_)                                     \
-  BASIC_RULE_FUNCS(type_)                                           \
-  mozilla::StyleStrong<ServoCssRules> Servo_##type_##Rule_GetRules( \
+#define GROUP_RULE_FUNCS(type_)                     \
+  BASIC_RULE_FUNCS(type_)                           \
+  ServoCssRulesStrong Servo_##type_##Rule_GetRules( \
       const RawServo##type_##Rule* rule);
 
 BASIC_RULE_FUNCS(Style)
@@ -308,7 +305,7 @@ BASIC_RULE_FUNCS(CounterStyle)
 
 using Matrix4x4Components = float[16];
 
-mozilla::StyleStrong<RawServoDeclarationBlock> Servo_StyleRule_GetStyle(
+RawServoDeclarationBlockStrong Servo_StyleRule_GetStyle(
     const RawServoStyleRule*);
 
 void Servo_StyleRule_SetStyle(const RawServoStyleRule* rule,
@@ -351,7 +348,7 @@ void Servo_Keyframe_GetKeyText(const RawServoKeyframe* keyframe,
 bool Servo_Keyframe_SetKeyText(const RawServoKeyframe* keyframe,
                                const nsACString* text);
 
-mozilla::StyleStrong<RawServoDeclarationBlock> Servo_Keyframe_GetStyle(
+RawServoDeclarationBlockStrong Servo_Keyframe_GetStyle(
     const RawServoKeyframe* keyframe);
 
 void Servo_Keyframe_SetStyle(const RawServoKeyframe* keyframe,
@@ -365,7 +362,7 @@ void Servo_KeyframesRule_SetName(const RawServoKeyframesRule* rule,
 
 uint32_t Servo_KeyframesRule_GetCount(const RawServoKeyframesRule* rule);
 
-mozilla::StyleStrong<RawServoKeyframe> Servo_KeyframesRule_GetKeyframeAt(
+RawServoKeyframeStrong Servo_KeyframesRule_GetKeyframeAt(
     const RawServoKeyframesRule* rule, uint32_t index, uint32_t* line,
     uint32_t* column);
 
@@ -381,13 +378,12 @@ bool Servo_KeyframesRule_AppendRule(const RawServoKeyframesRule* rule,
 void Servo_KeyframesRule_DeleteRule(const RawServoKeyframesRule* rule,
                                     uint32_t index);
 
-mozilla::StyleStrong<RawServoMediaList> Servo_MediaRule_GetMedia(
-    const RawServoMediaRule* rule);
+RawServoMediaListStrong Servo_MediaRule_GetMedia(const RawServoMediaRule* rule);
 
 nsAtom* Servo_NamespaceRule_GetPrefix(const RawServoNamespaceRule* rule);
 nsAtom* Servo_NamespaceRule_GetURI(const RawServoNamespaceRule* rule);
 
-mozilla::StyleStrong<RawServoDeclarationBlock> Servo_PageRule_GetStyle(
+RawServoDeclarationBlockStrong Servo_PageRule_GetStyle(
     const RawServoPageRule* rule);
 
 void Servo_PageRule_SetStyle(const RawServoPageRule* rule,
@@ -405,9 +401,9 @@ void Servo_FontFeatureValuesRule_GetFontFamily(
 void Servo_FontFeatureValuesRule_GetValueText(
     const RawServoFontFeatureValuesRule* rule, nsAString* result);
 
-mozilla::StyleStrong<RawServoFontFaceRule> Servo_FontFaceRule_CreateEmpty();
+RawServoFontFaceRuleStrong Servo_FontFaceRule_CreateEmpty();
 
-mozilla::StyleStrong<RawServoFontFaceRule> Servo_FontFaceRule_Clone(
+RawServoFontFaceRuleStrong Servo_FontFaceRule_Clone(
     const RawServoFontFaceRule* rule);
 
 void Servo_FontFaceRule_GetSourceLocation(const RawServoFontFaceRule* rule,
@@ -500,7 +496,7 @@ bool Servo_CounterStyleRule_SetDescriptor(const RawServoCounterStyleRule* rule,
 
 // Animations API
 
-mozilla::StyleStrong<RawServoDeclarationBlock> Servo_ParseProperty(
+RawServoDeclarationBlockStrong Servo_ParseProperty(
     nsCSSPropertyID property, const nsACString* value,
     mozilla::URLExtraData* data, mozilla::ParsingMode parsing_mode,
     nsCompatibility quirks_mode, mozilla::css::Loader* loader);
@@ -518,8 +514,7 @@ void Servo_GetComputedKeyframeValues(
     const RawServoStyleSet* set,
     nsTArray<mozilla::ComputedKeyframeValues>* result);
 
-mozilla::StyleStrong<RawServoAnimationValue>
-Servo_ComputedValues_ExtractAnimationValue(
+RawServoAnimationValueStrong Servo_ComputedValues_ExtractAnimationValue(
     const mozilla::ComputedStyle* computed_values, nsCSSPropertyID property);
 
 bool Servo_ComputedValues_SpecifiesAnimationsOrTransitions(
@@ -546,21 +541,21 @@ void Servo_GetAnimationValues(
 
 // AnimationValues handling
 
-mozilla::StyleStrong<RawServoAnimationValue> Servo_AnimationValues_Interpolate(
+RawServoAnimationValueStrong Servo_AnimationValues_Interpolate(
     const RawServoAnimationValue* from, const RawServoAnimationValue* to,
     double progress);
 
 bool Servo_AnimationValues_IsInterpolable(const RawServoAnimationValue* from,
                                           const RawServoAnimationValue* to);
 
-mozilla::StyleStrong<RawServoAnimationValue> Servo_AnimationValues_Add(
+RawServoAnimationValueStrong Servo_AnimationValues_Add(
     const RawServoAnimationValue* a, const RawServoAnimationValue* b);
 
-mozilla::StyleStrong<RawServoAnimationValue> Servo_AnimationValues_Accumulate(
+RawServoAnimationValueStrong Servo_AnimationValues_Accumulate(
     const RawServoAnimationValue* a, const RawServoAnimationValue* b,
     uint64_t count);
 
-mozilla::StyleStrong<RawServoAnimationValue> Servo_AnimationValues_GetZeroValue(
+RawServoAnimationValueStrong Servo_AnimationValues_GetZeroValue(
     const RawServoAnimationValue* value_to_match);
 
 double Servo_AnimationValues_ComputeDistance(const RawServoAnimationValue* from,
@@ -572,40 +567,38 @@ void Servo_AnimationValue_Serialize(const RawServoAnimationValue* value,
 
 nscolor Servo_AnimationValue_GetColor(const RawServoAnimationValue* value,
                                       nscolor foregroundColor);
-mozilla::StyleStrong<RawServoAnimationValue> Servo_AnimationValue_Color(
-    nsCSSPropertyID, nscolor);
+RawServoAnimationValueStrong Servo_AnimationValue_Color(nsCSSPropertyID,
+                                                        nscolor);
 
 float Servo_AnimationValue_GetOpacity(const RawServoAnimationValue* value);
-mozilla::StyleStrong<RawServoAnimationValue> Servo_AnimationValue_Opacity(
-    float);
+RawServoAnimationValueStrong Servo_AnimationValue_Opacity(float);
 
 nsCSSPropertyID Servo_AnimationValue_GetTransform(
     const RawServoAnimationValue* value, RefPtr<nsCSSValueSharedList>* list);
 
-mozilla::StyleStrong<RawServoAnimationValue> Servo_AnimationValue_Transform(
+RawServoAnimationValueStrong Servo_AnimationValue_Transform(
     nsCSSPropertyID property, const nsCSSValueSharedList& list);
 
 bool Servo_AnimationValue_DeepEqual(const RawServoAnimationValue*,
                                     const RawServoAnimationValue*);
 
-mozilla::StyleStrong<RawServoDeclarationBlock> Servo_AnimationValue_Uncompute(
+RawServoDeclarationBlockStrong Servo_AnimationValue_Uncompute(
     const RawServoAnimationValue* value);
 
-mozilla::StyleStrong<RawServoAnimationValue> Servo_AnimationValue_Compute(
+RawServoAnimationValueStrong Servo_AnimationValue_Compute(
     const mozilla::dom::Element* element,
     const RawServoDeclarationBlock* declarations,
     const mozilla::ComputedStyle* style, const RawServoStyleSet* raw_data);
 
 // Style attribute
 
-mozilla::StyleStrong<RawServoDeclarationBlock> Servo_ParseStyleAttribute(
+RawServoDeclarationBlockStrong Servo_ParseStyleAttribute(
     const nsACString* data, mozilla::URLExtraData* extra_data,
     nsCompatibility quirks_mode, mozilla::css::Loader* loader);
 
-mozilla::StyleStrong<RawServoDeclarationBlock>
-Servo_DeclarationBlock_CreateEmpty();
+RawServoDeclarationBlockStrong Servo_DeclarationBlock_CreateEmpty();
 
-mozilla::StyleStrong<RawServoDeclarationBlock> Servo_DeclarationBlock_Clone(
+RawServoDeclarationBlockStrong Servo_DeclarationBlock_Clone(
     const RawServoDeclarationBlock* declarations);
 
 bool Servo_DeclarationBlock_Equals(const RawServoDeclarationBlock* a,
@@ -683,7 +676,7 @@ void Servo_AnimationCompose(
 // segment endpoints and the supplied iteration composite mode.
 // The caller is responsible for providing an underlying value and
 // last value in all situations where there are needed.
-mozilla::StyleStrong<RawServoAnimationValue> Servo_ComposeAnimationSegment(
+RawServoAnimationValueStrong Servo_ComposeAnimationSegment(
     const mozilla::AnimationPropertySegment* animation_segment,
     const RawServoAnimationValue* underlying_value,
     const RawServoAnimationValue* last_value,
@@ -754,9 +747,9 @@ void Servo_DeclarationBlock_SetBackgroundImage(
 
 // MediaList
 
-mozilla::StyleStrong<RawServoMediaList> Servo_MediaList_Create();
+RawServoMediaListStrong Servo_MediaList_Create();
 
-mozilla::StyleStrong<RawServoMediaList> Servo_MediaList_DeepClone(
+RawServoMediaListStrong Servo_MediaList_DeepClone(
     const RawServoMediaList* list);
 
 bool Servo_MediaList_Matches(const RawServoMediaList* list,
@@ -791,12 +784,11 @@ bool Servo_CSSSupports(const nsACString* cond);
 
 // Computed style data
 
-mozilla::StyleStrong<mozilla::ComputedStyle>
-Servo_ComputedValues_GetForAnonymousBox(
+ComputedStyleStrong Servo_ComputedValues_GetForAnonymousBox(
     const mozilla::ComputedStyle* parent_style_or_null,
     mozilla::PseudoStyleType, const RawServoStyleSet* set);
 
-mozilla::StyleStrong<mozilla::ComputedStyle> Servo_ComputedValues_Inherit(
+ComputedStyleStrong Servo_ComputedValues_Inherit(
     const RawServoStyleSet*, mozilla::PseudoStyleType,
     const mozilla::ComputedStyle* parent_style, mozilla::InheritTarget);
 
@@ -826,16 +818,15 @@ void Servo_NoteExplicitHints(const mozilla::dom::Element*, mozilla::RestyleHint,
 uint32_t Servo_TakeChangeHint(const mozilla::dom::Element* element,
                               bool* was_restyled);
 
-mozilla::StyleStrong<mozilla::ComputedStyle> Servo_ResolveStyle(
-    const mozilla::dom::Element* element, const RawServoStyleSet* set);
+ComputedStyleStrong Servo_ResolveStyle(const mozilla::dom::Element* element,
+                                       const RawServoStyleSet* set);
 
-mozilla::StyleStrong<mozilla::ComputedStyle> Servo_ResolvePseudoStyle(
+ComputedStyleStrong Servo_ResolvePseudoStyle(
     const mozilla::dom::Element* element, mozilla::PseudoStyleType pseudo_type,
     bool is_probe, const mozilla::ComputedStyle* inherited_style,
     const RawServoStyleSet* set);
 
-mozilla::StyleStrong<mozilla::ComputedStyle>
-Servo_ComputedValues_ResolveXULTreePseudoStyle(
+ComputedStyleStrong Servo_ComputedValues_ResolveXULTreePseudoStyle(
     const mozilla::dom::Element* element, nsAtom* pseudo_tag,
     const mozilla::ComputedStyle* inherited_style,
     const mozilla::AtomArray* input_word, const RawServoStyleSet* set);
@@ -857,14 +848,14 @@ bool Servo_HasAuthorSpecifiedRules(const RawServoStyleSet* set,
 // The tree must be in a consistent state such that a normal traversal could be
 // performed, and this function maintains that invariant.
 
-mozilla::StyleStrong<mozilla::ComputedStyle> Servo_ResolveStyleLazily(
+ComputedStyleStrong Servo_ResolveStyleLazily(
     const mozilla::dom::Element* element, mozilla::PseudoStyleType pseudo_type,
     mozilla::StyleRuleInclusion rule_inclusion,
     const mozilla::ServoElementSnapshotTable* snapshots,
     const RawServoStyleSet* set);
 
 // Reparents style to the new parents.
-mozilla::StyleStrong<mozilla::ComputedStyle> Servo_ReparentStyle(
+ComputedStyleStrong Servo_ReparentStyle(
     const mozilla::ComputedStyle* style_to_reparent,
     const mozilla::ComputedStyle* parent_style,
     const mozilla::ComputedStyle* parent_style_ignoring_first_line,
@@ -891,15 +882,13 @@ bool Servo_IsWorkerThread();
 void Servo_MaybeGCRuleTree(const RawServoStyleSet* set);
 
 // Returns computed values for the given element without any animations rules.
-mozilla::StyleStrong<mozilla::ComputedStyle>
-Servo_StyleSet_GetBaseComputedValuesForElement(
+ComputedStyleStrong Servo_StyleSet_GetBaseComputedValuesForElement(
     const RawServoStyleSet* set, const mozilla::dom::Element* element,
     const mozilla::ComputedStyle* existing_style,
     const mozilla::ServoElementSnapshotTable* snapshots);
 
 // Returns computed values for the given element by adding an animation value.
-mozilla::StyleStrong<mozilla::ComputedStyle>
-Servo_StyleSet_GetComputedValuesByAddingAnimation(
+ComputedStyleStrong Servo_StyleSet_GetComputedValuesByAddingAnimation(
     const RawServoStyleSet* set, const mozilla::dom::Element* element,
     const mozilla::ComputedStyle* existing_style,
     const mozilla::ServoElementSnapshotTable* snapshots,
@@ -983,7 +972,8 @@ void Servo_Property_GetCSSValuesForProperty(const nsACString* name, bool* found,
 
 uint64_t Servo_PseudoClass_GetStates(const nsACString* name);
 
-mozilla::StyleOwned<StyleUseCounters> Servo_UseCounters_Create();
+StyleUseCounters* Servo_UseCounters_Create();
+void Servo_UseCounters_Drop(StyleUseCountersOwned);
 
 void Servo_UseCounters_Merge(const StyleUseCounters* doc_counters,
                              const StyleUseCounters* sheet_counters);
@@ -992,15 +982,20 @@ bool Servo_IsCssPropertyRecordedInUseCounter(const StyleUseCounters*,
                                              const nsACString* property,
                                              bool* out_known_prop);
 
-mozilla::StyleStrong<RawServoQuotes> Servo_Quotes_GetInitialValue();
+RawServoQuotesStrong Servo_Quotes_GetInitialValue();
 bool Servo_Quotes_Equal(const RawServoQuotes* a, RawServoQuotes* b);
 
 void Servo_Quotes_GetQuote(const RawServoQuotes* quotes, int32_t depth,
                            mozilla::StyleContentType quote_type,
                            nsAString* result);
 
-}  // extern "C"
+// AddRef / Release functions
+#define SERVO_ARC_TYPE(name_, type_)         \
+  void Servo_##name_##_AddRef(const type_*); \
+  void Servo_##name_##_Release(const type_*);
+#include "mozilla/ServoArcTypeList.h"
+#undef SERVO_ARC_TYPE
 
-#pragma GCC diagnostic pop
+}  // extern "C"
 
 #endif  // mozilla_ServoBindings_h

@@ -148,16 +148,15 @@ class DeclarationBlock final {
     return reinterpret_cast<RawServoDeclarationBlock* const*>(&mRaw);
   }
 
-  const StyleStrong<RawServoDeclarationBlock>* RefRawStrong() const {
+  const RawServoDeclarationBlockStrong* RefRawStrong() const {
     static_assert(sizeof(RefPtr<RawServoDeclarationBlock>) ==
                       sizeof(RawServoDeclarationBlock*),
                   "RefPtr should just be a pointer");
     static_assert(
         sizeof(RefPtr<RawServoDeclarationBlock>) ==
-            sizeof(StyleStrong<RawServoDeclarationBlock>),
+            sizeof(RawServoDeclarationBlockStrong),
         "RawServoDeclarationBlockStrong should be the same as RefPtr");
-    return reinterpret_cast<const StyleStrong<RawServoDeclarationBlock>*>(
-        &mRaw);
+    return reinterpret_cast<const RawServoDeclarationBlockStrong*>(&mRaw);
   }
 
   void ToString(nsAString& aResult) const {

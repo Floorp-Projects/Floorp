@@ -366,7 +366,7 @@ void ShadowRoot::InsertSheetIntoAuthorData(size_t aIndex, StyleSheet& aSheet) {
   MOZ_ASSERT(aSheet.IsApplicable());
 
   if (!mServoStyles) {
-    mServoStyles = Servo_AuthorStyles_Create().Consume();
+    mServoStyles.reset(Servo_AuthorStyles_Create());
   }
 
   if (mStyleRuleMap) {
