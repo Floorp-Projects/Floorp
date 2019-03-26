@@ -18,41 +18,41 @@ const invalid_type_messages =
       // Invalid NFCPushMessage type
       undefined,
 
-      // NFCMessage.records: should have at least 1 valid record.
+      // NDEFMessage.records: should have at least 1 valid record.
       // https://w3c.github.io/web-nfc/#the-push-method - Step 8.
       createMessage([{}]),
 
       // https://w3c.github.io/web-nfc/#dfn-map-text-to-ndef
-      // NFCRecord must have data.
+      // NDEFRecord must have data.
       createMessage([createTextRecord()]),
 
-      // NFCRecord.data for 'text' record must be number or string.
+      // NDEFRecord.data for 'text' record must be number or string.
       createMessage([createTextRecord(test_buffer_data)]),
       createMessage([createTextRecord(test_json_data)]),
 
       // https://w3c.github.io/web-nfc/#dfn-map-a-json-object-to-ndef
-      // NFCRecord must have data.
+      // NDEFRecord must have data.
       createMessage([createJsonRecord()]),
 
-      // NFCRecord.data for 'json' record must be object.
+      // NDEFRecord.data for 'json' record must be object.
       createMessage([createJsonRecord(test_buffer_data)]),
       createMessage([createJsonRecord(test_number_data)]),
       createMessage([createJsonRecord(test_text_data)]),
 
       // https://w3c.github.io/web-nfc/#dfn-map-a-url-to-ndef
-      // NFCRecord must have data.
+      // NDEFRecord must have data.
       createMessage([createUrlRecord()]),
 
-      // NFCRecord.data for 'url' record must be string.
+      // NDEFRecord.data for 'url' record must be string.
       createMessage([createUrlRecord(test_buffer_data)]),
       createMessage([createUrlRecord(test_number_data)]),
       createMessage([createUrlRecord(test_json_data)]),
 
       // https://w3c.github.io/web-nfc/#dfn-map-binary-data-to-ndef
-      // NFCRecord must have data.
+      // NDEFRecord must have data.
       createMessage([createOpaqueRecord()]),
 
-      // NFCRecord.data for 'opaque' record must be ArrayBuffer.
+      // NDEFRecord.data for 'opaque' record must be ArrayBuffer.
       createMessage([createOpaqueRecord(test_text_data)]),
       createMessage([createOpaqueRecord(test_number_data)]),
       createMessage([createOpaqueRecord(test_json_data)])
@@ -60,14 +60,14 @@ const invalid_type_messages =
 
 const invalid_syntax_messages =
     [
-      // NFCRecord.mediaType for 'text' record must be 'text/*'.
+      // NDEFRecord.mediaType for 'text' record must be 'text/*'.
       createMessage([createRecord('text', 'application/json',
           test_number_data)]),
 
       // Data for 'url' record, must be a valid URL.
       createMessage([createUrlRecord('Invalid URL:// Data')]),
 
-      // NFCRecord.mediaType for 'json' record must be 'application/json' or
+      // NDEFRecord.mediaType for 'json' record must be 'application/json' or
       // starts with 'application/' and ends with '+json'.
       createMessage([createRecord('json', 'image/png', test_json_data)]),
       createMessage([createRecord('json', 'application/x+y', test_json_data)]),
@@ -81,7 +81,7 @@ promise_test(t => {
       promise_rejects(t, new TypeError(), navigator.nfc.push(message)));
   });
   return Promise.all(promises);
-}, "Test that promise is rejected with TypeError if NFCMessage is invalid.");
+}, "Test that promise is rejected with TypeError if NDEFMessage is invalid.");
 
 promise_test(t => {
   let promises = [];
@@ -90,7 +90,7 @@ promise_test(t => {
       promise_rejects(t, 'SyntaxError', navigator.nfc.push(message)));
   });
   return Promise.all(promises);
-}, "'Test that promise is rejected with SyntaxError if NFCMessage contains invalid records.");
+}, "'Test that promise is rejected with SyntaxError if NDEFMessage contains invalid records.");
 
 promise_test(t => {
   return promise_rejects(t, new TypeError(), navigator.nfc.push(test_text_data, { timeout: "invalid"}));
