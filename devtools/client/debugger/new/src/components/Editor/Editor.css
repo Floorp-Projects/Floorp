@@ -118,11 +118,11 @@ html[dir="rtl"] .editor-mount {
   background-color: var(--debug-expression-background);
 }
 
-debug-expression-error {
+.debug-expression-error {
   background-color: var(--debug-expression-error-background);
 }
 
-.new-debug-line .CodeMirror-line {
+:not(.conditional-breakpoint-panel) .new-debug-line .CodeMirror-line {
   background-color: transparent !important;
   outline: var(--debug-line-border) solid 1px;
 }
@@ -133,7 +133,7 @@ debug-expression-error {
   display: none;
 }
 
-.new-debug-line-error .CodeMirror-line {
+:not(.conditional-breakpoint-panel) .new-debug-line-error .CodeMirror-line {
   background-color: var(--debug-expression-error-background) !important;
   outline: var(--debug-line-error-border) solid 1px;
 }
