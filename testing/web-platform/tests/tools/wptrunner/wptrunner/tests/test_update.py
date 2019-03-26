@@ -22,7 +22,7 @@ def rel_path_to_url(rel_path, url_base="/"):
 
 def SourceFileWithTest(path, hash, cls, *args):
     s = mock.Mock(rel_path=path, hash=hash)
-    test = cls(s, rel_path_to_url(path), *args)
+    test = cls("/foobar", path, "/", rel_path_to_url(path), *args)
     s.manifest_items = mock.Mock(return_value=(cls.item_type, [test]))
     return s
 
