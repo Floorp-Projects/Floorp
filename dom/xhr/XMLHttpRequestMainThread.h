@@ -157,6 +157,7 @@ class RequestHeaders {
 };
 
 class nsXHRParseEndListener;
+class XMLHttpRequestDoneNotifier;
 
 // Make sure that any non-DOM interfaces added here are also added to
 // nsXMLHttpRequestXPCOMifier.
@@ -171,6 +172,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
                                        public MutableBlobStorageCallback {
   friend class nsXHRParseEndListener;
   friend class nsXMLHttpRequestXPCOMifier;
+  friend class XMLHttpRequestDoneNotifier;
 
  public:
   enum class ProgressEventType : uint8_t {
@@ -199,7 +201,8 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   XMLHttpRequestMainThread();
 
   void Construct(nsIPrincipal* aPrincipal, nsIGlobalObject* aGlobalObject,
-                 nsICookieSettings* aCookieSettings, nsIURI* aBaseURI = nullptr,
+                 nsICookieSettings* aCookieSettings, bool aForWorker,
+                 nsIURI* aBaseURI = nullptr,
                  nsILoadGroup* aLoadGroup = nullptr,
                  PerformanceStorage* aPerformanceStorage = nullptr,
                  nsICSPEventListener* aCSPEventListener = nullptr) {
@@ -209,6 +212,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
     mBaseURI = aBaseURI;
     mLoadGroup = aLoadGroup;
     mCookieSettings = aCookieSettings;
+    mForWorker = aForWorker;
     mPerformanceStorage = aPerformanceStorage;
     mCSPEventListener = aCSPEventListener;
   }
@@ -458,7 +462,8 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   bool InUploadPhase() const;
 
   void OnBodyParseEnd();
-  void ChangeStateToDone();
+  void ChangeStateToDone(bool aWasSync);
+  void ChangeStateToDoneInternal();
 
   void StartProgressEventTimer();
   void StopProgressEventTimer();
@@ -604,6 +609,9 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
   uint16_t mState;
 
+  // If true, this object is used by the worker's XMLHttpRequest.
+  bool mForWorker;
+
   bool mFlagSynchronous;
   bool mFlagAborted;
   bool mFlagParseBody;
@@ -714,6 +722,9 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   // Our parse-end listener, if we are parsing.
   RefPtr<nsXHRParseEndListener> mParseEndListener;
 
+  RefPtr<XMLHttpRequestDoneNotifier> mDelayedDoneNotifier;
+  void DisconnectDoneNotifier();
+
   static bool sDontWarnAboutSyncXHR;
 };
 
@@ -769,6 +780,28 @@ class nsXMLHttpRequestXPCOMifier final : public nsIStreamListener,
  private:
   RefPtr<XMLHttpRequestMainThread> mXHR;
 };
+
+
+class XMLHttpRequestDoneNotifier : public Runnable
+{
+ public:
+  explicit XMLHttpRequestDoneNotifier(XMLHttpRequestMainThread* aXHR)
+      : Runnable("XMLHttpRequestDoneNotifier"), mXHR(aXHR) {}
+
+ NS_IMETHOD Run() override {
+   if (mXHR) {
+     RefPtr<XMLHttpRequestMainThread> xhr = mXHR;
+     mXHR = nullptr;
+     xhr->ChangeStateToDoneInternal();
+   }
+   return NS_OK;
+ }
+
+  void Disconnect() { mXHR = nullptr; }
+ private:
+  XMLHttpRequestMainThread* mXHR;
+};
+
 
 class nsXHRParseEndListener : public nsIDOMEventListener {
  public:
