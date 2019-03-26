@@ -34,7 +34,7 @@
  *    https://bugzilla.mozilla.org/show_bug.cgi?id=1535523 tracks this.
  *
  * Given those invariants we then require that when calling a MOZ_CAN_RUN_SCRIPT
- * function all refcounted arguments (including "this") satisfy one of four
+ * function all refcounted arguments (including "this") satisfy one of these
  * conditions:
  *  a) The argument is held via a strong pointer on the stack.
  *  b) The argument is a const strong pointer member of "this".  We know "this"
@@ -45,6 +45,7 @@
  *  d) The argument is explicitly annotated with MOZ_KnownLive, which indicates
  *     that something is guaranteed to keep it alive (e.g. it's rooted via a JS
  *     reflector).
+ *  e) The argument is constexpr and therefore cannot disappear.
  */
 
 #include "CanRunScriptChecker.h"
@@ -61,11 +62,13 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
     memberExpr(hasType(isSmartPtrToRefCounted()),
                hasType(isConstQualified()),
                hasObjectExpression(cxxThisExpr()));
-  // A smartptr can be known-live for two reasons:
+  // A smartptr can be known-live for three reasons:
   // 1) It's declared on the stack.
   // 2) It's a const member of "this".  We know "this" is alive (recursively)
   //    and const members can't change their value hence can't drop their
   //    reference until "this" gets destroyed.
+  // 3) It's an immediate temporary being constructed at the point where the
+  //    call is happening.
   auto KnownLiveSmartPtr = anyOf(
     StackSmartPtr,
     ConstMemberOfThisSmartPtr,
@@ -74,12 +77,61 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
   auto MozKnownLiveCall =
     ignoreTrivials(callExpr(callee(functionDecl(hasName("MOZ_KnownLive")))));
 
-  // A matcher that matches some cases that are known live due to local
-  // information (as in, not relying on the rest of this analysius to guarantee
-  // their liveness).  There's some conceptual overlap with the set of unless()
-  // clauses in InvalidArg here, but for our purposes this limited set of cases
-  // is fine.
-  auto LocalKnownLive = anyOf(KnownLiveSmartPtr, MozKnownLiveCall);
+  // Params of the calling function are presumed live, because it itself should be
+  // MOZ_CAN_RUN_SCRIPT.  Note that this is subject to
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1537656 a the moment.
+  auto KnownLiveParam = anyOf(
+      // "this" is OK
+      cxxThisExpr(),
+      // A parameter of the calling function is OK.
+      declRefExpr(to(parmVarDecl())));
+
+  // A matcher that matches various things that are known to be live directly,
+  // without making any assumptions about operators.
+  auto KnownLiveBase = anyOf(
+      // Things that are known to be a stack or immutable refptr.
+      KnownLiveSmartPtr,
+      // MOZ_KnownLive() calls.
+      MozKnownLiveCall,
+      // Params of the caller function.
+      KnownLiveParam,
+      // Constexpr things.
+      declRefExpr(to(varDecl(isConstexpr()))));
+
+  // A matcher that matches various known-live things that don't involve
+  // non-unary operators.
+  auto KnownLiveSimple = anyOf(
+      // Things that are just known live.
+      KnownLiveBase,
+      // Method calls on a live things that are smart ptrs.  Note that we don't
+      // want to allow general method calls on live things, because those can
+      // return non-live objects (e.g. consider "live_pointer->foo()" as an
+      // example).  For purposes of this analysis we are assuming the method
+      // calls on smart ptrs all just return the pointer inside,
+      cxxMemberCallExpr(on(
+          allOf(hasType(isSmartPtrToRefCounted()),
+                KnownLiveBase))),
+      // operator* or operator-> on a thing that is already known to be live.
+      cxxOperatorCallExpr(
+          anyOf(hasOverloadedOperatorName("*"),
+                hasOverloadedOperatorName("->")),
+          hasAnyArgument(KnownLiveBase),
+          argumentCountIs(1)),
+      // A dereference on a thing that is known to be live.  This is _not_
+      // caught by the "operator* or operator->" clause above, because
+      // cxxOperatorCallExpr() only catches cases when a class defines
+      // operator*.  The default (built-in) operator* matches unaryOperator()
+      // instead.),
+      unaryOperator(
+          unaryDereferenceOperator(),
+          hasUnaryOperand(
+              // If we're doing *someArg, the argument of the dereference is an
+              // ImplicitCastExpr LValueToRValue which has the DeclRefExpr as an
+              // argument.  We could try to match that explicitly with a custom
+              // matcher (none of the built-in matchers seem to match on the
+              // thing being cast for an implicitCastExpr), but it's simpler to
+              // just use ignoreTrivials to strip off the cast.
+              ignoreTrivials(KnownLiveBase))));
 
   auto InvalidArg =
       ignoreTrivialsConditional(
@@ -93,77 +145,13 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
         ),
         // We want to find any expression,
         expr(
-          // which is not this,
-          unless(cxxThisExpr()),
-          // and which is not a stack smart ptr
-          unless(KnownLiveSmartPtr),
-          // and which is not a method call on a stack smart ptr,
-          unless(cxxMemberCallExpr(on(KnownLiveSmartPtr))),
-          // and which is not calling operator* or operator-> on a thing that is
-          // already known to be live.
-          unless(
-            cxxOperatorCallExpr(
-              anyOf(hasOverloadedOperatorName("*"),
-                    hasOverloadedOperatorName("->")),
-              hasAnyArgument(LocalKnownLive),
-              argumentCountIs(1)
-            )
-          ),
-          // and which is not a parameter of the parent function,
-          unless(declRefExpr(to(parmVarDecl()))),
-          // and which is not a constexpr variable, since that must be
-          // computable at compile-time and therefore isn't going to be going
-          // away.
-          unless(declRefExpr(to(varDecl(isConstexpr())))),
+          // which is not known live,
+          unless(KnownLiveSimple),
           // and which is not a default arg with value nullptr, since those are
-          // always safe.
+          // always safe,
           unless(cxxDefaultArgExpr(isNullDefaultArg())),
-          // and which is not a literal nullptr
+          // and which is not a literal nullptr,
           unless(cxxNullPtrLiteralExpr()),
-          // and which is not a dereference of a parameter of the parent
-          // function (including "this"),
-          unless(
-            unaryOperator(
-              unaryDereferenceOperator(),
-              hasUnaryOperand(
-                anyOf(
-                  // If we're doing *someArg, the argument of the dereference is
-                  // an ImplicitCastExpr LValueToRValue which has the
-                  // DeclRefExpr as an argument.  We could try to match that
-                  // explicitly with a custom matcher (none of the built-in
-                  // matchers seem to match on the thing being cast for an
-                  // implicitCastExpr), but it's simpler to just use
-                  // ignoreTrivials to strip off the cast.
-                  ignoreTrivials(declRefExpr(to(parmVarDecl()))),
-                  cxxThisExpr(),
-                  // We also allow dereferencing a constexpr variable here,
-                  // since that will just end up with a reference to the
-                  // compile-time-constant thing.  Again, use ignoreTrivials()
-                  // to stip off the LValueToRValue cast.
-                  ignoreTrivials(declRefExpr(to(varDecl(isConstexpr()))))
-                )
-              )
-            )
-          ),
-          // and which is not a MOZ_KnownLive wrapped value.
-          unless(
-            anyOf(
-              MozKnownLiveCall,
-              // MOZ_KnownLive applied to a smartptr just returns that
-              // same smartptr type which causes us to have a conversion
-              // operator applied after the MOZ_KnownLive.  Allow that by
-              // allowing member calls on the result of MOZ_KnownLive, but only
-              // if the type is a known smartptr type.  Otherwise we would think
-              // that things of the form "MOZ_KnownLive(someptr)->foo()" are
-              // live!
-              //
-              // This relies on member calls on smartptr types that return a
-              // refcounted pointer only returning the pointer the smartptr is
-              // keeping alive.
-              cxxMemberCallExpr(on(allOf(hasType(isSmartPtrToRefCounted()),
-                                         MozKnownLiveCall)))
-            )
-          ),
           expr().bind("invalidArg")));
 
   // A matcher which will mark the first invalid argument it finds invalid, but
