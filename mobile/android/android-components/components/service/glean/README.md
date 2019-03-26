@@ -127,15 +127,23 @@ for the command line switches used to pass the extra keys. These are the current
 |key|type|description|
 |---|----|-----------|
 | logPings | boolean (--ez) | If set to `true`, glean dumps pings to logcat; defaults to `false` |
-| sendPing | string (--es) | Sends the ping with the given name immediately. |
+| sendPing | string (--es) | Sends the ping with the given name immediately |
+| tagPings | string (--es) | Tags all outgoing pings as debug pings to make them available for real-time validation. The value must match the pattern `[a-zA-Z0-9-]{1,20}` |
 
-For example, to direct the glean sample application to dump pings to logcat, and send the "metrics" ping immediately, the following command can be used:
+For example, to direct the glean sample application to (1) dump pings to logcat, (2) tag the ping 
+with the `test-metrics-ping` tag, and (3) send the "metrics" ping immediately, the following command
+can be used:
 
 ```
 adb shell am start -n org.mozilla.samples.glean/mozilla.components.service.glean.debug.GleanDebugActivity \
   --ez logPings true \
-  --es sendPing metrics
+  --es sendPing metrics \
+  --es tagPings test-metrics-ping
 ```
+
+### Important GleanDebugActivity note!
+
+Options that are set using the adb flags are not immediately reset and will persist until the application is closed or manually reset.
 
 ## Contact
 

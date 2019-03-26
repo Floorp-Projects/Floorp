@@ -22,6 +22,16 @@ import mozilla.components.support.base.log.logger.Logger
 class GleanDebugActivity : Activity() {
     private val logger = Logger("glean/GleanDebugActivity")
 
+    companion object {
+        // This is a list of the currently accepted commands
+        const val SEND_PING_EXTRA_KEY = "sendPing"
+        const val LOG_PINGS_EXTRA_KEY = "logPings"
+        const val TAG_DEBUG_VIEW_EXTRA_KEY = "tagPings"
+
+        // Regular expression filter for debugId
+        val pingTagPattern = "[a-zA-Z0-9-]{1,20}".toRegex()
+    }
+
     // IMPORTANT: These activities are unsecured, and may be triggered by
     // any other application on the device, including in release builds.
     // Therefore, care should be taken in selecting what features are
@@ -33,8 +43,21 @@ class GleanDebugActivity : Activity() {
 
         // Enable debugging options and start the application.
         intent.extras?.let {
+            // Check for ping debug view tag to apply to the X-Debug-ID header when uploading the
+            // ping to the endpoint
+            var pingTag: String? = intent.getStringExtra(TAG_DEBUG_VIEW_EXTRA_KEY)
+
+            // Validate the ping tag against the regex pattern
+            pingTag?.let {
+                if (!pingTagPattern.matches(it)) {
+                    logger.error("tagPings value $it does not match accepted pattern $pingTagPattern")
+                    pingTag = null
+                }
+            }
+
             val debugConfig = Glean.configuration.copy(
-                logPings = intent.getBooleanExtra("logPings", Glean.configuration.logPings)
+                logPings = intent.getBooleanExtra(LOG_PINGS_EXTRA_KEY, Glean.configuration.logPings),
+                pingTag = pingTag
             )
 
             // Finally set the default configuration before starting
@@ -42,7 +65,7 @@ class GleanDebugActivity : Activity() {
             logger.info("Setting debug config $debugConfig")
             Glean.configuration = debugConfig
 
-            intent.getStringExtra("sendPing")?.let {
+            intent.getStringExtra(SEND_PING_EXTRA_KEY)?.let {
                 Glean.sendPings(listOf(it))
             }
         }

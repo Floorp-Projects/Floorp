@@ -20,13 +20,20 @@ import mozilla.components.service.glean.BuildConfig
  * @property maxEvents the number of events to store before the events ping is sent
  * @property logPings whether to log ping contents to the console.
  * @property httpClient The HTTP client implementation to use for uploading pings.
+ * @property pingTag String tag to be applied to headers when uploading pings for debug view
  */
 data class Configuration(
-    val serverEndpoint: String = "https://incoming.telemetry.mozilla.org",
+    val serverEndpoint: String = DEFAULT_TELEMETRY_ENDPOINT,
     val userAgent: String = "Glean/${BuildConfig.LIBRARY_VERSION} (Android)",
     val connectionTimeout: Long = 10000,
     val readTimeout: Long = 30000,
     val maxEvents: Int = 500,
     val logPings: Boolean = false,
-    val httpClient: Lazy<Client> = lazy { HttpURLConnectionClient() }
-)
+    val httpClient: Lazy<Client> = lazy { HttpURLConnectionClient() },
+    val pingTag: String? = null
+) {
+    companion object {
+        const val DEFAULT_TELEMETRY_ENDPOINT = "https://incoming.telemetry.mozilla.org"
+        const val DEFAULT_DEBUGVIEW_ENDPOINT = "https://stage.ingestion.nonprod.dataops.mozgcp.net"
+    }
+}

@@ -14,6 +14,11 @@ import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Headers
+import mozilla.components.concept.fetch.MutableHeaders
+import mozilla.components.concept.fetch.Request
+import mozilla.components.concept.fetch.Response
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.firstrun.FileFirstRunDetector
 import mozilla.components.service.glean.ping.PingMaker
@@ -189,5 +194,30 @@ internal fun triggerWorkManager() {
     // Since WorkManager does not properly run in tests, simulate the work being done
     GlobalScope.launch(Dispatchers.IO) {
         PingUploadWorker.uploadPings()
+    }
+}
+
+/**
+ * This is a helper class to facilitate testing of ping tagging
+ */
+internal class TestPingTagClient(
+    private val responseUrl: String = Configuration.DEFAULT_DEBUGVIEW_ENDPOINT,
+    private val responseStatus: Int = 200,
+    private val responseHeaders: Headers = MutableHeaders(),
+    private val responseBody: Response.Body = Response.Body.empty(),
+    private val debugHeaderValue: String? = null
+) : Client() {
+    override fun fetch(request: Request): Response {
+        Assert.assertTrue("URL must be redirected for tagged pings",
+            request.url.startsWith(responseUrl))
+        Assert.assertEquals("Debug headers must match what the ping tag was set to",
+            debugHeaderValue, request.headers!!["X-Debug-ID"])
+
+        // Have to return a response here.
+        return Response(
+            responseUrl ?: request.url,
+            responseStatus,
+            request.headers ?: responseHeaders,
+            responseBody)
     }
 }

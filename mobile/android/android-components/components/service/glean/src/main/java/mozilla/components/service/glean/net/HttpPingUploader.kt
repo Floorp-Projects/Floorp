@@ -76,25 +76,42 @@ internal class HttpPingUploader : PingUploader {
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal fun buildRequest(path: String, data: String, config: Configuration) = Request(
-        url = config.serverEndpoint + path,
-        method = Request.Method.POST,
-        connectTimeout = Pair(config.connectionTimeout, TimeUnit.MILLISECONDS),
-        readTimeout = Pair(config.readTimeout, TimeUnit.MILLISECONDS),
-        headers = MutableHeaders(
+    internal fun buildRequest(path: String, data: String, config: Configuration): Request {
+        val headers = MutableHeaders(
             "Content-Type" to "application/json; charset=utf-8",
             "User-Agent" to config.userAgent,
             "Date" to createDateHeaderValue(),
             // Add headers for supporting the legacy pipeline.
             "X-Client-Type" to "Glean",
             "X-Client-Version" to BuildConfig.LIBRARY_VERSION
-        ),
-        // Make sure we are not sending cookies. Unfortunately, HttpURLConnection doesn't
-        // offer a better API to do that, so we nuke all cookies going to our telemetry
-        // endpoint.
-        cookiePolicy = Request.CookiePolicy.OMIT,
-        body = Request.Body.fromString(data)
-    )
+        )
+
+        var endpoint = config.serverEndpoint
+
+        // If there is a pingTag set, then this header needs to be added in order to flag pings
+        // for "debug view" use.
+        config.pingTag?.let {
+            headers.append("X-Debug-ID", it)
+
+            // NOTE: Tagged pings must be redirected to the GCP endpoint as the AWS endpoint isn't
+            // configured to handle them.  This may pose an issue with testing if a local server
+            // is used to capture pings.
+            endpoint = Configuration.DEFAULT_DEBUGVIEW_ENDPOINT
+        }
+
+        return Request(
+            url = endpoint + path,
+            method = Request.Method.POST,
+            connectTimeout = Pair(config.connectionTimeout, TimeUnit.MILLISECONDS),
+            readTimeout = Pair(config.readTimeout, TimeUnit.MILLISECONDS),
+            headers = headers,
+            // Make sure we are not sending cookies. Unfortunately, HttpURLConnection doesn't
+            // offer a better API to do that, so we nuke all cookies going to our telemetry
+            // endpoint.
+            cookiePolicy = Request.CookiePolicy.OMIT,
+            body = Request.Body.fromString(data)
+        )
+    }
 
     @Throws(IOException::class)
     internal fun performUpload(client: Client, request: Request): Boolean {
