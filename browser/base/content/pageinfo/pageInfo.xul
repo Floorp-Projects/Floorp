@@ -232,7 +232,7 @@
         <hbox id="imageSaveBox" align="end">
           <vbox id="blockImageBox">
             <checkbox id="blockImage" hidden="true" oncommand="onBlockImage()"
-                      data-l10n-id="media-block-image"/>
+                      data-l10n-id="media-block-image" data-l10n-args='{"website":""}'/>
             <label control="thepreviewimage" data-l10n-id="media-preview" class="header"/>
           </vbox>
           <spacer id="imageSaveBoxSpacer" flex="1"/>
