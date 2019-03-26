@@ -403,6 +403,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   int64_t GetAltDataLength() { return mAltDataLength; }
   bool IsNavigation();
 
+  bool IsDeliveringAltData() const { return mDeliveringAltData; }
+
   static bool IsReferrerSchemeAllowed(nsIURI *aReferrer);
 
   static void PropagateReferenceIfNeeded(nsIURI *aURI,
@@ -767,6 +769,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   bool mAsyncOpenTimeOverriden;
   bool mForcePending;
+
+  // true if the channel is deliving alt-data.
+  bool mDeliveringAltData;
 
   bool mCorsIncludeCredentials;
 
