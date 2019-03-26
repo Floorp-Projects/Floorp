@@ -25,10 +25,7 @@ def get_method(method):
 
 
 def filter_out_nightly(task, parameters):
-    return (
-        not task.attributes.get('nightly') and
-        task.attributes.get('shipping_phase') in (None, 'build')
-        )
+    return not task.attributes.get('nightly')
 
 
 def filter_out_cron(task, parameters):
@@ -471,13 +468,9 @@ def make_desktop_nightly_filter(platforms):
         return all([
             filter_on_platforms(task, platforms),
             filter_for_project(task, parameters),
-            any([
-                task.attributes.get('nightly', False),
-                task.attributes.get('shippable', False),
-            ]),
+            task.attributes.get('nightly', False),
             # Tests and nightly only builds don't have `shipping_product` set
             task.attributes.get('shipping_product') in {None, "firefox", "thunderbird"},
-            task.kind not in {'l10n'},  # no on-change l10n
         ])
     return filter
 
@@ -487,9 +480,7 @@ def target_tasks_nightly_linux(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of linux. The
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filter = make_desktop_nightly_filter({
-        'linux64-nightly', 'linux-nightly', 'linux64-shippable', 'linux-shippable'
-        })
+    filter = make_desktop_nightly_filter({'linux64-nightly', 'linux-nightly'})
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
@@ -498,7 +489,7 @@ def target_tasks_nightly_macosx(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of macosx. The
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filter = make_desktop_nightly_filter({'macosx64-nightly', 'macosx64-shippable'})
+    filter = make_desktop_nightly_filter({'macosx64-nightly'})
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
@@ -507,7 +498,7 @@ def target_tasks_nightly_win32(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of win32 and win64.
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filter = make_desktop_nightly_filter({'win32-nightly', 'win32-shippable'})
+    filter = make_desktop_nightly_filter({'win32-nightly'})
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
@@ -516,7 +507,7 @@ def target_tasks_nightly_win64(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of win32 and win64.
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filter = make_desktop_nightly_filter({'win64-nightly', 'win64-shippable'})
+    filter = make_desktop_nightly_filter({'win64-nightly'})
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
@@ -525,7 +516,7 @@ def target_tasks_nightly_win64_aarch64(full_task_graph, parameters, graph_config
     """Select the set of tasks required for a nightly build of win32 and win64.
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filter = make_desktop_nightly_filter({'win64-aarch64-nightly', 'win64-aarch64-shippable'})
+    filter = make_desktop_nightly_filter({'win64-aarch64-nightly'})
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 

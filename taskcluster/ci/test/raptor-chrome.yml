@@ -9,7 +9,10 @@ job-defaults:
         by-test-platform:
             android-hw.*: /builds/worker
             default: /home/cltbld
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*shippable(?:-qr)?/opt: built-projects
+            default: ['try', 'mozilla-central']
     tier: 2
     virtualization:
         by-test-platform:
