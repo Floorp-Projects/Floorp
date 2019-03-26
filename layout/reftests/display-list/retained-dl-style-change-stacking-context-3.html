@@ -1,0 +1,29 @@
+<html class="reftest-wait">
+<head>
+<style>
+  body {
+    margin: 0px;
+  }
+  div {
+    width:100px;
+    height:100px;
+    display: inline-block;
+    position:absolute;
+  }
+</style>
+</head>
+<body>
+  <div style="position:fixed;" class="reftest-display-list">
+    <div style="background-color:green;" class="reftest-no-display-list">
+  </div>
+  <div id="second" style="background-color:red; top: 110px;"></div>
+</body>
+<script>
+function doTest() {
+  document.getElementById("second").style.backgroundColor = "green";
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</html>

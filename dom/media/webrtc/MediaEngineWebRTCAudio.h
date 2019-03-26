@@ -28,9 +28,9 @@ class AudioInputProcessing;
 class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
  public:
   MediaEngineWebRTCMicrophoneSource(RefPtr<AudioDeviceInfo> aInfo,
-                                    const nsString& aName,
-                                    const nsCString& aUuid,
-                                    const nsString& aGroupId,
+                                    const nsString& aDeviceName,
+                                    const nsCString& aDeviceUUID,
+                                    const nsString& aDeviceGroup,
                                     uint32_t aMaxChannelCount,
                                     bool aDelayAgnostic, bool aExtendedFilter);
 

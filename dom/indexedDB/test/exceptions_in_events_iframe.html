@@ -62,7 +62,7 @@
         let transaction = request.transaction;
         transaction.oncomplete = unexpectedSuccessHandler;
         transaction.onabort = grabEventAndContinueHandler;
-        throw "STOP";
+        throw new Error("STOP");
       };
 
       let event = yield undefined;
@@ -106,7 +106,7 @@
 
       request = objectStore.add({}, 1);
       request.onsuccess = function(event) {
-        throw "foo";
+        throw new Error("foo");
       };
 
       event = yield undefined;
@@ -155,7 +155,7 @@
       request.onsuccess = unexpectedSuccessHandler;
       request.onerror = function(event) {
         event.preventDefault();
-        throw "STOP";
+        throw new Error("STOP");
       };
 
       event = yield undefined;

@@ -483,7 +483,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
   // node.
   getSelectorSource: function(selectorInfo, relativeTo) {
     let result = selectorInfo.selector.text;
-    if (selectorInfo.elementStyle) {
+    if (selectorInfo.inlineStyle) {
       const source = selectorInfo.sourceElement;
       if (source === relativeTo) {
         result = "this";
@@ -642,7 +642,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     for (let i = domRules.length - 1; i >= 0; i--) {
       const domRule = domRules[i];
 
-      const isSystem = !SharedCssLogic.isContentStylesheet(domRule.parentStyleSheet);
+      const isSystem = !SharedCssLogic.isAuthorStylesheet(domRule.parentStyleSheet);
 
       if (isSystem && options.filter != SharedCssLogic.FILTER.UA) {
         continue;

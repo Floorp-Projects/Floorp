@@ -115,7 +115,7 @@ async function testSteps() {
       }
 
       default: {
-        throw ("Unknown type: " + type);
+        throw new Error("Unknown type: " + type);
       }
     }
 

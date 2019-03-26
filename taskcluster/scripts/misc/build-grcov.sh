@@ -5,7 +5,7 @@ set -x -e -v
 
 OWNER=marco-c
 PROJECT=grcov
-PROJECT_REVISION=4ad0dbc35b9614e45812e179176f48bb1f70ccab
+PROJECT_REVISION=9214a916805838265764f9c69eaed657ea3db021
 
 # This script is for building rust-size
 case "$(uname -s)" in
@@ -13,8 +13,6 @@ Linux)
     WORKSPACE=$HOME/workspace
     UPLOAD_DIR=$HOME/artifacts
     COMPRESS_EXT=xz
-
-    export CXX=clang++
     ;;
 MINGW*)
     WORKSPACE=$PWD
@@ -39,7 +37,7 @@ if [ -e Cargo.toml ]; then
   mv Cargo.toml Cargo.toml.back
 fi
 
-PATH="$WORKSPACE/build/src/clang/bin/:$PWD/rustc/bin:$PATH"
+PATH="$PWD/rustc/bin:$PATH"
 
 git clone -n https://github.com/${OWNER}/${PROJECT} ${PROJECT}
 
