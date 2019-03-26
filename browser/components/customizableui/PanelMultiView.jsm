@@ -412,7 +412,7 @@ var PanelMultiView = class extends AssociatedToNode {
     this._panel.removeEventListener("popuppositioned", this);
     this._panel.removeEventListener("popupshown", this);
     this._panel.removeEventListener("popuphidden", this);
-    this.window.removeEventListener("keydown", this);
+    this.window.removeEventListener("keydown", this, true);
     this.node = this._openPopupPromise = this._openPopupCancelCallback =
       this._viewContainer = this._viewStack = this._transitionDetails = null;
   }
@@ -1114,7 +1114,14 @@ var PanelMultiView = class extends AssociatedToNode {
       case "popupshowing": {
         this._viewContainer.setAttribute("panelopen", "true");
         if (!this.node.hasAttribute("disablekeynav")) {
-          this.window.addEventListener("keydown", this);
+          // We add the keydown handler on the window so that it handles key
+          // presses when a panel appears but doesn't get focus, as happens
+          // when a button to open a panel is clicked with the mouse.
+          // However, this means the listener is on an ancestor of the panel,
+          // which means that handlers such as ToolbarKeyboardNavigator are
+          // deeper in the tree. Therefore, this must be a capturing listener
+          // so we get the event first.
+          this.window.addEventListener("keydown", this, true);
           this._panel.addEventListener("mousemove", this);
         }
         break;
@@ -1143,7 +1150,7 @@ var PanelMultiView = class extends AssociatedToNode {
         this._transitioning = false;
         this._viewContainer.removeAttribute("panelopen");
         this._cleanupTransitionPhase();
-        this.window.removeEventListener("keydown", this);
+        this.window.removeEventListener("keydown", this, true);
         this._panel.removeEventListener("mousemove", this);
         this.closeAllViews();
 
