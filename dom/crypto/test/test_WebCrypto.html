@@ -49,7 +49,7 @@ TestArray.addTest(
     var that = this;
     var alg = {
       get name() {
-        throw "Oh no, no name!";
+        throw new Error("Oh no, no name!");
       },
     };
 
@@ -70,14 +70,14 @@ TestArray.addTest(
 
     function doExport(x) {
       if (!hasKeyFields(x)) {
-        throw "Invalid key; missing field(s)";
+        throw new Error("Invalid key; missing field(s)");
       } else if ((x.algorithm.name != alg) ||
         (x.algorithm.length != 8 * tv.raw.length) ||
         (x.type != "secret") ||
         (!x.extractable) ||
         (x.usages.length != 1) ||
         (x.usages[0] != "encrypt")) {
-        throw "Invalid key: incorrect key data";
+        throw new Error("Invalid key: incorrect key data");
       }
       return crypto.subtle.exportKey("raw", x);
     }
@@ -136,7 +136,7 @@ TestArray.addTest(
 
     function doExport(x) {
       if (!hasKeyFields(x)) {
-        throw "Invalid key; missing field(s)";
+        throw new Error("Invalid key; missing field(s)");
       } else if ((x.algorithm.name != alg.name) ||
         (x.algorithm.hash.name != alg.hash) ||
         (x.algorithm.modulusLength != 512) ||
@@ -145,7 +145,7 @@ TestArray.addTest(
         (!x.extractable) ||
         (x.usages.length != 1) ||
         (x.usages[0] != "sign")) {
-        throw "Invalid key: incorrect key data";
+        throw new Error("Invalid key: incorrect key data");
       }
       return crypto.subtle.exportKey("pkcs8", x);
     }
@@ -183,7 +183,7 @@ TestArray.addTest(
 
     function doExport(x) {
       if (!hasKeyFields(x)) {
-        throw "Invalid key; missing field(s)";
+        throw new Error("Invalid key; missing field(s)");
       } else if ((x.algorithm.name != alg.name) ||
         (x.algorithm.modulusLength != 1024) ||
         (x.algorithm.publicExponent.byteLength != 3) ||
@@ -191,7 +191,7 @@ TestArray.addTest(
         (!x.extractable) ||
         (x.usages.length != 1) ||
         (x.usages[0] != "verify")) {
-        throw "Invalid key: incorrect key data";
+        throw new Error("Invalid key: incorrect key data");
       }
       return crypto.subtle.exportKey("spki", x);
     }

@@ -719,9 +719,9 @@ TileDescriptor TileClient::GetTileDescriptor() {
   }
 
   return TexturedTileDescriptor(
-      nullptr, mFrontBuffer->GetIPDLActor(),
-      mFrontBufferOnWhite ? MaybeTexture(mFrontBufferOnWhite->GetIPDLActor())
-                          : MaybeTexture(null_t()),
+      nullptr, mFrontBuffer->GetIPDLActor(), Nothing(),
+      mFrontBufferOnWhite ? Some(mFrontBufferOnWhite->GetIPDLActor())
+                          : Nothing(),
       mUpdateRect, readLocked, readLockedOnWhite, wasPlaceholder);
 }
 

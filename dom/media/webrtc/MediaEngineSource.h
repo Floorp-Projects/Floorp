@@ -48,7 +48,7 @@ class MediaEnginePhotoCallback {
   virtual nsresult PhotoError(nsresult aRv) = 0;
 
  protected:
-  virtual ~MediaEnginePhotoCallback() {}
+  virtual ~MediaEnginePhotoCallback() = default;
 };
 
 /**

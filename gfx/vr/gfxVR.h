@@ -69,7 +69,6 @@ struct VRDisplayInfo {
   VRControllerState mControllerState[kVRControllerMaxCount];
 
   VRHMDSensorState mLastSensorState[kVRMaxLatencyFrames];
-  TimeStamp mLastFrameStart[kVRMaxLatencyFrames];
   const VRHMDSensorState& GetSensorState() const {
     return mLastSensorState[mFrameId % kVRMaxLatencyFrames];
   }

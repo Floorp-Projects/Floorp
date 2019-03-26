@@ -4,24 +4,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import re
+import sys
+import os
 
+# Add this directory to the import path.
+sys.path.append(os.path.dirname(__file__))
+
+from selection import (
+    CaretActions,
+    SelectionManager,
+)
 from marionette_driver.by import By
-from marionette_driver.legacy_actions import Actions
-from marionette_driver.selection import SelectionManager
 from marionette_harness.marionette_test import (
     MarionetteTestCase,
     SkipTest,
     parameterized
 )
-
-
-def skip_if_not_rotatable(target):
-    def wrapper(self, *args, **kwargs):
-        if not self.marionette.session_capabilities.get('rotatable'):
-            raise SkipTest('skipping due to device not rotatable')
-        return target(self, *args, **kwargs)
-    return wrapper
-
 
 class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     '''Test cases for AccessibleCaret under selection mode.'''
@@ -57,7 +55,11 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
             self.carets_tested_pref: True,
         }
         self.marionette.set_prefs(self.prefs)
-        self.actions = Actions(self.marionette)
+        self.actions = CaretActions(self.marionette)
+
+    def tearDown(self):
+        self.marionette.actions.release()
+        super(AccessibleCaretSelectionModeTestCase, self).tearDown()
 
     def open_test_html(self, test_html):
         self.marionette.navigate(self.marionette.absolute_url(test_html))
@@ -585,8 +587,8 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         self.long_press_on_word(el, 1)
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
 
-        # Drag the first caret up by 50px.
-        self.actions.flick(el, caret1_x, caret1_y, caret1_x, caret1_y - 50).perform()
+        # Drag the first caret up by 40px.
+        self.actions.flick(el, caret1_x, caret1_y, caret1_x, caret1_y - 40).perform()
         self.assertEqual(target_content, sel.selected_content)
 
         # Drag the second caret down by 50px.

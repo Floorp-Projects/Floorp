@@ -4,10 +4,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import string
+import sys
+import os
 
+# Add this directory to the import path.
+sys.path.append(os.path.dirname(__file__))
+
+from selection import (
+    CaretActions,
+    SelectionManager,
+)
 from marionette_driver.by import By
-from marionette_driver.legacy_actions import Actions
-from marionette_driver.selection import SelectionManager
 from marionette_harness.marionette_test import (
     MarionetteTestCase,
     parameterized,
@@ -41,7 +48,11 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
             self.hide_carets_for_mouse: False,
         }
         self.marionette.set_prefs(self.prefs)
-        self.actions = Actions(self.marionette)
+        self.actions = CaretActions(self.marionette)
+
+    def tearDown(self):
+        self.marionette.actions.release()
+        super(AccessibleCaretCursorModeTestCase, self).tearDown()
 
     def open_test_html(self, test_html):
         self.marionette.navigate(self.marionette.absolute_url(test_html))
@@ -72,7 +83,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.actions.flick(el, first_caret0_x, first_caret0_y,
                            first_caret1_x, first_caret1_y).perform()
 
-        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
+        self.actions.send_keys(content_to_add).perform()
         self.assertEqual(target_content, sel.content)
 
     @parameterized(_input_id, el_id=_input_id)
@@ -95,7 +106,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         dest_x, dest_y = el.rect['width'], el.rect['height']
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
 
-        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
+        self.actions.send_keys(content_to_add).perform()
         self.assertEqual(target_content, sel.content)
 
     @parameterized(_input_id, el_id=_input_id)
@@ -125,7 +136,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         # Move first caret to the front of the input box.
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
 
-        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
+        self.actions.send_keys(content_to_add).perform()
         self.assertEqual(target_content, sel.content)
 
     def test_caret_not_appear_when_typing_in_scrollable_content(self):
@@ -174,7 +185,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
 
         # Drag the caret down by 50px, and insert '!'.
         self.actions.flick(el, x, y, x, y + 50).perform()
-        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
+        self.actions.send_keys(content_to_add).perform()
         self.assertNotEqual(non_target_content, sel.content)
 
     @parameterized(_input_id, el_id=_input_id)
@@ -196,9 +207,9 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         el.tap(*sel.cursor_location())
         x, y = sel.first_caret_location()
 
-        # Drag the caret up by 50px, and insert '!'.
-        self.actions.flick(el, x, y, x, y - 50).perform()
-        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
+        # Drag the caret up by 40px, and insert '!'.
+        self.actions.flick(el, x, y, x, y - 40).perform()
+        self.actions.send_keys(content_to_add).perform()
         self.assertNotEqual(non_target_content, sel.content)
 
     def test_drag_caret_from_front_to_end_across_columns(self):
@@ -224,7 +235,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         # Drag the first caret to the bottom-right corner of the element.
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
 
-        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
+        self.actions.send_keys(content_to_add).perform()
         self.assertEqual(target_content, sel.content)
 
     def test_move_cursor_to_front_by_dragging_caret_to_front_br_element(self):
@@ -258,5 +269,5 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         # Move first caret to the front of the input box.
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
 
-        self.actions.key_down(content_to_add_1).key_up(content_to_add_1).perform()
+        self.actions.send_keys(content_to_add_1).perform()
         self.assertEqual(target_content, sel.content)

@@ -53,7 +53,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944821
     finishedCount++;
 
     if (finishedCount < 1 || finishedCount > 2 * N) {
-      throw "Huh?!";
+      throw new Error("Huh?!");
     } else if (finishedCount == N) {
       for (let i = 0; i < N; i++)
         evalAsync(codes[i]);

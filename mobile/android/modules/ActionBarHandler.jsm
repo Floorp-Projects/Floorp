@@ -474,7 +474,7 @@ var ActionBarHandler = {
       },
 
       action: function(element, win) {
-        ActionBarHandler._getEditor(element, win).copy();
+        ActionBarHandler._getDocShell(win).doCommand("cmd_copy");
 
         let msg = Strings.browser.GetStringFromName("selectionHelper.textCopied");
         Snackbars.show(msg, Snackbars.LENGTH_LONG);
@@ -730,6 +730,13 @@ var ActionBarHandler = {
    */
   _isInDesignMode: function(win) {
     return this._selectionID && (win.document.designMode === "on");
+  },
+
+  /**
+   * Get current DocShell object.
+   */
+  _getDocShell: function(win) {
+    return win.docShell;
   },
 
   /**
