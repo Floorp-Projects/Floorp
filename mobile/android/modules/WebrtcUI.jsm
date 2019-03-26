@@ -116,7 +116,7 @@ var WebrtcUI = {
         notificationOptions.icon = "drawable:alert_mic";
       } else {
         // somethings wrong. lets throw
-        throw "Couldn't find any cameras or microphones being used";
+        throw new Error("Couldn't find any cameras or microphones being used");
       }
 
       if (this._notificationId)

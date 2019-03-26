@@ -1422,12 +1422,12 @@ SessionStore.prototype = {
     try {
       state = JSON.parse(aData);
     } catch (e) {
-      throw "Invalid session JSON: " + aData;
+      throw new Error("Invalid session JSON: " + aData);
     }
 
     // To do a restore, we must have at least one window with one tab
     if (!state || state.windows.length == 0 || !state.windows[0].tabs || state.windows[0].tabs.length == 0) {
-      throw "Invalid session JSON: " + aData;
+      throw new Error("Invalid session JSON: " + aData);
     }
 
     let window = Services.wm.getMostRecentWindow("navigator:browser");
@@ -1491,7 +1491,7 @@ SessionStore.prototype = {
 
   getClosedTabs(aWindow) {
     if (!aWindow.__SSID) {
-      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+      throw new Error(Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
     }
 
     return this._windows[aWindow.__SSID].closedTabs;
@@ -1499,7 +1499,7 @@ SessionStore.prototype = {
 
   undoCloseTab(aWindow, aCloseTabData) {
     if (!aWindow.__SSID) {
-      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+      throw new Error(Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
     }
 
     // If the tab data is in the closedTabs array, remove it.
@@ -1562,7 +1562,7 @@ SessionStore.prototype = {
     }
 
     if (!aWindow.__SSID) {
-      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+      throw new Error(Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
     }
 
     let closedTabs = this._windows[aWindow.__SSID].closedTabs;

@@ -118,9 +118,9 @@ GeckoViewPermission.prototype = {
       });
 
       if (constraints.video && !sources.some(source => source.type === "videoinput")) {
-        throw "no video source";
+        throw new Error("no video source");
       } else if (constraints.audio && !sources.some(source => source.type === "audioinput")) {
-        throw "no audio source";
+        throw new Error("no audio source");
       }
 
       let dispatcher = GeckoViewUtils.getDispatcherForWindow(win);
