@@ -3,19 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
-
 namespace mozilla {
-
-union MaybeDuration {
-  null_t;
-  double;
-};
 
 struct ProfilerInitParams {
   bool enabled;
   uint32_t entries;
-  MaybeDuration duration;
+  double? duration;
   double interval;
   uint32_t features;
   nsCString[] filters;
