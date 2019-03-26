@@ -57,29 +57,47 @@ class SidebarRuntimeItem extends PureComponent {
     const displayName = isUnknown ?
       getString("about-debugging-sidebar-runtime-item-waiting-for-runtime") : name;
 
-    const titleLocalizationId = deviceName ?
-      "about-debugging-sidebar-runtime-item-name" :
-      "about-debugging-sidebar-runtime-item-name-no-device";
+    const localizationId = deviceName
+      ? "about-debugging-sidebar-runtime-item-name"
+      : "about-debugging-sidebar-runtime-item-name-no-device";
+
+    const className = "ellipsis-text sidebar-runtime-item__runtime";
+
+    function renderWithDevice() {
+      return dom.span(
+        {
+          className,
+          title: localizationId,
+        },
+        deviceName,
+        dom.br({}),
+        dom.span(
+          {
+            className: "sidebar-runtime-item__runtime__details",
+          },
+          displayName,
+        ),
+      );
+    }
+
+    function renderNoDevice() {
+      return dom.span(
+        {
+          className,
+          title: localizationId,
+        },
+        displayName,
+      );
+    }
 
     return Localized(
       {
-        id: titleLocalizationId,
+        id: localizationId,
         attrs: { title: true },
         $deviceName: deviceName,
         $displayName: displayName,
       },
-      dom.span(
-        {
-          className: "ellipsis-text",
-          title: titleLocalizationId,
-        },
-        displayName,
-        // If a deviceName is available, display it on a separate line.
-        ...(deviceName ? [
-          dom.br({}),
-          deviceName,
-        ] : []),
-      )
+      deviceName ? renderWithDevice() : renderNoDevice(),
     );
   }
 
@@ -99,10 +117,11 @@ class SidebarRuntimeItem extends PureComponent {
 
     return SidebarItem(
       {
+        className: "sidebar-item--tall",
         isSelected,
         to: isConnected ? `/runtime/${encodeURIComponent(runtimeId)}` : null,
       },
-      dom.div(
+      dom.section(
         {
           className: "sidebar-runtime-item__container",
         },
