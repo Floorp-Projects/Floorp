@@ -10,22 +10,6 @@
 
 namespace mozilla {
 namespace layers {
-
-AutoApplyAsyncTestAttributes::AutoApplyAsyncTestAttributes(
-    const AsyncPanZoomController* aApzc)
-    // Having to use const_cast here seems less ugly than the alternatives
-    // of making several members of AsyncPanZoomController that
-    // ApplyAsyncTestAttributes() modifies |mutable|, or several methods that
-    // query the async transforms non-const.
-    : mApzc(const_cast<AsyncPanZoomController*>(aApzc)),
-      mPrevFrameMetrics(aApzc->Metrics()) {
-  mApzc->ApplyAsyncTestAttributes();
-}
-
-AutoApplyAsyncTestAttributes::~AutoApplyAsyncTestAttributes() {
-  mApzc->UnapplyAsyncTestAttributes(mPrevFrameMetrics);
-}
-
 namespace apz {
 
 /*static*/ void InitializeGlobalState() {
