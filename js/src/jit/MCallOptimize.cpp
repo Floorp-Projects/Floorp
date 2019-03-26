@@ -223,7 +223,7 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
     return InliningStatus_NotInlined;
   }
 
-  bool isWasmCall = target->isWasmOptimized();
+  bool isWasmCall = target->isWasmWithJitEntry();
   if (!isWasmCall &&
       (!target->hasJitInfo() ||
        target->jitInfo()->type() != JSJitInfo::InlinableNative)) {
@@ -4322,7 +4322,7 @@ IonBuilder::InliningResult IonBuilder::inlineConstructTypedObject(
 
 IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
                                                       JSFunction* target) {
-  MOZ_ASSERT(target->isWasmOptimized());
+  MOZ_ASSERT(target->isWasmWithJitEntry());
 
   // Don't inline wasm constructors.
   if (callInfo.constructing()) {

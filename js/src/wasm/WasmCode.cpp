@@ -1161,8 +1161,9 @@ void Code::commitTier2() const {
 }
 
 uint32_t Code::getFuncIndex(JSFunction* fun) const {
-  if (fun->isAsmJSNative()) {
-    return fun->asmJSFuncIndex();
+  MOZ_ASSERT(fun->isWasm() || fun->isAsmJSNative());
+  if (!fun->isWasmWithJitEntry()) {
+    return fun->wasmFuncIndex();
   }
   return jumpTables_.funcIndexFromJitEntry(fun->wasmJitEntry());
 }

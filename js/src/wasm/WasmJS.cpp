@@ -1494,34 +1494,29 @@ bool WasmInstanceObject::getExportedFunction(
     if (!fun) {
       return false;
     }
-    fun->setAsmJSIndex(funcIndex);
+    fun->setWasmFuncIndex(funcIndex);
   } else {
     RootedAtom name(cx, NumberToAtom(cx, funcIndex));
     if (!name) {
       return false;
     }
 
+    // Functions with anyref don't have jit entries yet.
     bool disableJitEntry = funcType.temporarilyUnsupportedAnyRef()
 #ifdef WASM_CODEGEN_DEBUG
                            || !JitOptions.enableWasmJitEntry;
 #endif
     ;
 
-    // Functions with anyref don't have jit entries yet, so they should
-    // mostly behave like asm.js functions. Pretend it's the case, until
-    // jit entries are implemented.
-    JSFunction::Flags flags =
-        disableJitEntry ? JSFunction::ASMJS_NATIVE : JSFunction::WASM_FUN;
-
     fun.set(NewNativeFunction(cx, WasmCall, numArgs, name,
                               gc::AllocKind::FUNCTION_EXTENDED, SingletonObject,
-                              flags));
+                              JSFunction::WASM));
     if (!fun) {
       return false;
     }
 
     if (disableJitEntry) {
-      fun->setAsmJSIndex(funcIndex);
+      fun->setWasmFuncIndex(funcIndex);
     } else {
       fun->setWasmJitEntry(instance.code().getAddressOfJitEntry(funcIndex));
     }
