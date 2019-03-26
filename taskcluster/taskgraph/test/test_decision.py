@@ -59,11 +59,11 @@ class TestGetDecisionParameters(unittest.TestCase):
             'head_ref': 'ef01',
             'message': '',
             'project': 'mozilla-central',
-            'pushlog_id': 143,
+            'pushlog_id': '143',
             'pushdate': 1503691511,
             'owner': 'nobody@mozilla.com',
             'tasks_for': 'hg-push',
-            'level': 3,
+            'level': '3',
         }
 
     @patch('taskgraph.decision.get_hg_revision_branch')
@@ -71,7 +71,7 @@ class TestGetDecisionParameters(unittest.TestCase):
         mock_get_hg_revision_branch.return_value = 'default'
         with MockedOpen({self.ttc_file: None}):
             params = decision.get_decision_parameters(FAKE_GRAPH_CONFIG, self.options)
-        self.assertEqual(params['pushlog_id'], 143)
+        self.assertEqual(params['pushlog_id'], '143')
         self.assertEqual(params['build_date'], 1503691511)
         self.assertEqual(params['hg_branch'], 'default')
         self.assertEqual(params['moz_build_date'], '20170825200511')
@@ -80,7 +80,8 @@ class TestGetDecisionParameters(unittest.TestCase):
         self.assertEqual(params['try_task_config'], None)
 
     @patch('taskgraph.decision.get_hg_revision_branch')
-    def test_no_email_owner(self, _):
+    def test_no_email_owner(self, mock_get_hg_revision_branch):
+        mock_get_hg_revision_branch.return_value = 'default'
         self.options['owner'] = 'ffxbld'
         with MockedOpen({self.ttc_file: None}):
             params = decision.get_decision_parameters(FAKE_GRAPH_CONFIG, self.options)
@@ -88,8 +89,9 @@ class TestGetDecisionParameters(unittest.TestCase):
 
     @patch('taskgraph.decision.get_hg_revision_branch')
     @patch('taskgraph.decision.get_hg_commit_message')
-    def test_try_options(self, mock_get_hg_commit_message, _):
+    def test_try_options(self, mock_get_hg_commit_message, mock_get_hg_revision_branch):
         mock_get_hg_commit_message.return_value = 'try: -b do -t all'
+        mock_get_hg_revision_branch.return_value = 'default'
         self.options['project'] = 'try'
         with MockedOpen({self.ttc_file: None}):
             params = decision.get_decision_parameters(FAKE_GRAPH_CONFIG, self.options)
@@ -100,8 +102,9 @@ class TestGetDecisionParameters(unittest.TestCase):
 
     @patch('taskgraph.decision.get_hg_revision_branch')
     @patch('taskgraph.decision.get_hg_commit_message')
-    def test_try_task_config(self, mock_get_hg_commit_message, _):
+    def test_try_task_config(self, mock_get_hg_commit_message, mock_get_hg_revision_branch):
         mock_get_hg_commit_message.return_value = 'Fuzzy query=foo'
+        mock_get_hg_revision_branch.return_value = 'default'
         ttc = {'tasks': ['a', 'b'], 'templates': {}}
         self.options['project'] = 'try'
         with MockedOpen({self.ttc_file: json.dumps(ttc)}):
