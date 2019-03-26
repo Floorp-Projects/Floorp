@@ -426,7 +426,10 @@ void SessionStorageObserverChild::SendDeleteMeInternal() {
     mObserver->ClearActor();
     mObserver = nullptr;
 
-    MOZ_ALWAYS_TRUE(PSessionStorageObserverChild::SendDeleteMe());
+    // Don't check result here since IPC may no longer be available due to
+    // SessionStorageManager (which holds a strong reference to
+    // SessionStorageObserver) being destroyed very late in the game.
+    PSessionStorageObserverChild::SendDeleteMe();
   }
 }
 
