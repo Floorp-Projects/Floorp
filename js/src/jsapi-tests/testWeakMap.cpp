@@ -65,7 +65,7 @@ BEGIN_TEST(testWeakMap_keyDelegates) {
   AutoLeaveZeal nozeal(cx);
 #endif /* JS_GC_ZEAL */
 
-  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_INCREMENTAL);
+  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE_INCREMENTAL);
   JS_GC(cx);
   JS::RootedObject map(cx, JS::NewWeakMapObject(cx));
   CHECK(map);
