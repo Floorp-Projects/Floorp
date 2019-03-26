@@ -63,11 +63,5 @@ exports[`WelomeBox renders with default values 1`] = `
       </p>
     </div>
   </div>
-  <PaneToggleButton
-    collapsed={false}
-    handleClick={[MockFunction]}
-    horizontal={false}
-    position="end"
-  />
 </div>
 `;

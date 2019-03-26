@@ -41,7 +41,6 @@ import {
 // Redux actions
 import actions from "../../actions";
 
-import Footer from "./Footer";
 import SearchBar from "./SearchBar";
 import HighlightLines from "./HighlightLines";
 import Preview from "./Preview";
@@ -58,7 +57,6 @@ import {
   updateDocument,
   showLoading,
   showErrorMessage,
-  shouldShowFooter,
   getEditor,
   clearEditor,
   getCursorLine,
@@ -85,15 +83,13 @@ import type { SymbolDeclarations } from "../../workers/parser";
 import type { SourceLocation, Source } from "../../types";
 
 const cssVars = {
-  searchbarHeight: "var(--editor-searchbar-height)",
-  footerHeight: "var(--editor-footer-height)"
+  searchbarHeight: "var(--editor-searchbar-height)"
 };
 
 export type Props = {
   selectedLocation: ?SourceLocation,
   selectedSource: ?Source,
   searchOn: boolean,
-  horizontal: boolean,
   startPanelSize: number,
   endPanelSize: number,
   conditionalPanelLocation: SourceLocation,
@@ -577,28 +573,21 @@ class Editor extends PureComponent<Props, State> {
   }
 
   getInlineEditorStyles() {
-    const { selectedSource, horizontal, searchOn } = this.props;
-
-    const subtractions = [];
-
-    if (shouldShowFooter(selectedSource, horizontal)) {
-      subtractions.push(cssVars.footerHeight);
-    }
+    const { searchOn } = this.props;
 
     if (searchOn) {
-      subtractions.push(cssVars.searchbarHeight);
+      return {
+        height: `calc(100% - ${cssVars.searchbarHeight})`
+      };
     }
 
     return {
-      height:
-        subtractions.length === 0
-          ? "100%"
-          : `calc(100% - ${subtractions.join(" - ")})`
+      height: "100%"
     };
   }
 
   renderItems() {
-    const { horizontal, selectedSource, conditionalPanelLocation } = this.props;
+    const { selectedSource, conditionalPanelLocation } = this.props;
     const { editor, contextMenu } = this.state;
 
     if (!selectedSource || !editor || !getDocument(selectedSource.id)) {
@@ -612,7 +601,6 @@ class Editor extends PureComponent<Props, State> {
         <EmptyLines editor={editor} />
         <Breakpoints editor={editor} />
         <Preview editor={editor} editorRef={this.$editorWrapper} />
-        <Footer editor={editor} horizontal={horizontal} />
         <HighlightLines editor={editor} />
         {
           <EditorMenu
@@ -633,7 +621,7 @@ class Editor extends PureComponent<Props, State> {
   renderSearchBar() {
     const { editor } = this.state;
 
-    if (!editor) {
+    if (!this.props.selectedSource) {
       return null;
     }
 
