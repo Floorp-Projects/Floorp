@@ -121,8 +121,8 @@ struct CraneliftMetadataEntry {
     MemoryAccess,
     SymbolicAccess
   } which;
-  uint32_t offset;  // relative to the beginning of the function generated code
-  uint32_t srcLoc;  // relative to the beginning of the module bytecode
+  uint32_t codeOffset;
+  uint32_t moduleBytecodeOffset;
   size_t extra;
 };
 

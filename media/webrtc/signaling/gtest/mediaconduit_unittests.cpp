@@ -436,8 +436,8 @@ class TransportConduitTest : public ::testing::Test {
     // Same APIs
     mozilla::EncodingConstraints constraints;
     mozilla::VideoCodecConfig cinst1(120, "VP8", constraints);
-    VideoCodecConfig::SimulcastEncoding encoding;
-    cinst1.mSimulcastEncodings.push_back(encoding);
+    VideoCodecConfig::Encoding encoding;
+    cinst1.mEncodings.push_back(encoding);
 
     // This test is disabled because with the current code this will trigger an
     // assertion in video_receive_stream.cc because we this results in a
@@ -448,7 +448,7 @@ class TransportConduitTest : public ::testing::Test {
     cerr << "   *************************************************" << endl;
 
     mozilla::VideoCodecConfig cinst2(120, "VP8", constraints);
-    cinst2.mSimulcastEncodings.push_back(encoding);
+    cinst2.mEncodings.push_back(encoding);
     rcvCodecList.push_back(&cinst1);
     rcvCodecList.push_back(&cinst2);
     err = videoSession->ConfigureRecvMediaCodecs(rcvCodecList);
@@ -468,9 +468,9 @@ class TransportConduitTest : public ::testing::Test {
     mozilla::VideoCodecConfig cinst3(
         124, "I4201234tttttthhhyyyy89087987y76t567r7756765rr6u6676",
         constraints);
-    cinst3.mSimulcastEncodings.push_back(encoding);
+    cinst3.mEncodings.push_back(encoding);
     mozilla::VideoCodecConfig cinst4(124, "", constraints);
-    cinst4.mSimulcastEncodings.push_back(encoding);
+    cinst4.mEncodings.push_back(encoding);
 
     rcvCodecList.emplace_back(new mozilla::VideoCodecConfig(cinst3));
     rcvCodecList.emplace_back(new mozilla::VideoCodecConfig(cinst4));

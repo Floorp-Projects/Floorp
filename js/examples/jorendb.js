@@ -748,7 +748,7 @@ function handleBreakpoint (frame) {
 var jorendbDepth;
 if (typeof jorendbDepth == 'undefined') jorendbDepth = 0;
 
-var debuggeeGlobal = newGlobal("new-compartment");
+var debuggeeGlobal = newGlobal({newCompartment: true});
 debuggeeGlobal.jorendbDepth = jorendbDepth + 1;
 var debuggeeGlobalWrapper = dbg.addDebuggee(debuggeeGlobal);
 

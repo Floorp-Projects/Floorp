@@ -124,6 +124,8 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
     int width, int height, const webrtc::VideoEncoderConfig& config) {
   size_t streamCount = config.number_of_streams;
 
+  MOZ_RELEASE_ASSERT(streamCount >= 1, "Should request at least one stream");
+
   // We only allow one layer when screensharing
   if (mCodecMode == webrtc::VideoCodecMode::kScreensharing) {
     streamCount = 1;
@@ -141,8 +143,8 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
 
   for (size_t idx = streamCount - 1; streamCount > 0; idx--, streamCount--) {
     webrtc::VideoStream video_stream;
-    auto& simulcastEncoding = mCodecConfig.mSimulcastEncodings[idx];
-    MOZ_ASSERT(simulcastEncoding.constraints.scaleDownBy >= 1.0);
+    auto& encoding = mCodecConfig.mEncodings[idx];
+    MOZ_ASSERT(encoding.constraints.scaleDownBy >= 1.0);
 
     // All streams' dimensions must retain the aspect ratio of the input stream.
     // Note that the first stream might already have been scaled by us.
@@ -157,8 +159,8 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
       outHeight = height;
     } else {
       float effectiveScaleDownBy =
-          simulcastEncoding.constraints.scaleDownBy /
-          mCodecConfig.mSimulcastEncodings[0].constraints.scaleDownBy;
+          encoding.constraints.scaleDownBy /
+          mCodecConfig.mEncodings[0].constraints.scaleDownBy;
       MOZ_ASSERT(effectiveScaleDownBy >= 1.0);
       mSimulcastAdapter->OnScaleResolutionBy(
           effectiveScaleDownBy > 1.0
@@ -181,7 +183,7 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
     if (outWidth == 0 || outHeight == 0) {
       CSFLogInfo(LOGTAG,
                  "%s Stream with RID %s ignored because of no resolution.",
-                 __FUNCTION__, simulcastEncoding.rid.c_str());
+                 __FUNCTION__, encoding.rid.c_str());
       continue;
     }
 
@@ -191,13 +193,13 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
     video_stream.height = outHeight;
 
     CSFLogInfo(LOGTAG, "%s Input frame %ux%u, RID %s scaling to %zux%zu",
-               __FUNCTION__, width, height, simulcastEncoding.rid.c_str(),
+               __FUNCTION__, width, height, encoding.rid.c_str(),
                video_stream.width, video_stream.height);
 
     if (video_stream.width * height != width * video_stream.height) {
       CSFLogInfo(LOGTAG,
                  "%s Stream with RID %s ignored because of bad aspect ratio.",
-                 __FUNCTION__, simulcastEncoding.rid.c_str());
+                 __FUNCTION__, encoding.rid.c_str());
       continue;
     }
 
@@ -205,11 +207,11 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
     video_stream.max_framerate = mSendingFramerate;
 
     SelectBitrates(video_stream.width, video_stream.height, mMinBitrate,
-                   mStartBitrate, simulcastEncoding.constraints.maxBr,
-                   mPrefMaxBitrate, mNegotiatedMaxBitrate, video_stream);
+                   mStartBitrate, encoding.constraints.maxBr, mPrefMaxBitrate,
+                   mNegotiatedMaxBitrate, video_stream);
 
     video_stream.max_qp = kQpMax;
-    video_stream.SetRid(simulcastEncoding.rid);
+    video_stream.SetRid(encoding.rid);
 
     // leave vector temporal_layer_thresholds_bps empty for non-simulcast
     video_stream.temporal_layer_thresholds_bps.clear();
