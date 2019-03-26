@@ -113,10 +113,12 @@ internal fun collectAndCheckPingSchema(storeName: String): JSONObject {
  *
  * @param context the application context to init glean with
  * @param config the [Configuration] to init glean with
+ * @param clearStores if true, clear the contents of all stores
  */
 internal fun resetGlean(
     context: Context = ApplicationProvider.getApplicationContext(),
-    config: Configuration = Configuration()
+    config: Configuration = Configuration(),
+    clearStores: Boolean = true
 ) {
     Glean.enableTestingMode()
 
@@ -124,12 +126,15 @@ internal fun resetGlean(
     // in tests without this line. Let's simply put it here.
     WorkManagerTestInitHelper.initializeTestWorkManager(context)
 
-    // Clear all the stored data.
-    val storageManager = StorageEngineManager(applicationContext = context)
-    storageManager.clearAllStores()
-    // The experiments storage engine needs to be cleared manually as it's not listed
-    // in the `StorageEngineManager`.
-    ExperimentsStorageEngine.clearAllStores()
+    if (clearStores) {
+        // Clear all the stored data.
+        val storageManager = StorageEngineManager(applicationContext = context)
+        storageManager.clearAllStores()
+        // The experiments storage engine needs to be cleared manually as it's not listed
+        // in the `StorageEngineManager`.
+        ExperimentsStorageEngine.clearAllStores()
+    }
+
     // Clear the "first run" flag.
     val firstRun = FileFirstRunDetector(File(context.applicationInfo.dataDir, Glean.GLEAN_DATA_DIR))
     firstRun.reset()
