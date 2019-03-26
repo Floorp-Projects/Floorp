@@ -150,7 +150,9 @@ nsAtom** EffectSet::GetEffectSetPropertyAtoms() {
   static nsAtom* effectSetPropertyAtoms[] = {
       nsGkAtoms::animationEffectsProperty,
       nsGkAtoms::animationEffectsForBeforeProperty,
-      nsGkAtoms::animationEffectsForAfterProperty, nullptr};
+      nsGkAtoms::animationEffectsForAfterProperty,
+      nsGkAtoms::animationEffectsForMarkerProperty,
+      nullptr};
 
   return effectSetPropertyAtoms;
 }
@@ -167,10 +169,13 @@ nsAtom* EffectSet::GetEffectSetPropertyAtom(PseudoStyleType aPseudoType) {
     case PseudoStyleType::after:
       return nsGkAtoms::animationEffectsForAfterProperty;
 
+    case PseudoStyleType::marker:
+      return nsGkAtoms::animationEffectsForMarkerProperty;
+
     default:
       MOZ_ASSERT_UNREACHABLE(
           "Should not try to get animation effects for "
-          "a pseudo other that :before or :after");
+          "a pseudo other that :before, :after or ::marker");
       return nullptr;
   }
 }
