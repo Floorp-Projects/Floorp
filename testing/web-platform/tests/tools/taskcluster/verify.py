@@ -16,14 +16,22 @@ def create_parser():
 def run(venv, **kwargs):
     with open(os.path.join(root, ".taskcluster.yml")) as f:
         template = yaml.safe_load(f)
-    with open(os.path.join(here, "testdata/pr_event.json")) as f:
-        event = json.load(f)
 
-    context = {"tasks_for": "github-pull-request",
-               "event": event,
-               "as_slugid": lambda x: x}
+    events = [("pr_event.json", "github-pull-request", "Pull Request"),
+              ("master_push_event.json", "github-push", "Push to master")]
 
-    data = jsone.render(template, context)
-    print("Got %s tasks for pull request synchonize" % len(data["tasks"]))
-    for item in data["tasks"]:
-        print(json.dumps(item, indent=2))
+    for filename, tasks_for, title in events:
+        with open(os.path.join(here, "testdata", filename)) as f:
+            event = json.load(f)
+
+        context = {"tasks_for": tasks_for,
+                   "event": event,
+                   "as_slugid": lambda x: x}
+
+        data = jsone.render(template, context)
+        heading = "Got %s tasks for %s" % (len(data["tasks"]), title)
+        print(heading)
+        print("=" * len(heading))
+        for item in data["tasks"]:
+            print(json.dumps(item, indent=2))
+        print("")
