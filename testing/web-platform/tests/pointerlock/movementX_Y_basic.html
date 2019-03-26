@@ -4,7 +4,9 @@
 <meta name="timeout" content="long">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<meta name='flags' content='interact'>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-actions.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
 <style type="text/css">
     #status-log {
         margin: 10px 0;
@@ -13,7 +15,7 @@
     }
 </style>
 </head>
-<body>
+<body onload="run_test()">
     <h2>Description</h2>
     <p>This test if movementX/Y can provide the change in position of the pointer, as if movementX/Y = eNow.screenX/Y-ePrevious.screenX/Y</p>
     <hr/>
@@ -123,6 +125,25 @@
             movementY_log.innerHTML = movementY;
             movementX_sum_log.innerHTML = movementX_sum;
             movementY_sum_log.innerHTML = movementY_sum;
+        }
+
+        function run_test() {
+            x = window.innerWidth / 2;
+            y = window.innerHeight / 2;
+            var actions = new test_driver.Actions();
+            actions.pointerMove(x, y)
+              .pointerDown()
+              .pointerUp();
+            for (var i = 0; i < 10; i++) {
+                // Alternatively move left/right and up/down.
+                x += ((-1)**i) * i * 10;
+                y -= ((-1)**i) * i * 10;
+                actions.pointerMove(x, y);
+            }
+            actions.pointerMove(x, y)
+              .pointerDown()
+              .pointerUp()
+              .send();
         }
         </script>
     </body>

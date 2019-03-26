@@ -3,6 +3,9 @@
 <title>Remove PointerLock target on mouseup</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-actions.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
 <p>Click anywhere to run the test. If a "PASS" result appears the test passes, otherwise it fails</p>
 <div id="target"></div>
 <script>
@@ -17,4 +20,11 @@ async_test(t => {
         }));
     }));
 })
+
+// Inject mouse input.
+new test_driver.Actions()
+               .pointerMove(50, 50)
+               .pointerDown()
+               .pointerUp()
+               .send();
 </script>
