@@ -103,6 +103,9 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
 
   void MaybeRejectWithUndefined();
 
+  void MaybeResolveWithClone(JSContext* aCx, JS::Handle<JS::Value> aValue);
+  void MaybeRejectWithClone(JSContext* aCx, JS::Handle<JS::Value> aValue);
+
   // DO NOT USE MaybeRejectBrokenly with in new code.  Promises should be
   // rejected with Error instances.
   // Note: MaybeRejectBrokenly is a template so we can use it with DOMException
