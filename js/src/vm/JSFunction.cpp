@@ -2110,11 +2110,7 @@ JSFunction* js::NewFunctionWithProto(
   } else {
     MOZ_ASSERT(fun->isNative());
     MOZ_ASSERT(native);
-    if (fun->isWasmOptimized()) {
-      fun->initWasmNative(native);
-    } else {
-      fun->initNative(native, nullptr);
-    }
+    fun->initNative(native, nullptr);
   }
   if (allocKind == gc::AllocKind::FUNCTION_EXTENDED) {
     fun->initializeExtended();
