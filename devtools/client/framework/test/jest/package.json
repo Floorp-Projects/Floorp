@@ -1,0 +1,17 @@
+{
+  "name": "devtools-client-framework-tests",
+  "license": "MPL-2.0",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=8.9.4"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "jest": "^23.0.0",
+    "react-test-renderer": "16.4.1",
+    "react": "16.4.1",
+    "react-dom": "16.4.1"
+  }
+}
