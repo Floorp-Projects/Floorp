@@ -263,14 +263,6 @@ class BackgroundParentImpl : public PBackgroundParent {
       const nsID& aUUID, const nsID& aDestinationUUID,
       const uint32_t& aSequenceID) override;
 
-  virtual PAsmJSCacheEntryParent* AllocPAsmJSCacheEntryParent(
-      const dom::asmjscache::OpenMode& aOpenMode,
-      const dom::asmjscache::WriteParams& aWriteParams,
-      const PrincipalInfo& aPrincipalInfo) override;
-
-  virtual bool DeallocPAsmJSCacheEntryParent(
-      PAsmJSCacheEntryParent* aActor) override;
-
   virtual PQuotaParent* AllocPQuotaParent() override;
 
   virtual bool DeallocPQuotaParent(PQuotaParent* aActor) override;
