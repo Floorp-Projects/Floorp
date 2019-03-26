@@ -1731,7 +1731,8 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
     // MakeBasicBlock() creates AutoSelectionRestorer.
     // Therefore, even if it returns NS_OK, editor might have been destroyed
     // at restoring Selection.
-    nsresult rv = MakeBasicBlock(ParagraphSeparatorElement(separator));
+    OwningNonNull<nsAtom> separatorTag = ParagraphSeparatorElement(separator);
+    nsresult rv = MakeBasicBlock(separatorTag);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
         NS_WARN_IF(!CanHandleEditAction())) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
@@ -2221,7 +2222,8 @@ nsresult HTMLEditRules::WillDeleteSelection(
       HTMLEditorRef().GetFirstSelectedTableCellElement(error);
   if (cellElement) {
     error.SuppressException();
-    nsresult rv = HTMLEditorRef().DeleteTableCellContentsWithTransaction();
+    nsresult rv =
+        MOZ_KnownLive(HTMLEditorRef()).DeleteTableCellContentsWithTransaction();
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -6508,13 +6510,6 @@ nsresult HTMLEditRules::ExpandSelectionForDeletion() {
       }
     }
   }
-  // Now set the selection to the new range
-  DebugOnly<nsresult> rv =
-      SelectionRefPtr()->Collapse(selStartNode, selStartOffset);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to collapse selection");
 
   // Expand selection endpoint only if we didn't pass a <br>, or if we really
   // needed to pass that <br> (i.e., its block is now totally selected).
@@ -6542,26 +6537,20 @@ nsresult HTMLEditRules::ExpandSelectionForDeletion() {
       doEndExpansion = false;
     }
   }
-  if (doEndExpansion) {
-    nsresult rv = SelectionRefPtr()->Extend(selEndNode, selEndOffset);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } else {
-    // Only expand to just before <br>.
-    nsresult rv = SelectionRefPtr()->Extend(firstBRParent, firstBROffset);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
 
-  return NS_OK;
+  EditorRawDOMPoint newSelectionStart(selStartNode, selStartOffset);
+  EditorRawDOMPoint newSelectionEnd(
+      doEndExpansion ? selEndNode : firstBRParent,
+      doEndExpansion ? selEndOffset : firstBROffset);
+  ErrorResult error;
+  MOZ_KnownLive(SelectionRefPtr())
+      ->SetStartAndEndInLimiter(newSelectionStart, newSelectionEnd, error);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    error.SuppressException();
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(!error.Failed(), "Failed to set selection for deletion");
+  return error.StealNSResult();
 }
 
 nsresult HTMLEditRules::NormalizeSelection() {
@@ -6714,20 +6703,18 @@ nsresult HTMLEditRules::NormalizeSelection() {
     return NS_OK;  // New start after old end.
   }
 
-  // otherwise set selection to new values.
-  // XXX Why don't we use SetBaseAndExtent()?
-  DebugOnly<nsresult> rv =
-      SelectionRefPtr()->Collapse(newStartNode, newStartOffset);
+  // Otherwise set selection to new values.  Note that end point may be prior
+  // to start point.  So, we cannot use Selection::SetStartAndEndInLimit() here.
+  ErrorResult error;
+  MOZ_KnownLive(SelectionRefPtr())
+      ->SetBaseAndExtentInLimiter(*newStartNode, newStartOffset, *newEndNode,
+                                  newEndOffset, error);
   if (NS_WARN_IF(!CanHandleEditAction())) {
+    error.SuppressException();
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to collapse selection");
-  rv = SelectionRefPtr()->Extend(newEndNode, newEndOffset);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to extend selection");
-  return NS_OK;
+  NS_WARNING_ASSERTION(!error.Failed(), "Failed to set selection");
+  return error.StealNSResult();
 }
 
 EditorDOMPoint HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
