@@ -26,7 +26,7 @@ private:
      */
     bool isScratch() const {
         return !fResource->getUniqueKey().isValid() && fResource->fScratchKey.isValid() &&
-                SkBudgeted::kYes == fResource->resourcePriv().isBudgeted();
+               GrBudgetedType::kBudgeted == fResource->resourcePriv().budgetedType();
     }
 
     /**
@@ -34,7 +34,7 @@ private:
      */
     void release() {
         fResource->release();
-        if (fResource->isPurgeable()) {
+        if (!fResource->hasRefOrPendingIO()) {
             delete fResource;
         }
     }
@@ -44,7 +44,7 @@ private:
      */
     void abandon() {
         fResource->abandon();
-        if (fResource->isPurgeable()) {
+        if (!fResource->hasRefOrPendingIO()) {
             delete fResource;
         }
     }

@@ -10,6 +10,7 @@
 
 #include "SkColorFilter.h"
 #include "SkDrawLooper.h"
+#include "SkFont.h"
 #include "SkImageFilter.h"
 #include "SkMaskFilter.h"
 #include "SkPaintPriv.h"
@@ -42,65 +43,20 @@ public:
 class SkTextBlobBuilderPriv {
 public:
     static const SkTextBlobBuilder::RunBuffer& AllocRunText(SkTextBlobBuilder* builder,
-            const SkPaint& font, int count, SkScalar x, SkScalar y, int textByteCount,
+            const SkFont& font, int count, SkScalar x, SkScalar y, int textByteCount,
             SkString lang, const SkRect* bounds = nullptr) {
         return builder->allocRunText(font, count, x, y, textByteCount, lang, bounds);
     }
     static const SkTextBlobBuilder::RunBuffer& AllocRunTextPosH(SkTextBlobBuilder* builder,
-            const SkPaint& font, int count, SkScalar y, int textByteCount, SkString lang,
+            const SkFont& font, int count, SkScalar y, int textByteCount, SkString lang,
             const SkRect* bounds = nullptr) {
         return builder->allocRunTextPosH(font, count, y, textByteCount, lang, bounds);
     }
     static const SkTextBlobBuilder::RunBuffer& AllocRunTextPos(SkTextBlobBuilder* builder,
-            const SkPaint& font, int count, int textByteCount, SkString lang,
+            const SkFont& font, int count, int textByteCount, SkString lang,
             const SkRect* bounds = nullptr) {
         return builder->allocRunTextPos(font, count, textByteCount, lang, bounds);
     }
-};
-
-// TODO(fmalita): replace with SkFont.
-class SkRunFont : SkNoncopyable {
-public:
-    SkRunFont(const SkPaint& paint);
-
-    void applyToPaint(SkPaint* paint) const;
-
-    bool operator==(const SkRunFont& other) const;
-
-    bool operator!=(const SkRunFont& other) const {
-        return !(*this == other);
-    }
-
-    uint32_t flags() const { return fFlags; }
-
-private:
-    friend SkPaint;
-    const static uint32_t kFlagsMask =
-            SkPaint::kAntiAlias_Flag          |
-            SkPaint::kFakeBoldText_Flag       |
-            SkPaint::kLinearText_Flag         |
-            SkPaint::kSubpixelText_Flag       |
-            SkPaint::kLCDRenderText_Flag      |
-            SkPaint::kEmbeddedBitmapText_Flag |
-            SkPaint::kAutoHinting_Flag        |
-            SkPaint::kVerticalText_Flag       ;
-
-    SkScalar                 fSize;
-    SkScalar                 fScaleX;
-
-    // Keep this sk_sp off the first position, to avoid interfering with SkNoncopyable
-    // empty baseclass optimization (http://code.google.com/p/skia/issues/detail?id=3694).
-    sk_sp<SkTypeface>        fTypeface;
-    SkScalar                 fSkewX;
-
-    static_assert(SkPaint::kAlignCount < 4, "insufficient_align_bits");
-    uint32_t                 fAlign : 2;
-    static_assert(SkPaint::kFull_Hinting < 4, "insufficient_hinting_bits");
-    uint32_t                 fHinting : 2;
-    static_assert((kFlagsMask & 0xffff) == kFlagsMask, "insufficient_flags_bits");
-    uint32_t                 fFlags : 16;
-
-    typedef SkNoncopyable INHERITED;
 };
 
 //
@@ -127,7 +83,7 @@ SkDEBUGCODE(static const unsigned kRunRecordMagic = 0xb10bcafe;)
 
 class SkTextBlob::RunRecord {
 public:
-    RunRecord(uint32_t count, uint32_t textSize,  const SkPoint& offset, const SkPaint& font, GlyphPositioning pos)
+    RunRecord(uint32_t count, uint32_t textSize,  const SkPoint& offset, const SkFont& font, GlyphPositioning pos)
             : fFont(font)
             , fCount(count)
             , fOffset(offset)
@@ -149,7 +105,7 @@ public:
         return fOffset;
     }
 
-    const SkRunFont& font() const {
+    const SkFont& font() const {
         return fFont;
     }
 
@@ -163,10 +119,23 @@ public:
         return reinterpret_cast<uint16_t*>(const_cast<RunRecord*>(this) + 1);
     }
 
+    // can be aliased with pointBuffer() or xformBuffer()
     SkScalar* posBuffer() const {
         // Position scalars follow the (aligned) glyph buffer.
         return reinterpret_cast<SkScalar*>(reinterpret_cast<uint8_t*>(this->glyphBuffer()) +
                                            SkAlign4(fCount * sizeof(uint16_t)));
+    }
+
+    // alias for posBuffer()
+    SkPoint* pointBuffer() const {
+        SkASSERT(this->positioning() == (GlyphPositioning)2);
+        return reinterpret_cast<SkPoint*>(this->posBuffer());
+    }
+
+    // alias for posBuffer()
+    SkRSXform* xformBuffer() const {
+        SkASSERT(this->positioning() == (GlyphPositioning)3);
+        return reinterpret_cast<SkRSXform*>(this->posBuffer());
     }
 
     uint32_t textSize() const { return isExtended() ? *this->textSizePtr() : 0; }
@@ -215,35 +184,13 @@ private:
         return fFlags & kExtended_Flag;
     }
 
-    SkRunFont        fFont;
+    SkFont           fFont;
     uint32_t         fCount;
     SkPoint          fOffset;
     uint32_t         fFlags;
 
     SkDEBUGCODE(unsigned fMagic;)
 };
-
-// (paint->getFlags() & ~kFlagsMask) | fFlags
-inline SkPaint::SkPaint(const SkPaint& basePaint, const SkRunFont& runFont)
-        : fTypeface{runFont.fTypeface}
-        , fPathEffect{basePaint.fPathEffect}
-        , fShader{basePaint.fShader}
-        , fMaskFilter{basePaint.fMaskFilter}
-        , fColorFilter{basePaint.fColorFilter}
-        , fDrawLooper{basePaint.fDrawLooper}
-        , fImageFilter{basePaint.fImageFilter}
-        , fTextSize{runFont.fSize}
-        , fTextScaleX{runFont.fScaleX}
-        , fTextSkewX{runFont.fSkewX}
-        , fColor4f{basePaint.fColor4f}
-        , fWidth{basePaint.fWidth}
-        , fMiterLimit{basePaint.fMiterLimit}
-        , fBlendMode{basePaint.fBlendMode}
-        , fBitfieldsUInt{(basePaint.fBitfieldsUInt & ~SkRunFont::kFlagsMask) | runFont.fFlags} {
-    fBitfields.fTextEncoding = kGlyphID_TextEncoding;
-    fBitfields.fHinting = runFont.fHinting;
-    fBitfields.fTextAlign = runFont.fAlign;
-}
 
 /**
  *  Iterate through all of the text runs of the text blob.  For example:
@@ -258,7 +205,8 @@ public:
     enum GlyphPositioning : uint8_t {
         kDefault_Positioning      = 0, // Default glyph advances -- zero scalars per glyph.
         kHorizontal_Positioning   = 1, // Horizontal positioning -- one scalar per glyph.
-        kFull_Positioning         = 2  // Point positioning -- two scalars per glyph.
+        kFull_Positioning         = 2, // Point positioning -- two scalars per glyph.
+        kRSXform_Positioning      = 3, // RSXform positioning -- four scalars per glyph.
     };
 
     bool done() const {
@@ -278,15 +226,22 @@ public:
         SkASSERT(!this->done());
         return fCurrentRun->posBuffer();
     }
+    // alias for pos()
+    const SkPoint* points() const {
+        return fCurrentRun->pointBuffer();
+    }
+    // alias for pos()
+    const SkRSXform* xforms() const {
+        return fCurrentRun->xformBuffer();
+    }
     const SkPoint& offset() const {
         SkASSERT(!this->done());
         return fCurrentRun->offset();
     }
-    const SkRunFont& runFont() const {
+    const SkFont& font() const {
         SkASSERT(!this->done());
         return fCurrentRun->font();
     }
-    void applyFontToPaint(SkPaint*) const;
     GlyphPositioning positioning() const;
     uint32_t* clusters() const {
         SkASSERT(!this->done());

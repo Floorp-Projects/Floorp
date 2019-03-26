@@ -7,7 +7,6 @@
 
 #include "SkBitmap.h"
 
-#include "SkAtomics.h"
 #include "SkColorData.h"
 #include "SkConvertPixels.h"
 #include "SkData.h"
@@ -115,10 +114,10 @@ bool SkBitmap::setInfo(const SkImageInfo& info, size_t rowBytes) {
 
     // require that rowBytes fit in 31bits
     int64_t mrb = info.minRowBytes64();
-    if ((int32_t)mrb != mrb) {
+    if (!SkTFitsIn<int32_t>(mrb)) {
         return reset_return_false(this);
     }
-    if ((int64_t)rowBytes != (int32_t)rowBytes) {
+    if (!SkTFitsIn<int32_t>(rowBytes)) {
         return reset_return_false(this);
     }
 
@@ -218,6 +217,38 @@ bool SkBitmap::tryAllocPixels(Allocator* allocator) {
         allocator = &stdalloc;
     }
     return allocator->allocPixelRef(this);
+}
+
+bool SkBitmap::tryAllocN32Pixels(int width, int height, bool isOpaque) {
+    SkImageInfo info = SkImageInfo::MakeN32(width, height,
+            isOpaque ? kOpaque_SkAlphaType : kPremul_SkAlphaType);
+    return this->tryAllocPixels(info);
+}
+
+void SkBitmap::allocN32Pixels(int width, int height, bool isOpaque) {
+    SkImageInfo info = SkImageInfo::MakeN32(width, height,
+                                        isOpaque ? kOpaque_SkAlphaType : kPremul_SkAlphaType);
+    this->allocPixels(info);
+}
+
+void SkBitmap::allocPixels() {
+    this->allocPixels((Allocator*)nullptr);
+}
+
+void SkBitmap::allocPixels(Allocator* allocator) {
+    SkASSERT_RELEASE(this->tryAllocPixels(allocator));
+}
+
+void SkBitmap::allocPixelsFlags(const SkImageInfo& info, uint32_t flags) {
+    SkASSERT_RELEASE(this->tryAllocPixelsFlags(info, flags));
+}
+
+void SkBitmap::allocPixels(const SkImageInfo& info, size_t rowBytes) {
+    SkASSERT_RELEASE(this->tryAllocPixels(info, rowBytes));
+}
+
+void SkBitmap::allocPixels(const SkImageInfo& info) {
+    this->allocPixels(info, info.minRowBytes());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -382,34 +413,7 @@ void* SkBitmap::getAddr(int x, int y) const {
 
     char* base = (char*)this->getPixels();
     if (base) {
-        base += y * this->rowBytes();
-        switch (this->colorType()) {
-            case kRGBA_F32_SkColorType:
-                base += x << 4;
-                break;
-            case kRGBA_F16_SkColorType:
-                base += x << 3;
-                break;
-            case kRGB_888x_SkColorType:
-            case kRGBA_8888_SkColorType:
-            case kBGRA_8888_SkColorType:
-            case kRGB_101010x_SkColorType:
-            case kRGBA_1010102_SkColorType:
-                base += x << 2;
-                break;
-            case kARGB_4444_SkColorType:
-            case kRGB_565_SkColorType:
-                base += x << 1;
-                break;
-            case kAlpha_8_SkColorType:
-            case kGray_8_SkColorType:
-                base += x;
-                break;
-            default:
-                SkDEBUGFAIL("Can't return addr for config");
-                base = nullptr;
-                break;
-        }
+        base += (y * this->rowBytes()) + (x << this->shiftPerPixel());
     }
     return base;
 }
@@ -420,12 +424,9 @@ void* SkBitmap::getAddr(int x, int y) const {
 void SkBitmap::erase(SkColor c, const SkIRect& area) const {
     SkDEBUGCODE(this->validate();)
 
-    switch (this->colorType()) {
-        case kUnknown_SkColorType:
-            // TODO: can we ASSERT that we never get here?
-            return; // can't erase. Should we bzero so the memory is not uninitialized?
-        default:
-            break;
+    if (kUnknown_SkColorType == this->colorType()) {
+        // TODO: can we ASSERT that we never get here?
+        return; // can't erase. Should we bzero so the memory is not uninitialized?
     }
 
     SkPixmap result;
@@ -607,17 +608,8 @@ bool SkBitmap::extractAlpha(SkBitmap* dst, const SkPaint* paint,
 void SkBitmap::validate() const {
     this->info().validate();
 
-    // ImageInfo may not require this, but Bitmap ensures that opaque-only
-    // colorTypes report opaque for their alphatype
-    if (kRGB_565_SkColorType == this->colorType()) {
-        SkASSERT(kOpaque_SkAlphaType == this->alphaType());
-    }
-
     SkASSERT(this->info().validRowBytes(this->rowBytes()));
     uint8_t allFlags = kImageIsVolatile_Flag;
-#ifdef SK_BUILD_FOR_ANDROID
-    allFlags |= kHasHardwareMipMap_Flag;
-#endif
     SkASSERT((~allFlags & fFlags) == 0);
 
     if (fPixelRef && fPixelRef->pixels()) {

@@ -8,37 +8,43 @@
 #define SkPDFDocumentPriv_DEFINED
 
 #include "SkCanvas.h"
+#include "SkMutex.h"
 #include "SkPDFDocument.h"
-#include "SkPDFCanon.h"
-#include "SkPDFFont.h"
 #include "SkPDFMetadata.h"
+#include "SkPDFTag.h"
+#include "SkStream.h"
+#include "SkTHash.h"
 
+#include <atomic>
+#include <vector>
+#include <memory>
+
+class SkExecutor;
 class SkPDFDevice;
-class SkPDFTag;
+class SkPDFFont;
+struct SkAdvancedTypefaceMetrics;
+struct SkBitmapKey;
+struct SkPDFFillGraphicState;
+struct SkPDFImageShaderKey;
+struct SkPDFStrokeGraphicState;
+
+namespace SkPDFGradientShader {
+struct Key;
+struct KeyHash;
+}
 
 const char* SkPDFGetNodeIdKey();
 
-// Logically part of SkPDFDocument (like SkPDFCanon), but separate to
-// keep similar functionality together.
-struct SkPDFObjectSerializer {
-    SkPDFObjNumMap fObjNumMap;
-    std::vector<int32_t> fOffsets;
-    sk_sp<SkPDFObject> fInfoDict;
-    size_t fBaseOffset;
-    size_t fNextToBeSerialized;  // index in fObjNumMap
-
-    SkPDFObjectSerializer();
-    ~SkPDFObjectSerializer();
-    SkPDFObjectSerializer(SkPDFObjectSerializer&&);
-    SkPDFObjectSerializer& operator=(SkPDFObjectSerializer&&);
-    SkPDFObjectSerializer(const SkPDFObjectSerializer&) = delete;
-    SkPDFObjectSerializer& operator=(const SkPDFObjectSerializer&) = delete;
-
-    void addObjectRecursively(const sk_sp<SkPDFObject>&);
-    void serializeHeader(SkWStream*, const SkPDF::Metadata&);
-    void serializeObjects(SkWStream*);
-    void serializeFooter(SkWStream*, const sk_sp<SkPDFObject>, sk_sp<SkPDFObject>);
-    int32_t offset(SkWStream*);
+// Logically part of SkPDFDocument, but separate to keep similar functionality together.
+class SkPDFOffsetMap {
+public:
+    void markStartOfDocument(const SkWStream*);
+    void markStartOfObject(int referenceNumber, const SkWStream*);
+    int objectCount() const;
+    int emitCrossReferenceTable(SkWStream* s) const;
+private:
+    std::vector<int> fOffsets;
+    size_t fBaseOffset = SIZE_MAX;
 };
 
 /** Concrete implementation of SkDocument that creates PDF files. This
@@ -62,42 +68,75 @@ public:
        It might go without saying that objects should not be changed
        after calling serialize, since those changes will be too late.
      */
-    void serialize(const sk_sp<SkPDFObject>&);
-    SkPDFCanon* canon() { return &fCanon; }
-    void registerFont(SkPDFFont* f) { fFonts.add(f); }
+    SkPDFIndirectReference emit(const SkPDFObject&, SkPDFIndirectReference);
+    SkPDFIndirectReference emit(const SkPDFObject& o) { return this->emit(o, this->reserveRef()); }
+
+    template <typename T>
+    void emitStream(const SkPDFDict& dict, T writeStream, SkPDFIndirectReference ref) {
+        SkWStream* stream = this->beginObject(ref);
+        dict.emitObject(stream);
+        stream->writeText(" stream\n");
+        writeStream(stream);
+        stream->writeText("\nendstream");
+        this->endObject();
+    }
+
     const SkPDF::Metadata& metadata() const { return fMetadata; }
 
-    sk_sp<SkPDFDict> getPage(int pageIndex) const;
+    SkPDFIndirectReference getPage(size_t pageIndex) const;
     // Returns -1 if no mark ID.
     int getMarkIdForNodeId(int nodeId);
 
-private:
-    sk_sp<SkPDFTag> recursiveBuildTagTree(const SkPDF::StructureElementNode& node,
-                                          sk_sp<SkPDFTag> parent);
+    SkPDFIndirectReference reserveRef() { return SkPDFIndirectReference{fNextObjectNumber++}; }
 
-    SkPDFObjectSerializer fObjectSerializer;
-    SkPDFCanon fCanon;
+    SkExecutor* executor() const { return fExecutor; }
+    void incrementJobCount();
+    void signalJobComplete();
+    size_t currentPageIndex() { return fPages.size(); }
+    size_t pageCount() { return fPageRefs.size(); }
+
+    // Canonicalized objects
+    SkTHashMap<SkPDFImageShaderKey, SkPDFIndirectReference> fImageShaderMap;
+    SkTHashMap<SkPDFGradientShader::Key, SkPDFIndirectReference, SkPDFGradientShader::KeyHash>
+        fGradientPatternMap;
+    SkTHashMap<SkBitmapKey, SkPDFIndirectReference> fPDFBitmapMap;
+    SkTHashMap<uint32_t, std::unique_ptr<SkAdvancedTypefaceMetrics>> fTypefaceMetrics;
+    SkTHashMap<uint32_t, std::vector<SkString>> fType1GlyphNames;
+    SkTHashMap<uint32_t, std::vector<SkUnichar>> fToUnicodeMap;
+    SkTHashMap<uint32_t, SkPDFIndirectReference> fFontDescriptors;
+    SkTHashMap<uint32_t, SkPDFIndirectReference> fType3FontDescriptors;
+    SkTHashMap<uint64_t, SkPDFFont> fFontMap;
+    SkTHashMap<SkPDFStrokeGraphicState, SkPDFIndirectReference> fStrokeGSMap;
+    SkTHashMap<SkPDFFillGraphicState, SkPDFIndirectReference> fFillGSMap;
+    SkPDFIndirectReference fInvertFunction;
+    SkPDFIndirectReference fNoSmaskGraphicState;
+
+private:
+    SkPDFOffsetMap fOffsetMap;
     SkCanvas fCanvas;
-    std::vector<sk_sp<SkPDFDict>> fPages;
-    SkTHashSet<SkPDFFont*> fFonts;
-    sk_sp<SkPDFDict> fDests;
+    std::vector<std::unique_ptr<SkPDFDict>> fPages;
+    std::vector<SkPDFIndirectReference> fPageRefs;
+    SkPDFDict fDests;
     sk_sp<SkPDFDevice> fPageDevice;
-    sk_sp<SkPDFObject> fID;
-    sk_sp<SkPDFObject> fXMP;
+    std::atomic<int> fNextObjectNumber = {1};
+    std::atomic<int> fJobCount = {0};
+    SkUUID fUUID;
+    SkPDFIndirectReference fInfoDict;
+    SkPDFIndirectReference fXMP;
     SkPDF::Metadata fMetadata;
     SkScalar fRasterScale = 1;
     SkScalar fInverseRasterScale = 1;
+    SkExecutor* fExecutor = nullptr;
 
     // For tagged PDFs.
+    SkPDFTagTree fTagTree;
 
-    // The tag root, which owns its child tags and so on.
-    sk_sp<SkPDFTag> fTagRoot;
-    // Array of page -> array of marks mapping to tags.
-    SkTArray<SkTArray<sk_sp<SkPDFTag>>> fMarksPerPage;
-    // A mapping from node ID to tag for fast lookup.
-    SkTHashMap<int, sk_sp<SkPDFTag>> fNodeIdToTag;
+    SkMutex fMutex;
+    SkSemaphore fSemaphore;
 
-    void reset();
+    void waitForJobs();
+    SkWStream* beginObject(SkPDFIndirectReference);
+    void endObject();
 };
 
 #endif  // SkPDFDocumentPriv_DEFINED

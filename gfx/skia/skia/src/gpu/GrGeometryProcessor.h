@@ -21,57 +21,23 @@ class GrGeometryProcessor : public GrPrimitiveProcessor {
 public:
     GrGeometryProcessor(ClassID classID)
         : INHERITED(classID)
-        , fWillUseGeoShader(false)
-        , fSampleShading(0.0) {}
+        , fWillUseGeoShader(false) {}
 
     bool willUseGeoShader() const final { return fWillUseGeoShader; }
 
-    /**
-     * Returns the minimum fraction of samples for which the fragment shader will be run. For
-     * instance, if sampleShading is 0.5 in MSAA16 mode, the fragment shader will run a minimum of
-     * 8 times per pixel. The default value is zero.
-     */
-    float getSampleShading() const final { return fSampleShading; }
-
 protected:
     void setWillUseGeoShader() { fWillUseGeoShader = true; }
-    void setSampleShading(float sampleShading) {
-        fSampleShading = sampleShading;
+
+    // GPs that need to use either half-float or ubyte colors can just call this to get a correctly
+    // configured Attribute struct
+    static Attribute MakeColorAttribute(const char* name, bool wideColor) {
+        return { name,
+                 wideColor ? kHalf4_GrVertexAttribType : kUByte4_norm_GrVertexAttribType,
+                 kHalf4_GrSLType };
     }
-
-    /**
-     * Recursive helpers for implementing onVertexAttribute or onInstanceAttribute.
-     */
-
-    template <typename... Args>
-    static const Attribute& IthAttribute(int i, const Attribute& attr0, const Args&... attrs) {
-        SkASSERT(attr0.isInitialized());
-        return (0 == i) ? attr0 : IthAttribute(i - 1, attrs...);
-    }
-
-    static const Attribute& IthAttribute(int i) {
-        SK_ABORT("Illegal attribute Index");
-        static constexpr Attribute kBogus;
-        return kBogus;
-    }
-
-    template <typename... Args>
-    static const Attribute& IthInitializedAttribute(int i, const Attribute& attr0,
-                                                    const Args&... attrs) {
-        if (attr0.isInitialized()) {
-            if (0 == i) {
-                return attr0;
-            }
-            i -= 1;
-        }
-        return IthInitializedAttribute(i, attrs...);
-    }
-
-    static const Attribute& IthInitializedAttribute(int i) { return IthAttribute(i); }
 
 private:
     bool fWillUseGeoShader;
-    float fSampleShading;
 
     typedef GrPrimitiveProcessor INHERITED;
 };

@@ -14,6 +14,7 @@
 #include "GrMesh.h"
 #include "GrTypes.h"
 #include "GrVkPipelineState.h"
+#include "vk/GrVkTypes.h"
 
 class GrVkGpu;
 class GrVkImage;
@@ -43,12 +44,12 @@ private:
     struct CopyInfo {
         CopyInfo(GrSurface* src, GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
                  const SkIPoint& dstPoint)
-            : fSrc(src), fSrcOrigin(srcOrigin), fSrcRect(srcRect), fDstPoint(dstPoint) {}
+            : fSrc(sk_ref_sp(src)), fSrcOrigin(srcOrigin), fSrcRect(srcRect), fDstPoint(dstPoint) {}
 
-        GrSurface*      fSrc;
-        GrSurfaceOrigin fSrcOrigin;
-        SkIRect         fSrcRect;
-        SkIPoint        fDstPoint;
+        sk_sp<GrSurface> fSrc;
+        GrSurfaceOrigin  fSrcOrigin;
+        SkIRect          fSrcRect;
+        SkIPoint         fDstPoint;
     };
 
     GrVkGpu*                    fGpu;
@@ -74,6 +75,8 @@ public:
     void copy(GrSurface* src, GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
               const SkIPoint& dstPoint) override;
 
+    void executeDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>) override;
+
     void set(GrRenderTarget*, GrSurfaceOrigin,
              const GrGpuRTCommandBuffer::LoadAndStoreInfo&,
              const GrGpuRTCommandBuffer::StencilLoadAndStoreInfo&);
@@ -84,12 +87,18 @@ public:
 private:
     void init();
 
+    // Called instead of init when we are drawing to a render target that already wraps a secondary
+    // command buffer.
+    void initWrapped();
+
+    bool wrapsSecondaryCommandBuffer() const;
+
     GrGpu* gpu() override;
 
     // Bind vertex and index buffers
-    void bindGeometry(const GrBuffer* indexBuffer,
-                      const GrBuffer* vertexBuffer,
-                      const GrBuffer* instanceBuffer);
+    void bindGeometry(const GrGpuBuffer* indexBuffer,
+                      const GrGpuBuffer* vertexBuffer,
+                      const GrGpuBuffer* instanceBuffer);
 
     GrVkPipelineState* prepareDrawState(const GrPrimitiveProcessor&,
                                         const GrPipeline&,
@@ -132,7 +141,7 @@ private:
                                        const GrBuffer* instanceBuffer, int instanceCount,
                                        int baseInstance, GrPrimitiveRestart) final;
 
-    void onClear(const GrFixedClip&, GrColor color) override;
+    void onClear(const GrFixedClip&, const SkPMColor4f& color) override;
 
     void onClearStencilClip(const GrFixedClip&, bool insideStencilMask) override;
 
@@ -150,17 +159,17 @@ private:
     struct CopyInfo {
         CopyInfo(GrSurface* src, GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
                  const SkIPoint& dstPoint, bool shouldDiscardDst)
-            : fSrc(src)
+            : fSrc(sk_ref_sp(src))
             , fSrcOrigin(srcOrigin)
             , fSrcRect(srcRect)
             , fDstPoint(dstPoint)
             , fShouldDiscardDst(shouldDiscardDst) {}
 
-        GrSurface*      fSrc;
-        GrSurfaceOrigin fSrcOrigin;
-        SkIRect         fSrcRect;
-        SkIPoint        fDstPoint;
-        bool            fShouldDiscardDst;
+        sk_sp<GrSurface> fSrc;
+        GrSurfaceOrigin  fSrcOrigin;
+        SkIRect          fSrcRect;
+        SkIPoint         fDstPoint;
+        bool             fShouldDiscardDst;
     };
 
     enum class LoadStoreState {
@@ -184,7 +193,7 @@ private:
         // Array of images that will be sampled and thus need to be transfered to sampled layout
         // before submitting the secondary command buffers. This must happen after we do any predraw
         // uploads or copies.
-        SkTArray<GrVkImage*>                   fSampledImages;
+        SkTArray<sk_sp<GrVkTexture>>           fSampledTextures;
 
         GrVkSecondaryCommandBuffer* currentCmdBuf() {
             return fCommandBuffers.back();
@@ -199,7 +208,7 @@ private:
     VkAttachmentStoreOp         fVkColorStoreOp;
     VkAttachmentLoadOp          fVkStencilLoadOp;
     VkAttachmentStoreOp         fVkStencilStoreOp;
-    GrColor4f                   fClearColor;
+    SkPMColor4f                 fClearColor;
     GrVkPipelineState*          fLastPipelineState;
 
     typedef GrGpuRTCommandBuffer INHERITED;

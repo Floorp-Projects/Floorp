@@ -7,18 +7,20 @@
 
 #include "GrVkResourceProvider.h"
 
+#include "GrContextPriv.h"
 #include "GrSamplerState.h"
 #include "GrVkCommandBuffer.h"
+#include "GrVkCommandPool.h"
 #include "GrVkCopyPipeline.h"
 #include "GrVkGpu.h"
 #include "GrVkPipeline.h"
 #include "GrVkRenderTarget.h"
-#include "GrVkSampler.h"
 #include "GrVkUniformBuffer.h"
 #include "GrVkUtil.h"
+#include "SkTaskGroup.h"
 
 #ifdef SK_TRACE_VK_RESOURCES
-uint32_t GrVkResource::fKeyCounter = 0;
+std::atomic<uint32_t> GrVkResource::fKeyCounter{0};
 #endif
 
 GrVkResourceProvider::GrVkResourceProvider(GrVkGpu* gpu)
@@ -29,26 +31,60 @@ GrVkResourceProvider::GrVkResourceProvider(GrVkGpu* gpu)
 
 GrVkResourceProvider::~GrVkResourceProvider() {
     SkASSERT(0 == fRenderPassArray.count());
+    SkASSERT(0 == fExternalRenderPasses.count());
     SkASSERT(VK_NULL_HANDLE == fPipelineCache);
     delete fPipelineStateCache;
 }
 
-void GrVkResourceProvider::init() {
-    VkPipelineCacheCreateInfo createInfo;
-    memset(&createInfo, 0, sizeof(VkPipelineCacheCreateInfo));
-    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-    createInfo.pNext = nullptr;
-    createInfo.flags = 0;
-    createInfo.initialDataSize = 0;
-    createInfo.pInitialData = nullptr;
-    VkResult result = GR_VK_CALL(fGpu->vkInterface(),
-                                 CreatePipelineCache(fGpu->device(), &createInfo, nullptr,
-                                                     &fPipelineCache));
-    SkASSERT(VK_SUCCESS == result);
-    if (VK_SUCCESS != result) {
-        fPipelineCache = VK_NULL_HANDLE;
-    }
+VkPipelineCache GrVkResourceProvider::pipelineCache() {
+    if (fPipelineCache == VK_NULL_HANDLE) {
+        VkPipelineCacheCreateInfo createInfo;
+        memset(&createInfo, 0, sizeof(VkPipelineCacheCreateInfo));
+        createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = 0;
 
+        auto persistentCache = fGpu->getContext()->priv().getPersistentCache();
+        sk_sp<SkData> cached;
+        if (persistentCache) {
+            uint32_t key = GrVkGpu::kPipelineCache_PersistentCacheKeyType;
+            sk_sp<SkData> keyData = SkData::MakeWithoutCopy(&key, sizeof(uint32_t));
+            cached = persistentCache->load(*keyData);
+        }
+        bool usedCached = false;
+        if (cached) {
+            uint32_t* cacheHeader = (uint32_t*)cached->data();
+            if (cacheHeader[1] == VK_PIPELINE_CACHE_HEADER_VERSION_ONE) {
+                // For version one of the header, the total header size is 16 bytes plus
+                // VK_UUID_SIZE bytes. See Section 9.6 (Pipeline Cache) in the vulkan spec to see
+                // the breakdown of these bytes.
+                SkASSERT(cacheHeader[0] == 16 + VK_UUID_SIZE);
+                const VkPhysicalDeviceProperties& devProps = fGpu->physicalDeviceProperties();
+                const uint8_t* supportedPipelineCacheUUID = devProps.pipelineCacheUUID;
+                if (cacheHeader[2] == devProps.vendorID && cacheHeader[3] == devProps.deviceID &&
+                    !memcmp(&cacheHeader[4], supportedPipelineCacheUUID, VK_UUID_SIZE)) {
+                    createInfo.initialDataSize = cached->size();
+                    createInfo.pInitialData = cached->data();
+                    usedCached = true;
+                }
+            }
+        }
+        if (!usedCached) {
+            createInfo.initialDataSize = 0;
+            createInfo.pInitialData = nullptr;
+        }
+        VkResult result = GR_VK_CALL(fGpu->vkInterface(),
+                                     CreatePipelineCache(fGpu->device(), &createInfo, nullptr,
+                                                         &fPipelineCache));
+        SkASSERT(VK_SUCCESS == result);
+        if (VK_SUCCESS != result) {
+            fPipelineCache = VK_NULL_HANDLE;
+        }
+    }
+    return fPipelineCache;
+}
+
+void GrVkResourceProvider::init() {
     // Init uniform descriptor objects
     GrVkDescriptorSetManager* dsm = GrVkDescriptorSetManager::CreateUniformManager(fGpu);
     fDescriptorSetManagers.emplace_back(dsm);
@@ -56,7 +92,8 @@ void GrVkResourceProvider::init() {
     fUniformDSHandle = GrVkDescriptorSetManager::Handle(0);
 }
 
-GrVkPipeline* GrVkResourceProvider::createPipeline(const GrPrimitiveProcessor& primProc,
+GrVkPipeline* GrVkResourceProvider::createPipeline(int numColorSamples,
+                                                   const GrPrimitiveProcessor& primProc,
                                                    const GrPipeline& pipeline,
                                                    const GrStencilSettings& stencil,
                                                    VkPipelineShaderStageCreateInfo* shaderStageInfo,
@@ -64,9 +101,9 @@ GrVkPipeline* GrVkResourceProvider::createPipeline(const GrPrimitiveProcessor& p
                                                    GrPrimitiveType primitiveType,
                                                    VkRenderPass compatibleRenderPass,
                                                    VkPipelineLayout layout) {
-    return GrVkPipeline::Create(fGpu, primProc, pipeline, stencil, shaderStageInfo,
+    return GrVkPipeline::Create(fGpu, numColorSamples, primProc, pipeline, stencil, shaderStageInfo,
                                 shaderStageCount, primitiveType, compatibleRenderPass, layout,
-                                fPipelineCache);
+                                this->pipelineCache());
 }
 
 GrVkCopyPipeline* GrVkResourceProvider::findOrCreateCopyPipeline(
@@ -85,7 +122,7 @@ GrVkCopyPipeline* GrVkResourceProvider::findOrCreateCopyPipeline(
                                             pipelineLayout,
                                             dst->numColorSamples(),
                                             *dst->simpleRenderPass(),
-                                            fPipelineCache);
+                                            this->pipelineCache());
         if (!pipeline) {
             return nullptr;
         }
@@ -132,6 +169,26 @@ GrVkResourceProvider::findCompatibleRenderPass(const CompatibleRPHandle& compati
     return renderPass;
 }
 
+const GrVkRenderPass* GrVkResourceProvider::findCompatibleExternalRenderPass(
+        VkRenderPass renderPass, uint32_t colorAttachmentIndex) {
+    for (int i = 0; i < fExternalRenderPasses.count(); ++i) {
+        if (fExternalRenderPasses[i]->isCompatibleExternalRP(renderPass)) {
+            fExternalRenderPasses[i]->ref();
+#ifdef SK_DEBUG
+            uint32_t cachedColorIndex;
+            SkASSERT(fExternalRenderPasses[i]->colorAttachmentIndex(&cachedColorIndex));
+            SkASSERT(cachedColorIndex == colorAttachmentIndex);
+#endif
+            return fExternalRenderPasses[i];
+        }
+    }
+
+    const GrVkRenderPass* newRenderPass = new GrVkRenderPass(renderPass, colorAttachmentIndex);
+    fExternalRenderPasses.push_back(newRenderPass);
+    newRenderPass->ref();
+    return newRenderPass;
+}
+
 const GrVkRenderPass* GrVkResourceProvider::findRenderPass(
                                                      const GrVkRenderTarget& target,
                                                      const GrVkRenderPass::LoadStoreOps& colorOps,
@@ -166,11 +223,14 @@ GrVkDescriptorPool* GrVkResourceProvider::findOrCreateCompatibleDescriptorPool(
     return new GrVkDescriptorPool(fGpu, type, count);
 }
 
-GrVkSampler* GrVkResourceProvider::findOrCreateCompatibleSampler(const GrSamplerState& params,
-                                                                 uint32_t maxMipLevel) {
-    GrVkSampler* sampler = fSamplers.find(GrVkSampler::GenerateKey(params, maxMipLevel));
+GrVkSampler* GrVkResourceProvider::findOrCreateCompatibleSampler(
+        const GrSamplerState& params, const GrVkYcbcrConversionInfo& ycbcrInfo) {
+    GrVkSampler* sampler = fSamplers.find(GrVkSampler::GenerateKey(params, ycbcrInfo));
     if (!sampler) {
-        sampler = GrVkSampler::Create(fGpu, params, maxMipLevel);
+        sampler = GrVkSampler::Create(fGpu, params, ycbcrInfo);
+        if (!sampler) {
+            return nullptr;
+        }
         fSamplers.add(sampler);
     }
     SkASSERT(sampler);
@@ -178,11 +238,29 @@ GrVkSampler* GrVkResourceProvider::findOrCreateCompatibleSampler(const GrSampler
     return sampler;
 }
 
+GrVkSamplerYcbcrConversion* GrVkResourceProvider::findOrCreateCompatibleSamplerYcbcrConversion(
+        const GrVkYcbcrConversionInfo& ycbcrInfo) {
+    GrVkSamplerYcbcrConversion* ycbcrConversion =
+            fYcbcrConversions.find(GrVkSamplerYcbcrConversion::GenerateKey(ycbcrInfo));
+    if (!ycbcrConversion) {
+        ycbcrConversion = GrVkSamplerYcbcrConversion::Create(fGpu, ycbcrInfo);
+        if (!ycbcrConversion) {
+            return nullptr;
+        }
+        fYcbcrConversions.add(ycbcrConversion);
+    }
+    SkASSERT(ycbcrConversion);
+    ycbcrConversion->ref();
+    return ycbcrConversion;
+}
+
 GrVkPipelineState* GrVkResourceProvider::findOrCreateCompatiblePipelineState(
-        const GrPipeline& pipeline, const GrPrimitiveProcessor& proc, GrPrimitiveType primitiveType,
+        GrRenderTarget* renderTarget, GrSurfaceOrigin origin,
+        const GrPipeline& pipeline, const GrPrimitiveProcessor& proc,
+        const GrTextureProxy* const primProcProxies[], GrPrimitiveType primitiveType,
         VkRenderPass compatibleRenderPass) {
-    return fPipelineStateCache->refPipelineState(proc, pipeline, primitiveType,
-                                                 compatibleRenderPass);
+    return fPipelineStateCache->refPipelineState(renderTarget, origin, proc, primProcProxies,
+                                                 pipeline, primitiveType, compatibleRenderPass);
 }
 
 void GrVkResourceProvider::getSamplerDescriptorSetHandle(VkDescriptorType type,
@@ -255,47 +333,40 @@ void GrVkResourceProvider::recycleDescriptorSet(const GrVkDescriptorSet* descSet
     fDescriptorSetManagers[managerIdx]->recycleDescriptorSet(descSet);
 }
 
-GrVkPrimaryCommandBuffer* GrVkResourceProvider::findOrCreatePrimaryCommandBuffer() {
-    GrVkPrimaryCommandBuffer* cmdBuffer = nullptr;
-    int count = fAvailableCommandBuffers.count();
-    if (count > 0) {
-        cmdBuffer = fAvailableCommandBuffers[count - 1];
-        SkASSERT(cmdBuffer->finished(fGpu));
-        fAvailableCommandBuffers.removeShuffle(count - 1);
+GrVkCommandPool* GrVkResourceProvider::findOrCreateCommandPool() {
+    std::unique_lock<std::recursive_mutex> lock(fBackgroundMutex);
+    GrVkCommandPool* result;
+    if (fAvailableCommandPools.count()) {
+        result = fAvailableCommandPools.back();
+        fAvailableCommandPools.pop_back();
     } else {
-        cmdBuffer = GrVkPrimaryCommandBuffer::Create(fGpu, fGpu->cmdPool());
+        result = GrVkCommandPool::Create(fGpu);
     }
-    fActiveCommandBuffers.push_back(cmdBuffer);
-    cmdBuffer->ref();
-    return cmdBuffer;
+    SkASSERT(result->unique());
+    SkDEBUGCODE(
+        for (const GrVkCommandPool* pool : fActiveCommandPools) {
+            SkASSERT(pool != result);
+        }
+        for (const GrVkCommandPool* pool : fAvailableCommandPools) {
+            SkASSERT(pool != result);
+        }
+    )
+    fActiveCommandPools.push_back(result);
+    result->ref();
+    return result;
 }
 
 void GrVkResourceProvider::checkCommandBuffers() {
-    for (int i = fActiveCommandBuffers.count()-1; i >= 0; --i) {
-        if (fActiveCommandBuffers[i]->finished(fGpu)) {
-            GrVkPrimaryCommandBuffer* cmdBuffer = fActiveCommandBuffers[i];
-            cmdBuffer->reset(fGpu);
-            fAvailableCommandBuffers.push_back(cmdBuffer);
-            fActiveCommandBuffers.removeShuffle(i);
+    for (int i = fActiveCommandPools.count() - 1; i >= 0; --i) {
+        GrVkCommandPool* pool = fActiveCommandPools[i];
+        if (!pool->isOpen()) {
+            GrVkPrimaryCommandBuffer* buffer = pool->getPrimaryCommandBuffer();
+            if (buffer->finished(fGpu)) {
+                fActiveCommandPools.removeShuffle(i);
+                this->backgroundReset(pool);
+            }
         }
     }
-}
-
-GrVkSecondaryCommandBuffer* GrVkResourceProvider::findOrCreateSecondaryCommandBuffer() {
-    GrVkSecondaryCommandBuffer* cmdBuffer = nullptr;
-    int count = fAvailableSecondaryCommandBuffers.count();
-    if (count > 0) {
-        cmdBuffer = fAvailableSecondaryCommandBuffers[count-1];
-        fAvailableSecondaryCommandBuffers.removeShuffle(count - 1);
-    } else {
-        cmdBuffer = GrVkSecondaryCommandBuffer::Create(fGpu, fGpu->cmdPool());
-    }
-    return cmdBuffer;
-}
-
-void GrVkResourceProvider::recycleSecondaryCommandBuffer(GrVkSecondaryCommandBuffer* cb) {
-    cb->reset(fGpu);
-    fAvailableSecondaryCommandBuffers.push_back(cb);
 }
 
 const GrVkResource* GrVkResourceProvider::findOrCreateStandardUniformBufferResource() {
@@ -315,28 +386,10 @@ void GrVkResourceProvider::recycleStandardUniformBufferResource(const GrVkResour
 }
 
 void GrVkResourceProvider::destroyResources(bool deviceLost) {
-    // release our active command buffers
-    for (int i = 0; i < fActiveCommandBuffers.count(); ++i) {
-        SkASSERT(deviceLost || fActiveCommandBuffers[i]->finished(fGpu));
-        SkASSERT(fActiveCommandBuffers[i]->unique());
-        fActiveCommandBuffers[i]->reset(fGpu);
-        fActiveCommandBuffers[i]->unref(fGpu);
+    SkTaskGroup* taskGroup = fGpu->getContext()->priv().getTaskGroup();
+    if (taskGroup) {
+        taskGroup->wait();
     }
-    fActiveCommandBuffers.reset();
-    // release our available command buffers
-    for (int i = 0; i < fAvailableCommandBuffers.count(); ++i) {
-        SkASSERT(deviceLost || fAvailableCommandBuffers[i]->finished(fGpu));
-        SkASSERT(fAvailableCommandBuffers[i]->unique());
-        fAvailableCommandBuffers[i]->unref(fGpu);
-    }
-    fAvailableCommandBuffers.reset();
-
-    // release our available secondary command buffers
-    for (int i = 0; i < fAvailableSecondaryCommandBuffers.count(); ++i) {
-        SkASSERT(fAvailableSecondaryCommandBuffers[i]->unique());
-        fAvailableSecondaryCommandBuffers[i]->unref(fGpu);
-    }
-    fAvailableSecondaryCommandBuffers.reset();
 
     // Release all copy pipelines
     for (int i = 0; i < fCopyPipelines.count(); ++i) {
@@ -349,8 +402,13 @@ void GrVkResourceProvider::destroyResources(bool deviceLost) {
     }
     fRenderPassArray.reset();
 
+    for (int i = 0; i < fExternalRenderPasses.count(); ++i) {
+        fExternalRenderPasses[i]->unref(fGpu);
+    }
+    fExternalRenderPasses.reset();
+
     // Iterate through all store GrVkSamplers and unref them before resetting the hash.
-    SkTDynamicHash<GrVkSampler, uint16_t>::Iter iter(&fSamplers);
+    SkTDynamicHash<GrVkSampler, GrVkSampler::Key>::Iter iter(&fSamplers);
     for (; !iter.done(); ++iter) {
         (*iter).unref(fGpu);
     }
@@ -360,6 +418,18 @@ void GrVkResourceProvider::destroyResources(bool deviceLost) {
 
     GR_VK_CALL(fGpu->vkInterface(), DestroyPipelineCache(fGpu->device(), fPipelineCache, nullptr));
     fPipelineCache = VK_NULL_HANDLE;
+
+    for (GrVkCommandPool* pool : fActiveCommandPools) {
+        SkASSERT(pool->unique());
+        pool->unref(fGpu);
+    }
+    fActiveCommandPools.reset();
+
+    for (GrVkCommandPool* pool : fAvailableCommandPools) {
+        SkASSERT(pool->unique());
+        pool->unref(fGpu);
+    }
+    fAvailableCommandPools.reset();
 
     // We must release/destroy all command buffers and pipeline states before releasing the
     // GrVkDescriptorSetManagers
@@ -377,25 +447,22 @@ void GrVkResourceProvider::destroyResources(bool deviceLost) {
 }
 
 void GrVkResourceProvider::abandonResources() {
-    // release our active command buffers
-    for (int i = 0; i < fActiveCommandBuffers.count(); ++i) {
-        SkASSERT(fActiveCommandBuffers[i]->unique());
-        fActiveCommandBuffers[i]->unrefAndAbandon();
+    SkTaskGroup* taskGroup = fGpu->getContext()->priv().getTaskGroup();
+    if (taskGroup) {
+        taskGroup->wait();
     }
-    fActiveCommandBuffers.reset();
-    // release our available command buffers
-    for (int i = 0; i < fAvailableCommandBuffers.count(); ++i) {
-        SkASSERT(fAvailableCommandBuffers[i]->unique());
-        fAvailableCommandBuffers[i]->unrefAndAbandon();
-    }
-    fAvailableCommandBuffers.reset();
 
-    // release our available secondary command buffers
-    for (int i = 0; i < fAvailableSecondaryCommandBuffers.count(); ++i) {
-        SkASSERT(fAvailableSecondaryCommandBuffers[i]->unique());
-        fAvailableSecondaryCommandBuffers[i]->unrefAndAbandon();
+    // Abandon all command pools
+    for (int i = 0; i < fActiveCommandPools.count(); ++i) {
+        SkASSERT(fActiveCommandPools[i]->unique());
+        fActiveCommandPools[i]->unrefAndAbandon();
     }
-    fAvailableSecondaryCommandBuffers.reset();
+    fActiveCommandPools.reset();
+    for (int i = 0; i < fAvailableCommandPools.count(); ++i) {
+        SkASSERT(fAvailableCommandPools[i]->unique());
+        fAvailableCommandPools[i]->unrefAndAbandon();
+    }
+    fAvailableCommandPools.reset();
 
     // Abandon all copy pipelines
     for (int i = 0; i < fCopyPipelines.count(); ++i) {
@@ -408,8 +475,13 @@ void GrVkResourceProvider::abandonResources() {
     }
     fRenderPassArray.reset();
 
+    for (int i = 0; i < fExternalRenderPasses.count(); ++i) {
+        fExternalRenderPasses[i]->unrefAndAbandon();
+    }
+    fExternalRenderPasses.reset();
+
     // Iterate through all store GrVkSamplers and unrefAndAbandon them before resetting the hash.
-    SkTDynamicHash<GrVkSampler, uint16_t>::Iter iter(&fSamplers);
+    SkTDynamicHash<GrVkSampler, GrVkSampler::Key>::Iter iter(&fSamplers);
     for (; !iter.done(); ++iter) {
         (*iter).unrefAndAbandon();
     }
@@ -432,6 +504,48 @@ void GrVkResourceProvider::abandonResources() {
         fAvailableUniformBufferResources[i]->unrefAndAbandon();
     }
     fAvailableUniformBufferResources.reset();
+}
+
+void GrVkResourceProvider::backgroundReset(GrVkCommandPool* pool) {
+    SkASSERT(pool->unique());
+    pool->releaseResources(fGpu);
+    SkTaskGroup* taskGroup = fGpu->getContext()->priv().getTaskGroup();
+    if (taskGroup) {
+        taskGroup->add([this, pool]() {
+            this->reset(pool);
+        });
+    } else {
+        this->reset(pool);
+    }
+}
+
+void GrVkResourceProvider::reset(GrVkCommandPool* pool) {
+    SkASSERT(pool->unique());
+    pool->reset(fGpu);
+    std::unique_lock<std::recursive_mutex> providerLock(fBackgroundMutex);
+    fAvailableCommandPools.push_back(pool);
+}
+
+void GrVkResourceProvider::storePipelineCacheData() {
+    size_t dataSize = 0;
+    VkResult result = GR_VK_CALL(fGpu->vkInterface(), GetPipelineCacheData(fGpu->device(),
+                                                                           this->pipelineCache(),
+                                                                           &dataSize, nullptr));
+    SkASSERT(result == VK_SUCCESS);
+
+    std::unique_ptr<uint8_t[]> data(new uint8_t[dataSize]);
+
+    result = GR_VK_CALL(fGpu->vkInterface(), GetPipelineCacheData(fGpu->device(),
+                                                                  this->pipelineCache(),
+                                                                  &dataSize,
+                                                                  (void*)data.get()));
+    SkASSERT(result == VK_SUCCESS);
+
+    uint32_t key = GrVkGpu::kPipelineCache_PersistentCacheKeyType;
+    sk_sp<SkData> keyData = SkData::MakeWithoutCopy(&key, sizeof(uint32_t));
+
+    fGpu->getContext()->priv().getPersistentCache()->store(
+            *keyData, *SkData::MakeWithoutCopy(data.get(), dataSize));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -469,7 +583,7 @@ GrVkRenderPass* GrVkResourceProvider::CompatibleRenderPassSet::getRenderPass(
     return renderPass;
 }
 
-void GrVkResourceProvider::CompatibleRenderPassSet::releaseResources(const GrVkGpu* gpu) {
+void GrVkResourceProvider::CompatibleRenderPassSet::releaseResources(GrVkGpu* gpu) {
     for (int i = 0; i < fRenderPasses.count(); ++i) {
         if (fRenderPasses[i]) {
             fRenderPasses[i]->unref(gpu);

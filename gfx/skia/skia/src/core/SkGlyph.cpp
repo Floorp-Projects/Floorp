@@ -7,13 +7,9 @@
 
 #include "SkGlyph.h"
 
-void SkGlyph::initWithGlyphID(SkPackedGlyphID glyph_id) {
-    fID             = glyph_id;
-    fImage          = nullptr;
-    fPathData       = nullptr;
-    fMaskFormat     = MASK_FORMAT_UNKNOWN;
-    fForceBW        = 0;
-}
+#include "SkArenaAlloc.h"
+#include "SkMakeUnique.h"
+#include "SkScalerContext.h"
 
 void SkGlyph::toMask(SkMask* mask) const {
     SkASSERT(mask);
@@ -90,3 +86,37 @@ size_t SkGlyph::computeImageSize() const {
 
     return size;
 }
+
+size_t SkGlyph::copyImageData(const SkGlyph& from, SkArenaAlloc* alloc) {
+    fMaskFormat = from.fMaskFormat;
+    fWidth = from.fWidth;
+    fHeight = from.fHeight;
+    fLeft = from.fLeft;
+    fTop = from.fTop;
+    fForceBW = from.fForceBW;
+
+    if (from.fImage != nullptr) {
+        auto imageSize = this->allocImage(alloc);
+        SkASSERT(imageSize == from.computeImageSize());
+
+        memcpy(fImage, from.fImage, imageSize);
+        return imageSize;
+    }
+
+    return 0u;
+}
+
+SkPath* SkGlyph::addPath(SkScalerContext* scalerContext, SkArenaAlloc* alloc) {
+    if (!this->isEmpty()) {
+        if (fPathData == nullptr) {
+            fPathData = alloc->make<SkGlyph::PathData>();
+            if (scalerContext->getPath(this->getPackedID(), &fPathData->fPath)) {
+                fPathData->fPath.updateBoundsCache();
+                fPathData->fPath.getGenerationID();
+                fPathData->fHasPath = true;
+            }
+        }
+    }
+    return this->path();
+}
+

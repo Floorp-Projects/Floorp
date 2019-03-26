@@ -22,11 +22,13 @@ public:
         this->registerWithCache(budgeted);
     }
 
-    enum Wrapped { kWrapped };
-    GrMockTexture(GrMockGpu* gpu, Wrapped, const GrSurfaceDesc& desc,
-                  GrMipMapsStatus mipMapsStatus, const GrMockTextureInfo& info)
+    GrMockTexture(GrMockGpu* gpu, const GrSurfaceDesc& desc, GrMipMapsStatus mipMapsStatus,
+                  const GrMockTextureInfo& info, GrWrapCacheable cacheable, GrIOType ioType)
             : GrMockTexture(gpu, desc, mipMapsStatus, info) {
-        this->registerWithCacheWrapped();
+        if (ioType == kRead_GrIOType) {
+            this->setReadOnly();
+        }
+        this->registerWithCacheWrapped(cacheable);
     }
 
     ~GrMockTexture() override {}
@@ -36,10 +38,11 @@ public:
                                 fInfo);
     }
 
-    void textureParamsModified() override {}
-    void setRelease(sk_sp<GrReleaseProcHelper> releaseHelper) override {
-        fReleaseHelper = std::move(releaseHelper);
+    GrBackendFormat backendFormat() const override {
+        return GrBackendFormat::MakeMock(fInfo.fConfig);
     }
+
+    void textureParamsModified() override {}
 
 protected:
     // constructor for subclasses
@@ -50,12 +53,10 @@ protected:
             , fInfo(info) {}
 
     void onRelease() override {
-        this->invokeReleaseProc();
         INHERITED::onRelease();
     }
 
     void onAbandon() override {
-        this->invokeReleaseProc();
         INHERITED::onAbandon();
     }
 
@@ -64,15 +65,7 @@ protected:
     }
 
 private:
-    void invokeReleaseProc() {
-        if (fReleaseHelper) {
-            // Depending on the ref count of fReleaseHelper this may or may not actually trigger the
-            // ReleaseProc to be called.
-            fReleaseHelper.reset();
-        }
-    }
-    GrMockTextureInfo          fInfo;
-    sk_sp<GrReleaseProcHelper> fReleaseHelper;
+    GrMockTextureInfo fInfo;
 
     typedef GrTexture INHERITED;
 };
@@ -89,7 +82,7 @@ public:
     GrMockRenderTarget(GrMockGpu* gpu, Wrapped, const GrSurfaceDesc& desc,
                        const GrMockRenderTargetInfo& info)
             : GrSurface(gpu, desc), INHERITED(gpu, desc), fInfo(info) {
-        this->registerWithCacheWrapped();
+        this->registerWithCacheWrapped(GrWrapCacheable::kNo);
     }
 
     ResolveType getResolveType() const override { return kCanResolve_ResolveType; }
@@ -112,6 +105,10 @@ public:
             numStencilBits = stencil->bits();
         }
         return {this->width(), this->height(), this->numColorSamples(), numStencilBits, fInfo};
+    }
+
+    GrBackendFormat backendFormat() const override {
+        return GrBackendFormat::MakeMock(fInfo.fConfig);
     }
 
 protected:
@@ -141,17 +138,25 @@ public:
     // Renderable wrapped backend texture.
     GrMockTextureRenderTarget(GrMockGpu* gpu, const GrSurfaceDesc& desc,
                               GrMipMapsStatus mipMapsStatus, const GrMockTextureInfo& texInfo,
-                              const GrMockRenderTargetInfo& rtInfo)
+                              const GrMockRenderTargetInfo& rtInfo, GrWrapCacheable cacheble)
             : GrSurface(gpu, desc)
             , GrMockTexture(gpu, desc, mipMapsStatus, texInfo)
             , GrMockRenderTarget(gpu, desc, rtInfo) {
-        this->registerWithCacheWrapped();
+        this->registerWithCacheWrapped(cacheble);
     }
 
     GrTexture* asTexture() override { return this; }
     GrRenderTarget* asRenderTarget() override { return this; }
     const GrTexture* asTexture() const override { return this; }
     const GrRenderTarget* asRenderTarget() const override { return this; }
+
+    GrBackendFormat backendFormat() const override {
+        return GrMockTexture::backendFormat();
+    }
+
+protected:
+    // This avoids an inherits via dominance warning on MSVC.
+    void willRemoveLastRefOrPendingIO() override { GrTexture::willRemoveLastRefOrPendingIO(); }
 
 private:
     void onAbandon() override {

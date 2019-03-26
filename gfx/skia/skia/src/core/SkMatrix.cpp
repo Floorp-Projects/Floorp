@@ -796,6 +796,18 @@ bool SkMatrix::asAffine(SkScalar affine[6]) const {
     return true;
 }
 
+void SkMatrix::mapPoints(SkPoint dst[], const SkPoint src[], int count) const {
+    SkASSERT((dst && src && count > 0) || 0 == count);
+    // no partial overlap
+    SkASSERT(src == dst || &dst[count] <= &src[0] || &src[count] <= &dst[0]);
+    this->getMapPtsProc()(*this, dst, src, count);
+}
+
+void SkMatrix::mapXY(SkScalar x, SkScalar y, SkPoint* result) const {
+    SkASSERT(result);
+    this->getMapXYProc()(*this, x, y, result);
+}
+
 void SkMatrix::ComputeInv(SkScalar dst[9], const SkScalar src[9], double invDet, bool isPersp) {
     SkASSERT(src != dst);
     SkASSERT(src && dst);
@@ -986,7 +998,7 @@ void SkMatrix::Persp_pts(const SkMatrix& m, SkPoint dst[],
             SkScalar z = sdot(sx, m.fMat[kMPersp0], sy, m.fMat[kMPersp1]) + m.fMat[kMPersp2];
 #endif
             if (z) {
-                z = SkScalarFastInvert(z);
+                z = 1 / z;
             }
 
             dst->fY = y * z;
@@ -1177,7 +1189,7 @@ void SkMatrix::Persp_xy(const SkMatrix& m, SkScalar sx, SkScalar sy,
     SkScalar y = sdot(sx, m.fMat[kMSkewY],  sy, m.fMat[kMScaleY]) + m.fMat[kMTransY];
     SkScalar z = sdot(sx, m.fMat[kMPersp0], sy, m.fMat[kMPersp1]) + m.fMat[kMPersp2];
     if (z) {
-        z = SkScalarFastInvert(z);
+        z = 1 / z;
     }
     pt->fX = x * z;
     pt->fY = y * z;

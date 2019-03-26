@@ -11,6 +11,7 @@
 
 #include "GrGLPath.h"
 #include "GrGLPathRendering.h"
+#include "GrRenderTargetProxy.h"
 
 #include "SkStream.h"
 #include "SkTypeface.h"
@@ -42,7 +43,7 @@ static GrGLenum gr_stencil_op_to_gl_path_rendering_fill_mode(GrStencilOp op) {
     switch (op) {
         default:
             SK_ABORT("Unexpected path fill.");
-            /* fallthrough */;
+            /* fallthrough */
         case GrStencilOp::kIncWrap:
             return GR_GL_COUNT_UP;
         case GrStencilOp::kInvert:
@@ -66,7 +67,7 @@ GrGLPathRendering::~GrGLPathRendering() {
 void GrGLPathRendering::disconnect(GrGpu::DisconnectType type) {
     if (GrGpu::DisconnectType::kCleanup == type) {
         this->deletePaths(fFirstPreallocatedPathID, fPreallocatedPathCount);
-    };
+    }
     fPreallocatedPathCount = 0;
 }
 
@@ -91,7 +92,7 @@ void GrGLPathRendering::onStencilPath(const StencilPathArgs& args, const GrPath*
     SkISize size = SkISize::Make(rt->width(), rt->height());
     this->setProjectionMatrix(*args.fViewMatrix, size, args.fProxy->origin());
     gpu->flushScissor(*args.fScissor, rt->getViewport(), args.fProxy->origin());
-    gpu->flushHWAAState(rt, args.fUseHWAA, true);
+    gpu->flushHWAAState(rt, args.fUseHWAA);
     gpu->flushRenderTarget(rt);
 
     const GrGLPath* glPath = static_cast<const GrGLPath*>(path);
@@ -111,12 +112,14 @@ void GrGLPathRendering::onStencilPath(const StencilPathArgs& args, const GrPath*
     }
 }
 
-void GrGLPathRendering::onDrawPath(const GrPrimitiveProcessor& primProc,
+void GrGLPathRendering::onDrawPath(GrRenderTarget* renderTarget, GrSurfaceOrigin origin,
+                                   const GrPrimitiveProcessor& primProc,
                                    const GrPipeline& pipeline,
                                    const GrPipeline::FixedDynamicState& fixedDynamicState,
                                    const GrStencilSettings& stencilPassSettings,
                                    const GrPath* path) {
-    if (!this->gpu()->flushGLState(primProc, pipeline, &fixedDynamicState, nullptr, 1, false)) {
+    if (!this->gpu()->flushGLState(renderTarget, origin, primProc, pipeline,
+                                   &fixedDynamicState, nullptr, 1, false)) {
         return;
     }
     const GrGLPath* glPath = static_cast<const GrGLPath*>(path);

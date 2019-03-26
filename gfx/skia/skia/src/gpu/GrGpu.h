@@ -17,12 +17,13 @@
 #include "GrTypes.h"
 #include "GrXferProcessor.h"
 #include "SkPath.h"
+#include "SkSurface.h"
 #include "SkTArray.h"
 #include <map>
 
 class GrBackendRenderTarget;
 class GrBackendSemaphore;
-class GrBuffer;
+class GrGpuBuffer;
 class GrContext;
 struct GrContextOptions;
 class GrGLContext;
@@ -104,13 +105,14 @@ public:
     /**
      * Implements GrResourceProvider::wrapBackendTexture
      */
-    sk_sp<GrTexture> wrapBackendTexture(const GrBackendTexture&, GrWrapOwnership);
+    sk_sp<GrTexture> wrapBackendTexture(const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable,
+                                        GrIOType);
 
     /**
      * Implements GrResourceProvider::wrapRenderableBackendTexture
      */
-    sk_sp<GrTexture> wrapRenderableBackendTexture(const GrBackendTexture&,
-                                                  int sampleCnt, GrWrapOwnership);
+    sk_sp<GrTexture> wrapRenderableBackendTexture(const GrBackendTexture&, int sampleCnt,
+                                                  GrWrapOwnership, GrWrapCacheable);
 
     /**
      * Implements GrResourceProvider::wrapBackendRenderTarget
@@ -124,6 +126,12 @@ public:
                                                            int sampleCnt);
 
     /**
+     * Implements GrResourceProvider::wrapVulkanSecondaryCBAsRenderTarget
+     */
+    sk_sp<GrRenderTarget> wrapVulkanSecondaryCBAsRenderTarget(const SkImageInfo&,
+                                                              const GrVkDrawableInfo&);
+
+    /**
      * Creates a buffer in GPU memory. For a client-side buffer use GrBuffer::CreateCPUBacked.
      *
      * @param size            size of buffer to create.
@@ -133,8 +141,8 @@ public:
      *
      * @return the buffer if successful, otherwise nullptr.
      */
-    GrBuffer* createBuffer(size_t size, GrBufferType intendedType, GrAccessPattern accessPattern,
-                           const void* data = nullptr);
+    sk_sp<GrGpuBuffer> createBuffer(size_t size, GrGpuBufferType intendedType,
+                                    GrAccessPattern accessPattern, const void* data = nullptr);
 
     /**
      * Resolves MSAA.
@@ -145,6 +153,11 @@ public:
      * Uses the base of the texture to recompute the contents of the other levels.
      */
     bool regenerateMipMapLevels(GrTexture*);
+
+    /**
+     * If the backend API has stateful texture bindings, this resets them back to defaults.
+     */
+    void resetTextureBindings();
 
     /**
      * Reads a rectangle of pixels from a render target. No sRGB/linear conversions are performed.
@@ -210,7 +223,7 @@ public:
      *                         means rows are tightly packed.
      */
     bool transferPixels(GrTexture* texture, int left, int top, int width, int height,
-                        GrColorType bufferColorType, GrBuffer* transferBuffer, size_t offset,
+                        GrColorType bufferColorType, GrGpuBuffer* transferBuffer, size_t offset,
                         size_t rowBytes);
 
     // After the client interacts directly with the 3D context state the GrGpu
@@ -240,9 +253,9 @@ public:
                      bool canDiscardOutsideDstRect = false);
 
     // Returns a GrGpuRTCommandBuffer which GrOpLists send draw commands to instead of directly
-    // to the Gpu object.
+    // to the Gpu object. The 'bounds' rect is the content rect of the destination.
     virtual GrGpuRTCommandBuffer* getCommandBuffer(
-            GrRenderTarget*, GrSurfaceOrigin,
+            GrRenderTarget*, GrSurfaceOrigin, const SkRect& bounds,
             const GrGpuRTCommandBuffer::LoadAndStoreInfo&,
             const GrGpuRTCommandBuffer::StencilLoadAndStoreInfo&) = 0;
 
@@ -254,7 +267,9 @@ public:
     // Provides a hook for post-flush actions (e.g. Vulkan command buffer submits). This will also
     // insert any numSemaphore semaphores on the gpu and set the backendSemaphores to match the
     // inserted semaphores.
-    GrSemaphoresSubmitted finishFlush(int numSemaphores, GrBackendSemaphore backendSemaphores[]);
+    GrSemaphoresSubmitted finishFlush(GrSurfaceProxy*, SkSurface::BackendSurfaceAccess access,
+                                      SkSurface::FlushFlags flags, int numSemaphores,
+                                      GrBackendSemaphore backendSemaphores[]);
 
     virtual void submit(GrGpuCommandBuffer*) = 0;
 
@@ -266,7 +281,7 @@ public:
     virtual sk_sp<GrSemaphore> wrapBackendSemaphore(const GrBackendSemaphore& semaphore,
                                                     GrResourceProvider::SemaphoreWrapType wrapType,
                                                     GrWrapOwnership ownership) = 0;
-    virtual void insertSemaphore(sk_sp<GrSemaphore> semaphore, bool flush = false) = 0;
+    virtual void insertSemaphore(sk_sp<GrSemaphore> semaphore) = 0;
     virtual void waitSemaphore(sk_sp<GrSemaphore> semaphore) = 0;
 
     /**
@@ -293,6 +308,7 @@ public:
             fStencilAttachmentCreates = 0;
             fNumDraws = 0;
             fNumFailedDraws = 0;
+            fNumFinishFlushes = 0;
         }
 
         int renderTargetBinds() const { return fRenderTargetBinds; }
@@ -308,10 +324,14 @@ public:
         void incStencilAttachmentCreates() { fStencilAttachmentCreates++; }
         void incNumDraws() { fNumDraws++; }
         void incNumFailedDraws() { ++fNumFailedDraws; }
+        void incNumFinishFlushes() { ++fNumFinishFlushes; }
+#if GR_TEST_UTILS
         void dump(SkString*);
         void dumpKeyValuePairs(SkTArray<SkString>* keys, SkTArray<double>* values);
+#endif
         int numDraws() const { return fNumDraws; }
         int numFailedDraws() const { return fNumFailedDraws; }
+        int numFinishFlushes() const { return fNumFinishFlushes; }
     private:
         int fRenderTargetBinds;
         int fShaderCompilations;
@@ -321,9 +341,13 @@ public:
         int fStencilAttachmentCreates;
         int fNumDraws;
         int fNumFailedDraws;
+        int fNumFinishFlushes;
 #else
+
+#if GR_TEST_UTILS
         void dump(SkString*) {}
         void dumpKeyValuePairs(SkTArray<SkString>*, SkTArray<double>*) {}
+#endif
         void incRenderTargetBinds() {}
         void incShaderCompilations() {}
         void incTextureCreates() {}
@@ -332,6 +356,7 @@ public:
         void incStencilAttachmentCreates() {}
         void incNumDraws() {}
         void incNumFailedDraws() {}
+        void incNumFinishFlushes() {}
 #endif
     };
 
@@ -405,6 +430,20 @@ public:
         }
     }
 
+    /**
+     * Returns a key that represents the sampler that will be created for the passed in parameters.
+     * Currently this key is only used when we are building a vulkan pipeline with immutable
+     * samplers. In that case, we need our cache key to also contain this key.
+     *
+     * A return value of 0 indicates that the program/pipeline we are creating is not affected by
+     * the sampler.
+     */
+    virtual uint32_t getExtraSamplerKeyForProgram(const GrSamplerState&, const GrBackendFormat&) {
+        return 0;
+    }
+
+    virtual void storeVkPipelineCacheData() {}
+
 protected:
     // Handles cases where a surface will be updated without a call to flushRenderTarget.
     void didWriteToSurface(GrSurface* surface, GrSurfaceOrigin origin, const SkIRect* bounds,
@@ -422,6 +461,9 @@ private:
     // assumed 3D context state and dirty any state cache.
     virtual void onResetContext(uint32_t resetBits) = 0;
 
+    // Implementation of resetTextureBindings.
+    virtual void onResetTextureBindings() {}
+
     // Called before certain draws in order to guarantee coherent results from dst reads.
     virtual void xferBarrier(GrRenderTarget*, GrXferBarrierType) = 0;
 
@@ -431,15 +473,18 @@ private:
     virtual sk_sp<GrTexture> onCreateTexture(const GrSurfaceDesc&, SkBudgeted,
                                              const GrMipLevel texels[], int mipLevelCount) = 0;
 
-    virtual sk_sp<GrTexture> onWrapBackendTexture(const GrBackendTexture&, GrWrapOwnership) = 0;
-    virtual sk_sp<GrTexture> onWrapRenderableBackendTexture(const GrBackendTexture&,
-                                                            int sampleCnt,
-                                                            GrWrapOwnership) = 0;
+    virtual sk_sp<GrTexture> onWrapBackendTexture(const GrBackendTexture&, GrWrapOwnership,
+                                                  GrWrapCacheable, GrIOType) = 0;
+    virtual sk_sp<GrTexture> onWrapRenderableBackendTexture(const GrBackendTexture&, int sampleCnt,
+                                                            GrWrapOwnership, GrWrapCacheable) = 0;
     virtual sk_sp<GrRenderTarget> onWrapBackendRenderTarget(const GrBackendRenderTarget&) = 0;
     virtual sk_sp<GrRenderTarget> onWrapBackendTextureAsRenderTarget(const GrBackendTexture&,
                                                                      int sampleCnt) = 0;
-    virtual GrBuffer* onCreateBuffer(size_t size, GrBufferType intendedType, GrAccessPattern,
-                                     const void* data) = 0;
+    virtual sk_sp<GrRenderTarget> onWrapVulkanSecondaryCBAsRenderTarget(const SkImageInfo&,
+                                                                        const GrVkDrawableInfo&);
+
+    virtual sk_sp<GrGpuBuffer> onCreateBuffer(size_t size, GrGpuBufferType intendedType,
+                                              GrAccessPattern, const void* data) = 0;
 
     // overridden by backend-specific derived class to perform the surface read
     virtual bool onReadPixels(GrSurface*, int left, int top, int width, int height, GrColorType,
@@ -451,7 +496,7 @@ private:
 
     // overridden by backend-specific derived class to perform the texture transfer
     virtual bool onTransferPixels(GrTexture*, int left, int top, int width, int height,
-                                  GrColorType colorType, GrBuffer* transferBuffer, size_t offset,
+                                  GrColorType colorType, GrGpuBuffer* transferBuffer, size_t offset,
                                   size_t rowBytes) = 0;
 
     // overridden by backend-specific derived class to perform the resolve
@@ -466,7 +511,8 @@ private:
                                const SkIRect& srcRect, const SkIPoint& dstPoint,
                                bool canDiscardOutsideDstRect) = 0;
 
-    virtual void onFinishFlush(bool insertedSemaphores) = 0;
+    virtual void onFinishFlush(GrSurfaceProxy*, SkSurface::BackendSurfaceAccess access,
+                               SkSurface::FlushFlags flags, bool insertedSemaphores) = 0;
 
 #ifdef SK_ENABLE_DUMP_GPU
     virtual void onDumpJSON(SkJSONWriter*) const {}

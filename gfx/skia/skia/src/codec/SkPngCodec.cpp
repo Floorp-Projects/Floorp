@@ -25,6 +25,10 @@
 #include "png.h"
 #include <algorithm>
 
+#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
+    #include "SkAndroidFrameworkUtils.h"
+#endif
+
 // This warning triggers false postives way too often in here.
 #if defined(__GNUC__) && !defined(__clang__)
     #pragma GCC diagnostic ignored "-Wclobbered"
@@ -195,7 +199,7 @@ bool SkPngCodec::processData() {
         case kPngError:
             // There was an error. Stop processing data.
             // FIXME: Do we need to discard png_ptr?
-            return false;;
+            return false;
         case kStopDecoding:
             // We decoded all the lines we want.
             return true;
@@ -478,6 +482,14 @@ void SkPngCodec::applyXformRow(void* dst, const void* src) {
     }
 }
 
+static SkCodec::Result log_and_return_error(bool success) {
+    if (success) return SkCodec::kIncompleteInput;
+#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
+    SkAndroidFrameworkUtils::SafetyNetLog("117838472");
+#endif
+    return SkCodec::kErrorInInput;
+}
+
 class SkPngNormalDecoder : public SkPngCodec {
 public:
     SkPngNormalDecoder(SkEncodedInfo&& info, std::unique_ptr<SkStream> stream,
@@ -524,19 +536,16 @@ private:
         fFirstRow = 0;
         fLastRow = height - 1;
 
-        if (!this->processData()) {
-            return kErrorInInput;
-        }
-
-        if (fRowsWrittenToOutput == height) {
-            return SkCodec::kSuccess;
+        const bool success = this->processData();
+        if (success && fRowsWrittenToOutput == height) {
+            return kSuccess;
         }
 
         if (rowsDecoded) {
             *rowsDecoded = fRowsWrittenToOutput;
         }
 
-        return SkCodec::kIncompleteInput;
+        return log_and_return_error(success);
     }
 
     void allRowsCallback(png_bytep row, int rowNum) {
@@ -556,25 +565,22 @@ private:
         fRowsNeeded = fLastRow - fFirstRow + 1;
     }
 
-    SkCodec::Result decode(int* rowsDecoded) override {
+    Result decode(int* rowsDecoded) override {
         if (this->swizzler()) {
             const int sampleY = this->swizzler()->sampleY();
             fRowsNeeded = get_scaled_dimension(fLastRow - fFirstRow + 1, sampleY);
         }
 
-        if (!this->processData()) {
-            return kErrorInInput;
-        }
-
-        if (fRowsWrittenToOutput == fRowsNeeded) {
-            return SkCodec::kSuccess;
+        const bool success = this->processData();
+        if (success && fRowsWrittenToOutput == fRowsNeeded) {
+            return kSuccess;
         }
 
         if (rowsDecoded) {
             *rowsDecoded = fRowsWrittenToOutput;
         }
 
-        return SkCodec::kIncompleteInput;
+        return log_and_return_error(success);
     }
 
     void rowCallback(png_bytep row, int rowNum) {
@@ -666,7 +672,7 @@ private:
         }
     }
 
-    SkCodec::Result decodeAllRows(void* dst, size_t rowBytes, int* rowsDecoded) override {
+    Result decodeAllRows(void* dst, size_t rowBytes, int* rowsDecoded) override {
         const int height = this->dimensions().height();
         this->setUpInterlaceBuffer(height);
         png_set_progressive_read_fn(this->png_ptr(), this, nullptr, InterlacedRowCallback,
@@ -676,10 +682,7 @@ private:
         fLastRow = height - 1;
         fLinesDecoded = 0;
 
-        if (!this->processData()) {
-            return kErrorInInput;
-        }
-
+        const bool success = this->processData();
         png_bytep srcRow = fInterlaceBuffer.get();
         // FIXME: When resuming, this may rewrite rows that did not change.
         for (int rowNum = 0; rowNum < fLinesDecoded; rowNum++) {
@@ -687,15 +690,15 @@ private:
             dst = SkTAddOffset<void>(dst, rowBytes);
             srcRow = SkTAddOffset<png_byte>(srcRow, fPng_rowbytes);
         }
-        if (fInterlacedComplete) {
-            return SkCodec::kSuccess;
+        if (success && fInterlacedComplete) {
+            return kSuccess;
         }
 
         if (rowsDecoded) {
             *rowsDecoded = fLinesDecoded;
         }
 
-        return SkCodec::kIncompleteInput;
+        return log_and_return_error(success);
     }
 
     void setRange(int firstRow, int lastRow, void* dst, size_t rowBytes) override {
@@ -709,45 +712,45 @@ private:
         fLinesDecoded = 0;
     }
 
-    SkCodec::Result decode(int* rowsDecoded) override {
-        if (this->processData() == false) {
-            return kErrorInInput;
-        }
+    Result decode(int* rowsDecoded) override {
+        const bool success = this->processData();
 
         // Now apply Xforms on all the rows that were decoded.
         if (!fLinesDecoded) {
             if (rowsDecoded) {
                 *rowsDecoded = 0;
             }
-            return SkCodec::kIncompleteInput;
+            return log_and_return_error(success);
         }
 
         const int sampleY = this->swizzler() ? this->swizzler()->sampleY() : 1;
         const int rowsNeeded = get_scaled_dimension(fLastRow - fFirstRow + 1, sampleY);
-        int rowsWrittenToOutput = 0;
 
         // FIXME: For resuming interlace, we may swizzle a row that hasn't changed. But it
         // may be too tricky/expensive to handle that correctly.
 
         // Offset srcRow by get_start_coord rows. We do not need to account for fFirstRow,
         // since the first row in fInterlaceBuffer corresponds to fFirstRow.
-        png_bytep srcRow = SkTAddOffset<png_byte>(fInterlaceBuffer.get(),
-                                                  fPng_rowbytes * get_start_coord(sampleY));
+        int srcRow = get_start_coord(sampleY);
         void* dst = fDst;
-        for (; rowsWrittenToOutput < rowsNeeded; rowsWrittenToOutput++) {
-            this->applyXformRow(dst, srcRow);
+        int rowsWrittenToOutput = 0;
+        while (rowsWrittenToOutput < rowsNeeded && srcRow < fLinesDecoded) {
+            png_bytep src = SkTAddOffset<png_byte>(fInterlaceBuffer.get(), fPng_rowbytes * srcRow);
+            this->applyXformRow(dst, src);
             dst = SkTAddOffset<void>(dst, fRowBytes);
-            srcRow = SkTAddOffset<png_byte>(srcRow, fPng_rowbytes * sampleY);
+
+            rowsWrittenToOutput++;
+            srcRow += sampleY;
         }
 
-        if (fInterlacedComplete) {
-            return SkCodec::kSuccess;
+        if (success && fInterlacedComplete) {
+            return kSuccess;
         }
 
         if (rowsDecoded) {
             *rowsDecoded = rowsWrittenToOutput;
         }
-        return SkCodec::kIncompleteInput;
+        return log_and_return_error(success);
     }
 
     void setUpInterlaceBuffer(int height) {
@@ -1075,9 +1078,31 @@ void SkPngCodec::initializeSwizzler(const SkImageInfo& dstInfo, const Options& o
         swizzlerOptions.fZeroInitialized = kNo_ZeroInitialized;
     }
 
-    const SkPMColor* colors = get_color_ptr(fColorTable.get());
-    fSwizzler.reset(SkSwizzler::CreateSwizzler(this->getEncodedInfo(), colors, swizzlerInfo,
-                                               swizzlerOptions, nullptr, skipFormatConversion));
+    if (skipFormatConversion) {
+        // We cannot skip format conversion when there is a color table.
+        SkASSERT(!fColorTable);
+        int srcBPP = 0;
+        switch (this->getEncodedInfo().color()) {
+            case SkEncodedInfo::kRGB_Color:
+                SkASSERT(this->getEncodedInfo().bitsPerComponent() == 16);
+                srcBPP = 6;
+                break;
+            case SkEncodedInfo::kRGBA_Color:
+                srcBPP = this->getEncodedInfo().bitsPerComponent() / 2;
+                break;
+            case SkEncodedInfo::kGray_Color:
+                srcBPP = 1;
+                break;
+            default:
+                SkASSERT(false);
+                break;
+        }
+        fSwizzler = SkSwizzler::MakeSimple(srcBPP, swizzlerInfo, swizzlerOptions);
+    } else {
+        const SkPMColor* colors = get_color_ptr(fColorTable.get());
+        fSwizzler = SkSwizzler::Make(this->getEncodedInfo(), colors, swizzlerInfo,
+                                     swizzlerOptions);
+    }
     SkASSERT(fSwizzler);
 }
 

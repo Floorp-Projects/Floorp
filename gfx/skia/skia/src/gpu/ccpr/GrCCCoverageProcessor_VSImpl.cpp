@@ -268,7 +268,8 @@ void GrCCCoverageProcessor::VSImpl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs)
         SkASSERT(3 == numInputPoints);
         SkASSERT(kFloat4_GrVertexAttribType ==
                  proc.fInstanceAttributes[kInstanceAttribIdx_X].cpuType());
-        v->codeAppendf("wind *= %s.w;", proc.fInstanceAttributes[kInstanceAttribIdx_X].name());
+        v->codeAppendf("wind *= half(%s.w);",
+                       proc.fInstanceAttributes[kInstanceAttribIdx_X].name());
     }
 
     float bloat = kAABloatRadius;
@@ -360,7 +361,7 @@ void GrCCCoverageProcessor::VSImpl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs)
                            // fallthru.
     v->codeAppend ("}");
 
-    v->codeAppend ("float2 vertex = corner + bloatdir * bloat;");
+    v->codeAppend ("float2 vertex = fma(bloatdir, float2(bloat), corner);");
     gpArgs->fPositionVar.set(kFloat2_GrSLType, "vertex");
 
     // Hulls have a coverage of +1 all around.
@@ -449,19 +450,19 @@ void GrCCCoverageProcessor::initVS(GrResourceProvider* rp) {
         case PrimitiveType::kTriangles:
         case PrimitiveType::kWeightedTriangles: {
             GR_DEFINE_STATIC_UNIQUE_KEY(gTriangleVertexBufferKey);
-            fVSVertexBuffer = rp->findOrMakeStaticBuffer(kVertex_GrBufferType,
+            fVSVertexBuffer = rp->findOrMakeStaticBuffer(GrGpuBufferType::kVertex,
                                                          sizeof(kTriangleVertices),
                                                          kTriangleVertices,
                                                          gTriangleVertexBufferKey);
             GR_DEFINE_STATIC_UNIQUE_KEY(gTriangleIndexBufferKey);
             if (caps.usePrimitiveRestart()) {
-                fVSIndexBuffer = rp->findOrMakeStaticBuffer(kIndex_GrBufferType,
+                fVSIndexBuffer = rp->findOrMakeStaticBuffer(GrGpuBufferType::kIndex,
                                                             sizeof(kTriangleIndicesAsStrips),
                                                             kTriangleIndicesAsStrips,
                                                             gTriangleIndexBufferKey);
                 fVSNumIndicesPerInstance = SK_ARRAY_COUNT(kTriangleIndicesAsStrips);
             } else {
-                fVSIndexBuffer = rp->findOrMakeStaticBuffer(kIndex_GrBufferType,
+                fVSIndexBuffer = rp->findOrMakeStaticBuffer(GrGpuBufferType::kIndex,
                                                             sizeof(kTriangleIndicesAsTris),
                                                             kTriangleIndicesAsTris,
                                                             gTriangleIndexBufferKey);
@@ -474,18 +475,18 @@ void GrCCCoverageProcessor::initVS(GrResourceProvider* rp) {
         case PrimitiveType::kCubics:
         case PrimitiveType::kConics: {
             GR_DEFINE_STATIC_UNIQUE_KEY(gCurveVertexBufferKey);
-            fVSVertexBuffer = rp->findOrMakeStaticBuffer(kVertex_GrBufferType,
-                                                         sizeof(kCurveVertices), kCurveVertices,
-                                                         gCurveVertexBufferKey);
+            fVSVertexBuffer =
+                    rp->findOrMakeStaticBuffer(GrGpuBufferType::kVertex, sizeof(kCurveVertices),
+                                               kCurveVertices, gCurveVertexBufferKey);
             GR_DEFINE_STATIC_UNIQUE_KEY(gCurveIndexBufferKey);
             if (caps.usePrimitiveRestart()) {
-                fVSIndexBuffer = rp->findOrMakeStaticBuffer(kIndex_GrBufferType,
+                fVSIndexBuffer = rp->findOrMakeStaticBuffer(GrGpuBufferType::kIndex,
                                                             sizeof(kCurveIndicesAsStrips),
                                                             kCurveIndicesAsStrips,
                                                             gCurveIndexBufferKey);
                 fVSNumIndicesPerInstance = SK_ARRAY_COUNT(kCurveIndicesAsStrips);
             } else {
-                fVSIndexBuffer = rp->findOrMakeStaticBuffer(kIndex_GrBufferType,
+                fVSIndexBuffer = rp->findOrMakeStaticBuffer(GrGpuBufferType::kIndex,
                                                             sizeof(kCurveIndicesAsTris),
                                                             kCurveIndicesAsTris,
                                                             gCurveIndexBufferKey);
@@ -516,9 +517,9 @@ void GrCCCoverageProcessor::initVS(GrResourceProvider* rp) {
     }
     fInstanceAttributes[kInstanceAttribIdx_X] = {"X", xyAttribType, xySLType};
     fInstanceAttributes[kInstanceAttribIdx_Y] = {"Y", xyAttribType, xySLType};
-    this->setInstanceAttributeCnt(2);
+    this->setInstanceAttributes(fInstanceAttributes, 2);
     fVertexAttribute = {"vertexdata", kInt_GrVertexAttribType, kInt_GrSLType};
-    this->setVertexAttributeCnt(1);
+    this->setVertexAttributes(&fVertexAttribute, 1);
 
     if (caps.usePrimitiveRestart()) {
         fVSTriangleType = GrPrimitiveType::kTriangleStrip;
@@ -527,14 +528,14 @@ void GrCCCoverageProcessor::initVS(GrResourceProvider* rp) {
     }
 }
 
-void GrCCCoverageProcessor::appendVSMesh(GrBuffer* instanceBuffer, int instanceCount,
+void GrCCCoverageProcessor::appendVSMesh(sk_sp<const GrGpuBuffer> instanceBuffer, int instanceCount,
                                          int baseInstance, SkTArray<GrMesh>* out) const {
     SkASSERT(Impl::kVertexShader == fImpl);
     GrMesh& mesh = out->emplace_back(fVSTriangleType);
     auto primitiveRestart = GrPrimitiveRestart(GrPrimitiveType::kTriangleStrip == fVSTriangleType);
-    mesh.setIndexedInstanced(fVSIndexBuffer.get(), fVSNumIndicesPerInstance, instanceBuffer,
+    mesh.setIndexedInstanced(fVSIndexBuffer, fVSNumIndicesPerInstance, std::move(instanceBuffer),
                              instanceCount, baseInstance, primitiveRestart);
-    mesh.setVertexData(fVSVertexBuffer.get(), 0);
+    mesh.setVertexData(fVSVertexBuffer, 0);
 }
 
 GrGLSLPrimitiveProcessor* GrCCCoverageProcessor::createVSImpl(std::unique_ptr<Shader> shadr) const {

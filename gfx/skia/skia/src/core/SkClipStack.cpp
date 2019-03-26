@@ -5,19 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "SkAtomics.h"
 #include "SkCanvas.h"
 #include "SkClipStack.h"
 #include "SkPath.h"
 #include "SkPathOps.h"
 #include "SkClipOpPriv.h"
-
+#include <atomic>
 #include <new>
 
-
-// 0-2 are reserved for invalid, empty & wide-open
-static const int32_t kFirstUnreservedGenID = 3;
-int32_t SkClipStack::gGenID = kFirstUnreservedGenID;
+#if SK_SUPPORT_GPU
+#include "GrProxyProvider.h"
+#endif
 
 SkClipStack::Element::Element(const Element& that) {
     switch (that.getDeviceSpaceType()) {
@@ -43,6 +41,15 @@ SkClipStack::Element::Element(const Element& that) {
     fFiniteBound = that.fFiniteBound;
     fIsIntersectionOfRects = that.fIsIntersectionOfRects;
     fGenID = that.fGenID;
+}
+
+SkClipStack::Element::~Element() {
+#if SK_SUPPORT_GPU
+    for (int i = 0; i < fKeysToInvalidate.count(); ++i) {
+        fProxyProvider->processInvalidUniqueKey(fKeysToInvalidate[i], nullptr,
+                                                GrProxyProvider::InvalidateGPUResource::kYes);
+    }
+#endif
 }
 
 bool SkClipStack::Element::operator== (const Element& element) const {
@@ -498,13 +505,6 @@ void SkClipStack::Element::updateBoundAndGenID(const Element* prior) {
         case DeviceSpaceType::kEmpty:
             SkDEBUGFAIL("We shouldn't get here with an empty element.");
             break;
-    }
-
-    if (!fDoAA) {
-        fFiniteBound.set(SkScalarRoundToScalar(fFiniteBound.fLeft),
-                         SkScalarRoundToScalar(fFiniteBound.fTop),
-                         SkScalarRoundToScalar(fFiniteBound.fRight),
-                         SkScalarRoundToScalar(fFiniteBound.fBottom));
     }
 
     // Now determine the previous Element's bound information taking into
@@ -1004,9 +1004,13 @@ bool SkClipStack::isRRect(const SkRect& bounds, SkRRect* rrect, bool* aa) const 
 }
 
 uint32_t SkClipStack::GetNextGenID() {
+    // 0-2 are reserved for invalid, empty & wide-open
+    static const uint32_t kFirstUnreservedGenID = 3;
+    static std::atomic<uint32_t> nextID{kFirstUnreservedGenID};
+
     uint32_t id;
     do {
-        id = static_cast<uint32_t>(sk_atomic_inc(&gGenID));
+        id = nextID++;
     } while (id < kFirstUnreservedGenID);
     return id;
 }

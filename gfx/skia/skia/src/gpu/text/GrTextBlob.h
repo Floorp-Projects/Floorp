@@ -10,8 +10,9 @@
 
 #include "GrColor.h"
 #include "GrDrawOpAtlas.h"
-#include "GrGlyphCache.h"
+#include "GrStrikeCache.h"
 #include "GrTextTarget.h"
+#include "text/GrTextContext.h"
 #include "SkDescriptor.h"
 #include "SkMaskFilterBase.h"
 #include "SkOpts.h"
@@ -48,12 +49,26 @@ class SkTextBlobRunIterator;
  * *WARNING* If you add new fields to this struct, then you may need to to update AssertEqual
  */
 class GrTextBlob : public SkNVRefCnt<GrTextBlob> {
+    struct Run;
 public:
     SK_DECLARE_INTERNAL_LLIST_INTERFACE(GrTextBlob);
 
     class VertexRegenerator;
 
-    static sk_sp<GrTextBlob> Make(int glyphCount, int runCount);
+    void generateFromGlyphRunList(const GrShaderCaps& shaderCaps,
+                                  const GrTextContext::Options& options,
+                                  const SkPaint& paint,
+                                  SkScalerContextFlags scalerContextFlags,
+                                  const SkMatrix& viewMatrix,
+                                  const SkSurfaceProps& props,
+                                  const SkGlyphRunList& glyphRunList,
+                                  SkGlyphRunListPainter* glyphPainter);
+
+    static sk_sp<GrTextBlob> Make(
+            int glyphCount,
+            int runCount,
+            GrColor color,
+            GrStrikeCache* strikeCache);
 
     /**
      * We currently force regeneration of a blob if old or new matrix differ in having perspective.
@@ -119,70 +134,27 @@ public:
     void setHasDistanceField() { fTextType |= kHasDistanceField_TextType; }
     void setHasBitmap() { fTextType |= kHasBitmap_TextType; }
 
-    int runCount() const { return fRunCount; }
+    int runCountLimit() const { return fRunCountLimit; }
 
-    void push_back_run(int currRun) {
-        SkASSERT(currRun < fRunCount);
-        if (currRun > 0) {
-            Run::SubRunInfo& newRun = fRuns[currRun].fSubRunInfo.back();
-            Run::SubRunInfo& lastRun = fRuns[currRun - 1].fSubRunInfo.back();
+    Run* pushBackRun() {
+        SkASSERT(fRunCount < fRunCountLimit);
+
+        // If there is more run, then connect up the subruns.
+        if (fRunCount > 0) {
+            SubRun& newRun = fRuns[fRunCount].fSubRunInfo.back();
+            SubRun& lastRun = fRuns[fRunCount - 1].fSubRunInfo.back();
             newRun.setAsSuccessor(lastRun);
         }
+
+        fRunCount++;
+        return this->currentRun();
     }
 
-    // sets the last subrun of runIndex to use distance field text
-    void setSubRunHasDistanceFields(int runIndex, bool hasLCD, bool isAntiAlias, bool hasWCoord) {
-        Run& run = fRuns[runIndex];
-        Run::SubRunInfo& subRun = run.fSubRunInfo.back();
-        subRun.setUseLCDText(hasLCD);
-        subRun.setAntiAliased(isAntiAlias);
-        subRun.setDrawAsDistanceFields();
-        subRun.setHasWCoord(hasWCoord);
-    }
-
-    // sets the last subrun of runIndex to use w values
-    void setSubRunHasW(int runIndex, bool hasWCoord) {
-        Run& run = fRuns[runIndex];
-        Run::SubRunInfo& subRun = run.fSubRunInfo.back();
-        subRun.setHasWCoord(hasWCoord);
-    }
-
-    void setRunPaintFlags(int runIndex, uint16_t paintFlags) {
-        fRuns[runIndex].fPaintFlags = paintFlags & Run::kPaintFlagsMask;
-    }
-
-    void setMinAndMaxScale(SkScalar scaledMax, SkScalar scaledMin) {
+    void setMinAndMaxScale(SkScalar scaledMin, SkScalar scaledMax) {
         // we init fMaxMinScale and fMinMaxScale in the constructor
-        fMaxMinScale = SkMaxScalar(scaledMax, fMaxMinScale);
-        fMinMaxScale = SkMinScalar(scaledMin, fMinMaxScale);
+        fMaxMinScale = SkMaxScalar(scaledMin, fMaxMinScale);
+        fMinMaxScale = SkMinScalar(scaledMax, fMinMaxScale);
     }
-
-    // inits the override descriptor on the current run.  All following subruns must use this
-    // descriptor
-    void initOverride(int runIndex) {
-        Run& run = fRuns[runIndex];
-        // Push back a new subrun to fill and set the override descriptor
-        run.push_back();
-        run.fOverrideDescriptor.reset(new SkAutoDescriptor);
-    }
-
-    SkExclusiveStrikePtr setupCache(int runIndex,
-                                    const SkSurfaceProps& props,
-                                    SkScalerContextFlags scalerContextFlags,
-                                    const SkPaint& skPaint,
-                                    const SkMatrix* viewMatrix);
-
-    // Appends a glyph to the blob.  If the glyph is too large, the glyph will be appended
-    // as a path.
-    void appendGlyph(int runIndex,
-                     const SkRect& positions,
-                     GrColor color,
-                     const sk_sp<GrTextStrike>& strike,
-                     GrGlyph* glyph, bool preTransformed);
-
-    // Appends a glyph to the blob as a path only.
-    void appendPathGlyph(int runIndex, const SkPath& path,
-                         SkScalar x, SkScalar y, SkScalar scale, bool preTransformed);
 
     static size_t GetVertexStride(GrMaskFormat maskFormat, bool hasWCoord) {
         switch (maskFormat) {
@@ -196,12 +168,12 @@ public:
         }
     }
 
-    bool mustRegenerate(const SkPaint&, const SkMaskFilterBase::BlurRec& blurRec,
+    bool mustRegenerate(const SkPaint&, bool, const SkMaskFilterBase::BlurRec& blurRec,
                         const SkMatrix& viewMatrix, SkScalar x, SkScalar y);
 
     void flush(GrTextTarget*, const SkSurfaceProps& props,
                const GrDistanceFieldAdjustTable* distanceAdjustTable,
-               const SkPaint& paint, GrColor filteredColor, const GrClip& clip,
+               const SkPaint& paint, const SkPMColor4f& filteredColor, const GrClip& clip,
                const SkMatrix& viewMatrix, SkScalar x, SkScalar y);
 
     void computeSubRunBounds(SkRect* outBounds, int runIndex, int subRunIndex,
@@ -213,7 +185,7 @@ public:
         // the vertex bounds of bitmap text are in device space.  If we are flushing multiple runs
         // from one blob then we are going to pay the price here of mapping the rect for each run.
         const Run& run = fRuns[runIndex];
-        const Run::SubRunInfo& subRun = run.fSubRunInfo[subRunIndex];
+        const SubRun& subRun = run.fSubRunInfo[subRunIndex];
         *outBounds = subRun.vertexBounds();
         if (needsGlyphTransform) {
             // Distance field text is positioned with the (X,Y) as part of the glyph position,
@@ -267,7 +239,7 @@ public:
     size_t size() const { return fSize; }
 
     ~GrTextBlob() {
-        for (int i = 0; i < fRunCount; i++) {
+        for (int i = 0; i < fRunCountLimit; i++) {
             fRuns[i].~Run();
         }
     }
@@ -276,16 +248,12 @@ public:
     // Internal test methods
     std::unique_ptr<GrDrawOp> test_makeOp(int glyphCount, uint16_t run, uint16_t subRun,
                                           const SkMatrix& viewMatrix, SkScalar x, SkScalar y,
-                                          const SkPaint& paint, GrColor filteredColor,
+                                          const SkPaint& paint, const SkPMColor4f& filteredColor,
                                           const SkSurfaceProps&, const GrDistanceFieldAdjustTable*,
                                           GrTextTarget*);
 
 private:
-    GrTextBlob()
-        : fMaxMinScale(-SK_ScalarMax)
-        , fMinMaxScale(SK_ScalarMax)
-        , fTextType(0) {}
-
+    GrTextBlob(GrStrikeCache* strikeCache) : fStrikeCache{strikeCache} { }
 
     // This function will only be called when we are generating a blob from scratch. We record the
     // initial view matrix and initial offsets(x,y), because we record vertex bounds relative to
@@ -300,10 +268,113 @@ private:
         fInitialY = y;
 
         // make sure all initial subruns have the correct VM and X/Y applied
-        for (int i = 0; i < fRunCount; i++) {
+        for (int i = 0; i < fRunCountLimit; i++) {
             fRuns[i].fSubRunInfo[0].init(fInitialViewMatrix, x, y);
         }
     }
+
+    class SubRun {
+    public:
+        SubRun(Run* run, const SkAutoDescriptor& desc, GrColor color)
+            : fColor{color}
+            , fRun{run}
+            , fDesc{desc} {}
+
+        // When used with emplace_back, this constructs a SubRun from the last SubRun in an array.
+        //SubRun(SkSTArray<1, SubRun>* subRunList)
+        //    : fColor{subRunList->fromBack(1).fColor} { }
+
+        void appendGlyph(GrGlyph* glyph, SkRect dstRect);
+
+        // TODO when this object is more internal, drop the privacy
+        void resetBulkUseToken() { fBulkUseToken.reset(); }
+        GrDrawOpAtlas::BulkUseTokenUpdater* bulkUseToken() { return &fBulkUseToken; }
+        void setStrike(sk_sp<GrTextStrike> strike) { fStrike = std::move(strike); }
+        GrTextStrike* strike() const { return fStrike.get(); }
+        sk_sp<GrTextStrike> refStrike() const { return fStrike; }
+
+        void setAtlasGeneration(uint64_t atlasGeneration) { fAtlasGeneration = atlasGeneration;}
+        uint64_t atlasGeneration() const { return fAtlasGeneration; }
+
+        size_t byteCount() const { return fVertexEndIndex - fVertexStartIndex; }
+        size_t vertexStartIndex() const { return fVertexStartIndex; }
+        size_t vertexEndIndex() const { return fVertexEndIndex; }
+
+        uint32_t glyphCount() const { return fGlyphEndIndex - fGlyphStartIndex; }
+        uint32_t glyphStartIndex() const { return fGlyphStartIndex; }
+        uint32_t glyphEndIndex() const { return fGlyphEndIndex; }
+        void setColor(GrColor color) { fColor = color; }
+        GrColor color() const { return fColor; }
+        void setMaskFormat(GrMaskFormat format) { fMaskFormat = format; }
+        GrMaskFormat maskFormat() const { return fMaskFormat; }
+
+        void setAsSuccessor(const SubRun& prev) {
+            fGlyphStartIndex = prev.glyphEndIndex();
+            fGlyphEndIndex = fGlyphStartIndex;
+
+            fVertexStartIndex = prev.vertexEndIndex();
+            fVertexEndIndex = fVertexStartIndex;
+
+            // copy over viewmatrix settings
+            this->init(prev.fCurrentViewMatrix, prev.fX, prev.fY);
+        }
+
+        const SkRect& vertexBounds() const { return fVertexBounds; }
+        void joinGlyphBounds(const SkRect& glyphBounds) {
+            fVertexBounds.joinNonEmptyArg(glyphBounds);
+        }
+
+        void init(const SkMatrix& viewMatrix, SkScalar x, SkScalar y) {
+            fCurrentViewMatrix = viewMatrix;
+            fX = x;
+            fY = y;
+        }
+
+        // This function assumes the translation will be applied before it is called again
+        void computeTranslation(const SkMatrix& viewMatrix, SkScalar x, SkScalar y,
+                                SkScalar* transX, SkScalar* transY);
+
+        // df properties
+        void setDrawAsDistanceFields() { fFlags.drawAsSdf = true; }
+        bool drawAsDistanceFields() const { return fFlags.drawAsSdf; }
+        void setUseLCDText(bool useLCDText) { fFlags.useLCDText = useLCDText; }
+        bool hasUseLCDText() const { return fFlags.useLCDText; }
+        void setAntiAliased(bool antiAliased) { fFlags.antiAliased = antiAliased; }
+        bool isAntiAliased() const { return fFlags.antiAliased; }
+        void setHasWCoord(bool hasW) { fFlags.hasWCoord = hasW; }
+        bool hasWCoord() const { return fFlags.hasWCoord; }
+        void setNeedsTransform(bool needsTransform) { fFlags.needsTransform = needsTransform; }
+        bool needsTransform() const { return fFlags.needsTransform; }
+        void setFallback() { fFlags.argbFallback = true; }
+        bool isFallback() { return fFlags.argbFallback; }
+
+        const SkDescriptor* desc() const { return fDesc.getDesc(); }
+
+    private:
+        GrDrawOpAtlas::BulkUseTokenUpdater fBulkUseToken;
+        sk_sp<GrTextStrike> fStrike;
+        SkMatrix fCurrentViewMatrix;
+        SkRect fVertexBounds = SkRectPriv::MakeLargestInverted();
+        uint64_t fAtlasGeneration{GrDrawOpAtlas::kInvalidAtlasGeneration};
+        size_t fVertexStartIndex{0};
+        size_t fVertexEndIndex{0};
+        uint32_t fGlyphStartIndex{0};
+        uint32_t fGlyphEndIndex{0};
+        SkScalar fX;
+        SkScalar fY;
+        GrColor fColor{GrColor_ILLEGAL};
+        GrMaskFormat fMaskFormat{kA8_GrMaskFormat};
+        struct {
+            bool drawAsSdf:1;
+            bool useLCDText:1;
+            bool antiAliased:1;
+            bool hasWCoord:1;
+            bool needsTransform:1;
+            bool argbFallback:1;
+        } fFlags{false, false, false, false, false, false};
+        Run* const fRun;
+        const SkAutoDescriptor& fDesc;
+    };  // SubRunInfo
 
     /*
      * Each Run inside of the blob can have its texture coordinates regenerated if required.
@@ -329,160 +400,76 @@ private:
      * would greatly increase the memory of these cached items.
      */
     struct Run {
-        Run() : fPaintFlags(0)
-              , fInitialized(false) {
+        explicit Run(GrTextBlob* blob, GrColor color)
+        : fBlob{blob}, fColor{color} {
             // To ensure we always have one subrun, we push back a fresh run here
-            fSubRunInfo.push_back();
+            fSubRunInfo.emplace_back(this, fDescriptor, color);
         }
-        struct SubRunInfo {
-            SubRunInfo()
-                    : fAtlasGeneration(GrDrawOpAtlas::kInvalidAtlasGeneration)
-                    , fVertexStartIndex(0)
-                    , fVertexEndIndex(0)
-                    , fGlyphStartIndex(0)
-                    , fGlyphEndIndex(0)
-                    , fColor(GrColor_ILLEGAL)
-                    , fMaskFormat(kA8_GrMaskFormat)
-                    , fFlags(0) {
-                fVertexBounds = SkRectPriv::MakeLargestInverted();
-            }
-            SubRunInfo(const SubRunInfo& that)
-                : fBulkUseToken(that.fBulkUseToken)
-                , fStrike(SkSafeRef(that.fStrike.get()))
-                , fCurrentViewMatrix(that.fCurrentViewMatrix)
-                , fVertexBounds(that.fVertexBounds)
-                , fAtlasGeneration(that.fAtlasGeneration)
-                , fVertexStartIndex(that.fVertexStartIndex)
-                , fVertexEndIndex(that.fVertexEndIndex)
-                , fGlyphStartIndex(that.fGlyphStartIndex)
-                , fGlyphEndIndex(that.fGlyphEndIndex)
-                , fX(that.fX)
-                , fY(that.fY)
-                , fColor(that.fColor)
-                , fMaskFormat(that.fMaskFormat)
-                , fFlags(that.fFlags) {
-            }
 
-            // TODO when this object is more internal, drop the privacy
-            void resetBulkUseToken() { fBulkUseToken.reset(); }
-            GrDrawOpAtlas::BulkUseTokenUpdater* bulkUseToken() { return &fBulkUseToken; }
-            void setStrike(sk_sp<GrTextStrike> strike) { fStrike = std::move(strike); }
-            GrTextStrike* strike() const { return fStrike.get(); }
-            sk_sp<GrTextStrike> refStrike() const { return fStrike; }
+        // sets the last subrun of runIndex to use w values
+        void setSubRunHasW(bool hasWCoord) {
+            SubRun& subRun = this->fSubRunInfo.back();
+            subRun.setHasWCoord(hasWCoord);
+        }
 
-            void setAtlasGeneration(uint64_t atlasGeneration) { fAtlasGeneration = atlasGeneration;}
-            uint64_t atlasGeneration() const { return fAtlasGeneration; }
+        // inits the override descriptor on the current run.  All following subruns must use this
+        // descriptor
+        SubRun* initARGBFallback() {
+            fARGBFallbackDescriptor.reset(new SkAutoDescriptor{});
+            // Push back a new subrun to fill and set the override descriptor
+            SubRun* subRun = this->pushBackSubRun(*fARGBFallbackDescriptor, fColor);
+            subRun->setMaskFormat(kARGB_GrMaskFormat);
+            subRun->setFallback();
+            return subRun;
+        }
 
-            size_t byteCount() const { return fVertexEndIndex - fVertexStartIndex; }
-            size_t vertexStartIndex() const { return fVertexStartIndex; }
-            size_t vertexEndIndex() const { return fVertexEndIndex; }
-            void appendVertices(size_t vertexStride) {
-                fVertexEndIndex += vertexStride * kVerticesPerGlyph;
-            }
+        // Appends a glyph to the blob as a path only.
+        void appendPathGlyph(
+                const SkPath& path, SkPoint position, SkScalar scale, bool preTransformed);
 
-            uint32_t glyphCount() const { return fGlyphEndIndex - fGlyphStartIndex; }
-            uint32_t glyphStartIndex() const { return fGlyphStartIndex; }
-            uint32_t glyphEndIndex() const { return fGlyphEndIndex; }
-            void glyphAppended() { fGlyphEndIndex++; }
-            void setColor(GrColor color) { fColor = color; }
-            GrColor color() const { return fColor; }
-            void setMaskFormat(GrMaskFormat format) { fMaskFormat = format; }
-            GrMaskFormat maskFormat() const { return fMaskFormat; }
+        // Append a glyph to the sub run taking care to switch the glyph if needed.
+        void switchSubRunIfNeededAndAppendGlyph(GrGlyph* glyph,
+                                                const sk_sp<GrTextStrike>& strike,
+                                                const SkRect& destRect,
+                                                bool needsTransform);
 
-            void setAsSuccessor(const SubRunInfo& prev) {
-                fGlyphStartIndex = prev.glyphEndIndex();
-                fGlyphEndIndex = prev.glyphEndIndex();
+        // Used when the glyph in the cache has the CTM already applied, therefore no transform
+        // is needed during rendering.
+        void appendDeviceSpaceGlyph(const sk_sp<GrTextStrike>& strike,
+                                    const SkGlyph& skGlyph,
+                                    SkPoint origin);
 
-                fVertexStartIndex = prev.vertexEndIndex();
-                fVertexEndIndex = prev.vertexEndIndex();
+        // The glyph is oriented upright in the cache and needs to be transformed onto the screen.
+        void appendSourceSpaceGlyph(const sk_sp<GrTextStrike>& strike,
+                                    const SkGlyph& skGlyph,
+                                    SkPoint origin,
+                                    SkScalar textScale);
 
-                // copy over viewmatrix settings
-                this->init(prev.fCurrentViewMatrix, prev.fX, prev.fY);
-            }
+        void setupFont(const SkStrikeSpec& strikeSpec);
 
-            const SkRect& vertexBounds() const { return fVertexBounds; }
-            void joinGlyphBounds(const SkRect& glyphBounds) {
-                fVertexBounds.joinNonEmptyArg(glyphBounds);
-            }
+        void setRunFontAntiAlias(bool aa) {
+            fAntiAlias = aa;
+        }
 
-            void init(const SkMatrix& viewMatrix, SkScalar x, SkScalar y) {
-                fCurrentViewMatrix = viewMatrix;
-                fX = x;
-                fY = y;
-            }
+        // sets the last subrun of runIndex to use distance field text
+        void setSubRunHasDistanceFields(bool hasLCD, bool isAntiAlias, bool hasWCoord) {
+            SubRun& subRun = fSubRunInfo.back();
+            subRun.setUseLCDText(hasLCD);
+            subRun.setAntiAliased(isAntiAlias);
+            subRun.setDrawAsDistanceFields();
+            subRun.setHasWCoord(hasWCoord);
+        }
 
-            // This function assumes the translation will be applied before it is called again
-            void computeTranslation(const SkMatrix& viewMatrix, SkScalar x, SkScalar y,
-                                    SkScalar* transX, SkScalar* transY);
-
-            // df properties
-            void setDrawAsDistanceFields() { fFlags |= kDrawAsSDF_Flag; }
-            bool drawAsDistanceFields() const { return SkToBool(fFlags & kDrawAsSDF_Flag); }
-            void setUseLCDText(bool useLCDText) {
-                fFlags = useLCDText ? fFlags | kUseLCDText_Flag : fFlags & ~kUseLCDText_Flag;
-            }
-            bool hasUseLCDText() const { return SkToBool(fFlags & kUseLCDText_Flag); }
-            void setAntiAliased(bool antiAliased) {
-                fFlags = antiAliased ? fFlags | kAntiAliased_Flag : fFlags & ~kAntiAliased_Flag;
-            }
-            bool isAntiAliased() const { return SkToBool(fFlags & kAntiAliased_Flag); }
-            void setHasWCoord(bool hasW) {
-                fFlags  = hasW ? (fFlags | kHasWCoord_Flag) : fFlags & ~kHasWCoord_Flag;
-            }
-            bool hasWCoord() const { return SkToBool(fFlags & kHasWCoord_Flag); }
-            void setNeedsTransform(bool needsTransform) {
-                fFlags  = needsTransform ? (fFlags | kNeedsTransform_Flag)
-                                          : fFlags & ~kNeedsTransform_Flag;
-            }
-            bool needsTransform() const { return SkToBool(fFlags & kNeedsTransform_Flag); }
-
-        private:
-            enum Flag {
-                kDrawAsSDF_Flag = 0x01,
-                kUseLCDText_Flag = 0x02,
-                kAntiAliased_Flag = 0x04,
-                kHasWCoord_Flag = 0x08,
-                kNeedsTransform_Flag = 0x10
-            };
-
-            GrDrawOpAtlas::BulkUseTokenUpdater fBulkUseToken;
-            sk_sp<GrTextStrike> fStrike;
-            SkMatrix fCurrentViewMatrix;
-            SkRect fVertexBounds;
-            uint64_t fAtlasGeneration;
-            size_t fVertexStartIndex;
-            size_t fVertexEndIndex;
-            uint32_t fGlyphStartIndex;
-            uint32_t fGlyphEndIndex;
-            SkScalar fX;
-            SkScalar fY;
-            GrColor fColor;
-            GrMaskFormat fMaskFormat;
-            uint32_t fFlags;
-        };  // SubRunInfo
-
-        SubRunInfo& push_back() {
+        SubRun* pushBackSubRun(const SkAutoDescriptor& desc, GrColor color) {
             // Forward glyph / vertex information to seed the new sub run
-            SubRunInfo& newSubRun = fSubRunInfo.push_back();
-            const SubRunInfo& prevSubRun = fSubRunInfo.fromBack(1);
+            SubRun& newSubRun = fSubRunInfo.emplace_back(this, desc, color);
 
+            const SubRun& prevSubRun = fSubRunInfo.fromBack(1);
+
+            // Forward glyph / vertex information to seed the new sub run
             newSubRun.setAsSuccessor(prevSubRun);
-            return newSubRun;
+            return &newSubRun;
         }
-        static const int kMinSubRuns = 1;
-        sk_sp<SkTypeface> fTypeface;
-        SkSTArray<kMinSubRuns, SubRunInfo> fSubRunInfo;
-        SkAutoDescriptor fDescriptor;
-
-        // Effects from the paint that are used to build a SkScalerContext.
-        sk_sp<SkPathEffect> fPathEffect;
-        sk_sp<SkMaskFilter> fMaskFilter;
-
-        // Distance field text cannot draw coloremoji, and so has to fall back.  However,
-        // though the distance field text and the coloremoji may share the same run, they
-        // will have different descriptors.  If fOverrideDescriptor is non-nullptr, then it
-        // will be used in place of the run's descriptor to regen texture coords
-        std::unique_ptr<SkAutoDescriptor> fOverrideDescriptor; // df properties
 
         // Any glyphs that can't be rendered with the base or override descriptor
         // are rendered as paths
@@ -500,21 +487,63 @@ private:
             bool fPreTransformed;
         };
 
+
+        sk_sp<SkTypeface> fTypeface;
+        SkSTArray<1, SubRun> fSubRunInfo;
+        SkAutoDescriptor fDescriptor;
+
+        // Effects from the paint that are used to build a SkScalerContext.
+        sk_sp<SkPathEffect> fPathEffect;
+        sk_sp<SkMaskFilter> fMaskFilter;
+
+        // Distance field text cannot draw coloremoji, and so has to fall back.  However,
+        // though the distance field text and the coloremoji may share the same run, they
+        // will have different descriptors.  If fARGBFallbackDescriptor is non-nullptr, then it
+        // will be used in place of the run's descriptor to regen texture coords
+        std::unique_ptr<SkAutoDescriptor> fARGBFallbackDescriptor;
+
         SkTArray<PathGlyph> fPathGlyphs;
 
-        struct {
-            unsigned fPaintFlags : 16;   // needed mainly for rendering paths
-            bool fInitialized : 1;
-        };
-        // the only flags we need to set
-        static constexpr auto kPaintFlagsMask = SkPaint::kAntiAlias_Flag;
+        bool fAntiAlias{false};   // needed mainly for rendering paths
+        bool fInitialized{false};
+
+        GrTextBlob* const fBlob;
+        GrColor fColor;
     };  // Run
 
-    inline std::unique_ptr<GrAtlasTextOp> makeOp(
-            const Run::SubRunInfo& info, int glyphCount, uint16_t run, uint16_t subRun,
+    std::unique_ptr<GrAtlasTextOp> makeOp(
+            const SubRun& info, int glyphCount, uint16_t run, uint16_t subRun,
             const SkMatrix& viewMatrix, SkScalar x, SkScalar y, const SkIRect& clipRect,
-            const SkPaint& paint, GrColor filteredColor, const SkSurfaceProps&,
+            const SkPaint& paint, const SkPMColor4f& filteredColor, const SkSurfaceProps&,
             const GrDistanceFieldAdjustTable*, GrTextTarget*);
+
+    // currentRun, startRun, and the process* calls are all used by the SkGlyphRunPainter, and
+    // live in SkGlyphRunPainter.cpp file.
+    Run* currentRun();
+    void startRun(const SkGlyphRun& glyphRun, bool useSDFT);
+
+    void processMasksDevice(SkSpan<const SkGlyphRunListPainter::GlyphAndPos> masks,
+                            SkStrikeInterface* strike);
+
+    void processPathsSource(SkSpan<const SkGlyphRunListPainter::GlyphAndPos> paths,
+                            SkStrikeInterface* strike, SkScalar textScale);
+    void processPathsDevice(SkSpan<const SkGlyphRunListPainter::GlyphAndPos> paths);
+
+    void processSDFTSource(SkSpan<const SkGlyphRunListPainter::GlyphAndPos> masks,
+                           SkStrikeInterface* strike,
+                           const SkFont& runFont,
+                           SkScalar textScale,
+                           SkScalar minScale,
+                           SkScalar maxScale,
+                           bool hasWCoord);
+
+    void processFallbackSource(SkSpan<const SkGlyphRunListPainter::GlyphAndPos> masks,
+                               SkStrikeInterface* strike,
+                               SkScalar strikeToSourceRatio,
+                               bool hasW);
+
+    void processFallbackDevice(SkSpan<const SkGlyphRunListPainter::GlyphAndPos> masks,
+                               SkStrikeInterface* strike);
 
     struct StrokeInfo {
         SkScalar fFrameWidth;
@@ -531,6 +560,10 @@ private:
     char* fVertices;
     GrGlyph** fGlyphs;
     Run* fRuns;
+
+    // Lifetime: The GrStrikeCache is owned by and has the same lifetime as the GrRecordingContext.
+    // The GrRecordingContext also owns the GrTextBlob cache which owns this GrTextBlob.
+    GrStrikeCache* const fStrikeCache;
     SkMaskFilterBase::BlurRec fBlurRec;
     StrokeInfo fStrokeInfo;
     Key fKey;
@@ -544,10 +577,11 @@ private:
     // We can reuse distance field text, but only if the new viewmatrix would not result in
     // a mip change.  Because there can be multiple runs in a blob, we track the overall
     // maximum minimum scale, and minimum maximum scale, we can support before we need to regen
-    SkScalar fMaxMinScale;
-    SkScalar fMinMaxScale;
-    int fRunCount;
-    uint8_t fTextType;
+    SkScalar fMaxMinScale{-SK_ScalarMax};
+    SkScalar fMinMaxScale{SK_ScalarMax};
+    int fRunCount{0};
+    int fRunCountLimit;
+    uint8_t fTextType{0};
 };
 
 /**
@@ -567,7 +601,7 @@ public:
      */
     VertexRegenerator(GrResourceProvider*, GrTextBlob*, int runIdx, int subRunIdx,
                       const SkMatrix& viewMatrix, SkScalar x, SkScalar y, GrColor color,
-                      GrDeferredUploadTarget*, GrGlyphCache*, GrAtlasManager*,
+                      GrDeferredUploadTarget*, GrStrikeCache*, GrAtlasManager*,
                       SkExclusiveStrikePtr*);
 
     struct Result {
@@ -592,18 +626,17 @@ public:
     bool regenerate(Result*);
 
 private:
-    template <bool regenPos, bool regenCol, bool regenTexCoords, bool regenGlyphs>
-    bool doRegen(Result*);
+    bool doRegen(Result*, bool regenPos, bool regenCol, bool regenTexCoords, bool regenGlyphs);
 
     GrResourceProvider* fResourceProvider;
     const SkMatrix& fViewMatrix;
     GrTextBlob* fBlob;
     GrDeferredUploadTarget* fUploadTarget;
-    GrGlyphCache* fGlyphCache;
+    GrStrikeCache* fGlyphCache;
     GrAtlasManager* fFullAtlasManager;
     SkExclusiveStrikePtr* fLazyCache;
     Run* fRun;
-    Run::SubRunInfo* fSubRun;
+    SubRun* fSubRun;
     GrColor fColor;
     SkScalar fTransX;
     SkScalar fTransY;

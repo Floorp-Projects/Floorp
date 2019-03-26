@@ -9,6 +9,7 @@
 #include "GrCaps.h"
 #include "GrContextPriv.h"
 #include "GrContextThreadSafeProxyPriv.h"
+#include "GrSkSLFPFactoryCache.h"
 
 /**
  * The DDL Context is the one in effect during DDL Recording. It isn't backed by a GrGPU and
@@ -17,16 +18,11 @@
 class SK_API GrDDLContext : public GrContext {
 public:
     GrDDLContext(sk_sp<GrContextThreadSafeProxy> proxy)
-            : INHERITED(proxy->priv().backend(), proxy->priv().contextUniqueID()) {
-        fCaps = proxy->priv().refCaps();
-        fFPFactoryCache = proxy->priv().fpFactoryCache();
-        SkASSERT(fFPFactoryCache);
+            : INHERITED(proxy->backend(), proxy->priv().options(), proxy->priv().contextID()) {
         fThreadSafeProxy = std::move(proxy);
     }
 
-    ~GrDDLContext() override {
-        // The GrDDLContext doesn't actually own the fRestrictedAtlasManager so don't delete it
-    }
+    ~GrDDLContext() override { }
 
     void abandonContext() override {
         SkASSERT(0); // abandoning in a DDL Recorder doesn't make a whole lot of sense
@@ -44,13 +40,19 @@ public:
     }
 
 protected:
-    bool init(const GrContextOptions& options) override {
-        SkASSERT(fCaps);  // should've been set in ctor
+    // TODO: Here we're pretending this isn't derived from GrContext. Switch this to be derived from
+    // GrRecordingContext!
+    GrContext* asDirectContext() override { return nullptr; }
+
+    bool init(sk_sp<const GrCaps> caps, sk_sp<GrSkSLFPFactoryCache> FPFactoryCache) override {
+        SkASSERT(caps && FPFactoryCache);
         SkASSERT(fThreadSafeProxy); // should've been set in the ctor
 
-        if (!INHERITED::initCommon(options)) {
+        if (!INHERITED::init(std::move(caps), std::move(FPFactoryCache))) {
             return false;
         }
+
+        SkASSERT(this->caps());
 
         return true;
     }
@@ -67,9 +69,7 @@ private:
 sk_sp<GrContext> GrContextPriv::MakeDDL(const sk_sp<GrContextThreadSafeProxy>& proxy) {
     sk_sp<GrContext> context(new GrDDLContext(proxy));
 
-    // Note: we aren't creating a Gpu here. This causes the resource provider & cache to
-    // also not be created
-    if (!context->init(proxy->priv().contextOptions())) {
+    if (!context->init(proxy->priv().refCaps(), proxy->priv().fpFactoryCache())) {
         return nullptr;
     }
     return context;

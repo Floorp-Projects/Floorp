@@ -10,11 +10,12 @@
 #include "vk/GrVkExtensions.h"
 #include "vk/GrVkUtil.h"
 
-#define ACQUIRE_PROC(name, instance, device) fFunctions.f##name = \
-    reinterpret_cast<PFN_vk##name>(getProc("vk"#name, instance, device));
+#define ACQUIRE_PROC(name, instance, device) \
+    fFunctions.f##name = reinterpret_cast<PFN_vk##name>(getProc("vk" #name, instance, device))
 
-#define ACQUIRE_PROC_SUFFIX(name, suffix, instance, device) fFunctions.f##name = \
-    reinterpret_cast<PFN_vk##name##suffix>(getProc("vk"#name#suffix, instance, device));
+#define ACQUIRE_PROC_SUFFIX(name, suffix, instance, device) \
+    fFunctions.f##name =                                    \
+            reinterpret_cast<PFN_vk##name##suffix>(getProc("vk" #name #suffix, instance, device))
 
 GrVkInterface::GrVkInterface(GrVkGetProc getProc,
                              VkInstance instance,
@@ -227,6 +228,15 @@ GrVkInterface::GrVkInterface(GrVkGetProc getProc,
     } else if (extensions->hasExtension(VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME, 1)) {
         ACQUIRE_PROC_SUFFIX(GetPhysicalDeviceExternalBufferProperties, KHR, instance,
                             VK_NULL_HANDLE);
+    }
+
+    // Functions for VK_KHR_sampler_ycbcr_conversion
+    if (physicalDeviceVersion >= VK_MAKE_VERSION(1, 1, 0)) {
+        ACQUIRE_PROC(CreateSamplerYcbcrConversion, VK_NULL_HANDLE, device);
+        ACQUIRE_PROC(DestroySamplerYcbcrConversion, VK_NULL_HANDLE, device);
+    } else if (extensions->hasExtension(VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME, 1)) {
+        ACQUIRE_PROC_SUFFIX(CreateSamplerYcbcrConversion, KHR, VK_NULL_HANDLE, device);
+        ACQUIRE_PROC_SUFFIX(DestroySamplerYcbcrConversion, KHR, VK_NULL_HANDLE, device);
     }
 
 #ifdef SK_BUILD_FOR_ANDROID
@@ -444,6 +454,15 @@ bool GrVkInterface::validate(uint32_t instanceVersion, uint32_t physicalDeviceVe
     if (physicalDeviceVersion >= VK_MAKE_VERSION(1, 1, 0) ||
         extensions->hasExtension(VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME, 1)) {
         if (nullptr == fFunctions.fGetPhysicalDeviceExternalBufferProperties) {
+            RETURN_FALSE_INTERFACE
+        }
+    }
+
+    // Functions for VK_KHR_sampler_ycbcr_conversion
+    if (physicalDeviceVersion >= VK_MAKE_VERSION(1, 1, 0) ||
+        extensions->hasExtension(VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME, 1)) {
+        if (nullptr == fFunctions.fCreateSamplerYcbcrConversion ||
+            nullptr == fFunctions.fDestroySamplerYcbcrConversion) {
             RETURN_FALSE_INTERFACE
         }
     }

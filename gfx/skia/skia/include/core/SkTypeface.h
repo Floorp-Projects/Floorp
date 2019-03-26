@@ -176,7 +176,7 @@ public:
      */
     static sk_sp<SkTypeface> MakeDeserialize(SkStream*);
 
-    enum Encoding {
+    enum Encoding : uint8_t {
         kUTF8_Encoding,
         kUTF16_Encoding,
         kUTF32_Encoding
@@ -200,6 +200,14 @@ public:
      */
     int charsToGlyphs(const void* chars, Encoding encoding, SkGlyphID glyphs[],
                       int glyphCount) const;
+
+    /**
+     *  Return the glyphID that corresponds to the specified unicode code-point
+     *  (in UTF32 encoding). If the unichar is not supported, returns 0.
+     *
+     *  This is a short-cut for calling charsToGlyphs() with kUTF32_Encoding for one code-point.
+     */
+    SkGlyphID unicharToGlyph(SkUnichar unichar) const;
 
     /**
      *  Return the number of glyphs in the typeface.
@@ -306,7 +314,7 @@ public:
      *  collection.
      *  The caller is responsible for deleting the stream.
      */
-    SkStreamAsset* openStream(int* ttcIndex) const;
+    std::unique_ptr<SkStreamAsset> openStream(int* ttcIndex) const;
 
     /**
      *  Return the font data, or nullptr on failure.
@@ -378,7 +386,7 @@ protected:
     // dstArray is non-null, and points to an array of size this->countGlyphs().
     virtual void getGlyphToUnicodeMap(SkUnichar* dstArray) const;
 
-    virtual SkStreamAsset* onOpenStream(int* ttcIndex) const = 0;
+    virtual std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const = 0;
     // TODO: make pure virtual.
     virtual std::unique_ptr<SkFontData> onMakeFontData() const;
 
@@ -432,7 +440,10 @@ private:
     };
     static SkFontStyle FromOldStyle(Style oldStyle);
     static SkTypeface* GetDefaultTypeface(Style style = SkTypeface::kNormal);
+
+    friend class SkFontPriv;       // GetDefaultTypeface
     friend class SkPaintPriv;      // GetDefaultTypeface
+    friend class SkFont;           // getGlyphToUnicodeMap
 
 private:
     SkFontID            fUniqueID;

@@ -9,7 +9,6 @@
 
 #include "SkDashImpl.h"
 #include "SkDashPathPriv.h"
-#include "SkFlattenablePriv.h"
 #include "SkReadBuffer.h"
 #include "SkStrokeRec.h"
 #include "SkTo.h"
@@ -374,11 +373,6 @@ void SkDashImpl::flatten(SkWriteBuffer& buffer) const {
 }
 
 sk_sp<SkFlattenable> SkDashImpl::CreateProc(SkReadBuffer& buffer) {
-#ifdef SK_DISABLE_READBUFFER
-    // Should not be reachable by PathKit WebAssembly Code.
-    SkASSERT(false);
-    return nullptr;
-#else
     const SkScalar phase = buffer.readScalar();
     uint32_t count = buffer.getArrayCount();
 
@@ -392,7 +386,6 @@ sk_sp<SkFlattenable> SkDashImpl::CreateProc(SkReadBuffer& buffer) {
         return SkDashPathEffect::Make(intervals.get(), SkToInt(count), phase);
     }
     return nullptr;
-#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////

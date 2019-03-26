@@ -63,16 +63,19 @@ public:
 
     // TODO: might want to remember we're a lighting color filter through serialization?
     void flatten(SkWriteBuffer& buf) const override { return fMatrixFilter->flatten(buf); }
-    Factory getFactory() const override             { return fMatrixFilter->getFactory(); }
+
 
 #if SK_SUPPORT_GPU
     std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
-            GrContext* ctx, const GrColorSpaceInfo& csi) const override {
+            GrRecordingContext* ctx, const GrColorSpaceInfo& csi) const override {
         return fMatrixFilter->asFragmentProcessor(ctx, csi);
     }
 #endif
 
 private:
+    Factory      getFactory() const override { return fMatrixFilter->getFactory(); }
+    const char* getTypeName() const override { return fMatrixFilter->getTypeName(); }
+
     SkColor              fMul, fAdd;
     sk_sp<SkColorFilter> fMatrixFilter;
 

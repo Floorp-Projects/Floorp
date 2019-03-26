@@ -122,9 +122,7 @@ SkScalar SkScalarSinCos(SkScalar radians, SkScalar* cosValue);
 
 static inline SkScalar SkScalarSquare(SkScalar x) { return x * x; }
 
-#define SkScalarDiv(numer, denom)   sk_ieee_float_divide(numer, denom)
-#define SkScalarInvert(x)           sk_ieee_float_divide(SK_Scalar1, (x))
-#define SkScalarFastInvert(x)       sk_ieee_float_divide(SK_Scalar1, (x))
+#define SkScalarInvert(x)           sk_ieee_float_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(SK_Scalar1, (x))
 #define SkScalarAve(a, b)           (((a) + (b)) * SK_ScalarHalf)
 #define SkScalarHalf(a)             ((a) * SK_ScalarHalf)
 

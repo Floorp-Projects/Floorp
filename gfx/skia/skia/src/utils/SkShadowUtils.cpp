@@ -12,7 +12,6 @@
 #include "SkColorData.h"
 #include "SkDevice.h"
 #include "SkDrawShadowInfo.h"
-#include "SkFlattenablePriv.h"
 #include "SkMaskFilter.h"
 #include "SkPath.h"
 #include "SkRandom.h"
@@ -42,10 +41,8 @@ public:
 
 #if SK_SUPPORT_GPU
     std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
-            GrContext*, const GrColorSpaceInfo&) const override;
+            GrRecordingContext*, const GrColorSpaceInfo&) const override;
 #endif
-
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkGaussianColorFilter)
 
 protected:
     void flatten(SkWriteBuffer&) const override {}
@@ -54,6 +51,8 @@ protected:
         pipeline->append(SkRasterPipeline::gauss_a_to_rgba);
     }
 private:
+    SK_FLATTENABLE_HOOKS(SkGaussianColorFilter)
+
     SkGaussianColorFilter() : INHERITED() {}
 
     typedef SkColorFilter INHERITED;
@@ -66,7 +65,7 @@ sk_sp<SkFlattenable> SkGaussianColorFilter::CreateProc(SkReadBuffer&) {
 #if SK_SUPPORT_GPU
 
 std::unique_ptr<GrFragmentProcessor> SkGaussianColorFilter::asFragmentProcessor(
-        GrContext*, const GrColorSpaceInfo&) const {
+        GrRecordingContext*, const GrColorSpaceInfo&) const {
     return GrBlurredEdgeFragmentProcessor::Make(GrBlurredEdgeFragmentProcessor::Mode::kGaussian);
 }
 #endif

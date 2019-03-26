@@ -452,8 +452,8 @@ public:
     */
     bool op(const SkRegion& rgna, const SkRegion& rgnb, Op op);
 
-#ifdef SK_BUILD_FOR_ANDROID
-    /** Android framework only.
+#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
+    /** Private. Android framework only.
 
         @return  string representation of SkRegion
     */
@@ -467,10 +467,11 @@ public:
     class SK_API Iterator {
     public:
 
-        /** Initializes SkRegion::Iterator with an empty SkRegion. done() on SkRegion::Iterator returns true.
+        /** Initializes SkRegion::Iterator with an empty SkRegion. done() on SkRegion::Iterator
+            returns true.
             Call reset() to initialized SkRegion::Iterator at a later time.
 
-            @return  empty SkRegion ierator
+            @return  empty SkRegion iterator
         */
         Iterator() : fRgn(nullptr), fDone(true) {}
 
@@ -549,8 +550,8 @@ public:
         */
         void  next();
 
-        /** Returns SkIRect element in SkRegion, intersected with clip passed to SkRegion::Cliperator
-            constructor. Does not return predictable results if SkRegion
+        /** Returns SkIRect element in SkRegion, intersected with clip passed to
+            SkRegion::Cliperator constructor. Does not return predictable results if SkRegion
             is empty.
 
             @return  part of SkRegion inside clip as SkIRect

@@ -19,42 +19,47 @@
 // Deferred version
 // TODO: we can probably munge the 'desc' in both the wrapped and deferred
 // cases to make the sampleConfig/numSamples stuff more rational.
-GrRenderTargetProxy::GrRenderTargetProxy(const GrCaps& caps, const GrSurfaceDesc& desc,
-                                         GrSurfaceOrigin origin, SkBackingFit fit,
-                                         SkBudgeted budgeted, GrInternalSurfaceFlags surfaceFlags)
-        : INHERITED(desc, origin, fit, budgeted, surfaceFlags)
+GrRenderTargetProxy::GrRenderTargetProxy(const GrCaps& caps, const GrBackendFormat& format,
+                                         const GrSurfaceDesc& desc, GrSurfaceOrigin origin,
+                                         SkBackingFit fit, SkBudgeted budgeted,
+                                         GrInternalSurfaceFlags surfaceFlags)
+        : INHERITED(format, desc, origin, fit, budgeted, surfaceFlags)
         , fSampleCnt(desc.fSampleCnt)
-        , fNeedsStencil(false) {
+        , fNeedsStencil(false)
+        , fWrapsVkSecondaryCB(WrapsVkSecondaryCB::kNo) {
     // Since we know the newly created render target will be internal, we are able to precompute
     // what the flags will ultimately end up being.
     if (caps.usesMixedSamples() && fSampleCnt > 1) {
         this->setHasMixedSamples();
     }
-    if (caps.maxWindowRectangles() > 0) {
-        this->setSupportsWindowRects();
-    }
 }
 
 // Lazy-callback version
 GrRenderTargetProxy::GrRenderTargetProxy(LazyInstantiateCallback&& callback,
-                                         LazyInstantiationType lazyType, const GrSurfaceDesc& desc,
-                                         GrSurfaceOrigin origin, SkBackingFit fit,
-                                         SkBudgeted budgeted, GrInternalSurfaceFlags surfaceFlags)
-        : INHERITED(std::move(callback), lazyType, desc, origin, fit, budgeted, surfaceFlags)
+                                         LazyInstantiationType lazyType,
+                                         const GrBackendFormat& format, const GrSurfaceDesc& desc,
+                                         GrSurfaceOrigin origin,  SkBackingFit fit,
+                                         SkBudgeted budgeted, GrInternalSurfaceFlags surfaceFlags,
+                                         WrapsVkSecondaryCB wrapsVkSecondaryCB)
+        : INHERITED(std::move(callback), lazyType, format, desc, origin, fit, budgeted,
+                    surfaceFlags)
         , fSampleCnt(desc.fSampleCnt)
-        , fNeedsStencil(false) {
+        , fNeedsStencil(false)
+        , fWrapsVkSecondaryCB(wrapsVkSecondaryCB) {
     SkASSERT(SkToBool(kRenderTarget_GrSurfaceFlag & desc.fFlags));
 }
 
 // Wrapped version
-GrRenderTargetProxy::GrRenderTargetProxy(sk_sp<GrSurface> surf, GrSurfaceOrigin origin)
+GrRenderTargetProxy::GrRenderTargetProxy(sk_sp<GrSurface> surf, GrSurfaceOrigin origin,
+                                         WrapsVkSecondaryCB wrapsVkSecondaryCB)
         : INHERITED(std::move(surf), origin, SkBackingFit::kExact)
         , fSampleCnt(fTarget->asRenderTarget()->numStencilSamples())
-        , fNeedsStencil(false) {
+        , fNeedsStencil(false)
+        , fWrapsVkSecondaryCB(wrapsVkSecondaryCB) {
 }
 
 int GrRenderTargetProxy::maxWindowRectangles(const GrCaps& caps) const {
-    return this->supportsWindowRects() ? caps.maxWindowRectangles() : 0;
+    return this->glRTFBOIDIs0() ? 0 : caps.maxWindowRectangles();
 }
 
 bool GrRenderTargetProxy::instantiate(GrResourceProvider* resourceProvider) {
@@ -107,7 +112,8 @@ bool GrRenderTargetProxy::refsWrappedObjects() const {
 
 #ifdef SK_DEBUG
 void GrRenderTargetProxy::onValidateSurface(const GrSurface* surface) {
-    SkASSERT(!surface->asTexture());
+    // We do not check that surface->asTexture returns null since, when replaying DDLs we
+    // can fulfill a renderTarget-only proxy w/ a textureRenderTarget.
 
     // Anything that is checked here should be duplicated in GrTextureRenderTargetProxy's version
     SkASSERT(surface->asRenderTarget());

@@ -175,6 +175,11 @@ protected:
     virtual void drawDRRect(const SkRRect& outer,
                             const SkRRect& inner, const SkPaint&);
 
+    // Default impl always calls drawRect() with a solid-color paint, setting it to anti-aliased
+    // only when all edge flags are set.
+    virtual void drawEdgeAARect(const SkRect& r, SkCanvas::QuadAAFlags aa, SkColor color,
+                                SkBlendMode mode);
+
     /**
      *  If pathIsMutable, then the implementation is allowed to cast path to a
      *  non-const pointer and modify it in place (as an optimization). Canvas
@@ -184,10 +189,6 @@ protected:
     virtual void drawPath(const SkPath& path,
                           const SkPaint& paint,
                           bool pathIsMutable = false) = 0;
-    virtual void drawBitmap(const SkBitmap& bitmap,
-                            SkScalar x,
-                            SkScalar y,
-                            const SkPaint& paint) = 0;
     virtual void drawSprite(const SkBitmap& bitmap,
                             int x, int y, const SkPaint& paint) = 0;
 
@@ -204,7 +205,6 @@ protected:
     virtual void drawBitmapLattice(const SkBitmap&, const SkCanvas::Lattice&,
                                    const SkRect& dst, const SkPaint&);
 
-    virtual void drawImage(const SkImage*, SkScalar x, SkScalar y, const SkPaint&);
     virtual void drawImageRect(const SkImage*, const SkRect* src, const SkRect& dst,
                                const SkPaint&, SkCanvas::SrcRectConstraint);
     virtual void drawImageNine(const SkImage*, const SkIRect& center,
@@ -212,6 +212,8 @@ protected:
     virtual void drawImageLattice(const SkImage*, const SkCanvas::Lattice&,
                                   const SkRect& dst, const SkPaint&);
 
+    virtual void drawImageSet(const SkCanvas::ImageSetEntry[], int count, SkFilterQuality,
+                              SkBlendMode);
 
     virtual void drawVertices(const SkVertices*, const SkVertices::Bone bones[], int boneCount,
                               SkBlendMode, const SkPaint&) = 0;
@@ -233,7 +235,10 @@ protected:
      */
     virtual void drawDevice(SkBaseDevice*, int x, int y, const SkPaint&) = 0;
 
-    void drawGlyphRunRSXform(SkGlyphRun* run, const SkRSXform* xform);
+    void drawGlyphRunRSXform(const SkFont&, const SkGlyphID[], const SkRSXform[], int count,
+                             SkPoint origin, const SkPaint& paint);
+
+    virtual void drawDrawable(SkDrawable*, const SkMatrix*, SkCanvas*);
 
     virtual void drawSpecial(SkSpecialImage*, int x, int y, const SkPaint&,
                              SkImage* clipImage, const SkMatrix& clipMatrix);
@@ -243,6 +248,8 @@ protected:
     virtual void setImmutable() {}
 
     bool readPixels(const SkPixmap&, int x, int y);
+
+    virtual sk_sp<SkSpecialImage> snapBackImage(const SkIRect&);    // default returns null
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -318,7 +325,7 @@ protected:
     }
 
     // A helper function used by derived classes to log the scale factor of a bitmap or image draw.
-    static void LogDrawScaleFactor(const SkMatrix&, SkFilterQuality);
+    static void LogDrawScaleFactor(const SkMatrix& view, const SkMatrix& srcToDst, SkFilterQuality);
 
 private:
     friend class SkAndroidFrameworkUtils;
@@ -332,6 +339,9 @@ private:
     // Temporarily friend the SkGlyphRunBuilder until drawPosText is gone.
     friend class SkGlyphRun;
     friend class SkGlyphRunList;
+    friend class SkGlyphRunBuilder;
+
+    friend class ClipTileRenderer;  // GM needs context() until API is in SkCanvas
 
     // used to change the backend's pixels (and possibly config/rowbytes)
     // but cannot change the width/height, so there should be no change to
@@ -371,8 +381,10 @@ private:
 
 class SkNoPixelsDevice : public SkBaseDevice {
 public:
-    SkNoPixelsDevice(const SkIRect& bounds, const SkSurfaceProps& props)
-            : SkBaseDevice(SkImageInfo::MakeUnknown(bounds.width(), bounds.height()), props)
+    SkNoPixelsDevice(const SkIRect& bounds, const SkSurfaceProps& props,
+                     sk_sp<SkColorSpace> colorSpace = nullptr)
+    : SkBaseDevice(SkImageInfo::Make(bounds.width(), bounds.height(), kUnknown_SkColorType,
+                                     kUnknown_SkAlphaType, std::move(colorSpace)), props)
     {
         // this fails if we enable this assert: DiscardableImageMapTest.GetDiscardableImagesInRectMaxImage
         //SkASSERT(bounds.width() >= 0 && bounds.height() >= 0);
@@ -407,7 +419,6 @@ protected:
     void drawOval(const SkRect&, const SkPaint&) override {}
     void drawRRect(const SkRRect&, const SkPaint&) override {}
     void drawPath(const SkPath&, const SkPaint&, bool) override {}
-    void drawBitmap(const SkBitmap&, SkScalar x, SkScalar y, const SkPaint&) override {}
     void drawSprite(const SkBitmap&, int, int, const SkPaint&) override {}
     void drawBitmapRect(const SkBitmap&, const SkRect*, const SkRect&, const SkPaint&,
                         SkCanvas::SrcRectConstraint) override {}

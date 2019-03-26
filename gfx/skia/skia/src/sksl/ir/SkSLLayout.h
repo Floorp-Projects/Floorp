@@ -64,6 +64,7 @@ struct Layout {
         kR8,
         kRGBA8I,
         kR8I,
+        kRG16F,
     };
 
     // used by SkSL processors
@@ -82,7 +83,6 @@ struct Layout {
         kInt32,
         kSkRect,
         kSkIRect,
-        kGrColor4f,
         kSkPMColor4f,
         kSkPMColor,
         kSkPoint,
@@ -104,6 +104,7 @@ struct Layout {
             case Format::kR8:           return "r8";
             case Format::kRGBA8I:       return "rgba8i";
             case Format::kR8I:          return "r8i";
+            case Format::kRG16F:        return "rg16f";
         }
         ABORT("Unexpected format");
     }
@@ -133,6 +134,9 @@ struct Layout {
         } else if (str == "r8i") {
             *format = Format::kR8I;
             return true;
+        } else if (str == "rg16f") {
+            *format = Format::kRG16F;
+            return true;
         }
         return false;
     }
@@ -149,8 +153,6 @@ struct Layout {
                 return "SkRect";
             case CType::kSkIRect:
                 return "SkIRect";
-            case CType::kGrColor4f:
-                return "GrColor4f";
             case CType::kSkPMColor4f:
                 return "SkPMColor4f";
             case CType::kSkPMColor:

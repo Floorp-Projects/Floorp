@@ -21,16 +21,12 @@ public:
     /* Does not take ownership of canvas */
     SkOverdrawCanvas(SkCanvas*);
 
-    void onDrawText(const void*, size_t, SkScalar, SkScalar, const SkPaint&) override;
-    void onDrawPosText(const void*, size_t, const SkPoint[], const SkPaint&) override;
-    void onDrawPosTextH(const void*, size_t, const SkScalar[], SkScalar, const SkPaint&) override;
-    void onDrawTextRSXform(const void*, size_t, const SkRSXform[], const SkRect*,
-                           const SkPaint&) override;
     void onDrawTextBlob(const SkTextBlob*, SkScalar, SkScalar, const SkPaint&) override;
     void onDrawPatch(const SkPoint[12], const SkColor[4], const SkPoint[4], SkBlendMode,
                      const SkPaint&) override;
     void onDrawPaint(const SkPaint&) override;
     void onDrawRect(const SkRect&, const SkPaint&) override;
+    void onDrawEdgeAARect(const SkRect&, SkCanvas::QuadAAFlags, SkColor, SkBlendMode) override;
     void onDrawRegion(const SkRegion&, const SkPaint&) override;
     void onDrawOval(const SkRect&, const SkPaint&) override;
     void onDrawArc(const SkRect&, SkScalar, SkScalar, bool, const SkPaint&) override;
@@ -47,6 +43,7 @@ public:
                          SrcRectConstraint) override;
     void onDrawImageNine(const SkImage*, const SkIRect&, const SkRect&, const SkPaint*) override;
     void onDrawImageLattice(const SkImage*, const Lattice&, const SkRect&, const SkPaint*) override;
+    void onDrawImageSet(const ImageSetEntry[], int count, SkFilterQuality, SkBlendMode) override;
     void onDrawBitmap(const SkBitmap&, SkScalar, SkScalar, const SkPaint*) override;
     void onDrawBitmapRect(const SkBitmap&, const SkRect*, const SkRect&, const SkPaint*,
                           SrcRectConstraint) override;
@@ -60,8 +57,8 @@ public:
     void onDrawShadowRec(const SkPath&, const SkDrawShadowRec&) override;
 
 private:
-    void drawPosTextCommon(const void*, size_t, const SkScalar[], int, const SkPoint&,
-                           const SkPaint&);
+    void drawPosTextCommon(const SkGlyphID[], int, const SkScalar[], int, const SkPoint&,
+                           const SkFont&, const SkPaint&);
 
     inline SkPaint overdrawPaint(const SkPaint& paint);
 

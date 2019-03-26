@@ -37,8 +37,8 @@ GrMtlPipelineState::GrMtlPipelineState(
         MTLPixelFormat pixelFormat,
         const GrGLSLBuiltinUniformHandles& builtinUniformHandles,
         const UniformInfoArray& uniforms,
-        GrMtlBuffer* geometryUniformBuffer,
-        GrMtlBuffer* fragmentUniformBuffer,
+        sk_sp<GrMtlBuffer> geometryUniformBuffer,
+        sk_sp<GrMtlBuffer> fragmentUniformBuffer,
         uint32_t numSamplers,
         std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
         std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
@@ -48,24 +48,26 @@ GrMtlPipelineState::GrMtlPipelineState(
         , fPipelineState(pipelineState)
         , fPixelFormat(pixelFormat)
         , fBuiltinUniformHandles(builtinUniformHandles)
-        , fGeometryUniformBuffer(geometryUniformBuffer)
-        , fFragmentUniformBuffer(fragmentUniformBuffer)
+        , fGeometryUniformBuffer(std::move(geometryUniformBuffer))
+        , fFragmentUniformBuffer(std::move(fragmentUniformBuffer))
         , fNumSamplers(numSamplers)
         , fGeometryProcessor(std::move(geometryProcessor))
         , fXferProcessor(std::move(xferProcessor))
         , fFragmentProcessors(std::move(fragmentProcessors))
         , fFragmentProcessorCnt(fragmentProcessorCnt)
-        , fDataManager(uniforms, geometryUniformBuffer->sizeInBytes(),
-                       fragmentUniformBuffer->sizeInBytes()) {
+        , fDataManager(uniforms, fGeometryUniformBuffer->size(),
+                       fFragmentUniformBuffer->size()) {
     (void) fPixelFormat; // Suppress unused-var warning.
 }
 
-void GrMtlPipelineState::setData(const GrPrimitiveProcessor& primProc,
+void GrMtlPipelineState::setData(const GrRenderTarget* renderTarget,
+                                 GrSurfaceOrigin origin,
+                                 const GrPrimitiveProcessor& primProc,
                                  const GrPipeline& pipeline,
                                  const GrTextureProxy* const primProcTextures[]) {
     SkASSERT(primProcTextures || !primProc.numTextureSamplers());
 
-    this->setRenderTargetState(pipeline.proxy());
+    this->setRenderTargetState(renderTarget, origin);
     fGeometryProcessor->setData(fDataManager, primProc,
                                 GrFragmentProcessor::CoordTransformIter(pipeline));
     fSamplerBindings.reset();
@@ -110,10 +112,9 @@ void GrMtlPipelineState::setData(const GrPrimitiveProcessor& primProc,
     }
 
     if (pipeline.isStencilEnabled()) {
-        GrRenderTarget* rt = pipeline.renderTarget();
-        SkASSERT(rt->renderTargetPriv().getStencilAttachment());
+        SkASSERT(renderTarget->renderTargetPriv().getStencilAttachment());
         fStencil.reset(*pipeline.getUserStencil(), pipeline.hasStencilClip(),
-                       rt->renderTargetPriv().numStencilBits());
+                       renderTarget->renderTargetPriv().numStencilBits());
     }
 }
 
@@ -137,9 +138,7 @@ void GrMtlPipelineState::bind(id<MTLRenderCommandEncoder> renderCmdEncoder) {
     }
 }
 
-void GrMtlPipelineState::setRenderTargetState(const GrRenderTargetProxy* proxy) {
-    GrRenderTarget* rt = proxy->peekRenderTarget();
-
+void GrMtlPipelineState::setRenderTargetState(const GrRenderTarget* rt, GrSurfaceOrigin origin) {
     // Load the RT height uniform if it is needed to y-flip gl_FragCoord.
     if (fBuiltinUniformHandles.fRTHeightUni.isValid() &&
         fRenderTargetState.fRenderTargetSize.fHeight != rt->height()) {
@@ -150,10 +149,10 @@ void GrMtlPipelineState::setRenderTargetState(const GrRenderTargetProxy* proxy) 
     SkISize size;
     size.set(rt->width(), rt->height());
     SkASSERT(fBuiltinUniformHandles.fRTAdjustmentUni.isValid());
-    if (fRenderTargetState.fRenderTargetOrigin != proxy->origin() ||
+    if (fRenderTargetState.fRenderTargetOrigin != origin ||
         fRenderTargetState.fRenderTargetSize != size) {
         fRenderTargetState.fRenderTargetSize = size;
-        fRenderTargetState.fRenderTargetOrigin = proxy->origin();
+        fRenderTargetState.fRenderTargetOrigin = origin;
 
         float rtAdjustmentVec[4];
         fRenderTargetState.getRTAdjustmentVec(rtAdjustmentVec);
@@ -185,16 +184,14 @@ void GrMtlPipelineState::setBlendConstants(id<MTLRenderCommandEncoder> renderCmd
     GrBlendCoeff srcCoeff = blendInfo.fSrcBlend;
     GrBlendCoeff dstCoeff = blendInfo.fDstBlend;
     if (blend_coeff_refs_constant(srcCoeff) || blend_coeff_refs_constant(dstCoeff)) {
-        float floatColors[4];
         // Swizzle the blend to match what the shader will output.
         const GrSwizzle& swizzle = fGpu->caps()->shaderCaps()->configOutputSwizzle(config);
-        GrColor blendConst = swizzle.applyTo(blendInfo.fBlendConstant);
-        GrColorToRGBAFloat(blendConst, floatColors);
+        SkPMColor4f blendConst = swizzle.applyTo(blendInfo.fBlendConstant);
 
-        [renderCmdEncoder setBlendColorRed: floatColors[0]
-                                     green: floatColors[1]
-                                      blue: floatColors[2]
-                                     alpha: floatColors[3]];
+        [renderCmdEncoder setBlendColorRed: blendConst.fR
+                                     green: blendConst.fG
+                                      blue: blendConst.fB
+                                     alpha: blendConst.fA];
     }
 }
 

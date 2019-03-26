@@ -121,7 +121,7 @@ template<typename TFlags> inline TFlags& operator&=(TFlags& a, GrTFlagsMask<TFla
     friend constexpr GrTFlagsMask<X> operator ~(X); \
     friend constexpr X operator |(X, X); \
     friend X& operator |=(X&, X); \
-    friend constexpr bool operator &(X, X);
+    friend constexpr bool operator &(X, X)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -184,16 +184,32 @@ static inline size_t GrSizeAlignDown(size_t x, uint32_t alignment) {
 /**
  * Possible 3D APIs that may be used by Ganesh.
  */
-enum GrBackend {
-    kMetal_GrBackend,
-    kOpenGL_GrBackend,
-    kVulkan_GrBackend,
+enum class GrBackendApi : unsigned {
+    kMetal,
+    kOpenGL,
+    kVulkan,
     /**
      * Mock is a backend that does not draw anything. It is used for unit tests
      * and to measure CPU overhead.
      */
-    kMock_GrBackend,
+    kMock,
+
+    /**
+     * Added here to support the legacy GrBackend enum value and clients who referenced it using
+     * GrBackend::kOpenGL_GrBackend.
+     */
+    kOpenGL_GrBackend = kOpenGL,
 };
+
+/**
+ * Previously the above enum was not an enum class but a normal enum. To support the legacy use of
+ * the enum values we define them below so that no clients break.
+ */
+typedef GrBackendApi GrBackend;
+
+static constexpr GrBackendApi kMetal_GrBackend = GrBackendApi::kMetal;
+static constexpr GrBackendApi kVulkan_GrBackend = GrBackendApi::kVulkan;
+static constexpr GrBackendApi kMock_GrBackend = GrBackendApi::kMock;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -211,7 +227,7 @@ enum class GrMipMapped : bool {
  * GPU SkImage and SkSurfaces can be stored such that (0, 0) in texture space may correspond to
  * either the top-left or bottom-left content pixel.
  */
-enum GrSurfaceOrigin {
+enum GrSurfaceOrigin : int {
     kTopLeft_GrSurfaceOrigin,
     kBottomLeft_GrSurfaceOrigin,
 };
@@ -222,6 +238,7 @@ enum GrSurfaceOrigin {
  */
 enum GrGLBackendState {
     kRenderTarget_GrGLBackendState     = 1 << 0,
+    // Also includes samplers bound to texture units.
     kTextureBinding_GrGLBackendState   = 1 << 1,
     // View state stands for scissor and viewport
     kView_GrGLBackendState             = 1 << 2,
