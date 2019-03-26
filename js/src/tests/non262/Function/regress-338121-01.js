@@ -15,6 +15,7 @@ printStatus (summary);
 
 expectExitCode(0);
 expectExitCode(5);
+expectExitCode(3);
 
 var fe="v";
 
