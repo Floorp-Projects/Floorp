@@ -414,6 +414,26 @@ template bool StringsEqual<true>(JSContext* cx, HandleString lhs,
 template bool StringsEqual<false>(JSContext* cx, HandleString lhs,
                                   HandleString rhs, bool* res);
 
+template <bool LessThan>
+bool StringsCompare(JSContext* cx, HandleString lhs, HandleString rhs,
+                    bool* res) {
+  int32_t result;
+  if (!js::CompareStrings(cx, lhs, rhs, &result)) {
+    return false;
+  }
+  if (LessThan) {
+    *res = result < 0;
+  } else {
+    *res = result >= 0;
+  }
+  return true;
+}
+
+template bool StringsCompare<true>(JSContext* cx, HandleString lhs,
+                                   HandleString rhs, bool* res);
+template bool StringsCompare<false>(JSContext* cx, HandleString lhs,
+                                    HandleString rhs, bool* res);
+
 bool StringSplitHelper(JSContext* cx, HandleString str, HandleString sep,
                        HandleObjectGroup group, uint32_t limit,
                        MutableHandleValue result) {

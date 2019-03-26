@@ -229,6 +229,8 @@ namespace jit {
   _(StringToLowerCase, js::StringToLowerCase)                                  \
   _(StringToNumber, js::StringToNumber)                                        \
   _(StringToUpperCase, js::StringToUpperCase)                                  \
+  _(StringsCompareGreaterThanOrEquals, js::jit::StringsCompare<false>)         \
+  _(StringsCompareLessThan, js::jit::StringsCompare<true>)                     \
   _(StringsEqual, js::jit::StringsEqual<true>)                                 \
   _(StringsNotEqual, js::jit::StringsEqual<false>)                             \
   _(SubValues, js::SubValues)                                                  \
