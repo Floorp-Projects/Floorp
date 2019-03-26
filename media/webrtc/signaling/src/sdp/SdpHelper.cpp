@@ -54,6 +54,11 @@ nsresult SdpHelper::CopyTransportParams(size_t numComponents,
     }
   }
 
+  if (oldLocalAttrs.HasAttribute(SdpAttribute::kEndOfCandidatesAttribute)) {
+    newLocalAttrs.SetAttribute(
+        new SdpFlagAttribute(SdpAttribute::kEndOfCandidatesAttribute));
+  }
+
   if (numComponents == 2 &&
       oldLocalAttrs.HasAttribute(SdpAttribute::kRtcpAttribute)) {
     // copy rtcp attribute if we had one that we are using
