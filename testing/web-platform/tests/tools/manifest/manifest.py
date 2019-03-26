@@ -302,9 +302,8 @@ class Manifest(object):
                 elif is_new or hash_changed:
                     self._data[new_type][rel_path] = set(manifest_items)
 
-                self._path_hash[rel_path] = (file_hash, new_type)
-
                 if is_new or hash_changed:
+                    self._path_hash[rel_path] = (file_hash, new_type)
                     changed = True
 
         deleted = prev_files - seen_files
