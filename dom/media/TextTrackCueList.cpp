@@ -105,19 +105,6 @@ void TextTrackCueList::SetCuesInactive() {
   }
 }
 
-already_AddRefed<TextTrackCueList> TextTrackCueList::GetCueListByTimeInterval(
-    media::Interval<double>& aInterval) {
-  RefPtr<TextTrackCueList> output = new TextTrackCueList(mParent);
-  for (uint32_t i = 0; i < mList.Length(); ++i) {
-    TextTrackCue* cue = mList[i];
-    if (cue->StartTime() <= aInterval.mEnd &&
-        aInterval.mStart <= cue->EndTime()) {
-      output->AddCue(*cue);
-    }
-  }
-  return output.forget();
-}
-
 void TextTrackCueList::NotifyCueUpdated(TextTrackCue* aCue) {
   if (aCue) {
     mList.RemoveElement(aCue);

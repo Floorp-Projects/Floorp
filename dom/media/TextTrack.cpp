@@ -17,8 +17,9 @@
 
 extern mozilla::LazyLogModule gTextTrackLog;
 
-#define WEBVTT_LOG(msg, ...) \
-  MOZ_LOG(gTextTrackLog, LogLevel::Debug, ("TextTrack=%p, " msg, this, ##__VA_ARGS__))
+#define WEBVTT_LOG(msg, ...)              \
+  MOZ_LOG(gTextTrackLog, LogLevel::Debug, \
+          ("TextTrack=%p, " msg, this, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {
@@ -279,18 +280,28 @@ void TextTrack::NotifyCueActiveStateChanged(TextTrackCue* aCue) {
   MOZ_ASSERT(aCue);
   if (aCue->GetActive()) {
     MOZ_ASSERT(!mActiveCueList->IsCueExist(aCue));
-    WEBVTT_LOG("NotifyCueActiveStateChanged, add cue %p to the active list", aCue);
+    WEBVTT_LOG("NotifyCueActiveStateChanged, add cue %p to the active list",
+               aCue);
     mActiveCueList->AddCue(*aCue);
   } else {
     MOZ_ASSERT(mActiveCueList->IsCueExist(aCue));
-    WEBVTT_LOG("NotifyCueActiveStateChanged, remove cue %p from the active list", aCue);
+    WEBVTT_LOG(
+        "NotifyCueActiveStateChanged, remove cue %p from the active list",
+        aCue);
     mActiveCueList->RemoveCue(*aCue);
   }
 }
 
-void TextTrack::GetCurrentCueList(RefPtr<TextTrackCueList>& aCueList) const {
+void TextTrack::GetCurrentCuesAndOtherCues(
+    RefPtr<TextTrackCueList>& aCurrentCues,
+    RefPtr<TextTrackCueList>& aOtherCues,
+    const media::TimeInterval& aInterval) const {
   const HTMLMediaElement* mediaElement = GetMediaElement();
   if (!mediaElement) {
+    return;
+  }
+
+  if (Mode() == TextTrackMode::Disabled) {
     return;
   }
 
@@ -298,14 +309,26 @@ void TextTrack::GetCurrentCueList(RefPtr<TextTrackCueList>& aCueList) const {
   // whose start times are less than or equal to the current playback position
   // and whose end times are greater than the current playback position.
   // https://html.spec.whatwg.org/multipage/media.html#time-marches-on
-  MOZ_ASSERT(aCueList);
+  MOZ_ASSERT(aCurrentCues && aOtherCues);
   const double playbackTime = mediaElement->CurrentTime();
   for (uint32_t idx = 0; idx < mCueList->Length(); idx++) {
     TextTrackCue* cue = (*mCueList)[idx];
     if (cue->StartTime() <= playbackTime && cue->EndTime() > playbackTime) {
-      WEBVTT_LOG("Add cue %p [%f:%f] to current cue list",
-                 cue, cue->StartTime(), cue->EndTime());
-      aCueList->AddCue(*cue);
+      WEBVTT_LOG("Add cue %p [%f:%f] to current cue list", cue,
+                 cue->StartTime(), cue->EndTime());
+      aCurrentCues->AddCue(*cue);
+    } else {
+      media::TimeInterval cueInterval(
+          media::TimeUnit::FromSeconds(cue->StartTime()),
+          media::TimeUnit::FromSeconds(cue->EndTime()));
+      // cues are completely outside the time interval.
+      if (!aInterval.Touches(cueInterval)) {
+        continue;
+      }
+      // contains any cues which are overlapping within the time interval.
+      WEBVTT_LOG("Add cue %p [%f:%f] to other cue list", cue, cue->StartTime(),
+                 cue->EndTime());
+      aOtherCues->AddCue(*cue);
     }
   }
 }
