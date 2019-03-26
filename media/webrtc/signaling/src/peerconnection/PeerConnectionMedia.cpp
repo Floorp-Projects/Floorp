@@ -652,8 +652,6 @@ void PeerConnectionMedia::OnCandidateFound_s(
 
   CSFLogDebug(LOGTAG, "%s: %s", __FUNCTION__, aTransportId.c_str());
 
-  MOZ_ASSERT(!aCandidateInfo.mUfrag.empty());
-
   // ShutdownMediaTransport_s has not run yet because it unhooks this function
   // from its signal, which means that SelfDestruct_m has not been dispatched
   // yet either, so this PCMedia will still be around when this dispatch reaches

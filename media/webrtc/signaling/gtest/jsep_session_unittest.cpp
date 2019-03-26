@@ -974,7 +974,7 @@ class JsepSessionTest : public JsepSessionTestBase,
         uint16_t level = 0;
         bool skipped;
         session.AddLocalIceCandidate(kAEqualsCandidate + candidate.str(),
-                                     transportId, "", &level, &mid, &skipped);
+                                     transportId, &level, &mid, &skipped);
         if (!skipped) {
           mCandidatesToTrickle.push_back(Tuple<Level, Mid, Candidate>(
               level, mid, kAEqualsCandidate + candidate.str()));
@@ -1010,16 +1010,11 @@ class JsepSessionTest : public JsepSessionTestBase,
             // that there is no default for RTCP
             idAndCandidates.second[RTCP].first,
             idAndCandidates.second[RTCP].second, idAndCandidates.first);
-        std::string mid;
-        uint16_t level = 0;
-        bool skipped;
-        session.AddLocalIceCandidate("", idAndCandidates.first, "", &level,
-                                     &mid, &skipped);
+        session.EndOfLocalCandidates(idAndCandidates.first);
       }
     }
 
     void Trickle(JsepSession& session) {
-      std::string transportId;
       for (const auto& levelMidAndCandidate : mCandidatesToTrickle) {
         Level level;
         Mid mid;
@@ -1027,11 +1022,10 @@ class JsepSessionTest : public JsepSessionTestBase,
         Tie(level, mid, candidate) = levelMidAndCandidate;
         std::cerr << "trickling candidate: " << candidate << " level: " << level
                   << " mid: " << mid << std::endl;
+        std::string transportId;
         Maybe<unsigned long> lev = Some(level);
-        session.AddRemoteIceCandidate(candidate, mid, lev, "", &transportId);
+        session.AddRemoteIceCandidate(candidate, mid, lev, &transportId);
       }
-      session.AddRemoteIceCandidate("", "", Maybe<uint16_t>(), "",
-                                    &transportId);
       mCandidatesToTrickle.clear();
     }
 
@@ -2597,7 +2591,7 @@ TEST_P(JsepSessionTest, FullCallWithCandidates) {
         "(unless bundle-only)");
     mOffCandidates->CheckDefaultRtpCandidate(
         false, remoteOffer->GetMediaSection(i), id,
-        "Remote offer after trickle should not have a default RTP candidate.");
+        "Initial remote offer should not have a default RTP candidate.");
     mOffCandidates->CheckRtcpCandidates(
         !bundleOnly && types[i] != SdpMediaSection::kApplication,
         remoteOffer->GetMediaSection(i), id,
@@ -2605,10 +2599,10 @@ TEST_P(JsepSessionTest, FullCallWithCandidates) {
         "(unless m=application or bundle-only)");
     mOffCandidates->CheckDefaultRtcpCandidate(
         false, remoteOffer->GetMediaSection(i), id,
-        "Remote offer after trickle should not have a default RTCP candidate.");
+        "Initial remote offer should not have a default RTCP candidate.");
     CheckEndOfCandidates(
-        true, remoteOffer->GetMediaSection(i),
-        "Remote offer after trickle should have an end-of-candidates.");
+        false, remoteOffer->GetMediaSection(i),
+        "Initial remote offer should not have an end-of-candidates.");
   }
 
   AddTracks(*mSessionAns);
@@ -2666,8 +2660,8 @@ TEST_P(JsepSessionTest, FullCallWithCandidates) {
         "Remote answer after trickle should not have a default RTCP "
         "candidate.");
     CheckEndOfCandidates(
-        true, remoteAnswer->GetMediaSection(i),
-        "Remote answer after trickle should have an end-of-candidates.");
+        false, remoteAnswer->GetMediaSection(i),
+        "Remote answer after trickle should not have an end-of-candidates.");
   }
 }
 
@@ -2708,9 +2702,8 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates) {
         "Local reoffer before gathering should not have a default RTCP "
         "candidate.");
     CheckEndOfCandidates(
-        i == 0, parsedOffer->GetMediaSection(i),
-        "Local reoffer before gathering should have an end-of-candidates "
-        "(level 0 only)");
+        false, parsedOffer->GetMediaSection(i),
+        "Local reoffer before gathering should not have an end-of-candidates.");
   }
 
   // mSessionAns should generate a reoffer that is similar
@@ -2739,9 +2732,9 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates) {
         "Local reoffer before gathering should not have a default RTCP "
         "candidate. (previous answerer)");
     CheckEndOfCandidates(
-        i == 0, parsedOffer->GetMediaSection(i),
-        "Local reoffer before gathering should have an end-of-candidates "
-        "(level 0 only)");
+        false, parsedOffer->GetMediaSection(i),
+        "Local reoffer before gathering should not have an end-of-candidates. "
+        "(previous answerer)");
   }
 
   // Ok, let's continue with the renegotiation
@@ -2824,8 +2817,9 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates) {
     mOffCandidates->CheckDefaultRtcpCandidate(
         false, remoteOffer->GetMediaSection(i), id,
         "Remote reoffer should not have a default RTCP candidate.");
-    CheckEndOfCandidates(true, remoteOffer->GetMediaSection(i),
-                         "Remote reoffer should have an end-of-candidates.");
+    CheckEndOfCandidates(
+        false, remoteOffer->GetMediaSection(i),
+        "Remote reoffer should not have an end-of-candidates.");
   }
 
   answer = CreateAnswer();
@@ -2881,9 +2875,9 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates) {
         false, remoteAnswer->GetMediaSection(i), id,
         "Remote reanswer after trickle should not have a default RTCP "
         "candidate.");
-    CheckEndOfCandidates(i == 0, remoteAnswer->GetMediaSection(i),
-                         "Remote reanswer after trickle should have an "
-                         "end-of-candidates on level 0 only.");
+    CheckEndOfCandidates(
+        false, remoteAnswer->GetMediaSection(i),
+        "Remote reanswer after trickle should not have an end-of-candidates.");
   }
 }
 
@@ -4818,7 +4812,7 @@ TEST_F(JsepSessionTest, CreateOfferAddCandidate) {
   bool skipped;
   nsresult rv;
   rv = mSessionOff->AddLocalIceCandidate(strSampleCandidate,
-                                         GetTransportId(*mSessionOff, 0), "",
+                                         GetTransportId(*mSessionOff, 0),
                                          &level, &mid, &skipped);
   ASSERT_EQ(NS_OK, rv);
 }
@@ -4829,7 +4823,7 @@ TEST_F(JsepSessionTest, AddIceCandidateEarly) {
   bool skipped;
   nsresult rv;
   rv = mSessionOff->AddLocalIceCandidate(strSampleCandidate,
-                                         GetTransportId(*mSessionOff, 0), "",
+                                         GetTransportId(*mSessionOff, 0),
                                          &level, &mid, &skipped);
 
   // This can't succeed without a local description
@@ -4915,7 +4909,7 @@ TEST_F(JsepSessionTest, AddCandidateInHaveLocalOffer) {
   std::string mid;
   std::string transportId;
   rv = mSessionOff->AddRemoteIceCandidate(strSampleCandidate, mid,
-                                          Some(nSamplelevel), "", &transportId);
+                                          Some(nSamplelevel), &transportId);
   ASSERT_EQ(NS_ERROR_UNEXPECTED, rv);
 }
 

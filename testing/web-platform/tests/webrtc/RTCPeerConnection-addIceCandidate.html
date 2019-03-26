@@ -176,15 +176,12 @@ a=rtcp-rsize
     t.add_cleanup(() => pc.close());
 
     await pc.setRemoteDescription(sessionDesc);
-    await pc.addIceCandidate({
-      usernameFragment: usernameFragment1,
-      sdpMid: sdpMid1
-    });
+    await pc.addIceCandidate({usernameFragment: usernameFragment1});
     assert_candidate_line_between(pc.remoteDescription.sdp,
       mediaLine1, endOfCandidateLine, mediaLine2);
     assert_false(is_candidate_line_after(pc.remoteDescription.sdp,
       mediaLine2, endOfCandidateLine));
-  }, 'addIceCandidate({usernameFragment: usernameFragment1, sdpMid: sdpMid1}) should work, and add a=end-of-candidates to the first m-section');
+  }, 'addIceCandidate({usernameFragment: usernameFragment1}) should work, and add a=end-of-candidates to the first m-section');
 
   promise_test(async t => {
     const pc = new RTCPeerConnection();
@@ -192,15 +189,12 @@ a=rtcp-rsize
     t.add_cleanup(() => pc.close());
 
     await pc.setRemoteDescription(sessionDesc);
-    await pc.addIceCandidate({
-      usernameFragment: usernameFragment2,
-      sdpMLineIndex: 1
-    });
+    await pc.addIceCandidate({usernameFragment: usernameFragment2});
     assert_false(is_candidate_line_between(pc.remoteDescription.sdp,
       mediaLine1, endOfCandidateLine, mediaLine2));
     assert_true(is_candidate_line_after(pc.remoteDescription.sdp,
       mediaLine2, endOfCandidateLine));
-  }, 'addIceCandidate({usernameFragment: usernameFragment2, sdpMLineIndex: 1}) should work, and add a=end-of-candidates to the first m-section');
+  }, 'addIceCandidate({usernameFragment: usernameFragment2}) should work, and add a=end-of-candidates to the first m-section');
 
   promise_test(async t => {
     const pc = new RTCPeerConnection();
@@ -208,9 +202,12 @@ a=rtcp-rsize
     t.add_cleanup(() => pc.close());
 
     await pc.setRemoteDescription(sessionDesc);
-    await promise_rejects(t, 'OperationError',
-      pc.addIceCandidate({usernameFragment: "no such ufrag"}));
-  }, 'addIceCandidate({usernameFragment: "no such ufrag"}) should not work');
+    await pc.addIceCandidate({usernameFragment: "no such ufrag"});
+    assert_false(is_candidate_line_between(pc.remoteDescription.sdp,
+      mediaLine1, endOfCandidateLine, mediaLine2));
+    assert_false(is_candidate_line_after(pc.remoteDescription.sdp,
+      mediaLine2, endOfCandidateLine));
+  }, 'addIceCandidate({usernameFragment: "no such ufrag"}) should work, but not add a=end-of-candidates');
 
   promise_test(t => {
     const pc = new RTCPeerConnection();
@@ -319,7 +316,7 @@ a=rtcp-rsize
       candidate: candidateStr1,
       sdpMid: sdpMid1,
       sdpMLineIndex: sdpMLineIndex1,
-      usernameFragment: null
+      ufrag: null
     }))
     .then(() => {
       assert_candidate_line_between(pc.remoteDescription.sdp,
@@ -542,7 +539,7 @@ a=rtcp-rsize
           candidate: candidateStr1,
           sdpMid: sdpMid1,
           sdpMLineIndex: sdpMLineIndex1,
-          usernameFragment: 'invalid'
+          ufrag: 'invalid'
         })));
   }, 'Add candidate with invalid usernameFragment should reject with OperationError');
 
@@ -581,7 +578,7 @@ a=rtcp-rsize
           candidate: candidateStr2,
           sdpMid: sdpMid2,
           sdpMLineIndex: sdpMLineIndex2,
-          usernameFragment: usernameFragment1
+          usernameFragement: usernameFragment1
         })));
   }, 'Add candidate with sdpMid belonging to different usernameFragment should reject with OperationError');
 
