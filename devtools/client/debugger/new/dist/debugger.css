@@ -288,7 +288,7 @@ button.invoke-getter {
   background-color: var(--theme-icon-color);
   height: 10px;
   vertical-align: middle;
-  border:none;
+  border: none;
 }
 
 .invoke-getter:hover {
@@ -304,7 +304,7 @@ button.invoke-getter {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /* We can remove the outline since we do add our own focus style on nodes */
+/* We can remove the outline since we do add our own focus style on nodes */
 .tree:focus {
   outline: none;
 }
@@ -337,7 +337,7 @@ button.invoke-getter {
   display: inline-block;
   width: 12px;
   margin-inline-start: 5px;
-  border-inline-start: 1px solid #A2D1FF;
+  border-inline-start: 1px solid #a2d1ff;
   flex-shrink: 0;
 }
 
@@ -349,7 +349,7 @@ button.invoke-getter {
 /* For non expandable root nodes, we don't have .tree-indent elements, so we declare
    the margin on the start of the node */
 .tree-node[data-expandable="false"][aria-level="1"] {
-  padding-inline-start: 15px
+  padding-inline-start: 15px;
 }
 
 .tree .tree-node[data-expandable="true"] {
@@ -416,7 +416,7 @@ html[dir="rtl"] .tree-node button:not(.expanded) {
   color: var(--theme-body-color);
 }
 
-.tree.object-inspector .block .object-label:before {
+.tree.object-inspector .block .object-label::before {
   content: "\2632   ";
   font-size: 1.1em;
 }
@@ -960,6 +960,7 @@ menuseparator {
 }
 
 .split-box.vert > .splitter {
+  /* prettier-ignore */
   min-width: calc(var(--devtools-splitter-inline-start-width) +
     var(--devtools-splitter-inline-end-width) + 1px);
 
@@ -973,6 +974,7 @@ menuseparator {
 }
 
 .split-box.horz > .splitter {
+  /* prettier-ignore */
   min-height: calc(var(--devtools-splitter-top-width) +
     var(--devtools-splitter-bottom-width) + 1px);
   border-top-width: var(--devtools-splitter-top-width);
@@ -2183,7 +2185,8 @@ menuseparator {
   width: 100%;
   height: 2px;
   background-color: var(--tab-line-color, transparent);
-  transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
+  transition: transform 250ms var(--animation-curve),
+    opacity 250ms var(--animation-curve);
   opacity: 0;
   transform: scaleX(0);
 }
@@ -2361,7 +2364,7 @@ menuseparator {
   left: 0;
   right: 0;
   bottom: -1px;
-  border: solid 1px  var(--blue-50);
+  border: solid 1px var(--blue-50);
   pointer-events: none;
   opacity: 0;
   transition: opacity 150ms ease-out;
@@ -3944,56 +3947,56 @@ html[dir="rtl"] .command-bar {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .event-listeners-content {
-	padding-top: 4px;
-	padding-bottom: 4px;
-	padding-inline-start: 14px;
-	padding-inline-end: 20px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-inline-start: 14px;
+  padding-inline-end: 20px;
 }
 
 .event-listeners-content ul {
-	padding: 0;
-	list-style-type: none;
+  padding: 0;
+  list-style-type: none;
 }
 
 .event-listener-group {
-	user-select: none;
+  user-select: none;
 }
 
 .event-listener-header {
-	display: flex;
-	align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .event-listener-expand {
-	border: none;
-	background: none;
-	padding: 4px 5px;
-	line-height: 12px;
+  border: none;
+  background: none;
+  padding: 4px 5px;
+  line-height: 12px;
 }
 
 .event-listener-expand:hover {
-	background: transparent;
+  background: transparent;
 }
 
 .event-listener-group input[type="checkbox"] {
-	margin: 0px;
-	margin-inline-end: 4px;
+  margin: 0px;
+  margin-inline-end: 4px;
 }
 
 .event-listener-label {
-	display: flex;
-	align-items: center;
-	padding-inline-start: 2px;
-	padding-inline-end: 10px;
+  display: flex;
+  align-items: center;
+  padding-inline-start: 2px;
+  padding-inline-end: 10px;
 }
 
 .event-listener-category {
-	padding: 3px 0px;
-	line-height: 14px;
+  padding: 3px 0px;
+  line-height: 14px;
 }
 
 .event-listeners-content .arrow {
-	margin-inline-end: 0;
+  margin-inline-end: 0;
 }
 
 html[dir="ltr"] .event-listeners-content .arrow.expanded {
@@ -4005,21 +4008,21 @@ html[dir="rtl"] .event-listeners-content .arrow.expanded {
 }
 
 .event-listener-event {
-	display: flex;
-	align-items: center;
-	margin-inline-start: 30px;
+  display: flex;
+  align-items: center;
+  margin-inline-start: 30px;
 }
 
 .event-listener-name {
-	line-height: 14px;
-	padding: 3px 0px;
+  line-height: 14px;
+  padding: 3px 0px;
 }
 
 .event-listener-event input {
-	margin-inline-end: 4px;
-	margin-inline-start: 0px;
-	margin-top: 0px;
-	margin-bottom: 0px;
+  margin-inline-end: 4px;
+  margin-inline-start: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
