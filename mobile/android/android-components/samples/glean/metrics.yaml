@@ -14,13 +14,13 @@ browser.engagement:
     data_reviews:
       - N/A 
     notification_emails:
-      - telemetry-client-dev@mozilla.com
+      - CHANGE-ME@test-only.com
     extra_keys:
       key1:
         description: "This is key one"
       key2:
         description: "This is key two"
-    expires: never
+    expires: 2100-01-01 
     
   event_no_keys:
     type: event
@@ -31,8 +31,8 @@ browser.engagement:
     data_reviews:
       - N/A 
     notification_emails:
-      - telemetry-client-dev@mozilla.com
-    expires: never
+      - CHANGE-ME@test-only.com
+    expires: 2100-01-01
 
 basic:
   os:
@@ -44,8 +44,8 @@ basic:
     data_reviews:
       - N/A 
     notification_emails:
-      - telemetry-client-dev@mozilla.com
-    expires: never
+      - CHANGE-ME@test-only.com
+    expires: 2100-01-01
 
 test:
   test_string_list:
@@ -60,8 +60,8 @@ test:
     data_reviews:
       - N/A 
     notification_emails:
-      - telemetry-client-dev@mozilla.com
-    expires: never
+      - CHANGE-ME@test-only.com
+    expires: 2100-01-01
 
   test_counter:
     type: counter
@@ -75,8 +75,8 @@ test:
     data_reviews:
       - N/A 
     notification_emails:
-      - telemetry-client-dev@mozilla.com
-    expires: never
+      - CHANGE-ME@test-only.com
+    expires: 2100-01-01
 
   test_timespan:
     type: timespan
@@ -89,5 +89,5 @@ test:
     data_reviews:
       - N/A 
     notification_emails:
-      - telemetry-client-dev@mozilla.com
-    expires: never
+      - CHANGE-ME@test-only.com
+    expires: 2100-01-01

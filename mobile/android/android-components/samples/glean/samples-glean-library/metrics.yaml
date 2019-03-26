@@ -18,5 +18,5 @@ sample_metrics:
     data_reviews:
       - N/A
     notification_emails:
-      - telemetry-client-dev@mozilla.com
-    expires: never
+      - CHANGE-ME@test-only.com
+    expires: 2100-01-01 

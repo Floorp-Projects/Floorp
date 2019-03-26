@@ -9,7 +9,7 @@ import groovy.json.JsonOutput
 // so that it will be shared between all libraries that use glean.  This is
 // important because it is approximately 300MB in installed size.
 
-String GLEAN_PARSER_VERSION = "0.19.1"
+String GLEAN_PARSER_VERSION = "0.19.2"
 // The version of Miniconda is explicitly specified.
 // Miniconda3-4.5.12 is known to not work on Windows.
 String MINICONDA_VERSION = "4.5.11"
