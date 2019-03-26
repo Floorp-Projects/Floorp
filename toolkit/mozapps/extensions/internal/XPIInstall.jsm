@@ -82,6 +82,8 @@ const PREF_XPI_DIRECT_WHITELISTED     = "xpinstall.whitelist.directRequest";
 const PREF_XPI_FILE_WHITELISTED       = "xpinstall.whitelist.fileRequest";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 
+const PREF_SELECTED_LWT               = "lightweightThemes.selectedThemeID";
+
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
@@ -178,6 +180,11 @@ const LOGGER_ID = "addons.xpi";
 // Create a new logger for use by all objects in this Addons XPI Provider module
 // (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
+
+// Stores the ID of the lightweight theme which was selected during the
+// last session, if any. When installing a new built-in theme with this
+// ID, it will be automatically enabled.
+let lastLightweightTheme = null;
 
 function getJarURI(file, path = "") {
   if (file instanceof Ci.nsIFile) {
@@ -3646,6 +3653,11 @@ var XPIInstall = {
    *          A Promise that resolves when the addon is installed.
    */
   async installBuiltinAddon(base) {
+    if (lastLightweightTheme === null) {
+      lastLightweightTheme = Services.prefs.getCharPref(PREF_SELECTED_LWT, "");
+      Services.prefs.clearUserPref(PREF_SELECTED_LWT);
+    }
+
     let baseURL = Services.io.newURI(base);
 
     // WebExtensions need to be able to iterate through the contents of
@@ -3680,15 +3692,26 @@ var XPIInstall = {
     let addon = await loadManifest(pkg, XPIInternal.BuiltInLocation);
     addon.rootURI = base;
 
-    // Themes are disabled by default at install time. However, we
-    // always want one theme to be active, falling back to the default
-    // theme when the active theme is disabled. The first time we
-    // install the default theme, though, there likely aren't any other
-    // theme add-ons installed yet, in which case we want to enable it
-    // immediately.
-    if (addon.id === DEFAULT_THEME_ID &&
-        !XPIDatabase.getAddonsByType("theme").some(theme => !theme.disabled)) {
-      addon.userDisabled = false;
+    // If this is a theme, decide whether to enable it. Themes are
+    // disabled by default. However:
+    //
+    // If a lightweight theme was selected in the last session, and this
+    // theme has the same ID, then we clearly want to enable it.
+    //
+    // If it is the default theme, more specialized behavior applies:
+    //
+    // We always want one theme to be active, falling back to the
+    // default theme when the active theme is disabled. The first time
+    // we install the default theme, though, there likely aren't any
+    // other theme add-ons installed yet, in which case we want to
+    // enable it immediately.
+    if (addon.type === "theme") {
+      if (addon.id === lastLightweightTheme ||
+          (!lastLightweightTheme.endsWith("@mozilla.org") &&
+           addon.id === DEFAULT_THEME_ID &&
+           !XPIDatabase.getAddonsByType("theme").some(theme => !theme.disabled))) {
+        addon.userDisabled = false;
+      }
     }
     await this._activateAddon(addon);
   },
