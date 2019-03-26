@@ -63,6 +63,15 @@ about-debugging-sidebar-runtime-item-name =
 about-debugging-sidebar-runtime-item-name-no-device =
   .title = { $displayName }
 
+# Text to show in the footer of the sidebar that links to a help page
+# (currently: https://developer.mozilla.org/docs/Tools/about:debugging)
+about-debugging-sidebar-support = Debugging Support
+
+# Text to show as the ALT attribute of a help icon that accompanies the help about
+# debugging link in the footer of the sidebar
+about-debugging-sidebar-support-icon =
+  .alt = Help icon
+
 # Text displayed in a sidebar button to refresh the list of USB devices. Clicking on it
 # will attempt to update the list of devices displayed in the sidebar.
 about-debugging-refresh-usb-devices-button = Refresh devices
