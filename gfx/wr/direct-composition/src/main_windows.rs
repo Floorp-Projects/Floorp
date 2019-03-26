@@ -115,6 +115,7 @@ impl Rectangle {
                 ..webrender::RendererOptions::default()
             },
             None,
+            size,
         ).unwrap();
         let api = sender.create_api();
 
