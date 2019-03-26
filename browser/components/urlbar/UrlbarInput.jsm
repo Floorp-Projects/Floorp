@@ -196,7 +196,7 @@ class UrlbarInput {
    *   The trimmed string
    */
   trimValue(val) {
-    return UrlbarPrefs.get("trimURLs") ? this.window.trimURL(val) : val;
+    return UrlbarPrefs.get("trimURLs") ? BrowserUtils.trimURL(val) : val;
   }
 
   /**

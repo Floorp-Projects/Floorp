@@ -8,6 +8,7 @@ var EXPORTED_SYMBOLS = ["UrlbarView"];
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
@@ -454,7 +455,7 @@ class UrlbarView {
     let setURL = () => {
       url = this._createElement("span");
       url.className = "urlbarView-secondary urlbarView-url";
-      let val = this.window.trimURL(result.payload.displayUrl || "");
+      let val = BrowserUtils.trimURL(result.payload.displayUrl || "");
       this._addTextContentWithHighlights(url, val,
                                          result.payloadHighlights.displayUrl || []);
     };
