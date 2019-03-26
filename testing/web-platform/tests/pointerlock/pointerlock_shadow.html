@@ -4,13 +4,15 @@
 <meta name='author' title='Takayoshi Kochi' href='mailto:kochi@chromium.org'>
 <meta name='assert' content='Test for DocumentOrShadowRoot.pointerLockElement.'>
 <link rel='help' href='https://w3c.github.io/pointerlock/#widl-DocumentOrShadowRoot-pointerLockElement'>
-<meta name='flags' content='interact'>
 <meta name='timeout' content='long'>
 <script src='/resources/testharness.js'></script>
 <script src='/resources/testharnessreport.js'></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-actions.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
 <script src='../shadow-dom/resources/shadow-dom.js'></script>
 </head>
-<body>
+<body onload="inject_input()">
 <div id='host'>
   <template data-mode='open' id='root'>
     <slot></slot>
@@ -35,7 +37,12 @@
     </template>
   </div>
 </div>
-
+<div>
+  <h2>Description</h2>
+  <p>Click the button below to trigger pointer lock on an element in a shadow root.</p>
+  <button onclick="run_test()" id="button">Click Me!</button>
+</div>
+</body>
 <script>
 function run_test() {
     async_test((test) => {
@@ -73,12 +80,14 @@ function run_test() {
         var canvas = ids.canvas;
         canvas.requestPointerLock();
     }, 'Test for pointerLockElement adjustment for Shadow DOM.');
-}
+  }
+
+  function inject_input() {
+      new test_driver.Actions()
+        .pointerMove(0, 0, {origin: button})
+        .pointerDown()
+        .pointerUp()
+        .send();
+  }
 </script>
-<div>
-  <h2>Description</h2>
-  <p>Click the button below to trigger pointer lock on an element in a shadow root.</p>
-  <button onclick="run_test()">Click Me!</button>
-</div>
-</body>
 </html>

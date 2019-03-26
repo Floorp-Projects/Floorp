@@ -4,7 +4,9 @@
 <meta name="timeout" content="long">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<meta name='flags' content='interact'>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-actions.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
 <style type="text/css">
     button {
         color: blue;
@@ -46,7 +48,7 @@
     </p>
     <hr/>
 
-    <button onclick="lockTarget();">lockTarget</button>
+    <button id="Button" onclick="lockTarget();">lockTarget</button>
 
     <div id="target-wrap">
         <div id="status-log">Click the "lockTarget" button.</div>
@@ -63,25 +65,32 @@
 
         var removeTargetTest = async_test("Test that pointer lock will be lost when taking the target element out of the DOM.");
 
-    document.addEventListener("pointerlockchange", function() {
-        if(document.pointerLockElement) {
-            status_log.innerHTML = "Target is locked!";
+        document.addEventListener("pointerlockchange", function() {
+            if(document.pointerLockElement) {
+                status_log.innerHTML = "Target is locked!";
 
-            target_wrap.removeChild(target);
-        } else {
-            status_log.innerHTML = "Pointer lock exited!";
+                target_wrap.removeChild(target);
+            } else {
+                status_log.innerHTML = "Pointer lock exited!";
 
-            removeTargetTest.step(function() {
-                assert_true(document.pointerLockElement === null, "Pointer lock exited!");
-            });
+                removeTargetTest.step(function() {
+                    assert_true(document.pointerLockElement === null, "Pointer lock exited!");
+                });
 
-            removeTargetTest.done();
+                removeTargetTest.done();
+            }
+        });
+
+        function lockTarget() {
+            target.requestPointerLock();
         }
-    });
 
-    function lockTarget() {
-        target.requestPointerLock();
-    }
+        // Inject mouse inputs.
+        new test_driver.Actions()
+                       .pointerMove(0, 0, {origin: Button})
+                       .pointerDown()
+                       .pointerUp()
+                       .send();
     </script>
     </body>
 </html>
