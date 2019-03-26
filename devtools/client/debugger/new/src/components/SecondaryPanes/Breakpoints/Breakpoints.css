@@ -181,10 +181,17 @@ html .breakpoints-list .breakpoint.paused {
 }
 
 .breakpoint .close-btn {
-  inset-inline-end: 15px;
-  inset-inline-start: auto;
   position: absolute;
-  top: -100px; /*For hiding button outside of row until hovered or focused*/
+  /* hide button outside of row until hovered or focused */
+  top: -100px;
+}
+
+[dir="ltr"] .breakpoint .close-btn {
+  right: 12px;
+}
+
+[dir="rtl"] .breakpoint .close-btn {
+  left: 12px;
 }
 
 .breakpoint:hover .close-btn,
