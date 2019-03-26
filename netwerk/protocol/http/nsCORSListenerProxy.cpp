@@ -103,6 +103,13 @@ static void LogBlockedRequest(nsIRequest* aRequest, const char* aProperty,
     privateBrowsing = nsContentUtils::IsInPrivateBrowsing(loadGroup);
   }
 
+  bool fromChromeContext = false;
+  if (channel) {
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+    fromChromeContext =
+        nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal());
+  }
+
   // we are passing aProperty as the category so we can link to the
   // appropriate MDN docs depending on the specific error.
   uint64_t innerWindowID = nsContentUtils::GetInnerWindowID(aRequest);
@@ -116,7 +123,7 @@ static void LogBlockedRequest(nsIRequest* aRequest, const char* aProperty,
     }
   }
   nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, privateBrowsing,
-                                             msg, category);
+                                             fromChromeContext, msg, category);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1518,6 +1525,7 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
 // static
 void nsCORSListenerProxy::LogBlockedCORSRequest(uint64_t aInnerWindowID,
                                                 bool aPrivateBrowsing,
+                                                bool aFromChromeContext,
                                                 const nsAString& aMessage,
                                                 const nsACString& aCategory) {
   nsresult rv = NS_OK;
@@ -1555,7 +1563,8 @@ void nsCORSListenerProxy::LogBlockedCORSRequest(uint64_t aInnerWindowID,
                            0,              // lineNumber
                            0,              // columnNumber
                            nsIScriptError::warningFlag, category.get(),
-                           aPrivateBrowsing);
+                           aPrivateBrowsing,
+                           aFromChromeContext);  // From chrome context
   }
   if (NS_FAILED(rv)) {
     NS_WARNING(
