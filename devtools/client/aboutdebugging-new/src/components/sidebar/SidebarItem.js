@@ -22,24 +22,41 @@ class SidebarItem extends PureComponent {
     };
   }
 
+  static get defaultProps() {
+    return {
+      isSelected: false,
+    };
+  }
+
   renderContent() {
     const { children, to } = this.props;
 
     if (to) {
-      return Link(
-        {
-          className: "sidebar-item__link js-sidebar-link",
-          to,
-        },
-        children
-      );
+      const isExternalUrl = /^http/.test(to);
+
+      return isExternalUrl
+        ? dom.a(
+          {
+            className: "sidebar-item__link",
+            href: to,
+            target: "_blank",
+          },
+          children,
+        )
+        : Link(
+          {
+            className: "sidebar-item__link js-sidebar-link",
+            to,
+          },
+          children,
+        );
     }
 
     return children;
   }
 
   render() {
-    const {className, isSelected, to } = this.props;
+    const { className, isSelected, to } = this.props;
 
     return dom.li(
       {

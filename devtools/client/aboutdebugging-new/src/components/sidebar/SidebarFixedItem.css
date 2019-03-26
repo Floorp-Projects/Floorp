@@ -15,8 +15,9 @@
   border-radius: 2px;
   display: grid;
   grid-template-columns: 34px 1fr;
-  font-size: 16px;
   height: 100%;
+  font-size: var(--body-20-font-size);
+  font-weight: var(--body-20-font-weight);
 }
 
 .sidebar-fixed-item__icon {
