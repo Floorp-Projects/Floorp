@@ -1197,6 +1197,9 @@ skip script test262/language/expressions/await/await-monkey-patched-promise.js
 skip script test262/language/expressions/await/async-await-interleaved.js
 skip script test262/language/expressions/await/for-await-of-interleaved.js
 skip script test262/language/expressions/await/async-generator-interleaved.js
+skip script test262/language/statements/for-await-of/async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js
+skip script test262/language/statements/for-await-of/ticks-with-async-iter-resolved-promise-and-constructor-lookup-two.js
+skip script test262/language/statements/for-await-of/ticks-with-sync-iter-resolved-promise-and-constructor-lookup.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1321616
 skip script test262/annexB/built-ins/Function/createdynfn-html-close-comment-params.js
