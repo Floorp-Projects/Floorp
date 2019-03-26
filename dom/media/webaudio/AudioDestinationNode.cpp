@@ -413,8 +413,8 @@ void AudioDestinationNode::NotifyMainThreadStreamFinished() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mStream->IsFinished());
 
-  if (mIsOffline) {
-    AbstractMainThread()->Dispatch(NewRunnableMethod(
+  if (mIsOffline && GetAbstractMainThread()) {
+    GetAbstractMainThread()->Dispatch(NewRunnableMethod(
         "dom::AudioDestinationNode::FireOfflineCompletionEvent", this,
         &AudioDestinationNode::FireOfflineCompletionEvent));
   }
