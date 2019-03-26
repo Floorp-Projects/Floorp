@@ -4823,7 +4823,7 @@ var XULBrowserWindow = {
                         encodeURIComponent);
 
       if (UrlbarPrefs.get("trimURLs")) {
-        url = trimURL(url);
+        url = BrowserUtils.trimURL(url);
       }
     }
 
