@@ -438,6 +438,7 @@ class UrlbarAbstraction {
         action: actionElement,
         row: element,
         separator: urlElement || actionElement,
+        title: element.getElementsByClassName("urlbarView-title")[0],
         url: urlElement,
       };
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
@@ -471,6 +472,7 @@ class UrlbarAbstraction {
         action: element._actionText,
         row: element,
         separator: element._separator,
+        title: element._titleText,
         url: element._urlText,
       };
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH && action) {
