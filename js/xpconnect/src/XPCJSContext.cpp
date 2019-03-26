@@ -761,13 +761,15 @@ static mozilla::Atomic<bool> sSharedMemoryEnabled(false);
 static mozilla::Atomic<bool> sStreamsEnabled(false);
 static mozilla::Atomic<bool> sBigIntEnabled(false);
 static mozilla::Atomic<bool> sFieldsEnabled(false);
+static mozilla::Atomic<bool> sAwaitFixEnabled(false);
 
 void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
       .setSharedMemoryAndAtomicsEnabled(sSharedMemoryEnabled)
       .setBigIntEnabled(sBigIntEnabled)
       .setStreamsEnabled(sStreamsEnabled)
-      .setFieldsEnabled(sFieldsEnabled);
+      .setFieldsEnabled(sFieldsEnabled)
+      .setAwaitFixEnabled(sAwaitFixEnabled);
 }
 
 static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
@@ -848,6 +850,8 @@ static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
   sStreamsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "streams");
   sFieldsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.fields");
+  sAwaitFixEnabled =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.await_fix");
 
 #ifdef DEBUG
   sExtraWarningsForSystemJS =

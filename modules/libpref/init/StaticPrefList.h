@@ -1156,6 +1156,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+VARCACHE_PREF(
+  "javascript.options.experimental.await_fix",
+   javascript_options_experimental_await_fix,
+  RelaxedAtomicBool, false
+)
+
 
 //---------------------------------------------------------------------------
 // Media prefs
