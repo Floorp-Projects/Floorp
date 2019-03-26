@@ -38,14 +38,21 @@ GraphRunner::GraphRunner(MediaStreamGraphImpl* aGraph)
 GraphRunner::~GraphRunner() {
   MOZ_COUNT_DTOR(GraphRunner);
   MOZ_ASSERT(mThreadState == ThreadState::Shutdown);
-  PR_JoinThread(mThread);
 }
 
 void GraphRunner::Shutdown() {
-  MonitorAutoLock lock(mMonitor);
-  MOZ_ASSERT(mThreadState == ThreadState::Wait);
-  mThreadState = ThreadState::Shutdown;
-  mMonitor.Notify();
+  {
+    MonitorAutoLock lock(mMonitor);
+    MOZ_ASSERT(mThreadState == ThreadState::Wait);
+    mThreadState = ThreadState::Shutdown;
+    mMonitor.Notify();
+  }
+  // We need to wait for runner thread shutdown here for the sake of the
+  // xpcomWillShutdown case, so that the main thread is not shut down before
+  // cleanup messages are sent for objects destroyed in
+  // CycleCollectedJSContext shutdown.
+  PR_JoinThread(mThread);
+  mThread = nullptr;
 }
 
 bool GraphRunner::OneIteration(GraphTime aStateEnd) {
