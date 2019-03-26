@@ -477,12 +477,14 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
   },
 
   /**
-   * Load accessibility highlighter style sheet used for preventing transitions and
-   * applying transparency when calculating colour contrast.
+   * Ensure that nothing interferes with the audit for an accessible object
+   * (CSS, overlays) by load accessibility highlighter style sheet used for
+   * preventing transitions and applying transparency when calculating colour
+   * contrast as well as temporarily hiding accessible highlighter overlay.
    * @param  {Object} win
    *         Window where highlighting happens.
    */
-  loadTransitionDisablingStyleSheet(win) {
+  clearStyles(win) {
     if (this._sheetLoaded) {
       return;
     }
@@ -493,21 +495,43 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     // taking a snapshot for contrast measurement).
     loadSheet(win, HIGHLIGHTER_STYLES_SHEET);
     this._sheetLoaded = true;
+    this.hideHighlighter();
   },
 
   /**
-   * Unload accessibility highlighter style sheet used for preventing transitions and
-   * applying transparency when calculating colour contrast.
+   * Restore CSS and overlays that could've interfered with the audit for an
+   * accessible object by unloading accessibility highlighter style sheet used
+   * for preventing transitions and applying transparency when calculating
+   * colour contrast and potentially restoring accessible highlighter overlay.
    * @param  {Object} win
    *         Window where highlighting was happenning.
    */
-  removeTransitionDisablingStyleSheet(win) {
+  restoreStyles(win) {
     if (!this._sheetLoaded) {
       return;
     }
 
+    this.showHighlighter();
     removeSheet(win, HIGHLIGHTER_STYLES_SHEET);
     this._sheetLoaded = false;
+  },
+
+  hideHighlighter() {
+    // TODO: Fix this workaround that temporarily removes higlighter bounds
+    // overlay that can interfere with the contrast ratio calculation.
+    if (this._highlighter) {
+      const highlighter = this._highlighter.instance;
+      highlighter.hideAccessibleBounds();
+    }
+  },
+
+  showHighlighter() {
+    // TODO: Fix this workaround that temporarily removes higlighter bounds
+    // overlay that can interfere with the contrast ratio calculation.
+    if (this._highlighter) {
+      const highlighter = this._highlighter.instance;
+      highlighter.showAccessibleBounds();
+    }
   },
 
   /**

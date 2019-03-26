@@ -233,17 +233,52 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
   }
 
   /**
+   * Public API method to temporarily hide accessible bounds for things like
+   * color contrast calculation.
+   */
+  hideAccessibleBounds() {
+    if (this.getElement("elements").hasAttribute("hidden")) {
+      return;
+    }
+
+    this._hideAccessibleBounds();
+    this._shouldRestoreBoundsVisibility = true;
+  }
+
+  /**
+   * Public API method to show accessible bounds in case they were temporarily
+   * hidden.
+   */
+  showAccessibleBounds() {
+    if (this._shouldRestoreBoundsVisibility) {
+      this._showAccessibleBounds();
+    }
+  }
+
+  /**
    * Hide the accessible bounds container.
    */
   _hideAccessibleBounds() {
+    this._shouldRestoreBoundsVisibility = null;
+    setIgnoreLayoutChanges(true);
     this.getElement("elements").setAttribute("hidden", "true");
+    setIgnoreLayoutChanges(false,
+      this.highlighterEnv.window.document.documentElement);
   }
 
   /**
    * Show the accessible bounds container.
    */
   _showAccessibleBounds() {
+    this._shouldRestoreBoundsVisibility = null;
+    if (!this.currentNode || !this.highlighterEnv.window) {
+      return;
+    }
+
+    setIgnoreLayoutChanges(true);
     this.getElement("elements").removeAttribute("hidden");
+    setIgnoreLayoutChanges(false,
+      this.highlighterEnv.window.document.documentElement);
   }
 
   /**
