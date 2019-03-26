@@ -45,6 +45,15 @@
     info("Source resolution changed");
   }
 
+  async function setParameters(test, emitter, encodings) {
+    info(`Setting parameters to ${JSON.stringify(encodings)}`);
+    emitter.start();
+    await test.pcRemote._pc.getSenders()[0].setParameters({encodings});
+    await haveEvent(test.pcLocal.remoteMediaElements[0], "resize");
+    emitter.stop();
+		info("Parameters set");
+	}
+
   async function checkResolution(test, emitter, rid) {
     const vlocal = test.pcRemote.localMediaElements[0];
     const vremote = test.pcLocal.remoteMediaElements[0];
@@ -172,7 +181,7 @@
         encodings.find(({rid}) => rid == "foo").scaleResolutionDownBy = 1;
         encodings.find(({rid}) => rid == "bar").scaleResolutionDownBy = 2;
         encodings.find(({rid}) => rid == "baz").scaleResolutionDownBy = 3;
-        await test.pcRemote._pc.getSenders()[0].setParameters({encodings});
+        await setParameters(test, emitter, encodings);
         await checkResolutions(test, emitter);
       },
     ]);
