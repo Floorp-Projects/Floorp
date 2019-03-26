@@ -638,10 +638,6 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
       continue;
     }
 
-    // Apply any additional async scrolling for testing purposes (used for
-    // reftest-async-scroll and reftest-async-zoom).
-    AutoApplyAsyncTestAttributes testAttributeApplier(apzc);
-
     ParentLayerPoint layerTranslation =
         apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing)
             .mTranslation;
@@ -3142,9 +3138,6 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
   //    transform (which includes async scrolling of the layout viewport
   //    relative to the visual viewport).
   if (AsyncPanZoomController* apzc = aNode->GetApzc()) {
-    // Apply any additional async scrolling for testing purposes (used for
-    // reftest-async-scroll and reftest-async-zoom).
-    AutoApplyAsyncTestAttributes testAttributeApplier(apzc);
     // If the node represents scrollable content, apply the async transform
     // from its APZC.
     AsyncTransformComponents components =
@@ -3283,10 +3276,6 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
   }
 
   MOZ_RELEASE_ASSERT(aApzc);
-
-  // Apply any additional async scrolling for testing purposes (used for
-  // reftest-async-scroll and reftest-async-zoom).
-  AutoApplyAsyncTestAttributes testAttributeApplier(aApzc);
 
   AsyncTransformComponentMatrix asyncTransform =
       aApzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing);

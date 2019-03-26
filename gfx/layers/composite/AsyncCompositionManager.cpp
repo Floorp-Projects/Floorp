@@ -996,11 +996,6 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
               continue;
             }
 
-            // Apply any additional async scrolling for testing purposes (used
-            // for reftest-async-scroll and reftest-async-zoom).
-            AutoApplyAsyncTestAttributes testAttributeApplier(
-                wrapper.GetApzc());
-
             const FrameMetrics& metrics = wrapper.Metrics();
             MOZ_ASSERT(metrics.IsScrollable());
 
@@ -1183,12 +1178,6 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
           if (Maybe<ScrollableLayerGuid::ViewID> zoomedScrollId =
                   layer->IsAsyncZoomContainer()) {
             if (zoomedMetrics) {
-              // Since we're querying the root content APZC's async transform,
-              // we need to make sure any additional async scrolling for test
-              // purposes is applied as well.
-              AutoApplyAsyncTestAttributes testAttributeApplier(
-                  zoomedMetrics->GetApzc());
-
               AsyncTransform zoomTransform = sampler->GetCurrentAsyncTransform(
                   *zoomedMetrics, {AsyncTransformComponent::eVisual});
               hasAsyncTransform = true;
