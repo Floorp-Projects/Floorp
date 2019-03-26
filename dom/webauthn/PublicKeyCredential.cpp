@@ -89,27 +89,18 @@ PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(
 
 // https://w3c.github.io/webauthn/#isUserVerifyingPlatformAuthenticatorAvailable
 //
-// If on latest windows, call system APIs, otherwise
-// We currently implement no platform authenticators, so this would always
-// resolve to false. For those cases, the spec recommends a resolve timeout
-// on the order of 10 minutes to avoid fingerprinting.
-//
-// A simple solution is thus to never resolve the promise, otherwise we'd
-// have to track every single call to this method along with a promise
-// and timer to resolve it after exactly X minutes.
-//
-// A Relying Party has to deal with a non-response in a timely fashion, so
-// we can keep this as-is (and not resolve) even when we support platform
-// authenticators but they're not available, or a user rejects a website's
-// request to use them.
+// If on latest windows, call system APIs, otherwise return false, as we don't
+// have other UVPAAs available at this time.
 #ifdef OS_WIN
 
   if (WinWebAuthnManager::IsUserVerifyingPlatformAuthenticatorAvailable()) {
     promise->MaybeResolve(true);
+    return promise.forget();
   }
 
 #endif
 
+  promise->MaybeResolve(false);
   return promise.forget();
 }
 
