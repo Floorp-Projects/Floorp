@@ -40,7 +40,7 @@ class JSWindowActorService final {
   // This method will not initialize the actor or set its manager,
   // which is handled by callers.
   void ConstructActor(const nsAString& aName, bool aParentSide,
-                      BrowsingContext* aBrowsingContext,
+                      BrowsingContext* aBrowsingContext, nsIURI* aURI,
                       JS::MutableHandleObject aActor, ErrorResult& aRv);
 
   void ReceiveMessage(nsISupports* aActor, JS::RootedObject& aObj,

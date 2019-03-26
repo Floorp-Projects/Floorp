@@ -242,6 +242,7 @@ struct JSWindowActorInfo
 
   JSWindowActorEventDecl[] events;
   nsCString[] observers;
+  nsString[] matches;
 };
 
 struct GMPAPITags

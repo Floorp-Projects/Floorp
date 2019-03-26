@@ -12,6 +12,8 @@
 #include "mozilla/dom/PContent.h"
 #include "mozilla/StaticPtr.h"
 #include "mozJSComponentLoader.h"
+#include "mozilla/extensions/WebExtensionContentScript.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 namespace dom {
@@ -119,9 +121,6 @@ class JSWindowActorProtocol final : public nsIObserver,
     nsTArray<nsCString> mObservers;
   };
 
-  const nsAString& Name() const { return mName; }
-  bool AllFrames() const { return mAllFrames; }
-  bool IncludeChrome() const { return mIncludeChrome; }
   const ParentSide& Parent() const { return mParent; }
   const ChildSide& Child() const { return mChild; }
 
@@ -129,17 +128,22 @@ class JSWindowActorProtocol final : public nsIObserver,
   void UnregisterListenersFor(EventTarget* aRoot);
   void AddObservers();
   void RemoveObservers();
+  bool Matches(BrowsingContext* aBrowsingContext, nsIURI* aURI);
 
  private:
   explicit JSWindowActorProtocol(const nsAString& aName) : mName(aName) {}
-
+  extensions::MatchPatternSet* GetURIMatcher();
   ~JSWindowActorProtocol() = default;
 
   nsString mName;
   bool mAllFrames = false;
   bool mIncludeChrome = false;
+  nsTArray<nsString> mMatches;
+
   ParentSide mParent;
   ChildSide mChild;
+
+  RefPtr<extensions::MatchPatternSet> mURIMatcher;
 };
 
 NS_IMPL_ISUPPORTS(JSWindowActorProtocol, nsIObserver, nsIDOMEventListener);
@@ -153,6 +157,7 @@ JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
   // irrelevant and not propagated.
   proto->mIncludeChrome = false;
   proto->mAllFrames = aInfo.allFrames();
+  proto->mMatches = aInfo.matches();
   proto->mChild.mModuleURI.Assign(aInfo.url());
 
   proto->mChild.mEvents.SetCapacity(aInfo.events().Length());
@@ -177,6 +182,7 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
   JSWindowActorInfo info;
   info.name() = mName;
   info.allFrames() = mAllFrames;
+  info.matches() = mMatches;
   info.url() = mChild.mModuleURI;
 
   info.events().SetCapacity(mChild.mEvents.Length());
@@ -204,6 +210,11 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsAString& aName,
   RefPtr<JSWindowActorProtocol> proto = new JSWindowActorProtocol(aName);
   proto->mAllFrames = aOptions.mAllFrames;
   proto->mIncludeChrome = aOptions.mIncludeChrome;
+
+  if (aOptions.mMatches.WasPassed()) {
+    MOZ_ASSERT(aOptions.mMatches.Value().Length());
+    proto->mMatches = aOptions.mMatches.Value();
+  }
 
   proto->mParent.mModuleURI = aOptions.mParent.mModuleURI;
   proto->mChild.mModuleURI = aOptions.mChild.mModuleURI;
@@ -382,6 +393,52 @@ void JSWindowActorProtocol::RemoveObservers() {
   }
 }
 
+extensions::MatchPatternSet* JSWindowActorProtocol::GetURIMatcher() {
+  // If we've already created the pattern set, return it.
+  if (mURIMatcher || mMatches.IsEmpty()) {
+    return mURIMatcher;
+  }
+
+  // Constructing the MatchPatternSet requires a JS environment to be run in.
+  // We can construct it here in the JSM scope, as we will be keeping it around.
+  AutoJSAPI jsapi;
+  MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
+  GlobalObject global(jsapi.cx(), xpc::PrivilegedJunkScope());
+
+  nsTArray<OwningStringOrMatchPattern> patterns;
+  patterns.SetCapacity(mMatches.Length());
+  for (nsString& s : mMatches) {
+    auto* entry = patterns.AppendElement();
+    entry->SetAsString() = s;
+  }
+
+  MatchPatternOptions matchPatternOptions;
+  // Make MatchPattern's mSchemes create properly.
+  matchPatternOptions.mRestrictSchemes = false;
+  mURIMatcher = extensions::MatchPatternSet::Constructor(
+      global, patterns, matchPatternOptions, IgnoreErrors());
+  return mURIMatcher;
+}
+
+bool JSWindowActorProtocol::Matches(BrowsingContext* aBrowsingContext,
+                                    nsIURI* aURI) {
+  if (!mAllFrames && aBrowsingContext->GetParent()) {
+    return false;
+  }
+
+  if (!mIncludeChrome && !aBrowsingContext->IsContent()) {
+    return false;
+  }
+
+  if (extensions::MatchPatternSet* uriMatcher = GetURIMatcher()) {
+    if (!uriMatcher->Matches(aURI)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 JSWindowActorService::JSWindowActorService() { MOZ_ASSERT(NS_IsMainThread()); }
 
 JSWindowActorService::~JSWindowActorService() { MOZ_ASSERT(NS_IsMainThread()); }
@@ -489,13 +546,12 @@ void JSWindowActorService::GetJSWindowActorInfos(
   }
 }
 
-void JSWindowActorService::ConstructActor(const nsAString& aName,
-                                          bool aParentSide,
-                                          BrowsingContext* aBrowsingContext,
-                                          JS::MutableHandleObject aActor,
-                                          ErrorResult& aRv) {
+void JSWindowActorService::ConstructActor(
+    const nsAString& aName, bool aParentSide, BrowsingContext* aBrowsingContext,
+    nsIURI* aURI, JS::MutableHandleObject aActor, ErrorResult& aRv) {
   MOZ_ASSERT_IF(aParentSide, XRE_IsParentProcess());
-
+  MOZ_ASSERT(aBrowsingContext, "DocShell without a BrowsingContext!");
+  MOZ_ASSERT(aURI, "Must have URI!");
   // Constructing an actor requires a running script, so push an AutoEntryScript
   // onto the stack.
   AutoEntryScript aes(xpc::PrivilegedJunkScope(), "JSWindowActor construction");
@@ -515,14 +571,9 @@ void JSWindowActorService::ConstructActor(const nsAString& aName,
     side = &proto->Child();
   }
 
-  // Check if our current BrowsingContext matches the requirements for this
-  // actor to load.
-  if (!proto->AllFrames() && aBrowsingContext->GetParent()) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return;
-  }
-
-  if (!proto->IncludeChrome() && !aBrowsingContext->IsContent()) {
+  // Check if our current BrowsingContext and URI matches the requirements for
+  // this actor to load.
+  if (!proto->Matches(aBrowsingContext, aURI)) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return;
   }
