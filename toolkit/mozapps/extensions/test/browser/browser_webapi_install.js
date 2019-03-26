@@ -1,5 +1,6 @@
 const TESTPAGE = `${SECURE_TESTROOT}webapi_checkavailable.html`;
 const XPI_URL = `${SECURE_TESTROOT}../xpinstall/amosigned.xpi`;
+const XPI_ADDON_ID = "amosigned-xpi@tests.mozilla.org";
 
 const XPI_SHA = "sha256:91121ed2c27f670f2307b9aebdd30979f147318c7fb9111c254c14ddbb84e4b0";
 
@@ -204,7 +205,7 @@ function makeRegularTest(options, what) {
         panel.button.click();
       });
 
-    let promptPromise = acceptAppMenuNotificationWhenShown("addon-installed", "extension");
+    let promptPromise = acceptAppMenuNotificationWhenShown("addon-installed", options.addonId);
 
     await testInstall(browser, options, steps, what);
 
@@ -230,10 +231,11 @@ function makeRegularTest(options, what) {
   });
 }
 
-add_task(makeRegularTest({url: XPI_URL}, "a basic install works"));
-add_task(makeRegularTest({url: XPI_URL, hash: null}, "install with hash=null works"));
-add_task(makeRegularTest({url: XPI_URL, hash: ""}, "install with empty string for hash works"));
-add_task(makeRegularTest({url: XPI_URL, hash: XPI_SHA}, "install with hash works"));
+let addonId = XPI_ADDON_ID;
+add_task(makeRegularTest({url: XPI_URL, addonId}, "a basic install works"));
+add_task(makeRegularTest({url: XPI_URL, addonId, hash: null}, "install with hash=null works"));
+add_task(makeRegularTest({url: XPI_URL, addonId, hash: ""}, "install with empty string for hash works"));
+add_task(makeRegularTest({url: XPI_URL, addonId, hash: XPI_SHA}, "install with hash works"));
 
 add_task(makeInstallTest(async function(browser) {
   let steps = [
