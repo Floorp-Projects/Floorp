@@ -2198,6 +2198,12 @@ pub struct PicturePrimitive {
     /// dynamically during the first picture traversal.
     pub local_rect: LayoutRect,
 
+    /// If false, this picture needs to (re)build segments
+    /// if it supports segment rendering. This can occur
+    /// if the local rect of the picture changes due to
+    /// transform animation and/or scrolling.
+    pub segments_are_valid: bool,
+
     /// Local clip rect for this picture.
     pub local_clip_rect: LayoutRect,
 
@@ -2231,6 +2237,25 @@ impl PicturePrimitive {
         }
 
         pt.end_level();
+    }
+
+    /// Returns true if this picture supports segmented rendering.
+    pub fn can_use_segments(&self) -> bool {
+        match self.raster_config {
+            // TODO(gw): Support brush segment rendering for filter and mix-blend
+            //           shaders. It's possible this already works, but I'm just
+            //           applying this optimization to Blit mode for now.
+            Some(RasterConfig { composite_mode: PictureCompositeMode::MixBlend(..), .. }) |
+            Some(RasterConfig { composite_mode: PictureCompositeMode::Filter(..), .. }) |
+            Some(RasterConfig { composite_mode: PictureCompositeMode::ComponentTransferFilter(..), .. }) |
+            Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, ..}) |
+            None => {
+                false
+            }
+            Some(RasterConfig { composite_mode: PictureCompositeMode::Blit(reason), ..}) => {
+                reason == BlitReason::CLIP
+            }
+        }
     }
 
     fn resolve_scene_properties(&mut self, properties: &SceneProperties) -> bool {
@@ -2314,6 +2339,7 @@ impl PicturePrimitive {
             local_clip_rect,
             tile_cache,
             options,
+            segments_are_valid: false,
         }
     }
 
@@ -2806,6 +2832,9 @@ impl PicturePrimitive {
                 if let PictureCompositeMode::Filter(FilterOp::DropShadow(..)) = raster_config.composite_mode {
                     gpu_cache.invalidate(&self.extra_gpu_data_handle);
                 }
+                // Invalidate any segments built for this picture, since the local
+                // rect has changed.
+                self.segments_are_valid = false;
                 self.local_rect = surface_rect;
             }
 

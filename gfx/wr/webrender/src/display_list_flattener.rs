@@ -25,7 +25,7 @@ use picture::{BlitReason, PrimitiveList, TileCache};
 use prim_store::{PrimitiveInstance, PrimitiveSceneData};
 use prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
 use prim_store::{ScrollNodeAndClipChain, PictureIndex};
-use prim_store::InternablePrimitive;
+use prim_store::{InternablePrimitive, SegmentInstanceIndex};
 use prim_store::{register_prim_chase_id, get_line_decoration_sizes};
 use prim_store::borders::{ImageBorder, NormalBorderPrim};
 use prim_store::gradient::{GradientStopKey, LinearGradient, RadialGradient, RadialGradientParams};
@@ -473,7 +473,8 @@ impl<'a> DisplayListFlattener<'a> {
             LayoutRect::max_rect(),
             PrimitiveInstanceKind::Picture {
                 data_handle: pic_data_handle,
-                pic_index: PictureIndex(pic_index)
+                pic_index: PictureIndex(pic_index),
+                segment_instance_index: SegmentInstanceIndex::INVALID,
             },
             ClipChainId::NONE,
             main_scroll_root,
@@ -2070,7 +2071,8 @@ impl<'a> DisplayListFlattener<'a> {
                             LayoutRect::max_rect(),
                             PrimitiveInstanceKind::Picture {
                                 data_handle: shadow_prim_data_handle,
-                                pic_index: shadow_pic_index
+                                pic_index: shadow_pic_index,
+                                segment_instance_index: SegmentInstanceIndex::INVALID,
                             },
                             pending_shadow.clip_and_scroll.clip_chain_id,
                             pending_shadow.clip_and_scroll.spatial_node_index,
@@ -2917,6 +2919,7 @@ fn create_prim_instance(
         PrimitiveInstanceKind::Picture {
             data_handle,
             pic_index,
+            segment_instance_index: SegmentInstanceIndex::INVALID,
         },
         clip_chain_id,
         spatial_node_index,
