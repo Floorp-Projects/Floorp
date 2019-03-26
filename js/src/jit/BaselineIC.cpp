@@ -5719,22 +5719,23 @@ bool DoCompareFallback(JSContext* cx, BaselineFrame* frame,
       }
       break;
     case JSOP_EQ:
-      if (!LooselyEqual<true>(cx, &lhsCopy, &rhsCopy, &out)) {
+      if (!LooselyEqual<EqualityKind::Equal>(cx, &lhsCopy, &rhsCopy, &out)) {
         return false;
       }
       break;
     case JSOP_NE:
-      if (!LooselyEqual<false>(cx, &lhsCopy, &rhsCopy, &out)) {
+      if (!LooselyEqual<EqualityKind::NotEqual>(cx, &lhsCopy, &rhsCopy, &out)) {
         return false;
       }
       break;
     case JSOP_STRICTEQ:
-      if (!StrictlyEqual<true>(cx, &lhsCopy, &rhsCopy, &out)) {
+      if (!StrictlyEqual<EqualityKind::Equal>(cx, &lhsCopy, &rhsCopy, &out)) {
         return false;
       }
       break;
     case JSOP_STRICTNE:
-      if (!StrictlyEqual<false>(cx, &lhsCopy, &rhsCopy, &out)) {
+      if (!StrictlyEqual<EqualityKind::NotEqual>(cx, &lhsCopy, &rhsCopy,
+                                                 &out)) {
         return false;
       }
       break;

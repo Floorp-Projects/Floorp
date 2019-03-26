@@ -1336,14 +1336,14 @@ bool IonCacheIRCompiler::emitCompareStringResult() {
 
   using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
   if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
-    callVM<Fn, jit::StringsEqual<true>>(masm);
+    callVM<Fn, jit::StringsEqual<EqualityKind::Equal>>(masm);
   } else if (op == JSOP_NE || op == JSOP_STRICTNE) {
-    callVM<Fn, jit::StringsEqual<false>>(masm);
+    callVM<Fn, jit::StringsEqual<EqualityKind::NotEqual>>(masm);
   } else if (op == JSOP_LT || op == JSOP_GT) {
-    callVM<Fn, jit::StringsCompare<true>>(masm);
+    callVM<Fn, jit::StringsCompare<ComparisonKind::LessThan>>(masm);
   } else {
     MOZ_ASSERT(op == JSOP_LE || op == JSOP_GE);
-    callVM<Fn, jit::StringsCompare<false>>(masm);
+    callVM<Fn, jit::StringsCompare<ComparisonKind::GreaterThanOrEqual>>(masm);
   }
 
   masm.storeCallBoolResult(output.typedReg().gpr());

@@ -838,11 +838,13 @@ MOZ_MUST_USE bool InitProp(JSContext* cx, HandleObject obj,
                            HandlePropertyName name, HandleValue value,
                            jsbytecode* pc);
 
-template <bool Equal>
+enum class EqualityKind : bool { NotEqual, Equal };
+
+template <EqualityKind Kind>
 bool LooselyEqual(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
                   bool* res);
 
-template <bool Equal>
+template <EqualityKind Kind>
 bool StrictlyEqual(JSContext* cx, MutableHandleValue lhs,
                    MutableHandleValue rhs, bool* res);
 
@@ -855,10 +857,12 @@ bool GreaterThan(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
 bool GreaterThanOrEqual(JSContext* cx, MutableHandleValue lhs,
                         MutableHandleValue rhs, bool* res);
 
-template <bool Equal>
+template <EqualityKind Kind>
 bool StringsEqual(JSContext* cx, HandleString lhs, HandleString rhs, bool* res);
 
-template <bool LessThan>
+enum class ComparisonKind : bool { GreaterThanOrEqual, LessThan };
+
+template <ComparisonKind Kind>
 bool StringsCompare(JSContext* cx, HandleString lhs, HandleString rhs,
                     bool* res);
 
