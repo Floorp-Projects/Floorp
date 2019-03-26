@@ -237,6 +237,14 @@ var UrlbarTestUtils = {
     let urlbar = getUrlbarAbstraction(win);
     return urlbar.promiseUserContextId();
   },
+
+  /**
+   * Dispatches an input event to the input field.
+   * @param {object} win The browser window
+   */
+  fireInputEvent(win) {
+    getUrlbarAbstraction(win).fireInputEvent();
+  },
 };
 
 /**
