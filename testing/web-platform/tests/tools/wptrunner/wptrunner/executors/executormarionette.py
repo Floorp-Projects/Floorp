@@ -865,8 +865,9 @@ class InternalRefTestImplementation(object):
         self.executor.protocol.marionette._send_message("reftest:setup", data)
 
     def reset(self, screenshot=None):
-        self.teardown()
-        self.setup(screenshot)
+        # this is obvious wrong; it shouldn't be a no-op
+        # see https://github.com/web-platform-tests/wpt/issues/15604
+        pass
 
     def run_test(self, test):
         references = self.get_references(test)
