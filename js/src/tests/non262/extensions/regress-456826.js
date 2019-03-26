@@ -27,6 +27,7 @@ function test()
     gc();
     gcparam("maxBytes", gcparam("gcBytes") + 4*1024);
     expectExitCode(5);
+    expectExitCode(3);
   }
 
   const numRows = 600;
