@@ -144,10 +144,6 @@ class Element;
 }  // namespace mozilla
 
 #define SERVO_ARC_TYPE(name_, type_)                                    \
-  struct MOZ_MUST_USE_TYPE type_##Strong {                              \
-    type_* mPtr;                                                        \
-    already_AddRefed<type_> Consume();                                  \
-  };                                                                    \
   extern "C" {                                                          \
   void Servo_##name_##_AddRef(const type_*);                            \
   void Servo_##name_##_Release(const type_*);                           \
@@ -160,6 +156,7 @@ class Element;
   };                                                                    \
   }
 #include "mozilla/ServoArcTypeList.h"
+SERVO_ARC_TYPE(ComputedStyle, mozilla::ComputedStyle)
 #undef SERVO_ARC_TYPE
 
 // See the comment in ServoBindings.h about the same.
@@ -194,12 +191,5 @@ SERVO_BOXED_TYPE(UseCounters, StyleUseCounters)
 // TODO(heycam): Handle these elsewhere.
 struct RawServoAnimationValueTable;
 struct RawServoAnimationValueMap;
-
-struct MOZ_MUST_USE_TYPE ComputedStyleStrong {
-  mozilla::ComputedStyle* mPtr;
-  already_AddRefed<mozilla::ComputedStyle> Consume();
-};
-
-#undef DECL_ARC_REF_TYPE_FOR
 
 #endif  // mozilla_ServoBindingTypes_h
