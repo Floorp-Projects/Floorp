@@ -461,7 +461,8 @@ bool nsLayoutUtils::IsAnimationLoggingEnabled() {
 
 bool nsLayoutUtils::AreRetainedDisplayListsEnabled() {
 #ifdef MOZ_WIDGET_ANDROID
-  return gfxPrefs::LayoutRetainDisplayList();;
+  return gfxPrefs::LayoutRetainDisplayList();
+  ;
 #else
   if (XRE_IsContentProcess()) {
     return gfxPrefs::LayoutRetainDisplayList();
@@ -8829,8 +8830,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
         // Restore the visual viewport offset to the copy stored on the
         // main thread.
         presShell->ScrollToVisual(presShell->GetVisualViewportOffset(),
-                                  FrameMetrics::eRestore,
-                                  nsIPresShell::ScrollMode::eInstant);
+                                  FrameMetrics::eRestore, ScrollMode::eInstant);
       }
 
       if (const Maybe<nsIPresShell::VisualScrollUpdate>& visualUpdate =

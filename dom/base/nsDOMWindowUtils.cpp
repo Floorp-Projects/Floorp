@@ -1422,13 +1422,13 @@ nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY,
       return NS_ERROR_INVALID_ARG;
   }
 
-  nsIPresShell::ScrollMode scrollMode;
+  ScrollMode scrollMode;
   switch (aScrollMode) {
     case SCROLL_MODE_INSTANT:
-      scrollMode = nsIPresShell::ScrollMode::eInstant;
+      scrollMode = ScrollMode::eInstant;
       break;
     case SCROLL_MODE_SMOOTH:
-      scrollMode = nsIPresShell::ScrollMode::eSmooth;
+      scrollMode = ScrollMode::eSmoothMsd;
       break;
     default:
       return NS_ERROR_INVALID_ARG;
