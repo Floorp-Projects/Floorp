@@ -4,7 +4,7 @@ load 157320-1.html
 load 199379-1.html
 load 206561-1.html
 load 248518-1.html
-load 306649-1.xml
+skip-if(Android) load 306649-1.xml
 load 306902-1.xml
 load 333861-1.html
 load 334735-1.html
