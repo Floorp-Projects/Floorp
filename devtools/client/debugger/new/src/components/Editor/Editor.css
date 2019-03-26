@@ -44,9 +44,9 @@
  */
 .editor-wrapper {
   position: absolute;
-  height: calc(100% - var(--editor-header-height));
   width: calc(100% - 1px);
   top: var(--editor-header-height);
+  bottom: var(--editor-footer-height);
   left: 0px;
 }
 

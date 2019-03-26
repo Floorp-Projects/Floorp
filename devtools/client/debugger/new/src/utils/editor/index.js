@@ -11,7 +11,7 @@ export * from "../ui";
 export { onMouseOver } from "./token-events";
 
 import { createEditor } from "./create-editor";
-import { shouldPrettyPrint, isOriginal } from "../source";
+import { shouldPrettyPrint } from "../source";
 import { findNext, findPrev } from "./source-search";
 
 import { isWasm, lineToWasmOffset, wasmOffsetToLine } from "../wasm";
@@ -60,16 +60,6 @@ export function endOperation() {
 
 export function shouldShowPrettyPrint(source: Source) {
   return shouldPrettyPrint(source);
-}
-
-export function shouldShowFooter(source: ?Source, horizontal: boolean) {
-  if (!horizontal) {
-    return true;
-  }
-  if (!source) {
-    return false;
-  }
-  return shouldShowPrettyPrint(source) || isOriginal(source);
 }
 
 export function traverseResults(
