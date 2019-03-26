@@ -2498,8 +2498,8 @@ const RawServoSelectorList* nsINode::ParseSelectorList(
 
   NS_ConvertUTF16toUTF8 selectorString(aSelectorString);
 
-  UniquePtr<RawServoSelectorList> selectorList =
-      Servo_SelectorList_Parse(&selectorString).Consume();
+  auto selectorList = UniquePtr<RawServoSelectorList>(
+      Servo_SelectorList_Parse(&selectorString));
   if (!selectorList) {
     aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR,
                           NS_LITERAL_CSTRING("'") + selectorString +

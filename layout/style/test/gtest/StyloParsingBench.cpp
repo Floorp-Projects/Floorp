@@ -85,7 +85,7 @@ MOZ_GTEST_BENCH(Stylo, Servo_StyleSheet_FromUTF8Bytes_Bench,
                 [] { ServoParsingBench(nullptr); });
 
 MOZ_GTEST_BENCH(Stylo, Servo_StyleSheet_FromUTF8Bytes_Bench_UseCounters, [] {
-  UniquePtr<StyleUseCounters> counters = Servo_UseCounters_Create().Consume();
+  UniquePtr<StyleUseCounters> counters(Servo_UseCounters_Create());
   ServoParsingBench(counters.get());
 });
 
