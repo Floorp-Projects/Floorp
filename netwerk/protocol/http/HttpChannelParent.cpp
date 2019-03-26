@@ -1411,6 +1411,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   chan->GetRedirectCount(&redirectCount);
 
   int64_t altDataLen = chan->GetAltDataLength();
+  bool deliveringAltData = chan->IsDeliveringAltData();
 
   nsCOMPtr<nsILoadInfo> loadInfo;
   Unused << chan->GetLoadInfo(getter_AddRefs(loadInfo));
@@ -1455,8 +1456,8 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
           loadInfoForwarderArg, isFromCache, mCacheEntry ? true : false,
           cacheEntryId, fetchCount, expirationTime, cachedCharset,
           secInfoSerialization, chan->GetSelfAddr(), chan->GetPeerAddr(),
-          redirectCount, cacheKey, altDataType, altDataLen, applyConversion,
-          timing)) {
+          redirectCount, cacheKey, altDataType, altDataLen, deliveringAltData,
+          applyConversion, timing)) {
     rv = NS_ERROR_UNEXPECTED;
   }
   requestHead->Exit();

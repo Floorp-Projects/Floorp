@@ -166,7 +166,7 @@ HttpBaseChannel::HttpBaseChannel()
       mRequestContextID(0),
       mContentWindowId(0),
       mTopLevelOuterContentWindowId(0),
-      mAltDataLength(0),
+      mAltDataLength(-1),
       mChannelId(0),
       mReqContentLength(0U),
       mStatus(NS_OK),
@@ -221,6 +221,7 @@ HttpBaseChannel::HttpBaseChannel()
       mInternalRedirectCount(0),
       mAsyncOpenTimeOverriden(false),
       mForcePending(false),
+      mDeliveringAltData(false),
       mCorsIncludeCredentials(false),
       mOnStartRequestCalled(false),
       mOnStopRequestCalled(false),
@@ -729,7 +730,8 @@ HttpBaseChannel::GetContentLength(int64_t* aContentLength) {
 
   if (!mResponseHead) return NS_ERROR_NOT_AVAILABLE;
 
-  if (!mAvailableCachedAltDataType.IsEmpty()) {
+  if (mDeliveringAltData) {
+    MOZ_ASSERT(!mAvailableCachedAltDataType.IsEmpty());
     *aContentLength = mAltDataLength;
     return NS_OK;
   }
@@ -1192,7 +1194,8 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
     return NS_OK;
   }
 
-  if (!mAvailableCachedAltDataType.IsEmpty()) {
+  if (mDeliveringAltData) {
+    MOZ_ASSERT(!mAvailableCachedAltDataType.IsEmpty());
     LOG(("not applying conversion because delivering alt-data\n"));
     return NS_OK;
   }

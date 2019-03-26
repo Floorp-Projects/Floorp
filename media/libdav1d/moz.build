@@ -32,20 +32,26 @@ DEFINES['DAV1D_API'] = ''
 if CONFIG['MOZ_DAV1D_ASM']:
     DIRS += ['asm']
 
+    # Store the stack alignment that will be used.
+    stack_alignment = 0
+
     # Default stack alignment can be 4 bytes on x86.
     if CONFIG['CPU_ARCH'] == 'x86':
-        # Update stack alignment to 16 bytes.
-        if CONFIG['CC_TYPE'] == 'clang':
-            CFLAGS += ['-mstack-alignment=16']
-            for ep in entrypoint_source_files:
-                SOURCES[ep].flags += ['-mstackrealign']
-        elif CONFIG['CC_TYPE'] == 'gcc':
-            CFLAGS += ['-mpreferred-stack-boundary=4']
-            for ep in entrypoint_source_files:
-                SOURCES[ep].flags += ['-mincoming-stack-boundary=2']
+        if CONFIG['OS_TARGET'] == 'WINNT':
+            # Allow the default to avoid crashes
+            stack_alignment = 4
+        else:
+            # Update stack alignment to 16 bytes.
+            stack_alignment = 16
+            if CONFIG['CC_TYPE'] == 'clang':
+                CFLAGS += ['-mstack-alignment=16']
+                for ep in entrypoint_source_files:
+                    SOURCES[ep].flags += ['-mstackrealign']
+            elif CONFIG['CC_TYPE'] == 'gcc':
+                CFLAGS += ['-mpreferred-stack-boundary=4']
+                for ep in entrypoint_source_files:
+                    SOURCES[ep].flags += ['-mincoming-stack-boundary=2']
 
-    # Expect stack alignment of 16 bytes.
-    stack_alignment = 16
 
     # The default stack alignment in x86_64 is 16 bytes. On all Linux flavors the
     # default is used due to crashes with 32 bytes stack alignment.
@@ -60,8 +66,12 @@ if CONFIG['MOZ_DAV1D_ASM']:
             CFLAGS += ['-mpreferred-stack-boundary=5']
             for ep in entrypoint_source_files:
                 SOURCES[ep].flags += ['-mincoming-stack-boundary=4']
+    else:
+        stack_alignment = 16
 
     # Set the macro here instead of config.h
+    if stack_alignment == 0:
+        error('Stack alignment cannot be zero.')
     DEFINES['STACK_ALIGNMENT'] = stack_alignment
 
 if CONFIG['OS_TARGET'] == 'Linux':

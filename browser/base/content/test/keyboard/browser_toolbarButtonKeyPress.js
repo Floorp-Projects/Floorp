@@ -7,16 +7,6 @@
  * Test the behavior of key presses on various toolbar buttons.
  */
 
-// Toolbar buttons aren't focusable because if they were, clicking them would
-// focus them, which is undesirable. Therefore, they're only made focusable
-// when a user is navigating with the keyboard. This function forces focus as
-// is done during keyboard navigation.
-function forceFocus(aElem) {
-  aElem.setAttribute("tabindex", "-1");
-  aElem.focus();
-  aElem.removeAttribute("tabindex");
-}
-
 function waitForLocationChange() {
   let promise = new Promise(resolve => {
     let wpl = {

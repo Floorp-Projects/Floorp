@@ -53,7 +53,7 @@ void MediaElementAudioSourceNode::ListenForAllowedToPlay(
     const MediaElementAudioSourceOptions& aOptions) {
   aOptions.mMediaElement->GetAllowedToPlayPromise()
       ->Then(
-          AbstractMainThread(), __func__,
+          GetAbstractMainThread(), __func__,
           // Capture by reference to bypass the mozilla-refcounted-inside-lambda
           // static analysis. We capture a non-owning reference so as to allow
           // cycle collection of the node. The reference is cleared via

@@ -907,6 +907,11 @@
             ExtensionPermissions.get(this.mAddon.id).then((perms) => {
               let allowed = perms.permissions.includes("internal:privateBrowsingAllowed");
               this.setAttribute("privateBrowsing", allowed);
+              if (!allowed && PrivateBrowsingUtils.isContentWindowPrivate(window)) {
+                // Hide the preferences button if the current window is
+                // private and the addon is not allowed to access it.
+                this._preferencesBtn.hidden = true;
+              }
             });
           }
 

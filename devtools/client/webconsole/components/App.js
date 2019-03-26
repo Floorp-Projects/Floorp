@@ -47,6 +47,7 @@ class App extends Component {
       serviceContainer: PropTypes.object.isRequired,
       closeSplitConsole: PropTypes.func.isRequired,
       jstermCodeMirror: PropTypes.bool,
+      autocomplete: PropTypes.bool,
       currentReverseSearchEntry: PropTypes.string,
       reverseSearchInputVisible: PropTypes.bool,
       reverseSearchInitialValue: PropTypes.string,
@@ -200,6 +201,7 @@ class App extends Component {
       serviceContainer,
       closeSplitConsole,
       jstermCodeMirror,
+      autocomplete,
       reverseSearchInitialValue,
       editorMode,
     } = this.props;
@@ -248,6 +250,7 @@ class App extends Component {
             serviceContainer,
             onPaste: this.onPaste,
             codeMirrorEnabled: jstermCodeMirror,
+            autocomplete,
             editorMode,
           }),
           ReverseSearchInput({

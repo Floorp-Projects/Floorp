@@ -80,6 +80,13 @@
         ]
       }
     },
+    "bn": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-m", "bing", "ddg", "wikipedia-bn"
+        ]
+      }
+    },
     "bn-BD": {
       "default": {
         "visibleDefaultEngines": [

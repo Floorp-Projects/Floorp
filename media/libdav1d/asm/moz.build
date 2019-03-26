@@ -25,16 +25,17 @@ CFLAGS += [
     '-I%s/dist/include/dav1d/' % TOPOBJDIR,
 ]
 
-# Default stack aligment is 16 bytes.
-stack_alignment = 16
-
+stack_alignment = 0
 # Attaching config.asm file
 if CONFIG['CPU_ARCH'] == 'x86':
+    # Default stack alignment can be 4 bytes.
     if CONFIG['OS_TARGET'] == 'WINNT':
+        stack_alignment = 4
         ASFLAGS += ['-I%s/media/libdav1d/asm/x86_32/win/' % TOPSRCDIR]
     else:
         ASFLAGS += ['-I%s/media/libdav1d/asm/x86_32/' % TOPSRCDIR]
-        # Default stack aligment can be 4 bytes, change it to 16 bytes.
+        stack_alignment = 16
+        # Change stack alignment to 16 bytes.
         if CONFIG['CC_TYPE'] == 'clang':
             CFLAGS += ['-mstack-alignment=16']
         elif CONFIG['CC_TYPE'] == 'gcc':
@@ -42,6 +43,8 @@ if CONFIG['CPU_ARCH'] == 'x86':
 
 
 if CONFIG['CPU_ARCH'] == 'x86_64':
+    # Default stack aligment is 16 bytes.
+    stack_alignment = 16
     if CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/osx/' % TOPSRCDIR]
     elif CONFIG['OS_TARGET'] == 'WINNT':
@@ -62,6 +65,8 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
             CFLAGS += ['-mpreferred-stack-boundary=5']
 
 # Set the macro here instead of config.h
+if stack_alignment == 0:
+    error('Stack alignment cannot be zero.')
 DEFINES['STACK_ALIGNMENT'] = stack_alignment
 
 if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):

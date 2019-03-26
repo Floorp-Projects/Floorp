@@ -138,6 +138,13 @@
         ]
       }
     },
+    "bn": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-d", "amazon-in", "bing", "ddg", "wikipedia-bn"
+        ]
+      }
+    },
     "bn-BD": {
       "default": {
         "visibleDefaultEngines": [

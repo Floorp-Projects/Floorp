@@ -40,6 +40,8 @@ const AUTOCOMPLETE_ENTER_TEXT_TOPIC = "autocomplete-did-enter-text";
 const MAX_TAB_COUNT_SCALAR_NAME = "browser.engagement.max_concurrent_tab_count";
 const MAX_WINDOW_COUNT_SCALAR_NAME = "browser.engagement.max_concurrent_window_count";
 const TAB_OPEN_EVENT_COUNT_SCALAR_NAME = "browser.engagement.tab_open_event_count";
+const MAX_TAB_PINNED_COUNT_SCALAR_NAME = "browser.engagement.max_concurrent_tab_pinned_count";
+const TAB_PINNED_EVENT_COUNT_SCALAR_NAME = "browser.engagement.tab_pinned_event_count";
 const WINDOW_OPEN_EVENT_COUNT_SCALAR_NAME = "browser.engagement.window_open_event_count";
 const UNIQUE_DOMAINS_COUNT_SCALAR_NAME = "browser.engagement.unique_domains_count";
 const TOTAL_URI_COUNT_SCALAR_NAME = "browser.engagement.total_uri_count";
@@ -112,6 +114,16 @@ function getOpenTabsAndWinsCounts() {
 
 function getTabCount() {
   return getOpenTabsAndWinsCounts().tabCount;
+}
+
+function getPinnedTabsCount() {
+  let pinnedTabs = 0;
+
+  for (let win of Services.wm.getEnumerator("navigator:browser")) {
+    pinnedTabs += [...win.ownerGlobal.gBrowser.tabs].filter(t => t.pinned).length;
+  }
+
+  return pinnedTabs;
 }
 
 function getSearchEngineId(engine) {
@@ -424,6 +436,9 @@ let BrowserUsageTelemetry = {
       case "TabOpen":
         this._onTabOpen();
         break;
+      case "TabPinned":
+        this._onTabPinned();
+        break;
       case "unload":
         this._unregisterWindow(event.target);
         break;
@@ -704,6 +719,7 @@ let BrowserUsageTelemetry = {
   _registerWindow(win) {
     win.addEventListener("unload", this);
     win.addEventListener("TabOpen", this, true);
+    win.addEventListener("TabPinned", this, true);
 
     win.gBrowser.tabContainer.addEventListener(TAB_RESTORING_TOPIC, this);
     win.gBrowser.addTabsProgressListener(URICountListener);
@@ -715,6 +731,7 @@ let BrowserUsageTelemetry = {
   _unregisterWindow(win) {
     win.removeEventListener("unload", this);
     win.removeEventListener("TabOpen", this, true);
+    win.removeEventListener("TabPinned", this, true);
 
     win.defaultView.gBrowser.tabContainer.removeEventListener(TAB_RESTORING_TOPIC, this);
     win.defaultView.gBrowser.removeTabsProgressListener(URICountListener);
@@ -733,6 +750,14 @@ let BrowserUsageTelemetry = {
     Services.telemetry.scalarSetMaximum(MAX_TAB_COUNT_SCALAR_NAME, tabCount);
 
     this._recordTabCount(tabCount);
+  },
+
+  _onTabPinned(target) {
+    const pinnedTabs = getPinnedTabsCount();
+
+    // Update the "tab pinned" count and its maximum.
+    Services.telemetry.scalarAdd(TAB_PINNED_EVENT_COUNT_SCALAR_NAME, 1);
+    Services.telemetry.scalarSetMaximum(MAX_TAB_PINNED_COUNT_SCALAR_NAME, pinnedTabs);
   },
 
   /**

@@ -36,23 +36,56 @@ function NarrateControls(mm, win, languagePromise) {
 
   let dropdown = win.document.createElement("ul");
   dropdown.className = "dropdown narrate-dropdown";
-  dropdown.innerHTML =
-    `<li>
-       <button class="dropdown-toggle button narrate-toggle" hidden></button>
-    </li>
-    <li class="dropdown-popup">
-      <div class="narrate-row narrate-control">
-        <button disabled class="narrate-skip-previous"></button>
-        <button class="narrate-start-stop"></button>
-        <button disabled class="narrate-skip-next"></button>
-      </div>
-      <div class="narrate-row narrate-rate">
-        <input class="narrate-rate-input" value="0"
-               step="5" max="100" min="-100" type="range">
-      </div>
-      <div class="narrate-row narrate-voices"></div>
-      <div class="dropdown-arrow"></div>
-    </li>`;
+
+  let toggle = win.document.createElement("li");
+  let toggleButton = win.document.createElement("button");
+  toggleButton.className = "dropdown-toggle button narrate-toggle";
+  toggleButton.hidden = true;
+  dropdown.appendChild(toggle);
+  toggle.appendChild(toggleButton);
+
+  let dropdownList = win.document.createElement("li");
+  dropdownList.className = "dropdown-popup";
+  dropdown.appendChild(dropdownList);
+
+  let narrateControl = win.document.createElement("div");
+  narrateControl.className = "narrate-row narrate-control";
+  dropdownList.appendChild(narrateControl);
+
+  let narrateRate = win.document.createElement("div");
+  narrateRate.className = "narrate-row narrate-rate";
+  dropdownList.appendChild(narrateRate);
+
+  let narrateVoices = win.document.createElement("div");
+  narrateVoices.className = "narrate-row narrate-voices";
+  dropdownList.appendChild(narrateVoices);
+
+  let dropdownArrow = win.document.createElement("div");
+  dropdownArrow.className = "dropdown-arrow";
+  dropdownList.appendChild(dropdownArrow);
+
+  let narrateSkipPrevious = win.document.createElement("button");
+  narrateSkipPrevious.className = "narrate-skip-previous";
+  narrateSkipPrevious.disabled = true;
+  narrateControl.appendChild(narrateSkipPrevious);
+
+  let narrateStartStop = win.document.createElement("button");
+  narrateStartStop.className = "narrate-start-stop";
+  narrateControl.appendChild(narrateStartStop);
+
+  let narrateSkipNext = win.document.createElement("button");
+  narrateSkipNext.className = "narrate-skip-next";
+  narrateSkipNext.disabled = true;
+  narrateControl.appendChild(narrateSkipNext);
+
+  let narrateRateInput = win.document.createElement("input");
+  narrateRateInput.className = "narrate-rate-input";
+  narrateRateInput.setAttribute("value", "0");
+  narrateRateInput.setAttribute("step", "5");
+  narrateRateInput.setAttribute("max", "100");
+  narrateRateInput.setAttribute("min", "-100");
+  narrateRateInput.setAttribute("type", "range");
+  narrateRate.appendChild(narrateRateInput);
 
   for (let [selector, stringID] of Object.entries(elemL10nMap)) {
     dropdown.querySelector(selector).setAttribute("title",
