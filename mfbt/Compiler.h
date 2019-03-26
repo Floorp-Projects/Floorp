@@ -10,7 +10,6 @@
 #define mozilla_Compiler_h
 
 #define MOZ_IS_GCC 0
-#define MOZ_IS_MSVC 0
 
 #if !defined(__clang__) && defined(__GNUC__)
 
@@ -29,11 +28,6 @@
 #  if !MOZ_GCC_VERSION_AT_LEAST(6, 1, 0)
 #    error "mfbt (and Gecko) require at least gcc 6.1 to build."
 #  endif
-
-#elif defined(_MSC_VER)
-
-#  undef MOZ_IS_MSVC
-#  define MOZ_IS_MSVC 1
 
 #endif
 
