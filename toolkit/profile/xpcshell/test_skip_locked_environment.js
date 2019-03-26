@@ -26,10 +26,7 @@ add_task(async () => {
       name: "Profile3",
       path: "Path3",
     }],
-  };
-
-  // Another install is using the profile and it is locked.
-  let installData = {
+    // Another install is using the profile and it is locked.
     installs: {
       otherinstall: {
         default: root.leafName,
@@ -39,8 +36,7 @@ add_task(async () => {
   };
 
   writeProfilesIni(profileData);
-  writeInstallsIni(installData);
-  checkProfileService(profileData, installData);
+  checkProfileService(profileData);
 
   let env = Cc["@mozilla.org/process/environment;1"].
             getService(Ci.nsIEnvironment);
@@ -73,10 +69,9 @@ add_task(async () => {
   Assert.ok(!profileData.profiles[1].default, "Should not be the old default profile.");
 
   let hash = xreDirProvider.getInstallHash();
-  installData = readInstallsIni();
-  Assert.equal(Object.keys(installData.installs).length, 2, "Should be one known install.");
-  Assert.notEqual(installData.installs[hash].default, root.leafName, "Should have marked the original default profile as the default for this install.");
-  Assert.ok(installData.installs[hash].locked, "Should have locked as we created the profile for this install.");
-  Assert.equal(installData.installs.otherinstall.default, root.leafName, "Should have left the other profile as the default for the other install.");
-  Assert.ok(installData.installs[hash].locked, "Should still be locked to the other install.");
+  Assert.equal(Object.keys(profileData.installs).length, 2, "Should be one known install.");
+  Assert.notEqual(profileData.installs[hash].default, root.leafName, "Should have marked the original default profile as the default for this install.");
+  Assert.ok(profileData.installs[hash].locked, "Should have locked as we created the profile for this install.");
+  Assert.equal(profileData.installs.otherinstall.default, root.leafName, "Should have left the other profile as the default for the other install.");
+  Assert.ok(profileData.installs[hash].locked, "Should still be locked to the other install.");
 });
