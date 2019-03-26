@@ -18,6 +18,8 @@ AppPicker.prototype =
     appPickerLoad: function appPickerLoad() {
         const nsILocalHandlerApp = Ci.nsILocalHandlerApp;
 
+        document.addEventListener("dialogaccept", function() { g_dialog.appPickerOK(); });
+        document.addEventListener("dialogcancel", function() { g_dialog.appPickerCancel(); });
         document.addEventListener("dialogextra2", function() { g_dialog.appPickerBrowse(); });
 
         this._incomingParams = window.arguments[0];
@@ -154,23 +156,20 @@ AppPicker.prototype =
     },
 
     appPickerOK: function appPickerOK() {
-      if (this._incomingParams.handlerApp) return true;
+      if (this._incomingParams.handlerApp) return;
 
       var list = document.getElementById("app-picker-listbox");
       var selItem = list.selectedItem;
 
       if (!selItem) {
         this._incomingParams.handlerApp = null;
-        return true;
+        return;
       }
       this._incomingParams.handlerApp = selItem.handlerApp;
-
-      return true;
     },
 
     appPickerCancel: function appPickerCancel() {
       this._incomingParams.handlerApp = null;
-      return true;
     },
 
     /**
@@ -206,7 +205,6 @@ AppPicker.prototype =
               window.close();
           }
       });
-      return true;
     },
 };
 

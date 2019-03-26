@@ -131,6 +131,7 @@ var dialog = {
 
     // UI is ready, lets populate our list
     this.populateList();
+    document.addEventListener("dialogaccept", () => { this.onAccept(); });
 
     this._delayHelper = new EnableDelayHelper({
       disableDialog: () => {
@@ -307,8 +308,6 @@ var dialog = {
     hs.store(this._handlerInfo);
 
     this._handlerInfo.launchWithURI(this._URI, this._windowCtxt);
-
-    return true;
   },
 
  /**

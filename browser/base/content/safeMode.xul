@@ -15,8 +15,6 @@
             buttons="accept,extra1"
             buttonidaccept="start-safe-mode"
             buttonidextra1="refresh-profile"
-            ondialogaccept="return onDefaultButton()"
-            ondialogcancel="onCancel();"
             onload="onLoad()">
 
   <linkset>

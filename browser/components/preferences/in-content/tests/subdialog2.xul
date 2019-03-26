@@ -8,9 +8,9 @@
 <dialog id="subDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Sample sub-dialog #2" style="width: 32em; height: 5em;"
-        onload="document.getElementById('textbox').focus();"
-        ondialogaccept="acceptSubdialog();">
+        onload="document.getElementById('textbox').focus();">
   <script>
+    document.addEventListener("dialogaccept", acceptSubdialog);
     function acceptSubdialog() {
       window.arguments[0].acceptCount++;
     }

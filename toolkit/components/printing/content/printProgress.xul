@@ -11,7 +11,6 @@
         buttons="cancel"
         data-l10n-id="print-window"
         style="width: 36em;"
-        ondialogcancel="onCancel()"
         onload="onLoad()"
         onunload="onUnload()">
 
