@@ -1431,8 +1431,8 @@ PeerConnectionWrapper.prototype = {
       }
 
       info(this.label + ": iceCandidate = " + JSON.stringify(anEvent.candidate));
+      ok(anEvent.candidate.candidate.length > 0, "ICE candidate contains candidate");
       ok(anEvent.candidate.sdpMid.length > 0, "SDP mid not empty");
-      ok(anEvent.candidate.usernameFragment.length > 0, "usernameFragment not empty");
 
       // only check the m-section for the updated default addr that corresponds
       // with this candidate.

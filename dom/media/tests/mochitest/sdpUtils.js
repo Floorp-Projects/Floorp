@@ -71,63 +71,32 @@ verify_unique_extmap_ids: function(sdp) {
 },
 
 getMSections: function(sdp) {
-  return sdp.split(new RegExp('^m=', 'gm')).slice(1).map(s => "m=" + s);
+  return sdp.split(new RegExp('^m=', 'gm')).slice(1);
 },
 
 getAudioMSections: function(sdp) {
-  return this.getMSections(sdp).filter(section => section.startsWith('m=audio'))
+  return this.getMSections(sdp).filter(section => section.startsWith('audio'))
 },
 
 getVideoMSections: function(sdp) {
-  return this.getMSections(sdp).filter(section => section.startsWith('m=video'))
+  return this.getMSections(sdp).filter(section => section.startsWith('video'))
 },
 
-checkSdpAfterEndOfTrickle: function(description, testOptions, label) {
-  info("EOC-SDP: " + JSON.stringify(description));
+checkSdpAfterEndOfTrickle: function(sdp, testOptions, label) {
+  info("EOC-SDP: " + JSON.stringify(sdp));
 
-  const checkForTransportAttributes = msection => {
-    info("Checking msection: " + msection);
-    ok(msection.includes("a=end-of-candidates"),
-      label + ": SDP contains end-of-candidates");
-    sdputils.checkSdpCLineNotDefault(msection, label);
+  ok(sdp.sdp.includes("a=end-of-candidates"), label + ": SDP contains end-of-candidates");
+  sdputils.checkSdpCLineNotDefault(sdp.sdp, label);
 
-    if (!msection.startsWith("m=application")) {
-      if (testOptions.rtcpmux) {
-        ok(msection.includes("a=rtcp-mux"), label + ": SDP contains rtcp-mux");
-      } else {
-        ok(msection.includes("a=rtcp:"), label + ": SDP contains rtcp port");
-      }
-    }
-  };
-
-  const hasOwnTransport = msection => {
-    const port0Check = new RegExp(/^m=\S+ 0 /).exec(msection);
-    if (port0Check) {
-      return false;
-    }
-    const midMatch = new RegExp(/\r\na=mid:(\S+)/).exec(msection);
-    if (!midMatch) {
-      return true;
-    }
-    const mid = midMatch[1];
-    const bundleGroupMatch =
-      new RegExp("\\r\\na=group:BUNDLE \\S.* " + mid + "\\s+")
-      .exec(description.sdp);
-    return bundleGroupMatch == null;
-  };
-
-  const msectionsWithOwnTransports =
-    this.getMSections(description.sdp).filter(hasOwnTransport);
-
-  ok(msectionsWithOwnTransports.length > 0,
-    "SDP should contain at least one msection with a transport");
-  msectionsWithOwnTransports.forEach(checkForTransportAttributes);
-
-  if (testOptions.ssrc) {
-    ok(description.sdp.includes("a=ssrc"), label + ": SDP contains a=ssrc");
+  if (testOptions.rtcpmux) {
+    ok(sdp.sdp.includes("a=rtcp-mux"), label + ": SDP contains rtcp-mux");
   } else {
-    ok(!description.sdp.includes("a=ssrc"),
-      label + ": SDP does not contain a=ssrc");
+    ok(sdp.sdp.includes("a=rtcp:"), label + ": SDP contains rtcp port");
+  }
+  if (testOptions.ssrc) {
+    ok(sdp.sdp.includes("a=ssrc"), label + ": SDP contains a=ssrc");
+  } else {
+    ok(!sdp.sdp.includes("a=ssrc"), label + ": SDP does not contain a=ssrc");
   }
 },
 

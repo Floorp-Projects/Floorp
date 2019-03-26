@@ -102,12 +102,10 @@ class JsepSessionImpl : public JsepSession {
   virtual nsresult AddRemoteIceCandidate(const std::string& candidate,
                                          const std::string& mid,
                                          const Maybe<uint16_t>& level,
-                                         const std::string& ufrag,
                                          std::string* transportId) override;
 
   virtual nsresult AddLocalIceCandidate(const std::string& candidate,
                                         const std::string& transportId,
-                                        const std::string& ufrag,
                                         uint16_t* level, std::string* mid,
                                         bool* skipped) override;
 
@@ -115,6 +113,9 @@ class JsepSessionImpl : public JsepSession {
       const std::string& defaultCandidateAddr, uint16_t defaultCandidatePort,
       const std::string& defaultRtcpCandidateAddr,
       uint16_t defaultRtcpCandidatePort,
+      const std::string& transportId) override;
+
+  virtual nsresult EndOfLocalCandidates(
       const std::string& transportId) override;
 
   virtual nsresult Close() override;
