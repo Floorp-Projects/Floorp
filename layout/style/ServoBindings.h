@@ -50,6 +50,16 @@ namespace nsStyleTransformMatrix {
 enum class MatrixTransformOperator : uint8_t;
 }
 
+// The clang we use on windows complains about returning StyleStrong<> and
+// StyleOwned<>, since the template parameters are incomplete.
+//
+// But they only contain pointers so it is ok. Also, this warning hilariously
+// doesn't exist in GCC.
+#pragma GCC diagnostic push
+#ifdef __clang__
+#  pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
+
 extern "C" {
 
 // Element data
@@ -138,7 +148,6 @@ mozilla::MediumFeaturesChangedResult Servo_StyleSet_MediumFeaturesChanged(
     nsTArray<RawServoAuthorStyles*>* non_document_sets,
     bool may_affect_default_style);
 
-void Servo_StyleSet_Drop(RawServoStyleSetOwned set);
 void Servo_StyleSet_CompatModeChanged(const RawServoStyleSet* raw_data);
 
 void Servo_StyleSet_AppendStyleSheet(const RawServoStyleSet* set,
@@ -182,14 +191,13 @@ ComputedStyleStrong Servo_StyleSet_ResolveForDeclarations(
     const RawServoStyleSet* set, const mozilla::ComputedStyle* parent_style,
     const RawServoDeclarationBlock* declarations);
 
-void Servo_SelectorList_Drop(RawServoSelectorList*);
-RawServoSelectorList* Servo_SelectorList_Parse(const nsACString* selector_list);
-RawServoSourceSizeList* Servo_SourceSizeList_Parse(const nsACString* value);
+mozilla::StyleOwnedOrNull<RawServoSelectorList> Servo_SelectorList_Parse(
+    const nsACString* selector_list);
+mozilla::StyleOwned<RawServoSourceSizeList> Servo_SourceSizeList_Parse(
+    const nsACString* value);
 
 int32_t Servo_SourceSizeList_Evaluate(const RawServoStyleSet* set,
                                       const RawServoSourceSizeList*);
-
-void Servo_SourceSizeList_Drop(RawServoSourceSizeList*);
 
 bool Servo_SelectorList_Matches(const mozilla::dom::Element*,
                                 const RawServoSelectorList*);
@@ -215,8 +223,7 @@ void Servo_UACache_AddSizeOf(mozilla::MallocSizeOf malloc_size_of,
 
 // AuthorStyles
 
-RawServoAuthorStyles* Servo_AuthorStyles_Create();
-void Servo_AuthorStyles_Drop(RawServoAuthorStyles*);
+mozilla::StyleOwned<RawServoAuthorStyles> Servo_AuthorStyles_Create();
 
 void Servo_AuthorStyles_AppendStyleSheet(RawServoAuthorStyles*,
                                          const mozilla::StyleSheet*);
@@ -972,8 +979,7 @@ void Servo_Property_GetCSSValuesForProperty(const nsACString* name, bool* found,
 
 uint64_t Servo_PseudoClass_GetStates(const nsACString* name);
 
-StyleUseCounters* Servo_UseCounters_Create();
-void Servo_UseCounters_Drop(StyleUseCountersOwned);
+mozilla::StyleOwned<StyleUseCounters> Servo_UseCounters_Create();
 
 void Servo_UseCounters_Merge(const StyleUseCounters* doc_counters,
                              const StyleUseCounters* sheet_counters);
@@ -997,5 +1003,7 @@ void Servo_Quotes_GetQuote(const RawServoQuotes* quotes, int32_t depth,
 #undef SERVO_ARC_TYPE
 
 }  // extern "C"
+
+#pragma GCC diagnostic pop
 
 #endif  // mozilla_ServoBindings_h
