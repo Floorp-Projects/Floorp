@@ -11,6 +11,9 @@ import android.graphics.drawable.Drawable
 import android.support.v13.view.inputmethod.EditorInfoCompat
 import android.util.AttributeSet
 import android.view.View
+import android.view.ViewParent
+import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityManager
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.test.core.app.ApplicationProvider
@@ -32,8 +35,10 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.any
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
@@ -41,6 +46,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserToolbarTest {
@@ -133,6 +139,39 @@ class BrowserToolbarTest {
         toolbar.editMode()
 
         verify(ediToolbar).updateUrl("https://www.mozilla.org")
+    }
+
+    @Test
+    fun `displayProgress will send accessibility events`() {
+        val toolbar = BrowserToolbar(context)
+        val root = mock(ViewParent::class.java)
+        Shadows.shadowOf(toolbar).setMyParent(root)
+        `when`(root.requestSendAccessibilityEvent(any(), any())).thenReturn(false)
+
+        Shadows.shadowOf(context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager).setEnabled(true)
+
+        toolbar.displayProgress(10)
+        toolbar.displayProgress(50)
+        toolbar.displayProgress(100)
+
+        val captor = ArgumentCaptor.forClass(AccessibilityEvent::class.java)
+
+        verify(root, times(4)).requestSendAccessibilityEvent(any(), captor.capture())
+
+        assertEquals(AccessibilityEvent.TYPE_ANNOUNCEMENT, captor.allValues[0].eventType)
+        assertEquals(context.getString(R.string.mozac_browser_toolbar_progress_loading), captor.allValues[0].text[0])
+
+        assertEquals(AccessibilityEvent.TYPE_VIEW_SCROLLED, captor.allValues[1].eventType)
+        assertEquals(10, captor.allValues[1].scrollY)
+        assertEquals(100, captor.allValues[1].maxScrollY)
+
+        assertEquals(AccessibilityEvent.TYPE_VIEW_SCROLLED, captor.allValues[2].eventType)
+        assertEquals(50, captor.allValues[2].scrollY)
+        assertEquals(100, captor.allValues[2].maxScrollY)
+
+        assertEquals(AccessibilityEvent.TYPE_VIEW_SCROLLED, captor.allValues[3].eventType)
+        assertEquals(100, captor.allValues[3].scrollY)
+        assertEquals(100, captor.allValues[3].maxScrollY)
     }
 
     @Test

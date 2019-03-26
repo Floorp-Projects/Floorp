@@ -15,6 +15,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityEvent
 import android.widget.ProgressBar
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
@@ -130,6 +131,17 @@ internal class DisplayToolbar(
         context, null, android.R.attr.progressBarStyleHorizontal
     ).apply {
         visibility = View.GONE
+        setAccessibilityDelegate(object : View.AccessibilityDelegate() {
+            override fun onInitializeAccessibilityEvent(host: View?, event: AccessibilityEvent?) {
+                super.onInitializeAccessibilityEvent(host, event)
+                if (event?.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+                    // Populate the scroll event with the current progress.
+                    // See accessibility note in `updateProgress()`.
+                    event.scrollY = progress
+                    event.maxScrollY = max
+                }
+            }
+        })
     }
 
     private val browserActions: MutableList<DisplayAction> = mutableListOf()
@@ -185,11 +197,42 @@ internal class DisplayToolbar(
 
     /**
      * Updates the progress to be displayed.
+     *
+     * Accessibility note:
+     *     ProgressBars can be made accessible to TalkBack by setting `android:accessibilityLiveRegion`.
+     *     They will emit TYPE_VIEW_SELECTED events. TalkBack will format those events into percentage
+     *     announcements along with a pitch-change earcon. We are not using that feature here for
+     *     several reasons:
+     *     1. They are dispatched via a 200ms timeout. Since loading a page can be a short process,
+     *        and since we only update the bar a handful of times, these events often never fire and
+     *        they don't give the user a true sense of the progress.
+     *     2. The last 100% event is dispatched after the view is hidden. This prevents the event
+     *        from being fired, so the user never gets a "complete" event.
+     *     3. Live regions in TalkBack have their role announced, so the user will hear
+     *        "Progress bar, 25%". For a common feature like page load this is very chatty and unintuitive.
+     *     4. We can provide custom strings instead of the less useful percentage utterance, but
+     *        TalkBack will not play an earcon if an event has its own text.
+     *
+     *     For all those reasons, we are going another route here with a "loading" announcement
+     *     when the progress bar first appears along with scroll events that have the same
+     *     pitch-change earcon in TalkBack (although they are a bit louder). This gives a concise and
+     *     consistent feedback to the user that they can depend on.
+     *
      */
     fun updateProgress(progress: Int) {
-        progressView.progress = progress
+        if (!progressView.isVisible() && progress > 0) {
+            // Loading has just started, make visible and announce "loading" for accessibility.
+            progressView.visibility = View.VISIBLE
+            progressView.announceForAccessibility(context.getString(R.string.mozac_browser_toolbar_progress_loading))
+        }
 
-        progressView.visibility = if (progress < progressView.max && progress > 0) View.VISIBLE else View.GONE
+        progressView.progress = progress
+        progressView.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_SCROLLED)
+
+        if (progress >= progressView.max) {
+            // Loading is done, hide progress bar.
+            progressView.visibility = View.GONE
+        }
     }
 
     /**

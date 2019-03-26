@@ -3,4 +3,5 @@
     <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
     <string name="mozac_browser_toolbar_menu_button">Menü</string>
     <string name="mozac_clear_button_description">Leeren</string>
+    <string name="mozac_browser_toolbar_progress_loading">Wird geladen</string>
 </resources>

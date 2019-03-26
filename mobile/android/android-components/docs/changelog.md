@@ -25,6 +25,9 @@ permalink: /changelog/
 * **browser-storage-sync**, **browser-storage-memory**
   * Implementations of `concept-storage`/`HistoryStorage` expose newly added `deleteVisit`.
 
+* **browser-toolbar**
+  * Add TalkBack support for page load status.
+
 # 0.48.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.47.0...v0.48.0)
