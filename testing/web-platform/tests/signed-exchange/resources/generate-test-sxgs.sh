@@ -355,8 +355,6 @@ gen-signedexchange \
   -miRecordSize 100 \
   -ignoreErrors true
 
-
-
 # Signed Exchange with payload integrity error.
 echo 'garbage' | cat sxg/sxg-location.sxg - >sxg/sxg-merkle-integrity-error.sxg
 
@@ -439,6 +437,21 @@ gen-signedexchange \
   -date 2018-04-01T00:00:00Z \
   -expire 168h \
   -o sxg/sxg-variants-mismatch.sxg \
+  -miRecordSize 100
+
+# A valid Signed Exchange that reports navigation timing.
+gen-signedexchange \
+  -version $sxg_version \
+  -uri $inner_url_origin/signed-exchange/resources/inner-url.html \
+  -status 200 \
+  -content sxg-navigation-timing.html \
+  -certificate $certfile \
+  -certUrl $cert_url_origin/signed-exchange/resources/$certfile.cbor \
+  -validityUrl $inner_url_origin/signed-exchange/resources/resource.validity.msg \
+  -privateKey $keyfile \
+  -date 2018-04-01T00:00:00Z \
+  -expire 168h \
+  -o sxg/sxg-navigation-timing.sxg \
   -miRecordSize 100
 
 rm -fr $tmpdir
