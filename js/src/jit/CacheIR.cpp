@@ -5465,8 +5465,6 @@ CompareIRGenerator::CompareIRGenerator(JSContext* cx, HandleScript script,
 
 bool CompareIRGenerator::tryAttachString(ValOperandId lhsId,
                                          ValOperandId rhsId) {
-  MOZ_ASSERT(IsEqualityOp(op_));
-
   if (!lhsVal_.isString() || !rhsVal_.isString()) {
     return false;
   }
@@ -5761,9 +5759,6 @@ bool CompareIRGenerator::tryAttachStub() {
   // - {Bool} x {Double}.
   // - {Object} x {String, Symbol, Bool, Number}.
   if (IsEqualityOp(op_)) {
-    if (tryAttachString(lhsId, rhsId)) {
-      return true;
-    }
     if (tryAttachObject(lhsId, rhsId)) {
       return true;
     }
@@ -5808,6 +5803,9 @@ bool CompareIRGenerator::tryAttachStub() {
     return true;
   }
   if (tryAttachNumber(lhsId, rhsId)) {
+    return true;
+  }
+  if (tryAttachString(lhsId, rhsId)) {
     return true;
   }
 

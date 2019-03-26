@@ -1322,14 +1322,28 @@ bool IonCacheIRCompiler::emitCompareStringResult() {
   masm.bind(&slow);
 
   prepareVMCall(masm, save);
-  masm.Push(right);
-  masm.Push(left);
+
+  // Push the operands in reverse order for JSOP_LE and JSOP_GT:
+  // - |left <= right| is implemented as |right >= left|.
+  // - |left > right| is implemented as |right < left|.
+  if (op == JSOP_LE || op == JSOP_GT) {
+    masm.Push(left);
+    masm.Push(right);
+  } else {
+    masm.Push(right);
+    masm.Push(left);
+  }
 
   using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
   if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
     callVM<Fn, jit::StringsEqual<true>>(masm);
-  } else {
+  } else if (op == JSOP_NE || op == JSOP_STRICTNE) {
     callVM<Fn, jit::StringsEqual<false>>(masm);
+  } else if (op == JSOP_LT || op == JSOP_GT) {
+    callVM<Fn, jit::StringsCompare<true>>(masm);
+  } else {
+    MOZ_ASSERT(op == JSOP_LE || op == JSOP_GE);
+    callVM<Fn, jit::StringsCompare<false>>(masm);
   }
 
   masm.storeCallBoolResult(output.typedReg().gpr());
