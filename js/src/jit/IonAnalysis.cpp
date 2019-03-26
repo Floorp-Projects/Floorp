@@ -2361,8 +2361,7 @@ static bool CanCompareRegExp(MCompare* compare, MDefinition* def) {
 
   if (op != JSOP_EQ && op != JSOP_NE) {
     // Relational comparison always invoke @@toPrimitive.
-    MOZ_ASSERT(op == JSOP_GT || op == JSOP_GE || op == JSOP_LT ||
-               op == JSOP_LE);
+    MOZ_ASSERT(IsRelationalOp(op));
     return false;
   }
 

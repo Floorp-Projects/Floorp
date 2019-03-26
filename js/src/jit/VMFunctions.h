@@ -856,8 +856,11 @@ bool GreaterThanOrEqual(JSContext* cx, MutableHandleValue lhs,
                         MutableHandleValue rhs, bool* res);
 
 template <bool Equal>
-bool StringsEqual(JSContext* cx, HandleString left, HandleString right,
-                  bool* res);
+bool StringsEqual(JSContext* cx, HandleString lhs, HandleString rhs, bool* res);
+
+template <bool LessThan>
+bool StringsCompare(JSContext* cx, HandleString lhs, HandleString rhs,
+                    bool* res);
 
 MOZ_MUST_USE bool StringSplitHelper(JSContext* cx, HandleString str,
                                     HandleString sep, HandleObjectGroup group,
