@@ -69,11 +69,14 @@ class NewRenderer : public RendererEvent {
     *mUseDComp = compositor->UseDComp();
     *mUseTripleBuffering = compositor->UseTripleBuffering();
 
-    bool supportLowPriorityTransactions = true;  // TODO only for main windows.
+    bool isMainWindow = true; //TODO!
+    bool supportLowPriorityTransactions = isMainWindow;
+    bool supportPictureCaching = isMainWindow;
     wr::Renderer* wrRenderer = nullptr;
     if (!wr_window_new(aWindowId, mSize.width, mSize.height,
                        supportLowPriorityTransactions,
-                       gfxPrefs::WebRenderPictureCaching(), compositor->gl(),
+                       gfxPrefs::WebRenderPictureCaching() && supportPictureCaching,
+                       compositor->gl(),
                        aRenderThread.GetProgramCache()
                            ? aRenderThread.GetProgramCache()->Raw()
                            : nullptr,
