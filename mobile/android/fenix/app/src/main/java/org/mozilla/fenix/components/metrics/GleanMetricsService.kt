@@ -16,9 +16,15 @@ private class EventWrapper<T : Enum<T>>(
     private val event: EventMetricType<T>,
     private val keyMapper: ((String) -> T)? = null
 ) {
+    private val String.asCamelCase: String
+        get() = this.split("_").reduceIndexed { index, acc, s ->
+            if (index == 0) acc + s
+            else acc + s.capitalize()
+        }
+
     fun track(event: Event) {
         val extras = if (keyMapper != null) {
-            event.extras?.mapKeys { keyMapper.invoke(it.key) }
+            event.extras?.mapKeys { keyMapper.invoke(it.key.asCamelCase) }
         } else {
             null
         }
