@@ -46,7 +46,7 @@ skip-if(Android) == blend-layer-opacity.svg blend-layer-opacity-ref.svg
 skip-if(Android) == blend-lighten.svg blend-lighten-ref.svg
 # == blend-luminosity.svg blend-luminosity-ref.svg
 #skip-if(Android) == blend-multiply-alpha.svg blend-multiply-alpha-ref.svg
-skip-if(Android) == blend-multiply.svg blend-multiply-ref.svg
+fuzzy-if(skiaContent,0-1,0-1600) skip-if(Android) == blend-multiply.svg blend-multiply-ref.svg
 == blend-normal.svg blend-normal-ref.svg
 #skip-if(Android) == blend-overlay.svg blend-overlay-ref.svg
 #skip-if(Android)  == blend-saturation.svg blend-saturation-ref.svg
