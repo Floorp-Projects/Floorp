@@ -358,6 +358,17 @@ function TargetMixin(parentClass) {
       return this.tab.linkedBrowser.contentPrincipal;
     }
 
+    /**
+     * Similar to the above get contentPrincipal(), the get csp()
+     * returns the CSP which should be used for opening links.
+     */
+    get csp() {
+      if (!this.isLocalTab) {
+        return null;
+      }
+      return this.tab.linkedBrowser.csp;
+    }
+
     // Attach the console actor
     async attachConsole() {
       this.activeConsole = await this.getFront("console");

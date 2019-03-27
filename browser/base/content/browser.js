@@ -1832,7 +1832,7 @@ var gBrowserInit = {
       } else {
         // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
         // Such callers expect that window.arguments[0] is handled as a single URI.
-        loadOneOrMoreURIs(uriToLoad, Services.scriptSecurityManager.getSystemPrincipal());
+        loadOneOrMoreURIs(uriToLoad, Services.scriptSecurityManager.getSystemPrincipal(), null);
       }
     });
   },
@@ -2308,7 +2308,7 @@ function BrowserHome(aEvent) {
     if (isInitialPage(homePage)) {
       gBrowser.selectedBrowser.initialPageLoadedFromUserAction = homePage;
     }
-    loadOneOrMoreURIs(homePage, Services.scriptSecurityManager.getSystemPrincipal());
+    loadOneOrMoreURIs(homePage, Services.scriptSecurityManager.getSystemPrincipal(), null);
     if (isBlankPageURL(homePage)) {
       focusAndSelectUrlBar();
     } else {
@@ -2328,6 +2328,7 @@ function BrowserHome(aEvent) {
     gBrowser.loadTabs(urls, {
       inBackground: loadInBackground,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      csp: null,
     });
     break;
   case "window":
@@ -2345,7 +2346,7 @@ function BrowserHome(aEvent) {
   }
 }
 
-function loadOneOrMoreURIs(aURIString, aTriggeringPrincipal) {
+function loadOneOrMoreURIs(aURIString, aTriggeringPrincipal, aCsp) {
   // we're not a browser window, pass the URI string to a new browser window
   if (window.location.href != AppConstants.BROWSER_CHROME_URL) {
     window.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", "all,dialog=no", aURIString);
@@ -2359,6 +2360,7 @@ function loadOneOrMoreURIs(aURIString, aTriggeringPrincipal) {
       inBackground: false,
       replace: true,
       triggeringPrincipal: aTriggeringPrincipal,
+      csp: aCsp,
     });
   } catch (e) {
   }
@@ -2555,6 +2557,19 @@ function loadURI(uri, referrerInfo, postData, allowThirdPartyFixup,
                  triggeringPrincipal, allowInheritPrincipal = false, csp = null) {
   if (!triggeringPrincipal) {
     throw new Error("Must load with a triggering Principal");
+  }
+
+  // After Bug 965637 we can remove that Error because the CSP will not
+  // hang off the Principal anymore. Please note that the SystemPrincipal
+  // can not hold a CSP!
+  if (AppConstants.EARLY_BETA_OR_EARLIER) {
+    // Please note that the backend will still query the CSP from the Principal in
+    // release versions of Firefox. We use this error just to annotate all the
+    // callsites to explicitly pass a CSP before we can remove the CSP from
+    // the Principal within Bug 965637.
+    if (!triggeringPrincipal.isSystemPrincipal && triggeringPrincipal.csp && !csp) {
+      throw new Error("If Principal has CSP then we need an explicit CSP");
+    }
   }
 
   try {
@@ -3716,6 +3731,10 @@ var browserDragAndDrop = {
     return Services.droppedLinkHandler.getTriggeringPrincipal(aEvent);
   },
 
+  getCSP(aEvent) {
+    return Services.droppedLinkHandler.getCSP(aEvent);
+  },
+
   validateURIsForDrop(aEvent, aURIsCount, aURIs) {
     return Services.droppedLinkHandler.validateURIsForDrop(aEvent,
                                                            aURIsCount,
@@ -3793,6 +3812,7 @@ var newTabButtonObserver = {
     let shiftKey = aEvent.shiftKey;
     let links = browserDragAndDrop.dropLinks(aEvent);
     let triggeringPrincipal = browserDragAndDrop.getTriggeringPrincipal(aEvent);
+    let csp = browserDragAndDrop.getCSP(aEvent);
 
     if (links.length >= Services.prefs.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
       // Sync dialog cannot be used inside drop event handler.
@@ -3814,6 +3834,7 @@ var newTabButtonObserver = {
           postData: data.postData,
           allowThirdPartyFixup: true,
           triggeringPrincipal,
+          csp,
         });
       }
     }
@@ -3828,6 +3849,7 @@ var newWindowButtonObserver = {
   async onDrop(aEvent) {
     let links = browserDragAndDrop.dropLinks(aEvent);
     let triggeringPrincipal = browserDragAndDrop.getTriggeringPrincipal(aEvent);
+    let csp = browserDragAndDrop.getCSP(aEvent);
 
     if (links.length >= Services.prefs.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
       // Sync dialog cannot be used inside drop event handler.
@@ -3849,6 +3871,7 @@ var newWindowButtonObserver = {
           postData: data.postData,
           allowThirdPartyFixup: true,
           triggeringPrincipal,
+          csp,
         });
       }
     }
@@ -4266,7 +4289,7 @@ const BrowserSearch = {
    * @return engine The search engine used to perform a search, or null if no
    *                search was performed.
    */
-  _loadSearch(searchText, useNewTab, purpose, triggeringPrincipal) {
+  _loadSearch(searchText, useNewTab, purpose, triggeringPrincipal, csp) {
     if (!triggeringPrincipal) {
       throw new Error("Required argument triggeringPrincipal missing within _loadSearch");
     }
@@ -4289,7 +4312,8 @@ const BrowserSearch = {
                { postData: submission.postData,
                  inBackground,
                  relatedToCurrent: true,
-                 triggeringPrincipal });
+                 triggeringPrincipal,
+                 csp });
 
     return engine;
   },
@@ -4300,8 +4324,8 @@ const BrowserSearch = {
    * This should only be called from the context menu. See
    * BrowserSearch.loadSearch for the preferred API.
    */
-  loadSearchFromContext(terms, triggeringPrincipal) {
-    let engine = BrowserSearch._loadSearch(terms, true, "contextmenu", triggeringPrincipal);
+  loadSearchFromContext(terms, triggeringPrincipal, csp) {
+    let engine = BrowserSearch._loadSearch(terms, true, "contextmenu", triggeringPrincipal, csp);
     if (engine) {
       BrowserSearch.recordSearchInTelemetry(engine, "contextmenu");
     }
@@ -6427,6 +6451,7 @@ function middleMousePaste(event) {
                  { ignoreButton: true,
                    allowInheritPrincipal: data.mayInheritPrincipal,
                    triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
+                   csp: gBrowser.selectedBrowser.csp,
                  });
     }
   });
