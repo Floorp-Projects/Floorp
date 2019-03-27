@@ -615,6 +615,13 @@ dictionary WindowActorOptions {
    **/
   sequence<DOMString> matches;
 
+  /**
+   * Optional list of regular expressions for remoteTypes which are
+   * allowed to instantiate this actor. If not passed, all content
+   * processes are allowed to instantiate the actor.
+   **/
+  sequence<DOMString> remoteTypes;
+
   /** This fields are used for configuring individual sides of the actor. */
   required WindowActorSidedOptions parent;
   required WindowActorChildOptions child;
