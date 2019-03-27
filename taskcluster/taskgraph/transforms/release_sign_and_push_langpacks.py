@@ -82,9 +82,13 @@ def filter_out_macos_jobs_but_mac_only_locales(config, jobs):
     for job in jobs:
         build_platform = job['primary-dependency'].attributes.get('build_platform')
 
-        if build_platform in ('linux64-nightly', 'linux64-devedition-nightly'):
+        if build_platform in (
+                'linux64-nightly', 'linux64-devedition-nightly',
+                'linux64-shippable'):
             yield job
-        elif build_platform in ('macosx64-nightly', 'macosx64-devedition-nightly') and \
+        elif build_platform in (
+                'macosx64-nightly', 'macosx64-devedition-nightly',
+                'macosx64-shippable') and \
                 'ja-JP-mac' in job['attributes']['chunk_locales']:
             # Other locales of the same job shouldn't be processed
             job['attributes']['chunk_locales'] = ['ja-JP-mac']
