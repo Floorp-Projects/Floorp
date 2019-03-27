@@ -156,6 +156,11 @@ DefaultJitOptions::DefaultJitOptions() {
   // Duplicated in all.js - ensure both match.
   SET_DEFAULT(baselineWarmUpThreshold, 10);
 
+  // How many invocations or loop iterations are needed before functions
+  // are compiled with the Ion compiler at OptimizationLevel::Normal.
+  // Duplicated in all.js - ensure both match.
+  SET_DEFAULT(normalIonWarmUpThreshold, 1000);
+
   // Number of exception bailouts (resuming into catch/finally block) before
   // we invalidate and forbid Ion compilation.
   SET_DEFAULT(exceptionBailoutThreshold, 10);
@@ -193,20 +198,6 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(branchPruningBlockSpanFactor, 100);
   SET_DEFAULT(branchPruningEffectfulInstFactor, 3500);
   SET_DEFAULT(branchPruningThreshold, 4000);
-
-  // Force how many invocation or loop iterations are needed before compiling
-  // a function with the highest ionmonkey optimization level.
-  // (i.e. OptimizationLevel_Normal)
-  const char* forcedDefaultIonWarmUpThresholdEnv =
-      "JIT_OPTION_forcedDefaultIonWarmUpThreshold";
-  if (const char* env = getenv(forcedDefaultIonWarmUpThresholdEnv)) {
-    Maybe<int> value = ParseInt(env);
-    if (value.isSome()) {
-      forcedDefaultIonWarmUpThreshold.emplace(value.ref());
-    } else {
-      Warn(forcedDefaultIonWarmUpThresholdEnv, env);
-    }
-  }
 
   // Force the used register allocator instead of letting the optimization
   // pass decide.
@@ -279,13 +270,11 @@ void DefaultJitOptions::enableGvn(bool enable) { disableGvn = !enable; }
 void DefaultJitOptions::setEagerCompilation() {
   eagerCompilation = true;
   baselineWarmUpThreshold = 0;
-  forcedDefaultIonWarmUpThreshold.reset();
-  forcedDefaultIonWarmUpThreshold.emplace(0);
+  normalIonWarmUpThreshold = 0;
 }
 
 void DefaultJitOptions::setCompilerWarmUpThreshold(uint32_t warmUpThreshold) {
-  forcedDefaultIonWarmUpThreshold.reset();
-  forcedDefaultIonWarmUpThreshold.emplace(warmUpThreshold);
+  normalIonWarmUpThreshold = warmUpThreshold;
 
   // Undo eager compilation
   if (eagerCompilation && warmUpThreshold != 0) {
@@ -296,11 +285,11 @@ void DefaultJitOptions::setCompilerWarmUpThreshold(uint32_t warmUpThreshold) {
 }
 
 void DefaultJitOptions::resetCompilerWarmUpThreshold() {
-  forcedDefaultIonWarmUpThreshold.reset();
+  jit::DefaultJitOptions defaultValues;
+  normalIonWarmUpThreshold = defaultValues.normalIonWarmUpThreshold;
 
   // Undo eager compilation
   if (eagerCompilation) {
-    jit::DefaultJitOptions defaultValues;
     eagerCompilation = false;
     baselineWarmUpThreshold = defaultValues.baselineWarmUpThreshold;
   }
