@@ -3500,14 +3500,14 @@ nsDOMWindowUtils::GetOMTCTransform(Element* aElement,
     return NS_OK;
   }
 
-  MaybeTransform transform;
+  Maybe<Matrix4x4> transform;
   forwarder->GetShadowManager()->SendGetTransform(
       layer->AsShadowableLayer()->GetShadow(), &transform);
-  if (transform.type() != MaybeTransform::TMatrix4x4) {
+  if (transform.isNothing()) {
     return NS_OK;
   }
 
-  Matrix4x4 matrix = transform.get_Matrix4x4();
+  Matrix4x4 matrix = transform.value();
   RefPtr<nsROCSSPrimitiveValue> cssValue =
       nsComputedDOMStyle::MatrixToCSSValue(matrix);
   if (!cssValue) {
