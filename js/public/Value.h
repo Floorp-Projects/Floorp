@@ -1124,8 +1124,8 @@ inline bool SameType(const Value& lhs, const Value& rhs) {
 /************************************************************************/
 
 namespace JS {
-JS_PUBLIC_API void HeapValuePostBarrier(Value* valuep, const Value& prev,
-                                        const Value& next);
+JS_PUBLIC_API void HeapValueWriteBarriers(Value* valuep, const Value& prev,
+                                          const Value& next);
 
 template <>
 struct GCPolicy<JS::Value> {
@@ -1149,9 +1149,9 @@ struct BarrierMethods<JS::Value> {
   static gc::Cell* asGCThingOrNull(const JS::Value& v) {
     return v.isGCThing() ? v.toGCThing() : nullptr;
   }
-  static void postBarrier(JS::Value* v, const JS::Value& prev,
-                          const JS::Value& next) {
-    JS::HeapValuePostBarrier(v, prev, next);
+  static void writeBarriers(JS::Value* v, const JS::Value& prev,
+                            const JS::Value& next) {
+    JS::HeapValueWriteBarriers(v, prev, next);
   }
   static void exposeToJS(const JS::Value& v) { JS::ExposeValueToActiveJS(v); }
 };

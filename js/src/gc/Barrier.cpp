@@ -189,21 +189,31 @@ template struct JS_PUBLIC_API MovableCellHasher<LazyScript*>;
 
 }  // namespace js
 
-JS_PUBLIC_API void JS::HeapObjectPostBarrier(JSObject** objp, JSObject* prev,
-                                             JSObject* next) {
+JS_PUBLIC_API void JS::HeapObjectWriteBarriers(JSObject** objp, JSObject* prev,
+                                               JSObject* next) {
   MOZ_ASSERT(objp);
+  js::InternalBarrierMethods<JSObject*>::preBarrier(prev);
   js::InternalBarrierMethods<JSObject*>::postBarrier(objp, prev, next);
 }
 
-JS_PUBLIC_API void JS::HeapStringPostBarrier(JSString** strp, JSString* prev,
-                                             JSString* next) {
+JS_PUBLIC_API void JS::HeapStringWriteBarriers(JSString** strp, JSString* prev,
+                                               JSString* next) {
   MOZ_ASSERT(strp);
+  js::InternalBarrierMethods<JSString*>::preBarrier(prev);
   js::InternalBarrierMethods<JSString*>::postBarrier(strp, prev, next);
 }
 
-JS_PUBLIC_API void JS::HeapValuePostBarrier(JS::Value* valuep,
-                                            const Value& prev,
-                                            const Value& next) {
+JS_PUBLIC_API void JS::HeapScriptWriteBarriers(JSScript** scriptp,
+                                               JSScript* prev, JSScript* next) {
+  MOZ_ASSERT(scriptp);
+  js::InternalBarrierMethods<JSScript*>::preBarrier(prev);
+  js::InternalBarrierMethods<JSScript*>::postBarrier(scriptp, prev, next);
+}
+
+JS_PUBLIC_API void JS::HeapValueWriteBarriers(JS::Value* valuep,
+                                              const Value& prev,
+                                              const Value& next) {
   MOZ_ASSERT(valuep);
+  js::InternalBarrierMethods<JS::Value>::preBarrier(prev);
   js::InternalBarrierMethods<JS::Value>::postBarrier(valuep, prev, next);
 }

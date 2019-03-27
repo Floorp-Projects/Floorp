@@ -201,7 +201,14 @@ struct BarrierMethods<jsid> {
     }
     return nullptr;
   }
-  static void postBarrier(jsid* idp, jsid prev, jsid next) {}
+  static void writeBarriers(jsid* idp, jsid prev, jsid next) {
+    if (JSID_IS_STRING(prev)) {
+      JS::IncrementalPreWriteBarrier(JS::GCCellPtr(JSID_TO_STRING(prev)));
+    }
+    if (JSID_IS_SYMBOL(prev)) {
+      JS::IncrementalPreWriteBarrier(JS::GCCellPtr(JSID_TO_SYMBOL(prev)));
+    }
+  }
   static void exposeToJS(jsid id) {
     if (JSID_IS_GCTHING(id)) {
       js::gc::ExposeGCThingToActiveJS(JSID_TO_GCTHING(id));
