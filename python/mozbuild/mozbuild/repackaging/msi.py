@@ -54,6 +54,16 @@ def repackage_msi(topsrcdir, wsx, version, locale, arch, setupexe, candle, light
         raise Exception("%s does not exist." % candle)
     if light is not None and not os.path.isfile(light):
         raise Exception("%s does not exist." % light)
+    embeddedVersion = '0.0.0.0'
+    # Version string cannot contain 'a' or 'b' when embedding in msi manifest.
+    if not 'a' in version and not 'b' in version:
+        if version.endswith('esr'):
+            parts = version[:-3].split('.')
+        else:
+            parts = version.split('.')
+        while len(parts) < 4:
+            parts.append('0')
+        embeddedVersion = '.'.join(parts)
 
     wsx = mozpath.realpath(wsx)
     setupexe = mozpath.realpath(setupexe)
@@ -73,7 +83,8 @@ def repackage_msi(topsrcdir, wsx, version, locale, arch, setupexe, candle, light
                           'Version': version,
                           'AB_CD':  locale,
                           'Architecture': _MSI_ARCH[arch],
-                          'ExeSourcePath': setupexe}
+                          'ExeSourcePath': setupexe,
+                          'EmbeddedVersionCode': embeddedVersion}
             # update wsx file with inputs from
             newfile = update_wsx(temp_wsx_file, pre_values)
             wix_object_file = os.path.join(tmpdir, 'installer.wixobj')
