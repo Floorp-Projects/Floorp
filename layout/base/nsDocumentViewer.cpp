@@ -2299,6 +2299,10 @@ UniquePtr<ServoStyleSet> nsDocumentViewer::CreateStyleSet(Document* aDocument) {
   auto cache = nsLayoutStylesheetCache::Singleton();
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
 
+  MOZ_ASSERT(sheetService,
+             "should never be creating a StyleSet after the style sheet "
+             "service has gone");
+
   auto styleSet = MakeUnique<ServoStyleSet>();
 
   // User sheets
