@@ -176,24 +176,6 @@ panelview[mainview] > .panel-header {
   min-width: calc(var(--tab-min-width) + 10px);
 }
 
-@supports -moz-bool-pref("browser.tabs.newanimations") {
-
-.tabbrowser-tab:not([pinned]):not([tabdrop-samewindow]) {
-  transition: transform 100ms ease-in-out;
-}
-
-#tabbrowser-tabs[movingtab] > .tabbrowser-tab[selected] {
-  transition: none;
-}
-
-.tabbrowser-tab:not([pinned]):not([fadein]) {
-  transform: translateY(var(--tab-min-height));
-}
-
-} /* end @supports -moz-bool-pref("browser.tabs.newanimations") */
-
-@supports not -moz-bool-pref("browser.tabs.newanimations") {
-
 .tabbrowser-tab:not([pinned]):not([fadein]) {
   max-width: 0.1px;
   min-width: 0.1px;
@@ -220,8 +202,6 @@ panelview[mainview] > .panel-header {
 .tab-throbber:not([fadein]) {
   display: none;
 }
-
-} /* end @supports not -moz-bool-pref("browser.tabs.newanimations") */
 
 %ifdef NIGHTLY_BUILD
 @supports -moz-bool-pref("browser.tabs.hideThrobber") {
