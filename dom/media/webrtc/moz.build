@@ -14,7 +14,6 @@ with Files('PeerIdentity.*'):
 XPIDL_MODULE = 'content_webrtc'
 
 EXPORTS += [
-    'AllocationHandle.h',
     'CubebDeviceEnumerator.h',
     'MediaEngine.h',
     'MediaEngineDefault.h',

@@ -6,7 +6,6 @@
 
 #include "MediaManager.h"
 
-#include "AllocationHandle.h"
 #include "AudioDeviceInfo.h"
 #include "MediaStreamGraphImpl.h"
 #include "MediaTimer.h"
@@ -915,7 +914,6 @@ nsresult MediaDevice::Allocate(const dom::MediaTrackConstraints& aConstraints,
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
   return mSource->Allocate(aConstraints, aPrefs, mID, aPrincipalInfo,
-                           getter_AddRefs(mAllocationHandle),
                            aOutBadConstraint);
 }
 
@@ -924,13 +922,13 @@ void MediaDevice::SetTrack(const RefPtr<SourceMediaStream>& aStream,
                            const PrincipalHandle& aPrincipalHandle) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
-  mSource->SetTrack(mAllocationHandle, aStream, aTrackID, aPrincipalHandle);
+  mSource->SetTrack(aStream, aTrackID, aPrincipalHandle);
 }
 
 nsresult MediaDevice::Start() {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
-  return mSource->Start(mAllocationHandle);
+  return mSource->Start();
 }
 
 nsresult MediaDevice::Reconfigure(
@@ -938,26 +936,25 @@ nsresult MediaDevice::Reconfigure(
     const MediaEnginePrefs& aPrefs, const char** aOutBadConstraint) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
-  return mSource->Reconfigure(mAllocationHandle, aConstraints, aPrefs, mID,
-                              aOutBadConstraint);
+  return mSource->Reconfigure(aConstraints, aPrefs, mID, aOutBadConstraint);
 }
 
 nsresult MediaDevice::FocusOnSelectedSource() {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
-  return mSource->FocusOnSelectedSource(mAllocationHandle);
+  return mSource->FocusOnSelectedSource();
 }
 
 nsresult MediaDevice::Stop() {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
-  return mSource->Stop(mAllocationHandle);
+  return mSource->Stop();
 }
 
 nsresult MediaDevice::Deallocate() {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
-  return mSource->Deallocate(mAllocationHandle);
+  return mSource->Deallocate();
 }
 
 dom::MediaSourceEnum MediaDevice::GetMediaSource() const {

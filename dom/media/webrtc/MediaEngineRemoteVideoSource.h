@@ -120,21 +120,17 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
-                    AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
-  nsresult Deallocate(const RefPtr<const AllocationHandle>& aHandle) override;
-  void SetTrack(const RefPtr<const AllocationHandle>& aHandle,
-                const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+  nsresult Deallocate() override;
+  void SetTrack(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
                 const PrincipalHandle& aPrincipal) override;
-  nsresult Start(const RefPtr<const AllocationHandle>& aHandle) override;
-  nsresult Reconfigure(const RefPtr<AllocationHandle>& aHandle,
-                       const dom::MediaTrackConstraints& aConstraints,
+  nsresult Start() override;
+  nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
                        const nsString& aDeviceId,
                        const char** aOutBadConstraint) override;
-  nsresult FocusOnSelectedSource(
-      const RefPtr<const AllocationHandle>& aHandle) override;
-  nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) override;
+  nsresult FocusOnSelectedSource() override;
+  nsresult Stop() override;
 
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
