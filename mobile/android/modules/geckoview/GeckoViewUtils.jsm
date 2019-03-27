@@ -103,7 +103,7 @@ var GeckoViewUtils = {
     });
 
     if (observers) {
-      let observer = (subject, topic, data) => {
+      const observer = (subject, topic, data) => {
         Services.obs.removeObserver(observer, topic);
         if (!once) {
           Services.obs.addObserver(scope[name], topic);
@@ -118,8 +118,8 @@ var GeckoViewUtils = {
       return;
     }
 
-    let addMMListener = (target, names) => {
-      let listener = msg => {
+    const addMMListener = (target, names) => {
+      const listener = msg => {
         target.removeMessageListener(msg.name, listener);
         if (!once) {
           target.addMessageListener(msg.name, scope[name]);
@@ -136,7 +136,7 @@ var GeckoViewUtils = {
     }
 
     if (ged) {
-      let listener = (event, data, callback) => {
+      const listener = (event, data, callback) => {
         EventDispatcher.instance.unregisterListener(listener, event);
         if (!once) {
           EventDispatcher.instance.registerListener(scope[name], event);
@@ -151,7 +151,7 @@ var GeckoViewUtils = {
     if (!handler) {
       handler = (_ => Array.isArray(name) ? name.map(n => scope[n]) : scope[name]);
     }
-    let listener = (...args) => {
+    const listener = (...args) => {
       let handlers = handler(...args);
       if (!handlers) {
           return;
@@ -213,7 +213,7 @@ var GeckoViewUtils = {
    */
   registerLazyWindowEventListener: function(window, events,
                                             {handler, scope, name, once}) {
-    let dispatcher = this.getDispatcherForWindow(window);
+    const dispatcher = this.getDispatcherForWindow(window);
 
     this._addLazyListeners(events, handler, scope, name,
       (events, listener) => {
@@ -339,13 +339,13 @@ var GeckoViewUtils = {
   },
 
   getActiveDispatcherAndWindow: function() {
-    let win = Services.focus.activeWindow;
+    const win = Services.focus.activeWindow;
     let dispatcher = this.getDispatcherForWindow(win);
     if (dispatcher) {
       return [dispatcher, win];
     }
 
-    for (let win of Services.wm.getEnumerator(/* windowType */ null)) {
+    for (const win of Services.wm.getEnumerator(/* windowType */ null)) {
       dispatcher = this.getDispatcherForWindow(win);
       if (dispatcher) {
         return [dispatcher, win];

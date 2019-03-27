@@ -113,7 +113,7 @@ class GeckoViewAutoFill {
       return info;
     };
 
-    let [usernameField] =
+    const [usernameField] =
       LoginManagerContent.getUserNameAndPasswordFields(aFormLike.elements[0]);
 
     const rootInfo = getInfo(aFormLike.rootElement, null, undefined, null);
@@ -131,7 +131,7 @@ class GeckoViewAutoFill {
         const AUTOFILL_STATE = "-moz-autofill";
         const winUtils = window.windowUtils;
 
-        for (let id in responses) {
+        for (const id in responses) {
           const entry = this._autoFillElements &&
                         this._autoFillElements.get(+id);
           const element = entry && entry.get();
@@ -173,8 +173,8 @@ class GeckoViewAutoFill {
   onFocus(aTarget) {
     debug `Auto-fill focus on ${aTarget && aTarget.tagName}`;
 
-    let info = aTarget && this._autoFillInfos &&
-               this._autoFillInfos.get(aTarget);
+    const info = aTarget && this._autoFillInfos &&
+                 this._autoFillInfos.get(aTarget);
     if (!aTarget || info) {
       this._eventDispatcher.dispatch("GeckoView:OnAutoFillFocus", info);
     }
