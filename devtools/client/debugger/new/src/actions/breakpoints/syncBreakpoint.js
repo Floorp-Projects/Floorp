@@ -14,7 +14,7 @@ import {
   makeBreakpointLocation
 } from "../../utils/breakpoint";
 
-import { getTextAtPosition } from "../../utils/source";
+import { getTextAtPosition, isInlineScript } from "../../utils/source";
 import { comparePosition } from "../../utils/location";
 
 import { originalToGeneratedId, isOriginalId } from "devtools-source-map";
@@ -173,7 +173,14 @@ export async function syncBreakpointPromise(
   }
 
   if (!newGeneratedLocation) {
-    return { previousLocation, breakpoint: null };
+    return {
+      previousLocation,
+      // We return the original bp here for HTML scripts because there may
+      // be multiple <script> elements in a source and not all of them may
+      // have loaded yet to allow synching. This means we need to leave
+      // breakpoints on these pages pending.
+      breakpoint: isInlineScript(generatedSource) ? bp : null
+    };
   }
 
   /** ******* Case 2: Add New Breakpoint ***********/
