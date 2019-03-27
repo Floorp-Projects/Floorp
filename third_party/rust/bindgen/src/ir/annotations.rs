@@ -58,6 +58,8 @@ pub struct Annotations {
     /// In that case, bindgen will generate a constant for `Bar` instead of
     /// `Baz`.
     constify_enum_variant: bool,
+    /// List of explicit derives for this type.
+    derives: Vec<String>,
 }
 
 fn parse_accessor(s: &str) -> FieldAccessorKind {
@@ -79,6 +81,7 @@ impl Default for Annotations {
             private_fields: None,
             accessor_kind: None,
             constify_enum_variant: false,
+            derives: vec![],
         }
     }
 }
@@ -130,6 +133,11 @@ impl Annotations {
         self.use_instead_of.as_ref().map(|s| &**s)
     }
 
+    /// The list of derives that have been specified in this annotation.
+    pub fn derives(&self) -> &[String] {
+        &self.derives
+    }
+
     /// Should we avoid implementing the `Copy` trait?
     pub fn disallow_copy(&self) -> bool {
         self.disallow_copy
@@ -164,6 +172,9 @@ impl Annotations {
                             Some(
                                 attr.value.split("::").map(Into::into).collect(),
                             )
+                    }
+                    "derive" => {
+                        self.derives.push(attr.value)
                     }
                     "private" => {
                         self.private_fields = Some(attr.value != "false")
