@@ -384,12 +384,6 @@ uint32_t MediaEngineDefaultAudioSource::GetBestFitnessDistance(
   return distance;
 }
 
-bool MediaEngineDefaultAudioSource::IsAvailable() const {
-  AssertIsOnOwningThread();
-
-  return mState == kReleased;
-}
-
 nsresult MediaEngineDefaultAudioSource::Allocate(
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
@@ -524,15 +518,7 @@ void MediaEngineDefault::EnumerateDevices(
   switch (aMediaSource) {
     case dom::MediaSourceEnum::Camera: {
       // Only supports camera video sources. See Bug 1038241.
-
-      // We once had code here to find a VideoSource with the same settings and
-      // re-use that. This is no longer possible since the resolution gets set
-      // in Allocate().
-
-      nsTArray<RefPtr<MediaEngineSource>>* devicesForThisWindow =
-          mVSources.LookupOrAdd(aWindowId);
       auto newSource = MakeRefPtr<MediaEngineDefaultVideoSource>();
-      devicesForThisWindow->AppendElement(newSource);
       aDevices->AppendElement(MakeRefPtr<MediaDevice>(
           newSource, newSource->GetName(),
           NS_ConvertUTF8toUTF16(newSource->GetUUID()), newSource->GetGroupId(),
@@ -540,27 +526,11 @@ void MediaEngineDefault::EnumerateDevices(
       return;
     }
     case dom::MediaSourceEnum::Microphone: {
-      nsTArray<RefPtr<MediaEngineDefaultAudioSource>>* devicesForThisWindow =
-          mASources.LookupOrAdd(aWindowId);
-      for (const RefPtr<MediaEngineDefaultAudioSource>& source :
-           *devicesForThisWindow) {
-        if (source->IsAvailable()) {
-          aDevices->AppendElement(MakeRefPtr<MediaDevice>(
-              source, source->GetName(),
-              NS_ConvertUTF8toUTF16(source->GetUUID()), source->GetGroupId(),
-              NS_LITERAL_STRING("")));
-        }
-      }
-
-      if (aDevices->IsEmpty()) {
-        // All streams are currently busy, just make a new one.
-        auto newSource = MakeRefPtr<MediaEngineDefaultAudioSource>();
-        devicesForThisWindow->AppendElement(newSource);
-        aDevices->AppendElement(MakeRefPtr<MediaDevice>(
-            newSource, newSource->GetName(),
-            NS_ConvertUTF8toUTF16(newSource->GetUUID()),
-            newSource->GetGroupId(), NS_LITERAL_STRING("")));
-      }
+      auto newSource = MakeRefPtr<MediaEngineDefaultAudioSource>();
+      aDevices->AppendElement(MakeRefPtr<MediaDevice>(
+          newSource, newSource->GetName(),
+          NS_ConvertUTF8toUTF16(newSource->GetUUID()), newSource->GetGroupId(),
+          NS_LITERAL_STRING("")));
       return;
     }
     default:
@@ -572,52 +542,5 @@ void MediaEngineDefault::EnumerateDevices(
     NS_WARNING("No default implementation for MediaSinkEnum::Speaker");
   }
 }
-
-void MediaEngineDefault::ReleaseResourcesForWindow(uint64_t aWindowId) {
-  nsTArray<RefPtr<MediaEngineDefaultAudioSource>>* audioDevicesForThisWindow =
-      mASources.Get(aWindowId);
-
-  if (audioDevicesForThisWindow) {
-    for (const RefPtr<MediaEngineDefaultAudioSource>& source :
-         *audioDevicesForThisWindow) {
-      source->Shutdown();
-    }
-  }
-
-  mASources.Remove(aWindowId);
-
-  nsTArray<RefPtr<MediaEngineSource>>* videoDevicesForThisWindow =
-      mVSources.Get(aWindowId);
-
-  if (videoDevicesForThisWindow) {
-    for (const RefPtr<MediaEngineSource>& source : *videoDevicesForThisWindow) {
-      source->Shutdown();
-    }
-  }
-
-  mVSources.Remove(aWindowId);
-}
-
-void MediaEngineDefault::Shutdown() {
-  AssertIsOnOwningThread();
-
-  for (auto iter = mVSources.Iter(); !iter.Done(); iter.Next()) {
-    for (const RefPtr<MediaEngineSource>& source : *iter.UserData()) {
-      if (source) {
-        source->Shutdown();
-      }
-    }
-  }
-  for (auto iter = mASources.Iter(); !iter.Done(); iter.Next()) {
-    for (const RefPtr<MediaEngineDefaultAudioSource>& source :
-         *iter.UserData()) {
-      if (source) {
-        source->Shutdown();
-      }
-    }
-  }
-  mVSources.Clear();
-  mASources.Clear();
-};
 
 }  // namespace mozilla

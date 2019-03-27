@@ -127,8 +127,6 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) const override;
 
-  bool IsAvailable() const;
-
  protected:
   ~MediaEngineDefaultAudioSource();
 
@@ -147,18 +145,10 @@ class MediaEngineDefault : public MediaEngine {
 
   void EnumerateDevices(uint64_t aWindowId, dom::MediaSourceEnum, MediaSinkEnum,
                         nsTArray<RefPtr<MediaDevice>>*) override;
-  void Shutdown() override;
-  void ReleaseResourcesForWindow(uint64_t aWindowId) override;
+  void Shutdown() override {}
 
  private:
   ~MediaEngineDefault() = default;
-
-  // WindowID -> Array of devices.
-  nsClassHashtable<nsUint64HashKey, nsTArray<RefPtr<MediaEngineSource>>>
-      mVSources;
-  nsClassHashtable<nsUint64HashKey,
-                   nsTArray<RefPtr<MediaEngineDefaultAudioSource>>>
-      mASources;
 };
 
 }  // namespace mozilla
