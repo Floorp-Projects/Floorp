@@ -48,6 +48,7 @@
 }
 
 .split-box.vert > .splitter {
+  /* prettier-ignore */
   min-width: calc(var(--devtools-splitter-inline-start-width) +
     var(--devtools-splitter-inline-end-width) + 1px);
 
@@ -61,6 +62,7 @@
 }
 
 .split-box.horz > .splitter {
+  /* prettier-ignore */
   min-height: calc(var(--devtools-splitter-top-width) +
     var(--devtools-splitter-bottom-width) + 1px);
   border-top-width: var(--devtools-splitter-top-width);

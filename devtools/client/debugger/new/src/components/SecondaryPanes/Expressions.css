@@ -72,6 +72,7 @@
   background-color: var(--theme-body-background);
   display: block;
   position: relative;
+  overflow: hidden;
   min-height: var(--breakpoint-expression-height);
 }
 
@@ -94,8 +95,21 @@
 
 .expression-container__close-btn {
   position: absolute;
-  inset-inline-end: 0px;
-  top: 1px;
+  /* hiding button outside of row until hovered or focused */
+  top: -100px;
+}
+
+.expression-container:hover .expression-container__close-btn,
+.expression-container__close-btn:focus-within {
+  top: calc(50% - 8px);
+}
+
+[dir="ltr"] .expression-container__close-btn {
+  right: 0;
+}
+
+[dir="rtl"] .expression-container__close-btn {
+  left: 0;
 }
 
 .expression-content {

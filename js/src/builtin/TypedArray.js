@@ -1518,7 +1518,28 @@ function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
         // Try to take a fast path when there's no mapper function and the
         // constructor is a built-in TypedArray constructor.
         if (!mapping && IsTypedArrayConstructor(C) && IsObject(source)) {
-            // TODO: Add fast path for TypedArray inputs (bug 1491813).
+            // The source is a TypedArray using the default iterator.
+            if (usingIterator === TypedArrayValues && IsTypedArray(source) &&
+                ArrayIteratorPrototypeOptimizable())
+            {
+                // Step 7.a.
+                // Omitted but we still need to throw if |source| was detached.
+                GetAttachedArrayBuffer(source);
+
+                // Step 7.b.
+                var len = TypedArrayLength(source);
+
+                // Step 7.c.
+                var targetObj = new C(len);
+
+                // Steps 7.d-f.
+                for (var k = 0; k < len; k++) {
+                    targetObj[k] = source[k];
+                }
+
+                // Step 7.g.
+                return targetObj;
+            }
 
             // The source is a packed array using the default iterator.
             if (usingIterator === ArrayValues && IsPackedArray(source) &&

@@ -14,7 +14,6 @@
 #include "nsISupports.h"
 #include "nsImportModule.h"
 #include "nsContentUtils.h"
-#include "xpcprivate.h"
 
 #define INTL_APP_LOCALES_CHANGED "intl:app-locales-changed"
 
@@ -36,32 +35,12 @@ PromiseResolver::PromiseResolver(Promise* aPromise) { mPromise = aPromise; }
 
 void PromiseResolver::ResolvedCallback(JSContext* aCx,
                                        JS::Handle<JS::Value> aValue) {
-  JS::RootedObject sourceScope(aCx, JS::CurrentGlobalOrNull(aCx));
-
-  AutoEntryScript aes(mPromise->GetParentObject(), "Promise resolution");
-  JSContext* cx = aes.cx();
-  JS::Rooted<JS::Value> value(cx, aValue);
-
-  xpc::StackScopedCloneOptions options;
-  StackScopedClone(cx, options, sourceScope, &value);
-
-  mPromise->MaybeResolve(cx, value);
-  mPromise = nullptr;
+  mPromise->MaybeResolveWithClone(aCx, aValue);
 }
 
 void PromiseResolver::RejectedCallback(JSContext* aCx,
                                        JS::Handle<JS::Value> aValue) {
-  JS::RootedObject sourceScope(aCx, JS::CurrentGlobalOrNull(aCx));
-
-  AutoEntryScript aes(mPromise->GetParentObject(), "Promise rejection");
-  JSContext* cx = aes.cx();
-  JS::Rooted<JS::Value> value(cx, aValue);
-
-  xpc::StackScopedCloneOptions options;
-  StackScopedClone(cx, options, sourceScope, &value);
-
-  mPromise->MaybeReject(cx, value);
-  mPromise = nullptr;
+  mPromise->MaybeRejectWithClone(aCx, aValue);
 }
 
 PromiseResolver::~PromiseResolver() { mPromise = nullptr; }
@@ -369,12 +348,12 @@ class L10nReadyHandler final : public PromiseNativeHandler {
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     mDocumentL10n->InitialDocumentTranslationCompleted();
-    mPromise->MaybeResolveWithUndefined();
+    mPromise->MaybeResolveWithClone(aCx, aValue);
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     mDocumentL10n->InitialDocumentTranslationCompleted();
-    mPromise->MaybeRejectWithUndefined();
+    mPromise->MaybeRejectWithClone(aCx, aValue);
   }
 
  private:

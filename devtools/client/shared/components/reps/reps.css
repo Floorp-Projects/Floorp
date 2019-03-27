@@ -288,7 +288,7 @@ button.invoke-getter {
   background-color: var(--theme-icon-color);
   height: 10px;
   vertical-align: middle;
-  border:none;
+  border: none;
 }
 
 .invoke-getter:hover {
@@ -304,7 +304,7 @@ button.invoke-getter {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /* We can remove the outline since we do add our own focus style on nodes */
+/* We can remove the outline since we do add our own focus style on nodes */
 .tree:focus {
   outline: none;
 }
@@ -337,7 +337,7 @@ button.invoke-getter {
   display: inline-block;
   width: 12px;
   margin-inline-start: 5px;
-  border-inline-start: 1px solid #A2D1FF;
+  border-inline-start: 1px solid #a2d1ff;
   flex-shrink: 0;
 }
 
@@ -349,7 +349,7 @@ button.invoke-getter {
 /* For non expandable root nodes, we don't have .tree-indent elements, so we declare
    the margin on the start of the node */
 .tree-node[data-expandable="false"][aria-level="1"] {
-  padding-inline-start: 15px
+  padding-inline-start: 15px;
 }
 
 .tree .tree-node[data-expandable="true"] {
@@ -416,7 +416,7 @@ html[dir="rtl"] .tree-node button:not(.expanded) {
   color: var(--theme-body-color);
 }
 
-.tree.object-inspector .block .object-label:before {
+.tree.object-inspector .block .object-label::before {
   content: "\2632   ";
   font-size: 1.1em;
 }

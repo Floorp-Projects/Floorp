@@ -9740,34 +9740,6 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
 }
 
 /* static */
-void nsLayoutUtils::FixupNoneGeneric(nsFont* aFont, uint8_t aGenericFontID,
-                                     const nsFont* aDefaultVariableFont) {
-  bool useDocumentFonts = StaticPrefs::browser_display_use_document_fonts();
-  if (aGenericFontID == kGenericFont_NONE ||
-      (!useDocumentFonts && (aGenericFontID == kGenericFont_cursive ||
-                             aGenericFontID == kGenericFont_fantasy))) {
-    FontFamilyType defaultGeneric =
-        aDefaultVariableFont->fontlist.GetDefaultFontType();
-    MOZ_ASSERT(aDefaultVariableFont->fontlist.IsEmpty() &&
-               (defaultGeneric == eFamily_serif ||
-                defaultGeneric == eFamily_sans_serif));
-    if (defaultGeneric != eFamily_none) {
-      if (useDocumentFonts) {
-        aFont->fontlist.SetDefaultFontType(defaultGeneric);
-      } else {
-        // Either prioritize the first generic in the list,
-        // or (if there isn't one) prepend the default variable font.
-        if (!aFont->fontlist.PrioritizeFirstGeneric()) {
-          aFont->fontlist.PrependGeneric(defaultGeneric);
-        }
-      }
-    }
-  } else {
-    aFont->fontlist.SetDefaultFontType(eFamily_none);
-  }
-}
-
-/* static */
 void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
                                       LookAndFeel::FontID aFontID,
                                       const nsFont* aDefaultVariableFont) {

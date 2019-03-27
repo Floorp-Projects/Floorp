@@ -636,7 +636,7 @@ describe("QuickOpenModal", () => {
       }));
       wrapper.find("SearchInput").simulate("keydown", event);
       expect(event.preventDefault).toHaveBeenCalled();
-      expect(wrapper.state().selectedIndex).toEqual(NaN);
+      expect(wrapper.state().selectedIndex).toEqual(0);
       expect(props.selectSpecificLocation).not.toHaveBeenCalledWith();
       expect(props.highlightLineRange).not.toHaveBeenCalled();
     });

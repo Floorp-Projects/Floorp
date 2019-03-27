@@ -143,7 +143,7 @@ bool js::GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
   } else {
     MOZ_ASSERT(resumeKind == AbstractGeneratorObject::RETURN);
 
-    MOZ_ASSERT(arg.isObject());
+    MOZ_ASSERT_IF(genObj->is<GeneratorObject>(), arg.isObject());
     frame.setReturnValue(arg);
 
     RootedValue closing(cx, MagicValue(JS_GENERATOR_CLOSING));

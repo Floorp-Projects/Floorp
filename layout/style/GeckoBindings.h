@@ -109,19 +109,20 @@ NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::SheetLoadDataHolder,
 
 void Gecko_StyleSheet_FinishAsyncParse(
     mozilla::css::SheetLoadDataHolder* data,
-    RawServoStyleSheetContentsStrong sheet_contents,
-    StyleUseCountersOwnedOrNull use_counters);
+    mozilla::StyleStrong<RawServoStyleSheetContents> sheet_contents,
+    mozilla::StyleOwnedOrNull<StyleUseCounters> use_counters);
 
 mozilla::StyleSheet* Gecko_LoadStyleSheet(
     mozilla::css::Loader* loader, mozilla::StyleSheet* parent,
     mozilla::css::SheetLoadData* parent_load_data,
     mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
-    RawServoCssUrlDataStrong url, RawServoMediaListStrong media_list);
+    mozilla::StyleStrong<RawServoCssUrlData> url,
+    mozilla::StyleStrong<RawServoMediaList> media_list);
 
 void Gecko_LoadStyleSheetAsync(mozilla::css::SheetLoadDataHolder* parent_data,
-                               RawServoCssUrlDataStrong,
-                               RawServoMediaListStrong,
-                               RawServoImportRuleStrong);
+                               mozilla::StyleStrong<RawServoCssUrlData>,
+                               mozilla::StyleStrong<RawServoMediaList>,
+                               mozilla::StyleStrong<RawServoImportRule>);
 
 // Selector Matching.
 uint64_t Gecko_ElementState(const mozilla::dom::Element*);
@@ -170,27 +171,27 @@ SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(
 #undef SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS
 
 // Style attributes.
-const RawServoDeclarationBlockStrong* Gecko_GetStyleAttrDeclarationBlock(
-    const mozilla::dom::Element* element);
+const mozilla::StyleStrong<RawServoDeclarationBlock>*
+Gecko_GetStyleAttrDeclarationBlock(const mozilla::dom::Element* element);
 
 void Gecko_UnsetDirtyStyleAttr(const mozilla::dom::Element* element);
 
-const RawServoDeclarationBlockStrong*
+const mozilla::StyleStrong<RawServoDeclarationBlock>*
 Gecko_GetHTMLPresentationAttrDeclarationBlock(
     const mozilla::dom::Element* element);
 
-const RawServoDeclarationBlockStrong* Gecko_GetExtraContentStyleDeclarations(
-    const mozilla::dom::Element* element);
+const mozilla::StyleStrong<RawServoDeclarationBlock>*
+Gecko_GetExtraContentStyleDeclarations(const mozilla::dom::Element* element);
 
-const RawServoDeclarationBlockStrong*
+const mozilla::StyleStrong<RawServoDeclarationBlock>*
 Gecko_GetUnvisitedLinkAttrDeclarationBlock(
     const mozilla::dom::Element* element);
 
-const RawServoDeclarationBlockStrong* Gecko_GetVisitedLinkAttrDeclarationBlock(
-    const mozilla::dom::Element* element);
+const mozilla::StyleStrong<RawServoDeclarationBlock>*
+Gecko_GetVisitedLinkAttrDeclarationBlock(const mozilla::dom::Element* element);
 
-const RawServoDeclarationBlockStrong* Gecko_GetActiveLinkAttrDeclarationBlock(
-    const mozilla::dom::Element* element);
+const mozilla::StyleStrong<RawServoDeclarationBlock>*
+Gecko_GetActiveLinkAttrDeclarationBlock(const mozilla::dom::Element* element);
 
 // Visited handling.
 
@@ -567,8 +568,8 @@ void Gecko_nsStyleSVG_SetContextPropertiesLength(nsStyleSVG* svg, uint32_t len);
 void Gecko_nsStyleSVG_CopyContextProperties(nsStyleSVG* dst,
                                             const nsStyleSVG* src);
 
-mozilla::css::URLValue* Gecko_URLValue_Create(RawServoCssUrlDataStrong url,
-                                              mozilla::CORSMode aCORSMode);
+mozilla::css::URLValue* Gecko_URLValue_Create(
+    mozilla::StyleStrong<RawServoCssUrlData> url, mozilla::CORSMode aCORSMode);
 
 size_t Gecko_URLValue_SizeOfIncludingThis(mozilla::css::URLValue* url);
 
@@ -671,8 +672,13 @@ void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsAtom* atom);
 void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont,
                                     const nsStyleFont* aSource);
 
-void Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* font,
-                                        const mozilla::dom::Document*);
+// Moves the generic family in the font-family to the front, or prepends
+// aDefaultGeneric, so that user-configured fonts take precedent over document
+// fonts.
+//
+// Document fonts may still be used as fallback for unsupported glyphs though.
+void Gecko_nsStyleFont_PrioritizeUserFonts(
+    nsStyleFont* font, mozilla::FontFamilyType aDefaultGeneric);
 
 void Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* font,
                                                 const mozilla::dom::Document*,

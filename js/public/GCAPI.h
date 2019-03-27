@@ -48,11 +48,11 @@ typedef enum JSGCMode {
   /** Perform per-zone GCs until too much garbage has accumulated. */
   JSGC_MODE_ZONE = 1,
 
-  /**
-   * Collect in short time slices rather than all at once. Implies
-   * JSGC_MODE_ZONE.
-   */
-  JSGC_MODE_INCREMENTAL = 2
+  /** Collect in short time slices rather than all at once. */
+  JSGC_MODE_INCREMENTAL = 2,
+
+  /** Both of the above. */
+  JSGC_MODE_ZONE_INCREMENTAL = 3,
 } JSGCMode;
 
 /**
@@ -111,7 +111,7 @@ typedef enum JSGCParamKey {
    * See: JSGCMode in GCAPI.h
    * prefs: javascript.options.mem.gc_per_zone and
    *   javascript.options.mem.gc_incremental.
-   * Default: JSGC_MODE_INCREMENTAL
+   * Default: JSGC_MODE_ZONE_INCREMENTAL
    */
   JSGC_MODE = 6,
 
@@ -525,8 +525,8 @@ extern JS_PUBLIC_API void NonIncrementalGC(JSContext* cx,
  * must be met:
  *  - The collection must be run by calling JS::IncrementalGC() rather than
  *    JS_GC().
- *  - The GC mode must have been set to JSGC_MODE_INCREMENTAL with
- *    JS_SetGCParameter().
+ *  - The GC mode must have been set to JSGC_MODE_INCREMENTAL or
+ *    JSGC_MODE_ZONE_INCREMENTAL with JS_SetGCParameter().
  *
  * Note: Even if incremental GC is enabled and working correctly,
  *       non-incremental collections can still happen when low on memory.

@@ -109,8 +109,14 @@
 }
 
 .xhr-container__close-btn {
-  inset-inline-end: 12px;
-  inset-inline-start: auto;
   position: absolute;
-  top: 8px;
+  top: calc(50% - 8px);
+}
+
+[dir="ltr"] .xhr-container__close-btn {
+  right: 12px;
+}
+
+[dir="rtl"] .xhr-container__close-btn {
+  left: 12px;
 }

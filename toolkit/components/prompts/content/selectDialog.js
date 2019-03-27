@@ -38,6 +38,7 @@ function dialogOnLoad() {
     listBox.selectedIndex = 0;
     listBox.focus();
 
+    document.addEventListener("dialogaccept", dialogOK);
     // resize the window to the content
     window.sizeToContent();
 
@@ -56,7 +57,6 @@ function dialogOnLoad() {
 function dialogOK() {
     gArgs.setProperty("selected", listBox.selectedIndex);
     gArgs.setProperty("ok", true);
-    return true;
 }
 
 function dialogDoubleClick() {

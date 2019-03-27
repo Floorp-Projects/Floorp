@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1512281",
+    title: "Test that RTCP sender and receiver stats are not swapped"
+  });
+
+const ensure_missing_rtcp = async stats => {
+	const rtcp_stats = [...stats.values()].filter(
+		s => s.type.endsWith("bound-rtp") &&
+			 s.isRemote == true).map(s => JSON.stringify(s))
+	is(rtcp_stats, [],
+	   "There are no RTCP stats when RTCP reception is turned off");
+};
+
+const PC_LOCAL_TEST_FOR_MISSING_RTCP = async test =>
+	await ensure_missing_rtcp(await test.pcLocal.getStats());
+
+const PC_REMOTE_TEST_FOR_MISSING_RTCP = async test =>
+  await ensure_missing_rtcp(await test.pcRemote.getStats());
+
+runNetworkTest(async options => {
+  await pushPrefs(["media.webrtc.net.force_disable_rtcp_reception", true]);
+
+  const test = new PeerConnectionTest(options);
+
+  test.chain.insertAfter("PC_LOCAL_WAIT_FOR_MEDIA_FLOW",
+    [PC_LOCAL_TEST_FOR_MISSING_RTCP]);
+
+  test.chain.insertAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW",
+    [PC_REMOTE_TEST_FOR_MISSING_RTCP]);
+
+  test.setMediaConstraints([{audio: true}, {video: true}],
+                           [{audio: true}, {video: true}]);
+  test.run();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,3 +1,4 @@
+// |jit-test| --enable-experimental-await-fix
 // async functions fire onEnterFrame each time they resume, like generators
 
 let g = newGlobal({newCompartment: true});
@@ -28,5 +29,5 @@ g.job();
 drainJobQueue();
 assertEq(log,
          "(job(t5)(t3))" +
-         "(t5)(t3)".repeat(3) + "(job)" +
-         "(t5)(t5)(job)");
+         "(t5)(t3)".repeat(3) +
+         "(t5)(job)(t5)(job)");

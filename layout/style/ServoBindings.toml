@@ -26,6 +26,7 @@ headers = [
     "mozilla/LookAndFeel.h",
     "mozilla/StaticPrefs.h",
     "mozilla/GeckoBindings.h",
+    "mozilla/ServoBindings.h",
     "mozilla/ComputedStyle.h",
     "mozilla/ServoTraversalStatistics.h",
     "mozilla/SizeOfState.h",
@@ -46,7 +47,6 @@ raw-lines = [
     "use data::ElementData;",
 ]
 hide-types = [
-    "nsString",
     ".*char_traits",
     ".*incompatible_char_type",
     # https://github.com/rust-lang/rust-bindgen/issues/1503
@@ -454,6 +454,9 @@ cbindgen-types = [
     { gecko = "StyleWillChangeBits", servo = "values::specified::box_::WillChangeBits" },
     { gecko = "StyleTextDecorationLine", servo = "values::computed::TextDecorationLine" },
     { gecko = "StyleMozListReversed", servo = "values::computed::MozListReversed" },
+    { gecko = "StyleOwned", servo = "gecko_bindings::sugar::ownership::Owned" },
+    { gecko = "StyleOwnedOrNull", servo = "gecko_bindings::sugar::ownership::OwnedOrNull" },
+    { gecko = "StyleStrong", servo = "gecko_bindings::sugar::ownership::Strong" },
 ]
 
 mapped-generic-types = [
@@ -465,36 +468,14 @@ mapped-generic-types = [
     { generic = false, gecko = "mozilla::ServoVisitedStyle", servo = "Option<::servo_arc::RawOffsetArc<::properties::ComputedValues>>" },
     { generic = false, gecko = "mozilla::ServoComputedValueFlags", servo = "::properties::computed_value_flags::ComputedValueFlags" },
     { generic = true, gecko = "mozilla::ServoRawOffsetArc", servo = "::servo_arc::RawOffsetArc" },
-    { generic = false, gecko = "ComputedStyleStrong", servo = "::gecko_bindings::sugar::ownership::Strong<::properties::ComputedValues>" },
-]
-fixups = [
-    { pat = "\\broot\\s*::\\s*nsString\\b", rep = "::nsstring::nsStringRepr" },
-    { pat = "\\broot\\s*::\\s*nsTString\\s*<\\s*u16\\s*>", rep = "::nsstring::nsStringRepr" },
+    { generic = false, gecko = "nsACString", servo = "nsstring::nsACString" },
+    { generic = false, gecko = "nsAString", servo = "nsstring::nsAString" },
+    { generic = false, gecko = "nsCString", servo = "nsstring::nsCString" },
+    { generic = false, gecko = "nsString", servo = "nsstring::nsStringRepr" },
 ]
 
-[bindings]
-headers = [
-    "mozilla/GeckoBindings.h",
-    # We include ServoBindings.h so we can type check the C function declarations
-    # in there against the function definitions in servo/ports/gecko/glue.rs.
-    "mozilla/ServoBindings.h",
-]
-hide-types = [
-    "nsACString_internal",
-    "nsAString_internal",
-]
-raw-lines = [
-    "pub use nsstring::{nsACString, nsAString, nsCString, nsString, nsStringRepr};",
-    "use gecko_bindings::structs::*;",
-    "use gecko_bindings::structs::mozilla::gfx::*;",
-    "use gecko_bindings::structs::nsStyleTransformMatrix::*;",
-    "type nsACString_internal = nsACString;",
-    "type nsAString_internal = nsAString;",
-]
 whitelist-functions = ["Servo_.*", "Gecko_.*"]
+
 fixups = [
-    # Remap the templated string type to the helper type
-    { pat = "\\bnsTString\\s*<\\s*u16\\s*>", rep = "nsString" },
-    # hack for gecko-owned string
-    { pat = "<\\s*nsString\\s*", rep = "<nsStringRepr" },
+    { pat = "\\broot\\s*::\\s*nsTString\\s*<\\s*u16\\s*>", rep = "::nsstring::nsStringRepr" },
 ]

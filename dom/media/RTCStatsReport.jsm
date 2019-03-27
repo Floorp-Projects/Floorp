@@ -18,13 +18,8 @@ function convertToRTCStatsReport(dict) {
   appendStats(dict.remoteInboundRtpStreamStats, report);
   appendStats(dict.remoteOutboundRtpStreamStats, report);
   appendStats(dict.rtpContributingSourceStats, report);
-  appendStats(dict.mediaStreamTrackStats, report);
-  appendStats(dict.mediaStreamStats, report);
-  appendStats(dict.transportStats, report);
-  appendStats(dict.iceComponentStats, report);
   appendStats(dict.iceCandidatePairStats, report);
   appendStats(dict.iceCandidateStats, report);
-  appendStats(dict.codecStats, report);
   return report;
 }
 

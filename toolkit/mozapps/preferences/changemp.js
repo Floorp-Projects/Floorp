@@ -22,6 +22,7 @@ function init() {
   pw1 = document.getElementById("pw1");
 
   process();
+  document.addEventListener("dialogaccept", setPassword);
 }
 
 
@@ -80,8 +81,6 @@ function setPassword() {
   var oldpwbox = document.getElementById("oldpw");
   var initpw = oldpwbox.getAttribute("inited");
 
-  var success = false;
-
   if (initpw == "false" || initpw == "empty") {
     try {
       var oldpw = "";
@@ -114,7 +113,6 @@ function setPassword() {
             } else {
               createAlert("pw-change-success-title", "pw-change-ok");
             }
-            success = true;
           }
         }
       } else {
@@ -130,14 +128,7 @@ function setPassword() {
     if (pw1.value == "") {
       createAlert("pw-change-success-title", "pw-not-wanted");
     }
-    success = true;
   }
-
-  // Terminate dialog
-  if (success)
-    window.close();
-
-  return success;
 }
 
 function setPasswordStrength() {

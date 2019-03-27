@@ -699,9 +699,8 @@
                 connection-proxy-reload.label,
                 connection-proxy-autologin.label,
                 connection-proxy-socks-remote-dns.label,
-                connection-dns-over-https,
-                connection-dns-over-https-url-custom,
-                connection-dns-over-https-url-default,
+                connection-dns-over-https.label,
+                connection-dns-over-https-url-custom.label,
             " />
     </hbox>
   </hbox>

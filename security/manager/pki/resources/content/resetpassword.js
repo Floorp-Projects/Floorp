@@ -4,6 +4,8 @@
 /* import-globals-from pippki.js */
 "use strict";
 
+document.addEventListener("dialogaccept", resetPassword);
+
 function resetPassword() {
   var pk11db = Cc["@mozilla.org/security/pk11tokendb;1"]
                  .getService(Ci.nsIPK11TokenDB);
@@ -23,6 +25,4 @@ function resetPassword() {
                         bundle.getString("resetPasswordConfirmationTitle"),
                         bundle.getString("resetPasswordConfirmationMessage"));
   }
-
-  return true;
 }

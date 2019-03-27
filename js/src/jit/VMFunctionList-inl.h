@@ -158,8 +158,8 @@ namespace jit {
   _(LessThan, js::jit::LessThan)                                               \
   _(LessThanOrEqual, js::jit::LessThanOrEqual)                                 \
   _(LexicalEnvironmentObjectCreate, js::LexicalEnvironmentObject::create)      \
-  _(LooselyEqual, js::jit::LooselyEqual<true>)                                 \
-  _(LooselyNotEqual, js::jit::LooselyEqual<false>)                             \
+  _(LooselyEqual, js::jit::LooselyEqual<js::jit::EqualityKind::Equal>)         \
+  _(LooselyNotEqual, js::jit::LooselyEqual<js::jit::EqualityKind::NotEqual>)   \
   _(MakeDefaultConstructor, js::MakeDefaultConstructor)                        \
   _(ModValues, js::ModValues)                                                  \
   _(MulValues, js::MulValues)                                                  \
@@ -218,8 +218,8 @@ namespace jit {
   _(SetPropertySuper, js::SetPropertySuper)                                    \
   _(SingletonObjectLiteralOperation, js::SingletonObjectLiteralOperation)      \
   _(StartDynamicModuleImport, js::StartDynamicModuleImport)                    \
-  _(StrictlyEqual, js::jit::StrictlyEqual<true>)                               \
-  _(StrictlyNotEqual, js::jit::StrictlyEqual<false>)                           \
+  _(StrictlyEqual, js::jit::StrictlyEqual<js::jit::EqualityKind::Equal>)       \
+  _(StrictlyNotEqual, js::jit::StrictlyEqual<js::jit::EqualityKind::NotEqual>) \
   _(StringFlatReplaceString, js::StringFlatReplaceString)                      \
   _(StringFromCharCode, js::jit::StringFromCharCode)                           \
   _(StringFromCodePoint, js::jit::StringFromCodePoint)                         \
@@ -229,8 +229,11 @@ namespace jit {
   _(StringToLowerCase, js::StringToLowerCase)                                  \
   _(StringToNumber, js::StringToNumber)                                        \
   _(StringToUpperCase, js::StringToUpperCase)                                  \
-  _(StringsEqual, js::jit::StringsEqual<true>)                                 \
-  _(StringsNotEqual, js::jit::StringsEqual<false>)                             \
+  _(StringsCompareGreaterThanOrEquals,                                         \
+    js::jit::StringsCompare<ComparisonKind::GreaterThanOrEqual>)               \
+  _(StringsCompareLessThan, js::jit::StringsCompare<ComparisonKind::LessThan>) \
+  _(StringsEqual, js::jit::StringsEqual<js::jit::EqualityKind::Equal>)         \
+  _(StringsNotEqual, js::jit::StringsEqual<js::jit::EqualityKind::NotEqual>)   \
   _(SubValues, js::SubValues)                                                  \
   _(SubstringKernel, js::SubstringKernel)                                      \
   _(SuperFunOperation, js::SuperFunOperation)                                  \
