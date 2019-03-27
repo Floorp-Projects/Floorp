@@ -61,6 +61,10 @@ schema = Schema({
         Optional('sccache', description='true if ccache in use is sccache'): bool,
         Optional('icecream', description='true if icecream in use'): bool,
     },
+    Optional('build_attrs', description='Attributes characterizing a build'): {
+        Optional('cpu_percent', description='cpu utilization observed during a build'): int,
+        Optional('clobber', description='true if the build was a clobber/full build'): bool,
+    },
     Required('system'): {
         # We don't need perfect granularity here.
         Required('os', description='Operating system'): Any('windows', 'macos', 'linux', 'other'),
