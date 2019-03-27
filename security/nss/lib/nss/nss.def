@@ -1145,3 +1145,9 @@ HASH_GetHashOidTagByHashType;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.44 { 	# NSS 3.44 release
+;+    global:
+CERT_GetCertificateDer;
+;+    local:
+;+       *;
+;+};

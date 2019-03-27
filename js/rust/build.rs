@@ -221,6 +221,7 @@ const WHITELIST_TYPES: &'static [&'static str] = &[
     "JS::Rooted",
     "JS::RootedObject",
     "JS::RootedObjectVector",
+    "JS::RootedValue",
     "JS::RootingContext",
     "JS::RootKind",
     "js::Scalar::Type",
