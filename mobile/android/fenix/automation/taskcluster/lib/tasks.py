@@ -79,50 +79,104 @@ class TaskBuilder(object):
             artifacts=artifacts,
             routes=routes,
             is_staging=is_staging,
+            treeherder={
+                'jobKind': 'build',
+                'machine': {
+                  'platform': 'android-all',
+                },
+                'symbol': 'NA',
+                'tier': 1,
+            },
         )
 
     def craft_assemble_task(self, variant):
-        return self._craft_gradle_clean_task(
+        return self._craft_clean_gradle_task(
             name='assemble: {}'.format(variant),
             description='Building and testing variant {}'.format(variant),
             gradle_task='assemble{}'.format(variant.capitalize()),
             artifacts=_craft_artifacts_from_variant(variant),
+            treeherder={
+                'groupSymbol': _craft_treeherder_group_symbol_from_variant(variant),
+                'jobKind': 'build',
+                'machine': {
+                  'platform': _craft_treeherder_platform_from_variant(variant),
+                },
+                'symbol': 'A',
+                'tier': 1,
+            },
         )
 
     def craft_test_task(self, variant):
-        return self._craft_gradle_clean_task(
+        return self._craft_clean_gradle_task(
             name='test: {}'.format(variant),
             description='Building and testing variant {}'.format(variant),
             gradle_task='test{}UnitTest'.format(variant.capitalize()),
+            treeherder={
+                'groupSymbol': _craft_treeherder_group_symbol_from_variant(variant),
+                'jobKind': 'test',
+                'machine': {
+                  'platform': _craft_treeherder_platform_from_variant(variant),
+                },
+                'symbol': 'T',
+                'tier': 1,
+            },
         )
 
     def craft_detekt_task(self):
-        return self._craft_gradle_clean_task(
+        return self._craft_clean_gradle_task(
             name='detekt',
             description='Running detekt over all modules',
-            gradle_task='detekt'
+            gradle_task='detekt',
+            treeherder={
+                'jobKind': 'test',
+                'machine': {
+                  'platform': 'lint',
+                },
+                'symbol': 'detekt',
+                'tier': 1,
+            }
+
         )
 
     def craft_ktlint_task(self):
-        return self._craft_gradle_clean_task(
+        return self._craft_clean_gradle_task(
             name='ktlint',
             description='Running ktlint over all modules',
-            gradle_task='ktlint'
+            gradle_task='ktlint',
+            treeherder={
+                'jobKind': 'test',
+                'machine': {
+                  'platform': 'lint',
+                },
+                'symbol': 'ktlint',
+                'tier': 1,
+            }
         )
 
     def craft_lint_task(self):
-        return self._craft_gradle_clean_task(
+        return self._craft_clean_gradle_task(
             name='lint',
             description='Running ktlint over all modules',
-            gradle_task='lint'
+            gradle_task='lint',
+            treeherder={
+                'jobKind': 'test',
+                'machine': {
+                  'platform': 'lint',
+                },
+                'symbol': 'lint',
+                'tier': 1,
+            },
         )
 
-    def _craft_gradle_clean_task(self, name, description, gradle_task, artifacts=None):
+    def _craft_clean_gradle_task(
+        self, name, description, gradle_task, artifacts=None, treeherder=None
+    ):
         return self._craft_build_ish_task(
             name=name,
             description=description,
             command='./gradlew --no-daemon clean {}'.format(gradle_task),
             artifacts=artifacts,
+            treeherder=treeherder,
         )
 
     def craft_compare_locales_task(self):
@@ -132,12 +186,20 @@ class TaskBuilder(object):
             command=(
                 'pip install "compare-locales>=5.0.2,<6.0" && '
                 'compare-locales --validate l10n.toml .'
-            )
+            ),
+            treeherder={
+                'jobKind': 'test',
+                'machine': {
+                  'platform': 'lint',
+                },
+                'symbol': 'compare-locale',
+                'tier': 2,
+            }
         )
 
     def _craft_build_ish_task(
         self, name, description, command, dependencies=None, artifacts=None, scopes=None,
-        routes=None, is_staging=True
+        routes=None, is_staging=True, treeherder=None
     ):
         dependencies = [] if dependencies is None else dependencies
         artifacts = {} if artifacts is None else artifacts
@@ -182,12 +244,16 @@ class TaskBuilder(object):
             scopes,
             name,
             description,
-            payload
+            payload,
+            treeherder=treeherder,
         )
 
     def _craft_default_task_definition(
-        self, worker_type, provisioner_id, dependencies, routes, scopes, name, description, payload
+        self, worker_type, provisioner_id, dependencies, routes, scopes, name, description,
+        payload, treeherder=None
     ):
+        treeherder = {} if treeherder is None else treeherder
+
         created = datetime.datetime.now()
         deadline = taskcluster.fromNow('1 day')
         expires = taskcluster.fromNow(DEFAULT_EXPIRES_IN)
@@ -205,9 +271,14 @@ class TaskBuilder(object):
             "priority": self.tasks_priority,
             "dependencies": [self.task_id] + dependencies,
             "requires": "all-completed",
-            "routes": routes,
+            "routes": routes + [
+                "tc-treeherder.v2.fenix.{}".format(self.commit)
+            ],
             "scopes": scopes,
             "payload": payload,
+            "extra": {
+                "treeherder": treeherder,
+            },
             "metadata": {
                 "name": "Fenix - {}".format(name),
                 "description": description,
@@ -254,7 +325,15 @@ class TaskBuilder(object):
             ],
             name="Signing task",
             description="Sign release builds of Fenix",
-            payload=payload
+            payload=payload,
+            treeherder={
+                'jobKind': 'other',
+                'machine': {
+                  'platform': 'android-all',
+                },
+                'symbol': 'Ns',
+                'tier': 1,
+            },
         )
 
     def craft_push_task(
@@ -284,8 +363,26 @@ class TaskBuilder(object):
             ],
             name="Push task",
             description="Upload signed release builds of Fenix to Google Play",
-            payload=payload
+            payload=payload,
+            treeherder={
+                'jobKind': 'other',
+                'machine': {
+                  'platform': 'android-all',
+                },
+                'symbol': 'gp',
+                'tier': 1,
+            },
         )
+
+
+def _craft_treeherder_platform_from_variant(variant):
+    architecture, build_type, _ = _get_architecture_and_build_type_and_product_from_variant(variant)
+    return 'android-{}-{}'.format(architecture, build_type)
+
+
+def _craft_treeherder_group_symbol_from_variant(variant):
+    _, __, product = _get_architecture_and_build_type_and_product_from_variant(variant)
+    return product
 
 
 def _craft_artifacts_from_variant(variant):
@@ -299,7 +396,9 @@ def _craft_artifacts_from_variant(variant):
 
 
 def _craft_apk_full_path_from_variant(variant):
-    architecture, build_type = _get_architecture_and_build_type_from_variant(variant)
+    architecture, build_type, product = _get_architecture_and_build_type_and_product_from_variant(
+        variant
+    )
 
     short_variant = variant[:-len(build_type)]
     postfix = '-unsigned' if build_type == 'release' else ''
@@ -314,31 +413,50 @@ def _craft_apk_full_path_from_variant(variant):
     )
 
 
-def _get_architecture_and_build_type_from_variant(variant):
-    variant = variant.lower()
+_SUPPORTED_ARCHITECTURES = ('aarch64', 'arm', 'x86')
+_SUPPORTED_BUILD_TYPES = ('Debug', 'Release')
+_SUPPORTED_PRODUCTS = ('FirefoxBeta', 'FirefoxNightly', 'FirefoxRelease', 'Greenfield')
 
-    architecture = None
-    if 'aarch64' in variant:
-        architecture = 'aarch64'
-    elif 'x86' in variant:
-        architecture = 'x86'
-    elif 'arm' in variant:
-        architecture = 'arm'
 
-    build_type = None
-    if variant.endswith('debug'):
-        build_type = 'debug'
-    elif variant.endswith('release'):
-        build_type = 'release'
-
-    if not architecture or not build_type:
+def _get_architecture_and_build_type_and_product_from_variant(variant):
+    for supported_architecture in _SUPPORTED_ARCHITECTURES:
+        if variant.startswith(supported_architecture):
+            architecture = supported_architecture
+            break
+    else:
         raise ValueError(
-            'Unsupported variant "{}". Found architecture, build_type: {}'.format(
-                variant, (architecture, build_type)
+            'Cannot identify architecture in "{}". '
+            'Expected to find one of these supported ones: {}'.format(
+                variant, _SUPPORTED_ARCHITECTURES
             )
         )
 
-    return architecture, build_type
+    for supported_build_type in _SUPPORTED_BUILD_TYPES:
+        if variant.endswith(supported_build_type):
+            build_type = supported_build_type.lower()
+            break
+    else:
+        raise ValueError(
+            'Cannot identify build type in "{}". '
+            'Expected to find one of these supported ones: {}'.format(
+                variant, _SUPPORTED_BUILD_TYPES
+            )
+        )
+
+    remaining_variant_data = variant[len(architecture):len(variant) - len(build_type)]
+    for supported_product in _SUPPORTED_PRODUCTS:
+        if remaining_variant_data == supported_product:
+            product = supported_product
+            break
+    else:
+        raise ValueError(
+            'Cannot identify product in "{}" "{}". '
+            'Expected to find one of these supported ones: {}'.format(
+                remaining_variant_data, variant, _SUPPORTED_PRODUCTS
+            )
+        )
+
+    return architecture, build_type, product
 
 
 def schedule_task(queue, taskId, task):
