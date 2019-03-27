@@ -322,6 +322,8 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapBase<T, Heap<T>> {
 
   T* unsafeGet() { return &ptr; }
 
+  void unbarrieredSet(const T& newPtr) { ptr = newPtr; }
+
   explicit operator bool() const {
     return bool(js::BarrierMethods<T>::asGCThingOrNull(ptr));
   }
@@ -1356,51 +1358,6 @@ class PersistentRooted
   detail::MaybeWrapped<T> ptr;
 } JS_HAZ_ROOTED;
 
-class JS_PUBLIC_API ObjectPtr {
-  Heap<JSObject*> value;
-
- public:
-  using ElementType = JSObject*;
-
-  ObjectPtr() : value(nullptr) {}
-
-  explicit ObjectPtr(JSObject* obj) : value(obj) {}
-
-  ObjectPtr(const ObjectPtr& other) : value(other.value) {}
-
-  ObjectPtr(ObjectPtr&& other) : value(other.value) { other.value = nullptr; }
-
-  /* Always call finalize before the destructor. */
-  ~ObjectPtr() { MOZ_ASSERT(!value); }
-
-  void finalize(JSRuntime* rt);
-  void finalize(JSContext* cx);
-
-  void init(JSObject* obj) { value = obj; }
-
-  JSObject* get() const { return value; }
-  JSObject* unbarrieredGet() const { return value.unbarrieredGet(); }
-
-  void writeBarrierPre(JSContext* cx) { IncrementalPreWriteBarrier(value); }
-
-  void updateWeakPointerAfterGC();
-
-  ObjectPtr& operator=(JSObject* obj) {
-    IncrementalPreWriteBarrier(value);
-    value = obj;
-    return *this;
-  }
-
-  void trace(JSTracer* trc, const char* name);
-
-  JSObject& operator*() const { return *value; }
-  JSObject* operator->() const { return value; }
-  operator JSObject*() const { return value; }
-
-  explicit operator bool() const { return value.unbarrieredGet(); }
-  explicit operator bool() { return value.unbarrieredGet(); }
-};
-
 } /* namespace JS */
 
 namespace js {
@@ -1492,13 +1449,6 @@ template <typename T>
 struct DefineComparisonOps<JS::TenuredHeap<T>> : mozilla::TrueType {
   static const T get(const JS::TenuredHeap<T>& v) {
     return v.unbarrieredGetPtr();
-  }
-};
-
-template <>
-struct DefineComparisonOps<JS::ObjectPtr> : mozilla::TrueType {
-  static const JSObject* get(const JS::ObjectPtr& v) {
-    return v.unbarrieredGet();
   }
 };
 
