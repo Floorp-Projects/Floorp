@@ -269,6 +269,17 @@ class BrowsingContext : public nsWrapperCache,
     // parent process.
     void Apply(BrowsingContext* aOwner, ContentParent* aSource);
 
+    bool HasNonRacyField() const {
+#define MOZ_BC_FIELD(name, ...) \
+  if (m##name.isSome()) {       \
+    return true;                \
+  }
+#define MOZ_BC_FIELD_RACY(...) /* nothing */
+#include "mozilla/dom/BrowsingContextFieldList.h"
+
+      return false;
+    }
+
 #define MOZ_BC_FIELD(name, type) mozilla::Maybe<type> m##name;
 #include "mozilla/dom/BrowsingContextFieldList.h"
 

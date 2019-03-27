@@ -101,8 +101,12 @@ void CanonicalBrowsingContext::SetCurrentWindowGlobal(
 
 bool CanonicalBrowsingContext::ValidateTransaction(
     const Transaction& aTransaction, ContentParent* aProcess) {
-  if (NS_WARN_IF(aProcess && mProcessId != aProcess->ChildID())) {
-    return false;
+  // Check that the correct process is performing sets for transactions with
+  // non-racy fields.
+  if (aTransaction.HasNonRacyField()) {
+    if (NS_WARN_IF(aProcess && mProcessId != aProcess->ChildID())) {
+      return false;
+    }
   }
 
   return true;
