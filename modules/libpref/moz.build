@@ -49,6 +49,9 @@ DEFINES['MOZ_WIDGET_TOOLKIT'] = CONFIG['MOZ_WIDGET_TOOLKIT']
 if CONFIG['MOZ_ENABLE_WEBRENDER']:
     DEFINES['MOZ_ENABLE_WEBRENDER'] = True
 
-FINAL_TARGET_PP_FILES += [
+grepref_location = FINAL_TARGET_PP_FILES
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    grepref_location = grepref_location[CONFIG['ANDROID_CPU_ARCH']]
+grepref_location += [
     'greprefs.js',
 ]
