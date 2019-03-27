@@ -2336,20 +2336,6 @@ FUNCTIONS = {
 TestDirsPlaceHolder = List()
 
 
-def default_prefs_for(context, var):
-    """Return default location for pref files.
-
-On Android, the location varies by architecture to accommodate "fat
-AAR" packages that contain native libraries for multiple architectures
-and must have corresponding architecture-specific Gecko preferences."""
-
-    arch = context.config.substs.get('ANDROID_CPU_ARCH')
-    if arch:
-        return context[var].defaults.pref[arch]
-    else:
-        return context[var].defaults.pref
-
-
 # Special variables. These complement VARIABLES.
 #
 # Each entry is a tuple of:
@@ -2421,15 +2407,15 @@ SPECIAL_VARIABLES = {
        files will be installed in the ``/components`` directory of the distribution.
         """),
 
-    'JS_PREFERENCE_FILES': (lambda context: default_prefs_for(context, 'FINAL_TARGET_FILES')._strings, list,
+    'JS_PREFERENCE_FILES': (lambda context: context['FINAL_TARGET_FILES'].defaults.pref._strings, list,
         """Exported JavaScript files.
 
         A list of files copied into the dist directory for packaging and installation.
         Path will be defined for gre or application prefs dir based on what is building.
         """),
 
-    'JS_PREFERENCE_PP_FILES': (lambda context: default_prefs_for(context, 'FINAL_TARGET_PP_FILES')._strings, list,
-        """Like JS_PREFERENCE_FILES, preprocessed.
+    'JS_PREFERENCE_PP_FILES': (lambda context: context['FINAL_TARGET_PP_FILES'].defaults.pref._strings, list,
+        """Like JS_PREFERENCE_FILES, preprocessed..
         """),
 
     'RESOURCE_FILES': (lambda context: context['FINAL_TARGET_FILES'].res, list,
