@@ -11,9 +11,9 @@ import os
 
 from .registry import register_callback_action
 
-from .util import find_decision_task, find_existing_tasks_from_previous_kinds
 from taskgraph.util.hg import find_hg_revision_push_info
 from taskgraph.util.taskcluster import get_artifact
+from taskgraph.util.taskgraph import find_decision_task, find_existing_tasks_from_previous_kinds
 from taskgraph.util.partials import populate_release_history
 from taskgraph.util.partners import (
     fix_partner_config,

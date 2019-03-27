@@ -13,8 +13,9 @@ import requests
 from requests.exceptions import HTTPError
 
 from .registry import register_callback_action
-from .util import find_decision_task, create_tasks, combine_task_graph_files
+from .util import create_tasks, combine_task_graph_files
 from taskgraph.util.taskcluster import get_artifact_from_index
+from taskgraph.util.taskgraph import find_decision_task
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.util import taskcluster
 
