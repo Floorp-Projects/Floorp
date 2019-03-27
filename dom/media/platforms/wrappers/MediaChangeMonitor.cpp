@@ -27,7 +27,8 @@ namespace mozilla {
 
 class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
  public:
-  explicit H264ChangeMonitor(const VideoInfo& aInfo) : mCurrentConfig(aInfo) {
+  explicit H264ChangeMonitor(const VideoInfo& aInfo, bool aFullParsing)
+      : mCurrentConfig(aInfo), mFullParsing(aFullParsing) {
     if (CanBeInstantiated()) {
       UpdateConfigFromExtraData(aInfo.mExtraData);
     }
@@ -51,9 +52,10 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
                          RESULT_DETAIL("Invalid H264 content"));
     }
 
-    RefPtr<MediaByteBuffer> extra_data = aSample->mKeyframe || !mGotSPS
-                                             ? H264::ExtractExtraData(aSample)
-                                             : nullptr;
+    RefPtr<MediaByteBuffer> extra_data =
+        aSample->mKeyframe || !mGotSPS || mFullParsing
+            ? H264::ExtractExtraData(aSample)
+            : nullptr;
 
     if (!H264::HasSPS(extra_data) && !H264::HasSPS(mCurrentConfig.mExtraData)) {
       // We don't have inband data and the original config didn't contain a SPS.
@@ -134,6 +136,7 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
 
   VideoInfo mCurrentConfig;
   uint32_t mStreamID = 0;
+  const bool mFullParsing;
   bool mGotSPS = false;
   RefPtr<TrackInfoSharedPtr> mTrackInfo;
   RefPtr<MediaByteBuffer> mPreviousExtraData;
@@ -222,7 +225,9 @@ MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
     mChangeMonitor = MakeUnique<VPXChangeMonitor>(mCurrentConfig);
   } else {
     MOZ_ASSERT(MP4Decoder::IsH264(mCurrentConfig.mMimeType));
-    mChangeMonitor = MakeUnique<H264ChangeMonitor>(mCurrentConfig);
+    mChangeMonitor = MakeUnique<H264ChangeMonitor>(
+        mCurrentConfig,
+        mDecoderOptions.contains(CreateDecoderParams::Option::FullH264Parsing));
   }
   mLastError = CreateDecoder(aParams.mDiagnostics);
   mInConstructor = false;
