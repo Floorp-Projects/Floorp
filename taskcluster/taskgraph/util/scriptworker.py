@@ -808,6 +808,11 @@ def should_use_artifact_map(platform, project):
     This function exists solely for the beetmover artifact map
     migration.
     """
+    if 'linux64-snap-nightly' in platform:
+        # Snap has never been implemented outside of declarative artifacts. We need to use
+        # declarative artifacts no matter the branch we're on
+        return True
+
     # FIXME: once we're ready to switch fully to declarative artifacts on other
     # branches, we can expand this; for now, Fennec is rolled-out to all
     # release branches, while Firefox only to mozilla-central
