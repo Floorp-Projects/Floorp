@@ -58,8 +58,8 @@ nsOSHelperAppService::~nsOSHelperAppService() {}
 nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char *aProtocolScheme,
                                                        bool *aHandlerExists) {
   // CFStringCreateWithBytes() can fail even if we're not out of memory --
-  // for example if the 'bytes' parameter is something very weird (like
-  // "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
+  // for example if the 'bytes' parameter is something very wierd (like "ÿÿ~"
+  // aka "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
   // specified in the 'encoding' parameter.  See bug 548719.
   CFStringRef schemeString =
       ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)aProtocolScheme,
@@ -197,6 +197,12 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const char16_t *aPlatformAppP
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+NS_IMETHODIMP nsOSHelperAppService::GetFromTypeAndExtension(const nsACString &aType,
+                                                            const nsACString &aFileExt,
+                                                            nsIMIMEInfo **aMIMEInfo) {
+  return nsExternalHelperAppService::GetFromTypeAndExtension(aType, aFileExt, aMIMEInfo);
+}
+
 // Returns the MIME types an application bundle explicitly claims to handle.
 // Returns NULL if aAppRef doesn't explicitly claim to handle any MIME types.
 // If the return value is non-NULL, the caller is responsible for freeing it.
@@ -269,11 +275,12 @@ static CFArrayRef GetMIMETypesHandledByApp(FSRef *aAppRef) {
   return mimeTypes;
 }
 
-nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString &aMIMEType,
-                                                 const nsACString &aFileExt, bool *aFound,
-                                                 nsIMIMEInfo **aMIMEInfo) {
+// aMIMEType and aFileExt might not match,  If they don't we set *aFound to
+// false and return a minimal nsIMIMEInfo structure.
+already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString &aMIMEType,
+                                                                      const nsACString &aFileExt,
+                                                                      bool *aFound) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
-  MOZ_ASSERT(XRE_IsParentProcess());
 
   *aFound = false;
 
@@ -303,8 +310,8 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString &aMIMEType,
     typeIsOctetStream = aMIMEType.LowerCaseEqualsLiteral(APPLICATION_OCTET_STREAM);
     CFURLRef appURL = NULL;
     // CFStringCreateWithCString() can fail even if we're not out of memory --
-    // for example if the 'cStr' parameter is something very weird (like
-    // "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
+    // for example if the 'cStr' parameter is something very weird (like "ÿÿ~"
+    // aka "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
     // specified in the 'encoding' parameter.  See bug 548719.
     cfMIMEType = ::CFStringCreateWithCString(NULL, flatType.get(), kCFStringEncodingUTF8);
     if (cfMIMEType) {
@@ -321,8 +328,8 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString &aMIMEType,
   }
   if (!aFileExt.IsEmpty()) {
     // CFStringCreateWithCString() can fail even if we're not out of memory --
-    // for example if the 'cStr' parameter is something very weird (like
-    // "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
+    // for example if the 'cStr' parameter is something very wierd (like "ÿÿ~"
+    // aka "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
     // specified in the 'encoding' parameter.  See bug 548719.
     CFStringRef cfExt = ::CFStringCreateWithCString(NULL, flatExt.get(), kCFStringEncodingUTF8);
     if (cfExt) {
@@ -438,11 +445,10 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString &aMIMEType,
   if (typeAppIsDefault || extAppIsDefault) {
     if (haveAppForExt) mimeInfoMac->AppendExtension(aFileExt);
 
-    nsresult rv;
-    nsCOMPtr<nsILocalFileMac> app(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) {
+    nsCOMPtr<nsILocalFileMac> app(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+    if (!app) {
       [localPool release];
-      return rv;
+      return nullptr;
     }
 
     CFStringRef cfAppName = NULL;
@@ -510,10 +516,9 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString &aMIMEType,
   MOZ_LOG(mLog, LogLevel::Debug, ("OS gave us: type '%s' found '%i'\n", mimeType.get(), *aFound));
 
   [localPool release];
-  mimeInfoMac.forget(aMIMEInfo);
-  return NS_OK;
+  return mimeInfoMac.forget();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
 
 NS_IMETHODIMP
@@ -544,4 +549,32 @@ nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme, bo
   }
 
   return NS_OK;
+}
+
+/*
+ * Override GetMIMETypeFromOSForExtension() so that we can proxy requests for
+ * the MIME type to the parent when we're executing in the child process. If
+ * we're in the parent process, query the OS directly.
+ */
+bool nsOSHelperAppService::GetMIMETypeFromOSForExtension(const nsACString &aExtension,
+                                                         nsACString &aMIMEType) {
+  if (XRE_IsParentProcess()) {
+    return nsExternalHelperAppService::GetMIMETypeFromOSForExtension(aExtension, aMIMEType);
+  }
+
+  nsCOMPtr<nsIHandlerService> handlerSvc = do_GetService(NS_HANDLERSERVICE_CONTRACTID);
+  if (NS_WARN_IF(!handlerSvc)) {
+    return false;
+  }
+
+  nsresult rv = handlerSvc->GetTypeFromExtension(aExtension, aMIMEType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  if (aMIMEType.IsEmpty()) {
+    return false;
+  }
+
+  return true;
 }

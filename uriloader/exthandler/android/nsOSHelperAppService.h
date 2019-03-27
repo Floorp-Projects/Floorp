@@ -14,16 +14,15 @@ class nsOSHelperAppService : public nsExternalHelperAppService {
   nsOSHelperAppService();
   virtual ~nsOSHelperAppService();
 
-  nsresult GetMIMEInfoFromOS(const nsACString& aMIMEType,
-                             const nsACString& aFileExt, bool* aFound,
-                             nsIMIMEInfo** aMIMEInfo) override;
+  virtual already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(
+      const nsACString& aMIMEType, const nsACString& aFileExt, bool* aFound);
 
-  MOZ_MUST_USE nsresult OSProtocolHandlerExists(const char* aScheme,
-                                                bool* aExists) override;
+  virtual MOZ_MUST_USE nsresult OSProtocolHandlerExists(const char* aScheme,
+                                                        bool* aExists);
 
   NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString& aScheme,
                                           bool* found,
-                                          nsIHandlerInfo** _retval) override;
+                                          nsIHandlerInfo** _retval);
 
   static nsIHandlerApp* CreateAndroidHandlerApp(
       const nsAString& aName, const nsAString& aDescription,
