@@ -29,6 +29,7 @@ import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.RecordedExperimentData
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.utils.ensureDirectoryExists
+import mozilla.components.service.glean.utils.parseISOTimeString
 import mozilla.components.support.base.log.logger.Logger
 
 @Suppress("TooManyFunctions")
@@ -218,6 +219,24 @@ open class GleanInternalAPI internal constructor () {
             val uuid = UUID.randomUUID()
             UuidsStorageEngine.record(GleanInternalMetrics.clientId, uuid)
             DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate)
+        } else {
+            // ////////////////////////////////////////////////////////////
+            // BACKWARD COMPATIBILITY HACK
+            // 1539480: This moves the two user-lifetime metrics, client_id, and
+            // first_run_date from their old locations in the glean_ping_info
+            // store to the glean_client_info store.  Failure to do so means
+            // that the client_id won't be sent in the ping, and the ping will
+            // then be rejected by the pipeline.
+            val uuidSnapshot = UuidsStorageEngine.getSnapshot("glean_ping_info", false)
+            uuidSnapshot?.get("client_id")?.let {
+                UuidsStorageEngine.record(GleanInternalMetrics.clientId, it)
+            }
+
+            val datetimeSnapshot = DatetimesStorageEngine.getSnapshot("glean_ping_info", false)
+            datetimeSnapshot?.get("first_run_date")?.let {
+                DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate, parseISOTimeString(it)!!)
+            }
+            // ////////////////////////////////////////////////////////////
         }
 
         // Set a few more metrics that will be sent as part of every ping.
