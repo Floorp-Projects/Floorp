@@ -151,7 +151,10 @@ def fill_template(config, tasks):
             'description': description,
             'attributes': {'image_name': image_name},
             'expires-after': '28 days' if config.params.is_try() else '1 year',
-            'scopes': ['secrets:get:project/taskcluster/gecko/hgfingerprint'],
+            'scopes': [
+                'secrets:get:project/taskcluster/gecko/hgfingerprint',
+                'secrets:get:project/taskcluster/gecko/hgmointernal',
+            ],
             'treeherder': {
                 'symbol': job_symbol,
                 'platform': 'taskcluster-images/opt',
