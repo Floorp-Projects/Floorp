@@ -7,7 +7,7 @@ job-defaults:
             linux64.*: aws-provisioner-v1/gecko-t-linux-xlarge
     worker:
         docker-image: {in-tree: debian7-amd64-build}
-        max-run-time: 3600
+        max-run-time: 5400
     treeherder:
         kind: other
         tier: 2
