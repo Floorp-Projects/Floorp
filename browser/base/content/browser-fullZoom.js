@@ -313,15 +313,19 @@ var FullZoom = {
    * @return A promise which resolves when the zoom reset has been applied.
    */
   reset: function FullZoom_reset(browser = gBrowser.selectedBrowser) {
-    let token = this._getBrowserToken(browser);
-    let result = this._getGlobalValue(browser).then(value => {
-      if (token.isCurrent) {
-        ZoomManager.setZoomForBrowser(browser, value === undefined ? 1 : value);
-        this._ignorePendingZoomAccesses(browser);
-      }
-    });
-    this._removePref(browser);
-    return result;
+    if (browser.currentURI.spec.startsWith("about:reader")) {
+      browser.messageManager.sendAsyncMessage("Reader:ResetZoom");
+    } else {
+      let token = this._getBrowserToken(browser);
+      let result = this._getGlobalValue(browser).then(value => {
+        if (token.isCurrent) {
+          ZoomManager.setZoomForBrowser(browser, value === undefined ? 1 : value);
+          this._ignorePendingZoomAccesses(browser);
+        }
+      });
+      this._removePref(browser);
+      return result;
+    }
   },
 
   /**

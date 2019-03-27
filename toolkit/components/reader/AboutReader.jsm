@@ -39,6 +39,7 @@ var AboutReader = function(mm, win, articlePromise) {
   this._mm.addMessageListener("Reader:GetStoredArticleData", this);
   this._mm.addMessageListener("Reader:ZoomIn", this);
   this._mm.addMessageListener("Reader:ZoomOut", this);
+  this._mm.addMessageListener("Reader:ResetZoom", this);
 
   this._docRef = Cu.getWeakReference(doc);
   this._winRef = Cu.getWeakReference(win);
@@ -268,6 +269,10 @@ AboutReader.prototype = {
         this._changeFontSize(-1);
         break;
       }
+      case "Reader:ResetZoom": {
+        this._resetFontSize();
+        break;
+      }
     }
   },
 
@@ -326,6 +331,7 @@ AboutReader.prototype = {
         this._mm.removeMessageListener("Reader:GetStoredArticleData", this);
         this._mm.removeMessageListener("Reader:ZoomIn", this);
         this._mm.removeMessageListener("Reader:ZoomOut", this);
+        this._mm.removeMessageListener("Reader:ResetZoom", this);
         this._windowUnloaded = true;
         break;
     }
@@ -346,6 +352,12 @@ AboutReader.prototype = {
 
   _onReaderClose() {
     ReaderMode.leaveReaderMode(this._mm.docShell, this._win);
+  },
+
+  async _resetFontSize() {
+    await AsyncPrefs.reset("reader.font_size");
+    let currentSize = Services.prefs.getIntPref("reader.font_size");
+    this._setFontSize(currentSize);
   },
 
   _setFontSize(newFontSize) {
