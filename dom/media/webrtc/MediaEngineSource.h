@@ -69,26 +69,6 @@ enum MediaEngineSourceState {
 class MediaEngineSourceInterface {
  public:
   /**
-   * Returns true if this source requires sharing to support multiple
-   * allocations.
-   *
-   * If this returns true, the MediaEngine is expected to do subsequent
-   * allocations on the first instance of this source.
-   *
-   * If this returns false, the MediaEngine is expected to instantiate one
-   * source instance per allocation.
-   *
-   * Sharing means that the source gets multiple simultaneous calls to
-   * Allocate(), Start(), Stop(), Deallocate(), etc. These are all keyed off
-   * the AllocationHandle returned by Allocate() so the source can keep
-   * allocations apart.
-   *
-   * A source typically requires sharing when the underlying hardware doesn't
-   * allow multiple users, or when having multiple users would be inefficient.
-   */
-  virtual bool RequiresSharing() const = 0;
-
-  /**
    * Return true if this is a fake source. I.e., if it is generating media
    * itself rather than being an interface to underlying hardware.
    */
@@ -289,9 +269,6 @@ class MediaEngineSource : public MediaEngineSourceInterface {
   void AssertIsOnOwningThread() const {
     NS_ASSERT_OWNINGTHREAD(MediaEngineSource);
   }
-
-  // No sharing required by default.
-  bool RequiresSharing() const override;
 
   // Not fake by default.
   bool IsFake() const override;

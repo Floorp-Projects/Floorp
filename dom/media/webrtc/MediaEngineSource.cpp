@@ -37,8 +37,6 @@ bool MediaEngineSource::IsVideo(MediaSourceEnum aSource) {
   }
 }
 
-bool MediaEngineSource::RequiresSharing() const { return false; }
-
 bool MediaEngineSource::IsFake() const { return false; }
 
 bool MediaEngineSource::GetScary() const { return false; }
