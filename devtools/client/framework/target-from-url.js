@@ -77,6 +77,12 @@ exports.targetFromURL = async function targetFromURL(url) {
     }
 
     front = await addonFront.connect();
+  } else if (type === "worker") {
+    front = client.getActor(id);
+
+    if (!front) {
+      throw new Error(`targetFromURL, worker with actor id '${id}' doesn't exist`);
+    }
   } else if (type == "process") {
     // Fetch target for a remote chrome actor
     DebuggerServer.allowChromeProcess = true;
