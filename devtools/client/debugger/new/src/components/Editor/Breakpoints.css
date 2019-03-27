@@ -56,7 +56,8 @@
   bottom: 0;
   height: 15px;
   background-color: var(--gutter-hover-background-color);
-  mask: url(/images/breakpoint.svg) no-repeat;
+  mask: url(resource://devtools/client/debugger/new/images/breakpoint.svg)
+    no-repeat;
   mask-size: auto 15px;
   mask-position: right;
 }
@@ -151,5 +152,5 @@
 }
 
 .img.column-marker {
-  background-image: url(/images/column-marker.svg);
+  background-image: url(resource://devtools/client/debugger/new/images/column-marker.svg);
 }
