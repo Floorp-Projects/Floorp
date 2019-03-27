@@ -118,7 +118,7 @@ add_task(async function() {
 
   let bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.condition, "1", "breakpoint is created with the condition");
-  assertEditorBreakpoint(dbg, 5, { hasCondition: true });
+  await assertEditorBreakpoint(dbg, 5, { hasCondition: true });
 
   info("Edit the conditional breakpoint set above");
   await setConditionalBreakpoint(dbg, 5, "2");
@@ -126,13 +126,13 @@ add_task(async function() {
 
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.condition, "12", "breakpoint is created with the condition");
-  assertEditorBreakpoint(dbg, 5, { hasCondition: true });
+  await assertEditorBreakpoint(dbg, 5, { hasCondition: true });
 
   clickElement(dbg, "gutter", 5);
   await waitForDispatch(dbg, "REMOVE_BREAKPOINT");
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp, null, "breakpoint was removed");
-  assertEditorBreakpoint(dbg, 5);
+  await assertEditorBreakpoint(dbg, 5);
 
   info("Adding a condition to a breakpoint");
   clickElement(dbg, "gutter", 5);
@@ -142,7 +142,7 @@ add_task(async function() {
 
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.condition, "1", "breakpoint is created with the condition");
-  assertEditorBreakpoint(dbg, 5, { hasCondition: true });
+  await assertEditorBreakpoint(dbg, 5, { hasCondition: true });
 
   rightClickElement(dbg, "breakpointItem", 3);
   info('select "remove condition"');
@@ -154,7 +154,7 @@ add_task(async function() {
   info('Add "log point"');
   await setLogPoint(dbg, 5, "44");
   await waitForBreakpointWithLog(dbg, "simple2", 5);
-  assertEditorBreakpoint(dbg, 5, { hasLog: true });
+  await assertEditorBreakpoint(dbg, 5, { hasLog: true });
 
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.logValue, "44", "breakpoint condition removed");

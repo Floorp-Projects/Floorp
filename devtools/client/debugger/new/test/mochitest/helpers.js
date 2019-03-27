@@ -262,6 +262,23 @@ function assertPaused(dbg) {
   ok(isPaused(dbg), "client is paused");
 }
 
+function assertEmptyLines(dbg, lines) {
+  function every(array, predicate) {
+    return !array.some(item => !predicate(item));
+  }
+
+  function subset(subArray, superArray) {
+    return every(subArray, subItem => superArray.includes(subItem));
+  }
+
+  const sourceId = dbg.selectors.getSelectedSourceId(dbg.store.getState());
+  const emptyLines = dbg.selectors.getEmptyLines(
+    dbg.store.getState(),
+    sourceId
+  );
+  ok(subset(lines, emptyLines), "empty lines should match");
+}
+
 function getVisibleSelectedFrameLine(dbg) {
   const {
     selectors: { getVisibleSelectedFrame },
@@ -431,6 +448,13 @@ async function waitForLoadedScopes(dbg) {
   // Since scopes auto-expand, we can assume they are loaded when there is a tree node
   // with the aria-level attribute equal to "2".
   await waitUntil(() => scopes.querySelector('.tree-node[aria-level="2"]'));
+}
+
+function waitForBreakpointCount(dbg, count) {
+  return waitForState(
+    dbg,
+    state => dbg.selectors.getBreakpointCount(state) == count
+  );
 }
 
 /**
@@ -1090,20 +1114,26 @@ function isVisible(outerEl, innerEl) {
   return visible;
 }
 
-function getEditorLineEl(dbg, line) {
-  const lines = dbg.win.document.querySelectorAll(".CodeMirror-code > div");
-  return lines[line - 1];
+async function getEditorLineEl(dbg, line) {
+  let el = await codeMirrorGutterElement(dbg, line);
+  while (el && !el.matches(".CodeMirror-code > div")) {
+    el = el.parentElement;
+  }
+
+  return el;
 }
 
-function assertEditorBreakpoint(dbg, line, shouldExist) {
-  const exists = !!getEditorLineEl(dbg, line).querySelector(".new-breakpoint");
-  ok(
-    exists === shouldExist,
-    "Breakpoint " +
-      (shouldExist ? "exists" : "does not exist") +
-      " on line " +
-      line
-  );
+async function assertEditorBreakpoint(dbg, line, shouldExist) {
+  const el = await getEditorLineEl(dbg, line);
+
+  const exists = !!el.querySelector(".new-breakpoint");
+  const existsStr = shouldExist ? "exists" : "does not exist";
+  ok(exists === shouldExist, `Breakpoint ${existsStr} on line ${line}`);
+}
+
+function assertBreakpointSnippet(dbg, index, snippet) {
+  const actualSnippet = findElement(dbg, "breakpointLabel", 3).innerText;
+  is(snippet, actualSnippet, `Breakpoint ${index} snippet`);
 }
 
 const selectors = {
@@ -1120,6 +1150,7 @@ const selectors = {
   expressionPlus: ".watch-expressions-pane button.plus",
   scopesHeader: ".scopes-pane ._header",
   breakpointItem: i => `.breakpoints-list div:nth-of-type(${i})`,
+  breakpointLabel: i => `${selectors.breakpointItem(i)} .breakpoint-label`,
   breakpointItems: ".breakpoints-list .breakpoint",
   breakpointContextMenu: {
     disableSelf: "#node-menu-disable-self",
@@ -1256,11 +1287,7 @@ function clickElementWithSelector(dbg, selector) {
 }
 
 function clickDOMElement(dbg, element) {
-  EventUtils.synthesizeMouseAtCenter(
-    element,
-    {},
-    dbg.win
-  );
+  EventUtils.synthesizeMouseAtCenter(element, {}, dbg.win);
 }
 
 function dblClickElement(dbg, elementName, ...args) {
@@ -1282,6 +1309,11 @@ function rightClickElement(dbg, elementName, ...args) {
     { type: "contextmenu" },
     dbg.win
   );
+}
+
+async function clickGutter(dbg, line) {
+  const el = await codeMirrorGutterElement(dbg, line);
+  clickDOMElement(dbg, el);
 }
 
 function selectContextMenuItem(dbg, selector) {
@@ -1376,7 +1408,7 @@ async function codeMirrorGutterElement(dbg, line) {
   );
 
   if (!tokenEl) {
-    throw new Error("Failed to find element for line " + line);
+    throw new Error(`Failed to find element for line ${line}`);
   }
   return tokenEl;
 }
@@ -1592,7 +1624,7 @@ async function waitUntilPredicate(predicate) {
 // console if necessary.  This cleans up the split console pref so
 // it won't pollute other tests.
 async function getDebuggerSplitConsole(dbg) {
-  const { toolbox, win } = dbg;
+  let { toolbox, win } = dbg;
 
   if (!win) {
     win = toolbox.win;
