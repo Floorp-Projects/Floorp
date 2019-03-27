@@ -18,7 +18,8 @@ function resetToolbarWithoutDevEditionButtons() {
   CustomizableUI.removeWidgetFromArea("developer-button");
 }
 
-async function expectFocusAfterKey(aKey, aFocus, aAncestorOk = false) {
+async function expectFocusAfterKey(aKey, aFocus, aAncestorOk = false,
+                                   aWindow = window) {
   let res = aKey.match(/^(Shift\+)?(?:(.)|(.+))$/);
   let shift = Boolean(res[1]);
   let key;
@@ -30,27 +31,27 @@ async function expectFocusAfterKey(aKey, aFocus, aAncestorOk = false) {
   let expected;
   let friendlyExpected;
   if (typeof aFocus == "string") {
-    expected = document.getElementById(aFocus);
+    expected = aWindow.document.getElementById(aFocus);
     friendlyExpected = aFocus;
   } else {
     expected = aFocus;
-    if (aFocus == gURLBar.inputField) {
+    if (aFocus == aWindow.gURLBar.inputField) {
       friendlyExpected = "URL bar input";
-    } else if (aFocus == gBrowser.selectedBrowser) {
+    } else if (aFocus == aWindow.gBrowser.selectedBrowser) {
       friendlyExpected = "Web document";
     }
   }
   info("Listening on item " + (expected.id || expected.className));
   let focused = BrowserTestUtils.waitForEvent(expected, "focus", aAncestorOk);
-  EventUtils.synthesizeKey(key, {shiftKey: shift});
+  EventUtils.synthesizeKey(key, {shiftKey: shift}, aWindow);
   let receivedEvent = await focused;
   info("Got focus on item: " + (receivedEvent.target.id || receivedEvent.target.className));
   ok(true, friendlyExpected + " focused after " + aKey + " pressed");
 }
 
-function startFromUrlBar() {
-  gURLBar.focus();
-  is(document.activeElement, gURLBar.inputField,
+function startFromUrlBar(aWindow = window) {
+  aWindow.gURLBar.focus();
+  is(aWindow.document.activeElement, aWindow.gURLBar.inputField,
      "URL bar focused for start of test");
 }
 
@@ -260,6 +261,22 @@ add_task(async function testArrowsInPanelMultiView() {
   let hidden = BrowserTestUtils.waitForEvent(document, "popuphidden", true);
   view.closest("panel").hidePopup();
   await hidden;
+});
+
+// Test that right/left arrows move in the expected direction for RTL locales.
+add_task(async function testArrowsRtl() {
+  await SpecialPowers.pushPrefEnv({set: [["intl.uidirection", 1]]});
+  // window.RTL_UI doesn't update in existing windows when this pref is changed,
+  // so we need to test in a new window.
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  startFromUrlBar(win);
+  await expectFocusAfterKey("Tab", "library-button", false, win);
+  EventUtils.synthesizeKey("KEY_ArrowRight", {}, win);
+  is(win.document.activeElement.id, "library-button",
+     "ArrowRight at end of button group does nothing");
+  await expectFocusAfterKey("ArrowLeft", "sidebar-button", false, win);
+  await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
 });
 
 registerCleanupFunction(() => CustomizableUI.reset());
