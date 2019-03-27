@@ -1900,7 +1900,7 @@ skip-if(verify) == 1121748-2.html 1121748-2-ref.html
 == 1130231-2-button-padding-rtl.html 1130231-2-button-padding-rtl-ref.html
 # The 1133905-*.html reftests only make sense on platforms where both APZ and
 # <meta viewport> are enabled.
-# (Note: bug 1308702 and bug 1527511 cover these tests' failures on Android)
+# (Note: bug 1308702 covers these tests' failures on Android)
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-1.html 1133905-ref.html
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-2.html 1133905-ref.html
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-3.html 1133905-ref.html
@@ -1947,9 +1947,9 @@ pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-6-h-rtl.html 1133905-r
 pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-54,0-6) == 1133905-1-vh-rtl.html 1133905-ref-vh-rtl.html
 pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-45,0-4) == 1133905-2-vh-rtl.html 1133905-ref-vh-rtl.html
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-3-vh-rtl.html 1133905-ref-vh-rtl.html
-pref(apz.allow_zooming,true) skip-if(!Android) fails-if(Android) == 1133905-4-vh-rtl.html 1133905-ref-vh-rtl.html # bug 1527511
-pref(apz.allow_zooming,true) skip-if(!Android) fails-if(Android) == 1133905-5-vh-rtl.html 1133905-ref-vh-rtl.html # bug 1527511
-pref(apz.allow_zooming,true) skip-if(!Android) fails-if(Android) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.html # bug 1527511
+pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-45,0-4) == 1133905-4-vh-rtl.html 1133905-ref-vh-rtl.html
+pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-54,0-6) == 1133905-5-vh-rtl.html 1133905-ref-vh-rtl.html
+pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-54,0-8) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.html
 pref(apz.allow_zooming,true) skip-if(!Android) != 1133905-ref-vh-rtl.html about:blank # make sure it doesn't render blank
 == 1149304-1-transform-change.html 1149304-1-transform-change-ref.html
 == 1150021-1.xul 1150021-1-ref.xul
