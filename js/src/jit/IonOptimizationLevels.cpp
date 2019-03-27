@@ -91,7 +91,7 @@ uint32_t OptimizationInfo::compilerWarmUpThreshold(JSScript* script,
         (numLocalsAndArgs / double(MAX_MAIN_THREAD_LOCALS_AND_ARGS));
   }
 
-  if (!pc || JitOptions.eagerCompilation) {
+  if (!pc || JitOptions.eagerIonCompilation()) {
     return warmUpThreshold;
   }
 
