@@ -261,7 +261,7 @@ var PageThumbs = {
       return;
     }
     // The content is a local page, grab a thumbnail sync.
-    PageThumbUtils.createSnapshotThumbnail(aBrowser.ownerGlobal,
+    PageThumbUtils.createSnapshotThumbnail(aBrowser.contentWindow,
                                            aCanvas,
                                            aArgs);
 
