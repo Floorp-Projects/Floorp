@@ -54,10 +54,6 @@ tasks:
         $if: 'is_repo_trusted'
         then: mobile-3-decision
         else: mobile-1-decision
-      build_worker_type:
-        $if: 'is_repo_trusted'
-        then: mobile-3-b-fenix
-        else: mobile-1-b-fenix
 
       track:
         $if: 'is_repo_trusted'
@@ -104,10 +100,10 @@ tasks:
               TASK_ID: ${decision_task_id}
               TASKS_PRIORITY: ${tasks_priority}
               SCHEDULER_ID: ${scheduler_id}
-              BUILD_WORKER_TYPE: ${build_worker_type}
               MOBILE_HEAD_REPOSITORY: ${repository}
               MOBILE_HEAD_BRANCH: ${head_branch}
               MOBILE_HEAD_REV: ${head_rev}
+              MOBILE_TRIGGERED_BY: ${user}
             features:
               taskclusterProxy: true
           extra:
@@ -130,14 +126,14 @@ tasks:
                   features:
                     taskclusterProxy: true
                     chainOfTrust: true
-                  env:
-                    MOBILE_TRIGGERED_BY: ${user}
                   command:
                     - >-
                       git fetch ${repository} ${head_branch}
                       && git config advice.detachedHead false
                       && git checkout ${head_rev}
-                      && python automation/taskcluster/decision_task_nightly.py \
+                      && python automation/taskcluster/decision_task.py \
+                        release \
+                        --nightly \
                         --track ${track} \
                         --commit \
                         --output /opt/fenix/app/build/outputs/apk \
