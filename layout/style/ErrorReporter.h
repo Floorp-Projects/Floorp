@@ -44,7 +44,7 @@ class MOZ_STACK_CLASS ErrorReporter final {
                                  const Loader* aLoader);
 
   void OutputError(uint32_t aLineNumber, uint32_t aLineOffset,
-                   const nsACString& aSource);
+                   const nsACString& aSource, const nsACString& aSelectors);
   void ClearError();
 
   // In all overloads of ReportUnexpected, aMessage is a stringbundle
@@ -68,6 +68,7 @@ class MOZ_STACK_CLASS ErrorReporter final {
   nsString mError;
   nsString mErrorLine;
   nsString mFileName;
+  nsString mSelectors;
   const StyleSheet* mSheet;
   const Loader* mLoader;
   nsIURI* mURI;

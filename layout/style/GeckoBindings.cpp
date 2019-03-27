@@ -2229,14 +2229,13 @@ bool Gecko_ErrorReportingEnabled(const StyleSheet* aSheet,
   return ErrorReporter::ShouldReportErrors(aSheet, aLoader);
 }
 
-void Gecko_ReportUnexpectedCSSError(const StyleSheet* aSheet,
-                                    const Loader* aLoader, nsIURI* aURI,
-                                    const char* message, const char* param,
-                                    uint32_t paramLen, const char* prefix,
-                                    const char* prefixParam,
-                                    uint32_t prefixParamLen, const char* suffix,
-                                    const char* source, uint32_t sourceLen,
-                                    uint32_t lineNumber, uint32_t colNumber) {
+void Gecko_ReportUnexpectedCSSError(
+    const StyleSheet* aSheet, const Loader* aLoader, nsIURI* aURI,
+    const char* message, const char* param, uint32_t paramLen,
+    const char* prefix, const char* prefixParam, uint32_t prefixParamLen,
+    const char* suffix, const char* source, uint32_t sourceLen,
+    const char* selectors, uint32_t selectorsLen, uint32_t lineNumber,
+    uint32_t colNumber) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   ErrorReporter reporter(aSheet, aLoader, aURI);
@@ -2263,7 +2262,8 @@ void Gecko_ReportUnexpectedCSSError(const StyleSheet* aSheet,
     reporter.ReportUnexpected(suffix);
   }
   nsDependentCSubstring sourceValue(source, sourceLen);
-  reporter.OutputError(lineNumber, colNumber, sourceValue);
+  nsDependentCSubstring selectorsValue(selectors, selectorsLen);
+  reporter.OutputError(lineNumber, colNumber, sourceValue, selectorsValue);
 }
 
 void Gecko_ContentList_AppendAll(nsSimpleContentList* aList,

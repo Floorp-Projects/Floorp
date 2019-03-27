@@ -118,6 +118,12 @@ interface nsIScriptError : nsIConsoleMessage
      */
     attribute unsigned long long timeWarpTarget;
 
+    /**
+     * If the ScriptError is a CSS parser error, this value will contain the
+     * CSS selectors of the CSS ruleset where the error occured.
+     */
+    attribute AString cssSelectors;
+
     void init(in AString message,
               in AString sourceName,
               in AString sourceLine,

@@ -36,6 +36,7 @@ class nsScriptErrorNote final : public nsIScriptErrorNote {
 
   nsString mMessage;
   nsString mSourceName;
+  nsString mCssSelectors;
   nsString mSourceLine;
   uint32_t mSourceId;
   uint32_t mLineNumber;
@@ -69,6 +70,7 @@ class nsScriptErrorBase : public nsIScriptError {
   nsString mMessage;
   nsString mMessageName;
   nsString mSourceName;
+  nsString mCssSelectors;
   uint32_t mSourceId;
   uint32_t mLineNumber;
   nsString mSourceLine;
