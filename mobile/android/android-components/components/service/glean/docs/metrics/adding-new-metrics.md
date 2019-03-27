@@ -93,7 +93,7 @@ controls:
     ...
 ```
 
-Now you can use the event from the applications code:
+Now you can use the counter from the applications code:
 ```Kotlin
 import org.mozilla.yourApplication.GleanMetrics.Controls
 
@@ -113,6 +113,42 @@ assertTrue(Controls.refreshPressed.testHasValue())
 // Does the counter have the expected value?
 assertEquals(6, Controls.refreshPressed.testGetValue())
 ```
+
+## Strings
+
+Used to record a single string value, say the name of the default search engine in a browser.
+
+Say you're adding a metric to find out what the default search in a browser is. First you need to add an entry for the metric to the `metrics.yaml` file:
+
+```YAML
+search.default:
+  name:
+    type: string
+    description: >
+      The name of the default search engine.
+    ...
+```
+
+Now you can use the string from the applications code:
+```Kotlin
+import org.mozilla.yourApplication.GleanMetrics.SearchDefault
+
+// Record a value into the metric.
+SearchDefault.name.set("duck duck go")
+// If it changed later, you can record the new value:
+SearchDefault.name.set("wikipedia")
+```
+
+There are test APIs available too:
+
+```Kotlin
+import org.mozilla.yourApplication.GleanMetrics.SearchDefault
+Glean.enableTestingMode()
+
+// Was anything recorded?
+assertTrue(SearchDefault.name.testHasValue())
+// Does the string metric have the expected value?
+assertEquals("wikipedia", SearchDefault.name.testGetValue())
 
 ## Labeled metrics
 
