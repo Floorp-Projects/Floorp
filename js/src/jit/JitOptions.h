@@ -83,6 +83,7 @@ struct DefaultJitOptions {
   bool enableWasmFuncCallSpew;
 #endif
   uint32_t baselineWarmUpThreshold;
+  uint32_t normalIonWarmUpThreshold;
   uint32_t exceptionBailoutThreshold;
   uint32_t frequentBailoutThreshold;
   uint32_t maxStackArgs;
@@ -96,7 +97,6 @@ struct DefaultJitOptions {
   uint32_t branchPruningThreshold;
   uint32_t wasmBatchIonThreshold;
   uint32_t wasmBatchBaselineThreshold;
-  mozilla::Maybe<uint32_t> forcedDefaultIonWarmUpThreshold;
   mozilla::Maybe<IonRegisterAllocator> forcedRegisterAllocator;
 
   // Spectre mitigation flags. Each mitigation has its own flag in order to
