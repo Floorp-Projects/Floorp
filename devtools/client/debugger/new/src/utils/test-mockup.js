@@ -102,7 +102,6 @@ function makeMockBreakpoint(
     location,
     astLocation: null,
     generatedLocation: location,
-    loading: false,
     disabled: false,
     text: "text",
     originalText: "text",

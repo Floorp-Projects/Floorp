@@ -26,9 +26,9 @@ n
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n u50 -s "CN=TestUser50,E=TestUser50@bogus.com,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ca -m 50 -v 598
+certutil -S -z noise -g 1024 -d . -n u50 -s "CN=TestUser50,E=TestUser50@example.com,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ca -m 50 -v 598
 
-certutil -S -z noise -g 1024 -d . -n u51 -s "CN=TestUser51,E=TestUser51@bogus.com,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ca -m 51 -v 598
+certutil -S -z noise -g 1024 -d . -n u51 -s "CN=TestUser51,E=TestUser51@example.com,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ca -m 51 -v 598
 
 certutil -d . -L -n ca -r > TestCA.ca.cert
 certutil -d . -L -n u50 -r > TestUser50.cert

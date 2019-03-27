@@ -370,12 +370,6 @@ export function getBreakpointsDisabled(state: OuterState): boolean {
   return breakpoints.every(breakpoint => breakpoint.disabled);
 }
 
-export function getBreakpointsLoading(state: OuterState): boolean {
-  const breakpoints = getBreakpointsList(state);
-  const isLoading = breakpoints.some(breakpoint => breakpoint.loading);
-  return breakpoints.length > 0 && isLoading;
-}
-
 export function getBreakpointsForSource(
   state: OuterState,
   sourceId: string,

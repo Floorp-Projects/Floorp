@@ -202,6 +202,10 @@ static const Class DebuggerSource_class = {
 
 /*** Utils ******************************************************************/
 
+static inline bool IsInterpretedNonSelfHostedFunction(JSFunction* fun) {
+  return fun->isInterpreted() && !fun->isSelfHostedBuiltin();
+}
+
 static inline bool EnsureFunctionHasScript(JSContext* cx, HandleFunction fun) {
   if (fun->isInterpretedLazy()) {
     AutoRealm ar(cx, fun);
@@ -212,7 +216,7 @@ static inline bool EnsureFunctionHasScript(JSContext* cx, HandleFunction fun) {
 
 static inline JSScript* GetOrCreateFunctionScript(JSContext* cx,
                                                   HandleFunction fun) {
-  MOZ_ASSERT(fun->isInterpreted());
+  MOZ_ASSERT(IsInterpretedNonSelfHostedFunction(fun));
   if (!EnsureFunctionHasScript(cx, fun)) {
     return nullptr;
   }
@@ -6332,8 +6336,8 @@ static bool DebuggerScript_getChildScripts(JSContext* cx, unsigned argc,
     for (const GCPtrObject& obj : script->objects()) {
       if (obj->is<JSFunction>()) {
         fun = &obj->as<JSFunction>();
-        // The inner function could be a wasm native.
-        if (fun->isNative()) {
+        // The inner function could be an asm.js native.
+        if (!IsInterpretedNonSelfHostedFunction(fun)) {
           continue;
         }
         funScript = GetOrCreateFunctionScript(cx, fun);
@@ -10318,7 +10322,7 @@ bool DebuggerObject::scriptGetter(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedFunction fun(cx, &obj->as<JSFunction>());
-  if (!fun->isInterpreted()) {
+  if (!IsInterpretedNonSelfHostedFunction(fun)) {
     args.rval().setUndefined();
     return true;
   }
@@ -10357,7 +10361,7 @@ bool DebuggerObject::environmentGetter(JSContext* cx, unsigned argc,
   }
 
   RootedFunction fun(cx, &obj->as<JSFunction>());
-  if (!fun->isInterpreted()) {
+  if (!IsInterpretedNonSelfHostedFunction(fun)) {
     args.rval().setUndefined();
     return true;
   }
@@ -11469,7 +11473,7 @@ bool DebuggerObject::getParameterNames(JSContext* cx,
   if (!result.growBy(referent->nargs())) {
     return false;
   }
-  if (referent->isInterpreted()) {
+  if (IsInterpretedNonSelfHostedFunction(referent)) {
     RootedScript script(cx, GetOrCreateFunctionScript(cx, referent));
     if (!script) {
       return false;

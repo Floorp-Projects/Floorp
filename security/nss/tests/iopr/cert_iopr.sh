@@ -252,7 +252,7 @@ download_install_certs() {
             CERTNAME=$HOSTADDR
             
             CU_ACTION="Generate Cert Request for $CERTNAME (ws: $host)"
-            CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, \
+            CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, \
                         L=Mountain View, ST=California, C=US"
             certu -R -d "${sslServerDir}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}"\
                 -o $sslServerDir/req 2>&1

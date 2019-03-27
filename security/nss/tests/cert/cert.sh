@@ -317,7 +317,7 @@ cert_create_cert()
 cert_add_cert()
 {
     CU_ACTION="Generate Cert Request for $CERTNAME"
-    CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+    CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
     certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req  2>&1
     if [ "$RET" -ne 0 ]; then
         return $RET
@@ -343,7 +343,7 @@ cert_add_cert()
 #   Generate and add DSA cert
 #
 	CU_ACTION="Generate DSA Cert Request for $CERTNAME"
-	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-dsa@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-dsa@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
 	certu -R -k dsa -d "${PROFILEDIR}" -f "${R_PWFILE}" \
 	    -z "${R_NOISE_FILE}" -o req  2>&1
 	if [ "$RET" -ne 0 ]; then
@@ -367,7 +367,7 @@ cert_add_cert()
 
 #    Generate DSA certificate signed with RSA
 	CU_ACTION="Generate mixed DSA Cert Request for $CERTNAME"
-	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-dsamixed@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-dsamixed@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
 	certu -R -k dsa -d "${PROFILEDIR}" -f "${R_PWFILE}" \
 	    -z "${R_NOISE_FILE}" -o req  2>&1
 	if [ "$RET" -ne 0 ]; then
@@ -398,7 +398,7 @@ cert_add_cert()
 #
 	CURVE="secp384r1"
 	CU_ACTION="Generate EC Cert Request for $CERTNAME"
-	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ec@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ec@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
 	certu -R -k ec -q "${CURVE}" -d "${PROFILEDIR}" -f "${R_PWFILE}" \
 	    -z "${R_NOISE_FILE}" -o req  2>&1
 	if [ "$RET" -ne 0 ]; then
@@ -422,7 +422,7 @@ cert_add_cert()
 
 #    Generate EC certificate signed with RSA
 	CU_ACTION="Generate mixed EC Cert Request for $CERTNAME"
-	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ecmixed@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ecmixed@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
 	certu -R -k ec -q "${CURVE}" -d "${PROFILEDIR}" -f "${R_PWFILE}" \
 	    -z "${R_NOISE_FILE}" -o req  2>&1
 	if [ "$RET" -ne 0 ]; then
@@ -455,7 +455,7 @@ cert_add_cert()
 		grep 'TestUser-rsa-pss-interop$' | sed -n 's/^<.*> [^ ]\{1,\} *\([^ ]\{1,\}\).*/\1/p'`
 
 	CU_ACTION="Generate RSA-PSS Cert Request for $CERTNAME"
-	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-rsa-pss@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-rsa-pss@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
 	certu -R -d "${PROFILEDIR}" -k ${KEYID} -f "${R_PWFILE}" \
 	-z "${R_NOISE_FILE}" -o req 2>&1
 
@@ -873,15 +873,15 @@ cert_smime_client()
 ## call to cert_create_cert ends up creating two separate certs
 ## one for Eve and another for Eve-ec but they both end up with
 ## the same Subject Alt Name Extension, i.e., both the cert for
-## Eve@bogus.com and the cert for Eve-ec@bogus.com end up 
-## listing eve@bogus.net in the Certificate Subject Alt Name extension. 
+## Eve@example.com and the cert for Eve-ec@example.com end up 
+## listing eve@example.net in the Certificate Subject Alt Name extension. 
 ## This can cause a problem later when cmsutil attempts to create
 ## enveloped data and accidently picks up the ECC cert (NSS currently
 ## does not support ECC for enveloped data creation). This script
 ## avoids the problem by ensuring that these conflicting certs are
 ## never added to the same cert database (see comment marked XXXX).
   echo "$SCRIPTNAME: Creating multiEmail's Certificate --------------------"
-  cert_create_cert "${EVEDIR}" "Eve" 60 ${D_EVE} "-7 eve@bogus.net,eve@bogus.cc,beve@bogus.com"
+  cert_create_cert "${EVEDIR}" "Eve" 60 ${D_EVE} "-7 eve@example.net,eve@example.org,beve@example.com"
 
   #echo "************* Copying CA files to ${SERVERDIR}"
   #cp ${CADIR}/*.db .
@@ -891,7 +891,7 @@ cert_smime_client()
   #
   #cd ${CERTDIR}
   #CU_ACTION="Creating ${CERTNAME}'s Server Cert"
-  #CU_SUBJECT="CN=${CERTNAME}, E=${CERTNAME}@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US"
+  #CU_SUBJECT="CN=${CERTNAME}, E=${CERTNAME}@example.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US"
   #certu -S -n "${CERTNAME}" -c "TestCA" -t "u,u,u" -m "$CERTSERIAL" \
   #	-d ${PROFILEDIR} -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -v 60 2>&1
 
@@ -975,7 +975,7 @@ cert_extended_ssl()
   modu -add "RootCerts" -libfile "${ROOTCERTSFILE}" -dbdir "${PROFILEDIR}" 2>&1
 
   CU_ACTION="Generate Cert Request for $CERTNAME (ext)"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request (ext)"
@@ -995,7 +995,7 @@ cert_extended_ssl()
 #     Repeat the above for DSA certs
 #
       CU_ACTION="Generate DSA Cert Request for $CERTNAME (ext)"
-      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-dsa@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-dsa@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
       certu -R -d "${PROFILEDIR}" -k dsa -f "${R_PWFILE}" \
 	  -z "${R_NOISE_FILE}" -o req 2>&1
 
@@ -1017,7 +1017,7 @@ cert_extended_ssl()
 #     Repeat again for mixed DSA certs
 #
       CU_ACTION="Generate mixed DSA Cert Request for $CERTNAME (ext)"
-      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-dsamixed@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-dsamixed@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
       certu -R -d "${PROFILEDIR}" -k dsa -f "${R_PWFILE}" \
 	  -z "${R_NOISE_FILE}" -o req 2>&1
 
@@ -1040,7 +1040,7 @@ cert_extended_ssl()
 #
       EC_CURVE="secp256r1"
       CU_ACTION="Generate EC Cert Request for $CERTNAME (ext)"
-      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ec@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ec@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
       certu -R -d "${PROFILEDIR}" -k ec -q "${EC_CURVE}" -f "${R_PWFILE}" \
 	  -z "${R_NOISE_FILE}" -o req 2>&1
 
@@ -1063,7 +1063,7 @@ cert_extended_ssl()
 #
       EC_CURVE="secp256r1"
       CU_ACTION="Generate mixed EC Cert Request for $CERTNAME (ext)"
-      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ecmixed@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ecmixed@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
       certu -R -d "${PROFILEDIR}" -k ec -q "${EC_CURVE}" -f "${R_PWFILE}" \
 	  -z "${R_NOISE_FILE}" -o req 2>&1
 
@@ -1124,7 +1124,7 @@ cert_extended_ssl()
   modu -add "RootCerts" -libfile "${ROOTCERTSFILE}" -dbdir "${PROFILEDIR}" 2>&1
 
   CU_ACTION="Generate Cert Request for $CERTNAME (ext)"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" \
       -o req 2>&1
 
@@ -1144,7 +1144,7 @@ cert_extended_ssl()
 #     Repeat the above for DSA certs
 #
       CU_ACTION="Generate DSA Cert Request for $CERTNAME (ext)"
-      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-dsa@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-dsa@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
       certu -R -d "${PROFILEDIR}" -k dsa -f "${R_PWFILE}" \
 	  -z "${R_NOISE_FILE}" -o req 2>&1
 
@@ -1167,7 +1167,7 @@ cert_extended_ssl()
 #     Repeat the above for mixed DSA certs
 #
       CU_ACTION="Generate mixed DSA Cert Request for $CERTNAME (ext)"
-      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-dsamixed@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-dsamixed@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
       certu -R -d "${PROFILEDIR}" -k dsa -f "${R_PWFILE}" \
 	  -z "${R_NOISE_FILE}" -o req 2>&1
 
@@ -1191,7 +1191,7 @@ cert_extended_ssl()
 #     Repeat the above for EC certs
 #
       CU_ACTION="Generate EC Cert Request for $CERTNAME (ext)"
-      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ec@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ec@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
       certu -R -d "${PROFILEDIR}" -k ec -q "${EC_CURVE}" -f "${R_PWFILE}" \
 	  -z "${R_NOISE_FILE}" -o req 2>&1
 
@@ -1214,7 +1214,7 @@ cert_extended_ssl()
 #     Repeat the above for mixed EC certs
 #
       CU_ACTION="Generate mixed EC Cert Request for $CERTNAME (ext)"
-      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ecmixed@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ecmixed@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
       certu -R -d "${PROFILEDIR}" -k ec -q "${EC_CURVE}" -f "${R_PWFILE}" \
 	  -z "${R_NOISE_FILE}" -o req 2>&1
 
@@ -1387,7 +1387,7 @@ MODSCRIPT
   RETEXPECTED=0
 
   CU_ACTION="Generate Certificate for ${CERTNAME}"
-  CU_SUBJECT="CN=${CERTNAME}, E=fips@bogus.com, O=BOGUS NSS, OU=FIPS PUB 140, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=${CERTNAME}, E=fips@example.com, O=BOGUS NSS, OU=FIPS PUB 140, L=Mountain View, ST=California, C=US"
   certu -S -n ${FIPSCERTNICK} -x -t "Cu,Cu,Cu" -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" -k dsa -v 600 -m 500 -z "${R_NOISE_FILE}" 2>&1
   if [ "$RET" -eq 0 ]; then
     cert_log "SUCCESS: FIPS passed"
@@ -1439,7 +1439,7 @@ cert_eccurves()
 	CERTNAME="Curve-${CURVE}"
 	CERTSERIAL=`expr $CERTSERIAL + 1 `
 	CU_ACTION="Generate EC Cert Request for $CERTNAME"
-	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ec@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ec@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
 	certu -R -k ec -q "${CURVE}" -d "${PROFILEDIR}" -f "${R_PWFILE}" \
 		-z "${R_NOISE_FILE}" -o req  2>&1
 	
@@ -1464,7 +1464,7 @@ cert_extensions_test()
 {
     COUNT=`expr ${COUNT} + 1`
     CERTNAME=TestExt${COUNT}
-    CU_SUBJECT="CN=${CERTNAME}, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+    CU_SUBJECT="CN=${CERTNAME}, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
 
     echo
     echo certutil -d ${CERT_EXTENSIONS_DIR} -S -n ${CERTNAME} \
@@ -2026,7 +2026,7 @@ cert_test_password()
 
   # finally make sure we can use the old key with the new password
   CU_ACTION="Generate Certificate for ${CERTNAME} with new password"
-  CU_SUBJECT="CN=${CERTNAME}, E=password@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=${CERTNAME}, E=password@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -S -n PasswordCert -c PasswordCA -t "u,u,u" -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" -z "${R_NOISE_FILE}" 2>&1
   if [ "$RET" -eq 0 ]; then
     cert_log "SUCCESS: PASSWORD passed"
@@ -2055,7 +2055,7 @@ cert_test_distrust()
   certu -M -n "Distrusted" -t p,p,p -d ${PROFILEDIR} -f "${R_PWFILE}" 2>&1
   echo "$SCRIPTNAME: Creating Distrusted Intermediate"
   CERTNAME="DistrustedCA"
-  ALL_CU_SUBJECT="CN=${CERTNAME}, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  ALL_CU_SUBJECT="CN=${CERTNAME}, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   cert_CA ${CADIR} "${CERTNAME}" "-c TestCA" ",," ${D_CA} 2010 2>&1
   CU_ACTION="Import Distrusted Intermediate"
   certu -A -n "${CERTNAME}" -t "p,p,p" -f "${R_PWFILE}" -d "${PROFILEDIR}" \
@@ -2065,7 +2065,7 @@ cert_test_distrust()
   # since it's not signed by TestCA it requires more steps.
   CU_ACTION="Generate Cert Request for Leaf Chained to Distrusted CA"
   CERTNAME="LeafChainedToDistrustedCA"
-  CU_SUBJECT="CN=${CERTNAME}, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=${CERTNAME}, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request"
@@ -2205,7 +2205,7 @@ cert_test_rsapss()
   CERTNAME="TestUser-rsa-pss1"
 
   CU_ACTION="Generate Cert Request for $CERTNAME"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req  2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request"
@@ -2236,7 +2236,7 @@ EOF
   CERTNAME="TestUser-rsa-pss2"
 
   CU_ACTION="Generate Cert Request for $CERTNAME"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req  2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request"
@@ -2267,7 +2267,7 @@ EOF
   CERTNAME="TestUser-rsa-pss3"
 
   CU_ACTION="Generate Cert Request for $CERTNAME"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req  2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request"
@@ -2298,7 +2298,7 @@ EOF
   CERTNAME="TestUser-rsa-pss4"
 
   CU_ACTION="Generate Cert Request for $CERTNAME"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" --pss -o req  2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request"
@@ -2329,7 +2329,7 @@ EOF
   CERTNAME="TestUser-rsa-pss5"
 
   CU_ACTION="Generate Cert Request for $CERTNAME"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" --pss -o req  2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request"
@@ -2360,7 +2360,7 @@ EOF
   CERTNAME="TestUser-rsa-pss6"
 
   CU_ACTION="Generate Cert Request for $CERTNAME"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" --pss -o req  2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request"
@@ -2392,7 +2392,7 @@ EOF
   CERTNAME="TestUser-rsa-pss7"
 
   CU_ACTION="Generate Cert Request for $CERTNAME"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" --pss -o req  2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request"
@@ -2409,7 +2409,7 @@ EOF
   CERTNAME="TestUser-rsa-pss8"
 
   CU_ACTION="Generate Cert Request for $CERTNAME"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" --pss -o req  2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request"
@@ -2440,7 +2440,7 @@ EOF
   CERTNAME="TestUser-rsa-pss9"
 
   CU_ACTION="Generate Cert Request for $CERTNAME"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req  2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request"
@@ -2471,7 +2471,7 @@ EOF
   CERTNAME="TestUser-rsa-pss10"
 
   CU_ACTION="Generate Cert Request for $CERTNAME"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req  2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request"
@@ -2503,7 +2503,7 @@ EOF
   CERTNAME="TestUser-rsa-pss11"
 
   CU_ACTION="Generate Cert Request for $CERTNAME"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" --pss -o req  2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request"
@@ -2571,7 +2571,7 @@ cert_test_rsapss_policy()
   # Issuer certificate: RSA
   # Signature: RSA-PSS (explicit, with --pss-sign and -Z SHA1)
   CU_ACTION="Generate Cert Request for $CERTNAME"
-  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@example.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" --pss -o req  2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request"

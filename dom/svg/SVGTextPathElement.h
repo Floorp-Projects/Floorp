@@ -9,8 +9,8 @@
 
 #include "SVGEnum.h"
 #include "nsSVGLength2.h"
+#include "SVGAnimatedPathSegList.h"
 #include "SVGString.h"
-#include "mozilla/dom/SVGAnimatedPathSegList.h"
 #include "mozilla/dom/SVGTextContentElement.h"
 
 class nsAtom;

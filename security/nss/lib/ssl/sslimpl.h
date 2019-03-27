@@ -1734,6 +1734,14 @@ SECStatus ssl_DecodeResumptionToken(sslSessionID *sid, const PRUint8 *encodedTic
                                     PRUint32 encodedTicketLen);
 PRBool ssl_IsResumptionTokenUsable(sslSocket *ss, sslSessionID *sid);
 
+/* unwrap helper function to handle the case where the wrapKey doesn't wind
+ *  * up in the correct token for the master secret */
+PK11SymKey *ssl_unwrapSymKey(PK11SymKey *wrapKey,
+                             CK_MECHANISM_TYPE wrapType, SECItem *param,
+                             SECItem *wrappedKey,
+                             CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation,
+                             int keySize, CK_FLAGS keyFlags, void *pinArg);
+
 /* Remove when stable. */
 
 SECStatus SSLExp_SetResumptionTokenCallback(PRFileDesc *fd,
