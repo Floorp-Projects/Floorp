@@ -71,6 +71,8 @@
 #endif
 
 #ifdef XP_WIN
+// For min.
+#  include <algorithm>
 #  include <windows.h>
 #endif
 
@@ -1139,13 +1141,17 @@ nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
 #  endif
 #elif defined(XP_WIN)
   // 1MB is the default stack size on Windows. We use the -STACK linker flag
-  // (see WIN32_EXE_LDFLAGS in config/config.mk) to request a larger stack,
-  // so we determine the stack size at runtime.
-  const size_t kStackQuota = GetWindowsStackSize();
+  // (see WIN32_EXE_LDFLAGS in config/config.mk) to request a larger stack, so
+  // we determine the stack size at runtime. But 8MB is more than the Web can
+  // handle (bug 1537609), so clamp to something remotely reasonable.
 #  if defined(MOZ_ASAN)
   // See the standalone MOZ_ASAN branch below for the ASan case.
+  const size_t kStackQuota =
+      std::min(GetWindowsStackSize(), size_t(6 * 1024 * 1024));
   const size_t kTrustedScriptBuffer = 450 * 1024;
 #  else
+  const size_t kStackQuota =
+      std::min(GetWindowsStackSize(), size_t(2 * 1024 * 1024));
   const size_t kTrustedScriptBuffer = (sizeof(size_t) == 8)
                                           ? 180 * 1024   // win64
                                           : 120 * 1024;  // win32
