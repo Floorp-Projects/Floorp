@@ -3294,7 +3294,8 @@ extern JS_PUBLIC_API void JS_SetOffthreadIonCompilationEnabled(JSContext* cx,
 // clang-format off
 #define JIT_COMPILER_OPTIONS(Register) \
   Register(BASELINE_WARMUP_TRIGGER, "baseline.warmup.trigger") \
-  Register(ION_WARMUP_TRIGGER, "ion.warmup.trigger") \
+  Register(ION_NORMAL_WARMUP_TRIGGER, "ion.warmup.trigger") \
+  Register(ION_FULL_WARMUP_TRIGGER, "ion.full.warmup.trigger") \
   Register(ION_GVN_ENABLE, "ion.gvn.enable") \
   Register(ION_FORCE_IC, "ion.forceinlineCaches") \
   Register(ION_ENABLE, "ion.enable") \

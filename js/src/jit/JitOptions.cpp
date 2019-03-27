@@ -158,6 +158,11 @@ DefaultJitOptions::DefaultJitOptions() {
   // Duplicated in all.js - ensure both match.
   SET_DEFAULT(normalIonWarmUpThreshold, 1000);
 
+  // How many invocations or loop iterations are needed before functions
+  // are compiled with the Ion compiler at OptimizationLevel::Full.
+  // Duplicated in all.js - ensure both match.
+  SET_DEFAULT(fullIonWarmUpThreshold, 100'000);
+
   // Number of exception bailouts (resuming into catch/finally block) before
   // we invalidate and forbid Ion compilation.
   SET_DEFAULT(exceptionBailoutThreshold, 10);
@@ -267,15 +272,33 @@ void DefaultJitOptions::enableGvn(bool enable) { disableGvn = !enable; }
 void DefaultJitOptions::setEagerIonCompilation() {
   baselineWarmUpThreshold = 0;
   normalIonWarmUpThreshold = 0;
+  fullIonWarmUpThreshold = 0;
 }
 
-void DefaultJitOptions::setCompilerWarmUpThreshold(uint32_t warmUpThreshold) {
+void DefaultJitOptions::setNormalIonWarmUpThreshold(uint32_t warmUpThreshold) {
   normalIonWarmUpThreshold = warmUpThreshold;
+
+  if (fullIonWarmUpThreshold < normalIonWarmUpThreshold) {
+    fullIonWarmUpThreshold = normalIonWarmUpThreshold;
+  }
 }
 
-void DefaultJitOptions::resetCompilerWarmUpThreshold() {
+void DefaultJitOptions::setFullIonWarmUpThreshold(uint32_t warmUpThreshold) {
+  fullIonWarmUpThreshold = warmUpThreshold;
+
+  if (normalIonWarmUpThreshold > fullIonWarmUpThreshold) {
+    setNormalIonWarmUpThreshold(fullIonWarmUpThreshold);
+  }
+}
+
+void DefaultJitOptions::resetNormalIonWarmUpThreshold() {
   jit::DefaultJitOptions defaultValues;
-  normalIonWarmUpThreshold = defaultValues.normalIonWarmUpThreshold;
+  setNormalIonWarmUpThreshold(defaultValues.normalIonWarmUpThreshold);
+}
+
+void DefaultJitOptions::resetFullIonWarmUpThreshold() {
+  jit::DefaultJitOptions defaultValues;
+  setFullIonWarmUpThreshold(defaultValues.fullIonWarmUpThreshold);
 }
 
 }  // namespace jit
