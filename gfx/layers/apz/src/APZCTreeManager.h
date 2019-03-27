@@ -741,6 +741,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       const AncestorTransform& aAncestorTransform, HitTestingTreeNode* aParent,
       HitTestingTreeNode* aNextSibling, TreeBuildingState& aState,
       wr::RenderRoot aRenderRoot);
+  template <class ScrollNode>
+  Maybe<ParentLayerIntRegion> ComputeClipRegion(const ScrollNode& aLayer);
 
   template <class ScrollNode>
   void PrintAPZCInfo(const ScrollNode& aLayer,
