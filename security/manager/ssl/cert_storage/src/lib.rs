@@ -48,7 +48,7 @@ fn make_key(prefix: &str, part_a: &[u8], part_b: &[u8]) -> Vec<u8> {
 /// `SecurityStateError` is a type to represent errors in accessing or
 /// modifying security state.
 #[derive(Debug)]
-pub struct SecurityStateError {
+struct SecurityStateError {
     message: String,
 }
 
@@ -62,16 +62,38 @@ impl<T: Display> From<T> for SecurityStateError {
     }
 }
 
-/// `SecurityState`
-pub struct SecurityState {
+struct EnvAndStore {
     env: Rkv,
     store: SingleStore,
+}
+
+/// `SecurityState`
+struct SecurityState {
+    profile_path: PathBuf,
+    env_and_store: Option<EnvAndStore>,
     int_prefs: HashMap<String, i32>,
 }
 
 impl SecurityState {
     pub fn new(profile_path: PathBuf) -> Result<SecurityState, SecurityStateError> {
-        let mut store_path = profile_path.clone();
+        // Since this gets called on the main thread, we don't actually want to open the DB yet.
+        // We do this on-demand later, when we're probably on a certificate verification thread.
+        Ok(SecurityState {
+            profile_path,
+            env_and_store: None,
+            int_prefs: HashMap::new(),
+        })
+    }
+
+    pub fn db_needs_opening(&self) -> bool {
+        self.env_and_store.is_none()
+    }
+
+    pub fn open_db(&mut self) -> Result<(), SecurityStateError> {
+        if self.env_and_store.is_some() {
+            return Ok(());
+        }
+        let mut store_path = self.profile_path.clone();
         store_path.push("security_state");
 
         create_dir_all(store_path.as_path())?;
@@ -79,28 +101,32 @@ impl SecurityState {
         let mut options = StoreOptions::create();
         options.create = true;
         let store = env.open_single("cert_storage", options)?;
-        let mut ss = SecurityState {
-            env: env,
-            store: store,
-            int_prefs: HashMap::new(),
-        };
-
-        let mut revocations_path = profile_path;
-        revocations_path.push("revocations.txt");
 
         // if the profile has a revocations.txt, migrate it and remove the file
+        let mut revocations_path = self.profile_path.clone();
+        revocations_path.push("revocations.txt");
         if revocations_path.exists() {
-            ss.migrate(&revocations_path)?;
+            SecurityState::migrate(&revocations_path, &env, &store)?;
             remove_file(revocations_path)?;
         }
-        Ok(ss)
+        // We already returned early if env_and_store was Some, so this should take the None branch.
+        match self.env_and_store.replace(EnvAndStore { env, store }) {
+            Some(_) => Err(SecurityStateError::from(
+                "env and store already initialized? (did we mess up our threading model?)",
+            )),
+            None => Ok(()),
+        }
     }
 
-    fn migrate(&mut self, revocations_path: &PathBuf) -> Result<(), SecurityStateError> {
+    fn migrate(
+        revocations_path: &PathBuf,
+        env: &Rkv,
+        store: &SingleStore,
+    ) -> Result<(), SecurityStateError> {
         let f = File::open(revocations_path)?;
         let file = BufReader::new(f);
         let value = Value::I64(nsICertStorage::STATE_ENFORCE as i64);
-        let mut writer = self.env.write()?;
+        let mut writer = env.write()?;
 
         // Add the data from revocations.txt
         let mut dn: Option<Vec<u8>> = None;
@@ -135,13 +161,13 @@ impl SecurityState {
             };
             if let Some(name) = &dn {
                 if leading_char == '\t' {
-                    let _ = self.store.put(
+                    let _ = store.put(
                         &mut writer,
                         &make_key(PREFIX_REV_SPK, name, &l_sans_prefix),
                         &value,
                     );
                 } else {
-                    let _ = self.store.put(
+                    let _ = store.put(
                         &mut writer,
                         &make_key(PREFIX_REV_IS, name, &l_sans_prefix),
                         &value,
@@ -151,21 +177,29 @@ impl SecurityState {
         }
 
         writer.commit()?;
-
         Ok(())
     }
 
     fn write_entry(&mut self, key: &[u8], value: i16) -> Result<(), SecurityStateError> {
-        let mut writer = self.env.write()?;
-        self.store
+        let env_and_store = match self.env_and_store.as_mut() {
+            Some(env_and_store) => env_and_store,
+            None => return Err(SecurityStateError::from("env and store not initialized?")),
+        };
+        let mut writer = env_and_store.env.write()?;
+        env_and_store
+            .store
             .put(&mut writer, key, &Value::I64(value as i64))?;
         writer.commit()?;
         Ok(())
     }
 
     fn read_entry(&self, key: &[u8]) -> Result<Option<i16>, SecurityStateError> {
-        let reader = self.env.read()?;
-        match self.store.get(&reader, key) {
+        let env_and_store = match self.env_and_store.as_ref() {
+            Some(env_and_store) => env_and_store,
+            None => return Err(SecurityStateError::from("env and store not initialized?")),
+        };
+        let reader = env_and_store.env.read()?;
+        match env_and_store.store.get(&reader, key) {
             Ok(Some(Value::I64(i)))
                 if i <= (std::i16::MAX as i64) && i >= (std::i16::MIN as i64) =>
             {
@@ -493,11 +527,10 @@ impl CertStorage {
             let rv = (*prefs).AddObserverImpl(pref_nscstr, self.coerce::<nsIObserver>(), false);
             match read_int_pref(pref) {
                 Ok(up) => {
-                    let mut ss = match self.security_state.write() {
-                        Err(_) => return Err(SecurityStateError::from("could not get write lock")),
-                        Ok(write_guard) => write_guard,
-                    };
-                    ss.pref_seen(pref, up)
+                    let mut ss = self.security_state.write()?;
+                    // This doesn't use the DB, so no need to open it first. (Also since we do this
+                    // upon initialization, it would defeat the purpose of lazily opening the DB.)
+                    ss.pref_seen(pref, up);
                 }
                 Err(_) => return Err(SecurityStateError::from("could not read pref")),
             };
@@ -519,6 +552,7 @@ impl CertStorage {
         let issuer_decoded = try_ns!(base64::decode(&*issuer));
         let serial_decoded = try_ns!(base64::decode(&*serial));
         let mut ss = try_ns!(self.security_state.write());
+        try_ns!(ss.open_db()); // this is a no-op if the DB is already open
         match ss.set_revocation_by_issuer_and_serial(&issuer_decoded, &serial_decoded, state) {
             Ok(_) => nserror::NS_OK,
             _ => nserror::NS_ERROR_FAILURE,
@@ -537,6 +571,7 @@ impl CertStorage {
         let subject_decoded = try_ns!(base64::decode(&*subject));
         let pub_key_decoded = try_ns!(base64::decode(&*pub_key_base64));
         let mut ss = try_ns!(self.security_state.write());
+        try_ns!(ss.open_db()); // this is a no-op if the DB is already open
         match ss.set_revocation_by_subject_and_pub_key(&subject_decoded, &pub_key_decoded, state) {
             Ok(_) => nserror::NS_OK,
             _ => nserror::NS_ERROR_FAILURE,
@@ -555,6 +590,7 @@ impl CertStorage {
         let issuer_decoded = try_ns!(base64::decode(&*issuer));
         let serial_decoded = try_ns!(base64::decode(&*serial));
         let mut ss = try_ns!(self.security_state.write());
+        try_ns!(ss.open_db()); // this is a no-op if the DB is already open
         match ss.set_enrollment(&issuer_decoded, &serial_decoded, state) {
             Ok(_) => nserror::NS_OK,
             _ => nserror::NS_ERROR_FAILURE,
@@ -573,6 +609,7 @@ impl CertStorage {
         let issuer_decoded = try_ns!(base64::decode(&*issuer));
         let serial_decoded = try_ns!(base64::decode(&*serial));
         let mut ss = try_ns!(self.security_state.write());
+        try_ns!(ss.open_db()); // this is a no-op if the DB is already open
         match ss.set_whitelist(&issuer_decoded, &serial_decoded, state) {
             Ok(_) => nserror::NS_OK,
             _ => nserror::NS_ERROR_FAILURE,
@@ -597,8 +634,27 @@ impl CertStorage {
         let serial_decoded = try_ns!(base64::decode(&*serial));
         let subject_decoded = try_ns!(base64::decode(&*subject));
         let pub_key_decoded = try_ns!(base64::decode(&*pub_key_base64));
-        let ss = try_ns!(self.security_state.read());
         *state = nsICertStorage::STATE_UNSET as i16;
+        // The following is a way to ensure the DB has been opened while minimizing lock
+        // acquisitions in the common (read-only) case. First we acquire a read lock and see if we
+        // even need to open the DB. If not, we can continue with the read lock we already have.
+        // Otherwise, we drop the read lock, acquire the write lock, open the DB, drop the write
+        // lock, and re-acquire the read lock. While it is possible for two or more threads to all
+        // come to the conclusion that they need to open the DB, this isn't ultimately an issue -
+        // `open_db` will exit early if another thread has already done the work.
+        let ss = {
+            let ss_read_only = try_ns!(self.security_state.read());
+            if !ss_read_only.db_needs_opening() {
+                ss_read_only
+            } else {
+                drop(ss_read_only);
+                {
+                    let mut ss_write = try_ns!(self.security_state.write());
+                    try_ns!(ss_write.open_db());
+                }
+                try_ns!(self.security_state.read())
+            }
+        };
         match ss.get_revocation_state(
             &issuer_decoded,
             &serial_decoded,
@@ -624,8 +680,20 @@ impl CertStorage {
         }
         let issuer_decoded = try_ns!(base64::decode(&*issuer));
         let serial_decoded = try_ns!(base64::decode(&*serial));
-        let ss = try_ns!(self.security_state.read());
         *state = nsICertStorage::STATE_UNSET as i16;
+        let ss = {
+            let ss_read_only = try_ns!(self.security_state.read());
+            if !ss_read_only.db_needs_opening() {
+                ss_read_only
+            } else {
+                drop(ss_read_only);
+                {
+                    let mut ss_write = try_ns!(self.security_state.write());
+                    try_ns!(ss_write.open_db());
+                }
+                try_ns!(self.security_state.read())
+            }
+        };
         match ss.get_enrollment_state(&issuer_decoded, &serial_decoded) {
             Ok(st) => {
                 *state = st;
@@ -646,8 +714,20 @@ impl CertStorage {
         }
         let issuer_decoded = try_ns!(base64::decode(&*issuer));
         let serial_decoded = try_ns!(base64::decode(&*serial));
-        let ss = try_ns!(self.security_state.read());
         *state = nsICertStorage::STATE_UNSET as i16;
+        let ss = {
+            let ss_read_only = try_ns!(self.security_state.read());
+            if !ss_read_only.db_needs_opening() {
+                ss_read_only
+            } else {
+                drop(ss_read_only);
+                {
+                    let mut ss_write = try_ns!(self.security_state.write());
+                    try_ns!(ss_write.open_db());
+                }
+                try_ns!(self.security_state.read())
+            }
+        };
         match ss.get_whitelist_state(&issuer_decoded, &serial_decoded) {
             Ok(st) => {
                 *state = st;
@@ -660,6 +740,7 @@ impl CertStorage {
     unsafe fn IsBlocklistFresh(&self, fresh: *mut bool) -> nserror::nsresult {
         *fresh = false;
         let ss = try_ns!(self.security_state.read());
+        // This doesn't use the db -> don't need to make sure it's open.
         *fresh = match ss.is_blocklist_fresh() {
             Ok(is_fresh) => is_fresh,
             Err(_) => false,
@@ -671,6 +752,7 @@ impl CertStorage {
     unsafe fn IsWhitelistFresh(&self, fresh: *mut bool) -> nserror::nsresult {
         *fresh = false;
         let ss = try_ns!(self.security_state.read());
+        // This doesn't use the db -> don't need to make sure it's open.
         *fresh = match ss.is_whitelist_fresh() {
             Ok(is_fresh) => is_fresh,
             Err(_) => false,
@@ -682,6 +764,7 @@ impl CertStorage {
     unsafe fn IsEnrollmentFresh(&self, fresh: *mut bool) -> nserror::nsresult {
         *fresh = false;
         let ss = try_ns!(self.security_state.read());
+        // This doesn't use the db -> don't need to make sure it's open.
         *fresh = match ss.is_enrollment_fresh() {
             Ok(is_fresh) => is_fresh,
             Err(_) => false,
@@ -727,6 +810,7 @@ impl CertStorage {
                 }
 
                 let mut ss = try_ns!(self.security_state.write());
+                // This doesn't use the db -> don't need to make sure it's open.
                 ss.pref_seen(name_string.as_str_unchecked(), pref_value);
             }
             _ => (),
