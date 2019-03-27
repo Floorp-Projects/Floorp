@@ -330,6 +330,7 @@ SPConsoleListener.prototype = {
   observe(msg, topic) {
     let m = { message: msg.message,
               errorMessage: null,
+              cssSelectors: null,
               sourceName: null,
               sourceLine: null,
               lineNumber: null,
@@ -343,6 +344,7 @@ SPConsoleListener.prototype = {
               isStrict: false };
     if (msg instanceof Ci.nsIScriptError) {
       m.errorMessage  = msg.errorMessage;
+      m.cssSelectors  = msg.cssSelectors;
       m.sourceName    = msg.sourceName;
       m.sourceLine    = msg.sourceLine;
       m.lineNumber    = msg.lineNumber;
