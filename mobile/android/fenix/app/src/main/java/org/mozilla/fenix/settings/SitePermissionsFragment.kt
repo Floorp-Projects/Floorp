@@ -6,11 +6,19 @@ package org.mozilla.fenix.settings
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.Navigation
 import androidx.preference.Preference
+import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
 import org.jetbrains.anko.support.v4.defaultSharedPreferences
 import org.mozilla.fenix.R
+import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature
+import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature.NOTIFICATION
+import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature.LOCATION
+import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature.CAMERA
+import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature.MICROPHONE
 
+@SuppressWarnings("TooManyFunctions")
 class SitePermissionsFragment : PreferenceFragmentCompat() {
 
     private lateinit var categoryPhoneFeatures: Preference
@@ -19,7 +27,6 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        (activity as AppCompatActivity).title = getString(R.string.preferences_site_permissions)
         (activity as AppCompatActivity).supportActionBar?.show()
     }
 
@@ -53,7 +60,7 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
         radioCustomSettings = requireNotNull(findPreference(keyCustomSettings))
 
         radioCustomSettings.onClickListener {
-            toggleCategoryPhoneFeatureVisibility()
+            categoryPhoneFeatures.isVisible = true
         }
     }
 
@@ -62,7 +69,7 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
         radioRecommendSettings = requireNotNull(findPreference(keyRecommendSettings))
 
         radioRecommendSettings.onClickListener {
-            toggleCategoryPhoneFeatureVisibility()
+            categoryPhoneFeatures.isVisible = false
         }
     }
 
@@ -75,9 +82,33 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
         if (isCategoryActivate) {
             categoryPhoneFeatures.isVisible = true
         }
+        initPhoneFeature(CAMERA)
+        initPhoneFeature(LOCATION)
+        initPhoneFeature(MICROPHONE)
+        initPhoneFeature(NOTIFICATION)
     }
 
-    private fun toggleCategoryPhoneFeatureVisibility() {
-        categoryPhoneFeatures.isVisible = !categoryPhoneFeatures.isVisible
+    private fun initPhoneFeature(phoneFeature: PhoneFeature) {
+        val keyPreference = getPreferenceKeyBy(phoneFeature)
+        val cameraPhoneFeatures: Preference = requireNotNull(findPreference(keyPreference))
+
+        cameraPhoneFeatures.onPreferenceClickListener = OnPreferenceClickListener {
+            navigateToPhoneFeature(phoneFeature)
+            true
+        }
+    }
+
+    private fun getPreferenceKeyBy(phoneFeature: PhoneFeature): String {
+        return when (phoneFeature) {
+            CAMERA -> getString(R.string.pref_key_phone_feature_camera)
+            LOCATION -> getString(R.string.pref_key_phone_feature_location)
+            MICROPHONE -> getString(R.string.pref_key_phone_feature_microphone)
+            NOTIFICATION -> getString(R.string.pref_key_phone_feature_notification)
+        }
+    }
+
+    private fun navigateToPhoneFeature(phoneFeature: PhoneFeature) {
+        val directions = SitePermissionsFragmentDirections.actionSitePermissionsToManagePhoneFeatures(phoneFeature.id)
+        Navigation.findNavController(view!!).navigate(directions)
     }
 }

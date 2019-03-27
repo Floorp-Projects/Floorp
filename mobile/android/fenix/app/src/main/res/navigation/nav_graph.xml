@@ -47,6 +47,15 @@
     </fragment>
 
     <fragment
+        android:id="@+id/SitePermissionsManagePhoneFeature"
+        android:name="org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature"
+        tools:layout="@layout/fragment_manage_site_permissions_feature_phone">
+        <argument
+            android:name="permission"
+            app:argType="integer"/>
+    </fragment>
+
+    <fragment
         android:id="@+id/browserFragment"
         android:name="org.mozilla.fenix.browser.BrowserFragment"
         tools:layout="@layout/fragment_browser">
@@ -112,9 +121,17 @@
     </fragment>
     <fragment android:id="@+id/dataChoicesFragment" android:name="org.mozilla.fenix.settings.DataChoicesFragment"
               android:label="DataChoicesFragment"/>
-    <fragment android:id="@+id/sitePermissionsFragment"
-              android:name="org.mozilla.fenix.settings.SitePermissionsFragment"
-              android:label="SitePermissionsFragment"/>
+    <fragment
+        android:id="@+id/sitePermissionsFragment"
+        android:name="org.mozilla.fenix.settings.SitePermissionsFragment"
+        android:label="@string/preferences_site_permissions">
+
+        <action
+            android:id="@+id/action_site_permissions_to_manage_phone_features"
+            app:destination="@id/SitePermissionsManagePhoneFeature"
+            app:popUpTo="@id/sitePermissionsFragment"/>
+    </fragment>
+
     <fragment android:id="@+id/accessibilityFragment" android:name="org.mozilla.fenix.settings.AccessibilityFragment"
               android:label="AccessibilityFragment"/>
     <fragment android:id="@+id/accountSettingsFragment" android:name="org.mozilla.fenix.settings.AccountSettingsFragment"

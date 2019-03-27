@@ -26,4 +26,5 @@
     <dimen name="radio_button_preference_horizontal">16dp</dimen>
     <dimen name="radio_button_preference_drawable_padding">16dp</dimen>
     <dimen name="radio_button_preference_vertical">12dp</dimen>
+    <dimen name="phone_feature_label_recommended_text_size">14sp</dimen>
 </resources>

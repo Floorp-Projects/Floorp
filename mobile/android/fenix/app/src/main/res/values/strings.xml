@@ -170,8 +170,18 @@
     <string name="preference_phone_feature_location">Location</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Notification</string>
-    <!-- Preference option for altering the notification access for all websites -->
+    <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Ask to allow</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_block">Block</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Blocked by Android</string>
+    <!-- Alternative explanation label that is shown when a permissions like (camera,location and microphone) is required, this indicate to the user how to enable the permission via Android settings %1$s indicate the name of the permission (camera,location and microphone)  -->
+    <string name="phone_feature_blocked_by_android_explanation">To allow it: &lt;br/&gt;&lt;br/&gt; 1. Go to Android Settings &lt;br/&gt;&lt;br/&gt;2. Tap &lt;b&gt;Permissions&lt;/b&gt; &lt;br/&gt;&lt;br/&gt; 3. Toggle &lt;b&gt;%1$s&lt;/b&gt; to ON</string>
+    <!--Label that indicates that this option it the recommended one-->
+    <string name="phone_feature_recommended">Recommended</string>
+    <!--Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Go to Settings</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->

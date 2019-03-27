@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_marginTop="@dimen/radio_button_preference_vertical">
+
+    <RadioGroup
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/ask_to_allow_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/preference_option_phone_feature_ask_to_allow"
+            android:textAppearance="?android:attr/textAppearanceListItem"
+            android:background="?android:attr/selectableItemBackground"
+            android:button="@null"
+            android:drawableStart="?android:attr/listChoiceIndicatorSingle"
+            android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
+            android:paddingTop="@dimen/radio_button_preference_vertical"
+            android:paddingStart="@dimen/radio_button_preference_horizontal"
+            android:paddingEnd="@dimen/radio_button_preference_horizontal"
+            android:paddingBottom="@dimen/radio_button_preference_vertical"/>
+
+        <RadioButton
+            android:id="@+id/block_switch"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/radio_button_preference_height"
+            android:text="@string/preference_option_phone_feature_block"
+            android:textAppearance="?android:attr/textAppearanceListItem"
+            android:background="?android:attr/selectableItemBackground"
+            android:button="@null"
+            android:drawableStart="?android:attr/listChoiceIndicatorSingle"
+            android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
+            android:paddingTop="@dimen/radio_button_preference_vertical"
+            android:paddingStart="@dimen/radio_button_preference_horizontal"
+            android:paddingEnd="@dimen/radio_button_preference_horizontal"
+            android:paddingBottom="@dimen/radio_button_preference_vertical"/>
+    </RadioGroup>
+
+    <LinearLayout
+        android:id="@+id/permissions_blocked_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="32dp"
+        android:paddingStart="@dimen/radio_button_preference_horizontal"
+        android:paddingEnd="@dimen/radio_button_preference_horizontal"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceListItem"
+            android:text="@string/phone_feature_blocked_by_android"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/blocked_by_android_explanation_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceListItemSmall"
+            android:text="@string/phone_feature_blocked_by_android_explanation"/>
+
+        <Button
+            android:id="@+id/settings_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/SitePermissionButton"
+            android:text="@string/phone_feature_go_to_settings"
+            android:layout_marginTop="24dp"/>
+
+    </LinearLayout>
+</LinearLayout>
+
