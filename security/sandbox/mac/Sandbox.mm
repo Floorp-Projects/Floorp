@@ -188,10 +188,6 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage) {
     params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
     params.push_back("APP_PATH");
     params.push_back(aInfo.appPath.c_str());
-    params.push_back("PLUGIN_BINARY_PATH");
-    params.push_back(aInfo.pluginInfo.pluginBinaryPath.c_str());
-    params.push_back("APP_BINARY_PATH");
-    params.push_back(aInfo.appBinaryPath.c_str());
   } else if (aInfo.type == MacSandboxType_Plugin) {
     profile = const_cast<char *>(SandboxPolicyGMP);
     params.push_back("SHOULD_LOG");
