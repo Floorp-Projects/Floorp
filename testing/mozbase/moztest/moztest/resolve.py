@@ -87,6 +87,13 @@ TEST_SUITES = {
         'task_regex': ['mochitest-browser-chrome($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
+    'mochitest-browser-clipboard': {
+        'aliases': ('cl', 'clipboard',),
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'browser-chrome', 'subsuite': 'clipboard', 'test_paths': None},
+        'task_regex': ['mochitest-clipboard($|.*(-1|[^0-9])$)',
+                       'test-verify($|.*(-1|[^0-9])$)'],
+    },
     'mochitest-chrome': {
         'aliases': ('mc',),
         'mach_command': 'mochitest',
@@ -94,11 +101,18 @@ TEST_SUITES = {
         'task_regex': ['mochitest-chrome($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
-    'mochitest-clipboard': {
+    'mochitest-chrome-clipboard': {
         'aliases': ('cl', 'clipboard',),
         'mach_command': 'mochitest',
-        'kwargs': {'subsuite': 'clipboard', 'test_paths': None},
+        'kwargs': {'flavor': 'chrome', 'subsuite': 'clipboard', 'test_paths': None},
         'task_regex': ['mochitest-clipboard($|.*(-1|[^0-9])$)',
+                       'test-verify($|.*(-1|[^0-9])$)'],
+    },
+    'mochitest-chrome-gpu': {
+        'aliases': ('gpu',),
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'chrome', 'subsuite': 'gpu', 'test_paths': None},
+        'task_regex': ['mochitest-gpu($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
     'mochitest-devtools': {
@@ -106,13 +120,6 @@ TEST_SUITES = {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'browser-chrome', 'subsuite': 'devtools', 'test_paths': None},
         'task_regex': ['mochitest-devtools-chrome($|.*(-1|[^0-9])$)',
-                       'test-verify($|.*(-1|[^0-9])$)'],
-    },
-    'mochitest-gpu': {
-        'aliases': ('gpu',),
-        'mach_command': 'mochitest',
-        'kwargs': {'subsuite': 'gpu', 'test_paths': None},
-        'task_regex': ['mochitest-gpu($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
     'mochitest-media': {
@@ -127,6 +134,20 @@ TEST_SUITES = {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'plain', 'test_paths': None},
         'task_regex': ['mochitest(?!-a11y|-browser|-chrome|-clip|-devtools|-gpu|-media|-screen)($|.*(-1|[^0-9])$)',  # noqa
+                       'test-verify($|.*(-1|[^0-9])$)'],
+    },
+    'mochitest-plain-clipboard': {
+        'aliases': ('cl', 'clipboard',),
+        'mach_command': 'mochitest',
+        'kwargs': {'subsuite': 'clipboard', 'test_paths': None},
+        'task_regex': ['mochitest-clipboard($|.*(-1|[^0-9])$)',
+                       'test-verify($|.*(-1|[^0-9])$)'],
+    },
+    'mochitest-plain-gpu': {
+        'aliases': ('gpu',),
+        'mach_command': 'mochitest',
+        'kwargs': {'subsuite': 'gpu', 'test_paths': None},
+        'task_regex': ['mochitest-gpu($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
     'mochitest-screenshots': {
@@ -229,14 +250,14 @@ _test_flavors = {
 }
 
 _test_subsuites = {
-    ('browser-chrome', 'clipboard'): 'mochitest-clipboard',
+    ('browser-chrome', 'clipboard'): 'mochitest-browser-clipboard',
     ('browser-chrome', 'devtools'): 'mochitest-devtools',
-    ('browser-chrome', 'gpu'): 'mochitest-gpu',
+    ('browser-chrome', 'gpu'): 'mochitest-browser-gpu',
     ('browser-chrome', 'screenshots'): 'mochitest-screenshots',
-    ('chrome', 'clipboard'): 'mochitest-clipboard',
-    ('chrome', 'gpu'): 'mochitest-gpu',
-    ('mochitest', 'clipboard'): 'mochitest-clipboard',
-    ('mochitest', 'gpu'): 'mochitest-gpu',
+    ('chrome', 'clipboard'): 'mochitest-chrome-clipboard',
+    ('chrome', 'gpu'): 'mochitest-chrome-gpu',
+    ('mochitest', 'clipboard'): 'mochitest-plain-clipboard',
+    ('mochitest', 'gpu'): 'mochitest-plain-gpu',
     ('mochitest', 'media'): 'mochitest-media',
     ('mochitest', 'robocop'): 'robocop',
     ('mochitest', 'webgl1-core'): 'mochitest-webgl1-core',
