@@ -268,6 +268,9 @@
 #    include "mozilla/SandboxBroker.h"
 #    include "mozilla/SandboxBrokerPolicyFactory.h"
 #  endif
+#  if defined(XP_MACOSX)
+#    include "mozilla/Sandbox.h"
+#  endif
 #endif
 
 #ifdef MOZ_TOOLKIT_SEARCH
@@ -1905,7 +1908,7 @@ void ContentParent::AppendDynamicSandboxParams(
     std::vector<std::string>& aArgs) {
   // For file content processes
   if (GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE)) {
-    aArgs.push_back("-sbAllowFileAccess");
+    MacSandboxInfo::AppendFileAccessParam(aArgs, true);
   }
 }
 
@@ -1917,33 +1920,25 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
   // be starting with an empty list of parameters.
   MOZ_ASSERT(aCachedParams.empty());
 
-  // Indicates the child should startup the sandbox
-  aCachedParams.push_back("-sbStartup");
-
-  // The content sandbox level
-  int contentSandboxLevel =
-      Preferences::GetInt("security.sandbox.content.level");
-  std::ostringstream os;
-  os << contentSandboxLevel;
-  std::string contentSandboxLevelString = os.str();
-  aCachedParams.push_back("-sbLevel");
-  aCachedParams.push_back(contentSandboxLevelString);
+  MacSandboxInfo info;
+  info.type = MacSandboxType_Content;
+  info.level = GetEffectiveContentSandboxLevel();
 
   // Sandbox logging
   if (Preferences::GetBool("security.sandbox.logging.enabled") ||
       PR_GetEnv("MOZ_SANDBOX_LOGGING")) {
-    aCachedParams.push_back("-sbLogging");
+    info.shouldLog = true;
   }
 
   // Audio access
   if (!Preferences::GetBool("media.cubeb.sandbox")) {
-    aCachedParams.push_back("-sbAllowAudio");
+    info.hasAudio = true;
   }
 
   // Windowserver access
   if (!Preferences::GetBool(
           "security.sandbox.content.mac.disconnect-windowserver")) {
-    aCachedParams.push_back("-sbAllowWindowServer");
+    info.hasWindowServer = true;
   }
 
   // .app path (normalized)
@@ -1951,16 +1946,14 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
   if (!nsMacUtilsImpl::GetAppPath(appPath)) {
     MOZ_CRASH("Failed to get app dir paths");
   }
-  aCachedParams.push_back("-sbAppPath");
-  aCachedParams.push_back(appPath.get());
+  info.appPath = appPath.get();
 
   // TESTING_READ_PATH1
   nsAutoCString testingReadPath1;
   Preferences::GetCString("security.sandbox.content.mac.testing_read_path1",
                           testingReadPath1);
   if (!testingReadPath1.IsEmpty()) {
-    aCachedParams.push_back("-sbTestingReadPath");
-    aCachedParams.push_back(testingReadPath1.get());
+    info.testingReadPath1 = testingReadPath1.get();
   }
 
   // TESTING_READ_PATH2
@@ -1968,8 +1961,7 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
   Preferences::GetCString("security.sandbox.content.mac.testing_read_path2",
                           testingReadPath2);
   if (!testingReadPath2.IsEmpty()) {
-    aCachedParams.push_back("-sbTestingReadPath");
-    aCachedParams.push_back(testingReadPath2.get());
+    info.testingReadPath2 = testingReadPath2.get();
   }
 
   // TESTING_READ_PATH3, TESTING_READ_PATH4. In development builds,
@@ -1984,8 +1976,7 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
     }
     nsCString repoDirPath;
     Unused << repoDir->GetNativePath(repoDirPath);
-    aCachedParams.push_back("-sbTestingReadPath");
-    aCachedParams.push_back(repoDirPath.get());
+    info.testingReadPath3 = repoDirPath.get();
 
     // Object dir
     nsCOMPtr<nsIFile> objDir;
@@ -1995,8 +1986,7 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
     }
     nsCString objDirPath;
     Unused << objDir->GetNativePath(objDirPath);
-    aCachedParams.push_back("-sbTestingReadPath");
-    aCachedParams.push_back(objDirPath.get());
+    info.testingReadPath4 = objDirPath.get();
   }
 
   // DEBUG_WRITE_DIR
@@ -2010,10 +2000,11 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
     // of that path.
     nsAutoCString bloatDirectoryPath =
         nsMacUtilsImpl::GetDirectoryPath(bloatLog);
-    aCachedParams.push_back("-sbDebugWriteDir");
-    aCachedParams.push_back(bloatDirectoryPath.get());
+    info.debugWriteDir = bloatDirectoryPath.get();
   }
 #  endif  // DEBUG
+
+  info.AppendAsParams(aCachedParams);
 }
 
 // Append sandboxing command line parameters.
