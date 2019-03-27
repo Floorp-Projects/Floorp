@@ -14,6 +14,7 @@ job-defaults:
             windows10-64-ux: ['try', 'mozilla-central']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             android-hw-.*-api-16/opt: ['try']
+            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['try', 'trunk', 'mozilla-beta']
     tier:
         by-test-platform:
