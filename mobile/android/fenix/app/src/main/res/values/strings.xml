@@ -124,7 +124,7 @@
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Data choices</string>
     <!-- Preference for developers -->
-    <string name="preference_leakcanary">Leak Canary</string>
+    <string name="preference_leakcanary">LeakCanary</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">Developer tools</string>
     <!-- Preference for developers -->
