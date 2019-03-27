@@ -83,6 +83,7 @@ struct DefaultJitOptions {
 #endif
   uint32_t baselineWarmUpThreshold;
   uint32_t normalIonWarmUpThreshold;
+  uint32_t fullIonWarmUpThreshold;
   uint32_t exceptionBailoutThreshold;
   uint32_t frequentBailoutThreshold;
   uint32_t maxStackArgs;
@@ -114,8 +115,10 @@ struct DefaultJitOptions {
   DefaultJitOptions();
   bool isSmallFunction(JSScript* script) const;
   void setEagerIonCompilation();
-  void setCompilerWarmUpThreshold(uint32_t warmUpThreshold);
-  void resetCompilerWarmUpThreshold();
+  void setNormalIonWarmUpThreshold(uint32_t warmUpThreshold);
+  void setFullIonWarmUpThreshold(uint32_t warmUpThreshold);
+  void resetNormalIonWarmUpThreshold();
+  void resetFullIonWarmUpThreshold();
   void enableGvn(bool val);
 
   bool eagerIonCompilation() const {
