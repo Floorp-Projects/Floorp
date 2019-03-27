@@ -128,6 +128,7 @@ linux64-rust-android-1.33:
             '--channel', '1.33.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'armv7-linux-androideabi',
             '--target', 'thumbv7neon-linux-androideabi',
             '--target', 'aarch64-linux-android',
             '--target', 'i686-linux-android',
