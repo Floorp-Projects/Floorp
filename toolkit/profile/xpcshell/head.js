@@ -169,7 +169,7 @@ function writeProfilesIni(profileData) {
                 getService(Ci.nsIINIParserFactory);
   let ini = factory.createINIParser().QueryInterface(Ci.nsIINIParserWriter);
 
-  const { options = {}, profiles = [], installs = null } = profileData;
+  const { options = {}, profiles = [] } = profileData;
 
   let { startWithLastProfile = true } = options;
   ini.setString("General", "StartWithLastProfile", startWithLastProfile ? "1" : "0");
@@ -185,21 +185,6 @@ function writeProfilesIni(profileData) {
     if (profile.default) {
       ini.setString(section, "Default", "1");
     }
-  }
-
-  if (installs) {
-    ini.setString("General", "Version", "2");
-
-    for (let hash of Object.keys(installs)) {
-      ini.setString(`Install${hash}`, "Default", installs[hash].default);
-      if ("locked" in installs[hash]) {
-        ini.setString(`Install${hash}`, "Locked", installs[hash].locked ? "1" : "0");
-      }
-    }
-
-    writeInstallsIni({ installs });
-  } else {
-    writeInstallsIni(null);
   }
 
   ini.writeFile(target);
@@ -220,7 +205,6 @@ function readProfilesIni() {
       startWithLastProfile: true,
     },
     profiles: [],
-    installs: null,
   };
 
   if (!target.exists()) {
@@ -232,52 +216,29 @@ function readProfilesIni() {
   let ini = factory.createINIParser(target);
 
   profileData.options.startWithLastProfile = safeGet(ini, "General", "StartWithLastProfile") == "1";
-  if (safeGet(ini, "General", "Version") == "2") {
-    profileData.installs = {};
-  }
 
-  let sections = ini.getSections();
-  while (sections.hasMore()) {
-    let section = sections.getNext();
+  for (let i = 0; true; i++) {
+    let section = `Profile${i}`;
 
-    if (section == "General") {
-      continue;
+    let isRelative = safeGet(ini, section, "IsRelative");
+    if (isRelative === null) {
+      break;
+    }
+    Assert.equal(isRelative, "1", "Paths should always be relative in these tests.");
+
+    let profile = {
+      name: safeGet(ini, section, "Name"),
+      path: safeGet(ini, section, "Path"),
+    };
+
+    try {
+      profile.default = ini.getString(section, "Default") == "1";
+      Assert.ok(profile.default, "The Default value is only written when true.");
+    } catch (e) {
+      profile.default = false;
     }
 
-    if (section.startsWith("Profile")) {
-      let isRelative = safeGet(ini, section, "IsRelative");
-      if (isRelative === null) {
-        break;
-      }
-      Assert.equal(isRelative, "1", "Paths should always be relative in these tests.");
-
-      let profile = {
-        name: safeGet(ini, section, "Name"),
-        path: safeGet(ini, section, "Path"),
-      };
-
-      try {
-        profile.default = ini.getString(section, "Default") == "1";
-        Assert.ok(profile.default, "The Default value is only written when true.");
-      } catch (e) {
-        profile.default = false;
-      }
-
-      profileData.profiles.push(profile);
-    }
-
-    if (section.startsWith("Install")) {
-      Assert.ok(profileData.installs, "Should only see an install section if the ini version was correct.");
-
-      profileData.installs[section.substring(7)] = {
-        default: safeGet(ini, section, "Default"),
-      };
-
-      let locked = safeGet(ini, section, "Locked");
-      if (locked !== null) {
-        profileData.installs[section.substring(7)].locked = locked;
-      }
-    }
+    profileData.profiles.push(profile);
   }
 
   profileData.profiles.sort((a, b) => a.name.localeCompare(b.name));
@@ -293,14 +254,6 @@ function readProfilesIni() {
 function writeInstallsIni(installData) {
   let target = gDataHome.clone();
   target.append("installs.ini");
-
-  if (!installData) {
-    try {
-      target.remove(false);
-    } catch (e) {
-    }
-    return;
-  }
 
   const { installs = {} } = installData;
 
@@ -330,7 +283,6 @@ function readInstallsIni() {
   };
 
   if (!target.exists()) {
-    dump("Missing installs.ini\n");
     return installData;
   }
 
@@ -344,12 +296,8 @@ function readInstallsIni() {
     if (hash != "General") {
       installData.installs[hash] = {
         default: safeGet(ini, hash, "Default"),
+        locked: safeGet(ini, hash, "Locked") == 1,
       };
-
-      let locked = safeGet(ini, hash, "Locked");
-      if (locked !== null) {
-        installData.installs[hash].locked = locked;
-      }
     }
   }
 
@@ -357,24 +305,10 @@ function readInstallsIni() {
 }
 
 /**
- * Check that the backup data in installs.ini matches the install data in
- * profiles.ini.
- */
-function checkBackup(profileData = readProfilesIni(), installData = readInstallsIni()) {
-  if (!profileData.installs) {
-    // If the profiles db isn't of the right version we wouldn't expect the
-    // backup to be accurate.
-    return;
-  }
-
-  Assert.deepEqual(profileData.installs, installData.installs, "Backup installs.ini should match installs in profiles.ini");
-}
-
-/**
  * Checks that the profile service seems to have the right data in it compared
  * to profile and install data structured as in the above functions.
  */
-function checkProfileService(profileData = readProfilesIni(), verifyBackup = true) {
+function checkProfileService(profileData = readProfilesIni(), installData = readInstallsIni()) {
   let service = getProfileService();
 
   let serviceProfiles = Array.from(service.profiles);
@@ -386,8 +320,7 @@ function checkProfileService(profileData = readProfilesIni(), verifyBackup = tru
   profileData.profiles.sort((a, b) => a.name.localeCompare(b.name));
 
   let hash = xreDirProvider.getInstallHash();
-  let defaultPath = (profileData.installs && hash in profileData.installs) ?
-                    profileData.installs[hash].default : null;
+  let defaultPath = hash in installData.installs ? installData.installs[hash].default : null;
   let dedicatedProfile = null;
   let snapProfile = null;
 
@@ -418,10 +351,6 @@ function checkProfileService(profileData = readProfilesIni(), verifyBackup = tru
     Assert.equal(service.defaultProfile, snapProfile, "Should have seen the right profile selected.");
   } else {
     Assert.equal(service.defaultProfile, dedicatedProfile, "Should have seen the right profile selected.");
-  }
-
-  if (verifyBackup) {
-    checkBackup(profileData);
   }
 }
 
