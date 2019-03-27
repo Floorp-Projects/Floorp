@@ -10,8 +10,10 @@ from __future__ import print_function
 
 import argparse
 import os
+import sys
 import taskcluster
 
+from lib import build_variants
 from lib.tasks import TaskBuilder, schedule_task_graph
 from lib.util import (
     populate_chain_of_trust_task_graph,
@@ -36,6 +38,39 @@ BUILDER = TaskBuilder(
     scheduler_id=os.environ.get('SCHEDULER_ID', 'taskcluster-github'),
     tasks_priority=os.environ.get('TASKS_PRIORITY'),
 )
+
+
+def pr_or_push():
+    if SKIP_TASKS_TRIGGER in PR_TITLE:
+        print("Pull request title contains", SKIP_TASKS_TRIGGER)
+        print("Exit")
+        exit(0)
+
+    print("Fetching build variants from gradle")
+    variants = build_variants.from_gradle()
+
+    if len(variants) == 0:
+        print("Could not get build variants from gradle")
+        sys.exit(2)
+
+    print("Got variants: {}".format(' '.join(variants)))
+
+    build_tasks = {}
+    other_tasks = {}
+
+    for variant in variants:
+        build_tasks[taskcluster.slugId()] = BUILDER.craft_assemble_task(variant)
+        build_tasks[taskcluster.slugId()] = BUILDER.craft_test_task(variant)
+
+    for craft_function in (
+        BUILDER.craft_detekt_task,
+        BUILDER.craft_ktlint_task,
+        BUILDER.craft_lint_task,
+        BUILDER.craft_compare_locales_task,
+    ):
+        other_tasks[taskcluster.slugId()] = craft_function()
+
+    return (build_tasks, other_tasks)
 
 
 def nightly(apks, track, commit, date_string):
@@ -99,8 +134,7 @@ if __name__ == "__main__":
     command = result.command
 
     if command == 'pr-or-push':
-        # TODO
-        ordered_groups_of_tasks = {}
+        ordered_groups_of_tasks = pr_or_push()
     elif command == 'release':
         apks = ["{}/{}".format(result.output, apk) for apk in result.apks]
         # nightly(apks, result.track, result.commit, result.date)

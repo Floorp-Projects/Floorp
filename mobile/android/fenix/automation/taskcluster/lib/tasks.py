@@ -70,7 +70,7 @@ class TaskBuilder(object):
         ]
 
         return self._craft_build_ish_task(
-            name='Fenix - Build task',
+            name='Build task',
             description='Build Fenix from source code',
             command=command,
             scopes=[
@@ -79,6 +79,60 @@ class TaskBuilder(object):
             artifacts=artifacts,
             routes=routes,
             is_staging=is_staging,
+        )
+
+    def craft_assemble_task(self, variant):
+        return self._craft_gradle_clean_task(
+            name='assemble: {}'.format(variant),
+            description='Building and testing variant {}'.format(variant),
+            gradle_task='assemble{}'.format(variant.capitalize()),
+            artifacts=_craft_artifacts_from_variant(variant),
+        )
+
+    def craft_test_task(self, variant):
+        return self._craft_gradle_clean_task(
+            name='test: {}'.format(variant),
+            description='Building and testing variant {}'.format(variant),
+            gradle_task='test{}UnitTest'.format(variant.capitalize()),
+        )
+
+    def craft_detekt_task(self):
+        return self._craft_gradle_clean_task(
+            name='detekt',
+            description='Running detekt over all modules',
+            gradle_task='detekt'
+        )
+
+    def craft_ktlint_task(self):
+        return self._craft_gradle_clean_task(
+            name='ktlint',
+            description='Running ktlint over all modules',
+            gradle_task='ktlint'
+        )
+
+    def craft_lint_task(self):
+        return self._craft_gradle_clean_task(
+            name='lint',
+            description='Running ktlint over all modules',
+            gradle_task='lint'
+        )
+
+    def _craft_gradle_clean_task(self, name, description, gradle_task, artifacts=None):
+        return self._craft_build_ish_task(
+            name=name,
+            description=description,
+            command='./gradlew --no-daemon clean {}'.format(gradle_task),
+            artifacts=artifacts,
+        )
+
+    def craft_compare_locales_task(self):
+        return self._craft_build_ish_task(
+            name='compare-locales',
+            description='Validate strings.xml with compare-locales',
+            command=(
+                'pip install "compare-locales>=5.0.2,<6.0" && '
+                'compare-locales --validate l10n.toml .'
+            )
         )
 
     def _craft_build_ish_task(
@@ -155,7 +209,7 @@ class TaskBuilder(object):
             "scopes": scopes,
             "payload": payload,
             "metadata": {
-                "name": name,
+                "name": "Fenix - {}".format(name),
                 "description": description,
                 "owner": self.owner,
                 "source": self.source,
@@ -198,7 +252,7 @@ class TaskBuilder(object):
                     'dep-signing' if is_staging else 'release-signing'
                 )
             ],
-            name="Fenix - Signing task",
+            name="Signing task",
             description="Sign release builds of Fenix",
             payload=payload
         )
@@ -228,10 +282,63 @@ class TaskBuilder(object):
                     ':dep' if is_staging else ''
                 )
             ],
-            name="Fenix - Push task",
+            name="Push task",
             description="Upload signed release builds of Fenix to Google Play",
             payload=payload
         )
+
+
+def _craft_artifacts_from_variant(variant):
+    return {
+        'public/target.apk': {
+            'type': 'file',
+            'path': _craft_apk_full_path_from_variant(variant),
+            'expires': taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
+        }
+    }
+
+
+def _craft_apk_full_path_from_variant(variant):
+    architecture, build_type = _get_architecture_and_build_type_from_variant(variant)
+
+    short_variant = variant[:-len(build_type)]
+    postfix = '-unsigned' if build_type == 'release' else ''
+    product = '{}{}'.format(product[0].lower(), product[1:])
+
+    return '/opt/fenix/app/build/outputs/apk/{short_variant}/{build_type}/app-{architecture}-{product}-{build_type}{postfix}.apk'.format(     # noqa: E501
+        architecture=architecture,
+        build_type=build_type,
+        product=product,
+        short_variant=short_variant,
+        postfix=postfix
+    )
+
+
+def _get_architecture_and_build_type_from_variant(variant):
+    variant = variant.lower()
+
+    architecture = None
+    if 'aarch64' in variant:
+        architecture = 'aarch64'
+    elif 'x86' in variant:
+        architecture = 'x86'
+    elif 'arm' in variant:
+        architecture = 'arm'
+
+    build_type = None
+    if variant.endswith('debug'):
+        build_type = 'debug'
+    elif variant.endswith('release'):
+        build_type = 'release'
+
+    if not architecture or not build_type:
+        raise ValueError(
+            'Unsupported variant "{}". Found architecture, build_type: {}'.format(
+                variant, (architecture, build_type)
+            )
+        )
+
+    return architecture, build_type
 
 
 def schedule_task(queue, taskId, task):
