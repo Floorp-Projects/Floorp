@@ -865,6 +865,7 @@ nsContextMenu.prototype = {
     openLinkIn(gContextMenuContentData.docLocation, "tab",
                { charset: gContextMenuContentData.charSet,
                  triggeringPrincipal: this.browser.contentPrincipal,
+                 csp: this.browser.csp,
                  referrerInfo: gContextMenuContentData.frameReferrerInfo });
   },
 
@@ -880,6 +881,7 @@ nsContextMenu.prototype = {
     openLinkIn(gContextMenuContentData.docLocation, "window",
                { charset: gContextMenuContentData.charSet,
                  triggeringPrincipal: this.browser.contentPrincipal,
+                 csp: this.browser.csp,
                  referrerInfo: gContextMenuContentData.frameReferrerInfo });
   },
 
@@ -951,6 +953,7 @@ nsContextMenu.prototype = {
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
     openUILink(this.imageDescURL, e, { referrerInfo: gContextMenuContentData.referrerInfo,
                                        triggeringPrincipal: this.principal,
+                                       csp: this.csp,
     });
   },
 
@@ -997,6 +1000,7 @@ nsContextMenu.prototype = {
       openUILink(this.mediaURL, e, { referrerInfo,
                                      forceAllowDataURI: true,
                                      triggeringPrincipal: this.principal,
+                                     csp: this.csp,
       });
     }
   },
@@ -1053,6 +1057,7 @@ nsContextMenu.prototype = {
 
     openUILink(this.bgImageURL, e, { referrerInfo: gContextMenuContentData.referrerInfo,
                                      triggeringPrincipal: this.principal,
+                                     csp: this.csp,
     });
   },
 
@@ -1526,6 +1531,7 @@ nsContextMenu.prototype = {
     // Store searchTerms in context menu item so we know what to search onclick
     menuItem.searchTerms = selectedText;
     menuItem.principal = this.principal;
+    menuItem.csp = this.csp;
 
     // Copied to alert.js' prefillAlertInfo().
     // If the JS character after our truncation point is a trail surrogate,
