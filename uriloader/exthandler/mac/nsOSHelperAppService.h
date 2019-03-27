@@ -26,20 +26,13 @@ class nsOSHelperAppService : public nsExternalHelperAppService {
   NS_IMETHOD GetApplicationDescription(const nsACString& aScheme,
                                        nsAString& _retval) override;
 
-  // method overrides --> used to hook the mime service into internet config....
-  NS_IMETHOD GetFromTypeAndExtension(const nsACString& aType,
-                                     const nsACString& aFileExt,
-                                     nsIMIMEInfo** aMIMEInfo) override;
-  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType,
-                                                  const nsACString& aFileExt,
-                                                  bool* aFound) override;
+  nsresult GetMIMEInfoFromOS(const nsACString& aMIMEType,
+                             const nsACString& aFileExt, bool* aFound,
+                             nsIMIMEInfo** aMIMEInfo) override;
+
   NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString& aScheme,
                                           bool* found,
                                           nsIHandlerInfo** _retval) override;
-
-  // override so we can have a child process sandbox-friendly implementation
-  bool GetMIMETypeFromOSForExtension(const nsACString& aExtension,
-                                     nsACString& aMIMEType) override;
 
   // GetFileTokenForPath must be implemented by each platform.
   // platformAppPath --> a platform specific path to an application that we got
@@ -47,8 +40,8 @@ class nsOSHelperAppService : public nsExternalHelperAppService {
   //                     spec, a unix path or a windows path depending on the
   //                     platform
   // aFile --> an nsIFile representation of that platform application path.
-  virtual MOZ_MUST_USE nsresult GetFileTokenForPath(
-      const char16_t* platformAppPath, nsIFile** aFile) override;
+  MOZ_MUST_USE nsresult GetFileTokenForPath(const char16_t* platformAppPath,
+                                            nsIFile** aFile) override;
 
   MOZ_MUST_USE nsresult OSProtocolHandlerExists(const char* aScheme,
                                                 bool* aHandlerExists) override;

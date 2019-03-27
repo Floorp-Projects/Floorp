@@ -11,8 +11,10 @@ nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService() {}
 
 nsOSHelperAppService::~nsOSHelperAppService() {}
 
-already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(
-    const nsACString& aMIMEType, const nsACString& aFileExt, bool* aFound) {
+nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
+                                                 const nsACString& aFileExt,
+                                                 bool* aFound,
+                                                 nsIMIMEInfo** aMIMEInfo) {
   RefPtr<nsMIMEInfoAndroid> mimeInfo;
   *aFound = false;
   if (!aMIMEType.IsEmpty())
@@ -26,7 +28,8 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(
   // something for us, so we return the empty object.
   if (!*aFound) mimeInfo = new nsMIMEInfoAndroid(aMIMEType);
 
-  return mimeInfo.forget();
+  mimeInfo.forget(aMIMEInfo);
+  return NS_OK;
 }
 
 nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char* aScheme,
