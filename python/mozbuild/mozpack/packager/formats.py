@@ -43,6 +43,8 @@ The base interface provides the following methods:
         The optional addon argument tells whether the base directory
         is that of a packed addon (True), unpacked addon ('unpacked') or
         otherwise (False).
+        The method may only be called in sorted order of `path` (alphanumeric
+        order, parents before children).
     - add(path, content)
         Add the given content (BaseFile instance) at the given virtual path
     - add_interfaces(path, content)
@@ -77,6 +79,7 @@ class PiecemealFormatter(object):
         # Only allow to add a base directory before calls to _get_base()
         assert not self._frozen_bases
         assert base not in self._sub_formatter
+        assert all(base > b for b in self._sub_formatter)
         self._add_base(base, addon)
 
     def _get_base(self, path):
