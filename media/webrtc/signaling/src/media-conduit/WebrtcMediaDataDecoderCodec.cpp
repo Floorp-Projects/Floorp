@@ -55,7 +55,9 @@ int32_t WebrtcMediaDataDecoder::InitDecode(
 
   mDecoder = mFactory->CreateDecoder(
       {mInfo, mTaskQueue,
-       CreateDecoderParams::OptionSet(CreateDecoderParams::Option::LowLatency),
+       CreateDecoderParams::OptionSet(
+           CreateDecoderParams::Option::LowLatency,
+           CreateDecoderParams::Option::FullH264Parsing),
        mTrackType, mImageContainer, knowsCompositor});
 
   if (!mDecoder) {
