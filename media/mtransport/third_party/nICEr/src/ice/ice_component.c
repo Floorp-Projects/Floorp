@@ -707,6 +707,20 @@ void nr_ice_component_stop_gathering(nr_ice_component *component)
     }
   }
 
+int nr_ice_component_is_done_gathering(nr_ice_component *comp)
+  {
+    nr_ice_candidate *cand=TAILQ_FIRST(&comp->candidates);
+    while(cand){
+      if(cand->state != NR_ICE_CAND_STATE_INITIALIZED &&
+         cand->state != NR_ICE_CAND_STATE_FAILED){
+        return 0;
+      }
+      cand=TAILQ_NEXT(cand,entry_comp);
+    }
+    return 1;
+  }
+
+
 static int nr_ice_any_peer_paired(nr_ice_candidate* cand) {
   nr_ice_peer_ctx* pctx=STAILQ_FIRST(&cand->ctx->peers);
   while(pctx && pctx->state == NR_ICE_PEER_STATE_UNPAIRED){
