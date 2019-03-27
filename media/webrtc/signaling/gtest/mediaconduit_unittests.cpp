@@ -274,7 +274,20 @@ class WebrtcMediaTransport : public mozilla::TransportInterface {
  public:
   WebrtcMediaTransport() : numPkts(0), mAudio(false), mVideo(false) {}
 
-  ~WebrtcMediaTransport() {}
+  ~WebrtcMediaTransport() {
+    if (mAudioSession) {
+      mAudioSession->DeleteStreams();
+    }
+    if (mOtherAudioSession) {
+      mOtherAudioSession->DeleteStreams();
+    }
+    if (mVideoSession) {
+      mVideoSession->DeleteStreams();
+    }
+    if (mOtherVideoSession) {
+      mOtherVideoSession->DeleteStreams();
+    }
+  }
 
   virtual nsresult SendRtpPacket(const uint8_t* data, size_t len) {
     ++numPkts;
