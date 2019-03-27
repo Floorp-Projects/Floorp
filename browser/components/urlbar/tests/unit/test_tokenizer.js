@@ -61,6 +61,13 @@ add_task(async function test_tokenizer() {
         { value: `test${UrlbarTokenizer.RESTRICT.BOOKMARK}test`, type: UrlbarTokenizer.TYPE.TEXT },
       ],
     },
+    { desc: "restriction char in the middle 2",
+      searchString: `test${UrlbarTokenizer.RESTRICT.BOOKMARK} test`,
+      expectedTokens: [
+        { value: `test${UrlbarTokenizer.RESTRICT.BOOKMARK}`, type: UrlbarTokenizer.TYPE.TEXT },
+        { value: `test`, type: UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN },
+      ],
+    },
     { desc: "double boundary restriction char",
       searchString: `${UrlbarTokenizer.RESTRICT.BOOKMARK}test${UrlbarTokenizer.RESTRICT.TITLE}`,
       expectedTokens: [
@@ -207,6 +214,12 @@ add_task(async function test_tokenizer() {
       searchString: "test/test",
       expectedTokens: [
         { value: "test/test", type: UrlbarTokenizer.TYPE.POSSIBLE_URL },
+      ],
+    },
+    { desc: "percent encoded string",
+      searchString: "%E6%97%A5%E6%9C%AC",
+      expectedTokens: [
+        { value: "%E6%97%A5%E6%9C%AC", type: UrlbarTokenizer.TYPE.TEXT },
       ],
     },
   ];
