@@ -104,7 +104,11 @@ def use_profile_data(config, jobs):
             yield job
             continue
 
-        dependencies = 'generate-profile-{}'.format(job['name'])
+        # Nightlies use the same profile information as a regular PGO build.
+        name = job['name']
+        if name.endswith('-nightly/opt'):
+            name = name.replace('-nightly/opt', '/pgo')
+        dependencies = 'generate-profile-{}'.format(name)
         job.setdefault('dependencies', {})['generate-profile'] = dependencies
         job.setdefault('fetches', {})['generate-profile'] = ['profdata.tar.xz']
         yield job
