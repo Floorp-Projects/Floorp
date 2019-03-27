@@ -1,5 +1,5 @@
 
 1 Added function:
 
-  'function SECOidTag HASH_GetHashOidTagByHashType(HASH_HashType)'    {HASH_GetHashOidTagByHashType@@NSS_3.43}
+  'function SECStatus CERT_GetCertificateDer(const CERTCertificate*, SECItem*)'    {CERT_GetCertificateDer@@NSS_3.44}
 
