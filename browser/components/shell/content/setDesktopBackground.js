@@ -22,13 +22,29 @@ var gSetBackground = {
     this._canvas = document.getElementById("screen");
     this._screenWidth = screen.width;
     this._screenHeight = screen.height;
-    if (AppConstants.platform == "macosx") {
-      document.documentElement.getButton("accept").hidden = true;
-    }
     // Cap ratio to 4 so the dialog width doesn't get ridiculous. Highest
     // regular screens seem to be 32:9 (3.56) according to Wikipedia.
     let screenRatio = Math.min(this._screenWidth / this._screenHeight, 4);
     this._canvas.width = this._canvas.height * screenRatio;
+
+    if (AppConstants.platform == "macosx") {
+      document.documentElement.getButton("accept").hidden = true;
+    } else {
+      let multiMonitors = false;
+      try {
+        const gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+        const monitors = gfxInfo.getMonitors();
+        multiMonitors = monitors.length > 1;
+      } catch (e) {
+        // getMonitors() isn't implemented on Linux
+        multiMonitors = true;
+      }
+
+      if (!multiMonitors || AppConstants.isPlatformAndVersionAtMost("win", 6.1)) {
+        // Hide span option if < Win8 since that's when it was introduced.
+        document.getElementById("spanPosition").hidden = true;
+      }
+    }
 
     document.addEventListener("dialogaccept", function() { gSetBackground.setDesktopBackground(); });
     // make sure that the correct dimensions will be used
@@ -139,6 +155,21 @@ var gSetBackground = {
         }
         ctx.drawImage(this._image, x, y, width, height);
         break;
+      }
+      case "SPAN": {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, this._screenWidth, this._screenHeight);
+        let x = this._screenWidth / 2;
+        let y = this._screenHeight / 2;
+        let radius = this._screenHeight * .4;
+        let delta = Math.sin(.25 * Math.PI) * radius; // opp = sin * hyp
+        ctx.lineWidth = radius / 4.5;
+        ctx.strokeStyle = "#9B2423";
+        ctx.arc(x, y, radius, -.75 * Math.PI, 1.25 * Math.PI);
+        ctx.stroke();
+        ctx.lineWidth *= .8;
+        ctx.lineTo(x + delta, y + delta);
+        ctx.stroke();
       }
     }
   },
