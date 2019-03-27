@@ -208,9 +208,16 @@ already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
     return nullptr;
   }
 
+  nsAutoString remoteType;
+  if (RefPtr<TabParent> tabParent = GetTabParent()) {
+    remoteType = tabParent->Manager()->GetRemoteType();
+  } else {
+    remoteType = VoidString();
+  }
+
   JS::RootedObject obj(RootingCx());
   actorSvc->ConstructActor(aName, /* aParentSide */ true, mBrowsingContext,
-                           mDocumentURI, &obj, aRv);
+                           mDocumentURI, remoteType, &obj, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
