@@ -36,8 +36,6 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
                                     uint32_t aMaxChannelCount,
                                     bool aDelayAgnostic, bool aExtendedFilter);
 
-  bool RequiresSharing() const override { return false; }
-
   nsString GetName() const override;
   nsCString GetUUID() const override;
   nsString GetGroupId() const override;
