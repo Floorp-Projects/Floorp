@@ -51,6 +51,7 @@
           <menuitem label="&stretch.label;" value="STRETCH"/>
           <menuitem label="&fill.label;"    value="FILL"/>
           <menuitem label="&fit.label;"     value="FIT"/>
+          <menuitem label="&span.label;"    value="SPAN" id="spanPosition"/>
         </menupopup>
       </menulist>
       <spacer flex="1"/>
