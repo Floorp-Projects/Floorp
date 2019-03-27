@@ -35,7 +35,7 @@
     // QuantumBar doesn't have separate boxes for items.
     let urlHbox = element._urlText.parentNode.parentNode;
     Assert.ok(urlHbox.classList.contains("ac-url"), "URL hbox element sanity check");
-    is_element_hidden(urlHbox, "URL element should be hidden");
+    BrowserTestUtils.is_hidden(urlHbox, "URL element should be hidden");
   }
 
   info("During override");
@@ -53,7 +53,7 @@
     // QuantumBar doesn't have separate boxes for items.
     let urlHbox = element._urlText.parentNode.parentNode;
     Assert.ok(urlHbox.classList.contains("ac-url"), "URL hbox element sanity check");
-    is_element_hidden(urlHbox, "URL element should be hidden");
+    BrowserTestUtils.is_hidden(urlHbox, "URL element should be hidden");
   }
 
   EventUtils.synthesizeKey("VK_SHIFT", { type: "keyup" });
