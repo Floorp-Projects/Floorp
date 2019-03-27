@@ -563,11 +563,6 @@ struct TransactionInfo
   CompositionPayload[] payload;
 };
 
-union MaybeTransform {
-  Matrix4x4;
-  void_t;
-};
-
 union OMTAValue {
   null_t;
   nscolor;

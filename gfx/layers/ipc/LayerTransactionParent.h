@@ -120,7 +120,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
   mozilla::ipc::IPCResult RecvGetAnimationValue(
       const uint64_t& aCompositorAnimationsId, OMTAValue* aValue);
   mozilla::ipc::IPCResult RecvGetTransform(const LayerHandle& aHandle,
-                                           MaybeTransform* aTransform);
+                                           Maybe<Matrix4x4>* aTransform);
   mozilla::ipc::IPCResult RecvSetAsyncScrollOffset(
       const ScrollableLayerGuid::ViewID& aId, const float& aX, const float& aY);
   mozilla::ipc::IPCResult RecvSetAsyncZoom(
