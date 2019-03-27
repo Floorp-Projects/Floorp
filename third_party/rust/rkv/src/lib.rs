@@ -171,6 +171,30 @@
 //!     // This line would report error[E0382]: borrow of moved value: `writer`.
 //!     // store.put(&mut writer, "baz", &Value::Str("buz")).unwrap();
 //! }
+//!
+//! {
+//!     // Clearing all the entries in the store with a write transaction.
+//!     {
+//!         let mut writer = env.write().unwrap();
+//!         store.put(&mut writer, "foo", &Value::Str("bar")).unwrap();
+//!         store.put(&mut writer, "bar", &Value::Str("baz")).unwrap();
+//!         writer.commit().unwrap();
+//!     }
+//!
+//!     {
+//!         let mut writer = env.write().unwrap();
+//!         store.clear(&mut writer).unwrap();
+//!         writer.commit().unwrap();
+//!     }
+//!
+//!     {
+//!         let reader = env.read().expect("reader");
+//!         println!("It should be None! ({:?})", store.get(&reader, "foo").unwrap());
+//!         println!("It should be None! ({:?})", store.get(&reader, "bar").unwrap());
+//!     }
+//!
+//! }
+//!
 //! ```
 
 #![allow(dead_code)]

@@ -153,6 +153,20 @@ fn main() {
         // store.put(&mut writer, "baz", &Value::Str("buz")).unwrap();
     }
 
+    println!("Clearing store...");
+    {
+        // Clearing a store deletes all the entries in that store
+        let mut writer = k.write().unwrap();
+        store.put(&mut writer, "foo", &Value::Str("bar")).unwrap();
+        store.put(&mut writer, "bar", &Value::Str("baz")).unwrap();
+        store.clear(&mut writer).unwrap();
+        writer.commit().unwrap();
+
+        let reader = k.read().expect("reader");
+        println!("It should be None! ({:?})", store.get(&reader, "foo").unwrap());
+        println!("It should be None! ({:?})", store.get(&reader, "bar").unwrap());
+    }
+
     println!("Write and read on multiple stores...");
     {
         let another_store = k.open_single("another_store", StoreOptions::create()).unwrap();
