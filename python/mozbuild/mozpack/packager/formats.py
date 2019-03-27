@@ -328,13 +328,11 @@ class OmniJarSubFormatter(PiecemealFormatter):
             return len(path) != 3 or \
                 not (path[2] == 'channel-prefs.js' and
                      path[1] in ['pref', 'preferences'])
-        if len(path) <= 2 and path[-1] == 'greprefs.js':
-            # Accommodate `greprefs.js` and `$ANDROID_CPU_ARCH/greprefs.js`.
-            return True
         return path[0] in [
             'modules',
             'actors',
             'dictionaries',
+            'greprefs.js',
             'hyphenation',
             'localization',
             'update.locale',
