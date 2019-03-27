@@ -12,9 +12,7 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
   (version 1)
 
   (define should-log (param "SHOULD_LOG"))
-  (define plugin-binary-path (param "PLUGIN_BINARY_PATH"))
   (define app-path (param "APP_PATH"))
-  (define app-binary-path (param "APP_BINARY_PATH"))
 
   (define (moz-deny feature)
     (if (string=? should-log "TRUE")
@@ -34,27 +32,25 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
   (if (defined? 'file-map-executable)
     (allow file-map-executable file-read*
       (subpath "/System/Library/PrivateFrameworks")
-      (regex #"^/usr/lib/libstdc\+\+\.[^/]*dylib$")
-      (literal plugin-binary-path)
-      (literal app-binary-path)
+      (subpath "/System/Library/Frameworks")
+      (subpath "/usr/lib")
       (subpath app-path))
     (allow file-read*
       (subpath "/System/Library/PrivateFrameworks")
-      (regex #"^/usr/lib/libstdc\+\+\.[^/]*dylib$")
-      (literal plugin-binary-path)
-      (literal app-binary-path)
+      (subpath "/System/Library/Frameworks")
+      (subpath "/usr/lib")
       (subpath app-path)))
 
   (allow signal (target self))
   (allow sysctl-read)
-  (allow iokit-open (iokit-user-client-class "IOHIDParamUserClient"))
   (allow file-read*
-      (literal "/etc")
-      (literal "/dev/random")
-      (literal "/dev/urandom")
-      (literal "/usr/share/icu/icudt51l.dat")
-      (subpath "/System/Library/Displays/Overrides")
-      (subpath "/System/Library/CoreServices/CoreTypes.bundle"))
+    (literal "/dev/random")
+    (literal "/dev/urandom")
+    (literal "/System/Library/CoreServices/SystemVersion.plist")
+    (subpath "/usr/share/icu"))
+
+  (allow mach-lookup
+    (global-name "com.apple.coreservices.launchservicesd"))
 )SANDBOX_LITERAL";
 
 }  // namespace mozilla

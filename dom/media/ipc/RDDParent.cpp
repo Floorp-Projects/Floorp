@@ -114,11 +114,7 @@ static void StartRDDMacSandbox() {
   info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled") ||
                    PR_GetEnv("MOZ_SANDBOX_LOGGING");
   info.appPath.assign(appPath.get());
-  // Per Haik, set appBinaryPath and pluginBinaryPath to '/dev/null' to
-  // make sure OSX sandbox policy isn't confused by empty strings for
-  // the paths.
-  info.appBinaryPath.assign("/dev/null");
-  info.pluginInfo.pluginBinaryPath.assign("/dev/null");
+
   std::string err;
   bool rv = mozilla::StartMacSandbox(info, err);
   if (!rv) {
