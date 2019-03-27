@@ -318,15 +318,6 @@ macosx64/debug:
     test-sets:
         - macosx64-tests
 
-macosx64/opt:
-    build-platform: macosx64/opt
-    test-sets:
-        - macosx64-talos
-        - macosx64-tests
-        - desktop-screenshot-capture
-        - awsy
-        - raptor-firefox
-
 macosx64-nightly/opt:
     build-platform: macosx64-nightly/opt
     test-sets:
@@ -350,11 +341,6 @@ macosx64-devedition/opt:
     build-platform: macosx64-devedition-nightly/opt
     test-sets:
         - macosx64-tests
-
-macosx64-qr/opt:
-    build-platform: macosx64/opt
-    test-sets:
-        - macosx64-qr-tests
 
 macosx64-shippable-qr/opt:
     build-platform: macosx64-shippable/opt
