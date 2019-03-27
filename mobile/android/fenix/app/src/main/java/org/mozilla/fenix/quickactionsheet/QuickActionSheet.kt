@@ -48,11 +48,30 @@ class QuickActionSheet @JvmOverloads constructor(
 
         handle.setAccessibilityDelegate(HandleAccessibilityDelegate(quickActionSheetBehavior))
 
+        quickActionSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(v: View, state: Int) {
+                updateImportantForAccessibility(state)
+            }
+
+            override fun onSlide(p0: View, p1: Float) {
+            }
+        })
+
+        updateImportantForAccessibility(quickActionSheetBehavior.state)
+
         val settings = Settings.getInstance(context)
         if (settings.shouldAutoBounceQuickActionSheet) {
             settings.incrementAutomaticBounceQuickActionSheetCount()
             bounceSheet(quickActionSheetBehavior, demoBounceAnimationLength)
         }
+    }
+
+    private fun updateImportantForAccessibility(state: Int) {
+        findViewById<LinearLayout>(R.id.quick_action_sheet_buttonbar).importantForAccessibility =
+            if (state == BottomSheetBehavior.STATE_COLLAPSED || state == BottomSheetBehavior.STATE_HIDDEN)
+                View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            else
+                View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
     }
 
     private fun bounceSheet(

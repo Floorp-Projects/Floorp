@@ -21,6 +21,7 @@
         android:src="@drawable/ic_drawer_pull_tab"/>
 
     <LinearLayout
+        android:id="@+id/quick_action_sheet_buttonbar"
         android:orientation="horizontal"
         android:layout_gravity="bottom"
         android:layout_width="match_parent"
