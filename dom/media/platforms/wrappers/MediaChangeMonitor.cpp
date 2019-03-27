@@ -27,8 +27,7 @@ namespace mozilla {
 
 class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
  public:
-  explicit H264ChangeMonitor(const VideoInfo& aInfo, bool aFullParsing)
-      : mCurrentConfig(aInfo), mFullParsing(aFullParsing) {
+  explicit H264ChangeMonitor(const VideoInfo& aInfo) : mCurrentConfig(aInfo) {
     if (CanBeInstantiated()) {
       UpdateConfigFromExtraData(aInfo.mExtraData);
     }
@@ -53,17 +52,13 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
     }
 
     RefPtr<MediaByteBuffer> extra_data =
-        aSample->mKeyframe || !mGotSPS || mFullParsing
-            ? H264::ExtractExtraData(aSample)
-            : nullptr;
+        aSample->mKeyframe ? H264::ExtractExtraData(aSample) : nullptr;
 
     if (!H264::HasSPS(extra_data) && !H264::HasSPS(mCurrentConfig.mExtraData)) {
       // We don't have inband data and the original config didn't contain a SPS.
       // We can't decode this content.
       return NS_ERROR_NOT_INITIALIZED;
     }
-
-    mGotSPS = true;
 
     if (!H264::HasSPS(extra_data)) {
       // This sample doesn't contain inband SPS/PPS
@@ -136,8 +131,6 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
 
   VideoInfo mCurrentConfig;
   uint32_t mStreamID = 0;
-  const bool mFullParsing;
-  bool mGotSPS = false;
   RefPtr<TrackInfoSharedPtr> mTrackInfo;
   RefPtr<MediaByteBuffer> mPreviousExtraData;
 };
@@ -225,9 +218,7 @@ MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
     mChangeMonitor = MakeUnique<VPXChangeMonitor>(mCurrentConfig);
   } else {
     MOZ_ASSERT(MP4Decoder::IsH264(mCurrentConfig.mMimeType));
-    mChangeMonitor = MakeUnique<H264ChangeMonitor>(
-        mCurrentConfig,
-        mDecoderOptions.contains(CreateDecoderParams::Option::FullH264Parsing));
+    mChangeMonitor = MakeUnique<H264ChangeMonitor>(mCurrentConfig);
   }
   mLastError = CreateDecoder(aParams.mDiagnostics);
   mInConstructor = false;
@@ -280,8 +271,8 @@ RefPtr<MediaDataDecoder::DecodePromise> MediaChangeMonitor::Decode(
 
     if (rv == NS_ERROR_NOT_INITIALIZED) {
       // We are missing the required init data to create the decoder.
-      // This frame can't be decoded and should be treated as an error.
-      return DecodePromise::CreateAndReject(rv, __func__);
+      // Ignore for the time being, the MediaRawData will be dropped.
+      return DecodePromise::CreateAndResolve(DecodedData(), __func__);
     }
     if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {
       // The decoder is pending initialization.
@@ -521,10 +512,7 @@ bool MediaChangeMonitor::CanRecycleDecoder() const {
 void MediaChangeMonitor::DecodeFirstSample(MediaRawData* aSample) {
   AssertOnTaskQueue();
 
-  // We feed all the data to AnnexB decoder as a non-keyframe could contain
-  // the SPS/PPS when used with WebRTC and this data is needed by the decoder.
-  if (mNeedKeyframe && !aSample->mKeyframe &&
-      *mConversionRequired != ConversionRequired::kNeedAnnexB) {
+  if (mNeedKeyframe && !aSample->mKeyframe) {
     mDecodePromise.Resolve(std::move(mPendingFrames), __func__);
     mPendingFrames = DecodedData();
     return;
@@ -538,9 +526,7 @@ void MediaChangeMonitor::DecodeFirstSample(MediaRawData* aSample) {
     return;
   }
 
-  if (aSample->mKeyframe) {
-    mNeedKeyframe = false;
-  }
+  mNeedKeyframe = false;
 
   RefPtr<MediaChangeMonitor> self = this;
   mDecoder->Decode(aSample)
