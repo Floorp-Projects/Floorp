@@ -209,10 +209,12 @@ class Rooted;
 template <typename T>
 class PersistentRooted;
 
-JS_FRIEND_API void HeapObjectPostBarrier(JSObject** objp, JSObject* prev,
-                                         JSObject* next);
-JS_FRIEND_API void HeapStringPostBarrier(JSString** objp, JSString* prev,
-                                         JSString* next);
+JS_FRIEND_API void HeapObjectWriteBarriers(JSObject** objp, JSObject* prev,
+                                           JSObject* next);
+JS_FRIEND_API void HeapStringWriteBarriers(JSString** objp, JSString* prev,
+                                           JSString* next);
+JS_FRIEND_API void HeapScriptWriteBarriers(JSScript** objp, JSScript* prev,
+                                           JSScript* next);
 
 /**
  * Create a safely-initialized |T|, suitable for use as a default value in
@@ -289,10 +291,10 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapBase<T, Heap<T>> {
  public:
   using ElementType = T;
 
-  Heap() {
+  Heap() : ptr(SafelyInitialized<T>()) {
+    // No barriers are required for initialization to the default value.
     static_assert(sizeof(T) == sizeof(Heap<T>),
                   "Heap<T> must be binary compatible with T.");
-    init(SafelyInitialized<T>());
   }
   explicit Heap(const T& p) { init(p); }
 
@@ -304,7 +306,7 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapBase<T, Heap<T>> {
    */
   explicit Heap(const Heap<T>& p) { init(p.ptr); }
 
-  ~Heap() { post(ptr, SafelyInitialized<T>()); }
+  ~Heap() { writeBarriers(ptr, SafelyInitialized<T>()); }
 
   DECLARE_POINTER_CONSTREF_OPS(T);
   DECLARE_POINTER_ASSIGN_OPS(Heap, T);
@@ -330,17 +332,17 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapBase<T, Heap<T>> {
  private:
   void init(const T& newPtr) {
     ptr = newPtr;
-    post(SafelyInitialized<T>(), ptr);
+    writeBarriers(SafelyInitialized<T>(), ptr);
   }
 
   void set(const T& newPtr) {
     T tmp = ptr;
     ptr = newPtr;
-    post(tmp, ptr);
+    writeBarriers(tmp, ptr);
   }
 
-  void post(const T& prev, const T& next) {
-    js::BarrierMethods<T>::postBarrier(&ptr, prev, next);
+  void writeBarriers(const T& prev, const T& next) {
+    js::BarrierMethods<T>::writeBarriers(&ptr, prev, next);
   }
 
   T ptr;
@@ -434,6 +436,7 @@ class TenuredHeap : public js::HeapBase<T, TenuredHeap<T>> {
   explicit TenuredHeap(const TenuredHeap<T>& p) : bits(0) {
     setPtr(p.getPtr());
   }
+  ~TenuredHeap() { pre(); }
 
   void setPtr(T newPtr) {
     MOZ_ASSERT((reinterpret_cast<uintptr_t>(newPtr) & flagsMask) == 0);
@@ -441,6 +444,11 @@ class TenuredHeap : public js::HeapBase<T, TenuredHeap<T>> {
     if (newPtr) {
       AssertGCThingMustBeTenured(newPtr);
     }
+    pre();
+    unbarrieredSetPtr(newPtr);
+  }
+
+  void unbarrieredSetPtr(T newPtr) {
     bits = (bits & flagsMask) | reinterpret_cast<uintptr_t>(newPtr);
   }
 
@@ -495,6 +503,12 @@ class TenuredHeap : public js::HeapBase<T, TenuredHeap<T>> {
     maskBits = 3,
     flagsMask = (1 << maskBits) - 1,
   };
+
+  void pre() {
+    if (T prev = unbarrieredGetPtr()) {
+      JS::IncrementalPreWriteBarrier(JS::GCCellPtr(prev));
+    }
+  }
 
   uintptr_t bits;
 };
@@ -650,8 +664,11 @@ class MOZ_STACK_CLASS MutableHandle
 
 namespace js {
 
+namespace detail {
+
+// Default implementations for barrier methods on GC thing pointers.
 template <typename T>
-struct BarrierMethods<T*> {
+struct PtrBarrierMethodsBase {
   static T* initial() { return nullptr; }
   static gc::Cell* asGCThingOrNull(T* v) {
     if (!v) {
@@ -660,12 +677,6 @@ struct BarrierMethods<T*> {
     MOZ_ASSERT(uintptr_t(v) > 32);
     return reinterpret_cast<gc::Cell*>(v);
   }
-  static void postBarrier(T** vp, T* prev, T* next) {
-    if (next) {
-      JS::AssertGCThingIsNotNurseryAllocable(
-          reinterpret_cast<js::gc::Cell*>(next));
-    }
-  }
   static void exposeToJS(T* t) {
     if (t) {
       js::gc::ExposeGCThingToActiveJS(JS::GCCellPtr(t));
@@ -673,18 +684,26 @@ struct BarrierMethods<T*> {
   }
 };
 
-template <>
-struct BarrierMethods<JSObject*> {
-  static JSObject* initial() { return nullptr; }
-  static gc::Cell* asGCThingOrNull(JSObject* v) {
-    if (!v) {
-      return nullptr;
+}  // namespace detail
+
+template <typename T>
+struct BarrierMethods<T*> : public detail::PtrBarrierMethodsBase<T> {
+  static void writeBarriers(T** vp, T* prev, T* next) {
+    if (prev) {
+      JS::IncrementalPreWriteBarrier(JS::GCCellPtr(prev));
     }
-    MOZ_ASSERT(uintptr_t(v) > 32);
-    return reinterpret_cast<gc::Cell*>(v);
+    if (next) {
+      JS::AssertGCThingIsNotNurseryAllocable(
+          reinterpret_cast<js::gc::Cell*>(next));
+    }
   }
-  static void postBarrier(JSObject** vp, JSObject* prev, JSObject* next) {
-    JS::HeapObjectPostBarrier(vp, prev, next);
+};
+
+template <>
+struct BarrierMethods<JSObject*>
+    : public detail::PtrBarrierMethodsBase<JSObject> {
+  static void writeBarriers(JSObject** vp, JSObject* prev, JSObject* next) {
+    JS::HeapObjectWriteBarriers(vp, prev, next);
   }
   static void exposeToJS(JSObject* obj) {
     if (obj) {
@@ -694,19 +713,13 @@ struct BarrierMethods<JSObject*> {
 };
 
 template <>
-struct BarrierMethods<JSFunction*> {
-  static JSFunction* initial() { return nullptr; }
-  static gc::Cell* asGCThingOrNull(JSFunction* v) {
-    if (!v) {
-      return nullptr;
-    }
-    MOZ_ASSERT(uintptr_t(v) > 32);
-    return reinterpret_cast<gc::Cell*>(v);
-  }
-  static void postBarrier(JSFunction** vp, JSFunction* prev, JSFunction* next) {
-    JS::HeapObjectPostBarrier(reinterpret_cast<JSObject**>(vp),
-                              reinterpret_cast<JSObject*>(prev),
-                              reinterpret_cast<JSObject*>(next));
+struct BarrierMethods<JSFunction*>
+    : public detail::PtrBarrierMethodsBase<JSFunction> {
+  static void writeBarriers(JSFunction** vp, JSFunction* prev,
+                            JSFunction* next) {
+    JS::HeapObjectWriteBarriers(reinterpret_cast<JSObject**>(vp),
+                                reinterpret_cast<JSObject*>(prev),
+                                reinterpret_cast<JSObject*>(next));
   }
   static void exposeToJS(JSFunction* fun) {
     if (fun) {
@@ -716,22 +729,18 @@ struct BarrierMethods<JSFunction*> {
 };
 
 template <>
-struct BarrierMethods<JSString*> {
-  static JSString* initial() { return nullptr; }
-  static gc::Cell* asGCThingOrNull(JSString* v) {
-    if (!v) {
-      return nullptr;
-    }
-    MOZ_ASSERT(uintptr_t(v) > 32);
-    return reinterpret_cast<gc::Cell*>(v);
+struct BarrierMethods<JSString*>
+    : public detail::PtrBarrierMethodsBase<JSString> {
+  static void writeBarriers(JSString** vp, JSString* prev, JSString* next) {
+    JS::HeapStringWriteBarriers(vp, prev, next);
   }
-  static void postBarrier(JSString** vp, JSString* prev, JSString* next) {
-    JS::HeapStringPostBarrier(vp, prev, next);
-  }
-  static void exposeToJS(JSString* v) {
-    if (v) {
-      js::gc::ExposeGCThingToActiveJS(JS::GCCellPtr(v));
-    }
+};
+
+template <>
+struct BarrierMethods<JSScript*>
+    : public detail::PtrBarrierMethodsBase<JSScript> {
+  static void writeBarriers(JSScript** vp, JSScript* prev, JSScript* next) {
+    JS::HeapScriptWriteBarriers(vp, prev, next);
   }
 };
 
