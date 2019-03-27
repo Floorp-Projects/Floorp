@@ -19,3 +19,13 @@ CompiledModules(
     'Workers.js',
     'XHRBreakpoints.js',
 )
+
+DevToolsModules(
+    'CommandBar.css',
+    'EventListeners.css',
+    'Expressions.css',
+    'Scopes.css',
+    'SecondaryPanes.css',
+    'Workers.css',
+    'XHRBreakpoints.css',
+)

@@ -26,9 +26,6 @@ const webpackConfig = {
   entry: {
     // We always generate the debugger bundle, but we will only copy the CSS
     // artifact over to mozilla-central.
-    debugger: getEntry(
-      isProduction ? "src/main.js" : "src/main.development.js"
-    ),
     "parser-worker": getEntry("src/workers/parser/worker.js"),
     "pretty-print-worker": getEntry("src/workers/pretty-print/worker.js"),
     "search-worker": getEntry("src/workers/search/worker.js"),
@@ -58,6 +55,8 @@ if (isProduction) {
   // compatible with the DevTools Loader.
   webpackConfig.entry.vendors = getEntry("src/vendors.js");
   webpackConfig.entry.reps = getEntry("packages/devtools-reps/src/index.js");
+} else {
+  webpackConfig.entry.debugger = getEntry("src/main.development.js");
 }
 
 const envConfig = getConfig();
