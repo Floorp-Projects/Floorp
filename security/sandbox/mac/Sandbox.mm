@@ -140,7 +140,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage) {
   std::string flashCacheDir, flashTempDir, flashPath;
 
   if (aInfo.type == MacSandboxType_Plugin && aInfo.pluginInfo.type == MacSandboxPluginType_Flash) {
-    profile = flashPluginSandboxRules;
+    profile = SandboxPolicyFlash;
 
     params.push_back("SHOULD_LOG");
     params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
@@ -182,8 +182,18 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage) {
       return false;
     }
     params.push_back(flashTempDir.c_str());
+  } else if (aInfo.type == MacSandboxType_Utility) {
+    profile = const_cast<char *>(SandboxPolicyUtility);
+    params.push_back("SHOULD_LOG");
+    params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
+    params.push_back("APP_PATH");
+    params.push_back(aInfo.appPath.c_str());
+    params.push_back("PLUGIN_BINARY_PATH");
+    params.push_back(aInfo.pluginInfo.pluginBinaryPath.c_str());
+    params.push_back("APP_BINARY_PATH");
+    params.push_back(aInfo.appBinaryPath.c_str());
   } else if (aInfo.type == MacSandboxType_Plugin) {
-    profile = const_cast<char *>(pluginSandboxRules);
+    profile = const_cast<char *>(SandboxPolicyGMP);
     params.push_back("SHOULD_LOG");
     params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
     params.push_back("PLUGIN_BINARY_PATH");
@@ -192,14 +202,10 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage) {
     params.push_back(aInfo.appPath.c_str());
     params.push_back("APP_BINARY_PATH");
     params.push_back(aInfo.appBinaryPath.c_str());
-
-    if (aInfo.pluginInfo.type == MacSandboxPluginType_GMPlugin_EME_Widevine) {
-      profile.append(widevinePluginSandboxRulesAddend);
-    }
   } else if (aInfo.type == MacSandboxType_Content) {
     MOZ_ASSERT(aInfo.level >= 1);
     if (aInfo.level >= 1) {
-      profile = contentSandboxRules;
+      profile = SandboxPolicyContent;
       params.push_back("SHOULD_LOG");
       params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
       params.push_back("SANDBOX_LEVEL_1");
@@ -248,10 +254,10 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage) {
 #endif  // DEBUG
 
       if (aInfo.hasFilePrivileges) {
-        profile.append(fileContentProcessAddend);
+        profile.append(SandboxPolicyContentFileAddend);
       }
       if (aInfo.hasAudio) {
-        profile.append(contentProcessAudioAddend);
+        profile.append(SandboxPolicyContentAudioAddend);
       }
     } else {
       fprintf(stderr, "Content sandbox disabled due to sandbox level setting\n");
