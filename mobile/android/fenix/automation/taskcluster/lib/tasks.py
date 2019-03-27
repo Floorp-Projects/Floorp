@@ -65,6 +65,10 @@ class TaskBuilder(object):
             if cmd
         )
 
+        routes = [] if is_staging else [
+            "notify.email.fenix-eng-notifications@mozilla.com.on-failed"
+        ]
+
         return self._craft_build_ish_task(
             name='Fenix - Build task',
             description='Build Fenix from source code',
@@ -73,7 +77,7 @@ class TaskBuilder(object):
                 "secrets:get:{}".format(secret) for secret in (sentry_secret, leanplum_secret)
             ],
             artifacts=artifacts,
-            routes=["notify.email.fenix-eng-notifications@mozilla.com.on-failed"],
+            routes=routes,
             is_staging=is_staging,
         )
 
