@@ -14,7 +14,6 @@ import {
   getTopFrame,
   getBreakpointsList,
   getBreakpointsDisabled,
-  getBreakpointsLoading,
   getExpressions,
   getIsWaitingOnBreak,
   getMapScopes,
@@ -79,7 +78,6 @@ type Props = {
   breakpoints: Object,
   selectedFrame: ?Frame,
   breakpointsDisabled: boolean,
-  breakpointsLoading: boolean,
   isWaitingOnBreak: boolean,
   shouldMapScopes: boolean,
   shouldPauseOnExceptions: boolean,
@@ -118,8 +116,7 @@ class SecondaryPanes extends Component<Props, State> {
     const {
       toggleAllBreakpoints,
       breakpoints,
-      breakpointsDisabled,
-      breakpointsLoading
+      breakpointsDisabled
     } = this.props;
     const isIndeterminate =
       !breakpointsDisabled && breakpoints.some(x => x.disabled);
@@ -134,7 +131,7 @@ class SecondaryPanes extends Component<Props, State> {
         ? L10N.getStr("breakpoints.enable")
         : L10N.getStr("breakpoints.disable"),
       className: "breakpoints-toggle",
-      disabled: breakpointsLoading,
+      disabled: false,
       key: "breakpoints-toggle",
       onChange: e => {
         e.stopPropagation();
@@ -469,7 +466,6 @@ const mapStateToProps = state => {
     hasFrames: !!getTopFrame(state, thread),
     breakpoints: getBreakpointsList(state),
     breakpointsDisabled: getBreakpointsDisabled(state),
-    breakpointsLoading: getBreakpointsLoading(state),
     isWaitingOnBreak: getIsWaitingOnBreak(state, thread),
     selectedFrame: getSelectedFrame(state, thread),
     shouldMapScopes: getMapScopes(state),

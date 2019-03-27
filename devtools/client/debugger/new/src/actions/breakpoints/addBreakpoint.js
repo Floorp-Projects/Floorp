@@ -5,7 +5,6 @@
 // @flow
 import { setBreakpointPositions } from "./breakpointPositions";
 import {
-  breakpointExists,
   assertBreakpoint,
   createBreakpoint,
   getASTLocation,
@@ -36,12 +35,6 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
   const source = getSourceFromId(state, location.sourceId);
   const generatedSource = getSourceFromId(state, generatedLocation.sourceId);
 
-  if (breakpointExists(state, location)) {
-    const newBreakpoint = { ...breakpoint, location, generatedLocation };
-    assertBreakpoint(newBreakpoint);
-    return newBreakpoint;
-  }
-
   const breakpointLocation = makeBreakpointLocation(
     getState(),
     generatedLocation
@@ -57,7 +50,6 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
   const newBreakpoint = {
     id: makeBreakpointId(generatedLocation),
     disabled: false,
-    loading: false,
     options: breakpoint.options,
     location,
     astLocation,
@@ -79,10 +71,6 @@ export function addHiddenBreakpoint(location: SourceLocation) {
 
 export function enableBreakpoint(breakpoint: Breakpoint) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
-    if (breakpoint.loading) {
-      return;
-    }
-
     // To instantly reflect in the UI, we optimistically enable the breakpoint
     const enabledBreakpoint = { ...breakpoint, disabled: false };
 

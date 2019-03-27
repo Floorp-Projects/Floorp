@@ -80,7 +80,7 @@ int main(void) {
 
   char toWrite[kSmallWrite];
   memset(toWrite, 0x0a, kSmallWrite);
-  bl.WriteBytes(toWrite, kSmallWrite);
+  MOZ_ALWAYS_TRUE(bl.WriteBytes(toWrite, kSmallWrite));
 
   MOZ_RELEASE_ASSERT(bl.Size() == kInitialSize + kSmallWrite);
 
@@ -140,7 +140,7 @@ int main(void) {
   for (unsigned i = 0; i < kBigWrite; i++) {
     toWriteBig[i] = i % 37;
   }
-  bl.WriteBytes(toWriteBig, kBigWrite);
+  MOZ_ALWAYS_TRUE(bl.WriteBytes(toWriteBig, kBigWrite));
 
   char* toReadBig = static_cast<char*>(malloc(kBigWrite));
   iter = bl.Iter();
@@ -189,9 +189,9 @@ int main(void) {
   const size_t kSmallCapacity = 8;
 
   BufferList bl2(0, kSmallCapacity, kSmallCapacity);
-  bl2.WriteBytes(toWrite, kSmallWrite);
-  bl2.WriteBytes(toWrite, kSmallWrite);
-  bl2.WriteBytes(toWrite, kSmallWrite);
+  MOZ_ALWAYS_TRUE(bl2.WriteBytes(toWrite, kSmallWrite));
+  MOZ_ALWAYS_TRUE(bl2.WriteBytes(toWrite, kSmallWrite));
+  MOZ_ALWAYS_TRUE(bl2.WriteBytes(toWrite, kSmallWrite));
 
   bl = std::move(bl2);
   MOZ_RELEASE_ASSERT(bl2.Size() == 0);
@@ -262,7 +262,7 @@ int main(void) {
   MOZ_RELEASE_ASSERT(iter.Done());
 
   BufferList bl4(8, 8, 8);
-  bl4.WriteBytes("abcd1234", 8);
+  MOZ_ALWAYS_TRUE(bl4.WriteBytes("abcd1234", 8));
   iter = bl4.Iter();
   iter.Advance(bl4, 8);
 
@@ -270,8 +270,8 @@ int main(void) {
   MOZ_RELEASE_ASSERT(!success);
 
   BufferList bl6(0, 0, 16);
-  bl6.WriteBytes("abcdefgh12345678", 16);
-  bl6.WriteBytes("ijklmnop87654321", 16);
+  MOZ_ALWAYS_TRUE(bl6.WriteBytes("abcdefgh12345678", 16));
+  MOZ_ALWAYS_TRUE(bl6.WriteBytes("ijklmnop87654321", 16));
   iter = bl6.Iter();
   iter.Advance(bl6, 8);
   BufferList bl7 = bl6.Extract(iter, 16, &success);
@@ -284,7 +284,7 @@ int main(void) {
   MOZ_RELEASE_ASSERT(memcmp(data, "12345678ijklmnop", 16) == 0);
 
   BufferList bl8(0, 0, 16);
-  bl8.WriteBytes("abcdefgh12345678", 16);
+  MOZ_ALWAYS_TRUE(bl8.WriteBytes("abcdefgh12345678", 16));
   iter = bl8.Iter();
   BufferList bl9 = bl8.Extract(iter, 8, &success);
   MOZ_RELEASE_ASSERT(success);
@@ -292,8 +292,8 @@ int main(void) {
   MOZ_RELEASE_ASSERT(!iter.Done());
 
   BufferList bl10(0, 0, 8);
-  bl10.WriteBytes("abcdefgh", 8);
-  bl10.WriteBytes("12345678", 8);
+  MOZ_ALWAYS_TRUE(bl10.WriteBytes("abcdefgh", 8));
+  MOZ_ALWAYS_TRUE(bl10.WriteBytes("12345678", 8));
   iter = bl10.Iter();
   BufferList bl11 = bl10.Extract(iter, 16, &success);
   MOZ_RELEASE_ASSERT(success);
