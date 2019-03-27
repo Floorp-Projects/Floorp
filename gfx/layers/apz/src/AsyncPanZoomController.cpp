@@ -3986,13 +3986,13 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncViewportTransform(
     return AsyncTransform();
   }
 
-  CSSRect lastPaintViewport;
+  CSSPoint lastPaintViewportOffset;
   if (mLastContentPaintMetrics.IsScrollable()) {
-    lastPaintViewport = mLastContentPaintMetrics.GetLayoutViewport();
+    lastPaintViewportOffset =
+        mLastContentPaintMetrics.GetLayoutViewport().TopLeft();
   }
 
-  CSSRect currentViewport = GetEffectiveLayoutViewport(aMode);
-  CSSPoint currentViewportOffset = currentViewport.TopLeft();
+  CSSPoint currentViewportOffset = GetEffectiveLayoutViewport(aMode).TopLeft();
 
   // Unlike the visual viewport, the layout viewport does not change size
   // (in the sense of "number of CSS pixels of page content it covers")
@@ -4002,7 +4002,7 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncViewportTransform(
   CSSToParentLayerScale2D effectiveZoom =
       Metrics().LayersPixelsPerCSSPixel() * LayerToParentLayerScale(1.0f);
   ParentLayerPoint translation =
-      (currentViewportOffset - lastPaintViewport.TopLeft()) * effectiveZoom;
+      (currentViewportOffset - lastPaintViewportOffset) * effectiveZoom;
   LayerToParentLayerScale compositedAsyncZoom;
 
   return AsyncTransform(compositedAsyncZoom, -translation);
@@ -4017,7 +4017,7 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
   }
 
   CSSToParentLayerScale2D effectiveZoom;
-  if (aComponents.contains(AsyncTransformComponent::eZoom)) {
+  if (aComponents.contains(AsyncTransformComponent::eVisual)) {
     effectiveZoom = GetEffectiveZoom(aMode);
   } else {
     effectiveZoom =
@@ -4028,50 +4028,36 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
       (effectiveZoom / Metrics().LayersPixelsPerCSSPixel()).ToScaleFactor();
 
   ParentLayerPoint translation;
-  if (aComponents.contains(AsyncTransformComponent::eScroll)) {
-    CSSPoint lastPaintScrollOffset;
+  if (aComponents.contains(AsyncTransformComponent::eVisual)) {
+    CSSPoint lastPaintVisualOffset;
     if (mLastContentPaintMetrics.IsScrollable()) {
-      lastPaintScrollOffset = mLastContentPaintMetrics.GetScrollOffset();
+      lastPaintVisualOffset =
+          mLastContentPaintMetrics.GetScrollOffset() -
+          mLastContentPaintMetrics.GetLayoutViewport().TopLeft();
     }
 
-    CSSPoint currentScrollOffset = GetEffectiveScrollOffset(aMode);
+    CSSPoint currentVisualOffset =
+        GetEffectiveScrollOffset(aMode) -
+        GetEffectiveLayoutViewport(aMode).TopLeft();
 
-    translation = (currentScrollOffset - lastPaintScrollOffset) * effectiveZoom;
+    translation += 
+        (currentVisualOffset - lastPaintVisualOffset) * effectiveZoom;
+  }
+  if (aComponents.contains(AsyncTransformComponent::eLayout)) {
+    CSSPoint lastPaintLayoutOffset;
+    if (mLastContentPaintMetrics.IsScrollable()) {
+      lastPaintLayoutOffset =
+          mLastContentPaintMetrics.GetLayoutViewport().TopLeft();
+    }
+
+    CSSPoint currentLayoutOffset =
+        GetEffectiveLayoutViewport(aMode).TopLeft();
+
+    translation += 
+        (currentLayoutOffset - lastPaintLayoutOffset) * effectiveZoom;
   }
 
   return AsyncTransform(compositedAsyncZoom, -translation);
-}
-
-AsyncTransform AsyncPanZoomController::GetCurrentAsyncViewportRelativeTransform(
-    AsyncTransformConsumer aMode) const {
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
-
-  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
-    return AsyncTransform();
-  }
-
-  CSSPoint lastPaintRelativeViewportOffset;
-  if (mLastContentPaintMetrics.IsScrollable()) {
-    lastPaintRelativeViewportOffset =
-        mLastContentPaintMetrics.GetScrollOffset() -
-        mLastContentPaintMetrics.GetLayoutViewport().TopLeft();
-  }
-
-  CSSPoint currentRelativeViewportOffset =
-      GetEffectiveScrollOffset(aMode) -
-      GetEffectiveLayoutViewport(aMode).TopLeft();
-
-  // Don't include the zoom, because that applies to both the visual and
-  // layout viewports so it's not part of the *relative* transform.
-  // The non-async part of the zoom is only calculated so that we can get
-  // the translation into the right coordinate space.
-  CSSToParentLayerScale2D effectiveZoom =
-      Metrics().LayersPixelsPerCSSPixel() * LayerToParentLayerScale(1.0f);
-  ParentLayerPoint translation =
-      (currentRelativeViewportOffset - lastPaintRelativeViewportOffset) *
-      effectiveZoom;
-
-  return AsyncTransform(LayerToParentLayerScale{}, -translation);
 }
 
 AsyncTransform
