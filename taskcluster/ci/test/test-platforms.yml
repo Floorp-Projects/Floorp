@@ -19,11 +19,6 @@ linux32/debug:
     build-platform: linux/debug
     test-sets:
         - linux32-tests
-linux32/opt:
-    build-platform: linux/opt
-    test-sets:
-        - linux32-tests
-        - linux32-opt-tests
 linux32-nightly/opt:
     build-platform: linux-nightly/opt
     test-sets:
