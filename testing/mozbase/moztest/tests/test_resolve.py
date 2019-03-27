@@ -397,10 +397,6 @@ class TestTestResolver(Base):
             'mochitest-devtools': [
                 'test-linux64/opt-mochitest-devtools-chrome',
             ],
-            'mochitest-gpu': [
-                'test-linux64/opt-mochitest-gpu',
-                'test-linux64/opt-mochitest-gpu-e10s',
-            ],
             'mochitest-media': [
                 'test-linux64/opt-mochitest-media-e10s-1',
             ],
@@ -409,6 +405,10 @@ class TestTestResolver(Base):
                 'test-linux64/debug-mochitest-e10s',
                 # this isn't a real task but the regex would match it if it were
                 'test-linux64/opt-mochitest-plain',
+            ],
+            'mochitest-plain-gpu': [
+                'test-linux64/opt-mochitest-gpu',
+                'test-linux64/opt-mochitest-gpu-e10s',
             ],
             'mochitest-screenshots': [
                 'test-linux64/opt-browser-screenshots-1',
