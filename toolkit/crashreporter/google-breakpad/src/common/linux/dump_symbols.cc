@@ -746,16 +746,9 @@ bool LoadSymbols(const string& obj_file,
                                        elf_header->e_shnum);
     }
 
-    if (dwarf_section) {
-      found_debug_info_section = true;
-      found_usable_info = true;
-      info->LoadedSection(".debug_info");
-      if (!LoadDwarf<ElfClass>(obj_file, elf_header, big_endian,
-                               options.handle_inter_cu_refs, module)) {
-        fprintf(stderr, "%s: \".debug_info\" section found, but failed to load "
-                "DWARF debugging information\n", obj_file.c_str());
-      }
-    }
+    // Parse export symbols prior to parsing DWARF data, so that any
+    // functions found via DWARF data will take precedence over the functions
+    // found via ELF.
 
     // See if there are export symbols available.
     const Shdr* symtab_section =
@@ -812,6 +805,17 @@ bool LoadSymbols(const string& obj_file,
                                ElfClass::kAddrSize,
                                module);
         found_usable_info = found_usable_info || result;
+      }
+    }
+
+    if (dwarf_section) {
+      found_debug_info_section = true;
+      found_usable_info = true;
+      info->LoadedSection(".debug_info");
+      if (!LoadDwarf<ElfClass>(obj_file, elf_header, big_endian,
+                               options.handle_inter_cu_refs, module)) {
+        fprintf(stderr, "%s: \".debug_info\" section found, but failed to load "
+                "DWARF debugging information\n", obj_file.c_str());
       }
     }
   }
