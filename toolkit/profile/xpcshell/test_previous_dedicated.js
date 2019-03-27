@@ -16,9 +16,6 @@ add_task(async () => {
       path: defaultProfile.leafName,
       default: true,
     }],
-  });
-
-  writeInstallsIni({
     installs: {
       [hash]: {
         default: "foobar",
@@ -30,7 +27,6 @@ add_task(async () => {
   testStartsProfileManager();
 
   let profileData = readProfilesIni();
-  let installData = readInstallsIni();
 
   Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 1, "Should have the right number of profiles.");
@@ -42,7 +38,7 @@ add_task(async () => {
   Assert.ok(profile.default, "Should be marked as the old-style default.");
 
   // We keep the data here so we don't steal on the next reboot...
-  Assert.equal(Object.keys(installData.installs).length, 1, "Still list the broken reference.");
+  Assert.equal(Object.keys(profileData.installs).length, 1, "Still list the broken reference.");
 
-  checkProfileService(profileData, installData);
+  checkProfileService(profileData);
 });

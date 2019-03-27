@@ -21,7 +21,6 @@ add_task(async () => {
   checkStartupReason("firstrun-created-default");
 
   let profileData = readProfilesIni();
-  let installData = readInstallsIni();
 
   Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 2, "Should have the right number of profiles.");
@@ -39,11 +38,11 @@ add_task(async () => {
   Assert.notEqual(profile.path, defaultProfile.leafName, "Should not be the original default profile.");
   Assert.ok(!profile.default, "Should not be marked as the old-style default.");
 
-  Assert.equal(Object.keys(installData.installs).length, 1, "Should be a default for installs.");
-  Assert.equal(installData.installs[hash].default, profile.path, "Should have the right default profile.");
-  Assert.ok(installData.installs[hash].locked, "Should have locked as we created this profile for this install.");
+  Assert.equal(Object.keys(profileData.installs).length, 1, "Should be a default for installs.");
+  Assert.equal(profileData.installs[hash].default, profile.path, "Should have the right default profile.");
+  Assert.ok(profileData.installs[hash].locked, "Should have locked as we created this profile for this install.");
 
-  checkProfileService(profileData, installData);
+  checkProfileService(profileData);
 
   Assert.ok(didCreate, "Should have created a new profile.");
   Assert.ok(!service.createdAlternateProfile, "Should not have created an alternate profile.");
