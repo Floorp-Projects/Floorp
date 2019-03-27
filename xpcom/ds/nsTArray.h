@@ -40,7 +40,6 @@
 namespace JS {
 template <class T>
 class Heap;
-class ObjectPtr;
 } /* namespace JS */
 
 class nsRegion;
@@ -699,7 +698,6 @@ DECLARE_USE_COPY_CONSTRUCTORS(
 DECLARE_USE_COPY_CONSTRUCTORS(JSStructuredCloneData)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::MessagePortMessage)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::SourceBufferTask)
-DECLARE_USE_COPY_CONSTRUCTORS(JS::ObjectPtr)
 
 //
 // Base class for nsTArray_Impl that is templated on element type and derived

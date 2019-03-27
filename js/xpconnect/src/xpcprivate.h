@@ -856,15 +856,9 @@ class XPCWrappedNativeScope final
     if (mXrayExpandos.initialized()) {
       mXrayExpandos.trace(trc);
     }
-    if (mIDProto) {
-      mIDProto.trace(trc, "XPCWrappedNativeScope::mIDProto");
-    }
-    if (mIIDProto) {
-      mIIDProto.trace(trc, "XPCWrappedNativeScope::mIIDProto");
-    }
-    if (mCIDProto) {
-      mCIDProto.trace(trc, "XPCWrappedNativeScope::mCIDProto");
-    }
+    JS::TraceEdge(trc, &mIDProto, "XPCWrappedNativeScope::mIDProto");
+    JS::TraceEdge(trc, &mIIDProto, "XPCWrappedNativeScope::mIIDProto");
+    JS::TraceEdge(trc, &mCIDProto, "XPCWrappedNativeScope::mCIDProto");
   }
 
   static void SuspectAllWrappers(nsCycleCollectionNoteRootCallback& cb);
@@ -925,9 +919,9 @@ class XPCWrappedNativeScope final
   bool AllowContentXBLScope(JS::Realm* aRealm);
 
   // ID Object prototype caches.
-  JS::ObjectPtr mIDProto;
-  JS::ObjectPtr mIIDProto;
-  JS::ObjectPtr mCIDProto;
+  JS::Heap<JSObject*> mIDProto;
+  JS::Heap<JSObject*> mIIDProto;
+  JS::Heap<JSObject*> mCIDProto;
 
  protected:
   XPCWrappedNativeScope() = delete;
@@ -1258,17 +1252,19 @@ class XPCWrappedNativeProto final {
 
   void TraceSelf(JSTracer* trc) {
     if (mJSProtoObject) {
-      mJSProtoObject.trace(trc, "XPCWrappedNativeProto::mJSProtoObject");
+      TraceEdge(trc, &mJSProtoObject, "XPCWrappedNativeProto::mJSProtoObject");
     }
   }
 
   void TraceJS(JSTracer* trc) { TraceSelf(trc); }
 
+  /*
   void WriteBarrierPre(JSContext* cx) {
     if (JS::IsIncrementalBarrierNeeded(cx) && mJSProtoObject) {
       mJSProtoObject.writeBarrierPre(cx);
     }
   }
+  */
 
   // NOP. This is just here to make the AutoMarkingPtr code compile.
   void Mark() const {}
@@ -1294,7 +1290,7 @@ class XPCWrappedNativeProto final {
 
  private:
   XPCWrappedNativeScope* mScope;
-  JS::ObjectPtr mJSProtoObject;
+  JS::Heap<JSObject*> mJSProtoObject;
   nsCOMPtr<nsIClassInfo> mClassInfo;
   RefPtr<XPCNativeSet> mSet;
   nsCOMPtr<nsIXPCScriptable> mScriptable;
