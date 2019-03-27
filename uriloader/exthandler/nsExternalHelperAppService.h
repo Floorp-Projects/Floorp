@@ -68,25 +68,6 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
   MOZ_MUST_USE nsresult Init();
 
   /**
-   * Given a mimetype and an extension, looks up a mime info from the OS.
-   * The mime type is given preference. This function follows the same rules
-   * as nsIMIMEService::GetFromTypeAndExtension.
-   * This is supposed to be overridden by the platform-specific
-   * nsOSHelperAppService!
-   * @param aFileExt The file extension; may be empty. UTF-8 encoded.
-   * @param [out] aFound
-   *        Should be set to true if the os has a mapping, to
-   *        false otherwise. Must not be null.
-   * @return A MIMEInfo. This function must return a MIMEInfo object if it
-   *         can allocate one.  The only justifiable reason for not
-   *         returning one is an out-of-memory error.
-   *         If null, the value of aFound is unspecified.
-   */
-  virtual already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(
-      const nsACString& aMIMEType, const nsACString& aFileExt,
-      bool* aFound) = 0;
-
-  /**
    * Given a string identifying an application, create an nsIFile representing
    * it. This function should look in $PATH for the application.
    * The base class implementation will first try to interpret platformAppPath
@@ -103,8 +84,7 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
   virtual nsresult GetFileTokenForPath(const char16_t* platformAppPath,
                                        nsIFile** aFile);
 
-  virtual nsresult OSProtocolHandlerExists(const char* aScheme,
-                                           bool* aExists) = 0;
+  NS_IMETHOD OSProtocolHandlerExists(const char* aScheme, bool* aExists) = 0;
 
   /**
    * Given an extension, get a MIME type string. If not overridden by
@@ -114,6 +94,8 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
    */
   virtual bool GetMIMETypeFromOSForExtension(const nsACString& aExtension,
                                              nsACString& aMIMEType);
+
+  static already_AddRefed<nsExternalHelperAppService> GetSingleton();
 
  protected:
   virtual ~nsExternalHelperAppService();
