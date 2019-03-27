@@ -889,13 +889,16 @@ mathml:
   doc_count:
     bug_numbers:
       - 1362187
+      - 1538985
     description: >
       The number of documents that contained enabled MathML elements.
-    expires: "63"
+    expires: "73"
     kind: uint
     notification_emails:
-      - gsquelart@mozilla.com
-    release_channel_collection: opt-in
+      - emilio@mozilla.com
+      - fredw@igalia.com
+      - dev-tech-layout@lists.mozilla.org
+    release_channel_collection: opt-out
     record_in_processes:
       - 'content'
 
