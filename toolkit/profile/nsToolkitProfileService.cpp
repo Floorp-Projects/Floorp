@@ -1,1710 +1,520 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/UniquePtr.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <prprf.h>
-#include <prtime.h>
-
-#ifdef XP_WIN
-#  include <windows.h>
-#  include <shlobj.h>
-#endif
-#ifdef XP_UNIX
-#  include <unistd.h>
-#endif
-
-#include "nsToolkitProfileService.h"
-#include "CmdLineAndEnvUtils.h"
-#include "nsIFile.h"
-
-#ifdef XP_MACOSX
-#  include <CoreFoundation/CoreFoundation.h>
-#  include "nsILocalFileMac.h"
-#endif
-
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsNetCID.h"
-#include "nsXULAppAPI.h"
-#include "nsThreadUtils.h"
-
-#include "nsIRunnable.h"
-#include "nsXREDirProvider.h"
-#include "nsAppRunner.h"
-#include "nsString.h"
-#include "nsReadableUtils.h"
-#include "nsNativeCharsetUtils.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/Sprintf.h"
-#include "nsPrintfCString.h"
-#include "mozilla/UniquePtr.h"
-#include "nsIToolkitShellService.h"
-#include "mozilla/Telemetry.h"
-
-using namespace mozilla;
-
-#define DEV_EDITION_NAME "dev-edition-default"
-#define DEFAULT_NAME "default"
-#define COMPAT_FILE NS_LITERAL_STRING("compatibility.ini")
-
-nsToolkitProfile::nsToolkitProfile(const nsACString& aName, nsIFile* aRootDir,
-                                   nsIFile* aLocalDir, nsToolkitProfile* aPrev)
-    : mPrev(aPrev),
-      mName(aName),
-      mRootDir(aRootDir),
-      mLocalDir(aLocalDir),
-      mLock(nullptr) {
-  NS_ASSERTION(aRootDir, "No file!");
-
-  if (aPrev) {
-    aPrev->mNext = this;
-  } else {
-    nsToolkitProfileService::gService->mFirst = this;
-  }
-}
-
-NS_IMPL_ISUPPORTS(nsToolkitProfile, nsIToolkitProfile)
-
-NS_IMETHODIMP
-nsToolkitProfile::GetRootDir(nsIFile** aResult) {
-  NS_ADDREF(*aResult = mRootDir);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfile::GetLocalDir(nsIFile** aResult) {
-  NS_ADDREF(*aResult = mLocalDir);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfile::GetName(nsACString& aResult) {
-  aResult = mName;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfile::SetName(const nsACString& aName) {
-  NS_ASSERTION(nsToolkitProfileService::gService, "Where did my service go?");
-
-  if (mName.Equals(aName)) {
-    return NS_OK;
-  }
-
-  // Changing the name from the dev-edition default profile name makes this
-  // profile no longer the dev-edition default.
-  if (mName.EqualsLiteral(DEV_EDITION_NAME) &&
-      nsToolkitProfileService::gService->mDevEditionDefault == this) {
-    nsToolkitProfileService::gService->mDevEditionDefault = nullptr;
-  }
-
-  mName = aName;
-
-  // Setting the name to the dev-edition default profile name will cause this
-  // profile to become the dev-edition default.
-  if (aName.EqualsLiteral(DEV_EDITION_NAME) &&
-      !nsToolkitProfileService::gService->mDevEditionDefault) {
-    nsToolkitProfileService::gService->mDevEditionDefault = this;
-  }
-
-  return NS_OK;
-}
-
-nsresult nsToolkitProfile::RemoveInternal(bool aRemoveFiles,
-                                          bool aInBackground) {
-  NS_ASSERTION(nsToolkitProfileService::gService, "Whoa, my service is gone.");
-
-  if (mLock) return NS_ERROR_FILE_IS_LOCKED;
-
-  if (!mPrev && !mNext && nsToolkitProfileService::gService->mFirst != this)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  if (aRemoveFiles) {
-    // Check if another instance is using this profile.
-    nsCOMPtr<nsIProfileLock> lock;
-    nsresult rv = Lock(nullptr, getter_AddRefs(lock));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIFile> rootDir(mRootDir);
-    nsCOMPtr<nsIFile> localDir(mLocalDir);
-
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
-        "nsToolkitProfile::RemoveInternal", [rootDir, localDir, lock]() {
-          bool equals;
-          nsresult rv = rootDir->Equals(localDir, &equals);
-          // The root dir might contain the temp dir, so remove
-          // the temp dir first.
-          if (NS_SUCCEEDED(rv) && !equals) {
-            localDir->Remove(true);
-          }
-
-          // Ideally we'd unlock after deleting but since the lock is a file
-          // in the profile we must unlock before removing.
-          lock->Unlock();
-
-          rootDir->Remove(true);
-        });
-
-    if (aInBackground) {
-      nsCOMPtr<nsIEventTarget> target =
-          do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-      target->Dispatch(runnable, NS_DISPATCH_NORMAL);
-    } else {
-      runnable->Run();
-    }
-  }
-
-  if (mPrev)
-    mPrev->mNext = mNext;
-  else
-    nsToolkitProfileService::gService->mFirst = mNext;
-
-  if (mNext) mNext->mPrev = mPrev;
-
-  mPrev = nullptr;
-  mNext = nullptr;
-
-  if (nsToolkitProfileService::gService->mNormalDefault == this) {
-    nsToolkitProfileService::gService->mNormalDefault = nullptr;
-  }
-  if (nsToolkitProfileService::gService->mDevEditionDefault == this) {
-    nsToolkitProfileService::gService->mDevEditionDefault = nullptr;
-  }
-  if (nsToolkitProfileService::gService->mDedicatedProfile == this) {
-    nsToolkitProfileService::gService->SetDefaultProfile(nullptr);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfile::Remove(bool removeFiles) {
-  return RemoveInternal(removeFiles, false /* in background */);
-}
-
-NS_IMETHODIMP
-nsToolkitProfile::RemoveInBackground(bool removeFiles) {
-  return RemoveInternal(removeFiles, true /* in background */);
-}
-
-NS_IMETHODIMP
-nsToolkitProfile::Lock(nsIProfileUnlocker** aUnlocker,
-                       nsIProfileLock** aResult) {
-  if (mLock) {
-    NS_ADDREF(*aResult = mLock);
-    return NS_OK;
-  }
-
-  RefPtr<nsToolkitProfileLock> lock = new nsToolkitProfileLock();
-  if (!lock) return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult rv = lock->Init(this, aUnlocker);
-  if (NS_FAILED(rv)) return rv;
-
-  NS_ADDREF(*aResult = lock);
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(nsToolkitProfileLock, nsIProfileLock)
-
-nsresult nsToolkitProfileLock::Init(nsToolkitProfile* aProfile,
-                                    nsIProfileUnlocker** aUnlocker) {
-  nsresult rv;
-  rv = Init(aProfile->mRootDir, aProfile->mLocalDir, aUnlocker);
-  if (NS_SUCCEEDED(rv)) mProfile = aProfile;
-
-  return rv;
-}
-
-nsresult nsToolkitProfileLock::Init(nsIFile* aDirectory,
-                                    nsIFile* aLocalDirectory,
-                                    nsIProfileUnlocker** aUnlocker) {
-  nsresult rv;
-
-  rv = mLock.Lock(aDirectory, aUnlocker);
-
-  if (NS_SUCCEEDED(rv)) {
-    mDirectory = aDirectory;
-    mLocalDirectory = aLocalDirectory;
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileLock::GetDirectory(nsIFile** aResult) {
-  if (!mDirectory) {
-    NS_ERROR("Not initialized, or unlocked!");
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  NS_ADDREF(*aResult = mDirectory);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileLock::GetLocalDirectory(nsIFile** aResult) {
-  if (!mLocalDirectory) {
-    NS_ERROR("Not initialized, or unlocked!");
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  NS_ADDREF(*aResult = mLocalDirectory);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileLock::Unlock() {
-  if (!mDirectory) {
-    NS_ERROR("Unlocking a never-locked nsToolkitProfileLock!");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  mLock.Unlock();
-
-  if (mProfile) {
-    mProfile->mLock = nullptr;
-    mProfile = nullptr;
-  }
-  mDirectory = nullptr;
-  mLocalDirectory = nullptr;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileLock::GetReplacedLockTime(PRTime* aResult) {
-  mLock.GetReplacedLockTime(aResult);
-  return NS_OK;
-}
-
-nsToolkitProfileLock::~nsToolkitProfileLock() {
-  if (mDirectory) {
-    Unlock();
-  }
-}
-
-nsToolkitProfileService* nsToolkitProfileService::gService = nullptr;
-
-NS_IMPL_ISUPPORTS(nsToolkitProfileService, nsIToolkitProfileService)
-
-nsToolkitProfileService::nsToolkitProfileService()
-    : mStartupProfileSelected(false),
-      mStartWithLast(true),
-      mIsFirstRun(true),
-      mUseDevEditionProfile(false),
-#ifdef MOZ_DEDICATED_PROFILES
-      mUseDedicatedProfile(!IsSnapEnvironment()),
-#else
-      mUseDedicatedProfile(false),
-#endif
-      mCreatedAlternateProfile(false),
-      mStartupReason(NS_LITERAL_STRING("unknown")),
-      mMaybeLockProfile(false) {
-#ifdef MOZ_DEV_EDITION
-  mUseDevEditionProfile = true;
-#endif
-  gService = this;
-}
-
-nsToolkitProfileService::~nsToolkitProfileService() { gService = nullptr; }
-
-void nsToolkitProfileService::CompleteStartup() {
-  if (!mStartupProfileSelected) {
-    return;
-  }
-
-  ScalarSet(mozilla::Telemetry::ScalarID::STARTUP_PROFILE_SELECTION_REASON,
-            mStartupReason);
-
-  if (mMaybeLockProfile) {
-    nsCOMPtr<nsIToolkitShellService> shell =
-        do_GetService(NS_TOOLKITSHELLSERVICE_CONTRACTID);
-    if (!shell) {
-      return;
-    }
-
-    bool isDefaultApp;
-    nsresult rv = shell->IsDefaultApplication(&isDefaultApp);
-    NS_ENSURE_SUCCESS_VOID(rv);
-
-    if (isDefaultApp) {
-      mInstallData.SetString(mInstallHash.get(), "Locked", "1");
-      Flush();
-    }
-  }
-}
-
-// Tests whether the passed profile was last used by this install.
-bool nsToolkitProfileService::IsProfileForCurrentInstall(
-    nsIToolkitProfile* aProfile) {
-  nsCOMPtr<nsIFile> profileDir;
-  nsresult rv = aProfile->GetRootDir(getter_AddRefs(profileDir));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  nsCOMPtr<nsIFile> compatFile;
-  rv = profileDir->Clone(getter_AddRefs(compatFile));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  rv = compatFile->Append(COMPAT_FILE);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  nsINIParser compatData;
-  rv = compatData.Init(compatFile);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  /**
-   * In xpcshell gDirServiceProvider doesn't have all the correct directories
-   * set so using NS_GetSpecialDirectory works better there. But in a normal
-   * app launch the component registry isn't initialized so
-   * NS_GetSpecialDirectory doesn't work. So we have to use two different
-   * paths to support testing.
-   */
-  nsCOMPtr<nsIFile> currentGreDir;
-  rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(currentGreDir));
-  if (rv == NS_ERROR_NOT_INITIALIZED) {
-    currentGreDir = gDirServiceProvider->GetGREDir();
-    MOZ_ASSERT(currentGreDir, "No GRE dir found.");
-  } else if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsCString greDirPath;
-  rv = compatData.GetString("Compatibility", "LastPlatformDir", greDirPath);
-  // If this string is missing then this profile is from an ancient version.
-  // We'll opt to use it in this case.
-  if (NS_FAILED(rv)) {
-    return true;
-  }
-
-  nsCOMPtr<nsIFile> greDir;
-  rv = NS_NewNativeLocalFile(EmptyCString(), false, getter_AddRefs(greDir));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  rv = greDir->SetPersistentDescriptor(greDirPath);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  bool equal;
-  rv = greDir->Equals(currentGreDir, &equal);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return equal;
-}
-
-/**
- * Used the first time an install with dedicated profile support runs. Decides
- * whether to mark the passed profile as the default for this install.
- *
- * The goal is to reduce disruption but ideally end up with the OS default
- * install using the old default profile.
- *
- * If the decision is to use the profile then it will be unassigned as the
- * dedicated default for other installs.
- *
- * We won't attempt to use the profile if it was last used by a different
- * install.
- *
- * If the profile is currently in use by an install that was either the OS
- * default install or the profile has been explicitely chosen by some other
- * means then we won't use it.
- *
- * Returns true if we chose to make the profile the new dedicated default.
- */
-bool nsToolkitProfileService::MaybeMakeDefaultDedicatedProfile(
-    nsIToolkitProfile* aProfile) {
-  nsresult rv;
-
-  // If the profile was last used by a different install then we won't use it.
-  if (!IsProfileForCurrentInstall(aProfile)) {
-    return false;
-  }
-
-  nsCString descriptor;
-  rv = GetProfileDescriptor(aProfile, descriptor, nullptr);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  // Get a list of all the installs.
-  nsTArray<nsCString> installs = GetKnownInstalls();
-
-  // Cache the installs that use the profile.
-  nsTArray<nsCString> inUseInstalls;
-
-  // See if the profile is already in use by an install that hasn't locked it.
-  for (uint32_t i = 0; i < installs.Length(); i++) {
-    const nsCString& install = installs[i];
-
-    nsCString path;
-    rv = mInstallData.GetString(install.get(), "Default", path);
-    if (NS_FAILED(rv)) {
-      continue;
-    }
-
-    // Is this install using the profile we care about?
-    if (!descriptor.Equals(path)) {
-      continue;
-    }
-
-    // Is this profile locked to this other install?
-    nsCString isLocked;
-    rv = mInstallData.GetString(install.get(), "Locked", isLocked);
-    if (NS_SUCCEEDED(rv) && isLocked.Equals("1")) {
-      return false;
-    }
-
-    inUseInstalls.AppendElement(install);
-  }
-
-  // At this point we've decided to take the profile. Strip it from other
-  // installs.
-  for (uint32_t i = 0; i < inUseInstalls.Length(); i++) {
-    // Removing the default setting entirely will make the install go through
-    // the first run process again at startup and create itself a new profile.
-    mInstallData.DeleteString(inUseInstalls[i].get(), "Default");
-  }
-
-  // Set this as the default profile for this install.
-  SetDefaultProfile(aProfile);
-
-  // SetDefaultProfile will have locked this profile to this install so no
-  // other installs will steal it, but this was auto-selected so we want to
-  // unlock it so that other installs can potentially take it.
-  mInstallData.DeleteString(mInstallHash.get(), "Locked");
-
-  // Persist the changes.
-  Flush();
-
-  // Once XPCOM is available check if this is the default application and if so
-  // lock the profile again.
-  mMaybeLockProfile = true;
-
-  return true;
-}
-
-nsresult nsToolkitProfileService::Init() {
-  NS_ASSERTION(gDirServiceProvider, "No dirserviceprovider!");
-  nsresult rv;
-
-  rv = nsXREDirProvider::GetUserAppDataDirectory(getter_AddRefs(mAppData));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = nsXREDirProvider::GetUserLocalDataDirectory(getter_AddRefs(mTempData));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCString installProfilePath;
-
-  if (mUseDedicatedProfile) {
-    // Load the dedicated profiles database.
-    rv = mAppData->Clone(getter_AddRefs(mInstallFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mInstallFile->AppendNative(NS_LITERAL_CSTRING("installs.ini"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsString installHash;
-    rv = gDirServiceProvider->GetInstallHash(installHash);
-    NS_ENSURE_SUCCESS(rv, rv);
-    CopyUTF16toUTF8(installHash, mInstallHash);
-
-    rv = mInstallData.Init(mInstallFile);
-    if (NS_SUCCEEDED(rv)) {
-      // Try to find the descriptor for the default profile for this install.
-      rv = mInstallData.GetString(mInstallHash.get(), "Default",
-                                  installProfilePath);
-      // Not having a value means this install doesn't appear in installs.ini so
-      // this is the first run for this install.
-      mIsFirstRun = NS_FAILED(rv);
-    }
-  }
-
-  rv = mAppData->Clone(getter_AddRefs(mListFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mListFile->AppendNative(NS_LITERAL_CSTRING("profiles.ini"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsINIParser parser;
-
-  bool exists;
-  rv = mListFile->IsFile(&exists);
-  if (NS_SUCCEEDED(rv) && exists) {
-    rv = parser.Init(mListFile);
-    // Init does not fail on parsing errors, only on OOM/really unexpected
-    // conditions.
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
-  nsAutoCString buffer;
-  rv = parser.GetString("General", "StartWithLastProfile", buffer);
-  if (NS_SUCCEEDED(rv) && buffer.EqualsLiteral("0")) mStartWithLast = false;
-
-  nsToolkitProfile* currentProfile = nullptr;
-
-#ifdef MOZ_DEV_EDITION
-  nsCOMPtr<nsIFile> ignoreDevEditionProfile;
-  rv = mAppData->Clone(getter_AddRefs(ignoreDevEditionProfile));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = ignoreDevEditionProfile->AppendNative(
-      NS_LITERAL_CSTRING("ignore-dev-edition-profile"));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  bool shouldIgnoreSeparateProfile;
-  rv = ignoreDevEditionProfile->Exists(&shouldIgnoreSeparateProfile);
-  if (NS_FAILED(rv)) return rv;
-
-  mUseDevEditionProfile = !shouldIgnoreSeparateProfile;
-#endif
-
-  nsCOMPtr<nsIToolkitProfile> autoSelectProfile;
-
-  unsigned int nonDevEditionProfiles = 0;
-  unsigned int c = 0;
-  for (c = 0; true; ++c) {
-    nsAutoCString profileID("Profile");
-    profileID.AppendInt(c);
-
-    rv = parser.GetString(profileID.get(), "IsRelative", buffer);
-    if (NS_FAILED(rv)) break;
-
-    bool isRelative = buffer.EqualsLiteral("1");
-
-    nsAutoCString filePath;
-
-    rv = parser.GetString(profileID.get(), "Path", filePath);
-    if (NS_FAILED(rv)) {
-      NS_ERROR("Malformed profiles.ini: Path= not found");
-      continue;
-    }
-
-    nsAutoCString name;
-
-    rv = parser.GetString(profileID.get(), "Name", name);
-    if (NS_FAILED(rv)) {
-      NS_ERROR("Malformed profiles.ini: Name= not found");
-      continue;
-    }
-
-    nsCOMPtr<nsIFile> rootDir;
-    rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(rootDir));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (isRelative) {
-      rv = rootDir->SetRelativeDescriptor(mAppData, filePath);
-    } else {
-      rv = rootDir->SetPersistentDescriptor(filePath);
-    }
-    if (NS_FAILED(rv)) continue;
-
-    nsCOMPtr<nsIFile> localDir;
-    if (isRelative) {
-      rv =
-          NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(localDir));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = localDir->SetRelativeDescriptor(mTempData, filePath);
-    } else {
-      localDir = rootDir;
-    }
-
-    currentProfile =
-        new nsToolkitProfile(name, rootDir, localDir, currentProfile);
-    NS_ENSURE_TRUE(currentProfile, NS_ERROR_OUT_OF_MEMORY);
-
-    rv = parser.GetString(profileID.get(), "Default", buffer);
-    if (NS_SUCCEEDED(rv) && buffer.EqualsLiteral("1")) {
-      mNormalDefault = currentProfile;
-    }
-
-    // Is this the default profile for this install?
-    if (mUseDedicatedProfile && !mDedicatedProfile &&
-        installProfilePath.Equals(filePath)) {
-      // Found a profile for this install.
-      mDedicatedProfile = currentProfile;
-    }
-
-    if (name.EqualsLiteral(DEV_EDITION_NAME)) {
-      mDevEditionDefault = currentProfile;
-    } else {
-      nonDevEditionProfiles++;
-      autoSelectProfile = currentProfile;
-    }
-  }
-
-  // If there is only one non-dev-edition profile then mark it as the default.
-  if (!mNormalDefault && nonDevEditionProfiles == 1) {
-    mNormalDefault = autoSelectProfile;
-  }
-
-  if (!mUseDedicatedProfile) {
-    if (mUseDevEditionProfile) {
-      // When using the separate dev-edition profile not finding it means this
-      // is a first run.
-      mIsFirstRun = !mDevEditionDefault;
-    } else {
-      // If there are no normal profiles then this is a first run.
-      mIsFirstRun = nonDevEditionProfiles == 0;
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::SetStartWithLastProfile(bool aValue) {
-  if (mStartWithLast != aValue) {
-    mStartWithLast = aValue;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::GetStartWithLastProfile(bool* aResult) {
-  *aResult = mStartWithLast;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::GetProfiles(nsISimpleEnumerator** aResult) {
-  *aResult = new ProfileEnumerator(this->mFirst);
-  if (!*aResult) return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::ProfileEnumerator::HasMoreElements(bool* aResult) {
-  *aResult = mCurrent ? true : false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::ProfileEnumerator::GetNext(nsISupports** aResult) {
-  if (!mCurrent) return NS_ERROR_FAILURE;
-
-  NS_ADDREF(*aResult = mCurrent);
-
-  mCurrent = mCurrent->mNext;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::GetCurrentProfile(nsIToolkitProfile** aResult) {
-  NS_IF_ADDREF(*aResult = mCurrent);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::GetDefaultProfile(nsIToolkitProfile** aResult) {
-  if (mUseDedicatedProfile) {
-    NS_IF_ADDREF(*aResult = mDedicatedProfile);
-    return NS_OK;
-  }
-
-  if (mUseDevEditionProfile) {
-    NS_IF_ADDREF(*aResult = mDevEditionDefault);
-    return NS_OK;
-  }
-
-  NS_IF_ADDREF(*aResult = mNormalDefault);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::SetDefaultProfile(nsIToolkitProfile* aProfile) {
-  if (mUseDedicatedProfile) {
-    if (mDedicatedProfile != aProfile) {
-      if (!aProfile) {
-        // Setting this to the empty string means no profile will be found on
-        // startup but we'll recognise that this install has been used
-        // previously.
-        mInstallData.SetString(mInstallHash.get(), "Default", "");
-      } else {
-        nsCString profilePath;
-        nsresult rv = GetProfileDescriptor(aProfile, profilePath, nullptr);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        mInstallData.SetString(mInstallHash.get(), "Default",
-                               profilePath.get());
-      }
-      mDedicatedProfile = aProfile;
-
-      // Some kind of choice has happened here, lock this profile to this
-      // install.
-      mInstallData.SetString(mInstallHash.get(), "Locked", "1");
-    }
-    return NS_OK;
-  }
-
-  if (mUseDevEditionProfile && aProfile != mDevEditionDefault) {
-    // The separate profile is hardcoded.
-    return NS_ERROR_FAILURE;
-  }
-
-  mNormalDefault = aProfile;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::GetCreatedAlternateProfile(bool* aResult) {
-  *aResult = mCreatedAlternateProfile;
-  return NS_OK;
-}
-
-// Gets the profile root directory descriptor for storing in profiles.ini or
-// installs.ini.
-nsresult nsToolkitProfileService::GetProfileDescriptor(
-    nsIToolkitProfile* aProfile, nsACString& aDescriptor, bool* aIsRelative) {
-  nsCOMPtr<nsIFile> profileDir;
-  nsresult rv = aProfile->GetRootDir(getter_AddRefs(profileDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // if the profile dir is relative to appdir...
-  bool isRelative;
-  rv = mAppData->Contains(profileDir, &isRelative);
-
-  nsCString profilePath;
-  if (NS_SUCCEEDED(rv) && isRelative) {
-    // we use a relative descriptor
-    rv = profileDir->GetRelativeDescriptor(mAppData, profilePath);
-  } else {
-    // otherwise, a persistent descriptor
-    rv = profileDir->GetPersistentDescriptor(profilePath);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aDescriptor.Assign(profilePath);
-  if (aIsRelative) {
-    *aIsRelative = isRelative;
-  }
-
-  return NS_OK;
-}
-
-nsresult nsToolkitProfileService::CreateDefaultProfile(
-    nsIToolkitProfile** aResult) {
-  // Create a new default profile
-  nsAutoCString name;
-  if (mUseDevEditionProfile) {
-    name.AssignLiteral(DEV_EDITION_NAME);
-  } else if (mUseDedicatedProfile) {
-    name.AssignLiteral("default-" NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
-  } else {
-    name.AssignLiteral(DEFAULT_NAME);
-  }
-
-  nsresult rv = CreateUniqueProfile(nullptr, name, aResult);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mUseDedicatedProfile) {
-    SetDefaultProfile(mCurrent);
-  } else if (mUseDevEditionProfile) {
-    mDevEditionDefault = mCurrent;
-  } else {
-    mNormalDefault = mCurrent;
-  }
-
-  return NS_OK;
-}
-
-/**
- * An implementation of SelectStartupProfile callable from JavaScript via XPCOM.
- * See nsIToolkitProfileService.idl.
- */
-NS_IMETHODIMP
-nsToolkitProfileService::SelectStartupProfile(
-    const nsTArray<nsCString>& aArgv, bool aIsResetting, nsIFile** aRootDir,
-    nsIFile** aLocalDir, nsIToolkitProfile** aProfile, bool* aDidCreate) {
-  int argc = aArgv.Length();
-  // Our command line handling expects argv to be null-terminated so construct
-  // an appropriate array.
-  auto argv = MakeUnique<char*[]>(argc + 1);
-  // Also, our command line handling removes things from the array without
-  // freeing them so keep track of what we've created separately.
-  auto allocated = MakeUnique<UniqueFreePtr<char>[]>(argc);
-
-  for (int i = 0; i < argc; i++) {
-    allocated[i].reset(ToNewCString(aArgv[i]));
-    argv[i] = allocated[i].get();
-  }
-  argv[argc] = nullptr;
-
-  bool wasDefault;
-  nsresult rv = SelectStartupProfile(&argc, argv.get(), aIsResetting, aRootDir,
-                                     aLocalDir, aProfile, aDidCreate,
-                                     &wasDefault);
-
-  // Since we were called outside of the normal startup path complete any
-  // startup tasks.
-  if (NS_SUCCEEDED(rv)) {
-    CompleteStartup();
-  }
-
-  return rv;
-}
-
-/**
- * Selects or creates a profile to use based on the profiles database, any
- * environment variables and any command line arguments. Will not create
- * a profile if aIsResetting is true. The profile is selected based on this
- * order of preference:
- * * Environment variables (set when restarting the application).
- * * --profile command line argument.
- * * --createprofile command line argument (this also causes the app to exit).
- * * -p command line argument.
- * * A new profile created if this is the first run of the application.
- * * The default profile.
- * aRootDir and aLocalDir are set to the data and local directories for the
- * profile data. If a profile from the database was selected it will be
- * returned in aProfile.
- * aDidCreate will be set to true if a new profile was created.
- * This function should be called once at startup and will fail if called again.
- * aArgv should be an array of aArgc + 1 strings, the last element being null.
- * Both aArgv and aArgc will be mutated.
- */
-nsresult nsToolkitProfileService::SelectStartupProfile(
-    int* aArgc, char* aArgv[], bool aIsResetting, nsIFile** aRootDir,
-    nsIFile** aLocalDir, nsIToolkitProfile** aProfile, bool* aDidCreate,
-    bool* aWasDefaultSelection) {
-  if (mStartupProfileSelected) {
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-
-  mStartupProfileSelected = true;
-  *aDidCreate = false;
-  *aWasDefaultSelection = false;
-
-  nsresult rv;
-  const char* arg;
-
-  // Use the profile specified in the environment variables (generally from an
-  // app initiated restart).
-  nsCOMPtr<nsIFile> lf = GetFileFromEnv("XRE_PROFILE_PATH");
-  if (lf) {
-    nsCOMPtr<nsIFile> localDir = GetFileFromEnv("XRE_PROFILE_LOCAL_PATH");
-    if (!localDir) {
-      localDir = lf;
-    }
-
-    // Clear out flags that we handled (or should have handled!) last startup.
-    const char* dummy;
-    CheckArg(*aArgc, aArgv, "p", &dummy);
-    CheckArg(*aArgc, aArgv, "profile", &dummy);
-    CheckArg(*aArgc, aArgv, "profilemanager");
-
-    nsCOMPtr<nsIToolkitProfile> profile;
-    GetProfileByDir(lf, localDir, getter_AddRefs(profile));
-
-    if (profile && mIsFirstRun && mUseDedicatedProfile) {
-      if (profile ==
-          (mUseDevEditionProfile ? mDevEditionDefault : mNormalDefault)) {
-        // This is the first run of a dedicated profile build where the selected
-        // profile is the previous default so we should either make it the
-        // default profile for this install or push the user to a new profile.
-
-        if (MaybeMakeDefaultDedicatedProfile(profile)) {
-          mStartupReason = NS_LITERAL_STRING("restart-claimed-default");
-
-          mCurrent = profile;
-        } else {
-          if (aIsResetting) {
-            // We don't want to create a fresh profile when we're attempting a
-            // profile reset so just bail out here, the calling code will handle
-            // it.
-            *aProfile = nullptr;
-            return NS_OK;
-          }
-
-          rv = CreateDefaultProfile(getter_AddRefs(mCurrent));
-          if (NS_FAILED(rv)) {
-            *aProfile = nullptr;
-            return rv;
-          }
-
-          Flush();
-
-          mStartupReason = NS_LITERAL_STRING("restart-skipped-default");
-          *aDidCreate = true;
-          mCreatedAlternateProfile = true;
-        }
-
-        NS_IF_ADDREF(*aProfile = mCurrent);
-        mCurrent->GetRootDir(aRootDir);
-        mCurrent->GetLocalDir(aLocalDir);
-
-        return NS_OK;
-      }
-    }
-
-    if (EnvHasValue("XRE_RESTARTED_BY_PROFILE_MANAGER")) {
-      mStartupReason = NS_LITERAL_STRING("profile-manager");
-    } else if (aIsResetting) {
-      mStartupReason = NS_LITERAL_STRING("profile-reset");
-    } else {
-      mStartupReason = NS_LITERAL_STRING("restart");
-    }
-
-    mCurrent = profile;
-    lf.forget(aRootDir);
-    localDir.forget(aLocalDir);
-    NS_IF_ADDREF(*aProfile = profile);
-    return NS_OK;
-  }
-
-  // Check the -profile command line argument. It accepts a single argument that
-  // gives the path to use for the profile.
-  ArgResult ar = CheckArg(*aArgc, aArgv, "profile", &arg,
-                          CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
-  if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR, "Error: argument --profile requires a path\n");
-    return NS_ERROR_FAILURE;
-  }
-  if (ar) {
-    nsCOMPtr<nsIFile> lf;
-    rv = XRE_GetFileFromPath(arg, getter_AddRefs(lf));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Make sure that the profile path exists and it's a directory.
-    bool exists;
-    rv = lf->Exists(&exists);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!exists) {
-      rv = lf->Create(nsIFile::DIRECTORY_TYPE, 0700);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      bool isDir;
-      rv = lf->IsDirectory(&isDir);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!isDir) {
-        PR_fprintf(
-            PR_STDERR,
-            "Error: argument --profile requires a path to a directory\n");
-        return NS_ERROR_FAILURE;
-      }
-    }
-
-    mStartupReason = NS_LITERAL_STRING("argument-profile");
-
-    // If a profile path is specified directly on the command line, then
-    // assume that the temp directory is the same as the given directory.
-    GetProfileByDir(lf, lf, getter_AddRefs(mCurrent));
-    NS_ADDREF(*aRootDir = lf);
-    lf.forget(aLocalDir);
-    NS_IF_ADDREF(*aProfile = mCurrent);
-    return NS_OK;
-  }
-
-  // Check the -createprofile command line argument. It accepts a single
-  // argument that is either the name for the new profile or the name followed
-  // by the path to use.
-  ar = CheckArg(*aArgc, aArgv, "createprofile", &arg,
-                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
-  if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR,
-               "Error: argument --createprofile requires a profile name\n");
-    return NS_ERROR_FAILURE;
-  }
-  if (ar) {
-    const char* delim = strchr(arg, ' ');
-    nsCOMPtr<nsIToolkitProfile> profile;
-    if (delim) {
-      nsCOMPtr<nsIFile> lf;
-      rv = NS_NewNativeLocalFile(nsDependentCString(delim + 1), true,
-                                 getter_AddRefs(lf));
-      if (NS_FAILED(rv)) {
-        PR_fprintf(PR_STDERR, "Error: profile path not valid.\n");
-        return rv;
-      }
-
-      // As with --profile, assume that the given path will be used for the
-      // main profile directory.
-      rv = CreateProfile(lf, nsDependentCSubstring(arg, delim),
-                         getter_AddRefs(profile));
-    } else {
-      rv = CreateProfile(nullptr, nsDependentCString(arg),
-                         getter_AddRefs(profile));
-    }
-    // Some pathological arguments can make it this far
-    if (NS_FAILED(rv)) {
-      PR_fprintf(PR_STDERR, "Error creating profile.\n");
-      return rv;
-    }
-    rv = NS_ERROR_ABORT;
-    Flush();
-
-    return rv;
-  }
-
-  // Check the -p command line argument. It either accepts a profile name and
-  // uses that named profile or without a name it opens the profile manager.
-  ar = CheckArg(*aArgc, aArgv, "p", &arg);
-  if (ar == ARG_BAD) {
-    ar = CheckArg(*aArgc, aArgv, "osint");
-    if (ar == ARG_FOUND) {
-      PR_fprintf(
-          PR_STDERR,
-          "Error: argument -p is invalid when argument --osint is specified\n");
-      return NS_ERROR_FAILURE;
-    }
-
-    return NS_ERROR_SHOW_PROFILE_MANAGER;
-  }
-  if (ar) {
-    ar = CheckArg(*aArgc, aArgv, "osint");
-    if (ar == ARG_FOUND) {
-      PR_fprintf(
-          PR_STDERR,
-          "Error: argument -p is invalid when argument --osint is specified\n");
-      return NS_ERROR_FAILURE;
-    }
-
-    rv = GetProfileByName(nsDependentCString(arg), getter_AddRefs(mCurrent));
-    if (NS_SUCCEEDED(rv)) {
-      mStartupReason = NS_LITERAL_STRING("argument-p");
-
-      mCurrent->GetRootDir(aRootDir);
-      mCurrent->GetLocalDir(aLocalDir);
-
-      NS_ADDREF(*aProfile = mCurrent);
-      return NS_OK;
-    }
-
-    return NS_ERROR_SHOW_PROFILE_MANAGER;
-  }
-
-  ar = CheckArg(*aArgc, aArgv, "profilemanager", (const char**)nullptr,
-                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
-  if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR,
-               "Error: argument --profilemanager is invalid when argument "
-               "--osint is specified\n");
-    return NS_ERROR_FAILURE;
-  }
-  if (ar == ARG_FOUND) {
-    return NS_ERROR_SHOW_PROFILE_MANAGER;
-  }
-
-  // If this is a first run then create a new profile.
-  if (mIsFirstRun) {
-    if (aIsResetting) {
-      // We don't want to create a fresh profile when we're attempting a
-      // profile reset so just bail out here, the calling code will handle it.
-      *aProfile = nullptr;
-      return NS_OK;
-    }
-
-    // If we're configured to always show the profile manager then don't create
-    // a new profile to use.
-    if (!mStartWithLast) {
-      return NS_ERROR_SHOW_PROFILE_MANAGER;
-    }
-
-    if (mUseDedicatedProfile) {
-      // This is the first run of a dedicated profile install. We have to decide
-      // whether to use the default profile used by non-dedicated-profile
-      // installs or to create a new profile.
-
-      // Find what would have been the default profile for old installs.
-      nsCOMPtr<nsIToolkitProfile> profile = mNormalDefault;
-      if (mUseDevEditionProfile) {
-        profile = mDevEditionDefault;
-      }
-
-      if (profile) {
-        nsCOMPtr<nsIFile> rootDir;
-        profile->GetRootDir(getter_AddRefs(rootDir));
-
-        nsCOMPtr<nsIFile> compat;
-        rootDir->Clone(getter_AddRefs(compat));
-        compat->Append(COMPAT_FILE);
-
-        bool exists;
-        rv = compat->Exists(&exists);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // If the file is missing then either this is an empty profile (likely
-        // generated by bug 1518591) or it is from an ancient version. We'll opt
-        // to leave it for older versions in this case.
-        if (exists) {
-          if (MaybeMakeDefaultDedicatedProfile(profile)) {
-            mStartupReason = NS_LITERAL_STRING("firstrun-claimed-default");
-
-            mCurrent = profile;
-            rootDir.forget(aRootDir);
-            profile->GetLocalDir(aLocalDir);
-            profile.forget(aProfile);
-            return NS_OK;
-          }
-
-          // We're going to create a new profile for this install. If there was
-          // a potential previous default to use then the user may be confused
-          // over why we're not using that anymore so set a flag for the front
-          // end to use to notify the user about what has happened.
-          mCreatedAlternateProfile = true;
-        }
-      }
-    }
-
-    rv = CreateDefaultProfile(getter_AddRefs(mCurrent));
-    if (NS_SUCCEEDED(rv)) {
-      // If there is only one profile and it isn't meant to be the profile that
-      // older versions of Firefox use then we must create a default profile
-      // for older versions of Firefox to avoid the existing profile being
-      // auto-selected.
-      if ((mUseDedicatedProfile || mUseDevEditionProfile) && mFirst &&
-          !mFirst->mNext) {
-        CreateProfile(nullptr, NS_LITERAL_CSTRING(DEFAULT_NAME),
-                      getter_AddRefs(mNormalDefault));
-      }
-
-      Flush();
-
-      if (mCreatedAlternateProfile) {
-        mStartupReason = NS_LITERAL_STRING("firstrun-skipped-default");
-      } else {
-        mStartupReason = NS_LITERAL_STRING("firstrun-created-default");
-      }
-
-      // Use the new profile.
-      mCurrent->GetRootDir(aRootDir);
-      mCurrent->GetLocalDir(aLocalDir);
-      NS_ADDREF(*aProfile = mCurrent);
-
-      *aDidCreate = true;
-      return NS_OK;
-    }
-  }
-
-  GetDefaultProfile(getter_AddRefs(mCurrent));
-
-  // None of the profiles was marked as default (generally only happens if the
-  // user modifies profiles.ini manually). Let the user choose.
-  if (!mCurrent) {
-    return NS_ERROR_SHOW_PROFILE_MANAGER;
-  }
-
-  // Let the caller know that the profile was selected by default.
-  *aWasDefaultSelection = true;
-  mStartupReason = NS_LITERAL_STRING("default");
-
-  // Use the selected profile.
-  mCurrent->GetRootDir(aRootDir);
-  mCurrent->GetLocalDir(aLocalDir);
-  NS_ADDREF(*aProfile = mCurrent);
-
-  return NS_OK;
-}
-
-/**
- * Creates a new profile for reset and mark it as the current profile.
- */
-nsresult nsToolkitProfileService::CreateResetProfile(
-    nsIToolkitProfile** aNewProfile) {
-  nsAutoCString oldProfileName;
-  mCurrent->GetName(oldProfileName);
-
-  nsCOMPtr<nsIToolkitProfile> newProfile;
-  // Make the new profile name the old profile (or "default-") + the time in
-  // seconds since epoch for uniqueness.
-  nsAutoCString newProfileName;
-  if (!oldProfileName.IsEmpty()) {
-    newProfileName.Assign(oldProfileName);
-    newProfileName.Append("-");
-  } else {
-    newProfileName.AssignLiteral("default-");
-  }
-  newProfileName.AppendPrintf("%" PRId64, PR_Now() / 1000);
-  nsresult rv = CreateProfile(nullptr,  // choose a default dir for us
-                              newProfileName, getter_AddRefs(newProfile));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = Flush();
-  if (NS_FAILED(rv)) return rv;
-
-  mCurrent = newProfile;
-  newProfile.forget(aNewProfile);
-
-  return NS_OK;
-}
-
-/**
- * This is responsible for deleting the old profile, copying its name to the
- * current profile and if the old profile was default making the new profile
- * default as well.
- */
-nsresult nsToolkitProfileService::ApplyResetProfile(
-    nsIToolkitProfile* aOldProfile) {
-  // If the old profile would have been the default for old installs then mark
-  // the new profile as such.
-  if (mNormalDefault == aOldProfile) {
-    mNormalDefault = mCurrent;
-  }
-
-  if (mUseDedicatedProfile && mDedicatedProfile == aOldProfile) {
-    bool wasLocked = false;
-    nsCString val;
-    if (NS_SUCCEEDED(
-            mInstallData.GetString(mInstallHash.get(), "Locked", val))) {
-      wasLocked = val.Equals("1");
-    }
-
-    SetDefaultProfile(mCurrent);
-
-    // Make the locked state match if necessary.
-    if (!wasLocked) {
-      mInstallData.DeleteString(mInstallHash.get(), "Locked");
-    }
-  }
-
-  nsCString name;
-  nsresult rv = aOldProfile->GetName(name);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aOldProfile->Remove(false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Switching the name will make this the default for dev-edition if
-  // appropriate.
-  rv = mCurrent->SetName(name);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return Flush();
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::GetProfileByName(const nsACString& aName,
-                                          nsIToolkitProfile** aResult) {
-  nsToolkitProfile* curP = mFirst;
-  while (curP) {
-    if (curP->mName.Equals(aName)) {
-      NS_ADDREF(*aResult = curP);
-      return NS_OK;
-    }
-    curP = curP->mNext;
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-/**
- * Finds a profile from the database that uses the given root and local
- * directories.
- */
-void nsToolkitProfileService::GetProfileByDir(nsIFile* aRootDir,
-                                              nsIFile* aLocalDir,
-                                              nsIToolkitProfile** aResult) {
-  nsToolkitProfile* curP = mFirst;
-  while (curP) {
-    bool equal;
-    nsresult rv = curP->mRootDir->Equals(aRootDir, &equal);
-    if (NS_SUCCEEDED(rv) && equal) {
-      rv = curP->mLocalDir->Equals(aLocalDir, &equal);
-      if (NS_SUCCEEDED(rv) && equal) {
-        NS_ADDREF(*aResult = curP);
-        return;
-      }
-    }
-    curP = curP->mNext;
-  }
-}
-
-nsresult NS_LockProfilePath(nsIFile* aPath, nsIFile* aTempPath,
-                            nsIProfileUnlocker** aUnlocker,
-                            nsIProfileLock** aResult) {
-  RefPtr<nsToolkitProfileLock> lock = new nsToolkitProfileLock();
-  if (!lock) return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult rv = lock->Init(aPath, aTempPath, aUnlocker);
-  if (NS_FAILED(rv)) return rv;
-
-  lock.forget(aResult);
-  return NS_OK;
-}
-
-static void SaltProfileName(nsACString& aName) {
-  char salt[9];
-  NS_MakeRandomString(salt, 8);
-  salt[8] = '.';
-
-  aName.Insert(salt, 0, 9);
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::CreateUniqueProfile(nsIFile* aRootDir,
-                                             const nsACString& aNamePrefix,
-                                             nsIToolkitProfile** aResult) {
-  nsCOMPtr<nsIToolkitProfile> profile;
-  nsresult rv = GetProfileByName(aNamePrefix, getter_AddRefs(profile));
-  if (NS_FAILED(rv)) {
-    return CreateProfile(aRootDir, aNamePrefix, aResult);
-  }
-
-  uint32_t suffix = 1;
-  while (true) {
-    nsPrintfCString name("%s-%d", PromiseFlatCString(aNamePrefix).get(),
-                         suffix);
-    rv = GetProfileByName(name, getter_AddRefs(profile));
-    if (NS_FAILED(rv)) {
-      return CreateProfile(aRootDir, name, aResult);
-    }
-    suffix++;
-  }
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::CreateProfile(nsIFile* aRootDir,
-                                       const nsACString& aName,
-                                       nsIToolkitProfile** aResult) {
-  nsresult rv = GetProfileByName(aName, aResult);
-  if (NS_SUCCEEDED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIFile> rootDir(aRootDir);
-
-  nsAutoCString dirName;
-  if (!rootDir) {
-    rv = gDirServiceProvider->GetUserProfilesRootDir(getter_AddRefs(rootDir));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    dirName = aName;
-    SaltProfileName(dirName);
-
-    if (NS_IsNativeUTF8()) {
-      rootDir->AppendNative(dirName);
-    } else {
-      rootDir->Append(NS_ConvertUTF8toUTF16(dirName));
-    }
-  }
-
-  nsCOMPtr<nsIFile> localDir;
-
-  bool isRelative;
-  rv = mAppData->Contains(rootDir, &isRelative);
-  if (NS_SUCCEEDED(rv) && isRelative) {
-    nsAutoCString path;
-    rv = rootDir->GetRelativeDescriptor(mAppData, path);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(localDir));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = localDir->SetRelativeDescriptor(mTempData, path);
-  } else {
-    localDir = rootDir;
-  }
-
-  bool exists;
-  rv = rootDir->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (exists) {
-    rv = rootDir->IsDirectory(&exists);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!exists) return NS_ERROR_FILE_NOT_DIRECTORY;
-  } else {
-    nsCOMPtr<nsIFile> profileDirParent;
-    nsAutoString profileDirName;
-
-    rv = rootDir->GetParent(getter_AddRefs(profileDirParent));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = rootDir->GetLeafName(profileDirName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // let's ensure that the profile directory exists.
-    rv = rootDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = rootDir->SetPermissions(0700);
-#ifndef ANDROID
-    // If the profile is on the sdcard, this will fail but its non-fatal
-    NS_ENSURE_SUCCESS(rv, rv);
-#endif
-  }
-
-  rv = localDir->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!exists) {
-    rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // We created a new profile dir. Let's store a creation timestamp.
-  // Note that this code path does not apply if the profile dir was
-  // created prior to launching.
-  rv = CreateTimesInternal(rootDir);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsToolkitProfile* last = mFirst.get();
-  if (last) {
-    while (last->mNext) {
-      last = last->mNext;
-    }
-  }
-
-  nsCOMPtr<nsIToolkitProfile> profile =
-      new nsToolkitProfile(aName, rootDir, localDir, last);
-  if (!profile) return NS_ERROR_OUT_OF_MEMORY;
-
-  if (aName.Equals(DEV_EDITION_NAME)) {
-    mDevEditionDefault = profile;
-  }
-
-  profile.forget(aResult);
-  return NS_OK;
-}
-
-/**
- * Snaps (https://snapcraft.io/) use a different installation directory for
- * every version of an application. Since dedicated profiles uses the
- * installation directory to determine which profile to use this would lead
- * snap users getting a new profile on every application update.
- *
- * However the only way to have multiple installation of a snap is to install
- * a new snap instance. Different snap instances have different user data
- * directories and so already will not share profiles, in fact one instance
- * will not even be able to see the other instance's profiles since
- * profiles.ini will be stored in different places.
- *
- * So we can just disable dedicated profile support in this case and revert
- * back to the old method of just having a single default profile and still
- * get essentially the same benefits as dedicated profiles provides.
- */
-bool nsToolkitProfileService::IsSnapEnvironment() {
-  return !!PR_GetEnv("SNAP_NAME");
-}
-
-struct FindInstallsClosure {
-  nsINIParser* installData;
-  nsTArray<nsCString>* installs;
-};
-
-static bool FindInstalls(const char* aSection, void* aClosure) {
-  FindInstallsClosure* closure = static_cast<FindInstallsClosure*>(aClosure);
-
-  nsCString install(aSection);
-  closure->installs->AppendElement(install);
-
-  return true;
-}
-
-nsTArray<nsCString> nsToolkitProfileService::GetKnownInstalls() {
-  nsTArray<nsCString> result;
-  FindInstallsClosure closure = {&mInstallData, &result};
-
-  mInstallData.GetSections(&FindInstalls, &closure);
-
-  return result;
-}
-
-nsresult nsToolkitProfileService::CreateTimesInternal(nsIFile* aProfileDir) {
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIFile> creationLog;
-  rv = aProfileDir->Clone(getter_AddRefs(creationLog));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = creationLog->AppendNative(NS_LITERAL_CSTRING("times.json"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool exists = false;
-  creationLog->Exists(&exists);
-  if (exists) {
-    return NS_OK;
-  }
-
-  rv = creationLog->Create(nsIFile::NORMAL_FILE_TYPE, 0700);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // We don't care about microsecond resolution.
-  int64_t msec = PR_Now() / PR_USEC_PER_MSEC;
-
-  // Write it out.
-  PRFileDesc* writeFile;
-  rv = creationLog->OpenNSPRFileDesc(PR_WRONLY, 0700, &writeFile);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PR_fprintf(writeFile, "{\n\"created\": %lld,\n\"firstUse\": null\n}\n", msec);
-  PR_Close(writeFile);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::GetProfileCount(uint32_t* aResult) {
-  *aResult = 0;
-  nsToolkitProfile* profile = mFirst;
-  while (profile) {
-    (*aResult)++;
-    profile = profile->mNext;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::Flush() {
-  nsresult rv;
-
-  if (mUseDedicatedProfile) {
-    rv = mInstallData.WriteToFile(mInstallFile);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Errors during writing might cause unhappy semi-written files.
-  // To avoid this, write the entire thing to a buffer, then write
-  // that buffer to disk.
-
-  uint32_t pCount = 0;
-  nsToolkitProfile* cur;
-
-  for (cur = mFirst; cur != nullptr; cur = cur->mNext) ++pCount;
-
-  uint32_t length;
-  const int bufsize = 100 + MAXPATHLEN * pCount;
-  auto buffer = MakeUnique<char[]>(bufsize);
-
-  char* pos = buffer.get();
-  char* end = pos + bufsize;
-
-  pos += snprintf(pos, end - pos,
-                  "[General]\n"
-                  "StartWithLastProfile=%s\n\n",
-                  mStartWithLast ? "1" : "0");
-
-  nsAutoCString path;
-  cur = mFirst;
-  pCount = 0;
-
-  while (cur) {
-    bool isRelative;
-    nsresult rv = GetProfileDescriptor(cur, path, &isRelative);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    pos +=
-        snprintf(pos, end - pos,
-                 "[Profile%u]\n"
-                 "Name=%s\n"
-                 "IsRelative=%s\n"
-                 "Path=%s\n",
-                 pCount, cur->mName.get(), isRelative ? "1" : "0", path.get());
-
-    if (cur == mNormalDefault) {
-      pos += snprintf(pos, end - pos, "Default=1\n");
-    }
-
-    pos += snprintf(pos, end - pos, "\n");
-
-    cur = cur->mNext;
-    ++pCount;
-  }
-
-  FILE* writeFile;
-  rv = mListFile->OpenANSIFileDesc("w", &writeFile);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  length = pos - buffer.get();
-
-  if (fwrite(buffer.get(), sizeof(char), length, writeFile) != length) {
-    fclose(writeFile);
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  fclose(writeFile);
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(nsToolkitProfileFactory, nsIFactory)
-
-NS_IMETHODIMP
-nsToolkitProfileFactory::CreateInstance(nsISupports* aOuter, const nsID& aIID,
-                                        void** aResult) {
-  if (aOuter) return NS_ERROR_NO_AGGREGATION;
-
-  RefPtr<nsToolkitProfileService> profileService =
-      nsToolkitProfileService::gService;
-  if (!profileService) {
-    nsresult rv = NS_NewToolkitProfileService(getter_AddRefs(profileService));
-    if (NS_FAILED(rv)) return rv;
-  }
-  return profileService->QueryInterface(aIID, aResult);
-}
-
-NS_IMETHODIMP
-nsToolkitProfileFactory::LockFactory(bool aVal) { return NS_OK; }
-
-nsresult NS_NewToolkitProfileFactory(nsIFactory** aResult) {
-  *aResult = new nsToolkitProfileFactory();
-  if (!*aResult) return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
-nsresult NS_NewToolkitProfileService(nsToolkitProfileService** aResult) {
-  nsToolkitProfileService* profileService = new nsToolkitProfileService();
-  if (!profileService) return NS_ERROR_OUT_OF_MEMORY;
-  nsresult rv = profileService->Init();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("nsToolkitProfileService::Init failed!");
-    delete profileService;
-    return rv;
-  }
-
-  NS_ADDREF(*aResult = profileService);
-  return NS_OK;
-}
-
-nsresult XRE_GetFileFromPath(const char* aPath, nsIFile** aResult) {
-#if defined(XP_MACOSX)
-  int32_t pathLen = strlen(aPath);
-  if (pathLen > MAXPATHLEN) return NS_ERROR_INVALID_ARG;
-
-  CFURLRef fullPath = CFURLCreateFromFileSystemRepresentation(
-      nullptr, (const UInt8*)aPath, pathLen, true);
-  if (!fullPath) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIFile> lf;
-  nsresult rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(lf));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsILocalFileMac> lfMac = do_QueryInterface(lf, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = lfMac->InitWithCFURL(fullPath);
-      if (NS_SUCCEEDED(rv)) {
-        lf.forget(aResult);
-      }
-    }
-  }
-  CFRelease(fullPath);
-  return rv;
-
-#elif defined(XP_UNIX)
-  char fullPath[MAXPATHLEN];
-
-  if (!realpath(aPath, fullPath)) return NS_ERROR_FAILURE;
-
-  return NS_NewNativeLocalFile(nsDependentCString(fullPath), true, aResult);
-#elif defined(XP_WIN)
-  WCHAR fullPath[MAXPATHLEN];
-
-  if (!_wfullpath(fullPath, NS_ConvertUTF8toUTF16(aPath).get(), MAXPATHLEN))
-    return NS_ERROR_FAILURE;
-
-  return NS_NewLocalFile(nsDependentString(fullPath), true, aResult);
-
-#else
-#  error Platform-specific logic needed here.
-#endif
-}
+Looks like configure has not run yet, running it now...
+ 0:00.68 Clobber not needed.
+ 0:00.68 Adding make options from /Users/dave/mozilla/bin/entrymozconfig
+    RUN_AUTOCONF_LOCALLY=1
+    AUTOCLOBBER=1
+    MOZ_OBJDIR=/Users/dave/mozilla/source/trunk/obj-x86_64-apple-darwin18.5.0
+    OBJDIR=/Users/dave/mozilla/source/trunk/obj-x86_64-apple-darwin18.5.0
+    FOUND_MOZCONFIG=/Users/dave/mozilla/bin/entrymozconfig
+    export FOUND_MOZCONFIG
+ 0:00.70 /usr/bin/make -f client.mk -s configure
+ 0:00.72 cd /Users/dave/mozilla/source/trunk/obj-x86_64-apple-darwin18.5.0
+ 0:00.72 /Users/dave/mozilla/source/trunk/configure
+ 0:00.91 Creating Python environment
+ 0:02.84 New python executable in /Users/dave/mozilla/source/trunk/obj-x86_64-apple-darwin18.5.0/_virtualenvs/init/bin/python2.7
+ 0:02.84 Also creating executable in /Users/dave/mozilla/source/trunk/obj-x86_64-apple-darwin18.5.0/_virtualenvs/init/bin/python
+ 0:02.84 Installing setuptools, pip, wheel...done.
+ 0:03.15 running build_ext
+ 0:03.15 copying build/lib.macosx-10.14-x86_64-2.7/psutil/_psutil_osx.so -> psutil
+ 0:03.15 copying build/lib.macosx-10.14-x86_64-2.7/psutil/_psutil_posix.so -> psutil
+ 0:03.15 
+ 0:03.15 Error processing command. Ignoring because optional. (optional:packages.txt:comm/build/virtualenv_packages.txt)
+ 0:03.15 Reexecuting in the virtualenv
+ 0:03.32 Adding configure options from /Users/dave/mozilla/bin/entrymozconfig
+ 0:03.32   --enable-application=browser
+ 0:03.32   --enable-debug
+ 0:03.32   --disable-optimize
+ 0:03.32   --with-ccache=/usr/local/bin/sccache
+ 0:03.32   --with-macos-sdk=/Users/dave/.mozbuild/MacOSX10.13.sdk
+ 0:03.32   CONFIG=/Users/dave/mozilla/config
+ 0:03.32 checking for vcs source checkout... hg
+ 0:03.37 checking for a shell... /bin/sh
+ 0:03.43 checking for host system type... x86_64-apple-darwin18.5.0
+ 0:03.43 checking for target system type... x86_64-apple-darwin18.5.0
+ 0:03.75 checking whether cross compiling... no
+ 0:03.90 checking for Python 3... /usr/local/bin/python3 (3.7.2)
+ 0:03.90 checking for hg... /usr/local/bin/hg
+ 0:04.08 checking for Mercurial version... 4.9
+ 0:04.28 checking for sparse checkout... no
+ 0:04.28 checking for yasm... /usr/local/bin/yasm
+ 0:04.30 checking yasm version... 1.3.0
+ 0:04.40 checking for ccache... /usr/local/bin/sccache
+ 0:04.43 checking for the target C compiler... /usr/bin/clang
+ 0:05.74 checking whether the target C compiler can be used... yes
+ 0:05.74 checking the target C compiler version... 10.0.1
+ 0:05.78 checking the target C compiler works... yes
+ 0:05.78 checking for the target C++ compiler... /usr/bin/clang++
+ 0:05.88 checking whether the target C++ compiler can be used... yes
+ 0:05.88 checking the target C++ compiler version... 10.0.1
+ 0:05.92 checking the target C++ compiler works... yes
+ 0:05.92 checking for the host C compiler... /usr/bin/clang
+ 0:06.00 checking whether the host C compiler can be used... yes
+ 0:06.00 checking the host C compiler version... 10.0.1
+ 0:06.04 checking the host C compiler works... yes
+ 0:06.04 checking for the host C++ compiler... /usr/bin/clang++
+ 0:06.12 checking whether the host C++ compiler can be used... yes
+ 0:06.12 checking the host C++ compiler version... 10.0.1
+ 0:06.16 checking the host C++ compiler works... yes
+ 0:06.20 checking for 64-bit OS... yes
+ 0:06.21 checking for llvm_profdata... not found
+ 0:06.21 checking for nasm... /usr/local/bin/nasm
+ 0:06.23 checking nasm version... 2.14.02
+ 0:06.30 checking for linker... ld64
+ 0:06.30 checking for the assembler... /usr/bin/clang
+ 0:06.34 checking whether the C compiler supports -fsanitize=fuzzer-no-link... yes
+ 0:06.34 checking for ar... /usr/bin/ar
+ 0:06.34 checking for pkg_config... not found
+ 0:06.41 checking for stdint.h... yes
+ 0:06.48 checking for inttypes.h... yes
+ 0:06.51 checking for malloc.h... no
+ 0:06.56 checking for alloca.h... yes
+ 0:06.60 checking for sys/byteorder.h... no
+ 0:06.67 checking for getopt.h... yes
+ 0:06.72 checking for unistd.h... yes
+ 0:06.78 checking for nl_types.h... yes
+ 0:06.82 checking for cpuid.h... yes
+ 0:06.86 checking for sys/statvfs.h... yes
+ 0:06.91 checking for sys/statfs.h... no
+ 0:06.96 checking for sys/vfs.h... no
+ 0:07.04 checking for sys/mount.h... yes
+ 0:07.21 checking for sys/quota.h... no
+ 0:07.25 checking for sys/queue.h... yes
+ 0:07.31 checking for sys/types.h... yes
+ 0:07.37 checking for netinet/in.h... yes
+ 0:07.41 checking for byteswap.h... no
+ 0:07.46 checking for perf_event_open system call... no
+ 0:07.50 checking whether the C compiler supports -Wbitfield-enum-conversion... yes
+ 0:07.55 checking whether the C++ compiler supports -Wbitfield-enum-conversion... yes
+ 0:07.60 checking whether the C compiler supports -Wshadow-field-in-constructor-modified... yes
+ 0:07.66 checking whether the C++ compiler supports -Wshadow-field-in-constructor-modified... yes
+ 0:07.71 checking whether the C compiler supports -Wunreachable-code-return... yes
+ 0:07.77 checking whether the C++ compiler supports -Wunreachable-code-return... yes
+ 0:07.81 checking whether the C compiler supports -Wclass-varargs... yes
+ 0:07.85 checking whether the C++ compiler supports -Wclass-varargs... yes
+ 0:07.89 checking whether the C compiler supports -Wfloat-overflow-conversion... yes
+ 0:07.93 checking whether the C++ compiler supports -Wfloat-overflow-conversion... yes
+ 0:07.97 checking whether the C compiler supports -Wfloat-zero-conversion... yes
+ 0:08.01 checking whether the C++ compiler supports -Wfloat-zero-conversion... yes
+ 0:08.04 checking whether the C compiler supports -Wloop-analysis... yes
+ 0:08.07 checking whether the C++ compiler supports -Wloop-analysis... yes
+ 0:08.11 checking whether the C++ compiler supports -Wc++1z-compat... yes
+ 0:08.16 checking whether the C++ compiler supports -Wc++2a-compat... yes
+ 0:08.20 checking whether the C++ compiler supports -Wcomma... yes
+ 0:08.24 checking whether the C compiler supports -Wduplicated-cond... no
+ 0:08.28 checking whether the C++ compiler supports -Wduplicated-cond... no
+ 0:08.33 checking whether the C++ compiler supports -Wimplicit-fallthrough... yes
+ 0:08.38 checking whether the C compiler supports -Wstring-conversion... yes
+ 0:08.42 checking whether the C++ compiler supports -Wstring-conversion... yes
+ 0:08.46 checking whether the C compiler supports -Wtautological-overlap-compare... yes
+ 0:08.50 checking whether the C++ compiler supports -Wtautological-overlap-compare... yes
+ 0:08.55 checking whether the C compiler supports -Wtautological-unsigned-enum-zero-compare... yes
+ 0:08.58 checking whether the C++ compiler supports -Wtautological-unsigned-enum-zero-compare... yes
+ 0:08.62 checking whether the C compiler supports -Wtautological-unsigned-zero-compare... yes
+ 0:08.66 checking whether the C++ compiler supports -Wtautological-unsigned-zero-compare... yes
+ 0:08.70 checking whether the C++ compiler supports -Wno-inline-new-delete... yes
+ 0:08.74 checking whether the C compiler supports -Wno-error=maybe-uninitialized... no
+ 0:08.79 checking whether the C++ compiler supports -Wno-error=maybe-uninitialized... no
+ 0:08.84 checking whether the C compiler supports -Wno-error=deprecated-declarations... yes
+ 0:08.89 checking whether the C++ compiler supports -Wno-error=deprecated-declarations... yes
+ 0:08.94 checking whether the C compiler supports -Wno-error=array-bounds... yes
+ 0:08.98 checking whether the C++ compiler supports -Wno-error=array-bounds... yes
+ 0:09.01 checking whether the C compiler supports -Wno-error=coverage-mismatch... no
+ 0:09.05 checking whether the C++ compiler supports -Wno-error=coverage-mismatch... no
+ 0:09.09 checking whether the C compiler supports -Wno-error=backend-plugin... yes
+ 0:09.13 checking whether the C++ compiler supports -Wno-error=backend-plugin... yes
+ 0:09.16 checking whether the C compiler supports -Wno-error=free-nonheap-object... no
+ 0:09.20 checking whether the C++ compiler supports -Wno-error=free-nonheap-object... no
+ 0:09.24 checking whether the C compiler supports -Wno-error=multistatement-macros... no
+ 0:09.27 checking whether the C++ compiler supports -Wno-error=multistatement-macros... no
+ 0:09.30 checking whether the C compiler supports -Wno-error=return-std-move... yes
+ 0:09.34 checking whether the C++ compiler supports -Wno-error=return-std-move... yes
+ 0:09.38 checking whether the C compiler supports -Wno-error=class-memaccess... no
+ 0:09.42 checking whether the C++ compiler supports -Wno-error=class-memaccess... no
+ 0:09.45 checking whether the C compiler supports -Wno-error=atomic-alignment... yes
+ 0:09.49 checking whether the C++ compiler supports -Wno-error=atomic-alignment... yes
+ 0:09.53 checking whether the C compiler supports -Wno-error=deprecated-copy... no
+ 0:09.56 checking whether the C++ compiler supports -Wno-error=deprecated-copy... no
+ 0:09.60 checking whether the C compiler supports -Wformat... yes
+ 0:09.63 checking whether the C++ compiler supports -Wformat... yes
+ 0:09.67 checking whether the C compiler supports -Wformat-security... yes
+ 0:09.71 checking whether the C++ compiler supports -Wformat-security... yes
+ 0:09.74 checking whether the C compiler supports -Wformat-overflow=2... no
+ 0:09.77 checking whether the C++ compiler supports -Wformat-overflow=2... no
+ 0:09.81 checking whether the C compiler supports -Wno-gnu-zero-variadic-macro-arguments... yes
+ 0:09.84 checking whether the C++ compiler supports -Wno-gnu-zero-variadic-macro-arguments... yes
+ 0:09.88 checking whether the C++ compiler supports -fno-sized-deallocation... yes
+ 0:09.89 checking for rustc... /Users/dave/.cargo/bin/rustc
+ 0:09.89 checking for cargo... /Users/dave/.cargo/bin/cargo
+ 0:10.07 checking rustc version... 1.33.0
+ 0:10.15 checking cargo version... 1.33.0
+ 0:10.56 checking for rust target triplet... x86_64-apple-darwin
+ 0:10.64 checking for rust host triplet... x86_64-apple-darwin
+ 0:10.64 checking for rustdoc... /Users/dave/.cargo/bin/rustdoc
+ 0:10.64 checking for cbindgen... /Users/dave/.cargo/bin/cbindgen
+ 0:10.66 checking cbindgen version... 0.8.2
+ 0:10.66 checking for rustfmt... /Users/dave/.cargo/bin/rustfmt
+ 0:12.57 checking for llvm-config... /usr/local/opt/llvm/bin/llvm-config
+ 0:12.78 checking bindgen cflags... -x c++ -fno-sized-deallocation -DTRACING=1 -DIMPL_LIBXUL -DMOZILLA_INTERNAL_API -DRUST_BINDGEN -DOS_POSIX=1 -DOS_MACOSX=1 -stdlib=libc++
+ 0:12.80 checking for nodejs... /Users/dave/.mozbuild/node/bin/node (8.11.3)
+ 0:12.81 checking for tar... /usr/local/bin/gtar
+ 0:12.81 checking for unzip... /usr/bin/unzip
+ 0:12.81 checking for zip... /usr/bin/zip
+ 0:12.81 checking for gn... not found
+ 0:12.81 checking for the Mozilla API key... no
+ 0:12.81 checking for the Google Location Service API key... no
+ 0:12.81 checking for the Google Safebrowsing API key... no
+ 0:12.81 checking for the Bing API key... no
+ 0:12.81 checking for the Adjust SDK key... no
+ 0:12.81 checking for the Leanplum SDK key... no
+ 0:12.81 checking for the Pocket API key... no
+ 0:12.83 checking for awk... /usr/bin/awk
+ 0:12.83 checking for perl... /usr/bin/perl
+ 0:12.86 checking for minimum required perl version >= 5.006... 5.018002
+ 0:12.89 checking for full perl installation... yes
+ 0:12.89 checking for gmake... /Applications/Xcode.app/Contents/Developer/usr/bin/make
+ 0:12.91 checking for watchman... /usr/local/bin/watchman
+ 0:12.91 checking for watchman version... 4.9.0
+ 0:12.91 checking for watchman Mercurial integration... yes
+ 0:12.91 checking for xargs... /usr/bin/xargs
+ 0:12.91 checking for dsymutil... /usr/bin/dsymutil
+ 0:12.92 checking for mkfshfs... /sbin/newfs_hfs
+ 0:12.92 checking for hfs_tool... not found
+ 0:12.94 checking for llvm-objdump... /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-objdump
+ 0:12.94 checking for autoconf... /usr/local/bin/autoconf213
+ 0:12.94 Refreshing /Users/dave/mozilla/source/trunk/old-configure with /usr/local/bin/autoconf213
+ 0:15.73 creating cache ./config.cache
+ 0:15.80 checking host system type... x86_64-apple-darwin18.5.0
+ 0:15.84 checking target system type... x86_64-apple-darwin18.5.0
+ 0:15.88 checking build system type... x86_64-apple-darwin18.5.0
+ 0:15.89 checking for gcc... (cached) /usr/local/bin/sccache /usr/bin/clang -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu99
+ 0:15.89 checking whether the C compiler (/usr/local/bin/sccache /usr/bin/clang -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu99   -Wl,-syslibroot,/Users/dave/.mozbuild/MacOSX10.13.sdk) works... (cached) yes
+ 0:15.89 checking whether the C compiler (/usr/local/bin/sccache /usr/bin/clang -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu99   -Wl,-syslibroot,/Users/dave/.mozbuild/MacOSX10.13.sdk) is a cross-compiler... no
+ 0:15.89 checking whether we are using GNU C... (cached) yes
+ 0:15.89 checking whether /usr/local/bin/sccache /usr/bin/clang -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu99 accepts -g... (cached) yes
+ 0:15.89 checking for c++... (cached) /usr/local/bin/sccache /usr/bin/clang++ -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu++14
+ 0:15.90 checking whether the C++ compiler (/usr/local/bin/sccache /usr/bin/clang++ -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu++14   -Wl,-syslibroot,/Users/dave/.mozbuild/MacOSX10.13.sdk) works... (cached) yes
+ 0:15.90 checking whether the C++ compiler (/usr/local/bin/sccache /usr/bin/clang++ -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu++14   -Wl,-syslibroot,/Users/dave/.mozbuild/MacOSX10.13.sdk) is a cross-compiler... no
+ 0:15.90 checking whether we are using GNU C++... (cached) yes
+ 0:15.90 checking whether /usr/local/bin/sccache /usr/bin/clang++ -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu++14 accepts -g... (cached) yes
+ 0:15.90 checking for ranlib... ranlib
+ 0:15.90 checking for /usr/local/bin/sccache... /usr/local/bin/sccache /usr/bin/clang -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu99
+ 0:15.91 checking for strip... strip
+ 0:15.91 checking for otool... otool
+ 0:16.20 checking for X... no
+ 0:16.34 checking for --noexecstack option to as... yes
+ 0:16.39 checking for -z noexecstack option to ld... no
+ 0:16.44 checking for -z text option to ld... no
+ 0:16.49 checking for -z relro option to ld... no
+ 0:16.55 checking for -z nocopyreloc option to ld... no
+ 0:16.60 checking for -Bsymbolic-functions option to ld... no
+ 0:16.65 checking for --build-id=sha1 option to ld... no
+ 0:16.69 checking for --ignore-unresolved-symbol option to ld... no
+ 0:16.73 checking if toolchain supports -mssse3 option... yes
+ 0:16.77 checking if toolchain supports -msse4.1 option... yes
+ 0:16.82 checking for x86 AVX2 asm support in compiler... yes
+ 0:16.86 checking for iOS target... no
+ 0:16.86 /Users/dave/mozilla/source/trunk/old-configure: line 4548: test: argument expected
+ 0:16.93 checking for -dead_strip option to ld... yes
+ 0:16.99 checking for valid debug flags... yes
+ 0:17.05 checking for working const... yes
+ 0:17.11 checking for mode_t... yes
+ 0:17.16 checking for off_t... yes
+ 0:17.20 checking for pid_t... yes
+ 0:17.25 checking for size_t... yes
+ 0:17.43 checking whether 64-bits std::atomic requires -latomic... no
+ 0:17.49 checking for dirent.h that defines DIR... yes
+ 0:17.55 checking for opendir in -ldir... no
+ 0:17.61 checking for sockaddr_in.sin_len... true
+ 0:17.67 checking for sockaddr_in6.sin6_len... true
+ 0:17.73 checking for sockaddr.sa_len... true
+ 0:17.79 checking for gethostbyname_r in -lc_r... no
+ 0:17.86 checking for dladdr... yes
+ 0:17.93 checking for memmem... yes
+ 0:17.99 checking for socket in -lsocket... no
+ 0:18.05 checking whether /usr/local/bin/sccache /usr/bin/clang -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu99 accepts -pthread... yes
+ 0:18.11 checking for pthread.h... yes
+ 0:18.18 checking for stat64... yes
+ 0:18.26 checking for lstat64... yes
+ 0:18.38 checking for truncate64... no
+ 0:18.48 checking for statvfs64... no
+ 0:18.59 checking for statvfs... yes
+ 0:18.68 checking for statfs64... yes
+ 0:18.76 checking for statfs... yes
+ 0:18.82 checking for getpagesize... yes
+ 0:18.90 checking for gmtime_r... yes
+ 0:18.98 checking for localtime_r... yes
+ 0:19.08 checking for arc4random... yes
+ 0:19.16 checking for arc4random_buf... yes
+ 0:19.24 checking for mallinfo... no
+ 0:19.32 checking for gettid... no
+ 0:19.38 checking for lchown... yes
+ 0:19.45 checking for setpriority... yes
+ 0:19.52 checking for strerror... yes
+ 0:19.59 checking for syscall... yes
+ 0:19.72 checking for clock_gettime(CLOCK_MONOTONIC)... no
+ 0:19.79 checking for pthread_cond_timedwait_monotonic_np...
+ 0:19.89 checking for res_ninit()... no
+ 0:19.95 checking for an implementation of va_copy()... yes
+ 0:20.05 checking whether va_list can be copied by value... no
+ 0:20.15 checking for __thread keyword for TLS variables... yes
+ 0:20.22 checking for localeconv... yes
+ 0:20.28 checking for malloc.h... no
+ 0:20.32 checking for malloc_np.h... no
+ 0:20.41 checking for malloc/malloc.h... yes
+ 0:20.48 checking for strndup... yes
+ 0:20.55 checking for posix_memalign... yes
+ 0:20.61 checking for memalign... no
+ 0:20.67 checking for malloc_usable_size... no
+ 0:20.71 checking for valloc in malloc.h... no
+ 0:20.77 checking for valloc in unistd.h... yes
+ 0:20.81 checking for _aligned_malloc in malloc.h... no
+ 0:20.81 checking NSPR selection... source-tree
+ 0:20.81 checking if app-specific confvars.sh exists... /Users/dave/mozilla/source/trunk/browser/confvars.sh
+ 0:21.26 checking for CoreMedia/CoreMedia.h... yes
+ 0:21.45 checking for VideoToolbox/VideoToolbox.h... yes
+ 0:21.47 checking for wget... wget
+ 0:21.64 checking for fdatasync... yes
+ 0:21.78 checking for __cxa_demangle... yes
+ 0:21.85 checking for unwind.h... yes
+ 0:21.97 checking for _Unwind_Backtrace... yes
+ 0:21.99 checking for -pipe support... yes
+ 0:23.18 checking what kind of list files are supported by the linker... filelist
+ 0:23.43 checking for posix_fadvise... no
+ 0:23.53 checking for posix_fallocate... no
+ 0:23.55 updating cache ./config.cache
+ 0:23.56 creating ./config.data
+ 0:23.58 js/src> configuring
+ 0:23.59 js/src> running /Users/dave/mozilla/source/trunk/configure.py --enable-project=js --host=x86_64-apple-darwin18.5.0 --target=x86_64-apple-darwin18.5.0 --enable-tests --enable-debug --enable-rust-debug --disable-release --disable-optimize --enable-xcode-checks --with-ccache=/usr/local/bin/sccache --without-toolchain-prefix --enable-debug-symbols --disable-profile-generate --disable-profile-use --without-pgo-profile-path --disable-lto --disable-address-sanitizer --disable-undefined-sanitizer --disable-coverage --disable-linker --disable-clang-plugin --disable-mozsearch-plugin --disable-stdcxx-compat --enable-jemalloc --enable-replace-malloc --without-linux-headers --disable-warnings-as-errors --disable-valgrind --without-libclang-path --without-clang-path --disable-js-shell --disable-shared-js --disable-export-js --enable-ion --disable-simulator --disable-instruments --disable-callgrind --enable-profiling --disable-vtune --disable-gc-trace --enable-gczeal --disable-small-chunk-size --enable-trace-logging --disable-oom-breakpoint --disable-perf --enable-jitspew --enable-masm-verbose --disable-more-deterministic --enable-ctypes --without-system-ffi --disable-fuzzing --disable-pipeline-operator --enable-binast --enable-cranelift --enable-wasm-codegen-debug --enable-typed-objects --enable-wasm-bulk-memory --enable-wasm-reftypes --enable-wasm-gc --enable-wasm-private-reftypes --with-nspr-cflags=-I/Users/dave/mozilla/source/trunk/obj-x86_64-apple-darwin18.5.0/dist/include/nspr --with-nspr-libs=-L/Users/dave/mozilla/source/trunk/obj-x86_64-apple-darwin18.5.0/dist/lib -lnspr4 -lplc4 -lplds4 --prefix=/Users/dave/mozilla/source/trunk/obj-x86_64-apple-darwin18.5.0/dist JS_STANDALONE=
+ 0:23.60 js/src> checking for vcs source checkout... hg
+ 0:23.63 js/src> checking for a shell... /bin/sh
+ 0:23.64 js/src> checking for host system type... x86_64-apple-darwin18.5.0
+ 0:23.66 js/src> checking for target system type... x86_64-apple-darwin18.5.0
+ 0:23.94 js/src> checking whether cross compiling... no
+ 0:23.97 js/src> checking for Python 3... /usr/local/bin/python3 (3.7.2)
+ 0:23.97 js/src> checking for hg... /usr/local/bin/hg
+ 0:24.14 js/src> checking for Mercurial version... 4.9
+ 0:24.34 js/src> checking for sparse checkout... no
+ 0:24.34 js/src> checking for yasm... /usr/local/bin/yasm
+ 0:24.34 js/src> checking yasm version... 1.3.0
+ 0:24.38 js/src> checking for ccache... /usr/local/bin/sccache
+ 0:24.40 js/src> checking for the target C compiler... /usr/bin/clang
+ 0:24.44 js/src> checking whether the target C compiler can be used... yes
+ 0:24.44 js/src> checking the target C compiler version... 10.0.1
+ 0:24.48 js/src> checking the target C compiler works... yes
+ 0:24.48 js/src> checking for the target C++ compiler... /usr/bin/clang++
+ 0:24.52 js/src> checking whether the target C++ compiler can be used... yes
+ 0:24.52 js/src> checking the target C++ compiler version... 10.0.1
+ 0:24.56 js/src> checking the target C++ compiler works... yes
+ 0:24.56 js/src> checking for the host C compiler... /usr/bin/clang
+ 0:24.59 js/src> checking whether the host C compiler can be used... yes
+ 0:24.59 js/src> checking the host C compiler version... 10.0.1
+ 0:24.63 js/src> checking the host C compiler works... yes
+ 0:24.63 js/src> checking for the host C++ compiler... /usr/bin/clang++
+ 0:24.67 js/src> checking whether the host C++ compiler can be used... yes
+ 0:24.67 js/src> checking the host C++ compiler version... 10.0.1
+ 0:24.71 js/src> checking the host C++ compiler works... yes
+ 0:24.75 js/src> checking for 64-bit OS... yes
+ 0:24.75 js/src> checking for llvm_profdata... not found
+ 0:24.75 js/src> checking for nasm... /usr/local/bin/nasm
+ 0:24.76 js/src> checking nasm version... 2.14.02
+ 0:24.80 js/src> checking for linker... ld64
+ 0:24.80 js/src> checking for the assembler... /usr/bin/clang
+ 0:24.84 js/src> checking whether the C compiler supports -fsanitize=fuzzer-no-link... yes
+ 0:24.84 js/src> checking for ar... /usr/bin/ar
+ 0:24.84 js/src> checking for pkg_config... not found
+ 0:24.88 js/src> checking for stdint.h... yes
+ 0:24.94 js/src> checking for inttypes.h... yes
+ 0:24.98 js/src> checking for malloc.h... no
+ 0:25.02 js/src> checking for alloca.h... yes
+ 0:25.06 js/src> checking for sys/byteorder.h... no
+ 0:25.12 js/src> checking for getopt.h... yes
+ 0:25.16 js/src> checking for unistd.h... yes
+ 0:25.20 js/src> checking for nl_types.h... yes
+ 0:25.24 js/src> checking for cpuid.h... yes
+ 0:25.28 js/src> checking for sys/statvfs.h... yes
+ 0:25.32 js/src> checking for sys/statfs.h... no
+ 0:25.36 js/src> checking for sys/vfs.h... no
+ 0:25.41 js/src> checking for sys/mount.h... yes
+ 0:25.47 js/src> checking for sys/quota.h... no
+ 0:25.51 js/src> checking for sys/queue.h... yes
+ 0:25.55 js/src> checking for sys/types.h... yes
+ 0:25.60 js/src> checking for netinet/in.h... yes
+ 0:25.64 js/src> checking for byteswap.h... no
+ 0:25.68 js/src> checking for perf_event_open system call... no
+ 0:25.71 js/src> checking whether the C compiler supports -Wbitfield-enum-conversion... yes
+ 0:25.75 js/src> checking whether the C++ compiler supports -Wbitfield-enum-conversion... yes
+ 0:25.79 js/src> checking whether the C compiler supports -Wshadow-field-in-constructor-modified... yes
+ 0:25.83 js/src> checking whether the C++ compiler supports -Wshadow-field-in-constructor-modified... yes
+ 0:25.86 js/src> checking whether the C compiler supports -Wunreachable-code-return... yes
+ 0:25.89 js/src> checking whether the C++ compiler supports -Wunreachable-code-return... yes
+ 0:25.93 js/src> checking whether the C compiler supports -Wclass-varargs... yes
+ 0:25.97 js/src> checking whether the C++ compiler supports -Wclass-varargs... yes
+ 0:26.01 js/src> checking whether the C compiler supports -Wfloat-overflow-conversion... yes
+ 0:26.05 js/src> checking whether the C++ compiler supports -Wfloat-overflow-conversion... yes
+ 0:26.07 js/src> checking whether the C compiler supports -Wfloat-zero-conversion... yes
+ 0:26.11 js/src> checking whether the C++ compiler supports -Wfloat-zero-conversion... yes
+ 0:26.15 js/src> checking whether the C compiler supports -Wloop-analysis... yes
+ 0:26.19 js/src> checking whether the C++ compiler supports -Wloop-analysis... yes
+ 0:26.22 js/src> checking whether the C++ compiler supports -Wc++1z-compat... yes
+ 0:26.26 js/src> checking whether the C++ compiler supports -Wc++2a-compat... yes
+ 0:26.30 js/src> checking whether the C++ compiler supports -Wcomma... yes
+ 0:26.34 js/src> checking whether the C compiler supports -Wduplicated-cond... no
+ 0:26.37 js/src> checking whether the C++ compiler supports -Wduplicated-cond... no
+ 0:26.40 js/src> checking whether the C++ compiler supports -Wimplicit-fallthrough... yes
+ 0:26.44 js/src> checking whether the C compiler supports -Wstring-conversion... yes
+ 0:26.48 js/src> checking whether the C++ compiler supports -Wstring-conversion... yes
+ 0:26.52 js/src> checking whether the C compiler supports -Wtautological-overlap-compare... yes
+ 0:26.56 js/src> checking whether the C++ compiler supports -Wtautological-overlap-compare... yes
+ 0:26.58 js/src> checking whether the C compiler supports -Wtautological-unsigned-enum-zero-compare... yes
+ 0:26.62 js/src> checking whether the C++ compiler supports -Wtautological-unsigned-enum-zero-compare... yes
+ 0:26.66 js/src> checking whether the C compiler supports -Wtautological-unsigned-zero-compare... yes
+ 0:26.69 js/src> checking whether the C++ compiler supports -Wtautological-unsigned-zero-compare... yes
+ 0:26.73 js/src> checking whether the C++ compiler supports -Wno-inline-new-delete... yes
+ 0:26.77 js/src> checking whether the C compiler supports -Wno-error=maybe-uninitialized... no
+ 0:26.81 js/src> checking whether the C++ compiler supports -Wno-error=maybe-uninitialized... no
+ 0:26.84 js/src> checking whether the C compiler supports -Wno-error=deprecated-declarations... yes
+ 0:26.88 js/src> checking whether the C++ compiler supports -Wno-error=deprecated-declarations... yes
+ 0:26.92 js/src> checking whether the C compiler supports -Wno-error=array-bounds... yes
+ 0:26.95 js/src> checking whether the C++ compiler supports -Wno-error=array-bounds... yes
+ 0:26.99 js/src> checking whether the C compiler supports -Wno-error=coverage-mismatch... no
+ 0:27.03 js/src> checking whether the C++ compiler supports -Wno-error=coverage-mismatch... no
+ 0:27.06 js/src> checking whether the C compiler supports -Wno-error=backend-plugin... yes
+ 0:27.10 js/src> checking whether the C++ compiler supports -Wno-error=backend-plugin... yes
+ 0:27.13 js/src> checking whether the C compiler supports -Wno-error=free-nonheap-object... no
+ 0:27.17 js/src> checking whether the C++ compiler supports -Wno-error=free-nonheap-object... no
+ 0:27.21 js/src> checking whether the C compiler supports -Wno-error=multistatement-macros... no
+ 0:27.25 js/src> checking whether the C++ compiler supports -Wno-error=multistatement-macros... no
+ 0:27.29 js/src> checking whether the C compiler supports -Wno-error=return-std-move... yes
+ 0:27.32 js/src> checking whether the C++ compiler supports -Wno-error=return-std-move... yes
+ 0:27.35 js/src> checking whether the C compiler supports -Wno-error=class-memaccess... no
+ 0:27.39 js/src> checking whether the C++ compiler supports -Wno-error=class-memaccess... no
+ 0:27.43 js/src> checking whether the C compiler supports -Wno-error=atomic-alignment... yes
+ 0:27.46 js/src> checking whether the C++ compiler supports -Wno-error=atomic-alignment... yes
+ 0:27.50 js/src> checking whether the C compiler supports -Wno-error=deprecated-copy... no
+ 0:27.54 js/src> checking whether the C++ compiler supports -Wno-error=deprecated-copy... no
+ 0:27.57 js/src> checking whether the C compiler supports -Wformat... yes
+ 0:27.61 js/src> checking whether the C++ compiler supports -Wformat... yes
+ 0:27.64 js/src> checking whether the C compiler supports -Wformat-security... yes
+ 0:27.67 js/src> checking whether the C++ compiler supports -Wformat-security... yes
+ 0:27.71 js/src> checking whether the C compiler supports -Wformat-overflow=2... no
+ 0:27.75 js/src> checking whether the C++ compiler supports -Wformat-overflow=2... no
+ 0:27.79 js/src> checking whether the C compiler supports -Wno-gnu-zero-variadic-macro-arguments... yes
+ 0:27.83 js/src> checking whether the C++ compiler supports -Wno-gnu-zero-variadic-macro-arguments... yes
+ 0:27.87 js/src> checking whether the C++ compiler supports -Wno-noexcept-type... yes
+ 0:27.89 js/src> checking whether the C++ compiler supports -fno-sized-deallocation... yes
+ 0:27.90 js/src> checking for rustc... /Users/dave/.cargo/bin/rustc
+ 0:27.90 js/src> checking for cargo... /Users/dave/.cargo/bin/cargo
+ 0:27.94 js/src> checking rustc version... 1.33.0
+ 0:27.98 js/src> checking cargo version... 1.33.0
+ 0:28.12 js/src> checking for rust target triplet... x86_64-apple-darwin
+ 0:28.20 js/src> checking for rust host triplet... x86_64-apple-darwin
+ 0:28.20 js/src> checking for rustdoc... /Users/dave/.cargo/bin/rustdoc
+ 0:28.20 js/src> checking for rustfmt... /Users/dave/.cargo/bin/rustfmt
+ 0:29.53 js/src> checking for llvm-config... /usr/local/opt/llvm/bin/llvm-config
+ 0:29.60 js/src> checking bindgen cflags... -x c++ -fno-sized-deallocation -DTRACING=1 -DIMPL_LIBXUL -DMOZILLA_INTERNAL_API -DRUST_BINDGEN -DOS_POSIX=1 -DOS_MACOSX=1 -stdlib=libc++
+ 0:29.61 js/src> checking for awk... /usr/bin/awk
+ 0:29.61 js/src> checking for perl... /usr/bin/perl
+ 0:29.62 js/src> checking for minimum required perl version >= 5.006... 5.018002
+ 0:29.65 js/src> checking for full perl installation... yes
+ 0:29.65 js/src> checking for gmake... /Applications/Xcode.app/Contents/Developer/usr/bin/make
+ 0:29.68 js/src> checking for watchman... /usr/local/bin/watchman
+ 0:29.68 js/src> checking for watchman version... 4.9.0
+ 0:29.68 js/src> checking for watchman Mercurial integration... yes
+ 0:29.68 js/src> checking for xargs... /usr/bin/xargs
+ 0:29.68 js/src> checking for dsymutil... /usr/bin/dsymutil
+ 0:29.68 js/src> checking for mkfshfs... /sbin/newfs_hfs
+ 0:29.68 js/src> checking for hfs_tool... not found
+ 0:29.70 js/src> checking for llvm-objdump... /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-objdump
+ 0:29.70 js/src> checking for autoconf... /usr/local/bin/autoconf213
+ 0:29.80 js/src> loading cache /Users/dave/mozilla/source/trunk/obj-x86_64-apple-darwin18.5.0/./config.cache
+ 0:29.83 js/src> checking host system type... x86_64-apple-darwin18.5.0
+ 0:29.85 js/src> checking target system type... x86_64-apple-darwin18.5.0
+ 0:29.87 js/src> checking build system type... x86_64-apple-darwin18.5.0
+ 0:29.88 js/src> checking for gcc... (cached) /usr/local/bin/sccache /usr/bin/clang -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu99
+ 0:29.88 js/src> checking whether the C compiler (/usr/local/bin/sccache /usr/bin/clang -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu99   ) works... (cached) yes
+ 0:29.88 js/src> checking whether the C compiler (/usr/local/bin/sccache /usr/bin/clang -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu99   ) is a cross-compiler... no
+ 0:29.88 js/src> checking whether we are using GNU C... (cached) yes
+ 0:29.88 js/src> checking whether /usr/local/bin/sccache /usr/bin/clang -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu99 accepts -g... (cached) yes
+ 0:29.88 js/src> checking for c++... (cached) /usr/local/bin/sccache /usr/bin/clang++ -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu++14
+ 0:29.88 js/src> checking whether the C++ compiler (/usr/local/bin/sccache /usr/bin/clang++ -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu++14   ) works... (cached) yes
+ 0:29.88 js/src> checking whether the C++ compiler (/usr/local/bin/sccache /usr/bin/clang++ -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu++14   ) is a cross-compiler... no
+ 0:29.88 js/src> checking whether we are using GNU C++... (cached) yes
+ 0:29.89 js/src> checking whether /usr/local/bin/sccache /usr/bin/clang++ -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu++14 accepts -g... (cached) yes
+ 0:29.89 js/src> checking for ranlib... (cached) ranlib
+ 0:29.89 js/src> checking for /usr/local/bin/sccache... (cached) /usr/local/bin/sccache /usr/bin/clang -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu99
+ 0:29.89 js/src> checking for strip... (cached) strip
+ 0:29.89 js/src> checking for sb-conf... no
+ 0:29.89 js/src> checking for ve... no
+ 0:29.90 js/src> checking for X... (cached) no
+ 0:30.06 js/src> checking for --noexecstack option to as... yes
+ 0:30.13 js/src> checking for -z noexecstack option to ld... no
+ 0:30.19 js/src> checking for -z text option to ld... no
+ 0:30.25 js/src> checking for -z relro option to ld... no
+ 0:30.30 js/src> checking for -z nocopyreloc option to ld... no
+ 0:30.36 js/src> checking for -Bsymbolic-functions option to ld... no
+ 0:30.42 js/src> checking for --build-id=sha1 option to ld... no
+ 0:30.50 js/src> checking for -framework ExceptionHandling... yes
+ 0:30.56 js/src> checking for -dead_strip option to ld... yes
+ 0:30.62 js/src> checking for valid debug flags... yes
+ 0:30.62 js/src> checking for working const... (cached) yes
+ 0:30.62 js/src> checking for mode_t... (cached) yes
+ 0:30.62 js/src> checking for off_t... (cached) yes
+ 0:30.62 js/src> checking for pid_t... (cached) yes
+ 0:30.62 js/src> checking for size_t... (cached) yes
+ 0:30.68 js/src> checking for ssize_t... yes
+ 0:30.69 js/src> checking whether 64-bits std::atomic requires -latomic... (cached) no
+ 0:30.69 js/src> checking for dirent.h that defines DIR... (cached) yes
+ 0:30.71 js/src> checking for opendir in -ldir... (cached) no
+ 0:30.71 js/src> checking for gethostbyname_r in -lc_r... (cached) no
+ 0:30.71 js/src> checking for socket in -lsocket... (cached) no
+ 0:30.78 js/src> checking whether /usr/local/bin/sccache /usr/bin/clang -isysroot /Users/dave/.mozbuild/MacOSX10.13.sdk -std=gnu99 accepts -pthread... yes
+ 0:30.85 js/src> checking for getc_unlocked... yes
+ 0:30.93 js/src> checking for _getc_nolock... no
+ 0:30.93 js/src> checking for gmtime_r... (cached) yes
+ 0:30.95 js/src> checking for localtime_r... (cached) yes
+ 0:31.03 js/src> checking for pthread_getname_np... yes
+ 0:31.11 js/src> checking for pthread_get_name_np... no
+ 0:31.11 js/src> checking for clock_gettime(CLOCK_MONOTONIC)... (cached) no
+ 0:31.17 js/src> checking for sin in -lm... yes
+ 0:31.27 js/src> checking for sincos in -lm... no
+ 0:31.34 js/src> checking for __sincos in -lm... yes
+ 0:31.35 js/src> checking for res_ninit()... (cached) no
+ 0:31.42 js/src> checking for nl_langinfo and CODESET... yes
+ 0:31.43 js/src> checking for an implementation of va_copy()... (cached) yes
+ 0:31.43 js/src> checking whether va_list can be copied by value... (cached) no
+ 0:31.44 js/src> checking for __thread keyword for TLS variables... (cached) yes
+ 0:31.45 js/src> checking for localeconv... (cached) yes
+ 0:31.46 js/src> checking NSPR selection... command-line
+ 0:31.47 js/src> checking for __cxa_demangle... (cached) yes
+ 0:31.49 js/src> checking for -pipe support... yes
+ 0:31.54 js/src> checking for tm_zone tm_gmtoff in struct tm... yes
+ 0:32.68 js/src> checking what kind of list files are supported by the linker... filelist
+ 0:32.72 js/src> checking for posix_fadvise... (cached) no
+ 0:32.72 js/src> checking for posix_fallocate... (cached) no
+ 0:32.73 js/src> checking for malloc.h... (cached) no
+ 0:32.74 js/src> checking for malloc_np.h... (cached) no
+ 0:32.74 js/src> checking for malloc/malloc.h... (cached) yes
+ 0:32.75 js/src> checking for strndup... (cached) yes
+ 0:32.77 js/src> checking for posix_memalign... (cached) yes
+ 0:32.78 js/src> checking for memalign... (cached) no
+ 0:32.78 js/src> checking for malloc_usable_size... (cached) no
+ 0:32.83 js/src> checking for valloc in malloc.h... no
+ 0:32.89 js/src> checking for valloc in unistd.h... yes
+ 0:32.93 js/src> checking for _aligned_malloc in malloc.h... no
+ 0:32.93 js/src> checking for localeconv... (cached) yes
+ 0:32.96 js/src> updating cache /Users/dave/mozilla/source/trunk/obj-x86_64-apple-darwin18.5.0/./config.cache
+ 0:32.97 js/src> creating ./config.data
+ 0:32.99 js/src> Creating config.status
+ 0:33.11 Creating config.status
+ 0:33.32 Reticulating splines...
+ 0:35.68  0:02.39 File already read. Skipping: /Users/dave/mozilla/source/trunk/gfx/angle/targets/angle_common/moz.build
+ 0:47.03 Finished reading 2030 moz.build files in 2.76s
+ 0:47.03 Read 64 gyp files in parallel contributing 0.00s to total wall time
+ 0:47.03 Processed into 10568 build config descriptors in 5.50s
+ 0:47.03 RecursiveMake backend executed in 4.51s
+ 0:47.03   3745 total backend files; 3745 created; 0 updated; 0 unchanged; 0 deleted; 33 -> 1366 Makefile
+ 0:47.03 FasterMake backend executed in 0.39s
+ 0:47.03   14 total backend files; 14 created; 0 updated; 0 unchanged; 0 deleted
+ 0:47.03 Total wall time: 13.73s; CPU time: 11.71s; Efficiency: 85%; Untracked: 0.56s
+Configure complete!
+Be sure to run |mach build| to pick up any changes
