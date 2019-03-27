@@ -286,10 +286,15 @@ class ArtifactJob(object):
                              'matched an archive path.'.format(
                                  patterns=LinuxArtifactJob.test_artifact_patterns))
 
-    def process_symbols_archive(self, filename, processed_filename):
+    def process_symbols_archive(self, filename, processed_filename, skip_compressed=False):
         with JarWriter(file=processed_filename, compress_level=5) as writer:
             reader = JarReader(filename)
             for filename in reader.entries:
+                if skip_compressed and filename.endswith('.gz'):
+                    self.log(logging.INFO, 'artifact',
+                             {'filename': filename},
+                             'Skipping compressed ELF debug symbol file {filename}')
+                    continue
                 destpath = mozpath.join('crashreporter-symbols', filename)
                 self.log(logging.INFO, 'artifact',
                          {'destpath': destpath},
@@ -333,6 +338,35 @@ class AndroidArtifactJob(ArtifactJob):
                     basedir = mozpath.join('bin', dirname.lstrip('assets/'))
                 basename = mozpath.join(basedir, basename)
                 writer.add(basename.encode('utf-8'), f.open())
+
+    def process_symbols_archive(self, filename, processed_filename):
+        ArtifactJob.process_symbols_archive(self, filename, processed_filename, skip_compressed=True)
+
+        if self._symbols_archive_suffix != 'crashreporter-symbols-full.zip':
+            return
+
+        import gzip
+
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
+            reader = JarReader(filename)
+            for filename in reader.entries:
+                if not filename.endswith('.gz'):
+                    continue
+
+                # Uncompress "libxul.so/D3271457813E976AE7BF5DAFBABABBFD0/libxul.so.dbg.gz" into "libxul.so.dbg".
+                #
+                # After `settings append target.debug-file-search-paths /path/to/topobjdir/dist/crashreporter-symbols`,
+                # Android Studio's lldb (7.0.0, at least) will find the ELF debug symbol files.
+                #
+                # There are other paths that will work but none seem more desireable.  See
+                # https://github.com/llvm-mirror/lldb/blob/882670690ca69d9dd96b7236c620987b11894af9/source/Host/common/Symbols.cpp#L324.
+                basename = os.path.basename(filename).replace('.gz', '')
+                destpath = mozpath.join('crashreporter-symbols', basename)
+                self.log(logging.INFO, 'artifact',
+                         {'destpath': destpath},
+                         'Adding uncompressed ELF debug symbol file {destpath} to processed archive')
+                writer.add(destpath.encode('utf-8'),
+                           gzip.GzipFile(fileobj=reader[filename].uncompressed_data))
 
 
 class LinuxArtifactJob(ArtifactJob):
