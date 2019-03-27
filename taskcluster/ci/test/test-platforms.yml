@@ -192,17 +192,6 @@ windows7-32/opt:
         - web-platform-tests
         - raptor-firefox
 
-windows7-32-pgo/opt:
-    build-platform: win32-pgo/opt
-    test-sets:
-        - awsy
-        - desktop-screenshot-capture
-        - windows-reftest-gpu
-        - windows-talos
-        - windows-tests
-        - web-platform-tests
-        - raptor-firefox
-
 windows7-32-nightly/opt:
     build-platform: win32-nightly/opt
     test-sets:
@@ -284,18 +273,6 @@ windows10-64-ux/opt:
         - raptor-firefox
         - talos-ux
 
-windows10-64-pgo/opt:
-    build-platform: win64-pgo/opt
-    test-sets:
-        - awsy
-        - desktop-screenshot-capture
-        - windows-talos
-        - marionette-gpu-tests
-        - windows-tests
-        - web-platform-tests
-        - mochitest-headless
-        - raptor-firefox
-
 windows10-64-nightly/opt:
     build-platform: win64-nightly/opt
     test-sets:
@@ -345,15 +322,6 @@ windows10-64-qr/debug:
 
 windows10-64-qr/opt:
     build-platform: win64/opt
-    test-sets:
-        - awsy
-        - windows-qr-tests
-        - windows-talos
-        - raptor-firefox
-        - web-platform-tests
-
-windows10-64-pgo-qr/opt:
-    build-platform: win64-pgo/opt
     test-sets:
         - awsy
         - windows-qr-tests
