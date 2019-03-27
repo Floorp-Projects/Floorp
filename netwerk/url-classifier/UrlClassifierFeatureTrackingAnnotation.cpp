@@ -127,6 +127,8 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(nsIChannel* aChannel,
   nsTArray<nsCString> list;
   Classifier::SplitTables(aList, list);
 
+  uint32_t loadingState = nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT;
+
   uint32_t flags = 0;
   for (nsCString& table : list) {
     if (StringBeginsWith(table, NS_LITERAL_CSTRING("ads-track-"))) {
@@ -156,8 +158,7 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(nsIChannel* aChannel,
   }
 
   UrlClassifierCommon::AnnotateChannel(
-      aChannel, AntiTrackingCommon::eTrackingAnnotations, flags,
-      nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
+      aChannel, AntiTrackingCommon::eTrackingAnnotations, flags, loadingState);
 
   return NS_OK;
 }
