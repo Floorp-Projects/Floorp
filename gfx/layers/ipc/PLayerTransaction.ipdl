@@ -81,7 +81,7 @@ parent:
 
   // Returns the value of the transform applied to the layer by animation and
   // APZC.
-  sync GetTransform(LayerHandle layer) returns (MaybeTransform transform);
+  sync GetTransform(LayerHandle layer) returns (Matrix4x4? transform);
 
   // The next time the layer tree is composited, add this async scroll offset in
   // CSS pixels for the given ViewID.
