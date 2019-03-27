@@ -302,7 +302,7 @@ def get_decision_parameters(config, options):
         task_config_file = os.path.join(os.getcwd(), 'try_task_config.json')
 
     # load try settings
-    if 'try' in project:
+    if 'try' in project and options['tasks_for'] == 'hg-push':
         set_try_config(parameters, task_config_file)
 
     if options.get('optimize_target_tasks') is not None:
