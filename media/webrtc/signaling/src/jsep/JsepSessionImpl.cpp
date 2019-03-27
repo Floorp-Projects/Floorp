@@ -2101,16 +2101,13 @@ nsresult JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
 
 nsresult JsepSessionImpl::AddLocalIceCandidate(const std::string& candidate,
                                                const std::string& transportId,
+                                               const std::string& ufrag,
                                                uint16_t* level,
                                                std::string* mid,
                                                bool* skipped) {
   mLastError.clear();
-
-  mozilla::Sdp* sdp =
-      GetParsedLocalDescription(kJsepDescriptionPendingOrCurrent);
-
-  if (!sdp) {
-    JSEP_SET_ERROR("Cannot add ICE candidate in state " << GetStateStr(mState));
+  if (!mCurrentLocalDescription && !mPendingLocalDescription) {
+    JSEP_SET_ERROR("Cannot add ICE candidate when there is no local SDP");
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -2128,7 +2125,20 @@ nsresult JsepSessionImpl::AddLocalIceCandidate(const std::string& candidate,
   *level = transceiver->GetLevel();
   *mid = transceiver->GetMid();
 
-  return mSdpHelper.AddCandidateToSdp(sdp, candidate, *level, "");
+  nsresult rv = NS_ERROR_INVALID_ARG;
+  if (mCurrentLocalDescription) {
+    rv = mSdpHelper.AddCandidateToSdp(mCurrentLocalDescription.get(), candidate,
+                                      *level, ufrag);
+  }
+
+  if (mPendingLocalDescription) {
+    // If we had an error when adding the candidate to the current description,
+    // we stomp them here. This is deliberate.
+    rv = mSdpHelper.AddCandidateToSdp(mPendingLocalDescription.get(), candidate,
+                                      *level, ufrag);
+  }
+
+  return rv;
 }
 
 nsresult JsepSessionImpl::UpdateDefaultCandidate(
@@ -2173,28 +2183,6 @@ nsresult JsepSessionImpl::UpdateDefaultCandidate(
                                      defaultRtcpCandidatePort,
                                      &sdp->GetMediaSection(level));
     }
-  }
-
-  return NS_OK;
-}
-
-nsresult JsepSessionImpl::EndOfLocalCandidates(const std::string& transportId) {
-  mLastError.clear();
-
-  mozilla::Sdp* sdp =
-      GetParsedLocalDescription(kJsepDescriptionPendingOrCurrent);
-
-  if (!sdp) {
-    JSEP_SET_ERROR("Cannot mark end of local ICE candidates in state "
-                   << GetStateStr(mState));
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  JsepTransceiver* transceiver = GetTransceiverWithTransport(transportId);
-  if (transceiver) {
-    nsresult rv =
-        mSdpHelper.SetIceGatheringComplete(sdp, transceiver->GetLevel(), "");
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
