@@ -135,6 +135,10 @@ static bool DocumentNeedsRestyle(const Document* aDocument, Element* aElement,
       if (EffectSet::GetEffectSet(aElement, PseudoStyleType::after)) {
         return true;
       }
+    } else if (aPseudo == nsCSSPseudoElements::marker()) {
+      if (EffectSet::GetEffectSet(aElement, PseudoStyleType::marker)) {
+        return true;
+      }
     }
   }
 

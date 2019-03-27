@@ -470,6 +470,11 @@ static PseudoStyleType GetPseudoTypeFromElementForAnimation(
     return PseudoStyleType::after;
   }
 
+  if (aElementOrPseudo->IsGeneratedContentContainerForMarker()) {
+    aElementOrPseudo = aElementOrPseudo->GetParent()->AsElement();
+    return PseudoStyleType::marker;
+  }
+
   return PseudoStyleType::NotPseudo;
 }
 

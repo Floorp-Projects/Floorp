@@ -942,6 +942,7 @@ void KeyframeEffect::GetTarget(
   switch (mTarget->mPseudoType) {
     case PseudoStyleType::before:
     case PseudoStyleType::after:
+    case PseudoStyleType::marker:
       aRv.SetValue().SetAsCSSPseudoElement() =
           CSSPseudoElement::GetCSSPseudoElement(mTarget->mElement,
                                                 mTarget->mPseudoType);
@@ -1389,6 +1390,8 @@ nsIFrame* KeyframeEffect::GetPrimaryFrame() const {
     frame = nsLayoutUtils::GetBeforeFrame(mTarget->mElement);
   } else if (mTarget->mPseudoType == PseudoStyleType::after) {
     frame = nsLayoutUtils::GetAfterFrame(mTarget->mElement);
+  } else if (mTarget->mPseudoType == PseudoStyleType::marker) {
+    frame = nsLayoutUtils::GetMarkerFrame(mTarget->mElement);
   } else {
     frame = mTarget->mElement->GetPrimaryFrame();
     MOZ_ASSERT(mTarget->mPseudoType == PseudoStyleType::NotPseudo,

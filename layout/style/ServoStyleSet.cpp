@@ -1228,6 +1228,11 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazilyInternal(
       elementForStyleResolution = pseudo;
       pseudoTypeForStyleResolution = PseudoStyleType::NotPseudo;
     }
+  } else if (aPseudoType == PseudoStyleType::marker) {
+    if (Element* pseudo = nsLayoutUtils::GetMarkerPseudo(aElement)) {
+      elementForStyleResolution = pseudo;
+      pseudoTypeForStyleResolution = PseudoStyleType::NotPseudo;
+    }
   }
 
   RefPtr<ComputedStyle> computedValues =

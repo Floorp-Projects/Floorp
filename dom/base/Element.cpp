@@ -1777,7 +1777,8 @@ nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
     PseudoStyleType pseudoType = GetPseudoElementType();
     if ((pseudoType == PseudoStyleType::NotPseudo ||
          pseudoType == PseudoStyleType::before ||
-         pseudoType == PseudoStyleType::after) &&
+         pseudoType == PseudoStyleType::after ||
+         pseudoType == PseudoStyleType::marker) &&
         EffectSet::GetEffectSet(this, pseudoType)) {
       if (nsPresContext* presContext = aDocument->GetPresContext()) {
         presContext->EffectCompositor()->RequestRestyle(
@@ -1913,9 +1914,11 @@ void Element::UnbindFromTree(bool aDeep, bool aNullParent) {
   if (MayHaveAnimations()) {
     DeleteProperty(nsGkAtoms::transitionsOfBeforeProperty);
     DeleteProperty(nsGkAtoms::transitionsOfAfterProperty);
+    DeleteProperty(nsGkAtoms::transitionsOfMarkerProperty);
     DeleteProperty(nsGkAtoms::transitionsProperty);
     DeleteProperty(nsGkAtoms::animationsOfBeforeProperty);
     DeleteProperty(nsGkAtoms::animationsOfAfterProperty);
+    DeleteProperty(nsGkAtoms::animationsOfMarkerProperty);
     DeleteProperty(nsGkAtoms::animationsProperty);
     if (document) {
       if (nsPresContext* presContext = document->GetPresContext()) {
@@ -3493,14 +3496,19 @@ void Element::GetAnimations(const AnimationFilter& filter,
   } else if (IsGeneratedContentContainerForAfter()) {
     elem = GetParentElement();
     pseudoType = PseudoStyleType::after;
+  } else if (IsGeneratedContentContainerForMarker()) {
+    elem = GetParentElement();
+    pseudoType = PseudoStyleType::marker;
   }
 
   if (!elem) {
     return;
   }
 
-  if (!filter.mSubtree || pseudoType == PseudoStyleType::before ||
-      pseudoType == PseudoStyleType::after) {
+  if (!filter.mSubtree ||
+      pseudoType == PseudoStyleType::before ||
+      pseudoType == PseudoStyleType::after ||
+      pseudoType == PseudoStyleType::marker) {
     GetAnimationsUnsorted(elem, pseudoType, aAnimations);
   } else {
     for (nsIContent* node = this; node; node = node->GetNextNode(this)) {
@@ -3514,6 +3522,8 @@ void Element::GetAnimations(const AnimationFilter& filter,
                                      aAnimations);
       Element::GetAnimationsUnsorted(element, PseudoStyleType::after,
                                      aAnimations);
+      Element::GetAnimationsUnsorted(element, PseudoStyleType::marker,
+                                     aAnimations);
     }
   }
   aAnimations.Sort(AnimationPtrComparator<RefPtr<Animation>>());
@@ -3525,7 +3535,8 @@ void Element::GetAnimationsUnsorted(Element* aElement,
                                     nsTArray<RefPtr<Animation>>& aAnimations) {
   MOZ_ASSERT(aPseudoType == PseudoStyleType::NotPseudo ||
                  aPseudoType == PseudoStyleType::after ||
-                 aPseudoType == PseudoStyleType::before,
+                 aPseudoType == PseudoStyleType::before ||
+                 aPseudoType == PseudoStyleType::marker,
              "Unsupported pseudo type");
   MOZ_ASSERT(aElement, "Null element");
 
