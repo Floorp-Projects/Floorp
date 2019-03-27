@@ -8,180 +8,171 @@
  * nsIMIMEService.getTypeFromExtension may fail unexpectedly on Windows when
  * "Content Type" is empty in the registry.
  */
+
+// We must use a file extension that isn't listed in nsExternalHelperAppService's
+// defaultMimeEntries, otherwise the code takes a shortcut skipping the registry.
+const FILE_EXTENSION = ".nfo";
+// This is used to ensure the test properly used the mock, so that if we change
+// the underlying code, it won't be skipped.
+let gTestUsedOurMock = false;
+
 function run_test() {
-  // --- Preliminary platform check ---
+  // Activate the override of the file association data in the registry.
+  registerMockWindowsRegKeyFactory();
 
-  // If this test is not running on the Windows platform, stop now, before
-  // calling ChromeUtils.generateQI during the MockWindowsRegKey declaration.
-  if (mozinfo.os != "win")
-    return;
+  // Check the mock has been properly activated.
+  let regKey = Cc["@mozilla.org/windows-registry-key;1"]
+                 .createInstance(Ci.nsIWindowsRegKey);
+  regKey.open(Ci.nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT, FILE_EXTENSION,
+              Ci.nsIWindowsRegKey.ACCESS_QUERY_VALUE);
+  Assert.equal(regKey.readStringValue("content type"), "",
+               "Check the mock replied as expected.");
+  Assert.ok(gTestUsedOurMock, "The test properly used the mock registry");
+  // Reset gTestUsedOurMock, because we just used it.
+  gTestUsedOurMock = false;
+  // Try and get the MIME type associated with the extension. If this
+  // operation does not throw an unexpected exception, the test succeeds.
+  Assert.throws(() => {
+    Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService)
+                             .getTypeFromExtension(FILE_EXTENSION);
+  }, /NS_ERROR_NOT_AVAILABLE/, "Should throw a NOT_AVAILABLE exception");
 
-  // --- Modified nsIWindowsRegKey implementation ---
+  Assert.ok(gTestUsedOurMock, "The test properly used the mock registry");
+}
 
-  /**
-   * Constructs a new mock registry key by wrapping the provided object.
-   *
-   * This mock implementation is tailored for this test, and forces consumers
-   * of the readStringValue method to believe that the "Content Type" value of
-   * the ".txt" key under HKEY_CLASSES_ROOT is an empty string.
-   *
-   * The same value read from "HKEY_LOCAL_MACHINE\SOFTWARE\Classes" is not
-   * affected.
-   *
-   * @param aWrappedObject   An actual nsIWindowsRegKey implementation.
-   */
-  function MockWindowsRegKey(aWrappedObject) {
-    this._wrappedObject = aWrappedObject;
+/**
+ * Constructs a new mock registry key by wrapping the provided object.
+ *
+ * This mock implementation is tailored for this test, and forces consumers
+ * of the readStringValue method to believe that the "Content Type" value of
+ * the FILE_EXTENSION key under HKEY_CLASSES_ROOT is an empty string.
+ *
+ * The same value read from "HKEY_LOCAL_MACHINE\SOFTWARE\Classes" is not
+ * affected.
+ *
+ * @param aWrappedObject   An actual nsIWindowsRegKey implementation.
+ */
+function MockWindowsRegKey(aWrappedObject) {
+  this._wrappedObject = aWrappedObject;
 
-    // This function creates a forwarding function for wrappedObject
-    function makeForwardingFunction(functionName) {
-      return function() {
-        return aWrappedObject[functionName].apply(aWrappedObject, arguments);
-      };
-    }
+  // This function creates a forwarding function for wrappedObject
+  function makeForwardingFunction(functionName) {
+    return function() {
+      return aWrappedObject[functionName].apply(aWrappedObject, arguments);
+    };
+  }
 
-    // Forward all the functions that are not explicitly overridden
-    for (var propertyName in aWrappedObject) {
-      if (!(propertyName in this)) {
-        if (typeof aWrappedObject[propertyName] == "function") {
-          this[propertyName] = makeForwardingFunction(propertyName);
-        } else {
-          this[propertyName] = aWrappedObject[propertyName];
-        }
+  // Forward all the functions that are not explicitly overridden
+  for (var propertyName in aWrappedObject) {
+    if (!(propertyName in this)) {
+      if (typeof aWrappedObject[propertyName] == "function") {
+        this[propertyName] = makeForwardingFunction(propertyName);
+      } else {
+        this[propertyName] = aWrappedObject[propertyName];
       }
     }
   }
+}
 
-  MockWindowsRegKey.prototype = {
-    // --- Overridden nsISupports interface functions ---
+MockWindowsRegKey.prototype = {
+  // --- Overridden nsISupports interface functions ---
 
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowsRegKey]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowsRegKey]),
 
-    // --- Overridden nsIWindowsRegKey interface functions ---
+  // --- Overridden nsIWindowsRegKey interface functions ---
 
-    open(aRootKey, aRelPath, aMode) {
-      // Remember the provided root key and path
-      this._rootKey = aRootKey;
-      this._relPath = aRelPath;
+  open(aRootKey, aRelPath, aMode) {
+    // Remember the provided root key and path
+    this._rootKey = aRootKey;
+    this._relPath = aRelPath;
 
-      // Create the actual registry key
-      return this._wrappedObject.open(aRootKey, aRelPath, aMode);
-    },
+    // Create the actual registry key
+    return this._wrappedObject.open(aRootKey, aRelPath, aMode);
+  },
 
-    openChild(aRelPath, aMode) {
-      // Open the child key and wrap it
-      var innerKey = this._wrappedObject.openChild(aRelPath, aMode);
-      var key = new MockWindowsRegKey(innerKey);
+  openChild(aRelPath, aMode) {
+    // Open the child key and wrap it
+    var innerKey = this._wrappedObject.openChild(aRelPath, aMode);
+    var key = new MockWindowsRegKey(innerKey);
 
-      // Set the properties of the child key and return it
-      key._rootKey = this._rootKey;
-      key._relPath = this._relPath + aRelPath;
-      return key;
-    },
+    // Set the properties of the child key and return it
+    key._rootKey = this._rootKey;
+    key._relPath = this._relPath + aRelPath;
+    return key;
+  },
 
-    createChild(aRelPath, aMode) {
-      // Create the child key and wrap it
-      var innerKey = this._wrappedObject.createChild(aRelPath, aMode);
-      var key = new MockWindowsRegKey(innerKey);
+  createChild(aRelPath, aMode) {
+    // Create the child key and wrap it
+    var innerKey = this._wrappedObject.createChild(aRelPath, aMode);
+    var key = new MockWindowsRegKey(innerKey);
 
-      // Set the properties of the child key and return it
-      key._rootKey = this._rootKey;
-      key._relPath = this._relPath + aRelPath;
-      return key;
-    },
+    // Set the properties of the child key and return it
+    key._rootKey = this._rootKey;
+    key._relPath = this._relPath + aRelPath;
+    return key;
+  },
 
-    get childCount() {
-      return this._wrappedObject.childCount;
-    },
+  get childCount() {
+    return this._wrappedObject.childCount;
+  },
 
-    get valueCount() {
-      return this._wrappedObject.valueCount;
-    },
+  get valueCount() {
+    return this._wrappedObject.valueCount;
+  },
 
-    readStringValue(aName) {
-      // If this is the key under test, return a fake value
-      if (this._rootKey == Ci.nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT &&
-          this._relPath.toLowerCase() == ".txt" &&
-          aName.toLowerCase() == "content type") {
-        return "";
-      }
+  readStringValue(aName) {
+    // If this is the key under test, return a fake value
+    if (this._rootKey == Ci.nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT &&
+        this._relPath.toLowerCase() == FILE_EXTENSION &&
+        aName.toLowerCase() == "content type") {
+      gTestUsedOurMock = true;
+      return "";
+    }
+    // Return the real value from the registry
+    return this._wrappedObject.readStringValue(aName);
+  },
+};
 
-      // Return the real value in the registry
-      return this._wrappedObject.readStringValue(aName);
-    },
-  };
-
-  // --- Mock nsIWindowsRegKey factory ---
-
-  var componentRegistrar = Components.manager.
-                           QueryInterface(Ci.nsIComponentRegistrar);
-
-  var originalWindowsRegKeyCID;
-  var mockWindowsRegKeyFactory;
-
+function registerMockWindowsRegKeyFactory() {
   const kMockCID = Components.ID("{9b23dfe9-296b-4740-ba1c-d39c9a16e55e}");
   const kWindowsRegKeyContractID = "@mozilla.org/windows-registry-key;1";
+  // Preserve the original CID.
+  let originalWindowsRegKeyCID = Cc[kWindowsRegKeyContractID].number;
 
-  function registerMockWindowsRegKeyFactory() {
-    mockWindowsRegKeyFactory = {
-      createInstance(aOuter, aIid) {
-        if (aOuter != null)
-          throw Cr.NS_ERROR_NO_AGGREGATION;
-        // XXX Bug 1533719 - originalWindowsRegKeyFactory is undefined.
-        // eslint-disable-next-line no-undef
-        var innerKey = originalWindowsRegKeyFactory.createInstance(null, aIid);
-        var key = new MockWindowsRegKey(innerKey);
+  info("Create a mock RegKey factory");
+  let originalRegKey = Cc["@mozilla.org/windows-registry-key;1"]
+                          .createInstance(Ci.nsIWindowsRegKey);
+  let mockWindowsRegKeyFactory = {
+    createInstance(outer, iid) {
+      if (outer != null) {
+        throw Cr.NS_ERROR_NO_AGGREGATION;
+      }
+      info("Create a mock wrapper around RegKey");
+      var key = new MockWindowsRegKey(originalRegKey);
+      return key.QueryInterface(iid);
+    },
+  };
+  info("Register the mock RegKey factory");
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  registrar.registerFactory(
+    kMockCID,
+    "Mock Windows Registry Key Implementation",
+    kWindowsRegKeyContractID,
+    mockWindowsRegKeyFactory
+  );
 
-        return key.QueryInterface(aIid);
-      },
-    };
-
-    // Preserve the original factory
-    originalWindowsRegKeyCID = Cc[kWindowsRegKeyContractID].number;
-
-    // Register the mock factory
-    componentRegistrar.registerFactory(
-      kMockCID,
-      "Mock Windows Registry Key Implementation",
-      kWindowsRegKeyContractID,
-      mockWindowsRegKeyFactory
-    );
-  }
-
-  function unregisterMockWindowsRegKeyFactory() {
+  registerCleanupFunction(() => {
     // Free references to the mock factory
-    componentRegistrar.unregisterFactory(
+    registrar.unregisterFactory(
       kMockCID,
       mockWindowsRegKeyFactory
     );
-
     // Restore the original factory
-    componentRegistrar.registerFactory(
+    registrar.registerFactory(
       Components.ID(originalWindowsRegKeyCID),
       "",
       kWindowsRegKeyContractID,
       null
     );
-  }
-
-  // --- Test procedure ---
-
-  // Activate the override of the ".txt" file association data in the registry
-  registerMockWindowsRegKeyFactory();
-  try {
-    // Try and get the MIME type associated with the extension. If this
-    // operation does not throw an unexpected exception, the test succeeds.
-    Cc["@mozilla.org/mime;1"].
-      getService(Ci.nsIMIMEService).
-      getTypeFromExtension(".txt");
-  } catch (e) {
-    if (!(e instanceof Ci.nsIException) ||
-        e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
-      throw e;
-    }
-    // This is an expected exception, thrown if the type can't be determined
-  } finally {
-    // Ensure we restore the original factory when the test is finished
-    unregisterMockWindowsRegKeyFactory();
-  }
+  });
 }
