@@ -816,7 +816,7 @@ bool WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  AutoValueVector elems(cx);
+  RootedValueVector elems(cx);
   if (!elems.reserve(module->imports().length())) {
     return false;
   }
@@ -896,7 +896,7 @@ bool WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  AutoValueVector elems(cx);
+  RootedValueVector elems(cx);
   if (!elems.reserve(module->exports().length())) {
     return false;
   }
@@ -985,7 +985,7 @@ bool WasmModuleObject::customSections(JSContext* cx, unsigned argc, Value* vp) {
                                   RangedPtr<char>(name.begin(), name.length()));
   }
 
-  AutoValueVector elems(cx);
+  RootedValueVector elems(cx);
   RootedArrayBufferObject buf(cx);
   for (const CustomSection& cs : module->customSections()) {
     if (name.length() != cs.name.length()) {

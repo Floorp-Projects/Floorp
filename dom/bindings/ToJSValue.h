@@ -353,7 +353,7 @@ MOZ_MUST_USE bool ToJSValue(JSContext* aCx, T* aArguments, size_t aLength,
   // Make sure we're called in a compartment
   MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
 
-  JS::AutoValueVector v(aCx);
+  JS::RootedVector<JS::Value> v(aCx);
   if (!v.resize(aLength)) {
     return false;
   }

@@ -13,7 +13,7 @@ async function promise_first_result(inputText) {
   return UrlbarTestUtils.getDetailsOfResultAt(window, 0);
 }
 
-function assertURL(result, expectedUrl, input, postData) {
+function assertURL(result, expectedUrl, keyword, input, postData) {
   if (UrlbarPrefs.get("quantumbar")) {
     Assert.equal(result.url, expectedUrl, "Should have the correct URL");
     if (postData) {
@@ -24,7 +24,7 @@ function assertURL(result, expectedUrl, input, postData) {
     // We need to make a real URI out of this to ensure it's normalised for
     // comparison.
     Assert.equal(result.url, PlacesUtils.mozActionURI("keyword",
-      {url: expectedUrl, input, postData}),
+      {url: expectedUrl, keyword, input, postData}),
       "Expect correct url");
   }
 }
@@ -32,14 +32,38 @@ function assertURL(result, expectedUrl, input, postData) {
 const TEST_URL = `${TEST_BASE_URL}print_postdata.sjs`;
 
 add_task(async function setup() {
-  await PlacesUtils.keywords.insert({ keyword: "get",
-                                      url: TEST_URL + "?q=%s" });
-  await PlacesUtils.keywords.insert({ keyword: "post",
-                                      url: TEST_URL,
-                                      postData: "q=%s" });
+  await PlacesUtils.keywords.insert({
+    keyword: "get",
+    url: TEST_URL + "?q=%s",
+  });
+  await PlacesUtils.keywords.insert({
+    keyword: "post",
+    url: TEST_URL,
+    postData: "q=%s",
+  });
+  await PlacesUtils.keywords.insert({
+    keyword: "question?",
+    url: TEST_URL + "?q2=%s",
+  });
+  await PlacesUtils.keywords.insert({
+    keyword: "?question",
+    url: TEST_URL + "?q3=%s",
+  });
+  // Avoid fetching search suggestions.
+  await SpecialPowers.pushPrefEnv({set: [
+    ["browser.urlbar.suggest.searches", false],
+  ]});
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "searchSuggestionEngine.xml");
+  let defaultEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = engine;
+
   registerCleanupFunction(async function() {
+    Services.search.defaultEngine = defaultEngine;
     await PlacesUtils.keywords.remove("get");
     await PlacesUtils.keywords.remove("post");
+    await PlacesUtils.keywords.remove("question?");
+    await PlacesUtils.keywords.remove("?question");
     while (gBrowser.tabs.length > 1) {
       BrowserTestUtils.removeTab(gBrowser.selectedTab);
     }
@@ -73,7 +97,7 @@ add_task(async function test_keyword_using_get() {
      "Node should contain the name of the bookmark and query");
   Assert.ok(!result.displayed.action, "Should have an empty action");
 
-  assertURL(result, TEST_URL + "?q=something", "get something");
+  assertURL(result, TEST_URL + "?q=something", "get", "get something");
 
   let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
 
@@ -81,7 +105,7 @@ add_task(async function test_keyword_using_get() {
     // QuantumBar doesn't have separate boxes for items.
     let urlHbox = element._urlText.parentNode.parentNode;
     Assert.ok(urlHbox.classList.contains("ac-url"), "URL hbox element sanity check");
-    is_element_hidden(urlHbox, "URL element should be hidden");
+    BrowserTestUtils.is_hidden(urlHbox, "URL element should be hidden");
   }
 
   // Click on the result
@@ -99,7 +123,7 @@ add_task(async function test_keyword_using_get() {
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.KEYWORD,
     "Should have a keyword result");
 
-  assertURL(result, TEST_URL + "?q=somethingmore", "get somethingmore");
+  assertURL(result, TEST_URL + "?q=somethingmore", "get", "get somethingmore");
 
   tabPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
   element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
@@ -124,7 +148,7 @@ add_task(async function test_keyword_using_post() {
      "Node should contain the name of the bookmark and query");
   Assert.ok(!result.displayed.action, "Should have an empty action");
 
-  assertURL(result, TEST_URL, "post something", "q=something");
+  assertURL(result, TEST_URL, "post", "post something", "q=something");
 
   // Click on the result
   info("Normal click on result");
@@ -140,4 +164,32 @@ add_task(async function test_keyword_using_post() {
     return content.document.body.textContent;
   });
   Assert.equal(postData, "q=something", "post data was submitted correctly");
+});
+
+add_task(async function test_keyword_with_question_mark() {
+  // TODO Bug 1517140: keywords containing restriction chars should not be
+  // allowed, or properly supported.
+  let result = await promise_first_result("question?");
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH,
+               "Result should be a search");
+  Assert.equal(result.searchParams.query, "question",
+               "Check search query");
+
+  result = await promise_first_result("question? something");
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.KEYWORD,
+               "Result should be a keyword");
+  Assert.equal(result.keyword, "question?",
+               "Check search query");
+
+  result = await promise_first_result("?question");
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH,
+               "Result should be a search");
+  Assert.equal(result.searchParams.query, "question",
+               "Check search query");
+
+  result = await promise_first_result("?question something");
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH,
+               "Result should be a search");
+  Assert.equal(result.searchParams.query, "question something",
+               "Check search query");
 });

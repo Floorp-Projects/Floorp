@@ -295,7 +295,7 @@ JS_PUBLIC_API bool IsDebugger(JSObject& obj);
 // Append each of the debuggee global objects observed by the Debugger object
 // |dbgObj| to |vector|. Returns true on success, false on failure.
 JS_PUBLIC_API bool GetDebuggeeGlobals(JSContext* cx, JSObject& dbgObj,
-                                      AutoObjectVector& vector);
+                                      MutableHandleObjectVector vector);
 
 // Hooks for reporting where JavaScript execution began.
 //

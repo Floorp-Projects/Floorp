@@ -79,6 +79,11 @@ interface nsIAboutModule : nsISupports
     const unsigned long URI_CAN_LOAD_IN_PRIVILEGED_CHILD = (1 << 8);
 
     /**
+     * A flag that indicates that this URI must be loaded in an extension process (if available).
+     */
+    const unsigned long URI_MUST_LOAD_IN_EXTENSION_PROCESS = (1 << 9);
+
+    /**
      * A method to get the flags that apply to a given about: URI.  The URI
      * passed in is guaranteed to be one of the URIs that this module
      * registered to deal with.

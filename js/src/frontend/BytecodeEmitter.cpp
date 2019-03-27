@@ -4379,7 +4379,7 @@ bool ParseNode::getConstantValue(JSContext* cx,
         pn = as<ListNode>().head();
       }
 
-      AutoValueVector values(cx);
+      RootedValueVector values(cx);
       if (!values.appendN(MagicValue(JS_ELEMENTS_HOLE), count)) {
         return false;
       }

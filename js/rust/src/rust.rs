@@ -22,7 +22,7 @@ use std::sync::mpsc::{SyncSender, sync_channel};
 use std::thread;
 use jsapi::root::*;
 use jsval::{self, UndefinedValue};
-use glue::{CreateAutoObjectVector, CreateCallArgsFromVp, AppendToAutoObjectVector, DeleteAutoObjectVector, IsDebugBuild};
+use glue::{CreateRootedObjectVector, CreateCallArgsFromVp, AppendToRootedObjectVector, DeleteRootedObjectVector, IsDebugBuild};
 use glue::{CreateAutoIdVector, SliceAutoIdVector, DestroyAutoIdVector};
 use glue::{NewCompileOptions, DeleteCompileOptions};
 use panic;
@@ -749,29 +749,29 @@ impl JSJitSetterCallArgs {
 // ___________________________________________________________________________
 // Wrappers around things in jsglue.cpp
 
-pub struct AutoObjectVectorWrapper {
-    pub ptr: *mut JS::AutoObjectVector
+pub struct RootedObjectVectorWrapper {
+    pub ptr: *mut JS::RootedObjectVector
 }
 
-impl AutoObjectVectorWrapper {
-    pub fn new(cx: *mut JSContext) -> AutoObjectVectorWrapper {
-        AutoObjectVectorWrapper {
+impl RootedObjectVectorWrapper {
+    pub fn new(cx: *mut JSContext) -> RootedObjectVectorWrapper {
+        RootedObjectVectorWrapper {
             ptr: unsafe {
-                 CreateAutoObjectVector(cx)
+                 CreateRootedObjectVector(cx)
             }
         }
     }
 
     pub fn append(&self, obj: *mut JSObject) -> bool {
         unsafe {
-            AppendToAutoObjectVector(self.ptr, obj)
+            AppendToRootedObjectVector(self.ptr, obj)
         }
     }
 }
 
-impl Drop for AutoObjectVectorWrapper {
+impl Drop for RootedObjectVectorWrapper {
     fn drop(&mut self) {
-        unsafe { DeleteAutoObjectVector(self.ptr) }
+        unsafe { DeleteRootedObjectVector(self.ptr) }
     }
 }
 

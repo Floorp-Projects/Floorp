@@ -17,11 +17,6 @@ namespace jit {
 
 const OptimizationLevelInfo IonOptimizations;
 
-// Duplicated in all.js - ensure both match.
-const uint32_t OptimizationInfo::CompilerWarmupThreshold = 1000;
-const uint32_t OptimizationInfo::CompilerSmallFunctionWarmupThreshold =
-    CompilerWarmupThreshold;
-
 void OptimizationInfo::initNormalOptimizationInfo() {
   level_ = OptimizationLevel::Normal;
 
@@ -48,8 +43,6 @@ void OptimizationInfo::initNormalOptimizationInfo() {
   maxInlineDepth_ = 3;
   scalarReplacement_ = true;
   smallFunctionMaxInlineDepth_ = 10;
-  compilerWarmUpThreshold_ = CompilerWarmupThreshold;
-  compilerSmallFunctionWarmUpThreshold_ = CompilerSmallFunctionWarmupThreshold;
   inliningWarmUpThresholdFactor_ = 0.125;
   inliningRecompileThresholdFactor_ = 4;
 }
@@ -81,14 +74,7 @@ uint32_t OptimizationInfo::compilerWarmUpThreshold(JSScript* script,
     pc = nullptr;
   }
 
-  uint32_t warmUpThreshold = JitOptions.forcedDefaultIonWarmUpThreshold.valueOr(
-      compilerWarmUpThreshold_);
-
-  if (JitOptions.isSmallFunction(script)) {
-    warmUpThreshold =
-        JitOptions.forcedDefaultIonSmallFunctionWarmUpThreshold.valueOr(
-            compilerSmallFunctionWarmUpThreshold_);
-  }
+  uint32_t warmUpThreshold = baseCompilerWarmUpThreshold();
 
   // If the script is too large to compile on the main thread, we can still
   // compile it off thread. In these cases, increase the warm-up counter
@@ -105,7 +91,7 @@ uint32_t OptimizationInfo::compilerWarmUpThreshold(JSScript* script,
         (numLocalsAndArgs / double(MAX_MAIN_THREAD_LOCALS_AND_ARGS));
   }
 
-  if (!pc || JitOptions.eagerCompilation) {
+  if (!pc || JitOptions.eagerIonCompilation()) {
     return warmUpThreshold;
   }
 

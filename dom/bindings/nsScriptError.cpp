@@ -33,6 +33,7 @@ nsScriptErrorBase::nsScriptErrorBase()
     : mMessage(),
       mMessageName(),
       mSourceName(),
+      mCssSelectors(),
       mSourceId(0),
       mLineNumber(0),
       mSourceLine(),
@@ -111,6 +112,18 @@ nsScriptErrorBase::GetErrorMessage(nsAString& aResult) {
 NS_IMETHODIMP
 nsScriptErrorBase::GetSourceName(nsAString& aResult) {
   aResult.Assign(mSourceName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorBase::GetCssSelectors(nsAString& aResult) {
+  aResult.Assign(mCssSelectors);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorBase::SetCssSelectors(const nsAString& aCssSelectors) {
+  mCssSelectors = aCssSelectors;
   return NS_OK;
 }
 

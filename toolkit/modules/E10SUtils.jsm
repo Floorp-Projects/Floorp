@@ -222,6 +222,10 @@ var E10SUtils = {
         }
 
         let flags = module.getURIFlags(aURI);
+        if (flags & Ci.nsIAboutModule.URI_MUST_LOAD_IN_EXTENSION_PROCESS) {
+          return WebExtensionPolicy.useRemoteWebExtensions ? EXTENSION_REMOTE_TYPE : NOT_REMOTE;
+        }
+
         if (flags & Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD) {
           if ((flags & Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGED_CHILD) &&
               useSeparatePrivilegedContentProcess) {

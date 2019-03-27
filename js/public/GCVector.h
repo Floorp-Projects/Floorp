@@ -152,6 +152,17 @@ class GCVector {
   }
 };
 
+// AllocPolicy is optional. It has a default value declared in TypeDecls.h
+template <typename T, typename AllocPolicy>
+class MOZ_STACK_CLASS StackGCVector : public GCVector<T, 8, AllocPolicy> {
+ public:
+  using Base = GCVector<T, 8, AllocPolicy>;
+
+ private:
+  // Inherit constructor from GCVector.
+  using Base::Base;
+};
+
 }  // namespace JS
 
 namespace js {
@@ -269,10 +280,21 @@ class MutableWrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>,
   void erase(T* aBegin, T* aEnd) { vec().erase(aBegin, aEnd); }
 };
 
+template <typename Wrapper, typename T, typename AllocPolicy>
+class WrappedPtrOperations<JS::StackGCVector<T, AllocPolicy>, Wrapper> :
+  public WrappedPtrOperations<typename JS::StackGCVector<T, AllocPolicy>::Base,
+                              Wrapper> {};
+
+template <typename Wrapper, typename T, typename AllocPolicy>
+class MutableWrappedPtrOperations<JS::StackGCVector<T, AllocPolicy>, Wrapper> :
+  public MutableWrappedPtrOperations<typename JS::StackGCVector<T, AllocPolicy>::Base,
+                                     Wrapper> {};
+
 }  // namespace js
 
 namespace JS {
 
+// Deprecated, use RootedVector instead.
 // An automatically rooted vector for stack use.
 template <typename T>
 class AutoVector : public Rooted<GCVector<T, 8>> {
@@ -281,6 +303,16 @@ class AutoVector : public Rooted<GCVector<T, 8>> {
 
  public:
   explicit AutoVector(JSContext* cx) : Base(cx, Vec(cx)) {}
+};
+
+// An automatically rooted GCVector for stack use.
+template <typename T>
+class RootedVector : public Rooted<StackGCVector<T>> {
+  using Vec = StackGCVector<T>;
+  using Base = Rooted<Vec>;
+
+ public:
+  explicit RootedVector(JSContext* cx) : Base(cx, Vec(cx)) {}
 };
 
 }  // namespace JS

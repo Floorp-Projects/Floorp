@@ -5,3 +5,7 @@
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/components/urlbar/tests/legacy/head-common.js",
   this);
+
+function promisePopupShown(popup) {
+  return BrowserTestUtils.waitForPopupEvent(popup, "shown");
+}

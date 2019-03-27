@@ -28,7 +28,6 @@ dictionary CSP {
   sequence<DOMString> upgrade-insecure-requests;
   sequence<DOMString> child-src;
   sequence<DOMString> block-all-mixed-content;
-  sequence<DOMString> require-sri-for;
   sequence<DOMString> sandbox;
   sequence<DOMString> worker-src;
 };

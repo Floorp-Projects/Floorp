@@ -5,16 +5,12 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-const { gDevTools } = require("devtools/client/framework/devtools");
-const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
-const { Toolbox } = require("devtools/client/framework/toolbox");
 const { remoteClientManager } =
   require("devtools/client/shared/remote-debugging/remote-client-manager");
 
 const { l10n } = require("../modules/l10n");
 
 const {
-  debugAddon,
   openTemporaryExtension,
   uninstallAddon,
 } = require("../modules/extensions-helper");
@@ -49,58 +45,27 @@ const Actions = require("./index");
 function inspectDebugTarget(type, id) {
   return async (dispatch, getState) => {
     const runtime = getCurrentRuntime(getState().runtimes);
-    const { runtimeDetails, type: runtimeType } = runtime;
+    const remoteId = remoteClientManager.getRemoteId(runtime.id, runtime.type);
 
-    switch (type) {
-      case DEBUG_TARGETS.TAB: {
-        // Open tab debugger in new window.
-        if (runtimeType === RUNTIMES.NETWORK || runtimeType === RUNTIMES.USB) {
-          // Pass the remote id from the client manager so that about:devtools-toolbox can
-          // retrieve the connected client directly.
-          const remoteId = remoteClientManager.getRemoteId(runtime.id, runtime.type);
-          window.open(`about:devtools-toolbox?type=tab&id=${id}&remoteId=${remoteId}`);
-        } else if (runtimeType === RUNTIMES.THIS_FIREFOX) {
-          window.open(`about:devtools-toolbox?type=tab&id=${id}`);
-        }
-        break;
-      }
-      case DEBUG_TARGETS.EXTENSION: {
-        await debugAddon(id, runtimeDetails.clientWrapper.client);
-        break;
-      }
-      case DEBUG_TARGETS.PROCESS: {
-        const devtoolsClient = runtimeDetails.clientWrapper.client;
-        const processTargetFront = devtoolsClient.getActor(id);
-        const toolbox = await gDevTools.showToolbox(processTargetFront, null,
-          Toolbox.HostType.WINDOW);
-
-        // Once the target is destroyed after closing the toolbox, the front is gone and
-        // can no longer be used. Extensions don't have the issue because we don't list
-        // the target fronts directly, but proxies on which we call connect to create a
-        // target front when we want to inspect them. Local workers don't have this issue
-        // because closing the toolbox stops several workers which will indirectly trigger
-        // a requestWorkers action. However workers on a remote runtime have the exact
-        // same issue.
-        // To workaround the issue we request processes after the toolbox is closed.
-        toolbox.once("destroy", () => dispatch(Actions.requestProcesses()));
-        break;
-      }
-      case DEBUG_TARGETS.WORKER: {
-        // Open worker toolbox in new window.
-        const devtoolsClient = runtimeDetails.clientWrapper.client;
-        const front = devtoolsClient.getActor(id);
-        gDevToolsBrowser.openWorkerToolbox(front);
-        break;
-      }
-      default: {
-        console.error("Failed to inspect the debug target of " +
-                      `type: ${ type } id: ${ id }`);
-      }
+    if (runtime.id === RUNTIMES.THIS_FIREFOX && type !== DEBUG_TARGETS.WORKER) {
+      // Even when debugging on This Firefox we need to re-use the client since the worker
+      // actor is cached in the client instance. Instead we should pass an id that does
+      // not depend on the client (such as the worker url). This will be fixed in
+      // Bug 1539328.
+      // Once the target is destroyed after closing the toolbox, the front will be gone
+      // and can no longer be used. When debugging This Firefox, workers are regularly
+      // updated so this is not an issue. On remote runtimes however, trying to inspect a
+      // worker a second time after closing the corresponding about:devtools-toolbox tab
+      // will fail. See Bug 1534201.
+      window.open(`about:devtools-toolbox?type=${type.toLowerCase()}&id=${id}`);
+    } else {
+      window.open(`about:devtools-toolbox?type=${type.toLowerCase()}&id=${id}` +
+                  `&remoteId=${remoteId}`);
     }
 
     dispatch(Actions.recordTelemetryEvent("inspect", {
       "target_type": type,
-      "runtime_type": runtimeType,
+      "runtime_type": runtime.type,
     }));
   };
 }

@@ -28,12 +28,17 @@ checkParseOk("1ex", 1, "ex");
 checkParseOk("1e1em", 10, "em");
 checkParseOk("1E+2", 100);
 checkParseOk(".1e-2", 0.001);
+checkParseOk("   10", 10);
+checkParseOk("10  ", 10);
+checkParseOk("  10  ", 10);
+checkParseOk("  10em  ", 10, "em");
 
 // Fail cases
 checkParseFail("1e");
 checkParseFail("1 e");
 checkParseFail("1 em");
 checkParseFail("1ee");
+checkParseFail(" 10 20");
 
 function checkParseOk(spec, valueInUnits, units) {
   var rect = document.getElementById("rect");

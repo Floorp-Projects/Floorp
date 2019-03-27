@@ -41,7 +41,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "key term",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=term", input: "key term"}),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=term", keyword: "key", input: "key term"}),
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
@@ -56,7 +56,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "key multi word",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=multi%20word", input: "key multi word"}),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=multi%20word", keyword: "key", input: "key multi word"}),
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
@@ -64,7 +64,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "key blocking+",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=blocking%2B", input: "key blocking+"}),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=blocking%2B", keyword: "key", input: "key blocking+"}),
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
@@ -75,7 +75,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "key ユニコード",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=" + encodeURIComponent("ユニコード"), input: "key ユニコード"}),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=" + encodeURIComponent("ユニコード"), keyword: "key", input: "key ユニコード"}),
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
@@ -83,7 +83,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "key ThisPageIsInHistory",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=ThisPageIsInHistory", input: "key ThisPageIsInHistory"}),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=ThisPageIsInHistory", keyword: "key", input: "key ThisPageIsInHistory"}),
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
@@ -91,7 +91,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "key ThisPage",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=ThisPage", input: "key ThisPage"}),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=ThisPage", keyword: "key", input: "key ThisPage"}),
                  title: "abc", style: [ "action", "keyword", "heuristic" ] },
                // Only the most recent bookmark for the URL:
                { value: "http://abc/?search=ThisPageIsInHistory",
@@ -106,7 +106,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "key2",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://def/?search=", input: "key2"}),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://def/?search=", keyword: "key2", input: "key2"}),
                  title: "def", style: [ "action", "keyword", "heuristic" ] },
                { uri: uri5, title: "Keyword", style: [ "bookmark" ] },
     ],
@@ -116,7 +116,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "key2 ",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://def/?search=", input: "key2 "}),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://def/?search=", keyword: "key2", input: "key2 "}),
                  title: "def", style: [ "action", "keyword", "heuristic" ] },
                { uri: uri5, title: "Keyword", style: [ "bookmark" ] },
     ],
@@ -126,7 +126,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "post foo",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=foo", input: "post foo", postData: "post_search=foo"}),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=foo", keyword: "post", input: "post foo", postData: "post_search=foo"}),
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
@@ -146,7 +146,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "encoded foé",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=fo%C3%A9&raw=foé", input: "encoded foé" }),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=fo%C3%A9&raw=foé", keyword: "encoded", input: "encoded foé" }),
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
@@ -154,7 +154,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "charset foé",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=fo%E9&raw=foé", input: "charset foé" }),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=fo%E9&raw=foé", keyword: "charset", input: "charset foé" }),
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
@@ -162,7 +162,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "charset_history foé",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://ghi/?search=fo%E9&raw=foé", input: "charset_history foé" }),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://ghi/?search=fo%E9&raw=foé", keyword: "charset_history", input: "charset_history foé" }),
                  title: "ghi", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
@@ -170,7 +170,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "encoded +/@",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=%2B%2F%40&raw=+/@", input: "encoded +/@" }),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=%2B%2F%40&raw=+/@", keyword: "encoded", input: "encoded +/@" }),
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
@@ -178,7 +178,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: "charset +/@",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=%2B%2F%40&raw=+/@", input: "charset +/@" }),
+    matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=%2B%2F%40&raw=+/@", keyword: "charset", input: "charset +/@" }),
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
@@ -186,7 +186,7 @@ add_task(async function test_keyword_search() {
   await check_autocomplete({
     search: " key test",
     searchParam: "enable-actions",
-    matches: [ { uri:  makeActionURI("keyword", {url: "http://abc/?search=test", input: " key test" }),
+    matches: [ { uri:  makeActionURI("keyword", {url: "http://abc/?search=test", keyword: "key", input: " key test" }),
     title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 

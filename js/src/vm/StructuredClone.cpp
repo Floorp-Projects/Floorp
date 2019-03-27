@@ -64,6 +64,7 @@
 using namespace js;
 
 using JS::CanonicalizeNaN;
+using JS::RootedValueVector;
 using mozilla::BitwiseCast;
 using mozilla::NativeEndian;
 using mozilla::NumbersAreIdentical;
@@ -426,7 +427,7 @@ struct JSStructuredCloneReader {
   JS::StructuredCloneScope allowedScope;
 
   // Stack of objects with properties remaining to be read.
-  AutoValueVector objs;
+  RootedValueVector objs;
 
   // Array of all objects read during this deserialization, for resolving
   // backreferences.
@@ -439,7 +440,7 @@ struct JSStructuredCloneReader {
   //
   // The values in this vector are objects, except it can temporarily have
   // one `undefined` placeholder value (the readTypedArray hack).
-  AutoValueVector allObjs;
+  RootedValueVector allObjs;
 
   // The user defined callbacks that will be used for cloning.
   const JSStructuredCloneCallbacks* callbacks;
@@ -520,7 +521,7 @@ struct JSStructuredCloneWriter {
   //
   // NB: These can span multiple compartments, so the compartment must be
   // entered before any manipulation is performed.
-  AutoValueVector objs;
+  RootedValueVector objs;
 
   // counts[i] is the number of entries of objs[i] remaining to be written.
   // counts.length() == objs.length() and sum(counts) == entries.length().
@@ -532,7 +533,7 @@ struct JSStructuredCloneWriter {
   // For Map: Key followed by value
   // For Set: Key
   // For SavedFrame: parent SavedFrame
-  AutoValueVector otherEntries;
+  RootedValueVector otherEntries;
 
   // The "memory" list described in the HTML5 internal structured cloning
   // algorithm.  memory is a superset of objs; items are never removed from

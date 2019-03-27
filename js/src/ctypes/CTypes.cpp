@@ -2029,7 +2029,7 @@ static JSObject* InitInt64Class(JSContext* cx, HandleObject parent,
   return prototype;
 }
 
-static void AttachProtos(JSObject* proto, const AutoObjectVector& protos) {
+static void AttachProtos(JSObject* proto, HandleObjectVector protos) {
   // For a given 'proto' of [[Class]] "CTypeProto", attach each of the 'protos'
   // to the appropriate CTypeProtoSlot. (SLOT_CTYPES is the last slot
   // of [[Class]] "CTypeProto" that we fill in this automated manner.)
@@ -2102,7 +2102,7 @@ static bool InitTypeClasses(JSContext* cx, HandleObject ctypesObj) {
   //     * [[Class]] "CDataProto"
   //     * __proto__ === 'p', the prototype object from above
   //     * 'constructor' property === 't'
-  AutoObjectVector protos(cx);
+  RootedObjectVector protos(cx);
   if (!protos.resize(CTYPEPROTO_SLOTS)) {
     return false;
   }
@@ -6196,7 +6196,7 @@ JSObject* StructType::BuildFieldsArray(JSContext* cx, JSObject* obj) {
   size_t len = fields->count();
 
   // Prepare a new array for the 'fields' property of the StructType.
-  JS::AutoValueVector fieldsVec(cx);
+  JS::RootedValueVector fieldsVec(cx);
   if (!fieldsVec.resize(len)) {
     return nullptr;
   }
@@ -6715,7 +6715,7 @@ bool FunctionType::Create(JSContext* cx, unsigned argc, Value* vp) {
     return ArgumentLengthError(cx, "FunctionType", "two or three", "s");
   }
 
-  AutoValueVector argTypes(cx);
+  JS::RootedValueVector argTypes(cx);
   RootedObject arrayObj(cx, nullptr);
 
   if (args.length() == 3) {
@@ -7078,7 +7078,7 @@ bool FunctionType::ArgTypesGetter(JSContext* cx, const JS::CallArgs& args) {
   // Prepare a new array.
   JS::Rooted<JSObject*> argTypes(cx);
   {
-    JS::AutoValueVector vec(cx);
+    JS::RootedValueVector vec(cx);
     if (!vec.resize(len)) {
       return false;
     }
@@ -7304,7 +7304,7 @@ bool CClosure::ArgClosure::operator()(JSContext* cx) {
   }
 
   // Set up an array for converted arguments.
-  JS::AutoValueVector argv(cx);
+  JS::RootedValueVector argv(cx);
   if (!argv.resize(cif->nargs)) {
     JS_ReportOutOfMemory(cx);
     return false;

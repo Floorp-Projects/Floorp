@@ -958,8 +958,8 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   // mTarget is different from aElement in the <body> case, where mTarget is a
   // Window, and in that case we do not want the scope chain to include the body
   // or the document.
-  JS::AutoObjectVector scopeChain(cx);
-  if (!nsJSUtils::GetScopeChainForElement(cx, element, scopeChain)) {
+  JS::RootedVector<JSObject*> scopeChain(cx);
+  if (!nsJSUtils::GetScopeChainForElement(cx, element, &scopeChain)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

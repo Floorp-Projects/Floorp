@@ -196,6 +196,10 @@ linux-qr-tests:
     - reftest
     - xpcshell
 
+linux-qr-smoketests:
+    - crashtest
+    - reftest
+
 linux-talos-flex:
     - talos-flex
 

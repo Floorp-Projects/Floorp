@@ -43,15 +43,15 @@ var tests = [
 ];
 var results = [
   [ { errorMessage: /Unknown property \u2018nosuchprop\u2019/,
-      lineNumber: 1, columnNumber: 16, sourceLine: "" },
+      lineNumber: 1, columnNumber: 16, sourceLine: "", cssSelectors: "#s1" },
     { errorMessage: /Unknown property \u2018nosuchprop\u2019/,
-      lineNumber: 2, columnNumber: 16, sourceLine: "" },
+      lineNumber: 2, columnNumber: 16, sourceLine: "", cssSelectors: "#s2" },
     { errorMessage: /Ruleset ignored due to bad selector/,
-      lineNumber: 2, columnNumber: 41, sourceLine: "" } ],
+      lineNumber: 2, columnNumber: 41, sourceLine: "", cssSelectors: "" } ],
   [ { errorMessage: /parsing value for \u2018width\u2019/,
-      lineNumber: 0, columnNumber: 7, sourceLine: "" } ],
+      lineNumber: 0, columnNumber: 7, sourceLine: "", cssSelectors: "" } ],
   [ { errorMessage: /parsing value for \u2018width\u2019/,
-      lineNumber: 0, columnNumber: 1, sourceLine: "" } ],
+      lineNumber: 0, columnNumber: 1, sourceLine: "", cssSelectors: "" } ],
 ];
 var curTest = -1;
 

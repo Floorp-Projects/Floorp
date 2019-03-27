@@ -37,17 +37,17 @@ const gValidRotate = [
   "30.5deg",
   "0.5rad",
   "auto",
-  "auto-reverse"
+  "auto-reverse",
+  " 10 ",
+  "  10deg",
+  "10deg ",
+  " 10.1 "
 ];
 
 const gInvalidRotate = [
-  " 10 ",
-  "  10deg",
   "10 deg",
-  "10deg ",
   "10 rad    ",
-  "aaa",
-  " 10.1 ",
+  "aaa"
 ];
 
 const gValidToBy = [
