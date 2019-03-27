@@ -24,6 +24,8 @@ add_task(async function testDuplicateTab() {
             browser.test.assertEq(1, tab.index);
             // Should be active by default.
             browser.test.assertTrue(tab.active);
+
+            browser.tabs.remove([tab.id, source.id]);
             browser.test.notifyPass("tabs.duplicate");
           });
         });
@@ -34,10 +36,6 @@ add_task(async function testDuplicateTab() {
   await extension.startup();
   await extension.awaitFinish("tabs.duplicate");
   await extension.unload();
-
-  while (gBrowser.tabs[0].linkedBrowser.currentURI.spec === "http://example.net/") {
-    BrowserTestUtils.removeTab(gBrowser.tabs[0]);
-  }
 });
 
 add_task(async function testDuplicateTabLazily() {
@@ -130,6 +128,8 @@ add_task(async function testDuplicatePinnedTab() {
           browser.test.assertEq(1, tab.index);
           // Should be pinned.
           browser.test.assertTrue(tab.pinned);
+
+          browser.tabs.remove([tabs[0].id, tab.id]);
           browser.test.notifyPass("tabs.duplicate.pinned");
         });
       });
@@ -139,8 +139,49 @@ add_task(async function testDuplicatePinnedTab() {
   await extension.startup();
   await extension.awaitFinish("tabs.duplicate.pinned");
   await extension.unload();
+});
 
-  while (gBrowser.tabs[0].linkedBrowser.currentURI.spec === "http://example.net/") {
-    BrowserTestUtils.removeTab(gBrowser.tabs[0]);
-  }
+add_task(async function testDuplicateResolvePromiseRightAway() {
+  const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
+  const URL = BASE + "file_slowed_document.sjs";
+
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    background: async function() {
+      browser.tabs.query({
+        lastFocusedWindow: true,
+      }, async (tabs) => {
+        let resolvedRightAway = null;
+        browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+          if (resolvedRightAway === null) {
+            resolvedRightAway = false;
+          }
+        }, {urls: [tabs[1].url]});
+
+        browser.tabs.duplicate(tabs[1].id, async (tab) => {
+          // if the promise is resolved before any onUpdated event has been fired,
+          // then the promise has been resolved before waiting for the tab to load
+          if (resolvedRightAway === null) {
+            resolvedRightAway = true;
+          }
+
+          await browser.tabs.remove([tabs[1].id, tab.id]);
+          if (resolvedRightAway) {
+            browser.test.notifyPass("tabs.duplicate.resolvePromiseRightAway");
+          } else {
+            browser.test.notifyFail("tabs.duplicate.resolvePromiseRightAway");
+          }
+        });
+      });
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("tabs.duplicate.resolvePromiseRightAway");
+  await extension.unload();
 });
