@@ -238,7 +238,7 @@ typedef struct NPObjectMemberPrivate {
   JS::Heap<JSObject *> npobjWrapper;
   JS::Heap<JS::Value> fieldValue;
   JS::Heap<jsid> methodName;
-  NPP npp;
+  NPP npp = nullptr;
 } NPObjectMemberPrivate;
 
 static void NPObjectMember_Finalize(JSFreeOp *fop, JSObject *obj);
@@ -1991,19 +1991,13 @@ static bool CreateNPObjectMember(NPP npp, JSContext *cx,
     return false;
   }
 
-  NPObjectMemberPrivate *memberPrivate =
-      (NPObjectMemberPrivate *)malloc(sizeof(NPObjectMemberPrivate));
-  if (!memberPrivate) return false;
-
-  // Make sure to clear all members in case something fails here
-  // during initialization.
-  memset(memberPrivate, 0, sizeof(NPObjectMemberPrivate));
+  NPObjectMemberPrivate *memberPrivate = new NPObjectMemberPrivate;
 
   JS::Rooted<JSObject *> obj(cx, aObj);
 
   JS::Rooted<JSObject *> memobj(cx, ::JS_NewObject(cx, &sNPObjectMemberClass));
   if (!memobj) {
-    free(memberPrivate);
+    delete memberPrivate;
     return false;
   }
 
@@ -2064,7 +2058,7 @@ static void NPObjectMember_Finalize(JSFreeOp *fop, JSObject *obj) {
   memberPrivate = (NPObjectMemberPrivate *)::JS_GetPrivate(obj);
   if (!memberPrivate) return;
 
-  free(memberPrivate);
+  delete memberPrivate;
 }
 
 static bool NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp) {
