@@ -1123,7 +1123,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(
       this, &aToDestroy);
 
-  wr::RenderRootArray<bool> scheduleComposite(false);
+  wr::RenderRootArray<bool> scheduleComposite;
 
   UpdateAPZFocusState(aFocusTarget);
 
