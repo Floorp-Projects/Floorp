@@ -333,10 +333,9 @@ void XPCWrappedNativeScope::UpdateWeakPointersAfterGC() {
     if (mXrayExpandos.initialized()) {
       mXrayExpandos.destroy();
     }
-    JSContext* cx = dom::danger::GetJSContext();
-    mIDProto.finalize(cx);
-    mIIDProto.finalize(cx);
-    mCIDProto.finalize(cx);
+    mIDProto = nullptr;
+    mIIDProto = nullptr;
+    mCIDProto = nullptr;
     return;
   }
 
@@ -392,10 +391,9 @@ void XPCWrappedNativeScope::SystemIsBeingShutDown() {
 
     // Null out these pointers to prevent ~ObjectPtr assertion failures if we
     // leaked things at shutdown.
-    JSContext* cx = dom::danger::GetJSContext();
-    cur->mIDProto.finalize(cx);
-    cur->mIIDProto.finalize(cx);
-    cur->mCIDProto.finalize(cx);
+    cur->mIDProto = nullptr;
+    cur->mIIDProto = nullptr;
+    cur->mCIDProto = nullptr;
 
     // Similarly, destroy mXrayExpandos to prevent assertion failures.
     if (cur->mXrayExpandos.initialized()) {

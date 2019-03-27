@@ -1151,25 +1151,6 @@ JS_FRIEND_API bool js::IsSharableCompartment(JS::Compartment* comp) {
   return true;
 }
 
-void JS::ObjectPtr::finalize(JSRuntime* rt) {
-  if (IsIncrementalBarrierNeeded(rt->mainContextFromOwnThread())) {
-    IncrementalPreWriteBarrier(value);
-  }
-  value = nullptr;
-}
-
-void JS::ObjectPtr::finalize(JSContext* cx) { finalize(cx->runtime()); }
-
-void JS::ObjectPtr::updateWeakPointerAfterGC() {
-  if (js::gc::IsAboutToBeFinalizedUnbarriered(value.unsafeGet())) {
-    value = nullptr;
-  }
-}
-
-void JS::ObjectPtr::trace(JSTracer* trc, const char* name) {
-  JS::TraceEdge(trc, &value, name);
-}
-
 JS_FRIEND_API JSObject* js::GetTestingFunctions(JSContext* cx) {
   RootedObject obj(cx, JS_NewPlainObject(cx));
   if (!obj) {
