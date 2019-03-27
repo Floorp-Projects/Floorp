@@ -27,14 +27,6 @@ with:
 assertEquals(5, GleanMetrics.Foo.UriCount.testGetValue())
 ```
 
-Finally there is a function `testClearAllData()` that will help to clear out all collected data, 
-such as you would do in an `@Before` block prior to running a new test, or in an `@After` block to 
-clean up after a test.  This function is called off of the main `Glean` singleton object:
-
-```kotlin
-Glean.testClearAllData()
-```
-
 Note that each of these functions has it's visibility limited to the scope to only unit tests by
 making use of the `@VisibleForTesting` annotation, so the IDE should complain if you attempt to use
 them inside of client code.
@@ -61,6 +53,7 @@ GleanMetrics.Foo.UriCount.testGetValue("customPing")
 Here is a longer example to better illustrate the intended use of the test API:
 ```kotlin
 // Enable testing mode
+// (Perhaps called from a @Before method so it precedes every test in the suite.)
 Glean.enableTestingMode()
 
 // Record a metric value with extra to validate against
@@ -84,6 +77,5 @@ val events = BrowserEngagement.click.testGetValue()
 assertEquals(3, events.size)
 
 // Check extra key/value for first event in the list
-assertEquals(“Courier”, events.elementAt(0).extra[“font”])
-
+assertEquals("Courier", events.elementAt(0).extra["font"])
 ```
