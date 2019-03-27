@@ -483,12 +483,6 @@ webrtc::CaptureCapability MediaEngineRemoteVideoSource::GetCapability(
   return result;
 }
 
-void MediaEngineRemoteVideoSource::Pull(
-    const RefPtr<const AllocationHandle>& aHandle,
-    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-    StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
-    const PrincipalHandle& aPrincipalHandle) {}
-
 int MediaEngineRemoteVideoSource::DeliverFrame(
     uint8_t* aBuffer, const camera::VideoFrameProperties& aProps) {
   // Cameras IPC thread - take great care with accessing members!

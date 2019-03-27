@@ -264,12 +264,6 @@ nsresult MediaEngineTabVideoSource::Start(
   return NS_OK;
 }
 
-void MediaEngineTabVideoSource::Pull(
-    const RefPtr<const AllocationHandle>& aHandle,
-    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-    StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
-    const PrincipalHandle& aPrincipalHandle) {}
-
 void MediaEngineTabVideoSource::Draw() {
   MOZ_ASSERT(NS_IsMainThread());
 
