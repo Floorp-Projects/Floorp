@@ -60,8 +60,8 @@
     <color name="library_downloads_icon_background">#D4C1FA</color>
     <color name="library_downloads_icon">#2E2060</color>
 
-    <color name="library_favorites_icon_background">#F4B8D9</color>
-    <color name="library_favorites_icon">#491949</color>
+    <color name="library_bookmarks_icon_background">#F4B8D9</color>
+    <color name="library_bookmarks_icon">#491949</color>
 
     <color name="library_history_icon_background">#F5C0C6</color>
     <color name="library_history_icon">#3E0909</color>

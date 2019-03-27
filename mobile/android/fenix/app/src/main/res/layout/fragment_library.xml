@@ -44,14 +44,14 @@
         app:listItemTitle="@string/library_downloads" />
 
     <org.mozilla.fenix.library.LibraryListItem
-        android:id="@+id/libraryFavorites"
+        android:id="@+id/libraryBookmarks"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:attr/selectableItemBackground"
         android:clickable="true"
         android:contentDescription="@string/library_bookmarks"
         android:focusable="true"
-        app:listItemIcon="@drawable/library_icon_favorites_circle_background"
+        app:listItemIcon="@drawable/library_icon_bookmarks_circle_background"
         app:listItemTitle="@string/library_bookmarks" />
 
     <org.mozilla.fenix.library.LibraryListItem

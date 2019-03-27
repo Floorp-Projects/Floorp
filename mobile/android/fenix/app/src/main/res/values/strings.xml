@@ -208,8 +208,8 @@
     <string name="quick_action_share">Share</string>
     <!-- Option in Quick Action Sheet in the browser to download the current page -->
     <string name="quick_action_download">Download</string>
-    <!-- Option in Quick Action Sheet in the browser to favorite the current page -->
-    <string name="quick_action_favorite">Favorite</string>
+    <!-- Option in Quick Action Sheet in the browser to bookmark the current page -->
+    <string name="quick_action_bookmark">Bookmark</string>
     <!-- Option in Quick Action Sheet in the browser to put the the current page in reader mode -->
     <string name="quick_action_read">Read</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet-->
@@ -224,7 +224,7 @@
     <string name="library_screenshots">Screenshots</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Downloads</string>
-    <!-- Option in Library to open Favorites page -->
+    <!-- Option in Library to open Bookmarks page -->
     <string name="library_bookmarks">Bookmarks</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">History</string>

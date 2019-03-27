@@ -53,7 +53,7 @@ class LibraryFragment : Fragment() {
         libraryScreenshots.setOnClickListener {
             ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "89")
         }
-        libraryFavorites.setOnClickListener {
+        libraryBookmarks.setOnClickListener {
             ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "90")
         }
         libraryReadingList.setOnClickListener {

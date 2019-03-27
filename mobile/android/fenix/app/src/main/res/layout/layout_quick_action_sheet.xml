@@ -55,12 +55,12 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_width="0dp"
-            android:drawableTop="@drawable/library_icon_favorites_circle_background"
+            android:drawableTop="@drawable/library_icon_bookmarks_circle_background"
             android:drawablePadding="5dp"
             android:textAlignment="center"
             android:textSize="12sp"
             android:textColor="?attr/toolbarTextColor"
-            android:text="@string/quick_action_favorite"/>
+            android:text="@string/quick_action_bookmark"/>
 
         <androidx.appcompat.widget.AppCompatTextView
             android:layout_height="wrap_content"
