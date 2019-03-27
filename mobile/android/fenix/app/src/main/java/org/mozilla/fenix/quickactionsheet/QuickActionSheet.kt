@@ -15,7 +15,9 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import mozilla.components.browser.toolbar.BrowserToolbar
 import org.mozilla.fenix.R
 import android.animation.ValueAnimator
-import android.view.accessibility.AccessibilityManager
+import android.os.Bundle
+import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import org.mozilla.fenix.utils.Settings
 
@@ -39,22 +41,12 @@ class QuickActionSheet @JvmOverloads constructor(
         val handle = findViewById<AppCompatImageButton>(R.id.quick_action_sheet_handle)
         val linearLayout = findViewById<LinearLayout>(R.id.quick_action_sheet)
         val quickActionSheetBehavior = BottomSheetBehavior.from(linearLayout.parent as View) as QuickActionSheetBehavior
-        val accessibilityManager = context
-            .getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-
-        if (accessibilityManager.isTouchExplorationEnabled) {
-            linearLayout.setOnClickListener {
-                quickActionSheetBehavior.state = when (quickActionSheetBehavior.state) {
-                    BottomSheetBehavior.STATE_EXPANDED -> BottomSheetBehavior.STATE_COLLAPSED
-                    else -> BottomSheetBehavior.STATE_EXPANDED
-                }
-            }
-            return
-        }
 
         handle.setOnClickListener {
             bounceSheet(quickActionSheetBehavior)
         }
+
+        handle.setAccessibilityDelegate(HandleAccessibilityDelegate(quickActionSheetBehavior))
 
         val settings = Settings.getInstance(context)
         if (settings.shouldAutoBounceQuickActionSheet) {
@@ -84,6 +76,53 @@ class QuickActionSheet @JvmOverloads constructor(
             it.interpolator = FastOutSlowInInterpolator()
             it.duration = duration
             it.start()
+        }
+    }
+
+    class HandleAccessibilityDelegate(
+        private val quickActionSheetBehavior: QuickActionSheetBehavior
+    ) : View.AccessibilityDelegate() {
+        private var finalState = BottomSheetBehavior.STATE_COLLAPSED
+        get() = when (quickActionSheetBehavior.state) {
+            BottomSheetBehavior.STATE_EXPANDED,
+            BottomSheetBehavior.STATE_HIDDEN,
+            BottomSheetBehavior.STATE_COLLAPSED -> {
+                quickActionSheetBehavior.state
+            }
+            else -> field
+        }
+        set(value) {
+            field = value
+            quickActionSheetBehavior.state = value
+        }
+
+        override fun performAccessibilityAction(host: View?, action: Int, args: Bundle?): Boolean {
+            when (action) {
+                AccessibilityNodeInfo.ACTION_CLICK -> {
+                    finalState = when (quickActionSheetBehavior.state) {
+                        BottomSheetBehavior.STATE_EXPANDED -> BottomSheetBehavior.STATE_COLLAPSED
+                        else -> BottomSheetBehavior.STATE_EXPANDED
+                    }
+                }
+                AccessibilityNodeInfo.ACTION_COLLAPSE ->
+                    finalState = BottomSheetBehavior.STATE_COLLAPSED
+                AccessibilityNodeInfo.ACTION_EXPAND ->
+                    finalState = BottomSheetBehavior.STATE_EXPANDED
+                else -> return super.performAccessibilityAction(host, action, args)
+            }
+
+            host?.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_CLICKED)
+
+            return true
+        }
+
+        override fun onInitializeAccessibilityNodeInfo(host: View?, info: AccessibilityNodeInfo?) {
+            super.onInitializeAccessibilityNodeInfo(host, info)
+            info?.addAction(when (finalState) {
+                BottomSheetBehavior.STATE_COLLAPSED,
+                BottomSheetBehavior.STATE_HIDDEN -> AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND
+                else -> AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE
+            })
         }
     }
 
