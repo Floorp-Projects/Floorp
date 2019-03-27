@@ -16,6 +16,8 @@ add_task(async () => {
       name: "Profile3",
       path: "Path3",
     }],
+  };
+  let installData = {
     installs: {
       [hash]: {
         default: "Path2",
@@ -41,6 +43,7 @@ add_task(async () => {
   }
 
   writeProfilesIni(profileData);
+  writeInstallsIni(installData);
 
   let { profile, didCreate } = selectStartupProfile();
   checkStartupReason("default");
