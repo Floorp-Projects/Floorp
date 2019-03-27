@@ -45,54 +45,27 @@ const Actions = require("./index");
 function inspectDebugTarget(type, id) {
   return async (dispatch, getState) => {
     const runtime = getCurrentRuntime(getState().runtimes);
-    const { type: runtimeType } = runtime;
+    const remoteId = remoteClientManager.getRemoteId(runtime.id, runtime.type);
 
-    switch (type) {
-      case DEBUG_TARGETS.TAB: {
-        // Open tab debugger in new window.
-        if (runtimeType === RUNTIMES.NETWORK || runtimeType === RUNTIMES.USB) {
-          // Pass the remote id from the client manager so that about:devtools-toolbox can
-          // retrieve the connected client directly.
-          const remoteId = remoteClientManager.getRemoteId(runtime.id, runtime.type);
-          window.open(`about:devtools-toolbox?type=tab&id=${id}&remoteId=${remoteId}`);
-        } else if (runtimeType === RUNTIMES.THIS_FIREFOX) {
-          window.open(`about:devtools-toolbox?type=tab&id=${id}`);
-        }
-        break;
-      }
-      case DEBUG_TARGETS.EXTENSION: {
-        if (runtimeType === RUNTIMES.NETWORK || runtimeType === RUNTIMES.USB) {
-          const remoteId = remoteClientManager.getRemoteId(runtime.id, runtime.type);
-          window.open(
-            `about:devtools-toolbox?type=extension&id=${id}&remoteId=${remoteId}`);
-        } else if (runtimeType === RUNTIMES.THIS_FIREFOX) {
-          window.open(`about:devtools-toolbox?type=extension&id=${id}`);
-        }
-        break;
-      }
-      case DEBUG_TARGETS.PROCESS: {
-        const remoteId = remoteClientManager.getRemoteId(runtime.id, runtime.type);
-        window.open(
-          `about:devtools-toolbox?type=process&id=${id}&remoteId=${remoteId}`);
-        break;
-      }
-      case DEBUG_TARGETS.WORKER: {
-        // Even debugs on this firefox, we need to re-use the client since the worker
-        // actor is cached in the client instance.
-        const remoteId = remoteClientManager.getRemoteId(runtime.id, runtime.type);
-        window.open(
-          `about:devtools-toolbox?type=worker&id=${id}&remoteId=${remoteId}`);
-        break;
-      }
-      default: {
-        console.error("Failed to inspect the debug target of " +
-                      `type: ${ type } id: ${ id }`);
-      }
+    if (runtime.id === RUNTIMES.THIS_FIREFOX && type !== DEBUG_TARGETS.WORKER) {
+      // Even when debugging on This Firefox we need to re-use the client since the worker
+      // actor is cached in the client instance. Instead we should pass an id that does
+      // not depend on the client (such as the worker url). This will be fixed in
+      // Bug 1539328.
+      // Once the target is destroyed after closing the toolbox, the front will be gone
+      // and can no longer be used. When debugging This Firefox, workers are regularly
+      // updated so this is not an issue. On remote runtimes however, trying to inspect a
+      // worker a second time after closing the corresponding about:devtools-toolbox tab
+      // will fail. See Bug 1534201.
+      window.open(`about:devtools-toolbox?type=${type.toLowerCase()}&id=${id}`);
+    } else {
+      window.open(`about:devtools-toolbox?type=${type.toLowerCase()}&id=${id}` +
+                  `&remoteId=${remoteId}`);
     }
 
     dispatch(Actions.recordTelemetryEvent("inspect", {
       "target_type": type,
-      "runtime_type": runtimeType,
+      "runtime_type": runtime.type,
     }));
   };
 }
