@@ -7137,10 +7137,7 @@ bool js::IsAsmJSModule(JSFunction* fun) {
 }
 
 bool js::IsAsmJSFunction(JSFunction* fun) {
-  if (IsExportedFunction(fun)) {
-    return ExportedFunctionToInstance(fun).metadata().isAsmJS();
-  }
-  return false;
+  return fun->kind() == JSFunction::AsmJS;
 }
 
 bool js::IsAsmJSStrictModeModuleOrFunction(JSFunction* fun) {

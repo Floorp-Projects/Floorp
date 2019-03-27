@@ -756,7 +756,7 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       if (funcIndex < funcImports.length()) {
         FuncImportTls& import = funcImportTls(funcImports[funcIndex]);
         JSFunction* fun = import.fun;
-        if (IsExportedWasmFunction(fun)) {
+        if (IsWasmExportedFunction(fun)) {
           // This element is a wasm function imported from another
           // instance. To preserve the === function identity required by
           // the JS embedding spec, we must set the element to the
@@ -1122,7 +1122,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
     const FuncImport& fi = metadata(callerTier).funcImports[i];
     FuncImportTls& import = funcImportTls(fi);
     import.fun = f;
-    if (!isAsmJS() && IsExportedWasmFunction(f)) {
+    if (!isAsmJS() && IsWasmExportedFunction(f)) {
       WasmInstanceObject* calleeInstanceObj =
           ExportedFunctionToInstanceObject(f);
       Instance& calleeInstance = calleeInstanceObj->instance();
