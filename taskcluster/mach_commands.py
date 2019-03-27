@@ -7,6 +7,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import argparse
 import json
 import logging
 import os
@@ -179,6 +180,16 @@ class MachCommands(MachCommandBase):
                      help='path to try task configuration file')
     @CommandArgument('--tasks-for',
                      help='the tasks_for value used to generate this task')
+    @CommandArgument('--include-push-tasks',
+                     action='store_true',
+                     help='Whether tasks from the on-push graph should be re-used '
+                          'in this graph. This allows cron graphs to avoid rebuilding '
+                          'jobs that were built on-push.')
+    @CommandArgument('--rebuild-kind',
+                     dest='rebuild_kinds',
+                     action='append',
+                     default=argparse.SUPPRESS,
+                     help='Kinds that should not be re-used from the on-push graph.')
     def taskgraph_decision(self, **options):
         """Run the decision task: generate a task graph and submit to
         TaskCluster.  This is only meant to be called within decision tasks,
