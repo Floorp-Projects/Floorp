@@ -550,6 +550,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   // resolve in firing a ServiceWorker FetchEvent.
   MOZ_MUST_USE nsresult RedirectToInterceptedChannel();
 
+  // Determines and sets content type in the cache entry. It's called when
+  // writing a new entry. The content type is used in cache internally only.
+  void SetCachedContentType();
+
  private:
   // this section is for main-thread-only object
   // all the references need to be proxy released on main thread.
