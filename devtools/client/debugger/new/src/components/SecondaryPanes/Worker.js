@@ -43,7 +43,7 @@ export class Worker extends Component<Props> {
         key={thread.actor}
         onClick={this.onSelectThread}
       >
-        <div clasName="icon">
+        <div className="icon">
           <AccessibleImage className={isWorker ? "worker" : "file"} />
         </div>
         <div className="label">{label}</div>
