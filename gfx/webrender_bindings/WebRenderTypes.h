@@ -115,6 +115,13 @@ template <typename T>
 class NonDefaultRenderRootArray : public Array<T, kRenderRootCount - 1> {
   typedef Array<T, kRenderRootCount - 1> Super;
  public:
+  NonDefaultRenderRootArray() {
+    // See RenderRootArray constructor
+    if (IsPod<T>::value) {
+      PodArrayZero(*this);
+    }
+  }
+
   T& operator[](wr::RenderRoot aIndex) {
     return (*(Super*)this)[(size_t)aIndex - 1];
   }
