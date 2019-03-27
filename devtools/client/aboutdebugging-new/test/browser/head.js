@@ -67,7 +67,8 @@ async function openAboutDebugging({ enableWorkerUpdates, enableLocalTabs = true 
   return { tab, document, window };
 }
 
-async function openAboutDevtoolsToolbox(doc, tab, win, targetText = "about:debugging") {
+async function openAboutDevtoolsToolbox(doc, tab, win, targetText = "about:debugging",
+                                        shouldWaitToolboxReady = true) {
   info("Open about:devtools-toolbox page");
   const target = findDebugTargetByText(targetText, doc);
   ok(target, `${ targetText } tab target appeared`);
@@ -77,13 +78,15 @@ async function openAboutDevtoolsToolbox(doc, tab, win, targetText = "about:debug
   await Promise.all([
     waitUntil(() => tab.nextElementSibling),
     waitForRequestsToSettle(win.AboutDebugging.store),
-    gDevTools.once("toolbox-ready"),
+    shouldWaitToolboxReady ? gDevTools.once("toolbox-ready") : Promise.resolve(),
   ]);
 
   info("Wait for about:devtools-toolbox tab will be selected");
   const devtoolsTab = tab.nextElementSibling;
   await waitUntil(() => gBrowser.selectedTab === devtoolsTab);
   const devtoolsBrowser = gBrowser.selectedBrowser;
+  await waitUntil(() =>
+    devtoolsBrowser.contentWindow.location.href.startsWith("about:devtools-toolbox?"));
 
   return {
     devtoolsBrowser,
