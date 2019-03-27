@@ -156,7 +156,6 @@ nsresult MediaEngineWebRTCMicrophoneSource::EvaluateSettings(
 }
 
 nsresult MediaEngineWebRTCMicrophoneSource::Reconfigure(
-    const RefPtr<AllocationHandle>&,
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& /* aDeviceId */,
     const char** aOutBadConstraint) {
@@ -178,7 +177,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Reconfigure(
     GetErrorName(rv, name);
     LOG("Mic source %p Reconfigure() failed unexpectedly. rv=%s", this,
         name.Data());
-    Stop(nullptr);
+    Stop();
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -393,12 +392,8 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
 nsresult MediaEngineWebRTCMicrophoneSource::Allocate(
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
-    const ipc::PrincipalInfo& aPrincipalInfo, AllocationHandle** aOutHandle,
-    const char** aOutBadConstraint) {
+    const ipc::PrincipalInfo& aPrincipalInfo, const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aOutHandle);
-
-  *aOutHandle = nullptr;
 
   mState = kAllocated;
 
@@ -424,8 +419,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Allocate(
   return rv;
 }
 
-nsresult MediaEngineWebRTCMicrophoneSource::Deallocate(
-    const RefPtr<const AllocationHandle>&) {
+nsresult MediaEngineWebRTCMicrophoneSource::Deallocate() {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kStopped || mState == kAllocated);
@@ -485,7 +479,6 @@ nsresult MediaEngineWebRTCMicrophoneSource::Deallocate(
 }
 
 void MediaEngineWebRTCMicrophoneSource::SetTrack(
-    const RefPtr<const AllocationHandle>&,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const PrincipalHandle& aPrincipal) {
   AssertIsOnOwningThread();
@@ -547,8 +540,7 @@ class StartStopMessage : public ControlMessage {
   StartStop mAction;
 };
 
-nsresult MediaEngineWebRTCMicrophoneSource::Start(
-    const RefPtr<const AllocationHandle>&) {
+nsresult MediaEngineWebRTCMicrophoneSource::Start() {
   AssertIsOnOwningThread();
 
   // This spans setting both the enabled state and mState.
@@ -587,8 +579,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start(
   return NS_OK;
 }
 
-nsresult MediaEngineWebRTCMicrophoneSource::Stop(
-    const RefPtr<const AllocationHandle>&) {
+nsresult MediaEngineWebRTCMicrophoneSource::Stop() {
   AssertIsOnOwningThread();
 
   LOG("Mic source %p Stop()", this);
@@ -655,12 +646,12 @@ void MediaEngineWebRTCMicrophoneSource::Shutdown() {
   AssertIsOnOwningThread();
 
   if (mState == kStarted) {
-    Stop(nullptr);
+    Stop();
     MOZ_ASSERT(mState == kStopped);
   }
 
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
-  Deallocate(nullptr);
+  Deallocate();
   MOZ_ASSERT(mState == kReleased);
 }
 
@@ -1160,27 +1151,23 @@ nsString MediaEngineWebRTCAudioCaptureSource::GetGroupId() const {
 }
 
 void MediaEngineWebRTCAudioCaptureSource::SetTrack(
-    const RefPtr<const AllocationHandle>&,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const PrincipalHandle& aPrincipalHandle) {
   AssertIsOnOwningThread();
   // Nothing to do here. aStream is a placeholder dummy and not exposed.
 }
 
-nsresult MediaEngineWebRTCAudioCaptureSource::Start(
-    const RefPtr<const AllocationHandle>&) {
+nsresult MediaEngineWebRTCAudioCaptureSource::Start() {
   AssertIsOnOwningThread();
   return NS_OK;
 }
 
-nsresult MediaEngineWebRTCAudioCaptureSource::Stop(
-    const RefPtr<const AllocationHandle>&) {
+nsresult MediaEngineWebRTCAudioCaptureSource::Stop() {
   AssertIsOnOwningThread();
   return NS_OK;
 }
 
 nsresult MediaEngineWebRTCAudioCaptureSource::Reconfigure(
-    const RefPtr<AllocationHandle>&,
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
     const char** aOutBadConstraint) {
