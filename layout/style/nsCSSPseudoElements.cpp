@@ -119,6 +119,8 @@ nsString nsCSSPseudoElements::PseudoTypeAsString(Type aPseudoType) {
       return NS_LITERAL_STRING("::before");
     case PseudoStyleType::after:
       return NS_LITERAL_STRING("::after");
+    case PseudoStyleType::marker:
+      return NS_LITERAL_STRING("::marker");
     default:
       MOZ_ASSERT(aPseudoType == PseudoStyleType::NotPseudo,
                  "Unexpected pseudo type");
