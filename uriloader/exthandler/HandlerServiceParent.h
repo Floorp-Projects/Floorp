@@ -13,19 +13,32 @@ class HandlerServiceParent final : public mozilla::dom::PHandlerServiceParent {
 
  private:
   virtual ~HandlerServiceParent();
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult RecvFillHandlerInfo(
+  mozilla::ipc::IPCResult RecvFillHandlerInfo(
       const HandlerInfo& aHandlerInfoData, const nsCString& aOverrideType,
       HandlerInfo* handlerInfoData) override;
-  virtual mozilla::ipc::IPCResult RecvExists(const HandlerInfo& aHandlerInfo,
-                                             bool* exits) override;
 
-  virtual mozilla::ipc::IPCResult RecvGetTypeFromExtension(
+  mozilla::ipc::IPCResult RecvGetMIMEInfoFromOS(const nsCString& aMIMEType,
+                                                const nsCString& aExtension,
+                                                nsresult* aRv,
+                                                HandlerInfo* aHandlerInfoData,
+                                                bool* aFound) override;
+
+  mozilla::ipc::IPCResult RecvExists(const HandlerInfo& aHandlerInfo,
+                                     bool* exists) override;
+
+  mozilla::ipc::IPCResult RecvGetTypeFromExtension(
       const nsCString& aFileExtension, nsCString* type) override;
 
-  virtual mozilla::ipc::IPCResult RecvExistsForProtocol(
+  mozilla::ipc::IPCResult RecvExistsForProtocolOS(
       const nsCString& aProtocolScheme, bool* aHandlerExists) override;
+
+  mozilla::ipc::IPCResult RecvExistsForProtocol(
+      const nsCString& aProtocolScheme, bool* aHandlerExists) override;
+
+  mozilla::ipc::IPCResult RecvGetApplicationDescription(
+      const nsCString& aScheme, nsresult* aRv, nsString* aDescription) override;
 };
 
 #endif

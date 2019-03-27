@@ -32,15 +32,16 @@ nsOSHelperAppService::GetFromTypeAndExtension(const nsACString& aType, const nsA
   return nsExternalHelperAppService::GetFromTypeAndExtension(aType, aFileExt, aMIMEInfo);
 }
 
-already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
-                                                                      const nsACString& aFileExt,
-                                                                      bool* aFound) {
+NS_IMETHODIMP nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
+                                                      const nsACString& aFileExt, bool* aFound,
+                                                      nsIMIMEInfo** aMIMEInfo) {
+  *aMIMEInfo = nullptr;
   *aFound = false;
-  return nullptr;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString& aScheme, bool* found,
+nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const char* aScheme, bool* found,
                                                    nsIHandlerInfo** _retval) {
   *found = false;
   return NS_OK;
