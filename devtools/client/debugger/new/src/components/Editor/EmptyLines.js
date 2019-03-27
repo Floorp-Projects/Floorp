@@ -8,19 +8,15 @@ import { connect } from "../../utils/connect";
 import { Component } from "react";
 import { getSelectedSource, getEmptyLines } from "../../selectors";
 import type { Source } from "../../types";
-import { toEditorLine } from "../../utils/editor";
+import { fromEditorLine } from "../../utils/editor";
 
 type Props = {
   selectedSource: Source,
   editor: Object,
-  emptyLines: Object
+  emptyLines: Set<number>
 };
 
 class EmptyLines extends Component<Props> {
-  props: Props;
-
-  disableEmptyLines: Function;
-
   componentDidMount() {
     this.disableEmptyLines();
   }
@@ -30,16 +26,11 @@ class EmptyLines extends Component<Props> {
   }
 
   componentWillUnmount() {
-    const { emptyLines, selectedSource, editor } = this.props;
-
-    if (!emptyLines) {
-      return;
-    }
+    const { editor } = this.props;
 
     editor.codeMirror.operation(() => {
-      emptyLines.forEach(emptyLine => {
-        const line = toEditorLine(selectedSource.id, emptyLine);
-        editor.codeMirror.removeLineClass(line, "line", "empty-line");
+      editor.codeMirror.eachLine(lineHandle => {
+        editor.codeMirror.removeLineClass(lineHandle, "line", "empty-line");
       });
     });
   }
@@ -47,13 +38,18 @@ class EmptyLines extends Component<Props> {
   disableEmptyLines() {
     const { emptyLines, selectedSource, editor } = this.props;
 
-    if (!emptyLines) {
-      return;
-    }
     editor.codeMirror.operation(() => {
-      emptyLines.forEach(emptyLine => {
-        const line = toEditorLine(selectedSource.id, emptyLine);
-        editor.codeMirror.addLineClass(line, "line", "empty-line");
+      editor.codeMirror.eachLine(lineHandle => {
+        const line = fromEditorLine(
+          selectedSource.id,
+          editor.codeMirror.getLineNumber(lineHandle)
+        );
+
+        if (emptyLines.has(line)) {
+          editor.codeMirror.addLineClass(lineHandle, "line", "empty-line");
+        } else {
+          editor.codeMirror.removeLineClass(lineHandle, "line", "empty-line");
+        }
       });
     });
   }
@@ -68,11 +64,11 @@ const mapStateToProps = state => {
   if (!selectedSource) {
     throw new Error("no selectedSource");
   }
-  const foundEmptyLines = getEmptyLines(state, selectedSource.id);
+  const emptyLines = new Set(getEmptyLines(state, selectedSource.id) || []);
 
   return {
     selectedSource,
-    emptyLines: selectedSource ? foundEmptyLines : []
+    emptyLines
   };
 };
 
