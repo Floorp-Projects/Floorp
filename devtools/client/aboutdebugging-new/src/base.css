@@ -78,7 +78,6 @@
   --monospace-font-family: monospace;
 
   --card-separator-color: var(--grey-20);
-  --card-shadow-blur-radius: var(--base-unit);
 
   /*
    * Variables particular to about:debugging
@@ -397,7 +396,7 @@ Form controls
  */
 .card {
   background-color: var(--white-100); /* from common.inc.css */
-  border-radius: var(--card-shadow-blur-radius); /* from common.inc.css */
+  border-radius: var(--base-unit); /* from common.inc.css */
   box-shadow: 0 1px 4px var(--grey-90-a10); /* from common.inc.css */
   padding-block: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
 }
