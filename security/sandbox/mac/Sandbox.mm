@@ -30,6 +30,9 @@ extern "C" int sandbox_init(const char *profile, uint64_t flags, char **errorbuf
 extern "C" int sandbox_init_with_parameters(const char *profile, uint64_t flags,
                                             const char *const parameters[], char **errorbuf);
 extern "C" void sandbox_free_error(char *errorbuf);
+#ifdef DEBUG
+extern "C" int sandbox_check(pid_t pid, const char *operation, int type, ...);
+#endif
 
 #define MAC_OS_X_VERSION_10_0_HEX 0x00001000
 #define MAC_OS_X_VERSION_10_6_HEX 0x00001060
@@ -608,17 +611,8 @@ bool StartMacSandboxIfEnabled(const MacSandboxType aSandboxType, int aArgc, char
 }
 
 #ifdef DEBUG
-/*
- * Ensures that a process sandbox is enabled by attempting to enable
- * a new sandbox policy and ASSERT'ing that this fails. This depends
- * on sandbox_init() failing when called again after a sandbox has
- * already been successfully enabled.
- */
-void AssertMacSandboxEnabled() {
-  char *errorbuf = NULL;
-  int rv = sandbox_init("(version 1)(deny default)", 0, &errorbuf);
-  MOZ_ASSERT(rv != 0);
-}
+// sandbox_check returns 1 if the specified process is sandboxed
+void AssertMacSandboxEnabled() { MOZ_ASSERT(sandbox_check(getpid(), NULL, 0) == 1); }
 #endif /* DEBUG */
 
 }  // namespace mozilla

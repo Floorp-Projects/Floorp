@@ -126,6 +126,10 @@ mozilla::ipc::IPCResult RDDParent::RecvInit(
 
   if (aStartMacSandbox) {
     StartRDDMacSandbox();
+  } else {
+#    ifdef DEBUG
+    AssertMacSandboxEnabled();
+#    endif
   }
 #  elif defined(XP_LINUX)
   int fd = -1;
