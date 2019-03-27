@@ -39,10 +39,7 @@ def all_suites(patch_resolver):
 
 KNOWN_FAILURES = (
     'browser-chrome-addons',
-    'browser-chrome-chunked',
-    'browser-chrome-coverage',
     'browser-chrome-instrumentation',
-    'chrome-chunked',
     'cppunittest',
     'gtest',
     'jittest',
@@ -61,7 +58,6 @@ KNOWN_FAILURES = (
     'plain-gpu',
     'valgrind-plain',
     'xpcshell-addons',
-    'xpcshell-coverage',
 )
 """A suite being listed here means it won't work properly with
 MOZHARNESS_TEST_PATHS (the mechanism |mach try fuzzy <path>| uses.
