@@ -30,15 +30,6 @@ var gSetBackground = {
     let screenRatio = Math.min(this._screenWidth / this._screenHeight, 4);
     this._canvas.width = this._canvas.height * screenRatio;
 
-    if (AppConstants.platform == "win") {
-      // Hide fill + fit options if < Win7 since they don't work.
-      var version = Services.sysinfo.getProperty("version");
-      var isWindows7OrHigher = (parseFloat(version) >= 6.1);
-      if (!isWindows7OrHigher) {
-        document.getElementById("fillPosition").hidden = true;
-        document.getElementById("fitPosition").hidden = true;
-      }
-    }
     document.addEventListener("dialogaccept", function() { gSetBackground.setDesktopBackground(); });
     // make sure that the correct dimensions will be used
     setTimeout(function(self) {
