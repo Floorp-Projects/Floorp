@@ -223,10 +223,10 @@ nsIFrame* TouchManager::SuppressInvalidPointsAndGetTargetedFrame(
 bool TouchManager::PreHandleEvent(WidgetEvent* aEvent, nsEventStatus* aStatus,
                                   bool& aTouchIsNew, bool& aIsHandlingUserInput,
                                   nsCOMPtr<nsIContent>& aCurrentEventContent) {
-  if (!aEvent->IsTrusted()) {
-    return true;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(aEvent->IsTrusted());
 
+  // NOTE: If you need to handle new event messages here, you need to add new
+  //       cases in PresShell::EventHandler::PrepareToDispatchEvent().
   switch (aEvent->mMessage) {
     case eTouchStart: {
       aIsHandlingUserInput = true;
