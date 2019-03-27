@@ -120,6 +120,11 @@ assertEq(e4.call(0), 42);
 assertErrorMessage(() => e4.call(1), RuntimeError, /indirect call signature mismatch/);
 assertEq(e4.call(2), 13);
 
+var asmjsFun = (function() { "use asm"; function f() {} return f })();
+assertEq(isAsmJSFunction(asmjsFun), true);
+assertErrorMessage(() => tbl.set(0, asmjsFun), TypeError, /can only assign WebAssembly exported functions/);
+assertErrorMessage(() => tbl.grow(1, asmjsFun), TypeError, /bad initializer to funcref table/);
+
 var m = new Module(wasmTextToBinary(`(module
     (type $i2i (func (param i32) (result i32)))
     (import "a" "mem" (memory 1))

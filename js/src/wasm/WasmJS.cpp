@@ -1532,26 +1532,8 @@ WasmFunctionScope* WasmInstanceObject::getFunctionScope(
   return funcScope;
 }
 
-bool wasm::IsExportedFunction(JSFunction* fun) {
-  return fun->kind() == JSFunction::Wasm || fun->kind() == JSFunction::AsmJS;
-}
-
-bool wasm::IsExportedWasmFunction(JSFunction* fun) {
+bool wasm::IsWasmExportedFunction(JSFunction* fun) {
   return fun->kind() == JSFunction::Wasm;
-}
-
-bool wasm::IsExportedFunction(const Value& v, MutableHandleFunction f) {
-  if (!v.isObject()) {
-    return false;
-  }
-
-  JSObject& obj = v.toObject();
-  if (!obj.is<JSFunction>() || !IsExportedFunction(&obj.as<JSFunction>())) {
-    return false;
-  }
-
-  f.set(&obj.as<JSFunction>());
-  return true;
 }
 
 Instance& wasm::ExportedFunctionToInstance(JSFunction* fun) {
@@ -1559,13 +1541,13 @@ Instance& wasm::ExportedFunctionToInstance(JSFunction* fun) {
 }
 
 WasmInstanceObject* wasm::ExportedFunctionToInstanceObject(JSFunction* fun) {
-  MOZ_ASSERT(IsExportedFunction(fun));
+  MOZ_ASSERT(fun->kind() == JSFunction::Wasm ||
+             fun->kind() == JSFunction::AsmJS);
   const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT);
   return &v.toObject().as<WasmInstanceObject>();
 }
 
 uint32_t wasm::ExportedFunctionToFuncIndex(JSFunction* fun) {
-  MOZ_ASSERT(IsExportedFunction(fun));
   Instance& instance = ExportedFunctionToInstanceObject(fun)->instance();
   return instance.code().getFuncIndex(fun);
 }
@@ -2171,6 +2153,20 @@ static void TableFunctionFill(JSContext* cx, Table* table, HandleFunction value,
   }
 }
 
+static bool IsWasmExportedFunction(const Value& v, MutableHandleFunction f) {
+  if (!v.isObject()) {
+    return false;
+  }
+
+  JSObject& obj = v.toObject();
+  if (!obj.is<JSFunction>() || !IsWasmExportedFunction(&obj.as<JSFunction>())) {
+    return false;
+  }
+
+  f.set(&obj.as<JSFunction>());
+  return true;
+}
+
 /* static */
 bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
   RootedWasmTableObject tableObj(
@@ -2190,7 +2186,7 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
   switch (table.kind()) {
     case TableKind::AnyFunction: {
       RootedFunction value(cx);
-      if (!IsExportedFunction(fillValue, &value) && !fillValue.isNull()) {
+      if (!IsWasmExportedFunction(fillValue, &value) && !fillValue.isNull()) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                  JSMSG_WASM_BAD_TABLE_VALUE);
         return false;
@@ -2268,7 +2264,7 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
           MOZ_ASSERT(table->table().getAnyFunc(index).code == nullptr);
         }
 #endif
-      } else if (IsExportedFunction(fillValue, &value)) {
+      } else if (IsWasmExportedFunction(fillValue, &value)) {
         TableFunctionFill(cx, &table->table(), value, oldLength,
                           oldLength + delta);
       } else {

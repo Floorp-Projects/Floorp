@@ -722,7 +722,7 @@ bool Module::instantiateFunctions(JSContext* cx,
 
   for (size_t i = 0; i < metadata(tier).funcImports.length(); i++) {
     JSFunction* f = funcImports[i];
-    if (!IsExportedFunction(f) || ExportedFunctionToInstance(f).isAsmJS()) {
+    if (!IsWasmExportedFunction(f)) {
       continue;
     }
 
@@ -1086,7 +1086,7 @@ static bool GetFunctionExport(JSContext* cx,
                               const JSFunctionVector& funcImports,
                               const Export& exp, MutableHandleValue val) {
   if (exp.funcIndex() < funcImports.length() &&
-      IsExportedWasmFunction(funcImports[exp.funcIndex()])) {
+      IsWasmExportedFunction(funcImports[exp.funcIndex()])) {
     val.setObject(*funcImports[exp.funcIndex()]);
     return true;
   }
