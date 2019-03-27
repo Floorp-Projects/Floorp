@@ -88,6 +88,14 @@ export function toEditorLine(sourceId: string, lineOrOffset: number): number {
   return lineOrOffset ? lineOrOffset - 1 : 1;
 }
 
+export function fromEditorLine(sourceId: string, line: number): number {
+  if (isWasm(sourceId)) {
+    return lineToWasmOffset(sourceId, line) || 0;
+  }
+
+  return line + 1;
+}
+
 export function toEditorPosition(location: SourceLocation): EditorPosition {
   return {
     line: toEditorLine(location.sourceId, location.line),
