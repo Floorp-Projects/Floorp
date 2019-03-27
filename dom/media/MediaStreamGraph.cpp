@@ -1558,12 +1558,11 @@ class MediaStreamGraphShutDownRunnable : public Runnable {
       // mGraph is no longer needed, so delete it.
       mGraph->Destroy();
     } else {
-      // The graph is not empty.  We must be in a forced shutdown, or a
-      // non-realtime graph that has finished processing. Some later
-      // AppendMessage will detect that the graph has been emptied, and
-      // delete it.
-      NS_ASSERTION(mGraph->mForceShutDown || !mGraph->mRealtime,
-                   "Not in forced shutdown?");
+      // The graph is not empty.  We must be in a forced shutdown, either for
+      // process shutdown or a non-realtime graph that has finished
+      // processing. Some later AppendMessage will detect that the graph has
+      // been emptied, and delete it.
+      NS_ASSERTION(mGraph->mForceShutDown, "Not in forced shutdown?");
       mGraph->LifecycleStateRef() =
           MediaStreamGraphImpl::LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION;
     }
@@ -1730,7 +1729,7 @@ void MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG) {
       }
     }
 
-    if ((mForceShutDown || !mRealtime) &&
+    if (mForceShutDown &&
         LifecycleStateRef() == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
       // Defer calls to RunDuringShutdown() to happen while mMonitor is not
       // held.
