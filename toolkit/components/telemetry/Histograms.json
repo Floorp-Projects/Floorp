@@ -7317,6 +7317,26 @@
     ],
     "description": "Counts of the different ways sending a Telemetry ping can fail."
   },
+  "TELEMETRY_SEND_FAILURE_TYPE_PER_PING" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
+    "bug_numbers": [1438896],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "keyed": true,
+    "labels": [
+        "eOK",
+        "eRequest",
+        "eUnreachable",
+        "eChannelOpen",
+        "eRedirect",
+        "abort",
+        "timeout",
+        "eTooLate",
+        "eTerminated"
+    ],
+    "description": "Counts of the different ways sending a Telemetry ping can fail per ping type."
+  },
   "TELEMETRY_STRINGIFY" : {
     "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
