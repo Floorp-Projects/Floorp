@@ -50,8 +50,8 @@ bool StyleCSSPixelLength::IsZero() const { return _0 == 0.0f; }
 
 nscoord StyleCSSPixelLength::ToAppUnits() const {
   // We want to resolve the length part of the calc() expression rounding 0.5
-  // away from zero, instead of the default behavior of NSToCoordRoundWithClamp
-  // which is floor(x + 0.5).
+  // away from zero, instead of the default behavior of
+  // NSToCoordRound{,WithClamp} which do floor(x + 0.5).
   //
   // This is what the rust code in the app_units crate does, and not doing this
   // would regress bug 1323735, for example.
@@ -64,7 +64,7 @@ nscoord StyleCSSPixelLength::ToAppUnits() const {
   if (length <= nscoord_MIN) {
     return nscoord_MIN;
   }
-  return roundf(length);
+  return NSToIntRound(length);
 }
 
 constexpr LengthPercentage LengthPercentage::Zero() {
