@@ -12,7 +12,7 @@
 
 [package]
 name = "clang-sys"
-version = "0.26.1"
+version = "0.28.0"
 authors = ["Kyle Mayes <kyle@mayeses.com>"]
 build = "build.rs"
 links = "clang"
@@ -26,6 +26,7 @@ version = "0.2.11"
 
 [dependencies.libc]
 version = "0.2.39"
+default-features = false
 
 [dependencies.libloading]
 version = "0.5.0"
@@ -43,6 +44,7 @@ clang_4_0 = ["gte_clang_3_6", "gte_clang_3_7", "gte_clang_3_8", "gte_clang_3_9",
 clang_5_0 = ["gte_clang_3_6", "gte_clang_3_7", "gte_clang_3_8", "gte_clang_3_9", "gte_clang_4_0", "gte_clang_5_0"]
 clang_6_0 = ["gte_clang_3_6", "gte_clang_3_7", "gte_clang_3_8", "gte_clang_3_9", "gte_clang_4_0", "gte_clang_5_0", "gte_clang_6_0"]
 clang_7_0 = ["gte_clang_3_6", "gte_clang_3_7", "gte_clang_3_8", "gte_clang_3_9", "gte_clang_4_0", "gte_clang_5_0", "gte_clang_6_0", "gte_clang_7_0"]
+clang_8_0 = ["gte_clang_3_6", "gte_clang_3_7", "gte_clang_3_8", "gte_clang_3_9", "gte_clang_4_0", "gte_clang_5_0", "gte_clang_6_0", "gte_clang_7_0", "gte_clang_8_0"]
 gte_clang_3_6 = []
 gte_clang_3_7 = []
 gte_clang_3_8 = []
@@ -51,5 +53,6 @@ gte_clang_4_0 = []
 gte_clang_5_0 = []
 gte_clang_6_0 = []
 gte_clang_7_0 = []
+gte_clang_8_0 = []
 runtime = ["libloading"]
 static = []

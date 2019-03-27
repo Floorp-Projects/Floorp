@@ -1,7 +1,6 @@
 //! Common context that is passed around during parsing and codegen.
 
-use super::analysis::{CannotDeriveCopy, CannotDeriveDebug, CannotDeriveDefault,
-                      CannotDeriveHash, CannotDerivePartialEqOrPartialOrd,
+use super::analysis::{CannotDerive, DeriveTrait, as_cannot_derive_set,
                       HasTypeParameterInArray, HasVtableAnalysis,
                       HasVtableResult, HasDestructorAnalysis,
                       UsedTemplateParameters, HasFloat, SizednessAnalysis,
@@ -10,7 +9,7 @@ use super::derive::{CanDeriveCopy, CanDeriveDebug, CanDeriveDefault,
                     CanDeriveHash, CanDerivePartialOrd, CanDeriveOrd,
                     CanDerivePartialEq, CanDeriveEq, CanDerive};
 use super::int::IntKind;
-use super::item::{IsOpaque, Item, ItemAncestors, ItemCanonicalPath, ItemSet};
+use super::item::{IsOpaque, Item, ItemAncestors, ItemSet};
 use super::item_kind::ItemKind;
 use super::module::{Module, ModuleKind};
 use super::template::{TemplateInstantiation, TemplateParameters};
@@ -24,13 +23,13 @@ use cexpr;
 use clang::{self, Cursor};
 use clang_sys;
 use parse::ClangItemParser;
-use proc_macro2::{Term, Span};
+use proc_macro2::{Ident, Span};
 use std::borrow::Cow;
 use std::cell::Cell;
-use std::collections::{HashMap, HashSet, hash_map};
-use std::collections::btree_map::{self, BTreeMap};
 use std::iter::IntoIterator;
 use std::mem;
+use std::collections::HashMap as StdHashMap;
+use {HashMap, HashSet, Entry};
 
 /// An identifier for some kind of IR item.
 #[derive(Debug, Copy, Clone, Eq, PartialOrd, Ord, Hash)]
@@ -301,14 +300,8 @@ enum TypeKey {
 /// A context used during parsing and generation of structs.
 #[derive(Debug)]
 pub struct BindgenContext {
-    /// The map of all the items parsed so far.
-    ///
-    /// It's a BTreeMap because we want the keys to be sorted to have consistent
-    /// output.
-    items: BTreeMap<ItemId, Item>,
-
-    /// The next item id to use during this bindings regeneration.
-    next_item_id: ItemId,
+    /// The map of all the items parsed so far, keyed off ItemId.
+    items: Vec<Option<Item>>,
 
     /// Clang USR to type map. This is needed to be able to associate types with
     /// item ids during parsing.
@@ -348,10 +341,12 @@ pub struct BindgenContext {
     /// potentially break that assumption.
     currently_parsed_types: Vec<PartialType>,
 
-    /// A HashSet with all the already parsed macro names. This is done to avoid
+    /// A map with all the already parsed macro names. This is done to avoid
     /// hard errors while parsing duplicated macros, as well to allow macro
     /// expression parsing.
-    parsed_macros: HashMap<Vec<u8>, cexpr::expr::EvalResult>,
+    ///
+    /// This needs to be an std::HashMap because the cexpr API requires it.
+    parsed_macros: StdHashMap<Vec<u8>, cexpr::expr::EvalResult>,
 
     /// The active replacements collected from replaces="xxx" annotations.
     replacements: HashMap<Vec<String>, ItemId>,
@@ -594,12 +589,11 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         let root_module = Self::build_root_module(ItemId(0));
         let root_module_id = root_module.id().as_module_id_unchecked();
 
-        let mut me = BindgenContext {
-            items: Default::default(),
+        BindgenContext {
+            items: vec![Some(root_module)],
             types: Default::default(),
             type_params: Default::default(),
             modules: Default::default(),
-            next_item_id: ItemId(1),
             root_module: root_module_id,
             current_module: root_module_id,
             semantic_parents: Default::default(),
@@ -628,11 +622,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
             have_destructor: None,
             has_type_param_in_array: None,
             has_float: None,
-        };
-
-        me.add_item(root_module, None, None);
-
-        me
+        }
     }
 
     /// Creates a timer for the current bindgen phase. If time_phases is `true`,
@@ -715,7 +705,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
             self.need_bitfield_allocation.push(id);
         }
 
-        let old_item = self.items.insert(id, item);
+        let old_item = mem::replace(&mut self.items[id.0], Some(item));
         assert!(
             old_item.is_none(),
             "should not have already associated an item with the given id"
@@ -743,7 +733,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                 debug!(
                     "Invalid declaration {:?} found for type {:?}",
                     declaration,
-                    self.items.get(&id).unwrap().kind().expect_type()
+                    self.resolve_item_fallible(id).unwrap().kind().expect_type()
                 );
                 return;
             }
@@ -772,9 +762,9 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     /// details.
     fn add_item_to_module(&mut self, item: &Item) {
         assert!(item.id() != self.root_module);
-        assert!(!self.items.contains_key(&item.id()));
+        assert!(self.resolve_item_fallible(item.id()).is_none());
 
-        if let Some(parent) = self.items.get_mut(&item.parent_id()) {
+        if let Some(ref mut parent) = self.items[item.parent_id().0] {
             if let Some(module) = parent.as_module_mut() {
                 debug!(
                     "add_item_to_module: adding {:?} as child of parent module {:?}",
@@ -793,8 +783,8 @@ If you encounter an error missing from this list, please file an issue or a PR!"
             self.current_module
         );
 
-        self.items
-            .get_mut(&self.current_module.into())
+        self.items[(self.current_module.0).0]
+            .as_mut()
             .expect("Should always have an item for self.current_module")
             .as_module_mut()
             .expect("self.current_module should always be a module")
@@ -822,7 +812,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         self.add_item_to_module(&item);
 
         let id = item.id();
-        let old_item = self.items.insert(id, item);
+        let old_item = mem::replace(&mut self.items[id.0], Some(item));
         assert!(
             old_item.is_none(),
             "should not have already associated an item with the given id"
@@ -922,7 +912,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     }
 
     /// Returns a mangled name as a rust identifier.
-    pub fn rust_ident<S>(&self, name: S) -> Term
+    pub fn rust_ident<S>(&self, name: S) -> Ident
     where
         S: AsRef<str>
     {
@@ -930,16 +920,22 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     }
 
     /// Returns a mangled name as a rust identifier.
-    pub fn rust_ident_raw<T>(&self, name: T) -> Term
+    pub fn rust_ident_raw<T>(&self, name: T) -> Ident
     where
         T: AsRef<str>
     {
-        Term::new(name.as_ref(), Span::call_site())
+        Ident::new(name.as_ref(), Span::call_site())
     }
 
     /// Iterate over all items that have been defined.
-    pub fn items<'a>(&'a self) -> btree_map::Iter<'a, ItemId, Item> {
-        self.items.iter()
+    pub fn items(&self) -> impl Iterator<Item = (ItemId, &Item)> {
+        self.items
+            .iter()
+            .enumerate()
+            .filter_map(|(index, item)| {
+                let item = item.as_ref()?;
+                Some((ItemId(index), item))
+            })
     }
 
     /// Have we collected all unresolved type references yet?
@@ -954,7 +950,8 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         debug_assert!(!self.collected_typerefs);
         self.collected_typerefs = true;
         let mut typerefs = vec![];
-        for (id, ref mut item) in &mut self.items {
+
+        for (id, item) in self.items() {
             let kind = item.kind();
             let ty = match kind.as_type() {
                 Some(ty) => ty,
@@ -963,7 +960,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
 
             match *ty.kind() {
                 TypeKind::UnresolvedTypeRef(ref ty, loc, parent_id) => {
-                    typerefs.push((*id, ty.clone(), loc, parent_id));
+                    typerefs.push((id, ty.clone(), loc, parent_id));
                 }
                 _ => {}
             };
@@ -984,7 +981,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                         Item::new_opaque_type(self.next_item_id(), &ty, self)
                     });
 
-                let item = self.items.get_mut(&id).unwrap();
+                let item = self.items[id.0].as_mut().unwrap();
                 *item.kind_mut().as_type_mut().unwrap().kind_mut() =
                     TypeKind::ResolvedTypeRef(resolved);
                 resolved
@@ -1015,11 +1012,11 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     where
         F: (FnOnce(&BindgenContext, &mut Item) -> T)
     {
-        let mut item = self.items.remove(&id).unwrap();
+        let mut item = self.items[id.0].take().unwrap();
 
         let result = f(self, &mut item);
 
-        let existing = self.items.insert(id, item);
+        let existing = mem::replace(&mut self.items[id.0], Some(item));
         assert!(existing.is_none());
 
         result
@@ -1048,15 +1045,13 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     fn deanonymize_fields(&mut self) {
         let _t = self.timer("deanonymize_fields");
 
-        let comp_item_ids: Vec<ItemId> = self.items
-            .iter()
+        let comp_item_ids: Vec<ItemId> = self.items()
             .filter_map(|(id, item)| {
                 if item.kind().as_type()?.is_comp() {
                     return Some(id);
                 }
                 None
             })
-            .cloned()
             .collect();
 
         for id in comp_item_ids {
@@ -1087,7 +1082,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
 
         let mut replacements = vec![];
 
-        for (id, item) in self.items.iter() {
+        for (id, item) in self.items() {
             if item.annotations().use_instead_of().is_some() {
                 continue;
             }
@@ -1107,14 +1102,14 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                 _ => continue,
             }
 
-            let path = item.canonical_path(self);
+            let path = item.path_for_whitelisting(self);
             let replacement = self.replacements.get(&path[1..]);
 
             if let Some(replacement) = replacement {
-                if replacement != id {
+                if *replacement != id {
                     // We set this just after parsing the annotation. It's
                     // very unlikely, but this can happen.
-                    if self.items.get(replacement).is_some() {
+                    if self.resolve_item_fallible(*replacement).is_some() {
                         replacements.push((id.expect_type_id(self), replacement.expect_type_id(self)));
                     }
                 }
@@ -1123,9 +1118,9 @@ If you encounter an error missing from this list, please file an issue or a PR!"
 
         for (id, replacement_id) in replacements {
             debug!("Replacing {:?} with {:?}", id, replacement_id);
-
             let new_parent = {
-                let item = self.items.get_mut(&id.into()).unwrap();
+                let item_id: ItemId = id.into();
+                let item = self.items[item_id.0].as_mut().unwrap();
                 *item.kind_mut().as_type_mut().unwrap().kind_mut() =
                     TypeKind::ResolvedTypeRef(replacement_id);
                 item.parent_id()
@@ -1143,8 +1138,9 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                 continue;
             }
 
-            self.items
-                .get_mut(&replacement_id.into())
+            let replacement_item_id: ItemId = replacement_id.into();
+            self.items[replacement_item_id.0]
+                .as_mut()
                 .unwrap()
                 .set_parent_for_replacement(new_parent);
 
@@ -1180,16 +1176,16 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                 continue;
             }
 
-            self.items
-                .get_mut(&old_module)
+            self.items[old_module.0]
+                .as_mut()
                 .unwrap()
                 .as_module_mut()
                 .unwrap()
                 .children_mut()
                 .remove(&replacement_id.into());
 
-            self.items
-                .get_mut(&new_module)
+            self.items[new_module.0]
+                .as_mut()
                 .unwrap()
                 .as_module_mut()
                 .unwrap()
@@ -1257,7 +1253,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         assert!(self.in_codegen_phase());
         assert!(self.current_module == self.root_module);
 
-        let roots = self.items().map(|(&id, _)| id);
+        let roots = self.items().map(|(id, _)| id);
         traversal::AssertNoDanglingItemsTraversal::new(
             self,
             roots,
@@ -1273,7 +1269,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
             assert!(self.in_codegen_phase());
             assert!(self.current_module == self.root_module);
 
-            for (&id, _item) in self.items() {
+            for (id, _item) in self.items() {
                 if id == self.root_module {
                     continue;
                 }
@@ -1380,7 +1376,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         } else {
             // If you aren't recursively whitelisting, then we can't really make
             // any sense of template parameter usage, and you're on your own.
-            let mut used_params = HashMap::new();
+            let mut used_params = HashMap::default();
             for &id in self.whitelisted_items() {
                 used_params.entry(id).or_insert(
                     id.self_template_params(self).into_iter().map(|p| p.into()).collect()
@@ -1464,7 +1460,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         debug_assert!(item.kind().is_type());
         self.add_item_to_module(&item);
         let id = item.id();
-        let old_item = self.items.insert(id, item);
+        let old_item = mem::replace(&mut self.items[id.0], Some(item));
         assert!(old_item.is_none(), "Inserted type twice?");
     }
 
@@ -1499,13 +1495,13 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     ///
     /// Panics if the id resolves to an item that is not a type.
     pub fn safe_resolve_type(&self, type_id: TypeId) -> Option<&Type> {
-        self.items.get(&type_id.into()).map(|t| t.kind().expect_type())
+        self.resolve_item_fallible(type_id).map(|t| t.kind().expect_type())
     }
 
     /// Resolve the given `ItemId` into an `Item`, or `None` if no such item
     /// exists.
     pub fn resolve_item_fallible<Id: Into<ItemId>>(&self, id: Id) -> Option<&Item> {
-        self.items.get(&id.into())
+        self.items.get(id.into().0)?.as_ref()
     }
 
     /// Resolve the given `ItemId` into an `Item`.
@@ -1513,7 +1509,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     /// Panics if the given id does not resolve to any item.
     pub fn resolve_item<Id: Into<ItemId>>(&self, item_id: Id) -> &Item {
         let item_id = item_id.into();
-        match self.items.get(&item_id) {
+        match self.resolve_item_fallible(item_id) {
             Some(item) => item,
             None => panic!("Not an item: {:?}", item_id),
         }
@@ -1758,7 +1754,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                             sub_name,
                             template_decl_cursor
                                 .cur_type()
-                                .fallible_layout()
+                                .fallible_layout(self)
                                 .ok(),
                             sub_kind,
                             false,
@@ -1779,8 +1775,8 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                             sub_item
                         );
                         self.add_item_to_module(&sub_item);
-                        debug_assert!(sub_id == sub_item.id());
-                        self.items.insert(sub_id, sub_item);
+                        debug_assert_eq!(sub_id, sub_item.id());
+                        self.items[sub_id.0] = Some(sub_item);
                         args.push(sub_id.as_type_id_unchecked());
                     }
                 }
@@ -1824,7 +1820,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         let name = if name.is_empty() { None } else { Some(name) };
         let ty = Type::new(
             name,
-            ty.fallible_layout().ok(),
+            ty.fallible_layout(self).ok(),
             type_kind,
             ty.is_const(),
         );
@@ -1839,8 +1835,8 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         // Bypass all the validations in add_item explicitly.
         debug!("instantiate_template: inserting item: {:?}", item);
         self.add_item_to_module(&item);
-        debug_assert!(with_id == item.id());
-        self.items.insert(with_id, item);
+        debug_assert_eq!(with_id, item.id());
+        self.items[with_id.0] = Some(item);
         Some(with_id.as_type_id_unchecked())
     }
 
@@ -1980,7 +1976,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         is_const: bool,
     ) -> TypeId {
         let spelling = ty.spelling();
-        let layout = ty.fallible_layout().ok();
+        let layout = ty.fallible_layout(self).ok();
         let type_kind = TypeKind::ResolvedTypeRef(wrapped_id);
         let ty = Type::new(Some(spelling), layout, type_kind, is_const);
         let item = Item::new(
@@ -1996,8 +1992,8 @@ If you encounter an error missing from this list, please file an issue or a PR!"
 
     /// Returns the next item id to be used for an item.
     pub fn next_item_id(&mut self) -> ItemId {
-        let ret = self.next_item_id;
-        self.next_item_id = ItemId(self.next_item_id.0 + 1);
+        let ret = ItemId(self.items.len());
+        self.items.push(None);
         ret
     }
 
@@ -2021,7 +2017,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
             CXType_UShort => TypeKind::Int(IntKind::UShort),
             CXType_WChar => {
                 TypeKind::Int(IntKind::WChar {
-                    size: ty.fallible_size().expect("Couldn't compute size of wchar_t?"),
+                    size: ty.fallible_size(self).expect("Couldn't compute size of wchar_t?"),
                 })
             },
             CXType_Char16 => TypeKind::Int(IntKind::U16),
@@ -2059,7 +2055,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
 
         let spelling = ty.spelling();
         let is_const = ty.is_const();
-        let layout = ty.fallible_layout().ok();
+        let layout = ty.fallible_layout(self).ok();
         let ty = Type::new(Some(spelling), layout, type_kind, is_const);
         let id = self.next_item_id();
         let item =
@@ -2079,7 +2075,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     }
 
     /// Get the currently parsed macros.
-    pub fn parsed_macros(&self) -> &HashMap<Vec<u8>, cexpr::expr::EvalResult> {
+    pub fn parsed_macros(&self) -> &StdHashMap<Vec<u8>, cexpr::expr::EvalResult> {
         debug_assert!(!self.in_codegen_phase());
         &self.parsed_macros
     }
@@ -2105,7 +2101,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     /// and implies that the original type is hidden.
     pub fn replace(&mut self, name: &[String], potential_ty: ItemId) {
         match self.replacements.entry(name.into()) {
-            hash_map::Entry::Vacant(entry) => {
+            Entry::Vacant(entry) => {
                 debug!(
                     "Defining replacement for {:?} as {:?}",
                     name,
@@ -2113,7 +2109,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                 );
                 entry.insert(potential_ty);
             }
-            hash_map::Entry::Occupied(occupied) => {
+            Entry::Occupied(occupied) => {
                 warn!(
                     "Replacement for {:?} already defined as {:?}; \
                        ignoring duplicate replacement definition as {:?}",
@@ -2163,21 +2159,17 @@ If you encounter an error missing from this list, please file an issue or a PR!"
 
         let mut module_name = None;
         let spelling = cursor.spelling();
-        if !spelling.is_empty()
-        {
+        if !spelling.is_empty() {
             module_name = Some(spelling)
         }
 
-        let tokens = match cursor.tokens() {
-            Some(tokens) => tokens,
-            None => return (module_name, ModuleKind::Normal),
-        };
+        let tokens = cursor.tokens();
         let mut iter = tokens.iter();
         let mut kind = ModuleKind::Normal;
         let mut found_namespace_keyword = false;
         while let Some(token) = iter.next() {
-            match &*token.spelling {
-                "inline" => {
+            match token.spelling() {
+                b"inline" => {
                     assert!(!found_namespace_keyword);
                     assert!(kind != ModuleKind::Inline);
                     kind = ModuleKind::Inline;
@@ -2192,16 +2184,16 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                 //
                 // Fortunately enough, inline nested namespace specifiers aren't
                 // a thing, and are invalid C++ :)
-                "namespace" | "::" => {
+                b"namespace" | b"::" => {
                     found_namespace_keyword = true;
                 }
-                "{" => {
+                b"{" => {
                     assert!(found_namespace_keyword);
                     break;
                 }
                 name if found_namespace_keyword => {
                     if module_name.is_none() {
-                        module_name = Some(name.to_owned());
+                        module_name = Some(String::from_utf8_lossy(name).into_owned());
                     }
                     break;
                 }
@@ -2307,7 +2299,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                         return true;
                     }
 
-                    let name = item.canonical_path(self)[1..].join("::");
+                    let name = item.path_for_whitelisting(self)[1..].join("::");
                     debug!("whitelisted_items: testing {:?}", name);
                     match *item.kind() {
                         ItemKind::Module(..) => true,
@@ -2322,35 +2314,62 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                                 return true;
                             }
 
-                            let parent = self.resolve_item(item.parent_id());
-                            if parent.is_module() {
-                                let mut prefix_path = parent.canonical_path(self);
-
-                                // Unnamed top-level enums are special and we
-                                // whitelist them via the `whitelisted_vars` filter,
-                                // since they're effectively top-level constants,
-                                // and there's no way for them to be referenced
-                                // consistently.
-                                if let TypeKind::Enum(ref enum_) = *ty.kind() {
-                                    if ty.name().is_none() &&
-                                        enum_.variants().iter().any(|variant| {
-                                            prefix_path.push(variant.name().into());
-                                            let name = prefix_path[1..].join("::");
-                                            prefix_path.pop().unwrap();
-                                            self.options()
-                                                .whitelisted_vars
-                                                .matches(&name)
-                                        }) {
-                                            return true;
-                                        }
-                                }
+                            // Auto-whitelist types that don't need code
+                            // generation if not whitelisting recursively, to
+                            // make the #[derive] analysis not be lame.
+                            if !self.options().whitelist_recursively {
+                                match *ty.kind() {
+                                    TypeKind::Void |
+                                    TypeKind::NullPtr |
+                                    TypeKind::Int(..) |
+                                    TypeKind::Float(..) |
+                                    TypeKind::Complex(..) |
+                                    TypeKind::Array(..) |
+                                    TypeKind::Vector(..) |
+                                    TypeKind::Pointer(..) |
+                                    TypeKind::Reference(..) |
+                                    TypeKind::Function(..) |
+                                    TypeKind::ResolvedTypeRef(..) |
+                                    TypeKind::Opaque |
+                                    TypeKind::TypeParam => return true,
+                                    _ => {},
+                                };
                             }
 
-                            false
+                            // Unnamed top-level enums are special and we
+                            // whitelist them via the `whitelisted_vars` filter,
+                            // since they're effectively top-level constants,
+                            // and there's no way for them to be referenced
+                            // consistently.
+                            let parent = self.resolve_item(item.parent_id());
+                            if !parent.is_module() {
+                                return false;
+                            }
+
+
+                            let enum_ = match *ty.kind() {
+                                TypeKind::Enum(ref e) => e,
+                                _ => return false,
+                            };
+
+                            if ty.name().is_some() {
+                                return false;
+                            }
+
+                            let mut prefix_path =
+                                parent.path_for_whitelisting(self);
+                            enum_.variants().iter().any(|variant| {
+                                prefix_path.push(variant.name().into());
+                                let name = prefix_path[1..].join("::");
+                                prefix_path.pop().unwrap();
+                                self.options()
+                                    .whitelisted_vars
+                                    .matches(&name)
+                            })
                         }
                     }
                 })
-                .map(|(&id, _)| id)
+                .map(|(id, _)| id)
                 .collect::<Vec<_>>();
 
             // The reversal preserves the expected ordering of traversal,
@@ -2389,11 +2408,23 @@ If you encounter an error missing from this list, please file an issue or a PR!"
 
         self.whitelisted = Some(whitelisted);
         self.codegen_items = Some(codegen_items);
+
+        for item in self.options().whitelisted_functions.unmatched_items() {
+            error!("unused option: --whitelist-function {}", item);
+        }
+
+        for item in self.options().whitelisted_vars.unmatched_items() {
+            error!("unused option: --whitelist-var {}", item);
+        }
+
+        for item in self.options().whitelisted_types.unmatched_items() {
+            error!("unused option: --whitelist-type {}", item);
+        }
     }
 
     /// Convenient method for getting the prefix to use for most traits in
     /// codegen depending on the `use_core` option.
-    pub fn trait_prefix(&self) -> Term {
+    pub fn trait_prefix(&self) -> Ident {
         if self.options().use_core {
             self.rust_ident_raw("core")
         } else {
@@ -2416,7 +2447,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         let _t = self.timer("compute_cannot_derive_debug");
         assert!(self.cannot_derive_debug.is_none());
         if self.options.derive_debug {
-            self.cannot_derive_debug = Some(analyze::<CannotDeriveDebug>(self));
+            self.cannot_derive_debug = Some(as_cannot_derive_set(analyze::<CannotDerive>((self, DeriveTrait::Debug))));
         }
     }
 
@@ -2440,7 +2471,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         assert!(self.cannot_derive_default.is_none());
         if self.options.derive_default {
             self.cannot_derive_default =
-                Some(analyze::<CannotDeriveDefault>(self));
+                Some(as_cannot_derive_set(analyze::<CannotDerive>((self, DeriveTrait::Default))));
         }
     }
 
@@ -2462,7 +2493,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     fn compute_cannot_derive_copy(&mut self) {
         let _t = self.timer("compute_cannot_derive_copy");
         assert!(self.cannot_derive_copy.is_none());
-        self.cannot_derive_copy = Some(analyze::<CannotDeriveCopy>(self));
+        self.cannot_derive_copy = Some(as_cannot_derive_set(analyze::<CannotDerive>((self, DeriveTrait::Copy))));
     }
 
     /// Compute whether we can derive hash.
@@ -2470,7 +2501,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         let _t = self.timer("compute_cannot_derive_hash");
         assert!(self.cannot_derive_hash.is_none());
         if self.options.derive_hash {
-            self.cannot_derive_hash = Some(analyze::<CannotDeriveHash>(self));
+            self.cannot_derive_hash = Some(as_cannot_derive_set(analyze::<CannotDerive>((self, DeriveTrait::Hash))));
         }
     }
 
@@ -2493,7 +2524,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         let _t = self.timer("compute_cannot_derive_partialord_partialeq_or_eq");
         assert!(self.cannot_derive_partialeq_or_partialord.is_none());
         if self.options.derive_partialord || self.options.derive_partialeq || self.options.derive_eq {
-            self.cannot_derive_partialeq_or_partialord = Some(analyze::<CannotDerivePartialEqOrPartialOrd>(self));
+            self.cannot_derive_partialeq_or_partialord = Some(analyze::<CannotDerive>((self, DeriveTrait::PartialEqOrPartialOrd)));
         }
     }
 
@@ -2570,19 +2601,19 @@ If you encounter an error missing from this list, please file an issue or a PR!"
 
     /// Check if `--no-partialeq` flag is enabled for this item.
     pub fn no_partialeq_by_name(&self, item: &Item) -> bool {
-        let name = item.canonical_path(self)[1..].join("::");
+        let name = item.path_for_whitelisting(self)[1..].join("::");
         self.options().no_partialeq_types.matches(&name)
     }
 
     /// Check if `--no-copy` flag is enabled for this item.
     pub fn no_copy_by_name(&self, item: &Item) -> bool {
-        let name = item.canonical_path(self)[1..].join("::");
+        let name = item.path_for_whitelisting(self)[1..].join("::");
         self.options().no_copy_types.matches(&name)
     }
 
     /// Check if `--no-hash` flag is enabled for this item.
     pub fn no_hash_by_name(&self, item: &Item) -> bool {
-        let name = item.canonical_path(self)[1..].join("::");
+        let name = item.path_for_whitelisting(self)[1..].join("::");
         self.options().no_hash_types.matches(&name)
     }
 }
