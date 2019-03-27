@@ -547,7 +547,7 @@
                            <column flex="2"/>
                         </columns>
                         <rows id="detail-rows">
-                          <row class="detail-row-complex" id="detail-privateBrowsing-row">
+                          <row class="detail-row-complex detail-privateBrowsing" id="detail-privateBrowsing-row">
                             <label class="detail-row-label" data-l10n-id="detail-private-browsing-label"/>
                             <hbox align="center">
                               <radiogroup id="detail-privateBrowsing" orient="horizontal">
@@ -558,9 +558,25 @@
                               </radiogroup>
                             </hbox>
                           </row>
-                          <hbox class="detail-row-footer" id="detail-privateBrowsing-row-footer">
+                          <hbox class="detail-row-footer detail-privateBrowsing" id="detail-privateBrowsing-row-footer">
                             <description class="indent preferences-description" data-l10n-id="detail-private-browsing-description2">
-                              <label id="detail-private-browsing-learnmore-link" class="learnMore" data-l10n-name="detail-private-browsing-learn-more" is="text-link"/>
+                              <label class="learnMore private-learnmore" data-l10n-name="detail-private-browsing-learn-more" is="text-link"/>
+                            </description>
+                          </hbox>
+                          <row class="detail-row-complex detail-privateBrowsing" id="detail-privateBrowsing-required">
+                            <label class="detail-row-label" data-l10n-id="detail-private-required-label"/>
+                          </row>
+                          <hbox class="detail-row-footer detail-privateBrowsing" id="detail-privateBrowsing-required-footer">
+                            <description class="indent preferences-description" data-l10n-id="detail-private-required-description">
+                              <label class="learnMore private-learnmore" data-l10n-name="detail-private-browsing-learn-more" is="text-link"/>
+                            </description>
+                          </hbox>
+                          <row class="detail-row-complex detail-privateBrowsing" id="detail-privateBrowsing-disallowed">
+                            <label class="detail-row-label" data-l10n-id="detail-private-disallowed-label"/>
+                          </row>
+                          <hbox class="detail-row-footer detail-privateBrowsing" id="detail-privateBrowsing-disallowed-footer">
+                            <description class="indent preferences-description" data-l10n-id="detail-private-disallowed-description">
+                              <label class="learnMore private-learnmore" data-l10n-name="detail-private-browsing-learn-more" is="text-link"/>
                             </description>
                           </hbox>
                           <row class="detail-row-complex" id="detail-updates-row">
