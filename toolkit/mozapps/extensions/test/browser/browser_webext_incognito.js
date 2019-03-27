@@ -102,7 +102,10 @@ add_task(async function test_addon() {
       is_element_hidden(get("detail-privateBrowsing-row"), "Private browsing should be hidden");
       is_element_hidden(get("detail-privateBrowsing-row-footer"), "Private browsing footer should be hidden");
       ok(!await hasPrivateAllowed(id), "Private browsing permission not set");
+      is_element_visible(get("detail-privateBrowsing-disallowed"), "Private browsing should be hidden");
+      is_element_visible(get("detail-privateBrowsing-disallowed-footer"), "Private browsing footer should be hidden");
     } else {
+      // This assumes PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS, we test other options in a later test in this file.
       is_element_visible(get("detail-privateBrowsing-row"), "Private browsing should be visible");
       is_element_visible(get("detail-privateBrowsing-row-footer"), "Private browsing footer should be visible");
       let privateBrowsing = gManagerWindow.document.getElementById("detail-privateBrowsing");
@@ -356,7 +359,8 @@ add_task(async function test_addon_postinstall_incognito_hidden_checkbox() {
       }),
     ]);
 
-    const {permissions} = install.addon;
+    const {addon} = install;
+    const {permissions} = addon;
     const canChangePBAccess = Boolean(permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS);
 
     if (id === "ext-incognito-default-opt-in@mozilla.com") {
@@ -365,6 +369,27 @@ add_task(async function test_addon_postinstall_incognito_hidden_checkbox() {
       ok(!canChangePBAccess, `${id} should not have the PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS permission`);
     }
 
-    await install.addon.uninstall();
+    // This tests the visibility of various private detail rows.
+    gManagerWindow = await open_manager("addons://detail/" + encodeURIComponent(id));
+    info(`addon ${id} detail opened`);
+    if (addon.type === "extension") {
+      is(!is_hidden(get("detail-privateBrowsing-row")), canChangePBAccess, "Private permission row visibility is correct");
+      is(!is_hidden(get("detail-privateBrowsing-row-footer")), canChangePBAccess, "Private permission footer visibility is correct");
+      let required = addon.incognito === "spanning";
+      is(!is_hidden(get("detail-privateBrowsing-required")), !canChangePBAccess && required, "Private required row visibility is correct");
+      is(!is_hidden(get("detail-privateBrowsing-required-footer")), !canChangePBAccess && required, "Private required footer visibility is correct");
+      is(!is_hidden(get("detail-privateBrowsing-disallowed")), !canChangePBAccess && !required, "Private disallowed row visibility is correct");
+      is(!is_hidden(get("detail-privateBrowsing-disallowed-footer")), !canChangePBAccess && !required, "Private disallowed footer visibility is correct");
+    } else {
+      is_element_hidden(get("detail-privateBrowsing-row"), "Private browsing should be hidden");
+      is_element_hidden(get("detail-privateBrowsing-row-footer"), "Private browsing footer should be hidden");
+      is_element_hidden(get("detail-privateBrowsing-required"), "Private required should be hidden");
+      is_element_hidden(get("detail-privateBrowsing-required-footer"), "Private required footer should be hidden");
+      is_element_hidden(get("detail-privateBrowsing-disallowed"), "Private disallowed should be hidden");
+      is_element_hidden(get("detail-privateBrowsing-disallowed-footer"), "Private disallowed footer should be hidden");
+    }
+    await close_manager(gManagerWindow);
+
+    await addon.uninstall();
   }
 });
