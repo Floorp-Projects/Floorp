@@ -17,12 +17,15 @@
     }, {
       css: "x { color: invalid; }",
       error: "Expected color but found ‘invalid’.  Error in parsing value for ‘color’.  Declaration dropped.",
+      cssSelectors: "x",
     }, {
       css: "x { filter: alpha(foo); }",
       error: "Expected ‘none’, URL, or filter function but found ‘alpha(’.  Error in parsing value for ‘filter’.  Declaration dropped.",
+      cssSelectors: "x",
     }, {
       css: "x { filter: 5; }",
       error: "Expected ‘none’, URL, or filter function but found ‘5’.  Error in parsing value for ‘filter’.  Declaration dropped.",
+      cssSelectors: "x",
     }, {
       css: "::unknown {}",
       error: "Unknown pseudo-class or pseudo-element ‘unknown’.  Ruleset ignored due to bad selector.",
@@ -74,6 +77,7 @@
     }, {
       css: "* { -webkit-text-size-adjust: 100% }",
       error: "Error in parsing value for ‘-webkit-text-size-adjust’.  Declaration dropped.",
+      cssSelectors: "*",
     }, {
       css: "@media (totally-unknown-feature) {}",
       error: "Expected media feature name but found ‘totally-unknown-feature’.",
@@ -104,6 +108,10 @@
     }, {
       css: "@media (orientation: invalid-orientation-value) {}",
       error: "Found invalid value for media feature.",
+    }, {
+      css: "a, .b, #c { unknown: invalid; }",
+      error: "Unknown property ‘unknown’.  Declaration dropped.",
+      cssSelectors: "a, .b, #c"
     },
   ];
 
@@ -114,9 +122,11 @@
       SimpleTest.finish();
       return;
     }
-    let {css, error} = tests[test];
+    let {css, cssSelectors, error} = tests[test];
+    // Assume cssSelectors is empty if not provided in the test data.
+    cssSelectors = cssSelectors || "";
     SimpleTest.expectConsoleMessages(function () { testbench.innerHTML = css },
-                                     [{ errorMessage: error }],
+                                     [{ cssSelectors, errorMessage: error }],
                                      nextTest);
   }
 
