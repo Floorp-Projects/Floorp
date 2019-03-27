@@ -8,12 +8,16 @@
 
 #include <string>
 
-#include "SandboxPolicies.h"
+#include "SandboxPolicyContent.h"
+#include "SandboxPolicyFlash.h"
+#include "SandboxPolicyGMP.h"
+#include "SandboxPolicyUtility.h"
 
 enum MacSandboxType {
   MacSandboxType_Default = 0,
   MacSandboxType_Plugin,
   MacSandboxType_Content,
+  MacSandboxType_Utility,
   MacSandboxType_Invalid
 };
 
