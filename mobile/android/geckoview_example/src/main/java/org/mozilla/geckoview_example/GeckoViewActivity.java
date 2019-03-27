@@ -135,7 +135,7 @@ public class GeckoViewActivity extends AppCompatActivity {
                     .remoteDebuggingEnabled(mEnableRemoteDebugging)
                     .consoleOutput(true)
                     .contentBlocking(new ContentBlocking.Settings.Builder()
-                        .categories(ContentBlocking.AT_ALL | ContentBlocking.SB_ALL)
+                        .categories(ContentBlocking.AT_DEFAULT)
                         .build())
                     .crashHandler(ExampleCrashHandler.class);
 

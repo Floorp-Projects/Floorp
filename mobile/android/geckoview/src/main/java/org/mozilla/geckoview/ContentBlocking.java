@@ -73,8 +73,7 @@ public class ContentBlocking {
 
         /* package */ final Pref<String> mAt = new Pref<String>(
             "urlclassifier.trackingTable",
-            ContentBlocking.catToAtPref(
-                AT_TEST | AT_ANALYTIC | AT_SOCIAL | AT_AD));
+            ContentBlocking.catToAtPref(AT_DEFAULT));
         /* package */ final Pref<Boolean> mCm = new Pref<Boolean>(
             "privacy.trackingprotection.cryptomining.enabled", false);
         /* package */ final Pref<String> mCmList = new Pref<String>(
@@ -206,9 +205,10 @@ public class ContentBlocking {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef(flag = true,
             value = { NONE, AT_AD, AT_ANALYTIC, AT_SOCIAL, AT_CONTENT,
-                      AT_ALL, AT_TEST, AT_CRYPTOMINING,
+                      AT_TEST, AT_CRYPTOMINING, AT_DEFAULT, AT_STRICT,
                       SB_MALWARE, SB_UNWANTED,
-                      SB_HARMFUL, SB_PHISHING })
+                      SB_HARMFUL, SB_PHISHING,
+                      CB_DEFAULT, CB_STRICT })
     /* package */ @interface Category {}
 
     public static final int NONE = 0;
@@ -231,6 +231,7 @@ public class ContentBlocking {
 
     /**
      * Block content trackers.
+     * May cause issues with some web sites.
      */
     public static final int AT_CONTENT = 1 << 4;
 
@@ -245,11 +246,17 @@ public class ContentBlocking {
     public static final int AT_CRYPTOMINING = 1 << 6;
 
     /**
-     * Block all known trackers.
-     * Blocks all {@link #AT_AD AT_*} types.
+     * Block ad, analytic, social and test trackers.
      */
-    public static final int AT_ALL =
-        AT_AD | AT_ANALYTIC | AT_SOCIAL | AT_CONTENT | AT_TEST | AT_CRYPTOMINING;
+    public static final int AT_DEFAULT =
+        AT_AD | AT_ANALYTIC | AT_SOCIAL | AT_TEST;
+
+    /**
+     * Block all known trackers.
+     * May cause issues with some web sites.
+     */
+    public static final int AT_STRICT =
+        AT_DEFAULT | AT_CONTENT | AT_CRYPTOMINING;
 
     // Safe browsing
     /**
@@ -278,6 +285,19 @@ public class ContentBlocking {
      */
     public static final int SB_ALL =
         SB_MALWARE | SB_UNWANTED | SB_HARMFUL | SB_PHISHING;
+
+    /**
+     * Recommended content blocking categories.
+     * A combination of {@link #AT_DEFAULT} and {@link #SB_ALL}.
+     */
+    public static final int CB_DEFAULT = SB_ALL | AT_DEFAULT;
+
+    /**
+     * Strict content blocking categories.
+     * A combination of {@link #AT_STRICT} and {@link #SB_ALL}.
+     * May cause issues with some web sites.
+     */
+    public static final int CB_STRICT = SB_ALL | AT_STRICT;
 
     // Sync values with nsICookieService.idl.
     @Retention(RetentionPolicy.SOURCE)
