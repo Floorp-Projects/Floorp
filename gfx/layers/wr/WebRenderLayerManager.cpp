@@ -39,8 +39,7 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
       mIsFirstPaint(false),
       mTarget(nullptr),
       mPaintSequenceNumber(0),
-      mWebRenderCommandBuilder(this),
-      mLastDisplayListSizes{0} {
+      mWebRenderCommandBuilder(this) {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
   for (auto renderRoot : wr::kRenderRoots) {
     mStateManagers[renderRoot].mRenderRoot = renderRoot;
