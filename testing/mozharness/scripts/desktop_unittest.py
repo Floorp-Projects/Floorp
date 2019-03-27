@@ -364,6 +364,12 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
     def _get_mozharness_test_paths(self, suite_category, suite):
         test_paths = json.loads(os.environ.get('MOZHARNESS_TEST_PATHS', '""'))
 
+        if '-chunked' in suite:
+            suite = suite[:suite.index('-chunked')]
+
+        if '-coverage' in suite:
+            suite = suite[:suite.index('-coverage')]
+
         if not test_paths or suite not in test_paths:
             return None
 
