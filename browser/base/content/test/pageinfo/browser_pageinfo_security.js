@@ -10,28 +10,38 @@ const TEST_ORIGIN_CERT_ERROR = "https://expired.example.com";
 
 // Test displaying website identity information on certificate error pages.
 add_task(async function test_CertificateError() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: TEST_ORIGIN_CERT_ERROR, waitForLoad: false}, async function(browser) {
-    let pageInfo = BrowserPageInfo(TEST_ORIGIN_CERT_ERROR, "securityTab");
-    await BrowserTestUtils.waitForEvent(pageInfo, "load");
-    let securityTab = pageInfo.document.getElementById("securityTab");
-    await TestUtils.waitForCondition(() => BrowserTestUtils.is_visible(securityTab),
-      "Security tab should be visible.");
+  let browser;
+  let pageLoaded;
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_ORIGIN_CERT_ERROR);
+    browser = gBrowser.selectedBrowser;
+    pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
+  }, false);
 
-    let owner = pageInfo.document.getElementById("security-identity-owner-value");
-    let verifier = pageInfo.document.getElementById("security-identity-verifier-value");
-    let domain = pageInfo.document.getElementById("security-identity-domain-value");
+  await pageLoaded;
 
-    await TestUtils.waitForCondition(() => owner.textContent === "This website does not supply ownership information.",
-      `Value of owner should be should be "This website does not supply ownership information." instead got "${verifier.textContent}".`);
+  let pageInfo = BrowserPageInfo(TEST_ORIGIN_CERT_ERROR, "securityTab");
+  await BrowserTestUtils.waitForEvent(pageInfo, "load");
+  let securityTab = pageInfo.document.getElementById("securityTab");
 
-    await TestUtils.waitForCondition(() => verifier.textContent === "Not specified",
-      `Value of verifier should be "Not specified", instead got "${verifier.textContent}".`);
+  await TestUtils.waitForCondition(() => BrowserTestUtils.is_visible(securityTab),
+    "Security tab should be visible.");
 
-    await TestUtils.waitForCondition(() => domain.value === browser.currentURI.displayHost,
-      `Value of domain should be ${browser.currentURI.displayHost}, instead got "${domain.value}".`);
+  let owner = pageInfo.document.getElementById("security-identity-owner-value");
+  let verifier = pageInfo.document.getElementById("security-identity-verifier-value");
+  let domain = pageInfo.document.getElementById("security-identity-domain-value");
 
-    pageInfo.close();
-  });
+  await TestUtils.waitForCondition(() => owner.textContent === "This website does not supply ownership information.",
+    `Value of owner should be should be "This website does not supply ownership information." instead got "${verifier.textContent}".`);
+
+  await TestUtils.waitForCondition(() => verifier.textContent === "Not specified",
+    `Value of verifier should be "Not specified", instead got "${verifier.textContent}".`);
+
+  await TestUtils.waitForCondition(() => domain.value === browser.currentURI.displayHost,
+    `Value of domain should be ${browser.currentURI.displayHost}, instead got "${domain.value}".`);
+
+  pageInfo.close();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test displaying and removing quota managed data.
