@@ -3078,8 +3078,18 @@ void ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
   // viewport scrollbars. They would create layerization problems. This wouldn't
   // normally be an issue but themes can add overflow areas to scrollbar parts.
   if (mIsRoot) {
-    clipState.ClipContentDescendants(mOuter->GetRectRelativeToSelf() +
-                                     aBuilder->ToReferenceFrame(mOuter));
+    nsRect scrollPartsClip =
+        mOuter->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(mOuter);
+    if (!gfxPrefs::LayoutUseContainersForRootFrames() &&
+        mOuter->PresContext()->IsRootContentDocument()) {
+      // With containerless scrolling, the resolution does not apply to the
+      // scroll parts. We need to apply it to their clip manually to avoid it
+      // cutting off the scrollbars when zoomed in.
+      double res = mOuter->PresShell()->GetResolution();
+      scrollPartsClip.width = NSToCoordRound(scrollPartsClip.width * res);
+      scrollPartsClip.height = NSToCoordRound(scrollPartsClip.height * res);
+    }
+    clipState.ClipContentDescendants(scrollPartsClip);
   }
 
   for (uint32_t i = 0; i < scrollParts.Length(); ++i) {
