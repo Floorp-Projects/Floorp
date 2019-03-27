@@ -3126,12 +3126,13 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
   //     scrollbar layers
   //
   // The intended async transforms in this case are:
-  //  * On the async zoom container layer, the zoom portion of the root content
-  //    APZC's async transform.
+  //  * On the async zoom container layer, the "visual" portion of the root
+  //    content APZC's async transform (which includes the zoom, and async
+  //    scrolling of the visual viewport relative to the layout viewport).
   //  * On the scrollable layers bearing the root content APZC's scroll
-  //    metadata, the scroll portion of the root content APZC's async transform.
-  //  * On layers fixed with respect to the root content APZC, the async
-  //    transform of the visual viewport relative to the layout viewport.
+  //    metadata, the "layout" portion of the root content APZC's async
+  //    transform (which includes async scrolling of the layout viewport
+  //    relative to the visual viewport).
   if (AsyncPanZoomController* apzc = aNode->GetApzc()) {
     // Apply any additional async scrolling for testing purposes (used for
     // reftest-async-scroll and reftest-async-zoom).
@@ -3140,8 +3141,8 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
     // from its APZC.
     AsyncTransformComponents components =
         mUsingAsyncZoomContainer && apzc->IsRootContent()
-            ? AsyncTransformComponents{AsyncTransformComponent::eScroll}
-            : ScrollAndZoom;
+            ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
+            : LayoutAndVisual;
     return aNode->GetTransform() *
            CompleteAsyncTransform(apzc->GetCurrentAsyncTransformWithOverscroll(
                AsyncPanZoomController::eForHitTesting, components));
@@ -3152,19 +3153,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
              CompleteAsyncTransform(
                  rootContent->GetCurrentAsyncTransformWithOverscroll(
                      AsyncPanZoomController::eForHitTesting,
-                     {AsyncTransformComponent::eZoom}));
-    }
-  } else if (mUsingAsyncZoomContainer &&
-             aNode->GetFixedPosTarget() !=
-                 ScrollableLayerGuid::NULL_SCROLL_ID) {
-    if (AsyncPanZoomController* rootContent =
-            FindRootContentApzcForLayersId(aNode->GetLayersId())) {
-      if (aNode->GetFixedPosTarget() == rootContent->GetGuid().mScrollId) {
-        return aNode->GetTransform() *
-               CompleteAsyncTransform(
-                   rootContent->GetCurrentAsyncViewportRelativeTransform(
-                       AsyncPanZoomController::eForHitTesting));
-      }
+                     {AsyncTransformComponent::eVisual}));
     }
   } else if (aNode->IsScrollThumbNode()) {
     // If the node represents a scrollbar thumb, compute and apply the

@@ -1113,17 +1113,7 @@ class AsyncPanZoomController {
    */
   AsyncTransform GetCurrentAsyncTransform(
       AsyncTransformConsumer aMode,
-      AsyncTransformComponents aComponents = ScrollAndZoom) const;
-
-  /**
-   * Get the current async transform of the visual viewport relative to
-   * the layout viewport.
-   * We don't have an |aComponents| parameter here because the relative
-   * transform can only be a translation (the visual and layout viewports
-   * are zoomed together).
-   */
-  AsyncTransform GetCurrentAsyncViewportRelativeTransform(
-      AsyncTransformConsumer aMode) const;
+      AsyncTransformComponents aComponents = LayoutAndVisual) const;
 
   /**
    * Returns the incremental transformation corresponding to the async
@@ -1138,7 +1128,7 @@ class AsyncPanZoomController {
    */
   AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(
       AsyncTransformConsumer aMode,
-      AsyncTransformComponents aComponents = ScrollAndZoom) const;
+      AsyncTransformComponents aComponents = LayoutAndVisual) const;
 
   /**
    * Returns the "zoom" bits of the transform. This includes both the rasterized
