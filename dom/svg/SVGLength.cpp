@@ -32,9 +32,15 @@ void SVGLength::GetValueAsString(nsAString& aValue) const {
 }
 
 bool SVGLength::SetValueFromString(const nsAString& aString) {
-  RangedPtr<const char16_t> iter = SVGContentUtils::GetStartRangedPtr(aString);
-  const RangedPtr<const char16_t> end =
-      SVGContentUtils::GetEndRangedPtr(aString);
+  bool success;
+  auto token = SVGContentUtils::GetAndEnsureOneToken(aString, success);
+
+  if (!success) {
+    return false;
+  }
+
+  RangedPtr<const char16_t> iter = SVGContentUtils::GetStartRangedPtr(token);
+  const RangedPtr<const char16_t> end = SVGContentUtils::GetEndRangedPtr(token);
 
   float value;
 
