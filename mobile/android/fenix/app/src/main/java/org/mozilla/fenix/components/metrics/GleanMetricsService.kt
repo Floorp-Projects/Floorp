@@ -8,7 +8,10 @@ import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.metrics.NoExtraKeys
 import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.GleanMetrics.*
+import org.mozilla.fenix.GleanMetrics.CrashReporter
+import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.FindInPage
+import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.utils.Settings
 
@@ -35,7 +38,6 @@ private class EventWrapper<T : Enum<T>>(
 
 private val Event.wrapper
     get() = when (this) {
-
         is Event.OpenedApp -> EventWrapper(
             { Events.appOpened.record(it) },
             { Events.appOpenedKeys.valueOf(it) }
@@ -77,6 +79,10 @@ private val Event.wrapper
         is Event.CrashReporterClosed -> EventWrapper(
             { CrashReporter.closed },
             { CrashReporter.closedKeys.valueOf(it) }
+        )
+        is Event.BrowserMenuItemTapped -> EventWrapper(
+            { Events.browserMenuAction },
+            { Events.browserMenuActionKeys.valueOf(it) }
         )
 
         // Don't track other events with Glean

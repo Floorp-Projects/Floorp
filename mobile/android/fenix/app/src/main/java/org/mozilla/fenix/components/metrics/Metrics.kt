@@ -105,6 +105,16 @@ sealed class Event {
             get() = mapOf("crash_submitted" to crashSubmitted.toString())
     }
 
+    data class BrowserMenuItemTapped(val item: Item) : Event() {
+        enum class Item {
+            SETTINGS, LIBRARY, HELP, DESKTOP_VIEW_ON, DESKTOP_VIEW_OFF, FIND_IN_PAGE, NEW_TAB,
+            NEW_PRIVATE_TAB, SHARE, REPORT_SITE_ISSUE, BACK, FORWARD, RELOAD, STOP, OPEN_IN_FENIX
+        }
+
+        override val extras: Map<String, String>?
+            get() = mapOf("item" to item.toString().toLowerCase())
+    }
+
     open val extras: Map<String, String>?
         get() = null
 }

@@ -49,6 +49,7 @@ import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.Event.BrowserMenuItemTapped.Item
 import org.mozilla.fenix.components.toolbar.SearchAction
 import org.mozilla.fenix.components.toolbar.SearchState
 import org.mozilla.fenix.components.toolbar.ToolbarComponent
@@ -279,7 +280,10 @@ class BrowserFragment : Fragment(), BackHandler {
                             Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER)
                         )
                     }
-                    is SearchAction.ToolbarMenuItemTapped -> handleToolbarItemInteraction(it)
+                    is SearchAction.ToolbarMenuItemTapped -> {
+                        trackToolbarItemInteraction(it)
+                        handleToolbarItemInteraction(it)
+                    }
                 }
             }
 
@@ -352,6 +356,29 @@ class BrowserFragment : Fragment(), BackHandler {
         promptsFeature.withFeature { it.onActivityResult(requestCode, resultCode, data) }
     }
 
+    // This method triggers the complexity warning. However it's actually not that hard to understand.
+    @SuppressWarnings("ComplexMethod")
+    private fun trackToolbarItemInteraction(action: SearchAction.ToolbarMenuItemTapped) {
+        val item = when (action.item) {
+            ToolbarMenu.Item.Back -> Item.BACK
+            ToolbarMenu.Item.Forward -> Item.FORWARD
+            ToolbarMenu.Item.Reload -> Item.RELOAD
+            ToolbarMenu.Item.Stop -> Item.STOP
+            ToolbarMenu.Item.Settings -> Item.SETTINGS
+            ToolbarMenu.Item.Library -> Item.LIBRARY
+            is ToolbarMenu.Item.RequestDesktop ->
+                if (action.item.isChecked) Item.DESKTOP_VIEW_ON else Item.DESKTOP_VIEW_OFF
+            ToolbarMenu.Item.NewPrivateTab -> Item.NEW_PRIVATE_TAB
+            ToolbarMenu.Item.FindInPage -> Item.FIND_IN_PAGE
+            ToolbarMenu.Item.ReportIssue -> Item.REPORT_SITE_ISSUE
+            ToolbarMenu.Item.Help -> Item.HELP
+            ToolbarMenu.Item.NewTab -> Item.NEW_TAB
+            ToolbarMenu.Item.OpenInFenix -> Item.OPEN_IN_FENIX
+            ToolbarMenu.Item.Share -> Item.SHARE
+        }
+
+        requireComponents.analytics.metrics.track(Event.BrowserMenuItemTapped(item))
+    }
     // This method triggers the complexity warning. However it's actually not that hard to understand.
     @SuppressWarnings("ComplexMethod")
     private fun handleToolbarItemInteraction(action: SearchAction.ToolbarMenuItemTapped) {
