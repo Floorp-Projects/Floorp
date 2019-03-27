@@ -194,12 +194,12 @@ impl Rkv {
     /// Otherwise if the environment has the `NO_SYNC` flag set the flushes will be omitted,
     /// and with `MAP_ASYNC` they will be asynchronous.
     pub fn sync(&self, force: bool) -> Result<(), StoreError> {
-        self.env.sync(force).map_err(|e| e.into())
+        self.env.sync(force).map_err(Into::into)
     }
 
     /// Retrieves statistics about this environment.
     pub fn stat(&self) -> Result<Stat, StoreError> {
-        self.env.stat().map_err(|e| e.into())
+        self.env.stat().map_err(Into::into)
     }
 }
 
@@ -455,6 +455,35 @@ mod tests {
     }
 
     #[test]
+    fn test_single_store_clear() {
+        let root = Builder::new().prefix("test_single_store_clear").tempdir().expect("tempdir");
+        fs::create_dir_all(root.path()).expect("dir created");
+        let k = Rkv::new(root.path()).expect("new succeeded");
+
+        let sk: SingleStore = k.open_single("sk", StoreOptions::create()).expect("opened");
+
+        {
+            let mut writer = k.write().expect("writer");
+            sk.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
+            sk.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
+            sk.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
+            writer.commit().expect("committed");
+        }
+
+        {
+            let mut writer = k.write().expect("writer");
+            sk.clear(&mut writer).expect("cleared");
+            writer.commit().expect("committed");
+        }
+
+        {
+            let r = k.read().unwrap();
+            let iter = sk.iter_start(&r).expect("iter");
+            assert_eq!(iter.count(), 0);
+        }
+    }
+
+    #[test]
     fn test_multi_put_get_del() {
         let root = Builder::new().prefix("test_multi_put_get_del").tempdir().expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
@@ -488,6 +517,39 @@ mod tests {
         multistore.delete_all(&mut writer, "str3").unwrap();
         assert_eq!(multistore.get_first(&writer, "str3").unwrap(), None);
         writer.commit().unwrap();
+    }
+
+    #[test]
+    fn test_multiple_store_clear() {
+        let root = Builder::new().prefix("test_multiple_store_clear").tempdir().expect("tempdir");
+        fs::create_dir_all(root.path()).expect("dir created");
+        let k = Rkv::new(root.path()).expect("new succeeded");
+
+        let multistore = k.open_multi("multistore", StoreOptions::create()).expect("opened");
+
+        {
+            let mut writer = k.write().expect("writer");
+            multistore.put(&mut writer, "str1", &Value::Str("str1 foo")).unwrap();
+            multistore.put(&mut writer, "str1", &Value::Str("str1 bar")).unwrap();
+            multistore.put(&mut writer, "str2", &Value::Str("str2 foo")).unwrap();
+            multistore.put(&mut writer, "str2", &Value::Str("str2 bar")).unwrap();
+            multistore.put(&mut writer, "str3", &Value::Str("str3 foo")).unwrap();
+            multistore.put(&mut writer, "str3", &Value::Str("str3 bar")).unwrap();
+            writer.commit().expect("committed");
+        }
+
+        {
+            let mut writer = k.write().expect("writer");
+            multistore.clear(&mut writer).expect("cleared");
+            writer.commit().expect("committed");
+        }
+
+        {
+            let r = k.read().unwrap();
+            assert_eq!(multistore.get_first(&r, "str1").expect("read"), None);
+            assert_eq!(multistore.get_first(&r, "str2").expect("read"), None);
+            assert_eq!(multistore.get_first(&r, "str3").expect("read"), None);
+        }
     }
 
     #[test]
@@ -530,7 +592,7 @@ mod tests {
         // Open the same store for read while the reader is in progress will panic
         let store: Result<SingleStore, StoreError> = k.open_single("sk", StoreOptions::default());
         match store {
-            Err(StoreError::OpenAttemptedDuringTransaction(_thread_id)) => assert!(true),
+            Err(StoreError::OpenAttemptedDuringTransaction(_thread_id)) => (),
             _ => panic!("should panic"),
         }
     }

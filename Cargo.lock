@@ -436,7 +436,7 @@ dependencies = [
  "base64 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nserror 0.1.0",
  "nsstring 0.1.0",
- "rkv 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rkv 0.9.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha2 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "style 0.0.1",
  "time 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1481,8 +1481,9 @@ dependencies = [
  "moz_task 0.1.0",
  "nserror 0.1.0",
  "nsstring 0.1.0",
- "rkv 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rkv 0.9.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "storage_variant 0.1.0",
+ "thin-vec 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "xpcom 0.1.0",
 ]
 
@@ -2347,7 +2348,7 @@ dependencies = [
 
 [[package]]
 name = "rkv"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "arrayref 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3677,7 +3678,7 @@ dependencies = [
 "checksum regex 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "75ecf88252dce580404a22444fc7d626c01815debba56a7f4f536772a5ff19d3"
 "checksum regex-syntax 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ad890a5eef7953f55427c50575c680c42841653abd2b028b68cd223d157f62db"
 "checksum regex-syntax 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8f1ac0f60d675cc6cf13a20ec076568254472551051ad5dd050364d70671bf6b"
-"checksum rkv 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)" = "becd7f5278be3b97250a8035455116f9fc63f5fc68cc8293213051d7d751c373"
+"checksum rkv 0.9.4 (registry+https://github.com/rust-lang/crates.io-index)" = "238764bd8750927754d91e4a27155ac672ba88934a2bf698c992d55e5ae25e5b"
 "checksum ron 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "da06feaa07f69125ab9ddc769b11de29090122170b402547f64b86fe16ebc399"
 "checksum runloop 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5d79b4b604167921892e84afbbaad9d5ad74e091bf6c511d9dbfb0593f09fabd"
 "checksum rust-ini 0.10.3 (registry+https://github.com/rust-lang/crates.io-index)" = "8a654c5bda722c699be6b0fe4c0d90de218928da5b724c3e467fc48865c37263"
