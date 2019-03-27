@@ -129,5 +129,34 @@ interface nsIHandlerService : nsISupports
    *
    * @returns whether or not a handler exists
    */
+  boolean existsForProtocolOS(in ACString aProtocolScheme);
+
+  /**
+   * Whether or not there is a handler in the datastore or OS for
+   * the specified protocol type. If there is no handler in the datastore,
+   * falls back to a check for an OS handler.
+   *
+   * @param aProtocolScheme scheme to check for support
+   *
+   * @returns whether or not a handler exists
+   */
   boolean existsForProtocol(in ACString aProtocolScheme);
+
+  /*
+   * Fill in a handler info object using information from the OS, taking into
+   * account the MIME type and file extension. When the OS handler
+   * for the MIME type and extension match, |aFound| is returned as true. If
+   * either the MIME type or extension is the empty string and a handler is
+   * found, |aFound| is returned as true.
+   */
+  void getMIMEInfoFromOS(in nsIHandlerInfo aHandlerInfo,
+                         in ACString aMIMEType,
+                         in ACString aExtension,
+                         out bool aFound);
+
+  /*
+   * Get a description for the application responsible for handling
+   * the provided protocol.
+   */
+  AString getApplicationDescription(in ACString aProtocolScheme);
 };
