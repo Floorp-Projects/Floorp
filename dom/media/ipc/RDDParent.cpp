@@ -110,7 +110,7 @@ static void StartRDDMacSandbox() {
   nsMacUtilsImpl::GetAppPath(appPath);
 
   MacSandboxInfo info;
-  info.type = MacSandboxType_Plugin;
+  info.type = MacSandboxType_Utility;
   info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled") ||
                    PR_GetEnv("MOZ_SANDBOX_LOGGING");
   info.appPath.assign(appPath.get());
