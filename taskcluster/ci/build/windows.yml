@@ -325,7 +325,6 @@ win32-shippable/opt:
             - taskcluster_nightly.py
         extra-config:
             stage_platform: win32
-    run-on-projects: []  # Don't run by default yet
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -413,7 +412,6 @@ win64-shippable/opt:
             - taskcluster_nightly.py
         extra-config:
             stage_platform: win64
-    run-on-projects: []  # Don't run by default yet
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -1221,7 +1219,6 @@ win64-aarch64-shippable/opt:
             - artifact: target.langpack.xpi
               extract: false
               dest: ../public/build
-    run-on-projects: []  # Don't run by default yet
     toolchains:
         - win64-node
 

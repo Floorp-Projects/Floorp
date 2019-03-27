@@ -642,7 +642,6 @@ linux-shippable/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: []  # Don't run by default yet
     toolchains:
         - linux64-binutils
         - linux64-clang
@@ -943,7 +942,6 @@ linux64-shippable/opt:
         need-xvfb: true
         # Bug 1516114
         # mozconfig-variant: profile-use
-    run-on-projects: []  # Don't run by default yet
     toolchains:
         - linux64-binutils
         - linux64-clang
