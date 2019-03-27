@@ -41,44 +41,44 @@ job-defaults:
             production: false
 
 jobs:
-   linux-nightly:
+   linux-shippable:
       attributes:
-         build_platform: linux-nightly
+         build_platform: linux-shippable
          build_type: opt
          artifact_prefix: releng/partner
-         nightly: true
+         shippable: true
 
-   linux64-nightly:
+   linux64-shippable:
       attributes:
-         build_platform: linux64-nightly
+         build_platform: linux64-shippable
          build_type: opt
          artifact_prefix: releng/partner
-         nightly: true
+         shippable: true
 
-   macosx64-nightly:
+   macosx64-shippable:
       attributes:
-         build_platform: macosx64-nightly
+         build_platform: macosx64-shippable
          build_type: opt
          artifact_prefix: releng/partner
-         nightly: true
+         shippable: true
 
-   win32-nightly:
+   win32-shippable:
       attributes:
-         build_platform: win32-nightly
+         build_platform: win32-shippable
          build_type: opt
          artifact_prefix: releng/partner
-         nightly: true
+         shippable: true
 
-   win64-nightly:
+   win64-shippable:
       attributes:
-         build_platform: win64-nightly
+         build_platform: win64-shippable
          build_type: opt
          artifact_prefix: releng/partner
-         nightly: true
+         shippable: true
 
-   win64-aarch64-nightly:
+   win64-aarch64-shippable:
       attributes:
-         build_platform: win64-aarch64-nightly
+         build_platform: win64-aarch64-shippable
          build_type: opt
          artifact_prefix: releng/partner
-         nightly: true
+         shippable: true
