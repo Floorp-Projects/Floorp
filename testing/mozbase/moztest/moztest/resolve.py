@@ -133,7 +133,7 @@ TEST_SUITES = {
         'aliases': ('mp', 'plain',),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'plain', 'test_paths': None},
-        'task_regex': ['mochitest(?!-a11y|-browser|-chrome|-clip|-devtools|-gpu|-media|-screen)($|.*(-1|[^0-9])$)',  # noqa
+        'task_regex': ['mochitest(?!-a11y|-browser|-chrome|-clip|-devtools|-gpu|-harness|-media|-screen|-webgl)($|.*(-1|[^0-9])$)',  # noqa
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
     'mochitest-plain-clipboard': {
