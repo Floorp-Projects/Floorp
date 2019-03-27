@@ -6563,7 +6563,7 @@ static bool UnboxedObjectsEnabled(JSContext* cx, unsigned argc, Value* vp) {
 
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(!jit::JitOptions.disableUnboxedObjects &&
-                         !jit::JitOptions.eagerCompilation &&
+                         !jit::JitOptions.eagerIonCompilation() &&
                          jit::IsIonEnabled(cx));
   return true;
 }
@@ -10399,7 +10399,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   }
 
   if (op.getBoolOption("ion-eager")) {
-    jit::JitOptions.setEagerCompilation();
+    jit::JitOptions.setEagerIonCompilation();
   }
 
   offthreadCompilation = true;
