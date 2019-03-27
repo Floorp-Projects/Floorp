@@ -9,6 +9,25 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const RESIST_FINGERPRINTING_ENABLED = Services.prefs.getBoolPref("privacy.resistFingerprinting");
 const MIDI_ENABLED = Services.prefs.getBoolPref("dom.webmidi.enabled");
 
+add_task(async function testNsIURI() {
+  let uri = "http://foo.com/bar/baz";
+  const expectedError = /uri parameter should be an nsIURI/;
+
+  Assert.throws(() => SitePermissions.getAllByURI(uri),
+                expectedError,
+                "Should throw if arguments is not of type nsIURI.");
+  Assert.throws(() => SitePermissions.get(uri),
+                expectedError,
+                "Should throw if arguments is not of type nsIURI.");
+  Assert.throws(() => SitePermissions.set(uri),
+                expectedError,
+                "Should throw if arguments is not of type nsIURI.");
+  Assert.throws(() => SitePermissions.remove(uri),
+                expectedError,
+                "Should throw if arguments is not of type nsIURI.");
+});
+
+
 add_task(async function testPermissionsListing() {
   let expectedPermissions = ["autoplay-media", "camera", "cookie", "desktop-notification", "focus-tab-by-prompt",
      "geo", "image", "install", "microphone", "plugin:flash", "popup", "screen", "shortcuts",
