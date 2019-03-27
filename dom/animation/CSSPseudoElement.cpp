@@ -23,7 +23,9 @@ CSSPseudoElement::CSSPseudoElement(dom::Element* aElement,
     : mOriginatingElement(aElement), mPseudoType(aType) {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(
-      aType == PseudoStyleType::after || aType == PseudoStyleType::before,
+      aType == PseudoStyleType::after ||
+      aType == PseudoStyleType::before ||
+      aType == PseudoStyleType::marker,
       "Unexpected Pseudo Type");
 }
 
@@ -106,10 +108,13 @@ nsAtom* CSSPseudoElement::GetCSSPseudoElementPropertyAtom(
     case PseudoStyleType::after:
       return nsGkAtoms::cssPseudoElementAfterProperty;
 
+    case PseudoStyleType::marker:
+      return nsGkAtoms::cssPseudoElementMarkerProperty;
+
     default:
       MOZ_ASSERT_UNREACHABLE(
           "Should not try to get CSSPseudoElement "
-          "other than ::before or ::after");
+          "other than ::before, ::after or ::marker");
       return nullptr;
   }
 }

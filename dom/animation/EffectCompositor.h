@@ -104,7 +104,7 @@ class EffectCompositor {
   void PostRestyleForThrottledAnimations();
 
   // Clear all pending restyle requests for the given (pseudo-) element (and its
-  // ::before and ::after elements if the given element is not pseudo).
+  // ::before, ::after and ::marker elements if the given element is not pseudo).
   void ClearRestyleRequestsFor(dom::Element* aElement);
 
   // Called when computed style on the specified (pseudo-) element might
@@ -203,7 +203,7 @@ class EffectCompositor {
 
   // Returns the target element for restyling.
   //
-  // If |aPseudoType| is ::after or ::before, returns the generated content
+  // If |aPseudoType| is ::after, ::before or ::marker, returns the generated content
   // element of which |aElement| is the parent. If |aPseudoType| is any other
   // pseudo type (other than PseudoStyleType::NotPseudo) returns nullptr.
   // Otherwise, returns |aElement|.

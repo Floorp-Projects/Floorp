@@ -117,6 +117,8 @@ AnimationCollection<AnimationType>::GetPropertyAtomForPseudoType(
     propName = TraitsType::BeforePropertyAtom();
   } else if (aPseudoType == PseudoStyleType::after) {
     propName = TraitsType::AfterPropertyAtom();
+  } else if (aPseudoType == PseudoStyleType::marker) {
+    propName = TraitsType::MarkerPropertyAtom();
   }
 
   return propName;
