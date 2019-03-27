@@ -1101,15 +1101,21 @@ class PresShell final : public nsIPresShell,
      * PrepareToDispatchEvent() prepares to dispatch aEvent.
      *
      * @param aEvent                    The handling event.
+     * @param aEventStatus              [in/out] The status of aEvent.
      * @param aIsUserInteraction        [out] Set to true if the event is user
      *                                  interaction.  I.e., enough obvious input
      *                                  to allow to open popup, etc.  Otherwise,
      *                                  set to false.
+     * @param aTouchIsNew               [out] Set to true if the event is an
+     *                                  eTouchMove event and it represents new
+     *                                  touch.  Otherwise, set to false.
      * @return                          true if the caller can dispatch the
      *                                  event into the DOM.
      */
     MOZ_CAN_RUN_SCRIPT
-    bool PrepareToDispatchEvent(WidgetEvent* aEvent, bool* aIsUserInteraction);
+    bool PrepareToDispatchEvent(WidgetEvent* aEvent,
+                                nsEventStatus* aEventStatus,
+                                bool* aIsUserInteraction, bool* aTouchIsNew);
 
     /**
      * MaybeHandleKeyboardEventBeforeDispatch() may handle aKeyboardEvent
