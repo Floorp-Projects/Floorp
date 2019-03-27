@@ -3,8 +3,16 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
+import { sortBy } from "lodash";
+import { getSelectedLocation } from "./source-maps";
 
-import type { PartialPosition, SourceLocation, SourceId } from "../types";
+import type {
+  MappedLocation,
+  PartialPosition,
+  SourceLocation,
+  SourceId,
+  Source
+} from "../types";
 
 type IncompleteLocation = {
   sourceId: SourceId,
@@ -29,4 +37,18 @@ export function createLocation({
     column,
     sourceUrl
   };
+}
+
+export function sortSelectedLocations<T: MappedLocation>(
+  locations: $ReadOnlyArray<T>,
+  selectedSource: ?Source
+): Array<T> {
+  return sortBy(locations, [
+    // Priority: line number, undefined column, column number
+    location => getSelectedLocation(location, selectedSource).line,
+    location => {
+      const selectedLocation = getSelectedLocation(location, selectedSource);
+      return selectedLocation.column === undefined || selectedLocation.column;
+    }
+  ]);
 }
