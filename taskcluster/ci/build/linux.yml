@@ -414,6 +414,7 @@ linux/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
+    run-on-projects: ['mozilla-central', 'try']
     toolchains:
         - linux64-binutils
         - linux64-clang
