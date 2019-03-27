@@ -14,7 +14,6 @@ const { remoteClientManager } =
 const { l10n } = require("../modules/l10n");
 
 const {
-  debugAddon,
   openTemporaryExtension,
   uninstallAddon,
 } = require("../modules/extensions-helper");
@@ -65,7 +64,13 @@ function inspectDebugTarget(type, id) {
         break;
       }
       case DEBUG_TARGETS.EXTENSION: {
-        await debugAddon(id, runtimeDetails.clientWrapper.client);
+        if (runtimeType === RUNTIMES.NETWORK || runtimeType === RUNTIMES.USB) {
+          const remoteId = remoteClientManager.getRemoteId(runtime.id, runtime.type);
+          window.open(
+            `about:devtools-toolbox?type=extension&id=${id}&remoteId=${remoteId}`);
+        } else if (runtimeType === RUNTIMES.THIS_FIREFOX) {
+          window.open(`about:devtools-toolbox?type=extension&id=${id}`);
+        }
         break;
       }
       case DEBUG_TARGETS.PROCESS: {

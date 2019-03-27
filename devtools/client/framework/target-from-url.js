@@ -69,6 +69,14 @@ exports.targetFromURL = async function targetFromURL(url) {
       }
       throw ex;
     }
+  } else if (type === "extension") {
+    const addonFront = await client.mainRoot.getAddon({ id });
+
+    if (!addonFront) {
+      throw new Error(`targetFromURL, extension with id '${id}' doesn't exist`);
+    }
+
+    front = await addonFront.connect();
   } else if (type == "process") {
     // Fetch target for a remote chrome actor
     DebuggerServer.allowChromeProcess = true;
