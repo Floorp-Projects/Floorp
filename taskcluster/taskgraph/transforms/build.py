@@ -135,6 +135,7 @@ def enable_full_crashsymbols(config, jobs):
         else:
             logger.debug("Disabling full symbol generation for %s", job['name'])
             job['worker']['env']['MOZ_DISABLE_FULL_SYMBOLS'] = '1'
+            job['attributes'].pop('enable-full-crashsymbols', None)
         yield job
 
 
