@@ -43,6 +43,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/InputAPZContext.h"
@@ -933,6 +934,11 @@ static bool UsesSVGEffects(nsIFrame* aFrame) {
 }
 
 static bool ScrollFrameWillBuildScrollInfoLayer(nsIFrame* aScrollFrame) {
+  if (gfx::gfxVars::UseWebRender()) {
+    // If WebRender is enabled, even scrollframes enclosed in SVG effects can
+    // be drag-scrolled by APZ.
+    return false;
+  }
   nsIFrame* current = aScrollFrame;
   while (current) {
     if (UsesSVGEffects(current)) {
