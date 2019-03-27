@@ -17,6 +17,7 @@
 #include "nsError.h"
 #include "nsStringFwd.h"
 #include "gfx2DGlue.h"
+#include "nsDependentSubstring.h"
 
 class nsIContent;
 
@@ -335,6 +336,14 @@ class SVGContentUtils {
    *  to have no corners: circle or ellipse
    */
   static bool ShapeTypeHasNoCorners(const nsIContent* aContent);
+
+  /**
+   *  Return one token in aString, aString may have leading and trailing
+   * whitespace; aSuccess will be set to false if there is no token or more than
+   * one token, otherwise it's set to true.
+   */
+  static nsDependentSubstring GetAndEnsureOneToken(const nsAString& aString,
+                                                   bool& aSuccess);
 };
 
 }  // namespace mozilla

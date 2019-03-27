@@ -23,9 +23,16 @@ static SVGAttrTearoffTable<SVGInteger, SVGInteger::DOMAnimatedInteger>
 
 nsresult SVGInteger::SetBaseValueString(const nsAString &aValueAsString,
                                         SVGElement *aSVGElement) {
+  bool success;
+  auto token = SVGContentUtils::GetAndEnsureOneToken(aValueAsString, success);
+
+  if (!success) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
+  }
+
   int32_t value;
 
-  if (!SVGContentUtils::ParseInteger(aValueAsString, value)) {
+  if (!SVGContentUtils::ParseInteger(token, value)) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
