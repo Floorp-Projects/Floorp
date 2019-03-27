@@ -99,6 +99,7 @@ using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
+using mozilla::dom::BrowsingContextFieldEpochs from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextInitializer from "mozilla/dom/BrowsingContext.h";
 
 union ChromeRegistryItem
@@ -1236,7 +1237,8 @@ parent:
 
 both:
     async CommitBrowsingContextTransaction(BrowsingContext aContext,
-                                           BrowsingContextTransaction aTransaction);
+                                           BrowsingContextTransaction aTransaction,
+                                           BrowsingContextFieldEpochs aEpochs);
 
     async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                        Principal aPrincipal, ClonedMessageData aData);

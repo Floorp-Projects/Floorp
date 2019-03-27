@@ -5894,7 +5894,8 @@ void ContentParent::OnBrowsingContextGroupUnsubscribe(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
-    BrowsingContext* aContext, BrowsingContext::Transaction&& aTransaction) {
+    BrowsingContext* aContext, BrowsingContext::Transaction&& aTransaction,
+    BrowsingContext::FieldEpochs&& aEpochs) {
   if (!aContext) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
             ("ParentIPC: Trying to run transaction on missing context."));
@@ -5913,12 +5914,14 @@ mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
     auto* entry = iter.Get();
     ContentParent* parent = entry->GetKey();
     if (parent != this) {
-      Unused << parent->SendCommitBrowsingContextTransaction(aContext,
-                                                             aTransaction);
+      Unused << parent->SendCommitBrowsingContextTransaction(
+          aContext, aTransaction,
+          aContext->Canonical()->GetFieldEpochsForChild(parent));
     }
   }
 
   aTransaction.Apply(aContext, this);
+  aContext->Canonical()->SetFieldEpochsForChild(this, aEpochs);
 
   return IPC_OK();
 }
