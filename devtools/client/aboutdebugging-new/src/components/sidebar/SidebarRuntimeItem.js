@@ -55,7 +55,7 @@ class SidebarRuntimeItem extends PureComponent {
     const { deviceName, getString, isUnknown, name } = this.props;
 
     const displayName = isUnknown ?
-      getString("about-debugging-sidebar-runtime-item-waiting-for-browser") : name;
+      getString("about-debugging-sidebar-runtime-item-waiting-for-runtime") : name;
 
     const localizationId = deviceName
       ? "about-debugging-sidebar-runtime-item-name"
