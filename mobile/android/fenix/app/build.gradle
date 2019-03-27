@@ -111,7 +111,7 @@ android.applicationVariants.all { variant ->
 // Set up kotlin-allopen plugin for writing tests
 // -------------------------------------------------------------------------------------------------
 
-    boolean hasTest = gradle.startParameter.taskNames.find {it.contains("test") || it.contains("Test")} != null
+    boolean hasTest = gradle.startParameter.taskNames.find { it.contains("test") || it.contains("Test") } != null
     if (hasTest) {
         apply plugin: 'kotlin-allopen'
         allOpen {

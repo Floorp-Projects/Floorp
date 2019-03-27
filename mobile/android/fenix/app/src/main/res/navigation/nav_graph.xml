@@ -106,6 +106,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_searchEngineFragment"
             app:destination="@id/searchEngineFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_aboutFragment"
+            app:destination="@id/aboutFragment" />
     </fragment>
     <fragment android:id="@+id/dataChoicesFragment" android:name="org.mozilla.fenix.settings.DataChoicesFragment"
               android:label="DataChoicesFragment"/>
@@ -120,6 +123,11 @@
         android:id="@+id/searchEngineFragment"
         android:name="org.mozilla.fenix.settings.SearchEngineFragment"
         android:label="SearchEngineFragment" />
+
+    <fragment
+        android:id="@+id/aboutFragment"
+        android:name="org.mozilla.fenix.settings.AboutFragment"
+        android:label="AboutFragment" />
     <fragment android:id="@+id/crashReporterFragment" android:name="org.mozilla.fenix.crashes.CrashReporterFragment"
               android:label="CrashReporterFragment">
         <action

@@ -14,7 +14,9 @@
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Disable private browsing</string>
     <!-- Explanation for how sessions work -->
-    <string name="sessions_intro_description">Sessions help you return to the sites you visit often and those you\'ve just discovered. Start browsing and they\'ll begin to appear here. </string>
+    <string name="sessions_intro_description">Sessions help you return to the sites you visit often and those you\'ve
+        just discovered. Start browsing and they\'ll begin to appear here.
+    </string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Search or enter address</string>
 
@@ -23,7 +25,11 @@
     <string name="private_browsing_title">You\'re in a private session</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_explanation">%1$s clears your search and browsing history when you close your private session. While this doesn\'t make you anonymous to websites or your internet service provider, it makes it easier to keep what you do online private from anyone else who uses this device.\n\nCommon myths about private browsing</string>
+    <string name="private_browsing_explanation">%1$s clears your search and browsing history when you close your private
+        session. While this doesn\'t make you anonymous to websites or your internet service provider, it makes it
+        easier to keep what you do online private from anyone else who uses this device.\n\nCommon myths about private
+        browsing
+    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Delete session</string>
 
@@ -132,7 +138,9 @@
     <!-- Preference for reducing image sizes, bandwidth and platform-level optimizations -->
     <string name="preference_optimize">Optimize</string>
     <!-- Label summary to explain how the optimize preference works -->
-    <string name="preference_optimize_summary">Lower image quality, throttle streaming bandwidth, and platform-level optimizations</string>
+    <string name="preference_optimize_summary">Lower image quality, throttle streaming bandwidth, and platform-level
+        optimizations
+    </string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Exceptions</string>
     <!-- Preference for applying recommend rules to all sites -->
@@ -141,11 +149,15 @@
     <string name="preference_recommended_settings_summary">
         <b>Blocked</b>
 
-        \n Ads, autoplay sound and video (block playing media with sound), cookies (block third-party trackers cookies), trackers (allow some trackers), pop-up, website redirects. \n\n <b>Ask to allow</b>
+        \n Ads, autoplay sound and video (block playing media with sound), cookies (block third-party trackers cookies),
+        trackers (allow some trackers), pop-up, website redirects. \n\n
+        <b>Ask to allow</b>
 
-        \n Camera, location, microphone and notification. \n\n <b>Allowed</b>
+        \n Camera, location, microphone and notification. \n\n
+        <b>Allowed</b>
 
-        \n DRM audio and video, JavaScript, cache and site data, images.</string>
+        \n DRM audio and video, JavaScript, cache and site data, images.
+    </string>
     <!-- Preference for applying custom rules to all sites -->
     <string name="preference_custom_settings">Use custom settings</string>
     <!-- Preference category for feature phone permissions likes Camera,Microphone, Location ... etc -->
@@ -226,11 +238,12 @@
     <string name="settings_title">Settings</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
     <string name="content_description_history_menu">History item menu</string>
-    <!-- About content -->
-    <string name="about_content"><![CDATA[
-<p>%1$s puts you in control.</p>
-<p>%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>
-    ]]></string>
+    <!-- About content. Sentences are separated by two new lines -->
+    <string name="about_content">
+        %1$s puts you in control.
+        \n\n
+        %1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.
+    </string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs in the current session -->

@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings
 
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -18,16 +17,13 @@ import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import kotlin.coroutines.CoroutineContext
-import java.io.File
 import mozilla.components.service.fxa.FxaUnauthorizedException
-import mozilla.components.support.ktx.android.graphics.toDataUri
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
@@ -85,7 +81,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         val appName = getString(R.string.app_name)
         aboutPreference?.title = getString(R.string.preferences_about, appName)
 
-        generateWordmark()
         setupPreferences()
         setupAccountUI()
     }
@@ -122,8 +117,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
                 navigateToSettingsArticle()
             }
             resources.getString(pref_key_about) -> {
-                requireComponents.useCases.tabsUseCases.addTab.invoke(aboutURL, true)
-                navigateToSettingsArticle()
+                navigateToAbout()
             }
             resources.getString(pref_key_account) -> {
                 navigateToAccountSettings()
@@ -161,30 +155,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
                 (activity as HomeActivity).openToBrowser(null, BrowserDirection.FromSettings)
             }
             true
-        }
-    }
-
-    /**
-     * Shrinks the wordmark resolution on first run to ensure About Page loads quickly
-     */
-    private fun generateWordmark() {
-        val path = context?.filesDir
-        val file = File(path, wordmarkPath)
-        path?.let {
-            if (!file.exists()) {
-                launch(IO) {
-                    val options = BitmapFactory.Options().apply {
-                        inSampleSize = wordmarkScalingFactor
-                        inJustDecodeBounds = false
-                    }
-                    file.appendText(
-                        BitmapFactory.decodeResource(
-                            resources,
-                            R.drawable.ic_logo_wordmark, options
-                        ).toDataUri()
-                    )
-                }
-            }
         }
     }
 
@@ -263,6 +233,11 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         }
     }
 
+    private fun navigateToAbout() {
+        val directions = SettingsFragmentDirections.actionSettingsFragmentToAboutFragment()
+        Navigation.findNavController(view!!).navigate(directions)
+    }
+
     private fun navigateToAccountSettings() {
         val directions =
             SettingsFragmentDirections.actionSettingsFragmentToAccountSettingsFragment()
@@ -318,11 +293,5 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
             preferenceFirefoxAccount?.title = profile.displayName.orEmpty()
             preferenceFirefoxAccount?.summary = profile.email.orEmpty()
         }
-    }
-
-    companion object {
-        const val wordmarkScalingFactor = 2
-        const val wordmarkPath = "wordmark.b64"
-        const val aboutURL = "about:version"
     }
 }
