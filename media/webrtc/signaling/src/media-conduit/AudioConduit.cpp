@@ -75,15 +75,15 @@ WebrtcAudioConduit::~WebrtcAudioConduit() {
   MOZ_ASSERT(NS_IsMainThread());
 
   MutexAutoLock lock(mMutex);
-  DeleteSendStream();
-  DeleteRecvStream();
-
   DeleteChannels();
 
   // We don't Terminate() the VoEBase here, because the Call (owned by
   // PeerConnectionMedia) actually owns the (shared) VoEBase/VoiceEngine
   // here
   mPtrVoEBase = nullptr;
+
+  MOZ_ASSERT(!mSendStream && !mRecvStream,
+             "Call DeleteStreams prior to ~WebrtcAudioConduit.");
 }
 
 bool WebrtcAudioConduit::SetLocalSSRCs(
@@ -1032,6 +1032,14 @@ MediaConduitErrorCode WebrtcAudioConduit::DeliverPacket(const void* data,
   }
 
   return kMediaConduitNoError;
+}
+
+void WebrtcAudioConduit::DeleteStreams() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MutexAutoLock lock(mMutex);
+  DeleteSendStream();
+  DeleteRecvStream();
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::CreateChannels() {
