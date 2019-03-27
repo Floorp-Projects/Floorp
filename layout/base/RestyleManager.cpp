@@ -1983,6 +1983,7 @@ void RestyleManager::AnimationsWithDestroyedFrame ::
   StopAnimationsWithoutFrame(mContents, PseudoStyleType::NotPseudo);
   StopAnimationsWithoutFrame(mBeforeContents, PseudoStyleType::before);
   StopAnimationsWithoutFrame(mAfterContents, PseudoStyleType::after);
+  StopAnimationsWithoutFrame(mAfterContents, PseudoStyleType::marker);
 }
 
 void RestyleManager::AnimationsWithDestroyedFrame ::StopAnimationsWithoutFrame(
@@ -2002,6 +2003,10 @@ void RestyleManager::AnimationsWithDestroyedFrame ::StopAnimationsWithoutFrame(
       }
     } else if (aPseudoType == PseudoStyleType::after) {
       if (nsLayoutUtils::GetAfterFrame(content)) {
+        continue;
+      }
+    } else if (aPseudoType == PseudoStyleType::marker) {
+      if (nsLayoutUtils::GetMarkerFrame(content)) {
         continue;
       }
     }

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+@keyframes anim {
+  from { margin-left: 10em; }
+  to { margin-left: 10em; }
+}
+#target::marker {
+  content: 'marker';
+}
+#target.anim::marker {
+  animation: anim 100s infinite;
+  font-size: 10px;
+}
+#target.bigger-font::marker {
+  font-size: 20px;
+}
+#target {
+  display: list-item;
+  margin-left: 200px;
+}
+</style>
+<div id="target"></div>
+<script>
+addEventListener('DOMContentLoaded', () => {
+  var target = document.getElementById('target');
+
+  // Start an animation on pseudo element.
+  target.classList.add('anim');
+
+  requestAnimationFrame(() => {
+    // The animation on pseudo element should be updated
+    // when the target element classes are modified.
+    target.classList.add('bigger-font');
+
+    requestAnimationFrame(() => {
+      document.documentElement.classList.remove('reftest-wait');
+    });
+  });
+});
+</script>
+</html>
