@@ -114,6 +114,7 @@ OBJDIR_FILES += ['/.gdbinit']
 # directories as the current working directory.  The .lldbinit file will
 # load $(topsrcdir)/.lldbinit, which is where the actual debugging commands are.
 DEFINES['topsrcdir'] = TOPSRCDIR
+DEFINES['topobjdir'] = TOPOBJDIR
 FINAL_TARGET_PP_FILES += ['.lldbinit.in']
 OBJDIR_FILES += ['!/dist/bin/.lldbinit']
 
