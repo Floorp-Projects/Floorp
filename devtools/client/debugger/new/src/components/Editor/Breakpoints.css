@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
- .theme-light {
+.theme-light {
   --gutter-hover-background-color: #dde1e4;
 
   --breakpoint-fill: var(--blue-50);
@@ -22,7 +22,8 @@
   --breakpoint-disabled-stroke: var(--blue-55);
 }
 
-.theme-light, .theme-dark {
+.theme-light,
+.theme-dark {
   --logpoint-fill: var(--theme-graphs-purple);
   --logpoint-stroke: var(--purple-60);
   --breakpoint-condition-fill: var(--theme-graphs-yellow);

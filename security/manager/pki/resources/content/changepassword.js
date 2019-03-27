@@ -21,6 +21,7 @@ function doPrompt(msg) {
 
 function onLoad() {
   document.documentElement.getButton("accept").disabled = true;
+  document.addEventListener("dialogaccept", setPassword);
 
   pw1 = document.getElementById("pw1");
   params = window.arguments[0].QueryInterface(Ci.nsIDialogParamBlock);
@@ -64,7 +65,7 @@ function process() {
   checkPasswords();
 }
 
-function setPassword() {
+function setPassword(event) {
   var oldpwbox = document.getElementById("oldpw");
   var initpw = oldpwbox.getAttribute("inited");
   var bundle = document.getElementById("pippki_bundle");
@@ -130,7 +131,9 @@ function setPassword() {
   }
 
   // Terminate dialog
-  return success;
+  if (!success) {
+    event.preventDefault();
+  }
 }
 
 function setPasswordStrength() {

@@ -22,7 +22,7 @@ import {
   shouldBlackbox
 } from "../../utils/source";
 import { getGeneratedSource } from "../../reducers/sources";
-import { shouldShowFooter, shouldShowPrettyPrint } from "../../utils/editor";
+import { shouldShowPrettyPrint } from "../../utils/editor";
 
 import { PaneToggleButton } from "../shared/Button";
 import AccessibleImage from "../shared/AccessibleImage";
@@ -40,7 +40,6 @@ type Props = {
   selectedSource: Source,
   mappedSource: Source,
   endPanelCollapsed: boolean,
-  editor: Object,
   horizontal: boolean,
   togglePrettyPrint: typeof actions.togglePrettyPrint,
   toggleBlackBox: typeof actions.toggleBlackBox,
@@ -56,21 +55,39 @@ class SourceFooter extends PureComponent<Props, State> {
   constructor() {
     super();
 
-    this.state = { cursorPosition: { line: 1, column: 1 } };
+    this.state = { cursorPosition: { line: 0, column: 0 } };
   }
 
-  componentDidMount() {
-    const { editor } = this.props;
-    editor.codeMirror.on("cursorActivity", this.onCursorChange);
+  componentDidUpdate() {
+    const eventDoc = document.querySelector(".editor-mount .CodeMirror");
+    // querySelector can return null
+    if (eventDoc) {
+      this.toggleCodeMirror(eventDoc, true);
+    }
   }
 
   componentWillUnmount() {
-    const { editor } = this.props;
-    editor.codeMirror.off("cursorActivity", this.onCursorChange);
+    const eventDoc = document.querySelector(".editor-mount .CodeMirror");
+
+    if (eventDoc) {
+      this.toggleCodeMirror(eventDoc, false);
+    }
+  }
+
+  toggleCodeMirror(eventDoc: Object, toggle: boolean) {
+    if (toggle === true) {
+      eventDoc.CodeMirror.on("cursorActivity", this.onCursorChange);
+    } else {
+      eventDoc.CodeMirror.off("cursorActivity", this.onCursorChange);
+    }
   }
 
   prettyPrintButton() {
     const { selectedSource, togglePrettyPrint } = this.props;
+
+    if (!selectedSource) {
+      return;
+    }
 
     if (isLoading(selectedSource) && selectedSource.isPrettyPrinted) {
       return (
@@ -108,13 +125,20 @@ class SourceFooter extends PureComponent<Props, State> {
     const { selectedSource, toggleBlackBox } = this.props;
     const sourceLoaded = selectedSource && isLoaded(selectedSource);
 
+    if (!selectedSource) {
+      return;
+    }
+
     if (!shouldBlackbox(selectedSource)) {
       return;
     }
 
     const blackboxed = selectedSource.isBlackBoxed;
 
-    const tooltip = L10N.getStr("sourceFooter.blackbox");
+    const tooltip = blackboxed
+      ? L10N.getStr("sourceFooter.unblackbox")
+      : L10N.getStr("sourceFooter.blackbox");
+
     const type = "black-box";
 
     return (
@@ -150,7 +174,7 @@ class SourceFooter extends PureComponent<Props, State> {
   }
 
   renderCommands() {
-    const commands = [this.prettyPrintButton(), this.blackBoxButton()].filter(
+    const commands = [this.blackBoxButton(), this.prettyPrintButton()].filter(
       Boolean
     );
 
@@ -192,32 +216,30 @@ class SourceFooter extends PureComponent<Props, State> {
   };
 
   renderCursorPosition() {
-    const { cursorPosition } = this.state;
+    if (!this.props.selectedSource) {
+      return null;
+    }
+
+    const { line, column } = this.state.cursorPosition;
 
     const text = L10N.getFormatStr(
       "sourceFooter.currentCursorPosition",
-      cursorPosition.line + 1,
-      cursorPosition.column + 1
+      line + 1,
+      column + 1
     );
     const title = L10N.getFormatStr(
       "sourceFooter.currentCursorPosition.tooltip",
-      cursorPosition.line + 1,
-      cursorPosition.column + 1
+      line + 1,
+      column + 1
     );
     return (
-      <span className="cursor-position" title={title}>
+      <div className="cursor-position" title={title}>
         {text}
-      </span>
+      </div>
     );
   }
 
   render() {
-    const { selectedSource, horizontal } = this.props;
-
-    if (!shouldShowFooter(selectedSource, horizontal)) {
-      return null;
-    }
-
     return (
       <div className="source-footer">
         {this.renderCommands()}

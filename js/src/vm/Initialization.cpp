@@ -23,6 +23,7 @@
 #include "jit/JitCommon.h"
 #include "js/Utility.h"
 #if ENABLE_INTL_API
+#  include "unicode/putil.h"
 #  include "unicode/uclean.h"
 #  include "unicode/utypes.h"
 #endif  // ENABLE_INTL_API
@@ -129,6 +130,13 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
   RETURN_IF_FAIL(js::jit::AtomicOperations::Initialize());
 
 #if EXPOSE_INTL_API
+#  if !MOZ_SYSTEM_ICU
+  // Explicitly set the data directory to its default value, but only when we're
+  // sure that we use our in-tree ICU copy. See bug 1527879 and ICU bug
+  // report <https://unicode-org.atlassian.net/browse/ICU-20491>.
+  u_setDataDirectory("");
+#  endif
+
   UErrorCode err = U_ZERO_ERROR;
   u_init(&err);
   if (U_FAILURE(err)) {

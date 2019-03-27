@@ -26,9 +26,7 @@
 #endif
         screenX="" screenY=""
         persist="screenX screenY"
-        aria-describedby="intro location whichIs type from source unknownPrompt"
-        ondialogaccept="return dialog.onOK()"
-        ondialogcancel="return dialog.onCancel()">
+        aria-describedby="intro location whichIs type from source unknownPrompt">
 
 
   <stringbundle id="strings" src="chrome://mozapps/locale/downloads/unknownContentType.properties"/>

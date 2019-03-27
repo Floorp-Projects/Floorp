@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
 LOCAL_INCLUDES += [
     '../base',
     '../ipc',
+    '/js/xpconnect/src',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

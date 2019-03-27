@@ -157,7 +157,8 @@
   width: 100%;
   height: 2px;
   background-color: var(--tab-line-color, transparent);
-  transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
+  transition: transform 250ms var(--animation-curve),
+    opacity 250ms var(--animation-curve);
   opacity: 0;
   transform: scaleX(0);
 }

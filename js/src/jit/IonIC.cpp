@@ -634,22 +634,22 @@ bool IonCompareIC::update(JSContext* cx, HandleScript outerScript,
       }
       break;
     case JSOP_EQ:
-      if (!LooselyEqual<true>(cx, &lhsCopy, &rhsCopy, res)) {
+      if (!LooselyEqual<EqualityKind::Equal>(cx, &lhsCopy, &rhsCopy, res)) {
         return false;
       }
       break;
     case JSOP_NE:
-      if (!LooselyEqual<false>(cx, &lhsCopy, &rhsCopy, res)) {
+      if (!LooselyEqual<EqualityKind::NotEqual>(cx, &lhsCopy, &rhsCopy, res)) {
         return false;
       }
       break;
     case JSOP_STRICTEQ:
-      if (!StrictlyEqual<true>(cx, &lhsCopy, &rhsCopy, res)) {
+      if (!StrictlyEqual<EqualityKind::Equal>(cx, &lhsCopy, &rhsCopy, res)) {
         return false;
       }
       break;
     case JSOP_STRICTNE:
-      if (!StrictlyEqual<false>(cx, &lhsCopy, &rhsCopy, res)) {
+      if (!StrictlyEqual<EqualityKind::NotEqual>(cx, &lhsCopy, &rhsCopy, res)) {
         return false;
       }
       break;

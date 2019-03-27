@@ -14,8 +14,6 @@
             buttons="accept,cancel"
             defaultButton="cancel"
             buttonidaccept="refresh-profile-dialog-button"
-            ondialogaccept="return onResetProfileAccepted();"
-            ondialogcancel="window.close();"
             onload="">
 	<!-- The empty onload event handler is a hack to get the accept button text applied by Fluent. -->
 

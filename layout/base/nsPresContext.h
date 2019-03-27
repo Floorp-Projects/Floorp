@@ -1072,6 +1072,18 @@ class nsPresContext : public nsISupports,
 
   void InvalidatePaintedLayers();
 
+  uint32_t GetNextFrameRateMultiplier() const {
+    return mNextFrameRateMultiplier;
+  }
+
+  void DidUseFrameRateMultiplier() {
+    if (!mNextFrameRateMultiplier) {
+      mNextFrameRateMultiplier = 1;
+    } else if (mNextFrameRateMultiplier < 8) {
+      mNextFrameRateMultiplier = mNextFrameRateMultiplier * 2;
+    }
+  }
+
  protected:
   // May be called multiple times (unlink, destructor)
   void Destroy();
@@ -1175,6 +1187,9 @@ class nsPresContext : public nsISupports,
   uint16_t mImageAnimationModePref;
 
   uint32_t mInterruptChecksToSkip;
+
+  // During page load we use slower frame rate.
+  uint32_t mNextFrameRateMultiplier;
 
   // Counters for tests and tools that want to detect frame construction
   // or reflow.

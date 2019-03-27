@@ -7,8 +7,8 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-const MozXULMenuElement = MozElementMixin(XULMenuElement);
-const MenuBaseControl = BaseControlMixin(MozXULMenuElement);
+const MozXULMenuElement = MozElements.MozElementMixin(XULMenuElement);
+const MenuBaseControl = MozElements.BaseControlMixin(MozXULMenuElement);
 
 class MozMenuList extends MenuBaseControl {
   constructor() {

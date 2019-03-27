@@ -535,6 +535,10 @@ inline bool IsEqualityOp(JSOp op) {
          op == JSOP_STRICTNE;
 }
 
+inline bool IsRelationalOp(JSOp op) {
+  return op == JSOP_LT || op == JSOP_LE || op == JSOP_GT || op == JSOP_GE;
+}
+
 inline bool IsCheckStrictOp(JSOp op) {
   return CodeSpec[op].format & JOF_CHECKSTRICT;
 }

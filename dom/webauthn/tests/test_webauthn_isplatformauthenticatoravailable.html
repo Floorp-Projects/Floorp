@@ -24,26 +24,19 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
                                    ["security.webauth.webauthn_enable_softtoken", true],
                                    ["security.webauth.webauthn_enable_usbtoken", false]]},
-function() {
+async function() {
   // This test ensures that isUserVerifyingPlatformAuthenticatorAvailable()
-  // is a callable method, but we currently can't test that it works in an
-  // automated way. If it resolves to false, per spec, we SHOULD wait
-  // ~10 minutes before resolving.
-  let p1 = PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+  // is a callable method, but with the softtoken enabled, it's not useful to
+  // figure out what it actually returns, so we'll just make sure it runs.
+  await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
   .then(function(aResult) {
-    ok(false, "We shouldn't get here.");
+    ok(true, "Resolved: " + aResult);
   })
   .catch(function(aProblem) {
     ok(false, "Problem encountered: " + aProblem);
   });
 
-  // Finish on the next tick.
-  let p2 = Promise.resolve();
-
-  Promise.race([p1, p2]).then(function() {
-    ok(true, "isUserVerifyingPlatformAuthenticatorAvailable() is callable");
-    SimpleTest.finish();
-  });
+  SimpleTest.finish();
 });
 
 </script>

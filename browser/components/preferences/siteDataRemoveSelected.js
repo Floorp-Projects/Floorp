@@ -20,6 +20,8 @@ let gSiteDataRemoveSelected = {
       fragment.appendChild(listItem);
     }
     list.appendChild(fragment);
+    document.addEventListener("dialogaccept", function() { gSiteDataRemoveSelected.ondialogaccept(); });
+    document.addEventListener("dialogcancel", function() { gSiteDataRemoveSelected.ondialogcancel(); });
   },
 
   ondialogaccept() {

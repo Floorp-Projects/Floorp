@@ -18,7 +18,7 @@ window.addEventListener("unload", () => {
   elementsToDestroyOnUnload.clear();
 }, { mozSystemGroup: true, once: true });
 
-class MozBrowser extends MozElementMixin(XULFrameElement) {
+class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
   static get observedAttributes() {
     return ["remote"];
   }

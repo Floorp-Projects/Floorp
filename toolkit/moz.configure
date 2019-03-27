@@ -1163,8 +1163,12 @@ def midl_flags(c_compiler, target, toolchain_search_path):
             'aarch64': 'arm64',
         }[target.cpu]
         flags = ['-env', env]
-        # Ideally, we'd use ['-cpp_cmd', c_compiler.compiler], but clang-cl
-        # currently doesn't work as a preprocessor for midl, so we need to
+
+        if c_compiler.version >= '8':
+            return flags + ['-cpp_cmd', c_compiler.compiler]
+
+        # clang-cl didn't work as a preprocessor for midl before version 8
+        # so we need to find cl if we use an older version.
         # find cl. https://bugs.llvm.org/show_bug.cgi?id=40140
         cl = find_program('cl', paths=toolchain_search_path)
         if not cl:

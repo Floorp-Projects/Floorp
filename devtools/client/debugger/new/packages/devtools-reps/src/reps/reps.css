@@ -288,7 +288,7 @@ button.invoke-getter {
   background-color: var(--theme-icon-color);
   height: 10px;
   vertical-align: middle;
-  border:none;
+  border: none;
 }
 
 .invoke-getter:hover {

@@ -22,6 +22,7 @@ window.addEventListener("load", function() {
   const projectNameNode = document.querySelector("#project-name");
   projectNameNode.addEventListener("input", canValidate, true);
   getTemplatesJSON();
+  document.addEventListener("dialogaccept", doOK);
 }, {capture: true, once: true});
 
 function getTemplatesJSON() {
@@ -80,23 +81,26 @@ function canValidate() {
   }
 }
 
-function doOK() {
+function doOK(event) {
   const projectName = document.querySelector("#project-name").value;
 
   if (!projectName) {
     console.error("No project name");
-    return false;
+    event.preventDefault();
+    return;
   }
 
   if (!gTemplateList) {
     console.error("No template index");
-    return false;
+    event.preventDefault();
+    return;
   }
 
   const templatelistNode = document.querySelector("#templatelist");
   if (templatelistNode.selectedIndex < 0) {
     console.error("No template selected");
-    return false;
+    event.preventDefault();
+    return;
   }
 
   /* Chrome mochitest support */
@@ -164,5 +168,5 @@ function doOK() {
     }, bail);
   }, bail);
 
-  return false;
+  event.preventDefault();
 }

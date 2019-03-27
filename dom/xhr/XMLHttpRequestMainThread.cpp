@@ -235,6 +235,8 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread()
 }
 
 XMLHttpRequestMainThread::~XMLHttpRequestMainThread() {
+  DisconnectDoneNotifier();
+
   mFlagDeleted = true;
 
   if ((mState == XMLHttpRequest_Binding::OPENED && mFlagSend) ||
@@ -975,6 +977,7 @@ void XMLHttpRequestMainThread::Abort(ErrorResult& aRv) {
 
 void XMLHttpRequestMainThread::AbortInternal(ErrorResult& aRv) {
   mFlagAborted = true;
+  DisconnectDoneNotifier();
 
   // Step 1
   TerminateOngoingFetch();
@@ -1456,6 +1459,7 @@ nsresult XMLHttpRequestMainThread::Open(const nsACString& aMethod,
 
   // Step 11
   // timeouts are handled without a flag
+  DisconnectDoneNotifier();
   mFlagSend = false;
   mRequestMethod.Assign(method);
   mRequestURL = parsedURL;
@@ -1691,7 +1695,7 @@ void XMLHttpRequestMainThread::LocalFileToBlobCompleted(Blob* aBlob) {
   mBlobStorage = nullptr;
   NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
 
-  ChangeStateToDone();
+  ChangeStateToDone(mFlagSyncLooping);
 }
 
 NS_IMETHODIMP
@@ -2096,7 +2100,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
 
   // If we were just reading a blob URL, we're already done
   if (status == NS_ERROR_FILE_ALREADY_EXISTS && mResponseBlob) {
-    ChangeStateToDone();
+    ChangeStateToDone(mFlagSyncLooping);
     return NS_OK;
   }
 
@@ -2182,6 +2186,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
   mChannelEventSink = nullptr;
   mProgressEventSink = nullptr;
 
+  bool wasSync = mFlagSyncLooping;
   mFlagSyncLooping = false;
   mRequestSentTime = 0;
 
@@ -2210,7 +2215,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
 
     // We postpone the 'done' until the creation of the Blob is completed.
     if (!waitingForBlobCreation) {
-      ChangeStateToDone();
+      ChangeStateToDone(wasSync);
     }
 
     return NS_OK;
@@ -2238,14 +2243,14 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
     mErrorParsingXML = true;
     mResponseXML = nullptr;
   }
-  ChangeStateToDone();
+  ChangeStateToDone(wasSync);
   return NS_OK;
 }
 
 void XMLHttpRequestMainThread::OnBodyParseEnd() {
   mFlagParseBody = false;
   mParseEndListener = nullptr;
-  ChangeStateToDone();
+  ChangeStateToDone(mFlagSyncLooping);
 }
 
 void XMLHttpRequestMainThread::MatchCharsetAndDecoderToResponseDocument() {
@@ -2258,8 +2263,48 @@ void XMLHttpRequestMainThread::MatchCharsetAndDecoderToResponseDocument() {
     mDecoder = mResponseXML->GetDocumentCharacterSet()->NewDecoder();
   }
 }
+void XMLHttpRequestMainThread::DisconnectDoneNotifier() {
+  if (mDelayedDoneNotifier) {
+    mDelayedDoneNotifier->Disconnect();
+    mDelayedDoneNotifier = nullptr;
+  }
+}
 
-void XMLHttpRequestMainThread::ChangeStateToDone() {
+void XMLHttpRequestMainThread::ChangeStateToDone(bool aWasSync) {
+  DisconnectDoneNotifier();
+
+  if (!mForWorker && !aWasSync && mChannel) {
+    // If the top level page is loading, try to postpone the handling of the
+    // final events.
+    nsLoadFlags loadFlags = 0;
+    mChannel->GetLoadFlags(&loadFlags);
+    if (loadFlags & nsIRequest::LOAD_BACKGROUND) {
+      nsPIDOMWindowInner* owner = GetOwner();
+      Document* doc = owner ? owner->GetExtantDoc() : nullptr;
+      doc = doc ? doc->GetTopLevelContentDocument() : nullptr;
+      if (doc &&
+          (doc->GetReadyStateEnum() > Document::READYSTATE_UNINITIALIZED &&
+           doc->GetReadyStateEnum() < Document::READYSTATE_COMPLETE)) {
+        nsPIDOMWindowInner* topWin = doc->GetInnerWindow();
+        if (topWin) {
+          MOZ_ASSERT(!mDelayedDoneNotifier);
+          RefPtr<XMLHttpRequestDoneNotifier> notifier =
+              new XMLHttpRequestDoneNotifier(this);
+          mDelayedDoneNotifier = notifier;
+          topWin->AddAfterLoadRunner(notifier);
+          NS_DispatchToCurrentThreadQueue(notifier.forget(), 5000,
+                                          EventQueuePriority::Idle);
+          return;
+        }
+      }
+    }
+  }
+
+  ChangeStateToDoneInternal();
+}
+
+void XMLHttpRequestMainThread::ChangeStateToDoneInternal() {
+  DisconnectDoneNotifier();
   StopProgressEventTimer();
 
   MOZ_ASSERT(!mFlagParseBody,
@@ -3594,7 +3639,7 @@ void XMLHttpRequestMainThread::BlobStoreCompleted(
   mResponseBlob = aBlob;
   mBlobStorage = nullptr;
 
-  ChangeStateToDone();
+  ChangeStateToDone(mFlagSyncLooping);
 }
 
 NS_IMETHODIMP

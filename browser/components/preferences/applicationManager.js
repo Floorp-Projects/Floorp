@@ -16,6 +16,8 @@ var gAppManagerDialog = {
     Services.scriptloader.loadSubScript("chrome://browser/content/preferences/in-content/main.js",
       window);
 
+    document.addEventListener("dialogaccept", function() { gAppManagerDialog.onOK(); });
+
     const appDescElem = document.getElementById("appDescription");
     if (this.handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) {
       document.l10n.setAttributes(appDescElem, "app-manager-handle-file", {
@@ -59,19 +61,12 @@ var gAppManagerDialog = {
   },
 
   onOK: function appManager_onOK() {
-    if (!this._removed.length) {
-      // return early to avoid calling the |store| method.
-      return;
+    if (this._removed.length) {
+      for (var i = 0; i < this._removed.length; ++i)
+        this.handlerInfo.removePossibleApplicationHandler(this._removed[i]);
+
+      this.handlerInfo.store();
     }
-
-    for (var i = 0; i < this._removed.length; ++i)
-      this.handlerInfo.removePossibleApplicationHandler(this._removed[i]);
-
-    this.handlerInfo.store();
-  },
-
-  onCancel: function appManager_onCancel() {
-    // do nothing
   },
 
   remove: function appManager_remove() {

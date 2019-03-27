@@ -9705,9 +9705,7 @@ AbortReasonOr<Ok> IonBuilder::initOrSetElemTryDense(bool* emitted,
   MOZ_ASSERT(*emitted == false);
 
   if (value->type() == MIRType::MagicHole) {
-    {
-      trackOptimizationOutcome(TrackedOutcome::InitHole);
-    }
+    trackOptimizationOutcome(TrackedOutcome::InitHole);
     return Ok();
   }
 
@@ -9784,9 +9782,7 @@ AbortReasonOr<Ok> IonBuilder::initOrSetElemTryCache(bool* emitted,
   }
 
   if (value->type() == MIRType::MagicHole) {
-    {
-      trackOptimizationOutcome(TrackedOutcome::InitHole);
-    }
+    trackOptimizationOutcome(TrackedOutcome::InitHole);
     return Ok();
   }
 
@@ -9799,7 +9795,7 @@ AbortReasonOr<Ok> IonBuilder::initOrSetElemTryCache(bool* emitted,
 
   // We can avoid worrying about holes in the IC if we know a priori we are safe
   // from them. If TI can guard that there are no indexed properties on the
-  // prototype chain, we know that we anen't missing any setters by overwriting
+  // prototype chain, we know that we aren't missing any setters by overwriting
   // the hole with another value.
   bool guardHoles;
   MOZ_TRY_VAR(guardHoles, ElementAccessHasExtraIndexedProperty(this, object));

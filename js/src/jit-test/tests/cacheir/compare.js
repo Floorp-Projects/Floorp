@@ -224,3 +224,60 @@ warmup(String_Number_SEQ1, [["1.4",2, false],  ["1",1, false], [3,"4", false],
 var String_Number_SNEQ1 = (a, b) => { return a !== b; }
 warmup(String_Number_SNEQ1, [["1.4",2, true], ["1",1, true], [3,"4", true],
                              [-1024, "-1023", true], [1.2, "1.2", true]]);
+
+// String + String
+var String_String_GT1 = (a, b) => a > b;
+warmup(String_String_GT1, [["", "", false], ["a", "a", false], ["aa", "aa", false],
+                           ["a", "", true], ["", "a", false],
+                           ["a", "b", false], ["b", "a", true],
+                           ["a", "ab", false], ["ab", "a", true],
+                          ]);
+
+var String_String_GE1 = (a, b) => a >= b;
+warmup(String_String_GE1, [["", "", true], ["a", "a", true], ["aa", "aa", true],
+                           ["a", "", true], ["", "a", false],
+                           ["a", "b", false], ["b", "a", true],
+                           ["a", "ab", false], ["ab", "a", true],
+                          ]);
+
+var String_String_LT1 = (a, b) => a < b;
+warmup(String_String_LT1, [["", "", false], ["a", "a", false], ["aa", "aa", false],
+                           ["a", "", false], ["", "a", true],
+                           ["a", "b", true], ["b", "a", false],
+                           ["a", "ab", true], ["ab", "a", false],
+                          ]);
+
+var String_String_LE1 = (a, b) => a <= b;
+warmup(String_String_LE1, [["", "", true], ["a", "a", true], ["aa", "aa", true],
+                           ["a", "", false], ["", "a", true],
+                           ["a", "b", true], ["b", "a", false],
+                           ["a", "ab", true], ["ab", "a", false],
+                          ]);
+
+var String_String_EQ1 = (a, b) => a == b;
+warmup(String_String_EQ1, [["", "", true], ["a", "a", true], ["aa", "aa", true],
+                           ["a", "", false], ["", "a", false],
+                           ["a", "b", false], ["b", "a", false],
+                           ["a", "ab", false], ["ab", "a", false],
+                          ]);
+
+var String_String_SEQ1 = (a, b) => a === b;
+warmup(String_String_SEQ1, [["", "", true], ["a", "a", true], ["aa", "aa", true],
+                            ["a", "", false], ["", "a", false],
+                            ["a", "b", false], ["b", "a", false],
+                            ["a", "ab", false], ["ab", "a", false],
+                           ]);
+
+var String_String_NE1 = (a, b) => a != b;
+warmup(String_String_NE1, [["", "", false], ["a", "a", false], ["aa", "aa", false],
+                           ["a", "", true], ["", "a", true],
+                           ["a", "b", true], ["b", "a", true],
+                           ["a", "ab", true], ["ab", "a", true],
+                          ]);
+
+var String_String_SNE1 = (a, b) => a !== b;
+warmup(String_String_SNE1, [["", "", false], ["a", "a", false], ["aa", "aa", false],
+                            ["a", "", true], ["", "a", true],
+                            ["a", "b", true], ["b", "a", true],
+                            ["a", "ab", true], ["ab", "a", true],
+                           ]);

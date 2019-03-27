@@ -8043,12 +8043,30 @@ void CodeGenerator::emitCompareS(LInstruction* lir, JSOp op, Register left,
 
   using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
   if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
-    ool = oolCallVM<Fn, jit::StringsEqual<true>>(lir, ArgList(left, right),
-                                                 StoreRegisterTo(output));
+    ool = oolCallVM<Fn, jit::StringsEqual<EqualityKind::Equal>>(
+        lir, ArgList(left, right), StoreRegisterTo(output));
+  } else if (op == JSOP_NE || op == JSOP_STRICTNE) {
+    ool = oolCallVM<Fn, jit::StringsEqual<EqualityKind::NotEqual>>(
+        lir, ArgList(left, right), StoreRegisterTo(output));
+  } else if (op == JSOP_LT) {
+    ool = oolCallVM<Fn, jit::StringsCompare<ComparisonKind::LessThan>>(
+        lir, ArgList(left, right), StoreRegisterTo(output));
+  } else if (op == JSOP_LE) {
+    // Push the operands in reverse order for JSOP_LE:
+    // - |left <= right| is implemented as |right >= left|.
+    ool =
+        oolCallVM<Fn, jit::StringsCompare<ComparisonKind::GreaterThanOrEqual>>(
+            lir, ArgList(right, left), StoreRegisterTo(output));
+  } else if (op == JSOP_GT) {
+    // Push the operands in reverse order for JSOP_GT:
+    // - |left > right| is implemented as |right < left|.
+    ool = oolCallVM<Fn, jit::StringsCompare<ComparisonKind::LessThan>>(
+        lir, ArgList(right, left), StoreRegisterTo(output));
   } else {
-    MOZ_ASSERT(op == JSOP_NE || op == JSOP_STRICTNE);
-    ool = oolCallVM<Fn, jit::StringsEqual<false>>(lir, ArgList(left, right),
-                                                  StoreRegisterTo(output));
+    MOZ_ASSERT(op == JSOP_GE);
+    ool =
+        oolCallVM<Fn, jit::StringsCompare<ComparisonKind::GreaterThanOrEqual>>(
+            lir, ArgList(left, right), StoreRegisterTo(output));
   }
 
   masm.compareStrings(op, left, right, output, ool->entry());
@@ -8099,19 +8117,19 @@ void CodeGenerator::visitCompareVM(LCompareVM* lir) {
       bool (*)(JSContext*, MutableHandleValue, MutableHandleValue, bool*);
   switch (lir->mir()->jsop()) {
     case JSOP_EQ:
-      callVM<Fn, jit::LooselyEqual<true>>(lir);
+      callVM<Fn, jit::LooselyEqual<EqualityKind::Equal>>(lir);
       break;
 
     case JSOP_NE:
-      callVM<Fn, jit::LooselyEqual<false>>(lir);
+      callVM<Fn, jit::LooselyEqual<EqualityKind::NotEqual>>(lir);
       break;
 
     case JSOP_STRICTEQ:
-      callVM<Fn, jit::StrictlyEqual<true>>(lir);
+      callVM<Fn, jit::StrictlyEqual<EqualityKind::Equal>>(lir);
       break;
 
     case JSOP_STRICTNE:
-      callVM<Fn, jit::StrictlyEqual<false>>(lir);
+      callVM<Fn, jit::StrictlyEqual<EqualityKind::NotEqual>>(lir);
       break;
 
     case JSOP_LT:

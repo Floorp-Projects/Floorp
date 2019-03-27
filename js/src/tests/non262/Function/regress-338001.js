@@ -1,4 +1,4 @@
-// |reftest| skip-if(Android) silentfail skip -- disabled pending bug 657444
+// |reftest| skip-if(Android) silentfail slow
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

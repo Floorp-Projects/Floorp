@@ -19,7 +19,7 @@
   left: 0;
   right: 0;
   bottom: -1px;
-  border: solid 1px  var(--blue-50);
+  border: solid 1px var(--blue-50);
   pointer-events: none;
   opacity: 0;
   transition: opacity 150ms ease-out;

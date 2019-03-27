@@ -1567,13 +1567,8 @@ class RTCStatsReportInternalConstruct : public RTCStatsReportInternal {
     mOutboundRtpStreamStats.Construct();
     mRemoteInboundRtpStreamStats.Construct();
     mRemoteOutboundRtpStreamStats.Construct();
-    mMediaStreamTrackStats.Construct();
-    mMediaStreamStats.Construct();
-    mTransportStats.Construct();
-    mIceComponentStats.Construct();
     mIceCandidatePairStats.Construct();
     mIceCandidateStats.Construct();
-    mCodecStats.Construct();
     mTimestamp.Construct(now);
     mTrickledIceCandidateStats.Construct();
     mRawLocalCandidates.Construct();

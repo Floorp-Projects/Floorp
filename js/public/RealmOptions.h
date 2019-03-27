@@ -146,6 +146,12 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+  bool getAwaitFixEnabled() const { return awaitFix_; }
+  RealmCreationOptions& setAwaitFixEnabled(bool flag) {
+    awaitFix_ = flag;
+    return *this;
+  }
+
   // This flag doesn't affect JS engine behavior.  It is used by Gecko to
   // mark whether content windows and workers are "Secure Context"s. See
   // https://w3c.github.io/webappsec-secure-contexts/
@@ -177,6 +183,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool streams_ = false;
   bool bigint_ = false;
   bool fields_ = false;
+  bool awaitFix_ = false;
   bool secureContext_ = false;
   bool clampAndJitterTime_ = true;
 };

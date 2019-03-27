@@ -15,7 +15,6 @@
 <dialog id="webide:newapp" title="&newAppWindowTitle;"
   width="600" height="400"
   buttons="accept,cancel"
-  ondialogaccept="return doOK();"
   buttondisabledaccept="true"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 

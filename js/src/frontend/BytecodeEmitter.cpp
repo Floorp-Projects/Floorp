@@ -6007,6 +6007,7 @@ bool BytecodeEmitter::emitInitialYield(UnaryNode* yieldNode) {
 
 bool BytecodeEmitter::emitYield(UnaryNode* yieldNode) {
   MOZ_ASSERT(sc->isFunctionBox());
+  MOZ_ASSERT(sc->asFunctionBox()->isGenerator());
   MOZ_ASSERT(yieldNode->isKind(ParseNodeKind::YieldExpr));
 
   bool needsIteratorResult = sc->asFunctionBox()->needsIteratorResult();
@@ -6018,20 +6019,21 @@ bool BytecodeEmitter::emitYield(UnaryNode* yieldNode) {
   }
   if (ParseNode* expr = yieldNode->kid()) {
     if (!emitTree(expr)) {
-      //            [stack] ITEROBJ VAL
+      //            [stack] ITEROBJ? VAL
       return false;
     }
   } else {
     if (!emit1(JSOP_UNDEFINED)) {
-      //            [stack] ITEROBJ UNDEFINED
+      //            [stack] ITEROBJ? UNDEFINED
       return false;
     }
   }
 
-  // 11.4.3.7 AsyncGeneratorYield step 5.
+  // 25.5.3.7 AsyncGeneratorYield step 5.
   if (sc->asFunctionBox()->isAsync()) {
+    MOZ_ASSERT(!needsIteratorResult);
     if (!emitAwaitInInnermostScope()) {
-      //            [stack] ITEROBJ RESULT
+      //            [stack] RESULT
       return false;
     }
   }
@@ -6044,7 +6046,10 @@ bool BytecodeEmitter::emitYield(UnaryNode* yieldNode) {
   }
 
   if (!emitGetDotGeneratorInInnermostScope()) {
+    //              [stack] # if needsIteratorResult
     //              [stack] ITEROBJ .GENERATOR
+    //              [stack] # else
+    //              [stack] RESULT .GENERATOR
     return false;
   }
 
@@ -6112,13 +6117,19 @@ bool BytecodeEmitter::emitAwaitInScope(EmitterScope& currentScope) {
   return true;
 }
 
+// ES2019 draft rev 49b781ec80117b60f73327ef3054703a3111e40c
+// 14.4.14 Runtime Semantics: Evaluation
+// YieldExpression : yield* AssignmentExpression
 bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
   MOZ_ASSERT(sc->isFunctionBox());
   MOZ_ASSERT(sc->asFunctionBox()->isGenerator());
 
+  // Step 1.
   IteratorKind iterKind =
       sc->asFunctionBox()->isAsync() ? IteratorKind::Async : IteratorKind::Sync;
+  bool needsIteratorResult = sc->asFunctionBox()->needsIteratorResult();
 
+  // Steps 2-5.
   if (!emitTree(iter)) {
     //              [stack] ITERABLE
     return false;
@@ -6135,6 +6146,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     }
   }
 
+  // Step 6.
   // Initial send value is undefined.
   if (!emit1(JSOP_UNDEFINED)) {
     //              [stack] NEXT ITER RECEIVED
@@ -6154,7 +6166,19 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
 
   JumpTarget tryStart;
   if (!emitJumpTarget(&tryStart)) {
+    //              [stack] NEXT ITER RESULT
     return false;
+  }
+
+  if (iterKind == IteratorKind::Async) {
+    // Step 7.a.vi.
+    // Step 7.b.ii.7.
+    // Step 7.c.ix.
+    //   Call to IteratorValue.
+    if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) {
+      //            [stack] NEXT ITER RESULT
+      return false;
+    }
   }
 
   if (!tryCatch.emitTry()) {
@@ -6164,7 +6188,10 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
 
   MOZ_ASSERT(this->stackDepth == startDepth);
 
-  // 11.4.3.7 AsyncGeneratorYield step 5.
+  // Step 7.a.vi.
+  // Step 7.b.ii.7.
+  // Step 7.c.ix.
+  //   25.5.3.7 AsyncGeneratorYield, step 5.
   if (iterKind == IteratorKind::Async) {
     if (!emitAwaitInInnermostScope()) {
       //            [stack] NEXT ITER RESULT
@@ -6172,6 +6199,9 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     }
   }
 
+  // Steps 7.a.vi-vii.
+  // Steps 7.b.ii.7-8.
+  // Steps 7.c.ix-x.
   // Load the generator object.
   if (!emitGetDotGeneratorInInnermostScope()) {
     //              [stack] NEXT ITER RESULT GENOBJ
@@ -6223,7 +6253,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
 
   //                [stack] NEXT ITER OLDRESULT EXCEPTION ITER THROW
 
-  // ES 14.4.13, YieldExpression : yield * AssignmentExpression, step 5.b.iii.4.
+  // Step 7.b.ii.1.
   // RESULT = ITER.throw(EXCEPTION)
   if (!emit1(JSOP_SWAP)) {
     //              [stack] NEXT ITER OLDRESULT EXCEPTION THROW ITER
@@ -6238,6 +6268,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
+  // Step 7.b.ii.2.
   if (iterKind == IteratorKind::Async) {
     if (!emitAwaitInInnermostScope()) {
       //            [stack] NEXT ITER OLDRESULT RESULT
@@ -6245,6 +6276,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     }
   }
 
+  // Step 7.b.ii.4.
   if (!emitCheckIsObj(CheckIsObjectKind::IteratorThrow)) {
     //              [stack] NEXT ITER OLDRESULT RESULT
     return false;
@@ -6258,9 +6290,8 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
   MOZ_ASSERT(this->stackDepth == startDepth);
+
   JumpList checkResult;
-  // ES 14.4.13, YieldExpression : yield * AssignmentExpression, step 5.b.ii.
-  //
   // Note that there is no GOSUB to the finally block here. If the iterator has
   // a "throw" method, it does not perform IteratorClose.
   if (!emitJump(JSOP_GOTO, &checkResult)) {
@@ -6279,7 +6310,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER RESULT EXCEPTION ITER
     return false;
   }
-  // ES 14.4.13, YieldExpression : yield * AssignmentExpression, step 5.b.iii.2
+  // Steps 7.b.iii.1-4.
   //
   // If the iterator does not have a "throw" method, it calls IteratorClose
   // and then throws a TypeError.
@@ -6287,6 +6318,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER RESULT EXCEPTION
     return false;
   }
+  // Steps 7.b.iii.5-6.
   if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_ITERATOR_NO_THROW)) {
     //              [stack] NEXT ITER RESULT EXCEPTION
     //              [stack] # throw
@@ -6303,7 +6335,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  // ES 14.4.13, yield * AssignmentExpression, step 5.c
+  // Step 7.c.i.
   //
   // Call iterator.return() for receiving a "forced return" completion from
   // the generator.
@@ -6318,7 +6350,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  // Step ii.
+  // Step 7.c.ii.
   //
   // Get the "return" method.
   if (!emitDupAt(3)) {
@@ -6334,7 +6366,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  // Step iii.
+  // Step 7.c.iii.
   //
   // Do nothing if "return" is undefined or null.
   InternalIfEmitter ifReturnMethodIsDefined(this);
@@ -6344,7 +6376,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  // Step iv.
+  // Step 7.c.iv.
   //
   // Call "return" with the argument passed to Generator.prototype.return,
   // which is currently in rval.value.
@@ -6360,16 +6392,19 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE RET ITER RVAL
     return false;
   }
-  if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) {
-    //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE RET ITER
-    //                    VALUE
-    return false;
+  if (needsIteratorResult) {
+    if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) {
+      //            [stack] NEXT ITER OLDRESULT FTYPE FVALUE RET ITER
+      //                  VALUE
+      return false;
+    }
   }
   if (!emitCall(JSOP_CALL, 1)) {
     //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE RESULT
     return false;
   }
 
+  // Step 7.c.v.
   if (iterKind == IteratorKind::Async) {
     if (!emitAwaitInInnermostScope()) {
       //            [stack] ... FTYPE FVALUE RESULT
@@ -6377,13 +6412,13 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     }
   }
 
-  // Step v.
+  // Step 7.c.vi.
   if (!emitCheckIsObj(CheckIsObjectKind::IteratorReturn)) {
     //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE RESULT
     return false;
   }
 
-  // Steps vi-viii.
+  // Steps 7.c.vii-x.
   //
   // Check if the returned object from iterator.return() is done. If not,
   // continuing yielding.
@@ -6404,18 +6439,19 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE VALUE
     return false;
   }
-
-  if (!emitPrepareIteratorResult()) {
-    //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE VALUE RESULT
-    return false;
-  }
-  if (!emit1(JSOP_SWAP)) {
-    //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE RESULT VALUE
-    return false;
-  }
-  if (!emitFinishIteratorResult(true)) {
-    //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE RESULT
-    return false;
+  if (needsIteratorResult) {
+    if (!emitPrepareIteratorResult()) {
+      //            [stack] NEXT ITER OLDRESULT FTYPE FVALUE VALUE RESULT
+      return false;
+    }
+    if (!emit1(JSOP_SWAP)) {
+      //            [stack] NEXT ITER OLDRESULT FTYPE FVALUE RESULT VALUE
+      return false;
+    }
+    if (!emitFinishIteratorResult(true)) {
+      //            [stack] NEXT ITER OLDRESULT FTYPE FVALUE RESULT
+      return false;
+    }
   }
   if (!emit1(JSOP_SETRVAL)) {
     //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE
@@ -6456,6 +6492,21 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER RESULT FTYPE FVALUE
     return false;
   }
+  if (iterKind == IteratorKind::Async) {
+    // Step 7.c.iii.2.
+    if (!emit1(JSOP_GETRVAL)) {
+      //            [stack] NEXT ITER RESULT FTYPE FVALUE RVAL
+      return false;
+    }
+    if (!emitAwaitInInnermostScope()) {
+      //            [stack] NEXT ITER RESULT FTYPE FVALUE NEWRVAL
+      return false;
+    }
+    if (!emit1(JSOP_SETRVAL)) {
+      //            [stack] NEXT ITER RESULT FTYPE FVALUE
+      return false;
+    }
+  }
   if (!ifReturnMethodIsDefined.emitEnd()) {
     return false;
   }
@@ -6470,6 +6521,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
 
   //                [stack] NEXT ITER RECEIVED
 
+  // Step 7.a.i.
   // After the try-catch-finally block: send the received value to the iterator.
   // result = iter.next(received)
   if (!emit2(JSOP_UNPICK, 2)) {
@@ -6489,19 +6541,23 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
+  // Step 7.a.ii.
   if (iterKind == IteratorKind::Async) {
     if (!emitAwaitInInnermostScope()) {
-      //            [stack] NEXT ITER RESULT RESULT
+      //            [stack] NEXT ITER RESULT
       return false;
     }
   }
 
+  // Step 7.a.iii.
   if (!emitCheckIsObj(CheckIsObjectKind::IteratorNext)) {
     //              [stack] NEXT ITER RESULT
     return false;
   }
   MOZ_ASSERT(this->stackDepth == startDepth);
 
+  // Steps 7.a.iv-v.
+  // Steps 7.b.ii.5-6.
   if (!emitJumpTargetAndPatch(checkResult)) {
     //              [stack] NEXT ITER RESULT
     //              [stack] # checkResult:
