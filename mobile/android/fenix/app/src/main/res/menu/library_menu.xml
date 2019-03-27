@@ -16,7 +16,7 @@
         android:id="@+id/libraryClose"
         android:icon="@drawable/ic_close"
         android:iconTint="?attr/iconColor"
-        android:title="@string/mozac_close_button_description"
+        android:title="@string/content_description_close_button"
         app:showAsAction="always"
         tools:targetApi="o" />
 </menu>

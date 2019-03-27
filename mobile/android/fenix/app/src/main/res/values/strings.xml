@@ -238,6 +238,8 @@
     <string name="settings_title">Settings</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
     <string name="content_description_history_menu">History item menu</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Close</string>
     <!-- About content. Sentences are separated by two new lines -->
     <string name="about_content">
         %1$s puts you in control.
