@@ -3567,12 +3567,9 @@ class Document : public nsINode,
    * This method is called when the initial translation
    * of the document is completed.
    *
-   * It unblocks the layout.
-   *
-   * This method is virtual so that XULDocument can
-   * override it.
+   * It unblocks the load event if translation was blocking it.
    */
-  virtual void InitialDocumentTranslationCompleted();
+  void InitialDocumentTranslationCompleted();
 
  protected:
   RefPtr<DocumentL10n> mDocumentL10n;

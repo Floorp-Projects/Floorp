@@ -3163,6 +3163,13 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
     // container is reached.
     mL10nResources.AppendElement(href);
 
+    if (!mPendingInitialTranslation) {
+      // Our initial translation is going to block layout start.  Make sure we
+      // don't fire the load event until after that stops happening and layout
+      // has a chance to start.
+      BlockOnload();
+    }
+
     mPendingInitialTranslation = true;
   }
 }
@@ -3217,6 +3224,13 @@ void Document::TriggerInitialDocumentTranslation() {
 }
 
 void Document::InitialDocumentTranslationCompleted() {
+  if (mPendingInitialTranslation) {
+    // This means we blocked the load event in LocalizationLinkAdded.  It's
+    // important that the load blocker removal here be async, because our caller
+    // will notify the content sink after us, and we want the content sync's
+    // work to happen before the load event fires.
+    UnblockOnload(/* aFireSync = */ false);
+  }
   mPendingInitialTranslation = false;
 }
 
