@@ -187,7 +187,7 @@ class ArtifactJob(object):
             elif self._symbols_archive_suffix and name.endswith(self._symbols_archive_suffix):
                 yield name
             else:
-                self.log(logging.DEBUG, 'artifact',
+                self.log(logging.INFO, 'artifact',
                          {'name': name},
                          'Not yielding artifact named {name} as a candidate artifact')
         if self._tests_re and not tests_artifact:
@@ -599,7 +599,7 @@ class CacheManager(object):
 
     def load_cache(self):
         if self._skip_cache:
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                 {},
                 'Skipping cache: ignoring load_cache!')
             return
@@ -619,7 +619,7 @@ class CacheManager(object):
 
     def dump_cache(self):
         if self._skip_cache:
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                 {},
                 'Skipping cache: ignoring dump_cache!')
             return
@@ -629,7 +629,7 @@ class CacheManager(object):
 
     def clear_cache(self):
         if self._skip_cache:
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                 {},
                 'Skipping cache: ignoring clear_cache!')
             return
@@ -839,7 +839,7 @@ class ArtifactCache(object):
 
         path = os.path.abspath(mozpath.join(self._cache_dir, fname))
         if self._skip_cache and os.path.exists(path):
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                 {'path': path},
                 'Skipping cache: removing cached downloaded artifact {path}')
             os.remove(path)
@@ -880,7 +880,7 @@ class ArtifactCache(object):
 
     def clear_cache(self):
         if self._skip_cache:
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                 {},
                 'Skipping cache: ignoring clear_cache!')
             return
@@ -1065,10 +1065,10 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
         nodes = [pair[1] for pair in sorted(pairs, reverse=True)]
 
         for node in nodes[:20]:
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                      {'node': node},
                      'hg suggested candidate revision: {node}')
-        self.log(logging.DEBUG, 'artifact',
+        self.log(logging.INFO, 'artifact',
                  {'remaining': max(0, len(nodes) - 20)},
                  'hg suggested candidate revision: and {remaining} more')
 
@@ -1128,7 +1128,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
         processed_filename = filename + PROCESSED_SUFFIX
 
         if self._skip_cache and os.path.exists(processed_filename):
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                 {'path': processed_filename},
                 'Skipping cache: removing cached processed artifact {path}')
             os.remove(processed_filename)
@@ -1190,7 +1190,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
             for trees, hg_hash in hg_pushheads:
                 for tree in trees:
                     count += 1
-                    self.log(logging.DEBUG, 'artifact',
+                    self.log(logging.INFO, 'artifact',
                              {'hg_hash': hg_hash,
                               'tree': tree},
                              'Trying to find artifacts for hg revision {hg_hash} on tree {tree}.')
