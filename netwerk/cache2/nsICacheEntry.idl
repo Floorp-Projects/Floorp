@@ -18,6 +18,20 @@ interface nsILoadContextInfo;
 [scriptable, uuid(607c2a2c-0a48-40b9-a956-8cf2bb9857cf)]
 interface nsICacheEntry : nsISupports
 {
+  const unsigned long CONTENT_TYPE_UNKNOWN = 0;
+  const unsigned long CONTENT_TYPE_OTHER = 1;
+  const unsigned long CONTENT_TYPE_JAVASCRIPT = 2;
+  const unsigned long CONTENT_TYPE_IMAGE = 3;
+  const unsigned long CONTENT_TYPE_MEDIA = 4;
+  const unsigned long CONTENT_TYPE_STYLESHEET = 5;
+  const unsigned long CONTENT_TYPE_WASM = 6;
+  /**
+   * Content type that is used internally to check whether the value parsed
+   * from disk is within allowed limits. Don't pass CONTENT_TYPE_LAST to
+   * setContentType method.
+   */
+  const unsigned long CONTENT_TYPE_LAST = 7;
+
   /**
    * Placeholder for the initial value of expiration time.
    */
@@ -79,6 +93,13 @@ interface nsICacheEntry : nsISupports
    * Set the network response times for onStartReqeust/onStopRequest (in ms).
    */
   void setNetworkTimes(in uint64_t onStartTime, in uint64_t onStopTime);
+
+  /**
+   * Set content type. Available types are defined at the begining of this file.
+   * The content type is used internally for cache partitioning and telemetry
+   * purposes so there is no getter.
+   */
+  void setContentType(in uint8_t contentType);
 
   /**
    * This method is intended to override the per-spec cache validation
