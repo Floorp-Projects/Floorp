@@ -1039,8 +1039,8 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(
     nsCOMPtr<nsIHandlerService> handlerSvc =
         do_GetService(NS_HANDLERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv) && handlerSvc) {
-      rv = handlerSvc->ExistsForProtocolOS(nsCString(aProtocolScheme),
-                                           aHandlerExists);
+      rv = handlerSvc->ExistsForProtocol(nsCString(aProtocolScheme),
+                                         aHandlerExists);
     }
   }
 
@@ -1324,10 +1324,8 @@ already_AddRefed<nsMIMEInfoBase> nsOSHelperAppService::GetFromType(
   return mimeInfo.forget();
 }
 
-nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
-                                                 const nsACString& aFileExt,
-                                                 bool* aFound,
-                                                 nsIMIMEInfo** aMIMEInfo) {
+already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(
+    const nsACString& aType, const nsACString& aFileExt, bool* aFound) {
   *aFound = true;
   RefPtr<nsMIMEInfoBase> retval;
   // Fallback to lookup by extension when generic 'application/octet-stream'
@@ -1341,18 +1339,14 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
     RefPtr<nsMIMEInfoBase> miByExt =
         GetFromExtension(PromiseFlatCString(aFileExt));
     // If we had no extension match, but a type match, use that
-    if (!miByExt && retval) {
-      retval.forget(aMIMEInfo);
-      return NS_OK;
-    }
+    if (!miByExt && retval) return retval.forget();
     // If we had an extension match but no type match, set the mimetype and use
     // it
     if (!retval && miByExt) {
       if (!aType.IsEmpty()) miByExt->SetMIMEType(aType);
       miByExt.swap(retval);
 
-      retval.forget(aMIMEInfo);
-      return NS_OK;
+      return retval.forget();
     }
     // If we got nothing, make a new mimeinfo
     if (!retval) {
@@ -1362,8 +1356,7 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
         if (!aFileExt.IsEmpty()) retval->AppendExtension(aFileExt);
       }
 
-      retval.forget(aMIMEInfo);
-      return NS_OK;
+      return retval.forget();
     }
 
     // Copy the attributes of retval (mimeinfo from type) onto miByExt, to
@@ -1376,8 +1369,7 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
 
     miByExt.swap(retval);
   }
-  retval.forget(aMIMEInfo);
-  return NS_OK;
+  return retval.forget();
 }
 
 NS_IMETHODIMP

@@ -29,9 +29,9 @@ class nsOSHelperAppService final : public nsExternalHelperAppService {
   NS_IMETHOD GetFromTypeAndExtension(const nsACString& aType,
                                      const nsACString& aFileExt,
                                      nsIMIMEInfo** aMIMEInfo);
-  NS_IMETHOD GetMIMEInfoFromOS(const nsACString& aMIMEType,
-                               const nsACString& aFileExt, bool* aFound,
-                               nsIMIMEInfo** aMIMEInfo) override;
+  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType,
+                                                  const nsACString& aFileExt,
+                                                  bool* aFound);
   NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString& aScheme,
                                           bool* found,
                                           nsIHandlerInfo** _retval);
@@ -45,8 +45,7 @@ class nsOSHelperAppService final : public nsExternalHelperAppService {
   virtual nsresult GetFileTokenForPath(const char16_t* platformAppPath,
                                        nsIFile** aFile);
 
-  nsresult OSProtocolHandlerExists(const char* aScheme,
-                                   bool* aHandlerExists) override;
+  nsresult OSProtocolHandlerExists(const char* aScheme, bool* aHandlerExists);
 };
 
 #endif  // nsOSHelperAppService_h__
