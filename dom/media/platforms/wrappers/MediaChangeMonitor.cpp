@@ -51,14 +51,17 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
                          RESULT_DETAIL("Invalid H264 content"));
     }
 
-    RefPtr<MediaByteBuffer> extra_data =
-        aSample->mKeyframe ? H264::ExtractExtraData(aSample) : nullptr;
+    RefPtr<MediaByteBuffer> extra_data = aSample->mKeyframe || !mGotSPS
+                                             ? H264::ExtractExtraData(aSample)
+                                             : nullptr;
 
     if (!H264::HasSPS(extra_data) && !H264::HasSPS(mCurrentConfig.mExtraData)) {
       // We don't have inband data and the original config didn't contain a SPS.
       // We can't decode this content.
       return NS_ERROR_NOT_INITIALIZED;
     }
+
+    mGotSPS = true;
 
     if (!H264::HasSPS(extra_data)) {
       // This sample doesn't contain inband SPS/PPS
@@ -131,6 +134,7 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
 
   VideoInfo mCurrentConfig;
   uint32_t mStreamID = 0;
+  bool mGotSPS = false;
   RefPtr<TrackInfoSharedPtr> mTrackInfo;
   RefPtr<MediaByteBuffer> mPreviousExtraData;
 };
@@ -271,8 +275,8 @@ RefPtr<MediaDataDecoder::DecodePromise> MediaChangeMonitor::Decode(
 
     if (rv == NS_ERROR_NOT_INITIALIZED) {
       // We are missing the required init data to create the decoder.
-      // Ignore for the time being, the MediaRawData will be dropped.
-      return DecodePromise::CreateAndResolve(DecodedData(), __func__);
+      // This frame can't be decoded and should be treated as an error.
+      return DecodePromise::CreateAndReject(rv, __func__);
     }
     if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {
       // The decoder is pending initialization.
@@ -512,7 +516,10 @@ bool MediaChangeMonitor::CanRecycleDecoder() const {
 void MediaChangeMonitor::DecodeFirstSample(MediaRawData* aSample) {
   AssertOnTaskQueue();
 
-  if (mNeedKeyframe && !aSample->mKeyframe) {
+  // We feed all the data to AnnexB decoder as a non-keyframe could contain
+  // the SPS/PPS when used with WebRTC and this data is needed by the decoder.
+  if (mNeedKeyframe && !aSample->mKeyframe &&
+      *mConversionRequired != ConversionRequired::kNeedAnnexB) {
     mDecodePromise.Resolve(std::move(mPendingFrames), __func__);
     mPendingFrames = DecodedData();
     return;
@@ -526,7 +533,9 @@ void MediaChangeMonitor::DecodeFirstSample(MediaRawData* aSample) {
     return;
   }
 
-  mNeedKeyframe = false;
+  if (aSample->mKeyframe) {
+    mNeedKeyframe = false;
+  }
 
   RefPtr<MediaChangeMonitor> self = this;
   mDecoder->Decode(aSample)
