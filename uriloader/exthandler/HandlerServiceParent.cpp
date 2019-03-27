@@ -243,6 +243,12 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvGetMIMEInfoFromOS(
     const nsCString& aMIMEType, const nsCString& aExtension, nsresult* aRv,
     HandlerInfo* aHandlerInfoData, bool* aFound) {
   *aFound = false;
+  if (aMIMEType.Length() > MAX_MIMETYPE_LENGTH ||
+      aExtension.Length() > MAX_EXT_LENGTH) {
+    *aRv = NS_OK;
+    return IPC_OK();
+  }
+
   nsCOMPtr<nsIMIMEService> mimeService =
       do_GetService(NS_MIMESERVICE_CONTRACTID, aRv);
   if (NS_WARN_IF(NS_FAILED(*aRv))) {
@@ -275,6 +281,10 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvExists(
 
 mozilla::ipc::IPCResult HandlerServiceParent::RecvExistsForProtocolOS(
     const nsCString& aProtocolScheme, bool* aHandlerExists) {
+  if (aProtocolScheme.Length() > MAX_SCHEME_LENGTH) {
+    *aHandlerExists = false;
+    return IPC_OK();
+  }
 #ifdef MOZ_WIDGET_GTK
   // Check the GNOME registry for a protocol handler
   *aHandlerExists = nsGNOMERegistry::HandlerExists(aProtocolScheme.get());
@@ -290,6 +300,10 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvExistsForProtocolOS(
  */
 mozilla::ipc::IPCResult HandlerServiceParent::RecvExistsForProtocol(
     const nsCString& aProtocolScheme, bool* aHandlerExists) {
+  if (aProtocolScheme.Length() > MAX_SCHEME_LENGTH) {
+    *aHandlerExists = false;
+    return IPC_OK();
+  }
 #if defined(XP_MACOSX)
   // Check the datastore and fallback to an OS check.
   // ExternalProcotolHandlerExists() does the fallback.
@@ -315,6 +329,10 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvExistsForProtocol(
 
 mozilla::ipc::IPCResult HandlerServiceParent::RecvGetTypeFromExtension(
     const nsCString& aFileExtension, nsCString* type) {
+  if (aFileExtension.Length() > MAX_EXT_LENGTH) {
+    return IPC_OK();
+  }
+
   nsresult rv;
   nsCOMPtr<nsIHandlerService> handlerSvc =
       do_GetService(NS_HANDLERSERVICE_CONTRACTID, &rv);
@@ -330,6 +348,10 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvGetTypeFromExtension(
 
 mozilla::ipc::IPCResult HandlerServiceParent::RecvGetApplicationDescription(
     const nsCString& aScheme, nsresult* aRv, nsString* aDescription) {
+  if (aScheme.Length() > MAX_SCHEME_LENGTH) {
+    *aRv = NS_ERROR_NOT_AVAILABLE;
+    return IPC_OK();
+  }
   nsCOMPtr<nsIExternalProtocolService> protoSvc =
       do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
   NS_ASSERTION(protoSvc, "No Helper App Service!");
