@@ -41,10 +41,12 @@ function commonDialogOnLoad() {
     document.getElementById("filler").maxWidth = screen.availWidth;
 
     Dialog = new CommonDialog(args, ui);
-    Dialog.onLoad(dialog);
-
+    document.addEventListener("dialogaccept", function() { Dialog.onButton0(); });
+    document.addEventListener("dialogcancel", function() { Dialog.onButton1(); });
     document.addEventListener("dialogextra1", function() { Dialog.onButton2(); window.close(); });
     document.addEventListener("dialogextra2", function() { Dialog.onButton3(); window.close(); });
+    Dialog.onLoad(dialog);
+
     // resize the window to the content
     window.sizeToContent();
     window.getAttention();

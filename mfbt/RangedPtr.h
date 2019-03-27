@@ -17,6 +17,7 @@
 #include "mozilla/Attributes.h"
 
 #include <stdint.h>
+#include <cstddef>
 
 namespace mozilla {
 
@@ -245,6 +246,9 @@ class RangedPtr {
   bool operator!=(const U* u) const {
     return !(*this == u);
   }
+
+  bool operator==(std::nullptr_t) const { return mPtr == nullptr; }
+  bool operator!=(std::nullptr_t) const { return mPtr != nullptr; }
 
   template <typename U>
   bool operator<(const RangedPtr<U>& aOther) const {

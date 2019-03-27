@@ -2457,10 +2457,21 @@ void nsPIDOMWindowInner::SetAudioCapture(bool aCapture) {
   }
 }
 
-void nsPIDOMWindowInner::SetActiveLoadingState(bool aIsLoading) /* const? */ {
+void nsPIDOMWindowInner::SetActiveLoadingState(bool aIsLoading) {
   if (!nsGlobalWindowInner::Cast(this)->IsChromeWindow()) {
     mTimeoutManager->SetLoading(aIsLoading);
   }
+
+  if (!aIsLoading) {
+    for (uint32_t i = 0; i < mAfterLoadRunners.Length(); ++i) {
+      NS_DispatchToCurrentThread(mAfterLoadRunners[i].forget());
+    }
+    mAfterLoadRunners.Clear();
+  }
+}
+
+void nsPIDOMWindowInner::AddAfterLoadRunner(nsIRunnable* aRunner) {
+  mAfterLoadRunners.AppendElement(aRunner);
 }
 
 // nsISpeechSynthesisGetter

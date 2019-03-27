@@ -412,6 +412,9 @@ nsUnknownContentTypeDialog.prototype = {
     // Put file name in window title.
     var suggestedFileName = this.mLauncher.suggestedFileName;
 
+    this.mDialog.document.addEventListener("dialogaccept", this);
+    this.mDialog.document.addEventListener("dialogcancel", this);
+
     // Some URIs do not implement nsIURL, so we can't just QI.
     var url = this.mLauncher.source;
     if (url instanceof Ci.nsINestedURI)
@@ -843,7 +846,7 @@ nsUnknownContentTypeDialog.prototype = {
   },
 
   // onOK:
-  onOK() {
+  onOK(aEvent) {
     // Verify typed app path, if necessary.
     if (this.useOtherHandler) {
       var helperApp = this.helperAppChoice();
@@ -862,7 +865,7 @@ nsUnknownContentTypeDialog.prototype = {
         this.chosenApp = null;
 
         // Leave dialog up.
-        return false;
+        aEvent.preventDefault();
       }
     }
 
@@ -915,12 +918,7 @@ nsUnknownContentTypeDialog.prototype = {
       if (needUpdate && this.mLauncher.MIMEInfo.MIMEType != "application/octet-stream")
         this.updateHelperAppPref();
     } catch (e) { }
-
-    // Unhook dialog from this object.
-    this.mDialog.dialog = null;
-
-    // Close up dialog by returning true.
-    return true;
+    this.onUnload();
   },
 
   // onCancel:
@@ -933,12 +931,26 @@ nsUnknownContentTypeDialog.prototype = {
       this.mLauncher.cancel(Cr.NS_BINDING_ABORTED);
     } catch (exception) {
     }
+    this.onUnload();
+  },
+
+  onUnload() {
+    this.mDialog.document.removeEventListener("dialogaccept", this);
+    this.mDialog.document.removeEventListener("dialogcancel", this);
 
     // Unhook dialog from this object.
     this.mDialog.dialog = null;
+  },
 
-    // Close up dialog by returning true.
-    return true;
+  handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "dialogaccept":
+        this.onOK(aEvent);
+        break;
+      case "dialogcancel":
+        this.onCancel();
+        break;
+    }
   },
 
   // dialogElement:  Convenience.

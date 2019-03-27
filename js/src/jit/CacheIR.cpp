@@ -2316,7 +2316,7 @@ bool GetPropIRGenerator::tryAttachGenericElement(HandleObject obj,
   }
 
   // To allow other types to attach in the non-megamorphic case we test the
-  // specific matching native reciever; however, once megamorphic we can attach
+  // specific matching native receiver; however, once megamorphic we can attach
   // for any native
   if (mode_ == ICState::Mode::Megamorphic) {
     writer.guardIsNativeObject(objId);
@@ -3387,7 +3387,9 @@ bool SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
     return false;
   }
 
-  if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp) {
+  // Don't attach a megamorphic store slot stub for ops like JSOP_INITELEM.
+  if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp &&
+      IsPropertySetOp(JSOp(*pc_))) {
     writer.megamorphicStoreSlot(objId, JSID_TO_ATOM(id)->asPropertyName(),
                                 rhsId, typeCheckInfo_.needsTypeBarrier());
     writer.returnFromIC();
@@ -5463,8 +5465,6 @@ CompareIRGenerator::CompareIRGenerator(JSContext* cx, HandleScript script,
 
 bool CompareIRGenerator::tryAttachString(ValOperandId lhsId,
                                          ValOperandId rhsId) {
-  MOZ_ASSERT(IsEqualityOp(op_));
-
   if (!lhsVal_.isString() || !rhsVal_.isString()) {
     return false;
   }
@@ -5740,8 +5740,7 @@ bool CompareIRGenerator::tryAttachStringNumber(ValOperandId lhsId,
 
 bool CompareIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
-  MOZ_ASSERT(IsEqualityOp(op_) || op_ == JSOP_LE || op_ == JSOP_LT ||
-             op_ == JSOP_GE || op_ == JSOP_GT);
+  MOZ_ASSERT(IsEqualityOp(op_) || IsRelationalOp(op_));
 
   AutoAssertNoPendingException aanpe(cx_);
 
@@ -5760,9 +5759,6 @@ bool CompareIRGenerator::tryAttachStub() {
   // - {Bool} x {Double}.
   // - {Object} x {String, Symbol, Bool, Number}.
   if (IsEqualityOp(op_)) {
-    if (tryAttachString(lhsId, rhsId)) {
-      return true;
-    }
     if (tryAttachObject(lhsId, rhsId)) {
       return true;
     }
@@ -5807,6 +5803,9 @@ bool CompareIRGenerator::tryAttachStub() {
     return true;
   }
   if (tryAttachNumber(lhsId, rhsId)) {
+    return true;
+  }
+  if (tryAttachString(lhsId, rhsId)) {
     return true;
   }
 

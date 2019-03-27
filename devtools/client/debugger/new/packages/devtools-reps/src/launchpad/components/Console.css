@@ -27,7 +27,7 @@ main {
   padding: 0.5rem;
 }
 
-.rep-input:before {
+.rep-input::before {
   content: "➜ ";
 }
 
@@ -48,7 +48,7 @@ main {
 }
 
 .rep-element[data-mode]::before {
-  content: attr(data-mode)":";
+  content: attr(data-mode) ":";
   background-color: var(--theme-toolbar-background);
   font-family: monospace;
   display: inline-block;
@@ -73,7 +73,7 @@ main {
 .packet header .copy-label {
   margin: 0 0.5em;
   padding-inline-start: 0.5em;
-  border-inline-start: 1px solid rgba(0,0,0, 0.2);
+  border-inline-start: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .packet header.packet-expanded::before {

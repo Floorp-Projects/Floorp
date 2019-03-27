@@ -158,6 +158,7 @@
     <radiogroup id="DnsOverHttpsUrlRadioGroup" orient="vertical">
       <radio id="defaultDnsOverHttpsUrlRadio"
              data-l10n-id="connection-dns-over-https-url-default"
+             data-l10n-args='{"url":""}'
              preference="network.trr.uri"
              oncommand="gConnectionsDialog.updateDnsOverHttpsUI();"/>
       <hbox>

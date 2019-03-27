@@ -26,7 +26,6 @@
 #endif
         buttonlabelaccept="&setDesktopBackground.title;"
         onload="gSetBackground.load();"
-        ondialogaccept="gSetBackground.setDesktopBackground();"
         title="&setDesktopBackground.title;"
         style="width: 30em;">
 

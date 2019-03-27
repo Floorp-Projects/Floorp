@@ -38,6 +38,8 @@ var gSanitizePromptDialog = {
     let OKButton = document.documentElement.getButton("accept");
     document.l10n.setAttributes(OKButton, "sanitize-button-ok");
 
+    document.addEventListener("dialogaccept", function(e) { gSanitizePromptDialog.sanitize(e); });
+
     if (this.selectedTimespan === Sanitizer.TIMESPAN_EVERYTHING) {
       this.prepareWarning();
       this.warningBox.hidden = false;
@@ -91,7 +93,7 @@ var gSanitizePromptDialog = {
     document.l10n.setAttributes(document.documentElement, "dialog-title");
   },
 
-  sanitize() {
+  sanitize(event) {
     // Update pref values before handing off to the sanitizer (bug 453440)
     this.updatePrefs();
 
@@ -115,10 +117,9 @@ var gSanitizePromptDialog = {
         .catch(Cu.reportError)
         .then(() => window.close())
         .catch(Cu.reportError);
-      return false;
+      event.preventDefault();
     } catch (er) {
       Cu.reportError("Exception during sanitize: " + er);
-      return true; // We *do* want to close immediately on error.
     }
   },
 

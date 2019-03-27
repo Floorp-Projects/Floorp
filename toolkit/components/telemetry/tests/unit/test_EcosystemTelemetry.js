@@ -27,12 +27,14 @@ function checkPingStructure(ping, type, reason) {
 
   // Check that the environment is indeed minimal
   const ALLOWED_ENVIRONMENT_KEYS = ["settings", "system", "profile"];
-  Assert.deepEqual(ALLOWED_ENVIRONMENT_KEYS, Object.keys(environment), "Environment should only contain limited set of keys.");
+  Assert.deepEqual(ALLOWED_ENVIRONMENT_KEYS, Object.keys(environment), "Environment should only contain a limited set of keys.");
 
   // Check that fields of the environment are indeed minimal
   Assert.deepEqual(["locale"], Object.keys(environment.settings), "Settings environment should only contain locale");
   Assert.deepEqual(["cpu", "memoryMB", "os"], Object.keys(environment.system).sort(),
-    "System environment should contain limit set of keys");
+    "System environment should contain a limited set of keys");
+  Assert.deepEqual(["locale", "name", "version"], Object.keys(environment.system.os).sort(),
+    "system.environment.os should contain a limited set of keys");
 
   // Check the payload for required fields.
   let payload = ping.payload;

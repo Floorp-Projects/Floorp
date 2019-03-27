@@ -8,7 +8,7 @@ exports[`Editor When empty should render 1`] = `
     className="editor-mount devtools-monospace"
     style={
       Object {
-        "height": "calc(100% - var(--editor-footer-height))",
+        "height": "100%",
       }
     }
   />

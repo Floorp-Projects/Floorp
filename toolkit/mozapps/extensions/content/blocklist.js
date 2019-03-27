@@ -18,6 +18,9 @@ function init() {
   var hasSoftBlocks = false;
   gArgs = window.arguments[0].wrappedJSObject;
 
+  document.addEventListener("dialogaccept", function() { finish(true); });
+  document.addEventListener("dialogcancel", function() { finish(false); });
+
   // NOTE: We use strings from the "updates.properties" bundleset to change the
   // text on the "Cancel" button to "Restart Later". (bug 523784)
   let bundle = Services.strings.
@@ -95,5 +98,4 @@ function finish(shouldRestartNow) {
     if (!list[i].blocked)
       list[i].disable = items[i].querySelector(".disableCheckbox").checked;
   }
-  return true;
 }

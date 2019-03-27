@@ -27,7 +27,7 @@
   color: var(--theme-body-color);
 }
 
-.tree.object-inspector .block .object-label:before {
+.tree.object-inspector .block .object-label::before {
   content: "☲ ";
   font-size: 1.1em;
 }

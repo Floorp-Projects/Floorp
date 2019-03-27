@@ -48,8 +48,8 @@
   }
 
   function testMixin() {
-    ok(MozElementMixin, "Mixin exists");
-    let MixedHTMLElement = MozElementMixin(HTMLElement);
+    ok(MozElements.MozElementMixin, "Mixin exists");
+    let MixedHTMLElement = MozElements.MozElementMixin(HTMLElement);
     ok(MixedHTMLElement.insertFTLIfNeeded, "Mixed in class contains helper functions");
   }
 
@@ -60,9 +60,9 @@
   }
 
   function testBaseControlMixin() {
-    ok(BaseControlMixin, "Mixin exists");
-    let MixedHTMLSpanElement = MozElementMixin(HTMLSpanElement);
-    let HTMLSpanBaseControl = BaseControlMixin(MixedHTMLSpanElement);
+    ok(MozElements.BaseControlMixin, "Mixin exists");
+    let MixedHTMLSpanElement = MozElements.MozElementMixin(HTMLSpanElement);
+    let HTMLSpanBaseControl = MozElements.BaseControlMixin(MixedHTMLSpanElement);
     ok("disabled" in HTMLSpanBaseControl.prototype, "Mixed in class prototype contains base control attributes");
   }
 

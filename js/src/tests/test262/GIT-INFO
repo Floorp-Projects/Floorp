@@ -1,5 +1,7 @@
-commit c822f4c92914333d197191b2b3dec4e923acb4a3
-Author: André Bargull <andre.bargull@gmail.com>
-Date:   Wed Mar 6 09:24:44 2019 -0800
+commit e227f54d01d29629d1f889118e8d3442c8640625
+Author: Leo Balter <leonardo.balter@gmail.com>
+Date:   Wed Mar 6 12:39:58 2019 -0500
 
-    Fix existing linting errors, update error phase, and add a new flags linter (#2086)
+    Fix assertions previously not reached before
+    
+    Fix #2049

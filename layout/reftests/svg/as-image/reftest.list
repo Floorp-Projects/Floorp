@@ -111,7 +111,7 @@ random == img-and-image-1.html img-and-image-1-ref.svg # bug 645267
 
 # More complex <img> tests
 == img-blobURI-1.html lime100x100-ref.html
-== img-blobURI-2.html lime100x100-ref.html
+skip-if(webrender) == img-blobURI-2.html lime100x100-ref.html
 fuzzy-if(d2d,0-16,0-10) == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html # d2d is bug 1074161
 == img-display-none-1.html about:blank
 == img-dyn-1.html img-dyn-1-ref.html

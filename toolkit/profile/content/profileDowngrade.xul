@@ -25,7 +25,6 @@
 #else
         buttonlabelaccept="&window.quit-nonwin;"
 #endif
-        ondialogaccept="quit()" ondialogcancel="quit()"
         buttons="accept,extra1" buttonpack="end">
 
   <script type="application/javascript" src="profileDowngrade.js"/>

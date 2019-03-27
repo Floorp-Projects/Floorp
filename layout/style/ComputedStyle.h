@@ -34,8 +34,6 @@ class nsWindowSizes;
 #undef STYLE_STRUCT
 
 extern "C" {
-void Servo_ComputedStyle_AddRef(const mozilla::ComputedStyle* aStyle);
-void Servo_ComputedStyle_Release(const mozilla::ComputedStyle* aStyle);
 void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle*);
 }
 
@@ -90,9 +88,6 @@ class ComputedStyle {
                 ServoComputedDataForgotten aComputedValues);
 
   Bit Bits() const { return static_cast<Bit>(mSource.flags.mFlags); }
-
-  void AddRef() { Servo_ComputedStyle_AddRef(this); }
-  void Release() { Servo_ComputedStyle_Release(this); }
 
   // Return the ComputedStyle whose style data should be used for the R,
   // G, and B components of color, background-color, and border-*-color

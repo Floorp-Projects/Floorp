@@ -23,7 +23,10 @@ function init() {
   }
 
   document.addEventListener("dialogextra1", createProfile);
+  document.addEventListener("dialogaccept", quit);
+  document.addEventListener("dialogcancel", quit);
 }
+
 function quit() {
   gParams.SetInt(1, Ci.nsIToolkitProfileService.quit);
 }

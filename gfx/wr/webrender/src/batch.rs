@@ -975,7 +975,7 @@ impl AlphaBatchBuilder {
                     PrimitiveInstanceData::from(instance),
                 );
             }
-            PrimitiveInstanceKind::Picture { pic_index, .. } => {
+            PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, .. } => {
                 let picture = &ctx.prim_store.pictures[pic_index.0];
                 let non_segmented_blend_mode = BlendMode::PremultipliedAlpha;
                 let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
@@ -1585,39 +1585,69 @@ impl AlphaBatchBuilder {
                                     .as_ref()
                                     .expect("bug: surface must be allocated by now");
                                 let cache_task_id = surface.resolve_render_task_id();
-                                let kind = BatchKind::Brush(
-                                    BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
-                                );
-                                let key = BatchKey::new(
-                                    kind,
-                                    non_segmented_blend_mode,
-                                    BatchTextures::render_target_cache(),
-                                );
-
                                 let uv_rect_address = render_tasks[cache_task_id]
                                     .get_texture_address(gpu_cache)
                                     .as_int();
-                                let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                    ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                                    RasterizationSpace::Screen as i32,
-                                    get_shader_opacity(1.0),
-                                    0,
-                                ]);
+                                let batch_params = BrushBatchParameters::shared(
+                                    BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
+                                    BatchTextures::render_target_cache(),
+                                    [
+                                        ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
+                                        RasterizationSpace::Screen as i32,
+                                        get_shader_opacity(1.0),
+                                        0,
+                                    ],
+                                    uv_rect_address,
+                                );
 
-                                let instance = BrushInstance {
-                                    prim_header_index,
-                                    clip_task_address,
-                                    segment_index: INVALID_SEGMENT_INDEX,
-                                    edge_flags: EdgeAaSegmentMask::empty(),
-                                    brush_flags,
-                                    user_data: uv_rect_address,
+                                let is_segmented =
+                                    segment_instance_index != SegmentInstanceIndex::INVALID &&
+                                    segment_instance_index != SegmentInstanceIndex::UNUSED;
+
+                                let (prim_cache_address, segments) = if is_segmented {
+                                    let segment_instance = &ctx.scratch.segment_instances[segment_instance_index];
+                                    let segments = Some(&ctx.scratch.segments[segment_instance.segments_range]);
+                                    (gpu_cache.get_address(&segment_instance.gpu_cache_handle), segments)
+                                } else {
+                                    (prim_cache_address, None)
                                 };
 
-                                self.current_batch_list().push_single_instance(
-                                    key,
-                                    bounding_rect,
+                                let prim_header = PrimitiveHeader {
+                                    local_rect: picture.local_rect,
+                                    local_clip_rect: prim_info.combined_local_clip_rect,
+                                    task_address,
+                                    specific_prim_address: prim_cache_address,
+                                    transform_id,
+                                };
+
+                                let prim_header_index = prim_headers.push(
+                                    &prim_header,
                                     z_id,
-                                    PrimitiveInstanceData::from(instance),
+                                    batch_params.prim_user_data,
+                                );
+
+                                // TODO(gw): As before, all pictures that get blitted are assumed
+                                //           to have alpha. However, we could determine (at least for
+                                //           simple, common cases) if the picture content is opaque.
+                                //           That would allow inner segments of pictures to be drawn
+                                //           with blend disabled, which is a big performance win on
+                                //           integrated GPUs.
+                                let opacity = PrimitiveOpacity::translucent();
+                                let specified_blend_mode = BlendMode::PremultipliedAlpha;
+
+                                self.add_segmented_prim_to_batch(
+                                    segments,
+                                    opacity,
+                                    &batch_params,
+                                    specified_blend_mode,
+                                    non_segmented_blend_mode,
+                                    prim_header_index,
+                                    bounding_rect,
+                                    transform_kind,
+                                    render_tasks,
+                                    z_id,
+                                    prim_info.clip_task_index,
+                                    ctx,
                                 );
                             }
                         }

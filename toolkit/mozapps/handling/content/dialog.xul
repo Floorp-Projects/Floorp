@@ -9,7 +9,6 @@
 <!DOCTYPE dialog SYSTEM "chrome://mozapps/locale/handling/handling.dtd">
 
 <dialog id="handling"
-        ondialogaccept="return dialog.onAccept();"
         onload="dialog.initialize();"
         style="min-width: &window.emWidth;; min-height: &window.emHeight;;"
         persist="width height screenX screenY"

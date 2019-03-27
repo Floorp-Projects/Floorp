@@ -43,7 +43,7 @@ already_AddRefed<XMLHttpRequest> XMLHttpRequest::Constructor(
     }
 
     RefPtr<XMLHttpRequestMainThread> req = new XMLHttpRequestMainThread();
-    req->Construct(principal->GetPrincipal(), global, cookieSettings);
+    req->Construct(principal->GetPrincipal(), global, cookieSettings, false);
     req->InitParameters(aParams.mMozAnon, aParams.mMozSystem);
     return req.forget();
   }

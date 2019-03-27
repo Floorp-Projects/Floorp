@@ -165,7 +165,7 @@ bool SharedMemory::Map(size_t bytes, void* fixed_address) {
       mmap(fixed_address, bytes, PROT_READ | (read_only_ ? 0 : PROT_WRITE),
            MAP_SHARED, mapped_file_, 0);
 
-  bool mmap_succeeded = (memory_ != (void*)-1);
+  bool mmap_succeeded = memory_ != MAP_FAILED;
 
   DCHECK(mmap_succeeded) << "Call to mmap failed, errno=" << errno;
 

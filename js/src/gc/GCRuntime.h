@@ -330,7 +330,9 @@ class GCRuntime {
   void disallowIncrementalGC() { incrementalAllowed = false; }
 
   bool isIncrementalGCEnabled() const {
-    return mode == JSGC_MODE_INCREMENTAL && incrementalAllowed;
+    return (mode == JSGC_MODE_INCREMENTAL ||
+            mode == JSGC_MODE_ZONE_INCREMENTAL) &&
+           incrementalAllowed;
   }
   bool isIncrementalGCInProgress() const { return state() != State::NotActive; }
 

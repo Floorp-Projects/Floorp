@@ -6,7 +6,7 @@
   position: absolute;
   top: var(--editor-header-height);
   left: 0;
-  bottom: 1px;
+  bottom: var(--editor-footer-height);
   width: calc(100% - 1px);
   padding: 50px 0 0 0;
   text-align: center;
@@ -18,14 +18,6 @@
 
 .theme-dark .welcomebox {
   background-color: var(--theme-body-background);
-}
-
-.welcomebox .command-bar-button {
-  position: absolute;
-  top: auto;
-  inset-inline-end: 0;
-  inset-inline-start: auto;
-  bottom: 0;
 }
 
 .alignlabel {
@@ -88,8 +80,4 @@
 .shortcutFunction .shortcutLabel {
   padding: 10px 5px;
   display: table-cell;
-}
-
-html .welcomebox .toggle-button-end.collapsed {
-  bottom: 1px;
 }

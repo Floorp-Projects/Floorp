@@ -444,6 +444,7 @@ struct DisallowRefPtrTArrayElement {
 
 struct AllowConstexprMembers {
   static constexpr RefCountedBase* mRefCounted = nullptr;
+  static constexpr RefCountedBase* mRefCounted2 = nullptr;
   MOZ_CAN_RUN_SCRIPT void foo() {
     mRefCounted->method_test();
   }
@@ -465,4 +466,96 @@ MOZ_CAN_RUN_SCRIPT void test_constexpr_2() {
 
 MOZ_CAN_RUN_SCRIPT void test_constexpr_3() {
   test_ref(*AllowConstexprMembers::mRefCounted);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_1(RefCountedBase* arg1, RefCountedBase* arg2) {
+  (arg1 ? arg1 : arg2)->method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_2(RefCountedBase* arg1, RefCountedBase* arg2) {
+  test2(arg1 ? arg1 : arg2);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_3(RefCountedBase* arg1, RefCountedBase& arg2) {
+  (arg1 ? *arg1 : arg2).method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_4(RefCountedBase* arg1, RefCountedBase& arg2) {
+  test_ref(arg1 ? *arg1 : arg2);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_5(RefCountedBase* arg) {
+  RefPtr<RefCountedBase> local = new RefCountedBase();
+  (arg ? arg : local.get())->method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_6(RefCountedBase* arg) {
+  RefPtr<RefCountedBase> local = new RefCountedBase();
+  test2(arg ? arg : local.get());
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_7(RefCountedBase* arg) {
+  RefPtr<RefCountedBase> local = new RefCountedBase();
+  (arg ? *arg : *local).method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_8(RefCountedBase* arg) {
+  RefPtr<RefCountedBase> local = new RefCountedBase();
+  test_ref(arg ? *arg : *local);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_9(RefCountedBase* arg) {
+  (arg ? arg : AllowConstexprMembers::mRefCounted)->method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_10(RefCountedBase* arg) {
+  test2(arg ? arg : AllowConstexprMembers::mRefCounted);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_11(RefCountedBase* arg) {
+  (arg ? *arg : *AllowConstexprMembers::mRefCounted).method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_12(RefCountedBase* arg) {
+  test_ref(arg ? *arg : *AllowConstexprMembers::mRefCounted);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_13(RefCountedBase* arg1, RefCountedBase& arg2) {
+  (arg1 ? arg1 : &arg2)->method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_44(RefCountedBase* arg1, RefCountedBase& arg2) {
+  test2(arg1 ? arg1 : &arg2);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_13(bool arg) {
+  (arg ?
+   AllowConstexprMembers::mRefCounted :
+   AllowConstexprMembers::mRefCounted2)->method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_14(bool arg) {
+  test2(arg ?
+	AllowConstexprMembers::mRefCounted :
+	AllowConstexprMembers::mRefCounted2);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_15(bool arg) {
+  (arg ?
+   *AllowConstexprMembers::mRefCounted :
+   *AllowConstexprMembers::mRefCounted2).method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ternary_16(bool arg) {
+  test_ref(arg ?
+	   *AllowConstexprMembers::mRefCounted :
+	   *AllowConstexprMembers::mRefCounted2);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_pointer_to_ref_1(RefCountedBase& arg) {
+  (&arg)->method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_pointer_to_ref_2(RefCountedBase& arg) {
+  test2(&arg);
 }

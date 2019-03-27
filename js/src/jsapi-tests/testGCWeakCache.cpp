@@ -213,7 +213,7 @@ struct MovableCellHasher<NumberAndObjectEntry> {
 BEGIN_TEST(testIncrementalWeakCacheSweeping) {
   AutoLeaveZeal nozeal(cx);
 
-  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_INCREMENTAL);
+  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE_INCREMENTAL);
   JS_SetGCZeal(cx, 17, 1000000);
 
   CHECK(TestSet());

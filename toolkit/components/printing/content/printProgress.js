@@ -182,6 +182,7 @@ function onLoad() {
     // Fill dialog.
     loadDialog();
 
+    document.addEventListener("dialogcancel", onCancel);
     // set our web progress listener on the helper app launcher
     printProgress.registerListener(progressListener);
     // We need to delay the set title else dom will overwrite it
@@ -197,15 +198,12 @@ function onUnload() {
   }
 }
 
-// If the user presses cancel, tell the app launcher and close the dialog...
+// If the user presses cancel, tell the app launcher and close the dialog.
 function onCancel() {
   // Cancel app launcher.
    try {
      printProgress.processCanceledByUser = true;
-   } catch ( exception ) { return true; }
-
-  // don't Close up dialog by returning false, the backend will close the dialog when everything will be aborted.
-  return false;
+   } catch ( exception ) {}
 }
 
 function doneIniting() {

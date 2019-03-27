@@ -4,6 +4,8 @@
 /* import-globals-from pippki.js */
 "use strict";
 
+document.addEventListener("dialogaccept", onDialogAccept);
+
 /**
  * @file Implements the functionality of load_device.xul: a dialog that allows
  *       a PKCS #11 module to be loaded into Firefox.
@@ -27,10 +29,10 @@ async function onBrowseBtnPress() {
 
 /**
  * ondialogaccept() handler.
- *
- * @returns {Boolean} true to make the dialog close, false otherwise.
+ * @param {Object} event
+ *        The event causing this handler function to be called.
  */
-function onDialogAccept() {
+function onDialogAccept(event) {
   let nameBox = document.getElementById("device_name");
   let pathBox = document.getElementById("device_path");
   let pkcs11ModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
@@ -40,10 +42,8 @@ function onDialogAccept() {
     pkcs11ModuleDB.addModule(nameBox.value, pathBox.value, 0, 0);
   } catch (e) {
     addModuleFailure("add-module-failure");
-    return false;
+    event.preventDefault();
   }
-
-  return true;
 }
 
 async function addModuleFailure(l10nID) {
