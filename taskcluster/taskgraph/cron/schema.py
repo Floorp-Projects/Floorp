@@ -35,7 +35,7 @@ cron_yml_schema = Schema({
             Required('treeherder-symbol'): basestring,
 
             # --target-tasks-method './mach taskgraph decision' argument
-            'target-tasks-method': basestring,
+            Required('target-tasks-method'): basestring,
 
             Optional(
                 'optimize-target-tasks',
@@ -43,6 +43,15 @@ cron_yml_schema = Schema({
                             'tasks are eligible for optimization. Otherwise, '
                             'the default for the project is used.',
             ): bool,
+            Optional(
+                'include-push-tasks',
+                description='Whether tasks from the on-push graph should be re-used '
+                            'in the cron graph.',
+            ): bool,
+            Optional(
+                'rebuild-kinds',
+                description='Kinds that should not be re-used from the on-push graph.',
+            ): [basestring],
         },
 
         # when to run it
