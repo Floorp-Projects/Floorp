@@ -34,8 +34,8 @@ inline const char* OptimizationLevelString(OptimizationLevel level) {
 }
 #endif
 
+// Class representing the Ion optimization settings for an OptimizationLevel.
 class OptimizationInfo {
- public:
   OptimizationLevel level_;
 
   // Toggles whether Effective Address Analysis is performed.
@@ -111,13 +111,6 @@ class OptimizationInfo {
   // Actually it is only needed to make sure we don't blow out the stack.
   uint32_t smallFunctionMaxInlineDepth_;
 
-  // How many invocations or loop iterations are needed before functions
-  // are compiled.
-  uint32_t compilerWarmUpThreshold_;
-
-  // Default compiler warmup threshold, unless it is overridden.
-  static const uint32_t CompilerWarmupThreshold;
-
   // How many invocations or loop iterations are needed before calls
   // are inlined, as a fraction of compilerWarmUpThreshold.
   double inliningWarmUpThresholdFactor_;
@@ -127,6 +120,19 @@ class OptimizationInfo {
   // as a multiplication of inliningWarmUpThreshold.
   uint32_t inliningRecompileThresholdFactor_;
 
+  uint32_t baseCompilerWarmUpThreshold() const {
+    switch (level_) {
+      case OptimizationLevel::Normal:
+        return JitOptions.normalIonWarmUpThreshold;
+      case OptimizationLevel::DontCompile:
+      case OptimizationLevel::Wasm:
+      case OptimizationLevel::Count:
+        break;
+    }
+    MOZ_CRASH("Unexpected optimization level");
+  }
+
+ public:
   constexpr OptimizationInfo()
       : level_(OptimizationLevel::Normal),
         eaa_(false),
@@ -151,7 +157,6 @@ class OptimizationInfo {
         maxInlineDepth_(0),
         scalarReplacement_(false),
         smallFunctionMaxInlineDepth_(0),
-        compilerWarmUpThreshold_(0),
         inliningWarmUpThresholdFactor_(0.0),
         inliningRecompileThresholdFactor_(0) {}
 
@@ -238,10 +243,7 @@ class OptimizationInfo {
   }
 
   uint32_t inliningWarmUpThreshold() const {
-    uint32_t compilerWarmUpThreshold =
-        JitOptions.forcedDefaultIonWarmUpThreshold.valueOr(
-            compilerWarmUpThreshold_);
-    return compilerWarmUpThreshold * inliningWarmUpThresholdFactor_;
+    return baseCompilerWarmUpThreshold() * inliningWarmUpThresholdFactor_;
   }
 
   uint32_t inliningRecompileThreshold() const {

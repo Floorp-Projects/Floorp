@@ -5610,8 +5610,7 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       *valueOut = jit::JitOptions.baselineWarmUpThreshold;
       break;
     case JSJITCOMPILER_ION_WARMUP_TRIGGER:
-      *valueOut = jit::JitOptions.forcedDefaultIonWarmUpThreshold.valueOr(
-          jit::OptimizationInfo::CompilerWarmupThreshold);
+      *valueOut = jit::JitOptions.normalIonWarmUpThreshold;
       break;
     case JSJITCOMPILER_ION_FORCE_IC:
       *valueOut = jit::JitOptions.forceInlineCaches;
