@@ -62,6 +62,7 @@ export function createSource(
     isPrettyPrinted: false,
     sourceMapURL: source.sourceMapURL,
     introductionUrl: source.introductionUrl,
+    introductionType: source.introductionType,
     isBlackBoxed: false,
     loadedState: "unloaded",
     isWasm: supportsWasm && source.introductionType === "wasm",
