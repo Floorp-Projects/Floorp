@@ -164,7 +164,7 @@
 #endif
 @BINPATH@/@PREF_DIR@/channel-prefs.js
 @BINPATH@/ua-update.json
-@BINPATH@/@ANDROID_CPU_ARCH@/greprefs.js
+@BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
 
 ; [Layout Engine Resources]
@@ -260,7 +260,7 @@
 @BINPATH@/chrome/marionette.manifest
 @BINPATH@/components/marionette.manifest
 @BINPATH@/components/marionette.js
-@BINPATH@/@PREF_DIR@/marionette.js
+@BINPATH@/defaults/pref/marionette.js
 #endif
 
 #ifdef PKG_LOCALE_MANIFEST

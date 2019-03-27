@@ -967,17 +967,13 @@ endif
 ################################################################################
 # The default location for prefs is the gre prefs directory.
 # PREF_DIR is used for L10N_PREF_JS_EXPORTS in various locales/ directories.
-PREF_DIR := defaults/pref
+PREF_DIR = defaults/pref
 
 # If DIST_SUBDIR is defined it indicates that app and gre dirs are
 # different and that we are building app related resources. Hence,
 # PREF_DIR should point to the app prefs location.
 ifneq (,$(DIST_SUBDIR)$(XPI_NAME))
-PREF_DIR := defaults/preferences
-endif
-
-ifeq ($(MOZ_BUILD_APP),mobile/android)
-PREF_DIR := $(PREF_DIR)/$(ANDROID_CPU_ARCH)
+PREF_DIR = defaults/preferences
 endif
 
 ################################################################################
