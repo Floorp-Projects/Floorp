@@ -1747,8 +1747,7 @@ impl Renderer {
         gl: Rc<gl::Gl>,
         notifier: Box<RenderNotifier>,
         mut options: RendererOptions,
-        shaders: Option<&mut WrShaders>,
-        start_size: FramebufferIntSize,
+        shaders: Option<&mut WrShaders>
     ) -> Result<(Self, RenderApiSender), RendererError> {
         HAS_BEEN_INITIALIZED.store(true, Ordering::SeqCst);
 
@@ -2051,12 +2050,7 @@ impl Renderer {
             let texture_cache = TextureCache::new(
                 max_texture_size,
                 max_texture_layers,
-                if config.enable_picture_caching {
-                    Some(TileCache::tile_dimensions(config.testing))
-                } else {
-                    None
-                },
-                start_size,
+                TileCache::tile_dimensions(config.testing),
             );
 
             let resource_cache = ResourceCache::new(
