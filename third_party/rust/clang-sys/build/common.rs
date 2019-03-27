@@ -115,6 +115,13 @@ pub fn search_libclang_directories(files: &[String], variable: &str) -> Vec<(Pat
 
     let mut found = vec![];
 
+    // Search the `bin` and `lib` directories in directory provided by `llvm-config --prefix`.
+    if let Ok(output) = run_llvm_config(&["--prefix"]) {
+        let directory = Path::new(output.lines().next().unwrap()).to_path_buf();
+        found.extend(search_directories(&directory.join("bin"), files));
+        found.extend(search_directories(&directory.join("lib"), files));
+    }
+
     // Search the toolchain directory in the directory provided by `xcode-select --print-path`.
     if cfg!(target_os="macos") {
         if let Some(output) = run_command("xcode-select", &["--print-path"]) {
@@ -122,13 +129,6 @@ pub fn search_libclang_directories(files: &[String], variable: &str) -> Vec<(Pat
             let directory = directory.join("Toolchains/XcodeDefault.xctoolchain/usr/lib");
             found.extend(search_directories(&directory, files));
         }
-    }
-
-    // Search the `bin` and `lib` directories in directory provided by `llvm-config --prefix`.
-    if let Ok(output) = run_llvm_config(&["--prefix"]) {
-        let directory = Path::new(output.lines().next().unwrap()).to_path_buf();
-        found.extend(search_directories(&directory.join("bin"), files));
-        found.extend(search_directories(&directory.join("lib"), files));
     }
 
     // Search the directories provided by the `LD_LIBRARY_PATH` environment variable.
