@@ -234,7 +234,9 @@ open class GleanInternalAPI internal constructor () {
 
             val datetimeSnapshot = DatetimesStorageEngine.getSnapshot("glean_ping_info", false)
             datetimeSnapshot?.get("first_run_date")?.let {
-                DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate, parseISOTimeString(it)!!)
+                parseISOTimeString(it)?.let {
+                    DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate, it)
+                }
             }
             // ////////////////////////////////////////////////////////////
         }
