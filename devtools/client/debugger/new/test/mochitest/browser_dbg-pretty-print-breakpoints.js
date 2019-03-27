@@ -17,5 +17,5 @@ add_task(async function() {
   invokeInTab("stuff");
 
   await waitForPaused(dbg);
-  assertEditorBreakpoint(dbg, 4, true);
+  await assertEditorBreakpoint(dbg, 4, true);
 });

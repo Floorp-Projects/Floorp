@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests the breakpoint gutter and making sure breakpoint icons exist
 // correctly
@@ -18,10 +19,7 @@ function clickGutter(dbg, line) {
 
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
-  const {
-    selectors: { getBreakpoint, getBreakpointCount },
-    getState
-  } = dbg;
+  const { getState } = dbg;
   const source = findSource(dbg, "simple1.js");
 
   await selectSource(dbg, source.url);
@@ -29,12 +27,12 @@ add_task(async function() {
   // Make sure that clicking the gutter creates a breakpoint icon.
   clickGutter(dbg, 4);
   await waitForDispatch(dbg, "ADD_BREAKPOINT");
-  is(getBreakpointCount(getState()), 1, "One breakpoint exists");
-  assertEditorBreakpoint(dbg, 4, true);
+  is(dbg.selectors.getBreakpointCount(getState()), 1, "One breakpoint exists");
+  await assertEditorBreakpoint(dbg, 4, true);
 
   // Make sure clicking at the same place removes the icon.
   clickGutter(dbg, 4);
   await waitForDispatch(dbg, "REMOVE_BREAKPOINT");
-  is(getBreakpointCount(getState()), 0, "No breakpoints exist");
-  assertEditorBreakpoint(dbg, 4, false);
+  is(dbg.selectors.getBreakpointCount(getState()), 0, "No breakpoints exist");
+  await assertEditorBreakpoint(dbg, 4, false);
 });
