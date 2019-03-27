@@ -1831,6 +1831,10 @@ pref("toolkit.coverage.endpoint.base", "https://coverage.mozilla.org");
 #if defined(NIGHTLY_BUILD)
 pref("prio.enabled", true);
 #endif
+// Whether Prio-encoded Telemetry will be sent in the prio ping.
+#if defined(NIGHTLY_BUILD)
+pref("toolkit.telemetry.prioping.enabled", true);
+#endif
 
 // Discovery prefs
 pref("browser.discovery.enabled", true);

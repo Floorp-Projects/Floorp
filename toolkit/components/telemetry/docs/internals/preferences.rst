@@ -179,6 +179,21 @@ Preferences
   sending them to the parent process.
   Default is 2000 (milliseconds).
 
+``toolkit.telemetry.prioping.enabled``
+
+  Whether the :doc:`../data/prio-ping` is enabled.
+  Defaults to false except on Firefox Nightly where it is true. Change requires restart.
+
+``toolkit.telemetry.prioping.frequency``
+
+  The default frequency at which we send the :doc:`../data/prio-ping`.
+  Default is 24 (hours).
+
+``toolkit.telemetry.prioping.dataLimit``
+
+  The number of encoded prio payloads which triggers an immediate :doc:`../data/prio-ping` with reason "max".
+  Default is 10 payloads.
+
 Data-choices notification
 -------------------------
 
