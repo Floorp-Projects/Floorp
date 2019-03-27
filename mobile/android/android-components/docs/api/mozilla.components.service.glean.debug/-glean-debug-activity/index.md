@@ -25,10 +25,20 @@ https://developer.android.com/studio/command-line/adb#am
 |---|---|
 | [onCreate](on-create.md) | `fun onCreate(savedInstanceState: `[`Bundle`](https://developer.android.com/reference/android/os/Bundle.html)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
+### Companion Object Properties
+
+| Name | Summary |
+|---|---|
+| [LOG_PINGS_EXTRA_KEY](-l-o-g_-p-i-n-g-s_-e-x-t-r-a_-k-e-y.md) | `const val LOG_PINGS_EXTRA_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [SEND_PING_EXTRA_KEY](-s-e-n-d_-p-i-n-g_-e-x-t-r-a_-k-e-y.md) | `const val SEND_PING_EXTRA_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [TAG_DEBUG_VIEW_EXTRA_KEY](-t-a-g_-d-e-b-u-g_-v-i-e-w_-e-x-t-r-a_-k-e-y.md) | `const val TAG_DEBUG_VIEW_EXTRA_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [pingTagPattern](ping-tag-pattern.md) | `val pingTagPattern: `[`Regex`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/-regex/index.html) |
+
 ### Extension Properties
 
 | Name | Summary |
 |---|---|
+| [appName](../../mozilla.components.support.ktx.android.content/android.content.-context/app-name.md) | `val `[`Context`](https://developer.android.com/reference/android/content/Context.html)`.appName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Returns the name (label) of the application or the package name as a fallback. |
 | [appVersionName](../../mozilla.components.support.ktx.android.content/android.content.-context/app-version-name.md) | `val `[`Context`](https://developer.android.com/reference/android/content/Context.html)`.appVersionName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>The (visible) version name of the application, as specified by the  tag's versionName attribute. E.g. "2.0". |
 
 ### Extension Functions

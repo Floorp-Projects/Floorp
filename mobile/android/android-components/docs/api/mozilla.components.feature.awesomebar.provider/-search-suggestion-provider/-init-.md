@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`SearchSuggestionProvider(searchEngine: `[`SearchEngine`](../../mozilla.components.browser.search/-search-engine/index.md)`, searchUseCase: `[`SearchUseCase`](../../mozilla.components.feature.search/-search-use-cases/-search-use-case/index.md)`, fetchClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`, limit: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 15, mode: `[`Mode`](-mode/index.md)` = Mode.SINGLE_SUGGESTION)`
+`SearchSuggestionProvider(searchEngine: `[`SearchEngine`](../../mozilla.components.browser.search/-search-engine/index.md)`, searchUseCase: `[`SearchUseCase`](../../mozilla.components.feature.search/-search-use-cases/-search-use-case/index.md)`, fetchClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`, limit: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 15, mode: `[`Mode`](-mode/index.md)` = Mode.SINGLE_SUGGESTION, icon: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`? = null)`
 
 A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides a suggestion containing search engine suggestions (as
 chips) from the passed in [SearchEngine](../../mozilla.components.browser.search/-search-engine/index.md).
@@ -18,3 +18,5 @@ chips) from the passed in [SearchEngine](../../mozilla.components.browser.search
 `limit` - The maximum number of suggestions that should be returned. It needs to be &gt;= 1.
 
 `mode` - Whether to return a single search suggestion (with chips) or one suggestion per item.
+
+`icon` - The image to display next to the result. If not specified, the engine icon is used

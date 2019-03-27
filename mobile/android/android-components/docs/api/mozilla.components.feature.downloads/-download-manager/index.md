@@ -2,7 +2,7 @@
 
 # DownloadManager
 
-`class DownloadManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadManager.kt#L35)
+`class DownloadManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadManager.kt#L36)
 
 Handles the interactions with the [AndroidDownloadManager](../-android-download-manager.md).
 

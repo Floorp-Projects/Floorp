@@ -2,4 +2,4 @@
 
 # SINGLE_SUGGESTION
 
-`SINGLE_SUGGESTION` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/SearchSuggestionProvider.kt#L144)
+`SINGLE_SUGGESTION` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/SearchSuggestionProvider.kt#L147)
