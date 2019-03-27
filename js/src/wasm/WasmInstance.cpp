@@ -154,11 +154,9 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return false;
   }
 
-#ifdef WASM_CODEGEN_DEBUG
-  if (!JitOptions.enableWasmJitEntry) {
+  if (!JitOptions.enableWasmJitExit) {
     return true;
   }
-#endif
 
   // The import may already have become optimized.
   for (auto t : code().tiers()) {
@@ -1563,7 +1561,8 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
         if (!anyrefs.emplaceBack(ar.get().asJSObject())) {
           return false;
         }
-        DebugCodegen(DebugChannel::Function, "ptr(#%d) ", int(anyrefs.length()-1));
+        DebugCodegen(DebugChannel::Function, "ptr(#%d) ",
+                     int(anyrefs.length() - 1));
         break;
       }
       case ValType::NullRef: {
@@ -1592,8 +1591,8 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
         if (func.funcType().arg(i).isReference()) {
           ASSERT_ANYREF_IS_JSOBJECT;
           *(void**)&exportArgs[i] = (void*)anyrefs[nextRef++];
-          DebugCodegen(DebugChannel::Function, "ptr(#%d) = %p ", int(nextRef-1),
-                       *(void**)&exportArgs[i]);
+          DebugCodegen(DebugChannel::Function, "ptr(#%d) = %p ",
+                       int(nextRef - 1), *(void**)&exportArgs[i]);
         }
       }
       anyrefs.clear();
