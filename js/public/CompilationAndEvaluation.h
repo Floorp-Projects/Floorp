@@ -52,12 +52,12 @@ extern JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(
 
 /*
  * NB: JS_ExecuteScript and the JS::Evaluate APIs come in two flavors: either
- * they use the global as the scope, or they take an AutoObjectVector of objects
- * to use as the scope chain.  In the former case, the global is also used as
- * the "this" keyword value and the variables object (ECMA parlance for where
- * 'var' and 'function' bind names) of the execution context for script.  In the
- * latter case, the first object in the provided list is used, unless the list
- * is empty, in which case the global is used.
+ * they use the global as the scope, or they take a HandleValueVector of
+ * objects to use as the scope chain.  In the former case, the global is also
+ * used as the "this" keyword value and the variables object (ECMA parlance for
+ * where 'var' and 'function' bind names) of the execution context for script.
+ * In the latter case, the first object in the provided list is used, unless the
+ * list is empty, in which case the global is used.
  *
  * Why a runtime option?  The alternative is to add APIs duplicating those
  * for the other value of flags, and that doesn't seem worth the code bloat
@@ -83,12 +83,12 @@ extern JS_PUBLIC_API bool JS_ExecuteScript(JSContext* cx,
  * objects that should end up on the script's scope chain.
  */
 extern JS_PUBLIC_API bool JS_ExecuteScript(JSContext* cx,
-                                           JS::AutoVector<JSObject*>& envChain,
+                                           JS::HandleObjectVector envChain,
                                            JS::Handle<JSScript*> script,
                                            JS::MutableHandle<JS::Value> rval);
 
 extern JS_PUBLIC_API bool JS_ExecuteScript(JSContext* cx,
-                                           JS::AutoVector<JSObject*>& envChain,
+                                           JS::HandleObjectVector envChain,
                                            JS::Handle<JSScript*> script);
 
 namespace JS {
@@ -107,7 +107,7 @@ extern JS_PUBLIC_API bool CloneAndExecuteScript(JSContext* cx,
  * environment chain.
  */
 extern JS_PUBLIC_API bool CloneAndExecuteScript(JSContext* cx,
-                                                AutoVector<JSObject*>& envChain,
+                                                HandleObjectVector envChain,
                                                 Handle<JSScript*> script,
                                                 MutableHandle<Value> rval);
 
@@ -124,8 +124,7 @@ extern JS_PUBLIC_API bool Evaluate(JSContext* cx,
  * the global object on it; that's implicit.  It needs to contain the other
  * objects that should end up on the script's scope chain.
  */
-extern JS_PUBLIC_API bool Evaluate(JSContext* cx,
-                                   AutoVector<JSObject*>& envChain,
+extern JS_PUBLIC_API bool Evaluate(JSContext* cx, HandleObjectVector envChain,
                                    const ReadOnlyCompileOptions& options,
                                    SourceText<char16_t>& srcBuf,
                                    MutableHandle<Value> rval);
@@ -256,7 +255,7 @@ extern JS_PUBLIC_API bool CompileUtf8ForNonSyntacticScope(
  * global must not be explicitly included in the scope chain.
  */
 extern JS_PUBLIC_API bool CompileFunction(JSContext* cx,
-                                          AutoVector<JSObject*>& envChain,
+                                          HandleObjectVector envChain,
                                           const ReadOnlyCompileOptions& options,
                                           const char* name, unsigned nargs,
                                           const char* const* argnames,
@@ -267,7 +266,7 @@ extern JS_PUBLIC_API bool CompileFunction(JSContext* cx,
  * Same as above, but taking UTF-8 encoded const char* for the function body.
  */
 extern JS_PUBLIC_API bool CompileFunctionUtf8(
-    JSContext* cx, AutoVector<JSObject*>& envChain,
+    JSContext* cx, HandleObjectVector envChain,
     const ReadOnlyCompileOptions& options, const char* name, unsigned nargs,
     const char* const* argnames, const char* utf8, size_t length,
     MutableHandle<JSFunction*> fun);

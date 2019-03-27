@@ -403,6 +403,10 @@ export function isLoading(source: Source) {
   return source.loadedState === "loading";
 }
 
+export function isInlineScript(source: Source): boolean {
+  return source.introductionType === "scriptElement";
+}
+
 export function getTextAtPosition(source: ?Source, location: SourceLocation) {
   if (!source || !source.text) {
     return "";

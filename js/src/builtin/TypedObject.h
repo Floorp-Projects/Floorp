@@ -429,7 +429,7 @@ class StructMetaTypeDescr : public NativeObject {
   // The type objects in `fieldTypeObjs` must all be TypeDescr objects.
   static StructTypeDescr* createFromArrays(
       JSContext* cx, HandleObject structTypePrototype, bool opaque,
-      bool allowConstruct, AutoIdVector& ids, AutoValueVector& fieldTypeObjs,
+      bool allowConstruct, AutoIdVector& ids, HandleValueVector fieldTypeObjs,
       Vector<StructFieldProps>& fieldProps);
 
   // Properties and methods to be installed on StructType.prototype,

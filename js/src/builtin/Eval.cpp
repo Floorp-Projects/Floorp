@@ -475,7 +475,7 @@ JS_FRIEND_API bool js::ExecuteInFrameScriptEnvironment(
     return false;
   }
 
-  AutoObjectVector envChain(cx);
+  RootedObjectVector envChain(cx);
   if (!envChain.append(objArg)) {
     return false;
   }
@@ -524,14 +524,14 @@ JS_FRIEND_API JSObject* js::NewJSMEnvironment(JSContext* cx) {
 JS_FRIEND_API bool js::ExecuteInJSMEnvironment(JSContext* cx,
                                                HandleScript scriptArg,
                                                HandleObject varEnv) {
-  AutoObjectVector emptyChain(cx);
+  RootedObjectVector emptyChain(cx);
   return ExecuteInJSMEnvironment(cx, scriptArg, varEnv, emptyChain);
 }
 
 JS_FRIEND_API bool js::ExecuteInJSMEnvironment(JSContext* cx,
                                                HandleScript scriptArg,
                                                HandleObject varEnv,
-                                               AutoObjectVector& targetObj) {
+                                               HandleObjectVector targetObj) {
   cx->check(varEnv);
   MOZ_ASSERT(
       ObjectRealm::get(varEnv).getNonSyntacticLexicalEnvironment(varEnv));

@@ -22,12 +22,12 @@ BEGIN_TEST(test_functionBinding) {
 
   // Named function shouldn't have it's binding.
   const char s1chars[] = "return (typeof s1) == 'undefined';";
-  JS::AutoObjectVector emptyScopeChain(cx);
+  JS::RootedObjectVector emptyScopeChain(cx);
   CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "s1", 0, nullptr,
                                 s1chars, strlen(s1chars), &fun));
   CHECK(fun);
 
-  JS::AutoValueVector args(cx);
+  JS::RootedValueVector args(cx);
   RootedValue rval(cx);
   CHECK(JS::Call(cx, UndefinedHandleValue, fun, args, &rval));
   CHECK(rval.isBoolean());

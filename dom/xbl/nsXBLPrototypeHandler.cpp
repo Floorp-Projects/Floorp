@@ -352,9 +352,9 @@ nsresult nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
 
   // Build a scope chain in the XBL scope.
   RefPtr<Element> targetElement = do_QueryObject(scriptTarget);
-  JS::AutoObjectVector scopeChain(cx);
+  JS::RootedVector<JSObject*> scopeChain(cx);
   ok = nsJSUtils::GetScopeChainForXBL(cx, targetElement, *mPrototypeBinding,
-                                      scopeChain);
+                                      &scopeChain);
   NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
 
   // Next, clone the generic handler with our desired scope chain.
@@ -422,7 +422,7 @@ nsresult nsXBLPrototypeHandler::EnsureEventHandler(
   options.setFileAndLine(bindingURI.get(), mLineNumber);
 
   JS::Rooted<JSObject*> handlerFun(cx);
-  JS::AutoObjectVector emptyVector(cx);
+  JS::RootedVector<JSObject*> emptyVector(cx);
   rv = nsJSUtils::CompileFunction(jsapi, emptyVector, options,
                                   nsAtomCString(aName), argCount, argNames,
                                   handlerText, handlerFun.address());

@@ -164,7 +164,7 @@ static bool EvalScript(JSContext* cx, HandleObject targetObj,
     }
     retval.setUndefined();
   } else {
-    JS::AutoObjectVector envChain(cx);
+    JS::RootedObjectVector envChain(cx);
     if (!envChain.append(targetObj)) {
       return false;
     }

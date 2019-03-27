@@ -1822,7 +1822,7 @@ TelemetryImpl::GetAllStores(JSContext* aCx, JS::MutableHandleValue aResult) {
     return rv;
   }
 
-  JS::AutoValueVector allStores(aCx);
+  JS::RootedVector<JS::Value> allStores(aCx);
   if (!allStores.reserve(stores.Count())) {
     return NS_ERROR_FAILURE;
   }

@@ -57,7 +57,7 @@ class nsJSUtils {
   static uint64_t GetCurrentlyRunningCodeInnerWindowID(JSContext* aContext);
 
   static nsresult CompileFunction(mozilla::dom::AutoJSAPI& jsapi,
-                                  JS::AutoObjectVector& aScopeChain,
+                                  JS::HandleVector<JSObject*> aScopeChain,
                                   JS::CompileOptions& aOptions,
                                   const nsACString& aName, uint32_t aArgCount,
                                   const char** aArgArray,
@@ -80,7 +80,7 @@ class nsJSUtils {
     JS::Rooted<JS::Value> mRetValue;
 
     // Scope chain in which the execution takes place.
-    JS::AutoObjectVector mScopeChain;
+    JS::RootedVector<JSObject*> mScopeChain;
 
     // The compiled script.
     JS::Rooted<JSScript*> mScript;
@@ -142,7 +142,7 @@ class nsJSUtils {
     }
 
     // Set the scope chain in which the code should be executed.
-    void SetScopeChain(const JS::AutoObjectVector& aScopeChain);
+    void SetScopeChain(JS::HandleVector<JSObject*> aScopeChain);
 
     // After getting a notification that an off-thread compilation terminated,
     // this function will take the result of the parser and move it to the main
@@ -221,9 +221,9 @@ class nsJSUtils {
 
   // Returns false if an exception got thrown on aCx.  Passing a null
   // aElement is allowed; that wil produce an empty aScopeChain.
-  static bool GetScopeChainForElement(JSContext* aCx,
-                                      mozilla::dom::Element* aElement,
-                                      JS::AutoObjectVector& aScopeChain);
+  static bool GetScopeChainForElement(
+      JSContext* aCx, mozilla::dom::Element* aElement,
+      JS::MutableHandleVector<JSObject*> aScopeChain);
 
   // Returns a scope chain suitable for XBL execution.
   //
@@ -234,7 +234,7 @@ class nsJSUtils {
   static bool GetScopeChainForXBL(JSContext* aCx,
                                   mozilla::dom::Element* aBoundElement,
                                   const nsXBLPrototypeBinding& aProtoBinding,
-                                  JS::AutoObjectVector& aScopeChain);
+                                  JS::MutableHandleVector<JSObject*> aScopeChain);
 
   static void ResetTimeZone();
 };

@@ -53,7 +53,7 @@ static bool constructHook(JSContext* cx, unsigned argc, JS::Value* vp) {
 
 BEGIN_TEST(testNewObject_1) {
   static const size_t N = 1000;
-  JS::AutoValueVector argv(cx);
+  JS::RootedValueVector argv(cx);
   CHECK(argv.resize(N));
 
   JS::RootedValue v(cx);

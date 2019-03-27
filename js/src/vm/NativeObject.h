@@ -938,7 +938,7 @@ class NativeObject : public ShapedObject {
 
   static MOZ_MUST_USE bool fillInAfterSwap(JSContext* cx,
                                            HandleNativeObject obj,
-                                           const AutoValueVector& values,
+                                           HandleValueVector values,
                                            void* priv);
 
  public:

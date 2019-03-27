@@ -476,6 +476,8 @@ class UrlbarAbstraction {
           query: context.results[index].payload.query,
           suggestion: context.results[index].payload.suggestion,
         };
+      } else if (details.type == UrlbarUtils.RESULT_TYPE.KEYWORD) {
+        details.keyword = context.results[index].payload.keyword;
       }
     } else {
       details.url = this.urlbar.controller.getFinalCompleteValueAt(index);
@@ -509,6 +511,8 @@ class UrlbarAbstraction {
         let restrictTokens = Object.values(UrlbarTokenizer.RESTRICT);
         if (restrictTokens.includes(query[0])) {
           query = query.substring(1).trim();
+        } else if (restrictTokens.includes(query[query.length - 1])) {
+          query = query.substring(0, query.length - 1).trim();
         }
         details.searchParams = {
           engine: action.params.engineName,
@@ -516,6 +520,8 @@ class UrlbarAbstraction {
           query,
           suggestion: action.params.searchSuggestion,
         };
+      } else if (details.type == UrlbarUtils.RESULT_TYPE.KEYWORD) {
+        details.keyword = action.params.keyword;
       }
     }
     return details;

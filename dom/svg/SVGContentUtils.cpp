@@ -23,6 +23,7 @@
 #include "nsIScriptError.h"
 #include "nsLayoutUtils.h"
 #include "nsMathUtils.h"
+#include "nsWhitespaceTokenizer.h"
 #include "SVGAnimationElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsContentUtils.h"
@@ -796,6 +797,24 @@ already_AddRefed<gfx::Path> SVGContentUtils::GetPath(
 bool SVGContentUtils::ShapeTypeHasNoCorners(const nsIContent* aContent) {
   return aContent &&
          aContent->IsAnyOfSVGElements(nsGkAtoms::circle, nsGkAtoms::ellipse);
+}
+
+nsDependentSubstring SVGContentUtils::GetAndEnsureOneToken(
+    const nsAString& aString, bool& aSuccess) {
+  nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tokenizer(
+      aString);
+
+  aSuccess = false;
+  if (!tokenizer.hasMoreTokens()) {
+    return {};
+  }
+  auto token = tokenizer.nextToken();
+  if (tokenizer.hasMoreTokens()) {
+    return {};
+  }
+
+  aSuccess = true;
+  return token;
 }
 
 }  // namespace mozilla

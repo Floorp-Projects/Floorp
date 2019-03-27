@@ -172,6 +172,10 @@ class UrlbarView {
     this._selectItem(row);
   }
 
+  removeAccessibleFocus() {
+    this._setAccessibleFocus(null);
+  }
+
   /**
    * Closes the autocomplete popup, cancelling the query if necessary.
    *
@@ -209,7 +213,10 @@ class UrlbarView {
     if (queryContext.lastResultCount == 0) {
       if (queryContext.preselected) {
         isFirstPreselectedResult = true;
-        this._selectItem(fragment.firstElementChild, false);
+        this._selectItem(fragment.firstElementChild, {
+          updateInput: false,
+          setAccessibleFocus: false,
+        });
       } else {
         // Clear the selection when we get a new set of results.
         this._selectItem(null);
@@ -228,7 +235,10 @@ class UrlbarView {
       // TODO bug 1523602: the selection should stay on the node that had it, if
       // it's still in the current result set.
       let resultIndex = this._selected.getAttribute("resultIndex");
-      this._selectItem(fragment.children[resultIndex], false);
+      this._selectItem(fragment.children[resultIndex], {
+        updateInput: false,
+        setAccessibleFocus: false,
+      });
     }
 
     // TODO bug 1523602: For now, clear the results for each set received.
@@ -496,19 +506,20 @@ class UrlbarView {
     return item;
   }
 
-  _selectItem(item, updateInput = true) {
+  _selectItem(item, {
+    updateInput = true,
+    setAccessibleFocus = true,
+  } = {}) {
     if (this._selected) {
       this._selected.toggleAttribute("selected", false);
-      this._selected.toggleAttribute("aria-selected", false);
+      this._selected.removeAttribute("aria-selected");
     }
-    this._selected = item;
     if (item) {
       item.toggleAttribute("selected", true);
-      item.toggleAttribute("aria-selected", true);
-      this.input.inputField.setAttribute("aria-activedescendant", item.id);
-    } else {
-      this.input.inputField.removeAttribute("aria-activedescendant");
+      item.setAttribute("aria-selected", "true");
     }
+    this._setAccessibleFocus(setAccessibleFocus && item);
+    this._selected = item;
 
     if (updateInput) {
       let result = null;
@@ -517,6 +528,14 @@ class UrlbarView {
         result = this._queryContext.results[resultIndex];
       }
       this.input.setValueFromResult(result);
+    }
+  }
+
+  _setAccessibleFocus(item) {
+    if (item) {
+      this.input.inputField.setAttribute("aria-activedescendant", item.id);
+    } else {
+      this.input.inputField.removeAttribute("aria-activedescendant");
     }
   }
 
@@ -628,7 +647,7 @@ class UrlbarView {
     while (!row.classList.contains("urlbarView-row")) {
       row = row.parentNode;
     }
-    this._selectItem(row, false);
+    this._selectItem(row, { updateInput: false });
     this.controller.speculativeConnect(this._queryContext, this.selectedIndex, "mousedown");
   }
 
@@ -668,8 +687,8 @@ class UrlbarView {
   _on_popuphiding() {
     this.controller.cancelQuery();
     this.window.removeEventListener("resize", this);
+    this.removeAccessibleFocus();
     this.input.inputField.setAttribute("aria-expanded", "false");
-    this.input.inputField.removeAttribute("aria-activedescendant");
   }
 
   _on_resize() {

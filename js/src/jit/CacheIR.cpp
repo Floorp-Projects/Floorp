@@ -1362,8 +1362,8 @@ bool GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
   // Look for a getter we can call on the xray or its prototype chain.
   Rooted<PropertyDescriptor> desc(cx_);
   RootedObject holder(cx_, obj);
-  AutoObjectVector prototypes(cx_);
-  AutoObjectVector prototypeExpandoShapeWrappers(cx_);
+  RootedObjectVector prototypes(cx_);
+  RootedObjectVector prototypeExpandoShapeWrappers(cx_);
   while (true) {
     if (!GetOwnPropertyDescriptor(cx_, holder, id, &desc)) {
       cx_->clearPendingException();

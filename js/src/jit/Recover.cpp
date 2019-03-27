@@ -825,7 +825,7 @@ RHypot::RHypot(CompactBufferReader& reader)
     : numOperands_(reader.readUnsigned()) {}
 
 bool RHypot::recover(JSContext* cx, SnapshotIterator& iter) const {
-  JS::AutoValueVector vec(cx);
+  JS::RootedValueVector vec(cx);
 
   if (!vec.reserve(numOperands_)) {
     return false;

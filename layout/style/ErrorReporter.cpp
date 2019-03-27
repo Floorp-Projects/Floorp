@@ -238,7 +238,9 @@ void ErrorReporter::OutputError() {
         mError, mFileName, mErrorLine, mErrorLineNumber, mErrorColNumber,
         nsIScriptError::warningFlag, "CSS Parser",
         FindInnerWindowID(mSheet, mLoader));
+
     if (NS_SUCCEEDED(rv)) {
+      errorObject->SetCssSelectors(mSelectors);
       sConsoleService->LogMessage(errorObject);
     }
   }
@@ -253,7 +255,8 @@ void ErrorReporter::OutputError() {
 // - the complete source line containing the invalid CSS
 
 void ErrorReporter::OutputError(uint32_t aLineNumber, uint32_t aColNumber,
-                                const nsACString& aSourceLine) {
+                                const nsACString& aSourceLine,
+                                const nsACString& aSelectors) {
   mErrorLineNumber = aLineNumber;
   mErrorColNumber = aColNumber;
 
@@ -269,6 +272,10 @@ void ErrorReporter::OutputError(uint32_t aLineNumber, uint32_t aColNumber,
     }
 
     mPrevErrorLineNumber = aLineNumber;
+  }
+
+  if (!AppendUTF8toUTF16(aSelectors, mSelectors, fallible)) {
+    mSelectors.Truncate();
   }
 
   OutputError();
