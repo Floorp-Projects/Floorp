@@ -77,19 +77,6 @@ class SVGElement : public SVGElementBase  // nsIContent
   virtual nsresult Clone(mozilla::dom::NodeInfo*,
                          nsINode** aResult) const MOZ_MUST_OVERRIDE override;
 
-  typedef mozilla::SVGEnum SVGEnum;
-  typedef mozilla::SVGEnumMapping SVGEnumMapping;
-  typedef mozilla::SVGNumberList SVGNumberList;
-  typedef mozilla::SVGAnimatedNumberList SVGAnimatedNumberList;
-  typedef mozilla::SVGUserUnitList SVGUserUnitList;
-  typedef mozilla::SVGAnimatedLengthList SVGAnimatedLengthList;
-  typedef mozilla::SVGAnimatedPointList SVGAnimatedPointList;
-  typedef mozilla::SVGAnimatedPathSegList SVGAnimatedPathSegList;
-  typedef mozilla::SVGAnimatedPreserveAspectRatio
-      SVGAnimatedPreserveAspectRatio;
-  typedef mozilla::SVGAnimatedTransformList SVGAnimatedTransformList;
-  typedef mozilla::SVGStringList SVGStringList;
-
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(SVGElement, SVGElementBase)
 

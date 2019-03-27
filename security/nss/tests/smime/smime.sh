@@ -107,8 +107,8 @@ cms_sign()
 }
 
 header_mime_from_to_subject="MIME-Version: 1.0
-From: Alice@bogus.com
-To: Bob@bogus.com
+From: Alice@example.com
+To: Bob@example.com
 Subject: "
 
 header_opaque_signed="Content-Type: application/pkcs7-mime; name=smime.p7m;
@@ -167,7 +167,7 @@ mime_init()
 
 smime_enveloped()
 {
-  ${PROFTOOL} ${BINDIR}/cmsutil -E -r bob@bogus.com -i tb/alice.mime -d ${P_R_ALICEDIR} -p nss -o tb/alice.mime.env
+  ${PROFTOOL} ${BINDIR}/cmsutil -E -r bob@example.com -i tb/alice.mime -d ${P_R_ALICEDIR} -p nss -o tb/alice.mime.env
 
   OUT="tb/alice.env.eml"
   echo -n "${header_mime_from_to_subject}" >>${OUT}
@@ -191,7 +191,7 @@ smime_signed_enveloped()
   cat tb/alice.mime.d${SIG} | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
   echo "${multipart_end}" >>${OUT}
 
-  ${PROFTOOL} ${BINDIR}/cmsutil -E -r bob@bogus.com -i ${OUT} -d ${P_R_ALICEDIR} -p nss -o ${OUT}.env
+  ${PROFTOOL} ${BINDIR}/cmsutil -E -r bob@example.com -i ${OUT} -d ${P_R_ALICEDIR} -p nss -o ${OUT}.env
 
   OUT="tb/alice.d${SIG}.multipart.eml"
   echo -n "${header_mime_from_to_subject}" >>${OUT}
@@ -213,7 +213,7 @@ smime_signed_enveloped()
   echo "$header_opaque_signed" >>${OUT}
   cat tb/alice.textplain.${SIG} | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
 
-  ${PROFTOOL} ${BINDIR}/cmsutil -E -r bob@bogus.com -i ${OUT} -d ${P_R_ALICEDIR} -p nss -o ${OUT}.env
+  ${PROFTOOL} ${BINDIR}/cmsutil -E -r bob@example.com -i ${OUT} -d ${P_R_ALICEDIR} -p nss -o ${OUT}.env
 
   OUT="tb/alice.${SIG}.opaque.eml"
   echo -n "${header_mime_from_to_subject}" >>${OUT}
@@ -301,9 +301,9 @@ smime_main()
   smime_signed_enveloped
 
   echo "$SCRIPTNAME: Enveloped Data Tests ------------------------------"
-  echo "cmsutil -E -r bob@bogus.com -i alice.txt -d ${P_R_ALICEDIR} -p nss \\"
+  echo "cmsutil -E -r bob@example.com -i alice.txt -d ${P_R_ALICEDIR} -p nss \\"
   echo "        -o alice.env"
-  ${PROFTOOL} ${BINDIR}/cmsutil -E -r bob@bogus.com -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.env
+  ${PROFTOOL} ${BINDIR}/cmsutil -E -r bob@example.com -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.env
   html_msg $? 0 "Create Enveloped Data Alice" "."
 
   echo "cmsutil -D -i alice.env -d ${P_R_BOBDIR} -p nss -o alice.data1"
@@ -317,23 +317,23 @@ smime_main()
   # multiple recip
   echo "$SCRIPTNAME: Testing multiple recipients ------------------------------"
   echo "cmsutil -E -i alice.txt -d ${P_R_ALICEDIR} -o alicecc.env \\"
-  echo "        -r bob@bogus.com,dave@bogus.com"
+  echo "        -r bob@example.com,dave@example.com"
   ${PROFTOOL} ${BINDIR}/cmsutil -E -i alice.txt -d ${P_R_ALICEDIR} -o alicecc.env \
-          -r bob@bogus.com,dave@bogus.com
+          -r bob@example.com,dave@example.com
   ret=$?
   html_msg $ret 0 "Create Multiple Recipients Enveloped Data Alice" "."
   if [ $ret != 0 ] ; then
 	echo "certutil -L -d ${P_R_ALICEDIR}"
 	${BINDIR}/certutil -L -d ${P_R_ALICEDIR}
-	echo "certutil -L -d ${P_R_ALICEDIR} -n dave@bogus.com"
-	${BINDIR}/certutil -L -d ${P_R_ALICEDIR} -n dave@bogus.com
+	echo "certutil -L -d ${P_R_ALICEDIR} -n dave@example.com"
+	${BINDIR}/certutil -L -d ${P_R_ALICEDIR} -n dave@example.com
   fi
 
   echo "$SCRIPTNAME: Testing multiple email addrs ------------------------------"
   echo "cmsutil -E -i alice.txt -d ${P_R_ALICEDIR} -o aliceve.env \\"
-  echo "        -r eve@bogus.net"
+  echo "        -r eve@example.net"
   ${PROFTOOL} ${BINDIR}/cmsutil -E -i alice.txt -d ${P_R_ALICEDIR} -o aliceve.env \
-          -r eve@bogus.net
+          -r eve@example.net
   ret=$?
   html_msg $ret 0 "Encrypt to a Multiple Email cert" "."
 
@@ -359,9 +359,9 @@ smime_main()
   html_msg $? 0 "Compare Decoded with Multiple Email cert" "."
   
   echo "$SCRIPTNAME: Sending CERTS-ONLY Message ------------------------------"
-  echo "cmsutil -O -r \"Alice,bob@bogus.com,dave@bogus.com\" \\"
+  echo "cmsutil -O -r \"Alice,bob@example.com,dave@example.com\" \\"
   echo "        -d ${P_R_ALICEDIR} > co.der"
-  ${PROFTOOL} ${BINDIR}/cmsutil -O -r "Alice,bob@bogus.com,dave@bogus.com" -d ${P_R_ALICEDIR} > co.der
+  ${PROFTOOL} ${BINDIR}/cmsutil -O -r "Alice,bob@example.com,dave@example.com" -d ${P_R_ALICEDIR} > co.der
   html_msg $? 0 "Create Certs-Only Alice" "."
 
   echo "cmsutil -D -i co.der -d ${P_R_BOBDIR}"
@@ -370,9 +370,9 @@ smime_main()
 
   echo "$SCRIPTNAME: Encrypted-Data Message ---------------------------------"
   echo "cmsutil -C -i alice.txt -e alicehello.env -d ${P_R_ALICEDIR} \\"
-  echo "        -r \"bob@bogus.com\" > alice.enc"
+  echo "        -r \"bob@example.com\" > alice.enc"
   ${PROFTOOL} ${BINDIR}/cmsutil -C -i alice.txt -e alicehello.env -d ${P_R_ALICEDIR} \
-          -r "bob@bogus.com" > alice.enc
+          -r "bob@example.com" > alice.enc
   html_msg $? 0 "Create Encrypted-Data" "."
 
   echo "cmsutil -D -i alice.enc -d ${P_R_BOBDIR} -e alicehello.env -p nss \\"
