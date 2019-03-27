@@ -183,7 +183,7 @@ nsresult nsXBLProtoImplProperty::CompileMember(
       nsCString name =
           NS_LITERAL_CSTRING("get_") + NS_ConvertUTF16toUTF8(mName);
       JS::Rooted<JSObject*> getterObject(cx);
-      JS::AutoObjectVector emptyVector(cx);
+      JS::RootedVector<JSObject*> emptyVector(cx);
       rv = nsJSUtils::CompileFunction(jsapi, emptyVector, options, name, 0,
                                       nullptr, getter, getterObject.address());
 
@@ -229,7 +229,7 @@ nsresult nsXBLProtoImplProperty::CompileMember(
       nsCString name =
           NS_LITERAL_CSTRING("set_") + NS_ConvertUTF16toUTF8(mName);
       JS::Rooted<JSObject*> setterObject(cx);
-      JS::AutoObjectVector emptyVector(cx);
+      JS::RootedVector<JSObject*> emptyVector(cx);
       rv = nsJSUtils::CompileFunction(jsapi, emptyVector, options, name, 1,
                                       gPropertyArgs, setter,
                                       setterObject.address());

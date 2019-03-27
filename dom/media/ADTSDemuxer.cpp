@@ -337,6 +337,10 @@ bool ADTSTrackDemuxer::Init() {
           mInfo->mRate, mInfo->mChannels, mInfo->mBitDepth,
           mInfo->mDuration.ToMicroseconds());
 
+  // AAC encoder delay is by default 2112 audio frames.
+  // See https://developer.apple.com/library/content/documentation/QuickTime/QTFF/QTFFAppenG/QTFFAppenG.html
+  // So we always seek 2112 frames prior the seeking point.
+  mPreRoll = TimeUnit::FromMicroseconds(2112 * 1000000ULL / mSamplesPerSecond);
   return mSamplesPerSecond && mChannels;
 }
 
@@ -347,9 +351,10 @@ UniquePtr<TrackInfo> ADTSTrackDemuxer::GetInfo() const {
 RefPtr<ADTSTrackDemuxer::SeekPromise> ADTSTrackDemuxer::Seek(
     const TimeUnit& aTime) {
   // Efficiently seek to the position.
-  FastSeek(aTime);
+  const TimeUnit time = aTime > mPreRoll ? aTime - mPreRoll : TimeUnit::Zero();
+  FastSeek(time);
   // Correct seek position by scanning the next frames.
-  const TimeUnit seekTime = ScanUntil(aTime);
+  const TimeUnit seekTime = ScanUntil(time);
 
   return SeekPromise::CreateAndResolve(seekTime, __func__);
 }

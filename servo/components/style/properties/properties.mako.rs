@@ -33,7 +33,7 @@ use crate::parser::ParserContext;
 use crate::properties::longhands::system_font::SystemFont;
 use crate::selector_parser::PseudoElement;
 use selectors::parser::SelectorParseErrorKind;
-#[cfg(feature = "servo")] use servo_config::prefs::PREFS;
+#[cfg(feature = "servo")] use servo_config::prefs;
 use style_traits::{CssWriter, KeywordsCollectFn, ParseError, ParsingMode};
 use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
 use crate::stylesheets::{CssRuleType, Origin, UrlExtraData};
@@ -515,7 +515,7 @@ impl NonCustomPropertyId {
                     Some(pref) => pref,
                 };
 
-                PREFS.get(pref).as_boolean().unwrap_or(false)
+                prefs::pref_map().get(pref).as_bool().unwrap_or(false)
             % else:
                 unsafe { structs::nsCSSProps_gPropertyEnabled[self.0] }
             % endif
@@ -2759,7 +2759,7 @@ pub struct ComputedValuesInner {
     pub writing_mode: WritingMode,
 
     /// A set of flags we use to store misc information regarding this style.
-    flags: ComputedValueFlags,
+    pub flags: ComputedValueFlags,
 
     /// The rule node representing the ordered list of rules matched for this
     /// node.  Can be None for default values and text nodes.  This is
@@ -3719,8 +3719,8 @@ mod lazy_static_module {
     use super::{ComputedValues, ComputedValuesInner, longhands, style_structs};
     use super::computed_value_flags::ComputedValueFlags;
 
-    /// The initial values for all style structs as defined by the specification.
     lazy_static! {
+        /// The initial values for all style structs as defined by the specification.
         pub static ref INITIAL_SERVO_VALUES: ComputedValues = ComputedValues {
             inner: ComputedValuesInner {
                 % for style_struct in data.active_style_structs():
@@ -3744,7 +3744,7 @@ mod lazy_static_module {
                 writing_mode: WritingMode::empty(),
                 rules: None,
                 visited_style: None,
-                flags: Cell::new(ComputedValueFlags::empty()),
+                flags: ComputedValueFlags::empty(),
             }
         };
     }

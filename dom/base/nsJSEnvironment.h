@@ -136,7 +136,7 @@ class nsJSContext : public nsIScriptContext {
   // Helper to convert xpcom datatypes to jsvals.
   nsresult ConvertSupportsTojsvals(nsISupports *aArgs,
                                    JS::Handle<JSObject *> aScope,
-                                   JS::AutoValueVector &aArgsOut);
+                                   JS::MutableHandleVector<JS::Value> aArgsOut);
 
   nsresult AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv);
 

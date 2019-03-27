@@ -2200,7 +2200,7 @@ static bool GetWaitForAllPromise(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
   RootedNativeObject list(cx, &args[0].toObject().as<NativeObject>());
-  AutoObjectVector promises(cx);
+  RootedObjectVector promises(cx);
   uint32_t count = list->getDenseInitializedLength();
   if (!promises.resize(count)) {
     return false;

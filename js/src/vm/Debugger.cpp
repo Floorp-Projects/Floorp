@@ -2091,7 +2091,7 @@ ResumeMode Debugger::dispatchHook(JSContext* cx, HookIsEnabledFun hookIsEnabled,
   //
   // Note: In the general case, 'triggered' contains references to objects in
   // different compartments--every compartment *except* this one.
-  AutoValueVector triggered(cx);
+  RootedValueVector triggered(cx);
   Handle<GlobalObject*> global = cx->global();
   if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
     for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
@@ -2422,7 +2422,7 @@ void Debugger::slowPathOnNewGlobalObject(JSContext* cx,
   // Make a copy of the runtime's onNewGlobalObjectWatchers before running the
   // handlers. Since one Debugger's handler can disable another's, the list
   // can be mutated while we're walking it.
-  AutoObjectVector watchers(cx);
+  RootedObjectVector watchers(cx);
   for (auto& dbg : cx->runtime()->onNewGlobalObjectWatchers()) {
     MOZ_ASSERT(dbg.observesNewGlobalObject());
     JSObject* obj = dbg.object;
@@ -4051,7 +4051,7 @@ bool Debugger::getDebuggees(JSContext* cx, unsigned argc, Value* vp) {
   // Obtain the list of debuggees before wrapping each debuggee, as a GC could
   // update the debuggees set while we are iterating it.
   unsigned count = dbg->debuggees.count();
-  AutoValueVector debuggees(cx);
+  RootedValueVector debuggees(cx);
   if (!debuggees.resize(count)) {
     return false;
   }
@@ -5257,7 +5257,7 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery {
       : objects(cx), cx(cx), dbg(dbg), className(cx) {}
 
   /* The vector that we are accumulating results in. */
-  AutoObjectVector objects;
+  RootedObjectVector objects;
 
   /* The set of debuggee compartments. */
   JS::CompartmentSet debuggeeCompartments;
@@ -5469,7 +5469,7 @@ bool Debugger::findObjects(JSContext* cx, unsigned argc, Value* vp) {
 bool Debugger::findAllGlobals(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGGER(cx, argc, vp, "findAllGlobals", args, dbg);
 
-  AutoObjectVector globals(cx);
+  RootedObjectVector globals(cx);
 
   {
     // Accumulate the list of globals before wrapping them, because
@@ -9299,7 +9299,7 @@ static bool DebuggerGenericEval(JSContext* cx,
   // Gather keys and values of bindings, if any. This must be done in the
   // debugger compartment, since that is where any exceptions must be thrown.
   AutoIdVector keys(cx);
-  AutoValueVector values(cx);
+  RootedValueVector values(cx);
   if (bindings) {
     if (!GetPropertyKeys(cx, bindings, JSITER_OWNONLY, &keys) ||
         !values.growBy(keys.length())) {
@@ -9349,7 +9349,7 @@ static bool DebuggerGenericEval(JSContext* cx,
       }
     }
 
-    AutoObjectVector envChain(cx);
+    RootedObjectVector envChain(cx);
     if (!envChain.append(nenv)) {
       return false;
     }
@@ -13093,8 +13093,8 @@ JS_PUBLIC_API bool JS::dbg::IsDebugger(JSObject& obj) {
          js::Debugger::fromJSObject(unwrapped) != nullptr;
 }
 
-JS_PUBLIC_API bool JS::dbg::GetDebuggeeGlobals(JSContext* cx, JSObject& dbgObj,
-                                               AutoObjectVector& vector) {
+JS_PUBLIC_API bool JS::dbg::GetDebuggeeGlobals(
+    JSContext* cx, JSObject& dbgObj, MutableHandleObjectVector vector) {
   MOZ_ASSERT(IsDebugger(dbgObj));
   /* Since we know we have a debugger object, CheckedUnwrapStatic is fine. */
   js::Debugger* dbg = js::Debugger::fromJSObject(CheckedUnwrapStatic(&dbgObj));
@@ -13269,7 +13269,7 @@ JS_PUBLIC_API bool FireOnGarbageCollectionHookRequired(JSContext* cx) {
 
 JS_PUBLIC_API bool FireOnGarbageCollectionHook(
     JSContext* cx, JS::dbg::GarbageCollectionEvent::Ptr&& data) {
-  AutoObjectVector triggered(cx);
+  RootedObjectVector triggered(cx);
 
   {
     // We had better not GC (and potentially get a dangling Debugger

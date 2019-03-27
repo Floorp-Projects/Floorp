@@ -226,7 +226,7 @@ void ChromeUtils::ShallowClone(GlobalObject& aGlobal, JS::HandleObject aObj,
   auto cleanup = MakeScopeExit([&]() { aRv.NoteJSContextException(cx); });
 
   JS::Rooted<JS::IdVector> ids(cx, JS::IdVector(cx));
-  JS::AutoValueVector values(cx);
+  JS::RootedVector<JS::Value> values(cx);
   JS::AutoIdVector valuesIds(cx);
 
   {

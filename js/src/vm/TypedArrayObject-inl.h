@@ -452,7 +452,7 @@ class ElementSpecific {
 
     // Convert any remaining elements by first collecting them into a
     // temporary list, and then copying them into the typed array.
-    AutoValueVector values(cx);
+    RootedValueVector values(cx);
     if (!values.append(srcValues + i, len - i)) {
       return false;
     }

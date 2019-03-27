@@ -586,7 +586,7 @@ nsresult SerializeEventsArray(const EventRecordArray& events, JSContext* cx,
     // [timestamp, category, method, object, value]
     // [timestamp, category, method, object, null, extra]
     // [timestamp, category, method, object, value, extra]
-    JS::AutoValueVector items(cx);
+    JS::RootedVector<JS::Value> items(cx);
 
     // Add timestamp.
     JS::Rooted<JS::Value> val(cx);

@@ -46,25 +46,17 @@ add_task(async function() {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
-  const workerTarget = findDebugTargetByText(testWorker.name, document);
-  ok(workerTarget, "Worker target appeared for the test worker");
-  const inspectButton = workerTarget.querySelector(".js-debug-target-inspect-button");
-  ok(inspectButton, "Inspect button for the worker appeared");
+  info("Open a toolbox to debug the worker");
+  const { devtoolsTab, devtoolsWindow } =
+    await openAboutDevtoolsToolbox(document, tab, window, testWorker.name, false);
 
   info("Check whether the correct actor front will be opened in worker toolbox");
-  const waitForWorkerInspection = new Promise(resolve => {
-    // Override openWorkerToolbox of gDevToolsBrowser to check the parameter.
-    gDevToolsBrowser.openWorkerToolbox = front => {
-      if (front === testWorkerTargetFront) {
-        resolve();
-      }
-    };
-  });
+  const url = new window.URL(devtoolsWindow.location.href);
+  const workderID = url.searchParams.get("id");
+  is(workderID, testWorkerTargetFront.actorID,
+     "Correct actor front will be opened in worker toolbox");
 
-  inspectButton.click();
-
-  await waitForWorkerInspection;
-  ok(true, "Correct actor front will be opened in worker toolbox");
-
+  await removeTab(devtoolsTab);
+  await waitUntil(() => !findDebugTargetByText("about:devtools-toolbox?", document));
   await removeTab(tab);
 });

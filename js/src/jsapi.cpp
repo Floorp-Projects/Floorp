@@ -3308,7 +3308,7 @@ JS_PUBLIC_API JSObject* JS::CloneFunctionObject(JSContext* cx,
 }
 
 extern JS_PUBLIC_API JSObject* JS::CloneFunctionObject(
-    JSContext* cx, HandleObject funobj, AutoObjectVector& envChain) {
+    JSContext* cx, HandleObject funobj, HandleObjectVector envChain) {
   RootedObject env(cx);
   RootedScope scope(cx);
   if (!CreateNonSyntacticEnvironmentChain(cx, envChain, &env, &scope)) {
@@ -4135,7 +4135,7 @@ JS_PUBLIC_API bool JS::SetPromiseUserInputEventHandlingState(
  * Asserts that the array is dense and all entries are Promise objects.
  */
 JS_PUBLIC_API JSObject* JS::GetWaitForAllPromise(
-    JSContext* cx, const JS::AutoObjectVector& promises) {
+    JSContext* cx, JS::HandleObjectVector promises) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
@@ -5346,9 +5346,6 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
         break;
       }
       jit::JitOptions.setCompilerWarmUpThreshold(value);
-      if (value == 0) {
-        jit::JitOptions.setEagerCompilation();
-      }
       break;
     case JSJITCOMPILER_ION_GVN_ENABLE:
       if (value == 0) {
@@ -5472,8 +5469,7 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       *valueOut = jit::JitOptions.baselineWarmUpThreshold;
       break;
     case JSJITCOMPILER_ION_WARMUP_TRIGGER:
-      *valueOut = jit::JitOptions.forcedDefaultIonWarmUpThreshold.valueOr(
-          jit::OptimizationInfo::CompilerWarmupThreshold);
+      *valueOut = jit::JitOptions.normalIonWarmUpThreshold;
       break;
     case JSJITCOMPILER_ION_FORCE_IC:
       *valueOut = jit::JitOptions.forceInlineCaches;

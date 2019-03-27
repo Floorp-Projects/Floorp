@@ -2193,11 +2193,6 @@ VARCACHE_PREF(
   bool, true
 )
 
-VARCACHE_PREF(
-  "security.csp.experimentalEnabled",
-   security_csp_experimentalEnabled,
-  bool, false
-)
 
 VARCACHE_PREF(
   "security.csp.enableStrictDynamic",

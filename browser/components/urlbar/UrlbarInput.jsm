@@ -1223,6 +1223,8 @@ class UrlbarInput {
       return;
     }
 
+    this.view.removeAccessibleFocus();
+
     // During composition with an IME, the following events happen in order:
     // 1. a compositionstart event
     // 2. some input events

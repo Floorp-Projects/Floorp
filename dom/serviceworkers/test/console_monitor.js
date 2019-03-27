@@ -15,6 +15,7 @@ ConsoleListener.prototype  = {
     }
 
     let msg = {
+      cssSelectors  : aMsg.cssSelectors,
       errorMessage  : aMsg.errorMessage,
       sourceName    : aMsg.sourceName,
       sourceLine    : aMsg.sourceLine,
