@@ -282,8 +282,8 @@ class RemoteSettingsClient extends EventEmitter {
    * @param {string} options.trigger   label to identify what triggered this sync (eg. ``"timer"``, default: `"manual"`)
    * @return {Promise}                 which rejects on sync or process failure.
    */
-  async maybeSync(expectedTimestamp, options = { loadDump: true, trigger: "manual" }) {
-    const { loadDump, trigger } = options;
+  async maybeSync(expectedTimestamp, options = {}) {
+    const { loadDump = true, trigger = "manual" } = options;
 
     let reportStatus = null;
     try {
