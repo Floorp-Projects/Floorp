@@ -7,6 +7,9 @@ var EXPORTED_SYMBOLS = ["RemoteWebProgressManager"];
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+ChromeUtils.defineModuleGetter(this, "E10SUtils",
+                               "resource://gre/modules/E10SUtils.jsm");
+
 function RemoteWebProgressRequest(uriOrSpec, originalURIOrSpec, matchedList) {
   this.wrappedJSObject = this;
 
@@ -287,6 +290,7 @@ RemoteWebProgressManager.prototype = {
         this._browser._contentTitle = json.title;
         this._browser._imageDocument = null;
         this._browser._contentPrincipal = json.principal;
+        this._browser._csp = E10SUtils.deserializeCSP(json.csp);
         this._browser._isSyntheticDocument = json.synthetic;
         this._browser._innerWindowID = json.innerWindowID;
         this._browser._contentRequestContextID = json.requestContextID;
