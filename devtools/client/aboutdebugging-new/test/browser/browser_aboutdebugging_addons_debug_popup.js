@@ -114,15 +114,13 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
     name: ADDON_NAME,
   }, document);
 
-  const target = findDebugTargetByText(ADDON_NAME, document);
-
   info("Open a toolbox to debug the addon");
-  const onToolboxReady = gDevTools.once("toolbox-ready");
+  const { devtoolsTab, devtoolsWindow } =
+    await openAboutDevtoolsToolbox(document, tab, aboutDebuggingWindow, ADDON_NAME);
+  const toolbox = getToolbox(devtoolsWindow);
+
   const onToolboxClose = gDevTools.once("toolbox-destroyed");
-  const inspectButton = target.querySelector(".js-debug-target-inspect-button");
-  inspectButton.click();
-  const toolbox = await onToolboxReady;
-  toolboxTestScript(toolbox);
+  toolboxTestScript(toolbox, devtoolsTab);
 
   info("Wait until the addon popup is opened from the test script");
   await onReadyForOpenPopup;
@@ -155,7 +153,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   await removeTab(tab);
 });
 
-async function toolboxTestScript(toolbox) {
+async function toolboxTestScript(toolbox, devtoolsTab) {
   let jsterm;
   const popupFramePromise = new Promise(resolve => {
     const listener = data => {
@@ -225,7 +223,7 @@ async function toolboxTestScript(toolbox) {
 
       await jsterm.execute("myWebExtensionPopupAddonFunction()");
 
-      await toolbox.closeToolbox();
+      await removeTab(devtoolsTab);
     })
     .catch((error) => {
       dump("Error while running code in the browser toolbox process:\n");

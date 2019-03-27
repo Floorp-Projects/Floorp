@@ -67,12 +67,12 @@ async function openAboutDebugging({ enableWorkerUpdates, enableLocalTabs = true 
   return { tab, document, window };
 }
 
-async function openAboutDevtoolsToolbox(doc, tab, win) {
+async function openAboutDevtoolsToolbox(doc, tab, win, targetText = "about:debugging") {
   info("Open about:devtools-toolbox page");
-  const target = findDebugTargetByText("about:debugging", doc);
-  ok(target, "about:debugging tab target appeared");
+  const target = findDebugTargetByText(targetText, doc);
+  ok(target, `${ targetText } tab target appeared`);
   const inspectButton = target.querySelector(".js-debug-target-inspect-button");
-  ok(inspectButton, "Inspect button for about:debugging appeared");
+  ok(inspectButton, `Inspect button for ${ targetText } appeared`);
   inspectButton.click();
   await Promise.all([
     waitUntil(() => tab.nextElementSibling),
