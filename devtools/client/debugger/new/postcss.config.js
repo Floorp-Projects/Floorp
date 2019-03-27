@@ -5,19 +5,13 @@
 var mapUrl = require("postcss-url-mapper");
 const debug = require("debug")("launchpad");
 
-function mapUrlProduction(url) {
-  const newUrl = url.replace(
-    /\/images\//,
-    "resource://devtools/client/debugger/new/images/"
-  );
-
-  debug("map url", { url, newUrl });
-  return newUrl;
-}
-
 function mapUrlDevelopment(url) {
   const newUrl = url
-    .replace(/(chrome:\/\/|resource:\/\/)/, "/mc/")
+    .replace(
+      /resource:\/\/devtools\/client\/debugger\/new\/images\//,
+      "/images/"
+    )
+    .replace(/(chrome:\/\/)/, "/images/")
     .replace(/devtools\/skin/, "devtools/client/themes")
     .replace(/devtools\/content/, "devtools/client");
 
@@ -27,9 +21,7 @@ function mapUrlDevelopment(url) {
 
 module.exports = ({ file, options, env }) => {
   if (env === "production") {
-    return {
-      plugins: [mapUrl(mapUrlProduction)]
-    };
+    return {};
   }
 
   return {

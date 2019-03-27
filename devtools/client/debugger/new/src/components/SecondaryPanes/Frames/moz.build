@@ -15,3 +15,9 @@ CompiledModules(
     'index.js',
     'WhyPaused.js',
 )
+
+DevToolsModules(
+    'Frames.css',
+    'Group.css',
+    'WhyPaused.css',
+)
