@@ -196,14 +196,16 @@ release-beetmover-push-to-release publishes promoted releases from the
 candidates directory to the release directory. This is part of release
 promotion.
 
+beetmover-snap
+--------------
+Beetmover-source publishes Ubuntu's snap. This is part of release promotion.
+
 beetmover-source
 ----------------
-
 Beetmover-source publishes release source. This is part of release promotion.
 
 beetmover-geckoview
 -------------------
-
 Beetmover-geckoview publishes the Android library called "geckoview".
 
 checksums-signing
