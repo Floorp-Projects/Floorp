@@ -10354,7 +10354,12 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 
   int32_t warmUpThreshold = op.getIntOption("ion-warmup-threshold");
   if (warmUpThreshold >= 0) {
-    jit::JitOptions.setCompilerWarmUpThreshold(warmUpThreshold);
+    jit::JitOptions.setNormalIonWarmUpThreshold(warmUpThreshold);
+  }
+
+  warmUpThreshold = op.getIntOption("ion-full-warmup-threshold");
+  if (warmUpThreshold >= 0) {
+    jit::JitOptions.setFullIonWarmUpThreshold(warmUpThreshold);
   }
 
   warmUpThreshold = op.getIntOption("baseline-warmup-threshold");
@@ -10946,7 +10951,11 @@ int main(int argc, char** argv, char** envp) {
           "Don't compile very large scripts (default: on, off to disable)") ||
       !op.addIntOption('\0', "ion-warmup-threshold", "COUNT",
                        "Wait for COUNT calls or iterations before compiling "
-                       "(default: 1000)",
+                       "at the normal optimization level (default: 1000)",
+                       -1) ||
+      !op.addIntOption('\0', "ion-full-warmup-threshold", "COUNT",
+                       "Wait for COUNT calls or iterations before compiling "
+                       "at the 'full' optimization level (default: 100,000)",
                        -1) ||
       !op.addStringOption(
           '\0', "ion-regalloc", "[mode]",
