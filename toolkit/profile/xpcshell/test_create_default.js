@@ -9,8 +9,7 @@ add_task(async () => {
   checkStartupReason("firstrun-created-default");
 
   let profileData = readProfilesIni();
-  let installData = readInstallsIni();
-  checkProfileService(profileData, installData);
+  checkProfileService(profileData);
 
   Assert.ok(didCreate, "Should have created a new profile.");
   Assert.equal(profile, service.defaultProfile, "Should now be the default profile.");
@@ -29,5 +28,5 @@ add_task(async () => {
   Assert.ok(!profile.default, "Should not be marked as the old-style default.");
 
   let hash = xreDirProvider.getInstallHash();
-  Assert.ok(installData.installs[hash].locked, "Should have locked the profile");
+  Assert.ok(profileData.installs[hash].locked, "Should have locked the profile");
 });

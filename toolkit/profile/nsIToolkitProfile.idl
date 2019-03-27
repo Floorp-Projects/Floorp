@@ -46,7 +46,7 @@ interface nsIProfileLock : nsISupports
  * @note THIS INTERFACE SHOULD BE IMPLEMENTED BY THE TOOLKIT CODE ONLY! DON'T
  *       EVEN THINK ABOUT IMPLEMENTING THIS IN JAVASCRIPT!
  */
-[scriptable, uuid(7422b090-4a86-4407-972e-75468a625388)]
+[scriptable, builtinclass, uuid(7422b090-4a86-4407-972e-75468a625388)]
 interface nsIToolkitProfile : nsISupports
 {
     /**
