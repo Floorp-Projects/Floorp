@@ -24000,10 +24000,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
     nsCString flatCloneData;
     flatCloneData.SetLength(cloneDataSize);
     auto iter = cloneData.Start();
-    if (NS_WARN_IF(!cloneData.ReadBytes(iter, flatCloneData.BeginWriting(),
-                                        cloneDataSize))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    cloneData.ReadBytes(iter, flatCloneData.BeginWriting(), cloneDataSize);
 
     // Compress the bytes before adding into the database.
     const char* uncompressed = flatCloneData.BeginReading();
@@ -24242,10 +24239,7 @@ ObjectStoreAddOrPutRequestOp::SCInputStream::ReadSegments(
     *_retval += count;
     aCount -= count;
 
-    if (NS_WARN_IF(!mData.Advance(mIter, count))) {
-      // InputStreams do not propagate errors to caller.
-      return NS_OK;
-    }
+    mData.Advance(mIter, count);
   }
 
   return NS_OK;
