@@ -48,7 +48,6 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
     Default,
     LowLatency,
     HardwareDecoderNotAllowed,
-    FullH264Parsing,
   };
   using OptionSet = EnumSet<Option>;
 
