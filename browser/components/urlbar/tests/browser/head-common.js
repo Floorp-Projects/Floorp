@@ -18,16 +18,6 @@ XPCOMUtils.defineLazyGetter(this, "TEST_BASE_URL", () =>
 
 SearchTestUtils.init(Assert, registerCleanupFunction);
 
-function is_element_visible(element, msg) {
-  isnot(element, null, "Element should not be null, when checking visibility");
-  ok(BrowserTestUtils.is_visible(element), msg || "Element should be visible");
-}
-
-function is_element_hidden(element, msg) {
-  isnot(element, null, "Element should not be null, when checking visibility");
-  ok(BrowserTestUtils.is_hidden(element), msg || "Element should be hidden");
-}
-
 /**
  * Initializes an HTTP Server, and runs a task with it.
  * @param {object} details {scheme, host, port}
@@ -61,14 +51,6 @@ async function withHttpServer(details = { scheme: "http", host: "localhost", por
   }
 }
 
-function promisePopupShown(popup) {
-  return BrowserTestUtils.waitForPopupEvent(popup, "shown");
-}
-
-function promisePopupHidden(popup) {
-  return BrowserTestUtils.waitForPopupEvent(popup, "hidden");
-}
-
 function promiseSearchComplete(win = window, dontAnimate = false) {
   return UrlbarTestUtils.promiseSearchComplete(win, dontAnimate);
 }
@@ -86,8 +68,4 @@ async function waitForAutocompleteResultAt(index) {
 
 function promiseSuggestionsPresent(msg = "") {
   return UrlbarTestUtils.promiseSuggestionsPresent(window, msg);
-}
-
-function suggestionsPresent() {
-  return UrlbarTestUtils.suggestionsPresent(window);
 }
