@@ -21,12 +21,12 @@ ChromeUtils.defineModuleGetter(this, "OS",
 const {debug, warn} = GeckoViewUtils.initLogging("ContentCrashHandler"); // eslint-disable-line no-unused-vars
 
 function getDir(name) {
-  let uAppDataPath = Services.dirsvc.get("UAppData", Ci.nsIFile).path;
+  const uAppDataPath = Services.dirsvc.get("UAppData", Ci.nsIFile).path;
   return OS.Path.join(uAppDataPath, "Crash Reports", name);
 }
 
 function getPendingMinidump(id) {
-  let pendingDir = getDir("pending");
+  const pendingDir = getDir("pending");
 
   return [".dmp", ".extra"].map(suffix => {
     return OS.Path.join(pendingDir, `${id}${suffix}`);
@@ -46,7 +46,7 @@ var ContentCrashHandler = {
       return;
     }
 
-    let dumpID = aSubject.get("dumpID");
+    const dumpID = aSubject.get("dumpID");
     if (!dumpID) {
       Services.telemetry
               .getHistogramById("FX_CONTENT_CRASH_DUMP_UNAVAILABLE")

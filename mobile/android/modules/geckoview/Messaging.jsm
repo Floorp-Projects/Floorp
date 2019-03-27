@@ -70,8 +70,8 @@ DispatcherDelegate.prototype = {
       return;
     }
 
-    let mm = this._messageManager || Services.cpmm;
-    let forwardData = {
+    const mm = this._messageManager || Services.cpmm;
+    const forwardData = {
       global: !this._messageManager,
       event: aEvent,
       data: aData,
@@ -182,11 +182,11 @@ var EventDispatcher = {
    * @param aWindow a chrome DOM window.
    */
   for: function(aWindow) {
-    let view = aWindow && aWindow.arguments && aWindow.arguments[0] &&
-               aWindow.arguments[0].QueryInterface(Ci.nsIAndroidView);
+    const view = aWindow && aWindow.arguments && aWindow.arguments[0] &&
+                 aWindow.arguments[0].QueryInterface(Ci.nsIAndroidView);
 
     if (!view) {
-      let mm = !IS_PARENT_PROCESS && aWindow && aWindow.messageManager;
+      const mm = !IS_PARENT_PROCESS && aWindow && aWindow.messageManager;
       if (!mm) {
         throw new Error("window is not a GeckoView-connected window and does" +
                         " not have a message manager");
@@ -211,7 +211,7 @@ var EventDispatcher = {
     // aMsg.data includes keys: global, event, data, uuid
     let callback;
     if (aMsg.data.uuid) {
-      let reply = (type, response) => {
+      const reply = (type, response) => {
         const mm = aMsg.data.global ? aMsg.target : aMsg.target.messageManager;
         if (!mm) {
           if (type === "finalize") {
@@ -241,8 +241,8 @@ var EventDispatcher = {
       return;
     }
 
-    let win = aMsg.target.ownerGlobal;
-    let dispatcher = win.WindowEventDispatcher || this.for(win);
+    const win = aMsg.target.ownerGlobal;
+    const dispatcher = win.WindowEventDispatcher || this.for(win);
     dispatcher.dispatch(aMsg.data.event, aMsg.data.data, callback, callback);
   },
 };

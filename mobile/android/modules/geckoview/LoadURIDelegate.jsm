@@ -55,8 +55,8 @@ const LoadURIDelegate = {
                             aErrorModule) {
     let errorClass = 0;
     try {
-      let nssErrorsService = Cc["@mozilla.org/nss_errors_service;1"]
-                             .getService(Ci.nsINSSErrorsService);
+      const nssErrorsService = Cc["@mozilla.org/nss_errors_service;1"]
+                               .getService(Ci.nsINSSErrorsService);
       errorClass = nssErrorsService.getErrorClass(aError);
     } catch (e) {}
 

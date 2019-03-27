@@ -23,7 +23,7 @@ class Tab {
 // Stub BrowserApp implementation for WebExtensions support.
 class GeckoViewTab extends GeckoViewModule {
   onInit() {
-    let tab = new Tab(0, this.browser);
+    const tab = new Tab(0, this.browser);
 
     this.window.gBrowser = this.window.BrowserApp = {
       selectedBrowser: this.browser,
