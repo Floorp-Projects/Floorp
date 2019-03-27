@@ -26,7 +26,7 @@
 #define kMinUnwrittenChanges 300
 #define kMinDumpInterval 20000  // in milliseconds
 #define kMaxBufSize 16384
-#define kIndexVersion 0x00000006
+#define kIndexVersion 0x00000007
 #define kUpdateIndexStartDelay 50000  // in milliseconds
 
 #define INDEX_NAME "index"
@@ -925,14 +925,17 @@ nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
                                  const bool *aHasAltData,
                                  const uint16_t *aOnStartTime,
                                  const uint16_t *aOnStopTime,
+                                 const uint8_t *aContentType,
                                  const uint32_t *aSize) {
   LOG(
       ("CacheIndex::UpdateEntry() [hash=%08x%08x%08x%08x%08x, "
-       "frecency=%s, hasAltData=%s, onStartTime=%s, onStopTime=%s, size=%s]",
+       "frecency=%s, hasAltData=%s, onStartTime=%s, onStopTime=%s, "
+       "contentType=%s, size=%s]",
        LOGSHA1(aHash), aFrecency ? nsPrintfCString("%u", *aFrecency).get() : "",
        aHasAltData ? (*aHasAltData ? "true" : "false") : "",
        aOnStartTime ? nsPrintfCString("%u", *aOnStartTime).get() : "",
        aOnStopTime ? nsPrintfCString("%u", *aOnStopTime).get() : "",
+       aContentType ? nsPrintfCString("%u", *aContentType).get() : "",
        aSize ? nsPrintfCString("%u", *aSize).get() : ""));
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
@@ -971,7 +974,7 @@ nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
       }
 
       if (!HasEntryChanged(entry, aFrecency, aHasAltData, aOnStartTime,
-                           aOnStopTime, aSize)) {
+                           aOnStopTime, aContentType, aSize)) {
         return NS_OK;
       }
 
@@ -993,6 +996,10 @@ nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
 
       if (aOnStopTime) {
         entry->SetOnStopTime(*aOnStopTime);
+      }
+
+      if (aContentType) {
+        entry->SetContentType(*aContentType);
       }
 
       if (aSize) {
@@ -1039,6 +1046,10 @@ nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
 
       if (aOnStopTime) {
         updated->SetOnStopTime(*aOnStopTime);
+      }
+
+      if (aContentType) {
+        updated->SetContentType(*aContentType);
       }
 
       if (aSize) {
@@ -1523,12 +1534,10 @@ bool CacheIndex::IsCollision(CacheIndexEntry *aEntry,
 }
 
 // static
-bool CacheIndex::HasEntryChanged(CacheIndexEntry *aEntry,
-                                 const uint32_t *aFrecency,
-                                 const bool *aHasAltData,
-                                 const uint16_t *aOnStartTime,
-                                 const uint16_t *aOnStopTime,
-                                 const uint32_t *aSize) {
+bool CacheIndex::HasEntryChanged(
+    CacheIndexEntry *aEntry, const uint32_t *aFrecency, const bool *aHasAltData,
+    const uint16_t *aOnStartTime, const uint16_t *aOnStopTime,
+    const uint8_t *aContentType, const uint32_t *aSize) {
   if (aFrecency && *aFrecency != aEntry->GetFrecency()) {
     return true;
   }
@@ -1542,6 +1551,10 @@ bool CacheIndex::HasEntryChanged(CacheIndexEntry *aEntry,
   }
 
   if (aOnStopTime && *aOnStopTime != aEntry->GetOnStopTime()) {
+    return true;
+  }
+
+  if (aContentType && *aContentType != aEntry->GetContentType()) {
     return true;
   }
 
@@ -2613,6 +2626,8 @@ nsresult CacheIndex::SetupDirectoryEnumerator() {
 nsresult CacheIndex::InitEntryFromDiskData(CacheIndexEntry *aEntry,
                                            CacheFileMetadata *aMetaData,
                                            int64_t aFileSize) {
+  nsresult rv;
+
   aEntry->InitNew();
   aEntry->MarkDirty();
   aEntry->MarkFresh();
@@ -2646,6 +2661,18 @@ nsresult CacheIndex::InitEntryFromDiskData(CacheIndexEntry *aEntry,
       toUint16(aMetaData->GetElement("net-response-time-onstart")));
   aEntry->SetOnStopTime(
       toUint16(aMetaData->GetElement("net-response-time-onstop")));
+
+  const char *contentTypeStr = aMetaData->GetElement("ctid");
+  uint8_t contentType = nsICacheEntry::CONTENT_TYPE_UNKNOWN;
+  if (contentTypeStr) {
+    int64_t n64 = nsDependentCString(contentTypeStr).ToInteger64(&rv);
+    if (NS_FAILED(rv) || n64 < nsICacheEntry::CONTENT_TYPE_UNKNOWN ||
+        n64 >= nsICacheEntry::CONTENT_TYPE_LAST) {
+      n64 = nsICacheEntry::CONTENT_TYPE_UNKNOWN;
+    }
+    contentType = n64;
+  }
+  aEntry->SetContentType(contentType);
 
   aEntry->SetFileSize(static_cast<uint32_t>(std::min(
       static_cast<int64_t>(PR_UINT32_MAX), (aFileSize + 0x3FF) >> 10)));
