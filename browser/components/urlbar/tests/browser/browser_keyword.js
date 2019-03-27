@@ -81,7 +81,7 @@ add_task(async function test_keyword_using_get() {
     // QuantumBar doesn't have separate boxes for items.
     let urlHbox = element._urlText.parentNode.parentNode;
     Assert.ok(urlHbox.classList.contains("ac-url"), "URL hbox element sanity check");
-    is_element_hidden(urlHbox, "URL element should be hidden");
+    BrowserTestUtils.is_hidden(urlHbox, "URL element should be hidden");
   }
 
   // Click on the result
