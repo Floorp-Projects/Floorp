@@ -101,6 +101,33 @@ events:
     - telemetry-client-dev@mozilla.com
     expires: "2020-03-01"
 
+crash_reporter:
+    opened:
+      type: event
+      description: >
+        The crash reporter was displayed
+      bugs:
+      - 1040
+      data_reviews:
+      - TBD
+      notification_emails:
+      - telemetry-client-dev@mozilla.com
+      expires: "2020-03-01"
+    closed:
+      type: event
+      description: >
+        The crash reporter was closed
+      extra_keys:
+        crash_submitted:
+          description: "A boolean that tells us whether or not the user submitted a crash report"
+      bugs:
+      - 1040
+      data_reviews:
+      - TBD
+      notification_emails:
+      - telemetry-client-dev@mozilla.com
+      expires: "2020-03-01"
+
 context_menu:
   item_tapped:
     type: event

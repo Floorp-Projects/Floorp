@@ -99,6 +99,12 @@ sealed class Event {
         }
     }
 
+    object CrashReporterOpened : Event()
+    data class CrashReporterClosed(val crashSubmitted: Boolean) : Event() {
+        override val extras: Map<String, String>?
+            get() = mapOf("crash_submitted" to crashSubmitted.toString())
+    }
+
     open val extras: Map<String, String>?
         get() = null
 }

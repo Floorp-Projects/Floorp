@@ -15,7 +15,10 @@ import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_crash_reporter.*
 import mozilla.components.lib.crash.Crash
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.utils.Settings
 
 class CrashReporterFragment : Fragment() {
     override fun onCreateView(
@@ -26,24 +29,25 @@ class CrashReporterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val crashIntent = CrashReporterFragmentArgs.fromBundle(arguments!!).crashIntent
         val crash = Crash.fromIntent(CrashReporterFragmentArgs.fromBundle(arguments!!).crashIntent)
 
         view.findViewById<TextView>(R.id.title).text =
             getString(R.string.tab_crash_title, context!!.getString(R.string.app_name))
 
-        // TODO TelemetryWrapper.crashReporterOpened()
+        requireContext().components.analytics.metrics.track(Event.CrashReporterOpened)
 
         close_tab_button.setOnClickListener {
             val selectedSession = requireComponents.core.sessionManager.selectedSession
 
             selectedSession?.let { session -> requireComponents.useCases.tabsUseCases.removeTab.invoke(session) }
-            // TODO TelemetryWrapper.crashReporterClosed(wantsSubmitCrashReport)
 
-            if (send_crash_checkbox.isChecked) {
+            var wantsSubmitCrashReport = false
+            if (Settings.getInstance(context!!).isCrashReportingEnabled) {
                 requireComponents.analytics.crashReporter.submitReport(crash)
+                wantsSubmitCrashReport = true
             }
 
+            requireContext().components.analytics.metrics.track(Event.CrashReporterClosed(wantsSubmitCrashReport))
             navigateHome(view)
         }
     }
@@ -59,6 +63,6 @@ class CrashReporterFragment : Fragment() {
     }
 
     fun onBackPressed() {
-        // TODO TelemetryWrapper.crashReporterClosed(false)
+        requireContext().components.analytics.metrics.track(Event.CrashReporterClosed(false))
     }
 }
