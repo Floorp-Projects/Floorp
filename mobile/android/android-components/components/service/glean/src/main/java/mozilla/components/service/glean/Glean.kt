@@ -223,7 +223,8 @@ open class GleanInternalAPI internal constructor () {
         // Set a few more metrics that will be sent as part of every ping.
         StringsStorageEngine.record(GleanInternalMetrics.os, "Android")
         // https://developer.android.com/reference/android/os/Build.VERSION
-        StringsStorageEngine.record(GleanInternalMetrics.osVersion, Build.VERSION.SDK_INT.toString())
+        StringsStorageEngine.record(GleanInternalMetrics.androidSdkVersion, Build.VERSION.SDK_INT.toString())
+        StringsStorageEngine.record(GleanInternalMetrics.osVersion, Build.VERSION.RELEASE)
         // https://developer.android.com/reference/android/os/Build
         StringsStorageEngine.record(GleanInternalMetrics.deviceManufacturer, Build.MANUFACTURER)
         StringsStorageEngine.record(GleanInternalMetrics.deviceModel, Build.MODEL)

@@ -57,11 +57,26 @@ glean.internal.metrics:
     send_in_pings:
       - glean_client_info
     description: |
-      The version of the operating system.
+      The user-visible version of the operating system (e.g. "1.2.3").
     bugs:
       - 1497894
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    expires: never
+
+  android_sdk_version:
+    type: string
+    lifetime: application
+    send_in_pings:
+      - glean_client_info
+    description: |
+      The optional Android specific SDK version of the software running on this hardware device.
+    bugs:
+      - 1525606
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1525606#c14
     notification_emails:
       - telemetry-client-dev@mozilla.com
     expires: never

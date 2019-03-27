@@ -39,7 +39,8 @@ The following fields are included in the `client_info` section, for every ping.
 | `device_model` | String | The model name of the device |
 | `first_run_date` | Datetime | The date of the first run of the application, in local time and with day precision. See [note](#a-note-about-time-formats) |
 | `os` | String | The name of the operating system (e.g. "linux", "Android", "ios") |
-| `os_version` | String | The version of the operating system |
+| `os_version` | String | The user visible version of the operating system (e.g. "1.2.3") |
+| `android_sdk_version` | String | *Optional*. The Android specific SDK version of the software running on this hardware device (e.g. "23") |
 | `telemetry_sdk_build` | String | The version of the glean library |
 
 All the metrics surviving application restarts (e.g. `client_id`, ...) are removed once the
