@@ -31,6 +31,7 @@ from mozpack.test.test_files import (
     bar_xpt,
 )
 import mozpack.path as mozpath
+from itertools import chain
 from test_errors import TestErrors
 
 
@@ -222,20 +223,19 @@ RESULT_OMNIJAR.update({
     ],
     'app/omni.foo': {
         p: RESULT_FLAT['app/' + p]
-        for p in (
+        for p in chain((
             'chrome.manifest',
             'chrome/chrome.manifest',
             'chrome/foo/foo',
             'components/components.manifest',
             'components/foo.js',
-        )
+        ), (
+            mozpath.relpath(p, 'app')
+            for p in RESULT_FLAT.iterkeys()
+            if p.startswith('app/chrome/addons/addon2/')
+        ))
     },
     'app/chrome.manifest': [],
-    'app/chrome/addons/addon2.xpi': {
-        mozpath.relpath(p, 'app/chrome/addons/addon2'): f
-        for p, f in RESULT_FLAT.iteritems()
-        if p.startswith('app/chrome/addons/addon2/')
-    },
 })
 
 RESULT_OMNIJAR['omni.foo'].update({
