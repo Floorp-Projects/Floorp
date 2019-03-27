@@ -168,9 +168,9 @@ static void fpehandler(int signum, siginfo_t *si, void *context) {
 #      endif
 #    endif
 #    if defined(LINUX) && !defined(ANDROID)
-  ucontext_t *uc = (ucontext_t *)context;
 
 #      if defined(__i386__)
+  ucontext_t *uc = (ucontext_t *)context;
   /*
    * It seems that we have no access to mxcsr on Linux. libc
    * seems to be translating cw/sw to mxcsr.
@@ -182,6 +182,8 @@ static void fpehandler(int signum, siginfo_t *si, void *context) {
   *sw &= ~FPU_STATUS_FLAGS;
 #      endif
 #      if defined(__amd64__)
+  ucontext_t *uc = (ucontext_t *)context;
+
   uint16_t *cw = &uc->uc_mcontext.fpregs->cwd;
   *cw |= FPU_EXCEPTION_MASK;
 
