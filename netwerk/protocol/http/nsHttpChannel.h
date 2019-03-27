@@ -802,4 +802,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpChannel, NS_HTTPCHANNEL_IID)
 }  // namespace net
 }  // namespace mozilla
 
+inline nsISupports *ToSupports(mozilla::net::nsHttpChannel *aChannel) {
+  return static_cast<nsIHttpChannel *>(aChannel);
+}
+
 #endif  // nsHttpChannel_h__

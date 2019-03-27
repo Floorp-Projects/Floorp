@@ -547,9 +547,12 @@ nsresult nsHttpChannel::OnBeforeConnect() {
   bool shouldUpgrade = mUpgradeToSecure;
   if (isHttp) {
     if (!shouldUpgrade) {
-      RefPtr<nsHttpChannel> self = this;
-      auto resultCallback = [self{std::move(self)}](bool aResult,
-                                                    nsresult aStatus) {
+      // Make sure http channel is released on main thread.
+      // See bug 1539148 for details.
+      nsMainThreadPtrHandle<nsHttpChannel> self(
+          new nsMainThreadPtrHolder<nsHttpChannel>(
+              "nsHttpChannel::OnBeforeConnect::self", this));
+      auto resultCallback = [self(self)](bool aResult, nsresult aStatus) {
         nsresult rv = self->ContinueOnBeforeConnect(aResult, aStatus);
         if (NS_FAILED(rv)) {
           self->CloseCacheEntry(false);
