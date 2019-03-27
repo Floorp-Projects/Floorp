@@ -267,15 +267,8 @@ class TestAgent {
   void Shutdown_s() { transport_->Shutdown(); }
 
   void Shutdown() {
-    if (audio_pipeline_) {
-      audio_pipeline_->Shutdown_m();
-    }
-    if (audio_stream_track_) {
-      audio_stream_track_->Stop();
-    }
-    if (audio_conduit_) {
-      audio_conduit_->DeleteStreams();
-    }
+    if (audio_pipeline_) audio_pipeline_->Shutdown_m();
+    if (audio_stream_track_) audio_stream_track_->Stop();
 
     mozilla::SyncRunnable::DispatchToThread(
         test_utils->sts_target(), WrapRunnable(this, &TestAgent::Shutdown_s));
