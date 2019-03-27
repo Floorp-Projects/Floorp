@@ -329,12 +329,10 @@ internal object EventsStorageEngine : StorageEngine {
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     override fun clearAllStores() {
-        // We need to delete these files on the IO thread to avoid
-        // racing with writing to the file.  However, we want to
-        // block the main thread until this work is done, so the
-        // caller can rely on the files being gone.  This is not a
-        // performance problem since this function is for use in
-        // testing only.
+        // Wait until any writes have cleared until deleting all the files.
+        // This is not a performance problem since this function is for use
+        // in testing only.
+        testWaitForWrites()
         synchronized(eventFileLock) {
             storageDirectory.listFiles()?.forEach {
                 it.delete()
