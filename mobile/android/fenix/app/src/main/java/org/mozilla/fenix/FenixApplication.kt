@@ -91,13 +91,6 @@ open class FenixApplication : Application() {
     }
 
     private fun setupCrashReporting() {
-        @Suppress("ConstantConditionIf")
-        if (!BuildConfig.CRASH_REPORTING || BuildConfig.BUILD_TYPE != "release") {
-            // Only enable crash reporting if this is a release build and if crash reporting was explicitly enabled
-            // via a Gradle command line flag.
-            return
-        }
-
         components
             .analytics
             .crashReporter

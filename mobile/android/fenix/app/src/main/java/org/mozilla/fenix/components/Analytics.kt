@@ -9,6 +9,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
 import org.mozilla.fenix.BuildConfig
@@ -28,14 +29,21 @@ class Analytics(
     private val context: Context
 ) {
     val crashReporter: CrashReporter by lazy {
-        val sentryService = SentryService(
-            context,
-            BuildConfig.SENTRY_TOKEN,
-            tags = mapOf("geckoview" to "$MOZ_APP_VERSION-$MOZ_APP_BUILDID"),
-            sendEventForNativeCrashes = true
-        )
+        var services = listOf<CrashReporterService>()
 
-        val socorroService = MozillaSocorroService(context, "Fenix")
+        if (!BuildConfig.SENTRY_TOKEN.isNullOrEmpty()) {
+            val sentryService = SentryService(
+                context,
+                BuildConfig.SENTRY_TOKEN,
+                tags = mapOf("geckoview" to "$MOZ_APP_VERSION-$MOZ_APP_BUILDID"),
+                sendEventForNativeCrashes = true
+            )
+
+            services += sentryService
+        }
+
+        val socorroService = MozillaSocorroService(context, context.getString(R.string.app_name))
+        services += socorroService
 
         val intent = Intent(context, HomeActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -49,7 +57,7 @@ class Analytics(
         )
 
         CrashReporter(
-            services = listOf(sentryService, socorroService),
+            services = services,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             promptConfiguration = CrashReporter.PromptConfiguration(
                 appName = context.getString(R.string.app_name),

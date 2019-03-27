@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import java.security.InvalidParameterException
@@ -42,7 +43,8 @@ class Settings private constructor(context: Context) {
         get() = preferences.getString(appContext.getPreferenceKey(R.string.pref_key_search_engine), "") ?: ""
 
     val isCrashReportingEnabled: Boolean
-        get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_crash_reporter), true)
+        get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_crash_reporter), true) &&
+                BuildConfig.CRASH_REPORTING && BuildConfig.BUILD_TYPE == "release"
 
     val isRemoteDebuggingEnabled: Boolean
         get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_remote_debugging), false)
