@@ -170,7 +170,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   void SetPCHandle(const std::string& aPCHandle) override {}
   MediaConduitErrorCode DeliverPacket(const void* data, int len) override;
 
-  void DeleteStreams() override {}
+  void DeleteStreams() override;
 
   WebrtcAudioConduit(RefPtr<WebRtcCallWrapper> aCall,
                      nsCOMPtr<nsIEventTarget> aStsThread)

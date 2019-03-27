@@ -78,6 +78,8 @@ class AudioConduitTest : public ::testing::Test {
     mAudioConduit->Init();
   }
 
+  ~AudioConduitTest() { mAudioConduit->DeleteStreams(); }
+
   MockCall* mCall;
   RefPtr<AudioConduitWithMockChannelProxy> mAudioConduit;
 };
