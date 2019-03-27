@@ -686,15 +686,27 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
 
 void BrowsingContext::Transaction::Commit(BrowsingContext* aBrowsingContext) {
   if (XRE_IsContentProcess()) {
+    // Increment the field epoch for fields affected by this transaction. We
+    // only need to do this in content.
+#define MOZ_BC_FIELD_RACY(name, ...)          \
+  if (m##name) {                              \
+    aBrowsingContext->mFieldEpochs.m##name++; \
+  }
+#define MOZ_BC_FIELD(...) /* nothing */
+#include "mozilla/dom/BrowsingContextFieldList.h"
+
     ContentChild* cc = ContentChild::GetSingleton();
-    cc->SendCommitBrowsingContextTransaction(aBrowsingContext, *this);
+    cc->SendCommitBrowsingContextTransaction(aBrowsingContext, *this,
+                                             aBrowsingContext->mFieldEpochs);
   } else {
     MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
     for (auto iter = aBrowsingContext->Group()->ContentParentsIter();
          !iter.Done(); iter.Next()) {
-      nsRefPtrHashKey<ContentParent>* entry = iter.Get();
-      Unused << entry->GetKey()->SendCommitBrowsingContextTransaction(
-          aBrowsingContext, *this);
+      RefPtr<ContentParent> child = iter.Get()->GetKey();
+      const FieldEpochs& childEpochs =
+          aBrowsingContext->Canonical()->GetFieldEpochsForChild(child);
+      Unused << child->SendCommitBrowsingContextTransaction(aBrowsingContext,
+                                                            *this, childEpochs);
     }
   }
 
@@ -702,7 +714,23 @@ void BrowsingContext::Transaction::Commit(BrowsingContext* aBrowsingContext) {
 }
 
 void BrowsingContext::Transaction::Apply(BrowsingContext* aBrowsingContext,
-                                         ContentParent* aSource) {
+                                         ContentParent* aSource,
+                                         const FieldEpochs* aEpochs) {
+  // Filter out racy fields which have been updated in this process since this
+  // transaction was committed in the parent. This should only ever occur in the
+  // content process.
+  if (aEpochs) {
+    MOZ_ASSERT(XRE_IsContentProcess());
+#define MOZ_BC_FIELD_RACY(name, ...)                                 \
+  if (m##name) {                                                     \
+    if (aEpochs->m##name < aBrowsingContext->mFieldEpochs.m##name) { \
+      m##name.reset();                                               \
+    }                                                                \
+  }
+#define MOZ_BC_FIELD(...) /* nothing */
+#include "mozilla/dom/BrowsingContextFieldList.h"
+  }
+
 #define MOZ_BC_FIELD(name, ...)                         \
   if (m##name) {                                        \
     aBrowsingContext->WillSet##name(*m##name, aSource); \
@@ -829,6 +857,27 @@ bool IPDLParamTraits<dom::BrowsingContext::Transaction>::Read(
   }
 #include "mozilla/dom/BrowsingContextFieldList.h"
 
+  return true;
+}
+
+void IPDLParamTraits<dom::BrowsingContext::FieldEpochs>::Write(
+    IPC::Message* aMessage, IProtocol* aActor,
+    const dom::BrowsingContext::FieldEpochs& aEpochs) {
+#define MOZ_BC_FIELD_RACY(name, ...) \
+  WriteIPDLParam(aMessage, aActor, aEpochs.m##name);
+#define MOZ_BC_FIELD(...) /* nothing */
+#include "mozilla/dom/BrowsingContextFieldList.h"
+}
+
+bool IPDLParamTraits<dom::BrowsingContext::FieldEpochs>::Read(
+    const IPC::Message* aMessage, PickleIterator* aIterator, IProtocol* aActor,
+    dom::BrowsingContext::FieldEpochs* aEpochs) {
+#define MOZ_BC_FIELD_RACY(name, ...)                                    \
+  if (!ReadIPDLParam(aMessage, aIterator, aActor, &aEpochs->m##name)) { \
+    return false;                                                       \
+  }
+#define MOZ_BC_FIELD(...) /* nothing */
+#include "mozilla/dom/BrowsingContextFieldList.h"
   return true;
 }
 

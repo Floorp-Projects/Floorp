@@ -250,6 +250,17 @@ class BrowsingContext : public nsWrapperCache,
   void StartDelayedAutoplayMediaComponents();
 
   /**
+   * Each synced racy field in a BrowsingContext needs to have a epoch value
+   * which is used to resolve race conflicts by ensuring that only the last
+   * message received in the parent process wins.
+   */
+  struct FieldEpochs {
+#define MOZ_BC_FIELD(...) /* nothing */
+#define MOZ_BC_FIELD_RACY(name, ...) uint64_t m##name = 0;
+#include "mozilla/dom/BrowsingContextFieldList.h"
+  };
+
+  /**
    * Transaction object. This object is used to specify and then commit
    * modifications to synchronized fields in BrowsingContexts.
    */
@@ -267,7 +278,8 @@ class BrowsingContext : public nsWrapperCache,
     //
     // |aSource| is the ContentParent which is performing the mutation in the
     // parent process.
-    void Apply(BrowsingContext* aOwner, ContentParent* aSource);
+    void Apply(BrowsingContext* aOwner, ContentParent* aSource,
+               const FieldEpochs* aEpochs = nullptr);
 
     bool HasNonRacyField() const {
 #define MOZ_BC_FIELD(name, ...) \
@@ -431,6 +443,8 @@ class BrowsingContext : public nsWrapperCache,
   JS::Heap<JSObject*> mWindowProxy;
   LocationProxy mLocation;
 
+  FieldEpochs mFieldEpochs;
+
   // Is the most recent Document in this BrowsingContext loaded within this
   // process? This may be true with a null mDocShell after the Window has been
   // closed.
@@ -450,6 +464,7 @@ extern bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
                                       JS::MutableHandle<JSObject*> aRetVal);
 
 typedef BrowsingContext::Transaction BrowsingContextTransaction;
+typedef BrowsingContext::FieldEpochs BrowsingContextFieldEpochs;
 typedef BrowsingContext::IPCInitializer BrowsingContextInitializer;
 
 }  // namespace dom
@@ -472,6 +487,16 @@ struct IPDLParamTraits<dom::BrowsingContext::Transaction> {
   static bool Read(const IPC::Message* aMessage, PickleIterator* aIterator,
                    IProtocol* aActor,
                    dom::BrowsingContext::Transaction* aTransaction);
+};
+
+template <>
+struct IPDLParamTraits<dom::BrowsingContext::FieldEpochs> {
+  static void Write(IPC::Message* aMessage, IProtocol* aActor,
+                    const dom::BrowsingContext::FieldEpochs& aEpochs);
+
+  static bool Read(const IPC::Message* aMessage, PickleIterator* aIterator,
+                   IProtocol* aActor,
+                   dom::BrowsingContext::FieldEpochs* aEpochs);
 };
 
 template <>

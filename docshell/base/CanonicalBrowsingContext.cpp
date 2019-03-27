@@ -148,5 +148,20 @@ void CanonicalBrowsingContext::NotifyStartDelayedAutoplayMedia() {
   }
 }
 
+void CanonicalBrowsingContext::SetFieldEpochsForChild(
+    ContentParent* aChild, const BrowsingContext::FieldEpochs& aEpochs) {
+  mChildFieldEpochs.Put(aChild->ChildID(), aEpochs);
+}
+
+const BrowsingContext::FieldEpochs&
+CanonicalBrowsingContext::GetFieldEpochsForChild(ContentParent* aChild) {
+  static const BrowsingContext::FieldEpochs sDefaultFieldEpochs;
+
+  if (auto entry = mChildFieldEpochs.Lookup(aChild->ChildID())) {
+    return entry.Data();
+  }
+  return sDefaultFieldEpochs;
+}
+
 }  // namespace dom
 }  // namespace mozilla
