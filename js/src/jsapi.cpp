@@ -5481,9 +5481,6 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
         break;
       }
       jit::JitOptions.setCompilerWarmUpThreshold(value);
-      if (value == 0) {
-        jit::JitOptions.setEagerCompilation();
-      }
       break;
     case JSJITCOMPILER_ION_GVN_ENABLE:
       if (value == 0) {
