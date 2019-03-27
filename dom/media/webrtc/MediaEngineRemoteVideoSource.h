@@ -135,10 +135,6 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   nsresult FocusOnSelectedSource(
       const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) override;
-  void Pull(const RefPtr<const AllocationHandle>& aHandle,
-            const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-            StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
-            const PrincipalHandle& aPrincipalHandle) override;
 
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 

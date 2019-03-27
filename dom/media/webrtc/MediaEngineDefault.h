@@ -22,7 +22,6 @@
 #include "StreamTracks.h"
 #include "MediaEngineSource.h"
 #include "MediaStreamGraph.h"
-#include "SineWaveGenerator.h"
 
 namespace mozilla {
 
@@ -59,10 +58,6 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
                        const char** aOutBadConstraint) override;
   nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult Deallocate(const RefPtr<const AllocationHandle>& aHandle) override;
-  void Pull(const RefPtr<const AllocationHandle>& aHandle,
-            const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-            StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
-            const PrincipalHandle& aPrincipalHandle) override;
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
@@ -101,7 +96,7 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
   const nsString mName;
 };
 
-class SineWaveGenerator;
+class AudioSourcePullListener;
 
 class MediaEngineDefaultAudioSource : public MediaEngineSource {
  public:
@@ -127,12 +122,6 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
                        const char** aOutBadConstraint) override;
   nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult Deallocate(const RefPtr<const AllocationHandle>& aHandle) override;
-  void inline AppendToSegment(AudioSegment& aSegment, TrackTicks aSamples,
-                              const PrincipalHandle& aPrincipalHandle);
-  void Pull(const RefPtr<const AllocationHandle>& aHandle,
-            const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-            StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
-            const PrincipalHandle& aPrincipalHandle) override;
 
   bool IsFake() const override { return true; }
 
@@ -149,21 +138,13 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
  protected:
   ~MediaEngineDefaultAudioSource();
 
-  // mMutex protects mState, mStream, mTrackID
-  Mutex mMutex;
-
   // Current state of this source.
-  // Set under mMutex on the owning thread. Accessed under one of the two.
   MediaEngineSourceState mState = kReleased;
   RefPtr<SourceMediaStream> mStream;
   TrackID mTrackID = TRACK_NONE;
-
-  // Accessed in Pull (from MSG thread)
-  TrackTicks mLastNotify = 0;
-  uint32_t mFreq = 1000;  // ditto
-
-  // Created on Start, then accessed from Pull (MSG thread)
-  nsAutoPtr<SineWaveGenerator> mSineGenerator;
+  PrincipalHandle mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
+  uint32_t mFrequency = 1000;
+  RefPtr<AudioSourcePullListener> mPullListener;
 };
 
 class MediaEngineDefault : public MediaEngine {
