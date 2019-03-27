@@ -1497,7 +1497,8 @@ def add_shippable_index_routes(config, task):
     task = add_shippable_l10n_index_routes(config, task, force_locale="en-US")
 
     # For nightly-compat index:
-    # 'nightly' in config.params['target_tasks_method']
+    if 'nightly' in config.params['target_tasks_method']:
+        add_nightly_index_routes(config, task)
 
     return task
 
@@ -1608,6 +1609,10 @@ def add_shippable_l10n_index_routes(config, task, force_locale=None):
     for locale in locales:
         for tpl in V2_SHIPPABLE_L10N_TEMPLATES:
             routes.append(tpl.format(locale=locale, **subs))
+
+    # For nightly-compat index:
+    if 'nightly' in config.params['target_tasks_method']:
+        add_nightly_l10n_index_routes(config, task, force_locale)
 
     return task
 
