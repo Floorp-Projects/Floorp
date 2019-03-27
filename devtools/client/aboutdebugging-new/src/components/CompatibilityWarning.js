@@ -38,15 +38,15 @@ class CompatibilityWarning extends PureComponent {
     switch (status) {
       case COMPATIBILITY_STATUS.TOO_OLD:
         statusClassName = "js-compatibility-warning-too-old";
-        localizationId = "about-debugging-runtime-version-too-old";
+        localizationId = "about-debugging-browser-version-too-old";
         break;
       case COMPATIBILITY_STATUS.TOO_RECENT:
         statusClassName = "js-compatibility-warning-too-recent";
-        localizationId = "about-debugging-runtime-version-too-recent";
+        localizationId = "about-debugging-browser-version-too-recent";
         break;
       case COMPATIBILITY_STATUS.TOO_OLD_67_DEBUGGER:
         statusClassName = "js-compatibility-warning-too-old-67-debugger";
-        localizationId = "about-debugging-runtime-version-too-old-67-debugger";
+        localizationId = "about-debugging-browser-version-too-old-67-debugger";
         break;
     }
 
