@@ -1,8 +1,12 @@
 ---
-name: "👩🏻‍💻 User Story"
+name: "\U0001F469\U0001F3FB‍\U0001F4BB User Story"
 about: Create user story, assigned to an Epic
+title: ''
+labels: ''
+assignees: ''
 
 ---
+
 Owner: Product Manager
 
 - Description of User Story (Added by PM)
@@ -23,5 +27,3 @@ As a product owner, I want… so I can do ...
 
 I can do …  (e.g. add a bookmark)
 I can do …   (e.g. track usage)
-
-

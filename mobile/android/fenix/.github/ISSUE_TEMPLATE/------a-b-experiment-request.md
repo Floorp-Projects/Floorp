@@ -1,6 +1,9 @@
 ---
 name: "\U0001F469‍\U0001F52C A/B Experiment Request"
 about: Template to run and define an A/B experiment
+title: ''
+labels: ''
+assignees: ''
 
 ---
 

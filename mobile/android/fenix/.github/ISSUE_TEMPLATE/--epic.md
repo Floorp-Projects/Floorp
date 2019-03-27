@@ -1,8 +1,12 @@
 ---
-name: "🔵 Meta Feature (Epic)"
+name: "\U0001F535 Meta Feature (Epic)"
 about: Create Epic (Meta Feature)
+title: "[Meta]"
+labels: ''
+assignees: ''
 
 ---
+
 Owner: Product Manager
 Purpose: PM to describe a feature and track overall activities, dependencies, progress
 
@@ -22,5 +26,3 @@ Purpose: PM to describe a feature and track overall activities, dependencies, pr
 -UX Designs (Immediate task: Assign UX issue to this epic)
 -User stories (to be created by PM)
 -List dependencies on other issues/teams etc.
-
-

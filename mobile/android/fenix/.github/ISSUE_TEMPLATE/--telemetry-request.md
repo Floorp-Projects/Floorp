@@ -1,8 +1,12 @@
 ---
-name: "📈 Telemetry User Story"
+name: "\U0001F4C8 Telemetry User Story"
 about: Create a telemetry user story, assigned to an Epic to track telemetry
+title: "[Telemetry]"
+labels: Feature:Telemetry
+assignees: ''
 
 ---
+
 Owner: Product Manager
 
 #### Description & Product Manager / Data Scienties User Story
@@ -28,7 +32,3 @@ Owner: Product Manager
 - We have documented the telemetry
 - We have asked a data steward to [review](https://github.com/mozilla/data-review/blob/master/request.md) the telemetry
 - NOT an AC: Data science to create dashboard or further graphs (this will be a separate issue, this issue is only about hooking up the events described and that they can be queried in re-dash)
-
-
-
-
