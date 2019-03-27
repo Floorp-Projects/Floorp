@@ -2035,32 +2035,37 @@ void JsepSessionImpl::SetState(JsepSignalingState state) {
 nsresult JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
                                                 const std::string& mid,
                                                 const Maybe<uint16_t>& level,
+                                                const std::string& ufrag,
                                                 std::string* transportId) {
   mLastError.clear();
-
-  mozilla::Sdp* sdp =
-      GetParsedRemoteDescription(kJsepDescriptionPendingOrCurrent);
-
-  if (!sdp) {
-    JSEP_SET_ERROR("Cannot add ICE candidate in state " << GetStateStr(mState));
+  if (!mCurrentRemoteDescription && !mPendingRemoteDescription) {
+    JSEP_SET_ERROR("Cannot add ICE candidate when there is no remote SDP");
     return NS_ERROR_UNEXPECTED;
   }
 
+  if (mid.empty() && !level.isSome() && candidate.empty()) {
+    // Set end-of-candidates on SDP
+    if (mCurrentRemoteDescription) {
+      nsresult rv = mSdpHelper.SetIceGatheringComplete(
+          mCurrentRemoteDescription.get(), ufrag);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    if (mPendingRemoteDescription) {
+      // If we had an error when adding the candidate to the current
+      // description, we stomp them here. This is deliberate.
+      nsresult rv = mSdpHelper.SetIceGatheringComplete(
+          mPendingRemoteDescription.get(), ufrag);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    return NS_OK;
+  }
+
   JsepTransceiver* transceiver = nullptr;
-  bool hasMidOrLevel = true;
   if (!mid.empty()) {
     transceiver = GetTransceiverForMid(mid);
   } else if (level.isSome()) {
     transceiver = GetTransceiverForLevel(level.value());
-  } else {
-    hasMidOrLevel = false;
-  }
-
-  if (candidate.empty() && !hasMidOrLevel) {
-    for (uint16_t i = 0; i < sdp->GetMediaSectionCount(); ++i) {
-      mSdpHelper.SetIceGatheringComplete(sdp, i);
-    }
-    return NS_OK;
   }
 
   if (!transceiver) {
@@ -2076,8 +2081,22 @@ nsresult JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
   }
 
   *transportId = transceiver->mTransport.mTransportId;
+  nsresult rv = NS_ERROR_UNEXPECTED;
+  if (mCurrentRemoteDescription) {
+    rv =
+        mSdpHelper.AddCandidateToSdp(mCurrentRemoteDescription.get(), candidate,
+                                     transceiver->GetLevel(), ufrag);
+  }
 
-  return mSdpHelper.AddCandidateToSdp(sdp, candidate, transceiver->GetLevel());
+  if (mPendingRemoteDescription) {
+    // If we had an error when adding the candidate to the current description,
+    // we stomp them here. This is deliberate.
+    rv =
+        mSdpHelper.AddCandidateToSdp(mPendingRemoteDescription.get(), candidate,
+                                     transceiver->GetLevel(), ufrag);
+  }
+
+  return rv;
 }
 
 nsresult JsepSessionImpl::AddLocalIceCandidate(const std::string& candidate,
@@ -2109,7 +2128,7 @@ nsresult JsepSessionImpl::AddLocalIceCandidate(const std::string& candidate,
   *level = transceiver->GetLevel();
   *mid = transceiver->GetMid();
 
-  return mSdpHelper.AddCandidateToSdp(sdp, candidate, *level);
+  return mSdpHelper.AddCandidateToSdp(sdp, candidate, *level, "");
 }
 
 nsresult JsepSessionImpl::UpdateDefaultCandidate(
@@ -2173,7 +2192,9 @@ nsresult JsepSessionImpl::EndOfLocalCandidates(const std::string& transportId) {
 
   JsepTransceiver* transceiver = GetTransceiverWithTransport(transportId);
   if (transceiver) {
-    mSdpHelper.SetIceGatheringComplete(sdp, transceiver->GetLevel());
+    nsresult rv =
+        mSdpHelper.SetIceGatheringComplete(sdp, transceiver->GetLevel(), "");
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
