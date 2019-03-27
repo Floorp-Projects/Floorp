@@ -77,3 +77,8 @@ gen-external-apklibs
 # Token files
 .leanplum_token
 .adjust_token
+
+
+# Python Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
