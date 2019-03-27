@@ -32,12 +32,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
   let BrowserApp = chromeWin.BrowserApp;
 
   const BASE = "http://example.org/chrome/mobile/android/tests/browser/chrome/";
+  const BASE2 = "http://test1.example.org/chrome/mobile/android/tests/browser/chrome/";
   // Use something with ample space for scrolling and zooming.
   const URL = BASE + "browser_scrollPositions_sample.html";
   // Same content but under a different URL, so we have something to navigate to and from.
   const URL2 = BASE + "browser_scrollPositions_sample2.html";
   // Test nested scrolling with frames.
   const URL_FRAMESET = BASE + "browser_scrollPositions_sample_frameset.html";
+  // Smaller page, which has no layout scroll range.
+  const URL_SMALL = BASE + "browser_scrollPositions_sample_small.html";
+  const URL_SMALL2 = BASE2 + "browser_scrollPositions_sample_small.html";
   // Reader mode URL
   const URL_reader = "about:reader?url=http%3A%2F%2Fexample.org%2Fchrome%2Fmobile%2Fandroid%2Ftests%2Fbrowser%2Fchrome%2Fbasic_article_mobile.html";
 
@@ -283,6 +287,89 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     checkScroll(browser, testDataParent);
     checkScroll(browser, testData1);
     checkScroll(browser, testData2);
+
+    // Remove the tab.
+    BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
+  });
+
+  add_task(async function test_sessionHistoryRespectsLayoutScrollRange() {
+    let zoom = 2.0;
+    let testData = {x: 100, y: 100, zoom};
+    // Creates a tab, sets a scroll position and zoom level and closes the tab.
+    function createAndRemoveTab() {
+      return Task.spawn(function* () {
+        // Create a new tab.
+        tabScroll = BrowserApp.addTab(URL_SMALL);
+        let browser = tabScroll.browser;
+        yield promiseBrowserEvent(browser, "pageshow");
+
+        // Modify scroll position and zoom level.
+        setScrollPosition(browser, testData);
+        yield promiseVisualScrollEvent(browser);
+
+        // Check that we've actually scrolled and zoomed.
+        checkScroll(browser, testData);
+
+        // Check that the layout scroll position hasn't changed,
+        // as the page has no layout scroll range.
+        is(browser.contentWindow.scrollX, 0, "Layout scrolling should not have occurred");
+        is(browser.contentWindow.scrollY, 0, "Layout scrolling should not have occurred");
+
+        // Navigate to a different page and scroll/zoom there as well.
+        browser.loadURI(URL_SMALL2);
+        yield promiseBrowserEvent(browser, "pageshow");
+
+        setScrollPosition(browser, testData);
+        yield promiseVisualScrollEvent(browser);
+
+        checkScroll(browser, testData);
+
+        // Check that the layout scroll range is respected.
+        is(browser.contentWindow.scrollX, 0, "Layout scroll range should be respected");
+        is(browser.contentWindow.scrollY, 0, "Layout scroll range should be respected");
+
+        // Remove the tab.
+        BrowserApp.closeTab(tabScroll);
+        yield promiseTabEvent(browser, "SSTabCloseProcessed");
+      });
+    }
+
+    await createAndRemoveTab();
+    let state = ss.getClosedTabs(chromeWin);
+    let [{scrolldata}] = state;
+    is(scrolldata.scroll, getScrollString(testData), "stored scroll position is correct");
+    ok(fuzzyEquals(scrolldata.zoom.resolution, zoom), "stored zoom level is correct");
+
+    // Restore the closed tab.
+    let closedTabData = ss.getClosedTabs(chromeWin)[0];
+    let browser = ss.undoCloseTab(chromeWin, closedTabData);
+    let pageshow = promiseBrowserEvent(browser, "pageshow");
+    let scroll = promiseVisualScrollEvent(browser);
+    await pageshow;
+    await scroll;
+
+    // Check the scroll position and zoom level.
+    checkScroll(browser, testData);
+    
+    // Check that the layout scroll range is still respected.
+    // TODO: This should start passing after bug 1516056 is fixed.
+    todo_is(browser.contentWindow.scrollX, 0, "Layout scroll range should be respected");
+    todo_is(browser.contentWindow.scrollY, 0, "Layout scroll range should be respected");
+
+    // Now go back in history and check that the scroll position
+    // is restored there as well.
+    is(browser.canGoBack, true, "can go back");
+    pageshow = promiseBrowserEvent(browser, "pageshow");
+    scroll = promiseVisualScrollEvent(browser);
+    browser.goBack();
+    await pageshow;
+    await scroll;
+
+    checkScroll(browser, testData);
+
+    // Check that the layout scroll range is still respected.
+    is(browser.contentWindow.scrollX, 0, "Layout scroll range should be respected");
+    is(browser.contentWindow.scrollY, 0, "Layout scroll range should be respected");
 
     // Remove the tab.
     BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
