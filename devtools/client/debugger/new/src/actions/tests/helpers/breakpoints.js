@@ -40,7 +40,6 @@ export function generateBreakpoint(
 ) {
   return {
     id: "breakpoint",
-    loading: false,
     originalText: "",
     text: "",
     location: {

@@ -491,7 +491,7 @@ void Pickle::BeginWrite(uint32_t length, uint32_t alignment) {
         kBytePaddingMarker, kBytePaddingMarker, kBytePaddingMarker,
         kBytePaddingMarker, kBytePaddingMarker,
     };
-    buffers_.WriteBytes(padding_data, padding);
+    MOZ_ALWAYS_TRUE(buffers_.WriteBytes(padding_data, padding));
   }
 
   DCHECK((header_size_ + header_->payload_size + padding) % alignment == 0);
@@ -511,7 +511,7 @@ void Pickle::EndWrite(uint32_t length) {
         kBytePaddingMarker,
         kBytePaddingMarker,
     };
-    buffers_.WriteBytes(padding_data, padding);
+    MOZ_ALWAYS_TRUE(buffers_.WriteBytes(padding_data, padding));
   }
 }
 
@@ -627,7 +627,7 @@ bool Pickle::WriteBytes(const void* data, uint32_t data_len,
 
   BeginWrite(data_len, alignment);
 
-  buffers_.WriteBytes(reinterpret_cast<const char*>(data), data_len);
+  MOZ_ALWAYS_TRUE(buffers_.WriteBytes(reinterpret_cast<const char*>(data), data_len));
 
   EndWrite(data_len);
   return true;
@@ -667,7 +667,7 @@ bool Pickle::WriteData(const char* data, uint32_t length) {
 }
 
 void Pickle::InputBytes(const char* data, uint32_t length) {
-  buffers_.WriteBytes(data, length);
+  MOZ_ALWAYS_TRUE(buffers_.WriteBytes(data, length));
 }
 
 int32_t* Pickle::GetInt32PtrForTest(uint32_t offset) {
