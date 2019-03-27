@@ -83,7 +83,7 @@ const SEND_MAXIMUM_BACKOFF_DELAY_MS = 120 * MS_IN_A_MINUTE;
 // Strings to map from XHR.errorCode to TELEMETRY_SEND_FAILURE_TYPE.
 // Echoes XMLHttpRequestMainThread's ErrorType enum.
 // Make sure that any additions done to XHR_ERROR_TYPE enum are also mirrored in
-// TELEMETRY_SEND_FAILURE_TYPE's labels.
+// TELEMETRY_SEND_FAILURE_TYPE and TELEMETRY_SEND_FAILURE_TYPE_PER_PING's labels.
 const XHR_ERROR_TYPE = [
   "eOK",
   "eRequest",
@@ -781,6 +781,12 @@ var TelemetrySendImpl = {
 
     histograms.forEach(h => Telemetry.getHistogramById(h).clear());
 
+    const keyedHistograms = [
+      "TELEMETRY_SEND_FAILURE_TYPE_PER_PING",
+    ];
+
+    keyedHistograms.forEach(h => Telemetry.getKeyedHistogramById(h).clear());
+
     return SendScheduler.reset();
   },
 
@@ -1092,6 +1098,7 @@ var TelemetrySendImpl = {
       // Too late to send now. Reject so we pend the ping to send it next time.
       this._log.trace("_doPing - Too late to send ping " + ping.id);
       Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE_TYPE").add("eTooLate");
+      Telemetry.getKeyedHistogramById("TELEMETRY_SEND_FAILURE_TYPE_PER_PING").add(ping.type, "eTooLate");
       return Promise.reject();
     }
 
@@ -1158,6 +1165,7 @@ var TelemetrySendImpl = {
       }
 
       Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE_TYPE").add(failure);
+      Telemetry.getKeyedHistogramById("TELEMETRY_SEND_FAILURE_TYPE_PER_PING").add(ping.type, failure);
 
       this._log.error("_doPing - error making request to " + url + ": " + failure);
       onRequestFinished(false, event);
