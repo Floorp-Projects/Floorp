@@ -5,4 +5,7 @@ module.exports = {
     "debug": false,
     "warn": false,
   },
+  "rules": {
+    "prefer-const": "error",
+  },
 };
