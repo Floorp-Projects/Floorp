@@ -97,7 +97,6 @@ struct DefaultJitOptions {
   uint32_t wasmBatchIonThreshold;
   uint32_t wasmBatchBaselineThreshold;
   mozilla::Maybe<uint32_t> forcedDefaultIonWarmUpThreshold;
-  mozilla::Maybe<uint32_t> forcedDefaultIonSmallFunctionWarmUpThreshold;
   mozilla::Maybe<IonRegisterAllocator> forcedRegisterAllocator;
 
   // Spectre mitigation flags. Each mitigation has its own flag in order to
