@@ -1,7 +1,7 @@
 ---
 name: "\U0001F469\U0001F3FB‍\U0001F4BB User Story"
 about: Create user story, assigned to an Epic
-title: ''
+title: "[User Story]"
 labels: ''
 assignees: ''
 
