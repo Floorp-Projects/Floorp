@@ -36,10 +36,21 @@ VALID_MANIFESTS = [{'apps': 'firefox',
                     'playback_binary_manifest': 'binary.manifest',
                     'playback_pageset_manifest': 'pageset.manifest',
                     'playback_recordings': 'recorded_site.mp',
-                    'manifest': 'valid_details_1'},
+                    'manifest': 'valid_details_0'},
                    {'apps': 'chrome',
                     'type': 'benchmark',
                     'page_cycles': 5,
+                    'test_url': 'http://www.test-url/goes/here',
+                    'measure': 'fcp',
+                    'unit': 'score',
+                    'lower_is_better': False,
+                    'alert_threshold': 2.0,
+                    'manifest': 'valid_details_1'},
+                   {'apps': 'geckoview',
+                    'type': 'pageload',
+                    'cold': True,
+                    'browser_cycles': 10,
+                    'page_cycles': 1,
                     'test_url': 'http://www.test-url/goes/here',
                     'measure': 'fcp',
                     'unit': 'score',
@@ -58,7 +69,7 @@ INVALID_MANIFESTS = [{'apps': 'firefox',
                       'playback_binary_manifest': 'binary.manifest',
                       'playback_pageset_manifest': 'pageset.manifest',
                       'playback_recordings': 'recorded_site.mp',
-                      'manifest': 'invalid_details_1'},
+                      'manifest': 'invalid_details_0'},
                      {'apps': 'chrome',
                       'type': 'pageload',
                       'page_cycles': 25,
@@ -68,7 +79,7 @@ INVALID_MANIFESTS = [{'apps': 'firefox',
                       'lower_is_better': True,
                       'alert_threshold': 2.0,
                       'playback': 'mitmproxy',
-                      'manifest': 'invalid_details_2'},
+                      'manifest': 'invalid_details_1'},
                      {'apps': 'firefox',
                       'type': 'pageload',
                       'page_cycles': 25,
@@ -82,7 +93,7 @@ INVALID_MANIFESTS = [{'apps': 'firefox',
                       'playback_binary_manifest': 'binary.manifest',
                       'playback_pageset_manifest': 'pageset.manifest',
                       'playback_recordings': 'recorded_site.mp',
-                      'manifest': 'invalid_details_3'}]
+                      'manifest': 'invalid_details_2'}]
 
 
 @pytest.mark.parametrize('app', ['firefox', 'chrome', 'geckoview', 'refbrow', 'fenix'])
@@ -105,7 +116,7 @@ def test_validate_test_ini_invalid(test_details):
 
 
 def test_get_raptor_test_list_firefox(create_args):
-    args = create_args()
+    args = create_args(browser_cycles=1)
 
     test_list = get_raptor_test_list(args, mozinfo.os)
     assert len(test_list) == 4
@@ -119,7 +130,8 @@ def test_get_raptor_test_list_firefox(create_args):
 
 def test_get_raptor_test_list_chrome(create_args):
     args = create_args(app="chrome",
-                       test="raptor-speedometer")
+                       test="raptor-speedometer",
+                       browser_cycles=1)
 
     test_list = get_raptor_test_list(args, mozinfo.os)
     assert len(test_list) == 1
@@ -128,7 +140,8 @@ def test_get_raptor_test_list_chrome(create_args):
 
 def test_get_raptor_test_list_geckoview(create_args):
     args = create_args(app="geckoview",
-                       test="raptor-unity-webgl")
+                       test="raptor-unity-webgl",
+                       browser_cycles=1)
 
     test_list = get_raptor_test_list(args, mozinfo.os)
     assert len(test_list) == 1
@@ -137,7 +150,8 @@ def test_get_raptor_test_list_geckoview(create_args):
 
 def test_get_raptor_test_list_gecko_profiling(create_args):
     args = create_args(test="raptor-tp6-google-firefox",
-                       gecko_profile=True)
+                       gecko_profile=True,
+                       browser_cycles=1)
 
     test_list = get_raptor_test_list(args, mozinfo.os)
     assert len(test_list) == 1
@@ -148,7 +162,8 @@ def test_get_raptor_test_list_gecko_profiling(create_args):
 
 def test_get_raptor_test_list_debug_mode(create_args):
     args = create_args(test="raptor-tp6-google-firefox",
-                       debug_mode=True)
+                       debug_mode=True,
+                       browser_cycles=1)
 
     test_list = get_raptor_test_list(args, mozinfo.os)
     assert len(test_list) == 1
@@ -159,7 +174,8 @@ def test_get_raptor_test_list_debug_mode(create_args):
 
 def test_get_raptor_test_list_override_page_cycles(create_args):
     args = create_args(test="raptor-tp6-google-firefox",
-                       page_cycles=99)
+                       page_cycles=99,
+                       browser_cycles=1)
 
     test_list = get_raptor_test_list(args, mozinfo.os)
     assert len(test_list) == 1
@@ -169,7 +185,8 @@ def test_get_raptor_test_list_override_page_cycles(create_args):
 
 def test_get_raptor_test_list_override_page_timeout(create_args):
     args = create_args(test="raptor-tp6-google-firefox",
-                       page_timeout=9999)
+                       page_timeout=9999,
+                       browser_cycles=1)
 
     test_list = get_raptor_test_list(args, mozinfo.os)
     assert len(test_list) == 1
@@ -179,7 +196,8 @@ def test_get_raptor_test_list_override_page_timeout(create_args):
 
 def test_get_raptor_test_list_refbrow(create_args):
     args = create_args(app="refbrow",
-                       test="raptor-speedometer")
+                       test="raptor-speedometer",
+                       browser_cycles=1)
 
     test_list = get_raptor_test_list(args, mozinfo.os)
     assert len(test_list) == 1
@@ -188,7 +206,8 @@ def test_get_raptor_test_list_refbrow(create_args):
 
 def test_get_raptor_test_list_fenix(create_args):
     args = create_args(app="fenix",
-                       test="raptor-speedometer")
+                       test="raptor-speedometer",
+                       browser_cycles=1)
 
     test_list = get_raptor_test_list(args, mozinfo.os)
     # we don't have any actual fenix tests yet
