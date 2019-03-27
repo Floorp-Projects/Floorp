@@ -832,8 +832,10 @@ bool LazyStubTier::hasStub(uint32_t funcIndex) const {
 
 void* LazyStubTier::lookupInterpEntry(uint32_t funcIndex) const {
   size_t match;
-  MOZ_ALWAYS_TRUE(BinarySearch(ProjectLazyFuncIndex(exports_), 0,
-                               exports_.length(), funcIndex, &match));
+  if (!BinarySearch(ProjectLazyFuncIndex(exports_), 0, exports_.length(),
+                    funcIndex, &match)) {
+    return nullptr;
+  }
   const LazyFuncExport& fe = exports_[match];
   const LazyStubSegment& stub = *stubSegments_[fe.lazyStubSegmentIndex];
   return stub.base() + stub.codeRanges()[fe.funcCodeRangeIndex].begin();
