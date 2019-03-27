@@ -276,6 +276,9 @@ struct AnimationTypeTraits<dom::CSSTransition> {
   static nsAtom* AfterPropertyAtom() {
     return nsGkAtoms::transitionsOfAfterProperty;
   }
+  static nsAtom* MarkerPropertyAtom() {
+    return nsGkAtoms::transitionsOfMarkerProperty;
+  }
 };
 
 }  // namespace mozilla

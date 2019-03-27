@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<title>In visibility hidden color animation on pseudo element</title>
+<style>
+
+div::marker {
+  visibility: visible;
+  color: blue;
+  content: "Color Animation";
+}
+
+div {
+  color: black;
+  visibility: hidden;
+  display: list-item;
+  list-style-position: inside;
+}
+
+</style>
+<div>color animation on visible psuedo element attached to invisible element</div>
