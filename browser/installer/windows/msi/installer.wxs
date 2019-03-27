@@ -7,7 +7,7 @@
      zeros to show it isn't valid, and add the real version to the Name. -->
 <Product Name="$(var.BrandFullName) $(var.Version) $(var.Architecture) $(var.AB_CD)"
          Manufacturer="$(var.Vendor)" Language="0" Codepage="1252"
-         Version="0.0.0.0" Id="1294a4c5-9977-480f-9497-c0ea1e630130"
+         Version="$(var.EmbeddedVersionCode)" Id="1294a4c5-9977-480f-9497-c0ea1e630130"
          UpgradeCode="3118ab4c-b433-4fbb-b9fa-8f9ca4b5c103" >
 
   <Package Id="*" InstallerVersion="200" Compressed="yes"
