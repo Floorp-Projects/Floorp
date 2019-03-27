@@ -303,6 +303,7 @@ var LightweightThemeManager = {
 
     await new Promise(resolve => {
       req.addEventListener("load", resolve, {once: true});
+      req.addEventListener("error", resolve, {once: true});
       req.send(null);
     });
 
