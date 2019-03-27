@@ -294,7 +294,7 @@ RESULT_OMNIJAR_WITH_BASE = result_with_base(RESULT_OMNIJAR)
 
 
 def fill_formatter(formatter, contents):
-    for base, is_addon in contents['bases'].items():
+    for base, is_addon in sorted(contents['bases'].items()):
         formatter.add_base(base, is_addon)
 
     for manifest in contents['manifests']:
@@ -325,8 +325,8 @@ class TestFormatters(TestErrors, unittest.TestCase):
     def test_bases(self):
         formatter = FlatFormatter(FileRegistry())
         formatter.add_base('')
-        formatter.add_base('browser')
         formatter.add_base('addon0', addon=True)
+        formatter.add_base('browser')
         self.assertEqual(formatter._get_base('platform.ini'),
                          ('', 'platform.ini'))
         self.assertEqual(formatter._get_base('browser/application.ini'),
