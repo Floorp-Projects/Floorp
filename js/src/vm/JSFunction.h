@@ -733,7 +733,7 @@ class JSFunction : public js::NativeObject {
     return u.native.extra.wasmFuncIndex_;
   }
   void setWasmJitEntry(void** entry) {
-    MOZ_ASSERT(entry);
+    MOZ_ASSERT(*entry);
     MOZ_ASSERT(isWasm());
     MOZ_ASSERT(!isWasmWithJitEntry());
     flags_ |= WASM_JIT_ENTRY;
