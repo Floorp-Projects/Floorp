@@ -5,8 +5,6 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-const { gDevTools } = require("devtools/client/framework/devtools");
-const { Toolbox } = require("devtools/client/framework/toolbox");
 const { remoteClientManager } =
   require("devtools/client/shared/remote-debugging/remote-client-manager");
 
@@ -47,7 +45,7 @@ const Actions = require("./index");
 function inspectDebugTarget(type, id) {
   return async (dispatch, getState) => {
     const runtime = getCurrentRuntime(getState().runtimes);
-    const { runtimeDetails, type: runtimeType } = runtime;
+    const { type: runtimeType } = runtime;
 
     switch (type) {
       case DEBUG_TARGETS.TAB: {
@@ -73,20 +71,9 @@ function inspectDebugTarget(type, id) {
         break;
       }
       case DEBUG_TARGETS.PROCESS: {
-        const devtoolsClient = runtimeDetails.clientWrapper.client;
-        const processTargetFront = devtoolsClient.getActor(id);
-        const toolbox = await gDevTools.showToolbox(processTargetFront, null,
-          Toolbox.HostType.WINDOW);
-
-        // Once the target is destroyed after closing the toolbox, the front is gone and
-        // can no longer be used. Extensions don't have the issue because we don't list
-        // the target fronts directly, but proxies on which we call connect to create a
-        // target front when we want to inspect them. Local workers don't have this issue
-        // because closing the toolbox stops several workers which will indirectly trigger
-        // a requestWorkers action. However workers on a remote runtime have the exact
-        // same issue.
-        // To workaround the issue we request processes after the toolbox is closed.
-        toolbox.once("destroy", () => dispatch(Actions.requestProcesses()));
+        const remoteId = remoteClientManager.getRemoteId(runtime.id, runtime.type);
+        window.open(
+          `about:devtools-toolbox?type=process&id=${id}&remoteId=${remoteId}`);
         break;
       }
       case DEBUG_TARGETS.WORKER: {
