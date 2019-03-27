@@ -32,26 +32,22 @@ class MockMediaEngineSource : public MediaEngineSource {
   MOCK_CONST_METHOD0(GetName, nsString());
   MOCK_CONST_METHOD0(GetUUID, nsCString());
   MOCK_CONST_METHOD0(GetGroupId, nsString());
-  MOCK_METHOD6(Allocate, nsresult(const dom::MediaTrackConstraints&,
+  MOCK_METHOD5(Allocate, nsresult(const dom::MediaTrackConstraints&,
                                   const MediaEnginePrefs&, const nsString&,
-                                  const ipc::PrincipalInfo&, AllocationHandle**,
-                                  const char**));
-  MOCK_METHOD4(SetTrack, void(const RefPtr<const AllocationHandle>&,
-                              const RefPtr<SourceMediaStream>&, TrackID,
+                                  const ipc::PrincipalInfo&, const char**));
+  MOCK_METHOD3(SetTrack, void(const RefPtr<SourceMediaStream>&, TrackID,
                               const PrincipalHandle&));
-  MOCK_METHOD1(Start, nsresult(const RefPtr<const AllocationHandle>&));
-  MOCK_METHOD5(Reconfigure, nsresult(const RefPtr<AllocationHandle>&,
-                                     const dom::MediaTrackConstraints&,
+  MOCK_METHOD0(Start, nsresult());
+  MOCK_METHOD4(Reconfigure, nsresult(const dom::MediaTrackConstraints&,
                                      const MediaEnginePrefs&, const nsString&,
                                      const char**));
-  MOCK_METHOD1(Stop, nsresult(const RefPtr<const AllocationHandle>&));
-  MOCK_METHOD1(Deallocate, nsresult(const RefPtr<const AllocationHandle>&));
+  MOCK_METHOD0(Stop, nsresult());
+  MOCK_METHOD0(Deallocate, nsresult());
   MOCK_CONST_METHOD2(GetBestFitnessDistance,
                      uint32_t(const nsTArray<const NormalizedConstraintSet*>&,
                               const nsString&));
-  MOCK_METHOD6(Pull,
-               void(const RefPtr<const AllocationHandle>& aHandle,
-                    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+  MOCK_METHOD5(Pull,
+               void(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
                     StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
                     const PrincipalHandle& aPrincipalHandle));
 };

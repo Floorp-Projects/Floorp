@@ -98,7 +98,7 @@ nsresult MediaEngineDefaultVideoSource::Allocate(
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-    AllocationHandle** aOutHandle, const char** aOutBadConstraint) {
+    const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kReleased);
@@ -132,17 +132,14 @@ nsresult MediaEngineDefaultVideoSource::Allocate(
       );
   mOpts.mWidth = std::max(160, std::min(mOpts.mWidth, 4096)) & ~1;
   mOpts.mHeight = std::max(90, std::min(mOpts.mHeight, 2160)) & ~1;
-  *aOutHandle = nullptr;
 
   mState = kAllocated;
   return NS_OK;
 }
 
-nsresult MediaEngineDefaultVideoSource::Deallocate(
-    const RefPtr<const AllocationHandle>& aHandle) {
+nsresult MediaEngineDefaultVideoSource::Deallocate() {
   AssertIsOnOwningThread();
 
-  MOZ_ASSERT(!aHandle);
   MOZ_ASSERT(!mImage);
   MOZ_ASSERT(mState == kStopped || mState == kAllocated);
 
@@ -189,7 +186,6 @@ static void ReleaseFrame(layers::PlanarYCbCrData& aData) {
 }
 
 void MediaEngineDefaultVideoSource::SetTrack(
-    const RefPtr<const AllocationHandle>& aHandle,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const PrincipalHandle& aPrincipal) {
   AssertIsOnOwningThread();
@@ -205,8 +201,7 @@ void MediaEngineDefaultVideoSource::SetTrack(
                     SourceMediaStream::ADDTRACK_QUEUED);
 }
 
-nsresult MediaEngineDefaultVideoSource::Start(
-    const RefPtr<const AllocationHandle>& aHandle) {
+nsresult MediaEngineDefaultVideoSource::Start() {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
@@ -246,8 +241,7 @@ nsresult MediaEngineDefaultVideoSource::Start(
   return NS_OK;
 }
 
-nsresult MediaEngineDefaultVideoSource::Stop(
-    const RefPtr<const AllocationHandle>& aHandle) {
+nsresult MediaEngineDefaultVideoSource::Stop() {
   AssertIsOnOwningThread();
 
   if (mState == kStopped || mState == kAllocated) {
@@ -268,7 +262,6 @@ nsresult MediaEngineDefaultVideoSource::Stop(
 }
 
 nsresult MediaEngineDefaultVideoSource::Reconfigure(
-    const RefPtr<AllocationHandle>& aHandle,
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
     const char** aOutBadConstraint) {
@@ -401,7 +394,7 @@ nsresult MediaEngineDefaultAudioSource::Allocate(
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-    AllocationHandle** aOutHandle, const char** aOutBadConstraint) {
+    const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kReleased);
@@ -414,17 +407,14 @@ nsresult MediaEngineDefaultAudioSource::Allocate(
   }
 
   mFrequency = aPrefs.mFreq ? aPrefs.mFreq : 1000;
-  *aOutHandle = nullptr;
 
   mState = kAllocated;
   return NS_OK;
 }
 
-nsresult MediaEngineDefaultAudioSource::Deallocate(
-    const RefPtr<const AllocationHandle>& aHandle) {
+nsresult MediaEngineDefaultAudioSource::Deallocate() {
   AssertIsOnOwningThread();
 
-  MOZ_ASSERT(!aHandle);
   MOZ_ASSERT(mState == kStopped || mState == kAllocated);
 
   if (mStream && IsTrackIDExplicit(mTrackID)) {
@@ -438,7 +428,6 @@ nsresult MediaEngineDefaultAudioSource::Deallocate(
 }
 
 void MediaEngineDefaultAudioSource::SetTrack(
-    const RefPtr<const AllocationHandle>& aHandle,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const PrincipalHandle& aPrincipal) {
   AssertIsOnOwningThread();
@@ -455,8 +444,7 @@ void MediaEngineDefaultAudioSource::SetTrack(
                          SourceMediaStream::ADDTRACK_QUEUED);
 }
 
-nsresult MediaEngineDefaultAudioSource::Start(
-    const RefPtr<const AllocationHandle>& aHandle) {
+nsresult MediaEngineDefaultAudioSource::Start() {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
@@ -484,8 +472,7 @@ nsresult MediaEngineDefaultAudioSource::Start(
   return NS_OK;
 }
 
-nsresult MediaEngineDefaultAudioSource::Stop(
-    const RefPtr<const AllocationHandle>& aHandle) {
+nsresult MediaEngineDefaultAudioSource::Stop() {
   AssertIsOnOwningThread();
 
   if (mState == kStopped || mState == kAllocated) {
@@ -507,7 +494,6 @@ nsresult MediaEngineDefaultAudioSource::Stop(
 }
 
 nsresult MediaEngineDefaultAudioSource::Reconfigure(
-    const RefPtr<AllocationHandle>& aHandle,
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
     const char** aOutBadConstraint) {

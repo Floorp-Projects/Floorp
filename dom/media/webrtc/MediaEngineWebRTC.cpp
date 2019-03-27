@@ -6,12 +6,12 @@
 
 #include "MediaEngineWebRTC.h"
 
-#include "AllocationHandle.h"
 #include "CamerasChild.h"
 #include "CSFLog.h"
 #include "MediaEngineTabVideoSource.h"
 #include "MediaEngineRemoteVideoSource.h"
 #include "MediaEngineWebRTCAudio.h"
+#include "MediaManager.h"
 #include "MediaTrackConstraints.h"
 #include "mozilla/dom/MediaDeviceInfo.h"
 #include "mozilla/Logging.h"
@@ -132,16 +132,9 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
 
     nsRefPtrHashtable<nsStringHashKey, MediaEngineSource>*
         devicesForThisWindow = mVideoSources.LookupOrAdd(aWindowId);
-
-    if (devicesForThisWindow->Get(uuid, getter_AddRefs(vSource)) &&
-        vSource->RequiresSharing()) {
-      // We've already seen this shared device, just refresh and append.
-      static_cast<MediaEngineRemoteVideoSource*>(vSource.get())->Refresh(i);
-    } else {
-      vSource = new MediaEngineRemoteVideoSource(i, aCapEngine,
-                                                 scaryKind || scarySource);
-      devicesForThisWindow->Put(uuid, vSource);
-    }
+    vSource = new MediaEngineRemoteVideoSource(i, aCapEngine,
+                                               scaryKind || scarySource);
+    devicesForThisWindow->Put(uuid, vSource);
     aDevices->AppendElement(MakeRefPtr<MediaDevice>(
         vSource, vSource->GetName(), NS_ConvertUTF8toUTF16(vSource->GetUUID()),
         vSource->GetGroupId(), NS_LITERAL_STRING("")));
