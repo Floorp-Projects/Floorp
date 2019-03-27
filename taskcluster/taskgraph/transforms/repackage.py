@@ -87,7 +87,7 @@ PACKAGE_FORMATS = {
         ],
         'inputs': {
             'input': 'target{archive_format}',
-            'mar': 'mar{executable_extension}',
+            'mar': 'mar-tools/mar{executable_extension}',
         },
         'output': "target.complete.mar",
     },
@@ -390,9 +390,7 @@ def _generate_download_config(task, build_platform, build_task, signing_task,
                     'extract': False,
                 },
             ],
-            build_task: [
-                'host/bin/mar',
-            ],
+            "toolchain": ["linux64-mar-tools"],
         })
     elif build_platform.startswith('win'):
         fetch.update({
