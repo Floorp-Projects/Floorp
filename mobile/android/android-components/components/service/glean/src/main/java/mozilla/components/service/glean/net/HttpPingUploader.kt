@@ -115,9 +115,8 @@ internal class HttpPingUploader : PingUploader {
 
     @Throws(IOException::class)
     internal fun performUpload(client: Client, request: Request): Boolean {
+        logger.debug("Submitting ping to: ${request.url}")
         client.fetch(request).use { response ->
-            logger.debug("Ping upload: ${response.status}")
-
             when {
                 response.isSuccess -> {
                     // Known success errors (2xx):
@@ -140,7 +139,7 @@ internal class HttpPingUploader : PingUploader {
                     // Something our client did is not correct. It's unlikely that the client is going
                     // to recover from this by re-trying again, so we just log and error and report a
                     // successful upload to the service.
-                    logger.error("Server returned client error code: ${response.status}")
+                    logger.error("Server returned client error code ${response.status} for ${request.url}")
                     return true
                 }
 
@@ -149,7 +148,7 @@ internal class HttpPingUploader : PingUploader {
                     // 500 - internal error
 
                     // For all other errors we log a warning an try again at a later time.
-                    logger.warn("Server returned response code: ${response.status}")
+                    logger.warn("Server returned response code ${response.status} for ${request.url}")
                     return false
                 }
             }
