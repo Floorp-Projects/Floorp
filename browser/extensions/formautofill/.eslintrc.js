@@ -103,4 +103,14 @@ module.exports = {
     // Disallow function or variable declarations in nested blocks
     "no-inner-declarations": "error",
   },
+
+  "overrides": [{
+    "files": "test/unit/head.js",
+    "rules": {
+      "no-unused-vars": ["error", {
+        "args": "none",
+        "vars": "local",
+      }],
+    },
+  }],
 };
