@@ -40,17 +40,14 @@ var LoginManagerParent = {
   // to avoid spamming master password prompts on autocomplete searches.
   _lastMPLoginCancelled: Math.NEGATIVE_INFINITY,
 
-  _searchAndDedupeLogins(formOrigin, actionOrigin, {looseActionOriginMatch} = {}) {
+  _searchAndDedupeLogins(formOrigin, actionOrigin) {
     let logins;
-    let matchData = {
-      hostname: formOrigin,
-      schemeUpgrades: LoginHelper.schemeUpgrades,
-    };
-    if (!looseActionOriginMatch) {
-      matchData.formSubmitURL = actionOrigin;
-    }
     try {
-      logins = LoginHelper.searchLoginsWithObject(matchData);
+      logins = LoginHelper.searchLoginsWithObject({
+        hostname: formOrigin,
+        formSubmitURL: actionOrigin,
+        schemeUpgrades: LoginHelper.schemeUpgrades,
+      });
     } catch (e) {
       // Record the last time the user cancelled the MP prompt
       // to avoid spamming them with MP prompts for autocomplete.
@@ -64,11 +61,10 @@ var LoginManagerParent = {
 
     // Dedupe so the length checks below still make sense with scheme upgrades.
     let resolveBy = [
-      "actionOrigin",
       "scheme",
       "timePasswordChanged",
     ];
-    return LoginHelper.dedupeLogins(logins, ["username"], resolveBy, formOrigin, actionOrigin);
+    return LoginHelper.dedupeLogins(logins, ["username"], resolveBy, formOrigin);
   },
 
   // Listeners are added in BrowserGlue.jsm on desktop
@@ -226,8 +222,7 @@ var LoginManagerParent = {
       return;
     }
 
-    // Autocomplete results do not need to match actionOrigin.
-    let logins = this._searchAndDedupeLogins(formOrigin, actionOrigin, {looseActionOriginMatch: true});
+    let logins = this._searchAndDedupeLogins(formOrigin, actionOrigin);
 
     log("sendLoginDataToChild:", logins.length, "deduped logins");
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
@@ -275,8 +270,7 @@ var LoginManagerParent = {
     } else {
       log("Creating new autocomplete search result.");
 
-      // Autocomplete results do not need to match actionOrigin.
-      logins = this._searchAndDedupeLogins(formOrigin, actionOrigin, {looseActionOriginMatch: true});
+      logins = this._searchAndDedupeLogins(formOrigin, actionOrigin);
     }
 
     let matchingLogins = logins.filter(function(fullMatch) {
