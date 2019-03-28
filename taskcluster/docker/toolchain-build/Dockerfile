@@ -29,7 +29,6 @@ RUN apt-get update && \
       libcurl4-openssl-dev \
       libssl-dev \
       libtool \
-      libucl-dev \
       ninja-build \
       p7zip-full \
       procps \
