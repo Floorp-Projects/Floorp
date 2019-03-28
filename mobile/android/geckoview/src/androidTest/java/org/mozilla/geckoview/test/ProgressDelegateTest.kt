@@ -288,8 +288,6 @@ class ProgressDelegateTest : BaseSessionTest() {
     @WithDevToolsAPI
     @WithDisplay(width = 400, height = 400)
     @Test fun saveAndRestoreState() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.visualviewport.enabled" to true))
-
         val startUri = createTestUrl(SAVE_STATE_PATH)
         mainSession.loadUri(startUri)
         sessionRule.waitForPageStop()
@@ -303,10 +301,6 @@ class ProgressDelegateTest : BaseSessionTest() {
             @AssertCalled(count=1)
             override fun onSessionStateChange(session: GeckoSession, state: GeckoSession.SessionState) {
                 savedState = state
-
-                val serialized = state.toString()
-                val deserialized = GeckoSession.SessionState.fromString(serialized)
-                assertThat("Deserialized session state should match", deserialized, equalTo(state))
             }
         })
 
