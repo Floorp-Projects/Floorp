@@ -48,15 +48,6 @@ var GeckoViewRemoteDebugger = {
     this._isEnabled = false;
     this._usbDebugger = new USBRemoteDebugger();
 
-    // For GeckoView-consuming Apps (including Fennec), we want "remote
-    // debugging" to encapsulate "Marionette" completely.  It's possible for
-    // consumers to manage the Marionette pref independently, but we don't
-    // condone or accommodate such management.
-    Services.prefs.setBoolPref("marionette.enabled", false);
-
-    // We never want Marionette to set prefs recommended for automation.
-    Services.prefs.setBoolPref("marionette.prefs.recommended", false);
-
     // This lets Marionette start listening (when it's enabled).  Both
     // GeckoView and Marionette do most of their initialization in
     // "profile-after-change", and there is no order enforced between
@@ -104,8 +95,6 @@ var GeckoViewRemoteDebugger = {
 
     const portOrPath = packageName + "firefox-debugger-socket";
     this._usbDebugger.start(portOrPath);
-
-    Services.prefs.setBoolPref("marionette.enabled", true);
   },
 
   onDisable() {
@@ -116,8 +105,6 @@ var GeckoViewRemoteDebugger = {
     debug `onDisable`;
     this._isEnabled = false;
     this._usbDebugger.stop();
-
-    Services.prefs.setBoolPref("marionette.enabled", false);
   },
 };
 

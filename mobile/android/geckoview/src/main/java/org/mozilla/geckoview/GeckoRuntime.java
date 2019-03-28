@@ -186,10 +186,6 @@ public final class GeckoRuntime implements Parcelable {
             flags |= GeckoThread.FLAG_DEBUGGING;
         }
 
-        if (settings.getRemoteDebuggingEnabled()) {
-            flags |= GeckoThread.FLAG_ENABLE_MARIONETTE;
-        }
-
         final Class<?> crashHandler = settings.getCrashHandler();
         if (crashHandler != null) {
             try {
