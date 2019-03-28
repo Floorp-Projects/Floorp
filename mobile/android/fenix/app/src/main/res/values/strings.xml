@@ -204,8 +204,7 @@
     <!-- About content. Sentences are separated by two new lines -->
     <string name="about_content">
         %1$s puts you in control.
-        \n\n
-        %1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.
+        \n\n%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.
     </string>
 
     <!-- Sessions -->
