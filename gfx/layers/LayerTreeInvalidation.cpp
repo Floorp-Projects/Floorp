@@ -624,8 +624,16 @@ struct ImageLayerProperties : public LayerPropertiesBase {
         mLastFrameID(-1),
         mIsMask(aIsMask) {
     if (mImageHost) {
-      mLastProducerID = mImageHost->GetLastProducerID();
-      mLastFrameID = mImageHost->GetLastFrameID();
+      if (aIsMask) {
+        // Mask layers never set the 'last' producer/frame
+        // id, since they never get composited as their own
+        // layer.
+        mLastProducerID = mImageHost->GetProducerID();
+        mLastFrameID = mImageHost->GetFrameID();
+      } else {
+        mLastProducerID = mImageHost->GetLastProducerID();
+        mLastFrameID = mImageHost->GetLastFrameID();
+      }
     }
   }
 
