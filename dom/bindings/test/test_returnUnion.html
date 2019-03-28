@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1048659
 
   /** Test for returning unions from JS-implemented WebIDL. **/
   SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, go);
+  SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, go);
 
   function go() {
     var t = new TestInterfaceJS();

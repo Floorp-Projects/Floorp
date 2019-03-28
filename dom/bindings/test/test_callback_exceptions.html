@@ -12,6 +12,6 @@ promise_test(function(t) {
 }, "Trying to use JSON.parse as filter should throw a catchable SyntaxError exception even when the filter is invoked async");
 
 promise_test(function(t) {
-  return promise_rejects(t, new SyntaxError, Promise.resolve('{').then(JSON.parse));
+  return promise_rejects(t, new SyntaxError, Promise.resolve("{").then(JSON.parse));
 }, "Trying to use JSON.parse as a promise callback should allow the next promise to handle the resulting exception.");
 </script>

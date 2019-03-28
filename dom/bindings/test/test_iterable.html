@@ -10,12 +10,11 @@
   <body>
     <script class="testbody" type="application/javascript">
      SimpleTest.waitForExplicitFinish();
-     SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, function() {
-
+     SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, function() {
        base_properties = [["entries", "function", 0],
                           ["keys", "function", 0],
                           ["values", "function", 0],
-                          ["forEach", "function", 1]]
+                          ["forEach", "function", 1]];
        var testExistence = function testExistence(prefix, obj, properties) {
          for (var [name, type, args] of properties) {
            // Properties are somewhere up the proto chain, hasOwnProperty won't work
@@ -44,7 +43,7 @@
              owner = Object.getPrototypeOf(owner);
            }
          }
-       }
+       };
 
        var itr;
        // Simple single type iterable creation and functionality test
@@ -120,7 +119,7 @@
        testExistence("IterableDouble: ", itr, base_properties);
        is(itr.entries, itr[Symbol.iterator],
           "IterableDouble: Should be using @@iterator for 'entries'");
-       var elements = [["a", "b"], ["c", "d"], ["e", "f"]]
+       var elements = [["a", "b"], ["c", "d"], ["e", "f"]];
        var keys = [...itr.keys()];
        var values = [...itr.values()];
        var entries = [...itr.entries()];
@@ -163,7 +162,7 @@
 
        var key = key_itr.next();
        var value = value_itr.next();
-       var entry = entries_itr.next()
+       var entry = entries_itr.next();
        is(key.value, undefined, "IterableDouble: Key iterator value should be undefined");
        is(key.done, true, "IterableDouble: Key iterator done should be true");
        is(value.value, undefined, "IterableDouble: Value iterator value should be undefined");
@@ -180,7 +179,7 @@
        testExistence("IterableDoubleUnion: ", itr, base_properties);
        is(itr.entries, itr[Symbol.iterator],
           "IterableDoubleUnion: Should be using @@iterator for 'entries'");
-       var elements = [["long", 1], ["string", "a"]]
+       var elements = [["long", 1], ["string", "a"]];
        var keys = [...itr.keys()];
        var values = [...itr.values()];
        var entries = [...itr.entries()];
@@ -223,7 +222,7 @@
 
        var key = key_itr.next();
        var value = value_itr.next();
-       var entry = entries_itr.next()
+       var entry = entries_itr.next();
        is(key.value, undefined, "IterableDoubleUnion: Key iterator value should be undefined");
        is(key.done, true, "IterableDoubleUnion: Key iterator done should be true");
        is(value.value, undefined, "IterableDoubleUnion: Value iterator value should be undefined");

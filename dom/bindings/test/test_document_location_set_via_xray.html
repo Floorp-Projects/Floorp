@@ -20,8 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=905493
 
 /** Test for Bug 905493 **/
 
-function test()
-{
+function test() {
   var doc = document.getElementById("t").contentWindow.document;
   ok(!("x" in doc), "Should have an Xray here");
   is(doc.x, undefined, "Really should have an Xray here");

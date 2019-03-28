@@ -87,7 +87,7 @@ doTest@${ourFile}:56:9
 ` +
                         parentFrame) : "")),
       t.testPromiseWithThrowingContentThenable({
-            then: function() { thereIsNoSuchContentFunction3(); }
+            then() { thereIsNoSuchContentFunction3(); },
         }).then(
           ensurePromiseFail.bind(null, 6),
           checkExn.bind(null, 90, "ReferenceError",
@@ -122,12 +122,12 @@ doTest@${ourFile}:56:9
                          parentFrame : ""))),
     ]).then(SimpleTest.finish,
             function(err) {
-              ok(false, "One of our catch statements totally failed with err" + err + ', stack: ' + (err ? err.stack : ''));
+              ok(false, "One of our catch statements totally failed with err" + err + ", stack: " + (err ? err.stack : ""));
               SimpleTest.finish();
             });
   }
 
-  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]},
+  SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]},
                             doTest);
   </script>
 </head>

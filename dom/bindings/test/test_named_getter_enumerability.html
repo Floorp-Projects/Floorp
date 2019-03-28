@@ -25,13 +25,13 @@ test(function() {
 }, "Correct enumeration behavior");
 test(function() {
   var list = document.getElementsByTagName("div");
-  props = Object.keys(list)
+  props = Object.keys(list);
   assert_not_equals(props.indexOf("0"), -1, "Keys should contain '0'");
   assert_equals(props.indexOf("log"), -1, "Keys should not contain 'log'");
 }, "Correct keys() behavior");
 test(function() {
   var list = document.getElementsByTagName("div");
-  props = Object.getOwnPropertyNames(list)
+  props = Object.getOwnPropertyNames(list);
   assert_not_equals(props.indexOf("0"), -1,
                     "own prop names should contain '0'");
   assert_not_equals(props.indexOf("log"), -1,

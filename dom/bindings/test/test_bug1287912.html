@@ -17,13 +17,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1287912
 </div>
 <pre id="test">
 <script type="application/javascript">
-function test()
-{
+function test() {
   var win = document.getElementById("t").contentWindow;
   is(Object.getPrototypeOf(win.Image), win.Function.prototype, "The __proto__ of a named constructor is Function.prototype");
   is(win.Image.prototype, win.HTMLImageElement.prototype, "The prototype property of a named constructor is the interface prototype object");
-  is(win.HTMLImageElement['foo'], undefined, "Should not have a property named foo on the HTMLImageElement interface object");
-  is(win.Image['foo'], undefined, "Should not have a property named foo on the Image named constructor");
+  is(win.HTMLImageElement.foo, undefined, "Should not have a property named foo on the HTMLImageElement interface object");
+  is(win.Image.foo, undefined, "Should not have a property named foo on the Image named constructor");
 
   SimpleTest.finish();
 }

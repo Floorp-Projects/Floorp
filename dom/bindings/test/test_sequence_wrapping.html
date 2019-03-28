@@ -34,13 +34,13 @@ function doTest() {
 
   Object.defineProperty(Array.prototype, "0",
     {
-      set: function(val) {
+      set(val) {
              setterCalled = true;
-           }
+           },
     });
 
   // Test that our property got defined correctly
-  var arr = []
+  var arr = [];
   arr[0] = 5;
   is(setterCalled, true, "Setter should be called when setting prop on array");
 
