@@ -58,6 +58,7 @@ public final class SampleBuffer implements Parcelable {
         }
         try {
             nativeReadFromDirectBuffer(src, mSharedMem.getPointer(), offset, size);
+            mSharedMem.flush();
         } catch (NullPointerException e) {
             throw new IOException(e);
         }

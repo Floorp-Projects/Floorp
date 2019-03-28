@@ -18,6 +18,8 @@ import org.mozilla.gecko.mozglue.JNIObject;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -34,6 +36,9 @@ public final class CodecProxy {
     private String mRemoteDrmStubId;
     private Queue<Sample> mSurfaceOutputs = new ConcurrentLinkedQueue<>();
     private boolean mFlushed = true;
+
+    private Map<Integer, SampleBuffer> mInputBuffers = new HashMap<>();
+    private Map<Integer, SampleBuffer> mOutputBuffers = new HashMap<>();
 
     public interface Callbacks {
         void onInputStatus(long timestamp, boolean processed);
@@ -227,11 +232,7 @@ public final class CodecProxy {
 
         try {
             Sample s = mRemote.dequeueInput(info.size);
-            if (bytes != null && info.size > 0) {
-                SampleBuffer buffer = mRemote.getInputBuffer(s.bufferId);
-                buffer.readFromByteBuffer(bytes, info.offset, info.size);
-                buffer.dispose();
-            }
+            fillInputBuffer(s.bufferId, bytes, info.offset, info.size);
             return sendInput(s.set(info, cryptoInfo));
         } catch (RemoteException | NullPointerException e) {
             Log.e(LOGTAG, "fail to dequeue input buffer", e);
@@ -241,6 +242,21 @@ public final class CodecProxy {
             sendInput(null);
         }
         return false;
+    }
+
+    private void fillInputBuffer(final int bufferId, final ByteBuffer bytes,
+            final int offset, final int size) throws RemoteException, IOException {
+        if (bytes == null || size == 0) {
+            Log.w(LOGTAG, "empty input");
+            return;
+        }
+
+        SampleBuffer buffer = mInputBuffers.get(bufferId);
+        if (buffer == null) {
+            buffer = mRemote.getInputBuffer(bufferId);
+            mInputBuffers.put(bufferId, buffer);
+        }
+        buffer.readFromByteBuffer(bytes, offset, size);
     }
 
     private boolean sendInput(final Sample sample) {
@@ -307,6 +323,15 @@ public final class CodecProxy {
                 }
                 mSurfaceOutputs.clear();
             }
+
+            for (SampleBuffer b : mInputBuffers.values()) {
+                b.dispose();
+            }
+            mInputBuffers.clear();
+            for (SampleBuffer b : mOutputBuffers.values()) {
+                b.dispose();
+            }
+            mOutputBuffers.clear();
 
             try {
                 RemoteManager.getInstance().releaseCodec(this);
@@ -390,11 +415,16 @@ public final class CodecProxy {
             return null;
         }
 
-        try {
-            return mRemote.getOutputBuffer(id);
-        } catch (Exception e) {
-            Log.e(LOGTAG, "cannot get buffer#" + id, e);
-            return null;
+        SampleBuffer buffer = mOutputBuffers.get(id);
+        if (buffer == null) {
+            try {
+                buffer = mRemote.getOutputBuffer(id);
+                mOutputBuffers.put(id, buffer);
+            } catch (Exception e) {
+                Log.e(LOGTAG, "cannot get buffer#" + id, e);
+                return null;
+            }
         }
+        return buffer;
     }
 }
