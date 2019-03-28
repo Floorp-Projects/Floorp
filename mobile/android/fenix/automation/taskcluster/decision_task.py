@@ -14,7 +14,7 @@ import taskcluster
 
 from lib import build_variants
 from lib.tasks import TaskBuilder, schedule_task_graph
-from lib.util import (
+from lib.chain_of_trust import (
     populate_chain_of_trust_task_graph,
     populate_chain_of_trust_required_but_unused_files
 )
