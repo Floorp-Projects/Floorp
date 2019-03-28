@@ -126,7 +126,7 @@
   margin: 0 .4em;
 }
 
-.urlbarView-title:empty + .urlbarView-tags:empty + .urlbarView-title-separator {
+.urlbarView-title:empty + .urlbarView-title-separator {
   display: none;
 }
 
