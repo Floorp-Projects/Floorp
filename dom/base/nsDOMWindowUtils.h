@@ -82,6 +82,7 @@ class nsDOMWindowUtils final : public nsIDOMWindowUtils,
   mozilla::dom::Document* GetDocument();
   mozilla::layers::LayerTransactionChild* GetLayerTransaction();
   mozilla::layers::WebRenderBridgeChild* GetWebRenderBridge();
+  mozilla::layers::CompositorBridgeChild* GetCompositorBridge();
 
   // Until callers are annotated.
   MOZ_CAN_RUN_SCRIPT

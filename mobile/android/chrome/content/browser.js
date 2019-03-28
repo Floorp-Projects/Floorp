@@ -532,7 +532,7 @@ var BrowserApp = {
         Telemetry.addData("FENNEC_TRACKING_PROTECTION_STATE", parseInt(BrowserApp.getTrackingProtectionState()));
       });
 
-      InitLater(() => LightWeightThemeWebInstaller.init());
+      InitLater(() => LightWeightThemeStuff.init());
       InitLater(() => CastingApps.init(), window, "CastingApps");
 
       // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
@@ -3274,14 +3274,11 @@ ChromeUtils.defineModuleGetter(this, "PageActions",
   });
 });
 
-var LightWeightThemeWebInstaller = {
+var LightWeightThemeStuff = {
   init: function sh_init() {
-    let temp = {};
-    ChromeUtils.import("resource://gre/modules/LightweightThemeConsumer.jsm", temp);
-    let theme = new temp.LightweightThemeConsumer(document);
-    BrowserApp.deck.addEventListener("InstallBrowserTheme", this, false, true);
-    BrowserApp.deck.addEventListener("PreviewBrowserTheme", this, false, true);
-    BrowserApp.deck.addEventListener("ResetBrowserThemePreview", this, false, true);
+    let {LightweightThemeConsumer} =
+        ChromeUtils.import("resource://gre/modules/LightweightThemeConsumer.jsm");
+    new LightweightThemeConsumer(document);
 
     if (ParentalControls.parentalControlsEnabled &&
         !this._manager.currentTheme &&
@@ -3291,38 +3288,11 @@ var LightWeightThemeWebInstaller = {
     }
   },
 
-  handleEvent: function (event) {
-    switch (event.type) {
-      case "InstallBrowserTheme":
-      case "PreviewBrowserTheme":
-      case "ResetBrowserThemePreview":
-        // ignore requests from background tabs
-        if (event.target.ownerGlobal.top != content)
-          return;
-    }
-
-    switch (event.type) {
-      case "InstallBrowserTheme":
-        this._installRequest(event);
-        break;
-      case "PreviewBrowserTheme":
-        this._preview(event);
-        break;
-      case "ResetBrowserThemePreview":
-        this._resetPreview(event);
-        break;
-      case "pagehide":
-      case "TabSelect":
-        this._resetPreview();
-        break;
-    }
-  },
-
   get _manager () {
-    let temp = {};
-    ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
+    let {LightweightThemeManager} =
+        ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
     delete this._manager;
-    return this._manager = temp.LightweightThemeManager;
+    return this._manager = LightweightThemeManager;
   },
 
   _installParentalControlsTheme: function() {
@@ -3336,81 +3306,6 @@ var LightWeightThemeWebInstaller = {
     mgr.addBuiltInTheme(parentalControlsTheme);
     mgr.themeChanged(parentalControlsTheme);
   },
-
-  _installRequest: function (event) {
-    let node = event.target;
-    let data = this._getThemeFromNode(node);
-    if (!data)
-      return;
-
-    if (this._isAllowed(node)) {
-      this._install(data);
-      return;
-    }
-
-    let allowButtonText = Strings.browser.GetStringFromName("lwthemeInstallRequest.allowButton");
-    let IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
-    let hostname = IDNService.convertToDisplayIDN(node.ownerDocument.location.hostname, {});
-    let message = Strings.browser.formatStringFromName("lwthemeInstallRequest.message", [hostname], 1);
-    let buttons = [{
-      label: allowButtonText,
-      callback: function () {
-        LightWeightThemeWebInstaller._install(data);
-      },
-      positive: true
-    }];
-
-    NativeWindow.doorhanger.show(message, "Personas", buttons, BrowserApp.selectedTab.id);
-  },
-
-  _install: function (newLWTheme) {
-    this._manager.currentTheme = newLWTheme;
-  },
-
-  _previewWindow: null,
-  _preview: function (event) {
-    if (!this._isAllowed(event.target))
-      return;
-    let data = this._getThemeFromNode(event.target);
-    if (!data)
-      return;
-    this._resetPreview();
-
-    this._previewWindow = event.target.ownerGlobal;
-    this._previewWindow.addEventListener("pagehide", this, true);
-    BrowserApp.deck.addEventListener("TabSelect", this);
-    this._manager.previewTheme(data);
-  },
-
-  _resetPreview: function (event) {
-    if (!this._previewWindow ||
-        event && !this._isAllowed(event.target))
-      return;
-
-    this._previewWindow.removeEventListener("pagehide", this, true);
-    this._previewWindow = null;
-    BrowserApp.deck.removeEventListener("TabSelect", this);
-
-    this._manager.resetPreview();
-  },
-
-  _isAllowed: function (node) {
-    // Make sure the whitelist has been imported to permissions
-    PermissionsUtils.importFromPrefs("xpinstall.", "install");
-
-    let pm = Services.perms;
-
-    let uri = node.ownerDocument.documentURIObject;
-    if (!uri.schemeIs("https")) {
-      return false;
-    }
-
-    return pm.testPermission(uri, "install") == pm.ALLOW_ACTION;
-  },
-
-  _getThemeFromNode: function (node) {
-    return this._manager.parseTheme(node.getAttribute("data-browsertheme"), node.baseURI);
-  }
 };
 
 var DesktopUserAgent = {
