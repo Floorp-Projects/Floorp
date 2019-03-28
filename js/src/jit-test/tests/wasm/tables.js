@@ -121,7 +121,7 @@ assertErrorMessage(() => e4.call(1), RuntimeError, /indirect call signature mism
 assertEq(e4.call(2), 13);
 
 var asmjsFun = (function() { "use asm"; function f() {} return f })();
-assertEq(isAsmJSFunction(asmjsFun), true);
+assertEq(isAsmJSFunction(asmjsFun), isAsmJSCompilationAvailable());
 assertErrorMessage(() => tbl.set(0, asmjsFun), TypeError, /can only assign WebAssembly exported functions/);
 assertErrorMessage(() => tbl.grow(1, asmjsFun), TypeError, /bad initializer to funcref table/);
 
