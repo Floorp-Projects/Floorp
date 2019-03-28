@@ -198,6 +198,42 @@ open class GleanInternalAPI internal constructor () {
     }
 
     /**
+     * Fixes some legacy metrics.
+     *
+     * This is a BACKWARD COMPATIBILITY HACK.
+     * See  1539480: The implementation of 1528787 moved the client_id and
+     * first_run_date metrics from the ping_info to the client_info
+     * sections. This introduced a bug that the client_id would not be
+     * picked up from the old location on devices that had already run
+     * the application. Missing a client_id is particularly problematic
+     * because these pings will be rejected by the pipeline. This fix
+     * looks for these metrics at their old locations, and if found,
+     * copies them to the new location. If they already exist in the
+     * new location, this shouldn't override them.
+     */
+    private fun fixLegacyPingInfoMetrics() {
+        val uuidClientInfoSnapshot = UuidsStorageEngine.getSnapshot("glean_client_info", false)
+        val newClientId = uuidClientInfoSnapshot?.get("client_id")
+        if (newClientId == null) {
+            val uuidPingInfoSnapshot = UuidsStorageEngine.getSnapshot("glean_ping_info", false)
+            uuidPingInfoSnapshot?.get("client_id")?.let {
+                UuidsStorageEngine.record(GleanInternalMetrics.clientId, it)
+            }
+        }
+
+        val datetimeClientInfoSnapshot = DatetimesStorageEngine.getSnapshot("glean_client_info", false)
+        val newFirstRunDate = datetimeClientInfoSnapshot?.get("first_run_date")
+        if (newFirstRunDate == null) {
+            val datetimePingInfoSnapshot = DatetimesStorageEngine.getSnapshot("glean_ping_info", false)
+            datetimePingInfoSnapshot?.get("first_run_date")?.let {
+                parseISOTimeString(it)?.let {
+                    DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate, it)
+                }
+            }
+        }
+    }
+
+    /**
      * Initialize the core metrics internally managed by Glean (e.g. client id).
      */
     private fun initializeCoreMetrics(applicationContext: Context) {
@@ -220,38 +256,7 @@ open class GleanInternalAPI internal constructor () {
             UuidsStorageEngine.record(GleanInternalMetrics.clientId, uuid)
             DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate)
         } else {
-            // ////////////////////////////////////////////////////////////
-            // BACKWARD COMPATIBILITY HACK
-            // 1539480: The implementation of 1528787 moved the client_id and 
-            // first_run_date metrics from the ping_info to the client_info
-            // sections. This introduced a bug that the client_id would not be
-            // picked up from the old location on devices that had already run
-            // the application. Missing a client_id is particularly problematic
-            // because these pings will be rejected by the pipeline. This fix
-            // looks for these metrics at their old locations, and if found,
-            // copies them to the new location. If they already exist in the
-            // new location, this shouldn't override them.
-
-            val uuidClientInfoSnapshot = UuidsStorageEngine.getSnapshot("glean_client_info", false)
-            val newClientId = uuidClientInfoSnapshot?.get("client_id")
-            if (newClientId == null) {
-                val uuidPingInfoSnapshot = UuidsStorageEngine.getSnapshot("glean_ping_info", false)
-                uuidPingInfoSnapshot?.get("client_id")?.let {
-                    UuidsStorageEngine.record(GleanInternalMetrics.clientId, it)
-                }
-            }
-
-            val datetimeClientInfoSnapshot = DatetimesStorageEngine.getSnapshot("glean_client_info", false)
-            val newFirstRunDate = datetimeClientInfoSnapshot?.get("first_run_date")
-            if (newFirstRunDate == null) {
-                val datetimePingInfoSnapshot = DatetimesStorageEngine.getSnapshot("glean_ping_info", false)
-                datetimePingInfoSnapshot?.get("first_run_date")?.let {
-                    parseISOTimeString(it)?.let {
-                        DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate, it)
-                    }
-                }
-            }
-            // ////////////////////////////////////////////////////////////
+            fixLegacyPingInfoMetrics()
         }
 
         // Set a few more metrics that will be sent as part of every ping.
