@@ -2360,6 +2360,38 @@ impl Device {
         pbo
     }
 
+    pub fn read_pixels_into_pbo(
+        &mut self,
+        read_target: ReadTarget,
+        rect: DeviceIntRect,
+        format: ImageFormat,
+        pbo: &PBO,
+    ) {
+        let byte_size = rect.size.area() as usize * format.bytes_per_pixel() as usize;
+
+        assert!(byte_size <= pbo.reserved_size);
+
+        self.bind_read_target(read_target);
+
+        self.gl.bind_buffer(gl::PIXEL_PACK_BUFFER, pbo.id);
+        self.gl.pixel_store_i(gl::PACK_ALIGNMENT, 1);
+
+        let gl_format = self.gl_describe_format(format);
+
+        unsafe {
+            self.gl.read_pixels_into_pbo(
+                rect.origin.x as _,
+                rect.origin.y as _,
+                rect.size.width as _,
+                rect.size.height as _,
+                gl_format.external,
+                gl_format.pixel_type,
+            );
+        }
+
+        self.gl.bind_buffer(gl::PIXEL_PACK_BUFFER, 0);
+    }
+
     pub fn delete_pbo(&mut self, mut pbo: PBO) {
         self.gl.delete_buffers(&[pbo.id]);
         pbo.id = 0;
