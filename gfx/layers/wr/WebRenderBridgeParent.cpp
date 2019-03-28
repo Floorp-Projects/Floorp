@@ -914,7 +914,8 @@ bool WebRenderBridgeParent::SetDisplayList(
     if (IsRootWebRenderBridgeParent()) {
       if (aRenderRoot != wr::RenderRoot::Default) {
         MutexAutoLock lock(mRenderRootRectMutex);
-        mRenderRootRects[aRenderRoot] = RoundedToInt(aRect).ToUnknownRect();
+        mRenderRootRects[aRenderRoot] = ViewAs<ScreenPixel>(
+            aRect, PixelCastJustification::LayoutDeviceIsScreenForTabDims);
       }
       LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
       LayoutDeviceIntRect rect = RoundedToInt(aRect);
@@ -2019,7 +2020,7 @@ void WebRenderBridgeParent::HoldPendingTransactionId(
 }
 
 already_AddRefed<wr::WebRenderAPI>
-WebRenderBridgeParent::GetWebRenderAPIAtPoint(const gfx::IntPoint& aPoint) {
+WebRenderBridgeParent::GetWebRenderAPIAtPoint(const ScreenPoint& aPoint) {
   MutexAutoLock lock(mRenderRootRectMutex);
   for (auto renderRoot : wr::kNonDefaultRenderRoots) {
     if (mRenderRootRects[renderRoot].Contains(aPoint)) {
