@@ -31,6 +31,8 @@ import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.ThumbnailsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
+import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.enterToImmersiveMode
@@ -56,6 +58,7 @@ import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.quickactionsheet.QuickActionSheet
+import org.mozilla.fenix.utils.Settings
 
 class BrowserFragment : Fragment(), BackHandler {
     private lateinit var toolbarComponent: ToolbarComponent
@@ -258,6 +261,8 @@ class BrowserFragment : Fragment(), BackHandler {
                     is SearchAction.ToolbarMenuItemTapped -> handleToolbarItemInteraction(it)
                 }
             }
+
+        assignSitePermissionsRules()
     }
 
     override fun onBackPressed(): Boolean {
@@ -332,6 +337,25 @@ class BrowserFragment : Fragment(), BackHandler {
                 intent.data = Uri.parse(session?.url)
                 startActivity(intent)
             }
+        }
+    }
+
+    private fun assignSitePermissionsRules() {
+        val settings = Settings.getInstance(requireContext())
+
+        val recommendedSettings = SitePermissionsRules(
+            camera = ASK_TO_ALLOW,
+            notification = ASK_TO_ALLOW,
+            location = ASK_TO_ALLOW,
+            microphone = ASK_TO_ALLOW
+        )
+        val rules: SitePermissionsRules? = if (settings.shouldRecommendedSettingsBeActivated) {
+            recommendedSettings
+        } else {
+            null
+        }
+        sitePermissionsFeature.withFeature {
+            it.sitePermissionsRules = rules
         }
     }
 

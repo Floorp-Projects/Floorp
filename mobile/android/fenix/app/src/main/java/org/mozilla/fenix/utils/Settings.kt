@@ -50,6 +50,9 @@ class Settings private constructor(context: Context) {
     val shouldAutoBounceQuickActionSheet: Boolean
         get() = autoBounceQuickActionSheetCount < autoBounceMaximumCount
 
+    val shouldRecommendedSettingsBeActivated: Boolean
+        get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_recommended_settings), true)
+
     private val autoBounceQuickActionSheetCount: Int
         get() = (preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_bounce_quick_action), 0))
 
