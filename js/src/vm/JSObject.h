@@ -84,7 +84,7 @@ bool SetImmutablePrototype(JSContext* cx, JS::HandleObject obj,
 class JSObject : public js::gc::Cell {
  protected:
   js::GCPtrObjectGroup group_;
-  void* shape_;
+  js::GCPtrShape shape_;
 
  private:
   friend class js::Shape;
@@ -163,13 +163,13 @@ class JSObject : public js::gc::Cell {
     // Note: JSObject::zone() uses the group and we require it to be
     // initialized before the shape.
     MOZ_ASSERT(zone() == shape->zone());
-    shapeRef().init(shape);
+    shape_.init(shape);
   }
   void setShape(js::Shape* shape) {
     MOZ_ASSERT(zone() == shape->zone());
-    shapeRef() = shape;
+    shape_ = shape;
   }
-  js::Shape* shape() const { return shapeRef(); }
+  js::Shape* shape() const { return shape_; }
 
   void traceShape(JSTracer* trc) { TraceEdge(trc, shapePtr(), "shape"); }
 
@@ -567,20 +567,8 @@ class JSObject : public js::gc::Cell {
       4 * sizeof(void*) + 16 * sizeof(JS::Value);
 
  protected:
-  // ShapedObjects treat the |shapeOrExpando_| field as a GCPtrShape to
-  // ensure barriers are called. Use these instead of accessing
-  // |shapeOrExpando_| directly.
-  MOZ_ALWAYS_INLINE const js::GCPtrShape& shapeRef() const {
-    return *reinterpret_cast<const js::GCPtrShape*>(&(this->shape_));
-  }
-  MOZ_ALWAYS_INLINE js::GCPtrShape& shapeRef() {
-    return *reinterpret_cast<js::GCPtrShape*>(&(this->shape_));
-  }
-
   // Used for GC tracing and Shape::listp
-  MOZ_ALWAYS_INLINE js::GCPtrShape* shapePtr() {
-    return reinterpret_cast<js::GCPtrShape*>(&(this->shape_));
-  }
+  MOZ_ALWAYS_INLINE js::GCPtrShape* shapePtr() { return &(this->shape_); }
 
   // JIT Accessors.
   //
