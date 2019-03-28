@@ -352,9 +352,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     checkScroll(browser, testData);
 
     // Check that the layout scroll range is still respected.
-    // TODO: This should start passing after bug 1516056 is fixed.
-    todo_is(browser.contentWindow.scrollX, 0, "Layout scroll range should be respected");
-    todo_is(browser.contentWindow.scrollY, 0, "Layout scroll range should be respected");
+    is(browser.contentWindow.scrollX, 0, "Layout scroll range should be respected");
+    is(browser.contentWindow.scrollY, 0, "Layout scroll range should be respected");
 
     // Now go back in history and check that the scroll position
     // is restored there as well.
