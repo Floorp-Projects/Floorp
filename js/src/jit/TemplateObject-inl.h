@@ -53,8 +53,8 @@ inline gc::Cell* TemplateObject::group() const {
   return obj_->group();
 }
 
-inline gc::Cell* TemplateObject::maybeShape() const {
-  Shape* shape = obj_->maybeShape();
+inline gc::Cell* TemplateObject::shape() const {
+  Shape* shape = obj_->shape();
   MOZ_ASSERT(!shape->inDictionary());
   return shape;
 }
