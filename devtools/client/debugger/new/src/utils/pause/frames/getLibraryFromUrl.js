@@ -33,10 +33,6 @@ const libraryMap = [
     pattern: /webpack\/bootstrap/i
   },
   {
-    label: "Node",
-    pattern: /(^internal\/|^[^.\/]+\.js)/
-  },
-  {
     label: "Express",
     pattern: /node_modules\/express/
   },
