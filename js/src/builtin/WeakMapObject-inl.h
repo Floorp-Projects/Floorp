@@ -16,9 +16,7 @@
 namespace js {
 
 static bool TryPreserveReflector(JSContext* cx, HandleObject obj) {
-  if (obj->getClass()->isWrappedNative() || obj->getClass()->isDOMClass() ||
-      (obj->is<ProxyObject>() && obj->as<ProxyObject>().handler()->family() ==
-                                     GetDOMProxyHandlerFamily())) {
+  if (obj->getClass()->isDOMClass()) {
     MOZ_ASSERT(cx->runtime()->preserveWrapperCallback);
     if (!cx->runtime()->preserveWrapperCallback(cx, obj)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,

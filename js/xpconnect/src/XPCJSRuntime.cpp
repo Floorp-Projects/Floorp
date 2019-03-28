@@ -2791,10 +2791,9 @@ static void DestroyRealm(JSFreeOp* fop, JS::Realm* realm) {
 static bool PreserveWrapper(JSContext* cx, JS::Handle<JSObject*> obj) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(obj);
-  MOZ_ASSERT(IS_WN_REFLECTOR(obj) || mozilla::dom::IsDOMObject(obj));
+  MOZ_ASSERT(mozilla::dom::IsDOMObject(obj));
 
-  return mozilla::dom::IsDOMObject(obj) &&
-         mozilla::dom::TryPreserveWrapper(obj);
+  return mozilla::dom::TryPreserveWrapper(obj);
 }
 
 static nsresult ReadSourceFromFilename(JSContext* cx, const char* filename,
