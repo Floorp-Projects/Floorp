@@ -82,7 +82,8 @@ class CallbacksSupport final : public JavaCallbacksSupport {
     CSFLogDebug(LOGTAG, "%s %p", __FUNCTION__, this);
   }
 
-  void HandleOutput(Sample::Param aSample) override {
+  void HandleOutput(Sample::Param aSample,
+                    SampleBuffer::Param aBuffer) override {
     CSFLogDebug(LOGTAG, "%s %p", __FUNCTION__, this);
     BufferInfo::LocalRef info = aSample->Info();
 
@@ -115,7 +116,7 @@ class CallbacksSupport final : public JavaCallbacksSupport {
 
       jni::ByteBuffer::LocalRef dest =
           jni::ByteBuffer::New(mEncodedImage._buffer, size);
-      aSample->WriteToByteBuffer(dest);
+      aBuffer->WriteToByteBuffer(dest, 0, size);
 
       webrtc::CodecSpecificInfo info;
       info.codecType = webrtc::kVideoCodecVP8;

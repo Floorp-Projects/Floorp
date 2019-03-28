@@ -92,7 +92,8 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
       mDecoder->UpdateInputStatus(aTimestamp, aProcessed);
     }
 
-    void HandleOutput(Sample::Param aSample) override {
+    void HandleOutput(Sample::Param aSample,
+                      java::SampleBuffer::Param aBuffer) override {
       // aSample will be implicitly converted into a GlobalRef.
       mDecoder->ProcessOutput(std::move(aSample));
     }
@@ -368,9 +369,10 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
       mDecoder->UpdateInputStatus(aTimestamp, aProcessed);
     }
 
-    void HandleOutput(Sample::Param aSample) override {
+    void HandleOutput(Sample::Param aSample,
+                      java::SampleBuffer::Param aBuffer) override {
       // aSample will be implicitly converted into a GlobalRef.
-      mDecoder->ProcessOutput(std::move(aSample));
+      mDecoder->ProcessOutput(std::move(aSample), std::move(aBuffer));
     }
 
     void HandleOutputFormatChanged(MediaFormat::Param aFormat) override {
@@ -403,11 +405,14 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
   // Param and LocalRef are only valid for the duration of a JNI method call.
   // Use GlobalRef as the parameter type to keep the Java object referenced
   // until running.
-  void ProcessOutput(Sample::GlobalRef&& aSample) {
+  void ProcessOutput(Sample::GlobalRef&& aSample,
+                     SampleBuffer::GlobalRef&& aBuffer) {
     if (!mTaskQueue->IsCurrentThreadIn()) {
-      nsresult rv = mTaskQueue->Dispatch(NewRunnableMethod<Sample::GlobalRef&&>(
-          "RemoteAudioDecoder::ProcessOutput", this,
-          &RemoteAudioDecoder::ProcessOutput, std::move(aSample)));
+      nsresult rv = mTaskQueue->Dispatch(
+          NewRunnableMethod<Sample::GlobalRef&&, SampleBuffer::GlobalRef&&>(
+              "RemoteAudioDecoder::ProcessOutput", this,
+              &RemoteAudioDecoder::ProcessOutput, std::move(aSample),
+              std::move(aBuffer)));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
       Unused << rv;
       return;
@@ -451,7 +456,7 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
       }
 
       jni::ByteBuffer::LocalRef dest = jni::ByteBuffer::New(audio.get(), size);
-      aSample->WriteToByteBuffer(dest);
+      aBuffer->WriteToByteBuffer(dest, offset, size);
 
       RefPtr<AudioData> data =
           new AudioData(0, TimeUnit::FromMicroseconds(presentationTimeUs),

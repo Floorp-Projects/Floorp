@@ -7,6 +7,7 @@ package org.mozilla.gecko.media;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.SharedMemory;
 
 import java.io.IOException;
@@ -64,6 +65,7 @@ public final class SampleBuffer implements Parcelable {
 
     private native static void nativeReadFromDirectBuffer(ByteBuffer src, long dest, int offset, int size);
 
+    @WrapForJNI
     public void writeToByteBuffer(final ByteBuffer dest, final int offset, final int size)
             throws IOException {
         if (!dest.isDirect()) {
