@@ -18,6 +18,10 @@ import android.widget.ImageView
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
 import mozilla.components.browser.toolbar.facts.emitCommitFact
+import mozilla.components.browser.toolbar.internal.ActionWrapper
+import mozilla.components.browser.toolbar.internal.invalidateActions
+import mozilla.components.browser.toolbar.internal.measureActions
+import mozilla.components.browser.toolbar.internal.wrapAction
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.showKeyboard
@@ -36,7 +40,7 @@ import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
  * - exit: Button that switches back to display mode.
  */
 @SuppressLint("ViewConstructor") // This view is only instantiated in code
-class EditToolbar(
+internal class EditToolbar(
     context: Context,
     private val toolbar: BrowserToolbar
 ) : ViewGroup(context) {
@@ -101,6 +105,8 @@ class EditToolbar(
 
     internal var editListener: Toolbar.OnEditListener? = null
 
+    private val editActions: MutableList<ActionWrapper> = mutableListOf()
+
     init {
         addView(urlView)
         addView(clearView)
@@ -121,6 +127,21 @@ class EditToolbar(
         urlView.showKeyboard(flags = InputMethodManager.SHOW_FORCED)
     }
 
+    /**
+     * Adds an action to be displayed on the right of the URL in edit mode.
+     */
+    fun addEditAction(action: Toolbar.Action) {
+        editActions.add(wrapAction(action))
+    }
+
+    /**
+     * Declare that the actions (navigation actions, browser actions, page actions) have changed and
+     * should be updated if needed.
+     */
+    fun invalidateActions() {
+        invalidateActions(editActions)
+    }
+
     // We measure the views manually to avoid overhead by using complex ViewGroup implementations
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         // This toolbar is using the full size provided by the parent
@@ -129,11 +150,16 @@ class EditToolbar(
 
         setMeasuredDimension(width, height)
 
+        val actionsWidth = measureActions(editActions, height)
+
         // The icon fills the whole height and has a square shape
         val iconSquareSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
         clearView.measure(iconSquareSpec, iconSquareSpec)
 
-        val urlWidthSpec = MeasureSpec.makeMeasureSpec(width - height, MeasureSpec.EXACTLY)
+        val urlWidthSpec = MeasureSpec.makeMeasureSpec(
+            width - clearView.measuredWidth - actionsWidth,
+            MeasureSpec.EXACTLY)
+
         urlView.measure(urlWidthSpec, heightMeasureSpec)
     }
 
@@ -141,7 +167,19 @@ class EditToolbar(
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         clearView.layout(measuredWidth - clearView.measuredWidth, 0, measuredWidth, measuredHeight)
 
-        urlView.layout(0, 0, measuredWidth - clearView.measuredWidth, bottom)
+        urlView.layout(0, 0, 0 + urlView.measuredWidth, bottom)
+
+        editActions
+            .asSequence()
+            .mapNotNull { it.view }
+            .fold(urlView.measuredWidth) { usedWidth, view ->
+                val viewLeft = usedWidth
+                val viewRight = viewLeft + view.measuredWidth
+
+                view.layout(viewLeft, 0, viewRight, measuredHeight)
+
+                usedWidth + view.measuredWidth
+            }
     }
 
     companion object {

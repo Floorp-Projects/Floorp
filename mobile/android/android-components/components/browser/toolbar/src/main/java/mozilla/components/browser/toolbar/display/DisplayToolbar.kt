@@ -10,7 +10,6 @@ import android.support.v4.content.ContextCompat
 import android.support.v7.widget.AppCompatImageButton
 import android.support.v7.widget.AppCompatImageView
 import android.support.v7.widget.AppCompatTextView
-import android.transition.TransitionManager
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -22,6 +21,10 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
 import mozilla.components.browser.toolbar.facts.emitOpenMenuFact
+import mozilla.components.browser.toolbar.internal.ActionWrapper
+import mozilla.components.browser.toolbar.internal.invalidateActions
+import mozilla.components.browser.toolbar.internal.measureActions
+import mozilla.components.browser.toolbar.internal.wrapAction
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.support.ktx.android.content.res.pxToDp
@@ -144,9 +147,9 @@ internal class DisplayToolbar(
         })
     }
 
-    private val browserActions: MutableList<DisplayAction> = mutableListOf()
-    private val pageActions: MutableList<DisplayAction> = mutableListOf()
-    private val navigationActions: MutableList<DisplayAction> = mutableListOf()
+    private val browserActions: MutableList<ActionWrapper> = mutableListOf()
+    private val pageActions: MutableList<ActionWrapper> = mutableListOf()
+    private val navigationActions: MutableList<ActionWrapper> = mutableListOf()
 
     // Margin between browser actions.
     internal var browserActionMargin = 0
@@ -239,48 +242,21 @@ internal class DisplayToolbar(
      * Adds an action to be displayed on the right side of the toolbar.
      */
     fun addBrowserAction(action: Toolbar.Action) {
-        val displayAction = DisplayAction(action)
-
-        if (action.visible()) {
-            action.createView(this).let {
-                displayAction.view = it
-                addView(it)
-            }
-        }
-
-        browserActions.add(displayAction)
+        browserActions.add(wrapAction(action))
     }
 
     /**
      * Adds an action to be displayed on the right side of the toolbar.
      */
     fun addPageAction(action: Toolbar.Action) {
-        val displayAction = DisplayAction(action)
-
-        if (action.visible()) {
-            action.createView(this).let {
-                displayAction.view = it
-                addView(it)
-            }
-        }
-
-        pageActions.add(displayAction)
+        pageActions.add(wrapAction(action))
     }
 
     /**
      * Adds an action to be displayed on the far left side of the toolbar.
      */
     fun addNavigationAction(action: Toolbar.Action) {
-        val displayAction = DisplayAction(action)
-
-        if (action.visible()) {
-            action.createView(this).let {
-                displayAction.view = it
-                addView(it)
-            }
-        }
-
-        navigationActions.add(displayAction)
+        navigationActions.add(wrapAction(action))
     }
 
     /**
@@ -302,25 +278,7 @@ internal class DisplayToolbar(
      * should be updated if needed.
      */
     fun invalidateActions() {
-        TransitionManager.beginDelayedTransition(this)
-
-        for (action in navigationActions + pageActions + browserActions) {
-            val visible = action.actual.visible()
-
-            if (!visible && action.view != null) {
-                // Action should not be visible anymore. Remove view.
-                removeView(action.view)
-                action.view = null
-            } else if (visible && action.view == null) {
-                // Action should be visible. Add view for it.
-                action.actual.createView(this).let {
-                    action.view = it
-                    addView(it)
-                }
-            }
-
-            action.view?.let { action.actual.bind(it) }
-        }
+        invalidateActions(navigationActions + pageActions + browserActions)
     }
 
     // We measure the views manually to avoid overhead by using complex ViewGroup implementations
@@ -362,28 +320,6 @@ internal class DisplayToolbar(
             )
             it.measure(urlBoxWidthSpec, fixedHeightSpec)
         }
-    }
-
-    /**
-     * Measures a list of actions and returns the needed width.
-     */
-    private fun measureActions(actions: List<DisplayAction>, size: Int): Int {
-        val sizeSpec = MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY)
-
-        return actions
-            .asSequence()
-            .mapNotNull { it.view }
-            .map { view ->
-                val widthSpec = if (view.minimumWidth > size) {
-                    MeasureSpec.makeMeasureSpec(view.minimumWidth, MeasureSpec.EXACTLY)
-                } else {
-                    sizeSpec
-                }
-
-                view.measure(widthSpec, sizeSpec)
-                size
-            }
-            .sum()
     }
 
     // We layout the toolbar ourselves to avoid the overhead from using complex ViewGroup implementations
@@ -498,11 +434,3 @@ internal class DisplayToolbar(
         private const val PROGRESS_BAR_HEIGHT_DP = 3
     }
 }
-
-/**
- * A wrapper helper to pair a Toolbar.Action with an optional View.
- */
-private class DisplayAction(
-    var actual: Toolbar.Action,
-    var view: View? = null
-)

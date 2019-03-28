@@ -5,6 +5,7 @@
 package mozilla.components.browser.toolbar.edit
 
 import android.content.Context
+import android.graphics.Rect
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +19,7 @@ import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.ktx.android.view.forEach
+import mozilla.components.support.test.mock
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.junit.Assert
 import org.junit.Assert.assertEquals
@@ -199,18 +201,132 @@ class EditToolbarTest {
         assertEquals(R.color.photonBlue40, editToolbar.clearViewColor)
     }
 
+    @Test
+    fun `WHEN edit actions are added THEN views are measured correctly`() {
+        val toolbar: BrowserToolbar = mock()
+        val editToolbar = EditToolbar(context, toolbar)
+
+        editToolbar.addEditAction(BrowserToolbar.Button(mock(), "Microphone") {})
+        editToolbar.addEditAction(BrowserToolbar.Button(mock(), "QR code scanner") {})
+
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.EXACTLY)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(56, View.MeasureSpec.EXACTLY)
+
+        editToolbar.measure(widthSpec, heightSpec)
+
+        assertEquals(1024, editToolbar.measuredWidth)
+        assertEquals(56, editToolbar.measuredHeight)
+
+        val clearView = extractClearView(editToolbar)
+
+        assertEquals(56, clearView.measuredWidth)
+        assertEquals(56, clearView.measuredHeight)
+
+        val microphoneView = extractActionView(editToolbar, "Microphone")
+
+        assertEquals(56, microphoneView.measuredWidth)
+        assertEquals(56, microphoneView.measuredHeight)
+
+        val qrView = extractActionView(editToolbar, "QR code scanner")
+
+        assertEquals(56, qrView.measuredWidth)
+        assertEquals(56, qrView.measuredHeight)
+
+        val urlView = extractUrlView(editToolbar)
+
+        assertEquals(856, urlView.measuredWidth)
+        assertEquals(56, urlView.measuredHeight)
+    }
+
+    @Test
+    fun `WHEN edit actions are added THEN views are layout correctly`() {
+        val toolbar: BrowserToolbar = mock()
+        val editToolbar = EditToolbar(context, toolbar)
+
+        editToolbar.addEditAction(BrowserToolbar.Button(mock(), "Microphone") {})
+        editToolbar.addEditAction(BrowserToolbar.Button(mock(), "QR code scanner") {})
+
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.EXACTLY)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(56, View.MeasureSpec.EXACTLY)
+
+        editToolbar.measure(widthSpec, heightSpec)
+        editToolbar.layout(0, 0, 1024, 56)
+
+        val urlView = extractUrlView(editToolbar)
+        val microphoneView = extractActionView(editToolbar, "Microphone")
+        val qrView = extractActionView(editToolbar, "QR code scanner")
+        val clearView = extractClearView(editToolbar)
+
+        val toolbarRect = Rect(editToolbar.left, editToolbar.top, editToolbar.right, editToolbar.bottom)
+
+        val urlRect = Rect(urlView.left, urlView.top, urlView.right, urlView.bottom)
+        val microphoneRect = Rect(microphoneView.left, microphoneView.top, microphoneView.right, microphoneView.bottom)
+        val qrRect = Rect(qrView.left, qrView.top, qrView.right, qrView.bottom)
+        val clearRect = Rect(clearView.left, clearView.top, clearView.right, clearView.bottom)
+
+        assertTrue(toolbarRect.contains(urlRect))
+        assertTrue(toolbarRect.contains(microphoneRect))
+        assertTrue(toolbarRect.contains(qrRect))
+        assertTrue(toolbarRect.contains(clearRect))
+
+        assertEquals(
+            Rect(0, 0, 856, 56),
+            urlRect)
+
+        assertEquals(
+            Rect(856, 0, 912, 56),
+            microphoneRect)
+
+        assertEquals(
+            Rect(912, 0, 968, 56),
+            qrRect)
+
+        assertEquals(
+            Rect(968, 0, 1024, 56),
+            clearRect)
+    }
+
     companion object {
         private fun extractClearView(editToolbar: EditToolbar): ImageView {
             var clearView: ImageView? = null
 
             editToolbar.forEach {
-                if (it is ImageView) {
+                if (it is ImageView && it.id == R.id.mozac_browser_toolbar_clear_view) {
                     clearView = it
                     return@forEach
                 }
             }
 
             return clearView ?: throw AssertionError("Could not find clear view")
+        }
+
+        private fun extractUrlView(editToolbar: EditToolbar): View {
+            var urlView: InlineAutocompleteEditText? = null
+
+            editToolbar.forEach { view ->
+                if (view is InlineAutocompleteEditText) {
+                    urlView = view
+                    return@forEach
+                }
+            }
+
+            return urlView ?: throw java.lang.AssertionError("Could not find URL input view")
+        }
+
+        private fun extractActionView(
+            editToolbar: EditToolbar,
+            contentDescription: String
+        ): View {
+            var actionView: View? = null
+
+            editToolbar.forEach { view ->
+                if (view.contentDescription == contentDescription) {
+                    actionView = view
+                    return@forEach
+                }
+            }
+
+            return actionView ?: throw java.lang.AssertionError("Could not find action view: $contentDescription")
         }
     }
 

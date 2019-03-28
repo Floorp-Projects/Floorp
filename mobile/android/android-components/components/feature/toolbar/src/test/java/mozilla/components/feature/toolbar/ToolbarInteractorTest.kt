@@ -68,6 +68,10 @@ class ToolbarInteractorTest {
         override fun editMode() {
             fail()
         }
+
+        override fun addEditAction(action: Toolbar.Action) {
+            fail()
+        }
     }
     @Test
     fun `provide custom use case for loading url`() {

@@ -399,6 +399,7 @@ class BrowserToolbar @JvmOverloads constructor(
      */
     fun invalidateActions() {
         displayToolbar.invalidateActions()
+        editToolbar.invalidateActions()
     }
 
     /**
@@ -431,6 +432,13 @@ class BrowserToolbar @JvmOverloads constructor(
      */
     override fun addNavigationAction(action: Toolbar.Action) {
         displayToolbar.addNavigationAction(action)
+    }
+
+    /**
+     * Adds an action to be displayed on the right of the URL in edit mode.
+     */
+    override fun addEditAction(action: Toolbar.Action) {
+        editToolbar.addEditAction(action)
     }
 
     /**

@@ -388,6 +388,22 @@ class BrowserToolbarTest {
     }
 
     @Test
+    fun `add edit action will be forwarded to edit toolbar`() {
+        val toolbar = BrowserToolbar(context)
+
+        val editToolbar: EditToolbar = mock()
+        toolbar.editToolbar = editToolbar
+
+        val action = BrowserToolbar.Button(mock(), "QR code scanner") {
+            // Do nothing
+        }
+
+        toolbar.addEditAction(action)
+
+        verify(editToolbar).addEditAction(action)
+    }
+
+    @Test
     fun `URL update does not override search terms in edit mode`() {
         val toolbar = BrowserToolbar(context)
         val displayToolbar = mock(DisplayToolbar::class.java)

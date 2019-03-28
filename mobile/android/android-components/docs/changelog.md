@@ -34,6 +34,7 @@ permalink: /changelog/
 
 * **browser-toolbar**
   * Add TalkBack support for page load status.
+  * Added option to add "edit actions" that will show up next to the URL in edit mode.
 
 # 0.48.0
 

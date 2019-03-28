@@ -80,6 +80,10 @@ class ToolbarAutocompleteFeatureTest {
         override fun editMode() {
             fail()
         }
+
+        override fun addEditAction(action: Toolbar.Action) {
+            fail()
+        }
     }
 
     @Test
