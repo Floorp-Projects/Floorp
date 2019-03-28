@@ -2,7 +2,7 @@
 
 # EMBED
 
-`EMBED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L131)
+`EMBED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L121)
 
 ### Inherited Properties
 

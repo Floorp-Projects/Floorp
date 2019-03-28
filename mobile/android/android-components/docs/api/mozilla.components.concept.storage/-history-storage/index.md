@@ -2,7 +2,7 @@
 
 # HistoryStorage
 
-`interface HistoryStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L11)
+`interface HistoryStorage : `[`Storage`](../-storage/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L11)
 
 An interface which defines read/write methods for history data.
 
@@ -10,7 +10,6 @@ An interface which defines read/write methods for history data.
 
 | Name | Summary |
 |---|---|
-| [cleanup](cleanup.md) | `abstract fun cleanup(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Cleanup any allocated resources. |
 | [deleteEverything](delete-everything.md) | `abstract suspend fun deleteEverything(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Remove all locally stored data. |
 | [deleteVisitsBetween](delete-visits-between.md) | `abstract suspend fun deleteVisitsBetween(startTime: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, endTime: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Remove history visits in an inclusive range from [startTime](delete-visits-between.md#mozilla.components.concept.storage.HistoryStorage$deleteVisitsBetween(kotlin.Long, kotlin.Long)/startTime) to [endTime](delete-visits-between.md#mozilla.components.concept.storage.HistoryStorage$deleteVisitsBetween(kotlin.Long, kotlin.Long)/endTime). |
 | [deleteVisitsFor](delete-visits-for.md) | `abstract suspend fun deleteVisitsFor(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Remove all history visits for a given [url](delete-visits-for.md#mozilla.components.concept.storage.HistoryStorage$deleteVisitsFor(kotlin.String)/url). |
@@ -22,11 +21,17 @@ An interface which defines read/write methods for history data.
 | [prune](prune.md) | `abstract suspend fun prune(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Prune history storage, removing stale history. |
 | [recordObservation](record-observation.md) | `abstract suspend fun recordObservation(uri: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, observation: `[`PageObservation`](../-page-observation/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Records an observation about a page. |
 | [recordVisit](record-visit.md) | `abstract suspend fun recordVisit(uri: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, visitType: `[`VisitType`](../-visit-type/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Records a visit to a page. |
-| [runMaintenance](run-maintenance.md) | `abstract suspend fun runMaintenance(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Perform internal storage maintenance. |
+
+### Inherited Functions
+
+| Name | Summary |
+|---|---|
+| [cleanup](../-storage/cleanup.md) | `abstract fun cleanup(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Cleans up background work and database connections |
+| [runMaintenance](../-storage/run-maintenance.md) | `abstract suspend fun runMaintenance(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Runs internal database maintenance tasks |
 
 ### Inheritors
 
 | Name | Summary |
 |---|---|
 | [InMemoryHistoryStorage](../../mozilla.components.browser.storage.memory/-in-memory-history-storage/index.md) | `class InMemoryHistoryStorage : `[`HistoryStorage`](./index.md)<br>An in-memory implementation of [mozilla.components.concept.storage.HistoryStorage](./index.md). |
-| [PlacesHistoryStorage](../../mozilla.components.browser.storage.sync/-places-history-storage/index.md) | `open class PlacesHistoryStorage : `[`HistoryStorage`](./index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)<br>Implementation of the [HistoryStorage](./index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
+| [PlacesHistoryStorage](../../mozilla.components.browser.storage.sync/-places-history-storage/index.md) | `open class PlacesHistoryStorage : `[`PlacesStorage`](../../mozilla.components.browser.storage.sync/-places-storage/index.md)`, `[`HistoryStorage`](./index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)<br>Implementation of the [HistoryStorage](./index.md) which is backed by a Rust Places lib via [PlacesApi](#). |

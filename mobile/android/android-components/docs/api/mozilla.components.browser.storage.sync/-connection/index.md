@@ -16,6 +16,6 @@ Writer is always the same, as guaranteed by [PlacesApi](#).
 
 | Name | Summary |
 |---|---|
-| [reader](reader.md) | `abstract fun reader(): ReadableHistoryConnection` |
+| [reader](reader.md) | `abstract fun reader(): PlacesReaderConnection` |
 | [sync](sync.md) | `abstract fun sync(syncInfo: `[`SyncAuthInfo`](../-sync-auth-info.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [writer](writer.md) | `abstract fun writer(): WritableHistoryConnection` |
+| [writer](writer.md) | `abstract fun writer(): PlacesWriterConnection` |

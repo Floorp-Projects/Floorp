@@ -43,6 +43,10 @@
 | [mozilla.components.support.ktx.android.util.Base64](../mozilla.components.support.ktx.android.util/-base64/index.md) |  |
 | [mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider](../mozilla.components.browser.domains.autocomplete/-base-domain-autocomplete-provider/index.md) | Provides common autocomplete functionality powered by domain lists. |
 | [android.graphics.Bitmap](../mozilla.components.support.ktx.android.graphics/android.graphics.-bitmap/index.md) (extensions in package mozilla.components.support.ktx.android.graphics) |  |
+| [mozilla.components.concept.storage.BookmarkInfo](../mozilla.components.concept.storage/-bookmark-info/index.md) | Class for making alterations to any bookmark node |
+| [mozilla.components.concept.storage.BookmarkNode](../mozilla.components.concept.storage/-bookmark-node/index.md) | Class for holding metadata about any bookmark node |
+| [mozilla.components.concept.storage.BookmarkNodeType](../mozilla.components.concept.storage/-bookmark-node-type/index.md) | The types of bookmark nodes |
+| [mozilla.components.concept.storage.BookmarksStorage](../mozilla.components.concept.storage/-bookmarks-storage/index.md) | An interface which defines read/write operations for bookmarks data. |
 | [kotlin.Boolean](../mozilla.components.lib.jexl.ext/kotlin.-boolean/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
 | [mozilla.components.service.glean.BooleanMetricType](../mozilla.components.service.glean/-boolean-metric-type/index.md) | This implements the developer facing API for recording boolean metrics. |
 | [mozilla.components.browser.awesomebar.BrowserAwesomeBar](../mozilla.components.browser.awesomebar/-browser-awesome-bar/index.md) | A customizable [AwesomeBar](../mozilla.components.concept.awesomebar/-awesome-bar/index.md) implementation. |
@@ -286,7 +290,9 @@
 | [mozilla.components.service.fxa.PersistCallback](../mozilla.components.service.fxa/-persist-callback.md) |  |
 | [mozilla.components.feature.session.PictureInPictureFeature](../mozilla.components.feature.session/-picture-in-picture-feature/index.md) | A simple implementation of Picture-in-picture mode if on a supported platform. |
 | [mozilla.components.service.glean.scheduler.PingUploadWorker](../mozilla.components.service.glean.scheduler/-ping-upload-worker/index.md) | This class is the worker class used by [WorkManager](#) to handle uploading the ping to the server. |
+| [mozilla.components.browser.storage.sync.PlacesBookmarksStorage](../mozilla.components.browser.storage.sync/-places-bookmarks-storage/index.md) | Implementation of the [BookmarksStorage](../mozilla.components.concept.storage/-bookmarks-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
 | [mozilla.components.browser.storage.sync.PlacesHistoryStorage](../mozilla.components.browser.storage.sync/-places-history-storage/index.md) | Implementation of the [HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
+| [mozilla.components.browser.storage.sync.PlacesStorage](../mozilla.components.browser.storage.sync/-places-storage/index.md) | A base class for concrete implementations of PlacesStorages |
 | [mozilla.components.service.pocket.PocketEndpoint](../mozilla.components.service.pocket/-pocket-endpoint/index.md) | Makes requests to the Pocket API and returns the requested data. |
 | [mozilla.components.service.pocket.data.PocketGlobalVideoRecommendation](../mozilla.components.service.pocket.data/-pocket-global-video-recommendation/index.md) | A recommended video as returned from the Pocket Global Video Recommendation endpoint v2. |
 | [org.mozilla.telemetry.measurement.PocketIdMeasurement](../org.mozilla.telemetry.measurement/-pocket-id-measurement/index.md) | A unique, randomly generated UUID for this pocket client for fire-tv instance. This is distinct from the telemetry clientId. The clientId should not be able to be tied to the pocketId in any way. |
@@ -361,6 +367,7 @@
 | [mozilla.components.browser.session.storage.SnapshotSerializer](../mozilla.components.browser.session.storage/-snapshot-serializer/index.md) | Helper to transform [SessionManager.Snapshot](../mozilla.components.browser.session/-session-manager/-snapshot/index.md) instances to JSON and back. |
 | [org.mozilla.telemetry.measurement.StaticMeasurement](../org.mozilla.telemetry.measurement/-static-measurement/index.md) |  |
 | [mozilla.components.support.utils.StatusBarUtils](../mozilla.components.support.utils/-status-bar-utils/index.md) |  |
+| [mozilla.components.concept.storage.Storage](../mozilla.components.concept.storage/-storage/index.md) | An interface which provides generic operations for storing browser data like history and bookmarks. |
 | [mozilla.components.feature.sync.StorageSync](../mozilla.components.feature.sync/-storage-sync/index.md) | A feature implementation which orchestrates data synchronization of a set of [SyncableStore](../mozilla.components.concept.sync/-syncable-store/index.md)-s. |
 | [mozilla.components.concept.sync.StoreSyncStatus](../mozilla.components.concept.sync/-store-sync-status/index.md) |  |
 | [kotlin.String](../mozilla.components.browser.engine.system.matcher/kotlin.-string/index.md) (extensions in package mozilla.components.browser.engine.system.matcher) |  |

@@ -2,4 +2,4 @@
 
 # writer
 
-`abstract fun writer(): WritableHistoryConnection` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/Connection.kt#L27)
+`abstract fun writer(): PlacesWriterConnection` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/Connection.kt#L27)

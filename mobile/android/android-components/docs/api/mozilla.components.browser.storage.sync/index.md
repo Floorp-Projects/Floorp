@@ -7,7 +7,9 @@
 | Name | Summary |
 |---|---|
 | [Connection](-connection/index.md) | `interface Connection : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)<br>A slight abstraction over [PlacesApi](#). |
-| [PlacesHistoryStorage](-places-history-storage/index.md) | `open class PlacesHistoryStorage : `[`HistoryStorage`](../mozilla.components.concept.storage/-history-storage/index.md)`, `[`SyncableStore`](../mozilla.components.concept.sync/-syncable-store/index.md)<br>Implementation of the [HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
+| [PlacesBookmarksStorage](-places-bookmarks-storage/index.md) | `open class PlacesBookmarksStorage : `[`PlacesStorage`](-places-storage/index.md)`, `[`BookmarksStorage`](../mozilla.components.concept.storage/-bookmarks-storage/index.md)`, `[`SyncableStore`](../mozilla.components.concept.sync/-syncable-store/index.md)<br>Implementation of the [BookmarksStorage](../mozilla.components.concept.storage/-bookmarks-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
+| [PlacesHistoryStorage](-places-history-storage/index.md) | `open class PlacesHistoryStorage : `[`PlacesStorage`](-places-storage/index.md)`, `[`HistoryStorage`](../mozilla.components.concept.storage/-history-storage/index.md)`, `[`SyncableStore`](../mozilla.components.concept.sync/-syncable-store/index.md)<br>Implementation of the [HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
+| [PlacesStorage](-places-storage/index.md) | `open class PlacesStorage : `[`Storage`](../mozilla.components.concept.storage/-storage/index.md)`, `[`SyncableStore`](../mozilla.components.concept.sync/-syncable-store/index.md)<br>A base class for concrete implementations of PlacesStorages |
 
 ### Type Aliases
 

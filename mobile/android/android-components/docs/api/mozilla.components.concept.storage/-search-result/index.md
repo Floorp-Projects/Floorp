@@ -2,7 +2,7 @@
 
 # SearchResult
 
-`data class SearchResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L148)
+`data class SearchResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L138)
 
 Encapsulates a set of properties which define a result of querying history storage.
 
