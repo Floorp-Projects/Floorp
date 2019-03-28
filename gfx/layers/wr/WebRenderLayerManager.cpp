@@ -422,7 +422,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
         resourceUpdates.SubQueue(renderRoot)
             .Flush(renderRootDL->mResourceUpdates, renderRootDL->mSmallShmems,
                    renderRootDL->mLargeShmems);
-        renderRootDL->mRect = RoundedToInt(rects[renderRoot]).ToUnknownRect();
+        renderRootDL->mRect = rects[renderRoot];
         renderRootDL->mScrollData.emplace(std::move(mScrollDatas[renderRoot]));
       } else if (WrBridge()->HasWebRenderParentCommands(renderRoot)) {
         auto renderRootDL = renderRootDLs.AppendElement();

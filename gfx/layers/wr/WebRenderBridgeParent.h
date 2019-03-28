@@ -295,7 +295,7 @@ class WebRenderBridgeParent final
     }
   }
 
-  bool SetDisplayList(wr::RenderRoot aRenderRoot, const gfx::IntRect& aRect,
+  bool SetDisplayList(wr::RenderRoot aRenderRoot, const LayoutDeviceRect& aRect,
                       const wr::LayoutSize& aContentSize, ipc::ByteBuf&& aDL,
                       const wr::BuiltDisplayListDescriptor& aDLDesc,
                       const nsTArray<OpUpdateResource>& aResourceUpdates,
