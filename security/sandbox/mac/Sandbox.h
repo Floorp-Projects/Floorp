@@ -53,6 +53,23 @@ typedef struct _MacSandboxInfo {
         shouldLog(false) {}
   _MacSandboxInfo(const struct _MacSandboxInfo& other) = default;
 
+  void AppendAsParams(std::vector<std::string>& aParams) const;
+  static void AppendFileAccessParam(std::vector<std::string>& aParams,
+                                    bool aHasFilePrivileges);
+
+ private:
+  void AppendStartupParam(std::vector<std::string>& aParams) const;
+  void AppendLoggingParam(std::vector<std::string>& aParams) const;
+  void AppendAppPathParam(std::vector<std::string>& aParams) const;
+  void AppendLevelParam(std::vector<std::string>& aParams) const;
+  void AppendAudioParam(std::vector<std::string>& aParams) const;
+  void AppendWindowServerParam(std::vector<std::string>& aParams) const;
+  void AppendReadPathParams(std::vector<std::string>& aParams) const;
+#ifdef DEBUG
+  void AppendDebugWriteDirParam(std::vector<std::string>& aParams) const;
+#endif
+
+ public:
   MacSandboxType type;
   int32_t level;
   bool hasFilePrivileges;
@@ -79,8 +96,8 @@ typedef struct _MacSandboxInfo {
 namespace mozilla {
 
 bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage);
-bool EarlyStartMacSandboxIfEnabled(int aArgc, char** aArgv,
-                                   std::string& aErrorMessage);
+bool StartMacSandboxIfEnabled(MacSandboxType aSandboxType, int aArgc,
+                              char** aArgv, std::string& aErrorMessage);
 #ifdef DEBUG
 void AssertMacSandboxEnabled();
 #endif /* DEBUG */

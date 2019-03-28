@@ -27,6 +27,13 @@
 #  include "sandboxBroker.h"
 #endif
 
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+#  include "mozilla/Sandbox.h"
+#endif
+
+struct _MacSandboxInfo;
+typedef _MacSandboxInfo MacSandboxInfo;
+
 namespace mozilla {
 namespace ipc {
 
@@ -133,6 +140,24 @@ class GeckoChildProcessHost : public ChildProcessHost {
     sRunSelfAsContentProc = true;
   }
 
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+  // To allow filling a MacSandboxInfo from the child
+  // process without an instance of RDDProcessHost.
+  // Only needed for late-start sandbox enabling.
+  static void StaticFillMacSandboxInfo(MacSandboxInfo& aInfo);
+
+  // Start the sandbox from the child process.
+  static bool StartMacSandbox(int aArgc, char** aArgv,
+                              std::string& aErrorMessage);
+
+  // The sandbox type that will be use when sandboxing is
+  // enabled in the derived class and FillMacSandboxInfo
+  // has not been overridden.
+  static MacSandboxType GetDefaultMacSandboxType() {
+    return MacSandboxType_Utility;
+  };
+#endif
+
  protected:
   ~GeckoChildProcessHost();
 
@@ -186,6 +211,21 @@ class GeckoChildProcessHost : public ChildProcessHost {
   RefPtr<HandlePromise::Private> mHandlePromise;
 
   bool OpenPrivilegedHandle(base::ProcessId aPid);
+
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+  // Override this method to return true to launch the child process
+  // using the Mac utility (by default) sandbox. Override
+  // FillMacSandboxInfo() to change the sandbox type and settings.
+  virtual bool IsMacSandboxLaunchEnabled() { return false; }
+
+  // Fill a MacSandboxInfo to configure the sandbox
+  virtual void FillMacSandboxInfo(MacSandboxInfo& aInfo);
+
+  // Adds the command line arguments needed to enable
+  // sandboxing of the child process at startup before
+  // the child event loop is up.
+  virtual void AppendMacSandboxParams(StringVector& aArgs);
+#endif
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GeckoChildProcessHost);
