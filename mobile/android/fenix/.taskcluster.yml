@@ -98,13 +98,14 @@ tasks:
               - -cx
               # The rest of the command must be defined below
             env:
-              TASK_ID: ${decision_task_id}
-              TASKS_PRIORITY: ${tasks_priority}
-              SCHEDULER_ID: ${scheduler_id}
-              MOBILE_HEAD_REPOSITORY: ${repository}
+              BUILD_DATE: ${now}
               MOBILE_HEAD_BRANCH: ${head_branch}
+              MOBILE_HEAD_REPOSITORY: ${repository}
               MOBILE_HEAD_REV: ${head_rev}
               MOBILE_TRIGGERED_BY: ${user}
+              SCHEDULER_ID: ${scheduler_id}
+              TASK_ID: ${decision_task_id}
+              TASKS_PRIORITY: ${tasks_priority}
             features:
               taskclusterProxy: true
           extra:
@@ -190,8 +191,7 @@ tasks:
                           --output /opt/fenix/app/build/outputs/apk \
                           --apk armGreenfield/release/app-arm-greenfield-release-unsigned.apk \
                           --apk x86Greenfield/release/app-x86-greenfield-release-unsigned.apk \
-                          --apk aarch64Greenfield/release/app-aarch64-greenfield-release-unsigned.apk \
-                          --date ${now}
+                          --apk aarch64Greenfield/release/app-aarch64-greenfield-release-unsigned.apk
                     artifacts:
                       public/task-graph.json:
                         type: file

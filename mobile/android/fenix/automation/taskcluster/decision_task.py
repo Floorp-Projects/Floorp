@@ -30,13 +30,14 @@ SKIP_TASKS_TRIGGER = '[ci skip]'
 
 BUILDER = TaskBuilder(
     task_id=os.environ.get('TASK_ID'),
-    repo_url=os.environ.get('MOBILE_HEAD_REPOSITORY'),
+    repo_url=REPO_URL,
     branch=os.environ.get('MOBILE_HEAD_BRANCH'),
     commit=COMMIT,
     owner="fenix-eng-notifications@mozilla.com",
     source='{}/raw/{}/.taskcluster.yml'.format(REPO_URL, COMMIT),
     scheduler_id=os.environ.get('SCHEDULER_ID', 'taskcluster-github'),
     tasks_priority=os.environ.get('TASKS_PRIORITY'),
+    date_string=os.environ.get('BUILD_DATE'),
 )
 
 
@@ -73,7 +74,7 @@ def pr_or_push():
     return (build_tasks, other_tasks)
 
 
-def nightly(apks, track, commit, date_string):
+def nightly(apks, track, commit):
     is_staging = track == 'staging-nightly'
 
     build_tasks = {}
@@ -88,7 +89,6 @@ def nightly(apks, track, commit, date_string):
     signing_tasks[signing_task_id] = BUILDER.craft_signing_task(
         build_task_id,
         apks=artifacts,
-        date_string=date_string,
         is_staging=is_staging,
     )
 
@@ -127,7 +127,6 @@ if __name__ == "__main__":
     release_parser.add_argument(
         '--output', metavar="path", action="store", help="Path to the build output", required=True
     )
-    release_parser.add_argument('--date', action="store", help="ISO8601 timestamp for build")
 
     result = parser.parse_args()
 
@@ -137,10 +136,7 @@ if __name__ == "__main__":
         ordered_groups_of_tasks = pr_or_push()
     elif command == 'release':
         apks = ["{}/{}".format(result.output, apk) for apk in result.apks]
-        # nightly(apks, result.track, result.commit, result.date)
-        ordered_groups_of_tasks = nightly(
-            apks, result.track, result.commit, result.date
-        )
+        ordered_groups_of_tasks = nightly(apks, result.track, result.commit)
     else:
         raise Exception('Unsupported command "{}"'.format(command))
 

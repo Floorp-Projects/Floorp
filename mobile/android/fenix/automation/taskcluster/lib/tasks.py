@@ -10,12 +10,15 @@ import json
 import os
 import taskcluster
 
+from lib.util import convert_camel_case_into_kebab_case
+
 DEFAULT_EXPIRES_IN = '1 year'
+_OFFICIAL_REPO_URL = 'https://github.com/mozilla-mobile/fenix'
 
 
 class TaskBuilder(object):
     def __init__(
-        self, task_id, repo_url, branch, commit, owner, source, scheduler_id,
+        self, task_id, repo_url, branch, commit, owner, source, scheduler_id, date_string,
         tasks_priority='lowest'
     ):
         self.task_id = task_id
@@ -26,6 +29,7 @@ class TaskBuilder(object):
         self.source = source
         self.scheduler_id = scheduler_id
         self.tasks_priority = tasks_priority
+        self.date = arrow.get(date_string)
 
     def craft_assemble_release_task(self, apks, is_staging=False):
         artifacts = {
@@ -95,6 +99,7 @@ class TaskBuilder(object):
             description='Building and testing variant {}'.format(variant),
             gradle_task='assemble{}'.format(variant.capitalize()),
             artifacts=_craft_artifacts_from_variant(variant),
+            routes=self._craft_branch_routes(variant),
             treeherder={
                 'groupSymbol': _craft_treeherder_group_symbol_from_variant(variant),
                 'jobKind': 'build',
@@ -121,6 +126,32 @@ class TaskBuilder(object):
                 'tier': 1,
             },
         )
+
+    def _craft_branch_routes(self, variant):
+        routes = []
+
+        if self.repo_url == _OFFICIAL_REPO_URL and self.branch == 'master':
+            architecture, build_type, product = \
+                _get_architecture_and_build_type_and_product_from_variant(variant)
+            product = convert_camel_case_into_kebab_case(product)
+            postfix = convert_camel_case_into_kebab_case('{}-{}'.format(architecture, build_type))
+
+            routes = [
+                'index.project.mobile.fenix.branch.{}.revision.{}.{}.{}'.format(
+                    self.branch, self.commit, product, postfix
+                ),
+                'index.project.mobile.fenix.branch.{}.latest.{}.{}'.format(
+                    self.branch, product, postfix
+                ),
+                'index.project.mobile.fenix.branch.{}.pushdate.{}.{}.{}.revision.{}.{}.{}'.format(
+                    self.branch, self.date.year, self.date.month, self.date.day, self.commit,
+                    product, postfix
+                ),
+                'index.project.mobile.fenix.branch.{}.pushdate.{}.{}.{}.latest.{}.{}'.format(
+                    self.branch. self.date.year, self.date.month, self.date.day, product, postfix
+                ),
+            ]
+        return routes
 
     def craft_detekt_task(self):
         return self._craft_clean_gradle_task(
@@ -169,13 +200,14 @@ class TaskBuilder(object):
         )
 
     def _craft_clean_gradle_task(
-        self, name, description, gradle_task, artifacts=None, treeherder=None
+        self, name, description, gradle_task, artifacts=None, routes=None, treeherder=None
     ):
         return self._craft_build_ish_task(
             name=name,
             description=description,
             command='./gradlew --no-daemon clean {}'.format(gradle_task),
             artifacts=artifacts,
+            routes=routes,
             treeherder=treeherder,
         )
 
@@ -288,9 +320,8 @@ class TaskBuilder(object):
         }
 
     def craft_signing_task(
-        self, build_task_id, apks, date_string, is_staging=True,
+        self, build_task_id, apks, is_staging=True,
     ):
-        date = arrow.get(date_string)
         signing_format = 'autograph_apk'
         payload = {
             "upstreamArtifacts": [{
@@ -304,10 +335,10 @@ class TaskBuilder(object):
         index_release = 'staging-signed-nightly' if is_staging else 'signed-nightly'
         routes = [
             "index.project.mobile.fenix.{}.nightly.{}.{}.{}.latest".format(
-                index_release, date.year, date.month, date.day
+                index_release, self.date.year, self.date.month, self.date.day
             ),
             "index.project.mobile.fenix.{}.nightly.{}.{}.{}.revision.{}".format(
-                index_release, date.year, date.month, date.day, self.commit
+                index_release, self.date.year, self.date.month, self.date.day, self.commit
             ),
             "index.project.mobile.fenix.{}.nightly.latest".format(index_release),
         ]
@@ -376,7 +407,9 @@ class TaskBuilder(object):
 
 
 def _craft_treeherder_platform_from_variant(variant):
-    architecture, build_type, _ = _get_architecture_and_build_type_and_product_from_variant(variant)
+    architecture, build_type, _ = _get_architecture_and_build_type_and_product_from_variant(
+        variant
+    )
     return 'android-{}-{}'.format(architecture, build_type)
 
 
