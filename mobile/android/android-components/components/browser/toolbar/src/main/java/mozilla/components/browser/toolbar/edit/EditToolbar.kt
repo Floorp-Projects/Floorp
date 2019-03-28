@@ -54,8 +54,11 @@ class EditToolbar(
         setSelectAllOnFocus(true)
 
         setOnCommitListener {
+            // We emit the fact before notifying the listener because otherwise the listener may cause a focus
+            // change which may reset the autocomplete state that we want to report here.
+            emitCommitFact(autocompleteResult)
+
             toolbar.onUrlEntered(text.toString())
-            emitCommitFact()
         }
 
         setOnTextChangeListener { text, _ ->

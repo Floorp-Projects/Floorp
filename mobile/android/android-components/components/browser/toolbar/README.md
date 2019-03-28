@@ -31,10 +31,17 @@ implementation "org.mozilla.components:browser-toolbar:{latest-version}"
 
 This component emits the following [Facts](../../support/base/README.md#Facts):
 
-| Action | Item    | Description                        |
-|--------|---------|------------------------------------|
-| CLICK  | menu    | The user opened the overflow menu. |
-| COMMIT | toolbar | The user has edited the URL.       |
+| Action | Item    | Extras         | Description                        |
+|--------|---------|----------------|------------------------------------|
+| CLICK  | menu    |                | The user opened the overflow menu. |
+| COMMIT | toolbar | `commitExtras` | The user has edited the URL.       |
+
+#### `commitExtras`
+
+| Key          | Type    | Value                             |
+|--------------|---------|-----------------------------------|
+| autocomplete | Boolean | Whether the URL was autocompleted |
+| source       | String? | Which autocomplete list was used  |
 
 ## License
 
