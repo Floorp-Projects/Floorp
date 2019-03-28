@@ -19,7 +19,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
-    'WindowsConsole.h',
     'WinHeaderOnlyUtils.h',
 ]
 
@@ -76,7 +75,6 @@ UNIFIED_SOURCES += [
     'WidgetTraceEvent.cpp',
     'WinCompositorWindowThread.cpp',
     'WindowHook.cpp',
-    'WindowsConsole.cpp',
     'WinIMEHandler.cpp',
     'WinPointerEvents.cpp',
     'WinTaskbar.cpp',

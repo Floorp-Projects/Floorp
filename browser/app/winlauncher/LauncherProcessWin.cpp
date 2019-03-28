@@ -17,7 +17,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/SafeMode.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/WindowsConsole.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsWindowsHelpers.h"
@@ -219,8 +218,6 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
       MOZ_ASSERT(setOk);
     }
   }
-
-  mozilla::UseParentConsole();
 
   if (!SetArgv0ToFullBinaryPath(argv)) {
     HandleLauncherError(LAUNCHER_ERROR_GENERIC());
