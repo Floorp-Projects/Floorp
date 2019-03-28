@@ -107,6 +107,10 @@ class GeckoEngine(
             get() = runtime.settings.webFontsEnabled
             set(value) { runtime.settings.webFontsEnabled = value }
 
+        override var automaticFontSizeAdjustment: Boolean
+            get() = runtime.settings.automaticFontSizeAdjustment
+            set(value) { runtime.settings.automaticFontSizeAdjustment = value }
+
         override var trackingProtectionPolicy: TrackingProtectionPolicy?
             get() = TrackingProtectionPolicy.select(runtime.settings.contentBlocking.categories)
             set(value) {
@@ -135,6 +139,7 @@ class GeckoEngine(
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
             this.webFontsEnabled = it.webFontsEnabled
+            this.automaticFontSizeAdjustment = it.automaticFontSizeAdjustment
             this.trackingProtectionPolicy = it.trackingProtectionPolicy
             this.remoteDebuggingEnabled = it.remoteDebuggingEnabled
             this.testingModeEnabled = it.testingModeEnabled
