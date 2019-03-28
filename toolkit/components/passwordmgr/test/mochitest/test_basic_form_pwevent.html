@@ -11,8 +11,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=355063
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <script type="application/javascript">
   /** Test for Bug 355063 **/
-  gTestDependsOnDeprecatedLogin = true;
-  runChecksAfterCommonInit(async function startTest() {
+
+  runChecksAfterCommonInit(function startTest() {
     info("startTest");
     // Password Manager's own listener should always have been added first, so
     // the test's listener should be called after the pwmgr's listener fills in
@@ -23,9 +23,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=355063
       var passField = $("p1");
       passField.addEventListener("input", checkForm);
     });
-    await setFormAndWaitForFieldFilled("<form id=form1>form1: <input id=u1><input type=password id=p1></form><br>",
-                                       {fieldSelector: "#u1", fieldValue: "testuser"});
+    addForm();
   });
+
+  function addForm() {
+    info("addForm");
+    var c = document.getElementById("content");
+    c.innerHTML = "<form id=form1>form1: <input id=u1><input type=password id=p1></form><br>";
+  }
 
   function checkForm() {
     info("checkForm");
