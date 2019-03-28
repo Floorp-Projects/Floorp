@@ -1471,7 +1471,7 @@ bool JSObject::setFlags(JSContext* cx, HandleObject obj, BaseShape::Flag flags,
     return true;
   }
 
-  Shape* existingShape = obj->shape();
+  Shape* existingShape = obj->ensureShape(cx);
   if (!existingShape) {
     return false;
   }
@@ -1499,7 +1499,10 @@ bool JSObject::setFlags(JSContext* cx, HandleObject obj, BaseShape::Flag flags,
     return false;
   }
 
-  obj->as<JSObject>().setShape(newShape);
+  // The success of the |JSObject::ensureShape| call above means that |obj|
+  // can be assumed to have a shape.
+  obj->as<ShapedObject>().setShape(newShape);
+
   return true;
 }
 
@@ -1910,7 +1913,7 @@ void Shape::fixupDictionaryShapeAfterMovingGC() {
     }
   } else {
     // listp points to the shape_ field of an object.
-    JSObject* last = JSObject::fromShapeFieldPointer(uintptr_t(listp));
+    JSObject* last = ShapedObject::fromShapeFieldPointer(uintptr_t(listp));
     if (gc::IsForwarded(last)) {
       listp = gc::Forwarded(last)->as<NativeObject>().shapePtr();
     }

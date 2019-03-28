@@ -259,7 +259,7 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
   }
 
   if (ic->state().canAttachStub()) {
-    oldShape = obj->shape();
+    oldShape = obj->maybeShape();
     oldGroup = JSObject::getGroup(cx, obj);
     if (!oldGroup) {
       return false;
