@@ -17,5 +17,5 @@ pt_CV{
             "Escudo português",
         }
     }
-    Version{"2.1.39.12"}
+    Version{"2.1.47.71"}
 }

@@ -11,16 +11,6 @@ zh_Hant_HK{
     }
     NumberElements{
         latn{
-            patternsLong{
-                decimalFormat{
-                    10000{
-                        other{"0萬"}
-                    }
-                    100000{
-                        other{"00萬"}
-                    }
-                }
-            }
             patternsShort{
                 currencyFormat{
                     1000{
@@ -101,7 +91,7 @@ zh_Hant_HK{
             }
         }
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.47.86"}
     calendar{
         buddhist{
             availableFormats{
@@ -391,6 +381,10 @@ zh_Hant_HK{
             }
             eras{
                 abbreviated{
+                    "公元前",
+                    "公元",
+                }
+                narrow{
                     "公元前",
                     "公元",
                 }

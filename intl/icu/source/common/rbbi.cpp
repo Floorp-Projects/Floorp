@@ -720,7 +720,7 @@ struct LookAheadResults {
     int32_t    fPositions[8];
     int16_t    fKeys[8];
 
-    LookAheadResults() : fUsedSlotLimit(0), fPositions(), fKeys() {};
+    LookAheadResults() : fUsedSlotLimit(0), fPositions(), fKeys() {}
 
     int32_t getPosition(int16_t key) {
         for (int32_t i=0; i<fUsedSlotLimit; ++i) {
@@ -728,8 +728,7 @@ struct LookAheadResults {
                 return fPositions[i];
             }
         }
-        U_ASSERT(FALSE);
-        return -1;
+        UPRV_UNREACHABLE;
     }
 
     void setPosition(int16_t key, int32_t position) {
@@ -741,8 +740,7 @@ struct LookAheadResults {
             }
         }
         if (i >= kMaxLookaheads) {
-            U_ASSERT(FALSE);
-            i = kMaxLookaheads - 1;
+            UPRV_UNREACHABLE;
         }
         fKeys[i] = key;
         fPositions[i] = position;

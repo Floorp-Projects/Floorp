@@ -2,9 +2,21 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ar_SY{
     NumberElements{
+        arab{
+            symbols{
+                decimal{"٫"}
+                group{"٬"}
+            }
+        }
         default{"arab"}
+        latn{
+            symbols{
+                decimal{"."}
+                group{","}
+            }
+        }
     }
-    Version{"2.1.38.80"}
+    Version{"2.1.49.36"}
     calendar{
         gregorian{
             monthNames{

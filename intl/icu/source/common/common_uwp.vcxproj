@@ -1,9 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <!-- The following import will include the UWP configuration options for VS projects. -->
-  <Import Project="..\allinone\Build.Windows.UWP.ProjectConfiguration.props" />
-  <!-- The following import will include the library configuration options for VS projects. -->
-  <Import Project="..\allinone\Build.Windows.Library.ProjectConfiguration.props" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -35,12 +31,16 @@
     <Keyword>DynamicLibrary</Keyword>
     <DefaultLanguage>en-US</DefaultLanguage>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+<!-- The following import will include the UWP configuration options for VS projects. -->
+  <Import Project="..\allinone\Build.Windows.UWP.ProjectConfiguration.props" />
+  <!-- The following import will include the library configuration options for VS projects. -->
+  <Import Project="..\allinone\Build.Windows.Library.ProjectConfiguration.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -102,6 +102,7 @@
       </DataExecutionPrevention>
       <TurnOffAssemblyGeneration>true</TurnOffAssemblyGeneration>
       <IgnoreSpecificDefaultLibraries>vccorlib.lib;msvcrt.lib</IgnoreSpecificDefaultLibraries>
+      <AdditionalDependencies>onecoreuap.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
@@ -187,7 +188,7 @@
       <ProgramDataBaseFileName>.\x86\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin32uwp\icuuc63.dll</OutputFile>
+      <OutputFile>..\..\bin32uwp\icuuc64.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib32uwp\icuuc.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib32uwp\icuuc.lib</ImportLibrary>
     </Link>
@@ -203,7 +204,7 @@
       <ProgramDataBaseFileName>.\x86\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin32uwp\icuuc63d.dll</OutputFile>
+      <OutputFile>..\..\bin32uwp\icuuc64d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib32uwp\icuucd.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib32uwp\icuucd.lib</ImportLibrary>
     </Link>
@@ -219,7 +220,7 @@
       <ProgramDataBaseFileName>.\x64\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64uwp\icuuc63.dll</OutputFile>
+      <OutputFile>..\..\bin64uwp\icuuc64.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib64uwp\icuuc.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64uwp\icuuc.lib</ImportLibrary>
     </Link>
@@ -235,7 +236,7 @@
       <ProgramDataBaseFileName>.\x64\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64uwp\icuuc63d.dll</OutputFile>
+      <OutputFile>..\..\bin64uwp\icuuc64d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib64uwp\icuucd.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64uwp\icuucd.lib</ImportLibrary>
     </Link>
@@ -251,7 +252,7 @@
       <ProgramDataBaseFileName>.\ARM\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARMuwp\icuuc63.dll</OutputFile>
+      <OutputFile>..\..\binARMuwp\icuuc64.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARMuwp\icuuc.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARMuwp\icuuc.lib</ImportLibrary>
     </Link>
@@ -267,7 +268,7 @@
       <ProgramDataBaseFileName>.\ARM\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARMuwp\icuuc63d.dll</OutputFile>
+      <OutputFile>..\..\binARMuwp\icuuc64d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARMuwp\icuucd.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARMuwp\icuucd.lib</ImportLibrary>
     </Link>
@@ -382,6 +383,7 @@
     <ClCompile Include="uresdata.cpp" />
     <ClCompile Include="resource.cpp" />
     <ClCompile Include="ucurr.cpp" />
+    <ClCompile Include="localebuilder.cpp" />
     <ClCompile Include="caniter.cpp" />
     <ClCompile Include="filterednormalizer2.cpp" />
     <ClCompile Include="loadednormalizer2impl.cpp" />
@@ -552,6 +554,7 @@
     <ClInclude Include="propname.h" />
     <ClInclude Include="ruleiter.h" />
     <ClInclude Include="ucase.h" />
+    <ClInclude Include="ulayout_props.h" />
     <ClInclude Include="unisetspan.h" />
     <ClInclude Include="uprops.h" />
     <ClInclude Include="usc_impl.h" />
@@ -570,11 +573,16 @@
     <ClInclude Include="ustr_cnv.h" />
     <ClInclude Include="ustr_imp.h" />
     <ClInclude Include="static_unicode_sets.h" />
+    <ClInclude Include="capi_helper.h" />
+    <ClInclude Include="unicode\localebuilder.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="common.rc" />
   </ItemGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="Build" Condition="'$(SkipUWP)'=='true'">
+    <Message Text="Skipping building the UWP project: $(MSBuildThisFile)" Importance="high" />
+  </Target>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" Condition="'$(SkipUWP)'!='true'" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>

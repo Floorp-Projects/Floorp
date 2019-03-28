@@ -165,7 +165,7 @@ uz_Cyrl{
             }
         }
     }
-    Version{"2.1.43.2"}
+    Version{"2.1.48.17"}
     calendar{
         generic{
             DateTimePatterns{
@@ -327,8 +327,8 @@ uz_Cyrl{
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMW{
-                    one{"MMM, W-'ҳафта'"}
-                    other{"MMM, W-'ҳафта'"}
+                    one{"MMMM, W-'ҳафта'"}
+                    other{"MMMM, W-'ҳафта'"}
                 }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}

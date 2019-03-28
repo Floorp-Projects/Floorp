@@ -16,6 +16,10 @@ AC_INIT([ICU],
         [International Components for Unicode],
         [http://icu-project.org])
 
+# Instruct Python to never write any byte code to the ICU source tree.
+PYTHONDONTWRITEBYTECODE=1
+export PYTHONDONTWRITEBYTECODE
+
 AC_CONFIG_MACRO_DIR([config/m4])
 AC_CONFIG_SRCDIR([common/unicode/utypes.h])
 
@@ -195,7 +199,9 @@ fi
 #AC_CHECK_PROG(AUTOCONF, autoconf, autoconf, true)
 #AC_CHECK_PROG(STRIP, strip, strip, true)
 
-AC_CHECK_PROGS(PYTHON3, python3)
+# TODO(ICU-20301): Remove fallback to Python 2.
+AC_CHECK_PROGS(PYTHON, python3 "py -3" python "py")
+AC_SUBST(PYTHON)
 
 # Check for the platform make
 AC_PATH_PROGS(U_MAKE, gmake gnumake, make)
@@ -1290,13 +1296,13 @@ fi
 # Now that we're done using CPPFLAGS etc. for tests, we can change it
 # for build.
 
-if test "${CC}" == "clang"; then
+if test "${CC}" = "clang"; then
    CLANGCFLAGS="-Qunused-arguments -Wno-parentheses-equality"
 else
    CLANGCFLAGS=""
 fi
 
-if test "${CXX}" == "clang++"; then
+if test "${CXX}" = "clang++"; then
    CLANGCXXFLAGS="-Qunused-arguments -Wno-parentheses-equality"
 else
    CLANGCXXFLAGS=""
@@ -1385,6 +1391,38 @@ AC_CONFIG_FILES([icudefs.mk \
 		samples/cal/Makefile samples/layout/Makefile])
 AC_OUTPUT
 
+if test -z "$PYTHON";
+then
+    echo "" > data/rules.mk
+else
+    if test -f "$srcdir/data/locales/root.txt";
+    then
+        echo "Spawning Python to generate data/rules.mk..."
+        PYTHONPATH="$srcdir/data" $PYTHON -m buildtool \
+            --mode gnumake \
+            --seqmode parallel \
+            --src_dir "$srcdir/data" \
+            --filter_file "$ICU_DATA_FILTER_FILE" \
+            $ICU_DATA_BUILDTOOL_OPTS \
+            > data/rules.mk
+        if test "$?" != "0"; then
+            AC_MSG_ERROR(Python failed to run; see above error.)
+        fi
+    else
+      echo "Not rebuilding data/rules.mk, assuming prebuilt data in data/in"
+      touch data/rules.mk
+    fi
+    echo "Spawning Python to generate test/testdata/rules.mk..."
+    PYTHONPATH="$srcdir/test/testdata:$srcdir/data" $PYTHON -m buildtool \
+        --mode gnumake \
+        --seqmode parallel \
+        --src_dir "$srcdir/test/testdata" \
+        > test/testdata/rules.mk
+    if test "$?" != "0"; then
+        AC_MSG_ERROR(Python failed to run; see above error.)
+    fi
+fi
+
 echo
 echo "ICU for C/C++ $VERSION is ready to be built."
 echo "=== Important Notes: ==="
@@ -1464,17 +1502,9 @@ then
         echo "## Expect build failures in the 'data', 'test', and other directories."
 fi
 
-if test -z "$PYTHON3";
+if test -z "$PYTHON";
 then
-    echo ""
-    echo "NOTICE: Unable to find Python 3. ICU versions 64 and later will require Python 3 to build."
-    echo "See ICU-10923 for more information: https://unicode-org.atlassian.net/browse/ICU-10923"
-    echo ""
-else
-    echo ""
-    echo "Found Python 3. You are all set for ICU 64, which will require Python 3 to build."
-    echo "For more info on Python 3 requirement, see: https://unicode-org.atlassian.net/browse/ICU-10923"
-    echo ""
+    echo "** Note: Python not found. You will not be able to build data from source."
 fi
 
 $as_unset _CXX_CXXSUFFIX

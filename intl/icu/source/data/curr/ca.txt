@@ -1207,7 +1207,6 @@ ca{
         BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
-        BMD{"$"}
         BND{"$"}
         BOB{"Bs"}
         BRL{"R$"}
@@ -1215,7 +1214,6 @@ ca{
         BWP{"P"}
         BYN{"р."}
         BZD{"$"}
-        CAD{"$"}
         CLP{"$"}
         CNY{"¥"}
         COP{"$"}
@@ -1280,7 +1278,6 @@ ca{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -2502,5 +2499,5 @@ ca{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.48.42"}
 }

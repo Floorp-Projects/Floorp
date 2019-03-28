@@ -1,13 +1,175 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 dz{
-    Version{"2.1.41.34"}
+    Version{"2.1.47.82"}
     zoneStrings{
+        "Africa:Cairo"{
+            ec{"ཀཱའི་རོ"}
+        }
+        "Africa:Dakar"{
+            ec{"ཌཱ་ཀར"}
+        }
+        "Africa:Khartoum"{
+            ec{"ཁཱར་ཊུམ"}
+        }
+        "Africa:Lome"{
+            ec{"ལོ་མེ"}
+        }
+        "Africa:Tripoli"{
+            ec{"ཏྲི་པོ་ལི"}
+        }
+        "Africa:Tunis"{
+            ec{"ཊུ་ནིས྄"}
+        }
+        "America:Antigua"{
+            ec{"ཨན་ཊི་གུ་ཝ་"}
+        }
+        "America:Barbados"{
+            ec{"བྷར་བེ་ཌོས"}
+        }
+        "America:Belize"{
+            ec{"བྷེ་ལིཛ"}
+        }
+        "America:Bogota"{
+            ec{"བྷོ་ག་ཊ"}
+        }
+        "America:Cambridge_Bay"{
+            ec{"ཀེམ་བིརིདཆ་ བའེ"}
+        }
+        "America:Chicago"{
+            ec{"ཅི་ཀཱ་གོ"}
+        }
+        "America:Coral_Harbour"{
+            ec{"ཨ་ཏི་ཀོ་ཀཱན"}
+        }
+        "America:Costa_Rica"{
+            ec{"ཀོས་ཊ་རི་ཀ"}
+        }
+        "America:Dawson"{
+            ec{"དའུ་སཱོན"}
+        }
+        "America:Dawson_Creek"{
+            ec{"དའུ་སཱོན་ ཀིརིཀ"}
+        }
+        "America:Dominica"{
+            ec{"ཌོ་མི་ནི་ཀ"}
+        }
+        "America:Edmonton"{
+            ec{"ཨེཌ་མཱོན་ཊོན"}
+        }
+        "America:El_Salvador"{
+            ec{"ཨེལ་ སཱལ་བ་ཌོ"}
+        }
+        "America:Goose_Bay"{
+            ec{"གཱུསི་ བའེ"}
+        }
+        "America:Guatemala"{
+            ec{"གྷོ་ཊ་མ་ལ"}
+        }
+        "America:Halifax"{
+            ec{"ཧ་ལི་ཕེགསི"}
+        }
+        "America:Inuvik"{
+            ec{"ཨི་ནུ་ཝིཀ"}
+        }
+        "America:La_Paz"{
+            ec{"ལ་པཱཛ྄"}
+        }
+        "America:Mexico_City"{
+            ec{"མེཀ་སི་ཀོ་ སི་ཊི"}
+        }
+        "America:Moncton"{
+            ec{"མཱོངཀ་ཊོན"}
+        }
+        "America:Nipigon"{
+            ec{"ནི་པི་གཱོན"}
+        }
+        "America:Panama"{
+            ec{"པ་ན་མ"}
+        }
+        "America:Pangnirtung"{
+            ec{"པེང་ནིར་ཏུང"}
+        }
+        "America:Rainy_River"{
+            ec{"རཱེ་ནི་རི་ཝར"}
+        }
+        "America:Rankin_Inlet"{
+            ec{"རེན་ཀིན་ ཨིན་ལེཊ"}
+        }
+        "America:Regina"{
+            ec{"རི་ཇི་ན"}
+        }
+        "America:Resolute"{
+            ec{"རི་སོ་ལིའུཊ"}
+        }
+        "America:Santiago"{
+            ec{"སཱན་ཊི་ཡ་གྷོ"}
+        }
+        "America:Santo_Domingo"{
+            ec{"སཱན་ཊོ་ ཌོ་མིང་གྷོ"}
+        }
+        "America:St_Johns"{
+            ec{"ཨིསི་ཊེཊ་ ཇཱོནསི་"}
+        }
+        "America:Swift_Current"{
+            ec{"སུ་ཨིཕཊ་ཀ་རེནཊ"}
+        }
+        "America:Tegucigalpa"{
+            ec{"ཊེ་གུ་སི་གཱལ་པ"}
+        }
+        "America:Thunder_Bay"{
+            ec{"ཐན་ཌར་ བའེ"}
+        }
+        "America:Tijuana"{
+            ec{"ཏིའུ་ཝ་ན"}
+        }
+        "America:Toronto"{
+            ec{"ཊོ་རོན་ཊོ"}
+        }
+        "America:Yakutat"{
+            ec{"ཡ་ཀུ་ཏཏ"}
+        }
+        "Antarctica:Davis"{
+            ec{"ཌེ་ཝིས།"}
+        }
+        "Antarctica:Mawson"{
+            ec{"མའུ་སཱོན"}
+        }
+        "Asia:Bahrain"{
+            ec{"བྷ་རེན་"}
+        }
+        "Asia:Thimphu"{
+            ec{"ཐིམ་ཕུག"}
+        }
+        "Atlantic:Bermuda"{
+            ec{"བར་མུ་ད"}
+        }
+        "Atlantic:Faeroe"{
+            ec{"ཕཱའེ་རོ་"}
+        }
+        "Etc:Unknown"{
+            ec{"མ་ཤེས་པའི་ཁྲོམ་སྡེ"}
+        }
+        "Europe:Athens"{
+            ec{"ཨེ་ཐེནས་"}
+        }
+        "Europe:Copenhagen"{
+            ec{"ཀོ་པེན་ཧེ་གེན"}
+        }
         "Europe:Dublin"{
             ld{"ཨཱ་ཡརིཤ་བྱཱར་དུས་ཆུ་ཚོད"}
         }
+        "Europe:Helsinki"{
+            ec{"ཧེལ་སིང་ཀི"}
+        }
         "Europe:London"{
             ld{"བྲཱི་ཊིཤ་བྱཱར་དུས་ཆུ་ཚོད"}
+        }
+        "Europe:Tallinn"{
+            ec{"ཊཱ་ལཱིན"}
+        }
+        "Pacific:Apia"{
+            ec{"ཨ་པི་ཡ"}
         }
         "meta:Afghanistan"{
             ls{"ཨཕ་ག་ནི་ས྄ཏཱནཆུ་ཚོད"}
