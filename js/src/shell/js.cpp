@@ -8142,9 +8142,11 @@ static bool TransplantObject(JSContext* cx, unsigned argc, Value* vp) {
   // 1. Check the recursion depth using CheckRecursionLimitConservative.
   // 2. Enter the target compartment.
   // 3. Clone the source object using JS_CloneObject.
-  // 4. Copy all properties from source to a temporary holder object.
-  // 5. Actually transplant the object.
-  // 6. And finally copy the properties back to the source object.
+  // 4. Check if new wrappers can be created if source and target are in
+  //    different compartments.
+  // 5. Copy all properties from source to a temporary holder object.
+  // 6. Actually transplant the object.
+  // 7. And finally copy the properties back to the source object.
   //
   // As an extension to the algorithm in UpdateReflectorGlobal, we also allow
   // to transplant an object into the same compartment as the source object to
@@ -8175,6 +8177,12 @@ static bool TransplantObject(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedObject target(cx, JS_CloneObject(cx, source, proto));
   if (!target) {
+    return false;
+  }
+
+  if (GetObjectCompartment(source) != GetObjectCompartment(target) &&
+      !AllowNewWrapper(GetObjectCompartment(source), target)) {
+    JS_ReportErrorASCII(cx, "Cannot transplant into nuked compartment");
     return false;
   }
 
