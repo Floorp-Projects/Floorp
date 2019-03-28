@@ -45,6 +45,7 @@ function ArrayIndexOf(searchElement/*, fromIndex*/) {
 }
 
 function ArrayStaticIndexOf(list, searchElement/*, fromIndex*/) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_INDEXOF, "indexOf");
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.indexOf");
     var fromIndex = arguments.length > 2 ? arguments[2] : 0;
@@ -86,6 +87,7 @@ function ArrayLastIndexOf(searchElement/*, fromIndex*/) {
 }
 
 function ArrayStaticLastIndexOf(list, searchElement/*, fromIndex*/) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_LASTINDEXOF, "lastIndexOf");
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.lastIndexOf");
     var fromIndex;
@@ -132,6 +134,7 @@ function ArrayEvery(callbackfn/*, thisArg*/) {
 }
 
 function ArrayStaticEvery(list, callbackfn/*, thisArg*/) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_EVERY, "every");
     if (arguments.length < 2)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.every");
     if (!IsCallable(callbackfn))
@@ -173,6 +176,7 @@ function ArraySome(callbackfn/*, thisArg*/) {
 }
 
 function ArrayStaticSome(list, callbackfn/*, thisArg*/) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_SOME, "some");
     if (arguments.length < 2)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.some");
     if (!IsCallable(callbackfn))
@@ -258,6 +262,7 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
 }
 
 function ArrayStaticForEach(list, callbackfn/*, thisArg*/) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_FOREACH, "forEach");
     if (arguments.length < 2)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.forEach");
     if (!IsCallable(callbackfn))
@@ -302,6 +307,7 @@ function ArrayMap(callbackfn/*, thisArg*/) {
 }
 
 function ArrayStaticMap(list, callbackfn/*, thisArg*/) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_MAP, "map");
     if (arguments.length < 2)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.map");
     if (!IsCallable(callbackfn))
@@ -350,6 +356,7 @@ function ArrayFilter(callbackfn/*, thisArg*/) {
 }
 
 function ArrayStaticFilter(list, callbackfn/*, thisArg*/) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_FILTER, "filter");
     if (arguments.length < 2)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.filter");
     if (!IsCallable(callbackfn))
@@ -418,6 +425,7 @@ function ArrayReduce(callbackfn/*, initialValue*/) {
 }
 
 function ArrayStaticReduce(list, callbackfn) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_REDUCE, "reduce");
     if (arguments.length < 2)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.reduce");
     if (!IsCallable(callbackfn))
@@ -489,6 +497,7 @@ function ArrayReduceRight(callbackfn/*, initialValue*/) {
 }
 
 function ArrayStaticReduceRight(list, callbackfn) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_REDUCERIGHT, "reduceRight");
     if (arguments.length < 2)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.reduceRight");
     if (!IsCallable(callbackfn))
@@ -1221,6 +1230,7 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
 }
 
 function ArrayStaticConcat(arr, arg1) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_CONCAT, "concat");
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.concat");
     var args = callFunction(std_Array_slice, arguments, 1);
@@ -1228,24 +1238,28 @@ function ArrayStaticConcat(arr, arg1) {
 }
 
 function ArrayStaticJoin(arr, separator) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_JOIN, "join");
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.join");
     return callFunction(std_Array_join, arr, separator);
 }
 
 function ArrayStaticReverse(arr) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_REVERSE, "reverse");
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.reverse");
     return callFunction(std_Array_reverse, arr);
 }
 
 function ArrayStaticSort(arr, comparefn) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_SORT, "sort");
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.sort");
     return callFunction(ArraySort, arr, comparefn);
 }
 
 function ArrayStaticPush(arr, arg1) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_PUSH, "push");
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.push");
     var args = callFunction(std_Array_slice, arguments, 1);
@@ -1253,18 +1267,21 @@ function ArrayStaticPush(arr, arg1) {
 }
 
 function ArrayStaticPop(arr) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_POP, "pop");
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.pop");
     return callFunction(std_Array_pop, arr);
 }
 
 function ArrayStaticShift(arr) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_SHIFT, "shift");
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.shift");
     return callFunction(std_Array_shift, arr);
 }
 
 function ArrayStaticUnshift(arr, arg1) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_UNSHIFT, "unshift");
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.unshift");
     var args = callFunction(std_Array_slice, arguments, 1);
@@ -1272,6 +1289,7 @@ function ArrayStaticUnshift(arr, arg1) {
 }
 
 function ArrayStaticSplice(arr, start, deleteCount) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_SPLICE, "splice");
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.splice");
     var args = callFunction(std_Array_slice, arguments, 1);
@@ -1279,6 +1297,7 @@ function ArrayStaticSplice(arr, start, deleteCount) {
 }
 
 function ArrayStaticSlice(arr, start, end) {
+    WarnDeprecatedArrayMethod(ARRAY_GENERICS_SLICE, "slice");
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.slice");
     return callFunction(std_Array_slice, arr, start, end);
