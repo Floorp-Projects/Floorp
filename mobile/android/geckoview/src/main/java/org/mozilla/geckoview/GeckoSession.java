@@ -1772,6 +1772,34 @@ public class GeckoSession implements Parcelable {
         }
 
         @Override
+        public int hashCode() {
+            return mState.hashCode();
+        }
+
+        @Override
+        public boolean equals(final Object other) {
+            if (other == null || !(other instanceof SessionState)) {
+                return false;
+            }
+
+            final SessionState otherState = (SessionState)other;
+
+            return this.mState.equals(otherState.mState);
+        }
+
+        /**
+         * Creates a new SessionState instance from a value previously returned by
+         * {@link #toString()}.
+         *
+         * @param value The serialized SessionState in String form.
+         * @return A new SessionState instance.
+         * @throws JSONException
+         */
+        public static @NonNull SessionState fromString(final @NonNull String value) throws JSONException {
+            return new SessionState(GeckoBundle.fromJSONObject(new JSONObject(value)));
+        }
+
+        @Override
         public String toString() {
             if (mState == null) {
                 Log.w(LOGTAG, "Can't convert SessionState with null state to string");
