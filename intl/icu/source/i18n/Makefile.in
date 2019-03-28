@@ -101,7 +101,7 @@ uregion.o reldatefmt.o quantityformatter.o measunit.o \
 sharedbreakiterator.o scientificnumberformatter.o dayperiodrules.o nounit.o \
 number_affixutils.o number_compact.o number_decimalquantity.o \
 number_decimfmtprops.o number_fluent.o number_formatimpl.o number_grouping.o \
-number_integerwidth.o number_longnames.o number_modifiers.o number_notation.o \
+number_integerwidth.o number_longnames.o number_modifiers.o number_notation.o number_output.o \
 number_padding.o number_patternmodifier.o number_patternstring.o \
 number_rounding.o number_scientific.o number_stringbuilder.o number_utils.o number_asformat.o \
 number_mapper.o number_multiplier.o number_currencysymbols.o number_skeletons.o number_capi.o \
@@ -112,7 +112,7 @@ numparse_stringsegment.o numparse_parsednumber.o numparse_impl.o \
 numparse_symbols.o numparse_decimal.o numparse_scientific.o numparse_currency.o \
 numparse_affixes.o numparse_compositions.o numparse_validators.o \
 numrange_fluent.o numrange_impl.o \
-erarules.o
+erarules.o formattedvalue.o formattedval_iterimpl.o formattedval_sbimpl.o
 
 ## Header files to install
 HEADERS = $(srcdir)/unicode/*.h

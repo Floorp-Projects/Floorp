@@ -1034,6 +1034,10 @@ nl{
             "UYU",
             "Uruguayaanse peso",
         }
+        UYW{
+            "UYW",
+            "Uruguayaanse nominale salarisindexeenheid",
+        }
         UZS{
             "UZS",
             "Oezbeekse sum",
@@ -1237,7 +1241,6 @@ nl{
         DKK{"kr"}
         DOP{"$"}
         EGP{"E£"}
-        ESP{"₧"}
         EUR{"€"}
         FJD{"$"}
         FKP{"£"}
@@ -1267,8 +1270,6 @@ nl{
         LBP{"L£"}
         LKR{"Rs"}
         LRD{"$"}
-        LTL{"Lt"}
-        LVL{"Ls"}
         MGA{"Ar"}
         MMK{"K"}
         MNT{"₮"}
@@ -1287,7 +1288,6 @@ nl{
         PYG{"₲"}
         RON{"lei"}
         RUB{"₽"}
-        RUR{"р."}
         RWF{"RF"}
         SBD{"$"}
         SEK{"kr"}
@@ -2348,6 +2348,10 @@ nl{
             one{"Uruguayaanse peso"}
             other{"Uruguayaanse peso"}
         }
+        UYW{
+            one{"Uruguayaanse nominale salarisindexeenheid"}
+            other{"Uruguayaanse nominale salarisindexeenheid"}
+        }
         UZS{
             one{"Oezbeekse sum"}
             other{"Oezbeekse sum"}
@@ -2529,5 +2533,5 @@ nl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.45.14"}
+    Version{"2.1.48.86"}
 }

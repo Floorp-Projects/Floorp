@@ -27,7 +27,6 @@ tk{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
                 scientificFormat{"#E0"}
             }
@@ -191,24 +190,25 @@ tk{
                 group{" "}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"-"}
                 nan{"san däl"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
             ordinal{
                 other{"Sagdan {0}-nj. öwrümden öwrüliň."}
             }
+            plural{
+                one{"{0} gün"}
+                other{"{0} günler"}
+            }
         }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.48.86"}
     calendar{
         generic{
             DateTimePatterns{
@@ -277,20 +277,54 @@ tk{
                 yyyyQQQ{"G y QQQ"}
                 yyyyQQQQ{"G y QQQQ"}
             }
-            dayNames{
-                stand-alone{
-                    narrow{
-                        "Ý",
-                        "D",
-                        "S",
-                        "Ç",
-                        "P",
-                        "A",
-                        "Ş",
-                    }
-                }
-            }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 M{
                     M{"MM – MM"}
                 }
@@ -554,6 +588,53 @@ tk{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG M/y – GGGGG M/y"}
+                    M{"GGGGG M/y – M/y"}
+                    y{"GGGGG M/y – M/y"}
+                }
+                GyMEd{
+                    G{"GGGGG dd.MM.y, E – GGGGG dd.MM.y, E"}
+                    M{"GGGGG dd.MM.y, E – dd.MM.y, E"}
+                    d{"GGGGG dd.MM.y, E – dd.MM.y, E"}
+                    y{"GGGGG dd.MM.y, E – dd.MM.y, E"}
+                }
+                GyMMM{
+                    G{"G MMM y – G MMM y"}
+                    M{"G MMM–MMM y"}
+                    y{"G MMM y – MMM y"}
+                }
+                GyMMMEd{
+                    G{"G d MMM y, E – G d MMM y, E"}
+                    M{"G d MMM, E – d MMM, E y"}
+                    d{"G d MMM y, E – d MMM y, E"}
+                    y{"G d MMM y, E – d MMM y, E"}
+                }
+                GyMMMd{
+                    G{"G d MMM y – G d MMM y"}
+                    M{"G d MMM – d MMM y"}
+                    d{"G d–d MMM y"}
+                    y{"G d MMM y – d MMM y"}
+                }
+                GyMd{
+                    G{"GGGGG dd.MM.y – GGGGG dd.MM.y"}
+                    M{"GGGGG dd.MM.y – dd.MM.y"}
+                    d{"GGGGG dd.MM.y – dd.MM.y"}
+                    y{"GGGGG dd.MM.y – dd.MM.y"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -1666,6 +1747,12 @@ tk{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-narrow{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard-short{
             2{"{0} we {1}"}
             end{"{0} we {1}"}
@@ -1721,10 +1808,6 @@ tk{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }

@@ -13,7 +13,7 @@ es_CO{
             }
         }
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.47.70"}
     calendar{
         generic{
             DateTimePatterns{
@@ -100,12 +100,12 @@ es_CO{
         }
         gregorian{
             AmPmMarkers{
-                "a. m.",
-                "p. m.",
+                "a. m.",
+                "p. m.",
             }
             AmPmMarkersAbbr{
-                "a. m.",
-                "p. m.",
+                "a. m.",
+                "p. m.",
             }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -170,18 +170,18 @@ es_CO{
                 }
                 stand-alone{
                     abbreviated{
-                        am{"a. m."}
+                        am{"a. m."}
                         noon{"m."}
-                        pm{"p. m."}
+                        pm{"p. m."}
                     }
                     narrow{
-                        am{"a. m."}
+                        am{"a. m."}
                         noon{"m."}
-                        pm{"p. m."}
+                        pm{"p. m."}
                     }
                     wide{
-                        am{"a. m."}
-                        pm{"p. m."}
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                 }
             }
@@ -302,7 +302,7 @@ es_CO{
     }
     fields{
         dayperiod{
-            dn{"a. m./p. m."}
+            dn{"a. m./p. m."}
         }
     }
 }

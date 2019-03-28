@@ -19,13 +19,6 @@ is{
     }
     MoreInformation{"?"}
     NumberElements{
-        arab{
-            symbols{
-                minusSign{"؜-"}
-                plusSign{"؜+"}
-            }
-        }
-        default{"latn"}
         latn{
             miscPatterns{
                 approximately{"~{0}"}
@@ -36,7 +29,6 @@ is{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -200,11 +192,9 @@ is{
                 group{"."}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -219,9 +209,8 @@ is{
             }
         }
         minimumGroupingDigits{"1"}
-        native{"latn"}
     }
-    Version{"2.1.44.91"}
+    Version{"2.1.48.17"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -957,6 +946,53 @@ is{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"y G – y G"}
+                    y{"y–y G"}
+                }
+                GyM{
+                    G{"MM.y GGGGG – MM.y GGGGG"}
+                    M{"MM.y – MM.y GGGGG"}
+                    y{"MM.y – MM.y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, dd.MM.y GGGGG – E, dd.MM.y GGGGG"}
+                    M{"E, dd.MM.y – E, dd.MM.y GGGGG"}
+                    d{"E, dd.MM.y – E, dd.MM.y GGGGG"}
+                    y{"E, dd.MM.y – E, dd.MM.y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM–MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, d. MMM y G – E, d. MMM y G"}
+                    M{"E, d. MMM – E, d. MMM y G"}
+                    d{"E, d. MMM – E, d. MMM y G"}
+                    y{"E, d. MMM y – E, d. MMM y G"}
+                }
+                GyMMMd{
+                    G{"d. MMM y G – d. MMM y G"}
+                    M{"d. MMM – d MMM y G"}
+                    d{"d.–d. MMM y G"}
+                    y{"d. MMM y – d. MMM y G"}
+                }
+                GyMd{
+                    G{"dd.MM.y GGGGG – dd.MM.y GGGGG"}
+                    M{"dd.MM.y – dd.MM.y GGGGG"}
+                    d{"dd.MM.y – dd.MM.y GGGGG"}
+                    y{"dd.MM.y – dd.MM.y GGGGG"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -1113,8 +1149,8 @@ is{
                 MMMEd{"E, d. MMM"}
                 MMMMEd{"E, d. MMMM"}
                 MMMMW{
-                    one{"'viku' W 'í' MMM"}
-                    other{"'viku' W 'í' MMM"}
+                    one{"'viku' W 'í' MMMM"}
+                    other{"'viku' W 'í' MMMM"}
                 }
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
@@ -1306,6 +1342,15 @@ is{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -3777,6 +3822,12 @@ is{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-narrow{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard-short{
             2{"{0} og {1}"}
             end{"{0} og {1}"}
@@ -3832,10 +3883,6 @@ is{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }

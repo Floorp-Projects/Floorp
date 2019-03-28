@@ -14,7 +14,7 @@ es_AR{
             }
         }
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.47.70"}
     calendar{
         generic{
             availableFormats{
@@ -24,12 +24,12 @@ es_AR{
         }
         gregorian{
             AmPmMarkers{
-                "a. m.",
-                "p. m.",
+                "a. m.",
+                "p. m.",
             }
             AmPmMarkersAbbr{
-                "a. m.",
-                "p. m.",
+                "a. m.",
+                "p. m.",
             }
             availableFormats{
                 GyMMMEd{"E, d 'de' MMM 'de' y G"}
@@ -77,17 +77,17 @@ es_AR{
                 }
                 stand-alone{
                     abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                     narrow{
-                        am{"a. m."}
+                        am{"a. m."}
                         noon{"m."}
-                        pm{"p. m."}
+                        pm{"p. m."}
                     }
                     wide{
-                        am{"a. m."}
-                        pm{"p. m."}
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                 }
             }
@@ -213,7 +213,7 @@ es_AR{
             }
         }
         dayperiod{
-            dn{"a. m./p. m."}
+            dn{"a. m./p. m."}
         }
         second-narrow{
             dn{"seg."}

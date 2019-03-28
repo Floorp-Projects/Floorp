@@ -4,7 +4,7 @@ ru_UA{
     NumberElements{
         minimumGroupingDigits{"2"}
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.47.71"}
     calendar{
         gregorian{
             availableFormats{

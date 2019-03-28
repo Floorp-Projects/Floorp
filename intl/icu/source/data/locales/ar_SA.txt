@@ -10,20 +10,31 @@ ar_SA{
             }
         }
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.49.36"}
     calendar{
         default{"islamic-umalqura"}
         gregorian{
             dayPeriod{
                 format{
                     abbreviated{
-                        afternoon1{"ظهرًا"}
-                        afternoon2{"بعد الظهر"}
-                        evening1{"مساءً"}
-                        morning1{"فجرًا"}
-                        morning2{"ص"}
-                        night1{"منتصف الليل"}
                         night2{"ل"}
+                    }
+                    narrow{
+                        morning1{"فجرًا"}
+                    }
+                    wide{
+                        morning1{"فجرًا"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        morning1{"فجرًا"}
+                    }
+                    narrow{
+                        morning1{"فجرًا"}
+                    }
+                    wide{
+                        morning1{"فجرًا"}
                     }
                 }
             }

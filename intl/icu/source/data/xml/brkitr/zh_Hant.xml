@@ -19,10 +19,10 @@
     <special xmlns:icu="http://www.icu-project.org/">
         <icu:breakIteratorData>
             <icu:boundaries>
-                <icu:line icu:dependency="line.brk"/>
+                <icu:line icu:dependency="line_cj.brk"/>
                 <icu:line alt="loose"  icu:dependency="line_loose_cj.brk"/>
                 <icu:line alt="normal" icu:dependency="line_normal_cj.brk"/>
-                <icu:line alt="strict" icu:dependency="line.brk"/>
+                <icu:line alt="strict" icu:dependency="line_cj.brk"/>
             </icu:boundaries>
         </icu:breakIteratorData>
     </special>

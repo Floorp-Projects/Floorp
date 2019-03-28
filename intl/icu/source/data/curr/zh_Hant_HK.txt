@@ -30,6 +30,10 @@ zh_Hant_HK{
             "BBD",
             "巴巴多斯元",
         }
+        BEC{
+            "BEC",
+            "比利時法郎（可兌換）",
+        }
         BIF{
             "BIF",
             "布隆迪法郎",
@@ -290,6 +294,9 @@ zh_Hant_HK{
         BBD{
             other{"巴巴多斯元"}
         }
+        BEC{
+            other{"比利時法郎（可兌換）"}
+        }
         BIF{
             other{"布隆迪法郎"}
         }
@@ -465,5 +472,5 @@ zh_Hant_HK{
             other{"贊比亞克瓦查"}
         }
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.47.86"}
 }

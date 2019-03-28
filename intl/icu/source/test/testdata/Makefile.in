@@ -127,105 +127,22 @@ TESTDATA=testdata
 # prefix for files that are testdata
 TESTDT=$(TESTDATA)
 
-# File definitions 
-TEST_DAT_FILES=$(TESTBUILDDIR)/test.icu
-TEST_SPP_FILES=$(TESTBUILDDIR)/nfscsi.spp $(TESTBUILDDIR)/nfscss.spp $(TESTBUILDDIR)/nfscis.spp $(TESTBUILDDIR)/nfsmxs.spp $(TESTBUILDDIR)/nfsmxp.spp
+# Variable names for rules.mk
+OUT_DIR=$(TESTBUILDDIR)
+TMP_DIR=$(TESTOUTDIR)/$(TESTDT)
 
-TEST_UCM_SOURCE= test1.ucm test1bmp.ucm test2.ucm test3.ucm test4.ucm test4x.ucm test5.ucm ibm9027.ucm
-TEST_UCM_FILES=$(TEST_UCM_SOURCE:%=$(TESTSRCDATADIR)/data/%)
-TEST_CNV_FILES=$(TEST_UCM_SOURCE:%.ucm=$(TESTBUILDDIR)/%.cnv)
+## Include the Python-generated rules
 
-TEST_NRM_FILES=$(TESTBUILDDIR)/testnorm.nrm
-
-# import the shared .mk file
-include $(TESTSRCDATADIR)/tstfiles.mk
--include $(TESTSRCDATADIR)/tstlocal.mk
-
-# TEST_RES_SOURCE comes from tstfiles.mk
-TEST_RES = $(TEST_RES_SOURCE) $(TEST_RES_LOCAL) casing.txt mc.txt root.txt sh.txt sh_YU.txt te.txt te_IN.txt te_IN_REVISED.txt testtypes.txt testaliases.txt testempty.txt structLocale.txt idna_rules.txt conversion.txt icuio.txt testtable32.txt metaZones.txt timezoneTypes.txt windowsZones.txt zoneinfo64.txt
-TEST_RES_FILES=$(TEST_RES:%.txt=$(TESTBUILDDIR)/%.res) $(TESTBUILDDIR)/encoded.res $(TESTBUILDDIR)/old_l_testtypes.res $(TESTBUILDDIR)/old_e_testtypes.res
-
-ALL_TEST_FILES = $(TEST_DAT_FILES) $(TEST_SPP_FILES) $(TEST_BRK_FILES) $(TEST_CNV_FILES) $(TEST_NRM_FILES) $(TEST_RES_FILES) $(TESTOUTDIR)/$(TESTDT)/nam.typ $(TESTOUTDIR)/$(TESTDT)/zoneinfo64.res
-
-# list
-
-$(TESTBUILDDIR)/testdata.lst: $(SRCLISTDEPS)
-	@echo "generating $@ (list of data files)"
-	@-$(RMV) $@
-	@for file in $(TEST_RES_FILES:$(TESTBUILDDIR)/%.res=%.res) $(TEST_DAT_FILES:$(TESTBUILDDIR)/%.icu=%.icu) $(TEST_SPP_FILES:$(TESTBUILDDIR)/%.spp=%.spp) $(TEST_CNV_FILES:$(TESTBUILDDIR)/%.cnv=%.cnv) $(TEST_NRM_FILES:$(TESTBUILDDIR)/%.nrm=%.nrm); do \
-	  echo $$file >> $@; \
-	done;
+include $(top_builddir)/$(subdir)/rules.mk
 
 
-build-testdata: build-dir $(ALL_TEST_FILES) $(TESTBUILDDIR)/testdata.lst $(TESTBUILDDIR)/encoded.res
+build-testdata: build-dir $(TESTDATA_ALL_OUTPUT_FILES)
 
-# test.icu
-$(TESTBUILDDIR)/test.icu: $(GENTEST)
-	$(INVOKE) $(GENTEST) -d $(TESTBUILDDIR) 
+testdata: build-testdata
 
-$(TESTBUILDDIR)/testtable32.txt:  $(GENTEST)
-	$(INVOKE) $(GENTEST) -r -d $(TESTBUILDDIR) 
 
-$(TESTBUILDDIR)/testtable32.res: $(TESTBUILDDIR)/testtable32.txt $(TOOLBINDIR)/genrb$(EXEEXT)
-	$(INVOKE) $(TOOLBINDIR)/genrb $(GENRBOPTS) -s $(TESTBUILDDIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) $(<F)
-
-# Targets for nfscsi.spp
-$(TESTBUILDDIR)/nfscsi.spp: $(TOOLBINDIR)/gensprep$(EXEEXT) $(TESTSRCDATADIR)/nfs4_cs_prep_ci.txt
-	@echo Building nfscsi.icu
-	$(INVOKE) $(TOOLBINDIR)/gensprep -s $(TESTSRCDATADIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) -b nfscsi -u 3.2.0 nfs4_cs_prep_ci.txt
-
-# Targets for nfscss.spp
-$(TESTBUILDDIR)/nfscss.spp: $(TOOLBINDIR)/gensprep$(EXEEXT) $(TESTSRCDATADIR)/nfs4_cs_prep_cs.txt
-	@echo Building nfscss.icu
-	$(INVOKE) $(TOOLBINDIR)/gensprep -s $(TESTSRCDATADIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) -b nfscss -u 3.2.0 nfs4_cs_prep_cs.txt
-
-# Targets for nfscis.spp
-$(TESTBUILDDIR)/nfscis.spp: $(TOOLBINDIR)/gensprep$(EXEEXT) $(TESTSRCDATADIR)/nfs4_cis_prep.txt
-	@echo Building nfscis.spp
-	$(INVOKE) $(TOOLBINDIR)/gensprep -s $(TESTSRCDATADIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) -b nfscis -k -n $(UNICODEDATADIR) -u 3.2.0 nfs4_cis_prep.txt
-
-# Targets for nfsmxs.spp
-$(TESTBUILDDIR)/nfsmxs.spp: $(TOOLBINDIR)/gensprep$(EXEEXT) $(TESTSRCDATADIR)/nfs4_mixed_prep_s.txt
-	@echo Building nfsmxs.spp
-	$(INVOKE) $(TOOLBINDIR)/gensprep -s $(TESTSRCDATADIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) -b nfsmxs -k -n $(UNICODEDATADIR) -u 3.2.0 nfs4_mixed_prep_s.txt
-
-# Targets for nfsmxp.spp
-$(TESTBUILDDIR)/nfsmxp.spp: $(TOOLBINDIR)/gensprep$(EXEEXT) $(TESTSRCDATADIR)/nfs4_mixed_prep_p.txt
-	@echo Building nfsmxp.spp
-	$(INVOKE) $(TOOLBINDIR)/gensprep -s $(TESTSRCDATADIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) -b nfsmxp -k -n $(UNICODEDATADIR) -u 3.2.0 nfs4_mixed_prep_p.txt
-
-$(TESTBUILDDIR)/%.cnv: $(TESTSRCDATADIR)/%.ucm $(TOOLBINDIR)/makeconv$(EXEEXT)
-	$(INVOKE) $(TOOLBINDIR)/makeconv --small -c -d $(TESTBUILDDIR) $(TESTSRCDATADIR)/$(<F)
-
-$(TESTBUILDDIR)/%.nrm: $(TESTSRCDATADIR)/%.txt $(TOOLBINDIR)/gennorm2$(EXEEXT)
-	$(INVOKE) $(TOOLBINDIR)/gennorm2 -s $(TESTSRCDATADIR) $(<F) -o $@
-
-$(TESTBUILDDIR)/%.res: $(TESTSRCDATADIR)/%.txt $(TOOLBINDIR)/genrb$(EXEEXT) $(DAT_FILES)
-	$(INVOKE) $(TOOLBINDIR)/genrb $(GENRBOPTS) -q -s $(TESTSRCDATADIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) $(<F)
-
-$(TESTBUILDDIR)/encoded.res:  $(TESTSRCDATADIR)/encoded.utf16be $(TOOLBINDIR)/genrb$(EXEEXT)
-	@echo Testing genrb -e option
-	ICU_DATA=$(BUILDDIR) $(INVOKE) $(TOOLBINDIR)/genrb $(GENRBOPTS) -s $(TESTSRCDATADIR) -eUTF-16BE -d $(TESTBUILDDIR) $(<F)
-	@echo Finished testing genrb -e option
-
-################################################################### TYP
-# TYP FILES
-
-$(TESTOUTDIR)/$(TESTDT)/nam.typ: $(TESTBUILDDIR)/te_IN.res
-	cp $< $@
-$(TESTBUILDDIR)/old_l_testtypes.res: $(TESTSRCDATADIR)/old_l_testtypes.res
-	cp $< $@
-$(TESTBUILDDIR)/old_e_testtypes.res: $(TESTSRCDATADIR)/old_e_testtypes.res
-	cp $< $@
-$(TESTOUTDIR)/$(TESTDT)/zoneinfo64.res: $(TESTBUILDDIR)/zoneinfo64.res
-	cp $< $@
-
-testdata: build-dir $(ALL_TEST_FILES) $(UNPACKAGEDTESTDATA)
-
-#$(ALL_TEST_FILES) $(TESTBUILDDIR)/testtable32.txt $(TESTBUILDDIR)/testdata.lst: build-dir
-
-packagetest: build-dir testdata pkgdata.inc $(TESTBUILDDIR)/testdata.lst 
-	$(PKGDATA_INVOKE) $(PKGDATA) -T $(TESTBUILDDIR) -d $(TESTOUTDIR) -s $(TESTBUILDDIR) -p $(TESTDATA) -m common $(TESTBUILDDIR)/testdata.lst
+packagetest: build-dir testdata pkgdata.inc $(TMP_DIR)/testdata.lst 
+	$(PKGDATA_INVOKE) $(PKGDATA) -T $(TESTBUILDDIR) -d $(TESTOUTDIR) -s $(TESTBUILDDIR) -p $(TESTDATA) -m common $(TMP_DIR)/testdata.lst
 
 build-dir: $(BUILD_DIRS)
 $(BUILD_DIRS):

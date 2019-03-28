@@ -4,12 +4,11 @@ wo{
     AuxExemplarCharacters{"[ã h v z]"}
     ExemplarCharacters{"[a à b c d e é ë f g i j k l m n ñ ŋ o ó p q r s t u w x y]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N Ŋ O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"≥{0}"}
+                atLeast{"⩾{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -35,7 +34,7 @@ wo{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.43.94"}
+    Version{"2.1.47.84"}
     calendar{
         generic{
             DateTimePatterns{

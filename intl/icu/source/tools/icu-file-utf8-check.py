@@ -23,6 +23,8 @@
 #  Only files from the ICU github repository are checked.
 #  No changes are made to the repository; only the working copy will be altered.
 
+from __future__ import print_function
+
 import sys
 import os
 import os.path
@@ -35,13 +37,13 @@ def runCommand(cmd):
     output_text = output_file.read();
     exit_status = output_file.close();
     if exit_status:
-        print >>sys.stderr, '"', cmd, '" failed.  Exiting.'
+        print('"', cmd, '" failed.  Exiting.', file=sys.stderr)
         sys.exit(exit_status)
     return output_text
 
 
 def usage():
-    print "usage: " + sys.argv[0] + " [-h | --help]"
+    print("usage: " + sys.argv[0] + " [-h | --help]")
 
     
 #
@@ -50,7 +52,7 @@ def usage():
 #    is_source:        Flag, set to True if file is a source code file (.c, .cpp, .h, .java).
 #
 def check_file(file_name, is_source):
-    f = open(file_name, 'r')
+    f = open(file_name, 'rb')
     bytes = f.read()
     f.close()
 
@@ -58,13 +60,13 @@ def check_file(file_name, is_source):
         try:
             bytes.decode("UTF-8")
         except UnicodeDecodeError:
-            print "Error: %s is a source code file but contains non-utf-8 bytes." % file_name
+            print("Error: %s is a source code file but contains non-utf-8 bytes." % file_name)
     
-    if ord(bytes[0]) == 0xef:
+    if bytes[0] == 0xef:
         if not (file_name.endswith(".txt") or file_name.endswith(".sln")
                     or file_name.endswith(".targets")
                     or ".vcxproj" in file_name):
-            print "Warning: file %s contains a UTF-8 BOM: " % file_name
+            print("Warning: file %s contains a UTF-8 BOM: " % file_name)
 
     return
 
@@ -72,7 +74,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, "h", ("help"))
     except getopt.GetoptError:
-        print "unrecognized option: " + argv[0]
+        print("unrecognized option: " + argv[0])
         usage()
         sys.exit(2)
     for opt, arg in opts:
@@ -80,7 +82,7 @@ def main(argv):
             usage()
             sys.exit()
     if args:
-        print "unexpected command line argument"
+        print("unexpected command line argument")
         usage()
         sys.exit()
 
@@ -91,10 +93,10 @@ def main(argv):
     
     for f in file_list:
         if os.path.isdir(f):
-            print "Skipping dir " + f
+            print("Skipping dir " + f)
             continue
         if not os.path.isfile(f):
-            print "Repository file not in working copy: " + f
+            print("Repository file not in working copy: " + f)
             continue;
 
         source_file = source_file_re.match(f)

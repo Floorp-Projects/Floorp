@@ -119,7 +119,6 @@ lo{
             patterns{
                 accountingFormat{"¤#,##0.00;¤-#,##0.00"}
                 currencyFormat{"¤#,##0.00;¤-#,##0.00"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#"}
             }
@@ -247,13 +246,10 @@ lo{
                 group{"."}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"-"}
                 nan{"ບໍ່​ແມ່ນ​ໂຕ​ເລກ"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -265,10 +261,9 @@ lo{
                 other{"{0} ມື້"}
             }
         }
-        minimumGroupingDigits{"1"}
         native{"laoo"}
     }
-    Version{"2.1.43.50"}
+    Version{"2.1.48.17"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -737,6 +732,30 @@ lo{
                 yyyyQQQQ{"G y QQQQ"}
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG M/y – GGGGG M/y"}
+                    M{"GGGGG M/y – M/y"}
+                    y{"GGGGG M/y – M/y"}
+                }
+                GyMd{
+                    G{"GGGGG d/M/y – GGGGG d/M/y"}
+                    M{"GGGGG d/M/y – d/M/y"}
+                    d{"GGGGG d/M/y – d/M/y"}
+                    y{"GGGGG d/M/y – d/M/y"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -1072,6 +1091,53 @@ lo{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG MM/y – GGGGG MM/y"}
+                    M{"GGGGG MM/y – MM/y"}
+                    y{"GGGGG MM/y – MM/y"}
+                }
+                GyMEd{
+                    G{"GGGGG E, dd/MM/y – GGGGG E, dd/MM/y"}
+                    M{"GGGGG E, dd/MM/y – E, dd/MM/y"}
+                    d{"GGGGG E, dd/MM/y – E, dd/MM/y"}
+                    y{"GGGGG E, dd/MM/y – E, dd/MM/y"}
+                }
+                GyMMM{
+                    G{"G MM/y – G MM/y"}
+                    M{"G MM/y – MM"}
+                    y{"G MM/y – MM/y"}
+                }
+                GyMMMEd{
+                    G{"G E, dd/MM/y – G E, dd/MM/y"}
+                    M{"G E, dd/MM/y – E, dd/MM/y"}
+                    d{"G E, dd/MM/y – E, dd/MM/y"}
+                    y{"G E, dd/MM/y – E, dd/MM/y"}
+                }
+                GyMMMd{
+                    G{"G dd/MM/y– G dd/MM/y"}
+                    M{"G dd/MM/y – dd/MM"}
+                    d{"G d–d/MM/y"}
+                    y{"G dd/MM/y – dd/MM/y"}
+                }
+                GyMd{
+                    G{"GGGGG dd/MM/y – GGGGG dd/MM/y"}
+                    M{"GGGGG dd/MM/y – dd/MM/y"}
+                    d{"GGGGG dd/MM/y – dd/MM/y"}
+                    y{"GGGGG dd/MM/y – dd/MM/y"}
+                }
                 H{
                     H{"HH–HH"}
                 }

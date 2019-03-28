@@ -85,10 +85,6 @@ es_US{
                     }
                 }
                 decimalFormat{
-                    1000{
-                        one{"0 K"}
-                        other{"0 K"}
-                    }
                     10000{
                         one{"00 K"}
                         other{"00 K"}
@@ -125,7 +121,7 @@ es_US{
             }
         }
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.47.86"}
     calendar{
         generic{
             DateTimePatterns{
@@ -147,7 +143,6 @@ es_US{
                 GyMMM{"MMM y G"}
                 GyMMMd{"d MMM y G"}
                 MMMEd{"E d MMM"}
-                MMMMd{"d 'de' MMM"}
                 MMMd{"d MMM"}
                 yyyyMEd{"E, d/M/y GGGGG"}
                 yyyyMMM{"MMM y G"}
@@ -176,12 +171,12 @@ es_US{
         }
         gregorian{
             AmPmMarkers{
-                "a. m.",
-                "p. m.",
+                "a. m.",
+                "p. m.",
             }
             AmPmMarkersAbbr{
-                "a. m.",
-                "p. m.",
+                "a. m.",
+                "p. m.",
             }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -231,25 +226,21 @@ es_US{
             dayPeriod{
                 format{
                     narrow{
-                        evening1{"de la tarde"}
-                        morning1{"de la madrugada"}
                         morning2{"mañana"}
-                        night1{"de la noche"}
-                        noon{"del mediodía"}
                     }
                 }
                 stand-alone{
                     abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                     narrow{
-                        am{"a. m."}
-                        pm{"p. m."}
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                     wide{
-                        am{"a. m."}
-                        pm{"p. m."}
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                 }
             }
@@ -308,6 +299,24 @@ es_US{
                     d{"d–d 'de' MMM 'de' y"}
                 }
             }
+            monthNames{
+                format{
+                    abbreviated{
+                        "ene.",
+                        "feb.",
+                        "mar.",
+                        "abr.",
+                        "may.",
+                        "jun.",
+                        "jul.",
+                        "ago.",
+                        "sep.",
+                        "oct.",
+                        "nov.",
+                        "dic.",
+                    }
+                }
+            }
             quarters{
                 format{
                     wide{
@@ -359,15 +368,6 @@ es_US{
         quotationStart{"«"}
     }
     fields{
-        day{
-            relative{
-                "-1"{"ayer"}
-                "-2"{"anteayer"}
-                "0"{"hoy"}
-                "1"{"mañana"}
-                "2"{"pasado mañana"}
-            }
-        }
         dayOfYear-narrow{
             dn{"día del a"}
         }
@@ -375,18 +375,17 @@ es_US{
             dn{"día del a"}
         }
         dayperiod{
-            dn{"a. m./p. m."}
+            dn{"a. m./p. m."}
         }
         dayperiod-narrow{
-            dn{"a. m./p. m."}
+            dn{"a. m./p. m."}
         }
         dayperiod-short{
-            dn{"a. m./p. m."}
+            dn{"a. m./p. m."}
         }
         fri{
             relativeTime{
                 future{
-                    one{"dentro de {0} viernes"}
                     other{"dentro de {0} viernes"}
                 }
             }
@@ -402,7 +401,6 @@ es_US{
         fri-short{
             relativeTime{
                 future{
-                    one{"dentro de {0} vie."}
                     other{"dentro de {0} vie."}
                 }
             }
@@ -412,9 +410,6 @@ es_US{
                 future{
                     one{"dentro de {0} lunes"}
                     other{"dentro de {0} lunes"}
-                }
-                past{
-                    one{"hace {0} lunes"}
                 }
             }
         }
@@ -434,7 +429,6 @@ es_US{
             relativeTime{
                 future{
                     one{"dentro de {0} lun."}
-                    other{"dentro de {0} lun."}
                 }
                 past{
                     one{"hace {0} lun."}
@@ -444,8 +438,6 @@ es_US{
         }
         month{
             relative{
-                "-1"{"el mes pasado"}
-                "0"{"este mes"}
                 "1"{"el mes próximo"}
             }
         }
@@ -479,7 +471,6 @@ es_US{
         sun-narrow{
             relativeTime{
                 future{
-                    one{"dentro de {0} DO"}
                     other{"dentro de {0} DO"}
                 }
                 past{
@@ -492,14 +483,12 @@ es_US{
             relativeTime{
                 future{
                     one{"dentro de {0} jueves"}
-                    other{"dentro de {0} jueves"}
                 }
             }
         }
         thu-narrow{
             relativeTime{
                 future{
-                    one{"dentro de {0} JU"}
                     other{"dentro de {0} JU"}
                 }
             }
@@ -515,7 +504,6 @@ es_US{
             relativeTime{
                 future{
                     one{"dentro de {0} miércoles"}
-                    other{"dentro de {0} miércoles"}
                 }
             }
         }
@@ -534,8 +522,6 @@ es_US{
         wed-short{
             relative{
                 "-1"{"el mie. pasado"}
-                "0"{"este mié."}
-                "1"{"el próximo mié."}
             }
             relativeTime{
                 future{
@@ -550,8 +536,6 @@ es_US{
         }
         week{
             relative{
-                "-1"{"la semana pasada"}
-                "0"{"esta semana"}
                 "1"{"la semana próxima"}
             }
         }
@@ -572,8 +556,6 @@ es_US{
         }
         year{
             relative{
-                "-1"{"el año pasado"}
-                "0"{"este año"}
                 "1"{"el año próximo"}
             }
         }
