@@ -20,7 +20,6 @@
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
     locale/browser/customizableui/customizableWidgets.properties (%chrome/browser/customizableui/customizableWidgets.properties)
-    locale/browser/lightweightThemes.properties    (%chrome/browser/lightweightThemes.properties)
     locale/browser/uiDensity.properties            (%chrome/browser/uiDensity.properties)
     locale/browser/pocket.properties               (%chrome/browser/pocket.properties)
     locale/browser/search.properties               (%chrome/browser/search.properties)

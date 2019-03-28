@@ -17,10 +17,6 @@ const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "AttributionCode",
                                "resource:///modules/AttributionCode.jsm");
 
-// Lazy load |LightweightThemeManager|.
-ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
-                               "resource://gre/modules/LightweightThemeManager.jsm");
-
 ChromeUtils.defineModuleGetter(this, "ExtensionTestUtils",
                                "resource://testing-common/ExtensionXPCShellUtils.jsm");
 
@@ -71,12 +67,6 @@ const PLUGIN_MIME_TYPE2 = "text/plain";
 const PLUGIN2_NAME = "Quicktime";
 const PLUGIN2_DESC = "A mock Quicktime plugin";
 const PLUGIN2_VERSION = "2.3";
-
-const PERSONA_ID = "3785";
-// Defined by LightweightThemeManager, it is appended to the PERSONA_ID.
-const PERSONA_ID_SUFFIX = "@personas.mozilla.org";
-const PERSONA_NAME = "Test Theme";
-const PERSONA_DESCRIPTION = "A nice theme/persona description.";
 
 const PLUGIN_UPDATED_TOPIC     = "plugins-list-updated";
 
@@ -272,20 +262,6 @@ function createMockAddonProvider(aName) {
   };
 
   return mockProvider;
-}
-
-/**
- * Used to spoof the Persona Id.
- */
-function spoofTheme(aId, aName, aDesc) {
-  return {
-    id: aId,
-    name: aName,
-    description: aDesc,
-    headerURL: "http://lwttest.invalid/a.png",
-    textcolor: Math.random().toString(),
-    accentcolor: Math.random().toString(),
-  };
 }
 
 function spoofGfxAdapter() {
@@ -816,7 +792,6 @@ function checkActiveGMPlugin(data) {
 function checkAddonsSection(data, expectBrokenAddons, partialAddonsRecords) {
   const EXPECTED_FIELDS = [
     "activeAddons", "theme", "activePlugins", "activeGMPlugins",
-    "persona",
   ];
 
   Assert.ok("addons" in data, "There must be an addons section in Environment.");
@@ -848,9 +823,6 @@ function checkAddonsSection(data, expectBrokenAddons, partialAddonsRecords) {
   for (let gmPlugin in activeGMPlugins) {
     checkActiveGMPlugin(activeGMPlugins[gmPlugin]);
   }
-
-  // Check persona
-  Assert.ok(checkNullOrString(data.addons.persona));
 }
 
 function checkExperimentsSection(data) {
@@ -901,10 +873,6 @@ add_task(async function setup() {
   system_addon.append("tel-system-xpi@tests.mozilla.org.xpi");
   system_addon.lastModifiedTime = SYSTEM_ADDON_INSTALL_DATE;
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
-
-  // Spoof the persona ID.
-  LightweightThemeManager.currentTheme =
-    spoofTheme(PERSONA_ID, PERSONA_NAME, PERSONA_DESCRIPTION);
 
   // The test runs in a fresh profile so starting the AddonManager causes
   // the addons database to be created (as does setting new theme).
@@ -1376,12 +1344,6 @@ add_task(async function test_addonsAndPlugins() {
 
   await webextension.unload();
 
-  // Check theme data.
-  let theme = data.addons.theme;
-  Assert.equal(theme.id, (PERSONA_ID + PERSONA_ID_SUFFIX));
-  Assert.equal(theme.name, PERSONA_NAME);
-  Assert.equal(theme.description, PERSONA_DESCRIPTION);
-
   // Check plugin data.
   Assert.equal(data.addons.activePlugins.length, 1, "We must have only one active plugin.");
   let targetPlugin = data.addons.activePlugins[0];
@@ -1393,8 +1355,6 @@ add_task(async function test_addonsAndPlugins() {
   Assert.ok(targetPlugin.mimeTypes.find(m => m == PLUGIN_MIME_TYPE1));
   Assert.ok(targetPlugin.mimeTypes.find(m => m == PLUGIN_MIME_TYPE2));
   Assert.ok(!targetPlugin.mimeTypes.find(m => m == "Not There."));
-
-  Assert.equal(data.addons.persona, PERSONA_ID, "The correct Persona Id must be reported.");
 
   // Uninstall the addon.
   await addon.startupPromise;

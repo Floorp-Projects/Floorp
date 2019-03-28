@@ -31,7 +31,6 @@ add_task(async () => {
 
   let hash = xreDirProvider.getInstallHash();
   let profileData = readProfilesIni();
-  let installData = readInstallsIni();
 
   Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 3, "Should have the right number of profiles.");
@@ -51,16 +50,16 @@ add_task(async () => {
   Assert.equal(profile.path, mydefaultProfile.leafName, "Should be the original default profile.");
   Assert.ok(profile.default, "Should be marked as the old-style default.");
 
-  Assert.equal(Object.keys(installData.installs).length, 1, "Should be only one known install.");
+  Assert.equal(Object.keys(profileData.installs).length, 1, "Should be only one known install.");
   if (AppConstants.MOZ_DEV_EDITION) {
-    Assert.equal(installData.installs[hash].default, devDefaultProfile.leafName, "Should have marked the original dev default profile as the default for this install.");
+    Assert.equal(profileData.installs[hash].default, devDefaultProfile.leafName, "Should have marked the original dev default profile as the default for this install.");
   } else {
-    Assert.equal(installData.installs[hash].default, mydefaultProfile.leafName, "Should have marked the original default profile as the default for this install.");
+    Assert.equal(profileData.installs[hash].default, mydefaultProfile.leafName, "Should have marked the original default profile as the default for this install.");
   }
 
-  Assert.ok(!installData.installs[hash].locked, "Should not be locked as we're not the default app.");
+  Assert.ok(!profileData.installs[hash].locked, "Should not be locked as we're not the default app.");
 
-  checkProfileService(profileData, installData);
+  checkProfileService(profileData);
 
   Assert.ok(!didCreate, "Should not have created a new profile.");
   if (AppConstants.MOZ_DEV_EDITION) {

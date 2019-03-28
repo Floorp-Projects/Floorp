@@ -1933,6 +1933,11 @@ interface nsIDOMWindowUtils : nsISupports {
   void wrCapture();
 
   /**
+   * Toggle recording of composition on and off.
+   */
+  void setCompositionRecording(in boolean aValue);
+
+  /**
    * Returns whether the document we're associated to has recorded a given CSS
    * property via the use counter mechanism.
    *
