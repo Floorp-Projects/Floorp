@@ -16,8 +16,6 @@ const { dumpn } = require("devtools/shared/DevToolsUtils");
 const OKAY = 0x59414b4f;
 const FAIL = 0x4c494146;
 
-const _sockets = [ ];
-
 // Return buffer, which differs between Gecko versions
 function getBuffer(packet) {
   return packet.buffer ? packet.buffer : packet;
@@ -67,16 +65,8 @@ function createRequest(command) {
   return encoder.encode(length + command);
 }
 
-function close() {
-  _sockets.forEach(function(s) {
-    s.close();
-  });
-}
-
 function connect() {
-  const tmp = new AdbSocket();
-  _sockets.push(tmp);
-  return tmp;
+  return new AdbSocket();
 }
 
 const client = {
@@ -85,7 +75,6 @@ const client = {
   checkResponse,
   createRequest,
   connect,
-  close,
 };
 
 module.exports = client;
