@@ -36,7 +36,9 @@ exports.viewSourceInStyleEditor = async function(toolbox, sourceURL,
 
 /**
  * Tries to open a JavaScript file in the Debugger. If the file is not found,
- * it is opened in source view instead.
+ * it is opened in source view instead. Either the source URL or source actor ID
+ * can be specified. If both are specified, the source actor ID is used.
+ *
  * Returns a promise resolving to a boolean indicating whether or not
  * the source was able to be displayed in the Debugger, as the built-in Firefox
  * View Source is the fallback.
