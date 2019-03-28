@@ -30,21 +30,33 @@ void OptimizationInfo::initNormalOptimizationInfo() {
   gvn_ = true;
   rangeAnalysis_ = true;
   reordering_ = true;
+  scalarReplacement_ = true;
   sincos_ = true;
   sink_ = true;
 
   registerAllocator_ = RegisterAllocator_Backtracking;
 
-  inlineMaxBytecodePerCallSiteMainThread_ = 550;
-  inlineMaxBytecodePerCallSiteHelperThread_ = 1100;
+  inlineMaxBytecodePerCallSiteMainThread_ = 200;
+  inlineMaxBytecodePerCallSiteHelperThread_ = 400;
   inlineMaxCalleeInlinedBytecodeLength_ = 3550;
   inlineMaxTotalBytecodeLength_ = 85000;
   inliningMaxCallerBytecodeLength_ = 1600;
+  maxInlineDepth_ = 0;
+  smallFunctionMaxInlineDepth_ = 1;
+  inliningWarmUpThresholdFactor_ = 0.5;
+  inliningRecompileThresholdFactor_ = 4;
+}
+
+void OptimizationInfo::initFullOptimizationInfo() {
+  initNormalOptimizationInfo();
+
+  level_ = OptimizationLevel::Full;
+
+  inlineMaxBytecodePerCallSiteMainThread_ = 550;
+  inlineMaxBytecodePerCallSiteHelperThread_ = 1100;
   maxInlineDepth_ = 3;
-  scalarReplacement_ = true;
   smallFunctionMaxInlineDepth_ = 10;
   inliningWarmUpThresholdFactor_ = 0.125;
-  inliningRecompileThresholdFactor_ = 4;
 }
 
 void OptimizationInfo::initWasmOptimizationInfo() {
@@ -103,8 +115,29 @@ uint32_t OptimizationInfo::compilerWarmUpThreshold(JSScript* script,
   return warmUpThreshold + loopDepth * (baseCompilerWarmUpThreshold() / 10);
 }
 
+uint32_t OptimizationInfo::recompileWarmUpThreshold(JSScript* script,
+                                                    jsbytecode* pc) const {
+  MOZ_ASSERT(pc == script->code() || *pc == JSOP_LOOPENTRY);
+
+  uint32_t threshold = compilerWarmUpThreshold(script, pc);
+  if (*pc != JSOP_LOOPENTRY || JitOptions.eagerIonCompilation()) {
+    return threshold;
+  }
+
+  // If we're stuck in a long-running loop at a low optimization level, we have
+  // to invalidate to be able to tier up. This is worse than recompiling at
+  // function entry (because in that case we can use the lazy link mechanism and
+  // avoid invalidation completely). Use a very high recompilation threshold for
+  // loop edges so that this only affects very long-running loops.
+
+  uint32_t loopDepth = LoopEntryDepthHint(pc);
+  MOZ_ASSERT(loopDepth > 0);
+  return threshold + loopDepth * (baseCompilerWarmUpThreshold() / 10);
+}
+
 OptimizationLevelInfo::OptimizationLevelInfo() {
   infos_[OptimizationLevel::Normal].initNormalOptimizationInfo();
+  infos_[OptimizationLevel::Full].initFullOptimizationInfo();
   infos_[OptimizationLevel::Wasm].initWasmOptimizationInfo();
 
 #ifdef DEBUG
@@ -124,8 +157,11 @@ OptimizationLevel OptimizationLevelInfo::nextLevel(
     case OptimizationLevel::DontCompile:
       return OptimizationLevel::Normal;
     case OptimizationLevel::Normal:
+      return OptimizationLevel::Full;
+    case OptimizationLevel::Full:
     case OptimizationLevel::Wasm:
-    case OptimizationLevel::Count:;
+    case OptimizationLevel::Count:
+      break;
   }
   MOZ_CRASH("Unknown optimization level.");
 }
@@ -135,7 +171,7 @@ OptimizationLevel OptimizationLevelInfo::firstLevel() const {
 }
 
 bool OptimizationLevelInfo::isLastLevel(OptimizationLevel level) const {
-  return level == OptimizationLevel::Normal;
+  return level == OptimizationLevel::Full;
 }
 
 OptimizationLevel OptimizationLevelInfo::levelForScript(JSScript* script,

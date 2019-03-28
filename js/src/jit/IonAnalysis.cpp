@@ -4568,7 +4568,7 @@ bool jit::AnalyzeNewScriptDefiniteProperties(
                    script->needsArgsObj(), inlineScriptTree);
 
   const OptimizationInfo* optimizationInfo =
-      IonOptimizations.get(OptimizationLevel::Normal);
+      IonOptimizations.get(OptimizationLevel::Full);
 
   CompilerConstraintList* constraints = NewCompilerConstraintList(temp);
   if (!constraints) {

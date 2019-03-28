@@ -225,8 +225,25 @@ void ClusterIterator::Next() {
     }
   }
 
+  const uint32_t kVS16 = 0xfe0f;
+  const uint32_t kZWJ = 0x200d;
+  // UTF-16 surrogate values for Fitzpatrick type modifiers
+  const uint32_t kFitzpatrickHigh = 0xD83C;
+  const uint32_t kFitzpatrickLowFirst = 0xDFFB;
+  const uint32_t kFitzpatrickLowLast = 0xDFFF;
+
+  bool baseIsEmoji = (GetEmojiPresentation(ch) == EmojiDefault) ||
+                     (GetEmojiPresentation(ch) == TextDefault &&
+                      ((mPos < mLimit && *mPos == kVS16) ||
+                       (mPos + 1 < mLimit &&
+                        *mPos == kFitzpatrickHigh &&
+                        *(mPos + 1) >= kFitzpatrickLowFirst &&
+                        *(mPos + 1) <= kFitzpatrickLowLast)));
+  bool prevWasZwj = false;
+
   while (mPos < mLimit) {
     ch = *mPos;
+    size_t chLen = 1;
 
     // Check for surrogate pairs; note that isolated surrogates will just
     // be treated as generic (non-cluster-extending) characters here,
@@ -234,16 +251,21 @@ void ClusterIterator::Next() {
     if (NS_IS_HIGH_SURROGATE(ch) && mPos < mLimit - 1 &&
         NS_IS_LOW_SURROGATE(*(mPos + 1))) {
       ch = SURROGATE_TO_UCS4(ch, *(mPos + 1));
+      chLen = 2;
     }
 
-    if (!IsClusterExtender(ch)) {
+    bool extendCluster = IsClusterExtender(ch) ||
+        (baseIsEmoji && prevWasZwj &&
+            ((GetEmojiPresentation(ch) == EmojiDefault) ||
+             (GetEmojiPresentation(ch) == TextDefault &&
+              mPos + chLen < mLimit &&
+              *(mPos + chLen) == kVS16)));
+    if (!extendCluster) {
       break;
     }
 
-    mPos++;
-    if (!IS_IN_BMP(ch)) {
-      mPos++;
-    }
+    prevWasZwj = (ch == kZWJ);
+    mPos += chLen;
   }
 
   NS_ASSERTION(mText < mPos && mPos <= mLimit,
