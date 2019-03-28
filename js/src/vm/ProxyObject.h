@@ -15,7 +15,7 @@ namespace js {
  * This is the base class for the various kinds of proxy objects.  It's never
  * instantiated.
  *
- * Proxy objects use JSObject::shape_ primarily to record flags.  Property
+ * Proxy objects use their shape primarily to record flags. Property
  * information, &c. is all dynamically computed.
  *
  * There is no class_ member to force specialization of JSObject::is<T>().
