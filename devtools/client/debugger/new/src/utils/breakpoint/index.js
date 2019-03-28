@@ -21,8 +21,7 @@ import type {
   PendingLocation,
   Breakpoint,
   BreakpointLocation,
-  PendingBreakpoint,
-  MappedLocation
+  PendingBreakpoint
 } from "../../types";
 
 import type { State } from "../../reducers/types";
@@ -151,34 +150,6 @@ export function breakpointAtLocation(
 export function breakpointExists(state: State, location: SourceLocation) {
   const currentBp = getBreakpoint(state, location);
   return currentBp && !currentBp.disabled;
-}
-
-export function createBreakpoint(
-  mappedLocation: MappedLocation,
-  overrides: Object = {}
-): Breakpoint {
-  const { disabled, astLocation, text, originalText, options } = overrides;
-
-  const defaultASTLocation = {
-    name: undefined,
-    offset: mappedLocation.location,
-    index: 0
-  };
-  const properties = {
-    id: makeBreakpointId(mappedLocation.location),
-    ...mappedLocation,
-    options: {
-      condition: options.condition || null,
-      logValue: options.logValue || null,
-      hidden: options.hidden || false
-    },
-    disabled: disabled || false,
-    astLocation: astLocation || defaultASTLocation,
-    text,
-    originalText
-  };
-
-  return properties;
 }
 
 export function createXHRBreakpoint(

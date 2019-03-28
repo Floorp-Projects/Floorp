@@ -113,7 +113,7 @@ add_task(async function() {
   await waitForSelectedSource(dbg, "simple2");
 
   await setConditionalBreakpoint(dbg, 5, "1");
-  await waitForDispatch(dbg, "ADD_BREAKPOINT");
+  await waitForDispatch(dbg, "SET_BREAKPOINT");
   await waitForBreakpointWithCondition(dbg, "simple2", 5);
 
   let bp = findBreakpoint(dbg, "simple2", 5);
@@ -136,7 +136,7 @@ add_task(async function() {
 
   info("Adding a condition to a breakpoint");
   clickElement(dbg, "gutter", 5);
-  await waitForDispatch(dbg, "ADD_BREAKPOINT");
+  await waitForDispatch(dbg, "SET_BREAKPOINT");
   await setConditionalBreakpoint(dbg, 5, "1");
   await waitForBreakpointWithCondition(dbg, "simple2", 5);
 
