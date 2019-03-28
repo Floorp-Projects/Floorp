@@ -3198,8 +3198,7 @@ already_AddRefed<wr::WebRenderAPI> APZCTreeManager::GetWebRenderAPIAtPoint(
   CompositorBridgeParent::CallWithIndirectShadowTree(
       mRootLayersId, [&](LayerTreeState& aState) -> void {
         if (aState.mWrBridge) {
-          IntPoint point = RoundedToInt(aPoint).ToUnknownPoint();
-          api = aState.mWrBridge->GetWebRenderAPIAtPoint(point);
+          api = aState.mWrBridge->GetWebRenderAPIAtPoint(aPoint);
         }
       });
   return api.forget();
