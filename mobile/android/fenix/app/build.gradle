@@ -30,11 +30,17 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         manifestPlaceholders.isRaptorEnabled = "false"
     }
+
     buildTypes {
         release {
             shrinkResources true
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        releaseRaptor {
+            initWith release
+            manifestPlaceholders.isRaptorEnabled = "true"
+            matchingFallbacks = ['release']
         }
         debug {
             shrinkResources false
