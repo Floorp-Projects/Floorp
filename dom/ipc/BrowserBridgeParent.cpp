@@ -19,11 +19,7 @@ namespace dom {
 
 BrowserBridgeParent::BrowserBridgeParent() : mIPCOpen(false) {}
 
-BrowserBridgeParent::~BrowserBridgeParent() {
-  if (mTabParent) {
-    mTabParent->mBrowserBridgeParent = nullptr;
-  }
-}
+BrowserBridgeParent::~BrowserBridgeParent() { Destroy(); }
 
 nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
                                    const nsString& aRemoteType,
@@ -94,6 +90,12 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
   return NS_OK;
 }
 
+void BrowserBridgeParent::Destroy() {
+  if (mTabParent) {
+    mTabParent->Destroy();
+  }
+}
+
 IPCResult BrowserBridgeParent::RecvShow(const ScreenIntSize& aSize,
                                         const bool& aParentIsActive,
                                         const nsSizeMode& aSizeMode) {
@@ -143,6 +145,7 @@ IPCResult BrowserBridgeParent::RecvDeactivate() {
 
 void BrowserBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
+  Destroy();
 }
 
 }  // namespace dom
