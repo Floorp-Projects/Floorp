@@ -13,6 +13,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Logging.h"
 #include "nsPrintfCString.h"
@@ -493,6 +494,9 @@ void ProcessPriorityManagerImpl::TabActivityChanged(TabParent* aTabParent,
     return;
   }
 
+  Telemetry::ScalarAdd(
+      Telemetry::ScalarID::DOM_CONTENTPROCESS_OS_PRIORITY_CHANGE_CONSIDERED, 1);
+
   pppm->TabActivityChanged(aTabParent, aIsActive);
 }
 
@@ -795,6 +799,15 @@ void ParticularProcessPriorityManager::SetPriorityNow(
   ProcessPriority oldPriority = mPriority;
 
   mPriority = aPriority;
+
+  if (oldPriority < mPriority) {
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::DOM_CONTENTPROCESS_OS_PRIORITY_RAISED, 1);
+  } else {
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::DOM_CONTENTPROCESS_OS_PRIORITY_LOWERED, 1);
+  }
+
   hal::SetProcessPriority(Pid(), mPriority);
 
   if (oldPriority != mPriority) {

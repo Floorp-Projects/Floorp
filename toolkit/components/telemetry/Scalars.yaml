@@ -1047,6 +1047,49 @@ dom.contentprocess:
     release_channel_collection: opt-out
     record_in_processes:
       - 'main'
+  os_priority_lowered:
+    bug_numbers:
+      - 1538987
+    description: >
+      The number of times a content process has had its OS priority lowered
+      due to only containing background tabs without audible media playing.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+      - gsvelto@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+  os_priority_raised:
+    bug_numbers:
+      - 1538987
+    description: >
+      The number of times a content process has had its OS priority raised
+      due to containing at least one foregrounded tab, or a tab with audible
+      media has started playing in it.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+      - gsvelto@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+  os_priority_change_considered:
+    bug_numbers:
+      - 1538987
+    description: >
+      The number of times we've had the opportunity to change content process
+      priority due to a tab switch or a tab being opened.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+      - gsvelto@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
 # The following section contains parent process base counters.
 dom.parentprocess:
