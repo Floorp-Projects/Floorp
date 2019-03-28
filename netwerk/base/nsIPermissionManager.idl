@@ -191,6 +191,14 @@ interface nsIPermissionManager : nsISupports
   void removeByType(in ACString type);
 
   /**
+   * Clear all permissions of the passed type added since the specified time.
+   * @param type    a case-sensitive ASCII string, identifying the permission.
+   * @param since   a unix timestamp representing the number of milliseconds from
+   *                Jan 1, 1970 00:00:00 UTC.
+   */
+  void removeByTypeSince(in ACString type, in int64_t since);
+
+  /**
    * Test whether a website has permission to perform the given action.
    * This function will perform a pref lookup to permissions.default.<type>
    * if the specific permission type is part of the whitelist for that functionality.
