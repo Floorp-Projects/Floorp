@@ -10,8 +10,7 @@
     <body>
         <script class="testbody" type="application/javascript">
          SimpleTest.waitForExplicitFinish();
-         SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, function() {
-
+         SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, function() {
              base_properties = [["has", "function", 1],
                                 ["entries", "function", 0],
                                 ["keys", "function", 0],
@@ -23,7 +22,7 @@
              rw_properties = [["clear", "function", 0],
                               ["delete", "function", 1]];
              setlike_rw_properties = base_properties.concat(rw_properties).concat([["add", "function", 1]]);
-             maplike_rw_properties = maplike_properties.concat(rw_properties).concat([["get", "function",1]]);
+             maplike_rw_properties = maplike_properties.concat(rw_properties).concat([["get", "function", 1]]);
              var testExistence = function testExistence(prefix, obj, properties) {
                  for (var [name, type, args] of properties) {
                      // Properties are somewhere up the proto chain, hasOwnProperty won't work
@@ -52,7 +51,7 @@
                          owner = Object.getPrototypeOf(owner);
                      }
                  }
-             }
+             };
 
              var m;
              var testSet;
@@ -181,9 +180,9 @@
              m = new TestInterfaceMaplikeObject();
              ok(m, "ReadOnlyMapConvenience: got a TestInterfaceMaplikeObject object");
              is(m.size, 0, "ReadOnlyMapConvenience: size should be zero");
-             is(m["set"], undefined, "ReadOnlyMapConvenience: readonly map, should be no set function");
-             is(m["clear"], undefined, "ReadOnlyMapConvenience: readonly map, should be no clear function");
-             is(m["delete"], undefined, "ReadOnlyMapConvenience: readonly map, should be no delete function");
+             is(m.set, undefined, "ReadOnlyMapConvenience: readonly map, should be no set function");
+             is(m.clear, undefined, "ReadOnlyMapConvenience: readonly map, should be no clear function");
+             is(m.delete, undefined, "ReadOnlyMapConvenience: readonly map, should be no delete function");
              ok(!m.hasInternal("test"), "ReadOnlyMapConvenience: maplike hasInternal should return false");
              m.setInternal("test");
              is(m.size, 1, "size should be 1");

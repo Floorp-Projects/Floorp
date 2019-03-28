@@ -21,11 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=936056
     }
     get = desc.get;
     ok(get, "Couldn't find document getter");
-    Object.defineProperty(frames[0], "foo", { get: get, configurable: true });
+    Object.defineProperty(frames[0], "foo", { get, configurable: true });
 
     var barewordFunc = frames[0].eval("(function (count) { var doc; for (var i = 0; i < count; ++i) doc = foo; return doc.documentElement; })");
     var qualifiedFunc = frames[0].eval("(function (count) { var doc; for (var i = 0; i < count; ++i) doc = window.document; return doc.documentElement; })");
-    document.querySelector("iframe").onload = function () {
+    document.querySelector("iframe").onload = function() {
       // interp
       is(barewordFunc(1).innerText, "OLD", "Bareword should see own inner 1");
       is(qualifiedFunc(1).innerText, "NEW",
@@ -39,9 +39,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=936056
       is(qualifiedFunc(10000).innerText, "NEW",
          "Qualified should see current inner 2");
       SimpleTest.finish();
-    }
+    };
     frames[0].location = "file_barewordGetsWindow_frame2.html";
-  }
+  };
 
 
 

@@ -13,14 +13,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=847119
   /** Test for Bug 847119 **/
 
   var xhr = new XMLHttpRequest();
-  var domthrows = function() { xhr.open();  }
+  var domthrows = function() { xhr.open(); };
 
   var count = 20000;
   
   function f() {
     var k = 0;
     for (var j = 0; j < count; ++j) {
-      try { domthrows(); } catch(e) { ++k; }
+      try { domthrows(); } catch (e) { ++k; }
     }
     return k;
   }
@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=847119
   }
   ok(true, "We should get here");
 
-  var domthrows = function() { xhr.withCredentials = false; }
+  var domthrows = function() { xhr.withCredentials = false; };
   xhr.open("GET", "");
   xhr.send();
 
