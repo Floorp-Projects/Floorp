@@ -2614,7 +2614,7 @@ nsresult HTMLInputElement::SetValueInternal(const nsAString& aValue,
         // FIXME(emilio): eSetValue_Internal is not supposed to change state,
         // but maybe we could run this too?
         if (aFlags & nsTextEditorState::eSetValue_ByContent) {
-          MaybeUpdateAllValidityStates();
+          MaybeUpdateAllValidityStates(!mDoneCreating);
         }
       } else {
         free(mInputData.mValue);

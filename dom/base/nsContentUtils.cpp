@@ -4149,7 +4149,9 @@ nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
   HTMLInputElement* inputElement =
       HTMLInputElement::FromNode(aEventTargetElement);
   if (inputElement) {
-    inputElement->MaybeUpdateAllValidityStates();
+    MOZ_KnownLive(inputElement)->MaybeUpdateAllValidityStates(true);
+    // XXX Should we stop dispatching "input" event if the target is removed
+    //     from the DOM tree?
   }
 
   if (!useInputEvent) {
