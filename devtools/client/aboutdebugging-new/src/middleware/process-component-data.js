@@ -32,7 +32,7 @@ function toMainProcessComponentData(process) {
   const id = process.processFront.actorID;
   const icon = "chrome://devtools/skin/images/settings.svg";
   const name = l10n.getString("about-debugging-main-process-name");
-  const description = l10n.getString("about-debugging-main-process-description");
+  const description = l10n.getString("about-debugging-main-process-description2");
 
   return {
     name,
