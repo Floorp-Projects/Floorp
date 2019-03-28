@@ -217,6 +217,7 @@ LOCAL_INCLUDES += [
     '/dom/ipc',
     '/toolkit/crashreporter',
     '/toolkit/xre',
+    '/xpcom/base',
     '/xpcom/threads',
 ]
 
