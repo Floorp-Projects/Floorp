@@ -67,6 +67,7 @@ class GeckoEngineTest {
         val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
         `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
+        `when`(runtimeSettings.automaticFontSizeAdjustment).thenReturn(true)
         `when`(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
         `when`(runtime.settings).thenReturn(runtimeSettings)
         val engine = GeckoEngine(context, runtime = runtime, defaultSettings = defaultSettings)
@@ -78,6 +79,10 @@ class GeckoEngineTest {
         assertTrue(engine.settings.webFontsEnabled)
         engine.settings.webFontsEnabled = false
         verify(runtimeSettings).webFontsEnabled = false
+
+        assertTrue(engine.settings.automaticFontSizeAdjustment)
+        engine.settings.automaticFontSizeAdjustment = false
+        verify(runtimeSettings).automaticFontSizeAdjustment = false
 
         assertFalse(engine.settings.remoteDebuggingEnabled)
         engine.settings.remoteDebuggingEnabled = true
@@ -129,12 +134,14 @@ class GeckoEngineTest {
                 trackingProtectionPolicy = TrackingProtectionPolicy.all(),
                 javascriptEnabled = false,
                 webFontsEnabled = false,
+                automaticFontSizeAdjustment = false,
                 remoteDebuggingEnabled = true,
                 testingModeEnabled = true,
                 userAgentString = "test-ua"), runtime)
 
         verify(runtimeSettings).javaScriptEnabled = false
         verify(runtimeSettings).webFontsEnabled = false
+        verify(runtimeSettings).automaticFontSizeAdjustment = false
         verify(runtimeSettings).remoteDebuggingEnabled = true
         assertEquals(TrackingProtectionPolicy.select(
             TrackingProtectionPolicy.AD,
