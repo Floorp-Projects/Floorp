@@ -249,7 +249,7 @@ struct LayerPropertiesBase : public LayerProperties {
         areaOverflowed = true;
       }
       LTI_DUMP(mask, "mask");
-      AddTransformedRegion(result, mask, mTransform);
+      AddRegion(result, mask);
     }
 
     for (size_t i = 0; i < std::min(mAncestorMaskLayers.Length(),
@@ -260,7 +260,7 @@ struct LayerPropertiesBase : public LayerProperties {
         areaOverflowed = true;
       }
       LTI_DUMP(mask, "ancestormask");
-      AddTransformedRegion(result, mask, mTransform);
+      AddRegion(result, mask);
     }
 
     if (mUseClipRect && otherClip) {
