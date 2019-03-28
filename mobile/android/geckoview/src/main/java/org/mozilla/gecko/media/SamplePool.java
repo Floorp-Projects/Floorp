@@ -52,7 +52,7 @@ final class SamplePool {
                 throw new UnsupportedOperationException(e);
             }
 
-            return new Sample(new SharedMemBuffer(shm));
+            return new Sample(new SampleBuffer(shm));
         }
 
         private synchronized void recycle(final Sample recycled) {

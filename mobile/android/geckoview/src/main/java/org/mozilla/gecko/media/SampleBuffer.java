@@ -1,26 +1,27 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.gecko.media;
 
 import android.os.Parcel;
+import android.os.Parcelable;
 
 import org.mozilla.gecko.mozglue.SharedMemory;
-import org.mozilla.gecko.media.Sample;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public final class SharedMemBuffer implements Sample.Buffer {
+public final class SampleBuffer implements Parcelable {
     private SharedMemory mSharedMem;
 
     /* package */
-    public SharedMemBuffer(final SharedMemory sharedMem) {
+    public SampleBuffer(final SharedMemory sharedMem) {
         mSharedMem = sharedMem;
     }
 
-    protected SharedMemBuffer(final Parcel in) {
-        mSharedMem = in.readParcelable(Sample.class.getClassLoader());
+    protected SampleBuffer(final Parcel in) {
+        mSharedMem = in.readParcelable(SampleBuffer.class.getClassLoader());
     }
 
     @Override
@@ -33,24 +34,22 @@ public final class SharedMemBuffer implements Sample.Buffer {
         return 0;
     }
 
-    public static final Creator<SharedMemBuffer> CREATOR = new Creator<SharedMemBuffer>() {
+    public static final Creator<SampleBuffer> CREATOR = new Creator<SampleBuffer>() {
         @Override
-        public SharedMemBuffer createFromParcel(final Parcel in) {
-            return new SharedMemBuffer(in);
+        public SampleBuffer createFromParcel(final Parcel in) {
+            return new SampleBuffer(in);
         }
 
         @Override
-        public SharedMemBuffer[] newArray(final int size) {
-            return new SharedMemBuffer[size];
+        public SampleBuffer[] newArray(final int size) {
+            return new SampleBuffer[size];
         }
     };
 
-    @Override
     public int capacity() {
         return mSharedMem != null ? mSharedMem.getSize() : 0;
     }
 
-    @Override
     public void readFromByteBuffer(final ByteBuffer src, final int offset, final int size)
             throws IOException {
         if (!src.isDirect()) {
@@ -65,7 +64,6 @@ public final class SharedMemBuffer implements Sample.Buffer {
 
     private native static void nativeReadFromDirectBuffer(ByteBuffer src, long dest, int offset, int size);
 
-    @Override
     public void writeToByteBuffer(final ByteBuffer dest, final int offset, final int size)
             throws IOException {
         if (!dest.isDirect()) {
@@ -80,7 +78,6 @@ public final class SharedMemBuffer implements Sample.Buffer {
 
     private native static void nativeWriteToDirectBuffer(long src, ByteBuffer dest, int offset, int size);
 
-    @Override
     public void dispose() {
         if (mSharedMem != null) {
             mSharedMem.dispose();

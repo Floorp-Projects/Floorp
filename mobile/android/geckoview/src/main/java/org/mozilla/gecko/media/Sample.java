@@ -11,7 +11,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.mozglue.SharedMemory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -25,14 +24,7 @@ public final class Sample implements Parcelable {
         EOS.info.set(0, 0, Long.MIN_VALUE, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
     }
 
-    public interface Buffer extends Parcelable {
-        int capacity();
-        void readFromByteBuffer(ByteBuffer src, int offset, int size) throws IOException;
-        void writeToByteBuffer(ByteBuffer dest, int offset, int size) throws IOException;
-        void dispose();
-    }
-
-    public Buffer buffer;
+    public SampleBuffer buffer;
     @WrapForJNI
     public BufferInfo info = new BufferInfo();
     public CryptoInfo cryptoInfo;
@@ -44,7 +36,7 @@ public final class Sample implements Parcelable {
     private static int sPoolSize = 1;
 
     public Sample() { }
-    public Sample(Buffer bytes) {
+    public Sample(SampleBuffer bytes) {
         buffer = bytes;
     }
 
@@ -160,7 +152,7 @@ public final class Sample implements Parcelable {
             } else {
                 s = new Sample();
             }
-            s.buffer = in.readParcelable(Sample.class.getClassLoader());
+            s.buffer = in.readParcelable(SampleBuffer.class.getClassLoader());
             s.readInfo(in);
             s.readCrypto(in);
             return s;
