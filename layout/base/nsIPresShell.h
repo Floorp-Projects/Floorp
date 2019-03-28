@@ -1399,6 +1399,11 @@ class nsIPresShell : public nsStubDocumentObserver {
   void SetResolutionUpdated(bool aUpdated) { mResolutionUpdated = aUpdated; }
 
   /**
+   * Returns true if the resolution has ever been changed by APZ.
+   */
+  bool IsResolutionUpdatedByApz() const { return mResolutionUpdatedByApz; }
+
+  /**
    * Calculate the cumulative scale resolution from this document up to
    * but not including the root document.
    */
@@ -2050,6 +2055,9 @@ class nsIPresShell : public nsStubDocumentObserver {
   // Whether the most recent change to the pres shell resolution was
   // originated by the main thread.
   bool mResolutionUpdated : 1;
+
+  // True if the resolution has been ever changed by APZ.
+  bool mResolutionUpdatedByApz : 1;
 
   uint32_t mPresShellId;
 
