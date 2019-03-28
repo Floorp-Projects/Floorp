@@ -878,25 +878,30 @@ void BaselineInterpreterCodeGen::pushScriptScopeArg() {
 }
 
 template <>
-void BaselineCompilerCodeGen::pushUint8BytecodeOperandArg() {
+void BaselineCompilerCodeGen::pushUint8BytecodeOperandArg(Register) {
   MOZ_ASSERT(JOF_OPTYPE(JSOp(*handler.pc())) == JOF_UINT8);
   pushArg(Imm32(GET_UINT8(handler.pc())));
 }
 
 template <>
-void BaselineInterpreterCodeGen::pushUint8BytecodeOperandArg() {
-  MOZ_CRASH("NYI: interpreter pushUint8BytecodeOperandArg");
+void BaselineInterpreterCodeGen::pushUint8BytecodeOperandArg(Register scratch) {
+  masm.loadPtr(frame.addressOfInterpreterPC(), scratch);
+  LoadUint8Operand(masm, scratch, scratch);
+  pushArg(scratch);
 }
 
 template <>
-void BaselineCompilerCodeGen::pushUint16BytecodeOperandArg() {
+void BaselineCompilerCodeGen::pushUint16BytecodeOperandArg(Register) {
   MOZ_ASSERT(JOF_OPTYPE(JSOp(*handler.pc())) == JOF_UINT16);
   pushArg(Imm32(GET_UINT16(handler.pc())));
 }
 
 template <>
-void BaselineInterpreterCodeGen::pushUint16BytecodeOperandArg() {
-  MOZ_CRASH("NYI: interpreter pushUint16BytecodeOperandArg");
+void BaselineInterpreterCodeGen::pushUint16BytecodeOperandArg(
+    Register scratch) {
+  masm.loadPtr(frame.addressOfInterpreterPC(), scratch);
+  LoadUint16Operand(masm, scratch, scratch);
+  pushArg(scratch);
 }
 
 template <>
@@ -1905,7 +1910,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CHECKISOBJ() {
 
   prepareVMCall();
 
-  pushUint8BytecodeOperandArg();
+  pushUint8BytecodeOperandArg(R0.scratchReg());
 
   using Fn = bool (*)(JSContext*, CheckIsObjectKind);
   if (!callVM<Fn, ThrowCheckIsObject>()) {
@@ -1923,7 +1928,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CHECKISCALLABLE() {
 
   prepareVMCall();
 
-  pushUint8BytecodeOperandArg();
+  pushUint8BytecodeOperandArg(R1.scratchReg());
   pushArg(R0);
 
   using Fn = bool (*)(JSContext*, HandleValue, CheckIsCallableKind);
@@ -2337,7 +2342,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_SETFUNNAME() {
 
   prepareVMCall();
 
-  pushUint8BytecodeOperandArg();
+  pushUint8BytecodeOperandArg(R2.scratchReg());
   pushArg(R1);
   pushArg(R0.scratchReg());
 
@@ -4370,7 +4375,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TYPEOFEXPR() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_THROWMSG() {
   prepareVMCall();
-  pushUint16BytecodeOperandArg();
+  pushUint16BytecodeOperandArg(R2.scratchReg());
 
   using Fn = bool (*)(JSContext*, const unsigned);
   return callVM<Fn, js::ThrowMsgOperation>();
@@ -4899,7 +4904,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_ASYNCRESOLVE() {
   masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
 
   prepareVMCall();
-  pushUint8BytecodeOperandArg();
+  pushUint8BytecodeOperandArg(R2.scratchReg());
   pushArg(R1);
   pushArg(R0.scratchReg());
 
