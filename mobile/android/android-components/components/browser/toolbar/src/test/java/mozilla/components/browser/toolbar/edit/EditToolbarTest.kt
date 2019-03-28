@@ -18,9 +18,11 @@ import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.ktx.android.view.forEach
+import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -107,7 +109,57 @@ class EditToolbarTest {
             assertEquals(Action.COMMIT, fact.action)
             assertEquals("toolbar", fact.item)
             assertNull(fact.value)
-            assertNull(fact.metadata)
+
+            val metadata = fact.metadata
+            assertNotNull(metadata!!)
+            assertEquals(1, metadata.size)
+            assertTrue(metadata.contains("autocomplete"))
+            assertTrue(metadata["autocomplete"] is Boolean)
+            assertFalse(metadata["autocomplete"] as Boolean)
+        }
+    }
+
+    @Test
+    fun `entering text emits commit fact with autocomplete metadata`() {
+        CollectionProcessor.withFactCollection { facts ->
+            val toolbar = BrowserToolbar(context)
+            toolbar.editToolbar.urlView.onAttachedToWindow()
+
+            assertEquals(0, facts.size)
+
+            toolbar.editToolbar.urlView.setText("https://www.mozilla.org")
+
+            // Fake autocomplete
+            toolbar.editToolbar.urlView.autocompleteResult = InlineAutocompleteEditText.AutocompleteResult(
+                text = "hello world",
+                source = "test-source",
+                totalItems = 100)
+
+            toolbar.editToolbar.urlView.dispatchKeyEvent(KeyEvent(
+                System.currentTimeMillis(),
+                System.currentTimeMillis(),
+                KeyEvent.ACTION_DOWN,
+                KeyEvent.KEYCODE_ENTER,
+                0))
+
+            assertEquals(1, facts.size)
+
+            val fact = facts[0]
+            assertEquals(Component.BROWSER_TOOLBAR, fact.component)
+            assertEquals(Action.COMMIT, fact.action)
+            assertEquals("toolbar", fact.item)
+            assertNull(fact.value)
+
+            val metadata = fact.metadata
+            assertNotNull(metadata!!)
+            assertEquals(2, metadata.size)
+
+            assertTrue(metadata.contains("autocomplete"))
+            assertTrue(metadata["autocomplete"] is Boolean)
+            assertTrue(metadata["autocomplete"] as Boolean)
+
+            assertTrue(metadata.contains("source"))
+            assertEquals("test-source", metadata["source"])
         }
     }
 

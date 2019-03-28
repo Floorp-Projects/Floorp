@@ -10,6 +10,7 @@ import android.graphics.Rect
 import android.os.Build
 import android.provider.Settings.Secure.DEFAULT_INPUT_METHOD
 import android.provider.Settings.Secure.getString
+import android.support.annotation.VisibleForTesting
 import android.support.v7.widget.AppCompatEditText
 import android.text.Editable
 import android.text.NoCopySpan
@@ -125,7 +126,8 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
     // The previous autocomplete result returned to us
     var autocompleteResult: AutocompleteResult? = null
-        private set
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        public set
 
     // Length of the user-typed portion of the result
     private var autoCompletePrefixLength: Int = 0
