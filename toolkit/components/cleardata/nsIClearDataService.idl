@@ -190,6 +190,11 @@ interface nsIClearDataService : nsISupports
   const uint32_t CLEAR_REPORTS = 1 << 19;
 
   /**
+   * StorageAccessAPI flag, which indicates user interaction.
+   */
+  const uint32_t CLEAR_STORAGE_ACCESS = 1 << 20;
+
+  /**
    * Use this value to delete all the data.
    */
   const uint32_t CLEAR_ALL = 0xFFFFFF;
