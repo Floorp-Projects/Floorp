@@ -10,9 +10,6 @@ with Files("**"):
 with Files("LightweightThemeChild.jsm"):
     BUG_COMPONENT = ("WebExtensions", "Themes")
 
-with Files("LightWeightThemeInstallChild.jsm"):
-    BUG_COMPONENT = ("Firefox", "Theme")
-
 with Files("PageInfoChild.jsm"):
     BUG_COMPONENT = ("Firefox", "Page Info Window")
 
@@ -35,7 +32,6 @@ FINAL_TARGET_FILES.actors += [
     'DOMFullscreenChild.jsm',
     'FormValidationChild.jsm',
     'LightweightThemeChild.jsm',
-    'LightWeightThemeInstallChild.jsm',
     'LinkHandlerChild.jsm',
     'NetErrorChild.jsm',
     'OfflineAppsChild.jsm',

@@ -72,6 +72,7 @@ class APZSampler;
 class APZUpdater;
 class AsyncCompositionManager;
 class AsyncImagePipelineManager;
+class CompositionRecorder;
 class Compositor;
 class CompositorAnimationStorage;
 class CompositorBridgeParent;
@@ -238,6 +239,9 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       const nsIntRegion& region) = 0;
   virtual mozilla::ipc::IPCResult RecvRequestNotifyAfterRemotePaint() = 0;
   virtual mozilla::ipc::IPCResult RecvAllPluginsCaptured() = 0;
+  virtual mozilla::ipc::IPCResult RecvBeginRecording(
+      const TimeStamp& aRecordingStart) = 0;
+  virtual mozilla::ipc::IPCResult RecvEndRecording() = 0;
   virtual mozilla::ipc::IPCResult RecvInitialize(
       const LayersId& rootLayerTreeId) = 0;
   virtual mozilla::ipc::IPCResult RecvGetFrameUniformity(
@@ -343,6 +347,9 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   };
 
   mozilla::ipc::IPCResult RecvAllPluginsCaptured() override;
+  mozilla::ipc::IPCResult RecvBeginRecording(
+      const TimeStamp& aRecordingStart) override;
+  mozilla::ipc::IPCResult RecvEndRecording() override;
 
   virtual void NotifyMemoryPressure() override;
   virtual void AccumulateMemoryReport(wr::MemoryReport*) override;
@@ -762,6 +769,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   // mSelfRef is cleared in DeferredDestroy which is scheduled by ActorDestroy.
   RefPtr<CompositorBridgeParent> mSelfRef;
   RefPtr<CompositorAnimationStorage> mAnimationStorage;
+  UniquePtr<CompositionRecorder> mCompositionRecorder;
 
   TimeDuration mPaintTime;
 
