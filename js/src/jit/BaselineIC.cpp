@@ -2211,7 +2211,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
     return false;
   }
 
-  RootedShape oldShape(cx, obj->maybeShape());
+  RootedShape oldShape(cx, obj->shape());
   RootedObjectGroup oldGroup(cx, JSObject::getGroup(cx, obj));
   if (!oldGroup) {
     return false;
@@ -2928,7 +2928,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
   if (!obj) {
     return false;
   }
-  RootedShape oldShape(cx, obj->maybeShape());
+  RootedShape oldShape(cx, obj->shape());
   RootedObjectGroup oldGroup(cx, JSObject::getGroup(cx, obj));
   if (!oldGroup) {
     return false;
