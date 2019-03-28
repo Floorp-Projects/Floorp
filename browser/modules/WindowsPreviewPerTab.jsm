@@ -148,7 +148,7 @@ function PreviewController(win, tab) {
   this.tab.addEventListener("TabAttrModified", this);
 
   XPCOMUtils.defineLazyGetter(this, "canvasPreview", function() {
-    let canvas = PageThumbs.createCanvas(this.win);
+    let canvas = PageThumbs.createCanvas(this.win.win);
     canvas.mozOpaque = true;
     return canvas;
   });
@@ -270,7 +270,7 @@ PreviewController.prototype = {
       let winWidth = this.win.width;
       let winHeight = this.win.height;
 
-      let composite = PageThumbs.createCanvas(this.win);
+      let composite = PageThumbs.createCanvas(this.win.win);
 
       // Use transparency, Aero glass is drawn black without it.
       composite.mozOpaque = false;

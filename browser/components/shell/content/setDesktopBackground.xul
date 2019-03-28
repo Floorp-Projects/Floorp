@@ -49,8 +49,9 @@
           <menuitem label="&center.label;"  value="CENTER"/>
           <menuitem label="&tile.label;"    value="TILE"/>
           <menuitem label="&stretch.label;" value="STRETCH"/>
-          <menuitem label="&fill.label;"    value="FILL" id="fillPosition"/>
-          <menuitem label="&fit.label;"     value="FIT"  id="fitPosition"/>
+          <menuitem label="&fill.label;"    value="FILL"/>
+          <menuitem label="&fit.label;"     value="FIT"/>
+          <menuitem label="&span.label;"    value="SPAN" id="spanPosition"/>
         </menupopup>
       </menulist>
       <spacer flex="1"/>

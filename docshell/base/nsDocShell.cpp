@@ -29,6 +29,7 @@
 #include "mozilla/MediaFeatureChange.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/ScrollTypes.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/StartupTimeline.h"
@@ -5629,10 +5630,10 @@ nsresult nsDocShell::SetCurScrollPosEx(int32_t aCurHorizontalPos,
   nsIScrollableFrame* sf = GetRootScrollFrame();
   NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
-  nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
+  ScrollMode scrollMode = ScrollMode::eInstant;
   if (sf->GetScrollStyles().mScrollBehavior ==
       NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
-    scrollMode = nsIScrollableFrame::SMOOTH_MSD;
+    scrollMode = ScrollMode::eSmoothMsd;
   }
 
   nsPoint targetPos(aCurHorizontalPos, aCurVerticalPos);
@@ -5658,9 +5659,7 @@ nsresult nsDocShell::SetCurScrollPosEx(int32_t aCurHorizontalPos,
   }
 
   shell->ScrollToVisual(targetPos, layers::FrameMetrics::eMainThread,
-                        scrollMode == nsIScrollableFrame::INSTANT
-                            ? nsIPresShell::ScrollMode::eInstant
-                            : nsIPresShell::ScrollMode::eSmooth);
+                        scrollMode);
 
   return NS_OK;
 }

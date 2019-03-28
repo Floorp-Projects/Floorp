@@ -1633,6 +1633,36 @@ void WarnWrongMIMEOfScript(nsHttpChannel *aChannel, nsIURI *aURI,
   }
 }
 
+void nsHttpChannel::SetCachedContentType() {
+  if (!mResponseHead) {
+    return;
+  }
+
+  nsAutoCString contentTypeStr;
+  mResponseHead->ContentType(contentTypeStr);
+
+  uint8_t contentType = nsICacheEntry::CONTENT_TYPE_OTHER;
+  if (nsContentUtils::IsJavascriptMIMEType(
+          NS_ConvertUTF8toUTF16(contentTypeStr))) {
+    contentType = nsICacheEntry::CONTENT_TYPE_JAVASCRIPT;
+  } else if (StringBeginsWith(contentTypeStr, NS_LITERAL_CSTRING("text/css")) ||
+             mLoadInfo->GetExternalContentPolicyType() ==
+                 nsIContentPolicy::TYPE_STYLESHEET) {
+    contentType = nsICacheEntry::CONTENT_TYPE_STYLESHEET;
+  } else if (StringBeginsWith(contentTypeStr,
+                              NS_LITERAL_CSTRING("application/wasm"))) {
+    contentType = nsICacheEntry::CONTENT_TYPE_WASM;
+  } else if (StringBeginsWith(contentTypeStr, NS_LITERAL_CSTRING("image/"))) {
+    contentType = nsICacheEntry::CONTENT_TYPE_IMAGE;
+  } else if (StringBeginsWith(contentTypeStr, NS_LITERAL_CSTRING("video/"))) {
+    contentType = nsICacheEntry::CONTENT_TYPE_MEDIA;
+  } else if (StringBeginsWith(contentTypeStr, NS_LITERAL_CSTRING("audio/"))) {
+    contentType = nsICacheEntry::CONTENT_TYPE_MEDIA;
+  }
+
+  mCacheEntry->SetContentType(contentType);
+}
+
 nsresult nsHttpChannel::CallOnStartRequest() {
   LOG(("nsHttpChannel::CallOnStartRequest [this=%p]", this));
 
@@ -1728,6 +1758,10 @@ nsresult nsHttpChannel::CallOnStartRequest() {
 
   if (mResponseHead && !mResponseHead->HasContentCharset())
     mResponseHead->SetContentCharset(mContentCharsetHint);
+
+  if (mCacheEntry && mCacheEntryIsWriteOnly) {
+    SetCachedContentType();
+  }
 
   LOG(("  calling mListener->OnStartRequest [this=%p, listener=%p]\n", this,
        mListener.get()));

@@ -10,6 +10,7 @@ interface nsIKeyValueEnumeratorCallback;
 interface nsIKeyValuePairCallback;
 interface nsIKeyValueVariantCallback;
 interface nsIKeyValueVoidCallback;
+interface nsIKeyValuePair;
 
 /**
  * The nsIKeyValue* interfaces provide a simple, asynchronous API to a key/value
@@ -65,6 +66,22 @@ interface nsIKeyValueDatabase : nsISupports {
         in nsIVariant value);
 
     /**
+     * Write multiple key/value pairs to the database.
+     *
+     * This features the "all-or-nothing" semantics, i.e. if any error occurs
+     * during the call, it will rollback the previous puts and terminate the
+     * put. In addition, putMany should be more efficient than calling "put"
+     * for every single key/value pair since it does all the puts in a single
+     * transaction.
+     *
+     * Note: if there are multiple values with the same key in the specified
+     * pairs, only the last value will be stored in the database.
+     */
+    void putMany(
+        in nsIKeyValueVoidCallback callback,
+        in Array<nsIKeyValuePair> pairs);
+
+    /**
      * Retrieve the value of the specified key from the database.
      *
      * If the key/value pair doesn't exist in the database, and you specify
@@ -95,6 +112,11 @@ interface nsIKeyValueDatabase : nsISupports {
     void delete(
         in nsIKeyValueVoidCallback callback,
         in AUTF8String key);
+
+    /**
+     * Clear all the key/value pairs from the database.
+     */
+    void clear(in nsIKeyValueVoidCallback callback);
 
     /**
      * Enumerate key/value pairs, starting with the first key equal to

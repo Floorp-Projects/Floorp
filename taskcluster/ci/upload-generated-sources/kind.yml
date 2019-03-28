@@ -14,11 +14,10 @@ kind-dependencies:
 
 only-for-attributes:
     - nightly
+    - shippable
 
 job-template:
     description: Upload generated source files from build
-    attributes:
-        nightly: true
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
     treeherder:
         symbol: Ugs

@@ -88,4 +88,8 @@ impl<'env> Writer<'env> {
     pub(crate) fn delete<K: AsRef<[u8]>>(&mut self, db: Database, k: &K, v: Option<&[u8]>) -> Result<(), StoreError> {
         self.0.del(db, &k, v).map_err(StoreError::LmdbError)
     }
+
+    pub(crate) fn clear(&mut self, db: Database) -> Result<(), StoreError> {
+        self.0.clear_db(db).map_err(StoreError::LmdbError)
+    }
 }

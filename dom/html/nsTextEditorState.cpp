@@ -641,8 +641,7 @@ nsTextInputSelectionImpl::CompleteScroll(bool aForward) {
   if (!mScrollFrame) return NS_ERROR_NOT_INITIALIZED;
 
   mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                         nsIScrollableFrame::WHOLE,
-                         nsIScrollableFrame::INSTANT);
+                         nsIScrollableFrame::WHOLE, ScrollMode::eInstant);
   return NS_OK;
 }
 
@@ -685,7 +684,7 @@ nsTextInputSelectionImpl::ScrollPage(bool aForward) {
   if (!mScrollFrame) return NS_ERROR_NOT_INITIALIZED;
 
   mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                         nsIScrollableFrame::PAGES, nsIScrollableFrame::SMOOTH);
+                         nsIScrollableFrame::PAGES, ScrollMode::eSmooth);
   return NS_OK;
 }
 
@@ -694,7 +693,7 @@ nsTextInputSelectionImpl::ScrollLine(bool aForward) {
   if (!mScrollFrame) return NS_ERROR_NOT_INITIALIZED;
 
   mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                         nsIScrollableFrame::LINES, nsIScrollableFrame::SMOOTH);
+                         nsIScrollableFrame::LINES, ScrollMode::eSmooth);
   return NS_OK;
 }
 
@@ -703,7 +702,7 @@ nsTextInputSelectionImpl::ScrollCharacter(bool aRight) {
   if (!mScrollFrame) return NS_ERROR_NOT_INITIALIZED;
 
   mScrollFrame->ScrollBy(nsIntPoint(aRight ? 1 : -1, 0),
-                         nsIScrollableFrame::LINES, nsIScrollableFrame::SMOOTH);
+                         nsIScrollableFrame::LINES, ScrollMode::eSmooth);
   return NS_OK;
 }
 

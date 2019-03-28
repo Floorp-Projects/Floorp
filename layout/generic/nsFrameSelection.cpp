@@ -1706,8 +1706,7 @@ void nsFrameSelection::CommonPageMove(bool aForward, bool aExtend,
   // Scroll one page if necessary.
   if (scrollableFrame) {
     scrollableFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                              nsIScrollableFrame::PAGES,
-                              nsIScrollableFrame::SMOOTH);
+                              nsIScrollableFrame::PAGES, ScrollMode::eSmooth);
   }
 
   // place the caret

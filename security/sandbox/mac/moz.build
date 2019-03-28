@@ -6,7 +6,10 @@
 
 EXPORTS.mozilla += [
     'Sandbox.h',
-    'SandboxPolicies.h'
+    'SandboxPolicyContent.h',
+    'SandboxPolicyFlash.h',
+    'SandboxPolicyGMP.h',
+    'SandboxPolicyUtility.h'
 ]
 
 SOURCES += [

@@ -41,38 +41,38 @@ job-defaults:
             production: false
 
 jobs:
-   macosx64-nightly:
+   macosx64-shippable:
       treeherder:
          symbol: EME
          platform: macosx64/opt
          kind: test
          tier: 1
       attributes:
-         build_platform: macosx64-nightly
+         build_platform: macosx64-shippable
          build_type: opt
          artifact_prefix: releng/partner
          nightly: true
 
-   win32-nightly:
+   win32-shippable:
       treeherder:
          symbol: EME
          platform: win32/opt
          kind: test
          tier: 1
       attributes:
-         build_platform: win32-nightly
+         build_platform: win32-shippable
          build_type: opt
          artifact_prefix: releng/partner
          nightly: true
 
-   win64-nightly:
+   win64-shippable:
       treeherder:
          symbol: EME
          platform: win64/opt
          kind: test
          tier: 1
       attributes:
-         build_platform: win64-nightly
+         build_platform: win64-shippable
          build_type: opt
          artifact_prefix: releng/partner
          nightly: true

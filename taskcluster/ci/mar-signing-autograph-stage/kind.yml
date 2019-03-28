@@ -13,7 +13,7 @@ kind-dependencies:
     - repackage
 
 only-for-build-platforms:
-    - linux64-nightly/opt
+    - linux64-shippable/opt
 
 job-template:
     shipping-phase: null

@@ -1,8 +1,6 @@
 //! Intermediate representation for the physical layout of some type.
 
-use super::derive::{CanTriviallyDeriveCopy, CanTriviallyDeriveDebug,
-                    CanTriviallyDeriveDefault, CanTriviallyDeriveHash,
-                    CanTriviallyDerivePartialEqOrPartialOrd, CanDerive};
+use super::derive::CanDerive;
 use super::ty::{RUST_DERIVE_IN_ARRAY_LIMIT, Type, TypeKind};
 use ir::context::BindgenContext;
 use clang;
@@ -100,8 +98,8 @@ pub struct Opaque(pub Layout);
 
 impl Opaque {
     /// Construct a new opaque type from the given clang type.
-    pub fn from_clang_ty(ty: &clang::Type) -> Type {
-        let layout = Layout::new(ty.size(), ty.align());
+    pub fn from_clang_ty(ty: &clang::Type, ctx: &BindgenContext) -> Type {
+        let layout = Layout::new(ty.size(ctx), ty.align(ctx));
         let ty_kind = TypeKind::Opaque;
         let is_const = ty.is_const();
         Type::new(None, Some(layout), ty_kind, is_const)
@@ -126,45 +124,13 @@ impl Opaque {
     /// Return `true` if this opaque layout's array size will fit within the
     /// maximum number of array elements that Rust allows deriving traits
     /// with. Return `false` otherwise.
-    pub fn array_size_within_derive_limit(&self, ctx: &BindgenContext) -> bool {
-        self.array_size(ctx).map_or(false, |size| {
+    pub fn array_size_within_derive_limit(&self, ctx: &BindgenContext) -> CanDerive {
+        if self.array_size(ctx).map_or(false, |size| {
             size <= RUST_DERIVE_IN_ARRAY_LIMIT
-        })
-    }
-}
-
-impl CanTriviallyDeriveDebug for Opaque {
-    fn can_trivially_derive_debug(&self, ctx: &BindgenContext) -> bool {
-        self.array_size_within_derive_limit(ctx)
-    }
-}
-
-impl CanTriviallyDeriveDefault for Opaque {
-    fn can_trivially_derive_default(&self, ctx: &BindgenContext) -> bool {
-        self.array_size_within_derive_limit(ctx)
-    }
-}
-
-impl CanTriviallyDeriveCopy for Opaque {
-    fn can_trivially_derive_copy(&self, ctx: &BindgenContext) -> bool {
-        self.array_size_within_derive_limit(ctx)
-    }
-}
-
-impl CanTriviallyDeriveHash for Opaque {
-    fn can_trivially_derive_hash(&self, ctx: &BindgenContext) -> bool {
-        self.array_size_within_derive_limit(ctx)
-    }
-}
-
-impl CanTriviallyDerivePartialEqOrPartialOrd for Opaque {
-    fn can_trivially_derive_partialeq_or_partialord(&self, ctx: &BindgenContext) -> CanDerive {
-        // TODO(emilio): This is inconsistent with the rest of the
-        // CanTriviallyDerive* traits.
-        if self.array_size_within_derive_limit(ctx) {
+        }) {
             CanDerive::Yes
         } else {
-            CanDerive::ArrayTooLarge
+            CanDerive::Manually
         }
     }
 }

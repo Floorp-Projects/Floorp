@@ -36,6 +36,8 @@ EXPORTS += [
 EXPORTS += [
     'ContentHandlerService.h',
     'nsExternalHelperAppService.h',
+    'nsMIMEInfoChild.h',
+    'nsOSHelperAppServiceChild.h',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
@@ -61,6 +63,7 @@ UNIFIED_SOURCES += [
     'nsExternalProtocolHandler.cpp',
     'nsLocalHandlerApp.cpp',
     'nsMIMEInfoImpl.cpp',
+    'nsOSHelperAppServiceChild.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

@@ -32,7 +32,7 @@ class RDDChild final : public PRDDChild {
   explicit RDDChild(RDDProcessHost* aHost);
   ~RDDChild();
 
-  bool Init();
+  bool Init(bool aStartMacSandbox);
 
   bool EnsureRDDReady();
 

@@ -1,5 +1,6 @@
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TelemetryTestUtils } = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js");
 
 const COMPONENT = "remotesettings";
@@ -42,6 +43,16 @@ add_task(async function test_unknown_status_is_not_reported() {
   const endHistogram = getUptakeTelemetrySnapshot(source);
   const expectedIncrements = {};
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+});
+
+add_task(async function test_age_is_converted_to_string_and_reported() {
+  const status = UptakeTelemetry.STATUS.SUCCESS;
+  const age = 42;
+
+  await UptakeTelemetry.report(COMPONENT, status, { source: "s", age });
+
+  TelemetryTestUtils.assertEvents(
+    [["uptake.remotecontent.result", "uptake", COMPONENT, status, { source: "s", age: `${age}` }]]);
 });
 
 add_task(async function test_each_status_can_be_caught_in_snapshot() {

@@ -29,18 +29,17 @@ tests can be found in test_SVGxxxList.xhtml. Anything that can be generalized
 to other list types belongs there.
 */
 
-function run_tests()
-{
-  document.getElementById('svg').pauseAnimations();
+function run_tests() {
+  document.getElementById("svg").pauseAnimations();
 
   var polyline = document.getElementById("polyline");
   var points = polyline.points;
 
-  is(points.numberOfItems, 2, 'Checking numberOfItems');
+  is(points.numberOfItems, 2, "Checking numberOfItems");
 
   // Test mutation events
   // --- Initialization
-  eventChecker = new MutationEventChecker;
+  var eventChecker = new MutationEventChecker;
   eventChecker.watchAttr(polyline, "points");
   // -- Actual changes
   eventChecker.expect("modify modify");
@@ -54,7 +53,7 @@ function run_tests()
   // -- Invalid attribute
   eventChecker.expect("modify");
   polyline.setAttribute("points", ",30,375");
-  is(points.numberOfItems, 0, 'Checking that parsing stops at invalid token');
+  is(points.numberOfItems, 0, "Checking that parsing stops at invalid token");
   // -- Attribute removal
   eventChecker.expect("remove");
   polyline.removeAttribute("points");
@@ -83,7 +82,7 @@ function run_tests()
     function appendItem(aItem) {
       polyline.removeAttribute("points");
       return points.appendItem(aItem);
-    }
+    },
   ];
   subtests.forEach(function(aFunction) {
     // -- Adding SVGSVGElement.currentTranslate, which is the only instance

@@ -13,6 +13,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ScrollTypes.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StyleSheet.h"
@@ -1399,6 +1400,11 @@ class nsIPresShell : public nsStubDocumentObserver {
   void SetResolutionUpdated(bool aUpdated) { mResolutionUpdated = aUpdated; }
 
   /**
+   * Returns true if the resolution has ever been changed by APZ.
+   */
+  bool IsResolutionUpdatedByApz() const { return mResolutionUpdatedByApz; }
+
+  /**
    * Calculate the cumulative scale resolution from this document up to
    * but not including the root document.
    */
@@ -1689,12 +1695,6 @@ class nsIPresShell : public nsStubDocumentObserver {
     FrameMetrics::ScrollOffsetUpdateType mUpdateType;
   };
 
-  // Scroll mode enum for ScrollToVisual(). We'd like to reuse
-  // nsIScrollableFrame::ScrollMode but that would require including
-  // nsIScrollableFrame.h from this header, which quickly sinks everything
-  // into a circular dependency quagmire.
-  enum class ScrollMode { eInstant, eSmooth };
-
   // Ask APZ in the next transaction to scroll to the given visual viewport
   // offset (relative to the document).
   // Use this sparingly, as it will clobber JS-driven scrolling that happens
@@ -1707,7 +1707,7 @@ class nsIPresShell : public nsStubDocumentObserver {
   // Please request APZ review if adding a new call site.
   void ScrollToVisual(const nsPoint& aVisualViewportOffset,
                       FrameMetrics::ScrollOffsetUpdateType aUpdateType,
-                      ScrollMode aMode);
+                      mozilla::ScrollMode aMode);
   void ClearPendingVisualScrollUpdate() {
     mPendingVisualScrollUpdate = mozilla::Nothing();
   }
@@ -2065,6 +2065,9 @@ class nsIPresShell : public nsStubDocumentObserver {
   // Whether the most recent change to the pres shell resolution was
   // originated by the main thread.
   bool mResolutionUpdated : 1;
+
+  // True if the resolution has been ever changed by APZ.
+  bool mResolutionUpdatedByApz : 1;
 
   uint32_t mPresShellId;
 

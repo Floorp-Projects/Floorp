@@ -167,9 +167,17 @@ already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
     return nullptr;
   }
 
+  nsAutoString remoteType;
+  if (XRE_IsContentProcess()) {
+    remoteType = ContentChild::GetSingleton()->GetRemoteType();
+  } else {
+    remoteType = VoidString();
+  }
+
   JS::RootedObject obj(RootingCx());
   actorSvc->ConstructActor(aName, /* aChildSide */ false, mBrowsingContext,
-                           mWindowGlobal->GetDocumentURI(), &obj, aRv);
+                           mWindowGlobal->GetDocumentURI(), remoteType, &obj,
+                           aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

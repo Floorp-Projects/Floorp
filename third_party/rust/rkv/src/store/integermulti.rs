@@ -76,6 +76,10 @@ where
     pub fn delete(&self, writer: &mut Writer, k: K, v: &Value) -> Result<(), StoreError> {
         self.inner.delete(writer, Key::new(&k)?, v)
     }
+
+    pub fn clear(&self, writer: &mut Writer) -> Result<(), StoreError> {
+        self.inner.clear(writer)
+    }
 }
 
 #[cfg(test)]
@@ -110,5 +114,31 @@ mod tests {
 
         test_integer_keys!(u32, std::u32::MIN);
         test_integer_keys!(u32, std::u32::MAX);
+    }
+
+    #[test]
+    fn test_clear() {
+        let root = Builder::new().prefix("test_multi_integer_clear").tempdir().expect("tempdir");
+        fs::create_dir_all(root.path()).expect("dir created");
+        let k = Rkv::new(root.path()).expect("new succeeded");
+        let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+
+        {
+            let mut writer = k.write().expect("writer");
+            s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
+            s.put(&mut writer, 1, &Value::Str("hello1!")).expect("write");
+            s.put(&mut writer, 2, &Value::Str("hello!")).expect("write");
+            writer.commit().expect("committed");
+        }
+
+        {
+            let mut writer = k.write().expect("writer");
+            s.clear(&mut writer).expect("cleared");
+            writer.commit().expect("committed");
+
+            let reader = k.read().expect("reader");
+            assert_eq!(s.get_first(&reader, 1).expect("read"), None);
+            assert_eq!(s.get_first(&reader, 2).expect("read"), None);
+        }
     }
 }

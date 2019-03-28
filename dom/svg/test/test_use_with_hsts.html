@@ -62,7 +62,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
   // use with 'await', to avoid onload callback hell.
   async function LoadIframeAsync(uri) {
     return new Promise(resolve => {
-      iframe.addEventListener('load', resolve, {once: true});
+      iframe.addEventListener("load", resolve, {once: true});
       // Kick off the requested load:
       iframe.src = uri;
     });
@@ -81,7 +81,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
 
     // Ensure reference snapshot looks different from blank snapshot:
     assertSnapshots(refSnapshot, blankSnapshot,
-                    false /*not equal*/, null /*no fuzz*/,
+                    false /* not equal*/, null /* no fuzz*/,
                     "refSnapshot", "blankSnapshot");
 
     // OK, assuming we've got a valid refSnapshot, we can now proceed to
@@ -94,7 +94,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
     await LoadIframeAsync(secureURI);
     let secureSnapshot = snapshotWindow(iframeWin);
     assertSnapshots(secureSnapshot, refSnapshot,
-                    true /*equal*/, null /*no fuzz*/,
+                    true /* equal*/, null /* no fuzz*/,
                     "secureSnapshot", "refSnapshot");
 
     // Load insecure (HTTP) version of testcase (which should get
@@ -110,7 +110,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
     // Capture snapshot of iframe showing upgraded-to-HTTPS version of testcase:
     let upgradedSnapshot = snapshotWindow(iframeWin);
     assertSnapshots(upgradedSnapshot, refSnapshot,
-                    true /*equal*/, null /*no fuzz*/,
+                    true /* equal*/, null /* no fuzz*/,
                     "upgradedSnapshot", "refSnapshot");
 
     // Check that the iframe did actually invoke our postMessage handler (which

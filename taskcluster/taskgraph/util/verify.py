@@ -222,7 +222,7 @@ def verify_always_optimized(task, taskgraph, scratch_pad, graph_config):
 
 @verifications.add('full_task_graph')
 def verify_nightly_no_sccache(task, taskgraph, scratch_pad, graph_config):
-    if task and task.attributes.get('nightly'):
+    if task and any([task.attributes.get('nightly'), task.attributes.get('shippable')]):
         if task.task.get('payload', {}).get('env', {}).get('USE_SCCACHE'):
             raise Exception(
                 'Nightly job {} cannot use sccache'.format(task.label))

@@ -37,14 +37,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=892372
        "orientType baseVal after numeric angle is set");
     is(marker.orientType.animVal, SVGMarkerElement.SVG_MARKER_ORIENT_ANGLE,
        "orientType animVal after numeric angle is set");
-    is(m.orientAngle.baseVal.value, angleVal,
+    is(marker.orientAngle.baseVal.value, angleVal,
        "orientAngle baseVal after numeric angle is set");
-    is(m.orientAngle.animVal.value, angleVal,
+    is(marker.orientAngle.animVal.value, angleVal,
        "orientAngle animVal after numeric angle is set");
   }
 
-  function run()
-  {
+  function run() {
     var m = $("m");
 
     // Testing two conditions:

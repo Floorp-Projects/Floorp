@@ -5,9 +5,8 @@ use ir::context::{BindgenContext, ItemId};
 use ir::traversal::EdgeKind;
 use ir::ty::TypeKind;
 use std::cmp;
-use std::collections::HashMap;
-use std::collections::hash_map::Entry;
 use std::ops;
+use {HashMap, Entry};
 
 /// The result of the `HasVtableAnalysis` for an individual item.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Ord)]
@@ -148,7 +147,7 @@ impl<'ctx> MonotoneFramework for HasVtableAnalysis<'ctx> {
     type Output = HashMap<ItemId, HasVtableResult>;
 
     fn new(ctx: &'ctx BindgenContext) -> HasVtableAnalysis<'ctx> {
-        let have_vtable = HashMap::new();
+        let have_vtable = HashMap::default();
         let dependencies = generate_dependencies(ctx, Self::consider_edge);
 
         HasVtableAnalysis {

@@ -1433,13 +1433,13 @@ nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY,
       return NS_ERROR_INVALID_ARG;
   }
 
-  nsIPresShell::ScrollMode scrollMode;
+  ScrollMode scrollMode;
   switch (aScrollMode) {
     case SCROLL_MODE_INSTANT:
-      scrollMode = nsIPresShell::ScrollMode::eInstant;
+      scrollMode = ScrollMode::eInstant;
       break;
     case SCROLL_MODE_SMOOTH:
-      scrollMode = nsIPresShell::ScrollMode::eSmooth;
+      scrollMode = ScrollMode::eSmoothMsd;
       break;
     default:
       return NS_ERROR_INVALID_ARG;
@@ -3511,14 +3511,14 @@ nsDOMWindowUtils::GetOMTCTransform(Element* aElement,
     return NS_OK;
   }
 
-  MaybeTransform transform;
+  Maybe<Matrix4x4> transform;
   forwarder->GetShadowManager()->SendGetTransform(
       layer->AsShadowableLayer()->GetShadow(), &transform);
-  if (transform.type() != MaybeTransform::TMatrix4x4) {
+  if (transform.isNothing()) {
     return NS_OK;
   }
 
-  Matrix4x4 matrix = transform.get_Matrix4x4();
+  Matrix4x4 matrix = transform.value();
   RefPtr<nsROCSSPrimitiveValue> cssValue =
       nsComputedDOMStyle::MatrixToCSSValue(matrix);
   if (!cssValue) {

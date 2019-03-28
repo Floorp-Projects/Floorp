@@ -10,6 +10,7 @@ jobs:
           type: decision-task
           treeherder-symbol: Nd
           target-tasks-method: nightly_desktop
+          include-push-tasks: true
       run-on-projects:
           - mozilla-central
       when:
@@ -23,6 +24,7 @@ jobs:
           type: decision-task
           treeherder-symbol: Nd-Ln
           target-tasks-method: nightly_linux
+          include-push-tasks: true
       run-on-projects:
           - mozilla-central
       when: []  # never (hook only)
@@ -32,6 +34,7 @@ jobs:
           type: decision-task
           treeherder-symbol: Nd-OSX
           target-tasks-method: nightly_macosx
+          include-push-tasks: true
       run-on-projects:
           - mozilla-central
       when: []  # never (hook only)
@@ -41,6 +44,7 @@ jobs:
           type: decision-task
           treeherder-symbol: Nd-win32
           target-tasks-method: nightly_win32
+          include-push-tasks: true
       run-on-projects:
           - mozilla-central
       when: []  # never (hook only)
@@ -50,6 +54,7 @@ jobs:
           type: decision-task
           treeherder-symbol: Nd-win64
           target-tasks-method: nightly_win64
+          include-push-tasks: true
       run-on-projects:
           - mozilla-central
       when: []  # never (hook only)
@@ -59,6 +64,7 @@ jobs:
           type: decision-task
           treeherder-symbol: Nd-win64-aarch64
           target-tasks-method: nightly_win64_aarch64
+          include-push-tasks: true
       run-on-projects:
           - mozilla-central
       when: []  # never (hook only)
@@ -68,6 +74,7 @@ jobs:
           type: decision-task
           treeherder-symbol: Na
           target-tasks-method: nightly_fennec
+          include-push-tasks: true
       run-on-projects:
           - mozilla-central
       when:
@@ -81,6 +88,8 @@ jobs:
           type: decision-task
           treeherder-symbol: Vg
           target-tasks-method: mochitest_valgrind
+          include-push-tasks: true
+          rebuild-kinds: [test]
       run-on-projects:
           - mozilla-central
       when:

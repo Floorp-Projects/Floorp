@@ -57,7 +57,7 @@ function checkParseOk(spec, expected) {
     return;
 
   // Check each item
-  for (var i=0; i < transformList.numberOfItems; i++) {
+  for (var i = 0; i < transformList.numberOfItems; i++) {
     checkTransform(transformList.getItem(i), expected[i], spec, i);
   }
 }
@@ -70,7 +70,7 @@ function checkTransform(transform, expected, spec, index) {
     "scale": SVGTransform.SVG_TRANSFORM_SCALE,
     "rotate": SVGTransform.SVG_TRANSFORM_ROTATE,
     "skewx": SVGTransform.SVG_TRANSFORM_SKEWX,
-    "skewy": SVGTransform.SVG_TRANSFORM_SKEWY
+    "skewy": SVGTransform.SVG_TRANSFORM_SKEWY,
   };
   var name = "Item " + index + " of '" + spec + "'";
 
@@ -85,12 +85,12 @@ function checkTransform(transform, expected, spec, index) {
   }
 
   // Compare matrix values (roughly)
-  ['a', 'b', 'c', 'd', 'e', 'f'].forEach(function(item) {
+  ["a", "b", "c", "d", "e", "f"].forEach(function(item) {
     var actual = transform.matrix[item];
     var msg = name + " - matrix:" + item;
     const tolerance = 1 / 65535;
     ok(Math.abs(actual - expected[item]) < tolerance,
-       msg + ' - got ' + actual + ', expected ' + expected[item]);
+       msg + " - got " + actual + ", expected " + expected[item]);
   });
 }
 

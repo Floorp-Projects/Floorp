@@ -95,7 +95,7 @@ var pktUI = (function() {
         if (pktApi.getSignupPanelTabTestVariant() == "v2") {
             let site = Services.prefs.getCharPref("extensions.pocket.site");
             openTabWithUrl("https://" + site + "/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext",
-                           Services.scriptSecurityManager.createNullPrincipal({}));
+                           Services.scriptSecurityManager.createNullPrincipal({}), null);
 
             // force the panel closed before it opens
             getPanel().hidePopup();
@@ -323,7 +323,7 @@ var pktUI = (function() {
 
         // Open a new tab with a given url
         var _openTabWithUrlMessageId = "openTabWithUrl";
-        pktUIMessaging.addMessageListener(iframe, _openTabWithUrlMessageId, function(panelId, data, contentPrincipal) {
+        pktUIMessaging.addMessageListener(iframe, _openTabWithUrlMessageId, function(panelId, data, contentPrincipal, csp) {
             try {
               urlSecurityCheck(data.url, contentPrincipal, Services.scriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
             } catch (ex) {
@@ -331,7 +331,7 @@ var pktUI = (function() {
             }
 
             var url = data.url;
-            openTabWithUrl(url, contentPrincipal);
+            openTabWithUrl(url, contentPrincipal, csp);
             pktUIMessaging.sendResponseMessageToPanel(panelId, _openTabWithUrlMessageId, url);
         });
 
@@ -476,7 +476,7 @@ var pktUI = (function() {
      * Open a new tab with a given url and notify the iframe panel that it was opened
      */
 
-    function openTabWithUrl(url, aTriggeringPrincipal) {
+    function openTabWithUrl(url, aTriggeringPrincipal, aCsp) {
         let recentWindow = Services.wm.getMostRecentWindow("navigator:browser");
         if (!recentWindow) {
           Cu.reportError("Pocket: No open browser windows to openTabWithUrl");
@@ -490,6 +490,7 @@ var pktUI = (function() {
             PrivateBrowsingUtils.permanentPrivateBrowsing) {
           recentWindow.openWebLinkIn(url, "tab", {
             triggeringPrincipal: aTriggeringPrincipal,
+            csp: aCsp,
           });
           return;
         }
@@ -498,6 +499,7 @@ var pktUI = (function() {
           if (!PrivateBrowsingUtils.isWindowPrivate(win)) {
             win.openWebLinkIn(url, "tab", {
               triggeringPrincipal: aTriggeringPrincipal,
+              csp: aCsp,
             });
             return;
           }
@@ -506,6 +508,7 @@ var pktUI = (function() {
         // If there were no non-private windows opened already.
         recentWindow.openWebLinkIn(url, "window", {
           triggeringPrincipal: aTriggeringPrincipal,
+          csp: aCsp,
         });
     }
 
@@ -594,7 +597,10 @@ var pktUIMessaging = (function() {
             var payload = JSON.parse(e.target.getAttribute("payload"))[0];
             var panelId = payload.panelId;
             var data = payload.data;
-            callback(panelId, data, nodePrincipal);
+            // After Bug 965637 we can query the csp from the document instead
+            // of the nodePrincipal, we can just use: e.target.ownerDocument.csp;
+            var csp = e.target.nodePrincipal.csp;
+            callback(panelId, data, nodePrincipal, csp);
 
             // Cleanup the element
             e.target.remove();

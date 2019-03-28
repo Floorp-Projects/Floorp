@@ -65,13 +65,14 @@ static_assert(sizeof(CacheIndexHeader::mVersion) +
                   sizeof(CacheIndexHeader),
               "Unexpected sizeof(CacheIndexHeader)!");
 
-#pragma pack(push, 4)
+#pragma pack(push, 1)
 struct CacheIndexRecord {
   SHA1Sum::Hash mHash;
   uint32_t mFrecency;
   OriginAttrsHash mOriginAttrsHash;
   uint16_t mOnStartTime;
   uint16_t mOnStopTime;
+  uint8_t mContentType;
 
   /*
    *    1000 0000 0000 0000 0000 0000 0000 0000 : initialized
@@ -91,6 +92,7 @@ struct CacheIndexRecord {
         mOriginAttrsHash(0),
         mOnStartTime(kIndexTimeNotAvailable),
         mOnStopTime(kIndexTimeNotAvailable),
+        mContentType(nsICacheEntry::CONTENT_TYPE_UNKNOWN),
         mFlags(0) {}
 };
 #pragma pack(pop)
@@ -100,6 +102,7 @@ static_assert(sizeof(CacheIndexRecord::mHash) +
                       sizeof(CacheIndexRecord::mOriginAttrsHash) +
                       sizeof(CacheIndexRecord::mOnStartTime) +
                       sizeof(CacheIndexRecord::mOnStopTime) +
+                      sizeof(CacheIndexRecord::mContentType) +
                       sizeof(CacheIndexRecord::mFlags) ==
                   sizeof(CacheIndexRecord),
               "Unexpected sizeof(CacheIndexRecord)!");
@@ -153,6 +156,7 @@ class CacheIndexEntry : public PLDHashEntryHdr {
     mRec->mOriginAttrsHash = aOther.mRec->mOriginAttrsHash;
     mRec->mOnStartTime = aOther.mRec->mOnStartTime;
     mRec->mOnStopTime = aOther.mRec->mOnStopTime;
+    mRec->mContentType = aOther.mRec->mContentType;
     mRec->mFlags = aOther.mRec->mFlags;
     return *this;
   }
@@ -162,6 +166,7 @@ class CacheIndexEntry : public PLDHashEntryHdr {
     mRec->mOriginAttrsHash = 0;
     mRec->mOnStartTime = kIndexTimeNotAvailable;
     mRec->mOnStopTime = kIndexTimeNotAvailable;
+    mRec->mContentType = nsICacheEntry::CONTENT_TYPE_UNKNOWN;
     mRec->mFlags = 0;
   }
 
@@ -170,6 +175,7 @@ class CacheIndexEntry : public PLDHashEntryHdr {
     MOZ_ASSERT(mRec->mOriginAttrsHash == 0);
     MOZ_ASSERT(mRec->mOnStartTime == kIndexTimeNotAvailable);
     MOZ_ASSERT(mRec->mOnStopTime == kIndexTimeNotAvailable);
+    MOZ_ASSERT(mRec->mContentType == nsICacheEntry::CONTENT_TYPE_UNKNOWN);
     // When we init the entry it must be fresh and may be dirty
     MOZ_ASSERT((mRec->mFlags & ~kDirtyMask) == kFreshMask);
 
@@ -220,6 +226,9 @@ class CacheIndexEntry : public PLDHashEntryHdr {
   void SetOnStopTime(uint16_t aTime) { mRec->mOnStopTime = aTime; }
   uint16_t GetOnStopTime() const { return mRec->mOnStopTime; }
 
+  void SetContentType(uint8_t aType) { mRec->mContentType = aType; }
+  uint8_t GetContentType() const { return mRec->mContentType; }
+
   // Sets filesize in kilobytes.
   void SetFileSize(uint32_t aFileSize) {
     if (aFileSize > kFileSizeMask) {
@@ -254,6 +263,8 @@ class CacheIndexEntry : public PLDHashEntryHdr {
     ptr += sizeof(uint16_t);
     NetworkEndian::writeUint16(ptr, mRec->mOnStopTime);
     ptr += sizeof(uint16_t);
+    *ptr = mRec->mContentType;
+    ptr += sizeof(uint8_t);
     // Dirty and fresh flags should never go to disk, since they make sense only
     // during current session.
     NetworkEndian::writeUint32(ptr, mRec->mFlags & ~(kDirtyMask | kFreshMask));
@@ -271,6 +282,8 @@ class CacheIndexEntry : public PLDHashEntryHdr {
     ptr += sizeof(uint16_t);
     mRec->mOnStopTime = NetworkEndian::readUint16(ptr);
     ptr += sizeof(uint16_t);
+    mRec->mContentType = *ptr;
+    ptr += sizeof(uint8_t);
     mRec->mFlags = NetworkEndian::readUint32(ptr);
   }
 
@@ -279,10 +292,11 @@ class CacheIndexEntry : public PLDHashEntryHdr {
         ("CacheIndexEntry::Log() [this=%p, hash=%08x%08x%08x%08x%08x, fresh=%u,"
          " initialized=%u, removed=%u, dirty=%u, anonymous=%u, "
          "originAttrsHash=%" PRIx64 ", frecency=%u, hasAltData=%u, "
-         "onStartTime=%u, onStopTime=%u, size=%u]",
+         "onStartTime=%u, onStopTime=%u, contentType=%u, size=%u]",
          this, LOGSHA1(mRec->mHash), IsFresh(), IsInitialized(), IsRemoved(),
          IsDirty(), Anonymous(), OriginAttrsHash(), GetFrecency(),
-         GetHasAltData(), GetOnStartTime(), GetOnStopTime(), GetFileSize()));
+         GetHasAltData(), GetOnStartTime(), GetOnStopTime(), GetContentType(),
+         GetFileSize()));
   }
 
   static bool RecordMatchesLoadContextInfo(CacheIndexRecord *aRec,
@@ -365,7 +379,7 @@ class CacheIndexEntryUpdate : public CacheIndexEntry {
   void InitNew() {
     mUpdateFlags = kFrecencyUpdatedMask | kHasAltDataUpdatedMask |
                    kOnStartTimeUpdatedMask | kOnStopTimeUpdatedMask |
-                   kFileSizeUpdatedMask;
+                   kContentTypeUpdatedMask | kFileSizeUpdatedMask;
     CacheIndexEntry::InitNew();
   }
 
@@ -389,6 +403,11 @@ class CacheIndexEntryUpdate : public CacheIndexEntry {
     CacheIndexEntry::SetOnStopTime(aTime);
   }
 
+  void SetContentType(uint8_t aType) {
+    mUpdateFlags |= kContentTypeUpdatedMask;
+    CacheIndexEntry::SetContentType(aType);
+  }
+
   void SetFileSize(uint32_t aFileSize) {
     mUpdateFlags |= kFileSizeUpdatedMask;
     CacheIndexEntry::SetFileSize(aFileSize);
@@ -406,6 +425,9 @@ class CacheIndexEntryUpdate : public CacheIndexEntry {
     }
     if (mUpdateFlags & kOnStopTimeUpdatedMask) {
       aDst->mRec->mOnStopTime = mRec->mOnStopTime;
+    }
+    if (mUpdateFlags & kContentTypeUpdatedMask) {
+      aDst->mRec->mContentType = mRec->mContentType;
     }
     if (mUpdateFlags & kHasAltDataUpdatedMask &&
         ((aDst->mRec->mFlags ^ mRec->mFlags) & kHasAltDataMask)) {
@@ -425,6 +447,7 @@ class CacheIndexEntryUpdate : public CacheIndexEntry {
 
  private:
   static const uint32_t kFrecencyUpdatedMask = 0x00000001;
+  static const uint32_t kContentTypeUpdatedMask = 0x00000002;
   static const uint32_t kFileSizeUpdatedMask = 0x00000004;
   static const uint32_t kHasAltDataUpdatedMask = 0x00000008;
   static const uint32_t kOnStartTimeUpdatedMask = 0x00000010;
@@ -664,6 +687,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
                               const bool *aHasAltData,
                               const uint16_t *aOnStartTime,
                               const uint16_t *aOnStopTime,
+                              const uint8_t *aContentType,
                               const uint32_t *aSize);
 
   // Remove all entries from the index. Called when clearing the whole cache.
@@ -768,6 +792,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
                               const bool *aHasAltData,
                               const uint16_t *aOnStartTime,
                               const uint16_t *aOnStopTime,
+                              const uint8_t *aContentType,
                               const uint32_t *aSize);
 
   // Merge all pending operations from mPendingUpdates into mIndex.

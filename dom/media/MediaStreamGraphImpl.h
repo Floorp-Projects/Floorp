@@ -812,10 +812,11 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
   }
 
   /**
-   * True when we need to do a forced shutdown during application shutdown.
-   * Only set on main thread.
-   * Can be read safely on the main thread, on all other threads mMonitor must
-   * be held.
+   * True when we need to do a forced shutdown, during application shutdown or
+   * when shutting down a non-realtime graph.
+   * Only set on the graph thread.
+   * Can be read safely on the thread currently owning the graph, as indicated
+   * by mLifecycleState.
    */
   bool mForceShutDown;
 

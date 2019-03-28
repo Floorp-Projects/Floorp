@@ -200,8 +200,7 @@ class MediaStreamGraphInitThreadRunnable : public Runnable {
       mDriver->SetPreviousDriver(nullptr);
     } else {
       MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
-      MOZ_ASSERT(mDriver->mGraphImpl->MessagesQueued() ||
-                     mDriver->mGraphImpl->mForceShutDown,
+      MOZ_ASSERT(mDriver->mGraphImpl->MessagesQueued(),
                  "Don't start a graph without messages queued.");
       mDriver->mGraphImpl->SwapMessageQueues();
     }

@@ -41,7 +41,7 @@ def make_repackage_signing_description(config, jobs):
         repack_id = dep_job.task['extra']['repack_id']
         attributes = dep_job.attributes
         build_platform = dep_job.attributes.get('build_platform')
-        is_nightly = dep_job.attributes.get('nightly')
+        is_nightly = dep_job.attributes.get('nightly', dep_job.attributes.get('shippable'))
 
         # Mac & windows
         label = dep_job.label.replace("repackage-", "repackage-signing-")

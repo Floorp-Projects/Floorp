@@ -31,6 +31,7 @@
 #  include "mozilla/Sandbox.h"
 #  include "nsMacUtilsImpl.h"
 #  include <Carbon/Carbon.h>  // for CGSSetDenyWindowServerConnections
+#  include "RDDProcessHost.h"
 #endif
 
 #include "nsDebugImpl.h"
@@ -93,11 +94,6 @@ void CGSShutdownServerConnections();
 };
 
 static void StartRDDMacSandbox() {
-  // Close all current connections to the WindowServer. This ensures that the
-  // Activity Monitor will not label the content process as "Not responding"
-  // because it's not running a native event loop. See bug 1384336.
-  CGSShutdownServerConnections();
-
   // Actual security benefits are only acheived when we additionally deny
   // future connections.
   CGError result = CGSSetDenyWindowServerConnections(true);
@@ -106,19 +102,9 @@ static void StartRDDMacSandbox() {
   Unused << result;
 #  endif
 
-  nsAutoCString appPath;
-  nsMacUtilsImpl::GetAppPath(appPath);
-
   MacSandboxInfo info;
-  info.type = MacSandboxType_Plugin;
-  info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled") ||
-                   PR_GetEnv("MOZ_SANDBOX_LOGGING");
-  info.appPath.assign(appPath.get());
-  // Per Haik, set appBinaryPath and pluginBinaryPath to '/dev/null' to
-  // make sure OSX sandbox policy isn't confused by empty strings for
-  // the paths.
-  info.appBinaryPath.assign("/dev/null");
-  info.pluginInfo.pluginBinaryPath.assign("/dev/null");
+  RDDProcessHost::StaticFillMacSandboxInfo(info);
+
   std::string err;
   bool rv = mozilla::StartMacSandbox(info, err);
   if (!rv) {
@@ -129,11 +115,22 @@ static void StartRDDMacSandbox() {
 #endif
 
 mozilla::ipc::IPCResult RDDParent::RecvInit(
-    const Maybe<FileDescriptor>& aBrokerFd) {
+    const Maybe<FileDescriptor>& aBrokerFd, bool aStartMacSandbox) {
   Unused << SendInitComplete();
 #if defined(MOZ_SANDBOX)
 #  if defined(XP_MACOSX)
-  StartRDDMacSandbox();
+  // Close all current connections to the WindowServer. This ensures that the
+  // Activity Monitor will not label the content process as "Not responding"
+  // because it's not running a native event loop. See bug 1384336.
+  CGSShutdownServerConnections();
+
+  if (aStartMacSandbox) {
+    StartRDDMacSandbox();
+  } else {
+#    ifdef DEBUG
+    AssertMacSandboxEnabled();
+#    endif
+  }
 #  elif defined(XP_LINUX)
   int fd = -1;
   if (aBrokerFd.isSome()) {

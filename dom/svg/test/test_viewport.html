@@ -19,10 +19,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483389
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-function runTest()
-{
+function runTest() {
   var doc = $("svg").contentWindow.document;
-  
+
   var root = doc.documentElement;
   var inner = doc.getElementById("inner");
   var g1 = doc.getElementById("g1");
@@ -58,7 +57,7 @@ function runTest()
   is(g2.nearestViewportElement, outer, "g2.nearestViewportElement");
   is(g3.nearestViewportElement, null, "g3.nearestViewportElement");
   is(symbolRect.nearestViewportElement, sym, "symbolRect.nearestViewportElement");
-  
+
   <!-- farthestViewportElement -->
   is(root.farthestViewportElement, null, "root.farthestViewportElement");
   is(inner.farthestViewportElement, root, "inner.farthestViewportElement");
@@ -67,7 +66,7 @@ function runTest()
   is(g2.farthestViewportElement, outer, "g2.farthestViewportElement");
   is(g3.farthestViewportElement, null, "g3.farthestViewportElement");
   is(symbolRect.farthestViewportElement, root, "symbolRect.farthestViewportElement");
-  
+
   SimpleTest.finish();
 }
 

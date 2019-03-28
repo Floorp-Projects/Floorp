@@ -30,29 +30,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463934
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-function Rect(left, top, width, height)
-{
+function Rect(left, top, width, height) {
   this.left = left;
   this.top = top;
   this.width = width;
   this.height = height;
 }
 
-Rect.prototype.roundOut = function()
-{
+Rect.prototype.roundOut = function() {
   this.width = Math.ceil(this.left + this.width) - Math.floor(this.left);
   this.height = Math.ceil(this.top + this.height) - Math.floor(this.top);
   this.left = Math.floor(this.left);
   this.top = Math.floor(this.top);
-}
+};
 
-function isWithAbsTolerance(a, b, tolerance, message)
-{
+function isWithAbsTolerance(a, b, tolerance, message) {
   ok(tolerance >= Math.abs(a - b), message + " - got " + a + ", expected " + b + " ± " + tolerance);
 }
 
-function runTest()
-{
+function runTest() {
   var bounds;
 
   bounds = document.getElementById("outer-1").getBoundingClientRect();
@@ -120,7 +116,7 @@ function runTest()
   is(rect1Bounds.width, 50, "rect1.getBoundingClientRect().width");
   is(rect1Bounds.height, 50, "rect1.getBoundingClientRect().height");
 
-  rect = new Rect(175 - 50 * sin45, 75 - 50 * sin45, 50 * sin45 * 2, 50 * sin45 * 2);
+  var rect = new Rect(175 - 50 * sin45, 75 - 50 * sin45, 50 * sin45 * 2, 50 * sin45 * 2);
   isWithAbsTolerance(rect2Bounds.left, rect.left, 0.1, "rect2.getBoundingClientRect().left");
   isWithAbsTolerance(rect2Bounds.top, rect.top, 0.1, "rect2.getBoundingClientRect().top");
   isWithAbsTolerance(rect2Bounds.width, rect.width, 0.1, "rect2.getBoundingClientRect().width");
@@ -235,9 +231,9 @@ function runTest()
 
   var nonScalingStrokedLine2Bounds =
     doc.getElementById("nonScalingStrokedLine2").getBoundingClientRect();
-  var capDelta = 5/Math.SQRT2 + 5/Math.SQRT2;
-  rect = new Rect(260 - capDelta, 15 - capDelta, 20/Math.SQRT2 + 2 * capDelta,
-                  20/Math.SQRT2 + 2 * capDelta);
+  var capDelta = 5 / Math.SQRT2 + 5 / Math.SQRT2;
+  rect = new Rect(260 - capDelta, 15 - capDelta, 20 / Math.SQRT2 + 2 * capDelta,
+                  20 / Math.SQRT2 + 2 * capDelta);
   isWithAbsTolerance(nonScalingStrokedLine2Bounds.left, rect.left, 0.1,
                      "nonScalingStrokedLine2.getBoundingClientRect().left");
   isWithAbsTolerance(nonScalingStrokedLine2Bounds.top, rect.top, 0.1,
@@ -249,9 +245,9 @@ function runTest()
 
   var nonScalingStrokedLine3Bounds =
     doc.getElementById("nonScalingStrokedLine3").getBoundingClientRect();
-  var capDelta = 5/Math.SQRT2;
-  rect = new Rect(280 - capDelta, 15 - capDelta, 20/Math.SQRT2 + 2 * capDelta,
-                  20/Math.SQRT2 + 2 * capDelta);
+  capDelta = 5 / Math.SQRT2;
+  rect = new Rect(280 - capDelta, 15 - capDelta, 20 / Math.SQRT2 + 2 * capDelta,
+                  20 / Math.SQRT2 + 2 * capDelta);
   isWithAbsTolerance(nonScalingStrokedLine3Bounds.left, rect.left, 0.1,
                      "nonScalingStrokedLine3.getBoundingClientRect().left");
   isWithAbsTolerance(nonScalingStrokedLine3Bounds.top, rect.top, 0.1,

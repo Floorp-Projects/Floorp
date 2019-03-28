@@ -181,6 +181,52 @@ impl Task for PutTask {
     task_done!(void);
 }
 
+pub struct PutManyTask {
+    callback: AtomicCell<Option<ThreadBoundRefPtr<nsIKeyValueVoidCallback>>>,
+    rkv: Arc<RwLock<Rkv>>,
+    store: SingleStore,
+    pairs: Vec<(nsCString, OwnedValue)>,
+    result: AtomicCell<Option<Result<(), KeyValueError>>>,
+}
+
+impl PutManyTask {
+    pub fn new(
+        callback: RefPtr<nsIKeyValueVoidCallback>,
+        rkv: Arc<RwLock<Rkv>>,
+        store: SingleStore,
+        pairs: Vec<(nsCString, OwnedValue)>,
+    ) -> PutManyTask {
+        PutManyTask {
+            callback: AtomicCell::new(Some(ThreadBoundRefPtr::new(callback))),
+            rkv,
+            store,
+            pairs,
+            result: AtomicCell::default(),
+        }
+    }
+}
+
+impl Task for PutManyTask {
+    fn run(&self) {
+        // We do the work within a closure that returns a Result so we can
+        // use the ? operator to simplify the implementation.
+        self.result.store(Some(|| -> Result<(), KeyValueError> {
+            let env = self.rkv.read()?;
+            let mut writer = env.write()?;
+
+            for (key, value) in self.pairs.iter() {
+                let key = str::from_utf8(key)?;
+                self.store.put(&mut writer, key, &Value::from(value))?;
+            }
+            writer.commit()?;
+
+            Ok(())
+        }()));
+    }
+
+    task_done!(void);
+}
+
 pub struct GetTask {
     callback: AtomicCell<Option<ThreadBoundRefPtr<nsIKeyValueVariantCallback>>>,
     rkv: Arc<RwLock<Rkv>>,
@@ -330,6 +376,45 @@ impl Task for DeleteTask {
                 Err(err) => return Err(KeyValueError::StoreError(err)),
             };
 
+            writer.commit()?;
+
+            Ok(())
+        }()));
+    }
+
+    task_done!(void);
+}
+
+pub struct ClearTask {
+    callback: AtomicCell<Option<ThreadBoundRefPtr<nsIKeyValueVoidCallback>>>,
+    rkv: Arc<RwLock<Rkv>>,
+    store: SingleStore,
+    result: AtomicCell<Option<Result<(), KeyValueError>>>,
+}
+
+impl ClearTask {
+    pub fn new(
+        callback: RefPtr<nsIKeyValueVoidCallback>,
+        rkv: Arc<RwLock<Rkv>>,
+        store: SingleStore,
+    ) -> ClearTask {
+        ClearTask {
+            callback: AtomicCell::new(Some(ThreadBoundRefPtr::new(callback))),
+            rkv,
+            store,
+            result: AtomicCell::default(),
+        }
+    }
+}
+
+impl Task for ClearTask {
+    fn run(&self) {
+        // We do the work within a closure that returns a Result so we can
+        // use the ? operator to simplify the implementation.
+        self.result.store(Some(|| -> Result<(), KeyValueError> {
+            let env = self.rkv.read()?;
+            let mut writer = env.write()?;
+            self.store.clear(&mut writer)?;
             writer.commit()?;
 
             Ok(())

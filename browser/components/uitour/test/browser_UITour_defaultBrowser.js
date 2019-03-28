@@ -22,6 +22,7 @@ MockShellService.prototype = {
   BACKGROUND_CENTER: 3,
   BACKGROUND_FILL: 4,
   BACKGROUND_FIT: 5,
+  BACKGROUND_SPAN: 6,
   setDesktopBackground(aElement, aPosition) {},
   APPLICATION_MAIL: 0,
   APPLICATION_NEWS: 1,

@@ -31,9 +31,8 @@ tests can be found in test_SVGxxxList.xhtml. Anything that can be generalized
 to other list types belongs there.
 */
 
-function main()
-{
-  var g = $('g');
+function main() {
+  var g = $("g");
   var tests =
     [ testConsolidateMatrix,
       testConsolidateMatrixOneElem,
@@ -42,7 +41,7 @@ function main()
       testReadOnly,
       testOrphan,
       testFailedSet,
-      testMutationEvents
+      testMutationEvents,
     ];
   for (var i = 0; i < tests.length; i++) {
     tests[i](g);
@@ -50,8 +49,7 @@ function main()
   SimpleTest.finish();
 }
 
-function testConsolidateMatrix(g)
-{
+function testConsolidateMatrix(g) {
   // This is the example from SVG 1.1 section 7.5
   g.setAttribute("transform",
                  "translate(50 90) rotate(-45) translate(130 160)");
@@ -72,7 +70,7 @@ function testConsolidateMatrix(g)
      "Consolidate return value should be first item in list, not a copy");
   is(consolidated.type, SVGTransform.SVG_TRANSFORM_MATRIX,
      "Consolidated transform not of type matrix");
-  const angle = -Math.PI/4;
+  const angle = -Math.PI / 4;
   roughCmpMatrix(consolidated.matrix,
     [Math.cos(angle), Math.sin(angle),
      -Math.sin(angle), Math.cos(angle),
@@ -102,8 +100,7 @@ function testConsolidateMatrix(g)
      "Changing list doesn't affect return value from consolidate");
 }
 
-function testConsolidateMatrixOneElem(g)
-{
+function testConsolidateMatrixOneElem(g) {
   // Check that even if we only have one item in the list it becomes a matrix
   // transform (as per the spec)
   g.setAttribute("transform", "translate(50 90)");
@@ -126,8 +123,7 @@ function testConsolidateMatrixOneElem(g)
      "Unexpected consolidated matrix value");
 }
 
-function testConsolidateMatrixZeroElem(g)
-{
+function testConsolidateMatrixZeroElem(g) {
   // Check that zero items returns null
   g.setAttribute("transform", "");
   var list = g.transform.baseVal;
@@ -137,8 +133,7 @@ function testConsolidateMatrixZeroElem(g)
      "consolidate() should return null for a zero-length transform list");
 }
 
-function testCreateSVGTransformFromMatrix(g)
-{
+function testCreateSVGTransformFromMatrix(g) {
   var m = createMatrix(1, 2, 3, 4, 5, 6);
 
   // "Creates an SVGTransform object which is initialized to transform of type
@@ -169,34 +164,33 @@ function testCreateSVGTransformFromMatrix(g)
   var exception = null;
   try {
     t = list.createSVGTransformFromMatrix(null);
-  } catch(e) { exception = e; }
+  } catch (e) { exception = e; }
   ok(exception,
     "Failed to throw for null input to createSVGTransformFromMatrix");
   exception = null;
   try {
     t = list.createSVGTransformFromMatrix("undefined");
-  } catch(e) { exception = e; }
+  } catch (e) { exception = e; }
   ok(exception,
     "Failed to throw for string input to createSVGTransformFromMatrix");
   exception = null;
   try {
     t = list.createSVGTransformFromMatrix(SVGMatrix(t));
-  } catch(e) { exception = e; }
+  } catch (e) { exception = e; }
   ok(exception,
     "Failed to throw for bad input to createSVGTransformFromMatrix");
   exception = null;
 }
 
-function testReadOnly(g)
-{
-  var SVG_NS = 'http://www.w3.org/2000/svg';
+function testReadOnly(g) {
+  var SVG_NS = "http://www.w3.org/2000/svg";
 
   // Just some data to work with
   g.setAttribute("transform", "translate(50 90)");
 
   // baseVal / animVal are readonly attributes
   //   Create another (empty) transform list
-  var otherg = document.createElementNS(SVG_NS, 'g');
+  var otherg = document.createElementNS(SVG_NS, "g");
   g.parentNode.appendChild(otherg);
   is(g.transform.baseVal.numberOfItems, 1,
     "Unexpected number of items in transform list before attempting to set");
@@ -255,7 +249,7 @@ function testReadOnly(g)
   threw = false;
   try {
     roTransform.setTranslate(2, 3);
-  } catch(e) {
+  } catch (e) {
     threw = true;
   }
   ok(threw, "Failed to throw when calling setTranslate on read-only"
@@ -264,7 +258,7 @@ function testReadOnly(g)
   threw = false;
   try {
     roTransform.setScale(2, 3);
-  } catch(e) {
+  } catch (e) {
     threw = true;
   }
   ok(threw, "Failed to throw when calling setScale on read-only transform");
@@ -272,7 +266,7 @@ function testReadOnly(g)
   threw = false;
   try {
     roTransform.setRotate(1, 2, 3);
-  } catch(e) {
+  } catch (e) {
     threw = true;
   }
   ok(threw, "Failed to throw when calling setRotate on read-only transform");
@@ -280,7 +274,7 @@ function testReadOnly(g)
   threw = false;
   try {
     roTransform.setSkewX(2);
-  } catch(e) {
+  } catch (e) {
     threw = true;
   }
   ok(threw, "Failed to throw when calling setSkewX on read-only transform");
@@ -288,7 +282,7 @@ function testReadOnly(g)
   threw = false;
   try {
     roTransform.setSkewY(2);
-  } catch(e) {
+  } catch (e) {
     threw = true;
   }
   ok(threw, "Failed to throw when calling setSkewY on read-only transform");
@@ -310,8 +304,7 @@ function testReadOnly(g)
   ok(threw, "Failed to throw exception when modifying read-only matrix");
 }
 
-function testOrphan(g)
-{
+function testOrphan(g) {
   // Although this isn't defined, if a read-only object becomes orphaned
   // (detached from it's parent), then presumably it should become editable
   // again.
@@ -330,26 +323,24 @@ function testOrphan(g)
   var exception = null;
   try {
     roTransform.setTranslate(5, 3);
-  } catch(e) {
+  } catch (e) {
     exception = e;
   }
-  ok(exception===null,
+  ok(exception === null,
      "Unexpected exception " + exception + " modifying orphaned transform");
-  uexception = null;
 
   // So should matrix
   exception = null;
   try {
     roMatrix.a = 1;
-  } catch(e) {
+  } catch (e) {
     exception = e;
   }
-  ok(exception===null,
+  ok(exception === null,
      "Unexpected exception " + exception + " modifying orphaned matrix");
 }
 
-function testFailedSet(g)
-{
+function testFailedSet(g) {
   // Check that a parse failure results in the attribute being empty
 
   // Set initial value
@@ -365,15 +356,14 @@ function testFailedSet(g)
      "Animated transform list should also be empty after setting bad value");
 }
 
-function testMutationEvents(g)
-{
+function testMutationEvents(g) {
   // Check mutation events
 
   // Set initial value
   g.setAttribute("transform", "translate(50 90)");
   var list = g.transform.baseVal;
   is(list.numberOfItems, 1, "Unexpected initial length of list");
-  eventChecker = new MutationEventChecker;
+  var eventChecker = new MutationEventChecker;
   eventChecker.watchAttr(g, "transform");
 
   // consolidate
@@ -390,7 +380,7 @@ function testMutationEvents(g)
 
   // transform.setMatrix
   eventChecker.expect("modify");
-  var mx = $('svg').createSVGMatrix();
+  var mx = $("svg").createSVGMatrix();
   list[0].setMatrix(mx);
   list[0].setMatrix(mx);
 

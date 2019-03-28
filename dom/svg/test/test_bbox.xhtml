@@ -20,12 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=449327
 
 SimpleTest.waitForExplicitFinish();
 
-function run()
-{
+function run() {
   var doc = $("svg").contentDocument;
 
-  function isFuzzy(a, b, error, name)
-  {
+  function isFuzzy(a, b, error, name) {
     ok(!(Math.abs(a - b) > error),
       name + " - got " + a + ", expected " + b + " (within " + error + ")");
   }

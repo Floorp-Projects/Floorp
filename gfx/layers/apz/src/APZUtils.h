@@ -124,26 +124,12 @@ struct TargetConfirmationFlags {
   bool mRequiresTargetConfirmation : 1;
 };
 
-/**
- * An RAII class to temporarily apply async test attributes to the provided
- * AsyncPanZoomController.
- */
-class MOZ_RAII AutoApplyAsyncTestAttributes {
- public:
-  explicit AutoApplyAsyncTestAttributes(AsyncPanZoomController*);
-  ~AutoApplyAsyncTestAttributes();
-
- private:
-  AsyncPanZoomController* mApzc;
-  FrameMetrics mPrevFrameMetrics;
-};
-
-enum class AsyncTransformComponent { eScroll, eZoom };
+enum class AsyncTransformComponent { eLayout, eVisual };
 
 using AsyncTransformComponents = EnumSet<AsyncTransformComponent>;
 
-constexpr AsyncTransformComponents ScrollAndZoom(
-    AsyncTransformComponent::eScroll, AsyncTransformComponent::eZoom);
+constexpr AsyncTransformComponents LayoutAndVisual(
+    AsyncTransformComponent::eLayout, AsyncTransformComponent::eVisual);
 
 namespace apz {
 

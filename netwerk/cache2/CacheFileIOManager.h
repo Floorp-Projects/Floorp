@@ -322,7 +322,8 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
                                    const uint32_t *aFrecency,
                                    const bool *aHasAltData,
                                    const uint16_t *aOnStartTime,
-                                   const uint16_t *aOnStopTime);
+                                   const uint16_t *aOnStopTime,
+                                   const uint8_t *aContentType);
 
   static nsresult UpdateIndexEntry();
 

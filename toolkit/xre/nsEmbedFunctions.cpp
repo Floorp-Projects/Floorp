@@ -504,7 +504,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 
 #  if defined(MOZ_SANDBOX)
   std::string sandboxError;
-  if (!EarlyStartMacSandboxIfEnabled(allArgc, aArgv, sandboxError)) {
+  if (!GeckoChildProcessHost::StartMacSandbox(allArgc, aArgv, sandboxError)) {
     printf_stderr("Sandbox error: %s\n", sandboxError.c_str());
     MOZ_CRASH("Sandbox initialization failed");
   }
