@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1465602
   /** Test for Bug 1465602 **/
 
   SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, go);
+  SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, go);
 
   function go() {
     var ourObj = new TestFunctions();

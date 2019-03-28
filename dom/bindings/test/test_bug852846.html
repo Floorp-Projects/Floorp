@@ -12,14 +12,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=852846
 
   /** Test for Bug 852846 **/
   var elem = document.createElement("div");
-  is(elem.style.color, "", "Shouldn't have color set on HTML element")
+  is(elem.style.color, "", "Shouldn't have color set on HTML element");
   elem.style = "color: green";
-  is(elem.style.color, "green", "Should have color set on HTML element")
+  is(elem.style.color, "green", "Should have color set on HTML element");
 
   elem = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  is(elem.style.color, "", "Shouldn't have color set on SVG element")
+  is(elem.style.color, "", "Shouldn't have color set on SVG element");
   elem.style = "color: green";
-  is(elem.style.color, "green", "Should have color set on SVG element")
+  is(elem.style.color, "green", "Should have color set on SVG element");
   </script>
 </head>
 <body>

@@ -89,7 +89,7 @@ ${asyncFrame}`,
     }
 
     try {
-      t.testThrowCallbackError(function() { Array.indexOf() });
+      t.testThrowCallbackError(function() { Array.indexOf(); });
     } catch (e) {
       ok(e instanceof TypeError, "Should have a TypeError here (3)");
       ok(!(e instanceof DOMException), "Should not have DOMException here (3)");
@@ -150,7 +150,7 @@ ${asyncFrame}`,
     SimpleTest.finish();
   }
 
-  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]},
+  SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]},
                             doTest);
   </script>
 </head>

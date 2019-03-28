@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1295322
 
     SimpleTest.waitForExplicitFinish();
     async function runTests() {
-      await SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]});
+      await SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]});
 
       var t = new TestFunctions();
 

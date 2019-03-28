@@ -20,8 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=775543
 
 /** Test for Bug 775543 **/
 
-function test()
-{
+function test() {
   var a = XPCNativeWrapper(document.getElementById("t").contentWindow.wrappedJSObject.worker);
   isnot(XPCNativeWrapper.unwrap(a), a, "XPCNativeWrapper(Worker) should be an Xray wrapper");
   a.toString();

@@ -23,8 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=787070
 // values should contain the values that the property should have on each of
 // the objects on the prototype chain of obj. A value of undefined signals
 // that the value should not be present on that prototype.
-function checkXrayProperty(obj, name, values)
-{
+function checkXrayProperty(obj, name, values) {
   var instance = obj;
   do {
     var value = values.shift();
@@ -33,7 +32,7 @@ function checkXrayProperty(obj, name, values)
       is(Object.getOwnPropertyDescriptor(obj, name), undefined, "getOwnPropertyDescriptor shouldn't see \"" + name + "\" through Xrays");
       ok(!Object.keys(obj).includes(name), "Enumerating the Xray should not return \"" + name + "\"");
       ok(!Object.getOwnPropertyNames(obj).includes(name),
-         `The Xray's property names should not include ${name}`)
+         `The Xray's property names should not include ${name}`);
     } else {
       ok(obj.hasOwnProperty(name), "hasOwnProperty should see \"" + name + "\" through Xrays");
       var pd = Object.getOwnPropertyDescriptor(obj, name);
@@ -48,19 +47,17 @@ function checkXrayProperty(obj, name, values)
           ok(Object.keys(obj).indexOf("" + name) > -1, "Enumerating the Xray should return \"" + name + "\"");
         }
         ok(Object.getOwnPropertyNames(obj).indexOf("" + name) > -1,
-           `The Xray's property names should include ${name}`)
+           `The Xray's property names should include ${name}`);
       }
     }
   } while ((obj = Object.getPrototypeOf(obj)));
 }
 
-function checkWindowXrayProperty(obj, name, windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetValue)
-{
+function checkWindowXrayProperty(obj, name, windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetValue) {
   checkXrayProperty(obj, name, [ windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetValue ]);
 }
 
-function test()
-{
+function test() {
   // Window
   var win = document.getElementById("t").contentWindow;
   var doc = document.getElementById("t").contentDocument;
@@ -109,10 +106,10 @@ function test()
 
   // WebIDL interface names should be exposed.
   var waivedWin = Cu.waiveXrays(win);
-  checkWindowXrayProperty(win, "Element", Cu.unwaiveXrays(waivedWin.Element))
+  checkWindowXrayProperty(win, "Element", Cu.unwaiveXrays(waivedWin.Element));
 
   // JS standard classes should be exposed.
-  checkWindowXrayProperty(win, "Array", Cu.unwaiveXrays(waivedWin.Array))
+  checkWindowXrayProperty(win, "Array", Cu.unwaiveXrays(waivedWin.Array));
 
   // HTMLDocument
   // Unforgeable properties live on the instance.
@@ -197,21 +194,21 @@ function test()
   var elem = win.document.documentElement;
   var dataset = elem.dataset;
   is(dataset.foo, undefined, "Should not have a 'foo' property");
-  ok(!('foo' in dataset), "Really should not have a 'foo' property");
+  ok(!("foo" in dataset), "Really should not have a 'foo' property");
   is(elem.getAttribute("data-foo"), null,
      "Should not have a 'data-foo' attribute");
   ok(!elem.hasAttribute("data-foo"),
      "Really should not have a 'data-foo' attribute");
   dataset.foo = "bar";
   is(dataset.foo, "bar", "Should now have a 'foo' property");
-  ok('foo' in dataset, "Really should have a 'foo' property");
+  ok("foo" in dataset, "Really should have a 'foo' property");
   is(elem.getAttribute("data-foo"), "bar",
      "Should have a 'data-foo' attribute");
   ok(elem.hasAttribute("data-foo"),
      "Really should have a 'data-foo' attribute");
   delete dataset.foo;
   is(dataset.foo, undefined, "Should not have a 'foo' property again");
-  ok(!('foo' in dataset), "Really should not have a 'foo' property again");
+  ok(!("foo" in dataset), "Really should not have a 'foo' property again");
   is(elem.getAttribute("data-foo"), null,
      "Should not have a 'data-foo' attribute again");
   ok(!elem.hasAttribute("data-foo"),
@@ -220,15 +217,15 @@ function test()
   // Check that deleters work correctly in the non-[OverrideBuiltins] case.
   var storage = win.sessionStorage;
   is(storage.foo, undefined, "Should not have a 'foo' property");
-  ok(!('foo' in storage), "Really should not have a 'foo' property");
+  ok(!("foo" in storage), "Really should not have a 'foo' property");
   is(storage.getItem("foo"), null, "Should not have an item named 'foo'");
   storage.foo = "bar";
   is(storage.foo, "bar", "Should have a 'foo' property");
-  ok('foo' in storage, "Really should have a 'foo' property");
+  ok("foo" in storage, "Really should have a 'foo' property");
   is(storage.getItem("foo"), "bar", "Should have an item named 'foo'");
-  delete storage.foo
+  delete storage.foo;
   is(storage.foo, undefined, "Should not have a 'foo' property again");
-  ok(!('foo' in storage), "Really should not have a 'foo' property again");
+  ok(!("foo" in storage), "Really should not have a 'foo' property again");
   is(storage.getItem("foo"), null, "Should not have an item named 'foo' again");
 
   // Non-static properties are not exposed on interface objects or instances.
@@ -252,9 +249,9 @@ function test()
         "Should see static property on interface objects");
   isnot(Object.getOwnPropertyNames(win.URL).indexOf("createObjectURL"), -1,
         "Should see static property on interface objects");
-  is(new URL('http://example.org').createObjectURL, undefined,
+  is(new URL("http://example.org").createObjectURL, undefined,
      "Shouldn't see static property on instances and prototype ojbects");
-  is(Object.getOwnPropertyDescriptor(new URL('http://example.org'), "createObjectURL"), undefined,
+  is(Object.getOwnPropertyDescriptor(new URL("http://example.org"), "createObjectURL"), undefined,
      "Shouldn't see static property on instances");
   is(Object.getOwnPropertyDescriptor(win.URL.prototype, "createObjectURL"), undefined,
      "Shouldn't see static property on prototype objects");

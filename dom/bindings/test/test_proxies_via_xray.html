@@ -20,8 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1021066
 
 /** Test for Bug 1021066 **/
 
-function test()
-{
+function test() {
   "use strict"; // So we'll get exceptions on sets
   var doc = document.getElementById("t").contentWindow.document;
   ok(!("x" in doc), "Should have an Xray here");
@@ -78,13 +77,13 @@ function test()
 
   // Test non-overridebuiltins binding with named setter
   var s = doc.defaultView.localStorage;
-  s["test_proxies_via_xray"] = "bar";
+  s.test_proxies_via_xray = "bar";
   // Check that this actually got passed on to the underlying object.
-  is(s.wrappedJSObject["test_proxies_via_xray"], "bar",
+  is(s.wrappedJSObject.test_proxies_via_xray, "bar",
      "Set should get forwarded to the underlying object without overridebuiltins");
-  s["test_proxies_via_xray"] = "baz";
+  s.test_proxies_via_xray = "baz";
   // Check that this actually got passed on to the underlying object.
-  is(s.wrappedJSObject["test_proxies_via_xray"], "baz",
+  is(s.wrappedJSObject.test_proxies_via_xray, "baz",
      "Set should get forwarded to the underlying object again without overridebuiltins");
 
   SimpleTest.finish();

@@ -33,14 +33,14 @@ function runTestsForDocument(document, msgSuffix) {
     var egg3 = document.createElement("span");
     egg3.id = "egg3";
 
-    var log = '';
+    var log = "";
     for (var x of basket.childNodes) {
         if (x.nodeType != x.TEXT_NODE)
             log += x.id + ";";
     }
     is(log, "egg0;egg1;egg2;", "'for (x of div.childNodes)' should iterate over child nodes");
 
-    log = '';
+    log = "";
     for (var x of basket.childNodes) {
         if (x.nodeType != x.TEXT_NODE) {
             log += x.id + ";";
@@ -50,7 +50,7 @@ function runTestsForDocument(document, msgSuffix) {
     }
     is(log, "egg0;egg1;egg2;egg3;", "'for (x of div.childNodes)' should see elements added during iteration");
 
-    log = '';
+    log = "";
     basket.appendChild(document.createTextNode("some text"));
     for (var x of basket.children)
         log += x.id + ";";
@@ -61,7 +61,7 @@ function runTestsForDocument(document, msgSuffix) {
         count++;
     is(count, 0, "'for (x of emptyNodeList)' loop should run zero times");
 
-    var log = '';
+    var log = "";
     for (var x of document.querySelectorAll("span"))
         log += x.id + ";";
     is(log, "egg0;egg1;duckling1;egg2;egg3;", "for-of loop should work with a querySelectorAll() NodeList");

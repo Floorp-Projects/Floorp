@@ -20,9 +20,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462428
 /** Test for Bug 462428 **/
 var x = new XMLHttpRequest;
 x.open("GET", "");
-var getter = x.__lookupGetter__('readyState');
+var getter = x.__lookupGetter__("readyState");
 ok(getter !== undefined, "But able to look it up the normal way");
-ok(!x.hasOwnProperty('readyState'), "property should still be on the prototype");
+ok(!x.hasOwnProperty("readyState"), "property should still be on the prototype");
 
 var sawProp = false;
 for (var i in x) {
@@ -35,11 +35,11 @@ ok(sawProp, "property should be enumerable");
 
 is(getter.call(x), 1, "the getter actually works");
 
-Object.getPrototypeOf(x).__defineSetter__('readyState', function() {});
+Object.getPrototypeOf(x).__defineSetter__("readyState", function() {});
 is(getter.call(x), 1, "the getter works after defineSetter");
 
 is(x.responseType, "", "Should have correct responseType up front");
-var setter = x.__lookupSetter__('responseType');
+var setter = x.__lookupSetter__("responseType");
 setter.call(x, "document");
 is(x.responseType, "document", "the setter is bound correctly");
 

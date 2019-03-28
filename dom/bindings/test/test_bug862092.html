@@ -13,12 +13,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=862092
   /** Test for Bug 862092 **/
 
   SimpleTest.waitForExplicitFinish();
-  function runTest()
-  {
+  function runTest() {
     var frameDoc = document.getElementById("f").contentDocument;
     var a = document.createElement("select");
     a.expando = "test";
-    a = frameDoc.adoptNode(a)
+    a = frameDoc.adoptNode(a);
     is(a.expando, "test", "adoptNode needs to preserve expandos");
     SimpleTest.finish();
   }

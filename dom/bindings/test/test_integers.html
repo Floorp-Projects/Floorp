@@ -22,7 +22,7 @@
       todo(false, "WebGL not supported");
       return;
     }
-    var error = gl.getError()
+    var error = gl.getError();
 
     // on the b2g emulator we get GL_INVALID_FRAMEBUFFER_OPERATION
     if (error == 0x0506) // GL_INVALID_FRAMEBUFFER_OPERATION

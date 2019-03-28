@@ -15,9 +15,9 @@ TestInterfaceJS.prototype = {
   contractID: "@mozilla.org/dom/test-interface-js;1",
   QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer, Ci.mozITestInterfaceJS]),
 
-  init: function(win) { this._win = win; },
+  init(win) { this._win = win; },
 
-  __init: function (anyArg, objectArg, dictionaryArg) {
+  __init(anyArg, objectArg, dictionaryArg) {
     this._anyAttr = undefined;
     this._objectAttr = null;
     this._anyArg = anyArg;
@@ -27,116 +27,116 @@ TestInterfaceJS.prototype = {
 
   get anyArg() { return this._anyArg; },
   get objectArg() { return this._objectArg; },
-  getDictionaryArg: function() { return this._dictionaryArg; },
+  getDictionaryArg() { return this._dictionaryArg; },
   get anyAttr() { return this._anyAttr; },
   set anyAttr(val) { this._anyAttr = val; },
   get objectAttr() { return this._objectAttr; },
   set objectAttr(val) { this._objectAttr = val; },
-  getDictionaryAttr: function() { return this._dictionaryAttr; },
-  setDictionaryAttr: function(val) { this._dictionaryAttr = val; },
-  pingPongAny: function(any) { return any; },
-  pingPongObject: function(obj) { return obj; },
-  pingPongObjectOrString: function(objectOrString) { return objectOrString; },
-  pingPongDictionary: function(dict) { return dict; },
-  pingPongDictionaryOrLong: function(dictOrLong) { return dictOrLong.anyMember || dictOrLong; },
-  pingPongRecord: function(rec) { return JSON.stringify(rec); },
-  objectSequenceLength: function(seq) { return seq.length; },
-  anySequenceLength: function(seq) { return seq.length; },
+  getDictionaryAttr() { return this._dictionaryAttr; },
+  setDictionaryAttr(val) { this._dictionaryAttr = val; },
+  pingPongAny(any) { return any; },
+  pingPongObject(obj) { return obj; },
+  pingPongObjectOrString(objectOrString) { return objectOrString; },
+  pingPongDictionary(dict) { return dict; },
+  pingPongDictionaryOrLong(dictOrLong) { return dictOrLong.anyMember || dictOrLong; },
+  pingPongRecord(rec) { return JSON.stringify(rec); },
+  objectSequenceLength(seq) { return seq.length; },
+  anySequenceLength(seq) { return seq.length; },
 
 
-  getCallerPrincipal: function() { return Cu.getWebIDLCallerPrincipal().origin; },
+  getCallerPrincipal() { return Cu.getWebIDLCallerPrincipal().origin; },
 
-  convertSVS: function(svs) { return svs; },
+  convertSVS(svs) { return svs; },
 
-  pingPongUnion: function(x) { return x; },
-  pingPongUnionContainingNull: function(x) { return x; },
-  pingPongNullableUnion: function(x) { return x; },
-  returnBadUnion: function(x) { return 3; },
+  pingPongUnion(x) { return x; },
+  pingPongUnionContainingNull(x) { return x; },
+  pingPongNullableUnion(x) { return x; },
+  returnBadUnion(x) { return 3; },
 
-  testSequenceOverload: function(arg) {},
-  testSequenceUnion: function(arg) {},
+  testSequenceOverload(arg) {},
+  testSequenceUnion(arg) {},
 
-  testThrowError: function() {
+  testThrowError() {
     throw new this._win.Error("We are an Error");
   },
 
-  testThrowDOMException: function() {
+  testThrowDOMException() {
     throw new this._win.DOMException("We are a DOMException",
                                      "NotSupportedError");
   },
 
-  testThrowTypeError: function() {
+  testThrowTypeError() {
     throw new this._win.TypeError("We are a TypeError");
   },
 
-  testThrowNsresult: function() {
+  testThrowNsresult() {
       throw Cr.NS_BINDING_ABORTED;
   },
 
-  testThrowNsresultFromNative: function(x) {
+  testThrowNsresultFromNative(x) {
     // We want to throw an exception that we generate from an nsresult thrown
     // by a C++ component.
     Services.netUtils.notImplemented();
   },
 
-  testThrowCallbackError: function(callback) {
+  testThrowCallbackError(callback) {
     callback();
   },
 
-  testThrowXraySelfHosted: function() {
+  testThrowXraySelfHosted() {
     this._win.Array.indexOf();
   },
 
-  testThrowSelfHosted: function() {
+  testThrowSelfHosted() {
     Array.indexOf();
   },
 
-  testPromiseWithThrowingChromePromiseInit: function() {
+  testPromiseWithThrowingChromePromiseInit() {
     return new this._win.Promise(function() {
       noSuchMethodExistsYo1();
-    })
+    });
   },
 
-  testPromiseWithThrowingContentPromiseInit: function(func) {
+  testPromiseWithThrowingContentPromiseInit(func) {
       return new this._win.Promise(func);
   },
 
-  testPromiseWithDOMExceptionThrowingPromiseInit: function() {
+  testPromiseWithDOMExceptionThrowingPromiseInit() {
     return new this._win.Promise(() => {
       throw new this._win.DOMException("We are a second DOMException",
                                        "NotFoundError");
-    })
+    });
   },
 
-  testPromiseWithThrowingChromeThenFunction: function() {
+  testPromiseWithThrowingChromeThenFunction() {
     return this._win.Promise.resolve(5).then(function() {
       noSuchMethodExistsYo2();
     });
   },
 
-  testPromiseWithThrowingContentThenFunction: function(func) {
+  testPromiseWithThrowingContentThenFunction(func) {
     return this._win.Promise.resolve(10).then(func);
   },
 
-  testPromiseWithDOMExceptionThrowingThenFunction: function() {
+  testPromiseWithDOMExceptionThrowingThenFunction() {
     return this._win.Promise.resolve(5).then(() => {
       throw new this._win.DOMException("We are a third DOMException",
                                        "NetworkError");
     });
   },
 
-  testPromiseWithThrowingChromeThenable: function() {
+  testPromiseWithThrowingChromeThenable() {
     var thenable =  {
-      then: function() {
-        noSuchMethodExistsYo3()
-      }
+      then() {
+        noSuchMethodExistsYo3();
+      },
     };
     return new this._win.Promise(function(resolve) {
-      resolve(thenable)
+      resolve(thenable);
     });
   },
 
-  testPromiseWithThrowingContentThenable: function(thenable) {
+  testPromiseWithThrowingContentThenable(thenable) {
     // Waive Xrays on the thenable, because we're calling resolve() in the
     // chrome compartment, so that's the compartment the "then" property get
     // will happen in, and if we leave the Xray in place the function-valued
@@ -144,15 +144,15 @@ TestInterfaceJS.prototype = {
     return this._win.Promise.resolve(Cu.waiveXrays(thenable));
   },
 
-  testPromiseWithDOMExceptionThrowingThenable: function() {
+  testPromiseWithDOMExceptionThrowingThenable() {
     var thenable =  {
       then: () => {
         throw new this._win.DOMException("We are a fourth DOMException",
                                          "TypeMismatchError");
-      }
+      },
     };
     return new this._win.Promise(function(resolve) {
-      resolve(thenable)
+      resolve(thenable);
     });
   },
 
@@ -162,7 +162,7 @@ TestInterfaceJS.prototype = {
 
   set onsomething(val) {
     this.__DOM_IMPL__.setEventHandler("onsomething", val);
-  }
+  },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceJS])
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceJS]);
