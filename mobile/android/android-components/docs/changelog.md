@@ -15,6 +15,13 @@ permalink: /changelog/
 * **browser-awesomebar**
    * `DefaultSuggestionViewHolder` now centers titles if no description is provided by the suggestion.
 
+* **browser-engine**
+  * Added `automaticFontSizeAdjustment` engine setting for automatic font size adjustment, 
+  in line with system accessibility settings. The default is `true`.
+  ```kotlin
+  GeckoEngine(runtime, DefaultSettings(automaticFontSizeAdjustment = true))
+  ```
+
 * **feature-awesomebar**
   * Added optional `icon` parameter to `SearchSuggestionProvider`
 
