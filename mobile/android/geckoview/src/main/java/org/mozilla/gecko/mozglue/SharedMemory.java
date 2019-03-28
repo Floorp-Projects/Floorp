@@ -85,16 +85,17 @@ public class SharedMemory implements Parcelable {
     }
 
     public void flush() {
-        if (mBackedFile == null) {
-            close();
+        if (!mIsMapped) {
+            return;
         }
+
+        unmap(mHandle, mSize);
+        mHandle = 0;
+        mIsMapped = false;
     }
 
     public void close() {
-        if (mIsMapped) {
-            unmap(mHandle, mSize);
-            mHandle = 0;
-        }
+        flush();
 
         if (mDescriptor != null) {
             try {
