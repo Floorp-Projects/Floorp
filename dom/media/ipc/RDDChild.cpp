@@ -28,7 +28,7 @@ RDDChild::RDDChild(RDDProcessHost* aHost) : mHost(aHost), mRDDReady(false) {
 
 RDDChild::~RDDChild() { MOZ_COUNT_DTOR(RDDChild); }
 
-bool RDDChild::Init() {
+bool RDDChild::Init(bool aStartMacSandbox) {
   Maybe<FileDescriptor> brokerFd;
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
@@ -46,7 +46,7 @@ bool RDDChild::Init() {
   }
 #endif  // XP_LINUX && MOZ_SANDBOX
 
-  SendInit(brokerFd);
+  SendInit(brokerFd, aStartMacSandbox);
 
 #ifdef MOZ_GECKO_PROFILER
   Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));

@@ -11,9 +11,18 @@
 
 #include "RDDChild.h"
 
+#if defined(XP_MACOSX)
+#  include "mozilla/Sandbox.h"
+#  include "nsMacUtilsImpl.h"
+#endif
+
 namespace mozilla {
 
 using namespace ipc;
+
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+bool RDDProcessHost::sLaunchWithMacSandbox = false;
+#endif
 
 RDDProcessHost::RDDProcessHost(Listener* aListener)
     : GeckoChildProcessHost(GeckoProcessType_RDD),
@@ -24,6 +33,17 @@ RDDProcessHost::RDDProcessHost(Listener* aListener)
       mShutdownRequested(false),
       mChannelClosed(false) {
   MOZ_COUNT_CTOR(RDDProcessHost);
+
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+  // sLaunchWithMacSandbox is statically initialized to false.
+  // Once we've set it to true due to the pref, avoid checking the
+  // pref on subsequent calls. As a result, changing the earlyinit
+  // pref requires restarting the browser to take effect.
+  if (!sLaunchWithMacSandbox) {
+    sLaunchWithMacSandbox =
+        Preferences::GetBool("security.sandbox.rdd.mac.earlyinit");
+  }
+#endif
 }
 
 RDDProcessHost::~RDDProcessHost() { MOZ_COUNT_DTOR(RDDProcessHost); }
@@ -128,7 +148,15 @@ void RDDProcessHost::InitAfterConnect(bool aSucceeded) {
         mRDDChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
     MOZ_ASSERT(rv);
 
-    if (!mRDDChild->Init()) {
+    bool startMacSandbox = false;
+
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+    // If the sandbox was started at launch time,
+    // do not start the sandbox again.
+    startMacSandbox = !sLaunchWithMacSandbox;
+#endif
+
+    if (!mRDDChild->Init(startMacSandbox)) {
       KillHard("ActorInitFailed");
     }
   }
@@ -210,5 +238,24 @@ void RDDProcessHost::DestroyProcess() {
   MessageLoop::current()->PostTask(
       NS_NewRunnableFunction("DestroyProcessRunnable", [this] { Destroy(); }));
 }
+
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+/* static */
+void RDDProcessHost::StaticFillMacSandboxInfo(MacSandboxInfo& aInfo) {
+  GeckoChildProcessHost::StaticFillMacSandboxInfo(aInfo);
+  if (!aInfo.shouldLog && PR_GetEnv("MOZ_SANDBOX_RDD_LOGGING")) {
+    aInfo.shouldLog = true;
+  }
+}
+
+void RDDProcessHost::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
+  RDDProcessHost::StaticFillMacSandboxInfo(aInfo);
+}
+
+/* static */
+MacSandboxType RDDProcessHost::GetMacSandboxType() {
+  return GeckoChildProcessHost::GetDefaultMacSandboxType();
+}
+#endif
 
 }  // namespace mozilla
