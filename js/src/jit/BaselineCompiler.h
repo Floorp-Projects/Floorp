@@ -317,8 +317,8 @@ class BaselineCodeGen {
   void pushScriptScopeArg();
 
   // Pushes a bytecode operand as argument for a VM function.
-  void pushUint8BytecodeOperandArg();
-  void pushUint16BytecodeOperandArg();
+  void pushUint8BytecodeOperandArg(Register scratch);
+  void pushUint16BytecodeOperandArg(Register scratch);
 
   void loadResumeIndexBytecodeOperand(Register dest);
   void loadInt32LengthBytecodeOperand(Register dest);
