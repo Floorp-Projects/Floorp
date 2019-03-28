@@ -8,7 +8,6 @@
 #define vm_ProxyObject_h
 
 #include "js/Proxy.h"
-#include "vm/ShapedObject.h"
 
 namespace js {
 
@@ -16,14 +15,14 @@ namespace js {
  * This is the base class for the various kinds of proxy objects.  It's never
  * instantiated.
  *
- * Proxy objects use ShapedObject::shape_ primarily to record flags.  Property
+ * Proxy objects use JSObject::shape_ primarily to record flags.  Property
  * information, &c. is all dynamically computed.
  *
  * There is no class_ member to force specialization of JSObject::is<T>().
  * The implementation in JSObject is incorrect for proxies since it doesn't
  * take account of the handler type.
  */
-class ProxyObject : public ShapedObject {
+class ProxyObject : public JSObject {
   // GetProxyDataLayout computes the address of this field.
   detail::ProxyDataLayout data;
 
