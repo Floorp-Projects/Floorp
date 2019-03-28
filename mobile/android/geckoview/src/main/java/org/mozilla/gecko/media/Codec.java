@@ -90,8 +90,8 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             }
 
             Sample dequeued = mDequeuedSamples.remove();
-            dequeued.info = sample.info;
-            dequeued.cryptoInfo = sample.cryptoInfo;
+            dequeued.setBufferInfo(sample.info);
+            dequeued.setCryptoInfo(sample.cryptoInfo);
             queueSample(dequeued);
 
             sample.dispose();
