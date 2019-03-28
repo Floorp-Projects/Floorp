@@ -260,6 +260,15 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
 
       test = aSubtests[testIndex];
 
+      let recognizedProps = ["file", "prefs", "dp_suppression", "onload"];
+      for (let prop in test) {
+        if (!recognizedProps.includes(prop)) {
+          SimpleTest.ok(false, "Subtest " + test.file + " has unrecognized property '" + prop + "'");
+          setTimeout(function() { advanceSubtestExecution(); }, 0);
+          return;
+        }
+      }
+
       if (onlyOneSubtest && onlyOneSubtest != test.file) {
         SimpleTest.ok(true, "Skipping " + test.file + " because only " + onlyOneSubtest + " is being run");
         setTimeout(function() { advanceSubtestExecution(); }, 0);
