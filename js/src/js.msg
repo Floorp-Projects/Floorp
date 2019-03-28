@@ -562,6 +562,7 @@ MSG_DEF(JSMSG_TYPEDOBJECT_NOT_CONSTRUCTIBLE, 0, JSEXN_TYPEERR, "not constructibl
 
 // Array
 MSG_DEF(JSMSG_TOO_LONG_ARRAY,         0, JSEXN_TYPEERR, "Too long array")
+MSG_DEF(JSMSG_DEPRECATED_ARRAY_METHOD, 2, JSEXN_WARN, "Array.{0} is deprecated; use Array.prototype.{1} instead")
 
 // Typed array
 MSG_DEF(JSMSG_BAD_INDEX,               0, JSEXN_RANGEERR, "invalid or out-of-range index")
