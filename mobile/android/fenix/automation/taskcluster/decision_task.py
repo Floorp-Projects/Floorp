@@ -10,7 +10,6 @@ from __future__ import print_function
 
 import argparse
 import os
-import sys
 import taskcluster
 
 from lib import build_variants
@@ -45,14 +44,13 @@ def pr_or_push():
     if SKIP_TASKS_TRIGGER in PR_TITLE:
         print("Pull request title contains", SKIP_TASKS_TRIGGER)
         print("Exit")
-        exit(0)
+        return {}
 
     print("Fetching build variants from gradle")
     variants = build_variants.from_gradle()
 
     if len(variants) == 0:
-        print("Could not get build variants from gradle")
-        sys.exit(2)
+        raise ValueError("Could not get build variants from gradle")
 
     print("Got variants: {}".format(' '.join(variants)))
 
