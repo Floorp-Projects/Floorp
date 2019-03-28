@@ -926,12 +926,6 @@ class RTCPeerConnection {
                                        "NotSupportedError");
     }
 
-    if (!sdp && action != Ci.IPeerConnection.kActionRollback) {
-      throw new this._win.DOMException(
-          "Empty or null SDP provided to setLocalDescription",
-          "InvalidParameterError");
-    }
-
     // The fippo butter finger filter AKA non-ASCII chars
     // Note: SDP allows non-ASCII character in the subject (who cares?)
     // eslint-disable-next-line no-control-regex
