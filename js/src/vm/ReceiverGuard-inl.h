@@ -11,7 +11,6 @@
 
 #include "builtin/TypedObject.h"
 #include "vm/JSObject.h"
-#include "vm/ShapedObject.h"
 
 namespace js {
 
@@ -23,7 +22,7 @@ ReceiverGuard::ReceiverGuard(JSObject* obj) : group(nullptr), shape(nullptr) {
       return;
     }
   }
-  shape = obj->as<ShapedObject>().shape();
+  shape = obj->as<JSObject>().shape();
 }
 
 MOZ_ALWAYS_INLINE
