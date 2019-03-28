@@ -15,7 +15,7 @@ extern "C" {
 
 JNIEXPORT
 void JNICALL
-Java_org_mozilla_gecko_media_SharedMemBuffer_nativeReadFromDirectBuffer(
+Java_org_mozilla_gecko_media_SampleBuffer_nativeReadFromDirectBuffer(
     JNIEnv* jenv, jclass, jobject src, jlong dest, jint offset, jint size) {
   uint8_t* from = static_cast<uint8_t*>(jenv->GetDirectBufferAddress(src));
   if (from == nullptr) {
@@ -36,7 +36,7 @@ Java_org_mozilla_gecko_media_SharedMemBuffer_nativeReadFromDirectBuffer(
 
 JNIEXPORT
 void JNICALL
-Java_org_mozilla_gecko_media_SharedMemBuffer_nativeWriteToDirectBuffer(
+Java_org_mozilla_gecko_media_SampleBuffer_nativeWriteToDirectBuffer(
     JNIEnv* jenv, jclass, jlong src, jobject dest, jint offset, jint size) {
   uint8_t* from = reinterpret_cast<uint8_t*>(src);
   if (from == nullptr) {
