@@ -303,12 +303,10 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   mozilla::gfx::BackendType GetFallbackCanvasBackend() {
     return mFallbackCanvasBackend;
   }
+
   /*
    * Font bits
    */
-
-  virtual void SetupClusterBoundaries(gfxTextRun* aTextRun,
-                                      const char16_t* aString);
 
   /**
    * Fill aListOfFonts with the results of querying the list of font names
