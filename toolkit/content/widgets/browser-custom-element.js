@@ -218,8 +218,6 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
     this._innerWindowID = null;
 
-    this._browsingContextId = null;
-
     this._lastSearchString = null;
 
     this._controller = null;
@@ -553,11 +551,7 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
   }
 
   get browsingContext() {
-    if (!this.isRemoteBrowser) {
-      return this.docShell.browsingContext;
-    }
-
-    return BrowsingContext.get(this._browsingContextId);
+    return this.frameLoader.browsingContext;
   }
   /**
    * Note that this overrides webNavigation on XULFrameElement, and duplicates the return value for the non-remote case
@@ -1306,7 +1300,6 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
     switch (aMessage.name) {
       case "Browser:Init":
         this._outerWindowID = data.outerWindowID;
-        this._browsingContextId = data.browsingContextId;
         break;
       case "DOMTitleChanged":
         this._contentTitle = data.title;
