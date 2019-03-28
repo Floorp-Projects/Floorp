@@ -278,6 +278,12 @@ def stlport_cppflags(value, ndk):
     # functions, locale-specific C library functions, multibyte support,
     # etc.
     return [
+        # You'd think we'd want to use -stdlib=libc++, but this doesn't work
+        # (cf. https://bugzilla.mozilla.org/show_bug.cgi?id=1510897#c2)
+        # Using -stdlib=libc++ and removing some of the -I below also doesn't
+        # work because not everything that is in cxx_include comes in the C++
+        # header directory that comes with clang.
+        '-stdlib=libstdc++',
         '-I%s' % cxx_include,
         '-I%s' % os.path.join(ndk, 'sources', 'android', 'support', 'include'),
         '-I%s' % cxxabi_include]
