@@ -22,6 +22,7 @@ struct mozilla::detail::VectorTesting {
   static void testExtractOrCopyRawBuffer();
   static void testReplaceRawBuffer();
   static void testInsert();
+  static void testErase();
   static void testPodResizeToFit();
 };
 
@@ -135,6 +136,8 @@ struct S {
     moveCount++;
     return *this;
   }
+
+  bool operator==(const S& rhs) const { return j == rhs.j && *k == *rhs.k; }
 
   S(const S&) = delete;
   S& operator=(const S&) = delete;
@@ -437,6 +440,97 @@ void mozilla::detail::VectorTesting::testInsert() {
   MOZ_RELEASE_ASSERT(S::destructCount == 1);
 }
 
+void mozilla::detail::VectorTesting::testErase() {
+  S::resetCounts();
+
+  Vector<S, 8> vec;
+  MOZ_RELEASE_ASSERT(vec.reserve(8));
+  for (size_t i = 0; i < 7; i++) {
+    vec.infallibleEmplaceBack(i, i * i);
+  }
+
+  // vec: [0, 1, 2, 3, 4, 5, 6]
+  MOZ_RELEASE_ASSERT(vec.length() == 7);
+  MOZ_ASSERT(vec.reserved() == 8);
+  MOZ_RELEASE_ASSERT(S::constructCount == 7);
+  MOZ_RELEASE_ASSERT(S::moveCount == 0);
+  MOZ_RELEASE_ASSERT(S::destructCount == 0);
+  S::resetCounts();
+
+  vec.erase(&vec[4]);
+  // vec: [0, 1, 2, 3, 5, 6]
+  MOZ_RELEASE_ASSERT(vec.length() == 6);
+  MOZ_ASSERT(vec.reserved() == 8);
+  MOZ_RELEASE_ASSERT(S::constructCount == 0);
+  // 5 and 6 should have been moved into 4 and 5.
+  MOZ_RELEASE_ASSERT(S::moveCount == 2);
+  MOZ_RELEASE_ASSERT(S::destructCount == 1);
+  MOZ_RELEASE_ASSERT(vec[4] == S(5, 5 * 5));
+  MOZ_RELEASE_ASSERT(vec[5] == S(6, 6 * 6));
+  S::resetCounts();
+
+  vec.erase(&vec[3], &vec[5]);
+  // vec: [0, 1, 2, 6]
+  MOZ_RELEASE_ASSERT(vec.length() == 4);
+  MOZ_ASSERT(vec.reserved() == 8);
+  MOZ_RELEASE_ASSERT(S::constructCount == 0);
+  // 6 should have been moved into 3.
+  MOZ_RELEASE_ASSERT(S::moveCount == 1);
+  MOZ_RELEASE_ASSERT(S::destructCount == 2);
+  MOZ_RELEASE_ASSERT(vec[3] == S(6, 6 * 6));
+
+  S s2(2, 2 * 2);
+  S::resetCounts();
+
+  vec.eraseIfEqual(s2);
+  // vec: [0, 1, 6]
+  MOZ_RELEASE_ASSERT(vec.length() == 3);
+  MOZ_ASSERT(vec.reserved() == 8);
+  MOZ_RELEASE_ASSERT(S::constructCount == 0);
+  // 6 should have been moved into 2.
+  MOZ_RELEASE_ASSERT(S::moveCount == 1);
+  MOZ_RELEASE_ASSERT(S::destructCount == 1);
+  MOZ_RELEASE_ASSERT(vec[2] == S(6, 6 * 6));
+  S::resetCounts();
+
+  // Predicate to find one element.
+  vec.eraseIf([](const S& s) { return s.j == 1; });
+  // vec: [0, 6]
+  MOZ_RELEASE_ASSERT(vec.length() == 2);
+  MOZ_ASSERT(vec.reserved() == 8);
+  MOZ_RELEASE_ASSERT(S::constructCount == 0);
+  // 6 should have been moved into 1.
+  MOZ_RELEASE_ASSERT(S::moveCount == 1);
+  MOZ_RELEASE_ASSERT(S::destructCount == 1);
+  MOZ_RELEASE_ASSERT(vec[1] == S(6, 6 * 6));
+  S::resetCounts();
+
+  // Generic predicate that flags everything.
+  vec.eraseIf([](auto&&) { return true; });
+  // vec: []
+  MOZ_RELEASE_ASSERT(vec.length() == 0);
+  MOZ_ASSERT(vec.reserved() == 8);
+  MOZ_RELEASE_ASSERT(S::constructCount == 0);
+  MOZ_RELEASE_ASSERT(S::moveCount == 0);
+  MOZ_RELEASE_ASSERT(S::destructCount == 2);
+
+  for (size_t i = 0; i < 7; i++) {
+    vec.infallibleEmplaceBack(i, i * i);
+  }
+  // vec: [0, 1, 2, 3, 4, 5, 6]
+  MOZ_RELEASE_ASSERT(vec.length() == 7);
+  S::resetCounts();
+
+  // Predicate that flags all even numbers.
+  vec.eraseIf([](const S& s) { return s.j % 2 == 0; });
+  // vec: [1 (was 0), 3 (was 1), 5 (was 2)]
+  MOZ_RELEASE_ASSERT(vec.length() == 3);
+  MOZ_ASSERT(vec.reserved() == 8);
+  MOZ_RELEASE_ASSERT(S::constructCount == 0);
+  MOZ_RELEASE_ASSERT(S::moveCount == 3);
+  MOZ_RELEASE_ASSERT(S::destructCount == 4);
+}
+
 void mozilla::detail::VectorTesting::testPodResizeToFit() {
   // Vectors not using inline storage realloc capacity to exact length.
   Vector<int, 0> v1;
@@ -576,6 +670,7 @@ int main() {
   VectorTesting::testExtractOrCopyRawBuffer();
   VectorTesting::testReplaceRawBuffer();
   VectorTesting::testInsert();
+  VectorTesting::testErase();
   VectorTesting::testPodResizeToFit();
   TestVectorBeginNonNull();
 }
