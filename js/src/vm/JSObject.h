@@ -78,7 +78,8 @@ bool SetImmutablePrototype(JSContext* cx, JS::HandleObject obj,
  *
  * NOTE: Some operations can change the contents of an object (including class)
  *       in-place so avoid assuming an object with same pointer has same class
- *       as before. - JSObject::swap()
+ *       as before.
+ *       - JSObject::swap()
  */
 class JSObject : public js::gc::Cell {
  protected:
@@ -157,9 +158,6 @@ class JSObject : public js::gc::Cell {
 
   JS::Compartment* compartment() const { return group_->compartment(); }
   JS::Compartment* maybeCompartment() const { return compartment(); }
-
-  inline js::Shape* maybeShape() const;
-  inline js::Shape* ensureShape(JSContext* cx);
 
   void initShape(js::Shape* shape) {
     // Note: JSObject::zone() uses the group and we require it to be
