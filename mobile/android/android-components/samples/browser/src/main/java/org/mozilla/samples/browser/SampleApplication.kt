@@ -5,6 +5,8 @@
 package org.mozilla.samples.browser
 
 import android.app.Application
+import mozilla.components.support.base.facts.Facts
+import mozilla.components.support.base.facts.processor.LogFactProcessor
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 
@@ -15,5 +17,8 @@ class SampleApplication : Application() {
         super.onCreate()
 
         Log.addSink(AndroidLogSink())
+
+        Facts.registerProcessor(
+            LogFactProcessor())
     }
 }
