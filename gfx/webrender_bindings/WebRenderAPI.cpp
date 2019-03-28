@@ -165,11 +165,11 @@ void TransactionBuilder::RemovePipeline(PipelineId aPipelineId) {
 }
 
 void TransactionBuilder::SetDisplayList(
-    gfx::Color aBgColor, Epoch aEpoch, mozilla::LayerSize aViewportSize,
+    gfx::Color aBgColor, Epoch aEpoch, const wr::LayoutSize& aViewportSize,
     wr::WrPipelineId pipeline_id, const wr::LayoutSize& content_size,
     wr::BuiltDisplayListDescriptor dl_descriptor, wr::Vec<uint8_t>& dl_data) {
   wr_transaction_set_display_list(mTxn, aEpoch, ToColorF(aBgColor),
-                                  aViewportSize.width, aViewportSize.height,
+                                  aViewportSize,
                                   pipeline_id, content_size, dl_descriptor,
                                   &dl_data.inner);
 }
