@@ -622,7 +622,7 @@ class TypedObject : public JSObject {
                                          Value* vp);
 
   Shape** addressOfShapeFromGC() {
-    return shapeRef().unsafeUnbarrieredForTracing();
+    return shape_.unsafeUnbarrieredForTracing();
   }
 };
 
