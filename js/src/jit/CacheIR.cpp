@@ -2652,7 +2652,7 @@ bool GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   env = env_;
   while (env) {
     if (NeedEnvironmentShapeGuard(env)) {
-      writer.guardShape(lastObjId, env->shape());
+      writer.guardShape(lastObjId, env->maybeShape());
     }
 
     if (env == holder) {
@@ -2802,7 +2802,7 @@ bool BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   env = env_;
   while (env) {
     if (NeedEnvironmentShapeGuard(env) && !env->is<GlobalObject>()) {
-      writer.guardShape(lastObjId, env->shape());
+      writer.guardShape(lastObjId, env->maybeShape());
     }
 
     if (env == holder) {
@@ -4399,8 +4399,9 @@ bool SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup,
 
   // In addition to guarding for type barrier, we need this group guard (or
   // shape guard below) to ensure class is unchanged. This group guard may also
-  // imply maybeInterpretedFunction() for the special-case of function
+  // implay maybeInterpretedFunction() for the special-case of function
   // prototype property set.
+  MOZ_ASSERT(obj->is<ShapedObject>());
   writer.guardGroup(objId, oldGroup);
 
   // If we are adding a property to an object for which the new script

@@ -48,7 +48,7 @@ class TemplateObject {
   // The group and shape should not change. This is true for template objects
   // because they're never exposed to arbitrary script.
   inline gc::Cell* group() const;
-  inline gc::Cell* shape() const;
+  inline gc::Cell* maybeShape() const;
 
   // Some TypedObjec methods that can be called off-thread.
   inline uint32_t getInlineTypedObjectSize() const;

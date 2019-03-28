@@ -21,6 +21,7 @@
 #include "js/Value.h"
 #include "vm/JSObject.h"
 #include "vm/Shape.h"
+#include "vm/ShapedObject.h"
 #include "vm/StringType.h"
 
 namespace js {
@@ -458,7 +459,7 @@ enum class ShouldUpdateTypes { Update, DontUpdate };
  * Slots and elements may both be non-empty. The slots may be either names or
  * indexes; no indexed property will be in both the slots and elements.
  */
-class NativeObject : public JSObject {
+class NativeObject : public ShapedObject {
  protected:
   /* Slots for object properties. */
   js::HeapSlot* slots_;

@@ -31,7 +31,22 @@
 #include "vm/JSAtom-inl.h"
 #include "vm/ObjectOperations-inl.h"  // js::MaybeHasInterestingSymbolProperty
 #include "vm/Realm-inl.h"
+#include "vm/ShapedObject-inl.h"
 #include "vm/TypeInference-inl.h"
+
+inline js::Shape* JSObject::maybeShape() const {
+  if (!is<js::ShapedObject>()) {
+    return nullptr;
+  }
+
+  return as<js::ShapedObject>().shape();
+}
+
+inline js::Shape* JSObject::ensureShape(JSContext* cx) {
+  js::Shape* shape = maybeShape();
+  MOZ_ASSERT(shape);
+  return shape;
+}
 
 inline void JSObject::finalize(js::FreeOp* fop) {
   js::probes::FinalizeObject(this);
@@ -215,7 +230,10 @@ inline js::GlobalObject& JSObject::nonCCWGlobal() const {
 
 inline bool JSObject::hasAllFlags(js::BaseShape::Flag flags) const {
   MOZ_ASSERT(flags);
-  return shape()->hasAllObjectFlags(flags);
+  if (js::Shape* shape = maybeShape()) {
+    return shape->hasAllObjectFlags(flags);
+  }
+  return false;
 }
 
 inline bool JSObject::nonProxyIsExtensible() const {
