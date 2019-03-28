@@ -50,11 +50,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   }
   void SetCurrentWindowGlobal(WindowGlobalParent* aGlobal);
 
-  WindowGlobalParent* GetEmbedderWindowGlobal() const {
-    return mEmbedderWindowGlobal;
-  }
-  void SetEmbedderWindowGlobal(WindowGlobalParent* aGlobal);
-
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
@@ -100,7 +95,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // All live window globals within this browsing context.
   nsTHashtable<nsRefPtrHashKey<WindowGlobalParent>> mWindowGlobals;
   RefPtr<WindowGlobalParent> mCurrentWindowGlobal;
-  RefPtr<WindowGlobalParent> mEmbedderWindowGlobal;
 
   // Generation information for each content process which has interacted with
   // this CanonicalBrowsingContext, by ChildID.

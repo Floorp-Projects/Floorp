@@ -13,12 +13,9 @@
 #include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/LocationBinding.h"
 #include "mozilla/dom/WindowBinding.h"
-#include "mozilla/dom/WindowGlobalChild.h"
-#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -204,27 +201,6 @@ void BrowsingContext::SetDocShell(nsIDocShell* aDocShell) {
   MOZ_RELEASE_ASSERT(nsDocShell::Cast(aDocShell)->GetBrowsingContext() == this);
   mDocShell = aDocShell;
   mIsInProcess = true;
-}
-
-void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
-  mEmbedderElement = aEmbedder;
-
-  // Notify the parent process of the embedding status. We don't need to do
-  // this when clearing our embedder, as we're being destroyed either way.
-  if (mEmbedderElement) {
-    nsCOMPtr<nsPIDOMWindowInner> embedderGlobal =
-        do_QueryInterface(mEmbedderElement->GetOwnerGlobal());
-    RefPtr<WindowGlobalChild> wgc = embedderGlobal->GetWindowGlobalChild();
-
-    // If we're in-process, synchronously perform the update to ensure we don't
-    // get out of sync.
-    // XXX(nika): This is super gross, and I don't like it one bit.
-    if (RefPtr<WindowGlobalParent> wgp = wgc->GetParentActor()) {
-      Canonical()->SetEmbedderWindowGlobal(wgp);
-    } else {
-      wgc->SendDidEmbedBrowsingContext(this);
-    }
-  }
 }
 
 void BrowsingContext::Attach(bool aFromIPC) {
@@ -529,8 +505,7 @@ bool BrowsingContext::GetUserGestureActivation() {
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren, mParent, mGroup,
-                                  mEmbedderElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren, mParent, mGroup)
   if (XRE_IsParentProcess()) {
     CanonicalBrowsingContext::Cast(tmp)->Unlink();
   }
@@ -538,8 +513,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren, mParent, mGroup,
-                                    mEmbedderElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren, mParent, mGroup)
   if (XRE_IsParentProcess()) {
     CanonicalBrowsingContext::Cast(tmp)->Traverse(cb);
   }

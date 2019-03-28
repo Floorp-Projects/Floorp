@@ -99,20 +99,6 @@ void CanonicalBrowsingContext::SetCurrentWindowGlobal(
   mCurrentWindowGlobal = aGlobal;
 }
 
-void CanonicalBrowsingContext::SetEmbedderWindowGlobal(
-    WindowGlobalParent* aGlobal) {
-  MOZ_RELEASE_ASSERT(aGlobal, "null embedder");
-  if (RefPtr<BrowsingContext> parent = GetParent()) {
-    MOZ_RELEASE_ASSERT(aGlobal->BrowsingContext() == parent,
-                       "Embedder has incorrect browsing context");
-  } else {
-    MOZ_RELEASE_ASSERT(aGlobal->IsInProcess(),
-                       "Toplevel must have a parent-process embedder");
-  }
-
-  mEmbedderWindowGlobal = aGlobal;
-}
-
 bool CanonicalBrowsingContext::ValidateTransaction(
     const Transaction& aTransaction, ContentParent* aProcess) {
   // Check that the correct process is performing sets for transactions with
@@ -134,14 +120,12 @@ JSObject* CanonicalBrowsingContext::WrapObject(
 void CanonicalBrowsingContext::Traverse(
     nsCycleCollectionTraversalCallback& cb) {
   CanonicalBrowsingContext* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindowGlobals, mCurrentWindowGlobal,
-                                    mEmbedderWindowGlobal);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindowGlobals);
 }
 
 void CanonicalBrowsingContext::Unlink() {
   CanonicalBrowsingContext* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowGlobals, mCurrentWindowGlobal,
-                                  mEmbedderWindowGlobal);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowGlobals);
 }
 
 void CanonicalBrowsingContext::NotifyStartDelayedAutoplayMedia() {
