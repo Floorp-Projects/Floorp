@@ -151,7 +151,7 @@ void CacheIRSpewer::valueProperty(const char* name, const Value& v) {
     }
   } else if (v.isObject()) {
     JSObject& object = v.toObject();
-    j.formatProperty("value", "%p (shape: %p)", &object, object.maybeShape());
+    j.formatProperty("value", "%p (shape: %p)", &object, object.shape());
     if (NativeObject* nobj =
             object.isNative() ? &object.as<NativeObject>() : nullptr) {
       j.beginListProperty("flags");
