@@ -297,20 +297,6 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
             rt_asm_flags = " ".join(asm[1:] + android_flags)
 
             cmake_args += [
-                "-DBUILTINS_%s_ANDROID=1" % target,
-                "-DBUILTINS_%s_CMAKE_ASM_FLAGS=%s" % (target, rt_asm_flags),
-                "-DBUILTINS_%s_CMAKE_CXX_FLAGS=%s" % (target, rt_cxx_flags),
-                "-DBUILTINS_%s_CMAKE_C_FLAGS=%s" % (target, rt_c_flags),
-                "-DBUILTINS_%s_CMAKE_EXE_LINKER_FLAGS=%s" % (target, android_link_flags),
-                "-DBUILTINS_%s_CMAKE_SHARED_LINKER_FLAGS=%s" % (target, android_link_flags),
-                "-DBUILTINS_%s_CMAKE_SYSROOT=%s" % (target, sysroot_dir),
-                "-DRUNTIMES_%s_ANDROID=1" % target,
-                "-DRUNTIMES_%s_CMAKE_ASM_FLAGS=%s" % (target, rt_asm_flags),
-                "-DRUNTIMES_%s_CMAKE_CXX_FLAGS=%s" % (target, rt_cxx_flags),
-                "-DRUNTIMES_%s_CMAKE_C_FLAGS=%s" % (target, rt_c_flags),
-                "-DRUNTIMES_%s_CMAKE_EXE_LINKER_FLAGS=%s" % (target, android_link_flags),
-                "-DRUNTIMES_%s_CMAKE_SHARED_LINKER_FLAGS=%s" % (target, android_link_flags),
-                "-DRUNTIMES_%s_CMAKE_SYSROOT=%s" % (target, sysroot_dir),
                 "-DRUNTIMES_%s_COMPILER_RT_BUILD_PROFILE=ON" % target,
                 "-DRUNTIMES_%s_COMPILER_RT_BUILD_SANITIZERS=ON" % target,
                 "-DRUNTIMES_%s_SANITIZER_ALLOW_CXXABI=OFF" % target,
@@ -318,8 +304,20 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
                 "-DRUNTIMES_%s_COMPILER_RT_INCLUDE_TESTS=OFF" % target,
                 "-DRUNTIMES_%s_LLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF" % target,
                 "-DRUNTIMES_%s_LLVM_INCLUDE_TESTS=OFF" % target,
-                "-DRUNTIMES_%s_ANDROID_NATIVE_API_LEVEL=%s" % (target, api_level),
             ]
+
+            for kind in ('BUILTINS', 'RUNTIMES'):
+                for var, arg in (
+                        ('ANDROID', '1'),
+                        ('CMAKE_ASM_FLAGS', rt_asm_flags),
+                        ('CMAKE_CXX_FLAGS', rt_cxx_flags),
+                        ('CMAKE_C_FLAGS', rt_c_flags),
+                        ('CMAKE_EXE_LINKER_FLAGS', android_link_flags),
+                        ('CMAKE_SHARED_LINKER_FLAGS', android_link_flags),
+                        ('CMAKE_SYSROOT', sysroot_dir),
+                        ('ANDROID_NATIVE_API_LEVEL', api_level),
+                ):
+                    cmake_args += ['-D%s_%s_%s=%s' % (kind, target, var, arg)]
 
     cmake_args += cmake_base_args(
         cc, cxx, asm, ld, ar, ranlib, libtool, inst_dir)
