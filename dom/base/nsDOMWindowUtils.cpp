@@ -3769,7 +3769,7 @@ nsDOMWindowUtils::GetFrameUniformityTestData(
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::XpconnectArgument(nsIDOMWindowUtils* aThis) {
+nsDOMWindowUtils::XpconnectArgument(nsISupports* aObj) {
   // Do nothing.
   return NS_OK;
 }
