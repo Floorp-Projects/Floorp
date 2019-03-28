@@ -17,7 +17,7 @@ interface nsISimpleEnumerator;
  * listeners.
  */
 
-[scriptable, uuid(D07F5192-E3D1-11d2-8ACD-00105A1B8860)]
+[scriptable, builtinclass, uuid(D07F5192-E3D1-11d2-8ACD-00105A1B8860)]
 interface nsIObserverService : nsISupports 
 {
 
