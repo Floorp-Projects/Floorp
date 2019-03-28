@@ -24,7 +24,7 @@
 #include "nsIHttpChannel.h"
 #include "nsDeque.h"
 
-class nsPIDOMWindowInner;
+class nsIGlobalObject;
 class nsICookieSettings;
 
 namespace mozilla {
@@ -81,8 +81,8 @@ class EventSource final : public DOMEventTargetHelper {
   void Close();
 
  private:
-  EventSource(nsPIDOMWindowInner* aOwnerWindow,
-              nsICookieSettings* aCookieSettings, bool aWithCredentials);
+  EventSource(nsIGlobalObject* aGlobal, nsICookieSettings* aCookieSettings,
+              bool aWithCredentials);
   virtual ~EventSource();
   // prevent bad usage
   EventSource(const EventSource& x) = delete;
