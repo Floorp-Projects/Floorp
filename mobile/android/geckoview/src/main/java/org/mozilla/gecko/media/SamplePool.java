@@ -38,7 +38,7 @@ final class SamplePool {
             }
 
             if (mBufferless) {
-                return Sample.create();
+                return new Sample();
             } else {
                 return allocateSharedMemorySample(size);
             }
@@ -52,7 +52,7 @@ final class SamplePool {
                 throw new UnsupportedOperationException(e);
             }
 
-            return Sample.create(shm);
+            return new Sample(new SharedMemBuffer(shm));
         }
 
         private synchronized void recycle(final Sample recycled) {
