@@ -114,23 +114,21 @@ class BlockedSiteChild extends ActorChild {
     // Set safe browsing advisory link.
     let advisoryUrl = Services.prefs.getCharPref(
       "browser.safebrowsing.provider." + provider + ".advisoryURL", "");
+    let advisoryDesc = content.document.getElementById("advisoryDescText");
     if (!advisoryUrl) {
-      let el = content.document.getElementById("advisoryDesc");
-      el.remove();
+      advisoryDesc.remove();
       return;
     }
 
     let advisoryLinkText = Services.prefs.getCharPref(
       "browser.safebrowsing.provider." + provider + ".advisoryName", "");
     if (!advisoryLinkText) {
-      let el = content.document.getElementById("advisoryDesc");
-      el.remove();
+      advisoryDesc.remove();
       return;
     }
 
-    let anchorEl = content.document.getElementById("advisory_provider");
-    anchorEl.setAttribute("href", advisoryUrl);
-    anchorEl.textContent = advisoryLinkText;
+    content.document.l10n.setAttributes(advisoryDesc, "safeb-palm-advisory-desc", {"advisoryname": advisoryLinkText});
+    content.document.getElementById("advisory_provider").setAttribute("href", advisoryUrl);
   }
 
   onClick(event) {
