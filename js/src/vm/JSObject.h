@@ -33,6 +33,10 @@ namespace gc {
 class RelocationOverlay;
 }  // namespace gc
 
+namespace jit {
+class CacheIRCompiler;
+}
+
 /****************************************************************************/
 
 class GlobalObject;
@@ -63,31 +67,23 @@ bool SetImmutablePrototype(JSContext* cx, JS::HandleObject obj,
  * - The |group_| member stores the group of the object, which contains its
  *   prototype object, its class and the possible types of its properties.
  *
- * - The |shapeOrExpando_| member points to (an optional) guard object that JIT
- *   may use to optimize. The pointed-to object dictates the constraints
- *   imposed on the JSObject:
- *      nullptr
- *          - Safe value if this field is not needed.
- *      js::Shape
- *          - All objects that might point |shapeOrExpando_| to a js::Shape
- *            must follow the rules specified on js::ShapedObject.
- *      JSObject
- *          - Implies nothing about the current object or target object. Either
- *            of which may mutate in place. Store a JSObject* only to save
- *            space, not to guard on.
+ * - The |shape_| member stores the current 'shape' of the object, which
+ *   describes the current layout and set of property keys of the object. The
+ *   |shape_| field must be non-null.
  *
- * NOTE: The JIT may check |shapeOrExpando_| pointer value without ever
- *       inspecting |group_| or the class.
+ * NOTE: shape()->getObjectClass() must equal getClass().
+ *
+ * NOTE: The JIT may check |shape_| pointer value without ever inspecting
+ *       |group_| or the class.
  *
  * NOTE: Some operations can change the contents of an object (including class)
  *       in-place so avoid assuming an object with same pointer has same class
- *       as before.
- *       - JSObject::swap()
+ *       as before. - JSObject::swap()
  */
 class JSObject : public js::gc::Cell {
  protected:
   js::GCPtrObjectGroup group_;
-  void* shapeOrExpando_;
+  void* shape_;
 
  private:
   friend class js::Shape;
@@ -164,6 +160,24 @@ class JSObject : public js::gc::Cell {
 
   inline js::Shape* maybeShape() const;
   inline js::Shape* ensureShape(JSContext* cx);
+
+  void initShape(js::Shape* shape) {
+    // Note: JSObject::zone() uses the group and we require it to be
+    // initialized before the shape.
+    MOZ_ASSERT(zone() == shape->zone());
+    shapeRef().init(shape);
+  }
+  void setShape(js::Shape* shape) {
+    MOZ_ASSERT(zone() == shape->zone());
+    shapeRef() = shape;
+  }
+  js::Shape* shape() const { return shapeRef(); }
+
+  void traceShape(JSTracer* trc) { TraceEdge(trc, shapePtr(), "shape"); }
+
+  static JSObject* fromShapeFieldPointer(uintptr_t p) {
+    return reinterpret_cast<JSObject*>(p - JSObject::offsetOfShape());
+  }
 
   enum GenerateShape { GENERATE_NONE, GENERATE_SHAPE };
 
@@ -555,16 +569,30 @@ class JSObject : public js::gc::Cell {
       4 * sizeof(void*) + 16 * sizeof(JS::Value);
 
  protected:
+  // ShapedObjects treat the |shapeOrExpando_| field as a GCPtrShape to
+  // ensure barriers are called. Use these instead of accessing
+  // |shapeOrExpando_| directly.
+  MOZ_ALWAYS_INLINE const js::GCPtrShape& shapeRef() const {
+    return *reinterpret_cast<const js::GCPtrShape*>(&(this->shape_));
+  }
+  MOZ_ALWAYS_INLINE js::GCPtrShape& shapeRef() {
+    return *reinterpret_cast<js::GCPtrShape*>(&(this->shape_));
+  }
+
+  // Used for GC tracing and Shape::listp
+  MOZ_ALWAYS_INLINE js::GCPtrShape* shapePtr() {
+    return reinterpret_cast<js::GCPtrShape*>(&(this->shape_));
+  }
+
   // JIT Accessors.
   //
   // To help avoid writing Spectre-unsafe code, we only allow MacroAssembler
   // to call the method below.
   friend class js::jit::MacroAssembler;
+  friend class js::jit::CacheIRCompiler;
 
   static constexpr size_t offsetOfGroup() { return offsetof(JSObject, group_); }
-  static constexpr size_t offsetOfShapeOrExpando() {
-    return offsetof(JSObject, shapeOrExpando_);
-  }
+  static constexpr size_t offsetOfShape() { return offsetof(JSObject, shape_); }
 
  private:
   JSObject() = delete;

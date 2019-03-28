@@ -4159,13 +4159,7 @@ static bool UnwrappedObjectsHaveSameShape(JSContext* cx, unsigned argc,
   RootedObject obj1(cx, UncheckedUnwrap(&args[0].toObject()));
   RootedObject obj2(cx, UncheckedUnwrap(&args[1].toObject()));
 
-  if (!obj1->is<ShapedObject>() || !obj2->is<ShapedObject>()) {
-    JS_ReportErrorASCII(cx, "object does not have a Shape");
-    return false;
-  }
-
-  args.rval().setBoolean(obj1->as<ShapedObject>().shape() ==
-                         obj2->as<ShapedObject>().shape());
+  args.rval().setBoolean(obj1->shape() == obj2->shape());
   return true;
 }
 

@@ -31,16 +31,9 @@
 #include "vm/JSAtom-inl.h"
 #include "vm/ObjectOperations-inl.h"  // js::MaybeHasInterestingSymbolProperty
 #include "vm/Realm-inl.h"
-#include "vm/ShapedObject-inl.h"
 #include "vm/TypeInference-inl.h"
 
-inline js::Shape* JSObject::maybeShape() const {
-  if (!is<js::ShapedObject>()) {
-    return nullptr;
-  }
-
-  return as<js::ShapedObject>().shape();
-}
+inline js::Shape* JSObject::maybeShape() const { return shape(); }
 
 inline js::Shape* JSObject::ensureShape(JSContext* cx) {
   js::Shape* shape = maybeShape();

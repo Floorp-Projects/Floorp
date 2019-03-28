@@ -1100,7 +1100,7 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
            Address(obj, JSObject::offsetOfGroup()));
 
   if (gc::Cell* shape = templateObj.maybeShape()) {
-    storePtr(ImmGCPtr(shape), Address(obj, ShapedObject::offsetOfShape()));
+    storePtr(ImmGCPtr(shape), Address(obj, JSObject::offsetOfShape()));
   }
 
   if (templateObj.isNative()) {
@@ -3481,7 +3481,7 @@ void MacroAssembler::debugAssertObjHasFixedSlots(Register obj,
                                                  Register scratch) {
 #ifdef DEBUG
   Label hasFixedSlots;
-  loadPtr(Address(obj, ShapedObject::offsetOfShape()), scratch);
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
   branchTest32(Assembler::NonZero,
                Address(scratch, Shape::offsetOfImmutableFlags()),
                Imm32(Shape::fixedSlotsMask()), &hasFixedSlots);
