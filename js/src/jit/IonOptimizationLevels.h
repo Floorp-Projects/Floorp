@@ -17,7 +17,31 @@
 namespace js {
 namespace jit {
 
-enum class OptimizationLevel : uint8_t { Normal, Wasm, Count, DontCompile };
+// [SMDOC] Ion Optimization Levels
+//
+// Ion can do aggressive inlining, but inlining a lot of code will have a
+// negative effect on compilation time and memory usage. It also means we spend
+// more time in the slower Baseline code while compiling the Ion code
+// off-thread or after an invalidation.
+//
+// To address this, Ion consists of two tiers:
+//
+// * Normal: the first tier (warm-up threshold of 1,000) only inlines small
+//           functions one level deep. This tier also has recompile checks to
+//           recompile the script when it becomes very hot.
+//
+// * Full: the second tier (warm-up threshold of 100,000) is only used for very
+//         hot code so we can afford inlining a lot more code.
+//
+// See MRecompileCheck::RecompileCheckType for more info.
+
+enum class OptimizationLevel : uint8_t {
+  Normal,
+  Full,
+  Wasm,
+  Count,
+  DontCompile
+};
 
 #ifdef JS_JITSPEW
 inline const char* OptimizationLevelString(OptimizationLevel level) {
@@ -26,6 +50,8 @@ inline const char* OptimizationLevelString(OptimizationLevel level) {
       return "Optimization_DontCompile";
     case OptimizationLevel::Normal:
       return "Optimization_Normal";
+    case OptimizationLevel::Full:
+      return "Optimization_Full";
     case OptimizationLevel::Wasm:
       return "Optimization_Wasm";
     case OptimizationLevel::Count:;
@@ -124,6 +150,8 @@ class OptimizationInfo {
     switch (level_) {
       case OptimizationLevel::Normal:
         return JitOptions.normalIonWarmUpThreshold;
+      case OptimizationLevel::Full:
+        return JitOptions.fullIonWarmUpThreshold;
       case OptimizationLevel::DontCompile:
       case OptimizationLevel::Wasm:
       case OptimizationLevel::Count:
@@ -161,6 +189,7 @@ class OptimizationInfo {
         inliningRecompileThresholdFactor_(0) {}
 
   void initNormalOptimizationInfo();
+  void initFullOptimizationInfo();
   void initWasmOptimizationInfo();
 
   OptimizationLevel level() const { return level_; }
@@ -175,6 +204,8 @@ class OptimizationInfo {
 
   uint32_t compilerWarmUpThreshold(JSScript* script,
                                    jsbytecode* pc = nullptr) const;
+
+  uint32_t recompileWarmUpThreshold(JSScript* script, jsbytecode* pc) const;
 
   bool gvnEnabled() const { return gvn_ && !JitOptions.disableGvn; }
 
