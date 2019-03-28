@@ -712,6 +712,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // True if we are using the minimum scale size instead of ICB for scroll port.
   bool mIsUsingMinimumScaleSize : 1;
 
+  // True if the minimum scale size has been changed since the last reflow.
+  bool mMinimumScaleSizeChanged : 1;
+
   mozilla::layout::ScrollVelocityQueue mVelocityQueue;
 
  protected:

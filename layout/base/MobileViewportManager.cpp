@@ -325,9 +325,9 @@ void MobileViewportManager::UpdateResolution(
     MOZ_ASSERT(aDisplayWidthChangeRatio.isNothing());
 
     // We try to scale down the contents only IF the document has no
-    // initial-scale AND IF it's the initial paint AND IF it's not restored
-    // documents.
-    if (mIsFirstPaint && !mRestoreResolution &&
+    // initial-scale AND IF it's not restored documents AND IF the resolution
+    // has never been changed by APZ.
+    if (!mRestoreResolution && !mPresShell->IsResolutionUpdatedByApz() &&
         !aViewportInfo.IsDefaultZoomValid()) {
       if (zoom != intrinsicScale) {
         newZoom = Some(intrinsicScale);
