@@ -203,6 +203,9 @@ where
             Arg::with_name("no-prepend-enum-name")
                 .long("no-prepend-enum-name")
                 .help("Do not prepend the enum name to bitfield or constant variants."),
+            Arg::with_name("no-include-path-detection")
+                .long("no-include-path-detection")
+                .help("Do not try to detect default include paths"),
             Arg::with_name("unstable-rust")
                 .long("unstable-rust")
                 .help("Generate unstable Rust code (deprecated; use --rust-target instead).")
@@ -277,6 +280,10 @@ where
                        Useful when debugging bindgen, using C-Reduce, or when \
                        filing issues. The resulting file will be named \
                        something like `__bindgen.i` or `__bindgen.ii`."),
+            Arg::with_name("no-record-matches")
+                .long("no-record-matches")
+                .help("Do not record matching items in the regex sets. \
+                      This disables reporting of unused items."),
             Arg::with_name("no-rustfmt-bindings")
                 .long("no-rustfmt-bindings")
                 .help("Do not format the generated bindings with rustfmt."),
@@ -315,6 +322,10 @@ where
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
+            Arg::with_name("enable-function-attribute-detection")
+                .long("enable-function-attribute-detection")
+                .help("Enables detecting unexposed attributes in functions (slow).
+                       Used to generate #[must_use] annotations."),
         ]) // .args()
         .get_matches_from(args);
 
@@ -439,6 +450,10 @@ where
         builder = builder.prepend_enum_name(false);
     }
 
+    if matches.is_present("no-include-path-detection") {
+        builder = builder.detect_include_paths(false);
+    }
+
     if matches.is_present("time-phases") {
         builder = builder.time_phases(true);
     }
@@ -482,6 +497,10 @@ where
 
     if matches.is_present("enable-cxx-namespaces") {
         builder = builder.enable_cxx_namespaces();
+    }
+
+    if matches.is_present("enable-function-attribute-detection") {
+        builder = builder.enable_function_attribute_detection();
     }
 
     if matches.is_present("disable-name-namespacing") {
@@ -581,6 +600,10 @@ where
 
     if matches.is_present("dump-preprocessed-input") {
         builder.dump_preprocessed_input()?;
+    }
+
+    if matches.is_present("no-record-matches") {
+        builder = builder.record_matches(false);
     }
 
     let no_rustfmt_bindings = matches.is_present("no-rustfmt-bindings");

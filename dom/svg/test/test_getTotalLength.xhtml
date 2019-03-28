@@ -22,20 +22,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1474284
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-function expectValue(id, expected)
-{
+function expectValue(id, expected) {
   isfuzzy(document.getElementById(id).getTotalLength(),
           expected, expected * 0.02,
           `getTotalLength() on element id="${id}" returned the wrong value`);
 }
 
-function run()
-{
+function run() {
   expectValue("path1", 55.19);
   SimpleTest.finish();
 }
 
-window.addEventListener("load", run, false);
+window.addEventListener("load", run);
 </script>
 </pre>
 </body>

@@ -730,7 +730,7 @@ impl Type {
             }
         }
 
-        let layout = ty.fallible_layout().ok();
+        let layout = ty.fallible_layout(ctx).ok();
         let cursor = ty.declaration();
         let mut name = cursor.spelling();
 
@@ -780,7 +780,7 @@ impl Type {
                    opaque type instead."
             );
             return Ok(
-                ParseResult::New(Opaque::from_clang_ty(&canonical_ty), None),
+                ParseResult::New(Opaque::from_clang_ty(&canonical_ty, ctx), None),
             );
         }
 
@@ -912,7 +912,7 @@ impl Type {
                                                from class template or base \
                                                specifier, using opaque blob"
                                         );
-                                        let opaque = Opaque::from_clang_ty(ty);
+                                        let opaque = Opaque::from_clang_ty(ty, ctx);
                                         return Ok(
                                             ParseResult::New(opaque, None),
                                         );

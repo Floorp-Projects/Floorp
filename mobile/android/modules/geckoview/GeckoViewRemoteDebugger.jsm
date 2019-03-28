@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyGetter(this, "DebuggerServer", () => {
 });
 
 XPCOMUtils.defineLazyGetter(this, "SocketListener", () => {
-  let { SocketListener } = require("devtools/shared/security/socket");
+  const { SocketListener } = require("devtools/shared/security/socket");
   return SocketListener;
 });
 

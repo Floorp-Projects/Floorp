@@ -415,6 +415,8 @@ nsGNOMEShellService::SetDesktopBackground(dom::Element *aElement,
     options.AssignLiteral("zoom");
   else if (aPosition == BACKGROUND_FIT)
     options.AssignLiteral("scaled");
+  else if (aPosition == BACKGROUND_SPAN)
+    options.AssignLiteral("spanned");
   else
     options.AssignLiteral("centered");
 

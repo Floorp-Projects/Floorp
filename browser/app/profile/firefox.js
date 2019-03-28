@@ -477,9 +477,6 @@ pref("browser.tabs.showAudioPlayingIcon", true);
 // This should match Chromium's audio indicator delay.
 pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
 
-// New, experimental, tab open/close animations.
-pref("browser.tabs.newanimations", false);
-
 // Pref to control whether we use separate privileged content processes.
 #if defined(NIGHTLY_BUILD) && !defined(MOZ_ASAN)
 pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
@@ -1056,6 +1053,8 @@ pref("security.sandbox.gmp.win32k-disable", false);
 // Start the Mac sandbox early during child process startup instead
 // of when messaged by the parent after the message loop is running.
 pref("security.sandbox.content.mac.earlyinit", true);
+// Remove this pref once RDD early init is stable on Release.
+pref("security.sandbox.rdd.mac.earlyinit", true);
 
 // This pref is discussed in bug 1083344, the naming is inspired from its
 // Windows counterpart, but on Mac it's an integer which means:
@@ -1832,6 +1831,10 @@ pref("toolkit.coverage.endpoint.base", "https://coverage.mozilla.org");
 // Whether or not Prio-encoded Telemetry will be sent along with the main ping.
 #if defined(NIGHTLY_BUILD)
 pref("prio.enabled", true);
+#endif
+// Whether Prio-encoded Telemetry will be sent in the prio ping.
+#if defined(NIGHTLY_BUILD)
+pref("toolkit.telemetry.prioping.enabled", true);
 #endif
 
 // Discovery prefs

@@ -101,6 +101,7 @@ add_task(async function() {
     checkWallpaper(Ci.nsIShellService.BACKGROUND_CENTER, "centered");
     checkWallpaper(Ci.nsIShellService.BACKGROUND_FILL, "zoom");
     checkWallpaper(Ci.nsIShellService.BACKGROUND_FIT, "scaled");
+    checkWallpaper(Ci.nsIShellService.BACKGROUND_SPAN, "spanned");
 
     restoreSettings();
 

@@ -119,6 +119,9 @@ class _OldCacheEntryWrapper : public nsICacheEntry {
                              uint64_t aOnStopTime) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  NS_IMETHOD SetContentType(uint8_t aContentType) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
   NS_IMETHOD GetLoadContextInfo(nsILoadContextInfo **aInfo) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }

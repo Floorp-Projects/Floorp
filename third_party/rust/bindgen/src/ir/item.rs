@@ -454,7 +454,7 @@ impl Item {
         ty: &clang::Type,
         ctx: &mut BindgenContext,
     ) -> TypeId {
-        let ty = Opaque::from_clang_ty(ty);
+        let ty = Opaque::from_clang_ty(ty, ctx);
         let kind = ItemKind::Type(ty);
         let parent = ctx.root_module().into();
         ctx.add_item(Item::new(with_id, None, None, parent, kind), None, None);
@@ -635,7 +635,7 @@ impl Item {
             return true;
         }
 
-        let path = self.canonical_path(ctx);
+        let path = self.path_for_whitelisting(ctx);
         let name = path[1..].join("::");
         ctx.options().blacklisted_items.matches(&name) ||
         match self.kind {
@@ -875,10 +875,13 @@ impl Item {
 
         let name = names.join("_");
 
-        let name = ctx
-            .parse_callbacks()
-            .and_then(|callbacks| callbacks.item_name(&name))
-            .unwrap_or(name);
+        let name = if opt.user_mangled == UserMangled::Yes {
+            ctx.parse_callbacks()
+                .and_then(|callbacks| callbacks.item_name(&name))
+                .unwrap_or(name)
+        } else {
+            name
+        };
 
         ctx.rust_mangle(&name).into_owned()
     }
@@ -972,6 +975,44 @@ impl Item {
             }
         }
     }
+
+    /// Returns the path we should use for whitelisting / blacklisting, which
+    /// doesn't include user-mangling.
+    pub fn path_for_whitelisting(&self, ctx: &BindgenContext) -> Vec<String> {
+        self.compute_path(ctx, UserMangled::No)
+    }
+
+    fn compute_path(&self, ctx: &BindgenContext, mangled: UserMangled) -> Vec<String> {
+        if let Some(path) = self.annotations().use_instead_of() {
+            let mut ret =
+                vec![ctx.resolve_item(ctx.root_module()).name(ctx).get()];
+            ret.extend_from_slice(path);
+            return ret;
+        }
+
+        let target = ctx.resolve_item(self.name_target(ctx));
+        let mut path: Vec<_> = target
+            .ancestors(ctx)
+            .chain(iter::once(ctx.root_module().into()))
+            .map(|id| ctx.resolve_item(id))
+            .filter(|item| {
+                item.id() == target.id() ||
+                    item.as_module().map_or(false, |module| {
+                        !module.is_inline() ||
+                            ctx.options().conservative_inline_namespaces
+                    })
+            })
+            .map(|item| {
+                ctx.resolve_item(item.name_target(ctx))
+                    .name(ctx)
+                    .within_namespaces()
+                    .user_mangled(mangled)
+                    .get()
+            })
+            .collect();
+        path.reverse();
+        path
+    }
 }
 
 impl<T> IsOpaque for T
@@ -999,7 +1040,7 @@ impl IsOpaque for Item {
         );
         self.annotations.opaque() ||
             self.as_type().map_or(false, |ty| ty.is_opaque(ctx, self)) ||
-            ctx.opaque_by_name(&self.canonical_path(ctx))
+            ctx.opaque_by_name(&self.path_for_whitelisting(ctx))
     }
 }
 
@@ -1408,6 +1449,7 @@ impl ClangItemParser for Item {
         let is_const = ty.is_const();
         let kind = TypeKind::UnresolvedTypeRef(ty, location, parent_id);
         let current_module = ctx.current_module();
+
         ctx.add_item(
             Item::new(
                 potential_id,
@@ -1821,35 +1863,19 @@ impl ItemCanonicalPath for Item {
     }
 
     fn canonical_path(&self, ctx: &BindgenContext) -> Vec<String> {
-        if let Some(path) = self.annotations().use_instead_of() {
-            let mut ret =
-                vec![ctx.resolve_item(ctx.root_module()).name(ctx).get()];
-            ret.extend_from_slice(path);
-            return ret;
-        }
-
-        let target = ctx.resolve_item(self.name_target(ctx));
-        let mut path: Vec<_> = target
-            .ancestors(ctx)
-            .chain(iter::once(ctx.root_module().into()))
-            .map(|id| ctx.resolve_item(id))
-            .filter(|item| {
-                item.id() == target.id() ||
-                    item.as_module().map_or(false, |module| {
-                        !module.is_inline() ||
-                            ctx.options().conservative_inline_namespaces
-                    })
-            })
-            .map(|item| {
-                ctx.resolve_item(item.name_target(ctx))
-                    .name(ctx)
-                    .within_namespaces()
-                    .get()
-            })
-            .collect();
-        path.reverse();
-        path
+        self.compute_path(ctx, UserMangled::Yes)
     }
+}
+
+/// Whether to use the user-mangled name (mangled by the `item_name` callback or
+/// not.
+///
+/// Most of the callers probably want just yes, but the ones dealing with
+/// whitelisting and blacklisting don't.
+#[derive(Copy, Clone, Debug, PartialEq)]
+enum UserMangled {
+    No,
+    Yes,
 }
 
 /// Builder struct for naming variations, which hold inside different
@@ -1859,6 +1885,7 @@ pub struct NameOptions<'a> {
     item: &'a Item,
     ctx: &'a BindgenContext,
     within_namespaces: bool,
+    user_mangled: UserMangled,
 }
 
 impl<'a> NameOptions<'a> {
@@ -1868,6 +1895,7 @@ impl<'a> NameOptions<'a> {
             item: item,
             ctx: ctx,
             within_namespaces: false,
+            user_mangled: UserMangled::Yes,
         }
     }
 
@@ -1875,6 +1903,11 @@ impl<'a> NameOptions<'a> {
     /// into it. In other words, the item's name within the item's namespace.
     pub fn within_namespaces(&mut self) -> &mut Self {
         self.within_namespaces = true;
+        self
+    }
+
+    fn user_mangled(&mut self, user_mangled: UserMangled) -> &mut Self {
+        self.user_mangled = user_mangled;
         self
     }
 

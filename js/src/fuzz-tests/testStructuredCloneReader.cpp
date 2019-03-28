@@ -44,9 +44,15 @@ static int testStructuredCloneReaderFuzz(const uint8_t* buf, size_t size) {
   }
 
   // Copy buffer then pad with zeroes.
-  clonebuf->AppendBytes((const char*)buf, size);
+  if (!clonebuf->AppendBytes((const char*)buf, size)) {
+    ReportOutOfMemory(gCx);
+    return 0;
+  }
   char padding[kSegmentAlignment] = {0};
-  clonebuf->AppendBytes(padding, buf_size - size);
+  if (!clonebuf->AppendBytes(padding, buf_size - size)) {
+    ReportOutOfMemory(gCx);
+    return 0;
+  }
 
   RootedValue deserialized(gCx);
   if (!JS_ReadStructuredClone(gCx, *clonebuf, JS_STRUCTURED_CLONE_VERSION,

@@ -149,7 +149,7 @@ function TestScreenColor(gl, isFBFloat, r, g, b, a) {
   var testText = RGBAToString(floatArr);
   var refText = RGBAToString([r, g, b, a]);
 
-  var eps = 1.0 / 255.0;
+  var eps = 1.0 / 16.0; // Must work with RGBA4!
   var isSame = (Math.abs(floatArr[0] - r) < eps &&
                 Math.abs(floatArr[1] - g) < eps &&
                 Math.abs(floatArr[2] - b) < eps &&
@@ -378,15 +378,21 @@ function TestType(gl, prog, isTex, sizedFormat) {
 
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.CONSTANT_COLOR, gl.ZERO);
-  gl.blendColor(0, 10, 0.1, 1);
+  gl.blendColor(0, 6, 0.1, 1);
 
   gl.uniform4f(prog.uFragColor, 0, 0.5, 15.0, 1);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-  if (isFormatFloat)
-    TestScreenColor(gl, isFormatFloat, 0, 5.0, 1.5, 1);
-  else
-    TestScreenColor(gl, isFormatFloat, 0, 0.5, 0.1, 1);
+  let correctError = 0;
+  if (sizedFormat == RGBA32F && !gl.getExtension('EXT_float_blend')) {
+    correctError = gl.INVALID_OPERATION;
+  }
+  if (!TestError(gl, correctError, 'Is blending an error?')) {
+    if (isFormatFloat)
+      TestScreenColor(gl, isFormatFloat, 0, 3.0, 1.5, 1);
+    else
+      TestScreenColor(gl, isFormatFloat, 0, 0.5, 0.1, 1);
+  }
 
   gl.disable(gl.BLEND);
 

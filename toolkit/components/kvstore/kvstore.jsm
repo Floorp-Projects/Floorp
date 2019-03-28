@@ -60,6 +60,16 @@ class KeyValueService {
  *     await database.has("foo"); // false
  * ```
  *
+ * You can also call putMany() to put multiple key/value pairs:
+ *
+ * ```
+ *     await database.putMany({
+ *       key1: "value1",
+ *       key2: "value2",
+ *       key3: "value3",
+ *     });
+ * ```
+ *
  * And you can call its enumerate() method to retrieve a KeyValueEnumerator,
  * which is described below.
  */
@@ -72,6 +82,50 @@ class KeyValueDatabase {
     return promisify(this.database.put, key, value);
   }
 
+  /**
+   * Puts multiple key/value pairs to the database.
+   *
+   * @param pairs Pairs could be any of following types:
+   *        * An Object, all its properties and the corresponding values will
+   *          be used as key value pairs.
+   *        * A Map.
+   *        * An Array or an iterable whose elements are key-values pairs, such
+   *          as [["key1", "value1"], ["key2", "value2"]]. Note: given multiple
+   *          values with the same key, only the last value will be stored.
+   *
+   * @return A promise that is fulfilled when all the key/value pairs are written
+   *         to the database.
+   */
+  putMany(pairs) {
+    if (!pairs) {
+      throw new Error("putMany(): unexpected argument.");
+    }
+
+    let entries;
+
+    if (pairs instanceof Map || pairs instanceof Array ||
+        typeof(pairs[Symbol.iterator]) === "function") {
+      try {
+        // Let Map constructor validate the argument. Although Map accepts a
+        // different set of key/value types than that of kvstore, we do not
+        // need to check that here since it will be done later.
+        const map = pairs instanceof Map ? pairs : new Map(pairs);
+        entries = Array.from(map, ([key, value]) => ({key, value}));
+      } catch (error) {
+        throw new Error("putMany(): unexpected argument.");
+      }
+    } else if (typeof(pairs) === "object") {
+      entries = Array.from(Object.entries(pairs), ([key, value]) => ({key, value}));
+    } else {
+      throw new Error("putMany(): unexpected argument.");
+    }
+
+    if (entries.length) {
+      return promisify(this.database.putMany, entries);
+    }
+    return Promise.resolve();
+  }
+
   has(key) {
     return promisify(this.database.has, key);
   }
@@ -82,6 +136,10 @@ class KeyValueDatabase {
 
   delete(key) {
     return promisify(this.database.delete, key);
+  }
+
+  clear() {
+    return promisify(this.database.clear);
   }
 
   async enumerate(from_key, to_key) {

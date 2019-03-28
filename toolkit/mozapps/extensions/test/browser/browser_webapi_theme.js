@@ -22,7 +22,7 @@ add_task(async function test_theme_install() {
     });
 
 
-    let prompt1 = waitAppMenuNotificationShown("addon-installed", "theme", false);
+    let prompt1 = waitAppMenuNotificationShown("addon-installed", "theme@tests.mozilla.org", false);
     let installPromise = ContentTask.spawn(browser, URL, async (url) => {
       let install = await content.navigator.mozAddonManager.createInstall({url});
       return install.install();
@@ -32,7 +32,7 @@ add_task(async function test_theme_install() {
     // Open a new window and test the app menu panel from there.  This verifies the
     // incognito checkbox as well as finishing install in this case.
     let newWin = await BrowserTestUtils.openNewBrowserWindow();
-    await waitAppMenuNotificationShown("addon-installed", "theme", true, newWin);
+    await waitAppMenuNotificationShown("addon-installed", "theme@tests.mozilla.org", true, newWin);
     await installPromise;
     ok(true, "Theme install completed");
 

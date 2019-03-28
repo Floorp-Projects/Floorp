@@ -75,6 +75,13 @@ class MobileViewportManager final : public nsIDOMEventListener,
     return mDisplaySize;
   };
 
+  /*
+   * Shrink the content to fit it to the display width if no initial-scale is
+   * specified and if the content is still wider than the display width.
+   */
+  void ShrinkToDisplaySizeIfNeeded(nsViewportInfo& aViewportInfo,
+                                   const mozilla::ScreenIntSize& aDisplaySize);
+
  private:
   ~MobileViewportManager();
 
@@ -132,13 +139,6 @@ class MobileViewportManager final : public nsIDOMEventListener,
    */
   mozilla::ScreenIntSize GetCompositionSize(
       const mozilla::ScreenIntSize& aDisplaySize) const;
-
-  /*
-   * Shrink the content to fit it to the display width if no initial-scale is
-   * specified and if the content is still wider than the display width.
-   */
-  void ShrinkToDisplaySizeIfNeeded(nsViewportInfo& aViewportInfo,
-                                   const mozilla::ScreenIntSize& aDisplaySize);
 
   RefPtr<mozilla::dom::Document> mDocument;
   // raw ref since the presShell owns this

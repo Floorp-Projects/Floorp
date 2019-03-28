@@ -21,6 +21,7 @@ import os
 
 VARIANTS = [
     'nightly',
+    'shippable',
     'devedition',
     'pgo',
     'asan',
@@ -53,7 +54,8 @@ def test_packages_url(taskdesc):
                                     'target.test_packages.json'))
     # for android nightly we need to add 'en-US' to the artifact url
     test = taskdesc['run']['test']
-    if get_variant(test['test-platform']) == "nightly" and 'android' in test['test-platform']:
+    if 'android' in test['test-platform'] and (
+            get_variant(test['test-platform']) in ("nightly", 'shippable')):
         head, tail = os.path.split(artifact_url)
         artifact_url = os.path.join(head, 'en-US', tail)
     return artifact_url

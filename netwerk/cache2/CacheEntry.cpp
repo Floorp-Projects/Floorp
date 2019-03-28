@@ -1083,6 +1083,15 @@ nsresult CacheEntry::SetNetworkTimes(uint64_t aOnStartTime,
   return NS_ERROR_NOT_AVAILABLE;
 }
 
+nsresult CacheEntry::SetContentType(uint8_t aContentType) {
+  NS_ENSURE_ARG_MAX(aContentType, nsICacheEntry::CONTENT_TYPE_LAST - 1);
+
+  if (NS_SUCCEEDED(mFileStatus)) {
+    return mFile->SetContentType(aContentType);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 nsresult CacheEntry::GetIsForcedValid(bool *aIsForcedValid) {
   NS_ENSURE_ARG(aIsForcedValid);
 

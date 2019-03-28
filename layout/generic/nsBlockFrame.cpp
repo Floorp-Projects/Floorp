@@ -6387,6 +6387,10 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 #endif
 
+  // TODO(heycam): Should we boost the load priority of any shape-outside
+  // images using CATEGORY_DISPLAY, now that this block is being displayed?
+  // We don't have a float manager here.
+
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   if (GetPrevInFlow()) {

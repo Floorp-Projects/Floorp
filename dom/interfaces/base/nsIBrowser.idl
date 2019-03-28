@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsISupports.idl"
 
+interface nsIContentSecurityPolicy;
 interface nsIPrincipal;
 interface nsIURI;
 
@@ -76,6 +77,7 @@ interface nsIBrowser : nsISupports
                                        [array, size_is(disabledLength)] in string disabledCommands);
 
   readonly attribute nsIPrincipal contentPrincipal;
+  readonly attribute nsIContentSecurityPolicy csp;
 
   /**
    * Called by Gecko when we need to call the web progress listeners on our

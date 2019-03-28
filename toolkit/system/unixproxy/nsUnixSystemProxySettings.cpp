@@ -167,7 +167,7 @@ static void SetProxyResult(const char* aType, const nsACString& aHost,
   aResult.Append(aHost);
   if (aPort > 0) {
     aResult.Append(':');
-    aResult.Append(nsPrintfCString("%d", aPort));
+    aResult.AppendInt(aPort);
   }
 }
 

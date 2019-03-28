@@ -17,13 +17,18 @@ kind-dependencies:
     - fetch
 
 only-for-build-platforms:
+    - win32-shippable/opt
     - win32-nightly/opt
+    - win64-shippable/opt
     - win64-nightly/opt
     - win32-devedition-nightly/opt
     - win64-devedition-nightly/opt
 
 job-template:
+    worker-type: 'aws-provisioner-v1/gecko-{level}-b-win2012'
     mozharness:
+        use-magic-mh-args: false
+        use-caches: false
         config:
             by-build-platform:
                 win32\b.*:

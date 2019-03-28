@@ -11,15 +11,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=589640
     SimpleTest.waitForExplicitFinish();
 
     function debug(message) {
-      document.getElementById('debug').appendChild(document.createTextNode(message + "\n"));
+      document.getElementById("debug").appendChild(document.createTextNode(message + "\n"));
     }
 
-    function runTests()
-    {
-      var svg = document.getElementById('svg1');
+    function runTests() {
+      var svg = document.getElementById("svg1");
       for (var el = 0; el < svg.children.length; el++) {
         is(svg.children[el].id, svg.children[el].localName, svg.children[el].localName + " in the SVG namespace has a valid ID");
-        debug(svg.children[el].localName + '.id = ' + svg.children[el].id);
+        debug(svg.children[el].localName + ".id = " + svg.children[el].id);
       }
 
       SimpleTest.finish();

@@ -17,23 +17,29 @@ kind-dependencies:
     - toolchain
 
 only-for-build-platforms:
+    - linux-shippable/opt
     - linux-nightly/opt
     - linux-devedition-nightly/opt
     - linux/opt
+    - linux64-shippable/opt
     - linux64-nightly/opt
     - linux64-devedition-nightly/opt
     - linux64-asan-reporter-nightly/opt
     - linux64/opt
     - linux64-pgo/opt
+    - macosx64-shippable/opt
     - macosx64-nightly/opt
     - macosx64-devedition-nightly/opt
     - macosx64/opt
+    - win32-shippable/opt
     - win32-nightly/opt
     - win32-devedition-nightly/opt
     - win32/opt
     - win32-pgo/opt
+    - win64-shippable/opt
     - win64-nightly/opt
     - win64-devedition-nightly/opt
+    - win64-aarch64-shippable/opt
     - win64-aarch64-nightly/opt
     - win64-aarch64-devedition-nightly/opt
     - win64/opt
@@ -41,6 +47,9 @@ only-for-build-platforms:
     - win64-asan-reporter-nightly/opt
 
 job-template:
+    worker-type: 'aws-provisioner-v1/gecko-{level}-b-linux'
+    worker:
+        docker-image: {"in-tree": "debian7-amd64-build"}
     mozharness:
         config:
             by-build-platform:
@@ -81,3 +90,7 @@ job-template:
                     macosx64\b.*: [mar, dmg]
                     win32\b.*: [mar, installer]
                     win64\b.*: [mar, installer]
+    fetches:
+        toolchain:
+            - linux64-mar-tools
+            - linux64-upx

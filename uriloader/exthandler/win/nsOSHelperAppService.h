@@ -31,16 +31,16 @@ class nsOSHelperAppService : public nsExternalHelperAppService {
   virtual ~nsOSHelperAppService();
 
   // override nsIExternalProtocolService methods
-  nsresult OSProtocolHandlerExists(const char* aProtocolScheme,
-                                   bool* aHandlerExists);
+  NS_IMETHOD OSProtocolHandlerExists(const char* aProtocolScheme,
+                                     bool* aHandlerExists) override;
   nsresult LoadUriInternal(nsIURI* aURL);
   NS_IMETHOD GetApplicationDescription(const nsACString& aScheme,
                                        nsAString& _retval) override;
 
   // method overrides for windows registry look up steps....
-  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType,
-                                                  const nsACString& aFileExt,
-                                                  bool* aFound);
+  NS_IMETHOD GetMIMEInfoFromOS(const nsACString& aMIMEType,
+                               const nsACString& aFileExt, bool* aFound,
+                               nsIMIMEInfo** aMIMEInfo) override;
   NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString& aScheme,
                                           bool* found,
                                           nsIHandlerInfo** _retval);

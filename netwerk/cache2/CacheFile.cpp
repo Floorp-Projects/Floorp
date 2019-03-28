@@ -1172,7 +1172,7 @@ nsresult CacheFile::SetFrecency(uint32_t aFrecency) {
 
   if (mHandle && !mHandle->IsDoomed())
     CacheFileIOManager::UpdateIndexEntry(mHandle, &aFrecency, nullptr, nullptr,
-                                         nullptr);
+                                         nullptr, nullptr);
 
   return mMetadata->SetFrecency(aFrecency);
 }
@@ -1220,8 +1220,8 @@ nsresult CacheFile::SetNetworkTimes(uint64_t aOnStartTime,
       aOnStopTime <= kIndexTimeOutOfBound ? aOnStopTime : kIndexTimeOutOfBound;
 
   if (mHandle && !mHandle->IsDoomed()) {
-    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, nullptr,
-                                         &onStartTime16, &onStopTime16);
+    CacheFileIOManager::UpdateIndexEntry(
+        mHandle, nullptr, nullptr, &onStartTime16, &onStopTime16, nullptr);
   }
   return NS_OK;
 }
@@ -1255,6 +1255,32 @@ nsresult CacheFile::GetOnStopTime(uint64_t *_retval) {
   return NS_OK;
 }
 
+nsresult CacheFile::SetContentType(uint8_t aContentType) {
+  CacheFileAutoLock lock(this);
+
+  LOG(("CacheFile::SetContentType() this=%p, contentType=%u", this,
+       aContentType));
+
+  MOZ_ASSERT(mMetadata);
+  NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
+
+  PostWriteTimer();
+
+  // Save the content type to metadata for case we need to rebuild the index.
+  nsAutoCString contentType;
+  contentType.AppendInt(aContentType);
+  nsresult rv = mMetadata->SetElement("ctid", contentType.get());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (mHandle && !mHandle->IsDoomed()) {
+    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, nullptr, nullptr,
+                                         nullptr, &aContentType);
+  }
+  return NS_OK;
+}
+
 nsresult CacheFile::SetAltMetadata(const char *aAltMetadata) {
   AssertOwnsLock();
   LOG(("CacheFile::SetAltMetadata() this=%p, aAltMetadata=%s", this,
@@ -1280,7 +1306,7 @@ nsresult CacheFile::SetAltMetadata(const char *aAltMetadata) {
 
   if (mHandle && !mHandle->IsDoomed()) {
     CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, &hasAltData, nullptr,
-                                         nullptr);
+                                         nullptr, nullptr);
   }
   return rv;
 }
@@ -2516,8 +2542,19 @@ nsresult CacheFile::InitIndexEntry() {
   const char *onStopTimeStr = mMetadata->GetElement("net-response-time-onstop");
   uint16_t onStopTime = toUint16(onStopTimeStr);
 
-  rv = CacheFileIOManager::UpdateIndexEntry(mHandle, &frecency, &hasAltData,
-                                            &onStartTime, &onStopTime);
+  const char *contentTypeStr = mMetadata->GetElement("ctid");
+  uint8_t contentType = nsICacheEntry::CONTENT_TYPE_UNKNOWN;
+  if (contentTypeStr) {
+    int64_t n64 = nsDependentCString(contentTypeStr).ToInteger64(&rv);
+    if (NS_FAILED(rv) || n64 < nsICacheEntry::CONTENT_TYPE_UNKNOWN ||
+        n64 >= nsICacheEntry::CONTENT_TYPE_LAST) {
+      n64 = nsICacheEntry::CONTENT_TYPE_UNKNOWN;
+    }
+    contentType = n64;
+  }
+
+  rv = CacheFileIOManager::UpdateIndexEntry(
+      mHandle, &frecency, &hasAltData, &onStartTime, &onStopTime, &contentType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

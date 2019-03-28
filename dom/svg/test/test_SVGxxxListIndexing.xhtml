@@ -17,13 +17,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=631437
      requiredFeatures="foo bar baz"/>
 </svg>
 <script type="text/javascript"><![CDATA[
+
 var text = document.getElementById("text"),
     path = document.getElementById("path"),
-    poly = document.getElementById("poly");
+    poly = document.getElementById("poly"),
     g    = document.getElementById("g");
 
-function CheckList(aListObject, aExpectedListLength, aListDescription)
-{
+function CheckList(aListObject, aExpectedListLength, aListDescription) {
   is(aListObject.numberOfItems, aExpectedListLength, aListDescription + ".numberOfItems");
   is(aListObject.length, aExpectedListLength, aListDescription + ".length");
   for (let i = 0; i < aListObject.length; i++) {
@@ -69,7 +69,7 @@ var tests = [
     type: "SVGStringList",
     subtests: [ { values: null, length: 3 },
                 { values: "foo", length: 1 },
-                { values: "foo bar baz qux", length: 4 } ] }
+                { values: "foo bar baz qux", length: 4 } ] },
 ];
 
 for (let test of tests) {

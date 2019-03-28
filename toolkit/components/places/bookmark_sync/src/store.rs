@@ -379,7 +379,7 @@ fn update_local_items_in_places<'t>(
     descendants: Vec<MergedDescendant<'t>>,
     deletions: Vec<Deletion>,
 ) -> Result<()> {
-    for chunk in descendants.chunks(999 / 3) {
+    for chunk in descendants.chunks(999 / 4) {
         let mut statement = db.prepare(format!(
             "INSERT INTO mergeStates(localGuid, remoteGuid, mergedGuid, mergedParentGuid, level,
                                      position, useRemote, shouldUpload)

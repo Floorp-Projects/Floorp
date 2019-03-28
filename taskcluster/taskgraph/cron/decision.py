@@ -25,6 +25,11 @@ def run_decision_task(job, params, root):
         arguments.append('--optimize-target-tasks={}'.format(
             str(job['optimize-target-tasks']).lower(),
         ))
+    if 'include-push-tasks' in job:
+        arguments.append('--include-push-tasks')
+    if 'rebuild-kinds' in job:
+        for kind in job['rebuild-kinds']:
+            arguments.append('--rebuild-kind={}'.format(kind))
     return [
         make_decision_task(
             params,

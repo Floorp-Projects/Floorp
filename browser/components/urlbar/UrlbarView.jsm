@@ -584,7 +584,7 @@ class UrlbarView {
       // a _rebuild call that uses it.
       this.oneOffSearchButtons.textbox = this.input.textbox;
       this.oneOffSearchButtons.view = this;
-    } else if (this._oneOffSearchButtons) {
+    } else {
       this.oneOffSearchButtons.telemetryOrigin = null;
       this.oneOffSearchButtons.style.display = "none";
       this.oneOffSearchButtons.textbox = null;
@@ -600,8 +600,8 @@ class UrlbarView {
     // Update all search suggestion results to use the newly selected engine, or
     // if no engine is selected, revert to their original engines.
     let engine =
-      this._oneOffSearchButtons.selectedButton &&
-      this._oneOffSearchButtons.selectedButton.engine;
+      this.oneOffSearchButtons.selectedButton &&
+      this.oneOffSearchButtons.selectedButton.engine;
     for (let i = 0; i < this._queryContext.results.length; i++) {
       let result = this._queryContext.results[i];
       if (result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||

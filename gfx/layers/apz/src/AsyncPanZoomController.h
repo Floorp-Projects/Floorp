@@ -1113,17 +1113,7 @@ class AsyncPanZoomController {
    */
   AsyncTransform GetCurrentAsyncTransform(
       AsyncTransformConsumer aMode,
-      AsyncTransformComponents aComponents = ScrollAndZoom) const;
-
-  /**
-   * Get the current async transform of the visual viewport relative to
-   * the layout viewport.
-   * We don't have an |aComponents| parameter here because the relative
-   * transform can only be a translation (the visual and layout viewports
-   * are zoomed together).
-   */
-  AsyncTransform GetCurrentAsyncViewportRelativeTransform(
-      AsyncTransformConsumer aMode) const;
+      AsyncTransformComponents aComponents = LayoutAndVisual) const;
 
   /**
    * Returns the incremental transformation corresponding to the async
@@ -1138,7 +1128,7 @@ class AsyncPanZoomController {
    */
   AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(
       AsyncTransformConsumer aMode,
-      AsyncTransformComponents aComponents = ScrollAndZoom) const;
+      AsyncTransformComponents aComponents = LayoutAndVisual) const;
 
   /**
    * Returns the "zoom" bits of the transform. This includes both the rasterized
@@ -1191,19 +1181,15 @@ class AsyncPanZoomController {
    * AsyncPanZoomController. Calls |SampleCompositedAsyncTransform| to ensure
    * that the GetCurrentAsync* functions consider the test offset and zoom in
    * their computations.
-   *
-   * Returns false if neither test value is set, and true otherwise.
    */
-  bool ApplyAsyncTestAttributes();
+  void ApplyAsyncTestAttributes();
 
   /**
    * Sets this AsyncPanZoomController's FrameMetrics to |aPrevFrameMetrics| and
    * calls |SampleCompositedAsyncTransform| to unapply any test values applied
    * by |ApplyAsyncTestAttributes|.
-   *
-   * Returns false if neither test value is set, and true otherwise.
    */
-  bool UnapplyAsyncTestAttributes(const FrameMetrics& aPrevFrameMetrics);
+  void UnapplyAsyncTestAttributes(const FrameMetrics& aPrevFrameMetrics);
 
   /* ===================================================================
    * The functions and members in this section are used to manage
@@ -1608,6 +1594,7 @@ class AsyncPanZoomController {
   CSSPoint mTestAsyncScrollOffset;
   // Extra zoom to include in the aync zoom for testing
   LayerToParentLayerScale mTestAsyncZoom;
+  int mTestAttributeAppliers : 8;
   // Flag to track whether or not the APZ transform is not used. This
   // flag is recomputed for every composition frame.
   bool mAsyncTransformAppliedToContent : 1;

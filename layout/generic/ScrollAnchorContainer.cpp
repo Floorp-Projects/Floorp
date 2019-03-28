@@ -350,7 +350,7 @@ void ScrollAnchorContainer::ApplyAdjustments() {
   // We should use AutoRestore here, but that doesn't work with bitfields
   mApplyingAnchorAdjustment = true;
   mScrollFrame->ScrollTo(mScrollFrame->GetScrollPosition() + physicalAdjustment,
-                         nsIScrollableFrame::INSTANT, nsGkAtoms::relative);
+                         ScrollMode::eInstant, nsGkAtoms::relative);
   mApplyingAnchorAdjustment = false;
 
   nsPresContext* pc = Frame()->PresContext();

@@ -82,6 +82,10 @@ impl SingleStore {
             cursor,
         })
     }
+
+    pub fn clear(self, writer: &mut Writer) -> Result<(), StoreError> {
+        writer.clear(self.db)
+    }
 }
 
 impl<'env> Iterator for Iter<'env> {

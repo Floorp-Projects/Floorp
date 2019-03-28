@@ -17,18 +17,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=759124
 
 <pre id="test">
 <script class="testbody" type="application/javascript">
+var svg = $("svg");
+
 SimpleTest.waitForExplicitFinish();
 
 function Test(svgFragmentIdentifier, valid, viewBoxString,
-              preserveAspectRatioString, zoomAndPanString)
-{
+              preserveAspectRatioString, zoomAndPanString) {
     this.svgFragmentIdentifier = svgFragmentIdentifier;
     this.valid = valid;
 }
 
-function runTests()
-{
-  var svg = $("svg");
+function runTests() {
   var doc = svg.contentWindow.document;
   var rootElement = doc.documentElement;
 
@@ -58,7 +57,7 @@ function runTests()
       new Test("svgView(zoomAndPan(disable)", false),
       new Test("svgView(zoomAndPan(disable) ", false),
       new Test("svgView(zoomAndPan(disable)]", false),
-      new Test("svgView(zoomAndPan(disable)))", false)
+      new Test("svgView(zoomAndPan(disable)))", false),
   ];
 
   var src = svg.getAttribute("src");
@@ -109,8 +108,8 @@ function runTests()
   SimpleTest.finish();
 }
 
-$(svg).addEventListener("load", runTests);
-$(svg).setAttribute("src", "fragments-helper.svg");
+svg.addEventListener("load", runTests);
+svg.setAttribute("src", "fragments-helper.svg");
 </script>
 </pre>
 </body>

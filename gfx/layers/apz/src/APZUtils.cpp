@@ -10,17 +10,6 @@
 
 namespace mozilla {
 namespace layers {
-
-AutoApplyAsyncTestAttributes::AutoApplyAsyncTestAttributes(
-    AsyncPanZoomController* aApzc)
-    : mApzc(aApzc), mPrevFrameMetrics(aApzc->Metrics()) {
-  mApzc->ApplyAsyncTestAttributes();
-}
-
-AutoApplyAsyncTestAttributes::~AutoApplyAsyncTestAttributes() {
-  mApzc->UnapplyAsyncTestAttributes(mPrevFrameMetrics);
-}
-
 namespace apz {
 
 /*static*/ void InitializeGlobalState() {

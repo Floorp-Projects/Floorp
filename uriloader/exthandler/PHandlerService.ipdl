@@ -31,12 +31,28 @@ parent:
   sync FillHandlerInfo(HandlerInfo aHandlerInfoData,
                        nsCString aOverrideType)
       returns (HandlerInfo handlerInfoData);
+
+  /*
+   * Check if an OS handler exists for the given protocol scheme.
+   */
+  sync ExistsForProtocolOS(nsCString aProtocolScheme)
+      returns (bool exists);
+
+  /*
+   * Check if a handler exists for the given protocol scheme. Check
+   * the datastore first and then fallback to an OS handler check.
+   */
   sync ExistsForProtocol(nsCString aProtocolScheme)
       returns (bool exists);
+
   sync Exists(HandlerInfo aHandlerInfo)
       returns (bool exists);
   sync GetTypeFromExtension(nsCString aFileExtension)
       returns (nsCString type);
+  sync GetMIMEInfoFromOS(nsCString aMIMEType, nsCString aExtension)
+      returns (nsresult rv, HandlerInfo handlerInfoData, bool found);
+  sync GetApplicationDescription(nsCString aScheme)
+      returns (nsresult rv, nsString description);
   async __delete__();
 };
 

@@ -18,28 +18,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=676001
 
 SimpleTest.waitForExplicitFinish();
 
-function run()
-{
-  var div = document.getElementById('div');
-  var line = document.getElementById('line');
-  var circle = document.getElementById('circle');
+function run() {
+  var div = document.getElementById("div");
+  var line = document.getElementById("line");
+  var circle = document.getElementById("circle");
   var offsetX = div.offsetLeft;
   var offsetY = div.offsetTop;
   var got;
 
   // line
   got = document.elementFromPoint(offsetX + 116, offsetY + 103);
-  is(got, line, 'Should hit line (1)');
+  is(got, line, "Should hit line (1)");
 
   got = document.elementFromPoint(offsetX + 123, offsetY + 108);
-  is(got, line, 'Should hit line (2)');
+  is(got, line, "Should hit line (2)");
 
   // circle
   got = document.elementFromPoint(offsetX + 188, offsetY + 158);
-  is(got, circle, 'Should hit circle (1)');
+  is(got, circle, "Should hit circle (1)");
 
   got = document.elementFromPoint(offsetX + 185, offsetY + 162);
-  is(got, circle, 'Should hit circle (2)');
+  is(got, circle, "Should hit circle (2)");
 
   SimpleTest.finish();
 }

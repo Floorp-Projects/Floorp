@@ -1898,6 +1898,10 @@ bool nsStyleImageRequest::Resolve(Document& aDocument,
     return false;
   }
 
+  // Boost priority now that we know the image is present in the ComputedStyle
+  // of some frame.
+  mRequestProxy->BoostPriority(imgIRequest::CATEGORY_FRAME_STYLE);
+
   if (mModeFlags & Mode::Track) {
     mImageTracker = aDocument.ImageTracker();
   }

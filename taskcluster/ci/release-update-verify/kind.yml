@@ -53,7 +53,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: linux64-nightly
+         build_platform: linux64-shippable
 
    firefox-linux:
       description: linux update verify
@@ -73,7 +73,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: linux-nightly
+         build_platform: linux-shippable
 
    firefox-win64:
       description: win64 update verify
@@ -93,7 +93,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: win64-nightly
+         build_platform: win64-shippable
 
    firefox-win32:
       description: win32 update verify
@@ -113,7 +113,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: win32-nightly
+         build_platform: win32-shippable
 
    firefox-macosx64:
       description: macosx64 update verify
@@ -133,7 +133,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: macosx64-nightly
+         build_platform: macosx64-shippable
 
    devedition-linux64:
       description: linux64 update verify

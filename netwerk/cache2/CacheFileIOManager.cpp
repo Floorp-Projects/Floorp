@@ -976,7 +976,7 @@ class InitIndexEntryEvent : public Runnable {
     // if there is no write to the file.
     uint32_t sizeInK = mHandle->FileSizeInK();
     CacheIndex::UpdateEntry(mHandle->Hash(), nullptr, nullptr, nullptr, nullptr,
-                            &sizeInK);
+                            nullptr, &sizeInK);
 
     return NS_OK;
   }
@@ -992,17 +992,20 @@ class UpdateIndexEntryEvent : public Runnable {
  public:
   UpdateIndexEntryEvent(CacheFileHandle *aHandle, const uint32_t *aFrecency,
                         const bool *aHasAltData, const uint16_t *aOnStartTime,
-                        const uint16_t *aOnStopTime)
+                        const uint16_t *aOnStopTime,
+                        const uint8_t *aContentType)
       : Runnable("net::UpdateIndexEntryEvent"),
         mHandle(aHandle),
         mHasFrecency(false),
         mHasHasAltData(false),
         mHasOnStartTime(false),
         mHasOnStopTime(false),
+        mHasContentType(false),
         mFrecency(0),
         mHasAltData(false),
         mOnStartTime(0),
-        mOnStopTime(0) {
+        mOnStopTime(0),
+        mContentType(nsICacheEntry::CONTENT_TYPE_UNKNOWN) {
     if (aFrecency) {
       mHasFrecency = true;
       mFrecency = *aFrecency;
@@ -1019,6 +1022,10 @@ class UpdateIndexEntryEvent : public Runnable {
       mHasOnStopTime = true;
       mOnStopTime = *aOnStopTime;
     }
+    if (aContentType) {
+      mHasContentType = true;
+      mContentType = *aContentType;
+    }
   }
 
  protected:
@@ -1034,7 +1041,8 @@ class UpdateIndexEntryEvent : public Runnable {
                             mHasFrecency ? &mFrecency : nullptr,
                             mHasHasAltData ? &mHasAltData : nullptr,
                             mHasOnStartTime ? &mOnStartTime : nullptr,
-                            mHasOnStopTime ? &mOnStopTime : nullptr, nullptr);
+                            mHasOnStopTime ? &mOnStopTime : nullptr,
+                            mHasContentType ? &mContentType : nullptr, nullptr);
     return NS_OK;
   }
 
@@ -1045,11 +1053,13 @@ class UpdateIndexEntryEvent : public Runnable {
   bool mHasHasAltData;
   bool mHasOnStartTime;
   bool mHasOnStopTime;
+  bool mHasContentType;
 
   uint32_t mFrecency;
   bool mHasAltData;
   uint16_t mOnStartTime;
   uint16_t mOnStopTime;
+  uint8_t mContentType;
 };
 
 class MetadataWriteScheduleEvent : public Runnable {
@@ -2042,7 +2052,7 @@ nsresult CacheFileIOManager::WriteInternal(CacheFileHandle *aHandle,
     if (oldSizeInK != newSizeInK && !aHandle->IsDoomed() &&
         !aHandle->IsSpecialFile()) {
       CacheIndex::UpdateEntry(aHandle->Hash(), nullptr, nullptr, nullptr,
-                              nullptr, &newSizeInK);
+                              nullptr, nullptr, &newSizeInK);
 
       if (oldSizeInK < newSizeInK) {
         EvictIfOverLimitInternal();
@@ -2568,7 +2578,7 @@ nsresult CacheFileIOManager::TruncateSeekSetEOFInternal(
   if (oldSizeInK != newSizeInK && !aHandle->IsDoomed() &&
       !aHandle->IsSpecialFile()) {
     CacheIndex::UpdateEntry(aHandle->Hash(), nullptr, nullptr, nullptr, nullptr,
-                            &newSizeInK);
+                            nullptr, &newSizeInK);
 
     if (oldSizeInK < newSizeInK) {
       EvictIfOverLimitInternal();
@@ -2882,7 +2892,7 @@ nsresult CacheFileIOManager::OverLimitEvictionInternal() {
       // failing on one entry forever.
       uint32_t frecency = 0;
       rv = CacheIndex::UpdateEntry(&hash, &frecency, nullptr, nullptr, nullptr,
-                                   nullptr);
+                                   nullptr, nullptr);
       NS_ENSURE_SUCCESS(rv, rv);
 
       consecutiveFailures++;
@@ -3540,14 +3550,16 @@ nsresult CacheFileIOManager::UpdateIndexEntry(CacheFileHandle *aHandle,
                                               const uint32_t *aFrecency,
                                               const bool *aHasAltData,
                                               const uint16_t *aOnStartTime,
-                                              const uint16_t *aOnStopTime) {
+                                              const uint16_t *aOnStopTime,
+                                              const uint8_t *aContentType) {
   LOG(
       ("CacheFileIOManager::UpdateIndexEntry() [handle=%p, frecency=%s, "
-       "hasAltData=%s, onStartTime=%s, onStopTime=%s]",
+       "hasAltData=%s, onStartTime=%s, onStopTime=%s, contentType=%s]",
        aHandle, aFrecency ? nsPrintfCString("%u", *aFrecency).get() : "",
        aHasAltData ? (*aHasAltData ? "true" : "false") : "",
        aOnStartTime ? nsPrintfCString("%u", *aOnStartTime).get() : "",
-       aOnStopTime ? nsPrintfCString("%u", *aOnStopTime).get() : ""));
+       aOnStopTime ? nsPrintfCString("%u", *aOnStopTime).get() : "",
+       aContentType ? nsPrintfCString("%u", *aContentType).get() : ""));
 
   nsresult rv;
   RefPtr<CacheFileIOManager> ioMan = gInstance;
@@ -3561,7 +3573,7 @@ nsresult CacheFileIOManager::UpdateIndexEntry(CacheFileHandle *aHandle,
   }
 
   RefPtr<UpdateIndexEntryEvent> ev = new UpdateIndexEntryEvent(
-      aHandle, aFrecency, aHasAltData, aOnStartTime, aOnStopTime);
+      aHandle, aFrecency, aHasAltData, aOnStartTime, aOnStopTime, aContentType);
   rv = ioMan->mIOThread->Dispatch(ev, aHandle->mPriority
                                           ? CacheIOThread::WRITE_PRIORITY
                                           : CacheIOThread::WRITE);

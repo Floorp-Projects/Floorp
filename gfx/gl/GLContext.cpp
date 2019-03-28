@@ -125,6 +125,8 @@ static const char* const sExtensionNames[] = {
     "GL_ARB_transform_feedback2",
     "GL_ARB_uniform_buffer_object",
     "GL_ARB_vertex_array_object",
+    "GL_CHROMIUM_color_buffer_float_rgb",
+    "GL_CHROMIUM_color_buffer_float_rgba",
     "GL_EXT_bgra",
     "GL_EXT_blend_minmax",
     "GL_EXT_color_buffer_float",

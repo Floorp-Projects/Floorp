@@ -2944,7 +2944,10 @@ class CloneBufferObject : public NativeObject {
       return false;
     }
     auto iter = data->Start();
-    data->ReadBytes(iter, buffer.get(), size);
+    if (!data->ReadBytes(iter, buffer.get(), size)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
     JSString* str = JS_NewStringCopyN(cx, buffer.get(), size);
     if (!str) {
       return false;
@@ -2976,7 +2979,10 @@ class CloneBufferObject : public NativeObject {
       return false;
     }
     auto iter = data->Start();
-    data->ReadBytes(iter, buffer.get(), size);
+    if (!data->ReadBytes(iter, buffer.get(), size)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
 
     auto* rawBuffer = buffer.release();
     JSObject* arrayBuffer = JS::NewArrayBufferWithContents(cx, size, rawBuffer);

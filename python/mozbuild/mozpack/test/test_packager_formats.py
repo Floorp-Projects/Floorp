@@ -31,6 +31,7 @@ from mozpack.test.test_files import (
     bar_xpt,
 )
 import mozpack.path as mozpath
+from itertools import chain
 from test_errors import TestErrors
 
 
@@ -41,6 +42,7 @@ CONTENTS = {
         'app': False,
         'addon0': 'unpacked',
         'addon1': True,
+        'app/chrome/addons/addon2': True,
     },
     'manifests': [
         ManifestContent('chrome/f', 'oo', 'oo/'),
@@ -49,8 +51,9 @@ CONTENTS = {
         ManifestBinaryComponent('components', 'foo.so'),
         ManifestContent('app/chrome', 'content', 'foo/'),
         ManifestComponent('app/components', '{foo-id}', 'foo.js'),
-        ManifestContent('addon0/chrome', 'content', 'foo/bar/'),
-        ManifestContent('addon1/chrome', 'content', 'foo/bar/'),
+        ManifestContent('addon0/chrome', 'addon0', 'foo/bar/'),
+        ManifestContent('addon1/chrome', 'addon1', 'foo/bar/'),
+        ManifestContent('app/chrome/addons/addon2/chrome', 'addon2', 'foo/bar/'),
     ],
     'files': {
         'chrome/f/oo/bar/baz': GeneratedFile('foobarbaz'),
@@ -68,6 +71,9 @@ CONTENTS = {
         'addon1/chrome/foo/bar/baz': GeneratedFile('foobarbaz'),
         'addon1/components/foo.xpt': foo2_xpt,
         'addon1/components/bar.xpt': bar_xpt,
+        'app/chrome/addons/addon2/chrome/foo/bar/baz': GeneratedFile('foobarbaz'),
+        'app/chrome/addons/addon2/components/foo.xpt': foo2_xpt,
+        'app/chrome/addons/addon2/components/bar.xpt': bar_xpt,
     },
 }
 
@@ -112,7 +118,7 @@ RESULT_FLAT = {
     'app/components/foo.js': FILES['app/components/foo.js'],
 }
 
-for addon in ('addon0', 'addon1'):
+for addon in ('addon0', 'addon1', 'app/chrome/addons/addon2'):
     RESULT_FLAT.update({
         mozpath.join(addon, p): f
         for p, f in {
@@ -121,7 +127,7 @@ for addon in ('addon0', 'addon1'):
                 'manifest components/components.manifest',
             ],
             'chrome/chrome.manifest': [
-                'content content foo/bar/',
+                'content %s foo/bar/' % mozpath.basename(addon),
             ],
             'chrome/foo/bar/baz': FILES[mozpath.join(addon, 'chrome/foo/bar/baz')],
             'components/components.manifest': [
@@ -171,7 +177,7 @@ RESULT_JAR.update({
         'foo': FILES['app/chrome/foo/foo'],
     },
     'addon0/chrome/chrome.manifest': [
-        'content content jar:foo.jar!/bar/',
+        'content addon0 jar:foo.jar!/bar/',
     ],
     'addon0/chrome/foo.jar': {
         'bar/baz': FILES['addon0/chrome/foo/bar/baz'],
@@ -180,6 +186,11 @@ RESULT_JAR.update({
         mozpath.relpath(p, 'addon1'): f
         for p, f in RESULT_FLAT.iteritems()
         if p.startswith('addon1/')
+    },
+    'app/chrome/addons/addon2.xpi': {
+        mozpath.relpath(p, 'app/chrome/addons/addon2'): f
+        for p, f in RESULT_FLAT.iteritems()
+        if p.startswith('app/chrome/addons/addon2/')
     },
 })
 
@@ -212,13 +223,17 @@ RESULT_OMNIJAR.update({
     ],
     'app/omni.foo': {
         p: RESULT_FLAT['app/' + p]
-        for p in (
+        for p in chain((
             'chrome.manifest',
             'chrome/chrome.manifest',
             'chrome/foo/foo',
             'components/components.manifest',
             'components/foo.js',
-        )
+        ), (
+            mozpath.relpath(p, 'app')
+            for p in RESULT_FLAT.iterkeys()
+            if p.startswith('app/chrome/addons/addon2/')
+        ))
     },
     'app/chrome.manifest': [],
 })
@@ -279,7 +294,7 @@ RESULT_OMNIJAR_WITH_BASE = result_with_base(RESULT_OMNIJAR)
 
 
 def fill_formatter(formatter, contents):
-    for base, is_addon in contents['bases'].items():
+    for base, is_addon in sorted(contents['bases'].items()):
         formatter.add_base(base, is_addon)
 
     for manifest in contents['manifests']:
@@ -310,8 +325,8 @@ class TestFormatters(TestErrors, unittest.TestCase):
     def test_bases(self):
         formatter = FlatFormatter(FileRegistry())
         formatter.add_base('')
-        formatter.add_base('browser')
         formatter.add_base('addon0', addon=True)
+        formatter.add_base('browser')
         self.assertEqual(formatter._get_base('platform.ini'),
                          ('', 'platform.ini'))
         self.assertEqual(formatter._get_base('browser/application.ini'),

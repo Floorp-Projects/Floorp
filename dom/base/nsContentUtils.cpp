@@ -2739,7 +2739,7 @@ static inline void KeyAppendString(const nsACString& aString,
 static inline void KeyAppendInt(int32_t aInt, nsACString& aKey) {
   KeyAppendSep(aKey);
 
-  aKey.Append(nsPrintfCString("%d", aInt));
+  aKey.AppendInt(aInt);
 }
 
 static inline bool IsAutocompleteOff(const nsIContent* aContent) {

@@ -34,7 +34,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829085
   function startTest() {
     SimpleTest.waitForFocus(function() {
         disableNonTestMouseEvents(true);
-        var line = document.getElementById('line');
         // Send a click
         synthesizeMouseExpectEvent($("svg"), 170, 100, { },
                                    $("line"), "click",

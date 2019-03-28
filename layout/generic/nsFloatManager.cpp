@@ -2684,7 +2684,13 @@ nsFloatManager::ShapeInfo::CreateImageShape(const nsStyleImage& aShapeImage,
                                 nsImageRenderer::FLAG_SYNC_DECODE_IMAGES);
 
   if (!imageRenderer.PrepareImage()) {
-    // The image is not ready yet.
+    // The image is not ready yet.  Boost its loading priority since it will
+    // affect layout.
+    if (aShapeImage.GetType() == eStyleImageType_Image) {
+      if (imgRequestProxy* req = aShapeImage.GetImageData()) {
+        req->BoostPriority(imgIRequest::CATEGORY_SIZE_QUERY);
+      }
+    }
     return nullptr;
   }
 

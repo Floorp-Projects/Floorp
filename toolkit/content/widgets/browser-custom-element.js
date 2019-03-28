@@ -238,6 +238,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
     this._contentPrincipal = null;
 
+    this._csp = null;
+
     this._contentRequestContextID = null;
 
     this._fullZoom = 1;
@@ -602,6 +604,12 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
     return this.isRemoteBrowser ? this._contentPrincipal : this.contentDocument.nodePrincipal;
   }
 
+  get csp() {
+    // After Bug 965637 we can query the csp directly from the contentDocument
+    // instead of contentDocument.nodePrincipal.
+    return this.isRemoteBrowser ? this._csp : this.contentDocument.nodePrincipal.csp;
+  }
+
   get contentRequestContextID() {
     if (this.isRemoteBrowser) {
       return this._contentRequestContextID;
@@ -809,9 +817,11 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
         triggeringPrincipal,
         postData,
         headers,
+        csp,
     } = aParams || {};
     let loadURIOptions = {
       triggeringPrincipal,
+      csp,
       referrerInfo,
       loadFlags: flags,
       postData,
@@ -1042,6 +1052,9 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
       let aboutBlank = Services.io.newURI("about:blank");
       let ssm = Services.scriptSecurityManager;
       this._contentPrincipal = ssm.getLoadContextCodebasePrincipal(aboutBlank, this.loadContext);
+      // CSP for about:blank is null; if we ever change _contentPrincipal above,
+      // we should re-evaluate the CSP here.
+      this._csp = null;
 
       this.messageManager.addMessageListener("Browser:Init", this);
       this.messageManager.addMessageListener("DOMTitleChanged", this);

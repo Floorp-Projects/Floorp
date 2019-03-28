@@ -71,6 +71,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   bool ValidateTransaction(const Transaction& aTransaction,
                            ContentParent* aSource);
 
+  void SetFieldEpochsForChild(ContentParent* aChild,
+                              const FieldEpochs& aEpochs);
+  const FieldEpochs& GetFieldEpochsForChild(ContentParent* aChild);
+
  protected:
   void Traverse(nsCycleCollectionTraversalCallback& cb);
   void Unlink();
@@ -91,6 +95,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // All live window globals within this browsing context.
   nsTHashtable<nsRefPtrHashKey<WindowGlobalParent>> mWindowGlobals;
   RefPtr<WindowGlobalParent> mCurrentWindowGlobal;
+
+  // Generation information for each content process which has interacted with
+  // this CanonicalBrowsingContext, by ChildID.
+  nsDataHashtable<nsUint64HashKey, FieldEpochs> mChildFieldEpochs;
 };
 
 }  // namespace dom

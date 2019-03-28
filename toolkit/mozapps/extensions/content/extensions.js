@@ -1285,11 +1285,10 @@ var gViewController = {
                   resolve() {
                     aAddon.markAsSeen();
                     aAddon.enable().then(() => {
-                      // If private browsing access is not allowed by default,
-                      // show the post-install doorhanger notification to
-                      // allow the user to give the extension access from the
-                      // checkbox included in the doorhanger.
-                      if (!allowPrivateBrowsingByDefault && aAddon.incognito !== "not_allowed") {
+                      // The user has just enabled a sideloaded extension, if the permission
+                      // can be changed for the extension, show the post-install panel to
+                      // give the user that opportunity.
+                      if (aAddon.permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS) {
                         Services.obs.notifyObservers({
                           addon: aAddon, target,
                         }, "webextension-install-notify");
@@ -2810,8 +2809,9 @@ var gDetailView = {
       recordSetAddonUpdateTelemetry(this._addon);
     }, true);
 
-    document.getElementById("detail-private-browsing-learnmore-link")
-            .setAttribute("href", SUPPORT_URL + "extensions-pb");
+    for (let el of document.getElementsByClassName("private-learnmore")) {
+      el.setAttribute("href", SUPPORT_URL + "extensions-pb");
+    }
 
     this._privateBrowsing = document.getElementById("detail-privateBrowsing");
     this._privateBrowsing.addEventListener("command", async () => {
@@ -3000,21 +3000,27 @@ var gDetailView = {
     // no code that would be affected by the setting.  The permission is read directly
     // from ExtensionPermissions so we can get it whether or not the extension is
     // currently active.
-    let privateBrowsingRow = document.getElementById("detail-privateBrowsing-row");
-    let privateBrowsingFooterRow = document.getElementById("detail-privateBrowsing-row-footer");
-
-    if (allowPrivateBrowsingByDefault || aAddon.type != "extension" ||
-        !(aAddon.permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS)) {
-      this._privateBrowsing.hidden = true;
-      privateBrowsingRow.hidden = true;
-      privateBrowsingFooterRow.hidden = true;
-      this._privateBrowsing.value = "0";
-    } else {
-      let perms = await ExtensionPermissions.get(aAddon.id);
-      this._privateBrowsing.hidden = false;
-      privateBrowsingRow.hidden = false;
-      privateBrowsingFooterRow.hidden = false;
-      this._privateBrowsing.value = perms.permissions.includes("internal:privateBrowsingAllowed") ? "1" : "0";
+    // Ensure that all private browsing rows are hidden by default, we'll then
+    // unhide what we want.
+    for (let el of document.getElementsByClassName("detail-privateBrowsing")) {
+      el.hidden = true;
+    }
+    if (!allowPrivateBrowsingByDefault && aAddon.type === "extension") {
+      if (aAddon.permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS) {
+        let privateBrowsingRow = document.getElementById("detail-privateBrowsing-row");
+        let privateBrowsingFooterRow = document.getElementById("detail-privateBrowsing-row-footer");
+        let perms = await ExtensionPermissions.get(aAddon.id);
+        this._privateBrowsing.hidden = false;
+        privateBrowsingRow.hidden = false;
+        privateBrowsingFooterRow.hidden = false;
+        this._privateBrowsing.value = perms.permissions.includes("internal:privateBrowsingAllowed") ? "1" : "0";
+      } else if (aAddon.incognito == "spanning") {
+        document.getElementById("detail-privateBrowsing-required").hidden = false;
+        document.getElementById("detail-privateBrowsing-required-footer").hidden = false;
+      } else if (aAddon.incognito == "not_allowed") {
+        document.getElementById("detail-privateBrowsing-disallowed").hidden = false;
+        document.getElementById("detail-privateBrowsing-disallowed-footer").hidden = false;
+      }
     }
 
     // While updating the addon details view, also check if the preferences button should be disabled because
