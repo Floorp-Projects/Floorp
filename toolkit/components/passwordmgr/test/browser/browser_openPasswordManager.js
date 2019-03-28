@@ -8,10 +8,7 @@ registerCleanupFunction(resetPrefs);
 
 add_task(async function test_noFilter() {
   LoginHelper.openPasswordManager(window);
-  await TestUtils.waitForCondition(() => {
-    return Services.wm.getMostRecentWindow("Toolkit:PasswordManager") !== null;
-  }, "Waiting for the password manager dialog to open");
-  let win = Services.wm.getMostRecentWindow("Toolkit:PasswordManager");
+  let win = await waitForPasswordManagerDialog();
   ok(win, "Login dialog was opened");
   await BrowserTestUtils.closeWindow(win);
   await TestUtils.waitForCondition(() => {
@@ -23,10 +20,7 @@ add_task(async function test_filter() {
   // Greek IDN for example.test
   let domain = "παράδειγμα.δοκιμή";
   LoginHelper.openPasswordManager(window, domain);
-  await TestUtils.waitForCondition(() => {
-    return Services.wm.getMostRecentWindow("Toolkit:PasswordManager") !== null;
-  }, "Waiting for the password manager dialog to open");
-  let win = Services.wm.getMostRecentWindow("Toolkit:PasswordManager");
+  let win = await waitForPasswordManagerDialog();
   await TestUtils.waitForCondition(() => {
     return win.document.getElementById("filter").value == domain;
   }, "Waiting for the search string to filter logins");
