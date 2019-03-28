@@ -10,12 +10,13 @@
 #include "gfxFeature.h"
 #include "gfxFallback.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 namespace gfx {
 
 // Defined in GraphicsMessages.ipdlh.
-class FeatureChange;
+class FeatureFailure;
 
 // Manages the history and state of a graphics feature. The flow of a feature
 // is:
@@ -171,7 +172,8 @@ class gfxConfig {
   // Get the most descriptive failure id message for this feature.
   static const nsCString& GetFailureId(Feature aFeature);
 
-  static void ImportChange(Feature aFeature, const FeatureChange& aChange);
+  static void ImportChange(Feature aFeature,
+                           const Maybe<FeatureFailure>& aChange);
 
   static void Init();
   static void Shutdown();

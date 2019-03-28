@@ -321,7 +321,7 @@ mozilla::ipc::IPCResult GPUParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
   return IPC_OK();
 }
 
-static void CopyFeatureChange(Feature aFeature, FeatureChange* aOut) {
+static void CopyFeatureChange(Feature aFeature, Maybe<FeatureFailure>* aOut) {
   FeatureState& feature = gfxConfig::GetFeature(aFeature);
   if (feature.DisabledByDefault() || feature.IsEnabled()) {
     // No change:
@@ -330,7 +330,7 @@ static void CopyFeatureChange(Feature aFeature, FeatureChange* aOut) {
     //   - Enabled means we were told to use this feature, and we didn't
     //   discover anything
     //     that would prevent us from doing so.
-    *aOut = null_t();
+    *aOut = Nothing();
     return;
   }
 
@@ -339,7 +339,8 @@ static void CopyFeatureChange(Feature aFeature, FeatureChange* aOut) {
   nsCString message;
   message.AssignASCII(feature.GetFailureMessage());
 
-  *aOut = FeatureFailure(feature.GetValue(), message, feature.GetFailureId());
+  *aOut =
+      Some(FeatureFailure(feature.GetValue(), message, feature.GetFailureId()));
 }
 
 mozilla::ipc::IPCResult GPUParent::RecvGetDeviceStatus(GPUDeviceData* aOut) {
@@ -351,10 +352,10 @@ mozilla::ipc::IPCResult GPUParent::RecvGetDeviceStatus(GPUDeviceData* aOut) {
   if (DeviceManagerDx* dm = DeviceManagerDx::Get()) {
     D3D11DeviceStatus deviceStatus;
     dm->ExportDeviceInfo(&deviceStatus);
-    aOut->gpuDevice() = deviceStatus;
+    aOut->gpuDevice() = Some(deviceStatus);
   }
 #else
-  aOut->gpuDevice() = null_t();
+  aOut->gpuDevice() = Nothing();
 #endif
 
   return IPC_OK();
