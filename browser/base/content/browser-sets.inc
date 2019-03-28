@@ -96,7 +96,8 @@
     <command id="History:UndoCloseWindow" oncommand="undoCloseWindow();"/>
 
 #ifdef NIGHTLY_BUILD
-    <command id="wrCaptureCmd" oncommand="gWebRender.capture();"/>
+    <command id="wrCaptureCmd" oncommand="gGfxUtils.webrenderCapture();"/>
+    <command id="windowRecordingCmd" oncommand="gGfxUtils.toggleWindowRecording();"/>
 #endif
 #ifdef XP_MACOSX
     <command id="minimizeWindow"
@@ -317,6 +318,13 @@
     key="#" modifiers="control"
 #endif
     command="wrCaptureCmd"/>
+    <key id="key_windowRecordingCmd"
+#ifdef XP_MACOSX
+    key="4" modifiers="control,shift"
+#else
+    key="$" modifiers="control"
+#endif
+    command="windowRecordingCmd"/>
 #endif
 #ifdef XP_MACOSX
     <key id="key_minimizeWindow"

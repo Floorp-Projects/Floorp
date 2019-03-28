@@ -371,6 +371,9 @@ void ClientLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
     mWidget->PrepareWindowEffects();
   }
   EndTransactionInternal(aCallback, aCallbackData, aFlags);
+  if (XRE_IsContentProcess()) {
+    RegisterPayload({CompositionPayloadType::eContentPaint, TimeStamp::Now()});
+  }
   ForwardTransaction(!(aFlags & END_NO_REMOTE_COMPOSITE));
 
   if (mRepeatTransaction) {

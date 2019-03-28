@@ -31,7 +31,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   LightweightThemeConsumer: "resource://gre/modules/LightweightThemeConsumer.jsm",
-  LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   Log: "resource://gre/modules/Log.jsm",
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
@@ -102,8 +101,7 @@ XPCOMUtils.defineLazyScriptGetter(this, "gViewSourceUtils",
                                   "chrome://global/content/viewSourceUtils.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gTabsPanel",
                                   "chrome://browser/content/browser-allTabsMenu.js");
-XPCOMUtils.defineLazyScriptGetter(this, ["LightWeightThemeWebInstaller",
-                                         "gExtensionsNotifications",
+XPCOMUtils.defineLazyScriptGetter(this, ["gExtensionsNotifications",
                                          "gXPInstallObserver"],
                                   "chrome://browser/content/browser-addons.js");
 XPCOMUtils.defineLazyScriptGetter(this, "ctrlTab",
@@ -141,8 +139,8 @@ XPCOMUtils.defineLazyScriptGetter(this, "gEditItemOverlay",
 XPCOMUtils.defineLazyScriptGetter(this, "SearchOneOffs",
                                   "chrome://browser/content/search/search-one-offs.js");
 if (AppConstants.NIGHTLY_BUILD) {
-  XPCOMUtils.defineLazyScriptGetter(this, "gWebRender",
-                                    "chrome://browser/content/browser-webrender.js");
+  XPCOMUtils.defineLazyScriptGetter(this, "gGfxUtils",
+                                    "chrome://browser/content/browser-graphics-utils.js");
 }
 
 XPCOMUtils.defineLazyScriptGetter(this, "pktUI", "chrome://pocket/content/main.js");
@@ -1653,8 +1651,6 @@ var gBrowserInit = {
       placesContext.addEventListener("popupshowing", updateEditUIVisibility);
       placesContext.addEventListener("popuphiding", updateEditUIVisibility);
     }
-
-    LightWeightThemeWebInstaller.init();
 
     FullScreen.init();
     PointerLock.init();

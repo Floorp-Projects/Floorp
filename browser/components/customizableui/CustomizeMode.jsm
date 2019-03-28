@@ -28,14 +28,14 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["CSS"]);
 
+ChromeUtils.defineModuleGetter(this, "AddonManager",
+                               "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "AMTelemetry",
                                "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "DragPositionManager",
                                "resource:///modules/DragPositionManager.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
                                "resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
-                               "resource://gre/modules/LightweightThemeManager.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionStore",
                                "resource:///modules/sessionstore/SessionStore.jsm");
 XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
@@ -164,11 +164,11 @@ CustomizeMode.prototype = {
     }
   },
 
-  _updateLWThemeButtonIcon() {
+  async _updateThemeButtonIcon() {
     let lwthemeButton = this.$("customization-lwtheme-button");
     let lwthemeIcon = this.document.getAnonymousElementByAttribute(lwthemeButton,
                         "class", "button-icon");
-    let theme = LightweightThemeManager.currentTheme;
+    let theme = (await AddonManager.getAddonsByTypes(["theme"])).find(addon => addon.isActive);
     lwthemeIcon.style.backgroundImage = theme ? "url(" + theme.iconURL + ")" : "";
   },
 
@@ -344,8 +344,8 @@ CustomizeMode.prototype = {
       }, 0);
       this._updateEmptyPaletteNotice();
 
-      this._updateLWThemeButtonIcon();
-      Services.obs.addObserver(this, "lightweight-theme-changed");
+      this._updateThemeButtonIcon();
+      AddonManager.addAddonListener(this);
 
       this._setupDownloadAutoHideToggle();
 
@@ -388,7 +388,7 @@ CustomizeMode.prototype = {
 
     this._teardownDownloadAutoHideToggle();
 
-    Services.obs.removeObserver(this, "lightweight-theme-changed");
+    AddonManager.removeAddonListener(this);
     CustomizableUI.removeListener(this);
 
     this.document.removeEventListener("keypress", this);
@@ -1310,23 +1310,13 @@ CustomizeMode.prototype = {
     this._onUIChange();
   },
 
-  onLWThemesMenuShowing(aEvent) {
+  async onThemesMenuShowing(aEvent) {
     const DEFAULT_THEME_ID = "default-theme@mozilla.org";
     const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
     const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
     const MAX_THEME_COUNT = 6;
 
-    this._clearLWThemesMenu(aEvent.target);
-
-    function previewTheme(aPreviewThemeEvent) {
-      LightweightThemeManager.previewTheme(
-        aPreviewThemeEvent.target.theme.id != DEFAULT_THEME_ID ?
-        aPreviewThemeEvent.target.theme : null);
-    }
-
-    function resetPreview() {
-      LightweightThemeManager.resetPreview();
-    }
+    this._clearThemesMenu(aEvent.target);
 
     let onThemeSelected = panel => {
       // This causes us to call _onUIChange when the LWT actually changes,
@@ -1346,50 +1336,36 @@ CustomizeMode.prototype = {
         tbb.setAttribute("tooltiptext", aTheme.description);
       tbb.setAttribute("tabindex", "0");
       tbb.classList.add("customization-lwtheme-menu-theme");
-      let isActive = activeThemeID == aTheme.id;
+      let isActive = aTheme.isActive;
       tbb.setAttribute("aria-checked", isActive);
       tbb.setAttribute("role", "menuitemradio");
       if (isActive) {
         tbb.setAttribute("active", "true");
       }
-      tbb.addEventListener("focus", previewTheme);
-      tbb.addEventListener("mouseover", previewTheme);
-      tbb.addEventListener("blur", resetPreview);
 
       return tbb;
     }
 
-    let themes = [];
-    let lwts = LightweightThemeManager.usedThemes;
-    let currentLwt = LightweightThemeManager.currentTheme;
-
-    let activeThemeID = currentLwt ? currentLwt.id : DEFAULT_THEME_ID;
+    let themes = await AddonManager.getAddonsByTypes(["theme"]);
+    let currentTheme = themes.find(theme => theme.isActive);
 
     // Move the current theme (if any) and the light/dark themes to the start:
-    let importantThemes = [DEFAULT_THEME_ID, LIGHT_THEME_ID, DARK_THEME_ID];
-    if (currentLwt && !importantThemes.includes(currentLwt.id)) {
-      importantThemes.push(currentLwt.id);
+    let importantThemes = new Set([DEFAULT_THEME_ID, LIGHT_THEME_ID, DARK_THEME_ID]);
+    if (currentTheme) {
+      importantThemes.add(currentTheme.id);
     }
-    for (let importantTheme of importantThemes) {
-      let themeIndex = lwts.findIndex(theme => theme.id == importantTheme);
-      if (themeIndex > -1) {
-        themes.push(...lwts.splice(themeIndex, 1));
-      }
-    }
-    themes = themes.concat(lwts);
+
+    themes.sort((a, b) => importantThemes.has(b) - importantThemes.has(a));
+
     if (themes.length > MAX_THEME_COUNT)
       themes.length = MAX_THEME_COUNT;
 
     let footer = doc.getElementById("customization-lwtheme-menu-footer");
     let panel = footer.parentNode;
-    let recommendedLabel = doc.getElementById("customization-lwtheme-menu-recommended");
     for (let theme of themes) {
       let button = buildToolbarButton(theme);
-      button.addEventListener("command", () => {
-        if ("userDisabled" in button.theme)
-          button.theme.userDisabled = false;
-        else
-          LightweightThemeManager.currentTheme = button.theme;
+      button.addEventListener("command", async () => {
+        await button.theme.enable();
         onThemeSelected(panel);
         AMTelemetry.recordActionEvent({
           object: "customize",
@@ -1397,69 +1373,16 @@ CustomizeMode.prototype = {
           extra: {type: "theme", addonId: theme.id},
         });
       });
-      panel.insertBefore(button, recommendedLabel);
-    }
-
-    function panelMouseOut(e) {
-      // mouseout events bubble, so we get mouseout events for the buttons
-      // in the panel. Here, we only care when the mouse actually leaves
-      // the panel. For some reason event.target might not be the panel
-      // even when the mouse *is* leaving the panel, so we check
-      // explicitOriginalTarget instead.
-      if (e.explicitOriginalTarget == panel) {
-        resetPreview();
-      }
-    }
-
-    panel.addEventListener("mouseout", panelMouseOut);
-    panel.addEventListener("popuphidden", () => {
-      panel.removeEventListener("mouseout", panelMouseOut);
-      resetPreview();
-    }, {once: true});
-
-    let lwthemePrefs = Services.prefs.getBranch("lightweightThemes.");
-    let recommendedThemes = lwthemePrefs.getStringPref("recommendedThemes");
-    recommendedThemes = JSON.parse(recommendedThemes);
-    let sb = Services.strings.createBundle("chrome://browser/locale/lightweightThemes.properties");
-    for (let theme of recommendedThemes) {
-      try {
-        theme.name = sb.GetStringFromName("lightweightThemes." + theme.id + ".name");
-        theme.description = sb.GetStringFromName("lightweightThemes." + theme.id + ".description");
-      } catch (ex) {
-        // If finding strings for this failed, just don't build it. This can
-        // happen for users with 'older' recommended themes lists, some of which
-        // have since been removed from Firefox.
-        continue;
-      }
-      let button = buildToolbarButton(theme);
-      button.addEventListener("command", () => {
-        LightweightThemeManager.setLocalTheme(button.theme);
-        recommendedThemes = recommendedThemes.filter((aTheme) => { return aTheme.id != button.theme.id; });
-        lwthemePrefs.setStringPref("recommendedThemes",
-                                   JSON.stringify(recommendedThemes));
-        onThemeSelected(panel);
-        let addonId = `${button.theme.id}@personas.mozilla.org`;
-        AMTelemetry.recordActionEvent({
-          object: "customize",
-          action: "enable",
-          value: "recommended",
-          extra: {type: "theme", addonId},
-        });
-      });
       panel.insertBefore(button, footer);
     }
-    let hideRecommendedLabel = (footer.previousElementSibling == recommendedLabel);
-    recommendedLabel.hidden = hideRecommendedLabel;
   },
 
-  _clearLWThemesMenu(panel) {
+  _clearThemesMenu(panel) {
     let footer = this.$("customization-lwtheme-menu-footer");
-    let recommendedLabel = this.$("customization-lwtheme-menu-recommended");
-    for (let element of [footer, recommendedLabel]) {
-      while (element.previousElementSibling &&
-             element.previousElementSibling.localName == "toolbarbutton") {
-        element.previousElementSibling.remove();
-      }
+    let element = footer;
+    while (element.previousElementSibling &&
+           element.previousElementSibling.localName == "toolbarbutton") {
+      element.previousElementSibling.remove();
     }
 
     // Workaround for bug 1059934
@@ -1582,14 +1505,19 @@ CustomizeMode.prototype = {
           this._updateDragSpaceCheckbox();
         }
         break;
-      case "lightweight-theme-changed":
-        this._updateLWThemeButtonIcon();
-        if (this._nextThemeChangeUserTriggered) {
-          this._onUIChange();
-        }
-        this._nextThemeChangeUserTriggered = false;
-        break;
     }
+  },
+
+  async onEnabled(addon) {
+    if (addon.type != "theme") {
+      return;
+    }
+
+    await this._updateThemeButtonIcon();
+    if (this._nextThemeChangeUserTriggered) {
+      this._onUIChange();
+    }
+    this._nextThemeChangeUserTriggered = false;
   },
 
   _canDrawInTitlebar() {

@@ -84,6 +84,12 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
 
   mozilla::ipc::IPCResult RecvAllPluginsCaptured() override { return IPC_OK(); }
 
+  mozilla::ipc::IPCResult RecvBeginRecording(
+      const TimeStamp& aRecordingStart) override {
+    return IPC_OK();
+  }
+  mozilla::ipc::IPCResult RecvEndRecording() override { return IPC_OK(); }
+
   mozilla::ipc::IPCResult RecvGetFrameUniformity(
       FrameUniformityData* aOutData) override {
     // Don't support calculating frame uniformity on the child process and

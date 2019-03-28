@@ -7,11 +7,9 @@
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
 const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
-const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 add_task(async function() {
   Services.prefs.clearUserPref("lightweightThemes.usedThemes");
-  Services.prefs.clearUserPref("lightweightThemes.recommendedThemes");
 
   await startCustomizing();
   // Check restore defaults button is disabled.
@@ -51,9 +49,9 @@ add_task(async function() {
   await popupShownPromise;
 
   let header = document.getElementById("customization-lwtheme-menu-header");
-  let recommendedHeader = document.getElementById("customization-lwtheme-menu-recommended");
+  let footer = document.getElementById("customization-lwtheme-menu-footer");
 
-  is(header.nextElementSibling.nextElementSibling.nextElementSibling.nextElementSibling, recommendedHeader,
+  is(header.nextElementSibling.nextElementSibling.nextElementSibling.nextElementSibling, footer,
      "There should only be three themes (default, light, dark) in the 'My Themes' section by default");
   is(header.nextElementSibling.theme.id, DEFAULT_THEME_ID,
      "The first theme should be the default theme");
@@ -67,8 +65,11 @@ add_task(async function() {
   info("Clicked on light theme");
   await themeChangedPromise;
 
+  let button = document.getElementById("customization-reset-button");
+  await TestUtils.waitForCondition(() => !button.disabled);
+
   // Check restore defaults button is enabled.
-  ok(!document.getElementById("customization-reset-button").disabled,
+  ok(!button.disabled,
      "Reset button should not be disabled anymore");
   ok((/light/i).test(themesButtonIcon.style.backgroundImage),
      `Button should show light theme thumbnail - was: "${themesButtonIcon.style.backgroundImage}"`);
@@ -84,12 +85,14 @@ add_task(async function() {
     is(activeThemes[0].theme.id, LIGHT_THEME_ID, "Light theme should be selected");
   }
 
-  let firstLWTheme = recommendedHeader.nextElementSibling;
+  let firstLWTheme = footer.previousElementSibling;
   let firstLWThemeId = firstLWTheme.theme.id;
   themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
   firstLWTheme.doCommand();
   info("Clicked on first theme");
   await themeChangedPromise;
+
+  await new Promise(executeSoon);
 
   popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
@@ -103,17 +106,13 @@ add_task(async function() {
   }
 
   is(header.nextElementSibling.theme.id, DEFAULT_THEME_ID, "The first theme should be the Default theme");
-  let installedThemeId = header.nextElementSibling.nextElementSibling.nextElementSibling.nextElementSibling.theme.id;
-  ok(installedThemeId.startsWith(firstLWThemeId),
-     "The second theme in the 'My Themes' section should be the newly installed theme: " +
-     "Installed theme id: " + installedThemeId + "; First theme ID: " + firstLWThemeId);
   let themeCount = 0;
   let iterNode = header;
   while (iterNode.nextElementSibling && iterNode.nextElementSibling.theme) {
     themeCount++;
     iterNode = iterNode.nextElementSibling;
   }
-  is(themeCount, 4,
+  is(themeCount, 3,
      "There should be four themes in the 'My Themes' section");
 
   let defaultTheme = header.nextElementSibling;
@@ -128,20 +127,14 @@ add_task(async function() {
   info("Clicked on themes button a fourth time");
   await popupShownPromise;
 
-  firstLWTheme = recommendedHeader.nextElementSibling;
-  themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
-  firstLWTheme.doCommand();
-  info("Clicked on first theme again");
-  await themeChangedPromise;
-
   // check that "Restore Defaults" button resets theme
   await gCustomizeMode.reset();
-  is(LightweightThemeManager.currentTheme.id, DEFAULT_THEME_ID, "Current theme reset to default");
+
+  defaultTheme = await AddonManager.getAddonByID(DEFAULT_THEME_ID);
+  is(defaultTheme.isActive, true, "Current theme reset to default");
 
   await endCustomizing();
   Services.prefs.setCharPref("lightweightThemes.usedThemes", "[]");
-  Services.prefs.setCharPref("lightweightThemes.recommendedThemes", "[]");
-  info("Removed all recommended themes");
   await startCustomizing();
   popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
@@ -160,18 +153,10 @@ add_task(async function() {
   themeNode = themeNode.nextElementSibling;
   is(themeNode.theme.id, DARK_THEME_ID, "The third theme should be the Dark theme");
   is(themeNode.hidden, false, "The dark theme should never be hidden");
-
-  recommendedHeader = document.getElementById("customization-lwtheme-menu-recommended");
-  is(themeNode.nextElementSibling, recommendedHeader,
-     "There should only be three themes (default, light, dark) in the 'My Themes' section now");
-  let footer = document.getElementById("customization-lwtheme-menu-footer");
-  is(recommendedHeader.nextElementSibling.id, footer.id, "There should be no recommended themes in the menu");
-  is(recommendedHeader.hidden, true, "The recommendedHeader should be hidden since there are no recommended themes");
 });
 
 add_task(async function asyncCleanup() {
   await endCustomizing();
 
   Services.prefs.clearUserPref("lightweightThemes.usedThemes");
-  Services.prefs.clearUserPref("lightweightThemes.recommendedThemes");
 });

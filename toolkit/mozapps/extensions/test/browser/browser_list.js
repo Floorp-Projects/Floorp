@@ -4,10 +4,11 @@
 
 // Tests the list view
 
-var tempScope = {};
-ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", tempScope);
-var LightweightThemeManager = tempScope.LightweightThemeManager;
- const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+
+const {PromiseTestUtils} = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
+
+PromiseTestUtils.whitelistRejectionsGlobally(/this\._errorLink/);
 
 var gProvider;
 var gManagerWindow;
@@ -19,18 +20,6 @@ var gDate = new Date(2010, 7, 16);
 var infoURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
 
 const EXPECTED_ADDONS = 11;
-
-var gLWTheme = {
-                id: "4",
-                version: "1",
-                name: "Bling",
-                description: "SO MUCH BLING!",
-                author: "Pixel Pusher",
-                homepageURL: "http://mochi.test:8888/data/index.html",
-                headerURL: "http://mochi.test:8888/data/header.png",
-                previewURL: "http://mochi.test:8888/data/preview.png",
-                iconURL: "http://mochi.test:8888/data/icon.png",
-              };
 
 add_task(async function() {
   gProvider = new MockProvider();
@@ -451,38 +440,6 @@ add_task(async function() {
   } catch (e) { }
 });
 
-
-function tick() {
-  return new Promise(SimpleTest.executeSoon);
-}
-
-add_task(async function() {
-  info("Enabling lightweight theme");
-  LightweightThemeManager.currentTheme = gLWTheme;
-  await tick();
-
-  gManagerWindow.loadView("addons://list/theme");
-  await new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
-
-  var addon = get_addon_element(gManagerWindow, "4@personas.mozilla.org");
-
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
-  is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  info("Disabling lightweight theme");
-  LightweightThemeManager.currentTheme = null;
-  await tick();
-
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_visible(get_node(addon, "enable-btn"), "Enable button should be hidden");
-  is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be visible");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  let [aAddon] = await promiseAddonsByIDs(["4@personas.mozilla.org"]);
-  aAddon.uninstall();
-});
 
 // Check that onPropertyChanges for appDisabled updates the UI
 add_task(async function() {

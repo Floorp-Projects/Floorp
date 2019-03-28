@@ -63,6 +63,8 @@ LOCAL_INCLUDES += [
     'celt',
     'include',
     'silk',
+    'silk/fixed',
+    'silk/float',
     'src',
 ]
 
@@ -76,15 +78,9 @@ UNIFIED_SOURCES += opus_sources
 SOURCES += opus_nonunified_sources
 
 if CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
-    LOCAL_INCLUDES += [
-        'silk/float',
-    ]
     UNIFIED_SOURCES += silk_sources_float
     UNIFIED_SOURCES += opus_sources_float
 else:
-    LOCAL_INCLUDES += [
-        'silk/fixed',
-    ]
     UNIFIED_SOURCES += silk_sources_fixed
 
 if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
