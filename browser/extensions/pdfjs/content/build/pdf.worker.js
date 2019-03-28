@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.2.91';
-const pdfjsBuild = 'bce9ff73';
+const pdfjsVersion = '2.2.100';
+const pdfjsBuild = 'f9c58115';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -378,7 +378,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.2.91';
+    let workerVersion = '2.2.100';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -20264,7 +20264,10 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
       var fontCapability = (0, _util.createPromiseCapability)();
       var preEvaluatedFont = this.preEvaluateFont(font);
-      var descriptor = preEvaluatedFont.descriptor;
+      const {
+        descriptor,
+        hash
+      } = preEvaluatedFont;
       var fontRefIsRef = (0, _primitives.isRef)(fontRef),
           fontID;
 
@@ -20272,13 +20275,12 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         fontID = fontRef.toString();
       }
 
-      if ((0, _primitives.isDict)(descriptor)) {
+      if (hash && (0, _primitives.isDict)(descriptor)) {
         if (!descriptor.fontAliases) {
           descriptor.fontAliases = Object.create(null);
         }
 
         var fontAliases = descriptor.fontAliases;
-        var hash = preEvaluatedFont.hash;
 
         if (fontAliases[hash]) {
           var aliasFontRef = fontAliases[hash].aliasRef;
@@ -20334,7 +20336,6 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         });
 
         try {
-          var descriptor = preEvaluatedFont.descriptor;
           var fontFile3 = descriptor && descriptor.get('FontFile3');
           var subtype = fontFile3 && fontFile3.get('Subtype');
           var fontType = (0, _fonts.getFontType)(preEvaluatedFont.type, subtype && subtype.name);
@@ -21877,6 +21878,9 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           }
         }
 
+        const firstChar = dict.get('FirstChar') || 0;
+        const lastChar = dict.get('LastChar') || (composite ? 0xFFFF : 0xFF);
+        hash.update(`${firstChar}-${lastChar}`);
         var toUnicode = dict.get('ToUnicode') || baseDict.get('ToUnicode');
 
         if ((0, _primitives.isStream)(toUnicode)) {
@@ -26826,16 +26830,18 @@ var CFFFont = function CFFFontClosure() {
 
       if (properties.composite) {
         charCodeToGlyphId = Object.create(null);
+        let charCode;
 
         if (cff.isCIDFont) {
           for (glyphId = 0; glyphId < charsets.length; glyphId++) {
             var cid = charsets[glyphId];
-            var charCode = properties.cMap.charCodeOf(cid);
+            charCode = properties.cMap.charCodeOf(cid);
             charCodeToGlyphId[charCode] = glyphId;
           }
         } else {
           for (glyphId = 0; glyphId < cff.charStrings.count; glyphId++) {
-            charCodeToGlyphId[glyphId] = glyphId;
+            charCode = properties.cMap.charCodeOf(glyphId);
+            charCodeToGlyphId[charCode] = glyphId;
           }
         }
 
@@ -44298,7 +44304,7 @@ exports.PDFImage = PDFImage;
 
 
 module.exports = function isNodeJS() {
-  return typeof process === 'object' && process + '' === '[object process]' && !process.versions['nw'];
+  return typeof process === 'object' && process + '' === '[object process]' && !process.versions['nw'] && !process.versions['electron'];
 };
 
 /***/ }),
