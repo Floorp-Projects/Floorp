@@ -926,8 +926,8 @@ bool WebRenderBridgeParent::SetDisplayList(
     }
     gfx::Color clearColor(0.f, 0.f, 0.f, 0.f);
     aTxn.SetDisplayList(clearColor, aWrEpoch,
-                        LayerSize(aRect.width, aRect.height), mPipelineId,
-                        aContentSize, aDLDesc, dlData);
+                        wr::LayoutSize{(float)aRect.width, (float)aRect.height},
+                        mPipelineId, aContentSize, aDLDesc, dlData);
 
     if (aObserveLayersUpdate) {
       aTxn.Notify(wr::Checkpoint::SceneBuilt,

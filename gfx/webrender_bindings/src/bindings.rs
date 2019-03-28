@@ -1401,8 +1401,7 @@ pub extern "C" fn wr_transaction_set_display_list(
     txn: &mut Transaction,
     epoch: WrEpoch,
     background: ColorF,
-    viewport_width: f32,
-    viewport_height: f32,
+    viewport_size: LayoutSize,
     pipeline_id: WrPipelineId,
     content_size: LayoutSize,
     dl_descriptor: BuiltDisplayListDescriptor,
@@ -1421,7 +1420,7 @@ pub extern "C" fn wr_transaction_set_display_list(
     txn.set_display_list(
         epoch,
         color,
-        LayoutSize::new(viewport_width, viewport_height),
+        viewport_size,
         (pipeline_id, content_size, dl),
         preserve_frame_state,
     );
