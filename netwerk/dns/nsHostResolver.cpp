@@ -1433,12 +1433,22 @@ nsresult nsHostResolver::NameLookup(nsHostRecord *rec) {
     mode = MODE_NATIVEONLY;
   }
 
-  if (!TRR_DISABLED(mode)) {
+  // For domains that are excluded from TRR we fallback to NativeLookup.
+  // This happens even in MODE_TRRONLY.
+  // By default localhost and local are excluded (so we cover *.local hosts)
+  // See the network.trr.excluded-domains pref.
+  bool skipTRR = true;
+  if (gTRRService) {
+    skipTRR = gTRRService->IsExcludedFromTRR(rec->host);
+  }
+
+  if (!TRR_DISABLED(mode) && !skipTRR) {
     rv = TrrLookup(rec);
   }
 
   if ((mode == MODE_PARALLEL) || TRR_DISABLED(mode) || (mode == MODE_SHADOW) ||
-      ((mode == MODE_TRRFIRST) && NS_FAILED(rv))) {
+      ((mode == MODE_TRRFIRST) && NS_FAILED(rv)) ||
+      (mode == MODE_TRRONLY && skipTRR)) {
     if (!rec->IsAddrRecord()) {
       return rv;
     }
