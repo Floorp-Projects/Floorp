@@ -88,7 +88,7 @@ class TransactionBuilder {
   void RemovePipeline(PipelineId aPipelineId);
 
   void SetDisplayList(gfx::Color aBgColor, Epoch aEpoch,
-                      mozilla::LayerSize aViewportSize,
+                      const wr::LayoutSize& aViewportSize,
                       wr::WrPipelineId pipeline_id,
                       const wr::LayoutSize& content_size,
                       wr::BuiltDisplayListDescriptor dl_descriptor,

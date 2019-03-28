@@ -462,7 +462,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   builder.Finalize(builderContentSize, dl);
   aSceneBuilderTxn.SetDisplayList(
       gfx::Color(0.f, 0.f, 0.f, 0.f), aEpoch,
-      LayerSize(aPipeline->mScBounds.Width(), aPipeline->mScBounds.Height()),
+      wr::ToLayoutSize(aPipeline->mScBounds.Size()),
       aPipelineId, builderContentSize, dl.dl_desc, dl.dl);
 }
 
@@ -521,7 +521,7 @@ void AsyncImagePipelineManager::SetEmptyDisplayList(
   builder.Finalize(builderContentSize, dl);
   txn.SetDisplayList(
       gfx::Color(0.f, 0.f, 0.f, 0.f), epoch,
-      LayerSize(pipeline->mScBounds.Width(), pipeline->mScBounds.Height()),
+      wr::ToLayoutSize(pipeline->mScBounds.Size()),
       aPipelineId, builderContentSize, dl.dl_desc, dl.dl);
 }
 
