@@ -1,0 +1,9 @@
+[package]
+name = "shlex"
+version = "0.1.1"
+authors = ["comex <comexk@gmail.com>"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/comex/rust-shlex"
+description = """
+Split a string into shell words, like Python's shlex.
+"""

@@ -63,7 +63,6 @@ const PREF_SERVICES_SETTINGS_LAST_FETCHED       = "services.settings.last_update
 
 const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.", "security.ssl3."];
 
-
 function getSerializedSecurityInfo(docShell) {
   let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
                     .getService(Ci.nsISerializationHelper);
@@ -599,7 +598,10 @@ class NetErrorChild extends ActorChild {
           let textContainer = doc.getElementById("text-container");
           errorPageContainer.style.backgroundPosition = `left top calc(50vh - ${textContainer.clientHeight / 2}px)`;
         } else {
-          doc.getElementById("wrongSystemTime_systemDate2").textContent = systemDate;
+          let targetElems = doc.querySelectorAll("#wrongSystemTime_systemDate2");
+          for (let elem of targetElems) {
+            elem.textContent = systemDate;
+          }
 
           let errDesc = doc.getElementById("ed_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE");
           let sd = doc.getElementById("errorShortDescText");

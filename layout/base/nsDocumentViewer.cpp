@@ -2299,6 +2299,10 @@ UniquePtr<ServoStyleSet> nsDocumentViewer::CreateStyleSet(Document* aDocument) {
   auto cache = nsLayoutStylesheetCache::Singleton();
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
 
+  MOZ_ASSERT(sheetService,
+             "should never be creating a StyleSet after the style sheet "
+             "service has gone");
+
   auto styleSet = MakeUnique<ServoStyleSet>();
 
   // User sheets
@@ -3693,7 +3697,7 @@ nsDocumentViewer::PrintPreviewNavigate(int16_t aType, int32_t aPageNum) {
   if (aType == nsIWebBrowserPrint::PRINTPREVIEW_HOME ||
       (aType == nsIWebBrowserPrint::PRINTPREVIEW_GOTO_PAGENUM &&
        aPageNum == 1)) {
-    sf->ScrollTo(nsPoint(0, 0), nsIScrollableFrame::INSTANT);
+    sf->ScrollTo(nsPoint(0, 0), ScrollMode::eInstant);
     return NS_OK;
   }
 
@@ -3759,7 +3763,7 @@ nsDocumentViewer::PrintPreviewNavigate(int16_t aType, int32_t aPageNum) {
   if (fndPageFrame) {
     nscoord newYPosn = nscoord(mPrintJob->GetPrintPreviewScale() *
                                fndPageFrame->GetPosition().y);
-    sf->ScrollTo(nsPoint(pt.x, newYPosn), nsIScrollableFrame::INSTANT);
+    sf->ScrollTo(nsPoint(pt.x, newYPosn), ScrollMode::eInstant);
   }
   return NS_OK;
 }

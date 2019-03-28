@@ -544,19 +544,27 @@ interface nsIHttpChannel : nsIChannel
       CLASSIFIED_TRACKING_CONTENT = 0x40,
 
       /**
-       * This is exposed to help to identify tracking classification
+       * This is exposed to help to identify tracking classification using the
+       * basic lists.
        */
-      CLASSIFIED_ANY_TRACKING = CLASSIFIED_TRACKING |
+      CLASSIFIED_ANY_BASIC_TRACKING = CLASSIFIED_TRACKING |
         CLASSIFIED_TRACKING_AD | CLASSIFIED_TRACKING_ANALYTICS |
-        CLASSIFIED_TRACKING_SOCIAL | CLASSIFIED_TRACKING_CONTENT |
-        CLASSIFIED_FINGERPRINTING,
+        CLASSIFIED_TRACKING_SOCIAL | CLASSIFIED_FINGERPRINTING,
+
+      /**
+       * This is exposed to help to identify tracking classification using the
+       * strict lists.
+       */
+      CLASSIFIED_ANY_STRICT_TRACKING = CLASSIFIED_ANY_BASIC_TRACKING |
+        CLASSIFIED_TRACKING_CONTENT,
     };
 
     /**
      * Returns true if the channel has loaded a resource that is classified as
      * tracker.
      * This is a helper attribute which returns the same value of
-     * (classificationFlags & CLASSIFIED_ANY_TRACKING)
+     * (classificationFlags & CLASSIFIED_ANY_BASIC_TRACKING) or
+     * (classificationFlags & CLASSIFIED_ANY_STRICT_TRACKING)
      *
      * Note that top-level channels could be marked as tracking
      * resource. In order to identify third-party tracking resources
@@ -581,7 +589,8 @@ interface nsIHttpChannel : nsIChannel
      * window URI.
      *
      * This is a helper attribute which returns the same value of
-     * (thirdPartyClassificationFlags & CLASSIFIED_ANY_TRACKING)
+     * (thirdPartyClassificationFlags & CLASSIFIED_ANY_BASIC_TRACKING) or
+     * (thirdPartyClassificationFlags & CLASSIFIED_ANY_STRICT_TRACKING)
      */
     boolean isThirdPartyTrackingResource();
 

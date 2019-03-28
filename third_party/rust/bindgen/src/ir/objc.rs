@@ -12,8 +12,7 @@ use clang_sys::CXCursor_ObjCClassRef;
 use clang_sys::CXCursor_ObjCInstanceMethodDecl;
 use clang_sys::CXCursor_ObjCProtocolDecl;
 use clang_sys::CXCursor_ObjCProtocolRef;
-use quote;
-use proc_macro2::{Term, Span};
+use proc_macro2::{TokenStream, Ident, Span};
 
 /// Objective C interface as used in TypeKind
 ///
@@ -132,10 +131,9 @@ impl ObjCInterface {
                                     if protocol.is_protocol
                                     {
                                         debug!("Checking protocol {}, ty.name {:?}", protocol.name, ty.name());
-                                        if Some(needle.as_ref()) == ty.name()
-                                        {
+                                        if Some(needle.as_ref()) == ty.name() {
                                             debug!("Found conforming protocol {:?}", item);
-                                            interface.conforms_to.push(*id);
+                                            interface.conforms_to.push(id);
                                             break;
                                         }
                                     }
@@ -213,11 +211,11 @@ impl ObjCMethod {
     }
 
     /// Formats the method call
-    pub fn format_method_call(&self, args: &[quote::Tokens]) -> quote::Tokens {
+    pub fn format_method_call(&self, args: &[TokenStream]) -> TokenStream {
         let split_name: Vec<_> = self.name
             .split(':')
             .filter(|p| !p.is_empty())
-            .map(|name| Term::new(name, Span::call_site()))
+            .map(|name| Ident::new(name, Span::call_site()))
             .collect();
 
         // No arguments
@@ -243,7 +241,7 @@ impl ObjCMethod {
             let arg = arg.to_string();
             let name_and_sig: Vec<&str> = arg.split(' ').collect();
             let name = name_and_sig[0];
-            args_without_types.push(Term::new(name, Span::call_site()))
+            args_without_types.push(Ident::new(name, Span::call_site()))
         };
 
         let args = split_name

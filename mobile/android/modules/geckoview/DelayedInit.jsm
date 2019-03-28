@@ -52,7 +52,7 @@ var DelayedInit = {
   },
 
   scheduleList: function(fns, maxWait) {
-    for (let fn of fns) {
+    for (const fn of fns) {
       Impl.scheduleInit(fn, null, null, maxWait);
     }
   },
@@ -66,13 +66,13 @@ var Impl = {
   pendingInits: [],
 
   onIdle: function() {
-    let startTime = Cu.now();
+    const startTime = Cu.now();
     let time = startTime;
     let nextDue;
 
     // Go through all the pending inits. Even if we don't run them,
     // we still need to find out when the next timeout should be.
-    for (let init of this.pendingInits) {
+    for (const init of this.pendingInits) {
       if (init.complete) {
         continue;
       }
@@ -97,7 +97,7 @@ var Impl = {
   },
 
   addPendingInit: function(fn, wait) {
-    let init = {
+    const init = {
       fn: fn,
       due: Cu.now() + wait,
       complete: false,
@@ -121,7 +121,7 @@ var Impl = {
   },
 
   scheduleInit: function(fn, object, name, wait) {
-    let init = this.addPendingInit(fn, wait);
+    const init = this.addPendingInit(fn, wait);
 
     if (!object || !name) {
       // No lazy getter needed.
@@ -146,7 +146,7 @@ var Impl = {
 
         // If the initializer actually ran, it may have replaced our proxy
         // property with a real one, so we need to reload he property.
-        let newProp = Object.getOwnPropertyDescriptor(object, name);
+        const newProp = Object.getOwnPropertyDescriptor(object, name);
         if (newProp.get !== proxy_getter) {
           // Set prop if newProp doesn't refer to our proxy property.
           prop = newProp;

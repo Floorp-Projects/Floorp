@@ -191,7 +191,6 @@ dom/security/test/mixedcontentblocker/**
 dom/security/test/sri/**
 dom/serviceworkers/**
 dom/smil/**
-dom/svg/**
 
 dom/tests/html/**
 dom/tests/mochitest/**
@@ -213,6 +212,8 @@ dom/canvas/test/webgl-conf/**
 dom/imptests/**
 dom/media/webaudio/test/blink/**
 dom/media/webvtt/**
+dom/svg/test/test_nonAnimStrings.xhtml
+dom/svg/test/test_SVG_namespace_ids.html
 
 # Third-party
 editor/libeditor/tests/browserscope/**

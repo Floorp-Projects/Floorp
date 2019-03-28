@@ -21,8 +21,12 @@ def add_indexes(config, jobs):
             job_name = '{}-{}'.format(build_platform, repackage_type)
             product = job.get('index', {}).get('product', 'firefox')
             index_type = 'generic'
+            if job['attributes'].get('shippable') and job['attributes'].get('locale'):
+                index_type = 'shippable-l10n'
             if job['attributes'].get('nightly') and job['attributes'].get('locale'):
                 index_type = 'nightly-l10n'
+            if job['attributes'].get('shippable'):
+                index_type = 'shippable'
             if job['attributes'].get('nightly'):
                 index_type = 'nightly'
             if job['attributes'].get('locale'):

@@ -383,7 +383,15 @@ void UrlClassifierCommon::AnnotateChannel(
   SetClassificationFlagsHelper(aChannel, aClassificationFlags,
                                isThirdPartyWithTopLevelWinURI);
 
-  if (isThirdPartyWithTopLevelWinURI || IsAllowListed(aChannel, aPurpose)) {
+  // We consider valid tracking flags (based on the current strict vs basic list
+  // prefs) and cryptomining (which is not considered as tracking).
+  bool validClassificationFlags =
+      IsTrackingClassificationFlag(aClassificationFlags) ||
+      (aClassificationFlags &
+       nsIHttpChannel::ClassificationFlags::CLASSIFIED_CRYPTOMINING);
+
+  if (validClassificationFlags &&
+      (isThirdPartyWithTopLevelWinURI || IsAllowListed(aChannel, aPurpose))) {
     UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
         aChannel, aLoadingState);
   }
@@ -457,7 +465,13 @@ bool UrlClassifierCommon::IsAllowListed(
 
 // static
 bool UrlClassifierCommon::IsTrackingClassificationFlag(uint32_t aFlag) {
-  return (aFlag & nsIHttpChannel::ClassificationFlags::CLASSIFIED_ANY_TRACKING);
+  if (StaticPrefs::privacy_annotate_channels_strict_list_enabled()) {
+    return (
+        aFlag &
+        nsIHttpChannel::ClassificationFlags::CLASSIFIED_ANY_STRICT_TRACKING);
+  }
+  return (aFlag &
+          nsIHttpChannel::ClassificationFlags::CLASSIFIED_ANY_BASIC_TRACKING);
 }
 
 }  // namespace net

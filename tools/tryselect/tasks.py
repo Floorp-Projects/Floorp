@@ -125,10 +125,17 @@ def resolve_tests_by_suite(paths):
 
     suite_to_tests = defaultdict(list)
     for test in run_tests:
-        key = test['flavor']
-        subsuite = test.get('subsuite')
-        if subsuite:
-            key += '-' + subsuite
+        suite = get_suite_definition(test['flavor'], test.get('subsuite'), strict=True)
+
+        if 'mozharness_name' in suite:
+            key = suite['mozharness_name']
+        else:
+            key = test['flavor']
+            subsuite = test.get('subsuite')
+
+            if subsuite:
+                key += '-' + subsuite
+
         suite_to_tests[key].append(test['srcdir_relpath'])
 
     return suite_to_tests

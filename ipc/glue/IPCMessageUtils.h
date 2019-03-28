@@ -84,7 +84,7 @@ struct SerializedStructuredCloneBuffer final {
       const SerializedStructuredCloneBuffer& aOther) {
     data.Clear();
     data.initScope(aOther.data.scope());
-    data.Append(aOther.data);
+    MOZ_RELEASE_ASSERT(data.Append(aOther.data), "out of memory");
     return *this;
   }
 

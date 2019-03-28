@@ -305,7 +305,7 @@ android-geckoview-docs/opt:
     treeherder:
         platform: android-4-0-armv7-api16/opt
         kind: build
-        tier: 3
+        tier: 2
         symbol: A(gv-docs)
     run-on-projects: [mozilla-central]
     worker-type: aws-provisioner-v1/gecko-{level}-b-android

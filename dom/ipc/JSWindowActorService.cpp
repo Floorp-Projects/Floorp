@@ -128,7 +128,8 @@ class JSWindowActorProtocol final : public nsIObserver,
   void UnregisterListenersFor(EventTarget* aRoot);
   void AddObservers();
   void RemoveObservers();
-  bool Matches(BrowsingContext* aBrowsingContext, nsIURI* aURI);
+  bool Matches(BrowsingContext* aBrowsingContext, nsIURI* aURI,
+               const nsString& aRemoteType);
 
  private:
   explicit JSWindowActorProtocol(const nsAString& aName) : mName(aName) {}
@@ -139,6 +140,7 @@ class JSWindowActorProtocol final : public nsIObserver,
   bool mAllFrames = false;
   bool mIncludeChrome = false;
   nsTArray<nsString> mMatches;
+  nsTArray<nsString> mRemoteTypes;
 
   ParentSide mParent;
   ChildSide mChild;
@@ -158,6 +160,7 @@ JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
   proto->mIncludeChrome = false;
   proto->mAllFrames = aInfo.allFrames();
   proto->mMatches = aInfo.matches();
+  proto->mRemoteTypes = aInfo.remoteTypes();
   proto->mChild.mModuleURI.Assign(aInfo.url());
 
   proto->mChild.mEvents.SetCapacity(aInfo.events().Length());
@@ -183,6 +186,7 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
   info.name() = mName;
   info.allFrames() = mAllFrames;
   info.matches() = mMatches;
+  info.remoteTypes() = mRemoteTypes;
   info.url() = mChild.mModuleURI;
 
   info.events().SetCapacity(mChild.mEvents.Length());
@@ -214,6 +218,11 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsAString& aName,
   if (aOptions.mMatches.WasPassed()) {
     MOZ_ASSERT(aOptions.mMatches.Value().Length());
     proto->mMatches = aOptions.mMatches.Value();
+  }
+
+  if (aOptions.mRemoteTypes.WasPassed()) {
+    MOZ_ASSERT(aOptions.mRemoteTypes.Value().Length());
+    proto->mRemoteTypes = aOptions.mRemoteTypes.Value();
   }
 
   proto->mParent.mModuleURI = aOptions.mParent.mModuleURI;
@@ -427,7 +436,11 @@ extensions::MatchPatternSet* JSWindowActorProtocol::GetURIMatcher() {
 }
 
 bool JSWindowActorProtocol::Matches(BrowsingContext* aBrowsingContext,
-                                    nsIURI* aURI) {
+                                    nsIURI* aURI, const nsString& aRemoteType) {
+  if (!mRemoteTypes.IsEmpty() && !mRemoteTypes.Contains(aRemoteType)) {
+    return false;
+  }
+
   if (!mAllFrames && aBrowsingContext->GetParent()) {
     return false;
   }
@@ -554,7 +567,8 @@ void JSWindowActorService::GetJSWindowActorInfos(
 
 void JSWindowActorService::ConstructActor(
     const nsAString& aName, bool aParentSide, BrowsingContext* aBrowsingContext,
-    nsIURI* aURI, JS::MutableHandleObject aActor, ErrorResult& aRv) {
+    nsIURI* aURI, const nsString& aRemoteType, JS::MutableHandleObject aActor,
+    ErrorResult& aRv) {
   MOZ_ASSERT_IF(aParentSide, XRE_IsParentProcess());
   MOZ_ASSERT(aBrowsingContext, "DocShell without a BrowsingContext!");
   MOZ_ASSERT(aURI, "Must have URI!");
@@ -579,7 +593,7 @@ void JSWindowActorService::ConstructActor(
 
   // Check if our current BrowsingContext and URI matches the requirements for
   // this actor to load.
-  if (!proto->Matches(aBrowsingContext, aURI)) {
+  if (!proto->Matches(aBrowsingContext, aURI, aRemoteType)) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return;
   }

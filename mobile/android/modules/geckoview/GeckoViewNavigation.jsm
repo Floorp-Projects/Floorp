@@ -301,7 +301,7 @@ class GeckoViewNavigation extends GeckoViewModule {
   onEnable() {
     debug `onEnable`;
 
-    let flags = Ci.nsIWebProgress.NOTIFY_LOCATION;
+    const flags = Ci.nsIWebProgress.NOTIFY_LOCATION;
     this.progressFilter =
       Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
       .createInstance(Ci.nsIWebProgress);
@@ -329,7 +329,7 @@ class GeckoViewNavigation extends GeckoViewModule {
       fixedURI = Services.uriFixup.createExposableURI(aLocationURI);
     } catch (ex) { }
 
-    let message = {
+    const message = {
       type: "GeckoView:LocationChange",
       uri: fixedURI.displaySpec,
       canGoBack: this.browser.canGoBack,

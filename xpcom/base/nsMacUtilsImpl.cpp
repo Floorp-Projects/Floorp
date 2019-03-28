@@ -7,6 +7,7 @@
 #include "nsMacUtilsImpl.h"
 
 #include "base/command_line.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
@@ -17,6 +18,13 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 NS_IMPL_ISUPPORTS(nsMacUtilsImpl, nsIMacUtils)
+
+using mozilla::StaticMutexAutoLock;
+
+#if defined(MOZ_SANDBOX)
+StaticAutoPtr<nsCString> nsMacUtilsImpl::sCachedAppPath;
+StaticMutex nsMacUtilsImpl::sCachedAppPathMutex;
+#endif
 
 nsresult nsMacUtilsImpl::GetArchString(nsAString& aArchString) {
   if (!mBinaryArchs.IsEmpty()) {
@@ -134,6 +142,12 @@ nsMacUtilsImpl::GetIsTranslated(bool* aIsTranslated) {
 // executable. We don't rely on the actual .app extension to allow for the
 // bundle being renamed.
 bool nsMacUtilsImpl::GetAppPath(nsCString& aAppPath) {
+  StaticMutexAutoLock lock(sCachedAppPathMutex);
+  if (sCachedAppPath) {
+    aAppPath.Assign(*sCachedAppPath);
+    return true;
+  }
+
   nsAutoCString appPath;
   nsAutoCString appBinaryPath(
       (CommandLine::ForCurrentProcess()->argv()[0]).c_str());
@@ -178,6 +192,11 @@ bool nsMacUtilsImpl::GetAppPath(nsCString& aAppPath) {
     return false;
   }
   app->GetNativePath(aAppPath);
+
+  if (!sCachedAppPath) {
+    sCachedAppPath = new nsCString(aAppPath);
+    ClearOnShutdown(&sCachedAppPath);
+  }
 
   return true;
 }

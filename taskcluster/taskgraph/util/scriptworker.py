@@ -808,7 +808,7 @@ def should_use_artifact_map(platform, project):
     This function exists solely for the beetmover artifact map
     migration.
     """
-    if 'linux64-snap-nightly' in platform:
+    if 'linux64-snap-shippable' in platform:
         # Snap has never been implemented outside of declarative artifacts. We need to use
         # declarative artifacts no matter the branch we're on
         return True
@@ -825,12 +825,12 @@ def should_use_artifact_map(platform, project):
         return True
 
     platforms = [
-        'linux-nightly',
-        'linux64-nightly',
-        'macosx64-nightly',
-        'win32-nightly',
-        'win64-nightly',
-        'win64-aarch64-nightly',
+        'linux-shippable',
+        'linux64-shippable',
+        'macosx64-shippable',
+        'win32-shippable',
+        'win64-shippable',
+        'win64-aarch64-shippable',
         'win64-asan-reporter-nightly',
         'linux64-asan-reporter-nightly',
     ]

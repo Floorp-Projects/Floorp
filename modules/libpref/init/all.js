@@ -227,7 +227,7 @@ pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys", "www.icloud.
 // non-zero keyCode or charCode value to the other).  The format is exactly
 // same as "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys". So,
 // check its explanation for the detail.
-pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode", "*.collabserv.com,*.gov.online.office365.us,*.officeapps-df.live.com.,*.officeapps.live.com,*.online.office.de,*.partner.officewebapps.cn,*.scniris.com");
+pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode", "*.collabserv.com,*.gov.online.office365.us,*.officeapps-df.live.com,*.officeapps.live.com,*.online.office.de,*.partner.officewebapps.cn,*.scniris.com");
 
 // Whether InputEvent.data is enabled.
 pref("dom.inputevent.data.enabled", true);
@@ -1467,6 +1467,7 @@ pref("javascript.options.baselinejit.threshold", 10);
 pref("javascript.options.ion",              true);
 //Duplicated in JitOptions - ensure both match.
 pref("javascript.options.ion.threshold",    1000);
+pref("javascript.options.ion.full.threshold", 100000);
 //Duplicated in JitOptions - ensure both match.
 pref("javascript.options.ion.frequent_bailout_threshold", 10);
 pref("javascript.options.asmjs",            true);
@@ -5650,12 +5651,7 @@ pref("urlclassifier.downloadBlockTable", "goog-badbinurl-proto");
 pref("urlclassifier.passwordAllowTable", "goog-passwordwhite-proto");
 
 // Tables for anti-tracking features
-#ifdef EARLY_BETA_OR_EARLIER
-// Use the strict list for the default cookie restrictions in Nightly and early betas
 pref("urlclassifier.trackingAnnotationTable", "test-track-simple,base-track-digest256,content-track-digest256");
-#else
-pref("urlclassifier.trackingAnnotationTable", "test-track-simple,base-track-digest256");
-#endif
 pref("urlclassifier.trackingAnnotationWhitelistTable", "test-trackwhite-simple,mozstd-trackwhite-digest256");
 pref("urlclassifier.trackingTable", "test-track-simple,base-track-digest256");
 pref("urlclassifier.trackingWhitelistTable", "test-trackwhite-simple,mozstd-trackwhite-digest256");
@@ -6085,6 +6081,8 @@ pref("dom.datatransfer.mozAtAPIs", true);
 
 // Whether or not Prio is supported on this platform.
 pref("prio.enabled", false);
+// Whether or not the Prio Ping is supported on this platform.
+pref("toolkit.telemetry.prioping.enabled", false);
 
 // External.AddSearchProvider is deprecated and it will be removed in the next
 // cycles.

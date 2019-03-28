@@ -22,8 +22,7 @@ SimpleTest.waitForExplicitFinish();
 
 var test = 1;
 
-function checkBounds(element, x, y, w, h)
-{
+function checkBounds(element, x, y, w, h) {
   var bbox = element.getBBox();
   var name = element.nodeName;
 
@@ -34,8 +33,7 @@ function checkBounds(element, x, y, w, h)
   ++test;
 }
 
-function checkWidth(element, w)
-{
+function checkWidth(element, w) {
   var bbox = element.getBBox();
   var name = element.nodeName;
 
@@ -43,21 +41,19 @@ function checkWidth(element, w)
   ++test;
 }
 
-function run()
-{
+function run() {
   // Set accept_languages to something we know
   SpecialPowers.pushPrefEnv({"set": [["intl.accept_languages", "en-gb,en,it"]]}, run1);
 }
 
-function run1()
-{
+function run1() {
   try {
     var doc = $("svg").contentDocument;
     var s = doc.getElementById("s");
     var first = doc.getElementById("first");
     var second = doc.getElementById("second");
     var third = doc.getElementById("third");
-  
+
     first.setAttribute("systemLanguage", "fr");
 
     /* test for an exact match */
@@ -75,7 +71,7 @@ function run1()
     /* test that we use the default if nothing matches */
     second.setAttribute("systemLanguage", "fr");
     checkWidth(s, 80);
-    
+
     /* test we still ignore non-matches */
     second.removeAttribute("systemLanguage");
     third.setAttribute("systemLanguage", "fr");
@@ -89,7 +85,6 @@ function run1()
     first.setAttribute("systemLanguage", "en");
     second.setAttribute("systemLanguage", "en-gb");
     checkWidth(s, 50);
-
   } finally {
     SimpleTest.finish();
   }

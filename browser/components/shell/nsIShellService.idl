@@ -43,6 +43,7 @@ interface nsIShellService : nsISupports
   const long BACKGROUND_CENTER    = 3;
   const long BACKGROUND_FILL      = 4;
   const long BACKGROUND_FIT       = 5;
+  const long BACKGROUND_SPAN      = 6;
 
     /**
      * Sets the desktop background image using either the HTML <IMG> 

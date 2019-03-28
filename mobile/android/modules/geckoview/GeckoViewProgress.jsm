@@ -85,10 +85,10 @@ var IdentityHandler = {
    * (if available). Return the data needed to update the UI.
    */
   checkIdentity: function checkIdentity(aState, aBrowser) {
-    let identityMode = this.getIdentityMode(aState);
-    let mixedDisplay = this.getMixedDisplayMode(aState);
-    let mixedActive = this.getMixedActiveMode(aState);
-    let result = {
+    const identityMode = this.getIdentityMode(aState);
+    const mixedDisplay = this.getMixedDisplayMode(aState);
+    const mixedActive = this.getMixedActiveMode(aState);
+    const result = {
       mode: {
         identity: identityMode,
         mixed_display: mixedDisplay,
@@ -122,7 +122,7 @@ var IdentityHandler = {
       result.host = uri.host;
     }
 
-    let cert = aBrowser.securityUI.secInfo.serverCert;
+    const cert = aBrowser.securityUI.secInfo.serverCert;
 
     result.organization = cert.organization;
     result.subjectName = cert.subjectName;
@@ -147,9 +147,9 @@ class GeckoViewProgress extends GeckoViewModule {
   onEnable() {
     debug `onEnable`;
 
-    let flags = Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
-                Ci.nsIWebProgress.NOTIFY_SECURITY |
-                Ci.nsIWebProgress.NOTIFY_LOCATION;
+    const flags = Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
+                  Ci.nsIWebProgress.NOTIFY_SECURITY |
+                  Ci.nsIWebProgress.NOTIFY_LOCATION;
     this.progressFilter =
       Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
       .createInstance(Ci.nsIWebProgress);
@@ -203,7 +203,7 @@ class GeckoViewProgress extends GeckoViewModule {
     } else if (isStop && !aWebProgress.isLoadingDocument) {
       this._inProgress = false;
 
-      let message = {
+      const message = {
         type: "GeckoView:PageStop",
         success: isSuccess,
       };
@@ -223,9 +223,9 @@ class GeckoViewProgress extends GeckoViewModule {
     this._state = aState;
     this._hostChanged = false;
 
-    let identity = IdentityHandler.checkIdentity(aState, this.browser);
+    const identity = IdentityHandler.checkIdentity(aState, this.browser);
 
-    let message = {
+    const message = {
       type: "GeckoView:SecurityChanged",
       identity: identity,
     };

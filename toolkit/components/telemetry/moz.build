@@ -116,6 +116,7 @@ EXTRA_JS_MODULES += [
     'pings/EventPing.jsm',
     'pings/HealthPing.jsm',
     'pings/ModulesPing.jsm',
+    'pings/PrioPing.jsm',
     'pings/TelemetrySession.jsm',
     'pings/UntrustedModulesPing.jsm',
     'pings/UpdatePing.jsm',

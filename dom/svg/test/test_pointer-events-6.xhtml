@@ -13,8 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500174
 
 SimpleTest.waitForExplicitFinish();
 
-function run()
-{
+function run() {
   var div = document.getElementById("div");
   // Get the coords of the origin of the SVG canvas:
   var originX = div.offsetLeft;
@@ -22,28 +21,28 @@ function run()
   var elementFromPoint;
 
   elementFromPoint = document.elementFromPoint(originX + 18, originY + 30);
-  isnot(elementFromPoint, div, 'Outside left edge of clipped area');
+  isnot(elementFromPoint, div, "Outside left edge of clipped area");
 
   elementFromPoint = document.elementFromPoint(originX + 22, originY + 30);
-  is(elementFromPoint, div, 'Inside left edge of clipped area');
+  is(elementFromPoint, div, "Inside left edge of clipped area");
 
   elementFromPoint = document.elementFromPoint(originX + 30, originY + 18);
-  isnot(elementFromPoint, div, 'Outside top edge of clipped area');
+  isnot(elementFromPoint, div, "Outside top edge of clipped area");
 
   elementFromPoint = document.elementFromPoint(originX + 30, originY + 22);
-  is(elementFromPoint, div, 'Inside top edge of clipped area');
+  is(elementFromPoint, div, "Inside top edge of clipped area");
 
   elementFromPoint = document.elementFromPoint(originX + 42, originY + 30);
-  isnot(elementFromPoint, div, 'Outside right edge of clipped area');
+  isnot(elementFromPoint, div, "Outside right edge of clipped area");
 
   elementFromPoint = document.elementFromPoint(originX + 38, originY + 30);
-  is(elementFromPoint, div, 'Inside right edge of clipped area');
+  is(elementFromPoint, div, "Inside right edge of clipped area");
 
   elementFromPoint = document.elementFromPoint(originX + 30, originY + 42);
-  isnot(elementFromPoint, div, 'Outside bottom edge of clipped area');
+  isnot(elementFromPoint, div, "Outside bottom edge of clipped area");
 
   elementFromPoint = document.elementFromPoint(originX + 30, originY + 38);
-  is(elementFromPoint, div, 'Inside bottom edge of clipped area');
+  is(elementFromPoint, div, "Inside bottom edge of clipped area");
 
   SimpleTest.finish();
 }

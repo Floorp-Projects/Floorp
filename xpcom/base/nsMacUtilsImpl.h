@@ -10,6 +10,11 @@
 #include "nsIMacUtils.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPtr.h"
+
+using mozilla::StaticAutoPtr;
+using mozilla::StaticMutex;
 
 class nsMacUtilsImpl final : public nsIMacUtils {
  public:
@@ -34,6 +39,13 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   // A string containing a "-" delimited list of architectures
   // in our binary.
   nsString mBinaryArchs;
+
+#if defined(MOZ_SANDBOX)
+  // Cache the appDir returned from GetAppPath to avoid doing I/O
+  static StaticAutoPtr<nsCString> sCachedAppPath;
+  // For thread safe setting/checking of sCachedAppPath
+  static StaticMutex sCachedAppPathMutex;
+#endif
 };
 
 // Global singleton service

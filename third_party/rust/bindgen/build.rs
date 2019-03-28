@@ -56,7 +56,7 @@ mod testgen {
                         dst,
                         "test_header!(header_{}, {:?});",
                         func,
-                        entry.path()
+                        entry.path(),
                     ).unwrap();
                 }
                 _ => {}

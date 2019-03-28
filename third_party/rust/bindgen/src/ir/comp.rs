@@ -17,7 +17,7 @@ use peeking_take_while::PeekableExt;
 use std::cmp;
 use std::io;
 use std::mem;
-use std::collections::HashMap;
+use HashMap;
 
 /// The kind of compound type.
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -1517,6 +1517,10 @@ impl CompInfo {
             }) {
                 info!("Found a struct that was defined within `#pragma packed(...)`");
                 return true;
+            } else if self.has_own_virtual_method {
+                if parent_layout.align == 1 {
+                    return true;
+                }
             }
         }
 
@@ -1649,16 +1653,19 @@ impl IsOpaque for CompInfo {
             return true;
         }
 
-        // We don't have `#[repr(packed = "N")]` in Rust yet, so the best we can
-        // do is make this struct opaque.
-        //
-        // See https://github.com/rust-lang-nursery/rust-bindgen/issues/537 and
-        // https://github.com/rust-lang/rust/issues/33158
-        if self.is_packed(ctx, layout) && layout.map_or(false, |l| l.align > 1) {
-            warn!("Found a type that is both packed and aligned to greater than \
-                   1; Rust doesn't have `#[repr(packed = \"N\")]` yet, so we \
-                   are treating it as opaque");
-            return true;
+        if !ctx.options().rust_features().repr_packed_n {
+            // If we don't have `#[repr(packed(N)]`, the best we can
+            // do is make this struct opaque.
+            //
+            // See https://github.com/rust-lang-nursery/rust-bindgen/issues/537 and
+            // https://github.com/rust-lang/rust/issues/33158
+            if self.is_packed(ctx, layout) && layout.map_or(false, |l| l.align > 1) {
+                warn!("Found a type that is both packed and aligned to greater than \
+                       1; Rust before version 1.33 doesn't have `#[repr(packed(N))]`, so we \
+                       are treating it as opaque. You may wish to set bindgen's rust target \
+                       version to 1.33 or later to enable `#[repr(packed(N))]` support.");
+                return true;
+            }
         }
 
         false

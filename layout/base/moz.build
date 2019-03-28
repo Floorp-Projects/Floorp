@@ -79,6 +79,7 @@ EXPORTS.mozilla += [
     'PresShell.h',
     'RestyleManager.h',
     'ScrollStyles.h',
+    'ScrollTypes.h',
     'ShapeUtils.h',
     'StaticPresData.h',
 ]

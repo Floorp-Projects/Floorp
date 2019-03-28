@@ -492,6 +492,7 @@ bitflags! {
 /// Because freeing a texture requires various device handles that are not
 /// reachable from this struct, manual destruction via `Device` is required.
 /// Our `Drop` implementation asserts that this has happened.
+#[derive(Debug)]
 pub struct Texture {
     id: gl::GLuint,
     target: gl::GLuint,

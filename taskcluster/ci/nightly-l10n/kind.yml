@@ -21,13 +21,19 @@ kind-dependencies:
 primary-dependency: build
 
 only-for-build-platforms:
-    - linux64-nightly/opt
-    - linux-nightly/opt
     - android-api-16-nightly/opt
+    - linux64-nightly/opt
+    - linux64-shippable/opt
+    - linux-nightly/opt
+    - linux-shippable/opt
     - macosx64-nightly/opt
+    - macosx64-shippable/opt
     - win32-nightly/opt
+    - win32-shippable/opt
     - win64-nightly/opt
+    - win64-shippable/opt
     - win64-aarch64-nightly/opt
+    - win64-aarch64-shippable/opt
     - linux64-devedition-nightly/opt
     - linux-devedition-nightly/opt
     - macosx64-devedition-nightly/opt
@@ -74,18 +80,13 @@ job-template:
                 - android-sdk-linux
     tooltool:
         by-build-platform:
-            default: public
-            android-api-16-nightly: internal
-            macosx64-nightly: internal
-            macosx64-devedition-nightly: internal
-            win32-nightly: internal
-            win32-devedition-nightly: internal
-            win64-nightly: internal
-            win64-devedition-nightly: internal
-            win64-aarch64-nightly: internal
-            win64-aarch64-devedition-nightly: internal
+            default: internal
+            linux.*: public
     index:
-        type: nightly-l10n
+        type:
+            by-build-platform:
+                .*nightly.*: nightly-l10n
+                default: shippable-l10n
         product:
             by-build-platform:
                 default: firefox
@@ -99,6 +100,12 @@ job-template:
                 win32-nightly: win32-opt
                 win64-nightly: win64-opt
                 win64-aarch64-nightly: win64-aarch64-opt
+                linux-shippable: linux-opt
+                linux64-shippable: linux64-opt
+                macosx64-shippable: macosx64-opt
+                win32-shippable: win32-opt
+                win64-shippable: win64-opt
+                win64-aarch64-shippable: win64-aarch64-opt
                 linux-devedition-nightly: linux-devedition-opt
                 linux64-devedition-nightly: linux64-devedition-opt
                 macosx64-devedition-nightly: macosx64-devedition-opt
@@ -125,6 +132,12 @@ job-template:
                 win32-nightly: windows2012-32/opt
                 win64-nightly: windows2012-64/opt
                 win64-aarch64-nightly: windows2012-aarch64/opt
+                linux64-shippable: linux64-shippable/opt
+                linux-shippable: linux32-shippable/opt
+                macosx64-shippable: osx-shippable/opt
+                win32-shippable: windows2012-32-shippable/opt
+                win64-shippable: windows2012-64-shippable/opt
+                win64-aarch64-shippable: windows2012-aarch64-shippable/opt
                 linux64-devedition-nightly: linux64-devedition/opt
                 linux-devedition-nightly: linux32-devedition/opt
                 macosx64-devedition-nightly: osx-cross-devedition/opt
@@ -153,37 +166,37 @@ job-template:
     mozharness:
         config:
             by-build-platform:
-                linux-nightly:
+                linux-(?:nightly|shippable):
                     - single_locale/firefox.py
                     - single_locale/linux32.py
                     - single_locale/tc_common.py
                     - single_locale/tc_linux_common.py
                     - taskcluster_nightly.py
-                linux64-nightly:
+                linux64-(?:nightly|shippable):
                     - single_locale/firefox.py
                     - single_locale/linux64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_linux_common.py
                     - taskcluster_nightly.py
-                macosx64-nightly:
+                macosx64-(?:nightly|shippable):
                     - single_locale/firefox.py
                     - single_locale/macosx64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_macosx64.py
                     - taskcluster_nightly.py
-                win32-nightly:
+                win32-(?:nightly|shippable):
                     - single_locale/firefox.py
                     - single_locale/win32.py
                     - single_locale/tc_common.py
                     - single_locale/tc_win32.py
                     - taskcluster_nightly.py
-                win64-nightly:
+                win64-(?:nightly|shippable):
                     - single_locale/firefox.py
                     - single_locale/win64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_win64.py
                     - taskcluster_nightly.py
-                win64-aarch64-nightly:
+                win64-aarch64-(?:nightly|shippable):
                     - single_locale/firefox.py
                     - single_locale/win64-aarch64.py
                     - single_locale/tc_common.py

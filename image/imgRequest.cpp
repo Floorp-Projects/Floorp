@@ -489,6 +489,10 @@ void imgRequest::BoostPriority(uint32_t aCategory) {
     --delta;
   }
 
+  if (newRequestedCategory & imgIRequest::CATEGORY_FRAME_STYLE) {
+    --delta;
+  }
+
   if (newRequestedCategory & imgIRequest::CATEGORY_SIZE_QUERY) {
     --delta;
   }

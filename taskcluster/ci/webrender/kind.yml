@@ -248,15 +248,7 @@ jobs:
                   path: /builds/worker/checkouts/gecko/gfx/wr/target/android-artifacts/app/build/outputs/apk/app-debug.apk
         run:
             using: run-task
-            command: >-
-                cd $GECKO_PATH &&
-                ./mach artifact toolchain -v $MOZ_TOOLCHAINS &&
-                export PATH=$PATH:$PWD/rustc/bin:$PWD/android-gradle-dependencies/gradle-dist/bin &&
-                export ANDROID_HOME=$PWD/android-sdk-linux &&
-                export NDK_HOME=$PWD/android-ndk &&
-                mv wrench-deps/{vendor,.cargo,cargo-apk} gfx/wr &&
-                cd gfx/wr/wrench &&
-                ../cargo-apk/bin/cargo-apk build --frozen --verbose
+            command: '$GECKO_PATH/taskcluster/scripts/misc/wrench-android-build.sh'
         toolchains:
             - android-gradle-dependencies
             - android-ndk-linux

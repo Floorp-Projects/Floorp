@@ -18,9 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=872812
 <pre id="test">
 <script class="testbody" type="application/javascript">
 
-var svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
+var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 ok(svg, "SVG exists");
-var a = document.createEvent('CustomEvent').initCustomEvent('', '', '', svg.viewBox);
+var a = document.createEvent("CustomEvent").initCustomEvent("", "", "", svg.viewBox);
 ok(true, "CustomEvent exists and we are not crashed!");
 
 </script>

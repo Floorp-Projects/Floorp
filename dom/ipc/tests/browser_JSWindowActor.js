@@ -24,6 +24,7 @@ let windowActorOptions = {
 function teardown() {
   windowActorOptions.allFrames = false;
   delete windowActorOptions.matches;
+  delete windowActorOptions.remoteTypes;
   ChromeUtils.unregisterWindowActor("Test");
 }
 
@@ -292,6 +293,46 @@ add_task(async function test_getActor_with_iframe_mismatch() {
           Assert.throws(() => child.getActor("Test"),
             /NS_ERROR_NOT_AVAILABLE/, "Should throw if it doesn't match.");
         });
+      teardown();
+    });
+});
+
+add_task(async function test_getActor_with_remoteType_match() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: TEST_URL},
+    async function(browser) {
+      windowActorOptions.remoteTypes = ["web"];
+      ChromeUtils.registerWindowActor("Test", windowActorOptions);
+      let parent = browser.browsingContext.currentWindowGlobal;
+      ok(parent.getActor("Test"), "JSWindowActorParent should have value.");
+
+      await ContentTask.spawn(
+        browser, {}, async function() {
+          let child = content.window.getWindowGlobalChild();
+          ok(child, "WindowGlobalChild should have value.");
+          ok(child.getActor("Test"), "JSWindowActorChild should have value.");
+        });
+
+      teardown();
+    });
+});
+
+add_task(async function test_getActor_with_remoteType_mismatch() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: TEST_URL},
+    async function(browser) {
+      windowActorOptions.remoteTypes = ["privileged"];
+      ChromeUtils.registerWindowActor("Test", windowActorOptions);
+      let parent = browser.browsingContext.currentWindowGlobal;
+      Assert.throws(() => parent.getActor("Test"),
+            /NS_ERROR_NOT_AVAILABLE/, "Should throw if its remoteTypes don't match.");
+
+      await ContentTask.spawn(
+        browser, {}, async function() {
+          let child = content.window.getWindowGlobalChild();
+          ok(child, "WindowGlobalChild should have value.");
+          Assert.throws(() => child.getActor("Test"),
+            /NS_ERROR_NOT_AVAILABLE/, "Should throw if its remoteTypes don't match.");
+        });
+
       teardown();
     });
 });

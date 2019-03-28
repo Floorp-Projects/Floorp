@@ -130,6 +130,83 @@ add_task(async function extendedCharacterKey() {
   await database.delete("Héllo, wőrld!");
 });
 
+add_task(async function clear() {
+  const databaseDir = await makeDatabaseDir("clear");
+  const database = await KeyValueService.getOrCreate(databaseDir, "db");
+
+  await database.put("int-key", 1234);
+  await database.put("double-key", 56.78);
+  await database.put("string-key", "Héllo, wőrld!");
+  await database.put("bool-key", true);
+
+  Assert.strictEqual(await database.clear(), undefined);
+  Assert.strictEqual(await database.has("int-key"), false);
+  Assert.strictEqual(await database.has("double-key"), false);
+  Assert.strictEqual(await database.has("string-key"), false);
+  Assert.strictEqual(await database.has("bool-key"), false);
+});
+
+add_task(async function putMany() {
+  const databaseDir = await makeDatabaseDir("putMany");
+  const database = await KeyValueService.getOrCreate(databaseDir, "db");
+
+  async function test_helper(pairs) {
+    Assert.strictEqual(await database.putMany(pairs), undefined);
+    Assert.strictEqual(await database.get("int-key"), 1234);
+    Assert.strictEqual(await database.get("double-key"), 56.78);
+    Assert.strictEqual(await database.get("string-key"), "Héllo, wőrld!");
+    Assert.strictEqual(await database.get("bool-key"), true);
+    await database.clear();
+  }
+
+  // putMany with an empty object is OK
+  Assert.strictEqual(await database.putMany({}), undefined);
+
+  // putMany with an object
+  const pairs = {
+    "int-key": 1234,
+    "double-key": 56.78,
+    "string-key": "Héllo, wőrld!",
+    "bool-key": true,
+  };
+  await test_helper(pairs);
+
+  // putMany with an array of pairs
+  const arrayPairs = [
+    ["int-key", 1234],
+    ["double-key", 56.78],
+    ["string-key", "Héllo, wőrld!"],
+    ["bool-key", true],
+  ];
+  await test_helper(arrayPairs);
+
+  // putMany with a key/value generator
+  function* pairMaker() {
+    yield ["int-key", 1234];
+    yield ["double-key", 56.78];
+    yield ["string-key", "Héllo, wőrld!"];
+    yield ["bool-key", true];
+  }
+  await test_helper(pairMaker());
+
+  // putMany with a map
+  const mapPairs = new Map(arrayPairs);
+  await test_helper(mapPairs);
+});
+
+add_task(async function putManyFailureCases() {
+  const databaseDir = await makeDatabaseDir("putManyFailureCases");
+  const database = await KeyValueService.getOrCreate(databaseDir, "db");
+
+  Assert.throws(() => database.putMany(), /unexpected argument/);
+  Assert.throws(() => database.putMany("foo"), /unexpected argument/);
+  Assert.throws(() => database.putMany(["foo"]), /unexpected argument/);
+
+  const pairWithoutValue = {"key": undefined};
+  await Assert.rejects(database.putMany(pairWithoutValue), /NS_ERROR_UNEXPECTED/);
+  await Assert.rejects(database.putMany([["foo"]]), /NS_ERROR_UNEXPECTED/);
+});
+
 add_task(async function getOrCreateNamedDatabases() {
   const databaseDir = await makeDatabaseDir("getOrCreateNamedDatabases");
 

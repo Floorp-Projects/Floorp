@@ -5,8 +5,7 @@ use ir::context::{BindgenContext, ItemId};
 use ir::traversal::EdgeKind;
 use ir::comp::{CompKind, Field, FieldMethods};
 use ir::ty::TypeKind;
-use std::collections::HashMap;
-use std::collections::HashSet;
+use {HashMap, HashSet};
 
 /// An analysis that finds for each IR item whether it has a destructor or not
 ///
@@ -73,7 +72,7 @@ impl<'ctx> MonotoneFramework for HasDestructorAnalysis<'ctx> {
     type Output = HashSet<ItemId>;
 
     fn new(ctx: &'ctx BindgenContext) -> Self {
-        let have_destructor = HashSet::new();
+        let have_destructor = HashSet::default();
         let dependencies = generate_dependencies(ctx, Self::consider_edge);
 
         HasDestructorAnalysis {

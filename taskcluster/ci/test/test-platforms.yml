@@ -19,16 +19,6 @@ linux32/debug:
     build-platform: linux/debug
     test-sets:
         - linux32-tests
-linux32/opt:
-    build-platform: linux/opt
-    test-sets:
-        - linux32-tests
-        - linux32-opt-tests
-linux32-nightly/opt:
-    build-platform: linux-nightly/opt
-    test-sets:
-        - linux32-tests
-        - linux32-opt-tests
 linux32-shippable/opt:
     build-platform: linux-shippable/opt
     test-sets:
@@ -59,18 +49,6 @@ linux64/opt:
         - linux-talos-flex
         - raptor-firefox
         - raptor-fetch-firefox
-linux64-nightly/opt:
-    build-platform: linux64-nightly/opt
-    test-sets:
-        - common-tests
-        - web-platform-tests
-        - opt-only-tests
-        - desktop-screenshot-capture
-        - awsy
-        - raptor-chrome
-        - raptor-fetch-chrome
-        - raptor-profiling
-        - raptor-fetch-profiling
 linux64-shippable/opt:
     build-platform: linux64-shippable/opt
     test-sets:
@@ -96,21 +74,7 @@ linux64-devedition/opt:
         - opt-only-tests
         - desktop-screenshot-capture
 
-# TODO: use 'pgo' and 'asan' labels here, instead of -pgo/opt
-linux64-pgo/opt:
-    build-platform: linux64-pgo/opt
-    test-sets:
-        - common-tests
-        - web-platform-tests
-        - opt-only-tests
-        - desktop-screenshot-capture
-        - talos
-        - awsy
-        - mochitest-headless
-        - linux-talos-flex
-        - raptor-firefox
-        - raptor-fetch-firefox
-
+# TODO: use 'asan' label here, instead of -asan/opt
 linux64-asan/opt:
     build-platform: linux64-asan/opt
     test-sets:
@@ -126,15 +90,6 @@ linux64-stylo-sequential/opt:
 # QR builds just run a subset right now.
 linux64-qr/opt:
     build-platform: linux64/opt
-    test-sets:
-        - linux-qr-tests
-        - talos
-        - awsy
-        - web-platform-tests
-        - raptor-firefox
-        - raptor-fetch-firefox
-linux64-pgo-qr/opt:
-    build-platform: linux64-pgo/opt
     test-sets:
         - linux-qr-tests
         - talos
@@ -191,27 +146,6 @@ windows7-32/opt:
         - windows-tests
         - web-platform-tests
         - raptor-firefox
-
-windows7-32-pgo/opt:
-    build-platform: win32-pgo/opt
-    test-sets:
-        - awsy
-        - desktop-screenshot-capture
-        - windows-reftest-gpu
-        - windows-talos
-        - windows-tests
-        - web-platform-tests
-        - raptor-firefox
-
-windows7-32-nightly/opt:
-    build-platform: win32-nightly/opt
-    test-sets:
-        - awsy
-        - desktop-screenshot-capture
-        - windows-reftest-gpu
-        - windows-tests
-        - web-platform-tests
-        - raptor-chrome
 
 windows7-32-shippable/opt:
     build-platform: win32-shippable/opt
@@ -279,34 +213,10 @@ windows10-64/opt:
 #         - raptor-firefox
 
 windows10-64-ux/opt:
-    build-platform: win64-nightly/opt
+    build-platform: win64-shippable/opt
     test-sets:
         - raptor-firefox
         - talos-ux
-
-windows10-64-pgo/opt:
-    build-platform: win64-pgo/opt
-    test-sets:
-        - awsy
-        - desktop-screenshot-capture
-        - windows-talos
-        - marionette-gpu-tests
-        - windows-tests
-        - web-platform-tests
-        - mochitest-headless
-        - raptor-firefox
-
-windows10-64-nightly/opt:
-    build-platform: win64-nightly/opt
-    test-sets:
-        - awsy
-        - desktop-screenshot-capture
-        - desktop-instrumentation
-        - marionette-gpu-tests
-        - windows-tests
-        - web-platform-tests
-        - raptor-chrome
-        - raptor-profiling
 
 windows10-64-shippable/opt:
     build-platform: win64-shippable/opt
@@ -352,15 +262,6 @@ windows10-64-qr/opt:
         - raptor-firefox
         - web-platform-tests
 
-windows10-64-pgo-qr/opt:
-    build-platform: win64-pgo/opt
-    test-sets:
-        - awsy
-        - windows-qr-tests
-        - windows-talos
-        - raptor-firefox
-        - web-platform-tests
-
 windows10-64-shippable-qr/opt:
     build-platform: win64-shippable/opt
     test-sets:
@@ -378,23 +279,6 @@ macosx64/debug:
     test-sets:
         - macosx64-tests
 
-macosx64/opt:
-    build-platform: macosx64/opt
-    test-sets:
-        - macosx64-talos
-        - macosx64-tests
-        - desktop-screenshot-capture
-        - awsy
-        - raptor-firefox
-
-macosx64-nightly/opt:
-    build-platform: macosx64-nightly/opt
-    test-sets:
-        - macosx64-tests
-        - awsy
-        - raptor-chrome
-        - raptor-profiling
-
 macosx64-shippable/opt:
     build-platform: macosx64-shippable/opt
     test-sets:
@@ -410,11 +294,6 @@ macosx64-devedition/opt:
     build-platform: macosx64-devedition-nightly/opt
     test-sets:
         - macosx64-tests
-
-macosx64-qr/opt:
-    build-platform: macosx64/opt
-    test-sets:
-        - macosx64-qr-tests
 
 macosx64-shippable-qr/opt:
     build-platform: macosx64-shippable/opt

@@ -46,7 +46,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: linux64-nightly
+         build_platform: linux64-shippable
 
    firefox-secondary-linux:
       description: linux secondary channel update verify
@@ -57,7 +57,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: linux-nightly
+         build_platform: linux-shippable
 
    firefox-secondary-win64:
       description: win64 secondary channel update verify
@@ -68,7 +68,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: win64-nightly
+         build_platform: win64-shippable
 
    firefox-secondary-win32:
       description: win32 secondary channel update verify
@@ -79,7 +79,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: win32-nightly
+         build_platform: win32-shippable
 
    firefox-secondary-macosx64:
       description: macosx64 secondary channel update verify
@@ -90,4 +90,4 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: macosx64-nightly
+         build_platform: macosx64-shippable

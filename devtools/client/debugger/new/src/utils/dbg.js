@@ -7,6 +7,7 @@
 import * as timings from "./timings";
 import { prefs, asyncStore, features } from "./prefs";
 import { isDevelopment, isTesting } from "devtools-environment";
+import { getDocument } from "./editor/source-documents";
 
 function findSource(dbg: any, url: string) {
   const sources = dbg.selectors.getSourceList();
@@ -66,6 +67,11 @@ function formatSelectedColumnBreakpoints(dbg) {
   return formatMappedLocations(positions);
 }
 
+function getDocumentForUrl(dbg, url) {
+  const source = findSource(dbg, url);
+  return getDocument(source.id);
+}
+
 export function setupHelper(obj: Object) {
   const selectors = bindSelectors(obj);
   const dbg: Object = {
@@ -82,7 +88,8 @@ export function setupHelper(obj: Object) {
       evaluate: expression => evaluate(dbg, expression),
       sendPacketToThread: packet => sendPacketToThread(dbg, packet),
       sendPacket: packet => sendPacket(dbg, packet),
-      dumpThread: () => sendPacketToThread(dbg, { type: "dumpThread" })
+      dumpThread: () => sendPacketToThread(dbg, { type: "dumpThread" }),
+      getDocument: url => getDocumentForUrl(dbg, url)
     },
     formatters: {
       mappedLocations: locations => formatMappedLocations(locations),

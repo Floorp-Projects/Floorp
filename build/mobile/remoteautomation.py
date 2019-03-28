@@ -101,9 +101,6 @@ class RemoteAutomation(Automation):
         env.setdefault('MOZ_IN_AUTOMATION', '1')
 
         # Set WebRTC logging in case it is not set yet.
-        # On Android, environment variables cannot contain ',' so the
-        # standard WebRTC setting for NSPR_LOG_MODULES is not available.
-        # env.setdefault('NSPR_LOG_MODULES', 'signaling:5,mtransport:5,datachannel:5,jsep:5,MediaPipelineFactory:5')  # NOQA: E501
         env.setdefault('R_LOG_LEVEL', '6')
         env.setdefault('R_LOG_DESTINATION', 'stderr')
         env.setdefault('R_LOG_VERBOSE', '1')

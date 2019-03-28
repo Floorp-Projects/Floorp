@@ -11,6 +11,8 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
                                "resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(this, "E10SUtils",
+                               "resource://gre/modules/E10SUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
                                    "@mozilla.org/xre/app-info;1",
@@ -149,6 +151,10 @@ class WebProgressChild {
       json.charset = this.mm.content.document.characterSet;
       json.mayEnableCharacterEncodingMenu = this.mm.docShell.mayEnableCharacterEncodingMenu;
       json.principal = this.mm.content.document.nodePrincipal;
+      // After Bug 965637 we can query the csp directly from content.document
+      // instead of content.document.nodePrincipal.
+      let csp = this.mm.content.document.nodePrincipal.csp;
+      json.csp = E10SUtils.serializeCSP(csp);
       json.synthetic = this.mm.content.document.mozSyntheticDocument;
       json.inLoadURI = this.inLoadURI;
       json.requestContextID = this.mm.content.document.documentLoadGroup

@@ -2039,6 +2039,20 @@ VARCACHE_PREF(
   uint32_t, 32
 )
 
+// Annotate trackers using the strict list. If set to false, the basic list will
+// be used instead.
+#ifdef EARLY_BETA_OR_EARLIER
+#define PREF_VALUE true
+#else
+#define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "privacy.annotate_channels.strict_list.enabled",
+   privacy_annotate_channels_strict_list_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 // Annotate channels based on the tracking protection list in all modes
 VARCACHE_PREF(
   "privacy.trackingprotection.annotate_channels",

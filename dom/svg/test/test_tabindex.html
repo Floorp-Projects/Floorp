@@ -31,13 +31,12 @@
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
-function main()
-{
-  var f = document.getElementById('f');
-  var r = document.getElementById('r');
-  var t = document.getElementById('t');
-  var l1 = document.getElementById('l1');
-  var l2 = document.getElementById('l2');
+function main() {
+  var f = document.getElementById("f");
+  var r = document.getElementById("r");
+  var t = document.getElementById("t");
+  var l1 = document.getElementById("l1");
+  var l2 = document.getElementById("l2");
   const isMac = ("nsILocalFileMac" in SpecialPowers.Ci);
 
   try {
@@ -89,7 +88,7 @@ function main()
     } else {
       is(document.activeElement.tabIndex, 5, "The active element tabindex is 5");
     }
-  } catch(e) {
+  } catch (e) {
     ok(false, "Got unexpected exception" + e);
   }
 

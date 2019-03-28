@@ -35,6 +35,8 @@ To target a version of `libclang`, enable one of the following Cargo features:
   ([Documentation](https://kylemayes.github.io/clang-sys/6_0/clang_sys))
 * `clang_7_0` - requires `libclang` 7.0 or later
   ([Documentation](https://kylemayes.github.io/clang-sys/7_0/clang_sys))
+* `clang_8_0` - requires `libclang` 8.0 or later
+  ([Documentation](https://kylemayes.github.io/clang-sys/8_0/clang_sys))
 
 If you do not enable one of these features, the API provided by `libclang` 3.5 will be available by
 default.

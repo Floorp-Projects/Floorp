@@ -31,7 +31,7 @@ def test_resolve_tests_by_suite(patch_resolver):
     ])
     assert resolve_tests_by_suite(['xpcshell.js', 'mochitest.js']) == {
         'xpcshell': ['xpcshell.js'],
-        'mochitest': ['mochitest.js'],
+        'plain': ['mochitest.js'],
     }
 
 

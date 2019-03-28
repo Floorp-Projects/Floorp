@@ -24,19 +24,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=342513
 
 SimpleTest.waitForExplicitFinish();
 
-function run()
-{
-  var svgDoc = document.getElementById('svg');
-  var divElem = document.getElementById('div');
+function run() {
+  var svgDoc = document.getElementById("svg");
+  var divElem = document.getElementById("div");
   var expectedWidth = divElem.clientWidth;
   // test for the pixel width of the svg
-  is(svgDoc.width.baseVal.value, expectedWidth, 'svgDoc.width.baseVal.value');
+  is(svgDoc.width.baseVal.value, expectedWidth, "svgDoc.width.baseVal.value");
 
   // set the SVG width to ~50% in pixels
-  svgDoc.width.baseVal.newValueSpecifiedUnits(svgDoc.width.baseVal.SVG_LENGTHTYPE_PX, Math.floor(expectedWidth/2));
+  svgDoc.width.baseVal.newValueSpecifiedUnits(svgDoc.width.baseVal.SVG_LENGTHTYPE_PX, Math.floor(expectedWidth / 2));
   svgDoc.width.baseVal.convertToSpecifiedUnits(svgDoc.width.baseVal.SVG_LENGTHTYPE_PERCENTAGE);
   // the valueInSpecifiedUnits should now be 50%
-  is(Math.round(svgDoc.width.baseVal.valueInSpecifiedUnits), 50, 'valueInSpecifiedUnits after convertToSpecifiedUnits');
+  is(Math.round(svgDoc.width.baseVal.valueInSpecifiedUnits), 50, "valueInSpecifiedUnits after convertToSpecifiedUnits");
 
   SimpleTest.finish();
 }

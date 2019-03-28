@@ -32,7 +32,7 @@ jobs:
         treeherder:
             platform: linux32/opt
         dependencies:
-            build-linux/opt: build-linux-nightly/opt
+            build-linux/opt: build-linux-shippable/opt
         fetches:
             build-linux/opt:
                 - artifact: target.common.tests.tar.gz
@@ -51,7 +51,7 @@ jobs:
         treeherder:
             platform: linux64/opt
         dependencies:
-            build-linux64/opt: build-linux64-nightly/opt
+            build-linux64/opt: build-linux64-shippable/opt
         fetches:
             build-linux64/opt:
                 - artifact: target.common.tests.tar.gz
@@ -70,7 +70,7 @@ jobs:
         treeherder:
             platform: osx-cross/opt
         dependencies:
-            build-macosx64/opt: build-macosx64-nightly/opt
+            build-macosx64/opt: build-macosx64-shippable/opt
         fetches:
             build-macosx64/opt:
                 - artifact: target.common.tests.tar.gz
@@ -89,7 +89,7 @@ jobs:
         treeherder:
             platform: windows2012-32/opt
         dependencies:
-            build-win32/opt: build-win32-nightly/opt
+            build-win32/opt: build-win32-shippable/opt
         fetches:
             build-win32/opt:
                 - artifact: target.common.tests.tar.gz
@@ -108,7 +108,7 @@ jobs:
         treeherder:
             platform: windows2012-64/opt
         dependencies:
-            build-win64/opt: build-win64-nightly/opt
+            build-win64/opt: build-win64-shippable/opt
         fetches:
             build-win64/opt:
                 - artifact: target.common.tests.tar.gz

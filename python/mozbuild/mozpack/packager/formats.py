@@ -43,6 +43,8 @@ The base interface provides the following methods:
         The optional addon argument tells whether the base directory
         is that of a packed addon (True), unpacked addon ('unpacked') or
         otherwise (False).
+        The method may only be called in sorted order of `path` (alphanumeric
+        order, parents before children).
     - add(path, content)
         Add the given content (BaseFile instance) at the given virtual path
     - add_interfaces(path, content)
@@ -77,6 +79,7 @@ class PiecemealFormatter(object):
         # Only allow to add a base directory before calls to _get_base()
         assert not self._frozen_bases
         assert base not in self._sub_formatter
+        assert all(base > b for b in self._sub_formatter)
         self._add_base(base, addon)
 
     def _get_base(self, path):
@@ -264,6 +267,21 @@ class OmniJarFormatter(JarFormatter):
 
     def _add_base(self, base, addon=False):
         if addon:
+            # Because add_base is always called with parents before children,
+            # all the possible ancestry of `base` is already present in
+            # `_sub_formatter`.
+            parent_base = mozpath.basedir(base, self._sub_formatter.keys())
+            if parent_base:
+                rel_base = mozpath.relpath(base, parent_base)
+                # If the addon is under a resource directory, package it in the
+                # omnijar.
+                parent_sub_formatter = self._sub_formatter[parent_base]
+                if parent_sub_formatter.is_resource(rel_base):
+                    omnijar_sub_formatter = \
+                        parent_sub_formatter._sub_formatter[self._omnijar_name]
+                    self._sub_formatter[base] = FlatSubFormatter(
+                        FileRegistrySubtree(rel_base, omnijar_sub_formatter.copier))
+                    return
             JarFormatter._add_base(self, base, addon)
         else:
             # Initialize a chrome.manifest next to the omnijar file so that
