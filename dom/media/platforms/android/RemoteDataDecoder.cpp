@@ -120,6 +120,12 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
   }
 
   RefPtr<InitPromise> Init() override {
+    BufferInfo::LocalRef bufferInfo;
+    if (NS_FAILED(BufferInfo::New(&bufferInfo)) || !bufferInfo) {
+      return InitPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
+    }
+    mInputBufferInfo = bufferInfo;
+
     mSurface = GeckoSurface::LocalRef(SurfaceAllocator::AcquireSurface(
         mConfig.mImage.width, mConfig.mImage.height, false));
     if (!mSurface) {
@@ -325,6 +331,12 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
   }
 
   RefPtr<InitPromise> Init() override {
+    BufferInfo::LocalRef bufferInfo;
+    if (NS_FAILED(BufferInfo::New(&bufferInfo)) || !bufferInfo) {
+      return InitPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
+    }
+    mInputBufferInfo = bufferInfo;
+
     // Register native methods.
     JavaCallbacksSupport::Init();
 
@@ -560,14 +572,10 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Drain() {
       return p;
     }
 
-    BufferInfo::LocalRef bufferInfo;
-    nsresult rv = BufferInfo::New(&bufferInfo);
-    if (NS_FAILED(rv)) {
-      return DecodePromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
-    }
     SetState(State::DRAINING);
-    bufferInfo->Set(0, 0, -1, MediaCodec::BUFFER_FLAG_END_OF_STREAM);
-    mJavaDecoder->Input(nullptr, bufferInfo, nullptr);
+    self->mInputBufferInfo->Set(0, 0, -1,
+                                MediaCodec::BUFFER_FLAG_END_OF_STREAM);
+    mJavaDecoder->Input(nullptr, self->mInputBufferInfo, nullptr);
     return p;
   });
 }
@@ -666,16 +674,10 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Decode(
     jni::ByteBuffer::LocalRef bytes = jni::ByteBuffer::New(
         const_cast<uint8_t*>(sample->Data()), sample->Size());
 
-    BufferInfo::LocalRef bufferInfo;
-    nsresult rv = BufferInfo::New(&bufferInfo);
-    if (NS_FAILED(rv)) {
-      return DecodePromise::CreateAndReject(
-          MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
-    }
-    bufferInfo->Set(0, sample->Size(), sample->mTime.ToMicroseconds(), 0);
-
     self->SetState(State::DRAINABLE);
-    return self->mJavaDecoder->Input(bytes, bufferInfo,
+    self->mInputBufferInfo->Set(0, sample->Size(),
+                                sample->mTime.ToMicroseconds(), 0);
+    return self->mJavaDecoder->Input(bytes, self->mInputBufferInfo,
                                      GetCryptoInfoFromSample(sample))
                ? self->mDecodePromise.Ensure(__func__)
                : DecodePromise::CreateAndReject(
