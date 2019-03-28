@@ -2240,6 +2240,10 @@ static MethodStatus Compile(JSContext* cx, HandleScript script,
     return Method_Skipped;
   }
 
+  if (script->baselineScript()->hasPendingIonBuilder()) {
+    LinkIonScript(cx, script);
+  }
+
   if (script->hasIonScript()) {
     IonScript* scriptIon = script->ionScript();
     if (!scriptIon->method()) {
@@ -2260,16 +2264,6 @@ static MethodStatus Compile(JSContext* cx, HandleScript script,
 
     if (osrPc) {
       scriptIon->resetOsrPcMismatchCounter();
-    }
-
-    recompile = true;
-  }
-
-  if (script->baselineScript()->hasPendingIonBuilder()) {
-    IonBuilder* buildIon = script->baselineScript()->pendingIonBuilder();
-    if (optimizationLevel <= buildIon->optimizationInfo().level() &&
-        !forceRecompile) {
-      return Method_Compiled;
     }
 
     recompile = true;
@@ -2580,6 +2574,8 @@ MethodStatus jit::Recompile(JSContext* cx, HandleScript script,
   if (script->ionScript()->isRecompiling()) {
     return Method_Compiled;
   }
+
+  MOZ_ASSERT(!script->baselineScript()->hasPendingIonBuilder());
 
   MethodStatus status = Compile(cx, script, osrFrame, osrPc, force);
   if (status != Method_Compiled) {
