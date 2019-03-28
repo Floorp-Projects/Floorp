@@ -127,8 +127,8 @@ function NetworkEventMessage({
   // let's just provide empty implementation.
   // Individual methods might be implemented step by step as needed.
   const connector = {
-    viewSourceInDebugger: (url, line) => {
-      serviceContainer.onViewSourceInDebugger({url, line});
+    viewSourceInDebugger: (url, line, column) => {
+      serviceContainer.onViewSourceInDebugger({url, line, column});
     },
     getLongString: (grip) => {
       return serviceContainer.getLongString(grip);

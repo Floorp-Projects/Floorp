@@ -62,8 +62,8 @@ class StackTracePanel extends Component {
       div({ className: "panel-container" },
         StackTrace({
           stacktrace,
-          onViewSourceInDebugger: ({ url, line }) => {
-            return connector.viewSourceInDebugger(url, line);
+          onViewSourceInDebugger: ({ url, line, column }) => {
+            return connector.viewSourceInDebugger(url, line, column);
           },
           sourceMapService,
           openLink,
