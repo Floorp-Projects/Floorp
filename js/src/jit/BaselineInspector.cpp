@@ -1554,7 +1554,7 @@ static bool GetCacheIRReceiverForProtoReadSlot(ICCacheIR_Monitored* stub,
     return false;
   }
 
-  if (holder->shape() != holderShape) {
+  if (holder->maybeShape() != holderShape) {
     return false;
   }
   if (*holderResult && *holderResult != holder) {

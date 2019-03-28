@@ -4129,7 +4129,7 @@ static bool ShapeOf(JSContext* cx, unsigned argc, JS::Value* vp) {
     return false;
   }
   JSObject* obj = &args[0].toObject();
-  args.rval().set(JS_NumberValue(double(uintptr_t(obj->shape()) >> 3)));
+  args.rval().set(JS_NumberValue(double(uintptr_t(obj->maybeShape()) >> 3)));
   return true;
 }
 
@@ -4159,7 +4159,13 @@ static bool UnwrappedObjectsHaveSameShape(JSContext* cx, unsigned argc,
   RootedObject obj1(cx, UncheckedUnwrap(&args[0].toObject()));
   RootedObject obj2(cx, UncheckedUnwrap(&args[1].toObject()));
 
-  args.rval().setBoolean(obj1->shape() == obj2->shape());
+  if (!obj1->is<ShapedObject>() || !obj2->is<ShapedObject>()) {
+    JS_ReportErrorASCII(cx, "object does not have a Shape");
+    return false;
+  }
+
+  args.rval().setBoolean(obj1->as<ShapedObject>().shape() ==
+                         obj2->as<ShapedObject>().shape());
   return true;
 }
 

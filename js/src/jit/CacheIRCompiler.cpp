@@ -1672,7 +1672,7 @@ bool CacheIRCompiler::emitGuardIsExtensible() {
     return false;
   }
 
-  Address shape(obj, JSObject::offsetOfShape());
+  Address shape(obj, ShapedObject::offsetOfShape());
   masm.loadPtr(shape, scratch);
 
   Address baseShape(scratch, Shape::offsetOfBaseShape());

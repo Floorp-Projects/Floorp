@@ -14,6 +14,7 @@
 #include "js/Conversions.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
+#include "vm/ShapedObject.h"
 
 /*
  * -------------
@@ -522,7 +523,7 @@ class TypedObjectModuleObject : public NativeObject {
 };
 
 /* Base type for transparent and opaque typed objects. */
-class TypedObject : public JSObject {
+class TypedObject : public ShapedObject {
   static const bool IsTypedObjectClass = true;
 
   static MOZ_MUST_USE bool obj_getArrayElement(JSContext* cx,
@@ -622,7 +623,7 @@ class TypedObject : public JSObject {
                                          Value* vp);
 
   Shape** addressOfShapeFromGC() {
-    return shape_.unsafeUnbarrieredForTracing();
+    return shapeRef().unsafeUnbarrieredForTracing();
   }
 };
 

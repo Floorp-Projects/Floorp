@@ -11,6 +11,8 @@
 
 #include "vm/RegExpObject.h"
 
+#include "vm/ShapedObject-inl.h"
+
 namespace js {
 namespace jit {
 
@@ -53,10 +55,13 @@ inline gc::Cell* TemplateObject::group() const {
   return obj_->group();
 }
 
-inline gc::Cell* TemplateObject::shape() const {
-  Shape* shape = obj_->shape();
-  MOZ_ASSERT(!shape->inDictionary());
-  return shape;
+inline gc::Cell* TemplateObject::maybeShape() const {
+  if (obj_->is<ShapedObject>()) {
+    Shape* shape = obj_->maybeShape();
+    MOZ_ASSERT(!shape->inDictionary());
+    return shape;
+  }
+  return nullptr;
 }
 
 inline uint32_t TemplateObject::getInlineTypedObjectSize() const {
