@@ -6438,46 +6438,60 @@ AbortReasonOr<Ok> IonBuilder::compareTryCharacter(bool* emitted, JSOp op,
     trackOptimizationAttempt(TrackedStrategy::Compare_Character);
   }
 
-  // Try to optimize |MConstant(string) <compare> (MFromCharCode MCharCodeAt)|
-  // as |MConstant(charcode) <compare> MCharCodeAt|.
+  // |str[i]| is compiled as |MFromCharCode(MCharCodeAt(str, i))|.
+  auto isCharAccess = [](MDefinition* ins) {
+    return ins->isFromCharCode() &&
+           ins->toFromCharCode()->input()->isCharCodeAt();
+  };
 
-  MConstant* constant;
-  MDefinition* operand;
-  if (left->isConstant()) {
-    constant = left->toConstant();
-    operand = right;
-  } else if (right->isConstant()) {
-    constant = right->toConstant();
-    operand = left;
+  if (left->isConstant() || right->isConstant()) {
+    // Try to optimize |MConstant(string) <compare> (MFromCharCode MCharCodeAt)|
+    // as |MConstant(charcode) <compare> MCharCodeAt|.
+    MConstant* constant;
+    MDefinition* operand;
+    if (left->isConstant()) {
+      constant = left->toConstant();
+      operand = right;
+    } else {
+      constant = right->toConstant();
+      operand = left;
+    }
+
+    if (constant->type() != MIRType::String ||
+        constant->toString()->length() != 1 || !isCharAccess(operand)) {
+      return Ok();
+    }
+
+    char16_t charCode = constant->toString()->asAtom().latin1OrTwoByteChar(0);
+    constant->setImplicitlyUsedUnchecked();
+
+    MConstant* charCodeConst = MConstant::New(alloc(), Int32Value(charCode));
+    current->add(charCodeConst);
+
+    MDefinition* charCodeAt = operand->toFromCharCode()->input();
+    operand->setImplicitlyUsedUnchecked();
+
+    if (left == constant) {
+      left = charCodeConst;
+      right = charCodeAt;
+    } else {
+      left = charCodeAt;
+      right = charCodeConst;
+    }
+  } else if (isCharAccess(left) && isCharAccess(right)) {
+    // Try to optimize |(MFromCharCode MCharCodeAt) <compare> (MFromCharCode
+    // MCharCodeAt)| as |MCharCodeAt <compare> MCharCodeAt|.
+
+    MDefinition* leftCharCodeAt = left->toFromCharCode()->input();
+    left->setImplicitlyUsedUnchecked();
+
+    MDefinition* rightCharCodeAt = right->toFromCharCode()->input();
+    right->setImplicitlyUsedUnchecked();
+
+    left = leftCharCodeAt;
+    right = rightCharCodeAt;
   } else {
     return Ok();
-  }
-
-  if (constant->type() != MIRType::String ||
-      constant->toString()->length() != 1) {
-    return Ok();
-  }
-
-  if (!operand->isFromCharCode() ||
-      !operand->toFromCharCode()->input()->isCharCodeAt()) {
-    return Ok();
-  }
-
-  char16_t charCode = constant->toString()->asAtom().latin1OrTwoByteChar(0);
-  constant->setImplicitlyUsedUnchecked();
-
-  MConstant* charCodeConst = MConstant::New(alloc(), Int32Value(charCode));
-  current->add(charCodeConst);
-
-  MDefinition* charCodeAt = operand->toFromCharCode()->input();
-  operand->setImplicitlyUsedUnchecked();
-
-  if (left == constant) {
-    left = charCodeConst;
-    right = charCodeAt;
-  } else {
-    left = charCodeAt;
-    right = charCodeConst;
   }
 
   MCompare* ins = MCompare::New(alloc(), left, right, op);
