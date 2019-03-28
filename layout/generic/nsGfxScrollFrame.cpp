@@ -6736,16 +6736,21 @@ bool ScrollFrameHelper::SmoothScrollVisual(
   }
 
   // Clamp the destination to the visual scroll range.
-  nsPoint destination =
-      GetScrollRangeForClamping().ClampPoint(aVisualViewportOffset);
-
-  // We also want to set mDestination to that subsequent ScrollBy()s work
-  // correctly, but mDestination needs to be clamped to the layout scroll range.
-  mDestination = GetScrollRange().ClampPoint(destination);
+  // There is a potential issue here, where |mDestination| is usually
+  // clamped to the layout scroll range, and so e.g. a subsequent
+  // window.scrollBy() may have an undesired effect. However, as this function
+  // is only called internally, this should not be a problem in practice.
+  // If it turns out to be, the fix would be:
+  //   - add a new "destination" field that doesn't have to be clamped to
+  //     the layout scroll range
+  //   - clamp mDestination to the layout scroll range here
+  //   - make sure ComputeScrollMetadata() picks up the former as the
+  //     smooth scroll destination to send to APZ.
+  mDestination = GetScrollRangeForClamping().ClampPoint(aVisualViewportOffset);
 
   // Perform the scroll.
-  ApzSmoothScrollTo(destination, aUpdateType == FrameMetrics::eRestore
-                                     ? nsGkAtoms::restore
-                                     : nsGkAtoms::other);
+  ApzSmoothScrollTo(mDestination, aUpdateType == FrameMetrics::eRestore
+                                      ? nsGkAtoms::restore
+                                      : nsGkAtoms::other);
   return true;
 }
