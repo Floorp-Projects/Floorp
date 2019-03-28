@@ -623,24 +623,47 @@ nsresult JsepSessionImpl::DetermineAnswererSetupRole(
 }
 
 nsresult JsepSessionImpl::SetLocalDescription(JsepSdpType type,
-                                              const std::string& sdp) {
+                                              const std::string& constSdp) {
   mLastError.clear();
+  std::string sdp = constSdp;
 
   MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: SetLocalDescription type=" << type
                           << "\nSDP=\n"
                           << sdp);
 
-  if (type == kJsepSdpRollback) {
-    if (mState != kJsepStateHaveLocalOffer) {
-      JSEP_SET_ERROR("Cannot rollback local description in "
-                     << GetStateStr(mState));
-      return NS_ERROR_UNEXPECTED;
-    }
+  switch (type) {
+    case kJsepSdpOffer:
+      if (!mGeneratedOffer) {
+        JSEP_SET_ERROR(
+            "Cannot set local offer when createOffer has not been called.");
+        return NS_ERROR_UNEXPECTED;
+      }
+      if (sdp.empty()) {
+        sdp = mGeneratedOffer->ToString();
+      }
+      break;
+    case kJsepSdpAnswer:
+    case kJsepSdpPranswer:
+      if (!mGeneratedAnswer) {
+        JSEP_SET_ERROR(
+            "Cannot set local answer when createAnswer has not been called.");
+        return NS_ERROR_UNEXPECTED;
+      }
+      if (sdp.empty()) {
+        sdp = mGeneratedAnswer->ToString();
+      }
+      break;
+    case kJsepSdpRollback:
+      if (mState != kJsepStateHaveLocalOffer) {
+        JSEP_SET_ERROR("Cannot rollback local description in "
+                       << GetStateStr(mState));
+        return NS_ERROR_UNEXPECTED;
+      }
 
-    mPendingLocalDescription.reset();
-    SetState(kJsepStateStable);
-    RollbackLocalOffer();
-    return NS_OK;
+      mPendingLocalDescription.reset();
+      SetState(kJsepStateStable);
+      RollbackLocalOffer();
+      return NS_OK;
   }
 
   switch (mState) {
