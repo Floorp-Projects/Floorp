@@ -1651,7 +1651,8 @@ impl AsyncScreenshotGrabber {
 
     /// Take a screenshot and scale it asynchronously.
     ///
-    /// The returned handle can be used to access the mapped screenshot data.
+    /// The returned handle can be used to access the mapped screenshot data via
+    /// `map_and_recycle_screenshot`.
     /// The returned size is the size of the screenshot.
     pub fn get_screenshot(
         &mut self,
@@ -1800,6 +1801,46 @@ impl AsyncScreenshotGrabber {
                 TextureFilter::Linear,
             );
         }
+
+    }
+
+    /// Map the contents of the screenshot given by the handle and copy it into the given buffer.
+    pub fn map_and_recycle_screenshot(
+        &mut self,
+        device: &mut Device,
+        handle: AsyncScreenshotHandle,
+        dst_buffer: &mut [u8],
+        dst_stride: usize,
+    ) -> bool {
+        let AsyncScreenshot {
+            pbo,
+            screenshot_size,
+            image_format,
+        } = match self.awaiting_readback.remove(&handle) {
+            Some(async_screenshots) => async_screenshots,
+            None => return false,
+        };
+
+        let success = if let Some(bound_pbo) = device.map_pbo_for_readback(&pbo) {
+            let src_buffer = &bound_pbo.data;
+            let src_stride = screenshot_size.width as usize
+                * image_format.bytes_per_pixel() as usize;
+
+            for (src_slice, dst_slice) in src_buffer
+                .chunks(src_stride)
+                .zip(dst_buffer.chunks_mut(dst_stride))
+                .take(screenshot_size.height as usize)
+            {
+                dst_slice[..src_stride].copy_from_slice(src_slice);
+            }
+
+            true
+        } else {
+            false
+        };
+
+        self.available_pbos.push(pbo);
+        success
     }
 }
 
@@ -2555,13 +2596,13 @@ impl Renderer {
 
     /// Take a screenshot and scale it asynchronously.
     ///
-    /// The returned handle can be used to access the mapped screenshot data.
+    /// The returned handle can be used to access the mapped screenshot data via
+    /// `map_and_recycle_screenshot`.
     /// The returned size is the size of the screenshot.
     pub fn get_screenshot_async(
         &mut self,
         window_rect: DeviceIntRect,
         buffer_size: DeviceIntSize,
-        screenshot_size: DeviceIntSize,
         image_format: ImageFormat,
     ) -> (AsyncScreenshotHandle, DeviceIntSize) {
         self.device.begin_frame();
@@ -2576,6 +2617,25 @@ impl Renderer {
         self.device.end_frame();
 
         handle
+    }
+
+    /// Map the contents of the screenshot given by the handle and copy it into the given buffer.
+    pub fn map_and_recycle_screenshot(
+        &mut self,
+        handle: AsyncScreenshotHandle,
+        dst_buffer: &mut [u8],
+        dst_stride: usize,
+    ) -> bool {
+        if let Some(async_screenshots) = self.async_screenshots.as_mut() {
+            async_screenshots.map_and_recycle_screenshot(
+                &mut self.device,
+                handle,
+                dst_buffer,
+                dst_stride,
+            )
+        } else {
+            false
+        }
     }
 
     #[cfg(not(feature = "debugger"))]

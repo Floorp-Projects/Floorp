@@ -677,6 +677,17 @@ impl Drop for PBO {
     }
 }
 
+pub struct BoundPBO<'a> {
+    device: &'a mut Device,
+    pub data: &'a [u8]
+}
+
+impl<'a> Drop for BoundPBO<'a> {
+    fn drop(&mut self) {
+        self.device.gl.unmap_buffer(gl::PIXEL_PACK_BUFFER);
+    }
+}
+
 #[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
 pub struct FBOId(gl::GLuint);
 
@@ -2390,6 +2401,33 @@ impl Device {
         }
 
         self.gl.bind_buffer(gl::PIXEL_PACK_BUFFER, 0);
+    }
+
+    pub fn map_pbo_for_readback<'a>(&'a mut self, pbo: &'a PBO) -> Option<BoundPBO<'a>> {
+        let buf_ptr = match self.gl.get_type() {
+            gl::GlType::Gl => {
+                self.gl.map_buffer(gl::PIXEL_PACK_BUFFER, gl::READ_ONLY)
+            }
+
+            gl::GlType::Gles => {
+                self.gl.map_buffer_range(
+                    gl::PIXEL_PACK_BUFFER,
+                    0,
+                    pbo.reserved_size as _,
+                    gl::READ_ONLY)
+            }
+        };
+
+        if buf_ptr.is_null() {
+            return None;
+        }
+
+        let buffer = unsafe { slice::from_raw_parts(buf_ptr as *const u8, pbo.reserved_size) };
+
+        Some(BoundPBO {
+            device: self,
+            data: buffer,
+        })
     }
 
     pub fn delete_pbo(&mut self, mut pbo: PBO) {
