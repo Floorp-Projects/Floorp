@@ -153,17 +153,17 @@ add_task(async function test_unpinned() {
 add_task(async function test_url() {
   await do_test_update(function background() {
     // Create a new tab for testing update.
-    browser.tabs.create({}, function(tab) {
+    browser.tabs.create({url: "about:blank?initial_url=1"}, function(tab) {
+      const expectedUpdatedURL = "about:blank?updated_url=1";
+
       browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
-        if ("url" in changeInfo) {
-          // When activity stream is enabled, about:newtab runs in the content process
-          // which causes some timing issues for onUpdated. So if we encounter
-          // about:newtab, return early and continue waiting for about:blank.
-          if (changeInfo.url === "about:newtab") {
-            return;
-          }
-          browser.test.assertEq("about:blank", changeInfo.url,
-                                "Check changeInfo.url");
+        // Wait for the tabs.onUpdated events related to the updated url (because
+        // there is a good chance that we may still be receiving events related to
+        // the browser.tabs.create API call above before we are able to start
+        // loading the new url from the browser.tabs.update API call below).
+        if ("url" in changeInfo && changeInfo.url === expectedUpdatedURL) {
+          browser.test.assertEq(expectedUpdatedURL, changeInfo.url,
+                                "Got tabs.onUpdated event for the expected url");
           browser.tabs.onUpdated.removeListener(onUpdated);
           // Remove created tab.
           browser.tabs.remove(tabId);
@@ -173,7 +173,8 @@ add_task(async function test_url() {
         browser.test.assertEq(tabId, tab.id, "Check tab id");
         browser.test.log("onUpdate: " + JSON.stringify(changeInfo));
       });
-      browser.tabs.update(tab.id, {url: "about:blank"});
+
+      browser.tabs.update(tab.id, {url: expectedUpdatedURL});
     });
   });
 });
