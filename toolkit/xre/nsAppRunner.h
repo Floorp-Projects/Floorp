@@ -8,7 +8,6 @@
 
 #ifdef XP_WIN
 #  include <windows.h>
-#  include "mozilla/WindowsConsole.h"
 #else
 #  include <limits.h>
 #endif
@@ -101,6 +100,7 @@ void OverrideDefaultLocaleIfNeeded();
 void MozExpectedExit();
 
 #ifdef XP_WIN
+void UseParentConsole();
 
 BOOL WinLaunchChild(const wchar_t* exePath, int argc, char** argv,
                     HANDLE userToken = nullptr, HANDLE* hProcess = nullptr);
