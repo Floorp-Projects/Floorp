@@ -1715,7 +1715,11 @@ impl RenderBackend {
         // rather explicitly on what's used before and after scene building
         // so that, for example, we never miss anything in the code below:
 
-        let plain_externals = self.resource_cache.load_capture(backend.resources, caches_maybe, root);
+        let plain_externals = self.resource_cache.load_capture(
+            backend.resources,
+            caches_maybe,
+            root,
+        );
         let msg_load = ResultMsg::DebugOutput(
             DebugOutput::LoadCapture(root.clone(), plain_externals)
         );

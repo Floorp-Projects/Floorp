@@ -168,7 +168,13 @@ pub fn main_wrapper<E: Example>(
         FramebufferIntSize::new(size.width as i32, size.height as i32)
     };
     let notifier = Box::new(Notifier::new(events_loop.create_proxy()));
-    let (mut renderer, sender) = webrender::Renderer::new(gl.clone(), notifier, opts, None).unwrap();
+    let (mut renderer, sender) = webrender::Renderer::new(
+        gl.clone(),
+        notifier,
+        opts,
+        None,
+        framebuffer_size,
+    ).unwrap();
     let api = sender.create_api();
     let document_id = api.add_document(framebuffer_size, 0);
 
