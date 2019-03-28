@@ -17,5 +17,15 @@ module.exports = {
     "space-in-parens": ["error", "never"],
     "strict": ["error", "global"],
     "yoda": "error"
-  }
+  },
+
+  "overrides": [{
+    "files": "tests/unit/head*.js",
+    "rules": {
+      "no-unused-vars": ["error", {
+        "args": "none",
+        "vars": "local",
+      }],
+    },
+  }],
 };

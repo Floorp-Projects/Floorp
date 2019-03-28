@@ -10,6 +10,14 @@ job-defaults:
         docker-image: {in-tree: mingw32-build}
         max-run-time: 3600
 
+linux64-upx:
+    description: "UPX build for MinGW32 Cross Compile"
+    treeherder:
+        symbol: TMW(upx)
+    run:
+        script: build-upx.sh
+        toolchain-artifact: public/build/upx.tar.xz
+
 linux64-wine:
     description: "Wine build for MinGW32 Cross Compile"
     treeherder:
