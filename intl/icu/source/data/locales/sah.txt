@@ -164,7 +164,7 @@ sah{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.43.94"}
+    Version{"2.1.47.82"}
     calendar{
         generic{
             DateTimePatterns{
@@ -235,7 +235,7 @@ sah{
                 MMM{"LLL"}
                 MMMEd{"MMM d, E"}
                 MMMMW{
-                    other{"MMM W 'нэдиэлэтэ'"}
+                    other{"MMMM W 'нэдиэлэтэ'"}
                 }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}

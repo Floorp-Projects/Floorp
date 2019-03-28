@@ -575,7 +575,9 @@ keyTypeData:table(nofallback){
             c{"c11"}
             css{""}
             din{""}
+            ewts{""}
             gost{""}
+            iast{""}
             iso{""}
             java{""}
             mcst{""}
@@ -628,9 +630,11 @@ keyTypeData:table(nofallback){
             hantfin{""}
             hebr{""}
             hmng{""}
+            hmnp{""}
             java{""}
             jpan{""}
             jpanfin{""}
+            jpanyear{""}
             kali{""}
             khmr{""}
             knda{""}
@@ -679,6 +683,7 @@ keyTypeData:table(nofallback){
             traditional{"traditio"}
             vaii{""}
             wara{""}
+            wcho{""}
         }
         rg{
             RG_KEY_VALUE{""}

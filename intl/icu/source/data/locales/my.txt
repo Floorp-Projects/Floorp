@@ -34,7 +34,6 @@ my{
             patterns{
                 accountingFormat{"¤ #,##0.00"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -157,16 +156,12 @@ my{
                 }
             }
             symbols{
-                decimal{"."}
                 exponential{"E"}
-                group{","}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"-"}
                 nan{"ဂဏန်းမဟုတ်သော"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -203,7 +198,7 @@ my{
         }
         native{"mymr"}
     }
-    Version{"2.1.44.88"}
+    Version{"2.1.48.36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -266,6 +261,15 @@ my{
                 yyyyQQQQ{"G y QQQQ"}
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -419,7 +423,7 @@ my{
                 MMMEd{"MMM d၊ E"}
                 MMMMEd{"MMMM d ရက် Eနေ့"}
                 MMMMW{
-                    other{"MMM လ W ပတ်မြောက်"}
+                    other{"MMMM လ W ပတ်မြောက်"}
                 }
                 MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
@@ -602,6 +606,53 @@ my{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y – y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM   "}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM "}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d   "}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d – d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"HH – HH"}
                 }
@@ -1630,6 +1681,12 @@ my{
             middle{"{0} {1}"}
             start{"{0} {1}"}
         }
+        standard-narrow{
+            2{"{0}နှင့် {1}"}
+            end{"{0}နှင့် {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
+        }
         standard-short{
             2{"{0}နှင့် {1}"}
             end{"{0}နှင့် {1}"}
@@ -1685,10 +1742,6 @@ my{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }

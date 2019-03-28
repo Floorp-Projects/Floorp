@@ -1237,8 +1237,6 @@ sk{
         DKK{"kr"}
         DOP{"$"}
         EGP{"E£"}
-        ESP{"₧"}
-        EUR{"€"}
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
@@ -1267,8 +1265,6 @@ sk{
         LBP{"L£"}
         LKR{"Rs"}
         LRD{"$"}
-        LTL{"Lt"}
-        LVL{"Ls"}
         MGA{"Ar"}
         MMK{"K"}
         MNT{"₮"}
@@ -1287,7 +1283,6 @@ sk{
         PYG{"₲"}
         RON{"lei"}
         RUB{"₽"}
-        RUR{"р."}
         RWF{"RF"}
         SBD{"$"}
         SEK{"kr"}
@@ -1295,7 +1290,6 @@ sk{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -3136,5 +3130,5 @@ sk{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.48.42"}
 }

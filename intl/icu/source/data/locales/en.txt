@@ -205,7 +205,7 @@ en{
             }
         }
     }
-    Version{"2.1.44.91"}
+    Version{"2.1.48.65"}
     calendar{
         buddhist{
             eras{
@@ -299,6 +299,15 @@ en{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
                 H{
                     H{"HH – HH"}
                 }
@@ -499,6 +508,15 @@ en{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
                 Gy{
                     G{"y G – y G"}
                     y{"y – y G"}
@@ -850,6 +868,15 @@ en{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
                 Gy{
                     G{"y G – y G"}
                     y{"y – y G"}
@@ -1987,6 +2014,18 @@ en{
         standard{
             2{"{0} and {1}"}
             end{"{0}, and {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
+            2{"{0} & {1}"}
+            end{"{0}, & {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }

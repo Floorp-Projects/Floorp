@@ -14,7 +14,7 @@ de_AT{
             }
         }
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.47.69"}
     calendar{
         gregorian{
             dayPeriod{

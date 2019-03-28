@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sr{
-    AuxExemplarCharacters{"[ё й щ ъ ы ь э ю я]"}
+    AuxExemplarCharacters{"[{а\u0302} {е\u0302} ё й {и\u0302} {о\u0302} {у\u0302} щ ъ ы ь э ю я]"}
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}
@@ -19,15 +19,12 @@ sr{
         default{"latn"}
         latn{
             miscPatterns{
-                approximately{"~{0}"}
                 atLeast{"≥{0}"}
-                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
                 accountingFormat{"#,##0.00 ¤;(#,##0.00 ¤)"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -226,14 +223,10 @@ sr{
                 exponential{"E"}
                 group{"."}
                 infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -249,7 +242,7 @@ sr{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.43.94"}
+    Version{"2.1.48.42"}
     calendar{
         buddhist{
             eras{
@@ -365,12 +358,52 @@ sr{
                 yyyyQQQQ{"QQQQ y. G"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
                 }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 Hmv{
                     H{"HH:mm–HH:mm v"}
@@ -405,15 +438,6 @@ sr{
                     d{"d–d"}
                 }
                 fallback{"{0} – {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
-                hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
-                }
                 hmv{
                     a{"h:mm a – h:mm a v"}
                     h{"h:mm–h:mm a v"}
@@ -518,9 +542,9 @@ sr{
                 MMMEd{"E d. MMM"}
                 MMMMEd{"E, d. MMMM"}
                 MMMMW{
-                    few{"W. 'седмица' 'у' MMM."}
-                    one{"W. 'седмица' 'у' MMM."}
-                    other{"W. 'седмица' 'у' MMM."}
+                    few{"W. 'седмица' 'у' MMMM."}
+                    one{"W. 'седмица' 'у' MMMM."}
+                    other{"W. 'седмица' 'у' MMMM."}
                 }
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
@@ -695,6 +719,10 @@ sr{
                     "п. н. е.",
                     "н. е.",
                 }
+                abbreviated%variant{
+                    "BCE",
+                    "CE",
+                }
                 narrow{
                     "п.н.е.",
                     "н.е.",
@@ -703,8 +731,59 @@ sr{
                     "пре нове ере",
                     "нове ере",
                 }
+                wide%variant{
+                    "BCE",
+                    "CE",
+                }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -1935,9 +2014,9 @@ sr{
         }
         sun-narrow{
             relative{
-                "-1"{"прошле нед"}
+                "-1"{"пр. нед."}
                 "0"{"у нед"}
-                "1"{"следеће нед"}
+                "1"{"сл. нед."}
             }
             relativeTime{
                 future{
@@ -2315,6 +2394,12 @@ sr{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-narrow{
+            2{"{0} и {1}"}
+            end{"{0} и {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard-short{
             2{"{0} и {1}"}
             end{"{0} и {1}"}
@@ -2370,10 +2455,6 @@ sr{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }
