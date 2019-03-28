@@ -222,20 +222,33 @@ open class GleanInternalAPI internal constructor () {
         } else {
             // ////////////////////////////////////////////////////////////
             // BACKWARD COMPATIBILITY HACK
-            // 1539480: This moves the two user-lifetime metrics, client_id, and
-            // first_run_date from their old locations in the glean_ping_info
-            // store to the glean_client_info store.  Failure to do so means
-            // that the client_id won't be sent in the ping, and the ping will
-            // then be rejected by the pipeline.
-            val uuidSnapshot = UuidsStorageEngine.getSnapshot("glean_ping_info", false)
-            uuidSnapshot?.get("client_id")?.let {
-                UuidsStorageEngine.record(GleanInternalMetrics.clientId, it)
+            // 1539480: The implementation of 1528787 moved the client_id and 
+            // first_run_date metrics from the ping_info to the client_info
+            // sections. This introduced a bug that the client_id would not be
+            // picked up from the old location on devices that had already run
+            // the application. Missing a client_id is particularly problematic
+            // because these pings will be rejected by the pipeline. This fix
+            // looks for these metrics at their old locations, and if found,
+            // copies them to the new location. If they already exist in the
+            // new location, this shouldn't override them.
+
+            val uuidClientInfoSnapshot = UuidsStorageEngine.getSnapshot("glean_client_info", false)
+            val newClientId = uuidClientInfoSnapshot?.get("client_id")
+            if (newClientId == null) {
+                val uuidPingInfoSnapshot = UuidsStorageEngine.getSnapshot("glean_ping_info", false)
+                uuidPingInfoSnapshot?.get("client_id")?.let {
+                    UuidsStorageEngine.record(GleanInternalMetrics.clientId, it)
+                }
             }
 
-            val datetimeSnapshot = DatetimesStorageEngine.getSnapshot("glean_ping_info", false)
-            datetimeSnapshot?.get("first_run_date")?.let {
-                parseISOTimeString(it)?.let {
-                    DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate, it)
+            val datetimeClientInfoSnapshot = DatetimesStorageEngine.getSnapshot("glean_client_info", false)
+            val newFirstRunDate = datetimeClientInfoSnapshot?.get("first_run_date")
+            if (newFirstRunDate == null) {
+                val datetimePingInfoSnapshot = DatetimesStorageEngine.getSnapshot("glean_ping_info", false)
+                datetimePingInfoSnapshot?.get("first_run_date")?.let {
+                    parseISOTimeString(it)?.let {
+                        DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate, it)
+                    }
                 }
             }
             // ////////////////////////////////////////////////////////////
