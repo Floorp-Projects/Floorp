@@ -485,6 +485,19 @@ IonBuilder::InliningDecision IonBuilder::canInlineTarget(JSFunction* target,
     return DontInline(inlineScript, "No baseline jitcode");
   }
 
+  // Don't inline functions with a higher optimization level.
+  if (!isHighestOptimizationLevel()) {
+    OptimizationLevel level = optimizationLevel();
+    if (inlineScript->hasIonScript() &&
+        (inlineScript->ionScript()->isRecompiling() ||
+         inlineScript->ionScript()->optimizationLevel() > level)) {
+      return DontInline(inlineScript, "More optimized");
+    }
+    if (IonOptimizations.levelForScript(inlineScript, nullptr) > level) {
+      return DontInline(inlineScript, "Should be more optimized");
+    }
+  }
+
   if (TooManyFormalArguments(target->nargs())) {
     trackOptimizationOutcome(TrackedOutcome::CantInlineTooManyArgs);
     return DontInline(inlineScript, "Too many args");
@@ -777,7 +790,10 @@ AbortReasonOr<Ok> IonBuilder::build() {
 
   MOZ_TRY(init());
 
-  if (script()->hasBaselineScript()) {
+  // The BaselineScript-based inlining heuristics only affect the highest
+  // optimization level. Other levels do almost no inlining and we don't want to
+  // overwrite data from the highest optimization tier.
+  if (script()->hasBaselineScript() && isHighestOptimizationLevel()) {
     script()->baselineScript()->resetMaxInliningDepth();
   }
 
@@ -797,7 +813,7 @@ AbortReasonOr<Ok> IonBuilder::build() {
             (script()->hasIonScript() ? "Rec" : "C"), script()->filename(),
             script()->lineno(), script()->column(), (void*)script(),
             script()->getWarmUpCount(),
-            OptimizationLevelString(optimizationInfo().level()));
+            OptimizationLevelString(optimizationLevel()));
   }
 #endif
 
@@ -910,7 +926,7 @@ AbortReasonOr<Ok> IonBuilder::build() {
 
   MOZ_TRY(traverseBytecode());
 
-  if (script_->hasBaselineScript() &&
+  if (isHighestOptimizationLevel() && script_->hasBaselineScript() &&
       inlinedBytecodeLength_ >
           script_->baselineScript()->inlinedBytecodeLength()) {
     script_->baselineScript()->setInlinedBytecodeLength(inlinedBytecodeLength_);
@@ -4369,7 +4385,10 @@ IonBuilder::InliningDecision IonBuilder::makeInliningDecision(
     // outermost script a max inlining depth of 0, so that it won't be
     // inlined in other scripts. This heuristic is currently only used
     // when we're inlining scripts with loops, see the comment below.
-    outerBaseline->setMaxInliningDepth(0);
+    // These heuristics only apply to the highest optimization level.
+    if (isHighestOptimizationLevel()) {
+      outerBaseline->setMaxInliningDepth(0);
+    }
 
     trackOptimizationOutcome(TrackedOutcome::CantInlineExceededDepth);
     return DontInline(targetScript, "Vetoed: exceeding allowed inline depth");
@@ -4392,7 +4411,10 @@ IonBuilder::InliningDecision IonBuilder::makeInliningDecision(
   // script, indicating at which depth we won't be able to inline all functions
   // we inlined this time. This solves the issue above, because we will only
   // inline f if it means we can also inline g.
-  if (targetScript->hasLoops() &&
+  //
+  // These heuristics only apply to the highest optimization level: other tiers
+  // do very little inlining and performance is not as much of a concern there.
+  if (isHighestOptimizationLevel() && targetScript->hasLoops() &&
       inliningDepth_ >= targetScript->baselineScript()->maxInliningDepth()) {
     trackOptimizationOutcome(TrackedOutcome::CantInlineExceededDepth);
     return DontInline(targetScript,
@@ -4402,7 +4424,8 @@ IonBuilder::InliningDecision IonBuilder::makeInliningDecision(
   // Update the max depth at which we can inline the outer script.
   MOZ_ASSERT(maxInlineDepth > inliningDepth_);
   uint32_t scriptInlineDepth = maxInlineDepth - inliningDepth_ - 1;
-  if (scriptInlineDepth < outerBaseline->maxInliningDepth()) {
+  if (scriptInlineDepth < outerBaseline->maxInliningDepth() &&
+      isHighestOptimizationLevel()) {
     outerBaseline->setMaxInliningDepth(scriptInlineDepth);
   }
 
@@ -5955,12 +5978,12 @@ AbortReasonOr<Ok> IonBuilder::jsop_call(uint32_t argc, bool constructing,
   }
 
   if (status == InliningStatus_WarmUpCountTooLow && callTargets &&
-      callTargets->length() == 1) {
+      callTargets->length() == 1 && isHighestOptimizationLevel()) {
     JSFunction* target = callTargets.ref()[0];
     MRecompileCheck* check =
         MRecompileCheck::New(alloc(), target->nonLazyScript(),
                              optimizationInfo().inliningRecompileThreshold(),
-                             MRecompileCheck::RecompileCheck_Inlining);
+                             MRecompileCheck::RecompileCheckType::Inlining);
     current->add(check);
   }
 
@@ -7631,27 +7654,33 @@ static bool ObjectHasExtraOwnProperty(CompileRealm* realm,
 }
 
 void IonBuilder::insertRecompileCheck() {
+  MOZ_ASSERT(pc == script()->code() || *pc == JSOP_LOOPENTRY);
+
   // No need for recompile checks if this is the highest optimization level.
-  OptimizationLevel curLevel = optimizationInfo().level();
+  OptimizationLevel curLevel = optimizationLevel();
   if (IonOptimizations.isLastLevel(curLevel)) {
     return;
   }
 
-  // Add recompile check.
+  // Add recompile check. See MRecompileCheck::RecompileCheckType for how this
+  // works.
 
-  // Get the topmost builder. The topmost script will get recompiled when
-  // warm-up counter is high enough to justify a higher optimization level.
-  IonBuilder* topBuilder = outermostBuilder();
+  MRecompileCheck::RecompileCheckType type;
+  if (*pc == JSOP_LOOPENTRY) {
+    type = MRecompileCheck::RecompileCheckType::OptimizationLevelOSR;
+  } else if (this != outermostBuilder()) {
+    type = MRecompileCheck::RecompileCheckType::OptimizationLevelInlined;
+  } else {
+    type = MRecompileCheck::RecompileCheckType::OptimizationLevel;
+  }
 
   // Add recompile check to recompile when the warm-up count reaches the
   // threshold of the next optimization level.
   OptimizationLevel nextLevel = IonOptimizations.nextLevel(curLevel);
   const OptimizationInfo* info = IonOptimizations.get(nextLevel);
-  uint32_t warmUpThreshold =
-      info->compilerWarmUpThreshold(topBuilder->script());
+  uint32_t warmUpThreshold = info->recompileWarmUpThreshold(script(), pc);
   MRecompileCheck* check =
-      MRecompileCheck::New(alloc(), topBuilder->script(), warmUpThreshold,
-                           MRecompileCheck::RecompileCheck_OptimizationLevel);
+      MRecompileCheck::New(alloc(), script(), warmUpThreshold, type);
   current->add(check);
 }
 
