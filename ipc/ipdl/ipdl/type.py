@@ -85,6 +85,9 @@ class TypeVisitor:
     def visitEndpointType(self, s, *args):
         pass
 
+    def visitManagedEndpointType(self, s, *args):
+        pass
+
     def visitUniquePtrType(self, s, *args):
         pass
 
@@ -211,6 +214,8 @@ class IPDLType(Type):
     def isFD(self): return False
 
     def isEndpoint(self): return False
+
+    def isManagedEndpoint(self): return False
 
     def isAsync(self): return self.sendSemantics == ASYNC
 
@@ -519,6 +524,19 @@ class EndpointType(IPDLType):
         return str(self.qname)
 
 
+class ManagedEndpointType(IPDLType):
+    def __init__(self, qname):
+        self.qname = qname
+
+    def isManagedEndpoint(self): return True
+
+    def name(self):
+        return self.qname.baseid
+
+    def fullname(self):
+        return str(self.qname)
+
+
 class UniquePtrType(Type):
     def __init__(self, innertype):
         self.innertype = innertype
@@ -765,6 +783,19 @@ class GatherDecls(TcheckVisitor):
                                               fullname + 'Child>', ['mozilla', 'ipc'])),
                 shortname='Endpoint<' + p.name + 'Child>')
 
+            p.parentManagedEndpointDecl = self.declare(
+                loc=p.loc,
+                type=ManagedEndpointType(QualifiedId(p.loc, 'ManagedEndpoint<' +
+                                                     fullname + 'Parent>',
+                                                     ['mozilla', 'ipc'])),
+                shortname='ManagedEndpoint<' + p.name + 'Parent>')
+            p.childManagedEndpointDecl = self.declare(
+                loc=p.loc,
+                type=ManagedEndpointType(QualifiedId(p.loc, 'ManagedEndpoint<' +
+                                                     fullname + 'Child>',
+                                                     ['mozilla', 'ipc'])),
+                shortname='ManagedEndpoint<' + p.name + 'Child>')
+
             # XXX ugh, this sucks.  but we need this information to compute
             # what friend decls we need in generated C++
             p.decl.type._ast = p
@@ -833,6 +864,8 @@ class GatherDecls(TcheckVisitor):
             self.symtab.declare(inc.tu.protocol.decl)
             self.symtab.declare(inc.tu.protocol.parentEndpointDecl)
             self.symtab.declare(inc.tu.protocol.childEndpointDecl)
+            self.symtab.declare(inc.tu.protocol.parentManagedEndpointDecl)
+            self.symtab.declare(inc.tu.protocol.childManagedEndpointDecl)
         else:
             # This is a header.  Import its "exported" globals into
             # our scope.
@@ -951,16 +984,6 @@ class GatherDecls(TcheckVisitor):
 
         p.decl.type.hasReentrantDelete = p.decl.type.hasDelete and self.symtab.lookup(
             _DELETE_MSG).type.isInterrupt()
-
-        for managed in p.managesStmts:
-            mgdname = managed.name
-            ctordecl = self.symtab.lookup(mgdname + 'Constructor')
-
-            if not (ctordecl and ctordecl.type.isCtor()):
-                self.error(
-                    managed.loc,
-                    "constructor declaration required for managed protocol `%s' (managed by protocol `%s')",  # NOQA: E501
-                    mgdname, p.name)
 
         # FIXME/cjones declare all the little C++ thingies that will
         # be generated.  they're not relevant to IPDL itself, but
