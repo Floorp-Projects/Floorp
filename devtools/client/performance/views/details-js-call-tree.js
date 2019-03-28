@@ -113,8 +113,9 @@ const JsCallTreeView = extend(DetailsSubview, {
     const optimizations = JITOptimizationsView({
       frameData,
       optimizationSites,
-      onViewSourceInDebugger: (url, line) => {
-        PerformanceController.toolbox.viewSourceInDebugger(url, line).then(success => {
+      onViewSourceInDebugger: (url, line, column) => {
+        PerformanceController.toolbox.viewSourceInDebugger(url, line, column)
+        .then(success => {
           if (success) {
             this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
           } else {
@@ -133,8 +134,9 @@ const JsCallTreeView = extend(DetailsSubview, {
    * Fired on the "link" event for the call tree in this container.
    */
   _onLink: function(treeItem) {
-    const { url, line } = treeItem.frame.getInfo();
-    PerformanceController.toolbox.viewSourceInDebugger(url, line).then(success => {
+    const { url, line, column } = treeItem.frame.getInfo();
+    PerformanceController.toolbox.viewSourceInDebugger(url, line, column)
+    .then(success => {
       if (success) {
         this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
       } else {

@@ -248,7 +248,7 @@ class MemoryApp extends Component {
             snapshot: selectedSnapshot,
             diffing,
             onViewSourceInDebugger: frame =>
-              toolbox.viewSourceInDebugger(frame.source, frame.line),
+              toolbox.viewSourceInDebugger(frame.source, frame.line, frame.column),
             onSnapshotClick: () =>
               dispatch(takeSnapshotAndCensus(front, heapWorker)),
             onLoadMoreSiblings: lazyChildren =>
