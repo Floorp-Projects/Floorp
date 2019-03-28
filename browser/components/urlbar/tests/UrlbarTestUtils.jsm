@@ -52,6 +52,8 @@ var UrlbarTestUtils = {
     if (fireInputEvent) {
       // This is necessary to get the urlbar to set gBrowser.userTypedValue.
       urlbar.fireInputEvent();
+    } else {
+      win.gURLBar.setAttribute("pageproxystate", "invalid");
     }
     // An input event will start a new search, with a couple of exceptions, so
     // be careful not to call startSearch if we fired an input event since that
@@ -340,6 +342,7 @@ class UrlbarAbstraction {
   startSearch(text) {
     if (this.quantumbar) {
       this.urlbar.value = text;
+      this.urlbar.setAttribute("pageproxystate", "invalid");
       this.urlbar.startQuery();
     } else {
       // Force the controller to do consecutive searches for the same string by
