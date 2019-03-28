@@ -2638,6 +2638,14 @@ impl Renderer {
         }
     }
 
+    pub fn release_profiler_structures(&mut self) {
+        if let Some(async_screenshots) = self.async_screenshots.take() {
+            self.device.begin_frame();
+            async_screenshots.deinit(&mut self.device);
+            self.device.end_frame();
+        }
+    }
+
     #[cfg(not(feature = "debugger"))]
     fn get_screenshot_for_debugger(&mut self) -> String {
         // Avoid unused param warning.
