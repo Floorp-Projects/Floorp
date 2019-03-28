@@ -12,8 +12,11 @@
 ##
 ## Reference: https://www.mozilla.org/styleguide/communications/translation/
 
--brand-short-name = Firefox Developer Edition
--vendor-short-name = Mozilla
--brand-full-name = Firefox Developer Edition
 -brand-shorter-name = Firefox
+-brand-short-name = Firefox Developer Edition
+-brand-full-name = Firefox Developer Edition
+# This brand name can be used in messages where the product name needs to
+# remain unchanged across different versions (Nightly, Beta, etc.).
+-brand-product-name = Firefox
+-vendor-short-name = Mozilla
 trademarkInfo = { " " }
