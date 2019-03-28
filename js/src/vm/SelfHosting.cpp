@@ -2088,6 +2088,10 @@ static bool intrinsic_WarnDeprecatedMethod(JSContext* cx, unsigned argc,
       return false;
     }
 
+    if (!cx->realm()->isProbablySystemCode()) {
+      cx->runtime()->addTelemetry(JS_TELEMETRY_DEPRECATED_ARRAY_GENERICS, id);
+    }
+
     cx->realm()->warnedAboutArrayGenericsMethods |= mask;
   }
 
