@@ -1,9 +1,6 @@
 "use strict";
 
 module.exports = {
-  "extends": [
-    "plugin:mozilla/browser-test"
-  ],
   "rules": {
     "mozilla/no-aArgs": "error",
     "mozilla/reject-importGlobalProperties": ["error", "everything"],

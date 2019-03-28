@@ -22,6 +22,7 @@ using mozilla::IsAscii;
 using mozilla::Utf8Unit;
 
 using namespace js;
+using namespace js::unicode;
 
 Latin1CharsZ JS::LossyTwoByteCharsToNewLatin1CharsZ(
     JSContext* cx, const mozilla::Range<const char16_t> tbchars) {
@@ -47,18 +48,18 @@ static size_t GetDeflatedUTF8StringLength(const CharT* chars, size_t nchars) {
       continue;
     }
     uint32_t v;
-    if (0xD800 <= c && c <= 0xDFFF) {
+    if (LeadSurrogateMin <= c && c <= TrailSurrogateMax) {
       /* nbytes sets 1 length since this is surrogate pair. */
-      if (c >= 0xDC00 || (chars + 1) == end) {
+      if (c >= TrailSurrogateMin || (chars + 1) == end) {
         nbytes += 2; /* Bad Surrogate */
         continue;
       }
       char16_t c2 = chars[1];
-      if (c2 < 0xDC00 || c2 > 0xDFFF) {
+      if (c2 < TrailSurrogateMin || c2 > TrailSurrogateMax) {
         nbytes += 2; /* Bad Surrogate */
         continue;
       }
-      v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
+      v = ((c - LeadSurrogateMin) << 10) + (c2 - TrailSurrogateMin) + NonBMPMin;
       nbytes--;
       chars++;
     } else {
@@ -100,21 +101,22 @@ static void DeflateStringToUTF8Buffer(const CharT* src, size_t srclen,
     uint32_t v;
     char16_t c = *src++;
     srclen--;
-    if (c >= 0xDC00 && c <= 0xDFFF) {
-      v = unicode::REPLACEMENT_CHARACTER;
-    } else if (c < 0xD800 || c > 0xDBFF) {
+    if (c >= TrailSurrogateMin && c <= TrailSurrogateMax) {
+      v = REPLACEMENT_CHARACTER;
+    } else if (c < LeadSurrogateMin || c > LeadSurrogateMax) {
       v = c;
     } else {
       if (srclen < 1) {
-        v = unicode::REPLACEMENT_CHARACTER;
+        v = REPLACEMENT_CHARACTER;
       } else {
         char16_t c2 = *src;
-        if (c2 < 0xDC00 || c2 > 0xDFFF) {
-          v = unicode::REPLACEMENT_CHARACTER;
+        if (c2 < TrailSurrogateMin || c2 > TrailSurrogateMax) {
+          v = REPLACEMENT_CHARACTER;
         } else {
           src++;
           srclen--;
-          v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
+          v = ((c - LeadSurrogateMin) << 10) + (c2 - TrailSurrogateMin) +
+              NonBMPMin;
         }
       }
     }
@@ -221,7 +223,7 @@ static uint32_t Utf8ToOneUcs4CharImpl(const uint8_t* utf8Buffer,
   }
 
   /* from Unicode 3.1, non-shortest form is illegal */
-  static const uint32_t minucs4Table[] = {0x80, 0x800, 0x10000};
+  static const uint32_t minucs4Table[] = {0x80, 0x800, NonBMPMin};
 
   MOZ_ASSERT((*utf8Buffer & (0x100 - (1 << (7 - utf8Length)))) ==
              (0x100 - (1 << (8 - utf8Length))));
@@ -238,7 +240,8 @@ static uint32_t Utf8ToOneUcs4CharImpl(const uint8_t* utf8Buffer,
 
   // WTF-8 allows lone surrogate.
   if (std::is_same<InputCharsT, UTF8Chars>::value &&
-      MOZ_UNLIKELY(ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF)) {
+      MOZ_UNLIKELY(ucs4Char >= LeadSurrogateMin &&
+                   ucs4Char <= TrailSurrogateMax)) {
     return INVALID_UTF8;
   }
 
@@ -263,7 +266,7 @@ static void ReportBufferTooSmall(JSContext* cx, uint32_t dummy) {
 
 static void ReportTooBigCharacter(JSContext* cx, uint32_t v) {
   char buffer[10];
-  SprintfLiteral(buffer, "0x%x", v + 0x10000);
+  SprintfLiteral(buffer, "0x%x", v + NonBMPMin);
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_UTF8_CHAR_TOO_LARGE, buffer);
 }
@@ -312,7 +315,7 @@ static bool InflateUTF8ToUTF16(JSContext* cx, const InputCharsT src,
     } else {                                                        \
       char16_t replacement;                                         \
       if (ErrorAction == OnUTF8Error::InsertReplacementCharacter) { \
-        replacement = unicode::REPLACEMENT_CHARACTER;               \
+        replacement = REPLACEMENT_CHARACTER;                        \
       } else {                                                      \
         MOZ_ASSERT(ErrorAction == OnUTF8Error::InsertQuestionMark); \
         replacement = '?';                                          \
@@ -362,19 +365,21 @@ static bool InflateUTF8ToUTF16(JSContext* cx, const InputCharsT src,
 
       // Determine the code unit's length in CharT and act accordingly.
       v = Utf8ToOneUcs4CharImpl<InputCharsT>((uint8_t*)&src[i], n);
-      if (v < 0x10000) {
+      if (v < NonBMPMin) {
         // The n-byte UTF8 code unit will fit in a single CharT.
         if (dst(char16_t(v)) == LoopDisposition::Break) {
           break;
         }
       } else {
-        v -= 0x10000;
+        v -= NonBMPMin;
         if (v <= 0xFFFFF) {
           // The n-byte UTF8 code unit will fit in two CharT units.
-          if (dst(char16_t((v >> 10) + 0xD800)) == LoopDisposition::Break) {
+          if (dst(char16_t((v >> 10) + LeadSurrogateMin)) ==
+              LoopDisposition::Break) {
             break;
           }
-          if (dst(char16_t((v & 0x3FF) + 0xDC00)) == LoopDisposition::Break) {
+          if (dst(char16_t((v & 0x3FF) + TrailSurrogateMin)) ==
+              LoopDisposition::Break) {
             break;
           }
         } else {

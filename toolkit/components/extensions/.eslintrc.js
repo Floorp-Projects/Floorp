@@ -288,4 +288,14 @@ module.exports = {
     // Disallow labels that share a name with a variable
     "no-label-var": "error",
   },
+
+  "overrides": [{
+    "files": "test/xpcshell/head*.js",
+    "rules": {
+      "no-unused-vars": ["error", {
+        "args": "none",
+        "vars": "local",
+      }],
+    },
+  }],
 };
