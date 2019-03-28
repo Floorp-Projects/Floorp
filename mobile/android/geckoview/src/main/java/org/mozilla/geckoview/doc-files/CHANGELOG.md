@@ -22,7 +22,6 @@ exclude: true
 
 [68.3]: ../ContentBlocking.html#AT_CRYPTOMINING
 
-<<<<<<< HEAD
 - Added [`ContentBlocking#AT_DEFAULT`][68.4], [`ContentBlocking#AT_STRICT`][68.5],
   [`ContentBlocking#CB_DEFAULT`][68.6] and [`ContentBlocking#CB_STRICT`][68.7]
   for clearer app default selections.
@@ -31,13 +30,6 @@ exclude: true
 [68.5]: ../ContentBlocking.html$AT_STRICT
 [68.6]: ../ContentBlocking.html$CB_DEFAULT
 [68.7]: ../ContentBlocking.html$CB_STRICT
-=======
-- Added [`GeckoSession.SessionState.fromString`][. This can be used to deserialize a
-  `GeckoSession.SessionState` instance previously serialized to a `String` vai
-  `GeckoSession.SessionState.toString`.
-
-[68.4]: ../GeckoSession.SessionState.html#fromString-java.lang.String-
->>>>>>> Bug 1538702 - Allow recreating GeckoSession.SessionState from String r?#geckoview-reviewers
 
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
@@ -245,4 +237,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: d35c31c60693caf8467b98a196b382707c3bd044
+[api-version]: 9ac0d5a6ef3fd45ecf9e12b42de4f6057e274c30
