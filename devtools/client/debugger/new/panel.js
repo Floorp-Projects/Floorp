@@ -133,12 +133,12 @@ DebuggerPanel.prototype = {
     return this._selectors.getIsPaused(this._getState(), thread);
   },
 
-  selectSourceURL(url, line) {
-    return this._actions.selectSourceURL(url, { line });
+  selectSourceURL(url, line, column) {
+    return this._actions.selectSourceURL(url, { line, column });
   },
 
-  selectSource(sourceId, line) {
-    return this._actions.selectSource(sourceId, { line });
+  selectSource(sourceId, line, column) {
+    return this._actions.selectSource(sourceId, { line, column });
   },
 
   getSourceByActorId(sourceId) {

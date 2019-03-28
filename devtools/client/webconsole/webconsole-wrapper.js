@@ -264,7 +264,7 @@ class WebConsoleWrapper {
         Object.assign(serviceContainer, {
           onViewSourceInDebugger: frame => {
             this.toolbox.viewSourceInDebugger(
-              frame.url, frame.line, frame.sourceId
+              frame.url, frame.line, frame.column, frame.sourceId
             ).then(() => {
               this.telemetry.recordEvent(
                 "jump_to_source", "webconsole",
