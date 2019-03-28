@@ -33,14 +33,6 @@
 #include "vm/Realm-inl.h"
 #include "vm/TypeInference-inl.h"
 
-inline js::Shape* JSObject::maybeShape() const { return shape(); }
-
-inline js::Shape* JSObject::ensureShape(JSContext* cx) {
-  js::Shape* shape = maybeShape();
-  MOZ_ASSERT(shape);
-  return shape;
-}
-
 inline void JSObject::finalize(js::FreeOp* fop) {
   js::probes::FinalizeObject(this);
 
@@ -223,10 +215,7 @@ inline js::GlobalObject& JSObject::nonCCWGlobal() const {
 
 inline bool JSObject::hasAllFlags(js::BaseShape::Flag flags) const {
   MOZ_ASSERT(flags);
-  if (js::Shape* shape = maybeShape()) {
-    return shape->hasAllObjectFlags(flags);
-  }
-  return false;
+  return shape()->hasAllObjectFlags(flags);
 }
 
 inline bool JSObject::nonProxyIsExtensible() const {

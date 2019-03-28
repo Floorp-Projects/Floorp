@@ -2652,7 +2652,7 @@ bool GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   env = env_;
   while (env) {
     if (NeedEnvironmentShapeGuard(env)) {
-      writer.guardShape(lastObjId, env->maybeShape());
+      writer.guardShape(lastObjId, env->shape());
     }
 
     if (env == holder) {
@@ -2802,7 +2802,7 @@ bool BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   env = env_;
   while (env) {
     if (NeedEnvironmentShapeGuard(env) && !env->is<GlobalObject>()) {
-      writer.guardShape(lastObjId, env->maybeShape());
+      writer.guardShape(lastObjId, env->shape());
     }
 
     if (env == holder) {
