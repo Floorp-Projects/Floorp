@@ -71,9 +71,6 @@ class nsPermissionManager final : public nsIPermissionManager,
 
   /**
    * PermissionKey is the key used by PermissionHashKey hash table.
-   *
-   * NOTE: It could be implementing nsIHashable but there is no reason to worry
-   * with XPCOM interfaces while we don't need to.
    */
   class PermissionKey {
    public:
