@@ -12,8 +12,6 @@
 %downloadsDTD;
 <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
 %placesDTD;
-<!ENTITY % safebrowsingDTD SYSTEM "chrome://browser/locale/safebrowsing/phishing-afterload-warning-message.dtd">
-%safebrowsingDTD;
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
 %syncBrandDTD;
 <!ENTITY % reportphishDTD SYSTEM "chrome://browser/locale/safebrowsing/report-phishing.dtd">
