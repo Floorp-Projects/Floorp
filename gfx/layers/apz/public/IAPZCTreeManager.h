@@ -9,6 +9,7 @@
 
 #include <stdint.h>  // for uint64_t, uint32_t
 
+#include "mozilla/layers/APZTypes.h"
 #include "mozilla/layers/LayersTypes.h"          // for TouchBehaviorFlags
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, etc
 #include "mozilla/layers/ZoomConstraints.h"      // for ZoomConstraints

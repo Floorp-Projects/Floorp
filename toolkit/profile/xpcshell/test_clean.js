@@ -18,7 +18,6 @@ add_task(async () => {
   service.flush();
 
   let profileData = readProfilesIni();
-  let installData = readInstallsIni();
 
   Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 1, "Should have the right number of profiles.");
@@ -28,15 +27,14 @@ add_task(async () => {
   Assert.ok(!profile.default, "Should not be marked as the old-style default.");
 
   // The new profile hasn't been marked as the default yet!
-  Assert.equal(Object.keys(installData.installs).length, 0, "Should be no defaults for installs yet.");
+  Assert.equal(Object.keys(profileData.installs).length, 0, "Should be no defaults for installs yet.");
 
-  checkProfileService(profileData, installData);
+  checkProfileService(profileData);
 
   service.defaultProfile = newProfile;
   service.flush();
 
   profileData = readProfilesIni();
-  installData = readInstallsIni();
 
   Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 1, "Should have the right number of profiles.");
@@ -46,10 +44,10 @@ add_task(async () => {
   Assert.ok(!profile.default, "Should not be marked as the old-style default.");
 
   let hash = xreDirProvider.getInstallHash();
-  Assert.equal(Object.keys(installData.installs).length, 1, "Should be only one known install.");
-  Assert.equal(installData.installs[hash].default, profileData.profiles[0].path, "Should have marked the new profile as the default for this install.");
+  Assert.equal(Object.keys(profileData.installs).length, 1, "Should be only one known install.");
+  Assert.equal(profileData.installs[hash].default, profileData.profiles[0].path, "Should have marked the new profile as the default for this install.");
 
-  checkProfileService(profileData, installData);
+  checkProfileService(profileData);
 
   let otherProfile = service.createProfile(null, "another");
   service.defaultProfile = otherProfile;
@@ -57,7 +55,6 @@ add_task(async () => {
   service.flush();
 
   profileData = readProfilesIni();
-  installData = readInstallsIni();
 
   Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 2, "Should have the right number of profiles.");
@@ -70,16 +67,15 @@ add_task(async () => {
   Assert.equal(profile.name, "dedicated", "Should have the right name.");
   Assert.ok(!profile.default, "Should not be marked as the old-style default.");
 
-  Assert.equal(Object.keys(installData.installs).length, 1, "Should be only one known install.");
-  Assert.equal(installData.installs[hash].default, profileData.profiles[0].path, "Should have marked the new profile as the default for this install.");
+  Assert.equal(Object.keys(profileData.installs).length, 1, "Should be only one known install.");
+  Assert.equal(profileData.installs[hash].default, profileData.profiles[0].path, "Should have marked the new profile as the default for this install.");
 
-  checkProfileService(profileData, installData);
+  checkProfileService(profileData);
 
   newProfile.remove(true);
   service.flush();
 
   profileData = readProfilesIni();
-  installData = readInstallsIni();
 
   Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 1, "Should have the right number of profiles.");
@@ -88,23 +84,22 @@ add_task(async () => {
   Assert.equal(profile.name, "another", "Should have the right name.");
   Assert.ok(!profile.default, "Should not be marked as the old-style default.");
 
-  Assert.equal(Object.keys(installData.installs).length, 1, "Should be only one known install.");
-  Assert.equal(installData.installs[hash].default, profileData.profiles[0].path, "Should have marked the new profile as the default for this install.");
+  Assert.equal(Object.keys(profileData.installs).length, 1, "Should be only one known install.");
+  Assert.equal(profileData.installs[hash].default, profileData.profiles[0].path, "Should have marked the new profile as the default for this install.");
 
-  checkProfileService(profileData, installData);
+  checkProfileService(profileData);
 
   otherProfile.remove(true);
   service.flush();
 
   profileData = readProfilesIni();
-  installData = readInstallsIni();
 
   Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 0, "Should have the right number of profiles.");
 
   // We leave a reference to the missing profile to stop us trying to steal the
   // old-style default profile on next startup.
-  Assert.equal(Object.keys(installData.installs).length, 1, "Should be only one known install.");
+  Assert.equal(Object.keys(profileData.installs).length, 1, "Should be only one known install.");
 
-  checkProfileService(profileData, installData);
+  checkProfileService(profileData);
 });

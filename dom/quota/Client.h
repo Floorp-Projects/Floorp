@@ -43,7 +43,6 @@ class Client {
   enum Type {
     IDB = 0,
     // APPCACHE,
-    ASMJS,
     DOMCACHE,
     SDB,
     LS,
