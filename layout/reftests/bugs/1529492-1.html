@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!-- This test relies on caret browsing being enabled. -->
+<style>
+.parent {
+  font: 32px monospace;
+  width: 26ch;
+  overflow: hidden;
+}
+#child {
+  transform: scaleX(0.5);
+  transform-origin: 0 0;
+  outline: none;
+}
+</style>
+<div class="parent"><div id="child">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</div></div>
+<script>
+let r = document.createRange();
+let t = child.firstChild;
+
+// With a scale of 0.5, the bug manifests by limiting the caret's position
+// to half way through the text.  Place the selection somewhere past that.
+r.setStart(t, 30);
+r.setEnd(t, 30);
+
+let sel = getSelection();
+sel.empty();
+sel.addRange(r);
+</script>
