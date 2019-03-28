@@ -659,6 +659,13 @@ impl Drop for VAO {
 
 pub struct PBO {
     id: gl::GLuint,
+    reserved_size: usize,
+}
+
+impl PBO {
+    pub fn get_reserved_size(&self) -> usize {
+        self.reserved_size
+    }
 }
 
 impl Drop for PBO {
@@ -2330,12 +2337,33 @@ impl Device {
 
     pub fn create_pbo(&mut self) -> PBO {
         let id = self.gl.gen_buffers(1)[0];
-        PBO { id }
+        PBO {
+            id,
+            reserved_size: 0,
+        }
+    }
+
+    pub fn create_pbo_with_size(&mut self, size: usize) -> PBO {
+        let mut pbo = self.create_pbo();
+
+        self.gl.bind_buffer(gl::PIXEL_PACK_BUFFER, pbo.id);
+        self.gl.pixel_store_i(gl::PACK_ALIGNMENT, 1);
+        self.gl.buffer_data_untyped(
+            gl::PIXEL_PACK_BUFFER,
+            size as _,
+            ptr::null(),
+            gl::STREAM_READ,
+        );
+        self.gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, 0);
+
+        pbo.reserved_size = size;
+        pbo
     }
 
     pub fn delete_pbo(&mut self, mut pbo: PBO) {
         self.gl.delete_buffers(&[pbo.id]);
         pbo.id = 0;
+        pbo.reserved_size = 0
     }
 
     pub fn upload_texture<'a, T>(
