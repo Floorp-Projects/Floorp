@@ -806,6 +806,7 @@ nsIPresShell::nsIPresShell()
       mPaintingIsFrozen(false),
       mIsNeverPainting(false),
       mResolutionUpdated(false),
+      mResolutionUpdatedByApz(false),
       mPresShellId(0),
       mFontSizeInflationEmPerLine(0),
       mFontSizeInflationMinTwips(0),
@@ -5195,9 +5196,12 @@ nsresult PresShell::SetResolutionAndScaleTo(float aResolution,
   if (mMobileViewportManager) {
     mMobileViewportManager->ResolutionUpdated();
   }
-  if (aOrigin != ChangeOrigin::eApz) {
+  if (aOrigin == ChangeOrigin::eApz) {
+    mResolutionUpdatedByApz = true;
+  } else {
     mResolutionUpdated = true;
   }
+
   if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
     window->VisualViewport()->PostResizeEvent();
   }
