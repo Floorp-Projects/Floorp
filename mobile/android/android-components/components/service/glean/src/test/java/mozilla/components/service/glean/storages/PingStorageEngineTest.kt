@@ -139,9 +139,8 @@ class PingStorageEngineTest {
             pingStorageEngine.storageDirectory.listFiles())
 
         // Store a "valid" ping with a UUID file name
-        runBlocking(Dispatchers.IO) {
-            pingStorageEngine.store(fileName1, path1, "dummy data").join()
-        }
+        pingStorageEngine.store(fileName1, path1, "dummy data")
+        pingStorageEngine.testWait()
 
         // Store an "invalid" ping without a UUID file name
         runBlocking(Dispatchers.IO) {
@@ -158,8 +157,15 @@ class PingStorageEngineTest {
         // Check to see that we list both the valid and invalid ping files
         assertEquals(2, pingStorageEngine.storageDirectory.listFiles()?.count())
 
+        var numCalls = 0
+        fun testCountingCallback(path: String, pingData: String, config: Configuration): Boolean {
+            numCalls++
+            return testCallback(path, pingData, config)
+        }
+
         //  Process the directory
-        assertTrue(pingStorageEngine.process(this::testCallback))
+        assertTrue(pingStorageEngine.process(::testCountingCallback))
+        assertEquals("The callback should be called once", 1, numCalls)
 
         // Check to see that we list no ping files and no invalid files
         assertEquals(0, pingStorageEngine.storageDirectory.listFiles()?.count())

@@ -60,7 +60,7 @@ internal class PingStorageEngine(context: Context) {
      *
      * @param uuidFileName UUID that will represent the file named used to store the ping
      * @param pingPath String representing the upload path used for uploading the ping
-     * @param ping Serialized JSON string representing the ping payload
+     * @param pingData Serialized JSON string representing the ping payload
      */
     fun store(uuidFileName: UUID, pingPath: String, pingData: String): Job {
         logger.debug("Storing ping $uuidFileName in $pingPath")
@@ -88,16 +88,20 @@ internal class PingStorageEngine(context: Context) {
      *         from the callback, or if there was an error reading the files.
      */
     fun process(processingCallback: (String, String, Configuration) -> Boolean): Boolean {
+        logger.debug("Processing persisted pings at ${storageDirectory.absolutePath}")
+
         var success = true
 
         storageDirectory.listFiles()?.forEach { file ->
             if (file.name.matches(Regex(FILE_PATTERN))) {
+                logger.debug("Processing ping: ${file.name}")
                 if (!processFile(file, processingCallback)) {
                     logger.error("Error processing ping file: ${file.name}")
                     success = false
                 }
             } else {
                 // Delete files that don't match the UUID FILE_PATTERN regex
+                logger.debug("Pattern mismatch. Deleting ${file.name}")
                 file.delete()
             }
         }
@@ -116,21 +120,14 @@ internal class PingStorageEngine(context: Context) {
         file: File,
         processingCallback: (String, String, Configuration) -> Boolean
     ): Boolean {
+        var processed = false
         BufferedReader(FileReader(file)).use {
             try {
                 val path = it.readLine()
                 val serializedPing = it.readLine()
 
-                val processed = serializedPing == null ||
+                processed = serializedPing == null ||
                     processingCallback(path, serializedPing, Glean.configuration)
-
-                return if (processed) {
-                    file.delete()
-                    true
-                } else {
-                    // The callback couldn't process this file.
-                    false
-                }
             } catch (e: FileNotFoundException) {
                 // This shouldn't happen after we queried the directory.
                 logger.error("Could not find ping file ${file.name}")
@@ -140,6 +137,15 @@ internal class PingStorageEngine(context: Context) {
                 logger.error("IO Exception when reading file ${file.name}")
                 return false
             }
+        }
+
+        return if (processed) {
+            val fileWasDeleted = file.delete()
+            logger.debug("${file.name} was deleted: $fileWasDeleted")
+            true
+        } else {
+            // The callback couldn't process this file.
+            false
         }
     }
 
