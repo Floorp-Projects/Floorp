@@ -31,6 +31,12 @@ exclude: true
 [68.6]: ../ContentBlocking.html$CB_DEFAULT
 [68.7]: ../ContentBlocking.html$CB_STRICT
 
+- Added [`GeckoSession.SessionState.fromString`][. This can be used to deserialize a
+  `GeckoSession.SessionState` instance previously serialized to a `String` vai
+  `GeckoSession.SessionState.toString`.
+
+[68.4]: ../GeckoSession.SessionState.html#fromString-java.lang.String-
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -237,4 +243,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 9ac0d5a6ef3fd45ecf9e12b42de4f6057e274c30
+[api-version]: d35c31c60693caf8467b98a196b382707c3bd044
