@@ -23,25 +23,28 @@ add_task(async function() {
   info("Clicked on themes button");
   await popupShownPromise;
 
-  let recommendedHeader = document.getElementById("customization-lwtheme-menu-recommended");
-  let firstLWTheme = recommendedHeader.nextElementSibling;
+  let header = document.getElementById("customization-lwtheme-menu-header");
+  let firstLWTheme = header.nextElementSibling.nextElementSibling;
   let firstLWThemeId = firstLWTheme.theme.id;
   let themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
   firstLWTheme.doCommand();
   info("Clicked on first theme");
   await themeChangedPromise;
 
-  is(LightweightThemeManager.currentTheme.id, firstLWThemeId, "Theme changed to first option");
+  let theme = await AddonManager.getAddonByID(firstLWThemeId);
+  is(theme.isActive, true, "Theme changed to first option");
 
   await gCustomizeMode.reset();
 
   ok(CustomizableUI.inDefaultState, "In default state after reset");
   is(undoResetButton.hidden, false, "The undo button is visible after reset");
-  is(LightweightThemeManager.currentTheme.id, "default-theme@mozilla.org", "Theme reset to default");
+  theme = await AddonManager.getAddonByID("default-theme@mozilla.org");
+  is(theme.isActive, true, "Theme reset to default");
 
   await gCustomizeMode.undoReset();
 
-  is(LightweightThemeManager.currentTheme.id, firstLWThemeId, "Theme has been reset from default to original choice");
+  theme = await AddonManager.getAddonByID(firstLWThemeId);
+  is(theme.isActive, true, "Theme has been reset from default to original choice");
   ok(!CustomizableUI.inDefaultState, "Not in default state after undo-reset");
   is(undoResetButton.hidden, true, "The undo button is hidden after clicking on the undo button");
   is(CustomizableUI.getPlacementOfWidget(homeButtonId), null, "Home button is in palette");

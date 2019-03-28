@@ -213,14 +213,6 @@ class BackgroundChildImpl : public PBackgroundChild {
   virtual bool DeallocPParentToChildStreamChild(
       PParentToChildStreamChild* aActor) override;
 
-  virtual PAsmJSCacheEntryChild* AllocPAsmJSCacheEntryChild(
-      const dom::asmjscache::OpenMode& aOpenMode,
-      const dom::asmjscache::WriteParams& aWriteParams,
-      const PrincipalInfo& aPrincipalInfo) override;
-
-  virtual bool DeallocPAsmJSCacheEntryChild(
-      PAsmJSCacheEntryChild* aActor) override;
-
   virtual PQuotaChild* AllocPQuotaChild() override;
 
   virtual bool DeallocPQuotaChild(PQuotaChild* aActor) override;

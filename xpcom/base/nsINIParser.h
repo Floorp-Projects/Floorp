@@ -117,6 +117,17 @@ class nsINIParser {
   nsresult DeleteSection(const char* aSection);
 
   /**
+   * Renames the specified section.
+   *
+   * @param aSection      section name
+   * @param aNewName      new section name
+   *
+   * @throws NS_ERROR_FAILURE if the section did not exist.
+   * @throws NS_ERROR_ILLEGAL_VALUE if the new section name already exists.
+   */
+  nsresult RenameSection(const char* aSection, const char* aNewName);
+
+  /**
    * Writes the ini data to disk.
    * @param aFile         the file to write to
    * @throws NS_ERROR_FAILURE on failure.

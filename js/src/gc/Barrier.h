@@ -29,7 +29,7 @@
  *   - writes to fields in private data
  *   - writes to non-markable fields like JSObject::private that point to
  *     markable data
- * The last category is the trickiest. Even though the private pointers does not
+ * The last category is the trickiest. Even though the private pointer does not
  * point to a GC thing, changing the private pointer may change the set of
  * objects that are traced by the GC. Therefore it needs a write barrier.
  *
@@ -119,9 +119,9 @@
  * reference them. The solution is to maintain information about these pointers,
  * and mark their targets when we start a minor collection.
  *
- * The pointers can be thought of as edges in object graph, and the set of edges
- * from the tenured generation into the nursery is know as the remembered set.
- * Post barriers are used to track this remembered set.
+ * The pointers can be thought of as edges in an object graph, and the set of
+ * edges from the tenured generation into the nursery is known as the remembered
+ * set. Post barriers are used to track this remembered set.
  *
  * Whenever a slot which could contain such a pointer is written, we check
  * whether the pointed-to thing is in the nursery (if storeBuffer() returns a

@@ -41,12 +41,11 @@
     </button>
     <button id="customization-lwtheme-button" label="&customizeMode.lwthemes;" class="customizationmode-button" type="menu">
       <panel type="arrow" id="customization-lwtheme-menu"
-             onpopupshowing="gCustomizeMode.onLWThemesMenuShowing(event);"
+             onpopupshowing="gCustomizeMode.onThemesMenuShowing(event);"
              position="topcenter bottomleft"
              flip="none"
              role="menu">
         <label id="customization-lwtheme-menu-header" value="&customizeMode.lwthemes.myThemes;"/>
-        <label id="customization-lwtheme-menu-recommended" value="&customizeMode.lwthemes.recommended;"/>
         <hbox id="customization-lwtheme-menu-footer">
           <toolbarbutton class="customization-lwtheme-menu-footeritem"
                          label="&customizeMode.lwthemes.menuManage;"

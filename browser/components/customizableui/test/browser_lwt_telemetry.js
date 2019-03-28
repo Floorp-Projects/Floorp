@@ -16,33 +16,6 @@ add_task(async function testCustomize() {
 
   await startCustomizing();
 
-  // Open the panel to populate the recommended themes.
-  let themePanel = document.getElementById("customization-lwtheme-menu");
-  themePanel.openPopup();
-  await BrowserTestUtils.waitForPopupEvent(themePanel, "shown");
-
-  // Install a recommended theme.
-  let recommendedLabel = document.getElementById("customization-lwtheme-menu-recommended");
-  let themeButton = recommendedLabel.nextElementSibling;
-  let themeId = `${themeButton.theme.id}@personas.mozilla.org`;
-  let themeChanged = TestUtils.topicObserved("lightweight-theme-changed");
-  themeButton.click();
-
-  // Wait for the theme to change and the popup to close.
-  await themeChanged;
-  await BrowserTestUtils.waitForPopupEvent(themePanel, "hidden");
-
-  // Switch back to the default theme.
-  let installedThemes = document.querySelectorAll(".customization-lwtheme-menu-theme");
-  let defaultId = "default-theme@mozilla.org";
-  let defaultThemeIndex = Array.from(installedThemes).findIndex(btn => btn.theme.id == defaultId);
-  let defaultThemeButton = installedThemes[defaultThemeIndex];
-  themeChanged = TestUtils.topicObserved("lightweight-theme-changed");
-  defaultThemeButton.click();
-
-  // Wait for the theme to change back to default.
-  await themeChanged;
-
   // Find the footer buttons to test.
   let footerRow = document.getElementById("customization-lwtheme-menu-footer");
   let [manageButton, getMoreButton] = footerRow.childNodes;
@@ -77,8 +50,6 @@ add_task(async function testCustomize() {
 
   // Events are now [method, object, value, extra] as expected.
   Assert.deepEqual(relatedEvents, [
-    ["action", "customize", "recommended", {action: "enable", addonId: themeId, type: "theme"}],
-    ["action", "customize", null, {action: "enable", addonId: defaultId, type: "theme"}],
     ["link", "customize", "manageThemes"],
     ["link", "customize", "getThemes"],
   ], "The events are recorded correctly");
