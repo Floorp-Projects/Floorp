@@ -791,7 +791,7 @@ nsresult nsLocalFile::nsLocalFileConstructor(nsISupports* aOuter,
 // nsLocalFile::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(nsLocalFile, nsIFile, nsILocalFileWin, nsIHashable)
+NS_IMPL_ISUPPORTS(nsLocalFile, nsIFile, nsILocalFileWin)
 
 //-----------------------------------------------------------------------------
 // nsLocalFile <private>
@@ -3285,29 +3285,6 @@ void nsLocalFile::EnsureShortPath() {
   } else {
     mShortWorkingPath.Assign(mWorkingPath);
   }
-}
-
-// nsIHashable
-
-NS_IMETHODIMP
-nsLocalFile::Equals(nsIHashable* aOther, bool* aResult) {
-  nsCOMPtr<nsIFile> otherfile(do_QueryInterface(aOther));
-  if (!otherfile) {
-    *aResult = false;
-    return NS_OK;
-  }
-
-  return Equals(otherfile, aResult);
-}
-
-NS_IMETHODIMP
-nsLocalFile::GetHashCode(uint32_t* aResult) {
-  // In order for short and long path names to hash to the same value we
-  // always hash on the short pathname.
-  EnsureShortPath();
-
-  *aResult = HashString(mShortWorkingPath);
-  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsDriveEnumerator, nsSimpleEnumerator,
