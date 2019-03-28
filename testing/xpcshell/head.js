@@ -21,6 +21,9 @@
 /* must be defined by tests using do_await_remote_message/do_send_remote_message */
 /* globals Cc, Ci */
 
+/* defined by this file but is defined as read-only for tests */
+/* globals runningInParent: true */
+
 /* may be defined in test files */
 /* globals run_test */
 
@@ -1441,7 +1444,7 @@ function run_next_test() {
           _gTaskRunning = false;
           try {
             do_report_unexpected_exception(ex);
-          } catch (ex) {
+          } catch (error) {
             // The above throws NS_ERROR_ABORT and we don't want this to show up
             // as an unhandled rejection later.
           }
@@ -1494,9 +1497,9 @@ function _load_mozinfo() {
     .createInstance(Ci.nsIFileInputStream);
   stream.init(mozinfoFile, -1, 0, 0);
   let bytes = _NetUtil.readInputStream(stream, stream.available());
-  let mozinfo = JSON.parse((new TextDecoder()).decode(bytes));
+  let decoded = JSON.parse((new TextDecoder()).decode(bytes));
   stream.close();
-  return mozinfo;
+  return decoded;
 }
 
 Object.defineProperty(this, "mozinfo", {

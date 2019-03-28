@@ -56,18 +56,8 @@ static nsresult GetGMPStorageDir(nsIFile** aTempDir, const nsString& aGMPName,
     return rv;
   }
 
-  rv = tmpFile->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   rv = tmpFile->AppendNative(NS_LITERAL_CSTRING("storage"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = tmpFile->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 

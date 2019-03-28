@@ -11,5 +11,14 @@ module.exports = {
       "args": "none",
       "vars": "all",
     }],
-  }
+  },
+  "overrides": [{
+    "files": "test/xpcshell/head*.js",
+    "rules": {
+      "no-unused-vars": ["error", {
+        "args": "none",
+        "vars": "local",
+      }],
+    },
+  }],
 };

@@ -214,17 +214,6 @@ nsresult GeckoMediaPluginServiceParent::InitStorage() {
     return rv;
   }
 
-  rv = mStorageBaseDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  if (NS_WARN_IF(NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIFile> gmpDirWithoutPlatform;
-  rv = mStorageBaseDir->Clone(getter_AddRefs(gmpDirWithoutPlatform));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   nsAutoString platform;
   rv = GMPPlatformString(platform);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -233,11 +222,6 @@ nsresult GeckoMediaPluginServiceParent::InitStorage() {
 
   rv = mStorageBaseDir->Append(platform);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = mStorageBaseDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  if (NS_WARN_IF(NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)) {
     return rv;
   }
 
@@ -1139,25 +1123,15 @@ nsresult GeckoMediaPluginServiceParent::GetNodeId(
     return rv;
   }
 
+  // $profileDir/gmp/$platform/$gmpName/
   rv = path->Append(aGMPName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  // $profileDir/gmp/$platform/$gmpName/
-  rv = path->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+  // $profileDir/gmp/$platform/$gmpName/id/
   rv = path->AppendNative(NS_LITERAL_CSTRING("id"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // $profileDir/gmp/$platform/$gmpName/id/
-  rv = path->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
@@ -1325,18 +1299,6 @@ static void KillPlugins(const nsTArray<RefPtr<GMPParent>>& aPlugins,
   }
 }
 
-static nsresult DeleteDir(nsIFile* aPath) {
-  bool exists = false;
-  nsresult rv = aPath->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  if (exists) {
-    return aPath->Remove(true);
-  }
-  return NS_OK;
-}
-
 struct NodeFilter {
   explicit NodeFilter(const nsTArray<nsCString>& nodeIDs) : mNodeIDs(nodeIDs) {}
   bool operator()(GMPParent* aParent) {
@@ -1416,7 +1378,7 @@ void GeckoMediaPluginServiceParent::ClearNodeIdAndPlugin(
       continue;
     }
 
-    if (NS_FAILED(DeleteDir(dirEntry))) {
+    if (NS_FAILED(dirEntry->Remove(true))) {
       NS_WARNING("Failed to delete GMP storage directory for the node");
     }
   }
@@ -1603,7 +1565,7 @@ void GeckoMediaPluginServiceParent::ClearStorage() {
     return;
   }
 
-  if (NS_FAILED(DeleteDir(path))) {
+  if (NS_FAILED(path->Remove(true))) {
     NS_WARNING("Failed to delete GMP storage directory");
   }
 
