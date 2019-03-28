@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <!-- Site Permissions Preferences -->
+    <!-- Preference for reducing image sizes, bandwidth and platform-level optimizations -->
+    <string name="preference_optimize">Optimize</string>
+    <!-- Label summary to explain how the optimize preference works -->
+    <string name="preference_optimize_summary">Lower image quality, throttle streaming bandwidth, and platform-level optimizations</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Exceptions</string>
+    <!-- Preference for applying recommend rules to all sites -->
+    <string name="preference_recommended_settings">Use recommended settings</string>
+    <!-- Label summary to explain how the recommended settings work -->
+    <string name="preference_recommended_settings_summary"><![CDATA[
+        <b>Blocked</b>
+
+        <br/> Ads, autoplay sound and video (block playing media with sound), cookies (block third-party trackers cookies), trackers (allow some trackers), pop-up, website redirects. <br/><br/> <b>Ask to allow</b>
+
+        <br/> Camera, location, microphone and notification. <br/><br/> <b>Allowed</b>
+
+        <br/> DRM audio and video, JavaScript, cache and site data, images.]]></string>
+    <!-- Preference for applying custom rules to all sites -->
+    <string name="preference_custom_settings">Use custom settings</string>
+    <!-- Preference category for feature phone permissions likes Camera,Microphone, Location ... etc -->
+    <string name="preference_category_phone_feature">Phone Feature</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Camera</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Microphone</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Location</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Notification</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Ask to allow</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_block">Block</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Blocked by Android</string>
+    <!-- Alternative explanation label that is shown when a permissions like (camera,location and microphone) is required, this indicate to the user how to enable the permission via Android settings %1$s indicate the name of the permission (camera,location and microphone)  -->
+    <string name="phone_feature_blocked_by_android_explanation"><![CDATA[
+        To allow it: <br/><br/> 1. Go to Android Settings <br/><br/>2. Tap <b>Permissions</b> <br/><br/> 3. Toggle <b>%1$s</b> to ON
+        ]]></string>
+    <!--Label that indicates that this option it the recommended one-->
+    <string name="phone_feature_recommended">Recommended</string>
+    <!--Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Go to Settings</string>
+</resources>

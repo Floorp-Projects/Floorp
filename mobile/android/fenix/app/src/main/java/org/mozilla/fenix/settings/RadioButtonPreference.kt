@@ -11,6 +11,7 @@ import android.content.Context
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.widget.RadioButton
+import androidx.core.text.HtmlCompat
 import androidx.preference.Preference
 import org.mozilla.fenix.R
 
@@ -18,7 +19,7 @@ class RadioButtonPreference : Preference {
     private val radioGroups = mutableListOf<RadioButtonPreference>()
     private lateinit var summaryView: TextView
     private lateinit var radioButton: RadioButton
-
+    var shouldSummaryBeParsedAsHtmlContent: Boolean = true
     private var clickListener: (() -> Unit)? = null
 
     init {
@@ -86,7 +87,11 @@ class RadioButtonPreference : Preference {
     private fun bindSummaryView(holder: PreferenceViewHolder) {
         summaryView = holder.findViewById(R.id.widget_summary) as TextView
         if (!TextUtils.isEmpty(summary)) {
-            summaryView.text = summary
+            if (shouldSummaryBeParsedAsHtmlContent) {
+                summaryView.text = HtmlCompat.fromHtml(summary.toString(), HtmlCompat.FROM_HTML_MODE_COMPACT)
+            } else {
+                summaryView.text = summary
+            }
             summaryView.visibility = View.VISIBLE
         } else {
             summaryView.visibility = View.GONE
