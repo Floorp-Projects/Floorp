@@ -71,12 +71,9 @@ add_task(async function test_autocomplete_footer_onclick() {
     }, "Waiting for footer to become visible");
 
     EventUtils.synthesizeMouseAtCenter(footer, {});
-    await TestUtils.waitForCondition(() => {
-      return Services.wm.getMostRecentWindow("Toolkit:PasswordManager") !== null;
-    }, "Waiting for the password manager dialog to open");
+    let window = await waitForPasswordManagerDialog();
     info("Login dialog was opened");
 
-    let window = Services.wm.getMostRecentWindow("Toolkit:PasswordManager");
     await TestUtils.waitForCondition(() => {
       return window.document.getElementById("filter").value == "example.com";
     }, "Waiting for the search string to filter logins");
@@ -109,12 +106,9 @@ add_task(async function test_autocomplete_footer_keydown() {
     await EventUtils.synthesizeKey("KEY_ArrowDown");
     await EventUtils.synthesizeKey("KEY_Enter");
 
-    await TestUtils.waitForCondition(() => {
-      return Services.wm.getMostRecentWindow("Toolkit:PasswordManager") !== null;
-    }, "Waiting for the password manager dialog to open");
+    let window = await waitForPasswordManagerDialog();
     info("Login dialog was opened");
 
-    let window = Services.wm.getMostRecentWindow("Toolkit:PasswordManager");
     await TestUtils.waitForCondition(() => {
       return window.document.getElementById("filter").value == "example.com";
     }, "Waiting for the search string to filter logins");
