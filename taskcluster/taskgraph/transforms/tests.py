@@ -629,7 +629,7 @@ def set_treeherder_machine_platform(config, tests):
         'android-api-16/debug': 'android-em-4-3-armv7-api16/debug',
         'android-api-16-ccov/debug': 'android-em-4-3-armv7-api16-ccov/debug',
         'android-api-16/opt': 'android-em-4-3-armv7-api16/opt',
-        'android-api-16-pgo/opt': 'android-em-4-3-armv7-api16-pgo/opt',
+        'android-api-16-pgo/opt': 'android-em-4-3-armv7-api16/pgo',
         'android-x86/opt': 'android-em-4-2-x86/opt',
         'android-api-16-gradle/opt': 'android-api-16-gradle/opt',
     }
@@ -641,7 +641,10 @@ def set_treeherder_machine_platform(config, tests):
         # platform based on regular macOS builds, such as for QR.
         # Since it's unclear if the regular macOS builds can be removed from
         # the table, workaround the issue for QR.
-        if '-qr' in test['test-platform']:
+        if 'android' in test['test-platform'] and 'pgo/opt' in test['test-platform']:
+            platform_new = test['test-platform'].replace('-pgo/opt', '/pgo')
+            test['treeherder-machine-platform'] = platform_new
+        elif '-qr' in test['test-platform']:
             test['treeherder-machine-platform'] = test['test-platform']
         elif 'android-hw' in test['test-platform']:
             test['treeherder-machine-platform'] = test['test-platform']

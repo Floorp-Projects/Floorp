@@ -265,7 +265,7 @@ raptor-tp6m-1-geckoview:
     treeherder-symbol: Rap(tp6m-1)
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
             android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     target: geckoview_example.apk
@@ -301,8 +301,8 @@ raptor-tp6m-2-geckoview:
     target: geckoview_example.apk
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
-            android-hw-g5.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
+            android-hw-g5.*/pgo: ['try', 'mozilla-central']
             android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     tier: 2
@@ -345,8 +345,8 @@ raptor-tp6m-5-geckoview:
     treeherder-symbol: Rap(tp6m-5)
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
-            android-hw-g5.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
+            android-hw-g5.*/pgo: ['try', 'mozilla-central']
             android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     target: geckoview_example.apk
@@ -364,8 +364,8 @@ raptor-tp6m-6-geckoview:
     treeherder-symbol: Rap(tp6m-6)
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
-            android-hw-g5.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
+            android-hw-g5.*/pgo: ['try', 'mozilla-central']
             android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     target: geckoview_example.apk
@@ -396,8 +396,8 @@ raptor-tp6m-8-geckoview:
     treeherder-symbol: Rap(tp6m-8)
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
-            android-hw-g5.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
+            android-hw-g5.*/pgo: ['try', 'mozilla-central']
             android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     target: geckoview_example.apk
@@ -450,7 +450,7 @@ raptor-speedometer-geckoview:
     target: geckoview_example.apk
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
             android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     max-run-time: 900
@@ -468,7 +468,7 @@ raptor-speedometer-geckoview-power:
     target: geckoview_example.apk
     run-on-projects:
         by-test-platform:
-            android-hw.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw.*/pgo: ['try', 'mozilla-central']
             android-hw-.*-aarch64/opt: ['try', 'mozilla-central']
             android-hw-.*-api-16/opt: ['try']
     max-run-time: 1800
@@ -632,7 +632,7 @@ raptor-unity-webgl-geckoview:
     target: geckoview_example.apk
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
             android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     max-run-time: 900
