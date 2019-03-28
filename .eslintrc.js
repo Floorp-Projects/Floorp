@@ -1,5 +1,37 @@
 "use strict";
 
+const xpcshellTestConfig = require("eslint-plugin-mozilla/lib/configs/xpcshell-test.js");
+const browserTestConfig = require("eslint-plugin-mozilla/lib/configs/browser-test.js");
+const mochitestTestConfig = require("eslint-plugin-mozilla/lib/configs/mochitest-test.js");
+const chromeTestConfig = require("eslint-plugin-mozilla/lib/configs/chrome-test.js");
+
+/**
+ * Some configurations have overrides, which can't be specified within overrides,
+ * so we need to remove them.
+ */
+function removeOverrides(config) {
+  config = {...config};
+  delete config.overrides;
+  return config;
+}
+
+const xpcshellTestPaths = [
+  "**/test*/unit*/",
+  "**/test*/xpcshell/",
+];
+
+const browserTestPaths = [
+  "**/test*/**/browser/",
+];
+
+const mochitestTestPaths = [
+  "**/test*/mochitest/",
+];
+
+const chromeTestPaths = [
+  "**/test*/chrome/",
+];
+
 module.exports = {
   // New rules and configurations should generally be added in
   // tools/lint/eslint/eslint-plugin-mozilla/lib/configs/recommended.js to
@@ -84,5 +116,51 @@ module.exports = {
     "rules": {
       "no-throw-literal": "off",
     }
+  }, {
+    ...removeOverrides(xpcshellTestConfig),
+    "files": xpcshellTestPaths.map(path => `${path}**`),
+    "excludedFiles": "devtools/**"
+  }, {
+    // If it is an xpcshell head file, we turn off global unused variable checks, as it
+    // would require searching the other test files to know if they are used or not.
+    // This would be expensive and slow, and it isn't worth it for head files.
+    // We could get developers to declare as exported, but that doesn't seem worth it.
+    "files": xpcshellTestPaths.map(path => `${path}head*.js`),
+
+    "rules": {
+      "no-unused-vars": ["error", {
+        "args": "none",
+        "vars": "local",
+      }],
+    },
+  }, {
+    ...browserTestConfig,
+    "files": browserTestPaths.map(path => `${path}**`),
+    "excludedFiles": "devtools/**"
+  }, {
+    ...removeOverrides(mochitestTestConfig),
+    "files": mochitestTestPaths.map(path => `${path}**`),
+    "excludedFiles": [
+      "devtools/**",
+      "security/manager/ssl/tests/mochitest/browser/**",
+      "testing/mochitest/**",
+    ],
+  }, {
+    ...removeOverrides(chromeTestConfig),
+    "files": chromeTestPaths.map(path => `${path}**`),
+    "excludedFiles": [
+      "devtools/**",
+    ],
+  }, {
+    "env": {
+      // Ideally we wouldn't be using the simpletest env here, but our uses of
+      // js files mean we pick up everything from the global scope, which could
+      // be any one of a number of html files. So we just allow the basics...
+      "mozilla/simpletest": true,
+    },
+    "files": [
+      ...mochitestTestPaths.map(path => `${path}/**/*.js`),
+      ...chromeTestPaths.map(path => `${path}/**/*.js`),
+    ],
   }]
 };

@@ -1,9 +1,6 @@
 "use strict";
 
 module.exports = {
-  "extends": [
-    "plugin:mozilla/mochitest-test"
-  ],
   "rules": {
     // XXX These are rules that are enabled in the recommended configuration, but
     // disabled here due to failures when initially implemented. They should be
