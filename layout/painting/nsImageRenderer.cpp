@@ -101,7 +101,10 @@ static bool ShouldTreatAsCompleteDueToSyncDecode(const nsStyleImage* aImage,
 }
 
 bool nsImageRenderer::PrepareImage() {
-  if (mImage->IsEmpty()) {
+  if (mImage->IsEmpty() ||
+      (mType == eStyleImageType_Image && !mImage->GetImageData())) {
+    // mImage->GetImageData() could be null here if the nsStyleImage refused
+    // to load a same-document URL.
     mPrepareResult = ImgDrawResult::BAD_IMAGE;
     return false;
   }
@@ -109,6 +112,14 @@ bool nsImageRenderer::PrepareImage() {
   if (!mImage->IsComplete()) {
     // Make sure the image is actually decoding.
     bool frameComplete = mImage->StartDecoding();
+
+    // Boost the loading priority since we know we want to draw the image.
+    if ((mFlags & nsImageRenderer::FLAG_PAINTING_TO_WINDOW) &&
+        mType == eStyleImageType_Image) {
+      MOZ_ASSERT(mImage->GetImageData(),
+                 "must have image data, since we checked above");
+      mImage->GetImageData()->BoostPriority(imgIRequest::CATEGORY_DISPLAY);
+    }
 
     // Check again to see if we finished.
     // We cannot prepare the image for rendering if it is not fully loaded.
@@ -124,7 +135,7 @@ bool nsImageRenderer::PrepareImage() {
   switch (mType) {
     case eStyleImageType_Image: {
       MOZ_ASSERT(mImage->GetImageData(),
-                 "must have image data, since we checked IsEmpty above");
+                 "must have image data, since we checked above");
       nsCOMPtr<imgIContainer> srcImage;
       DebugOnly<nsresult> rv =
           mImage->GetImageData()->GetImage(getter_AddRefs(srcImage));
