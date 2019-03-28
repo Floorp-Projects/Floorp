@@ -18,7 +18,7 @@ void RendererScreenshotGrabber::MaybeGrabScreenshot(
 
     GrabScreenshot(aRenderer, aWindowSize);
   } else if (mProfilerScreenshots) {
-    Destroy();
+    Destroy(aRenderer);
   }
 }
 
@@ -30,14 +30,16 @@ void RendererScreenshotGrabber::MaybeProcessQueue(Renderer* aRenderer) {
 
     ProcessQueue(aRenderer);
   } else if (mProfilerScreenshots) {
-    Destroy();
+    Destroy(aRenderer);
   }
 }
 
-void RendererScreenshotGrabber::Destroy() {
+void RendererScreenshotGrabber::Destroy(Renderer* aRenderer) {
   mQueue.Clear();
   mCurrentFrameQueueItem = Nothing();
   mProfilerScreenshots = nullptr;
+
+  wr_renderer_release_profiler_structures(aRenderer);
 }
 
 void RendererScreenshotGrabber::GrabScreenshot(
