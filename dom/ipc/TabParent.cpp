@@ -323,6 +323,21 @@ void TabParent::SetOwnerElement(Element* aElement) {
   if (mRenderFrame.IsInitialized()) {
     mRenderFrame.OwnerContentChanged();
   }
+
+  // Set our BrowsingContext's embedder if we're not embedded within a
+  // BrowserBridgeParent.
+  if (!GetBrowserBridgeParent() && mBrowsingContext) {
+    mBrowsingContext->SetEmbedderElement(mFrameElement);
+  }
+
+  // Ensure all TabParent actors within BrowserBridges are also updated.
+  const auto& browserBridges = ManagedPBrowserBridgeParent();
+  for (auto iter = browserBridges.ConstIter(); !iter.Done(); iter.Next()) {
+    BrowserBridgeParent* browserBridge =
+        static_cast<BrowserBridgeParent*>(iter.Get()->GetKey());
+
+    browserBridge->GetTabParent()->SetOwnerElement(aElement);
+  }
 }
 
 NS_IMETHODIMP TabParent::GetOwnerElement(Element** aElement) {

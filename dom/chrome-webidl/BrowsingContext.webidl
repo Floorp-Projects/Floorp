@@ -20,6 +20,8 @@ interface BrowsingContext {
 
   readonly attribute nsIDocShell? docShell;
 
+  readonly attribute Element? embedderElement;
+
   readonly attribute unsigned long long id;
 
   readonly attribute BrowsingContext? opener;
@@ -32,6 +34,8 @@ interface CanonicalBrowsingContext : BrowsingContext {
   sequence<WindowGlobalParent> getWindowGlobals();
 
   readonly attribute WindowGlobalParent? currentWindowGlobal;
+
+  readonly attribute WindowGlobalParent? embedderWindowGlobal;
 
   void notifyStartDelayedAutoplayMedia();
 };
