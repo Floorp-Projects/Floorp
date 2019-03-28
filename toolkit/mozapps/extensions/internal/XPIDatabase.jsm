@@ -373,7 +373,7 @@ class AddonInternal {
   }
 
   get hidden() {
-    return this.location.isBuiltin ||
+    return this.location.hidden ||
            (this._hidden && this.signedState == AddonManager.SIGNEDSTATE_PRIVILEGED);
   }
 
@@ -620,7 +620,10 @@ class AddonInternal {
         permissions |= AddonManager.PERM_CAN_UPGRADE;
       }
 
-      permissions |= AddonManager.PERM_CAN_UNINSTALL;
+      permissions |= AddonManager.PERM_API_CAN_UNINSTALL;
+      if (!this.location.isBuiltin) {
+        permissions |= AddonManager.PERM_CAN_UNINSTALL;
+      }
     }
 
     // The permission to "toggle the private browsing access" is locked down
