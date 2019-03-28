@@ -3168,6 +3168,9 @@ var AddonManager = {
   // Indicates that the Addon can be set to be allowed/disallowed
   // in private browsing windows.
   PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS: 32,
+  // Indicates that internal APIs can uninstall the add-on, even if the
+  // front-end cannot.
+  PERM_API_CAN_UNINSTALL: 64,
 
   // General descriptions of where items are installed.
   // Installed in this profile.

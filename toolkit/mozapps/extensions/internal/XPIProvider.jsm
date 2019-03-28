@@ -854,6 +854,10 @@ class XPIStateLocation extends Map {
     return false;
   }
 
+  get hidden() {
+    return this.isBuiltin;
+  }
+
   // If this property is false, it does not implement readAddons()
   // interface.  This is used for the temporary and built-in locations
   // that do not correspond to a physical location that can be scanned.
@@ -913,6 +917,10 @@ var BuiltInLocation = new class _BuiltInLocation extends XPIStateLocation {
       installAddon() {},
       uninstallAddon() {},
     };
+  }
+
+  get hidden() {
+    return false;
   }
 
   get isBuiltin() {

@@ -64,9 +64,9 @@ async function check_installed(conditions) {
       Assert.ok(addon.isSystem);
       Assert.ok(!hasFlag(addon.permissions, AddonManager.PERM_CAN_UPGRADE));
       if (isUpgrade) {
-        Assert.ok(hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL));
+        Assert.ok(hasFlag(addon.permissions, AddonManager.PERM_API_CAN_UNINSTALL));
       } else {
-        Assert.ok(!hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL));
+        Assert.ok(!hasFlag(addon.permissions, AddonManager.PERM_API_CAN_UNINSTALL));
       }
 
       // Verify the add-ons file is in the right place
