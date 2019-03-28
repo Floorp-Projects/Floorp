@@ -12,7 +12,6 @@ import android.os.Parcelable;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 // Parcelable carrying input/output sample data and info cross process.
@@ -24,7 +23,9 @@ public final class Sample implements Parcelable {
         EOS.info.set(0, 0, Long.MIN_VALUE, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
     }
 
-    public SampleBuffer buffer;
+    public static final int NO_BUFFER = -1;
+
+    public int bufferId = NO_BUFFER;
     @WrapForJNI
     public BufferInfo info = new BufferInfo();
     public CryptoInfo cryptoInfo;
@@ -36,9 +37,6 @@ public final class Sample implements Parcelable {
     private static int sPoolSize = 1;
 
     public Sample() { }
-    public Sample(SampleBuffer bytes) {
-        buffer = bytes;
-    }
 
     private void readInfo(final Parcel in) {
         int offset = in.readInt();
@@ -73,11 +71,7 @@ public final class Sample implements Parcelable {
                       mode);
     }
 
-    public Sample set(final ByteBuffer bytes, final BufferInfo info, final CryptoInfo cryptoInfo)
-            throws IOException {
-        if (bytes != null && info.size > 0) {
-            buffer.readFromByteBuffer(bytes, info.offset, info.size);
-        }
+    public Sample set(final BufferInfo info, final CryptoInfo cryptoInfo) {
         setBufferInfo(info);
         setCryptoInfo(cryptoInfo);
         return this;
@@ -109,10 +103,7 @@ public final class Sample implements Parcelable {
             return;
         }
 
-        if (buffer != null) {
-            buffer.dispose();
-            buffer = null;
-        }
+        bufferId = NO_BUFFER;
         info.set(0, 0, 0, 0);
         if (cryptoInfo != null) {
             cryptoInfo.set(0, null, null, null, null, 0);
@@ -152,7 +143,7 @@ public final class Sample implements Parcelable {
             } else {
                 s = new Sample();
             }
-            s.buffer = in.readParcelable(SampleBuffer.class.getClassLoader());
+            s.bufferId = in.readInt();
             s.readInfo(in);
             s.readCrypto(in);
             return s;
@@ -166,7 +157,7 @@ public final class Sample implements Parcelable {
 
     @Override
     public void writeToParcel(final Parcel dest, final int parcelableFlags) {
-        dest.writeParcelable(buffer, parcelableFlags);
+        dest.writeInt(bufferId);
         writeInfo(dest);
         writeCrypto(dest);
     }
@@ -207,13 +198,6 @@ public final class Sample implements Parcelable {
         return bytes;
     }
 
-    @WrapForJNI
-    public void writeToByteBuffer(final ByteBuffer dest) throws IOException {
-        if (buffer != null && dest != null && info.size > 0) {
-            buffer.writeToByteBuffer(dest, info.offset, info.size);
-        }
-    }
-
     @Override
     public String toString() {
         if (isEOS()) {
@@ -221,7 +205,7 @@ public final class Sample implements Parcelable {
         }
 
         StringBuilder str = new StringBuilder();
-        str.append("{ buffer=").append(buffer).
+        str.append("{ buffer#").append(bufferId).
                 append(", info=").
                 append("{ offset=").append(info.offset).
                 append(", size=").append(info.size).
