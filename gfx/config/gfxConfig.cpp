@@ -240,12 +240,13 @@ void gfxConfig::ForEachFallbackImpl(const FallbackIterCallback& aCallback) {
 }
 
 /* static */
-void gfxConfig::ImportChange(Feature aFeature, const FeatureChange& aChange) {
-  if (aChange.type() == FeatureChange::Tnull_t) {
+void gfxConfig::ImportChange(Feature aFeature,
+                             const Maybe<FeatureFailure>& aChange) {
+  if (aChange.isNothing()) {
     return;
   }
 
-  const FeatureFailure& failure = aChange.get_FeatureFailure();
+  const FeatureFailure& failure = aChange.ref();
   gfxConfig::SetFailed(aFeature, failure.status(), failure.message().get(),
                        failure.failureId());
 }
