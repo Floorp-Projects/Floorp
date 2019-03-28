@@ -132,7 +132,7 @@ jobs:
             - win64-clang-cl
     win64-aarch64/opt:
         attributes:
-            build_platform: windows2012-aarch64
+            build_platform: win64-aarch64
             build_type: opt
         treeherder:
             platform: win64-aarch64/opt
