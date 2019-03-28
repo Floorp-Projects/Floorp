@@ -134,10 +134,10 @@ async function run_proxy_tests() {
                      `Base resource URL resolves as expected`);
 
         let file = ADDONS[i].directory.clone();
-        file.append("install.rdf");
+        file.append("manifest.json");
 
         Assert.equal(Services.io.newFileURI(file).spec,
-                     fixURL(addon.getResourceURI("install.rdf").spec),
+                     fixURL(addon.getResourceURI("manifest.json").spec),
                      `Resource URLs resolve as expected`);
 
         await addon.uninstall();
