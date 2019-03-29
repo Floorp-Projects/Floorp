@@ -84,6 +84,7 @@ class GeckoViewAutoFill {
       if (info) {
         return info;
       }
+      const bounds = element.getBoundingClientRect();
       info = {
         id: ++this._autoFillId,
         parent,
@@ -101,6 +102,12 @@ class GeckoViewAutoFill {
             .map(attr => ({[attr.localName]: attr.value}))),
         origin: element.ownerDocument.location.origin,
         autofillhint: "",
+        bounds: {
+          left: bounds.left,
+          top: bounds.top,
+          right: bounds.right,
+          bottom: bounds.bottom,
+        },
       };
 
       if (element === usernameField) {
