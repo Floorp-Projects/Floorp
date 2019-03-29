@@ -64,6 +64,7 @@ permalink: /changelog/
 * **support-ktx**
   * Added `Intent.toSafeIntent()`.
   * Added `MotionEvent.use {}` (like `AutoCloseable.use {}`).
+  * Added `Bitmap.arePixelsAllTheSame()`.
 
 # 0.48.0
 
