@@ -167,7 +167,8 @@ void CookieSettings::Serialize(CookieSettingsArgs& aData) {
     }
 
     PrincipalInfo principalInfo;
-    rv = PrincipalToPrincipalInfo(principal, &principalInfo);
+    rv = PrincipalToPrincipalInfo(principal, &principalInfo,
+                                  true /* aSkipBaseDomain */);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       continue;
     }
