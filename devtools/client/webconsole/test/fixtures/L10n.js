@@ -41,6 +41,8 @@ class L10n {
         return "#1 repeat;#1 repeats";
       case "webconsole.filteredMessages.label":
         return "#1 item hidden by filters;#1 items hidden by filters";
+      case "webconsole.group.contentBlocked":
+        return "Content blocked messages";
       default:
         return str;
     }
