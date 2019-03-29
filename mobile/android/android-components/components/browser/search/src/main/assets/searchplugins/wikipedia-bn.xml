@@ -14,10 +14,5 @@
   <Param name="search" value="{searchTerms}"/>
   <Param name="sourceid" value="Mozilla-search"/>
 </Url>
-<!-- Search activity -->
-<Url type="text/html" method="GET" rel="mobile" template="https://bn.m.wikipedia.org/wiki/বিশেষ:Search">
-  <Param name="search" value="{searchTerms}"/>
-  <Param name="sourceid" value="Mozilla-search"/>
-</Url>
 <SearchForm>https://bn.wikipedia.org/wiki/বিশেষ:Search</SearchForm>
 </SearchPlugin>

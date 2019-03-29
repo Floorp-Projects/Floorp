@@ -25,7 +25,7 @@ class SearchSuggestionClientTest {
     fun `Get a list of results based on the Google search engine`() {
         val searchEngine = SearchEngineParser().load(
                 RuntimeEnvironment.application.assets,
-                "google", "searchplugins/google-nocodes.xml")
+                "google", "searchplugins/google-b-m.xml")
 
         val client = SearchSuggestionClient(searchEngine, GOOGLE_MOCK_RESPONSE)
 
@@ -57,7 +57,7 @@ class SearchSuggestionClientTest {
     fun `Check that a bad response will throw a parser exception`() {
         val searchEngine = SearchEngineParser().load(
                 RuntimeEnvironment.application.assets,
-                "google", "searchplugins/google-nocodes.xml")
+                "google", "searchplugins/google-b-m.xml")
 
         val client = SearchSuggestionClient(searchEngine, SERVER_ERROR_RESPONSE)
 
@@ -70,7 +70,7 @@ class SearchSuggestionClientTest {
     fun `Check that an exception in the suggestionFetcher will re-throw an IOException`() {
         val searchEngine = SearchEngineParser().load(
                 RuntimeEnvironment.application.assets,
-                "google", "searchplugins/google-nocodes.xml")
+                "google", "searchplugins/google-b-m.xml")
 
         val client = SearchSuggestionClient(searchEngine, { throw IOException() })
 

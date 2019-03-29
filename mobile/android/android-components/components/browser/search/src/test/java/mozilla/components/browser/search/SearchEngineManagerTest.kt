@@ -15,6 +15,7 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineContext
+import mozilla.components.browser.search.provider.SearchEngineList
 import mozilla.components.browser.search.provider.SearchEngineProvider
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
@@ -101,6 +102,26 @@ class SearchEngineManagerTest {
                     "Bing Search")
 
             assertEquals("bing", default.identifier)
+        }
+    }
+
+    @Test
+    fun `manager returns default engine as default from the provider`() {
+        runBlocking {
+            val mozSearchEngine = mockSearchEngine("mozsearch")
+            val provider = mockProvider(
+                engines = listOf(
+                    mockSearchEngine("google"),
+                    mozSearchEngine,
+                    mockSearchEngine("bing")
+                ),
+                default = mozSearchEngine
+            )
+
+            val manager = SearchEngineManager(listOf(provider))
+
+            val default = manager.getDefaultSearchEngine(RuntimeEnvironment.application)
+            assertEquals("mozsearch", default.identifier)
         }
     }
 
@@ -258,10 +279,10 @@ class SearchEngineManagerTest {
         }
     }
 
-    private fun mockProvider(engines: List<SearchEngine>): SearchEngineProvider =
+    private fun mockProvider(engines: List<SearchEngine>, default: SearchEngine? = null): SearchEngineProvider =
             object : SearchEngineProvider {
-                override suspend fun loadSearchEngines(context: Context): List<SearchEngine> {
-                    return engines
+                override suspend fun loadSearchEngines(context: Context): SearchEngineList {
+                    return SearchEngineList(engines, default)
                 }
             }
 

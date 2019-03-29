@@ -14,10 +14,5 @@
   <Param name="search" value="{searchTerms}"/>
   <Param name="sourceid" value="Mozilla-search"/>
 </Url>
-<!-- Search activity -->
-<Url type="text/html" method="GET" rel="mobile" template="https://ja.m.wikipedia.org/wiki/特別:検索">
-  <Param name="search" value="{searchTerms}"/>
-  <Param name="sourceid" value="Mozilla-search"/>
-</Url>
 <SearchForm>https://ja.wikipedia.org/wiki/特別:検索</SearchForm>
 </SearchPlugin>

@@ -16,6 +16,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
+import mozilla.components.browser.search.provider.SearchEngineList
 import mozilla.components.browser.search.provider.SearchEngineProvider
 import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
 import kotlin.coroutines.CoroutineContext
@@ -28,15 +29,20 @@ class SearchEngineManager(
             AssetsSearchEngineProvider(LocaleSearchLocalizationProvider())),
     coroutineContext: CoroutineContext = Dispatchers.Default
 ) {
-    private var deferredSearchEngines: Deferred<List<SearchEngine>>? = null
+    private var deferredSearchEngines: Deferred<SearchEngineList>? = null
     private val scope = CoroutineScope(coroutineContext)
+
+    /**
+     * This is set by browsers to indicate the users preference of which search engine to use.
+     * This overrides the default which may be set by the [SearchEngineProvider] (e.g. via `list.json`)
+     */
     var defaultSearchEngine: SearchEngine? = null
 
     /**
      * Asynchronously load search engines from providers. Inherits caller's [CoroutineScope.coroutineContext].
      */
     @Synchronized
-    suspend fun load(context: Context): Deferred<List<SearchEngine>> = coroutineScope {
+    suspend fun load(context: Context): Deferred<SearchEngineList> = coroutineScope {
         // We might have previous 'load' calls still running; cancel them.
         deferredSearchEngines?.cancel()
         scope.async {
@@ -45,32 +51,42 @@ class SearchEngineManager(
     }
 
     /**
-     * Returns all search engines. If no call to load() has been made then calling this method
-     * will perform a load.
+     * Gets the localized list of search engines and a default search engine from providers.
+     *
+     * If no call to load() has been made then calling this method will perform a load.
+     */
+    @Synchronized
+    private fun getSearchEngineList(context: Context): SearchEngineList {
+        return deferredSearchEngines?.let { runBlocking { it.await() } }
+                ?: runBlocking { load(context).await() }
+    }
+
+    /**
+     * Returns all search engines.
      */
     @Synchronized
     fun getSearchEngines(context: Context): List<SearchEngine> {
-        deferredSearchEngines?.let { return runBlocking { it.await() } }
-
-        return runBlocking { load(context).await() }
+        return getSearchEngineList(context).list
     }
 
     /**
      * Returns the default search engine.
      *
-     * If defaultSearchEngine has not been set, the default engine is the first engine loaded by the
-     * first provider passed to the constructor of SearchEngineManager.
+     * If defaultSearchEngine has not been set, the default engine is set by the search provider,
+     * (e.g. as set in `list.json`). If that is not set, then the first search engine listed is
+     * returned.
      *
      * Optionally a name can be passed to this method (e.g. from the user's preferences). If
      * a matching search engine was loaded then this search engine will be returned instead.
      */
     @Synchronized
     fun getDefaultSearchEngine(context: Context, name: String = EMPTY): SearchEngine {
-        val searchEngines = getSearchEngines(context)
+        val searchEngineList = getSearchEngineList(context)
+        val providedDefault = searchEngineList.default ?: searchEngineList.list[0]
 
         return when (name) {
-            EMPTY -> defaultSearchEngine ?: searchEngines[0]
-            else -> searchEngines.find { it.name == name } ?: searchEngines[0]
+            EMPTY -> defaultSearchEngine ?: providedDefault
+            else -> searchEngineList.list.find { it.name == name } ?: providedDefault
         }
     }
 
@@ -82,21 +98,31 @@ class SearchEngineManager(
         context.registerReceiver(localeChangedReceiver, IntentFilter(Intent.ACTION_LOCALE_CHANGED))
     }
 
-    private suspend fun loadSearchEngines(context: Context): List<SearchEngine> {
-        val searchEngines = mutableListOf<SearchEngine>()
-        val deferredSearchEngines = mutableListOf<Deferred<List<SearchEngine>>>()
-
-        providers.forEach {
-            deferredSearchEngines.add(scope.async {
+    /**
+     * Loads the search engines and defaults from all search engine providers. Some attempt is made
+     * to merge these lists. As there can only be one default, the first provider with a default
+     * gets to set this [SearchEngineManager] default.
+     */
+    private suspend fun loadSearchEngines(context: Context): SearchEngineList {
+        val deferredSearchEngines = providers.map {
+            scope.async {
                 it.loadSearchEngines(context)
-            })
+            }
         }
 
-        deferredSearchEngines.forEach {
-            searchEngines.addAll(it.await())
-        }
+        val searchEngineLists =
+            deferredSearchEngines.map { it.await() }
 
-        return searchEngines
+        val searchEngines = searchEngineLists
+            .fold(emptyList<SearchEngine>()) { sum, searchEngineList ->
+                sum + searchEngineList.list
+            }
+            .distinctBy { it.name }
+
+        val defaultSearchEngine = searchEngineLists
+            .firstOrNull { it.default != null }?.default
+
+        return SearchEngineList(searchEngines, defaultSearchEngine)
     }
 
     internal val localeChangedReceiver by lazy {

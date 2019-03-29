@@ -19,14 +19,14 @@ class SearchEngineParserTest {
     fun `SearchEngine can be parsed from assets`() {
         val searchEngine = SearchEngineParser().load(
                 RuntimeEnvironment.application.assets,
-                "google", "searchplugins/google-nocodes.xml")
+                "google", "searchplugins/google-b-m.xml")
 
         assertEquals("google", searchEngine.identifier)
         assertEquals("Google", searchEngine.name)
         assertNotNull(searchEngine.icon)
 
         val url = searchEngine.buildSearchUrl("HelloWorld")
-        assertEquals("https://www.google.com/search?q=HelloWorld&ie=utf-8&oe=utf-8", url)
+        assertEquals("https://www.google.com/search?q=HelloWorld&ie=utf-8&oe=utf-8&client=firefox-b-m", url)
 
         val suggestionURL = searchEngine.buildSuggestionsURL("Mozilla")
         assertEquals("https://www.google.com/complete/search?client=firefox&q=Mozilla", suggestionURL)
