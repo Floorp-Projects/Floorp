@@ -9,20 +9,20 @@
     </head>
     <body>
         <script class="testbody" type="application/javascript">
+        /* global TestInterfaceMaplike, TestInterfaceSetlike, TestInterfaceMaplikeObject, TestInterfaceJSMaplike */
          SimpleTest.waitForExplicitFinish();
          SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, function() {
-             base_properties = [["has", "function", 1],
-                                ["entries", "function", 0],
-                                ["keys", "function", 0],
-                                ["values", "function", 0],
-                                ["forEach", "function", 1],
-                                ["size", "number"]];
-             maplike_properties = base_properties.concat([["set", "function", 2]]);
-             setlike_properties = base_properties;
-             rw_properties = [["clear", "function", 0],
-                              ["delete", "function", 1]];
-             setlike_rw_properties = base_properties.concat(rw_properties).concat([["add", "function", 1]]);
-             maplike_rw_properties = maplike_properties.concat(rw_properties).concat([["get", "function", 1]]);
+             var base_properties = [["has", "function", 1],
+                                    ["entries", "function", 0],
+                                    ["keys", "function", 0],
+                                    ["values", "function", 0],
+                                    ["forEach", "function", 1],
+                                    ["size", "number"]];
+             var maplike_properties = base_properties.concat([["set", "function", 2]]);
+             var rw_properties = [["clear", "function", 0],
+                                  ["delete", "function", 1]];
+             var setlike_rw_properties = base_properties.concat(rw_properties).concat([["add", "function", 1]]);
+             var maplike_rw_properties = maplike_properties.concat(rw_properties).concat([["get", "function", 1]]);
              var testExistence = function testExistence(prefix, obj, properties) {
                  for (var [name, type, args] of properties) {
                      // Properties are somewhere up the proto chain, hasOwnProperty won't work
@@ -56,6 +56,7 @@
              var m;
              var testSet;
              var testIndex;
+
              // Simple map creation and functionality test
              info("SimpleMap: Testing simple map creation and functionality");
              m = new TestInterfaceMaplike();
@@ -64,12 +65,12 @@
              is(m.size, 0, "SimpleMap: size should be zero");
              ok(!m.has("test"), "SimpleMap: maplike has should return false");
              is(m.get("test"), undefined, "SimpleMap: maplike get should return undefined on bogus lookup");
-             m1 = m.set("test", 1);
+             var m1 = m.set("test", 1);
              is(m, m1, "SimpleMap: return from set should be map object");
              is(m.size, 1, "SimpleMap: size should be 1");
              ok(m.has("test"), "SimpleMap: maplike has should return true");
              is(m.get("test"), 1, "SimpleMap: maplike get should return value entered");
-             m2 = m.set("test2", 2);
+             m.set("test2", 2);
              is(m.size, 2, "SimpleMap: size should be 2");
              testSet = [["test", 1], ["test2", 2]];
              testIndex = 0;
@@ -85,8 +86,8 @@
              is(m.get("test2"), 2, "SimpleMap: maplike get should return value entered");
              is(m.delete("test2"), true, "SimpleMap: maplike deletion should return boolean");
              is(m.size, 1, "SimpleMap: size should be 1");
-             iterable = false;
-             for (var e of m) {
+             var iterable = false;
+             for (let e of m) {
                  iterable = true;
                  is(e[0], "test", "SimpleMap: iterable first array element should be key");
                  is(e[1], 1, "SimpleMap: iterable second array element should be value");
@@ -95,13 +96,13 @@
              is(m[Symbol.iterator].name, "entries", "SimpleMap: @@iterator symbol has correct name");
              is(m[Symbol.iterator], m.entries, 'SimpleMap: @@iterator is an alias for "entries"');
              ok(iterable, "SimpleMap: @@iterator symbol resolved correctly");
-             for (var k of m.keys()) {
+             for (let k of m.keys()) {
                  is(k, "test", "SimpleMap: first keys element should be 'test'");
              }
-             for (var v of m.values()) {
+             for (let v of m.values()) {
                  is(v, 1, "SimpleMap: first values elements should be 1");
              }
-             for (var e of m.entries()) {
+             for (let e of m.entries()) {
                  is(e[0], "test", "SimpleMap: entries first array element should be 'test'");
                  is(e[1], 1, "SimpleMap: entries second array element should be 1");
              }
@@ -119,7 +120,7 @@
              is(m, m1, "SimpleSet: return from set should be map object");
              is(m.size, 1, "SimpleSet: size should be 1");
              ok(m.has("test"), "SimpleSet: maplike has should return true");
-             m2 = m.add("test2");
+             m.add("test2");
              is(m.size, 2, "SimpleSet: size should be 2");
              testSet = ["test", "test2"];
              testIndex = 0;
@@ -134,7 +135,7 @@
              is(m.delete("test2"), true, "SimpleSet: maplike deletion should return true");
              is(m.size, 1, "SimpleSet: size should be 1");
              iterable = false;
-             for (var e of m) {
+             for (let e of m) {
                  iterable = true;
                  is(e, "test", "SimpleSet: iterable first array element should be key");
              }
@@ -142,13 +143,13 @@
              is(m[Symbol.iterator].name, "values", "SimpleSet: @@iterator symbol has correct name");
              is(m[Symbol.iterator], m.values, 'SimpleSet: @@iterator is an alias for "values"');
              ok(iterable, "SimpleSet: @@iterator symbol resolved correctly");
-             for (var k of m.keys()) {
+             for (let k of m.keys()) {
                  is(k, "test", "SimpleSet: first keys element should be 'test'");
              }
-             for (var v of m.values()) {
+             for (let v of m.values()) {
                  is(v, "test", "SimpleSet: first values elements should be 'test'");
              }
-             for (var e of m.entries()) {
+             for (let e of m.entries()) {
                  is(e[0], "test", "SimpleSet: Entries first array element should be 'test'");
                  is(e[1], "test", "SimpleSet: Entries second array element should be 'test'");
              }
@@ -165,7 +166,7 @@
              is(m.size, 1, "MapConvenience: size should be 1");
              ok(m.hasInternal("test"), "MapConvenience: maplike hasInternal should return true");
              is(m.get("test"), 1, "MapConvenience: maplike get should return value entered");
-             m2 = m.setInternal("test2", 2);
+             m.setInternal("test2", 2);
              is(m.size, 2, "size should be 2");
              ok(m.hasInternal("test2"), "MapConvenience: maplike hasInternal should return true");
              is(m.get("test2"), 2, "MapConvenience: maplike get should return value entered");
@@ -187,7 +188,7 @@
              m.setInternal("test");
              is(m.size, 1, "size should be 1");
              ok(m.hasInternal("test"), "ReadOnlyMapConvenience: maplike hasInternal should return true");
-             m2 = m.setInternal("test2");
+             m.setInternal("test2");
              is(m.size, 2, "size should be 2");
              ok(m.hasInternal("test2"), "ReadOnlyMapConvenience: maplike hasInternal should return true");
              is(m.deleteInternal("test2"), true, "ReadOnlyMapConvenience: maplike deleteInternal should return true");
@@ -206,19 +207,19 @@
              is(m.size, 1, "JSMapConvenience: size should be 1");
              ok(m.has("test"), "JSMapConvenience: maplike has should return true");
              is(m.get("test"), 1, "JSMapConvenience: maplike get should return value entered");
-             m2 = m.setInternal("test2", 2);
+             m.setInternal("test2", 2);
              is(m.size, 2, "JSMapConvenience: size should be 2");
              ok(m.has("test2"), "JSMapConvenience: maplike has should return true");
              is(m.get("test2"), 2, "JSMapConvenience: maplike get should return value entered");
              is(m.deleteInternal("test2"), true, "JSMapConvenience: maplike deleteInternal should return true");
              is(m.size, 1, "JSMapConvenience: size should be 1");
-             for (var k of m.keys()) {
+             for (let k of m.keys()) {
                  is(k, "test", "JSMapConvenience: first keys element should be 'test'");
              }
-             for (var v of m.values()) {
+             for (let v of m.values()) {
                  is(v, 1, "JSMapConvenience: first values elements should be 1");
              }
-             for (var e of m.entries()) {
+             for (let e of m.entries()) {
                  is(e[0], "test", "JSMapConvenience: entries first array element should be 'test'");
                  is(e[1], 1, "JSMapConvenience: entries second array element should be 1");
              }

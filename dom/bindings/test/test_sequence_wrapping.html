@@ -28,7 +28,7 @@ function doTest() {
   }
   var setterCalled = false;
 
-  extLength = gl.getSupportedExtensions().length;
+  var extLength = gl.getSupportedExtensions().length;
   ok(extLength > 0,
      "This test won't work right if we have no supported extensions");
 

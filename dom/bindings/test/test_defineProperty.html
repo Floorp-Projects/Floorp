@@ -84,7 +84,7 @@ function namedSetNonStrict(obj) {
   ok(threw,
      "Should throw in non-strict mode when defining named property on " + obj);
 }
-for (var obj of [ document, document.forms ]) {
+for (let obj of [ document, document.forms ]) {
   namedSetStrict(obj);
   namedSetNonStrict(obj);
 }
@@ -148,7 +148,7 @@ function indexedSetNonStrict(obj) {
   ok(threw,
      "Should throw in non-strict mode when defining indexed property on " + obj);
 }
-for (var obj of [ document.forms, document.childNodes ]) {
+for (let obj of [ document.forms, document.childNodes ]) {
   indexedSetStrict(obj);
   indexedSetNonStrict(obj);
 }

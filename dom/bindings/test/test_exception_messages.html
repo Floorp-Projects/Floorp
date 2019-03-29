@@ -59,8 +59,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=882653
   ];
 
   for (var i = 0; i < tests.length; ++i) {
-      msg = "Correct exception should be thrown for " + tests[i][2];
+      var msg = "Correct exception should be thrown for " + tests[i][2];
       try {
+          // eslint-disable-next-line no-eval
           eval(tests[i][0]);
           ok(false, msg);
       } catch (e) {
