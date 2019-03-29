@@ -8,7 +8,6 @@
 #define GFX_ASYNCCOMPOSITIONMANAGER_H
 
 #include "Units.h"                                 // for ScreenPoint, etc
-#include "FrameMetrics.h"                          // for FrameMetrics
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerManagerComposite
 #include "mozilla/Attributes.h"                    // for final, etc
 #include "mozilla/RefPtr.h"                        // for RefCounted
@@ -239,11 +238,6 @@ class AsyncCompositionManager final {
   void SetFixedLayerMargins(ScreenIntCoord aTop, ScreenIntCoord aBottom);
 
  private:
-  // This calculates whether frame metrics should be sent to Java.
-  bool FrameMetricsHaveUpdated(const FrameMetrics& aMetrics);
-  // This holds the most recent scroll/zoom metrics sent to Java, and is used
-  // to send new updates when it changes.
-  FrameMetrics mLastMetrics;
   // The following two fields are only needed on Fennec with C++ APZ, because
   // then we need to reposition the gecko scrollbar to deal with the
   // dynamic toolbar shifting content around.

@@ -1447,7 +1447,6 @@ import android.view.inputmethod.EditorInfo;
                 if (DEBUG) {
                     Log.d(LOGTAG, "restartInput(" + reason + ", " + toggleSoftInput + ')');
                 }
-
                 if (toggleSoftInput) {
                     mSoftInputReentrancyGuard.incrementAndGet();
                 }
@@ -1596,7 +1595,6 @@ import android.view.inputmethod.EditorInfo;
                 // show/hide the keyboard because the find box has the focus and is taking input from
                 // the keyboard.
                 final GeckoSession session = mSession.get();
-
                 if (session == null) {
                     return;
                 }
@@ -1615,8 +1613,14 @@ import android.view.inputmethod.EditorInfo;
                     return;
                 }
                 if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+                    if (DEBUG) {
+                        Log.d(LOGTAG, "hideSoftInput");
+                    }
                     session.getTextInput().getDelegate().hideSoftInput(session);
                     return;
+                }
+                if (DEBUG) {
+                    Log.d(LOGTAG, "showSoftInput");
                 }
                 session.getEventDispatcher().dispatch("GeckoView:ZoomToInput", null);
                 session.getTextInput().getDelegate().showSoftInput(session);

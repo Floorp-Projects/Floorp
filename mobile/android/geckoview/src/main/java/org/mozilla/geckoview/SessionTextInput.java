@@ -5,7 +5,6 @@
 
 package org.mozilla.geckoview;
 
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.IGeckoEditableParent;
@@ -19,7 +18,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Build;
@@ -247,41 +245,6 @@ public final class SessionTextInput {
             }
         }
 
-        private Rect displayRectForId(@NonNull final GeckoSession session,
-                                      @NonNull final int virtualId,
-                                      @Nullable final View view) {
-            final SessionTextInput textInput = session.getTextInput();
-            Rect contentRect;
-            if (textInput.mAutoFillNodes.indexOfKey(virtualId) >= 0) {
-                GeckoBundle element = textInput.mAutoFillNodes
-                        .get(virtualId);
-                GeckoBundle bounds = element.getBundle("bounds");
-                contentRect = new Rect(bounds.getInt("left"),
-                        bounds.getInt("top"),
-                        bounds.getInt("right"),
-                        bounds.getInt("bottom"));
-
-                final Matrix matrix = new Matrix();
-                final RectF rectF = new RectF(contentRect);
-                if (GeckoAppShell.isFennec()) {
-                    session.getClientToScreenMatrix(matrix);
-                } else {
-                    session.getPageToScreenMatrix(matrix);
-                }
-                matrix.mapRect(rectF);
-                rectF.roundOut(contentRect);
-                if (DEBUG) {
-                    Log.d(LOGTAG, "Displaying autofill rect at (" + contentRect.left + ", " +
-                            contentRect.top + "), (" + contentRect.right + ", " +
-                            contentRect.bottom + ")");
-                }
-            } else {
-                contentRect = getDummyAutoFillRect(session, true, view);
-            }
-
-            return contentRect;
-        }
-
         @Override
         public void notifyAutoFill(@NonNull final GeckoSession session,
                                    @AutoFillNotification final int notification,
@@ -310,7 +273,9 @@ public final class SessionTextInput {
                     manager.cancel();
                     break;
                 case AUTO_FILL_NOTIFY_VIEW_ENTERED:
-                    manager.notifyViewEntered(view, virtualId, displayRectForId(session, virtualId, view));
+                    // Use a dummy rect for the View.
+                    manager.notifyViewEntered(view, virtualId, getDummyAutoFillRect(
+                            session, /* screen */ true, view));
                     break;
                 case AUTO_FILL_NOTIFY_VIEW_EXITED:
                     manager.notifyViewExited(view, virtualId);
@@ -538,13 +503,6 @@ public final class SessionTextInput {
         return mDelegate;
     }
 
-    /*package*/ void onScreenMetricsUpdated() {
-        if (mAutoFillFocusedId != View.NO_ID) {
-            getDelegate().notifyAutoFill(
-                    mSession, GeckoSession.TextInputDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED, mAutoFillFocusedId);
-        }
-    }
-
     /**
      * Fill the specified {@link ViewStructure} with auto-fill fields from the current page.
      *
@@ -563,7 +521,8 @@ public final class SessionTextInput {
         structure.setEnabled(true);
         structure.setVisibility(View.VISIBLE);
 
-        final Rect rect = getDummyAutoFillRect(mSession, false, null);
+        final Rect rect = getDummyAutoFillRect(mSession, /* screen */ false,
+                                               /* view */ null);
         structure.setDimens(rect.left, rect.top, 0, 0, rect.width(), rect.height());
 
         if (mAutoFillRoots == null) {
@@ -761,8 +720,9 @@ public final class SessionTextInput {
         if (DEBUG) {
             Log.d(LOGTAG, "addAutoFill(" + id + ')');
         }
+
         mAutoFillRoots.append(id, callback);
-        populateAutofillNodes(message);
+        mAutoFillNodes.append(id, message);
 
         if (initializing) {
             getDelegate().notifyAutoFill(
@@ -770,19 +730,6 @@ public final class SessionTextInput {
         } else {
             getDelegate().notifyAutoFill(
                     mSession, GeckoSession.TextInputDelegate.AUTO_FILL_NOTIFY_VIEW_ADDED, id);
-        }
-    }
-
-    private void populateAutofillNodes(final GeckoBundle bundle) {
-        final int id = bundle.getInt("id");
-
-        mAutoFillNodes.append(id, bundle);
-
-        final GeckoBundle[] children = bundle.getBundleArray("children");
-        if (children != null) {
-            for (GeckoBundle child : children) {
-                populateAutofillNodes(child);
-            }
         }
     }
 
@@ -830,6 +777,10 @@ public final class SessionTextInput {
 
         mAutoFillFocusedId = id;
         mAutoFillFocusedRoot = root;
+        if (id != View.NO_ID) {
+            getDelegate().notifyAutoFill(
+                    mSession, GeckoSession.TextInputDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED, id);
+        }
     }
 
     /* package */ static Rect getDummyAutoFillRect(@NonNull final GeckoSession session,
