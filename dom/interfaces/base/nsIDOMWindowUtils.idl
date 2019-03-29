@@ -52,7 +52,7 @@ webidl Node;
 webidl NodeList;
 webidl Storage;
 
-[scriptable, uuid(4d6732ca-9da7-4176-b8a1-8dde15cd0bf9)]
+[builtinclass, scriptable, uuid(4d6732ca-9da7-4176-b8a1-8dde15cd0bf9)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1765,7 +1765,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * This method doesn't do anything useful.  It was solely added for the
    * purpose of the test for bug 503926.
    */
-  void xpconnectArgument(in nsIDOMWindowUtils aThis);
+  void xpconnectArgument(in nsISupports aObj);
 
   /**
    * Helper for JS components that need to send permission requests with

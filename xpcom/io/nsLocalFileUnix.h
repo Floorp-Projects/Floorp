@@ -18,7 +18,6 @@
 #include "nscore.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsIHashable.h"
 #include "nsIClassInfoImpl.h"
 #include "mozilla/Attributes.h"
 #ifdef MOZ_WIDGET_COCOA
@@ -84,8 +83,7 @@ class nsLocalFile final
 #else
     : public nsIFile
 #endif
-    ,
-      public nsIHashable {
+{
  public:
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
 
@@ -100,7 +98,6 @@ class nsLocalFile final
 #ifdef MOZ_WIDGET_COCOA
   NS_DECL_NSILOCALFILEMAC
 #endif
-  NS_DECL_NSIHASHABLE
 
  private:
   nsLocalFile(const nsLocalFile& aOther);

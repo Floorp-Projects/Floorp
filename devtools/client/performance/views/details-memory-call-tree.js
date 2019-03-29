@@ -65,8 +65,9 @@ const MemoryCallTreeView = extend(DetailsSubview, {
    * Fired on the "link" event for the call tree in this container.
    */
   _onLink: function(treeItem) {
-    const { url, line } = treeItem.frame.getInfo();
-    PerformanceController.toolbox.viewSourceInDebugger(url, line).then(success => {
+    const { url, line, column } = treeItem.frame.getInfo();
+    PerformanceController.toolbox.viewSourceInDebugger(url, line, column)
+    .then(success => {
       if (success) {
         this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
       } else {

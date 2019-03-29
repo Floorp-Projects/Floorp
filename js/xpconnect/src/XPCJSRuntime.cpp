@@ -2750,6 +2750,9 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
     case JS_TELEMETRY_GC_MARK_RATE:
       Telemetry::Accumulate(Telemetry::GC_MARK_RATE, sample);
       break;
+    case JS_TELEMETRY_DEPRECATED_ARRAY_GENERICS:
+      Telemetry::Accumulate(Telemetry::JS_DEPRECATED_ARRAY_GENERICS, sample);
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected JS_TELEMETRY id");
   }
@@ -2791,10 +2794,9 @@ static void DestroyRealm(JSFreeOp* fop, JS::Realm* realm) {
 static bool PreserveWrapper(JSContext* cx, JS::Handle<JSObject*> obj) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(obj);
-  MOZ_ASSERT(IS_WN_REFLECTOR(obj) || mozilla::dom::IsDOMObject(obj));
+  MOZ_ASSERT(mozilla::dom::IsDOMObject(obj));
 
-  return mozilla::dom::IsDOMObject(obj) &&
-         mozilla::dom::TryPreserveWrapper(obj);
+  return mozilla::dom::TryPreserveWrapper(obj);
 }
 
 static nsresult ReadSourceFromFilename(JSContext* cx, const char* filename,

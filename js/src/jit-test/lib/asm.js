@@ -84,7 +84,7 @@ function assertAsmTypeFail()
     options("throw_on_asmjs_validation_failure");
 }
 
-function assertAsmLinkFail(f)
+function assertAsmLinkFail(f, ...args)
 {
     if (!isAsmJSCompilationAvailable())
         return;
@@ -92,7 +92,7 @@ function assertAsmLinkFail(f)
     assertEq(isAsmJSModule(f), true);
 
     // Verify no error is thrown with warnings off
-    var ret = f.apply(null, Array.slice(arguments, 1));
+    var ret = f.apply(null, args);
 
     assertEq(isAsmJSFunction(ret), false);
     if (typeof ret === 'object')
@@ -106,7 +106,7 @@ function assertAsmLinkFail(f)
     // Verify an error is thrown
     var caught = false;
     try {
-        f.apply(null, Array.slice(arguments, 1));
+        f.apply(null, args);
     } catch (e) {
         // Arbitrary code an run in the GetProperty, so don't assert any
         // particular string
@@ -120,11 +120,11 @@ function assertAsmLinkFail(f)
 }
 
 // Linking should throw an exception even without warnings-as-errors
-function assertAsmLinkAlwaysFail(f)
+function assertAsmLinkAlwaysFail(f, ...args)
 {
     var caught = false;
     try {
-        f.apply(null, Array.slice(arguments, 1));
+        f.apply(null, args);
     } catch (e) {
         caught = true;
     }
@@ -138,7 +138,7 @@ function assertAsmLinkAlwaysFail(f)
     // Verify an error is thrown
     var caught = false;
     try {
-        f.apply(null, Array.slice(arguments, 1));
+        f.apply(null, args);
     } catch (e) {
         caught = true;
     }
@@ -149,13 +149,13 @@ function assertAsmLinkAlwaysFail(f)
     options("werror");
 }
 
-function assertAsmLinkDeprecated(f)
+function assertAsmLinkDeprecated(f, ...args)
 {
     if (!isAsmJSCompilationAvailable())
         return;
 
     // Verify no error is thrown with warnings off
-    f.apply(null, Array.slice(arguments, 1));
+    f.apply(null, args);
 
     // Turn on warnings-as-errors
     var oldOpts = options("werror");
@@ -164,7 +164,7 @@ function assertAsmLinkDeprecated(f)
     // Verify an error is thrown
     var caught = false;
     try {
-        f.apply(null, Array.slice(arguments, 1));
+        f.apply(null, args);
     } catch (e) {
         // Arbitrary code an run in the GetProperty, so don't assert any
         // particular string
@@ -178,16 +178,16 @@ function assertAsmLinkDeprecated(f)
 }
 
 // Linking should throw a warning-as-error but otherwise run fine
-function asmLink(f)
+function asmLink(f, ...args)
 {
     if (!isAsmJSCompilationAvailable())
-        return f.apply(null, Array.slice(arguments, 1));
+        return f.apply(null, args);
 
     // Turn on warnings-as-errors
     var oldOpts = options("werror");
     assertEq(oldOpts.indexOf("werror"), -1);
 
-    var ret = f.apply(null, Array.slice(arguments, 1));
+    var ret = f.apply(null, args);
 
     // Turn warnings-as-errors back off
     options("werror");

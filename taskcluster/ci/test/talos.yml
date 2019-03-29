@@ -139,6 +139,7 @@ talos-g4:
     treeherder-symbol: T(g4)
     run-on-projects:
         by-test-platform:
+            windows10-64-ux/opt: ['try', 'mozilla-central']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']

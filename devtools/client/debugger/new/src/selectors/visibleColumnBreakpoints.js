@@ -15,6 +15,8 @@ import {
 } from "../selectors";
 import { getVisibleBreakpoints } from "./visibleBreakpoints";
 import { getSelectedLocation } from "../utils/source-maps";
+import { sortSelectedLocations } from "../utils/location";
+
 import type { Selector, State } from "../reducers/types";
 
 import type {
@@ -170,7 +172,7 @@ export function getFirstBreakpointPosition(
     return;
   }
 
-  return positions.find(
+  return sortSelectedLocations(positions, source).find(
     position => getSelectedLocation(position, source).line == line
   );
 }

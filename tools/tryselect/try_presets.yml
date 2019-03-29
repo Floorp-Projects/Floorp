@@ -31,6 +31,7 @@ perf:
         Android hardware platforms are excluded due to resource limitations.
     query:
         - "^test- !android-hw 'raptor | 'talos"
+    rebuild: 5
 
 sample-suites:
     selector: fuzzy

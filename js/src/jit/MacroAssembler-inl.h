@@ -469,7 +469,7 @@ void MacroAssembler::branchTestObjShape(Condition cond, Register obj,
     move32(Imm32(0), scratch);
   }
 
-  branchPtr(cond, Address(obj, ShapedObject::offsetOfShape()), ImmGCPtr(shape),
+  branchPtr(cond, Address(obj, JSObject::offsetOfShape()), ImmGCPtr(shape),
             label);
 
   if (JitOptions.spectreObjectMitigationsMisc) {
@@ -481,7 +481,7 @@ void MacroAssembler::branchTestObjShapeNoSpectreMitigations(Condition cond,
                                                             Register obj,
                                                             const Shape* shape,
                                                             Label* label) {
-  branchPtr(cond, Address(obj, ShapedObject::offsetOfShape()), ImmGCPtr(shape),
+  branchPtr(cond, Address(obj, JSObject::offsetOfShape()), ImmGCPtr(shape),
             label);
 }
 
@@ -497,7 +497,7 @@ void MacroAssembler::branchTestObjShape(Condition cond, Register obj,
     move32(Imm32(0), scratch);
   }
 
-  branchPtr(cond, Address(obj, ShapedObject::offsetOfShape()), shape, label);
+  branchPtr(cond, Address(obj, JSObject::offsetOfShape()), shape, label);
 
   if (JitOptions.spectreObjectMitigationsMisc) {
     spectreMovePtr(cond, scratch, spectreRegToZero);
@@ -508,7 +508,7 @@ void MacroAssembler::branchTestObjShapeNoSpectreMitigations(Condition cond,
                                                             Register obj,
                                                             Register shape,
                                                             Label* label) {
-  branchPtr(cond, Address(obj, ShapedObject::offsetOfShape()), shape, label);
+  branchPtr(cond, Address(obj, JSObject::offsetOfShape()), shape, label);
 }
 
 void MacroAssembler::branchTestObjShapeUnsafe(Condition cond, Register obj,
@@ -808,7 +808,7 @@ template <typename EmitPreBarrier>
 void MacroAssembler::storeObjShape(Register shape, Register obj,
                                    EmitPreBarrier emitPreBarrier) {
   MOZ_ASSERT(shape != obj);
-  Address shapeAddr(obj, ShapedObject::offsetOfShape());
+  Address shapeAddr(obj, JSObject::offsetOfShape());
   emitPreBarrier(*this, shapeAddr);
   storePtr(shape, shapeAddr);
 }
@@ -816,7 +816,7 @@ void MacroAssembler::storeObjShape(Register shape, Register obj,
 template <typename EmitPreBarrier>
 void MacroAssembler::storeObjShape(Shape* shape, Register obj,
                                    EmitPreBarrier emitPreBarrier) {
-  Address shapeAddr(obj, ShapedObject::offsetOfShape());
+  Address shapeAddr(obj, JSObject::offsetOfShape());
   emitPreBarrier(*this, shapeAddr);
   storePtr(ImmGCPtr(shape), shapeAddr);
 }

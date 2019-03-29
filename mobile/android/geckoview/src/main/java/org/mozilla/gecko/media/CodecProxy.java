@@ -18,6 +18,8 @@ import org.mozilla.gecko.mozglue.JNIObject;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -35,10 +37,13 @@ public final class CodecProxy {
     private Queue<Sample> mSurfaceOutputs = new ConcurrentLinkedQueue<>();
     private boolean mFlushed = true;
 
+    private Map<Integer, SampleBuffer> mInputBuffers = new HashMap<>();
+    private Map<Integer, SampleBuffer> mOutputBuffers = new HashMap<>();
+
     public interface Callbacks {
         void onInputStatus(long timestamp, boolean processed);
         void onOutputFormatChanged(MediaFormat format);
-        void onOutput(Sample output);
+        void onOutput(Sample output, SampleBuffer buffer);
         void onError(boolean fatal);
     }
 
@@ -46,7 +51,7 @@ public final class CodecProxy {
     public static class NativeCallbacks extends JNIObject implements Callbacks {
         public native void onInputStatus(long timestamp, boolean processed);
         public native void onOutputFormatChanged(MediaFormat format);
-        public native void onOutput(Sample output);
+        public native void onOutput(Sample output, SampleBuffer buffer);
         public native void onError(boolean fatal);
 
         @Override // JNIObject
@@ -95,7 +100,7 @@ public final class CodecProxy {
                 // Don't render to surface just yet. Callback will make that happen when it's time.
                 mSurfaceOutputs.offer(sample);
             }
-            mCallbacks.onOutput(sample);
+            mCallbacks.onOutput(sample, CodecProxy.this.getOutputBuffer(sample.bufferId));
         }
 
         @Override
@@ -226,7 +231,9 @@ public final class CodecProxy {
         }
 
         try {
-            return sendInput(mRemote.dequeueInput(info.size).set(bytes, info, cryptoInfo));
+            Sample s = mRemote.dequeueInput(info.size);
+            fillInputBuffer(s.bufferId, bytes, info.offset, info.size);
+            return sendInput(s.set(info, cryptoInfo));
         } catch (RemoteException | NullPointerException e) {
             Log.e(LOGTAG, "fail to dequeue input buffer", e);
         } catch (IOException e) {
@@ -235,6 +242,21 @@ public final class CodecProxy {
             sendInput(null);
         }
         return false;
+    }
+
+    private void fillInputBuffer(final int bufferId, final ByteBuffer bytes,
+            final int offset, final int size) throws RemoteException, IOException {
+        if (bytes == null || size == 0) {
+            Log.w(LOGTAG, "empty input");
+            return;
+        }
+
+        SampleBuffer buffer = mInputBuffers.get(bufferId);
+        if (buffer == null) {
+            buffer = mRemote.getInputBuffer(bufferId);
+            mInputBuffers.put(bufferId, buffer);
+        }
+        buffer.readFromByteBuffer(bytes, offset, size);
     }
 
     private boolean sendInput(final Sample sample) {
@@ -301,6 +323,15 @@ public final class CodecProxy {
                 }
                 mSurfaceOutputs.clear();
             }
+
+            for (SampleBuffer b : mInputBuffers.values()) {
+                b.dispose();
+            }
+            mInputBuffers.clear();
+            for (SampleBuffer b : mOutputBuffers.values()) {
+                b.dispose();
+            }
+            mOutputBuffers.clear();
 
             try {
                 RemoteManager.getInstance().releaseCodec(this);
@@ -372,5 +403,28 @@ public final class CodecProxy {
 
     /* package */ void reportError(final boolean fatal) {
         mCallbacks.reportError(fatal);
+    }
+
+    private SampleBuffer getOutputBuffer(final int id) {
+        if (mRemote == null) {
+            Log.e(LOGTAG, "cannot get buffer#" + id + " from an ended codec");
+            return null;
+        }
+
+        if (mOutputSurface != null) {
+            return null;
+        }
+
+        SampleBuffer buffer = mOutputBuffers.get(id);
+        if (buffer == null) {
+            try {
+                buffer = mRemote.getOutputBuffer(id);
+                mOutputBuffers.put(id, buffer);
+            } catch (Exception e) {
+                Log.e(LOGTAG, "cannot get buffer#" + id, e);
+                return null;
+            }
+        }
+        return buffer;
     }
 }

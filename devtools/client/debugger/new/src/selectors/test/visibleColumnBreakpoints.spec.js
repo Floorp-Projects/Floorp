@@ -3,15 +3,23 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
+import {
+  actions,
+  selectors,
+  createStore,
+  makeSource
+} from "../../utils/test-head";
 
-import { getColumnBreakpoints } from "../visibleColumnBreakpoints";
+import {
+  getColumnBreakpoints,
+  getFirstBreakpointPosition
+} from "../visibleColumnBreakpoints";
 import { makeMockSource, makeMockBreakpoint } from "../../utils/test-mockup";
 
 function pp(line, column) {
   return {
     location: { sourceId: "foo", line, column },
-    generatedLocation: { sourceId: "foo", line, column },
-    types: { break: true, step: false }
+    generatedLocation: { sourceId: "foo", line, column }
   };
 }
 
@@ -57,5 +65,31 @@ describe("visible column breakpoints", () => {
 
     const columnBps = getColumnBreakpoints(pausePoints, breakpoints, viewport);
     expect(columnBps).toMatchSnapshot();
+  });
+});
+
+describe("getFirstBreakpointPosition", () => {
+  it("sorts the positions by column", async () => {
+    const store = createStore();
+    const { dispatch, getState } = store;
+
+    await dispatch(actions.newSource(makeSource("foo1")));
+
+    const source = selectors.getSourceFromId(getState(), "foo1");
+    dispatch({
+      type: "ADD_BREAKPOINT_POSITIONS",
+      positions: [pp(1, 5), pp(1, 3)],
+      source
+    });
+
+    const position = getFirstBreakpointPosition(getState(), {
+      line: 1,
+      sourceId: source.id
+    });
+
+    if (!position) {
+      throw new Error("There should be a position");
+    }
+    expect(position.location.column).toEqual(3);
   });
 });

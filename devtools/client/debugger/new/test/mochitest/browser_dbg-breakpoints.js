@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function toggleBreakpoint(dbg, index) {
   const bp = findAllElements(dbg, "breakpointItems")[index];
@@ -19,36 +20,6 @@ async function enableBreakpoint(dbg, index) {
   await enabled;
 }
 
-function toggleBreakpoints(dbg, count) {
-  clickElement(dbg, "toggleBreakpoints");
-}
-
-function disableBreakpoints(dbg, count) {
-  const toggled = waitForDispatch(dbg, "DISABLE_BREAKPOINT", count);
-  toggleBreakpoints(dbg);
-  return toggled;
-}
-
-function enableBreakpoints(dbg, count) {
-  const enabled = waitForDispatch(dbg, "ENABLE_BREAKPOINT", count);
-  toggleBreakpoints(dbg);
-  return enabled;
-}
-
-function every(array, predicate) {
-  return !array.some(item => !predicate(item));
-}
-
-function subset(subArray, superArray) {
-  return every(subArray, subItem => superArray.includes(subItem));
-}
-
-function assertEmptyLines(dbg, lines) {
-  const sourceId = dbg.selectors.getSelectedSourceId(dbg.store.getState());
-  const emptyLines = dbg.selectors.getEmptyLines(dbg.store.getState(), sourceId);
-  ok(subset(lines, emptyLines), 'empty lines should match');
-}
-
 // Test enabling and disabling a breakpoint using the check boxes
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2");
@@ -60,7 +31,7 @@ add_task(async function() {
 
   // Disable the first one
   await disableBreakpoint(dbg, 0);
-  let bp1 = findBreakpoint(dbg, "simple2", 3);
+  const bp1 = findBreakpoint(dbg, "simple2", 3);
   let bp2 = findBreakpoint(dbg, "simple2", 5);
   is(bp1.disabled, true, "first breakpoint is disabled");
   is(bp2.disabled, false, "second breakpoint is enabled");
@@ -79,7 +50,8 @@ add_task(async function() {
   await addBreakpoint(dbg, "simple2", 3);
   await addBreakpoint(dbg, "simple2", 5);
 
-  assertEmptyLines(dbg, [1,2]);
+  assertEmptyLines(dbg, [1, 2]);
+  assertBreakpointSnippet(dbg, 3, "return x + y;");
 
   rightClickElement(dbg, "breakpointItem", 3);
   const disableBreakpointDispatch = waitForDispatch(dbg, "DISABLE_BREAKPOINT");

@@ -92,7 +92,8 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
       mDecoder->UpdateInputStatus(aTimestamp, aProcessed);
     }
 
-    void HandleOutput(Sample::Param aSample) override {
+    void HandleOutput(Sample::Param aSample,
+                      java::SampleBuffer::Param aBuffer) override {
       // aSample will be implicitly converted into a GlobalRef.
       mDecoder->ProcessOutput(std::move(aSample));
     }
@@ -120,6 +121,12 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
   }
 
   RefPtr<InitPromise> Init() override {
+    BufferInfo::LocalRef bufferInfo;
+    if (NS_FAILED(BufferInfo::New(&bufferInfo)) || !bufferInfo) {
+      return InitPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
+    }
+    mInputBufferInfo = bufferInfo;
+
     mSurface = GeckoSurface::LocalRef(SurfaceAllocator::AcquireSurface(
         mConfig.mImage.width, mConfig.mImage.height, false));
     if (!mSurface) {
@@ -325,6 +332,12 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
   }
 
   RefPtr<InitPromise> Init() override {
+    BufferInfo::LocalRef bufferInfo;
+    if (NS_FAILED(BufferInfo::New(&bufferInfo)) || !bufferInfo) {
+      return InitPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
+    }
+    mInputBufferInfo = bufferInfo;
+
     // Register native methods.
     JavaCallbacksSupport::Init();
 
@@ -356,9 +369,10 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
       mDecoder->UpdateInputStatus(aTimestamp, aProcessed);
     }
 
-    void HandleOutput(Sample::Param aSample) override {
+    void HandleOutput(Sample::Param aSample,
+                      java::SampleBuffer::Param aBuffer) override {
       // aSample will be implicitly converted into a GlobalRef.
-      mDecoder->ProcessOutput(std::move(aSample));
+      mDecoder->ProcessOutput(std::move(aSample), std::move(aBuffer));
     }
 
     void HandleOutputFormatChanged(MediaFormat::Param aFormat) override {
@@ -391,11 +405,14 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
   // Param and LocalRef are only valid for the duration of a JNI method call.
   // Use GlobalRef as the parameter type to keep the Java object referenced
   // until running.
-  void ProcessOutput(Sample::GlobalRef&& aSample) {
+  void ProcessOutput(Sample::GlobalRef&& aSample,
+                     SampleBuffer::GlobalRef&& aBuffer) {
     if (!mTaskQueue->IsCurrentThreadIn()) {
-      nsresult rv = mTaskQueue->Dispatch(NewRunnableMethod<Sample::GlobalRef&&>(
-          "RemoteAudioDecoder::ProcessOutput", this,
-          &RemoteAudioDecoder::ProcessOutput, std::move(aSample)));
+      nsresult rv = mTaskQueue->Dispatch(
+          NewRunnableMethod<Sample::GlobalRef&&, SampleBuffer::GlobalRef&&>(
+              "RemoteAudioDecoder::ProcessOutput", this,
+              &RemoteAudioDecoder::ProcessOutput, std::move(aSample),
+              std::move(aBuffer)));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
       Unused << rv;
       return;
@@ -439,7 +456,7 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
       }
 
       jni::ByteBuffer::LocalRef dest = jni::ByteBuffer::New(audio.get(), size);
-      aSample->WriteToByteBuffer(dest);
+      aBuffer->WriteToByteBuffer(dest, offset, size);
 
       RefPtr<AudioData> data =
           new AudioData(0, TimeUnit::FromMicroseconds(presentationTimeUs),
@@ -560,14 +577,10 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Drain() {
       return p;
     }
 
-    BufferInfo::LocalRef bufferInfo;
-    nsresult rv = BufferInfo::New(&bufferInfo);
-    if (NS_FAILED(rv)) {
-      return DecodePromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
-    }
     SetState(State::DRAINING);
-    bufferInfo->Set(0, 0, -1, MediaCodec::BUFFER_FLAG_END_OF_STREAM);
-    mJavaDecoder->Input(nullptr, bufferInfo, nullptr);
+    self->mInputBufferInfo->Set(0, 0, -1,
+                                MediaCodec::BUFFER_FLAG_END_OF_STREAM);
+    mJavaDecoder->Input(nullptr, self->mInputBufferInfo, nullptr);
     return p;
   });
 }
@@ -666,16 +679,10 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Decode(
     jni::ByteBuffer::LocalRef bytes = jni::ByteBuffer::New(
         const_cast<uint8_t*>(sample->Data()), sample->Size());
 
-    BufferInfo::LocalRef bufferInfo;
-    nsresult rv = BufferInfo::New(&bufferInfo);
-    if (NS_FAILED(rv)) {
-      return DecodePromise::CreateAndReject(
-          MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
-    }
-    bufferInfo->Set(0, sample->Size(), sample->mTime.ToMicroseconds(), 0);
-
     self->SetState(State::DRAINABLE);
-    return self->mJavaDecoder->Input(bytes, bufferInfo,
+    self->mInputBufferInfo->Set(0, sample->Size(),
+                                sample->mTime.ToMicroseconds(), 0);
+    return self->mJavaDecoder->Input(bytes, self->mInputBufferInfo,
                                      GetCryptoInfoFromSample(sample))
                ? self->mDecodePromise.Ensure(__func__)
                : DecodePromise::CreateAndReject(

@@ -466,7 +466,7 @@ MOZ_ALWAYS_INLINE void NativeObject::setSlotWithType(JSContext* cx,
 inline void NativeObject::updateShapeAfterMovingGC() {
   Shape* shape = this->shape();
   if (IsForwarded(shape)) {
-    shapeRef().unsafeSet(Forwarded(shape));
+    shape_.unsafeSet(Forwarded(shape));
   }
 }
 
