@@ -53,4 +53,16 @@ void nsIPresShell::SetNeedThrottledAnimationFlush() {
   }
 }
 
+namespace mozilla {
+
+/* static */
+inline void PresShell::EventHandler::OnPresShellDestroy(Document* aDocument) {
+  if (sLastKeyDownEventTargetElement &&
+      sLastKeyDownEventTargetElement->OwnerDoc() == aDocument) {
+    sLastKeyDownEventTargetElement = nullptr;
+  }
+}
+
+}  // namespace mozilla
+
 #endif  // nsIPresShellInlines_h

@@ -7,6 +7,7 @@
 /* a presentation of a document, part 1 */
 
 #include "nsPresContext.h"
+#include "nsPresContextInlines.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
@@ -1486,6 +1487,20 @@ void nsPresContext::ContentLanguageChanged() {
                                RestyleHint::RecascadeSubtree());
 }
 
+void nsPresContext::MediaFeatureValuesChanged(
+    const MediaFeatureChange& aChange) {
+  if (mShell) {
+    mShell->EnsureStyleFlush();
+  }
+
+  if (!mPendingMediaFeatureValuesChange) {
+    mPendingMediaFeatureValuesChange.emplace(aChange);
+    return;
+  }
+
+  *mPendingMediaFeatureValuesChange |= aChange;
+}
+
 void nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
                                         RestyleHint aRestyleHint) {
   if (!mShell) {
@@ -2459,6 +2474,16 @@ void nsPresContext::FlushFontFeatureValues() {
     mFontFeatureValuesDirty = false;
   }
 }
+
+#ifdef DEBUG
+
+void nsPresContext::ValidatePresShellAndDocumentReleation() const {
+  NS_ASSERTION(
+      !mShell || !mShell->GetDocument() || mShell->GetDocument() == mDocument,
+      "nsPresContext doesn't have the same document as nsPresShell!");
+}
+
+#endif  // #ifdef DEBUG
 
 nsRootPresContext::nsRootPresContext(dom::Document* aDocument,
                                      nsPresContextType aType)
