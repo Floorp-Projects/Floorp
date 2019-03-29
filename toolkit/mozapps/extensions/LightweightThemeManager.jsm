@@ -6,9 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["LightweightThemeManager"];
 
-ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
-  "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
-
 // Holds optional fallback theme data that will be returned when no data for an
 // active theme can be found. This the case for WebExtension Themes, for example.
 var _fallbackThemeData = null;
@@ -17,7 +14,6 @@ var LightweightThemeManager = {
   set fallbackThemeData(data) {
     if (data && Object.getOwnPropertyNames(data).length) {
       _fallbackThemeData = Object.assign({}, data);
-      LightweightThemeImageOptimizer.purge();
     } else {
       _fallbackThemeData = null;
     }

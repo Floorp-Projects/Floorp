@@ -11,8 +11,6 @@ const ICONS = Services.prefs.getStringPref("extensions.webextensions.themes.icon
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
-  "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
 // Get the theme variables from the app resource directory.
 // This allows per-app variables.
 ChromeUtils.defineModuleGetter(this, "ThemeContentPropertyList",
@@ -197,12 +195,6 @@ LightweightThemeConsumer.prototype = {
     }
     if (!theme) {
       theme = { id: DEFAULT_THEME_ID };
-    }
-
-    if (theme) {
-      theme = LightweightThemeImageOptimizer.optimize(theme, this._win.screen);
-    } else {
-      theme = {};
     }
 
     let active = this._active = Object.keys(theme).length;
