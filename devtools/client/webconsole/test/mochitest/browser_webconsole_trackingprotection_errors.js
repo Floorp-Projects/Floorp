@@ -50,6 +50,10 @@ add_task(async function testContentBlockingMessage() {
 
 add_task(async function testForeignCookieBlockedMessage() {
   info("Test foreign cookie blocked message");
+  // Bug 1518138: GC heuristics are broken for this test, so that the test
+  // ends up running out of memory. Try to work-around the problem by GCing
+  // before the test begins.
+  Cu.forceShrinkingGC();
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.REJECT_FOREIGN);
   const {hud, win} = await openNewWindowAndConsole(TEST_URI);
@@ -62,6 +66,10 @@ add_task(async function testForeignCookieBlockedMessage() {
 
 add_task(async function testLimitForeignCookieBlockedMessage() {
   info("Test unvisited eTLD foreign cookies blocked message");
+  // Bug 1518138: GC heuristics are broken for this test, so that the test
+  // ends up running out of memory. Try to work-around the problem by GCing
+  // before the test begins.
+  Cu.forceShrinkingGC();
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.LIMIT_FOREIGN);
   const {hud, win} = await openNewWindowAndConsole(TEST_URI);
