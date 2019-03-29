@@ -76,7 +76,7 @@ AutoEditInitRulesTrigger::AutoEditInitRulesTrigger(TextEditor* aTextEditor,
 
 AutoEditInitRulesTrigger::~AutoEditInitRulesTrigger() {
   if (mTextEditor) {
-    mResult = MOZ_KnownLive(mTextEditor)->EndEditorInit();
+    mResult = mTextEditor->EndEditorInit();
   }
 }
 
