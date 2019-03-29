@@ -713,6 +713,12 @@ void AudioContext::Shutdown() {
   // Node is already unregistered.
   mActiveNodes.Clear();
 
+  // On process shutdown, the MSG thread shuts down before the destination
+  // stream is destroyed, but AudioWorklet needs to release objects on the MSG
+  // thread.  AudioContext::Shutdown() is invoked on processing the
+  // PBrowser::Destroy() message before xpcom shutdown begins.
+  ShutdownWorklet();
+
   // For offline contexts, we can destroy the MediaStreamGraph at this point.
   if (mIsOffline && mDestination) {
     mDestination->OfflineShutdown();
