@@ -183,6 +183,7 @@ class SHEntryParent final : public PSHEntryParent {
   void GetOrCreate(nsISHEntry* aSHEntry, MaybeNewPSHEntry* aResult) {
     GetOrCreate(Manager(), aSHEntry, *aResult);
   }
+  bool RecvCreateLoadInfo(RefPtr<nsDocShellLoadState>* aLoadState);
 
   RefPtr<LegacySHEntry> mEntry;
 };

@@ -8,8 +8,7 @@ include protocol PSHistory;
 include DOMTypes;
 include NewPSHEntry;
 
-using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
-
+using refcounted class nsDocShellLoadState from "mozilla/dom/DocShellMessageUtils.h";
 using struct nsID from "nsID.h";
 using nsIntRect from "nsRect.h";
 
@@ -104,6 +103,7 @@ parent:
   sync GetChildAt(int32_t index) returns (MaybeNewPSHEntry childEntry);
   sync ReplaceChild(PSHEntry newChildEntry) returns (nsresult result);
   sync ClearEntry(uint64_t aNewSharedID);
+  sync CreateLoadInfo() returns (nsDocShellLoadState loadState);
 
   sync __delete__();
 };
