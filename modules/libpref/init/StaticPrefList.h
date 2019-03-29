@@ -203,6 +203,15 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// If this is true, it's allowed to fire "cut", "copy" and "paste" events.
+// Additionally, "input" events may expose clipboard content when inputType
+// is "insertFromPaste" or something.
+VARCACHE_PREF(
+  "dom.event.clipboardevents.enabled",
+   dom_event_clipboardevents_enabled,
+  bool, true
+)
+
 // If this is true, "keypress" event's keyCode value and charCode value always
 // become same if the event is not created/initialized by JS.
 VARCACHE_PREF(

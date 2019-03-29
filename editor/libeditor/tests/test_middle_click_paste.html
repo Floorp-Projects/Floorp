@@ -305,6 +305,24 @@ async function doContenteditableTests(aEditableDiv) {
           'No "input" event should be fired if "auxclick" event is canceled (contenteditable)');
   aEditableDiv.innerHTML = "";
 
+  // If clipboard event is disabled, InputEvent.dataTransfer should have only empty string.
+  await SpecialPowers.pushPrefEnv({"set": [["dom.event.clipboardevents.enabled", false]]});
+  await copyPlaintext("abc");
+  aEditableDiv.focus();
+  pasteEventCount = 0;
+  inputEvents = [];
+  synthesizeMouseAtCenter(aEditableDiv, {button: 1});
+  is(aEditableDiv.innerHTML, "abc",
+     "Even if clipboard event is disabled, paste should be done");
+  is(pasteEventCount, 0,
+     "If clipboard event is disabled, 'paste' event shouldn't be fired once");
+  is(inputEvents.length, 1,
+     'One "input" event should be fired even if clipboard event is disabled (contenteditable)');
+  checkInputEvent(inputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: ""}],
+                  "when clipboard event is disabled (contenteditable)");
+  await SpecialPowers.pushPrefEnv({"set": [["dom.event.clipboardevents.enabled", true]]});
+  aEditableDiv.innerHTML = "";
+
   aEditableDiv.removeEventListener("paste", pasteEventLogger);
 
   // Oddly, copyHTMLContent fails randomly only on Linux.  Let's skip this.
@@ -418,7 +436,8 @@ async function doAfterRemoveOfClickedElementTest(aEditableDiv) {
 
 async function doTests() {
   await SpecialPowers.pushPrefEnv({"set": [["middlemouse.paste", true],
-                                           ["middlemouse.contentLoadURL", false]]});
+                                           ["middlemouse.contentLoadURL", false],
+                                           ["dom.event.clipboardevents.enabled", true]]});
   let container = document.getElementById("container");
   container.innerHTML = "<textarea id=\"editor\"></textarea>";
   await doTextareaTests(document.getElementById("editor"));
