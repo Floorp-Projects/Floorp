@@ -118,8 +118,14 @@ nsresult HTMLLinkElement::BindToTree(Document* aDocument, nsIContent* aParent,
       nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  bool isLocalizationLink =
+      aDocument && this->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel,
+                                     nsGkAtoms::localization, eIgnoreCase);
+
   if (Document* doc = GetComposedDoc()) {
-    doc->RegisterPendingLinkUpdate(this);
+    if (!isLocalizationLink || !doc->NodePrincipal()->IsSystemPrincipal()) {
+      doc->RegisterPendingLinkUpdate(this);
+    }
     TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender();
   }
 
@@ -128,8 +134,7 @@ nsresult HTMLLinkElement::BindToTree(Document* aDocument, nsIContent* aParent,
   nsContentUtils::AddScriptRunner(
       NewRunnableMethod("dom::HTMLLinkElement::BindToTree", this, update));
 
-  if (aDocument && this->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel,
-                                     nsGkAtoms::localization, eIgnoreCase)) {
+  if (isLocalizationLink) {
     aDocument->LocalizationLinkAdded(this);
   }
 
