@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/intl/MozLocale.h"
 #include "nsIToolkitChromeRegistry.h"
@@ -51,6 +52,29 @@ TEST(Intl_Locale_LocaleService, GetRegionalPrefsLocales) {
 
   int32_t len = rpLocales.Length();
   ASSERT_TRUE(len > 0);
+}
+
+TEST(Intl_Locale_LocaleService, GetWebExposedLocales) {
+  const nsTArray<nsCString> spoofLocale{NS_LITERAL_CSTRING("de")};
+  LocaleService::GetInstance()->SetAvailableLocales(spoofLocale);
+  LocaleService::GetInstance()->SetRequestedLocales(spoofLocale);
+
+  nsTArray<nsCString> pvLocales;
+
+  mozilla::Preferences::SetInt("privacy.spoof_english", 0);
+  LocaleService::GetInstance()->GetWebExposedLocales(pvLocales);
+  ASSERT_TRUE(pvLocales.Length() > 0);
+  ASSERT_TRUE(pvLocales[0].Equals(NS_LITERAL_CSTRING("de")));
+
+  mozilla::Preferences::SetCString("intl.locale.privacy.web_exposed", "zh-TW");
+  LocaleService::GetInstance()->GetWebExposedLocales(pvLocales);
+  ASSERT_TRUE(pvLocales.Length() > 0);
+  ASSERT_TRUE(pvLocales[0].Equals(NS_LITERAL_CSTRING("zh-TW")));
+
+  mozilla::Preferences::SetInt("privacy.spoof_english", 2);
+  LocaleService::GetInstance()->GetWebExposedLocales(pvLocales);
+  ASSERT_EQ(1u, pvLocales.Length());
+  ASSERT_TRUE(pvLocales[0].Equals(NS_LITERAL_CSTRING("en-US")));
 }
 
 TEST(Intl_Locale_LocaleService, GetRequestedLocales) {

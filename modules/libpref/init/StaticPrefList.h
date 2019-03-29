@@ -2097,6 +2097,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Spoof user locale to English
+VARCACHE_PREF(
+  "privacy.spoof_english",
+   privacy_spoof_english,
+  RelaxedAtomicUint32, 0
+)
+
 // Lower the priority of network loads for resources on the tracking protection
 // list.  Note that this requires the
 // privacy.trackingprotection.annotate_channels pref to be on in order to have

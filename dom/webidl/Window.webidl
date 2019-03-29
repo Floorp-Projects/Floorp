@@ -578,6 +578,23 @@ partial interface Window {
   sequence<DOMString> getRegionalPrefsLocales();
 
   /**
+   * Returns a list of locales that the web content would know from the user.
+   *
+   * One of the fingerprinting technique is to recognize users from their locales
+   * exposed to web content. For those components that would be fingerprintable
+   * from the locale should call this API instead of |getRegionalPrefsLocales()|.
+   *
+   * If the pref is set to spoof locale setting, this function will return the
+   * spoofed locale, otherwise it returns what |getRegionalPrefsLocales()| returns.
+   *
+   * This API always returns at least one locale.
+   *
+   * Example: ["en-US"]
+   */
+  [Func="IsChromeOrXBLOrUAWidget"]
+  sequence<DOMString> getWebExposedLocales();
+
+  /**
    * Getter funcion for IntlUtils, which provides helper functions for
    * localization.
    */
