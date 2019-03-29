@@ -370,7 +370,7 @@ ClipManager::ItemClips::ItemClips(const ActiveScrolledRoot* aASR,
                                   const DisplayItemClipChain* aChain,
                                   bool aSeparateLeaf)
     : mASR(aASR), mChain(aChain), mSeparateLeaf(aSeparateLeaf) {
-  mScrollId.id = 0;
+  mScrollId = wr::wr_root_scroll_node_id();
 }
 
 void ClipManager::ItemClips::UpdateSeparateLeaf(
