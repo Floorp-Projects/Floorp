@@ -11,17 +11,19 @@ option('--with-java-bin-path', nargs=1,
        help='Location of Java binaries (java, jarsigner, keytool)')
 
 
-@depends('--with-java-bin-path')
+@depends(host, '--with-java-bin-path')
 @imports(_from='os', _import='environ')
-def java_search_paths(path):
+def java_search_paths(host, path):
     if path:
         # Look for javac and jar in the specified path.
         return path
-    # With no path specified, look for javac and jar in $JAVA_HOME (if set)
-    # and $PATH.
+    # With no path specified, look for javac and jar in $JAVA_HOME (if set),
+    # JDK registery on Windows, and $PATH.
     if 'JAVA_HOME' in environ:
-        return [os.path.join(environ['JAVA_HOME'], 'bin'),
-                environ.get('PATH', '')]
+        return [os.path.join(environ['JAVA_HOME'], 'bin')]
+    if host.os == 'WINNT':
+        for x in get_registry_values(r'HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\Java Development Kit\1.8\JavaHome', get_32_and_64_bit=True):
+            return [os.path.join(x[0], 'bin')]
     return [environ.get('PATH')]
 
 # Finds the given java tool, failing with a custom error message if we can't
