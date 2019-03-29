@@ -448,7 +448,7 @@ char16_t nsFind::PeekNextChar(State& aState) const {
 // Take nodes out of the tree with NextNode, until null (NextNode will return 0
 // at the end of our range).
 NS_IMETHODIMP
-nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
+nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
              nsRange* aStartPoint, nsRange* aEndPoint, nsRange** aRangeRet) {
   DEBUG_FIND_PRINTF("============== nsFind::Find('%s'%s, %p, %p, %p)\n",
                     NS_LossyConvertUTF16toASCII(aPatText).get(),
@@ -468,10 +468,6 @@ nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
   NS_ENSURE_ARG(root);
 
   *aRangeRet = 0;
-
-  if (!aPatText) {
-    return NS_ERROR_NULL_POINTER;
-  }
 
   nsAutoString patAutoStr(aPatText);
   if (!mCaseSensitive) {
