@@ -508,14 +508,9 @@ bool ReadbackSharedSurface(SharedSurface* src, gfx::DrawTarget* dst) {
 
     // ReadPixels from the current FB into lockedBits.
     {
-      size_t alignment = 8;
-      if (dstStride % 4 == 0) alignment = 4;
-
       ScopedPackState scopedPackState(gl);
-      if (alignment != 4) {
-        gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, alignment);
-      }
-
+      bool handled = scopedPackState.SetForWidthAndStrideRGBA(width, dstStride);
+      MOZ_RELEASE_ASSERT(handled, "Unhandled stride");
       gl->raw_fReadPixels(0, 0, width, height, readGLFormat, readType,
                           dstBytes);
     }
