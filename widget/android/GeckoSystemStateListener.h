@@ -7,11 +7,11 @@
 #define GeckoSystemStateListener_h
 
 #include "GeneratedJNINatives.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
-#include "nsIPresShell.h"
 #include "nsIWindowMediator.h"
 #include "nsPIDOMWindow.h"
-#include "mozilla/Assertions.h"
 
 namespace mozilla {
 
@@ -44,7 +44,7 @@ class GeckoSystemStateListener final
           continue;
         }
         if (dom::Document* doc = window->GetExtantDoc()) {
-          if (nsIPresShell* presShell = doc->GetShell()) {
+          if (PresShell* presShell = doc->GetPresShell()) {
             presShell->ThemeChanged();
           }
         }

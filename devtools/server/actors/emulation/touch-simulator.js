@@ -73,7 +73,23 @@ TouchSimulator.prototype = {
     this.enabled = false;
   },
 
+  /**
+   * Set the current element picker state value.
+   * True means the element picker is currently active and we should not be emulating
+   * touch events.
+   * False means the element picker is not active and it is ok to emulate touch events.
+   * @param {Boolean} state
+   */
+  setElementPickerState(state) {
+    this._isPicking = state;
+  },
+
   handleEvent(evt) {
+    // Bail out if devtools is in pick mode in the same tab.
+    if (this._isPicking) {
+      return;
+    }
+
     // The gaia system window use an hybrid system even on the device which is
     // a mix of mouse/touch events. So let's not cancel *all* mouse events
     // if it is the current target.

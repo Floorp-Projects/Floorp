@@ -2588,8 +2588,10 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   // during an active session. Currently the pref is only used for testing
   // purpose. If the decision is made to permanently rely on the pref, this
   // should be changed so that it is required to restart firefox for the change
-  // of value to take effect.
+  // of value to take effect. Always send SetProcessSandbox message on macOS.
+#  if !defined(XP_MACOSX)
   shouldSandbox = IsContentSandboxEnabled();
+#  endif
 
 #  ifdef XP_LINUX
   if (shouldSandbox) {

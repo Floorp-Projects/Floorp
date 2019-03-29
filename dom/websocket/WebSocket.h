@@ -55,8 +55,6 @@ class WebSocket final : public DOMEventTargetHelper {
   virtual void DisconnectFromOwner() override;
 
   // nsWrapperCache
-  nsPIDOMWindowInner* GetParentObject() { return GetOwner(); }
-
   virtual JSObject* WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
@@ -138,7 +136,7 @@ class WebSocket final : public DOMEventTargetHelper {
   void Send(const ArrayBufferView& aData, ErrorResult& aRv);
 
  private:  // constructor && destructor
-  explicit WebSocket(nsPIDOMWindowInner* aOwnerWindow);
+  explicit WebSocket(nsIGlobalObject* aGlobal);
   virtual ~WebSocket();
 
   void SetReadyState(uint16_t aReadyState);

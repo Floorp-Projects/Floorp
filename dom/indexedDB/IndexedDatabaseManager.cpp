@@ -101,7 +101,7 @@ using namespace mozilla::dom::indexedDB;
 
 namespace {
 
-NS_DEFINE_IID(kIDBRequestIID, PRIVATE_IDBREQUEST_IID);
+NS_DEFINE_IID(kIDBPrivateRequestIID, PRIVATE_IDBREQUEST_IID);
 
 const uint32_t kDeleteTimeoutMs = 1000;
 
@@ -370,7 +370,7 @@ nsresult IndexedDatabaseManager::CommonPostHandleEvent(
 
   // Only mess with events that were originally targeted to an IDBRequest.
   RefPtr<IDBRequest> request;
-  if (NS_FAILED(eventTarget->QueryInterface(kIDBRequestIID,
+  if (NS_FAILED(eventTarget->QueryInterface(kIDBPrivateRequestIID,
                                             getter_AddRefs(request))) ||
       !request) {
     return NS_OK;
@@ -481,9 +481,14 @@ bool IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
   MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
              "Passed object is not a global object!");
 
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!global)) {
+    return false;
+  }
+
   RefPtr<IDBFactory> factory;
-  if (NS_FAILED(IDBFactory::CreateForMainThreadJS(aCx, aGlobal,
-                                                  getter_AddRefs(factory)))) {
+  if (NS_FAILED(
+          IDBFactory::CreateForMainThreadJS(global, getter_AddRefs(factory)))) {
     return false;
   }
 

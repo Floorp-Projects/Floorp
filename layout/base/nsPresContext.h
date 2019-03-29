@@ -19,8 +19,6 @@
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsCOMPtr.h"
-#include "nsIPresShell.h"
-#include "nsIPresShellInlines.h"
 #include "nsRect.h"
 #include "nsStringFwd.h"
 #include "nsFont.h"
@@ -50,6 +48,7 @@ class nsBidi;
 class nsIPrintSettings;
 class nsDocShell;
 class nsIDocShell;
+class nsIPresShell;
 class nsITheme;
 class nsIContent;
 class nsIFrame;
@@ -62,6 +61,9 @@ class gfxUserFontEntry;
 class gfxUserFontSet;
 class gfxTextPerfMetrics;
 class nsCSSFontFeatureValuesRule;
+class nsCSSFrameConstructor;
+class nsDisplayList;
+class nsDisplayListBuilder;
 class nsPluginFrame;
 class nsTransitionManager;
 class nsAnimationManager;
@@ -211,23 +213,19 @@ class nsPresContext : public nsISupports,
   virtual bool IsRoot() { return false; }
 
   mozilla::dom::Document* Document() const {
-    NS_ASSERTION(
-        !mShell || !mShell->GetDocument() || mShell->GetDocument() == mDocument,
-        "nsPresContext doesn't have the same document as nsPresShell!");
+#ifdef DEBUG
+    ValidatePresShellAndDocumentReleation();
+#endif  // #ifdef DEBUG
     return mDocument;
   }
 
-  mozilla::ServoStyleSet* StyleSet() const {
-    return GetPresShell()->StyleSet();
-  }
+  inline mozilla::ServoStyleSet* StyleSet() const;
 
   bool HasPendingMediaQueryUpdates() const {
     return !!mPendingMediaFeatureValuesChange;
   }
 
-  nsCSSFrameConstructor* FrameConstructor() {
-    return PresShell()->FrameConstructor();
-  }
+  inline nsCSSFrameConstructor* FrameConstructor();
 
   mozilla::AnimationEventDispatcher* AnimationEventDispatcher() {
     return mAnimationEventDispatcher;
@@ -271,18 +269,7 @@ class nsPresContext : public nsISupports,
   /**
    * Handle changes in the values of media features (used in media queries).
    */
-  void MediaFeatureValuesChanged(const mozilla::MediaFeatureChange& aChange) {
-    if (mShell) {
-      mShell->EnsureStyleFlush();
-    }
-
-    if (!mPendingMediaFeatureValuesChange) {
-      mPendingMediaFeatureValuesChange.emplace(aChange);
-      return;
-    }
-
-    *mPendingMediaFeatureValuesChange |= aChange;
-  }
+  void MediaFeatureValuesChanged(const mozilla::MediaFeatureChange& aChange);
 
   void FlushPendingMediaFeatureValuesChanged();
 
@@ -491,6 +478,10 @@ class nsPresContext : public nsISupports,
 
  protected:
   void UpdateEffectiveTextZoom();
+
+#ifdef DEBUG
+  void ValidatePresShellAndDocumentReleation() const;
+#endif  // #ifdef DEBUG
 
  public:
   /**

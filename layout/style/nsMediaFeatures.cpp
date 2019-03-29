@@ -18,6 +18,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
 #include "mozilla/StyleSheet.h"

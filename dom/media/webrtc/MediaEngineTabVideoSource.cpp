@@ -18,7 +18,6 @@
 #include "nsPresContext.h"
 #include "gfxContext.h"
 #include "gfx2DGlue.h"
-#include "AllocationHandle.h"
 #include "ImageContainer.h"
 #include "Layers.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -138,7 +137,7 @@ nsresult MediaEngineTabVideoSource::Allocate(
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-    AllocationHandle** aOutHandle, const char** aOutBadConstraint) {
+    const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
 
   // windowId is not a proper constraint, so just read it.
@@ -147,20 +146,16 @@ nsresult MediaEngineTabVideoSource::Allocate(
   mWindowId = aConstraints.mBrowserWindow.WasPassed()
                   ? aConstraints.mBrowserWindow.Value()
                   : -1;
-  *aOutHandle = nullptr;
   mState = kAllocated;
 
-  return Reconfigure(nullptr, aConstraints, aPrefs, aDeviceId,
-                     aOutBadConstraint);
+  return Reconfigure(aConstraints, aPrefs, aDeviceId, aOutBadConstraint);
 }
 
 nsresult MediaEngineTabVideoSource::Reconfigure(
-    const RefPtr<AllocationHandle>& aHandle,
     const dom::MediaTrackConstraints& aConstraints,
     const mozilla::MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
     const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!aHandle);
   MOZ_ASSERT(mState != kReleased);
 
   // scrollWithPage is not proper a constraint, so just read it.
@@ -214,10 +209,8 @@ nsresult MediaEngineTabVideoSource::Reconfigure(
   return NS_OK;
 }
 
-nsresult MediaEngineTabVideoSource::Deallocate(
-    const RefPtr<const AllocationHandle>& aHandle) {
+nsresult MediaEngineTabVideoSource::Deallocate() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!aHandle);
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
 
   if (mStream && IsTrackIDExplicit(mTrackID)) {
@@ -231,7 +224,6 @@ nsresult MediaEngineTabVideoSource::Deallocate(
 }
 
 void MediaEngineTabVideoSource::SetTrack(
-    const RefPtr<const AllocationHandle>& aHandle,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const mozilla::PrincipalHandle& aPrincipal) {
   AssertIsOnOwningThread();
@@ -247,8 +239,7 @@ void MediaEngineTabVideoSource::SetTrack(
   mStream->AddTrack(mTrackID, new VideoSegment());
 }
 
-nsresult MediaEngineTabVideoSource::Start(
-    const RefPtr<const AllocationHandle>& aHandle) {
+nsresult MediaEngineTabVideoSource::Start() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == kAllocated);
 
@@ -263,12 +254,6 @@ nsresult MediaEngineTabVideoSource::Start(
 
   return NS_OK;
 }
-
-void MediaEngineTabVideoSource::Pull(
-    const RefPtr<const AllocationHandle>& aHandle,
-    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-    StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
-    const PrincipalHandle& aPrincipalHandle) {}
 
 void MediaEngineTabVideoSource::Draw() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -392,13 +377,11 @@ void MediaEngineTabVideoSource::Draw() {
   mStreamMain->AppendToTrack(mTrackIDMain, &segment);
 }
 
-nsresult MediaEngineTabVideoSource::FocusOnSelectedSource(
-    const RefPtr<const AllocationHandle>& aHandle) {
+nsresult MediaEngineTabVideoSource::FocusOnSelectedSource() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult MediaEngineTabVideoSource::Stop(
-    const RefPtr<const AllocationHandle>& aHandle) {
+nsresult MediaEngineTabVideoSource::Stop() {
   AssertIsOnOwningThread();
 
   if (mState == kStopped || mState == kAllocated) {

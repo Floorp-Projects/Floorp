@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIDocShell.h"

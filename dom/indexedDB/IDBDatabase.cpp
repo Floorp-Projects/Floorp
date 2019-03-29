@@ -150,7 +150,7 @@ class IDBDatabase::Observer final : public nsIObserver {
 
 IDBDatabase::IDBDatabase(IDBOpenDBRequest* aRequest, IDBFactory* aFactory,
                          BackgroundDatabaseChild* aActor, DatabaseSpec* aSpec)
-    : IDBWrapperCache(aRequest),
+    : DOMEventTargetHelper(aRequest),
       mFactory(aFactory),
       mSpec(aSpec),
       mBackgroundActor(aActor),
@@ -184,10 +184,10 @@ already_AddRefed<IDBDatabase> IDBDatabase::Create(
 
   RefPtr<IDBDatabase> db = new IDBDatabase(aRequest, aFactory, aActor, aSpec);
 
-  db->SetScriptOwner(aRequest->GetScriptOwner());
-
   if (NS_IsMainThread()) {
-    if (nsPIDOMWindowInner* window = aFactory->GetParentObject()) {
+    nsCOMPtr<nsPIDOMWindowInner> window =
+        do_QueryInterface(aFactory->GetParentObject());
+    if (window) {
       uint64_t windowId = window->WindowID();
 
       RefPtr<Observer> observer = new Observer(db, windowId);
@@ -316,10 +316,6 @@ void IDBDatabase::RefreshSpec(bool aMayDelete) {
     transaction->AssertIsOnOwningThread();
     transaction->RefreshSpec(aMayDelete);
   }
-}
-
-nsPIDOMWindowInner* IDBDatabase::GetParentObject() const {
-  return mFactory->GetParentObject();
 }
 
 const nsString& IDBDatabase::Name() const {
@@ -1060,20 +1056,22 @@ void IDBDatabase::LogWarning(const char* aMessageName,
       mFactory->InnerWindowID());
 }
 
-NS_IMPL_ADDREF_INHERITED(IDBDatabase, IDBWrapperCache)
-NS_IMPL_RELEASE_INHERITED(IDBDatabase, IDBWrapperCache)
+NS_IMPL_ADDREF_INHERITED(IDBDatabase, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(IDBDatabase, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBDatabase)
-NS_INTERFACE_MAP_END_INHERITING(IDBWrapperCache)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBDatabase)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBDatabase, IDBWrapperCache)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBDatabase,
+                                                  DOMEventTargetHelper)
   tmp->AssertIsOnOwningThread();
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFactory)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBDatabase, IDBWrapperCache)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBDatabase,
+                                                DOMEventTargetHelper)
   tmp->AssertIsOnOwningThread();
 
   // Don't unlink mFactory!
@@ -1085,7 +1083,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 void IDBDatabase::DisconnectFromOwner() {
   InvalidateInternal();
-  IDBWrapperCache::DisconnectFromOwner();
+  DOMEventTargetHelper::DisconnectFromOwner();
 }
 
 void IDBDatabase::LastRelease() {

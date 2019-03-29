@@ -37,14 +37,11 @@ bool MediaEngineSource::IsVideo(MediaSourceEnum aSource) {
   }
 }
 
-bool MediaEngineSource::RequiresSharing() const { return false; }
-
 bool MediaEngineSource::IsFake() const { return false; }
 
 bool MediaEngineSource::GetScary() const { return false; }
 
-nsresult MediaEngineSource::FocusOnSelectedSource(
-    const RefPtr<const AllocationHandle>& aHandle) {
+nsresult MediaEngineSource::FocusOnSelectedSource() {
   return NS_ERROR_NOT_AVAILABLE;
 }
 

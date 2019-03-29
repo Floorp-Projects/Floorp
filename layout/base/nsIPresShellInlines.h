@@ -7,12 +7,13 @@
 #ifndef nsIPresShellInlines_h
 #define nsIPresShellInlines_h
 
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
 
 void nsIPresShell::SetNeedLayoutFlush() {
   mNeedLayoutFlush = true;
   if (mozilla::dom::Document* doc = mDocument->GetDisplayDocument()) {
-    if (nsIPresShell* shell = doc->GetShell()) {
+    if (mozilla::PresShell* shell = doc->GetPresShell()) {
       shell->mNeedLayoutFlush = true;
     }
   }
@@ -27,8 +28,8 @@ void nsIPresShell::SetNeedLayoutFlush() {
 void nsIPresShell::SetNeedStyleFlush() {
   mNeedStyleFlush = true;
   if (mozilla::dom::Document* doc = mDocument->GetDisplayDocument()) {
-    if (nsIPresShell* shell = doc->GetShell()) {
-      shell->mNeedStyleFlush = true;
+    if (mozilla::PresShell* presShell = doc->GetPresShell()) {
+      presShell->mNeedStyleFlush = true;
     }
   }
 
@@ -47,10 +48,22 @@ void nsIPresShell::EnsureStyleFlush() {
 void nsIPresShell::SetNeedThrottledAnimationFlush() {
   mNeedThrottledAnimationFlush = true;
   if (mozilla::dom::Document* doc = mDocument->GetDisplayDocument()) {
-    if (nsIPresShell* shell = doc->GetShell()) {
-      shell->mNeedThrottledAnimationFlush = true;
+    if (mozilla::PresShell* presShell = doc->GetPresShell()) {
+      presShell->mNeedThrottledAnimationFlush = true;
     }
   }
 }
+
+namespace mozilla {
+
+/* static */
+inline void PresShell::EventHandler::OnPresShellDestroy(Document* aDocument) {
+  if (sLastKeyDownEventTargetElement &&
+      sLastKeyDownEventTargetElement->OwnerDoc() == aDocument) {
+    sLastKeyDownEventTargetElement = nullptr;
+  }
+}
+
+}  // namespace mozilla
 
 #endif  // nsIPresShellInlines_h

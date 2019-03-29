@@ -113,6 +113,25 @@ Test intersection with preset containing multiple queries
       "version": 1
   }
   
+  $ ./mach try $testargs --preset foo -xq "'test"
+  Commit message:
+  Fuzzy query='test&query='opt&query='test
+  
+  Pushed via `mach try fuzzy`
+  Calculated try_task_config.json:
+  {
+      "tasks": [
+          "test/foo-debug",
+          "test/foo-opt"
+      ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          }
+      },
+      "version": 1
+  }
+  
 
 Test exact match
 

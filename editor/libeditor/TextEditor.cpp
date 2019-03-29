@@ -321,7 +321,8 @@ nsresult TextEditor::InitRules() {
     // instantiate the rules for this text editor
     mRules = new TextEditRules();
   }
-  return mRules->Init(this);
+  RefPtr<TextEditRules> textEditRules(mRules);
+  return textEditRules->Init(this);
 }
 
 nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
@@ -1595,12 +1596,6 @@ TextEditor::SetWrapWidth(int32_t aWrapColumn) {
 
   return rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleValue,
                               true);
-}
-
-NS_IMETHODIMP
-TextEditor::SetWrapColumn(int32_t aWrapColumn) {
-  mWrapColumn = aWrapColumn;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
