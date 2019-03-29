@@ -10766,7 +10766,6 @@ nsContainerFrame* nsCSSFrameConstructor::BeginBuildingColumns(
     nsContainerFrame* columnSetFrame = NS_NewColumnSetFrame(
         mPresShell, aComputedStyle, nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
     InitAndRestoreFrame(aState, aContent, aParentFrame, columnSetFrame);
-    SetInitialSingleChild(columnSetFrame, aColumnContent);
 
     RefPtr<ComputedStyle> anonBlockStyle =
         mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
@@ -10774,6 +10773,7 @@ nsContainerFrame* nsCSSFrameConstructor::BeginBuildingColumns(
     aColumnContent->SetComputedStyleWithoutNotification(anonBlockStyle);
     InitAndRestoreFrame(aState, aContent, columnSetFrame, aColumnContent);
 
+    SetInitialSingleChild(columnSetFrame, aColumnContent);
     return columnSetFrame;
   }
 
