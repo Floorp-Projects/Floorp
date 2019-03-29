@@ -32,7 +32,7 @@ android {
         testApplicationId 'org.mozilla.roboexample.test'
         testInstrumentationRunner 'org.mozilla.gecko.FennecInstrumentationTestRunner'
         // Used by Robolectric based tests; see TestRunner.
-        buildConfigField 'String', 'BUILD_DIR', "\"${project.buildDir}\""
+        buildConfigField 'String', 'BUILD_DIR', "\"${project.buildDir}\"".tr(File.separator, "/")
 
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
