@@ -70,7 +70,9 @@ function tabWithRequest(task, permission) {
 }
 
 add_task(async function setup() {
+  Services.prefs.setBoolPref("dom.webnotifications.requireuserinteraction", false);
   SimpleTest.registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("dom.webnotifications.requireuserinteraction");
     Services.perms.remove(ORIGIN_URI, PERMISSION_NAME);
   });
 });
