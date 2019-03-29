@@ -30,6 +30,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"  // For PseudoStyleType
 #include "nsIScriptError.h"
+#include "nsPresContextInlines.h"
 #include "nsTArray.h"
 #include <algorithm>  // For std::stable_sort, std::min
 

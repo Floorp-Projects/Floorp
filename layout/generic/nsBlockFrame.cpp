@@ -32,6 +32,7 @@
 #include "nsStyleConsts.h"
 #include "nsFrameManager.h"
 #include "nsPresContext.h"
+#include "nsPresContextInlines.h"
 #include "nsIPresShell.h"
 #include "nsHTMLParts.h"
 #include "nsGkAtoms.h"

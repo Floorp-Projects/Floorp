@@ -10,6 +10,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Logging.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/PresShell.h"
 
 #include "nsDocLoader.h"
 #include "nsNetUtil.h"
