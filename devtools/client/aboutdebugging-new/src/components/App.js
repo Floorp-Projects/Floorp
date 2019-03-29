@@ -130,7 +130,17 @@ class App extends PureComponent {
       // in this case maybe we'd like to do something else than a redirect.
       // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1509897
       Route({
-        render: () => Redirect({ to: "/setup"}),
+        render: routeProps => {
+          const { pathname } = routeProps.location;
+          // The old about:debugging supported the following routes:
+          // about:debugging#workers, about:debugging#addons and about:debugging#tabs.
+          // Such links can still be found in external documentation pages.
+          // We redirect to This Firefox rather than the Setup Page here.
+          if (pathname === "/workers" || pathname === "/addons" || pathname === "/tabs") {
+            return Redirect({ to: `/runtime/${RUNTIMES.THIS_FIREFOX}`});
+          }
+          return Redirect({ to: "/setup"});
+        },
       })
     );
   }

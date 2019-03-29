@@ -8,6 +8,7 @@
 
 #include "mozilla/ContentIterator.h"
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
@@ -21,7 +22,6 @@
 #include "nsFocusManager.h"
 #include "nsFontMetrics.h"
 #include "nsFrameSelection.h"
-#include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIObjectFrame.h"
 #include "nsLayoutUtils.h"
@@ -287,7 +287,7 @@ nsresult ContentEventHandler::InitRootContent(Selection* aNormalSelection) {
   NS_ASSERTION(startNode->GetComposedDoc() == endNode->GetComposedDoc(),
                "firstNormalSelectionRange crosses the document boundary");
 
-  mRootContent = startNode->GetSelectionRootContent(mDocument->GetShell());
+  mRootContent = startNode->GetSelectionRootContent(mDocument->GetPresShell());
   if (NS_WARN_IF(!mRootContent)) {
     return NS_ERROR_FAILURE;
   }
@@ -309,8 +309,8 @@ nsresult ContentEventHandler::InitCommon(SelectionType aSelectionType,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISelectionController> selectionController;
-  if (nsIPresShell* shell = mDocument->GetShell()) {
-    selectionController = shell->GetSelectionControllerForFocusedContent();
+  if (PresShell* presShell = mDocument->GetPresShell()) {
+    selectionController = presShell->GetSelectionControllerForFocusedContent();
   }
   if (NS_WARN_IF(!selectionController)) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -965,8 +965,8 @@ nsresult ContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
 
   NS_ASSERTION(*aXPOffset <= aContent->TextLength(), "offset is out of range.");
 
-  MOZ_DIAGNOSTIC_ASSERT(mDocument->GetShell());
-  RefPtr<nsFrameSelection> fs = mDocument->GetShell()->FrameSelection();
+  MOZ_DIAGNOSTIC_ASSERT(mDocument->GetPresShell());
+  RefPtr<nsFrameSelection> fs = mDocument->GetPresShell()->FrameSelection();
   int32_t offsetInFrame;
   CaretAssociationHint hint =
       aForward ? CARET_ASSOCIATE_BEFORE : CARET_ASSOCIATE_AFTER;
@@ -2511,9 +2511,9 @@ nsresult ContentEventHandler::OnQueryCharacterAtPoint(
   aEvent->mReply.mOffset = aEvent->mReply.mTentativeCaretOffset =
       WidgetQueryContentEvent::NOT_FOUND;
 
-  nsIPresShell* shell = mDocument->GetShell();
-  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
-  nsIFrame* rootFrame = shell->GetRootFrame();
+  PresShell* presShell = mDocument->GetPresShell();
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+  nsIFrame* rootFrame = presShell->GetRootFrame();
   NS_ENSURE_TRUE(rootFrame, NS_ERROR_FAILURE);
   nsIWidget* rootWidget = rootFrame->GetNearestWidget();
   NS_ENSURE_TRUE(rootWidget, NS_ERROR_FAILURE);
@@ -2623,9 +2623,9 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
 
   NS_ENSURE_TRUE(aEvent->mWidget, NS_ERROR_FAILURE);
 
-  nsIPresShell* shell = mDocument->GetShell();
-  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
-  nsIFrame* docFrame = shell->GetRootFrame();
+  PresShell* presShell = mDocument->GetPresShell();
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+  nsIFrame* docFrame = presShell->GetRootFrame();
   NS_ENSURE_TRUE(docFrame, NS_ERROR_FAILURE);
 
   LayoutDeviceIntPoint eventLoc =

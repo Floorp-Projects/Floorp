@@ -7,11 +7,11 @@
 #define nsCoreUtils_h_
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Element.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIContent.h"
-#include "mozilla/dom/Document.h"  // for GetShell()
-#include "nsIPresShell.h"
+#include "mozilla/dom/Document.h"  // for GetPresShell()
 
 #include "nsPoint.h"
 #include "nsTArray.h"
@@ -213,7 +213,7 @@ class nsCoreUtils {
    * Return presShell for the document containing the given DOM node.
    */
   static nsIPresShell *GetPresShellFor(nsINode *aNode) {
-    return aNode->OwnerDoc()->GetShell();
+    return aNode->OwnerDoc()->GetPresShell();
   }
 
   /**

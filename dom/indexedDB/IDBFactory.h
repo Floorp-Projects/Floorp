@@ -18,6 +18,7 @@
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
+class nsIGlobalObject;
 class nsIEventTarget;
 class nsIPrincipal;
 class nsPIDOMWindowInner;
@@ -58,10 +59,7 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
 
   nsAutoPtr<PrincipalInfo> mPrincipalInfo;
 
-  // If this factory lives on a window then mWindow must be non-null. Otherwise
-  // mOwningObject must be non-null.
-  nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  JS::Heap<JSObject*> mOwningObject;
+  nsCOMPtr<nsIGlobalObject> mGlobal;
 
   // This will only be set if the factory belongs to a window in a child
   // process.
@@ -84,12 +82,10 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
   static nsresult CreateForWindow(nsPIDOMWindowInner* aWindow,
                                   IDBFactory** aFactory);
 
-  static nsresult CreateForMainThreadJS(JSContext* aCx,
-                                        JS::Handle<JSObject*> aOwningObject,
+  static nsresult CreateForMainThreadJS(nsIGlobalObject* aGlobal,
                                         IDBFactory** aFactory);
 
-  static nsresult CreateForWorker(JSContext* aCx,
-                                  JS::Handle<JSObject*> aOwningObject,
+  static nsresult CreateForWorker(nsIGlobalObject* aGlobal,
                                   const PrincipalInfo& aPrincipalInfo,
                                   uint64_t aInnerWindowID,
                                   IDBFactory** aFactory);
@@ -127,7 +123,7 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
 
   void IncrementParentLoggingRequestSerialNumber();
 
-  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
   TabChild* GetTabChild() const { return mTabChild; }
 
@@ -178,7 +174,7 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
       const IDBOpenDBOptions& aOptions, SystemCallerGuarantee,
       ErrorResult& aRv);
 
-  void DisconnectFromWindow(nsPIDOMWindowInner* aOldWindow);
+  void DisconnectFromGlobal(nsIGlobalObject* aOldGlobal);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBFactory)
@@ -192,14 +188,13 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
   ~IDBFactory();
 
   static nsresult CreateForMainThreadJSInternal(
-      JSContext* aCx, JS::Handle<JSObject*> aOwningObject,
-      nsAutoPtr<PrincipalInfo>& aPrincipalInfo, IDBFactory** aFactory);
+      nsIGlobalObject* aGlobal, nsAutoPtr<PrincipalInfo>& aPrincipalInfo,
+      IDBFactory** aFactory);
 
-  static nsresult CreateForJSInternal(JSContext* aCx,
-                                      JS::Handle<JSObject*> aOwningObject,
-                                      nsAutoPtr<PrincipalInfo>& aPrincipalInfo,
-                                      uint64_t aInnerWindowID,
-                                      IDBFactory** aFactory);
+  static nsresult CreateInternal(nsIGlobalObject* aGlobal,
+                                 nsAutoPtr<PrincipalInfo>& aPrincipalInfo,
+                                 uint64_t aInnerWindowID,
+                                 IDBFactory** aFactory);
 
   static nsresult AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
                                            nsIPrincipal** aPrincipal);

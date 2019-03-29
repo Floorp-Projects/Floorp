@@ -1,0 +1,10 @@
+[
+  {
+    "size": 2198557,
+    "visibility": "public",
+    "digest": "43abbaaaa9074116d9999f056aded52a6858a7122abde8e87d12cce91eab40c4b0f3b1bbc7ef23d1a7c127d0ed2920d1e5842b59bd51f3fe63eb0e117a6692ab",
+    "algorithm": "sha512",
+    "filename": "mitmproxy404-tp6-ebay.zip",
+    "unpack": true
+  }
+]

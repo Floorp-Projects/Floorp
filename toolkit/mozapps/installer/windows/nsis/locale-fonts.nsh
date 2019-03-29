@@ -63,13 +63,7 @@
 !endif
 
 ; Bengali
-!if "${AB_CD}" == "bn-BD"
-!define FONT_NAME1 "Nirmala UI"
-!define FONT_FILE1 "Nirmala.ttf"
-!endif
-
-; Bengali - India
-!if "${AB_CD}" == "bn-IN"
+!if "${AB_CD}" == "bn"
 !define FONT_NAME1 "Nirmala UI"
 !define FONT_FILE1 "Nirmala.ttf"
 !endif

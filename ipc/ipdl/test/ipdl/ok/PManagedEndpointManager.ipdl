@@ -1,0 +1,14 @@
+include protocol PManagedEndpointDecl;
+
+namespace mozilla {
+
+protocol PManagedEndpointManager {
+  manages PManagedEndpointDecl;
+
+child:
+  async Message(ManagedEndpoint<PManagedEndpointDeclParent> aEndpointParent,
+                ManagedEndpoint<PManagedEndpointDeclChild> aEndpointChild);
+};
+
+}
+

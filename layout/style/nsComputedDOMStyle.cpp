@@ -12,6 +12,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/StaticPtr.h"
 
 #include "nsError.h"
@@ -99,17 +100,17 @@ already_AddRefed<CSSValue> GetBackgroundList(
 // Whether aDocument needs to restyle for aElement
 static bool DocumentNeedsRestyle(const Document* aDocument, Element* aElement,
                                  nsAtom* aPseudo) {
-  nsIPresShell* shell = aDocument->GetShell();
-  if (!shell) {
+  PresShell* presShell = aDocument->GetPresShell();
+  if (!presShell) {
     return true;
   }
 
-  nsPresContext* presContext = shell->GetPresContext();
+  nsPresContext* presContext = presShell->GetPresContext();
   MOZ_ASSERT(presContext);
 
   // Unfortunately we don't know if the sheet change affects mElement or not, so
   // just assume it will and that we need to flush normally.
-  ServoStyleSet* styleSet = shell->StyleSet();
+  ServoStyleSet* styleSet = presShell->StyleSet();
   if (styleSet->StyleSheetsHaveChanged()) {
     return true;
   }
@@ -570,8 +571,9 @@ nsComputedDOMStyle::GetUnanimatedComputedStyleNoFlush(Element* aElement,
   }
 
   PseudoStyleType pseudoType = GetPseudoType(aPseudo);
-  nsIPresShell* shell = aElement->OwnerDoc()->GetShell();
-  MOZ_ASSERT(shell, "How in the world did we get a style a few lines above?");
+  PresShell* presShell = aElement->OwnerDoc()->GetPresShell();
+  MOZ_ASSERT(presShell,
+             "How in the world did we get a style a few lines above?");
 
   Element* elementOrPseudoElement =
       EffectCompositor::GetElementToRestyle(aElement, pseudoType);
@@ -579,8 +581,8 @@ nsComputedDOMStyle::GetUnanimatedComputedStyleNoFlush(Element* aElement,
     return nullptr;
   }
 
-  return shell->StyleSet()->GetBaseContextForElement(elementOrPseudoElement,
-                                                     style);
+  return presShell->StyleSet()->GetBaseContextForElement(elementOrPseudoElement,
+                                                         style);
 }
 
 nsMargin nsComputedDOMStyle::GetAdjustedValuesForBoxSizing() {
@@ -827,7 +829,7 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
     }
   }
 
-  mPresShell = document->GetShell();
+  mPresShell = document->GetPresShell();
   if (!mPresShell || !mPresShell->GetPresContext()) {
     ClearComputedStyle();
     return;

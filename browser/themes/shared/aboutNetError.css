@@ -9,7 +9,14 @@
 }
 
 body.certerror {
+  width: 100%;
   justify-content: normal;
+}
+
+body.caution {
+  border-style: solid;
+  border-color: #ffe900;
+  border-width: 16px;
 }
 
 body.captiveportal .title {
@@ -24,6 +31,11 @@ body.blocked .title {
   background-image: url("chrome://global/skin/icons/blocked.svg");
 }
 
+body.clockSkewError .title {
+  background-image: none;
+  background-repeat: no-repeat;
+}
+
 #errorContainer {
   display: none;
 }
@@ -33,6 +45,10 @@ body.blocked .title {
  * the button disabled as the initial state. */
 button:disabled {
   cursor: pointer;
+}
+
+#errorWhatToDoTitle {
+  margin-top: 2em;
 }
 
 #prefChangeContainer {
@@ -47,15 +63,19 @@ button:disabled {
   display: none;
 }
 
+#advancedPanelButtonContainer {
+  background-color: var(--exception-button-container-background);
+  display: flex;
+  justify-content: end;
+  padding: 5px;
+  margin-top: 2em;
+}
+
 body:not(.neterror) #certErrorAndCaptivePortalButtonContainer {
   display: flex;
 }
 
 body:not(.neterror) #netErrorButtonContainer {
-  display: none;
-}
-
-#advancedPanelErrorTryAgain {
   display: none;
 }
 
@@ -75,6 +95,14 @@ body:not(.captiveportal) #openPortalLoginPageButton {
   display: none;
 }
 
+body:not(.clockSkewError) #errorTryAgain {
+  display: none;
+}
+
+body:not(.clockSkewError) #advancedPanelErrorTryAgain {
+  display: none;
+}
+
 #openPortalLoginPageButton {
   margin-inline-start: 0;
 }
@@ -85,10 +113,10 @@ body:not(.neterror) #advancedButton {
 
 #certificateErrorReporting {
   display: none;
+  padding-bottom: 10px;
 }
 
 #advancedPanelContainer {
-  position: absolute;
   width: 100%;
   left: 0;
 }
@@ -113,12 +141,16 @@ body:not(.neterror) #advancedButton {
   margin-top: 1em;
 }
 
-span#hostname {
+.mitm-name,
+#hostname {
   font-weight: bold;
 }
 
 #automaticallyReportInFuture {
   cursor: pointer;
+  /* Prevent the checkbox from looking super
+   * squeezed on small viewports */
+  flex-shrink: 0;
 }
 
 #errorCode:not([href]) {
@@ -131,8 +163,12 @@ span#hostname {
   white-space: nowrap;
 }
 
+#viewCertificate {
+  margin: 0 3em;
+}
+
 #badCertTechnicalInfo {
-  margin: 3em;
+  margin: 3em 3em 1em;
   overflow: auto;
   white-space: pre-wrap;
 }
@@ -145,7 +181,6 @@ span#hostname {
   display: none;
   background-color: var(--in-content-box-background-hover) !important;
   border-top: 1px solid var(--in-content-border-color);
-  position: absolute;
   width: 100%;
   padding: 1em 17.5%;
   box-sizing: border-box;
@@ -168,7 +203,6 @@ span#hostname {
   background-color: var(--exception-button-container-background);
   display: flex;
   justify-content: end;
-  padding: 10px;
 }
 
 .exceptionDialogButtonContainer[hidden] {
@@ -191,6 +225,33 @@ span#hostname {
   background-image: url("chrome://browser/content/illustrations/error-malformed-url.svg");
 }
 
+.clockSkewError #errorPageContainer {
+  background-image: url("chrome://browser/content/illustrations/blue-berror.svg");
+  background-size: 18.5em;
+}
+
+.clockSkewError #returnButton {
+  display: none;
+}
+
+.clockSkewError #advancedButton {
+  display: none;
+}
+
+.clockSkewError #advancedPanelErrorTryAgain,
+.clockSkewError #errorTryAgain {
+  display: block;
+  margin-top: 0.3em;
+}
+
+.clockSkewError #exceptionDialogButton {
+  display: none;
+}
+
+.clockSkewError #advancedPanelReturnButton {
+  display: none;
+}
+
 .malformedURI #errorTryAgain {
   display: none;
 }
@@ -201,4 +262,29 @@ span#hostname {
 
 #wrongSystemTimeWithoutReferencePanel {
   display: none;
+}
+
+@media only screen and (max-width: 959px) {
+  #certificateErrorText {
+    /* The encoded certificate chain looks better when we're not
+     * wrapping words on big screens, but at some point we need
+     * to wrap to avoid overflowing */
+    word-wrap: anywhere;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  #badCertTechnicalInfo {
+    margin: 10px 10px 5px;
+  }
+
+  #viewCertificate {
+    margin: 0 10px;
+  }
+
+  #errorCode[href] {
+    /* Break the error code to avoid long codes overflowing the screen */
+    white-space: normal;
+    word-wrap: anywhere;
+  }
 }

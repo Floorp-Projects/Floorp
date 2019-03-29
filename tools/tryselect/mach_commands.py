@@ -69,16 +69,14 @@ class TrySelect(MachCommandBase):
         push.MAX_HISTORY = self._mach_context.settings['try']['maxhistory']
         self.subcommand = self._mach_context.handler.subcommand
         self.parser = self._mach_context.handler.parser
+        self._presets = None
 
-    def handle_presets(self, preset_action, save, preset, **kwargs):
-        """Handle preset related arguments.
+    @property
+    def presets(self):
+        if self._presets:
+            return self._presets
 
-        This logic lives here so that the underlying selectors don't need
-        special preset handling. They can all save and load presets the same
-        way.
-        """
-        from tryselect.preset import MergedHandler, migrate_old_presets
-        from tryselect.util.dicttools import merge
+        from tryselect.preset import MergedHandler
 
         # Create our handler using both local and in-tree presets. The first
         # path in this list will be treated as the 'user' file for the purposes
@@ -92,14 +90,26 @@ class TrySelect(MachCommandBase):
                 os.path.join(self.topsrcdir, 'tools', 'tryselect', 'try_presets.yml'),
             ]
 
-        presets = MergedHandler(*preset_paths)
-        user_presets = presets.handlers[0]
+        self._presets = MergedHandler(*preset_paths)
+        return self._presets
+
+    def handle_presets(self, preset_action, save, preset, **kwargs):
+        """Handle preset related arguments.
+
+        This logic lives here so that the underlying selectors don't need
+        special preset handling. They can all save and load presets the same
+        way.
+        """
+        from tryselect.preset import migrate_old_presets
+        from tryselect.util.dicttools import merge
+
+        user_presets = self.presets.handlers[0]
 
         # TODO: Remove after Jan 1, 2020.
         migrate_old_presets(user_presets)
 
         if preset_action == 'list':
-            presets.list()
+            self.presets.list()
             sys.exit()
 
         if preset_action == 'edit':
@@ -117,11 +127,11 @@ class TrySelect(MachCommandBase):
             sys.exit()
 
         if preset:
-            if preset not in presets:
+            if preset not in self.presets:
                 self.parser.error("preset '{}' does not exist".format(preset))
 
             name = preset
-            preset = presets[name]
+            preset = self.presets[name]
             selector = preset.pop('selector')
             preset.pop('description', None)  # description isn't used by any selectors
 
@@ -187,8 +197,12 @@ class TrySelect(MachCommandBase):
         """
         # We do special handling of presets here so that `./mach try --preset foo`
         # works no matter what subcommand 'foo' was saved with.
-        if kwargs['preset']:
-            kwargs = self.handle_presets(**kwargs)
+        preset = kwargs['preset']
+        if preset:
+            if preset not in self.presets:
+                self.parser.error("preset '{}' does not exist".format(preset))
+
+            self.subcommand = self.presets[preset]['selector']
 
         sub = self.subcommand or self._mach_context.settings['try']['default']
         return self._mach_context.commands.dispatch(

@@ -5,11 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AnonymousContent.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/AnonymousContentBinding.h"
 #include "nsComputedDOMStyle.h"
 #include "nsCycleCollectionParticipant.h"
-#include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
 #include "nsStyledElement.h"
 #include "HTMLCanvasElement.h"
@@ -185,8 +186,7 @@ void AnonymousContent::GetComputedStylePropertyValue(
     return;
   }
 
-  nsIPresShell* shell = element->OwnerDoc()->GetShell();
-  if (!shell) {
+  if (!element->OwnerDoc()->GetPresShell()) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return;
   }

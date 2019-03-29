@@ -89,7 +89,7 @@ class GenerateRTCCertificateTask : public GenerateAsymmetricKeyTask {
       return NS_ERROR_DOM_UNKNOWN_ERR;
     }
 
-    UniqueSECKEYPublicKey publicKey(mKeyPair->mPublicKey.get()->GetPublicKey());
+    UniqueSECKEYPublicKey publicKey(mKeyPair->mPublicKey->GetPublicKey());
     UniqueCERTSubjectPublicKeyInfo spki(
         SECKEY_CreateSubjectPublicKeyInfo(publicKey.get()));
     if (!spki) {
@@ -154,8 +154,7 @@ class GenerateRTCCertificateTask : public GenerateAsymmetricKeyTask {
       return NS_ERROR_DOM_UNKNOWN_ERR;
     }
 
-    UniqueSECKEYPrivateKey privateKey(
-        mKeyPair->mPrivateKey.get()->GetPrivateKey());
+    UniqueSECKEYPrivateKey privateKey(mKeyPair->mPrivateKey->GetPrivateKey());
     rv = SEC_DerSignData(arena, signedCert, innerDER.data, innerDER.len,
                          privateKey.get(), mSignatureAlg);
     if (rv != SECSuccess) {
@@ -173,7 +172,7 @@ class GenerateRTCCertificateTask : public GenerateAsymmetricKeyTask {
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
 
-      KeyAlgorithmProxy& alg = mKeyPair->mPublicKey.get()->Algorithm();
+      KeyAlgorithmProxy& alg = mKeyPair->mPublicKey->Algorithm();
       if (alg.mType != KeyAlgorithmProxy::RSA ||
           !alg.mRsa.mHash.mName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -210,7 +209,7 @@ class GenerateRTCCertificateTask : public GenerateAsymmetricKeyTask {
   virtual void Resolve() override {
     // Make copies of the private key and certificate, otherwise, when this
     // object is deleted, the structures they reference will be deleted too.
-    UniqueSECKEYPrivateKey key = mKeyPair->mPrivateKey.get()->GetPrivateKey();
+    UniqueSECKEYPrivateKey key = mKeyPair->mPrivateKey->GetPrivateKey();
     CERTCertificate* cert = CERT_DupCertificate(mCertificate.get());
     RefPtr<RTCCertificate> result =
         new RTCCertificate(mResultPromise->GetParentObject(), key.release(),

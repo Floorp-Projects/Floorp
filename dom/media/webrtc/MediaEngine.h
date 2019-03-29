@@ -45,7 +45,6 @@ class MediaEngine : public DeviceChangeCallback {
                                 MediaSinkEnum,
                                 nsTArray<RefPtr<MediaDevice>>*) = 0;
 
-  virtual void ReleaseResourcesForWindow(uint64_t aWindowId) = 0;
   virtual void Shutdown() = 0;
 
   virtual void SetFakeDeviceChangeEvents() {}

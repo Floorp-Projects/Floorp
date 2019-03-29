@@ -72,14 +72,6 @@ interface nsIPlaintextEditor : nsISupports
     */
   attribute long wrapWidth;
 
-  /**
-   * Similar to the setter for wrapWidth, but just sets the editor
-   * internal state without actually changing the content being edited
-   * to wrap at that column.  This should only be used by callers who
-   * are sure that their content is already set up correctly.
-   */
-  void setWrapColumn(in long aWrapColumn);
-
   /** Get and set newline handling.
    *
    *  Values are the constants defined above.

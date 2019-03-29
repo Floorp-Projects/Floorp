@@ -28,7 +28,7 @@ class ConnectSteps extends PureComponent {
       {
         className: "connect-page__step-list",
       },
-      this.props.steps.map(step =>
+      ...this.props.steps.map(step =>
         Localized(
           {
             id: step.localizationId,

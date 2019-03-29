@@ -460,28 +460,6 @@ function promiseOnBookmarkItemAdded(aExpectedURI) {
 }
 
 async function loadBadCertPage(url) {
-  const EXCEPTION_DIALOG_URI = "chrome://pippki/content/exceptionDialog.xul";
-  let exceptionDialogResolved = new Promise(function(resolve) {
-    // When the certificate exception dialog has opened, click the button to add
-    // an exception.
-    let certExceptionDialogObserver = {
-      observe(aSubject, aTopic, aData) {
-        if (aTopic == "cert-exception-ui-ready") {
-          Services.obs.removeObserver(this, "cert-exception-ui-ready");
-          let certExceptionDialog = getCertExceptionDialog(EXCEPTION_DIALOG_URI);
-          ok(certExceptionDialog, "found exception dialog");
-          executeSoon(function() {
-            certExceptionDialog.documentElement.getButton("extra1").click();
-            resolve();
-          });
-        }
-      },
-    };
-
-    Services.obs.addObserver(certExceptionDialogObserver,
-                             "cert-exception-ui-ready");
-  });
-
   let loaded = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
   await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
   await loaded;
@@ -489,26 +467,7 @@ async function loadBadCertPage(url) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     content.document.getElementById("exceptionDialogButton").click();
   });
-  if (!Services.prefs.getBoolPref("browser.security.newcerterrorpage.enabled", false)) {
-    await exceptionDialogResolved;
-  }
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-}
-
-// Utility function to get a handle on the certificate exception dialog.
-// Modified from toolkit/components/passwordmgr/test/prompt_common.js
-function getCertExceptionDialog(aLocation) {
-  for (let {docShell} of Services.wm.getXULWindowEnumerator(null)) {
-    let containedDocShells = docShell.getDocShellEnumerator(
-                                      docShell.typeChrome,
-                                      docShell.ENUMERATE_FORWARDS);
-    for (let {domWindow} of containedDocShells) {
-      if (domWindow.location.href == aLocation) {
-        return domWindow.document;
-      }
-    }
-  }
-  return undefined;
 }
 
 /**

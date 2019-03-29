@@ -5,6 +5,9 @@
 add_task(async function test() {
   // This test relies on the form history being empty to start with delete
   // all the items first.
+  // The TabContextMenu initializes its strings only on a focus or mouseover event.
+  // Calls focus event on the TabContextMenu early in the test.
+  gBrowser.selectedTab.focus();
   await new Promise((resolve, reject) => {
     FormHistory.update({ op: "remove" },
                        { handleError(error) {
