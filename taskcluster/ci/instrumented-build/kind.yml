@@ -93,7 +93,7 @@ jobs:
             - android-gradle-dependencies
             - android-ndk-linux
             - android-sdk-linux
-            - linux64-clang-7-android-cross
+            - linux64-clang-android-cross
             - linux64-rust-android
             - linux64-rust-size
             - linux64-cbindgen
