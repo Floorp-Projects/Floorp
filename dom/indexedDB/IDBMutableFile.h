@@ -17,8 +17,6 @@
 #include "nsString.h"
 #include "nsTHashtable.h"
 
-class nsPIDOMWindowInner;
-
 namespace mozilla {
 
 class ErrorResult;
@@ -105,8 +103,6 @@ class IDBMutableFile final : public DOMEventTargetHelper {
   void AbortFileHandles();
 
   // WebIDL
-  nsPIDOMWindowInner* GetParentObject() const { return GetOwner(); }
-
   void GetName(nsString& aName) const { aName = mName; }
 
   void GetType(nsString& aType) const { aType = mType; }
