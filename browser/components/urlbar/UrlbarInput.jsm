@@ -537,7 +537,8 @@ class UrlbarInput {
     }
 
     if (!searchString) {
-      searchString = this.textValue;
+      searchString = (this.getAttribute("pageproxystate") == "valid") ?
+                     "" : this.textValue;
     } else if (!this.textValue.startsWith(searchString)) {
       throw new Error("The current value doesn't start with the search string");
     }

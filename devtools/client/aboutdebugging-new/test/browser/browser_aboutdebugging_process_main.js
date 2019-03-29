@@ -35,7 +35,7 @@ add_task(async function() {
   info("Check debug target item of the main process");
   const mainProcessItem = findDebugTargetByText(MAIN_PROCESS_NAME, document);
   ok(mainProcessItem, "Debug target item of the main process should display");
-  ok(mainProcessItem.textContent.includes("Main Process for the target runtime"),
+  ok(mainProcessItem.textContent.includes("Main Process for the target browser"),
      "Debug target item of the main process should contains the description");
 
   info("Inspect main process");

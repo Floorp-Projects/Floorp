@@ -74,7 +74,6 @@
 #include "nsIException.h"
 #include "nsIFactory.h"
 #include "nsIFile.h"
-#include "nsIHashable.h"
 #include "nsIINIParser.h"
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"

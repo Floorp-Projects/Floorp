@@ -31,11 +31,13 @@ class JavaCallbacksSupport
     }
   }
 
-  virtual void HandleOutput(java::Sample::Param aSample) = 0;
+  virtual void HandleOutput(java::Sample::Param aSample,
+                            java::SampleBuffer::Param aBuffer) = 0;
 
-  void OnOutput(jni::Object::Param aSample) {
+  void OnOutput(jni::Object::Param aSample, jni::Object::Param aBuffer) {
     if (!mCanceled) {
-      HandleOutput(java::Sample::Ref::From(aSample));
+      HandleOutput(java::Sample::Ref::From(aSample),
+                   java::SampleBuffer::Ref::From(aBuffer));
     }
   }
 

@@ -200,14 +200,16 @@ class WebConsole {
    *        The URL of the file.
    * @param integer sourceLine
    *        The line number which you want to place the caret.
+   * @param integer sourceColumn
+   *        The column number which you want to place the caret.
    */
-  viewSourceInDebugger(sourceURL, sourceLine) {
+  viewSourceInDebugger(sourceURL, sourceLine, sourceColumn) {
     const toolbox = gDevTools.getToolbox(this.target);
     if (!toolbox) {
-      this.viewSource(sourceURL, sourceLine);
+      this.viewSource(sourceURL, sourceLine, sourceColumn);
       return;
     }
-    toolbox.viewSourceInDebugger(sourceURL, sourceLine).then(() => {
+    toolbox.viewSourceInDebugger(sourceURL, sourceLine, sourceColumn).then(() => {
       this.ui.emit("source-in-debugger-opened");
     });
   }

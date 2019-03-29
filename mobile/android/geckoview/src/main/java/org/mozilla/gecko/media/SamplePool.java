@@ -11,14 +11,18 @@ import org.mozilla.gecko.mozglue.SharedMemory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 final class SamplePool {
     private static final class Impl {
         private final String mName;
-        private int mNextId = 0;
         private int mDefaultBufferSize = 4096;
         private final List<Sample> mRecycledSamples = new ArrayList<>();
         private final boolean mBufferless;
+
+        private int mNextBufferId = Sample.NO_BUFFER + 1;
+        private Map<Integer, SampleBuffer> mBuffers = new HashMap<>();
 
         private Impl(final String name, final boolean bufferless) {
             mName = name;
@@ -38,37 +42,56 @@ final class SamplePool {
             }
 
             if (mBufferless) {
-                return Sample.create();
+                return new Sample();
             } else {
-                return allocateSharedMemorySample(size);
+                return allocateSampleAndBuffer(size);
             }
         }
 
-        private Sample allocateSharedMemorySample(final int size) {
-            SharedMemory shm = null;
+        private Sample allocateSampleAndBuffer(final int size) {
+            final int id = mNextBufferId++;
             try {
-                shm = new SharedMemory(mNextId++, Math.max(size, mDefaultBufferSize));
+                final SharedMemory shm = new SharedMemory(id, Math.max(size, mDefaultBufferSize));
+                mBuffers.put((Integer)id, new SampleBuffer(shm));
+                final Sample s = new Sample();
+                s.bufferId = id;
+                return s;
             } catch (NoSuchMethodException | IOException e) {
+                mBuffers.remove(id);
                 throw new UnsupportedOperationException(e);
             }
+        }
 
-            return Sample.create(shm);
+        private synchronized SampleBuffer getBuffer(final int id) {
+            return mBuffers.get(id);
         }
 
         private synchronized void recycle(final Sample recycled) {
-            if (mBufferless || recycled.buffer.capacity() >= mDefaultBufferSize) {
+            if (mBufferless || isUsefulSample(recycled)) {
                 mRecycledSamples.add(recycled);
             } else {
-                recycled.dispose();
+                disposeSample(recycled);
             }
+        }
+
+        private boolean isUsefulSample(final Sample sample) {
+            return mBuffers.get(sample.bufferId).capacity() >= mDefaultBufferSize;
         }
 
         private synchronized void clear() {
             for (Sample s : mRecycledSamples) {
-                s.dispose();
+                disposeSample(s);
             }
 
             mRecycledSamples.clear();
+            mBuffers.clear();
+        }
+
+        private void disposeSample(final Sample sample) {
+            if (sample.bufferId != Sample.NO_BUFFER) {
+                mBuffers.remove(sample.bufferId);
+            }
+            sample.dispose();
         }
 
         @Override
@@ -118,5 +141,13 @@ final class SamplePool {
     /* package */ void reset() {
         mInputs.clear();
         mOutputs.clear();
+    }
+
+    /* package */ SampleBuffer getInputBuffer(final int id) {
+        return mInputs.getBuffer(id);
+    }
+
+    /* package */ SampleBuffer getOutputBuffer(final int id) {
+        return mOutputs.getBuffer(id);
     }
 }

@@ -1,10 +1,10 @@
 "use strict";
 
-const {ExtensionData} = ChromeUtils.import("resource://gre/modules/Extension.jsm");
-
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+
+const {ExtensionData} = ChromeUtils.import("resource://gre/modules/Extension.jsm");
 
 async function generateAddon(data) {
   let xpi = AddonTestUtils.createTempWebExtensionFile(data);

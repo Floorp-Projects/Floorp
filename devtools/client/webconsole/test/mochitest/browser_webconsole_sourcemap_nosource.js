@@ -41,7 +41,7 @@ add_task(async function() {
     return url.includes("nosuchfile");
   });
 
-  await testOpenInDebugger(hud, toolbox, "here");
+  await testOpenInDebugger(hud, toolbox, "here", true, false, false);
 
   info("Selecting the console again");
   await toolbox.selectTool("webconsole");

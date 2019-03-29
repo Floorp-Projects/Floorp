@@ -7,16 +7,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import logging
 import os
-import shutil
-import subprocess
-import zipfile
 import json
 
 from zipfile import ZipFile
 
 import mozpack.path as mozpath
-
-from mozfile import TemporaryDirectory
 
 from mozbuild.base import (
     MachCommandBase,
@@ -233,39 +228,6 @@ class MachCommands(MachCommandBase):
 
         return ret
 
-    @SubCommand('android', 'test-ccov',
-                """Run Android local unit tests in order to get a code coverage report.
-        See https://firefox-source-docs.mozilla.org/mobile/android/fennec/testcoverage.html""")  # NOQA: E501
-    @CommandArgument('args', nargs=argparse.REMAINDER)
-    def android_test_ccov(self, args):
-        enable_ccov = '-Penable_code_coverage'
-
-        # Don't care if the tests are failing, we only want the coverage information.
-        self.android_test([enable_ccov])
-
-        self.gradle(self.substs['GRADLE_ANDROID_TEST_CCOV_REPORT_TASKS'] +
-                    [enable_ccov] + args, verbose=True)
-        self._process_jacoco_reports()
-        return 0
-
-    def _process_jacoco_reports(self):
-        def run_grcov(grcov_path, input_path):
-            args = [grcov_path, input_path, '-t', 'lcov']
-            return subprocess.check_output(args)
-
-        with TemporaryDirectory() as xml_dir:
-            grcov = os.path.join(os.environ['MOZ_FETCHES_DIR'], 'grcov')
-
-            report_xml_template = self.topobjdir + '/gradle/build/mobile/android/%s/reports/jacoco/jacocoTestReport/jacocoTestReport.xml'  # NOQA: E501
-            shutil.copy(report_xml_template % 'app', os.path.join(xml_dir, 'app.xml'))
-            shutil.copy(report_xml_template % 'geckoview', os.path.join(xml_dir, 'geckoview.xml'))
-
-            # Parse output files with grcov.
-            grcov_output = run_grcov(grcov, xml_dir)
-            grcov_zip_path = os.path.join(self.topobjdir, 'code-coverage-grcov.zip')
-            with zipfile.ZipFile(grcov_zip_path, 'w', zipfile.ZIP_DEFLATED) as z:
-                z.writestr('grcov_lcov_output.info', grcov_output)
-
     @SubCommand('android', 'lint',
                 """Run Android lint.
                 See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-lint""")  # NOQA: E501
@@ -438,16 +400,6 @@ class MachCommands(MachCommandBase):
         # can change the outputs for those processes.
         self.gradle(self.substs['GRADLE_ANDROID_DEPENDENCIES_TASKS'] +
                     ["--continue"] + args, verbose=True)
-
-        return 0
-
-    @SubCommand('android', 'archive-coverage-artifacts',
-                """Archive compiled classfiles to be used later in generating code
-        coverage reports. See https://firefox-source-docs.mozilla.org/mobile/android/fennec/testcoverage.html""")  # NOQA: E501
-    @CommandArgument('args', nargs=argparse.REMAINDER)
-    def android_archive_classfiles(self, args):
-        self.gradle(self.substs['GRADLE_ANDROID_ARCHIVE_COVERAGE_ARTIFACTS_TASKS'] +
-                    args, verbose=True)
 
         return 0
 

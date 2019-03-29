@@ -205,16 +205,7 @@ def gradle_android_test_tasks(build_config):
     ]
 
 
-@dependable
-def gradle_android_test_ccov_report_tasks():
-    '''Additional gradle tasks run by |mach android test-ccov|.'''
-    return [
-        'app:jacocoTestReport',
-        'geckoview:jacocoTestReport',
-    ]
-
 set_config('GRADLE_ANDROID_TEST_TASKS', gradle_android_test_tasks)
-set_config('GRADLE_ANDROID_TEST_CCOV_REPORT_TASKS', gradle_android_test_ccov_report_tasks)
 
 
 @depends(gradle_android_build_config)

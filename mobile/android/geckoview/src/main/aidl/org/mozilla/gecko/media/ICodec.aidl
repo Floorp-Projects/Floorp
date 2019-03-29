@@ -10,6 +10,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
 import org.mozilla.gecko.media.FormatParam;
 import org.mozilla.gecko.media.ICodecCallbacks;
 import org.mozilla.gecko.media.Sample;
+import org.mozilla.gecko.media.SampleBuffer;
 
 interface ICodec {
     void setCallbacks(in ICodecCallbacks callbacks);
@@ -24,6 +25,8 @@ interface ICodec {
 
     Sample dequeueInput(int size);
     oneway void queueInput(in Sample sample);
+    SampleBuffer getInputBuffer(int id);
+    SampleBuffer getOutputBuffer(int id);
 
     void releaseOutput(in Sample sample, in boolean render);
     oneway void setRates(in int newBitRate);

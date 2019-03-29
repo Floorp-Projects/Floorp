@@ -895,7 +895,7 @@ void WebRenderBridgeParent::SetAPZSampleTime() {
 }
 
 bool WebRenderBridgeParent::SetDisplayList(
-    wr::RenderRoot aRenderRoot, const gfx::IntRect& aRect,
+    wr::RenderRoot aRenderRoot, const LayoutDeviceRect& aRect,
     const wr::LayoutSize& aContentSize, ipc::ByteBuf&& aDL,
     const wr::BuiltDisplayListDescriptor& aDLDesc,
     const nsTArray<OpUpdateResource>& aResourceUpdates,
@@ -914,10 +914,11 @@ bool WebRenderBridgeParent::SetDisplayList(
     if (IsRootWebRenderBridgeParent()) {
       if (aRenderRoot != wr::RenderRoot::Default) {
         MutexAutoLock lock(mRenderRootRectMutex);
-        mRenderRootRects[aRenderRoot] = aRect;
+        mRenderRootRects[aRenderRoot] = ViewAs<ScreenPixel>(
+            aRect, PixelCastJustification::LayoutDeviceIsScreenForTabDims);
       }
       LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
-      LayoutDeviceIntRect rect = LayoutDeviceIntRect::FromUnknownRect(aRect);
+      LayoutDeviceIntRect rect = RoundedToInt(aRect);
       rect.SetWidth(
           std::max(0, std::min(widgetSize.width - rect.X(), rect.Width())));
       rect.SetHeight(
@@ -926,8 +927,8 @@ bool WebRenderBridgeParent::SetDisplayList(
     }
     gfx::Color clearColor(0.f, 0.f, 0.f, 0.f);
     aTxn.SetDisplayList(clearColor, aWrEpoch,
-                        LayerSize(aRect.width, aRect.height), mPipelineId,
-                        aContentSize, aDLDesc, dlData);
+                        wr::ToLayoutSize(RoundedToInt(aRect).Size()),
+                        mPipelineId, aContentSize, aDLDesc, dlData);
 
     if (aObserveLayersUpdate) {
       aTxn.Notify(wr::Checkpoint::SceneBuilt,
@@ -2019,7 +2020,7 @@ void WebRenderBridgeParent::HoldPendingTransactionId(
 }
 
 already_AddRefed<wr::WebRenderAPI>
-WebRenderBridgeParent::GetWebRenderAPIAtPoint(const gfx::IntPoint& aPoint) {
+WebRenderBridgeParent::GetWebRenderAPIAtPoint(const ScreenPoint& aPoint) {
   MutexAutoLock lock(mRenderRootRectMutex);
   for (auto renderRoot : wr::kNonDefaultRenderRoots) {
     if (mRenderRootRects[renderRoot].Contains(aPoint)) {

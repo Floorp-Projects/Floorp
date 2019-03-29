@@ -2885,6 +2885,14 @@ class Document : public nsINode,
   void SetStateObject(nsIStructuredCloneContainer* scContainer);
 
   /**
+   * Set the document's pending state object to the same state object as
+   * aDocument.
+   */
+  void SetStateObjectFrom(Document* aDocument) {
+    SetStateObject(aDocument->mStateObjectContainer);
+  }
+
+  /**
    * Returns Doc_Theme_None if there is no lightweight theme specified,
    * Doc_Theme_Dark for a dark theme, Doc_Theme_Bright for a light theme, and
    * Doc_Theme_Neutral for any other theme. This is used to determine the state
@@ -4480,7 +4488,7 @@ class Document : public nsINode,
   // Our update nesting level
   uint32_t mUpdateNestLevel;
 
-  enum ViewportType : uint8_t { DisplayWidthHeight, Specified, Unknown };
+  enum ViewportType : uint8_t { DisplayWidthHeight, Specified, Unknown, Empty };
 
   ViewportType mViewportType;
 

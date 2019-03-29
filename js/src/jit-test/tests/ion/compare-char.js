@@ -25,6 +25,16 @@ function IsASCIIAlphaString_GetElem(s) {
     return true;
 }
 
+function IsASCIIAlphaString_GetElem_GetElem(s) {
+    var range = "AZaz";
+    for (var i = 0; i < s.length; i++) {
+        var c = s[i];
+        if (!((range[0] <= c && c <= range[1]) || (range[2] <= c && c <= range[3])))
+            return false;
+    }
+    return true;
+}
+
 function IsGreekOrCyrillicString_CharCodeAt(s) {
     // U+0370 (GREEK CAPITAL LETTER HETA)
     // U+03FF (GREEK CAPITAL REVERSED DOTTED LUNATE SIGMA SYMBOL)
@@ -56,9 +66,20 @@ function IsGreekOrCyrillicString_GetElem(s) {
     return true;
 }
 
+function IsGreekOrCyrillicString_GetElem_GetElem(s) {
+    var range = "ͰϿЀԯ";
+    for (var i = 0; i < s.length; i++) {
+        var c = s[i];
+        if (!((range[0] <= c && c <= range[1]) || (range[2] <= c && c <= range[3])))
+            return false;
+    }
+    return true;
+}
+
 function main() {
     function compareLatin1() {
         var strings = ["ABCABCABC", "abcabcabc"];
+        var compare = "aAbD";
         var q = 0;
         for (var i = 0; i < 200; ++i) {
             var str = strings[i & 1];
@@ -71,12 +92,21 @@ function main() {
                     q++;
                 if ("D" !== str[j])
                     q++;
+                if (str[j] === compare[0])
+                    q++;
+                if (compare[1] == str[j])
+                    q++;
+                if (str[j] != compare[2])
+                    q++;
+                if (compare[3] !== str[j])
+                    q++;
             }
         }
-        assertEq(q, 100*3 + 100*3 + 100*15 + 100*18);
+        assertEq(q, 100*3*2 + 100*3*2 + 100*15*2 + 100*18*2);
     }
     function compareTwoByte() {
         var strings = ["āĉœāĉœāĉœ", "abcabcabc"];
+        var compare = "œĉāƉ";
         var q = 0;
         for (var i = 0; i < 200; ++i) {
             var str = strings[i & 1];
@@ -89,9 +119,17 @@ function main() {
                     q++;
                 if (str[j] !== "Ɖ")
                     q++;
+                if (compare[0] === str[j])
+                    q++;
+                if (str[j] == compare[1])
+                    q++;
+                if (compare[2] != str[j])
+                    q++;
+                if (str[j] !== compare[3])
+                    q++;
             }
         }
-        assertEq(q, 100*3 + 100*3 + 100*15 + 100*18);
+        assertEq(q, 100*3*2 + 100*3*2 + 100*15*2 + 100*18*2);
     }
     function compareRangeLatin1() {
         var strings = [
@@ -109,9 +147,11 @@ function main() {
             var resultCharCodeAt = IsASCIIAlphaString_CharCodeAt(str);
             var resultCharAt = IsASCIIAlphaString_CharAt(str);
             var resultGetElem = IsASCIIAlphaString_GetElem(str);
+            var resultGetElemGetElem = IsASCIIAlphaString_GetElem_GetElem(str);
 
             assertEq(resultCharAt, resultCharCodeAt);
             assertEq(resultGetElem, resultCharCodeAt);
+            assertEq(resultGetElemGetElem, resultCharCodeAt);
         }
     }
     function compareRangeTwoByte() {
@@ -130,9 +170,11 @@ function main() {
             var resultCharCodeAt = IsGreekOrCyrillicString_CharCodeAt(str);
             var resultCharAt = IsGreekOrCyrillicString_CharAt(str);
             var resultGetElem = IsGreekOrCyrillicString_GetElem(str);
+            var resultGetElemGetElem = IsGreekOrCyrillicString_GetElem_GetElem(str);
 
             assertEq(resultCharAt, resultCharCodeAt);
             assertEq(resultGetElem, resultCharCodeAt);
+            assertEq(resultGetElemGetElem, resultCharCodeAt);
         }
     }
 

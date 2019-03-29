@@ -75,6 +75,10 @@ class RemoteDataDecoder : public MediaDataDecoder,
 
   RefPtr<TaskQueue> mTaskQueue;
 
+  // Preallocated Java object used as a reusable storage for input buffer
+  // information. Contents must be changed only on mTaskQueue.
+  java::sdk::BufferInfo::GlobalRef mInputBufferInfo;
+
  private:
   enum class PendingOp { INCREASE, DECREASE, CLEAR };
   void UpdatePendingInputStatus(PendingOp aOp);

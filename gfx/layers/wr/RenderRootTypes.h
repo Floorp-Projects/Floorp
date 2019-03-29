@@ -18,7 +18,7 @@ namespace layers {
 
 struct RenderRootDisplayListData {
   wr::RenderRoot mRenderRoot;
-  gfx::IntRect mRect;
+  LayoutDeviceRect mRect;
   nsTArray<WebRenderParentCommand> mCommands;
   wr::LayoutSize mContentSize;
   Maybe<mozilla::ipc::ByteBuf> mDL;

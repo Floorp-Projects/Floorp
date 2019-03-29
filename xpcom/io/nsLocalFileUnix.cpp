@@ -230,9 +230,9 @@ nsLocalFile::nsLocalFile(const nsACString& aFilePath) : mCachedStat() {
 nsLocalFile::nsLocalFile(const nsLocalFile& aOther) : mPath(aOther.mPath) {}
 
 #ifdef MOZ_WIDGET_COCOA
-NS_IMPL_ISUPPORTS(nsLocalFile, nsILocalFileMac, nsIFile, nsIHashable)
+NS_IMPL_ISUPPORTS(nsLocalFile, nsILocalFileMac, nsIFile)
 #else
-NS_IMPL_ISUPPORTS(nsLocalFile, nsIFile, nsIHashable)
+NS_IMPL_ISUPPORTS(nsLocalFile, nsIFile)
 #endif
 
 nsresult nsLocalFile::nsLocalFileConstructor(nsISupports* aOuter,
@@ -2102,25 +2102,6 @@ nsLocalFile::RenameToNative(nsIFile* aNewParentDir,
 
 nsresult nsLocalFile::GetTarget(nsAString& aResult) {
   GET_UCS(GetNativeTarget, aResult);
-}
-
-// nsIHashable
-
-NS_IMETHODIMP
-nsLocalFile::Equals(nsIHashable* aOther, bool* aResult) {
-  nsCOMPtr<nsIFile> otherFile(do_QueryInterface(aOther));
-  if (!otherFile) {
-    *aResult = false;
-    return NS_OK;
-  }
-
-  return Equals(otherFile, aResult);
-}
-
-NS_IMETHODIMP
-nsLocalFile::GetHashCode(uint32_t* aResult) {
-  *aResult = HashString(mPath);
-  return NS_OK;
 }
 
 nsresult NS_NewLocalFile(const nsAString& aPath, bool aFollowLinks,
