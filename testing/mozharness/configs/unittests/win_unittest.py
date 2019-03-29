@@ -156,7 +156,6 @@ config = {
         "browser-chrome": ["--flavor=browser"],
         "browser-chrome-clipboard": ["--flavor=browser", "--subsuite=clipboard"],
         "browser-chrome-chunked": ["--flavor=browser", "--chunk-by-runtime"],
-        "browser-chrome-addons": ["--flavor=browser", "--chunk-by-runtime", "--tag=addons"],
         "browser-chrome-screenshots": ["--flavor=browser", "--subsuite=screenshots"],
         "browser-chrome-instrumentation": ["--flavor=browser"],
         "mochitest-webgl1-core": ["--subsuite=webgl1-core"],
@@ -197,12 +196,6 @@ config = {
     "all_xpcshell_suites": {
         "xpcshell": {
             'options': ["--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
-                        "--manifest=tests/xpcshell/tests/xpcshell.ini"],
-            'tests': []
-        },
-        "xpcshell-addons": {
-            'options': ["--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
-                        "--tag=addons",
                         "--manifest=tests/xpcshell/tests/xpcshell.ini"],
             'tests': []
         },

@@ -38,7 +38,6 @@ def all_suites(patch_resolver):
 
 
 KNOWN_FAILURES = (
-    'browser-chrome-addons',
     'browser-chrome-instrumentation',
     'cppunittest',
     'gtest',
@@ -52,7 +51,6 @@ KNOWN_FAILURES = (
     'reftest-no-accel',
     'reftest-qr',
     'valgrind-plain',
-    'xpcshell-addons',
 )
 """A suite being listed here means it won't work properly with
 MOZHARNESS_TEST_PATHS (the mechanism |mach try fuzzy <path>| uses.
