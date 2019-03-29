@@ -99,7 +99,7 @@ var DateTimePickerPanel = class {
   initPicker(detail) {
     // TODO: When bug 1376616 lands, replace this.setGregorian with
     //       mozIntl.Locale for setting calendar to Gregorian
-    const locale = this.setGregorian(Services.locale.regionalPrefsLocales[0]);
+    const locale = this.setGregorian(Services.locale.webExposedLocales[0]);
     const dir = Services.intl.getLocaleInfo(locale).direction;
 
     switch (this.type) {
