@@ -602,9 +602,11 @@ add_task(async function test_eventspref_disabled() {
   });
 
   var event_fired = false;
+  var input_data = undefined;
   contentInput.oncut = function() { event_fired = true; };
   contentInput.oncopy = function() { event_fired = true; };
   contentInput.onpaste = function() { event_fired = true; };
+  contentInput.oninput = function(event) { input_data = event.data; };
   try {
     selectContentInput();
     contentInput.setSelectionRange(1, 4);
@@ -613,24 +615,30 @@ add_task(async function test_eventspref_disabled() {
       synthesizeKey("x", {accelKey: 1});
     }, "cut changed clipboard when preference is disabled");
     is(contentInput.value, "IT TEXT", "cut changed text when preference is disabled");
-    ok(!event_fired, "cut event did not fire when preference is disabled")
+    ok(!event_fired, "cut event did not fire when preference is disabled");
+    is(input_data, null, "cut should cause input event whose data value is null");
 
     event_fired = false;
+    input_data = undefined;
     contentInput.setSelectionRange(3, 6);
     await putOnClipboard("TEX", () => {
       synthesizeKey("c", {accelKey: 1});
     }, "copy changed clipboard when preference is disabled");
     ok(!event_fired, "copy event did not fire when preference is disabled")
+    is(input_data, undefined, "copy shouldn't cause input event");
 
     event_fired = false;
     contentInput.setSelectionRange(0, 2);
     synthesizeKey("v", {accelKey: 1});
     is(contentInput.value, "TEX TEXT", "paste changed text when preference is disabled");
-    ok(!event_fired, "paste event did not fire when preference is disabled")
+    ok(!event_fired, "paste event did not fire when preference is disabled");
+    is(input_data, "",
+       "paste should cause input event but whose data value should be empty string if clipboard event is disabled");
   } finally {
     contentInput.oncut = null;
     contentInput.oncopy = null;
     contentInput.onpaste = null;
+    contentInput.oninput = null;
   }
 
   await new Promise(resolve => {

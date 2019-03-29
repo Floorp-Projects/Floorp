@@ -34,8 +34,9 @@ class InputEvent : public UIEvent {
   }
 
   void GetInputType(nsAString& aInputType);
-  void GetData(nsAString& aData);
-  DataTransfer* GetDataTransfer();
+  void GetData(nsAString& aData, CallerType aCallerType = CallerType::System);
+  already_AddRefed<DataTransfer> GetDataTransfer(
+      CallerType aCallerType = CallerType::System);
   bool IsComposing();
 
  protected:

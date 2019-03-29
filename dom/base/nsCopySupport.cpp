@@ -716,8 +716,7 @@ bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
   // next, fire the cut, copy or paste event
   bool doDefault = true;
   RefPtr<DataTransfer> clipboardData;
-  if (chromeShell ||
-      Preferences::GetBool("dom.event.clipboardevents.enabled", true)) {
+  if (chromeShell || StaticPrefs::dom_event_clipboardevents_enabled()) {
     clipboardData =
         new DataTransfer(doc->GetScopeObject(), aEventMessage,
                          originalEventMessage == ePaste, aClipboardType);

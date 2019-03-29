@@ -12,7 +12,7 @@ interface InputEvent : UIEvent
   [Pref="dom.inputevent.inputtype.enabled"]
   readonly attribute DOMString inputType;
 
-  [Pref="dom.inputevent.data.enabled"]
+  [NeedsCallerType, Pref="dom.inputevent.data.enabled"]
   readonly attribute DOMString? data;
 };
 
@@ -32,7 +32,7 @@ dictionary InputEventInit : UIEventInit
 // https://rawgit.com/w3c/input-events/v1/index.html#interface-InputEvent
 partial interface InputEvent
 {
-  [Pref="dom.inputevent.datatransfer.enabled"]
+  [NeedsCallerType, Pref="dom.inputevent.datatransfer.enabled"]
   readonly attribute DataTransfer? dataTransfer;
 };
 
