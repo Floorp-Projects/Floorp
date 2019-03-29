@@ -31,7 +31,6 @@ class Message extends Component {
       type: PropTypes.string.isRequired,
       level: PropTypes.string.isRequired,
       indent: PropTypes.number.isRequired,
-      inWarningGroup: PropTypes.bool,
       topLevelClasses: PropTypes.array.isRequired,
       messageBody: PropTypes.any.isRequired,
       repeat: PropTypes.any,
@@ -132,17 +131,7 @@ class Message extends Component {
   }
 
   renderIcon() {
-    const {
-      level,
-      messageId,
-      executionPoint,
-      serviceContainer,
-      inWarningGroup,
-    } = this.props;
-
-    if (inWarningGroup) {
-      return undefined;
-    }
+    const { level, messageId, executionPoint, serviceContainer } = this.props;
 
     return MessageIcon({
       level,
@@ -162,7 +151,6 @@ class Message extends Component {
       isPaused,
       level,
       indent,
-      inWarningGroup,
       topLevelClasses,
       messageBody,
       frame,
@@ -313,10 +301,7 @@ class Message extends Component {
       "aria-live": type === MESSAGE_TYPE.COMMAND ? "off" : "polite",
     },
       timestampEl,
-      MessageIndent({
-        indent,
-        inWarningGroup,
-      }),
+      MessageIndent({indent}),
       icon,
       collapse,
       dom.span({ className: "message-body-wrapper" },
@@ -328,7 +313,7 @@ class Message extends Component {
           timestampEl ? " " : null,
           dom.span({ className: "message-body devtools-monospace" },
             ...bodyElements,
-            learnMore,
+            learnMore
           ),
           repeat ? " " : null,
           repeat,

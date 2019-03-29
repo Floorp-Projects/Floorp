@@ -16,8 +16,6 @@ const {
   getVisibleMessages,
   getPausedExecutionPoint,
   getAllRepeatById,
-  getAllWarningGroupsById,
-  isMessageInWarningGroup,
 } = require("devtools/client/webconsole/selectors/messages");
 
 loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
@@ -60,8 +58,6 @@ class ConsoleOutput extends Component {
       timestampsVisible: PropTypes.bool,
       messagesTableData: PropTypes.object.isRequired,
       messagesRepeat: PropTypes.object.isRequired,
-      warningGroups: PropTypes.object.isRequired,
-      isInWarningGroup: PropTypes.isRequired,
       networkMessagesUpdate: PropTypes.object.isRequired,
       visibleMessages: PropTypes.array.isRequired,
       networkMessageActiveTabId: PropTypes.string.isRequired,
@@ -175,8 +171,6 @@ class ConsoleOutput extends Component {
       messagesUi,
       messagesTableData,
       messagesRepeat,
-      warningGroups,
-      isInWarningGroup,
       networkMessagesUpdate,
       networkMessageActiveTabId,
       serviceContainer,
@@ -206,10 +200,6 @@ class ConsoleOutput extends Component {
         tableData: messagesTableData.get(messageId),
         timestampsVisible,
         repeat: messagesRepeat[messageId],
-        badge: warningGroups.has(messageId) ? warningGroups.get(messageId).length : null,
-        inWarningGroup: isInWarningGroup
-          ? isInWarningGroup(messages.get(messageId))
-          : false,
         networkMessageUpdate: networkMessagesUpdate[messageId],
         networkMessageActiveTabId,
         pausedExecutionPoint,
@@ -254,10 +244,6 @@ function mapStateToProps(state, props) {
     messagesUi: getAllMessagesUiById(state),
     messagesTableData: getAllMessagesTableDataById(state),
     messagesRepeat: getAllRepeatById(state),
-    warningGroups: getAllWarningGroupsById(state),
-    isInWarningGroup: state.prefs.groupWarnings
-      ? message => isMessageInWarningGroup(state, message)
-      : null,
     networkMessagesUpdate: getAllNetworkMessagesUpdateById(state),
     timestampsVisible: state.ui.timestampsVisible,
     networkMessageActiveTabId: state.ui.networkMessageActiveTabId,
