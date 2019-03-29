@@ -55,8 +55,7 @@
 }
 
 .tree-node button.arrow {
-  mask: url(resource://devtools/client/debugger/new/images/arrow.svg) no-repeat
-    center;
+  mask: url(/images/arrow.svg) no-repeat center;
   mask-size: 10px;
   vertical-align: -1px;
   width: 10px;
