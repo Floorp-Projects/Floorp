@@ -118,6 +118,7 @@ class nsLegacySHEntry final : public nsSHEntry {
   NS_IMETHOD_(bool) HasDetachedEditor() override;
   NS_IMETHOD_(bool) HasBFCacheEntry(nsIBFCacheEntry* aEntry) override;
   NS_IMETHOD AbandonBFCacheEntry() override;
+  NS_IMETHOD CreateLoadInfo(nsDocShellLoadState** aLoadState) override;
 
  private:
   nsSHEntryShared* GetState();

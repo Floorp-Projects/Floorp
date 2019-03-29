@@ -35,9 +35,12 @@ class SHEntrySharedParentState;
 
 }
 }
+class nsSHEntryShared;
+class nsDocShellLoadState;
 %}
 [ref] native nsIntRect(nsIntRect);
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
+[ptr] native nsDocShellLoadStatePtr(nsDocShellLoadState);
 
 [builtinclass, scriptable, uuid(0dad26b8-a259-42c7-93f1-2fa7fc076e45)]
 interface nsISHEntry : nsISupports
@@ -407,5 +410,11 @@ interface nsISHEntry : nsISupports
     * Remove all children of this entry and call abandonBFCacheEntry.
     */
     [notxpcom] void ClearEntry();
+    
+    /**
+     * Create nsDocShellLoadState and fill it with information. 
+     * Don't set nsSHEntry here to avoid serializing it.
+     */
+    [noscript] nsDocShellLoadStatePtr CreateLoadInfo();
 };
 
