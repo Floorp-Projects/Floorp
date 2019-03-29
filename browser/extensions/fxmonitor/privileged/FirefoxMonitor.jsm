@@ -32,6 +32,10 @@ this.FirefoxMonitor = {
 
   kEnabledPref: "extensions.fxmonitor.enabled",
 
+  // Telemetry event recording is enabled by default.
+  // If this pref exists and is true-y, it's disabled.
+  kTelemetryDisabledPref: "extensions.fxmonitor.telemetryDisabled",
+
   kNotificationID: "fxmonitor",
 
   // This is here for documentation, will be redefined to a pref getter
@@ -104,6 +108,12 @@ this.FirefoxMonitor = {
     Services.scriptloader.loadSubScript(
       this.getURL("privileged/subscripts/PanelUI.jsm"));
 
+    // Expire our telemetry on November 1, at which time
+    // we should redo data-review.
+    let telemetryExpiryDate = new Date(2019, 10, 1); // Month is zero-index
+    let today = new Date();
+    let expired = today.getTime() > telemetryExpiryDate.getTime();
+
     Services.telemetry.registerEvents("fxmonitor", {
       "interaction": {
         methods: ["interaction"],
@@ -114,13 +124,13 @@ this.FirefoxMonitor = {
           "dismiss_btn",
           "never_show_btn",
         ],
-        // Disabled for now, pending data review (bug 1525977)
-        record_on_release: false,
+        record_on_release: true,
+        expired,
       },
     });
 
-    // Disabled for now, pending data review (bug 1525977)
-    Services.telemetry.setEventRecordingEnabled("fxmonitor", false);
+    let telemetryEnabled = !Preferences.get(this.kTelemetryDisabledPref);
+    Services.telemetry.setEventRecordingEnabled("fxmonitor", telemetryEnabled);
 
     let warnedHostsJSON = Preferences.get(this.kWarnedHostsPref, "");
     if (warnedHostsJSON) {
