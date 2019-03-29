@@ -395,9 +395,15 @@ already_AddRefed<IDBFactory> WorkerGlobalScope::GetIndexedDB(
       return nullptr;
     }
 
+    JSContext* cx = mWorkerPrivate->GetJSContext();
+    MOZ_ASSERT(cx);
+
+    JS::Rooted<JSObject*> owningObject(cx, GetGlobalJSObject());
+    MOZ_ASSERT(owningObject);
+
     const PrincipalInfo& principalInfo = mWorkerPrivate->GetPrincipalInfo();
 
-    nsresult rv = IDBFactory::CreateForWorker(this, principalInfo,
+    nsresult rv = IDBFactory::CreateForWorker(cx, owningObject, principalInfo,
                                               mWorkerPrivate->WindowID(),
                                               getter_AddRefs(indexedDB));
     if (NS_WARN_IF(NS_FAILED(rv))) {

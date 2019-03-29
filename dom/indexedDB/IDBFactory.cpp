@@ -70,7 +70,8 @@ struct IDBFactory::PendingRequestInfo {
 };
 
 IDBFactory::IDBFactory()
-    : mBackgroundActor(nullptr),
+    : mOwningObject(nullptr),
+      mBackgroundActor(nullptr),
       mInnerWindowID(0),
       mActiveTransactionCount(0),
       mActiveDatabaseCount(0),
@@ -81,6 +82,9 @@ IDBFactory::IDBFactory()
 
 IDBFactory::~IDBFactory() {
   MOZ_ASSERT_IF(mBackgroundActorFailed, !mBackgroundActor);
+
+  mOwningObject = nullptr;
+  mozilla::DropJSObjects(this);
 
   if (mBackgroundActor) {
     mBackgroundActor->SendDeleteMeInternal();
@@ -139,10 +143,7 @@ nsresult IDBFactory::CreateForWindow(nsPIDOMWindowInner* aWindow,
 
   RefPtr<IDBFactory> factory = new IDBFactory();
   factory->mPrincipalInfo = std::move(principalInfo);
-
-  factory->mGlobal = do_QueryInterface(aWindow);
-  MOZ_ASSERT(factory->mGlobal);
-
+  factory->mWindow = aWindow;
   factory->mTabChild = TabChild::GetFrom(aWindow);
   factory->mEventTarget =
       nsGlobalWindowInner::Cast(aWindow)->EventTargetFor(TaskCategory::Other);
@@ -155,18 +156,13 @@ nsresult IDBFactory::CreateForWindow(nsPIDOMWindowInner* aWindow,
 }
 
 // static
-nsresult IDBFactory::CreateForMainThreadJS(nsIGlobalObject* aGlobal,
+nsresult IDBFactory::CreateForMainThreadJS(JSContext* aCx,
+                                           JS::Handle<JSObject*> aOwningObject,
                                            IDBFactory** aFactory) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aGlobal);
-
-  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aGlobal);
-  if (NS_WARN_IF(!sop)) {
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
 
   nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
-  nsIPrincipal* principal = sop->GetPrincipal();
+  nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aOwningObject);
   MOZ_ASSERT(principal);
   bool isSystem;
   if (!AllowedForPrincipal(principal, &isSystem)) {
@@ -182,7 +178,8 @@ nsresult IDBFactory::CreateForMainThreadJS(nsIGlobalObject* aGlobal,
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  rv = CreateForMainThreadJSInternal(aGlobal, principalInfo, aFactory);
+  rv = CreateForMainThreadJSInternal(aCx, aOwningObject, principalInfo,
+                                     aFactory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -193,18 +190,18 @@ nsresult IDBFactory::CreateForMainThreadJS(nsIGlobalObject* aGlobal,
 }
 
 // static
-nsresult IDBFactory::CreateForWorker(nsIGlobalObject* aGlobal,
+nsresult IDBFactory::CreateForWorker(JSContext* aCx,
+                                     JS::Handle<JSObject*> aOwningObject,
                                      const PrincipalInfo& aPrincipalInfo,
                                      uint64_t aInnerWindowID,
                                      IDBFactory** aFactory) {
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aPrincipalInfo.type() != PrincipalInfo::T__None);
 
   nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo(aPrincipalInfo));
 
-  nsresult rv =
-      CreateInternal(aGlobal, principalInfo, aInnerWindowID, aFactory);
+  nsresult rv = CreateForJSInternal(aCx, aOwningObject, principalInfo,
+                                    aInnerWindowID, aFactory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -216,10 +213,9 @@ nsresult IDBFactory::CreateForWorker(nsIGlobalObject* aGlobal,
 
 // static
 nsresult IDBFactory::CreateForMainThreadJSInternal(
-    nsIGlobalObject* aGlobal, nsAutoPtr<PrincipalInfo>& aPrincipalInfo,
-    IDBFactory** aFactory) {
+    JSContext* aCx, JS::Handle<JSObject*> aOwningObject,
+    nsAutoPtr<PrincipalInfo>& aPrincipalInfo, IDBFactory** aFactory) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aPrincipalInfo);
 
   if (aPrincipalInfo->type() != PrincipalInfo::TSystemPrincipalInfo &&
@@ -234,8 +230,8 @@ nsresult IDBFactory::CreateForMainThreadJSInternal(
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  nsresult rv =
-      CreateInternal(aGlobal, aPrincipalInfo, /* aInnerWindowID */ 0, aFactory);
+  nsresult rv = CreateForJSInternal(aCx, aOwningObject, aPrincipalInfo,
+                                    /* aInnerWindowID */ 0, aFactory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -244,14 +240,16 @@ nsresult IDBFactory::CreateForMainThreadJSInternal(
 }
 
 // static
-nsresult IDBFactory::CreateInternal(nsIGlobalObject* aGlobal,
-                                    nsAutoPtr<PrincipalInfo>& aPrincipalInfo,
-                                    uint64_t aInnerWindowID,
-                                    IDBFactory** aFactory) {
-  MOZ_ASSERT(aGlobal);
+nsresult IDBFactory::CreateForJSInternal(
+    JSContext* aCx, JS::Handle<JSObject*> aOwningObject,
+    nsAutoPtr<PrincipalInfo>& aPrincipalInfo, uint64_t aInnerWindowID,
+    IDBFactory** aFactory) {
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aOwningObject);
   MOZ_ASSERT(aPrincipalInfo);
   MOZ_ASSERT(aPrincipalInfo->type() != PrincipalInfo::T__None);
   MOZ_ASSERT(aFactory);
+  MOZ_ASSERT(JS_IsGlobalObject(aOwningObject));
 
   if (aPrincipalInfo->type() != PrincipalInfo::TContentPrincipalInfo &&
       aPrincipalInfo->type() != PrincipalInfo::TSystemPrincipalInfo) {
@@ -263,7 +261,8 @@ nsresult IDBFactory::CreateInternal(nsIGlobalObject* aGlobal,
 
   RefPtr<IDBFactory> factory = new IDBFactory();
   factory->mPrincipalInfo = aPrincipalInfo.forget();
-  factory->mGlobal = aGlobal;
+  factory->mOwningObject = aOwningObject;
+  mozilla::HoldJSObjects(factory.get());
   factory->mEventTarget = GetCurrentThreadEventTarget();
   factory->mInnerWindowID = aInnerWindowID;
 
@@ -378,9 +377,8 @@ void IDBFactory::UpdateActiveTransactionCount(int32_t aDelta) {
   MOZ_DIAGNOSTIC_ASSERT(aDelta > 0 || (mActiveTransactionCount + aDelta) <
                                           mActiveTransactionCount);
   mActiveTransactionCount += aDelta;
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
-  if (window) {
-    window->UpdateActiveIndexedDBTransactionCount(aDelta);
+  if (mWindow) {
+    mWindow->UpdateActiveIndexedDBTransactionCount(aDelta);
   }
 }
 
@@ -389,10 +387,8 @@ void IDBFactory::UpdateActiveDatabaseCount(int32_t aDelta) {
   MOZ_DIAGNOSTIC_ASSERT(aDelta > 0 ||
                         (mActiveDatabaseCount + aDelta) < mActiveDatabaseCount);
   mActiveDatabaseCount += aDelta;
-
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
-  if (window) {
-    window->UpdateActiveIndexedDBDatabaseCount(aDelta);
+  if (mWindow) {
+    mWindow->UpdateActiveIndexedDBDatabaseCount(aDelta);
   }
 }
 
@@ -425,9 +421,8 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::Open(
     JSContext* aCx, const nsAString& aName, const IDBOpenDBOptions& aOptions,
     CallerType aCallerType, ErrorResult& aRv) {
   if (!IsChrome() && aOptions.mStorage.WasPassed()) {
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
-    if (window && window->GetExtantDoc()) {
-      window->GetExtantDoc()->WarnOnceAbout(
+    if (mWindow && mWindow->GetExtantDoc()) {
+      mWindow->GetExtantDoc()->WarnOnceAbout(
           Document::eIDBOpenDBOptions_StorageType);
     } else if (!NS_IsMainThread()) {
       // The method below reports on the main thread too, so we need to make
@@ -568,7 +563,8 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::OpenInternal(
     const Optional<uint64_t>& aVersion,
     const Optional<StorageType>& aStorageType, bool aDeleting,
     CallerType aCallerType, ErrorResult& aRv) {
-  MOZ_ASSERT(mGlobal);
+  MOZ_ASSERT(mWindow || mOwningObject);
+  MOZ_ASSERT_IF(!mWindow, !mPrivateBrowsingMode);
 
   CommonFactoryRequestParams commonParams;
 
@@ -728,12 +724,24 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::OpenInternal(
     }
   }
 
-  RefPtr<IDBOpenDBRequest> request =
-      IDBOpenDBRequest::Create(aCx, this, mGlobal);
-  if (!request) {
-    MOZ_ASSERT(!NS_IsMainThread());
-    aRv.ThrowUncatchableException();
-    return nullptr;
+  RefPtr<IDBOpenDBRequest> request;
+
+  if (mWindow) {
+    JS::Rooted<JSObject*> scriptOwner(
+        aCx, nsGlobalWindowInner::Cast(mWindow.get())->FastGetGlobalJSObject());
+    MOZ_ASSERT(scriptOwner);
+
+    request =
+        IDBOpenDBRequest::CreateForWindow(aCx, this, mWindow, scriptOwner);
+  } else {
+    JS::Rooted<JSObject*> scriptOwner(aCx, mOwningObject);
+
+    request = IDBOpenDBRequest::CreateForJS(aCx, this, scriptOwner);
+    if (!request) {
+      MOZ_ASSERT(!NS_IsMainThread());
+      aRv.ThrowUncatchableException();
+      return nullptr;
+    }
   }
 
   MOZ_ASSERT(request);
@@ -809,12 +817,12 @@ nsresult IDBFactory::InitiateRequest(IDBOpenDBRequest* aRequest,
   return NS_OK;
 }
 
-void IDBFactory::DisconnectFromGlobal(nsIGlobalObject* aOldGlobal) {
-  MOZ_DIAGNOSTIC_ASSERT(aOldGlobal);
-  // If CC unlinks us first, then mGlobal might be nullptr
-  MOZ_DIAGNOSTIC_ASSERT(!mGlobal || mGlobal == aOldGlobal);
+void IDBFactory::DisconnectFromWindow(nsPIDOMWindowInner* aOldWindow) {
+  MOZ_DIAGNOSTIC_ASSERT(aOldWindow);
+  // If CC unlinks us first, then mWindow might be nullptr
+  MOZ_DIAGNOSTIC_ASSERT(!mWindow || mWindow == aOldWindow);
 
-  mGlobal = nullptr;
+  mWindow = nullptr;
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBFactory)
@@ -828,20 +836,22 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBFactory)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBFactory)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTabChild)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEventTarget)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBFactory)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
+  tmp->mOwningObject = nullptr;
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTabChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEventTarget)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBFactory)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mOwningObject)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 JSObject* IDBFactory::WrapObject(JSContext* aCx,

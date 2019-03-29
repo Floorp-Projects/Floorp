@@ -16,7 +16,7 @@
 #include "nsTArrayForwardDeclare.h"
 #include "nsWrapperCache.h"
 
-class nsIGlobalObject;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -83,7 +83,7 @@ class IDBIndex final : public nsISupports, public nsWrapperCache {
     return mObjectStore;
   }
 
-  nsIGlobalObject* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
 
   void GetName(nsString& aName) const { aName = Name(); }
 
