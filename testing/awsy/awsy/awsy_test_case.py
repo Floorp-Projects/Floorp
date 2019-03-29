@@ -42,6 +42,9 @@ class AwsyTestCase(MarionetteTestCase):
     def perf_checkpoints(self):
         raise NotImplementedError()
 
+    def perf_extra_opts(self):
+        return None
+
     def iterations(self):
         return self._iterations
 
@@ -92,7 +95,8 @@ class AwsyTestCase(MarionetteTestCase):
             self.logger.info("processing data in %s!" % self._resultsDir)
             perf_blob = process_perf_data.create_perf_data(
                             self._resultsDir, self.perf_suites(),
-                            self.perf_checkpoints())
+                            self.perf_checkpoints(),
+                            self.perf_extra_opts())
             self.logger.info("PERFHERDER_DATA: %s" % json.dumps(perf_blob))
 
             perf_file = os.path.join(self._resultsDir, "perfherder_data.json")

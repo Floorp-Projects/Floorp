@@ -40,6 +40,9 @@ class TestMemoryUsage(AwsyTestCase):
     def perf_checkpoints(self):
         return process_perf_data.CHECKPOINTS
 
+    def perf_extra_opts(self):
+        return self._extra_opts
+
     def setupTp5(self):
         urls = None
         default_tp5n_manifest = os.path.join(self._webroot_dir, 'page_load_test', 'tp5n',
@@ -80,6 +83,9 @@ class TestMemoryUsage(AwsyTestCase):
                     urls.append(url)
 
         self._urls = urls
+
+        # Indicate that we're using tp6 in the perf data.
+        self._extra_opts = ["tp6"]
 
         # Now we setup the mitm proxy with our tp6 pageset.
         tp6_pageset_manifest = os.path.join(AWSY_PATH, 'tp6-pageset.manifest')
@@ -134,6 +140,7 @@ class TestMemoryUsage(AwsyTestCase):
         self.logger.info("setting up")
         self._webroot_dir = self.testvars["webRootDir"]
         self._urls = []
+        self._extra_opts = None
 
         if self.testvars.get("tp6", False):
             self.setupTp6()
