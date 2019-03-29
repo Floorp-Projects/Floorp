@@ -12,6 +12,10 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 595350";
 
 add_task(async function() {
   requestLongerTimeout(3);
+  // Bug 1518138: GC heuristics are broken for this test, so that the test
+  // ends up running out of memory. Try to work-around the problem by GCing
+  // before the test begins.
+  Cu.forceShrinkingGC();
 
   const win1 = window;
 
