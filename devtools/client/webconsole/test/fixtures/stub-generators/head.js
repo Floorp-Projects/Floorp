@@ -62,10 +62,6 @@ function getCleanedPacket(key, packet) {
       res.timeStamp = existingPacket.timeStamp;
     }
 
-    if (res.innerWindowID) {
-      res.innerWindowID = existingPacket.innerWindowID;
-    }
-
     if (res.startedDateTime) {
       res.startedDateTime = existingPacket.startedDateTime;
     }
@@ -175,9 +171,8 @@ function getCleanedPacket(key, packet) {
     }
 
     if (res.pageError) {
-      // Clean timeStamp and innerWindowID on pageError messages.
+      // Clean timeStamp on pageError messages.
       res.pageError.timeStamp = existingPacket.pageError.timeStamp;
-      res.pageError.innerWindowID = existingPacket.pageError.innerWindowID;
 
       if (
         typeof res.pageError.errorMessage === "object"
