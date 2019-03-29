@@ -15,28 +15,12 @@
 using namespace mozilla;
 
 template <class InnerQueueT>
-PrioritizedEventQueue<InnerQueueT>::PrioritizedEventQueue(
-    UniquePtr<InnerQueueT> aHighQueue, UniquePtr<InnerQueueT> aInputQueue,
-    UniquePtr<InnerQueueT> aMediumHighQueue,
-    UniquePtr<InnerQueueT> aNormalQueue,
-    UniquePtr<InnerQueueT> aDeferredTimersQueue,
-    UniquePtr<InnerQueueT> aIdleQueue,
-    already_AddRefed<nsIIdlePeriod> aIdlePeriod)
-    : mHighQueue(std::move(aHighQueue)),
-      mInputQueue(std::move(aInputQueue)),
-      mMediumHighQueue(std::move(aMediumHighQueue)),
-      mNormalQueue(std::move(aNormalQueue)),
-      mDeferredTimersQueue(std::move(aDeferredTimersQueue)),
-      mIdleQueue(std::move(aIdleQueue)),
-      mIdlePeriod(aIdlePeriod) {
-  static_assert(IsBaseOf<AbstractEventQueue, InnerQueueT>::value,
-                "InnerQueueT must be an AbstractEventQueue subclass");
-}
-
-template <class InnerQueueT>
 void PrioritizedEventQueue<InnerQueueT>::PutEvent(
     already_AddRefed<nsIRunnable>&& aEvent, EventQueuePriority aPriority,
     const MutexAutoLock& aProofOfLock) {
+  static_assert(IsBaseOf<AbstractEventQueue, InnerQueueT>::value,
+                "InnerQueueT must be an AbstractEventQueue subclass");
+
   // Double check the priority with a QI.
   RefPtr<nsIRunnable> event(aEvent);
   EventQueuePriority priority = aPriority;
