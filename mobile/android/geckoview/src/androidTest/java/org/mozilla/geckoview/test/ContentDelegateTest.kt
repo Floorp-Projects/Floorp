@@ -407,6 +407,7 @@ class ContentDelegateTest : BaseSessionTest() {
                    countAutoFillNodes({ it.isFocused }), equalTo(0))
     }
 
+    @WithDisplay(height = 100, width = 100)
     @WithDevToolsAPI
     @Test fun autofill_userpass() {
         if (Build.VERSION.SDK_INT < 26) {
