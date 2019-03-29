@@ -26,6 +26,7 @@
 #include "nsLeafFrame.h"
 #include "nsIPresShell.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsImageMap.h"
 #include "nsILinkHandler.h"
 #include "nsIURL.h"

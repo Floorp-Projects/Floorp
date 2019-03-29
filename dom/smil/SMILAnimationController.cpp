@@ -11,6 +11,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/SMILTimedElement.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "nsContentUtils.h"

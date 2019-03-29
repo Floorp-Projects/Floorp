@@ -8,8 +8,9 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "mozilla/EventDispatcher.h"
-#include "nsXULElement.h"
 #include "mozilla/Logging.h"
+#include "mozilla/dom/DocumentInlines.h"
+#include "nsXULElement.h"
 
 struct BroadcastListener {
   nsWeakPtr mListener;
