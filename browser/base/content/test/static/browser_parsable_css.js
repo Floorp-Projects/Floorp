@@ -76,6 +76,15 @@ if (!Services.prefs.getBoolPref("layout.css.xul-box-display-values.content.enabl
   });
 }
 
+if (!Services.prefs.getBoolPref("layout.css.line-height-moz-block-height.content.enabled")) {
+  // -moz-block-height is used in form controls but not exposed to the web.
+  whitelist.push({
+    sourceName: /(?:res|gre-resources)\/forms\.css$/i,
+    errorMessage: /Error in parsing value for \u2018line-height\u2019/iu,
+    isFromDevTools: false,
+  });
+}
+
 if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
   whitelist.push({
     sourceName: /(?:res|gre-resources)\/(ua|html)\.css$/i,
