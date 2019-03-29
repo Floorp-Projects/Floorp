@@ -3180,52 +3180,28 @@ var BrowserOnClick = {
         break;
       case "exceptionDialogButton":
         securityInfo = getSecurityInfo(securityInfoAsString);
-        let params = { exceptionAdded: false,
-                       securityInfo };
-        if (Services.prefs.getBoolPref("browser.security.newcerterrorpage.enabled", false)) {
-          let overrideService = Cc["@mozilla.org/security/certoverride;1"]
-                                  .getService(Ci.nsICertOverrideService);
-          let flags = 0;
-          if (securityInfo.isUntrusted) {
-            flags |= overrideService.ERROR_UNTRUSTED;
-          }
-          if (securityInfo.isDomainMismatch) {
-            flags |= overrideService.ERROR_MISMATCH;
-          }
-          if (securityInfo.isNotValidAtThisTime) {
-            flags |= overrideService.ERROR_TIME;
-          }
-          let uri = Services.uriFixup.createFixupURI(location, 0);
-          let permanentOverride =
-            Services.prefs.getBoolPref("security.certerrors.permanentOverride");
-          cert = securityInfo.serverCert;
-          overrideService.rememberValidityOverride(
-            uri.asciiHost, uri.port,
-            cert,
-            flags,
-            !permanentOverride);
-          browser.reload();
-          return;
+        let overrideService = Cc["@mozilla.org/security/certoverride;1"]
+                                .getService(Ci.nsICertOverrideService);
+        let flags = 0;
+        if (securityInfo.isUntrusted) {
+          flags |= overrideService.ERROR_UNTRUSTED;
         }
-
-        try {
-          switch (Services.prefs.getIntPref("browser.ssl_override_behavior")) {
-            case 2 : // Pre-fetch & pre-populate
-              params.prefetchCert = true;
-            case 1 : // Pre-populate
-              params.location = location;
-          }
-        } catch (e) {
-          Cu.reportError("Couldn't get ssl_override pref: " + e);
+        if (securityInfo.isDomainMismatch) {
+          flags |= overrideService.ERROR_MISMATCH;
         }
-
-        window.openDialog("chrome://pippki/content/exceptionDialog.xul",
-                          "", "chrome,centerscreen,modal", params);
-
-        // If the user added the exception cert, attempt to reload the page
-        if (params.exceptionAdded) {
-          browser.reload();
+        if (securityInfo.isNotValidAtThisTime) {
+          flags |= overrideService.ERROR_TIME;
         }
+        let uri = Services.uriFixup.createFixupURI(location, 0);
+        let permanentOverride =
+          Services.prefs.getBoolPref("security.certerrors.permanentOverride");
+        cert = securityInfo.serverCert;
+        overrideService.rememberValidityOverride(
+          uri.asciiHost, uri.port,
+          cert,
+          flags,
+          !permanentOverride);
+        browser.reload();
         break;
 
       case "returnButton":

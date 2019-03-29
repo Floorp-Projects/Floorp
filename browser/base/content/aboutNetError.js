@@ -15,7 +15,6 @@ let searchParams = new URLSearchParams(document.documentURI.split("?")[1]);
 
 // Set to true on init if the error code is nssBadCert.
 let gIsCertError;
-let gNewErrorPagesEnabled;
 
 function getErrorCode() {
   return searchParams.get("e");
@@ -129,16 +128,14 @@ function disallowCertOverridesIfNeeded() {
   if (cssClass == "badStsCert") {
     document.getElementById("badStsCertExplanation").removeAttribute("hidden");
 
-    if (gNewErrorPagesEnabled) {
-      let stsReturnButtonText = document.getElementById("stsReturnButtonText").textContent;
-      document.getElementById("returnButton").textContent = stsReturnButtonText;
-      document.getElementById("advancedPanelReturnButton").textContent = stsReturnButtonText;
+    let stsReturnButtonText = document.getElementById("stsReturnButtonText").textContent;
+    document.getElementById("returnButton").textContent = stsReturnButtonText;
+    document.getElementById("advancedPanelReturnButton").textContent = stsReturnButtonText;
 
-      let stsMitmWhatCanYouDoAboutIt3 =
-        document.getElementById("stsMitmWhatCanYouDoAboutIt3").innerHTML;
-      // eslint-disable-next-line no-unsanitized/property
-      document.getElementById("mitmWhatCanYouDoAboutIt3").innerHTML = stsMitmWhatCanYouDoAboutIt3;
-    }
+    let stsMitmWhatCanYouDoAboutIt3 =
+      document.getElementById("stsMitmWhatCanYouDoAboutIt3").innerHTML;
+    // eslint-disable-next-line no-unsanitized/property
+    document.getElementById("mitmWhatCanYouDoAboutIt3").innerHTML = stsMitmWhatCanYouDoAboutIt3;
   }
 }
 
@@ -157,7 +154,6 @@ function initPage() {
   }
 
   gIsCertError = (err == "nssBadCert");
-  gNewErrorPagesEnabled = !!document.body.dataset.newErrorPagesEnabled;
   // Only worry about captive portals if this is a cert error.
   let showCaptivePortalUI = isCaptive() && gIsCertError;
   if (showCaptivePortalUI) {
@@ -170,7 +166,7 @@ function initPage() {
     document.body.classList.add(className);
   }
 
-  if (gNewErrorPagesEnabled && gIsCertError && (window !== window.top || className == "badStsCert")) {
+  if (gIsCertError && (window !== window.top || className == "badStsCert")) {
     l10nErrId += "_sts";
   }
 
