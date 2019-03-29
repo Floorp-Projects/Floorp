@@ -134,6 +134,7 @@
 #include "nsFrameMessageManager.h"
 #include "nsHashPropertyBag.h"
 #include "nsIAlertsService.h"
+#include "nsIAppStartup.h"
 #include "nsIClipboard.h"
 #include "nsICookie.h"
 #include "nsContentPermissionHelper.h"
@@ -2956,8 +2957,6 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
                        const char16_t* aData) {
   if (mSubprocess && (!strcmp(aTopic, "profile-before-change") ||
                       !strcmp(aTopic, "xpcom-shutdown"))) {
-    mShuttingDown = true;
-
     // Make sure that our process will get scheduled.
     ProcessPriorityManager::SetProcessPriority(this,
                                                PROCESS_PRIORITY_FOREGROUND);
@@ -3377,7 +3376,11 @@ void ContentParent::GeneratePairedMinidump(const char* aReason) {
   // Something has gone wrong to get us here, so we generate a minidump
   // of the parent and child for submission to the crash server unless we're
   // already shutting down.
-  if (mCrashReporter && !mShuttingDown &&
+  nsCOMPtr<nsIAppStartup> appStartup = components::AppStartup::Service();
+  bool shuttingDown = false;
+  if (mCrashReporter &&
+      !(NS_SUCCEEDED(appStartup->GetShuttingDown(&shuttingDown)) &&
+        shuttingDown) &&
       Preferences::GetBool("dom.ipc.tabs.createKillHardCrashReports", false)) {
     // GeneratePairedMinidump creates two minidumps for us - the main
     // one is for the content process we're about to kill, and the other
@@ -5735,7 +5738,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
 
   if (!child) {
     RefPtr<BrowsingContextGroup> group =
-      BrowsingContextGroup::Select(aInit.mParentId, aInit.mOpenerId);
+        BrowsingContextGroup::Select(aInit.mParentId, aInit.mOpenerId);
     child = BrowsingContext::CreateFromIPC(std::move(aInit), group, this);
   }
 
