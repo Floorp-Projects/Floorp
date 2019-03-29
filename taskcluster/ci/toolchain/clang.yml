@@ -24,66 +24,64 @@ linux64-clang-4.0:
     toolchains:
         - linux64-gcc-6
 
-linux64-clang-8:
-    description: "Clang 8 toolchain build"
+linux64-clang-7:
+    description: "Clang 7 toolchain build"
     treeherder:
-        symbol: TL(clang8)
+        symbol: TL(clang7)
     run:
         using: toolchain-script
-        script: build-clang-8-linux.sh
+        script: build-clang-7-linux.sh
         resources:
             - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-8-linux64.json'
+            - 'build/build-clang/clang-7-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
         - linux64-gcc-6
 
-linux64-clang-8-mingw-x86:
+linux64-clang-trunk-mingw-x86:
     description: "MinGW-Clang Trunk x86 toolchain build"
     treeherder:
         symbol: TMW(clang-x86)
     run:
-        script: build-clang-8-mingw.sh
+        script: build-clang-trunk-mingw.sh
         arguments: [
             'x86'
         ]
         resources:
-            - 'build/build-clang/clang-8-mingw.json'
+            - 'build/build-clang/clang-trunk-mingw.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias: linux64-clang-mingw-x86
         toolchain-artifact: public/build/clangmingw.tar.xz
     toolchains:
         - linux64-gcc-6
 
-linux64-clang-8-mingw-x64:
+linux64-clang-trunk-mingw-x64:
     description: "MinGW-Clang Trunk x64 toolchain build"
     treeherder:
         symbol: TMW(clang-x64)
         tier: 1
     run:
-        script: build-clang-8-mingw.sh
+        script: build-clang-trunk-mingw.sh
         arguments: [
             'x64'
         ]
         resources:
-            - 'build/build-clang/clang-8-mingw.json'
+            - 'build/build-clang/clang-trunk-mingw.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias: linux64-clang-mingw-x64
         toolchain-artifact: public/build/clangmingw.tar.xz
     toolchains:
         - linux64-gcc-6
 
-linux64-clang-8-android-cross:
-    description: "Clang 8 toolchain build"
+linux64-clang-7-android-cross:
+    description: "Clang 7 toolchain build"
     treeherder:
-        symbol: TL(clang8-android)
+        symbol: TL(clang7-android)
     run:
         using: toolchain-script
-        script: build-clang-8-android.sh
+        script: build-clang-7-android.sh
         resources:
-            - 'build/build-clang/clang-8-android.json'
+            - 'build/build-clang/clang-7-android.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-clang-android-cross
         toolchain-artifact: public/build/clang.tar.xz
@@ -91,26 +89,26 @@ linux64-clang-8-android-cross:
         - linux64-gcc-6
         - linux64-android-ndk-linux-repack
 
-linux64-clang-8-macosx-cross:
-    description: "Clang 8 toolchain build with MacOS Compiler RT libs"
+linux64-clang-7-macosx-cross:
+    description: "Clang 7 toolchain build with MacOS Compiler RT libs"
     treeherder:
-        symbol: TL(clang8-macosx-cross)
+        symbol: TL(clang7-macosx-cross)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
     run:
-        script: build-clang-8-linux-macosx-cross.sh
+        script: build-clang-7-linux-macosx-cross.sh
         resources:
-            - 'build/build-clang/clang-8-macosx64.json'
+            - 'build/build-clang/clang-7-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-clang-macosx-cross
         toolchain-artifact: public/build/clang.tar.xz
         tooltool-downloads: internal
     toolchains:
         - linux64-cctools-port
-        - linux64-clang-8
+        - linux64-clang-7
         - linux64-gcc-6
 
 macosx64-clang:
@@ -129,12 +127,12 @@ macosx64-clang:
         script: build-clang-macosx.sh
         tooltool-downloads: internal
         resources:
-            - 'build/build-clang/clang-8-macosx64.json'
+            - 'build/build-clang/clang-7-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
         - linux64-cctools-port
-        - linux64-clang-8
+        - linux64-clang-7
         - linux64-gcc-6
         - linux64-node
 
