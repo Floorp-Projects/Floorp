@@ -77,6 +77,10 @@ linux64-mingw-fxc2-x86:
     run:
         using: toolchain-script
         script: build-mingw-fxc2-x86.sh
+        resources:
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-trunk-mingw.json'
+            - 'taskcluster/scripts/misc/build-clang-trunk-mingw.sh'
         toolchain-artifact: public/build/fxc2.tar.xz
     toolchains:
-        - linux64-clang-8-mingw-x86
+        - linux64-clang-trunk-mingw-x86
