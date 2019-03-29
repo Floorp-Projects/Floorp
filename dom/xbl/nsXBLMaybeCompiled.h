@@ -91,17 +91,17 @@ template <class UncompiledT>
 struct BarrierMethods<nsXBLMaybeCompiled<UncompiledT>> {
   typedef struct BarrierMethods<JSObject*> Base;
 
-  static void postBarrier(nsXBLMaybeCompiled<UncompiledT>* functionp,
-                          nsXBLMaybeCompiled<UncompiledT> prev,
-                          nsXBLMaybeCompiled<UncompiledT> next) {
+  static void writeBarriers(nsXBLMaybeCompiled<UncompiledT>* functionp,
+                            nsXBLMaybeCompiled<UncompiledT> prev,
+                            nsXBLMaybeCompiled<UncompiledT> next) {
     if (next.IsCompiled()) {
-      Base::postBarrier(
+      Base::writeBarriers(
           &functionp->UnsafeGetJSFunction(),
           prev.IsCompiled() ? prev.UnsafeGetJSFunction() : nullptr,
           next.UnsafeGetJSFunction());
     } else if (prev.IsCompiled()) {
-      Base::postBarrier(&prev.UnsafeGetJSFunction(), prev.UnsafeGetJSFunction(),
-                        nullptr);
+      Base::writeBarriers(&prev.UnsafeGetJSFunction(),
+                          prev.UnsafeGetJSFunction(), nullptr);
     }
   }
   static void exposeToJS(nsXBLMaybeCompiled<UncompiledT> fun) {

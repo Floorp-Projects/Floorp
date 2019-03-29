@@ -236,6 +236,11 @@ class FuncExport {
     return pod.eagerInterpEntryOffset_;
   }
 
+  bool canHaveJitEntry() const {
+    return !funcType_.temporarilyUnsupportedAnyRef() &&
+           JitOptions.enableWasmJitEntry;
+  }
+
   bool clone(const FuncExport& src) {
     mozilla::PodAssign(&pod, &src.pod);
     return funcType_.clone(src.funcType_);

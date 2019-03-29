@@ -86,19 +86,17 @@ MOZ_MUST_USE bool CompileAndSerialize(const ShareableBytes& bytecode,
 MOZ_MUST_USE bool DeserializeModule(JSContext* cx, const Bytes& serialized,
                                     MutableHandleObject module);
 
-// These accessors can be used to probe JS values for being an exported wasm
-// function.
+// A WebAssembly "Exported Function" is the spec name for the JS function
+// objects created to wrap wasm functions. This predicate returns false
+// for asm.js functions which are semantically just normal JS functions
+// (even if they are implemented via wasm under the hood). The accessor
+// functions for extracting the instance and func-index of a wasm function
+// can be used for both wasm and asm.js, however.
 
-extern bool IsExportedFunction(JSFunction* fun);
-
-extern bool IsExportedWasmFunction(JSFunction* fun);
-
-extern bool IsExportedFunction(const Value& v, MutableHandleFunction f);
+extern bool IsWasmExportedFunction(JSFunction* fun);
 
 extern Instance& ExportedFunctionToInstance(JSFunction* fun);
-
 extern WasmInstanceObject* ExportedFunctionToInstanceObject(JSFunction* fun);
-
 extern uint32_t ExportedFunctionToFuncIndex(JSFunction* fun);
 
 extern bool IsSharedWasmMemoryObject(JSObject* obj);

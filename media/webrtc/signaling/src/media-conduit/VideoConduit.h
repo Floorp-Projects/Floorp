@@ -591,6 +591,7 @@ class WebrtcVideoConduit
   // and when receiving packets (sts).
   Atomic<uint32_t> mRecvSSRC;  // this can change during a stream!
 
+  // Accessed only on mStsThread.
   RtpPacketQueue mRtpPacketQueue;
 
   // The lifetime of these codecs are maintained by the VideoConduit instance.
