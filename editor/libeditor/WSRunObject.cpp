@@ -252,7 +252,8 @@ template <typename PT, typename CT>
 nsresult WSRunObject::InsertText(
     Document& aDocument, const nsAString& aStringToInsert,
     const EditorDOMPointBase<PT, CT>& aPointToInsert,
-    EditorRawDOMPoint* aPointAfterInsertedString) {
+    EditorRawDOMPoint* aPointAfterInsertedString)
+    MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
   // meanwhile, the pre case is handled in WillInsertText in
   // HTMLEditRules.cpp
@@ -381,8 +382,10 @@ nsresult WSRunObject::InsertText(
   }
 
   // Ready, aim, fire!
-  nsresult rv = mHTMLEditor->InsertTextWithTransaction(
-      aDocument, theString, pointToInsert, aPointAfterInsertedString);
+  nsresult rv =
+      MOZ_KnownLive(mHTMLEditor)
+          ->InsertTextWithTransaction(aDocument, theString, pointToInsert,
+                                      aPointAfterInsertedString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_OK;
   }

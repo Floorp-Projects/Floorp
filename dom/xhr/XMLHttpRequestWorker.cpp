@@ -1474,7 +1474,14 @@ already_AddRefed<XMLHttpRequest> XMLHttpRequestWorker::Construct(
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
   MOZ_ASSERT(workerPrivate);
 
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
   RefPtr<XMLHttpRequestWorker> xhr = new XMLHttpRequestWorker(workerPrivate);
+  xhr->BindToOwner(global);
 
   if (workerPrivate->XHRParamsAllowed()) {
     if (aParams.mMozSystem)

@@ -74,6 +74,7 @@ class HTMLEditorEventListener final : public EditorEventListener {
  protected:
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult MouseDown(dom::MouseEvent* aMouseEvent) override;
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult MouseUp(dom::MouseEvent* aMouseEvent) override;
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult MouseClick(WidgetMouseEvent* aMouseClickEvent) override;

@@ -76,14 +76,14 @@ def tooltool_download(manifest, run_local, raptor_dir):
     if run_local:
         command = [sys.executable, TOOLTOOL_PATH, "fetch", "-o", "-m", manifest]
     else:
-        # we want to use the tooltool cache in production
-        if os.environ.get("TOOLTOOLCACHE") is not None:
-            _cache = os.environ["TOOLTOOLCACHE"]
-        else:
-            # XXX top level dir? really?
-            # that gets run locally on any platform
-            # when you call ./mach python-test
-            _cache = "/builds/tooltool_cache"
+        # Attempt to determine the tooltool cache path:
+        #  - TOOLTOOLCACHE is used by Raptor tests
+        #  - TOOLTOOL_CACHE is automatically set for taskcluster jobs
+        #  - fallback to a hardcoded path
+        _cache = next(x for x in (
+                    os.environ.get("TOOLTOOLCACHE"),
+                    os.environ.get("TOOLTOOL_CACHE"),
+                    "/builds/tooltool_cache") if x is not None)
 
         command = [
             sys.executable,

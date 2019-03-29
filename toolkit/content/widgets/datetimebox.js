@@ -88,7 +88,7 @@ this.DateTimeInputBaseImplWidget = class {
     this.DEBUG = false;
     this.mDateTimeBoxElement = this.shadowRoot.firstChild;
     this.mInputElement = this.element;
-    this.mLocales = this.window.getRegionalPrefsLocales();
+    this.mLocales = this.window.getWebExposedLocales();
 
     this.mIsRTL = false;
     let intlUtils = this.window.intlUtils;

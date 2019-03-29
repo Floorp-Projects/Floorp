@@ -570,8 +570,8 @@ class WebSocketServer(object):
         cmd = [sys.executable, script]
         if self.debuggerInfo and self.debuggerInfo.interactive:
             cmd += ['--interactive']
-        cmd += ['-p', str(self.port), '-w', self._scriptdir, '-l',
-                os.path.join(self._scriptdir, "websock.log"),
+        cmd += ['-H', '127.0.0.1', '-p', str(self.port), '-w', self._scriptdir,
+                '-l', os.path.join(self._scriptdir, "websock.log"),
                 '--log-level=debug', '--allow-handlers-outside-root-dir']
         # start the process
         self._process = mozprocess.ProcessHandler(cmd, cwd=SCRIPT_DIR)

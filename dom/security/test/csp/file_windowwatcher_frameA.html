@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+frame A<br/>
+<iframe name='frameB' src="http://example.com/tests/dom/security/test/csp/file_windowwatcher_subframeB.html"></iframe>
+<iframe name='frameC' src="http://example.com/tests/dom/security/test/csp/file_windowwatcher_subframeC.html"></iframe>
+<iframe name='frameD' src="http://example.com/tests/dom/security/test/csp/file_windowwatcher_subframeD.html"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+window.onload = function() {
+  frameB.openWin();
+}
+
+</script>
+</body>
+</html>

@@ -80,6 +80,9 @@
 
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
+#if defined(XP_WIN)
+#  include "mozilla/WindowsConsole.h"
+#endif
 #include "mozilla/WindowsDllBlocklist.h"
 
 #include "GMPProcessChild.h"
@@ -381,19 +384,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   // Try to attach console to the parent process.
   // It will succeed when the parent process is a command line,
   // so that stdio will be displayed in it.
-  if (AttachConsole(ATTACH_PARENT_PROCESS)) {
-    // Change std handles to refer to new console handles.
-    // Before doing so, ensure that stdout/stderr haven't been
-    // redirected to a valid file
-    if (_fileno(stdout) == -1 || _get_osfhandle(fileno(stdout)) == -1)
-      freopen("CONOUT$", "w", stdout);
-    // Merge stderr into CONOUT$ since there isn't any `CONERR$`.
-    // http://msdn.microsoft.com/en-us/library/windows/desktop/ms683231%28v=vs.85%29.aspx
-    if (_fileno(stderr) == -1 || _get_osfhandle(fileno(stderr)) == -1)
-      freopen("CONOUT$", "w", stderr);
-    if (_fileno(stdin) == -1 || _get_osfhandle(fileno(stdin)) == -1)
-      freopen("CONIN$", "r", stdin);
-  }
+  UseParentConsole();
 
 #  if defined(MOZ_SANDBOX)
   if (aChildData->sandboxTargetServices) {

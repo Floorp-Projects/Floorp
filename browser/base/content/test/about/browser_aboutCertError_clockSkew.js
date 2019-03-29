@@ -5,11 +5,8 @@
 
 const PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS = "services.settings.clock_skew_seconds";
 const PREF_SERVICES_SETTINGS_LAST_FETCHED = "services.settings.last_update_seconds";
-const PREF_NEW_CERT_ERRORS = "browser.security.newcerterrorpage.enabled";
 
 add_task(async function checkWrongSystemTimeWarning() {
-  Services.prefs.setBoolPref(PREF_NEW_CERT_ERRORS, true);
-
   async function setUpPage() {
     let browser;
     let certErrorLoaded;
@@ -80,5 +77,4 @@ add_task(async function checkWrongSystemTimeWarning() {
 
   Services.prefs.clearUserPref(PREF_SERVICES_SETTINGS_LAST_FETCHED);
   Services.prefs.clearUserPref(PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS);
-  Services.prefs.clearUserPref(PREF_NEW_CERT_ERRORS);
 });

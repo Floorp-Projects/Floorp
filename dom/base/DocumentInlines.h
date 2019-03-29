@@ -6,13 +6,25 @@
 #ifndef mozilla_dom_DocumentInlines_h
 #define mozilla_dom_DocumentInlines_h
 
-#include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"
+
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "nsContentUtils.h"
+#include "nsIPresShell.h"
+#include "nsPresContext.h"
 #include "nsStyleSheetService.h"
 
 namespace mozilla {
 namespace dom {
+
+inline PresShell* Document::GetObservingPresShell() const {
+  return mPresShell && mPresShell->IsObservingDocument() ? mPresShell : nullptr;
+}
+
+inline nsPresContext* Document::GetPresContext() const {
+  PresShell* presShell = GetPresShell();
+  return presShell ? presShell->GetPresContext() : nullptr;
+}
 
 inline HTMLBodyElement* Document::GetBodyElement() {
   return static_cast<HTMLBodyElement*>(GetHtmlChildElement(nsGkAtoms::body));

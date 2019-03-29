@@ -25,8 +25,9 @@
 #include "nsTreeColumns.h"
 #include "nsContentUtils.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"  // for Event
 #include "mozilla/dom/MouseEvent.h"
@@ -524,7 +525,7 @@ nsresult nsXULTooltipListener::FindTooltip(nsIContent* aTarget,
   // non-XUL elements should just use the default tooltip
   if (!aTarget->IsXULElement()) {
     nsIPopupContainer* popupContainer =
-        nsIPopupContainer::GetPopupContainer(document->GetShell());
+        nsIPopupContainer::GetPopupContainer(document->GetPresShell());
     NS_ENSURE_STATE(popupContainer);
     if (RefPtr<Element> tooltip = popupContainer->GetDefaultTooltip()) {
       tooltip.forget(aTooltip);
@@ -541,7 +542,7 @@ nsresult nsXULTooltipListener::FindTooltip(nsIContent* aTarget,
   if (!tooltipText.IsEmpty()) {
     // specifying tooltiptext means we will always use the default tooltip
     nsIPopupContainer* popupContainer =
-        nsIPopupContainer::GetPopupContainer(document->GetShell());
+        nsIPopupContainer::GetPopupContainer(document->GetPresShell());
     NS_ENSURE_STATE(popupContainer);
     if (RefPtr<Element> tooltip = popupContainer->GetDefaultTooltip()) {
       tooltip->SetAttr(kNameSpaceID_None, nsGkAtoms::label, tooltipText, true);
@@ -584,7 +585,7 @@ nsresult nsXULTooltipListener::FindTooltip(nsIContent* aTarget,
   // titletips should just use the default tooltip
   if (mIsSourceTree && mNeedTitletip) {
     nsIPopupContainer* popupContainer =
-        nsIPopupContainer::GetPopupContainer(document->GetShell());
+        nsIPopupContainer::GetPopupContainer(document->GetPresShell());
     NS_ENSURE_STATE(popupContainer);
     NS_IF_ADDREF(*aTooltip = popupContainer->GetDefaultTooltip());
   }

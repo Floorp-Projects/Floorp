@@ -27,6 +27,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocumentLoader.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIPrompt.h"
@@ -967,10 +968,10 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   // It's just designed to preserve old semantics during a mass-conversion
   // patch.
   // Bug 1498605 verify usages of systemPrincipal here
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
   nsCOMPtr<nsIPrincipal> subjectPrincipal =
-      nsContentUtils::GetCurrentJSContext()
-          ? nsContentUtils::SubjectPrincipal()
-          : nsContentUtils::GetSystemPrincipal();
+      cx ? nsContentUtils::SubjectPrincipal()
+         : nsContentUtils::GetSystemPrincipal();
 
   bool isPrivateBrowsingWindow = false;
 
@@ -1086,13 +1087,22 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     }
   }
 
-  // Currently we query the CSP from the subjectPrincipal. After Bug 965637
-  // we should query the CSP from the doc, similar to the referrerInfo above.
-  if (subjectPrincipal && loadState) {
-    nsCOMPtr<nsIContentSecurityPolicy> csp;
-    rv = subjectPrincipal->GetCsp(getter_AddRefs(csp));
-    NS_ENSURE_SUCCESS(rv, rv);
-    loadState->SetCsp(csp);
+  // Currently we query the CSP from the principal of the inner window.
+  // After Bug 965637 we can query the CSP directly from the inner window.
+  // Further, if the JS context is null, then the subjectPrincipal falls
+  // back to being the SystemPrincipal (see above) and the SystemPrincipal
+  // can currently not hold a CSP. We use the same semantics here.
+  if (loadState && cx) {
+    nsGlobalWindowInner* win = xpc::CurrentWindowOrNull(cx);
+    if (win) {
+      nsCOMPtr<nsIPrincipal> principal = win->GetPrincipal();
+      if (principal) {
+        nsCOMPtr<nsIContentSecurityPolicy> csp;
+        rv = principal->GetCsp(getter_AddRefs(csp));
+        NS_ENSURE_SUCCESS(rv, rv);
+        loadState->SetCsp(csp);
+      }
+    }
   }
 
   if (isNewToplevelWindow) {

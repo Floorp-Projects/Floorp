@@ -19,6 +19,10 @@
 #  include <gdk/gdkx.h>
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "GeneratedJNIWrappers.h"
+#endif
+
 namespace mozilla {
 namespace wr {
 
@@ -104,6 +108,10 @@ bool RenderCompositorEGL::BeginFrame() {
     return false;
   }
 
+#ifdef MOZ_WIDGET_ANDROID
+  java::GeckoSurfaceTexture::DestroyUnused((int64_t)gl());
+#endif
+
   return true;
 }
 
@@ -117,6 +125,8 @@ void RenderCompositorEGL::WaitForGPU() {}
 
 void RenderCompositorEGL::Pause() {
 #ifdef MOZ_WIDGET_ANDROID
+  java::GeckoSurfaceTexture::DestroyUnused((int64_t)gl());
+  java::GeckoSurfaceTexture::DetachAllFromGLContext((int64_t)gl());
   DestroyEGLSurface();
 #endif
 }

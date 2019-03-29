@@ -20,6 +20,7 @@
 #include "mozilla/dom/KeyframeEffect.h"
 
 #include "nsPresContext.h"
+#include "nsPresContextInlines.h"
 #include "nsStyleChangeList.h"
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"

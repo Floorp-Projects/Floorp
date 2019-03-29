@@ -18,6 +18,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TouchEvents.h"
 #include "nsContainerFrame.h"
 #include "nsContentUtils.h"
@@ -73,7 +74,7 @@ static ScreenMargin RecenterDisplayPort(const ScreenMargin& aDisplayPort) {
 static already_AddRefed<nsIPresShell> GetPresShell(const nsIContent* aContent) {
   nsCOMPtr<nsIPresShell> result;
   if (dom::Document* doc = aContent->GetComposedDoc()) {
-    result = doc->GetShell();
+    result = doc->GetPresShell();
   }
   return result.forget();
 }
@@ -436,11 +437,11 @@ nsPresContext* APZCCallbackHelper::GetPresContextForContent(
   if (!doc) {
     return nullptr;
   }
-  nsIPresShell* shell = doc->GetShell();
-  if (!shell) {
+  PresShell* presShell = doc->GetPresShell();
+  if (!presShell) {
     return nullptr;
   }
-  return shell->GetPresContext();
+  return presShell->GetPresContext();
 }
 
 nsIPresShell* APZCCallbackHelper::GetRootContentDocumentPresShellForContent(
@@ -461,11 +462,11 @@ static nsIPresShell* GetRootDocumentPresShell(nsIContent* aContent) {
   if (!doc) {
     return nullptr;
   }
-  nsIPresShell* shell = doc->GetShell();
-  if (!shell) {
+  PresShell* presShell = doc->GetPresShell();
+  if (!presShell) {
     return nullptr;
   }
-  nsPresContext* context = shell->GetPresContext();
+  nsPresContext* context = presShell->GetPresContext();
   if (!context) {
     return nullptr;
   }
@@ -646,8 +647,8 @@ static nsIFrame* UpdateRootFrameForTouchTargetDocument(nsIFrame* aRootFrame) {
   // necessary.
   if (dom::Document* doc =
           aRootFrame->PresShell()->GetPrimaryContentDocument()) {
-    if (nsIPresShell* shell = doc->GetShell()) {
-      if (nsIFrame* frame = shell->GetRootFrame()) {
+    if (PresShell* presShell = doc->GetPresShell()) {
+      if (nsIFrame* frame = presShell->GetRootFrame()) {
         return frame;
       }
     }
@@ -838,8 +839,8 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(
     return nullptr;
   }
   sLastTargetAPZCNotificationInputBlock = aInputBlockId;
-  if (nsIPresShell* shell = aDocument->GetShell()) {
-    if (nsIFrame* rootFrame = shell->GetRootFrame()) {
+  if (PresShell* presShell = aDocument->GetPresShell()) {
+    if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
       rootFrame = UpdateRootFrameForTouchTargetDocument(rootFrame);
 
       bool waitForRefresh = false;
@@ -866,7 +867,7 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(
               "At least one target got a new displayport, need to wait for "
               "refresh\n");
           return MakeUnique<DisplayportSetListener>(
-              aWidget, shell, aInputBlockId, std::move(targets));
+              aWidget, presShell, aInputBlockId, std::move(targets));
         }
         APZCCH_LOG("Sending target APZCs for input block %" PRIu64 "\n",
                    aInputBlockId);
@@ -884,8 +885,8 @@ void APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
   if (!aWidget || !aDocument) {
     return;
   }
-  if (nsIPresShell* shell = aDocument->GetShell()) {
-    if (nsIFrame* rootFrame = shell->GetRootFrame()) {
+  if (PresShell* presShell = aDocument->GetPresShell()) {
+    if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
       rootFrame = UpdateRootFrameForTouchTargetDocument(rootFrame);
 
       nsTArray<TouchBehaviorFlags> flags;

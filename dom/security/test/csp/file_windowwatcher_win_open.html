@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+Opened Window<br/>
+
+<script>
+
+window.onload = function() {
+  window.opener.parent.parent.postMessage({result: window.location.href}, "*");
+  window.close();
+}
+
+</script>
+</body>
+</html>

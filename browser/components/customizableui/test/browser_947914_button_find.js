@@ -6,6 +6,9 @@
 
 add_task(async function() {
   info("Check find button existence and functionality");
+  // The TabContextMenu initializes its strings only on a focus or mouseover event.
+  // Calls focus event on the TabContextMenu early in the test.
+  gBrowser.selectedTab.focus();
   CustomizableUI.addWidgetToArea("find-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
   registerCleanupFunction(() => CustomizableUI.reset());
 
