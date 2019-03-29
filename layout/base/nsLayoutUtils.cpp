@@ -27,6 +27,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsFontMetrics.h"
 #include "nsPresContext.h"
+#include "nsPresContextInlines.h"
 #include "nsIContent.h"
 #include "nsFrameList.h"
 #include "nsGenericHTMLElement.h"

@@ -15,6 +15,7 @@
 #include "mozilla/ServoElementSnapshotTable.h"
 #include "nsChangeHint.h"
 #include "nsPresContext.h"
+#include "nsPresContextInlines.h"  // XXX Shouldn't be included by header though
 #include "nsStringFwd.h"
 
 class nsAttrValue;
