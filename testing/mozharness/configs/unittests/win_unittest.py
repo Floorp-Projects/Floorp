@@ -24,7 +24,7 @@ TASKBAR_AUTOHIDE_REG_PATH = {
 config = {
     "exes": {
         'python': sys.executable,
-        'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg')
+        'hg': os.path.join(os.environ.get('PROGRAMFILES', ''), 'Mercurial', 'hg')
     },
     ###
     "installer_path": INSTALLER_PATH,
