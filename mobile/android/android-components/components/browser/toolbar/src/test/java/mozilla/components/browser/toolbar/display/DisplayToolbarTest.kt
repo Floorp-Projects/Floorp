@@ -668,6 +668,39 @@ class DisplayToolbarTest {
         }
     }
 
+    @Test
+    fun `clicking on site security indicator invokes listener`() {
+        var listenerInvoked = false
+
+        val toolbar = BrowserToolbar(context)
+
+        assertNull(toolbar.displayToolbar.siteSecurityIconView.background)
+
+        toolbar.setOnSiteSecurityClickedListener {
+            listenerInvoked = true
+        }
+
+        assertNotNull(toolbar.displayToolbar.siteSecurityIconView.background)
+
+        toolbar.displayToolbar.siteSecurityIconView.performClick()
+
+        assertTrue(listenerInvoked)
+
+        listenerInvoked = false
+
+        toolbar.setOnSiteSecurityClickedListener { }
+
+        assertNotNull(toolbar.displayToolbar.siteSecurityIconView.background)
+
+        toolbar.displayToolbar.siteSecurityIconView.performClick()
+
+        assertFalse(listenerInvoked)
+
+        toolbar.setOnSiteSecurityClickedListener(null)
+
+        assertNull(toolbar.displayToolbar.siteSecurityIconView.background)
+    }
+
     companion object {
         private fun extractUrlView(displayToolbar: DisplayToolbar): TextView {
             var textView: TextView? = null

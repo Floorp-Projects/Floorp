@@ -12,6 +12,7 @@ import android.support.annotation.DrawableRes
 import android.support.annotation.VisibleForTesting
 import android.support.v13.view.inputmethod.EditorInfoCompat
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.view.ViewGroup
@@ -231,6 +232,29 @@ class BrowserToolbar @JvmOverloads constructor(
     fun setOnEditFocusChangeListener(listener: (Boolean) -> Unit) {
         editToolbar.urlView.onFocusChangeListener = OnFocusChangeListener { _, hasFocus ->
             listener.invoke(hasFocus)
+        }
+    }
+
+    /**
+     * Sets a listener to be invoked when the site security indicator icon is clicked.
+     */
+    fun setOnSiteSecurityClickedListener(listener: (() -> Unit)?) {
+        if (listener == null) {
+            displayToolbar.siteSecurityIconView.setOnClickListener(null)
+            displayToolbar.siteSecurityIconView.background = null
+        } else {
+            displayToolbar.siteSecurityIconView.setOnClickListener {
+                listener.invoke()
+            }
+
+            val outValue = TypedValue()
+
+            context.theme.resolveAttribute(
+                android.R.attr.selectableItemBackgroundBorderless,
+                outValue,
+                true)
+
+            displayToolbar.siteSecurityIconView.setBackgroundResource(outValue.resourceId)
         }
     }
 
