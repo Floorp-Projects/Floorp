@@ -62,10 +62,6 @@ static bool IsInLoop(MDefinition* ins) { return ins->block()->isMarked(); }
 // Test whether the given instruction is cheap and not worth hoisting unless
 // one of its users will be hoisted as well.
 static bool RequiresHoistedUse(const MDefinition* ins, bool hasCalls) {
-  if (ins->isConstantElements()) {
-    return true;
-  }
-
   if (ins->isBox()) {
     MOZ_ASSERT(!ins->toBox()->input()->isBox(),
                "Box of a box could lead to unbounded recursion");

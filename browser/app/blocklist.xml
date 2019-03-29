@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1553172061896" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1553620435398" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2637,6 +2637,34 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="6cf1b676-f0b8-4fea-8a5f-64957650dc2e" id="/^((\{1c94bc8a-3ac1-12e1-aae7-0b314772229c\})|(\{8a22255c-4737-11e9-a86b-0bb66337cb31\})|(\{3fab603e-3ee1-1222-a859-5f85a3441216\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="e263fbec-7155-442f-aa82-cdf218f9e3d7" id="/^((\{157cd8f9-48f0-43a1-9bcf-c4316753e087\})|(\{157cd8f9-48f0-43a1-9bcf-c4316753e086\})|(\{157cd8f9-48f0-43a1-9bcf-c4316753e088\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="7abbecfb-5512-47d1-ba9b-96d6a61b85ee" id="{bc919484-f20e-48e2-a7c8-6642e111abce}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="a1f04f09-f4d5-4875-b4b1-a2c772178e8e" id="{7ab5c514-4ebe-22e9-a925-9b7c7317c373}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="50197dbd-71bc-492f-a0f1-6658ec454df4" id="/^((\{10f1b84d-79ca-41d0-97f6-abb53cec0765\})|(\{7891c029-0071-4534-b7f0-7288f14ee0ad\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="0c09f067-6e5f-4ee0-9040-08b4297ebe02" id="{a9c33302-4c97-11e9-9a9d-af400df725e3}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="a4dca16a-9fa1-4b55-899c-0f8d5eda1a57" id="new-tab-search@mozzilla.xpi">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="e00b2639-8a4f-427a-80d8-7c4937c58f31" id="/^((\{36261798-4c2a-4206-89cc-6c28932b2e98\})|(\{b2b9bb64-78d5-43ca-b0cf-a9ee8460521b\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>

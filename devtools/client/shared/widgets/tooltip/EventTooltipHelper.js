@@ -278,7 +278,8 @@ EventTooltip.prototype = {
 
       this._tooltip.hide();
 
-      toolbox.viewSourceInDebugger(location.url, location.line, sourceActor);
+      toolbox.viewSourceInDebugger(location.url, location.line,
+        location.column, sourceActor);
     }
   },
 

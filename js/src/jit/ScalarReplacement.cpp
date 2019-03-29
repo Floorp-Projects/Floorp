@@ -217,7 +217,7 @@ static bool IsObjectEscaped(MInstruction* ins, JSObject* objDefault) {
       case MDefinition::Opcode::GuardShape: {
         MGuardShape* guard = def->toGuardShape();
         MOZ_ASSERT(!ins->isGuardShape());
-        if (obj->maybeShape() != guard->shape()) {
+        if (obj->shape() != guard->shape()) {
           JitSpewDef(JitSpew_Escape, "has a non-matching guard shape\n", guard);
           return true;
         }

@@ -50,7 +50,7 @@ class JSObjectPtrOrRef(prettyprinters.Pointer):
             return '[object {}]'.format(class_name)
         else:
             native = self.value.cast(self.otc.NativeObject_ptr_t)
-            shape = native['shapeOrExpando_'].cast(self.otc.Shape_ptr_t)
+            shape = native['shape_'].cast(self.otc.Shape_ptr_t)
             baseshape = deref(shape['base_'])
             flags = baseshape['flags']
             is_delegate = bool(flags & self.otc.flag_DELEGATE)

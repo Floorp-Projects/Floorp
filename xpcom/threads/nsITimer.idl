@@ -77,7 +77,7 @@ interface nsITimerCallback : nsISupports
  * target thread, or races may occur with bad results like timers firing after
  * they've been canceled, and/or not firing after re-initiatization.
  */
-[scriptable, uuid(3de4b105-363c-482c-a409-baac83a01bfc)]
+[scriptable, builtinclass, uuid(3de4b105-363c-482c-a409-baac83a01bfc)]
 interface nsITimer : nsISupports
 {
   /* Timer types */

@@ -202,7 +202,7 @@ void js::NativeObject::checkShapeConsistency() {
                     shape->slot() < slotSpan());
       if (!prev) {
         MOZ_ASSERT(lastProperty() == shape);
-        MOZ_ASSERT(shape->listp == &shapeRef());
+        MOZ_ASSERT(shape->listp == &shape_);
       } else {
         MOZ_ASSERT(shape->listp == &prev->parent);
       }

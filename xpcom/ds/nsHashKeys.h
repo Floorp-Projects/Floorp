@@ -9,7 +9,6 @@
 
 #include "nsID.h"
 #include "nsISupports.h"
-#include "nsIHashable.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "PLDHashTable.h"
@@ -62,7 +61,6 @@ inline uint32_t HashString(const nsACString& aStr) {
  * nsDepCharHashKey
  * nsCharPtrHashKey
  * nsUnicharPtrHashKey
- * nsHashableHashKey
  * nsGenericHashKey
  */
 
@@ -585,47 +583,6 @@ class nsUnicharPtrHashKey : public PLDHashEntryHdr {
 
  private:
   const char16_t* mKey;
-};
-
-/**
- * Hashtable key class to use with objects that support nsIHashable
- */
-class nsHashableHashKey : public PLDHashEntryHdr {
- public:
-  typedef nsIHashable* KeyType;
-  typedef const nsIHashable* KeyTypePointer;
-
-  explicit nsHashableHashKey(const nsIHashable* aKey)
-      : mKey(const_cast<nsIHashable*>(aKey)) {}
-  nsHashableHashKey(nsHashableHashKey&& aOther)
-      : PLDHashEntryHdr(std::move(aOther)), mKey(std::move(aOther.mKey)) {}
-  ~nsHashableHashKey() {}
-
-  nsIHashable* GetKey() const { return mKey; }
-
-  bool KeyEquals(const nsIHashable* aKey) const {
-    bool eq;
-    if (NS_SUCCEEDED(mKey->Equals(const_cast<nsIHashable*>(aKey), &eq))) {
-      return eq;
-    }
-    return false;
-  }
-
-  static const nsIHashable* KeyToPointer(nsIHashable* aKey) { return aKey; }
-  static PLDHashNumber HashKey(const nsIHashable* aKey) {
-    uint32_t code = 8888;  // magic number if GetHashCode fails :-(
-#ifdef DEBUG
-    nsresult rv =
-#endif
-        const_cast<nsIHashable*>(aKey)->GetHashCode(&code);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "GetHashCode should not throw!");
-    return code;
-  }
-
-  enum { ALLOW_MEMMOVE = true };
-
- private:
-  nsCOMPtr<nsIHashable> mKey;
 };
 
 namespace mozilla {

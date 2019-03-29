@@ -48,7 +48,7 @@ crashtest:
         by-test-platform:
             android-em-4.3-arm7-api-16/debug: 10
             android-em-4.3-arm7-api-16/opt: 4
-            android-em-4.3-arm7-api-16-pgo/opt: 4
+            android-em-4.3-arm7-api-16/pgo: 4
             android-em-7.*: 1
             default: 1
     e10s:

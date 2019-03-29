@@ -1,79 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE html [
-  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
-  %htmlDTD;
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-  %brandDTD;
-  <!ENTITY % blockedSiteDTD SYSTEM "chrome://browser/locale/safebrowsing/phishing-afterload-warning-message.dtd">
-  %blockedSiteDTD;
-]>
-
+<!DOCTYPE html>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Security-Policy" content="default-src chrome:" />
     <link rel="stylesheet" href="chrome://browser/skin/blockedSite.css" type="text/css" media="all" />
     <link rel="icon" type="image/png" id="favicon" href="chrome://global/skin/icons/blocklist_favicon.png"/>
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="browser/safebrowsing/blockedSite.ftl"/>
   </head>
-  <body dir="&locale.dir;">
+  <body>
     <div id="errorPageContainer" class="container">
 
       <!-- Error Title -->
       <div id="errorTitle" class="title">
-        <h1 class="title-text" id="errorTitleText_phishing">&safeb.blocked.phishingPage.title3;</h1>
-        <h1 class="title-text" id="errorTitleText_malware">&safeb.blocked.malwarePage.title2;</h1>
-        <h1 class="title-text" id="errorTitleText_unwanted">&safeb.blocked.unwantedPage.title2;</h1>
-        <h1 class="title-text" id="errorTitleText_harmful">&safeb.blocked.harmfulPage.title;</h1>
+        <h1 class="title-text" id="errorTitleText"></h1>
       </div>
 
       <div id="errorLongContent">
 
         <!-- Short Description -->
         <div id="errorShortDesc">
-          <p id="errorShortDescText_phishing">&safeb.blocked.phishingPage.shortDesc3;</p>
-          <p id="errorShortDescText_malware">&safeb.blocked.malwarePage.shortDesc2;</p>
-          <p id="errorShortDescText_unwanted">&safeb.blocked.unwantedPage.shortDesc2;</p>
-          <p id="errorShortDescText_harmful">&safeb.blocked.harmfulPage.shortDesc2;</p>
+          <p id="errorShortDescText"></p>
         </div>
 
         <!-- Advisory -->
         <div id="advisoryDesc">
-          <p id="advisoryDescText">&safeb.palm.advisory.desc2;</p>
+          <p id="advisoryDescText">
+            <a id="advisory_provider" data-l10n-name="advisory_provider"></a>
+          </p>
         </div>
 
         <!-- Action buttons -->
         <div id="buttons" class="button-container">
           <!-- Commands handled in browser.js -->
-          <button id="goBackButton">&safeb.palm.accept.label2;</button>
-          <button id="seeDetailsButton">&safeb.palm.seedetails.label;</button>
+          <button id="goBackButton" data-l10n-id="safeb-palm-accept-label"></button>
+          <button id="seeDetailsButton" data-l10n-id="safeb-palm-see-details-label"></button>
         </div>
       </div>
       <div id="errorDescriptionContainer" hidden="true">
-        <div class="error-description" id="errorLongDesc_phishing">
-          <p id="phishing_error_desc_override">&safeb.blocked.phishingPage.errorDesc.override;</p>
-          <p id="phishing_error_desc_no_override">&safeb.blocked.phishingPage.errorDesc.noOverride;</p>
-          <p id="phishing_learn_more">&safeb.blocked.phishingPage.learnMore;</p>
-        </div>
-        <div class="error-description" id="errorLongDesc_malware">
-          <p id="malware_error_desc_override">&safeb.blocked.malwarePage.errorDesc.override;</p>
-          <p id="malware_error_desc_no_override">&safeb.blocked.malwarePage.errorDesc.noOverride;</p>
-          <p id="malware_learn_more">&safeb.blocked.malwarePage.learnMore;</p>
-        </div>
-        <div class="error-description" id="errorLongDesc_unwanted">
-          <p id="unwanted_error_desc_override">&safeb.blocked.unwantedPage.errorDesc.override;</p>
-          <p id="unwanted_error_desc_no_override">&safeb.blocked.unwantedPage.errorDesc.noOverride;</p>
-          <p id="unwanted_learn_more">&safeb.blocked.unwantedPage.learnMore;</p>
-        </div>
-        <div class="error-description" id="errorLongDesc_harmful">
-          <p id="harmful_error_desc_override">&safeb.blocked.harmfulPage.errorDesc.override;</p>
-          <p id="harmful_error_desc_no_override">&safeb.blocked.harmfulPage.errorDesc.noOverride;</p>
-          <p id="harmful_learn_more">&safeb.blocked.harmfulPage.learnMore;</p>
+        <!-- Error Descriptions Handled in blockedSite.js -->
+        <div class="error-description" id="errorLongDesc">
+          <p id="errorInnerDescription">
+              <span id="error_desc_sitename" data-l10n-name="sitename"></span>
+              <a id="error_desc_link" data-l10n-name="error_desc_link"></a>
+              <a id="report_detection" data-l10n-name="report_detection"></a>
+              <a id="ignore_warning_link" data-l10n-name="ignore_warning_link"></a>
+          </p>
+          <p id="learn_more">
+              <a id="learn_more_link" data-l10n-name="learn_more_link"></a>
+              <a id="firefox_support" data-l10n-name="firefox_support"></a>
+          </p>
         </div>
       </div>
     </div>

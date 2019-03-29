@@ -48,6 +48,11 @@
 
   /* we want to scroll only the main content, not the sidebar */
   overflow-y: auto;
+
+  /* padding will give space for card shadow to appear and
+     margin will correct the alignment */
+  margin-inline: calc(var(--card-shadow-blur-radius) * -1);
+  padding-inline: var(--card-shadow-blur-radius);
 }
 
 .page {

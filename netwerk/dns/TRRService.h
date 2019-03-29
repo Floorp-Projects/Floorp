@@ -52,6 +52,7 @@ class TRRService : public nsIObserver,
   bool IsTRRBlacklisted(const nsACString &aHost,
                         const nsACString &aOriginSuffix, bool aPrivateBrowsing,
                         bool aParentsToo);
+  bool IsExcludedFromTRR(const nsACString &aHost);
 
   bool MaybeBootstrap(const nsACString &possible, nsACString &result);
   enum TrrOkay { OKAY_NORMAL = 0, OKAY_TIMEOUT = 1, OKAY_BAD = 2 };

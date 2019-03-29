@@ -606,8 +606,6 @@
                           onclick="checkForMiddleClick(this, event);"
                           hidden="true"/>
                 <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
-                          label="&safeb.palm.notdeceptive.label;"
-                          accesskey="&safeb.palm.notdeceptive.accesskey;"
                           disabled="true"
                           oncommand="ReportFalseDeceptiveSite();"
                           onclick="checkForMiddleClick(this, event);"

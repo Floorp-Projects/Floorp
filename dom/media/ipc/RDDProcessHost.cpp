@@ -11,9 +11,8 @@
 
 #include "RDDChild.h"
 
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "mozilla/Sandbox.h"
-#  include "nsMacUtilsImpl.h"
 #endif
 
 namespace mozilla {

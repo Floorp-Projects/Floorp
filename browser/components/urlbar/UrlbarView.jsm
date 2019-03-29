@@ -204,16 +204,25 @@ class UrlbarView {
   onQueryResults(queryContext) {
     this._queryContext = queryContext;
 
-    let fragment = this.document.createDocumentFragment();
-    for (let resultIndex in queryContext.results) {
-      fragment.appendChild(this._createRow(resultIndex));
+    while (this._rows.children.length > queryContext.results.length) {
+      this._rows.lastElementChild.remove();
+    }
+    let resultIndex = 0;
+    for (let row of this._rows.children) {
+      this._updateRow(row, resultIndex);
+      resultIndex++;
+    }
+    for (; resultIndex < queryContext.results.length; resultIndex++) {
+      let row = this._createRow();
+      this._updateRow(row, resultIndex);
+      this._rows.appendChild(row);
     }
 
     let isFirstPreselectedResult = false;
     if (queryContext.lastResultCount == 0) {
       if (queryContext.preselected) {
         isFirstPreselectedResult = true;
-        this._selectItem(fragment.firstElementChild, {
+        this._selectItem(this._rows.firstElementChild, {
           updateInput: false,
           setAccessibleFocus: false,
         });
@@ -230,21 +239,7 @@ class UrlbarView {
          (trimmedValue[0] != UrlbarTokenizer.RESTRICT.SEARCH ||
           trimmedValue.length != 1))
       );
-    } else if (this._selected) {
-      // Ensure the selection is stable.
-      // TODO bug 1523602: the selection should stay on the node that had it, if
-      // it's still in the current result set.
-      let resultIndex = this._selected.getAttribute("resultIndex");
-      this._selectItem(fragment.children[resultIndex], {
-        updateInput: false,
-        setAccessibleFocus: false,
-      });
     }
-
-    // TODO bug 1523602: For now, clear the results for each set received.
-    // We should be updating the existing list instead.
-    this._rows.textContent = "";
-    this._rows.appendChild(fragment);
 
     this._openPanel();
 
@@ -394,24 +389,11 @@ class UrlbarView {
     this.panel.style.setProperty("--item-content-width", Math.round(contentWidth) + "px");
   }
 
-  _createRow(resultIndex) {
-    let result = this._queryContext.results[resultIndex];
+  _createRow() {
     let item = this._createElement("div");
-    item.id = "urlbarView-row-" + resultIndex;
     item.className = "urlbarView-row";
-    item.setAttribute("resultIndex", resultIndex);
     item.setAttribute("role", "option");
-
-    if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
-        !result.payload.isKeywordOffer) {
-      item.setAttribute("type", "search");
-    } else if (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB) {
-      item.setAttribute("type", "remotetab");
-    } else if (result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
-      item.setAttribute("type", "switchtab");
-    } else if (result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS) {
-      item.setAttribute("type", "bookmark");
-    }
+    item._elements = new Map;
 
     let content = this._createElement("span");
     content.className = "urlbarView-row-inner";
@@ -423,23 +405,67 @@ class UrlbarView {
 
     let favicon = this._createElement("img");
     favicon.className = "urlbarView-favicon";
+    content.appendChild(favicon);
+    item._elements.set("favicon", favicon);
+
+    let title = this._createElement("span");
+    title.className = "urlbarView-title";
+    content.appendChild(title);
+    item._elements.set("title", title);
+
+    let tagsContainer = this._createElement("div");
+    tagsContainer.className = "urlbarView-tags";
+    content.appendChild(tagsContainer);
+    item._elements.set("tagsContainer", tagsContainer);
+
+    let titleSeparator = this._createElement("span");
+    titleSeparator.className = "urlbarView-title-separator";
+    content.appendChild(titleSeparator);
+
+    let action = this._createElement("span");
+    action.className = "urlbarView-secondary urlbarView-action";
+    content.appendChild(action);
+    item._elements.set("action", action);
+
+    let url = this._createElement("span");
+    url.className = "urlbarView-secondary urlbarView-url";
+    content.appendChild(url);
+    item._elements.set("url", url);
+
+    return item;
+  }
+
+  _updateRow(item, resultIndex) {
+    let result = this._queryContext.results[resultIndex];
+    item.id = "urlbarView-row-" + resultIndex;
+    item.setAttribute("resultIndex", resultIndex);
+
+    if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
+        !result.payload.isKeywordOffer) {
+      item.setAttribute("type", "search");
+    } else if (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB) {
+      item.setAttribute("type", "remotetab");
+    } else if (result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
+      item.setAttribute("type", "switchtab");
+    } else if (result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS) {
+      item.setAttribute("type", "bookmark");
+    } else {
+      item.removeAttribute("type");
+    }
+
+    let favicon = item._elements.get("favicon");
     if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH ||
         result.type == UrlbarUtils.RESULT_TYPE.KEYWORD) {
       favicon.src = result.payload.icon || UrlbarUtils.ICON.SEARCH_GLASS;
     } else {
       favicon.src = result.payload.icon || UrlbarUtils.ICON.DEFAULT;
     }
-    content.appendChild(favicon);
 
-    let title = this._createElement("span");
-    title.className = "urlbarView-title";
     this._addTextContentWithHighlights(
-      title, result.title, result.titleHighlights);
-    content.appendChild(title);
+      item._elements.get("title"), result.title, result.titleHighlights);
 
+    let tagsContainer = item._elements.get("tagsContainer");
     if (result.payload.tags && result.payload.tags.length > 0) {
-      const tagsContainer = this._createElement("div");
-      tagsContainer.className = "urlbarView-tags";
       tagsContainer.append(...result.payload.tags.map((tag, i) => {
         const element = this._createElement("span");
         element.className = "urlbarView-tag";
@@ -447,63 +473,49 @@ class UrlbarView {
           element, tag, result.payloadHighlights.tags[i]);
         return element;
       }));
-      content.appendChild(tagsContainer);
+    } else {
+      tagsContainer.textContent = "";
     }
 
-    let titleSeparator = this._createElement("span");
-    titleSeparator.className = "urlbarView-title-separator";
-    content.appendChild(titleSeparator);
-
-    let action;
-    let url;
-    let setAction = text => {
-      action = this._createElement("span");
-      action.className = "urlbarView-secondary urlbarView-action";
-      action.textContent = text;
-    };
-    let setURL = () => {
-      url = this._createElement("span");
-      url.className = "urlbarView-secondary urlbarView-url";
-      this._addTextContentWithHighlights(url, result.payload.displayUrl,
-                                         result.payloadHighlights.displayUrl || []);
-    };
+    let action = "";
+    let setURL = false;
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
-        setAction(bundle.GetStringFromName("switchToTab2"));
-        setURL();
+        action = bundle.GetStringFromName("switchToTab2");
+        setURL = true;
         break;
       case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
-        setAction(result.payload.device);
-        setURL();
+        action = result.payload.device;
+        setURL = true;
         break;
       case UrlbarUtils.RESULT_TYPE.SEARCH:
-        setAction(bundle.formatStringFromName("searchWithEngine",
-                                              [result.payload.engine], 1));
+        action = bundle.formatStringFromName("searchWithEngine",
+                                             [result.payload.engine], 1);
         break;
       case UrlbarUtils.RESULT_TYPE.KEYWORD:
         if (result.payload.input.trim() == result.payload.keyword) {
-          setAction(bundle.GetStringFromName("visit"));
+          action = bundle.GetStringFromName("visit");
         }
         break;
       case UrlbarUtils.RESULT_TYPE.OMNIBOX:
-        setAction(result.payload.content);
+        action = result.payload.content;
         break;
       default:
         if (result.heuristic) {
-          setAction(bundle.GetStringFromName("visit"));
+          action = bundle.GetStringFromName("visit");
         } else {
-          setURL();
+          setURL = true;
         }
         break;
     }
-    if (action) {
-      content.appendChild(action);
+    let url = item._elements.get("url");
+    if (setURL) {
+      this._addTextContentWithHighlights(url, result.payload.displayUrl,
+                                         result.payloadHighlights.displayUrl || []);
+    } else {
+      url.textContent = "";
     }
-    if (url) {
-      content.appendChild(url);
-    }
-
-    return item;
+    item._elements.get("action").textContent = action;
   }
 
   _selectItem(item, {
@@ -551,6 +563,7 @@ class UrlbarView {
    *   The matches to highlight in the text.
    */
   _addTextContentWithHighlights(parentNode, textContent, highlights) {
+    parentNode.textContent = "";
     if (!textContent) {
       return;
     }

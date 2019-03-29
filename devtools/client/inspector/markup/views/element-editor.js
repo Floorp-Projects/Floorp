@@ -791,8 +791,14 @@ ElementEditor.prototype = {
   },
 
   onCustomBadgeClick: function() {
-    const { url, line } = this.node.customElementLocation;
-    this.markup.toolbox.viewSourceInDebugger(url, line, null, "show_custom_element");
+    const { url, line, column } = this.node.customElementLocation;
+    this.markup.toolbox.viewSourceInDebugger(
+      url,
+      line,
+      column,
+      null,
+      "show_custom_element"
+    );
   },
 
   onExpandBadgeClick: function() {

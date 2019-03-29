@@ -29,7 +29,7 @@ add_task(async function() {
   const usbRuntimeSidebarItem = findSidebarItemByText("test device name", document);
 
   const itemText = usbRuntimeSidebarItem.textContent;
-  ok(itemText.includes("Waiting for runtime"), "Sidebar item shows Waiting for runtime");
+  ok(itemText.includes("Waiting for browser"), "Sidebar item shows Waiting for browser");
   ok(!itemText.includes(RUNTIME_NAME), "Sidebar item does not show the runtime name");
 
   const hasConnectButton = usbRuntimeSidebarItem.querySelector(".js-connect-button");

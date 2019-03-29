@@ -758,6 +758,8 @@ nsresult txMozillaXMLOutput::createResultDocument(const nsAString& aName,
   // source, so that we have the right principal.
   mDocument->SetScriptHandlingObject(sgo);
 
+  mDocument->SetStateObjectFrom(aSourceDocument);
+
   // Set the charset
   if (!mOutputFormat.mEncoding.IsEmpty()) {
     const Encoding* encoding = Encoding::ForLabel(mOutputFormat.mEncoding);
