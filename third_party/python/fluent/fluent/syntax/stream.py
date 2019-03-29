@@ -64,7 +64,6 @@ SPECIAL_LINE_START_CHARS = ('}', '.', '[', '*')
 
 
 class FluentParserStream(ParserStream):
-    last_comment_zero_four_syntax = False
 
     def peek_blank_inline(self):
         start = self.index + self.peek_offset
@@ -185,14 +184,6 @@ class FluentParserStream(ParserStream):
             return True
 
         return False
-
-    def is_next_line_zero_four_comment(self):
-        if self.current_peek != EOL:
-            return False
-
-        is_comment = (self.peek(), self.peek()) == ('/', '/')
-        self.reset_peek()
-        return is_comment
 
     # -1 - any
     #  0 - comment

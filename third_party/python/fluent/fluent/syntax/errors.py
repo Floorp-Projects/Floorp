@@ -28,7 +28,7 @@ def get_error_message(code, args):
     if code == 'E0008':
         return 'The callee has to be an upper-case identifier or a term'
     if code == 'E0009':
-        return 'The key has to be a simple identifier'
+        return 'The argument name has to be a simple identifier'
     if code == 'E0010':
         return 'Expected one of the variants to be marked as default (*)'
     if code == 'E0011':
@@ -60,7 +60,7 @@ def get_error_message(code, args):
     if code == 'E0025':
         return 'Unknown escape sequence: \\{}.'.format(args[0])
     if code == 'E0026':
-        return 'Invalid Unicode escape sequence: {}'.format(args[0])
+        return 'Invalid Unicode escape sequence: {}.'.format(args[0])
     if code == 'E0027':
         return 'Unbalanced closing brace in TextElement.'
     if code == 'E0028':

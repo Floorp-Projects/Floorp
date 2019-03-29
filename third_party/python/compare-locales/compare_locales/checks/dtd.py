@@ -101,6 +101,7 @@ class DTDChecker(Checker):
                             ((refEnt.all + entities).encode('utf-8'),
                              b'&%s;' % refEnt.key.encode('utf-8'))))
         except sax.SAXParseException as e:
+            e  # noqa
             yield ('warning',
                    (0, 0),
                    "can't parse en-US value", 'xmlparse')
