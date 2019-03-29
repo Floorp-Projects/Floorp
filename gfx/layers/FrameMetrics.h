@@ -511,8 +511,12 @@ struct FrameMetrics {
   // the frame delay).
   // Modifies |aLayoutViewport| to continue enclosing |aVisualViewport|
   // if possible.
+  // The layout viewport needs to remain clamped to the scrollable rect,
+  // and we pass in the scrollable rect so this function can maintain that
+  // constraint.
   static void KeepLayoutViewportEnclosingVisualViewport(
-      const CSSRect& aVisualViewport, CSSRect& aLayoutViewport);
+      const CSSRect& aVisualViewport, const CSSRect& aScrollableRect,
+      CSSRect& aLayoutViewport);
 
  private:
   // A ID assigned to each scrollable frame, unique within each LayersId..
