@@ -9815,6 +9815,7 @@ void nsCSSFrameConstructor::ProcessChildren(
               listItem = do_QueryFrame(grandParent);
               MOZ_ASSERT(listItem, "ColumnSetWrapperFrame is expected to be "
                                    "a nsBlockFrame subclass");
+              childFrame->SetParent(listItem);
             }
           }
           listItem->SetMarkerFrameForListItem(childFrame);

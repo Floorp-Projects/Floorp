@@ -363,7 +363,7 @@ void MacroAssembler::branchIfFunctionHasNoJitEntry(Register fun,
   Address address(fun, JSFunction::offsetOfNargs());
   int32_t bit = JSFunction::INTERPRETED;
   if (!isConstructing) {
-    bit |= JSFunction::WASM_OPTIMIZED;
+    bit |= JSFunction::WASM_JIT_ENTRY;
   }
   bit = IMM32_16ADJ(bit);
   branchTest32(Assembler::Zero, address, Imm32(bit), label);

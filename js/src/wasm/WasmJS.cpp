@@ -1408,56 +1408,6 @@ static bool WasmCall(JSContext* cx, unsigned argc, Value* vp) {
   return instance.callExport(cx, funcIndex, args);
 }
 
-static bool EnsureLazyEntryStub(const Instance& instance,
-                                size_t funcExportIndex, const FuncExport& fe) {
-  if (fe.hasEagerStubs()) {
-    return true;
-  }
-
-  MOZ_ASSERT(!instance.isAsmJS(), "only wasm can lazily export functions");
-
-  // If the best tier is Ion, life is simple: background compilation has
-  // already completed and has been committed, so there's no risk of race
-  // conditions here.
-  //
-  // If the best tier is Baseline, there could be a background compilation
-  // happening at the same time. The background compilation will lock the
-  // first tier lazy stubs first to stop new baseline stubs from being
-  // generated, then the second tier stubs to generate them.
-  //
-  // - either we take the tier1 lazy stub lock before the background
-  // compilation gets it, then we generate the lazy stub for tier1. When the
-  // background thread gets the tier1 lazy stub lock, it will see it has a
-  // lazy stub and will recompile it for tier2.
-  // - or we don't take the lock here first. Background compilation won't
-  // find a lazy stub for this function, thus won't generate it. So we'll do
-  // it ourselves after taking the tier2 lock.
-
-  Tier prevTier = instance.code().bestTier();
-
-  auto stubs = instance.code(prevTier).lazyStubs().lock();
-  if (stubs->hasStub(fe.funcIndex())) {
-    return true;
-  }
-
-  // The best tier might have changed after we've taken the lock.
-  Tier tier = instance.code().bestTier();
-  const CodeTier& codeTier = instance.code(tier);
-  if (tier == prevTier) {
-    return stubs->createOne(funcExportIndex, codeTier);
-  }
-
-  MOZ_ASSERT(prevTier == Tier::Baseline && tier == Tier::Optimized);
-
-  auto stubs2 = instance.code(tier).lazyStubs().lock();
-
-  // If it didn't have a stub in the first tier, background compilation
-  // shouldn't have made one in the second tier.
-  MOZ_ASSERT(!stubs2->hasStub(fe.funcIndex()));
-
-  return stubs2->createOne(funcExportIndex, codeTier);
-}
-
 /* static */
 bool WasmInstanceObject::getExportedFunction(
     JSContext* cx, HandleWasmInstanceObject instanceObj, uint32_t funcIndex,
@@ -1468,18 +1418,9 @@ bool WasmInstanceObject::getExportedFunction(
   }
 
   const Instance& instance = instanceObj->instance();
-  const MetadataTier& metadata = instance.metadata(instance.code().bestTier());
-
-  size_t funcExportIndex;
   const FuncExport& funcExport =
-      metadata.lookupFuncExport(funcIndex, &funcExportIndex);
-
-  if (!EnsureLazyEntryStub(instance, funcExportIndex, funcExport)) {
-    return false;
-  }
-
-  const FuncType& funcType = funcExport.funcType();
-  unsigned numArgs = funcType.args().length();
+      instance.metadata(instance.code().bestTier()).lookupFuncExport(funcIndex);
+  unsigned numArgs = funcExport.funcType().args().length();
 
   if (instance.isAsmJS()) {
     // asm.js needs to act like a normal JS function which means having the
@@ -1494,36 +1435,30 @@ bool WasmInstanceObject::getExportedFunction(
     if (!fun) {
       return false;
     }
-    fun->setAsmJSIndex(funcIndex);
+
+    // asm.js does not support jit entries.
+    fun->setWasmFuncIndex(funcIndex);
   } else {
     RootedAtom name(cx, NumberToAtom(cx, funcIndex));
     if (!name) {
       return false;
     }
 
-    bool disableJitEntry = funcType.temporarilyUnsupportedAnyRef()
-#ifdef WASM_CODEGEN_DEBUG
-                           || !JitOptions.enableWasmJitEntry;
-#endif
-    ;
-
-    // Functions with anyref don't have jit entries yet, so they should
-    // mostly behave like asm.js functions. Pretend it's the case, until
-    // jit entries are implemented.
-    JSFunction::Flags flags =
-        disableJitEntry ? JSFunction::ASMJS_NATIVE : JSFunction::WASM_FUN;
-
     fun.set(NewNativeFunction(cx, WasmCall, numArgs, name,
                               gc::AllocKind::FUNCTION_EXTENDED, SingletonObject,
-                              flags));
+                              JSFunction::WASM));
     if (!fun) {
       return false;
     }
 
-    if (disableJitEntry) {
-      fun->setAsmJSIndex(funcIndex);
-    } else {
+    // Some applications eagerly access all table elements which currently
+    // triggers worst-case behavior for lazy stubs, since each will allocate a
+    // separate 4kb code page. Most eagerly-accessed functions are not called,
+    // so instead wait until Instance::callExport() to create the entry stubs.
+    if (funcExport.hasEagerStubs() && funcExport.canHaveJitEntry()) {
       fun->setWasmJitEntry(instance.code().getAddressOfJitEntry(funcIndex));
+    } else {
+      fun->setWasmFuncIndex(funcIndex);
     }
   }
 
@@ -1597,26 +1532,8 @@ WasmFunctionScope* WasmInstanceObject::getFunctionScope(
   return funcScope;
 }
 
-bool wasm::IsExportedFunction(JSFunction* fun) {
-  return fun->maybeNative() == WasmCall;
-}
-
-bool wasm::IsExportedWasmFunction(JSFunction* fun) {
-  return IsExportedFunction(fun) && !ExportedFunctionToInstance(fun).isAsmJS();
-}
-
-bool wasm::IsExportedFunction(const Value& v, MutableHandleFunction f) {
-  if (!v.isObject()) {
-    return false;
-  }
-
-  JSObject& obj = v.toObject();
-  if (!obj.is<JSFunction>() || !IsExportedFunction(&obj.as<JSFunction>())) {
-    return false;
-  }
-
-  f.set(&obj.as<JSFunction>());
-  return true;
+bool wasm::IsWasmExportedFunction(JSFunction* fun) {
+  return fun->kind() == JSFunction::Wasm;
 }
 
 Instance& wasm::ExportedFunctionToInstance(JSFunction* fun) {
@@ -1624,13 +1541,13 @@ Instance& wasm::ExportedFunctionToInstance(JSFunction* fun) {
 }
 
 WasmInstanceObject* wasm::ExportedFunctionToInstanceObject(JSFunction* fun) {
-  MOZ_ASSERT(IsExportedFunction(fun));
+  MOZ_ASSERT(fun->kind() == JSFunction::Wasm ||
+             fun->kind() == JSFunction::AsmJS);
   const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT);
   return &v.toObject().as<WasmInstanceObject>();
 }
 
 uint32_t wasm::ExportedFunctionToFuncIndex(JSFunction* fun) {
-  MOZ_ASSERT(IsExportedFunction(fun));
   Instance& instance = ExportedFunctionToInstanceObject(fun)->instance();
   return instance.code().getFuncIndex(fun);
 }
@@ -2236,6 +2153,20 @@ static void TableFunctionFill(JSContext* cx, Table* table, HandleFunction value,
   }
 }
 
+static bool IsWasmExportedFunction(const Value& v, MutableHandleFunction f) {
+  if (!v.isObject()) {
+    return false;
+  }
+
+  JSObject& obj = v.toObject();
+  if (!obj.is<JSFunction>() || !IsWasmExportedFunction(&obj.as<JSFunction>())) {
+    return false;
+  }
+
+  f.set(&obj.as<JSFunction>());
+  return true;
+}
+
 /* static */
 bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
   RootedWasmTableObject tableObj(
@@ -2255,7 +2186,7 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
   switch (table.kind()) {
     case TableKind::AnyFunction: {
       RootedFunction value(cx);
-      if (!IsExportedFunction(fillValue, &value) && !fillValue.isNull()) {
+      if (!IsWasmExportedFunction(fillValue, &value) && !fillValue.isNull()) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                  JSMSG_WASM_BAD_TABLE_VALUE);
         return false;
@@ -2333,7 +2264,7 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
           MOZ_ASSERT(table->table().getAnyFunc(index).code == nullptr);
         }
 #endif
-      } else if (IsExportedFunction(fillValue, &value)) {
+      } else if (IsWasmExportedFunction(fillValue, &value)) {
         TableFunctionFill(cx, &table->table(), value, oldLength,
                           oldLength + delta);
       } else {

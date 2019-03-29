@@ -91,7 +91,7 @@ ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
     // JNI wrappers is the moz.build system, which always builds geckoview to
     // consume from Fennec, so that dependency likely adds less to the build time.
     def jarTask = tasks["transformClassesAndResourcesWithPrepareIntermediateJarsFor${variant.name.capitalize()}"]
-    def bundleJar = jarTask.outputs.files.find({ it.absolutePath.contains('/classes.jar') })
+    def bundleJar = jarTask.outputs.files.find({ it.name == 'classes.jar' })
 
     def annotationProcessorsJarTask = project(':annotations').jar
 
@@ -140,7 +140,7 @@ ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
 
 ext.configureApplicationVariantWithJNIWrappers = { variant, module ->
     def jarTask = tasks["bundleAppClasses${variant.name.capitalize()}"]
-    def bundleJar = jarTask.outputs.files.find({ it.absolutePath.contains('/classes.jar') })
+    def bundleJar = jarTask.outputs.files.find({ it.name == 'classes.jar' })
 
     def annotationProcessorsJarTask = project(':annotations').jar
 
