@@ -367,13 +367,12 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
 
   // First, compute our inside-border size and scrollport size
   // XXXldb Can we depend more on ComputeSize here?
+  nsSize kidSize = aKidMetrics->PhysicalSize();
   nsSize desiredInsideBorderSize;
   desiredInsideBorderSize.width =
-      vScrollbarDesiredWidth +
-      std::max(aKidMetrics->Width(), hScrollbarMinWidth);
+      vScrollbarDesiredWidth + std::max(kidSize.width, hScrollbarMinWidth);
   desiredInsideBorderSize.height =
-      hScrollbarDesiredHeight +
-      std::max(aKidMetrics->Height(), vScrollbarMinHeight);
+      hScrollbarDesiredHeight + std::max(kidSize.height, vScrollbarMinHeight);
   aState->mInsideBorderSize =
       ComputeInsideBorderSize(aState, desiredInsideBorderSize);
 
@@ -720,8 +719,8 @@ void nsHTMLScrollFrame::ReflowContents(ScrollReflowInput* aState,
        aState->mReflowedContentsWithVScrollbar) &&
       aState->mVScrollbar != ShowScrollbar::Always &&
       aState->mHScrollbar != ShowScrollbar::Always) {
-    nsSize insideBorderSize = ComputeInsideBorderSize(
-        aState, nsSize(kidDesiredSize.Width(), kidDesiredSize.Height()));
+    nsSize kidSize = kidDesiredSize.PhysicalSize();
+    nsSize insideBorderSize = ComputeInsideBorderSize(aState, kidSize);
     nsRect scrolledRect = mHelper.GetUnsnappedScrolledRectInternal(
         kidDesiredSize.ScrollableOverflow(), insideBorderSize);
     if (nsRect(nsPoint(0, 0), insideBorderSize).Contains(scrolledRect)) {
