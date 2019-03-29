@@ -1598,12 +1598,6 @@ TextEditor::SetWrapWidth(int32_t aWrapColumn) {
 }
 
 NS_IMETHODIMP
-TextEditor::SetWrapColumn(int32_t aWrapColumn) {
-  mWrapColumn = aWrapColumn;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 TextEditor::GetNewlineHandling(int32_t* aNewlineHandling) {
   NS_ENSURE_ARG_POINTER(aNewlineHandling);
 
