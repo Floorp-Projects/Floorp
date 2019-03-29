@@ -41,6 +41,7 @@ export function willNavigate(event: Object) {
     clearASTs();
     clearScopes();
     clearSources();
+    client.detachWorkers();
     dispatch(navigate(event.url));
   };
 }

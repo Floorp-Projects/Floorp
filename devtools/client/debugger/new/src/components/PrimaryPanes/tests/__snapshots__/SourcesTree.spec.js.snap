@@ -48,6 +48,32 @@ exports[`SourcesTree After changing expanded nodes Shows the tree with four.js, 
 </div>
 `;
 
+exports[`SourcesTree Should show a 'No Sources' message if there are no sources 1`] = `
+<div
+  className="sources-pane thread"
+  key="pane"
+>
+  <div
+    className="node thread-header"
+  >
+    <AccessibleImage
+      className="file"
+    />
+    <span
+      className="label"
+    >
+      Main Thread
+    </span>
+  </div>
+  <div
+    className="no-sources-message"
+    key="empty"
+  >
+    This page has no sources.
+  </div>
+</div>
+`;
+
 exports[`SourcesTree Should show the tree with nothing expanded 1`] = `
 <div
   className="sources-pane thread"

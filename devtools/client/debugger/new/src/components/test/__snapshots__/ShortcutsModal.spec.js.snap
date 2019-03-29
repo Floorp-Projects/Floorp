@@ -33,7 +33,7 @@ exports[`ShortcutsModal renders when enabled 1`] = `
         </li>
         <li>
           <span>
-            Toggle Conditional Panel
+            Edit Conditional Breakpoint
           </span>
           <span>
             <span
@@ -41,6 +41,19 @@ exports[`ShortcutsModal renders when enabled 1`] = `
               key="Ctrl+Shift+B"
             >
               Ctrl+Shift+B
+            </span>
+          </span>
+        </li>
+        <li>
+          <span>
+            Edit Log Point
+          </span>
+          <span>
+            <span
+              className="keystroke"
+              key="Ctrl+Shift+Y"
+            >
+              Ctrl+Shift+Y
             </span>
           </span>
         </li>
