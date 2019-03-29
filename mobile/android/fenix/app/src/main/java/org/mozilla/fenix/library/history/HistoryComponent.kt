@@ -39,7 +39,7 @@ class HistoryComponent(
 
     override val reducer: (HistoryState, HistoryChange) -> HistoryState = { state, change ->
         when (change) {
-            is HistoryChange.Change -> state.copy(items = change.list)
+            is HistoryChange.Change -> state.copy(mode = HistoryState.Mode.Normal, items = change.list)
             is HistoryChange.EnterEditMode -> state.copy(mode = HistoryState.Mode.Editing(listOf(change.item)))
             is HistoryChange.AddItemForRemoval -> {
                 val mode = state.mode

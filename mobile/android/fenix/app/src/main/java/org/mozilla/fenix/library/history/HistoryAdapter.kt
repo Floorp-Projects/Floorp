@@ -13,8 +13,6 @@ import android.widget.CompoundButton
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import org.mozilla.fenix.R
-import androidx.core.content.ContextCompat
-import kotlinx.android.synthetic.main.history_delete.view.*
 import kotlinx.android.synthetic.main.history_header.view.*
 import kotlinx.android.synthetic.main.history_list_item.view.*
 import mozilla.components.browser.menu.BrowserMenu
@@ -223,48 +221,6 @@ class HistoryAdapter(
 
         companion object {
             const val LAYOUT_ID = R.layout.history_header
-        }
-    }
-
-    class HistoryDeleteViewHolder(
-        view: View,
-        private val actionEmitter: Observer<HistoryAction>
-    ) : RecyclerView.ViewHolder(view) {
-        private lateinit var mode: HistoryState.Mode
-
-        private val button = view.delete_history_button.apply {
-            setOnClickListener {
-                val mode = mode
-                if (mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
-                    actionEmitter.onNext(HistoryAction.Delete.Some(mode.selectedItems))
-                } else {
-                    actionEmitter.onNext(HistoryAction.Delete.All)
-                }
-            }
-        }
-
-        private val text = view.delete_history_button_text.apply {
-            val color = ContextCompat.getColor(context, R.color.photonRed60)
-            val drawable = ContextCompat.getDrawable(context, R.drawable.ic_delete)
-            drawable?.setTint(color)
-            this.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
-        }
-
-        fun bind(mode: HistoryState.Mode) {
-            this.mode = mode
-
-            val text = if (mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
-                text.context.resources.getString(R.string.history_delete_some, mode.selectedItems.size)
-            } else {
-                text.context.resources.getString(R.string.history_delete_all)
-            }
-
-            button.contentDescription = text
-            this.text.text = text
-        }
-
-        companion object {
-            const val LAYOUT_ID = R.layout.history_delete
         }
     }
 

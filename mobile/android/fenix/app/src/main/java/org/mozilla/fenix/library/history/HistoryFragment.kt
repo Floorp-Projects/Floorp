@@ -17,9 +17,10 @@ import androidx.navigation.NavOptions
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_history.view.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.coroutineScope
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
@@ -29,6 +30,7 @@ import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import kotlin.coroutines.CoroutineContext
 
+@SuppressWarnings("TooManyFunctions")
 class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
 
     private lateinit var job: Job
@@ -81,18 +83,13 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         launch(Dispatchers.IO) {
-            val items = requireComponents.core.historyStorage.getDetailedVisits(0)
-                .asReversed()
-                .mapIndexed { id, item -> HistoryItem(id, item.url, item.visitTime) }
-
-            launch(Dispatchers.Main) {
-                getManagedEmitter<HistoryChange>().onNext(HistoryChange.Change(items))
-            }
+            reloadData()
         }
     }
 
+    // This method triggers the complexity warning. However it's actually not that hard to understand.
+    @SuppressWarnings("ComplexMethod")
     override fun onStart() {
         super.onStart()
         getAutoDisposeObservable<HistoryAction>()
@@ -107,6 +104,20 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
                         .onNext(HistoryChange.RemoveItemForRemoval(it.item))
                     is HistoryAction.BackPressed -> getManagedEmitter<HistoryChange>()
                         .onNext(HistoryChange.ExitEditMode)
+                    is HistoryAction.Delete.All -> launch(Dispatchers.IO) {
+                        requireComponents.core.historyStorage.deleteEverything()
+                        reloadData()
+                    }
+                    is HistoryAction.Delete.One -> launch(Dispatchers.IO) {
+                        requireComponents.core.historyStorage.deleteVisit(it.item.url, it.item.visitedAt)
+                        reloadData()
+                    }
+                    is HistoryAction.Delete.Some -> launch(Dispatchers.IO) {
+                        it.items.forEach { item ->
+                            requireComponents.core.historyStorage.deleteVisit(item.url, item.visitedAt)
+                        }
+                        reloadData()
+                    }
                 }
             }
     }
@@ -128,4 +139,16 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
     }
 
     override fun onBackPressed(): Boolean = (historyComponent.uiView as HistoryUIView).onBackPressed()
+
+    private suspend fun reloadData() {
+        val items = requireComponents.core.historyStorage.getDetailedVisits(0)
+            .asReversed()
+            .mapIndexed { id, item -> HistoryItem(id, item.url, item.visitTime) }
+
+        coroutineScope {
+            launch(Dispatchers.Main) {
+                getManagedEmitter<HistoryChange>().onNext(HistoryChange.Change(items))
+            }
+        }
+    }
 }

@@ -3,8 +3,42 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<androidx.recyclerview.widget.RecyclerView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/history_list"
+<androidx.core.widget.NestedScrollView
+    android:id="@+id/history_wrapper"
+    android:layout_height="wrap_content"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" />
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/delete_history_button"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:background="@drawable/button_background"
+            android:layout_margin="16dp"
+            android:padding="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/delete_history_button_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/history_delete_all"
+                android:textColor="@color/photonRed60"
+                android:drawablePadding="8dp"
+                android:textSize="16sp"
+                android:gravity="center"
+                android:clickable="false"
+                android:focusable="false"
+                android:layout_gravity="center" />
+        </FrameLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/history_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
