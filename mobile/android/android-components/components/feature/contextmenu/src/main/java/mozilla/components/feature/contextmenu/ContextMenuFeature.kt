@@ -12,6 +12,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.feature.contextmenu.facts.emitClickFact
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -111,6 +112,7 @@ class ContextMenuFeature(
 
         session.hitResult.consume { hitResult ->
             candidate.action.invoke(session, hitResult)
+            emitClickFact(candidate)
             true
         }
     }

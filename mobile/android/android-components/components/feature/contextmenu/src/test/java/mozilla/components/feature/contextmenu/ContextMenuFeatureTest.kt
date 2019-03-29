@@ -13,9 +13,13 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -254,6 +258,41 @@ class ContextMenuFeatureTest {
         assertTrue(actionInvoked)
 
         verify(view, never()).performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+    }
+
+    @Test
+    fun `Selecting context menu item will emit a click fact`() {
+        val sessionManager = SessionManager(mock())
+        val session = Session("https://www.mozilla.org").apply {
+            sessionManager.add(this)
+            hitResult = Consumable.from(HitResult.UNKNOWN("https://www.mozilla.org"))
+        }
+
+        val candidate = ContextMenuCandidate(
+                id = "test-id",
+                label = "Test Item",
+                showFor = { _, _ -> true },
+                action = { _, _ -> /* noop */ })
+
+        val (engineView, _) = mockEngineView()
+
+        val feature = ContextMenuFeature(
+                mock(),
+                sessionManager,
+                listOf(candidate),
+                engineView)
+
+        CollectionProcessor.withFactCollection { facts ->
+            feature.onMenuItemSelected(session.id, candidate.id)
+
+            Assert.assertEquals(1, facts.size)
+
+            val fact = facts[0]
+            Assert.assertEquals(Component.FEATURE_CONTEXTMENU, fact.component)
+            Assert.assertEquals(Action.CLICK, fact.action)
+            Assert.assertEquals("item", fact.item)
+            Assert.assertEquals("test-id", fact.metadata?.get("item"))
+        }
     }
 
     private fun mockFragmentManager(): FragmentManager {
