@@ -447,7 +447,7 @@ def _craft_apk_full_path_from_variant(variant):
 
 
 _SUPPORTED_ARCHITECTURES = ('aarch64', 'arm', 'x86')
-_SUPPORTED_BUILD_TYPES = ('Debug', 'Release')
+_SUPPORTED_BUILD_TYPES = ('Debug', 'Release', 'ReleaseRaptor')
 _SUPPORTED_PRODUCTS = ('FirefoxBeta', 'FirefoxNightly', 'FirefoxRelease', 'Greenfield')
 
 
