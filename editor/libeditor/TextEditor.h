@@ -247,6 +247,14 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
     return NS_OK;
   }
 
+  /**
+   * Similar to the setter for wrapWidth, but just sets the editor
+   * internal state without actually changing the content being edited
+   * to wrap at that column.  This should only be used by callers who
+   * are sure that their content is already set up correctly.
+   */
+  void SetWrapColumn(int32_t aWrapColumn) { mWrapColumn = aWrapColumn; }
+
  protected:  // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
