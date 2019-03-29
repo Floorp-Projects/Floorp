@@ -207,7 +207,7 @@ void U2F::Register(const nsAString& aAppId,
 
   // Evaluate the AppID
   nsString adjustedAppId(aAppId);
-  if (!EvaluateAppID(mParent, mOrigin, U2FOperation::Register, adjustedAppId)) {
+  if (!EvaluateAppID(mParent, mOrigin, adjustedAppId)) {
     RegisterResponse response;
     response.mErrorCode.Construct(
         static_cast<uint32_t>(ErrorCode::BAD_REQUEST));
@@ -357,7 +357,7 @@ void U2F::Sign(const nsAString& aAppId, const nsAString& aChallenge,
 
   // Evaluate the AppID
   nsString adjustedAppId(aAppId);
-  if (!EvaluateAppID(mParent, mOrigin, U2FOperation::Sign, adjustedAppId)) {
+  if (!EvaluateAppID(mParent, mOrigin, adjustedAppId)) {
     SignResponse response;
     response.mErrorCode.Construct(
         static_cast<uint32_t>(ErrorCode::BAD_REQUEST));
