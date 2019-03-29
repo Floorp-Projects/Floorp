@@ -950,6 +950,19 @@ SHEntryChild::SetPersist(bool aPersist) {
   return SendSetPersist(aPersist) ? NS_OK : NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+SHEntryChild::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
+  *aLoadState = nullptr;
+  RefPtr<nsDocShellLoadState> loadState;
+  if (!SendCreateLoadInfo(&loadState)) {
+    return NS_ERROR_FAILURE;
+  }
+  // Avoid dealing with serializing the PSHEntry by setting it here
+  loadState->SetSHEntry(this);
+  loadState.forget(aLoadState);
+  return NS_OK;
+}
+
 void SHEntryChild::EvictContentViewer() {
   nsCOMPtr<nsIContentViewer> viewer = GetContentViewer();
   if (viewer) {

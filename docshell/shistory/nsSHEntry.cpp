@@ -925,6 +925,79 @@ nsSHEntry::SetPersist(bool aPersist) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSHEntry::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
+  nsCOMPtr<nsIURI> uri = GetURI();
+  RefPtr<nsDocShellLoadState> loadState(new nsDocShellLoadState(uri));
+
+  nsCOMPtr<nsIURI> originalURI = GetOriginalURI();
+  loadState->SetOriginalURI(originalURI);
+
+  mozilla::Maybe<nsCOMPtr<nsIURI>> emplacedResultPrincipalURI;
+  nsCOMPtr<nsIURI> resultPrincipalURI = GetResultPrincipalURI();
+  emplacedResultPrincipalURI.emplace(std::move(resultPrincipalURI));
+  loadState->SetMaybeResultPrincipalURI(emplacedResultPrincipalURI);
+
+  loadState->SetLoadReplace(GetLoadReplace());
+  nsCOMPtr<nsIInputStream> postData = GetPostData();
+  loadState->SetPostDataStream(postData);
+
+  nsAutoCString contentType;
+  GetContentType(contentType);
+  loadState->SetTypeHint(contentType);
+
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal = GetTriggeringPrincipal();
+  loadState->SetTriggeringPrincipal(triggeringPrincipal);
+  nsCOMPtr<nsIPrincipal> principalToInherit = GetPrincipalToInherit();
+  loadState->SetPrincipalToInherit(principalToInherit);
+  nsCOMPtr<nsIPrincipal> storagePrincipalToInherit =
+      GetStoragePrincipalToInherit();
+  loadState->SetStoragePrincipalToInherit(storagePrincipalToInherit);
+  nsCOMPtr<nsIContentSecurityPolicy> csp = GetCsp();
+  loadState->SetCsp(csp);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = GetReferrerInfo();
+  loadState->SetReferrerInfo(referrerInfo);
+
+  // Do not inherit principal from document (security-critical!);
+  uint32_t flags = nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_NONE;
+
+  // Passing nullptr as aSourceDocShell gives the same behaviour as before
+  // aSourceDocShell was introduced. According to spec we should be passing
+  // the source browsing context that was used when the history entry was
+  // first created. bug 947716 has been created to address this issue.
+  nsAutoString srcdoc;
+  nsCOMPtr<nsIURI> baseURI;
+  if (GetIsSrcdocEntry()) {
+    GetSrcdocData(srcdoc);
+    baseURI = GetBaseURI();
+    flags |= nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_IS_SRCDOC;
+  } else {
+    srcdoc = VoidString();
+  }
+  loadState->SetSrcdocData(srcdoc);
+  loadState->SetBaseURI(baseURI);
+  loadState->SetLoadFlags(flags);
+
+  loadState->SetFirstParty(true);
+
+  loadState.forget(aLoadState);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
+  RefPtr<nsDocShellLoadState> loadState;
+  nsSHEntry::CreateLoadInfo(getter_AddRefs(loadState));
+  // If CreateLoadInfo is getting called from a parent process,
+  // then the call will never go through SHEntryChild::CreateLoadInfo
+  // and then the nsSHEntry will never be set on load state.
+  // This is why we have to override this method here
+  // and set the nsSHEntry.
+  loadState->SetSHEntry(this);
+  loadState.forget(aLoadState);
+  return NS_OK;
+}
+
 void nsSHEntry::EvictContentViewer() {
   nsCOMPtr<nsIContentViewer> viewer = GetContentViewer();
   if (viewer) {
