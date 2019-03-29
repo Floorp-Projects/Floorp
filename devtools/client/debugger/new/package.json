@@ -53,7 +53,7 @@
     "babel-plugin-transform-imports": "^1.5.0",
     "codemirror": "^5.28.0",
     "devtools-environment": "^0.0.6",
-    "devtools-launchpad": "^0.0.149",
+    "devtools-launchpad": "^0.0.150",
     "devtools-linters": "^0.0.4",
     "devtools-reps": "0.23.0",
     "devtools-source-map": "0.16.0",
