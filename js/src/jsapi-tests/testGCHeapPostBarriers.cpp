@@ -179,8 +179,8 @@ BEGIN_TEST(testUnbarrieredEquality) {
   AutoLeaveZeal nozeal(cx);
 #endif /* JS_GC_ZEAL */
 
-  // Use ArrayBuffers because they have finalizers, which allows using them
-  // in ObjectPtr without awkward conversations about nursery allocatability.
+  // Use ArrayBuffers because they have finalizers, which allows using them in
+  // TenuredHeap<> without awkward conversations about nursery allocatability.
   JS::RootedObject robj(cx, JS::NewArrayBuffer(cx, 20));
   JS::RootedObject robj2(cx, JS::NewArrayBuffer(cx, 30));
   cx->runtime()->gc.evictNursery();  // Need tenured objects
@@ -213,15 +213,6 @@ BEGIN_TEST(testUnbarrieredEquality) {
     JS::TenuredHeap<JSObject*> heap2(obj2);
     CHECK(TestWrapper(obj, obj2, heap, heap2));
     CHECK(TestWrapper(constobj, constobj2, heap, heap2));
-  }
-
-  {
-    JS::ObjectPtr objptr(obj);
-    JS::ObjectPtr objptr2(obj2);
-    CHECK(TestWrapper(obj, obj2, objptr, objptr2));
-    CHECK(TestWrapper(constobj, constobj2, objptr, objptr2));
-    objptr.finalize(cx);
-    objptr2.finalize(cx);
   }
 
   // Sanity check that the barriers normally mark things black.

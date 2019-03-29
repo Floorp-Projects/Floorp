@@ -223,7 +223,7 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
     return InliningStatus_NotInlined;
   }
 
-  bool isWasmCall = target->isWasmOptimized();
+  bool isWasmCall = target->isWasmWithJitEntry();
   if (!isWasmCall &&
       (!target->hasJitInfo() ||
        target->jitInfo()->type() != JSJitInfo::InlinableNative)) {
@@ -4322,7 +4322,7 @@ IonBuilder::InliningResult IonBuilder::inlineConstructTypedObject(
 
 IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
                                                       JSFunction* target) {
-  MOZ_ASSERT(target->isWasmOptimized());
+  MOZ_ASSERT(target->isWasmWithJitEntry());
 
   // Don't inline wasm constructors.
   if (callInfo.constructing()) {
@@ -4346,11 +4346,8 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
   // Check that the function doesn't take or return non-compatible JS
   // argument types before adding nodes to the MIR graph, otherwise they'd be
   // dead code.
-  if (sig.hasI64ArgOrRet() || sig.temporarilyUnsupportedAnyRef()
-#ifdef WASM_CODEGEN_DEBUG
-      || !JitOptions.enableWasmIonFastCalls
-#endif
-  ) {
+  if (sig.hasI64ArgOrRet() || sig.temporarilyUnsupportedAnyRef() ||
+      !JitOptions.enableWasmIonFastCalls) {
     return InliningStatus_NotInlined;
   }
 

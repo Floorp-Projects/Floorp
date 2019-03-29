@@ -174,8 +174,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   WebrtcAudioConduit(RefPtr<WebRtcCallWrapper> aCall,
                      nsCOMPtr<nsIEventTarget> aStsThread)
-      : mFakeAudioDevice(new webrtc::FakeAudioDeviceModule()),
-        mTransportMonitor("WebrtcAudioConduit"),
+      : mTransportMonitor("WebrtcAudioConduit"),
         mTransmitterTransport(nullptr),
         mReceiverTransport(nullptr),
         mCall(aCall),
@@ -192,7 +191,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
         mSendChannel(-1),
         mDtmfEnabled(false),
         mMutex("WebrtcAudioConduit::mMutex"),
-        mCaptureDelay(150),
         mStsThread(aStsThread) {}
 
   virtual ~WebrtcAudioConduit();
@@ -252,7 +250,16 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
  protected:
   // These are protected so they can be accessed by unit tests
+
+  // Written only on main thread. Accessed from audio thread.
+  // Accessed from mStsThread during stats calls.
+  // This is safe, provided audio and stats calls stop before we
+  // destroy the AudioConduit.
   std::unique_ptr<webrtc::voe::ChannelProxy> mRecvChannelProxy = nullptr;
+
+  // Written only on main thread. Accessed from mStsThread during stats calls.
+  // This is safe, provided stats calls stop before we destroy the
+  // AudioConduit.
   std::unique_ptr<webrtc::voe::ChannelProxy> mSendChannelProxy = nullptr;
 
  private:
@@ -281,20 +288,39 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   MediaConduitErrorCode CreateChannels();
   virtual void DeleteChannels();
 
-  UniquePtr<webrtc::FakeAudioDeviceModule> mFakeAudioDevice;
   mozilla::ReentrantMonitor mTransportMonitor;
+
+  // Accessed on any thread under mTransportMonitor.
   RefPtr<TransportInterface> mTransmitterTransport;
+
+  // Accessed on any thread under mTransportMonitor.
   RefPtr<TransportInterface> mReceiverTransport;
+
+  // Accessed from main thread and audio threads. Used to create and destroy
+  // channels and to send audio data. Access to channels is protected by
+  // locking in channel.cc.
   ScopedCustomReleasePtr<webrtc::VoEBase> mPtrVoEBase;
 
+  // Const so can be accessed on any thread. Most methods are called on
+  // main thread.
   const RefPtr<WebRtcCallWrapper> mCall;
+
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
   webrtc::AudioReceiveStream::Config mRecvStreamConfig;
+
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
   webrtc::AudioReceiveStream* mRecvStream;
+
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
   webrtc::AudioSendStream::Config mSendStreamConfig;
+
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
   webrtc::AudioSendStream* mSendStream;
 
   // accessed on creation, and when receiving packets
   Atomic<uint32_t> mRecvSSRC;  // this can change during a stream!
+
+  // Accessed only on mStsThread.
   RtpPacketQueue mRtpPacketQueue;
 
   // engine states of our interets
@@ -303,28 +329,22 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   mozilla::Atomic<bool>
       mEngineReceiving;  // If true => VoiceEngine Receive-subsystem is up
                          // and playout is enabled
-  // Keep track of each inserted RTP block and the time it was inserted
-  // so we can estimate the clock time for a specific TimeStamp coming out
-  // (for when we send data to MediaStreamTracks).  Blocks are aged out as
-  // needed.
-  struct Processing {
-    TimeStamp mTimeStamp;
-    uint32_t mRTPTimeStamp;  // RTP timestamps received
-  };
-  AutoTArray<Processing, 8> mProcessing;
 
+  // Accessed only on main thread.
   int mRecvChannel;
+
+  // Accessed on main thread and from audio thread.
   int mSendChannel;
+
+  // Accessed only on main thread.
   bool mDtmfEnabled;
 
   Mutex mMutex;
-  nsAutoPtr<AudioCodecConfig> mCurSendCodecConfig;
 
-  // Current "capture" delay (really output plus input delay)
-  int32_t mCaptureDelay;
-
+  // Accessed from audio thread.
   webrtc::AudioFrame mAudioFrame;  // for output pulls
 
+  // Accessed from both main and mStsThread. Uses locks internally.
   RtpSourceObserver mRtpSourceObserver;
 
   // Socket transport service thread. Any thread.
