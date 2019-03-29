@@ -18,7 +18,6 @@
 #include "mozilla/dom/TreeWalker.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsCaret.h"
 #include "nsContainerFrame.h"

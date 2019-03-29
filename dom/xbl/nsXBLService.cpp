@@ -36,6 +36,7 @@
 #include "nsTArray.h"
 #include "nsError.h"
 
+#include "nsIPresShell.h"
 #include "nsIDocumentObserver.h"
 #include "nsFrameManager.h"
 #include "nsIScriptSecurityManager.h"
@@ -49,7 +50,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/dom/ChildIterator.h"
@@ -116,8 +116,8 @@ class nsXBLBindingRequest {
     // Destroy the frames for mBoundElement. Do this after getting the binding,
     // since if the binding fetch fails then we don't want to destroy the
     // frames.
-    if (PresShell* presShell = doc->GetPresShell()) {
-      presShell->DestroyFramesForAndRestyle(mBoundElement->AsElement());
+    if (nsIPresShell* shell = doc->GetShell()) {
+      shell->DestroyFramesForAndRestyle(mBoundElement->AsElement());
     }
     MOZ_ASSERT(!mBoundElement->GetPrimaryFrame());
   }
@@ -360,7 +360,7 @@ static void EnsureSubtreeStyled(Element* aElement) {
     return;
   }
 
-  PresShell* presShell = aElement->OwnerDoc()->GetPresShell();
+  nsIPresShell* presShell = aElement->OwnerDoc()->GetShell();
   if (!presShell || !presShell->DidInitialize()) {
     return;
   }
@@ -410,7 +410,7 @@ class MOZ_RAII AutoStyleElement {
   }
 
   ~AutoStyleElement() {
-    PresShell* presShell = mElement->OwnerDoc()->GetPresShell();
+    nsIPresShell* presShell = mElement->OwnerDoc()->GetShell();
     if (!mHadData || !presShell || !presShell->DidInitialize()) {
       return;
     }

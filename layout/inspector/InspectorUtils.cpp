@@ -17,6 +17,7 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
+#include "nsIPresShell.h"
 #include "nsIDOMWindow.h"
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
@@ -27,7 +28,6 @@
 #include "mozilla/EventStateManager.h"
 #include "nsAtom.h"
 #include "nsRange.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Element.h"
@@ -58,7 +58,7 @@ void InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
                                        Document& aDocument, bool aDocumentOnly,
                                        nsTArray<RefPtr<StyleSheet>>& aResult) {
   // Get the agent, then user and finally xbl sheets in the style set.
-  PresShell* presShell = aDocument.GetPresShell();
+  nsIPresShell* presShell = aDocument.GetShell();
 
   if (presShell) {
     ServoStyleSet* styleSet = presShell->StyleSet();
@@ -168,8 +168,8 @@ void InspectorUtils::GetCSSStyleRules(
   }
 
   Document* doc = aElement.OwnerDoc();
-  PresShell* presShell = doc->GetPresShell();
-  if (!presShell) {
+  nsIPresShell* shell = doc->GetShell();
+  if (!shell) {
     return;
   }
 
@@ -178,7 +178,7 @@ void InspectorUtils::GetCSSStyleRules(
 
   AutoTArray<ServoStyleRuleMap*, 1> maps;
   {
-    ServoStyleSet* styleSet = presShell->StyleSet();
+    ServoStyleSet* styleSet = shell->StyleSet();
     ServoStyleRuleMap* map = styleSet->StyleRuleMap();
     maps.AppendElement(map);
   }
@@ -598,7 +598,7 @@ already_AddRefed<ComputedStyle> InspectorUtils::GetCleanComputedStyleForElement(
     return nullptr;
   }
 
-  PresShell* presShell = doc->GetPresShell();
+  nsIPresShell* presShell = doc->GetShell();
   if (!presShell) {
     return nullptr;
   }

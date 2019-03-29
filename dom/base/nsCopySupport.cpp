@@ -18,6 +18,7 @@
 #include "nsRange.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
+#include "nsIPresShell.h"
 #include "nsFocusManager.h"
 #include "mozilla/dom/DataTransfer.h"
 
@@ -55,7 +56,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/IntegerRange.h"
 
@@ -588,10 +588,8 @@ nsIContent* nsCopySupport::GetSelectionForCopy(Document* aDocument,
                                                Selection** aSelection) {
   *aSelection = nullptr;
 
-  PresShell* presShell = aDocument->GetPresShell();
-  if (!presShell) {
-    return nullptr;
-  }
+  nsIPresShell* presShell = aDocument->GetShell();
+  if (!presShell) return nullptr;
 
   nsCOMPtr<nsIContent> focusedContent;
   nsCOMPtr<nsISelectionController> selectionController =

@@ -12,7 +12,6 @@
 #include "mozilla/dom/ImageDocumentBinding.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/MouseEvent.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsRect.h"
 #include "nsIImageLoadingContent.h"
@@ -27,6 +26,7 @@
 #include "imgILoader.h"
 #include "imgIContainer.h"
 #include "imgINotificationObserver.h"
+#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIChannel.h"
 #include "nsIContentPolicy.h"
@@ -402,12 +402,12 @@ void ImageDocument::ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage) {
     FlushPendingNotifications(FlushType::Layout);
   }
 
-  RefPtr<PresShell> presShell = GetPresShell();
-  if (!presShell) {
+  nsCOMPtr<nsIPresShell> shell = GetShell();
+  if (!shell) {
     return;
   }
 
-  nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+  nsIScrollableFrame* sf = shell->GetRootScrollFrameAsScrollable();
   if (!sf) {
     return;
   }
@@ -835,9 +835,9 @@ float ImageDocument::GetZoomLevel() {
 #if defined(MOZ_WIDGET_ANDROID)
 float ImageDocument::GetResolution() {
   float resolution = mOriginalResolution;
-  RefPtr<PresShell> presShell = GetPresShell();
-  if (presShell) {
-    resolution = presShell->GetResolution();
+  nsCOMPtr<nsIPresShell> shell = GetShell();
+  if (shell) {
+    resolution = shell->GetResolution();
   }
   return resolution;
 }

@@ -3,12 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsMenuUtilsX.h"
-
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/XULCommandEvent.h"
+#include "nsMenuUtilsX.h"
 #include "nsMenuBarX.h"
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
@@ -18,8 +14,10 @@
 #include "nsCocoaWindow.h"
 #include "nsGkAtoms.h"
 #include "nsGlobalWindowInner.h"
+#include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
+#include "mozilla/dom/XULCommandEvent.h"
 
 using namespace mozilla;
 

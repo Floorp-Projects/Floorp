@@ -14,9 +14,8 @@
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/DocumentInlines.h"
+#include "nsIPresShell.h"
 #include "nsStyleConsts.h"
 #include "nsError.h"
 #include "mozilla/MemoryReporting.h"
@@ -91,7 +90,7 @@ void nsHTMLStyleSheet::Reset() {
 
 nsresult nsHTMLStyleSheet::ImplLinkColorSetter(
     RefPtr<RawServoDeclarationBlock> &aDecl, nscolor aColor) {
-  if (!mDocument || !mDocument->GetPresShell()) {
+  if (!mDocument || !mDocument->GetShell()) {
     return NS_OK;
   }
 

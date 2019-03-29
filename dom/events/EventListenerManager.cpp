@@ -18,7 +18,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -446,9 +445,9 @@ void EventListenerManager::ProcessApzAwareEventListenerAdd() {
   }
 
   if (doc && gfxPlatform::AsyncPanZoomEnabled()) {
-    PresShell* presShell = doc->GetPresShell();
-    if (presShell) {
-      nsIFrame* f = presShell->GetRootFrame();
+    nsIPresShell* ps = doc->GetShell();
+    if (ps) {
+      nsIFrame* f = ps->GetRootFrame();
       if (f) {
         f->SchedulePaint();
       }

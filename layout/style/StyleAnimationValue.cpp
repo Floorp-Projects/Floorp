@@ -10,7 +10,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
@@ -317,8 +316,8 @@ AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
     return result;
   }
 
-  RefPtr<PresShell> presShell = doc->GetPresShell();
-  if (!presShell) {
+  nsCOMPtr<nsIPresShell> shell = doc->GetShell();
+  if (!shell) {
     return result;
   }
 
@@ -335,7 +334,7 @@ AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
     return result;
   }
 
-  result.mServo = presShell->StyleSet()->ComputeAnimationValue(
+  result.mServo = shell->StyleSet()->ComputeAnimationValue(
       aElement, declarations, computedStyle);
   return result;
 }

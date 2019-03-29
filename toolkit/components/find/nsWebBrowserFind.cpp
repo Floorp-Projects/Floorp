@@ -17,6 +17,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIURI.h"
 #include "nsIDocShell.h"
+#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsISelectionController.h"
@@ -32,7 +33,6 @@
 #include "nsError.h"
 #include "nsFocusManager.h"
 #include "nsRange.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
@@ -324,7 +324,7 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
     return;
   }
 
-  PresShell* presShell = doc->GetPresShell();
+  nsIPresShell* presShell = doc->GetShell();
   if (!presShell) {
     return;
   }
@@ -707,7 +707,7 @@ already_AddRefed<Selection> nsWebBrowserFind::GetFrameSelection(
     return nullptr;
   }
 
-  PresShell* presShell = doc->GetPresShell();
+  nsIPresShell* presShell = doc->GetShell();
   if (!presShell) {
     return nullptr;
   }
@@ -734,7 +734,8 @@ already_AddRefed<Selection> nsWebBrowserFind::GetFrameSelection(
     }
   }
 
-  sel = presShell->GetSelection(nsISelectionController::SELECTION_NORMAL);
+  selCon = do_QueryInterface(presShell);
+  sel = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
   return sel.forget();
 }
 

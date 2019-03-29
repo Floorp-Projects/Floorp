@@ -28,7 +28,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/MediaFeatureChange.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/Services.h"
@@ -7879,9 +7878,8 @@ nsresult nsDocShell::RestoreFromHistory() {
   } else {
     rootViewParent = nullptr;
   }
-  if (sibling && sibling->GetPresShell() &&
-      sibling->GetPresShell()->GetViewManager()) {
-    rootViewSibling = sibling->GetPresShell()->GetViewManager()->GetRootView();
+  if (sibling && sibling->GetShell() && sibling->GetShell()->GetViewManager()) {
+    rootViewSibling = sibling->GetShell()->GetViewManager()->GetRootView();
   } else {
     rootViewSibling = nullptr;
   }

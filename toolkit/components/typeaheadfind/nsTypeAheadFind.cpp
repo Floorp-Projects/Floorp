@@ -8,7 +8,6 @@
 #include "nsIServiceManager.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/ModuleUtils.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsCURILoader.h"
@@ -1133,7 +1132,7 @@ nsTypeAheadFind::IsRangeVisible(nsRange* aRange, bool aMustBeInViewPort,
   nsCOMPtr<nsINode> node = aRange->GetStartContainer();
 
   Document* doc = node->OwnerDoc();
-  RefPtr<PresShell> presShell = doc->GetPresShell();
+  nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
   if (!presShell) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1319,7 +1318,7 @@ NS_IMETHODIMP
 nsTypeAheadFind::IsRangeRendered(nsRange* aRange, bool* aResult) {
   nsINode* node = aRange->GetStartContainer();
 
-  RefPtr<PresShell> presShell = node->OwnerDoc()->GetPresShell();
+  nsCOMPtr<nsIPresShell> presShell = node->OwnerDoc()->GetShell();
   if (!presShell) {
     return NS_ERROR_UNEXPECTED;
   }

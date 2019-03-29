@@ -19,7 +19,6 @@
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BlobBinding.h"
-#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/PendingAnimationTracker.h"
@@ -45,7 +44,6 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TouchEvents.h"
@@ -54,6 +52,7 @@
 
 #include "nsLayoutUtils.h"
 #include "nsComputedDOMStyle.h"
+#include "nsIPresShell.h"
 #include "nsCSSProps.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
@@ -1040,7 +1039,7 @@ nsIWidget* nsDOMWindowUtils::GetWidgetForElement(Element* aElement) {
   if (!aElement) return GetWidget();
 
   Document* doc = aElement->GetUncomposedDoc();
-  PresShell* presShell = doc ? doc->GetPresShell() : nullptr;
+  nsIPresShell* presShell = doc ? doc->GetShell() : nullptr;
 
   if (presShell) {
     nsIFrame* frame = aElement->GetPrimaryFrame();
@@ -1376,7 +1375,7 @@ static nsresult getScrollXYAppUnits(const nsWeakPtr& aWindow, bool aFlushLayout,
     doc->FlushPendingNotifications(FlushType::Layout);
   }
 
-  PresShell* presShell = doc->GetPresShell();
+  nsIPresShell* presShell = doc->GetShell();
   if (presShell) {
     nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
     if (sf) {
@@ -1462,7 +1461,7 @@ nsDOMWindowUtils::GetVisualViewportOffsetRelativeToLayoutViewport(
   nsCOMPtr<Document> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
-  PresShell* presShell = doc->GetPresShell();
+  nsIPresShell* presShell = doc->GetShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
 
   nsPoint offset = presShell->GetVisualViewportOffsetRelativeToLayoutViewport();
@@ -1481,7 +1480,7 @@ nsDOMWindowUtils::GetVisualViewportOffset(int32_t* aOffsetX,
   nsCOMPtr<Document> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
-  PresShell* presShell = doc->GetPresShell();
+  nsIPresShell* presShell = doc->GetShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
 
   nsPoint offset = presShell->GetVisualViewportOffset();
@@ -1504,7 +1503,7 @@ nsDOMWindowUtils::GetScrollbarSize(bool aFlushLayout, int32_t* aWidth,
     doc->FlushPendingNotifications(FlushType::Layout);
   }
 
-  PresShell* presShell = doc->GetPresShell();
+  nsIPresShell* presShell = doc->GetShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
 
   nsIScrollableFrame* scrollFrame = presShell->GetRootScrollFrameAsScrollable();
@@ -1546,7 +1545,7 @@ nsDOMWindowUtils::NeedsFlush(int32_t aFlushType, bool* aResult) {
   nsCOMPtr<Document> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
-  PresShell* presShell = doc->GetPresShell();
+  nsIPresShell* presShell = doc->GetShell();
   NS_ENSURE_STATE(presShell);
 
   FlushType flushType;
@@ -1588,7 +1587,7 @@ nsDOMWindowUtils::GetRootBounds(DOMRect** aResult) {
   NS_ENSURE_STATE(doc);
 
   nsRect bounds(0, 0, 0, 0);
-  PresShell* presShell = doc->GetPresShell();
+  nsIPresShell* presShell = doc->GetShell();
   if (presShell) {
     nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
     if (sf) {
@@ -1698,14 +1697,13 @@ nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsINode* aTarget, Event* aEvent,
   }
   nsCOMPtr<Document> targetDoc = content->GetUncomposedDoc();
   NS_ENSURE_STATE(targetDoc);
-  RefPtr<PresShell> targetPresShell = targetDoc->GetPresShell();
-  NS_ENSURE_STATE(targetPresShell);
+  RefPtr<nsIPresShell> targetShell = targetDoc->GetShell();
+  NS_ENSURE_STATE(targetShell);
 
   targetDoc->FlushPendingNotifications(FlushType::Layout);
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  targetPresShell->HandleEventWithTarget(internalEvent, nullptr, content,
-                                         &status);
+  targetShell->HandleEventWithTarget(internalEvent, nullptr, content, &status);
   *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return NS_OK;
 }
@@ -4033,7 +4031,7 @@ nsDOMWindowUtils::GetDirectionFromText(const nsAString& aString,
 NS_IMETHODIMP
 nsDOMWindowUtils::EnsureDirtyRootFrame() {
   Document* doc = GetDocument();
-  PresShell* presShell = doc ? doc->GetPresShell() : nullptr;
+  nsIPresShell* presShell = doc ? doc->GetShell() : nullptr;
 
   if (!presShell) {
     return NS_ERROR_FAILURE;

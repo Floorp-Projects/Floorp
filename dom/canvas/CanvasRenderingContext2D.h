@@ -20,7 +20,6 @@
 #include "mozilla/dom/CanvasPattern.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/UniquePtr.h"
 #include "gfx2DGlue.h"
 #include "imgIEncoder.h"
@@ -393,7 +392,7 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
    */
   nsIPresShell* GetPresShell() final {
     if (mCanvasElement) {
-      return mCanvasElement->OwnerDoc()->GetPresShell();
+      return mCanvasElement->OwnerDoc()->GetShell();
     }
     if (mDocShell) {
       return mDocShell->GetPresShell();

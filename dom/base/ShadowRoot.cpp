@@ -17,7 +17,6 @@
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/IdentifierMapEntry.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/ServoStyleRuleMap.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -186,12 +185,12 @@ void ShadowRoot::InvalidateStyleAndLayoutOnSubtree(Element* aElement) {
     return;
   }
 
-  PresShell* presShell = doc->GetPresShell();
-  if (!presShell) {
+  nsIPresShell* shell = doc->GetShell();
+  if (!shell) {
     return;
   }
 
-  presShell->DestroyFramesForAndRestyle(aElement);
+  shell->DestroyFramesForAndRestyle(aElement);
 }
 
 void ShadowRoot::AddSlot(HTMLSlotElement* aSlot) {
@@ -350,8 +349,8 @@ void ShadowRoot::ApplicableRulesChanged() {
     return;
   }
 
-  if (PresShell* presShell = doc->GetPresShell()) {
-    presShell->RecordShadowStyleChange(*this);
+  if (nsIPresShell* shell = doc->GetShell()) {
+    shell->RecordShadowStyleChange(*this);
   }
 }
 
@@ -535,8 +534,8 @@ void ShadowRoot::MaybeReassignElement(Element* aElement) {
   }
 
   if (Document* doc = GetComposedDoc()) {
-    if (RefPtr<PresShell> presShell = doc->GetPresShell()) {
-      presShell->SlotAssignmentWillChange(*aElement, oldSlot, assignment.mSlot);
+    if (nsIPresShell* shell = doc->GetShell()) {
+      shell->SlotAssignmentWillChange(*aElement, oldSlot, assignment.mSlot);
     }
   }
 

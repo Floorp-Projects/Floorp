@@ -14,7 +14,6 @@
 #include "nsViewManager.h"
 #include "nsCanvasFrame.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/PresShell.h"
 
 /**
  * Code for doing display list building for a modified subset of the window,
@@ -725,7 +724,7 @@ static nsIFrame* GetRootFrameForPainting(nsDisplayListBuilder* aBuilder,
   // what painting uses. Walk up to the nsSubDocumentFrame owning
   // us, and then ask that which subdoc it's going to paint.
 
-  PresShell* presShell = aDocument->GetPresShell();
+  nsIPresShell* presShell = aDocument->GetShell();
   if (!presShell) {
     return nullptr;
   }
@@ -753,11 +752,10 @@ static nsIFrame* GetRootFrameForPainting(nsDisplayListBuilder* aBuilder,
 
   nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(subDocFrame);
   MOZ_ASSERT(subdocumentFrame);
-  presShell = static_cast<PresShell*>(
-      subdocumentFrame->GetSubdocumentPresShellForPainting(
-          aBuilder->IsIgnoringPaintSuppression()
-              ? nsSubDocumentFrame::IGNORE_PAINT_SUPPRESSION
-              : 0));
+  presShell = subdocumentFrame->GetSubdocumentPresShellForPainting(
+      aBuilder->IsIgnoringPaintSuppression()
+          ? nsSubDocumentFrame::IGNORE_PAINT_SUPPRESSION
+          : 0);
   return presShell ? presShell->GetRootFrame() : nullptr;
 }
 

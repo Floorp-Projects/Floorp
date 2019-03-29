@@ -31,8 +31,6 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/FlushType.h"
-#include "mozilla/PresShell.h"
-#include "mozilla/PseudoStyleType.h"
 #include "mozilla/RustCell.h"
 #include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
