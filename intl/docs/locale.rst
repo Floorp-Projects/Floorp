@@ -428,6 +428,16 @@ the locales are packaged to allow for bundling applications with different
 sets of locales in different areas - dictionaries, hyphenations, product language resources,
 installer language resources, etc.
 
+Web Exposed Locales
+====================
+
+For anti-tracking or some other reasons, we tend to expose spoofed locale to web content instead
+of default locales. This can be done by setting the pref :js:`intl.locale.privacy.web_exposed`.
+The pref is a comma separated list of locale, and empty string implies default locales.
+
+The pref has no function while :js:`privacy.spoof_english` is set to 2, where *"en-US"* will always
+be returned.
+
 Multi-Process
 =============
 
