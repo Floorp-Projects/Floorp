@@ -135,6 +135,11 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
         if (!Clear10BytePatch(origBytes)) {
           continue;
         }
+      } else if (opcode1 == 0x48) {
+        // The original function was just a different trampoline
+        if (!ClearTrampolinePatch(origBytes, tramp.GetCurrentRemoteAddress())) {
+          continue;
+        }
       } else {
         MOZ_ASSERT_UNREACHABLE("Unrecognized patch!");
         continue;
@@ -191,6 +196,30 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
     }
 
     aOrigBytes.WritePointer(aResetToAddress);
+    if (!aOrigBytes) {
+      return false;
+    }
+
+    return aOrigBytes.Commit();
+  }
+
+  bool ClearTrampolinePatch(WritableTargetFunction<MMPolicyT>& aOrigBytes,
+                            const uintptr_t aPtrToResetToAddress) {
+    // The target of the trampoline we replaced is stored at
+    // aPtrToResetToAddress. We simply put it back where we got it from.
+    Maybe<uint8_t> maybeOpcode2 = aOrigBytes.ReadByte();
+    if (!maybeOpcode2) {
+      return false;
+    }
+
+    uint8_t opcode2 = maybeOpcode2.value();
+    if (opcode2 != 0xB8) {
+      return false;
+    }
+
+    auto oldPtr = *(reinterpret_cast<const uintptr_t*>(aPtrToResetToAddress));
+
+    aOrigBytes.WritePointer(oldPtr);
     if (!aOrigBytes) {
       return false;
     }
@@ -493,6 +522,46 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
 
 #endif  // !defined(_M_ARM64)
 
+  // If originalFn is a recognized trampoline then patch it to call aDest,
+  // set *aTramp and *aOutTramp to that trampoline's target and return true.
+  bool PatchIfTargetIsRecognizedTrampoline(
+      Trampoline<MMPolicyT>& aTramp,
+      ReadOnlyTargetFunction<MMPolicyT>& aOriginalFn, intptr_t aDest,
+      void** aOutTramp) {
+#if defined(_M_X64)
+    // 48 b8 imm64  mov rax, imm64
+    // ff e0        jmp rax
+    if ((aOriginalFn[0] == 0x48) && (aOriginalFn[1] == 0xB8) &&
+        (aOriginalFn[10] == 0xFF) && (aOriginalFn[11] == 0xE0)) {
+      uintptr_t originalTarget =
+          (aOriginalFn + 2).template ChasePointer<uintptr_t>();
+
+      // Skip the first two bytes (48 b8) so that we can overwrite the imm64
+      WritableTargetFunction<MMPolicyT> target(aOriginalFn.Promote(8, 2));
+      if (!target) {
+        return false;
+      }
+
+      // Write the new JMP target address.
+      target.WritePointer(aDest);
+      if (!target.Commit()) {
+        return false;
+      }
+
+      // Store the old target address so we can restore it when we're cleared
+      aTramp.WritePointer(originalTarget);
+      if (!aTramp) {
+        return false;
+      }
+
+      *aOutTramp = reinterpret_cast<void*>(originalTarget);
+      return true;
+    }
+#endif  // defined(_M_X64)
+
+    return false;
+  }
+
   void CreateTrampoline(ReadOnlyTargetFunction<MMPolicyT>& origBytes,
                         intptr_t aDest, void** aOutTramp) {
     *aOutTramp = nullptr;
@@ -504,8 +573,10 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
 
     // The beginning of the trampoline contains two pointer-width slots:
     // [0]: |this|, so that we know whether the trampoline belongs to us;
-    // [1]: Pointer to original function, so that we can reset the hook upon
-    //      destruction.
+    // [1]: Pointer to original function, so that we can reset the hooked
+    // function to its original behavior upon destruction.  In rare cases
+    // where the function was already a different trampoline, this is
+    // just a pointer to that trampoline's target address.
     tramp.WriteEncodedPointer(this);
     if (!tramp) {
       return;
@@ -523,6 +594,11 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
       tramp.Rewind();
       tramp.WriteEncodedPointer(nullptr);
     });
+
+    if (PatchIfTargetIsRecognizedTrampoline(tramp, origBytes, aDest,
+                                            aOutTramp)) {
+      return;
+    }
 
     tramp.WritePointer(origBytes.AsEncodedPtr());
     if (!tramp) {
