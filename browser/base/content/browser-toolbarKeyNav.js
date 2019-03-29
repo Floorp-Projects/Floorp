@@ -51,7 +51,8 @@ ToolbarKeyboardNavigator = {
       }
 
       // Skip invisible or disabled elements.
-      if (aNode.hidden || aNode.disabled) {
+      if (aNode.hidden || aNode.disabled
+          || aNode.style.visibility == "hidden") {
         return NodeFilter.FILTER_REJECT;
       }
       // This width check excludes the overflow button when there's no overflow.
