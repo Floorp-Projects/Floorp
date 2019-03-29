@@ -22,7 +22,12 @@ namespace ImageDataSerializer {
 using namespace gfx;
 
 int32_t ComputeRGBStride(SurfaceFormat aFormat, int32_t aWidth) {
+#ifdef XP_MACOSX
+  // Some drivers require an alignment of 32 bytes for efficient texture upload.
+  return GetAlignedStride<32>(aWidth, BytesPerPixel(aFormat));
+#else
   return GetAlignedStride<4>(aWidth, BytesPerPixel(aFormat));
+#endif
 }
 
 int32_t GetRGBStride(const RGBDescriptor& aDescriptor) {
