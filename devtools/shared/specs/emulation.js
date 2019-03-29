@@ -123,6 +123,13 @@ const emulationSpec = generateActorSpec({
         valueChanged: RetVal("boolean"),
       },
     },
+
+    setElementPickerState: {
+      request: {
+        state: Arg(0, "boolean"),
+      },
+      response: {},
+    },
   },
 });
 
