@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_Document_h___
 #define mozilla_dom_Document_h___
 
+#include "mozilla/EventStates.h"  // for EventStates
 #include "mozilla/FlushType.h"  // for enum
 #include "mozilla/Pair.h"       // for Pair
 #include "nsAutoPtr.h"          // for member
@@ -23,7 +24,6 @@
 #include "nsILoadGroup.h"  // for member (in nsCOMPtr)
 #include "nsINode.h"       // for base class
 #include "nsIParser.h"
-#include "nsIPresShell.h"
 #include "nsIChannelEventSink.h"
 #include "nsIProgressEventSink.h"
 #include "nsIRadioGroupContainer.h"
@@ -107,6 +107,7 @@ class nsILayoutHistoryState;
 class nsILoadContext;
 class nsIObjectLoadingContent;
 class nsIObserver;
+class nsIPresShell;
 class nsIPrincipal;
 class nsIRequest;
 class nsIRunnable;
@@ -1252,18 +1253,12 @@ class Document : public nsINode,
     return GetBFCacheEntry() ? nullptr : mPresShell;
   }
 
-  nsIPresShell* GetObservingShell() const {
-    return mPresShell && mPresShell->IsObservingDocument() ? mPresShell
-                                                           : nullptr;
-  }
+  inline nsIPresShell* GetObservingShell() const;
 
   // Return whether the presshell for this document is safe to flush.
   bool IsSafeToFlush() const;
 
-  nsPresContext* GetPresContext() const {
-    nsIPresShell* shell = GetShell();
-    return shell ? shell->GetPresContext() : nullptr;
-  }
+  inline nsPresContext* GetPresContext() const;
 
   bool HasShellOrBFCacheEntry() const { return mPresShell || mBFCacheEntry; }
 
