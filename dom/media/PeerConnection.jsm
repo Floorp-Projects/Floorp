@@ -979,7 +979,6 @@ class RTCPeerConnection {
         expectedIdentity = this._impl.peerIdentity;
         // If this pc has an identity already, then the identity in sdp must match
         if (expectedIdentity && (!msg || msg.identity !== expectedIdentity)) {
-          this.close();
           throw new this._win.DOMException(
             "Peer Identity mismatch, expected: " + expectedIdentity,
             "IncompatibleSessionDescriptionError");
