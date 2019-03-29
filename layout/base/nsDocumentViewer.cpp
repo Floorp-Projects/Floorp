@@ -7,7 +7,6 @@
 /* container for a document and its presentation */
 
 #include "gfxContext.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nscore.h"
@@ -22,6 +21,7 @@
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/Document.h"
 #include "nsPresContext.h"
+#include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsSubDocumentFrame.h"
@@ -402,7 +402,7 @@ class nsDocumentViewer final : public nsIContentViewer,
   nsCOMPtr<nsIWidget> mWindow;  // may be null
   RefPtr<nsViewManager> mViewManager;
   RefPtr<nsPresContext> mPresContext;
-  RefPtr<PresShell> mPresShell;
+  nsCOMPtr<nsIPresShell> mPresShell;
 
   RefPtr<nsDocViewerSelectionListener> mSelectionListener;
   RefPtr<nsDocViewerFocusListener> mFocusListener;
@@ -730,8 +730,8 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
   UniquePtr<ServoStyleSet> styleSet = CreateStyleSet(mDocument);
 
   // Now make the shell for the document
-  mPresShell = mDocument->CreatePresShell(mPresContext, mViewManager,
-                                          std::move(styleSet));
+  mPresShell =
+      mDocument->CreateShell(mPresContext, mViewManager, std::move(styleSet));
   if (!mPresShell) {
     return NS_ERROR_FAILURE;
   }
@@ -770,9 +770,9 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
 
   p2a = mPresContext->AppUnitsPerDevPixel();  // zoom may have changed it
   if (aDoInitialReflow) {
-    RefPtr<PresShell> presShell = mPresShell;
+    nsCOMPtr<nsIPresShell> shell = mPresShell;
     // Initial reflow
-    presShell->Initialize();
+    shell->Initialize();
   }
 
   // now register ourselves as a selection listener, so that we get
@@ -880,7 +880,7 @@ nsresult nsDocumentViewer::InitInternal(nsIWidget* aParentWidget,
     if (!mPresContext &&
         (aParentWidget || containerView || mDocument->IsBeingUsedAsImage() ||
          (mDocument->GetDisplayDocument() &&
-          mDocument->GetDisplayDocument()->GetPresShell()))) {
+          mDocument->GetDisplayDocument()->GetShell()))) {
       // Create presentation context
       if (mIsPageMode) {
         // Presentation context already created in SetPageMode which is calling
@@ -1009,8 +1009,8 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
   // checking for our mDocument and its window.
   if (mPresShell && !mStopped) {
     // Hold strong ref because this could conceivably run script
-    RefPtr<PresShell> presShell = mPresShell;
-    presShell->FlushPendingNotifications(FlushType::Layout);
+    nsCOMPtr<nsIPresShell> shell = mPresShell;
+    shell->FlushPendingNotifications(FlushType::Layout);
   }
 
   nsresult rv = NS_OK;
@@ -1144,8 +1144,8 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
     // Now that the document has loaded, we can tell the presshell
     // to unsuppress painting.
     if (mPresShell) {
-      RefPtr<PresShell> presShell = mPresShell;
-      presShell->UnsuppressPainting();
+      nsCOMPtr<nsIPresShell> shell(mPresShell);
+      shell->UnsuppressPainting();
       // mPresShell could have been removed now, see bug 378682/421432
       if (mPresShell) {
         mPresShell->LoadComplete();
@@ -1867,8 +1867,8 @@ nsDocumentViewer::Stop(void) {
 
   if (!mLoaded && mPresShell) {
     // Well, we might as well paint what we have so far.
-    RefPtr<PresShell> presShell = mPresShell;  // bug 378682
-    presShell->UnsuppressPainting();
+    nsCOMPtr<nsIPresShell> shell(mPresShell);  // bug 378682
+    shell->UnsuppressPainting();
   }
 
   return NS_OK;
@@ -2192,8 +2192,8 @@ nsDocumentViewer::Show(void) {
     // shown...
 
     if (mPresShell) {
-      RefPtr<PresShell> presShell = mPresShell;  // bug 378682
-      presShell->UnsuppressPainting();
+      nsCOMPtr<nsIPresShell> shell(mPresShell);  // bug 378682
+      shell->UnsuppressPainting();
     }
   }
 
@@ -4270,7 +4270,7 @@ void nsDocumentViewer::SetPrintPreviewPresentation(nsViewManager* aViewManager,
   mWindow = nullptr;
   mViewManager = aViewManager;
   mPresContext = aPresContext;
-  mPresShell = static_cast<PresShell*>(aPresShell);
+  mPresShell = aPresShell;
 
   if (ShouldAttachToTopLevel()) {
     DetachFromTopLevelWidget();

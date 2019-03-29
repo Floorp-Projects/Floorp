@@ -61,7 +61,7 @@ void TouchManager::EvictTouchPoint(RefPtr<Touch>& aTouch,
   if (node) {
     Document* doc = node->GetComposedDoc();
     if (doc && (!aLimitToDocument || aLimitToDocument == doc)) {
-      PresShell* presShell = doc->GetPresShell();
+      nsIPresShell* presShell = doc->GetShell();
       if (presShell) {
         nsIFrame* frame = presShell->GetRootFrame();
         if (frame) {

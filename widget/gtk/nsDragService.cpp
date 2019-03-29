@@ -28,7 +28,6 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Services.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/PresShell.h"
 
 #include "gfxXlibSurface.h"
 #include "gfxContext.h"
@@ -262,10 +261,8 @@ static void OnSourceGrabEventAfter(GtkWidget *widget, GdkEvent *event,
 static GtkWindow *GetGtkWindow(dom::Document *aDocument) {
   if (!aDocument) return nullptr;
 
-  PresShell *presShell = aDocument->GetPresShell();
-  if (!presShell) {
-    return nullptr;
-  }
+  nsCOMPtr<nsIPresShell> presShell = aDocument->GetShell();
+  if (!presShell) return nullptr;
 
   RefPtr<nsViewManager> vm = presShell->GetViewManager();
   if (!vm) return nullptr;

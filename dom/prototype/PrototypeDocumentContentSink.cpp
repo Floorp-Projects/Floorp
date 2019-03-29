@@ -58,7 +58,6 @@
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/LoadInfo.h"
-#include "mozilla/PresShell.h"
 
 #include "nsXULPrototypeCache.h"
 #include "nsXULElement.h"
@@ -643,9 +642,9 @@ void PrototypeDocumentContentSink::StartLayout() {
       "PrototypeDocumentContentSink::StartLayout", LAYOUT,
       mDocumentURI->GetSpecOrDefault());
   mDocument->SetMayStartLayout(true);
-  RefPtr<PresShell> presShell = mDocument->GetPresShell();
-  if (presShell && !presShell->DidInitialize()) {
-    nsresult rv = presShell->Initialize();
+  nsCOMPtr<nsIPresShell> shell = mDocument->GetShell();
+  if (shell && !shell->DidInitialize()) {
+    nsresult rv = shell->Initialize();
     if (NS_FAILED(rv)) {
       return;
     }

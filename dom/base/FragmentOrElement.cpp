@@ -22,7 +22,6 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TouchEvents.h"
@@ -44,6 +43,7 @@
 #include "nsNetUtil.h"
 #include "nsIFrame.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsStyleConsts.h"
 #include "nsString.h"
@@ -1580,7 +1580,7 @@ static bool ShouldClearPurple(nsIContent* aContent) {
 // we can act as if it was optimizable. When the primary frame dies, aNode
 // will end up to the purple buffer because of the refcount change.
 bool NodeHasActiveFrame(Document* aCurrentDoc, nsINode* aNode) {
-  return aCurrentDoc->GetPresShell() && aNode->IsElement() &&
+  return aCurrentDoc->GetShell() && aNode->IsElement() &&
          aNode->AsElement()->GetPrimaryFrame();
 }
 

@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ResponsiveImageSelector.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/TextUtils.h"
 #include "nsIURI.h"
@@ -402,7 +401,7 @@ int ResponsiveImageSelector::GetSelectedCandidateIndex() {
 bool ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(
     double* aWidth) {
   dom::Document* doc = Document();
-  PresShell* presShell = doc->GetPresShell();
+  nsIPresShell* presShell = doc->GetShell();
   nsPresContext* pctx = presShell ? presShell->GetPresContext() : nullptr;
 
   if (!pctx) {

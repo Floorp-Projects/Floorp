@@ -50,7 +50,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/MessageBroadcaster.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMException.h"
@@ -91,7 +90,6 @@
 #include "mozilla/ManualNAC.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/Services.h"
@@ -3198,21 +3196,25 @@ void nsContentUtils::SplitExpatName(const char16_t* aExpatName,
 }
 
 // static
-PresShell* nsContentUtils::GetPresShellForContent(const nsIContent* aContent) {
+nsIPresShell* nsContentUtils::GetPresShellForContent(
+    const nsIContent* aContent) {
   Document* doc = aContent->GetComposedDoc();
   if (!doc) {
     return nullptr;
   }
-  return doc->GetPresShell();
+
+  return doc->GetShell();
 }
 
 // static
 nsPresContext* nsContentUtils::GetContextForContent(
     const nsIContent* aContent) {
-  PresShell* presShell = GetPresShellForContent(aContent);
+  nsIPresShell* presShell = GetPresShellForContent(aContent);
+
   if (!presShell) {
     return nullptr;
   }
+
   return presShell->GetPresContext();
 }
 
@@ -4181,7 +4183,7 @@ nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
     }
     // If we're running xpcshell tests, we fail to get presShell here.
     // Even in such case, we need to dispatch "input" event without widget.
-    PresShell* presShell = document->GetPresShell();
+    nsIPresShell* presShell = document->GetShell();
     if (presShell) {
       nsPresContext* presContext = presShell->GetPresContext();
       if (NS_WARN_IF(!presContext)) {
@@ -6295,9 +6297,9 @@ nsIPresShell* nsContentUtils::FindPresShellForDocument(const Document* aDoc) {
     doc = displayDoc;
   }
 
-  PresShell* presShell = doc->GetPresShell();
-  if (presShell) {
-    return presShell;
+  nsIPresShell* shell = doc->GetShell();
+  if (shell) {
+    return shell;
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = doc->GetDocShell();
@@ -9830,7 +9832,7 @@ void nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(
   size_t oldLength = aElements.Length();
 #endif
 
-  if (PresShell* presShell = aDocument->GetPresShell()) {
+  if (nsIPresShell* presShell = aDocument->GetShell()) {
     if (nsIFrame* scrollFrame = presShell->GetRootScrollFrame()) {
       nsIAnonymousContentCreator* creator = do_QueryFrame(scrollFrame);
       MOZ_ASSERT(
@@ -10507,9 +10509,9 @@ bool nsContentUtils::
   }
 
   Document* topLevel = aDocument->GetTopLevelContentDocument();
-  return topLevel && topLevel->GetPresShell() &&
-         topLevel->GetPresShell()->GetPresContext() &&
-         !topLevel->GetPresShell()->GetPresContext()->HadContentfulPaint() &&
+  return topLevel && topLevel->GetShell() &&
+         topLevel->GetShell()->GetPresContext() &&
+         !topLevel->GetShell()->GetPresContext()->HadContentfulPaint() &&
          nsThreadManager::MainThreadHasPendingHighPriorityEvents();
 }
 

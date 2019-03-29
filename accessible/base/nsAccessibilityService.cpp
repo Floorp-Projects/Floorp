@@ -72,7 +72,6 @@
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HTMLTableElement.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
 #include "nsDeckFrame.h"
 
@@ -373,9 +372,9 @@ class PluginTimerCallBack final : public nsITimerCallback, public nsINamed {
   NS_IMETHOD Notify(nsITimer* aTimer) final {
     if (!mContent->IsInUncomposedDoc()) return NS_OK;
 
-    PresShell* presShell = mContent->OwnerDoc()->GetPresShell();
-    if (presShell) {
-      DocAccessible* doc = presShell->GetDocAccessible();
+    nsIPresShell* ps = mContent->OwnerDoc()->GetShell();
+    if (ps) {
+      DocAccessible* doc = ps->GetDocAccessible();
       if (doc) {
         // Make sure that if we created an accessible for the plugin that wasn't
         // a plugin accessible we remove it before creating the right
