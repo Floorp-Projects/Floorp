@@ -330,11 +330,17 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE  true
+#else
+# define PREF_VALUE  false
+#endif
 VARCACHE_PREF(
   "dom.webnotifications.requireuserinteraction",
    dom_webnotifications_requireuserinteraction,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   "dom.webnotifications.serviceworker.enabled",
