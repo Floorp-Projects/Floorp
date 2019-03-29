@@ -428,6 +428,8 @@ class GeckoEngineSession(
         override fun onCrash(session: GeckoSession) {
             geckoSession.close()
             createGeckoSession()
+
+            notifyObservers { onCrashStateChange(crashed = true) }
         }
 
         override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {

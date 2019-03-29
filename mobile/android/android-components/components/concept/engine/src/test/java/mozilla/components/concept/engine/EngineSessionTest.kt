@@ -59,6 +59,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onCloseWindowRequest(windowRequest) }
         session.notifyInternalObservers { onMediaAdded(mediaAdded) }
         session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
+        session.notifyInternalObservers { onCrashStateChange(true) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onLocationChange("https://www.firefox.com")
@@ -81,6 +82,7 @@ class EngineSessionTest {
         verify(observer).onCloseWindowRequest(windowRequest)
         verify(observer).onMediaAdded(mediaAdded)
         verify(observer).onMediaRemoved(mediaRemoved)
+        verify(observer).onCrashStateChange(true)
         verifyNoMoreInteractions(observer)
     }
 
@@ -113,6 +115,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onOpenWindowRequest(windowRequest) }
         session.notifyInternalObservers { onCloseWindowRequest(windowRequest) }
+        session.notifyInternalObservers { onCrashStateChange(false) }
         session.unregister(observer)
 
         val mediaAdded: Media = mock()
@@ -137,6 +140,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onCloseWindowRequest(otherWindowRequest) }
         session.notifyInternalObservers { onMediaAdded(mediaAdded) }
         session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
+        session.notifyInternalObservers { onCrashStateChange(true) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -155,6 +159,7 @@ class EngineSessionTest {
         verify(observer).onCancelContentPermissionRequest(permissionRequest)
         verify(observer).onOpenWindowRequest(windowRequest)
         verify(observer).onCloseWindowRequest(windowRequest)
+        verify(observer).onCrashStateChange(false)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
@@ -174,6 +179,7 @@ class EngineSessionTest {
         verify(observer, never()).onCloseWindowRequest(otherWindowRequest)
         verify(observer, never()).onMediaAdded(mediaAdded)
         verify(observer, never()).onMediaRemoved(mediaRemoved)
+        verify(observer, never()).onCrashStateChange(true)
         verifyNoMoreInteractions(observer)
     }
 
@@ -588,6 +594,7 @@ class EngineSessionTest {
         defaultObserver.onCloseWindowRequest(mock(WindowRequest::class.java))
         defaultObserver.onMediaAdded(mock())
         defaultObserver.onMediaRemoved(mock())
+        defaultObserver.onCrashStateChange(true)
     }
 
     @Test

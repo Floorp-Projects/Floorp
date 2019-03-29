@@ -1449,6 +1449,26 @@ class GeckoEngineSessionTest {
         assertEquals(state, actualState)
     }
 
+    @Test
+    fun `onCrash notifies observers about crash`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var crashedState: Boolean? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onCrashStateChange(crashed: Boolean) {
+                crashedState = crashed
+            }
+        })
+
+        contentDelegate.value.onCrash(mock())
+
+        assertEquals(true, crashedState)
+    }
+
     private fun mockGeckoSession(): GeckoSession {
         val session = mock(GeckoSession::class.java)
         `when`(session.settings).thenReturn(

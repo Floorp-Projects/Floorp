@@ -49,6 +49,7 @@ abstract class EngineSession(
         fun onCloseWindowRequest(windowRequest: WindowRequest) = Unit
         fun onMediaAdded(media: Media) = Unit
         fun onMediaRemoved(media: Media) = Unit
+        fun onCrashStateChange(crashed: Boolean) = Unit
 
         @Suppress("LongParameterList")
         fun onExternalResource(
