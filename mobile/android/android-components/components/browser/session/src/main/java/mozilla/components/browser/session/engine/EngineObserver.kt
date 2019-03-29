@@ -136,4 +136,8 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
         }
         media.unregisterObservers()
     }
+
+    override fun onCrashStateChange(crashed: Boolean) {
+        session.crashed = crashed
+    }
 }

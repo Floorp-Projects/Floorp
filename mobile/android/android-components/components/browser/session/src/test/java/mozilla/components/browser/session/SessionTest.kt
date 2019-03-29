@@ -883,4 +883,28 @@ class SessionTest {
 
         session.media = listOf(media1)
     }
+
+    @Test
+    fun `WHEN crashed state changes THEN observers are notified`() {
+        val session = Session("https://www.mozilla.org")
+
+        var observedCrashState: Boolean? = null
+
+        session.register(object : Session.Observer {
+            override fun onCrashStateChanged(session: Session, crashed: Boolean) {
+                observedCrashState = crashed
+            }
+        })
+
+        assertFalse(session.crashed)
+
+        session.crashed = true
+        assertTrue(session.crashed)
+        assertTrue(observedCrashState!!)
+        observedCrashState = null
+
+        session.crashed = false
+        assertFalse(session.crashed)
+        assertFalse(observedCrashState!!)
+    }
 }

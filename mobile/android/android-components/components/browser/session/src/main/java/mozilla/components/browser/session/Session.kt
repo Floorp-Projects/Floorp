@@ -70,6 +70,7 @@ class Session(
         fun onCloseWindowRequested(session: Session, windowRequest: WindowRequest): Boolean = false
         fun onMediaRemoved(session: Session, media: List<Media>, removed: Media) = Unit
         fun onMediaAdded(session: Session, media: List<Media>, added: Media) = Unit
+        fun onCrashStateChanged(session: Session, crashed: Boolean) = Unit
     }
 
     /**
@@ -345,6 +346,19 @@ class Session(
         _, _, request ->
         val consumers = wrapConsumers<WindowRequest> { onCloseWindowRequested(this@Session, it) }
         !request.consumeBy(consumers)
+    }
+
+    /**
+     * Whether this [Session] has crashed.
+     *
+     * In conjunction with a `concept-engine` implementation that uses a multi-process architecture, single sessions
+     * can crash without crashing the whole app.
+     *
+     * A crashed session may still be operational (since the underlying engine implementation has recovered its content
+     * process), but further action may be needed to restore the last state before the session has crashed (if desired).
+     */
+    var crashed: Boolean by Delegates.observable(false) { _, old, new ->
+        notifyObservers(old, new) { onCrashStateChanged(this@Session, new) }
     }
 
     /**

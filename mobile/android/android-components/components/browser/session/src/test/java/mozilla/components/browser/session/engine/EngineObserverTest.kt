@@ -368,4 +368,21 @@ class EngineObserverTest {
 
         assertEquals(emptyList<Media>(), session.media)
     }
+
+    @Test
+    fun `onCrashStateChanged will update session and notify observer`() {
+        val session = Session("https://www.mozilla.org")
+        assertFalse(session.crashed)
+
+        val observer = EngineObserver(session)
+
+        observer.onCrashStateChange(true)
+        assertTrue(session.crashed)
+
+        observer.onCrashStateChange(false)
+        assertFalse(session.crashed)
+
+        observer.onCrashStateChange(true)
+        assertTrue(session.crashed)
+    }
 }
