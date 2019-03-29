@@ -413,7 +413,7 @@ class UrlbarView {
     content.appendChild(title);
     item._elements.set("title", title);
 
-    let tagsContainer = this._createElement("div");
+    let tagsContainer = this._createElement("span");
     tagsContainer.className = "urlbarView-tags";
     content.appendChild(tagsContainer);
     item._elements.set("tagsContainer", tagsContainer);
