@@ -3,7 +3,6 @@
 
 "use strict";
 
-const PREF_NEW_CERT_ERRORS = "browser.security.newcerterrorpage.enabled";
 const PREF_MITM_PRIMING = "security.certerrors.mitm.priming.enabled";
 const PREF_MITM_PRIMING_ENDPOINT = "security.certerrors.mitm.priming.endpoint";
 const PREF_MITM_CANARY_ISSUER = "security.pki.mitm_canary_issuer";
@@ -15,7 +14,6 @@ const UNKNOWN_ISSUER = "https://untrusted.example.com";
 // Check that basic MitM priming works and the MitM error page is displayed successfully.
 add_task(async function checkMitmPriming() {
   await SpecialPowers.pushPrefEnv({"set": [
-    [PREF_NEW_CERT_ERRORS, true],
     [PREF_MITM_PRIMING, true],
     [PREF_MITM_PRIMING_ENDPOINT, UNKNOWN_ISSUER],
   ]});
@@ -60,7 +58,6 @@ add_task(async function checkMitmPriming() {
 // Check that we set the enterprise roots pref correctly on MitM
 add_task(async function checkMitmAutoEnableEnterpriseRoots() {
   await SpecialPowers.pushPrefEnv({"set": [
-    [PREF_NEW_CERT_ERRORS, true],
     [PREF_MITM_PRIMING, true],
     [PREF_MITM_PRIMING_ENDPOINT, UNKNOWN_ISSUER],
     [PREF_MITM_AUTO_ENABLE_ENTERPRISE_ROOTS, true],
