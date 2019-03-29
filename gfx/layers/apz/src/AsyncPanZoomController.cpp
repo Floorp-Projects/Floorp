@@ -1082,7 +1082,8 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
   CSSCoord maxThumbPos = scrollbarData.mScrollTrackLength;
   maxThumbPos -= scrollbarData.mThumbLength;
 
-  float scrollPercent = thumbPosition / maxThumbPos;
+  float scrollPercent =
+      maxThumbPos.value == 0.0f ? 0.0f : (float)(thumbPosition / maxThumbPos);
   APZC_LOG("%p scrollbar dragged to %f percent\n", this, scrollPercent);
 
   CSSCoord minScrollPosition =
