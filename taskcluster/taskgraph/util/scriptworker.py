@@ -22,7 +22,10 @@ import os
 import itertools
 from copy import deepcopy
 from datetime import datetime
+
 import jsone
+
+from mozbuild.util import memoize
 
 from .schema import resolve_keyed_by
 from .taskcluster import get_artifact_prefix
@@ -325,6 +328,8 @@ get_push_apk_scope = functools.partial(
     alias_to_scope_map=PUSH_APK_SCOPES,
 )
 
+cached_load_yaml = memoize(load_yaml)
+
 
 # release_config {{{1
 def get_release_config(config):
@@ -422,7 +427,7 @@ def generate_beetmover_upstream_artifacts(config, job, platform, locale=None, de
         project=config.params['project'],
         platform=platform
     )
-    map_config = load_yaml(job['attributes']['artifact_map'])
+    map_config = cached_load_yaml(job['attributes']['artifact_map'])
     upstream_artifacts = list()
 
     if not locale:
@@ -492,7 +497,7 @@ def generate_beetmover_compressed_upstream_artifacts(job, dependencies=None):
         list: A list of dictionaries conforming to the upstream_artifacts spec.
     """
     base_artifact_prefix = get_artifact_prefix(job)
-    map_config = load_yaml(job['attributes']['artifact_map'])
+    map_config = cached_load_yaml(job['attributes']['artifact_map'])
     upstream_artifacts = list()
 
     if not dependencies:
@@ -549,7 +554,7 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
         project=config.params['project'],
         platform=platform
     )
-    map_config = load_yaml(job['attributes']['artifact_map'])
+    map_config = cached_load_yaml(job['attributes']['artifact_map'])
     base_artifact_prefix = map_config.get('base_artifact_prefix', get_artifact_prefix(job))
 
     artifacts = list()
@@ -689,7 +694,7 @@ def generate_beetmover_partials_artifact_map(config, job, partials_info, **kwarg
         project=config.params['project'],
         platform=platform
     )
-    map_config = load_yaml(job['attributes']['artifact_map'])
+    map_config = cached_load_yaml(job['attributes']['artifact_map'])
     base_artifact_prefix = map_config.get('base_artifact_prefix', get_artifact_prefix(job))
 
     artifacts = list()
