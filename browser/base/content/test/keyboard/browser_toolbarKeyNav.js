@@ -75,6 +75,8 @@ function withNewBlankTab(taskFn) {
   });
 }
 
+const BOOKMARKS_COUNT = 100;
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -83,6 +85,17 @@ add_task(async function setup() {
     ],
   });
   resetToolbarWithoutDevEditionButtons();
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  // Add bookmarks.
+  let bookmarks = new Array(BOOKMARKS_COUNT);
+  for (let i = 0; i < BOOKMARKS_COUNT; ++i) {
+    bookmarks[i] = {url: `http://test.places.${i}/`};
+  }
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.toolbarGuid,
+    children: bookmarks,
+  });
 });
 
 // Test tab stops with no page loaded.
@@ -279,4 +292,27 @@ add_task(async function testArrowsRtl() {
   await SpecialPowers.popPrefEnv();
 });
 
-registerCleanupFunction(() => CustomizableUI.reset());
+// Test that right arrow reaches the overflow menu button on the Bookmarks
+// toolbar when it is visible.
+add_task(async function testArrowsBookmarksOverflowButton() {
+  let toolbar = document.getElementById("PersonalToolbar");
+  let transitionEnded = BrowserTestUtils.waitForEvent(toolbar, "transitionend");
+  CustomizableUI.setToolbarVisibility("PersonalToolbar", true);
+  await transitionEnded;
+  let items = document.getElementById("PlacesToolbarItems").children;
+  let lastVisible;
+  for (let item of items) {
+    if (item.style.visibility == "hidden") {
+      break;
+    }
+    lastVisible = item;
+  }
+  forceFocus(lastVisible);
+  await expectFocusAfterKey("ArrowRight", "PlacesChevron");
+  CustomizableUI.setToolbarVisibility("PersonalToolbar", false);
+});
+
+registerCleanupFunction(async function() {
+  CustomizableUI.reset();
+  await PlacesUtils.bookmarks.eraseEverything();
+});

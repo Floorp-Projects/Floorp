@@ -1099,3 +1099,40 @@ linux64-add-on-devel/opt:
         - linux64-sccache
         - linux64-nasm
         - linux64-node
+
+linux64-aarch64/opt:
+    description: "Linux64 aarch64 Opt"
+    index:
+        product: firefox
+        job-name: linux64-aarch64-opt
+    attributes:
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: linux64-aarch64/opt
+        symbol: B
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: debian9-arm64-build}
+        max-run-time: 7200
+    run:
+        using: mozharness
+        actions: [get-secrets, build]
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_linux_64_builds.py
+        extra-config:
+            mozconfig_platform: linux64-aarch64
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        tooltool-downloads: public
+        need-xvfb: true
+    run-on-projects: []
+    toolchains:
+        - linux64-binutils
+        - linux64-clang
+        - linux64-rust
+        - linux64-rust-size
+        - linux64-cbindgen
+        - linux64-sccache
+        - linux64-node

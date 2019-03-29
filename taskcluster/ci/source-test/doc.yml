@@ -27,7 +27,7 @@ upload:
     treeherder:
         symbol: DocUp
         kind: test
-        tier: 3
+        tier: 2
     run-on-projects: [mozilla-central]
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
     worker:

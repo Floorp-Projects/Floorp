@@ -278,6 +278,12 @@ def stlport_cppflags(value, ndk):
     # functions, locale-specific C library functions, multibyte support,
     # etc.
     return [
+        # You'd think we'd want to use -stdlib=libc++, but this doesn't work
+        # (cf. https://bugzilla.mozilla.org/show_bug.cgi?id=1510897#c2)
+        # Using -stdlib=libc++ and removing some of the -I below also doesn't
+        # work because not everything that is in cxx_include comes in the C++
+        # header directory that comes with clang.
+        '-stdlib=libstdc++',
         '-I%s' % cxx_include,
         '-I%s' % os.path.join(ndk, 'sources', 'android', 'support', 'include'),
         '-I%s' % cxxabi_include]
@@ -286,10 +292,9 @@ def stlport_cppflags(value, ndk):
 add_old_configure_assignment('stlport_cppflags', stlport_cppflags)
 
 
-@depends(android_system, android_sysroot, android_toolchain, android_version,
-         stlport_cppflags)
+@depends(android_system, android_sysroot, android_toolchain, android_version)
 def extra_toolchain_flags(android_system, android_sysroot, toolchain_dir,
-                          android_version, stlport_cppflags):
+                          android_version):
     if not android_sysroot:
         return []
     flags = ['-isystem',
@@ -299,7 +304,6 @@ def extra_toolchain_flags(android_system, android_sysroot, toolchain_dir,
              '-gcc-toolchain',
              toolchain_dir,
              '-D__ANDROID_API__=%d' % android_version]
-    flags.extend(stlport_cppflags if stlport_cppflags else [])
     return flags
 
 
@@ -313,10 +317,11 @@ imply_option('--with-toolchain-prefix', android_toolchain_prefix,
              reason='--with-android-ndk')
 
 
-@depends(extra_toolchain_flags, android_toolchain,
+@depends(extra_toolchain_flags, stlport_cppflags, android_toolchain,
          android_toolchain_prefix_base)
 @imports(_from='os.path', _import='isdir')
-def bindgen_cflags_android(toolchain_flags, toolchain, toolchain_prefix):
+def bindgen_cflags_android(toolchain_flags, stlport_flags, toolchain,
+                           toolchain_prefix):
     if not toolchain_flags:
         return
 
@@ -326,7 +331,7 @@ def bindgen_cflags_android(toolchain_flags, toolchain, toolchain_prefix):
         gcc_include = os.path.join(
             toolchain, 'lib', 'gcc', toolchain_prefix, '4.9')
 
-    return toolchain_flags + [
+    return toolchain_flags + stlport_flags + [
         '-I%s' % os.path.join(gcc_include, 'include'),
         '-I%s' % os.path.join(gcc_include, 'include-fixed'),
     ]

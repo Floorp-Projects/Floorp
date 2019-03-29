@@ -516,6 +516,45 @@ const PushNotificationsCleaner = {
   },
 };
 
+const StorageAccessCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return new Promise(aResolve => {
+      for (let perm of Services.perms.enumerator) {
+        if (perm.type == "storageAccessAPI") {
+          let toBeRemoved = false;
+          try {
+            toBeRemoved = Services.eTLD.hasRootDomain(perm.principal.URI.host,
+                                                    aHost);
+          } catch (ex) {
+            continue;
+          }
+          if (!toBeRemoved) {
+            continue;
+          }
+
+          try {
+            Services.perms.removePermission(perm);
+          } catch (ex) {
+            Cu.reportError(ex);
+          }
+        }
+      }
+
+      aResolve();
+    });
+  },
+
+  deleteByRange(aFrom, aTo) {
+    Services.perms.removeByTypeSince("storageAccessAPI", aFrom / 1000);
+    return Promise.resolve();
+  },
+
+  deleteAll() {
+    Services.perms.removeByType("storageAccessAPI");
+    return Promise.resolve();
+  },
+};
+
 const HistoryCleaner = {
   deleteByHost(aHost, aOriginAttributes) {
     return PlacesUtils.history.removeByFilter({ host: "." + aHost });
@@ -796,6 +835,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_REPORTS,
    cleaner: ReportsCleaner },
+
+ { flag: Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS,
+   cleaner: StorageAccessCleaner },
 ];
 
 this.ClearDataService = function() {

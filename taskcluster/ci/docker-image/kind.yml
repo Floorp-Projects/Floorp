@@ -155,6 +155,12 @@ jobs:
     definition: debian-build
     args:
       ARCH: amd64
+  debian9-arm64-build:
+    symbol: I(deb9-arm64)
+    parent: debian9-base
+    definition: debian-build
+    args:
+      ARCH: arm64
   android-build:
     symbol: I(agb)
     parent: debian9-base
