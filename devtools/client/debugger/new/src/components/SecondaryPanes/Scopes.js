@@ -4,9 +4,7 @@
 
 // @flow
 import React, { PureComponent } from "react";
-import { isGeneratedId } from "devtools-source-map";
 import { connect } from "../../utils/connect";
-import { features } from "../../utils/prefs";
 import actions from "../../actions";
 import { createObjectClient } from "../../client/firefox";
 
@@ -23,15 +21,11 @@ import {
 import { getScopes } from "../../utils/pause/scopes";
 
 import { objectInspector } from "devtools-reps";
-import AccessibleImage from "../shared/AccessibleImage";
 
 import type { Why } from "../../types";
 import type { NamedValue } from "../../utils/pause/scopes/types";
 
 import "./Scopes.css";
-
-const mdnLink =
-  "https://developer.mozilla.org/en-US/docs/Tools/Debugger/Using_the_Debugger_map_scopes_feature";
 
 const { ObjectInspector } = objectInspector;
 
@@ -111,34 +105,6 @@ class Scopes extends PureComponent<Props, State> {
     this.props.toggleMapScopes();
   };
 
-  renderMapScopes() {
-    const { selectedFrame, shouldMapScopes } = this.props;
-
-    if (
-      !features.mapScopes ||
-      !selectedFrame ||
-      isGeneratedId(selectedFrame.location.sourceId)
-    ) {
-      return null;
-    }
-
-    return (
-      <div className="toggle-map-scopes" onClick={this.onToggleMapScopes}>
-        <input
-          type="checkbox"
-          checked={shouldMapScopes ? "checked" : ""}
-          onChange={e => e.stopPropagation() && this.onToggleMapScopes()}
-        />
-        <div className="toggle-map-scopes-label">
-          <span>{L10N.getStr("scopes.mapScopes")}</span>
-        </div>
-        <a className="mdn" target="_blank" href={mdnLink}>
-          <AccessibleImage className="shortcuts" />
-        </a>
-      </div>
-    );
-  }
-
   renderScopesList() {
     const {
       isPaused,
@@ -166,20 +132,6 @@ class Scopes extends PureComponent<Props, State> {
             onDOMNodeClick={grip => openElementInInspector(grip)}
             onInspectIconClick={grip => openElementInInspector(grip)}
           />
-          {originalScopes && shouldMapScopes ? (
-            <div className="scope-type-toggle">
-              <button
-                onClick={e => {
-                  e.preventDefault();
-                  this.setState({ showOriginal: !showOriginal });
-                }}
-              >
-                {showOriginal
-                  ? L10N.getStr("scopes.toggleToGenerated")
-                  : L10N.getStr("scopes.toggleToOriginal")}
-              </button>
-            </div>
-          ) : null}
         </div>
       );
     }
@@ -201,12 +153,7 @@ class Scopes extends PureComponent<Props, State> {
   }
 
   render() {
-    return (
-      <div className="scopes-content">
-        {this.renderMapScopes()}
-        {this.renderScopesList()}
-      </div>
-    );
+    return <div className="scopes-content">{this.renderScopesList()}</div>;
   }
 }
 

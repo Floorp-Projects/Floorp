@@ -28,6 +28,14 @@ describe("SourcesTree", () => {
     expect(component).toMatchSnapshot();
   });
 
+  it("Should show a 'No Sources' message if there are no sources", async () => {
+    const { component, defaultState } = render();
+    const sourceTree = defaultState.sourceTree;
+    sourceTree.contents = [];
+    component.setState({ sourceTree: sourceTree });
+    expect(component).toMatchSnapshot();
+  });
+
   describe("When loading initial source", () => {
     it("Shows the tree with one.js, two.js and three.js expanded", async () => {
       const { component, props } = render();

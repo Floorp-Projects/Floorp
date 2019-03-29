@@ -27,7 +27,8 @@ const threadClient = {
     source: "function foo1() {\n  const foo = 5; return foo;\n}",
     contentType: "text/javascript"
   }),
-  getBreakpointPositions: async () => ({})
+  getBreakpointPositions: async () => ({}),
+  detachWorkers: () => {}
 };
 
 describe("navigation", () => {
@@ -67,7 +68,7 @@ describe("navigation", () => {
   });
 
   it("navigation removes activeSearch 'project' value", async () => {
-    const { dispatch, getState } = createStore();
+    const { dispatch, getState } = createStore(threadClient);
     dispatch(actions.setActiveSearch("project"));
     expect(getActiveSearch(getState())).toBe("project");
 
@@ -76,7 +77,7 @@ describe("navigation", () => {
   });
 
   it("navigation clears the file-search query", async () => {
-    const { dispatch, getState } = createStore();
+    const { dispatch, getState } = createStore(threadClient);
 
     dispatch(actions.setFileSearchQuery("foobar"));
     expect(getFileSearchQuery(getState())).toBe("foobar");
@@ -87,7 +88,7 @@ describe("navigation", () => {
   });
 
   it("navigation clears the file-search results", async () => {
-    const { dispatch, getState } = createStore();
+    const { dispatch, getState } = createStore(threadClient);
 
     const searchResults = [{ line: 1, ch: 3 }, { line: 3, ch: 2 }];
     dispatch(actions.updateSearchResults(2, 3, searchResults));
@@ -109,7 +110,7 @@ describe("navigation", () => {
   });
 
   it("navigation removes activeSearch 'file' value", async () => {
-    const { dispatch, getState } = createStore();
+    const { dispatch, getState } = createStore(threadClient);
     dispatch(actions.setActiveSearch("file"));
     expect(getActiveSearch(getState())).toBe("file");
 
