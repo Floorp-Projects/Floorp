@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.support.annotation.VisibleForTesting
 import android.support.v4.view.ViewCompat
 import android.util.AttributeSet
 import android.widget.FrameLayout
@@ -22,7 +23,7 @@ class GeckoEngineView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView {
-
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var currentGeckoView = object : NestedGeckoView(context) {
         override fun onDetachedFromWindow() {
             // We are releasing the session before GeckoView gets detached from the window. Otherwise
@@ -37,6 +38,20 @@ class GeckoEngineView @JvmOverloads constructor(
         ViewCompat.setImportantForAutofill(this, 0x1 /* View.IMPORTANT_FOR_AUTOFILL_YES */)
     }
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val observer = object : EngineSession.Observer {
+        override fun onCrashStateChange(crashed: Boolean) {
+            if (crashed) {
+                // When crashing the previous GeckoSession is no longer usable. Internally GeckoEngineSession will
+                // create a new instance. This means we will need to tell GeckoView about this new GeckoSession:
+                currentSession?.let { currentGeckoView.setSession(it.geckoSession) }
+            }
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var currentSession: GeckoEngineSession? = null
+
     init {
         // Currently this is just a FrameLayout with a single GeckoView instance. Eventually this
         // implementation should handle at least two GeckoView so that we can switch between
@@ -46,8 +61,15 @@ class GeckoEngineView @JvmOverloads constructor(
     /**
      * Render the content of the given session.
      */
+    @Synchronized
     override fun render(session: EngineSession) {
         val internalSession = session as GeckoEngineSession
+
+        currentSession?.apply { unregister(observer) }
+
+        currentSession = session.apply {
+            register(observer)
+        }
 
         if (currentGeckoView.session != internalSession.geckoSession) {
             currentGeckoView.session?.let {
@@ -58,6 +80,12 @@ class GeckoEngineView @JvmOverloads constructor(
 
             currentGeckoView.setSession(internalSession.geckoSession)
         }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+
+        currentSession?.apply { unregister(observer) }
     }
 
     override fun canScrollVerticallyDown() = true // waiting for this issue https://bugzilla.mozilla.org/show_bug.cgi?id=1507569
