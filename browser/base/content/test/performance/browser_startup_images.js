@@ -25,10 +25,6 @@ const whitelist = [
     file: "chrome://browser/skin/arrow-left.svg",
     platforms: ["linux", "win", "macosx"],
   },
-  {
-    file: "chrome://browser/skin/tabbrowser/tab-overflow-indicator.png",
-    platforms: ["linux", "win", "macosx"],
-  },
 
   {
     file: "chrome://browser/skin/places/toolbarDropMarker.png",
