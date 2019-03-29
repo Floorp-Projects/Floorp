@@ -16,8 +16,6 @@
 #include "nsIRunnable.h"
 #include "nsWeakReference.h"
 
-class nsPIDOMWindowInner;
-
 namespace mozilla {
 namespace dom {
 
@@ -112,11 +110,6 @@ class IDBFileHandle final : public DOMEventTargetHelper,
   void Abort();
 
   // WebIDL
-  nsPIDOMWindowInner* GetParentObject() const {
-    AssertIsOnOwningThread();
-    return GetOwner();
-  }
-
   IDBMutableFile* GetMutableFile() const {
     AssertIsOnOwningThread();
     return mMutableFile;
