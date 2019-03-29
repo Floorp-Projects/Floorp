@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 extern crate base64;
+extern crate lmdb;
 extern crate nserror;
 extern crate nsstring;
 extern crate rkv;
@@ -29,6 +30,7 @@ use style::gecko_bindings::structs::nsresult;
 use xpcom::interfaces::{nsICertStorage, nsIFile, nsIObserver, nsIPrefBranch, nsISupports};
 use xpcom::{nsIID, GetterAddrefs, RefPtr, XpCom};
 
+use lmdb::EnvironmentFlags;
 use rkv::{Rkv, SingleStore, StoreOptions, Value};
 
 const PREFIX_REV_IS: &str = "is";
@@ -93,14 +95,13 @@ impl SecurityState {
         if self.env_and_store.is_some() {
             return Ok(());
         }
-        let mut store_path = self.profile_path.clone();
-        store_path.push("security_state");
 
-        create_dir_all(store_path.as_path())?;
+        let store_path = get_store_path(&self.profile_path)?;
+
+        // Open the store in read-write mode initially to create it (if needed)
+        // and migrate data from the old store (if any).
         let env = Rkv::new(store_path.as_path())?;
-        let mut options = StoreOptions::create();
-        options.create = true;
-        let store = env.open_single("cert_storage", options)?;
+        let store = env.open_single("cert_storage", StoreOptions::create())?;
 
         // if the profile has a revocations.txt, migrate it and remove the file
         let mut revocations_path = self.profile_path.clone();
@@ -109,13 +110,18 @@ impl SecurityState {
             SecurityState::migrate(&revocations_path, &env, &store)?;
             remove_file(revocations_path)?;
         }
+
         // We already returned early if env_and_store was Some, so this should take the None branch.
         match self.env_and_store.replace(EnvAndStore { env, store }) {
             Some(_) => Err(SecurityStateError::from(
                 "env and store already initialized? (did we mess up our threading model?)",
             )),
             None => Ok(()),
-        }
+        }?;
+
+        // Now reopen the store in read-only mode to conserve memory.
+        // We'll reopen it again in read-write mode when making changes.
+        self.reopen_store_read_only()
     }
 
     fn migrate(
@@ -180,16 +186,50 @@ impl SecurityState {
         Ok(())
     }
 
+    fn reopen_store_read_write(&mut self) -> Result<(), SecurityStateError> {
+        let store_path = get_store_path(&self.profile_path)?;
+
+        // Move out and drop the EnvAndStore first so we don't have
+        // two LMDB environments open at the same time.
+        drop(self.env_and_store.take());
+
+        let env = Rkv::new(store_path.as_path())?;
+        let store = env.open_single("cert_storage", StoreOptions::create())?;
+        self.env_and_store.replace(EnvAndStore { env, store });
+        Ok(())
+    }
+
+    fn reopen_store_read_only(&mut self) -> Result<(), SecurityStateError> {
+        let store_path = get_store_path(&self.profile_path)?;
+
+        // Move out and drop the EnvAndStore first so we don't have
+        // two LMDB environments open at the same time.
+        drop(self.env_and_store.take());
+
+        let mut builder = Rkv::environment_builder();
+        builder.set_max_dbs(2);
+        builder.set_flags(EnvironmentFlags::READ_ONLY);
+
+        let env = Rkv::from_env(store_path.as_path(), builder)?;
+        let store = env.open_single("cert_storage", StoreOptions::default())?;
+        self.env_and_store.replace(EnvAndStore { env, store });
+        Ok(())
+    }
+
     fn write_entry(&mut self, key: &[u8], value: i16) -> Result<(), SecurityStateError> {
-        let env_and_store = match self.env_and_store.as_mut() {
-            Some(env_and_store) => env_and_store,
-            None => return Err(SecurityStateError::from("env and store not initialized?")),
-        };
-        let mut writer = env_and_store.env.write()?;
-        env_and_store
-            .store
-            .put(&mut writer, key, &Value::I64(value as i64))?;
-        writer.commit()?;
+        self.reopen_store_read_write()?;
+        {
+            let env_and_store = match self.env_and_store.as_mut() {
+                Some(env_and_store) => env_and_store,
+                None => return Err(SecurityStateError::from("env and store not initialized?")),
+            };
+            let mut writer = env_and_store.env.write()?;
+            env_and_store
+                .store
+                .put(&mut writer, key, &Value::I64(value as i64))?;
+            writer.commit()?;
+        }
+        self.reopen_store_read_only()?;
         Ok(())
     }
 
@@ -406,18 +446,23 @@ fn get_path_from_directory_service(key: &str) -> Result<PathBuf, SecurityStateEr
     Ok(PathBuf::from(format!("{}", path)))
 }
 
+fn get_profile_path() -> Result<PathBuf, SecurityStateError> {
+    Ok(get_path_from_directory_service("ProfD").or_else(|_| get_path_from_directory_service("TmpD"))?)
+}
+
+fn get_store_path(profile_path: &PathBuf) -> Result<PathBuf, SecurityStateError> {
+    let mut store_path = profile_path.clone();
+    store_path.push("security_state");
+    create_dir_all(store_path.as_path())?;
+    Ok(store_path)
+}
+
 fn do_construct_cert_storage(
     _outer: *const nsISupports,
     iid: *const xpcom::nsIID,
     result: *mut *mut xpcom::reexports::libc::c_void,
 ) -> Result<(), SecurityStateError> {
-    let path_buf = match get_path_from_directory_service("ProfD") {
-        Ok(path) => path,
-        Err(_) => match get_path_from_directory_service("TmpD") {
-            Ok(path) => path,
-            Err(e) => return Err(e),
-        },
-    };
+    let path_buf = get_profile_path()?;
 
     let cert_storage = CertStorage::allocate(InitCertStorage {
         security_state: RwLock::new(SecurityState::new(path_buf)?),
