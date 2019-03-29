@@ -9,7 +9,6 @@
 // React & Redux
 const { Component } = require("devtools/client/shared/vendor/react");
 loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
-loader.lazyRequireGetter(this, "isWarningGroup", "devtools/client/webconsole/utils/messages", true);
 
 const {
   MESSAGE_SOURCE,
@@ -23,7 +22,6 @@ const componentMap = new Map([
   ["EvaluationResult", require("./message-types/EvaluationResult")],
   ["NetworkEventMessage", require("./message-types/NetworkEventMessage")],
   ["PageError", require("./message-types/PageError")],
-  ["WarningGroup", require("./message-types/WarningGroup")],
 ]);
 
 class MessageContainer extends Component {
@@ -35,8 +33,6 @@ class MessageContainer extends Component {
       tableData: PropTypes.object,
       timestampsVisible: PropTypes.bool.isRequired,
       repeat: PropTypes.number,
-      badge: PropTypes.number,
-      indent: PropTypes.number,
       networkMessageUpdate: PropTypes.object,
       getMessage: PropTypes.func.isRequired,
       isPaused: PropTypes.bool.isRequired,
@@ -61,10 +57,8 @@ class MessageContainer extends Component {
     const pausedChanged = this.props.isPaused !== nextProps.isPaused;
     const executionPointChanged =
       this.props.pausedExecutionPoint !== nextProps.pausedExecutionPoint;
-    const badgeChanged = this.props.badge !== nextProps.badge;
 
     return repeatChanged
-      || badgeChanged
       || openChanged
       || tableDataChanged
       || timestampVisibleChanged
@@ -107,11 +101,6 @@ function getMessageComponent(message) {
         default:
           return componentMap.get("DefaultRenderer");
       }
-    case MESSAGE_SOURCE.CONSOLE_FRONTEND:
-      if (isWarningGroup(message)) {
-        return componentMap.get("WarningGroup");
-      }
-      break;
   }
 
   return componentMap.get("DefaultRenderer");
