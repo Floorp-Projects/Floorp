@@ -120,6 +120,16 @@ raptor-tp6-8-chrome:
             - --test=raptor-tp6-8
             - --app=chrome
 
+raptor-tp6-8-404-chrome:
+    description: "Raptor tp6-8-404 on Chrome"
+    try-name: raptor-tp6-8-404-chrome
+    treeherder-symbol: Rap-C(tp6-8-404)
+    tier: 3
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-8-404
+            - --app=chrome
+
 raptor-tp6-9-chrome:
     description: "Raptor tp6-9 on Chrome"
     try-name: raptor-tp6-9-chrome

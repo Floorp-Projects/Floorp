@@ -163,7 +163,7 @@ class Mitmproxy(Playback):
         # mitmproxy needs some DLL's that are a part of Firefox itself, so add to path
         env = os.environ.copy()
         env["PATH"] = os.path.dirname(browser_path) + os.pathsep + env["PATH"]
-        command = [mitmdump_path, "-k"]
+        command = [mitmdump_path]
 
         if "playback_tool_args" in self.config:
             command.extend(self.config["playback_tool_args"])
