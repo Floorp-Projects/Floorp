@@ -18,12 +18,13 @@ void FrameMetrics::RecalculateLayoutViewportOffset() {
     return;
   }
   KeepLayoutViewportEnclosingVisualViewport(GetVisualViewport(),
-                                            mLayoutViewport);
+                                            mScrollableRect, mLayoutViewport);
 }
 
 /* static */
 void FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
-    const CSSRect& aVisualViewport, CSSRect& aLayoutViewport) {
+    const CSSRect& aVisualViewport, const CSSRect& aScrollableRect,
+    CSSRect& aLayoutViewport) {
   // If the visual viewport is contained within the layout viewport, we don't
   // need to make any adjustments, so we can exit early.
   //
@@ -77,6 +78,10 @@ void FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
                               aLayoutViewport.YMost());
     }
   }
+
+  // Regardless of any adjustment above, the layout viewport is not allowed
+  // to go outside the scrollable rect.
+  aLayoutViewport = aLayoutViewport.MoveInsideAndClamp(aScrollableRect);
 }
 
 void ScrollMetadata::SetUsesContainerScrolling(bool aValue) {
