@@ -2,15 +2,27 @@
 
 If data collection is enabled, glean provides a set of pings that are assembled out of the box
 without any developer intervention.
-Every glean ping is in JSON format and contains a [common section](#the-ping_info-section)
-with shared information data included under the `ping_info` key.
-The following is a list of the pings along with the conditions that triggers them.
+Every glean ping is in JSON format and contains one or more of the [common sections](#ping-sections)
+with shared information data.
+The following is a list of these built-in pings:
 
 - [`baseline` ping](baseline.md)
 - [`events` ping](events.md)
 - [`metrics` ping](metrics.md)
 
-## The `ping_info` section
+## Ping sections
+
+There are two standard sections that are added to most pings, in addition to their
+core metrics and events content.
+
+- The [`ping_info` section](#The-ping_info-section) contains core metadata that
+  is included in **every** ping.
+- The [`client_info` section](#The-client_info-section) contains information
+  that identifies the client. It is included in most pings (including all
+  built-in pings), but may be excluded from pings where we don't want to connect
+  client information with the other metrics in the ping.
+
+### The `ping_info` section
 The following fields are included in the `ping_info` section, for every ping. Optional fields
 are marked accordingly.
 
@@ -25,8 +37,8 @@ are marked accordingly.
 All the metrics surviving application restarts (e.g. `seq`, ...) are removed once the
 application using glean is uninstalled.
 
-## The `client_info` section
-The following fields are included in the `client_info` section, for every ping.
+### The `client_info` section
+The following fields are included in the `client_info` section. Optional fields are marked accordingly.
 
 | Field name | Type | Description |
 |---|---|---|
@@ -46,28 +58,13 @@ The following fields are included in the `client_info` section, for every ping.
 All the metrics surviving application restarts (e.g. `client_id`, ...) are removed once the
 application using glean is uninstalled.
 
-### A note about time formats
-Time formats are used and expected in ISO 8601 format.  Due to the minimum Android SDK version 21
-not having direct support of outputting or parsing these formats, there was difficulty in finding
-a way to output these formats with the `:` character properly encoded in the timezone offset.  So
-we get the following:
+### The `experiments` object 
 
-```
-2018-12-19T12:36-0600
-```
-
-We require the following to comply with certain back-end services:
-
-```
-2018-12-19T12:36-06:00
-```
-
-Which is why the `:` is manually inserted in order to comply with the format and requirements.
-
-### The `experiments` object
-This object contains experiments keyed by the experiment `id`. Each listed experiment contains the
-`branch` the client is enrolled in and may contain a string to string map with additional data in the
-`extra` key. Both the `id` and `branch` are truncated to 30 characters.
+This object (included in the [`ping_info` section](#The-ping_info-section))
+contains experiments keyed by the experiment `id`. Each listed experiment
+contains the `branch` the client is enrolled in and may contain a string to
+string map with additional data in the `extra` key. Both the `id` and `branch`
+are truncated to 30 characters.
 
 ```json
 {
@@ -81,9 +78,12 @@ This object contains experiments keyed by the experiment `id`. Each listed exper
 ```
 
 ## Ping submission
-The pings glean generates are submitted to the Mozilla servers at specific paths, in order to provide
-additional metadata without the need of unpacking the ping payload. A typical submission URL looks like
-`"<server-address>/submit/<application-id>/<doc-type>/<glean-schema-version>/<ping-uuid>"`, with:
+The pings that glean generates are submitted to the Mozilla servers at specific paths, in order to provide
+additional metadata without the need to unpack the ping payload. A typical submission URL looks like
+
+  `"<server-address>/submit/<application-id>/<doc-type>/<glean-schema-version>/<ping-uuid>"`
+  
+where:
 
 - `<server-address>`: the address of the server that receives the pings;
 - `<application-id>`: a unique application id, automatically detected by glean; this is the value returned by [`Context.getPackageName()`](http://developer.android.com/reference/android/content/Context.html#getPackageName());
@@ -113,9 +113,9 @@ ultimately what matters for ping size.
 ## Defining background state
 These docs refer to application 'background' state in several places. This specifically means when 
 the activity is no longer visible to the user, it has entered the Stopped state, and the system 
-invokes the [onStop()](https://developer.android.com/reference/android/app/Activity.html#onStop()) callback. 
+invokes the [`onStop()`](https://developer.android.com/reference/android/app/Activity.html#onStop()) callback. 
 This may occur, for example, when a newly launched activity covers the entire screen. The system may 
-also call onStop() when the activity has finished running, and is about to be terminated.
+also call `onStop()` when the activity has finished running, and is about to be terminated.
 
 ## Error reporting
 

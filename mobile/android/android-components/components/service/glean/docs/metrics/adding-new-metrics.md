@@ -7,7 +7,7 @@ documented [here](https://mozilla.github.io/glean_parser/metrics-yaml.html).
 
 When adding a new metric, the workflow is:
 * Decide on which [metric type](#Choosing-a-metric-type) you want to use.
-* Add a new entry to [`metrics.yaml`](#The-metrics-yaml-file).
+* Add a new entry to [`metrics.yaml`](#The-metricsyaml-file).
 * Add code to your project to record into the metric by calling glean.
 
 **Important**: as stated [here](../../README.md#before-using-the-library), any new data collection requires

@@ -24,22 +24,71 @@ In the second case, similarly to the previous case, if the `metrics` ping was al
 current calendar day when we hit 4AM, then a new collection is scheduled for the next calendar day.
 Otherwise, the `metrics` is immediately collected and scheduled for sending.
 
+More [scheduling examples](#Scheduling-examples) are included below.
+
 ## Contents
 The `metrics` ping contains all of the metrics defined in `metrics.yaml` (except events) that don't
 specify a ping or where `default` is specified in their [`send in pings`](https://mozilla.github.io/glean_parser/metrics-yaml.html#send-in-pings) property.
 
 Additionally, error metrics in the `glean.error` category are included in the `metrics` ping.
 
-The `metrics` ping shall also include the common [`ping_info`](pings.md#the-ping_info-section) section found in all pings.
+The `metrics` ping shall also include the common
+[`ping_info`](pings.md#the-ping_info-section) and
+['client_info'](pings.md#the-client_info-section) sections.
 
 ### Querying ping contents
 A quick note about querying ping contents (i.e. for https://sql.telemetry.mozilla.org):  Each metric
 in the metrics ping is organized by its metric type, and uses a namespace of 'glean.metrics'. For
 instance, in order to select a String field called `test` you would use `metrics.string['glean.metrics.test']`.
 
-## Examples
+### Example metrics ping
 
-#### Crossing due time with the application closed
+```json
+{
+  "ping_info": {
+    "ping_type": "metrics",
+    "experiments": {
+      "third_party_library": {
+        "branch": "enabled"
+      }
+    },
+    "seq": 0,
+    "start_time": "2019-03-29T09:50-04:00",
+    "end_time": "2019-03-29T10:02-04:00"
+  },
+  "client_info": {
+    "telemetry_sdk_build": "0.49.0",
+    "first_run_date": "2019-03-29-04:00",
+    "os": "Android",
+    "android_sdk_version": "27",
+    "os_version": "8.1.0",
+    "device_manufacturer": "Google",
+    "device_model": "Android SDK built for x86",
+    "architecture": "x86",
+    "app_build": "1",
+    "app_display_version": "1.0",
+    "client_id": "35dab852-74db-43f4-8aa0-88884211e545"
+  },
+  "metrics": {
+    "counter": {
+      "sample_metrics.test": 1
+    },
+    "string": {
+      "basic.os": "Android"
+    },
+    "timespan": {
+      "test.test_timespan": {
+        "time_unit": "microsecond",
+        "value": 181908
+      }
+    }
+  }
+}
+```
+
+## Scheduling Examples
+
+### Crossing due time with the application closed
 1. The application is opened on Feb 7 on 3PM, closed on 3:05PM.
 
     * Glean records one metric A (say startup time in ms) during this measurement window MW1.
@@ -54,7 +103,7 @@ instance, in order to select a String field called `test` you would use `metrics
 
   * Glean records metric A again, into MW2, which has a start_time of Feb8/5PM.
 
-#### Crossing due and changing timezones
+### Crossing due time and changing timezones
 1. The application is opened on Feb 7 on 3PM in timezone UTC, closed on 3:05PM.
 
     * Glean records one metric A (say startup time in ms) during this measurement window MW1.
@@ -68,7 +117,7 @@ instance, in order to select a String field called `test` you would use `metrics
 
     * Glean records metric A again, into MW2.
 
-#### The application doesn’t run in a week
+### The application doesn’t run in a week
 1. The application is opened on Feb 7 on 3PM in timezone UTC, closed on 3:05PM.
 
     * Glean records one metric A (say startup time in ms) during this measurement window MW1.
@@ -83,7 +132,7 @@ instance, in order to select a String field called `test` you would use `metrics
 
     * Glean records metric A again, into MW2.
 
-#### The application doesn’t run for a week, and when it’s finally re-opened the timezone has changed
+### The application doesn’t run for a week, and when it’s finally re-opened the timezone has changed
 1. The application is opened on Feb 7 on 3PM in timezone UTC, closed on 3:05PM.
 
     * Glean records one metric A (say startup time in ms) during this measurement window MW1.
@@ -98,7 +147,7 @@ instance, in order to select a String field called `test` you would use `metrics
 
     * Glean records metric A again, into MW2.
 
-#### The user changes timezone in an extreme enough fashion that they cross 4AM twice on the same date
+### The user changes timezone in an extreme enough fashion that they cross 4AM twice on the same date
 1. The application is opened on Feb 7 at 3PM in timezone UTC+11, closed at 3:05PM
 
     * Glean records one metric A (say startup time in ms) during this measurement window MW1.
