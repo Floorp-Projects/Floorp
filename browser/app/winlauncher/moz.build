@@ -10,6 +10,7 @@ FORCE_STATIC_LIB = True
 
 UNIFIED_SOURCES += [
     '/ipc/mscom/ProcessRuntime.cpp',
+    '/widget/windows/WindowsConsole.cpp',
     'DllBlocklistWin.cpp',
     'ErrorHandler.cpp',
     'LauncherProcessWin.cpp',
@@ -31,7 +32,6 @@ TEST_DIRS += [
 if CONFIG['MOZ_LAUNCHER_PROCESS']:
     UNIFIED_SOURCES += [
         '/toolkit/xre/LauncherRegistryInfo.cpp',
-        '/widget/windows/WindowsConsole.cpp',
     ]
     for var in ('MOZ_APP_BASENAME', 'MOZ_APP_VENDOR'):
         DEFINES[var] = '"%s"' % CONFIG[var]
