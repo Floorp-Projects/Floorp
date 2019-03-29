@@ -1053,6 +1053,7 @@ class RTCPeerConnection {
   setIdentityProvider(provider,
                       {protocol, usernameHint, peerIdentity} = {}) {
     this._checkClosed();
+    peerIdentity = peerIdentity || this._impl.peerIdentity;
     this._localIdp.setIdentityProvider(provider,
                                        protocol, usernameHint, peerIdentity);
   }
