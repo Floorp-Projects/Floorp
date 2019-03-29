@@ -1869,7 +1869,7 @@ JSObject* IDBObjectStore::WrapObject(JSContext* aCx,
   return IDBObjectStore_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsIGlobalObject* IDBObjectStore::GetParentObject() const {
+nsPIDOMWindowInner* IDBObjectStore::GetParentObject() const {
   return mTransaction->GetParentObject();
 }
 

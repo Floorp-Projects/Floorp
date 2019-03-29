@@ -1153,7 +1153,7 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   }
 
   if (mIndexedDB) {
-    mIndexedDB->DisconnectFromGlobal(this);
+    mIndexedDB->DisconnectFromWindow(this);
     mIndexedDB = nullptr;
   }
 
@@ -1449,7 +1449,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplicationCache)
   }
   if (tmp->mIndexedDB) {
-    tmp->mIndexedDB->DisconnectFromGlobal(tmp);
+    tmp->mIndexedDB->DisconnectFromWindow(tmp);
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)

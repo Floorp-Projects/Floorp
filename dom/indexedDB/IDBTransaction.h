@@ -9,12 +9,14 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDBTransactionBinding.h"
-#include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/IDBWrapperCache.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIRunnable.h"
 #include "nsString.h"
 #include "nsTArray.h"
+
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -42,7 +44,7 @@ class OpenCursorParams;
 class RequestParams;
 }  // namespace indexedDB
 
-class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
+class IDBTransaction final : public IDBWrapperCache, public nsIRunnable {
   friend class indexedDB::BackgroundCursorChild;
   friend class indexedDB::BackgroundRequestChild;
 
@@ -228,7 +230,7 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
     return mLoggingSerialNumber;
   }
 
-  nsIGlobalObject* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
 
   IDBTransactionMode GetMode(ErrorResult& aRv) const;
 
@@ -255,7 +257,7 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransaction, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransaction, IDBWrapperCache)
 
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* aCx,
