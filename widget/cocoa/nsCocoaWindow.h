@@ -99,6 +99,13 @@ typedef struct _nsCocoaWindowList {
 // original value.
 - (void)_setWindowNumber:(NSInteger)aNumber;
 
+// If we set the window's stylemask to be textured, the corners on the bottom of
+// the window are rounded by default. We use this private method to make
+// the corners square again, a la Safari. Starting with 10.7, all windows have
+// rounded bottom corners, so this call doesn't have any effect there.
+- (void)setBottomCornerRounded:(BOOL)rounded;
+- (BOOL)bottomCornerRounded;
+
 // Present in the same form on OS X since at least OS X 10.5.
 - (NSRect)contentRectForFrameRect:(NSRect)windowFrame styleMask:(NSUInteger)windowStyle;
 - (NSRect)frameRectForContentRect:(NSRect)windowContentRect styleMask:(NSUInteger)windowStyle;
@@ -150,17 +157,10 @@ typedef struct _nsCocoaWindowList {
 - (void)sendToplevelDeactivateEvents;
 @end
 
-@interface TitlebarGradientView : NSView
-@end
+@class ToolbarWindow;
 
 // NSWindow subclass for handling windows with toolbars.
 @interface ToolbarWindow : BaseWindow {
-  // This window's titlebar gradient view, if present.
-  // Will be nil if drawsContentsIntoWindowFrame is YES.
-  // This view is a subview of the window's content view and gets created and
-  // destroyed by updateTitlebarGradientViewPresence.
-  TitlebarGradientView* mTitlebarGradientView;  // [STRONG]
-
   CGFloat mUnifiedToolbarHeight;
   CGFloat mSheetAttachmentPosition;
   NSRect mWindowButtonsRect;
@@ -170,7 +170,8 @@ typedef struct _nsCocoaWindowList {
 - (CGFloat)unifiedToolbarHeight;
 - (CGFloat)titlebarHeight;
 - (NSRect)titlebarRect;
-- (void)setTitlebarNeedsDisplay;
+- (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect sync:(BOOL)aSync;
+- (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect;
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState;
 - (void)setSheetAttachmentPosition:(CGFloat)aY;
 - (CGFloat)sheetAttachmentPosition;
@@ -178,7 +179,6 @@ typedef struct _nsCocoaWindowList {
 - (void)placeFullScreenButton:(NSRect)aRect;
 - (NSPoint)windowButtonsPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
 - (NSPoint)fullScreenButtonPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
-- (void)windowMainStateChanged;
 @end
 
 class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
@@ -240,7 +240,6 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
 
   virtual void Resize(double aWidth, double aHeight, bool aRepaint) override;
   virtual void Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
-  NSRect GetClientCocoaRect();
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
   void ReportMoveEvent();
