@@ -626,6 +626,16 @@ class ADBDevice(ADBCommand):
 
         self._check_adb_root(timeout=timeout)
 
+        # To work around bug 1525401 where su -c id will return an
+        # exitcode of 1 if selinux permissive is not already in effect,
+        # we need su to turn off selinux prior to checking for su.
+        # We can use shell() directly to prevent the non-zero exitcode
+        # from raising an ADBError.
+        adb_process = self.shell("su -c setenforce 0")
+        self._logger.info("setenforce 0 exitcode %s, stdout: %s" % (
+            adb_process.proc.poll(),
+            adb_process.proc.stdout))
+
         uid = 'uid=0'
         # Do we have a 'Superuser' sh like su?
         try:
@@ -633,8 +643,8 @@ class ADBDevice(ADBCommand):
                 self.shell_output("su -c id", timeout=timeout).find(uid) != -1):
                 self._have_su = True
                 self._logger.info("su -c supported")
-        except ADBError:
-            self._logger.debug("Check for su -c failed")
+        except ADBError as e:
+            self._logger.debug("Check for su -c failed: {}".format(e))
 
         # Check if Android's su 0 command works.
         # su 0 id will hang on Pixel 2 8.1.0/OPM2.171019.029.B1/4720900
@@ -646,8 +656,8 @@ class ADBDevice(ADBCommand):
                 self.shell_output("su 0 id", timeout=timeout).find(uid) != -1):
                 self._have_android_su = True
                 self._logger.info("su 0 supported")
-        except ADBError:
-            self._logger.debug("Check for su 0 failed")
+        except ADBError as e:
+            self._logger.debug("Check for su 0 failed: {}".format(e))
 
         self._mkdir_p = None
         # Force the use of /system/bin/ls or /system/xbin/ls in case
