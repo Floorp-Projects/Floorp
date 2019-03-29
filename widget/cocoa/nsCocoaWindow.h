@@ -150,10 +150,17 @@ typedef struct _nsCocoaWindowList {
 - (void)sendToplevelDeactivateEvents;
 @end
 
-@class ToolbarWindow;
+@interface TitlebarGradientView : NSView
+@end
 
 // NSWindow subclass for handling windows with toolbars.
 @interface ToolbarWindow : BaseWindow {
+  // This window's titlebar gradient view, if present.
+  // Will be nil if drawsContentsIntoWindowFrame is YES.
+  // This view is a subview of the window's content view and gets created and
+  // destroyed by updateTitlebarGradientViewPresence.
+  TitlebarGradientView* mTitlebarGradientView;  // [STRONG]
+
   CGFloat mUnifiedToolbarHeight;
   CGFloat mSheetAttachmentPosition;
   NSRect mWindowButtonsRect;
@@ -171,6 +178,7 @@ typedef struct _nsCocoaWindowList {
 - (void)placeFullScreenButton:(NSRect)aRect;
 - (NSPoint)windowButtonsPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
 - (NSPoint)fullScreenButtonPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
+- (void)windowMainStateChanged;
 @end
 
 class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
