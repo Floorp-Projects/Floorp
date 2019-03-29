@@ -1,4 +1,9 @@
-// Arrays should be initialized to zero
+// |jit-test| skip-if: getBuildConfiguration()["arm64-simulator"] === true
+//
+// The ARM64 Simulator can take upwards of 6 minutes to execute this test,
+// which fails intermittently with timeouts.
+//
+// Arrays should be initialized to zero.
 
 function f() {
   for (var ctor of [ Int8Array,
