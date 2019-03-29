@@ -91,3 +91,26 @@ add_task(async function() {
 
   await removeTab(tab);
 });
+
+/**
+ * Test that routes from old about:debugging redirect to this Firefox.
+ */
+add_task(async function testOldAboutDebuggingRoutes() {
+  info("Check that routes from old about:debugging redirect to this Firefox");
+  const { document, tab } = await openAboutDebugging();
+
+  const routes = ["addons", "tabs", "workers"];
+  for (const route of routes) {
+    info("Move to setup page before testing the route");
+    document.location.hash = "#/setup";
+    await waitUntil(() => document.querySelector(".js-connect-page"));
+
+    info(`Check that navigating to ${route} redirects to This Firefox`);
+    document.location.hash = route;
+    await waitUntil(() => document.querySelector(".js-runtime-page"));
+    is(document.location.hash, "#/runtime/this-firefox",
+      `${route} was redirected to This Firefox`);
+  }
+
+  await removeTab(tab);
+});
