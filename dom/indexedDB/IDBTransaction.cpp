@@ -13,6 +13,7 @@
 #include "IDBRequest.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/WorkerRef.h"
@@ -39,7 +40,7 @@ using namespace mozilla::ipc;
 IDBTransaction::IDBTransaction(IDBDatabase* aDatabase,
                                const nsTArray<nsString>& aObjectStoreNames,
                                Mode aMode)
-    : IDBWrapperCache(aDatabase),
+    : DOMEventTargetHelper(aDatabase),
       mDatabase(aDatabase),
       mObjectStoreNames(aObjectStoreNames),
       mLoggingSerialNumber(0),
@@ -95,6 +96,8 @@ IDBTransaction::IDBTransaction(IDBDatabase* aDatabase,
     }
   }
 #endif
+
+  mozilla::HoldJSObjects(this);
 }
 
 IDBTransaction::~IDBTransaction() {
@@ -130,6 +133,9 @@ IDBTransaction::~IDBTransaction() {
     MOZ_ASSERT(!mBackgroundActor.mNormalBackgroundActor,
                "SendDeleteMeInternal should have cleared!");
   }
+
+  ReleaseWrapper(this);
+  mozilla::DropJSObjects(this);
 }
 
 // static
@@ -150,8 +156,6 @@ already_AddRefed<IDBTransaction> IDBTransaction::CreateVersionChange(
       new IDBTransaction(aDatabase, emptyObjectStoreNames, VERSION_CHANGE);
   aOpenRequest->GetCallerLocation(transaction->mFilename, &transaction->mLineNo,
                                   &transaction->mColumn);
-
-  transaction->SetScriptOwner(aDatabase->GetScriptOwner());
 
   transaction->NoteActiveTransaction();
 
@@ -179,8 +183,6 @@ already_AddRefed<IDBTransaction> IDBTransaction::Create(
       new IDBTransaction(aDatabase, aObjectStoreNames, aMode);
   IDBRequest::CaptureCaller(aCx, transaction->mFilename, &transaction->mLineNo,
                             &transaction->mColumn);
-
-  transaction->SetScriptOwner(aDatabase->GetScriptOwner());
 
   if (!NS_IsMainThread()) {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
@@ -798,7 +800,7 @@ int64_t IDBTransaction::NextIndexId() {
   return mNextIndexId++;
 }
 
-nsPIDOMWindowInner* IDBTransaction::GetParentObject() const {
+nsIGlobalObject* IDBTransaction::GetParentObject() const {
   AssertIsOnOwningThread();
 
   return mDatabase->GetParentObject();
@@ -902,24 +904,25 @@ already_AddRefed<IDBObjectStore> IDBTransaction::ObjectStore(
   return objectStore.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(IDBTransaction, IDBWrapperCache)
-NS_IMPL_RELEASE_INHERITED(IDBTransaction, IDBWrapperCache)
+NS_IMPL_ADDREF_INHERITED(IDBTransaction, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(IDBTransaction, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBTransaction)
   NS_INTERFACE_MAP_ENTRY(nsIRunnable)
-NS_INTERFACE_MAP_END_INHERITING(IDBWrapperCache)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransaction)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
-                                                  IDBWrapperCache)
+                                                  DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDatabase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mObjectStores)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDeletedObjectStores)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransaction, IDBWrapperCache)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransaction,
+                                                DOMEventTargetHelper)
   // Don't unlink mDatabase!
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mObjectStores)

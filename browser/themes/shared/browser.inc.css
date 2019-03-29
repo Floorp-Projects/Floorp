@@ -25,6 +25,12 @@
   }
 }
 
+@media (min-resolution: 3dppx) {
+  :root {
+    --tabs-navbar-shadow-size: 0.33px;
+  }
+}
+
 /* Increase contrast of UI links on dark themes */
 
 :root[lwt-popup-brighttext] panel .text-link {

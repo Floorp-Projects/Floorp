@@ -2171,7 +2171,7 @@ mozilla::ipc::IPCResult TabParent::RecvAccessKeyNotHandled(
   // Here we convert the WidgetEvent that we received to an Event
   // to be able to dispatch it to the <browser> element as the target element.
   Document* doc = mFrameElement->OwnerDoc();
-  nsIPresShell* presShell = doc->GetShell();
+  PresShell* presShell = doc->GetPresShell();
   NS_ENSURE_TRUE(presShell, IPC_OK());
 
   if (presShell->CanDispatchEvent()) {
@@ -2538,9 +2538,9 @@ mozilla::ipc::IPCResult TabParent::RecvSetInputContext(
 already_AddRefed<nsIWidget> TabParent::GetTopLevelWidget() {
   nsCOMPtr<nsIContent> content = mFrameElement;
   if (content) {
-    nsIPresShell* shell = content->OwnerDoc()->GetShell();
-    if (shell) {
-      nsViewManager* vm = shell->GetViewManager();
+    PresShell* presShell = content->OwnerDoc()->GetPresShell();
+    if (presShell) {
+      nsViewManager* vm = presShell->GetViewManager();
       nsCOMPtr<nsIWidget> widget;
       vm->GetRootWidget(getter_AddRefs(widget));
       return widget.forget();
@@ -3297,8 +3297,8 @@ mozilla::ipc::IPCResult TabParent::RecvInvokeDragSession(
     const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
     const IPC::Principal& aPrincipal) {
   mInitialDataTransferItems.Clear();
-  nsIPresShell* shell = mFrameElement->OwnerDoc()->GetShell();
-  if (!shell) {
+  PresShell* presShell = mFrameElement->OwnerDoc()->GetPresShell();
+  if (!presShell) {
     Unused << Manager()->SendEndDragSession(true, true, LayoutDeviceIntPoint(),
                                             0);
     // Continue sending input events with input priority when stopping the dnd
@@ -3307,7 +3307,7 @@ mozilla::ipc::IPCResult TabParent::RecvInvokeDragSession(
     return IPC_OK();
   }
 
-  EventStateManager* esm = shell->GetPresContext()->EventStateManager();
+  EventStateManager* esm = presShell->GetPresContext()->EventStateManager();
   for (uint32_t i = 0; i < aTransfers.Length(); ++i) {
     mInitialDataTransferItems.AppendElement(std::move(aTransfers[i].items()));
   }

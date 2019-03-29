@@ -34,7 +34,6 @@ struct JSContext;
 class JSObject;
 class nsIContent;
 class nsIFrame;
-class nsIPresShell;
 
 namespace mozilla {
 
@@ -45,6 +44,7 @@ struct AnimationRule;
 struct TimingParams;
 class EffectSet;
 class ComputedStyle;
+class PresShell;
 
 namespace dom {
 class ElementOrCSSPseudoElement;
@@ -283,7 +283,7 @@ class KeyframeEffect : public AnimationEffect {
   }
 
   Document* GetRenderedDocument() const;
-  nsIPresShell* GetPresShell() const;
+  PresShell* GetPresShell() const;
 
   // Associates a warning with the animated property set on the specified frame
   // indicating why, for example, the property could not be animated on the

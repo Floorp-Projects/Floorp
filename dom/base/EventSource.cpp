@@ -1376,16 +1376,10 @@ void EventSourceImpl::DispatchAllMessageEvents() {
   }
 
   AutoJSAPI jsapi;
-  if (mIsMainThread) {
-    if (NS_WARN_IF(!jsapi.Init(mEventSource->GetOwner()))) {
-      return;
-    }
-  } else {
-    MOZ_ASSERT(mWorkerRef);
-    if (NS_WARN_IF(!jsapi.Init(mWorkerRef->Private()->GlobalScope()))) {
-      return;
-    }
+  if (NS_WARN_IF(!jsapi.Init(mEventSource->GetOwnerGlobal()))) {
+    return;
   }
+
   JSContext* cx = jsapi.cx();
 
   while (mMessagesToDispatch.GetSize() > 0) {
@@ -1783,13 +1777,14 @@ EventSourceImpl::CheckListenerChain() {
 // EventSource
 ////////////////////////////////////////////////////////////////////////////////
 
-EventSource::EventSource(nsPIDOMWindowInner* aOwnerWindow,
+EventSource::EventSource(nsIGlobalObject* aGlobal,
                          nsICookieSettings* aCookieSettings,
                          bool aWithCredentials)
-    : DOMEventTargetHelper(aOwnerWindow),
+    : DOMEventTargetHelper(aGlobal),
       mWithCredentials(aWithCredentials),
       mIsMainThread(true),
       mKeepingAlive(false) {
+  MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aCookieSettings);
   mImpl = new EventSourceImpl(this, aCookieSettings);
 }
@@ -1810,12 +1805,14 @@ nsresult EventSource::CreateAndDispatchSimpleEvent(const nsAString& aName) {
 already_AddRefed<EventSource> EventSource::Constructor(
     const GlobalObject& aGlobal, const nsAString& aURL,
     const EventSourceInit& aEventSourceInitDict, ErrorResult& aRv) {
-  nsCOMPtr<nsPIDOMWindowInner> ownerWindow =
-      do_QueryInterface(aGlobal.GetAsSupports());
-
-  MOZ_ASSERT(!NS_IsMainThread() || ownerWindow);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
   nsCOMPtr<nsICookieSettings> cookieSettings;
+  nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(global);
   if (ownerWindow) {
     Document* doc = ownerWindow->GetExtantDoc();
     if (NS_WARN_IF(!doc)) {
@@ -1832,7 +1829,7 @@ already_AddRefed<EventSource> EventSource::Constructor(
   }
 
   RefPtr<EventSource> eventSource = new EventSource(
-      ownerWindow, cookieSettings, aEventSourceInitDict.mWithCredentials);
+      global, cookieSettings, aEventSourceInitDict.mWithCredentials);
   RefPtr<EventSourceImpl> eventSourceImp = eventSource->mImpl;
 
   if (NS_IsMainThread()) {

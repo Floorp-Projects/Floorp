@@ -1,0 +1,10 @@
+[
+  {
+    "size": 35903223,
+    "visibility": "public",
+    "digest": "cf5a2bd056ae655d4db0a953ec1bf80229990f449672ae9b636568540fae192a1c361c7742f1e2a8b560426a11e69955358b6a37445f37117dfcac154ef84713",
+    "algorithm": "sha512",
+    "filename": "mitmproxy-4.0.4-windows.zip",
+    "unpack": true
+  }
+]

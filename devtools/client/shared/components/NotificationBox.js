@@ -73,7 +73,7 @@ class NotificationBox extends Component {
       // Message that should be shown when hovering over the close button
       closeButtonTooltip: PropTypes.string,
       // Wraps text when passed from console window as wrapping: true
-      wrapping: PropTypes.boolean,
+      wrapping: PropTypes.bool,
     };
   }
 

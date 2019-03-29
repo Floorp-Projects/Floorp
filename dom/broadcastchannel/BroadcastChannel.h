@@ -13,7 +13,7 @@
 #include "nsTArray.h"
 #include "mozilla/RefPtr.h"
 
-class nsPIDOMWindowInner;
+class nsIGlobalObject;
 
 namespace mozilla {
 
@@ -57,7 +57,7 @@ class BroadcastChannel final : public DOMEventTargetHelper {
   void Shutdown();
 
  private:
-  BroadcastChannel(nsPIDOMWindowInner* aWindow, const nsAString& aChannel);
+  BroadcastChannel(nsIGlobalObject* aGlobal, const nsAString& aChannel);
 
   ~BroadcastChannel();
 

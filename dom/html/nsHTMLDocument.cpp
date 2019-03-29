@@ -8,6 +8,7 @@
 
 #include "nsIContentPolicy.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLAllCollection.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "nsCOMPtr.h"
@@ -1432,7 +1433,7 @@ void nsHTMLDocument::Close(ErrorResult& rv) {
   // above about reusing frames applies.
   //
   // XXXhsivonen keeping this around for bug 577508 / 253951 still :-(
-  if (GetShell()) {
+  if (GetPresShell()) {
     FlushPendingNotifications(FlushType::Layout);
   }
 }
@@ -1873,8 +1874,10 @@ void nsHTMLDocument::TearingDownEditor() {
     EditingState oldState = mEditingState;
     mEditingState = eTearingDown;
 
-    nsCOMPtr<nsIPresShell> presShell = GetShell();
-    if (!presShell) return;
+    RefPtr<PresShell> presShell = GetPresShell();
+    if (!presShell) {
+      return;
+    }
 
     nsTArray<RefPtr<StyleSheet>> agentSheets;
     presShell->GetAgentStyleSheets(agentSheets);
@@ -2018,7 +2021,7 @@ nsresult nsHTMLDocument::EditingStateChanged() {
     EditingState oldState = mEditingState;
     nsAutoEditingState push(this, eSettingUp);
 
-    nsCOMPtr<nsIPresShell> presShell = GetShell();
+    RefPtr<PresShell> presShell = GetPresShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
     // Before making this window editable, we need to modify UA style sheet
@@ -2200,7 +2203,7 @@ void nsHTMLDocument::MaybeDispatchCheckKeyPressEventModelEvent() {
 }
 
 void nsHTMLDocument::SetKeyPressEventModel(uint16_t aKeyPressEventModel) {
-  nsIPresShell* presShell = GetShell();
+  PresShell* presShell = GetPresShell();
   if (!presShell) {
     return;
   }

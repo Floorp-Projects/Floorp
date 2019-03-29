@@ -5,11 +5,9 @@
 
 const BAD_CERT = "https://expired.example.com/";
 const BAD_STS_CERT = "https://badchain.include-subdomains.pinning.example.com:443";
-const PREF_NEW_CERT_ERRORS = "browser.security.newcerterrorpage.enabled";
 const PREF_PERMANENT_OVERRIDE = "security.certerrors.permanentOverride";
 
 add_task(async function checkExceptionDialogButton() {
-  Services.prefs.setBoolPref(PREF_NEW_CERT_ERRORS, true);
   info("Loading a bad cert page and making sure the exceptionDialogButton directly adds an exception");
   let tab = await openErrorPage(BAD_CERT);
   let browser = tab.linkedBrowser;
@@ -33,11 +31,9 @@ add_task(async function checkExceptionDialogButton() {
                               .getService(Ci.nsICertOverrideService);
   certOverrideService.clearValidityOverride("expired.example.com", -1);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  Services.prefs.clearUserPref(PREF_NEW_CERT_ERRORS);
 });
 
 add_task(async function checkPermanentExceptionPref() {
-  Services.prefs.setBoolPref(PREF_NEW_CERT_ERRORS, true);
   info("Loading a bad cert page and making sure the permanent state of exceptions can be controlled via pref");
 
   for (let permanentOverride of [false, true]) {
@@ -83,7 +79,6 @@ add_task(async function checkPermanentExceptionPref() {
   }
 
   Services.prefs.clearUserPref(PREF_PERMANENT_OVERRIDE);
-  Services.prefs.clearUserPref(PREF_NEW_CERT_ERRORS);
 });
 
 add_task(async function checkBadStsCert() {
@@ -105,18 +100,9 @@ add_task(async function checkBadStsCert() {
       advancedButton.click();
       return doc.getElementById("badCertTechnicalInfo").textContent;
     });
-    if (Services.prefs.getBoolPref(PREF_NEW_CERT_ERRORS)) {
-      ok(message.includes("SSL_ERROR_BAD_CERT_DOMAIN"), "Didn't find SSL_ERROR_BAD_CERT_DOMAIN.");
-      ok(message.includes("The certificate is only valid for"), "Didn't find error message.");
-      ok(message.includes("a certificate that is not valid for"), "Didn't find error message.");
-      ok(message.includes("badchain.include-subdomains.pinning.example.com"), "Didn't find domain in error message.");
-
-      BrowserTestUtils.removeTab(gBrowser.selectedTab);
-      return;
-    }
     ok(message.includes("SSL_ERROR_BAD_CERT_DOMAIN"), "Didn't find SSL_ERROR_BAD_CERT_DOMAIN.");
     ok(message.includes("The certificate is only valid for"), "Didn't find error message.");
-    ok(message.includes("uses an invalid security certificate"), "Didn't find error message.");
+    ok(message.includes("a certificate that is not valid for"), "Didn't find error message.");
     ok(message.includes("badchain.include-subdomains.pinning.example.com"), "Didn't find domain in error message.");
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);

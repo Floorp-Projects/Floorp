@@ -198,11 +198,10 @@ class TeardownRunnableOnWorker final : public WorkerControlRunnable,
 
 }  // namespace
 
-BroadcastChannel::BroadcastChannel(nsPIDOMWindowInner* aWindow,
+BroadcastChannel::BroadcastChannel(nsIGlobalObject* aGlobal,
                                    const nsAString& aChannel)
-    : DOMEventTargetHelper(aWindow), mChannel(aChannel), mState(StateActive) {
-  // Window can be null in workers
-
+    : DOMEventTargetHelper(aGlobal), mChannel(aChannel), mState(StateActive) {
+  MOZ_ASSERT(aGlobal);
   KeepAliveIfHasListenersFor(NS_LITERAL_STRING("message"));
 }
 
@@ -219,16 +218,24 @@ JSObject* BroadcastChannel::WrapObject(JSContext* aCx,
 /* static */
 already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
     const GlobalObject& aGlobal, const nsAString& aChannel, ErrorResult& aRv) {
-  nsCOMPtr<nsPIDOMWindowInner> window =
-      do_QueryInterface(aGlobal.GetAsSupports());
-  // Window is null in workers.
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
-  RefPtr<BroadcastChannel> bc = new BroadcastChannel(window, aChannel);
+  RefPtr<BroadcastChannel> bc = new BroadcastChannel(global, aChannel);
 
   nsAutoCString origin;
   PrincipalInfo principalInfo;
 
   if (NS_IsMainThread()) {
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
+    if (NS_WARN_IF(!window)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
     nsCOMPtr<nsIGlobalObject> incumbent = mozilla::dom::GetIncumbentGlobal();
 
     if (!incumbent) {

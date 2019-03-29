@@ -34,7 +34,6 @@ EXPORTS.mozilla.dom += [
     'IDBObjectStore.h',
     'IDBRequest.h',
     'IDBTransaction.h',
-    'IDBWrapperCache.h',
     'IndexedDatabase.h',
     'IndexedDatabaseManager.h',
 ]
@@ -64,7 +63,6 @@ UNIFIED_SOURCES += [
     'IDBObjectStore.cpp',
     'IDBRequest.cpp',
     'IDBTransaction.cpp',
-    'IDBWrapperCache.cpp',
     'IndexedDatabaseManager.cpp',
     'KeyPath.cpp',
     'PermissionRequestBase.cpp',

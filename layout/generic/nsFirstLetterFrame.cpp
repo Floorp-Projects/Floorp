@@ -8,6 +8,7 @@
 
 #include "nsFirstLetterFrame.h"
 #include "nsPresContext.h"
+#include "nsPresContextInlines.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsIContent.h"
 #include "nsLineLayout.h"

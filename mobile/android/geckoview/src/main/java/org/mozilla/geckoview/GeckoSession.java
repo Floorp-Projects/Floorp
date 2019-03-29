@@ -4598,6 +4598,8 @@ public class GeckoSession implements Parcelable {
         mViewportLeft = scrollX;
         mViewportTop = scrollY;
         mViewportZoom = zoom;
+
+        mTextInput.onScreenMetricsUpdated();
     }
 
     /* protected */ void onWindowBoundsChanged() {

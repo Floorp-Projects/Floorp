@@ -14,7 +14,6 @@
 #include "nsXULElement.h"
 #include "nsIDocShell.h"
 #include "nsIObserverService.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIScrollableFrame.h"
 #include "nsISelectionController.h"
@@ -24,6 +23,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TouchEvents.h"
 #include "nsView.h"
 #include "nsGkAtoms.h"
@@ -70,8 +70,10 @@ void nsCoreUtils::DispatchClickEvent(XULTreeElement *aTree, int32_t aRowIndex,
   Document *document = tcElm->GetUncomposedDoc();
   if (!document) return;
 
-  nsCOMPtr<nsIPresShell> presShell = document->GetShell();
-  if (!presShell) return;
+  RefPtr<PresShell> presShell = document->GetPresShell();
+  if (!presShell) {
+    return;
+  }
 
   // Ensure row is visible.
   aTree->EnsureRowIsVisible(aRowIndex);

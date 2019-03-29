@@ -15,7 +15,9 @@
 #include "xpcpublic.h"
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/Blob.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 
 namespace mozilla {

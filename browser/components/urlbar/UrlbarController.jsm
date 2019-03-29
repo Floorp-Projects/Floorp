@@ -115,7 +115,8 @@ class UrlbarController {
    *   The reason the query was cancelled.
    */
   cancelQuery(reason) {
-    if (!this._lastQueryContext) {
+    if (!this._lastQueryContext ||
+        this._lastQueryContext._cancelled) {
       return;
     }
 
@@ -123,8 +124,8 @@ class UrlbarController {
     TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, this._lastQueryContext);
 
     this.manager.cancelQuery(this._lastQueryContext);
+    this._lastQueryContext._cancelled = true;
     this._notify("onQueryCancelled", this._lastQueryContext);
-    delete this._lastQueryContext;
 
     if (reason == UrlbarUtils.CANCEL_REASON.BLUR &&
         ExtensionSearchHandler.hasActiveInputSession()) {

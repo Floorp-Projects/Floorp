@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/SVGAElementBinding.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"

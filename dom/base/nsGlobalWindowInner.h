@@ -633,6 +633,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   void GetRegionalPrefsLocales(nsTArray<nsString>& aLocales);
 
+  void GetWebExposedLocales(nsTArray<nsString>& aLocales);
+
   mozilla::dom::IntlUtils* GetIntlUtils(mozilla::ErrorResult& aRv);
 
   void StoreSharedWorker(mozilla::dom::SharedWorker* aSharedWorker);

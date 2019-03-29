@@ -2790,7 +2790,7 @@ nsresult NS_ShouldSecureUpgrade(
               [service{std::move(service)}, uri{std::move(uri)}, flags(flags),
                originAttributes(aOriginAttributes),
                handleResultFunc{std::move(handleResultFunc)},
-               resultCallback{std::move(aResultCallback)}]() {
+               resultCallback{std::move(aResultCallback)}]() mutable {
                 uint32_t hstsSource = 0;
                 bool isStsHost = false;
                 nsresult rv = service->IsSecureURI(
