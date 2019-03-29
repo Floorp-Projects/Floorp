@@ -522,7 +522,8 @@ void DeserializeStructuredCloneFiles(
           RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(ipcBlob);
           MOZ_ASSERT(blobImpl);
 
-          RefPtr<Blob> blob = Blob::Create(aDatabase->GetOwner(), blobImpl);
+          RefPtr<Blob> blob =
+              Blob::Create(aDatabase->GetOwnerGlobal(), blobImpl);
 
           StructuredCloneFile* file = aFiles.AppendElement();
           MOZ_ASSERT(file);
@@ -610,7 +611,8 @@ void DeserializeStructuredCloneFiles(
           RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(ipcBlob);
           MOZ_ASSERT(blobImpl);
 
-          RefPtr<Blob> blob = Blob::Create(aDatabase->GetOwner(), blobImpl);
+          RefPtr<Blob> blob =
+              Blob::Create(aDatabase->GetOwnerGlobal(), blobImpl);
 
           StructuredCloneFile* file = aFiles.AppendElement();
           MOZ_ASSERT(file);
@@ -1225,7 +1227,8 @@ already_AddRefed<File> ConvertActorToFile(
   RefPtr<BlobImpl> blobImplSnapshot =
       new BlobImplSnapshot(blobImpl, static_cast<IDBFileHandle*>(aFileHandle));
 
-  RefPtr<File> file = File::Create(mutableFile->GetOwner(), blobImplSnapshot);
+  RefPtr<File> file =
+      File::Create(mutableFile->GetOwnerGlobal(), blobImplSnapshot);
   return file.forget();
 }
 
@@ -1677,7 +1680,8 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
   }
 
   if (XRE_IsParentProcess()) {
-    nsCOMPtr<nsPIDOMWindowInner> window = mFactory->GetParentObject();
+    nsCOMPtr<nsIGlobalObject> global = mFactory->GetParentObject();
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
     MOZ_ASSERT(window);
 
     nsCOMPtr<Element> ownerElement =

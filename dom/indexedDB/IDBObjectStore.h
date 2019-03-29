@@ -18,7 +18,7 @@
 #include "nsWrapperCache.h"
 
 struct JSClass;
-class nsPIDOMWindowInner;
+class nsIGlobalObject;
 
 namespace mozilla {
 
@@ -137,7 +137,7 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
 
   bool HasValidKeyPath() const;
 
-  nsPIDOMWindowInner* GetParentObject() const;
+  nsIGlobalObject* GetParentObject() const;
 
   void GetName(nsString& aName) const {
     AssertIsOnOwningThread();

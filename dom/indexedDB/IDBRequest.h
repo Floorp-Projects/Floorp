@@ -11,7 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/IDBRequestBinding.h"
-#include "mozilla/dom/IDBWrapperCache.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -22,7 +22,7 @@
     }                                                \
   }
 
-class nsPIDOMWindowInner;
+class nsIGlobalObject;
 
 namespace mozilla {
 
@@ -42,7 +42,7 @@ struct Nullable;
 class OwningIDBObjectStoreOrIDBIndexOrIDBCursor;
 class StrongWorkerRef;
 
-class IDBRequest : public IDBWrapperCache {
+class IDBRequest : public DOMEventTargetHelper {
  protected:
   // mSourceAsObjectStore and mSourceAsIndex are exclusive and one must always
   // be set. mSourceAsCursor is sometimes set also.
@@ -128,7 +128,7 @@ class IDBRequest : public IDBWrapperCache {
 
   void SetLoggingSerialNumber(uint64_t aLoggingSerialNumber);
 
-  nsPIDOMWindowInner* GetParentObject() const { return GetOwner(); }
+  nsIGlobalObject* GetParentObject() const { return GetOwnerGlobal(); }
 
   void GetResult(JS::MutableHandle<JS::Value> aResult, ErrorResult& aRv) const;
 
@@ -154,7 +154,7 @@ class IDBRequest : public IDBWrapperCache {
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(IDBRequest,
-                                                         IDBWrapperCache)
+                                                         DOMEventTargetHelper)
 
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -162,7 +162,7 @@ class IDBRequest : public IDBWrapperCache {
 
  protected:
   explicit IDBRequest(IDBDatabase* aDatabase);
-  explicit IDBRequest(nsPIDOMWindowInner* aOwner);
+  explicit IDBRequest(nsIGlobalObject* aGlobal);
   ~IDBRequest();
 
   void InitMembers();
@@ -189,12 +189,9 @@ class IDBOpenDBRequest final : public IDBRequest {
   bool mIncreasedActiveDatabaseCount;
 
  public:
-  static already_AddRefed<IDBOpenDBRequest> CreateForWindow(
-      JSContext* aCx, IDBFactory* aFactory, nsPIDOMWindowInner* aOwner,
-      JS::Handle<JSObject*> aScriptOwner);
-
-  static already_AddRefed<IDBOpenDBRequest> CreateForJS(
-      JSContext* aCx, IDBFactory* aFactory, JS::Handle<JSObject*> aScriptOwner);
+  static already_AddRefed<IDBOpenDBRequest> Create(JSContext* aCx,
+                                                   IDBFactory* aFactory,
+                                                   nsIGlobalObject* aGlobal);
 
   bool IsFileHandleDisabled() const { return mFileHandleDisabled; }
 
@@ -220,7 +217,7 @@ class IDBOpenDBRequest final : public IDBRequest {
                                JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  IDBOpenDBRequest(IDBFactory* aFactory, nsPIDOMWindowInner* aOwner,
+  IDBOpenDBRequest(IDBFactory* aFactory, nsIGlobalObject* aGlobal,
                    bool aFileHandleDisabled);
 
   ~IDBOpenDBRequest();
