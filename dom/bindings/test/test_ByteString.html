@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=796850
 
   /** Test for Bug 796850 **/
   var xhr = new XMLHttpRequest();
-  caught = false;
+  var caught = false;
   try {
     xhr.open("\u5427", "about:mozilla", true);
   } catch (TypeError) {

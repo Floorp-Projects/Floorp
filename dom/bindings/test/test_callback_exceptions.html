@@ -5,6 +5,8 @@
 <script src="/resources/testharnessreport.js"></script>
 <div id="log"></div>
 <script>
+/* global promise_test, promise_rejects */
+
 promise_test(function(t) {
   var iterator = document.createNodeIterator(document, NodeFilter.SHOW_ALL, JSON.parse);
   return promise_rejects(t, new SyntaxError,

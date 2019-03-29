@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1334537
     var asShortAString = t.getStringDataAsAString(substringLength);
     var asAString = t.getStringDataAsAString();
 
-    is(asShortAString, shortTestString, "Short DOMString should be short");
+    is(asShortDOMString, shortTestString, "Short DOMString should be short");
     is(asFullDOMString, testString, "Full DOMString should be test string");
     is(asShortAString, shortTestString, "Short AString should be short");
     is(asAString, testString, "Full AString should be test string");
