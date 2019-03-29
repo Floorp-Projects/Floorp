@@ -3501,7 +3501,7 @@ void AsyncPanZoomController::AdjustScrollForSurfaceShift(
   FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
       CSSRect(mCompositedScrollOffset,
               Metrics().CalculateCompositedSizeInCssPixels()),
-      mCompositedLayoutViewport);
+      Metrics().GetScrollableRect(), mCompositedLayoutViewport);
   RequestContentRepaint();
   UpdateSharedCompositorFrameMetrics();
 }
