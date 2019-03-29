@@ -19,6 +19,7 @@
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/PendingAnimationTracker.h"

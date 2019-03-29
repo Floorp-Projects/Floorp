@@ -50,6 +50,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/MessageBroadcaster.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMException.h"
