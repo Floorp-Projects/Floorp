@@ -78,6 +78,8 @@ class Mitmproxy(Playback):
         self.mitmdump_path = None
         self.browser_path = config.get("binary")
         self.policies_dir = None
+        self.ignore_mitmdump_exit_failure = config.get(
+                "ignore_mitmdump_exit_failure", False)
 
         # mozproxy_dir is where we will download all mitmproxy required files
         # when running locally it comes from obj_path via mozharness/mach
@@ -209,7 +211,10 @@ class Mitmproxy(Playback):
             if exit_code is None:
                 LOG.error("Failed to kill the mitmproxy playback process")
             else:
-                LOG.error("Mitmproxy exited with error code %d" % exit_code)
+                log_func = LOG.error
+                if self.ignore_mitmdump_exit_failure:
+                    log_func = LOG.info
+                log_func("Mitmproxy exited with error code %d" % exit_code)
         else:
             LOG.info("Successfully killed the mitmproxy playback process")
 
