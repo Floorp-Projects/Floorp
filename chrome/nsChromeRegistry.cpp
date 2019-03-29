@@ -21,11 +21,11 @@
 #include "mozilla/dom/Document.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
+#include "nsIPresShell.h"
 #include "nsIScriptError.h"
 #include "nsIWindowMediator.h"
 #include "nsIPrefService.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/Printf.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -38,7 +38,6 @@ nsChromeRegistry* nsChromeRegistry::gChromeRegistry;
 
 // DO NOT use namespace mozilla; it'll break due to a naming conflict between
 // mozilla::TextRange and a TextRange in OSX headers.
-using mozilla::PresShell;
 using mozilla::StyleSheet;
 using mozilla::dom::Document;
 using mozilla::dom::IsChromeURI;
@@ -345,11 +344,11 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow) {
   if (!document) return NS_OK;
 
   // Deal with the agent sheets first.  Have to do all the style sets by hand.
-  RefPtr<PresShell> presShell = document->GetPresShell();
-  if (presShell) {
+  nsCOMPtr<nsIPresShell> shell = document->GetShell();
+  if (shell) {
     // Reload only the chrome URL agent style sheets.
     nsTArray<RefPtr<StyleSheet>> agentSheets;
-    rv = presShell->GetAgentStyleSheets(agentSheets);
+    rv = shell->GetAgentStyleSheets(agentSheets);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsTArray<RefPtr<StyleSheet>> newAgentSheets;
@@ -371,7 +370,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow) {
       }
     }
 
-    rv = presShell->SetAgentStyleSheets(newAgentSheets);
+    rv = shell->SetAgentStyleSheets(newAgentSheets);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

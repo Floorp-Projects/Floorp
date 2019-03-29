@@ -27,7 +27,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocumentLoader.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/DocumentInlines.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIPrompt.h"

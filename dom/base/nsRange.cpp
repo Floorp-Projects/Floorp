@@ -30,7 +30,6 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Likely.h"
@@ -69,8 +68,8 @@ static void InvalidateAllFrames(nsINode* aNode) {
     }
     case nsINode::DOCUMENT_NODE: {
       Document* doc = static_cast<Document*>(aNode);
-      PresShell* presShell = doc ? doc->GetPresShell() : nullptr;
-      frame = presShell ? presShell->GetRootFrame() : nullptr;
+      nsIPresShell* shell = doc ? doc->GetShell() : nullptr;
+      frame = shell ? shell->GetRootFrame() : nullptr;
       break;
     }
   }
@@ -2729,8 +2728,8 @@ static void ExtractRectFromOffset(nsIFrame* aFrame, const int32_t aOffset,
 
 static nsTextFrame* GetTextFrameForContent(nsIContent* aContent,
                                            bool aFlushLayout) {
-  RefPtr<Document> doc = aContent->OwnerDoc();
-  PresShell* presShell = doc->GetPresShell();
+  Document* doc = aContent->OwnerDoc();
+  nsIPresShell* presShell = doc->GetShell();
   if (!presShell) {
     return nullptr;
   }

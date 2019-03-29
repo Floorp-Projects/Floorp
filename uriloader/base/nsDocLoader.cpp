@@ -10,7 +10,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Logging.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/PresShell.h"
 
 #include "nsDocLoader.h"
 #include "nsNetUtil.h"
@@ -759,12 +758,12 @@ void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout) {
 
               // Now unsuppress painting on the presshell, if we
               // haven't done that yet.
-              RefPtr<PresShell> presShell = doc->GetPresShell();
-              if (presShell && !presShell->IsDestroying()) {
-                presShell->UnsuppressPainting();
+              nsCOMPtr<nsIPresShell> shell = doc->GetShell();
+              if (shell && !shell->IsDestroying()) {
+                shell->UnsuppressPainting();
 
-                if (!presShell->IsDestroying()) {
-                  presShell->LoadComplete();
+                if (!shell->IsDestroying()) {
+                  shell->LoadComplete();
                 }
               }
             }

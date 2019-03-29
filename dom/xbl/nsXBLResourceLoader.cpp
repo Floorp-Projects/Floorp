@@ -8,6 +8,7 @@
 #include "nsString.h"
 #include "mozilla/dom/Document.h"
 #include "nsIContent.h"
+#include "nsIPresShell.h"
 #include "nsXBLService.h"
 #include "nsIServiceManager.h"
 #include "nsXBLResourceLoader.h"
@@ -16,7 +17,6 @@
 #include "imgILoader.h"
 #include "imgRequestProxy.h"
 #include "mozilla/ComputedStyle.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Loader.h"
@@ -162,8 +162,8 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet, bool aWasDeferred,
 
     // Our document might have been undisplayed after this sheet load
     // was started, so check before building the XBL cascade data.
-    if (PresShell* presShell = mBoundDocument->GetPresShell()) {
-      mResources->ComputeServoStyles(*presShell->StyleSet());
+    if (nsIPresShell* shell = mBoundDocument->GetShell()) {
+      mResources->ComputeServoStyles(*shell->StyleSet());
     }
 
     // XXX Check for mPendingScripts when scripts also come online.
@@ -214,12 +214,12 @@ void nsXBLResourceLoader::NotifyBoundElements() {
       continue;
     }
 
-    PresShell* presShell = doc->GetPresShell();
-    if (!presShell) {
+    nsIPresShell* shell = doc->GetShell();
+    if (!shell) {
       continue;
     }
 
-    presShell->PostRecreateFramesFor(content->AsElement());
+    shell->PostRecreateFramesFor(content->AsElement());
   }
 
   // Clear out the whole array.

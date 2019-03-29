@@ -17,7 +17,6 @@
 #include "mozilla/SMILTimeValue.h"
 #include "mozilla/SMILTimeValueSpec.h"
 #include "mozilla/TaskCategory.h"
-#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"

@@ -22,7 +22,6 @@
 
 #include "mozilla/Components.h"
 #include "mozilla/EventListenerManager.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/dom/Event.h"  // for Event
 #include "nsContentUtils.h"
 #include "nsDocShellLoadTypes.h"
@@ -438,10 +437,8 @@ DocAccessible* DocManager::CreateDocOrRootAccessible(Document* aDocument) {
   }
 
   // Ignore documents without presshell and not having root frame.
-  PresShell* presShell = aDocument->GetPresShell();
-  if (!presShell || presShell->IsDestroying()) {
-    return nullptr;
-  }
+  nsIPresShell* presShell = aDocument->GetShell();
+  if (!presShell || presShell->IsDestroying()) return nullptr;
 
   bool isRootDoc = nsCoreUtils::IsRootDocument(aDocument);
 

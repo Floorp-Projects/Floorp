@@ -13,7 +13,6 @@
 #include "nsRefreshDriver.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/OffscreenCanvas.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/NotNull.h"
@@ -59,7 +58,7 @@ class nsICanvasRenderingContextInternal : public nsISupports,
 
   virtual nsIPresShell* GetPresShell() {
     if (mCanvasElement) {
-      return mCanvasElement->OwnerDoc()->GetPresShell();
+      return mCanvasElement->OwnerDoc()->GetShell();
     }
     return nullptr;
   }

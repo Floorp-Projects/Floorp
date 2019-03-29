@@ -855,9 +855,9 @@ void EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
 already_AddRefed<EventStateManager> EventStateManager::ESMFromContentOrThis(
     nsIContent* aContent) {
   if (aContent) {
-    PresShell* presShell = aContent->OwnerDoc()->GetPresShell();
-    if (presShell) {
-      nsPresContext* prescontext = presShell->GetPresContext();
+    nsIPresShell* shell = aContent->OwnerDoc()->GetShell();
+    if (shell) {
+      nsPresContext* prescontext = shell->GetPresContext();
       if (prescontext) {
         RefPtr<EventStateManager> esm = prescontext->EventStateManager();
         if (esm) {
@@ -4302,9 +4302,9 @@ void EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
   if (Document* parentDoc = mDocument->GetParentDocument()) {
     if (nsCOMPtr<nsIContent> docContent =
             parentDoc->FindContentForSubDocument(mDocument)) {
-      if (PresShell* parentPresShell = parentDoc->GetPresShell()) {
+      if (nsIPresShell* parentShell = parentDoc->GetShell()) {
         RefPtr<EventStateManager> parentESM =
-            parentPresShell->GetPresContext()->EventStateManager();
+            parentShell->GetPresContext()->EventStateManager();
         parentESM->NotifyMouseOver(aMouseEvent, docContent);
       }
     }

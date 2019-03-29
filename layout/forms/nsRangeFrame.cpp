@@ -21,7 +21,6 @@
 #include "nsGkAtoms.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsPresContext.h"
-#include "nsPresContextInlines.h"
 #include "nsNodeInfoManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/ServoStyleSet.h"

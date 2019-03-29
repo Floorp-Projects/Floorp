@@ -13,10 +13,6 @@
 
 #include "gfxPrefs.h"
 
-#include "mozilla/Preferences.h"
-#include "mozilla/PresShell.h"
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/HTMLFrameElement.h"
 #include "mozilla/layout/RenderFrame.h"
 
 #include "nsCOMPtr.h"
@@ -27,6 +23,8 @@
 #include "nsIContentViewer.h"
 #include "nsIContentInlines.h"
 #include "nsPresContext.h"
+#include "nsIPresShell.h"
+#include "mozilla/dom/Document.h"
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsGkAtoms.h"
@@ -44,6 +42,8 @@
 #include "nsIPermissionManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsQueryObject.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/dom/HTMLFrameElement.h"
 #include "RetainedDisplayListBuilder.h"
 
 using namespace mozilla;
@@ -1024,12 +1024,12 @@ static void DestroyDisplayItemDataForFrames(nsIFrame* aFrame) {
 static bool BeginSwapDocShellsForDocument(Document* aDocument, void*) {
   MOZ_ASSERT(aDocument, "null document");
 
-  PresShell* presShell = aDocument->GetPresShell();
-  if (presShell) {
+  nsIPresShell* shell = aDocument->GetShell();
+  if (shell) {
     // Disable painting while the views are detached, see bug 946929.
-    presShell->SetNeverPainting(true);
+    shell->SetNeverPainting(true);
 
-    nsIFrame* rootFrame = presShell->GetRootFrame();
+    nsIFrame* rootFrame = shell->GetRootFrame();
     if (rootFrame) {
       ::DestroyDisplayItemDataForFrames(rootFrame);
     }

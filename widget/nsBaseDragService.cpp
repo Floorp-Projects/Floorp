@@ -18,6 +18,7 @@
 #include "nsFrameLoaderOwner.h"
 #include "mozilla/dom/Document.h"
 #include "nsIContent.h"
+#include "nsIPresShell.h"
 #include "nsViewManager.h"
 #include "nsINode.h"
 #include "nsPresContext.h"
@@ -35,7 +36,6 @@
 #endif
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -458,7 +458,7 @@ NS_IMETHODIMP
 nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage,
                                          uint32_t aKeyModifiers) {
   if (mSourceNode && mSourceDocument && !mSuppressLevel) {
-    RefPtr<PresShell> presShell = mSourceDocument->GetPresShell();
+    nsCOMPtr<nsIPresShell> presShell = mSourceDocument->GetShell();
     if (presShell) {
       nsEventStatus status = nsEventStatus_eIgnore;
       WidgetDragEvent event(true, aEventMessage, nullptr);
@@ -511,7 +511,7 @@ static nsIPresShell* GetPresShellForContent(nsINode* aDOMNode) {
   RefPtr<Document> document = content->GetComposedDoc();
   if (document) {
     document->FlushPendingNotifications(FlushType::Display);
-    return document->GetPresShell();
+    return document->GetShell();
   }
 
   return nullptr;

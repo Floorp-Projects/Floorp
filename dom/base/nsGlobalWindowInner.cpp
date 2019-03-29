@@ -18,7 +18,6 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
-#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/EventTarget.h"
@@ -96,7 +95,6 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ThrottledEventQueue.h"
@@ -124,6 +122,7 @@
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsThreadUtils.h"
 #include "nsILoadContext.h"
+#include "nsIPresShell.h"
 #include "nsIScrollableFrame.h"
 #include "nsView.h"
 #include "nsViewManager.h"
@@ -1136,9 +1135,9 @@ void nsGlobalWindowInner::FreeInnerObjects() {
     }
 
     if (mObservingDidRefresh) {
-      PresShell* presShell = mDoc->GetPresShell();
-      if (presShell) {
-        Unused << presShell->RemovePostRefreshObserver(this);
+      nsIPresShell* shell = mDoc->GetShell();
+      if (shell) {
+        Unused << shell->RemovePostRefreshObserver(this);
       }
     }
   }
@@ -6258,8 +6257,8 @@ already_AddRefed<Promise> nsGlobalWindowInner::PromiseDocumentFlushed(
     return nullptr;
   }
 
-  PresShell* presShell = mDoc->GetPresShell();
-  if (!presShell) {
+  nsIPresShell* shell = mDoc->GetShell();
+  if (!shell) {
     aError.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
@@ -6282,13 +6281,13 @@ already_AddRefed<Promise> nsGlobalWindowInner::PromiseDocumentFlushed(
   UniquePtr<PromiseDocumentFlushedResolver> flushResolver(
       new PromiseDocumentFlushedResolver(resultPromise, aCallback));
 
-  if (!presShell->NeedStyleFlush() && !presShell->NeedLayoutFlush()) {
+  if (!shell->NeedStyleFlush() && !shell->NeedLayoutFlush()) {
     flushResolver->Call();
     return resultPromise.forget();
   }
 
   if (!mObservingDidRefresh) {
-    bool success = presShell->AddPostRefreshObserver(this);
+    bool success = shell->AddPostRefreshObserver(this);
     if (!success) {
       aError.Throw(NS_ERROR_FAILURE);
       return nullptr;
@@ -6335,9 +6334,9 @@ void nsGlobalWindowInner::CallOrCancelDocumentFlushedResolvers() {
     // PromiseDocumentFlushed.  Add here and leave.
     // FIXME: Handle this case inside PromiseDocumentFlushed (bug 1442824).
     if (mDoc) {
-      PresShell* presShell = mDoc->GetPresShell();
-      if (presShell) {
-        Unused << presShell->AddPostRefreshObserver(this);
+      nsIPresShell* shell = mDoc->GetShell();
+      if (shell) {
+        (void)shell->AddPostRefreshObserver(this);
         break;
       }
     }
@@ -6366,10 +6365,10 @@ void nsGlobalWindowInner::DidRefresh() {
 
   MOZ_ASSERT(mDoc);
 
-  PresShell* presShell = mDoc->GetPresShell();
-  MOZ_ASSERT(presShell);
+  nsIPresShell* shell = mDoc->GetShell();
+  MOZ_ASSERT(shell);
 
-  if (presShell->NeedStyleFlush() || presShell->NeedLayoutFlush()) {
+  if (shell->NeedStyleFlush() || shell->NeedLayoutFlush()) {
     // By the time our observer fired, something has already invalidated
     // style or layout - or perhaps we're still in the middle of a flush that
     // was interrupted. In either case, we'll wait until the next refresh driver
@@ -6378,7 +6377,7 @@ void nsGlobalWindowInner::DidRefresh() {
     return;
   }
 
-  bool success = presShell->RemovePostRefreshObserver(this);
+  bool success = shell->RemovePostRefreshObserver(this);
   if (!success) {
     return;
   }

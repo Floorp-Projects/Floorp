@@ -16,7 +16,6 @@
 
 #include "BrowserElementParent.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/WindowProxyHolder.h"

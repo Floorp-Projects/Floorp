@@ -22,7 +22,6 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
@@ -43,6 +42,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsILoadContext.h"
 #include "nsINetworkPredictor.h"
+#include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
 #include "nsIPrincipal.h"
 #include "nsISupportsPriority.h"
@@ -1709,8 +1709,8 @@ void FontFaceSet::MarkUserFontSetDirty() {
     // Ensure we trigger at least a style flush, that will eventually flush the
     // user font set. Otherwise the font loads that that flush may cause could
     // never be triggered.
-    if (PresShell* presShell = mDocument->GetPresShell()) {
-      presShell->EnsureStyleFlush();
+    if (nsIPresShell* shell = mDocument->GetShell()) {
+      shell->EnsureStyleFlush();
     }
     mDocument->MarkUserFontSetDirty();
   }

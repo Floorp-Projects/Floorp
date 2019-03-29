@@ -14,7 +14,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "nsPresContext.h"
-#include "nsPresContextInlines.h"
 
 namespace mozilla {
 namespace dom {

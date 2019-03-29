@@ -6,7 +6,6 @@
 
 #include "GeometryUtils.h"
 
-#include "mozilla/PresShell.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/dom/GeometryUtilsBinding.h"
@@ -34,8 +33,8 @@ enum GeometryNodeType {
 static nsIFrame* GetFrameForNode(nsINode* aNode, GeometryNodeType aType) {
   Document* doc = aNode->OwnerDoc();
   if (aType == GEOMETRY_NODE_TEXT) {
-    if (PresShell* presShell = doc->GetPresShell()) {
-      presShell->FrameConstructor()->EnsureFrameForTextNodeIsCreatedAfterFlush(
+    if (nsIPresShell* shell = doc->GetShell()) {
+      shell->FrameConstructor()->EnsureFrameForTextNodeIsCreatedAfterFlush(
           static_cast<CharacterData*>(aNode));
     }
   }
@@ -46,7 +45,7 @@ static nsIFrame* GetFrameForNode(nsINode* aNode, GeometryNodeType aType) {
     case GEOMETRY_NODE_ELEMENT:
       return aNode->AsContent()->GetPrimaryFrame();
     case GEOMETRY_NODE_DOCUMENT: {
-      PresShell* presShell = doc->GetPresShell();
+      nsIPresShell* presShell = doc->GetShell();
       return presShell ? presShell->GetRootFrame() : nullptr;
     }
     default:
