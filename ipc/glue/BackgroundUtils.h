@@ -80,7 +80,8 @@ nsresult PopulateContentSecurityPolicies(
  * MUST be called on the main thread only.
  */
 nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
-                                  PrincipalInfo* aPrincipalInfo);
+                                  PrincipalInfo* aPrincipalInfo,
+                                  bool aSkipBaseDomain = false);
 
 /**
  * Return true if this PrincipalInfo is a content principal and it has
