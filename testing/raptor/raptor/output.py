@@ -233,7 +233,8 @@ class Output(object):
         for next_suite in suites_to_be_combined:
             suite_name = next_suite['details']['name']
             browser_cycle = next_suite['details']['browser_cycle']
-            LOG.info("combining results from browser cycle %d" % browser_cycle)
+            LOG.info("combining results from browser cycle %d for %s"
+                     % (browser_cycle, suite_name))
             if browser_cycle == 1:
                 # first browser cycle so just take entire entry to start with
                 combined_suites[suite_name] = next_suite['details']
