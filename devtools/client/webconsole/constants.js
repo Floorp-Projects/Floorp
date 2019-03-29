@@ -73,6 +73,7 @@ const prefs = {
       SIDEBAR_TOGGLE: "devtools.webconsole.sidebarToggle",
       JSTERM_CODE_MIRROR: "devtools.webconsole.jsterm.codeMirror",
       AUTOCOMPLETE: "devtools.webconsole.input.autocomplete",
+      GROUP_WARNINGS: "devtools.webconsole.groupWarningMessages",
     },
   },
 };
