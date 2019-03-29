@@ -1484,23 +1484,28 @@ void nsCocoaWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
   DoResize(mBounds.x * invScale, mBounds.y * invScale, aWidth, aHeight, aRepaint, true);
 }
 
+// Return the area that the Gecko ChildView in our window should cover, as an
+// NSRect in screen coordinates (with 0,0 being the bottom left corner of the
+// primary screen).
+NSRect nsCocoaWindow::GetClientCocoaRect() {
+  if (!mWindow) {
+    return NSZeroRect;
+  }
+
+  if ([mWindow isKindOfClass:[ToolbarWindow class]] &&
+      [(ToolbarWindow*)mWindow drawsContentsIntoWindowFrame]) {
+    return [mWindow frame];
+  }
+
+  NSUInteger styleMask = [mWindow styleMask];
+  return [NSWindow contentRectForFrameRect:[mWindow frame] styleMask:styleMask];
+}
+
 LayoutDeviceIntRect nsCocoaWindow::GetClientBounds() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   CGFloat scaleFactor = BackingScaleFactor();
-  if (!mWindow) {
-    return nsCocoaUtils::CocoaRectToGeckoRectDevPix(NSZeroRect, scaleFactor);
-  }
-
-  NSRect r;
-  if ([mWindow isKindOfClass:[ToolbarWindow class]] &&
-      [(ToolbarWindow*)mWindow drawsContentsIntoWindowFrame]) {
-    r = [mWindow frame];
-  } else {
-    r = [mWindow contentRectForFrameRect:[mWindow frame]];
-  }
-
-  return nsCocoaUtils::CocoaRectToGeckoRectDevPix(r, scaleFactor);
+  return nsCocoaUtils::CocoaRectToGeckoRectDevPix(GetClientCocoaRect(), scaleFactor);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntRect(0, 0, 0, 0));
 }
@@ -1857,14 +1862,8 @@ nsresult nsCocoaWindow::SetFocus(bool aState) {
 LayoutDeviceIntPoint nsCocoaWindow::WidgetToScreenOffset() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  NSRect rect = NSZeroRect;
-  LayoutDeviceIntRect r;
-  if (mWindow) {
-    rect = [mWindow contentRectForFrameRect:[mWindow frame]];
-  }
-  r = nsCocoaUtils::CocoaRectToGeckoRectDevPix(rect, BackingScaleFactor());
-
-  return r.TopLeft();
+  return nsCocoaUtils::CocoaRectToGeckoRectDevPix(GetClientCocoaRect(), BackingScaleFactor())
+      .TopLeft();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0, 0));
 }
@@ -1897,8 +1896,8 @@ LayoutDeviceIntSize nsCocoaWindow::ClientToWindowSize(const LayoutDeviceIntSize&
   //
   // This is the same thing the windows widget does, but we probably should fix
   // that, see bug 1445738.
-  unsigned int features = [mWindow styleMask];
-  NSRect inflatedRect = [NSWindow frameRectForContentRect:rect styleMask:features];
+  NSUInteger styleMask = [mWindow styleMask];
+  NSRect inflatedRect = [NSWindow frameRectForContentRect:rect styleMask:styleMask];
   r = nsCocoaUtils::CocoaRectToGeckoRectDevPix(inflatedRect, backingScale);
   return r.Size();
 
@@ -2659,7 +2658,6 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
 @interface BaseWindow (Private)
 - (void)removeTrackingArea;
 - (void)cursorUpdated:(NSEvent*)aEvent;
-- (void)updateContentViewSize;
 - (void)reflowTitlebarElements;
 @end
 
@@ -2857,7 +2855,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   bool changed = (aState != mDrawsIntoWindowFrame);
   mDrawsIntoWindowFrame = aState;
   if (changed) {
-    [self updateContentViewSize];
     [self reflowTitlebarElements];
     if ([self respondsToSelector:@selector(setTitlebarAppearsTransparent:)]) {
       [self setTitlebarAppearsTransparent:mDrawsIntoWindowFrame];
@@ -2957,11 +2954,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   return dirtyRect;
 }
 
-- (void)updateContentViewSize {
-  NSRect rect = [self contentRectForFrameRect:[self frame]];
-  [[self contentView] setFrameSize:rect.size];
-}
-
 // Possibly move the titlebar buttons.
 - (void)reflowTitlebarElements {
   NSView* frameView = [[self contentView] superview];
@@ -2972,43 +2964,19 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 // Override methods that translate between content rect and frame rect.
 - (NSRect)contentRectForFrameRect:(NSRect)aRect {
-  if ([self drawsContentsIntoWindowFrame]) {
-    return aRect;
-  }
-  return [super contentRectForFrameRect:aRect];
+  return aRect;
 }
 
 - (NSRect)contentRectForFrameRect:(NSRect)aRect styleMask:(NSUInteger)aMask {
-  if ([self drawsContentsIntoWindowFrame]) {
-    return aRect;
-  }
-  // Call the instance method on super, if it exists (it's undocumented so we
-  // shouldn't rely on it), or fall back to the (documented) class method.
-  if ([NSWindow instancesRespondToSelector:@selector(contentRectForFrameRect:styleMask:)]) {
-    return [super contentRectForFrameRect:aRect styleMask:aMask];
-  } else {
-    return [NSWindow contentRectForFrameRect:aRect styleMask:aMask];
-  }
+  return aRect;
 }
 
 - (NSRect)frameRectForContentRect:(NSRect)aRect {
-  if ([self drawsContentsIntoWindowFrame]) {
-    return aRect;
-  }
-  return [super frameRectForContentRect:aRect];
+  return aRect;
 }
 
 - (NSRect)frameRectForContentRect:(NSRect)aRect styleMask:(NSUInteger)aMask {
-  if ([self drawsContentsIntoWindowFrame]) {
-    return aRect;
-  }
-  // Call the instance method on super, if it exists (it's undocumented so we
-  // shouldn't rely on it), or fall back to the (documented) class method.
-  if ([NSWindow instancesRespondToSelector:@selector(frameRectForContentRect:styleMask:)]) {
-    return [super frameRectForContentRect:aRect styleMask:aMask];
-  } else {
-    return [NSWindow frameRectForContentRect:aRect styleMask:aMask];
-  }
+  return aRect;
 }
 
 - (void)setContentView:(NSView*)aView {
@@ -3180,10 +3148,10 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 - (CGFloat)titlebarHeight {
   // We use the original content rect here, not what we return from
   // [self contentRectForFrameRect:], because that would give us a
-  // titlebarHeight of zero in drawsContentsIntoWindowFrame mode.
+  // titlebarHeight of zero.
   NSRect frameRect = [self frame];
-  NSRect originalContentRect = [NSWindow contentRectForFrameRect:frameRect
-                                                       styleMask:[self styleMask]];
+  NSUInteger styleMask = [self styleMask];
+  NSRect originalContentRect = [NSWindow contentRectForFrameRect:frameRect styleMask:styleMask];
   return NSMaxY(frameRect) - NSMaxY(originalContentRect);
 }
 

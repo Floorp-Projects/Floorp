@@ -232,6 +232,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
 
   virtual void Resize(double aWidth, double aHeight, bool aRepaint) override;
   virtual void Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
+  NSRect GetClientCocoaRect();
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
   void ReportMoveEvent();
