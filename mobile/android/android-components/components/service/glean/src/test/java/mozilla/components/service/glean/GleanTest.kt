@@ -15,11 +15,17 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.service.glean.GleanMetrics.GleanInternalMetrics
 import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.metrics.DatetimeMetricType
+import mozilla.components.service.glean.metrics.EventMetricType
+import mozilla.components.service.glean.metrics.Lifetime
+import mozilla.components.service.glean.metrics.NoExtraKeys
+import mozilla.components.service.glean.metrics.StringMetricType
+import mozilla.components.service.glean.metrics.UuidMetricType
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.storages.StorageEngineManager
-import mozilla.components.service.glean.TimeUnit as GleanTimeUnit
+import mozilla.components.service.glean.metrics.TimeUnit as GleanTimeUnit
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject

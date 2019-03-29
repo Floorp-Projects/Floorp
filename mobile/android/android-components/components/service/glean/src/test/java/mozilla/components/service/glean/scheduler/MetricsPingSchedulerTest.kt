@@ -10,10 +10,10 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
 import mozilla.components.service.glean.getContextWithMockedInfo
 import mozilla.components.service.glean.Glean
-import mozilla.components.service.glean.Lifetime
+import mozilla.components.service.glean.metrics.Lifetime
 import mozilla.components.service.glean.resetGlean
-import mozilla.components.service.glean.StringMetricType
-import mozilla.components.service.glean.TimeUnit
+import mozilla.components.service.glean.metrics.StringMetricType
+import mozilla.components.service.glean.metrics.TimeUnit
 import mozilla.components.service.glean.checkPingSchema
 import mozilla.components.service.glean.triggerWorkManager
 import mozilla.components.service.glean.config.Configuration

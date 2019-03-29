@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.glean
+package mozilla.components.service.glean.metrics
 
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
+import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.collectAndCheckPingSchema
 import mozilla.components.service.glean.storages.BooleansStorageEngine
 import mozilla.components.service.glean.storages.CountersStorageEngine
 import mozilla.components.service.glean.storages.MockGenericStorageEngine
@@ -15,6 +17,7 @@ import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.storages.TimespansStorageEngine
 import mozilla.components.service.glean.storages.UuidsStorageEngine
 import mozilla.components.service.glean.error.ErrorRecording
+import mozilla.components.service.glean.resetGlean
 import org.junit.After
 import org.junit.Before
 import org.junit.Test

@@ -18,8 +18,8 @@ import kotlinx.coroutines.withTimeout
 import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.service.glean.error.ErrorRecording.ErrorType
-import mozilla.components.service.glean.EventMetricType
-import mozilla.components.service.glean.Lifetime
+import mozilla.components.service.glean.metrics.EventMetricType
+import mozilla.components.service.glean.metrics.Lifetime
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.utils.ensureDirectoryExists
 import mozilla.components.support.base.log.logger.Logger

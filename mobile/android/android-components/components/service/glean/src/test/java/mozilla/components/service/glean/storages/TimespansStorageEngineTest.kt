@@ -6,9 +6,9 @@ package mozilla.components.service.glean.storages
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
-import mozilla.components.service.glean.CommonMetricData
-import mozilla.components.service.glean.Lifetime
-import mozilla.components.service.glean.TimeUnit
+import mozilla.components.service.glean.metrics.CommonMetricData
+import mozilla.components.service.glean.metrics.Lifetime
+import mozilla.components.service.glean.metrics.TimeUnit
 
 import org.junit.Before
 import org.junit.Test

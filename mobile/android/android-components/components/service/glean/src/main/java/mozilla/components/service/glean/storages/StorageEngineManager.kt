@@ -6,14 +6,14 @@ package mozilla.components.service.glean.storages
 
 import android.content.Context
 import android.support.annotation.VisibleForTesting
-import mozilla.components.service.glean.BooleanMetricType
-import mozilla.components.service.glean.CounterMetricType
-import mozilla.components.service.glean.DatetimeMetricType
-import mozilla.components.service.glean.StringListMetricType
-import mozilla.components.service.glean.StringMetricType
-import mozilla.components.service.glean.TimingDistributionMetricType
-import mozilla.components.service.glean.TimespanMetricType
-import mozilla.components.service.glean.UuidMetricType
+import mozilla.components.service.glean.metrics.BooleanMetricType
+import mozilla.components.service.glean.metrics.CounterMetricType
+import mozilla.components.service.glean.metrics.DatetimeMetricType
+import mozilla.components.service.glean.metrics.StringListMetricType
+import mozilla.components.service.glean.metrics.StringMetricType
+import mozilla.components.service.glean.metrics.TimespanMetricType
+import mozilla.components.service.glean.metrics.TimingDistributionMetricType
+import mozilla.components.service.glean.metrics.UuidMetricType
 import org.json.JSONArray
 import org.json.JSONObject
 import mozilla.components.support.ktx.android.org.json.getOrPutJSONObject

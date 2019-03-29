@@ -5,8 +5,8 @@
 package mozilla.components.service.glean.error
 
 import mozilla.components.service.glean.Glean
-import mozilla.components.service.glean.Lifetime
-import mozilla.components.service.glean.StringMetricType
+import mozilla.components.service.glean.metrics.Lifetime
+import mozilla.components.service.glean.metrics.StringMetricType
 import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.storages.CountersStorageEngine
 import mozilla.components.support.base.log.logger.Logger

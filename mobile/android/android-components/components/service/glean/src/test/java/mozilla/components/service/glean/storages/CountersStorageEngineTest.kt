@@ -7,8 +7,8 @@ package mozilla.components.service.glean.storages
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
-import mozilla.components.service.glean.Lifetime
-import mozilla.components.service.glean.CounterMetricType
+import mozilla.components.service.glean.metrics.Lifetime
+import mozilla.components.service.glean.metrics.CounterMetricType
 import mozilla.components.service.glean.error.ErrorRecording.ErrorType
 import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
 import mozilla.components.service.glean.resetGlean

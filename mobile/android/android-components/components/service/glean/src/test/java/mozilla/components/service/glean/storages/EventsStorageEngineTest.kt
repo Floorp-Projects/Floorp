@@ -9,11 +9,11 @@ import androidx.work.testing.WorkManagerTestInitHelper
 import mozilla.components.service.glean.checkPingSchema
 import mozilla.components.service.glean.error.ErrorRecording.ErrorType
 import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
-import mozilla.components.service.glean.Lifetime
-import mozilla.components.service.glean.EventMetricType
+import mozilla.components.service.glean.metrics.Lifetime
+import mozilla.components.service.glean.metrics.EventMetricType
 import mozilla.components.service.glean.getContextWithMockedInfo
 import mozilla.components.service.glean.Glean
-import mozilla.components.service.glean.NoExtraKeys
+import mozilla.components.service.glean.metrics.NoExtraKeys
 import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.triggerWorkManager
 import okhttp3.mockwebserver.MockResponse
@@ -435,7 +435,7 @@ class EventsStorageEngineTest {
         EventsStorageEngine.eventStores.clear()
         resetGlean(
             getContextWithMockedInfo(),
-                Glean.configuration.copy(
+            Glean.configuration.copy(
                 serverEndpoint = "http://" + server.hostName + ":" + server.port,
                 logPings = true
             ),

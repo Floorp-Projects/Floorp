@@ -8,8 +8,8 @@ import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.error.ErrorRecording.ErrorType
 import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
-import mozilla.components.service.glean.Lifetime
-import mozilla.components.service.glean.StringMetricType
+import mozilla.components.service.glean.metrics.Lifetime
+import mozilla.components.service.glean.metrics.StringMetricType
 import mozilla.components.service.glean.resetGlean
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

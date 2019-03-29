@@ -6,7 +6,7 @@ package mozilla.components.service.glean.utils
 
 import java.lang.StringBuilder
 import java.text.SimpleDateFormat
-import mozilla.components.service.glean.TimeUnit
+import mozilla.components.service.glean.metrics.TimeUnit
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale

@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.glean
+package mozilla.components.service.glean.metrics
 
 import android.os.SystemClock
 import android.support.annotation.VisibleForTesting
+import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.RecordedEventData
 import mozilla.components.support.base.log.logger.Logger

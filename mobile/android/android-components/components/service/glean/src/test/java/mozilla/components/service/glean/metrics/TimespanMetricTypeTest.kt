@@ -1,7 +1,8 @@
-package mozilla.components.service.glean
+package mozilla.components.service.glean.metrics
 
 import mozilla.components.service.glean.error.ErrorRecording.ErrorType
 import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
+import mozilla.components.service.glean.resetGlean
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.Assert.assertFalse

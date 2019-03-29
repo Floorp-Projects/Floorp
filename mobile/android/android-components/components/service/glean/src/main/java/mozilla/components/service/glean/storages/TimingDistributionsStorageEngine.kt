@@ -7,10 +7,10 @@ package mozilla.components.service.glean.storages
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.support.annotation.VisibleForTesting
-import mozilla.components.service.glean.CommonMetricData
-import mozilla.components.service.glean.HistogramType
-import mozilla.components.service.glean.TimeUnit
 import mozilla.components.service.glean.error.ErrorRecording
+import mozilla.components.service.glean.metrics.CommonMetricData
+import mozilla.components.service.glean.metrics.HistogramType
+import mozilla.components.service.glean.metrics.TimeUnit
 
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.org.json.toList

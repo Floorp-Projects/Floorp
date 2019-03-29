@@ -6,8 +6,8 @@ package mozilla.components.service.glean.storages
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
-import mozilla.components.service.glean.Lifetime
-import mozilla.components.service.glean.UuidMetricType
+import mozilla.components.service.glean.metrics.Lifetime
+import mozilla.components.service.glean.metrics.UuidMetricType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
