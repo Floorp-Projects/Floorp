@@ -17,6 +17,9 @@ const { Management } = ChromeUtils.import("resource://gre/modules/Extension.jsm"
 const { ExtensionTestCommon } = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm");
 
 async function openAboutDebugging(page, win) {
+  info("Turn off the new about:debugging for the test");
+  await pushPref("devtools.aboutdebugging.new-enabled", false);
+
   info("opening about:debugging");
   let url = "about:debugging";
   if (page) {
