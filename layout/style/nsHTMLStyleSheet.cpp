@@ -15,6 +15,7 @@
 #include "nsPresContext.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsIPresShell.h"
 #include "nsStyleConsts.h"
 #include "nsError.h"

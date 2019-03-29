@@ -14,6 +14,7 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;
