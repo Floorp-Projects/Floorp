@@ -4,6 +4,8 @@
 
 #include "js/JSON.h"
 #include "jsapi.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
@@ -260,7 +262,7 @@ void SessionStoreUtils::RestoreDocShellCapabilities(
 
 static void CollectCurrentScrollPosition(JSContext* aCx, Document& aDocument,
                                          Nullable<CollectedData>& aRetVal) {
-  nsIPresShell* presShell = aDocument.GetShell();
+  PresShell* presShell = aDocument.GetPresShell();
   if (!presShell) {
     return;
   }

@@ -10,10 +10,6 @@
  * removed from the whitelist, thus ensuring there are no stale entries. */
 let gWhitelist = [{
     file: "netError.dtd",
-    key: "certerror.introPara",
-    type: "single-quote",
-  }, {
-    file: "netError.dtd",
     key: "certerror.introPara2",
     type: "single-quote",
   }, {

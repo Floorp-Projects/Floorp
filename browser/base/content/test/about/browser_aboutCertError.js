@@ -11,7 +11,6 @@ const BAD_CERT = "https://expired.example.com/";
 const UNKNOWN_ISSUER = "https://self-signed.example.com ";
 const BAD_STS_CERT = "https://badchain.include-subdomains.pinning.example.com:443";
 const {TabStateFlusher} = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm");
-const PREF_NEW_CERT_ERRORS = "browser.security.newcerterrorpage.enabled";
 
 add_task(async function checkReturnToAboutHome() {
   info("Loading a bad cert page directly and making sure 'return to previous page' goes to about:home");
@@ -259,7 +258,6 @@ add_task(async function checkUnknownIssuerLearnMoreLink() {
 });
 
 add_task(async function checkCautionClass() {
-  Services.prefs.setBoolPref(PREF_NEW_CERT_ERRORS, true);
   info("Checking that are potentially more dangerous get a 'caution' class");
   for (let useFrame of [false, true]) {
     let tab = await openErrorPage(UNKNOWN_ISSUER, useFrame);
@@ -282,11 +280,9 @@ add_task(async function checkCautionClass() {
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
-  Services.prefs.clearUserPref(PREF_NEW_CERT_ERRORS);
 });
 
 add_task(async function checkViewCertificate() {
-  Services.prefs.setBoolPref(PREF_NEW_CERT_ERRORS, true);
   info("Loading a cert error and checking that the certificate can be shown.");
   for (let useFrame of [false, true]) {
     let tab = await openErrorPage(UNKNOWN_ISSUER, useFrame);
@@ -310,7 +306,6 @@ add_task(async function checkViewCertificate() {
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
-  Services.prefs.clearUserPref(PREF_NEW_CERT_ERRORS);
 });
 
 add_task(async function checkBadStsCertHeadline() {

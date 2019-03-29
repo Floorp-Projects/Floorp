@@ -156,7 +156,6 @@ nsresult MediaEngineWebRTCMicrophoneSource::EvaluateSettings(
 }
 
 nsresult MediaEngineWebRTCMicrophoneSource::Reconfigure(
-    const RefPtr<AllocationHandle>&,
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& /* aDeviceId */,
     const char** aOutBadConstraint) {
@@ -178,7 +177,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Reconfigure(
     GetErrorName(rv, name);
     LOG("Mic source %p Reconfigure() failed unexpectedly. rv=%s", this,
         name.Data());
-    Stop(nullptr);
+    Stop();
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -189,18 +188,6 @@ nsresult MediaEngineWebRTCMicrophoneSource::Reconfigure(
   return NS_OK;
 }
 
-void MediaEngineWebRTCMicrophoneSource::Pull(
-    const RefPtr<const AllocationHandle>&,
-    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-    StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
-    const PrincipalHandle& aPrincipalHandle) {
-  // If pull is enabled, it means that the audio input is not open, and we
-  // should fill it out with silence. This is the only method called on the
-  // MSG thread.
-  mInputProcessing->Pull(aStream, aTrackID, aEndOfAppendedData, aDesiredTime,
-                         aPrincipalHandle);
-}
-
 void MediaEngineWebRTCMicrophoneSource::UpdateAECSettings(
     bool aEnable, bool aUseAecMobile,
     EchoCancellation::SuppressionLevel aLevel) {
@@ -208,8 +195,9 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAECSettings(
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
-  NS_DispatchToMainThread(media::NewRunnableFrom(
-      [that, graph = std::move(gripGraph), aEnable, aUseAecMobile, aLevel]() {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__,
+      [that, graph = std::move(gripGraph), aEnable, aUseAecMobile, aLevel] {
         class Message : public ControlMessage {
          public:
           Message(AudioInputProcessing* aInputProcessing, bool aEnable,
@@ -235,8 +223,6 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAECSettings(
           graph->AppendMessage(MakeUnique<Message>(
               that->mInputProcessing, aEnable, aUseAecMobile, aLevel));
         }
-
-        return NS_OK;
       }));
 }
 
@@ -246,8 +232,8 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAGCSettings(
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
-  NS_DispatchToMainThread(media::NewRunnableFrom(
-      [that, graph = std::move(gripGraph), aEnable, aMode]() {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [that, graph = std::move(gripGraph), aEnable, aMode] {
         class Message : public ControlMessage {
          public:
           Message(AudioInputProcessing* aInputProcessing, bool aEnable,
@@ -271,8 +257,6 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAGCSettings(
           graph->AppendMessage(
               MakeUnique<Message>(that->mInputProcessing, aEnable, aMode));
         }
-
-        return NS_OK;
       }));
 }
 
@@ -282,8 +266,8 @@ void MediaEngineWebRTCMicrophoneSource::UpdateNSSettings(
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
-  NS_DispatchToMainThread(media::NewRunnableFrom(
-      [that, graph = std::move(gripGraph), aEnable, aLevel]() {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [that, graph = std::move(gripGraph), aEnable, aLevel] {
         class Message : public ControlMessage {
          public:
           Message(AudioInputProcessing* aInputProcessing, bool aEnable,
@@ -307,8 +291,6 @@ void MediaEngineWebRTCMicrophoneSource::UpdateNSSettings(
           graph->AppendMessage(
               MakeUnique<Message>(that->mInputProcessing, aEnable, aLevel));
         }
-
-        return NS_OK;
       }));
 }
 
@@ -318,8 +300,9 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAPMExtraOptions(
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
-  NS_DispatchToMainThread(media::NewRunnableFrom(
-      [that, graph = std::move(gripGraph), aExtendedFilter, aDelayAgnostic]() {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__,
+      [that, graph = std::move(gripGraph), aExtendedFilter, aDelayAgnostic] {
         class Message : public ControlMessage {
          public:
           Message(AudioInputProcessing* aInputProcessing, bool aExtendedFilter,
@@ -344,8 +327,6 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAPMExtraOptions(
           graph->AppendMessage(MakeUnique<Message>(
               that->mInputProcessing, aExtendedFilter, aDelayAgnostic));
         }
-
-        return NS_OK;
       }));
 }
 
@@ -372,8 +353,8 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> graphImpl = mStream->GraphImpl();
-  NS_DispatchToMainThread(media::NewRunnableFrom(
-      [that, graph = std::move(graphImpl), prefs = aPrefs]() {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [that, graph = std::move(graphImpl), prefs = aPrefs] {
         that->mSettings->mEchoCancellation.Value() = prefs.mAecOn;
         that->mSettings->mAutoGainControl.Value() = prefs.mAgcOn;
         that->mSettings->mNoiseSuppression.Value() = prefs.mNoiseOn;
@@ -405,20 +386,14 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
           graph->AppendMessage(MakeUnique<Message>(
               that->mInputProcessing, passThrough, prefs.mChannels));
         }
-
-        return NS_OK;
       }));
 }
 
 nsresult MediaEngineWebRTCMicrophoneSource::Allocate(
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
-    const ipc::PrincipalInfo& aPrincipalInfo, AllocationHandle** aOutHandle,
-    const char** aOutBadConstraint) {
+    const ipc::PrincipalInfo& aPrincipalInfo, const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aOutHandle);
-
-  *aOutHandle = nullptr;
 
   mState = kAllocated;
 
@@ -431,21 +406,20 @@ nsresult MediaEngineWebRTCMicrophoneSource::Allocate(
   }
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(media::NewRunnableFrom([that, prefs = outputPrefs]() {
-    that->mSettings->mEchoCancellation.Value() = prefs.mAecOn;
-    that->mSettings->mAutoGainControl.Value() = prefs.mAgcOn;
-    that->mSettings->mNoiseSuppression.Value() = prefs.mNoiseOn;
-    that->mSettings->mChannelCount.Value() = prefs.mChannels;
-    return NS_OK;
-  }));
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction(__func__, [that, prefs = outputPrefs] {
+        that->mSettings->mEchoCancellation.Value() = prefs.mAecOn;
+        that->mSettings->mAutoGainControl.Value() = prefs.mAgcOn;
+        that->mSettings->mNoiseSuppression.Value() = prefs.mNoiseOn;
+        that->mSettings->mChannelCount.Value() = prefs.mChannels;
+      }));
 
   mCurrentPrefs = outputPrefs;
 
   return rv;
 }
 
-nsresult MediaEngineWebRTCMicrophoneSource::Deallocate(
-    const RefPtr<const AllocationHandle>&) {
+nsresult MediaEngineWebRTCMicrophoneSource::Deallocate() {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kStopped || mState == kAllocated);
@@ -472,19 +446,18 @@ nsresult MediaEngineWebRTCMicrophoneSource::Deallocate(
   if (mStream && IsTrackIDExplicit(mTrackID)) {
     RefPtr<MediaStream> sourceStream = mStream;
     RefPtr<AudioInputProcessing> inputProcessing = mInputProcessing;
-    NS_DispatchToMainThread(media::NewRunnableFrom(
-        [stream = std::move(sourceStream),
-         audioInputProcessing = std::move(inputProcessing),
-         trackID = mTrackID]() {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        __func__, [stream = std::move(sourceStream),
+                   audioInputProcessing = std::move(inputProcessing),
+                   trackID = mTrackID] {
           if (stream->IsDestroyed()) {
             // This stream has already been destroyed on main thread by its
             // DOMMediaStream. No cleanup left to do.
-            return NS_OK;
+            return;
           }
           MOZ_ASSERT(stream->GraphImpl());
           stream->GraphImpl()->AppendMessage(MakeUnique<EndTrackMessage>(
               stream, audioInputProcessing, trackID));
-          return NS_OK;
         }));
   }
 
@@ -506,7 +479,6 @@ nsresult MediaEngineWebRTCMicrophoneSource::Deallocate(
 }
 
 void MediaEngineWebRTCMicrophoneSource::SetTrack(
-    const RefPtr<const AllocationHandle>&,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const PrincipalHandle& aPrincipal) {
   AssertIsOnOwningThread();
@@ -522,11 +494,24 @@ void MediaEngineWebRTCMicrophoneSource::SetTrack(
 
   AudioSegment* segment = new AudioSegment();
 
-  aStream->AddAudioTrack(aTrackID, aStream->GraphRate(), segment,
+  mStream->AddAudioTrack(mTrackID, mStream->GraphRate(), segment,
                          SourceMediaStream::ADDTRACK_QUEUED);
 
   mInputProcessing = new AudioInputProcessing(mDeviceMaxChannelCount, mStream,
                                               mTrackID, mPrincipal);
+
+  // We only add the listener once -- AudioInputProcessing wants pull
+  // notifications also when stopped for appending silence.
+  mPullListener = new AudioInputProcessingPullListener(mInputProcessing);
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [self = RefPtr<MediaEngineWebRTCMicrophoneSource>(this),
+                 stream = mStream, track = mTrackID, listener = mPullListener] {
+        if (stream->IsDestroyed()) {
+          return;
+        }
+
+        stream->AddTrackListener(listener, track);
+      }));
 
   LOG("Stream %p registered for microphone capture", aStream.get());
 }
@@ -555,8 +540,7 @@ class StartStopMessage : public ControlMessage {
   StartStop mAction;
 };
 
-nsresult MediaEngineWebRTCMicrophoneSource::Start(
-    const RefPtr<const AllocationHandle>&) {
+nsresult MediaEngineWebRTCMicrophoneSource::Start() {
   AssertIsOnOwningThread();
 
   // This spans setting both the enabled state and mState.
@@ -575,18 +559,16 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start(
   }
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(media::NewRunnableFrom(
-      [that, deviceID, stream = mStream, track = mTrackID]() {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [that, deviceID, stream = mStream, track = mTrackID] {
         if (stream->IsDestroyed()) {
-          return NS_OK;
+          return;
         }
 
         stream->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
             that->mInputProcessing, StartStopMessage::Start));
         stream->SetPullingEnabled(track, true);
         stream->OpenAudioInput(deviceID, that->mInputProcessing);
-
-        return NS_OK;
       }));
 
   ApplySettings(mCurrentPrefs);
@@ -597,8 +579,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start(
   return NS_OK;
 }
 
-nsresult MediaEngineWebRTCMicrophoneSource::Stop(
-    const RefPtr<const AllocationHandle>&) {
+nsresult MediaEngineWebRTCMicrophoneSource::Stop() {
   AssertIsOnOwningThread();
 
   LOG("Mic source %p Stop()", this);
@@ -610,19 +591,18 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop(
   }
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(media::NewRunnableFrom([that, stream = mStream]() {
-    if (stream->IsDestroyed()) {
-      return NS_OK;
-    }
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction(__func__, [that, stream = mStream] {
+        if (stream->IsDestroyed()) {
+          return;
+        }
 
-    stream->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
-        that->mInputProcessing, StartStopMessage::Stop));
-    CubebUtils::AudioDeviceID deviceID = that->mDeviceInfo->DeviceID();
-    Maybe<CubebUtils::AudioDeviceID> id = Some(deviceID);
-    stream->CloseAudioInput(id, that->mInputProcessing);
-
-    return NS_OK;
-  }));
+        stream->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
+            that->mInputProcessing, StartStopMessage::Stop));
+        CubebUtils::AudioDeviceID deviceID = that->mDeviceInfo->DeviceID();
+        Maybe<CubebUtils::AudioDeviceID> id = Some(deviceID);
+        stream->CloseAudioInput(id, that->mInputProcessing);
+      }));
 
   MOZ_ASSERT(mState == kStarted, "Should be started when stopping");
   mState = kStopped;
@@ -666,12 +646,12 @@ void MediaEngineWebRTCMicrophoneSource::Shutdown() {
   AssertIsOnOwningThread();
 
   if (mState == kStarted) {
-    Stop(nullptr);
+    Stop();
     MOZ_ASSERT(mState == kStopped);
   }
 
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
-  Deallocate(nullptr);
+  Deallocate();
   MOZ_ASSERT(mState == kReleased);
 }
 
@@ -791,12 +771,10 @@ void AudioInputProcessing::Start() {
 
 void AudioInputProcessing::Stop() { mEnabled = false; }
 
-void AudioInputProcessing::Pull(const RefPtr<SourceMediaStream>& aStream,
-                                TrackID aTrackID, StreamTime aEndOfAppendedData,
-                                StreamTime aDesiredTime,
-                                const PrincipalHandle& aPrincipalHandle) {
-  TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p track %i", aStream.get(),
-                               aTrackID);
+void AudioInputProcessing::Pull(StreamTime aEndOfAppendedData,
+                                StreamTime aDesiredTime) {
+  TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p track %i", mStream.get(),
+                               mTrackID);
 
   if (mEnded) {
     return;
@@ -818,10 +796,10 @@ void AudioInputProcessing::Pull(const RefPtr<SourceMediaStream>& aStream,
     // If there were live frames appended and we haven't appended the
     // right amount of silence, we'll have to append silence once more,
     // failing the other assert below.
-    MOZ_ASSERT_IF(!PassThrough(aStream->GraphImpl()) && !mPacketizerInput,
+    MOZ_ASSERT_IF(!PassThrough(mStream->GraphImpl()) && !mPacketizerInput,
                   !mLiveFramesAppended);
 
-    if (!PassThrough(aStream->GraphImpl()) && mPacketizerInput) {
+    if (!PassThrough(mStream->GraphImpl()) && mPacketizerInput) {
       // Processing is active and is processed in chunks of 10ms through the
       // input packetizer. We allow for 10ms of silence on the track to
       // accomodate the buffering worst-case.
@@ -841,7 +819,7 @@ void AudioInputProcessing::Pull(const RefPtr<SourceMediaStream>& aStream,
   //   before the first graph iteration.
   // And other combinations of order of audio sample sources.
   MOZ_ASSERT_IF(mEnabled && mLiveFramesAppended && mLiveSilenceAppended,
-                aStream->GraphImpl()->IterationEnd() > mLastCallbackAppendTime);
+                mStream->GraphImpl()->IterationEnd() > mLastCallbackAppendTime);
 
   if (mLiveFramesAppended) {
     mLiveSilenceAppended = true;
@@ -849,7 +827,7 @@ void AudioInputProcessing::Pull(const RefPtr<SourceMediaStream>& aStream,
 
   AudioSegment audio;
   audio.AppendNullData(delta);
-  aStream->AppendToTrack(aTrackID, &audio);
+  mStream->AppendToTrack(mTrackID, &audio);
 }
 
 void AudioInputProcessing::NotifyOutputData(MediaStreamGraphImpl* aGraph,
@@ -1173,27 +1151,23 @@ nsString MediaEngineWebRTCAudioCaptureSource::GetGroupId() const {
 }
 
 void MediaEngineWebRTCAudioCaptureSource::SetTrack(
-    const RefPtr<const AllocationHandle>&,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const PrincipalHandle& aPrincipalHandle) {
   AssertIsOnOwningThread();
   // Nothing to do here. aStream is a placeholder dummy and not exposed.
 }
 
-nsresult MediaEngineWebRTCAudioCaptureSource::Start(
-    const RefPtr<const AllocationHandle>&) {
+nsresult MediaEngineWebRTCAudioCaptureSource::Start() {
   AssertIsOnOwningThread();
   return NS_OK;
 }
 
-nsresult MediaEngineWebRTCAudioCaptureSource::Stop(
-    const RefPtr<const AllocationHandle>&) {
+nsresult MediaEngineWebRTCAudioCaptureSource::Stop() {
   AssertIsOnOwningThread();
   return NS_OK;
 }
 
 nsresult MediaEngineWebRTCAudioCaptureSource::Reconfigure(
-    const RefPtr<AllocationHandle>&,
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
     const char** aOutBadConstraint) {

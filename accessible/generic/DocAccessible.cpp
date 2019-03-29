@@ -30,7 +30,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsImageFrame.h"
 #include "nsIPersistentProperties2.h"
-#include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsViewManager.h"
 #include "nsIScrollableFrame.h"
@@ -43,6 +42,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/DocumentType.h"
@@ -466,8 +466,10 @@ nsRect DocAccessible::RelativeBounds(nsIFrame** aRelativeFrame) const {
 
   nsRect bounds;
   while (document) {
-    nsIPresShell* presShell = document->GetShell();
-    if (!presShell) return nsRect();
+    mozilla::PresShell* presShell = document->GetPresShell();
+    if (!presShell) {
+      return nsRect();
+    }
 
     nsRect scrollPort;
     nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();

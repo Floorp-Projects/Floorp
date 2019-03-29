@@ -125,69 +125,52 @@
     <menupopup id="tabContextMenu"
                onpopupshowing="if (event.target == this) TabContextMenu.updateContextMenu(this);"
                onpopuphidden="if (event.target == this) TabContextMenu.contextTab = null;">
-      <menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
+      <menuitem id="context_reloadTab" data-lazy-l10n-id="reload-tab"
                 oncommand="gBrowser.reloadTab(TabContextMenu.contextTab);"/>
-      <menuitem id="context_reloadSelectedTabs" label="&reloadTabs.label;" hidden="true"
-                accesskey="&reloadTabs.accesskey;"
+      <menuitem id="context_reloadSelectedTabs" data-lazy-l10n-id="reload-tabs" hidden="true"
                 oncommand="gBrowser.reloadMultiSelectedTabs();"/>
       <menuitem id="context_toggleMuteTab" oncommand="TabContextMenu.contextTab.toggleMuteAudio();"/>
       <menuitem id="context_toggleMuteSelectedTabs" hidden="true"
                 oncommand="gBrowser.toggleMuteAudioOnMultiSelectedTabs(TabContextMenu.contextTab);"/>
-      <menuitem id="context_pinTab" label="&pinTab.label;"
-                accesskey="&pinTab.accesskey;"
+      <menuitem id="context_pinTab" data-lazy-l10n-id="pin-tab"
                 oncommand="gBrowser.pinTab(TabContextMenu.contextTab);"/>
-      <menuitem id="context_unpinTab" label="&unpinTab.label;" hidden="true"
-                accesskey="&unpinTab.accesskey;"
+      <menuitem id="context_unpinTab" data-lazy-l10n-id="unpin-tab" hidden="true"
                 oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
-      <menuitem id="context_pinSelectedTabs" label="&pinSelectedTabs.label;" hidden="true"
-                accesskey="&pinSelectedTabs.accesskey;"
+      <menuitem id="context_pinSelectedTabs" data-lazy-l10n-id="pin-selected-tabs" hidden="true"
                 oncommand="gBrowser.pinMultiSelectedTabs();"/>
-      <menuitem id="context_unpinSelectedTabs" label="&unpinSelectedTabs.label;" hidden="true"
-                accesskey="&unpinSelectedTabs.accesskey;"
+      <menuitem id="context_unpinSelectedTabs" data-lazy-l10n-id="unpin-selected-tabs" hidden="true"
                 oncommand="gBrowser.unpinMultiSelectedTabs();"/>
-      <menuitem id="context_duplicateTab" label="&duplicateTab.label;"
-                accesskey="&duplicateTab.accesskey;"
+      <menuitem id="context_duplicateTab" data-lazy-l10n-id="duplicate-tab"
                 oncommand="duplicateTabIn(TabContextMenu.contextTab, 'tab');"/>
-      <menuitem id="context_duplicateTabs" label="&duplicateTabs.label;"
-                accesskey="&duplicateTabs.accesskey;"
+      <menuitem id="context_duplicateTabs" data-lazy-l10n-id="duplicate-tabs"
                 oncommand="TabContextMenu.duplicateSelectedTabs();"/>
       <menuseparator/>
-      <menuitem id="context_selectAllTabs" label="&selectAllTabs.label;" accesskey="&selectAllTabs.accesskey;"
+      <menuitem id="context_selectAllTabs" data-lazy-l10n-id="select-all-tabs"
                 oncommand="gBrowser.selectAllTabs();"/>
       <menuitem id="context_bookmarkSelectedTabs"
                 hidden="true"
-                label="&bookmarkSelectedTabs.label;"
-                accesskey="&bookmarkSelectedTabs.accesskey;"
+                data-lazy-l10n-id="bookmark-selected-tabs"
                 oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.uniqueSelectedPages);"/>
       <menuitem id="context_bookmarkTab"
-                label="&bookmarkTab.label;"
-                accesskey="&bookmarkTab.accesskey;"
+                data-lazy-l10n-id="bookmark-tab"
                 oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.getUniquePages([TabContextMenu.contextTab]));"/>
       <menu id="context_reopenInContainer"
-            label="&reopenInContainer.label;"
-            accesskey="&reopenInContainer.accesskey;"
+            data-lazy-l10n-id="reopen-in-container"
             hidden="true">
         <menupopup oncommand="TabContextMenu.reopenInContainer(event);"
                    onpopupshowing="TabContextMenu.createReopenInContainerMenu(event);"/>
       </menu>
-      <menu id="context_moveTabOptions"
-            multiselectcontextlabel="&moveSelectedTabOptions.label;"
-            multiselectcontextaccesskey="&moveSelectedTabOptions.accesskey;"
-            nonmultiselectcontextlabel="&moveTabOptions.label;"
-            nonmultiselectcontextaccesskey="&moveTabOptions.accesskey;">
+      <menu id="context_moveTabOptions">
         <menupopup id="moveTabOptionsMenu">
           <menuitem id="context_moveToStart"
-                    label="&moveToStart.label;"
-                    accesskey="&moveToStart.accesskey;"
+                    data-lazy-l10n-id="move-to-start"
                     tbattr="tabbrowser-multiple"
                     oncommand="gBrowser.moveTabsToStart(TabContextMenu.contextTab);"/>
           <menuitem id="context_moveToEnd"
-                    label="&moveToEnd.label;"
-                    accesskey="&moveToEnd.accesskey;"
+                    data-lazy-l10n-id="move-to-end"
                     tbattr="tabbrowser-multiple"
                     oncommand="gBrowser.moveTabsToEnd(TabContextMenu.contextTab);"/>
-          <menuitem id="context_openTabInWindow" label="&moveToNewWindow.label;"
-                    accesskey="&moveToNewWindow.accesskey;"
+          <menuitem id="context_openTabInWindow" data-lazy-l10n-id="move-to-new-window"
                     tbattr="tabbrowser-multiple"
                     oncommand="gBrowser.replaceTabsWithWindow(TabContextMenu.contextTab);"/>
         </menupopup>
@@ -198,18 +181,17 @@
                    onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI.spec, TabContextMenu.contextTab.linkedBrowser.contentTitle, TabContextMenu.contextTab.multiselected);"/>
       </menu>
       <menuseparator/>
-      <menuitem id="context_closeTabsToTheEnd" label="&closeTabsToTheEnd.label;" accesskey="&closeTabsToTheEnd.accesskey;"
+      <menuitem id="context_closeTabsToTheEnd" data-lazy-l10n-id="close-tabs-to-the-end"
                 oncommand="gBrowser.removeTabsToTheEndFrom(TabContextMenu.contextTab, {animate: true});"/>
-      <menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
+      <menuitem id="context_closeOtherTabs" data-lazy-l10n-id="close-other-tabs"
                 oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
       <menuitem id="context_undoCloseTab"
-                label="&undoCloseTab.label;"
-                accesskey="&undoCloseTab.accesskey;"
+                data-lazy-l10n-id="undo-close-tab"
                 observes="History:UndoCloseTab"/>
-      <menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
+      <menuitem id="context_closeTab" data-lazy-l10n-id="close-tab"
                 oncommand="gBrowser.removeTab(TabContextMenu.contextTab, { animate: true });"/>
-      <menuitem id="context_closeSelectedTabs" label="&closeTabs.label;"
-                hidden="true" accesskey="&closeTabs.accesskey;"
+      <menuitem id="context_closeSelectedTabs" data-lazy-l10n-id="close-tabs"
+                hidden="true"
                 oncommand="gBrowser.removeMultiSelectedTabs();"/>
     </menupopup>
 

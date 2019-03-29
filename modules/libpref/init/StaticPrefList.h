@@ -987,6 +987,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Pref to control whether line-height: -moz-block-height is exposed to content.
+VARCACHE_PREF(
+  "layout.css.line-height-moz-block-height.content.enabled",
+   layout_css_line_height_moz_block_height_content_enabled,
+  bool, false
+)
+
 // Is support for variation fonts enabled?
 VARCACHE_PREF(
   "layout.css.font-variations.enabled",
@@ -2095,6 +2102,13 @@ VARCACHE_PREF(
   "privacy.trackingprotection.cryptomining.annotate.enabled",
    privacy_trackingprotection_cryptomining_annotate_enabled,
   bool, false
+)
+
+// Spoof user locale to English
+VARCACHE_PREF(
+  "privacy.spoof_english",
+   privacy_spoof_english,
+  RelaxedAtomicUint32, 0
 )
 
 // Lower the priority of network loads for resources on the tracking protection

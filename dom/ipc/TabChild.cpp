@@ -205,7 +205,7 @@ already_AddRefed<Document> TabChildBase::GetDocument() const {
 already_AddRefed<nsIPresShell> TabChildBase::GetPresShell() const {
   nsCOMPtr<nsIPresShell> result;
   if (nsCOMPtr<Document> doc = GetDocument()) {
-    result = doc->GetShell();
+    result = doc->GetPresShell();
   }
   return result.forget();
 }
@@ -455,12 +455,12 @@ TabChild::Observe(nsISupports* aSubject, const char* aTopic,
       nsCOMPtr<Document> doc(GetDocument());
 
       if (subject == doc) {
-        nsCOMPtr<nsIPresShell> shell(doc->GetShell());
-        if (shell) {
-          shell->SetIsFirstPaint(true);
+        RefPtr<PresShell> presShell = doc->GetPresShell();
+        if (presShell) {
+          presShell->SetIsFirstPaint(true);
         }
 
-        APZCCallbackHelper::InitializeRootDisplayport(shell);
+        APZCCallbackHelper::InitializeRootDisplayport(presShell);
       }
     }
   }

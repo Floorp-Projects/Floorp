@@ -18,6 +18,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/EventTarget.h"
@@ -95,6 +96,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ThrottledEventQueue.h"
@@ -122,7 +124,6 @@
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsThreadUtils.h"
 #include "nsILoadContext.h"
-#include "nsIPresShell.h"
 #include "nsIScrollableFrame.h"
 #include "nsView.h"
 #include "nsViewManager.h"
@@ -1135,9 +1136,9 @@ void nsGlobalWindowInner::FreeInnerObjects() {
     }
 
     if (mObservingDidRefresh) {
-      nsIPresShell* shell = mDoc->GetShell();
-      if (shell) {
-        Unused << shell->RemovePostRefreshObserver(this);
+      PresShell* presShell = mDoc->GetPresShell();
+      if (presShell) {
+        Unused << presShell->RemovePostRefreshObserver(this);
       }
     }
   }
@@ -1152,7 +1153,7 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   }
 
   if (mIndexedDB) {
-    mIndexedDB->DisconnectFromWindow(this);
+    mIndexedDB->DisconnectFromGlobal(this);
     mIndexedDB = nullptr;
   }
 
@@ -1448,7 +1449,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplicationCache)
   }
   if (tmp->mIndexedDB) {
-    tmp->mIndexedDB->DisconnectFromWindow(tmp);
+    tmp->mIndexedDB->DisconnectFromGlobal(tmp);
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)
@@ -6257,8 +6258,8 @@ already_AddRefed<Promise> nsGlobalWindowInner::PromiseDocumentFlushed(
     return nullptr;
   }
 
-  nsIPresShell* shell = mDoc->GetShell();
-  if (!shell) {
+  PresShell* presShell = mDoc->GetPresShell();
+  if (!presShell) {
     aError.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
@@ -6281,13 +6282,13 @@ already_AddRefed<Promise> nsGlobalWindowInner::PromiseDocumentFlushed(
   UniquePtr<PromiseDocumentFlushedResolver> flushResolver(
       new PromiseDocumentFlushedResolver(resultPromise, aCallback));
 
-  if (!shell->NeedStyleFlush() && !shell->NeedLayoutFlush()) {
+  if (!presShell->NeedStyleFlush() && !presShell->NeedLayoutFlush()) {
     flushResolver->Call();
     return resultPromise.forget();
   }
 
   if (!mObservingDidRefresh) {
-    bool success = shell->AddPostRefreshObserver(this);
+    bool success = presShell->AddPostRefreshObserver(this);
     if (!success) {
       aError.Throw(NS_ERROR_FAILURE);
       return nullptr;
@@ -6334,9 +6335,9 @@ void nsGlobalWindowInner::CallOrCancelDocumentFlushedResolvers() {
     // PromiseDocumentFlushed.  Add here and leave.
     // FIXME: Handle this case inside PromiseDocumentFlushed (bug 1442824).
     if (mDoc) {
-      nsIPresShell* shell = mDoc->GetShell();
-      if (shell) {
-        (void)shell->AddPostRefreshObserver(this);
+      PresShell* presShell = mDoc->GetPresShell();
+      if (presShell) {
+        Unused << presShell->AddPostRefreshObserver(this);
         break;
       }
     }
@@ -6365,10 +6366,10 @@ void nsGlobalWindowInner::DidRefresh() {
 
   MOZ_ASSERT(mDoc);
 
-  nsIPresShell* shell = mDoc->GetShell();
-  MOZ_ASSERT(shell);
+  PresShell* presShell = mDoc->GetPresShell();
+  MOZ_ASSERT(presShell);
 
-  if (shell->NeedStyleFlush() || shell->NeedLayoutFlush()) {
+  if (presShell->NeedStyleFlush() || presShell->NeedLayoutFlush()) {
     // By the time our observer fired, something has already invalidated
     // style or layout - or perhaps we're still in the middle of a flush that
     // was interrupted. In either case, we'll wait until the next refresh driver
@@ -6377,7 +6378,7 @@ void nsGlobalWindowInner::DidRefresh() {
     return;
   }
 
-  bool success = shell->RemovePostRefreshObserver(this);
+  bool success = presShell->RemovePostRefreshObserver(this);
   if (!success) {
     return;
   }
@@ -6796,9 +6797,22 @@ Worklet* nsGlobalWindowInner::GetPaintWorklet(ErrorResult& aRv) {
 
 void nsGlobalWindowInner::GetRegionalPrefsLocales(
     nsTArray<nsString>& aLocales) {
+  MOZ_ASSERT(mozilla::intl::LocaleService::GetInstance());
+
   AutoTArray<nsCString, 10> rpLocales;
   mozilla::intl::LocaleService::GetInstance()->GetRegionalPrefsLocales(
       rpLocales);
+
+  for (const auto& loc : rpLocales) {
+    aLocales.AppendElement(NS_ConvertUTF8toUTF16(loc));
+  }
+}
+
+void nsGlobalWindowInner::GetWebExposedLocales(nsTArray<nsString>& aLocales) {
+  MOZ_ASSERT(mozilla::intl::LocaleService::GetInstance());
+
+  AutoTArray<nsCString, 10> rpLocales;
+  mozilla::intl::LocaleService::GetInstance()->GetWebExposedLocales(rpLocales);
 
   for (const auto& loc : rpLocales) {
     aLocales.AppendElement(NS_ConvertUTF8toUTF16(loc));

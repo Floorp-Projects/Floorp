@@ -32,6 +32,7 @@
 #include "nsIObserverService.h"
 #include "XULDocument.h"
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"  // for Event
 #include "mozilla/dom/KeyboardEvent.h"
@@ -42,6 +43,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
 #include "mozilla/widget/nsAutoRollup.h"
 
@@ -537,8 +539,10 @@ nsMenuPopupFrame* nsXULPopupManager::GetPopupFrameForContent(
   if (aShouldFlush) {
     Document* document = aContent->GetUncomposedDoc();
     if (document) {
-      nsCOMPtr<nsIPresShell> presShell = document->GetShell();
-      if (presShell) presShell->FlushPendingNotifications(FlushType::Layout);
+      RefPtr<PresShell> presShell = document->GetPresShell();
+      if (presShell) {
+        presShell->FlushPendingNotifications(FlushType::Layout);
+      }
     }
   }
 
@@ -593,7 +597,7 @@ void nsXULPopupManager::InitTriggerEvent(Event* aEvent, nsIContent* aPopup,
       }
       Document* doc = aPopup->GetUncomposedDoc();
       if (doc) {
-        nsIPresShell* presShell = doc->GetShell();
+        PresShell* presShell = doc->GetPresShell();
         nsPresContext* presContext;
         if (presShell && (presContext = presShell->GetPresContext())) {
           nsPresContext* rootDocPresContext = presContext->GetRootPresContext();
@@ -783,8 +787,10 @@ static void CheckCaretDrawingState() {
     nsCOMPtr<Document> focusedDoc = piWindow->GetDoc();
     if (!focusedDoc) return;
 
-    nsIPresShell* presShell = focusedDoc->GetShell();
-    if (!presShell) return;
+    PresShell* presShell = focusedDoc->GetPresShell();
+    if (!presShell) {
+      return;
+    }
 
     RefPtr<nsCaret> caret = presShell->GetCaret();
     if (!caret) return;

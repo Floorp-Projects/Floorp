@@ -32,26 +32,17 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
-                    AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
-  nsresult Deallocate(const RefPtr<const AllocationHandle>& aHandle) override;
-  void SetTrack(const RefPtr<const AllocationHandle>& aHandle,
-                const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+  nsresult Deallocate() override;
+  void SetTrack(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
                 const PrincipalHandle& aPrincipal) override;
-  nsresult Start(const RefPtr<const AllocationHandle>& aHandle) override;
-  nsresult Reconfigure(const RefPtr<AllocationHandle>& aHandle,
-                       const dom::MediaTrackConstraints& aConstraints,
+  nsresult Start() override;
+  nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
                        const nsString& aDeviceId,
                        const char** aOutBadConstraint) override;
-  nsresult FocusOnSelectedSource(
-      const RefPtr<const AllocationHandle>& aHandle) override;
-  nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) override;
-
-  void Pull(const RefPtr<const AllocationHandle>& aHandle,
-            const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-            StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
-            const PrincipalHandle& aPrincipalHandle) override;
+  nsresult FocusOnSelectedSource() override;
+  nsresult Stop() override;
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,

@@ -627,8 +627,8 @@ void PointerEventHandler::DispatchGotOrLostPointerCaptureEvent(
     bool aIsGotCapture, const WidgetPointerEvent* aPointerEvent,
     nsIContent* aCaptureTarget) {
   Document* targetDoc = aCaptureTarget->OwnerDoc();
-  nsCOMPtr<nsIPresShell> shell = targetDoc->GetShell();
-  if (NS_WARN_IF(!shell)) {
+  RefPtr<PresShell> presShell = targetDoc->GetPresShell();
+  if (NS_WARN_IF(!presShell)) {
     return;
   }
 
@@ -654,7 +654,7 @@ void PointerEventHandler::DispatchGotOrLostPointerCaptureEvent(
       aPointerEvent->mWidget);
 
   localEvent.AssignPointerEventData(*aPointerEvent, true);
-  DebugOnly<nsresult> rv = shell->HandleEventWithTarget(
+  DebugOnly<nsresult> rv = presShell->HandleEventWithTarget(
       &localEvent, aCaptureTarget->GetPrimaryFrame(), aCaptureTarget, &status);
 
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),

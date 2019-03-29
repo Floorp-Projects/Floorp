@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+subFrame B
+
+<script>
+function openWin() {
+  parent.frameC.open.call(parent.frameD, "http://example.com/tests/dom/security/test/csp/file_windowwatcher_win_open.html");
+}
+</script>
+</body>
+</html>

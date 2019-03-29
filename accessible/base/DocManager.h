@@ -6,6 +6,7 @@
 #define mozilla_a11_DocManager_h_
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDOMEventListener.h"
 #include "nsRefPtrHashtable.h"
@@ -183,8 +184,8 @@ class DocManager : public nsIWebProgressListener,
  * more than one.
  */
 inline DocAccessible* GetExistingDocAccessible(const dom::Document* aDocument) {
-  nsIPresShell* ps = aDocument->GetShell();
-  return ps ? ps->GetDocAccessible() : nullptr;
+  PresShell* presShell = aDocument->GetPresShell();
+  return presShell ? presShell->GetDocAccessible() : nullptr;
 }
 
 }  // namespace a11y

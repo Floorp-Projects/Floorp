@@ -22,14 +22,6 @@
         ],
         "revision": "default"
     },
-    "as": {
-        "platforms": [
-            "android",
-            "android-api-16",
-            "android-multilocale"
-        ],
-        "revision": "default"
-    },
     "ast": {
         "platforms": [
             "android",
@@ -159,14 +151,6 @@
         "revision": "default"
     },
     "en-GB": {
-        "platforms": [
-            "android",
-            "android-api-16",
-            "android-multilocale"
-        ],
-        "revision": "default"
-    },
-    "en-ZA": {
         "platforms": [
             "android",
             "android-api-16",
@@ -483,14 +467,6 @@
         ],
         "revision": "default"
     },
-    "mai": {
-        "platforms": [
-            "android",
-            "android-api-16",
-            "android-multilocale"
-        ],
-        "revision": "default"
-    },
     "meh": {
         "platforms": [
             "android",
@@ -570,14 +546,6 @@
         "revision": "default"
     },
     "oc": {
-        "platforms": [
-            "android",
-            "android-api-16",
-            "android-multilocale"
-        ],
-        "revision": "default"
-    },
-    "or": {
         "platforms": [
             "android",
             "android-api-16",

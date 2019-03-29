@@ -4745,6 +4745,19 @@ window._gBrowser = {
                           SitePermissions.SCOPE_GLOBAL,
                           browser);
     });
+
+    let tabContextFTLInserter = () => {
+      MozXULElement.insertFTLIfNeeded("browser/tabContextMenu.ftl");
+      // Un-lazify the l10n-ids now that the FTL file has been inserted.
+      document.getElementById("tabContextMenu").querySelectorAll("[data-lazy-l10n-id]").forEach(el => {
+        el.setAttribute("data-l10n-id", el.getAttribute("data-lazy-l10n-id"));
+        el.removeAttribute("data-lazy-l10n-id");
+      });
+      this.tabContainer.removeEventListener("mouseover", tabContextFTLInserter);
+      this.tabContainer.removeEventListener("focus", tabContextFTLInserter, true);
+    };
+    this.tabContainer.addEventListener("mouseover", tabContextFTLInserter);
+    this.tabContainer.addEventListener("focus", tabContextFTLInserter, true);
   },
 
   setSuccessor(aTab, successorTab) {
@@ -5402,11 +5415,7 @@ var TabContextMenu = {
 
     let contextMoveTabOptions = document.getElementById("context_moveTabOptions");
     contextMoveTabOptions.disabled = gBrowser.allTabsSelected();
-    let moveTabOptionsStringPrefix = multiselectionContext ? "multiselectcontext" : "nonmultiselectcontext";
-    let moveTabOptionsLabel = contextMoveTabOptions.getAttribute(moveTabOptionsStringPrefix + "label");
-    let moveTabOptionsAccessKey = contextMoveTabOptions.getAttribute(moveTabOptionsStringPrefix + "accesskey");
-    contextMoveTabOptions.setAttribute("label", moveTabOptionsLabel);
-    contextMoveTabOptions.setAttribute("accesskey", moveTabOptionsAccessKey);
+    document.l10n.setAttributes(contextMoveTabOptions, multiselectionContext ? "move-tabs" : "move-tab");
     let selectedTabs = gBrowser.selectedTabs;
     let contextMoveTabToEnd = document.getElementById("context_moveToEnd");
     let allSelectedTabsAdjacent = selectedTabs.every((element, index, array) => {

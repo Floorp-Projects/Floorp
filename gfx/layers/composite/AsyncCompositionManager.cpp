@@ -6,7 +6,6 @@
 
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include <stdint.h>                 // for uint32_t
-#include "FrameMetrics.h"           // for FrameMetrics
 #include "LayerManagerComposite.h"  // for LayerManagerComposite, etc
 #include "Layers.h"                 // for Layer, ContainerLayer, etc
 #include "gfxPoint.h"               // for gfxPoint, gfxSize
@@ -1041,18 +1040,25 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                         compositor->GetCompositorBridgeParent()) {
                   AndroidDynamicToolbarAnimator* animator =
                       bridge->GetAndroidDynamicToolbarAnimator();
-                  if (mIsFirstPaint) {
+
+                  LayersId rootLayerTreeId = bridge->RootLayerTreeId();
+                  if (mIsFirstPaint || FrameMetricsHaveUpdated(metrics)) {
                     if (animator) {
                       animator->UpdateRootFrameMetrics(metrics);
+                    } else if (RefPtr<UiCompositorControllerParent> uiController =
+                              UiCompositorControllerParent::
+                                  GetFromRootLayerTreeId(rootLayerTreeId)) {
+                      uiController->NotifyUpdateScreenMetrics(metrics);
+                    }
+                    mLastMetrics = metrics;
+                  } 
+                  if (mIsFirstPaint) {
+                    if (animator) {
                       animator->FirstPaint();
                     }
-                    LayersId rootLayerTreeId = bridge->RootLayerTreeId();
                     if (RefPtr<UiCompositorControllerParent> uiController =
                             UiCompositorControllerParent::
                                 GetFromRootLayerTreeId(rootLayerTreeId)) {
-                      if (!animator) {
-                        uiController->NotifyUpdateScreenMetrics(metrics);
-                      }
                       uiController->NotifyFirstPaint();
                     }
                     mIsFirstPaint = false;
@@ -1230,6 +1236,13 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
 
   return appliedTransform;
 }
+
+#if defined(MOZ_WIDGET_ANDROID)
+bool AsyncCompositionManager::FrameMetricsHaveUpdated(const FrameMetrics& aMetrics) {
+  return RoundedToInt(mLastMetrics.GetScrollOffset()) != RoundedToInt(aMetrics.GetScrollOffset()) 
+          || mLastMetrics.GetZoom() != aMetrics.GetZoom();;
+}
+#endif
 
 static bool LayerIsScrollbarTarget(const LayerMetricsWrapper& aTarget,
                                    Layer* aScrollbar) {

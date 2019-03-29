@@ -26,7 +26,6 @@
 #include "nsPluginInstanceOwner.h"
 #include "nsJSNPRuntime.h"
 #include "nsINestedURI.h"
-#include "nsIPresShell.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIStreamConverterService.h"
@@ -92,6 +91,7 @@
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/PresShell.h"
 #include "nsChannelClassifier.h"
 #include "nsFocusManager.h"
 
@@ -2485,9 +2485,9 @@ void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
   } else if (aOldType != mType) {
     // If our state changed, then we already recreated frames
     // Otherwise, need to do that here
-    nsCOMPtr<nsIPresShell> shell = doc->GetShell();
-    if (shell) {
-      shell->PostRecreateFramesFor(thisEl);
+    RefPtr<PresShell> presShell = doc->GetPresShell();
+    if (presShell) {
+      presShell->PostRecreateFramesFor(thisEl);
     }
   }
 

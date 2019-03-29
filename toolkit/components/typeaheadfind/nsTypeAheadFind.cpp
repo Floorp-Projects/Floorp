@@ -8,6 +8,7 @@
 #include "nsIServiceManager.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsCURILoader.h"
@@ -433,7 +434,7 @@ nsresult nsTypeAheadFind::FindItNow(nsIPresShell* aPresShell, bool aIsLinksOnly,
 
   while (true) {    // ----- Outer while loop: go through all docs -----
     while (true) {  // === Inner while loop: go through a single doc ===
-      mFind->Find(mTypeAheadBuffer.get(), mSearchRange, mStartPointRange,
+      mFind->Find(mTypeAheadBuffer, mSearchRange, mStartPointRange,
                   mEndPointRange, getter_AddRefs(returnRange));
       if (!returnRange) {
         break;  // Nothing found in this doc, go to outer loop (try next doc)
@@ -1132,7 +1133,7 @@ nsTypeAheadFind::IsRangeVisible(nsRange* aRange, bool aMustBeInViewPort,
   nsCOMPtr<nsINode> node = aRange->GetStartContainer();
 
   Document* doc = node->OwnerDoc();
-  nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
+  RefPtr<PresShell> presShell = doc->GetPresShell();
   if (!presShell) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1318,7 +1319,7 @@ NS_IMETHODIMP
 nsTypeAheadFind::IsRangeRendered(nsRange* aRange, bool* aResult) {
   nsINode* node = aRange->GetStartContainer();
 
-  nsCOMPtr<nsIPresShell> presShell = node->OwnerDoc()->GetShell();
+  RefPtr<PresShell> presShell = node->OwnerDoc()->GetPresShell();
   if (!presShell) {
     return NS_ERROR_UNEXPECTED;
   }

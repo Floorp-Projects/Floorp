@@ -27,6 +27,7 @@ Mozproxy provide a function that returns a playback class. The usage pattern is
 
 - **playback_tool**: name of the backend. can be "mitmproxy", "mitmproxy-android"
 - **playback_tool_args**: extra options to pass to the playback tool
+- **playback_version**: playback tool version
 - **playback_binary_manifest**: tooltool manifests for the proxy backend binary
 - **playback_pageset_manifest**: tooltool manifest for the pagesets archive
 - **playback_artifacts**: links to downloadable artifacts
