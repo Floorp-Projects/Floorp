@@ -540,7 +540,7 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
     nsString appId(aOptions.mExtensions.mAppid.Value());
 
     // Check that the appId value is allowed.
-    if (!EvaluateAppID(mParent, origin, U2FOperation::Sign, appId)) {
+    if (!EvaluateAppID(mParent, origin, appId)) {
       promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
       return promise.forget();
     }

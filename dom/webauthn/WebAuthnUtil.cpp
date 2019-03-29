@@ -23,7 +23,7 @@ const uint8_t FLAG_TUP = 0x01;  // Test of User Presence required
 const uint8_t FLAG_AT = 0x40;   // Authenticator Data is provided
 
 bool EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
-                   const U2FOperation& aOp, /* in/out */ nsString& aAppId) {
+                   /* in/out */ nsString& aAppId) {
   // Facet is the specification's way of referring to the web origin.
   nsAutoCString facetString = NS_ConvertUTF16toUTF8(aOrigin);
   nsCOMPtr<nsIURI> facetUri;
@@ -101,8 +101,7 @@ bool EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
   }
 
   // Bug #1436078 - Permit Google Accounts. Remove in Bug #1436085 in Jan 2023.
-  if (aOp == U2FOperation::Sign &&
-      lowestFacetHost.EqualsLiteral("google.com") &&
+  if (lowestFacetHost.EqualsLiteral("google.com") &&
       (aAppId.Equals(kGoogleAccountsAppId1) ||
        aAppId.Equals(kGoogleAccountsAppId2))) {
     return true;
