@@ -2170,7 +2170,11 @@ class LSRequestBase : public DatastoreOperationBase,
  private:
   void SendReadyMessage();
 
+  nsresult SendReadyMessageInternal();
+
   void Finish();
+
+  void FinishInternal();
 
   void SendResults();
 
@@ -5703,26 +5707,48 @@ void LSRequestBase::SendReadyMessage() {
     MaybeSetFailureCode(NS_ERROR_FAILURE);
   }
 
-  if (MayProceed()) {
-    Unused << SendReady();
+  nsresult rv = SendReadyMessageInternal();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MaybeSetFailureCode(rv);
 
-    mState = State::WaitingForFinish;
-
-    mWaitingForFinish = true;
-  } else {
-    Cleanup();
-
-    mState = State::Completed;
+    FinishInternal();
   }
+}
+
+nsresult LSRequestBase::SendReadyMessageInternal() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::SendingReadyMessage);
+
+  if (!MayProceed()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_WARN_IF(!SendReady())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mState = State::WaitingForFinish;
+
+  mWaitingForFinish = true;
+
+  return NS_OK;
 }
 
 void LSRequestBase::Finish() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::WaitingForFinish);
 
-  mState = State::SendingResults;
-
   mWaitingForFinish = false;
+
+  FinishInternal();
+}
+
+void LSRequestBase::FinishInternal() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::SendingReadyMessage ||
+             mState == State::WaitingForFinish);
+
+  mState = State::SendingResults;
 
   // This LSRequestBase can only be held alive by the IPDL. Run() can end up
   // with clearing that last reference. So we need to add a self reference here.
