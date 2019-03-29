@@ -48,8 +48,9 @@ function groupBreakpoints(breakpoints, selectedSource) {
   if (!breakpoints) {
     return {};
   }
+
   const map: any = groupBy(
-    breakpoints,
+    breakpoints.filter(breakpoint => !breakpoint.options.hidden),
     breakpoint => getSelectedLocation(breakpoint, selectedSource).line
   );
 

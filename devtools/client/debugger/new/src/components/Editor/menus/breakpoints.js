@@ -39,7 +39,7 @@ export const addConditionalBreakpointItem = (
 ) => ({
   id: "node-menu-add-conditional-breakpoint",
   label: L10N.getStr("editor.addConditionBreakpoint"),
-  accelerator: L10N.getStr("toggleCondPanel.key"),
+  accelerator: L10N.getStr("toggleCondPanel.breakpoint.key"),
   accesskey: L10N.getStr("editor.addConditionBreakpoint.accesskey"),
   disabled: false,
   click: () => breakpointActions.openConditionalPanel(location)
@@ -51,7 +51,7 @@ export const editConditionalBreakpointItem = (
 ) => ({
   id: "node-menu-edit-conditional-breakpoint",
   label: L10N.getStr("editor.editConditionBreakpoint"),
-  accelerator: L10N.getStr("toggleCondPanel.key"),
+  accelerator: L10N.getStr("toggleCondPanel.breakpoint.key"),
   accesskey: L10N.getStr("editor.addConditionBreakpoint.accesskey"),
   disabled: false,
   click: () => breakpointActions.openConditionalPanel(location)
@@ -79,7 +79,7 @@ export const addLogPointItem = (
   accesskey: L10N.getStr("editor.addLogPoint.accesskey"),
   disabled: false,
   click: () => breakpointActions.openConditionalPanel(location, true),
-  accelerator: L10N.getStr("toggleCondPanel.key")
+  accelerator: L10N.getStr("toggleCondPanel.logPoint.key")
 });
 
 export const editLogPointItem = (
@@ -91,7 +91,7 @@ export const editLogPointItem = (
   accesskey: L10N.getStr("editor.addLogPoint.accesskey"),
   disabled: false,
   click: () => breakpointActions.openConditionalPanel(location, true),
-  accelerator: L10N.getStr("toggleCondPanel.key")
+  accelerator: L10N.getStr("toggleCondPanel.logPoint.key")
 });
 
 export const logPointItem = (

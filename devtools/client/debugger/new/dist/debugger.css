@@ -2670,59 +2670,6 @@ menuseparator {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.column-breakpoint {
-  display: inline;
-  padding-inline-start: 1px;
-  padding-inline-end: 3px;
-}
-
-.column-breakpoint:hover {
-  background-color: transparent;
-}
-
-.column-breakpoint svg {
-  display: inline-block;
-  cursor: pointer;
-  height: 13px;
-  width: 11px;
-  vertical-align: top;
-  fill: var(--blue-40);
-  stroke: var(--blue-60);
-}
-
-.column-breakpoint.disabled svg {
-  fill-opacity: 0.7;
-  stroke-opacity: 0.7;
-}
-
-.column-breakpoint.has-condition svg {
-  fill: var(--theme-graphs-yellow);
-  stroke: var(--theme-graphs-orange);
-}
-
-.column-breakpoint.has-log svg {
-  fill: var(--theme-graphs-purple);
-  stroke: var(--purple-60);
-}
-
-.theme-dark .column-breakpoint.active svg {
-  fill: var(--blue-55);
-  stroke: var(--blue-40);
-}
-
-.theme-dark .column-breakpoint.disabled svg {
-  fill: var(--blue-50);
-  stroke: var(--blue-60);
-  fill-opacity: 0.5;
-}
-
-.img.column-marker {
-  background-image: url("resource://devtools/client/debugger/new/images/column-marker.svg");
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .conditional-breakpoint-panel {
   cursor: initial;
   margin: 1em 0;
@@ -2803,52 +2750,12 @@ html[dir="rtl"] .editor-mount {
   direction: ltr;
 }
 
-.theme-light {
-  --gutter-hover-background-color: #dde1e4;
-  --breakpoint-fill: var(--blue-50);
-  --breakpoint-stroke: var(--blue-60);
-}
-
-.theme-dark {
-  --gutter-hover-background-color: #414141;
-  --breakpoint-fill: var(--blue-55);
-  --breakpoint-stroke: var(--blue-40);
-}
-
 .theme-light .cm-s-mozilla .empty-line .CodeMirror-linenumber {
   color: var(--grey-40);
 }
 
 .theme-dark .cm-s-mozilla .empty-line .CodeMirror-linenumber {
   color: var(--grey-50);
-}
-
-.new-breakpoint .CodeMirror-linenumber {
-  pointer-events: none;
-}
-
-:not(.empty-line):not(.new-breakpoint)
-  > .CodeMirror-gutter-wrapper:hover
-  > .CodeMirror-linenumber::after {
-  content: "";
-  position: absolute;
-  /* paint below the number */
-  z-index: -1;
-  top: 0;
-  left: 0;
-  right: -7px;
-  bottom: 0;
-  height: 15px;
-  background-color: var(--gutter-hover-background-color);
-  mask: url("resource://devtools/client/debugger/new/images/breakpoint.svg") no-repeat;
-  mask-size: auto 15px;
-  mask-position: right;
-}
-
-.editor-wrapper .breakpoints {
-  position: absolute;
-  top: 0;
-  left: 0;
 }
 
 .function-search {
@@ -2866,50 +2773,6 @@ html[dir="rtl"] .editor-mount {
 
 .editor-wrapper .highlight-lines {
   background: var(--theme-selection-background-hover);
-}
-
-.editor.new-breakpoint svg {
-  fill: var(--breakpoint-fill);
-  stroke: var(--breakpoint-stroke);
-  width: 60px;
-  height: 15px;
-  position: absolute;
-  top: 0px;
-  right: -4px;
-}
-
-.inline-bp {
-  background-color: #9ddfff;
-  width: 20px;
-  padding: 0px 5px;
-  margin: 0px 4px;
-  border-radius: 5px;
-  border-color: blue;
-  border: 1px solid #00b6ff;
-}
-
-.editor .breakpoint {
-  position: absolute;
-  right: -2px;
-}
-
-.editor.new-breakpoint.folding-enabled svg {
-  right: -16px;
-}
-
-.new-breakpoint.has-condition .CodeMirror-gutter-wrapper svg {
-  fill: var(--theme-graphs-yellow);
-  stroke: var(--theme-graphs-orange);
-}
-
-.new-breakpoint.has-log .CodeMirror-gutter-wrapper svg {
-  fill: var(--theme-graphs-purple);
-  stroke: var(--purple-60);
-}
-
-.editor.new-breakpoint.breakpoint-disabled svg {
-  fill-opacity: 0.7;
-  stroke-opacity: 0.7;
 }
 
 .CodeMirror {
@@ -2947,7 +2810,7 @@ html[dir="rtl"] .editor-mount {
 }
 
 .debug-expression,
-.new-debug-line .column-breakpoint {
+.debug-expression ~ .CodeMirror-widget {
   background-color: var(--debug-expression-background);
 }
 
@@ -3012,6 +2875,160 @@ debug-expression-error {
 
 .download-anchor {
   display: none;
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+ .theme-light {
+  --gutter-hover-background-color: #dde1e4;
+
+  --breakpoint-fill: var(--blue-50);
+  --breakpoint-stroke: var(--blue-60);
+
+  --breakpoint-disabled-fill: var(--blue-55);
+  --breakpoint-disabled-stroke: var(--blue-55);
+}
+
+.theme-dark {
+  --gutter-hover-background-color: #414141;
+
+  --breakpoint-fill: var(--blue-55);
+  --breakpoint-stroke: var(--blue-40);
+
+  --breakpoint-disabled-fill: var(--blue-55);
+  --breakpoint-disabled-stroke: var(--blue-55);
+}
+
+.theme-light, .theme-dark {
+  --logpoint-fill: var(--theme-graphs-purple);
+  --logpoint-stroke: var(--purple-60);
+  --breakpoint-condition-fill: var(--theme-graphs-yellow);
+  --breakpoint-condition-stroke: var(--theme-graphs-orange);
+  --breakpoint-inactive-opacity: 0.3;
+  --breakpoint-disabled-opacity: 0.6;
+}
+
+/* Standard gutter breakpoints */
+.editor-wrapper .breakpoints {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.new-breakpoint .CodeMirror-linenumber {
+  pointer-events: none;
+}
+
+:not(.empty-line):not(.new-breakpoint)
+  > .CodeMirror-gutter-wrapper:hover
+  > .CodeMirror-linenumber::after {
+  content: "";
+  position: absolute;
+  /* paint below the number */
+  z-index: -1;
+  top: 0;
+  left: 0;
+  right: -7px;
+  bottom: 0;
+  height: 15px;
+  background-color: var(--gutter-hover-background-color);
+  mask: url("resource://devtools/client/debugger/new/images/breakpoint.svg") no-repeat;
+  mask-size: auto 15px;
+  mask-position: right;
+}
+
+.editor.new-breakpoint svg {
+  fill: var(--breakpoint-fill);
+  stroke: var(--breakpoint-stroke);
+  width: 60px;
+  height: 15px;
+  position: absolute;
+  top: 0px;
+  right: -4px;
+}
+
+.editor .breakpoint {
+  position: absolute;
+  right: -2px;
+}
+
+.editor.new-breakpoint.folding-enabled svg {
+  right: -16px;
+}
+
+.new-breakpoint.has-condition .CodeMirror-gutter-wrapper svg {
+  fill: var(--breakpoint-condition-fill);
+  stroke: var(--breakpoint-condition-stroke);
+}
+
+.new-breakpoint.has-log .CodeMirror-gutter-wrapper svg {
+  fill: var(--logpoint-fill);
+  stroke: var(--logpoint-stroke);
+}
+
+.editor.new-breakpoint.breakpoint-disabled svg {
+  fill-opacity: var(--breakpoint-disabled-opacity);
+  stroke-opacity: var(--breakpoint-disabled-opacity);
+}
+
+/* Columnn breakpoints */
+.column-breakpoint {
+  display: inline;
+  padding-inline-start: 1px;
+  padding-inline-end: 1px;
+}
+
+.column-breakpoint:hover {
+  background-color: transparent;
+}
+
+.column-breakpoint svg {
+  display: inline-block;
+  cursor: pointer;
+  height: 13px;
+  width: 11px;
+  vertical-align: top;
+  fill: var(--breakpoint-fill);
+  stroke: var(--breakpoint-stroke);
+  fill-opacity: var(--breakpoint-inactive-opacity);
+  stroke-opacity: var(--breakpoint-inactive-opacity);
+}
+
+.column-breakpoint.active svg {
+  fill: var(--breakpoint-fill);
+  stroke: var(--breakpoint-stroke);
+  fill-opacity: 1;
+  stroke-opacity: 1;
+}
+
+.column-breakpoint.disabled svg {
+  fill-opacity: var(--breakpoint-disabled-opacity);
+  stroke-opacity: var(--breakpoint-disabled-opacity);
+}
+
+.column-breakpoint.has-log.disabled svg {
+  fill-opacity: 0.5;
+  stroke-opacity: 0.5;
+}
+
+.column-breakpoint.disabled:not(.has-condition):not(.has-log) svg {
+  fill: var(--breakpoint-disabled-fill);
+  stroke: var(--breakpoint-disabled-stroke);
+}
+
+.column-breakpoint.has-condition svg {
+  fill: var(--breakpoint-condition-fill);
+  stroke: var(--breakpoint-condition-stroke);
+}
+
+.column-breakpoint.has-log svg {
+  fill: var(--logpoint-fill);
+  stroke: var(--logpoint-stroke);
+}
+
+.img.column-marker {
+  background-image: url("resource://devtools/client/debugger/new/images/column-marker.svg");
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -4009,38 +4026,23 @@ html[dir="rtl"] .event-listeners-content .arrow.expanded {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.scopes-content .toggle-map-scopes {
-  border-bottom: 1px solid var(--theme-splitter-color);
-  margin-bottom: 3px;
-  margin-left: 10px;
-  padding: 0.5em 0;
-}
+ .secondary-panes .map-scopes-header {
+  padding-inline-end: 3px;
+ }
 
-.scopes-content .toggle-map-scopes input {
-  padding-inline-start: 2px;
-  margin-inline-start: 0;
-  vertical-align: text-bottom;
-}
-
-.scopes-content .toggle-map-scopes-label {
-  padding-inline-start: 2px;
-  padding-inline-end: 8px;
-  cursor: default;
-  flex-grow: 1;
-  -moz-user-select: none;
+.secondary-panes .header-buttons .img.shortcuts {
+  width: 14px;
+  height: 14px;
+  /* Better vertical centering of the icon */
+  margin-top: -2px;
 }
 
 .scopes-content .toggle-map-scopes a.mdn {
-  padding-inline-end: 10px;
+  padding-inline-start: 3px;
 }
 
 .scopes-content .toggle-map-scopes .img.shortcuts {
   background: var(--theme-comment);
-}
-
-.scopes-content .toggle-map-scopes {
-  display: flex;
-  align-items: center;
 }
 
 .object-node.default-property {

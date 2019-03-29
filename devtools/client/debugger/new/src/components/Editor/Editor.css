@@ -54,52 +54,12 @@ html[dir="rtl"] .editor-mount {
   direction: ltr;
 }
 
-.theme-light {
-  --gutter-hover-background-color: #dde1e4;
-  --breakpoint-fill: var(--blue-50);
-  --breakpoint-stroke: var(--blue-60);
-}
-
-.theme-dark {
-  --gutter-hover-background-color: #414141;
-  --breakpoint-fill: var(--blue-55);
-  --breakpoint-stroke: var(--blue-40);
-}
-
 .theme-light .cm-s-mozilla .empty-line .CodeMirror-linenumber {
   color: var(--grey-40);
 }
 
 .theme-dark .cm-s-mozilla .empty-line .CodeMirror-linenumber {
   color: var(--grey-50);
-}
-
-.new-breakpoint .CodeMirror-linenumber {
-  pointer-events: none;
-}
-
-:not(.empty-line):not(.new-breakpoint)
-  > .CodeMirror-gutter-wrapper:hover
-  > .CodeMirror-linenumber::after {
-  content: "";
-  position: absolute;
-  /* paint below the number */
-  z-index: -1;
-  top: 0;
-  left: 0;
-  right: -7px;
-  bottom: 0;
-  height: 15px;
-  background-color: var(--gutter-hover-background-color);
-  mask: url(/images/breakpoint.svg) no-repeat;
-  mask-size: auto 15px;
-  mask-position: right;
-}
-
-.editor-wrapper .breakpoints {
-  position: absolute;
-  top: 0;
-  left: 0;
 }
 
 .function-search {
@@ -117,50 +77,6 @@ html[dir="rtl"] .editor-mount {
 
 .editor-wrapper .highlight-lines {
   background: var(--theme-selection-background-hover);
-}
-
-.editor.new-breakpoint svg {
-  fill: var(--breakpoint-fill);
-  stroke: var(--breakpoint-stroke);
-  width: 60px;
-  height: 15px;
-  position: absolute;
-  top: 0px;
-  right: -4px;
-}
-
-.inline-bp {
-  background-color: #9ddfff;
-  width: 20px;
-  padding: 0px 5px;
-  margin: 0px 4px;
-  border-radius: 5px;
-  border-color: blue;
-  border: 1px solid #00b6ff;
-}
-
-.editor .breakpoint {
-  position: absolute;
-  right: -2px;
-}
-
-.editor.new-breakpoint.folding-enabled svg {
-  right: -16px;
-}
-
-.new-breakpoint.has-condition .CodeMirror-gutter-wrapper svg {
-  fill: var(--theme-graphs-yellow);
-  stroke: var(--theme-graphs-orange);
-}
-
-.new-breakpoint.has-log .CodeMirror-gutter-wrapper svg {
-  fill: var(--theme-graphs-purple);
-  stroke: var(--purple-60);
-}
-
-.editor.new-breakpoint.breakpoint-disabled svg {
-  fill-opacity: 0.7;
-  stroke-opacity: 0.7;
 }
 
 .CodeMirror {
@@ -198,7 +114,7 @@ html[dir="rtl"] .editor-mount {
 }
 
 .debug-expression,
-.new-debug-line .column-breakpoint {
+.debug-expression ~ .CodeMirror-widget {
   background-color: var(--debug-expression-background);
 }
 
