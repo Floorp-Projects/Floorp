@@ -195,37 +195,10 @@
  */
 
 class JSFlatString;
-class JSLinearString;
 
 namespace js {
 
-class AccessorShape;
-class ArrayObject;
-class ArgumentsObject;
-class ArrayBufferObjectMaybeShared;
-class ArrayBufferObject;
-class ArrayBufferViewObject;
-class SharedArrayBufferObject;
-class BaseShape;
-class DebugEnvironmentProxy;
-class GlobalObject;
-class LazyScript;
-class ModuleObject;
-class ModuleEnvironmentObject;
-class ModuleNamespaceObject;
 class NativeObject;
-class PlainObject;
-class PropertyName;
-class SavedFrame;
-class EnvironmentObject;
-class ScriptSourceObject;
-class Shape;
-class UnownedBaseShape;
-class ObjectGroup;
-
-namespace jit {
-class JitCode;
-}  // namespace jit
 
 #ifdef DEBUG
 
@@ -399,7 +372,10 @@ class WriteBarrieredBase
  * PreBarriered only automatically handles pre-barriers. Post-barriers must be
  * manually implemented when using this class. GCPtr and HeapPtr should be used
  * in all cases that do not require explicit low-level control of moving
- * behavior, e.g. for HashMap keys.
+ * behavior.
+ *
+ * This class is useful for example for HashMap keys where automatically
+ * updating a moved nursery pointer would break the hash table.
  */
 template <class T>
 class PreBarriered : public WriteBarrieredBase<T> {
@@ -911,9 +887,12 @@ struct DefaultHasher<js::ReadBarriered<T>> : js::ReadBarrieredHasher<T> {};
 
 namespace js {
 
+
 class ArrayObject;
-class ArrayBufferObject;
+class DebugEnvironmentProxy;
 class GlobalObject;
+class ObjectGroup;
+class PropertyName;
 class Scope;
 class ScriptSourceObject;
 class Shape;
@@ -921,63 +900,49 @@ class BaseShape;
 class UnownedBaseShape;
 class WasmInstanceObject;
 class WasmTableObject;
+
 namespace jit {
 class JitCode;
 }  // namespace jit
 
-typedef PreBarriered<JSObject*> PreBarrieredObject;
-typedef PreBarriered<JSScript*> PreBarrieredScript;
-typedef PreBarriered<jit::JitCode*> PreBarrieredJitCode;
-typedef PreBarriered<JSString*> PreBarrieredString;
-typedef PreBarriered<JSAtom*> PreBarrieredAtom;
+using PreBarrieredObject = PreBarriered<JSObject*>;
+using PreBarrieredValue = PreBarriered<Value>;
 
-typedef GCPtr<NativeObject*> GCPtrNativeObject;
-typedef GCPtr<ArrayObject*> GCPtrArrayObject;
-typedef GCPtr<ArrayBufferObjectMaybeShared*> GCPtrArrayBufferObjectMaybeShared;
-typedef GCPtr<ArrayBufferObject*> GCPtrArrayBufferObject;
-typedef GCPtr<BaseShape*> GCPtrBaseShape;
-typedef GCPtr<JSAtom*> GCPtrAtom;
-typedef GCPtr<JSFlatString*> GCPtrFlatString;
-typedef GCPtr<JSFunction*> GCPtrFunction;
-typedef GCPtr<JSLinearString*> GCPtrLinearString;
-typedef GCPtr<JSObject*> GCPtrObject;
-typedef GCPtr<JSScript*> GCPtrScript;
-typedef GCPtr<JSString*> GCPtrString;
-typedef GCPtr<ModuleObject*> GCPtrModuleObject;
-typedef GCPtr<ModuleEnvironmentObject*> GCPtrModuleEnvironmentObject;
-typedef GCPtr<ModuleNamespaceObject*> GCPtrModuleNamespaceObject;
-typedef GCPtr<PlainObject*> GCPtrPlainObject;
-typedef GCPtr<PropertyName*> GCPtrPropertyName;
-typedef GCPtr<Shape*> GCPtrShape;
-typedef GCPtr<UnownedBaseShape*> GCPtrUnownedBaseShape;
-typedef GCPtr<jit::JitCode*> GCPtrJitCode;
-typedef GCPtr<ObjectGroup*> GCPtrObjectGroup;
-typedef GCPtr<Scope*> GCPtrScope;
+using GCPtrNativeObject = GCPtr<NativeObject*>;
+using GCPtrArrayObject = GCPtr<ArrayObject*>;
+using GCPtrBaseShape = GCPtr<BaseShape*>;
+using GCPtrAtom = GCPtr<JSAtom*>;
+using GCPtrFlatString = GCPtr<JSFlatString*>;
+using GCPtrFunction = GCPtr<JSFunction*>;
+using GCPtrObject = GCPtr<JSObject*>;
+using GCPtrScript = GCPtr<JSScript*>;
+using GCPtrString = GCPtr<JSString*>;
+using GCPtrShape = GCPtr<Shape*>;
+using GCPtrUnownedBaseShape = GCPtr<UnownedBaseShape*>;
+using GCPtrObjectGroup = GCPtr<ObjectGroup*>;
+using GCPtrScope = GCPtr<Scope*>;
+using GCPtrValue = GCPtr<Value>;
+using GCPtrId = GCPtr<jsid>;
 
-typedef PreBarriered<Value> PreBarrieredValue;
-typedef GCPtr<Value> GCPtrValue;
+using ImmutablePropertyNamePtr = ImmutableTenuredPtr<PropertyName*>;
+using ImmutableSymbolPtr = ImmutableTenuredPtr<JS::Symbol*>;
 
-typedef PreBarriered<jsid> PreBarrieredId;
-typedef GCPtr<jsid> GCPtrId;
+using ReadBarrieredDebugEnvironmentProxy =
+    ReadBarriered<DebugEnvironmentProxy*>;
+using ReadBarrieredGlobalObject = ReadBarriered<GlobalObject*>;
+using ReadBarrieredObject = ReadBarriered<JSObject*>;
+using ReadBarrieredScript = ReadBarriered<JSScript*>;
+using ReadBarrieredScriptSourceObject = ReadBarriered<ScriptSourceObject*>;
+using ReadBarrieredShape = ReadBarriered<Shape*>;
+using ReadBarrieredJitCode = ReadBarriered<jit::JitCode*>;
+using ReadBarrieredObjectGroup = ReadBarriered<ObjectGroup*>;
+using ReadBarrieredSymbol = ReadBarriered<JS::Symbol*>;
+using ReadBarrieredWasmInstanceObject = ReadBarriered<WasmInstanceObject*>;
+using ReadBarrieredWasmTableObject = ReadBarriered<WasmTableObject*>;
 
-typedef ImmutableTenuredPtr<PropertyName*> ImmutablePropertyNamePtr;
-typedef ImmutableTenuredPtr<JS::Symbol*> ImmutableSymbolPtr;
-
-typedef ReadBarriered<DebugEnvironmentProxy*>
-    ReadBarrieredDebugEnvironmentProxy;
-typedef ReadBarriered<GlobalObject*> ReadBarrieredGlobalObject;
-typedef ReadBarriered<JSObject*> ReadBarrieredObject;
-typedef ReadBarriered<JSFunction*> ReadBarrieredFunction;
-typedef ReadBarriered<JSScript*> ReadBarrieredScript;
-typedef ReadBarriered<ScriptSourceObject*> ReadBarrieredScriptSourceObject;
-typedef ReadBarriered<Shape*> ReadBarrieredShape;
-typedef ReadBarriered<jit::JitCode*> ReadBarrieredJitCode;
-typedef ReadBarriered<ObjectGroup*> ReadBarrieredObjectGroup;
-typedef ReadBarriered<JS::Symbol*> ReadBarrieredSymbol;
-typedef ReadBarriered<WasmInstanceObject*> ReadBarrieredWasmInstanceObject;
-typedef ReadBarriered<WasmTableObject*> ReadBarrieredWasmTableObject;
-
-typedef ReadBarriered<Value> ReadBarrieredValue;
+using HeapPtrJitCode = HeapPtr<jit::JitCode*>;
+using HeapPtrRegExpShared = HeapPtr<RegExpShared*>;
+using HeapPtrValue = HeapPtr<Value>;
 
 namespace detail {
 
