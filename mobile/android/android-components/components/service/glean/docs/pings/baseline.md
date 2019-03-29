@@ -53,7 +53,10 @@ If you were trying to select a String based metric such as `os`, then you would 
   "metrics": {
     "string": {
       "glean.baseline.locale": "en-US",
-      "glean.baseline.duration": 52
+      "glean.baseline.duration": {
+        "value": 52,
+        "time_unit": "second"
+      }
     }
   }
 }
