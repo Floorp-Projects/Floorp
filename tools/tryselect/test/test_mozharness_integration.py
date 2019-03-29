@@ -47,7 +47,10 @@ KNOWN_FAILURES = (
     'jittest1',
     'jittest2',
     'jsreftest',
+    'mochitest-devtools-webreplay',
+    'reftest-gpu',
     'reftest-no-accel',
+    'reftest-qr',
     'valgrind-plain',
     'xpcshell-addons',
 )
@@ -58,26 +61,32 @@ MOZHARNESS_TEST_PATHS (the mechanism |mach try fuzzy <path>| uses.
 
 def generate_mozharness_suite_names():
     configdir = os.path.join(build.topsrcdir, 'testing', 'mozharness', 'configs', 'unittests')
-    files = imp.find_module('linux_unittest', [configdir])
-    mod = imp.load_module('config.linux_unittest', *files)
-    config = mod.config
+    seen = set()
 
-    for category in sorted(config['suite_definitions']):
-        if category == 'mozmill':
-            continue
+    for platform in ('linux', 'mac', 'win'):
+        files = imp.find_module('{}_unittest'.format(platform), [configdir])
+        mod = imp.load_module('config.{}_unittest'.format(platform), *files)
+        config = mod.config
 
-        suites = config['all_{}_suites'.format(category)]
+        for category in sorted(config['suite_definitions']):
+            if category == 'mozmill':
+                continue
 
-        for suite in sorted(suites):
-            result = category, suite
+            for suite in sorted(config['all_{}_suites'.format(category)]):
+                result = category, suite
 
-            if suite in KNOWN_FAILURES:
-                result = pytest.param(result, marks=pytest.mark.xfail)
+                if result in seen:
+                    continue
 
-            yield result
+                seen.add(result)
+
+                if suite in KNOWN_FAILURES:
+                    result = pytest.param(result, marks=pytest.mark.xfail)
+
+                yield result
 
 
-@pytest.mark.parametrize('mozharness_suite', list(generate_mozharness_suite_names()),
+@pytest.mark.parametrize('mozharness_suite', generate_mozharness_suite_names(),
                          ids=lambda val: val[1])
 def test_mozharness_suites(get_mozharness_test_paths, all_suites, mozharness_suite):
     """An integration test to make sure the suites returned by
