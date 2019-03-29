@@ -40,7 +40,9 @@ class U2FTransaction {
 
  public:
   explicit U2FTransaction(const U2FCallback&& aCallback)
-      : mCallback(std::move(aCallback)), mId(NextId()) {
+      : mCallback(std::move(aCallback)),
+        mId(NextId()),
+        mVisibilityChanged(false) {
     MOZ_ASSERT(mId > 0);
   }
 
@@ -65,6 +67,10 @@ class U2FTransaction {
 
   // Unique transaction id.
   uint64_t mId;
+
+  // Whether or not visibility has changed for the window during this
+  // transaction
+  bool mVisibilityChanged;
 
  private:
   // Generates a unique id for new transactions. This doesn't have to be unique
@@ -124,7 +130,9 @@ class U2F final : public WebAuthnManagerBase, public nsWrapperCache {
  protected:
   // Cancels the current transaction (by sending a Cancel message to the
   // parent) and rejects it by calling RejectTransaction().
-  MOZ_CAN_RUN_SCRIPT void CancelTransaction(const nsresult& aError) override;
+  MOZ_CAN_RUN_SCRIPT void CancelTransaction(const nsresult& aError);
+  // Upon a visibility change, makes note of it in the current transaction.
+  MOZ_CAN_RUN_SCRIPT void HandleVisibilityChange() override;
 
  private:
   MOZ_CAN_RUN_SCRIPT ~U2F();
