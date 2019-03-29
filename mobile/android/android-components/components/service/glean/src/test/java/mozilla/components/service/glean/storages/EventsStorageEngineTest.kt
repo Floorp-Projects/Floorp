@@ -225,7 +225,7 @@ class EventsStorageEngineTest {
         assertNull("The engine must report 'null' on empty stores",
             EventsStorageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = false))
         // Check that this serializes to the expected JSON format.
-        assertEquals("[[0,\"telemetry\",\"test_event_clear\"]]",
+        assertEquals("[{\"timestamp\":0,\"category\":\"telemetry\",\"name\":\"test_event_clear\"}]",
             snapshot.toString())
     }
 
@@ -252,7 +252,7 @@ class EventsStorageEngineTest {
         assertNull("The engine must report 'null' on empty stores",
             EventsStorageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = false))
         // Check that this serializes to the expected JSON format.
-        assertEquals("[[0,\"telemetry\",\"test_event_clear\",{\"someExtra\":\"field\"}]]",
+        assertEquals("[{\"timestamp\":0,\"category\":\"telemetry\",\"name\":\"test_event_clear\",\"extra\":{\"someExtra\":\"field\"}}]",
             snapshot.toString())
     }
 
@@ -297,7 +297,7 @@ class EventsStorageEngineTest {
             assertEquals(500, eventsArray.length())
 
             for (i in 0..499) {
-                assertEquals("$i", eventsArray.getJSONArray(i).getJSONObject(3)["test_event_number"])
+                assertEquals("$i", eventsArray.getJSONObject(i).getJSONObject("extra")["test_event_number"])
             }
         } finally {
             server.shutdown()
@@ -457,7 +457,7 @@ class EventsStorageEngineTest {
         assertNotNull(pingJson.opt("events"))
         val events = pingJson.getJSONArray("events")
         assertEquals(2, events.length())
-        assertEquals("bar", events.getJSONArray(0)!!.getJSONObject(3)!!.getString("key1"))
-        assertEquals("baz", events.getJSONArray(1)!!.getJSONObject(3)!!.getString("key1"))
+        assertEquals("bar", events.getJSONObject(0)!!.getJSONObject("extra")!!.getString("key1"))
+        assertEquals("baz", events.getJSONObject(1)!!.getJSONObject("extra")!!.getString("key1"))
     }
 }

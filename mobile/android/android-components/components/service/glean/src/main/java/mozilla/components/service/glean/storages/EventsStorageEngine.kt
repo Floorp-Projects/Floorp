@@ -70,11 +70,10 @@ internal object EventsStorageEngine : StorageEngine {
     internal const val MAX_LENGTH_EXTRA_KEY_VALUE = 100
 
     // The position of the fields within the JSON payload for each event
-    internal const val TIMESTAMP_FIELD = 0
-    internal const val CATEGORY_FIELD = 1
-    internal const val NAME_FIELD = 2
-    internal const val EXTRA_FIELD = 3
-    internal const val N_FIELDS = 4
+    internal const val TIMESTAMP_FIELD = "timestamp"
+    internal const val CATEGORY_FIELD = "category"
+    internal const val NAME_FIELD = "name"
+    internal const val EXTRA_FIELD = "extra"
 
     private val logger = Logger("glean/EventsStorageEngine")
 
@@ -114,7 +113,7 @@ internal object EventsStorageEngine : StorageEngine {
                 val storeData = eventStores.getOrPut(file.name) { mutableListOf() }
                 file.forEachLine { line ->
                     try {
-                        val jsonContent = JSONArray(line)
+                        val jsonContent = JSONObject(line)
                         val event = deserializeEvent(jsonContent)
                         storeData.add(event)
                     } catch (e: JSONException) {
@@ -261,19 +260,17 @@ internal object EventsStorageEngine : StorageEngine {
     /**
      * Serializes an event to its JSON representation.
      *
-     * @param category Event category
-     * @param name Event name
-     * @param msSinceStart The ms since the process started
-     * @param extra A `Map<String, String>` of extra values
-     * @return JSONArray representing the event
+     * @param event Event data to serialize
+     * @return [JSONObject] representing the event
      */
-    private fun serializeEvent(event: RecordedEventData): JSONArray {
-        val eventData = JSONArray()
-        eventData.put(event.timestamp)
-        eventData.put(event.category)
-        eventData.put(event.name)
+    private fun serializeEvent(event: RecordedEventData): JSONObject {
+        val eventData = JSONObject(mapOf(
+            TIMESTAMP_FIELD to event.timestamp,
+            CATEGORY_FIELD to event.category,
+            NAME_FIELD to event.name
+        ))
         if (event.extra != null) {
-            eventData.put(JSONObject(event.extra))
+            eventData.put(EXTRA_FIELD, JSONObject(event.extra))
         }
         return eventData
     }
@@ -281,14 +278,10 @@ internal object EventsStorageEngine : StorageEngine {
     /**
      * Deserializes an event in JSON into a RecordedEventData object.
      *
-     * @param jsonContent The JSONArray containing the data for the event.
-     * @return event data object
+     * @param jsonContent The JSONObject containing the data for the event.
+     * @return [RecordedEventData] representing the event data
      */
-    private fun deserializeEvent(jsonContent: JSONArray): RecordedEventData {
-        if (jsonContent.length() != N_FIELDS) {
-            throw JSONException("Invalid event")
-        }
-
+    private fun deserializeEvent(jsonContent: JSONObject): RecordedEventData {
         val extra: Map<String, String>? = jsonContent.optJSONObject(EXTRA_FIELD)?.let {
             val extraValues: MutableMap<String, String> = mutableMapOf()
             val names = it.names()

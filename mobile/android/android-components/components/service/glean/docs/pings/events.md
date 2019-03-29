@@ -30,15 +30,40 @@ At the top-level, this ping contains the following keys:
 - `events`: An array of all of the events that have occurred since the last time
   the `events` ping was sent.
 
-Each entry in the `events` array is an array with the following items:
+Each entry in the `events` array is an object with the following properties:
 
-- [0]: `timestamp`: The milliseconds relative to the first event in the ping.
+- `"timestamp"`: The milliseconds relative to the first event in the ping.
 
-- [1]: `category`: The category of the event, as defined by its location in the
+- `"category"`: The category of the event, as defined by its location in the
   `metrics.yaml` file.
 
-- [2]: `name`: The name of the event, as definded in the `metrics.yaml` file.
+- `"name"`: The name of the event, as definded in the `metrics.yaml` file.
 
-- [3]: `extra` (optional): A mapping of strings to strings providing additional
+- `"extra"` (optional): A mapping of strings to strings providing additional
   data about the event. The keys are restricted to 40 characters and values in
   this map will never exceed 100 characters.
+  
+### Example event JSON
+  
+```json
+{
+  ...,
+  
+  "events": [
+    {
+      "timestamp": 123456789,
+      "category": "examples",
+      "name": "event_example",
+      "extra": {
+        "metadata1": "extra", 
+        "metadata2": "more_extra"
+      }
+    },
+    {
+      "timestamp": 123456791,
+      "category": "examples",
+      "name": "event_example"
+    }
+  ]
+}
+```
