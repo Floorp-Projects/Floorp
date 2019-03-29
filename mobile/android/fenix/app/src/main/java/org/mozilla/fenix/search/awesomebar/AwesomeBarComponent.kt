@@ -12,27 +12,38 @@ import org.mozilla.fenix.mvi.Reducer
 import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.ViewState
 
-data class AwesomeBarState(val query: String) : ViewState
+data class AwesomeBarState(
+    val query: String,
+    val showShortcutEnginePicker: Boolean,
+    val suggestionEngine: SearchEngine? = null
+) : ViewState
 
 sealed class AwesomeBarAction : Action {
     data class URLTapped(val url: String) : AwesomeBarAction()
-    data class SearchTermsTapped(val searchTerms: String, val engine: SearchEngine?) : AwesomeBarAction()
+    data class SearchTermsTapped(val searchTerms: String, val engine: SearchEngine? = null) : AwesomeBarAction()
+    data class SearchShortcutEngineSelected(val engine: SearchEngine) : AwesomeBarAction()
 }
 
 sealed class AwesomeBarChange : Change {
+    data class SearchShortcutEngineSelected(val engine: SearchEngine) : AwesomeBarChange()
+    data class SearchShortcutEnginePicker(val show: Boolean) : AwesomeBarChange()
     data class UpdateQuery(val query: String) : AwesomeBarChange()
 }
 
 class AwesomeBarComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
-    override var initialState: AwesomeBarState = AwesomeBarState("")
+    override var initialState: AwesomeBarState = AwesomeBarState("", false)
 ) : UIComponent<AwesomeBarState, AwesomeBarAction, AwesomeBarChange>(
     bus.getManagedEmitter(AwesomeBarAction::class.java),
     bus.getSafeManagedObservable(AwesomeBarChange::class.java)
 ) {
     override val reducer: Reducer<AwesomeBarState, AwesomeBarChange> = { state, change ->
         when (change) {
+            is AwesomeBarChange.SearchShortcutEngineSelected ->
+                state.copy(suggestionEngine = change.engine, showShortcutEnginePicker = false)
+            is AwesomeBarChange.SearchShortcutEnginePicker ->
+                state.copy(showShortcutEnginePicker = change.show)
             is AwesomeBarChange.UpdateQuery -> state.copy(query = change.query)
         }
     }

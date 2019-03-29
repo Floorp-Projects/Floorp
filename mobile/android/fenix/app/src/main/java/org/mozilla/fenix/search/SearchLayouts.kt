@@ -63,10 +63,15 @@ internal fun SearchFragment.setOutOfExperimentConstraints(layout: ConstraintLayo
                 BOTTOM to TOP of UNSET
             )
         }
+        search_with_shortcuts {
+            connect(
+                TOP to BOTTOM of toolbar_wrapper
+            )
+        }
         awesomeBar {
             connect(
                 TOP to TOP of UNSET,
-                TOP to BOTTOM of toolbar_wrapper,
+                TOP to BOTTOM of search_with_shortcuts,
                 BOTTOM to TOP of pill_wrapper
             )
         }

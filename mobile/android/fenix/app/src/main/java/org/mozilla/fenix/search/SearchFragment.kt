@@ -5,7 +5,6 @@
 package org.mozilla.fenix.search
 
 import android.content.Context
-import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,13 +16,13 @@ import kotlinx.android.synthetic.main.fragment_search.view.*
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
-import org.jetbrains.anko.backgroundDrawable
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.SearchAction
+import org.mozilla.fenix.components.toolbar.SearchChange
 import org.mozilla.fenix.components.toolbar.SearchState
 import org.mozilla.fenix.components.toolbar.ToolbarComponent
 import org.mozilla.fenix.components.toolbar.ToolbarUIView
@@ -35,6 +34,7 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.search.awesomebar.AwesomeBarAction
 import org.mozilla.fenix.search.awesomebar.AwesomeBarChange
 import org.mozilla.fenix.search.awesomebar.AwesomeBarComponent
+import org.mozilla.fenix.search.awesomebar.AwesomeBarUIView
 
 class SearchFragment : Fragment() {
     private lateinit var toolbarComponent: ToolbarComponent
@@ -65,7 +65,8 @@ class SearchFragment : Fragment() {
             ActionBusFactory.get(this),
             sessionId,
             isPrivate,
-            SearchState(url, isEditing = true)
+            SearchState(url, isEditing = true),
+            view.search_engine_icon
         )
 
         awesomeBarComponent = AwesomeBarComponent(view.search_layout, ActionBusFactory.get(this))
@@ -82,15 +83,11 @@ class SearchFragment : Fragment() {
 
         view.toolbar_wrapper.clipToOutline = false
 
-        val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(
-            requireContext()
-        ).let {
-            BitmapDrawable(resources, it.icon)
+        search_shortcuts_button.setOnClickListener {
+            getManagedEmitter<AwesomeBarChange>().onNext(AwesomeBarChange
+                .SearchShortcutEnginePicker(!(
+                        (awesomeBarComponent.uiView as AwesomeBarUIView).state?.showShortcutEnginePicker ?: true)))
         }
-
-        val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
-        searchIcon.setBounds(0, 0, iconSize, iconSize)
-        search_engine_icon.backgroundDrawable = searchIcon
     }
 
     override fun onResume() {
@@ -100,13 +97,17 @@ class SearchFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
+        subscribeToSearchActions()
+        subscribeToAwesomeBarActions()
+    }
 
+    private fun subscribeToSearchActions() {
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
                 when (it) {
                     is SearchAction.UrlCommitted -> {
                         if (it.url.isNotBlank()) {
-                            (activity as HomeActivity).openToBrowserAndLoad(it.url, it.session,
+                            (activity as HomeActivity).openToBrowserAndLoad(it.url, it.session, it.engine,
                                 BrowserDirection.FromSearch)
 
                             val event = if (it.url.isUrl()) {
@@ -126,7 +127,9 @@ class SearchFragment : Fragment() {
                     }
                 }
             }
+    }
 
+    private fun subscribeToAwesomeBarActions() {
         getAutoDisposeObservable<AwesomeBarAction>()
             .subscribe {
                 when (it) {
@@ -140,6 +143,12 @@ class SearchFragment : Fragment() {
                             .invoke(it.searchTerms, it.engine)
                         (activity as HomeActivity).openToBrowser(sessionId, BrowserDirection.FromSearch)
                         requireComponents.analytics.metrics.track(Event.PerformedSearch(true))
+                    }
+                    is AwesomeBarAction.SearchShortcutEngineSelected -> {
+                        getManagedEmitter<AwesomeBarChange>()
+                            .onNext(AwesomeBarChange.SearchShortcutEngineSelected(it.engine))
+                        getManagedEmitter<SearchChange>()
+                            .onNext(SearchChange.SearchShortcutEngineSelected(it.engine))
                     }
                 }
             }

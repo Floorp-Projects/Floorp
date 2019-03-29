@@ -48,8 +48,10 @@
     <color name="private_browsing_top_gradient">#242251</color>
     <color name="private_browsing_bottom_gradient">#393862</color>
 
-    <color name="searchPillBackground">#FAFAFC</color>
-    <color name="searchPillPrimary">#202340</color>
+    <color name="search_pill_background">#FAFAFC</color>
+    <color name="search_pill_selected_background">#2f2c61</color>
+    <color name="search_pill_private_selected_background">#080639</color>
+    <color name="search_pill_primary">#202340</color>
 
     <color name="library_sessions_icon_background">#B9F0FD</color>
     <color name="library_sessions_icon">#0E214A</color>

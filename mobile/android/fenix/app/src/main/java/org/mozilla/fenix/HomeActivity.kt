@@ -16,6 +16,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
+import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.intent.IntentProcessor
@@ -148,9 +149,14 @@ open class HomeActivity : AppCompatActivity() {
         openToBrowser(SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID), BrowserDirection.FromGlobal)
     }
 
-    fun openToBrowserAndLoad(text: String, sessionId: String? = null, from: BrowserDirection) {
+    fun openToBrowserAndLoad(
+        text: String,
+        sessionId: String? = null,
+        engine: SearchEngine? = null,
+        from: BrowserDirection
+    ) {
         openToBrowser(sessionId, from)
-        load(text, sessionId)
+        load(text, sessionId, engine)
     }
 
     fun openToBrowser(sessionId: String?, from: BrowserDirection) {
@@ -165,7 +171,7 @@ open class HomeActivity : AppCompatActivity() {
         navHost.navController.navigate(directions)
     }
 
-    private fun load(text: String, sessionId: String?) {
+    private fun load(text: String, sessionId: String?, engine: SearchEngine?) {
         val isPrivate = this.browsingModeManager.isPrivate
 
         val loadUrlUseCase = if (sessionId == null) {
@@ -179,8 +185,8 @@ open class HomeActivity : AppCompatActivity() {
         val searchUseCase: (String) -> Unit = { searchTerms ->
             if (sessionId == null) {
                 components.useCases.searchUseCases.newTabSearch
-                    .invoke(searchTerms, Session.Source.USER_ENTERED, true, isPrivate)
-            } else components.useCases.searchUseCases.defaultSearch.invoke(searchTerms)
+                    .invoke(searchTerms, Session.Source.USER_ENTERED, true, isPrivate, searchEngine = engine)
+            } else components.useCases.searchUseCases.defaultSearch.invoke(searchTerms, engine)
         }
 
         if (text.isUrl()) {

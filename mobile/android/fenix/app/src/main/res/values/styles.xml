@@ -44,6 +44,7 @@
         <item name="searchBackground">@color/off_white</item>
         <item name="searchShortcutsTextColor">@color/awesome_bar_title_color</item>
         <item name="pillWrapperBackground">@color/off_white</item>
+        <item name="pillWrapperSelectedBackground">@color/search_pill_selected_background</item>
         <item name="awesomeBarTitleTextColor">@color/awesome_bar_title_color</item>
         <item name="awesomeBarDescriptionTextColor">@color/awesome_bar_description_color</item>
         <item name="suggestionBackground">@color/photonBlue50</item>
@@ -103,6 +104,7 @@
         <item name="searchBackground">@color/private_browsing_bottom_gradient</item>
         <item name="searchShortcutsTextColor">@color/off_white</item>
         <item name="pillWrapperBackground">@color/private_browsing_top_gradient</item>
+        <item name="pillWrapperSelectedBackground">@color/off_white</item>
         <item name="awesomeBarTitleTextColor">@color/off_white</item>
         <item name="awesomeBarDescriptionTextColor">@color/photonGrey40</item>
         <item name="suggestionBackground">@color/private_browsing_primary</item>
@@ -137,7 +139,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/searchPillPrimary</item>
+        <item name="android:textColor">@color/search_pill_primary</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:singleLine">true</item>

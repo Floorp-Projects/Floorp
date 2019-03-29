@@ -3,10 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/searchPillBackground"/>
+    <solid android:color="?attr/pillWrapperSelectedBackground"/>
 
     <stroke android:width="1dp"
-            android:color="@color/searchPillPrimary"/>
+            android:color="?attr/pillWrapperSelectedBackground"/>
 
     <corners android:radius="16dp"/>
 </shape>

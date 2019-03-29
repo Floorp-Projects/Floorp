@@ -40,7 +40,24 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@id/search_engine_icon"
             app:layout_constraintEnd_toEndOf="parent"/>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+            android:id="@+id/search_with_shortcuts"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:visibility="gone"
+            android:fontFamily="Inter UI"
+            android:textAllCaps="true"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:textColor="?attr/awesomeBarDescriptionTextColor"
+            android:letterSpacing="0.15"
+            android:text="@string/search_shortcuts_search_with"
+            app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"
+            app:layout_constraintStart_toStartOf="@id/toolbar_wrapper"/>
 
     <LinearLayout
         android:id="@+id/pill_wrapper"
@@ -64,16 +81,14 @@
             android:drawableStart="@drawable/ic_qr"
             android:layout_marginEnd="8dp"
             android:textColor="?attr/searchShortcutsTextColor"
-            android:background="?attr/pillWrapperBackground"
-            android:drawableTint="?attr/searchShortcutsTextColor"/>
+            android:background="?attr/pillWrapperBackground"/>
 
         <Button
             style="@style/search_pill"
             android:id="@+id/search_shortcuts_button"
             android:text="@string/search_shortcuts_button"
-            android:drawableStart="@drawable/ic_shortcuts"
+            android:drawableStart="@drawable/ic_search"
             android:textColor="?attr/searchShortcutsTextColor"
-            android:background="?attr/pillWrapperBackground"
-            android:drawableTint="?attr/searchShortcutsTextColor"/>
+            android:background="?attr/pillWrapperBackground"/>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

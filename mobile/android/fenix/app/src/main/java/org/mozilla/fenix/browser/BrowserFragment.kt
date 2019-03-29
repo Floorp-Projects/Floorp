@@ -21,6 +21,7 @@ import androidx.navigation.Navigation
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
+import kotlinx.android.synthetic.main.fragment_search.*
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
@@ -90,7 +91,8 @@ class BrowserFragment : Fragment(), BackHandler {
             view.browserLayout,
             ActionBusFactory.get(this), sessionId,
             (activity as HomeActivity).browsingModeManager.isPrivate,
-            SearchState("", isEditing = false)
+            SearchState("", isEditing = false),
+            search_engine_icon
         )
 
         toolbarComponent.uiView.view.apply {

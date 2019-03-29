@@ -5,8 +5,10 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.component_search.*
+import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.toolbar.BrowserToolbar
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
@@ -22,7 +24,8 @@ class ToolbarComponent(
     bus: ActionBusFactory,
     private val sessionId: String?,
     private val isPrivate: Boolean,
-    override var initialState: SearchState = SearchState("", false)
+    override var initialState: SearchState = SearchState("", false),
+    private val engineIconView: ImageView? = null
 ) :
     UIComponent<SearchState, SearchAction, SearchChange>(
         bus.getManagedEmitter(SearchAction::class.java),
@@ -34,10 +37,19 @@ class ToolbarComponent(
     override val reducer: Reducer<SearchState, SearchChange> = { state, change ->
         when (change) {
             is SearchChange.QueryChanged -> state.copy(query = change.query)
+            is SearchChange.SearchShortcutEngineSelected ->
+                state.copy(engine = change.engine)
         }
     }
 
-    override fun initView() = ToolbarUIView(sessionId, isPrivate, container, actionEmitter, changesObservable)
+    override fun initView() = ToolbarUIView(
+        sessionId,
+        isPrivate,
+        container,
+        actionEmitter,
+        changesObservable,
+        engineIconView
+    )
 
     init {
         render(reducer)
@@ -60,10 +72,14 @@ class ToolbarComponent(
     }
 }
 
-data class SearchState(val query: String, val isEditing: Boolean) : ViewState
+data class SearchState(
+    val query: String,
+    val isEditing: Boolean,
+    val engine: SearchEngine? = null
+) : ViewState
 
 sealed class SearchAction : Action {
-    data class UrlCommitted(val url: String, val session: String?) : SearchAction()
+    data class UrlCommitted(val url: String, val session: String?, val engine: SearchEngine? = null) : SearchAction()
     data class TextChanged(val query: String) : SearchAction()
     object ToolbarTapped : SearchAction()
     data class ToolbarMenuItemTapped(val item: ToolbarMenu.Item) : SearchAction()
@@ -72,4 +88,5 @@ sealed class SearchAction : Action {
 
 sealed class SearchChange : Change {
     data class QueryChanged(val query: String) : SearchChange()
+    data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchChange()
 }
