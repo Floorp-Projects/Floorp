@@ -33,20 +33,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450048
   var startPt = searchRange;
   var endPt = searchRange;
 
-  // Check |null| detection on |aPatText| parameter.
-  try {
-    rf.Find(null, searchRange, startPt, endPt);
-
-    ok(false, "Missing NS_ERROR_NULL_POINTER exception");
-  } catch (e) {
-    let wrappedError = SpecialPowers.wrap(e);
-    if (wrappedError.result == SpecialPowers.Cr.NS_ERROR_NULL_POINTER) {
-      ok(true, null);
-    } else {
-      throw wrappedError;
-    }
-  }
-
   // Check |null| detection on |aSearchRange| parameter.
   try {
     rf.Find("", null, startPt, endPt);
