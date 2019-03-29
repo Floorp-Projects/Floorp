@@ -13,6 +13,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIPrincipal.h"
+#include "nsPIDOMWindow.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla {

@@ -238,7 +238,7 @@ bool IDBIndex::IsAutoLocale() const {
   return mMetadata->autoLocale();
 }
 
-nsIGlobalObject* IDBIndex::GetParentObject() const {
+nsPIDOMWindowInner* IDBIndex::GetParentObject() const {
   AssertIsOnOwningThread();
 
   return mObjectStore->GetParentObject();
