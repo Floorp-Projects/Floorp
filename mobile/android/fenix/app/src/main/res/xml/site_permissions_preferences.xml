@@ -22,7 +22,7 @@
         android:key="@string/pref_key_recommended_settings"
         android:title="@string/preference_recommended_settings"
         android:summary="@string/preference_recommended_settings_summary"
-        android:defaultValue="false"/>
+        android:defaultValue="true"/>
 
     <org.mozilla.fenix.settings.RadioButtonPreference
         android:key="@string/pref_key_custom_settings"

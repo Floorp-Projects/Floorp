@@ -12,7 +12,8 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
+import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+import org.mozilla.fenix.utils.Settings
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned.SPAN_EXCLUSIVE_INCLUSIVE
@@ -29,12 +30,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import androidx.core.text.HtmlCompat.FROM_HTML_MODE_COMPACT
 import androidx.fragment.app.Fragment
+import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import org.mozilla.fenix.R
 
 class SitePermissionsManagePhoneFeature : Fragment() {
 
     private lateinit var phoneFeature: PhoneFeature
+    private lateinit var settings: Settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +50,7 @@ class SitePermissionsManagePhoneFeature : Fragment() {
 
         (activity as AppCompatActivity).title = phoneFeature.label
         (activity as AppCompatActivity).supportActionBar?.show()
+        settings = Settings.getInstance(requireContext())
     }
 
     override fun onCreateView(
@@ -55,14 +61,14 @@ class SitePermissionsManagePhoneFeature : Fragment() {
         val rootView = inflater.inflate(R.layout.fragment_manage_site_permissions_feature_phone, container, false)
 
         initAskToAllowRadio(rootView)
-
+        initBlockRadio(rootView)
         initBockedByAndroidContainer(rootView)
 
         return rootView
     }
 
     private fun initAskToAllowRadio(rootView: View) {
-        val radio = rootView.findViewById<RadioButton>(R.id.ask_to_allow_switch)
+        val radio = rootView.findViewById<RadioButton>(R.id.ask_to_allow_radio)
         val askToAllowText = getString(R.string.preference_option_phone_feature_ask_to_allow)
         val recommendedText = getString(R.string.phone_feature_recommended)
         val recommendedTextSize = resources.getDimensionPixelSize(R.dimen.phone_feature_label_recommended_text_size)
@@ -87,6 +93,24 @@ class SitePermissionsManagePhoneFeature : Fragment() {
             append(recommendedSpannable)
             this
         }
+        radio.setOnClickListener {
+            saveActionInSettings(ASK_TO_ALLOW)
+        }
+        radio.restoreState(ASK_TO_ALLOW)
+    }
+
+    private fun RadioButton.restoreState(action: SitePermissionsRules.Action) {
+        if (phoneFeature.action == action) {
+            this.isChecked = true
+        }
+    }
+
+    private fun initBlockRadio(rootView: View) {
+        val radio = rootView.findViewById<RadioButton>(R.id.block_radio)
+        radio.setOnClickListener {
+            saveActionInSettings(BLOCKED)
+        }
+        radio.restoreState(BLOCKED)
     }
 
     private fun initBockedByAndroidContainer(rootView: View) {
@@ -141,6 +165,16 @@ class SitePermissionsManagePhoneFeature : Fragment() {
         }
     }
 
+    private val PhoneFeature.action: SitePermissionsRules.Action
+        get() {
+            return when (phoneFeature) {
+                PhoneFeature.CAMERA -> settings.getSitePermissionsPhoneFeatureCameraAction()
+                PhoneFeature.LOCATION -> settings.getSitePermissionsPhoneFeatureLocation()
+                PhoneFeature.MICROPHONE -> settings.getSitePermissionsPhoneFeatureMicrophoneAction()
+                PhoneFeature.NOTIFICATION -> settings.getSitePermissionsPhoneFeatureNotificationAction()
+            }
+        }
+
     private fun initSettingsButton(rootView: View) {
         val button = rootView.findViewById<Button>(R.id.settings_button)
         button.setOnClickListener {
@@ -149,10 +183,19 @@ class SitePermissionsManagePhoneFeature : Fragment() {
     }
 
     private fun openSettings() {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        val intent = Intent(ACTION_APPLICATION_DETAILS_SETTINGS)
         val uri = Uri.fromParts("package", requireContext().packageName, null)
         intent.data = uri
         startActivity(intent)
+    }
+
+    private fun saveActionInSettings(action: SitePermissionsRules.Action) {
+        when (phoneFeature) {
+            PhoneFeature.CAMERA -> settings.setSitePermissionsPhoneFeatureCameraAction(action)
+            PhoneFeature.LOCATION -> settings.setSitePermissionsPhoneFeatureLocation(action)
+            PhoneFeature.MICROPHONE -> settings.setSitePermissionsPhoneFeatureMicrophoneAction(action)
+            PhoneFeature.NOTIFICATION -> settings.setSitePermissionsPhoneFeatureNotificationAction(action)
+        }
     }
 
     companion object {

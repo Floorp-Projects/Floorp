@@ -7,12 +7,15 @@ package org.mozilla.fenix.utils
 import android.content.Context
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
+import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
+import java.security.InvalidParameterException
 
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
  */
+@SuppressWarnings("TooManyFunctions")
 class Settings private constructor(context: Context) {
 
     companion object {
@@ -71,4 +74,80 @@ class Settings private constructor(context: Context) {
         appContext.getPreferenceKey(R.string.pref_key_show_search_suggestions),
         true
     )
+
+    fun setSitePermissionsPhoneFeatureCameraAction(action: SitePermissionsRules.Action) {
+        preferences.edit()
+            .putInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_camera), action.id)
+            .apply()
+    }
+
+    fun getSitePermissionsPhoneFeatureCameraAction(): SitePermissionsRules.Action {
+        return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_camera), 1)
+            .toSitePermissionsRulesAction()
+    }
+
+    fun setSitePermissionsPhoneFeatureMicrophoneAction(action: SitePermissionsRules.Action) {
+        preferences.edit()
+            .putInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_microphone), action.id)
+            .apply()
+    }
+
+    fun getSitePermissionsPhoneFeatureMicrophoneAction(): SitePermissionsRules.Action {
+        return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_microphone), 1)
+            .toSitePermissionsRulesAction()
+    }
+
+    fun setSitePermissionsPhoneFeatureNotificationAction(action: SitePermissionsRules.Action) {
+        preferences.edit()
+            .putInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_notification), action.id)
+            .apply()
+    }
+
+    fun getSitePermissionsPhoneFeatureNotificationAction(): SitePermissionsRules.Action {
+        return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_notification), 1)
+            .toSitePermissionsRulesAction()
+    }
+
+    fun setSitePermissionsPhoneFeatureLocation(action: SitePermissionsRules.Action) {
+        preferences.edit()
+            .putInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_location), action.id)
+            .apply()
+    }
+
+    fun getSitePermissionsPhoneFeatureLocation(): SitePermissionsRules.Action {
+        return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_location), 1)
+            .toSitePermissionsRulesAction()
+    }
+
+    fun getSitePermissionsRecommendedSettingsRules() = SitePermissionsRules(
+        camera = SitePermissionsRules.Action.ASK_TO_ALLOW,
+        notification = SitePermissionsRules.Action.ASK_TO_ALLOW,
+        location = SitePermissionsRules.Action.ASK_TO_ALLOW,
+        microphone = SitePermissionsRules.Action.ASK_TO_ALLOW
+    )
+
+    fun getSitePermissionsCustomSettingsRules(): SitePermissionsRules {
+        return SitePermissionsRules(
+            notification = getSitePermissionsPhoneFeatureNotificationAction(),
+            microphone = getSitePermissionsPhoneFeatureMicrophoneAction(),
+            location = getSitePermissionsPhoneFeatureLocation(),
+            camera = getSitePermissionsPhoneFeatureCameraAction()
+        )
+    }
+
+    private val SitePermissionsRules.Action.id: Int
+        get() {
+            return when (this) {
+                SitePermissionsRules.Action.BLOCKED -> 0
+                SitePermissionsRules.Action.ASK_TO_ALLOW -> 1
+            }
+        }
+
+    private fun Int.toSitePermissionsRulesAction(): SitePermissionsRules.Action {
+        return when (this) {
+            0 -> SitePermissionsRules.Action.BLOCKED
+            1 -> SitePermissionsRules.Action.ASK_TO_ALLOW
+            else -> throw InvalidParameterException("$this is not a valid SitePermissionsRules.Action")
+        }
+    }
 }

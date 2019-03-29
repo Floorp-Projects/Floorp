@@ -33,7 +33,6 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.ThumbnailsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
-import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.enterToImmersiveMode
@@ -345,16 +344,10 @@ class BrowserFragment : Fragment(), BackHandler {
     private fun assignSitePermissionsRules() {
         val settings = Settings.getInstance(requireContext())
 
-        val recommendedSettings = SitePermissionsRules(
-            camera = ASK_TO_ALLOW,
-            notification = ASK_TO_ALLOW,
-            location = ASK_TO_ALLOW,
-            microphone = ASK_TO_ALLOW
-        )
-        val rules: SitePermissionsRules? = if (settings.shouldRecommendedSettingsBeActivated) {
-            recommendedSettings
+        val rules: SitePermissionsRules = if (settings.shouldRecommendedSettingsBeActivated) {
+            settings.getSitePermissionsRecommendedSettingsRules()
         } else {
-            null
+            settings.getSitePermissionsCustomSettingsRules()
         }
         sitePermissionsFeature.withFeature {
             it.sitePermissionsRules = rules

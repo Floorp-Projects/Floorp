@@ -17,6 +17,7 @@ import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature
 import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature.LOCATION
 import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature.CAMERA
 import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature.MICROPHONE
+import org.mozilla.fenix.utils.Settings
 
 @SuppressWarnings("TooManyFunctions")
 class SitePermissionsFragment : PreferenceFragmentCompat() {
@@ -82,15 +83,35 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
         if (isCategoryActivate) {
             categoryPhoneFeatures.isVisible = true
         }
-        initPhoneFeature(CAMERA)
-        initPhoneFeature(LOCATION)
-        initPhoneFeature(MICROPHONE)
-        initPhoneFeature(NOTIFICATION)
+
+        val settings = Settings.getInstance(requireContext())
+
+        val cameraAction = settings
+            .getSitePermissionsPhoneFeatureCameraAction()
+            .toString(requireContext())
+
+        val locationAction = settings
+            .getSitePermissionsPhoneFeatureLocation()
+            .toString(requireContext())
+
+        val microPhoneAction = settings
+            .getSitePermissionsPhoneFeatureMicrophoneAction()
+            .toString(requireContext())
+
+        val notificationAction = settings
+            .getSitePermissionsPhoneFeatureNotificationAction()
+            .toString(requireContext())
+
+        initPhoneFeature(CAMERA, cameraAction)
+        initPhoneFeature(LOCATION, locationAction)
+        initPhoneFeature(MICROPHONE, microPhoneAction)
+        initPhoneFeature(NOTIFICATION, notificationAction)
     }
 
-    private fun initPhoneFeature(phoneFeature: PhoneFeature) {
+    private fun initPhoneFeature(phoneFeature: PhoneFeature, summary: String) {
         val keyPreference = getPreferenceKeyBy(phoneFeature)
         val cameraPhoneFeatures: Preference = requireNotNull(findPreference(keyPreference))
+        cameraPhoneFeatures.summary = summary
 
         cameraPhoneFeatures.onPreferenceClickListener = OnPreferenceClickListener {
             navigateToPhoneFeature(phoneFeature)

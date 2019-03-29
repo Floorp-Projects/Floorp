@@ -8,9 +8,11 @@ import android.view.View
 import androidx.preference.PreferenceViewHolder
 import android.widget.TextView
 import android.content.Context
+import android.content.res.TypedArray
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.widget.RadioButton
+import androidx.core.content.res.TypedArrayUtils
 import androidx.core.text.HtmlCompat
 import androidx.preference.Preference
 import org.mozilla.fenix.R
@@ -20,19 +22,22 @@ class RadioButtonPreference : Preference {
     private lateinit var summaryView: TextView
     private lateinit var radioButton: RadioButton
     var shouldSummaryBeParsedAsHtmlContent: Boolean = true
+    private var defaultValue: Boolean = false
     private var clickListener: (() -> Unit)? = null
 
     init {
         layoutResource = R.layout.preference_widget_radiobutton
     }
 
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
-
-    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    )
+    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
+        val typedArray = context.obtainStyledAttributes(
+            attrs, androidx.preference.R.styleable.Preference, TypedArrayUtils.getAttr(
+                context, androidx.preference.R.attr.preferenceStyle,
+                android.R.attr.preferenceStyle
+            ), 0
+        )
+        initDefaultValue(typedArray)
+    }
 
     fun addToRadioGroup(radioPreference: RadioButtonPreference) {
         radioGroups.add(radioPreference)
@@ -67,7 +72,15 @@ class RadioButtonPreference : Preference {
 
     private fun bindRadioButton(holder: PreferenceViewHolder) {
         radioButton = holder.findViewById(R.id.radio_button) as RadioButton
-        radioButton.isChecked = getPersistedBoolean(false)
+        radioButton.isChecked = getPersistedBoolean(defaultValue)
+    }
+
+    private fun initDefaultValue(typedArray: TypedArray) {
+        if (typedArray.hasValue(androidx.preference.R.styleable.Preference_defaultValue)) {
+            defaultValue = typedArray.getBoolean(androidx.preference.R.styleable.Preference_defaultValue, false)
+        } else if (typedArray.hasValue(androidx.preference.R.styleable.Preference_android_defaultValue)) {
+            defaultValue = typedArray.getBoolean(androidx.preference.R.styleable.Preference_android_defaultValue, false)
+        }
     }
 
     private fun toggleRadioGroups() {

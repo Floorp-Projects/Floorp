@@ -16,7 +16,7 @@
         android:layout_height="wrap_content">
 
         <RadioButton
-            android:id="@+id/ask_to_allow_switch"
+            android:id="@+id/ask_to_allow_radio"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/preference_option_phone_feature_ask_to_allow"
@@ -31,7 +31,7 @@
             android:paddingBottom="@dimen/radio_button_preference_vertical"/>
 
         <RadioButton
-            android:id="@+id/block_switch"
+            android:id="@+id/block_radio"
             android:layout_width="match_parent"
             android:layout_height="@dimen/radio_button_preference_height"
             android:text="@string/preference_option_phone_feature_block"
