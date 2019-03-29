@@ -987,6 +987,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Pref to control whether line-height: -moz-block-height is exposed to content.
+VARCACHE_PREF(
+  "layout.css.line-height-moz-block-height.content.enabled",
+   layout_css_line_height_moz_block_height_content_enabled,
+  bool, false
+)
+
 // Is support for variation fonts enabled?
 VARCACHE_PREF(
   "layout.css.font-variations.enabled",
