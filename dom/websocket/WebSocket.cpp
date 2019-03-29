@@ -870,8 +870,8 @@ WebSocketImpl::GetInterface(const nsIID& aIID, void** aResult) {
 // WebSocket
 ////////////////////////////////////////////////////////////////////////////////
 
-WebSocket::WebSocket(nsIGlobalObject* aGlobal)
-    : DOMEventTargetHelper(aGlobal),
+WebSocket::WebSocket(nsPIDOMWindowInner* aOwnerWindow)
+    : DOMEventTargetHelper(aOwnerWindow),
       mIsMainThread(true),
       mKeepingAlive(false),
       mCheckMustKeepAlive(true),
@@ -879,8 +879,6 @@ WebSocket::WebSocket(nsIGlobalObject* aGlobal)
       mBinaryType(dom::BinaryType::Blob),
       mMutex("WebSocket::mMutex"),
       mReadyState(CONNECTING) {
-  MOZ_ASSERT(aGlobal);
-
   mImpl = new WebSocketImpl(this);
   mIsMainThread = mImpl->mIsMainThread;
 }
@@ -1182,12 +1180,7 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     const nsACString& aNegotiatedExtensions, ErrorResult& aRv) {
   MOZ_ASSERT_IF(!aTransportProvider, aNegotiatedExtensions.IsEmpty());
   nsCOMPtr<nsIPrincipal> principal;
-
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  if (NS_WARN_IF(!global)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
+  nsCOMPtr<nsPIDOMWindowInner> ownerWindow;
 
   if (NS_IsMainThread()) {
     nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal =
@@ -1206,6 +1199,12 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     nsCOMPtr<nsIScriptGlobalObject> sgo =
         do_QueryInterface(aGlobal.GetAsSupports());
     if (!sgo) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    ownerWindow = do_QueryInterface(aGlobal.GetAsSupports());
+    if (!ownerWindow) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
@@ -1232,7 +1231,7 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     protocolArray.AppendElement(protocolElement);
   }
 
-  RefPtr<WebSocket> webSocket = new WebSocket(global);
+  RefPtr<WebSocket> webSocket = new WebSocket(ownerWindow);
   RefPtr<WebSocketImpl> webSocketImpl = webSocket->mImpl;
 
   bool connectionFailed = true;
@@ -1350,7 +1349,6 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
   if (NS_IsMainThread()) {
     MOZ_ASSERT(principal);
 
-    nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(global);
     nsPIDOMWindowOuter* outerWindow = ownerWindow->GetOuterWindow();
 
     uint64_t windowID = 0;
@@ -1802,8 +1800,17 @@ nsresult WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
   AssertIsOnTargetThread();
 
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(GetOwnerGlobal()))) {
-    return NS_ERROR_FAILURE;
+
+  if (NS_IsMainThread()) {
+    if (NS_WARN_IF(!jsapi.Init(GetOwner()))) {
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    MOZ_ASSERT(!mIsMainThread);
+    MOZ_ASSERT(mImpl->mWorkerRef);
+    if (NS_WARN_IF(!jsapi.Init(mImpl->mWorkerRef->Private()->GlobalScope()))) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   JSContext* cx = jsapi.cx();
@@ -1822,7 +1829,7 @@ nsresult WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
       messageType = nsIWebSocketEventListener::TYPE_BLOB;
 
       RefPtr<Blob> blob =
-          Blob::CreateStringBlob(GetOwnerGlobal(), aData, EmptyString());
+          Blob::CreateStringBlob(GetOwner(), aData, EmptyString());
       MOZ_ASSERT(blob);
 
       if (!ToJSValue(cx, blob, &jsData)) {
