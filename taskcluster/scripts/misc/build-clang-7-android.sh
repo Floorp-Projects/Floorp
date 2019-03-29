@@ -1,7 +1,8 @@
 #!/bin/bash
 set -x -e -v
 
-# This script is for building clang for Linux.
+# This script is for building clang on a Linux host with android compiler rt
+# libs.
 
 WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
@@ -16,7 +17,7 @@ set +x
 
 cd build/build-clang
 # |mach python| sets up a virtualenv for us!
-../../mach python ./build-clang.py -c clang-8-linux64.json
+../../mach python ./build-clang.py -c clang-7-android.json
 
 set -x
 
