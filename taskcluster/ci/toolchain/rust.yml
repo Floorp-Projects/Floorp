@@ -44,6 +44,7 @@ linux64-rust-1.32:
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
+            '--target', 'aarch64-unknown-linux-gnu',
         ]
         toolchain-alias: linux64-rust
 
