@@ -26,8 +26,7 @@ struct prio_config
   mp_int inv2;
 
   int n_roots;
-  MPArray roots;
-  MPArray rootsInv;
+  mp_int generator;
 };
 
 int PrioConfig_hPoints(const_PrioConfig cfg);
