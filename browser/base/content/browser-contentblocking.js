@@ -4,6 +4,7 @@
 
 var Fingerprinting = {
   PREF_ENABLED: "privacy.trackingprotection.fingerprinting.enabled",
+  reportBreakageLabel: "fingerprinting",
   telemetryIdentifier: "fp",
 
   strings: {
@@ -116,6 +117,7 @@ var Fingerprinting = {
 
 var Cryptomining = {
   PREF_ENABLED: "privacy.trackingprotection.cryptomining.enabled",
+  reportBreakageLabel: "cryptomining",
   telemetryIdentifier: "cm",
 
   strings: {
@@ -984,6 +986,8 @@ var ContentBlocking = {
     body += `${ThirdPartyCookies.PREF_ENABLED}: ${Services.prefs.getIntPref(ThirdPartyCookies.PREF_ENABLED)}\n`;
     body += `network.cookie.lifetimePolicy: ${Services.prefs.getIntPref("network.cookie.lifetimePolicy")}\n`;
     body += `privacy.restrict3rdpartystorage.expiration: ${Services.prefs.getIntPref("privacy.restrict3rdpartystorage.expiration")}\n`;
+    body += `${Fingerprinting.PREF_ENABLED}: ${Services.prefs.getBoolPref(Fingerprinting.PREF_ENABLED)}\n`;
+    body += `${Cryptomining.PREF_ENABLED}: ${Services.prefs.getBoolPref(Cryptomining.PREF_ENABLED)}\n`;
 
     let comments = document.getElementById("identity-popup-breakageReportView-collection-comments");
     body += "\n**Comments**\n" + comments.value;
