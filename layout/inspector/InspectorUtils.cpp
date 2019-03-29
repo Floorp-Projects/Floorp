@@ -547,12 +547,12 @@ bool InspectorUtils::SetContentState(GlobalObject& aGlobalObject,
                                      ErrorResult& aRv) {
   RefPtr<EventStateManager> esm =
       inLayoutUtils::GetEventStateManagerFor(aElement);
-  if (!esm) {
+  EventStates state(aState);
+  if (!esm || !EventStateManager::ManagesState(state)) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return false;
   }
-
-  return esm->SetContentState(&aElement, EventStates(aState));
+  return esm->SetContentState(&aElement, state);
 }
 
 /* static */
