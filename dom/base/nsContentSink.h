@@ -288,8 +288,6 @@ class nsContentSink : public nsICSSLoaderObserver,
   // Timer used for notification
   nsCOMPtr<nsITimer> mNotificationTimer;
 
-  // Have we already called BeginUpdate for this set of content changes?
-  uint8_t mBeganUpdate : 1;
   uint8_t mLayoutStarted : 1;
   uint8_t mDynamicLowerValue : 1;
   uint8_t mParsing : 1;
