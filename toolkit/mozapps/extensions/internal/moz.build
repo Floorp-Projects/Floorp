@@ -10,7 +10,6 @@ EXTRA_JS_MODULES.addons += [
     'AddonUpdateChecker.jsm',
     'Content.js',
     'GMPProvider.jsm',
-    'LightweightThemeImageOptimizer.jsm',
     'ProductAddonChecker.jsm',
     'XPIDatabase.jsm',
     'XPIInstall.jsm',
