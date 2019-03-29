@@ -262,7 +262,7 @@ void SessionStoreUtils::RestoreDocShellCapabilities(
 
 static void CollectCurrentScrollPosition(JSContext* aCx, Document& aDocument,
                                          Nullable<CollectedData>& aRetVal) {
-  nsIPresShell* presShell = aDocument.GetShell();
+  PresShell* presShell = aDocument.GetPresShell();
   if (!presShell) {
     return;
   }

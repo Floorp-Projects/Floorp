@@ -6,6 +6,7 @@
 
 #include "DocumentOrShadowRoot.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -244,12 +245,12 @@ static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
     doc->FlushPendingNotifications(FlushType::Layout);
   }
 
-  nsIPresShell* ps = doc->GetShell();
-  if (!ps) {
+  PresShell* presShell = doc->GetPresShell();
+  if (!presShell) {
     return;
   }
 
-  nsIFrame* rootFrame = ps->GetRootFrame();
+  nsIFrame* rootFrame = presShell->GetRootFrame();
   // XUL docs, unlike HTML, have no frame tree until everything's done loading
   if (!rootFrame) {
     return;  // return null to premature XUL callers as a reminder to wait

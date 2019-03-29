@@ -171,6 +171,14 @@ class PresShell final : public nsIPresShell,
   void SetRestoreResolution(float aResolution,
                             LayoutDeviceIntSize aDisplaySize) override;
 
+  // Widget notificiations
+  void WindowSizeMoveDone() override;
+  void SysColorChanged() override { mPresContext->SysColorChanged(); }
+  void ThemeChanged() override { mPresContext->ThemeChanged(); }
+  void BackingScaleFactorChanged() override {
+    mPresContext->UIResolutionChangedSync();
+  }
+
   // nsIViewObserver interface
 
   void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
@@ -1284,13 +1292,6 @@ class PresShell final : public nsIPresShell,
   // The callback for the mPaintSuppressionTimer timer.
   static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell);
 
-  // Widget notificiations
-  void WindowSizeMoveDone() override;
-  void SysColorChanged() override { mPresContext->SysColorChanged(); }
-  void ThemeChanged() override { mPresContext->ThemeChanged(); }
-  void BackingScaleFactorChanged() override {
-    mPresContext->UIResolutionChangedSync();
-  }
   Document* GetPrimaryContentDocument() override;
 
   void PausePainting() override;

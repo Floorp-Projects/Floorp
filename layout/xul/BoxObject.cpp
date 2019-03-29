@@ -6,8 +6,8 @@
 
 #include "mozilla/dom/BoxObject.h"
 #include "nsCOMPtr.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsContainerFrame.h"
@@ -116,7 +116,7 @@ nsIPresShell* BoxObject::GetPresShell(bool aFlushLayout) {
     doc->FlushPendingNotifications(FlushType::Layout);
   }
 
-  return doc->GetShell();
+  return doc->GetPresShell();
 }
 
 nsresult BoxObject::GetOffsetRect(nsIntRect& aRect) {

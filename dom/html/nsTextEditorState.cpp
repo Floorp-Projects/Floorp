@@ -8,7 +8,6 @@
 #include "mozilla/TextInputListener.h"
 
 #include "nsCOMPtr.h"
-#include "nsIPresShell.h"
 #include "nsView.h"
 #include "nsCaret.h"
 #include "nsLayoutCID.h"
@@ -35,6 +34,7 @@
 #include "nsTextNode.h"
 #include "nsIController.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -799,7 +799,7 @@ void TextInputListener::OnSelectionChange(Selection& aSelection,
     if (content) {
       nsCOMPtr<Document> doc = content->GetComposedDoc();
       if (doc) {
-        nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
+        RefPtr<PresShell> presShell = doc->GetPresShell();
         if (presShell) {
           nsEventStatus status = nsEventStatus_eIgnore;
           WidgetEvent event(true, eFormSelect);

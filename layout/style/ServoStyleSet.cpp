@@ -13,6 +13,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleRuleMap.h"
@@ -1346,8 +1347,8 @@ bool ServoStyleSet::MayTraverseFrom(const Element* aElement) {
 }
 
 bool ServoStyleSet::ShouldTraverseInParallel() const {
-  MOZ_ASSERT(mDocument->GetShell(), "Styling a document without a shell?");
-  if (!mDocument->GetShell()->IsActive()) {
+  MOZ_ASSERT(mDocument->GetPresShell(), "Styling a document without a shell?");
+  if (!mDocument->GetPresShell()->IsActive()) {
     return false;
   }
 #ifdef MOZ_GECKO_PROFILER
