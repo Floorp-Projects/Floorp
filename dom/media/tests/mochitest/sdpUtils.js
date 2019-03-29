@@ -71,32 +71,63 @@ verify_unique_extmap_ids: function(sdp) {
 },
 
 getMSections: function(sdp) {
-  return sdp.split(new RegExp('^m=', 'gm')).slice(1);
+  return sdp.split(new RegExp('^m=', 'gm')).slice(1).map(s => "m=" + s);
 },
 
 getAudioMSections: function(sdp) {
-  return this.getMSections(sdp).filter(section => section.startsWith('audio'))
+  return this.getMSections(sdp).filter(section => section.startsWith('m=audio'))
 },
 
 getVideoMSections: function(sdp) {
-  return this.getMSections(sdp).filter(section => section.startsWith('video'))
+  return this.getMSections(sdp).filter(section => section.startsWith('m=video'))
 },
 
-checkSdpAfterEndOfTrickle: function(sdp, testOptions, label) {
-  info("EOC-SDP: " + JSON.stringify(sdp));
+checkSdpAfterEndOfTrickle: function(description, testOptions, label) {
+  info("EOC-SDP: " + JSON.stringify(description));
 
-  ok(sdp.sdp.includes("a=end-of-candidates"), label + ": SDP contains end-of-candidates");
-  sdputils.checkSdpCLineNotDefault(sdp.sdp, label);
+  const checkForTransportAttributes = msection => {
+    info("Checking msection: " + msection);
+    ok(msection.includes("a=end-of-candidates"),
+      label + ": SDP contains end-of-candidates");
+    sdputils.checkSdpCLineNotDefault(msection, label);
 
-  if (testOptions.rtcpmux) {
-    ok(sdp.sdp.includes("a=rtcp-mux"), label + ": SDP contains rtcp-mux");
-  } else {
-    ok(sdp.sdp.includes("a=rtcp:"), label + ": SDP contains rtcp port");
-  }
+    if (!msection.startsWith("m=application")) {
+      if (testOptions.rtcpmux) {
+        ok(msection.includes("a=rtcp-mux"), label + ": SDP contains rtcp-mux");
+      } else {
+        ok(msection.includes("a=rtcp:"), label + ": SDP contains rtcp port");
+      }
+    }
+  };
+
+  const hasOwnTransport = msection => {
+    const port0Check = new RegExp(/^m=\S+ 0 /).exec(msection);
+    if (port0Check) {
+      return false;
+    }
+    const midMatch = new RegExp(/\r\na=mid:(\S+)/).exec(msection);
+    if (!midMatch) {
+      return true;
+    }
+    const mid = midMatch[1];
+    const bundleGroupMatch =
+      new RegExp("\\r\\na=group:BUNDLE \\S.* " + mid + "\\s+")
+      .exec(description.sdp);
+    return bundleGroupMatch == null;
+  };
+
+  const msectionsWithOwnTransports =
+    this.getMSections(description.sdp).filter(hasOwnTransport);
+
+  ok(msectionsWithOwnTransports.length > 0,
+    "SDP should contain at least one msection with a transport");
+  msectionsWithOwnTransports.forEach(checkForTransportAttributes);
+
   if (testOptions.ssrc) {
-    ok(sdp.sdp.includes("a=ssrc"), label + ": SDP contains a=ssrc");
+    ok(description.sdp.includes("a=ssrc"), label + ": SDP contains a=ssrc");
   } else {
-    ok(!sdp.sdp.includes("a=ssrc"), label + ": SDP does not contain a=ssrc");
+    ok(!description.sdp.includes("a=ssrc"),
+      label + ": SDP does not contain a=ssrc");
   }
 },
 

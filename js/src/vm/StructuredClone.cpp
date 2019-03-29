@@ -2363,6 +2363,7 @@ static bool PrimitiveToObject(JSContext* cx, MutableHandleValue vp) {
 
 bool JSStructuredCloneReader::startRead(MutableHandleValue vp) {
   uint32_t tag, data;
+  bool alreadAppended = false;
 
   if (!in.readPair(&tag, &data)) {
     return false;
@@ -2589,15 +2590,27 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp) {
                                   "unsupported type");
         return false;
       }
+
+      // callbacks->read() might read other objects from the buffer.
+      // In startWrite we always write the object itself before calling
+      // the custom function. We should do the same here to keep
+      // indexing consistent.
+      uint32_t placeholderIndex = allObjs.length();
+      Value dummy = UndefinedValue();
+      if (!allObjs.append(dummy)) {
+        return false;
+      }
       JSObject* obj = callbacks->read(context(), this, tag, data, closure);
       if (!obj) {
         return false;
       }
       vp.setObject(*obj);
+      allObjs[placeholderIndex].set(vp);
+      alreadAppended = true;
     }
   }
 
-  if (vp.isObject() && !allObjs.append(vp)) {
+  if (!alreadAppended && vp.isObject() && !allObjs.append(vp)) {
     return false;
   }
 
@@ -3211,16 +3224,17 @@ JS_PUBLIC_API bool JS_WriteTypedArray(JSStructuredCloneWriter* w,
   w->context()->check(v);
   RootedObject obj(w->context(), &v.toObject());
 
-  // Note: writeTypedArray also does a maybeUnwrapAs but it assumes this
-  // returns non-null. This isn't guaranteed for JSAPI users so we do our
-  // own unwrapping here.
-  obj = obj->maybeUnwrapAs<TypedArrayObject>();
-  if (!obj) {
+  // startWrite can write everything, thus we should check here
+  // and report error if the user passes a wrong type.
+  if (!obj->canUnwrapAs<TypedArrayObject>()) {
     ReportAccessDenied(w->context());
     return false;
   }
 
-  return w->writeTypedArray(obj);
+  // We should use startWrite instead of writeTypedArray, because
+  // typed array is an object, we should add it to the |memory|
+  // (allObjs) list. Directly calling writeTypedArray won't add it.
+  return w->startWrite(v);
 }
 
 JS_PUBLIC_API bool JS_ObjectNotWritten(JSStructuredCloneWriter* w,

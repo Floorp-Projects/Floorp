@@ -145,7 +145,7 @@ const mockControlChannelOfReceiver = {
   terminate(presentaionId) {
   },
   sendIceCandidate(candidate) {
-    mockControlChannelOfReceiver.notifyIceCandidate(candidate);
+    mockControlChannelOfSender.notifyIceCandidate(candidate);
   },
   notifyIceCandidate(candidate) {
     if (!this._listener) {

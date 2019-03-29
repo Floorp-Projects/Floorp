@@ -183,6 +183,11 @@ async function gotoPref(aCategory) {
 
   let item;
   if (category != "paneSearchResults") {
+    // Hide second level headers in normal view
+    for (let element of document.querySelectorAll(".search-header")) {
+      element.hidden = true;
+    }
+
     item = categories.querySelector(".category[value=" + category + "]");
     if (!item) {
       category = kDefaultCategoryInternalName;

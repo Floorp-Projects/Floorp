@@ -54,8 +54,7 @@ function windowMessage(evt) {
   ok(checkPattern(imageData, pattern),
      'postMessage from self worked correctly');
 
-  // We're not spec compliant on this yet.
-  todo_is(imageData.data, evt.data.dataRef,
+  is(imageData.data, evt.data.dataRef,
           'Should have backrefs for imagedata buffer');
 
   // Make a new pattern, and send it to a worker.

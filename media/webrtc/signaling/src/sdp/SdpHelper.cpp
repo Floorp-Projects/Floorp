@@ -54,6 +54,11 @@ nsresult SdpHelper::CopyTransportParams(size_t numComponents,
     }
   }
 
+  if (oldLocalAttrs.HasAttribute(SdpAttribute::kEndOfCandidatesAttribute)) {
+    newLocalAttrs.SetAttribute(
+        new SdpFlagAttribute(SdpAttribute::kEndOfCandidatesAttribute));
+  }
+
   if (numComponents == 2 &&
       oldLocalAttrs.HasAttribute(SdpAttribute::kRtcpAttribute)) {
     // copy rtcp attribute if we had one that we are using
@@ -271,14 +276,26 @@ nsresult SdpHelper::GetMidFromLevel(const Sdp& sdp, uint16_t level,
 
 nsresult SdpHelper::AddCandidateToSdp(Sdp* sdp,
                                       const std::string& candidateUntrimmed,
-                                      uint16_t level) {
+                                      uint16_t level,
+                                      const std::string& ufrag) {
   if (level >= sdp->GetMediaSectionCount()) {
     SDP_SET_ERROR("Index " << level << " out of range");
     return NS_ERROR_INVALID_ARG;
   }
 
+  SdpMediaSection& msection = sdp->GetMediaSection(level);
+  SdpAttributeList& attrList = msection.GetAttributeList();
+
+  if (!ufrag.empty()) {
+    if (!attrList.HasAttribute(SdpAttribute::kIceUfragAttribute) ||
+        attrList.GetIceUfrag() != ufrag) {
+      SDP_SET_ERROR("Unknown ufrag (" << ufrag << ")");
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+
   if (candidateUntrimmed.empty()) {
-    SetIceGatheringComplete(sdp, level);
+    SetIceGatheringComplete(sdp, level, ufrag);
     return NS_OK;
   }
 
@@ -292,9 +309,6 @@ nsresult SdpHelper::AddCandidateToSdp(Sdp* sdp,
 
   std::string candidate = candidateUntrimmed.substr(begin);
 
-  SdpMediaSection& msection = sdp->GetMediaSection(level);
-
-  SdpAttributeList& attrList = msection.GetAttributeList();
   UniquePtr<SdpMultiStringAttribute> candidates;
   if (!attrList.HasAttribute(SdpAttribute::kCandidateAttribute)) {
     // Create new
@@ -312,14 +326,38 @@ nsresult SdpHelper::AddCandidateToSdp(Sdp* sdp,
   return NS_OK;
 }
 
-void SdpHelper::SetIceGatheringComplete(Sdp* sdp, uint16_t level) {
-  SdpMediaSection& msection = sdp->GetMediaSection(level);
+nsresult SdpHelper::SetIceGatheringComplete(Sdp* sdp,
+                                            const std::string& ufrag) {
+  for (uint16_t i = 0; i < sdp->GetMediaSectionCount(); ++i) {
+    nsresult rv = SetIceGatheringComplete(sdp, i, ufrag);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
 
-  SdpAttributeList& attrs = msection.GetAttributeList();
-  attrs.SetAttribute(
+nsresult SdpHelper::SetIceGatheringComplete(Sdp* sdp, uint16_t level,
+                                            const std::string& ufrag) {
+  if (level >= sdp->GetMediaSectionCount()) {
+    SDP_SET_ERROR("Index " << level << " out of range");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  SdpMediaSection& msection = sdp->GetMediaSection(level);
+  SdpAttributeList& attrList = msection.GetAttributeList();
+
+  if (!ufrag.empty()) {
+    if (!attrList.HasAttribute(SdpAttribute::kIceUfragAttribute) ||
+        attrList.GetIceUfrag() != ufrag) {
+      SDP_SET_ERROR("Unknown ufrag (" << ufrag << ")");
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+
+  attrList.SetAttribute(
       new SdpFlagAttribute(SdpAttribute::kEndOfCandidatesAttribute));
   // Remove trickle-ice option
-  attrs.RemoveAttribute(SdpAttribute::kIceOptionsAttribute);
+  attrList.RemoveAttribute(SdpAttribute::kIceOptionsAttribute);
+  return NS_OK;
 }
 
 void SdpHelper::SetDefaultAddresses(const std::string& defaultCandidateAddr,

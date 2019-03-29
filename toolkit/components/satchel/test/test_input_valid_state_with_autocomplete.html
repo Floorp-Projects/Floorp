@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for valid state with autocomplete</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    input:invalid {
+      border: red 1px solid;
+    }
+  </style>
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <form id="form1">
+    <input  type="email" name="field1">
+    <button type="submit">Submit</button>
+  </form>
+</div>
+
+<pre id="test">
+<script class="testbody">
+var input = document.querySelector("input[name=field1]");
+
+async function runTest() {
+  let resolveFunc = null;
+  function onPopup() {
+    if (resolveFunc) {
+      resolveFunc();
+      resolveFunc = null;
+    }
+  }
+  registerPopupShownListener(onPopup);
+  function promisePopup() {
+    return new Promise(resolve => {
+      resolveFunc = resolve;
+    });
+  }
+
+  let waitForPopup = promisePopup();
+  input.focus();
+  input.addEventListener("input", (event) => {
+    is(event.inputType, "insertText",
+       "inputType of \"input\" event should be \"insertText\"");
+    ok(!input.validity.valid,
+       "Should be invalid immediately after inserting a character");
+    ok(input.matches(":invalid"),
+       "Should match \":invalid\" immediately after inserting a character");
+  }, {once: true});
+  synthesizeKey("e");
+
+  await waitForPopup;
+  synthesizeKey("KEY_ArrowDown");
+  input.addEventListener("input", (event) => {
+    is(event.inputType, "insertReplacementText",
+       "inputType of \"input\" event should be \"insertReplacementText\"");
+    ok(input.validity.valid,
+       "Should be valid immediately after selecting valid item in autocomplete list");
+    ok(!input.matches(":invalid"),
+       "Shouldn't match \":invalid\" immediately after selecting valid item in autocomplete list");
+  }, {once: true});
+  synthesizeKey("KEY_Enter"); // Select valid item
+
+  waitForPopup = promisePopup();
+  synthesizeKey("KEY_Backspace");
+  await waitForPopup;
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_ArrowDown");
+  input.addEventListener("input", (event) => {
+    is(event.inputType, "insertReplacementText",
+       "inputType of \"input\" event should be \"insertReplacementText\"");
+    ok(!input.validity.valid,
+       "Should be invalid immediately after selecting invalid item in autocomplete list");
+    ok(input.matches(":invalid"),
+       "Should match \":invalid\" immediately after selecting invalid item in autocomplete list");
+  }, {once: true});
+  synthesizeKey("KEY_Enter"); // Select invalid item
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  updateFormHistory([
+    { op: "remove" },
+    { op: "add", fieldname: "field1", value: "email@example.com" },
+    { op: "add", fieldname: "field1", value: "email@example.com." },
+  ], runTest);
+});
+</script>
+</pre>
+</body>

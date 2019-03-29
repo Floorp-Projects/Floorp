@@ -24,7 +24,7 @@
         // causes an ice restart and then rolls it back
         // (does not result in sending an offer)
         function PC_LOCAL_SETUP_ICE_HANDLER(test) {
-          test.pcLocal.setupIceCandidateHandler(test);
+          test.pcLocal.setupIceCandidateHandler(test, () => {});
           if (test.testOptions.steeplechase) {
             test.pcLocal.endOfTrickleIce.then(() => {
               send_message({"type": "end_of_trickle_ice"});
