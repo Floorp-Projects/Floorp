@@ -72,6 +72,7 @@ class nsEditingSession final : public nsIEditingSession,
   // progress load stuff
   nsresult StartDocumentLoad(nsIWebProgress* aWebProgress,
                              bool isToBeMadeEditable);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult EndDocumentLoad(nsIWebProgress* aWebProgress, nsIChannel* aChannel,
                            nsresult aStatus, bool isToBeMadeEditable);
   nsresult StartPageLoad(nsIChannel* aChannel);
