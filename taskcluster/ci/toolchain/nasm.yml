@@ -21,7 +21,7 @@ win64-nasm:
         script: build-nasm.sh
         arguments: ['win64']
     toolchains:
-        - linux64-clang-8-mingw-x64
+        - linux64-clang-trunk-mingw-x64
     fetches:
         fetch:
             - nasm-2.14.02

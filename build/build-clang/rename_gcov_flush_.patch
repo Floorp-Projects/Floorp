@@ -12,16 +12,3 @@ diff --git a/compiler-rt/lib/profile/GCDAProfiling.c b/compiler-rt/lib/profile/G
    struct fn_node* curr = flush_fn_list.head;
  
    while (curr) {
-diff --git a/llvm/lib/Transforms/Instrumentation/GCOVProfiling.cpp b/llvm/lib/Transforms/Instrumentation/GCOVProfiling.cpp
-index 9af64ed332c..bcebe303ff4 100644
---- a/llvm/lib/Transforms/Instrumentation/GCOVProfiling.cpp
-+++ b/llvm/lib/Transforms/Instrumentation/GCOVProfiling.cpp
-@@ -648,7 +648,7 @@ void GCOVProfiler::AddFlushBeforeForkAndExec() {
-   for (auto I : ForkAndExecs) {
-     IRBuilder<> Builder(I);
-     FunctionType *FTy = FunctionType::get(Builder.getVoidTy(), {}, false);
--    Constant *GCOVFlush = M->getOrInsertFunction("__gcov_flush", FTy);
-+    Constant *GCOVFlush = M->getOrInsertFunction("__custom_llvm_gcov_flush", FTy);
-     Builder.CreateCall(GCOVFlush);
-     I->getParent()->splitBasicBlock(I);
-   }
