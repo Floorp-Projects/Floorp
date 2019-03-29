@@ -72,16 +72,6 @@ subprocess.check_call([
 ] + sys.argv[3:])
 """
 
-// Configure the Python environments
-envs {
-    bootstrapDirectory = GLEAN_BOOTSTRAP_DIR
-    pipInstallOptions = "--trusted-host pypi.python.org --no-cache-dir"
-
-    // Setup a miniconda environment. conda is used because it works
-    // non-interactively on Windows, unlike the other options
-    conda "Miniconda3", "Miniconda3-${MINICONDA_VERSION}", "64", ["glean_parser==${GLEAN_PARSER_VERSION}"]
-}
-
 // Even though we are installing the Miniconda environment to the gradle user
 // home directory, the gradle-python-envs plugin is hardcoded to download the
 // installer to the project's build directory. Doing so will fail if the
@@ -89,6 +79,9 @@ envs {
 // the project's build directory exists before downloading and installing the
 // Miniconda environment.
 // See https://github.com/JetBrains/gradle-python-envs/issues/26
+// The fix in the above is not actually sufficient -- we need to add createBuildDir
+// as a dependency of Bootstrap_CONDA (where conda is installed), as the preBuild
+// task alone isn't early enough.
 task createBuildDir {
     description = "Make sure the build dir exists before creating the Python Environments"
     onlyIf {
@@ -100,6 +93,21 @@ task createBuildDir {
     }
 }
 
+// Configure the Python environments
+envs {
+    bootstrapDirectory = GLEAN_BOOTSTRAP_DIR
+    pipInstallOptions = "--trusted-host pypi.python.org --no-cache-dir"
+
+    // Setup a miniconda environment. conda is used because it works
+    // non-interactively on Windows, unlike the other options
+    conda "Miniconda3", "Miniconda3-${MINICONDA_VERSION}", "64", ["glean_parser==${GLEAN_PARSER_VERSION}"]
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name.startsWith('Bootstrap_CONDA')) {
+        task.dependsOn(createBuildDir)
+    }
+}
 preBuild.dependsOn(createBuildDir)
 preBuild.finalizedBy("build_envs")
 
