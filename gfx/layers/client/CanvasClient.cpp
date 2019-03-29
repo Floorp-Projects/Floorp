@@ -311,11 +311,12 @@ static already_AddRefed<TextureClient> TexClientFromReadback(
     // ReadPixels from the current FB into mapped.data.
     auto width = src->mSize.width;
     auto height = src->mSize.height;
+    auto stride = mapped.stride;
 
     {
       ScopedPackState scopedPackState(gl);
-
-      MOZ_ASSERT(mapped.stride / 4 == mapped.size.width);
+      bool handled = scopedPackState.SetForWidthAndStrideRGBA(width, stride);
+      MOZ_RELEASE_ASSERT(handled, "Unhandled stride");
       gl->raw_fReadPixels(0, 0, width, height, readFormat, readType,
                           mapped.data);
     }

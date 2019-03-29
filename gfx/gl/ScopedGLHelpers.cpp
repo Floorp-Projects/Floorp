@@ -387,6 +387,22 @@ ScopedPackState::ScopedPackState(GLContext* gl)
   if (mSkipRows != 0) mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, 0);
 }
 
+bool ScopedPackState::SetForWidthAndStrideRGBA(GLsizei aWidth,
+                                               GLsizei aStride) {
+  MOZ_ASSERT(aStride % 4 == 0, "RGBA data should always be 4-byte aligned");
+  MOZ_ASSERT(aStride / 4 >= aWidth, "Stride too small");
+  if (aStride / 4 == aWidth) {
+    // No special handling needed.
+    return true;
+  }
+  if (mGL->HasPBOState()) {
+    // HasPBOState implies support for GL_PACK_ROW_LENGTH.
+    mGL->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, aStride / 4);
+    return true;
+  }
+  return false;
+}
+
 void ScopedPackState::UnwrapImpl() {
   mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, mAlignment);
 
