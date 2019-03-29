@@ -8690,8 +8690,15 @@ JS_PUBLIC_API void JS::IncrementalPreWriteBarrier(JSObject* obj) {
     return;
   }
 
-  MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
   JSObject::writeBarrierPre(obj);
+}
+
+JS_PUBLIC_API void JS::IncrementalPreWriteBarrier(GCCellPtr thing) {
+  if (!thing) {
+    return;
+  }
+
+  TenuredCell::writeBarrierPre(&thing.asCell()->asTenured());
 }
 
 JS_PUBLIC_API void JS::IncrementalReadBarrier(GCCellPtr thing) {

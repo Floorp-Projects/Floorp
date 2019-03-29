@@ -22,11 +22,15 @@ def with_gradle(value):
         return True
 
 
-@depends('--with-gradle', check_build_environment)
+@depends(host, '--with-gradle', check_build_environment)
 @imports(_from='os.path', _import='isfile')
-def gradle(value, build_env):
-    gradle = value[0] if len(value) else \
-        os.path.join(build_env.topsrcdir, 'gradlew')
+def gradle(host, value, build_env):
+    if len(value):
+        gradle = value[0]
+    else:
+        gradle = os.path.join(build_env.topsrcdir, 'gradlew')
+        if host.os == 'WINNT':
+            gradle = gradle + '.bat'
 
     # TODO: verify that $GRADLE is executable.
     if not isfile(gradle):
