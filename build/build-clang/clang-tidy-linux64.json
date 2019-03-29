@@ -16,5 +16,6 @@
     "cxx": "/builds/worker/workspace/build/src/gcc/bin/g++",
     "as": "/builds/worker/workspace/build/src/gcc/bin/gcc",
     "patches": [
+      "clang-tidy-8.patch"
     ]
 }
