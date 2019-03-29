@@ -15,6 +15,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsMathMLElement.h"
 #include "gfxMathTable.h"
+#include "nsPresContextInlines.h"
 
 // used to map attributes into CSS rules
 #include "mozilla/ServoStyleSet.h"

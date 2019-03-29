@@ -563,12 +563,7 @@ class PresShell final : public nsIPresShell,
      * OnPresShellDestroy() is called when every PresShell instance is being
      * destroyed.
      */
-    static inline void OnPresShellDestroy(Document* aDocument) {
-      if (sLastKeyDownEventTargetElement &&
-          sLastKeyDownEventTargetElement->OwnerDoc() == aDocument) {
-        sLastKeyDownEventTargetElement = nullptr;
-      }
-    }
+    static inline void OnPresShellDestroy(Document* aDocument);
 
    private:
     static bool InZombieDocument(nsIContent* aContent);
@@ -986,7 +981,7 @@ class PresShell final : public nsIPresShell,
      * @return                          The element which should be the event
      *                                  target of aGUIEvent.
      */
-    Element* ComputeFocusedEventTargetElement(WidgetGUIEvent* aGUIEvent);
+    dom::Element* ComputeFocusedEventTargetElement(WidgetGUIEvent* aGUIEvent);
 
     /**
      * MaybeHandleEventWithAnotherPresShell() may handle aGUIEvent with another
@@ -1004,7 +999,7 @@ class PresShell final : public nsIPresShell,
      *                                  can handle the event, this returns true.
      */
     MOZ_CAN_RUN_SCRIPT
-    bool MaybeHandleEventWithAnotherPresShell(Element* aEventTargetElement,
+    bool MaybeHandleEventWithAnotherPresShell(dom::Element* aEventTargetElement,
                                               WidgetGUIEvent* aGUIEvent,
                                               nsEventStatus* aEventStatus,
                                               nsresult* aRv);
@@ -1277,7 +1272,7 @@ class PresShell final : public nsIPresShell,
     AutoCurrentEventInfoSetter* mCurrentEventInfoSetter;
     static TimeStamp sLastInputCreated;
     static TimeStamp sLastInputProcessed;
-    static StaticRefPtr<Element> sLastKeyDownEventTargetElement;
+    static StaticRefPtr<dom::Element> sLastKeyDownEventTargetElement;
   };
 
   void SynthesizeMouseMove(bool aFromScroll) override;

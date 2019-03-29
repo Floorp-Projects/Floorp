@@ -33,6 +33,7 @@
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsIScriptError.h"
+#include "nsPresContextInlines.h"
 #include "nsRefreshDriver.h"
 
 namespace mozilla {

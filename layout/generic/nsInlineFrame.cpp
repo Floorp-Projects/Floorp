@@ -14,6 +14,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
+#include "nsPresContextInlines.h"
 #include "nsCSSAnonBoxes.h"
 #include "mozilla/RestyleManager.h"
 #include "nsDisplayList.h"

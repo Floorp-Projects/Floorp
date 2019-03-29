@@ -13,6 +13,7 @@
 #include "mozilla/Types.h"
 #include "mozilla/WritingModes.h"
 #include "nsPresContext.h"
+#include "nsPresContextInlines.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
