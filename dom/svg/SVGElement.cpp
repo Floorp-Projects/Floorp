@@ -19,6 +19,7 @@
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/InternalMutationEvent.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/SMILAnimationController.h"
 #include "mozilla/SVGContentUtils.h"
@@ -34,7 +35,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsQueryObject.h"
 #include "nsLayoutUtils.h"
@@ -105,9 +105,9 @@ JSObject* SVGElement::WrapNode(JSContext* aCx,
 
 void SVGElement::DidAnimateClass() {
   // For Servo, snapshot the element before we change it.
-  nsIPresShell* shell = OwnerDoc()->GetShell();
-  if (shell) {
-    if (nsPresContext* presContext = shell->GetPresContext()) {
+  PresShell* presShell = OwnerDoc()->GetPresShell();
+  if (presShell) {
+    if (nsPresContext* presContext = presShell->GetPresContext()) {
       presContext->RestyleManager()->ClassAttributeWillBeChangedBySMIL(this);
     }
   }
@@ -121,8 +121,8 @@ void SVGElement::DidAnimateClass() {
 
   // FIXME(emilio): This re-selector-matches, but we do the snapshot stuff right
   // above... Is this needed anymore?
-  if (shell) {
-    shell->RestyleForAnimation(this, StyleRestyleHint_RESTYLE_SELF);
+  if (presShell) {
+    presShell->RestyleForAnimation(this, StyleRestyleHint_RESTYLE_SELF);
   }
 }
 

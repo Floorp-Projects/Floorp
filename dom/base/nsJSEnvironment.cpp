@@ -56,6 +56,7 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MainThreadIdlePeriod.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/DOMException.h"
@@ -89,7 +90,6 @@
 #include "GeckoProfiler.h"
 #include "mozilla/IdleTaskRunner.h"
 #include "nsIDocShell.h"
-#include "nsIPresShell.h"
 #include "nsViewManager.h"
 #include "mozilla/EventStateManager.h"
 
@@ -1943,7 +1943,7 @@ void nsJSContext::MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
     return;
   }
 
-  nsIPresShell* presShell = rootDocument->GetShell();
+  PresShell* presShell = rootDocument->GetPresShell();
   if (!presShell) {
     return;
   }
