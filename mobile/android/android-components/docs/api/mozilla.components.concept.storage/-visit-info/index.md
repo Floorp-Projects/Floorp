@@ -2,7 +2,7 @@
 
 # VisitInfo
 
-`data class VisitInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L102)
+`data class VisitInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L109)
 
 Information about a history visit.
 

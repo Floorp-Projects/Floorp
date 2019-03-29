@@ -2,7 +2,7 @@
 
 # VisitType
 
-`enum class VisitType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L113)
+`enum class VisitType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L120)
 
 Visit type constants as defined by Desktop Firefox.
 

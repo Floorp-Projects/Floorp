@@ -2,7 +2,7 @@
 
 # javaScriptCanOpenWindowsAutomatically
 
-`open var javaScriptCanOpenWindowsAutomatically: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L62)
+`open var javaScriptCanOpenWindowsAutomatically: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L67)
 
 Setting to control whether or not window.open can be called from JavaScript.
 

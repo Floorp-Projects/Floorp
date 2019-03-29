@@ -2,7 +2,7 @@
 
 # allowFileAccessFromFileURLs
 
-`open var allowFileAccessFromFileURLs: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L83)
+`open var allowFileAccessFromFileURLs: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L88)
 
 Setting to control whether or not JavaScript running in the context of a file scheme URL
 should be allowed to access content from other file scheme URLs.

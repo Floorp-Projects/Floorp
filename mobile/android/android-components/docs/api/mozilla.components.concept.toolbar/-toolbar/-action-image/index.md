@@ -2,7 +2,7 @@
 
 # ActionImage
 
-`open class ActionImage : `[`Action`](../-action/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L323)
+`open class ActionImage : `[`Action`](../-action/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L328)
 
 An action that just shows a static, non-clickable image.
 

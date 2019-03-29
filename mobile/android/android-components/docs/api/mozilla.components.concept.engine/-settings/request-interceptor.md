@@ -2,7 +2,7 @@
 
 # requestInterceptor
 
-`open var requestInterceptor: `[`RequestInterceptor`](../../mozilla.components.concept.engine.request/-request-interceptor/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L42)
+`open var requestInterceptor: `[`RequestInterceptor`](../../mozilla.components.concept.engine.request/-request-interceptor/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L47)
 
 Setting to intercept and override requests.
 

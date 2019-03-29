@@ -2,7 +2,7 @@
 
 # InlineAutocompleteEditText
 
-`open class InlineAutocompleteEditText : AppCompatEditText, `[`AutocompleteView`](../-autocomplete-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L87)
+`open class InlineAutocompleteEditText : AppCompatEditText, `[`AutocompleteView`](../-autocomplete-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L88)
 
 A UI edit text component which supports inline autocompletion.
 

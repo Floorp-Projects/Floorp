@@ -31,6 +31,7 @@
 | [mozilla.components.concept.sync.AuthException](../mozilla.components.concept.sync/-auth-exception/index.md) | An exception which may happen while obtaining auth information using [OAuthAccount](../mozilla.components.concept.sync/-o-auth-account/index.md). |
 | [mozilla.components.concept.sync.AuthExceptionType](../mozilla.components.concept.sync/-auth-exception-type/index.md) | An auth-related exception type, for use with [AuthException](../mozilla.components.concept.sync/-auth-exception/index.md). |
 | [mozilla.components.concept.sync.AuthInfo](../mozilla.components.concept.sync/-auth-info/index.md) | A Firefox Sync friendly auth object which can be obtained from [OAuthAccount](../mozilla.components.concept.sync/-o-auth-account/index.md). |
+| [mozilla.components.support.base.android.view.AutoFitTextureView](../mozilla.components.support.base.android.view/-auto-fit-texture-view/index.md) | A [TextureView](https://developer.android.com/reference/android/view/TextureView.html) that can be adjusted to a specified aspect ratio. |
 | [mozilla.components.browser.session.storage.AutoSave](../mozilla.components.browser.session.storage/-auto-save/index.md) |  |
 | [mozilla.components.concept.toolbar.AutocompleteDelegate](../mozilla.components.concept.toolbar/-autocomplete-delegate/index.md) | Describes an object to which a [AutocompleteResult](../mozilla.components.concept.toolbar/-autocomplete-result/index.md) may be applied. Usually, this will delegate to a specific text view. |
 | [mozilla.components.concept.toolbar.AutocompleteResult](../mozilla.components.concept.toolbar/-autocomplete-result/index.md) | Describes an autocompletion result. |
@@ -125,7 +126,6 @@
 | [mozilla.components.feature.downloads.DownloadsFeature](../mozilla.components.feature.downloads/-downloads-feature/index.md) | Feature implementation to provide download functionality for the selected session. The feature will subscribe to the selected session and listen for downloads. |
 | [android.graphics.drawable.Drawable](../mozilla.components.support.ktx.android.graphics.drawable/android.graphics.drawable.-drawable/index.md) (extensions in package mozilla.components.support.ktx.android.graphics.drawable) |  |
 | [mozilla.components.support.utils.DrawableUtils](../mozilla.components.support.utils/-drawable-utils/index.md) |  |
-| [mozilla.components.browser.toolbar.edit.EditToolbar](../mozilla.components.browser.toolbar.edit/-edit-toolbar/index.md) | Sub-component of the browser toolbar responsible for allowing the user to edit the URL. |
 | [mozilla.components.concept.engine.Engine](../mozilla.components.concept.engine/-engine/index.md) | Entry point for interacting with the engine implementation. |
 | [mozilla.components.concept.engine.EngineSession](../mozilla.components.concept.engine/-engine-session/index.md) | Class representing a single engine session. |
 | [mozilla.components.concept.engine.EngineSessionState](../mozilla.components.concept.engine/-engine-session-state/index.md) | The state of an [EngineSession](../mozilla.components.concept.engine/-engine-session/index.md). An instance can be obtained from [EngineSession.saveState](../mozilla.components.concept.engine/-engine-session/save-state.md). Creating a new [EngineSession](../mozilla.components.concept.engine/-engine-session/index.md) and calling [EngineSession.restoreState](../mozilla.components.concept.engine/-engine-session/restore-state.md) with the same state instance should restore the previous session. |
@@ -275,7 +275,9 @@
 | [mozilla.components.ui.autocomplete.OnKeyPreImeListener](../mozilla.components.ui.autocomplete/-on-key-pre-ime-listener.md) |  |
 | [mozilla.components.feature.downloads.OnNeedToRequestPermissions](../mozilla.components.feature.downloads/-on-need-to-request-permissions.md) |  |
 | [mozilla.components.feature.prompts.OnNeedToRequestPermissions](../mozilla.components.feature.prompts/-on-need-to-request-permissions.md) |  |
+| [mozilla.components.feature.qr.OnNeedToRequestPermissions](../mozilla.components.feature.qr/-on-need-to-request-permissions.md) |  |
 | [mozilla.components.feature.sitepermissions.OnNeedToRequestPermissions](../mozilla.components.feature.sitepermissions/-on-need-to-request-permissions.md) |  |
+| [mozilla.components.feature.qr.OnScanResult](../mozilla.components.feature.qr/-on-scan-result.md) |  |
 | [mozilla.components.ui.autocomplete.OnSearchStateChangeListener](../mozilla.components.ui.autocomplete/-on-search-state-change-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnSelectionChangedListener](../mozilla.components.ui.autocomplete/-on-selection-changed-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnTextChangeListener](../mozilla.components.ui.autocomplete/-on-text-change-listener.md) |  |
@@ -309,6 +311,8 @@
 | [mozilla.components.concept.push.PushProcessor](../mozilla.components.concept.push/-push-processor/index.md) | A push notification processor that handles registration and new messages from the [PushService](../mozilla.components.concept.push/-push-service/index.md) provided. Starting Push in the Application's onCreate is recommended. |
 | [mozilla.components.concept.push.PushService](../mozilla.components.concept.push/-push-service/index.md) | Implemented by push services like Firebase Cloud Messaging and Amazon Device Messaging SDKs to allow the [PushProcessor](../mozilla.components.concept.push/-push-processor/index.md) to manage their lifecycle. |
 | [mozilla.components.concept.push.PushType](../mozilla.components.concept.push/-push-type/index.md) | The different kinds of push messages. |
+| [mozilla.components.feature.qr.QrFeature](../mozilla.components.feature.qr/-qr-feature/index.md) | Feature implementation that provides QR scanning functionality via the [QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md). |
+| [mozilla.components.feature.qr.QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md) | A [Fragment](#) that displays a QR scanner. |
 | [mozilla.components.service.glean.storages.RecordedEventData](../mozilla.components.service.glean.storages/-recorded-event-data/index.md) |  |
 | [mozilla.components.service.glean.storages.RecordedExperimentData](../mozilla.components.service.glean.storages/-recorded-experiment-data/index.md) |  |
 | [mozilla.components.concept.fetch.Request](../mozilla.components.concept.fetch/-request/index.md) | The [Request](../mozilla.components.concept.fetch/-request/index.md) data class represents a resource request to be send by a [Client](../mozilla.components.concept.fetch/-client/index.md). |

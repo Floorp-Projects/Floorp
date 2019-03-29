@@ -31,6 +31,7 @@ Interface to be implemented by components that provide browser toolbar functiona
 | Name | Summary |
 |---|---|
 | [addBrowserAction](add-browser-action.md) | `abstract fun addBrowserAction(action: `[`Action`](-action/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Adds an action to be displayed on the right side of the toolbar in display mode. |
+| [addEditAction](add-edit-action.md) | `abstract fun addEditAction(action: `[`Action`](-action/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Adds an action to be displayed in edit mode. |
 | [addNavigationAction](add-navigation-action.md) | `abstract fun addNavigationAction(action: `[`Action`](-action/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Adds an action to be displayed on the far left side of the URL in display mode. |
 | [addPageAction](add-page-action.md) | `abstract fun addPageAction(action: `[`Action`](-action/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Adds an action to be displayed on the right side of the URL in display mode. |
 | [asView](as-view.md) | `open fun asView(): `[`View`](https://developer.android.com/reference/android/view/View.html)<br>Casts this toolbar to an Android View object. |

@@ -2,4 +2,4 @@
 
 # dispatchKeyEventPreIme
 
-`open fun dispatchKeyEventPreIme(event: `[`KeyEvent`](https://developer.android.com/reference/android/view/KeyEvent.html)`?): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L635)
+`open fun dispatchKeyEventPreIme(event: `[`KeyEvent`](https://developer.android.com/reference/android/view/KeyEvent.html)`?): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L637)

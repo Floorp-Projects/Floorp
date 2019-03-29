@@ -108,7 +108,6 @@ mozilla.components.browser.storage.sync
 mozilla.components.browser.tabstray
 mozilla.components.browser.toolbar
 mozilla.components.browser.toolbar.behavior
-mozilla.components.browser.toolbar.edit
 mozilla.components.concept.awesomebar
 mozilla.components.concept.engine
 mozilla.components.concept.engine.history
@@ -136,6 +135,7 @@ mozilla.components.feature.intent
 mozilla.components.feature.prompts
 mozilla.components.feature.pwa
 mozilla.components.feature.pwa.ext
+mozilla.components.feature.qr
 mozilla.components.feature.search
 mozilla.components.feature.session
 mozilla.components.feature.session.bundling
@@ -182,6 +182,7 @@ mozilla.components.support.android.test
 mozilla.components.support.android.test.espresso
 mozilla.components.support.android.test.espresso.matcher
 mozilla.components.support.base.android
+mozilla.components.support.base.android.view
 mozilla.components.support.base.facts
 mozilla.components.support.base.facts.processor
 mozilla.components.support.base.feature
