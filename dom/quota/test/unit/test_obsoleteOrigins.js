@@ -13,6 +13,11 @@ async function testSteps()
   const obsoleteOriginPaths = [
     "storage/default/chrome+++content+browser.xul/",
     "storage/default/moz-safe-about+++home/",
+    // XXX Bug 1540247 will expose MozURL::Init to js so that we could test the
+    // failure cases of that. The below directory is expected to fail now, but
+    // we expect it to pass once the rust-url issue is fixed. Thus, only test it
+    // manually.
+    // "storage/default/https+++smaug----.github.io/",
     // Deprecated client
     "storage/default/https+++example.com/asmjs/"
   ];
