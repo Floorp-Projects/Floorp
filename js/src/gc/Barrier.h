@@ -19,28 +19,111 @@
 /*
  * [SMDOC] GC Barriers
  *
- * A write barrier is a mechanism used by incremental or generation GCs to
+ * Several kinds of barrier are necessary to allow the GC to function correctly.
+ * These are triggered by reading or writing to GC pointers in the heap and
+ * serve to tell the collector about changes to the graph of reachable GC
+ * things.
+ *
+ * Since it would be awkward to change every write to memory into a function
+ * call, this file contains a bunch of C++ classes and templates that use
+ * operator overloading to take care of barriers automatically. In most cases,
+ * all that's necessary is to replace:
+ *
+ *     Type* field;
+ *
+ * with:
+ *
+ *     HeapPtr<Type> field;
+ *
+ * All heap-based GC pointers and tagged pointers must use one of these classes,
+ * except in a couple of exceptional cases.
+ *
+ * These classes are designed to be used by the internals of the JS engine.
+ * Barriers designed to be used externally are provided in js/RootingAPI.h.
+ *
+ * Overview
+ * ========
+ *
+ * This file implements the following concrete classes:
+ *
+ * HeapPtr       General wrapper for heap-based pointers that provides pre- and
+ *               post-write barriers. Most clients should use this.
+ *
+ * GCPtr         An optimisation of HeapPtr for objects which are only destroyed
+ *               by GC finalization (this rules out use in Vector, for example).
+ *
+ * PreBarriered  Provides a pre-barrier but not a post-barrier. Necessary when
+ *               generational GC updates are handled manually, e.g. for hash
+ *               table keys that don't use MovableCellHasher.
+ *
+ * HeapSlot      Provides pre and post-barriers, optimised for use in JSObject
+ *               slots and elements.
+ *
+ * ReadBarriered Provides read and post-write barriers, for use with weak
+ *               pointers.
+ *
+ * The following classes are implemented in js/RootingAPI.h (in the JS
+ * namespace):
+ *
+ * Heap          General wrapper for external clients. Like HeapPtr but also
+ *               handles cycle collector concerns. Most external clients should
+ *               use this.
+ *
+ * TenuredHeap   Like Heap but doesn't allow nursery pointers. Allows storing
+ *               flags in unused lower bits of the pointer.
+ *
+ * Which class to use?
+ * -------------------
+ *
+ * Answer the following questions to decide which barrier class is right for
+ * your use case:
+ *
+ * Is your code part of the JS engine?
+ *   Yes, it's internal =>
+ *     Is your pointer weak or strong?
+ *       Strong =>
+ *         Do you want automatic handling of nursery pointers?
+ *           Yes, of course =>
+ *             Can your object be destroyed outside of a GC?
+ *               Yes => Use HeapPtr<T>
+ *               No => Use GCPtr<T> (optimization)
+ *           No, I'll do this myself => Use PreBarriered<T>
+ *       Weak => Use ReadBarriered<T>
+ *   No, it's external =>
+ *     Can your pointer refer to nursery objects?
+ *       Yes => Use JS::Heap<T>
+ *       Never => Use JS::TenuredHeap<T> (optimization)
+ *
+ * Write barriers
+ * ==============
+ *
+ * A write barrier is a mechanism used by incremental or generational GCs to
  * ensure that every value that needs to be marked is marked. In general, the
  * write barrier should be invoked whenever a write can cause the set of things
  * traced through by the GC to change. This includes:
+ *
  *   - writes to object properties
  *   - writes to array slots
  *   - writes to fields like JSObject::shape_ that we trace through
  *   - writes to fields in private data
  *   - writes to non-markable fields like JSObject::private that point to
  *     markable data
+ *
  * The last category is the trickiest. Even though the private pointer does not
  * point to a GC thing, changing the private pointer may change the set of
  * objects that are traced by the GC. Therefore it needs a write barrier.
  *
  * Every barriered write should have the following form:
+ *
  *   <pre-barrier>
  *   obj->field = value; // do the actual write
  *   <post-barrier>
+ *
  * The pre-barrier is used for incremental GC and the post-barrier is for
  * generational GC.
  *
- *                               PRE-BARRIER
+ * Pre-write barrier
+ * -----------------
  *
  * To understand the pre-barrier, let's consider how incremental GC works. The
  * GC itself is divided into "slices". Between each slice, JS code is allowed to
@@ -97,18 +180,8 @@
  * value0. E.g., see JSObject::writeBarrierPre, which is used if obj->field is
  * a JSObject*. It takes value0 as a parameter.
  *
- *                                READ-BARRIER
- *
- * Incremental GC requires that weak pointers have read barriers. The problem
- * happens when, during an incremental GC, some code reads a weak pointer and
- * writes it somewhere on the heap that has been marked black in a previous
- * slice. Since the weak pointer will not otherwise be marked and will be swept
- * and finalized in the last slice, this will leave the pointer just written
- * dangling after the GC. To solve this, we immediately mark black all weak
- * pointers that get read between slices so that it is safe to store them in an
- * already marked part of the heap, e.g. in Rooted.
- *
- *                                POST-BARRIER
+ * Post-write barrier
+ * ------------------
  *
  * For generational GC, we want to be able to quickly collect the nursery in a
  * minor collection.  Part of the way this is achieved is to only mark the
@@ -130,15 +203,33 @@
  * come to do a minor collection we can examine the contents of the store buffer
  * and mark any edge targets that are in the nursery.
  *
- *                            IMPLEMENTATION DETAILS
+ * Read barriers
+ * =============
  *
- * Since it would be awkward to change every write to memory into a function
- * call, this file contains a bunch of C++ classes and templates that use
- * operator overloading to take care of barriers automatically. In many cases,
- * all that's necessary to make some field be barriered is to replace
- *     Type* field;
- * with
- *     GCPtr<Type> field;
+ * Weak pointer read barrier
+ * -------------------------
+ *
+ * Weak pointers must have a read barrier to prevent the referent from being
+ * collected if it is read after the start of an incremental GC.
+ *
+ * The problem happens when, during an incremental GC, some code reads a weak
+ * pointer and writes it somewhere on the heap that has been marked black in a
+ * previous slice. Since the weak pointer will not otherwise be marked and will
+ * be swept and finalized in the last slice, this will leave the pointer just
+ * written dangling after the GC. To solve this, we immediately mark black all
+ * weak pointers that get read between slices so that it is safe to store them
+ * in an already marked part of the heap, e.g. in Rooted.
+ *
+ * Cycle collector read barrier
+ * ----------------------------
+ *
+ * Heap pointers external to the engine may be marked gray. The JS API has an
+ * invariant that no gray pointers may be passed, and this maintained by a read
+ * barrier that calls ExposeGCThingToActiveJS on such pointers. This is
+ * implemented by JS::Heap<T> in js/RootingAPI.h.
+ *
+ * Implementation Details
+ * ======================
  *
  * One additional note: not all object writes need to be pre-barriered. Writes
  * to newly allocated objects do not need a pre-barrier. In these cases, we use
@@ -146,7 +237,7 @@
  * the init naming idiom in many places to signify that a field is being
  * assigned for the first time.
  *
- * This file implements four classes, illustrated here:
+ * This file implements the following hierarchy of classes:
  *
  * BarrieredBase             base class of all barriers
  *  |  |
@@ -183,10 +274,9 @@
  *  -> InternalBarrierMethods<Value>::postBarrier
  *      -> StoreBuffer::put
  *
- * These classes are designed to be used by the internals of the JS engine.
- * Barriers designed to be used externally are provided in js/RootingAPI.h.
- * These external barriers call into the same post-barrier implementations at
- * InternalBarrierMethods<T>::post via an indirect call to Heap(.+)Barrier.
+ * Barriers for use outside of the JS engine call into the same barrier
+ * implementations at InternalBarrierMethods<T>::post via an indirect call to
+ * Heap(.+)WriteBarriers.
  *
  * These clases are designed to be used to wrap GC thing pointers or values that
  * act like them (i.e. JS::Value and jsid).  It is possible to use them for
