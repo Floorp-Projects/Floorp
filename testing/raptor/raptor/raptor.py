@@ -866,11 +866,12 @@ def main(args=sys.argv[1:]):
     pages_that_timed_out = raptor.get_page_timeout_list()
     if len(pages_that_timed_out) > 0:
         for _page in pages_that_timed_out:
-            LOG.critical("TEST-UNEXPECTED-FAIL: test '%s' timed out loading test page: %s "
-                         "pending metrics: %s"
-                         % (_page['test_name'],
-                            _page['url'],
-                            _page['pending_metrics']))
+            message = [("TEST-UNEXPECTED-FAIL", "test '%s'" % _page['test_name']),
+                       ("timed out loading test page", _page['url'])]
+            if raptor_test.get("type") == 'pageload':
+                message.append(("pending metrics", _page['pending_metrics']))
+
+            LOG.critical(" ".join("%s: %s" % (subject, msg) for subject, msg in message))
         os.sys.exit(1)
 
     # when running raptor locally with gecko profiling on, use the view-gecko-profile
