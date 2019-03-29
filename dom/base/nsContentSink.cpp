@@ -11,6 +11,7 @@
 
 #include "nsContentSink.h"
 #include "mozilla/Components.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/SRILogHelper.h"
@@ -24,7 +25,6 @@
 #include "nsIProtocolHandler.h"
 #include "nsIHttpChannel.h"
 #include "nsIContent.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsViewManager.h"
 #include "nsAtom.h"
@@ -1190,14 +1190,14 @@ void nsContentSink::StartLayout(bool aIgnorePendingSheets) {
   mLastNotificationTime = PR_Now();
 
   mDocument->SetMayStartLayout(true);
-  nsCOMPtr<nsIPresShell> shell = mDocument->GetShell();
+  RefPtr<PresShell> presShell = mDocument->GetPresShell();
   // Make sure we don't call Initialize() for a shell that has
   // already called it. This can happen when the layout frame for
   // an iframe is constructed *between* the Embed() call for the
   // docshell in the iframe, and the content sink's call to OpenBody().
   // (Bug 153815)
-  if (shell && !shell->DidInitialize()) {
-    nsresult rv = shell->Initialize();
+  if (presShell && !presShell->DidInitialize()) {
+    nsresult rv = presShell->Initialize();
     if (NS_FAILED(rv)) {
       return;
     }
@@ -1345,8 +1345,8 @@ nsresult nsContentSink::DidProcessATokenImpl() {
   }
 
   // Get the current user event time
-  nsIPresShell* shell = mDocument->GetShell();
-  if (!shell) {
+  PresShell* presShell = mDocument->GetPresShell();
+  if (!presShell) {
     // If there's no pres shell in the document, return early since
     // we're not laying anything out here.
     return NS_OK;
@@ -1358,7 +1358,7 @@ nsresult nsContentSink::DidProcessATokenImpl() {
   // Check if there's a pending event
   if (sPendingEventMode != 0 && !mHasPendingEvent &&
       (mDeflectedCount % sEventProbeRate) == 0) {
-    nsViewManager* vm = shell->GetViewManager();
+    nsViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
     nsCOMPtr<nsIWidget> widget;
     vm->GetRootWidget(getter_AddRefs(widget));
@@ -1492,15 +1492,15 @@ nsresult nsContentSink::WillParseImpl(void) {
     return NS_OK;
   }
 
-  nsIPresShell* shell = mDocument->GetShell();
-  if (!shell) {
+  PresShell* presShell = mDocument->GetPresShell();
+  if (!presShell) {
     return NS_OK;
   }
 
   uint32_t currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
 
   if (sEnablePerfMode == 0) {
-    nsViewManager* vm = shell->GetViewManager();
+    nsViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
     uint32_t lastEventTime;
     vm->GetLastUserEventTime(lastEventTime);

@@ -6,6 +6,7 @@
 
 #include "ContentProcessController.h"
 
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZChild.h"
@@ -67,11 +68,11 @@ void ContentProcessController::NotifyMozMouseScrollEvent(
 
 void ContentProcessController::NotifyFlushComplete() {
   if (mBrowser) {
-    nsCOMPtr<nsIPresShell> shell;
+    RefPtr<PresShell> presShell;
     if (nsCOMPtr<dom::Document> doc = mBrowser->GetDocument()) {
-      shell = doc->GetShell();
+      presShell = doc->GetPresShell();
     }
-    APZCCallbackHelper::NotifyFlushComplete(shell.get());
+    APZCCallbackHelper::NotifyFlushComplete(presShell);
   }
 }
 

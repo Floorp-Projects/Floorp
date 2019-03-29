@@ -197,7 +197,7 @@ class EditorBase : public nsIEditor,
   Document* GetDocument() const { return mDocument; }
 
   PresShell* GetPresShell() const {
-    return mDocument ? static_cast<PresShell*>(mDocument->GetShell()) : nullptr;
+    return mDocument ? mDocument->GetPresShell() : nullptr;
   }
   nsPresContext* GetPresContext() const {
     PresShell* presShell = GetPresShell();
@@ -220,7 +220,7 @@ class EditorBase : public nsIEditor,
     if (!mDocument) {
       return nullptr;
     }
-    return static_cast<PresShell*>(mDocument->GetShell());
+    return mDocument->GetPresShell();
   }
 
   nsresult GetSelection(SelectionType aSelectionType,
