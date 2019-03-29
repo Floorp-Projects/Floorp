@@ -11,6 +11,7 @@
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Element.h"
 #include "nsIMutationObserver.h"
 #include "mozilla/EventListenerManager.h"

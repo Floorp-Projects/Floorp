@@ -32,6 +32,7 @@
 #include "nsIObserverService.h"
 #include "XULDocument.h"
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"  // for Event
 #include "mozilla/dom/KeyboardEvent.h"
