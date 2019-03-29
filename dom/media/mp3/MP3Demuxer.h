@@ -53,7 +53,7 @@ class MP3TrackDemuxer : public MediaTrackDemuxer,
   int64_t StreamLength() const;
 
   // Returns the estimated stream duration, or a 0-duration if unknown.
-  media::TimeUnit Duration() const;
+  media::NullableTimeUnit Duration() const;
 
   // Returns the estimated duration up to the given frame number,
   // or a 0-duration if unknown.

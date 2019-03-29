@@ -48,6 +48,14 @@ class MockMP3StreamMediaResource
 
 struct MP3Resource {
   enum class HeaderType { NONE, XING, VBRI };
+  struct Duration {
+    int64_t mMicroseconds;
+    float mTolerableRate;
+
+    Duration(int64_t aMicroseconds, float aTolerableRate)
+        : mMicroseconds(aMicroseconds), mTolerableRate(aTolerableRate) {}
+    int64_t Tolerance() const { return mTolerableRate * mMicroseconds; }
+  };
 
   const char* mFilePath;
   bool mIsVBR;
@@ -60,8 +68,7 @@ struct MP3Resource {
   uint8_t mID3Flags;
   uint32_t mID3Size;
 
-  int64_t mDuration;
-  float mDurationError;
+  Maybe<Duration> mDuration;
   float mSeekError;
   int32_t mSampleRate;
   int32_t mSamplesPerFrame;
@@ -94,8 +101,7 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 2141;
-      res.mDuration = 30067000;
-      res.mDurationError = 0.001f;
+      res.mDuration = Some(MP3Resource::Duration{30067000, 0.001f});
       res.mSeekError = 0.02f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
@@ -110,8 +116,7 @@ class MP3DemuxerTest : public ::testing::Test {
       // No content length can be estimated for CBR stream resources.
       MP3Resource streamRes = res;
       streamRes.mFileSize = -1;
-      streamRes.mDuration = -1;
-      streamRes.mDurationError = 0.0f;
+      streamRes.mDuration = Nothing();
 
       res.mResource = new MockMP3MediaResource(res.mFilePath);
       res.mDemuxer = new MP3TrackDemuxer(res.mResource);
@@ -139,8 +144,7 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 115304;
-      res.mDuration = 3166167;
-      res.mDurationError = 0.001f;
+      res.mDuration = Some(MP3Resource::Duration{3166167, 0.001f});
       res.mSeekError = 0.02f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
@@ -155,8 +159,7 @@ class MP3DemuxerTest : public ::testing::Test {
       // No content length can be estimated for CBR stream resources.
       MP3Resource streamRes = res;
       streamRes.mFileSize = -1;
-      streamRes.mDuration = -1;
-      streamRes.mDurationError = 0.0f;
+      streamRes.mDuration = Nothing();
 
       res.mResource = new MockMP3MediaResource(res.mFilePath);
       res.mDemuxer = new MP3TrackDemuxer(res.mResource);
@@ -179,8 +182,7 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 2221;
-      res.mDuration = 30081000;
-      res.mDurationError = 0.005f;
+      res.mDuration = Some(MP3Resource::Duration{30081000, 0.005f});
       res.mSeekError = 0.02f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
@@ -218,8 +220,7 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 24;
-      res.mDuration = 336686;
-      res.mDurationError = 0.01f;
+      res.mDuration = Some(MP3Resource::Duration{336686, 0.01f});
       res.mSeekError = 0.2f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
@@ -259,8 +260,7 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 24;
-      res.mDuration = 336686;
-      res.mDurationError = 0.01f;
+      res.mDuration = Some(MP3Resource::Duration{336686, 0.01f});
       res.mSeekError = 0.2f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
@@ -298,8 +298,7 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 24;
-      res.mDuration = 336686;
-      res.mDurationError = 0.01f;
+      res.mDuration = Some(MP3Resource::Duration{336686, 0.01f});
       res.mSeekError = 0.2f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
@@ -337,8 +336,7 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 4202;
-      res.mDuration = 783660;
-      res.mDurationError = 0.01f;
+      res.mDuration = Some(MP3Resource::Duration{783660, 0.01f});
       res.mSeekError = 0.02f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
@@ -479,10 +477,14 @@ TEST_F(MP3DemuxerTest, Duration) {
     EXPECT_EQ(target.mFileSize, target.mDemuxer->StreamLength());
 
     while (frameData) {
-      EXPECT_NEAR(target.mDuration,
-                  target.mDemuxer->Duration().ToMicroseconds(),
-                  target.mDurationError * target.mDuration);
-
+      if (target.mDuration) {
+        ASSERT_TRUE(target.mDemuxer->Duration());
+        EXPECT_NEAR(target.mDuration->mMicroseconds,
+                    target.mDemuxer->Duration()->ToMicroseconds(),
+                    target.mDuration->Tolerance());
+      } else {
+        EXPECT_FALSE(target.mDemuxer->Duration());
+      }
       frameData = target.mDemuxer->DemuxSample();
     }
   }
@@ -498,7 +500,8 @@ TEST_F(MP3DemuxerTest, Duration) {
     RefPtr<MediaRawData> frameData(target.mDemuxer->DemuxSample());
     ASSERT_TRUE(frameData);
 
-    const auto duration = target.mDemuxer->Duration();
+    ASSERT_TRUE(target.mDemuxer->Duration());
+    const auto duration = target.mDemuxer->Duration().value();
     const auto pos = duration + TimeUnit::FromMicroseconds(1e6);
 
     // Attempt to seek 1 second past the end of stream.
