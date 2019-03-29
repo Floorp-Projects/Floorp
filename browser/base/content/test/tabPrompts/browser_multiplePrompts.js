@@ -8,20 +8,21 @@
  * the oldest one.
  */
 add_task(async function() {
-  const PROMPTCOUNT = 5;
+  const PROMPTCOUNT = 9;
 
-  let contentScript = function() {
-    var i = 5; // contentScript has no access to PROMPTCOUNT.
+  let contentScript = function(MAX_PROMPT) {
+    var i = MAX_PROMPT;
+    let fns = ["alert", "prompt", "confirm"];
     window.addEventListener("message", function() {
       i--;
       if (i) {
         window.postMessage("ping", "*");
       }
-      alert("Alert countdown #" + i);
+      window[fns[i % 3]](fns[i % 3] + " countdown #" + i);
     });
     window.postMessage("ping", "*");
   };
-  let url = "data:text/html,<script>(" + encodeURIComponent(contentScript.toSource()) + ")();</script>";
+  let url = "data:text/html,<script>(" + encodeURIComponent(contentScript.toSource()) + ")(" + PROMPTCOUNT + ");</script>";
 
   let promptsOpenedPromise = new Promise(function(resolve) {
     let unopenedPromptCount = PROMPTCOUNT;
@@ -48,7 +49,8 @@ add_task(async function() {
     let i = 0;
     for (let promptElement of promptElements) {
       let prompt = tab.linkedBrowser.tabModalPromptBox.prompts.get(promptElement);
-      is(prompt.Dialog.args.text, "Alert countdown #" + i, "The #" + i + " alert should be labelled as such.");
+      let expectedType = ["alert", "prompt", "confirm"][i % 3];
+      is(prompt.Dialog.args.text, expectedType + " countdown #" + i, "The #" + i + " alert should be labelled as such.");
       if (i !== promptElementsCount) {
         is(prompt.element.hidden, true, "This prompt should be hidden.");
         i++;
