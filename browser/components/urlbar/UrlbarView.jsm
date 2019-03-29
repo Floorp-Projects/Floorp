@@ -343,7 +343,7 @@ class UrlbarView {
 
     this._alignPanel();
 
-    this.panel.openPopup(this.input.textbox.closest("toolbar"), "after_end");
+    this.panel.openPopup(this.input.textbox, "after_start");
   }
 
   _alignPanel() {
@@ -390,6 +390,14 @@ class UrlbarView {
       this.panel.style.removeProperty("--item-padding-end");
     }
     this.panel.style.setProperty("--item-content-width", Math.round(contentWidth) + "px");
+
+    // Align the panel with the input's parent toolbar.
+    let toolbarRect =
+      this._getBoundsWithoutFlushing(this.input.textbox.closest("toolbar"));
+    this.panel.style.marginInlineStart = this.window.RTL_UI ?
+      inputRect.right - documentRect.right + "px" :
+      documentRect.left - inputRect.left + "px";
+    this.panel.style.marginTop = inputRect.top - toolbarRect.top + "px";
   }
 
   _createRow() {
