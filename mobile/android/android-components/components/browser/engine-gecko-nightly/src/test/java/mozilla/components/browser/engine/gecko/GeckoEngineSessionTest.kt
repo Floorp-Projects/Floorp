@@ -375,20 +375,6 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun saveState() {
-        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
-                geckoSessionProvider = geckoSessionProvider)
-        val currentState = GeckoSession.SessionState("<state>")
-
-        `when`(geckoSession.saveState()).thenReturn(GeckoResult.fromValue(currentState))
-
-        val savedState = engineSession.saveState() as GeckoEngineSessionState
-
-        assertEquals(currentState, savedState.actualState)
-        assertEquals("{\"GECKO_STATE\":\"<state>\"}", savedState.toJSON().toString())
-    }
-
-    @Test
     fun restoreState() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider)
@@ -774,8 +760,9 @@ class GeckoEngineSessionTest {
         assertEquals(TrackingProtectionPolicy.CONTENT, ContentBlocking.AT_CONTENT)
         assertEquals(TrackingProtectionPolicy.SOCIAL, ContentBlocking.AT_SOCIAL)
         assertEquals(TrackingProtectionPolicy.TEST, ContentBlocking.AT_TEST)
+        assertEquals(TrackingProtectionPolicy.CRYPTOMINING, ContentBlocking.AT_CRYPTOMINING)
 
-        assertEquals(TrackingProtectionPolicy.all().categories, ContentBlocking.AT_ALL)
+        assertEquals(TrackingProtectionPolicy.all().categories, ContentBlocking.AT_STRICT)
     }
 
     @Test
@@ -1441,6 +1428,25 @@ class GeckoEngineSessionTest {
         assertNotNull(result)
         assertEquals(result!!.poll(0), AllowOrDeny.DENY)
         verify(geckoSession).loadUri("sample:about")
+    }
+
+    @Test
+    fun `State provided through delegate will be returned from saveState`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        val state: GeckoSession.SessionState = mock()
+
+        progressDelegate.value.onSessionStateChange(mock(), state)
+
+        val savedState = engineSession.saveState()
+        assertNotNull(savedState)
+        assertTrue(savedState is GeckoEngineSessionState)
+
+        val actualState = (savedState as GeckoEngineSessionState).actualState
+        assertEquals(state, actualState)
     }
 
     private fun mockGeckoSession(): GeckoSession {

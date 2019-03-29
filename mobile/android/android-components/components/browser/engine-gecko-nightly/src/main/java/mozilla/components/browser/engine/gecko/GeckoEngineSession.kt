@@ -5,8 +5,6 @@
 package mozilla.components.browser.engine.gecko
 
 import android.annotation.SuppressLint
-import kotlin.coroutines.CoroutineContext
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -28,7 +26,6 @@ import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
 import mozilla.components.support.utils.DownloadUtils
-import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
@@ -37,7 +34,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.WebRequestError
-import java.lang.IllegalStateException
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Gecko-based EngineSession implementation.
@@ -59,6 +56,7 @@ class GeckoEngineSession(
     internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
     internal var job: Job = Job()
+    private var lastSessionState: GeckoSession.SessionState? = null
 
     /**
      * See [EngineSession.settings]
@@ -127,28 +125,9 @@ class GeckoEngineSession(
 
     /**
      * See [EngineSession.saveState]
-     *
-     * See https://bugzilla.mozilla.org/show_bug.cgi?id=1441810 for
-     * discussion on sync vs. async, where a decision was made that
-     * callers should provide synchronous wrappers, if needed. In case we're
-     * asking for the state when persisting, a separate (independent) thread
-     * is used so we're not blocking anything else. In case of calling this
-     * method from onPause or similar, we also want a synchronous response.
      */
-    override fun saveState(): EngineSessionState = runBlocking {
-        val state = CompletableDeferred<GeckoEngineSessionState>()
-
-        ThreadUtils.postToBackgroundThread {
-            geckoSession.saveState().then({ sessionState ->
-                state.complete(GeckoEngineSessionState(sessionState))
-                GeckoResult<Void>()
-            }, { throwable ->
-                state.completeExceptionally(throwable)
-                GeckoResult<Void>()
-            })
-        }
-
-        state.await()
+    override fun saveState(): EngineSessionState {
+        return GeckoEngineSessionState(lastSessionState)
     }
 
     /**
@@ -376,6 +355,10 @@ class GeckoEngineSession(
                     onLoadingStateChange(false)
                 }
             }
+        }
+
+        override fun onSessionStateChange(session: GeckoSession, sessionState: GeckoSession.SessionState) {
+            lastSessionState = sessionState
         }
     }
 

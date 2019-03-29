@@ -775,7 +775,8 @@ class GeckoEngineSessionTest {
         assertEquals(TrackingProtectionPolicy.SOCIAL, ContentBlocking.AT_SOCIAL)
         assertEquals(TrackingProtectionPolicy.TEST, ContentBlocking.AT_TEST)
 
-        assertEquals(TrackingProtectionPolicy.all().categories, ContentBlocking.AT_ALL)
+        assertEquals(TrackingProtectionPolicy.all().categories and TrackingProtectionPolicy.CRYPTOMINING.inv(),
+            ContentBlocking.AT_ALL)
     }
 
     @Test
