@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.qr
 
+import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraDevice
 import android.util.Size
 import com.google.zxing.BarcodeFormat
@@ -16,6 +17,7 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
@@ -130,6 +132,27 @@ class QrFragmentTest {
         camera = mock()
         qrFragment.stateCallback.onError(camera, 0)
         verify(camera).close()
+    }
+
+    @Test
+    fun `catches and handles CameraAccessException`() {
+        val qrFragment = spy(QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java)))
+
+        var camera: CameraDevice = mock()
+        `when`(camera.createCaptureRequest(anyInt())).thenThrow(CameraAccessException(123))
+        qrFragment.cameraDevice = camera
+
+        val textureView: AutoFitTextureView = mock()
+        `when`(textureView.surfaceTexture).thenReturn(mock())
+        qrFragment.textureView = textureView
+
+        qrFragment.previewSize = mock()
+
+        try {
+            qrFragment.createCameraPreviewSession()
+        } catch (e: CameraAccessException) {
+            fail("CameraAccessException should have been caught and logged, not re-thrown.")
+        }
     }
 
     @Test

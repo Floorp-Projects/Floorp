@@ -23,6 +23,7 @@ import android.graphics.Matrix
 import android.graphics.Point
 import android.graphics.RectF
 import android.graphics.SurfaceTexture
+import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
@@ -49,7 +50,7 @@ import com.google.zxing.NotFoundException
 import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import mozilla.components.support.base.android.view.AutoFitTextureView
-import mozilla.components.support.base.log.Log
+import mozilla.components.support.base.log.logger.Logger
 import java.io.Serializable
 import java.lang.IllegalStateException
 
@@ -68,8 +69,10 @@ import java.util.concurrent.TimeUnit
  * https://github.com/googlesamples/android-Camera2Basic
  * https://github.com/kismkof/camera2basic
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class QrFragment : Fragment() {
+    private val logger = Logger("mozac-qr")
+
     /**
      * [TextureView.SurfaceTextureListener] handles several lifecycle events on a [TextureView].
      */
@@ -94,7 +97,7 @@ class QrFragment : Fragment() {
     private var cameraId: String? = null
     private var captureSession: CameraCaptureSession? = null
     internal var cameraDevice: CameraDevice? = null
-    private var previewSize: Size? = null
+    internal var previewSize: Size? = null
 
     /**
      * Listener invoked when the QR scan completed successfully.
@@ -238,7 +241,7 @@ class QrFragment : Fragment() {
             backgroundThread = null
             backgroundHandler = null
         } catch (e: InterruptedException) {
-            Log.log(Log.Priority.DEBUG, "mozac-qr", e, "Interrupted while stopping background thread")
+            logger.debug("Interrupted while stopping background thread", e)
         }
     }
 
@@ -263,7 +266,7 @@ class QrFragment : Fragment() {
             val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP) ?: continue
             val largest = Collections.max(map.getOutputSizes(ImageFormat.YUV_420_888).asList(), CompareSizesByArea())
             imageReader = ImageReader.newInstance(MAX_PREVIEW_WIDTH, MAX_PREVIEW_HEIGHT, ImageFormat.YUV_420_888, 2)
-                .apply { setOnImageAvailableListener(imageAvailableListener, backgroundHandler) }
+                    .apply { setOnImageAvailableListener(imageAvailableListener, backgroundHandler) }
 
             // Find out if we need to swap dimension to get the preview size relative to sensor coordinate.
             val displayRotation = activity?.windowManager?.defaultDisplay?.rotation
@@ -394,7 +397,8 @@ class QrFragment : Fragment() {
     /**
      * Creates a new [CameraCaptureSession] for camera preview.
      */
-    private fun createCameraPreviewSession() {
+    @Suppress("ComplexMethod")
+    internal fun createCameraPreviewSession() {
         val texture = textureView.surfaceTexture
 
         val size = previewSize as Size
@@ -403,15 +407,16 @@ class QrFragment : Fragment() {
 
         val surface = Surface(texture)
         val mImageSurface = imageReader?.surface
-        cameraDevice?.let {
-            previewRequestBuilder = it.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
-                addTarget(mImageSurface as Surface)
-                addTarget(surface)
-            }
 
-            it.createCaptureSession(Arrays.asList(mImageSurface, surface),
-                object : CameraCaptureSession.StateCallback() {
+        try {
+            cameraDevice?.let {
+                previewRequestBuilder = it.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
+                    addTarget(mImageSurface as Surface)
+                    addTarget(surface)
+                }
 
+                val captureCallback = object : CameraCaptureSession.CaptureCallback() {}
+                val stateCallback = object : CameraCaptureSession.StateCallback() {
                     override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
                         if (null == cameraDevice) return
 
@@ -419,19 +424,28 @@ class QrFragment : Fragment() {
                                 CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
 
                         previewRequest = previewRequestBuilder?.build()
-
                         captureSession = cameraCaptureSession
-                        cameraCaptureSession.setRepeatingRequest(previewRequest as CaptureRequest,
-                            object : CameraCaptureSession.CaptureCallback() {},
-                            backgroundHandler
-                        )
+
+                        try {
+                            cameraCaptureSession.setRepeatingRequest(
+                                    previewRequest as CaptureRequest,
+                                    captureCallback,
+                                    backgroundHandler
+                            )
+                        } catch (e: CameraAccessException) {
+                            logger.error("Failed to request capture", e)
+                        }
                     }
 
                     override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
-                        Log.log(Log.Priority.ERROR, "mozac-qr", message = "Failed to configure CameraCaptureSession")
+                        logger.error("Failed to configure CameraCaptureSession")
                     }
-                }, null
-            )
+                }
+
+                it.createCaptureSession(Arrays.asList(mImageSurface, surface), stateCallback, null)
+            }
+        } catch (e: CameraAccessException) {
+                logger.error("Failed to create camera preview session", e)
         }
     }
 
