@@ -30,7 +30,7 @@ internal object DatetimesStorageEngine : DatetimesStorageEngineImplementation()
 
 internal open class DatetimesStorageEngineImplementation(
     override val logger: Logger = Logger("glean/DatetimesStorageEngine")
-) : GenericScalarStorageEngine<String>() {
+) : GenericStorageEngine<String>() {
 
     override fun deserializeSingleMetric(metricName: String, value: Any?): String? {
         // This parses the date strings on ingestion as a sanity check, but we
@@ -61,7 +61,7 @@ internal open class DatetimesStorageEngineImplementation(
      * @param date the date value to set this metric to
      */
     fun set(metricData: DatetimeMetricType, date: Date = Date()) {
-        super.recordScalar(
+        super.recordMetric(
             metricData as CommonMetricData,
             getISOTimeString(date, metricData.timeUnit)
         )
@@ -75,7 +75,7 @@ internal open class DatetimesStorageEngineImplementation(
      * @param date the date value to set this metric to
      */
     fun set(metricData: DatetimeMetricType, calendar: Calendar) {
-        super.recordScalar(
+        super.recordMetric(
             metricData as CommonMetricData,
             getISOTimeString(calendar, metricData.timeUnit)
         )

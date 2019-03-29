@@ -31,7 +31,7 @@ internal object TimespansStorageEngine : TimespansStorageEngineImplementation()
 
 internal open class TimespansStorageEngineImplementation(
     override val logger: Logger = Logger("glean/TimespansStorageEngine")
-) : GenericScalarStorageEngine<Long>() {
+) : GenericStorageEngine<Long>() {
 
     /**
      * A map that stores the start times from the API consumers, not yet
@@ -179,7 +179,7 @@ internal open class TimespansStorageEngineImplementation(
             // Use a custom combiner to sum the new timespan to the one already stored. We
             // can't adjust the time unit before storing so that we still allow for values
             // lower than the desired time unit to accumulate.
-            super.recordScalar(metricData, elapsedNanos, timeUnit) { currentValue, newValue ->
+            super.recordMetric(metricData, elapsedNanos, timeUnit) { currentValue, newValue ->
                 currentValue?.let {
                     it + newValue
                 } ?: newValue

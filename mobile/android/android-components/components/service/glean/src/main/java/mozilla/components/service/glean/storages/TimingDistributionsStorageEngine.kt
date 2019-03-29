@@ -33,7 +33,7 @@ internal object TimingDistributionsStorageEngine : TimingDistributionsStorageEng
 
 internal open class TimingDistributionsStorageEngineImplementation(
     override val logger: Logger = Logger("glean/TimingDistributionsStorageEngine")
-) : GenericScalarStorageEngine<TimingDistributionData>() {
+) : GenericStorageEngine<TimingDistributionData>() {
 
     override fun deserializeSingleMetric(metricName: String, value: Any?): TimingDistributionData? {
         return try {
@@ -82,7 +82,7 @@ internal open class TimingDistributionsStorageEngineImplementation(
         // TimingDistributionData for each value that doesn't have an existing current value.
         val dummy = TimingDistributionData(category = metricData.category, name = metricData.name,
             timeUnit = timeUnit)
-        super.recordScalar(metricData, dummy, null) { currentValue, newValue ->
+        super.recordMetric(metricData, dummy, null) { currentValue, newValue ->
             currentValue?.let {
                 it.accumulate(sample)
                 it

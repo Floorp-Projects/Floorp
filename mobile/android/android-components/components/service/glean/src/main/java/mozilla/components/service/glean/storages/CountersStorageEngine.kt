@@ -24,7 +24,7 @@ internal object CountersStorageEngine : CountersStorageEngineImplementation()
 
 internal open class CountersStorageEngineImplementation(
     override val logger: Logger = Logger("glean/CountersStorageEngine")
-) : GenericScalarStorageEngine<Int>() {
+) : GenericStorageEngine<Int>() {
 
     override fun deserializeSingleMetric(metricName: String, value: Any?): Int? {
         return (value as? Int)?.let {
@@ -63,7 +63,7 @@ internal open class CountersStorageEngineImplementation(
         }
 
         // Use a custom combiner to add the amount to the existing counters rather than overwriting
-        super.recordScalar(metricData, amount, null) { currentValue, newAmount ->
+        super.recordMetric(metricData, amount, null) { currentValue, newAmount ->
             currentValue?.let { it + newAmount } ?: newAmount
         }
     }

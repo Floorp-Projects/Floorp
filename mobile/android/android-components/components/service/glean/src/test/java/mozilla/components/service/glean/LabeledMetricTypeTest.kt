@@ -9,7 +9,7 @@ import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.storages.BooleansStorageEngine
 import mozilla.components.service.glean.storages.CountersStorageEngine
-import mozilla.components.service.glean.storages.MockScalarStorageEngine
+import mozilla.components.service.glean.storages.MockGenericStorageEngine
 import mozilla.components.service.glean.storages.StringListsStorageEngine
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.storages.TimespansStorageEngine
@@ -440,17 +440,17 @@ class LabeledMetricTypeTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.all).thenAnswer { persistedSample }
         `when`(context.getSharedPreferences(
-            eq(MockScalarStorageEngine::class.java.canonicalName),
+            eq(MockGenericStorageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
         `when`(context.getSharedPreferences(
-            eq("${MockScalarStorageEngine::class.java.canonicalName}.PingLifetime"),
+            eq("${MockGenericStorageEngine::class.java.canonicalName}.PingLifetime"),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences("${MockScalarStorageEngine::class.java.canonicalName}.PingLifetime",
+            .getSharedPreferences("${MockGenericStorageEngine::class.java.canonicalName}.PingLifetime",
                 Context.MODE_PRIVATE))
 
-        val storageEngine = MockScalarStorageEngine()
+        val storageEngine = MockGenericStorageEngine()
         storageEngine.applicationContext = context
 
         val metric = GenericMetricType(

@@ -24,7 +24,7 @@ internal object StringsStorageEngine : StringsStorageEngineImplementation()
 
 internal open class StringsStorageEngineImplementation(
     override val logger: Logger = Logger("glean/StringsStorageEngine")
-) : GenericScalarStorageEngine<String>() {
+) : GenericStorageEngine<String>() {
     companion object {
         // Maximum length of any passed value string, in characters.
         private const val MAX_LENGTH_VALUE = 50
@@ -66,6 +66,6 @@ internal open class StringsStorageEngineImplementation(
             it
         }
 
-        super.recordScalar(metricData, truncatedValue)
+        super.recordMetric(metricData, truncatedValue)
     }
 }

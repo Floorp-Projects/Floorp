@@ -15,29 +15,29 @@ import org.json.JSONObject
 
 /**
  * Defines an alias for a generic data storage to be used by
- * [GenericScalarStorageEngine]. This maps a metric name to
+ * [GenericStorageEngine]. This maps a metric name to
  * its data.
  */
 internal typealias GenericDataStorage<T> = MutableMap<String, T>
 
 /**
  * Defines an alias for a generic storage map to be used by
- * [GenericScalarStorageEngine]. This maps a store name to
+ * [GenericStorageEngine]. This maps a store name to
  * the [GenericDataStorage] it holds.
  */
 internal typealias GenericStorageMap<T> = MutableMap<String, GenericDataStorage<T>>
 
 /**
  * Defines the typealias for the combiner function to be used by
- * [GenericScalarStorageEngine.recordScalar] when recording new values.
+ * [GenericStorageEngine.recordMetric] when recording new values.
  */
-internal typealias ScalarRecordingCombiner<T> = (currentValue: T?, newValue: T) -> T
+internal typealias MetricsCombiner<T> = (currentValue: T?, newValue: T) -> T
 
 /**
- * A base class for 'scalar' like metrics. This allows sharing the common
+ * A base class for common metric storage functionality. This allows sharing the common
  * store managing and lifetime behaviours.
  */
-internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
+internal abstract class GenericStorageEngine<MetricType> : StorageEngine {
     override lateinit var applicationContext: Context
 
     // Let derived class define a logger so that they can provide a proper name,
@@ -52,34 +52,34 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     }
 
     // Store a map for each lifetime as an array element:
-    // Array[Lifetime] = Map[StorageName, ScalarType].
-    protected val dataStores: Array<GenericStorageMap<ScalarType>> =
-        Array(Lifetime.values().size) { mutableMapOf<String, GenericDataStorage<ScalarType>>() }
+    // Array[Lifetime] = Map[StorageName, MetricType].
+    protected val dataStores: Array<GenericStorageMap<MetricType>> =
+        Array(Lifetime.values().size) { mutableMapOf<String, GenericDataStorage<MetricType>>() }
 
     /**
      * Implementor's provided function to convert deserialized 'user' lifetime
-     * data to the destination [ScalarType].
+     * data to the destination [MetricType].
      *
      * @param metricName the name of the metric being deserialized
      * @param value loaded from the storage as [Any]
      *
-     * @return data as [ScalarType] or null if deserialization failed
+     * @return data as [MetricType] or null if deserialization failed
      */
-    protected abstract fun deserializeSingleMetric(metricName: String, value: Any?): ScalarType?
+    protected abstract fun deserializeSingleMetric(metricName: String, value: Any?): MetricType?
 
     /**
      * Implementor's provided function to serialize 'user' lifetime data as needed by the data type.
      *
      * @param userPreferences [SharedPreferences.Editor] for writing preferences as needed by type.
      * @param storeName The metric store name where the data is stored in [SharedPreferences].
-     * @param value The value to be stored, passed as a [ScalarType] to be handled correctly by the
+     * @param value The value to be stored, passed as a [MetricType] to be handled correctly by the
      *              implementor.
      * @param extraSerializationData extra data to be serialized to disk for "User" persisted values
      */
     protected abstract fun serializeSingleMetric(
         userPreferences: SharedPreferences.Editor?,
         storeName: String,
-        value: ScalarType,
+        value: MetricType,
         extraSerializationData: Any?
     )
 
@@ -155,7 +155,7 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     }
 
     /**
-     * Retrieves the [recorded metric data][ScalarType] for the provided
+     * Retrieves the [recorded metric data][MetricType] for the provided
      * store name.
      *
      * Please note that the [Lifetime.Application] lifetime is handled implicitly
@@ -166,11 +166,11 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      * @param clearStore whether or not to clear the requested store. Not that only
      *        metrics stored with a lifetime of [Lifetime.Ping] will be cleared.
      *
-     * @return the [ScalarType] recorded in the requested store
+     * @return the [MetricType] recorded in the requested store
      */
     @Synchronized
-    fun getSnapshot(storeName: String, clearStore: Boolean): GenericDataStorage<ScalarType>? {
-        val allLifetimes: GenericDataStorage<ScalarType> = mutableMapOf()
+    fun getSnapshot(storeName: String, clearStore: Boolean): GenericDataStorage<MetricType>? {
+        val allLifetimes: GenericDataStorage<MetricType> = mutableMapOf()
 
         ensureAllLifetimesLoaded()
 
@@ -233,20 +233,20 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
 
     /**
      * Helper function for the derived classes. It can be used to record
-     * simple scalars to the internal storage. Internally, this calls [recordScalar]
+     * simple metrics to the internal storage. Internally, this calls [recordMetric]
      * with a custom `combine` function that only sets the new value.
      *
      * @param metricData the information about the metric
      * @param value the new value
      */
-    protected fun recordScalar(
+    protected fun recordMetric(
         metricData: CommonMetricData,
-        value: ScalarType
-    ) = recordScalar(metricData, value) { _, v -> v }
+        value: MetricType
+    ) = recordMetric(metricData, value) { _, v -> v }
 
     /**
      * Helper function for the derived classes. It can be used to record
-     * simple scalars to the internal storage.
+     * simple metrics to the internal storage.
      *
      * @param metricData the information about the metric
      * @param value the new value
@@ -255,11 +255,11 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      *        the new one; this allows to implement new behaviours such as adding.
      */
     @Synchronized
-    protected fun recordScalar(
+    protected fun recordMetric(
         metricData: CommonMetricData,
-        value: ScalarType,
+        value: MetricType,
         extraSerializationData: Any? = null,
-        combine: ScalarRecordingCombiner<ScalarType>
+        combine: MetricsCombiner<MetricType>
     ) {
         checkNotNull(applicationContext) { "No recording can take place without an application context" }
 

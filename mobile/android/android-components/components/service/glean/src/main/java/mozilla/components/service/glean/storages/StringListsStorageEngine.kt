@@ -26,7 +26,7 @@ internal object StringListsStorageEngine : StringListsStorageEngineImplementatio
 
 internal open class StringListsStorageEngineImplementation(
     override val logger: Logger = Logger("glean/StringsListsStorageEngine")
-) : GenericScalarStorageEngine<List<String>>() {
+) : GenericStorageEngine<List<String>>() {
     companion object {
         // Maximum length of any list
         const val MAX_LIST_LENGTH_VALUE = 20
@@ -92,7 +92,7 @@ internal open class StringListsStorageEngineImplementation(
         }
 
         // Use a custom combiner to add the string to the existing list rather than overwriting
-        super.recordScalar(metricData, listOf(truncatedValue), null) { currentValue, newValue ->
+        super.recordMetric(metricData, listOf(truncatedValue), null) { currentValue, newValue ->
             currentValue?.let {
                 if (it.count() + 1 > MAX_LIST_LENGTH_VALUE) {
                     recordError(
@@ -141,6 +141,6 @@ internal open class StringListsStorageEngineImplementation(
             )
         }
 
-        super.recordScalar(metricData, stringList.take(MAX_LIST_LENGTH_VALUE))
+        super.recordMetric(metricData, stringList.take(MAX_LIST_LENGTH_VALUE))
     }
 }

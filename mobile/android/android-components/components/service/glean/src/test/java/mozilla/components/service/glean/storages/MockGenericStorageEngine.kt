@@ -8,9 +8,9 @@ import android.content.SharedPreferences
 import mozilla.components.service.glean.CommonMetricData
 import mozilla.components.support.base.log.logger.Logger
 
-internal class MockScalarStorageEngine(
+internal class MockGenericStorageEngine(
     override val logger: Logger = Logger("test")
-) : GenericScalarStorageEngine<Int>() {
+) : GenericStorageEngine<Int>() {
     override fun deserializeSingleMetric(metricName: String, value: Any?): Int? {
         if (value is String) {
             return value.toIntOrNull()
@@ -32,6 +32,6 @@ internal class MockScalarStorageEngine(
         metricData: CommonMetricData,
         value: Int
     ) {
-        super.recordScalar(metricData, value)
+        super.recordMetric(metricData, value)
     }
 }

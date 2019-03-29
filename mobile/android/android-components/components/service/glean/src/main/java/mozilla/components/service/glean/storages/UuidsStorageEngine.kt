@@ -23,7 +23,7 @@ internal object UuidsStorageEngine : UuidsStorageEngineImplementation()
 
 internal open class UuidsStorageEngineImplementation(
     override val logger: Logger = Logger("glean/UuidsStorageEngine")
-) : GenericScalarStorageEngine<UUID>() {
+) : GenericStorageEngine<UUID>() {
 
     override fun deserializeSingleMetric(metricName: String, value: Any?): UUID? {
         return try {
@@ -52,6 +52,6 @@ internal open class UuidsStorageEngineImplementation(
         metricData: CommonMetricData,
         value: UUID
     ) {
-        super.recordScalar(metricData, value)
+        super.recordMetric(metricData, value)
     }
 }

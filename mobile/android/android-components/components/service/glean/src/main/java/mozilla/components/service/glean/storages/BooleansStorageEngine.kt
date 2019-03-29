@@ -22,7 +22,7 @@ internal object BooleansStorageEngine : BooleansStorageEngineImplementation()
 
 internal open class BooleansStorageEngineImplementation(
     override val logger: Logger = Logger("glean/BooleansStorageEngine")
-) : GenericScalarStorageEngine<Boolean>() {
+) : GenericStorageEngine<Boolean>() {
 
     override fun deserializeSingleMetric(metricName: String, value: Any?): Boolean? {
         return value as? Boolean
@@ -47,6 +47,6 @@ internal open class BooleansStorageEngineImplementation(
         metricData: CommonMetricData,
         value: Boolean
     ) {
-        super.recordScalar(metricData, value)
+        super.recordMetric(metricData, value)
     }
 }

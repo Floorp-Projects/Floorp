@@ -22,7 +22,7 @@ import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class GenericScalarStorageEngineTest {
+class GenericStorageEngineTest {
     private data class GenericMetricType(
         override val disabled: Boolean,
         override val category: String,
@@ -38,7 +38,7 @@ class GenericScalarStorageEngineTest {
         val dataUserLifetime = 37
         val dataPingLifetime = 3
 
-        val storageEngine = MockScalarStorageEngine()
+        val storageEngine = MockGenericStorageEngine()
         storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
         val metric1 = GenericMetricType(
@@ -86,7 +86,7 @@ class GenericScalarStorageEngineTest {
 
     @Test
     fun `metrics with empty 'category' must be properly recorded`() {
-        val storageEngine = MockScalarStorageEngine()
+        val storageEngine = MockGenericStorageEngine()
         storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
         val metric = GenericMetricType(
@@ -124,13 +124,13 @@ class GenericScalarStorageEngineTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.all).thenAnswer { persistedSample }
         `when`(context.getSharedPreferences(
-            eq(MockScalarStorageEngine::class.java.canonicalName),
+            eq(MockGenericStorageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
 
         // Instantiate our mock engine and check that it correctly unpersists the
         // data and makes it available in the snapshot.
-        val storageEngine = MockScalarStorageEngine()
+        val storageEngine = MockGenericStorageEngine()
         storageEngine.applicationContext = context
 
         val metric = GenericMetricType(
@@ -163,19 +163,19 @@ class GenericScalarStorageEngineTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.all).thenAnswer { brokenSample }
         `when`(context.getSharedPreferences(
-            eq(MockScalarStorageEngine::class.java.canonicalName),
+            eq(MockGenericStorageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
         `when`(context.getSharedPreferences(
-            eq("${MockScalarStorageEngine::class.java.canonicalName}.PingLifetime"),
+            eq("${MockGenericStorageEngine::class.java.canonicalName}.PingLifetime"),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences("${MockScalarStorageEngine::class.java.canonicalName}.PingLifetime",
+            .getSharedPreferences("${MockGenericStorageEngine::class.java.canonicalName}.PingLifetime",
                 Context.MODE_PRIVATE))
 
         // Instantiate our mock engine and check that it correctly unpersists the
         // data and makes it available in the snapshot.
-        val storageEngine = MockScalarStorageEngine()
+        val storageEngine = MockGenericStorageEngine()
         storageEngine.applicationContext = context
 
         val metric = GenericMetricType(
@@ -210,19 +210,19 @@ class GenericScalarStorageEngineTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.all).thenAnswer { brokenSample }
         `when`(context.getSharedPreferences(
-            eq(MockScalarStorageEngine::class.java.canonicalName),
+            eq(MockGenericStorageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
         `when`(context.getSharedPreferences(
-            eq("${MockScalarStorageEngine::class.java.canonicalName}.PingLifetime"),
+            eq("${MockGenericStorageEngine::class.java.canonicalName}.PingLifetime"),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences("${MockScalarStorageEngine::class.java.canonicalName}.PingLifetime",
+            .getSharedPreferences("${MockGenericStorageEngine::class.java.canonicalName}.PingLifetime",
                 Context.MODE_PRIVATE))
 
         // Instantiate our mock engine and check that it correctly unpersists the
         // data and makes it available in the snapshot.
-        val storageEngine = MockScalarStorageEngine()
+        val storageEngine = MockGenericStorageEngine()
         storageEngine.applicationContext = context
 
         val snapshot = storageEngine.getSnapshot(storeName = "store_name", clearStore = true)
@@ -237,19 +237,19 @@ class GenericScalarStorageEngineTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.all).thenThrow(NullPointerException())
         `when`(context.getSharedPreferences(
-            eq(MockScalarStorageEngine::class.java.canonicalName),
+            eq(MockGenericStorageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
         `when`(context.getSharedPreferences(
-            eq("${MockScalarStorageEngine::class.java.canonicalName}.PingLifetime"),
+            eq("${MockGenericStorageEngine::class.java.canonicalName}.PingLifetime"),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences("${MockScalarStorageEngine::class.java.canonicalName}.PingLifetime",
+            .getSharedPreferences("${MockGenericStorageEngine::class.java.canonicalName}.PingLifetime",
                 Context.MODE_PRIVATE))
 
         // Instantiate our mock engine and check that it correctly unpersists the
         // data and makes it available in the snapshot.
-        val storageEngine = MockScalarStorageEngine()
+        val storageEngine = MockGenericStorageEngine()
         storageEngine.applicationContext = context
 
         // Make sure we attempt to load data to trigger the exception.
@@ -273,19 +273,19 @@ class GenericScalarStorageEngineTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.all).thenAnswer { persistedSample }
         `when`(context.getSharedPreferences(
-            eq(MockScalarStorageEngine::class.java.canonicalName),
+            eq(MockGenericStorageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
         `when`(context.getSharedPreferences(
-            eq("${MockScalarStorageEngine::class.java.canonicalName}.PingLifetime"),
+            eq("${MockGenericStorageEngine::class.java.canonicalName}.PingLifetime"),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences("${MockScalarStorageEngine::class.java.canonicalName}.PingLifetime",
+            .getSharedPreferences("${MockGenericStorageEngine::class.java.canonicalName}.PingLifetime",
                 Context.MODE_PRIVATE))
 
         // Instantiate our mock engine and check that it correctly unpersists the
         // data and makes it available in the snapshot.
-        val storageEngine = MockScalarStorageEngine()
+        val storageEngine = MockGenericStorageEngine()
         storageEngine.applicationContext = context
 
         val store1Snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
@@ -300,7 +300,7 @@ class GenericScalarStorageEngineTest {
 
     @Test
     fun `snapshotting must only clear 'ping' lifetime`() {
-        val storageEngine = MockScalarStorageEngine()
+        val storageEngine = MockGenericStorageEngine()
         storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
         val stores = listOf("store1", "store2")
@@ -371,7 +371,7 @@ class GenericScalarStorageEngineTest {
         // context otherwise the test environment will use a different underlying file
         // for the SharedPreferences.
         run {
-            val storageEngine = MockScalarStorageEngine()
+            val storageEngine = MockGenericStorageEngine()
             storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
             val metric1 = GenericMetricType(
@@ -411,7 +411,7 @@ class GenericScalarStorageEngineTest {
 
         // Re-instantiate the engine: application lifetime probes should have been cleared.
         run {
-            val storageEngine = MockScalarStorageEngine()
+            val storageEngine = MockGenericStorageEngine()
             storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
             val snapshot = storageEngine.getSnapshot("store1", true)
@@ -426,7 +426,7 @@ class GenericScalarStorageEngineTest {
         // context otherwise the test environment will use a different underlying file
         // for the SharedPreferences.
         run {
-            val storageEngine = MockScalarStorageEngine()
+            val storageEngine = MockGenericStorageEngine()
             storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
             val metric1 = GenericMetricType(
@@ -471,7 +471,7 @@ class GenericScalarStorageEngineTest {
 
         // Re-instantiate the engine: ping lifetime metrics should be persisted.
         run {
-            val storageEngine = MockScalarStorageEngine()
+            val storageEngine = MockGenericStorageEngine()
             storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
             val snapshot = storageEngine.getSnapshot("store1", true)
@@ -489,7 +489,7 @@ class GenericScalarStorageEngineTest {
 
         // Now that the store was cleared, ping lifetime should have nothing persisted
         run {
-            val storageEngine = MockScalarStorageEngine()
+            val storageEngine = MockGenericStorageEngine()
             storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
             val snapshot = storageEngine.getSnapshot("store1", true)
