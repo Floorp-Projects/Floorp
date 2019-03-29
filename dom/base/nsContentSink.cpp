@@ -99,7 +99,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 nsContentSink::nsContentSink()
     : mBackoffCount(0),
       mLastNotificationTime(0),
-      mBeganUpdate(0),
       mLayoutStarted(0),
       mDynamicLowerValue(0),
       mParsing(0),
@@ -1211,17 +1210,13 @@ void nsContentSink::StartLayout(bool aIgnorePendingSheets) {
 }
 
 void nsContentSink::NotifyAppend(nsIContent* aContainer, uint32_t aStartIndex) {
-  if (aContainer->GetUncomposedDoc() != mDocument) {
-    // aContainer is not actually in our document anymore.... Just bail out of
-    // here; notifying on our document for this append would be wrong.
-    return;
-  }
-
   mInNotification++;
 
   {
     // Scope so we call EndUpdate before we decrease mInNotification
-    MOZ_AUTO_DOC_UPDATE(mDocument, !mBeganUpdate);
+    //
+    // Note that aContainer->OwnerDoc() may not be mDocument.
+    MOZ_AUTO_DOC_UPDATE(aContainer->OwnerDoc(), true);
     nsNodeUtils::ContentAppended(
         aContainer, aContainer->GetChildAt_Deprecated(aStartIndex));
     mLastNotificationTime = PR_Now();

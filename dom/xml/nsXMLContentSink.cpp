@@ -1445,7 +1445,6 @@ void nsXMLContentSink::FlushPendingNotifications(FlushType aType) {
  */
 nsresult nsXMLContentSink::FlushTags() {
   mDeferredFlushTags = false;
-  bool oldBeganUpdate = mBeganUpdate;
   uint32_t oldUpdates = mUpdatesInNotification;
 
   mUpdatesInNotification = 0;
@@ -1453,7 +1452,6 @@ nsresult nsXMLContentSink::FlushTags() {
   {
     // Scope so we call EndUpdate before we decrease mInNotification
     mozAutoDocUpdate updateBatch(mDocument, true);
-    mBeganUpdate = true;
 
     // Don't release last text node in case we need to add to it again
     FlushText(false);
@@ -1488,8 +1486,6 @@ nsresult nsXMLContentSink::FlushTags() {
   }
 
   mUpdatesInNotification = oldUpdates;
-  mBeganUpdate = oldBeganUpdate;
-
   return NS_OK;
 }
 
