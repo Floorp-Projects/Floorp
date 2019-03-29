@@ -249,7 +249,7 @@ struct LayerPropertiesBase : public LayerProperties {
         areaOverflowed = true;
       }
       LTI_DUMP(mask, "mask");
-      AddTransformedRegion(result, mask, mTransform);
+      AddRegion(result, mask);
     }
 
     for (size_t i = 0; i < std::min(mAncestorMaskLayers.Length(),
@@ -260,7 +260,7 @@ struct LayerPropertiesBase : public LayerProperties {
         areaOverflowed = true;
       }
       LTI_DUMP(mask, "ancestormask");
-      AddTransformedRegion(result, mask, mTransform);
+      AddRegion(result, mask);
     }
 
     if (mUseClipRect && otherClip) {
@@ -624,8 +624,16 @@ struct ImageLayerProperties : public LayerPropertiesBase {
         mLastFrameID(-1),
         mIsMask(aIsMask) {
     if (mImageHost) {
-      mLastProducerID = mImageHost->GetLastProducerID();
-      mLastFrameID = mImageHost->GetLastFrameID();
+      if (aIsMask) {
+        // Mask layers never set the 'last' producer/frame
+        // id, since they never get composited as their own
+        // layer.
+        mLastProducerID = mImageHost->GetProducerID();
+        mLastFrameID = mImageHost->GetFrameID();
+      } else {
+        mLastProducerID = mImageHost->GetLastProducerID();
+        mLastFrameID = mImageHost->GetLastFrameID();
+      }
     }
   }
 

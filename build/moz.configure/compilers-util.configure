@@ -71,12 +71,15 @@ def compiler_class(compiler, host_or_target):
                 def checking_fn(fn):
                     return fn
 
-            @depends(self, dependable(flags), extra_toolchain_flags, dependable(header), when=when)
+            @depends(self, dependable(flags), extra_toolchain_flags,
+                     stlport_cppflags, dependable(header), when=when)
             @checking_fn
-            def func(compiler, flags, extra_flags, header):
+            def func(compiler, flags, extra_flags, stlport_flags, header):
                 flags = list(flags or [])
                 if is_target:
                     flags += extra_flags or []
+                if compiler.language == 'C++':
+                    flags += stlport_flags or []
                 header = header or ''
                 if isinstance(header, (list, tuple)):
                     header = '\n'.join(header)

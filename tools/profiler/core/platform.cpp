@@ -2833,6 +2833,11 @@ void profiler_init(void* aStackTop) {
       }
     }
 
+    // Enable mainthreadio by default for startup profiles as startup is
+    // heavy on I/O operations, and main thread I/O is really important to
+    // see there.
+    features |= ProfilerFeature::MainThreadIO;
+
     const char* startupFeaturesBitfield =
         getenv("MOZ_PROFILER_STARTUP_FEATURES_BITFIELD");
     if (startupFeaturesBitfield && startupFeaturesBitfield[0] != '\0') {

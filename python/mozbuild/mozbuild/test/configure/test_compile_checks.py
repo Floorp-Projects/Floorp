@@ -51,6 +51,10 @@ class BaseCompileChecks(unittest.TestCase):
             def extra_toolchain_flags():
                 return []
 
+            @depends(when=True)
+            def stlport_cppflags():
+                return []
+
             target = depends(when=True)(lambda: True)
 
             include('%s/compilers-util.configure')

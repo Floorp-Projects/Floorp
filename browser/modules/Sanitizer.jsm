@@ -349,7 +349,8 @@ var Sanitizer = {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_HISTORY", refObj);
         await clearData(range, Ci.nsIClearDataService.CLEAR_HISTORY |
-                               Ci.nsIClearDataService.CLEAR_SESSION_HISTORY);
+                               Ci.nsIClearDataService.CLEAR_SESSION_HISTORY |
+                               Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS);
         TelemetryStopwatch.finish("FX_SANITIZE_HISTORY", refObj);
       },
     },

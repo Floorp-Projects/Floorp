@@ -270,6 +270,8 @@ SimpleTest.waitForFocus(() => {
        `Only one "input" event should be dispatched when setUserInput("${aInvalidValue}") is called before ${tag} gets focus`);
     isnot(validationMessage, "",
           `${tag}.validationMessage should not be empty when setUserInput("${aInvalidValue}") is called before ${tag} gets focus`);
+    ok(target.matches(":invalid"),
+       `The target should have invalid pseudo class when setUserInput("${aInvalidValue}") is called before ${tag} gets focus`);
 
     reset();
     SpecialPowers.wrap(target).setUserInput(aValidValue);
@@ -277,6 +279,8 @@ SimpleTest.waitForFocus(() => {
        `Only one "input" event should be dispatched when setUserInput("${aValidValue}") is called before ${tag} gets focus`);
     is(validationMessage, "",
        `${tag}.validationMessage should be empty when setUserInput("${aValidValue}") is called before ${tag} gets focus`);
+    ok(!target.matches(":invalid"),
+       `The target shouldn't have invalid pseudo class when setUserInput("${aValidValue}") is called before ${tag} gets focus`);
 
     reset();
     SpecialPowers.wrap(target).setUserInput(aInvalidValue);
@@ -284,6 +288,8 @@ SimpleTest.waitForFocus(() => {
        `Only one "input" event should be dispatched again when setUserInput("${aInvalidValue}") is called before ${tag} gets focus`);
     isnot(validationMessage, "",
           `${tag}.validationMessage should not be empty again when setUserInput("${aInvalidValue}") is called before ${tag} gets focus`);
+    ok(target.matches(":invalid"),
+       `The target should have invalid pseudo class again when setUserInput("${aInvalidValue}") is called before ${tag} gets focus`);
 
     target.value = "";
     target.focus();
@@ -294,6 +300,8 @@ SimpleTest.waitForFocus(() => {
        `Only one "input" event should be dispatched when setUserInput("${aInvalidValue}") is called after ${tag} gets focus`);
     isnot(validationMessage, "",
           `${tag}.validationMessage should not be empty when setUserInput("${aInvalidValue}") is called after ${tag} gets focus`);
+    ok(target.matches(":invalid"),
+       `The target should have invalid pseudo class when setUserInput("${aInvalidValue}") is called after ${tag} gets focus`);
 
     reset();
     SpecialPowers.wrap(target).setUserInput(aValidValue);
@@ -301,6 +309,8 @@ SimpleTest.waitForFocus(() => {
        `Only one "input" event should be dispatched when setUserInput("${aValidValue}") is called after ${tag} gets focus`);
     is(validationMessage, "",
        `${tag}.validationMessage should be empty when setUserInput("${aValidValue}") is called after ${tag} gets focus`);
+    ok(!target.matches(":invalid"),
+       `The target shouldn't have invalid pseudo class when setUserInput("${aValidValue}") is called after ${tag} gets focus`);
 
     reset();
     SpecialPowers.wrap(target).setUserInput(aInvalidValue);
@@ -308,6 +318,8 @@ SimpleTest.waitForFocus(() => {
        `Only one "input" event should be dispatched again when setUserInput("${aInvalidValue}") is called after ${tag} gets focus`);
     isnot(validationMessage, "",
           `${tag}.validationMessage should not be empty again when setUserInput("${aInvalidValue}") is called after ${tag} gets focus`);
+    ok(target.matches(":invalid"),
+       `The target should have invalid pseudo class again when setUserInput("${aInvalidValue}") is called after ${tag} gets focus`);
 
     target.removeEventListener("input", onInput);
   }
