@@ -101,7 +101,7 @@ class DTDParser(Parser):
         <!ENTITY % foo SYSTEM "url">
         %foo;
         '''
-        if offset is 0 and self.reHeader.match(ctx.contents):
+        if offset == 0 and self.reHeader.match(ctx.contents):
             offset += 1
         entity = Parser.getNext(self, ctx, offset)
         if (entity and isinstance(entity, Junk)) or entity is None:

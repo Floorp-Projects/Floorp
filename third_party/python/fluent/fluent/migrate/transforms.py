@@ -80,18 +80,6 @@ def evaluate(ctx, node):
     return node.traverse(eval_node)
 
 
-def get_text(element):
-    '''Get text content of a PatternElement.'''
-    if isinstance(element, FTL.TextElement):
-        return element.value
-    if isinstance(element, FTL.Placeable):
-        if isinstance(element.expression, FTL.StringLiteral):
-            return element.expression.value
-        else:
-            return None
-    raise RuntimeError('Expected PatternElement')
-
-
 def chain_elements(elements):
     '''Flatten a list of FTL nodes into an iterator over PatternElements.'''
     for element in elements:
@@ -152,36 +140,49 @@ class Transform(FTL.BaseNode):
     def pattern_of(*elements):
         normalized = []
 
-        # Normalize text content: convert all text to TextElements, join
-        # adjacent text and prune empty.
-        for current in chain_elements(elements):
-            current_text = get_text(current)
-            if current_text is None:
-                normalized.append(current)
+        # Normalize text content: convert text content to TextElements, join
+        # adjacent text and prune empty. Text content is either existing
+        # TextElements or whitespace-only StringLiterals. This may result in
+        # leading and trailing whitespace being put back into TextElements if
+        # the new Pattern is built from existing Patterns (CONCAT(COPY...)).
+        # The leading and trailing whitespace of the new Pattern will be
+        # extracted later into new StringLiterals.
+        for element in chain_elements(elements):
+            if isinstance(element, FTL.TextElement):
+                text_content = element.value
+            elif isinstance(element, FTL.Placeable) \
+                    and isinstance(element.expression, FTL.StringLiteral) \
+                    and re.match(r'^ *$', element.expression.value):
+                text_content = element.expression.value
+            else:
+                # The element does not contain text content which should be
+                # normalized. It may be a number, a reference, or
+                # a StringLiteral which should be preserved in the Pattern.
+                normalized.append(element)
                 continue
 
             previous = normalized[-1] if len(normalized) else None
             if isinstance(previous, FTL.TextElement):
-                # Join adjacent TextElements
-                previous.value += current_text
-            elif len(current_text) > 0:
-                # Normalize non-empty text to a TextElement
-                normalized.append(FTL.TextElement(current_text))
+                # Join adjacent TextElements.
+                previous.value += text_content
+            elif len(text_content) > 0:
+                # Normalize non-empty text to a TextElement.
+                normalized.append(FTL.TextElement(text_content))
             else:
-                # Prune empty text
+                # Prune empty text.
                 pass
 
-        # Handle empty values
+        # Store empty values explicitly as {""}.
         if len(normalized) == 0:
             empty = FTL.Placeable(FTL.StringLiteral(''))
             return FTL.Pattern([empty])
 
-        # Handle explicit leading whitespace
+        # Extract explicit leading whitespace into a StringLiteral.
         if isinstance(normalized[0], FTL.TextElement):
             ws, text = extract_whitespace(re_leading_ws, normalized[0])
             normalized[:1] = [ws, text]
 
-        # Handle explicit trailing whitespace
+        # Extract explicit trailing whitespace into a StringLiteral.
         if isinstance(normalized[-1], FTL.TextElement):
             ws, text = extract_whitespace(re_trailing_ws, normalized[-1])
             normalized[-1:] = [text, ws]
