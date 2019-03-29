@@ -1650,13 +1650,13 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
                       const nsXPTInterfaceInfo* aInfo);
 
   bool IsReflectable(uint16_t i) const {
-    return (bool)(mDescriptors[i / 32] & (1 << (i % 32)));
+    return (bool)(mDescriptors[i / 32] & (1U << (i % 32)));
   }
   void SetReflectable(uint16_t i, bool b) {
     if (b)
-      mDescriptors[i / 32] |= (1 << (i % 32));
+      mDescriptors[i / 32] |= (1U << (i % 32));
     else
-      mDescriptors[i / 32] &= ~(1 << (i % 32));
+      mDescriptors[i / 32] &= ~(1U << (i % 32));
   }
 
   bool GetArraySizeFromParam(const nsXPTMethodInfo* method,
