@@ -251,10 +251,10 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(enableTraceLogger, false);
 #endif
 
-#ifdef WASM_CODEGEN_DEBUG
   SET_DEFAULT(enableWasmJitExit, true);
   SET_DEFAULT(enableWasmJitEntry, true);
   SET_DEFAULT(enableWasmIonFastCalls, true);
+#ifdef WASM_CODEGEN_DEBUG
   SET_DEFAULT(enableWasmImportCallSpew, false);
   SET_DEFAULT(enableWasmFuncCallSpew, false);
 #endif

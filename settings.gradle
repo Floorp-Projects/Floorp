@@ -3,6 +3,16 @@
 def topsrcdir = rootProject.projectDir.absolutePath
 
 def commandLine = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
+if (System.properties['os.name'].toLowerCase().contains('windows')) {
+    // gradle is called before parsing config.status, we cannot use PYTHON
+    // value.
+    if (System.env.MOZILLABUILD) {
+        def mozillabuild = System.env.MOZILLABUILD
+        if (mozillabuild) {
+            commandLine.addAll(0, ["${mozillabuild}/python/python.exe"])
+        }
+    }
+}
 def proc = commandLine.execute(null, new File(topsrcdir))
 def standardOutput = new ByteArrayOutputStream()
 proc.consumeProcessOutput(standardOutput, standardOutput)

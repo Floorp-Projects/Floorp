@@ -6,6 +6,7 @@ from __future__ import print_function
 
 import buildconfig
 import subprocess
+import sys
 
 from mozbuild.util import (
     ensureParentDir,
@@ -23,6 +24,7 @@ def android(verb, *args):
     lock_instance = lock_file(lock_path)
     try:
         cmd = [
+            sys.executable,
             mozpath.join(buildconfig.topsrcdir, 'mach'),
             'android',
             verb,
