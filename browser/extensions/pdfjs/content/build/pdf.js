@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.91';
-var pdfjsBuild = 'bce9ff73';
+var pdfjsVersion = '2.2.100';
+var pdfjsBuild = 'f9c58115';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1301,7 +1301,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.2.91',
+    apiVersion: '2.2.100',
     source: {
       data: source.data,
       url: source.url,
@@ -3059,9 +3059,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.2.91';
+const version = '2.2.100';
 exports.version = version;
-const build = 'bce9ff73';
+const build = 'f9c58115';
 exports.build = build;
 
 /***/ }),
@@ -9707,7 +9707,7 @@ exports.SVGGraphics = SVGGraphics;
 
 
 module.exports = function isNodeJS() {
-  return typeof process === 'object' && process + '' === '[object process]' && !process.versions['nw'];
+  return typeof process === 'object' && process + '' === '[object process]' && !process.versions['nw'] && !process.versions['electron'];
 };
 
 /***/ })
