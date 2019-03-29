@@ -476,6 +476,7 @@ class UrlbarView {
       item._elements.get("title"), result.title, result.titleHighlights);
 
     let tagsContainer = item._elements.get("tagsContainer");
+    tagsContainer.textContent = "";
     if (result.payload.tags && result.payload.tags.length > 0) {
       tagsContainer.append(...result.payload.tags.map((tag, i) => {
         const element = this._createElement("span");
@@ -484,8 +485,6 @@ class UrlbarView {
           element, tag, result.payloadHighlights.tags[i]);
         return element;
       }));
-    } else {
-      tagsContainer.textContent = "";
     }
 
     let action = "";
