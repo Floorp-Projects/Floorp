@@ -165,6 +165,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
                  .exitFullscreen();
         }
         break;
+
       case "GeckoView:ZoomToInput": {
         let dwu = content.windowUtils;
 
