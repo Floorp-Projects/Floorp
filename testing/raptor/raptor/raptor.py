@@ -54,7 +54,7 @@ from manifest import get_raptor_test_list
 from mozproxy import get_playback
 from results import RaptorResultsHandler
 from gecko_profile import GeckoProfile
-from power import init_geckoview_power_test, finish_geckoview_power_test
+from power import init_android_power_test, finish_android_power_test
 from utils import view_gecko_profile
 
 
@@ -588,7 +588,7 @@ class RaptorAndroid(Raptor):
         proxy_prefs["network.proxy.no_proxies_on"] = self.config['host']
         self.profile.set_preferences(proxy_prefs)
 
-    def launch_firefox_android_app(self):
+    def launch_firefox_android_app(self, test_name):
         self.log.info("starting %s" % self.config['app'])
 
         extra_args = ["-profile", self.device_profile,
@@ -615,7 +615,7 @@ class RaptorAndroid(Raptor):
             self.log.error("Exception launching %s" % self.config['binary'])
             self.log.error("Exception: %s %s" % (type(e).__name__, str(e)))
             if self.config['power_test']:
-                finish_geckoview_power_test(self)
+                finish_android_power_test(self, test_name)
             raise
 
         # give our control server the device and app info
@@ -670,7 +670,7 @@ class RaptorAndroid(Raptor):
                       "page cycles" % test['name'])
 
         if self.config['power_test']:
-            init_geckoview_power_test(self)
+            init_android_power_test(self)
 
         for test['browser_cycle'] in range(1, test['expected_browser_cycles'] + 1):
 
@@ -718,7 +718,7 @@ class RaptorAndroid(Raptor):
             self.copy_profile_onto_device()
 
             # now start the browser/app under test
-            self.launch_firefox_android_app()
+            self.launch_firefox_android_app(test['name'])
 
             # set our control server flag to indicate we are running the browser/app
             self.control_server._finished = False
@@ -731,7 +731,7 @@ class RaptorAndroid(Raptor):
                 self.runner.wait(timeout=None)
 
         if self.config['power_test']:
-            finish_geckoview_power_test(self)
+            finish_android_power_test(self, test['name'])
 
         self.run_test_teardown()
 
@@ -739,7 +739,7 @@ class RaptorAndroid(Raptor):
         self.log.info("test %s is running in warm mode; browser will NOT be restarted between "
                       "page cycles" % test['name'])
         if self.config['power_test']:
-            init_geckoview_power_test(self)
+            init_android_power_test(self)
 
         self.run_test_setup(test)
         self.create_raptor_sdcard_folder()
@@ -756,7 +756,7 @@ class RaptorAndroid(Raptor):
         self.copy_profile_onto_device()
 
         # now start the browser/app under test
-        self.launch_firefox_android_app()
+        self.launch_firefox_android_app(test['name'])
 
         # set our control server flag to indicate we are running the browser/app
         self.control_server._finished = False
@@ -764,7 +764,7 @@ class RaptorAndroid(Raptor):
         self.wait_for_test_finish(test, timeout)
 
         if self.config['power_test']:
-            finish_geckoview_power_test(self)
+            finish_android_power_test(self, test['name'])
 
         self.run_test_teardown()
 
