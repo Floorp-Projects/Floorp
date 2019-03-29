@@ -17,7 +17,9 @@ add_task(async function test_geo_permission_prompt() {
 
 // Tests that DesktopNotificationPermissionPrompt works as expected
 add_task(async function test_desktop_notification_permission_prompt() {
+  Services.prefs.setBoolPref("dom.webnotifications.requireuserinteraction", false);
   await testPrompt(PermissionUI.DesktopNotificationPermissionPrompt);
+  Services.prefs.clearUserPref("dom.webnotifications.requireuserinteraction");
 });
 
 // Tests that PersistentStoragePermissionPrompt works as expected
