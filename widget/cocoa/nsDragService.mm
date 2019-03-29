@@ -23,7 +23,9 @@
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsIIOService.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsIContent.h"
 #include "nsView.h"
 #include "nsCocoaUtils.h"
@@ -603,11 +605,7 @@ void nsDragService::DragMovedWithView(NSDraggingSession* aSession, NSPoint aPoin
     nsPresContext* pc = nullptr;
     nsCOMPtr<nsIContent> content = do_QueryInterface(mImage);
     if (content) {
-      RefPtr<dom::Document> document = content->OwnerDoc();
-      if (document) {
-        nsIPresShell* shell = document->GetShell();
-        pc = shell ? shell->GetPresContext() : nullptr;
-      }
+      pc = content->OwnerDoc()->GetPresContext();
     }
 
     if (pc) {

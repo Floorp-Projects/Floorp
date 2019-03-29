@@ -17,12 +17,12 @@
 namespace mozilla {
 namespace dom {
 
-inline nsIPresShell* Document::GetObservingShell() const {
+inline PresShell* Document::GetObservingPresShell() const {
   return mPresShell && mPresShell->IsObservingDocument() ? mPresShell : nullptr;
 }
 
 inline nsPresContext* Document::GetPresContext() const {
-  nsIPresShell* presShell = GetShell();
+  PresShell* presShell = GetPresShell();
   return presShell ? presShell->GetPresContext() : nullptr;
 }
 

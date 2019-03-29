@@ -7,7 +7,6 @@
 #include "MediaDocument.h"
 #include "nsIPluginDocument.h"
 #include "nsGkAtoms.h"
-#include "nsIPresShell.h"
 #include "nsIObjectFrame.h"
 #include "nsNPAPIPluginInstance.h"
 #include "DocumentInlines.h"
@@ -17,6 +16,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsIPropertyBag2.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/PresShell.h"
 #include "nsObjectLoadingContent.h"
 #include "GeckoProfiler.h"
 
@@ -182,7 +182,7 @@ nsresult PluginDocument::StartDocumentLoad(const char* aCommand,
 }
 
 nsresult PluginDocument::CreateSyntheticPluginDocument() {
-  NS_ASSERTION(!GetShell() || !GetShell()->DidInitialize(),
+  NS_ASSERTION(!GetPresShell() || !GetPresShell()->DidInitialize(),
                "Creating synthetic plugin document content too late");
 
   // make our generic document
