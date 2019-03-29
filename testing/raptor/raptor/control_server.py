@@ -73,6 +73,9 @@ def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_pr
                 self.results_handler.add(data['data'])
             elif data['type'] == "webext_raptor-page-timeout":
                 LOG.info("received " + data['type'] + ": " + str(data['data']))
+
+                if len(data['data']) == 2:
+                    data['data'].append("")
                 # pageload test has timed out; record it as a failure
                 self.results_handler.add_page_timeout(str(data['data'][0]),
                                                       str(data['data'][1]),

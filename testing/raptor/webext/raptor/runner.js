@@ -415,7 +415,9 @@ async function timeoutAlarmListener() {
     "load time": isLoadTimePending,
   };
 
-  postToControlServer("raptor-page-timeout", [testName, testURL, pendingMetrics]);
+  var msgData = [testName, testURL];
+  if (testType == "pageload") { msgData.push(pendingMetrics); }
+  postToControlServer("raptor-page-timeout", msgData);
 
   // take a screen capture
   if (screenCapture) {
