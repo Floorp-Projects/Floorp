@@ -521,7 +521,8 @@ enum class Send {
 static void AddAnimationForProperty(nsIFrame* aFrame,
                                     const AnimationProperty& aProperty,
                                     dom::Animation* aAnimation,
-                                    const AnimationData& aData, Send aSendFlag,
+                                    const Maybe<TransformData>& aData,
+                                    Send aSendFlag,
                                     AnimationInfo& aAnimationInfo) {
   MOZ_ASSERT(aAnimation->GetEffect(),
              "Should not be adding an animation without an effect");
@@ -690,8 +691,8 @@ GroupAnimationsByProperty(const nsTArray<RefPtr<dom::Animation>>& aAnimations,
 static void AddAnimationsForProperty(
     nsIFrame* aFrame, const EffectSet* aEffects,
     const nsTArray<RefPtr<dom::Animation>>& aCompositorAnimations,
-    const AnimationData& aData, nsCSSPropertyID aProperty, Send aSendFlag,
-    AnimationInfo& aAnimationInfo) {
+    const Maybe<TransformData>& aData, nsCSSPropertyID aProperty,
+    Send aSendFlag, AnimationInfo& aAnimationInfo) {
   // Add from first to last (since last overrides)
   for (dom::Animation* anim : aCompositorAnimations) {
     if (!anim->IsRelevant()) {
@@ -739,11 +740,11 @@ static void AddAnimationsForProperty(
   }
 }
 
-static AnimationData CreateAnimationData(nsIFrame* aFrame, nsDisplayItem* aItem,
-                                         DisplayItemType aType,
-                                         layers::LayersBackend aLayersBackend) {
+static Maybe<TransformData> CreateAnimationData(
+    nsIFrame* aFrame, nsDisplayItem* aItem, DisplayItemType aType,
+    layers::LayersBackend aLayersBackend) {
   if (aType != DisplayItemType::TYPE_TRANSFORM) {
-    return AnimationData(null_t());
+    return Nothing();
   }
 
   // XXX Performance here isn't ideal for SVG. We'd prefer to avoid resolving
@@ -781,9 +782,9 @@ static AnimationData CreateAnimationData(nsIFrame* aFrame, nsDisplayItem* aItem,
     origin = aFrame->GetOffsetToCrossDoc(referenceFrame);
   }
 
-  return AnimationData(TransformData(origin, offsetToTransformOrigin, bounds,
-                                     devPixelsToAppUnits, scaleX, scaleY,
-                                     hasPerspectiveParent));
+  return Some(TransformData(origin, offsetToTransformOrigin, bounds,
+                            devPixelsToAppUnits, scaleX, scaleY,
+                            hasPerspectiveParent));
 }
 
 static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
@@ -828,7 +829,7 @@ static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
     return;
   }
 
-  const AnimationData data =
+  const Maybe<TransformData> data =
       CreateAnimationData(aFrame, aItem, aType, aLayersBackend);
   const HashMap<nsCSSPropertyID, nsTArray<RefPtr<dom::Animation>>>
       compositorAnimations =
