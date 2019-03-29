@@ -88,6 +88,7 @@ raptor-firefox:
     - raptor-tp6-6-firefox
     - raptor-tp6-7-firefox
     - raptor-tp6-8-firefox
+    - raptor-tp6-8-404-firefox
     - raptor-tp6-9-firefox
     - raptor-tp6-10-firefox
     - raptor-tp6-binast-1-firefox
@@ -127,6 +128,7 @@ raptor-chrome:
     - raptor-tp6-6-chrome
     - raptor-tp6-7-chrome
     - raptor-tp6-8-chrome
+    - raptor-tp6-8-404-chrome
     - raptor-tp6-9-chrome
     - raptor-tp6-10-chrome
     - raptor-speedometer-chrome
@@ -427,6 +429,7 @@ android-hw-arm7-raptor:
     - raptor-tp6m-7-geckoview
     - raptor-tp6m-8-geckoview
     - raptor-tp6m-9-geckoview
+    - raptor-tp6m-10-geckoview
 
 android-hw-aarch64-raptor:
     - raptor-speedometer-geckoview
@@ -440,6 +443,7 @@ android-hw-aarch64-raptor:
     - raptor-tp6m-8-geckoview
     - raptor-tp6m-9-geckoview
     - raptor-tp6m-1-geckoview-cold
+    - raptor-tp6m-10-geckoview
 
 android-hw-arm7-raptor-power:
     - raptor-speedometer-geckoview-power

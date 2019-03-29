@@ -236,10 +236,10 @@ class MOZ_STACK_CLASS WSRunObject final {
    *                        Otherwise, an error code.
    */
   template <typename PT, typename CT>
-  nsresult InsertText(dom::Document& aDocument,
-                      const nsAString& aStringToInsert,
-                      const EditorDOMPointBase<PT, CT>& aPointToInsert,
-                      EditorRawDOMPoint* aPointAfterInsertedString = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  InsertText(dom::Document& aDocument, const nsAString& aStringToInsert,
+             const EditorDOMPointBase<PT, CT>& aPointToInsert,
+             EditorRawDOMPoint* aPointAfterInsertedString = nullptr);
 
   // DeleteWSBackward deletes a single visible piece of ws before the ws
   // point (the point to create the wsRunObject, passed to its constructor).

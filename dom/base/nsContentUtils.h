@@ -127,6 +127,7 @@ class Dispatcher;
 class ErrorResult;
 class EventListenerManager;
 class HTMLEditor;
+class PresShell;
 class TextEditor;
 
 namespace dom {
@@ -827,7 +828,7 @@ class nsContentUtils {
    * @return the pres shell, or nullptr if the content is not in a document
    *         (if GetComposedDoc returns nullptr)
    */
-  static nsIPresShell* GetPresShellForContent(const nsIContent* aContent);
+  static mozilla::PresShell* GetPresShellForContent(const nsIContent* aContent);
 
   /**
    * Method to do security and content policy checks on the image URI

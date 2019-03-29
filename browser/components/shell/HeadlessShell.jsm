@@ -41,8 +41,8 @@ function loadContentWindow(webNavigation, url, principal) {
         if (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
           return;
         }
-        // Ignore the initial about:blank
-        if (uri.spec != location.spec) {
+        // Ignore the initial about:blank, unless about:blank is requested
+        if (location.spec == "about:blank" && uri.spec != "about:blank") {
           return;
         }
         let contentWindow = docShell.domWindow;

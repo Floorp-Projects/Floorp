@@ -97,6 +97,8 @@ interface mozILocaleService : nsISupports
    */
   readonly attribute Array<ACString> regionalPrefsLocales;
 
+  readonly attribute Array<ACString> webExposedLocales;
+
   /**
    * Negotiates the best locales out of a ordered list of requested locales and
    * a list of available locales.

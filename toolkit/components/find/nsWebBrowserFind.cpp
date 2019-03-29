@@ -17,7 +17,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIURI.h"
 #include "nsIDocShell.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsISelectionController.h"
@@ -33,6 +32,7 @@
 #include "nsError.h"
 #include "nsFocusManager.h"
 #include "nsRange.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
@@ -324,7 +324,7 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
     return;
   }
 
-  nsIPresShell* presShell = doc->GetShell();
+  PresShell* presShell = doc->GetPresShell();
   if (!presShell) {
     return;
   }
@@ -673,7 +673,7 @@ nsresult nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow,
   rv = GetSearchLimits(searchRange, startPt, endPt, theDoc, sel, aWrapping);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = find->Find(mSearchString.get(), searchRange, startPt, endPt,
+  rv = find->Find(mSearchString, searchRange, startPt, endPt,
                   getter_AddRefs(foundRange));
 
   if (NS_SUCCEEDED(rv) && foundRange) {
@@ -707,7 +707,7 @@ already_AddRefed<Selection> nsWebBrowserFind::GetFrameSelection(
     return nullptr;
   }
 
-  nsIPresShell* presShell = doc->GetShell();
+  PresShell* presShell = doc->GetPresShell();
   if (!presShell) {
     return nullptr;
   }
@@ -734,8 +734,7 @@ already_AddRefed<Selection> nsWebBrowserFind::GetFrameSelection(
     }
   }
 
-  selCon = do_QueryInterface(presShell);
-  sel = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
+  sel = presShell->GetSelection(nsISelectionController::SELECTION_NORMAL);
   return sel.forget();
 }
 

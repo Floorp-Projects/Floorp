@@ -5,9 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/XBLChildrenElement.h"
-#include "nsCharSeparatedTokenizer.h"
+
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "nsAttrValueOrString.h"
+#include "nsCharSeparatedTokenizer.h"
 
 namespace mozilla {
 namespace dom {
@@ -46,8 +48,8 @@ void XBLChildrenElement::DoRemoveDefaultContent(bool aNotify) {
   if (aNotify) {
     Element* parent = GetParentElement();
     if (Document* doc = parent->GetComposedDoc()) {
-      if (nsIPresShell* shell = doc->GetShell()) {
-        shell->DestroyFramesForAndRestyle(parent);
+      if (PresShell* presShell = doc->GetPresShell()) {
+        presShell->DestroyFramesForAndRestyle(parent);
       }
     }
   }

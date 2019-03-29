@@ -133,6 +133,11 @@ class LocaleService final : public mozILocaleService,
   void LocalesChanged();
 
   /**
+   * This function keeps the pref setting updated.
+   */
+  void WebExposedLocalesChanged();
+
+  /**
    * Returns whether the current app locale is RTL.
    */
   bool IsAppLocaleRTL();
@@ -158,6 +163,7 @@ class LocaleService final : public mozILocaleService,
   nsTArray<nsCString> mRequestedLocales;
   nsTArray<nsCString> mAvailableLocales;
   nsTArray<nsCString> mPackagedLocales;
+  nsTArray<nsCString> mWebExposedLocales;
   const bool mIsServer;
 
   static StaticRefPtr<LocaleService> sInstance;

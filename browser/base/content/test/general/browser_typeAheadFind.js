@@ -4,6 +4,9 @@
 
 add_task(async function() {
   let testWindow = await BrowserTestUtils.openNewBrowserWindow();
+  // The TabContextMenu initializes its strings only on a focus or mouseover event.
+  // Calls focus event on the TabContextMenu early in the test.
+  testWindow.gBrowser.selectedTab.focus();
 
   BrowserTestUtils.loadURI(testWindow.gBrowser, "data:text/html,<h1>A Page</h1>");
   await BrowserTestUtils.browserLoaded(testWindow.gBrowser.selectedBrowser);

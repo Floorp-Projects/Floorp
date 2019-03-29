@@ -15,7 +15,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
-class nsPIDOMWindowInner;
+class nsIGlobalObject;
 
 namespace mozilla {
 
@@ -65,8 +65,6 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
   // mSourceObjectStore or mSourceIndex will hold this alive.
   IDBTransaction* mTransaction;
 
-  JS::Heap<JSObject*> mScriptOwner;
-
   // These are cycle-collected!
   JS::Heap<JS::Value> mCachedKey;
   JS::Heap<JS::Value> mCachedPrimaryKey;
@@ -114,7 +112,7 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
   }
 #endif
 
-  nsPIDOMWindowInner* GetParentObject() const;
+  nsIGlobalObject* GetParentObject() const;
 
   void GetSource(OwningIDBObjectStoreOrIDBIndex& aSource) const;
 

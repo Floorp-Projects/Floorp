@@ -52,6 +52,7 @@ using mozilla::DefaultXDisplay;
 #include "mozilla/MouseEvents.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"

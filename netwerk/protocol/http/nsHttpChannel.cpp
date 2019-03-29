@@ -553,6 +553,8 @@ nsresult nsHttpChannel::OnBeforeConnect() {
           new nsMainThreadPtrHolder<nsHttpChannel>(
               "nsHttpChannel::OnBeforeConnect::self", this));
       auto resultCallback = [self(self)](bool aResult, nsresult aStatus) {
+        MOZ_ASSERT(NS_IsMainThread());
+
         nsresult rv = self->ContinueOnBeforeConnect(aResult, aStatus);
         if (NS_FAILED(rv)) {
           self->CloseCacheEntry(false);

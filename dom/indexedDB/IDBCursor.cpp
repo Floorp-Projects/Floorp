@@ -34,7 +34,6 @@ IDBCursor::IDBCursor(Type aType, BackgroundCursorChild* aBackgroundActor,
       mSourceObjectStore(aBackgroundActor->GetObjectStore()),
       mSourceIndex(aBackgroundActor->GetIndex()),
       mTransaction(mRequest->GetTransaction()),
-      mScriptOwner(mTransaction->Database()->GetScriptOwner()),
       mCachedKey(JS::UndefinedValue()),
       mCachedPrimaryKey(JS::UndefinedValue()),
       mCachedValue(JS::UndefinedValue()),
@@ -55,12 +54,6 @@ IDBCursor::IDBCursor(Type aType, BackgroundCursorChild* aBackgroundActor,
   MOZ_ASSERT_IF(aType == Type_Index || aType == Type_IndexKey, mSourceIndex);
   MOZ_ASSERT(mTransaction);
   MOZ_ASSERT(!aKey.IsUnset());
-  MOZ_ASSERT(mScriptOwner);
-
-  if (mScriptOwner) {
-    mozilla::HoldJSObjects(this);
-    mRooted = true;
-  }
 }
 
 bool IDBCursor::IsLocaleAware() const {
@@ -190,7 +183,6 @@ void IDBCursor::DropJSObjects() {
     return;
   }
 
-  mScriptOwner = nullptr;
   mRooted = false;
 
   mozilla::DropJSObjects(this);
@@ -234,7 +226,7 @@ void IDBCursor::Reset() {
   mContinueCalled = false;
 }
 
-nsPIDOMWindowInner* IDBCursor::GetParentObject() const {
+nsIGlobalObject* IDBCursor::GetParentObject() const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mTransaction);
 
@@ -873,7 +865,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBCursor)
   MOZ_ASSERT_IF(!tmp->mHaveCachedValue, tmp->mCachedValue.isUndefined());
 
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScriptOwner)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCachedKey)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCachedPrimaryKey)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCachedValue)

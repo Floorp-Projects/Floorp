@@ -8,6 +8,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "base/message_loop.h"
 #include "base/task.h"
 #include "mozilla/dom/Element.h"
@@ -131,11 +132,11 @@ static nsPresContext* GetPresContextFor(nsIContent* aContent) {
   if (!aContent) {
     return nullptr;
   }
-  nsIPresShell* shell = aContent->OwnerDoc()->GetShell();
-  if (!shell) {
+  PresShell* presShell = aContent->OwnerDoc()->GetPresShell();
+  if (!presShell) {
     return nullptr;
   }
-  return shell->GetPresContext();
+  return presShell->GetPresContext();
 }
 
 void ActiveElementManager::SetActive(dom::Element* aTarget) {

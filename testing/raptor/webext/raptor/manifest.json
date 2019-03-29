@@ -14,6 +14,7 @@
   "content_scripts": [
     {
       "matches": [
+                  "*://*.aframe.io/*",
                   "*://*.allrecipes.com/*",
                   "*://*.apple.com/*",
                   "*://*.amazon.com/*",
@@ -45,7 +46,8 @@
                   "*://*.youtube.com/*",
                   "*://*.yandex.ru/*"
                   ],
-      "js": ["measure.js"]
+      "js": ["measure.js"],
+      "run_at": "document_end"
     },
     {
       "matches": ["*://*/Speedometer/index.html*",
@@ -57,7 +59,8 @@
                   "*://*/wasm-misc/index.html*",
                   "*://*/wasm-godot/index.html*",
                   "*://*/assorted-dom/assorted/results.html*"],
-      "js": ["benchmark-relay.js"]
+      "js": ["benchmark-relay.js"],
+      "run_at": "document_end"
     }
   ],
   "browser_action": {

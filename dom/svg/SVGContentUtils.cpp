@@ -14,6 +14,7 @@
 #include "gfxPlatform.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/dom/SVGSVGElement.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SVGContextPaint.h"
 #include "mozilla/TextUtils.h"
@@ -516,7 +517,7 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
   float x = 0.0f, y = 0.0f;
   if (currentDoc &&
       element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {
-    nsIPresShell* presShell = currentDoc->GetShell();
+    PresShell* presShell = currentDoc->GetPresShell();
     if (presShell) {
       nsIFrame* frame = element->GetPrimaryFrame();
       nsIFrame* ancestorFrame = presShell->GetRootFrame();

@@ -1,5 +1,4 @@
 //error: protocol `undeclared', managed by `undeclProtocol', has not been declared
-//error: constructor declaration required for managed protocol `undeclared' (managed by protocol `undeclProtocol')
 
 protocol undeclProtocol {
     manages undeclared;

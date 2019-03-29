@@ -64,6 +64,8 @@ loader.lazyRequireGetter(this, "createEditContextMenu",
   "devtools/client/framework/toolbox-context-menu", true);
 loader.lazyRequireGetter(this, "remoteClientManager",
   "devtools/client/shared/remote-debugging/remote-client-manager.js", true);
+loader.lazyRequireGetter(this, "ResponsiveUIManager",
+  "devtools/client/responsive.html/manager", true);
 
 loader.lazyGetter(this, "domNodeConstants", () => {
   return require("devtools/shared/dom-node-constants");
@@ -1343,6 +1345,7 @@ Toolbox.prototype = {
   },
 
   _onPickerStarting: async function() {
+    this.tellRDMAboutPickerState(true);
     this.pickerButton.isChecked = true;
     await this.selectTool("inspector", "inspect_dom");
     this.on("select", this.inspector.nodePicker.stop);
@@ -1354,9 +1357,29 @@ Toolbox.prototype = {
   },
 
   _onPickerStopped: function() {
+    this.tellRDMAboutPickerState(false);
     this.off("select", this.inspector.nodePicker.stop);
     this.doc.removeEventListener("keypress", this._onPickerKeypress, true);
     this.pickerButton.isChecked = false;
+  },
+
+  /**
+   * RDM sometimes simulates touch events. For this to work correctly at all times, it
+   * needs to know when the picker is active or not.
+   * This method communicates with the RDM Manager if it exists.
+   *
+   * @param {Boolean} state
+   */
+  tellRDMAboutPickerState: async function(state) {
+    const { tab } = this.target;
+
+    if (!ResponsiveUIManager.isActiveForTab(tab) ||
+        await !this.target.actorHasMethod("emulation", "setElementPickerState")) {
+      return;
+    }
+
+    const ui = ResponsiveUIManager.getResponsiveUIForTab(tab);
+    await ui.emulationFront.setElementPickerState(state);
   },
 
   /**

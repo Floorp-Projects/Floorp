@@ -8,7 +8,6 @@
 #include "nsGkAtoms.h"
 #include "nsRect.h"
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsIScrollable.h"
 #include "nsViewManager.h"
 #include "nsITextToSubURI.h"
@@ -19,6 +18,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentUtils.h"
 #include "nsDocElementCreatedNotificationRunner.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPrincipal.h"
@@ -242,11 +242,11 @@ nsresult MediaDocument::CreateSyntheticDocument() {
 
 nsresult MediaDocument::StartLayout() {
   mMayStartLayout = true;
-  nsCOMPtr<nsIPresShell> shell = GetShell();
+  RefPtr<PresShell> presShell = GetPresShell();
   // Don't mess with the presshell if someone has already handled
   // its initial reflow.
-  if (shell && !shell->DidInitialize()) {
-    nsresult rv = shell->Initialize();
+  if (presShell && !presShell->DidInitialize()) {
+    nsresult rv = presShell->Initialize();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

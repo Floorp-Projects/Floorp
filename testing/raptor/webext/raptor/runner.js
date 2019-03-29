@@ -415,7 +415,9 @@ async function timeoutAlarmListener() {
     "load time": isLoadTimePending,
   };
 
-  postToControlServer("raptor-page-timeout", [testName, testURL, pendingMetrics]);
+  var msgData = [testName, testURL];
+  if (testType == "pageload") { msgData.push(pendingMetrics); }
+  postToControlServer("raptor-page-timeout", msgData);
 
   // take a screen capture
   if (screenCapture) {
@@ -572,7 +574,6 @@ function cleanUp() {
     stopGeckoProfiling();
   }
 
-  window.onload = null;
   // tell the control server we are done and the browser can be shutdown
   postToControlServer("status", "__raptor_shutdownBrowser");
 }
@@ -634,13 +635,9 @@ function raptorRunner() {
   });
 }
 
-// we do not wish to overwrite any window.onload that may exist in the pageload site itself
-var existing_onload = window.onload;
-if (existing_onload && typeof(existing_onload) == "function") {
-  window.onload = function() {
-    existing_onload();
-    raptorRunner();
-  };
+if (window.addEventListener) {
+  window.addEventListener("load", raptorRunner);
+  postToControlServer("status", "Attaching event listener successful!");
 } else {
-  window.onload = raptorRunner();
+  postToControlServer("status", "Attaching event listener failed!");
 }

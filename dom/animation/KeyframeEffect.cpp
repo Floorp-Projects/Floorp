@@ -20,6 +20,7 @@
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/LookAndFeel.h"  // For LookAndFeel::GetInt
 #include "mozilla/KeyframeUtils.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/TypeTraits.h"
@@ -31,8 +32,8 @@
 #include "nsCSSPseudoElements.h"    // For PseudoStyleType
 #include "nsDOMMutationObserver.h"  // For nsAutoAnimationMutationBatch
 #include "nsIFrame.h"
-#include "nsIPresShell.h"
 #include "nsIScriptError.h"
+#include "nsPresContextInlines.h"
 #include "nsRefreshDriver.h"
 
 namespace mozilla {
@@ -1206,7 +1207,7 @@ bool KeyframeEffect::CanThrottleIfNotVisible(nsIFrame& aFrame) const {
     return false;
   }
 
-  nsIPresShell* presShell = GetPresShell();
+  PresShell* presShell = GetPresShell();
   if (presShell && !presShell->IsActive()) {
     return true;
   }
@@ -1408,12 +1409,12 @@ Document* KeyframeEffect::GetRenderedDocument() const {
   return mTarget->mElement->GetComposedDoc();
 }
 
-nsIPresShell* KeyframeEffect::GetPresShell() const {
+PresShell* KeyframeEffect::GetPresShell() const {
   Document* doc = GetRenderedDocument();
   if (!doc) {
     return nullptr;
   }
-  return doc->GetShell();
+  return doc->GetPresShell();
 }
 
 /* static */
