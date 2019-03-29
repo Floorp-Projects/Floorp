@@ -1148,7 +1148,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "TreeWalker", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "U2F", insecureContext: true, disabled: true},
+    {name: "U2F", insecureContext: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "UIEvent", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
