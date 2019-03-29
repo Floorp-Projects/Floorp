@@ -266,4 +266,11 @@ class SafeIntentTest {
 
         assertEquals(intent, SafeIntent(intent).unsafe)
     }
+
+    @Test
+    fun `WHEN toSafeIntent wraps an intent THEN it has the same unsafe intent as the SafeIntent constructor`() {
+
+        // SafeIntent does not override .equals so we have to do comparison with their underlying unsafe intents.
+        assertEquals(SafeIntent(intent).unsafe, intent.toSafeIntent().unsafe)
+    }
 }

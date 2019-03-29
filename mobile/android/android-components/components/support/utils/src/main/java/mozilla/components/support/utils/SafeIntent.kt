@@ -98,3 +98,8 @@ class SafeIntent(val unsafe: Intent) {
         }
     }
 }
+
+/**
+ * Returns a [SafeIntent] for the given [Intent].
+ */
+fun Intent.toSafeIntent(): SafeIntent = SafeIntent(this)
