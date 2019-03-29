@@ -22,6 +22,7 @@
  *
  * They present this algorithm as Algorithm 8.14.
  */
+
 static SECStatus
 fft_recurse(mp_int* out, const mp_int* mod, int n, const mp_int* roots,
             const mp_int* ys, mp_int* tmp, mp_int* ySub, mp_int* rootsSub)
@@ -60,7 +61,7 @@ fft_recurse(mp_int* out, const mp_int* mod, int n, const mp_int* roots,
 
 static SECStatus
 fft_interpolate_raw(mp_int* out, const mp_int* ys, int nPoints,
-                    const mp_int* roots, const mp_int* mod, bool invert)
+                    const_MPArray roots, const mp_int* mod, bool invert)
 {
   SECStatus rv = SECSuccess;
   MPArray tmp = NULL;
@@ -74,8 +75,8 @@ fft_interpolate_raw(mp_int* out, const mp_int* ys, int nPoints,
   mp_int n_inverse;
   MP_DIGITS(&n_inverse) = NULL;
 
-  MP_CHECKC(fft_recurse(out, mod, nPoints, roots, ys, tmp->data, ySub->data,
-                        rootsSub->data));
+  MP_CHECKC(fft_recurse(out, mod, nPoints, roots->data, ys, tmp->data,
+                        ySub->data, rootsSub->data));
 
   if (invert) {
     MP_CHECKC(mp_init(&n_inverse));
@@ -103,16 +104,43 @@ cleanup:
  * of the n-th roots of unity.
  */
 SECStatus
-poly_fft_get_roots(mp_int* roots_out, int n_points, const_PrioConfig cfg,
+poly_fft_get_roots(MPArray roots_out, int n_points, const_PrioConfig cfg,
                    bool invert)
 {
-  if (n_points > cfg->n_roots)
+  if (n_points < 1) {
     return SECFailure;
-  const mp_int* roots_in = invert ? cfg->rootsInv->data : cfg->roots->data;
-  const int step_size = cfg->n_roots / n_points;
+  }
 
-  for (int i = 0; i < n_points; i++) {
-    roots_out[i] = roots_in[i * step_size];
+  if (n_points != roots_out->len) {
+    return SECFailure;
+  }
+
+  if (n_points > cfg->n_roots) {
+    return SECFailure;
+  }
+
+  mp_set(&roots_out->data[0], 1);
+  if (n_points == 1) {
+    return SECSuccess;
+  }
+
+  const int step_size = cfg->n_roots / n_points;
+  mp_int* gen = &roots_out->data[1];
+
+  MP_CHECK(mp_copy(&cfg->generator, gen));
+
+  if (invert) {
+    MP_CHECK(mp_invmod(gen, &cfg->modulus, gen));
+  }
+
+  // Compute g' = g^step_size
+  // Now, g' generates a subgroup of order n_points.
+  MP_CHECK(mp_exptmod_d(gen, step_size, &cfg->modulus, gen));
+
+  for (int i = 2; i < n_points; i++) {
+    // Compute g^i for all i in {0,..., n-1}
+    MP_CHECK(mp_mulmod(gen, &roots_out->data[i - 1], &cfg->modulus,
+                       &roots_out->data[i]));
   }
 
   return SECSuccess;
@@ -124,7 +152,7 @@ poly_fft(MPArray points_out, const_MPArray points_in, const_PrioConfig cfg,
 {
   SECStatus rv = SECSuccess;
   const int n_points = points_in->len;
-  mp_int* scaled_roots = NULL;
+  MPArray scaled_roots = NULL;
 
   if (points_out->len != points_in->len)
     return SECFailure;
@@ -133,15 +161,14 @@ poly_fft(MPArray points_out, const_MPArray points_in, const_PrioConfig cfg,
   if (cfg->n_roots % n_points != 0)
     return SECFailure;
 
-  P_CHECKA(scaled_roots = calloc(n_points, sizeof(mp_int)));
+  P_CHECKA(scaled_roots = MPArray_new(n_points));
   P_CHECKC(poly_fft_get_roots(scaled_roots, n_points, cfg, invert));
 
   P_CHECKC(fft_interpolate_raw(points_out->data, points_in->data, n_points,
                                scaled_roots, &cfg->modulus, invert));
 
 cleanup:
-  if (scaled_roots)
-    free(scaled_roots);
+  MPArray_clear(scaled_roots);
 
   return SECSuccess;
 }
@@ -155,7 +182,7 @@ poly_eval(mp_int* value, const_MPArray coeffs, const mp_int* eval_at,
 
   // Use Horner's method to evaluate the polynomial at the point
   // `eval_at`
-  mp_copy(&coeffs->data[n - 1], value);
+  MP_CHECK(mp_copy(&coeffs->data[n - 1], value));
   for (int i = n - 2; i >= 0; i--) {
     MP_CHECK(mp_mulmod(value, eval_at, &cfg->modulus, value));
     MP_CHECK(mp_addmod(value, &coeffs->data[i], &cfg->modulus, value));
@@ -170,20 +197,15 @@ poly_interp_evaluate(mp_int* value, const_MPArray poly_points,
 {
   SECStatus rv;
   MPArray coeffs = NULL;
-  mp_int* roots = NULL;
   const int N = poly_points->len;
 
-  P_CHECKA(roots = calloc(N, sizeof(mp_int)));
   P_CHECKA(coeffs = MPArray_new(N));
-  P_CHECKC(poly_fft_get_roots(roots, N, cfg, false));
 
   // Interpolate polynomial through roots of unity
   P_CHECKC(poly_fft(coeffs, poly_points, cfg, true))
   P_CHECKC(poly_eval(value, coeffs, eval_at, cfg));
 
 cleanup:
-  if (roots)
-    free(roots);
   MPArray_clear(coeffs);
   return rv;
 }
