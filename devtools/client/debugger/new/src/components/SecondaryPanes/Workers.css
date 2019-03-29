@@ -26,6 +26,16 @@
 
 .workers-list .icon {
   align-self: center;
+  margin-inline-end: 4px;
+  margin-inline-start: 2px;
+}
+
+.workers-list .icon .img.worker {
+  margin-top: -1px;
+}
+
+.workers-list .icon .img.file {
+  margin-top: -2px;
 }
 
 .workers-list .label {

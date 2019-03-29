@@ -31,9 +31,8 @@ export class Worker extends Component<Props> {
   render() {
     const { currentThread, isPaused, thread } = this.props;
 
-    const label = isWorker(thread)
-      ? getDisplayName(thread)
-      : L10N.getStr("mainThread");
+    const worker = isWorker(thread);
+    const label = worker ? getDisplayName(thread) : L10N.getStr("mainThread");
 
     return (
       <div
@@ -44,7 +43,7 @@ export class Worker extends Component<Props> {
         onClick={this.onSelectThread}
       >
         <div className="icon">
-          <AccessibleImage className={isWorker ? "worker" : "file"} />
+          <AccessibleImage className={worker ? "worker" : "file"} />
         </div>
         <div className="label">{label}</div>
         {isPaused ? (
