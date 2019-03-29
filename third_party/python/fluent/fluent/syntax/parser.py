@@ -63,16 +63,7 @@ class FluentParser(object):
                 # clear it.
                 last_comment = None
 
-            if isinstance(entry, ast.Comment) \
-               and ps.last_comment_zero_four_syntax \
-               and len(entries) == 0:
-                comment = ast.ResourceComment(entry.content)
-                comment.span = entry.span
-                entries.append(comment)
-            else:
-                entries.append(entry)
-
-            ps.last_comment_zero_four_syntax = False
+            entries.append(entry)
 
         res = ast.Resource(entries)
 
@@ -131,12 +122,6 @@ class FluentParser(object):
         if ps.current_char == '#':
             return self.get_comment(ps)
 
-        if ps.current_char == '/':
-            return self.get_zero_four_style_comment(ps)
-
-        if ps.current_char == '[':
-            return self.get_group_comment_from_section(ps)
-
         if ps.current_char == '-':
             return self.get_term(ps)
 
@@ -144,39 +129,6 @@ class FluentParser(object):
             return self.get_message(ps)
 
         raise ParseError('E0002')
-
-    @with_span
-    def get_zero_four_style_comment(self, ps):
-        ps.expect_char('/')
-        ps.expect_char('/')
-        ps.take_char(lambda x: x == ' ')
-
-        content = ''
-
-        while True:
-            ch = ps.take_char(lambda x: x != EOL)
-            while ch:
-                content += ch
-                ch = ps.take_char(lambda x: x != EOL)
-
-            if ps.is_next_line_zero_four_comment():
-                content += ps.current_char
-                ps.next()
-                ps.expect_char('/')
-                ps.expect_char('/')
-                ps.take_char(lambda x: x == ' ')
-            else:
-                break
-
-        # Comments followed by Sections become GroupComments.
-        if ps.peek() == '[':
-            ps.skip_to_peek()
-            self.get_group_comment_from_section(ps)
-            return ast.GroupComment(content)
-
-        ps.reset_peek()
-        ps.last_comment_zero_four_syntax = True
-        return ast.Comment(content)
 
     @with_span
     def get_comment(self, ps):
@@ -217,33 +169,12 @@ class FluentParser(object):
             return ast.ResourceComment(content)
 
     @with_span
-    def get_group_comment_from_section(self, ps):
-        def until_closing_bracket_or_eol(ch):
-            return ch not in (']', EOL)
-
-        ps.expect_char('[')
-        ps.expect_char('[')
-        while ps.take_char(until_closing_bracket_or_eol):
-            pass
-        ps.expect_char(']')
-        ps.expect_char(']')
-
-        # A Section without a comment is like an empty Group Comment.
-        # Semantically it ends the previous group and starts a new one.
-        return ast.GroupComment('')
-
-    @with_span
     def get_message(self, ps):
         id = self.get_identifier(ps)
         ps.skip_blank_inline()
+        ps.expect_char('=')
 
-        # XXX Syntax 0.4 compat
-        if ps.current_char == '=':
-            ps.next()
-            value = self.maybe_get_pattern(ps)
-        else:
-            value = None
-
+        value = self.maybe_get_pattern(ps)
         attrs = self.get_attributes(ps)
 
         if value is None and len(attrs) == 0:
@@ -259,10 +190,7 @@ class FluentParser(object):
         ps.skip_blank_inline()
         ps.expect_char('=')
 
-        # Syntax 0.8 compat: VariantLists are supported but deprecated. They
-        # can only be found as values of Terms. Nested VariantLists are not
-        # allowed.
-        value = self.maybe_get_variant_list(ps) or self.maybe_get_pattern(ps)
+        value = self.maybe_get_pattern(ps)
         if value is None:
             raise ParseError('E0006', id.name)
 
@@ -284,7 +212,6 @@ class FluentParser(object):
 
         return ast.Attribute(key, value)
 
-
     def get_attributes(self, ps):
         attrs = []
         ps.peek_blank()
@@ -293,7 +220,7 @@ class FluentParser(object):
             ps.skip_to_peek()
             attr = self.get_attribute(ps)
             attrs.append(attr)
-            ps.peek_blank();
+            ps.peek_blank()
 
         return attrs
 
@@ -342,7 +269,6 @@ class FluentParser(object):
             raise ParseError('E0012')
 
         return ast.Variant(key, value, default_index)
-
 
     def get_variants(self, ps):
         variants = []
@@ -419,35 +345,6 @@ class FluentParser(object):
 
         return None
 
-    def maybe_get_variant_list(self, ps):
-        '''Parse a VariantList, or None
-
-        Deprecated in Syntax 0.8. VariantLists are only allowed as values of
-        Terms. Values of Messages, Attributes and Variants must be Patterns.
-        This method is only used in get_term.
-        '''
-        ps.peek_blank()
-        if ps.current_peek == '{':
-            start = ps.peek_offset
-            ps.peek()
-            ps.peek_blank_inline()
-            if ps.current_peek == EOL:
-                ps.peek_blank()
-                if ps.is_variant_start():
-                    ps.reset_peek(start)
-                    ps.skip_to_peek()
-                    return self.get_variant_list(ps)
-
-        ps.reset_peek()
-        return None
-
-    @with_span
-    def get_variant_list(self, ps):
-        ps.expect_char('{')
-        variants = self.get_variants(ps)
-        ps.expect_char('}')
-        return ast.VariantList(variants)
-
     @with_span
     def get_pattern(self, ps, is_block):
         elements = []
@@ -460,7 +357,6 @@ class FluentParser(object):
             common_indent_length = len(first_indent)
         else:
             common_indent_length = float('infinity')
-
 
         while ps.current_char:
             if ps.current_char == EOL:
@@ -566,7 +462,7 @@ class FluentParser(object):
 
         if next == '\\' or next == '"':
             ps.next()
-            return '\\{}'.format(next), next
+            return '\\{}'.format(next)
 
         if next == 'u':
             return self.get_unicode_escape_sequence(ps, next, 4)
@@ -585,20 +481,7 @@ class FluentParser(object):
                 raise ParseError('E0026', '\\{}{}{}'.format(u, sequence, ps.current_char))
             sequence += ch
 
-        codepoint = int(sequence, 16)
-        if codepoint <= 0xD7FF or 0xE000 <= codepoint:
-            # It's a Unicode scalar value. The escape sequence is 4 or 6 digits
-            # long. Convert it to a 8-digit-long \UHHHHHHHH sequence and encode
-            # it as bytes, because in Python 3 decode is not available on str.
-            byte_sequence = "\\U{:08x}".format(codepoint).encode('utf-8')
-            unescaped = byte_sequence.decode('unicode-escape')
-        else:
-            # Escape sequences reresenting surrogate code points are
-            # well-formed but invalid in Fluent. Replace them with U+FFFD
-            # REPLACEMENT CHARACTER.
-            unescaped = '\uFFFD'
-
-        return '\\{}{}'.format(u, sequence), unescaped
+        return '\\{}{}'.format(u, sequence)
 
     @with_span
     def get_placeable(self, ps):
@@ -620,18 +503,15 @@ class FluentParser(object):
                 return selector
 
             if isinstance(selector, ast.MessageReference):
-                raise ParseError('E0016')
+                if selector.attribute is None:
+                    raise ParseError('E0016')
+                else:
+                    raise ParseError('E0018')
 
-            if isinstance(selector, ast.AttributeExpression) \
-                   and isinstance(selector.ref, ast.MessageReference):
-                raise ParseError('E0018')
-
-            if isinstance(selector, ast.TermReference) \
-                    or isinstance(selector, ast.VariantExpression):
-                raise ParseError('E0017')
-
-            if isinstance(selector, ast.CallExpression) \
-                   and isinstance(selector.callee, ast.TermReference):
+            if (
+                isinstance(selector, ast.TermReference)
+                and selector.attribute is None
+            ):
                 raise ParseError('E0017')
 
             ps.next()
@@ -643,12 +523,10 @@ class FluentParser(object):
             variants = self.get_variants(ps)
             return ast.SelectExpression(selector, variants)
 
-        if isinstance(selector, ast.AttributeExpression) \
-                and isinstance(selector.ref, ast.TermReference):
-            raise ParseError('E0019')
-
-        if isinstance(selector, ast.CallExpression) \
-                and isinstance(selector.callee, ast.AttributeExpression):
+        if (
+            isinstance(selector, ast.TermReference)
+            and selector.attribute is not None
+        ):
             raise ParseError('E0019')
 
         return selector
@@ -658,65 +536,46 @@ class FluentParser(object):
         if ps.current_char == '{':
             return self.get_placeable(ps)
 
-        expr = self.get_simple_expression(ps)
-
-        if isinstance(expr, (ast.NumberLiteral, ast.StringLiteral,
-                ast.VariableReference)):
-            return expr
-
-        if isinstance(expr, ast.MessageReference):
-            if ps.current_char == '.':
-                ps.next()
-                attr = self.get_identifier(ps)
-                return ast.AttributeExpression(expr, attr)
-
-            if ps.current_char == '(':
-                # It's a Function. Ensure it's all upper-case.
-                if not re.match('^[A-Z][A-Z_?-]*$', expr.id.name):
-                    raise ParseError('E0008')
-                func = ast.FunctionReference(expr.id)
-                if self.with_spans:
-                    func.add_span(expr.span.start, expr.span.end)
-                return ast.CallExpression(func, *self.get_call_arguments(ps))
-
-            return expr
-
-        if isinstance(expr, ast.TermReference):
-            if (ps.current_char == '['):
-                ps.next()
-                key = self.get_variant_key(ps)
-                ps.expect_char(']')
-                return ast.VariantExpression(expr, key)
-
-            if (ps.current_char == '.'):
-                ps.next()
-                attr = self.get_identifier(ps)
-                expr = ast.AttributeExpression(expr, attr)
-
-            if (ps.current_char == '('):
-                return ast.CallExpression(expr, *self.get_call_arguments(ps))
-
-            return expr
-
-        raise ParseError('E0028')
-
-    @with_span
-    def get_simple_expression(self, ps):
         if ps.is_number_start():
             return self.get_number(ps)
+
         if ps.current_char == '"':
             return self.get_string(ps)
+
         if ps.current_char == '$':
             ps.next()
             id = self.get_identifier(ps)
             return ast.VariableReference(id)
+
         if ps.current_char == '-':
             ps.next()
             id = self.get_identifier(ps)
-            return ast.TermReference(id)
+            attribute = None
+            if ps.current_char == '.':
+                ps.next()
+                attribute = self.get_identifier(ps)
+            arguments = None
+            if ps.current_char == '(':
+                arguments = self.get_call_arguments(ps)
+            return ast.TermReference(id, attribute, arguments)
+
         if ps.is_identifier_start():
             id = self.get_identifier(ps)
-            return ast.MessageReference(id)
+
+            if ps.current_char == '(':
+                # It's a Function. Ensure it's all upper-case.
+                if not re.match('^[A-Z][A-Z0-9_-]*$', id.name):
+                    raise ParseError('E0008')
+                args = self.get_call_arguments(ps)
+                return ast.FunctionReference(id, args)
+
+            attribute = None
+            if ps.current_char == '.':
+                ps.next()
+                attribute = self.get_identifier(ps)
+
+            return ast.MessageReference(id, attribute)
+
         raise ParseError('E0028')
 
     @with_span
@@ -728,15 +587,16 @@ class FluentParser(object):
         if ps.current_char != ':':
             return exp
 
-        if not isinstance(exp, ast.MessageReference):
-            raise ParseError('E0009')
+        if isinstance(exp, ast.MessageReference) and exp.attribute is None:
+            ps.next()
+            ps.skip_blank()
 
-        ps.next()
-        ps.skip_blank()
+            value = self.get_literal(ps)
+            return ast.NamedArgument(exp.id, value)
 
-        value = self.get_literal(ps)
-        return ast.NamedArgument(exp.id, value)
+        raise ParseError('E0009')
 
+    @with_span
     def get_call_arguments(self, ps):
         positional = []
         named = []
@@ -770,11 +630,10 @@ class FluentParser(object):
             break
 
         ps.expect_char(')')
-        return positional, named
+        return ast.CallArguments(positional, named)
 
     @with_span
     def get_string(self, ps):
-        raw = ''
         value = ''
 
         ps.expect_char('"')
@@ -784,11 +643,8 @@ class FluentParser(object):
             if not ch:
                 break
             if ch == '\\':
-                sequence, unescaped = self.get_escape_sequence(ps)
-                raw += sequence
-                value += unescaped
+                value += self.get_escape_sequence(ps)
             else:
-                raw += ch
                 value += ch
 
         if ps.current_char == EOL:
@@ -796,7 +652,7 @@ class FluentParser(object):
 
         ps.expect_char('"')
 
-        return ast.StringLiteral(raw, value)
+        return ast.StringLiteral(value)
 
     @with_span
     def get_literal(self, ps):

@@ -9,8 +9,10 @@ from __future__ import absolute_import
 
 from pkg_resources import resource_string
 import re
+import unittest
 
 from compare_locales import parser
+from compare_locales.checks import getChecker
 import six
 from six.moves import zip_longest
 
@@ -55,3 +57,26 @@ class ParserTestMixin():
             else:
                 self.assertIsInstance(entity, ref[0])
                 self.assertIn(ref[1], entity.all)
+
+
+class BaseHelper(unittest.TestCase):
+    file = None
+    refContent = None
+
+    def setUp(self):
+        p = parser.getParser(self.file.file)
+        p.readContents(self.refContent)
+        self.refList = p.parse()
+
+    def _test(self, content, refWarnOrErrors):
+        p = parser.getParser(self.file.file)
+        p.readContents(content)
+        l10n = [e for e in p]
+        assert len(l10n) == 1
+        l10n = l10n[0]
+        checker = getChecker(self.file)
+        if checker.needs_reference:
+            checker.set_reference(self.refList)
+        ref = self.refList[l10n.key]
+        found = tuple(checker.check(ref, l10n))
+        self.assertEqual(found, refWarnOrErrors)
