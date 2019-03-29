@@ -302,7 +302,6 @@ class AwsyTestCase(MarionetteTestCase):
         """
         page_to_load = self.urls()[self._pages_loaded % len(self.urls())]
         tabs_loaded = len(self._tabs)
-        is_new_tab = False
         open_tab_script = r"""
             gBrowser.loadOneTab("about:blank", {
                 inBackground: false,
@@ -326,8 +325,6 @@ class AwsyTestCase(MarionetteTestCase):
             self._tabs.append(new_tabs[0])
             tabs_loaded += 1
 
-            is_new_tab = True
-
         tab_idx = self._pages_loaded % self._maxTabs
 
         tab = self._tabs[tab_idx]
@@ -345,16 +342,16 @@ class AwsyTestCase(MarionetteTestCase):
             self.marionette.navigate(page_to_load)
             self.logger.info("loaded!")
 
-        # On e10s the tab handle can change after actually loading content
-        if is_new_tab:
-            # First build a set up w/o the current tab
-            old_tabs = set(self._tabs)
-            old_tabs.remove(tab)
-            # Perform a set diff to get the (possibly) new handle
-            [new_tab] = set(self.marionette.window_handles) - old_tabs
-            # Update the tab list at the current index to preserve the tab
-            # ordering
-            self._tabs[tab_idx] = new_tab
+        # The tab handle can change after actually loading content
+        # First build a set up w/o the current tab
+        old_tabs = set(self._tabs)
+        old_tabs.remove(tab)
+        # Perform a set diff to get the (possibly) new handle
+        new_tabs = set(self.marionette.window_handles) - old_tabs
+        # Update the tab list at the current index to preserve the tab
+        # ordering
+        if new_tabs:
+            self._tabs[tab_idx] = list(new_tabs)[0]
 
         # give the page time to settle
         time.sleep(self._perTabPause)
