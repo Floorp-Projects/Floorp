@@ -9,6 +9,7 @@
 #include "nsIFrame.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ServoBindings.h"
 
 namespace mozilla {
@@ -252,7 +253,7 @@ void DOMIntersectionObserver::Update(Document* aDocument,
           rootFrame, rootRectRelativeToRootFrame, containingBlock);
     }
   } else {
-    nsCOMPtr<nsIPresShell> presShell = aDocument->GetShell();
+    RefPtr<PresShell> presShell = aDocument->GetPresShell();
     if (presShell) {
       rootFrame = presShell->GetRootScrollFrame();
       if (rootFrame) {

@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include "mozilla/AutoRestore.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/SMILTimedElement.h"
 #include "mozilla/dom/DocumentInlines.h"
@@ -17,7 +18,6 @@
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
 #include "mozilla/dom/Document.h"
-#include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
 #include "nsITimer.h"
 #include "SMILCompositor.h"
@@ -729,8 +729,8 @@ nsRefreshDriver* SMILAnimationController::GetRefreshDriver() {
 }
 
 void SMILAnimationController::FlagDocumentNeedsFlush() {
-  if (nsIPresShell* shell = mDocument->GetShell()) {
-    shell->SetNeedStyleFlush();
+  if (PresShell* presShell = mDocument->GetPresShell()) {
+    presShell->SetNeedStyleFlush();
   }
 }
 

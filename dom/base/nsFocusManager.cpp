@@ -21,7 +21,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIFormControl.h"
 #include "nsLayoutUtils.h"
-#include "nsIPresShell.h"
 #include "nsFrameTraversal.h"
 #include "nsIWebNavigation.h"
 #include "nsCaret.h"
@@ -60,6 +59,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include <algorithm>
@@ -1482,8 +1482,10 @@ Element* nsFocusManager::CheckIfFocusable(Element* aElement, uint32_t aFlags) {
   mEventHandlingNeedsFlush = false;
   doc->FlushPendingNotifications(FlushType::EnsurePresShellInitAndFrames);
 
-  nsIPresShell* shell = doc->GetShell();
-  if (!shell) return nullptr;
+  PresShell* presShell = doc->GetPresShell();
+  if (!presShell) {
+    return nullptr;
+  }
 
   // the root content can always be focused,
   // except in userfocusignored context.
@@ -1492,7 +1494,7 @@ Element* nsFocusManager::CheckIfFocusable(Element* aElement, uint32_t aFlags) {
   }
 
   // cannot focus content in print preview mode. Only the root can be focused.
-  nsPresContext* presContext = shell->GetPresContext();
+  nsPresContext* presContext = presShell->GetPresContext();
   if (presContext &&
       presContext->Type() == nsPresContext::eContext_PrintPreview) {
     LOGCONTENT("Cannot focus %s while in print preview", aElement)
@@ -2529,7 +2531,7 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
   Element* rootContent = doc->GetRootElement();
   NS_ENSURE_TRUE(rootContent, NS_OK);
 
-  nsIPresShell* presShell = doc->GetShell();
+  PresShell* presShell = doc->GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_OK);
 
   if (aType == MOVEFOCUS_FIRST) {
@@ -2776,7 +2778,7 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
       NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
       rootContent = doc->GetRootElement();
-      presShell = doc->GetShell();
+      presShell = doc->GetPresShell();
 
       // We can focus the root element now that we have moved to another
       // document.
@@ -3626,11 +3628,12 @@ bool nsFocusManager::TryToMoveFocusToSubDocument(
       }
     }
     Element* rootElement = subdoc->GetRootElement();
-    nsIPresShell* subShell = subdoc->GetShell();
-    if (rootElement && subShell) {
+    PresShell* subPresShell = subdoc->GetPresShell();
+    if (rootElement && subPresShell) {
       nsresult rv = GetNextTabbableContent(
-          subShell, rootElement, aOriginalStartContent, rootElement, aForward,
-          (aForward ? 1 : 0), false, aForDocumentNavigation, aResultContent);
+          subPresShell, rootElement, aOriginalStartContent, rootElement,
+          aForward, (aForward ? 1 : 0), false, aForDocumentNavigation,
+          aResultContent);
       NS_ENSURE_SUCCESS(rv, false);
       if (*aResultContent) {
         return true;
@@ -3773,7 +3776,7 @@ nsresult nsFocusManager::FocusFirst(Element* aRootElement,
       // If the found content is in a chrome shell, navigate forward one
       // tabbable item so that the first item is focused. Note that we
       // always go forward and not back here.
-      nsIPresShell* presShell = doc->GetShell();
+      PresShell* presShell = doc->GetPresShell();
       if (presShell) {
         return GetNextTabbableContent(presShell, aRootElement, nullptr,
                                       aRootElement, true, 1, false, false,
