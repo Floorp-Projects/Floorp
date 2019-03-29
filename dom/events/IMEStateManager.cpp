@@ -14,6 +14,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/Unused.h"
@@ -32,7 +33,6 @@
 #include "nsIFormControl.h"
 #include "nsINode.h"
 #include "nsIObserverService.h"
-#include "nsIPresShell.h"
 #include "nsISupports.h"
 #include "nsPresContext.h"
 
@@ -922,11 +922,11 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
     return;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
+  RefPtr<PresShell> presShell;
   if (!aEditorBase) {
     MOZ_ASSERT(aContent, "we must have content");
     Document* doc = aContent->OwnerDoc();
-    presShell = doc->GetShell();
+    presShell = doc->GetPresShell();
   } else {
     presShell = aEditorBase->GetPresShell();
   }

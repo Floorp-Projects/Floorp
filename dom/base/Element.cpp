@@ -34,7 +34,6 @@
 #include "nsIURL.h"
 #include "nsContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsStyleConsts.h"
 #include "nsString.h"
@@ -68,6 +67,7 @@
 #include "mozilla/FullscreenChange.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/SizeOfState.h"
@@ -448,7 +448,7 @@ Element::StyleStateLocks Element::LockedStyleStates() const {
 void Element::NotifyStyleStateChange(EventStates aStates) {
   Document* doc = GetComposedDoc();
   if (doc) {
-    nsIPresShell* presShell = doc->GetShell();
+    RefPtr<PresShell> presShell = doc->GetPresShell();
     if (presShell) {
       nsAutoScriptBlocker scriptBlocker;
       presShell->ContentStateChanged(doc, this, aStates);
@@ -527,7 +527,7 @@ static bool MayNeedToLoadXBLBinding(const Document& aDocument,
   // Otherwise, don't do anything else here unless we're dealing with
   // XUL or an HTML element that may have a plugin-related overlay
   // (i.e. object or embed).
-  if (!aDocument.GetShell() || aElement.GetPrimaryFrame()) {
+  if (!aDocument.GetPresShell() || aElement.GetPrimaryFrame()) {
     return false;
   }
 
@@ -698,8 +698,8 @@ nsIScrollableFrame* Element::GetScrollFrame(nsIFrame** aFrame,
 
   if (isScrollingElement) {
     // Our scroll info should map to the root scrollable frame if there is one.
-    if (nsIPresShell* shell = doc->GetShell()) {
-      return shell->GetRootScrollFrameAsScrollable();
+    if (PresShell* presShell = doc->GetPresShell()) {
+      return presShell->GetRootScrollFrameAsScrollable();
     }
   }
 
@@ -731,7 +731,7 @@ void Element::ScrollIntoView(const ScrollIntoViewOptions& aOptions) {
   }
 
   // Get the presentation shell
-  nsCOMPtr<nsIPresShell> presShell = document->GetShell();
+  RefPtr<PresShell> presShell = document->GetPresShell();
   if (!presShell) {
     return;
   }
@@ -990,7 +990,7 @@ nsRect Element::GetClientAreaRect() {
     // We will always have a pres shell if we have a pres context, and we will
     // only get here if we have a pres context from the root content document
     // check
-    nsIPresShell* presShell = doc->GetShell();
+    PresShell* presShell = doc->GetPresShell();
 
     // Ensure up to date dimensions, but don't reflow
     RefPtr<nsViewManager> viewManager = presShell->GetViewManager();
@@ -1198,8 +1198,8 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
           DOCUMENT_FRAGMENT_NODE);
 
   if (Document* doc = GetComposedDoc()) {
-    if (nsIPresShell* shell = doc->GetShell()) {
-      shell->DestroyFramesForAndRestyle(this);
+    if (PresShell* presShell = doc->GetPresShell()) {
+      presShell->DestroyFramesForAndRestyle(this);
     }
   }
   MOZ_ASSERT(!GetPrimaryFrame());
@@ -1319,8 +1319,8 @@ void Element::UnattachShadow() {
   nsAutoScriptBlocker scriptBlocker;
 
   if (Document* doc = GetComposedDoc()) {
-    if (nsIPresShell* shell = doc->GetShell()) {
-      shell->DestroyFramesForAndRestyle(this);
+    if (PresShell* presShell = doc->GetPresShell()) {
+      presShell->DestroyFramesForAndRestyle(this);
     }
   }
   MOZ_ASSERT(!GetPrimaryFrame());
@@ -2041,8 +2041,8 @@ nsresult Element::SetSMILOverrideStyleDeclaration(
   // be in a document, if we're clearing animation effects on a target node
   // that's been detached since the previous animation sample.)
   if (Document* doc = GetComposedDoc()) {
-    if (nsIPresShell* shell = doc->GetShell()) {
-      shell->RestyleForAnimation(this, StyleRestyleHint_RESTYLE_SMIL);
+    if (PresShell* presShell = doc->GetPresShell()) {
+      presShell->RestyleForAnimation(this, StyleRestyleHint_RESTYLE_SMIL);
     }
   }
 
@@ -4290,8 +4290,8 @@ static void NoteDirtyElement(Element* aElement, uint32_t aBits) {
     }
   }
 
-  if (nsIPresShell* shell = doc->GetShell()) {
-    shell->EnsureStyleFlush();
+  if (PresShell* presShell = doc->GetPresShell()) {
+    presShell->EnsureStyleFlush();
   }
 
   MOZ_ASSERT(parent->IsElement() || parent == doc);

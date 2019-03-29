@@ -19,7 +19,6 @@
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
-#include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
@@ -51,6 +50,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;
@@ -228,8 +228,7 @@ nsresult nsBindingManager::ClearBinding(Element* aElement) {
   nsCOMPtr<Document> doc = aElement->OwnerDoc();
 
   // Destroy the frames here before the UnbindFromTree happens.
-  nsIPresShell* presShell = doc->GetShell();
-  if (presShell) {
+  if (PresShell* presShell = doc->GetPresShell()) {
     presShell->DestroyFramesForAndRestyle(aElement);
   }
 
@@ -245,9 +244,9 @@ nsresult nsBindingManager::ClearBinding(Element* aElement) {
   // been removed and style may have changed due to the removal of the
   // anonymous children.
   // XXXbz this should be using the current doc (if any), not the owner doc.
-  presShell = doc->GetShell();  // get the shell again, just in case it changed
+  // get the shell again, just in case it changed
+  PresShell* presShell = doc->GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
   presShell->PostRecreateFramesFor(aElement);
   return NS_OK;
 }
@@ -289,8 +288,8 @@ nsresult nsBindingManager::AddToAttachedQueue(nsXBLBinding* aBinding) {
   }
 
   // Make sure that flushes will flush out the new items as needed.
-  if (nsIPresShell* shell = mDocument->GetShell()) {
-    shell->SetNeedStyleFlush();
+  if (PresShell* presShell = mDocument->GetPresShell()) {
+    presShell->SetNeedStyleFlush();
   }
 
   return NS_OK;
