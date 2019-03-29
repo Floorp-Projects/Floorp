@@ -1,0 +1,10 @@
+[
+  {
+    "size": 2257102,
+    "visibility": "public",
+    "digest": "47b8699593fcd1b69e7b801bd832298ad1bb2f3898337e6b401dfe37ee35913896c2e42d361218e5232eeb1bc53c152b659696c56b554febd07bc2be7a502afe",
+    "algorithm": "sha512",
+    "filename": "mitmproxy404-tp6-wikipedia.zip",
+    "unpack": true
+  }
+]
