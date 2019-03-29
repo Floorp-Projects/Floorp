@@ -55,7 +55,7 @@ fuzzy(0-1,0-6800) == clipped-opacity-containing-unclipped-mixblendmode.html clip
 # Test 9
 == background-blending-image-color-svg-as-data-uri.html background-blending-image-color-ref.html
 # Test 10
-== background-blending-image-color-gif.html background-blending-image-color-gif-ref.html
+test-pref(image.animation_mode,"none") == background-blending-image-color-gif.html background-blending-image-color-gif-ref.html
 == background-blending-image-color-transform3d.html background-blending-image-color-ref.html
 
 # Test plan 5.3.2 Background layers do not blend with content outside the background (or behind the element) - tests 2 and 3
