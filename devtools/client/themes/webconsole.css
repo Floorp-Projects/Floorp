@@ -160,6 +160,10 @@ a {
   border-inline-end: solid 1px var(--console-output-indent-border-color);
 }
 
+.message > .indent.warning-indent {
+  border-inline-end-color: var(--warning-color);
+}
+
 .message > .indent[data-indent="0"] {
   display: none;
 }
@@ -249,21 +253,32 @@ a {
 }
 
 /* The bubble that shows the number of times a message is repeated */
-.message-repeats {
+.message-repeats,
+.warning-group-badge {
   flex-shrink: 0;
   margin: 2px 5px 0 5px;
   padding: 0 6px;
   height: 1.25em;
-  color: white;
-  background-color: var(--repeat-bubble-background-color);
   border-radius: 40px;
   font: message-box;
   font-size: 0.8em;
   font-weight: normal;
 }
 
+.message-repeats {
+  display: inline-block;
+  color: white;
+  background-color: var(--repeat-bubble-background-color);
+}
+
 .message-repeats[value="1"] {
   display: none;
+}
+
+.warning-group-badge {
+  display: inline-block;
+  color: var(--warning-background-color);
+  background-color: var(--warning-color);
 }
 
 .message-location {
