@@ -19,6 +19,9 @@ add_task(async function() {
 });
 
 async function performTests() {
+  // The TabContextMenu initializes its strings only on a focus or mouseover event.
+  // Calls focus event on the TabContextMenu early in the test.
+  gBrowser.selectedTab.focus();
   const hud = await openNewTabAndConsole(TEST_URI);
   const {jsterm} = hud;
 
