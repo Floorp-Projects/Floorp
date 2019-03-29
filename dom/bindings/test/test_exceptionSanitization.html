@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1295322
 <pre id="test">
 </pre>
   <script type="application/javascript">
-
+  /* global TestFunctions */
     SimpleTest.waitForExplicitFinish();
     async function runTests() {
       await SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]});
@@ -26,29 +26,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1295322
       var t = new TestFunctions();
 
       try {
-	t.testThrowNsresult();
+        t.testThrowNsresult();
       } catch (e) {
-	try {
-	  is(e.name, "NS_BINDING_ABORTED",
-	     "Should have the right exception");
-	  is(e.filename, location.href,
-             "Should not be seeing where the exception really came from");
-	} catch (e2) {
-	  ok(false, "Should be able to work with the exception");
-	}
+        try {
+          is(e.name, "NS_BINDING_ABORTED", "Should have the right exception");
+          is(e.filename, location.href, "Should not be seeing where the exception really came from");
+        } catch (e2) {
+          ok(false, "Should be able to work with the exception");
+        }
       }
 
       try {
-	t.testThrowNsresultFromNative();
+        t.testThrowNsresultFromNative();
       } catch (e) {
         try {
-	  is(e.name, "NS_ERROR_UNEXPECTED",
-	     "Should have the right exception");
-	  is(e.filename, location.href,
-             "Should not be seeing where the exception really came from");
-	} catch (e2) {
-	  ok(false, "Should be able to work with the exception");
-	}
+          is(e.name, "NS_ERROR_UNEXPECTED", "Should have the right exception");
+          is(e.filename, location.href, "Should not be seeing where the exception really came from");
+        } catch (e2) {
+          ok(false, "Should be able to work with the exception");
+        }
       }
 
       SimpleTest.finish();

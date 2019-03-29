@@ -9,6 +9,8 @@
 </head>
 <body>
 <script class="testbody" type="application/javascript">
+/* global TestInterfaceJS */
+
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, function() {
   var testInterfaceJS = new TestInterfaceJS();

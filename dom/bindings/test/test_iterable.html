@@ -9,12 +9,14 @@
   </head>
   <body>
     <script class="testbody" type="application/javascript">
+    /* global TestInterfaceIterableSingle, TestInterfaceIterableDouble, TestInterfaceIterableDoubleUnion */
+
      SimpleTest.waitForExplicitFinish();
      SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, function() {
-       base_properties = [["entries", "function", 0],
-                          ["keys", "function", 0],
-                          ["values", "function", 0],
-                          ["forEach", "function", 1]];
+       var base_properties = [["entries", "function", 0],
+                              ["keys", "function", 0],
+                              ["values", "function", 0],
+                              ["forEach", "function", 1]];
        var testExistence = function testExistence(prefix, obj, properties) {
          for (var [name, type, args] of properties) {
            // Properties are somewhere up the proto chain, hasOwnProperty won't work
@@ -46,7 +48,6 @@
        };
 
        var itr;
-       // Simple single type iterable creation and functionality test
        info("IterableSingle: Testing simple iterable creation and functionality");
        itr = new TestInterfaceIterableSingle();
        testExistence("IterableSingle: ", itr, base_properties);
@@ -66,10 +67,10 @@
        var key_itr = itr.keys();
        var value_itr = itr.values();
        var entries_itr = itr.entries();
-       for (var i = 0; i < 3; ++i) {
-         var key = key_itr.next();
-         var value = value_itr.next();
-         var entry = entries_itr.next();
+       for (let i = 0; i < 3; ++i) {
+         let key = key_itr.next();
+         let value = value_itr.next();
+         let entry = entries_itr.next();
          is(key.value, i, "IterableSingle: Key iterator value should be " + i);
          is(key.value, keys[i],
             "IterableSingle: Key iterator value should match destructuring " + i);
@@ -86,10 +87,10 @@
 
        var callsToForEachCallback = 0;
        var thisArg = {};
-       itr.forEach(function(value, index, obj) {
+       itr.forEach(function(value1, index, obj) {
          is(index, callsToForEachCallback,
             `IterableSingle: Should have the right index at ${callsToForEachCallback} calls to forEach callback`);
-         is(value, values[index],
+         is(value1, values[index],
             `IterableSingle: Should have the right value at ${callsToForEachCallback} calls to forEach callback`);
          is(this, thisArg,
             "IterableSingle: Should have the right this value for forEach callback");
@@ -100,9 +101,9 @@
        is(callsToForEachCallback, 3,
           "IterableSingle: Should have right total number of calls to forEach callback");
 
-       var key = key_itr.next();
-       var value = value_itr.next();
-       var entry = entries_itr.next();
+       let key = key_itr.next();
+       let value = value_itr.next();
+       let entry = entries_itr.next();
        is(key.value, undefined, "IterableSingle: Key iterator value should be undefined");
        is(key.done, true, "IterableSingle: Key iterator done should be true");
        is(value.value, undefined, "IterableSingle: Value iterator value should be undefined");
@@ -120,16 +121,16 @@
        is(itr.entries, itr[Symbol.iterator],
           "IterableDouble: Should be using @@iterator for 'entries'");
        var elements = [["a", "b"], ["c", "d"], ["e", "f"]];
-       var keys = [...itr.keys()];
-       var values = [...itr.values()];
-       var entries = [...itr.entries()];
-       var key_itr = itr.keys();
-       var value_itr = itr.values();
-       var entries_itr = itr.entries();
-       for (var i = 0; i < 3; ++i) {
-         var key = key_itr.next();
-         var value = value_itr.next();
-         var entry = entries_itr.next();
+       keys = [...itr.keys()];
+       values = [...itr.values()];
+       entries = [...itr.entries()];
+       key_itr = itr.keys();
+       value_itr = itr.values();
+       entries_itr = itr.entries();
+       for (let i = 0; i < 3; ++i) {
+         key = key_itr.next();
+         value = value_itr.next();
+         entry = entries_itr.next();
          is(key.value, elements[i][0], "IterableDouble: Key iterator value should be " + elements[i][0]);
          is(key.value, keys[i],
             "IterableDouble: Key iterator value should match destructuring " + i);
@@ -146,10 +147,10 @@
 
        callsToForEachCallback = 0;
        thisArg = {};
-       itr.forEach(function(value, key, obj) {
-         is(key, keys[callsToForEachCallback],
+       itr.forEach(function(value1, key1, obj) {
+         is(key1, keys[callsToForEachCallback],
             `IterableDouble: Should have the right key at ${callsToForEachCallback} calls to forEach callback`);
-         is(value, values[callsToForEachCallback],
+         is(value1, values[callsToForEachCallback],
             `IterableDouble: Should have the right value at ${callsToForEachCallback} calls to forEach callback`);
          is(this, thisArg,
             "IterableDouble: Should have the right this value for forEach callback");
@@ -160,9 +161,9 @@
        is(callsToForEachCallback, 3,
           "IterableDouble: Should have right total number of calls to forEach callback");
 
-       var key = key_itr.next();
-       var value = value_itr.next();
-       var entry = entries_itr.next();
+       key = key_itr.next();
+       value = value_itr.next();
+       entry = entries_itr.next();
        is(key.value, undefined, "IterableDouble: Key iterator value should be undefined");
        is(key.done, true, "IterableDouble: Key iterator done should be true");
        is(value.value, undefined, "IterableDouble: Value iterator value should be undefined");
@@ -179,17 +180,17 @@
        testExistence("IterableDoubleUnion: ", itr, base_properties);
        is(itr.entries, itr[Symbol.iterator],
           "IterableDoubleUnion: Should be using @@iterator for 'entries'");
-       var elements = [["long", 1], ["string", "a"]];
-       var keys = [...itr.keys()];
-       var values = [...itr.values()];
-       var entries = [...itr.entries()];
-       var key_itr = itr.keys();
-       var value_itr = itr.values();
-       var entries_itr = itr.entries();
-       for (var i = 0; i < elements.length; ++i) {
-         var key = key_itr.next();
-         var value = value_itr.next();
-         var entry = entries_itr.next();
+       elements = [["long", 1], ["string", "a"]];
+       keys = [...itr.keys()];
+       values = [...itr.values()];
+       entries = [...itr.entries()];
+       key_itr = itr.keys();
+       value_itr = itr.values();
+       entries_itr = itr.entries();
+       for (let i = 0; i < elements.length; ++i) {
+         key = key_itr.next();
+         value = value_itr.next();
+         entry = entries_itr.next();
          is(key.value, elements[i][0], "IterableDoubleUnion: Key iterator value should be " + elements[i][0]);
          is(key.value, keys[i],
             "IterableDoubleUnion: Key iterator value should match destructuring " + i);
@@ -206,10 +207,10 @@
 
        callsToForEachCallback = 0;
        thisArg = {};
-       itr.forEach(function(value, key, obj) {
-         is(key, keys[callsToForEachCallback],
+       itr.forEach(function(value1, key1, obj) {
+         is(key1, keys[callsToForEachCallback],
             `IterableDoubleUnion: Should have the right key at ${callsToForEachCallback} calls to forEach callback`);
-         is(value, values[callsToForEachCallback],
+         is(value1, values[callsToForEachCallback],
             `IterableDoubleUnion: Should have the right value at ${callsToForEachCallback} calls to forEach callback`);
          is(this, thisArg,
             "IterableDoubleUnion: Should have the right this value for forEach callback");
@@ -220,9 +221,9 @@
        is(callsToForEachCallback, 2,
           "IterableDoubleUnion: Should have right total number of calls to forEach callback");
 
-       var key = key_itr.next();
-       var value = value_itr.next();
-       var entry = entries_itr.next();
+       key = key_itr.next();
+       value = value_itr.next();
+       entry = entries_itr.next();
        is(key.value, undefined, "IterableDoubleUnion: Key iterator value should be undefined");
        is(key.done, true, "IterableDoubleUnion: Key iterator done should be true");
        is(value.value, undefined, "IterableDoubleUnion: Value iterator value should be undefined");

@@ -9,6 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
+  /* global TestInterfaceJS */
 
   /** Test for subsumes-checking |any| and |object| for js-implemented WebIDL. **/
   SimpleTest.waitForExplicitFinish();
@@ -84,7 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
     //
 
     xoObjects.forEach(function(xoObj) {
-      var blank = new TestInterfaceJS();
+      new TestInterfaceJS();
       checkThrows(() => new TestInterfaceJS(xoObj, undefined), "any param for constructor");
       checkThrows(() => new TestInterfaceJS(undefined, xoObj), "obj param for constructor");
       checkThrows(() => new TestInterfaceJS(undefined, undefined, { anyMember: xoObj }), "any dict param for constructor");
