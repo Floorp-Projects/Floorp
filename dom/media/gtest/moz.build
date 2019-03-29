@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     'TestAudioTrackEncoder.cpp',
     'TestBitWriter.cpp',
     'TestBlankVideoDataCreator.cpp',
+    'TestBufferReader.cpp',
     'TestCDMStorage.cpp',
     'TestDataMutex.cpp',
     'TestDriftCompensation.cpp',
