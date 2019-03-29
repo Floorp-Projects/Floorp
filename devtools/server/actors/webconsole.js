@@ -1519,7 +1519,6 @@ WebConsoleActor.prototype =
       lineNumber: pageError.lineNumber,
       columnNumber: pageError.columnNumber,
       category: pageError.category,
-      innerWindowID: pageError.innerWindowID,
       timeStamp: pageError.timeStamp,
       warning: !!(pageError.flags & pageError.warningFlag),
       error: !!(pageError.flags & pageError.errorFlag),
@@ -1718,7 +1717,6 @@ WebConsoleActor.prototype =
     });
 
     result.category = message.category || "webdev";
-    result.innerWindowID = message.innerID;
 
     return result;
   },
