@@ -7,7 +7,10 @@ package mozilla.components.support.ktx.android.graphics
 import android.graphics.Bitmap
 import android.graphics.Color
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,6 +18,13 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class BitmapKtTest {
+
+    private lateinit var subject: Bitmap
+
+    @Before
+    fun setUp() {
+        subject = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888)
+    }
 
     @Ignore // TODO: convert to integration test. Robolectric's shadows are incomplete and cause this to fail.
     @Test
@@ -45,5 +55,24 @@ class BitmapKtTest {
         assertNotSame(bitmap, roundedBitmap)
         assertCornersAreTransparent()
         assertCenterIsFilled()
+    }
+
+    @Test
+    fun `GIVEN an all red bitmap THEN pixels are all the same`() {
+        subject.eraseColor(Color.RED)
+        assertTrue(subject.arePixelsAllTheSame())
+    }
+
+    @Test
+    fun `GIVEN an all transparent bitmap THEN pixels are all the same`() {
+        subject.eraseColor(Color.TRANSPARENT)
+        assertTrue(subject.arePixelsAllTheSame())
+    }
+
+    @Test
+    fun `GIVEN an all red bitmap with one pixel not red THEN pixels are not all the same`() {
+        subject.eraseColor(Color.RED)
+        subject.setPixel(0, 1, Color.rgb(244, 0, 0))
+        assertFalse(subject.arePixelsAllTheSame())
     }
 }
