@@ -5243,13 +5243,7 @@ void EventStateManager::UpdateAncestorState(nsIContent* aStartNode,
 
 bool EventStateManager::SetContentState(nsIContent* aContent,
                                         EventStates aState) {
-  // We manage 4 states here: ACTIVE, HOVER, DRAGOVER, URLTARGET
-  // The input must be exactly one of them.
-  MOZ_ASSERT(aState == NS_EVENT_STATE_ACTIVE ||
-                 aState == NS_EVENT_STATE_HOVER ||
-                 aState == NS_EVENT_STATE_DRAGOVER ||
-                 aState == NS_EVENT_STATE_URLTARGET,
-             "Unexpected state");
+  MOZ_ASSERT(ManagesState(aState), "Unexpected state");
 
   nsCOMPtr<nsIContent> notifyContent1;
   nsCOMPtr<nsIContent> notifyContent2;
