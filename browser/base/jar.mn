@@ -21,7 +21,6 @@ browser.jar:
         content/browser/illustrations/blue-berror.svg (content/illustrations/blue-berror.svg)
         content/browser/aboutNetError.xhtml            (content/aboutNetError.xhtml)
         content/browser/aboutNetError.js               (content/aboutNetError.js)
-        content/browser/aboutNetError-new.xhtml        (content/aboutNetError-new.xhtml)
         content/browser/aboutRobots-icon.png          (content/aboutRobots-icon.png)
         content/browser/aboutRobots-widget-left.png   (content/aboutRobots-widget-left.png)
         content/browser/aboutTabCrashed.css           (content/aboutTabCrashed.css)

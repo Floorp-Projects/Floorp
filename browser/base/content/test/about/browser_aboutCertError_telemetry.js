@@ -53,11 +53,9 @@ add_task(async function checkTelemetryClickEvents() {
       "return_button_top",
     ];
 
-    if (Services.prefs.getBoolPref("browser.security.newcerterrorpage.enabled")) {
-      recordedObjects.push("return_button_adv");
-      if (!useFrame) {
-        recordedObjects.push("exception_button");
-      }
+    recordedObjects.push("return_button_adv");
+    if (!useFrame) {
+      recordedObjects.push("exception_button");
     }
 
     for (let object of recordedObjects) {

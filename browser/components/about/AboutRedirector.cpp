@@ -22,7 +22,6 @@ namespace browser {
 NS_IMPL_ISUPPORTS(AboutRedirector, nsIAboutModule)
 
 bool AboutRedirector::sNewTabPageEnabled = false;
-bool AboutRedirector::sNewCertErrorPageEnabled = false;
 
 static const uint32_t ACTIVITY_STREAM_FLAGS =
     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::ENABLE_INDEXED_DB |
@@ -145,13 +144,6 @@ AboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
     sNTPEnabledCacheInited = true;
   }
 
-  static bool sNCEPEnabledCacheInited = false;
-  if (!sNCEPEnabledCacheInited) {
-    Preferences::AddBoolVarCache(&AboutRedirector::sNewCertErrorPageEnabled,
-                                 "browser.security.newcerterrorpage.enabled");
-    sNCEPEnabledCacheInited = true;
-  }
-
   for (auto& redir : kRedirMap) {
     if (!strcmp(path.get(), redir.id)) {
       nsAutoCString url;
@@ -173,10 +165,6 @@ AboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
         NS_ENSURE_SUCCESS(rv, rv);
         rv = aboutNewTabService->GetWelcomeURL(url);
         NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      if (sNewCertErrorPageEnabled && path.EqualsLiteral("certerror")) {
-        url.AssignLiteral("chrome://browser/content/aboutNetError-new.xhtml");
       }
 
       // fall back to the specified url in the map

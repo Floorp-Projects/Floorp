@@ -24,8 +24,6 @@ XPCOMUtils.defineLazyGetter(this, "gPipNSSBundle", function() {
 XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
   return Services.strings.createBundle("chrome://branding/locale/brand.properties");
 });
-XPCOMUtils.defineLazyPreferenceGetter(this, "newErrorPagesEnabled",
-  "browser.security.newcerterrorpage.enabled");
 XPCOMUtils.defineLazyPreferenceGetter(this, "mitmErrorPageEnabled",
   "browser.security.newcerterrorpage.mitm.enabled");
 XPCOMUtils.defineLazyPreferenceGetter(this, "mitmPrimingEnabled",
@@ -128,7 +126,7 @@ class NetErrorChild extends ActorChild {
     if (input.data.certIsUntrusted) {
       switch (input.data.code) {
         case MOZILLA_PKIX_ERROR_MITM_DETECTED:
-          if (newErrorPagesEnabled && mitmErrorPageEnabled) {
+          if (mitmErrorPageEnabled) {
             let brandName = gBrandBundle.GetStringFromName("brandShortName");
             msg1 = gPipNSSBundle.GetStringFromName("certErrorMitM");
             msg1 += "\n\n";
@@ -141,17 +139,11 @@ class NetErrorChild extends ActorChild {
           // If the condition is false, fall through...
         case SEC_ERROR_UNKNOWN_ISSUER:
           let brandName = gBrandBundle.GetStringFromName("brandShortName");
-          if (newErrorPagesEnabled) {
-            msg1 = "";
-            msg1 += gPipNSSBundle.formatStringFromName("certErrorTrust_UnknownIssuer4", [hostString], 1);
-            msg1 += "\n\n";
-            msg1 += gPipNSSBundle.formatStringFromName("certErrorTrust_UnknownIssuer6", [brandName, hostString], 2);
-            msg1 += "\n\n";
-          } else {
-            msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer") + "\n";
-            msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer2") + "\n";
-            msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer3") + "\n";
-          }
+          msg1 = "";
+          msg1 += gPipNSSBundle.formatStringFromName("certErrorTrust_UnknownIssuer4", [hostString], 1);
+          msg1 += "\n\n";
+          msg1 += gPipNSSBundle.formatStringFromName("certErrorTrust_UnknownIssuer6", [brandName, hostString], 2);
+          msg1 += "\n\n";
           break;
         case SEC_ERROR_CA_CERT_INVALID:
           msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_CaInvalid") + "\n";
@@ -190,14 +182,10 @@ class NetErrorChild extends ActorChild {
       let msgPrefix = "";
       if (numSubjectAltNames != 0) {
         if (numSubjectAltNames == 1) {
-          if (newErrorPagesEnabled) {
-            technicalInfo.textContent = "";
-            let brandName = gBrandBundle.GetStringFromName("brandShortName");
-            msgPrefix = gPipNSSBundle.formatStringFromName("certErrorMismatchSinglePrefix3", [brandName, hostString], 2) + " ";
-            msgPrefix += gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
-          } else {
-            msgPrefix = gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
-          }
+          technicalInfo.textContent = "";
+          let brandName = gBrandBundle.GetStringFromName("brandShortName");
+          msgPrefix = gPipNSSBundle.formatStringFromName("certErrorMismatchSinglePrefix3", [brandName, hostString], 2) + " ";
+          msgPrefix += gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
           // Let's check if we want to make this a link.
           let okHost = input.data.certSubjectAltNames;
           let href = "";
@@ -264,13 +252,9 @@ class NetErrorChild extends ActorChild {
           technicalInfo.append("\n");
         } else {
           let msg = "";
-          if (newErrorPagesEnabled) {
-            technicalInfo.textContent = "";
-            let brandName = gBrandBundle.GetStringFromName("brandShortName");
-            msg = gPipNSSBundle.formatStringFromName("certErrorMismatchMultiple3", [brandName, hostString], 2) + " ";
-          } else {
-            msg = gPipNSSBundle.GetStringFromName("certErrorMismatchMultiple") + "\n";
-          }
+          technicalInfo.textContent = "";
+          let brandName = gBrandBundle.GetStringFromName("brandShortName");
+          msg = gPipNSSBundle.formatStringFromName("certErrorMismatchMultiple3", [brandName, hostString], 2) + " ";
           for (let i = 0; i < numSubjectAltNames; i++) {
             msg += subjectAltNames[i];
             if (i != (numSubjectAltNames - 1)) {
@@ -281,61 +265,34 @@ class NetErrorChild extends ActorChild {
         }
       } else {
         let msg = "";
-        if (newErrorPagesEnabled) {
-          technicalInfo.textContent = "";
-          let brandName = gBrandBundle.GetStringFromName("brandShortName");
-          msg = gPipNSSBundle.formatStringFromName("certErrorMismatch3", [brandName, hostString], 2) + " ";
-        } else {
-          msg = gPipNSSBundle.formatStringFromName("certErrorMismatch",
-                                                     [hostString], 1);
-        }
+        technicalInfo.textContent = "";
+        let brandName = gBrandBundle.GetStringFromName("brandShortName");
+        msg = gPipNSSBundle.formatStringFromName("certErrorMismatch3", [brandName, hostString], 2) + " ";
         technicalInfo.append(msg + "\n");
       }
     }
 
     if (input.data.isNotValidAtThisTime) {
       let nowTime = new Date().getTime() * 1000;
-      let dateOptions = { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric" };
-      let now = new Services.intl.DateTimeFormat(undefined, dateOptions).format(new Date());
       let msg = "";
       if (input.data.validity.notBefore) {
         if (nowTime > input.data.validity.notAfter) {
-          if (newErrorPagesEnabled) {
-            technicalInfo.textContent = "";
-            msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow2",
-                                                    [hostString], 1);
-            msg += "\n";
-          } else {
-            msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow",
-                                                      [input.data.validity.notAfterLocalTime, now], 2);
-            msg += "\n";
-          }
+          technicalInfo.textContent = "";
+          msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow2",
+                                                  [hostString], 1);
+          msg += "\n";
         } else {
-          // eslint-disable-next-line no-lonely-if
-          if (newErrorPagesEnabled) {
-            technicalInfo.textContent = "";
-            msg += gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow2",
-                                                      [hostString], 1);
-            msg += "\n";
-          } else {
-            msg += gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow",
-                                                      [input.data.validity.notBeforeLocalTime, now], 2);
-            msg += "\n";
-          }
+          technicalInfo.textContent = "";
+          msg += gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow2",
+                                                    [hostString], 1);
+          msg += "\n";
          }
         } else {
-        // If something goes wrong, we assume the cert expired.
-        // eslint-disable-next-line no-lonely-if
-          if (newErrorPagesEnabled) {
-            technicalInfo.textContent = "";
-            msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow2",
-                                                      [hostString], 1);
-            msg += "\n";
-          } else {
-            msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow",
-                                                      ["", now], 2);
-            msg += "\n";
-          }
+          // If something goes wrong, we assume the cert expired.
+          technicalInfo.textContent = "";
+          msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow2",
+                                                    [hostString], 1);
+          msg += "\n";
       }
       technicalInfo.append(msg);
     }
@@ -387,8 +344,7 @@ class NetErrorChild extends ActorChild {
     // Check if the connection is being man-in-the-middled. When the parent
     // detects an intercepted connection, the page may be reloaded with a new
     // error code (MOZILLA_PKIX_ERROR_MITM_DETECTED).
-    if (newErrorPagesEnabled && mitmPrimingEnabled &&
-        msg.data.code == SEC_ERROR_UNKNOWN_ISSUER &&
+    if (mitmPrimingEnabled && msg.data.code == SEC_ERROR_UNKNOWN_ISSUER &&
         // Only do this check for top-level failures.
         doc.ownerGlobal.top === doc.ownerGlobal) {
       this.mm.sendAsyncMessage("Browser:PrimeMitm");
@@ -433,9 +389,6 @@ class NetErrorChild extends ActorChild {
       case SSL_ERROR_BAD_CERT_DOMAIN:
       case SEC_ERROR_OCSP_INVALID_SIGNING_CERT:
       case SEC_ERROR_UNKNOWN_ISSUER:
-        if (!newErrorPagesEnabled) {
-          break;
-        }
         if (es) {
           // eslint-disable-next-line no-unsanitized/property
           es.innerHTML = errWhatToDo.innerHTML;
@@ -468,7 +421,7 @@ class NetErrorChild extends ActorChild {
         updateContainerPosition();
         break;
       case MOZILLA_PKIX_ERROR_MITM_DETECTED:
-        if (newErrorPagesEnabled && mitmErrorPageEnabled) {
+        if (mitmErrorPageEnabled) {
           let autoEnabledEnterpriseRoots =
             Services.prefs.getBoolPref("security.enterprise_roots.auto-enabled", false);
           if (mitmPrimingEnabled && autoEnabledEnterpriseRoots) {
@@ -575,9 +528,7 @@ class NetErrorChild extends ActorChild {
               .textContent = formatter.format(systemDate);
           }
         }
-        if (!newErrorPagesEnabled) {
-          break;
-        }
+
         let systemDate = formatter.format(new Date());
         doc.getElementById("wrongSystemTime_systemDate1").textContent = systemDate;
         if (clockSkew) {
@@ -640,18 +591,16 @@ class NetErrorChild extends ActorChild {
 
     // Add slightly more alarming UI unless there are indicators that
     // show that the error is harmless or can not be skipped anyway.
-    if (newErrorPagesEnabled) {
-      let {cssClass} = this.getParams(doc);
-      // Don't alarm users when they can't continue to the website anyway...
-      if (cssClass != "badStsCert" &&
-          // Errors in iframes can't be skipped either...
-          doc.ownerGlobal.parent == doc.ownerGlobal &&
-          // Also don't bother if it's just the user's clock being off...
-          !clockSkew &&
-          // Symantec distrust is likely harmless as well.
-          msg.data.code != MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED) {
-        doc.body.classList.add("caution");
-      }
+    let {cssClass} = this.getParams(doc);
+    // Don't alarm users when they can't continue to the website anyway...
+    if (cssClass != "badStsCert" &&
+        // Errors in iframes can't be skipped either...
+        doc.ownerGlobal.parent == doc.ownerGlobal &&
+        // Also don't bother if it's just the user's clock being off...
+        !clockSkew &&
+        // Symantec distrust is likely harmless as well.
+        msg.data.code != MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED) {
+      doc.body.classList.add("caution");
     }
   }
 
