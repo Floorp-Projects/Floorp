@@ -34,9 +34,8 @@ namespace mozilla {
 using dom::Element;
 
 // prototype
-MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
-    static nsresult
-    GetListState(HTMLEditor* aHTMLEditor, bool* aMixed, nsAString& aLocalName);
+static nsresult GetListState(HTMLEditor* aHTMLEditor, bool* aMixed,
+                             nsAString& aLocalName);
 
 // defines
 #define STATE_ENABLED "state_enabled"
@@ -85,7 +84,7 @@ StateUpdatingCommandBase::DoCommand(const char* aCommandName,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  return ToggleState(MOZ_KnownLive(htmlEditor));
+  return ToggleState(htmlEditor);
 }
 
 NS_IMETHODIMP
@@ -246,16 +245,15 @@ nsresult StyleUpdatingCommand::ToggleState(HTMLEditor* aHTMLEditor) {
       }
     }
 
-    nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
-        MOZ_KnownLive(*mTagName), nullptr);
+    nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(*mTagName, nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     return NS_OK;
   }
 
-  nsresult rv = aHTMLEditor->SetInlinePropertyAsAction(MOZ_KnownLive(*mTagName),
-                                                       nullptr, EmptyString());
+  nsresult rv =
+      aHTMLEditor->SetInlinePropertyAsAction(*mTagName, nullptr, EmptyString());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -402,7 +400,7 @@ RemoveListCommand::IsCommandEnabled(const char* aCommandName,
 
   bool bMixed;
   nsAutoString localName;
-  nsresult rv = GetListState(MOZ_KnownLive(htmlEditor), &bMixed, localName);
+  nsresult rv = GetListState(htmlEditor, &bMixed, localName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *outCmdEnabled = bMixed || !localName.IsEmpty();
@@ -591,7 +589,7 @@ MultiStateCommandBase::DoCommandParams(const char* aCommandName,
       params->GetString(STATE_ATTRIBUTE, attribute);
     }
   }
-  return SetState(MOZ_KnownLive(htmlEditor), attribute);
+  return SetState(htmlEditor, attribute);
 }
 
 NS_IMETHODIMP
@@ -606,7 +604,7 @@ MultiStateCommandBase::GetCommandStateParams(const char* aCommandName,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  return GetCurrentState(MOZ_KnownLive(htmlEditor), aParams);
+  return GetCurrentState(htmlEditor, aParams);
 }
 
 ParagraphStateCommand::ParagraphStateCommand() : MultiStateCommandBase() {}
@@ -1157,7 +1155,7 @@ RemoveStylesCommand::DoCommand(const char* aCommandName, nsISupports* refCon) {
   if (!htmlEditor) {
     return NS_OK;
   }
-  return MOZ_KnownLive(htmlEditor)->RemoveAllInlineProperties();
+  return htmlEditor->RemoveAllInlineProperties();
 }
 
 NS_IMETHODIMP
@@ -1203,7 +1201,7 @@ IncreaseFontSizeCommand::DoCommand(const char* aCommandName,
   if (!htmlEditor) {
     return NS_OK;
   }
-  return MOZ_KnownLive(htmlEditor)->IncreaseFontSize();
+  return htmlEditor->IncreaseFontSize();
 }
 
 NS_IMETHODIMP
@@ -1249,7 +1247,7 @@ DecreaseFontSizeCommand::DoCommand(const char* aCommandName,
   if (!htmlEditor) {
     return NS_OK;
   }
-  return MOZ_KnownLive(htmlEditor)->DecreaseFontSize();
+  return htmlEditor->DecreaseFontSize();
 }
 
 NS_IMETHODIMP
@@ -1299,7 +1297,7 @@ InsertHTMLCommand::DoCommand(const char* aCommandName, nsISupports* refCon) {
     return NS_ERROR_FAILURE;
   }
   nsAutoString html;
-  return MOZ_KnownLive(htmlEditor)->InsertHTML(html);
+  return htmlEditor->InsertHTML(html);
 }
 
 NS_IMETHODIMP
@@ -1324,7 +1322,7 @@ InsertHTMLCommand::DoCommandParams(const char* aCommandName,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  return MOZ_KnownLive(htmlEditor)->InsertHTML(html);
+  return htmlEditor->InsertHTML(html);
 }
 
 NS_IMETHODIMP
@@ -1375,14 +1373,11 @@ InsertTagCommand::DoCommand(const char* aCmdName, nsISupports* refCon) {
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<Element> newElement =
-      MOZ_KnownLive(htmlEditor)
-          ->CreateElementWithDefaults(MOZ_KnownLive(*mTagName));
+  RefPtr<Element> newElement = htmlEditor->CreateElementWithDefaults(*mTagName);
   if (NS_WARN_IF(!newElement)) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv =
-      MOZ_KnownLive(htmlEditor)->InsertElementAtSelection(newElement, true);
+  nsresult rv = htmlEditor->InsertElementAtSelection(newElement, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1433,9 +1428,7 @@ InsertTagCommand::DoCommandParams(const char* aCommandName,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  RefPtr<Element> newElement =
-      MOZ_KnownLive(htmlEditor)
-          ->CreateElementWithDefaults(MOZ_KnownLive(*mTagName));
+  RefPtr<Element> newElement = htmlEditor->CreateElementWithDefaults(*mTagName);
   if (NS_WARN_IF(!newElement)) {
     return NS_ERROR_FAILURE;
   }
@@ -1448,14 +1441,14 @@ InsertTagCommand::DoCommandParams(const char* aCommandName,
 
   // do actual insertion
   if (mTagName == nsGkAtoms::a) {
-    rv = MOZ_KnownLive(htmlEditor)->InsertLinkAroundSelection(newElement);
+    rv = htmlEditor->InsertLinkAroundSelection(newElement);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     return NS_OK;
   }
 
-  rv = MOZ_KnownLive(htmlEditor)->InsertElementAtSelection(newElement, true);
+  rv = htmlEditor->InsertElementAtSelection(newElement, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1479,8 +1472,7 @@ InsertTagCommand::GetCommandStateParams(const char* aCommandName,
 /****************************/
 
 static nsresult GetListState(HTMLEditor* aHTMLEditor, bool* aMixed,
-                             nsAString& aLocalName)
-    MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
+                             nsAString& aLocalName) {
   MOZ_ASSERT(aHTMLEditor);
   MOZ_ASSERT(aMixed);
 

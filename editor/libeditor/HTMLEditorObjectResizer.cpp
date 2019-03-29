@@ -970,25 +970,24 @@ void HTMLEditor::SetFinalSize(int32_t aX, int32_t aY) {
 
   // we want one transaction only from a user's point of view
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  RefPtr<Element> resizedObject(mResizedObject);
 
   if (mResizedObjectIsAbsolutelyPositioned) {
     if (setHeight) {
-      mCSSEditUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::top, y);
+      mCSSEditUtils->SetCSSPropertyPixels(*mResizedObject, *nsGkAtoms::top, y);
     }
     if (setWidth) {
-      mCSSEditUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::left, x);
+      mCSSEditUtils->SetCSSPropertyPixels(*mResizedObject, *nsGkAtoms::left, x);
     }
   }
   if (IsCSSEnabled() || mResizedObjectIsAbsolutelyPositioned) {
     if (setWidth &&
-        resizedObject->HasAttr(kNameSpaceID_None, nsGkAtoms::width)) {
-      RemoveAttributeWithTransaction(*resizedObject, *nsGkAtoms::width);
+        mResizedObject->HasAttr(kNameSpaceID_None, nsGkAtoms::width)) {
+      RemoveAttributeWithTransaction(*mResizedObject, *nsGkAtoms::width);
     }
 
     if (setHeight &&
-        resizedObject->HasAttr(kNameSpaceID_None, nsGkAtoms::height)) {
-      RemoveAttributeWithTransaction(*resizedObject, *nsGkAtoms::height);
+        mResizedObject->HasAttr(kNameSpaceID_None, nsGkAtoms::height)) {
+      RemoveAttributeWithTransaction(*mResizedObject, *nsGkAtoms::height);
     }
 
     if (setWidth) {
@@ -1006,30 +1005,30 @@ void HTMLEditor::SetFinalSize(int32_t aX, int32_t aY) {
     // triggering an immediate reflow; otherwise, we have problems
     // with asynchronous reflow
     if (setWidth) {
-      mCSSEditUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::width,
+      mCSSEditUtils->SetCSSPropertyPixels(*mResizedObject, *nsGkAtoms::width,
                                           width);
     }
     if (setHeight) {
-      mCSSEditUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::height,
+      mCSSEditUtils->SetCSSPropertyPixels(*mResizedObject, *nsGkAtoms::height,
                                           height);
     }
     if (setWidth) {
       nsAutoString w;
       w.AppendInt(width);
-      SetAttributeWithTransaction(*resizedObject, *nsGkAtoms::width, w);
+      SetAttributeWithTransaction(*mResizedObject, *nsGkAtoms::width, w);
     }
     if (setHeight) {
       nsAutoString h;
       h.AppendInt(height);
-      SetAttributeWithTransaction(*resizedObject, *nsGkAtoms::height, h);
+      SetAttributeWithTransaction(*mResizedObject, *nsGkAtoms::height, h);
     }
 
     if (setWidth) {
-      mCSSEditUtils->RemoveCSSProperty(*resizedObject, *nsGkAtoms::width,
+      mCSSEditUtils->RemoveCSSProperty(*mResizedObject, *nsGkAtoms::width,
                                        EmptyString());
     }
     if (setHeight) {
-      mCSSEditUtils->RemoveCSSProperty(*resizedObject, *nsGkAtoms::height,
+      mCSSEditUtils->RemoveCSSProperty(*mResizedObject, *nsGkAtoms::height,
                                        EmptyString());
     }
   }

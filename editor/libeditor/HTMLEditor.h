@@ -126,7 +126,6 @@ class HTMLEditor final : public TextEditor,
   bool GetReturnInParagraphCreatesNewParagraph();
 
   // TextEditor overrides
-  MOZ_CAN_RUN_SCRIPT
   virtual nsresult Init(Document& aDoc, Element* aRoot,
                         nsISelectionController* aSelCon, uint32_t aFlags,
                         const nsAString& aValue) override;
@@ -201,7 +200,6 @@ class HTMLEditor final : public TextEditor,
    *                            this creates an <a> element.
    * @return                    Newly created element.
    */
-  MOZ_CAN_RUN_SCRIPT
   already_AddRefed<Element> CreateElementWithDefaults(const nsAtom& aTagName);
 
   /**
@@ -226,7 +224,6 @@ class HTMLEditor final : public TextEditor,
    * @param aY      [IN] vertical position of the pointer
    * @param aTarget [IN] the element triggering the event
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult OnMouseUp(int32_t aX, int32_t aY, Element* aTarget);
 
   /**
@@ -348,7 +345,6 @@ class HTMLEditor final : public TextEditor,
    * This automatically removes exclusive style, however, treats all changes
    * as a transaction.
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult SetInlinePropertyAsAction(nsAtom& aProperty, nsAtom* aAttribute,
                                      const nsAString& aValue);
 
@@ -375,7 +371,6 @@ class HTMLEditor final : public TextEditor,
    *                    nsGkAtoms::bgcolor.  Otherwise, set nullptr.
    *                    Must not use nsGkAtoms::_empty here.
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult RemoveInlinePropertyAsAction(nsAtom& aProperty, nsAtom* aAttribute);
 
   /**
@@ -460,6 +455,16 @@ class HTMLEditor final : public TextEditor,
    */
   Element* GetActiveEditingHost() const;
 
+  /** Insert a string as quoted text
+   * (whose representation is dependant on the editor type),
+   * replacing the selected text (if any).
+   *
+   * @param aQuotedText    The actual text to be quoted
+   * @parem aNodeInserted  Return the node which was inserted.
+   */
+  nsresult InsertAsQuotation(const nsAString& aQuotedText,
+                             nsINode** aNodeInserted);
+
   /**
    * Inserts a plaintext string at the current location,
    * with special processing for lines beginning with ">",
@@ -517,7 +522,6 @@ class HTMLEditor final : public TextEditor,
   /**
    * InsertTextWithTransaction() inserts aStringToInsert at aPointToInsert.
    */
-  MOZ_CAN_RUN_SCRIPT
   virtual nsresult InsertTextWithTransaction(
       Document& aDocument, const nsAString& aStringToInsert,
       const EditorRawDOMPoint& aPointToInsert,
@@ -535,7 +539,6 @@ class HTMLEditor final : public TextEditor,
    *                            placeholder, this is set to the new <br>
    *                            element.
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult CopyLastEditableChildStylesWithTransaction(
       Element& aPreviousBlock, Element& aNewBlock,
       RefPtr<Element>* aNewBrElement);
@@ -548,16 +551,13 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aElement            Block element to be removed.
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult RemoveBlockContainerWithTransaction(Element& aElement);
 
   virtual Element* GetEditorRoot() const override;
   using EditorBase::IsEditable;
-  MOZ_CAN_RUN_SCRIPT
   virtual nsresult RemoveAttributeOrEquivalent(
       Element* aElement, nsAtom* aAttribute,
       bool aSuppressTransaction) override;
-  MOZ_CAN_RUN_SCRIPT
   virtual nsresult SetAttributeOrEquivalent(Element* aElement,
                                             nsAtom* aAttribute,
                                             const nsAString& aValue,
@@ -667,7 +667,6 @@ class HTMLEditor final : public TextEditor,
    * @param aEnabled [IN] true to absolutely position the element,
    *                      false to put it back in the normal flow
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult SetPositionToAbsoluteOrStatic(Element& aElement, bool aEnabled);
 
   /**
@@ -765,12 +764,10 @@ class HTMLEditor final : public TextEditor,
    * Helper routines for font size changing.
    */
   enum class FontSize { incr, decr };
-  MOZ_CAN_RUN_SCRIPT
   nsresult RelativeFontChangeOnTextNode(FontSize aDir, Text& aTextNode,
                                         int32_t aStartOffset,
                                         int32_t aEndOffset);
 
-  MOZ_CAN_RUN_SCRIPT
   nsresult SetInlinePropertyOnNode(nsIContent& aNode, nsAtom& aProperty,
                                    nsAtom* aAttribute, const nsAString& aValue);
 
@@ -933,12 +930,10 @@ class HTMLEditor final : public TextEditor,
                                  const nsAString* aValue, bool* aFirst,
                                  bool* aAny, bool* aAll, nsAString* outValue);
 
-  MOZ_CAN_RUN_SCRIPT
   nsresult ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
                       nsAtom* aProperty, nsAtom* aAttribute);
 
   nsresult SetPositionToAbsolute(Element& aElement);
-  MOZ_CAN_RUN_SCRIPT
   nsresult SetPositionToStatic(Element& aElement);
 
   /**
@@ -952,7 +947,6 @@ class HTMLEditor final : public TextEditor,
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
-  MOZ_CAN_RUN_SCRIPT
   virtual void OnEndHandlingTopLevelEditSubAction() override;
 
  protected:  // Shouldn't be used by friend classes
@@ -1441,7 +1435,6 @@ class HTMLEditor final : public TextEditor,
    *                        text.
    * @param aNodeInserted   [OUT] The new <blockquote> element.
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult InsertAsCitedQuotationInternal(const nsAString& aQuotedText,
                                           const nsAString& aCitation,
                                           bool aInsertHTML,
@@ -1465,7 +1458,7 @@ class HTMLEditor final : public TextEditor,
    *                          Otherwise, the result is not set.
    */
   template <typename PT, typename CT>
-  MOZ_CAN_RUN_SCRIPT EditorDOMPoint InsertNodeIntoProperAncestorWithTransaction(
+  EditorDOMPoint InsertNodeIntoProperAncestorWithTransaction(
       nsIContent& aNode, const EditorDOMPointBase<PT, CT>& aPointToInsert,
       SplitAtEdges aSplitAtEdges);
 
@@ -1496,13 +1489,10 @@ class HTMLEditor final : public TextEditor,
    */
   nsresult IndentOrOutdentAsSubAction(EditSubAction aEditSubAction);
 
-  MOZ_CAN_RUN_SCRIPT
   nsresult LoadHTML(const nsAString& aInputString);
 
-  MOZ_CAN_RUN_SCRIPT
   nsresult SetInlinePropertyInternal(nsAtom& aProperty, nsAtom* aAttribute,
                                      const nsAString& aValue);
-  MOZ_CAN_RUN_SCRIPT
   nsresult RemoveInlinePropertyInternal(nsAtom* aProperty, nsAtom* aAttribute);
 
   /**
@@ -1512,7 +1502,6 @@ class HTMLEditor final : public TextEditor,
    * @param aSourceToInsert     HTML source fragment to replace the children
    *                            of <head> element.
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult ReplaceHeadContentsWithSourceWithTransaction(
       const nsAString& aSourceToInsert);
 
@@ -1641,7 +1630,6 @@ class HTMLEditor final : public TextEditor,
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BlobReader)
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(BlobReader)
 
-    MOZ_CAN_RUN_SCRIPT
     nsresult OnResult(const nsACString& aResult);
     nsresult OnError(const nsAString& aErrorName);
 
@@ -1657,7 +1645,6 @@ class HTMLEditor final : public TextEditor,
     bool mDoDeleteSelection;
   };
 
-  MOZ_CAN_RUN_SCRIPT
   virtual nsresult InitRules() override;
 
   virtual void CreateEventListeners() override;
@@ -1756,7 +1743,6 @@ class HTMLEditor final : public TextEditor,
    * of course)
    * This doesn't change or use the current selection.
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult InsertCell(Element* aCell, int32_t aRowSpan, int32_t aColSpan,
                       bool aAfter, bool aIsHeader, Element** aNewCell);
 
@@ -1859,7 +1845,6 @@ class HTMLEditor final : public TextEditor,
   /**
    * Move all contents from aCellToMerge into aTargetCell (append at end).
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult MergeCells(RefPtr<Element> aTargetCell, RefPtr<Element> aCellToMerge,
                       bool aDeleteCellToMerge);
 
@@ -1917,12 +1902,10 @@ class HTMLEditor final : public TextEditor,
   nsresult GetCellSpansAt(Element* aTable, int32_t aRowIndex, int32_t aColIndex,
                           int32_t& aActualRowSpan, int32_t& aActualColSpan);
 
-  MOZ_CAN_RUN_SCRIPT
   nsresult SplitCellIntoColumns(Element* aTable, int32_t aRowIndex,
                                 int32_t aColIndex, int32_t aColSpanLeft,
                                 int32_t aColSpanRight, Element** aNewCell);
 
-  MOZ_CAN_RUN_SCRIPT
   nsresult SplitCellIntoRows(Element* aTable, int32_t aRowIndex,
                              int32_t aColIndex, int32_t aRowSpanAbove,
                              int32_t aRowSpanBelow, Element** aNewCell);
@@ -1947,7 +1930,6 @@ class HTMLEditor final : public TextEditor,
    *                                or <table> element itself.  Otherwise,
    *                                this returns NS_OK but does nothing.
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult NormalizeTableInternal(Element& aTableOrElementInTable);
 
   /**
@@ -2071,18 +2053,14 @@ class HTMLEditor final : public TextEditor,
   /**
    * Increase/decrease the font size of selection.
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult RelativeFontChange(FontSize aDir);
 
-  MOZ_CAN_RUN_SCRIPT
   nsresult RelativeFontChangeOnNode(int32_t aSizeChange, nsIContent* aNode);
-  MOZ_CAN_RUN_SCRIPT
   nsresult RelativeFontChangeHelper(int32_t aSizeChange, nsINode* aNode);
 
   /**
    * Helper routines for inline style.
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult SetInlinePropertyOnTextNode(Text& aData, int32_t aStartOffset,
                                        int32_t aEndOffset, nsAtom& aProperty,
                                        nsAtom* aAttribute,
@@ -2092,7 +2070,6 @@ class HTMLEditor final : public TextEditor,
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
   nsresult SplitStyleAboveRange(nsRange* aRange, nsAtom* aProperty,
                                 nsAtom* aAttribute);
-  MOZ_CAN_RUN_SCRIPT
   nsresult RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,
                              nsAtom* aAttribute,
                              const bool aChildrenOnly = false);
@@ -2103,7 +2080,6 @@ class HTMLEditor final : public TextEditor,
   bool IsOnlyAttribute(const Element* aElement, nsAtom* aAttribute);
 
   bool HasStyleOrIdOrClass(Element* aElement);
-  MOZ_CAN_RUN_SCRIPT
   nsresult RemoveElementIfNoStyleOrIdOrClass(Element& aElement);
 
   /**
@@ -2123,7 +2099,7 @@ class HTMLEditor final : public TextEditor,
    * aClearStyle should be set to false if you want the paste to be affected by
    * local style (e.g., for the insertHTML command).
    */
-  MOZ_CAN_RUN_SCRIPT
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult DoInsertHTMLWithContext(
       const nsAString& aInputString, const nsAString& aContextStr,
       const nsAString& aInfoStr, const nsAString& aFlavor, Document* aSourceDoc,
@@ -2250,7 +2226,6 @@ class HTMLEditor final : public TextEditor,
   int32_t GetNewResizingWidth(int32_t aX, int32_t aY);
   int32_t GetNewResizingHeight(int32_t aX, int32_t aY);
   void HideShadowAndInfo();
-  MOZ_CAN_RUN_SCRIPT
   void SetFinalSize(int32_t aX, int32_t aY);
   void SetResizeIncrements(int32_t aX, int32_t aY, int32_t aW, int32_t aH,
                            bool aPreserveRatio);
@@ -2343,7 +2318,6 @@ class HTMLEditor final : public TextEditor,
 
   bool IsSimpleModifiableNode(nsIContent* aContent, nsAtom* aProperty,
                               nsAtom* aAttribute, const nsAString* aValue);
-  MOZ_CAN_RUN_SCRIPT
   nsresult SetInlinePropertyOnNodeImpl(nsIContent& aNode, nsAtom& aProperty,
                                        nsAtom* aAttribute,
                                        const nsAString& aValue);
