@@ -49,8 +49,8 @@ class WebAuthnManagerBase : public nsIDOMEventListener {
  protected:
   MOZ_CAN_RUN_SCRIPT virtual ~WebAuthnManagerBase();
 
-  // Needed by HandleEvent() to cancel transactions.
-  MOZ_CAN_RUN_SCRIPT virtual void CancelTransaction(const nsresult& aError) = 0;
+  // Needed by HandleEvent() to track visibilty changes.
+  MOZ_CAN_RUN_SCRIPT virtual void HandleVisibilityChange() = 0;
 
   // Visibility event handling.
   void ListenForVisibilityEvents();
