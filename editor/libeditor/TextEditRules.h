@@ -80,16 +80,24 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
   HTMLEditRules* AsHTMLEditRules();
   const HTMLEditRules* AsHTMLEditRules() const;
 
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult Init(TextEditor* aTextEditor);
   virtual nsresult SetInitialValue(const nsAString& aValue);
   virtual nsresult DetachEditor();
   virtual nsresult BeforeEdit(EditSubAction aEditSubAction,
                               nsIEditor::EDirection aDirection);
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult AfterEdit(EditSubAction aEditSubAction,
                              nsIEditor::EDirection aDirection);
+  // NOTE: Don't mark WillDoAction() nor DidDoAction() as MOZ_CAN_RUN_SCRIPT
+  //       because they are too generic and doing it makes a lot of public
+  //       editor methods marked as MOZ_CAN_RUN_SCRIPT too, but some of them
+  //       may not causes running script.  So, ideal fix must be that we make
+  //       each method callsed by this method public.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
                                 bool* aHandled);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult DidDoAction(EditSubActionInfo& aInfo, nsresult aResult);
 
   /**
@@ -196,6 +204,7 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
    * @param aMaxLength          The maximum string length which the text editor
    *                            allows to set.
    */
+  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillSetText(bool* aCancel, bool* aHandled,
                                     const nsAString* inString,
                                     int32_t aMaxLength);
@@ -280,6 +289,7 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
   /**
    * Creates a bogus <br> node if the root element has no editable content.
    */
+  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult CreateBogusNodeIfNeeded();
 
   /**

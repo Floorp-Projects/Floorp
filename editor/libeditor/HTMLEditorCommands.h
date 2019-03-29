@@ -58,10 +58,12 @@ class StateUpdatingCommandBase : public HTMLEditorCommandBase {
   virtual ~StateUpdatingCommandBase();
 
   // get the current state (on or off) for this style or block format
-  virtual nsresult GetCurrentState(HTMLEditor* aHTMLEditor,
-                                   nsICommandParams* aParams) = 0;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
+      virtual nsresult
+      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) = 0;
 
   // add/remove the style
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult ToggleState(HTMLEditor* aHTMLEditor) = 0;
 
  protected:
@@ -76,10 +78,12 @@ class StyleUpdatingCommand final : public StateUpdatingCommandBase {
 
  protected:
   // get the current state (on or off) for this style or block format
-  nsresult GetCurrentState(HTMLEditor* aHTMLEditor,
-                           nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
+      nsresult
+      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
 
   // add/remove the style
+  MOZ_CAN_RUN_SCRIPT
   nsresult ToggleState(HTMLEditor* aHTMLEditor) final;
 };
 
@@ -103,10 +107,12 @@ class ListCommand final : public StateUpdatingCommandBase {
 
  protected:
   // get the current state (on or off) for this style or block format
-  nsresult GetCurrentState(HTMLEditor* aHTMLEditor,
-                           nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
+      nsresult
+      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
 
   // add/remove the style
+  MOZ_CAN_RUN_SCRIPT
   nsresult ToggleState(HTMLEditor* aHTMLEditor) final;
 };
 
@@ -116,10 +122,12 @@ class ListItemCommand final : public StateUpdatingCommandBase {
 
  protected:
   // get the current state (on or off) for this style or block format
-  nsresult GetCurrentState(HTMLEditor* aHTMLEditor,
-                           nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
+      nsresult
+      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
 
   // add/remove the style
+  MOZ_CAN_RUN_SCRIPT
   nsresult ToggleState(HTMLEditor* aHTMLEditor) final;
 };
 
@@ -135,8 +143,10 @@ class MultiStateCommandBase : public HTMLEditorCommandBase {
  protected:
   virtual ~MultiStateCommandBase();
 
-  virtual nsresult GetCurrentState(HTMLEditor* aHTMLEditor,
-                                   nsICommandParams* aParams) = 0;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
+      virtual nsresult
+      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) = 0;
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult SetState(HTMLEditor* aHTMLEditor,
                             const nsString& newState) = 0;
 };
@@ -146,8 +156,10 @@ class ParagraphStateCommand final : public MultiStateCommandBase {
   ParagraphStateCommand();
 
  protected:
-  nsresult GetCurrentState(HTMLEditor* aHTMLEditor,
-                           nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
+      nsresult
+      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
 };
 
@@ -156,8 +168,10 @@ class FontFaceStateCommand final : public MultiStateCommandBase {
   FontFaceStateCommand();
 
  protected:
-  nsresult GetCurrentState(HTMLEditor* aHTMLEditor,
-                           nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
+      nsresult
+      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
 };
 
@@ -166,8 +180,10 @@ class FontSizeStateCommand final : public MultiStateCommandBase {
   FontSizeStateCommand();
 
  protected:
-  nsresult GetCurrentState(HTMLEditor* aHTMLEditor,
-                           nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
+      nsresult
+      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
 };
 
@@ -178,8 +194,10 @@ class HighlightColorStateCommand final : public MultiStateCommandBase {
  protected:
   NS_IMETHOD IsCommandEnabled(const char* aCommandName,
                               nsISupports* aCommandRefCon, bool* _retval) final;
-  nsresult GetCurrentState(HTMLEditor* aHTMLEditor,
-                           nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
+      nsresult
+      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
 };
 
@@ -188,8 +206,10 @@ class FontColorStateCommand final : public MultiStateCommandBase {
   FontColorStateCommand();
 
  protected:
-  nsresult GetCurrentState(HTMLEditor* aHTMLEditor,
-                           nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
+      nsresult
+      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
 };
 
@@ -198,8 +218,10 @@ class AlignCommand final : public MultiStateCommandBase {
   AlignCommand();
 
  protected:
-  nsresult GetCurrentState(HTMLEditor* aHTMLEditor,
-                           nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
+      nsresult
+      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
 };
 
@@ -208,8 +230,10 @@ class BackgroundColorStateCommand final : public MultiStateCommandBase {
   BackgroundColorStateCommand();
 
  protected:
-  nsresult GetCurrentState(HTMLEditor* aHTMLEditor,
-                           nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
+      nsresult
+      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
 };
 
@@ -220,8 +244,10 @@ class AbsolutePositioningCommand final : public StateUpdatingCommandBase {
  protected:
   NS_IMETHOD IsCommandEnabled(const char* aCommandName,
                               nsISupports* aCommandRefCon, bool* _retval) final;
-  nsresult GetCurrentState(HTMLEditor* aHTMLEditor,
-                           nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
+      nsresult
+      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
+  MOZ_CAN_RUN_SCRIPT
   nsresult ToggleState(HTMLEditor* aHTMLEditor) final;
 };
 

@@ -469,9 +469,10 @@ EditActionResult TextEditRules::WillInsertLineBreak(int32_t aMaxLength) {
 
   // Insert a linefeed character.
   EditorRawDOMPoint pointAfterInsertedLineBreak;
-  rv = TextEditorRef().InsertTextWithTransaction(*doc, NS_LITERAL_STRING("\n"),
-                                                 pointToInsert,
-                                                 &pointAfterInsertedLineBreak);
+  rv = MOZ_KnownLive(TextEditorRef())
+           .InsertTextWithTransaction(*doc, NS_LITERAL_STRING("\n"),
+                                      pointToInsert,
+                                      &pointAfterInsertedLineBreak);
   if (NS_WARN_IF(!pointAfterInsertedLineBreak.IsSet())) {
     return EditActionIgnored(NS_ERROR_FAILURE);
   }
@@ -839,8 +840,8 @@ nsresult TextEditRules::WillInsertText(EditSubAction aEditSubAction,
       betterInsertionPoint.Set(betterInsertionPoint.GetContainer(),
                                IMESelectionOffset);
     }
-    rv = TextEditorRef().InsertTextWithTransaction(*doc, *outString,
-                                                   betterInsertionPoint);
+    rv = MOZ_KnownLive(TextEditorRef())
+             .InsertTextWithTransaction(*doc, *outString, betterInsertionPoint);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -854,8 +855,9 @@ nsresult TextEditRules::WillInsertText(EditSubAction aEditSubAction,
     AutoTransactionsConserveSelection dontChangeMySelection(TextEditorRef());
 
     EditorRawDOMPoint pointAfterStringInserted;
-    rv = TextEditorRef().InsertTextWithTransaction(
-        *doc, *outString, atStartOfSelection, &pointAfterStringInserted);
+    rv = MOZ_KnownLive(TextEditorRef())
+             .InsertTextWithTransaction(*doc, *outString, atStartOfSelection,
+                                        &pointAfterStringInserted);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -954,8 +956,9 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
     if (NS_WARN_IF(!newNode)) {
       return NS_OK;
     }
-    nsresult rv = TextEditorRef().InsertNodeWithTransaction(
-        *newNode, EditorRawDOMPoint(rootElement, 0));
+    nsresult rv = MOZ_KnownLive(TextEditorRef())
+                      .InsertNodeWithTransaction(
+                          *newNode, EditorRawDOMPoint(rootElement, 0));
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -1515,10 +1518,14 @@ nsresult TextEditRules::CreateBogusNodeIfNeeded() {
   // Give it a special attribute.
   newBrElement->SetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
                         kMOZEditorBogusNodeValue, false);
+  if (NS_WARN_IF(mBogusNode != newBrElement)) {
+    return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+  }
 
   // Put the node in the document.
-  nsresult rv = TextEditorRef().InsertNodeWithTransaction(
-      *mBogusNode, EditorRawDOMPoint(rootElement, 0));
+  nsresult rv = MOZ_KnownLive(TextEditorRef())
+                    .InsertNodeWithTransaction(
+                        *newBrElement, EditorRawDOMPoint(rootElement, 0));
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }

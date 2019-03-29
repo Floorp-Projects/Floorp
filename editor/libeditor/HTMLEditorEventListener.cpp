@@ -228,7 +228,7 @@ nsresult HTMLEditorEventListener::MouseUp(MouseEvent* aMouseEvent) {
 
   // FYI: We need to notify HTML editor of mouseup even if it's consumed
   //      because HTML editor always needs to release grabbing resizer.
-  HTMLEditor* htmlEditor = mEditorBase->AsHTMLEditor();
+  RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
   MOZ_ASSERT(htmlEditor);
 
   RefPtr<EventTarget> target = aMouseEvent->GetTarget();

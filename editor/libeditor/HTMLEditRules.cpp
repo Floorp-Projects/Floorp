@@ -1343,8 +1343,9 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
     }
 
     if (inString->IsEmpty()) {
-      rv = HTMLEditorRef().InsertTextWithTransaction(
-          *doc, *inString, EditorRawDOMPoint(pointToInsert));
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .InsertTextWithTransaction(*doc, *inString,
+                                          EditorRawDOMPoint(pointToInsert));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -1444,9 +1445,10 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
                                "by mutation observer");
         } else {
           EditorRawDOMPoint pointAfterInsertedString;
-          rv = HTMLEditorRef().InsertTextWithTransaction(
-              *doc, subStr, EditorRawDOMPoint(currentPoint),
-              &pointAfterInsertedString);
+          rv = MOZ_KnownLive(HTMLEditorRef())
+                   .InsertTextWithTransaction(*doc, subStr,
+                                              EditorRawDOMPoint(currentPoint),
+                                              &pointAfterInsertedString);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -1731,8 +1733,8 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
     // MakeBasicBlock() creates AutoSelectionRestorer.
     // Therefore, even if it returns NS_OK, editor might have been destroyed
     // at restoring Selection.
-    OwningNonNull<nsAtom> separatorTag = ParagraphSeparatorElement(separator);
-    nsresult rv = MakeBasicBlock(separatorTag);
+    nsresult rv =
+        MakeBasicBlock(MOZ_KnownLive(ParagraphSeparatorElement(separator)));
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
         NS_WARN_IF(!CanHandleEditAction())) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
@@ -1796,9 +1798,9 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
 
   nsCOMPtr<Element> listItem = IsInListItem(blockParent);
   if (listItem && listItem != host) {
-    nsresult rv =
-        ReturnInListItem(*listItem, *atStartOfSelection.GetContainer(),
-                         atStartOfSelection.Offset());
+    nsresult rv = ReturnInListItem(
+        *listItem, MOZ_KnownLive(*atStartOfSelection.GetContainer()),
+        atStartOfSelection.Offset());
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -1965,8 +1967,10 @@ nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
     // the style from the line above.
     EditorDOMPoint atSecondBRElement(maybeSecondBRNode);
     if (brElement->GetNextSibling() != maybeSecondBRNode) {
-      nsresult rv = HTMLEditorRef().MoveNodeWithTransaction(
-          *maybeSecondBRNode->AsContent(), afterBRElement);
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .MoveNodeWithTransaction(
+                            MOZ_KnownLive(*maybeSecondBRNode->AsContent()),
+                            afterBRElement);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -2588,7 +2592,7 @@ nsresult HTMLEditRules::WillDeleteSelection(
           startPoint.GetContainerAsText() && sibling->GetAsText()) {
         EditorDOMPoint pt;
         nsresult rv = JoinNearestEditableNodesWithTransaction(
-            *sibling, *startPoint.GetContainerAsContent(), &pt);
+            *sibling, MOZ_KnownLive(*startPoint.GetContainerAsContent()), &pt);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -2700,7 +2704,8 @@ nsresult HTMLEditRules::WillDeleteSelection(
           return NS_ERROR_FAILURE;
         }
         EditActionResult ret = TryToJoinBlocksWithTransaction(
-            *leftNode->AsContent(), *rightNode->AsContent());
+            MOZ_KnownLive(*leftNode->AsContent()),
+            MOZ_KnownLive(*rightNode->AsContent()));
         *aHandled |= ret.Handled();
         *aCancel |= ret.Canceled();
         if (NS_WARN_IF(ret.Failed())) {
@@ -2780,7 +2785,8 @@ nsresult HTMLEditRules::WillDeleteSelection(
           return NS_ERROR_FAILURE;
         }
         EditActionResult ret = TryToJoinBlocksWithTransaction(
-            *leftNode->AsContent(), *rightNode->AsContent());
+            MOZ_KnownLive(*leftNode->AsContent()),
+            MOZ_KnownLive(*rightNode->AsContent()));
         // This should claim that trying to join the block means that
         // this handles the action because the caller shouldn't do anything
         // anymore in this case.
@@ -3458,8 +3464,8 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
         return EditActionIgnored(NS_ERROR_NULL_POINTER);
       }
 
-      ret |= MoveBlock(*previousContent.GetContainerAsElement(), *rightBlock,
-                       previousContent.Offset(), 0);
+      ret |= MoveBlock(MOZ_KnownLive(*previousContent.GetContainerAsElement()),
+                       *rightBlock, previousContent.Offset(), 0);
       if (NS_WARN_IF(ret.Failed())) {
         return ret;
       }
@@ -3509,8 +3515,8 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
     if (pt.IsSet() && mergeLists) {
-      CreateElementResult convertListTypeResult =
-          ConvertListType(*rightBlock, *existingList, *nsGkAtoms::li);
+      CreateElementResult convertListTypeResult = ConvertListType(
+          *rightBlock, MOZ_KnownLive(*existingList), *nsGkAtoms::li);
       if (NS_WARN_IF(convertListTypeResult.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
         return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -3559,8 +3565,8 @@ EditActionResult HTMLEditRules::MoveBlock(Element& aLeftBlock,
     // get the node to act on
     if (IsBlockNode(arrayOfNodes[i])) {
       // For block nodes, move their contents only, then delete block.
-      ret |=
-          MoveContents(*arrayOfNodes[i]->AsElement(), aLeftBlock, &aLeftOffset);
+      ret |= MoveContents(MOZ_KnownLive(*arrayOfNodes[i]->AsElement()),
+                          aLeftBlock, &aLeftOffset);
       if (NS_WARN_IF(ret.Failed())) {
         return ret;
       }
@@ -3572,8 +3578,8 @@ EditActionResult HTMLEditRules::MoveBlock(Element& aLeftBlock,
       ret.MarkAsHandled();
     } else {
       // Otherwise move the content as is, checking against the DTD.
-      ret |= MoveNodeSmart(*arrayOfNodes[i]->AsContent(), aLeftBlock,
-                           &aLeftOffset);
+      ret |= MoveNodeSmart(MOZ_KnownLive(*arrayOfNodes[i]->AsContent()),
+                           aLeftBlock, &aLeftOffset);
       if (NS_WARN_IF(ret.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
         return ret;
       }
@@ -3600,8 +3606,8 @@ EditActionResult HTMLEditRules::MoveNodeSmart(nsIContent& aNode,
   if (HTMLEditorRef().CanContain(aDestElement, aNode)) {
     // If it can, move it there.
     if (*aInOutDestOffset == -1) {
-      nsresult rv =
-          HTMLEditorRef().MoveNodeToEndWithTransaction(aNode, aDestElement);
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .MoveNodeToEndWithTransaction(aNode, aDestElement);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -3610,8 +3616,8 @@ EditActionResult HTMLEditRules::MoveNodeSmart(nsIContent& aNode,
       }
     } else {
       EditorRawDOMPoint pointToInsert(&aDestElement, *aInOutDestOffset);
-      nsresult rv =
-          HTMLEditorRef().MoveNodeWithTransaction(aNode, pointToInsert);
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .MoveNodeWithTransaction(aNode, pointToInsert);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -3629,7 +3635,8 @@ EditActionResult HTMLEditRules::MoveNodeSmart(nsIContent& aNode,
   // If it can't, move its children (if any), and then delete it.
   EditActionResult ret(NS_OK);
   if (aNode.IsElement()) {
-    ret = MoveContents(*aNode.AsElement(), aDestElement, aInOutDestOffset);
+    ret = MoveContents(MOZ_KnownLive(*aNode.AsElement()), aDestElement,
+                       aInOutDestOffset);
     if (NS_WARN_IF(ret.Failed())) {
       return ret;
     }
@@ -3656,7 +3663,7 @@ EditActionResult HTMLEditRules::MoveContents(Element& aElement,
 
   EditActionResult ret(NS_OK);
   while (aElement.GetFirstChild()) {
-    ret |= MoveNodeSmart(*aElement.GetFirstChild(), aDestElement,
+    ret |= MoveNodeSmart(MOZ_KnownLive(*aElement.GetFirstChild()), aDestElement,
                          aInOutDestOffset);
     if (NS_WARN_IF(ret.Failed())) {
       return ret;
@@ -3964,20 +3971,22 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
         // whole list and then RemoveContainerWithTransaction() on the list.
         // ConvertListType first: that routine handles converting the list
         // item types, if needed.
-        rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode, *curList);
+        rv = MOZ_KnownLive(HTMLEditorRef())
+                 .MoveNodeToEndWithTransaction(*curNode, *curList);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
-        CreateElementResult convertListTypeResult =
-            ConvertListType(*curNode->AsElement(), aListType, aItemType);
+        CreateElementResult convertListTypeResult = ConvertListType(
+            MOZ_KnownLive(*curNode->AsElement()), aListType, aItemType);
         if (NS_WARN_IF(convertListTypeResult.Failed())) {
           return convertListTypeResult.Rv();
         }
-        rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
-            *convertListTypeResult.GetNewNode());
+        rv = MOZ_KnownLive(HTMLEditorRef())
+                 .RemoveBlockContainerWithTransaction(
+                     MOZ_KnownLive(*convertListTypeResult.GetNewNode()));
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -3987,8 +3996,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
         newBlock = convertListTypeResult.forget();
       } else {
         // replace list with new list type
-        CreateElementResult convertListTypeResult =
-            ConvertListType(*curNode->AsElement(), aListType, aItemType);
+        CreateElementResult convertListTypeResult = ConvertListType(
+            MOZ_KnownLive(*curNode->AsElement()), aListType, aItemType);
         if (NS_WARN_IF(convertListTypeResult.Failed())) {
           return convertListTypeResult.Rv();
         }
@@ -4033,7 +4042,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
           }
         }
         // move list item to new list
-        rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode, *curList);
+        rv = MOZ_KnownLive(HTMLEditorRef())
+                 .MoveNodeToEndWithTransaction(*curNode, *curList);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -4042,8 +4052,9 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
         }
         // convert list item type if needed
         if (!curNode->IsHTMLElement(&aItemType)) {
-          newBlock = HTMLEditorRef().ReplaceContainerWithTransaction(
-              *curNode->AsElement(), aItemType);
+          newBlock = MOZ_KnownLive(HTMLEditorRef())
+                         .ReplaceContainerWithTransaction(
+                             MOZ_KnownLive(*curNode->AsElement()), aItemType);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -4058,7 +4069,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
           curList = atCurNode.GetContainerAsElement();
         } else if (atCurNode.GetContainer() != curList) {
           // move list item to new list
-          rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode, *curList);
+          rv = MOZ_KnownLive(HTMLEditorRef())
+                   .MoveNodeToEndWithTransaction(*curNode, *curList);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -4067,8 +4079,9 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
           }
         }
         if (!curNode->IsHTMLElement(&aItemType)) {
-          newBlock = HTMLEditorRef().ReplaceContainerWithTransaction(
-              *curNode->AsElement(), aItemType);
+          newBlock = MOZ_KnownLive(HTMLEditorRef())
+                         .ReplaceContainerWithTransaction(
+                             MOZ_KnownLive(*curNode->AsElement()), aItemType);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -4109,8 +4122,9 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
       prevListItem = nullptr;
       int32_t j = i + 1;
       GetInnerContent(*curNode, arrayOfNodes, &j);
-      rv =
-          HTMLEditorRef().RemoveContainerWithTransaction(*curNode->AsElement());
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .RemoveContainerWithTransaction(
+                   MOZ_KnownLive(*curNode->AsElement()));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -4152,8 +4166,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
       if (IsInlineNode(curNode) && prevListItem) {
         // this is a continuation of some inline nodes that belong together in
         // the same list item.  use prevListItem
-        rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode,
-                                                          *prevListItem);
+        rv = MOZ_KnownLive(HTMLEditorRef())
+                 .MoveNodeToEndWithTransaction(*curNode, *prevListItem);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -4163,8 +4177,9 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
       } else {
         // don't wrap li around a paragraph.  instead replace paragraph with li
         if (curNode->IsHTMLElement(nsGkAtoms::p)) {
-          listItem = HTMLEditorRef().ReplaceContainerWithTransaction(
-              *curNode->AsElement(), aItemType);
+          listItem = MOZ_KnownLive(HTMLEditorRef())
+                         .ReplaceContainerWithTransaction(
+                             MOZ_KnownLive(*curNode->AsElement()), aItemType);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -4172,8 +4187,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
             return NS_ERROR_FAILURE;
           }
         } else {
-          listItem = HTMLEditorRef().InsertContainerWithTransaction(*curNode,
-                                                                    aItemType);
+          listItem = MOZ_KnownLive(HTMLEditorRef())
+                         .InsertContainerWithTransaction(*curNode, aItemType);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -4194,7 +4209,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
     if (listItem) {
       // if we made a new list item, deal with it: tuck the listItem into the
       // end of the active list
-      rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*listItem, *curList);
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .MoveNodeToEndWithTransaction(*listItem, *curList);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -4249,7 +4265,7 @@ nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
       // unlist this listitem
       bool bOutOfList;
       do {
-        rv = PopListItem(*curNode->AsContent(), &bOutOfList);
+        rv = PopListItem(MOZ_KnownLive(*curNode->AsContent()), &bOutOfList);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -4257,7 +4273,7 @@ nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
           !bOutOfList);  // keep popping it out until it's not in a list anymore
     } else if (HTMLEditUtils::IsList(curNode)) {
       // node is a list, move list items out
-      rv = RemoveListStructure(*curNode->AsElement());
+      rv = RemoveListStructure(MOZ_KnownLive(*curNode->AsElement()));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -4683,8 +4699,10 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
               sibling->NodeInfo()->NameAtom() &&
           atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
               sibling->NodeInfo()->NamespaceID()) {
-        nsresult rv = HTMLEditorRef().MoveNodeWithTransaction(
-            *curNode->AsContent(), EditorRawDOMPoint(sibling, 0));
+        nsresult rv =
+            MOZ_KnownLive(HTMLEditorRef())
+                .MoveNodeWithTransaction(MOZ_KnownLive(*curNode->AsContent()),
+                                         EditorRawDOMPoint(sibling, 0));
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -4703,8 +4721,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
               sibling->NodeInfo()->NameAtom() &&
           atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
               sibling->NodeInfo()->NamespaceID()) {
-        nsresult rv = HTMLEditorRef().MoveNodeToEndWithTransaction(
-            *curNode->AsContent(), *sibling);
+        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                          .MoveNodeToEndWithTransaction(
+                              MOZ_KnownLive(*curNode->AsContent()), *sibling);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -4744,8 +4763,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
         mNewBlock = curList;
       }
       // tuck the node into the end of the active list
-      nsresult rv = HTMLEditorRef().MoveNodeToEndWithTransaction(
-          *curNode->AsContent(), *curList);
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .MoveNodeToEndWithTransaction(
+                            MOZ_KnownLive(*curNode->AsContent()), *curList);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -4758,7 +4778,8 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
     // Not a list item.
 
     if (IsBlockNode(*curNode)) {
-      nsresult rv = IncreaseMarginToIndent(*curNode->AsElement());
+      nsresult rv =
+          IncreaseMarginToIndent(MOZ_KnownLive(*curNode->AsElement()));
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -4799,8 +4820,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
     }
 
     // tuck the node into the end of the active blockquote
-    nsresult rv = HTMLEditorRef().MoveNodeToEndWithTransaction(
-        *curNode->AsContent(), *curQuote);
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .MoveNodeToEndWithTransaction(
+                          MOZ_KnownLive(*curNode->AsContent()), *curQuote);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -4950,8 +4972,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
               sibling->NodeInfo()->NameAtom() &&
           atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
               sibling->NodeInfo()->NamespaceID()) {
-        rv = HTMLEditorRef().MoveNodeWithTransaction(
-            *curNode->AsContent(), EditorRawDOMPoint(sibling, 0));
+        rv = MOZ_KnownLive(HTMLEditorRef())
+                 .MoveNodeWithTransaction(MOZ_KnownLive(*curNode->AsContent()),
+                                          EditorRawDOMPoint(sibling, 0));
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -4970,8 +4993,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
               sibling->NodeInfo()->NameAtom() &&
           atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
               sibling->NodeInfo()->NamespaceID()) {
-        rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
-                                                          *sibling);
+        rv = MOZ_KnownLive(HTMLEditorRef())
+                 .MoveNodeToEndWithTransaction(
+                     MOZ_KnownLive(*curNode->AsContent()), *sibling);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -5011,8 +5035,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
         mNewBlock = curList;
       }
       // tuck the node into the end of the active list
-      rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
-                                                        *curList);
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .MoveNodeToEndWithTransaction(
+                   MOZ_KnownLive(*curNode->AsContent()), *curList);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -5069,7 +5094,8 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
         }
       }
 
-      rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*listItem, *curList);
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .MoveNodeToEndWithTransaction(*listItem, *curList);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -5118,8 +5144,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
     }
 
     // tuck the node into the end of the active blockquote
-    rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
-                                                      *curQuote);
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .MoveNodeToEndWithTransaction(MOZ_KnownLive(*curNode->AsContent()),
+                                           *curQuote);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -5275,8 +5302,9 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
         lastBQChild = nullptr;
         curBlockQuoteIsIndentedWithCSS = false;
       }
-      rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
-          *curNode->AsElement());
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .RemoveBlockContainerWithTransaction(
+                   MOZ_KnownLive(*curNode->AsElement()));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -5298,7 +5326,8 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
       RefPtr<nsAtom> unit;
       CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
       if (f > 0) {
-        nsresult rv = DecreaseMarginToOutdent(*curNode->AsElement());
+        nsresult rv =
+            DecreaseMarginToOutdent(MOZ_KnownLive(*curNode->AsElement()));
         if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
           return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -5328,7 +5357,7 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
         lastBQChild = nullptr;
         curBlockQuoteIsIndentedWithCSS = false;
       }
-      rv = PopListItem(*curNode->AsContent());
+      rv = PopListItem(MOZ_KnownLive(*curNode->AsContent()));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return SplitRangeOffFromNodeResult(rv);
       }
@@ -5415,8 +5444,9 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
       // Move node out of list
       if (HTMLEditUtils::IsList(curNode)) {
         // Just unwrap this sublist
-        rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
-            *curNode->AsElement());
+        rv = MOZ_KnownLive(HTMLEditorRef())
+                 .RemoveBlockContainerWithTransaction(
+                     MOZ_KnownLive(*curNode->AsElement()));
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -5441,8 +5471,8 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
           // list. Be sure to put it after the parent list because this
           // loop iterates backwards through the parent's list of children.
           EditorRawDOMPoint afterCurrentList(curParent, offset + 1);
-          rv =
-              HTMLEditorRef().MoveNodeWithTransaction(*child, afterCurrentList);
+          rv = MOZ_KnownLive(HTMLEditorRef())
+                   .MoveNodeWithTransaction(*child, afterCurrentList);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
           }
@@ -5462,8 +5492,9 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
         child = curNode->GetLastChild();
       }
       // Delete the now-empty list
-      rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
-          *curNode->AsElement());
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .RemoveBlockContainerWithTransaction(
+                   MOZ_KnownLive(*curNode->AsElement()));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -5522,8 +5553,8 @@ HTMLEditRules::SplitRangeOffFromBlockAndRemoveMiddleContainer(
   }
   NS_WARNING_ASSERTION(splitResult.Succeeded(),
                        "Failed to split the range off from the block element");
-  nsresult rv =
-      HTMLEditorRef().RemoveBlockContainerWithTransaction(aBlockElement);
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                    .RemoveBlockContainerWithTransaction(aBlockElement);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -5587,8 +5618,9 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentPartOfBlock(
   }
 
   if (!aIsBlockIndentedWithCSS) {
-    nsresult rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
-        *splitResult.GetMiddleContentAsElement());
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .RemoveBlockContainerWithTransaction(MOZ_KnownLive(
+                          *splitResult.GetMiddleContentAsElement()));
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -5600,8 +5632,8 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentPartOfBlock(
   }
 
   if (splitResult.GetMiddleContentAsElement()) {
-    nsresult rv =
-        DecreaseMarginToOutdent(*splitResult.GetMiddleContentAsElement());
+    nsresult rv = DecreaseMarginToOutdent(
+        MOZ_KnownLive(*splitResult.GetMiddleContentAsElement()));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return SplitRangeOffFromNodeResult(rv);
     }
@@ -5622,8 +5654,9 @@ CreateElementResult HTMLEditRules::ConvertListType(Element& aListElement,
       Element* element = child->AsElement();
       if (HTMLEditUtils::IsListItem(element) &&
           !element->IsHTMLElement(&aNewListItemTag)) {
-        child = HTMLEditorRef().ReplaceContainerWithTransaction(
-            *element, aNewListItemTag);
+        child = MOZ_KnownLive(HTMLEditorRef())
+                    .ReplaceContainerWithTransaction(MOZ_KnownLive(*element),
+                                                     aNewListItemTag);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -5634,8 +5667,8 @@ CreateElementResult HTMLEditRules::ConvertListType(Element& aListElement,
                  !element->IsHTMLElement(&aNewListTag)) {
         // XXX List elements shouldn't have other list elements as their
         //     child.  Why do we handle such invalid tree?
-        CreateElementResult convertListTypeResult =
-            ConvertListType(*child->AsElement(), aNewListTag, aNewListItemTag);
+        CreateElementResult convertListTypeResult = ConvertListType(
+            MOZ_KnownLive(*child->AsElement()), aNewListTag, aNewListItemTag);
         if (NS_WARN_IF(convertListTypeResult.Failed())) {
           return convertListTypeResult;
         }
@@ -5649,8 +5682,9 @@ CreateElementResult HTMLEditRules::ConvertListType(Element& aListElement,
     return CreateElementResult(&aListElement);
   }
 
-  RefPtr<Element> listElement = HTMLEditorRef().ReplaceContainerWithTransaction(
-      aListElement, aNewListTag);
+  RefPtr<Element> listElement =
+      MOZ_KnownLive(HTMLEditorRef())
+          .ReplaceContainerWithTransaction(aListElement, aNewListTag);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -5685,8 +5719,10 @@ nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
     while (item && node != rootElement) {
       // XXX If we redesign ClearStyle(), we can use EditorDOMPoint in this
       //     method.
-      nsresult rv = HTMLEditorRef().ClearStyle(address_of(node), &offset,
-                                               item->tag, item->attr);
+      nsresult rv =
+          MOZ_KnownLive(HTMLEditorRef())
+              .ClearStyle(address_of(node), &offset, MOZ_KnownLive(item->tag),
+                          MOZ_KnownLive(item->attr));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -5726,8 +5762,9 @@ nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
     }
     OwningNonNull<Text> newNode =
         EditorBase::CreateTextNode(aDocument, EmptyString());
-    nsresult rv = HTMLEditorRef().InsertNodeWithTransaction(
-        *newNode, EditorRawDOMPoint(node, offset));
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .InsertNodeWithTransaction(
+                          *newNode, EditorRawDOMPoint(node, offset));
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -5743,7 +5780,8 @@ nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
       HTMLEditor::FontSize dir = relFontSize > 0 ? HTMLEditor::FontSize::incr
                                                  : HTMLEditor::FontSize::decr;
       for (int32_t j = 0; j < DeprecatedAbs(relFontSize); j++) {
-        rv = HTMLEditorRef().RelativeFontChangeOnTextNode(dir, newNode, 0, -1);
+        rv = MOZ_KnownLive(HTMLEditorRef())
+                 .RelativeFontChangeOnTextNode(dir, newNode, 0, -1);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -5754,8 +5792,10 @@ nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
     }
 
     while (item) {
-      rv = HTMLEditorRef().SetInlinePropertyOnNode(
-          *node->AsContent(), *item->tag, item->attr, item->value);
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .SetInlinePropertyOnNode(MOZ_KnownLive(*node->AsContent()),
+                                        MOZ_KnownLive(*item->tag),
+                                        MOZ_KnownLive(item->attr), item->value);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -5854,7 +5894,7 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
       // header; in HTML 4, it can directly carry the ALIGN attribute and we
       // don't need to make a div! If we are in CSS mode, all the work is done
       // in AlignBlock
-      rv = AlignBlock(*node->AsElement(), aAlignType,
+      rv = AlignBlock(MOZ_KnownLive(*node->AsElement()), aAlignType,
                       ResetAlignOf::OnlyDescendants);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -5993,7 +6033,7 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
     // don't need to nest it, just set the alignment.  In CSS, assign the
     // corresponding CSS styles in AlignBlock
     if (HTMLEditUtils::SupportsAlignAttr(*curNode)) {
-      rv = AlignBlock(*curNode->AsElement(), aAlignType,
+      rv = AlignBlock(MOZ_KnownLive(*curNode->AsElement()), aAlignType,
                       ResetAlignOf::ElementAndDescendants);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -6090,8 +6130,9 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
     }
 
     // Tuck the node into the end of the active div
-    rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
-                                                      *curDiv);
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .MoveNodeToEndWithTransaction(MOZ_KnownLive(*curNode->AsContent()),
+                                           *curDiv);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -6139,8 +6180,10 @@ nsresult HTMLEditRules::AlignBlockContents(nsINode& aNode,
   if (firstChild == lastChild && firstChild->IsHTMLElement(nsGkAtoms::div)) {
     // the cell already has a div containing all of its content: just
     // act on this div.
-    nsresult rv = HTMLEditorRef().SetAttributeOrEquivalent(
-        firstChild->AsElement(), nsGkAtoms::align, aAlignType, false);
+    nsresult rv =
+        MOZ_KnownLive(HTMLEditorRef())
+            .SetAttributeOrEquivalent(MOZ_KnownLive(firstChild->AsElement()),
+                                      nsGkAtoms::align, aAlignType, false);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -6162,8 +6205,9 @@ nsresult HTMLEditRules::AlignBlockContents(nsINode& aNode,
     return NS_ERROR_FAILURE;
   }
   // set up the alignment on the div
-  nsresult rv = HTMLEditorRef().SetAttributeOrEquivalent(
-      divElem, nsGkAtoms::align, aAlignType, false);
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                    .SetAttributeOrEquivalent(divElem, nsGkAtoms::align,
+                                              aAlignType, false);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -6172,8 +6216,9 @@ nsresult HTMLEditRules::AlignBlockContents(nsINode& aNode,
   }
   // tuck the children into the end of the active div
   while (lastChild && (lastChild != divElem)) {
-    nsresult rv = HTMLEditorRef().MoveNodeWithTransaction(
-        *lastChild, EditorRawDOMPoint(divElem, 0));
+    nsresult rv =
+        MOZ_KnownLive(HTMLEditorRef())
+            .MoveNodeWithTransaction(*lastChild, EditorRawDOMPoint(divElem, 0));
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -7172,7 +7217,8 @@ nsresult HTMLEditRules::GetNodesForOperation(
       if (aTouchContent == TouchContent::yes && IsInlineNode(node) &&
           HTMLEditorRef().IsContainer(node) && !EditorBase::IsTextNode(node)) {
         nsTArray<OwningNonNull<nsINode>> arrayOfInlines;
-        nsresult rv = BustUpInlinesAtBRs(*node->AsContent(), arrayOfInlines);
+        nsresult rv = BustUpInlinesAtBRs(MOZ_KnownLive(*node->AsContent()),
+                                         arrayOfInlines);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -7460,8 +7506,9 @@ nsresult HTMLEditRules::BustUpInlinesAtBRs(
 
     // Move break outside of container and also put in node list
     EditorRawDOMPoint atNextNode(splitNodeResult.GetNextNode());
-    nsresult rv = HTMLEditorRef().MoveNodeWithTransaction(*brNode->AsContent(),
-                                                          atNextNode);
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .MoveNodeWithTransaction(
+                          MOZ_KnownLive(*brNode->AsContent()), atNextNode);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -8069,8 +8116,9 @@ nsresult HTMLEditRules::ReturnInListItem(Element& aListItem, nsINode& aNode,
                          "Failed to advance offset after the right list node");
     if (HTMLEditUtils::IsList(atNextSiblingOfLeftList.GetContainer())) {
       // If so, move item out of this list and into the grandparent list
-      nsresult rv = HTMLEditorRef().MoveNodeWithTransaction(
-          aListItem, atNextSiblingOfLeftList);
+      nsresult rv =
+          MOZ_KnownLive(HTMLEditorRef())
+              .MoveNodeWithTransaction(aListItem, atNextSiblingOfLeftList);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -8222,9 +8270,10 @@ nsresult HTMLEditRules::ReturnInListItem(Element& aListItem, nsINode& aNode,
         }
 
         RefPtr<Element> brElement;
-        nsresult rv =
-            HTMLEditorRef().CopyLastEditableChildStylesWithTransaction(
-                *prevItem->AsElement(), aListItem, address_of(brElement));
+        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                          .CopyLastEditableChildStylesWithTransaction(
+                              MOZ_KnownLive(*prevItem->AsElement()), aListItem,
+                              address_of(brElement));
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -8361,8 +8410,9 @@ nsresult HTMLEditRules::MakeBlockquote(
       // note: doesn't matter if we set mNewBlock multiple times.
     }
 
-    nsresult rv = HTMLEditorRef().MoveNodeToEndWithTransaction(
-        *curNode->AsContent(), *curBlock);
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .MoveNodeToEndWithTransaction(
+                          MOZ_KnownLive(*curNode->AsContent()), *curBlock);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -8399,8 +8449,9 @@ nsresult HTMLEditRules::RemoveBlockStyle(
         continue;
       }
       // Remove current block
-      nsresult rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
-          *curNode->AsElement());
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .RemoveBlockContainerWithTransaction(
+                            MOZ_KnownLive(*curNode->AsElement()));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -8524,9 +8575,9 @@ nsresult HTMLEditRules::ApplyBlockStyle(
         HTMLEditUtils::IsFormatNode(curNode)) {
       // Forget any previous block used for previous inline nodes
       curBlock = nullptr;
-      newBlock =
-          HTMLEditorRef().ReplaceContainerAndCloneAttributesWithTransaction(
-              *curNode->AsElement(), aBlockTag);
+      newBlock = MOZ_KnownLive(HTMLEditorRef())
+                     .ReplaceContainerAndCloneAttributesWithTransaction(
+                         MOZ_KnownLive(*curNode->AsElement()), aBlockTag);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -8606,8 +8657,9 @@ nsresult HTMLEditRules::ApplyBlockStyle(
       // Remember our new block for postprocessing
       mNewBlock = curBlock;
       // Note: doesn't matter if we set mNewBlock multiple times.
-      nsresult rv = HTMLEditorRef().MoveNodeToEndWithTransaction(
-          *curNode->AsContent(), *curBlock);
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .MoveNodeToEndWithTransaction(
+                            MOZ_KnownLive(*curNode->AsContent()), *curBlock);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -8662,8 +8714,9 @@ nsresult HTMLEditRules::ApplyBlockStyle(
 
       // This is a continuation of some inline nodes that belong together in
       // the same block item.  Use curBlock.
-      nsresult rv = HTMLEditorRef().MoveNodeToEndWithTransaction(
-          *curNode->AsContent(), *curBlock);
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .MoveNodeToEndWithTransaction(
+                            MOZ_KnownLive(*curNode->AsContent()), *curBlock);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -8751,8 +8804,9 @@ nsresult HTMLEditRules::JoinNearestEditableNodesWithTransaction(
   // left one
   if (parent != rightParent) {
     int32_t parOffset = parent->ComputeIndexOf(&aNodeLeft);
-    nsresult rv = HTMLEditorRef().MoveNodeWithTransaction(
-        aNodeRight, EditorRawDOMPoint(parent, parOffset));
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .MoveNodeWithTransaction(
+                          aNodeRight, EditorRawDOMPoint(parent, parOffset));
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -9684,8 +9738,8 @@ nsresult HTMLEditRules::PopListItem(nsIContent& aListItem, bool* aOutOfList) {
                          "Failed to advance offset to right list node");
   }
 
-  nsresult rv =
-      HTMLEditorRef().MoveNodeWithTransaction(*listItem, pointToInsertListItem);
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                    .MoveNodeWithTransaction(*listItem, pointToInsertListItem);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -9703,8 +9757,9 @@ nsresult HTMLEditRules::PopListItem(nsIContent& aListItem, bool* aOutOfList) {
   //     current parent is <dl>, there is same issue.
   if (!HTMLEditUtils::IsList(pointToInsertListItem.GetContainer()) &&
       HTMLEditUtils::IsListItem(listItem)) {
-    rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
-        *listItem->AsElement());
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .RemoveBlockContainerWithTransaction(
+                 MOZ_KnownLive(*listItem->AsElement()));
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -9747,7 +9802,7 @@ nsresult HTMLEditRules::RemoveListStructure(Element& aListElement) {
     }
 
     if (HTMLEditUtils::IsList(child)) {
-      nsresult rv = RemoveListStructure(*child->AsElement());
+      nsresult rv = RemoveListStructure(MOZ_KnownLive(*child->AsElement()));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -9768,8 +9823,8 @@ nsresult HTMLEditRules::RemoveListStructure(Element& aListElement) {
   }
 
   // Delete the now-empty list
-  nsresult rv =
-      HTMLEditorRef().RemoveBlockContainerWithTransaction(aListElement);
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                    .RemoveBlockContainerWithTransaction(aListElement);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -10155,7 +10210,9 @@ nsresult HTMLEditRules::RemoveAlignment(nsINode& aNode,
       }
 
       // now remove the CENTER container
-      rv = HTMLEditorRef().RemoveContainerWithTransaction(*child->AsElement());
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .RemoveContainerWithTransaction(
+                   MOZ_KnownLive(*child->AsElement()));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -10177,8 +10234,10 @@ nsresult HTMLEditRules::RemoveAlignment(nsINode& aNode,
       }
       if (useCSS) {
         if (child->IsAnyOfHTMLElements(nsGkAtoms::table, nsGkAtoms::hr)) {
-          nsresult rv = HTMLEditorRef().SetAttributeOrEquivalent(
-              child->AsElement(), nsGkAtoms::align, aAlignType, false);
+          nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                            .SetAttributeOrEquivalent(
+                                MOZ_KnownLive(child->AsElement()),
+                                nsGkAtoms::align, aAlignType, false);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -10291,8 +10350,9 @@ nsresult HTMLEditRules::AlignBlock(Element& aElement,
   if (HTMLEditorRef().IsCSSEnabled()) {
     // Let's use CSS alignment; we use margin-left and margin-right for tables
     // and text-align for other block-level elements
-    nsresult rv = HTMLEditorRef().SetAttributeOrEquivalent(
-        &aElement, nsGkAtoms::align, aAlignType, false);
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .SetAttributeOrEquivalent(&aElement, nsGkAtoms::align,
+                                                aAlignType, false);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -10309,8 +10369,9 @@ nsresult HTMLEditRules::AlignBlock(Element& aElement,
     return NS_OK;
   }
 
-  rv = HTMLEditorRef().SetAttributeOrEquivalent(&aElement, nsGkAtoms::align,
-                                                aAlignType, false);
+  rv = MOZ_KnownLive(HTMLEditorRef())
+           .SetAttributeOrEquivalent(&aElement, nsGkAtoms::align, aAlignType,
+                                     false);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -10370,8 +10431,8 @@ nsresult HTMLEditRules::ChangeMarginStart(Element& aElement, bool aIncrease) {
     return NS_OK;
   }
 
-  HTMLEditorRef().mCSSEditUtils->RemoveCSSProperty(aElement, marginProperty,
-                                                   value);
+  HTMLEditorRef().mCSSEditUtils->RemoveCSSProperty(
+      aElement, MOZ_KnownLive(marginProperty), value);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -10384,7 +10445,8 @@ nsresult HTMLEditRules::ChangeMarginStart(Element& aElement, bool aIncrease) {
     return NS_OK;
   }
 
-  nsresult rv = HTMLEditorRef().RemoveContainerWithTransaction(aElement);
+  nsresult rv =
+      MOZ_KnownLive(HTMLEditorRef()).RemoveContainerWithTransaction(aElement);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -10575,8 +10637,9 @@ nsresult HTMLEditRules::PrepareToMakeElementAbsolutePosition(
         // new block for postprocessing.
       }
       // Tuck the node into the end of the active list
-      rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
-                                                        *curList);
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .MoveNodeToEndWithTransaction(
+                   MOZ_KnownLive(*curNode->AsContent()), *curList);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -10641,7 +10704,8 @@ nsresult HTMLEditRules::PrepareToMakeElementAbsolutePosition(
           return NS_ERROR_FAILURE;
         }
       }
-      rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*listItem, *curList);
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .MoveNodeToEndWithTransaction(*listItem, *curList);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -10681,8 +10745,9 @@ nsresult HTMLEditRules::PrepareToMakeElementAbsolutePosition(
     }
 
     // Tuck the node into the end of the active blockquote
-    rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
-                                                      *curPositionedDiv);
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .MoveNodeToEndWithTransaction(MOZ_KnownLive(*curNode->AsContent()),
+                                           *curPositionedDiv);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -10701,7 +10766,9 @@ nsresult HTMLEditRules::DidAbsolutePosition() {
   if (!mNewBlock) {
     return NS_OK;
   }
-  nsresult rv = HTMLEditorRef().SetPositionToAbsoluteOrStatic(*mNewBlock, true);
+  OwningNonNull<Element> newBlock(*mNewBlock);
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                    .SetPositionToAbsoluteOrStatic(*newBlock, true);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -10738,8 +10805,8 @@ nsresult HTMLEditRules::WillRemoveAbsolutePosition(bool* aCancel,
   {
     AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
 
-    nsresult rv =
-        HTMLEditorRef().SetPositionToAbsoluteOrStatic(*element, false);
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .SetPositionToAbsoluteOrStatic(*element, false);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
