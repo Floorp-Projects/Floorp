@@ -52,12 +52,10 @@ interface nsIEditor  : nsISupports
 
   readonly attribute Selection selection;
 
-  [can_run_script]
   void setAttributeOrEquivalent(in Element element,
                                 in AString sourceAttrName,
                                 in AString sourceAttrValue,
                                 in boolean aSuppressTransaction);
-  [can_run_script]
   void removeAttributeOrEquivalent(in Element element,
                                    in AString sourceAttrName,
                                    in boolean aSuppressTransaction);
@@ -388,7 +386,6 @@ interface nsIEditor  : nsISupports
    * @param aDestNode     the destination element to operate on
    * @param aSourceNode   the source element to copy attributes from
    */
-  [can_run_script]
   void cloneAttributes(in Element aDestElement, in Element aSourceElement);
 
   /**
@@ -401,7 +398,6 @@ interface nsIEditor  : nsISupports
    *                  0=first child, 1=second child, etc.
    *                  any number > number of current children = last child
    */
-  [can_run_script]
   void insertNode(in Node node,
                   in Node parent,
                   in long aPosition);
