@@ -833,6 +833,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_common"
+version = "0.0.1"
+dependencies = [
+ "darling 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "proc-macro2 0.4.24 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote 0.6.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 0.15.24 (registry+https://github.com/rust-lang/crates.io-index)",
+ "synstructure 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "derive_more"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2737,6 +2748,7 @@ name = "style_derive"
 version = "0.0.1"
 dependencies = [
  "darling 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "derive_common 0.0.1",
  "proc-macro2 0.4.24 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.6.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn 0.15.24 (registry+https://github.com/rust-lang/crates.io-index)",
