@@ -27,3 +27,4 @@ servo_arc = {path = "../../components/servo_arc"}
 smallvec = "0.6"
 style = {path = "../../components/style", features = ["gecko"]}
 style_traits = {path = "../../components/style_traits"}
+to_shmem = {path = "../../components/to_shmem"}

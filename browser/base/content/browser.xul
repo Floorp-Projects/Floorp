@@ -619,31 +619,23 @@
              onpopupshowing="UpdateDynamicShortcutTooltipText(this);"/>
 
     <menupopup id="SyncedTabsSidebarContext">
-      <menuitem label="&syncedTabs.context.open.label;"
-                accesskey="&syncedTabs.context.open.accesskey;"
+      <menuitem data-lazy-l10n-id="synced-tabs-context-open"
                 id="syncedTabsOpenSelected" where="current"/>
-      <menuitem label="&syncedTabs.context.openInNewTab.label;"
-                accesskey="&syncedTabs.context.openInNewTab.accesskey;"
+      <menuitem data-lazy-l10n-id="synced-tabs-context-open-in-new-tab"
                 id="syncedTabsOpenSelectedInTab" where="tab"/>
-      <menuitem label="&syncedTabs.context.openInNewWindow.label;"
-                accesskey="&syncedTabs.context.openInNewWindow.accesskey;"
+      <menuitem data-lazy-l10n-id="synced-tabs-context-open-in-new-window"
                 id="syncedTabsOpenSelectedInWindow" where="window"/>
-      <menuitem label="&syncedTabs.context.openInNewPrivateWindow.label;"
-                accesskey="&syncedTabs.context.openInNewPrivateWindow.accesskey;"
+      <menuitem data-lazy-l10n-id="synced-tabs-context-open-in-new-private-window"
                 id="syncedTabsOpenSelectedInPrivateWindow" where="window" private="true"/>
       <menuseparator/>
-      <menuitem label="&syncedTabs.context.bookmarkSingleTab.label;"
-                accesskey="&syncedTabs.context.bookmarkSingleTab.accesskey;"
+      <menuitem data-lazy-l10n-id="synced-tabs-context-bookmark-single-tab"
                 id="syncedTabsBookmarkSelected"/>
-      <menuitem label="&syncedTabs.context.copy.label;"
-                accesskey="&syncedTabs.context.copy.accesskey;"
+      <menuitem data-lazy-l10n-id="synced-tabs-context-copy"
                 id="syncedTabsCopySelected"/>
       <menuseparator/>
-      <menuitem label="&syncedTabs.context.openAllInTabs.label;"
-                accesskey="&syncedTabs.context.openAllInTabs.accesskey;"
+      <menuitem data-lazy-l10n-id="synced-tabs-context-open-all-in-tabs"
                 id="syncedTabsOpenAllInTabs"/>
-      <menuitem label="&syncedTabs.context.managedevices.label;"
-                accesskey="&syncedTabs.context.managedevices.accesskey;"
+      <menuitem data-lazy-l10n-id="synced-tabs-context-manage-devices"
                 id="syncedTabsManageDevices"
                 oncommand="gSync.openDevicesManagementPage('syncedtabs-sidebar');"/>
       <menuitem label="&syncSyncNowItem.label;"

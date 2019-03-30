@@ -13,31 +13,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=847119
   /** Test for Bug 847119 **/
 
   var xhr = new XMLHttpRequest();
-  var domthrows = function() { xhr.open();  }
+  var domthrows = function() { xhr.open(); };
 
   var count = 20000;
-  
+
   function f() {
     var k = 0;
     for (var j = 0; j < count; ++j) {
-      try { domthrows(); } catch(e) { ++k; }
+      try { domthrows(); } catch (e) { ++k; }
     }
     return k;
   }
   function g() { return count; }
 
   is(f(), count, "Should get count exceptions");
-  for (var h of [f, g]) {
+  for (let h of [f, g]) {
     try { is(h(), count, "Should get count exceptions here too"); } catch (e) {}
   }
   ok(true, "We should get here");
 
-  var domthrows = function() { xhr.withCredentials = false; }
+  domthrows = function() { xhr.withCredentials = false; };
   xhr.open("GET", "");
   xhr.send();
 
   is(f(), count, "Should get count exceptions from getter");
-  for (var h of [f, g]) {
+  for (let h of [f, g]) {
     try { is(h(), count, "Should get count exceptions from getter here too"); } catch (e) {}
   }
   ok(true, "We should get here too");

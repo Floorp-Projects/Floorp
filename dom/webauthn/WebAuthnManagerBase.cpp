@@ -141,7 +141,7 @@ WebAuthnManagerBase::HandleEvent(Event* aEvent) {
     }
   }
 
-  CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
+  HandleVisibilityChange();
   return NS_OK;
 }
 

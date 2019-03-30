@@ -3993,9 +3993,26 @@ bool gfxFont::TryGetMathTable() {
 }
 
 /* static */
-void SharedFontList::Initialize() { sEmpty = new SharedFontList(); }
+void SharedFontList::Initialize() {
+  sEmpty = new SharedFontList();
+
+  for (uint8_t i = 0; i < uint8_t(eFamily_generic_count_including_special);
+       ++i) {
+    auto type = static_cast<FontFamilyType>(i + uint8_t(eFamily_generic_first));
+    sSingleGenerics[i] = new SharedFontList(type);
+  }
+}
 
 /* static */
-void SharedFontList::Shutdown() { sEmpty = nullptr; }
+void SharedFontList::Shutdown() {
+  sEmpty = nullptr;
+
+  for (auto& sharedFontList : sSingleGenerics) {
+    sharedFontList = nullptr;
+  }
+}
 
 StaticRefPtr<SharedFontList> SharedFontList::sEmpty;
+
+StaticRefPtr<SharedFontList>
+    SharedFontList::sSingleGenerics[eFamily_generic_count_including_special];

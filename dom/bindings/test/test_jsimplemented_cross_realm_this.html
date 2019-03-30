@@ -19,6 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1464374-->
 
 <iframe></iframe>
 <script type="application/javascript">
+  /* global TestInterfaceJS */
   /** Test for Bug 1464374 **/
   SimpleTest.waitForExplicitFinish();
 
@@ -28,14 +29,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1464374-->
     var ex;
     try {
       TestInterfaceJS.prototype.testThrowTypeError.call(obj);
-    } catch(e) {
+    } catch (e) {
       ex = e;
     }
     ok(ex, "Should have an exception");
     SimpleTest.finish();
   }
 
-  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]},
+  SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]},
                             doTest);
 </script>
 

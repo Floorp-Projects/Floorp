@@ -16,6 +16,11 @@ var syncedTabsDeckComponent = new SyncedTabsDeckComponent({window, SyncedTabs, f
 let themeListener;
 
 let onLoaded = () => {
+  window.top.MozXULElement.insertFTLIfNeeded("browser/syncedTabs.ftl");
+  window.top.document.getElementById("SyncedTabsSidebarContext").querySelectorAll("[data-lazy-l10n-id]").forEach(el => {
+    el.setAttribute("data-l10n-id", el.getAttribute("data-lazy-l10n-id"));
+    el.removeAttribute("data-lazy-l10n-id");
+  });
   themeListener = new LightweightThemeChild({
     content: window,
     chromeOuterWindowID: window.top.windowUtils.outerWindowID,
