@@ -6,49 +6,76 @@ var EXPORTED_SYMBOLS = ["LightweightThemeConsumer"];
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
+const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "EventDispatcher",
                                "resource://gre/modules/Messaging.jsm");
-ChromeUtils.defineModuleGetter(this, "LightweightThemePersister",
-  "resource://gre/modules/addons/LightweightThemePersister.jsm");
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
-function LightweightThemeConsumer(aDocument) {
-  this._doc = aDocument;
-  Services.obs.addObserver(this, "lightweight-theme-styling-update");
-  Services.obs.addObserver(this, "lightweight-theme-apply");
+let RESOLVE_PROPERTIES = ["headerURL"];
 
-  this._update(LightweightThemeManager.currentThemeWithFallback);
+let handlers = new ExtensionUtils.DefaultMap(proto => {
+  try {
+    return Cc[`@mozilla.org/network/protocol;1?name=${proto}`]
+      .getService(Ci.nsISubstitutingProtocolHandler);
+  } catch (e) {
+    return null;
+  }
+});
+
+// The Java front-end code cannot understand internal protocols like
+// resource:, so resolve them to their underlying file: or jar: URIs
+// when possible.
+function maybeResolveURL(url) {
+  try {
+    let uri = Services.io.newURI(url);
+    let handler = handlers.get(uri.scheme);
+    if (handler) {
+      return handler.resolveURI(uri);
+    }
+  } catch (e) {
+    Cu.reportError(e);
+  }
+  return url;
 }
 
-LightweightThemeConsumer.prototype = {
-  observe: function(aSubject, aTopic, aData) {
+class LightweightThemeConsumer {
+  constructor(aDocument) {
+    this._doc = aDocument;
+    Services.obs.addObserver(this, "lightweight-theme-styling-update");
+    Services.obs.addObserver(this, "lightweight-theme-apply");
+
+    this._update(LightweightThemeManager.currentThemeWithFallback);
+  }
+
+  observe(aSubject, aTopic, aData) {
     if (aTopic == "lightweight-theme-styling-update") {
       this._update(aSubject.wrappedJSObject.theme);
     } else if (aTopic == "lightweight-theme-apply") {
       this._update(LightweightThemeManager.currentThemeWithFallback);
     }
-  },
+  }
 
-  destroy: function() {
+  destroy() {
     Services.obs.removeObserver(this, "lightweight-theme-styling-update");
     Services.obs.removeObserver(this, "lightweight-theme-apply");
     this._doc = null;
-  },
+  }
 
-  _update: function(aData) {
+  _update(aData) {
     let active = aData && aData.id !== DEFAULT_THEME_ID;
-    let msg = active ? { type: "LightweightTheme:Update" } :
-                       { type: "LightweightTheme:Disable" };
+    let msg = { type: (active ? "LightweightTheme:Update"
+                              : "LightweightTheme:Disable") };
 
     if (active) {
-      LightweightThemePersister.persistImages(aData, () => {
-        msg.data = LightweightThemePersister.getPersistedData(aData);
-        EventDispatcher.instance.sendRequest(msg);
-      });
-    } else {
-      EventDispatcher.instance.sendRequest(msg);
+      msg.data = {...aData};
+      for (let prop of RESOLVE_PROPERTIES) {
+        if (msg.data[prop]) {
+          msg.data[prop] = maybeResolveURL(msg.data[prop]);
+        }
+      }
     }
-  },
-};
+    EventDispatcher.instance.sendRequest(msg);
+  }
+}
