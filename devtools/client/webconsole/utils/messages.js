@@ -430,19 +430,76 @@ function isPacketPrivate(packet) {
   );
 }
 
+function createWarningGroupMessage(id, type, firstMessage) {
+  let messageText;
+  if (type === MESSAGE_TYPE.CONTENT_BLOCKING_GROUP) {
+    messageText = l10n.getStr("webconsole.group.contentBlocked");
+  }
+  return new ConsoleMessage({
+    id,
+    level: MESSAGE_LEVEL.WARN,
+    source: MESSAGE_SOURCE.CONSOLE_FRONTEND,
+    type,
+    messageText,
+    timeStamp: firstMessage.timeStamp,
+    innerWindowID: firstMessage.innerWindowID,
+  });
+}
+
+/**
+ * Get the warningGroup type in which the message could be in.
+ * @param {ConsoleMessage} message
+ * @returns {String|null} null if the message can't be part of a warningGroup.
+ */
+function getWarningGroupType(message) {
+  if (isContentBlockingMessage(message)) {
+    return MESSAGE_TYPE.CONTENT_BLOCKING_GROUP;
+  }
+  return null;
+}
+
+/**
+ * Returns a computed id given a message
+ *
+ * @param {ConsoleMessage} type: the message type, from MESSAGE_TYPE.
+ * @param {Integer} innerWindowID: the message innerWindowID.
+ * @returns {String}
+ */
+function getParentWarningGroupMessageId(message) {
+  return `${message.type}-${message.innerWindowID}`;
+}
+
 /**
  * Returns true if the message is a warningGroup message (i.e. the "Header").
  * @param {ConsoleMessage} message
  * @returns {Boolean}
  */
 function isWarningGroup(message) {
-  return message.type === MESSAGE_TYPE.TRACKING_PROTECTION_GROUP
+  return message.type === MESSAGE_TYPE.CONTENT_BLOCKING_GROUP
    || message.type === MESSAGE_TYPE.CORS_GROUP
    || message.type === MESSAGE_TYPE.CSP_GROUP;
 }
 
+/**
+ * Returns true if the message is a content blocking message.
+ * @param {ConsoleMessage} message
+ * @returns {Boolean}
+ */
+function isContentBlockingMessage(message) {
+  const {category} = message;
+  return category == "cookieBlockedPermission" ||
+    category == "cookieBlockedTracker" ||
+    category == "cookieBlockedAll" ||
+    category == "cookieBlockedForeign" ||
+    category == "Tracking Protection";
+}
+
 module.exports = {
+  createWarningGroupMessage,
   getInitialMessageCountForViewport,
+  getParentWarningGroupMessageId,
+  getWarningGroupType,
+  isContentBlockingMessage,
   isGroupType,
   isPacketPrivate,
   isWarningGroup,
