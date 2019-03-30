@@ -509,9 +509,13 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval) {
 #endif
       if (*_retval) {
         nsAutoString oldSearchString;
-        // Open the popup if there has been a previous search, or else kick off
-        // a new search
+        uint16_t oldResult = 0;
+
+        // Open the popup if there has been a previous non-errored search, or
+        // else kick off a new search
         if (!mResults.IsEmpty() &&
+            NS_SUCCEEDED(mResults[0]->GetSearchResult(&oldResult)) &&
+            oldResult != nsIAutoCompleteResult::RESULT_FAILURE &&
             NS_SUCCEEDED(mResults[0]->GetSearchString(oldSearchString)) &&
             oldSearchString.Equals(mSearchString,
                                    nsCaseInsensitiveStringComparator())) {
