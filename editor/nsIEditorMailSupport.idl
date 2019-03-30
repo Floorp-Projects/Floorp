@@ -22,6 +22,7 @@ interface nsIEditorMailSupport : nsISupports
     * @param aInsertHTML  Insert as html?  (vs plaintext)
     * @return             The node which was inserted
     */
+  [can_run_script]
   Node insertAsCitedQuotation(in AString aQuotedText,
                               in AString aCitation,
                               in boolean aInsertHTML);

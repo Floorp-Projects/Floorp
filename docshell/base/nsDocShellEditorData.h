@@ -24,7 +24,6 @@ class nsDocShellEditorData {
 
   nsresult MakeEditable(bool aWaitForUriLoad);
   bool GetEditable();
-  nsresult CreateEditor();
   nsresult GetEditingSession(nsIEditingSession** aResult);
   mozilla::HTMLEditor* GetHTMLEditor() const { return mHTMLEditor; }
   nsresult SetHTMLEditor(mozilla::HTMLEditor* aHTMLEditor);
