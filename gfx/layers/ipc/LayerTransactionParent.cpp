@@ -724,10 +724,10 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvGetTransform(
   Point3D transformOrigin;
   for (const PropertyAnimationGroup& group :
        layer->GetPropertyAnimationGroups()) {
-    if (group.mAnimationData.type() != AnimationData::TTransformData) {
+    if (group.mAnimationData.isNothing()) {
       continue;
     }
-    const TransformData& data = group.mAnimationData.get_TransformData();
+    const TransformData& data = group.mAnimationData.ref();
     scale = data.appUnitsPerDevPixel();
     scaledOrigin = Point3D(
         NS_round(NSAppUnitsToFloatPixels(data.origin().x, scale)),

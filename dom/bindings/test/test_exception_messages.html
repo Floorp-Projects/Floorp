@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=882653
   // Each test is a string to eval, the expected exception message, and the
   // test description.
   var tests = [
-      [ 'document.documentElement.appendChild.call({}, new Image())',
+      [ "document.documentElement.appendChild.call({}, new Image())",
         "'appendChild' called on an object that does not implement interface Node.",
         "bogus method this object" ],
       [ 'Object.getOwnPropertyDescriptor(Document.prototype, "documentElement").get.call({})',
@@ -23,31 +23,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=882653
       [ 'Object.getOwnPropertyDescriptor(Element.prototype, "innerHTML").set.call({})',
         "'set innerHTML' called on an object that does not implement interface Element.",
         "bogus setter this object" ],
-      [ 'document.documentElement.appendChild(5)',
+      [ "document.documentElement.appendChild(5)",
         "Argument 1 of Node.appendChild is not an object.",
         "bogus interface argument" ],
-      [ 'document.documentElement.appendChild(null)',
+      [ "document.documentElement.appendChild(null)",
         "Argument 1 of Node.appendChild is not an object.",
         "null interface argument" ],
-      [ 'document.createTreeWalker(document).currentNode = 5',
+      [ "document.createTreeWalker(document).currentNode = 5",
         "Value being assigned to TreeWalker.currentNode is not an object.",
         "interface setter call" ],
-      [ 'document.documentElement.appendChild({})',
+      [ "document.documentElement.appendChild({})",
         "Argument 1 of Node.appendChild does not implement interface Node.",
         "wrong interface argument" ],
-      [ 'document.createTreeWalker(document).currentNode = {}',
+      [ "document.createTreeWalker(document).currentNode = {}",
         "Value being assigned to TreeWalker.currentNode does not implement interface Node.",
         "wrong interface setter call" ],
       [ 'document.createElement("canvas").getContext("2d").fill("bogus")',
         "Argument 1 of CanvasRenderingContext2D.fill 'bogus' is not a valid value for enumeration CanvasWindingRule.",
         "bogus enum value" ],
-      [ 'document.createTreeWalker(document, 0xFFFFFFFF, { acceptNode: 5 }).nextNode()',
+      [ "document.createTreeWalker(document, 0xFFFFFFFF, { acceptNode: 5 }).nextNode()",
         "Property 'acceptNode' is not callable.",
         "non-callable callback interface operation property" ],
-      [ '(new TextDecoder).decode(new Uint8Array(), 5)',
+      [ "(new TextDecoder).decode(new Uint8Array(), 5)",
         "Argument 2 of TextDecoder.decode can't be converted to a dictionary.",
         "primitive passed for a dictionary" ],
-      [ 'URL.createObjectURL(null)',
+      [ "URL.createObjectURL(null)",
         "Argument 1 is not valid for any of the 1-argument overloads of URL.createObjectURL.",
         "overload resolution failure" ],
       [ 'document.createElement("select").add({})',
@@ -55,12 +55,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=882653
         "invalid value passed for union" ],
       [ 'document.createElement("canvas").getContext("2d").createLinearGradient(0, 1, 0, 1).addColorStop(NaN, "")',
         "Argument 1 of CanvasGradient.addColorStop is not a finite floating-point value.",
-        "invalid float" ]
+        "invalid float" ],
   ];
 
   for (var i = 0; i < tests.length; ++i) {
-      msg = "Correct exception should be thrown for " + tests[i][2];
+      var msg = "Correct exception should be thrown for " + tests[i][2];
       try {
+          // eslint-disable-next-line no-eval
           eval(tests[i][0]);
           ok(false, msg);
       } catch (e) {

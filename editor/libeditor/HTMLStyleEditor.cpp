@@ -186,8 +186,8 @@ nsresult HTMLEditor::SetInlinePropertyInternal(nsAtom& aProperty,
       nsCOMPtr<nsINode> endNode = range->GetEndContainer();
       if (startNode && startNode == endNode && startNode->GetAsText()) {
         rv = SetInlinePropertyOnTextNode(
-            MOZ_KnownLive(*startNode->GetAsText()), range->StartOffset(),
-            range->EndOffset(), aProperty, aAttribute, aValue);
+            *startNode->GetAsText(), range->StartOffset(), range->EndOffset(),
+            aProperty, aAttribute, aValue);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -227,8 +227,8 @@ nsresult HTMLEditor::SetInlinePropertyInternal(nsAtom& aProperty,
       // subtree iterator works - it will not have reported it).
       if (startNode && startNode->GetAsText() && IsEditable(startNode)) {
         rv = SetInlinePropertyOnTextNode(
-            MOZ_KnownLive(*startNode->GetAsText()), range->StartOffset(),
-            startNode->Length(), aProperty, aAttribute, aValue);
+            *startNode->GetAsText(), range->StartOffset(), startNode->Length(),
+            aProperty, aAttribute, aValue);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -246,8 +246,8 @@ nsresult HTMLEditor::SetInlinePropertyInternal(nsAtom& aProperty,
       // separately handled (it does if it's a text node, due to how the
       // subtree iterator works - it will not have reported it).
       if (endNode && endNode->GetAsText() && IsEditable(endNode)) {
-        rv = SetInlinePropertyOnTextNode(MOZ_KnownLive(*endNode->GetAsText()),
-                                         0, range->EndOffset(), aProperty,
+        rv = SetInlinePropertyOnTextNode(*endNode->GetAsText(), 0,
+                                         range->EndOffset(), aProperty,
                                          aAttribute, aValue);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
@@ -388,7 +388,7 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
 
   if (aAttribute) {
     // Look for siblings that are correct type of node
-    nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(textNodeForTheRange);
+    nsIContent* sibling = GetPriorHTMLSibling(textNodeForTheRange);
     if (IsSimpleModifiableNode(sibling, &aProperty, aAttribute, &aValue)) {
       // Previous sib is already right kind of inline node; slide this over
       return MoveNodeToEndWithTransaction(*textNodeForTheRange, *sibling);
@@ -817,8 +817,7 @@ nsresult HTMLEditor::RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,
           return rv;
         }
       }
-      nsresult rv =
-          RemoveContainerWithTransaction(MOZ_KnownLive(*aNode.AsElement()));
+      nsresult rv = RemoveContainerWithTransaction(*aNode.AsElement());
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (aNode.IsElement()) {
       // otherwise we just want to eliminate the attribute
@@ -826,8 +825,7 @@ nsresult HTMLEditor::RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,
         // if this matching attribute is the ONLY one on the node,
         // then remove the whole node.  Otherwise just nix the attribute.
         if (IsOnlyAttribute(aNode.AsElement(), aAttribute)) {
-          nsresult rv =
-              RemoveContainerWithTransaction(MOZ_KnownLive(*aNode.AsElement()));
+          nsresult rv = RemoveContainerWithTransaction(*aNode.AsElement());
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -855,11 +853,10 @@ nsresult HTMLEditor::RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,
         // attribute
         // let's remove them
         mCSSEditUtils->RemoveCSSEquivalentToHTMLStyle(
-            MOZ_KnownLive(aNode.AsElement()), aProperty, aAttribute, nullptr,
-            false);
+            aNode.AsElement(), aProperty, aAttribute, nullptr, false);
         // remove the node if it is a span or font, if its style attribute is
         // empty or absent, and if it does not have a class nor an id
-        RemoveElementIfNoStyleOrIdOrClass(MOZ_KnownLive(*aNode.AsElement()));
+        RemoveElementIfNoStyleOrIdOrClass(*aNode.AsElement());
       }
     }
   }
@@ -873,7 +870,7 @@ nsresult HTMLEditor::RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,
        aNode.IsHTMLElement(nsGkAtoms::small)) &&
       aAttribute == nsGkAtoms::size) {
     // if we are setting font size, remove any nested bigs and smalls
-    return RemoveContainerWithTransaction(MOZ_KnownLive(*aNode.AsElement()));
+    return RemoveContainerWithTransaction(*aNode.AsElement());
   }
   return NS_OK;
 }
@@ -1406,7 +1403,7 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
             if (CSSEditUtils::IsCSSInvertible(*aProperty, aAttribute)) {
               NS_NAMED_LITERAL_STRING(value, "-moz-editor-invert-value");
               SetInlinePropertyOnTextNode(
-                  MOZ_KnownLive(*startNode->GetAsText()), range->StartOffset(),
+                  *startNode->GetAsText(), range->StartOffset(),
                   range->EndOffset(), *aProperty, aAttribute, value);
             }
           }
@@ -1553,9 +1550,9 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
     nsCOMPtr<nsINode> startNode = range->GetStartContainer();
     nsCOMPtr<nsINode> endNode = range->GetEndContainer();
     if (startNode == endNode && IsTextNode(startNode)) {
-      rv = RelativeFontChangeOnTextNode(
-          aDir, MOZ_KnownLive(*startNode->GetAsText()), range->StartOffset(),
-          range->EndOffset());
+      rv = RelativeFontChangeOnTextNode(aDir, *startNode->GetAsText(),
+                                        range->StartOffset(),
+                                        range->EndOffset());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1600,16 +1597,16 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
       // to be separately handled (they do if they are text nodes, due to how
       // the subtree iterator works - it will not have reported them).
       if (IsTextNode(startNode) && IsEditable(startNode)) {
-        rv = RelativeFontChangeOnTextNode(
-            aDir, MOZ_KnownLive(*startNode->GetAsText()), range->StartOffset(),
-            startNode->Length());
+        rv = RelativeFontChangeOnTextNode(aDir, *startNode->GetAsText(),
+                                          range->StartOffset(),
+                                          startNode->Length());
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       }
       if (IsTextNode(endNode) && IsEditable(endNode)) {
-        rv = RelativeFontChangeOnTextNode(
-            aDir, MOZ_KnownLive(*endNode->GetAsText()), 0, range->EndOffset());
+        rv = RelativeFontChangeOnTextNode(aDir, *endNode->GetAsText(), 0,
+                                          range->EndOffset());
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -1688,8 +1685,8 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   }
 
   // Else reparent the node inside font node with appropriate relative size
-  RefPtr<Element> newElement = InsertContainerWithTransaction(
-      *textNodeForTheRange, MOZ_KnownLive(*nodeType));
+  RefPtr<Element> newElement =
+      InsertContainerWithTransaction(*textNodeForTheRange, *nodeType);
   if (NS_WARN_IF(!newElement)) {
     return NS_ERROR_FAILURE;
   }
@@ -1768,7 +1765,7 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
     nsresult rv = RelativeFontChangeHelper(aSizeChange, aNode);
     NS_ENSURE_SUCCESS(rv, rv);
     // in that case, just remove this node and pull up the children
-    return RemoveContainerWithTransaction(MOZ_KnownLive(*aNode->AsElement()));
+    return RemoveContainerWithTransaction(*aNode->AsElement());
   }
 
   // can it be put inside a "big" or "small"?
@@ -1780,7 +1777,7 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
     // ok, chuck it in.
     // first look at siblings of aNode for matching bigs or smalls.
     // if we find one, move aNode into it.
-    nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(aNode);
+    nsIContent* sibling = GetPriorHTMLSibling(aNode);
     if (sibling && sibling->IsHTMLElement(atom)) {
       // previous sib is already right kind of inline node; slide this over into
       // it
@@ -1795,8 +1792,7 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
     }
 
     // else insert it above aNode
-    RefPtr<Element> newElement =
-        InsertContainerWithTransaction(*aNode, MOZ_KnownLive(*atom));
+    RefPtr<Element> newElement = InsertContainerWithTransaction(*aNode, *atom);
     if (NS_WARN_IF(!newElement)) {
       return NS_ERROR_FAILURE;
     }

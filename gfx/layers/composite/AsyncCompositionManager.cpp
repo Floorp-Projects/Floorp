@@ -593,7 +593,7 @@ static Matrix4x4 FrameTransformToTransformInDevice(
 
 static void ApplyAnimatedValue(
     Layer* aLayer, CompositorAnimationStorage* aStorage,
-    nsCSSPropertyID aProperty, const AnimationData& aAnimationData,
+    nsCSSPropertyID aProperty, const Maybe<TransformData>& aAnimationData,
     const nsTArray<RefPtr<RawServoAnimationValue>>& aValues) {
   MOZ_ASSERT(!aValues.IsEmpty());
 
@@ -629,7 +629,7 @@ static void ApplyAnimatedValue(
     case eCSSProperty_scale:
     case eCSSProperty_translate:
     case eCSSProperty_transform: {
-      const TransformData& transformData = aAnimationData.get_TransformData();
+      const TransformData& transformData = aAnimationData.ref();
 
       Matrix4x4 frameTransform =
           AnimationHelper::ServoAnimationValueToMatrix4x4(aValues,
@@ -719,7 +719,7 @@ static bool SampleAnimations(Layer* aLayer,
             MOZ_ASSERT(previousValue);
 #ifdef DEBUG
             const TransformData& transformData =
-                lastPropertyAnimationGroup.mAnimationData.get_TransformData();
+                lastPropertyAnimationGroup.mAnimationData.ref();
             Matrix4x4 frameTransform =
                 AnimationHelper::ServoAnimationValueToMatrix4x4(animationValues,
                                                                 transformData);

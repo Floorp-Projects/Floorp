@@ -21,7 +21,7 @@ function doTest() {
   var ctx = document.createElement("canvas").getContext("2d");
   try {
     ctx.drawImage({}, 0, 0);
-  } catch(e) {
+  } catch (e) {
     if (e instanceof TypeError) {
       gotTypeError = true;
     }

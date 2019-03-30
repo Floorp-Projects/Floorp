@@ -8,7 +8,7 @@
   'use strict';
 
   // Test is based on the following editor draft:
-  //   https://w3c.github.io/webrtc-pc/archives/20170605/webrtc.html
+  //   https://w3c.github.io/webrtc-identity/identity.html
 
   // The tests here interacts with the mock identity provider located at
   //   /.well-known/idp-proxy/mock-idp.js
@@ -54,7 +54,7 @@
       is, there is a current value for peerIdentity ), then this also establishes a
       target peer identity.
    */
-  promise_test(t => {
+  promise_test(async t => {
     const pc1 = new RTCPeerConnection();
     t.add_cleanup(() => pc1.close());
     const pc2 = new RTCPeerConnection();
@@ -70,51 +70,57 @@
       usernameHint: `alice@${idpDomain}`
     });
 
-    return pc1.createOffer()
-    .then(offer => pc2.setRemoteDescription(offer))
-    .then(() => pc2.peerIdentity)
-    .then(identityAssertion => {
-      const { idp, name } = identityAssertion;
-      assert_equals(idp, idpDomain, `Expect IdP domain to be ${idpDomain}`);
-      assert_equals(identityAssertion, `alice@${idpDomain}`,
-        `Expect validated identity from mock-idp.js to be same as specified in usernameHint`);
-    });
+    const peerIdentity = pc2.peerIdentity;
+    await pc2.setRemoteDescription(await pc1.createOffer());
+    const { idp, name } = await peerIdentity;
+    assert_equals(idp, idpHost, `Expect IdP to be ${idpHost}`);
+    assert_equals(name, `alice@${idpDomain}`,
+      `Expect validated identity from mock-idp.js to be same as specified in usernameHint`);
   }, 'setRemoteDescription() on offer with a=identity should establish peerIdentity');
 
   /*
-    4.3.2. setRemoteDescription
-      The target peer identity cannot be changed once set. Once set, if a different
-      value is provided, the user agent MUST reject the returned promise with a newly
-      created InvalidModificationError and abort this operation. The RTCPeerConnection
-      MUST be closed if the validated peer identity does not match the target peer
-      identity.
-   */
-  promise_test(t => {
+    If the peerIdentity configuration is applied to the RTCPeerConnection, this
+    establishes a target peer identity of the provided value. Alternatively, if the
+    RTCPeerConnection has previously authenticated the identity of the peer (that
+    is, the peerIdentity promise is resolved), then this also establishes a
+    target peer identity.
+
+    The target peer identity cannot be changed once set.
+  */
+  promise_test(async t => {
     const port = window.location.port;
     const [idpDomain] = getIdpDomains();
     const idpHost = hostString(idpDomain, port);
 
     const pc1 = new RTCPeerConnection();
     t.add_cleanup(() => pc1.close());
+    pc1.setIdentityProvider(idpHost, {
+      protocol: 'mock-idp.js',
+      usernameHint: `doesnt_matter@${idpDomain}`
+    });
+
     const pc2 = new RTCPeerConnection({
       peerIdentity: `bob@${idpDomain}`
     });
 
     t.add_cleanup(() => pc2.close());
 
-    pc1.setIdentityProvider(idpHost, {
+    pc2.setIdentityProvider(idpHost, {
       protocol: 'mock-idp.js',
       usernameHint: `alice@${idpDomain}`
     });
 
-    return pc1.createOffer()
-    .then(offer =>
-      promise_rejects(t, 'InvalidModificationError',
-        pc2.setRemoteDescription(offer)))
-    .then(() => {
-      assert_true(pc2.signalingState, 'closed',
-        'Expect peer connection to be closed after mismatch peer identity');
-    });
+    const offer = await pc1.createOffer();
+
+    try {
+      await pc2.setRemoteDescription(offer);
+      assert_true(false, "Previous line (sRD) should have thrown!");
+    } catch (e) {
+      assert_equals(e.name, 'InvalidModificationError');
+    }
+
+    assert_true(pc2.signalingState, 'closed',
+      'Expect peer connection to be closed after mismatch peer identity');
   }, 'setRemoteDescription() on offer with a=identity that resolve to value different from target peer identity should reject with InvalidModificationError');
 
   /*
@@ -154,7 +160,7 @@
 
     return pc1.createOffer()
     .then(offer => Promise.all([
-      promise_rejects(t, 'OperationError',
+      promise_rejects(t, 'IdpError',
         pc2.setRemoteDescription(offer)),
       promise_rejects(t, 'OperationError',
         peerIdentityPromise)
@@ -194,10 +200,10 @@
     .then(assertionResultStr => {
       const { idp, assertion } = parseAssertionResult(assertionResultStr);
 
-      assert_equals(idp.domain, idpDomain1,
-        'Sanity check domain of assertion is domain1');
+      assert_equals(idp.domain, idpHost1,
+        'Sanity check domain of assertion is host1');
 
-      assert_equals(assertion.options.usernameHint, `alice@${idpDomain2}`,
+      assert_equals(assertion.args.options.usernameHint, `alice@${idpDomain2}`,
         'Sanity check domain1 is going to validate a domain2 identity');
 
       return pc1.createOffer();

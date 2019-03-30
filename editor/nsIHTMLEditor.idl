@@ -42,7 +42,6 @@ interface nsIHTMLEditor : nsISupports
    *                    Example: aProperty="font", aAttribute="color",
    *                             aValue="0x00FFFF"
    */
-  [can_run_script]
   void setInlineProperty(in AString aProperty,
                          in AString aAttribute,
                          in AString aValue);
@@ -85,7 +84,6 @@ interface nsIHTMLEditor : nsISupports
    * removeAllInlineProperties() deletes all the inline properties from all
    * text in the current selection.
    */
-  [can_run_script]
   void removeAllInlineProperties();
 
 
@@ -102,7 +100,6 @@ interface nsIHTMLEditor : nsISupports
    * @param aAttribute  If aProperty is "font", aAttribute should be "face",
    *                    "size", "color" or "bgcolor".
    */
-  [can_run_script]
   void removeInlineProperty(in AString aProperty, in AString aAttribute);
 
   /**
@@ -110,7 +107,6 @@ interface nsIHTMLEditor : nsISupports
    *  All existing text is scanned for existing <FONT SIZE> attributes
    *  so they will be incremented instead of inserting new <FONT> tag
    */
-  [can_run_script]
   void increaseFontSize();
 
   /**
@@ -118,7 +114,6 @@ interface nsIHTMLEditor : nsISupports
    *  All existing text is scanned for existing <FONT SIZE> attributes
    *  so they will be decreased instead of inserting new <FONT> tag
    */
-  [can_run_script]
   void decreaseFontSize();
 
   /* ------------ HTML content methods -------------- */
@@ -136,7 +131,6 @@ interface nsIHTMLEditor : nsISupports
    *
    * @param aInputString   the string to be inserted
    */
-  [can_run_script]
   void insertHTML(in AString aInputString);
 
 
@@ -168,7 +162,6 @@ interface nsIHTMLEditor : nsISupports
     *     after the end of the selection for all element except
     *     Named Anchors, which insert before the selection
     */
-  [can_run_script]
   void insertElementAtSelection(in Element aElement,
                                 in boolean aDeleteSelection);
 
@@ -219,7 +212,6 @@ interface nsIHTMLEditor : nsISupports
    * @param aMixed     True if there is more than one format
    * @return           Name of block tag. "" is returned for none.
    */
-  [can_run_script]
   AString getParagraphState(out boolean aMixed);
 
   /**
@@ -253,7 +245,6 @@ interface nsIHTMLEditor : nsISupports
    * @param aUL       true if an "ul" list is selected.
    * @param aDL       true if a "dl" list is selected.
    */
-  [can_run_script]
   void getListState(out boolean aMixed, out boolean aOL, out boolean aUL,
                     out boolean aDL);
 
@@ -265,7 +256,6 @@ interface nsIHTMLEditor : nsISupports
    * @param aDT       true if "dt" list items are selected.
    * @param aDD       true if "dd" list items are selected.
    */
-  [can_run_script]
   void getListItemState(out boolean aMixed, out boolean aLI,
                         out boolean aDT, out boolean aDD);
 
@@ -276,7 +266,6 @@ interface nsIHTMLEditor : nsISupports
    * @param aAlign    enum value for first encountered alignment
    *                  (left/center/right)
    */
-  [can_run_script]
   void getAlignment(out boolean aMixed, out short aAlign);
 
   /**
@@ -367,7 +356,6 @@ interface nsIHTMLEditor : nsISupports
    *      (an "A" tag with the "name" attribute set)
    * @return          The new element created.
    */
-  [can_run_script]
   Element createElementWithDefaults(in AString aTagName);
 
   /**
@@ -375,7 +363,6 @@ interface nsIHTMLEditor : nsISupports
    *
    * @param aElement   An "A" element with a non-empty "href" attribute
    */
-  [can_run_script]
   void insertLinkAroundSelection(in Element aAnchorElement);
 
   /**

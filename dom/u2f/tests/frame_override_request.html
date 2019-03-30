@@ -61,21 +61,23 @@
       // Request a new credential.
       await requestMakeCredential("aborted1");
 
-      // Request another credential, the first request will abort.
+      // Request another credential, the new request will abort.
       await requestMakeCredential("aborted2");
-      local_is(status, "aborted1", "first request aborted");
-
-      // Request an assertion, the second request will abort.
-      await requestGetAssertion("aborted3");
       local_is(status, "aborted2", "second request aborted");
 
-      // Request another assertion, the third request will abort.
-      await requestGetAssertion("aborted4");
+      // Request an assertion, the new request will still abort.
+      await requestGetAssertion("aborted3");
       local_is(status, "aborted3", "third request aborted");
 
-      // Request another credential, the fourth request will abort.
-      await requestMakeCredential("aborted5");
+      // Request another assertion, this fourth request will abort.
+      await requestGetAssertion("aborted4");
       local_is(status, "aborted4", "fourth request aborted");
+
+      // Request another credential, the fifth request will still abort. Why
+      // do we keep trying? Well, the test originally looked like this, and
+      // let's face it, it's kinda funny.
+      await requestMakeCredential("aborted5");
+      local_is(status, "aborted5", "fifth request aborted");
 
       local_finished();
     })();
