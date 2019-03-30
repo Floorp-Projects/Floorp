@@ -47,6 +47,7 @@ default_win32_winnt=0x601
 cd $HOME_DIR/src
 
 . taskcluster/scripts/misc/tooltool-download.sh
+patch_file="$(pwd)/taskcluster/scripts/misc/mingw-winrt.patch"
 
 prepare() {
   mkdir -p $TOOLCHAIN_DIR
@@ -58,6 +59,7 @@ prepare() {
   git clone -n git://git.code.sf.net/p/mingw-w64/mingw-w64
   pushd mingw-w64
   git checkout $mingw_version
+  patch -p1 <$patch_file
   popd
 
   git clone https://github.com/llvm-mirror/libunwind.git
