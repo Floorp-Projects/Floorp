@@ -29,12 +29,14 @@ exports.ConsoleCommand = function(props) {
 exports.ConsoleMessage = function(props) {
   return Object.assign({
     id: null,
+    innerWindowID: null,
     allowRepeating: true,
     source: null,
     timeStamp: null,
     type: null,
     helperType: null,
     level: null,
+    category: null,
     messageText: null,
     parameters: null,
     repeatId: null,

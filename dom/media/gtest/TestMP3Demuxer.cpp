@@ -47,8 +47,19 @@ class MockMP3StreamMediaResource
 };
 
 struct MP3Resource {
+  enum class HeaderType { NONE, XING, VBRI };
+  struct Duration {
+    int64_t mMicroseconds;
+    float mTolerableRate;
+
+    Duration(int64_t aMicroseconds, float aTolerableRate)
+        : mMicroseconds(aMicroseconds), mTolerableRate(aTolerableRate) {}
+    int64_t Tolerance() const { return mTolerableRate * mMicroseconds; }
+  };
+
   const char* mFilePath;
   bool mIsVBR;
+  HeaderType mHeaderType;
   int64_t mFileSize;
   int32_t mMPEGLayer;
   int32_t mMPEGVersion;
@@ -57,8 +68,7 @@ struct MP3Resource {
   uint8_t mID3Flags;
   uint32_t mID3Size;
 
-  int64_t mDuration;
-  float mDurationError;
+  Maybe<Duration> mDuration;
   float mSeekError;
   int32_t mSampleRate;
   int32_t mSamplesPerFrame;
@@ -83,6 +93,7 @@ class MP3DemuxerTest : public ::testing::Test {
       MP3Resource res;
       res.mFilePath = "noise.mp3";
       res.mIsVBR = false;
+      res.mHeaderType = MP3Resource::HeaderType::NONE;
       res.mFileSize = 965257;
       res.mMPEGLayer = 3;
       res.mMPEGVersion = 1;
@@ -90,8 +101,7 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 2141;
-      res.mDuration = 30067000;
-      res.mDurationError = 0.001f;
+      res.mDuration = Some(MP3Resource::Duration{30067000, 0.001f});
       res.mSeekError = 0.02f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
@@ -106,8 +116,7 @@ class MP3DemuxerTest : public ::testing::Test {
       // No content length can be estimated for CBR stream resources.
       MP3Resource streamRes = res;
       streamRes.mFileSize = -1;
-      streamRes.mDuration = -1;
-      streamRes.mDurationError = 0.0f;
+      streamRes.mDuration = Nothing();
 
       res.mResource = new MockMP3MediaResource(res.mFilePath);
       res.mDemuxer = new MP3TrackDemuxer(res.mResource);
@@ -127,6 +136,7 @@ class MP3DemuxerTest : public ::testing::Test {
       // the artificially added extraneous header at 114532.
       res.mFilePath = "id3v2header.mp3";
       res.mIsVBR = false;
+      res.mHeaderType = MP3Resource::HeaderType::NONE;
       res.mFileSize = 191302;
       res.mMPEGLayer = 3;
       res.mMPEGVersion = 1;
@@ -134,8 +144,7 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 115304;
-      res.mDuration = 3166167;
-      res.mDurationError = 0.001f;
+      res.mDuration = Some(MP3Resource::Duration{3166167, 0.001f});
       res.mSeekError = 0.02f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
@@ -150,8 +159,7 @@ class MP3DemuxerTest : public ::testing::Test {
       // No content length can be estimated for CBR stream resources.
       MP3Resource streamRes = res;
       streamRes.mFileSize = -1;
-      streamRes.mDuration = -1;
-      streamRes.mDurationError = 0.0f;
+      streamRes.mDuration = Nothing();
 
       res.mResource = new MockMP3MediaResource(res.mFilePath);
       res.mDemuxer = new MP3TrackDemuxer(res.mResource);
@@ -166,6 +174,7 @@ class MP3DemuxerTest : public ::testing::Test {
       MP3Resource res;
       res.mFilePath = "noise_vbr.mp3";
       res.mIsVBR = true;
+      res.mHeaderType = MP3Resource::HeaderType::XING;
       res.mFileSize = 583679;
       res.mMPEGLayer = 3;
       res.mMPEGVersion = 1;
@@ -173,8 +182,7 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 2221;
-      res.mDuration = 30081000;
-      res.mDurationError = 0.005f;
+      res.mDuration = Some(MP3Resource::Duration{30081000, 0.005f});
       res.mSeekError = 0.02f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
@@ -204,6 +212,7 @@ class MP3DemuxerTest : public ::testing::Test {
       MP3Resource res;
       res.mFilePath = "small-shot.mp3";
       res.mIsVBR = true;
+      res.mHeaderType = MP3Resource::HeaderType::XING;
       res.mFileSize = 6825;
       res.mMPEGLayer = 3;
       res.mMPEGVersion = 1;
@@ -211,8 +220,7 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 24;
-      res.mDuration = 336686;
-      res.mDurationError = 0.01f;
+      res.mDuration = Some(MP3Resource::Duration{336686, 0.01f});
       res.mSeekError = 0.2f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
@@ -244,6 +252,7 @@ class MP3DemuxerTest : public ::testing::Test {
       // which should be identified as a false positive and skipped.
       res.mFilePath = "small-shot-false-positive.mp3";
       res.mIsVBR = true;
+      res.mHeaderType = MP3Resource::HeaderType::XING;
       res.mFileSize = 6845;
       res.mMPEGLayer = 3;
       res.mMPEGVersion = 1;
@@ -251,8 +260,7 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 24;
-      res.mDuration = 336686;
-      res.mDurationError = 0.01f;
+      res.mDuration = Some(MP3Resource::Duration{336686, 0.01f});
       res.mSeekError = 0.2f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
@@ -282,6 +290,7 @@ class MP3DemuxerTest : public ::testing::Test {
       MP3Resource res;
       res.mFilePath = "small-shot-partial-xing.mp3";
       res.mIsVBR = true;
+      res.mHeaderType = MP3Resource::HeaderType::XING;
       res.mFileSize = 6825;
       res.mMPEGLayer = 3;
       res.mMPEGVersion = 1;
@@ -289,8 +298,7 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 24;
-      res.mDuration = 336686;
-      res.mDurationError = 0.01f;
+      res.mDuration = Some(MP3Resource::Duration{336686, 0.01f});
       res.mSeekError = 0.2f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
@@ -304,6 +312,44 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mSyncOffsets.insert(res.mSyncOffsets.begin(), syncs, syncs + 13);
 
       // No content length can be estimated for CBR stream resources.
+      MP3Resource streamRes = res;
+      streamRes.mFileSize = -1;
+
+      res.mResource = new MockMP3MediaResource(res.mFilePath);
+      res.mDemuxer = new MP3TrackDemuxer(res.mResource);
+      mTargets.push_back(res);
+
+      streamRes.mResource = new MockMP3StreamMediaResource(streamRes.mFilePath);
+      streamRes.mDemuxer = new MP3TrackDemuxer(streamRes.mResource);
+      mTargets.push_back(streamRes);
+    }
+
+    {
+      MP3Resource res;
+      res.mFilePath = "test_vbri.mp3";
+      res.mIsVBR = true;
+      res.mHeaderType = MP3Resource::HeaderType::VBRI;
+      res.mFileSize = 16519;
+      res.mMPEGLayer = 3;
+      res.mMPEGVersion = 1;
+      res.mID3MajorVersion = 3;
+      res.mID3MinorVersion = 0;
+      res.mID3Flags = 0;
+      res.mID3Size = 4202;
+      res.mDuration = Some(MP3Resource::Duration{783660, 0.01f});
+      res.mSeekError = 0.02f;
+      res.mSampleRate = 44100;
+      res.mSamplesPerFrame = 1152;
+      res.mNumSamples = 29;
+      res.mNumTrailingFrames = 0;
+      res.mBitrate = 0;
+      res.mSlotSize = 1;
+      res.mPrivate = 0;
+      const int syncs[] = {4212, 4734, 5047, 5464, 5986, 6403};
+      res.mSyncOffsets.insert(res.mSyncOffsets.begin(), syncs, syncs + 6);
+
+      // VBR stream resources contain header info on total frames numbers, which
+      // is used to estimate the total duration.
       MP3Resource streamRes = res;
       streamRes.mFileSize = -1;
 
@@ -347,12 +393,15 @@ TEST_F(MP3DemuxerTest, VBRHeader) {
 
     const auto& vbr = target.mDemuxer->VBRInfo();
 
-    if (target.mIsVBR) {
+    if (target.mHeaderType == MP3Resource::HeaderType::XING) {
       EXPECT_EQ(FrameParser::VBRHeader::XING, vbr.Type());
       // TODO: find reference number which accounts for trailing headers.
       // EXPECT_EQ(target.mNumSamples / target.mSamplesPerFrame,
       // vbr.NumAudioFrames().value());
-    } else {
+    } else if (target.mHeaderType == MP3Resource::HeaderType::VBRI) {
+      EXPECT_TRUE(target.mIsVBR);
+      EXPECT_EQ(FrameParser::VBRHeader::VBRI, vbr.Type());
+    } else {  // MP3Resource::HeaderType::NONE
       EXPECT_EQ(FrameParser::VBRHeader::NONE, vbr.Type());
       EXPECT_FALSE(vbr.NumAudioFrames());
     }
@@ -428,10 +477,14 @@ TEST_F(MP3DemuxerTest, Duration) {
     EXPECT_EQ(target.mFileSize, target.mDemuxer->StreamLength());
 
     while (frameData) {
-      EXPECT_NEAR(target.mDuration,
-                  target.mDemuxer->Duration().ToMicroseconds(),
-                  target.mDurationError * target.mDuration);
-
+      if (target.mDuration) {
+        ASSERT_TRUE(target.mDemuxer->Duration());
+        EXPECT_NEAR(target.mDuration->mMicroseconds,
+                    target.mDemuxer->Duration()->ToMicroseconds(),
+                    target.mDuration->Tolerance());
+      } else {
+        EXPECT_FALSE(target.mDemuxer->Duration());
+      }
       frameData = target.mDemuxer->DemuxSample();
     }
   }
@@ -447,7 +500,8 @@ TEST_F(MP3DemuxerTest, Duration) {
     RefPtr<MediaRawData> frameData(target.mDemuxer->DemuxSample());
     ASSERT_TRUE(frameData);
 
-    const auto duration = target.mDemuxer->Duration();
+    ASSERT_TRUE(target.mDemuxer->Duration());
+    const auto duration = target.mDemuxer->Duration().value();
     const auto pos = duration + TimeUnit::FromMicroseconds(1e6);
 
     // Attempt to seek 1 second past the end of stream.

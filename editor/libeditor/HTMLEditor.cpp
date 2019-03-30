@@ -500,7 +500,8 @@ nsresult HTMLEditor::InitRules() {
     // instantiate the rules for the html editor
     mRules = new HTMLEditRules();
   }
-  return mRules->Init(this);
+  RefPtr<TextEditRules> rules(mRules);
+  return rules->Init(this);
 }
 
 NS_IMETHODIMP
@@ -1484,7 +1485,8 @@ HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString) {
   NS_ENSURE_TRUE(child && child->IsElement(), NS_ERROR_NULL_POINTER);
 
   // Copy all attributes from the div child to current body element
-  CloneAttributesWithTransaction(*rootElement, *child->AsElement());
+  CloneAttributesWithTransaction(*rootElement,
+                                 MOZ_KnownLive(*child->AsElement()));
 
   // place selection at first editable content
   return MaybeCollapseSelectionAtFirstEditableNode(false);
@@ -2945,7 +2947,7 @@ HTMLEditor::InsertLinkAroundSelection(Element* aAnchorElement) {
 
       attribute->GetValue(value);
 
-      rv = SetInlinePropertyInternal(*nsGkAtoms::a, name, value);
+      rv = SetInlinePropertyInternal(*nsGkAtoms::a, MOZ_KnownLive(name), value);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -4572,8 +4574,8 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
     }
     // Otherwise, inserts new parent inline container to the previous inserted
     // inline container.
-    lastClonedElement =
-        InsertContainerWithTransaction(*lastClonedElement, *tagName);
+    lastClonedElement = InsertContainerWithTransaction(*lastClonedElement,
+                                                       MOZ_KnownLive(*tagName));
     if (NS_WARN_IF(!lastClonedElement)) {
       return NS_ERROR_FAILURE;
     }

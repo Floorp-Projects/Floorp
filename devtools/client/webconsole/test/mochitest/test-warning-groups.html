@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Warning groups webconsole test page</title>
+  </head>
+  <body>
+    <p>Warning groups webconsole test page</p>
+    <script>
+      "use strict";
+
+      /* exported loadImage, loadIframe */
+      function loadImage(src) {
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = (new URL(src)).search;
+        img.title = src;
+        document.body.appendChild(img);
+      }
+
+      function loadIframe(src) {
+        const iframe = document.createElement("iframe");
+        iframe.src = src;
+        document.body.appendChild(iframe);
+      }
+    </script>
+  </body>
+</html>

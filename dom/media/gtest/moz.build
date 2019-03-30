@@ -79,6 +79,7 @@ TEST_HARNESS_FILES.gtest += [
     'test_case_1224361.vp8.ivf',
     'test_case_1224363.vp8.ivf',
     'test_case_1224369.vp8.ivf',
+    'test_vbri.mp3',
 ]
 
 TEST_DIRS += [
