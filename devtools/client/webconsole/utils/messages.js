@@ -430,10 +430,22 @@ function isPacketPrivate(packet) {
   );
 }
 
+/**
+ * Returns true if the message is a warningGroup message (i.e. the "Header").
+ * @param {ConsoleMessage} message
+ * @returns {Boolean}
+ */
+function isWarningGroup(message) {
+  return message.type === MESSAGE_TYPE.TRACKING_PROTECTION_GROUP
+   || message.type === MESSAGE_TYPE.CORS_GROUP
+   || message.type === MESSAGE_TYPE.CSP_GROUP;
+}
+
 module.exports = {
   getInitialMessageCountForViewport,
   isGroupType,
   isPacketPrivate,
+  isWarningGroup,
   l10n,
   prepareMessage,
   // Export for use in testing.
