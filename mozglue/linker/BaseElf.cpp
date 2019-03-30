@@ -9,7 +9,6 @@
 #include "mozilla/RefPtr.h"
 
 using namespace Elf;
-using namespace mozilla;
 
 unsigned long BaseElf::Hash(const char *symbol) {
   const unsigned char *sym = reinterpret_cast<const unsigned char *>(symbol);

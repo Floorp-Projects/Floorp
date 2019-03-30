@@ -280,3 +280,28 @@ add_task(async function testIntersect() {
     "intersect returns undefined if only one operand is a list",
   );
 });
+
+add_task(async function test_regExpMatch() {
+  let val;
+
+  val = await FilterExpressions.eval('"foobar"|regExpMatch("^foo(.+?)$")');
+  Assert.deepEqual(
+    new Set(val),
+    new Set(["foobar", "bar"]),
+    "regExpMatch returns the matches in an array",
+  );
+
+  val = await FilterExpressions.eval('"FOObar"|regExpMatch("^foo(.+?)$", "i")');
+  Assert.deepEqual(
+    new Set(val),
+    new Set(["FOObar", "bar"]),
+    "regExpMatch accepts flags for matching",
+  );
+
+  val = await FilterExpressions.eval('"F00bar"|regExpMatch("^foo(.+?)$", "i")');
+  Assert.equal(
+    val,
+    null,
+    "regExpMatch returns null if there are no matches",
+  );
+});

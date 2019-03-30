@@ -7,6 +7,8 @@
 #ifndef nsString_h___
 #define nsString_h___
 
+#include <ostream>
+
 #include "mozilla/Attributes.h"
 
 #include "nsStringFwd.h"
@@ -121,6 +123,18 @@ class NS_ConvertUTF8toUTF16 : public nsAutoString {
   // NOT TO BE IMPLEMENTED
   NS_ConvertUTF8toUTF16(char16_t) = delete;
 };
+
+// MOZ_DBG support
+
+inline std::ostream& operator<<(std::ostream& aOut, const nsACString& aString) {
+  aOut << '"';
+  aOut.write(aString.Data(), aString.Length());
+  return aOut << '"';
+}
+
+inline std::ostream& operator<<(std::ostream& aOut, const nsAString& aString) {
+  return aOut << NS_ConvertUTF16toUTF8(aString);
+}
 
 // the following are included/declared for backwards compatibility
 #include "nsDependentString.h"
