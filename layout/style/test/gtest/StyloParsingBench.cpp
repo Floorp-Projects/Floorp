@@ -11,7 +11,9 @@
 #include "ServoBindings.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/NullPrincipalURI.h"
+#include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/net/ReferrerPolicy.h"
+#include "nsCSSValue.h"
 
 using namespace mozilla;
 using namespace mozilla::css;

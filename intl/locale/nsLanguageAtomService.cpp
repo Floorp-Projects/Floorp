@@ -7,11 +7,13 @@
 #include "nsUConvPropertySearch.h"
 #include "nsUnicharUtils.h"
 #include "nsAtom.h"
+#include "nsGkAtoms.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/intl/OSPreferences.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/ServoUtils.h"
 
 using namespace mozilla;
 using mozilla::intl::OSPreferences;

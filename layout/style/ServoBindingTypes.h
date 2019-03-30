@@ -105,7 +105,6 @@
 #include "mozilla/gfx/Types.h"
 #include "nsCSSPropertyID.h"
 #include "nsStyleAutoArray.h"
-#include "nsStyleConsts.h"
 #include "nsTArray.h"
 
 // Forward declarations.
@@ -159,33 +158,18 @@ class Element;
 SERVO_ARC_TYPE(ComputedStyle, mozilla::ComputedStyle)
 #undef SERVO_ARC_TYPE
 
-// See the comment in ServoBindings.h about the same.
-#pragma GCC diagnostic push
-#ifdef __clang__
-#  pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
-#endif
-
-#define SERVO_BOXED_TYPE(name_, type_)                              \
-  struct type_;                                                     \
-  extern "C" void Servo_##name_##_Drop(mozilla::StyleOwned<type_>); \
-  namespace mozilla {                                               \
-  template <>                                                       \
-  class DefaultDelete<type_> {                                      \
-   public:                                                          \
-    void operator()(type_* aPtr) const {                            \
-      Servo_##name_##_Drop(mozilla::StyleOwned<type_>{aPtr});       \
-    }                                                               \
-  };                                                                \
+#define SERVO_BOXED_TYPE(name_, type_)                                 \
+  struct type_;                                                        \
+  extern "C" void Servo_##name_##_Drop(type_*);                        \
+  namespace mozilla {                                                  \
+  template <>                                                          \
+  class DefaultDelete<type_> {                                         \
+   public:                                                             \
+    void operator()(type_* aPtr) const { Servo_##name_##_Drop(aPtr); } \
+  };                                                                   \
   }
-SERVO_BOXED_TYPE(StyleSet, RawServoStyleSet)
-SERVO_BOXED_TYPE(AuthorStyles, RawServoAuthorStyles)
-SERVO_BOXED_TYPE(SelectorList, RawServoSelectorList)
-SERVO_BOXED_TYPE(SharedMemoryBuilder, RawServoSharedMemoryBuilder)
-SERVO_BOXED_TYPE(SourceSizeList, RawServoSourceSizeList)
-SERVO_BOXED_TYPE(UseCounters, StyleUseCounters)
+#include "mozilla/ServoBoxedTypeList.h"
 #undef SERVO_BOXED_TYPE
-
-#pragma GCC diagnostic pop
 
 // Other special cases.
 

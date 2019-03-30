@@ -7,11 +7,18 @@ import buildconfig
 import mozpack.path as mozpath
 import os
 import subprocess
+import pytoml
+
+# Try to read the package name or otherwise assume same name as the crate path.
+def _get_crate_name(crate_path):
+    try:
+        with open(mozpath.join(crate_path, "Cargo.toml")) as f:
+          return pytoml.load(f)["package"]["name"]
+    except:
+        return mozpath.basename(crate_path)
 
 CARGO_LOCK = mozpath.join(buildconfig.topsrcdir, "Cargo.lock")
 
-# cbindgen_crate_path needs to match the crate name
-# EG: /xpcom/rust/gkrust_utils is the path for the "gkrust_utils" crate
 def generate(output, cbindgen_crate_path, *in_tree_dependencies):
     env = os.environ.copy()
     env['CARGO'] = str(buildconfig.substs['CARGO'])
@@ -22,7 +29,7 @@ def generate(output, cbindgen_crate_path, *in_tree_dependencies):
         "--lockfile",
         CARGO_LOCK,
         "--crate",
-        mozpath.basename(cbindgen_crate_path),
+        _get_crate_name(cbindgen_crate_path)
     ], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     stdout, stderr = p.communicate()

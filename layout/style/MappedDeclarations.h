@@ -179,7 +179,7 @@ class MappedDeclarations final {
 
   // Set font-family to a string
   void SetFontFamily(const nsString& aValue) {
-    Servo_DeclarationBlock_SetFontFamily(mDecl, aValue);
+    Servo_DeclarationBlock_SetFontFamily(mDecl, &aValue);
   }
 
   // Add a quirks-mode override to the decoration color of elements nested in
