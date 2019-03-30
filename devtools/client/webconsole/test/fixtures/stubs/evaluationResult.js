@@ -15,12 +15,14 @@ const stubPreparedMessages = new Map();
 const stubPackets = new Map();
 stubPreparedMessages.set(`new Date(0)`, new ConsoleMessage({
   "id": "1",
+  "innerWindowID": null,
   "allowRepeating": true,
   "source": "javascript",
   "timeStamp": 1479159921364,
   "type": "result",
   "helperType": null,
   "level": "log",
+  "category": null,
   "parameters": [
     {
       "type": "object",
@@ -47,12 +49,14 @@ stubPreparedMessages.set(`new Date(0)`, new ConsoleMessage({
 
 stubPreparedMessages.set(`asdf()`, new ConsoleMessage({
   "id": "1",
+  "innerWindowID": null,
   "allowRepeating": true,
   "source": "javascript",
   "timeStamp": 1479159921377,
   "type": "result",
   "helperType": null,
   "level": "error",
+  "category": null,
   "messageText": "ReferenceError: asdf is not defined",
   "parameters": [
     {
@@ -77,12 +81,14 @@ stubPreparedMessages.set(`asdf()`, new ConsoleMessage({
 
 stubPreparedMessages.set(`1 + @`, new ConsoleMessage({
   "id": "1",
+  "innerWindowID": null,
   "allowRepeating": true,
   "source": "javascript",
   "timeStamp": 1479159921399,
   "type": "result",
   "helperType": null,
   "level": "error",
+  "category": null,
   "messageText": "SyntaxError: illegal character",
   "parameters": [
     {
@@ -107,12 +113,14 @@ stubPreparedMessages.set(`1 + @`, new ConsoleMessage({
 
 stubPreparedMessages.set(`inspect({a: 1})`, new ConsoleMessage({
   "id": "1",
+  "innerWindowID": null,
   "allowRepeating": true,
   "source": "javascript",
   "timeStamp": 1499776070751,
   "type": "result",
   "helperType": "inspectObject",
   "level": "log",
+  "category": null,
   "parameters": [
     {
       "type": "object",
@@ -151,12 +159,14 @@ stubPreparedMessages.set(`inspect({a: 1})`, new ConsoleMessage({
 
 stubPreparedMessages.set(`cd(document)`, new ConsoleMessage({
   "id": "1",
+  "innerWindowID": null,
   "allowRepeating": true,
   "source": "javascript",
   "timeStamp": 1510650094657,
   "type": "result",
   "helperType": "error",
   "level": "error",
+  "category": null,
   "messageText": "Cannot cd() to the given window. Invalid argument.",
   "parameters": [
     {
@@ -175,12 +185,14 @@ stubPreparedMessages.set(`cd(document)`, new ConsoleMessage({
 
 stubPreparedMessages.set(`undefined`, new ConsoleMessage({
   "id": "1",
+  "innerWindowID": null,
   "allowRepeating": true,
   "source": "javascript",
   "timeStamp": 1518606917356,
   "type": "result",
   "helperType": null,
   "level": "log",
+  "category": null,
   "parameters": [
     {
       "type": "undefined"
@@ -198,12 +210,14 @@ stubPreparedMessages.set(`undefined`, new ConsoleMessage({
 
 stubPreparedMessages.set(`longString message Error`, new ConsoleMessage({
   "id": "1",
+  "innerWindowID": null,
   "allowRepeating": true,
   "source": "javascript",
   "timeStamp": 1493108241073,
   "type": "result",
   "helperType": null,
   "level": "error",
+  "category": null,
   "messageText": {
     "type": "longString",
     "initial": "Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon",
@@ -227,12 +241,14 @@ stubPreparedMessages.set(`longString message Error`, new ConsoleMessage({
 
 stubPreparedMessages.set(`eval throw ""`, new ConsoleMessage({
   "id": "1",
+  "innerWindowID": null,
   "allowRepeating": true,
   "source": "javascript",
   "timeStamp": 1517990289517,
   "type": "result",
   "helperType": null,
   "level": "error",
+  "category": null,
   "messageText": "Error",
   "parameters": [
     {
@@ -251,12 +267,14 @@ stubPreparedMessages.set(`eval throw ""`, new ConsoleMessage({
 
 stubPreparedMessages.set(`eval throw "tomato"`, new ConsoleMessage({
   "id": "1",
+  "innerWindowID": null,
   "allowRepeating": true,
   "source": "javascript",
   "timeStamp": 1517990289520,
   "type": "result",
   "helperType": null,
   "level": "error",
+  "category": null,
   "messageText": "Error: tomato",
   "parameters": [
     {

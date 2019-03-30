@@ -245,9 +245,11 @@ function transformPageErrorPacket(packet) {
   const messageSource = matchesCSS ? MESSAGE_SOURCE.CSS
                                   : MESSAGE_SOURCE.JAVASCRIPT;
   return new ConsoleMessage({
+    innerWindowID: pageError.innerWindowID,
     source: messageSource,
     type: MESSAGE_TYPE.LOG,
     level,
+    category: pageError.category,
     messageText: pageError.errorMessage,
     stacktrace: pageError.stacktrace ? pageError.stacktrace : null,
     frame,
