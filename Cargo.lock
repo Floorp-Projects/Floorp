@@ -2940,6 +2940,9 @@ dependencies = [
 [[package]]
 name = "to_shmem"
 version = "0.0.1"
+dependencies = [
+ "cssparser 0.25.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "to_shmem_derive"
