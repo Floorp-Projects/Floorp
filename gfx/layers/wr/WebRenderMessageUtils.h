@@ -111,9 +111,9 @@ struct ParamTraits<mozilla::wr::LayoutPoint>
 
 template <>
 struct ParamTraits<mozilla::wr::RenderRoot>
-    : public ContiguousEnumSerializerInclusive<mozilla::wr::RenderRoot,
-                                               mozilla::wr::RenderRoot::Default,
-                                               mozilla::wr::kHighestRenderRoot> {};
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::wr::RenderRoot, mozilla::wr::RenderRoot::Default,
+          mozilla::wr::kHighestRenderRoot> {};
 
 template <>
 struct ParamTraits<mozilla::wr::ImageRendering>

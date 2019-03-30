@@ -362,8 +362,8 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
   if (gfxPrefs::APZTestLoggingEnabled()) {
     MutexAutoLock lock(mTestDataLock);
     UniquePtr<APZTestData> ptr = MakeUnique<APZTestData>();
-    auto result =
-        mTestData.insert(std::make_pair(aOriginatingWrRootId.mLayersId, std::move(ptr)));
+    auto result = mTestData.insert(
+        std::make_pair(aOriginatingWrRootId.mLayersId, std::move(ptr)));
     testData = result.first->second.get();
     testData->StartNewPaint(aPaintSequenceNumber);
   }
@@ -609,7 +609,8 @@ void APZCTreeManager::UpdateHitTestingTree(LayersId aRootLayerTreeId,
 
   LayerMetricsWrapper root(aRoot);
   UpdateHitTestingTreeImpl(aRootLayerTreeId, root, aIsFirstPaint,
-                           WRRootId::NonWebRender(aOriginatingLayersId), aPaintSequenceNumber);
+                           WRRootId::NonWebRender(aOriginatingLayersId),
+                           aPaintSequenceNumber);
 }
 
 void APZCTreeManager::UpdateHitTestingTree(
@@ -1046,8 +1047,9 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
         "Using APZC %p for layer %p with identifiers %" PRIx64 " %" PRId64 "\n",
         apzc, aLayer.GetLayer(), uint64_t(aLayersId), aMetrics.GetScrollId());
 
-    apzc->NotifyLayersUpdated(aLayer.Metadata(), aState.mIsFirstPaint,
-                              WRRootId(aLayersId, aRenderRoot) == aState.mOriginatingWrRootId);
+    apzc->NotifyLayersUpdated(
+        aLayer.Metadata(), aState.mIsFirstPaint,
+        WRRootId(aLayersId, aRenderRoot) == aState.mOriginatingWrRootId);
 
     // Since this is the first time we are encountering an APZC with this guid,
     // the node holding it must be the primary holder. It may be newly-created

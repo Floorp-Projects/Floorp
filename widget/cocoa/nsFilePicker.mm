@@ -190,34 +190,26 @@ nsresult nsFilePicker::Show(int16_t* retval) {
 
   int16_t userClicksOK = returnCancel;
 
-  // Random questions from DHH:
-  //
-  // Why do we pass mTitle, mDefault to the functions?  Can GetLocalFile. PutLocalFile,
-  // and GetLocalFolder get called someplace else?  It generates a bunch of warnings
-  // as it is right now.
-  //
-  // I think we could easily combine GetLocalFile and GetLocalFolder together, just
-  // setting panel pick options based on mMode.  I didn't do it here b/c I wanted to
-  // make this look as much like Carbon nsFilePicker as possible.
-
   mFiles.Clear();
   nsCOMPtr<nsIFile> theFile;
 
+  // Note that GetLocalFolder shares a lot of code with GetLocalFiles.
+  // Could combine the functions and just pass the mode in.
   switch (mMode) {
     case modeOpen:
-      userClicksOK = GetLocalFiles(mTitle, false, mFiles);
+      userClicksOK = GetLocalFiles(false, mFiles);
       break;
 
     case modeOpenMultiple:
-      userClicksOK = GetLocalFiles(mTitle, true, mFiles);
+      userClicksOK = GetLocalFiles(true, mFiles);
       break;
 
     case modeSave:
-      userClicksOK = PutLocalFile(mTitle, mDefault, getter_AddRefs(theFile));
+      userClicksOK = PutLocalFile(getter_AddRefs(theFile));
       break;
 
     case modeGetFolder:
-      userClicksOK = GetLocalFolder(mTitle, getter_AddRefs(theFile));
+      userClicksOK = GetLocalFolder(getter_AddRefs(theFile));
       break;
 
     default:
@@ -266,8 +258,7 @@ static void UpdatePanelFileTypes(NSOpenPanel* aPanel, NSArray* aFilters) {
 @end
 
 // Use OpenPanel to do a GetFile. Returns |returnOK| if the user presses OK in the dialog.
-int16_t nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple,
-                                    nsCOMArray<nsIFile>& outFiles) {
+int16_t nsFilePicker::GetLocalFiles(bool inAllowMultiple, nsCOMArray<nsIFile>& outFiles) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   int16_t retVal = (int16_t)returnCancel;
@@ -276,12 +267,12 @@ int16_t nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultipl
   SetShowHiddenFileState(thePanel);
 
   // Set the options for how the get file dialog will appear
-  SetDialogTitle(inTitle, thePanel);
+  SetDialogTitle(mTitle, thePanel);
   [thePanel setAllowsMultipleSelection:inAllowMultiple];
   [thePanel setCanSelectHiddenExtension:YES];
   [thePanel setCanChooseDirectories:NO];
   [thePanel setCanChooseFiles:YES];
-  [thePanel setResolvesAliases:YES];  // this is default - probably doesn't need to be set
+  [thePanel setResolvesAliases:YES];
 
   // Get filters
   // filters may be null, if we should allow all file types.
@@ -366,7 +357,7 @@ int16_t nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultipl
 }
 
 // Use OpenPanel to do a GetFolder. Returns |returnOK| if the user presses OK in the dialog.
-int16_t nsFilePicker::GetLocalFolder(const nsString& inTitle, nsIFile** outFile) {
+int16_t nsFilePicker::GetLocalFolder(nsIFile** outFile) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
   NS_ASSERTION(outFile, "this protected member function expects a null initialized out pointer");
 
@@ -376,12 +367,12 @@ int16_t nsFilePicker::GetLocalFolder(const nsString& inTitle, nsIFile** outFile)
   SetShowHiddenFileState(thePanel);
 
   // Set the options for how the get file dialog will appear
-  SetDialogTitle(inTitle, thePanel);
-  [thePanel setAllowsMultipleSelection:NO];  // this is default -probably doesn't need to be set
+  SetDialogTitle(mTitle, thePanel);
+  [thePanel setAllowsMultipleSelection:NO];
   [thePanel setCanSelectHiddenExtension:YES];
   [thePanel setCanChooseDirectories:YES];
   [thePanel setCanChooseFiles:NO];
-  [thePanel setResolvesAliases:YES];  // this is default - probably doesn't need to be set
+  [thePanel setResolvesAliases:YES];
   [thePanel setCanCreateDirectories:YES];
 
   // packages != folders
@@ -417,8 +408,7 @@ int16_t nsFilePicker::GetLocalFolder(const nsString& inTitle, nsIFile** outFile)
 }
 
 // Returns |returnOK| if the user presses OK in the dialog.
-int16_t nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultName,
-                                   nsIFile** outFile) {
+int16_t nsFilePicker::PutLocalFile(nsIFile** outFile) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
   NS_ASSERTION(outFile, "this protected member function expects a null initialized out pointer");
 
@@ -427,15 +417,15 @@ int16_t nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDe
 
   SetShowHiddenFileState(thePanel);
 
-  SetDialogTitle(inTitle, thePanel);
+  SetDialogTitle(mTitle, thePanel);
 
   // set up accessory view for file format options
   NSView* accessoryView = GetAccessoryView();
   [thePanel setAccessoryView:accessoryView];
 
   // set up default file name
-  NSString* defaultFilename = [NSString stringWithCharacters:(const unichar*)inDefaultName.get()
-                                                      length:inDefaultName.Length()];
+  NSString* defaultFilename = [NSString stringWithCharacters:(const unichar*)mDefaultFilename.get()
+                                                      length:mDefaultFilename.Length()];
 
   // Set up the allowed type. This prevents the extension from being selected.
   NSString* extension = defaultFilename.pathExtension;
@@ -609,7 +599,7 @@ NS_IMETHODIMP nsFilePicker::GetFiles(nsISimpleEnumerator** aFiles) {
 }
 
 NS_IMETHODIMP nsFilePicker::SetDefaultString(const nsAString& aString) {
-  mDefault = aString;
+  mDefaultFilename = aString;
   return NS_OK;
 }
 

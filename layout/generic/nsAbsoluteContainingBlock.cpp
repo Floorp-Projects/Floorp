@@ -49,6 +49,9 @@ void nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame* aDelegatingFrame,
   MOZ_ASSERT(mChildListID == aListID, "unexpected child list name");
 #ifdef DEBUG
   nsFrame::VerifyDirtyBitSet(aChildList);
+  for (nsIFrame* f : aChildList) {
+    MOZ_ASSERT(f->GetParent() == aDelegatingFrame, "Unexpected parent");
+  }
 #endif
   mAbsoluteFrames.SetFrames(aChildList);
 }

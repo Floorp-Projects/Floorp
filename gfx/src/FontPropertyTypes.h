@@ -97,8 +97,7 @@ class FontPropertyValue {
       : mValue(std::round(aValue * kScale)) {
     MOZ_ASSERT(aValue >= kMin && aValue <= kMax);
   }
-  explicit constexpr FontPropertyValue(int aValue)
-      : mValue(aValue * kScale) {
+  explicit constexpr FontPropertyValue(int aValue) : mValue(aValue * kScale) {
     MOZ_ASSERT(aValue >= Min && aValue <= Max);
   }
 
