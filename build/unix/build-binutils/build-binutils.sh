@@ -63,13 +63,30 @@ EOF
 
 cd ..
 
+TARGETS="aarch64-unknown-linux-gnu"
+
+# Build target-specific GNU as ; build them first so that the few documentation
+# files they install are overwritten by the full binutils build.
+
+for target in $TARGETS; do
+
+  mkdir binutils-$target
+  cd binutils-$target
+
+  ../binutils-$binutils_version/configure --prefix /tools/binutils/ --disable-gold --disable-ld --disable-binutils --disable-gprof --disable-nls --target=$target || exit 1
+  make $make_flags || exit 1
+  make install $make_flags DESTDIR=$root_dir || exit 1
+
+  cd ..
+done
+
 # Build binutils
 mkdir binutils-objdir
 cd binutils-objdir
 
 # --enable-targets builds extra target support in ld.
 # Enabling aarch64 support brings in arm support, so we don't need to specify that too.
-../binutils-$binutils_version/configure --prefix /tools/binutils/ --enable-gold --enable-plugins --disable-nls --enable-targets=aarch64-unknown-linux-gnu || exit 1
+../binutils-$binutils_version/configure --prefix /tools/binutils/ --enable-gold --enable-plugins --disable-nls --enable-targets="$TARGETS" || exit 1
 make $make_flags || exit 1
 make install $make_flags DESTDIR=$root_dir || exit 1
 
