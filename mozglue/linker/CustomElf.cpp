@@ -15,7 +15,6 @@
 #include "mozilla/IntegerPrintfMacros.h"
 
 using namespace Elf;
-using namespace mozilla;
 
 /* TODO: Fill ElfLoader::Singleton.lastError on errors. */
 
