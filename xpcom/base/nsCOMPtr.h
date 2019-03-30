@@ -1476,4 +1476,11 @@ inline already_AddRefed<T> do_AddRef(const nsCOMPtr<T>& aObj) {
   return ref.forget();
 }
 
+// MOZ_DBG support
+
+template <class T>
+std::ostream& operator<<(std::ostream& aOut, const nsCOMPtr<T>& aObj) {
+  return aOut << aObj.get();
+}
+
 #endif  // !defined(nsCOMPtr_h___)

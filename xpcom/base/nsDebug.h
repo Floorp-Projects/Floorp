@@ -12,6 +12,7 @@
 
 #include "nsXPCOM.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/DbgMacro.h"
 #include "mozilla/Likely.h"
 #include <stdarg.h>
 

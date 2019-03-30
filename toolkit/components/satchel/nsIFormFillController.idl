@@ -6,8 +6,8 @@
 
 interface nsIDocShell;
 interface nsIAutoCompletePopup;
-webidl Element;
 
+webidl Element;
 webidl HTMLInputElement;
 
 /*
@@ -26,6 +26,12 @@ interface nsIFormFillController : nsISupports
    * The input element the form fill controller is currently bound to.
    */
   readonly attribute HTMLInputElement focusedInput;
+
+  /*
+   * Whether the autocomplete popup on a password field was automatically opened
+   * by the form fill controller (upon focus).
+   */
+  readonly attribute boolean passwordPopupAutomaticallyOpened;
 
   /*
    * Start controlling form fill behavior for the given browser

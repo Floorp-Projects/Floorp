@@ -287,6 +287,9 @@ struct ScopedPackState : public ScopedGLWrapper<ScopedPackState> {
  public:
   explicit ScopedPackState(GLContext* gl);
 
+  // Returns whether the stride was handled successfully.
+  bool SetForWidthAndStrideRGBA(GLsizei aWidth, GLsizei aStride);
+
  protected:
   void UnwrapImpl();
 };

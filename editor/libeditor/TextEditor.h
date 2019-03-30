@@ -87,6 +87,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   virtual bool CanPasteTransferable(nsITransferable* aTransferable);
 
   // Overrides of EditorBase
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult Init(Document& aDoc, Element* aRoot,
                         nsISelectionController* aSelCon, uint32_t aFlags,
                         const nsAString& aValue) override;
@@ -266,9 +267,11 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    ****************************************************************************/
 
   // Overrides of EditorBase
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult RemoveAttributeOrEquivalent(
       Element* aElement, nsAtom* aAttribute,
       bool aSuppressTransaction) override;
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult SetAttributeOrEquivalent(Element* aElement,
                                             nsAtom* aAttribute,
                                             const nsAString& aValue,
@@ -363,9 +366,11 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
+  MOZ_CAN_RUN_SCRIPT
   virtual void OnEndHandlingTopLevelEditSubAction() override;
 
   void BeginEditorInit();
+  MOZ_CAN_RUN_SCRIPT
   nsresult EndEditorInit();
 
  protected:  // Shouldn't be used by friend classes
@@ -437,6 +442,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    */
   bool IsSafeToInsertData(Document* aSourceDoc);
 
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult InitRules();
 
   /**
