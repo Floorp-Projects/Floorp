@@ -1329,22 +1329,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                          FrameConstructionItemList& aItems,
                                          nsIFrame* aParentFrame);
 
-  /**
-   * Function to adjust aParentFrame to deal with captions.
-   * @param aParentFrame the frame we think should be the parent.  This will be
-   *        adjusted to point to the right parent frame.
-   * @param aFCData the FrameConstructionData that would be used for frame
-   *        construction.
-   * @param aComputedStyle the style for aChildContent
-   */
-  // XXXbz this function should really go away once we rework pseudo-frame
-  // handling to be better. This should simply be part of the job of
-  // GetGeometricParent, and stuff like the frameitems and parent frame should
-  // be kept track of in the state...
-  void AdjustParentFrame(nsContainerFrame** aParentFrame,
-                         const FrameConstructionData* aFCData,
-                         ComputedStyle* aComputedStyle);
-
   // END TABLE SECTION
 
  protected:
