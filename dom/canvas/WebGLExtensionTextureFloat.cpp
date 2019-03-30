@@ -42,7 +42,8 @@ WebGLExtensionTextureFloat::WebGLExtensionTextureFloat(WebGLContext* webgl)
   dui = {pi.format, pi.format, pi.type};
   swizzle = nullptr;
   if (needsSizedFormat ||
-      gl->IsExtensionSupported(gl::GLContext::CHROMIUM_color_buffer_float_rgba)) {
+      gl->IsExtensionSupported(
+          gl::GLContext::CHROMIUM_color_buffer_float_rgba)) {
     dui.internalFormat = LOCAL_GL_RGBA32F;
   }
   fnAdd(webgl::EffectiveFormat::RGBA32F);
