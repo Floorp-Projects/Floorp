@@ -8,81 +8,66 @@
 
 // React & Redux
 const { createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Message = createFactory(require("devtools/client/webconsole/components/Message"));
 
-PageError.displayName = "PageError";
+WarningGroup.displayName = "WarningGroup";
 
-PageError.propTypes = {
+WarningGroup.propTypes = {
+  dispatch: PropTypes.func.isRequired,
   message: PropTypes.object.isRequired,
-  open: PropTypes.bool,
   timestampsVisible: PropTypes.bool.isRequired,
   serviceContainer: PropTypes.object,
-  maybeScrollToBottom: PropTypes.func,
-  inWarningGroup: PropTypes.bool.isRequired,
+  badge: PropTypes.number.isRequired,
 };
 
-PageError.defaultProps = {
-  open: false,
-};
-
-function PageError(props) {
+function WarningGroup(props) {
   const {
     dispatch,
     message,
-    open,
-    repeat,
     serviceContainer,
     timestampsVisible,
-    isPaused,
-    maybeScrollToBottom,
-    inWarningGroup,
+    badge,
+    open,
   } = props;
+
   const {
-    id: messageId,
-    executionPoint,
     source,
     type,
     level,
-    messageText,
-    stacktrace,
-    frame,
-    exceptionDocURL,
+    id: messageId,
+    indent,
     timeStamp,
-    notes,
   } = message;
 
-  let messageBody;
-  if (typeof messageText === "string") {
-    messageBody = messageText;
-  } else if (typeof messageText === "object" && messageText.type === "longString") {
-    messageBody = `${message.messageText.initial}…`;
-  }
+  const messageBody = [
+    message.messageText,
+    " ",
+    dom.span({
+      className: "warning-group-badge",
+      title: `${badge} messages`,
+    }, badge),
+  ];
+  const topLevelClasses = ["cm-s-mozilla"];
 
   return Message({
+    badge,
+    collapsible: true,
     dispatch,
-    messageId,
-    executionPoint,
-    isPaused,
-    open,
-    collapsible: Array.isArray(stacktrace),
-    source,
-    type,
+    indent,
     level,
-    topLevelClasses: [],
-    indent: message.indent,
-    inWarningGroup,
     messageBody,
-    repeat,
-    frame,
-    stacktrace,
+    messageId,
+    open,
     serviceContainer,
-    exceptionDocURL,
+    source,
     timeStamp,
-    notes,
     timestampsVisible,
-    maybeScrollToBottom,
+    topLevelClasses,
+    type,
   });
 }
 
-module.exports = PageError;
+module.exports = WarningGroup;
