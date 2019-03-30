@@ -16,9 +16,12 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "formFillController",
+                                   "@mozilla.org/satchel/form-fill-controller;1",
+                                   Ci.nsIFormFillController);
+
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let logger = LoginHelper.createLogger("LoginAutoCompleteResult");
-  return logger.log.bind(logger);
+  return LoginHelper.createLogger("LoginAutoCompleteResult");
 });
 
 // nsIAutoCompleteResult implementation
@@ -50,15 +53,32 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messa
     return duplicates;
   }
 
-  this._showInsecureFieldWarning = (!isSecure && LoginHelper.showInsecureFieldWarning) ? 1 : 0;
-  this._showAutoCompleteFooter = 0;
-  // We need to check LoginHelper.enabled here since the insecure warning should
-  // appear even if pwmgr is disabled but the footer should never appear in that case.
-  if (LoginHelper.showAutoCompleteFooter && LoginHelper.enabled) {
+  let hidingFooterOnPWFieldAutoOpened = false;
+  function isFooterEnabled() {
+    // We need to check LoginHelper.enabled here since the insecure warning should
+    // appear even if pwmgr is disabled but the footer should never appear in that case.
+    if (!LoginHelper.showAutoCompleteFooter || !LoginHelper.enabled) {
+      return false;
+    }
+
     // Don't show the footer on non-empty password fields as it's not providing
     // value and only adding noise since a password was already filled.
-    this._showAutoCompleteFooter = (!isPasswordField || !aSearchString) ? 1 : 0;
+    if (isPasswordField && aSearchString) {
+      log.debug("Hiding footer: non-empty password field");
+      return false;
+    }
+
+    if (!matchingLogins.length && isPasswordField && formFillController.passwordPopupAutomaticallyOpened) {
+      hidingFooterOnPWFieldAutoOpened = true;
+      log.debug("Hiding footer: no logins and the popup was opened upon focus of the pw. field");
+      return false;
+    }
+
+    return true;
   }
+
+  this._showInsecureFieldWarning = (!isSecure && LoginHelper.showInsecureFieldWarning) ? 1 : 0;
+  this._showAutoCompleteFooter = isFooterEnabled() ? 1 : 0;
   this.searchString = aSearchString;
   this.logins = matchingLogins.sort(loginSort);
   this.matchCount = matchingLogins.length + this._showInsecureFieldWarning + this._showAutoCompleteFooter;
@@ -74,6 +94,11 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messa
   if (this.matchCount > 0) {
     this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
     this.defaultIndex = 0;
+  } else if (hidingFooterOnPWFieldAutoOpened) {
+    // We use a failure result so that the empty results aren't re-used for when
+    // the user tries to manually open the popup (we want the footer in that case).
+    this.searchResult = Ci.nsIAutoCompleteResult.RESULT_FAILURE;
+    this.defaultIndex = -1;
   }
 }
 

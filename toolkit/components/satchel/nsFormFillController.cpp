@@ -97,7 +97,8 @@ nsFormFillController::nsFormFillController()
       mCompleteDefaultIndex(false),
       mCompleteSelectedIndex(false),
       mForceComplete(false),
-      mSuppressOnInput(false) {
+      mSuppressOnInput(false),
+      mPasswordPopupAutomaticallyOpened(false) {
   mController = do_GetService("@mozilla.org/autocomplete/controller;1");
   MOZ_ASSERT(mController);
 }
@@ -393,6 +394,7 @@ nsFormFillController::SetPopupOpen(bool aPopupOpen) {
       }
     } else {
       mFocusedPopup->ClosePopup();
+      mPasswordPopupAutomaticallyOpened = false;
     }
   }
 
@@ -616,7 +618,10 @@ nsFormFillController::OnTextEntered(Event* aEvent, bool* aPrevent) {
 }
 
 NS_IMETHODIMP
-nsFormFillController::OnTextReverted(bool* _retval) { return NS_OK; }
+nsFormFillController::OnTextReverted(bool* _retval) {
+  mPasswordPopupAutomaticallyOpened = false;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsFormFillController::GetConsumeRollupEvent(bool* aConsumeRollupEvent) {
@@ -985,6 +990,7 @@ nsresult nsFormFillController::HandleFocus(HTMLInputElement* aInput) {
 
   // If we have not seen a right click yet, just show the popup.
   if (mLastRightClickTimeStamp.IsNull()) {
+    mPasswordPopupAutomaticallyOpened = true;
     ShowPopup();
     return NS_OK;
   }
@@ -992,6 +998,7 @@ nsresult nsFormFillController::HandleFocus(HTMLInputElement* aInput) {
   uint64_t timeDiff =
       (TimeStamp::Now() - mLastRightClickTimeStamp).ToMilliseconds();
   if (timeDiff > mFocusAfterRightClickThreshold) {
+    mPasswordPopupAutomaticallyOpened = true;
     ShowPopup();
   }
 #endif
@@ -1006,6 +1013,9 @@ nsresult nsFormFillController::Focus(Event* aEvent) {
 
 nsresult nsFormFillController::KeyDown(Event* aEvent) {
   NS_ASSERTION(mController, "should have a controller!");
+
+  mPasswordPopupAutomaticallyOpened = false;
+
   if (!mFocusedInput || !mController) {
     return NS_OK;
   }
@@ -1039,6 +1049,9 @@ nsresult nsFormFillController::KeyDown(Event* aEvent) {
 
 nsresult nsFormFillController::KeyPress(Event* aEvent) {
   NS_ASSERTION(mController, "should have a controller!");
+
+  mPasswordPopupAutomaticallyOpened = false;
+
   if (!mFocusedInput || !mController) {
     return NS_OK;
   }
@@ -1188,6 +1201,12 @@ nsFormFillController::ShowPopup() {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsFormFillController::GetPasswordPopupAutomaticallyOpened(
+    bool* _retval) {
+  *_retval = mPasswordPopupAutomaticallyOpened;
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////
 //// nsFormFillController
 
@@ -1311,6 +1330,8 @@ void nsFormFillController::StartControllingInput(HTMLInputElement* aInput) {
 }
 
 void nsFormFillController::StopControllingInput() {
+  mPasswordPopupAutomaticallyOpened = false;
+
   if (mListNode) {
     mListNode->RemoveMutationObserver(this);
     mListNode = nullptr;
