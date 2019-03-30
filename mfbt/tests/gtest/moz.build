@@ -10,6 +10,12 @@ UNIFIED_SOURCES += [
     'TestSpan.cpp',
 ]
 
+if not CONFIG['MOZILLA_OFFICIAL']:
+    UNIFIED_SOURCES += [
+        # MOZ_DBG is not defined in MOZILLA_OFFICIAL builds.
+        'TestMozDbg.cpp',
+    ]
+
 #LOCAL_INCLUDES += [
 #    '../../base',
 #]
