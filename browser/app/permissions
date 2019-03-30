@@ -14,7 +14,6 @@ origin	uitour	1	about:home
 origin	uitour	1	about:newtab
 
 # Remote troubleshooting
-origin	remote-troubleshooting	1	https://input.mozilla.org
 origin	remote-troubleshooting	1	https://support.mozilla.org
 
 # Hybrid Content Telemetry - https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/hybrid-content.html
