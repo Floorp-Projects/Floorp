@@ -5,22 +5,25 @@
 <script src="/resources/testharnessreport.js"></script>
 <div id="log"></div>
 <script>
+/* global test, assert_true */
 test(function() {
   function test(root) {
     var threw = false;
     try {
         root.querySelectorAll("");
-    } catch(e){ threw = true; };
+    } catch (e) { threw = true; }
     // Hot loop to make sure the JIT heuristics ion-compile this function even
     // though it's throwing exceptions (which would normally make us back off
     // of ion compilation).
-    for (var i=0; i<1500; i++) {}
+    for (var i = 0; i < 1500; i++) {
+      // empty
+    }
     return threw;
   }
 
   var threw = false;
   var el = document.createElement("div");
-  for (var i=0; i<200; i++)
+  for (var i = 0; i < 200; i++)
       threw = test(el);
   assert_true(threw);
 }, "Shouldn't optimize away throwing functions");

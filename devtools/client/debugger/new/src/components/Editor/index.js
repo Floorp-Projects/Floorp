@@ -639,9 +639,12 @@ class Editor extends PureComponent<Props, State> {
   }
 
   render() {
+    const { selectedSource } = this.props;
     return (
       <div
-        className={classnames("editor-wrapper")}
+        className={classnames("editor-wrapper", {
+          blackboxed: selectedSource && selectedSource.isBlackBoxed
+        })}
         ref={c => (this.$editorWrapper = c)}
       >
         <div

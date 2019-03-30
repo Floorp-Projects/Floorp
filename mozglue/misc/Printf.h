@@ -76,6 +76,18 @@ class PrintfTarget {
   /* The Vprintf-like interface.  */
   bool MFBT_API vprint(const char* format, va_list) MOZ_FORMAT_PRINTF(2, 0);
 
+  /* Fast paths for formatting integers as though by %d, %o, %u, or %x.
+     Since octal and hex formatting always treat numbers as unsigned, there
+     are no signed overloads for AppendInt{Oct,Hex}.  */
+  bool MFBT_API appendIntDec(int32_t);
+  bool MFBT_API appendIntDec(uint32_t);
+  bool MFBT_API appendIntOct(uint32_t);
+  bool MFBT_API appendIntHex(uint32_t);
+  bool MFBT_API appendIntDec(int64_t);
+  bool MFBT_API appendIntDec(uint64_t);
+  bool MFBT_API appendIntOct(uint64_t);
+  bool MFBT_API appendIntHex(uint64_t);
+
  protected:
   MFBT_API PrintfTarget();
   virtual ~PrintfTarget() {}

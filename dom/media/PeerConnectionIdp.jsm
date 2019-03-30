@@ -96,14 +96,20 @@ PeerConnectionIdp.prototype = {
       typeof assertion.assertion === "string";
   },
 
+  _getSessionLevelEnd(sdp) {
+    const match = sdp.match(PeerConnectionIdp._mLinePattern);
+    if (!match) {
+      return sdp.length;
+    }
+    return match.index;
+  },
+
   _getIdentityFromSdp(sdp) {
     // a=identity is session level
     let idMatch;
-    let mLineMatch = sdp.match(PeerConnectionIdp._mLinePattern);
-    if (mLineMatch) {
-      let sessionLevel = sdp.substring(0, mLineMatch.index);
-      idMatch = sessionLevel.match(PeerConnectionIdp._identityPattern);
-    }
+    const index = this._getSessionLevelEnd(sdp);
+    const sessionLevel = sdp.substring(0, index);
+    idMatch = sessionLevel.match(PeerConnectionIdp._identityPattern);
     if (!idMatch) {
       return undefined; // undefined === no identity
     }
@@ -254,11 +260,10 @@ PeerConnectionIdp.prototype = {
       return sdp;
     }
 
-    // yes, we assume that this matches; if it doesn't something is *wrong*
-    let match = sdp.match(PeerConnectionIdp._mLinePattern);
-    return sdp.substring(0, match.index) +
-      "a=identity:" + this.assertion + "\r\n" +
-      sdp.substring(match.index);
+    const index = this._getSessionLevelEnd(sdp);
+    return sdp.substring(0, index) +
+        "a=identity:" + this.assertion + "\r\n" +
+        sdp.substring(index);
   },
 
   /**

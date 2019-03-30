@@ -21,11 +21,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=748983
 
 SimpleTest.waitForExplicitFinish();
 
-function runTest()
-{
-    ok(document instanceof EventTarget, "document is an event target")
+function runTest() {
+    ok(document instanceof EventTarget, "document is an event target");
     ok(new XMLHttpRequest() instanceof XMLHttpRequest, "instanceof should work on XHR");
-    ok(HTMLElement.prototype instanceof Node, "instanceof needs to walk the prototype chain")
+    ok(HTMLElement.prototype instanceof Node, "instanceof needs to walk the prototype chain");
 
     var otherWin = document.getElementById("testFrame").contentWindow;
 

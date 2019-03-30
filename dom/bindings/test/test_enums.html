@@ -5,9 +5,10 @@
 <script src=/resources/testharnessreport.js></script>
 <div id=log></div>
 <script>
+/* global test, assert_equals */
 test(function() {
   var xhr = new XMLHttpRequest();
-  xhr.open("get", "foo")
+  xhr.open("get", "foo");
   assert_equals(xhr.responseType, "");
   xhr.responseType = "foo";
   assert_equals(xhr.responseType, "");

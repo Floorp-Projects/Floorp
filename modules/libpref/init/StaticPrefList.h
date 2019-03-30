@@ -1082,6 +1082,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Are shared memory User Agent style sheets enabled?
+VARCACHE_PREF(
+  "layout.css.shared-memory-ua-sheets.enabled",
+   layout_css_shared_memory_ua_sheets_enabled,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // JavaScript prefs
 //---------------------------------------------------------------------------

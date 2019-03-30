@@ -390,6 +390,7 @@ class PeerConnectionImpl final
   void GetPeerIdentity(nsAString& peerIdentity) {
     if (mPeerIdentity) {
       peerIdentity = mPeerIdentity->ToString();
+      return;
     }
 
     peerIdentity.SetIsVoid(true);

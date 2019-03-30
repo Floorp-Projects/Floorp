@@ -131,6 +131,14 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   nsIFrame* GetEventTarget();
   already_AddRefed<nsIContent> GetEventTargetContent(WidgetEvent* aEvent);
 
+  // We manage 4 states here: ACTIVE, HOVER, DRAGOVER, URLTARGET
+  static bool ManagesState(EventStates aState) {
+    return aState == NS_EVENT_STATE_ACTIVE ||
+           aState == NS_EVENT_STATE_HOVER ||
+           aState == NS_EVENT_STATE_DRAGOVER ||
+           aState == NS_EVENT_STATE_URLTARGET;
+  }
+
   /**
    * Notify that the given NS_EVENT_STATE_* bit has changed for this content.
    * @param aContent Content which has changed states

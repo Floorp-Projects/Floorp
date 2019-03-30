@@ -16,7 +16,7 @@ const bundlePath = path.join(projectPath, "./dist");
 
 const clientPath = path.join(projectPath, "../../");
 const watch = false;
-const updateAssets = false;
+const updateAssets = true;
 
 process.env.NODE_ENV = "production";
 

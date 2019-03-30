@@ -72,14 +72,14 @@
       assert_equals(args.origin, window.origin,
         'Expect args.origin argument to be the origin of this window');
 
-      assert_equals(env.location,
-        `https://${idpHost}/.well-known/idp-proxy/idp-test.js?foo=bar`,
+      assert_equals(env.location.href,
+        `https://${idpHost}/.well-known/idp-proxy/mock-idp.js?foo=bar`,
         'Expect IdP proxy to be loaded with full well-known URL constructed from provider and protocol');
 
-      assert_equals(env.origin, `https://${idpHost}`,
+      assert_equals(env.location.origin, `https://${idpHost}`,
         'Expect IdP to have its own origin');
 
-      assert_equals(args.options.protocol, 'idp-test.js?foo=bar',
+      assert_equals(args.options.protocol, 'mock-idp.js?foo=bar',
         'Expect options.protocol to be the same value as being passed from here');
 
       assert_equals(args.options.usernameHint, `alice@${idpDomain}`,
@@ -114,7 +114,7 @@
       const { idp, assertion } = parseAssertionResult(assertionResultStr);
       assert_equals(idp.domain, idpDomain2);
       assert_equals(idp.protocol, 'foo');
-      assert_equals(assertion.options.usernameHint, `alice@${idpDomain2}`);
+      assert_equals(assertion.args.options.usernameHint, `alice@${idpDomain2}`);
     });
   }, 'getIdentityAssertion() should succeed if mock-idp.js return different domain and protocol in assertion');
 
@@ -350,12 +350,17 @@
   }, 'createOffer() should return SDP containing identity assertion string if identity provider is set');
 
   /*
-    4.4.2.  Steps to create an offer
-      1.  If the need for an identity assertion was identified when createOffer was
-          invoked, wait for the identity assertion request process to complete.
-      2.  If the identity provider was unable to produce an identity assertion, reject p
-          with a newly created NotReadableError and abort these steps.
-   */
+    6. Requesting Identity Assertions
+
+      The identity assertion request process is triggered by a call to
+      createOffer, createAnswer, or getIdentityAssertion. When these calls are
+      invoked and an identity provider has been set, the following steps are
+      executed:
+
+      ...
+
+      If assertion generation fails, then the promise for the corresponding
+      function call is rejected with a newly created OperationError.   */
   promise_test(t => {
     const pc = new RTCPeerConnection();
     const port = window.location.port;
@@ -366,18 +371,10 @@
       usernameHint: `alice@${idpDomain}`
     });
 
-    return promise_rejects(t, 'NotReadableError',
+    return promise_rejects(t, 'OperationError',
       pc.createOffer());
-  }, 'createOffer() should reject with NotReadableError if identitity assertion request fails');
+  }, 'createOffer() should reject with OperationError if identity assertion request fails');
 
-  /*
-    4.4.2.  Steps to create an answer
-      1.  If the need for an identity assertion was identified when createAnswer was
-          invoked, wait for the identity assertion request process to complete.
-
-      2.  If the identity provider was unable to produce an identity assertion, reject p
-          with a newly created NotReadableError and abort these steps.
-   */
   promise_test(t => {
     const pc = new RTCPeerConnection();
     const port = window.location.port;
@@ -392,9 +389,9 @@
     .createOffer()
     .then(offer => pc.setRemoteDescription(offer))
     .then(() =>
-      promise_rejects(t, 'NotReadableError',
+      promise_rejects(t, 'OperationError',
         pc.createAnswer()));
 
-  }, 'createAnswer() should reject with NotReadableError if identitity assertion request fails');
+  }, 'createAnswer() should reject with OperationError if identity assertion request fails');
 
 </script>

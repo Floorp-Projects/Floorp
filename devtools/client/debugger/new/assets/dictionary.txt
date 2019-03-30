@@ -214,3 +214,4 @@ TravisCI
 Homebrew
 30-60minutes
 myScriptFunction
+strict-ssl
