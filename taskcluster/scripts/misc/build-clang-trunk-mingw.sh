@@ -32,7 +32,7 @@ SRC_DIR=$TOOLCHAIN_DIR/src
 
 make_flags="-j$(nproc)"
 
-mingw_version=a3b01285793fe405ce6eae883cd5ebacdfd819ae
+mingw_version=6c8dfd0765df2d9afd845f74285d803dde4d35c3
 libunwind_version=1f89d78bb488bc71cfdee8281fc0834e9fbe5dce
 llvm_mingw_version=53db1c3a4c9c81972b70556a5ba5cd6ccd8e6e7d
 
@@ -111,7 +111,6 @@ build_mingw() {
   pushd mingw-w64-headers
   $SRC_DIR/mingw-w64/mingw-w64-headers/configure --host=$machine-w64-mingw32 \
                                                  --enable-sdk=all \
-                                                 --enable-secure-api \
                                                  --enable-idl \
                                                  --with-default-msvcrt=ucrt \
                                                  --with-default-win32-winnt=$default_win32_winnt \
