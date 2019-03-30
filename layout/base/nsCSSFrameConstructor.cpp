@@ -1209,7 +1209,7 @@ void nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
   nsFrameList temp(placeholder, placeholder);
   frame->SetInitialChildList(nsIFrame::kBackdropList, temp);
 
-  frameItems->AddChild(backdropFrame);
+  frameItems->AppendFrame(nullptr, backdropFrame);
 }
 
 void nsFrameConstructorState::AddChild(
@@ -1246,7 +1246,7 @@ void nsFrameConstructorState::AddChild(
 
     placeholderFrame->AddStateBits(mAdditionalStateBits);
     // Add the placeholder frame to the flow
-    aFrameItems.AddChild(placeholderFrame);
+    aFrameItems.AppendFrame(nullptr, placeholderFrame);
 
     if (placeholderType & PLACEHOLDER_FOR_TOPLAYER) {
       ConstructBackdropFrameFor(aContent, aNewFrame);
@@ -1262,7 +1262,7 @@ void nsFrameConstructorState::AddChild(
   if (aInsertAfter) {
     frameItems->InsertFrame(nullptr, aInsertAfterFrame, aNewFrame);
   } else {
-    frameItems->AddChild(aNewFrame);
+    frameItems->AppendFrame(nullptr, aNewFrame);
   }
 }
 
@@ -2068,7 +2068,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableRowOrRowGroup(
   }
 
   newFrame->SetInitialChildList(kPrincipalList, childItems);
-  aFrameItems.AddChild(newFrame);
+  aFrameItems.AppendFrame(nullptr, newFrame);
   return newFrame;
 }
 
@@ -2084,7 +2084,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCol(
 
   NS_ASSERTION(colFrame->Style() == computedStyle, "Unexpected style");
 
-  aFrameItems.AddChild(colFrame);
+  aFrameItems.AppendFrame(nullptr, colFrame);
 
   // construct additional col frames if the col frame has a span > 1
   int32_t span = colFrame->GetSpan();
@@ -2093,7 +2093,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCol(
     InitAndRestoreFrame(aState, content, aParentFrame, newCol, false);
     aFrameItems.LastChild()->SetNextContinuation(newCol);
     newCol->SetPrevContinuation(aFrameItems.LastChild());
-    aFrameItems.AddChild(newCol);
+    aFrameItems.AppendFrame(nullptr, newCol);
     newCol->SetColType(eColAnonymousCol);
   }
 
@@ -2180,7 +2180,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
 
   cellInnerFrame->SetInitialChildList(kPrincipalList, childItems);
   SetInitialSingleChild(newFrame, cellInnerFrame);
-  aFrameItems.AddChild(newFrame);
+  aFrameItems.AppendFrame(nullptr, newFrame);
   return newFrame;
 }
 
@@ -2941,7 +2941,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
     nsIFrame* customFrame = comboboxFrame->CreateFrameForDisplayNode();
     MOZ_ASSERT(customFrame);
     customFrame->AddStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT);
-    childItems.AddChild(customFrame);
+    childItems.AppendFrame(nullptr, customFrame);
 
     // The other piece of NAC can take the normal path.
     AutoFrameConstructionItemList fcItems(this);
@@ -2956,7 +2956,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
     // Initialize the additional popup child list which contains the
     // dropdown list frame.
     nsFrameItems popupItems;
-    popupItems.AddChild(listFrame);
+    popupItems.AppendFrame(nullptr, listFrame);
     comboboxFrame->SetInitialChildList(nsIFrame::kSelectPopupList, popupItems);
 
     aState.mFrameState = historyState;
@@ -3118,7 +3118,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
                   childItems, true, aItem.mPendingBinding);
 
   nsFrameItems fieldsetKids;
-  fieldsetKids.AddChild(scrollFrame ? scrollFrame : contentFrameTop);
+  fieldsetKids.AppendFrame(nullptr, scrollFrame ? scrollFrame : contentFrameTop);
 
   for (nsFrameList::Enumerator e(childItems); !e.AtEnd(); e.Next()) {
     nsIFrame* child = e.get();
@@ -3266,7 +3266,7 @@ void nsCSSFrameConstructor::ConstructTextFrame(
   }
 
   // Add the newly constructed frame to the flow
-  aFrameItems.AddChild(newFrame);
+  aFrameItems.AppendFrame(nullptr, newFrame);
 
   if (!aState.mCreatingExtraFrames) aContent->SetPrimaryFrame(newFrame);
 }
@@ -3784,9 +3784,9 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
 
           childItems.RemoveFrame(f);
           if (wrapFrame) {
-            currentBlockItems.AddChild(f);
+            currentBlockItems.AppendFrame(nullptr, f);
           } else {
-            newItems.AddChild(f);
+            newItems.AppendFrame(nullptr, f);
           }
         }
         FlushAccumulatedBlock(aState, content, newFrameAsContainer,
@@ -4717,7 +4717,7 @@ void nsCSSFrameConstructor::FlushAccumulatedBlock(
   blockFrame->SetInitialChildList(kPrincipalList, aBlockItems);
   NS_ASSERTION(aBlockItems.IsEmpty(), "What happened?");
   aBlockItems.Clear();
-  aNewItems.AddChild(blockFrame);
+  aNewItems.AppendFrame(nullptr, blockFrame);
 }
 
 // Only <math> elements can be floated or positioned.  All other MathML
@@ -7954,7 +7954,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingOuterTableFrame(
   if (childFrame) {
     nsIFrame* continuingTableFrame =
         CreateContinuingFrame(aPresContext, childFrame, newFrame);
-    newChildFrames.AddChild(continuingTableFrame);
+    newChildFrames.AppendFrame(nullptr, continuingTableFrame);
 
     NS_ASSERTION(!childFrame->GetNextSibling(),
                  "there can be only one inner table frame");
@@ -8015,7 +8015,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingTableFrame(
       headerFooterFrame->InitRepeatedFrame(rowGroupFrame);
 
       // XXX Deal with absolute and fixed frames...
-      childFrames.AddChild(headerFooterFrame);
+      childFrames.AppendFrame(nullptr, headerFooterFrame);
     }
   }
 
@@ -8096,7 +8096,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
       if (IsTableCell(cellFrame->Type())) {
         nsIFrame* continuingCellFrame =
             CreateContinuingFrame(aPresContext, cellFrame, rowFrame);
-        newChildList.AddChild(continuingCellFrame);
+        newChildList.AppendFrame(nullptr, continuingCellFrame);
       }
       cellFrame = cellFrame->GetNextSibling();
     }
@@ -9845,7 +9845,7 @@ void nsCSSFrameConstructor::ProcessChildren(
     blockFrame->SetInitialChildList(kPrincipalList, aFrameItems);
     NS_ASSERTION(aFrameItems.IsEmpty(), "How did that happen?");
     aFrameItems.Clear();
-    aFrameItems.AddChild(blockFrame);
+    aFrameItems.AppendFrame(nullptr, blockFrame);
 
     aFrame->AddStateBits(NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK);
     MOZ_ASSERT(!aFrame->IsLeaf(), "Why do we have an nsLeafBoxFrame here?");
@@ -10104,7 +10104,7 @@ nsFirstLetterFrame* nsCSSFrameConstructor::CreateFloatingLetterFrame(
                   true, false, true, link.PrevFrame());
 
   if (nextTextFrame) {
-    aResult.AddChild(nextTextFrame);
+    aResult.AppendFrame(nullptr, nextTextFrame);
   }
 
   return letterFrame;
@@ -10189,7 +10189,7 @@ void nsCSSFrameConstructor::CreateLetterFrame(
 
       SetInitialSingleChild(letterFrame, textFrame);
       aResult.Clear();
-      aResult.AddChild(letterFrame);
+      aResult.AppendFrame(nullptr, letterFrame);
       NS_ASSERTION(!aBlockFrame->GetPrevContinuation(),
                    "should have the first continuation here");
       aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
@@ -10864,7 +10864,7 @@ nsFrameItems nsCSSFrameConstructor::CreateColumnSpanSiblings(
       aState.ReparentAbsoluteItems(columnSpanWrapper);
     }
 
-    siblings.AddChild(columnSpanWrapper);
+    siblings.AppendFrame(nullptr, columnSpanWrapper);
 
     // Grab the consecutive non-column-span kids, and reparent them into a new
     // continuation of the last non-column-span wrapper frame.
@@ -10886,7 +10886,7 @@ nsFrameItems nsCSSFrameConstructor::CreateColumnSpanSiblings(
       }
     }
 
-    siblings.AddChild(nonColumnSpanWrapper);
+    siblings.AppendFrame(nullptr, nonColumnSpanWrapper);
 
     lastNonColumnSpanWrapper = nonColumnSpanWrapper;
   } while (aChildList.NotEmpty());
@@ -11092,7 +11092,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructInline(
   nsFrameList firstInlineKids = childItems.ExtractHead(firstBlockEnumerator);
   newFrame->SetInitialChildList(kPrincipalList, firstInlineKids);
 
-  aFrameItems.AddChild(newFrame);
+  aFrameItems.AppendFrame(nullptr, newFrame);
 
   newFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
   CreateIBSiblings(aState, newFrame, isAbsPosCB, childItems, aFrameItems);
@@ -11151,7 +11151,7 @@ void nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
       MoveChildrenTo(aInitialInline, blockFrame, blockKids);
 
       SetFrameIsIBSplit(lastNewInline, blockFrame);
-      aSiblings.AddChild(blockFrame);
+      aSiblings.AppendFrame(nullptr, blockFrame);
     } else {
       // Extract any initial non-column-span frames, and put them in
       // blockFrame's child list.
@@ -11160,7 +11160,7 @@ void nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
       MoveChildrenTo(aInitialInline, blockFrame, initialNonColumnSpanKids);
 
       SetFrameIsIBSplit(lastNewInline, blockFrame);
-      aSiblings.AddChild(blockFrame);
+      aSiblings.AppendFrame(nullptr, blockFrame);
 
       if (blockKids.NotEmpty()) {
         // Although SetFrameIsIBSplit() will add NS_FRAME_PART_OF_IBSPLIT for
@@ -11197,7 +11197,7 @@ void nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
     }
 
     SetFrameIsIBSplit(blockFrame, inlineFrame);
-    aSiblings.AddChild(inlineFrame);
+    aSiblings.AppendFrame(nullptr, inlineFrame);
     lastNewInline = inlineFrame;
   } while (aChildItems.NotEmpty());
 
