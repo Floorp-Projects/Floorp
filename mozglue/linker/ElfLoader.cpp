@@ -19,10 +19,8 @@
 #include "Utils.h"
 #include <inttypes.h>
 
-using namespace mozilla;
-
 // From Utils.h
-Atomic<size_t, ReleaseAcquire> gPageSize;
+mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gPageSize;
 
 #if defined(ANDROID)
 #  include <sys/syscall.h>

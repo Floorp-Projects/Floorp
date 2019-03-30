@@ -20,7 +20,7 @@
     // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
-    function changeIframeSrc(aIdentifier, aURL) {
+    function changeIframeSrc(aIdentifier, aURL, aTitle) {
       this.DOMNode = getNode(aIdentifier);
 
       function getIframeDoc() {
@@ -40,7 +40,7 @@
           children: [
             {
               role: ROLE_DOCUMENT,
-              name: aURL == "about:license" ? "Licenses" : aURL,
+              name: aTitle,
             },
           ],
         });
@@ -53,8 +53,8 @@
 
     function doTests() {
       const gQueue = new eventQueue();
-      gQueue.push(new changeIframeSrc("iframe", "about:license"));
-      gQueue.push(new changeIframeSrc("iframe", "about:buildconfig"));
+      gQueue.push(new changeIframeSrc("iframe", "about:license", "Licenses"));
+      gQueue.push(new changeIframeSrc("iframe", "about:buildconfig", "Build Configuration"));
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
