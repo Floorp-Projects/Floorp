@@ -35,7 +35,7 @@ void MappedDeclarations::SetBackgroundImage(const nsAttrValue& aValue) {
   nsAutoString str;
   aValue.ToString(str);
   Servo_DeclarationBlock_SetBackgroundImage(
-      mDecl, str, mDocument->DefaultStyleAttrURLData());
+      mDecl, &str, mDocument->DefaultStyleAttrURLData());
 }
 
 }  // namespace mozilla

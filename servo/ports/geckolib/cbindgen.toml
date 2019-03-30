@@ -1,28 +1,19 @@
 header = """/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/. */"""
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+// See the comment in ServoBindings.h about the same.
+#pragma GCC diagnostic push
+#ifdef __clang__
+#  pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
+#endif"""
+trailer = "#pragma GCC diagnostic pop"
 autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
  *   1. Get the latest cbindgen using `cargo install --force cbindgen`
  *      a. Alternatively, you can clone `https://github.com/eqrion/cbindgen` and use a tagged release
  *   2. Run `rustup run nightly cbindgen toolkit/library/rust/ --lockfile Cargo.lock --crate style -o layout/style/ServoStyleConsts.h`
  */
-#include "nsCoord.h"
-#include "Units.h"
-#include "mozilla/gfx/Types.h"
-class nsAtom;
-namespace mozilla {
-  class WritingMode;
-  enum HalfCorner : uint8_t;
-  enum LogicalSide : uint8_t;
-  namespace css {
-    struct URLValue;
-  }
-
-  // Work-around weird cbindgen renaming.
-  typedef css::URLValue StyleURLValue;
-  typedef nsAtom StylensAtom;
-}
 """
 include_guard = "mozilla_ServoStyleConsts_h"
 include_version = true
@@ -31,10 +22,11 @@ line_length = 80
 tab_width = 2
 language = "C++"
 namespaces = ["mozilla"]
+includes = ["mozilla/ServoStyleConstsForwards.h"]
 
 [parse]
 parse_deps = true
-include = ["cssparser", "style_traits"]
+include = ["style", "cssparser", "style_traits"]
 
 [struct]
 derive_eq = true
@@ -113,7 +105,56 @@ include = [
   "OwnedOrNull",
   "Strong",
 ]
-item_types = ["enums", "structs", "typedefs"]
+item_types = ["enums", "structs", "typedefs", "functions"]
+renaming_overrides_prefixing = true
+
+# Prevent some renaming for Gecko types that cbindgen doesn't otherwise understand.
+[export.rename]
+"nscolor" = "nscolor"
+"nsAtom" = "nsAtom"
+"nsCompatibility" = "nsCompatibility"
+"SharedFontList" = "SharedFontList"
+"nsSimpleContentList" = "nsSimpleContentList"
+"nsACString" = "nsACString"
+"nsAString" = "nsAString"
+"nsString" = "nsString"
+"nsTArray" = "nsTArray"
+"nsPresContext" = "nsPresContext"
+"ComputedTiming" = "ComputedTiming"
+"RefPtr" = "RefPtr"
+"nsCSSPropertyID" = "nsCSSPropertyID"
+"nsCSSPropertyIDSet" = "nsCSSPropertyIDSet"
+"nsCSSValueSharedList" = "nsCSSValueSharedList"
+"AnimationPropertySegment" = "AnimationPropertySegment"
+"RawServoAnimationValueMap" = "RawServoAnimationValueMap"
+"RawServoAnimationValueTable" = "RawServoAnimationValueTable"
+"nsCSSUnit" = "nsCSSUnit"
+"ParsingMode" = "ParsingMode"
+"InheritTarget" = "InheritTarget"
+"PseudoStyleType" = "PseudoStyleType"
+"DeclarationBlockMutationClosure" = "DeclarationBlockMutationClosure"
+"AtomArray" = "AtomArray"
+"UpdateAnimationsTasks" = "UpdateAnimationsTasks"
+"StyleRuleInclusion" = "StyleRuleInclusion"
+"nsFontFaceRuleContainer" = "nsFontFaceRuleContainer"
+"MediumFeaturesChangedResult" = "MediumFeaturesChangedResult"
+"FontSizePrefs" = "FontSizePrefs"
+"nsCSSFontDesc" = "nsCSSFontDesc"
+"nsresult" = "nsresult"
+"gfxFontFeature" = "gfxFontFeature"
+"gfxFontFeatureValueSet" = "gfxFontFeatureValueSet"
+"SeenPtrs" = "SeenPtrs"
+"gfxFontVariation" = "gfxFontVariation"
+"URLExtraData" = "URLExtraData"
+"Keyframe" = "Keyframe"
+"nsChangeHint" = "nsChangeHint"
+"ServoElementSnapshotTable" = "ServoElementSnapshotTable"
+"nsTimingFunction" = "nsTimingFunction"
+"Keyframe" = "Keyframe"
+"ComputedKeyframeValues" = "ComputedKeyframeValues"
+"OriginFlags" = "OriginFlags"
+"ServoTraversalFlags" = "ServoTraversalFlags"
+"ServoStyleSetSizes" = "ServoStyleSetSizes"
 
 [export.body]
 "CSSPixelLength" = """

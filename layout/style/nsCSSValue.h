@@ -240,7 +240,7 @@ struct GridTemplateAreasValue final {
 }  // namespace css
 }  // namespace mozilla
 
-enum nsCSSUnit {
+enum nsCSSUnit : uint32_t {
   eCSSUnit_Null = 0,     // (n/a) null unit, value is not specified
   eCSSUnit_Auto = 1,     // (n/a) value is algorithmic
   eCSSUnit_Inherit = 2,  // (n/a) value is inherited
