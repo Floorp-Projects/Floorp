@@ -118,14 +118,6 @@ add_task(async function testCookieBlockedByPermissionMessage() {
   Services.perms.removeFromPrincipal(p, "cookie");
 });
 
-async function openNewWindowAndConsole(url) {
-  const win = await openNewBrowserWindow();
-  const tab = await addTab(url, {window: win});
-  win.gBrowser.selectedTab = tab;
-  const hud = await openConsole(tab);
-  return {win, hud};
-}
-
 function getStorageErrorUrl(category) {
   const BASE_STORAGE_ERROR_URL = "https://developer.mozilla.org/docs/Mozilla/Firefox/" +
                                  "Privacy/Storage_access_policy/Errors/";
