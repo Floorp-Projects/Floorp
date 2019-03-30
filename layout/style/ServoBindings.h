@@ -110,6 +110,10 @@ void Servo_StyleSheet_FromUTF8BytesAsync(
     mozilla::css::SheetParsingMode parsing_mode, uint32_t line_number_offset,
     nsCompatibility quirks_mode, bool should_record_use_counters);
 
+mozilla::StyleStrong<RawServoStyleSheetContents>
+Servo_StyleSheet_FromSharedData(mozilla::URLExtraData* extra_data,
+                                const ServoCssRules* shared_rules);
+
 mozilla::StyleStrong<RawServoStyleSheetContents> Servo_StyleSheet_Empty(
     mozilla::css::SheetParsingMode parsing_mode);
 
