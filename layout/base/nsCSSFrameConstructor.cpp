@@ -613,34 +613,6 @@ inline void SetInitialSingleChild(nsContainerFrame* aParent, nsIFrame* aFrame) {
 
 // -----------------------------------------------------------
 
-// Structure used when constructing formatting object trees.
-struct nsFrameItems : public nsFrameList {
-  // Appends the frame to the end of the list
-  void AddChild(nsIFrame* aChild);
-};
-
-void nsFrameItems::AddChild(nsIFrame* aChild) {
-  MOZ_ASSERT(aChild, "nsFrameItems::AddChild");
-  MOZ_ASSERT(!aChild->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) ||
-                 aChild->GetPlaceholderFrame(),
-             "An out-of-flow child without a placeholder frame?");
-
-  // It'd be really nice if we could just AppendFrames(kPrincipalList, aChild)
-  // here, but some of our callers put frames that have different parents
-  // (caption, I'm looking at you) on the same framelist, and nsFrameList
-  // asserts if you try to do that.
-  if (IsEmpty()) {
-    SetFrames(aChild);
-  } else {
-    NS_ASSERTION(aChild != mLastChild,
-                 "Same frame being added to frame list twice?");
-    mLastChild->SetNextSibling(aChild);
-    mLastChild = nsLayoutUtils::GetLastSibling(aChild);
-  }
-}
-
-// -----------------------------------------------------------
-
 // Structure used when constructing formatting object trees. Contains
 // state information needed for absolutely positioned elements
 struct nsAbsoluteItems : nsFrameItems {
