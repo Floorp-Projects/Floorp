@@ -10,6 +10,7 @@
 /* a MOZ_DBG macro that outputs a wrapped value to stderr then returns it */
 
 #include "mozilla/MacroForEach.h"
+#include "mozilla/Span.h"
 
 #include <stdio.h>
 #include <sstream>
@@ -76,6 +77,28 @@ auto&& MozDbg(const char* aFile, int aLine, const char* aExpression,
 }  // namespace detail
 
 }  // namespace mozilla
+
+template <class ElementType, size_t Extent>
+std::ostream& operator<<(std::ostream& aOut,
+                         const mozilla::Span<ElementType, Extent>& aSpan) {
+  aOut << '[';
+  if (!aSpan.IsEmpty()) {
+    aOut << aSpan[0];
+    for (size_t i = 1; i < aSpan.Length(); ++i) {
+      aOut << ", " << aSpan[i];
+    }
+  }
+  return aOut << ']';
+}
+
+// Don't define this for char[], since operator<<(ostream&, char*) is already
+// defined.
+template <typename T, size_t N,
+          typename = std::enable_if_t<!std::is_same<T, char>::value>>
+std::ostream& operator<<(std::ostream& aOut, const T (&aArray)[N]) {
+  return aOut << mozilla::MakeSpan(aArray);
+  // return aOut << mozilla::Span(aArray);
+}
 
 // MOZ_DBG is a macro like the Rust dbg!() macro -- it will print out the
 // expression passed to it to stderr and then return the value.  It is available

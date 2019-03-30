@@ -10,6 +10,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DbgMacro.h"
 
 /*****************************************************************************/
 
@@ -521,6 +522,13 @@ inline bool operator!=(const RefPtr<T>& aLhs, decltype(nullptr)) {
 template <class T>
 inline bool operator!=(decltype(nullptr), const RefPtr<T>& aRhs) {
   return nullptr != aRhs.get();
+}
+
+// MOZ_DBG support
+
+template <class T>
+std::ostream& operator<<(std::ostream& aOut, const RefPtr<T>& aObj) {
+  return mozilla::DebugValue(aOut, aObj.get());
 }
 
 /*****************************************************************************/
