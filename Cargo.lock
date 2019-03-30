@@ -2491,6 +2491,8 @@ dependencies = [
  "servo_arc 0.1.1",
  "smallvec 0.6.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "thin-slice 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "to_shmem 0.0.1",
+ "to_shmem_derive 0.0.1",
 ]
 
 [[package]]
@@ -2768,6 +2770,8 @@ dependencies = [
  "malloc_size_of_derive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "selectors 0.21.0",
  "servo_arc 0.1.1",
+ "to_shmem 0.0.1",
+ "to_shmem_derive 0.0.1",
 ]
 
 [[package]]
