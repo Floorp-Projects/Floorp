@@ -1416,6 +1416,21 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_StyleSheet_FromSharedData(
+    extra_data: *mut URLExtraData,
+    shared_rules: &ServoCssRules,
+) -> Strong<RawServoStyleSheetContents> {
+    let shared_rules = Locked::<CssRules>::as_arc(&shared_rules);
+    Arc::new(StylesheetContents::from_shared_data(
+        shared_rules.clone_arc(),
+        Origin::UserAgent,
+        UrlExtraData::new(extra_data),
+        QuirksMode::NoQuirks,
+    ))
+    .into_strong()
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_StyleSet_AppendStyleSheet(
     raw_data: &RawServoStyleSet,
     sheet: *const DomStyleSheet,
