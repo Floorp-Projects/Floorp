@@ -1345,10 +1345,8 @@ nsresult nsTextEditorState::PrepareEditor(const nsAString* aValue) {
     // already does the relevant security checks.
     AutoNoJSAPI nojsapi;
 
-    RefPtr<Element> rootElement = GetRootNode();
-    RefPtr<nsTextInputSelectionImpl> selectionController = mSelCon;
-    rv = newTextEditor->Init(*doc, rootElement, selectionController,
-                             editorFlags, defaultValue);
+    rv = newTextEditor->Init(*doc, GetRootNode(), mSelCon, editorFlags,
+                             defaultValue);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

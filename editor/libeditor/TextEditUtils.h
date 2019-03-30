@@ -29,12 +29,11 @@ class TextEditUtils final {
  */
 class AutoEditInitRulesTrigger final {
  private:
-  RefPtr<TextEditor> mTextEditor;
+  TextEditor* mTextEditor;
   nsresult& mResult;
 
  public:
   AutoEditInitRulesTrigger(TextEditor* aTextEditor, nsresult& aResult);
-  MOZ_CAN_RUN_SCRIPT
   ~AutoEditInitRulesTrigger();
 };
 
