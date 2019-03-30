@@ -1221,6 +1221,78 @@ void nsTSubstring<T>::AppendPrintf(const char* aFormat, va_list aAp) {
   }
 }
 
+template <typename T>
+void nsTSubstring<T>::AppendIntDec(int32_t aInteger) {
+  PrintfAppend<T> appender(this);
+  bool r = appender.appendIntDec(aInteger);
+  if (MOZ_UNLIKELY(!r)) {
+    MOZ_CRASH("Allocation or other failure while appending integers");
+  }
+}
+
+template <typename T>
+void nsTSubstring<T>::AppendIntDec(uint32_t aInteger) {
+  PrintfAppend<T> appender(this);
+  bool r = appender.appendIntDec(aInteger);
+  if (MOZ_UNLIKELY(!r)) {
+    MOZ_CRASH("Allocation or other failure while appending integers");
+  }
+}
+
+template <typename T>
+void nsTSubstring<T>::AppendIntOct(uint32_t aInteger) {
+  PrintfAppend<T> appender(this);
+  bool r = appender.appendIntOct(aInteger);
+  if (MOZ_UNLIKELY(!r)) {
+    MOZ_CRASH("Allocation or other failure while appending integers");
+  }
+}
+
+template <typename T>
+void nsTSubstring<T>::AppendIntHex(uint32_t aInteger) {
+  PrintfAppend<T> appender(this);
+  bool r = appender.appendIntHex(aInteger);
+  if (MOZ_UNLIKELY(!r)) {
+    MOZ_CRASH("Allocation or other failure while appending integers");
+  }
+}
+
+template <typename T>
+void nsTSubstring<T>::AppendIntDec(int64_t aInteger) {
+  PrintfAppend<T> appender(this);
+  bool r = appender.appendIntDec(aInteger);
+  if (MOZ_UNLIKELY(!r)) {
+    MOZ_CRASH("Allocation or other failure while appending integers");
+  }
+}
+
+template <typename T>
+void nsTSubstring<T>::AppendIntDec(uint64_t aInteger) {
+  PrintfAppend<T> appender(this);
+  bool r = appender.appendIntDec(aInteger);
+  if (MOZ_UNLIKELY(!r)) {
+    MOZ_CRASH("Allocation or other failure while appending integers");
+  }
+}
+
+template <typename T>
+void nsTSubstring<T>::AppendIntOct(uint64_t aInteger) {
+  PrintfAppend<T> appender(this);
+  bool r = appender.appendIntOct(aInteger);
+  if (MOZ_UNLIKELY(!r)) {
+    MOZ_CRASH("Allocation or other failure while appending integers");
+  }
+}
+
+template <typename T>
+void nsTSubstring<T>::AppendIntHex(uint64_t aInteger) {
+  PrintfAppend<T> appender(this);
+  bool r = appender.appendIntHex(aInteger);
+  if (MOZ_UNLIKELY(!r)) {
+    MOZ_CRASH("Allocation or other failure while appending integers");
+  }
+}
+
 // Returns the length of the formatted aDouble in aBuf.
 static int FormatWithoutTrailingZeros(char (&aBuf)[40], double aDouble,
                                       int aPrecision) {

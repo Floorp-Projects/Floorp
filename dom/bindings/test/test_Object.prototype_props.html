@@ -5,6 +5,7 @@
 <script src="/resources/testharnessreport.js"></script>
 <div id="log"></div>
 <script>
+/* global test, assert_array_equals */
 test(function() {
   var props = Object.getOwnPropertyNames(Object.prototype);
   // If you change this list, make sure it continues to match the list in
@@ -13,7 +14,7 @@ test(function() {
       "constructor", "toSource", "toString", "toLocaleString", "valueOf",
       "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable",
       "__defineGetter__", "__defineSetter__", "__lookupGetter__",
-      "__lookupSetter__", "__proto__"
+      "__lookupSetter__", "__proto__",
     ];
   assert_array_equals(props.sort(), expected.sort());
 }, "Own properties of Object.prototype");

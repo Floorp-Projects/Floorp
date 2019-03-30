@@ -16,7 +16,10 @@ use std::fmt;
 #[cfg(feature = "servo")]
 use std::mem;
 #[cfg(feature = "gecko")]
+use std::mem::ManuallyDrop;
+#[cfg(feature = "gecko")]
 use std::ptr;
+use to_shmem::{SharedMemoryBuilder, ToShmem};
 
 /// A shared read/write lock that can protect multiple objects.
 ///
@@ -28,6 +31,10 @@ use std::ptr;
 /// Servo needs the blocking behavior for its unsynchronized animation setup,
 /// but that may not be web-compatible and may need to be changed (at which
 /// point Servo could use AtomicRefCell too).
+///
+/// Gecko also needs the ability to have "read only" SharedRwLocks, which are
+/// used for objects stored in (read only) shared memory. Attempting to acquire
+/// write access to objects protected by a read only SharedRwLock will panic.
 #[derive(Clone)]
 #[cfg_attr(feature = "servo", derive(MallocSizeOf))]
 pub struct SharedRwLock {
@@ -36,7 +43,7 @@ pub struct SharedRwLock {
     arc: Arc<RwLock<()>>,
 
     #[cfg(feature = "gecko")]
-    cell: Arc<AtomicRefCell<SomethingZeroSizedButTyped>>,
+    cell: Option<Arc<AtomicRefCell<SomethingZeroSizedButTyped>>>,
 }
 
 #[cfg(feature = "gecko")]
@@ -61,8 +68,14 @@ impl SharedRwLock {
     #[cfg(feature = "gecko")]
     pub fn new() -> Self {
         SharedRwLock {
-            cell: Arc::new(AtomicRefCell::new(SomethingZeroSizedButTyped)),
+            cell: Some(Arc::new(AtomicRefCell::new(SomethingZeroSizedButTyped))),
         }
+    }
+
+    /// Create a new read-only shared lock (gecko).
+    #[cfg(feature = "gecko")]
+    pub fn read_only() -> Self {
+        SharedRwLock { cell: None }
     }
 
     /// Wrap the given data to make its access protected by this lock.
@@ -83,7 +96,7 @@ impl SharedRwLock {
     /// Obtain the lock for reading (gecko).
     #[cfg(feature = "gecko")]
     pub fn read(&self) -> SharedRwLockReadGuard {
-        SharedRwLockReadGuard(self.cell.borrow())
+        SharedRwLockReadGuard(self.cell.as_ref().map(|cell| cell.borrow()))
     }
 
     /// Obtain the lock for writing (servo).
@@ -96,22 +109,26 @@ impl SharedRwLock {
     /// Obtain the lock for writing (gecko).
     #[cfg(feature = "gecko")]
     pub fn write(&self) -> SharedRwLockWriteGuard {
-        SharedRwLockWriteGuard(self.cell.borrow_mut())
+        SharedRwLockWriteGuard(self.cell.as_ref().unwrap().borrow_mut())
     }
 }
 
 /// Proof that a shared lock was obtained for reading (servo).
 #[cfg(feature = "servo")]
 pub struct SharedRwLockReadGuard<'a>(&'a SharedRwLock);
-/// Proof that a shared lock was obtained for writing (gecko).
+/// Proof that a shared lock was obtained for reading (gecko).
 #[cfg(feature = "gecko")]
-pub struct SharedRwLockReadGuard<'a>(AtomicRef<'a, SomethingZeroSizedButTyped>);
+pub struct SharedRwLockReadGuard<'a>(Option<AtomicRef<'a, SomethingZeroSizedButTyped>>);
 #[cfg(feature = "servo")]
 impl<'a> Drop for SharedRwLockReadGuard<'a> {
     fn drop(&mut self) {
         // Unsafe: self.lock is private to this module, only ever set after `read()`,
         // and never copied or cloned (see `compile_time_assert` below).
-        unsafe { self.0.arc.force_unlock_read() }
+        if let Some(arc) = self.0.arc {
+            unsafe {
+                arc.force_unlock_read();
+            }
+        }
     }
 }
 
@@ -150,19 +167,40 @@ impl<T: fmt::Debug> fmt::Debug for Locked<T> {
 
 impl<T> Locked<T> {
     #[cfg(feature = "servo")]
+    #[inline]
+    fn is_read_only_lock(&self) -> bool {
+        false
+    }
+
+    #[cfg(feature = "gecko")]
+    #[inline]
+    fn is_read_only_lock(&self) -> bool {
+        self.shared_lock.cell.is_none()
+    }
+
+    #[cfg(feature = "servo")]
     fn same_lock_as(&self, lock: &SharedRwLock) -> bool {
         Arc::ptr_eq(&self.shared_lock.arc, &lock.arc)
     }
 
     #[cfg(feature = "gecko")]
-    fn same_lock_as(&self, derefed_guard: &SomethingZeroSizedButTyped) -> bool {
-        ptr::eq(self.shared_lock.cell.as_ptr(), derefed_guard)
+    fn same_lock_as(&self, derefed_guard: Option<&SomethingZeroSizedButTyped>) -> bool {
+        ptr::eq(
+            self.shared_lock
+                .cell
+                .as_ref()
+                .map(|cell| cell.as_ptr())
+                .unwrap_or(ptr::null_mut()),
+            derefed_guard
+                .map(|guard| guard as *const _ as *mut _)
+                .unwrap_or(ptr::null_mut()),
+        )
     }
 
     /// Access the data for reading.
     pub fn read_with<'a>(&'a self, guard: &'a SharedRwLockReadGuard) -> &'a T {
         assert!(
-            self.same_lock_as(&guard.0),
+            self.is_read_only_lock() || self.same_lock_as(guard.0.as_ref().map(|r| &**r)),
             "Locked::read_with called with a guard from an unrelated SharedRwLock"
         );
         let ptr = self.data.get();
@@ -186,8 +224,8 @@ impl<T> Locked<T> {
     /// Access the data for writing.
     pub fn write_with<'a>(&'a self, guard: &'a mut SharedRwLockWriteGuard) -> &'a mut T {
         assert!(
-            self.same_lock_as(&guard.0),
-            "Locked::write_with called with a guard from an unrelated SharedRwLock"
+            !self.is_read_only_lock() && self.same_lock_as(Some(&guard.0)),
+            "Locked::write_with called with a guard from a read only or unrelated SharedRwLock"
         );
         let ptr = self.data.get();
 
@@ -200,6 +238,26 @@ impl<T> Locked<T> {
         // * We require a mutable borrow of the guard,
         //   so that one write guard can only be used once at a time.
         unsafe { &mut *ptr }
+    }
+}
+
+#[cfg(feature = "gecko")]
+impl<T: ToShmem> ToShmem for Locked<T> {
+    fn to_shmem(&self, builder: &mut SharedMemoryBuilder) -> ManuallyDrop<Self> {
+        let guard = self.shared_lock.read();
+        ManuallyDrop::new(Locked {
+            shared_lock: SharedRwLock::read_only(),
+            data: UnsafeCell::new(ManuallyDrop::into_inner(
+                self.read_with(&guard).to_shmem(builder),
+            )),
+        })
+    }
+}
+
+#[cfg(feature = "servo")]
+impl<T: ToShmem> ToShmem for Locked<T> {
+    fn to_shmem(&self, _builder: &mut SharedMemoryBuilder) -> ManuallyDrop<Self> {
+        panic!("ToShmem not supported in Servo currently")
     }
 }
 

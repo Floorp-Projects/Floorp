@@ -78,6 +78,14 @@ function do_test() {
     is(e.name, "TypeError", "got the expected exception");
   }
 
+  try {
+    InspectorUtils.setContentState(document.documentElement, 3);
+    ok(false, "expected an exception");
+  }
+  catch(e) {
+    ok(true, "Threw");
+  }
+
   SimpleTest.finish();
 }
 

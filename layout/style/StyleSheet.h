@@ -25,6 +25,8 @@
 
 class nsINode;
 class nsIPrincipal;
+struct nsLayoutStylesheetCacheShm;
+struct RawServoSharedMemoryBuilder;
 
 namespace mozilla {
 
@@ -376,6 +378,17 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
     }
   }
 
+  // Copy the contents of this style sheet into the shared memory buffer managed
+  // by aBuilder.  Returns the pointer into the buffer that the sheet contents
+  // were stored at.  (The returned pointer is to an Arc<Locked<Rules>> value.)
+  const ServoCssRules* ToShared(RawServoSharedMemoryBuilder* aBuilder);
+
+  // Sets the contents of this style sheet to the specified aSharedRules
+  // pointer, which must be a pointer somewhere in the aSharedMemory buffer
+  // as previously returned by a ToShared() call.
+  void SetSharedContents(nsLayoutStylesheetCacheShm* aSharedMemory,
+                         const ServoCssRules* aSharedRules);
+
  private:
   dom::ShadowRoot* GetContainingShadow() const;
 
@@ -395,7 +408,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // returns false.
   bool AreRulesAvailable(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
 
-  already_AddRefed<URLExtraData> CreateURLExtraData() const;
+  void SetURLExtraData();
 
  protected:
   // Internal methods which do not have security check and completeness check.

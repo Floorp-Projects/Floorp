@@ -9,10 +9,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1066432
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
-
+  /* global TestInterfaceJS */
   /** Test for Bug 1066432 **/
   SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, function() {
+  SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, function() {
     var testInterfaceJS = new TestInterfaceJS();
     ok(testInterfaceJS, "got a TestInterfaceJS object");
 
@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1066432
 
     try {
       testInterfaceJS.testSequenceOverload(nonIterableObject);
-      ok(false, "Should have thrown in the overload case");  // see long comment above!
+      ok(false, "Should have thrown in the overload case"); // see long comment above!
     } catch (e) {
       is(e.name, "TypeError", "Should get a TypeError for the overload case");
       ok(e.message.includes("not iterable"),

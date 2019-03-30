@@ -233,6 +233,17 @@
   margin-top: 10px;
 }
 
+.thread-header .img.worker,
+.thread-header .img.file {
+  margin-top: -1px;
+  margin-inline-end: 4px;
+  margin-inline-start: 2px;
+}
+
+.thread-header .img.file {
+  margin-top: -2px;
+}
+
 .thread-header .label {
   line-height: 15px;
 }
