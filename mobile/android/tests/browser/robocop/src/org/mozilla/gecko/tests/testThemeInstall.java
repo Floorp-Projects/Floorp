@@ -46,15 +46,10 @@ public class testThemeInstall extends JavascriptTest implements BundleEventListe
         try {
             GeckoBundle themeData = message.getBundle("data");
             String headerURL = themeData.getString("headerURL");
-            mAsserter.ok(headerURL.contains("/lightweighttheme-header"),
+            mAsserter.ok(headerURL.endsWith("/testImage.png"),
                     "Theme update has the expected headerURL",null);
-            mAsserter.ok(headerURL.startsWith("file://"),
-                    "headerURL was transformed to file:// URL", null);
-            File themeFile = new File(new URI(headerURL).getPath());
-            mAsserter.ok(themeFile.exists(),
-                    "file pointed to by headerURL was successfully persisted", null);
-            mAsserter.ok(themeFile.length() > 0,
-                    "theme file is not empty", null);
+            mAsserter.ok(headerURL.startsWith("jar:file://"),
+                    "headerURL was transformed to jar:file:// URL", null);
         } catch (Exception e) {
             fFail("Event does not contain expected data: " + e.getMessage());
         }
