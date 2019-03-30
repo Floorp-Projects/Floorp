@@ -320,7 +320,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "eb0c3157f2c9"
+        "revision": "3a4903209389"
     },
     "dsb": {
         "platforms": [
@@ -1209,7 +1209,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "595592708485"
+        "revision": "77d200cede17"
     },
     "oc": {
         "platforms": [
