@@ -19,6 +19,9 @@ with Files("components/style_traits/**"):
 with Files("components/selectors/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
+with Files("components/to_shmem/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
 with Files("ports/geckolib/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
