@@ -2919,7 +2919,8 @@ bool gfxPlatform::IsInLayoutAsapMode() {
 
 /* static */
 bool gfxPlatform::ForceSoftwareVsync() {
-  return gfxPrefs::LayoutFrameRate() > 0 || recordreplay::IsRecordingOrReplaying();
+  return gfxPrefs::LayoutFrameRate() > 0 ||
+         recordreplay::IsRecordingOrReplaying();
 }
 
 /* static */
@@ -2932,9 +2933,7 @@ int gfxPlatform::GetSoftwareVsyncRate() {
 }
 
 /* static */
-int gfxPlatform::GetDefaultFrameRate() {
-  return 60;
-}
+int gfxPlatform::GetDefaultFrameRate() { return 60; }
 
 /* static */
 void gfxPlatform::ReInitFrameRate() {

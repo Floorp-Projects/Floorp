@@ -1045,13 +1045,14 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                   if (mIsFirstPaint || FrameMetricsHaveUpdated(metrics)) {
                     if (animator) {
                       animator->UpdateRootFrameMetrics(metrics);
-                    } else if (RefPtr<UiCompositorControllerParent> uiController =
-                              UiCompositorControllerParent::
-                                  GetFromRootLayerTreeId(rootLayerTreeId)) {
+                    } else if (RefPtr<UiCompositorControllerParent>
+                                   uiController = UiCompositorControllerParent::
+                                       GetFromRootLayerTreeId(
+                                           rootLayerTreeId)) {
                       uiController->NotifyUpdateScreenMetrics(metrics);
                     }
                     mLastMetrics = metrics;
-                  } 
+                  }
                   if (mIsFirstPaint) {
                     if (animator) {
                       animator->FirstPaint();
@@ -1238,9 +1239,12 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
-bool AsyncCompositionManager::FrameMetricsHaveUpdated(const FrameMetrics& aMetrics) {
-  return RoundedToInt(mLastMetrics.GetScrollOffset()) != RoundedToInt(aMetrics.GetScrollOffset()) 
-          || mLastMetrics.GetZoom() != aMetrics.GetZoom();;
+bool AsyncCompositionManager::FrameMetricsHaveUpdated(
+    const FrameMetrics& aMetrics) {
+  return RoundedToInt(mLastMetrics.GetScrollOffset()) !=
+             RoundedToInt(aMetrics.GetScrollOffset()) ||
+         mLastMetrics.GetZoom() != aMetrics.GetZoom();
+  ;
 }
 #endif
 

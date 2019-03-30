@@ -161,7 +161,8 @@ enum class VRDisplayCapabilityFlags : uint16_t {
   Cap_MountDetection = 1 << 8,
   /**
    * Cap_PositionEmulated is set if the VRDisplay is capable of setting a
-   * emulated position (e.g. neck model) even if still doesn't support 6DOF tracking.
+   * emulated position (e.g. neck model) even if still doesn't support 6DOF
+   * tracking.
    */
   Cap_PositionEmulated = 1 << 9,
   /**
