@@ -2735,6 +2735,7 @@ dependencies = [
  "thin-slice 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
  "to_shmem 0.0.1",
+ "to_shmem_derive 0.0.1",
  "toml 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "uluru 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "unicode-bidi 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2939,6 +2940,18 @@ dependencies = [
 [[package]]
 name = "to_shmem"
 version = "0.0.1"
+
+[[package]]
+name = "to_shmem_derive"
+version = "0.0.1"
+dependencies = [
+ "darling 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "derive_common 0.0.1",
+ "proc-macro2 0.4.24 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote 0.6.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 0.15.24 (registry+https://github.com/rust-lang/crates.io-index)",
+ "synstructure 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "tokio"
