@@ -261,11 +261,11 @@ void StyleSheet::SetDisabled(bool aDisabled) {
   }
 }
 
-already_AddRefed<URLExtraData> StyleSheet::CreateURLExtraData() const {
-  RefPtr<URLExtraData> data = new URLExtraData(
-      GetBaseURI(), GetSheetURI(), Principal(), GetReferrerPolicy());
-  return data.forget();
+void StyleSheet::SetURLExtraData() {
+  Inner().mURLData = new URLExtraData(GetBaseURI(), GetSheetURI(), Principal(),
+                                      GetReferrerPolicy());
 }
+
 StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
                                ReferrerPolicy aReferrerPolicy,
                                const SRIMetadata& aIntegrity,
@@ -900,7 +900,7 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
   MOZ_ASSERT(aLoadData);
   MOZ_ASSERT(mParsePromise.IsEmpty());
   RefPtr<StyleSheetParsePromise> p = mParsePromise.Ensure(__func__);
-  Inner().mURLData = CreateURLExtraData();  // RefPtr
+  SetURLExtraData();
 
   const StyleUseCounters* useCounters =
       aLoader->GetDocument() ? aLoader->GetDocument()->GetStyleUseCounters()
@@ -947,7 +947,7 @@ void StyleSheet::ParseSheetSync(
           ? aLoader->GetDocument()->GetStyleUseCounters()
           : nullptr;
 
-  Inner().mURLData = CreateURLExtraData();  // RefPtr
+  SetURLExtraData();
   Inner().mContents =
       Servo_StyleSheet_FromUTF8Bytes(
           aLoader, this, aLoadData, &aBytes, mParsingMode, Inner().mURLData,

@@ -1388,7 +1388,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
     should_record_use_counters: bool,
 ) {
     let load_data = RefPtr::new(load_data);
-    let extra_data = UrlExtraData(RefPtr::new(extra_data));
+    let extra_data = UrlExtraData::new(extra_data);
 
     let mut sheet_bytes = nsCString::new();
     sheet_bytes.assign(&*bytes);
@@ -5797,7 +5797,7 @@ pub unsafe extern "C" fn Servo_CssUrlData_GetSerialization(
 pub extern "C" fn Servo_CssUrlData_GetExtraData(
     url: &RawServoCssUrlData,
 ) -> &mut URLExtraData {
-    unsafe { &mut *CssUrlData::as_arc(&url).extra_data.0.get() }
+    unsafe { &mut *CssUrlData::as_arc(&url).extra_data.ptr() }
 }
 
 #[no_mangle]
