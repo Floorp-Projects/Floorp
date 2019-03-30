@@ -112,6 +112,9 @@ const chromeRDPEnums = {
     JAVASCRIPT: "javascript",
     NETWORK: "network",
     CONSOLE_API: "console-api",
+    // Messages emitted by the console frontend itself (i.e. similar messages grouping
+    // header).
+    CONSOLE_FRONTEND: "console-frontend",
     STORAGE: "storage",
     APPCACHE: "appcache",
     RENDERING: "rendering",
@@ -128,6 +131,9 @@ const chromeRDPEnums = {
     START_GROUP: "startGroup",
     START_GROUP_COLLAPSED: "startGroupCollapsed",
     END_GROUP: "endGroup",
+    CONTENT_BLOCKING_GROUP: "contentBlockingWarningGroup",
+    CORS_GROUP: "CORSWarningGroup",
+    CSP_GROUP: "CSPWarningGroup",
     ASSERT: "assert",
     DEBUG: "debug",
     PROFILE: "profile",
