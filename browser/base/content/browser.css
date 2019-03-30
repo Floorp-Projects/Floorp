@@ -698,15 +698,15 @@ html|input.urlbar-input {
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginsFooter"] {
   -moz-box-pack: center;
-  color: var(--btn-text-color);
+  color: -moz-fieldText;
   min-height: 40px;
   border-top: 1px solid rgba(38,38,38,.15);
-  background-color: #EDEDED;
+  background-color: hsla(0,0%,80%,.35); /* match arrowpanel-dimmed */;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginsFooter"]:hover,
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginsFooter"][selected] {
-  background-color: #DCDCDE;
+  background-color: hsla(0,0%,80%,.5); /* match arrowpanel-dimmed-further */
 }
 
 #PopupAutoComplete[firstresultstyle="insecureWarning"] {
