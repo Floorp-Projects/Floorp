@@ -4,7 +4,7 @@
   "favicon": "images/favicon.png",
   "theme": "light",
   "dir": "ltr",
-  "defaultURL": "https://devtools-html.github.io/debugger-examples/",
+  "defaultURL": "https://firefox-devtools.github.io/debugger-examples/",
   "logging": {
     "firefoxProxy": false
   },

@@ -48,7 +48,7 @@ namespace dom {
 class WebAuthnTransaction {
  public:
   explicit WebAuthnTransaction(const RefPtr<Promise>& aPromise)
-      : mPromise(aPromise), mId(NextId()) {
+      : mPromise(aPromise), mId(NextId()), mVisibilityChanged(false) {
     MOZ_ASSERT(mId > 0);
   }
 
@@ -57,6 +57,10 @@ class WebAuthnTransaction {
 
   // Unique transaction id.
   uint64_t mId;
+
+  // Whether or not visibility has changed for the window during this
+  // transaction
+  bool mVisibilityChanged;
 
  private:
   // Generates a unique id for new transactions. This doesn't have to be unique
@@ -105,7 +109,9 @@ class WebAuthnManager final : public WebAuthnManagerBase, public AbortFollower {
  protected:
   // Cancels the current transaction (by sending a Cancel message to the
   // parent) and rejects it by calling RejectTransaction().
-  void CancelTransaction(const nsresult& aError) override;
+  void CancelTransaction(const nsresult& aError);
+  // Upon a visibility change, makes note of it in the current transaction.
+  void HandleVisibilityChange() override;
 
  private:
   virtual ~WebAuthnManager();

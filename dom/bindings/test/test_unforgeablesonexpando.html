@@ -6,6 +6,7 @@
 <div id="log"></div>
 <img name="location">
 <script>
+/* global test, assert_equals */
 test(function() {
   assert_equals(document.location, window.location,
                 'The <img name="location"> should not override the location getter');

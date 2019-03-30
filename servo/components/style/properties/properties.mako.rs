@@ -36,6 +36,7 @@ use selectors::parser::SelectorParseErrorKind;
 #[cfg(feature = "servo")] use servo_config::prefs;
 use style_traits::{CssWriter, KeywordsCollectFn, ParseError, ParsingMode};
 use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
+use to_shmem::impl_trivial_to_shmem;
 use crate::stylesheets::{CssRuleType, Origin, UrlExtraData};
 use crate::values::generics::text::LineHeight;
 use crate::values::computed;
@@ -256,6 +257,7 @@ pub mod shorthands {
 %>
 
 /// Servo's representation for a property declaration.
+#[derive(ToShmem)]
 #[repr(u16)]
 pub enum PropertyDeclaration {
     % for variant in variants:
@@ -741,10 +743,12 @@ static ${name}: LonghandIdSet = LonghandIdSet {
 </%def>
 
 /// A set of longhand properties
-#[derive(Clone, Debug, Default, MallocSizeOf, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, MallocSizeOf, PartialEq)]
 pub struct LonghandIdSet {
     storage: [u32; (${len(data.longhands)} - 1 + 32) / 32]
 }
+
+impl_trivial_to_shmem!(LonghandIdSet);
 
 /// An iterator over a set of longhand ids.
 pub struct LonghandIdSetIterator<'a> {
@@ -893,7 +897,7 @@ impl LonghandIdSet {
 
 /// An enum to represent a CSS Wide keyword.
 #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo,
-         ToCss)]
+         ToCss, ToShmem)]
 pub enum CSSWideKeyword {
     /// The `initial` keyword.
     Initial,
@@ -993,7 +997,7 @@ pub enum LogicalGroup {
 }
 
 /// An identifier for a given longhand property.
-#[derive(Clone, Copy, Eq, Hash, MallocSizeOf, PartialEq)]
+#[derive(Clone, Copy, Eq, Hash, MallocSizeOf, PartialEq, ToShmem)]
 #[repr(u16)]
 pub enum LonghandId {
     % for i, property in enumerate(data.longhands):
@@ -1335,7 +1339,7 @@ where
 }
 
 /// An identifier for a given shorthand property.
-#[derive(Clone, Copy, Debug, Eq, Hash, MallocSizeOf, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, MallocSizeOf, PartialEq, ToShmem)]
 #[repr(u16)]
 pub enum ShorthandId {
     % for i, property in enumerate(data.shorthands):
@@ -1533,7 +1537,7 @@ impl ShorthandId {
 }
 
 /// An unparsed property value that contains `var()` functions.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, ToShmem)]
 pub struct UnparsedValue {
     /// The css serialization for this value.
     css: String,
@@ -1954,7 +1958,7 @@ impl PropertyId {
 
 /// A declaration using a CSS-wide keyword.
 #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
-#[derive(Clone, PartialEq, ToCss)]
+#[derive(Clone, PartialEq, ToCss, ToShmem)]
 pub struct WideKeywordDeclaration {
     #[css(skip)]
     id: LonghandId,
@@ -1963,7 +1967,7 @@ pub struct WideKeywordDeclaration {
 
 /// An unparsed declaration that contains `var()` functions.
 #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
-#[derive(Clone, PartialEq, ToCss)]
+#[derive(Clone, PartialEq, ToCss, ToShmem)]
 pub struct VariableDeclaration {
     #[css(skip)]
     id: LonghandId,
@@ -1973,7 +1977,7 @@ pub struct VariableDeclaration {
 
 /// A custom property declaration value is either an unparsed value or a CSS
 /// wide-keyword.
-#[derive(Clone, PartialEq, ToCss)]
+#[derive(Clone, PartialEq, ToCss, ToShmem)]
 pub enum CustomDeclarationValue {
     /// A value.
     Value(Arc<crate::custom_properties::SpecifiedValue>),
@@ -1983,7 +1987,7 @@ pub enum CustomDeclarationValue {
 
 /// A custom property declaration with the property name and the declared value.
 #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
-#[derive(Clone, PartialEq, ToCss)]
+#[derive(Clone, PartialEq, ToCss, ToShmem)]
 pub struct CustomDeclaration {
     /// The name of the custom property.
     #[css(skip)]

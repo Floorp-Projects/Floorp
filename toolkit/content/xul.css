@@ -288,11 +288,8 @@ menuitem[type="radio"] {
   -moz-box-flex: 1;
 }
 
-/********* popup & menupopup ***********/
+/********* menupopup, panel, & tooltip ***********/
 
-/* <popup> is deprecated.  Only <menupopup> and <tooltip> are still valid. */
-
-popup,
 menupopup {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#popup");
   -moz-box-orient: vertical;
@@ -303,7 +300,6 @@ panel {
   -moz-box-orient: vertical;
 }
 
-popup,
 menupopup,
 panel,
 tooltip {

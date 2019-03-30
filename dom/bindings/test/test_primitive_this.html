@@ -13,22 +13,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=603201
   /** Test for Bug 603201 **/
 
   SimpleTest.waitForExplicitFinish();
-  function runTest()
-  {
+  function runTest() {
     var nodes = document.body.childNodes;
 
     Object.setPrototypeOf(Number.prototype, nodes);
 
-    Object.defineProperty(nodes, "getter", {get: function() {
-      "use strict";
-      is(this, 1);
-      return "getter";
-    }});
-    Object.defineProperty(Object.getPrototypeOf(nodes), "getter2", {get: function() {
-      "use strict";
-      is(this, 1);
-      return "getter2";
-    }});
+    Object.defineProperty(nodes, "getter", {get() {
+    "use strict";
+    is(this, 1);
+    return "getter";
+  }});
+    Object.defineProperty(Object.getPrototypeOf(nodes), "getter2", {get() {
+    "use strict";
+    is(this, 1);
+    return "getter2";
+  }});
 
     var number = 1;
     is(number.getter, "getter");

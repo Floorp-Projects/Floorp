@@ -826,7 +826,7 @@ def set_gecko_property(ffi_name, expr):
     pub fn set_${ident}(&mut self, v: longhands::${ident}::computed_value::T) {
         match v {
             UrlOrNone::Url(ref url) => {
-                self.gecko.${gecko_ffi_name}.set_move(url.0.url_value.clone())
+                self.gecko.${gecko_ffi_name}.set_move(url.clone_url_value())
             }
             UrlOrNone::None => {
                 unsafe {
@@ -1993,7 +1993,9 @@ fn static_assert() {
         } else {
             v.families.single_generic().unwrap_or(structs::kGenericFont_NONE)
         };
-        self.gecko.mFont.fontlist.mFontlist.mBasePtr.set_move(v.families.0.clone());
+        self.gecko.mFont.fontlist.mFontlist.mBasePtr.set_move(
+            v.families.shared_font_list().clone()
+        );
         // Fixed-up if needed in Cascade::fixup_font_stuff.
         self.gecko.mFont.fontlist.mDefaultFontType = FontFamilyType::eFamily_none;
     }
@@ -2038,7 +2040,7 @@ fn static_assert() {
             };
             FontFamilyList::new(Box::new([default]))
         } else {
-            FontFamilyList(shared_fontlist)
+            FontFamilyList::SharedFontList(shared_fontlist)
         };
 
         FontFamily {
@@ -3781,7 +3783,7 @@ fn static_assert() {
                 },
                 Url(ref url) => {
                     unsafe {
-                        bindings::Gecko_nsStyleFilter_SetURLValue(gecko_filter, url.0.url_value.get());
+                        bindings::Gecko_nsStyleFilter_SetURLValue(gecko_filter, url.url_value_ptr());
                     }
                 },
             }
@@ -4162,7 +4164,7 @@ fn set_style_svg_path(
             % if ident == "clip_path":
             ShapeSource::ImageOrUrl(ref url) => {
                 unsafe {
-                    bindings::Gecko_StyleShapeSource_SetURLValue(${ident}, url.0.url_value.get())
+                    bindings::Gecko_StyleShapeSource_SetURLValue(${ident}, url.url_value_ptr())
                 }
             }
             % elif ident == "shape_outside":

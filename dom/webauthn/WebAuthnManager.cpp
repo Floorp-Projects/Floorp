@@ -180,6 +180,12 @@ void WebAuthnManager::CancelTransaction(const nsresult& aError) {
   RejectTransaction(aError);
 }
 
+void WebAuthnManager::HandleVisibilityChange() {
+  if (mTransaction.isSome()) {
+    mTransaction.ref().mVisibilityChanged = true;
+  }
+}
+
 WebAuthnManager::~WebAuthnManager() {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -199,16 +205,26 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
     const Optional<OwningNonNull<AbortSignal>>& aSignal) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mTransaction.isSome()) {
-    CancelTransaction(NS_ERROR_ABORT);
-  }
-
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
 
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(global, rv);
   if (rv.Failed()) {
     return nullptr;
+  }
+
+  if (mTransaction.isSome()) {
+    // If there hasn't been a visibility change during the current
+    // transaction, then let's let that one complete rather than
+    // cancelling it on a subsequent call.
+    if (!mTransaction.ref().mVisibilityChanged) {
+      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      return promise.forget();
+    }
+
+    // Otherwise, the user may well have clicked away, so let's
+    // abort the old transaction and take over control from here.
+    CancelTransaction(NS_ERROR_ABORT);
   }
 
   // Abort the request if aborted flag is already set.
@@ -400,16 +416,26 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
     const Optional<OwningNonNull<AbortSignal>>& aSignal) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mTransaction.isSome()) {
-    CancelTransaction(NS_ERROR_ABORT);
-  }
-
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
 
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(global, rv);
   if (rv.Failed()) {
     return nullptr;
+  }
+
+  if (mTransaction.isSome()) {
+    // If there hasn't been a visibility change during the current
+    // transaction, then let's let that one complete rather than
+    // cancelling it on a subsequent call.
+    if (!mTransaction.ref().mVisibilityChanged) {
+      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      return promise.forget();
+    }
+
+    // Otherwise, the user may well have clicked away, so let's
+    // abort the old transaction and take over control from here.
+    CancelTransaction(NS_ERROR_ABORT);
   }
 
   // Abort the request if aborted flag is already set.
@@ -579,16 +605,26 @@ already_AddRefed<Promise> WebAuthnManager::Store(
     const Credential& aCredential) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mTransaction.isSome()) {
-    CancelTransaction(NS_ERROR_ABORT);
-  }
-
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
 
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(global, rv);
   if (rv.Failed()) {
     return nullptr;
+  }
+
+  if (mTransaction.isSome()) {
+    // If there hasn't been a visibility change during the current
+    // transaction, then let's let that one complete rather than
+    // cancelling it on a subsequent call.
+    if (!mTransaction.ref().mVisibilityChanged) {
+      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      return promise.forget();
+    }
+
+    // Otherwise, the user may well have clicked away, so let's
+    // abort the old transaction and take over control from here.
+    CancelTransaction(NS_ERROR_ABORT);
   }
 
   promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);

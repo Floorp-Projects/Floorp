@@ -361,19 +361,19 @@ AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
 
 #ifdef DEBUG
   // Sanity check that all of animation data are the same.
-  const AnimationData& lastData =
+  const Maybe<TransformData>& lastData =
       aPropertyAnimationGroups.LastElement().mAnimationData;
   for (const PropertyAnimationGroup& group : aPropertyAnimationGroups) {
-    const AnimationData& data = group.mAnimationData;
-    MOZ_ASSERT(data.type() == lastData.type(),
+    const Maybe<TransformData>& data = group.mAnimationData;
+    MOZ_ASSERT(data.isSome() == lastData.isSome(),
                "The type of AnimationData should be the same");
-    if (data.type() == AnimationData::Tnull_t) {
+    if (data.isNothing()) {
       continue;
     }
 
-    MOZ_ASSERT(data.type() == AnimationData::TTransformData);
-    const TransformData& transformData = data.get_TransformData();
-    const TransformData& lastTransformData = lastData.get_TransformData();
+    MOZ_ASSERT(data.isSome());
+    const TransformData& transformData = data.ref();
+    const TransformData& lastTransformData = lastData.ref();
     MOZ_ASSERT(transformData.origin() == lastTransformData.origin() &&
                    transformData.transformOrigin() ==
                        lastTransformData.transformOrigin() &&
@@ -573,7 +573,7 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
       case eCSSProperty_translate:
       case eCSSProperty_transform: {
         const TransformData& transformData =
-            lastPropertyAnimationGroup.mAnimationData.get_TransformData();
+            lastPropertyAnimationGroup.mAnimationData.ref();
 
         gfx::Matrix4x4 transform =
             ServoAnimationValueToMatrix4x4(animationValues, transformData);
