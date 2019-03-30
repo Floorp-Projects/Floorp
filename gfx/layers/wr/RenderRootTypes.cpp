@@ -11,65 +11,61 @@
 namespace mozilla {
 namespace ipc {
 
-void IPDLParamTraits<mozilla::layers::RenderRootDisplayListData>::Write(IPC::Message* aMsg,
-                                                                        IProtocol* aActor,
-                                                                        paramType&& aParam) {
-    WriteIPDLParam(aMsg, aActor, aParam.mRenderRoot);
-    WriteIPDLParam(aMsg, aActor, aParam.mRect);
-    WriteIPDLParam(aMsg, aActor, aParam.mCommands);
-    WriteIPDLParam(aMsg, aActor, aParam.mContentSize);
-    WriteIPDLParam(aMsg, aActor, std::move(aParam.mDL));
-    WriteIPDLParam(aMsg, aActor, aParam.mDLDesc);
-    WriteIPDLParam(aMsg, aActor, aParam.mResourceUpdates);
-    WriteIPDLParam(aMsg, aActor, aParam.mSmallShmems);
-    WriteIPDLParam(aMsg, aActor, std::move(aParam.mLargeShmems));
-    WriteIPDLParam(aMsg, aActor, aParam.mScrollData);
+void IPDLParamTraits<mozilla::layers::RenderRootDisplayListData>::Write(
+    IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam) {
+  WriteIPDLParam(aMsg, aActor, aParam.mRenderRoot);
+  WriteIPDLParam(aMsg, aActor, aParam.mRect);
+  WriteIPDLParam(aMsg, aActor, aParam.mCommands);
+  WriteIPDLParam(aMsg, aActor, aParam.mContentSize);
+  WriteIPDLParam(aMsg, aActor, std::move(aParam.mDL));
+  WriteIPDLParam(aMsg, aActor, aParam.mDLDesc);
+  WriteIPDLParam(aMsg, aActor, aParam.mResourceUpdates);
+  WriteIPDLParam(aMsg, aActor, aParam.mSmallShmems);
+  WriteIPDLParam(aMsg, aActor, std::move(aParam.mLargeShmems));
+  WriteIPDLParam(aMsg, aActor, aParam.mScrollData);
 }
 
-bool IPDLParamTraits<mozilla::layers::RenderRootDisplayListData>::Read(const IPC::Message* aMsg,
-                                                                       PickleIterator* aIter,
-                                                                       IProtocol* aActor,
-                                                                       paramType* aResult) {
-    if (ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRenderRoot) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRect) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCommands) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mContentSize) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDL) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDLDesc) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResourceUpdates) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSmallShmems) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mLargeShmems) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mScrollData)) {
-        return true;
-    }
-    return false;
+bool IPDLParamTraits<mozilla::layers::RenderRootDisplayListData>::Read(
+    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
+    paramType* aResult) {
+  if (ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRenderRoot) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRect) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCommands) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mContentSize) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDL) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDLDesc) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResourceUpdates) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSmallShmems) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mLargeShmems) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mScrollData)) {
+    return true;
+  }
+  return false;
 }
 
-void IPDLParamTraits<mozilla::layers::RenderRootUpdates>::Write(IPC::Message* aMsg,
-                                                                        IProtocol* aActor,
-                                                                        paramType&& aParam) {
-    WriteIPDLParam(aMsg, aActor, aParam.mRenderRoot);
-    WriteIPDLParam(aMsg, aActor, aParam.mCommands);
-    WriteIPDLParam(aMsg, aActor, aParam.mResourceUpdates);
-    WriteIPDLParam(aMsg, aActor, aParam.mSmallShmems);
-    WriteIPDLParam(aMsg, aActor, std::move(aParam.mLargeShmems));
-    WriteIPDLParam(aMsg, aActor, aParam.mScrollUpdates);
+void IPDLParamTraits<mozilla::layers::RenderRootUpdates>::Write(
+    IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam) {
+  WriteIPDLParam(aMsg, aActor, aParam.mRenderRoot);
+  WriteIPDLParam(aMsg, aActor, aParam.mCommands);
+  WriteIPDLParam(aMsg, aActor, aParam.mResourceUpdates);
+  WriteIPDLParam(aMsg, aActor, aParam.mSmallShmems);
+  WriteIPDLParam(aMsg, aActor, std::move(aParam.mLargeShmems));
+  WriteIPDLParam(aMsg, aActor, aParam.mScrollUpdates);
 }
 
-bool IPDLParamTraits<mozilla::layers::RenderRootUpdates>::Read(const IPC::Message* aMsg,
-                                                                       PickleIterator* aIter,
-                                                                       IProtocol* aActor,
-                                                                       paramType* aResult) {
-    if (ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRenderRoot) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCommands) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResourceUpdates) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSmallShmems) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mLargeShmems) &&
-        ReadIPDLParam(aMsg, aIter, aActor, &aResult->mScrollUpdates)) {
-        return true;
-    }
-    return false;
+bool IPDLParamTraits<mozilla::layers::RenderRootUpdates>::Read(
+    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
+    paramType* aResult) {
+  if (ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRenderRoot) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCommands) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResourceUpdates) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSmallShmems) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mLargeShmems) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mScrollUpdates)) {
+    return true;
+  }
+  return false;
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

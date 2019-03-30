@@ -372,8 +372,8 @@ WebRenderCanvasRendererAsync* WebRenderCanvasData::CreateCanvasRenderer() {
   return mCanvasRenderer.get();
 }
 
-WebRenderRenderRootData::WebRenderRenderRootData(RenderRootStateManager* aManager,
-                                                 nsDisplayItem* aItem)
+WebRenderRenderRootData::WebRenderRenderRootData(
+    RenderRootStateManager* aManager, nsDisplayItem* aItem)
     : WebRenderUserData(aManager, aItem) {}
 
 RenderRootBoundary& WebRenderRenderRootData::EnsureHasBoundary(

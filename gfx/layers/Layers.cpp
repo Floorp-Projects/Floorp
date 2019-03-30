@@ -2233,8 +2233,7 @@ bool LayerManager::IsLogEnabled() {
 }
 
 bool LayerManager::SetPendingScrollUpdateForNextTransaction(
-    ScrollableLayerGuid::ViewID aScrollId,
-    const ScrollUpdateInfo& aUpdateInfo,
+    ScrollableLayerGuid::ViewID aScrollId, const ScrollUpdateInfo& aUpdateInfo,
     wr::RenderRoot aRenderRoot) {
   Layer* withPendingTransform = DepthFirstSearch<ForwardIterator>(
       GetRoot(), [](Layer* aLayer) { return aLayer->HasPendingTransform(); });
@@ -2247,7 +2246,8 @@ bool LayerManager::SetPendingScrollUpdateForNextTransaction(
   // RenderRoot::Default so that we can make assumptions in
   // GetPendingScrollInfoUpdate.
   wr::RenderRoot renderRoot = (GetBackendType() == LayersBackend::LAYERS_WR)
-    ? aRenderRoot : wr::RenderRoot::Default;
+                                  ? aRenderRoot
+                                  : wr::RenderRoot::Default;
   mPendingScrollUpdates[renderRoot][aScrollId] = aUpdateInfo;
   return true;
 }

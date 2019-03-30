@@ -460,10 +460,10 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   wr::BuiltDisplayList dl;
   wr::LayoutSize builderContentSize;
   builder.Finalize(builderContentSize, dl);
-  aSceneBuilderTxn.SetDisplayList(
-      gfx::Color(0.f, 0.f, 0.f, 0.f), aEpoch,
-      wr::ToLayoutSize(aPipeline->mScBounds.Size()),
-      aPipelineId, builderContentSize, dl.dl_desc, dl.dl);
+  aSceneBuilderTxn.SetDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f), aEpoch,
+                                  wr::ToLayoutSize(aPipeline->mScBounds.Size()),
+                                  aPipelineId, builderContentSize, dl.dl_desc,
+                                  dl.dl);
 }
 
 void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
@@ -519,10 +519,9 @@ void AsyncImagePipelineManager::SetEmptyDisplayList(
   wr::BuiltDisplayList dl;
   wr::LayoutSize builderContentSize;
   builder.Finalize(builderContentSize, dl);
-  txn.SetDisplayList(
-      gfx::Color(0.f, 0.f, 0.f, 0.f), epoch,
-      wr::ToLayoutSize(pipeline->mScBounds.Size()),
-      aPipelineId, builderContentSize, dl.dl_desc, dl.dl);
+  txn.SetDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f), epoch,
+                     wr::ToLayoutSize(pipeline->mScBounds.Size()), aPipelineId,
+                     builderContentSize, dl.dl_desc, dl.dl);
 }
 
 void AsyncImagePipelineManager::HoldExternalImage(

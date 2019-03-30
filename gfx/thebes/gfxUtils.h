@@ -316,10 +316,14 @@ class gfxUtils {
 
   static mozilla::wr::RenderRoot GetContentRenderRoot();
 
-  static mozilla::Maybe<mozilla::wr::RenderRoot> GetRenderRootForFrame(const nsIFrame* aFrame);
-  static mozilla::Maybe<mozilla::wr::RenderRoot> GetRenderRootForElement(const mozilla::dom::Element* aElement);
-  static mozilla::wr::RenderRoot RecursivelyGetRenderRootForFrame(const nsIFrame* aFrame);
-  static mozilla::wr::RenderRoot RecursivelyGetRenderRootForElement(const mozilla::dom::Element* aElement);
+  static mozilla::Maybe<mozilla::wr::RenderRoot> GetRenderRootForFrame(
+      const nsIFrame* aFrame);
+  static mozilla::Maybe<mozilla::wr::RenderRoot> GetRenderRootForElement(
+      const mozilla::dom::Element* aElement);
+  static mozilla::wr::RenderRoot RecursivelyGetRenderRootForFrame(
+      const nsIFrame* aFrame);
+  static mozilla::wr::RenderRoot RecursivelyGetRenderRootForElement(
+      const mozilla::dom::Element* aElement);
 };
 
 namespace mozilla {
