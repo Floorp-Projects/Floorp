@@ -2942,6 +2942,10 @@ name = "to_shmem"
 version = "0.0.1"
 dependencies = [
  "cssparser 0.25.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "servo_arc 0.1.1",
+ "smallbitvec 2.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "smallvec 0.6.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thin-slice 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
