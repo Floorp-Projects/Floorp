@@ -285,8 +285,7 @@ class SimplePackager(object):
                 if self.UNPACK_ADDON_RE.search(install_rdf):
                     addon = 'unpacked'
                 self._add_addon(mozpath.dirname(path), addon)
-            elif (mozpath.basename(path) == 'manifest.json' and
-                  'modules/' not in path):
+            elif mozpath.basename(path) == 'manifest.json':
                 manifest = file.open().read()
                 try:
                     parsed = json.loads(manifest)
