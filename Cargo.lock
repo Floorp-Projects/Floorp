@@ -1187,6 +1187,7 @@ dependencies = [
  "smallvec 0.6.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "style 0.0.1",
  "style_traits 0.0.1",
+ "to_shmem 0.0.1",
 ]
 
 [[package]]
@@ -2792,6 +2793,7 @@ dependencies = [
  "smallvec 0.6.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "style 0.0.1",
  "style_traits 0.0.1",
+ "to_shmem 0.0.1",
 ]
 
 [[package]]
