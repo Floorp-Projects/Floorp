@@ -321,7 +321,8 @@ nsresult TextEditor::InitRules() {
     // instantiate the rules for this text editor
     mRules = new TextEditRules();
   }
-  return mRules->Init(this);
+  RefPtr<TextEditRules> textEditRules(mRules);
+  return textEditRules->Init(this);
 }
 
 nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
