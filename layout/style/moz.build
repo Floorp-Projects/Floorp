@@ -111,6 +111,7 @@ EXPORTS.mozilla += [
     'StyleSheetInfo.h',
     'StyleSheetInlines.h',
     'URLExtraData.h',
+    'UserAgentStyleSheetID.h',
     'UserAgentStyleSheetList.h',
 ]
 
