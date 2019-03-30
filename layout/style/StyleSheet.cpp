@@ -23,6 +23,7 @@
 #include "mozilla/StyleSheetInlines.h"
 
 #include "mozAutoDocUpdate.h"
+#include "nsLayoutStylesheetCache.h"
 
 namespace mozilla {
 
@@ -303,6 +304,10 @@ StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy, StyleSheet* aPrimarySheet)
       mSourceURL(aCopy.mSourceURL),
       mContents(Servo_StyleSheet_Clone(aCopy.mContents.get(), aPrimarySheet)
                     .Consume()),
+      // Cloning aCopy.mContents will still leave us with some references to
+      // data in shared memory (for example, any SelectorList objects will still
+      // be shared), so continue to keep it alive.
+      mSharedMemory(aCopy.mSharedMemory),
       mURLData(aCopy.mURLData)
 #ifdef DEBUG
       ,
@@ -315,7 +320,12 @@ StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy, StyleSheet* aPrimarySheet)
   MOZ_COUNT_CTOR(StyleSheetInfo);
 }
 
-StyleSheetInfo::~StyleSheetInfo() { MOZ_COUNT_DTOR(StyleSheetInfo); }
+StyleSheetInfo::~StyleSheetInfo() {
+  MOZ_COUNT_DTOR(StyleSheetInfo);
+
+  // Drop the sheet contents before the shared memory.
+  mContents = nullptr;
+}
 
 StyleSheetInfo* StyleSheetInfo::CloneFor(StyleSheet* aPrimarySheet) {
   return new StyleSheetInfo(*this, aPrimarySheet);
@@ -326,9 +336,15 @@ MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoStyleSheetMallocEnclosingSizeOf)
 
 size_t StyleSheetInfo::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);
-  n += Servo_StyleSheet_SizeOfIncludingThis(
-      ServoStyleSheetMallocSizeOf, ServoStyleSheetMallocEnclosingSizeOf,
-      mContents);
+
+  // If this sheet came from shared memory, then it will be counted by
+  // nsLayoutStylesheetCache in the parent process.
+  if (!mSharedMemory) {
+    n += Servo_StyleSheet_SizeOfIncludingThis(
+        ServoStyleSheetMallocSizeOf, ServoStyleSheetMallocEnclosingSizeOf,
+        mContents);
+  }
+
   return n;
 }
 
@@ -1163,6 +1179,37 @@ nsresult StyleSheet::InsertRuleIntoGroupInternal(const nsAString& aRule,
 OriginFlags StyleSheet::GetOrigin() {
   return static_cast<OriginFlags>(
       Servo_StyleSheet_GetOrigin(Inner().mContents));
+}
+
+void StyleSheet::SetSharedContents(nsLayoutStylesheetCache::Shm* aSharedMemory,
+                                   const ServoCssRules* aSharedRules) {
+  MOZ_ASSERT(aSharedMemory);
+  MOZ_ASSERT(!IsComplete());
+
+  SetURLExtraData();
+
+  // Hold a strong reference to the shared memory that aSharedRules comes
+  // from, so that we don't end up releasing the shared memory before the
+  // StyleSheetInner.
+  Inner().mSharedMemory = aSharedMemory;
+
+  Inner().mContents =
+      Servo_StyleSheet_FromSharedData(Inner().mURLData, aSharedRules).Consume();
+
+  // Don't call FinishParse(), since that tries to set source map URLs,
+  // which we don't have.
+}
+
+const ServoCssRules* StyleSheet::ToShared(
+    RawServoSharedMemoryBuilder* aBuilder) {
+  // Assert some things we assume when creating a StyleSheet using shared
+  // memory.
+  MOZ_ASSERT(GetReferrerPolicy() == net::RP_Unset);
+  MOZ_ASSERT(GetCORSMode() == CORS_NONE);
+  MOZ_ASSERT(Inner().mIntegrity.IsEmpty());
+  MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(Principal()));
+
+  return Servo_SharedMemoryBuilder_AddStylesheet(aBuilder, Inner().mContents);
 }
 
 }  // namespace mozilla
