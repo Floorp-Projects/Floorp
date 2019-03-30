@@ -55,7 +55,8 @@ use style::gecko_bindings::structs::{
     RawServoKeyframesRule, ServoCssRules, RawServoStyleSheetContents,
     RawServoPageRule, RawServoNamespaceRule, RawServoMozDocumentRule,
     RawServoKeyframe, RawServoMediaRule, RawServoImportRule,
-    RawServoFontFaceRule, RawServoFontFeatureValuesRule
+    RawServoFontFaceRule, RawServoFontFeatureValuesRule,
+    RawServoSharedMemoryBuilder
 };
 use style::gecko_bindings::structs::gfxFontFeatureValueSet;
 use style::gecko_bindings::structs::nsAtom;
@@ -107,7 +108,7 @@ use style::properties::{parse_one_declaration_into, parse_style_attribute};
 use style::properties::{ComputedValues, Importance, NonCustomPropertyId};
 use style::properties::{LonghandId, LonghandIdSet, PropertyDeclarationBlock, PropertyId};
 use style::properties::{PropertyDeclarationId, ShorthandId};
-use style::properties::{SourcePropertyDeclaration, StyleBuilder};
+use style::properties::{SourcePropertyDeclaration, StyleBuilder, UnparsedValue};
 use style::rule_cache::RuleCacheConditions;
 use style::rule_tree::{CascadeLevel, StrongRuleNode};
 use style::selector_parser::{PseudoElementCascadeType, SelectorImpl};
@@ -137,6 +138,7 @@ use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
 use style::values::{CustomIdent, KeyframesName};
 use style_traits::{CssWriter, ParsingMode, StyleParseErrorKind, ToCss};
+use to_shmem::SharedMemoryBuilder;
 
 trait ClosureHelper {
     fn invoke(&self);
@@ -6336,4 +6338,56 @@ pub unsafe extern "C" fn Servo_Quotes_GetQuote(
         &quote_pair.closing
     };
     (*result).write_str(quote).unwrap();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_SharedMemoryBuilder_Create(
+    buffer: *mut u8,
+    len: usize,
+) -> *mut RawServoSharedMemoryBuilder {
+    let mut builder = Box::new(SharedMemoryBuilder::new(buffer, len));
+
+    // We have Arc<UnparsedValue>s in style sheets due to CSS variables being
+    // used in shorthand property declarations.  There aren't many, though,
+    // and they aren't big, so we just allow their duplication for now.
+    builder.add_allowed_duplication_type::<UnparsedValue>();
+
+    Box::into_raw(builder) as *mut _
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_SharedMemoryBuilder_AddStylesheet(
+    builder: &mut RawServoSharedMemoryBuilder,
+    raw_contents: &RawServoStyleSheetContents,
+) -> *const ServoCssRules {
+    let builder = SharedMemoryBuilder::from_ffi_mut(builder);
+    let contents = StylesheetContents::as_arc(&raw_contents);
+
+    // Assert some things we assume when we create a style sheet from shared
+    // memory.
+    debug_assert_eq!(contents.origin, Origin::UserAgent);
+    debug_assert_eq!(contents.quirks_mode, QuirksMode::NoQuirks);
+    debug_assert!(contents.source_map_url.read().is_none());
+    debug_assert!(contents.source_url.read().is_none());
+
+    let rules = &contents.rules;
+    let shared_rules: &Arc<Locked<CssRules>> = &*builder.write(rules);
+    (&*shared_rules).with_raw_offset_arc(|arc| {
+        *Locked::<CssRules>::arc_as_borrowed(arc) as *const _
+    })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_SharedMemoryBuilder_GetLength(
+    builder: &mut RawServoSharedMemoryBuilder,
+) -> usize {
+    let builder = SharedMemoryBuilder::from_ffi_mut(builder);
+    builder.len()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_SharedMemoryBuilder_Drop(
+    builder: Owned<RawServoSharedMemoryBuilder>
+) {
+    let _ = builder.into_box::<SharedMemoryBuilder>();
 }

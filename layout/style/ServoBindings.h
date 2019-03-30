@@ -1002,6 +1002,16 @@ void Servo_Quotes_GetQuote(const RawServoQuotes* quotes, int32_t depth,
                            mozilla::StyleContentType quote_type,
                            nsAString* result);
 
+RawServoSharedMemoryBuilder* Servo_SharedMemoryBuilder_Create(uint8_t* buffer,
+                                                              size_t len);
+
+const ServoCssRules* Servo_SharedMemoryBuilder_AddStylesheet(
+    RawServoSharedMemoryBuilder* builder,
+    const RawServoStyleSheetContents* sheet);
+
+size_t Servo_SharedMemoryBuilder_GetLength(
+    RawServoSharedMemoryBuilder* builder);
+
 }  // extern "C"
 
 #pragma GCC diagnostic pop
