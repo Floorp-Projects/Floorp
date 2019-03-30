@@ -33,7 +33,7 @@ use style::gecko::data::{GeckoStyleSheet, PerDocumentStyleData, PerDocumentStyle
 use style::gecko::restyle_damage::GeckoRestyleDamage;
 use style::gecko::selector_parser::{NonTSPseudoClass, PseudoElement};
 use style::gecko::traversal::RecalcStyleOnly;
-use style::gecko::url::CssUrlData;
+use style::gecko::url::{self, CssUrlData};
 use style::gecko::wrapper::{GeckoElement, GeckoNode};
 use style::gecko_bindings::bindings;
 use style::gecko_bindings::bindings::nsACString;
@@ -192,6 +192,7 @@ pub extern "C" fn Servo_InitializeCooperativeThread() {
 pub unsafe extern "C" fn Servo_Shutdown() {
     DUMMY_URL_DATA = ptr::null_mut();
     Stylist::shutdown();
+    url::shutdown();
 }
 
 #[inline(always)]
@@ -2744,7 +2745,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetSources(
             for source in sources.iter() {
                 match *source {
                     Source::Url(ref url) => {
-                        set_next(FontFaceSourceListComponent::Url(url.url.url_value.get()));
+                        set_next(FontFaceSourceListComponent::Url(url.url.url_value_ptr()));
                         for hint in url.format_hints.iter() {
                             set_next(FontFaceSourceListComponent::FormatHint {
                                 length: hint.len(),
