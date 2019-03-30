@@ -1900,56 +1900,15 @@ nsCSSFrameConstructor::ParentType nsCSSFrameConstructor::GetParentType(
   return eTypeBlock;
 }
 
-static nsContainerFrame* AdjustCaptionParentFrame(
-    nsContainerFrame* aParentFrame) {
-  if (aParentFrame->IsTableFrame()) {
-    return aParentFrame->GetParent();
-  }
-  return aParentFrame;
-}
-
-/**
- * If the parent frame is a |tableFrame| and the child is a
- * |captionFrame|, then we want to insert the frames beneath the
- * |tableFrame|'s parent frame. Returns |true| if the parent frame
- * needed to be fixed up.
- */
-static bool GetCaptionAdjustedParent(nsContainerFrame* aParentFrame,
-                                     const nsIFrame* aChildFrame,
-                                     nsContainerFrame** aAdjParentFrame) {
-  *aAdjParentFrame = aParentFrame;
-  bool haveCaption = false;
-
-  if (aChildFrame->IsTableCaption()) {
-    haveCaption = true;
-    *aAdjParentFrame = ::AdjustCaptionParentFrame(aParentFrame);
-  }
-  return haveCaption;
-}
-
-void nsCSSFrameConstructor::AdjustParentFrame(
-    nsContainerFrame** aParentFrame, const FrameConstructionData* aFCData,
-    ComputedStyle* aComputedStyle) {
-  MOZ_ASSERT(aComputedStyle, "Must have child's style");
-  MOZ_ASSERT(aFCData, "Must have frame construction data");
-
-  bool tablePart = ((aFCData->mBits & FCDATA_IS_TABLE_PART) != 0);
-
-  if (tablePart &&
-      aComputedStyle->StyleDisplay()->mDisplay == StyleDisplay::TableCaption) {
-    *aParentFrame = ::AdjustCaptionParentFrame(*aParentFrame);
-  }
-}
-
-// Pull all the captions present in aItems out  into aCaptions
+// Pull all the captions present in aItems out into aCaptions.
 static void PullOutCaptionFrames(nsFrameItems& aItems,
                                  nsFrameItems& aCaptions) {
   nsIFrame* child = aItems.FirstChild();
   while (child) {
     nsIFrame* nextSibling = child->GetNextSibling();
-    if (child->IsTableCaption()) {
+    if (child->StyleDisplay()->mDisplay == StyleDisplay::TableCaption) {
       aItems.RemoveFrame(child);
-      aCaptions.AddChild(child);
+      aCaptions.AppendFrame(nullptr, child);
     }
     child = nextSibling;
   }
@@ -2043,6 +2002,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
 
   // Set the table wrapper frame's secondary childlist lists
   if (captionItems.NotEmpty()) {
+    captionItems.ApplySetParent(newFrame);
     newFrame->SetInitialChildList(nsIFrame::kCaptionList, captionItems);
   }
 
@@ -5697,10 +5657,8 @@ bool nsCSSFrameConstructor::AtLineBoundary(FCItemIterator& aIter) {
 void nsCSSFrameConstructor::ConstructFramesFromItem(
     nsFrameConstructorState& aState, FCItemIterator& aIter,
     nsContainerFrame* aParentFrame, nsFrameItems& aFrameItems) {
-  nsContainerFrame* adjParentFrame = aParentFrame;
   FrameConstructionItem& item = aIter.item();
   ComputedStyle* computedStyle = item.mComputedStyle;
-  AdjustParentFrame(&adjParentFrame, item.mFCData, computedStyle);
 
   if (item.mIsText) {
     // If this is collapsible whitespace next to a line boundary,
@@ -5726,7 +5684,7 @@ void nsCSSFrameConstructor::ConstructFramesFromItem(
         !mAlwaysCreateFramesForIgnorableWhitespace && item.IsWhitespace(aState))
       return;
 
-    ConstructTextFrame(item.mFCData, aState, item.mContent, adjParentFrame,
+    ConstructTextFrame(item.mFCData, aState, item.mContent, aParentFrame,
                        computedStyle, aFrameItems);
     return;
   }
@@ -5739,7 +5697,7 @@ void nsCSSFrameConstructor::ConstructFramesFromItem(
   }
 
   // XXXbz maybe just inline ConstructFrameFromItemInternal here or something?
-  ConstructFrameFromItemInternal(item, aState, adjParentFrame, aFrameItems);
+  ConstructFrameFromItemInternal(item, aState, aParentFrame, aFrameItems);
 
   if (item.mIsGeneratedContent) {
     // This corresponds to the AddRef in AddFrameConstructionItemsInternal.
@@ -6946,6 +6904,7 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   if (captionItems.NotEmpty()) {  // append the caption to the table wrapper
     NS_ASSERTION(LayoutFrameType::Table == frameType, "how did that happen?");
     nsContainerFrame* outerTable = parentFrame->GetParent();
+    captionItems.ApplySetParent(outerTable);
     AppendFrames(outerTable, nsIFrame::kCaptionList, captionItems);
   }
 
@@ -7388,28 +7347,31 @@ void nsCSSFrameConstructor::ContentRangeInserted(
           aStartChild, aEndChild);
     }
 
-    nsContainerFrame* outerTable = nullptr;
-    if (GetCaptionAdjustedParent(captionInsertion.mParentFrame,
-                                 captionItems.FirstChild(), &outerTable)) {
-      // If the parent is not a table wrapper frame we will try to add frames
-      // to a named child list that the parent does not honor and the frames
-      // will get lost.
-      NS_ASSERTION(outerTable->IsTableWrapperFrame(),
-                   "Pseudo frame construction failure; "
-                   "a caption can be only a child of a table wrapper frame");
+    nsContainerFrame* outerTable =
+        captionInsertion.mParentFrame->IsTableFrame()
+            ? captionInsertion.mParentFrame->GetParent()
+            : captionInsertion.mParentFrame;
 
-      // If the parent of our current prevSibling is different from the frame
-      // we'll actually use as the parent, then the calculated insertion
-      // point is now invalid (bug 341382).
-      if (captionPrevSibling && captionPrevSibling->GetParent() != outerTable) {
-        captionPrevSibling = nullptr;
-      }
-      if (captionIsAppend) {
-        AppendFrames(outerTable, nsIFrame::kCaptionList, captionItems);
-      } else {
-        InsertFrames(outerTable, nsIFrame::kCaptionList, captionPrevSibling,
-                     captionItems);
-      }
+    // If the parent is not a table wrapper frame we will try to add frames
+    // to a named child list that the parent does not honor and the frames
+    // will get lost.
+    MOZ_ASSERT(outerTable->IsTableWrapperFrame(),
+               "Pseudo frame construction failure; "
+               "a caption can be only a child of a table wrapper frame");
+
+    // If the parent of our current prevSibling is different from the frame
+    // we'll actually use as the parent, then the calculated insertion
+    // point is now invalid (bug 341382).
+    if (captionPrevSibling && captionPrevSibling->GetParent() != outerTable) {
+      captionPrevSibling = nullptr;
+    }
+
+    captionItems.ApplySetParent(outerTable);
+    if (captionIsAppend) {
+      AppendFrames(outerTable, nsIFrame::kCaptionList, captionItems);
+    } else {
+      InsertFrames(outerTable, nsIFrame::kCaptionList, captionPrevSibling,
+                   captionItems);
     }
   }
 
