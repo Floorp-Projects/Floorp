@@ -9,6 +9,8 @@
 
 /* a MOZ_DBG macro that outputs a wrapped value to stderr then returns it */
 
+#include "mozilla/MacroForEach.h"
+
 #include <stdio.h>
 #include <sstream>
 
@@ -121,5 +123,32 @@ auto&& MozDbg(const char* aFile, int aLine, const char* aExpression,
 #  define MOZ_DBG(expression_...) \
     mozilla::detail::MozDbg(__FILE__, __LINE__, #expression_, expression_)
 #endif
+
+// Helper macro for MOZ_DEFINE_DBG.
+#define MOZ_DBG_FIELD(name_) << #name_ << " = " << aValue.name_
+
+// Macro to define an operator<<(ostream&) for a struct or class that displays
+// the type name and the values of the specified member variables.  Must be
+// called inside the struct or class.
+//
+// For example:
+//
+//   struct Point {
+//     float x;
+//     float y;
+//
+//     MOZ_DEFINE_DBG(Point, x, y)
+//   };
+//
+// generates an operator<< that outputs strings like
+// "Point { x = 1.0, y = 2.0 }".
+#define MOZ_DEFINE_DBG(type_, members_...)                                   \
+  friend std::ostream& operator<<(std::ostream& aOut, const type_& aValue) { \
+    return aOut << #type_                                                    \
+                << (MOZ_ARG_COUNT(members_) == 0 ? "{ " : "")                \
+                       MOZ_FOR_EACH_SEPARATED(MOZ_DBG_FIELD, (<< ", "), (),  \
+                                              (members_))                    \
+                << (MOZ_ARG_COUNT(members_) == 0 ? " }" : "");               \
+  }
 
 #endif  // mozilla_DbgMacro_h
