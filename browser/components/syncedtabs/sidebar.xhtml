@@ -5,14 +5,6 @@
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [
-  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
-  %browserDTD;
-  <!ENTITY % globalDTD
-    SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-  <!ENTITY % syncBrandDTD
-    SYSTEM "chrome://browser/locale/syncBrand.dtd">
-  %syncBrandDTD;
 ]>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -25,10 +17,12 @@
     <link rel="stylesheet" type="text/css" media="all" href="chrome://global/skin/"/>
     <link rel="stylesheet" type="text/css" media="all" href="chrome://global/skin/textbox.css"/>
     <link rel="stylesheet" type="text/css" media="all" href="chrome://browser/content/browser.css"/>
-    <title>&syncedTabs.sidebar.label;</title>
+    <link rel="localization" href="browser/branding/sync-brand.ftl"/>
+    <link rel="localization" href="browser/syncedTabs.ftl"/>
+    <title data-l10n-id="synced-tabs-sidebar-title"></title>
   </head>
 
-  <body dir="&locale.dir;" role="application">
+  <body role="application">
     <template id="client-template">
       <div class="item client" role="option" tabindex="-1">
         <div class="item-title-container">
@@ -50,7 +44,7 @@
           <div class="item empty" role="option" tabindex="-1">
             <div class="item-title-container">
               <div class="item-icon-container"></div>
-              <p class="item-title">&syncedTabs.sidebar.notabs.label;</p>
+              <p class="item-title" data-l10n-id="synced-tabs-sidebar-notabs"></p>
             </div>
           </div>
         </div>
@@ -78,28 +72,28 @@
         </div>
         <div class="notAuthedInfo sync-state">
           <div class="syncIllustration"></div>
-          <p class="instructions">&syncedTabs.sidebar.notsignedin.label;</p>
-          <button class="button sync-prefs">&fxaSignIn.label;</button>
+          <p class="instructions" data-l10n-id="synced-tabs-sidebar-notsignedin"></p>
+          <button class="button sync-prefs" data-l10n-id="fxa-sign-in"></button>
         </div>
         <div class="reauth sync-state">
           <div class="syncIllustrationIssue"></div>
-          <p class="instructions">&syncedTabs.sidebar.notsignedin.label;</p>
-          <button class="button sync-prefs">&fxaSignIn.label;</button>
+          <p class="instructions" data-l10n-id="synced-tabs-sidebar-notsignedin"></p>
+          <button class="button sync-prefs" data-l10n-id="fxa-sign-in"></button>
         </div>
         <div class="unverified sync-state">
           <div class="syncIllustrationIssue"></div>
-          <p class="instructions">&syncedTabs.sidebar.unverified.label;</p>
-          <button class="button sync-prefs">&syncedTabs.sidebar.openprefs.label;</button>
+          <p class="instructions" data-l10n-id="synced-tabs-sidebar-unverified"></p>
+          <button class="button sync-prefs" data-l10n-id="synced-tabs-sidebar-openprefs"></button>
         </div>
         <div class="singleDeviceInfo sync-state">
           <div class="syncIllustrationIssue"></div>
-          <p class="instructions">&syncedTabs.sidebar.noclients.subtitle;</p>
-          <button class="button connect-device">&syncedTabs.sidebar.connectAnotherDevice;</button>
+          <p class="instructions" data-l10n-id="synced-tabs-sidebar-noclients-subtitle"></p>
+          <button class="button connect-device" data-l10n-id="synced-tabs-sidebar-connect-another-device"></button>
         </div>
         <div class="tabs-disabled sync-state">
           <div class="syncIllustrationIssue"></div>
-          <p class="instructions">&syncedTabs.sidebar.tabsnotsyncing.label;</p>
-          <button class="button sync-prefs">&syncedTabs.sidebar.openprefs.label;</button>
+          <p class="instructions" data-l10n-id="synced-tabs-sidebar-tabsnotsyncing"></p>
+          <button class="button sync-prefs" data-l10n-id="synced-tabs-sidebar-openprefs"></button>
         </div>
       </div>
     </template>
@@ -112,7 +106,7 @@
             <div class="textbox-input-box">
               <input type="text"
                      class="tabsFilter textbox-input"
-                     placeholder="&syncedTabs.sidebar.searchPlaceholder;"
+                     data-l10n-id="synced-tabs-sidebar-search"
                      tabindex="1"/>
               <div class="textbox-search-icons">
                 <a class="textbox-search-clear"></a>

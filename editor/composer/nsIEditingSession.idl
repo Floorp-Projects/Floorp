@@ -47,7 +47,6 @@ interface nsIEditingSession : nsISupports
    *                                    (or part of it) editable.
    *  @param aInteractive if PR_FALSE turn off scripting and plugins
    */
-  [can_run_script]
   void makeWindowEditable(in mozIDOMWindowProxy window,
                           in string aEditorType,
                           in boolean doAfterUriLoad,
@@ -71,7 +70,6 @@ interface nsIEditingSession : nsISupports
   /**
    *  Setup editor and related support objects
    */
-  [can_run_script]
   void setupEditorOnWindow(in mozIDOMWindowProxy window);
 
   /**

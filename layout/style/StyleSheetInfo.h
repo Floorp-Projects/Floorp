@@ -15,6 +15,7 @@
 #include "nsIURI.h"
 
 class nsIPrincipal;
+struct nsLayoutStylesheetCacheShm;
 
 namespace mozilla {
 class StyleSheet;
@@ -76,6 +77,12 @@ struct StyleSheetInfo final {
   nsString mSourceURL;
 
   RefPtr<const RawServoStyleSheetContents> mContents;
+
+  // The shared memory buffer that stores the rules in the style sheet, if
+  // this style sheet was loaded from the style sheet cache's shared memory.
+  //
+  // We need to hold on to this so it doesn't go away before we do.
+  RefPtr<nsLayoutStylesheetCacheShm> mSharedMemory;
 
   // XXX We already have mSheetURI, mBaseURI, and mPrincipal.
   //

@@ -198,11 +198,6 @@ struct TransformData {
   bool hasPerspectiveParent;
 };
 
-union AnimationData {
-  null_t;
-  TransformData;
-};
-
 struct Animation {
   // The zero time of this Animation's timeline. May be null if isNotPlaying is
   // true.
@@ -237,7 +232,7 @@ struct Animation {
   // This uses dom::FillMode.
   uint8_t fillMode;
   nsCSSPropertyID property;
-  AnimationData data;
+  TransformData? data;
   float playbackRate;
   // When performing an asynchronous update to the playbackRate, |playbackRate|
   // above is the updated playbackRate while |previousPlaybackRate| is the

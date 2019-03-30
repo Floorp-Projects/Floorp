@@ -28,11 +28,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
     </menu>
 
     <popupset>
-      <popup id="contextmenu">
+      <menupopup id="contextmenu">
         <menuitem label="Cut"/>
         <menuitem label="Copy"/>
         <menuitem label="Paste"/>
-      </popup>
+      </menupopup>
       <tooltip id="tooltip" orient="vertical">
         <description value="This is a tooltip"/>
       </tooltip>

@@ -24,9 +24,12 @@ use cssparser::{serialize_identifier, CssStringWriter, Parser};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use std::fmt::{self, Write};
 use std::hash::{Hash, Hasher};
+#[cfg(feature = "gecko")]
+use std::mem::{self, ManuallyDrop};
 #[cfg(feature = "servo")]
 use std::slice;
 use style_traits::{CssWriter, ParseError, ToCss};
+use to_shmem::{SharedMemoryBuilder, ToShmem};
 
 pub use crate::values::computed::Length as MozScriptMinSize;
 pub use crate::values::specified::font::{FontSynthesis, MozScriptSizeMultiplier};
@@ -202,9 +205,8 @@ impl MallocSizeOf for FontFamily {
         // SharedFontList objects are generally shared from the pointer
         // stored in the specified value. So only count this if the
         // SharedFontList is unshared.
-        unsafe {
-            bindings::Gecko_SharedFontList_SizeOfIncludingThisIfUnshared(self.families.0.get())
-        }
+        let shared_font_list = self.families.shared_font_list().get();
+        unsafe { bindings::Gecko_SharedFontList_SizeOfIncludingThisIfUnshared(shared_font_list) }
     }
 }
 
@@ -223,7 +225,7 @@ impl ToCss for FontFamily {
     }
 }
 
-#[derive(Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq, ToShmem)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 /// The name of a font family of choice
 pub struct FamilyName {
@@ -266,7 +268,7 @@ impl ToCss for FamilyName {
     }
 }
 
-#[derive(Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq, ToShmem)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 /// Font family names must either be given quoted as strings,
 /// or unquoted as a sequence of one or more identifiers.
@@ -500,7 +502,30 @@ pub struct FontFamilyList(Box<[SingleFontFamily]>);
 #[cfg(feature = "gecko")]
 #[derive(Clone, Debug)]
 /// A list of SingleFontFamily
-pub struct FontFamilyList(pub RefPtr<structs::SharedFontList>);
+pub enum FontFamilyList {
+    /// A strong reference to a Gecko SharedFontList object.
+    SharedFontList(RefPtr<structs::SharedFontList>),
+    /// A font-family generic ID.
+    Generic(structs::FontFamilyType),
+}
+
+#[cfg(feature = "gecko")]
+impl ToShmem for FontFamilyList {
+    fn to_shmem(&self, _builder: &mut SharedMemoryBuilder) -> ManuallyDrop<Self> {
+        // In practice, the only SharedFontList objects we create from shared
+        // style sheets are ones with a single generic entry.
+        ManuallyDrop::new(match self {
+            FontFamilyList::SharedFontList(r) => {
+                assert!(
+                    r.mNames.len() == 1 && r.mNames[0].mName.mRawPtr.is_null(),
+                    "ToShmem failed for FontFamilyList: cannot handle non-generic families",
+                );
+                FontFamilyList::Generic(r.mNames[0].mType)
+            },
+            FontFamilyList::Generic(t) => FontFamilyList::Generic(*t),
+        })
+    }
+}
 
 #[cfg(feature = "gecko")]
 impl Hash for FontFamilyList {
@@ -510,7 +535,7 @@ impl Hash for FontFamilyList {
     {
         use crate::string_cache::WeakAtom;
 
-        for name in self.0.mNames.iter() {
+        for name in self.shared_font_list().mNames.iter() {
             name.mType.hash(state);
             if !name.mName.mRawPtr.is_null() {
                 unsafe {
@@ -524,10 +549,13 @@ impl Hash for FontFamilyList {
 #[cfg(feature = "gecko")]
 impl PartialEq for FontFamilyList {
     fn eq(&self, other: &FontFamilyList) -> bool {
-        if self.0.mNames.len() != other.0.mNames.len() {
+        let self_list = self.shared_font_list();
+        let other_list = other.shared_font_list();
+
+        if self_list.mNames.len() != other_list.mNames.len() {
             return false;
         }
-        for (a, b) in self.0.mNames.iter().zip(other.0.mNames.iter()) {
+        for (a, b) in self_list.mNames.iter().zip(other_list.mNames.iter()) {
             if a.mType != b.mType || a.mName.mRawPtr != b.mName.mRawPtr {
                 return false;
             }
@@ -540,14 +568,14 @@ impl PartialEq for FontFamilyList {
 impl Eq for FontFamilyList {}
 
 impl FontFamilyList {
-    #[cfg(feature = "servo")]
     /// Return FontFamilyList with a vector of SingleFontFamily
+    #[cfg(feature = "servo")]
     pub fn new(families: Box<[SingleFontFamily]>) -> FontFamilyList {
         FontFamilyList(families)
     }
 
-    #[cfg(feature = "gecko")]
     /// Return FontFamilyList with a vector of SingleFontFamily
+    #[cfg(feature = "gecko")]
     pub fn new(families: Box<[SingleFontFamily]>) -> FontFamilyList {
         let fontlist;
         let names;
@@ -578,26 +606,26 @@ impl FontFamilyList {
             }
         }
 
-        FontFamilyList(unsafe { RefPtr::from_addrefed(fontlist) })
+        FontFamilyList::SharedFontList(unsafe { RefPtr::from_addrefed(fontlist) })
     }
 
-    #[cfg(feature = "servo")]
     /// Return iterator of SingleFontFamily
+    #[cfg(feature = "servo")]
     pub fn iter(&self) -> slice::Iter<SingleFontFamily> {
         self.0.iter()
     }
 
-    #[cfg(feature = "gecko")]
     /// Return iterator of SingleFontFamily
+    #[cfg(feature = "gecko")]
     pub fn iter(&self) -> FontFamilyNameIter {
         FontFamilyNameIter {
-            names: &self.0.mNames,
+            names: &self.shared_font_list().mNames,
             cur: 0,
         }
     }
 
-    #[cfg(feature = "gecko")]
     /// Return the generic ID if it is a single generic font
+    #[cfg(feature = "gecko")]
     pub fn single_generic(&self) -> Option<u8> {
         let mut iter = self.iter();
         if let Some(SingleFontFamily::Generic(ref name)) = iter.next() {
@@ -607,10 +635,29 @@ impl FontFamilyList {
         }
         None
     }
+
+    /// Return a reference to the Gecko SharedFontList.
+    #[cfg(feature = "gecko")]
+    pub fn shared_font_list(&self) -> &RefPtr<structs::SharedFontList> {
+        match self {
+            FontFamilyList::SharedFontList(r) => r,
+            FontFamilyList::Generic(t) => {
+                unsafe {
+                    // TODO(heycam): Should really add StaticRefPtr sugar.
+                    let index =
+                        (*t as usize) - (structs::FontFamilyType::eFamily_generic_first as usize);
+                    mem::transmute::<
+                        &structs::StaticRefPtr<structs::SharedFontList>,
+                        &RefPtr<structs::SharedFontList>,
+                    >(&structs::SharedFontList_sSingleGenerics[index])
+                }
+            },
+        }
+    }
 }
 
-#[cfg(feature = "gecko")]
 /// Iterator of FontFamily
+#[cfg(feature = "gecko")]
 pub struct FontFamilyNameIter<'a> {
     names: &'a structs::nsTArray<structs::FontFamilyName>,
     cur: usize,
@@ -631,8 +678,8 @@ impl<'a> Iterator for FontFamilyNameIter<'a> {
     }
 }
 
-#[derive(Animate, Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq, ToCss)]
 /// Preserve the readability of text when font fallback occurs
+#[derive(Animate, Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq, ToCss)]
 pub enum FontSizeAdjust {
     #[animation(error)]
     /// None variant

@@ -6,7 +6,9 @@
 <div id="log"></div>
 <iframe src="http://www1.w3c-test.org/common/blank.html"></iframe>
 <script>
-async_test(function (t) {
+/* global async_test, assert_equals, assert_throws */
+
+async_test(function(t) {
   window.addEventListener("load", t.step_func(
     function() {
       assert_equals(document.querySelector("iframe").contentDocument, null, "Should have a crossorigin frame");

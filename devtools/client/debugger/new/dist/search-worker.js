@@ -7,7 +7,7 @@
 		var a = typeof exports === 'object' ? factory(require("devtools/shared/flags")) : factory(root["devtools/shared/flags"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_72__) {
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_103__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -70,197 +70,107 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 736);
+/******/ 	return __webpack_require__(__webpack_require__.s = 383);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 16:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const networkRequest = __webpack_require__(25);
-const workerUtils = __webpack_require__(26);
-
-module.exports = {
-  networkRequest,
-  workerUtils
-};
-
-/***/ }),
-
-/***/ 164:
+/***/ 102:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = buildQuery;
+const flag = __webpack_require__(103);
 
-var _escapeRegExp = __webpack_require__(165);
+function isBrowser() {
+  return typeof window == "object";
+}
 
-var _escapeRegExp2 = _interopRequireDefault(_escapeRegExp);
+function isNode() {
+  return process && process.release && process.release.name == 'node';
+}
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function isDevelopment() {
+  if (!isNode() && isBrowser()) {
+    const href = window.location ? window.location.href : "";
+    return href.match(/^file:/) || href.match(/localhost:/);
+  }
 
-/**
- * Ignore doing outline matches for less than 3 whitespaces
- *
- * @memberof utils/source-search
- * @static
- */
-function ignoreWhiteSpace(str) {
-  return (/^\s{0,2}$/.test(str) ? "(?!\\s*.*)" : str
+  return "production" != "production";
+}
+
+function isTesting() {
+  return flag.testing;
+}
+
+function isFirefoxPanel() {
+  return !isDevelopment();
+}
+
+function isFirefox() {
+  return (/firefox/i.test(navigator.userAgent)
   );
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function wholeMatch(query, wholeWord) {
-  if (query === "" || !wholeWord) {
-    return query;
-  }
-
-  return `\\b${query}\\b`;
 }
 
-function buildFlags(caseSensitive, isGlobal) {
-  if (caseSensitive && isGlobal) {
-    return "g";
-  }
-
-  if (!caseSensitive && isGlobal) {
-    return "gi";
-  }
-
-  if (!caseSensitive && !isGlobal) {
-    return "i";
-  }
-}
-
-function buildQuery(originalQuery, modifiers, { isGlobal = false, ignoreSpaces = false }) {
-  const { caseSensitive, regexMatch, wholeWord } = modifiers;
-
-  if (originalQuery === "") {
-    return new RegExp(originalQuery);
-  }
-
-  let query = originalQuery;
-  if (ignoreSpaces) {
-    query = ignoreWhiteSpace(query);
-  }
-
-  if (!regexMatch) {
-    query = (0, _escapeRegExp2.default)(query);
-  }
-
-  query = wholeMatch(query, wholeWord);
-  const flags = buildFlags(caseSensitive, isGlobal);
-
-  if (flags) {
-    return new RegExp(query, flags);
-  }
-
-  return new RegExp(query);
-}
+module.exports = {
+  isDevelopment,
+  isTesting,
+  isFirefoxPanel,
+  isFirefox
+};
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(35)))
 
 /***/ }),
 
-/***/ 165:
-/***/ (function(module, exports, __webpack_require__) {
+/***/ 103:
+/***/ (function(module, exports) {
 
-var toString = __webpack_require__(70);
-
-/**
- * Used to match `RegExp`
- * [syntax characters](http://ecma-international.org/ecma-262/7.0/#sec-patterns).
- */
-var reRegExpChar = /[\\^$.*+?()[\]{}|]/g,
-    reHasRegExpChar = RegExp(reRegExpChar.source);
-
-/**
- * Escapes the `RegExp` special characters "^", "$", "\", ".", "*", "+",
- * "?", "(", ")", "[", "]", "{", "}", and "|" in `string`.
- *
- * @static
- * @memberOf _
- * @since 3.0.0
- * @category String
- * @param {string} [string=''] The string to escape.
- * @returns {string} Returns the escaped string.
- * @example
- *
- * _.escapeRegExp('[lodash](https://lodash.com/)');
- * // => '\[lodash\]\(https://lodash\.com/\)'
- */
-function escapeRegExp(string) {
-  string = toString(string);
-  return (string && reHasRegExpChar.test(string))
-    ? string.replace(reRegExpChar, '\\$&')
-    : string;
-}
-
-module.exports = escapeRegExp;
-
+module.exports = __WEBPACK_EXTERNAL_MODULE_103__;
 
 /***/ }),
 
-/***/ 21:
-/***/ (function(module, exports, __webpack_require__) {
-
-var freeGlobal = __webpack_require__(71);
-
-/** Detect free variable `self`. */
-var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
-
-/** Used as a reference to the global object. */
-var root = freeGlobal || freeSelf || Function('return this')();
-
-module.exports = root;
-
-
-/***/ }),
-
-/***/ 22:
+/***/ 11:
 /***/ (function(module, exports) {
 
 /**
- * Checks if `value` is classified as an `Array` object.
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
  *
  * @static
  * @memberOf _
- * @since 0.1.0
+ * @since 4.0.0
  * @category Lang
  * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an array, else `false`.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
  * @example
  *
- * _.isArray([1, 2, 3]);
+ * _.isObjectLike({});
  * // => true
  *
- * _.isArray(document.body.children);
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
  * // => false
  *
- * _.isArray('abc');
- * // => false
- *
- * _.isArray(_.noop);
+ * _.isObjectLike(null);
  * // => false
  */
-var isArray = Array.isArray;
+function isObjectLike(value) {
+  return value != null && typeof value == 'object';
+}
 
-module.exports = isArray;
+module.exports = isObjectLike;
 
 
 /***/ }),
 
-/***/ 25:
+/***/ 13:
 /***/ (function(module, exports) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -288,7 +198,7 @@ module.exports = networkRequest;
 
 /***/ }),
 
-/***/ 26:
+/***/ 14:
 /***/ (function(module, exports) {
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
@@ -466,7 +376,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 27:
+/***/ 15:
 /***/ (function(module, exports) {
 
 var g;
@@ -494,143 +404,7 @@ module.exports = g;
 
 /***/ }),
 
-/***/ 28:
-/***/ (function(module, exports, __webpack_require__) {
-
-var root = __webpack_require__(21);
-
-/** Built-in value references. */
-var Symbol = root.Symbol;
-
-module.exports = Symbol;
-
-
-/***/ }),
-
-/***/ 29:
-/***/ (function(module, exports) {
-
-/**
- * Checks if `value` is object-like. A value is object-like if it's not `null`
- * and has a `typeof` result of "object".
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- * @example
- *
- * _.isObjectLike({});
- * // => true
- *
- * _.isObjectLike([1, 2, 3]);
- * // => true
- *
- * _.isObjectLike(_.noop);
- * // => false
- *
- * _.isObjectLike(null);
- * // => false
- */
-function isObjectLike(value) {
-  return value != null && typeof value == 'object';
-}
-
-module.exports = isObjectLike;
-
-
-/***/ }),
-
-/***/ 30:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const flag = __webpack_require__(72);
-
-function isBrowser() {
-  return typeof window == "object";
-}
-
-function isNode() {
-  return process && process.release && process.release.name == 'node';
-}
-
-function isDevelopment() {
-  if (!isNode() && isBrowser()) {
-    const href = window.location ? window.location.href : "";
-    return href.match(/^file:/) || href.match(/localhost:/);
-  }
-
-  return "production" != "production";
-}
-
-function isTesting() {
-  return flag.testing;
-}
-
-function isFirefoxPanel() {
-  return !isDevelopment();
-}
-
-function isFirefox() {
-  return (/firefox/i.test(navigator.userAgent)
-  );
-}
-
-module.exports = {
-  isDevelopment,
-  isTesting,
-  isFirefoxPanel,
-  isFirefox
-};
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(52)))
-
-/***/ }),
-
-/***/ 35:
-/***/ (function(module, exports, __webpack_require__) {
-
-var Symbol = __webpack_require__(28),
-    getRawTag = __webpack_require__(85),
-    objectToString = __webpack_require__(86);
-
-/** `Object#toString` result references. */
-var nullTag = '[object Null]',
-    undefinedTag = '[object Undefined]';
-
-/** Built-in value references. */
-var symToStringTag = Symbol ? Symbol.toStringTag : undefined;
-
-/**
- * The base implementation of `getTag` without fallbacks for buggy environments.
- *
- * @private
- * @param {*} value The value to query.
- * @returns {string} Returns the `toStringTag`.
- */
-function baseGetTag(value) {
-  if (value == null) {
-    return value === undefined ? undefinedTag : nullTag;
-  }
-  return (symToStringTag && symToStringTag in Object(value))
-    ? getRawTag(value)
-    : objectToString(value);
-}
-
-module.exports = baseGetTag;
-
-
-/***/ }),
-
-/***/ 360:
+/***/ 170:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -641,11 +415,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = getMatches;
 
-var _assert = __webpack_require__(57);
+var _assert = __webpack_require__(385);
 
 var _assert2 = _interopRequireDefault(_assert);
 
-var _buildQuery = __webpack_require__(164);
+var _buildQuery = __webpack_require__(386);
 
 var _buildQuery2 = _interopRequireDefault(_buildQuery);
 
@@ -689,11 +463,59 @@ function getMatches(query, text, modifiers) {
 
 /***/ }),
 
-/***/ 51:
+/***/ 18:
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(35),
-    isObjectLike = __webpack_require__(29);
+var Symbol = __webpack_require__(19),
+    getRawTag = __webpack_require__(71),
+    objectToString = __webpack_require__(72);
+
+/** `Object#toString` result references. */
+var nullTag = '[object Null]',
+    undefinedTag = '[object Undefined]';
+
+/** Built-in value references. */
+var symToStringTag = Symbol ? Symbol.toStringTag : undefined;
+
+/**
+ * The base implementation of `getTag` without fallbacks for buggy environments.
+ *
+ * @private
+ * @param {*} value The value to query.
+ * @returns {string} Returns the `toStringTag`.
+ */
+function baseGetTag(value) {
+  if (value == null) {
+    return value === undefined ? undefinedTag : nullTag;
+  }
+  return (symToStringTag && symToStringTag in Object(value))
+    ? getRawTag(value)
+    : objectToString(value);
+}
+
+module.exports = baseGetTag;
+
+
+/***/ }),
+
+/***/ 19:
+/***/ (function(module, exports, __webpack_require__) {
+
+var root = __webpack_require__(8);
+
+/** Built-in value references. */
+var Symbol = root.Symbol;
+
+module.exports = Symbol;
+
+
+/***/ }),
+
+/***/ 28:
+/***/ (function(module, exports, __webpack_require__) {
+
+var baseGetTag = __webpack_require__(18),
+    isObjectLike = __webpack_require__(11);
 
 /** `Object#toString` result references. */
 var symbolTag = '[object Symbol]';
@@ -725,7 +547,7 @@ module.exports = isSymbol;
 
 /***/ }),
 
-/***/ 52:
+/***/ 35:
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -916,104 +738,27 @@ process.umask = function() { return 0; };
 
 /***/ }),
 
-/***/ 57:
+/***/ 383:
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(384);
+
+
+/***/ }),
+
+/***/ 384:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = assert;
-
-var _devtoolsEnvironment = __webpack_require__(30);
-
-function assert(condition, message) {
-  if ((0, _devtoolsEnvironment.isDevelopment)() && !condition) {
-    throw new Error(`Assertion failure: ${message}`);
-  }
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-/***/ }),
-
-/***/ 70:
-/***/ (function(module, exports, __webpack_require__) {
-
-var baseToString = __webpack_require__(83);
-
-/**
- * Converts `value` to a string. An empty string is returned for `null`
- * and `undefined` values. The sign of `-0` is preserved.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to convert.
- * @returns {string} Returns the converted string.
- * @example
- *
- * _.toString(null);
- * // => ''
- *
- * _.toString(-0);
- * // => '-0'
- *
- * _.toString([1, 2, 3]);
- * // => '1,2,3'
- */
-function toString(value) {
-  return value == null ? '' : baseToString(value);
-}
-
-module.exports = toString;
-
-
-/***/ }),
-
-/***/ 71:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(global) {/** Detect free variable `global` from Node.js. */
-var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
-
-module.exports = freeGlobal;
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(27)))
-
-/***/ }),
-
-/***/ 72:
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_72__;
-
-/***/ }),
-
-/***/ 736:
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(737);
-
-
-/***/ }),
-
-/***/ 737:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _getMatches = __webpack_require__(360);
+var _getMatches = __webpack_require__(170);
 
 var _getMatches2 = _interopRequireDefault(_getMatches);
 
-var _projectSearch = __webpack_require__(738);
+var _projectSearch = __webpack_require__(388);
 
-var _devtoolsUtils = __webpack_require__(16);
+var _devtoolsUtils = __webpack_require__(7);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1025,7 +770,149 @@ self.onmessage = workerHandler({ getMatches: _getMatches2.default, findSourceMat
 
 /***/ }),
 
-/***/ 738:
+/***/ 385:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = assert;
+
+var _devtoolsEnvironment = __webpack_require__(102);
+
+function assert(condition, message) {
+  if ((0, _devtoolsEnvironment.isDevelopment)() && !condition) {
+    throw new Error(`Assertion failure: ${message}`);
+  }
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/***/ }),
+
+/***/ 386:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = buildQuery;
+
+var _escapeRegExp = __webpack_require__(387);
+
+var _escapeRegExp2 = _interopRequireDefault(_escapeRegExp);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * Ignore doing outline matches for less than 3 whitespaces
+ *
+ * @memberof utils/source-search
+ * @static
+ */
+function ignoreWhiteSpace(str) {
+  return (/^\s{0,2}$/.test(str) ? "(?!\\s*.*)" : str
+  );
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function wholeMatch(query, wholeWord) {
+  if (query === "" || !wholeWord) {
+    return query;
+  }
+
+  return `\\b${query}\\b`;
+}
+
+function buildFlags(caseSensitive, isGlobal) {
+  if (caseSensitive && isGlobal) {
+    return "g";
+  }
+
+  if (!caseSensitive && isGlobal) {
+    return "gi";
+  }
+
+  if (!caseSensitive && !isGlobal) {
+    return "i";
+  }
+}
+
+function buildQuery(originalQuery, modifiers, { isGlobal = false, ignoreSpaces = false }) {
+  const { caseSensitive, regexMatch, wholeWord } = modifiers;
+
+  if (originalQuery === "") {
+    return new RegExp(originalQuery);
+  }
+
+  let query = originalQuery;
+  if (ignoreSpaces) {
+    query = ignoreWhiteSpace(query);
+  }
+
+  if (!regexMatch) {
+    query = (0, _escapeRegExp2.default)(query);
+  }
+
+  query = wholeMatch(query, wholeWord);
+  const flags = buildFlags(caseSensitive, isGlobal);
+
+  if (flags) {
+    return new RegExp(query, flags);
+  }
+
+  return new RegExp(query);
+}
+
+/***/ }),
+
+/***/ 387:
+/***/ (function(module, exports, __webpack_require__) {
+
+var toString = __webpack_require__(57);
+
+/**
+ * Used to match `RegExp`
+ * [syntax characters](http://ecma-international.org/ecma-262/7.0/#sec-patterns).
+ */
+var reRegExpChar = /[\\^$.*+?()[\]{}|]/g,
+    reHasRegExpChar = RegExp(reRegExpChar.source);
+
+/**
+ * Escapes the `RegExp` special characters "^", "$", "\", ".", "*", "+",
+ * "?", "(", ")", "[", "]", "{", "}", and "|" in `string`.
+ *
+ * @static
+ * @memberOf _
+ * @since 3.0.0
+ * @category String
+ * @param {string} [string=''] The string to escape.
+ * @returns {string} Returns the escaped string.
+ * @example
+ *
+ * _.escapeRegExp('[lodash](https://lodash.com/)');
+ * // => '\[lodash\]\(https://lodash\.com/\)'
+ */
+function escapeRegExp(string) {
+  string = toString(string);
+  return (string && reHasRegExpChar.test(string))
+    ? string.replace(reRegExpChar, '\\$&')
+    : string;
+}
+
+module.exports = escapeRegExp;
+
+
+/***/ }),
+
+/***/ 388:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1036,7 +923,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.findSourceMatches = findSourceMatches;
 
-var _getMatches = __webpack_require__(360);
+var _getMatches = __webpack_require__(170);
 
 var _getMatches2 = _interopRequireDefault(_getMatches);
 
@@ -1113,82 +1000,74 @@ function truncateLine(text, column) {
 
 /***/ }),
 
-/***/ 83:
+/***/ 43:
 /***/ (function(module, exports, __webpack_require__) {
 
-var Symbol = __webpack_require__(28),
-    arrayMap = __webpack_require__(84),
-    isArray = __webpack_require__(22),
-    isSymbol = __webpack_require__(51);
+/* WEBPACK VAR INJECTION */(function(global) {/** Detect free variable `global` from Node.js. */
+var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
 
-/** Used as references for various `Number` constants. */
-var INFINITY = 1 / 0;
+module.exports = freeGlobal;
 
-/** Used to convert symbols to primitives and strings. */
-var symbolProto = Symbol ? Symbol.prototype : undefined,
-    symbolToString = symbolProto ? symbolProto.toString : undefined;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(15)))
+
+/***/ }),
+
+/***/ 57:
+/***/ (function(module, exports, __webpack_require__) {
+
+var baseToString = __webpack_require__(95);
 
 /**
- * The base implementation of `_.toString` which doesn't convert nullish
- * values to empty strings.
+ * Converts `value` to a string. An empty string is returned for `null`
+ * and `undefined` values. The sign of `-0` is preserved.
  *
- * @private
- * @param {*} value The value to process.
- * @returns {string} Returns the string.
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to convert.
+ * @returns {string} Returns the converted string.
+ * @example
+ *
+ * _.toString(null);
+ * // => ''
+ *
+ * _.toString(-0);
+ * // => '-0'
+ *
+ * _.toString([1, 2, 3]);
+ * // => '1,2,3'
  */
-function baseToString(value) {
-  // Exit early for strings to avoid a performance hit in some environments.
-  if (typeof value == 'string') {
-    return value;
-  }
-  if (isArray(value)) {
-    // Recursively convert values (susceptible to call stack limits).
-    return arrayMap(value, baseToString) + '';
-  }
-  if (isSymbol(value)) {
-    return symbolToString ? symbolToString.call(value) : '';
-  }
-  var result = (value + '');
-  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
+function toString(value) {
+  return value == null ? '' : baseToString(value);
 }
 
-module.exports = baseToString;
+module.exports = toString;
 
 
 /***/ }),
 
-/***/ 84:
-/***/ (function(module, exports) {
+/***/ 7:
+/***/ (function(module, exports, __webpack_require__) {
 
-/**
- * A specialized version of `_.map` for arrays without support for iteratee
- * shorthands.
- *
- * @private
- * @param {Array} [array] The array to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @returns {Array} Returns the new mapped array.
- */
-function arrayMap(array, iteratee) {
-  var index = -1,
-      length = array == null ? 0 : array.length,
-      result = Array(length);
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-  while (++index < length) {
-    result[index] = iteratee(array[index], index, array);
-  }
-  return result;
-}
+const networkRequest = __webpack_require__(13);
+const workerUtils = __webpack_require__(14);
 
-module.exports = arrayMap;
-
+module.exports = {
+  networkRequest,
+  workerUtils
+};
 
 /***/ }),
 
-/***/ 85:
+/***/ 71:
 /***/ (function(module, exports, __webpack_require__) {
 
-var Symbol = __webpack_require__(28);
+var Symbol = __webpack_require__(19);
 
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
@@ -1238,7 +1117,7 @@ module.exports = getRawTag;
 
 /***/ }),
 
-/***/ 86:
+/***/ 72:
 /***/ (function(module, exports) {
 
 /** Used for built-in method references. */
@@ -1263,6 +1142,127 @@ function objectToString(value) {
 }
 
 module.exports = objectToString;
+
+
+/***/ }),
+
+/***/ 8:
+/***/ (function(module, exports, __webpack_require__) {
+
+var freeGlobal = __webpack_require__(43);
+
+/** Detect free variable `self`. */
+var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
+
+/** Used as a reference to the global object. */
+var root = freeGlobal || freeSelf || Function('return this')();
+
+module.exports = root;
+
+
+/***/ }),
+
+/***/ 9:
+/***/ (function(module, exports) {
+
+/**
+ * Checks if `value` is classified as an `Array` object.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an array, else `false`.
+ * @example
+ *
+ * _.isArray([1, 2, 3]);
+ * // => true
+ *
+ * _.isArray(document.body.children);
+ * // => false
+ *
+ * _.isArray('abc');
+ * // => false
+ *
+ * _.isArray(_.noop);
+ * // => false
+ */
+var isArray = Array.isArray;
+
+module.exports = isArray;
+
+
+/***/ }),
+
+/***/ 95:
+/***/ (function(module, exports, __webpack_require__) {
+
+var Symbol = __webpack_require__(19),
+    arrayMap = __webpack_require__(96),
+    isArray = __webpack_require__(9),
+    isSymbol = __webpack_require__(28);
+
+/** Used as references for various `Number` constants. */
+var INFINITY = 1 / 0;
+
+/** Used to convert symbols to primitives and strings. */
+var symbolProto = Symbol ? Symbol.prototype : undefined,
+    symbolToString = symbolProto ? symbolProto.toString : undefined;
+
+/**
+ * The base implementation of `_.toString` which doesn't convert nullish
+ * values to empty strings.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {string} Returns the string.
+ */
+function baseToString(value) {
+  // Exit early for strings to avoid a performance hit in some environments.
+  if (typeof value == 'string') {
+    return value;
+  }
+  if (isArray(value)) {
+    // Recursively convert values (susceptible to call stack limits).
+    return arrayMap(value, baseToString) + '';
+  }
+  if (isSymbol(value)) {
+    return symbolToString ? symbolToString.call(value) : '';
+  }
+  var result = (value + '');
+  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
+}
+
+module.exports = baseToString;
+
+
+/***/ }),
+
+/***/ 96:
+/***/ (function(module, exports) {
+
+/**
+ * A specialized version of `_.map` for arrays without support for iteratee
+ * shorthands.
+ *
+ * @private
+ * @param {Array} [array] The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Array} Returns the new mapped array.
+ */
+function arrayMap(array, iteratee) {
+  var index = -1,
+      length = array == null ? 0 : array.length,
+      result = Array(length);
+
+  while (++index < length) {
+    result[index] = iteratee(array[index], index, array);
+  }
+  return result;
+}
+
+module.exports = arrayMap;
 
 
 /***/ })

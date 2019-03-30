@@ -174,10 +174,6 @@ void U2F::ExecuteCallback(T& aResp, nsMainThreadPtrHandle<C>& aCb) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCb);
 
-  // Assert that mTransaction was cleared before before we were called to allow
-  // reentrancy from microtask checkpoints.
-  MOZ_ASSERT(mTransaction.isNothing());
-
   ErrorResult error;
   aCb->Call(aResp, error);
   NS_WARNING_ASSERTION(!error.Failed(), "dom::U2F::Promise callback failed");
@@ -192,10 +188,6 @@ void U2F::Register(const nsAString& aAppId,
                    ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mTransaction.isSome()) {
-    CancelTransaction(NS_ERROR_ABORT);
-  }
-
   nsMainThreadPtrHandle<U2FRegisterCallback> callback(
       new nsMainThreadPtrHolder<U2FRegisterCallback>("U2F::Register::callback",
                                                      &aCallback));
@@ -203,6 +195,23 @@ void U2F::Register(const nsAString& aAppId,
   // Ensure we have a callback.
   if (NS_WARN_IF(!callback)) {
     return;
+  }
+
+  if (mTransaction.isSome()) {
+    // If there hasn't been a visibility change during the current
+    // transaction, then let's let that one complete rather than
+    // cancelling it on a subsequent call.
+    if (!mTransaction.ref().mVisibilityChanged) {
+      RegisterResponse response;
+      response.mErrorCode.Construct(
+          static_cast<uint32_t>(ErrorCode::OTHER_ERROR));
+      ExecuteCallback(response, callback);
+      return;
+    }
+
+    // Otherwise, the user may well have clicked away, so let's
+    // abort the old transaction and take over control from here.
+    CancelTransaction(NS_ERROR_ABORT);
   }
 
   // Evaluate the AppID
@@ -342,10 +351,6 @@ void U2F::Sign(const nsAString& aAppId, const nsAString& aChallenge,
                ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mTransaction.isSome()) {
-    CancelTransaction(NS_ERROR_ABORT);
-  }
-
   nsMainThreadPtrHandle<U2FSignCallback> callback(
       new nsMainThreadPtrHolder<U2FSignCallback>("U2F::Sign::callback",
                                                  &aCallback));
@@ -353,6 +358,23 @@ void U2F::Sign(const nsAString& aAppId, const nsAString& aChallenge,
   // Ensure we have a callback.
   if (NS_WARN_IF(!callback)) {
     return;
+  }
+
+  if (mTransaction.isSome()) {
+    // If there hasn't been a visibility change during the current
+    // transaction, then let's let that one complete rather than
+    // cancelling it on a subsequent call.
+    if (!mTransaction.ref().mVisibilityChanged) {
+      SignResponse response;
+      response.mErrorCode.Construct(
+          static_cast<uint32_t>(ErrorCode::OTHER_ERROR));
+      ExecuteCallback(response, callback);
+      return;
+    }
+
+    // Otherwise, the user may well have clicked away, so let's
+    // abort the old transaction and take over control from here.
+    CancelTransaction(NS_ERROR_ABORT);
   }
 
   // Evaluate the AppID
@@ -542,6 +564,12 @@ void U2F::RequestAborted(const uint64_t& aTransactionId,
 
   if (mTransaction.isSome() && mTransaction.ref().mId == aTransactionId) {
     RejectTransaction(aError);
+  }
+}
+
+void U2F::HandleVisibilityChange() {
+  if (mTransaction.isSome()) {
+    mTransaction.ref().mVisibilityChanged = true;
   }
 }
 

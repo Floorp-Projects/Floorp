@@ -5,6 +5,7 @@ authors = ["Dana Keeler <dkeeler@mozilla.com>", "Mark Goodwin <mgoodwin@mozilla.
 
 [dependencies]
 base64 = "0.10"
+lmdb-rkv = "0.11"
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 rkv = "^0.9"

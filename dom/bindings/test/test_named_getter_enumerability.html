@@ -5,6 +5,7 @@
 <script src="/resources/testharnessreport.js"></script>
 <div id="log"></div>
 <script>
+/* global test, assert_equals, assert_true, assert_false, assert_not_equals */
 test(function() {
   var list = document.getElementsByTagName("div");
   var desc = Object.getOwnPropertyDescriptor(list, "0");
@@ -16,7 +17,7 @@ test(function() {
 }, "Correct getOwnPropertyDescriptor behavior");
 test(function() {
   var list = document.getElementsByTagName("div");
-  props = [];
+  var props = [];
   for (var prop in list) {
     props.push(prop);
   }
@@ -25,13 +26,13 @@ test(function() {
 }, "Correct enumeration behavior");
 test(function() {
   var list = document.getElementsByTagName("div");
-  props = Object.keys(list)
+  var props = Object.keys(list);
   assert_not_equals(props.indexOf("0"), -1, "Keys should contain '0'");
   assert_equals(props.indexOf("log"), -1, "Keys should not contain 'log'");
 }, "Correct keys() behavior");
 test(function() {
   var list = document.getElementsByTagName("div");
-  props = Object.getOwnPropertyNames(list)
+  var props = Object.getOwnPropertyNames(list);
   assert_not_equals(props.indexOf("0"), -1,
                     "own prop names should contain '0'");
   assert_not_equals(props.indexOf("log"), -1,

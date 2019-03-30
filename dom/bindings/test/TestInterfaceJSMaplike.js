@@ -14,25 +14,25 @@ TestInterfaceJSMaplike.prototype = {
   contractID: "@mozilla.org/dom/test-interface-js-maplike;1",
   QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
 
-  init: function(win) { this._win = win; },
+  init(win) { this._win = win; },
 
-  __init: function () {},
+  __init() {},
 
-  setInternal: function(aKey, aValue) {
+  setInternal(aKey, aValue) {
     return this.__DOM_IMPL__.__set(aKey, aValue);
   },
 
-  deleteInternal: function(aKey) {
+  deleteInternal(aKey) {
     return this.__DOM_IMPL__.__delete(aKey);
   },
 
-  clearInternal: function() {
+  clearInternal() {
     return this.__DOM_IMPL__.__clear();
   },
 
-  __onget: function(key, value) {
+  __onget(key, value) {
     /* no-op */
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceJSMaplike])
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceJSMaplike]);

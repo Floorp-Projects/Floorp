@@ -137,10 +137,23 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
   const int32_t numberOfCapabilies =
       static_cast<int32_t>(_captureCapabilities.size());
 
+  bool hasNonRGB24Capability = false;
   for (int32_t tmp = 0; tmp < numberOfCapabilies;
        ++tmp)  // Loop through all capabilities
   {
     VideoCaptureCapability& capability = _captureCapabilities[tmp];
+    if (capability.videoType != VideoType::kRGB24) {
+      hasNonRGB24Capability = true;
+    }
+  }
+
+  for (int32_t tmp = 0; tmp < numberOfCapabilies;
+       ++tmp)  // Loop through all capabilities
+  {
+    VideoCaptureCapability& capability = _captureCapabilities[tmp];
+    if (hasNonRGB24Capability && capability.videoType == VideoType::kRGB24) {
+      continue;
+    }
 
     const int32_t diffWidth = capability.width - requested.width;
     const int32_t diffHeight = capability.height - requested.height;

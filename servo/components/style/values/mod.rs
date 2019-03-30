@@ -17,6 +17,7 @@ use selectors::parser::SelectorParseErrorKind;
 use std::fmt::{self, Debug, Write};
 use std::hash;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
+use to_shmem::impl_trivial_to_shmem;
 
 #[cfg(feature = "gecko")]
 pub use crate::gecko::url::CssUrl;
@@ -108,6 +109,8 @@ impl ComputeSquaredDistance for Impossible {
     }
 }
 
+impl_trivial_to_shmem!(Impossible);
+
 impl Parse for Impossible {
     fn parse<'i, 't>(
         _context: &ParserContext,
@@ -131,6 +134,7 @@ impl Parse for Impossible {
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
+    ToShmem,
 )]
 pub enum Either<A, B> {
     /// The first value.
@@ -149,7 +153,9 @@ impl<A: Debug, B: Debug> Debug for Either<A, B> {
 }
 
 /// <https://drafts.csswg.org/css-values-4/#custom-idents>
-#[derive(Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue)]
+#[derive(
+    Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToShmem,
+)]
 pub struct CustomIdent(pub Atom);
 
 impl CustomIdent {
@@ -186,7 +192,7 @@ impl ToCss for CustomIdent {
 }
 
 /// <https://drafts.csswg.org/css-animations/#typedef-keyframes-name>
-#[derive(Clone, Debug, MallocSizeOf, SpecifiedValueInfo, ToComputedValue)]
+#[derive(Clone, Debug, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToShmem)]
 pub enum KeyframesName {
     /// <custom-ident>
     Ident(CustomIdent),

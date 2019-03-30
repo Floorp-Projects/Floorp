@@ -18,8 +18,8 @@ async function assertStatus(tab, expected) {
 async function waitForStatus(tab, expected) {
   await ContentTask.spawn(tab.linkedBrowser, [expected], async function (expected) {
     return ContentTaskUtils.waitForCondition(() => {
-      info("visbility state: " + content.document.visibilityState);
-      info("docshell active: " + docShell.isActive);
+      info("expecting " + expected + ", visbility state: " + content.document.visibilityState);
+      info("expecting " + expected + ", docshell active: " + docShell.isActive);
       return content.document.getElementById("status").value == expected;
     });
   });
@@ -103,14 +103,15 @@ add_task(async function test_switch_tab() {
 
   // Open another tab and switch to it. The first will lose focus.
   let tab_get = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
-  await waitForStatus(tab_create, "aborted");
+  await assertStatus(tab_create, "pending");
 
-  // Start a GetAssertion() request in the second tab.
+  // Start a GetAssertion() request in the second tab, the first is aborted
   await startGetAssertionRequest(tab_get);
+  await waitForStatus(tab_create, "aborted");
   await assertStatus(tab_get, "pending");
 
-  // Switch back to the first tab, the get() request is aborted.
-  await BrowserTestUtils.switchTab(gBrowser, tab_create);
+  // Start a second request in the second tab. It should abort.
+  await startGetAssertionRequest(tab_get);
   await waitForStatus(tab_get, "aborted");
 
   // Close tabs.
@@ -137,7 +138,7 @@ add_task(async function test_new_window_make() {
   // Open a new window. The tab will lose focus.
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await windowGonePromise;
-  await waitForStatus(tab, "aborted");
+  await assertStatus(tab, "pending");
 
   let windowBackPromise = waitForWindowActive(window, true);
   await BrowserTestUtils.closeWindow(win);
@@ -159,7 +160,7 @@ add_task(async function test_new_window_get() {
   // Open a new window. The tab will lose focus.
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await windowGonePromise;
-  await waitForStatus(tab, "aborted");
+  await assertStatus(tab, "pending");
 
   let windowBackPromise = waitForWindowActive(window, true);
   await BrowserTestUtils.closeWindow(win);
@@ -188,11 +189,12 @@ add_task(async function test_minimize_make() {
   // Minimize the window.
   let windowGonePromise = waitForWindowActive(win, false);
   win.minimize();
-  await waitForStatus(tab, "aborted");
+  await assertStatus(tab, "pending");
   await windowGonePromise;
 
   // Restore the window.
   await new Promise(resolve => SimpleTest.waitForFocus(resolve, win));
+  await assertStatus(tab, "pending");
 
   // Close window and wait for main window to be focused again.
   let windowBackPromise = waitForWindowActive(window, true);
@@ -219,11 +221,12 @@ add_task(async function test_minimize_get() {
   // Minimize the window.
   let windowGonePromise = waitForWindowActive(win, false);
   win.minimize();
-  await waitForStatus(tab, "aborted");
+  await assertStatus(tab, "pending");
   await windowGonePromise;
 
   // Restore the window.
   await new Promise(resolve => SimpleTest.waitForFocus(resolve, win));
+  await assertStatus(tab, "pending");
 
   // Close window and wait for main window to be focused again.
   let windowBackPromise = waitForWindowActive(window, true);

@@ -101,6 +101,7 @@ using mozilla::dom::BrowsingContextId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextFieldEpochs from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextInitializer from "mozilla/dom/BrowsingContext.h";
+using base::SharedMemoryHandle from "base/shared_memory.h";
 
 union ChromeRegistryItem
 {
@@ -563,7 +564,9 @@ child:
                                     StructuredCloneData initialData,
                                     LookAndFeelInt[] lookAndFeelIntCache,
                                     /* used on MacOSX and Linux only: */
-                                    SystemFontListEntry[] systemFontList);
+                                    SystemFontListEntry[] systemFontList,
+                                    SharedMemoryHandle? sharedUASheetHandle,
+                                    uintptr_t sharedUASheetAddress);
 
     // Notify child that last-pb-context-exited notification was observed
     async LastPrivateDocShellDestroyed();

@@ -26,8 +26,7 @@ try {
     is(eventTargetToString, nativeToString,
        "Stringifying a DOM interface object should return the same string" +
        "as stringifying a native function.");
-}
-catch (e) {
+} catch (e) {
     ok(false, "Stringifying a DOM interface object shouldn't throw.");
 }
 
@@ -36,8 +35,7 @@ try {
     is(eventTargetToString, nativeToString,
        "Stringifying a DOM interface object via Function.prototype.toString " +
        "should return the same string as stringifying a native function.");
-}
-catch (e) {
+} catch (e) {
     ok(false, "Stringifying a DOM interface object shouldn't throw.");
 }
 
