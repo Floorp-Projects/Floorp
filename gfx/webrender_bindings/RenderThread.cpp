@@ -511,7 +511,8 @@ void RenderThread::DecPendingFrameCount(wr::WindowId aWindowId) {
   info->mStartIds.pop();
 }
 
-mozilla::Pair<bool, bool> RenderThread::IncRenderingFrameCount(wr::WindowId aWindowId, bool aRender) {
+mozilla::Pair<bool, bool> RenderThread::IncRenderingFrameCount(
+    wr::WindowId aWindowId, bool aRender) {
   auto windows = mWindowInfos.Lock();
   auto it = windows->find(AsUint64(aWindowId));
   if (it == windows->end()) {
@@ -894,7 +895,8 @@ void wr_schedule_render(mozilla::wr::WrWindowId aWindowId,
   RefPtr<mozilla::layers::CompositorBridgeParent> cbp = mozilla::layers::
       CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(aWindowId);
   if (cbp) {
-    cbp->ScheduleRenderOnCompositorThread(Some(wr::RenderRootFromId(aDocumentId)));
+    cbp->ScheduleRenderOnCompositorThread(
+        Some(wr::RenderRootFromId(aDocumentId)));
   }
 }
 
