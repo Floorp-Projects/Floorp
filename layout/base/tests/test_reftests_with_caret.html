@@ -219,6 +219,9 @@ var tests = [
     [ 'bug1518339-2.html' , 'bug1518339-2-ref.html' ] ,
     [ 'bug1524266-1.html' , 'bug1524266-1-ref.html' ] ,
     function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled_on_touch']]}, nextTest);} ,
+    function() {SpecialPowers.pushPrefEnv({'set': [['accessibility.browsewithcaret', true]]}, nextTest);} ,
+    [ 'bug1529492-1.html' , 'bug1529492-1-ref.html' ] ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['accessibility.browsewithcaret']]}, nextTest);} ,
 ];
 
 if (!navigator.appVersion.includes("Android")) {
