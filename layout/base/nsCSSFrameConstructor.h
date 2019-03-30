@@ -27,7 +27,7 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsFrameManager.h"
 
-struct nsFrameItems;
+using nsFrameItems = nsFrameList;
 struct nsStyleDisplay;
 struct nsGenConInitializer;
 
