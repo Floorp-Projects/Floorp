@@ -65,6 +65,9 @@ void nsContainerFrame::SetInitialChildList(ChildListID aListID,
                                            nsFrameList& aChildList) {
 #ifdef DEBUG
   nsFrame::VerifyDirtyBitSet(aChildList);
+  for (nsIFrame* f : aChildList) {
+    MOZ_ASSERT(f->GetParent() == this, "Unexpected parent");
+  }
 #endif
   if (aListID == kPrincipalList) {
     MOZ_ASSERT(mFrames.IsEmpty(),

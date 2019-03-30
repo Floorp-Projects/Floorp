@@ -286,8 +286,7 @@ already_AddRefed<GLContext> GLContextEGLFactory::Create(
       flags, caps, false, config, surface, &discardFailureId);
   if (!gl) {
     const auto err = egl->fGetError();
-    gfxCriticalNote << "Failed to create EGLContext!: "
-                    << gfx::hexa(err);
+    gfxCriticalNote << "Failed to create EGLContext!: " << gfx::hexa(err);
     mozilla::gl::DestroySurface(surface);
     return nullptr;
   }

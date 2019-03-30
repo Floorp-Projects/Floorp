@@ -169,9 +169,8 @@ void TransactionBuilder::SetDisplayList(
     wr::WrPipelineId pipeline_id, const wr::LayoutSize& content_size,
     wr::BuiltDisplayListDescriptor dl_descriptor, wr::Vec<uint8_t>& dl_data) {
   wr_transaction_set_display_list(mTxn, aEpoch, ToColorF(aBgColor),
-                                  aViewportSize,
-                                  pipeline_id, content_size, dl_descriptor,
-                                  &dl_data.inner);
+                                  aViewportSize, pipeline_id, content_size,
+                                  dl_descriptor, &dl_data.inner);
 }
 
 void TransactionBuilder::ClearDisplayList(Epoch aEpoch,

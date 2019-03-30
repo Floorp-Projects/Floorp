@@ -249,8 +249,7 @@ bool ShmSegmentsReader::Read(const layers::OffsetRange& aRange,
 }
 
 IpcResourceUpdateQueue::IpcResourceUpdateQueue(
-    layers::WebRenderBridgeChild* aAllocator,
-    wr::RenderRoot aRenderRoot,
+    layers::WebRenderBridgeChild* aAllocator, wr::RenderRoot aRenderRoot,
     size_t aChunkSize)
     : mWriter(aAllocator, aChunkSize), mRenderRoot(aRenderRoot) {}
 
@@ -276,8 +275,7 @@ IpcResourceUpdateQueue& IpcResourceUpdateQueue::operator=(
   return *this;
 }
 
-void IpcResourceUpdateQueue::ReplaceResources(
-    IpcResourceUpdateQueue&& aOther) {
+void IpcResourceUpdateQueue::ReplaceResources(IpcResourceUpdateQueue&& aOther) {
   MOZ_ASSERT(IsEmpty(), "Will forget existing updates!");
   MOZ_ASSERT(!aOther.HasAnySubQueue(), "Subqueues will be lost!");
   MOZ_ASSERT(mRenderRoot == aOther.mRenderRoot);
