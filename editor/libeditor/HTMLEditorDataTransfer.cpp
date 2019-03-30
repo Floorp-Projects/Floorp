@@ -523,7 +523,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
         // Try to insert.
         EditorDOMPoint insertedPoint =
             InsertNodeIntoProperAncestorWithTransaction(
-                MOZ_KnownLive(*curNode->AsContent()), pointToInsert,
+                *curNode->AsContent(), pointToInsert,
                 SplitAtEdges::eDoNotCreateEmptyContainer);
         if (insertedPoint.IsSet()) {
           lastInsertNode = curNode->AsContent();
@@ -542,7 +542,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
           }
           nsCOMPtr<nsINode> oldParent = content->GetParentNode();
           insertedPoint = InsertNodeIntoProperAncestorWithTransaction(
-              MOZ_KnownLive(*content->GetParent()), pointToInsert,
+              *content->GetParent(), pointToInsert,
               SplitAtEdges::eDoNotCreateEmptyContainer);
           if (insertedPoint.IsSet()) {
             insertedContextParent = oldParent;
@@ -982,13 +982,9 @@ nsresult HTMLEditor::BlobReader::OnResult(const nsACString& aResult) {
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*mHTMLEditor);
-  RefPtr<Document> sourceDocument(mSourceDoc);
-  EditorDOMPoint pointToInsert(mPointToInsert);
-  rv = MOZ_KnownLive(mHTMLEditor)
-           ->DoInsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(),
-                                     NS_LITERAL_STRING(kFileMime),
-                                     sourceDocument, pointToInsert,
-                                     mDoDeleteSelection, mIsSafe, false);
+  rv = mHTMLEditor->DoInsertHTMLWithContext(
+      stuffToPaste, EmptyString(), EmptyString(), NS_LITERAL_STRING(kFileMime),
+      mSourceDoc, mPointToInsert, mDoDeleteSelection, mIsSafe, false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
@@ -1013,7 +1009,6 @@ class SlurpBlobEventListener final : public nsIDOMEventListener {
   explicit SlurpBlobEventListener(HTMLEditor::BlobReader* aListener)
       : mListener(aListener) {}
 
-  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD HandleEvent(Event* aEvent) override;
 
  private:
@@ -1046,17 +1041,16 @@ SlurpBlobEventListener::HandleEvent(Event* aEvent) {
 
   EventMessage message = aEvent->WidgetEventPtr()->mMessage;
 
-  RefPtr<HTMLEditor::BlobReader> listener(mListener);
   if (message == eLoad) {
     MOZ_ASSERT(reader->DataFormat() == FileReader::FILE_AS_BINARY);
 
     // The original data has been converted from Latin1 to UTF-16, this just
     // undoes that conversion.
-    listener->OnResult(NS_LossyConvertUTF16toASCII(reader->Result()));
+    mListener->OnResult(NS_LossyConvertUTF16toASCII(reader->Result()));
   } else if (message == eLoadError) {
     nsAutoString errorMessage;
     reader->GetError()->GetErrorMessage(errorMessage);
-    listener->OnError(errorMessage);
+    mListener->OnError(errorMessage);
   }
 
   return NS_OK;
@@ -1920,6 +1914,39 @@ nsresult HTMLEditor::InsertTextWithQuotationsInternal(
   }
 
   return rv;
+}
+
+nsresult HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
+                                       nsINode** aNodeInserted) {
+  if (IsPlaintextEditor()) {
+    AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+    MOZ_ASSERT(!aQuotedText.IsVoid());
+    editActionData.SetData(aQuotedText);
+    AutoPlaceholderBatch treatAsOneTransaction(*this);
+    nsresult rv = InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorBase::ToGenericNSResult(rv);
+    }
+    return NS_OK;
+  }
+
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eInsertBlockquoteElement);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  nsAutoString citation;
+  nsresult rv = InsertAsCitedQuotationInternal(aQuotedText, citation, false,
+                                               aNodeInserted);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 // Insert plaintext as a quotation, with cite marks (e.g. "> ").
