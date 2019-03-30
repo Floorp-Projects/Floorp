@@ -6094,6 +6094,7 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
 ) -> bool {
     use style::font_face::ComputedFontStyleDescriptor;
     use style::properties::shorthands::font;
+    use style::values::computed::font::FontFamilyList;
     use style::values::computed::font::FontWeight as ComputedFontWeight;
     use style::values::generics::font::FontStyle as GenericFontStyle;
     use style::values::specified::font::{
@@ -6122,7 +6123,8 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
     // The system font is not acceptable, so we return false.
     let family = &mut *family;
     match font.font_family {
-        FontFamily::Values(list) => family.set_move(list.0),
+        FontFamily::Values(FontFamilyList::SharedFontList(list)) => family.set_move(list),
+        FontFamily::Values(list) => family.set_move(list.shared_font_list().clone()),
         FontFamily::System(_) => return false,
     }
 
