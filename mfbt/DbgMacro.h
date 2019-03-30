@@ -97,13 +97,12 @@ template <typename T, size_t N,
           typename = std::enable_if_t<!std::is_same<T, char>::value>>
 std::ostream& operator<<(std::ostream& aOut, const T (&aArray)[N]) {
   return aOut << mozilla::MakeSpan(aArray);
-  // return aOut << mozilla::Span(aArray);
 }
 
 // MOZ_DBG is a macro like the Rust dbg!() macro -- it will print out the
-// expression passed to it to stderr and then return the value.  It is available
-// only in MOZILLA_OFFICIAL builds, so you shouldn't land any uses of it in the
-// tree.
+// expression passed to it to stderr and then return the value.  It is not
+// available in MOZILLA_OFFICIAL builds, so you shouldn't land any uses of it in
+// the tree.
 //
 // It should work for any type T that has an operator<<(std::ostream&, const T&)
 // defined for it.
@@ -168,10 +167,10 @@ std::ostream& operator<<(std::ostream& aOut, const T (&aArray)[N]) {
 #define MOZ_DEFINE_DBG(type_, members_...)                                   \
   friend std::ostream& operator<<(std::ostream& aOut, const type_& aValue) { \
     return aOut << #type_                                                    \
-                << (MOZ_ARG_COUNT(members_) == 0 ? "{ " : "")                \
+                << (MOZ_ARG_COUNT(members_) == 0 ? "" : " { ")               \
                        MOZ_FOR_EACH_SEPARATED(MOZ_DBG_FIELD, (<< ", "), (),  \
                                               (members_))                    \
-                << (MOZ_ARG_COUNT(members_) == 0 ? " }" : "");               \
+                << (MOZ_ARG_COUNT(members_) == 0 ? "" : " }");               \
   }
 
 #endif  // mozilla_DbgMacro_h
