@@ -61,29 +61,29 @@ struct ExternalImageKeyPair {
 /* Generate a brand new window id and return it. */
 WindowId NewWindowId();
 
-MOZ_DEFINE_ENUM_CLASS_WITH_BASE(RenderRoot, uint8_t, (
-  // The default render root - within the parent process, this refers
-  // to everything within the top chrome area (urlbar, tab strip, etc.).
-  // Within the content process, this refers to the content area. Any
-  // system that multiplexes data streams from different processes is
-  // responsible for converting RenderRoot::Default into
-  // RenderRoot::Content (or whatever value is appropriate)
-  Default,
+MOZ_DEFINE_ENUM_CLASS_WITH_BASE(
+    RenderRoot, uint8_t,
+    (
+        // The default render root - within the parent process, this refers
+        // to everything within the top chrome area (urlbar, tab strip, etc.).
+        // Within the content process, this refers to the content area. Any
+        // system that multiplexes data streams from different processes is
+        // responsible for converting RenderRoot::Default into
+        // RenderRoot::Content (or whatever value is appropriate)
+        Default,
 
-  // Everything below the chrome - even if it is not coming from a content
-  // process. For example. the devtools, sidebars, and status panel are
-  // traditionally part of the "chrome," but are assigned a renderroot of
-  // RenderRoot::Content because they occupy screen space in the "content"
-  // area of the browser (visually situated below the "chrome" area).
-  Content
-));
+        // Everything below the chrome - even if it is not coming from a content
+        // process. For example. the devtools, sidebars, and status panel are
+        // traditionally part of the "chrome," but are assigned a renderroot of
+        // RenderRoot::Content because they occupy screen space in the "content"
+        // area of the browser (visually situated below the "chrome" area).
+        Content));
 
 typedef EnumSet<RenderRoot, uint8_t> RenderRootSet;
 
 // For simple iteration of all render roots
-const Array<RenderRoot, kRenderRootCount> kRenderRoots(
-    RenderRoot::Default,
-    RenderRoot::Content);
+const Array<RenderRoot, kRenderRootCount> kRenderRoots(RenderRoot::Default,
+                                                       RenderRoot::Content);
 
 const Array<RenderRoot, kRenderRootCount - 1> kNonDefaultRenderRoots(
     RenderRoot::Content);
@@ -91,12 +91,13 @@ const Array<RenderRoot, kRenderRootCount - 1> kNonDefaultRenderRoots(
 template <typename T>
 class RenderRootArray : public Array<T, kRenderRootCount> {
   typedef Array<T, kRenderRootCount> Super;
+
  public:
   RenderRootArray() {
     if (IsPod<T>::value) {
       // Ensure primitive types get initialized to 0/false.
       PodArrayZero(*this);
-    } // else C++ will default-initialize the array elements for us
+    }  // else C++ will default-initialize the array elements for us
   }
 
   T& operator[](wr::RenderRoot aIndex) {
@@ -114,6 +115,7 @@ class RenderRootArray : public Array<T, kRenderRootCount> {
 template <typename T>
 class NonDefaultRenderRootArray : public Array<T, kRenderRootCount - 1> {
   typedef Array<T, kRenderRootCount - 1> Super;
+
  public:
   NonDefaultRenderRootArray() {
     // See RenderRootArray constructor

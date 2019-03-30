@@ -862,7 +862,7 @@ inline bool MOZ2D_warn_if_impl(bool aCondition, const char* aExpr,
 
 const int INDENT_PER_LEVEL = 2;
 
-template<int Level = LOG_DEBUG>
+template <int Level = LOG_DEBUG>
 class TreeLog {
  public:
   explicit TreeLog(const std::string& aPrefix = "")
@@ -930,7 +930,7 @@ class TreeLog {
   }
 };
 
-template<int Level = LOG_DEBUG>
+template <int Level = LOG_DEBUG>
 class TreeAutoIndent {
  public:
   explicit TreeAutoIndent(TreeLog<Level>& aTreeLog) : mTreeLog(aTreeLog) {

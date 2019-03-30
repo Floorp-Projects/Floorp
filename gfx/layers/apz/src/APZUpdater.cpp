@@ -157,7 +157,8 @@ void APZUpdater::UpdateFocusState(LayersId aRootLayerTreeId,
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   UpdaterQueueSelector selector(aOriginatingWrRootId);
   if (aFocusTarget.mData.is<FocusTarget::ScrollTargets>()) {
-    const FocusTarget::ScrollTargets& targets = aFocusTarget.mData.as<FocusTarget::ScrollTargets>();
+    const FocusTarget::ScrollTargets& targets =
+        aFocusTarget.mData.as<FocusTarget::ScrollTargets>();
     selector.mRenderRoots += targets.mHorizontalRenderRoot;
     selector.mRenderRoots += targets.mVerticalRenderRoot;
   }
@@ -196,23 +197,23 @@ void APZUpdater::UpdateScrollDataAndTreeState(
         }
         self->mEpochData[aOriginatingWrRootId].mRequired = aEpoch;
       }));
-  RunOnUpdaterThread(
-      UpdaterQueueSelector(aOriginatingWrRootId),
-      NS_NewRunnableFunction(
-          "APZUpdater::UpdateHitTestingTree",
-          [=, aScrollData = std::move(aScrollData)]() {
-            self->mScrollData[aOriginatingWrRootId] = aScrollData;
-            auto root = self->mScrollData.find(aRootLayerTreeId);
-            if (root == self->mScrollData.end()) {
-              return;
-            }
-            self->mApz->UpdateHitTestingTree(
-                aRootLayerTreeId.mLayersId,
-                WebRenderScrollDataWrapper(*self, aRootLayerTreeId,
-                                           &(root->second)),
-                aScrollData.IsFirstPaint(), aOriginatingWrRootId,
-                aScrollData.GetPaintSequenceNumber());
-          }));
+  RunOnUpdaterThread(UpdaterQueueSelector(aOriginatingWrRootId),
+                     NS_NewRunnableFunction(
+                         "APZUpdater::UpdateHitTestingTree",
+                         [=, aScrollData = std::move(aScrollData)]() {
+                           self->mScrollData[aOriginatingWrRootId] =
+                               aScrollData;
+                           auto root = self->mScrollData.find(aRootLayerTreeId);
+                           if (root == self->mScrollData.end()) {
+                             return;
+                           }
+                           self->mApz->UpdateHitTestingTree(
+                               aRootLayerTreeId.mLayersId,
+                               WebRenderScrollDataWrapper(
+                                   *self, aRootLayerTreeId, &(root->second)),
+                               aScrollData.IsFirstPaint(), aOriginatingWrRootId,
+                               aScrollData.GetPaintSequenceNumber());
+                         }));
 }
 
 void APZUpdater::UpdateScrollOffsets(WRRootId aRootLayerTreeId,
@@ -235,8 +236,7 @@ void APZUpdater::UpdateScrollOffsets(WRRootId aRootLayerTreeId,
                                aRootLayerTreeId.mLayersId,
                                WebRenderScrollDataWrapper(
                                    *self, aRootLayerTreeId, &(root->second)),
-                               /*isFirstPaint*/ false,
-                               aOriginatingWrRootId,
+                               /*isFirstPaint*/ false, aOriginatingWrRootId,
                                aPaintSequenceNumber);
                          }));
 }
