@@ -384,6 +384,7 @@ android-api-16-without-google-play-services/opt:
 
 android-api-16-nightly/opt:
     description: "Android 4.0 api-16+ Nightly"
+    use-pgo: true
     attributes:
         nightly: true
         enable-full-crashsymbols: true
@@ -428,7 +429,7 @@ android-api-16-nightly/opt:
             - taskcluster_nightly.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
-        custom-build-variant-cfg: api-16
+        custom-build-variant-cfg: api-16-profile-use
         tooltool-downloads: internal
     toolchains:
         - android-gradle-dependencies
