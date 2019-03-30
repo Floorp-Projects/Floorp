@@ -32,7 +32,7 @@
   padding-inline-start: 14px;
 }
 
-.search-box > .textbox-input-box:-moz-locale-dir(rtl) {
+.search-box > .textbox-input-box:dir(rtl) {
   background-position: right center;
 }
 
