@@ -1,0 +1,125 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_DbgMacro_h
+#define mozilla_DbgMacro_h
+
+/* a MOZ_DBG macro that outputs a wrapped value to stderr then returns it */
+
+#include <stdio.h>
+#include <sstream>
+
+namespace mozilla {
+
+namespace detail {
+
+// Predicate to check whether T can be dereferenced and then inserted into an
+// ostream.
+template <typename T, typename = decltype(std::declval<std::ostream&>()
+                                          << *std::declval<T>())>
+std::true_type supports_os_deref_test(const T&);
+std::false_type supports_os_deref_test(...);
+
+template <typename T>
+using supports_os_deref = decltype(supports_os_deref_test(std::declval<T>()));
+
+}  // namespace detail
+
+// Helper function to write a value to an ostream.
+//
+// This handles pointer values where the type being pointed to supports
+// operator<<, and we write out the value being pointed to in addition to the
+// pointer value.
+template <typename T>
+auto DebugValue(std::ostream& aOut, T&& aValue) -> std::enable_if_t<
+    std::is_pointer<typename std::remove_reference<T>::type>::value &&
+        mozilla::detail::supports_os_deref<T>::value,
+    std::ostream&> {
+  if (aValue) {
+    aOut << *aValue << " @ " << aValue;
+  } else {
+    aOut << "null";
+  }
+  return aOut;
+}
+
+// Helper function to write a value to an ostream.
+//
+// This handles all other types by calling into operator<<.
+template <typename T>
+auto DebugValue(std::ostream& aOut, T&& aValue) -> std::enable_if_t<
+    !(std::is_pointer<typename std::remove_reference<T>::type>::value &&
+      mozilla::detail::supports_os_deref<T>::value),
+    std::ostream&> {
+  return aOut << aValue;
+}
+
+namespace detail {
+
+// Helper function template for MOZ_DBG.
+template <typename T>
+auto&& MozDbg(const char* aFile, int aLine, const char* aExpression,
+              T&& aValue) {
+  std::ostringstream s;
+  s << '[' << aFile << ':' << aLine << "] " << aExpression << " = ";
+  mozilla::DebugValue(s, std::forward<T>(aValue));
+  s << '\n';
+  fputs(s.str().c_str(), stderr);
+  return std::forward<T>(aValue);
+}
+
+}  // namespace detail
+
+}  // namespace mozilla
+
+// MOZ_DBG is a macro like the Rust dbg!() macro -- it will print out the
+// expression passed to it to stderr and then return the value.  It is available
+// only in MOZILLA_OFFICIAL builds, so you shouldn't land any uses of it in the
+// tree.
+//
+// It should work for any type T that has an operator<<(std::ostream&, const T&)
+// defined for it.
+//
+// Note 1: Using MOZ_DBG may cause copies to be made of temporary values:
+//
+//   struct A {
+//     A(int);
+//     A(const A&);
+//
+//     int x;
+//   };
+//
+//   void f(A);
+//
+//   f(A{1});  // may (and, in C++17, will) elide the creation of a temporary
+//             // for A{1} and instead initialize the function argument
+//             // directly using the A(int) constructor
+//
+//   f(MOZ_DBG(A{1}));  // will create and return a temporary for A{1}, which
+//                      // then will be passed to the A(const A&) copy
+//                      // constructor to initialize f's argument
+//
+// Note 2: MOZ_DBG cannot be used to wrap a prvalue that is being used to
+// initialize an object if its type has no move constructor:
+//
+//   struct B {
+//     B() = default;
+//     B(B&&) = delete;
+//   };
+//
+//   B b1 = B();  // fine, initializes b1 directly
+//
+//   B b2 = MOZ_DBG(B());  // compile error: MOZ_DBG needs to materialize a
+//                         // temporary for B() so it can be passed to
+//                         // operator<<, but that temporary is returned from
+//                         // MOZ_DBG as an rvalue reference and so wants to
+//                         // invoke B's move constructor to initialize b2
+#ifndef MOZILLA_OFFICIAL
+#  define MOZ_DBG(expression_...) \
+    mozilla::detail::MozDbg(__FILE__, __LINE__, #expression_, expression_)
+#endif
+
+#endif  // mozilla_DbgMacro_h
