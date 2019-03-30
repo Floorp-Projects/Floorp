@@ -91,6 +91,9 @@ void nsLayoutStylesheetCache::Shutdown() {
                        "Got the URL but never used?");
   gStyleCache = nullptr;
   gUserContentSheetURL = nullptr;
+  for (auto& r : URLExtraData::sShared) {
+    r = nullptr;
+  }
 }
 
 void nsLayoutStylesheetCache::SetUserContentCSSURL(nsIURI* aURI) {
