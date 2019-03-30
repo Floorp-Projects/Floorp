@@ -87,6 +87,23 @@ async function openNewTabAndConsole(url, clearJstermHistory = true) {
 }
 
 /**
+ * Open a new window with a tab,open the toolbox, and select the webconsole.
+ *
+ * @param string url
+ *        The URL for the tab to be opened.
+ * @return Promise<{win, hud, tab}>
+ *         Resolves when the tab has been added, loaded and the toolbox has been opened.
+ *         Resolves to the toolbox.
+ */
+async function openNewWindowAndConsole(url) {
+  const win = await openNewBrowserWindow();
+  const tab = await addTab(url, {window: win});
+  win.gBrowser.selectedTab = tab;
+  const hud = await openConsole(tab);
+  return {win, hud, tab};
+}
+
+/**
  * Subscribe to the store and log out stringinfied versions of messages.
  * This is a helper function for debugging, to make is easier to see what
  * happened during the test in the log.
@@ -1220,4 +1237,44 @@ function isScrolledToBottom(container) {
   const lastNodeHeight = container.lastChild.clientHeight;
   return container.scrollTop + container.clientHeight >=
          container.scrollHeight - lastNodeHeight / 2;
+}
+
+/**
+ *
+ * @param {WebConsole} hud
+ * @param {Array<String>} expectedMessages: An array of string representing the messages
+ *                        from the output. This can only be a part of the string of the
+ *                        message.
+ *                        Start the string with "▶︎ " or "▼ " to indicate that the
+ *                        message is a warningGroup (with respectively an open or
+ *                        collapsed arrow).
+ *                        Start the string with "|︎ " to indicate that the message is
+ *                        inside a group and should be indented.
+ */
+function checkConsoleOutputForWarningGroup(hud, expectedMessages) {
+  const messages = findMessages(hud, "");
+  is(messages.length, expectedMessages.length, "Got the expected number of messages");
+  expectedMessages.forEach((expectedMessage, i) => {
+    const message = messages[i];
+    if (expectedMessage.startsWith("▶︎")) {
+      is(message.querySelector(".arrow").getAttribute("aria-expanded"), "false",
+        "There's a collapsed arrow");
+      expectedMessage = expectedMessage.replace("▶︎ ", "");
+    }
+
+    if (expectedMessage.startsWith("▼")) {
+      is(message.querySelector(".arrow").getAttribute("aria-expanded"), "true",
+        "There's an expanded arrow");
+      expectedMessage = expectedMessage.replace("▼︎ ", "");
+    }
+
+    if (expectedMessage.startsWith("|")) {
+      is(message.querySelector(".indent.warning-indent").getAttribute("data-indent"), "1",
+        "The message has the expected indent");
+      expectedMessage = expectedMessage.replace("| ", "");
+    }
+
+    ok(message.textContent.trim().includes(expectedMessage.trim()), `Message includes ` +
+      `the expected "${expectedMessage}" content - "${message.textContent.trim()}"`);
+  });
 }

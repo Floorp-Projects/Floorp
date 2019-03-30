@@ -29,6 +29,7 @@ EXPORTS.mozilla = [
     'CheckedInt.h',
     'Compiler.h',
     'Compression.h',
+    'DbgMacro.h',
     'DebugOnly.h',
     'decimal/Decimal.h',
     'DefineEnum.h',

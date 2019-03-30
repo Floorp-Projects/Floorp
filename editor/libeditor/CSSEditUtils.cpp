@@ -495,11 +495,10 @@ already_AddRefed<nsComputedDOMStyle> CSSEditUtils::GetComputedStyle(
 // whole node if it is a span and if its only attribute is _moz_dirty
 nsresult CSSEditUtils::RemoveCSSInlineStyle(nsINode& aNode, nsAtom* aProperty,
                                             const nsAString& aPropertyValue) {
-  RefPtr<Element> element = aNode.AsElement();
-  NS_ENSURE_STATE(element);
+  OwningNonNull<Element> element(*aNode.AsElement());
 
   // remove the property from the style attribute
-  nsresult rv = RemoveCSSProperty(*element, *aProperty, aPropertyValue);
+  nsresult rv = RemoveCSSProperty(element, *aProperty, aPropertyValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!element->IsHTMLElement(nsGkAtoms::span) ||
@@ -507,7 +506,8 @@ nsresult CSSEditUtils::RemoveCSSInlineStyle(nsINode& aNode, nsAtom* aProperty,
     return NS_OK;
   }
 
-  return mHTMLEditor->RemoveContainerWithTransaction(*element);
+  OwningNonNull<HTMLEditor> htmlEditor(*mHTMLEditor);
+  return htmlEditor->RemoveContainerWithTransaction(element);
 }
 
 // Answers true if the property can be removed by setting a "none" CSS value
@@ -847,8 +847,9 @@ nsresult CSSEditUtils::RemoveCSSEquivalentToHTMLStyle(
   // remove the individual CSS inline styles
   int32_t count = cssPropertyArray.Length();
   for (int32_t index = 0; index < count; index++) {
-    nsresult rv = RemoveCSSProperty(*aElement, *cssPropertyArray[index],
-                                    cssValueArray[index], aSuppressTransaction);
+    nsresult rv =
+        RemoveCSSProperty(*aElement, MOZ_KnownLive(*cssPropertyArray[index]),
+                          cssValueArray[index], aSuppressTransaction);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;

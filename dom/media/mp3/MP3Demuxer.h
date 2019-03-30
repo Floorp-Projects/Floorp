@@ -53,7 +53,7 @@ class MP3TrackDemuxer : public MediaTrackDemuxer,
   int64_t StreamLength() const;
 
   // Returns the estimated stream duration, or a 0-duration if unknown.
-  media::TimeUnit Duration() const;
+  media::NullableTimeUnit Duration() const;
 
   // Returns the estimated duration up to the given frame number,
   // or a 0-duration if unknown.
@@ -121,6 +121,10 @@ class MP3TrackDemuxer : public MediaTrackDemuxer,
 
   // Returns the average frame length derived from the previously parsed frames.
   double AverageFrameLength() const;
+
+  // Returns the number of frames reported by the header if it's valid. Nothing
+  // otherwise.
+  Maybe<uint32_t> ValidNumAudioFrames() const;
 
   // The (hopefully) MPEG resource.
   MediaResourceIndex mSource;
