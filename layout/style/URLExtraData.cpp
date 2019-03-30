@@ -35,4 +35,7 @@ URLExtraData::~URLExtraData() {
   }
 }
 
+StaticRefPtr<URLExtraData>
+    URLExtraData::sShared[size_t(UserAgentStyleSheetID::Count)];
+
 }  // namespace mozilla
