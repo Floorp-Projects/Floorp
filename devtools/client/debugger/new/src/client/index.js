@@ -84,7 +84,7 @@ export async function onConnect(
   const workers = bootstrapWorkers();
   await client.onConnect(connection, actions);
 
-  await syncBreakpoints();
+  syncBreakpoints();
   syncXHRBreakpoints();
   setupHelper({
     store,

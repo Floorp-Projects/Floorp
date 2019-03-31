@@ -38,11 +38,11 @@ add_task(async function() {
   openFirstBreakpointContextMenu(dbg);
   // select "Disable Others"
   // FIXME bug 1524374 this waitForDispatch call only sees one dispatch for
-  // SET_BREAKPOINT even though three are triggered, due to the order in
+  // DISABLE_BREAKPOINT even though three are triggered, due to the order in
   // which promises get resolved. The problem seems to indicate a coverage gap
   // in waitUntilService(). Workaround this by only waiting for one dispatch,
   // though this is fragile and could break again in the future.
-  let dispatched = waitForDispatch(dbg, "SET_BREAKPOINT", /* 2*/ 1);
+  let dispatched = waitForDispatch(dbg, "DISABLE_BREAKPOINT", /* 2*/ 1);
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableOthers);
   await waitForState(dbg, state =>
     dbg.selectors
@@ -54,7 +54,7 @@ add_task(async function() {
 
   openFirstBreakpointContextMenu(dbg);
   // select "Disable All"
-  dispatched = waitForDispatch(dbg, "SET_BREAKPOINT");
+  dispatched = waitForDispatch(dbg, "DISABLE_ALL_BREAKPOINTS");
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableAll);
   await waitForState(dbg, state =>
     dbg.selectors.getBreakpointsList(state).every(bp => bp.disabled)
@@ -64,7 +64,7 @@ add_task(async function() {
 
   openFirstBreakpointContextMenu(dbg);
   // select "Enable Others"
-  dispatched = waitForDispatch(dbg, "SET_BREAKPOINT", 2);
+  dispatched = waitForDispatch(dbg, "ENABLE_BREAKPOINT", 2);
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.enableOthers);
   await waitForState(dbg, state =>
     dbg.selectors

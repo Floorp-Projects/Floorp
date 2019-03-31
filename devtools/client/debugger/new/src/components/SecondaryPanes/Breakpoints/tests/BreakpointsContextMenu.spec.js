@@ -8,11 +8,12 @@ import React from "react";
 import { shallow } from "enzyme";
 
 import BreakpointsContextMenu from "../BreakpointsContextMenu";
+import { createBreakpoint } from "../../../../utils/breakpoint";
 import { buildMenu } from "devtools-contextmenu";
 
 import {
-  makeMockBreakpoint,
-  makeMockSource
+  makeMockSource,
+  makeMappedLocation
 } from "../../../../utils/test-mockup";
 
 jest.mock("devtools-contextmenu");
@@ -24,34 +25,52 @@ function render(disabled = false) {
 }
 
 function generateDefaults(disabled) {
-  const source = makeMockSource(
-    "https://example.com/main.js",
-    "source-https://example.com/main.js"
-  );
   const breakpoints = [
-    {
-      ...makeMockBreakpoint(source, 1),
-      id: "https://example.com/main.js:1:",
-      disabled: disabled,
-      options: {
-        condition: "",
-        logValue: "",
-        hidden: false
+    createBreakpoint(
+      makeMappedLocation({
+        line: 1,
+        column: undefined,
+        sourceId: "source-https://example.com/main.js",
+        sourceUrl: "https://example.com/main.js"
+      }),
+      {
+        id: "https://example.com/main.js:1:",
+        disabled: disabled,
+        options: {
+          condition: "",
+          logValue: "",
+          hidden: false
+        }
       }
-    },
-    {
-      ...makeMockBreakpoint(source, 2),
-      id: "https://example.com/main.js:2:",
-      disabled: disabled,
-      options: {
-        hidden: false
+    ),
+    createBreakpoint(
+      makeMappedLocation({
+        line: 2,
+        column: undefined,
+        sourceId: "source-https://example.com/main.js",
+        sourceUrl: "https://example.com/main.js"
+      }),
+      {
+        id: "https://example.com/main.js:2:",
+        disabled: disabled,
+        options: {
+          hidden: false
+        }
       }
-    },
-    {
-      ...makeMockBreakpoint(source, 3),
-      id: "https://example.com/main.js:3:",
-      disabled: disabled
-    }
+    ),
+    createBreakpoint(
+      makeMappedLocation({
+        line: 3,
+        column: undefined,
+        sourceId: "source-https://example.com/main.js",
+        sourceUrl: "https://example.com/main.js"
+      }),
+      {
+        id: "https://example.com/main.js:3:",
+        disabled: disabled,
+        options: {}
+      }
+    )
   ];
 
   const props = {

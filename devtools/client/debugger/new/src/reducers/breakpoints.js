@@ -14,7 +14,7 @@ import { isEqual } from "lodash";
 
 import { makeBreakpointId, findPosition } from "../utils/breakpoint";
 import { findEmptyLines } from "../utils/empty-lines";
-import { isInlineScript } from "../utils/source";
+import { getTextAtPosition, isInlineScript } from "../utils/source";
 
 // eslint-disable-next-line max-len
 import { getBreakpointsList as getBreakpointsListSelector } from "../selectors/breakpoints";
@@ -24,10 +24,11 @@ import type {
   Breakpoint,
   BreakpointId,
   MappedLocation,
+  Source,
   SourceLocation,
   BreakpointPositions
 } from "../types";
-import type { Action } from "../actions/types";
+import type { Action, DonePromiseAction } from "../actions/types";
 
 export type BreakpointsMap = { [BreakpointId]: Breakpoint };
 export type XHRBreakpointsList = $ReadOnlyArray<XHRBreakpoint>;
@@ -58,12 +59,64 @@ function update(
   action: Action
 ): BreakpointsState {
   switch (action.type) {
-    case "SET_BREAKPOINT": {
-      return setBreakpoint(state, action);
+    case "UPDATE_BREAKPOINT_TEXT": {
+      return updateBreakpointText(state, action.source);
+    }
+
+    case "ADD_SOURCES": {
+      const { sources } = action;
+
+      const scriptSources = sources.filter(source => isInlineScript(source));
+
+      if (scriptSources.length > 0) {
+        const { ...breakpointPositions } = state.breakpointPositions;
+
+        // If new HTML sources are being added, we need to clear the breakpoint
+        // positions since the new source is a <script> with new breakpoints.
+        for (const source of scriptSources) {
+          delete breakpointPositions[source.id];
+        }
+
+        state = { ...state, breakpointPositions };
+      }
+
+      return state;
+    }
+
+    case "ADD_BREAKPOINT": {
+      return addBreakpoint(state, action);
+    }
+
+    case "SYNC_BREAKPOINT": {
+      return syncBreakpoint(state, action);
+    }
+
+    case "ENABLE_BREAKPOINT": {
+      return addBreakpoint(state, action);
+    }
+
+    case "DISABLE_BREAKPOINT": {
+      return updateBreakpoint(state, action);
+    }
+
+    case "DISABLE_ALL_BREAKPOINTS": {
+      return updateAllBreakpoints(state, action);
+    }
+
+    case "ENABLE_ALL_BREAKPOINTS": {
+      return updateAllBreakpoints(state, action);
+    }
+
+    case "SET_BREAKPOINT_OPTIONS": {
+      return updateBreakpoint(state, action);
     }
 
     case "REMOVE_BREAKPOINT": {
       return removeBreakpoint(state, action);
+    }
+
+    case "REMAP_BREAKPOINTS": {
+      return remapBreakpoints(state, action);
     }
 
     case "NAVIGATE": {
@@ -106,26 +159,53 @@ function update(
         }
       };
     }
+  }
 
-    case "ADD_SOURCES": {
-      const { sources } = action;
+  return state;
+}
 
-      const scriptSources = sources.filter(source => isInlineScript(source));
+function updateBreakpointText(
+  state: BreakpointsState,
+  source: Source
+): BreakpointsState {
+  const updates = [];
+  for (const id of Object.keys(state.breakpoints)) {
+    const breakpoint = state.breakpoints[id];
+    const { location, generatedLocation } = breakpoint;
+    let { text, originalText } = breakpoint;
+    let needsUpdate = false;
 
-      if (scriptSources.length > 0) {
-        const { ...breakpointPositions } = state.breakpointPositions;
-
-        // If new HTML sources are being added, we need to clear the breakpoint
-        // positions since the new source is a <script> with new breakpoints.
-        for (const source of scriptSources) {
-          delete breakpointPositions[source.id];
-        }
-
-        state = { ...state, breakpointPositions };
+    if (location.sourceId === source.id) {
+      const result = getTextAtPosition(source, location);
+      if (result !== originalText) {
+        originalText = result;
+        needsUpdate = true;
       }
-
-      return state;
     }
+    if (generatedLocation.sourceId === source.id) {
+      const result = getTextAtPosition(source, generatedLocation);
+      if (result !== text) {
+        text = result;
+        needsUpdate = true;
+      }
+    }
+
+    if (needsUpdate) {
+      updates.push({ id, text, originalText });
+    }
+  }
+
+  if (updates.length > 0) {
+    const { ...breakpoints } = state.breakpoints;
+
+    for (const { id, text, originalText } of updates) {
+      breakpoints[id] = { ...breakpoints[id], text, originalText };
+    }
+
+    state = {
+      ...state,
+      breakpoints
+    };
   }
 
   return state;
@@ -182,17 +262,98 @@ function updateXHRBreakpoint(state, action) {
   };
 }
 
-function setBreakpoint(state, { breakpoint }): BreakpointsState {
-  const id = makeBreakpointId(breakpoint.location);
-  const breakpoints = { ...state.breakpoints, [id]: breakpoint };
+function setBreakpoint(state, locationId, breakpoint) {
+  return {
+    ...state,
+    breakpoints: { ...state.breakpoints, [locationId]: breakpoint }
+  };
+}
+
+function unsetBreakpoint(state, locationId) {
+  const breakpoints = { ...state.breakpoints };
+  delete breakpoints[locationId];
+  return {
+    ...state,
+    breakpoints: { ...breakpoints }
+  };
+}
+
+function addBreakpoint(state, action): BreakpointsState {
+  if (action.status === "start" && action.breakpoint) {
+    const { breakpoint } = action;
+    const locationId = makeBreakpointId(breakpoint.location);
+    return setBreakpoint(state, locationId, breakpoint);
+  }
+
+  // when the action completes, we can commit the breakpoint
+  if (action.status === "done") {
+    const { value } = ((action: any): DonePromiseAction);
+    return syncBreakpoint(state, { breakpoint: value, previousLocation: null });
+  }
+
+  // Remove the optimistic update
+  if (action.status === "error" && action.breakpoint) {
+    const locationId = makeBreakpointId(action.breakpoint.location);
+    return unsetBreakpoint(state, locationId);
+  }
+
+  return state;
+}
+
+function syncBreakpoint(state, data): BreakpointsState {
+  const { breakpoint, previousLocation } = data;
+
+  if (previousLocation) {
+    state = {
+      ...state,
+      breakpoints: { ...state.breakpoints }
+    };
+    delete state.breakpoints[makeBreakpointId(previousLocation)];
+  }
+
+  if (!breakpoint) {
+    return state;
+  }
+
+  const locationId = makeBreakpointId(breakpoint.location);
+  return setBreakpoint(state, locationId, breakpoint);
+}
+
+function updateBreakpoint(state, action): BreakpointsState {
+  const { breakpoint } = action;
+  const locationId = makeBreakpointId(breakpoint.location);
+  return setBreakpoint(state, locationId, breakpoint);
+}
+
+function updateAllBreakpoints(state, action): BreakpointsState {
+  const { breakpoints } = action;
+  state = {
+    ...state,
+    breakpoints: { ...state.breakpoints }
+  };
+  breakpoints.forEach(breakpoint => {
+    const locationId = makeBreakpointId(breakpoint.location);
+    state.breakpoints[locationId] = breakpoint;
+  });
+  return state;
+}
+
+function remapBreakpoints(state, action): BreakpointsState {
+  const breakpoints = action.breakpoints.reduce(
+    (updatedBreakpoints, breakpoint) => {
+      const locationId = makeBreakpointId(breakpoint.location);
+      return { ...updatedBreakpoints, [locationId]: breakpoint };
+    },
+    {}
+  );
+
   return { ...state, breakpoints };
 }
 
-function removeBreakpoint(state, { location }): BreakpointsState {
-  const id = makeBreakpointId(location);
-  const breakpoints = { ...state.breakpoints };
-  delete breakpoints[id];
-  return { ...state, breakpoints };
+function removeBreakpoint(state, action): BreakpointsState {
+  const { breakpoint } = action;
+  const id = makeBreakpointId(breakpoint.location);
+  return unsetBreakpoint(state, id);
 }
 
 function isMatchingLocation(location1, location2) {
