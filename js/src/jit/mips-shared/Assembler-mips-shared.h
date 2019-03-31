@@ -814,9 +814,7 @@ class AssemblerMIPSShared : public AssemblerShared {
   }
 
  public:
-  void setUnlimitedBuffer() {
-    m_buffer.setUnlimited();
-  }
+  void setUnlimitedBuffer() { m_buffer.setUnlimited(); }
   bool oom() const;
 
   void setPrinter(Sprinter* sp) {

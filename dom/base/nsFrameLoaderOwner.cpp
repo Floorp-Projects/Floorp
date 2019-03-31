@@ -50,6 +50,5 @@ void nsFrameLoaderOwner::ChangeRemoteness(
   // ChromeOnlyDispatch is turns on to make sure this isn't fired into content.
   (new AsyncEventDispatcher(owner, NS_LITERAL_STRING("XULFrameLoaderCreated"),
                             CanBubble::eYes, ChromeOnlyDispatch::eYes))
-    ->RunDOMEventWhenSafe();
-
+      ->RunDOMEventWhenSafe();
 }

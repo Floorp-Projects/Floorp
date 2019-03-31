@@ -32,24 +32,16 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED OwningNonNull {
   }
 
   // This is no worse than get() in terms of const handling.
-  operator T&() const {
-    return ref();
-  }
+  operator T&() const { return ref(); }
 
-  operator T*() const {
-    return get();
-  }
+  operator T*() const { return get(); }
 
   // Conversion to bool is always true, so delete to catch errors
   explicit operator bool() const = delete;
 
-  T* operator->() const {
-    return get();
-  }
+  T* operator->() const { return get(); }
 
-  T& operator*() const {
-    return ref();
-  }
+  T& operator*() const { return ref(); }
 
   OwningNonNull<T>& operator=(T* aValue) {
     init(aValue);

@@ -77,11 +77,12 @@ class BaselineInspector {
  public:
   typedef Vector<ReceiverGuard, 4, JitAllocPolicy> ReceiverVector;
   typedef Vector<ObjectGroup*, 4, JitAllocPolicy> ObjectGroupVector;
-  MOZ_MUST_USE bool maybeInfoForPropertyOp(
-      jsbytecode* pc, ReceiverVector& receivers);
+  MOZ_MUST_USE bool maybeInfoForPropertyOp(jsbytecode* pc,
+                                           ReceiverVector& receivers);
 
-  MOZ_MUST_USE bool maybeInfoForProtoReadSlot(
-      jsbytecode* pc, ReceiverVector& receivers, JSObject** holder);
+  MOZ_MUST_USE bool maybeInfoForProtoReadSlot(jsbytecode* pc,
+                                              ReceiverVector& receivers,
+                                              JSObject** holder);
 
   SetElemICInspector setElemICInspector(jsbytecode* pc) {
     return makeICInspector<SetElemICInspector>(pc, ICStub::SetElem_Fallback);
@@ -126,9 +127,11 @@ class BaselineInspector {
   MOZ_MUST_USE bool megamorphicGetterSetterFunction(
       jsbytecode* pc, jsid id, bool isGetter, JSFunction** getterOrSetter);
 
-  MOZ_MUST_USE bool commonSetPropFunction(
-      jsbytecode* pc, JSObject** holder, Shape** holderShape,
-      JSFunction** commonSetter, bool* isOwnProperty, ReceiverVector& receivers);
+  MOZ_MUST_USE bool commonSetPropFunction(jsbytecode* pc, JSObject** holder,
+                                          Shape** holderShape,
+                                          JSFunction** commonSetter,
+                                          bool* isOwnProperty,
+                                          ReceiverVector& receivers);
 
   MOZ_MUST_USE bool instanceOfData(jsbytecode* pc, Shape** shape,
                                    uint32_t* slot, JSObject** prototypeObject);

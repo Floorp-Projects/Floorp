@@ -4436,8 +4436,7 @@ bool SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup,
                                 changeGroup, newGroup);
     trackAttached("AddSlot");
   } else {
-    size_t offset =
-        holder->dynamicSlotIndex(propShape->slot()) * sizeof(Value);
+    size_t offset = holder->dynamicSlotIndex(propShape->slot()) * sizeof(Value);
     uint32_t numOldSlots = NativeObject::dynamicSlotsCount(oldShape);
     uint32_t numNewSlots = NativeObject::dynamicSlotsCount(propShape);
     if (numOldSlots == numNewSlots) {

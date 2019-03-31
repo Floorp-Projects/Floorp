@@ -281,14 +281,14 @@ class MutableWrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>,
 };
 
 template <typename Wrapper, typename T, typename AllocPolicy>
-class WrappedPtrOperations<JS::StackGCVector<T, AllocPolicy>, Wrapper> :
-  public WrappedPtrOperations<typename JS::StackGCVector<T, AllocPolicy>::Base,
-                              Wrapper> {};
+class WrappedPtrOperations<JS::StackGCVector<T, AllocPolicy>, Wrapper>
+    : public WrappedPtrOperations<
+          typename JS::StackGCVector<T, AllocPolicy>::Base, Wrapper> {};
 
 template <typename Wrapper, typename T, typename AllocPolicy>
-class MutableWrappedPtrOperations<JS::StackGCVector<T, AllocPolicy>, Wrapper> :
-  public MutableWrappedPtrOperations<typename JS::StackGCVector<T, AllocPolicy>::Base,
-                                     Wrapper> {};
+class MutableWrappedPtrOperations<JS::StackGCVector<T, AllocPolicy>, Wrapper>
+    : public MutableWrappedPtrOperations<
+          typename JS::StackGCVector<T, AllocPolicy>::Base, Wrapper> {};
 
 }  // namespace js
 

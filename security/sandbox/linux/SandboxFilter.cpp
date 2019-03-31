@@ -696,14 +696,14 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         rv = DoSyscall(__NR_fstatfs, fd, buf);
         break;
       }
-#  ifdef __NR_statfs64
+#ifdef __NR_statfs64
       case __NR_statfs64: {
         auto sz = static_cast<size_t>(aArgs.args[1]);
         auto buf = reinterpret_cast<void*>(aArgs.args[2]);
         rv = DoSyscall(__NR_fstatfs64, fd, sz, buf);
         break;
       }
-#  endif
+#endif
       default:
         MOZ_ASSERT(false);
         rv = -ENOSYS;
@@ -845,10 +845,10 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case SYS_SENDMMSG:  // libresolv via libasyncns; see bug 1355274
         return Some(Allow());
 
-#  ifdef ANDROID
+#ifdef ANDROID
       case SYS_SOCKET:
         return Some(Error(EACCES));
-#  else  // #ifdef DESKTOP
+#else  // #ifdef DESKTOP
       case SYS_SOCKET: {
         const auto trapFn = aHasArgs ? FakeSocketTrap : FakeSocketTrapLegacy;
         return Some(AllowBelowLevel(4, Trap(trapFn, nullptr)));
@@ -871,13 +871,13 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case SYS_GETPEERNAME:
       case SYS_SHUTDOWN:
         return Some(Allow());
-#  endif
+#endif
       default:
         return SandboxPolicyCommon::EvaluateSocketCall(aCall, aHasArgs);
     }
   }
 
-#  ifdef DESKTOP
+#ifdef DESKTOP
   Maybe<ResultExpr> EvaluateIpcCall(int aCall) const override {
     switch (aCall) {
         // These are a problem: SysV IPC follows the Unix "same uid
@@ -903,9 +903,9 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         return SandboxPolicyCommon::EvaluateIpcCall(aCall);
     }
   }
-#  endif
+#endif
 
-#  ifdef MOZ_PULSEAUDIO
+#ifdef MOZ_PULSEAUDIO
   ResultExpr PrctlPolicy() const override {
     if (BelowLevel(4)) {
       Arg<int> op(0);
@@ -914,7 +914,7 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
     }
     return SandboxPolicyCommon::PrctlPolicy();
   }
-#  endif
+#endif
 
   ResultExpr EvaluateSyscall(int sysno) const override {
     // Straight allow for anything that got overriden via prefs
@@ -954,7 +954,7 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
     }
 
     switch (sysno) {
-#  ifdef DESKTOP
+#ifdef DESKTOP
       case __NR_getppid:
         return Trap(GetPPidTrap, nullptr);
 
@@ -966,28 +966,28 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case __NR_getcwd:
         return Error(ENOENT);
 
-#    ifdef MOZ_PULSEAUDIO
+#  ifdef MOZ_PULSEAUDIO
       CASES_FOR_fchown:
       case __NR_fchmod:
         return AllowBelowLevel(4);
-#    endif
+#  endif
       CASES_FOR_fstatfs:  // fontconfig, pulseaudio, GIO (see also statfs)
       case __NR_flock:    // graphics
         return Allow();
 
         // Bug 1354731: proprietary GL drivers try to mknod() their devices
-#    ifdef __NR_mknod
+#  ifdef __NR_mknod
       case __NR_mknod:
-#    endif
+#  endif
       case __NR_mknodat: {
         Arg<mode_t> mode(sysno == __NR_mknodat ? 2 : 1);
         return If((mode & S_IFMT) == S_IFCHR, Error(EPERM))
             .Else(InvalidSyscall());
       }
       // Bug 1438389: ...and nvidia GL will sometimes try to chown the devices
-#    ifdef __NR_chown
+#  ifdef __NR_chown
       case __NR_chown:
-#    endif
+#  endif
       case __NR_fchownat:
         return Error(EPERM);
 
@@ -995,7 +995,7 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         // settings.  Can remove when bug 1325242 happens in some form.
       case __NR_utime:
         return Error(EPERM);
-#  endif
+#endif
 
       CASES_FOR_select:
       case __NR_pselect6:
@@ -1004,18 +1004,18 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       CASES_FOR_getdents:
       case __NR_writev:
       case __NR_pread64:
-#  ifdef DESKTOP
+#ifdef DESKTOP
       case __NR_pwrite64:
       case __NR_readahead:
-#  endif
+#endif
         return Allow();
 
       case __NR_ioctl: {
-#  ifdef MOZ_ALSA
+#ifdef MOZ_ALSA
         if (BelowLevel(4)) {
           return Allow();
         }
-#  endif
+#endif
         static const unsigned long kTypeMask = _IOC_TYPEMASK << _IOC_TYPESHIFT;
         static const unsigned long kTtyIoctls = TIOCSTI & kTypeMask;
         // On some older architectures (but not x86 or ARM), ioctls are
@@ -1067,14 +1067,14 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
             .Case(F_DUPFD_CLOEXEC, Allow())
             // Nvidia GL and fontconfig (newer versions) use fcntl file locking.
             .Case(F_SETLK, Allow())
-#  ifdef F_SETLK64
+#ifdef F_SETLK64
             .Case(F_SETLK64, Allow())
-#  endif
+#endif
             // Pulseaudio uses F_SETLKW, as does fontconfig.
             .Case(F_SETLKW, Allow())
-#  ifdef F_SETLKW64
+#ifdef F_SETLKW64
             .Case(F_SETLKW64, Allow())
-#  endif
+#endif
             .Default(SandboxPolicyCommon::EvaluateSyscall(sysno));
       }
 
@@ -1098,10 +1098,10 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case __NR_sigaltstack:
         return Allow();
 
-#  ifdef __NR_set_thread_area
+#ifdef __NR_set_thread_area
       case __NR_set_thread_area:
         return Allow();
-#  endif
+#endif
 
       case __NR_getrusage:
       case __NR_times:
@@ -1128,17 +1128,17 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case __NR_sched_setscheduler:
       case __NR_sched_getparam:
       case __NR_sched_setparam:
-#  ifdef DESKTOP
+#ifdef DESKTOP
       case __NR_sched_getaffinity:
-#  endif
+#endif
         return Allow();
 
-#  ifdef DESKTOP
+#ifdef DESKTOP
       case __NR_sched_setaffinity:
         return Error(EPERM);
-#  endif
+#endif
 
-#  ifdef DESKTOP
+#ifdef DESKTOP
       case __NR_pipe2:
         return Allow();
 
@@ -1179,9 +1179,9 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       }
 
       case __NR_wait4:
-#    ifdef __NR_waitpid
+#  ifdef __NR_waitpid
       case __NR_waitpid:
-#    endif
+#  endif
         // NSPR will start a thread to wait for child processes even if
         // fork() fails; see bug 227246 and bug 1299581.
         return Error(ECHILD);
@@ -1189,18 +1189,18 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case __NR_eventfd2:
         return Allow();
 
-#    ifdef __NR_memfd_create
+#  ifdef __NR_memfd_create
       case __NR_memfd_create:
         return Allow();
-#    endif
+#  endif
 
-#    ifdef __NR_rt_tgsigqueueinfo
+#  ifdef __NR_rt_tgsigqueueinfo
         // Only allow to send signals within the process.
       case __NR_rt_tgsigqueueinfo: {
         Arg<pid_t> tgid(0);
         return If(tgid == getpid(), Allow()).Else(InvalidSyscall());
       }
-#    endif
+#  endif
 
       case __NR_mlock:
       case __NR_munlock:
@@ -1215,15 +1215,15 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case __NR_clone:
         return ClonePolicy(Error(EPERM));
 
-#    ifdef __NR_fadvise64
+#  ifdef __NR_fadvise64
       case __NR_fadvise64:
         return Allow();
-#    endif
+#  endif
 
-#    ifdef __NR_fadvise64_64
+#  ifdef __NR_fadvise64_64
       case __NR_fadvise64_64:
         return Allow();
-#    endif
+#  endif
 
       case __NR_fallocate:
         return Allow();
@@ -1231,25 +1231,25 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case __NR_get_mempolicy:
         return Allow();
 
-#  endif  // DESKTOP
+#endif  // DESKTOP
 
-#  ifdef __NR_getrandom
+#ifdef __NR_getrandom
       case __NR_getrandom:
         return Allow();
-#  endif
+#endif
 
         // nsSystemInfo uses uname (and we cache an instance, so
         // the info remains present even if we block the syscall)
       case __NR_uname:
-#  ifdef DESKTOP
+#ifdef DESKTOP
       case __NR_sysinfo:
-#  endif
+#endif
         return Allow();
 
-#  ifdef MOZ_JPROF
+#ifdef MOZ_JPROF
       case __NR_setitimer:
         return Allow();
-#  endif  // MOZ_JPROF
+#endif  // MOZ_JPROF
 
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);
@@ -1274,12 +1274,12 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
     int flags;
 
     switch (aArgs.nr) {
-#  ifdef __NR_open
+#ifdef __NR_open
       case __NR_open:
         path = reinterpret_cast<const char*>(aArgs.args[0]);
         flags = static_cast<int>(aArgs.args[1]);
         break;
-#  endif
+#endif
       case __NR_openat:
         // The path has to be absolute to match the pre-opened file (see
         // assertion in ctor) so the dirfd argument is ignored.
@@ -1353,9 +1353,9 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
   ResultExpr EvaluateSyscall(int sysno) const override {
     switch (sysno) {
       // Simulate opening the plugin file.
-#  ifdef __NR_open
+#ifdef __NR_open
       case __NR_open:
-#  endif
+#endif
       case __NR_openat:
         return Trap(OpenTrap, mFiles);
 
@@ -1392,7 +1392,6 @@ UniquePtr<sandbox::bpf_dsl::Policy> GetMediaSandboxPolicy(
     const SandboxOpenedFiles* aFiles) {
   return UniquePtr<sandbox::bpf_dsl::Policy>(new GMPSandboxPolicy(aFiles));
 }
-
 
 // The policy for the data decoder process is similar to the one for
 // media plugins, but the codec code is all in-tree so it's better

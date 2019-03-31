@@ -2349,7 +2349,7 @@ BigInt* BigInt::asUintN(JSContext* cx, HandleBigInt x, uint64_t bits) {
   if (res == nullptr) {
     return nullptr;
   }
-  
+
   while (length-- > 0) {
     res->setDigit(length, x->digit(length) & mask);
     mask = Digit(-1);

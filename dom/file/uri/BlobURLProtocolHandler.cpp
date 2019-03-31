@@ -175,7 +175,7 @@ class BlobURLsReporter final : public nsIMemoryReporter {
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aCallback,
                             nsISupports* aData, bool aAnonymize) override {
     MOZ_ASSERT(NS_IsMainThread(),
-             "without locking gDataTable is main-thread only");
+               "without locking gDataTable is main-thread only");
     if (!gDataTable) {
       return NS_OK;
     }

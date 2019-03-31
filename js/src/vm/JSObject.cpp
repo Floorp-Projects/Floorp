@@ -3014,8 +3014,7 @@ extern bool PropertySpecNameToId(JSContext* cx, const char* name,
                                  js::PinningBehavior pin = js::DoNotPinAtom);
 
 static bool ShouldIgnorePropertyDefinition(JSContext* cx, HandleObject obj,
-                                           HandleId id)
-{
+                                           HandleId id) {
   if (StandardProtoKeyOrNull(obj) == JSProto_DataView &&
       !cx->realm()->creationOptions().getBigIntEnabled() &&
       (id == NameToId(cx->names().getBigInt64) ||

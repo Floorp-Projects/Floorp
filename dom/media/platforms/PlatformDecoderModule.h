@@ -148,8 +148,8 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
 // The 'value' have to be the biggest enum from CreateDecoderParams::Option.
 template <>
 struct MaxEnumValue<::mozilla::CreateDecoderParams::Option> {
-  static constexpr unsigned int value = static_cast<unsigned int>(
-      CreateDecoderParams::Option::SENTINEL);
+  static constexpr unsigned int value =
+      static_cast<unsigned int>(CreateDecoderParams::Option::SENTINEL);
 };
 
 // The PlatformDecoderModule interface is used by the MediaFormatReader to

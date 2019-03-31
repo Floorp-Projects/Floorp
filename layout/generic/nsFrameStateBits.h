@@ -563,7 +563,8 @@ FRAME_STATE_BIT(Block, 28, NS_BLOCK_CLIP_PAGINATED_OVERFLOW)
 FRAME_STATE_BIT(Block, 29, NS_BLOCK_HAS_FIRST_LETTER_STYLE)
 
 // NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER and NS_BLOCK_FRAME_HAS_INSIDE_MARKER
-// means the block has an associated ::marker frame, they are mutually exclusive.
+// means the block has an associated ::marker frame, they are mutually
+// exclusive.
 FRAME_STATE_BIT(Block, 30, NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER)
 FRAME_STATE_BIT(Block, 31, NS_BLOCK_FRAME_HAS_INSIDE_MARKER)
 
