@@ -41,13 +41,15 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   static const bool SupportsPrioritization = true;
 
   explicit PrioritizedEventQueue(already_AddRefed<nsIIdlePeriod> aIdlePeriod)
-    : mHighQueue(MakeUnique<InnerQueueT>(EventQueuePriority::High)),
-      mInputQueue(MakeUnique<InnerQueueT>(EventQueuePriority::Input)),
-      mMediumHighQueue(MakeUnique<InnerQueueT>(EventQueuePriority::MediumHigh)),
-      mNormalQueue(MakeUnique<InnerQueueT>(EventQueuePriority::Normal)),
-      mDeferredTimersQueue(MakeUnique<InnerQueueT>(EventQueuePriority::DeferredTimers)),
-      mIdleQueue(MakeUnique<InnerQueueT>(EventQueuePriority::Idle)),
-      mIdlePeriod(aIdlePeriod) {}
+      : mHighQueue(MakeUnique<InnerQueueT>(EventQueuePriority::High)),
+        mInputQueue(MakeUnique<InnerQueueT>(EventQueuePriority::Input)),
+        mMediumHighQueue(
+            MakeUnique<InnerQueueT>(EventQueuePriority::MediumHigh)),
+        mNormalQueue(MakeUnique<InnerQueueT>(EventQueuePriority::Normal)),
+        mDeferredTimersQueue(
+            MakeUnique<InnerQueueT>(EventQueuePriority::DeferredTimers)),
+        mIdleQueue(MakeUnique<InnerQueueT>(EventQueuePriority::Idle)),
+        mIdlePeriod(aIdlePeriod) {}
 
   void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                 EventQueuePriority aPriority,

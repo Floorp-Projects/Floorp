@@ -1251,9 +1251,7 @@ class Assembler : public AssemblerShared {
   // MacroAssembler, before allocating any space.
   void initWithAllocator() { m_buffer.initWithAllocator(); }
 
-  void setUnlimitedBuffer() {
-    m_buffer.setUnlimited();
-  }
+  void setUnlimitedBuffer() { m_buffer.setUnlimited(); }
 
   static Condition InvertCondition(Condition cond);
   static Condition UnsignedCondition(Condition cond);

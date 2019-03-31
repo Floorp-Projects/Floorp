@@ -165,8 +165,7 @@ void nsCounterList::RecalcAll() {
       node->mValueAfter = 1;
     } else if ((node->mType == nsCounterChangeNode::INCREMENT ||
                 node->mType == nsCounterChangeNode::SET) &&
-               node->mScopeStart &&
-               node->mScopeStart->IsContentBasedReset()) {
+               node->mScopeStart && node->mScopeStart->IsContentBasedReset()) {
       ++node->mScopeStart->mValueAfter;
     }
   }
@@ -188,10 +187,10 @@ void nsCounterList::RecalcAll() {
     }
 
     if (oldValue != node->mValueAfter && node->mPseudoFrame &&
-        node->mPseudoFrame->StyleDisplay()->mDisplay == StyleDisplay::ListItem) {
+        node->mPseudoFrame->StyleDisplay()->mDisplay ==
+            StyleDisplay::ListItem) {
       auto* shell = node->mPseudoFrame->PresShell();
-      shell->FrameNeedsReflow(node->mPseudoFrame,
-                              nsIPresShell::eStyleChange,
+      shell->FrameNeedsReflow(node->mPseudoFrame, nsIPresShell::eStyleChange,
                               NS_FRAME_IS_DIRTY);
     }
   }
@@ -200,8 +199,7 @@ void nsCounterList::RecalcAll() {
 bool nsCounterManager::AddCounterChanges(nsIFrame* aFrame) {
   const nsStyleContent* styleContent = aFrame->StyleContent();
   if (!styleContent->CounterIncrementCount() &&
-      !styleContent->CounterResetCount() &&
-      !styleContent->CounterSetCount()) {
+      !styleContent->CounterResetCount() && !styleContent->CounterSetCount()) {
     MOZ_ASSERT(!aFrame->HasAnyStateBits(NS_FRAME_HAS_CSS_COUNTER_STYLE));
     return false;
   }
@@ -221,8 +219,9 @@ bool nsCounterManager::AddCounterChanges(nsIFrame* aFrame) {
                                   nsCounterChangeNode::SET);
   }
   for (i = 0, i_end = styleContent->CounterIncrementCount(); i != i_end; ++i) {
-    dirty |= AddCounterChangeNode(aFrame, i, styleContent->CounterIncrementAt(i),
-                                  nsCounterChangeNode::INCREMENT);
+    dirty |=
+        AddCounterChangeNode(aFrame, i, styleContent->CounterIncrementAt(i),
+                             nsCounterChangeNode::INCREMENT);
   }
   return dirty;
 }

@@ -151,8 +151,7 @@ nsAtom** EffectSet::GetEffectSetPropertyAtoms() {
       nsGkAtoms::animationEffectsProperty,
       nsGkAtoms::animationEffectsForBeforeProperty,
       nsGkAtoms::animationEffectsForAfterProperty,
-      nsGkAtoms::animationEffectsForMarkerProperty,
-      nullptr};
+      nsGkAtoms::animationEffectsForMarkerProperty, nullptr};
 
   return effectSetPropertyAtoms;
 }

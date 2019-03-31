@@ -22,11 +22,10 @@ CSSPseudoElement::CSSPseudoElement(dom::Element* aElement,
                                    PseudoStyleType aType)
     : mOriginatingElement(aElement), mPseudoType(aType) {
   MOZ_ASSERT(aElement);
-  MOZ_ASSERT(
-      aType == PseudoStyleType::after ||
-      aType == PseudoStyleType::before ||
-      aType == PseudoStyleType::marker,
-      "Unexpected Pseudo Type");
+  MOZ_ASSERT(aType == PseudoStyleType::after ||
+                 aType == PseudoStyleType::before ||
+                 aType == PseudoStyleType::marker,
+             "Unexpected Pseudo Type");
 }
 
 CSSPseudoElement::~CSSPseudoElement() {

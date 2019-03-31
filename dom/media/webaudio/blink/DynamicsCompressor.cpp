@@ -184,7 +184,7 @@ void DynamicsCompressor::process(const AudioBlock* sourceChunk,
       break;
     case 1:
       m_sourceChannels[0] =
-        static_cast<const float*>(sourceChunk->mChannelData[0]);
+          static_cast<const float*>(sourceChunk->mChannelData[0]);
       break;
     default:
       MOZ_CRASH("not supported.");

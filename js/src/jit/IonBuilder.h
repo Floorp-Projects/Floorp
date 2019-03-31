@@ -916,8 +916,7 @@ class IonBuilder : public MIRGenerator,
 
   MDefinition* addShapeGuardsForGetterSetter(
       MDefinition* obj, JSObject* holder, Shape* holderShape,
-      const BaselineInspector::ReceiverVector& receivers,
-      bool isOwnProperty);
+      const BaselineInspector::ReceiverVector& receivers, bool isOwnProperty);
 
   AbortReasonOr<Ok> annotateGetPropertyCache(MDefinition* obj,
                                              PropertyName* name,

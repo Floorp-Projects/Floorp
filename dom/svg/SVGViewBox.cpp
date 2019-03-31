@@ -207,8 +207,7 @@ already_AddRefed<SVGAnimatedRect> SVGViewBox::ToSVGAnimatedRect(
   return domAnimatedRect.forget();
 }
 
-already_AddRefed<SVGIRect> SVGViewBox::ToDOMBaseVal(
-    SVGElement* aSVGElement) {
+already_AddRefed<SVGIRect> SVGViewBox::ToDOMBaseVal(SVGElement* aSVGElement) {
   if (!mHasBaseVal || mBaseVal.none) {
     return nullptr;
   }
@@ -226,8 +225,7 @@ SVGViewBox::DOMBaseVal::~DOMBaseVal() {
   sBaseSVGViewBoxTearoffTable.RemoveTearoff(mVal);
 }
 
-already_AddRefed<SVGIRect> SVGViewBox::ToDOMAnimVal(
-    SVGElement* aSVGElement) {
+already_AddRefed<SVGIRect> SVGViewBox::ToDOMAnimVal(SVGElement* aSVGElement) {
   if ((mAnimVal && mAnimVal->none) ||
       (!mAnimVal && (!mHasBaseVal || mBaseVal.none))) {
     return nullptr;
