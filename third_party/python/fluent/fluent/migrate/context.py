@@ -123,7 +123,7 @@ class MergeContext(object):
         fullpath = os.path.join(self.reference_dir, path)
         try:
             return self.read_ftl_resource(fullpath)
-        except IOError as err:
+        except IOError:
             error_message = 'Missing reference file: {}'.format(fullpath)
             logging.getLogger('migrate').error(error_message)
             raise UnreadableReferenceError(error_message)

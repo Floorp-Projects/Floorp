@@ -118,21 +118,23 @@ SkPath ScaledFontBase::GetSkiaPathForGlyphs(const GlyphBuffer &aBuffer) {
   }
 
   struct Context {
-    const Glyph* mGlyph;
+    const Glyph *mGlyph;
     SkPath mPath;
-  } ctx = { aBuffer.mGlyphs };
+  } ctx = {aBuffer.mGlyphs};
 
-  font.getPaths(indices.data(), indices.size(),
-    [](const SkPath* glyphPath, const SkMatrix& scaleMatrix, void* ctxPtr) {
-      Context& ctx = *reinterpret_cast<Context*>(ctxPtr);
-      if (glyphPath) {
-        SkMatrix transMatrix(scaleMatrix);
-        transMatrix.postTranslate(SkFloatToScalar(ctx.mGlyph->mPosition.x),
-                                  SkFloatToScalar(ctx.mGlyph->mPosition.y));
-        ctx.mPath.addPath(*glyphPath, transMatrix);
-      }
-      ++ctx.mGlyph;
-    }, &ctx);
+  font.getPaths(
+      indices.data(), indices.size(),
+      [](const SkPath *glyphPath, const SkMatrix &scaleMatrix, void *ctxPtr) {
+        Context &ctx = *reinterpret_cast<Context *>(ctxPtr);
+        if (glyphPath) {
+          SkMatrix transMatrix(scaleMatrix);
+          transMatrix.postTranslate(SkFloatToScalar(ctx.mGlyph->mPosition.x),
+                                    SkFloatToScalar(ctx.mGlyph->mPosition.y));
+          ctx.mPath.addPath(*glyphPath, transMatrix);
+        }
+        ++ctx.mGlyph;
+      },
+      &ctx);
 
   return ctx.mPath;
 }

@@ -151,7 +151,8 @@ class StaticPresData {
    * to re-call GetLanguageGroup when it is safe to cache, to avoid
    * recomputing the language group again later.
    */
-  nsStaticAtom* GetLangGroup(nsAtom* aLanguage, bool* aNeedsToCache = nullptr) const;
+  nsStaticAtom* GetLangGroup(nsAtom* aLanguage,
+                             bool* aNeedsToCache = nullptr) const;
 
   /**
    * Same as GetLangGroup, but will not cache the result

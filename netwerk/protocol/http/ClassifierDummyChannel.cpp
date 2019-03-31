@@ -45,7 +45,8 @@ ClassifierDummyChannel::StorageAllowed(
   aChannel->GetURI(getter_AddRefs(uri));
 
   if (StaticPrefs::privacy_trackingprotection_annotate_channels()) {
-    dom::ContentChild* cc = static_cast<dom::ContentChild*>(gNeckoChild->Manager());
+    dom::ContentChild* cc =
+        static_cast<dom::ContentChild*>(gNeckoChild->Manager());
     if (cc->IsShuttingDown()) {
       return eStorageDenied;
     }

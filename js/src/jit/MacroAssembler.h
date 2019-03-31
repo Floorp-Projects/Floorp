@@ -3198,8 +3198,7 @@ class MOZ_RAII StackMacroAssembler : public MacroAssembler {
 class MOZ_RAII WasmMacroAssembler : public MacroAssembler {
  public:
   explicit WasmMacroAssembler(TempAllocator& alloc, bool limitedSize = true)
-      : MacroAssembler(WasmToken(), alloc)
-  {
+      : MacroAssembler(WasmToken(), alloc) {
     if (!limitedSize) {
       setUnlimitedBuffer();
     }

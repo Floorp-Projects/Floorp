@@ -5665,14 +5665,16 @@ class DebuggerAdoptSourceMatcher {
 
   ReturnType match(HandleScriptSourceObject source) {
     if (source->compartment() == cx_->compartment()) {
-      JS_ReportErrorASCII(cx_, "Source is in the same compartment as this debugger");
+      JS_ReportErrorASCII(cx_,
+                          "Source is in the same compartment as this debugger");
       return nullptr;
     }
     return dbg_->wrapSource(cx_, source);
   }
   ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
     if (wasmInstance->compartment() == cx_->compartment()) {
-      JS_ReportErrorASCII(cx_, "WasmInstance is in the same compartment as this debugger");
+      JS_ReportErrorASCII(
+          cx_, "WasmInstance is in the same compartment as this debugger");
       return nullptr;
     }
     return dbg_->wrapWasmSource(cx_, wasmInstance);

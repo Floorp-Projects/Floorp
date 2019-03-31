@@ -3938,8 +3938,7 @@ void CodeGenerator::visitStoreSlotV(LStoreSlotV* lir) {
 }
 
 static void GuardReceiver(MacroAssembler& masm, const ReceiverGuard& guard,
-                          Register obj,
-                          Register scratch, Label* miss) {
+                          Register obj, Register scratch, Label* miss) {
   if (guard.group) {
     masm.branchTestObjGroup(Assembler::NotEqual, obj, guard.group, scratch, obj,
                             miss);
@@ -4070,8 +4069,7 @@ void CodeGenerator::visitSetPropertyPolymorphicV(
   Register obj = ToRegister(ins->obj());
   Register temp1 = ToRegister(ins->temp());
   ValueOperand value = ToValue(ins, LSetPropertyPolymorphicV::Value);
-  emitSetPropertyPolymorphic(ins, obj, temp1,
-                             TypedOrValueRegister(value));
+  emitSetPropertyPolymorphic(ins, obj, temp1, TypedOrValueRegister(value));
 }
 
 void CodeGenerator::visitSetPropertyPolymorphicT(

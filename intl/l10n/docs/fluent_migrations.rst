@@ -605,7 +605,7 @@ category used in plural forms. For these reasons, it’s not possible to use
                               selector=VARIABLE_REFERENCE("tabCount"),
                               variants=[
                                   FTL.Variant(
-                                      key=FTL.NumberExpression("1"),
+                                      key=FTL.NumberLiteral("1"),
                                       default=False,
                                       value=COPY(
                                           "browser/chrome/browser/preferences/main.dtd",

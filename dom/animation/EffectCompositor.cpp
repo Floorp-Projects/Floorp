@@ -335,14 +335,14 @@ void EffectCompositor::ClearRestyleRequestsFor(Element* aElement) {
 
   PseudoStyleType pseudoType = aElement->GetPseudoElementType();
   if (pseudoType == PseudoStyleType::NotPseudo) {
-    PseudoElementHashEntry::KeyType notPseudoKey =
-      {aElement, PseudoStyleType::NotPseudo};
-    PseudoElementHashEntry::KeyType beforePseudoKey =
-      {aElement, PseudoStyleType::before};
-    PseudoElementHashEntry::KeyType afterPseudoKey =
-      {aElement, PseudoStyleType::after};
-    PseudoElementHashEntry::KeyType markerPseudoKey =
-      {aElement, PseudoStyleType::marker};
+    PseudoElementHashEntry::KeyType notPseudoKey = {aElement,
+                                                    PseudoStyleType::NotPseudo};
+    PseudoElementHashEntry::KeyType beforePseudoKey = {aElement,
+                                                       PseudoStyleType::before};
+    PseudoElementHashEntry::KeyType afterPseudoKey = {aElement,
+                                                      PseudoStyleType::after};
+    PseudoElementHashEntry::KeyType markerPseudoKey = {aElement,
+                                                       PseudoStyleType::marker};
 
     elementsToRestyle.Remove(notPseudoKey);
     elementsToRestyle.Remove(beforePseudoKey);

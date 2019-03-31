@@ -159,8 +159,7 @@ static bool EnumerateExtraProperties(JSContext* cx, HandleObject obj,
     // `enumerableOnly` to the hook to filter out non-enumerable
     // properties, it doesn't really matter what we pass here.
     bool enumerable = true;
-    if (!Enumerate<true>(cx, obj, id, enumerable, flags, visited,
-                                       props)) {
+    if (!Enumerate<true>(cx, obj, id, enumerable, flags, visited, props)) {
       return false;
     }
   }

@@ -210,7 +210,7 @@ three = three\xa0''', (
 
     def test_white_space_keys(self):
         self._test('''\
-o\ e = one
+o\\ e = one
 t\fo = two \n\
 t\xa0e = three\xa0''', (
             ('o\\ e', 'one'),

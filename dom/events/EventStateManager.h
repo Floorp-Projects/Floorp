@@ -133,8 +133,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 
   // We manage 4 states here: ACTIVE, HOVER, DRAGOVER, URLTARGET
   static bool ManagesState(EventStates aState) {
-    return aState == NS_EVENT_STATE_ACTIVE ||
-           aState == NS_EVENT_STATE_HOVER ||
+    return aState == NS_EVENT_STATE_ACTIVE || aState == NS_EVENT_STATE_HOVER ||
            aState == NS_EVENT_STATE_DRAGOVER ||
            aState == NS_EVENT_STATE_URLTARGET;
   }

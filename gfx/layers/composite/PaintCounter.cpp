@@ -55,8 +55,8 @@ void PaintCounter::Draw(Compositor* aCompositor, TimeDuration aPaintTime,
   SkFont font(SkTypeface::MakeDefault(), 32);
 
   mCanvas->clear(SK_ColorTRANSPARENT);
-  mCanvas->drawSimpleText(buffer, strlen(buffer), kUTF8_SkTextEncoding,
-                          10, 30, font, paint);
+  mCanvas->drawSimpleText(buffer, strlen(buffer), kUTF8_SkTextEncoding, 10, 30,
+                          font, paint);
   mCanvas->flush();
 
   if (!mTextureSource) {

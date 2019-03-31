@@ -12,12 +12,12 @@
 #include "nsISupports.h"
 
 // 1295f7c0-96b3-41fc-93ed-c95dfb712ce7
-#  define NS_ILAYOUT_DEBUGGER_IID                      \
-    {                                                  \
-      0x1295f7c0, 0x96b3, 0x41fc, {                    \
-        0x93, 0xed, 0xc9, 0x5d, 0xfb, 0x71, 0x2c, 0xe7 \
-      }                                                \
-    }
+#define NS_ILAYOUT_DEBUGGER_IID                      \
+  {                                                  \
+    0x1295f7c0, 0x96b3, 0x41fc, {                    \
+      0x93, 0xed, 0xc9, 0x5d, 0xfb, 0x71, 0x2c, 0xe7 \
+    }                                                \
+  }
 
 /**
  * API for access and control of layout debugging

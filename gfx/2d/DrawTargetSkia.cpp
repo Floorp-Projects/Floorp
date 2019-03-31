@@ -434,9 +434,8 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
           static_cast<const LinearGradientPattern&>(aPattern);
       GradientStopsSkia* stops =
           static_cast<GradientStopsSkia*>(pat.mStops.get());
-      if (!stops || stops->mCount < 2 ||
-          !pat.mBegin.IsFinite() || !pat.mEnd.IsFinite() ||
-          pat.mBegin == pat.mEnd) {
+      if (!stops || stops->mCount < 2 || !pat.mBegin.IsFinite() ||
+          !pat.mEnd.IsFinite() || pat.mBegin == pat.mEnd) {
         aPaint.setColor(SK_ColorTRANSPARENT);
       } else {
         SkShader::TileMode mode =
@@ -468,9 +467,9 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
           static_cast<const RadialGradientPattern&>(aPattern);
       GradientStopsSkia* stops =
           static_cast<GradientStopsSkia*>(pat.mStops.get());
-      if (!stops || stops->mCount < 2 ||
-          !pat.mCenter1.IsFinite() || !IsFinite(pat.mRadius1) ||
-          !pat.mCenter2.IsFinite() || !IsFinite(pat.mRadius2) ||
+      if (!stops || stops->mCount < 2 || !pat.mCenter1.IsFinite() ||
+          !IsFinite(pat.mRadius1) || !pat.mCenter2.IsFinite() ||
+          !IsFinite(pat.mRadius2) ||
           (pat.mCenter1 == pat.mCenter2 && pat.mRadius1 == pat.mRadius2)) {
         aPaint.setColor(SK_ColorTRANSPARENT);
       } else {
@@ -599,7 +598,8 @@ struct AutoPaintSetup {
       temp.setBlendMode(GfxOpToSkiaOp(aOptions.mCompositionOp));
       temp.setAlpha(ColorFloatToByte(aOptions.mAlpha));
       // TODO: Get a rect here
-      SkCanvas::SaveLayerRec rec(nullptr, &temp, SkCanvas::kPreserveLCDText_SaveLayerFlag);
+      SkCanvas::SaveLayerRec rec(nullptr, &temp,
+                                 SkCanvas::kPreserveLCDText_SaveLayerFlag);
       mCanvas->saveLayer(rec);
       mNeedsRestore = true;
     } else {
@@ -1324,9 +1324,9 @@ void DrawTargetSkia::DrawGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
   SkFont font(sk_ref_sp(typeface), SkFloatToScalar(skiaFont->mSize));
 
   bool useSubpixelAA = ShouldLCDRenderText(aFont->GetType(), aaMode);
-  font.setEdging(useSubpixelAA ?
-                   SkFont::Edging::kSubpixelAntiAlias :
-                   (aaEnabled ? SkFont::Edging::kAntiAlias : SkFont::Edging::kAlias));
+  font.setEdging(useSubpixelAA ? SkFont::Edging::kSubpixelAntiAlias
+                               : (aaEnabled ? SkFont::Edging::kAntiAlias
+                                            : SkFont::Edging::kAlias));
 
   bool useSubpixelText = true;
   switch (aFont->GetType()) {

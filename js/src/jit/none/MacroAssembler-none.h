@@ -171,9 +171,7 @@ class Assembler : public AssemblerShared {
     MOZ_CRASH();
   }
 
-  void setUnlimitedBuffer() {
-    MOZ_CRASH();
-  }
+  void setUnlimitedBuffer() { MOZ_CRASH(); }
 };
 
 class Operand {

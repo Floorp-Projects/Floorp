@@ -118,9 +118,7 @@ struct DefaultJitOptions {
   void resetFullIonWarmUpThreshold();
   void enableGvn(bool val);
 
-  bool eagerIonCompilation() const {
-    return normalIonWarmUpThreshold == 0;
-  }
+  bool eagerIonCompilation() const { return normalIonWarmUpThreshold == 0; }
 };
 
 extern DefaultJitOptions JitOptions;

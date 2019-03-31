@@ -224,9 +224,7 @@ class Assembler : public vixl::Assembler {
   void bind(RepatchLabel* label);
   void bind(CodeLabel* label) { label->target()->bind(currentOffset()); }
 
-  void setUnlimitedBuffer() {
-    armbuffer_.setUnlimited();
-  }
+  void setUnlimitedBuffer() { armbuffer_.setUnlimited(); }
   bool oom() const {
     return AssemblerShared::oom() || armbuffer_.oom() ||
            jumpRelocations_.oom() || dataRelocations_.oom();

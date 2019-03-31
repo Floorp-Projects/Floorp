@@ -447,7 +447,6 @@ nsScriptSecurityManager::GetChannelURIPrincipal(nsIChannel* aChannel,
   return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
 }
 
-
 /////////////////////////////
 // nsScriptSecurityManager //
 /////////////////////////////

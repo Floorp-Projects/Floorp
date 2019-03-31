@@ -134,8 +134,7 @@ void StructuredSpewer::startObject(JSContext* cx, const JSScript* script,
 
   json.beginObject();
   json.property("channel", getName(channel));
-  if (script)
-  {
+  if (script) {
     json.beginObjectProperty("location");
     json.property("filename", script->filename());
     json.property("line", script->lineno());

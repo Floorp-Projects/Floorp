@@ -11184,9 +11184,8 @@ int main(int argc, char** argv, char** envp) {
 
   JS_SetContextPrivate(cx, sc.get());
   JS_SetGrayGCRootsTracer(cx, TraceGrayRoots, nullptr);
-  auto resetGrayGCRootsTracer = MakeScopeExit([cx] {
-    JS_SetGrayGCRootsTracer(cx, nullptr, nullptr);
-  });
+  auto resetGrayGCRootsTracer =
+      MakeScopeExit([cx] { JS_SetGrayGCRootsTracer(cx, nullptr, nullptr); });
 
   // Waiting is allowed on the shell's main thread, for now.
   JS_SetFutexCanWait(cx);

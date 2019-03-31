@@ -235,8 +235,7 @@ void ClusterIterator::Next() {
   bool baseIsEmoji = (GetEmojiPresentation(ch) == EmojiDefault) ||
                      (GetEmojiPresentation(ch) == TextDefault &&
                       ((mPos < mLimit && *mPos == kVS16) ||
-                       (mPos + 1 < mLimit &&
-                        *mPos == kFitzpatrickHigh &&
+                       (mPos + 1 < mLimit && *mPos == kFitzpatrickHigh &&
                         *(mPos + 1) >= kFitzpatrickLowFirst &&
                         *(mPos + 1) <= kFitzpatrickLowLast)));
   bool prevWasZwj = false;
@@ -254,12 +253,12 @@ void ClusterIterator::Next() {
       chLen = 2;
     }
 
-    bool extendCluster = IsClusterExtender(ch) ||
+    bool extendCluster =
+        IsClusterExtender(ch) ||
         (baseIsEmoji && prevWasZwj &&
-            ((GetEmojiPresentation(ch) == EmojiDefault) ||
-             (GetEmojiPresentation(ch) == TextDefault &&
-              mPos + chLen < mLimit &&
-              *(mPos + chLen) == kVS16)));
+         ((GetEmojiPresentation(ch) == EmojiDefault) ||
+          (GetEmojiPresentation(ch) == TextDefault && mPos + chLen < mLimit &&
+           *(mPos + chLen) == kVS16)));
     if (!extendCluster) {
       break;
     }
