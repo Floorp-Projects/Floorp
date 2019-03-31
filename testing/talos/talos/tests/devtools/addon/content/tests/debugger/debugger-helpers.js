@@ -249,7 +249,10 @@ async function addBreakpoint(dbg, line, url) {
   };
 
   await selectSource(dbg, url);
-  await dbg.actions.addBreakpoint(location);
+
+  const onDispatched = waitForDispatch(dbg, "ADD_BREAKPOINT");
+  dbg.actions.addBreakpoint(location);
+  return onDispatched;
 }
 exports.addBreakpoint = addBreakpoint;
 

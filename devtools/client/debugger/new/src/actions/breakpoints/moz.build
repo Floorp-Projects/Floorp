@@ -8,9 +8,9 @@ DIRS += [
 ]
 
 CompiledModules(
+    'addBreakpoint.js',
     'breakpointPositions.js',
     'index.js',
-    'modify.js',
     'remapLocations.js',
     'syncBreakpoint.js',
 )

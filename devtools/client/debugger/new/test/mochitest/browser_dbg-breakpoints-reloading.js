@@ -17,7 +17,7 @@ function getLineEl(dbg, line) {
 
 function addBreakpoint(dbg, line) {
   clickGutter(dbg, line);
-  return waitForDispatch(dbg, "SET_BREAKPOINT");
+  return waitForDispatch(dbg, "ADD_BREAKPOINT");
 }
 
 function assertEditorBreakpoint(dbg, line) {
@@ -34,7 +34,7 @@ add_task(async function() {
   await addBreakpoint(dbg, 5);
   await addBreakpoint(dbg, 4);
 
-  const syncedBps = waitForDispatch(dbg, "SET_BREAKPOINT", 2);
+  const syncedBps = waitForDispatch(dbg, "SYNC_BREAKPOINT", 2);
   await reload(dbg, "simple1");
   await waitForSelectedSource(dbg, "simple1");
   await syncedBps;
