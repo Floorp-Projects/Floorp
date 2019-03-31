@@ -174,9 +174,7 @@ class AssemblerBuffer {
     return !(size() & (alignment - 1));
   }
 
-  void setUnlimited() {
-    maxSize = MaxCodeBytesPerProcess;
-  }
+  void setUnlimited() { maxSize = MaxCodeBytesPerProcess; }
 
  private:
   Slice* newSlice(LifoAlloc& a) {

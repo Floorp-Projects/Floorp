@@ -63,8 +63,7 @@ static nsString DefaultVideoName() {
  */
 
 MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
-    : mTimer(nullptr),
-      mName(DefaultVideoName()) {}
+    : mTimer(nullptr), mName(DefaultVideoName()) {}
 
 MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource() = default;
 

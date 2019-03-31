@@ -69,7 +69,7 @@ using mozilla::ipc::FileDescriptor;
 //
 // This list must be kept sorted.
 static const char sStaticFileExtensions[][5] = {
-  // clang-format off
+    // clang-format off
   "bmp",
   "gif",
   "ico",
@@ -77,7 +77,7 @@ static const char sStaticFileExtensions[][5] = {
   "jpg",
   "png",
   "svg",
-  // clang-format on
+    // clang-format on
 };
 
 namespace mozilla {

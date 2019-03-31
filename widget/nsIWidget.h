@@ -743,7 +743,7 @@ class nsIWidget : public nsISupports {
    * @param aShouldLock bool
    *
    */
-  virtual void LockAspectRatio(bool aShouldLock) {};
+  virtual void LockAspectRatio(bool aShouldLock){};
 
   /**
    * Move or resize this widget. Any size constraints set for the window by

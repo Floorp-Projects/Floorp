@@ -697,7 +697,7 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
     }
   }
 
-private:
+ private:
   void AppendIntDec(int32_t);
   void AppendIntDec(uint32_t);
   void AppendIntOct(uint32_t);
@@ -707,7 +707,7 @@ private:
   void AppendIntOct(uint64_t);
   void AppendIntHex(uint64_t);
 
-public:
+ public:
   /**
    * Append the given float to this string
    */

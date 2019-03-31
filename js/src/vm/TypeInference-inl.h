@@ -362,7 +362,6 @@ class TypeNewScript {
   }
 };
 
-
 inline bool ObjectGroup::hasUnanalyzedPreliminaryObjects() {
   return (newScriptDontCheckGeneration() &&
           !newScriptDontCheckGeneration()->analyzed()) ||

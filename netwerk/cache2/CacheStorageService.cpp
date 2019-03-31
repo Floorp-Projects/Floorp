@@ -41,7 +41,8 @@ namespace net {
 namespace {
 
 void AppendMemoryStorageTag(nsAutoCString& key) {
-  // Using DEL as the very last ascii-7 character we can use in the list of attributes
+  // Using DEL as the very last ascii-7 character we can use in the list of
+  // attributes
   key.Append('\x7f');
   key.Append(',');
 }

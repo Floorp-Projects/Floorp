@@ -12,8 +12,9 @@
 
 extern mozilla::LazyLogModule gTextTrackLog;
 
-#define LOG(msg, ...) \
-  MOZ_LOG(gTextTrackLog, LogLevel::Debug, ("TextTrackCue=%p, " msg, this, ##__VA_ARGS__))
+#define LOG(msg, ...)                     \
+  MOZ_LOG(gTextTrackLog, LogLevel::Debug, \
+          ("TextTrackCue=%p, " msg, this, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {

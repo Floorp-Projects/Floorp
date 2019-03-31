@@ -10560,8 +10560,8 @@ void nsIFrame::SetParent(nsContainerFrame* aParent) {
 void nsIFrame::CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder,
                                       nsDisplayList* aList,
                                       bool* aCreatedContainerItem) {
-  wr::RenderRoot renderRoot = gfxUtils::GetRenderRootForFrame(this)
-      .valueOr(wr::RenderRoot::Default);
+  wr::RenderRoot renderRoot =
+      gfxUtils::GetRenderRootForFrame(this).valueOr(wr::RenderRoot::Default);
 
   if (renderRoot != wr::RenderRoot::Default) {
     aList->AppendToTop(MakeDisplayItem<nsDisplayRenderRoot>(

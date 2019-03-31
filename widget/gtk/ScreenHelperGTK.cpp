@@ -84,8 +84,8 @@ ScreenHelperGTK::ScreenHelperGTK()
 #ifdef MOZ_X11
   gdk_window_add_filter(mRootWindow, root_window_event_filter, this);
   if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-    mNetWorkareaAtom =
-        XInternAtom(GDK_WINDOW_XDISPLAY(mRootWindow), "_NET_WORKAREA", X11False);
+    mNetWorkareaAtom = XInternAtom(GDK_WINDOW_XDISPLAY(mRootWindow),
+                                   "_NET_WORKAREA", X11False);
   }
 #endif
   RefreshScreens();

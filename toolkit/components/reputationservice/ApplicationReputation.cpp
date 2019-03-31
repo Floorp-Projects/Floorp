@@ -297,9 +297,9 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".mhtml",  // MS HTML
     ".mim",    // MS Mail
     //".mkv",
-    ".mmc",  // MS Office
+    ".mmc",           // MS Office
     ".mobileconfig",  // Configuration file for Apple systems
-    ".mof",  // Windows
+    ".mof",           // Windows
     //".mov",
     //".mp3",
     //".mp4",

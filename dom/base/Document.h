@@ -7,12 +7,12 @@
 #define mozilla_dom_Document_h___
 
 #include "mozilla/EventStates.h"  // for EventStates
-#include "mozilla/FlushType.h"  // for enum
-#include "mozilla/Pair.h"       // for Pair
-#include "nsAutoPtr.h"          // for member
-#include "nsCOMArray.h"         // for member
-#include "nsCompatibility.h"    // for member
-#include "nsCOMPtr.h"           // for member
+#include "mozilla/FlushType.h"    // for enum
+#include "mozilla/Pair.h"         // for Pair
+#include "nsAutoPtr.h"            // for member
+#include "nsCOMArray.h"           // for member
+#include "nsCompatibility.h"      // for member
+#include "nsCOMPtr.h"             // for member
 #include "nsICookieSettings.h"
 #include "nsGkAtoms.h"  // for static class members
 #include "nsIApplicationCache.h"

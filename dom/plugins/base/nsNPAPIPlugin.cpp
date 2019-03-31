@@ -984,7 +984,7 @@ bool _evaluate(NPP npp, NPObject *npobj, NPString *script, NPVariant *result) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(spec, 0);
   JS::Rooted<JS::Value> rval(cx);
-  JS::RootedVector<JSObject*> scopeChain(cx);
+  JS::RootedVector<JSObject *> scopeChain(cx);
   if (!JS_IsGlobalObject(obj) && !scopeChain.append(obj)) {
     return false;
   }

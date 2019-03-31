@@ -104,16 +104,15 @@ class TextTrack final : public DOMEventTargetHelper {
   // would add or remove the cue to the active cue list.
   void NotifyCueActiveStateChanged(TextTrackCue* aCue);
 
-  // Use this function to request current cues, which start time are less than or
-  // equal to the current playback position and whose end times are greater than
-  // the current playback position, and other cues, which are not in the current
-  // cues. Because there would be LOTS of cues in the other cues, and we don't
-  // actually need all of them. Therefore, we use a time interval to get the
-  // cues which are overlapping within the time interval.
-  void GetCurrentCuesAndOtherCues(
-    RefPtr<TextTrackCueList>& aCurrentCues,
-    RefPtr<TextTrackCueList>& aOtherCues,
-    const media::TimeInterval& aInterval) const;
+  // Use this function to request current cues, which start time are less than
+  // or equal to the current playback position and whose end times are greater
+  // than the current playback position, and other cues, which are not in the
+  // current cues. Because there would be LOTS of cues in the other cues, and we
+  // don't actually need all of them. Therefore, we use a time interval to get
+  // the cues which are overlapping within the time interval.
+  void GetCurrentCuesAndOtherCues(RefPtr<TextTrackCueList>& aCurrentCues,
+                                  RefPtr<TextTrackCueList>& aOtherCues,
+                                  const media::TimeInterval& aInterval) const;
 
  private:
   ~TextTrack();
