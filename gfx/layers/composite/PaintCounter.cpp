@@ -14,6 +14,7 @@
 #include "mozilla/Sprintf.h"
 
 #include "mozilla/gfx/HelpersSkia.h"
+#include "skia/include/core/SkFont.h"
 #include "PaintCounter.h"
 
 namespace mozilla {
@@ -48,12 +49,14 @@ void PaintCounter::Draw(Compositor* aCompositor, TimeDuration aPaintTime,
                  aCompositeTime.ToMilliseconds());
 
   SkPaint paint;
-  paint.setTextSize(32);
   paint.setColor(SkColorSetRGB(0, 255, 0));
   paint.setAntiAlias(true);
 
+  SkFont font(SkTypeface::MakeDefault(), 32);
+
   mCanvas->clear(SK_ColorTRANSPARENT);
-  mCanvas->drawText(buffer, strlen(buffer), 10, 30, paint);
+  mCanvas->drawSimpleText(buffer, strlen(buffer), kUTF8_SkTextEncoding,
+                          10, 30, font, paint);
   mCanvas->flush();
 
   if (!mTextureSource) {

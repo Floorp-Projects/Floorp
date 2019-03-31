@@ -309,6 +309,8 @@ function parseManifest(manifestUri) {
 // for any embedded APIs.  Returns the passed in URI if the manifest
 // is not a webextension manifest, null otherwise.
 async function parseJsonManifest(uri) {
+  uri = Services.io.newURI(convertToCodeURI(uri.spec));
+
   let raw = await fetchFile(uri.spec);
   let data;
   try {
@@ -320,6 +322,12 @@ async function parseJsonManifest(uri) {
   // Simplistic test for whether this is a webextension manifest:
   if (data.manifest_version !== 2) {
     return uri;
+  }
+
+  if (data.icons) {
+    for (let icon of Object.values(data.icons)) {
+      gReferencesFromCode.set(uri.resolve(icon), null);
+    }
   }
 
   if (data.experiment_apis) {

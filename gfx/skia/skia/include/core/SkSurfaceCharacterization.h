@@ -17,7 +17,9 @@
 class SkColorSpace;
 
 #if SK_SUPPORT_GPU
+// TODO: remove the GrContext.h include once Flutter is updated
 #include "GrContext.h"
+#include "GrContextThreadSafeProxy.h"
 
 /** \class SkSurfaceCharacterization
     A surface characterization contains all the information Ganesh requires to makes its internal
@@ -31,6 +33,8 @@ public:
     enum class Textureable : bool { kNo = false, kYes = true };
     enum class MipMapped : bool { kNo = false, kYes = true };
     enum class UsesGLFBO0 : bool { kNo = false, kYes = true };
+    // This flag indicates if the surface is wrapping a raw Vulkan secondary command buffer.
+    enum class VulkanSecondaryCBCompatible : bool { kNo = false, kYes = true };
 
     SkSurfaceCharacterization()
             : fCacheMaxResourceBytes(0)
@@ -41,6 +45,7 @@ public:
             , fIsTextureable(Textureable::kYes)
             , fIsMipMapped(MipMapped::kYes)
             , fUsesGLFBO0(UsesGLFBO0::kNo)
+            , fVulkanSecondaryCBCompatible(VulkanSecondaryCBCompatible::kNo)
             , fSurfaceProps(0, kUnknown_SkPixelGeometry) {
     }
 
@@ -72,12 +77,16 @@ public:
     bool isTextureable() const { return Textureable::kYes == fIsTextureable; }
     bool isMipMapped() const { return MipMapped::kYes == fIsMipMapped; }
     bool usesGLFBO0() const { return UsesGLFBO0::kYes == fUsesGLFBO0; }
+    bool vulkanSecondaryCBCompatible() const {
+        return VulkanSecondaryCBCompatible::kYes == fVulkanSecondaryCBCompatible;
+    }
     SkColorSpace* colorSpace() const { return fImageInfo.colorSpace(); }
     sk_sp<SkColorSpace> refColorSpace() const { return fImageInfo.refColorSpace(); }
     const SkSurfaceProps& surfaceProps()const { return fSurfaceProps; }
 
 private:
     friend class SkSurface_Gpu; // for 'set' & 'config'
+    friend class GrVkSecondaryCBDrawContext; // for 'set' & 'config'
     friend class GrContextThreadSafeProxy; // for private ctor
     friend class SkDeferredDisplayListRecorder; // for 'config'
     friend class SkSurface; // for 'config'
@@ -92,6 +101,7 @@ private:
                               GrFSAAType FSAAType, int stencilCnt,
                               Textureable isTextureable, MipMapped isMipMapped,
                               UsesGLFBO0 usesGLFBO0,
+                              VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible,
                               const SkSurfaceProps& surfaceProps)
             : fContextInfo(std::move(contextInfo))
             , fCacheMaxResourceBytes(cacheMaxResourceBytes)
@@ -103,6 +113,7 @@ private:
             , fIsTextureable(isTextureable)
             , fIsMipMapped(isMipMapped)
             , fUsesGLFBO0(usesGLFBO0)
+            , fVulkanSecondaryCBCompatible(vulkanSecondaryCBCompatible)
             , fSurfaceProps(surfaceProps) {
     }
 
@@ -116,9 +127,15 @@ private:
              Textureable isTextureable,
              MipMapped isMipMapped,
              UsesGLFBO0 usesGLFBO0,
+             VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible,
              const SkSurfaceProps& surfaceProps) {
         SkASSERT(MipMapped::kNo == isMipMapped || Textureable::kYes == isTextureable);
         SkASSERT(Textureable::kNo == isTextureable || UsesGLFBO0::kNo == usesGLFBO0);
+
+        SkASSERT(VulkanSecondaryCBCompatible::kNo == vulkanSecondaryCBCompatible ||
+                 UsesGLFBO0::kNo == usesGLFBO0);
+        SkASSERT(Textureable::kNo == isTextureable ||
+                 VulkanSecondaryCBCompatible::kNo == vulkanSecondaryCBCompatible);
 
         fContextInfo = contextInfo;
         fCacheMaxResourceBytes = cacheMaxResourceBytes;
@@ -131,6 +148,7 @@ private:
         fIsTextureable = isTextureable;
         fIsMipMapped = isMipMapped;
         fUsesGLFBO0 = usesGLFBO0;
+        fVulkanSecondaryCBCompatible = vulkanSecondaryCBCompatible;
         fSurfaceProps = surfaceProps;
     }
 
@@ -145,6 +163,7 @@ private:
     Textureable                     fIsTextureable;
     MipMapped                       fIsMipMapped;
     UsesGLFBO0                      fUsesGLFBO0;
+    VulkanSecondaryCBCompatible     fVulkanSecondaryCBCompatible;
     SkSurfaceProps                  fSurfaceProps;
 };
 
@@ -173,6 +192,7 @@ public:
     bool isTextureable() const { return false; }
     bool isMipMapped() const { return false; }
     bool usesGLFBO0() const { return false; }
+    bool vulkanSecondaryCBCompatible() const { return false; }
     SkColorSpace* colorSpace() const { return nullptr; }
     sk_sp<SkColorSpace> refColorSpace() const { return nullptr; }
     const SkSurfaceProps& surfaceProps()const { return fSurfaceProps; }

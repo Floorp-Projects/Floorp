@@ -6,10 +6,11 @@
  */
 
 #include "GrCCDrawPathsOp.h"
-#include "GrContext.h"
-#include "GrContextPriv.h"
+
 #include "GrMemoryPool.h"
 #include "GrOpFlushState.h"
+#include "GrRecordingContext.h"
+#include "GrRecordingContextPriv.h"
 #include "ccpr/GrCCPathCache.h"
 #include "ccpr/GrCCPerFlushResources.h"
 #include "ccpr/GrCoverageCountingPathRenderer.h"
@@ -24,13 +25,9 @@ static bool has_coord_transforms(const GrPaint& paint) {
     return false;
 }
 
-static int64_t area(const SkIRect& r) {
-    return sk_64_mul(r.height(), r.width());
-}
-
 std::unique_ptr<GrCCDrawPathsOp> GrCCDrawPathsOp::Make(
-        GrContext* context, const SkIRect& clipIBounds, const SkMatrix& m, const GrShape& shape,
-        GrPaint&& paint) {
+        GrRecordingContext* context, const SkIRect& clipIBounds, const SkMatrix& m,
+        const GrShape& shape, GrPaint&& paint) {
     SkRect conservativeDevBounds;
     m.mapRect(&conservativeDevBounds, shape.bounds());
 
@@ -78,8 +75,9 @@ std::unique_ptr<GrCCDrawPathsOp> GrCCDrawPathsOp::Make(
 }
 
 std::unique_ptr<GrCCDrawPathsOp> GrCCDrawPathsOp::InternalMake(
-        GrContext* context, const SkIRect& clipIBounds, const SkMatrix& m, const GrShape& shape,
-        float strokeDevWidth, const SkRect& conservativeDevBounds, GrPaint&& paint) {
+        GrRecordingContext* context, const SkIRect& clipIBounds, const SkMatrix& m,
+        const GrShape& shape, float strokeDevWidth, const SkRect& conservativeDevBounds,
+        GrPaint&& paint) {
     // The path itself should have been cropped if larger than kPathCropThreshold. If it had a
     // stroke, that would have further inflated its draw bounds.
     SkASSERT(SkTMax(conservativeDevBounds.height(), conservativeDevBounds.width()) <
@@ -90,37 +88,23 @@ std::unique_ptr<GrCCDrawPathsOp> GrCCDrawPathsOp::InternalMake(
     conservativeDevBounds.roundOut(&shapeConservativeIBounds);
 
     SkIRect maskDevIBounds;
-    Visibility maskVisibility;
-    if (clipIBounds.contains(shapeConservativeIBounds)) {
-        maskDevIBounds = shapeConservativeIBounds;
-        maskVisibility = Visibility::kComplete;
-    } else {
-        if (!maskDevIBounds.intersect(clipIBounds, shapeConservativeIBounds)) {
-            return nullptr;
-        }
-        int64_t unclippedArea = area(shapeConservativeIBounds);
-        int64_t clippedArea = area(maskDevIBounds);
-        maskVisibility = (clippedArea >= unclippedArea/2 || unclippedArea < 100*100)
-                ? Visibility::kMostlyComplete  // i.e., visible enough to justify rendering the
-                                               // whole thing if we think we can cache it.
-                : Visibility::kPartial;
+    if (!maskDevIBounds.intersect(clipIBounds, shapeConservativeIBounds)) {
+        return nullptr;
     }
 
-    GrOpMemoryPool* pool = context->contextPriv().opMemoryPool();
-
+    GrOpMemoryPool* pool = context->priv().opMemoryPool();
     return pool->allocate<GrCCDrawPathsOp>(m, shape, strokeDevWidth, shapeConservativeIBounds,
-                                           maskDevIBounds, maskVisibility, conservativeDevBounds,
-                                           std::move(paint));
+                                           maskDevIBounds, conservativeDevBounds, std::move(paint));
 }
 
 GrCCDrawPathsOp::GrCCDrawPathsOp(const SkMatrix& m, const GrShape& shape, float strokeDevWidth,
                                  const SkIRect& shapeConservativeIBounds,
-                                 const SkIRect& maskDevIBounds, Visibility maskVisibility,
-                                 const SkRect& conservativeDevBounds, GrPaint&& paint)
+                                 const SkIRect& maskDevIBounds, const SkRect& conservativeDevBounds,
+                                 GrPaint&& paint)
         : GrDrawOp(ClassID())
         , fViewMatrixIfUsingLocalCoords(has_coord_transforms(paint) ? m : SkMatrix::I())
-        , fDraws(m, shape, strokeDevWidth, shapeConservativeIBounds, maskDevIBounds, maskVisibility,
-                 paint.getColor())
+        , fDraws(m, shape, strokeDevWidth, shapeConservativeIBounds, maskDevIBounds,
+                 paint.getColor4f())
         , fProcessors(std::move(paint)) {  // Paint must be moved after fetching its color above.
     SkDEBUGCODE(fBaseInstance = -1);
     // FIXME: intersect with clip bounds to (hopefully) improve batching.
@@ -138,14 +122,12 @@ GrCCDrawPathsOp::~GrCCDrawPathsOp() {
 GrCCDrawPathsOp::SingleDraw::SingleDraw(const SkMatrix& m, const GrShape& shape,
                                         float strokeDevWidth,
                                         const SkIRect& shapeConservativeIBounds,
-                                        const SkIRect& maskDevIBounds, Visibility maskVisibility,
-                                        GrColor color)
+                                        const SkIRect& maskDevIBounds, const SkPMColor4f& color)
         : fMatrix(m)
         , fShape(shape)
         , fStrokeDevWidth(strokeDevWidth)
         , fShapeConservativeIBounds(shapeConservativeIBounds)
         , fMaskDevIBounds(maskDevIBounds)
-        , fMaskVisibility(maskVisibility)
         , fColor(color) {
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
     if (fShape.hasUnstyledKey()) {
@@ -157,50 +139,48 @@ GrCCDrawPathsOp::SingleDraw::SingleDraw(const SkMatrix& m, const GrShape& shape,
 #endif
 }
 
-GrCCDrawPathsOp::SingleDraw::~SingleDraw() {
-    if (fCacheEntry) {
-        // All currFlushAtlas references must be reset back to null before the flush is finished.
-        fCacheEntry->setCurrFlushAtlas(nullptr);
-    }
+GrProcessorSet::Analysis GrCCDrawPathsOp::finalize(
+        const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) {
+    SkASSERT(1 == fNumDraws);  // There should only be one single path draw in this Op right now.
+    return fDraws.head().finalize(caps, clip, fsaaType, &fProcessors);
 }
 
-GrDrawOp::RequiresDstTexture GrCCDrawPathsOp::finalize(const GrCaps& caps,
-                                                       const GrAppliedClip* clip) {
-    SkASSERT(1 == fNumDraws);  // There should only be one single path draw in this Op right now.
-    SingleDraw* draw = &fDraws.head();
-
-    const GrProcessorSet::Analysis& analysis = fProcessors.finalize(
-            draw->fColor, GrProcessorAnalysisCoverage::kSingleChannel, clip, false, caps,
-            &draw->fColor);
+GrProcessorSet::Analysis GrCCDrawPathsOp::SingleDraw::finalize(
+        const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType,
+        GrProcessorSet* processors) {
+    const GrProcessorSet::Analysis& analysis = processors->finalize(
+            fColor, GrProcessorAnalysisCoverage::kSingleChannel, clip,
+            &GrUserStencilSettings::kUnused, fsaaType, caps, &fColor);
 
     // Lines start looking jagged when they get thinner than 1px. For thin strokes it looks better
     // if we can convert them to hairline (i.e., inflate the stroke width to 1px), and instead
     // reduce the opacity to create the illusion of thin-ness. This strategy also helps reduce
     // artifacts from coverage dilation when there are self intersections.
     if (analysis.isCompatibleWithCoverageAsAlpha() &&
-            !draw->fShape.style().strokeRec().isFillStyle() && draw->fStrokeDevWidth < 1) {
+            !fShape.style().strokeRec().isFillStyle() && fStrokeDevWidth < 1) {
         // Modifying the shape affects its cache key. The draw can't have a cache entry yet or else
         // our next step would invalidate it.
-        SkASSERT(!draw->fCacheEntry);
-        SkASSERT(SkStrokeRec::kStroke_Style == draw->fShape.style().strokeRec().getStyle());
+        SkASSERT(!fCacheEntry);
+        SkASSERT(SkStrokeRec::kStroke_Style == fShape.style().strokeRec().getStyle());
 
         SkPath path;
-        draw->fShape.asPath(&path);
+        fShape.asPath(&path);
 
         // Create a hairline version of our stroke.
-        SkStrokeRec hairlineStroke = draw->fShape.style().strokeRec();
+        SkStrokeRec hairlineStroke = fShape.style().strokeRec();
         hairlineStroke.setStrokeStyle(0);
 
         // How transparent does a 1px stroke have to be in order to appear as thin as the real one?
-        GrColor coverageAsAlpha = GrColorPackA4(SkScalarFloorToInt(draw->fStrokeDevWidth * 255));
+        float coverage = fStrokeDevWidth;
 
-        draw->fShape = GrShape(path, GrStyle(hairlineStroke, nullptr));
-        draw->fStrokeDevWidth = 1;
+        fShape = GrShape(path, GrStyle(hairlineStroke, nullptr));
+        fStrokeDevWidth = 1;
+
         // fShapeConservativeIBounds already accounted for this possibility of inflating the stroke.
-        draw->fColor = GrColorMul(draw->fColor, coverageAsAlpha);
+        fColor = fColor * coverage;
     }
 
-    return RequiresDstTexture(analysis.requiresDstTexture());
+    return analysis;
 }
 
 GrOp::CombineResult GrCCDrawPathsOp::onCombineIfPossible(GrOp* op, const GrCaps&) {
@@ -216,14 +196,13 @@ GrOp::CombineResult GrCCDrawPathsOp::onCombineIfPossible(GrOp* op, const GrCaps&
     }
 
     fDraws.append(std::move(that->fDraws), &fOwningPerOpListPaths->fAllocator);
-    this->joinBounds(*that);
 
     SkDEBUGCODE(fNumDraws += that->fNumDraws);
     SkDEBUGCODE(that->fNumDraws = 0);
     return CombineResult::kMerged;
 }
 
-void GrCCDrawPathsOp::wasRecorded(sk_sp<GrCCPerOpListPaths> owningPerOpListPaths) {
+void GrCCDrawPathsOp::addToOwningPerOpListPaths(sk_sp<GrCCPerOpListPaths> owningPerOpListPaths) {
     SkASSERT(1 == fNumDraws);
     SkASSERT(!fOwningPerOpListPaths);
     fOwningPerOpListPaths = std::move(owningPerOpListPaths);
@@ -232,178 +211,173 @@ void GrCCDrawPathsOp::wasRecorded(sk_sp<GrCCPerOpListPaths> owningPerOpListPaths
 
 void GrCCDrawPathsOp::accountForOwnPaths(GrCCPathCache* pathCache,
                                          GrOnFlushResourceProvider* onFlushRP,
-                                         const GrUniqueKey& stashedAtlasKey,
                                          GrCCPerFlushResourceSpecs* specs) {
-    using CreateIfAbsent = GrCCPathCache::CreateIfAbsent;
-    using MaskTransform = GrCCPathCache::MaskTransform;
-
     for (SingleDraw& draw : fDraws) {
-        SkPath path;
-        draw.fShape.asPath(&path);
-
-        SkASSERT(!draw.fCacheEntry);
-
-        if (pathCache) {
-            MaskTransform m(draw.fMatrix, &draw.fCachedMaskShift);
-            bool canStashPathMask = draw.fMaskVisibility >= Visibility::kMostlyComplete;
-            draw.fCacheEntry = pathCache->find(draw.fShape, m, CreateIfAbsent(canStashPathMask));
-        }
-
-        if (auto cacheEntry = draw.fCacheEntry.get()) {
-            SkASSERT(!cacheEntry->currFlushAtlas());  // Shouldn't be set until setupResources().
-
-            if (cacheEntry->atlasKey().isValid()) {
-                // Does the path already exist in a cached atlas?
-                if (cacheEntry->hasCachedAtlas() &&
-                    (draw.fCachedAtlasProxy = onFlushRP->findOrCreateProxyByUniqueKey(
-                                                     cacheEntry->atlasKey(),
-                                                     GrCCAtlas::kTextureOrigin))) {
-                    ++specs->fNumCachedPaths;
-                    continue;
-                }
-
-                // Does the path exist in the atlas that we stashed away from last flush? If so we
-                // can copy it into a new 8-bit atlas and keep it in the resource cache.
-                if (stashedAtlasKey.isValid() && stashedAtlasKey == cacheEntry->atlasKey()) {
-                    SkASSERT(!cacheEntry->hasCachedAtlas());
-                    int idx = (draw.fShape.style().strokeRec().isFillStyle())
-                            ? GrCCPerFlushResourceSpecs::kFillIdx
-                            : GrCCPerFlushResourceSpecs::kStrokeIdx;
-                    ++specs->fNumCopiedPaths[idx];
-                    specs->fCopyPathStats[idx].statPath(path);
-                    specs->fCopyAtlasSpecs.accountForSpace(cacheEntry->width(),
-                                                           cacheEntry->height());
-                    continue;
-                }
-
-                // Whatever atlas the path used to reside in, it no longer exists.
-                cacheEntry->resetAtlasKeyAndInfo();
-            }
-
-            if (Visibility::kMostlyComplete == draw.fMaskVisibility && cacheEntry->hitCount() > 1) {
-                int shapeSize = SkTMax(draw.fShapeConservativeIBounds.height(),
-                                       draw.fShapeConservativeIBounds.width());
-                if (shapeSize <= onFlushRP->caps()->maxRenderTargetSize()) {
-                    // We've seen this path before with a compatible matrix, and it's mostly
-                    // visible. Just render the whole mask so we can try to cache it.
-                    draw.fMaskDevIBounds = draw.fShapeConservativeIBounds;
-                    draw.fMaskVisibility = Visibility::kComplete;
-                }
-            }
-        }
-
-        int idx = (draw.fShape.style().strokeRec().isFillStyle())
-                ? GrCCPerFlushResourceSpecs::kFillIdx
-                : GrCCPerFlushResourceSpecs::kStrokeIdx;
-        ++specs->fNumRenderedPaths[idx];
-        specs->fRenderedPathStats[idx].statPath(path);
-        specs->fRenderedAtlasSpecs.accountForSpace(draw.fMaskDevIBounds.width(),
-                                                   draw.fMaskDevIBounds.height());
+        draw.accountForOwnPath(pathCache, onFlushRP, specs);
     }
 }
 
-void GrCCDrawPathsOp::setupResources(GrOnFlushResourceProvider* onFlushRP,
-                                     GrCCPerFlushResources* resources, DoCopiesToCache doCopies) {
-    using DoEvenOddFill = GrCCPathProcessor::DoEvenOddFill;
+void GrCCDrawPathsOp::SingleDraw::accountForOwnPath(
+        GrCCPathCache* pathCache, GrOnFlushResourceProvider* onFlushRP,
+        GrCCPerFlushResourceSpecs* specs) {
+    using CoverageType = GrCCAtlas::CoverageType;
+
+    SkPath path;
+    fShape.asPath(&path);
+
+    SkASSERT(!fCacheEntry);
+
+    if (pathCache) {
+        fCacheEntry =
+                pathCache->find(onFlushRP, fShape, fMaskDevIBounds, fMatrix, &fCachedMaskShift);
+    }
+
+    if (fCacheEntry) {
+        if (const GrCCCachedAtlas* cachedAtlas = fCacheEntry->cachedAtlas()) {
+            SkASSERT(cachedAtlas->getOnFlushProxy());
+            if (CoverageType::kA8_LiteralCoverage == cachedAtlas->coverageType()) {
+                ++specs->fNumCachedPaths;
+            } else {
+                // Suggest that this path be copied to a literal coverage atlas, to save memory.
+                // (The client may decline this copy via DoCopiesToA8Coverage::kNo.)
+                int idx = (fShape.style().strokeRec().isFillStyle())
+                        ? GrCCPerFlushResourceSpecs::kFillIdx
+                        : GrCCPerFlushResourceSpecs::kStrokeIdx;
+                ++specs->fNumCopiedPaths[idx];
+                specs->fCopyPathStats[idx].statPath(path);
+                specs->fCopyAtlasSpecs.accountForSpace(fCacheEntry->width(), fCacheEntry->height());
+                fDoCopyToA8Coverage = true;
+            }
+            return;
+        }
+
+        if (this->shouldCachePathMask(onFlushRP->caps()->maxRenderTargetSize())) {
+            fDoCachePathMask = true;
+            // We don't cache partial masks; ensure the bounds include the entire path.
+            fMaskDevIBounds = fShapeConservativeIBounds;
+        }
+    }
+
+    // Plan on rendering this path in a new atlas.
+    int idx = (fShape.style().strokeRec().isFillStyle())
+            ? GrCCPerFlushResourceSpecs::kFillIdx
+            : GrCCPerFlushResourceSpecs::kStrokeIdx;
+    ++specs->fNumRenderedPaths[idx];
+    specs->fRenderedPathStats[idx].statPath(path);
+    specs->fRenderedAtlasSpecs.accountForSpace(fMaskDevIBounds.width(), fMaskDevIBounds.height());
+}
+
+bool GrCCDrawPathsOp::SingleDraw::shouldCachePathMask(int maxRenderTargetSize) const {
+    SkASSERT(fCacheEntry);
+    SkASSERT(!fCacheEntry->cachedAtlas());
+    if (fCacheEntry->hitCount() <= 1) {
+        return false;  // Don't cache a path mask until at least its second hit.
+    }
+
+    int shapeMaxDimension = SkTMax(fShapeConservativeIBounds.height(),
+                                   fShapeConservativeIBounds.width());
+    if (shapeMaxDimension > maxRenderTargetSize) {
+        return false;  // This path isn't cachable.
+    }
+
+    int64_t shapeArea = sk_64_mul(fShapeConservativeIBounds.height(),
+                                  fShapeConservativeIBounds.width());
+    if (shapeArea < 100*100) {
+        // If a path is small enough, we might as well try to render and cache the entire thing, no
+        // matter how much of it is actually visible.
+        return true;
+    }
+
+    // The hitRect should already be contained within the shape's bounds, but we still intersect it
+    // because it's possible for edges very near pixel boundaries (e.g., 0.999999), to round out
+    // inconsistently, depending on the integer translation values and fp32 precision.
+    SkIRect hitRect = fCacheEntry->hitRect().makeOffset(fCachedMaskShift.x(), fCachedMaskShift.y());
+    hitRect.intersect(fShapeConservativeIBounds);
+
+    // Render and cache the entire path mask if we see enough of it to justify rendering all the
+    // pixels. Our criteria for "enough" is that we must have seen at least 50% of the path in the
+    // past, and in this particular draw we must see at least 10% of it.
+    int64_t hitArea = sk_64_mul(hitRect.height(), hitRect.width());
+    int64_t drawArea = sk_64_mul(fMaskDevIBounds.height(), fMaskDevIBounds.width());
+    return hitArea*2 >= shapeArea && drawArea*10 >= shapeArea;
+}
+
+void GrCCDrawPathsOp::setupResources(
+        GrCCPathCache* pathCache, GrOnFlushResourceProvider* onFlushRP,
+        GrCCPerFlushResources* resources, DoCopiesToA8Coverage doCopies) {
     SkASSERT(fNumDraws > 0);
     SkASSERT(-1 == fBaseInstance);
     fBaseInstance = resources->nextPathInstanceIdx();
 
     for (SingleDraw& draw : fDraws) {
-        SkPath path;
-        draw.fShape.asPath(&path);
-
-        auto doEvenOddFill = DoEvenOddFill(draw.fShape.style().strokeRec().isFillStyle() &&
-                                           SkPath::kEvenOdd_FillType == path.getFillType());
-        SkASSERT(SkPath::kEvenOdd_FillType == path.getFillType() ||
-                 SkPath::kWinding_FillType == path.getFillType());
-
-        if (auto cacheEntry = draw.fCacheEntry.get()) {
-            // Does the path already exist in a cached atlas texture?
-            if (auto proxy = draw.fCachedAtlasProxy.get()) {
-                SkASSERT(!cacheEntry->currFlushAtlas());
-                this->recordInstance(proxy, resources->nextPathInstanceIdx());
-                resources->appendDrawPathInstance().set(*cacheEntry, draw.fCachedMaskShift,
-                                                        draw.fColor);
-                continue;
-            }
-
-            // Have we already encountered this path during the flush? (i.e. was the same SkPath
-            // drawn more than once during the same flush, with a compatible matrix?)
-            if (auto atlas = cacheEntry->currFlushAtlas()) {
-                this->recordInstance(atlas->textureProxy(), resources->nextPathInstanceIdx());
-                resources->appendDrawPathInstance().set(
-                        *cacheEntry, draw.fCachedMaskShift, draw.fColor,
-                        cacheEntry->hasCachedAtlas() ? DoEvenOddFill::kNo : doEvenOddFill);
-                continue;
-            }
-
-            // If the cache entry still has a valid atlas key at this point, it means the path
-            // exists in the atlas that we stashed away from last flush. Copy it into a permanent
-            // 8-bit atlas in the resource cache.
-            if (DoCopiesToCache::kYes == doCopies && cacheEntry->atlasKey().isValid()) {
-                SkIVector newOffset;
-                GrCCAtlas* atlas =
-                        resources->copyPathToCachedAtlas(*cacheEntry, doEvenOddFill, &newOffset);
-                cacheEntry->updateToCachedAtlas(atlas->getOrAssignUniqueKey(onFlushRP),
-                                                onFlushRP->contextUniqueID(), newOffset,
-                                                atlas->refOrMakeCachedAtlasInfo());
-                this->recordInstance(atlas->textureProxy(), resources->nextPathInstanceIdx());
-                resources->appendDrawPathInstance().set(*cacheEntry, draw.fCachedMaskShift,
-                                                        draw.fColor);
-                // Remember this atlas in case we encounter the path again during the same flush.
-                cacheEntry->setCurrFlushAtlas(atlas);
-                continue;
-            }
-        }
-
-        // Render the raw path into a coverage count atlas. renderPathInAtlas() gives us two tight
-        // bounding boxes: One in device space, as well as a second one rotated an additional 45
-        // degrees. The path vertex shader uses these two bounding boxes to generate an octagon that
-        // circumscribes the path.
-        SkASSERT(!draw.fCachedAtlasProxy);
-        SkRect devBounds, devBounds45;
-        SkIRect devIBounds;
-        SkIVector devToAtlasOffset;
-        if (auto atlas = resources->renderShapeInAtlas(
-                    draw.fMaskDevIBounds, draw.fMatrix, draw.fShape, draw.fStrokeDevWidth,
-                    &devBounds, &devBounds45, &devIBounds, &devToAtlasOffset)) {
-            this->recordInstance(atlas->textureProxy(), resources->nextPathInstanceIdx());
-            resources->appendDrawPathInstance().set(devBounds, devBounds45, devToAtlasOffset,
-                                                    draw.fColor, doEvenOddFill);
-
-            // If we have a spot in the path cache, try to make a note of where this mask is so we
-            // can reuse it in the future.
-            if (auto cacheEntry = draw.fCacheEntry.get()) {
-                SkASSERT(!cacheEntry->hasCachedAtlas());
-
-                if (Visibility::kComplete != draw.fMaskVisibility || cacheEntry->hitCount() <= 1) {
-                    // Don't cache a path mask unless it's completely visible with a hit count > 1.
-                    //
-                    // NOTE: mostly-visible paths with a hit count > 1 should have been promoted to
-                    // fully visible during accountForOwnPaths().
-                    continue;
-                }
-
-                if (resources->nextAtlasToStash() != atlas) {
-                    // This mask does not belong to the atlas that will be stashed for next flush.
-                    continue;
-                }
-
-                const GrUniqueKey& atlasKey =
-                        resources->nextAtlasToStash()->getOrAssignUniqueKey(onFlushRP);
-                cacheEntry->initAsStashedAtlas(atlasKey, onFlushRP->contextUniqueID(),
-                                               devToAtlasOffset, devBounds, devBounds45, devIBounds,
-                                               draw.fCachedMaskShift);
-                // Remember this atlas in case we encounter the path again during the same flush.
-                cacheEntry->setCurrFlushAtlas(atlas);
-            }
-            continue;
-        }
+        draw.setupResources(pathCache, onFlushRP, resources, doCopies, this);
     }
 
     if (!fInstanceRanges.empty()) {
         fInstanceRanges.back().fEndInstanceIdx = resources->nextPathInstanceIdx();
+    }
+}
+
+void GrCCDrawPathsOp::SingleDraw::setupResources(
+        GrCCPathCache* pathCache, GrOnFlushResourceProvider* onFlushRP,
+        GrCCPerFlushResources* resources, DoCopiesToA8Coverage doCopies, GrCCDrawPathsOp* op) {
+    using DoEvenOddFill = GrCCPathProcessor::DoEvenOddFill;
+
+    SkPath path;
+    fShape.asPath(&path);
+
+    auto doEvenOddFill = DoEvenOddFill(fShape.style().strokeRec().isFillStyle() &&
+                                       SkPath::kEvenOdd_FillType == path.getFillType());
+    SkASSERT(SkPath::kEvenOdd_FillType == path.getFillType() ||
+             SkPath::kWinding_FillType == path.getFillType());
+
+    if (fCacheEntry) {
+        // Does the path already exist in a cached atlas texture?
+        if (fCacheEntry->cachedAtlas()) {
+            SkASSERT(fCacheEntry->cachedAtlas()->getOnFlushProxy());
+            if (DoCopiesToA8Coverage::kYes == doCopies && fDoCopyToA8Coverage) {
+                resources->upgradeEntryToLiteralCoverageAtlas(pathCache, onFlushRP,
+                                                              fCacheEntry.get(), doEvenOddFill);
+                SkASSERT(fCacheEntry->cachedAtlas());
+                SkASSERT(GrCCAtlas::CoverageType::kA8_LiteralCoverage
+                                 == fCacheEntry->cachedAtlas()->coverageType());
+                SkASSERT(fCacheEntry->cachedAtlas()->getOnFlushProxy());
+            }
+#if 0
+            // Simple color manipulation to visualize cached paths.
+            fColor = (GrCCAtlas::CoverageType::kA8_LiteralCoverage
+                              == fCacheEntry->cachedAtlas()->coverageType())
+                    ? SkPMColor4f{0,0,.25,.25} : SkPMColor4f{0,.25,0,.25};
+#endif
+            op->recordInstance(fCacheEntry->cachedAtlas()->getOnFlushProxy(),
+                               resources->nextPathInstanceIdx());
+            resources->appendDrawPathInstance().set(*fCacheEntry, fCachedMaskShift,
+                                                    SkPMColor4f_toFP16(fColor));
+            return;
+        }
+    }
+
+    // Render the raw path into a coverage count atlas. renderShapeInAtlas() gives us two tight
+    // bounding boxes: One in device space, as well as a second one rotated an additional 45
+    // degrees. The path vertex shader uses these two bounding boxes to generate an octagon that
+    // circumscribes the path.
+    SkRect devBounds, devBounds45;
+    SkIRect devIBounds;
+    SkIVector devToAtlasOffset;
+    if (auto atlas = resources->renderShapeInAtlas(
+                fMaskDevIBounds, fMatrix, fShape, fStrokeDevWidth, &devBounds, &devBounds45,
+                &devIBounds, &devToAtlasOffset)) {
+        op->recordInstance(atlas->textureProxy(), resources->nextPathInstanceIdx());
+        resources->appendDrawPathInstance().set(devBounds, devBounds45, devToAtlasOffset,
+                                                SkPMColor4f_toFP16(fColor), doEvenOddFill);
+
+        if (fDoCachePathMask) {
+            SkASSERT(fCacheEntry);
+            SkASSERT(!fCacheEntry->cachedAtlas());
+            SkASSERT(fShapeConservativeIBounds == fMaskDevIBounds);
+            fCacheEntry->setCoverageCountAtlas(onFlushRP, atlas, devToAtlasOffset, devBounds,
+                                               devBounds45, devIBounds, fCachedMaskShift);
+        }
     }
 }
 
@@ -419,7 +393,7 @@ inline void GrCCDrawPathsOp::recordInstance(GrTextureProxy* atlasProxy, int inst
     }
 }
 
-void GrCCDrawPathsOp::onExecute(GrOpFlushState* flushState) {
+void GrCCDrawPathsOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {
     SkASSERT(fOwningPerOpListPaths);
 
     const GrCCPerFlushResources* resources = fOwningPerOpListPaths->fFlushResources.get();
@@ -428,7 +402,6 @@ void GrCCDrawPathsOp::onExecute(GrOpFlushState* flushState) {
     }
 
     GrPipeline::InitArgs initArgs;
-    initArgs.fProxy = flushState->drawOpArgs().fProxy;
     initArgs.fCaps = &flushState->caps();
     initArgs.fResourceProvider = flushState->resourceProvider();
     initArgs.fDstProxy = flushState->drawOpArgs().fDstProxy;

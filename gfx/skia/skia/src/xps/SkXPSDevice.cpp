@@ -28,7 +28,6 @@
 #include "SkEndian.h"
 #include "SkFindAndPlaceGlyph.h"
 #include "SkGeometry.h"
-#include "SkGlyphCache.h"
 #include "SkHRESULT.h"
 #include "SkIStream.h"
 #include "SkImage.h"
@@ -333,7 +332,9 @@ static HRESULT subset_typeface(SkXPSDevice::TypefaceUse* current) {
     //CreateFontPackage wants unsigned short.
     //Microsoft, Y U NO stdint.h?
     std::vector<unsigned short> keepList;
-    current->glyphsUsed->exportTo(&keepList);
+    current->glyphsUsed->getSetValues([&keepList](unsigned v) {
+            keepList.push_back((unsigned short)v);
+    });
 
     int ttcCount = (current->ttcIndex + 1);
 
@@ -1730,80 +1731,6 @@ HRESULT SkXPSDevice::clipToPath(IXpsOMVisual* xpsVisual,
     return S_OK;
 }
 
-void SkXPSDevice::drawBitmap(const SkBitmap& bitmap,
-                             SkScalar x,
-                             SkScalar y,
-                             const SkPaint& paint) {
-    if (this->cs().isEmpty(size(*this))) {
-        return;
-    }
-
-    SkIRect srcRect;
-    srcRect.set(0, 0, bitmap.width(), bitmap.height());
-
-    //Create the new shaded path.
-    SkTScopedComPtr<IXpsOMPath> shadedPath;
-    HRVM(this->fXpsFactory->CreatePath(&shadedPath),
-         "Could not create path for bitmap.");
-
-    //Create the shaded geometry.
-    SkTScopedComPtr<IXpsOMGeometry> shadedGeometry;
-    HRVM(this->fXpsFactory->CreateGeometry(&shadedGeometry),
-         "Could not create geometry for bitmap.");
-
-    //Add the shaded geometry to the shaded path.
-    HRVM(shadedPath->SetGeometryLocal(shadedGeometry.get()),
-         "Could not set the geometry for bitmap.");
-
-    //Get the shaded figures from the shaded geometry.
-    SkTScopedComPtr<IXpsOMGeometryFigureCollection> shadedFigures;
-    HRVM(shadedGeometry->GetFigures(&shadedFigures),
-         "Could not get the figures for bitmap.");
-
-    SkMatrix transform = SkMatrix::MakeTrans(x, y);
-    transform.postConcat(this->ctm());
-
-    SkTScopedComPtr<IXpsOMMatrixTransform> xpsTransform;
-    HRV(this->createXpsTransform(transform, &xpsTransform));
-    if (xpsTransform.get()) {
-        HRVM(shadedGeometry->SetTransformLocal(xpsTransform.get()),
-             "Could not set transform for bitmap.");
-    } else {
-        //TODO: perspective that bitmap!
-    }
-
-    SkTScopedComPtr<IXpsOMGeometryFigure> rectFigure;
-    if (xpsTransform.get()) {
-        const SkShader::TileMode xy[2] = {
-            SkShader::kClamp_TileMode,
-            SkShader::kClamp_TileMode,
-        };
-        SkTScopedComPtr<IXpsOMTileBrush> xpsImageBrush;
-        HRV(this->createXpsImageBrush(bitmap,
-                                      transform,
-                                      xy,
-                                      paint.getAlpha(),
-                                      &xpsImageBrush));
-        HRVM(shadedPath->SetFillBrushLocal(xpsImageBrush.get()),
-             "Could not set bitmap brush.");
-
-        const SkRect bitmapRect = SkRect::MakeLTRB(0, 0,
-            SkIntToScalar(srcRect.width()), SkIntToScalar(srcRect.height()));
-        HRV(this->createXpsRect(bitmapRect, FALSE, TRUE, &rectFigure));
-    }
-    HRVM(shadedFigures->Append(rectFigure.get()),
-         "Could not add bitmap figure.");
-
-    //Get the current visual collection and add the shaded path to it.
-    SkTScopedComPtr<IXpsOMVisualCollection> currentVisuals;
-    HRVM(this->fCurrentXpsCanvas->GetVisuals(&currentVisuals),
-         "Could not get current visuals for bitmap");
-    HRVM(currentVisuals->Append(shadedPath.get()),
-         "Could not add bitmap to current visuals.");
-
-    HRV(this->clip(shadedPath.get()));
-}
-
 void SkXPSDevice::drawSprite(const SkBitmap& bitmap, int x, int y, const SkPaint& paint) {
     //TODO: override this for XPS
     SkDEBUGF("XPS drawSprite not yet implemented.");
@@ -1834,9 +1761,9 @@ HRESULT SkXPSDevice::CreateTypefaceUse(const SkPaint& paint,
 
     SkTScopedComPtr<IStream> fontStream;
     int ttcIndex;
-    SkStream* fontData = typeface->openStream(&ttcIndex);
+    std::unique_ptr<SkStreamAsset> fontData = typeface->openStream(&ttcIndex);
     //TODO: cannot handle FON fonts.
-    HRM(SkIStream::CreateFromSkStream(fontData, true, &fontStream),
+    HRM(SkIStream::CreateFromSkStream(fontData.release(), true, &fontStream),
         "Could not create font stream.");
 
     const size_t size =
@@ -1871,8 +1798,8 @@ HRESULT SkXPSDevice::CreateTypefaceUse(const SkPaint& paint,
     newTypefaceUse.xpsFont = xpsFontResource.release();
     auto glyphCache =
         SkStrikeCache::FindOrCreateStrikeExclusive(
-            paint, &this->surfaceProps(),
-            SkScalerContextFlags::kNone, nullptr);
+            paint, this->surfaceProps(),
+            SkScalerContextFlags::kNone, SkMatrix::I());
     unsigned int glyphCount = glyphCache->getGlyphCount();
     newTypefaceUse.glyphsUsed = new SkBitSet(glyphCount);
 
@@ -1973,11 +1900,11 @@ HRESULT SkXPSDevice::AddGlyphs(IXpsOMObjectFactory* xpsFactory,
     return S_OK;
 }
 
-static int num_glyph_guess(SkPaint::TextEncoding encoding, const void* text, size_t byteLength) {
-    static_assert((int)SkTypeface::kUTF8_Encoding  == (int)SkPaint::kUTF8_TextEncoding,  "");
-    static_assert((int)SkTypeface::kUTF16_Encoding == (int)SkPaint::kUTF16_TextEncoding, "");
-    static_assert((int)SkTypeface::kUTF32_Encoding == (int)SkPaint::kUTF32_TextEncoding, "");
-    if (encoding == SkPaint::kGlyphID_TextEncoding) {
+static int num_glyph_guess(SkTextEncoding encoding, const void* text, size_t byteLength) {
+    static_assert((int)SkTypeface::kUTF8_Encoding  == (int)kUTF8_SkTextEncoding,  "");
+    static_assert((int)SkTypeface::kUTF16_Encoding == (int)kUTF16_SkTextEncoding, "");
+    static_assert((int)SkTypeface::kUTF32_Encoding == (int)kUTF32_SkTextEncoding, "");
+    if (encoding == kGlyphID_SkTextEncoding) {
         return SkToInt(byteLength / 2);
     }
     return SkUTFN_CountUnichars((SkTypeface::Encoding)encoding, text, byteLength);
@@ -2055,8 +1982,8 @@ void SkXPSDevice::drawPosText(const void* text, size_t byteLen,
 
     auto cache =
         SkStrikeCache::FindOrCreateStrikeExclusive(
-            paint, &this->surfaceProps(),
-            SkScalerContextFlags::kNone, nullptr);
+            paint, this->surfaceProps(),
+            SkScalerContextFlags::kNone, SkMatrix::I());
 
     // Advance width and offsets for glyphs measured in hundredths of the font em size
     // (XPS Spec 5.1.3).

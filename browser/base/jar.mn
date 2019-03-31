@@ -75,8 +75,6 @@ browser.jar:
         content/browser/defaultthemes/5.header.png    (content/defaultthemes/5.header.png)
         content/browser/defaultthemes/5.icon.jpg      (content/defaultthemes/5.icon.jpg)
         content/browser/defaultthemes/5.preview.jpg   (content/defaultthemes/5.preview.jpg)
-        content/browser/defaultthemes/dark.icon.svg   (content/defaultthemes/dark.icon.svg)
-        content/browser/defaultthemes/light.icon.svg  (content/defaultthemes/light.icon.svg)
         content/browser/history-swipe-arrow.svg       (content/history-swipe-arrow.svg)
 *       content/browser/pageinfo/pageInfo.xul         (content/pageinfo/pageInfo.xul)
         content/browser/pageinfo/pageInfo.js          (content/pageinfo/pageInfo.js)
@@ -128,3 +126,4 @@ browser.jar:
 % override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
 % override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
 % override chrome://mozapps/locale/downloads/settingsChange.dtd chrome://browser/locale/downloads/settingsChange.dtd
+% override chrome://global/locale/app-extension-fields.properties chrome://browser/locale/app-extension-fields.properties

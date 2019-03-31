@@ -73,6 +73,7 @@ public:
     }
 
     Factory getFactory() const override { return nullptr; }
+    const char* getTypeName() const override { return nullptr; }
 
 protected:
     bool onFilterPath(SkPath* dst, const SkPath&, SkStrokeRec* , const SkRect*) const override;
@@ -125,7 +126,6 @@ static inline GrColor GrRandomColor(SkRandom* random) {
             break;
         }
     }
-    GrColorIsPMAssert(color);
     return color;
 }
 

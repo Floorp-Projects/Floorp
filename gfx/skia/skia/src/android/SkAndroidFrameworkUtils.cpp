@@ -8,6 +8,7 @@
 #include "SkAndroidFrameworkUtils.h"
 #include "SkCanvas.h"
 #include "SkDevice.h"
+#include "SkSurface_Base.h"
 
 #if SK_SUPPORT_GPU
 #include "GrStyle.h"
@@ -17,7 +18,9 @@
 #include "effects/GrDisableColorXP.h"
 #endif //SK_SUPPORT_GPU
 
-#ifdef SK_BUILD_FOR_ANDROID
+#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
+
+#include <log/log.h>
 
 #if SK_SUPPORT_GPU
 bool SkAndroidFrameworkUtils::clipWithStencil(SkCanvas* canvas) {
@@ -52,5 +55,17 @@ bool SkAndroidFrameworkUtils::clipWithStencil(SkCanvas* canvas) {
 }
 #endif //SK_SUPPORT_GPU
 
-#endif // SK_BUILD_FOR_ANDROID
+void SkAndroidFrameworkUtils::SafetyNetLog(const char* bugNumber) {
+    android_errorWriteLog(0x534e4554, bugNumber);
+}
+
+sk_sp<SkSurface> SkAndroidFrameworkUtils::getSurfaceFromCanvas(SkCanvas* canvas) {
+    sk_sp<SkSurface> surface(SkSafeRef(canvas->getSurfaceBase()));
+    return surface;
+}
+
+int SkAndroidFrameworkUtils::SaveBehind(SkCanvas* canvas, const SkRect* subset) {
+    return canvas->only_axis_aligned_saveBehind(subset);
+}
+#endif // SK_BUILD_FOR_ANDROID_FRAMEWORK
 

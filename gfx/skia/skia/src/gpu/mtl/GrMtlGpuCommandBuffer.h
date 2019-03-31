@@ -43,6 +43,7 @@ private:
 class GrMtlGpuRTCommandBuffer : public GrGpuRTCommandBuffer, private GrMesh::SendToGpuImpl {
 public:
     GrMtlGpuRTCommandBuffer(GrMtlGpu* gpu, GrRenderTarget* rt, GrSurfaceOrigin origin,
+                            const SkRect& bounds,
                             const GrGpuRTCommandBuffer::LoadAndStoreInfo& colorInfo,
                             const GrGpuRTCommandBuffer::StencilLoadAndStoreInfo& stencilInfo);
 
@@ -63,8 +64,7 @@ public:
     void submit();
 
 private:
-    void internalBegin();
-    void internalEnd();
+    void addNullCommand();
 
     GrGpu* gpu() override { return fGpu; }
 
@@ -72,8 +72,7 @@ private:
             const GrPrimitiveProcessor& primProc,
             const GrPipeline& pipeline,
             const GrPipeline::FixedDynamicState* fixedDynamicState,
-            const GrMesh meshes[],
-            int meshCount);
+            GrPrimitiveType primType);
 
     void onDraw(const GrPrimitiveProcessor& primProc,
                 const GrPipeline& pipeline,
@@ -83,7 +82,7 @@ private:
                 int meshCount,
                 const SkRect& bounds) override;
 
-    void onClear(const GrFixedClip& clip, GrColor color) override {}
+    void onClear(const GrFixedClip& clip, const SkPMColor4f& color) override;
 
     void onClearStencilClip(const GrFixedClip& clip, bool insideStencilMask) override;
 
@@ -119,10 +118,14 @@ private:
                                        int baseInstance, GrPrimitiveRestart) final;
 
     GrMtlGpu*                                     fGpu;
+    // GrRenderTargetProxy bounds
+#ifdef SK_DEBUG
+    SkRect                                        fBounds;
+#endif
     GrGpuRTCommandBuffer::LoadAndStoreInfo        fColorLoadAndStoreInfo;
     GrGpuRTCommandBuffer::StencilLoadAndStoreInfo fStencilLoadAndStoreInfo;
 
-    id<MTLRenderCommandEncoder> fActiveRenderCmdEncoder;
+    __strong id<MTLRenderCommandEncoder> fActiveRenderCmdEncoder;
     MTLRenderPassDescriptor* fRenderPassDesc;
 
     struct CommandBufferInfo {

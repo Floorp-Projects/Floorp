@@ -55,6 +55,9 @@ Differences from GLSL
 * creating a smaller vector from a larger vector (e.g. float2(float3(1))) is
   intentionally disallowed, as it is just a wordier way of performing a swizzle.
   Use swizzles instead.
+* The last swizzle component, in addition to the normal rgba / xyzw components,
+  can also be the constants '0' or '1'. foo.rgb1 is equivalent to
+  float4(foo.rgb, 1).
 * Use texture() instead of textureProj(), e.g. texture(sampler2D, float3) is
   equivalent to GLSL's textureProj(sampler2D, float3)
 * Render target width and height are available via sk_Width and sk_Height
@@ -115,8 +118,8 @@ Within an '.fp' fragment processor file:
   (below) to override this default mapping.
 * global variables support an additional 'ctype' layout key, providing the type
   they should be represented as from within the C++ code. For instance, you can
-  use 'layout(ctype=GrColor4f) in half4 color;' to create a variable that looks
-  like a half4 on the SkSL side of things, and a GrColor4f on the C++ side of
+  use 'layout(ctype=SkPMColor4f) in half4 color;' to create a variable that looks
+  like a half4 on the SkSL side of things, and a SkPMColor4f on the C++ side of
   things.
 * 'uniform' variables become, as one would expect, top-level uniforms. By
   default they do not have any data provided to them; you will need to provide
@@ -145,6 +148,10 @@ Within an '.fp' fragment processor file:
   The first variant emits the child with a solid white input color. The second
   variant emits the child with the result of the 2nd argument's expression,
   which must evaluate to a half4. The process function returns a half4.
+* By default, fragment processors must be non-null. The type for a nullable
+  fragment processor is 'fragmentProcessor?', as in
+  'in fragmentProcessor? <name>'. You can check for the presence of such a
+  fragment processor by comparing it to 'null'.
 
 
 Creating a new .fp file

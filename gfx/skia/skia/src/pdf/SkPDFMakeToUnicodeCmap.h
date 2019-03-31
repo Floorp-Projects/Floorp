@@ -10,16 +10,16 @@
 #include "SkPDFFont.h"
 #include "SkStream.h"
 
-sk_sp<SkPDFStream> SkPDFMakeToUnicodeCmap(
+std::unique_ptr<SkStreamAsset> SkPDFMakeToUnicodeCmap(
         const SkUnichar* glyphToUnicode,
-        const SkBitSet* subset,
+        const SkPDFGlyphUse* subset,
         bool multiByteGlyphs,
         SkGlyphID firstGlyphID,
         SkGlyphID lastGlyphID);
 
 // Exposed for unit testing.
 void SkPDFAppendCmapSections(const SkUnichar* glyphToUnicode,
-                             const SkBitSet* subset,
+                             const SkPDFGlyphUse* subset,
                              SkDynamicMemoryWStream* cmap,
                              bool multiByteGlyphs,
                              SkGlyphID firstGlyphID,

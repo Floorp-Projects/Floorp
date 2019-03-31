@@ -399,7 +399,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   HybridContentTelemetry: "resource://gre/modules/HybridContentTelemetry.jsm",
   Integration: "resource://gre/modules/Integration.jsm",
   L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
-  LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   LiveBookmarkMigrator: "resource:///modules/LiveBookmarkMigrator.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
@@ -1037,53 +1036,12 @@ BrowserGlue.prototype = {
 
     SessionStore.init();
 
-    let vendorShortName = gBrandBundle.GetStringFromName("vendorShortName");
-
-    LightweightThemeManager.addBuiltInTheme({
-      id: "firefox-compact-light@mozilla.org",
-      name: gBrowserBundle.GetStringFromName("lightTheme.name"),
-      description: gBrowserBundle.GetStringFromName("lightTheme.description"),
-      iconURL: "resource:///chrome/browser/content/browser/defaultthemes/light.icon.svg",
-      textcolor: "rgb(24, 25, 26)",
-      icon_color: "rgb(24, 25, 26, 0.7)",
-      accentcolor: "#E3E4E6",
-      popup: "#fff",
-      popup_text: "#0c0c0d",
-      popup_border: "#ccc",
-      tab_line: "#0a84ff",
-      toolbarColor: "#f5f6f7",
-      toolbar_bottom_separator: "#ccc",
-      toolbar_field: "#fff",
-      toolbar_field_border: "#ccc",
-      author: vendorShortName,
-    });
-    LightweightThemeManager.addBuiltInTheme({
-      id: "firefox-compact-dark@mozilla.org",
-      name: gBrowserBundle.GetStringFromName("darkTheme.name"),
-      description: gBrowserBundle.GetStringFromName("darkTheme.description"),
-      iconURL: "resource:///chrome/browser/content/browser/defaultthemes/dark.icon.svg",
-      textcolor: "rgb(249, 249, 250)",
-      icon_color: "rgb(249, 249, 250, 0.7)",
-      accentcolor: "hsl(240, 5%, 5%)",
-      popup: "#4a4a4f",
-      popup_text: "rgb(249, 249, 250)",
-      popup_border: "#27272b",
-      tab_line: "#0a84ff",
-      toolbarColor: "hsl(240, 1%, 20%)",
-      toolbar_bottom_separator: "hsl(240, 5%, 5%)",
-      toolbar_field: "rgb(71, 71, 73)",
-      toolbar_field_border: "rgba(249, 249, 250, 0.2)",
-      toolbar_field_separator: "#5F6670",
-      toolbar_field_text: "rgb(249, 249, 250)",
-      ntp_background: "#2A2A2E",
-      ntp_text: "rgb(249, 249, 250)",
-      sidebar: "#38383D",
-      sidebar_text: "rgb(249, 249, 250)",
-      sidebar_border: "rgba(255, 255, 255, 0.1)",
-      author: vendorShortName,
-    }, {
-      useInDarkMode: true,
-    });
+    AddonManager.maybeInstallBuiltinAddon(
+        "firefox-compact-light@mozilla.org", "1.0",
+        "resource:///modules/themes/light/");
+    AddonManager.maybeInstallBuiltinAddon(
+        "firefox-compact-dark@mozilla.org", "1.0",
+        "resource:///modules/themes/dark/");
 
     Normandy.init();
 

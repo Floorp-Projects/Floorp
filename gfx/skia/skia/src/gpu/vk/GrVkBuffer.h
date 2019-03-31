@@ -9,7 +9,6 @@
 #define GrVkBuffer_DEFINED
 
 #include "GrVkResource.h"
-#include "vk/GrVkDefines.h"
 #include "vk/GrVkTypes.h"
 
 class GrVkGpu;
@@ -70,7 +69,7 @@ protected:
         Type               fType;
 
     private:
-        void freeGPUData(const GrVkGpu* gpu) const override;
+        void freeGPUData(GrVkGpu* gpu) const override;
 
         void onRecycle(GrVkGpu* gpu) const override { this->unref(gpu); }
 

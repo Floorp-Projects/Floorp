@@ -66,30 +66,33 @@ class GrOnFlushResourceProvider {
 public:
     explicit GrOnFlushResourceProvider(GrDrawingManager* drawingMgr) : fDrawingMgr(drawingMgr) {}
 
+#if 0
     sk_sp<GrRenderTargetContext> makeRenderTargetContext(const GrSurfaceDesc&,
                                                          GrSurfaceOrigin,
                                                          sk_sp<SkColorSpace>,
                                                          const SkSurfaceProps*);
+#endif
 
     sk_sp<GrRenderTargetContext> makeRenderTargetContext(sk_sp<GrSurfaceProxy>,
                                                          sk_sp<SkColorSpace>,
                                                          const SkSurfaceProps*);
 
-    // Proxy unique key management. See GrProxyProvider.
+    // Proxy unique key management. See GrProxyProvider.h.
     bool assignUniqueKeyToProxy(const GrUniqueKey&, GrTextureProxy*);
-    void removeUniqueKeyFromProxy(const GrUniqueKey&, GrTextureProxy*);
+    void removeUniqueKeyFromProxy(GrTextureProxy*);
+    void processInvalidUniqueKey(const GrUniqueKey&);
     sk_sp<GrTextureProxy> findOrCreateProxyByUniqueKey(const GrUniqueKey&, GrSurfaceOrigin);
 
     bool instatiateProxy(GrSurfaceProxy*);
 
     // Creates a GPU buffer with a "dynamic" access pattern.
-    sk_sp<GrBuffer> makeBuffer(GrBufferType, size_t, const void* data = nullptr);
+    sk_sp<GrGpuBuffer> makeBuffer(GrGpuBufferType, size_t, const void* data = nullptr);
 
     // Either finds and refs, or creates a static GPU buffer with the given data.
-    sk_sp<const GrBuffer> findOrMakeStaticBuffer(GrBufferType, size_t, const void* data,
-                                                 const GrUniqueKey&);
+    sk_sp<const GrGpuBuffer> findOrMakeStaticBuffer(GrGpuBufferType, size_t, const void* data,
+                                                    const GrUniqueKey&);
 
-    uint32_t contextUniqueID() const;
+    uint32_t contextID() const;
     const GrCaps* caps() const;
 
 private:

@@ -9,7 +9,6 @@
 #include "SkBitmap.h"
 #include "SkColorData.h"
 #include "SkColorSpaceXformer.h"
-#include "SkFlattenablePriv.h"
 #include "SkImageFilterPriv.h"
 #include "SkReadBuffer.h"
 #include "SkSpecialImage.h"
@@ -340,7 +339,7 @@ sk_sp<SkSpecialImage> SkMatrixConvolutionImageFilter::onFilterImage(SkSpecialIma
     // Note: if the kernel is too big, the GPU path falls back to SW
     if (source->isTextureBacked() &&
         fKernelSize.width() * fKernelSize.height() <= MAX_KERNEL_SIZE) {
-        GrContext* context = source->getContext();
+        auto context = source->getContext();
 
         // Ensure the input is in the destination color space. Typically applyCropRect will have
         // called pad_image to account for our dilation of bounds, so the result will already be

@@ -13,6 +13,8 @@ function waitForPrefChange(pref) {
   });
 }
 
+AddonTestUtils.init(this);
+
 add_task(async function startup() {
   await ExtensionTestUtils.startAddonManager();
 });

@@ -31,8 +31,6 @@ async function run_test() {
   Services.prefs.setBoolPref("media.gmp-provider.enabled", false);
 
   await promiseStartupManager();
-  AddonManager.addAddonListener(AddonListener);
-  AddonManager.addInstallListener(InstallListener);
 
   run_test_1();
 }
@@ -91,19 +89,19 @@ async function run_test_3() {
   PLUGINS.push(tag);
   let id = tag.name + tag.description;
 
-  let test_params = {};
-  test_params[id] = [
-    ["onInstalling", false],
-    "onInstalled",
-  ];
-
-  prepare_test(test_params, [
-    "onExternalInstall",
-  ]);
-
-  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
-
-  ensure_test_completed();
+  await expectEvents({
+    addonEvents: {
+      [id]: [
+        {event: "onInstalling"},
+        {event: "onInstalled"},
+      ],
+    },
+    installEvents: [
+      {event: "onExternalInstall"},
+    ],
+  }, async () => {
+    Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
+  });
 
   let addons = await AddonManager.getAddonsByTypes(["plugin"]);
   sortAddons(addons);
@@ -125,17 +123,16 @@ async function run_test_4() {
   let tag = PLUGINS.splice(1, 1)[0];
   let id = tag.name + tag.description;
 
-  let test_params = {};
-  test_params[id] = [
-    ["onUninstalling", false],
-    "onUninstalled",
-  ];
-
-  prepare_test(test_params);
-
-  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
-
-  ensure_test_completed();
+  await expectEvents({
+    addonEvents: {
+      [id]: [
+        {event: "onUninstalling"},
+        {event: "onUninstalled"},
+      ],
+    },
+  }, async () => {
+    Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
+  });
 
   let addons = await AddonManager.getAddonsByTypes(["plugin"]);
   sortAddons(addons);
@@ -155,8 +152,6 @@ async function run_test_5() {
   PLUGINS.splice(0, 1);
 
   Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
-
-  ensure_test_completed();
 
   let addons = await AddonManager.getAddonsByTypes(["plugin"]);
   sortAddons(addons);
@@ -178,23 +173,23 @@ async function run_test_6() {
   newTag.disabled = true;
   PLUGINS.push(newTag);
 
-  let test_params = {};
-  test_params[oldTag.name + oldTag.description] = [
-    ["onUninstalling", false],
-    "onUninstalled",
-  ];
-  test_params[newTag.name + newTag.description] = [
-    ["onInstalling", false],
-    "onInstalled",
-  ];
-
-  prepare_test(test_params, [
-    "onExternalInstall",
-  ]);
-
-  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
-
-  ensure_test_completed();
+  await expectEvents({
+    addonEvents: {
+      [oldTag.name + oldTag.description]: [
+        {event: "onUninstalling"},
+        {event: "onUninstalled"},
+      ],
+      [newTag.name + newTag.description]: [
+        {event: "onInstalling"},
+        {event: "onInstalled"},
+      ],
+    },
+    installEvents: [
+      {event: "onExternalInstall"},
+    ],
+  }, async () => {
+    Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
+  });
 
   let addons = await AddonManager.getAddonsByTypes(["plugin"]);
   sortAddons(addons);
@@ -216,21 +211,20 @@ async function run_test_7() {
   PLUGINS[0].disabled = true;
   PLUGINS[1] = new PluginTag("Flash 2", "A new crash-free Flash!");
 
-  let test_params = {};
-  test_params[PLUGINS[0].name + PLUGINS[0].description] = [
-    ["onDisabling", false],
-    "onDisabled",
-  ];
-  test_params[PLUGINS[1].name + PLUGINS[1].description] = [
-    ["onEnabling", false],
-    "onEnabled",
-  ];
-
-  prepare_test(test_params);
-
-  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
-
-  ensure_test_completed();
+  await expectEvents({
+    addonEvents: {
+      [PLUGINS[0].name + PLUGINS[0].description]: [
+        {event: "onDisabling"},
+        {event: "onDisabled"},
+      ],
+      [PLUGINS[1].name + PLUGINS[1].description]: [
+        {event: "onEnabling"},
+        {event: "onEnabled"},
+      ],
+    },
+  }, async () => {
+    Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
+  });
 
   let addons = await AddonManager.getAddonsByTypes(["plugin"]);
   sortAddons(addons);

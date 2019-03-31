@@ -254,8 +254,8 @@ void SkGifCodec::initializeSwizzler(const SkImageInfo& dstInfo, int frameIndex) 
     // - the swizzler does not need to know about the frame.
     // We may not be able to use the real Options anyway, since getPixels does not store it (due to
     // a bug).
-    fSwizzler.reset(SkSwizzler::CreateSwizzler(this->getEncodedInfo(),
-                    fCurrColorTable->readColors(), swizzlerInfo, Options(), &swizzleRect));
+    fSwizzler = SkSwizzler::Make(this->getEncodedInfo(), fCurrColorTable->readColors(),
+                                 swizzlerInfo, Options(), &swizzleRect);
     SkASSERT(fSwizzler.get());
 }
 
@@ -343,10 +343,8 @@ SkCodec::Result SkGifCodec::decodeFrame(bool firstAttempt, const Options& opts, 
             //   draw anything, so we need to fill.
             if (frameContext->frameRect() != this->bounds()
                     || frameContext->interlaced() || !fCurrColorTableIsReal) {
-                // fill ignores the width (replaces it with the actual, scaled width).
-                // But we need to scale in Y.
-                auto fillInfo = dstInfo.makeWH(0, scaledHeight);
-                fSwizzler->fill(fillInfo, fDst, fDstRowBytes, opts.fZeroInitialized);
+                auto fillInfo = dstInfo.makeWH(fSwizzler->fillWidth(), scaledHeight);
+                SkSampler::Fill(fillInfo, fDst, fDstRowBytes, opts.fZeroInitialized);
                 filledBackground = true;
             }
         } else {

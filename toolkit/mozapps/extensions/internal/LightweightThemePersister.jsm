@@ -6,35 +6,24 @@
 
 var EXPORTED_SYMBOLS = ["LightweightThemePersister"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-
-const PERSIST_ENABLED = true;
-const PERSIST_BYPASS_CACHE = false;
-const PERSIST_FILES = {
-  headerURL: "lightweighttheme-header",
-};
+let _prefs = Services.prefs.getBranch("lightweightThemes.");
 
 ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
   "resource://gre/modules/LightweightThemeManager.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "_prefs", () => {
-  return Services.prefs.getBranch("lightweightThemes.");
-});
+const PERSIST_FILES = {
+  headerURL: "lightweighttheme-header",
+};
 
 var LightweightThemePersister = {
-  get persistEnabled() {
-    return PERSIST_ENABLED;
-  },
-
   getPersistedData(aData) {
     for (let key in PERSIST_FILES) {
       try {
         if (aData[key] && _prefs.getBoolPref("persisted." + key))
           aData[key] = _getLocalImageURI(PERSIST_FILES[key]).spec
-                       + "?" + aData.id + ";" + _version(aData);
+                       + `?${aData.id};${aData.version}`;
       } catch (e) {}
     }
     return aData;
@@ -94,10 +83,7 @@ function _persistImage(sourceURL, localFileName, successCallback) {
 
   persist.persistFlags =
     Ci.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
-    Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION |
-    (PERSIST_BYPASS_CACHE ?
-       Ci.nsIWebBrowserPersist.PERSIST_FLAGS_BYPASS_CACHE :
-       Ci.nsIWebBrowserPersist.PERSIST_FLAGS_FROM_CACHE);
+    Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
   persist.progressListener = new _persistProgressListener(successCallback);
 
@@ -139,10 +125,6 @@ function _getLocalImageURI(localFileName) {
   return Services.io.newFileURI(localFile);
 }
 
-function _version(aThemeData) {
-  return aThemeData.version || "";
-}
-
 function _versionCode(aThemeData) {
-  return aThemeData.id + "-" + _version(aThemeData);
+  return `${aThemeData.id}-${aThemeData.version}`;
 }

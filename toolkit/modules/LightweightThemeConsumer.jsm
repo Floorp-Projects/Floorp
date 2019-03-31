@@ -11,8 +11,6 @@ const ICONS = Services.prefs.getStringPref("extensions.webextensions.themes.icon
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
-  "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
 // Get the theme variables from the app resource directory.
 // This allows per-app variables.
 ChromeUtils.defineModuleGetter(this, "ThemeContentPropertyList",
@@ -131,18 +129,16 @@ function LightweightThemeConsumer(aDocument) {
 
   Services.obs.addObserver(this, "lightweight-theme-styling-update");
 
-  ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", this);
-
   // We're responsible for notifying LightweightThemeManager when the OS is in
   // dark mode so it can activate the dark theme. We don't want this on Linux
   // as the default theme picks up the right colors from dark GTK themes.
   if (AppConstants.platform != "linux") {
-    this._darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
-    this._darkThemeMediaQuery.addListener(this.LightweightThemeManager);
-    this.LightweightThemeManager.systemThemeChanged(this._darkThemeMediaQuery);
+    this.darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
+    this.darkThemeMediaQuery.addListener(this);
   }
 
-  this._update(this.LightweightThemeManager.currentThemeWithPersistedData);
+  const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
+  this._update(LightweightThemeManager.themeData);
 
   this._win.addEventListener("resolutionchange", this);
   this._win.addEventListener("unload", this, { once: true });
@@ -150,66 +146,58 @@ function LightweightThemeConsumer(aDocument) {
 
 LightweightThemeConsumer.prototype = {
   _lastData: null,
-  // Whether a lightweight theme is enabled.
-  _active: false,
 
   observe(aSubject, aTopic, aData) {
     if (aTopic != "lightweight-theme-styling-update")
       return;
 
-    let parsedData = JSON.parse(aData);
-    if (!parsedData) {
-      parsedData = { theme: null, experiment: null };
-    }
-
-    if (parsedData.window && parsedData.window !== this._winId) {
+    let data = aSubject.wrappedJSObject;
+    if (data.window && data.window !== this._winId) {
       return;
     }
 
-    this._update(parsedData.theme, parsedData.experiment);
+    this._update(data, data.experiment);
   },
 
   handleEvent(aEvent) {
+    if (aEvent.media == "(-moz-system-dark-theme)") {
+      this._update(this._lastData);
+      return;
+    }
+
     switch (aEvent.type) {
       case "resolutionchange":
-        if (this._active) {
-          this._update(this._lastData);
-        }
+        this._update(this._lastData);
         break;
       case "unload":
         Services.obs.removeObserver(this, "lightweight-theme-styling-update");
         Services.ppmm.sharedData.delete(`theme/${this._winId}`);
         this._win.removeEventListener("resolutionchange", this);
         this._win = this._doc = null;
-        if (this._darkThemeMediaQuery) {
-          this._darkThemeMediaQuery.removeListener(this.LightweightThemeManager);
-          this._darkThemeMediaQuery = null;
+        if (this.darkThemeMediaQuery) {
+          this.darkThemeMediaQuery.removeListener(this);
+          this.darkThemeMediaQuery = null;
         }
         break;
     }
   },
 
-  _update(theme, experiment) {
-    this._lastData = theme;
-    if (theme) {
-      theme = LightweightThemeImageOptimizer.optimize(theme, this._win.screen);
+  get darkMode() {
+    return this.darkThemeMediaQuery && this.darkThemeMediaQuery.matches;
+  },
+
+  _update(themeData, experiment) {
+    this._lastData = themeData;
+
+    let theme = themeData.theme;
+    if (themeData.darkTheme && this.darkMode) {
+      theme = themeData.darkTheme;
     }
     if (!theme) {
       theme = { id: DEFAULT_THEME_ID };
     }
 
-    let active = this._active = (theme.id != DEFAULT_THEME_ID);
-
-    // The theme we're switching to can be different from the user-selected
-    // theme. E.g. if the default theme is selected and the OS is in dark mode,
-    // we'd silently activate the dark theme if available. We set an attribute
-    // in that case so stylesheets can differentiate this from the dark theme
-    // being selected explicitly by the user.
-    let isDefaultThemeInDarkMode =
-      theme.id == this.LightweightThemeManager.defaultDarkThemeID &&
-      this.LightweightThemeManager.selectedThemeID == DEFAULT_THEME_ID &&
-      this._darkThemeMediaQuery &&
-      this._darkThemeMediaQuery.matches;
+    let active = this._active = Object.keys(theme).length;
 
     let root = this._doc.documentElement;
 
@@ -236,13 +224,13 @@ LightweightThemeConsumer.prototype = {
     _setImage(root, active, "--lwt-additional-images", theme.additionalBackgrounds);
     _setProperties(root, active, theme);
 
-    if (active) {
+    if (theme.id != DEFAULT_THEME_ID || this.darkMode) {
       root.setAttribute("lwtheme", "true");
     } else {
       root.removeAttribute("lwtheme");
       root.removeAttribute("lwthemetextcolor");
     }
-    if (isDefaultThemeInDarkMode) {
+    if (theme.id == DEFAULT_THEME_ID && this.darkMode) {
       root.setAttribute("lwt-default-theme-in-dark-mode", "true");
     } else {
       root.removeAttribute("lwt-default-theme-in-dark-mode");
