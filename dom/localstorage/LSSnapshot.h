@@ -91,7 +91,7 @@ class LSSnapshot final : public nsIRunnable {
   bool mHasPendingTimerCallback;
   bool mDirty;
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool mInitialized;
   bool mSentFinish;
 #endif
@@ -105,7 +105,7 @@ class LSSnapshot final : public nsIRunnable {
 
   void ClearActor() {
     AssertIsOnOwningThread();
-    MOZ_ASSERT(mActor);
+    MOZ_DIAGNOSTIC_ASSERT(mActor);
 
     mActor = nullptr;
   }
