@@ -51,4 +51,4 @@ class InputStreamLengthHelper final : public Runnable,
 
 }  // namespace mozilla
 
-#endif // mozilla_InputStreamLengthHelper_h
+#endif  // mozilla_InputStreamLengthHelper_h

@@ -1200,7 +1200,6 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
 #endif
 }
 
-
 void MacroAssembler::compareStrings(JSOp op, Register left, Register right,
                                     Register result, Label* fail) {
   MOZ_ASSERT(left != result);

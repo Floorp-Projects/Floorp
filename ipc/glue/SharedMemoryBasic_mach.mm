@@ -528,12 +528,12 @@ bool SharedMemoryBasic::Map(size_t size, void* fixed_address) {
   }
 
   kr = mach_vm_map(mach_task_self(), &address, round_page(size), 0,
-                   fixed_address ? VM_FLAGS_FIXED : VM_FLAGS_ANYWHERE,
-                   mPort, 0, false, vmProtection, vmProtection, VM_INHERIT_NONE);
+                   fixed_address ? VM_FLAGS_FIXED : VM_FLAGS_ANYWHERE, mPort, 0, false,
+                   vmProtection, vmProtection, VM_INHERIT_NONE);
   if (kr != KERN_SUCCESS) {
     if (!fixed_address) {
-      LOG_ERROR("Failed to map shared memory (%zu bytes) into %x, port %x. %s (%x)\n",
-                size, mach_task_self(), mPort, mach_error_string(kr), kr);
+      LOG_ERROR("Failed to map shared memory (%zu bytes) into %x, port %x. %s (%x)\n", size,
+                mach_task_self(), mPort, mach_error_string(kr), kr);
     }
     return false;
   }
@@ -556,9 +556,8 @@ bool SharedMemoryBasic::Map(size_t size, void* fixed_address) {
 void* SharedMemoryBasic::FindFreeAddressSpace(size_t size) {
   mach_vm_address_t address = 0;
   size = round_page(size);
-  if (mach_vm_map(mach_task_self(), &address, size, 0,
-                  VM_FLAGS_ANYWHERE, MEMORY_OBJECT_NULL, 0, false, VM_PROT_NONE,
-                  VM_PROT_NONE, VM_INHERIT_NONE) != KERN_SUCCESS ||
+  if (mach_vm_map(mach_task_self(), &address, size, 0, VM_FLAGS_ANYWHERE, MEMORY_OBJECT_NULL, 0,
+                  false, VM_PROT_NONE, VM_PROT_NONE, VM_INHERIT_NONE) != KERN_SUCCESS ||
       vm_deallocate(mach_task_self(), address, size) != KERN_SUCCESS) {
     return nullptr;
   }

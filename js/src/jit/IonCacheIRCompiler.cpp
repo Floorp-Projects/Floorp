@@ -1677,7 +1677,6 @@ bool IonCacheIRCompiler::emitAllocateAndStoreDynamicSlot() {
   return emitAddAndStoreSlotShared(CacheOp::AllocateAndStoreDynamicSlot);
 }
 
-
 bool IonCacheIRCompiler::emitStoreTypedObjectReferenceProperty() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   Register obj = allocator.useRegister(masm, reader.objOperandId());

@@ -120,13 +120,16 @@ struct nsCounterChangeNode : public nsCounterNode {
                         // that comes before all the real content, with
                         // the resets first, in order, and then the sets and
                         // then the increments.
-            aPropIndex + (aChangeType == RESET ? (INT32_MIN) :
-                          (aChangeType == SET ?  ((INT32_MIN / 3) * 2) : INT32_MIN / 3)),
+            aPropIndex + (aChangeType == RESET
+                              ? (INT32_MIN)
+                              : (aChangeType == SET ? ((INT32_MIN / 3) * 2)
+                                                    : INT32_MIN / 3)),
             aChangeType),
         mChangeValue(aChangeValue) {
     NS_ASSERTION(aPropIndex >= 0, "out of range");
-    NS_ASSERTION(aChangeType == INCREMENT || aChangeType == SET
-                 || aChangeType == RESET, "bad type");
+    NS_ASSERTION(
+        aChangeType == INCREMENT || aChangeType == SET || aChangeType == RESET,
+        "bad type");
     mPseudoFrame = aPseudoFrame;
     CheckFrameAssertions();
   }
@@ -157,7 +160,7 @@ inline bool nsCounterNode::IsContentBasedReset() {
   return mType == RESET &&
          ChangeNode()->mChangeValue == std::numeric_limits<int32_t>::min();
 }
-  
+
 class nsCounterList : public nsGenConList {
  public:
   nsCounterList() : nsGenConList(), mDirty(false) {}

@@ -167,9 +167,9 @@ void nsBulletFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
                        !newStyleList->mCounterStyle.IsNone();
 
       if (hadBullet != hasBullet) {
-          nsIContent* listItem = mContent->GetParent();
-          accService->UpdateListBullet(PresContext()->GetPresShell(), listItem,
-                                       hasBullet);
+        nsIContent* listItem = mContent->GetParent();
+        accService->UpdateListBullet(PresContext()->GetPresShell(), listItem,
+                                     hasBullet);
       }
     }
   }

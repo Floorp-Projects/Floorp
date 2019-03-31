@@ -96,7 +96,7 @@ void HTMLSharedListElement::MapOLAttributesIntoRule(
     bool haveReversed = !!aAttributes->GetAttr(nsGkAtoms::reversed);
     if (haveReversed) {
       if (haveStart) {
-        start += 2; // i.e. the attr value + 1
+        start += 2;  // i.e. the attr value + 1
       } else {
         start = std::numeric_limits<int32_t>::min();
       }

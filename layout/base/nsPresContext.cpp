@@ -1709,7 +1709,7 @@ void nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont) {
   // potentially changed.
   if (!aUpdatedFont) {
     auto hint =
-      UsesExChUnits() ? RestyleHint::RecascadeSubtree() : RestyleHint{0};
+        UsesExChUnits() ? RestyleHint::RecascadeSubtree() : RestyleHint{0};
     PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW, hint);
     return;
   }

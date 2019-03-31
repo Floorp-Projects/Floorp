@@ -18,21 +18,21 @@ using mozilla::ipc::AssertIsOnBackgroundThread;
 
 class ServiceWorkerRegistrationProxy::DelayedUpdate final
     : public nsITimerCallback {
-    RefPtr<ServiceWorkerRegistrationProxy> mProxy;
-    RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
-    nsCOMPtr<nsITimer> mTimer;
+  RefPtr<ServiceWorkerRegistrationProxy> mProxy;
+  RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
+  nsCOMPtr<nsITimer> mTimer;
 
-    ~DelayedUpdate() = default;
-  public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSITIMERCALLBACK
+  ~DelayedUpdate() = default;
 
-    DelayedUpdate(RefPtr<ServiceWorkerRegistrationProxy>&& aProxy,
-        RefPtr<ServiceWorkerRegistrationPromise::Private>&& aPromise,
-        uint32_t delay);
-    void Reject();
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSITIMERCALLBACK
+
+  DelayedUpdate(RefPtr<ServiceWorkerRegistrationProxy>&& aProxy,
+                RefPtr<ServiceWorkerRegistrationPromise::Private>&& aPromise,
+                uint32_t delay);
+  void Reject();
 };
-
 
 ServiceWorkerRegistrationProxy::~ServiceWorkerRegistrationProxy() {
   // Any thread
@@ -250,25 +250,21 @@ NS_IMPL_ISUPPORTS(ServiceWorkerRegistrationProxy::DelayedUpdate,
                   nsITimerCallback)
 
 ServiceWorkerRegistrationProxy::DelayedUpdate::DelayedUpdate(
-    RefPtr<ServiceWorkerRegistrationProxy >&& aProxy,
-    RefPtr<ServiceWorkerRegistrationPromise::Private >&& aPromise,
+    RefPtr<ServiceWorkerRegistrationProxy>&& aProxy,
+    RefPtr<ServiceWorkerRegistrationPromise::Private>&& aPromise,
     uint32_t delay)
-  : mProxy(std::move(aProxy))
-  , mPromise(std::move(aPromise))
-{
+    : mProxy(std::move(aProxy)), mPromise(std::move(aPromise)) {
   MOZ_DIAGNOSTIC_ASSERT(mProxy);
   MOZ_DIAGNOSTIC_ASSERT(mPromise);
   mProxy->mDelayedUpdate = this;
-  Result<nsCOMPtr<nsITimer>, nsresult> result = NS_NewTimerWithCallback(
-      this, delay, nsITimer::TYPE_ONE_SHOT,
-      SystemGroup::EventTargetFor(TaskCategory::Other));
+  Result<nsCOMPtr<nsITimer>, nsresult> result =
+      NS_NewTimerWithCallback(this, delay, nsITimer::TYPE_ONE_SHOT,
+                              SystemGroup::EventTargetFor(TaskCategory::Other));
   mTimer = result.unwrapOr(nullptr);
   MOZ_DIAGNOSTIC_ASSERT(mTimer);
 }
 
-void
-ServiceWorkerRegistrationProxy::DelayedUpdate::Reject()
-{
+void ServiceWorkerRegistrationProxy::DelayedUpdate::Reject() {
   MOZ_DIAGNOSTIC_ASSERT(mPromise);
   if (mTimer) {
     mTimer->Cancel();
@@ -278,8 +274,7 @@ ServiceWorkerRegistrationProxy::DelayedUpdate::Reject()
 }
 
 NS_IMETHODIMP
-ServiceWorkerRegistrationProxy::DelayedUpdate::Notify(nsITimer* aTimer)
-{
+ServiceWorkerRegistrationProxy::DelayedUpdate::Notify(nsITimer* aTimer) {
   auto scopeExit = MakeScopeExit(
       [&] { mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__); });
   MOZ_DIAGNOSTIC_ASSERT((mProxy->mDelayedUpdate == this));
@@ -323,7 +318,8 @@ ServiceWorkerRegistrationProxy::Update() {
               new ServiceWorkerRegistrationProxy::DelayedUpdate(
                   std::move(self), std::move(promise), delay);
         } else {
-          RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+          RefPtr<ServiceWorkerManager> swm =
+              ServiceWorkerManager::GetInstance();
           NS_ENSURE_TRUE_VOID(swm);
 
           RefPtr<UpdateCallback> cb = new UpdateCallback(std::move(promise));

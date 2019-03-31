@@ -1102,9 +1102,7 @@ struct AssemblerBufferWithConstantPools
     inhibitNops_ = false;
   }
 
-  void align(unsigned alignment) {
-    align(alignment, alignFillInst_);
-  }
+  void align(unsigned alignment) { align(alignment, alignFillInst_); }
 
   void align(unsigned alignment, uint32_t pattern) {
     MOZ_ASSERT(mozilla::IsPowerOfTwo(alignment));

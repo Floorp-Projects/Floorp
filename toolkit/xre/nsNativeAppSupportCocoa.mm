@@ -29,8 +29,8 @@
 // This must be included last:
 #include "nsObjCExceptions.h"
 
-nsresult GetNativeWindowPointerFromDOMWindow(mozIDOMWindowProxy *a_window,
-                                             NSWindow **a_nativeWindow) {
+nsresult GetNativeWindowPointerFromDOMWindow(mozIDOMWindowProxy* a_window,
+                                             NSWindow** a_nativeWindow) {
   *a_nativeWindow = nil;
   if (!a_window) return NS_ERROR_INVALID_ARG;
 
@@ -45,7 +45,7 @@ nsresult GetNativeWindowPointerFromDOMWindow(mozIDOMWindowProxy *a_window,
         nsCOMPtr<nsIWidget> mruWidget = nullptr;
         mruBaseWindow->GetMainWidget(getter_AddRefs(mruWidget));
         if (mruWidget) {
-          *a_nativeWindow = (NSWindow *)mruWidget->GetNativeData(NS_NATIVE_WINDOW);
+          *a_nativeWindow = (NSWindow*)mruWidget->GetNativeData(NS_NATIVE_WINDOW);
         }
       }
     }
@@ -61,12 +61,9 @@ nsresult GetNativeWindowPointerFromDOMWindow(mozIDOMWindowProxy *a_window,
 // other new copies just broadcast this notification and quit (unless -no-remote
 // was specified in either of these processes), making the original process handle
 // the arguments passed to this handler.
-void
-remoteClientNotificationCallback(CFNotificationCenterRef aCenter,
-                                 void* aObserver, CFStringRef aName,
-                                 const void* aObject,
-                                 CFDictionaryRef aUserInfo)
-{
+void remoteClientNotificationCallback(CFNotificationCenterRef aCenter, void* aObserver,
+                                      CFStringRef aName, const void* aObject,
+                                      CFDictionaryRef aUserInfo) {
   // Autorelease pool to prevent memory leaks, in case there is no outer pool.
   mozilla::MacAutoreleasePool pool;
   NSDictionary* userInfoDict = (__bridge NSDictionary*)aUserInfo;
@@ -85,8 +82,7 @@ remoteClientNotificationCallback(CFNotificationCenterRef aCenter,
 
     // We're not currently passing the working dir as third argument because it
     // does not appear to be required.
-    nsresult rv = cmdLine->Init(argc, argv, nullptr,
-                                nsICommandLine::STATE_REMOTE_AUTO);
+    nsresult rv = cmdLine->Init(argc, argv, nullptr, nsICommandLine::STATE_REMOTE_AUTO);
 
     // Cleaning up C array.
     delete[] argv;
@@ -101,8 +97,8 @@ remoteClientNotificationCallback(CFNotificationCenterRef aCenter,
     cmdLine->Run();
 
     // And bring the app's window to front.
-    [[NSRunningApplication currentApplication] activateWithOptions:
-      NSApplicationActivateIgnoringOtherApps];
+    [[NSRunningApplication currentApplication]
+        activateWithOptions:NSApplicationActivateIgnoringOtherApps];
   }
 }
 
@@ -110,7 +106,7 @@ class nsNativeAppSupportCocoa : public nsNativeAppSupportBase {
  public:
   nsNativeAppSupportCocoa() : mCanShowUI(false) {}
 
-  NS_IMETHOD Start(bool *aRetVal) override;
+  NS_IMETHOD Start(bool* aRetVal) override;
   NS_IMETHOD ReOpen() override;
   NS_IMETHOD Enable() override;
 
@@ -124,7 +120,7 @@ nsNativeAppSupportCocoa::Enable() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval) {
+NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool* _retval) {
   int major, minor, bugfix;
   nsCocoaFeatures::GetSystemVersion(major, minor, bugfix);
 
@@ -166,7 +162,7 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval) {
 
   BOOL mozillaRestarting = NO;
   if ([[[[NSProcessInfo processInfo] environment] objectForKey:@"MOZ_APP_RESTART"]
-       isEqualToString:@"1"]) {
+          isEqualToString:@"1"]) {
     // Update process completed or restarting the app for another reason.
     // Triggered by an old instance that just quit.
     mozillaRestarting = YES;
@@ -198,22 +194,22 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval) {
   // So, let's check if this is the first instance ever of the process for the
   // current user.
   NSString* notificationName = [[[NSBundle mainBundle] bundleIdentifier]
-                                stringByAppendingString:
-                                @".distributedNotification.commandLineArgs"];
+      stringByAppendingString:@".distributedNotification.commandLineArgs"];
 
   BOOL runningInstanceFound = NO;
   if (!shallProceedLikeNoRemote) {
     // We check for other running instances only if -no-remote was not specified.
     // The check is needed so the marAppApplyUpdateSuccess.js test doesn't fail on next call.
-    runningInstanceFound = [[NSRunningApplication runningApplicationsWithBundleIdentifier:
-                              [[NSBundle mainBundle] bundleIdentifier]] count] > 1;
+    runningInstanceFound =
+        [[NSRunningApplication
+            runningApplicationsWithBundleIdentifier:[[NSBundle mainBundle] bundleIdentifier]]
+            count] > 1;
   }
 
   if (!shallProceedLikeNoRemote && !mozillaRestarting && runningInstanceFound) {
     // There is another instance of this app already running!
     NSArray* arguments = [[NSProcessInfo processInfo] arguments];
-    CFDictionaryRef userInfoDict = (__bridge CFDictionaryRef)@{@"commandLineArgs":
-                                                                 arguments};
+    CFDictionaryRef userInfoDict = (__bridge CFDictionaryRef) @{@"commandLineArgs" : arguments};
 
     // This code is shared between Firefox, Thunderbird and other Mozilla products.
     // So we need a notification name that is unique to the product, so we
@@ -226,9 +222,7 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval) {
     // logged in user. Distributed notifications is the best candidate
     // (while darwin notifications ignore the user context).
     CFNotificationCenterPostNotification(CFNotificationCenterGetDistributedCenter(),
-                                         (__bridge CFStringRef)notificationName,
-                                         NULL,
-                                         userInfoDict,
+                                         (__bridge CFStringRef)notificationName, NULL, userInfoDict,
                                          true);
 
     // Do not continue start up sequence for this process - just self-terminate,
@@ -240,11 +234,9 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval) {
     // In case future instances would want to notify us about command line arguments
     // passed to them. Note, that if mozilla process is restarting, we still need to
     // register for notifications.
-    CFNotificationCenterAddObserver(CFNotificationCenterGetDistributedCenter(),
-                                    NULL,
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDistributedCenter(), NULL,
                                     remoteClientNotificationCallback,
-                                    (__bridge CFStringRef)notificationName,
-                                    NULL,
+                                    (__bridge CFStringRef)notificationName, NULL,
                                     CFNotificationSuspensionBehaviorDeliverImmediately);
 
     // Continue the start up sequence of this process.
@@ -291,7 +283,7 @@ nsNativeAppSupportCocoa::ReOpen() {
         windowList->HasMoreElements(&more);
         continue;
       }
-      NSWindow *cocoaWindow = (NSWindow *)widget->GetNativeData(NS_NATIVE_WINDOW);
+      NSWindow* cocoaWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
       if (![cocoaWindow isMiniaturized]) {
         haveNonMiniaturized = true;
         break;  // have un-minimized windows, nothing to do
@@ -305,7 +297,7 @@ nsNativeAppSupportCocoa::ReOpen() {
       wm->GetMostRecentWindow(nullptr, getter_AddRefs(mru));
 
       if (mru) {
-        NSWindow *cocoaMru = nil;
+        NSWindow* cocoaMru = nil;
         GetNativeWindowPointerFromDOMWindow(mru, &cocoaMru);
         if (cocoaMru) {
           [cocoaMru deminiaturize:nil];
@@ -315,7 +307,7 @@ nsNativeAppSupportCocoa::ReOpen() {
     }  // end if have non miniaturized
 
     if (!haveOpenWindows && !done) {
-      char *argv[] = {nullptr};
+      char* argv[] = {nullptr};
 
       // use an empty command line to make the right kind(s) of window open
       nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
@@ -336,7 +328,7 @@ nsNativeAppSupportCocoa::ReOpen() {
 #pragma mark -
 
 // Create and return an instance of class nsNativeAppSupportCocoa.
-nsresult NS_CreateNativeAppSupport(nsINativeAppSupport **aResult) {
+nsresult NS_CreateNativeAppSupport(nsINativeAppSupport** aResult) {
   *aResult = new nsNativeAppSupportCocoa;
   if (!*aResult) return NS_ERROR_OUT_OF_MEMORY;
 

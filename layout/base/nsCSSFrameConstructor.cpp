@@ -3088,7 +3088,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
                   true, aItem.mPendingBinding);
 
   nsFrameList fieldsetKids;
-  fieldsetKids.AppendFrame(nullptr, scrollFrame ? scrollFrame : contentFrameTop);
+  fieldsetKids.AppendFrame(nullptr,
+                           scrollFrame ? scrollFrame : contentFrameTop);
 
   for (nsFrameList::Enumerator e(childList); !e.AtEnd(); e.Next()) {
     nsIFrame* child = e.get();
@@ -5192,8 +5193,7 @@ static bool ShouldSuppressFrameInSelect(const nsIContent* aParent,
 }
 
 static bool ShouldSuppressFrameInNonOpenDetails(
-    const HTMLDetailsElement* aDetails,
-    ComputedStyle* aComputedStyle,
+    const HTMLDetailsElement* aDetails, ComputedStyle* aComputedStyle,
     const nsIContent& aChild) {
   if (!aDetails || aDetails->Open()) {
     return false;
@@ -9546,13 +9546,16 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
   for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
     NS_ASSERTION(iter.item().DesiredParentType() == GetParentType(aParentFrame),
                  "Needed pseudos didn't get created; expect bad things");
-    // display:list-item boxes affects the start value of the "list-item" counter
-    // when an <ol reversed> element doesn't have an explicit start value.
+    // display:list-item boxes affects the start value of the "list-item"
+    // counter when an <ol reversed> element doesn't have an explicit start
+    // value.
     if (!listItemListIsDirty &&
-        iter.item().mComputedStyle->StyleList()->mMozListReversed
-            == StyleMozListReversed::True &&
-        iter.item().mComputedStyle->StyleDisplay()->mDisplay == StyleDisplay::ListItem) {
-      auto* list = mCounterManager.CounterListFor(NS_LITERAL_STRING("list-item"));
+        iter.item().mComputedStyle->StyleList()->mMozListReversed ==
+            StyleMozListReversed::True &&
+        iter.item().mComputedStyle->StyleDisplay()->mDisplay ==
+            StyleDisplay::ListItem) {
+      auto* list =
+          mCounterManager.CounterListFor(NS_LITERAL_STRING("list-item"));
       list->SetDirty();
       CountersDirty();
       listItemListIsDirty = true;
@@ -9679,13 +9682,13 @@ void nsCSSFrameConstructor::ProcessChildren(
 
     if (aCanHaveGeneratedContent) {
       auto* styleParentFrame =
-        nsFrame::CorrectStyleParentFrame(aFrame, PseudoStyleType::NotPseudo);
+          nsFrame::CorrectStyleParentFrame(aFrame, PseudoStyleType::NotPseudo);
       computedStyle = styleParentFrame->Style();
       if (computedStyle->StyleDisplay()->mDisplay == StyleDisplay::ListItem &&
           (listItem = do_QueryFrame(aFrame)) &&
           !styleParentFrame->IsFieldSetFrame()) {
         isOutsideMarker = computedStyle->StyleList()->mListStylePosition ==
-                            NS_STYLE_LIST_STYLE_POSITION_OUTSIDE;
+                          NS_STYLE_LIST_STYLE_POSITION_OUTSIDE;
         CreateGeneratedContentItem(aState, aFrame, *aContent->AsElement(),
                                    *computedStyle, PseudoStyleType::marker,
                                    itemsToConstruct);
@@ -9741,17 +9744,19 @@ void nsCSSFrameConstructor::ProcessChildren(
             // SetMarkerFrameForListItem will add childFrame to the kBulletList
             aFrameList.RemoveFrame(childFrame);
             auto* grandParent = listItem->GetParent()->GetParent();
-            if (listItem->Style()->GetPseudoType() == PseudoStyleType::columnContent &&
-                grandParent &&
-                grandParent->IsColumnSetWrapperFrame()) {
+            if (listItem->Style()->GetPseudoType() ==
+                    PseudoStyleType::columnContent &&
+                grandParent && grandParent->IsColumnSetWrapperFrame()) {
               listItem = do_QueryFrame(grandParent);
-              MOZ_ASSERT(listItem, "ColumnSetWrapperFrame is expected to be "
-                                   "a nsBlockFrame subclass");
+              MOZ_ASSERT(listItem,
+                         "ColumnSetWrapperFrame is expected to be "
+                         "a nsBlockFrame subclass");
               childFrame->SetParent(listItem);
             }
           }
           listItem->SetMarkerFrameForListItem(childFrame);
-          MOZ_ASSERT(listItem->HasAnyStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER) == isOutsideMarker);
+          MOZ_ASSERT(listItem->HasAnyStateBits(
+                         NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER) == isOutsideMarker);
           break;
         }
       }

@@ -627,7 +627,8 @@ bool Pickle::WriteBytes(const void* data, uint32_t data_len,
 
   BeginWrite(data_len, alignment);
 
-  MOZ_ALWAYS_TRUE(buffers_.WriteBytes(reinterpret_cast<const char*>(data), data_len));
+  MOZ_ALWAYS_TRUE(
+      buffers_.WriteBytes(reinterpret_cast<const char*>(data), data_len));
 
   EndWrite(data_len);
   return true;

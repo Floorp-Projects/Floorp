@@ -2665,8 +2665,9 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
     ReflowOutput metrics(aState.mReflowInput);
     nsIFrame* marker = GetOutsideMarker();
     WritingMode wm = aState.mReflowInput.GetWritingMode();
-    ReflowOutsideMarker(marker, aState, metrics,
-                        aState.mReflowInput.ComputedPhysicalBorderPadding().top);
+    ReflowOutsideMarker(
+        marker, aState, metrics,
+        aState.mReflowInput.ComputedPhysicalBorderPadding().top);
     NS_ASSERTION(!MarkerIsEmpty() || metrics.BSize(wm) == 0,
                  "empty ::marker frame took up space");
 
@@ -6792,7 +6793,8 @@ void nsBlockFrame::GetSpokenMarkerText(nsAString& aText) const {
 
 void nsBlockFrame::ReflowOutsideMarker(nsIFrame* aMarkerFrame,
                                        BlockReflowInput& aState,
-                                       ReflowOutput& aMetrics, nscoord aLineTop) {
+                                       ReflowOutput& aMetrics,
+                                       nscoord aLineTop) {
   const ReflowInput& ri = aState.mReflowInput;
 
   WritingMode markerWM = aMarkerFrame->GetWritingMode();

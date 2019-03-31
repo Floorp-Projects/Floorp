@@ -307,9 +307,9 @@ enum TypeCode {
 // Descriptor of one field in a StructType. The name of the field is stored
 // as the key to the hash entry.
 struct FieldInfo {
-  HeapPtr<JSObject*> mType;   // CType of the field
-  size_t mIndex;              // index of the field in the struct (first is 0)
-  size_t mOffset;             // offset of the field in the struct, in bytes
+  HeapPtr<JSObject*> mType;  // CType of the field
+  size_t mIndex;             // index of the field in the struct (first is 0)
+  size_t mOffset;            // offset of the field in the struct, in bytes
 
   void trace(JSTracer* trc) { TraceEdge(trc, &mType, "fieldType"); }
 };

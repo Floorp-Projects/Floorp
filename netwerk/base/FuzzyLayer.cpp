@@ -18,7 +18,7 @@ LazyLogModule gFuzzingLog("nsFuzzingNecko");
   MOZ_LOG(mozilla::net::gFuzzingLog, mozilla::LogLevel::Verbose, args)
 
 // These will be set by setNetworkFuzzingBuffer below
-static Atomic<const uint8_t*> gFuzzingBuf(NULL);
+static Atomic<const uint8_t *> gFuzzingBuf(NULL);
 static Atomic<size_t> gFuzzingSize(0);
 
 /*
@@ -39,7 +39,7 @@ Atomic<bool> gFuzzingConnClosed(true);
 Atomic<bool> gFuzzingAllowNewConn(false);
 Atomic<bool> gFuzzingAllowRead(false);
 
-void setNetworkFuzzingBuffer(const uint8_t* data, size_t size) {
+void setNetworkFuzzingBuffer(const uint8_t *data, size_t size) {
   if (size > INT32_MAX) {
     MOZ_CRASH("Unsupported buffer size");
   }
@@ -53,21 +53,21 @@ static PRDescIdentity sFuzzyLayerIdentity;
 static PRIOMethods sFuzzyLayerMethods;
 static PRIOMethods *sFuzzyLayerMethodsPtr = nullptr;
 
-static PRInt16 PR_CALLBACK FuzzyPoll(
-    PRFileDesc *fd, PRInt16 in_flags, PRInt16 *out_flags) {
-    *out_flags = 0;
+static PRInt16 PR_CALLBACK FuzzyPoll(PRFileDesc *fd, PRInt16 in_flags,
+                                     PRInt16 *out_flags) {
+  *out_flags = 0;
 
-    if (in_flags & PR_POLL_READ && gFuzzingAllowRead) {
-        *out_flags = PR_POLL_READ;
-        return PR_POLL_READ;
-    }
+  if (in_flags & PR_POLL_READ && gFuzzingAllowRead) {
+    *out_flags = PR_POLL_READ;
+    return PR_POLL_READ;
+  }
 
-    if (in_flags & PR_POLL_WRITE) {
-        *out_flags = PR_POLL_WRITE;
-        return PR_POLL_WRITE;
-    }
+  if (in_flags & PR_POLL_WRITE) {
+    *out_flags = PR_POLL_WRITE;
+    return PR_POLL_WRITE;
+  }
 
-    return in_flags;
+  return in_flags;
 }
 
 static PRStatus FuzzyConnect(PRFileDesc *fd, const PRNetAddr *addr,
@@ -118,12 +118,10 @@ static PRInt32 FuzzyRecv(PRFileDesc *fd, void *buf, PRInt32 amount,
   }
 
   // No data left, act as if the connection was closed.
-  if (!gFuzzingSize)
-    return 0;
+  if (!gFuzzingSize) return 0;
 
   // Use the remains of fuzzing buffer, if too little is left
-  if (gFuzzingSize < (PRUint32)amount)
-    amount = gFuzzingSize;
+  if (gFuzzingSize < (PRUint32)amount) amount = gFuzzingSize;
 
   // Consume buffer, copy data
   memcpy(buf, gFuzzingBuf, amount);

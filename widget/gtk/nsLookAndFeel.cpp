@@ -861,8 +861,8 @@ void nsLookAndFeel::EnsureInit() {
   GtkSettings* settings = gtk_settings_get_for_screen(gdk_screen_get_default());
 
   if (MOZ_UNLIKELY(!settings)) {
-      NS_WARNING("EnsureInit: No settings");
-      return;
+    NS_WARNING("EnsureInit: No settings");
+    return;
   }
 
   // Dark themes interacts poorly with widget styling (see bug 1216658).
