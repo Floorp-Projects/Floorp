@@ -830,13 +830,6 @@ marquee[direction="up"], marquee[direction="down"] {
   block-size: 200px;
 }
 
-/* PRINT ONLY rules follow */
-@media print {
-
-  marquee { -moz-binding: none; }
-
-}
-
 /* Ruby */
 
 ruby {
