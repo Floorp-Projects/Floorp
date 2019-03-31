@@ -20,13 +20,13 @@ function toggleBreakpoint(dbg, index) {
 }
 
 async function disableBreakpoint(dbg, index) {
-  const disabled = waitForDispatch(dbg, "SET_BREAKPOINT");
+  const disabled = waitForDispatch(dbg, "DISABLE_BREAKPOINT");
   toggleBreakpoint(dbg, index);
   await disabled;
 }
 
 async function enableBreakpoint(dbg, index) {
-  const enabled = waitForDispatch(dbg, "SET_BREAKPOINT");
+  const enabled = waitForDispatch(dbg, "ENABLE_BREAKPOINT");
   toggleBreakpoint(dbg, index);
   await enabled;
 }
