@@ -53,11 +53,7 @@ Object {
     "line": 5,
     "sourceUrl": "http://localhost:8000/examples/foo.js",
   },
-  "options": Object {
-    "condition": null,
-    "hidden": false,
-    "logValue": null,
-  },
+  "options": Object {},
 }
 `;
 
@@ -84,11 +80,7 @@ Object {
     "line": 5,
     "sourceUrl": "http://localhost:8000/examples/foo",
   },
-  "options": Object {
-    "condition": null,
-    "hidden": false,
-    "logValue": null,
-  },
+  "options": Object {},
 }
 `;
 
@@ -115,10 +107,6 @@ Object {
     "line": 5,
     "sourceUrl": "http://localhost:8000/examples/foo2",
   },
-  "options": Object {
-    "condition": null,
-    "hidden": false,
-    "logValue": null,
-  },
+  "options": Object {},
 }
 `;
