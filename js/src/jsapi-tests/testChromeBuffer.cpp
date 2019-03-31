@@ -10,20 +10,9 @@
 
 static TestJSPrincipals system_principals(1);
 
-static const JSClassOps global_classOps = {nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           JS_GlobalObjectTraceHook};
-
 static const JSClass global_class = {
-    "global", JSCLASS_IS_GLOBAL | JSCLASS_GLOBAL_FLAGS, &global_classOps};
+    "global", JSCLASS_IS_GLOBAL | JSCLASS_GLOBAL_FLAGS,
+    &JS::DefaultGlobalClassOps};
 
 static JS::PersistentRootedObject trusted_glob;
 static JS::PersistentRootedObject trusted_fun;
