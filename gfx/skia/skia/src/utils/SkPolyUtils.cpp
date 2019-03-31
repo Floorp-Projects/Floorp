@@ -61,13 +61,16 @@ int SkGetPolygonWinding(const SkPoint* polygonVerts, int polygonSize) {
 }
 
 // Compute difference vector to offset p0-p1 'offset' units in direction specified by 'side'
-void compute_offset_vector(const SkPoint& p0, const SkPoint& p1, SkScalar offset, int side,
+bool compute_offset_vector(const SkPoint& p0, const SkPoint& p1, SkScalar offset, int side,
                            SkPoint* vector) {
     SkASSERT(side == -1 || side == 1);
     // if distances are equal, can just outset by the perpendicular
     SkVector perp = SkVector::Make(p0.fY - p1.fY, p1.fX - p0.fX);
-    perp.setLength(offset*side);
+    if (!perp.setLength(offset*side)) {
+        return false;
+    }
     *vector = perp;
+    return true;
 }
 
 // check interval to see if intersection is in segment
@@ -313,6 +316,19 @@ bool SkInsetConvexPolygon(const SkPoint* inputPolygonVerts, int inputPolygonSize
     // practically we don't want anything bigger than this anyway
     if (inputPolygonSize > std::numeric_limits<uint16_t>::max()) {
         return false;
+    }
+
+    // can't inset by a negative or non-finite amount
+    if (inset < -SK_ScalarNearlyZero || !SkScalarIsFinite(inset)) {
+        return false;
+    }
+
+    // insetting close to zero just returns the original poly
+    if (inset <= SK_ScalarNearlyZero) {
+        for (int i = 0; i < inputPolygonSize; ++i) {
+            *insetPolygon->push() = inputPolygonVerts[i];
+        }
+        return true;
     }
 
     // get winding direction
@@ -657,6 +673,9 @@ public:
 
     bool insert(const SkPoint& p0, const SkPoint& p1, uint16_t index0, uint16_t index1) {
         SkVector v = p1 - p0;
+        if (!v.isFinite()) {
+            return false;
+        }
         // empty tree case -- easy
         if (!fTreeHead.fChild[1]) {
             ActiveEdge* root = fTreeHead.fChild[1] = this->allocate(p0, v, index0, index1);
@@ -1141,6 +1160,15 @@ bool SkOffsetSimplePolygon(const SkPoint* inputPolygonVerts, int inputPolygonSiz
         return false;
     }
 
+    // offsetting close to zero just returns the original poly
+    if (SkScalarNearlyZero(offset)) {
+        for (int i = 0; i < inputPolygonSize; ++i) {
+            *offsetPolygon->push() = inputPolygonVerts[i];
+            *polygonIndices->push() = i;
+        }
+        return true;
+    }
+
     // get winding direction
     int winding = SkGetPolygonWinding(inputPolygonVerts, inputPolygonSize);
     if (0 == winding) {
@@ -1157,8 +1185,10 @@ bool SkOffsetSimplePolygon(const SkPoint* inputPolygonVerts, int inputPolygonSiz
             return false;
         }
         int nextIndex = (currIndex + 1) % inputPolygonSize;
-        compute_offset_vector(inputPolygonVerts[currIndex], inputPolygonVerts[nextIndex],
-                              offset, winding, &normals[currIndex]);
+        if (!compute_offset_vector(inputPolygonVerts[currIndex], inputPolygonVerts[nextIndex],
+                                   offset, winding, &normals[currIndex])) {
+            return false;
+        }
         if (currIndex > 0) {
             // if reflex point, we need to add extra edges
             if (is_reflex_vertex(inputPolygonVerts, winding, offset,
@@ -1259,7 +1289,7 @@ bool SkOffsetSimplePolygon(const SkPoint* inputPolygonVerts, int inputPolygonSiz
     auto currEdge = head;
     unsigned int offsetVertexCount = numEdges;
     unsigned long long iterations = 0;
-    unsigned long long maxIterations = (unsigned long long)(numEdges*numEdges);
+    unsigned long long maxIterations = (unsigned long long)(numEdges) * numEdges;
     while (head && prevEdge != currEdge && offsetVertexCount > 0) {
         ++iterations;
         // we should check each edge against each other edge at most once
@@ -1436,18 +1466,34 @@ static bool point_in_triangle(const SkPoint& p0, const SkPoint& p1, const SkPoin
 // Data structure to track reflex vertices and check whether any are inside a given triangle
 class ReflexHash {
 public:
-    ReflexHash(const SkRect& bounds, int vertexCount)
-            : fBounds(bounds)
-            , fNumVerts(0) {
+    bool init(const SkRect& bounds, int vertexCount) {
+        fBounds = bounds;
+        fNumVerts = 0;
+        SkScalar width = bounds.width();
+        SkScalar height = bounds.height();
+        if (!SkScalarIsFinite(width) || !SkScalarIsFinite(height)) {
+            return false;
+        }
+
         // We want vertexCount grid cells, roughly distributed to match the bounds ratio
-        SkScalar hCount = SkScalarSqrt(vertexCount*bounds.width()/bounds.height());
+        SkScalar hCount = SkScalarSqrt(sk_ieee_float_divide(vertexCount*width, height));
+        if (!SkScalarIsFinite(hCount)) {
+            return false;
+        }
         fHCount = SkTMax(SkTMin(SkScalarRoundToInt(hCount), vertexCount), 1);
         fVCount = vertexCount/fHCount;
-        fGridConversion.set((fHCount - 0.001f)/bounds.width(), (fVCount - 0.001f)/bounds.height());
+        fGridConversion.set(sk_ieee_float_divide(fHCount - 0.001f, width),
+                            sk_ieee_float_divide(fVCount - 0.001f, height));
+        if (!fGridConversion.isFinite()) {
+            return false;
+        }
+
         fGrid.setCount(fHCount*fVCount);
         for (int i = 0; i < fGrid.count(); ++i) {
             fGrid[i].reset();
         }
+
+        return true;
     }
 
     void add(TriangulationVertex* v) {
@@ -1498,6 +1544,7 @@ private:
     int hash(TriangulationVertex* vert) const {
         int h = (vert->fPosition.fX - fBounds.fLeft)*fGridConversion.fX;
         int v = (vert->fPosition.fY - fBounds.fTop)*fGridConversion.fY;
+        SkASSERT(v*fHCount + h >= 0);
         return v*fHCount + h;
     }
 
@@ -1538,7 +1585,9 @@ bool SkTriangulateSimplePolygon(const SkPoint* polygonVerts, uint16_t* indexMap,
 
     // get bounds
     SkRect bounds;
-    bounds.setBounds(polygonVerts, polygonSize);
+    if (!bounds.setBoundsCheck(polygonVerts, polygonSize)) {
+        return false;
+    }
     // get winding direction
     // TODO: we do this for all the polygon routines -- might be better to have the client
     // compute it and pass it in
@@ -1573,7 +1622,10 @@ bool SkTriangulateSimplePolygon(const SkPoint* polygonVerts, uint16_t* indexMap,
     // Classify initial vertices into a list of convex vertices and a hash of reflex vertices
     // TODO: possibly sort the convexList in some way to get better triangles
     SkTInternalLList<TriangulationVertex> convexList;
-    ReflexHash reflexHash(bounds, polygonSize);
+    ReflexHash reflexHash;
+    if (!reflexHash.init(bounds, polygonSize)) {
+        return false;
+    }
     prevIndex = polygonSize - 1;
     for (int currIndex = 0; currIndex < polygonSize; prevIndex = currIndex, ++currIndex) {
         TriangulationVertex::VertexType currType = triangulationVertices[currIndex].fVertexType;
@@ -1661,3 +1713,116 @@ bool SkTriangulateSimplePolygon(const SkPoint* polygonVerts, uint16_t* indexMap,
 
     return true;
 }
+
+///////////
+
+static double crs(SkVector a, SkVector b) {
+    return a.fX * b.fY - a.fY * b.fX;
+}
+
+static int sign(SkScalar v) {
+    return v < 0 ? -1 : (v > 0);
+}
+
+struct SignTracker {
+    int fSign;
+    int fSignChanges;
+
+    void reset() {
+        fSign = 0;
+        fSignChanges = 0;
+    }
+
+    void init(int s) {
+        SkASSERT(fSignChanges == 0);
+        SkASSERT(s == 1 || s == -1 || s == 0);
+        fSign = s;
+        fSignChanges = 1;
+    }
+
+    void update(int s) {
+        if (s) {
+            if (fSign != s) {
+                fSignChanges += 1;
+                fSign = s;
+            }
+        }
+    }
+};
+
+struct ConvexTracker {
+    SkVector    fFirst, fPrev;
+    SignTracker fDSign, fCSign;
+    int         fVecCounter;
+    bool        fIsConcave;
+
+    ConvexTracker() { this->reset(); }
+
+    void reset() {
+        fPrev = {0, 0};
+        fDSign.reset();
+        fCSign.reset();
+        fVecCounter = 0;
+        fIsConcave = false;
+    }
+
+    void addVec(SkPoint p1, SkPoint p0) {
+        this->addVec(p1 - p0);
+    }
+    void addVec(SkVector v) {
+        if (v.fX == 0 && v.fY == 0) {
+            return;
+        }
+
+        fVecCounter += 1;
+        if (fVecCounter == 1) {
+            fFirst = fPrev = v;
+            fDSign.update(sign(v.fX));
+            return;
+        }
+
+        SkScalar d = v.fX;
+        SkScalar c = crs(fPrev, v);
+        int sign_c;
+        if (c) {
+            sign_c = sign(c);
+        } else {
+            if (d >= 0) {
+                sign_c = fCSign.fSign;
+            } else {
+                sign_c = -fCSign.fSign;
+            }
+        }
+
+        fDSign.update(sign(d));
+        fCSign.update(sign_c);
+        fPrev = v;
+
+        if (fDSign.fSignChanges > 3 || fCSign.fSignChanges > 1) {
+            fIsConcave = true;
+        }
+    }
+
+    void finalCross() {
+        this->addVec(fFirst);
+    }
+};
+
+bool SkIsPolyConvex_experimental(const SkPoint pts[], int count) {
+    if (count <= 3) {
+        return true;
+    }
+
+    ConvexTracker tracker;
+
+    for (int i = 0; i < count - 1; ++i) {
+        tracker.addVec(pts[i + 1], pts[i]);
+        if (tracker.fIsConcave) {
+            return false;
+        }
+    }
+    tracker.addVec(pts[0], pts[count - 1]);
+    tracker.finalCross();
+    return !tracker.fIsConcave;
+}
+

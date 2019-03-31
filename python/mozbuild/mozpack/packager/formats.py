@@ -271,17 +271,16 @@ class OmniJarFormatter(JarFormatter):
             # all the possible ancestry of `base` is already present in
             # `_sub_formatter`.
             parent_base = mozpath.basedir(base, self._sub_formatter.keys())
-            if parent_base:
-                rel_base = mozpath.relpath(base, parent_base)
-                # If the addon is under a resource directory, package it in the
-                # omnijar.
-                parent_sub_formatter = self._sub_formatter[parent_base]
-                if parent_sub_formatter.is_resource(rel_base):
-                    omnijar_sub_formatter = \
-                        parent_sub_formatter._sub_formatter[self._omnijar_name]
-                    self._sub_formatter[base] = FlatSubFormatter(
-                        FileRegistrySubtree(rel_base, omnijar_sub_formatter.copier))
-                    return
+            rel_base = mozpath.relpath(base, parent_base)
+            # If the addon is under a resource directory, package it in the
+            # omnijar.
+            parent_sub_formatter = self._sub_formatter[parent_base]
+            if parent_sub_formatter.is_resource(rel_base):
+                omnijar_sub_formatter = \
+                    parent_sub_formatter._sub_formatter[self._omnijar_name]
+                self._sub_formatter[base] = FlatSubFormatter(
+                    FileRegistrySubtree(rel_base, omnijar_sub_formatter.copier))
+                return
             JarFormatter._add_base(self, base, addon)
         else:
             # Initialize a chrome.manifest next to the omnijar file so that

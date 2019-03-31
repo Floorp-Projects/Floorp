@@ -29,8 +29,6 @@ async function run_test() {
   setTestPluginState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
   await promiseStartupManager();
-  AddonManager.addAddonListener(AddonListener);
-  AddonManager.addInstallListener(InstallListener);
 
   run_test_1();
 }
@@ -121,17 +119,18 @@ async function run_test_1() {
 
 // Tests that disabling a plugin works
 async function run_test_2(p) {
-  let test = {};
-  test[gID] = [
-    ["onDisabling", false],
-    "onDisabled",
-    ["onPropertyChanged", ["userDisabled"]],
-  ];
-  prepare_test(test);
-
-  await p.disable();
-
-  ensure_test_completed();
+  await expectEvents(
+    {
+      addonEvents: {
+        [gID]: [
+          {event: "onDisabling"},
+          {event: "onDisabled"},
+          {event: "onPropertyChanged",
+           properties: ["userDisabled"]},
+        ],
+      },
+    },
+    () => p.disable());
 
   Assert.ok(p.userDisabled);
   Assert.ok(!p.appDisabled);
@@ -149,16 +148,16 @@ async function run_test_2(p) {
 
 // Tests that enabling a plugin works
 async function run_test_3(p) {
-  let test = {};
-  test[gID] = [
-    ["onEnabling", false],
-    "onEnabled",
-  ];
-  prepare_test(test);
-
-  await p.enable();
-
-  ensure_test_completed();
+  await expectEvents(
+    {
+      addonEvents: {
+        [gID]: [
+          {event: "onEnabling"},
+          {event: "onEnabled"},
+        ],
+      },
+    },
+    () => p.enable());
 
   Assert.ok(!p.userDisabled);
   Assert.ok(!p.appDisabled);

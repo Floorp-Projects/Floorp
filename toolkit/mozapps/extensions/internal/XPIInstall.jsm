@@ -33,6 +33,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["TextDecoder", "TextEncoder", "fetch"]
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
+  AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   CertUtils: "resource://gre/modules/CertUtils.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
@@ -81,6 +82,8 @@ const PREF_XPI_ENABLED                = "xpinstall.enabled";
 const PREF_XPI_DIRECT_WHITELISTED     = "xpinstall.whitelist.directRequest";
 const PREF_XPI_FILE_WHITELISTED       = "xpinstall.whitelist.fileRequest";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
+
+const PREF_SELECTED_LWT               = "lightweightThemes.selectedThemeID";
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
@@ -176,6 +179,11 @@ const LOGGER_ID = "addons.xpi";
 // Create a new logger for use by all objects in this Addons XPI Provider module
 // (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
+
+// Stores the ID of the lightweight theme which was selected during the
+// last session, if any. When installing a new built-in theme with this
+// ID, it will be automatically enabled.
+let lastLightweightTheme = null;
 
 function getJarURI(file, path = "") {
   if (file instanceof Ci.nsIFile) {
@@ -375,7 +383,7 @@ function waitForAllPromises(promises) {
  *         be read
  */
 async function loadManifestFromWebManifest(aPackage) {
-  let extension = new ExtensionData(aPackage.rootURI);
+  let extension = new ExtensionData(XPIInternal.maybeResolveURI(aPackage.rootURI));
 
   let manifest = await extension.loadManifest();
 
@@ -1503,8 +1511,7 @@ class AddonInstall {
         });
 
         // Update the metadata in the database
-        this.addon._sourceBundle = file;
-        this.addon.rootURI = getURIForResourceInFile(file, "").spec;
+        this.addon.sourceBundle = file;
         this.addon.visible = true;
 
         if (isUpgrade) {
@@ -1590,7 +1597,7 @@ class AddonInstall {
 
     if (restartRequired) {
       // Point the add-on to its extracted files as the xpi may get deleted
-      this.addon._sourceBundle = stagedAddon;
+      this.addon.sourceBundle = stagedAddon;
 
       // Cache the AddonInternal as it may have updated compatibility info
       this.location.stageAddon(this.addon.id, this.addon.toJSON());
@@ -3257,8 +3264,7 @@ var XPIInstall = {
     }
 
     // Install the add-on
-    addon._sourceBundle = location.installer.installAddon({ id, source: file, action: "copy" });
-    addon.rootURI = XPIInternal.getURIForResourceInFile(addon._sourceBundle, "").spec;
+    addon.sourceBundle = location.installer.installAddon({ id, source: file, action: "copy" });
 
     XPIStates.addAddon(addon);
     logger.debug(`Installed distribution add-on ${id}`);
@@ -3316,7 +3322,7 @@ var XPIInstall = {
     }
 
     try {
-      addon._sourceBundle = location.installer.installAddon({
+      addon.sourceBundle = location.installer.installAddon({
         id, source, existingAddonID: id,
       });
       XPIStates.addAddon(addon);
@@ -3646,6 +3652,11 @@ var XPIInstall = {
    *          A Promise that resolves when the addon is installed.
    */
   async installBuiltinAddon(base) {
+    if (lastLightweightTheme === null) {
+      lastLightweightTheme = Services.prefs.getCharPref(PREF_SELECTED_LWT, "");
+      Services.prefs.clearUserPref(PREF_SELECTED_LWT);
+    }
+
     let baseURL = Services.io.newURI(base);
 
     // WebExtensions need to be able to iterate through the contents of
@@ -3656,15 +3667,10 @@ var XPIInstall = {
       throw new Error("Built-in addons must use resource: URLS");
     }
 
-    let root = Services.io.getProtocolHandler("resource")
-                       .QueryInterface(Ci.nsISubstitutingProtocolHandler)
-                       .resolveURI(baseURL);
-    let rootURI = Services.io.newURI(root);
-
     // Enough of the Package interface to allow loadManifest() to work.
     let pkg = {
-      rootURI,
-      filePath: baseURL,
+      rootURI: baseURL,
+      filePath: baseURL.spec,
       file: null,
       verifySignedState() {
         return {
@@ -3673,13 +3679,39 @@ var XPIInstall = {
         };
       },
       async hasResource(path) {
-        let response = await fetch(this.rootURI.resolve(path));
-        return response.ok;
+        try {
+          let response = await fetch(this.rootURI.resolve(path));
+          return response.ok;
+        } catch (e) {
+          return false;
+        }
       },
     };
 
     let addon = await loadManifest(pkg, XPIInternal.BuiltInLocation);
-    addon.rootURI = root;
+    addon.rootURI = base;
+
+    // If this is a theme, decide whether to enable it. Themes are
+    // disabled by default. However:
+    //
+    // If a lightweight theme was selected in the last session, and this
+    // theme has the same ID, then we clearly want to enable it.
+    //
+    // If it is the default theme, more specialized behavior applies:
+    //
+    // We always want one theme to be active, falling back to the
+    // default theme when the active theme is disabled. The first time
+    // we install the default theme, though, there likely aren't any
+    // other theme add-ons installed yet, in which case we want to
+    // enable it immediately.
+    if (addon.type === "theme") {
+      if (addon.id === lastLightweightTheme ||
+          (!lastLightweightTheme.endsWith("@mozilla.org") &&
+           addon.id === AddonSettings.DEFAULT_THEME_ID &&
+           !XPIDatabase.getAddonsByType("theme").some(theme => !theme.disabled))) {
+        addon.userDisabled = false;
+      }
+    }
     await this._activateAddon(addon);
   },
 
@@ -3717,8 +3749,13 @@ var XPIInstall = {
 
     let install = () => {
       addon.visible = true;
-      addon.active = true;
-      addon.userDisabled = false;
+      // Themes are generally not enabled by default at install time,
+      // unless enabled by the front-end code. If they are meant to be
+      // enabled, they will already have been enabled by this point.
+      if (addon.type !== "theme" || addon.location.isTemporary) {
+        addon.userDisabled = false;
+      }
+      addon.active = !addon.disabled;
 
       addon = XPIDatabase.addToDatabase(addon, addon._sourceBundle ? addon._sourceBundle.path : null);
 
@@ -3751,7 +3788,7 @@ var XPIInstall = {
     AddonManagerPrivate.callAddonListeners("onInstalled", addon.wrapper);
 
     // Notify providers that a new theme has been enabled.
-    if (addon.type === "theme")
+    if (addon.type === "theme" && !addon.userDisabled)
       AddonManagerPrivate.notifyAddonChanged(addon.id, addon.type, false);
   },
 

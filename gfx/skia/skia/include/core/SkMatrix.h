@@ -555,8 +555,8 @@ public:
 
         @param sx  horizontal scale factor
         @param sy  vertical scale factor
-        @param px  pivot x
-        @param py  pivot y
+        @param px  pivot on x-axis
+        @param py  pivot on y-axis
     */
     void setScale(SkScalar sx, SkScalar sy, SkScalar px, SkScalar py);
 
@@ -573,8 +573,8 @@ public:
         Positive degrees rotates clockwise.
 
         @param degrees  angle of axes relative to upright axes
-        @param px       pivot x
-        @param py       pivot y
+        @param px       pivot on x-axis
+        @param py       pivot on y-axis
     */
     void setRotate(SkScalar degrees, SkScalar px, SkScalar py);
 
@@ -593,8 +593,8 @@ public:
 
         @param sinValue  rotation vector x-axis component
         @param cosValue  rotation vector y-axis component
-        @param px        pivot x-axis
-        @param py        pivot y-axis
+        @param px        pivot on x-axis
+        @param py        pivot on y-axis
     */
     void setSinCos(SkScalar sinValue, SkScalar cosValue,
                    SkScalar px, SkScalar py);
@@ -625,8 +625,8 @@ public:
 
         @param kx  horizontal skew factor
         @param ky  vertical skew factor
-        @param px  pivot x
-        @param py  pivot y
+        @param px  pivot on x-axis
+        @param py  pivot on y-axis
     */
     void setSkew(SkScalar kx, SkScalar ky, SkScalar px, SkScalar py);
 
@@ -699,8 +699,8 @@ public:
 
         @param sx  horizontal scale factor
         @param sy  vertical scale factor
-        @param px  pivot x
-        @param py  pivot y
+        @param px  pivot on x-axis
+        @param py  pivot on y-axis
     */
     void preScale(SkScalar sx, SkScalar sy, SkScalar px, SkScalar py);
 
@@ -751,8 +751,8 @@ public:
                                           | G H I | | 0  0  1 |   | Gc+Hs -Gs+Hc G*dx+H*dy+I |
 
         @param degrees  angle of axes relative to upright axes
-        @param px       pivot x
-        @param py       pivot y
+        @param px       pivot on x-axis
+        @param py       pivot on y-axis
     */
     void preRotate(SkScalar degrees, SkScalar px, SkScalar py);
 
@@ -806,8 +806,8 @@ public:
 
         @param kx  horizontal skew factor
         @param ky  vertical skew factor
-        @param px  pivot x
-        @param py  pivot y
+        @param px  pivot on x-axis
+        @param py  pivot on y-axis
     */
     void preSkew(SkScalar kx, SkScalar ky, SkScalar px, SkScalar py);
 
@@ -894,8 +894,8 @@ public:
 
         @param sx  horizontal scale factor
         @param sy  vertical scale factor
-        @param px  pivot x
-        @param py  pivot y
+        @param px  pivot on x-axis
+        @param py  pivot on y-axis
     */
     void postScale(SkScalar sx, SkScalar sy, SkScalar px, SkScalar py);
 
@@ -974,8 +974,8 @@ public:
                                           |0  0  1| |P Q R|   |         P          Q          R|
 
         @param degrees  angle of axes relative to upright axes
-        @param px       pivot x
-        @param py       pivot y
+        @param px       pivot on x-axis
+        @param py       pivot on y-axis
     */
     void postRotate(SkScalar degrees, SkScalar px, SkScalar py);
 
@@ -1029,8 +1029,8 @@ public:
 
         @param kx  horizontal skew factor
         @param ky  vertical skew factor
-        @param px  pivot x
-        @param py  pivot y
+        @param px  pivot on x-axis
+        @param py  pivot on y-axis
     */
     void postSkew(SkScalar kx, SkScalar ky, SkScalar px, SkScalar py);
 
@@ -1165,9 +1165,9 @@ public:
             | 1 0 0 |
             | 0 1 0 |
 
-        Affine 3x2 matrices in column major order are used by OpenGL and XPS.
+        Affine 3 by 2 matrices in column major order are used by OpenGL and XPS.
 
-        @param affine  storage for 3x2 affine matrix
+        @param affine  storage for 3 by 2 affine matrix
     */
     static void SetAffineIdentity(SkScalar affine[6]);
 
@@ -1178,7 +1178,7 @@ public:
 
         If SkMatrix contains perspective, returns false and leaves affine unchanged.
 
-        @param affine  storage for 3x2 affine matrix; may be nullptr
+        @param affine  storage for 3 by 2 affine matrix; may be nullptr
         @return        true if SkMatrix does not contain perspective
     */
     bool SK_WARN_UNUSED_RESULT asAffine(SkScalar affine[6]) const;
@@ -1195,7 +1195,7 @@ public:
             |  skew-y scale-y translate-y |
             |       0       0           1 |
 
-        @param affine  3x2 affine matrix
+        @param affine  3 by 2 affine matrix
     */
     void setAffine(const SkScalar affine[6]);
 
@@ -1225,12 +1225,7 @@ public:
         @param src    SkPoint to transform
         @param count  number of SkPoint to transform
     */
-    void mapPoints(SkPoint dst[], const SkPoint src[], int count) const {
-        SkASSERT((dst && src && count > 0) || 0 == count);
-        // no partial overlap
-        SkASSERT(src == dst || &dst[count] <= &src[0] || &src[count] <= &dst[0]);
-        this->getMapPtsProc()(*this, dst, src, count);
-    }
+    void mapPoints(SkPoint dst[], const SkPoint src[], int count) const;
 
     /** Maps pts SkPoint array of length count in place. SkPoint are mapped by multiplying
         each SkPoint by SkMatrix. Given:
@@ -1294,10 +1289,7 @@ public:
         @param y       y-axis value of SkPoint to map
         @param result  storage for mapped SkPoint
     */
-    void mapXY(SkScalar x, SkScalar y, SkPoint* result) const {
-        SkASSERT(result);
-        this->getMapXYProc()(*this, x, y, result);
-    }
+    void mapXY(SkScalar x, SkScalar y, SkPoint* result) const;
 
     /** Returns SkPoint (x, y) multiplied by SkMatrix. Given:
 
@@ -1317,7 +1309,7 @@ public:
     */
     SkPoint mapXY(SkScalar x, SkScalar y) const {
         SkPoint result;
-        this->getMapXYProc()(*this, x, y, &result);
+        this->mapXY(x,y, &result);
         return result;
     }
 
@@ -1377,7 +1369,7 @@ public:
         this->mapVectors(vecs, vecs, count);
     }
 
-    /** Maps vector (x, y) to result. Vector is mapped by multiplying by SkMatrix,
+    /** Maps vector (dx, dy) to result. Vector is mapped by multiplying by SkMatrix,
         treating SkMatrix translation as zero. Given:
 
                      | A B 0 |         | dx |
@@ -1399,7 +1391,7 @@ public:
         this->mapVectors(result, &vec, 1);
     }
 
-    /** Returns vector (x, y) multiplied by SkMatrix, treating SkMatrix translation as zero.
+    /** Returns vector (dx, dy) multiplied by SkMatrix, treating SkMatrix translation as zero.
         Given:
 
                      | A B 0 |         | dx |
@@ -1439,7 +1431,7 @@ public:
         Returned value is the same as calling rectStaysRect().
 
         @param rect  rectangle to map, and storage for bounds of mapped corners
-        @return      true if result is equivalent to mapped src
+        @return      true if result is equivalent to mapped rect
     */
     bool mapRect(SkRect* rect) const {
         return this->mapRect(rect, *rect);

@@ -88,7 +88,7 @@ public:
                        bool canDiscardOutsideDstRect) override;
 
     GrGpuRTCommandBuffer* getCommandBuffer(
-                                    GrRenderTarget*, GrSurfaceOrigin,
+                                    GrRenderTarget*, GrSurfaceOrigin, const SkRect& bounds,
                                     const GrGpuRTCommandBuffer::LoadAndStoreInfo&,
                                     const GrGpuRTCommandBuffer::StencilLoadAndStoreInfo&) override;
 
@@ -108,7 +108,7 @@ public:
     sk_sp<GrSemaphore> wrapBackendSemaphore(const GrBackendSemaphore& semaphore,
                                             GrResourceProvider::SemaphoreWrapType wrapType,
                                             GrWrapOwnership ownership) override { return nullptr; }
-    void insertSemaphore(sk_sp<GrSemaphore> semaphore, bool flush) override {}
+    void insertSemaphore(sk_sp<GrSemaphore> semaphore) override {}
     void waitSemaphore(sk_sp<GrSemaphore> semaphore) override {}
     sk_sp<GrSemaphore> prepareTextureForCrossContextUsage(GrTexture*) override { return nullptr; }
 
@@ -132,18 +132,19 @@ private:
     sk_sp<GrTexture> onCreateTexture(const GrSurfaceDesc& desc, SkBudgeted budgeted,
                                      const GrMipLevel texels[], int mipLevelCount) override;
 
-    sk_sp<GrTexture> onWrapBackendTexture(const GrBackendTexture&, GrWrapOwnership) override;
+    sk_sp<GrTexture> onWrapBackendTexture(const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable,
+                                          GrIOType) override;
 
-    sk_sp<GrTexture> onWrapRenderableBackendTexture(const GrBackendTexture&,
-                                                    int sampleCnt,
-                                                    GrWrapOwnership) override;
+    sk_sp<GrTexture> onWrapRenderableBackendTexture(const GrBackendTexture&, int sampleCnt,
+                                                    GrWrapOwnership, GrWrapCacheable) override;
 
     sk_sp<GrRenderTarget> onWrapBackendRenderTarget(const GrBackendRenderTarget&) override;
 
     sk_sp<GrRenderTarget> onWrapBackendTextureAsRenderTarget(const GrBackendTexture&,
                                                              int sampleCnt) override;
 
-    GrBuffer* onCreateBuffer(size_t, GrBufferType, GrAccessPattern, const void*) override;
+    sk_sp<GrGpuBuffer> onCreateBuffer(size_t, GrGpuBufferType, GrAccessPattern,
+                                      const void*) override;
 
     bool onReadPixels(GrSurface* surface, int left, int top, int width, int height, GrColorType,
                       void* buffer, size_t rowBytes) override;
@@ -153,7 +154,7 @@ private:
 
     bool onTransferPixels(GrTexture*,
                           int left, int top, int width, int height,
-                          GrColorType, GrBuffer*,
+                          GrColorType, GrGpuBuffer*,
                           size_t offset, size_t rowBytes) override {
         return false;
     }
@@ -162,8 +163,13 @@ private:
 
     void onResolveRenderTarget(GrRenderTarget* target) override { return; }
 
-    void onFinishFlush(bool insertedSemaphores) override {
-        this->submitCommandBuffer(kSkip_SyncQueue);
+    void onFinishFlush(GrSurfaceProxy*, SkSurface::BackendSurfaceAccess access,
+                       SkSurface::FlushFlags flags, bool insertedSemaphores) override {
+        if (flags & SkSurface::kSyncCpu_FlushFlag) {
+            this->submitCommandBuffer(kForce_SyncQueue);
+        } else {
+            this->submitCommandBuffer(kSkip_SyncQueue);
+        }
     }
 
     // Function that uploads data onto textures with private storage mode (GPU access only).

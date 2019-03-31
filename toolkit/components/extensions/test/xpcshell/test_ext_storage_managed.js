@@ -19,6 +19,8 @@ const MANIFEST = {
   },
 };
 
+AddonTestUtils.init(this);
+
 add_task(async function setup() {
   await ExtensionTestUtils.startAddonManager();
 

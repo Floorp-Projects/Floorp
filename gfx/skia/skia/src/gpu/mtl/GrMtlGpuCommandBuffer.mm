@@ -15,11 +15,14 @@
 #include "GrRenderTargetPriv.h"
 
 GrMtlGpuRTCommandBuffer::GrMtlGpuRTCommandBuffer(
-        GrMtlGpu* gpu, GrRenderTarget* rt, GrSurfaceOrigin origin,
+        GrMtlGpu* gpu, GrRenderTarget* rt, GrSurfaceOrigin origin, const SkRect& bounds,
         const GrGpuRTCommandBuffer::LoadAndStoreInfo& colorInfo,
         const GrGpuRTCommandBuffer::StencilLoadAndStoreInfo& stencilInfo)
         : INHERITED(rt, origin)
         , fGpu(gpu)
+#ifdef SK_DEBUG
+        , fBounds(bounds)
+#endif
         , fColorLoadAndStoreInfo(colorInfo)
         , fStencilLoadAndStoreInfo(stencilInfo)
         , fRenderPassDesc(this->createRenderPassDesc()) {
@@ -32,8 +35,7 @@ GrMtlGpuRTCommandBuffer::GrMtlGpuRTCommandBuffer(
     if (fColorLoadAndStoreInfo.fLoadOp == GrLoadOp::kClear) {
         fCommandBufferInfo.fBounds = SkRect::MakeWH(fRenderTarget->width(),
                                                     fRenderTarget->height());
-        this->internalBegin();
-        this->internalEnd();
+        this->addNullCommand();
         fRenderPassDesc.colorAttachments[0].loadAction = MTLLoadActionLoad;
     } else {
         fCommandBufferInfo.fBounds.setEmpty();
@@ -46,8 +48,7 @@ GrMtlGpuRTCommandBuffer::GrMtlGpuRTCommandBuffer(
             fCommandBufferInfo.fBounds = SkRect::MakeWH(fRenderTarget->width(),
                                                         fRenderTarget->height());
             fRenderPassDesc.stencilAttachment.loadAction = MTLLoadActionClear;
-            this->internalBegin();
-            this->internalEnd();
+            this->addNullCommand();
             fRenderPassDesc.stencilAttachment.loadAction = MTLLoadActionLoad;
             break;
         case GrLoadOp::kDiscard:
@@ -68,16 +69,10 @@ GrMtlGpuRTCommandBuffer::~GrMtlGpuRTCommandBuffer() {
     SkASSERT(fActiveRenderCmdEncoder == nil);
 }
 
-void GrMtlGpuRTCommandBuffer::internalBegin() {
+void GrMtlGpuRTCommandBuffer::addNullCommand() {
     SkASSERT(fActiveRenderCmdEncoder == nil);
-    fActiveRenderCmdEncoder =
-            [fGpu->commandBuffer()
-                    renderCommandEncoderWithDescriptor: fRenderPassDesc];
-    SkASSERT(fActiveRenderCmdEncoder);
-    [fActiveRenderCmdEncoder setFrontFacingWinding: MTLWindingCounterClockwise];
-}
-
-void GrMtlGpuRTCommandBuffer::internalEnd() {
+    fActiveRenderCmdEncoder = [fGpu->commandBuffer()
+                               renderCommandEncoderWithDescriptor:fRenderPassDesc];
     SkASSERT(fActiveRenderCmdEncoder);
     [fActiveRenderCmdEncoder endEncoding];
     fActiveRenderCmdEncoder = nil;
@@ -105,37 +100,29 @@ GrMtlPipelineState* GrMtlGpuRTCommandBuffer::prepareDrawState(
         const GrPrimitiveProcessor& primProc,
         const GrPipeline& pipeline,
         const GrPipeline::FixedDynamicState* fixedDynamicState,
-        const GrMesh meshes[],
-        int meshCount) {
+        GrPrimitiveType primType) {
     // TODO: resolve textures and regenerate mipmaps as needed
-    bool hasPoints = false;
-    for (int i = 0; i < meshCount; ++i) {
-        if (meshes[i].primitiveType() == GrPrimitiveType::kPoints) {
-            hasPoints = true;
-            break;
-        }
-    }
-    GrProgramDesc desc;
-    if (!GrProgramDesc::Build(&desc, primProc, hasPoints, pipeline, *fGpu->caps()->shaderCaps())) {
-        return nullptr;
-    }
-    desc.finalize();
 
-    // TODO: use resource provider for pipeline
-    GrMtlPipelineState* pipelineState =
-            GrMtlPipelineStateBuilder::CreatePipelineState(primProc, pipeline, &desc, fGpu);
-    if (!pipelineState) {
-        return nullptr;
-    }
     const GrTextureProxy* const* primProcProxies = nullptr;
     if (fixedDynamicState) {
         primProcProxies = fixedDynamicState->fPrimitiveProcessorTextures;
     }
+    SkASSERT(SkToBool(primProcProxies) == SkToBool(primProc.numTextureSamplers()));
 
+    GrMtlPipelineState* pipelineState =
+        fGpu->resourceProvider().findOrCreateCompatiblePipelineState(fRenderTarget, fOrigin,
+                                                                     pipeline,
+                                                                     primProc,
+                                                                     primProcProxies,
+                                                                     primType);
+    if (!pipelineState) {
+        return nullptr;
+    }
     // We cannot have an active encoder when we set the pipeline data since it requires its own
     // command encoder.
-    SkASSERT(fActiveRenderCmdEncoder == nil);
-    pipelineState->setData(primProc, pipeline, primProcProxies);
+    // TODO: this doesn't appear to be true -- we only use a command encoder here
+    // SkASSERT(fActiveRenderCmdEncoder == nil);
+    pipelineState->setData(fRenderTarget, fOrigin, primProc, pipeline, primProcProxies);
 
     return pipelineState;
 }
@@ -147,7 +134,6 @@ void GrMtlGpuRTCommandBuffer::onDraw(const GrPrimitiveProcessor& primProc,
                                      const GrMesh meshes[],
                                      int meshCount,
                                      const SkRect& bounds) {
-    SkASSERT(pipeline.renderTarget() == fRenderTarget);
     if (!meshCount) {
         return;
     }
@@ -155,15 +141,21 @@ void GrMtlGpuRTCommandBuffer::onDraw(const GrPrimitiveProcessor& primProc,
         return; // TODO: ScissorRects are not supported.
     }
 
-    std::unique_ptr<GrMtlPipelineState> pipelineState(
-            this->prepareDrawState(primProc, pipeline, fixedDynamicState, meshes, meshCount));
+    GrPrimitiveType primitiveType = meshes[0].primitiveType();
+    GrMtlPipelineState* pipelineState = this->prepareDrawState(primProc, pipeline,
+                                                               fixedDynamicState, primitiveType);
     if (!pipelineState) {
         return;
     }
 
-    this->internalBegin();
-    [fActiveRenderCmdEncoder setRenderPipelineState: pipelineState->mtlPipelineState()];
+    SkASSERT(fActiveRenderCmdEncoder == nil);
+    fActiveRenderCmdEncoder = [fGpu->commandBuffer()
+                               renderCommandEncoderWithDescriptor:fRenderPassDesc];
+    SkASSERT(fActiveRenderCmdEncoder);
+    // TODO: can we set this once somewhere at the beginning of the draw?
+    [fActiveRenderCmdEncoder setFrontFacingWinding:MTLWindingCounterClockwise];
 
+    [fActiveRenderCmdEncoder setRenderPipelineState:pipelineState->mtlPipelineState()];
     pipelineState->bind(fActiveRenderCmdEncoder);
     pipelineState->setBlendConstants(fActiveRenderCmdEncoder, fRenderTarget->config(),
                                      pipeline.getXferProcessor());
@@ -171,11 +163,40 @@ void GrMtlGpuRTCommandBuffer::onDraw(const GrPrimitiveProcessor& primProc,
 
     for (int i = 0; i < meshCount; ++i) {
         const GrMesh& mesh = meshes[i];
-        SkASSERT(fActiveRenderCmdEncoder);
+        SkASSERT(nil != fActiveRenderCmdEncoder);
+        if (mesh.primitiveType() != primitiveType) {
+            SkDEBUGCODE(pipelineState = nullptr);
+            primitiveType = mesh.primitiveType();
+            pipelineState = this->prepareDrawState(primProc, pipeline, fixedDynamicState,
+                                                   primitiveType);
+            if (!pipelineState) {
+                return;
+            }
+
+            [fActiveRenderCmdEncoder setRenderPipelineState: pipelineState->mtlPipelineState()];
+            pipelineState->bind(fActiveRenderCmdEncoder);
+            pipelineState->setBlendConstants(fActiveRenderCmdEncoder, fRenderTarget->config(),
+                                             pipeline.getXferProcessor());
+            pipelineState->setDepthStencilState(fActiveRenderCmdEncoder);
+        }
+
         mesh.sendToGpu(this);
     }
-    this->internalEnd();
+
+    [fActiveRenderCmdEncoder endEncoding];
+    fActiveRenderCmdEncoder = nil;
     fCommandBufferInfo.fBounds.join(bounds);
+}
+
+void GrMtlGpuRTCommandBuffer::onClear(const GrFixedClip& clip, const SkPMColor4f& color) {
+    // if we end up here from absClear, the clear bounds may be bigger than the RT proxy bounds -
+    // but in that case, scissor should be enabled, so this check should still succeed
+    SkASSERT(!clip.scissorEnabled() || clip.scissorRect().contains(fBounds));
+    fRenderPassDesc.colorAttachments[0].clearColor = MTLClearColorMake(color.fR, color.fG, color.fB,
+                                                                       color.fA);
+    fRenderPassDesc.colorAttachments[0].loadAction = MTLLoadActionClear;
+    this->addNullCommand();
+    fRenderPassDesc.colorAttachments[0].loadAction = MTLLoadActionLoad;
 }
 
 void GrMtlGpuRTCommandBuffer::onClearStencilClip(const GrFixedClip& clip, bool insideStencilMask) {
@@ -196,8 +217,7 @@ void GrMtlGpuRTCommandBuffer::onClearStencilClip(const GrFixedClip& clip, bool i
     }
 
     fRenderPassDesc.stencilAttachment.loadAction = MTLLoadActionClear;
-    this->internalBegin();
-    this->internalEnd();
+    this->addNullCommand();
     fRenderPassDesc.stencilAttachment.loadAction = MTLLoadActionLoad;
 }
 
@@ -225,7 +245,7 @@ MTLRenderPassDescriptor* GrMtlGpuRTCommandBuffer::createRenderPassDesc() const {
             static_cast<GrMtlRenderTarget*>(fRenderTarget)->mtlRenderTexture();
     renderPassDesc.colorAttachments[0].slice = 0;
     renderPassDesc.colorAttachments[0].level = 0;
-    const auto& clearColor = GrColor4f::FromGrColor(fColorLoadAndStoreInfo.fClearColor).fRGBA;
+    const SkPMColor4f& clearColor = fColorLoadAndStoreInfo.fClearColor;
     renderPassDesc.colorAttachments[0].clearColor =
             MTLClearColorMake(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
     renderPassDesc.colorAttachments[0].loadAction =
@@ -257,8 +277,8 @@ void GrMtlGpuRTCommandBuffer::bindGeometry(const GrBuffer* vertexBuffer,
                                            const GrBuffer* instanceBuffer) {
     size_t bufferIndex = GrMtlUniformHandler::kLastUniformBinding + 1;
     if (vertexBuffer) {
-        SkASSERT(!vertexBuffer->isCPUBacked());
-        SkASSERT(!vertexBuffer->isMapped());
+        SkASSERT(!vertexBuffer->isCpuBuffer());
+        SkASSERT(!static_cast<const GrGpuBuffer*>(vertexBuffer)->isMapped());
 
         auto mtlVertexBuffer = static_cast<const GrMtlBuffer*>(vertexBuffer)->mtlBuffer();
         SkASSERT(mtlVertexBuffer);
@@ -267,8 +287,8 @@ void GrMtlGpuRTCommandBuffer::bindGeometry(const GrBuffer* vertexBuffer,
                                          atIndex: bufferIndex++];
     }
     if (instanceBuffer) {
-        SkASSERT(!instanceBuffer->isCPUBacked());
-        SkASSERT(!instanceBuffer->isMapped());
+        SkASSERT(!instanceBuffer->isCpuBuffer());
+        SkASSERT(!static_cast<const GrGpuBuffer*>(instanceBuffer)->isMapped());
 
         auto mtlInstanceBuffer = static_cast<const GrMtlBuffer*>(instanceBuffer)->mtlBuffer();
         SkASSERT(mtlInstanceBuffer);
@@ -310,8 +330,8 @@ void GrMtlGpuRTCommandBuffer::sendIndexedInstancedMeshToGpu(GrPrimitiveType prim
     SkASSERT(primitiveType != GrPrimitiveType::kLinesAdjacency); // Geometry shaders not supported.
     id<MTLBuffer> mtlIndexBuffer;
     if (indexBuffer) {
-        SkASSERT(!indexBuffer->isCPUBacked());
-        SkASSERT(!indexBuffer->isMapped());
+        SkASSERT(!indexBuffer->isCpuBuffer());
+        SkASSERT(!static_cast<const GrGpuBuffer*>(indexBuffer)->isMapped());
 
         mtlIndexBuffer = static_cast<const GrMtlBuffer*>(indexBuffer)->mtlBuffer();
         SkASSERT(mtlIndexBuffer);

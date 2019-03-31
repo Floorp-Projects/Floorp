@@ -94,12 +94,6 @@ public:
         return sk_sp<SkPathEffect>(new SkComposePathEffect(outer, inner));
     }
 
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkComposePathEffect)
-
-#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    bool exposedInAndroidJavaAPI() const override { return true; }
-#endif
-
 protected:
     SkComposePathEffect(sk_sp<SkPathEffect> outer, sk_sp<SkPathEffect> inner)
         : INHERITED(outer, inner) {}
@@ -116,6 +110,8 @@ protected:
     }
 
 private:
+    SK_FLATTENABLE_HOOKS(SkComposePathEffect)
+
     // illegal
     SkComposePathEffect(const SkComposePathEffect&);
     SkComposePathEffect& operator=(const SkComposePathEffect&);
@@ -154,11 +150,7 @@ public:
         return sk_sp<SkPathEffect>(new SkSumPathEffect(first, second));
     }
 
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkSumPathEffect)
-
-#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    bool exposedInAndroidJavaAPI() const override { return true; }
-#endif
+    SK_FLATTENABLE_HOOKS(SkSumPathEffect)
 
 protected:
     SkSumPathEffect(sk_sp<SkPathEffect> first, sk_sp<SkPathEffect> second)
@@ -197,7 +189,7 @@ sk_sp<SkPathEffect> SkPathEffect::MakeCompose(sk_sp<SkPathEffect> outer,
     return SkComposePathEffect::Make(std::move(outer), std::move(inner));
 }
 
-SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_START(SkPathEffect)
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkComposePathEffect)
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkSumPathEffect)
-SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_END
+void SkPathEffect::RegisterFlattenables() {
+    SK_REGISTER_FLATTENABLE(SkComposePathEffect);
+    SK_REGISTER_FLATTENABLE(SkSumPathEffect);
+}

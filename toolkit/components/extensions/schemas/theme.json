@@ -641,6 +641,10 @@
           "theme": {
             "$ref": "ThemeType"
           },
+          "dark_theme": {
+            "$ref": "ThemeType",
+            "optional": true
+          },
           "default_locale": {
             "type": "string",
             "optional": true

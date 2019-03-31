@@ -14,6 +14,7 @@
 #include "SkTemplates.h"
 #include "GrXferProcessor.h"
 
+struct GrUserStencilSettings;
 class GrAppliedClip;
 class GrXPFactory;
 
@@ -81,12 +82,7 @@ public:
         bool isInitialized() const { return fIsInitialized; }
         bool usesLocalCoords() const { return fUsesLocalCoords; }
         bool requiresDstTexture() const { return fRequiresDstTexture; }
-        bool canCombineOverlappedStencilAndCover() const {
-            return fCanCombineOverlappedStencilAndCover;
-        }
-        bool requiresBarrierBetweenOverlappingDraws() const {
-            return fRequiresBarrierBetweenOverlappingDraws;
-        }
+        bool requiresNonOverlappingDraws() const { return fRequiresNonOverlappingDraws; }
         bool isCompatibleWithCoverageAsAlpha() const { return fCompatibleWithCoverageAsAlpha; }
 
         bool inputColorIsIgnored() const { return fInputColorType == kIgnored_InputColorType; }
@@ -99,8 +95,7 @@ public:
                 : fUsesLocalCoords(false)
                 , fCompatibleWithCoverageAsAlpha(true)
                 , fRequiresDstTexture(false)
-                , fCanCombineOverlappedStencilAndCover(true)
-                , fRequiresBarrierBetweenOverlappingDraws(false)
+                , fRequiresNonOverlappingDraws(false)
                 , fIsInitialized(true)
                 , fInputColorType(kOriginal_InputColorType) {}
         enum InputColorType : uint32_t {
@@ -116,8 +111,7 @@ public:
         PackedBool fUsesLocalCoords : 1;
         PackedBool fCompatibleWithCoverageAsAlpha : 1;
         PackedBool fRequiresDstTexture : 1;
-        PackedBool fCanCombineOverlappedStencilAndCover : 1;
-        PackedBool fRequiresBarrierBetweenOverlappingDraws : 1;
+        PackedBool fRequiresNonOverlappingDraws : 1;
         PackedBool fIsInitialized : 1;
         PackedInputColorType fInputColorType : 2;
 
@@ -129,7 +123,7 @@ public:
      * This analyzes the processors given an op's input color and coverage as well as a clip. The
      * state of the processor set may change to an equivalent but more optimal set of processors.
      * This new state requires that the caller respect the returned 'inputColorOverride'. This is
-     * indicated by the returned Analysis's inputColorIsOverriden(). 'inputColorOverride' will not
+     * indicated by the returned Analysis's inputColorIsOverridden(). 'inputColorOverride' will not
      * be written if the analysis does not override the input color.
      *
      * This must be called before the processor set is used to construct a GrPipeline and may only
@@ -139,9 +133,9 @@ public:
      * that owns a processor set is recorded to ensure pending and writes are propagated to
      * resources referred to by the processors. Otherwise, data hazards may occur.
      */
-    Analysis finalize(const GrProcessorAnalysisColor& colorInput,
-                      const GrProcessorAnalysisCoverage coverageInput, const GrAppliedClip*,
-                      bool isMixedSamples, const GrCaps&, GrColor* inputColorOverride);
+    Analysis finalize(const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage,
+                      const GrAppliedClip*, const GrUserStencilSettings*, GrFSAAType, const GrCaps&,
+                      SkPMColor4f* inputColorOverride);
 
     bool isFinalized() const { return SkToBool(kFinalized_Flag & fFlags); }
 
@@ -150,7 +144,9 @@ public:
     static GrProcessorSet MakeEmptySet();
     static constexpr const Analysis EmptySetAnalysis() { return Analysis(Empty::kEmpty); }
 
+#ifdef SK_DEBUG
     SkString dumpProcessors() const;
+#endif
 
     void visitProxies(const std::function<void(GrSurfaceProxy*)>& func) const {
         for (int i = 0; i < this->numFragmentProcessors(); ++i) {
@@ -180,7 +176,7 @@ private:
     union XP {
         XP(const GrXPFactory* factory) : fFactory(factory) {}
         XP(const GrXferProcessor* processor) : fProcessor(processor) {}
-        XP(XP&& that) : fProcessor(that.fProcessor) {
+        explicit XP(XP&& that) : fProcessor(that.fProcessor) {
             SkASSERT(fProcessor == that.fProcessor);
             that.fProcessor = nullptr;
         }

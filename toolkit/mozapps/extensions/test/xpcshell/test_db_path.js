@@ -2,6 +2,8 @@
 const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
+const DEFAULT_THEME_ID = "default-theme@mozilla.org";
+
 let global = this;
 
 // Test that paths in the extensions database are stored properly
@@ -44,10 +46,11 @@ add_task(async function test_non_ascii_path() {
   let raw = new TextDecoder().decode(await OS.File.read(dbfile));
   let data = JSON.parse(raw);
 
-  Assert.ok(Array.isArray(data.addons), "extensions.json has addons array");
-  Assert.equal(2, data.addons.length, "extensions.json has 2 addons");
-  Assert.ok(data.addons[0].path.startsWith(profileDir),
+  let addons = data.addons.filter(a => a.id !== DEFAULT_THEME_ID);
+  Assert.ok(Array.isArray(addons), "extensions.json has addons array");
+  Assert.equal(2, addons.length, "extensions.json has 2 addons");
+  Assert.ok(addons[0].path.startsWith(profileDir),
             "path property for sideloaded extension has the proper profile directory");
-  Assert.ok(data.addons[1].path.startsWith(profileDir),
+  Assert.ok(addons[1].path.startsWith(profileDir),
             "path property for extension installed at runtime has the proper profile directory");
 });

@@ -27,8 +27,6 @@ public:
 
     bool asABlur(BlurRec*) const override { return false; }
 
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkShaderMF)
-
 protected:
 #if SK_SUPPORT_GPU
     std::unique_ptr<GrFragmentProcessor> onAsFragmentProcessor(const GrFPArgs&) const override;
@@ -36,6 +34,8 @@ protected:
 #endif
 
 private:
+    SK_FLATTENABLE_HOOKS(SkShaderMF)
+
     sk_sp<SkShader> fShader;
 
     SkShaderMF(SkReadBuffer&);
@@ -128,6 +128,4 @@ sk_sp<SkMaskFilter> SkShaderMaskFilter::Make(sk_sp<SkShader> shader) {
     return shader ? sk_sp<SkMaskFilter>(new SkShaderMF(std::move(shader))) : nullptr;
 }
 
-SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_START(SkShaderMaskFilter)
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkShaderMF)
-SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_END
+void SkShaderMaskFilter::RegisterFlattenables() { SK_REGISTER_FLATTENABLE(SkShaderMF); }
