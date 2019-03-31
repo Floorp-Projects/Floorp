@@ -208,6 +208,7 @@
 | [mozilla.components.browser.storage.memory.InMemoryHistoryStorage](../mozilla.components.browser.storage.memory/-in-memory-history-storage/index.md) | An in-memory implementation of [mozilla.components.concept.storage.HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md). |
 | [mozilla.components.ui.autocomplete.InlineAutocompleteEditText](../mozilla.components.ui.autocomplete/-inline-autocomplete-edit-text/index.md) | A UI edit text component which supports inline autocompletion. |
 | [kotlin.Int](../mozilla.components.lib.jexl.ext/kotlin.-int/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
+| [android.content.Intent](../mozilla.components.support.utils/android.content.-intent/index.md) (extensions in package mozilla.components.support.utils) |  |
 | [mozilla.components.feature.intent.IntentHandler](../mozilla.components.feature.intent/-intent-handler.md) |  |
 | [mozilla.components.feature.intent.IntentProcessor](../mozilla.components.feature.intent/-intent-processor/index.md) | Processor for intents which should trigger session-related actions. |
 | [mozilla.components.service.sync.logins.InvalidKeyException](../mozilla.components.service.sync.logins/-invalid-key-exception.md) | This error is emitted in two cases: |

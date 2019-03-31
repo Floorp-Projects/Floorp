@@ -72,6 +72,7 @@ $dokka.location:mozilla.components.support.ktx.kotlin$toBundle(kotlin.collection
 $dokka.location:mozilla.components.support.ktx.kotlin$toDate(kotlin.String, kotlin.String, java.util.Locale)mozilla.components.support.ktx.kotlin/kotlin.-string/to-date.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toNormalizedUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-normalized-url.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toUri(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-uri.md
+$dokka.location:mozilla.components.support.utils$toSafeIntent(android.content.Intent)mozilla.components.support.utils/android.content.-intent/to-safe-intent.md
 mozilla.components.browser.awesomebar
 mozilla.components.browser.awesomebar.layout
 mozilla.components.browser.awesomebar.transform

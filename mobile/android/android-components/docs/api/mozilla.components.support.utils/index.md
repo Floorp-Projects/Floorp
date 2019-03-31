@@ -17,6 +17,12 @@
 | [ThreadUtils](-thread-utils/index.md) | `object ThreadUtils` |
 | [WebURLFinder](-web-u-r-l-finder/index.md) | `class WebURLFinder`<br>Regular expressions used in this class are taken from Android's Patterns.java. We brought them in to standardize URL matching across Android versions, instead of relying on Android version-dependent built-ins that can vary across Android versions. The original code can be found here: http://androidxref.com/8.0.0_r4/xref/frameworks/base/core/java/android/util/Patterns.java |
 
+### Extensions for External Classes
+
+| Name | Summary |
+|---|---|
+| [android.content.Intent](android.content.-intent/index.md) |  |
+
 ### Functions
 
 | Name | Summary |

@@ -32,6 +32,7 @@ a [TrackingProtectionPolicy](./index.md) is applicable to all session types (see
 | [AD](-a-d.md) | `const val AD: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [ANALYTICS](-a-n-a-l-y-t-i-c-s.md) | `const val ANALYTICS: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [CONTENT](-c-o-n-t-e-n-t.md) | `const val CONTENT: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [CRYPTOMINING](-c-r-y-p-t-o-m-i-n-i-n-g.md) | `const val CRYPTOMINING: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [SOCIAL](-s-o-c-i-a-l.md) | `const val SOCIAL: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [TEST](-t-e-s-t.md) | `const val TEST: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 
