@@ -7,6 +7,7 @@
 
 #include "GrGLGpuCommandBuffer.h"
 
+#include "GrContextPriv.h"
 #include "GrFixedClip.h"
 #include "GrRenderTargetPriv.h"
 
@@ -28,7 +29,7 @@ void GrGLGpuRTCommandBuffer::set(GrRenderTarget* rt, GrSurfaceOrigin origin,
                                  const GrGpuRTCommandBuffer::StencilLoadAndStoreInfo& stencilInfo) {
     SkASSERT(fGpu);
     SkASSERT(!fRenderTarget);
-    SkASSERT(fGpu == rt->getContext()->contextPriv().getGpu());
+    SkASSERT(fGpu == rt->getContext()->priv().getGpu());
 
     this->INHERITED::set(rt, origin);
     fColorLoadAndStoreInfo = colorInfo;

@@ -13,8 +13,8 @@
 #include "SkImageInfo.h"
 #include "SkNoncopyable.h"
 
-class GrContext;
 class GrFragmentProcessor;
+class GrRecordingContext;
 class GrTexture;
 class GrTextureProxy;
 class SkColorSpace;
@@ -67,8 +67,7 @@ public:
             const SkRect& constraintRect,
             FilterConstraint filterConstraint,
             bool coordsLimitedToConstraintRect,
-            const GrSamplerState::Filter* filterOrNullForBicubic,
-            SkColorSpace* dstColorSpace) = 0;
+            const GrSamplerState::Filter* filterOrNullForBicubic) = 0;
 
     /**
      *  Returns a texture that is safe for use with the params.
@@ -82,53 +81,43 @@ public:
      * proxy will always be unscaled and nullptr can be passed for scaleAdjust. There is a weird
      * contract that if scaleAdjust is not null it must be initialized to {1, 1} before calling
      * this method. (TODO: Fix this and make this function always initialize scaleAdjust).
-     *
-     * Places the color space of the texture in (*proxyColorSpace).
      */
     sk_sp<GrTextureProxy> refTextureProxyForParams(const GrSamplerState&,
-                                                   SkColorSpace* dstColorSpace,
-                                                   sk_sp<SkColorSpace>* proxyColorSpace,
                                                    SkScalar scaleAdjust[2]);
 
-    sk_sp<GrTextureProxy> refTextureProxyForParams(GrSamplerState::Filter filter,
-                                                   SkColorSpace* dstColorSpace,
-                                                   sk_sp<SkColorSpace>* proxyColorSpace,
-                                                   SkScalar scaleAdjust[2]) {
-        return this->refTextureProxyForParams(
-                GrSamplerState(GrSamplerState::WrapMode::kClamp, filter), dstColorSpace,
-                proxyColorSpace, scaleAdjust);
-    }
+    sk_sp<GrTextureProxy> refTextureProxyForParams(
+            const GrSamplerState::Filter* filterOrNullForBicubic, SkScalar scaleAdjust[2]);
 
     /**
-     * Returns a texture that is safe for use with the dstColorSpace. If willNeedMips is true then
-     * the returned texture is guaranteed to have allocated mip map levels. This can be a
-     * performance win if future draws with the texture require mip maps.
-     *
-     * Places the color space of the texture in (*proxyColorSpace).
+     * Returns a texture. If willNeedMips is true then the returned texture is guaranteed to have
+     * allocated mip map levels. This can be a performance win if future draws with the texture
+     * require mip maps.
      */
     // TODO: Once we remove support for npot textures, we should add a flag for must support repeat
     // wrap mode. To support that flag now would require us to support scaleAdjust array like in
     // refTextureProxyForParams, however the current public API that uses this call does not expose
     // that array.
-    sk_sp<GrTextureProxy> refTextureProxy(GrMipMapped willNeedMips,
-                                          SkColorSpace* dstColorSpace,
-                                          sk_sp<SkColorSpace>* proxyColorSpace);
+    sk_sp<GrTextureProxy> refTextureProxy(GrMipMapped willNeedMips);
 
     virtual ~GrTextureProducer() {}
 
     int width() const { return fWidth; }
     int height() const { return fHeight; }
     bool isAlphaOnly() const { return fIsAlphaOnly; }
+    bool domainNeedsDecal() const { return fDomainNeedsDecal; }
     virtual SkAlphaType alphaType() const = 0;
+    virtual SkColorSpace* colorSpace() const = 0;
 
 protected:
     friend class GrTextureProducer_TestAccess;
 
-    GrTextureProducer(GrContext* context, int width, int height, bool isAlphaOnly)
+    GrTextureProducer(GrRecordingContext* context, int width, int height, bool isAlphaOnly,
+                      bool domainNeedsDecal)
         : fContext(context)
         , fWidth(width)
         , fHeight(height)
-        , fIsAlphaOnly(isAlphaOnly) {}
+        , fIsAlphaOnly(isAlphaOnly)
+        , fDomainNeedsDecal(domainNeedsDecal) {}
 
     /** Helper for creating a key for a copy from an original key. */
     static void MakeCopyKeyFromOrigKey(const GrUniqueKey& origKey,
@@ -167,7 +156,8 @@ protected:
         kTightCopy_DomainMode
     };
 
-    static sk_sp<GrTextureProxy> CopyOnGpu(GrContext*, sk_sp<GrTextureProxy> inputProxy,
+    // This can draw to accomplish the copy, thus the recording context is needed
+    static sk_sp<GrTextureProxy> CopyOnGpu(GrRecordingContext*, sk_sp<GrTextureProxy> inputProxy,
                                            const CopyParams& copyParams,
                                            bool dstWillRequireMipMaps);
 
@@ -178,25 +168,27 @@ protected:
                                           const GrSamplerState::Filter* filterModeOrNullForBicubic,
                                           SkRect* domainRect);
 
-    static std::unique_ptr<GrFragmentProcessor> CreateFragmentProcessorForDomainAndFilter(
+    std::unique_ptr<GrFragmentProcessor> createFragmentProcessorForDomainAndFilter(
             sk_sp<GrTextureProxy> proxy,
             const SkMatrix& textureMatrix,
             DomainMode,
             const SkRect& domain,
             const GrSamplerState::Filter* filterOrNullForBicubic);
 
-    GrContext* fContext;
+    GrRecordingContext* context() const { return fContext; }
 
 private:
     virtual sk_sp<GrTextureProxy> onRefTextureProxyForParams(const GrSamplerState&,
-                                                             SkColorSpace* dstColorSpace,
-                                                             sk_sp<SkColorSpace>* proxyColorSpace,
                                                              bool willBeMipped,
                                                              SkScalar scaleAdjust[2]) = 0;
 
-    const int   fWidth;
-    const int   fHeight;
-    const bool  fIsAlphaOnly;
+    GrRecordingContext* fContext;
+    const int           fWidth;
+    const int           fHeight;
+    const bool          fIsAlphaOnly;
+    // If true, any domain effect uses kDecal instead of kClamp, and sampler filter uses
+    // kClampToBorder instead of kClamp.
+    const bool  fDomainNeedsDecal;
 
     typedef SkNoncopyable INHERITED;
 };

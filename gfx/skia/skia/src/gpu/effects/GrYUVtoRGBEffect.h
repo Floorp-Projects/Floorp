@@ -19,8 +19,11 @@ class GrYUVtoRGBEffect : public GrFragmentProcessor {
 public:
     static std::unique_ptr<GrFragmentProcessor> Make(const sk_sp<GrTextureProxy> proxies[],
                                                      const SkYUVAIndex indices[4],
-                                                     SkYUVColorSpace yuvColorSpace);
+                                                     SkYUVColorSpace yuvColorSpace,
+                                                     GrSamplerState::Filter filterMode);
+#ifdef SK_DEBUG
     SkString dumpInfo() const override;
+#endif
 
     const SkMatrix44& colorSpaceMatrix() const { return fColorSpaceMatrix; }
     const SkYUVAIndex& yuvaIndex(int i) const { return fYUVAIndices[i]; }
@@ -39,7 +42,8 @@ private:
             fSamplers[i].reset(std::move(proxies[i]),
                                GrSamplerState(GrSamplerState::WrapMode::kClamp, filterModes[i]));
             fSamplerTransforms[i] = SkMatrix::MakeScale(scales[i].width(), scales[i].height());
-            fSamplerCoordTransforms[i].reset(fSamplerTransforms[i], fSamplers[i].proxy(), true);
+            fSamplerCoordTransforms[i] =
+                    GrCoordTransform(fSamplerTransforms[i], fSamplers[i].proxy());
         }
 
         this->setTextureSamplerCnt(numPlanes);

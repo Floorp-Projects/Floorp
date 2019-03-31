@@ -4,7 +4,6 @@
 
 toolkit.jar:
 % content mozapps %content/mozapps/
-  content/mozapps/extensions/default-theme-icon.svg             (content/default-theme-icon.svg)
   content/mozapps/extensions/shortcuts.html                     (content/shortcuts.html)
   content/mozapps/extensions/shortcuts.css                      (content/shortcuts.css)
   content/mozapps/extensions/shortcuts.js                       (content/shortcuts.js)

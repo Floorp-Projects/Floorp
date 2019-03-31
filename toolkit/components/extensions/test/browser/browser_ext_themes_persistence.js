@@ -39,8 +39,7 @@ add_task(async function test_multiple_windows() {
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
                "LWT text color attribute should be set");
-  // This time around we should be using the persisted theme file from the profile.
-  Assert.ok(style.backgroundImage.includes("lightweighttheme-header"), "Expected background image");
+  Assert.ok(style.backgroundImage.includes("image1.png"), "Expected background image");
 
   await BrowserTestUtils.closeWindow(window2);
   await extension.unload();

@@ -19,7 +19,7 @@
 class SkExecutor;
 
 #if SK_SUPPORT_GPU
-struct GrContextOptions {
+struct SK_API GrContextOptions {
     enum class Enable {
         /** Forces an option to be disabled. */
         kNo,
@@ -36,7 +36,7 @@ struct GrContextOptions {
      * Skia stores compiled shader binaries (only when glProgramBinary / glGetProgramBinary are
      * supported) when provided a persistent cache, but this may extend to other data in the future.
      */
-    class PersistentCache {
+    class SK_API PersistentCache {
     public:
         virtual ~PersistentCache() {}
 
@@ -133,19 +133,6 @@ struct GrContextOptions {
     bool fAvoidStencilBuffers = false;
 
     /**
-     * When specifing new data for a vertex/index buffer that replaces old data Ganesh can give
-     * a hint to the driver that the previous data will not be used in future draws like this:
-     *  glBufferData(GL_..._BUFFER, size, NULL, usage);       //<--hint, NULL means
-     *  glBufferSubData(GL_..._BUFFER, 0, lessThanSize, data) //   old data can't be
-     *                                                        //   used again.
-     * However, this can be an unoptimization on some platforms, esp. Chrome.
-     * Chrome's cmd buffer will create a new allocation and memset the whole thing
-     * to zero (for security reasons).
-     * Defaults to the value of GR_GL_USE_BUFFER_DATA_NULL_HINT #define (which is, by default, 1).
-     */
-    Enable fUseGLBufferDataNullHint = Enable::kDefault;
-
-    /**
      * If true, texture fetches from mip-mapped textures will be biased to read larger MIP levels.
      * This has the effect of sharpening those textures, at the cost of some aliasing, and possible
      * performance impact.
@@ -153,10 +140,9 @@ struct GrContextOptions {
     bool fSharpenMipmappedTextures = false;
 
     /**
-     * Enables driver workaround to use draws instead of glClear. This only applies to
-     * kOpenGL_GrBackend.
+     * Enables driver workaround to use draws instead of HW clears, e.g. glClear on the GL backend.
      */
-    Enable fUseDrawInsteadOfGLClear = Enable::kDefault;
+    Enable fUseDrawInsteadOfClear = Enable::kDefault;
 
     /**
      * Allow Ganesh to explicitly allocate resources at flush time rather than incrementally while
@@ -197,6 +183,14 @@ struct GrContextOptions {
      */
     PersistentCache* fPersistentCache = nullptr;
 
+    /**
+     * This affects the usage of the PersistentCache. If this is set to true GLSL shader strings
+     * rather than GL program binaries will be cached. It is intended to be used when the driver's
+     * binary loading/storing is believed to have bugs. Caching GLSL strings still saves a
+     * significant amount of CPU work when a GL program is created.
+     */
+     bool fDisallowGLSLBinaryCaching = false;
+
 #if GR_TEST_UTILS
     /**
      * Private options that are only meant for testing within Skia's tools.
@@ -232,12 +226,6 @@ struct GrContextOptions {
      * Include or exclude specific GPU path renderers.
      */
     GpuPathRenderers fGpuPathRenderers = GpuPathRenderers::kAll;
-
-    /**
-     * Disables using multiple texture units to batch multiple images into a single draw on
-     * supported GPUs.
-     */
-    bool fDisableImageMultitexturing = false;
 #endif
 
 #if SK_SUPPORT_ATLAS_TEXT

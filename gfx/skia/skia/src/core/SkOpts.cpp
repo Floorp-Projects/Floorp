@@ -37,10 +37,10 @@
 #endif
 
 #include "SkBitmapFilter_opts.h"
+#include "SkBitmapProcState_opts.h"
 #include "SkBlitMask_opts.h"
 #include "SkBlitRow_opts.h"
 #include "SkChecksum_opts.h"
-#include "SkMorphologyImageFilter_opts.h"
 #include "SkRasterPipeline_opts.h"
 #include "SkSwizzler_opts.h"
 #include "SkUtils_opts.h"
@@ -54,14 +54,8 @@ namespace SkOpts {
 #define DEFINE_DEFAULT(name) decltype(name) name = SK_OPTS_NS::name
     DEFINE_DEFAULT(create_xfermode);
 
-    DEFINE_DEFAULT(dilate_x);
-    DEFINE_DEFAULT(dilate_y);
-    DEFINE_DEFAULT( erode_x);
-    DEFINE_DEFAULT( erode_y);
-
     DEFINE_DEFAULT(blit_mask_d32_a8);
 
-    DEFINE_DEFAULT(blit_row_color32);
     DEFINE_DEFAULT(blit_row_s32a_opaque);
 
     DEFINE_DEFAULT(RGBA_to_BGRA);
@@ -80,6 +74,8 @@ namespace SkOpts {
     DEFINE_DEFAULT(memset64);
 
     DEFINE_DEFAULT(hash_fn);
+
+    DEFINE_DEFAULT(S32_alpha_D32_filter_DX);
 
     DEFINE_DEFAULT(convolve_vertically);
     DEFINE_DEFAULT(convolve_horizontally);

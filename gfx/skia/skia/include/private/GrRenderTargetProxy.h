@@ -54,6 +54,8 @@ public:
 
     int maxWindowRectangles(const GrCaps& caps) const;
 
+    bool wrapsVkSecondaryCB() const { return fWrapsVkSecondaryCB == WrapsVkSecondaryCB::kYes; }
+
     // TODO: move this to a priv class!
     bool refsWrappedObjects() const;
 
@@ -66,8 +68,10 @@ protected:
     friend class GrRenderTargetProxyPriv;
 
     // Deferred version
-    GrRenderTargetProxy(const GrCaps&, const GrSurfaceDesc&, GrSurfaceOrigin, SkBackingFit,
-                        SkBudgeted, GrInternalSurfaceFlags);
+    GrRenderTargetProxy(const GrCaps&, const GrBackendFormat&, const GrSurfaceDesc&,
+                        GrSurfaceOrigin, SkBackingFit, SkBudgeted, GrInternalSurfaceFlags);
+
+    enum class WrapsVkSecondaryCB : bool { kNo = false, kYes = true };
 
     // Lazy-callback version
     // There are two main use cases for lazily-instantiated proxies:
@@ -80,11 +84,13 @@ protected:
     // The minimal knowledge version is used for CCPR where we are generating an atlas but we do not
     // know the final size until flush time.
     GrRenderTargetProxy(LazyInstantiateCallback&&, LazyInstantiationType lazyType,
-                        const GrSurfaceDesc&, GrSurfaceOrigin, SkBackingFit, SkBudgeted,
-                        GrInternalSurfaceFlags);
+                        const GrBackendFormat&, const GrSurfaceDesc&, GrSurfaceOrigin,
+                        SkBackingFit, SkBudgeted, GrInternalSurfaceFlags,
+                        WrapsVkSecondaryCB wrapsVkSecondaryCB);
 
     // Wrapped version
-    GrRenderTargetProxy(sk_sp<GrSurface>, GrSurfaceOrigin);
+    GrRenderTargetProxy(sk_sp<GrSurface>, GrSurfaceOrigin,
+                        WrapsVkSecondaryCB wrapsVkSecondaryCB = WrapsVkSecondaryCB::kNo);
 
     sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
@@ -93,13 +99,6 @@ private:
         fSurfaceFlags |= GrInternalSurfaceFlags::kMixedSampled;
     }
     bool hasMixedSamples() const { return fSurfaceFlags & GrInternalSurfaceFlags::kMixedSampled; }
-
-    void setSupportsWindowRects() {
-        fSurfaceFlags |= GrInternalSurfaceFlags::kWindowRectsSupport;
-    }
-    bool supportsWindowRects() const {
-        return fSurfaceFlags & GrInternalSurfaceFlags::kWindowRectsSupport;
-    }
 
     void setGLRTFBOIDIs0() {
         fSurfaceFlags |= GrInternalSurfaceFlags::kGLRTFBOIDIs0;
@@ -120,8 +119,9 @@ private:
     // that particular class don't require it. Changing the size of this object can move the start
     // address of other types, leading to this problem.
 
-    int                 fSampleCnt;
-    bool                fNeedsStencil;
+    int                fSampleCnt;
+    bool               fNeedsStencil;
+    WrapsVkSecondaryCB fWrapsVkSecondaryCB;
 
     // For wrapped render targets the actual GrRenderTarget is stored in the GrIORefProxy class.
     // For deferred proxies that pointer is filled in when we need to instantiate the

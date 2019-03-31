@@ -99,10 +99,11 @@ void GrVkBuffer::addMemoryBarrier(const GrVkGpu* gpu,
     };
 
     // TODO: restrict to area of buffer we're interested in
-    gpu->addBufferMemoryBarrier(srcStageMask, dstStageMask, byRegion, &bufferMemoryBarrier);
+    gpu->addBufferMemoryBarrier(this->resource(), srcStageMask, dstStageMask, byRegion,
+                                &bufferMemoryBarrier);
 }
 
-void GrVkBuffer::Resource::freeGPUData(const GrVkGpu* gpu) const {
+void GrVkBuffer::Resource::freeGPUData(GrVkGpu* gpu) const {
     SkASSERT(fBuffer);
     SkASSERT(fAlloc.fMemory);
     VK_CALL(gpu, DestroyBuffer(gpu->device(), fBuffer, nullptr));
@@ -203,8 +204,8 @@ void GrVkBuffer::internalUnmap(GrVkGpu* gpu, size_t size) {
         if (size <= 65536 && 0 == (size & 0x3)) {
             gpu->updateBuffer(this, fMapPtr, this->offset(), size);
         } else {
-            GrVkTransferBuffer* transferBuffer =
-                    GrVkTransferBuffer::Create(gpu, size, GrVkBuffer::kCopyRead_Type);
+            sk_sp<GrVkTransferBuffer> transferBuffer =
+                    GrVkTransferBuffer::Make(gpu, size, GrVkBuffer::kCopyRead_Type);
             if (!transferBuffer) {
                 return;
             }
@@ -213,8 +214,7 @@ void GrVkBuffer::internalUnmap(GrVkGpu* gpu, size_t size) {
             memcpy (buffer, fMapPtr, size);
             transferBuffer->unmap();
 
-            gpu->copyBuffer(transferBuffer, this, 0, this->offset(), size);
-            transferBuffer->unref();
+            gpu->copyBuffer(transferBuffer.get(), this, 0, this->offset(), size);
         }
         this->addMemoryBarrier(gpu,
                                VK_ACCESS_TRANSFER_WRITE_BIT,

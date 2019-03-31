@@ -38,21 +38,25 @@ add_task(async function setup() {
 // User intentionally reinstalls existing disabled addon of the same version.
 // No onInstalling nor onInstalled are fired.
 add_task(async function reinstallExistingDisabledAddonSameVersion() {
-  prepare_test({
-    [ID]: [
-      ["onInstalling", false],
-      "onInstalled",
-    ],
-  }, [
-    "onNewInstall",
-    "onInstallStarted",
-    "onInstallEnded",
-  ]);
-
-  const xpi = AddonTestUtils.createTempWebExtensionFile({manifest: ADDONS.test_install1_1});
-  let install = await AddonManager.getInstallForFile(xpi);
-  await install.install();
-  ensure_test_completed();
+  await expectEvents(
+    {
+      addonEvents: {
+        [ID]: [
+          {event: "onInstalling"},
+          {event: "onInstalled"},
+        ],
+      },
+      installEvents: [
+        {event: "onNewInstall"},
+        {event: "onInstallStarted"},
+        {event: "onInstallEnded"},
+      ],
+    },
+    async () => {
+      const xpi = AddonTestUtils.createTempWebExtensionFile({manifest: ADDONS.test_install1_1});
+      let install = await AddonManager.getInstallForFile(xpi);
+      await install.install();
+    });
 
   let addon = await promiseAddonByID(ID);
   notEqual(addon, null);
@@ -60,14 +64,16 @@ add_task(async function reinstallExistingDisabledAddonSameVersion() {
   ok(addon.isActive);
   ok(!addon.userDisabled);
 
-  prepare_test({
-    [ID]: [
-      ["onDisabling", false],
-      "onDisabled",
-    ],
-  });
-  await addon.disable();
-  ensure_test_completed();
+  await expectEvents(
+    {
+      addonEvents: {
+        [ID]: [
+          {event: "onDisabling"},
+          {event: "onDisabled"},
+        ],
+      },
+    },
+    () => addon.disable());
 
   addon = await promiseAddonByID(ID);
   notEqual(addon, null);
@@ -75,21 +81,25 @@ add_task(async function reinstallExistingDisabledAddonSameVersion() {
   ok(!addon.isActive);
   ok(addon.userDisabled);
 
-  prepare_test({
-    [ID]: [
-      ["onEnabling", false],
-      "onEnabled",
-    ],
-  }, [
-    "onNewInstall",
-    "onInstallStarted",
-    "onInstallEnded",
-  ]);
-
-  const xpi2 = AddonTestUtils.createTempWebExtensionFile({manifest: ADDONS.test_install1_1});
-  install = await AddonManager.getInstallForFile(xpi2);
-  await install.install();
-  ensure_test_completed();
+  await expectEvents(
+    {
+      addonEvents: {
+        [ID]: [
+          {event: "onEnabling"},
+          {event: "onEnabled"},
+        ],
+      },
+      installEvents: [
+        {event: "onNewInstall"},
+        {event: "onInstallStarted"},
+        {event: "onInstallEnded"},
+      ],
+    },
+    async () => {
+      const xpi2 = AddonTestUtils.createTempWebExtensionFile({manifest: ADDONS.test_install1_1});
+      let install = await AddonManager.getInstallForFile(xpi2);
+      await install.install();
+    });
 
   addon = await promiseAddonByID(ID);
   notEqual(addon, null);
@@ -97,14 +107,16 @@ add_task(async function reinstallExistingDisabledAddonSameVersion() {
   ok(addon.isActive);
   ok(!addon.userDisabled);
 
-  prepare_test({
-    [ID]: [
-      ["onUninstalling", false],
-      "onUninstalled",
-    ],
-  });
-  await addon.uninstall();
-  ensure_test_completed();
+  await expectEvents(
+    {
+      addonEvents: {
+        [ID]: [
+          {event: "onUninstalling"},
+          {event: "onUninstalled"},
+        ],
+      },
+    },
+    () => addon.uninstall());
 
   addon = await promiseAddonByID(ID);
   equal(addon, null);
@@ -115,22 +127,26 @@ add_task(async function reinstallExistingDisabledAddonSameVersion() {
 // User intentionally reinstalls existing disabled addon of different version,
 // but addon *still should be disabled*.
 add_task(async function reinstallExistingDisabledAddonDifferentVersion() {
-  prepare_test({
-    [ID]: [
-      ["onInstalling", false],
-      "onInstalled",
-    ],
-  }, [
-    "onNewInstall",
-    "onInstallStarted",
-    "onInstallEnded",
-  ]);
+  await expectEvents(
+    {
+      addonEvents: {
+        [ID]: [
+          {event: "onInstalling"},
+          {event: "onInstalled"},
+        ],
+      },
+      installEvents: [
+        {event: "onNewInstall"},
+        {event: "onInstallStarted"},
+        {event: "onInstallEnded"},
+      ],
+    },
+    async () => {
+      const xpi = AddonTestUtils.createTempWebExtensionFile({manifest: ADDONS.test_install1_1});
+      let install = await AddonManager.getInstallForFile(xpi);
 
-  const xpi = AddonTestUtils.createTempWebExtensionFile({manifest: ADDONS.test_install1_1});
-  let install = await AddonManager.getInstallForFile(xpi);
-
-  await install.install();
-  ensure_test_completed();
+      await install.install();
+    });
 
   let addon = await promiseAddonByID(ID);
   notEqual(addon, null);
@@ -138,14 +154,16 @@ add_task(async function reinstallExistingDisabledAddonDifferentVersion() {
   ok(addon.isActive);
   ok(!addon.userDisabled);
 
-  prepare_test({
-    [ID]: [
-      ["onDisabling", false],
-      "onDisabled",
-    ],
-  });
-  await addon.disable();
-  ensure_test_completed();
+  await expectEvents(
+    {
+      addonEvents: {
+        [ID]: [
+          {event: "onDisabling"},
+          {event: "onDisabled"},
+        ],
+      },
+    },
+    () => addon.disable());
 
   addon = await promiseAddonByID(ID);
   notEqual(addon, null);
@@ -153,20 +171,25 @@ add_task(async function reinstallExistingDisabledAddonDifferentVersion() {
   ok(!addon.isActive);
   ok(addon.userDisabled);
 
-  prepare_test({
-    [ID]: [
-      ["onInstalling", false],
-      "onInstalled",
-    ],
-  }, [
-    "onNewInstall",
-    "onInstallStarted",
-    "onInstallEnded",
-  ]);
-  let xpi2 = AddonTestUtils.createTempWebExtensionFile({manifest: ADDONS.test_install1_2});
-  install = await AddonManager.getInstallForFile(xpi2);
-  await install.install();
-  ensure_test_completed();
+  await expectEvents(
+    {
+      addonEvents: {
+        [ID]: [
+          {event: "onInstalling"},
+          {event: "onInstalled"},
+        ],
+      },
+      installEvents: [
+        {event: "onNewInstall"},
+        {event: "onInstallStarted"},
+        {event: "onInstallEnded"},
+      ],
+    },
+    async () => {
+      let xpi2 = AddonTestUtils.createTempWebExtensionFile({manifest: ADDONS.test_install1_2});
+      let install = await AddonManager.getInstallForFile(xpi2);
+      await install.install();
+    });
 
   addon = await promiseAddonByID(ID);
   notEqual(addon, null);
@@ -175,14 +198,16 @@ add_task(async function reinstallExistingDisabledAddonDifferentVersion() {
   ok(addon.userDisabled);
   equal(addon.version, "2.0");
 
-  prepare_test({
-    [ID]: [
-      ["onUninstalling", false],
-      "onUninstalled",
-    ],
-  });
-  await addon.uninstall();
-  ensure_test_completed();
+  await expectEvents(
+    {
+      addonEvents: {
+        [ID]: [
+          {event: "onUninstalling"},
+          {event: "onUninstalled"},
+        ],
+      },
+    },
+    () => addon.uninstall());
 
   addon = await promiseAddonByID(ID);
   equal(addon, null);

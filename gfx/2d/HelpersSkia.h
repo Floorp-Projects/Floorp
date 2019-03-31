@@ -280,18 +280,18 @@ static inline SkShader::TileMode ExtendModeToTileMode(ExtendMode aMode,
   return SkShader::kClamp_TileMode;
 }
 
-static inline SkPaint::Hinting GfxHintingToSkiaHinting(FontHinting aHinting) {
+static inline SkFontHinting GfxHintingToSkiaHinting(FontHinting aHinting) {
   switch (aHinting) {
     case FontHinting::NONE:
-      return SkPaint::kNo_Hinting;
+      return kNo_SkFontHinting;
     case FontHinting::LIGHT:
-      return SkPaint::kSlight_Hinting;
+      return kSlight_SkFontHinting;
     case FontHinting::NORMAL:
-      return SkPaint::kNormal_Hinting;
+      return kNormal_SkFontHinting;
     case FontHinting::FULL:
-      return SkPaint::kFull_Hinting;
+      return kFull_SkFontHinting;
   }
-  return SkPaint::kNormal_Hinting;
+  return kNormal_SkFontHinting;
 }
 
 static inline FillRule GetFillRule(SkPath::FillType aFillType) {

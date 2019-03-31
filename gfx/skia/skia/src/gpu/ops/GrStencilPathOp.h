@@ -13,14 +13,14 @@
 #include "GrPathRendering.h"
 #include "GrStencilSettings.h"
 
-class GrContext;
 class GrOpFlushState;
+class GrRecordingContext;
 
 class GrStencilPathOp final : public GrOp {
 public:
     DEFINE_OP_CLASS_ID
 
-    static std::unique_ptr<GrOp> Make(GrContext* context,
+    static std::unique_ptr<GrOp> Make(GrRecordingContext* context,
                                       const SkMatrix& viewMatrix,
                                       bool useHWAA,
                                       GrPathRendering::FillType fillType,
@@ -30,12 +30,14 @@ public:
 
     const char* name() const override { return "StencilPathOp"; }
 
+#ifdef SK_DEBUG
     SkString dumpInfo() const override {
         SkString string;
         string.printf("Path: 0x%p, AA: %d", fPath.get(), fUseHWAA);
         string.append(INHERITED::dumpInfo());
         return string;
     }
+#endif
 
 private:
     friend class GrOpMemoryPool; // for ctor
@@ -58,7 +60,7 @@ private:
 
     void onPrepare(GrOpFlushState*) override {}
 
-    void onExecute(GrOpFlushState* state) override;
+    void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
     SkMatrix                                          fViewMatrix;
     bool                                              fUseHWAA;

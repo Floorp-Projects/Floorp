@@ -35,7 +35,9 @@ public:
      * the surface origin.
      * @return true if generation was successful.
      */
-    static GrGLProgram* CreateProgram(const GrPrimitiveProcessor&,
+    static GrGLProgram* CreateProgram(GrRenderTarget*, GrSurfaceOrigin,
+                                      const GrPrimitiveProcessor&,
+                                      const GrTextureProxy* const primProcProxies[],
                                       const GrPipeline&,
                                       GrProgramDesc*,
                                       GrGLGpu*);
@@ -45,8 +47,9 @@ public:
     GrGLGpu* gpu() const { return fGpu; }
 
 private:
-    GrGLProgramBuilder(GrGLGpu*, const GrPipeline&, const GrPrimitiveProcessor&,
-                       GrProgramDesc*);
+    GrGLProgramBuilder(GrGLGpu*, GrRenderTarget*, GrSurfaceOrigin,
+                       const GrPipeline&, const GrPrimitiveProcessor&,
+                       const GrTextureProxy* const primProcProxies[], GrProgramDesc*);
 
     void addInputVars(const SkSL::Program::Inputs& inputs);
     bool compileAndAttachShaders(const char* glsl,
@@ -65,6 +68,8 @@ private:
                                  SkSL::Program::Inputs* outInputs);
     void computeCountsAndStrides(GrGLuint programID, const GrPrimitiveProcessor& primProc,
                                  bool bindAttribLocations);
+    void storeShaderInCache(const SkSL::Program::Inputs& inputs, GrGLuint programID,
+                            const SkSL::String& glsl);
     GrGLProgram* finalize();
     void bindProgramResourceLocations(GrGLuint programID);
     bool checkLinkStatus(GrGLuint programID);

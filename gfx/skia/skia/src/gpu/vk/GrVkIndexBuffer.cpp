@@ -10,13 +10,13 @@
 
 GrVkIndexBuffer::GrVkIndexBuffer(GrVkGpu* gpu, const GrVkBuffer::Desc& desc,
                                  const GrVkBuffer::Resource* bufferResource)
-    : INHERITED(gpu, desc.fSizeInBytes, kIndex_GrBufferType,
-                desc.fDynamic ? kDynamic_GrAccessPattern : kStatic_GrAccessPattern)
-    , GrVkBuffer(desc, bufferResource) {
+        : INHERITED(gpu, desc.fSizeInBytes, GrGpuBufferType::kIndex,
+                    desc.fDynamic ? kDynamic_GrAccessPattern : kStatic_GrAccessPattern)
+        , GrVkBuffer(desc, bufferResource) {
     this->registerWithCache(SkBudgeted::kYes);
 }
 
-GrVkIndexBuffer* GrVkIndexBuffer::Create(GrVkGpu* gpu, size_t size, bool dynamic) {
+sk_sp<GrVkIndexBuffer> GrVkIndexBuffer::Make(GrVkGpu* gpu, size_t size, bool dynamic) {
     GrVkBuffer::Desc desc;
     desc.fDynamic = dynamic;
     desc.fType = GrVkBuffer::kIndex_Type;
@@ -32,7 +32,7 @@ GrVkIndexBuffer* GrVkIndexBuffer::Create(GrVkGpu* gpu, size_t size, bool dynamic
     if (!buffer) {
         bufferResource->unref(gpu);
     }
-    return buffer;
+    return sk_sp<GrVkIndexBuffer>(buffer);
 }
 
 void GrVkIndexBuffer::onRelease() {
@@ -50,7 +50,7 @@ void GrVkIndexBuffer::onAbandon() {
 
 void GrVkIndexBuffer::onMap() {
     if (!this->wasDestroyed()) {
-        this->GrBuffer::fMapPtr = this->vkMap(this->getVkGpu());
+        this->GrGpuBuffer::fMapPtr = this->vkMap(this->getVkGpu());
     }
 }
 

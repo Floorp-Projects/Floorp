@@ -6,6 +6,7 @@
  */
 
 #include "SkRecordDraw.h"
+#include "SkCanvasPriv.h"
 #include "SkImage.h"
 #include "SkPatchUtils.h"
 
@@ -82,6 +83,11 @@ DRAW(SaveLayer, saveLayer(SkCanvas::SaveLayerRec(r.bounds,
                                                  r.clipMask.get(),
                                                  r.clipMatrix,
                                                  r.saveLayerFlags)));
+
+template <> void Draw::draw(const SaveBehind& r) {
+    SkCanvasPriv::SaveBehind(fCanvas, r.subset);
+}
+
 DRAW(SetMatrix, setMatrix(SkMatrix::Concat(fInitialCTM, r.matrix)));
 DRAW(Concat, concat(r.matrix));
 DRAW(Translate, translate(r.dx, r.dy));
@@ -109,20 +115,18 @@ template <> void Draw::draw(const DrawImageLattice& r) {
 
 DRAW(DrawImageRect, legacy_drawImageRect(r.image.get(), r.src, r.dst, r.paint, r.constraint));
 DRAW(DrawImageNine, drawImageNine(r.image.get(), r.center, r.dst, r.paint));
+DRAW(DrawImageSet, experimental_DrawImageSetV1(r.set.get(), r.count, r.quality, r.mode));
 DRAW(DrawOval, drawOval(r.oval, r.paint));
 DRAW(DrawPaint, drawPaint(r.paint));
 DRAW(DrawPath, drawPath(r.path, r.paint));
 DRAW(DrawPatch, drawPatch(r.cubics, r.colors, r.texCoords, r.bmode, r.paint));
 DRAW(DrawPicture, drawPicture(r.picture.get(), &r.matrix, r.paint));
 DRAW(DrawPoints, drawPoints(r.mode, r.count, r.pts, r.paint));
-DRAW(DrawPosText, drawPosText(r.text, r.byteLength, r.pos, r.paint));
-DRAW(DrawPosTextH, drawPosTextH(r.text, r.byteLength, r.xpos, r.y, r.paint));
 DRAW(DrawRRect, drawRRect(r.rrect, r.paint));
 DRAW(DrawRect, drawRect(r.rect, r.paint));
+DRAW(DrawEdgeAARect, experimental_DrawEdgeAARectV1(r.rect, r.aa, r.color, r.mode));
 DRAW(DrawRegion, drawRegion(r.region, r.paint));
-DRAW(DrawText, drawText(r.text, r.byteLength, r.x, r.y, r.paint));
 DRAW(DrawTextBlob, drawTextBlob(r.blob.get(), r.x, r.y, r.paint));
-DRAW(DrawTextRSXform, drawTextRSXform(r.text, r.byteLength, r.xforms, r.cull, r.paint));
 DRAW(DrawAtlas, drawAtlas(r.atlas.get(),
                           r.xforms, r.texs, r.colors, r.count, r.mode, r.cull, r.paint));
 DRAW(DrawVertices, drawVertices(r.vertices, r.bones, r.boneCount, r.bmode, r.paint));
@@ -246,6 +250,7 @@ private:
     // from the bounds of the ops in the same Save block.
     void trackBounds(const Save&)          { this->pushSaveBlock(nullptr); }
     void trackBounds(const SaveLayer& op)  { this->pushSaveBlock(op.paint); }
+    void trackBounds(const SaveBehind&)    { this->pushSaveBlock(nullptr); }
     void trackBounds(const Restore&) { fBounds[fCurrentOp] = this->popSaveBlock(); }
 
     void trackBounds(const SetMatrix&)         { this->pushControl(); }
@@ -348,13 +353,12 @@ private:
 
     Bounds bounds(const Flush&) const { return fCullRect; }
 
-    // FIXME: this method could use better bounds
-    Bounds bounds(const DrawText&) const { return fCullRect; }
-
     Bounds bounds(const DrawPaint&) const { return fCullRect; }
     Bounds bounds(const NoOp&)  const { return Bounds::MakeEmpty(); }    // NoOps don't draw.
 
     Bounds bounds(const DrawRect& op) const { return this->adjustAndMap(op.rect, &op.paint); }
+    Bounds bounds(const DrawEdgeAARect& op) const { return this->adjustAndMap(op.rect, nullptr); }
+
     Bounds bounds(const DrawRegion& op) const {
         SkRect rect = SkRect::Make(op.region.getBounds());
         return this->adjustAndMap(rect, &op.paint);
@@ -382,6 +386,13 @@ private:
     }
     Bounds bounds(const DrawImageNine& op) const {
         return this->adjustAndMap(op.dst, op.paint);
+    }
+    Bounds bounds(const DrawImageSet& op) const {
+        SkRect rect = SkRect::MakeEmpty();
+        for (int i = 0; i < op.count; ++i) {
+            rect.join(this->adjustAndMap(op.set[i].fDstRect, nullptr));
+        }
+        return rect;
     }
     Bounds bounds(const DrawPath& op) const {
         return op.path.isInverseFillType() ? fCullRect
@@ -428,41 +439,6 @@ private:
         return this->adjustAndMap(dst, op.paint);
     }
 
-    Bounds bounds(const DrawPosText& op) const {
-        const int N = op.paint.countText(op.text, op.byteLength);
-        if (N == 0) {
-            return Bounds::MakeEmpty();
-        }
-
-        SkRect dst;
-        dst.set(op.pos, N);
-        AdjustTextForFontMetrics(&dst, op.paint);
-        return this->adjustAndMap(dst, &op.paint);
-    }
-    Bounds bounds(const DrawPosTextH& op) const {
-        const int N = op.paint.countText(op.text, op.byteLength);
-        if (N == 0) {
-            return Bounds::MakeEmpty();
-        }
-
-        SkScalar left = op.xpos[0], right = op.xpos[0];
-        for (int i = 1; i < N; i++) {
-            left  = SkMinScalar(left,  op.xpos[i]);
-            right = SkMaxScalar(right, op.xpos[i]);
-        }
-        SkRect dst = { left, op.y, right, op.y };
-        AdjustTextForFontMetrics(&dst, op.paint);
-        return this->adjustAndMap(dst, &op.paint);
-    }
-
-    Bounds bounds(const DrawTextRSXform& op) const {
-        if (op.cull) {
-            return this->adjustAndMap(*op.cull, nullptr);
-        } else {
-            return fCullRect;
-        }
-    }
-
     Bounds bounds(const DrawTextBlob& op) const {
         SkRect dst = op.blob->bounds();
         dst.offset(op.x, op.y);
@@ -475,30 +451,6 @@ private:
 
     Bounds bounds(const DrawAnnotation& op) const {
         return this->adjustAndMap(op.rect, nullptr);
-    }
-
-    static void AdjustTextForFontMetrics(SkRect* rect, const SkPaint& paint) {
-#ifdef SK_DEBUG
-        SkRect correct = *rect;
-#endif
-        // crbug.com/373785 ~~> xPad = 4x yPad
-        // crbug.com/424824 ~~> bump yPad from 2x text size to 2.5x
-        const SkScalar yPad = 2.5f * paint.getTextSize(),
-                       xPad = 4.0f * yPad;
-        rect->outset(xPad, yPad);
-#ifdef SK_DEBUG
-        SkPaint::FontMetrics metrics;
-        paint.getFontMetrics(&metrics);
-        correct.fLeft   += metrics.fXMin;
-        correct.fTop    += metrics.fTop;
-        correct.fRight  += metrics.fXMax;
-        correct.fBottom += metrics.fBottom;
-        // See skia:2862 for why we ignore small text sizes.
-        SkASSERTF(paint.getTextSize() < 0.001f || rect->contains(correct),
-                  "%f %f %f %f vs. %f %f %f %f\n",
-                  -xPad, -yPad, +xPad, +yPad,
-                  metrics.fXMin, metrics.fTop, metrics.fXMax, metrics.fBottom);
-#endif
     }
 
     // Returns true if rect was meaningfully adjusted for the effects of paint,

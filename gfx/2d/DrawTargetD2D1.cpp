@@ -1940,11 +1940,7 @@ already_AddRefed<ID2D1Brush> DrawTargetD2D1::CreateBrushForPattern(
     }
 
     if (pat->mBegin == pat->mEnd) {
-      uint32_t stopCount = stops->mStopCollection->GetGradientStopCount();
-      vector<D2D1_GRADIENT_STOP> d2dStops(stopCount);
-      stops->mStopCollection->GetGradientStops(&d2dStops.front(), stopCount);
-      d2dStops.back().color.a *= aAlpha;
-      return GetSolidColorBrush(d2dStops.back().color);
+      return CreateTransparentBlackBrush();
     }
 
     mDC->CreateLinearGradientBrush(
@@ -1970,6 +1966,10 @@ already_AddRefed<ID2D1Brush> DrawTargetD2D1::CreateBrushForPattern(
 
     if (!stops) {
       gfxDebug() << "No stops specified for gradient pattern.";
+      return CreateTransparentBlackBrush();
+    }
+
+    if (pat->mCenter1 == pat->mCenter2 && pat->mRadius1 == pat->mRadius2) {
       return CreateTransparentBlackBrush();
     }
 
