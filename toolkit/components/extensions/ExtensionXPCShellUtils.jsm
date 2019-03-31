@@ -780,13 +780,8 @@ var ExtensionTestUtils = {
   addonManagerStarted: false,
 
   mockAppInfo() {
-    const {updateAppInfo} = ChromeUtils.import("resource://testing-common/AppInfo.jsm");
-    updateAppInfo({
-      ID: "xpcshell@tests.mozilla.org",
-      name: "XPCShell",
-      version: "48",
-      platformVersion: "48",
-    });
+    AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org",
+                                 "XPCShell", "48", "48");
   },
 
   startAddonManager() {
@@ -796,9 +791,7 @@ var ExtensionTestUtils = {
     this.addonManagerStarted = true;
     this.mockAppInfo();
 
-    let manager = Cc["@mozilla.org/addons/integration;1"].getService(Ci.nsIObserver)
-                                                         .QueryInterface(Ci.nsITimerCallback);
-    manager.observe(null, "addons-startup", null);
+    return AddonTestUtils.promiseStartupManager();
   },
 
   loadExtension(data) {

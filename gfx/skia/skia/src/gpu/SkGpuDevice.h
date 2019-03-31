@@ -72,6 +72,8 @@ public:
     void drawPoints(SkCanvas::PointMode mode, size_t count, const SkPoint[],
                     const SkPaint& paint) override;
     void drawRect(const SkRect& r, const SkPaint& paint) override;
+    void drawEdgeAARect(const SkRect& r, SkCanvas::QuadAAFlags edgeAA, SkColor color,
+                        SkBlendMode mode) override;
     void drawRRect(const SkRRect& r, const SkPaint& paint) override;
     void drawDRRect(const SkRRect& outer, const SkRRect& inner, const SkPaint& paint) override;
     void drawRegion(const SkRegion& r, const SkPaint& paint) override;
@@ -79,7 +81,6 @@ public:
     void drawArc(const SkRect& oval, SkScalar startAngle, SkScalar sweepAngle,
                  bool useCenter, const SkPaint& paint) override;
     void drawPath(const SkPath& path, const SkPaint& paint, bool pathIsMutable) override;
-    void drawBitmap(const SkBitmap&, SkScalar x, SkScalar y, const SkPaint&) override;
     void drawBitmapRect(const SkBitmap&, const SkRect* srcOrNull, const SkRect& dst,
                         const SkPaint& paint, SkCanvas::SrcRectConstraint) override;
     void drawSprite(const SkBitmap& bitmap, int x, int y,
@@ -92,7 +93,6 @@ public:
                    const SkColor[], int count, SkBlendMode, const SkPaint&) override;
     void drawDevice(SkBaseDevice*, int x, int y, const SkPaint&) override;
 
-    void drawImage(const SkImage*, SkScalar x, SkScalar y, const SkPaint&) override;
     void drawImageRect(const SkImage*, const SkRect* src, const SkRect& dst,
                        const SkPaint&, SkCanvas::SrcRectConstraint) override;
 
@@ -105,20 +105,40 @@ public:
                           const SkRect& dst, const SkPaint&) override;
     void drawBitmapLattice(const SkBitmap&, const SkCanvas::Lattice&,
                            const SkRect& dst, const SkPaint&) override;
+    void drawImageSet(const SkCanvas::ImageSetEntry[], int count, SkFilterQuality,
+                      SkBlendMode) override;
+
+    void drawDrawable(SkDrawable*, const SkMatrix*, SkCanvas* canvas) override;
 
     void drawSpecial(SkSpecialImage*, int left, int top, const SkPaint& paint,
                      SkImage*, const SkMatrix&) override;
     sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&) override;
     sk_sp<SkSpecialImage> makeSpecial(const SkImage*) override;
     sk_sp<SkSpecialImage> snapSpecial() override;
+    sk_sp<SkSpecialImage> snapBackImage(const SkIRect&) override;
 
     void flush() override;
-    GrSemaphoresSubmitted flushAndSignalSemaphores(int numSemaphores,
+    GrSemaphoresSubmitted flushAndSignalSemaphores(SkSurface::BackendSurfaceAccess access,
+                                                   SkSurface::FlushFlags flags,
+                                                   int numSemaphores,
                                                    GrBackendSemaphore signalSemaphores[]);
     bool wait(int numSemaphores, const GrBackendSemaphore* waitSemaphores);
 
     bool onAccessPixels(SkPixmap*) override;
 
+    // Temporary interface until it gets lifted up to SkDevice and exposed in SkCanvas
+
+    /*
+     * dstClipCounts[] is a parallel array to the image entries, acting like the intended
+     * dstClipCount field in ImageSetEntry. Similarly, preViewMatrixIdx is parallel and will
+     * become an index field in ImageSetEntry that specifies an entry in the matrix array.
+     */
+    void tmp_drawImageSetV3(const SkCanvas::ImageSetEntry[],
+            int dstClipCounts[], int preViewMatrixIdx[], int count,
+            const SkPoint dstClips[], const SkMatrix preViewMatrices[], const SkPaint& paint,
+            SkCanvas::SrcRectConstraint constraint = SkCanvas::kStrict_SrcRectConstraint);
+    void tmp_drawEdgeAAQuad(const SkRect& rect, const SkPoint clip[], int clipCount,
+                            SkCanvas::QuadAAFlags aaFlags, SkColor color, SkBlendMode mode);
 protected:
     bool onReadPixels(const SkPixmap&, int, int) override;
     bool onWritePixels(const SkPixmap&, int, int) override;
@@ -129,7 +149,6 @@ private:
     sk_sp<GrRenderTargetContext> fRenderTargetContext;
 
     SkISize                      fSize;
-    bool                         fOpaque;
 
     enum Flags {
         kNeedClear_Flag = 1 << 0,  //!< Surface requires an initial clear
@@ -151,7 +170,7 @@ private:
 
     GrClipStackClip clip() const { return GrClipStackClip(&this->cs()); }
 
-    const GrCaps* caps() const { return fContext->contextPriv().caps(); }
+    const GrCaps* caps() const;
 
     /**
      * Helper functions called by drawBitmapCommon. By the time these are called the SkDraw's
@@ -202,39 +221,21 @@ private:
                         bool bicubic,
                         bool needsTextureDomain);
 
-    void drawPinnedTextureProxy(sk_sp<GrTextureProxy>,
-                                uint32_t pinnedUniqueID,
-                                SkColorSpace*,
-                                SkAlphaType alphaType,
-                                const SkRect* srcRect,
-                                const SkRect* dstRect,
-                                SkCanvas::SrcRectConstraint,
-                                const SkMatrix& viewMatrix,
-                                const SkPaint&);
+    // If not null, dstClip must be contained inside dst and will also respect the edge AA flags.
+    // If 'preViewMatrix' is not null, final CTM will be this->ctm() * preViewMatrix.
+    void drawImageQuad(const SkImage*, const SkRect* src, const SkRect* dst,
+                       const SkPoint dstClip[4], GrAA aa, GrQuadAAFlags aaFlags,
+                       const SkMatrix* preViewMatrix, const SkPaint&, SkCanvas::SrcRectConstraint);
 
-    void drawTextureMaker(GrTextureMaker* maker,
-                          int imageW,
-                          int imageH,
-                          const SkRect* srcRect,
-                          const SkRect* dstRect,
-                          SkCanvas::SrcRectConstraint,
-                          const SkMatrix& viewMatrix,
-                          const SkPaint&);
-
+    // TODO(michaelludwig): This can be removed once drawBitmapRect is removed from SkDevice
+    // so that drawImageQuad is the sole entry point into the draw-single-image op
     void drawTextureProducer(GrTextureProducer*,
                              const SkRect* srcRect,
                              const SkRect* dstRect,
                              SkCanvas::SrcRectConstraint,
                              const SkMatrix& viewMatrix,
-                             const SkPaint&);
-
-    void drawTextureProducerImpl(GrTextureProducer*,
-                                 const SkRect& clippedSrcRect,
-                                 const SkRect& clippedDstRect,
-                                 SkCanvas::SrcRectConstraint,
-                                 const SkMatrix& viewMatrix,
-                                 const SkMatrix& srcToDstMatrix,
-                                 const SkPaint&);
+                             const SkPaint&,
+                             bool attemptDrawTexture);
 
     void drawProducerLattice(GrTextureProducer*, std::unique_ptr<SkLatticeIter>, const SkRect& dst,
                              const SkPaint&);

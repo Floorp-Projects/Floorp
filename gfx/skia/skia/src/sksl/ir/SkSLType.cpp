@@ -14,6 +14,16 @@ int Type::coercionCost(const Type& other) const {
     if (*this == other) {
         return 0;
     }
+    if (this->kind() == kNullable_Kind && other.kind() != kNullable_Kind) {
+        int result = this->componentType().coercionCost(other);
+        if (result != INT_MAX) {
+            ++result;
+        }
+        return result;
+    }
+    if (this->fName == "null" && other.kind() == kNullable_Kind) {
+        return 0;
+    }
     if (this->kind() == kVector_Kind && other.kind() == kVector_Kind) {
         if (this->columns() == other.columns()) {
             return this->componentType().coercionCost(other.componentType());
@@ -26,17 +36,8 @@ int Type::coercionCost(const Type& other) const {
         }
         return INT_MAX;
     }
-    if (this->isNumber() && other.isFloat()) {
-        return 1;
-    }
-    if (this->isSigned() && other.isSigned()) {
-        return 1;
-    }
-    if (this->isUnsigned() && other.isUnsigned()) {
-        return 1;
-    }
-    if (this->isUnsigned() && other.isSigned() && other.priority() > priority()) {
-        return 1;
+    if (this->isNumber() && other.isNumber() && other.priority() > this->priority()) {
+        return other.priority() - this->priority();
     }
     for (size_t i = 0; i < fCoercibleTypes.size(); i++) {
         if (*fCoercibleTypes[i] == other) {
@@ -51,7 +52,7 @@ const Type& Type::toCompound(const Context& context, int columns, int rows) cons
     if (columns == 1 && rows == 1) {
         return *this;
     }
-    if (*this == *context.fFloat_Type) {
+    if (*this == *context.fFloat_Type || *this == *context.fFloatLiteral_Type) {
         switch (rows) {
             case 1:
                 switch (columns) {
@@ -147,7 +148,7 @@ const Type& Type::toCompound(const Context& context, int columns, int rows) cons
                 }
             default: ABORT("unsupported row count (%d)", rows);
         }
-    } else if (*this == *context.fInt_Type) {
+    } else if (*this == *context.fInt_Type || *this == *context.fIntLiteral_Type) {
         switch (rows) {
             case 1:
                 switch (columns) {

@@ -59,7 +59,7 @@ static bool bridgeWinding(SkOpContourHead* contourList, SkPathWriter* writer) {
                 writer->finishContour();
             } else {
                 SkOpSpanBase* last;
-                if (!current->markAndChaseDone(start, end, &last)) {
+                 if (!current->markAndChaseDone(start, end, &last)) {
                     return false;
                 }
                 if (last && !last->chased()) {
@@ -127,10 +127,7 @@ static bool bridgeXor(SkOpContourHead* contourList, SkPathWriter* writer) {
         if (!writer->isClosed()) {
             SkOpSpan* spanStart = start->starter(end);
             if (!spanStart->done()) {
-                if (!current->addCurveTo(start, end, writer)) {
-                    return false;
-                }
-                current->markDone(spanStart);
+                return false;
             }
         }
         writer->finishContour();

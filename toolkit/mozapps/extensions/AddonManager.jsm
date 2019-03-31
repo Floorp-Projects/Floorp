@@ -42,8 +42,6 @@ const KEY_PROFILEDIR                  = "ProfD";
 const KEY_APPDIR                      = "XCurProcD";
 const FILE_BLOCKLIST                  = "blocklist.xml";
 
-const DEFAULT_THEME_ID                = "default-theme@mozilla.org";
-
 const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 const PREF_EM_CHECK_COMPATIBILITY_BASE = "extensions.checkCompatibility";
 var PREF_EM_CHECK_COMPATIBILITY = MOZ_COMPATIBILITY_NIGHTLY ?
@@ -70,7 +68,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
-  LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
@@ -92,7 +89,6 @@ const CATEGORY_PROVIDER_MODULE = "addon-provider-module";
 // A list of providers to load by default
 const DEFAULT_PROVIDERS = [
   "resource://gre/modules/addons/XPIProvider.jsm",
-  "resource://gre/modules/LightweightThemeManager.jsm",
 ];
 
 const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -827,27 +823,6 @@ var AddonManagerInternal = {
       AddonManagerPrivate.recordException("AMI", "startup failed", e);
     }
 
-    let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
-    let extensionsBundle = Services.strings.createBundle(
-      "chrome://global/locale/extensions.properties");
-
-    // When running in xpcshell tests, the default theme may already
-    // exist.
-    if (!LightweightThemeManager._builtInThemes.has(DEFAULT_THEME_ID)) {
-      let author = "Mozilla";
-      try {
-        author = brandBundle.GetStringFromName("vendorShortName");
-      } catch (e) {}
-
-      LightweightThemeManager.addBuiltInTheme({
-        id: DEFAULT_THEME_ID,
-        name: extensionsBundle.GetStringFromName("defaultTheme.name"),
-        description: extensionsBundle.GetStringFromName("defaultTheme.description2"),
-        iconURL: "chrome://mozapps/content/extensions/default-theme-icon.svg",
-        author,
-      });
-    }
-
     logger.debug("Completed startup sequence");
     this.callManagerListeners("onStartup");
   },
@@ -1275,8 +1250,6 @@ var AddonManagerInternal = {
         // Keep track of all the async add-on updates happening in parallel
         let updates = [];
 
-        updates.push(LightweightThemeManager.updateThemes());
-
         let allAddons = await this.getAllAddons();
 
         // Repopulate repository cache first, to ensure compatibility overrides
@@ -1522,11 +1495,9 @@ var AddonManagerInternal = {
     // considered unsafe (and therefore disallowed by AddonManager.jsm) to
     // access providers that haven't been initialized yet. Since this is when
     // XPIProvider is starting up, XPIProvider can't access itself via APIs
-    // going through AddonManager.jsm. Furthermore, LightweightThemeManager may
-    // not be initialized until after XPIProvider is, and therefore would also
-    // be unaccessible during XPIProvider startup. Thankfully, these are the
-    // only two uses of this API, and we know it's safe to use this API with
-    // both providers; so we have this hack to allow bypassing the normal
+    // going through AddonManager.jsm. Thankfully, this is the only use
+    // of this API, and we know it's safe to use this API with both
+    // providers; so we have this hack to allow bypassing the normal
     // safetey guard.
     // The notifyAddonChanged/addonChanged API will be unneeded and therefore
     // removed by bug 520124, so this is a temporary quick'n'dirty hack.
@@ -2076,6 +2047,28 @@ var AddonManagerInternal = {
 
     return AddonManagerInternal._getProviderByName("XPIProvider")
                                .installBuiltinAddon(aBase);
+  },
+
+  /**
+   * Like `installBuiltinAddon`, but only installs the addon at `aBase`
+   * if an existing built-in addon with the ID `aID` and version doesn't
+   * already exist.
+   *
+   * @param {string} aID
+   *        The ID of the add-on being registered.
+   * @param {string} aVersion
+   *        The version of the add-on being registered.
+   * @param {string} aBase
+   *        A string containing the base URL.  Must be a resource: URL.
+   * @returns a Promise that resolves when the addon is installed.
+   */
+  maybeInstallBuiltinAddon(aID, aVersion, aBase) {
+    if (!gStarted)
+      throw Components.Exception("AddonManager is not initialized",
+                                 Cr.NS_ERROR_NOT_INITIALIZED);
+
+    return AddonManagerInternal._getProviderByName("XPIProvider")
+                               .maybeInstallBuiltinAddon(aID, aVersion, aBase);
   },
 
    syncGetAddonIDByInstanceID(aInstanceID) {
@@ -2995,6 +2988,11 @@ var AddonManagerPrivate = {
     let provider = AddonManagerInternal._getProviderByName("XPIProvider");
     return provider ? provider.isDBLoaded : false;
   },
+
+  get databaseReady() {
+    let provider = AddonManagerInternal._getProviderByName("XPIProvider");
+    return provider ? provider.databaseReady : new Promise(() => {});
+  },
 };
 
 /**
@@ -3141,6 +3139,9 @@ var AddonManager = {
   // Indicates that the Addon can be set to be allowed/disallowed
   // in private browsing windows.
   PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS: 32,
+  // Indicates that internal APIs can uninstall the add-on, even if the
+  // front-end cannot.
+  PERM_API_CAN_UNINSTALL: 64,
 
   // General descriptions of where items are installed.
   // Installed in this profile.
@@ -3362,6 +3363,10 @@ var AddonManager = {
 
   installBuiltinAddon(aBase) {
     return AddonManagerInternal.installBuiltinAddon(aBase);
+  },
+
+  maybeInstallBuiltinAddon(aID, aVersion, aBase) {
+    return AddonManagerInternal.maybeInstallBuiltinAddon(aID, aVersion, aBase);
   },
 
   addManagerListener(aListener) {

@@ -7,6 +7,7 @@
 
 #include "SkOpts.h"
 #define SK_OPTS_NS ssse3
+#include "SkBitmapProcState_opts.h"
 #include "SkBlitMask_opts.h"
 #include "SkSwizzler_opts.h"
 #include "SkXfermode_opts.h"
@@ -26,5 +27,7 @@ namespace SkOpts {
         grayA_to_rgbA         = ssse3::grayA_to_rgbA;
         inverted_CMYK_to_RGB1 = ssse3::inverted_CMYK_to_RGB1;
         inverted_CMYK_to_BGR1 = ssse3::inverted_CMYK_to_BGR1;
+
+        S32_alpha_D32_filter_DX  = ssse3::S32_alpha_D32_filter_DX;
     }
 }

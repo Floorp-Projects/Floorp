@@ -23,13 +23,14 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
 public:
     static constexpr int kMaxTextures = 4;
 
-    static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps& caps, GrColor color,
+    static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps& caps,
+                                           const SkPMColor4f& color, bool wideColor,
                                            const sk_sp<GrTextureProxy>* proxies,
                                            int numActiveProxies,
                                            const GrSamplerState& p, GrMaskFormat format,
                                            const SkMatrix& localMatrix, bool usesW) {
         return sk_sp<GrGeometryProcessor>(
-            new GrBitmapTextGeoProc(caps, color, proxies, numActiveProxies, p, format,
+            new GrBitmapTextGeoProc(caps, color, wideColor, proxies, numActiveProxies, p, format,
                                     localMatrix, usesW));
     }
 
@@ -41,7 +42,7 @@ public:
     const Attribute& inColor() const { return fInColor; }
     const Attribute& inTextureCoords() const { return fInTextureCoords; }
     GrMaskFormat maskFormat() const { return fMaskFormat; }
-    GrColor color() const { return fColor; }
+    const SkPMColor4f& color() const { return fColor; }
     bool hasVertexColor() const { return fInColor.isInitialized(); }
     const SkMatrix& localMatrix() const { return fLocalMatrix; }
     bool usesW() const { return fUsesW; }
@@ -54,14 +55,14 @@ public:
     GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps& caps) const override;
 
 private:
-    GrBitmapTextGeoProc(const GrShaderCaps&, GrColor, const sk_sp<GrTextureProxy>* proxies,
-                        int numProxies, const GrSamplerState& params, GrMaskFormat format,
+    GrBitmapTextGeoProc(const GrShaderCaps&, const SkPMColor4f&, bool wideColor,
+                        const sk_sp<GrTextureProxy>* proxies, int numProxies,
+                        const GrSamplerState& params, GrMaskFormat format,
                         const SkMatrix& localMatrix, bool usesW);
 
-    const Attribute& onVertexAttribute(int i) const override;
     const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
 
-    GrColor          fColor;
+    SkPMColor4f      fColor;
     SkMatrix         fLocalMatrix;
     bool             fUsesW;
     SkISize          fAtlasSize;  // size for all textures used with fTextureSamplers[].

@@ -14,6 +14,8 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Vector.h"
 
+#include "skia/include/core/SkFont.h"
+#include "skia/include/core/SkTextBlob.h"
 #include "skia/include/core/SkSurface.h"
 #include "skia/include/core/SkTypeface.h"
 #include "skia/include/effects/SkGradientShader.h"
@@ -432,8 +434,9 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
           static_cast<const LinearGradientPattern&>(aPattern);
       GradientStopsSkia* stops =
           static_cast<GradientStopsSkia*>(pat.mStops.get());
-      if (!stops || stops->mCount < 2 || !pat.mBegin.IsFinite() ||
-          !pat.mEnd.IsFinite()) {
+      if (!stops || stops->mCount < 2 ||
+          !pat.mBegin.IsFinite() || !pat.mEnd.IsFinite() ||
+          pat.mBegin == pat.mEnd) {
         aPaint.setColor(SK_ColorTRANSPARENT);
       } else {
         SkShader::TileMode mode =
@@ -465,9 +468,10 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
           static_cast<const RadialGradientPattern&>(aPattern);
       GradientStopsSkia* stops =
           static_cast<GradientStopsSkia*>(pat.mStops.get());
-      if (!stops || stops->mCount < 2 || !pat.mCenter1.IsFinite() ||
-          !IsFinite(pat.mRadius1) || !pat.mCenter2.IsFinite() ||
-          !IsFinite(pat.mRadius2)) {
+      if (!stops || stops->mCount < 2 ||
+          !pat.mCenter1.IsFinite() || !IsFinite(pat.mRadius1) ||
+          !pat.mCenter2.IsFinite() || !IsFinite(pat.mRadius2) ||
+          (pat.mCenter1 == pat.mCenter2 && pat.mRadius1 == pat.mRadius2)) {
         aPaint.setColor(SK_ColorTRANSPARENT);
       } else {
         SkShader::TileMode mode =
@@ -595,7 +599,8 @@ struct AutoPaintSetup {
       temp.setBlendMode(GfxOpToSkiaOp(aOptions.mCompositionOp));
       temp.setAlpha(ColorFloatToByte(aOptions.mAlpha));
       // TODO: Get a rect here
-      mCanvas->saveLayerPreserveLCDTextRequests(nullptr, &temp);
+      SkCanvas::SaveLayerRec rec(nullptr, &temp, SkCanvas::kPreserveLCDText_SaveLayerFlag);
+      mCanvas->saveLayer(rec);
       mNeedsRestore = true;
     } else {
       mPaint.setAlpha(ColorFloatToByte(aOptions.mAlpha));
@@ -1314,17 +1319,16 @@ void DrawTargetSkia::DrawGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
     aaMode = aOptions.mAntialiasMode;
   }
   bool aaEnabled = aaMode != AntialiasMode::NONE;
-
   paint.mPaint.setAntiAlias(aaEnabled);
-  paint.mPaint.setTypeface(sk_ref_sp(typeface));
-  paint.mPaint.setTextSize(SkFloatToScalar(skiaFont->mSize));
-  paint.mPaint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
 
-  bool shouldLCDRenderText = ShouldLCDRenderText(aFont->GetType(), aaMode);
-  paint.mPaint.setLCDRenderText(shouldLCDRenderText);
+  SkFont font(sk_ref_sp(typeface), SkFloatToScalar(skiaFont->mSize));
+
+  bool useSubpixelAA = ShouldLCDRenderText(aFont->GetType(), aaMode);
+  font.setEdging(useSubpixelAA ?
+                   SkFont::Edging::kSubpixelAntiAlias :
+                   (aaEnabled ? SkFont::Edging::kAntiAlias : SkFont::Edging::kAlias));
 
   bool useSubpixelText = true;
-
   switch (aFont->GetType()) {
     case FontType::FREETYPE:
     case FontType::FONTCONFIG:
@@ -1349,17 +1353,17 @@ void DrawTargetSkia::DrawGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
         // disabling the LCD font smoothing behaviour.
         // To accomplish this we have to explicitly disable hinting,
         // and disable LCDRenderText.
-        paint.mPaint.setHinting(SkPaint::kNo_Hinting);
+        font.setHinting(kNo_SkFontHinting);
       }
       break;
 #ifdef XP_WIN
     case FontType::DWRITE: {
       ScaledFontDWrite* dwriteFont = static_cast<ScaledFontDWrite*>(aFont);
-      paint.mPaint.setEmbeddedBitmapText(dwriteFont->UseEmbeddedBitmaps());
-
       if (dwriteFont->ForceGDIMode()) {
-        paint.mPaint.setEmbeddedBitmapText(true);
+        font.setEmbeddedBitmaps(true);
         useSubpixelText = false;
+      } else {
+        font.setEmbeddedBitmaps(dwriteFont->UseEmbeddedBitmaps());
       }
       break;
     }
@@ -1368,23 +1372,16 @@ void DrawTargetSkia::DrawGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
       break;
   }
 
-  paint.mPaint.setSubpixelText(useSubpixelText);
+  font.setSubpixel(useSubpixelText);
 
-  Vector<uint16_t, 64> indices;
-  Vector<SkPoint, 64> offsets;
-  if (!indices.resizeUninitialized(aBuffer.mNumGlyphs) ||
-      !offsets.resizeUninitialized(aBuffer.mNumGlyphs)) {
-    gfxDebug() << "Failed allocating Skia text buffers for GlyphBuffer";
-    return;
-  }
-
+  SkTextBlobBuilder builder;
+  auto runBuffer = builder.allocRunPos(font, aBuffer.mNumGlyphs);
   for (uint32_t i = 0; i < aBuffer.mNumGlyphs; i++) {
-    indices[i] = aBuffer.mGlyphs[i].mIndex;
-    offsets[i] = PointToSkPoint(aBuffer.mGlyphs[i].mPosition);
+    runBuffer.glyphs[i] = aBuffer.mGlyphs[i].mIndex;
+    runBuffer.points()[i] = PointToSkPoint(aBuffer.mGlyphs[i].mPosition);
   }
-
-  mCanvas->drawPosText(indices.begin(), indices.length() * sizeof(uint16_t),
-                       offsets.begin(), paint.mPaint);
+  sk_sp<SkTextBlob> text = builder.make();
+  mCanvas->drawTextBlob(text, 0, 0, paint.mPaint);
 }
 
 void DrawTargetSkia::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,

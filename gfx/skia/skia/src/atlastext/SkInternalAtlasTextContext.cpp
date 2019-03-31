@@ -10,7 +10,7 @@
 #include "GrContextPriv.h"
 #include "SkAtlasTextContext.h"
 #include "SkAtlasTextRenderer.h"
-#include "text/GrGlyphCache.h"
+#include "text/GrStrikeCache.h"
 
 SkAtlasTextRenderer* SkGetAtlasTextRendererFromInternalContext(
         class SkInternalAtlasTextContext& internal) {
@@ -38,7 +38,7 @@ SkInternalAtlasTextContext::SkInternalAtlasTextContext(sk_sp<SkAtlasTextRenderer
 SkInternalAtlasTextContext::~SkInternalAtlasTextContext() {
     if (fDistanceFieldAtlas.fProxy) {
 #ifdef SK_DEBUG
-        auto atlasManager = fGrContext->contextPriv().getAtlasManager();
+        auto atlasManager = fGrContext->priv().getAtlasManager();
         if (atlasManager) {
             unsigned int numProxies;
             atlasManager->getProxies(kA8_GrMaskFormat, &numProxies);
@@ -49,12 +49,12 @@ SkInternalAtlasTextContext::~SkInternalAtlasTextContext() {
     }
 }
 
-GrGlyphCache* SkInternalAtlasTextContext::glyphCache() {
-    return fGrContext->contextPriv().getGlyphCache();
+GrStrikeCache* SkInternalAtlasTextContext::glyphCache() {
+    return fGrContext->priv().getGrStrikeCache();
 }
 
 GrTextBlobCache* SkInternalAtlasTextContext::textBlobCache() {
-    return fGrContext->contextPriv().getTextBlobCache();
+    return fGrContext->priv().getTextBlobCache();
 }
 
 GrDeferredUploadToken SkInternalAtlasTextContext::addInlineUpload(
@@ -88,7 +88,7 @@ void SkInternalAtlasTextContext::recordDraw(const void* srcVertexData, int glyph
 }
 
 void SkInternalAtlasTextContext::flush() {
-    auto* atlasManager = fGrContext->contextPriv().getAtlasManager();
+    auto* atlasManager = fGrContext->priv().getAtlasManager();
     if (!fDistanceFieldAtlas.fProxy) {
         unsigned int numProxies;
         fDistanceFieldAtlas.fProxy = atlasManager->getProxies(kA8_GrMaskFormat, &numProxies)->get();

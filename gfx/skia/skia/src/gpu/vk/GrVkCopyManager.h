@@ -10,8 +10,7 @@
 
 #include "GrTypes.h"
 #include "GrVkDescriptorSetManager.h"
-
-#include "vk/GrVkDefines.h"
+#include "vk/GrVkTypes.h"
 
 class GrSurface;
 class GrVkCopyPipeline;

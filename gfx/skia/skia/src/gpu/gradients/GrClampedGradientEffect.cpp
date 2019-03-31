@@ -36,18 +36,19 @@ public:
                 args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf4_GrSLType,
                                                  kDefault_GrSLPrecision, "rightBorderColor");
         SkString _child1("_child1");
-        this->emitChild(1, &_child1, args);
+        this->emitChild(_outer.gradLayout_index(), &_child1, args);
         fragBuilder->codeAppendf(
                 "half4 t = %s;\nif (!%s && t.y < 0.0) {\n    %s = half4(0.0);\n} else if (t.x < "
-                "0.0) {\n    %s = %s;\n} else if (float(t.x) > 1.0) {\n    %s = %s;\n} else {",
+                "0.0) {\n    %s = %s;\n} else if (t.x > 1.0) {\n    %s = %s;\n} else {",
                 _child1.c_str(),
-                (_outer.childProcessor(1).preservesOpaqueInput() ? "true" : "false"),
+                (_outer.childProcessor(_outer.gradLayout_index()).preservesOpaqueInput() ? "true"
+                                                                                         : "false"),
                 args.fOutputColor, args.fOutputColor,
                 args.fUniformHandler->getUniformCStr(fLeftBorderColorVar), args.fOutputColor,
                 args.fUniformHandler->getUniformCStr(fRightBorderColorVar));
         SkString _input0("t");
         SkString _child0("_child0");
-        this->emitChild(0, _input0.c_str(), &_child0, args);
+        this->emitChild(_outer.colorizer_index(), _input0.c_str(), &_child0, args);
         fragBuilder->codeAppendf("\n    %s = %s;\n}\n@if (%s) {\n    %s.xyz *= %s.w;\n}\n",
                                  args.fOutputColor, _child0.c_str(),
                                  (_outer.makePremul() ? "true" : "false"), args.fOutputColor,
@@ -59,20 +60,20 @@ private:
                    const GrFragmentProcessor& _proc) override {
         const GrClampedGradientEffect& _outer = _proc.cast<GrClampedGradientEffect>();
         {
-            const GrColor4f& leftBorderColorValue = _outer.leftBorderColor();
+            const SkPMColor4f& leftBorderColorValue = _outer.leftBorderColor();
             if (fLeftBorderColorPrev != leftBorderColorValue) {
                 fLeftBorderColorPrev = leftBorderColorValue;
-                pdman.set4fv(fLeftBorderColorVar, 1, leftBorderColorValue.fRGBA);
+                pdman.set4fv(fLeftBorderColorVar, 1, leftBorderColorValue.vec());
             }
-            const GrColor4f& rightBorderColorValue = _outer.rightBorderColor();
+            const SkPMColor4f& rightBorderColorValue = _outer.rightBorderColor();
             if (fRightBorderColorPrev != rightBorderColorValue) {
                 fRightBorderColorPrev = rightBorderColorValue;
-                pdman.set4fv(fRightBorderColorVar, 1, rightBorderColorValue.fRGBA);
+                pdman.set4fv(fRightBorderColorVar, 1, rightBorderColorValue.vec());
             }
         }
     }
-    GrColor4f fLeftBorderColorPrev = GrColor4f::kIllegalConstructor;
-    GrColor4f fRightBorderColorPrev = GrColor4f::kIllegalConstructor;
+    SkPMColor4f fLeftBorderColorPrev = {SK_FloatNaN, SK_FloatNaN, SK_FloatNaN, SK_FloatNaN};
+    SkPMColor4f fRightBorderColorPrev = {SK_FloatNaN, SK_FloatNaN, SK_FloatNaN, SK_FloatNaN};
     UniformHandle fLeftBorderColorVar;
     UniformHandle fRightBorderColorVar;
 };
@@ -94,12 +95,14 @@ bool GrClampedGradientEffect::onIsEqual(const GrFragmentProcessor& other) const 
 }
 GrClampedGradientEffect::GrClampedGradientEffect(const GrClampedGradientEffect& src)
         : INHERITED(kGrClampedGradientEffect_ClassID, src.optimizationFlags())
+        , fColorizer_index(src.fColorizer_index)
+        , fGradLayout_index(src.fGradLayout_index)
         , fLeftBorderColor(src.fLeftBorderColor)
         , fRightBorderColor(src.fRightBorderColor)
         , fMakePremul(src.fMakePremul)
         , fColorsAreOpaque(src.fColorsAreOpaque) {
-    this->registerChildProcessor(src.childProcessor(0).clone());
-    this->registerChildProcessor(src.childProcessor(1).clone());
+    this->registerChildProcessor(src.childProcessor(fColorizer_index).clone());
+    this->registerChildProcessor(src.childProcessor(fGradLayout_index).clone());
 }
 std::unique_ptr<GrFragmentProcessor> GrClampedGradientEffect::clone() const {
     return std::unique_ptr<GrFragmentProcessor>(new GrClampedGradientEffect(*this));

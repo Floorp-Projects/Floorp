@@ -12,7 +12,6 @@
 
 #include "SkArenaAlloc.h"
 #include "SkMatrix.h"
-#include "SkPM4f.h"
 #include "SkShaderBase.h"
 #include "SkTArray.h"
 #include "SkTemplates.h"
@@ -110,10 +109,18 @@ public:
 
     SkColor getLegacyColor(int i) const {
         SkASSERT(i < fColorCount);
-        return Sk4f_toL32(swizzle_rb(Sk4f::Load(fOrigColors4f[i].vec())));
+        return fOrigColors4f[i].toSkColor();
     }
 
-    SkColor4f*          fOrigColors4f; // original colors, as linear floats
+    bool colorsCanConvertToSkColor() const {
+        bool canConvert = true;
+        for (int i = 0; i < fColorCount; ++i) {
+            canConvert &= fOrigColors4f[i].fitsInBytes();
+        }
+        return canConvert;
+    }
+
+    SkColor4f*          fOrigColors4f; // original colors, as floats
     SkScalar*           fOrigPos;      // original positions
     int                 fColorCount;
     sk_sp<SkColorSpace> fColorSpace;   // color space of gradient stops
