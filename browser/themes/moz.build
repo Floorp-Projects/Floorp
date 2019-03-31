@@ -16,6 +16,11 @@ elif toolkit == 'gtk3':
 else:
     DIRS += ['windows']
 
+DIRS += [
+    'addons/dark',
+    'addons/light',
+]
+
 with Files('osx/**'):
     SCHEDULES.exclusive = ['macosx']
 

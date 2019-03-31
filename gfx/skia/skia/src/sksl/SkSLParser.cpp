@@ -29,6 +29,7 @@
 #include "ast/SkSLASTInterfaceBlock.h"
 #include "ast/SkSLASTIntLiteral.h"
 #include "ast/SkSLASTModifiersDeclaration.h"
+#include "ast/SkSLASTNullLiteral.h"
 #include "ast/SkSLASTParameter.h"
 #include "ast/SkSLASTPrefixExpression.h"
 #include "ast/SkSLASTReturnStatement.h"
@@ -81,7 +82,7 @@ std::unordered_map<String, Parser::LayoutToken>* Parser::layoutTokens;
 
 void Parser::InitLayoutMap() {
     layoutTokens = new std::unordered_map<String, LayoutToken>;
-    #define TOKEN(name, text) (*layoutTokens)[text] = LayoutToken::name;
+    #define TOKEN(name, text) (*layoutTokens)[text] = LayoutToken::name
     TOKEN(LOCATION,                     "location");
     TOKEN(OFFSET,                       "offset");
     TOKEN(BINDING,                      "binding");
@@ -121,7 +122,6 @@ void Parser::InitLayoutMap() {
     TOKEN(KEY,                          "key");
     TOKEN(TRACKED,                      "tracked");
     TOKEN(CTYPE,                        "ctype");
-    TOKEN(GRCOLOR4F,                    "GrColor4f");
     TOKEN(SKPMCOLOR4F,                  "SkPMColor4f");
     TOKEN(SKRECT,                       "SkRect");
     TOKEN(SKIRECT,                      "SkIRect");
@@ -518,7 +518,7 @@ std::unique_ptr<ASTType> Parser::structDeclaration() {
     fTypes.add(this->text(name), std::unique_ptr<Type>(new Type(name.fOffset, this->text(name),
                                                                 fields)));
     return std::unique_ptr<ASTType>(new ASTType(name.fOffset, this->text(name),
-                                                ASTType::kStruct_Kind, std::vector<int>()));
+                                                ASTType::kStruct_Kind, std::vector<int>(), false));
 }
 
 /* structDeclaration ((IDENTIFIER varDeclarationEnd) | SEMICOLON) */
@@ -729,8 +729,6 @@ Layout::CType Parser::layoutCType() {
         auto found = layoutTokens->find(text);
         if (found != layoutTokens->end()) {
             switch (found->second) {
-                case LayoutToken::GRCOLOR4F:
-                    return Layout::CType::kGrColor4f;
                 case LayoutToken::SKPMCOLOR4F:
                     return Layout::CType::kSkPMColor4f;
                 case LayoutToken::SKRECT:
@@ -916,7 +914,8 @@ Layout Parser::layout() {
 }
 
 /* layout? (UNIFORM | CONST | IN | OUT | INOUT | LOWP | MEDIUMP | HIGHP | FLAT | NOPERSPECTIVE |
-            READONLY | WRITEONLY | COHERENT | VOLATILE | RESTRICT | BUFFER)* */
+            READONLY | WRITEONLY | COHERENT | VOLATILE | RESTRICT | BUFFER | PLS | PLSIN |
+            PLSOUT)* */
 Modifiers Parser::modifiers() {
     Layout layout = this->layout();
     int flags = 0;
@@ -992,6 +991,18 @@ Modifiers Parser::modifiers() {
                 this->nextToken();
                 flags |= Modifiers::kHasSideEffects_Flag;
                 break;
+            case Token::PLS:
+                this->nextToken();
+                flags |= Modifiers::kPLS_Flag;
+                break;
+            case Token::PLSIN:
+                this->nextToken();
+                flags |= Modifiers::kPLSIn_Flag;
+                break;
+            case Token::PLSOUT:
+                this->nextToken();
+                flags |= Modifiers::kPLSOut_Flag;
+                break;
             default:
                 return Modifiers(layout, flags);
         }
@@ -1061,7 +1072,7 @@ std::unique_ptr<ASTStatement> Parser::statement() {
     }
 }
 
-/* IDENTIFIER(type) (LBRACKET intLiteral? RBRACKET)* */
+/* IDENTIFIER(type) (LBRACKET intLiteral? RBRACKET)* QUESTION? */
 std::unique_ptr<ASTType> Parser::type() {
     Token type;
     if (!this->expect(Token::IDENTIFIER, "a type", &type)) {
@@ -1085,8 +1096,9 @@ std::unique_ptr<ASTType> Parser::type() {
         }
         this->expect(Token::RBRACKET, "']'");
     }
+    bool nullable = this->checkNext(Token::QUESTION);
     return std::unique_ptr<ASTType>(new ASTType(type.fOffset, this->text(type),
-                                                ASTType::kIdentifier_Kind, sizes));
+                                                ASTType::kIdentifier_Kind, sizes, nullable));
 }
 
 /* IDENTIFIER LBRACE varDeclaration* RBRACE (IDENTIFIER (LBRACKET expression? RBRACKET)*)? */
@@ -1806,6 +1818,10 @@ std::unique_ptr<ASTExpression> Parser::unaryExpression() {
         case Token::BITWISENOT: // fall through
         case Token::PLUSPLUS:   // fall through
         case Token::MINUSMINUS: {
+            AutoDepth depth(this);
+            if (!depth.checkValid()) {
+                return nullptr;
+            }
             Token t = this->nextToken();
             std::unique_ptr<ASTExpression> expr = this->unaryExpression();
             if (!expr) {
@@ -1903,7 +1919,7 @@ std::unique_ptr<ASTSuffix> Parser::suffix() {
     }
 }
 
-/* IDENTIFIER | intLiteral | floatLiteral | boolLiteral | '(' expression ')' */
+/* IDENTIFIER | intLiteral | floatLiteral | boolLiteral | NULL_LITERAL | '(' expression ')' */
 std::unique_ptr<ASTExpression> Parser::term() {
     std::unique_ptr<ASTExpression> result;
     Token t = this->peek();
@@ -1937,6 +1953,10 @@ std::unique_ptr<ASTExpression> Parser::term() {
             }
             break;
         }
+        case Token::NULL_LITERAL:
+            this->nextToken();
+            result.reset(new ASTNullLiteral(t.fOffset));
+            break;
         case Token::LPAREN: {
             this->nextToken();
             result = this->expression();

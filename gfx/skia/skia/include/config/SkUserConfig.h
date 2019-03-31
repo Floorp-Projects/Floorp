@@ -135,14 +135,13 @@
 
 #define SK_ALLOW_STATIC_GLOBAL_INITIALIZERS 0
 
-// Don't use __stdcall with SkiaGLGlue - bug 1320644
-#define GR_GL_FUNCTION_TYPE
-
 #define SK_RASTERIZE_EVEN_ROUNDING
 
 #define SK_DISABLE_SLOW_DEBUG_VALIDATION 1
 
 #define SK_SUPPORT_DEPRECATED_CLIPOPS
+
+#define SK_SUPPORT_GPU 0
 
 #ifndef MOZ_IMPLICIT
 #  ifdef MOZ_CLANG_PLUGIN
@@ -153,7 +152,5 @@
 #endif
 
 #define MOZ_SKIA
-
-#define SK_SUPPORT_GPU 0
 
 #endif

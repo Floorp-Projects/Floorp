@@ -7,8 +7,8 @@
 
 #include "GrPathRenderer.h"
 #include "GrCaps.h"
-#include "GrContextPriv.h"
 #include "GrPaint.h"
+#include "GrRecordingContextPriv.h"
 #include "GrRenderTargetContext.h"
 #include "GrShape.h"
 #include "GrUserStencilSettings.h"
@@ -45,11 +45,12 @@ bool GrPathRenderer::drawPath(const DrawPathArgs& args) {
 #ifdef SK_DEBUG
     args.validate();
     CanDrawPathArgs canArgs;
-    canArgs.fCaps = args.fContext->contextPriv().caps();
+    canArgs.fCaps = args.fContext->priv().caps();
     canArgs.fClipConservativeBounds = args.fClipConservativeBounds;
     canArgs.fViewMatrix = args.fViewMatrix;
     canArgs.fShape = args.fShape;
     canArgs.fAAType = args.fAAType;
+    canArgs.fTargetIsWrappedVkSecondaryCB = args.fRenderTargetContext->wrapsVkSecondaryCB();
     canArgs.validate();
 
     canArgs.fHasUserStencilSettings = !args.fUserStencilSettings->isUnused();

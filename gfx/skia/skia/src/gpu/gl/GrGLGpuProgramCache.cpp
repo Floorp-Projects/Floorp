@@ -68,8 +68,11 @@ void GrGLGpu::ProgramCache::abandon() {
     fMap.reset();
 }
 
-GrGLProgram* GrGLGpu::ProgramCache::refProgram(const GrGLGpu* gpu,
+GrGLProgram* GrGLGpu::ProgramCache::refProgram(GrGLGpu* gpu,
+                                               GrRenderTarget* renderTarget,
+                                               GrSurfaceOrigin origin,
                                                const GrPrimitiveProcessor& primProc,
+                                               const GrTextureProxy* const primProcProxies[],
                                                const GrPipeline& pipeline,
                                                bool isPoints) {
 #ifdef PROGRAM_CACHE_STATS
@@ -78,17 +81,14 @@ GrGLProgram* GrGLGpu::ProgramCache::refProgram(const GrGLGpu* gpu,
 
     // Get GrGLProgramDesc
     GrProgramDesc desc;
-    if (!GrProgramDesc::Build(&desc, primProc, isPoints, pipeline, *gpu->caps()->shaderCaps())) {
+    if (!GrProgramDesc::Build(&desc, renderTarget->config(), primProc, isPoints, pipeline, gpu)) {
         GrCapsDebugf(gpu->caps(), "Failed to gl program descriptor!\n");
         return nullptr;
     }
-    desc.finalize();
     std::unique_ptr<Entry>* entry = fMap.find(desc);
     if (!entry) {
         // Didn't find an origin-independent version, check with the specific origin
-        GrSurfaceOrigin origin = pipeline.proxy()->origin();
         desc.setSurfaceOriginKey(GrGLSLFragmentShaderBuilder::KeyForSurfaceOrigin(origin));
-        desc.finalize();
         entry = fMap.find(desc);
     }
     if (!entry) {
@@ -96,7 +96,9 @@ GrGLProgram* GrGLGpu::ProgramCache::refProgram(const GrGLGpu* gpu,
 #ifdef PROGRAM_CACHE_STATS
         ++fCacheMisses;
 #endif
-        GrGLProgram* program = GrGLProgramBuilder::CreateProgram(primProc, pipeline, &desc, fGpu);
+        GrGLProgram* program = GrGLProgramBuilder::CreateProgram(renderTarget, origin,
+                                                                 primProc, primProcProxies,
+                                                                 pipeline, &desc, fGpu);
         if (nullptr == program) {
             return nullptr;
         }

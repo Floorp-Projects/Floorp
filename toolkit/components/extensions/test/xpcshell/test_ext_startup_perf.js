@@ -25,6 +25,8 @@ if (!Services.prefs.getBoolPref("extensions.webextensions.remote")) {
     "resource://gre/modules/ExtensionPageChild.jsm");
 }
 
+AddonTestUtils.init(this);
+
 // Tests that only the minimal set of API scripts and modules are loaded at
 // startup for a simple extension.
 add_task(async function test_loaded_scripts() {

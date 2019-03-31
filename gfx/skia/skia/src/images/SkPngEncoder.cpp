@@ -16,6 +16,7 @@
 #include "SkString.h"
 #include "SkPngEncoder.h"
 #include "SkPngPriv.h"
+#include <vector>
 
 #include "png.h"
 
@@ -105,6 +106,7 @@ bool SkPngEncoderMgr::setHeader(const SkImageInfo& srcInfo, const SkPngEncoder::
     png_color_8 sigBit;
     int bitDepth = 8;
     switch (srcInfo.colorType()) {
+        case kRGBA_F16Norm_SkColorType:
         case kRGBA_F16_SkColorType:
         case kRGBA_F32_SkColorType:
             sigBit.red = 16;
@@ -231,6 +233,9 @@ bool SkPngEncoderMgr::setHeader(const SkImageInfo& srcInfo, const SkPngEncoder::
 
 static transform_scanline_proc choose_proc(const SkImageInfo& info) {
     switch (info.colorType()) {
+        case kUnknown_SkColorType:
+            break;
+
         case kRGBA_8888_SkColorType:
             switch (info.alphaType()) {
                 case kOpaque_SkAlphaType:
@@ -258,13 +263,12 @@ static transform_scanline_proc choose_proc(const SkImageInfo& info) {
         case kRGB_565_SkColorType:
             return transform_scanline_565;
         case kRGB_888x_SkColorType:
-            return transform_scanline_888x;
+            return transform_scanline_RGBX;
         case kARGB_4444_SkColorType:
             switch (info.alphaType()) {
                 case kOpaque_SkAlphaType:
                     return transform_scanline_444;
                 case kPremul_SkAlphaType:
-                    // 4444 is assumed to be legacy premul.
                     return transform_scanline_4444;
                 default:
                     SkASSERT(false);
@@ -272,6 +276,8 @@ static transform_scanline_proc choose_proc(const SkImageInfo& info) {
             }
         case kGray_8_SkColorType:
             return transform_scanline_memcpy;
+
+        case kRGBA_F16Norm_SkColorType:
         case kRGBA_F16_SkColorType:
             switch (info.alphaType()) {
                 case kOpaque_SkAlphaType:
@@ -309,10 +315,9 @@ static transform_scanline_proc choose_proc(const SkImageInfo& info) {
             return transform_scanline_101010x;
         case kAlpha_8_SkColorType:
             return transform_scanline_A8_to_GrayAlpha;
-        default:
-            SkASSERT(false);
-            return nullptr;
     }
+    SkASSERT(false);
+    return nullptr;
 }
 
 static void set_icc(png_structp png_ptr, png_infop info_ptr, const SkImageInfo& info) {
@@ -409,8 +414,10 @@ bool SkPngEncoder::onEncodeRows(int numRows) {
 
     const void* srcRow = fSrc.addr(0, fCurrRow);
     for (int y = 0; y < numRows; y++) {
-        fEncoderMgr->proc()((char*) fStorage.get(), (const char*) srcRow, fSrc.width(),
-                            SkColorTypeBytesPerPixel(fSrc.colorType()), nullptr);
+        fEncoderMgr->proc()((char*)fStorage.get(),
+                            (const char*)srcRow,
+                            fSrc.width(),
+                            SkColorTypeBytesPerPixel(fSrc.colorType()));
 
         png_bytep rowPtr = (png_bytep) fStorage.get();
         png_write_rows(fEncoderMgr->pngPtr(), &rowPtr, 1);

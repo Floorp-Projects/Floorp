@@ -51,14 +51,6 @@ struct SK_API SkIRect {
         return SkIRect{0, 0, 0, 0};
     }
 
-#ifdef SK_SUPPORT_LEGACY_RECTMAKELARGEST
-    /** Deprecated.
-    */
-    static SkIRect SK_WARN_UNUSED_RESULT MakeLargest() {
-        return { SK_MinS32, SK_MinS32, SK_MaxS32, SK_MaxS32 };
-    }
-#endif
-
     /** Returns constructed SkIRect set to (0, 0, w, h). Does not validate input; w or h
         may be negative.
 
@@ -149,6 +141,9 @@ struct SK_API SkIRect {
         @return  fTop
     */
     int32_t y() const { return fTop; }
+
+    // Experimental
+    SkIPoint topLeft() const { return {fLeft, fTop}; }
 
     /** Returns span on the x-axis. This does not check if SkIRect is sorted, or if
         result fits in 32-bit signed integer; result may be negative.
@@ -702,14 +697,6 @@ struct SK_API SkRect {
         return SkRect{0, 0, 0, 0};
     }
 
-#ifdef SK_SUPPORT_LEGACY_RECTMAKELARGEST
-    /** Deprecated.
-    */
-    static SkRect SK_WARN_UNUSED_RESULT MakeLargest() {
-        return { SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax };
-    }
-#endif
-
     /** Returns constructed SkRect set to SkScalar values (0, 0, w, h). Does not
         validate input; w or h may be negative.
 
@@ -903,7 +890,7 @@ struct SK_API SkRect {
     /** Returns average of left edge and right edge. Result does not change if SkRect
         is sorted. Result may overflow to infinity if SkRect is far from the origin.
 
-        @return  midpoint in x
+        @return  midpoint on x-axis
     */
     SkScalar centerX() const {
         // don't use SkScalarHalf(fLeft + fBottom) as that might overflow before the 0.5
@@ -913,7 +900,7 @@ struct SK_API SkRect {
     /** Returns average of top edge and bottom edge. Result does not change if SkRect
         is sorted.
 
-        @return  midpoint in y
+        @return  midpoint on y-axis
     */
     SkScalar centerY() const {
         // don't use SkScalarHalf(fTop + fBottom) as that might overflow before the 0.5
@@ -924,7 +911,7 @@ struct SK_API SkRect {
         equal to the corresponding members in b.
 
         a and b are not equal if either contain NaN. a and b are equal if members
-        contain zeroes width different signs.
+        contain zeroes with different signs.
 
         @param a  SkRect to compare
         @param b  SkRect to compare
@@ -938,7 +925,7 @@ struct SK_API SkRect {
         equal the corresponding members in b.
 
         a and b are not equal if either contain NaN. a and b are equal if members
-        contain zeroes width different signs.
+        contain zeroes with different signs.
 
         @param a  SkRect to compare
         @param b  SkRect to compare
@@ -950,7 +937,8 @@ struct SK_API SkRect {
 
     /** Returns four points in quad that enclose SkRect ordered as: top-left, top-right,
         bottom-right, bottom-left.
-        Consider adding param to control whether quad is clockwise or counterclockwise.
+
+        TODO: Consider adding parameter to control whether quad is clockwise or counterclockwise.
 
         @param quad  storage for corners of SkRect
     */

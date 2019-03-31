@@ -85,11 +85,11 @@ private:
                 const GrMesh mesh[],
                 int meshCount,
                 const SkRect& bounds) override {
-        SkASSERT(pipeline.renderTarget() == fRenderTarget);
-        fGpu->draw(primProc, pipeline, fixedDynamicState, dynamicStateArrays, mesh, meshCount);
+        fGpu->draw(fRenderTarget, fOrigin, primProc, pipeline, fixedDynamicState,
+                   dynamicStateArrays, mesh, meshCount);
     }
 
-    void onClear(const GrFixedClip& clip, GrColor color) override {
+    void onClear(const GrFixedClip& clip, const SkPMColor4f& color) override {
         fGpu->clear(clip, color, fRenderTarget, fOrigin);
     }
 

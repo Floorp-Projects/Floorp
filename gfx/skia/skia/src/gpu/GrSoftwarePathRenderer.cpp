@@ -7,6 +7,7 @@
 
 #include "GrSoftwarePathRenderer.h"
 #include "GrAuditTrail.h"
+#include "GrCaps.h"
 #include "GrClip.h"
 #include "GrContextPriv.h"
 #include "GrDeferredProxyUploader.h"
@@ -14,6 +15,7 @@
 #include "GrOpFlushState.h"
 #include "GrOpList.h"
 #include "GrProxyProvider.h"
+#include "GrRecordingContextPriv.h"
 #include "GrSWMaskHelper.h"
 #include "GrShape.h"
 #include "GrSurfaceContextPriv.h"
@@ -22,7 +24,7 @@
 #include "SkTaskGroup.h"
 #include "SkTraceEvent.h"
 #include "ops/GrDrawOp.h"
-#include "ops/GrRectOpFactory.h"
+#include "ops/GrFillRectOp.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 GrPathRenderer::CanDrawPath
@@ -98,11 +100,11 @@ void GrSoftwarePathRenderer::DrawNonAARect(GrRenderTargetContext* renderTargetCo
                                            const SkMatrix& viewMatrix,
                                            const SkRect& rect,
                                            const SkMatrix& localMatrix) {
-    GrContext* context = renderTargetContext->surfPriv().getContext();
+    auto context = renderTargetContext->surfPriv().getContext();
     renderTargetContext->addDrawOp(clip,
-                                   GrRectOpFactory::MakeNonAAFillWithLocalMatrix(
-                                           context, std::move(paint), viewMatrix, localMatrix, rect,
-                                           GrAAType::kNone, &userStencilSettings));
+                                   GrFillRectOp::MakeWithLocalMatrix(
+                                           context, std::move(paint), GrAAType::kNone, viewMatrix,
+                                           localMatrix, rect, &userStencilSettings));
 }
 
 void GrSoftwarePathRenderer::DrawAroundInvPath(GrRenderTargetContext* renderTargetContext,
@@ -172,18 +174,22 @@ void GrSoftwarePathRenderer::DrawToTargetWithShapeMask(
                   dstRect, invert);
 }
 
-static sk_sp<GrTextureProxy> make_deferred_mask_texture_proxy(GrContext* context, SkBackingFit fit,
+static sk_sp<GrTextureProxy> make_deferred_mask_texture_proxy(GrRecordingContext* context,
+                                                              SkBackingFit fit,
                                                               int width, int height) {
-    GrProxyProvider* proxyProvider = context->contextPriv().proxyProvider();
+    GrProxyProvider* proxyProvider = context->priv().proxyProvider();
 
     GrSurfaceDesc desc;
     desc.fWidth = width;
     desc.fHeight = height;
     desc.fConfig = kAlpha_8_GrPixelConfig;
 
+    const GrBackendFormat format =
+            context->priv().caps()->getBackendFormatFromColorType(kAlpha_8_SkColorType);
+
     // MDB TODO: We're going to fill this proxy with an ASAP upload (which is out of order wrt to
     // ops), so it can't have any pending IO.
-    return proxyProvider->createProxy(desc, kTopLeft_GrSurfaceOrigin, fit, SkBudgeted::kYes,
+    return proxyProvider->createProxy(format, desc, kTopLeft_GrSurfaceOrigin, fit, SkBudgeted::kYes,
                                       GrInternalSurfaceFlags::kNoPendingIO);
 }
 
@@ -328,7 +334,11 @@ bool GrSoftwarePathRenderer::onDrawPath(const DrawPathArgs& args) {
         SkBackingFit fit = useCache ? SkBackingFit::kExact : SkBackingFit::kApprox;
         GrAA aa = GrAAType::kCoverage == args.fAAType ? GrAA::kYes : GrAA::kNo;
 
-        SkTaskGroup* taskGroup = args.fContext->contextPriv().getTaskGroup();
+        SkTaskGroup* taskGroup = nullptr;
+        if (auto direct = args.fContext->priv().asDirectContext()) {
+            taskGroup = direct->priv().getTaskGroup();
+        }
+
         if (taskGroup) {
             proxy = make_deferred_mask_texture_proxy(args.fContext, fit,
                                                      boundsForMask->width(),
@@ -371,7 +381,7 @@ bool GrSoftwarePathRenderer::onDrawPath(const DrawPathArgs& args) {
             SkASSERT(proxy->origin() == kTopLeft_GrSurfaceOrigin);
             fProxyProvider->assignUniqueKeyToProxy(maskKey, proxy.get());
             args.fShape->addGenIDChangeListener(
-                    sk_make_sp<PathInvalidator>(maskKey, args.fContext->uniqueID()));
+                    sk_make_sp<PathInvalidator>(maskKey, args.fContext->priv().contextID()));
         }
     }
     if (inverseFilled) {

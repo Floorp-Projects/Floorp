@@ -1,0 +1,32 @@
+{
+  "manifest_version": 2,
+
+  "applications": {
+    "gecko": {
+      "id": "firefox-compact-light@mozilla.org"
+    }
+  },
+
+  "name": "Light",
+  "description": "A theme with a light color scheme.",
+  "author": "Mozilla",
+  "version": "1.0",
+
+  "icons": {"32": "icon.svg"},
+
+  "theme": {
+    "colors": {
+      "tab_background_text": "rgb(24, 25, 26)",
+      "icons": "rgb(24, 25, 26, 0.7)",
+      "frame": "#E3E4E6",
+      "popup": "#fff",
+      "popup_text": "#0c0c0d",
+      "popup_border": "#ccc",
+      "tab_line": "#0a84ff",
+      "toolbar": "#f5f6f7",
+      "toolbar_bottom_separator": "#ccc",
+      "toolbar_field": "#fff",
+      "toolbar_field_border": "#ccc"
+    }
+  }
+}

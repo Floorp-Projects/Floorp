@@ -17,6 +17,7 @@
 #include "SkTHash.h"
 
 class GrOp;
+class SkJSONWriter;
 
 /*
  * GrAuditTrail collects a list of draw ops, detailed information about those ops, and can dump them
@@ -91,10 +92,10 @@ public:
     // this means is that for some sequence of draw calls N, the below toJson calls will only
     // produce JSON which reflects N draw calls. This JSON may or may not be accurate for N + 1 or
     // N - 1 draws depending on the actual combining algorithm used.
-    SkString toJson(bool prettyPrint = false) const;
+    void toJson(SkJSONWriter& writer) const;
 
     // returns a json string of all of the ops associated with a given client id
-    SkString toJson(int clientID, bool prettyPrint = false) const;
+    void toJson(SkJSONWriter& writer, int clientID) const;
 
     bool isEnabled() { return fEnabled; }
     void setEnabled(bool enabled) { fEnabled = enabled; }
@@ -124,7 +125,7 @@ public:
 private:
     // TODO if performance becomes an issue, we can move to using SkVarAlloc
     struct Op {
-        SkString toJson() const;
+        void toJson(SkJSONWriter& writer) const;
         SkString fName;
         SkTArray<SkString> fStackTrace;
         SkRect fBounds;
@@ -138,7 +139,7 @@ private:
 
     struct OpNode {
         OpNode(const GrSurfaceProxy::UniqueID& proxyID) : fProxyUniqueID(proxyID) { }
-        SkString toJson() const;
+        void toJson(SkJSONWriter& writer) const;
 
         SkRect                         fBounds;
         Ops                            fChildren;
@@ -149,8 +150,7 @@ private:
     void copyOutFromOpList(OpInfo* outOpInfo, int opListID);
 
     template <typename T>
-    static void JsonifyTArray(SkString* json, const char* name, const T& array,
-                              bool addComma);
+    static void JsonifyTArray(SkJSONWriter& writer, const char* name, const T& array);
 
     OpPool fOpPool;
     SkTHashMap<uint32_t, int> fIDLookup;
@@ -164,22 +164,18 @@ private:
 };
 
 #define GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, invoke, ...) \
-    if (audit_trail->isEnabled()) {                           \
-        audit_trail->invoke(__VA_ARGS__);                     \
-    }
+        if (audit_trail->isEnabled()) audit_trail->invoke(__VA_ARGS__)
 
 #define GR_AUDIT_TRAIL_AUTO_FRAME(audit_trail, framename) \
-    GR_AUDIT_TRAIL_INVOKE_GUARD((audit_trail), pushFrame, framename);
+    GR_AUDIT_TRAIL_INVOKE_GUARD((audit_trail), pushFrame, framename)
 
 #define GR_AUDIT_TRAIL_RESET(audit_trail) \
     //GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, fullReset);
 
 #define GR_AUDIT_TRAIL_ADD_OP(audit_trail, op, proxy_id) \
-    GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, addOp, op, proxy_id);
+    GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, addOp, op, proxy_id)
 
 #define GR_AUDIT_TRAIL_OPS_RESULT_COMBINED(audit_trail, combineWith, op) \
-    GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, opsCombined, combineWith, op);
-
-#define GR_AUDIT_TRAIL_OP_RESULT_NEW(audit_trail, op) // Doesn't do anything now, one day...
+    GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, opsCombined, combineWith, op)
 
 #endif

@@ -64,9 +64,9 @@ async function check_installed(conditions) {
       Assert.ok(addon.isSystem);
       Assert.ok(!hasFlag(addon.permissions, AddonManager.PERM_CAN_UPGRADE));
       if (isUpgrade) {
-        Assert.ok(hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL));
+        Assert.ok(hasFlag(addon.permissions, AddonManager.PERM_API_CAN_UNINSTALL));
       } else {
-        Assert.ok(!hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL));
+        Assert.ok(!hasFlag(addon.permissions, AddonManager.PERM_API_CAN_UNINSTALL));
       }
 
       // Verify the add-ons file is in the right place
@@ -75,12 +75,7 @@ async function check_installed(conditions) {
       Assert.ok(file.exists());
       Assert.ok(file.isFile());
 
-      let uri = addon.getResourceURI(null);
-      if (uri instanceof Ci.nsIJARURI) {
-        uri = uri.JARFile;
-      }
-      Assert.ok(uri instanceof Ci.nsIFileURL);
-      Assert.equal(uri.file.path, file.path);
+      Assert.equal(getAddonFile(addon).path, file.path);
 
       if (isUpgrade) {
         Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);

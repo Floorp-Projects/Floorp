@@ -4,7 +4,7 @@
 
 // Tests installing an extension from the built-in location.
 add_task(async function test_builtin_location() {
-  let scopes = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_SYSTEM;
+  let scopes = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION;
   Services.prefs.setIntPref("extensions.enabledScopes", scopes);
   Services.prefs.setBoolPref("extensions.webextensions.background-delayed-startup", false);
 

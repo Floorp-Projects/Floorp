@@ -14,7 +14,7 @@
 #include "SkPDFTypes.h"
 #include "SkShader.h"
 
-class SkPDFCanon;
+
 class SkPDFDocument;
 class SkMatrix;
 struct SkIRect;
@@ -33,16 +33,16 @@ struct SkIRect;
  *  @param shader      The SkShader to emulate.
  *  @param ctm         The current transform matrix. (PDF shaders are absolutely
  *                     positioned, relative to where the page is drawn.)
- *  @param surfceBBox  The bounding box of the drawing surface (with matrix
+ *  @param surfaceBBox The bounding box of the drawing surface (with matrix
  *                     already applied).
  *  @param paintColor  Color+Alpha of the paint.  Color is usually ignored,
  *                     unless it is a alpha shader.
  */
-sk_sp<SkPDFObject> SkPDFMakeShader(SkPDFDocument* doc,
-                                  SkShader* shader,
-                                  const SkMatrix& ctm,
-                                  const SkIRect& surfaceBBox,
-                                  SkColor paintColor);
+SkPDFIndirectReference SkPDFMakeShader(SkPDFDocument* doc,
+                                       SkShader* shader,
+                                       const SkMatrix& ctm,
+                                       const SkIRect& surfaceBBox,
+                                       SkColor paintColor);
 
 SK_BEGIN_REQUIRE_DENSE
 struct SkPDFImageShaderKey {

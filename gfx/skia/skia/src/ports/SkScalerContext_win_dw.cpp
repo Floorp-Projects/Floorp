@@ -16,6 +16,7 @@
 #include "SkDWriteGeometrySink.h"
 #include "SkDraw.h"
 #include "SkEndian.h"
+#include "SkFontMetrics.h"
 #include "SkGlyph.h"
 #include "SkHRESULT.h"
 #include "SkMaskGamma.h"
@@ -356,7 +357,7 @@ SkScalerContext_DW::SkScalerContext_DW(sk_sp<DWriteFontTypeface> typefaceRef,
 
     // DirectWrite2 allows hinting to be disabled.
     fGridFitMode = DWRITE_GRID_FIT_MODE_ENABLED;
-    if (fRec.getHinting() == SkPaint::kNo_Hinting) {
+    if (fRec.getHinting() == kNo_SkFontHinting) {
         fGridFitMode = DWRITE_GRID_FIT_MODE_DISABLED;
         if (fRenderingMode != DWRITE_RENDERING_MODE_ALIASED) {
             fRenderingMode = DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC;
@@ -719,9 +720,11 @@ void SkScalerContext_DW::generateMetrics(SkGlyph* glyph) {
     }
 
     // GetAlphaTextureBounds succeeds but returns an empty RECT if there are no
-    // glyphs of the specified texture type. When this happens, try with the
-    // alternate texture type.
-    if (DWRITE_TEXTURE_CLEARTYPE_3x1 == fTextureType) {
+    // glyphs of the specified texture type or it is too big for smoothing.
+    // When this happens, try with the alternate texture type.
+    if (DWRITE_TEXTURE_ALIASED_1x1 != fTextureType ||
+        DWRITE_TEXT_ANTIALIAS_MODE_GRAYSCALE == fAntiAliasMode)
+    {
         HRVM(this->getBoundingBox(glyph,
                                   DWRITE_RENDERING_MODE_ALIASED,
                                   DWRITE_TEXTURE_ALIASED_1x1,
@@ -729,13 +732,14 @@ void SkScalerContext_DW::generateMetrics(SkGlyph* glyph) {
              "Fallback bounding box could not be determined.");
         if (glyph_check_and_set_bounds(glyph, bbox)) {
             glyph->fForceBW = 1;
+            glyph->fMaskFormat = SkMask::kBW_Format;
         }
     }
     // TODO: handle the case where a request for DWRITE_TEXTURE_ALIASED_1x1
     // fails, and try DWRITE_TEXTURE_CLEARTYPE_3x1.
 }
 
-void SkScalerContext_DW::generateFontMetrics(SkPaint::FontMetrics* metrics) {
+void SkScalerContext_DW::generateFontMetrics(SkFontMetrics* metrics) {
     if (nullptr == metrics) {
         return;
     }
@@ -767,10 +771,10 @@ void SkScalerContext_DW::generateFontMetrics(SkPaint::FontMetrics* metrics) {
     metrics->fStrikeoutThickness = fTextSizeRender * SkIntToScalar(dwfm.strikethroughThickness) / upem;
     metrics->fStrikeoutPosition = -(fTextSizeRender * SkIntToScalar(dwfm.strikethroughPosition) / upem);
 
-    metrics->fFlags |= SkPaint::FontMetrics::kUnderlineThicknessIsValid_Flag;
-    metrics->fFlags |= SkPaint::FontMetrics::kUnderlinePositionIsValid_Flag;
-    metrics->fFlags |= SkPaint::FontMetrics::kStrikeoutThicknessIsValid_Flag;
-    metrics->fFlags |= SkPaint::FontMetrics::kStrikeoutPositionIsValid_Flag;
+    metrics->fFlags |= SkFontMetrics::kUnderlineThicknessIsValid_Flag;
+    metrics->fFlags |= SkFontMetrics::kUnderlinePositionIsValid_Flag;
+    metrics->fFlags |= SkFontMetrics::kStrikeoutThicknessIsValid_Flag;
+    metrics->fFlags |= SkFontMetrics::kStrikeoutPositionIsValid_Flag;
 
     if (this->getDWriteTypeface()->fDWriteFontFace1.get()) {
         DWRITE_FONT_METRICS1 dwfm1;
@@ -1015,9 +1019,7 @@ void SkScalerContext_DW::generateColorGlyphImage(const SkGlyph& glyph) {
     draw.fRC = &rc;
 
     SkPaint paint;
-    if (fRenderingMode != DWRITE_RENDERING_MODE_ALIASED) {
-        paint.setFlags(SkPaint::Flags::kAntiAlias_Flag);
-    }
+    paint.setAntiAlias(fRenderingMode != DWRITE_RENDERING_MODE_ALIASED);
 
     BOOL hasNextRun = FALSE;
     while (SUCCEEDED(colorLayers->MoveNext(&hasNextRun)) && hasNextRun) {
@@ -1139,8 +1141,9 @@ void SkScalerContext_DW::generateImage(const SkGlyph& glyph) {
     //Copy the mask into the glyph.
     const uint8_t* src = (const uint8_t*)bits;
     if (DWRITE_RENDERING_MODE_ALIASED == renderingMode) {
+        SkASSERT(SkMask::kBW_Format == glyph.fMaskFormat);
+        SkASSERT(DWRITE_TEXTURE_ALIASED_1x1 == textureType);
         bilevel_to_bw(src, glyph);
-        const_cast<SkGlyph&>(glyph).fMaskFormat = SkMask::kBW_Format;
     } else if (!isLCD(fRec)) {
         if (textureType == DWRITE_TEXTURE_ALIASED_1x1) {
             if (fPreBlend.isApplicable()) {

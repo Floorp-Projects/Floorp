@@ -252,6 +252,8 @@ async function test_contentscript_storage(storageType) {
   await contentPage.close();
 }
 
+AddonTestUtils.init(this);
+
 add_task(async function setup() {
   await ExtensionTestUtils.startAddonManager();
 });

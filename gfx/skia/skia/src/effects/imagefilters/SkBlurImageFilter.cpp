@@ -41,8 +41,6 @@ public:
 
     SkRect computeFastBounds(const SkRect&) const override;
 
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkBlurImageFilterImpl)
-
 protected:
     void flatten(SkWriteBuffer&) const override;
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
@@ -52,6 +50,8 @@ protected:
                                MapDirection, const SkIRect* inputRect) const override;
 
 private:
+    SK_FLATTENABLE_HOOKS(SkBlurImageFilterImpl)
+
     typedef SkImageFilter INHERITED;
     friend class SkImageFilter;
 
@@ -66,9 +66,7 @@ private:
     SkBlurImageFilter::TileMode fTileMode;
 };
 
-SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_START(SkImageFilter)
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkBlurImageFilterImpl)
-SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_END
+void SkImageFilter::RegisterFlattenables() { SK_REGISTER_FLATTENABLE(SkBlurImageFilterImpl); }
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -631,7 +629,7 @@ sk_sp<SkSpecialImage> SkBlurImageFilterImpl::gpuFilter(
         return input->makeSubset(inputBounds);
     }
 
-    GrContext* context = source->getContext();
+    auto context = source->getContext();
 
     sk_sp<GrTextureProxy> inputTexture(input->asTextureProxyRef(context));
     if (!inputTexture) {

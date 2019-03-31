@@ -76,9 +76,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 # We should autogenerate these SSE related flags.
 
 if CONFIG['INTEL_ARCHITECTURE']:
-    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
-    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-mssse3']
-    SOURCES['skia/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['-mssse3']
     SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['-msse4.1']
     SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-msse4.2']
@@ -148,9 +145,13 @@ def generate_opt_sources():
     subprocess.check_output('cd skia && bin/gn gen out/{0} --args=\'target_cpu="{1}"\''.format(key, cpu), shell=True)
     opt_sources[key] = set()
     for dep in deps:
-        output = subprocess.check_output('cd skia && bin/gn desc out/{0} {1} sources'.format(key, dep), shell=True)
-        if output:
-            opt_sources[key].update(parse_sources(output))
+        try:
+            output = subprocess.check_output('cd skia && bin/gn desc out/{0} {1} sources'.format(key, dep), shell=True)
+            if output:
+                opt_sources[key].update(parse_sources(output))
+        except subprocess.CalledProcessError as e:
+            if e.output.find('source_set') < 0:
+                raise
 
   return opt_sources
 
@@ -165,7 +166,13 @@ def generate_platform_sources():
     if output:
       sources[plat] = parse_sources(output)
 
-  deps = {':effects' : 'common', ':pdf' : 'pdf'}
+  plat_deps = {':fontmgr_win' : 'win', ':fontmgr_win_gdi' : 'win'}
+  for dep, key in plat_deps.items():
+    output = subprocess.check_output('cd skia && bin/gn desc out/{1} {0} sources'.format(dep, key), shell=True)
+    if output:
+      sources[key].update(parse_sources(output))
+
+  deps = {':pdf' : 'pdf'}
   for dep, key in deps.items():
     output = subprocess.check_output('cd skia && bin/gn desc out/linux {} sources'.format(dep), shell=True)
     if output:
@@ -188,6 +195,7 @@ def generate_separated_sources(platform_sources):
     'SkLight',
     'SkNormal',
     'codec',
+    'SkWGL',
     'SkMemory_malloc',
     'third_party',
     'Sk3D',
@@ -204,7 +212,6 @@ def generate_separated_sources(platform_sources):
     'SkOverdrawCanvas',
     'SkPaintFilterCanvas',
     'SkParseColor',
-    'SkTextBox',
     'SkWhitelistTypefaces',
     'SkXPS',
     'SkCreateCGImageRef',
@@ -225,7 +232,6 @@ def generate_separated_sources(platform_sources):
       'skia/src/effects/SkDashPathEffect.cpp',
       'skia/src/ports/SkDiscardableMemory_none.cpp',
       'skia/src/ports/SkGlobalInitialization_default.cpp',
-      'skia/src/ports/SkGlobalInitialization_default_imagefilters.cpp',
       'skia/src/ports/SkMemory_mozalloc.cpp',
       'skia/src/ports/SkImageGenerator_none.cpp',
       'skia/third_party/skcms/skcms.cc',
@@ -298,13 +304,11 @@ def write_cflags(f, values, subsearch, cflag, indent):
       f.write("SOURCES[\'" + val + "\'].flags += " + cflag + "\n")
 
 opt_whitelist = [
-  'skia/src/opts/Sk',
   'SkOpts',
   'SkBitmapProcState',
-  'SkBlitMask',
+  'SkBitmapScaler',
   'SkBlitRow',
   'SkBlitter',
-  'SkJumper',
   'SkSpriteBlitter',
   'SkMatrix.cpp',
   'skcms',
@@ -314,7 +318,6 @@ opt_whitelist = [
 # non-unifiable. Keep track of this and fix it.
 unified_blacklist = [
   'FontHost',
-  'SkAdvancedTypefaceMetrics',
   'SkBitmapProcState_matrixProcs.cpp',
   'SkBlitter_A8.cpp',
   'SkBlitter_ARGB32.cpp',
@@ -327,7 +330,6 @@ unified_blacklist = [
   'SkPDFFont.cpp',
   'SkPictureData.cpp',
   'SkColorSpace',
-  'SkImage_Gpu.cpp',
   'SkPathOpsDebug.cpp',
   'SkParsePath.cpp',
   'SkRecorder.cpp',
@@ -336,10 +338,8 @@ unified_blacklist = [
   'SkMatrix44.cpp',
   'SkRTree.cpp',
   'SkVertices.cpp',
-  'SkJumper',
   'SkSLHCodeGenerator.cpp',
   'SkSLLexer.cpp',
-  'SkSLLayoutLexer.cpp',
 ] + opt_whitelist
 
 def write_sources(f, values, indent):
@@ -410,16 +410,19 @@ def write_mozbuild(sources):
   write_sources(f, sources['intel'], 4)
   write_cflags(f, sources['intel'], opt_whitelist, 'skia_opt_flags', 4)
 
-  f.write("elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):\n")
-  write_sources(f, sources['arm'], 4)
-  write_cflags(f, sources['arm'], opt_whitelist, 'skia_opt_flags', 4)
+  if sources['arm']:
+    f.write("elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):\n")
+    write_sources(f, sources['arm'], 4)
+    write_cflags(f, sources['arm'], opt_whitelist, 'skia_opt_flags', 4)
 
-  f.write("elif CONFIG['CPU_ARCH'] == 'aarch64':\n")
-  write_sources(f, sources['arm64'], 4)
-  write_cflags(f, sources['arm64'], opt_whitelist, 'skia_opt_flags', 4)
+  if sources['arm64']:
+    f.write("elif CONFIG['CPU_ARCH'] == 'aarch64':\n")
+    write_sources(f, sources['arm64'], 4)
+    write_cflags(f, sources['arm64'], opt_whitelist, 'skia_opt_flags', 4)
 
-  f.write("else:\n")
-  write_sources(f, sources['none'], 4)
+  if sources['none']:
+    f.write("else:\n")
+    write_sources(f, sources['none'], 4)
 
   f.write(footer)
 

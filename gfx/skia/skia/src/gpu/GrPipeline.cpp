@@ -19,10 +19,7 @@
 GrPipeline::GrPipeline(const InitArgs& args,
                        GrProcessorSet&& processors,
                        GrAppliedClip&& appliedClip) {
-    SkASSERT(args.fProxy);
     SkASSERT(processors.isFinalized());
-
-    fProxy.reset(args.fProxy);
 
     fFlags = args.fFlags;
     if (appliedClip.hasStencilClip()) {
@@ -91,24 +88,38 @@ void GrPipeline::addDependenciesTo(GrOpList* opList, const GrCaps& caps) const {
 
 }
 
-GrXferBarrierType GrPipeline::xferBarrierType(const GrCaps& caps) const {
-    if (fDstTextureProxy.get() &&
-        fDstTextureProxy.get()->peekTexture() == fProxy.get()->peekTexture()) {
+GrXferBarrierType GrPipeline::xferBarrierType(GrTexture* texture, const GrCaps& caps) const {
+    if (fDstTextureProxy.get() && fDstTextureProxy.get()->peekTexture() == texture) {
         return kTexture_GrXferBarrierType;
     }
     return this->getXferProcessor().xferBarrierType(caps);
 }
 
-GrPipeline::GrPipeline(GrRenderTargetProxy* proxy, GrScissorTest scissorTest, SkBlendMode blendmode)
-        : fProxy(proxy)
-        , fWindowRectsState()
+GrPipeline::GrPipeline(GrScissorTest scissorTest, SkBlendMode blendmode)
+        : fWindowRectsState()
         , fUserStencilSettings(&GrUserStencilSettings::kUnused)
         , fFlags()
         , fXferProcessor(GrPorterDuffXPFactory::MakeNoCoverageXP(blendmode))
         , fFragmentProcessors()
         , fNumColorProcessors(0) {
-    SkASSERT(proxy);
     if (GrScissorTest::kEnabled == scissorTest) {
         fFlags |= kScissorEnabled_Flag;
     }
+}
+
+uint32_t GrPipeline::getBlendInfoKey() const {
+    GrXferProcessor::BlendInfo blendInfo;
+    this->getXferProcessor().getBlendInfo(&blendInfo);
+
+    static const uint32_t kBlendWriteShift = 1;
+    static const uint32_t kBlendCoeffShift = 5;
+    GR_STATIC_ASSERT(kLast_GrBlendCoeff < (1 << kBlendCoeffShift));
+    GR_STATIC_ASSERT(kFirstAdvancedGrBlendEquation - 1 < 4);
+
+    uint32_t key = blendInfo.fWriteColor;
+    key |= (blendInfo.fSrcBlend << kBlendWriteShift);
+    key |= (blendInfo.fDstBlend << (kBlendWriteShift + kBlendCoeffShift));
+    key |= (blendInfo.fEquation << (kBlendWriteShift + 2 * kBlendCoeffShift));
+
+    return key;
 }

@@ -71,8 +71,8 @@ fuzzy(0-3,0-99) == animate-cube-degrees.html animate-cube-degrees-ref.html # sub
 == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
 != animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html
 fuzzy-if(gtkWidget,0-128,0-100) fuzzy-if(Android||OSX==1010||(gtkWidget&&layersGPUAccelerated),0-143,0-100) fuzzy-if(winWidget||OSX<1010,0-141,0-100) == preserves3d-nested.html preserves3d-nested-ref.html
-fuzzy-if(cocoaWidget,0-128,0-9) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
-fuzzy-if(cocoaWidget,0-128,0-9) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac, bug 1461311 for Android
+fuzzy-if(skiaContent,0-1,0-1) fuzzy-if(cocoaWidget,0-128,0-9) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
+fuzzy-if(skiaContent,0-1,0-1) fuzzy-if(cocoaWidget,0-128,0-9) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac, bug 1461311 for Android
 == animate-backface-hidden.html about:blank
 == 1245450-1.html green-rect.html
 fuzzy(0-1,0-2000) == opacity-preserve3d-1.html opacity-preserve3d-1-ref.html
