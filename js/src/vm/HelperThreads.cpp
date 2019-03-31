@@ -415,21 +415,9 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
 }
 #endif
 
-static const JSClassOps parseTaskGlobalClassOps = {nullptr,
-                                                   nullptr,
-                                                   nullptr,
-                                                   nullptr,
-                                                   nullptr,
-                                                   nullptr,
-                                                   nullptr,
-                                                   nullptr,
-                                                   nullptr,
-                                                   nullptr,
-                                                   JS_GlobalObjectTraceHook};
-
 static const JSClass parseTaskGlobalClass = {"internal-parse-task-global",
                                              JSCLASS_GLOBAL_FLAGS,
-                                             &parseTaskGlobalClassOps};
+                                             &JS::DefaultGlobalClassOps};
 
 ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
                      JS::OffThreadCompileCallback callback, void* callbackData)
