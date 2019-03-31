@@ -359,13 +359,6 @@ export type ThreadClient = {
   skipBreakpoints: boolean => Promise<{| skip: boolean |}>
 };
 
-export type FirefoxClientConnection = {
-  getTabTarget: () => TabTarget,
-  getThreadClient: () => ThreadClient,
-  setTabTarget: (target: TabTarget) => void,
-  setThreadClient: (client: ThreadClient) => void
-};
-
 export type Panel = {|
   emit: (eventName: string) => void,
   openLink: (url: string) => void,
