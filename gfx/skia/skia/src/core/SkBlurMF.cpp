@@ -20,9 +20,9 @@
 
 #if SK_SUPPORT_GPU
 #include "GrClip.h"
-#include "GrContext.h"
-#include "GrContextPriv.h"
 #include "GrFragmentProcessor.h"
+#include "GrRecordingContext.h"
+#include "GrRecordingContextPriv.h"
 #include "GrRenderTargetContext.h"
 #include "GrResourceProvider.h"
 #include "GrShaderCaps.h"
@@ -55,13 +55,13 @@ public:
                           const SkIRect& clipBounds,
                           const SkMatrix& ctm,
                           SkIRect* maskRect) const override;
-    bool directFilterMaskGPU(GrContext*,
+    bool directFilterMaskGPU(GrRecordingContext*,
                              GrRenderTargetContext* renderTargetContext,
                              GrPaint&&,
                              const GrClip&,
                              const SkMatrix& viewMatrix,
                              const GrShape& shape) const override;
-    sk_sp<GrTextureProxy> filterMaskGPU(GrContext*,
+    sk_sp<GrTextureProxy> filterMaskGPU(GrRecordingContext*,
                                         sk_sp<GrTextureProxy> srcProxy,
                                         const SkMatrix& ctm,
                                         const SkIRect& maskRect) const override;
@@ -70,7 +70,6 @@ public:
     void computeFastBounds(const SkRect&, SkRect*) const override;
     bool asABlur(BlurRec*) const override;
 
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkBlurMaskFilterImpl)
 
 protected:
     FilterReturn filterRectsToNine(const SkRect[], int count, const SkMatrix&,
@@ -89,6 +88,7 @@ protected:
     bool ignoreXform() const { return !fRespectCTM; }
 
 private:
+    SK_FLATTENABLE_HOOKS(SkBlurMaskFilterImpl)
     // To avoid unseemly allocation requests (esp. for finite platforms like
     // handset) we limit the radius so something manageable. (as opposed to
     // a request like 10,000)
@@ -420,12 +420,7 @@ static SkCachedData* add_cached_rects(SkMask* mask, SkScalar sigma, SkBlurStyle 
     return cache;
 }
 
-#ifdef SK_IGNORE_FAST_RRECT_BLUR
-  // Use the faster analytic blur approach for ninepatch round rects
-  static const bool c_analyticBlurRRect{false};
-#else
-  static const bool c_analyticBlurRRect{true};
-#endif
+static const bool c_analyticBlurRRect{true};
 
 SkMaskFilterBase::FilterReturn
 SkBlurMaskFilterImpl::filterRRectToNine(const SkRRect& rrect, const SkMatrix& matrix,
@@ -721,7 +716,7 @@ void SkBlurMaskFilterImpl::flatten(SkWriteBuffer& buffer) const {
 
 #if SK_SUPPORT_GPU
 
-bool SkBlurMaskFilterImpl::directFilterMaskGPU(GrContext* context,
+bool SkBlurMaskFilterImpl::directFilterMaskGPU(GrRecordingContext* context,
                                                GrRenderTargetContext* renderTargetContext,
                                                GrPaint&& paint,
                                                const GrClip& clip,
@@ -762,7 +757,7 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(GrContext* context,
         return false;
     }
 
-    GrProxyProvider* proxyProvider = context->contextPriv().proxyProvider();
+    GrProxyProvider* proxyProvider = context->priv().proxyProvider();
     std::unique_ptr<GrFragmentProcessor> fp;
 
     if (devRRect.isRect() || SkRRectPriv::IsCircle(devRRect)) {
@@ -770,7 +765,7 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(GrContext* context,
             SkScalar pad = 3.0f * xformedSigma;
             const SkRect dstCoverageRect = devRRect.rect().makeOutset(pad, pad);
 
-            fp = GrRectBlurEffect::Make(proxyProvider, *context->contextPriv().caps()->shaderCaps(),
+            fp = GrRectBlurEffect::Make(proxyProvider, *context->priv().caps()->shaderCaps(),
                                         dstCoverageRect, xformedSigma);
         } else {
             fp = GrCircleBlurFragmentProcessor::Make(proxyProvider, devRRect.rect(), xformedSigma);
@@ -788,8 +783,8 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(GrContext* context,
             // When we're ignoring the CTM the padding added to the source rect also needs to ignore
             // the CTM. The matrix passed in here is guaranteed to be just scale and translate so we
             // can just grab the X and Y scales off the matrix and pre-undo the scale.
-            outsetX /= viewMatrix.getScaleX();
-            outsetY /= viewMatrix.getScaleY();
+            outsetX /= SkScalarAbs(viewMatrix.getScaleX());
+            outsetY /= SkScalarAbs(viewMatrix.getScaleY());
         }
         srcProxyRect.outset(outsetX, outsetY);
 
@@ -873,7 +868,7 @@ bool SkBlurMaskFilterImpl::canFilterMaskGPU(const GrShape& shape,
     return true;
 }
 
-sk_sp<GrTextureProxy> SkBlurMaskFilterImpl::filterMaskGPU(GrContext* context,
+sk_sp<GrTextureProxy> SkBlurMaskFilterImpl::filterMaskGPU(GrRecordingContext* context,
                                                           sk_sp<GrTextureProxy> srcProxy,
                                                           const SkMatrix& ctm,
                                                           const SkIRect& maskRect) const {
@@ -929,9 +924,7 @@ sk_sp<GrTextureProxy> SkBlurMaskFilterImpl::filterMaskGPU(GrContext* context,
 
 #endif // SK_SUPPORT_GPU
 
-void sk_register_blur_maskfilter_createproc() {
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkBlurMaskFilterImpl)
-}
+void sk_register_blur_maskfilter_createproc() { SK_REGISTER_FLATTENABLE(SkBlurMaskFilterImpl); }
 
 sk_sp<SkMaskFilter> SkMaskFilter::MakeBlur(SkBlurStyle style, SkScalar sigma, bool respectCTM) {
     if (SkScalarIsFinite(sigma) && sigma > 0) {

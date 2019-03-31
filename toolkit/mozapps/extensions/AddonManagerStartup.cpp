@@ -425,12 +425,9 @@ Result<bool, nsresult> Addon::UpdateLastModifiedTime() {
 
   nsCOMPtr<nsIFile> manifest = file;
   if (!IsNormalFile(manifest)) {
-    manifest = CloneAndAppend(file, "install.rdf");
+    manifest = CloneAndAppend(file, "manifest.json");
     if (!IsNormalFile(manifest)) {
-      manifest = CloneAndAppend(file, "manifest.json");
-      if (!IsNormalFile(manifest)) {
-        return true;
-      }
+      return true;
     }
   }
 
@@ -445,7 +442,6 @@ Result<bool, nsresult> Addon::UpdateLastModifiedTime() {
   }
 
   return lastModified != LastModifiedTime();
-  ;
 }
 
 InstallLocation::InstallLocation(JSContext* cx, const JS::Value& value)

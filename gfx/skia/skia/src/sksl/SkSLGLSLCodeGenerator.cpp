@@ -90,14 +90,10 @@ String GLSLCodeGenerator::getTypeName(const Type& type) {
             else if (component == *fContext.fDouble_Type) {
                 result = "dvec";
             }
-            else if (component == *fContext.fInt_Type ||
-                     component == *fContext.fShort_Type ||
-                     component == *fContext.fByte_Type) {
+            else if (component.isSigned()) {
                 result = "ivec";
             }
-            else if (component == *fContext.fUInt_Type ||
-                     component == *fContext.fUShort_Type ||
-                     component == *fContext.fUByte_Type) {
+            else if (component.isUnsigned()) {
                 result = "uvec";
             }
             else if (component == *fContext.fBool_Type) {
@@ -464,8 +460,10 @@ void GLSLCodeGenerator::writeFunctionCall(const FunctionCall& c) {
         (*fFunctionClasses)["abs"]         = FunctionClass::kAbs;
         (*fFunctionClasses)["atan"]        = FunctionClass::kAtan;
         (*fFunctionClasses)["determinant"] = FunctionClass::kDeterminant;
-        (*fFunctionClasses)["dFdx"]        = FunctionClass::kDerivative;
-        (*fFunctionClasses)["dFdy"]        = FunctionClass::kDerivative;
+        (*fFunctionClasses)["dFdx"]        = FunctionClass::kDFdx;
+        (*fFunctionClasses)["dFdy"]        = FunctionClass::kDFdy;
+        (*fFunctionClasses)["fwidth"]      = FunctionClass::kFwidth;
+        (*fFunctionClasses)["fma"]         = FunctionClass::kFMA;
         (*fFunctionClasses)["fract"]       = FunctionClass::kFract;
         (*fFunctionClasses)["inverse"]     = FunctionClass::kInverse;
         (*fFunctionClasses)["inverseSqrt"] = FunctionClass::kInverseSqrt;
@@ -519,7 +517,15 @@ void GLSLCodeGenerator::writeFunctionCall(const FunctionCall& c) {
                     }
                 }
                 break;
-            case FunctionClass::kDerivative:
+            case FunctionClass::kDFdy:
+                if (fProgram.fSettings.fFlipY) {
+                    // Flipping Y also negates the Y derivatives.
+                    this->write("-dFdy");
+                    nameWritten = true;
+                }
+                // fallthru
+            case FunctionClass::kDFdx:
+            case FunctionClass::kFwidth:
                 if (!fFoundDerivatives &&
                     fProgram.fSettings.fCaps->shaderDerivativeExtensionString()) {
                     SkASSERT(fProgram.fSettings.fCaps->shaderDerivativeSupport());
@@ -531,6 +537,19 @@ void GLSLCodeGenerator::writeFunctionCall(const FunctionCall& c) {
                 if (fProgram.fSettings.fCaps->generation() < k150_GrGLSLGeneration) {
                     SkASSERT(c.fArguments.size() == 1);
                     this->writeDeterminantHack(*c.fArguments[0]);
+                    return;
+                }
+                break;
+            case FunctionClass::kFMA:
+                if (!fProgram.fSettings.fCaps->builtinFMASupport()) {
+                    SkASSERT(c.fArguments.size() == 3);
+                    this->write("((");
+                    this->writeExpression(*c.fArguments[0], kSequence_Precedence);
+                    this->write(") * (");
+                    this->writeExpression(*c.fArguments[1], kSequence_Precedence);
+                    this->write(") + (");
+                    this->writeExpression(*c.fArguments[2], kSequence_Precedence);
+                    this->write("))");
                     return;
                 }
                 break;
@@ -688,7 +707,9 @@ void GLSLCodeGenerator::writeFunctionCall(const FunctionCall& c) {
 
 void GLSLCodeGenerator::writeConstructor(const Constructor& c, Precedence parentPrecedence) {
     if (c.fArguments.size() == 1 &&
-        this->getTypeName(c.fType) == this->getTypeName(c.fArguments[0]->fType)) {
+        (this->getTypeName(c.fType) == this->getTypeName(c.fArguments[0]->fType) ||
+        (c.fType.kind() == Type::kScalar_Kind &&
+         c.fArguments[0]->fType == *fContext.fFloatLiteral_Type))) {
         // in cases like half(float), they're different types as far as SkSL is concerned but the
         // same type as far as GLSL is concerned. We avoid a redundant float(float) by just writing
         // out the inner expression here.
@@ -741,17 +762,9 @@ void GLSLCodeGenerator::writeFragCoord() {
         this->write("gl_FragCoord");
     } else {
         if (!fSetupFragPositionLocal) {
-            // The Adreno compiler seems to be very touchy about access to "gl_FragCoord".
-            // Accessing glFragCoord.zw can cause a program to fail to link. Additionally,
-            // depending on the surrounding code, accessing .xy with a uniform involved can
-            // do the same thing. Copying gl_FragCoord.xy into a temp float2 beforehand
-            // (and only accessing .xy) seems to "fix" things.
-            const char* precision = usesPrecisionModifiers() ? "highp " : "";
-            fFunctionHeader += precision;
-            fFunctionHeader += "    vec2 _sktmpCoord = gl_FragCoord.xy;\n";
-            fFunctionHeader += precision;
-            fFunctionHeader += "    vec4 sk_FragCoord = vec4(_sktmpCoord.x, " SKSL_RTHEIGHT_NAME
-                               " - _sktmpCoord.y, 1.0, 1.0);\n";
+            fFunctionHeader += usesPrecisionModifiers() ? "highp " : "";
+            fFunctionHeader += "    vec4 sk_FragCoord = vec4(gl_FragCoord.x, " SKSL_RTHEIGHT_NAME
+                               " - gl_FragCoord.y, gl_FragCoord.z, gl_FragCoord.w);\n";
             fSetupFragPositionLocal = true;
         }
         this->write("sk_FragCoord");
@@ -835,10 +848,23 @@ void GLSLCodeGenerator::writeFieldAccess(const FieldAccess& f) {
 }
 
 void GLSLCodeGenerator::writeSwizzle(const Swizzle& swizzle) {
+    int last = swizzle.fComponents.back();
+    if (last == SKSL_SWIZZLE_0 || last == SKSL_SWIZZLE_1) {
+        this->writeType(swizzle.fType);
+        this->write("(");
+    }
     this->writeExpression(*swizzle.fBase, kPostfix_Precedence);
     this->write(".");
     for (int c : swizzle.fComponents) {
-        this->write(&("x\0y\0z\0w\0"[c * 2]));
+        if (c >= 0) {
+            this->write(&("x\0y\0z\0w\0"[c * 2]));
+        }
+    }
+    if (last == SKSL_SWIZZLE_0) {
+        this->write(", 0)");
+    }
+    else if (last == SKSL_SWIZZLE_1) {
+        this->write(", 1)");
     }
 }
 
@@ -1104,6 +1130,15 @@ void GLSLCodeGenerator::writeModifiers(const Modifiers& modifiers,
     }
     if (modifiers.fFlags & Modifiers::kConst_Flag) {
         this->write("const ");
+    }
+    if (modifiers.fFlags & Modifiers::kPLS_Flag) {
+        this->write("__pixel_localEXT ");
+    }
+    if (modifiers.fFlags & Modifiers::kPLSIn_Flag) {
+        this->write("__pixel_local_inEXT ");
+    }
+    if (modifiers.fFlags & Modifiers::kPLSOut_Flag) {
+        this->write("__pixel_local_outEXT ");
     }
     if (usesPrecisionModifiers()) {
         if (modifiers.fFlags & Modifiers::kLowp_Flag) {
@@ -1453,7 +1488,8 @@ void GLSLCodeGenerator::writeProgramElement(const ProgramElement& e) {
                     this->writeVarDeclarations(decl, true);
                     this->writeLine();
                 } else if (builtin == SK_FRAGCOLOR_BUILTIN &&
-                           fProgram.fSettings.fCaps->mustDeclareFragmentShaderOutput()) {
+                           fProgram.fSettings.fCaps->mustDeclareFragmentShaderOutput() &&
+                           ((VarDeclaration&) *decl.fVars[0]).fVar->fWriteCount) {
                     if (fProgram.fSettings.fFragColorIsInOut) {
                         this->write("inout ");
                     } else {

@@ -25,11 +25,7 @@ function LightweightThemeConsumer(aDocument) {
 LightweightThemeConsumer.prototype = {
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "lightweight-theme-styling-update") {
-      let parsedData = JSON.parse(aData);
-      if (!parsedData) {
-        parsedData = { theme: null };
-      }
-      this._update(parsedData.theme);
+      this._update(aSubject.wrappedJSObject.theme);
     } else if (aTopic == "lightweight-theme-apply") {
       this._update(LightweightThemeManager.currentThemeWithFallback);
     }

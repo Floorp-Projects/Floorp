@@ -28,7 +28,7 @@ fuzzy-if(cocoaWidget||d2d,0-1,0-1600) == background-blending-hard-light.html bac
 fuzzy-if(d2d,0-1,0-9600) fuzzy-if(azureSkia||gtkWidget,0-1,0-11200) fuzzy-if(webrender,1-1,9600-11200) == background-blending-hue.html background-blending-hue-ref.svg
 == background-blending-lighten.html background-blending-lighten-ref.svg
 fuzzy-if(d2d,0-1,0-8000) fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) == background-blending-luminosity.html background-blending-luminosity-ref.svg
-== background-blending-multiply.html background-blending-multiply-ref.svg
+fuzzy-if(skiaContent,0-1,0-1600) == background-blending-multiply.html background-blending-multiply-ref.svg
 == background-blending-normal.html background-blending-normal-ref.svg
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia||gtkWidget,0-1,0-1600) == background-blending-overlay.html background-blending-overlay-ref.svg
 fuzzy-if(d2d,0-1,0-3200) fuzzy-if(azureSkia||gtkWidget,0-2,0-12800) == background-blending-saturation.html background-blending-saturation-ref.svg
@@ -97,4 +97,4 @@ fuzzy(0-1,0-40000) == mix-blend-mode-soft-light.html mix-blend-mode-soft-light-r
 # Test plan 4.4.2 element with isolation:isolate creates an isolated group for blended children
 == blend-isolation.html blend-isolation-ref.html
 
-== bug1281593.html bug1281593-ref.html
+fuzzy-if(skiaContent,0-1,0-8192) == bug1281593.html bug1281593-ref.html

@@ -113,17 +113,17 @@ SkCodec::Result SkSampledCodec::onGetAndroidPixels(const SkImageInfo& info, void
         const SkCodec::Result startResult = this->codec()->startIncrementalDecode(
                 scaledInfo, pixels, rowBytes, &codecOptions);
         if (SkCodec::kSuccess == startResult) {
-            int rowsDecoded;
+            int rowsDecoded = 0;
             const SkCodec::Result incResult = this->codec()->incrementalDecode(&rowsDecoded);
             if (incResult == SkCodec::kSuccess) {
                 return SkCodec::kSuccess;
             }
-            SkASSERT(SkCodec::kIncompleteInput == incResult);
+            SkASSERT(incResult == SkCodec::kIncompleteInput || incResult == SkCodec::kErrorInInput);
 
             // FIXME: Can zero initialized be read from SkCodec::fOptions?
             this->codec()->fillIncompleteImage(scaledInfo, pixels, rowBytes,
                     options.fZeroInitialized, scaledSubsetHeight, rowsDecoded);
-            return SkCodec::kIncompleteInput;
+            return incResult;
         } else if (startResult != SkCodec::kUnimplemented) {
             return startResult;
         }
@@ -243,7 +243,7 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
 
             sampler->setSampleY(sampleY);
 
-            int rowsDecoded;
+            int rowsDecoded = 0;
             const SkCodec::Result incResult = this->codec()->incrementalDecode(&rowsDecoded);
             if (incResult == SkCodec::kSuccess) {
                 return SkCodec::kSuccess;
@@ -254,6 +254,9 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
             this->codec()->fillIncompleteImage(info, pixels, rowBytes, options.fZeroInitialized,
                                                info.height(), rowsDecoded);
             return incResult;
+        } else if (startResult == SkCodec::kIncompleteInput
+                || startResult == SkCodec::kErrorInInput) {
+            return SkCodec::kInvalidInput;
         } else if (startResult != SkCodec::kUnimplemented) {
             return startResult;
         } // kUnimplemented means use the old method.
@@ -262,7 +265,9 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
     // Start the scanline decode.
     SkCodec::Result result = this->codec()->startScanlineDecode(nativeInfo,
             &sampledOptions);
-    if (SkCodec::kSuccess != result) {
+    if (SkCodec::kIncompleteInput == result || SkCodec::kErrorInInput == result) {
+        return SkCodec::kInvalidInput;
+    } else if (SkCodec::kSuccess != result) {
         return result;
     }
 

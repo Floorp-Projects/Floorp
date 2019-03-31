@@ -16,18 +16,18 @@
     subset of the pixelref specified by the bitmap. */
 class GrBitmapTextureMaker : public GrTextureMaker {
 public:
-    GrBitmapTextureMaker(GrContext* context, const SkBitmap& bitmap);
+    GrBitmapTextureMaker(GrRecordingContext* context, const SkBitmap& bitmap,
+                         bool useDecal = false);
 
 protected:
     sk_sp<GrTextureProxy> refOriginalTextureProxy(bool willBeMipped,
-                                                  SkColorSpace* dstColorSpace,
                                                   AllowedTexGenType onlyIfFast) override;
 
     void makeCopyKey(const CopyParams& copyParams, GrUniqueKey* copyKey) override;
     void didCacheCopy(const GrUniqueKey& copyKey, uint32_t contextUniqueID) override;
 
     SkAlphaType alphaType() const override;
-    sk_sp<SkColorSpace> getColorSpace(SkColorSpace* dstColorSpace) override;
+    SkColorSpace* colorSpace() const override;
 
 private:
     const SkBitmap  fBitmap;

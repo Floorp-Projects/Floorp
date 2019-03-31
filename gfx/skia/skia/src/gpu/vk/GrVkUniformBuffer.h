@@ -9,6 +9,7 @@
 #define GrVkUniformBuffer_DEFINED
 
 #include "GrVkBuffer.h"
+#include "vk/GrVkTypes.h"
 
 class GrVkGpu;
 

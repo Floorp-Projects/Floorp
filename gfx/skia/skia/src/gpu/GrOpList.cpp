@@ -13,15 +13,13 @@
 #include "GrRenderTargetPriv.h"
 #include "GrSurfaceProxy.h"
 #include "GrTextureProxyPriv.h"
-
-#include "SkAtomics.h"
+#include <atomic>
 
 uint32_t GrOpList::CreateUniqueID() {
-    static int32_t gUniqueID = SK_InvalidUniqueID;
+    static std::atomic<uint32_t> nextID{1};
     uint32_t id;
-    // Loop in case our global wraps around, as we never want to return a 0.
     do {
-        id = static_cast<uint32_t>(sk_atomic_inc(&gUniqueID) + 1);
+        id = nextID++;
     } while (id == SK_InvalidUniqueID);
     return id;
 }
@@ -213,7 +211,7 @@ void GrOpList::dump(bool printDependencies) const {
                      : -1);
     SkDebugf("ColorLoadOp: %s %x StencilLoadOp: %s\n",
              op_to_name(fColorLoadOp),
-             GrLoadOp::kClear == fColorLoadOp ? fLoadClearColor : 0x0,
+             GrLoadOp::kClear == fColorLoadOp ? fLoadClearColor.toBytes_RGBA() : 0x0,
              op_to_name(fStencilLoadOp));
 
     if (printDependencies) {

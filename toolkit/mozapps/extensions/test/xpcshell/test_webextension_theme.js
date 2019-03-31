@@ -19,6 +19,9 @@ const DEFAULT_THEME = THEME_IDS[2];
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
+Services.prefs.setIntPref("extensions.enabledScopes",
+                          AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION);
+
 // We remember the last/ currently active theme for tracking events.
 var gActiveTheme = null;
 
@@ -77,25 +80,26 @@ async function setDisabledStateAndCheck(which, disabled = false) {
     [themeToDisable]: true,
     [themeToEnable]: false,
   };
-  let expectedEvents = {
+  let addonEvents = {
     [themeToDisable]: [
-      [ "onDisabling", false ],
-      [ "onDisabled", false ],
+      {event: "onDisabling"},
+      {event: "onDisabled"},
     ],
     [themeToEnable]: [
-      [ "onEnabling", false ],
-      [ "onEnabled", false ],
+      {event: "onEnabling"},
+      {event: "onEnabled"},
     ],
   };
 
   // Set the state of the theme to change.
   let theme = await promiseAddonByID(which);
-  prepare_test(expectedEvents);
-  if (disabled) {
-    await theme.disable();
-  } else {
-    await theme.enable();
-  }
+  await expectEvents({addonEvents}, () => {
+    if (disabled) {
+      theme.disable();
+    } else {
+      theme.enable();
+    }
+  });
 
   let isDisabled;
   for (theme of await promiseAddonsByIDs(REAL_THEME_IDS)) {
@@ -122,8 +126,6 @@ async function setDisabledStateAndCheck(which, disabled = false) {
     if (!isDisabled)
       gActiveTheme = theme.id;
   }
-
-  ensure_test_completed();
 }
 
 add_task(async function test_WebExtension_themes() {

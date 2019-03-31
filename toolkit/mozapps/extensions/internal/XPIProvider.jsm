@@ -43,6 +43,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
+  resProto: ["@mozilla.org/network/protocol;1?name=resource", "nsISubstitutingProtocolHandler"],
   spellCheck: ["@mozilla.org/spellchecker/engine;1", "mozISpellCheckingEngine"],
   timerManager: ["@mozilla.org/updates/timer-manager;1", "nsIUpdateTimerManager"],
 });
@@ -106,6 +107,18 @@ const XPI_PERMISSION                  = "install";
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
 const DB_SCHEMA = 29;
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "enabledScopesPref",
+                                      PREF_EM_ENABLED_SCOPES,
+                                      AddonManager.SCOPE_ALL);
+
+Object.defineProperty(this, "enabledScopes", {
+  get() {
+    // The profile location is always enabled
+    return enabledScopesPref | AddonManager.SCOPE_PROFILE;
+  },
+});
+
 
 function encoded(strings, ...values) {
   let result = [];
@@ -323,6 +336,13 @@ function buildJarURI(aJarfile, aPath) {
   let uri = Services.io.newFileURI(aJarfile);
   uri = "jar:" + uri.spec + "!/" + aPath;
   return Services.io.newURI(uri);
+}
+
+function maybeResolveURI(uri) {
+  if (uri.schemeIs("resource")) {
+    return Services.io.newURI(resProto.resolveURI(uri));
+  }
+  return uri;
 }
 
 /**
@@ -554,6 +574,10 @@ class XPIState {
     return encoded`${this.id}:${this.version}`;
   }
 
+  get resolvedRootURI() {
+    return maybeResolveURI(Services.io.newURI(this.rootURI));
+  }
+
   /**
    * Update the XPIState to match an XPIDatabase entry; if 'enabled' is changed to true,
    * update the last-modified time. This should probably be made async, but for now we
@@ -598,7 +622,8 @@ class XPIState {
       // Built-in addons should have jar: rootURIs, use the mod time
       // for the containing jar file for those.
       if (!file) {
-        let fileUrl = Services.io.newURI(this.rootURI);
+        let fileUrl = this.resolvedRootURI;
+
         if (fileUrl instanceof Ci.nsIJARURI) {
           fileUrl = fileUrl.JARFile;
         }
@@ -841,6 +866,10 @@ class XPIStateLocation extends Map {
     return false;
   }
 
+  get hidden() {
+    return this.isBuiltin;
+  }
+
   // If this property is false, it does not implement readAddons()
   // interface.  This is used for the temporary and built-in locations
   // that do not correspond to a physical location that can be scanned.
@@ -900,6 +929,10 @@ var BuiltInLocation = new class _BuiltInLocation extends XPIStateLocation {
       installAddon() {},
       uninstallAddon() {},
     };
+  }
+
+  get hidden() {
+    return false;
   }
 
   get isBuiltin() {
@@ -1685,7 +1718,7 @@ class BootstrapScope {
       let params = {
         id: addon.id,
         version: addon.version,
-        resourceURI: Services.io.newURI(addon.rootURI),
+        resourceURI: addon.resolvedRootURI,
         signedState: addon.signedState,
         temporarilyInstalled: addon.location.isTemporary,
         builtIn: addon.location.isBuiltin,
@@ -1954,6 +1987,15 @@ class BootstrapScope {
   }
 }
 
+let resolveDBReady;
+let dbReadyPromise = new Promise(resolve => {
+  resolveDBReady = resolve;
+});
+let resolveProviderReady;
+let providerReadyPromise = new Promise(resolve => {
+  resolveProviderReady = resolve;
+});
+
 var XPIProvider = {
   get name() {
     return "XPIProvider";
@@ -1967,6 +2009,10 @@ var XPIProvider = {
   _telemetryDetails: {},
   // Have we started shutting down bootstrap add-ons?
   _closing: false,
+
+  startupPromises: [],
+
+  databaseReady: Promise.all([dbReadyPromise, providerReadyPromise]),
 
   // Check if the XPIDatabase has been loaded (without actually
   // triggering unwanted imports or I/O)
@@ -2081,11 +2127,6 @@ var XPIProvider = {
       }
     }
 
-    let enabledScopes = Services.prefs.getIntPref(PREF_EM_ENABLED_SCOPES,
-                                                  AddonManager.SCOPE_ALL);
-    // The profile location is always enabled
-    enabledScopes |= AddonManager.SCOPE_PROFILE;
-
     // These must be in order of priority, highest to lowest,
     // for processFileChanges etc. to work
     let locations = [
@@ -2100,7 +2141,7 @@ var XPIProvider = {
       [SystemDefaultsLoc, KEY_APP_SYSTEM_DEFAULTS, AddonManager.SCOPE_PROFILE,
        KEY_APP_FEATURES, []],
 
-      [() => BuiltInLocation, KEY_APP_BUILTINS, AddonManager.SCOPE_SYSTEM],
+      [() => BuiltInLocation, KEY_APP_BUILTINS, AddonManager.SCOPE_APPLICATION],
 
       [DirectoryLoc, KEY_APP_SYSTEM_USER, AddonManager.SCOPE_USER,
        "XREUSysExt", [Services.appinfo.ID], true],
@@ -2224,6 +2265,12 @@ var XPIProvider = {
       this.checkForChanges(aAppChanged, aOldAppVersion, aOldPlatformVersion);
 
       AddonManagerPrivate.markProviderSafe(this);
+
+      this.maybeInstallBuiltinAddon(
+          "default-theme@mozilla.org", "1.0",
+          "resource://gre/modules/themes/default/");
+
+      resolveProviderReady(Promise.all(this.startupPromises));
 
       if (AppConstants.MOZ_CRASHREPORTER) {
         // Annotate the crash report with relevant add-on information.
@@ -2575,6 +2622,17 @@ var XPIProvider = {
     return changed;
   },
 
+  maybeInstallBuiltinAddon(aID, aVersion, aBase) {
+    if (!(enabledScopes & BuiltInLocation.scope)) {
+      return;
+    }
+
+    let existing = BuiltInLocation.get(aID);
+    if (!existing || existing.version != aVersion) {
+      this.startupPromises.push(this.installBuiltinAddon(aBase));
+    }
+  },
+
   getDependentAddons(aAddon) {
     return Array.from(XPIDatabase.getAddons())
                 .filter(addon => addon.dependencies.includes(aAddon.id));
@@ -2857,7 +2915,9 @@ var XPIInternal = {
   getURIForResourceInFile,
   isXPI,
   iterDirectory,
+  maybeResolveURI,
   migrateAddonLoader,
+  resolveDBReady,
 };
 
 var addonTypes = [

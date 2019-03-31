@@ -24,6 +24,13 @@
 #include "SkTemplates.h"
 #include "SkUTF.h"
 
+#if defined(SK_DISABLE_DAA)
+void SkScan::DAAFillPath(const SkPath& path, SkBlitter* blitter, const SkIRect& ir,
+                         const SkIRect& clipBounds, bool forceRLE, SkDAARecord* record) {
+    SkDEBUGFAIL("DAA Disabled");
+    return;
+}
+#else
 ///////////////////////////////////////////////////////////////////////////////
 
 /*
@@ -153,11 +160,10 @@ template<class Deltas> static SK_ALWAYS_INLINE
 void gen_alpha_deltas(const SkPath& path, const SkIRect& clippedIR, const SkIRect& clipBounds,
         Deltas& result, SkBlitter* blitter, bool skipRect, bool pathContainedInClip) {
     // 1. Build edges
-    SkEdgeBuilder builder;
+    SkBezierEdgeBuilder builder;
     // We have to use clipBounds instead of clippedIR to build edges because of "canCullToTheRight":
     // if the builder finds a right edge past the right clip, it won't build that right edge.
-    int  count = builder.build_edges(path, &clipBounds, 0, pathContainedInClip,
-                                     SkEdgeBuilder::kBezier);
+    int  count = builder.buildEdges(path, pathContainedInClip ? nullptr : &clipBounds);
 
     if (count == 0) {
         return;
@@ -384,3 +390,4 @@ void SkScan::DAAFillPath(const SkPath& path, SkBlitter* blitter, const SkIRect& 
         }
     }
 }
+#endif //defined(SK_DISABLE_DAA)

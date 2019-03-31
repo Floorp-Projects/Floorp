@@ -94,23 +94,31 @@ add_task(async function test_apply_update() {
 
   let originalSyncGUID = a1.syncGUID;
 
-  prepare_test({
-    "addon1@tests.mozilla.org": [
-      ["onPropertyChanged", ["applyBackgroundUpdates"]],
-    ],
-  });
-  a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
-  check_test_completed();
+  await expectEvents(
+    {
+      addonEvents: {
+        "addon1@tests.mozilla.org": [
+          {event: "onPropertyChanged",
+           properties: ["applyBackgroundUpdates"]},
+        ],
+      },
+    },
+    async () => {
+      a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
+    });
 
   a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
 
-  prepare_test({}, [
-    "onNewInstall",
-  ]);
-
-  let {updateAvailable: install} = await AddonTestUtils.promiseFindAddonUpdates(a1);
-
-  ensure_test_completed();
+  let install;
+  await expectEvents(
+    {
+      installEvents: [
+        {event: "onNewInstall"},
+      ],
+    },
+    async () => {
+      ({updateAvailable: install} = await AddonTestUtils.promiseFindAddonUpdates(a1));
+    });
 
   let installs = await AddonManager.getAllInstalls();
   equal(installs.length, 1);
@@ -130,18 +138,17 @@ add_task(async function test_apply_update() {
   equal(installs[0], install);
   equal(install2, install);
 
-  await new Promise(resolve => {
-    prepare_test({}, [
-      "onDownloadStarted",
-      "onDownloadEnded",
-    ], () => {
-      resolve();
-      return false;
+  await expectEvents(
+    {
+      installEvents: [
+        {event: "onDownloadStarted"},
+        {event: "onDownloadEnded", returnValue: false},
+      ],
+    },
+    () => {
+      install.install();
     });
-    install.install();
-  });
 
-  ensure_test_completed();
   equal(install.state, AddonManager.STATE_DOWNLOADED);
 
   // Continue installing the update.
@@ -154,20 +161,22 @@ add_task(async function test_apply_update() {
   equal(installs.length, 1);
   equal(installs[0], install);
 
-  await new Promise(resolve => {
-    prepare_test({
-      "addon1@tests.mozilla.org": [
-        ["onInstalling", false],
-        "onInstalled",
+  await expectEvents(
+    {
+      addonEvents: {
+        "addon1@tests.mozilla.org": [
+          {event: "onInstalling"},
+          {event: "onInstalled"},
+        ],
+      },
+      installEvents: [
+        {event: "onInstallStarted"},
+        {event: "onInstallEnded"},
       ],
-    }, [
-      "onInstallStarted",
-      "onInstallEnded",
-    ], resolve);
-    install.install();
-  });
-
-  ensure_test_completed();
+    },
+    () => {
+      install.install();
+    });
 
   await AddonTestUtils.loadAddonsList(true);
 
@@ -187,15 +196,10 @@ add_task(async function test_apply_update() {
   equal(originalSyncGUID, a1.syncGUID);
 
   // Make sure that the extension lastModifiedTime was updated.
-  let testURI = a1.getResourceURI();
-  if (testURI instanceof Ci.nsIJARURI) {
-    testURI = testURI.JARFile;
-  }
-  let testFile = testURI.QueryInterface(Ci.nsIFileURL).file;
+  let testFile = getAddonFile(a1);
   let difference = testFile.lastModifiedTime - startupTime;
   ok(Math.abs(difference) < MAX_TIME_DIFFERENCE);
 
-  clearListeners();
   await a1.uninstall();
 });
 
@@ -320,37 +324,37 @@ add_task(async function test_background_update() {
     },
   });
 
-  let install = await new Promise(resolve => {
-    prepare_test({}, [
-      "onNewInstall",
-      "onDownloadStarted",
-      "onDownloadEnded",
-    ], resolve);
+  function checkInstall(install) {
+    notEqual(install.existingAddon, null);
+    equal(install.existingAddon.id, "addon1@tests.mozilla.org");
+  }
 
-    AddonManagerInternal.backgroundUpdateCheck();
-  });
-
-  notEqual(install.existingAddon, null);
-  equal(install.existingAddon.id, "addon1@tests.mozilla.org");
-
-  await new Promise(resolve => {
-    prepare_test({
-      "addon1@tests.mozilla.org": [
-        ["onInstalling", false],
-        "onInstalled",
+  await expectEvents(
+    {
+      addonEvents: {
+        "addon1@tests.mozilla.org": [
+          {event: "onInstalling"},
+          {event: "onInstalled"},
+        ],
+      },
+      installEvents: [
+        {event: "onNewInstall"},
+        {event: "onDownloadStarted"},
+        {event: "onDownloadEnded",
+         callback: checkInstall},
+        {event: "onInstallStarted"},
+        {event: "onInstallEnded"},
       ],
-    }, [
-      "onInstallStarted",
-      "onInstallEnded",
-    ], resolve);
-  });
+    },
+    () => {
+      AddonManagerInternal.backgroundUpdateCheck();
+    });
 
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   notEqual(a1, null);
   equal(a1.version, "2.0");
   equal(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
 
-  end_test();
   await a1.uninstall();
 });
 

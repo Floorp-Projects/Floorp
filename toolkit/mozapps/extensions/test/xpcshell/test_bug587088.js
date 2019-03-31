@@ -118,8 +118,8 @@ add_task(async function test_1() {
 
   // Lock either install.rdf for unpacked add-ons or the xpi for packed add-ons.
   let uri = a1.getResourceURI("install.rdf");
-  if (uri.schemeIs("jar"))
-    uri = a1.getResourceURI();
+  if (uri instanceof Ci.nsIJARURI)
+    uri = uri.JARFile;
 
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
                 createInstance(Ci.nsIFileInputStream);
@@ -161,8 +161,8 @@ add_task(async function test_2() {
 
   // Lock either install.rdf for unpacked add-ons or the xpi for packed add-ons.
   let uri = a1.getResourceURI("install.rdf");
-  if (uri.schemeIs("jar"))
-    uri = a1.getResourceURI();
+  if (uri instanceof Ci.nsIJARURI)
+    uri = uri.JARFile;
 
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
                 createInstance(Ci.nsIFileInputStream);

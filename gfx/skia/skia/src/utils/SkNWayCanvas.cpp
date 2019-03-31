@@ -4,7 +4,9 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+
 #include "SkNWayCanvas.h"
+#include "SkCanvasPriv.h"
 
 SkNWayCanvas::SkNWayCanvas(int width, int height) : INHERITED(width, height) {}
 
@@ -45,6 +47,7 @@ public:
         return false;
     }
     SkCanvas* operator->() { return fCanvas; }
+    SkCanvas* get() const { return fCanvas; }
 
 private:
     const SkTDArray<SkCanvas*>& fList;
@@ -70,6 +73,15 @@ SkCanvas::SaveLayerStrategy SkNWayCanvas::getSaveLayerStrategy(const SaveLayerRe
     this->INHERITED::getSaveLayerStrategy(rec);
     // No need for a layer.
     return kNoLayer_SaveLayerStrategy;
+}
+
+bool SkNWayCanvas::onDoSaveBehind(const SkRect* bounds) {
+    Iter iter(fList);
+    while (iter.next()) {
+        SkCanvasPriv::SaveBehind(iter.get(), bounds);
+    }
+    this->INHERITED::onDoSaveBehind(bounds);
+    return false;
 }
 
 void SkNWayCanvas::willRestore() {
@@ -147,6 +159,14 @@ void SkNWayCanvas::onDrawRect(const SkRect& rect, const SkPaint& paint) {
     Iter iter(fList);
     while (iter.next()) {
         iter->drawRect(rect, paint);
+    }
+}
+
+void SkNWayCanvas::onDrawEdgeAARect(const SkRect& rect, SkCanvas::QuadAAFlags aa, SkColor color,
+                                    SkBlendMode mode) {
+    Iter iter(fList);
+    while (iter.next()) {
+        iter->experimental_DrawEdgeAARectV1(rect, aa, color, mode);
     }
 }
 
@@ -257,35 +277,11 @@ void SkNWayCanvas::onDrawImageLattice(const SkImage* image, const Lattice& latti
     }
 }
 
-void SkNWayCanvas::onDrawText(const void* text, size_t byteLength, SkScalar x, SkScalar y,
-                              const SkPaint& paint) {
+void SkNWayCanvas::onDrawImageSet(const SkCanvas::ImageSetEntry set[], int count,
+                                  SkFilterQuality filterQuality, SkBlendMode mode) {
     Iter iter(fList);
     while (iter.next()) {
-        iter->drawText(text, byteLength, x, y, paint);
-    }
-}
-
-void SkNWayCanvas::onDrawPosText(const void* text, size_t byteLength, const SkPoint pos[],
-                                 const SkPaint& paint) {
-    Iter iter(fList);
-    while (iter.next()) {
-        iter->drawPosText(text, byteLength, pos, paint);
-    }
-}
-
-void SkNWayCanvas::onDrawPosTextH(const void* text, size_t byteLength, const SkScalar xpos[],
-                                  SkScalar constY, const SkPaint& paint) {
-    Iter iter(fList);
-    while (iter.next()) {
-        iter->drawPosTextH(text, byteLength, xpos, constY, paint);
-    }
-}
-
-void SkNWayCanvas::onDrawTextRSXform(const void* text, size_t byteLength, const SkRSXform xform[],
-                                     const SkRect* cull, const SkPaint& paint) {
-    Iter iter(fList);
-    while (iter.next()) {
-        iter->drawTextRSXform(text, byteLength, xform, cull, paint);
+        iter->experimental_DrawImageSetV1(set, count, filterQuality, mode);
     }
 }
 

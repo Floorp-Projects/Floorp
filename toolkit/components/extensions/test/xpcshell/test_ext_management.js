@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+AddonTestUtils.init(this);
+
 add_task(async function setup() {
   await ExtensionTestUtils.startAddonManager();
 });
@@ -31,7 +33,7 @@ add_task(async function test_management_getAll() {
     });
 
     let addons = await browser.management.getAll();
-    browser.test.assertEq(addons.length, 3, "management.getAll returned three add-ons.");
+    browser.test.assertEq(2, addons.length, "management.getAll returned correct number of add-ons.");
     browser.test.sendMessage("addons", addons);
   }
 

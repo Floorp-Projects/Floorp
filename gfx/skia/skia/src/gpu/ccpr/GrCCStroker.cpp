@@ -70,15 +70,10 @@ inline void CubicStrokeInstance::set(const Sk4f& X, const Sk4f& Y, float dx, flo
 class LinearStrokeProcessor : public GrGeometryProcessor {
 public:
     LinearStrokeProcessor() : GrGeometryProcessor(kLinearStrokeProcessor_ClassID) {
-        this->setInstanceAttributeCnt(2);
+        this->setInstanceAttributes(kInstanceAttribs, 2);
 #ifdef SK_DEBUG
-        // Check that instance attributes exactly match the LinearStrokeInstance struct layout.
         using Instance = LinearStrokeInstance;
-        SkASSERT(!strcmp(this->instanceAttribute(0).name(), "endpts"));
-        SkASSERT(this->debugOnly_instanceAttributeOffset(0) == offsetof(Instance, fEndpoints));
-        SkASSERT(!strcmp(this->instanceAttribute(1).name(), "stroke_radius"));
-        SkASSERT(this->debugOnly_instanceAttributeOffset(1) == offsetof(Instance, fStrokeRadius));
-        SkASSERT(this->debugOnly_instanceStride() == sizeof(Instance));
+        SkASSERT(this->instanceStride() == sizeof(Instance));
 #endif
     }
 
@@ -90,8 +85,6 @@ private:
             {"endpts", kFloat4_GrVertexAttribType, kFloat4_GrSLType},
             {"stroke_radius", kFloat_GrVertexAttribType, kFloat_GrSLType}
     };
-
-    const Attribute& onInstanceAttribute(int i) const override { return kInstanceAttribs[i]; }
 
     class Impl : public GrGLSLGeometryProcessor {
         void setData(const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
@@ -145,7 +138,7 @@ void LinearStrokeProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
 
     // Use the 4 edge distances to calculate coverage in the fragment shader.
     GrGLSLFPFragmentBuilder* f = args.fFragBuilder;
-    f->codeAppendf("half2 coverages = min(%s.xy, .5) + min(%s.zw, .5);",
+    f->codeAppendf("half2 coverages = half2(min(%s.xy, .5) + min(%s.zw, .5));",
                    edgeDistances.fsIn(), edgeDistances.fsIn());
     f->codeAppendf("%s = half4(coverages.x * coverages.y);", args.fOutputColor);
 
@@ -167,17 +160,10 @@ constexpr GrPrimitiveProcessor::Attribute LinearStrokeProcessor::kInstanceAttrib
 class CubicStrokeProcessor : public GrGeometryProcessor {
 public:
     CubicStrokeProcessor() : GrGeometryProcessor(kCubicStrokeProcessor_ClassID) {
-        this->setInstanceAttributeCnt(3);
+        this->setInstanceAttributes(kInstanceAttribs, 3);
 #ifdef SK_DEBUG
-        // Check that instance attributes exactly match the CubicStrokeInstance struct layout.
         using Instance = CubicStrokeInstance;
-        SkASSERT(!strcmp(this->instanceAttribute(0).name(), "X"));
-        SkASSERT(this->debugOnly_instanceAttributeOffset(0) == offsetof(Instance, fX));
-        SkASSERT(!strcmp(this->instanceAttribute(1).name(), "Y"));
-        SkASSERT(this->debugOnly_instanceAttributeOffset(1) == offsetof(Instance, fY));
-        SkASSERT(!strcmp(this->instanceAttribute(2).name(), "stroke_info"));
-        SkASSERT(this->debugOnly_instanceAttributeOffset(2) == offsetof(Instance, fStrokeRadius));
-        SkASSERT(this->debugOnly_instanceStride() == sizeof(Instance));
+        SkASSERT(this->instanceStride() == sizeof(Instance));
 #endif
     }
 
@@ -190,8 +176,6 @@ private:
             {"Y", kFloat4_GrVertexAttribType, kFloat4_GrSLType},
             {"stroke_info", kFloat2_GrVertexAttribType, kFloat2_GrSLType}
     };
-
-    const Attribute& onInstanceAttribute(int i) const override { return kInstanceAttribs[i]; }
 
     class Impl : public GrGLSLGeometryProcessor {
         void setData(const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
@@ -276,9 +260,9 @@ void CubicStrokeProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
 
     // Use the 2 edge distances and interpolated butt cap AA to calculate fragment coverage.
     GrGLSLFPFragmentBuilder* f = args.fFragBuilder;
-    f->codeAppendf("half2 edge_coverages = min(%s.xy, .5);", coverages.fsIn());
+    f->codeAppendf("half2 edge_coverages = min(half2(%s.xy), .5);", coverages.fsIn());
     f->codeAppend ("half coverage = edge_coverages.x + edge_coverages.y;");
-    f->codeAppendf("coverage *= %s.z;", coverages.fsIn());  // Butt cap AA.
+    f->codeAppendf("coverage *= half(%s.z);", coverages.fsIn());  // Butt cap AA.
 
     // As is common for CCPR, clockwise-winding triangles from the strip emit positive coverage, and
     // counter-clockwise triangles emit negative.
@@ -388,7 +372,7 @@ public:
 
         int endConicsIdx = stroker->fBaseInstances[1].fConics +
                            stroker->fInstanceCounts[1]->fConics;
-        fInstanceBuffer = onFlushRP->makeBuffer(kVertex_GrBufferType,
+        fInstanceBuffer = onFlushRP->makeBuffer(GrGpuBufferType::kVertex,
                                                 endConicsIdx * sizeof(ConicInstance));
         if (!fInstanceBuffer) {
             SkDebugf("WARNING: failed to allocate CCPR stroke instance buffer.\n");
@@ -513,7 +497,7 @@ public:
         }
     }
 
-    sk_sp<GrBuffer> finish() {
+    sk_sp<GrGpuBuffer> finish() {
         SkASSERT(this->isMapped());
         SkASSERT(!memcmp(fNextInstances, fEndInstances, sizeof(fNextInstances)));
         fInstanceBuffer->unmap();
@@ -559,7 +543,7 @@ private:
     InstanceTallies* fCurrNextInstances;
     SkDEBUGCODE(const InstanceTallies* fCurrEndInstances);
 
-    sk_sp<GrBuffer> fInstanceBuffer;
+    sk_sp<GrGpuBuffer> fInstanceBuffer;
     void* fInstanceBufferData = nullptr;
     InstanceTallies fNextInstances[2];
     SkDEBUGCODE(InstanceTallies fEndInstances[2]);
@@ -705,8 +689,7 @@ void GrCCStroker::drawStrokes(GrOpFlushState* flushState, BatchID batchID,
     startIndices[(int)GrScissorTest::kEnabled] = (!startScissorSubBatch)
             ? &fZeroTallies : fScissorSubBatches[startScissorSubBatch - 1].fEndInstances;
 
-    GrPipeline pipeline(flushState->drawOpArgs().fProxy, GrScissorTest::kEnabled,
-                        SkBlendMode::kPlus);
+    GrPipeline pipeline(GrScissorTest::kEnabled, SkBlendMode::kPlus);
 
     // Draw linear strokes.
     this->appendStrokeMeshesToBuffers(0, batch, startIndices, startScissorSubBatch, drawBounds);
@@ -751,7 +734,7 @@ void GrCCStroker::appendStrokeMeshesToBuffers(int numSegmentsLog2, const Batch& 
     SkASSERT(endIdx >= startIdx);
     if (int instanceCount = endIdx - startIdx) {
         GrMesh& mesh = fMeshesBuffer.emplace_back(GrPrimitiveType::kTriangleStrip);
-        mesh.setInstanced(fInstanceBuffer.get(), instanceCount, baseInstance + startIdx,
+        mesh.setInstanced(fInstanceBuffer, instanceCount, baseInstance + startIdx,
                           numStripVertices);
         fScissorsBuffer.push_back(drawBounds);
     }
@@ -765,7 +748,7 @@ void GrCCStroker::appendStrokeMeshesToBuffers(int numSegmentsLog2, const Batch& 
         SkASSERT(endIdx >= startIdx);
         if (int instanceCount = endIdx - startIdx) {
             GrMesh& mesh = fMeshesBuffer.emplace_back(GrPrimitiveType::kTriangleStrip);
-            mesh.setInstanced(fInstanceBuffer.get(), instanceCount, baseInstance + startIdx,
+            mesh.setInstanced(fInstanceBuffer, instanceCount, baseInstance + startIdx,
                               numStripVertices);
             fScissorsBuffer.push_back(subBatch.fScissor);
             startIdx = endIdx;
@@ -800,7 +783,7 @@ void GrCCStroker::drawConnectingGeometry(GrOpFlushState* flushState, const GrPip
     int endIdx = batch.fNonScissorEndInstances->*InstanceType;
     SkASSERT(endIdx >= startIdx);
     if (int instanceCount = endIdx - startIdx) {
-        processor.appendMesh(fInstanceBuffer.get(), instanceCount, baseInstance + startIdx,
+        processor.appendMesh(fInstanceBuffer, instanceCount, baseInstance + startIdx,
                              &fMeshesBuffer);
         fScissorsBuffer.push_back(drawBounds);
     }
@@ -813,7 +796,7 @@ void GrCCStroker::drawConnectingGeometry(GrOpFlushState* flushState, const GrPip
         endIdx = subBatch.fEndInstances->*InstanceType;
         SkASSERT(endIdx >= startIdx);
         if (int instanceCount = endIdx - startIdx) {
-            processor.appendMesh(fInstanceBuffer.get(), instanceCount, baseInstance + startIdx,
+            processor.appendMesh(fInstanceBuffer, instanceCount, baseInstance + startIdx,
                                  &fMeshesBuffer);
             fScissorsBuffer.push_back(subBatch.fScissor);
             startIdx = endIdx;
