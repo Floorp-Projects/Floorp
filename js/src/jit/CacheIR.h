@@ -1178,7 +1178,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
                      bool isSpread, bool isConstructing) {
     writeOpWithOperandId(CacheOp::CallClassHook, calleeId);
     writeOperandId(argc);
-    buffer_.writeByte(true);                // may be cross-realm
+    buffer_.writeByte(true);  // may be cross-realm
     buffer_.writeByte(uint32_t(isSpread));
     buffer_.writeByte(uint32_t(isConstructing));
     void* target = JS_FUNC_TO_DATA_PTR(void*, hook);

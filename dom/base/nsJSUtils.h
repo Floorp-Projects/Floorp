@@ -231,10 +231,10 @@ class nsJSUtils {
   // <binding> element had the simpleScopeChain attribute.
   //
   // This is to prevent footguns like bug 1446342.
-  static bool GetScopeChainForXBL(JSContext* aCx,
-                                  mozilla::dom::Element* aBoundElement,
-                                  const nsXBLPrototypeBinding& aProtoBinding,
-                                  JS::MutableHandleVector<JSObject*> aScopeChain);
+  static bool GetScopeChainForXBL(
+      JSContext* aCx, mozilla::dom::Element* aBoundElement,
+      const nsXBLPrototypeBinding& aProtoBinding,
+      JS::MutableHandleVector<JSObject*> aScopeChain);
 
   static void ResetTimeZone();
 };

@@ -578,9 +578,8 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
                   // Handle this case similarly to the code above, but just
                   // use idle queue.
                   TimeDuration rate = mVsyncRefreshDriverTimer->GetTimerRate();
-                  uint32_t slowRate =
-                      static_cast<uint32_t>(rate.ToMilliseconds() *
-                                            frameRateMultiplier);
+                  uint32_t slowRate = static_cast<uint32_t>(
+                      rate.ToMilliseconds() * frameRateMultiplier);
                   pctx->DidUseFrameRateMultiplier();
                   nsCOMPtr<nsIRunnable> vsyncEvent = NewRunnableMethod<>(
                       "RefreshDriverVsyncObserver::NormalPriorityNotify[IDLE]",

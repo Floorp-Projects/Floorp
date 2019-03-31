@@ -17,6 +17,6 @@ foo = Foo 1
 """, b"""
 foo = Foo 2
 """)
-        pattern = "Unsupported file format \(foo\.unknown\)\."
+        pattern = r"Unsupported file format \(foo\.unknown\)\."
         with six.assertRaisesRegex(self, MergeNotSupportedError, pattern):
             merge_channels(self.name, channels)

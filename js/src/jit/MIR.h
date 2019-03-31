@@ -2518,9 +2518,7 @@ class MObjectState : public MVariadicInstruction,
   MOZ_MUST_USE bool initFromTemplateObject(TempAllocator& alloc,
                                            MDefinition* undefinedVal);
 
-  size_t numFixedSlots() const {
-    return numFixedSlots_;
-  }
+  size_t numFixedSlots() const { return numFixedSlots_; }
   size_t numSlots() const { return numSlots_; }
 
   MDefinition* getSlot(uint32_t slot) const { return getOperand(slot + 1); }

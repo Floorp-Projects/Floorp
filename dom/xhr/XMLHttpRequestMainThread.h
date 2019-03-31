@@ -202,8 +202,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
   void Construct(nsIPrincipal* aPrincipal, nsIGlobalObject* aGlobalObject,
                  nsICookieSettings* aCookieSettings, bool aForWorker,
-                 nsIURI* aBaseURI = nullptr,
-                 nsILoadGroup* aLoadGroup = nullptr,
+                 nsIURI* aBaseURI = nullptr, nsILoadGroup* aLoadGroup = nullptr,
                  PerformanceStorage* aPerformanceStorage = nullptr,
                  nsICSPEventListener* aCSPEventListener = nullptr) {
     MOZ_ASSERT(aPrincipal);
@@ -781,27 +780,25 @@ class nsXMLHttpRequestXPCOMifier final : public nsIStreamListener,
   RefPtr<XMLHttpRequestMainThread> mXHR;
 };
 
-
-class XMLHttpRequestDoneNotifier : public Runnable
-{
+class XMLHttpRequestDoneNotifier : public Runnable {
  public:
   explicit XMLHttpRequestDoneNotifier(XMLHttpRequestMainThread* aXHR)
       : Runnable("XMLHttpRequestDoneNotifier"), mXHR(aXHR) {}
 
- NS_IMETHOD Run() override {
-   if (mXHR) {
-     RefPtr<XMLHttpRequestMainThread> xhr = mXHR;
-     mXHR = nullptr;
-     xhr->ChangeStateToDoneInternal();
-   }
-   return NS_OK;
- }
+  NS_IMETHOD Run() override {
+    if (mXHR) {
+      RefPtr<XMLHttpRequestMainThread> xhr = mXHR;
+      mXHR = nullptr;
+      xhr->ChangeStateToDoneInternal();
+    }
+    return NS_OK;
+  }
 
   void Disconnect() { mXHR = nullptr; }
+
  private:
   XMLHttpRequestMainThread* mXHR;
 };
-
 
 class nsXHRParseEndListener : public nsIDOMEventListener {
  public:

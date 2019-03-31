@@ -338,7 +338,8 @@ bool ADTSTrackDemuxer::Init() {
           mInfo->mDuration.ToMicroseconds());
 
   // AAC encoder delay is by default 2112 audio frames.
-  // See https://developer.apple.com/library/content/documentation/QuickTime/QTFF/QTFFAppenG/QTFFAppenG.html
+  // See
+  // https://developer.apple.com/library/content/documentation/QuickTime/QTFF/QTFFAppenG/QTFFAppenG.html
   // So we always seek 2112 frames prior the seeking point.
   mPreRoll = TimeUnit::FromMicroseconds(2112 * 1000000ULL / mSamplesPerSecond);
   return mSamplesPerSecond && mChannels;

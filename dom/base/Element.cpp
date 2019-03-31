@@ -3506,8 +3506,7 @@ void Element::GetAnimations(const AnimationFilter& filter,
     return;
   }
 
-  if (!filter.mSubtree ||
-      pseudoType == PseudoStyleType::before ||
+  if (!filter.mSubtree || pseudoType == PseudoStyleType::before ||
       pseudoType == PseudoStyleType::after ||
       pseudoType == PseudoStyleType::marker) {
     GetAnimationsUnsorted(elem, pseudoType, aAnimations);

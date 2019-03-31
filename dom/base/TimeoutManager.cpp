@@ -976,8 +976,7 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
         mLastFiringIndex = timeout->mFiringIndex;
 #endif
         // This timeout is good to run.
-        bool timeout_was_cleared =
-            window->RunTimeoutHandler(timeout, scx);
+        bool timeout_was_cleared = window->RunTimeoutHandler(timeout, scx);
 #if MOZ_GECKO_PROFILER
         if (profiler_is_active()) {
           TimeDuration elapsed = now - timeout->SubmitTime();

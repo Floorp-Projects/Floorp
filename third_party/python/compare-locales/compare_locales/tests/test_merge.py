@@ -972,11 +972,11 @@ eff = lEff
         self.reference("""
 foo = Foo
   .foottr = something
-bar
+bar =
   .tender = Attribute value
 """)
         self.localized("""\
-foo
+foo =
   .foottr = attr
 bar = lBar
   .tender = localized
@@ -1174,16 +1174,25 @@ bar = duplicated bar
             cc.observers.toJSON(),
             {'summary':
                 {None: {
-                    'warnings': 1,
+                    'warnings': 3,
                     'changed': 1,
                     'changed_w': 2
                 }},
              'details': {
                  'l10n.ftl': [
                      {'warning':
-                      u'Attribute "attr" occurs 3 times '
+                      u'Attribute "attr" is duplicated '
+                      u'at line 2, column 5 for foo'
+                      },
+                     {'warning':
+                      u'Attribute "attr" is duplicated '
+                      u'at line 3, column 5 for foo'
+                      },
+                     {'warning':
+                      u'Attribute "attr" is duplicated '
                       u'at line 4, column 5 for foo'
-                      }]
+                      },
+                  ]
                 }
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.ftl")

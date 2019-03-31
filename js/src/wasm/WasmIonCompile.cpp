@@ -733,7 +733,7 @@ class FunctionCompiler {
     // storage are not movable.
     MWasmLoadRef* load =
         MWasmLoadRef::New(alloc(), base, AliasSet::WasmTableElement,
-                          /*isMovable=*/ false);
+                          /*isMovable=*/false);
     curBlock_->add(load);
     return load;
   }

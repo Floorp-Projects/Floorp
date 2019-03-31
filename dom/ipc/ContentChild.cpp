@@ -1792,9 +1792,9 @@ bool ContentChild::SendPBrowserConstructor(
     return false;
   }
 
-  return PContentChild::SendPBrowserConstructor(aActor, aTabId, aSameTabGroupAs,
-                                                aContext, aChromeFlags, aCpID,
-                                                aBrowsingContext, aIsForBrowser);
+  return PContentChild::SendPBrowserConstructor(
+      aActor, aTabId, aSameTabGroupAs, aContext, aChromeFlags, aCpID,
+      aBrowsingContext, aIsForBrowser);
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvPBrowserConstructor(
@@ -3792,7 +3792,8 @@ mozilla::ipc::IPCResult ContentChild::RecvRegisterBrowsingContextGroup(
     MOZ_ASSERT_IF(parent, parent->Group() == group);
 #endif
 
-    RefPtr<BrowsingContext> ctxt = BrowsingContext::CreateFromIPC(std::move(init), group, nullptr);
+    RefPtr<BrowsingContext> ctxt =
+        BrowsingContext::CreateFromIPC(std::move(init), group, nullptr);
 
     // FIXME: We should deal with cached & detached contexts as well.
     ctxt->Attach(/* aFromIPC */ true);

@@ -1982,8 +1982,7 @@ static nsresult LockProfile(nsINativeAppSupport* aNative, nsIFile* aRootDir,
 // 6) display the profile-manager UI
 static nsresult SelectProfile(nsToolkitProfileService* aProfileSvc,
                               nsINativeAppSupport* aNative, nsIFile** aRootDir,
-                              nsIFile** aLocalDir,
-                              nsIToolkitProfile** aProfile,
+                              nsIFile** aLocalDir, nsIToolkitProfile** aProfile,
                               bool* aWasDefaultSelection) {
   StartupTimeline::Record(StartupTimeline::SELECT_PROFILE);
 
