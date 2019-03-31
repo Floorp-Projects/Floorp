@@ -297,7 +297,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "32222b150d30"
+        "revision": "c71db94ca881"
     },
     "kab": {
         "platforms": [
@@ -507,7 +507,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "669967598ff6"
+        "revision": "ab2d427ef158"
     },
     "tr": {
         "platforms": [
