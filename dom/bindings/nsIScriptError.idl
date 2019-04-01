@@ -93,6 +93,8 @@ interface nsIScriptError : nsIConsoleMessage
 
     readonly attribute boolean isFromPrivateWindow;
 
+    readonly attribute boolean isFromChromeContext;
+
     attribute jsval stack;
 
     /**
@@ -131,7 +133,8 @@ interface nsIScriptError : nsIConsoleMessage
               in uint32_t columnNumber,
               in uint32_t flags,
               in string category,
-              [optional] in bool fromPrivateWindow);
+              [optional] in bool fromPrivateWindow,
+              [optional] in bool fromChromeContext);
 
     /* This should be called instead of nsIScriptError.init to
      * initialize with a window id.  The window id should be for the

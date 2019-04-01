@@ -159,7 +159,8 @@ void CSP_LogMessage(const nsAString& aMessage, const nsAString& aSourceName,
                                  aInnerWindowID);
   } else {
     rv = error->Init(cspMsg, aSourceName, aSourceLine, aLineNumber,
-                     aColumnNumber, aFlags, category.get(), aFromPrivateWindow);
+                     aColumnNumber, aFlags, category.get(), aFromPrivateWindow,
+                     true /* from chrome context */);
   }
   if (NS_FAILED(rv)) {
     return;
