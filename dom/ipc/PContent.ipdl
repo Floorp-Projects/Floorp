@@ -936,11 +936,12 @@ parent:
     async ConsoleMessage(nsString message);
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,
                       uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
-                      nsCString category, bool privateWindow);
+                      nsCString category, bool privateWindow,
+                      bool fromChromeContext);
     async ScriptErrorWithStack(nsString message, nsString sourceName, nsString sourceLine,
                                uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
                                nsCString category, bool privateWindow,
-                               ClonedMessageData stack);
+                               bool fromChromeContext, ClonedMessageData stack);
 
     // Places the items within dataTransfer on the clipboard.
     async SetClipboard(IPCDataTransfer aDataTransfer,

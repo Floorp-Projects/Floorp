@@ -39,7 +39,8 @@ ConsoleLogLevel PrefToValue(const nsAString& aPref) {
         "Console.maxLogLevelPref used with a non-existing pref: ");
     message.Append(aPref);
 
-    nsContentUtils::LogSimpleConsoleError(message, "chrome", false);
+    nsContentUtils::LogSimpleConsoleError(message, "chrome", false,
+                                          true /* from chrome context*/);
     return ConsoleLogLevel::All;
   }
 
@@ -50,7 +51,8 @@ ConsoleLogLevel PrefToValue(const nsAString& aPref) {
     message.AssignLiteral("Invalid Console.maxLogLevelPref value: ");
     message.Append(NS_ConvertUTF8toUTF16(value));
 
-    nsContentUtils::LogSimpleConsoleError(message, "chrome", false);
+    nsContentUtils::LogSimpleConsoleError(message, "chrome", false,
+                                          true /* from chrome context*/);
     return ConsoleLogLevel::All;
   }
 

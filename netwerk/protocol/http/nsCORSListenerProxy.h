@@ -68,6 +68,7 @@ class nsCORSListenerProxy final : public nsIStreamListener,
   // browser console if no valid inner window ID is found.
   static void LogBlockedCORSRequest(uint64_t aInnerWindowID,
                                     bool aPrivateBrowsing,
+                                    bool aFromChromeContext,
                                     const nsAString& aMessage,
                                     const nsACString& aCategory);
 

@@ -18,6 +18,7 @@ consoleListener.prototype  = {
   observe(aSubject, aTopic, aData) {
     if (aTopic == "console-api-log-event") {
       var obj = aSubject.wrappedJSObject;
+      ok(!obj.chromeContext, "Thils is not a chrome context");
       if (order + 1 == parseInt(obj.arguments[0])) {
         ok(true, "Message received: " + obj.arguments[0]);
         order++;
