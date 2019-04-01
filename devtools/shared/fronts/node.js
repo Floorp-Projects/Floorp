@@ -267,6 +267,9 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this._form.hasEventListeners;
   }
 
+  get isMarkerPseudoElement() {
+    return this._form.isMarkerPseudoElement;
+  }
   get isBeforePseudoElement() {
     return this._form.isBeforePseudoElement;
   }
