@@ -64,6 +64,7 @@ rusty-enums = [
     "mozilla::dom::IterationCompositeOperation",
     "mozilla::dom::CompositeOperation",
     "mozilla::InheritTarget",
+    "mozilla::FontFamilyType",
     "mozilla::css::DocumentMatchingFunction",
     "mozilla::css::SheetParsingMode",
     "mozilla::StyleContentType",
@@ -457,8 +458,6 @@ cbindgen-types = [
     { gecko = "StyleOwned", servo = "gecko_bindings::sugar::ownership::Owned" },
     { gecko = "StyleOwnedOrNull", servo = "gecko_bindings::sugar::ownership::OwnedOrNull" },
     { gecko = "StyleStrong", servo = "gecko_bindings::sugar::ownership::Strong" },
-    { gecko = "StyleGenericFontFamily", servo = "values::computed::font::GenericFontFamily" },
-    { gecko = "StyleFontFamilyNameSyntax", servo = "values::computed::font::FontFamilyNameSyntax" },
 ]
 
 mapped-generic-types = [

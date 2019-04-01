@@ -61,8 +61,6 @@ include = [
   "FontDisplay",
   "FontFaceSourceListComponent",
   "FontLanguageOverride",
-  "GenericFontFamily",
-  "FontFamilyNameSyntax",
   "OverflowWrap",
   "TimingFunction",
   "PathCommand",

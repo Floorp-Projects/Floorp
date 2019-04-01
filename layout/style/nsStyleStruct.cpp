@@ -112,12 +112,12 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 
 nsStyleFont::nsStyleFont(const Document& aDocument)
     : mFont(*aDocument.GetFontPrefsForLang(nullptr)->GetDefaultFont(
-          StyleGenericFontFamily::None)),
+          kPresContext_DefaultVariableFont_ID)),
       mSize(ZoomText(aDocument, mFont.size)),
       mFontSizeFactor(1.0),
       mFontSizeOffset(0),
       mFontSizeKeyword(NS_STYLE_FONT_SIZE_MEDIUM),
-      mGenericID(StyleGenericFontFamily::None),
+      mGenericID(kGenericFont_NONE),
       mScriptLevel(0),
       mMathVariant(NS_MATHML_MATHVARIANT_NONE),
       mMathDisplay(NS_MATHML_DISPLAYSTYLE_INLINE),

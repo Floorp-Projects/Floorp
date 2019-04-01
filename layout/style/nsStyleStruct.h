@@ -105,7 +105,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
                              // NS_STYLE_FONT_SIZE_NO_KEYWORD when not
                              // keyword-derived
 
-  mozilla::StyleGenericFontFamily mGenericID;
+  uint8_t mGenericID;  // generic CSS font family, if any;
+                       // value is a kGenericFont_* constant, see nsFont.h.
 
   // MathML scriptlevel support
   int8_t mScriptLevel;
