@@ -357,7 +357,6 @@ void TabParent::RemoveWindowListeners() {
 
 void TabParent::DestroyInternal() {
   PopFocus(this);
-  IMEStateManager::OnTabParentDestroying(this);
 
   RemoveWindowListeners();
 
@@ -432,7 +431,7 @@ void TabParent::ActorDestroy(ActorDestroyReason why) {
 
   // Even though TabParent::Destroy calls this, we need to do it here too in
   // case of a crash.
-  IMEStateManager::OnTabParentDestroying(this);
+  TabParent::PopFocus(this);
 
   // Prevent executing ContentParent::NotifyTabDestroying in
   // TabParent::Destroy() called by frameLoader->DestroyComplete() below
