@@ -222,8 +222,6 @@
     <string name="close_tab">Close tab</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Tab menu</string>
-    <!-- Content description (not visible, for screen readers etc.): Close tab button. Favicon for the session's site -->
-    <string name="favicon_content_description">Bookmark</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
     <string name="current_session_delete">Delete</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
