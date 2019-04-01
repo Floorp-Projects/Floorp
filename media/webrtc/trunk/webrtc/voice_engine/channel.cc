@@ -718,7 +718,7 @@ int32_t Channel::OnReceivedPayloadData(const uint8_t* payloadData,
       const ChannelStatistics stats = statistics_proxy_->GetStats();
       jitter = stats.rtcp.jitter / (playoutFrequency / 1000);
     }
-    rtp_source_observer_->OnRtpPacket(rtpHeader,
+    rtp_source_observer_->OnRtpPacket(rtpHeader->header,
         webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds(), jitter);
   }
 
