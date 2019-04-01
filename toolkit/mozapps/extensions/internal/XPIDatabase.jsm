@@ -1624,6 +1624,8 @@ this.XPIDatabase = {
     if (aType !== "theme")
       return;
 
+    Services.prefs.setCharPref("extensions.activeThemeID", aId || DEFAULT_THEME_ID);
+
     let enableTheme;
 
     let addons = this.getAddonsByType("theme");
