@@ -1976,11 +1976,6 @@ void gfxFcPlatformFontList::AddGenericFonts(
     nsTArray<FamilyAndGeneric>& aFamilyList) {
   bool usePrefFontList = false;
 
-  // treat -moz-fixed as monospace
-  if (aGenericType == StyleGenericFontFamily::MozFixed) {
-    aGenericType = StyleGenericFontFamily::Monospace;
-  }
-
   const char* generic = GetGenericName(aGenericType);
   NS_ASSERTION(generic, "weird generic font type");
   if (!generic) {
