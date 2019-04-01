@@ -1628,13 +1628,6 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
 
     DisplayItemType itemType = item->GetType();
 
-    if (mForEventsAndPluginsOnly &&
-        (itemType != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO &&
-         itemType != DisplayItemType::TYPE_PLUGIN)) {
-      // Only process hit test info items or plugin items.
-      continue;
-    }
-
     bool forceNewLayerData = false;
     size_t layerCountBeforeRecursing =
         mLayerScrollDatas.GetLayerCount(aBuilder.GetRenderRoot());
@@ -1709,13 +1702,6 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
           mClippedGroupBounds = Some(innerClippedBounds);
         }
         GP("attempting to enter the grouping code\n");
-      }
-
-      AutoRestore<bool> restoreForEventsAndPluginsOnly(
-          mForEventsAndPluginsOnly);
-      if (itemType == DisplayItemType::TYPE_OPACITY &&
-          static_cast<nsDisplayOpacity*>(item)->ForEventsAndPluginsOnly()) {
-        mForEventsAndPluginsOnly = true;
       }
 
       if (dumpEnabled) {

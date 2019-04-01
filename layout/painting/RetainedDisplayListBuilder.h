@@ -95,8 +95,7 @@ RetainedDisplayListData* GetOrSetRetainedDisplayListData(nsIFrame* aRootFrame);
 struct RetainedDisplayListBuilder {
   RetainedDisplayListBuilder(nsIFrame* aReferenceFrame,
                              nsDisplayListBuilderMode aMode, bool aBuildCaret)
-      : mBuilder(aReferenceFrame, aMode, aBuildCaret, true),
-        mCurrentSubtreeIsForEventsAndPluginsOnly(false) {}
+      : mBuilder(aReferenceFrame, aMode, aBuildCaret, true) {}
   ~RetainedDisplayListBuilder() { mList.DeleteAll(&mBuilder); }
 
   nsDisplayListBuilder* Builder() { return &mBuilder; }
@@ -155,10 +154,6 @@ struct RetainedDisplayListBuilder {
   nsDisplayListBuilder mBuilder;
   RetainedDisplayList mList;
   WeakFrame mPreviousCaret;
-
-  // True if we're currently within an opacity:0 container, and only
-  // plugin and hit test items should be considered.
-  bool mCurrentSubtreeIsForEventsAndPluginsOnly;
 };
 
 #endif  // RETAINEDDISPLAYLISTBUILDER_H_
