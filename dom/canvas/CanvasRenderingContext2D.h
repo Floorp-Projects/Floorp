@@ -12,7 +12,6 @@
 #include "nsColor.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
-#include "gfxTextRun.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BasicRenderingContext2D.h"
 #include "mozilla/dom/CanvasGradient.h"
@@ -31,6 +30,7 @@
 #include "Layers.h"
 #include "nsBidi.h"
 
+class gfxFontGroup;
 class nsGlobalWindowInner;
 class nsXULElement;
 
@@ -897,55 +897,9 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
   // state stack handling
   class ContextState {
    public:
-    ContextState()
-        : textAlign(TextAlign::START),
-          textBaseline(TextBaseline::ALPHABETIC),
-          shadowColor(0),
-          lineWidth(1.0f),
-          miterLimit(10.0f),
-          globalAlpha(1.0f),
-          shadowBlur(0.0),
-          dashOffset(0.0f),
-          op(mozilla::gfx::CompositionOp::OP_OVER),
-          fillRule(mozilla::gfx::FillRule::FILL_WINDING),
-          lineCap(mozilla::gfx::CapStyle::BUTT),
-          lineJoin(mozilla::gfx::JoinStyle::MITER_OR_BEVEL),
-          filterString(u"none"),
-          filterSourceGraphicTainted(false),
-          imageSmoothingEnabled(true),
-          fontExplicitLanguage(false) {}
-
-    ContextState(const ContextState& aOther)
-        : fontGroup(aOther.fontGroup),
-          fontLanguage(aOther.fontLanguage),
-          fontFont(aOther.fontFont),
-          gradientStyles(aOther.gradientStyles),
-          patternStyles(aOther.patternStyles),
-          colorStyles(aOther.colorStyles),
-          font(aOther.font),
-          textAlign(aOther.textAlign),
-          textBaseline(aOther.textBaseline),
-          shadowColor(aOther.shadowColor),
-          transform(aOther.transform),
-          shadowOffset(aOther.shadowOffset),
-          lineWidth(aOther.lineWidth),
-          miterLimit(aOther.miterLimit),
-          globalAlpha(aOther.globalAlpha),
-          shadowBlur(aOther.shadowBlur),
-          dash(aOther.dash),
-          dashOffset(aOther.dashOffset),
-          op(aOther.op),
-          fillRule(aOther.fillRule),
-          lineCap(aOther.lineCap),
-          lineJoin(aOther.lineJoin),
-          filterString(aOther.filterString),
-          filterChain(aOther.filterChain),
-          autoSVGFiltersObserver(aOther.autoSVGFiltersObserver),
-          filter(aOther.filter),
-          filterAdditionalImages(aOther.filterAdditionalImages),
-          filterSourceGraphicTainted(aOther.filterSourceGraphicTainted),
-          imageSmoothingEnabled(aOther.imageSmoothingEnabled),
-          fontExplicitLanguage(aOther.fontExplicitLanguage) {}
+    ContextState();
+    ContextState(const ContextState& aOther);
+    ~ContextState();
 
     void SetColorStyle(Style aWhichStyle, nscolor aColor) {
       colorStyles[aWhichStyle] = aColor;
