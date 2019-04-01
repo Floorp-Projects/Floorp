@@ -83,19 +83,6 @@ jobs:
               mozilla-central: [{hour: 10, minute: 0}]
               # No default
 
-    - name: nightly-mochitest-valgrind
-      job:
-          type: decision-task
-          treeherder-symbol: Vg
-          target-tasks-method: mochitest_valgrind
-          include-push-tasks: true
-          rebuild-kinds: [test]
-      run-on-projects:
-          - mozilla-central
-      when:
-          - {hour: 16, minute: 0}
-          - {hour: 4, minute: 0}
-
     - name: searchfox-index
       job:
           type: decision-task
