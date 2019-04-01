@@ -236,10 +236,10 @@ static XDRResult XDRLazyClosedOverBindings(XDRState<mode>* xdr,
                                            MutableHandle<LazyScript*> lazy) {
   JSContext* cx = xdr->cx();
   RootedAtom atom(cx);
-  for (size_t i = 0; i < lazy->numClosedOverBindings(); i++) {
+  for (GCPtrAtom& elem : lazy->closedOverBindings()) {
     uint8_t endOfScopeSentinel;
     if (mode == XDR_ENCODE) {
-      atom = lazy->closedOverBindings()[i];
+      atom = elem.get();
       endOfScopeSentinel = !atom;
     }
 
@@ -252,7 +252,7 @@ static XDRResult XDRLazyClosedOverBindings(XDRState<mode>* xdr,
     }
 
     if (mode == XDR_DECODE) {
-      lazy->closedOverBindings()[i] = atom;
+      elem.init(atom);
     }
   }
 
@@ -1118,19 +1118,17 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
   // Code inner functions.
   {
     RootedFunction func(cx);
-    GCPtrFunction* innerFunctions = lazy->innerFunctions();
-    size_t numInnerFunctions = lazy->numInnerFunctions();
-    for (size_t i = 0; i < numInnerFunctions; i++) {
+    for (GCPtrFunction& elem : lazy->innerFunctions()) {
       if (mode == XDR_ENCODE) {
-        func = innerFunctions[i];
+        func = elem.get();
       }
 
       MOZ_TRY(XDRInterpretedFunction(xdr, nullptr, sourceObject, &func));
 
       if (mode == XDR_DECODE) {
-        innerFunctions[i] = func;
-        if (innerFunctions[i]->isInterpretedLazy()) {
-          innerFunctions[i]->lazyScript()->setEnclosingLazyScript(lazy);
+        elem.init(func);
+        if (elem->isInterpretedLazy()) {
+          elem->lazyScript()->setEnclosingLazyScript(lazy);
         }
       }
     }
@@ -4985,12 +4983,12 @@ LazyScript* LazyScript::Create(JSContext* cx, HandleFunction fun,
     return nullptr;
   }
 
-  JSAtom** resClosedOverBindings = res->closedOverBindings();
+  mozilla::Span<GCPtrAtom> resClosedOverBindings = res->closedOverBindings();
   for (size_t i = 0; i < res->numClosedOverBindings(); i++) {
-    resClosedOverBindings[i] = closedOverBindings[i];
+    resClosedOverBindings[i].init(closedOverBindings[i]);
   }
 
-  GCPtrFunction* resInnerFunctions = res->innerFunctions();
+  mozilla::Span<GCPtrFunction> resInnerFunctions = res->innerFunctions();
   for (size_t i = 0; i < res->numInnerFunctions(); i++) {
     resInnerFunctions[i].init(innerFunctions[i]);
     if (resInnerFunctions[i]->isInterpretedLazy()) {
@@ -5026,15 +5024,12 @@ LazyScript* LazyScript::CreateForXDR(
 
   // Fill with dummies, to be GC-safe after the initialization of the free
   // variables and inner functions.
-  size_t i, num;
-  JSAtom** closedOverBindings = res->closedOverBindings();
-  for (i = 0, num = res->numClosedOverBindings(); i < num; i++) {
-    closedOverBindings[i] = dummyAtom;
+  for (GCPtrAtom& closedOverBinding : res->closedOverBindings()) {
+    closedOverBinding.init(dummyAtom);
   }
 
-  GCPtrFunction* functions = res->innerFunctions();
-  for (i = 0, num = res->numInnerFunctions(); i < num; i++) {
-    functions[i].init(dummyFun);
+  for (GCPtrFunction& innerFunction : res->innerFunctions()) {
+    innerFunction.init(dummyFun);
   }
 
   // Set the enclosing scope of the lazy function. This value should only be
