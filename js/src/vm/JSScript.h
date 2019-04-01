@@ -2884,6 +2884,47 @@ struct FieldInitializers {
   }
 };
 
+// Variable-length data for LazyScripts. Contains vector of inner functions and
+// vector of captured property ids.
+class alignas(uintptr_t) LazyScriptData final {
+ private:
+  uint32_t numClosedOverBindings_ = 0;
+  uint32_t numInnerFunctions_ = 0;
+
+  FieldInitializers fieldInitializers_ = FieldInitializers::Invalid();
+
+  // Size to allocate
+  static size_t AllocationSize(uint32_t numClosedOverBindings,
+                               uint32_t numInnerFunctions);
+
+  // Translate an offset into a concrete pointer.
+  template <typename T>
+  T* offsetToPointer(size_t offset) {
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    return reinterpret_cast<T*>(base + offset);
+  }
+
+  template <typename T>
+  void initElements(size_t offset, size_t length);
+
+  LazyScriptData(uint32_t numClosedOverBindings, uint32_t numInnerFunctions);
+
+ public:
+  static LazyScriptData* new_(JSContext* cx, uint32_t numClosedOverBindings,
+                              uint32_t numInnerFunctions);
+
+  friend class LazyScript;
+
+  mozilla::Span<GCPtrAtom> closedOverBindings();
+  mozilla::Span<GCPtrFunction> innerFunctions();
+
+  void trace(JSTracer* trc);
+
+  // LazyScriptData has trailing data so isn't copyable or movable.
+  LazyScriptData(const LazyScriptData&) = delete;
+  LazyScriptData& operator=(const LazyScriptData&) = delete;
+};
+
 // Information about a script which may be (or has been) lazily compiled to
 // bytecode from its source.
 class LazyScript : public gc::TenuredCell {
