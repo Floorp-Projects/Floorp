@@ -23,9 +23,9 @@ class FileDescriptor;
 
 namespace loader {
 
-using mozilla::ipc::FileDescriptor;
-
 class AutoMemMap {
+  typedef mozilla::ipc::FileDescriptor FileDescriptor;
+
  public:
   AutoMemMap() = default;
 
@@ -34,7 +34,7 @@ class AutoMemMap {
   Result<Ok, nsresult> init(nsIFile* file, int flags = PR_RDONLY, int mode = 0,
                             PRFileMapProtect prot = PR_PROT_READONLY);
 
-  Result<Ok, nsresult> init(const ipc::FileDescriptor& file,
+  Result<Ok, nsresult> init(const FileDescriptor& file,
                             PRFileMapProtect prot = PR_PROT_READONLY,
                             size_t expectedSize = 0);
 
@@ -42,7 +42,7 @@ class AutoMemMap {
   // Unix-like systems, this is identical to the above init() method. On
   // Windows, the FileDescriptor must be a handle for a file mapping,
   // rather than a file descriptor.
-  Result<Ok, nsresult> initWithHandle(const ipc::FileDescriptor& file,
+  Result<Ok, nsresult> initWithHandle(const FileDescriptor& file,
                                       size_t size,
                                       PRFileMapProtect prot = PR_PROT_READONLY);
 
