@@ -1201,6 +1201,9 @@ impl Device {
             gl::GlType::Gles => true,
         };
 
+        if supports_extension(&extensions, "GL_ANGLE_provoking_vertex") {
+            gl.provoking_vertex_angle(gl::FIRST_VERTEX_CONVENTION);
+        }
 
         let (bgra_format_internal, bgra_format_external, texture_storage_usage) = if supports_bgra {
             assert_eq!(gl.get_type(), gl::GlType::Gles, "gleam only detects bgra on gles");
