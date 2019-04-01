@@ -10,7 +10,6 @@ This script manages Desktop repacks for nightly builds.
 """
 import os
 import glob
-import re
 import sys
 import shlex
 
@@ -40,13 +39,6 @@ FAILURE = 1
 
 SUCCESS_STR = "Success"
 FAILURE_STR = "Failed"
-
-
-# some other values such as "%(version)s", ...
-# are defined at run time and they cannot be enforced in the _pre_config_lock
-# phase
-runtime_config_tokens = ('version', 'locale', 'abs_objdir',
-                         'en_us_installer_binary_url')
 
 
 # DesktopSingleLocale {{{1
@@ -115,88 +107,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         self.pushdate = None
         # upload_files is a dictionary of files to upload, keyed by locale.
         self.upload_files = {}
-
-    def _pre_config_lock(self, rw_config):
-        """replaces 'configuration_tokens' with their values, before the
-           configuration gets locked. If some of the configuration_tokens
-           are not present, stops the execution of the script"""
-        # now, only runtime_config_tokens should be present in config
-        # we should parse self.config and fail if any other  we spot any
-        # other token
-        tokens_left = set(self._get_configuration_tokens(self.config))
-        unknown_tokens = set(tokens_left) - set(runtime_config_tokens)
-        if unknown_tokens:
-            msg = ['unknown tokens in configuration:']
-            for t in unknown_tokens:
-                msg.append(t)
-            self.fatal(' '.join(msg))
-        self.info('configuration looks ok')
-        return
-
-    def _get_configuration_tokens(self, iterable):
-        """gets a list of tokens in iterable"""
-        regex = re.compile('%\(\w+\)s')
-        results = []
-        try:
-            for element in iterable:
-                if isinstance(iterable, str):
-                    # this is a string, look for tokens
-                    # self.debug("{0}".format(re.findall(regex, element)))
-                    tokens = re.findall(regex, iterable)
-                    for token in tokens:
-                        # clean %(branch)s => branch
-                        # remove %(
-                        token_name = token.partition('%(')[2]
-                        # remove )s
-                        token_name = token_name.partition(')s')[0]
-                        results.append(token_name)
-                    break
-
-                elif isinstance(iterable, (list, tuple)):
-                    results.extend(self._get_configuration_tokens(element))
-
-                elif isinstance(iterable, dict):
-                    results.extend(self._get_configuration_tokens(iterable[element]))
-
-        except TypeError:
-            # element is a int/float/..., nothing to do here
-            pass
-
-        # remove duplicates, and return results
-
-        return list(set(results))
-
-    def __detokenise_element(self, config_option, token, value):
-        """reads config_options and returns a version of the same config_option
-           replacing token with value recursively"""
-        # config_option is a string, let's replace token with value
-        if isinstance(config_option, str):
-            # if token does not appear in this string,
-            # nothing happens and the original value is returned
-            return config_option.replace(token, value)
-        # it's a dictionary
-        elif isinstance(config_option, dict):
-            # replace token for each element of this dictionary
-            for element in config_option:
-                config_option[element] = self.__detokenise_element(
-                    config_option[element], token, value)
-            return config_option
-        # it's a list
-        elif isinstance(config_option, list):
-            # create a new list and append the replaced elements
-            new_list = []
-            for element in config_option:
-                new_list.append(self.__detokenise_element(element, token, value))
-            return new_list
-        elif isinstance(config_option, tuple):
-            # create a new list and append the replaced elements
-            new_list = []
-            for element in config_option:
-                new_list.append(self.__detokenise_element(element, token, value))
-            return tuple(new_list)
-        else:
-            # everything else, bool, number, ...
-            return config_option
 
     # Helper methods {{{2
     def query_bootstrap_env(self):
