@@ -10,7 +10,7 @@ var newTarget = Object.defineProperty(function(){}.bind(), "prototype", {
 var AsyncFunction = async function(){}.constructor;
 
 assertThrowsInstanceOf(() => {
-    Reflect.construct(AsyncFunction, ["#error"], newTarget);
+    Reflect.construct(AsyncFunction, ["@error"], newTarget);
 }, SyntaxError);
 
 assertEq(getProtoCalled, false);
