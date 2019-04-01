@@ -21,7 +21,6 @@ from operator import itemgetter
 # Skip all tests which use features not supported in SpiderMonkey.
 UNSUPPORTED_FEATURES = set([
     "tail-call-optimization",
-    "class-fields-public",
     "class-static-fields-public",
     "class-fields-private",
     "class-static-fields-private",
@@ -43,6 +42,9 @@ FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",
     "BigInt": "!this.hasOwnProperty('BigInt')",
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
+    # Syntax is a bit weird, because this string cannot have spaces in it
+    "class-fields-public":
+        "(function(){try{eval('c=class{x;}');return(false);}catch{return(true);}})()",
     "dynamic-import": "!xulRuntime.shell",
 }
 RELEASE_OR_BETA = set()
@@ -253,8 +255,8 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
 
     # Async tests are marked with the "async" attribute. It is an error for a
     # test to use the $DONE function without specifying the "async" attribute.
-    async = "async" in testRec
-    assert b"$DONE" not in testSource or async, "Missing async attribute in: %s" % testName
+    isAsync = "async" in testRec
+    assert b"$DONE" not in testSource or isAsync, "Missing async attribute in: %s" % testName
 
     # When the "module" attribute is set, the source code is module code.
     isModule = "module" in testRec
@@ -298,7 +300,7 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
             if "Atomics" in testRec["features"] and "SharedArrayBuffer" in testRec["features"]:
                 refTestSkipIf.append(("(this.hasOwnProperty('getBuildConfiguration')"
                                       "&&getBuildConfiguration()['arm64-simulator'])",
-                                     "ARM64 Simulator cannot emulate atomics"))
+                                      "ARM64 Simulator cannot emulate atomics"))
 
     # Includes for every test file in a directory is collected in a single
     # shell.js file per directory level. This is done to avoid adding all
@@ -308,7 +310,7 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
         includeSet.update(testRec["includes"])
 
     # Add reportCompare() after all positive, synchronous tests.
-    if not isNegative and not async:
+    if not isNegative and not isAsync:
         testEpilogue = "reportCompare(0, 0);"
     else:
         testEpilogue = ""
