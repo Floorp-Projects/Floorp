@@ -26,6 +26,7 @@ pref("devtools.webconsole.sidebarToggle", true);
 pref("devtools.webconsole.jsterm.codeMirror", true);
 pref("devtools.webconsole.groupWarningMessages", false);
 pref("devtools.webconsole.input.editor", false);
+pref("devtools.webconsole.input.autocomplete", true);
 
 global.loader = {
   lazyServiceGetter: () => {},
@@ -57,6 +58,12 @@ global.loader = {
 // Setting up globals used in some modules.
 global.isWorker = false;
 global.indexedDB = {open: () => ({})};
+
+// URLSearchParams was added to the global object in Node 10.0.0. To not cause any issue
+// with prior versions, we add it to the global object if it is not defined there.
+if (!global.URLSearchParams) {
+  global.URLSearchParams = require("url").URLSearchParams;
+}
 
 // Point to vendored-in files and mocks when needed.
 const requireHacker = require("require-hacker");

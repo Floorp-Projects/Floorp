@@ -1703,17 +1703,20 @@ WebConsoleActor.prototype =
     delete result.consoleID;
 
     if (result.stacktrace) {
-      result.stacktrace = Array.map(result.stacktrace, (frame) => {
-        return { ...frame, sourceId: this.getActorIdForInternalSourceId(frame.sourceId) };
+      result.stacktrace = result.stacktrace.map(frame => {
+        return {
+          ...frame,
+          sourceId: this.getActorIdForInternalSourceId(frame.sourceId),
+        };
       });
     }
 
-    result.arguments = Array.map(message.arguments || [], (obj) => {
+    result.arguments = (message.arguments || []).map(obj => {
       const dbgObj = this.makeDebuggeeValue(obj, useObjectGlobal);
       return this.createValueGrip(dbgObj);
     });
 
-    result.styles = Array.map(message.styles || [], (string) => {
+    result.styles = (message.styles || []).map(string => {
       return this.createValueGrip(string);
     });
 
