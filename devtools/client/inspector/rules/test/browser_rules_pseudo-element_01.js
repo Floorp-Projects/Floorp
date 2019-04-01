@@ -8,9 +8,11 @@
 
 const TEST_URI = URL_ROOT + "doc_pseudoelement.html";
 const PSEUDO_PREF = "devtools.inspector.show_pseudo_elements";
+const SHOWANON_PREF = "devtools.inspector.showAllAnonymousContent";
 
 add_task(async function() {
   await pushPref(PSEUDO_PREF, true);
+  await pushPref(SHOWANON_PREF, true);
 
   await addTab(TEST_URI);
   const {inspector, view} = await openRuleView();
@@ -21,6 +23,7 @@ add_task(async function() {
   await testBottomLeft(inspector, view);
   await testParagraph(inspector, view);
   await testBody(inspector, view);
+  await testList(inspector, view);
 });
 
 async function testTopLeft(inspector, view) {
@@ -31,6 +34,7 @@ async function testTopLeft(inspector, view) {
       firstLineRulesNb: 2,
       firstLetterRulesNb: 1,
       selectionRulesNb: 1,
+      markerRulesNb: 0,
       afterRulesNb: 1,
       beforeRulesNb: 2,
     }
@@ -123,6 +127,7 @@ async function testTopRight(inspector, view) {
     firstLineRulesNb: 1,
     firstLetterRulesNb: 1,
     selectionRulesNb: 0,
+    markerRulesNb: 0,
     beforeRulesNb: 2,
     afterRulesNb: 1,
   });
@@ -145,6 +150,7 @@ async function testBottomRight(inspector, view) {
     firstLineRulesNb: 1,
     firstLetterRulesNb: 1,
     selectionRulesNb: 0,
+    markerRulesNb: 0,
     beforeRulesNb: 3,
     afterRulesNb: 1,
   });
@@ -156,6 +162,7 @@ async function testBottomLeft(inspector, view) {
     firstLineRulesNb: 1,
     firstLetterRulesNb: 1,
     selectionRulesNb: 0,
+    markerRulesNb: 0,
     beforeRulesNb: 2,
     afterRulesNb: 1,
   });
@@ -168,6 +175,7 @@ async function testParagraph(inspector, view) {
       firstLineRulesNb: 1,
       firstLetterRulesNb: 1,
       selectionRulesNb: 2,
+      markerRulesNb: 0,
       beforeRulesNb: 0,
       afterRulesNb: 0,
     });
@@ -197,6 +205,20 @@ async function testBody(inspector, view) {
   is(gutters.length, 0, "There are no gutter headings");
 }
 
+async function testList(inspector, view) {
+  await assertPseudoElementRulesNumbers("#list", inspector, view, {
+    elementRulesNb: 4,
+    firstLineRulesNb: 1,
+    firstLetterRulesNb: 1,
+    selectionRulesNb: 0,
+    markerRulesNb: 1,
+    beforeRulesNb: 1,
+    afterRulesNb: 1,
+  });
+
+  assertGutters(view);
+}
+
 function convertTextPropsToString(textProps) {
   return textProps.map(t => t.name + ": " + t.value).join("; ");
 }
@@ -218,6 +240,8 @@ async function assertPseudoElementRulesNumbers(selector, inspector, view, ruleNb
       rule.pseudoElement === ":first-letter"),
     selectionRules: elementStyle.rules.filter(rule =>
       rule.pseudoElement === ":selection"),
+    markerRules: elementStyle.rules.filter(rule =>
+      rule.pseudoElement === ":marker"),
     beforeRules: elementStyle.rules.filter(rule =>
       rule.pseudoElement === ":before"),
     afterRules: elementStyle.rules.filter(rule =>
@@ -232,6 +256,8 @@ async function assertPseudoElementRulesNumbers(selector, inspector, view, ruleNb
      selector + " has the correct number of :first-letter rules");
   is(rules.selectionRules.length, ruleNbs.selectionRulesNb,
      selector + " has the correct number of :selection rules");
+  is(rules.markerRules.length, ruleNbs.markerRulesNb,
+     selector + " has the correct number of :marker rules");
   is(rules.beforeRules.length, ruleNbs.beforeRulesNb,
      selector + " has the correct number of :before rules");
   is(rules.afterRules.length, ruleNbs.afterRulesNb,
