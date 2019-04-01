@@ -1479,11 +1479,6 @@ try {
       .createInstance(Ci.nsIFile);
     prefsFile.initWithPath(_PREFS_FILE);
     _Services.prefs.readUserPrefsFromFile(prefsFile);
-
-    // Make tests run consistently on DevEdition (which has a lightweight theme
-    // selected by default).
-    _Services.prefs.deleteBranch("lightweightThemes.selectedThemeID");
-    _Services.prefs.deleteBranch("browser.devedition.theme.enabled");
   }
 } catch (e) {
   do_throw(e);

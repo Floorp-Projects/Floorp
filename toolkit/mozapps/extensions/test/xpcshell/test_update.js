@@ -7,10 +7,6 @@
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
-// This test requires lightweight themes update to be enabled even if the app
-// doesn't support lightweight themes.
-Services.prefs.setBoolPref("lightweightThemes.update.enabled", true);
-
 const updateFile = "test_update.json";
 
 const profileDir = gProfD.clone();
