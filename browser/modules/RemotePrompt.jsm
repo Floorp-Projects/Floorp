@@ -80,6 +80,7 @@ var RemotePrompt = {
       // there's other stuff in nsWindowWatcher::OpenWindowInternal
       // that we might need to do here as well.
     } catch (ex) {
+      Cu.reportError(ex);
       onPromptClose(true);
     }
   },
