@@ -238,7 +238,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   void GetRtpSources(const int64_t aTimeNow,
                      nsTArray<dom::RTCRtpSourceEntry>& outSources) override;
 
-  void OnRtpPacket(const webrtc::WebRtcRTPHeader* aRtpHeader,
+  void OnRtpPacket(const webrtc::RTPHeader& aRtpHeader,
                    const int64_t aTimestamp, const uint32_t aJitter) override;
 
   // test-only: inserts fake CSRCs and audio level data
