@@ -43,6 +43,8 @@ add_task(async function() {
   const worker2Thread = workers[1].actor;
 
   const mainThreadSource = findSource(dbg, "doc-windowless-workers.html");
+
+  await waitForSource(dbg, "simple-worker.js");
   const workerSource = findSource(dbg, "simple-worker.js");
 
   info("Test pausing in the main thread");

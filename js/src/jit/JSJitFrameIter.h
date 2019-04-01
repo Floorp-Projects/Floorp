@@ -16,6 +16,9 @@
 #include "vm/JSScript.h"
 
 namespace js {
+
+class ArgumentsObject;
+
 namespace jit {
 
 typedef void* CalleeToken;

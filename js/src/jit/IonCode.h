@@ -150,7 +150,7 @@ class IonIC;
 struct IonScript {
  private:
   // Code pointer containing the actual method.
-  PreBarrieredJitCode method_;
+  HeapPtrJitCode method_;
 
   // Entrypoint for OSR, or nullptr.
   jsbytecode* osrPc_;
@@ -257,6 +257,8 @@ struct IonScript {
     return (SnapshotOffset*)&bottomBuffer()[bailoutTable_];
   }
   PreBarrieredValue* constants() {
+    // Nursery constants are manually barriered in CodeGenerator::link() so a
+    // post barrier is not required..
     return (PreBarrieredValue*)&bottomBuffer()[constantTable_];
   }
   const SafepointIndex* safepointIndices() const {

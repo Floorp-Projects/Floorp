@@ -192,10 +192,7 @@ async function waitForSources(dbg, ...sources) {
 function waitForSource(dbg, url) {
   return waitForState(
     dbg,
-    state => {
-      const sources = dbg.selectors.getSources(state);
-      return Object.values(sources).find(s => (s.url || "").includes(url));
-    },
+    state => findSource(dbg, url, { silent: true }),
     "source exists"
   );
 }

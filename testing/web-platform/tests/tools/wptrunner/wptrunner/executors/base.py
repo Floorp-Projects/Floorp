@@ -1,5 +1,7 @@
+import base64
 import hashlib
 import httplib
+import io
 import os
 import threading
 import traceback
@@ -76,11 +78,34 @@ class TestharnessResultConverter(object):
 testharness_result_converter = TestharnessResultConverter()
 
 
+def hash_screenshot(data):
+    """Computes the sha1 checksum of a base64-encoded screenshot."""
+    return hashlib.sha1(base64.b64decode(data)).hexdigest()
+
+
+def _ensure_hash_in_reftest_screenshots(extra):
+    """Make sure reftest_screenshots have hashes.
+
+    Marionette internal reftest runner does not produce hashes.
+    """
+    log_data = extra.get("reftest_screenshots")
+    if not log_data:
+        return
+    for item in log_data:
+        if type(item) != dict:
+            # Skip relation strings.
+            continue
+        if "hash" not in item:
+            item["hash"] = hash_screenshot(item["screenshot"])
+
+
 def reftest_result_converter(self, test, result):
+    extra = result.get("extra", {})
+    _ensure_hash_in_reftest_screenshots(extra)
     return (test.result_cls(
         result["status"],
         result["message"],
-        extra=result.get("extra", {}),
+        extra=extra,
         stack=result.get("stack")), [])
 
 
@@ -261,9 +286,8 @@ class RefTestImplementation(object):
                 return False, data
 
             screenshot = data
-            hash_value = hashlib.sha1(screenshot).hexdigest()
-
-            self.screenshot_cache[key] = (hash_value, None)
+            hash_value = hash_screenshot(data)
+            self.screenshot_cache[key] = (hash_value, screenshot)
 
             rv = (hash_value, screenshot)
         else:
@@ -275,11 +299,34 @@ class RefTestImplementation(object):
     def reset(self):
         self.screenshot_cache.clear()
 
-    def is_pass(self, lhs_hash, rhs_hash, relation):
+    def is_pass(self, hashes, screenshots, relation, fuzzy):
         assert relation in ("==", "!=")
-        self.message.append("Testing %s %s %s" % (lhs_hash, relation, rhs_hash))
-        return ((relation == "==" and lhs_hash == rhs_hash) or
-                (relation == "!=" and lhs_hash != rhs_hash))
+        if not fuzzy or fuzzy == ((0,0), (0,0)):
+            equal = hashes[0] == hashes[1]
+        else:
+            max_per_channel, pixels_different = self.get_differences(screenshots)
+            allowed_per_channel, allowed_different = fuzzy
+            self.logger.info("Allowed %s pixels different, maximum difference per channel %s" %
+                             ("-".join(str(item) for item in allowed_different),
+                              "-".join(str(item) for item in allowed_per_channel)))
+            equal = (allowed_per_channel[0] <= max_per_channel <= allowed_per_channel[1] and
+                     allowed_different[0] <= pixels_different <= allowed_different[1])
+        return equal if relation == "==" else not equal
+
+    def get_differences(self, screenshots):
+        from PIL import Image, ImageChops, ImageStat
+
+        lhs = Image.open(io.BytesIO(base64.b64decode(screenshots[0]))).convert("RGB")
+        rhs = Image.open(io.BytesIO(base64.b64decode(screenshots[1]))).convert("RGB")
+        diff = ImageChops.difference(lhs, rhs)
+        minimal_diff = diff.crop(diff.getbbox())
+        mask = minimal_diff.convert("L", dither=None)
+        stat = ImageStat.Stat(minimal_diff, mask)
+        per_channel = max(item[1] for item in stat.extrema)
+        count = stat.count[0]
+        self.logger.info("Found %s pixels different, maximum difference per channel %s" %
+                         (count, per_channel))
+        return per_channel, count
 
     def run_test(self, test):
         viewport_size = test.viewport_size
@@ -295,6 +342,7 @@ class RefTestImplementation(object):
             screenshots = [None, None]
 
             nodes, relation = stack.pop()
+            fuzzy = self.get_fuzzy(test, nodes, relation)
 
             for i, node in enumerate(nodes):
                 success, data = self.get_hash(node, viewport_size, dpi)
@@ -303,7 +351,8 @@ class RefTestImplementation(object):
 
                 hashes[i], screenshots[i] = data
 
-            if self.is_pass(hashes[0], hashes[1], relation):
+            if self.is_pass(hashes, screenshots, relation, fuzzy):
+                fuzzy = self.get_fuzzy(test, nodes, relation)
                 if nodes[1].references:
                     stack.extend(list(((nodes[1], item[0]), item[1]) for item in reversed(nodes[1].references)))
                 else:
@@ -318,12 +367,34 @@ class RefTestImplementation(object):
                 if success:
                     screenshots[i] = screenshot
 
-        log_data = [{"url": nodes[0].url, "screenshot": screenshots[0]}, relation,
-                    {"url": nodes[1].url, "screenshot": screenshots[1]}]
+        log_data = [
+            {"url": nodes[0].url, "screenshot": screenshots[0], "hash": hashes[0]},
+            relation,
+            {"url": nodes[1].url, "screenshot": screenshots[1], "hash": hashes[1]},
+        ]
 
         return {"status": "FAIL",
                 "message": "\n".join(self.message),
                 "extra": {"reftest_screenshots": log_data}}
+
+    def get_fuzzy(self, root_test, test_nodes, relation):
+        full_key = tuple([item.url for item in test_nodes] + [relation])
+        ref_only_key = test_nodes[1].url
+
+        fuzzy_override = root_test.fuzzy_override
+        fuzzy = test_nodes[0].fuzzy
+
+        sources = [fuzzy_override, fuzzy]
+        keys = [full_key, ref_only_key, None]
+        value = None
+        for source in sources:
+            for key in keys:
+                if key in source:
+                    value = source[key]
+                    break
+            if value:
+                break
+        return value
 
     def retake_screenshot(self, node, viewport_size, dpi):
         success, data = self.executor.screenshot(node, viewport_size, dpi)
