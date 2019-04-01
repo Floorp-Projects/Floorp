@@ -153,9 +153,9 @@ class RegExpObject : public NativeObject {
     sharedRef().init(&shared);
   }
 
-  PreBarriered<RegExpShared*>& sharedRef() {
+  HeapPtrRegExpShared& sharedRef() {
     auto& ref = NativeObject::privateRef(PRIVATE_SLOT);
-    return reinterpret_cast<PreBarriered<RegExpShared*>&>(ref);
+    return reinterpret_cast<HeapPtrRegExpShared&>(ref);
   }
 
   static void trace(JSTracer* trc, JSObject* obj);
