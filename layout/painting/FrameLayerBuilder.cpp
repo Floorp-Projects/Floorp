@@ -4618,15 +4618,6 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
           item->Frame(), item->GetPerFrameKey());
       InvalidateForLayerChange(item, nullptr, oldData);
 
-      // If the item would have its own layer but is invisible, just hide it.
-      // Note that items without their own layers can't be skipped this
-      // way, since their PaintedLayer may decide it wants to draw them
-      // into its buffer even if they're currently covered.
-      if (itemVisibleRect.IsEmpty() &&
-          !item->ShouldBuildLayerEvenIfInvisible(mBuilder)) {
-        continue;
-      }
-
       // 3D-transformed layers don't necessarily draw in the order in which
       // they're added to their parent container layer.
       bool mayDrawOutOfOrder = itemType == DisplayItemType::TYPE_TRANSFORM &&
