@@ -545,6 +545,20 @@ class EGLImageTextureHost final : public TextureHost {
 
   virtual const char* Name() override { return "EGLImageTextureHost"; }
 
+  virtual void CreateRenderTexture(
+      const wr::ExternalImageId& aExternalImageId) override;
+
+  virtual void PushResourceUpdates(wr::TransactionBuilder& aResources,
+                                   ResourceUpdateOp aOp,
+                                   const Range<wr::ImageKey>& aImageKeys,
+                                   const wr::ExternalImageId& aExtID) override;
+
+  virtual void PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                const wr::LayoutRect& aBounds,
+                                const wr::LayoutRect& aClip,
+                                wr::ImageRendering aFilter,
+                                const Range<wr::ImageKey>& aImageKeys) override;
+
  protected:
   const EGLImage mImage;
   const EGLSync mSync;
