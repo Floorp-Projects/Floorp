@@ -157,13 +157,11 @@ SingleNativeEventPump::AfterProcessNextEvent(nsIThreadInternal* aThread,
   return NS_OK;
 }
 
-namespace mozilla {
-namespace widget {
-// Native event callback message.
-UINT sAppShellGeckoMsgId = RegisterWindowMessageW(L"nsAppShell:EventID");
-}  // namespace widget
-}  // namespace mozilla
-
+// RegisterWindowMessage values
+// Native event callback message
+const wchar_t* kAppShellGeckoEventId = L"nsAppShell:EventID";
+UINT sAppShellGeckoMsgId;
+// Taskbar button creation message
 const wchar_t* kTaskbarButtonEventId = L"TaskbarButtonCreated";
 UINT sTaskbarButtonCreatedMsg;
 
@@ -331,8 +329,13 @@ nsresult nsAppShell::Init() {
 
   // The hidden message window is used for interrupting the processing of native
   // events, so that we can process gecko events. Therefore, we only need it if
-  // we are processing native events.
+  // we are processing native events. Disabling this is required for win32k
+  // syscall lockdown.
   if (XRE_UseNativeEventProcessing()) {
+    sAppShellGeckoMsgId = ::RegisterWindowMessageW(kAppShellGeckoEventId);
+    NS_ASSERTION(sAppShellGeckoMsgId,
+                 "Could not register hidden window event message!");
+
     mLastNativeEventScheduled = TimeStamp::NowLoRes();
 
     WNDCLASSW wc;

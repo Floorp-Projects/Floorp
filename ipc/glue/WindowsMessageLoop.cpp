@@ -76,12 +76,8 @@ using namespace mozilla::ipc::windows;
 extern const wchar_t* kPropNameTabContent;
 #endif
 
-// widget related message id constants we need to defer
-namespace mozilla {
-namespace widget {
+// widget related message id constants we need to defer, see nsAppShell.
 extern UINT sAppShellGeckoMsgId;
-}
-}  // namespace mozilla
 
 namespace {
 
@@ -390,7 +386,7 @@ ProcessOrDeferMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     default: {
       // Unknown messages only are logged in debug builds and sent to
       // DefWindowProc.
-      if (uMsg && uMsg == mozilla::widget::sAppShellGeckoMsgId) {
+      if (uMsg && uMsg == sAppShellGeckoMsgId) {
         // Widget's registered native event callback
         deferred = new DeferredSendMessage(hwnd, uMsg, wParam, lParam);
       }
