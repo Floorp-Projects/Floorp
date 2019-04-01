@@ -98,7 +98,7 @@ var PoliciesPrefTracker = {
     this._originalFunc = null;
   },
 
-  hoistedSetDefaultPref(prefName, prefValue) {
+  hoistedSetDefaultPref(prefName, prefValue, locked = false) {
     // If this pref is seen multiple times, the very first
     // value seen is the one that is actually the default.
     if (!this._originalValues.has(prefName)) {
@@ -125,7 +125,7 @@ var PoliciesPrefTracker = {
 
     // Now that we've stored the original values, call the
     // original setDefaultPref function.
-    this._originalFunc(prefName, prefValue);
+    this._originalFunc(prefName, prefValue, locked);
   },
 
   restoreDefaultValues() {
