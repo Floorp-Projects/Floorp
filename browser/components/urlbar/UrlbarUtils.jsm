@@ -115,7 +115,6 @@ var UrlbarUtils = {
     NONE: 1,
     COMPOSING: 2,
     COMMIT: 3,
-    CANCELED: 4,
   },
 
   // This defines possible reasons for canceling a query.
