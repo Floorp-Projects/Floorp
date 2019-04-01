@@ -8568,22 +8568,22 @@ nsHttpChannel::GetOriginalInputStream(nsIInputStream **aInputStream) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetAltDataInputStream(const nsACString &aType,
-                                     nsIInputStreamReceiver *aReceiver) {
-  if (aReceiver == nullptr) {
-    return NS_ERROR_INVALID_ARG;
+nsHttpChannel::GetAlternativeDataInputStream(nsIInputStream **aInputStream) {
+  NS_ENSURE_ARG_POINTER(aInputStream);
+
+  *aInputStream = nullptr;
+
+  if (!mAfterOnStartRequestBegun) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
-  nsCOMPtr<nsIInputStream> inputStream;
 
   nsCOMPtr<nsICacheEntry> cacheEntry =
       mCacheEntry ? mCacheEntry : mAltDataCacheEntry;
-  if (cacheEntry) {
-    nsresult rv = cacheEntry->OpenAlternativeInputStream(
-        aType, getter_AddRefs(inputStream));
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (!mAvailableCachedAltDataType.IsEmpty() && cacheEntry) {
+    Unused << cacheEntry->OpenAlternativeInputStream(
+        mAvailableCachedAltDataType, aInputStream);
   }
 
-  aReceiver->OnInputStreamReady(inputStream);
   return NS_OK;
 }
 
