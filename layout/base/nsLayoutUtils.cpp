@@ -4564,8 +4564,8 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetFontMetricsForComputedStyle(
   params.language = styleFont->mLanguage;
   params.explicitLanguage = styleFont->mExplicitLanguage;
   params.orientation = wm.IsVertical() && !wm.IsSideways()
-                           ? gfxFont::eVertical
-                           : gfxFont::eHorizontal;
+                           ? nsFontMetrics::eVertical
+                           : nsFontMetrics::eHorizontal;
   // pass the user font set object into the device context to
   // pass along to CreateFontGroup
   params.userFontSet = aPresContext->GetUserFontSet();
@@ -9728,7 +9728,7 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
   nsFont font = aStyleFont->mFont;
   font.size = aFontSize;
   gfxFont::Orientation orientation =
-      aIsVertical ? gfxFont::eVertical : gfxFont::eHorizontal;
+      aIsVertical ? nsFontMetrics::eVertical : nsFontMetrics::eHorizontal;
   nsFontMetrics::Params params;
   params.language = aStyleFont->mLanguage;
   params.explicitLanguage = aStyleFont->mExplicitLanguage;

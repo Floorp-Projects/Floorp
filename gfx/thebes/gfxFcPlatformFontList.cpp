@@ -536,7 +536,8 @@ double gfxFontconfigFontEntry::GetAspect() {
   s.size = 100.0;  // pick large size to avoid possible hinting artifacts
   RefPtr<gfxFont> font = FindOrMakeFont(&s);
   if (font) {
-    const gfxFont::Metrics& metrics = font->GetMetrics(gfxFont::eHorizontal);
+    const gfxFont::Metrics& metrics =
+        font->GetMetrics(nsFontMetrics::eHorizontal);
 
     // The factor of 0.1 ensures that xHeight is sane so fonts don't
     // become huge.  Strictly ">" ensures that xHeight and emHeight are

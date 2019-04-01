@@ -34,11 +34,11 @@
 #include "harfbuzz/hb.h"
 #include "mozilla/gfx/2D.h"
 #include "nsColor.h"
+#include "nsFontMetrics.h"
 #include "mozilla/ServoUtils.h"
 
 typedef struct _cairo cairo_t;
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
-// typedef struct gr_face            gr_face;
 
 #ifdef DEBUG
 #  include <stdio.h>
@@ -1548,10 +1548,10 @@ class gfxFont {
     }
   };
 
-  enum Orientation { eHorizontal, eVertical };
+  typedef nsFontMetrics::FontOrientation Orientation;
 
   const Metrics& GetMetrics(Orientation aOrientation) {
-    if (aOrientation == eHorizontal) {
+    if (aOrientation == nsFontMetrics::eHorizontal) {
       return GetHorizontalMetrics();
     }
     if (!mVerticalMetrics) {
