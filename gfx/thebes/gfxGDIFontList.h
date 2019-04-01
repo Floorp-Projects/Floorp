@@ -323,8 +323,7 @@ class gfxGDIFontList : public gfxPlatformFontList {
                                       FontListSizes* aSizes) const;
 
  protected:
-  virtual gfxFontFamily* GetDefaultFontForPlatform(
-      const gfxFontStyle* aStyle) override;
+  FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
 
  private:
   friend class gfxWindowsPlatform;

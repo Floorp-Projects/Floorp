@@ -1186,7 +1186,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
   RefPtr<gfxTextRun> mCachedEllipsisTextRun;
 
   // cache the most recent pref font to avoid general pref font lookup
-  RefPtr<gfxFontFamily> mLastPrefFamily;
+  FontFamily mLastPrefFamily;
   RefPtr<gfxFont> mLastPrefFont;
   eFontPrefLang mLastPrefLang;  // lang group for last pref font
   eFontPrefLang mPageLang;

@@ -349,8 +349,7 @@ class gfxFcPlatformFontList : public gfxPlatformFontList {
 
   static void CheckFontUpdates(nsITimer* aTimer, void* aThis);
 
-  virtual gfxFontFamily* GetDefaultFontForPlatform(
-      const gfxFontStyle* aStyle) override;
+  FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
 
   gfxFontFamily* CreateFontFamily(const nsACString& aName) const override;
 
