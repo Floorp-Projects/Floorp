@@ -678,7 +678,6 @@ class PrincipalsCollector {
   async getAllPrincipals(progress) {
     if (this.principals == null) {
       // Here is the list of principals with site data.
-      progress.advancement = "get-principals";
       this.principals = await this.getAllPrincipalsInternal(progress);
     }
 
@@ -784,6 +783,8 @@ async function sanitizeOnShutdown(progress) {
 
     let principals = await principalsCollector.getAllPrincipals(progress);
     await maybeSanitizeSessionPrincipals(progress, principals);
+
+    progress.advancement = "done";
     return;
   }
 
@@ -850,7 +851,8 @@ async function maybeSanitizeSessionPrincipals(progress, principals) {
   });
 
   progress.step = "promises:" + promises.length;
-  return Promise.all(promises);
+  await Promise.all(promises);
+  progress.step = "promises resolved";
 }
 
 function cookiesAllowedForDomainOrSubDomain(principal) {
@@ -901,14 +903,14 @@ function cookiesAllowedForDomainOrSubDomain(principal) {
 async function sanitizeSessionPrincipal(progress, principal) {
   log("Sanitizing principal: " + principal.URI.spec);
 
-  progress.step = "sanitizing";
   await new Promise(resolve => {
+    progress.sanitizePrincipal = "started";
     Services.clearData.deleteDataFromPrincipal(principal, true /* user request */,
                                                Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
                                                Ci.nsIClearDataService.CLEAR_COOKIES,
                                                resolve);
   });
-  progress.step = "sanitized";
+  progress.sanitizePrincipal = "completed";
 }
 
 function sanitizeNewTabSegregation() {
