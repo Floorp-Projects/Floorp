@@ -56,7 +56,7 @@ class IMEStateManager {
     if (sInstalledMenuKeyboardListener) {
       return nullptr;
     }
-    return sActiveTabParent.get();
+    return TabParent::GetFocused();
   }
 
   /**
@@ -283,12 +283,6 @@ class IMEStateManager {
   static void CreateIMEContentObserver(EditorBase* aEditorBase);
   static void DestroyIMEContentObserver();
 
-  /**
-   * NotifyIMEOfBlurForChildProcess() tries to send blur notification when
-   * a remote process has IME focus.  Otherwise, do nothing.
-   */
-  static void NotifyIMEOfBlurForChildProcess();
-
   static bool IsEditable(nsINode* node);
 
   static bool IsIMEObserverNeeded(const IMEState& aState);
@@ -331,7 +325,6 @@ class IMEStateManager {
   // If IMEStateManager set input context to different widget, PuppetWidget can
   // return cached input context safely.
   static nsIWidget* sActiveInputContextWidget;
-  static StaticRefPtr<TabParent> sActiveTabParent;
   // sActiveIMEContentObserver points to the currently active
   // IMEContentObserver.  This is null if there is no focused editor.
   static StaticRefPtr<IMEContentObserver> sActiveIMEContentObserver;
@@ -345,9 +338,9 @@ class IMEStateManager {
   // Origin type of current process.
   static InputContext::Origin sOrigin;
 
-  // sActiveChildInputContext is valid only when sActiveTabParent is not
+  // sActiveChildInputContext is valid only when TabParent::GetFocused() is not
   // nullptr.  This stores last information of input context in the remote
-  // process of sActiveTabParent.  I.e., they are set when
+  // process of TabParent::GetFocused().  I.e., they are set when
   // SetInputContextForChildProcess() is called.  This is necessary for
   // restoring IME state when menu keyboard listener is uninstalled.
   static InputContext sActiveChildInputContext;
