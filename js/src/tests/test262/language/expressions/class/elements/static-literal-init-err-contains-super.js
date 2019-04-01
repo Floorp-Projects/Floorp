@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-fields-public,class-static-fields-public is not supported
+// |reftest| skip error:SyntaxError -- class-static-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/init-err-contains-super.case
 // - src/class-elements/initializer-error/cls-expr-fields-static-literal-name.template
