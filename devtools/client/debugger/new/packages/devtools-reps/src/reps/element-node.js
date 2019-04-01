@@ -93,7 +93,8 @@ function getElements(grip, mode) {
     attributes,
     nodeName,
     isAfterPseudoElement,
-    isBeforePseudoElement
+    isBeforePseudoElement,
+    isMarkerPseudoElement,
   } = grip.preview;
   const nodeNameElement = span(
     {
@@ -102,11 +103,19 @@ function getElements(grip, mode) {
     nodeName
   );
 
-  if (isAfterPseudoElement || isBeforePseudoElement) {
+  let pseudoNodeName;
+  if (isAfterPseudoElement) {
+    pseudoNodeName = "after";
+  } else if (isBeforePseudoElement) {
+    pseudoNodeName = "before";
+  } else if (isMarkerPseudoElement) {
+    pseudoNodeName = "marker";
+  }
+  if (pseudoNodeName) {
     return [
       span(
         { className: "attrName" },
-        `::${isAfterPseudoElement ? "after" : "before"}`
+        `::${pseudoNodeName}`
       )
     ];
   }
