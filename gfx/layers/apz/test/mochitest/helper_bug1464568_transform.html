@@ -26,6 +26,11 @@
   -->
  <div style="height: 500px"></div>
  <div id="anim"></div>
+ <!--
+  Give the page room to scroll, so that the setAsyncScrollOffset() call
+  doesn't take the scroll position out of bounds
+ -->
+ <div style="height: 1000px"></div>
 </body>
 <script>
 "use strict";
