@@ -1505,7 +1505,7 @@ searchDone:
   return fe;
 }
 
-gfxFontFamily* gfxFT2FontList::GetDefaultFontForPlatform(
+FontFamily gfxFT2FontList::GetDefaultFontForPlatform(
     const gfxFontStyle* aStyle) {
   gfxFontFamily* ff = nullptr;
 #if defined(MOZ_WIDGET_ANDROID)
@@ -1515,7 +1515,7 @@ gfxFontFamily* gfxFT2FontList::GetDefaultFontForPlatform(
   }
 #endif
   /* TODO: what about Qt or other platforms that may use this? */
-  return ff;
+  return FontFamily(ff);
 }
 
 gfxFontEntry* gfxFT2FontList::MakePlatformFont(const nsACString& aFontName,

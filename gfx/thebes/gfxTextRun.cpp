@@ -1734,7 +1734,7 @@ void gfxFontGroup::BuildFontList() {
 
   // build the fontlist from the specified families
   for (const auto& f : fonts) {
-    AddFamilyToFontList(f.mFamily, f.mGeneric);
+    AddFamilyToFontList(f.mFamily.mUnshared, f.mGeneric);
   }
 }
 
@@ -1897,12 +1897,12 @@ gfxFont* gfxFontGroup::GetDefaultFont() {
   }
 
   gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
-  gfxFontFamily* defaultFamily = pfl->GetDefaultFont(&mStyle);
-  NS_ASSERTION(defaultFamily,
+  FontFamily defaultFamily = pfl->GetDefaultFont(&mStyle);
+  NS_ASSERTION(!defaultFamily.mIsShared && defaultFamily.mUnshared,
                "invalid default font returned by GetDefaultFont");
 
-  if (defaultFamily) {
-    gfxFontEntry* fe = defaultFamily->FindFontForStyle(mStyle, true);
+  if (defaultFamily.mUnshared) {
+    gfxFontEntry* fe = defaultFamily.mUnshared->FindFontForStyle(mStyle, true);
     if (fe) {
       mDefaultFont = fe->FindOrMakeFont(&mStyle);
     }
@@ -3186,8 +3186,8 @@ gfxFont* gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh,
     numPrefs = families->Length();
     for (j = 0; j < numPrefs; j++) {
       // look up the appropriate face
-      gfxFontFamily* family = (*families)[j];
-      if (!family) {
+      FontFamily family = (*families)[j];
+      if (family.IsNull()) {
         continue;
       }
 
@@ -3199,7 +3199,7 @@ gfxFont* gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh,
         return mLastPrefFont;
       }
 
-      gfxFontEntry* fe = family->FindFontForStyle(mStyle);
+      gfxFontEntry* fe = family.mUnshared->FindFontForStyle(mStyle);
       if (!fe) {
         continue;
       }
@@ -3219,7 +3219,7 @@ gfxFont* gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh,
 
       // If the char was not available, see if we can fall back to an
       // alternative face in the same family.
-      gfxFont* prefFont = FindFallbackFaceForChar(family, aCh);
+      gfxFont* prefFont = FindFallbackFaceForChar(family.mUnshared, aCh);
       if (prefFont) {
         mLastPrefFamily = family;
         mLastPrefFont = prefFont;

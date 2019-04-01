@@ -100,7 +100,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // For font family lists loaded from user preferences (prefs such as
   // font.name-list.<generic>.<langGroup>) that map CSS generics to
   // platform-specific font families.
-  typedef nsTArray<RefPtr<gfxFontFamily>> PrefFontList;
+  typedef nsTArray<FontFamily> PrefFontList;
 
   static gfxPlatformFontList* PlatformFontList() { return sPlatformFontList; }
 
@@ -184,7 +184,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // pure virtual functions, to be provided by concrete subclasses
 
   // get the system default font family
-  gfxFontFamily* GetDefaultFont(const gfxFontStyle* aStyle);
+  FontFamily GetDefaultFont(const gfxFontStyle* aStyle);
 
   /**
    * Look up a font by name on the host platform.
@@ -396,7 +396,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
                             gfxFloat aDevToCssSize = 1.0) {
     AutoTArray<FamilyAndGeneric, 1> families;
     return FindAndAddFamilies(aFamily, &families, aFlags, aStyle, aDevToCssSize)
-               ? families[0].mFamily
+               ? families[0].mFamily.mUnshared
                : nullptr;
   }
 
@@ -416,20 +416,20 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   gfxFontEntry* CommonFontFallback(uint32_t aCh, uint32_t aNextCh,
                                    Script aRunScript,
                                    const gfxFontStyle* aMatchStyle,
-                                   gfxFontFamily** aMatchedFamily);
+                                   FontFamily* aMatchedFamily);
 
   // Search fonts system-wide for a given character, null if not found.
   gfxFontEntry* GlobalFontFallback(const uint32_t aCh, Script aRunScript,
                                    const gfxFontStyle* aMatchStyle,
                                    uint32_t& aCmapCount,
-                                   gfxFontFamily** aMatchedFamily);
+                                   FontFamily* aMatchedFamily);
 
   // Platform-specific implementation of global font fallback, if any;
   // this may return nullptr in which case the default cmap-based fallback
   // will be performed.
   virtual gfxFontEntry* PlatformGlobalFontFallback(
       const uint32_t aCh, Script aRunScript, const gfxFontStyle* aMatchStyle,
-      gfxFontFamily** aMatchedFamily) {
+      FontFamily* aMatchedFamily) {
     return nullptr;
   }
 
@@ -514,8 +514,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
       const FontEntryTable& aTable, mozilla::MallocSizeOf aMallocSizeOf);
 
   // Platform-specific helper for GetDefaultFont(...).
-  virtual gfxFontFamily* GetDefaultFontForPlatform(
-      const gfxFontStyle* aStyle) = 0;
+  virtual FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle) = 0;
 
   // Protects mFontFamilies.
   mozilla::Mutex mFontFamiliesMutex;
@@ -567,7 +566,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   // the family to use for U+FFFD fallback, to avoid expensive search every time
   // on pages with lots of problems
-  RefPtr<gfxFontFamily> mReplacementCharFallbackFamily;
+  FontFamily mReplacementCharFallbackFamily;
 
   // Sorted array of lowercased family names; use ContainsSorted to test
   nsTArray<nsCString> mBadUnderlineFamilyNames;

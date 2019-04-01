@@ -355,7 +355,6 @@ nsresult gfxPlatformFontList::InitFontList() {
   }
   mFaceNameListsInitialized = false;
   ClearLangGroupPrefFonts();
-  mReplacementCharFallbackFamily = nullptr;
   CancelLoader();
 
   // initialize ranges of characters for which system-wide font search should be
@@ -568,8 +567,12 @@ gfxFontEntry* gfxPlatformFontList::SystemFindFontForChar(
   // encoding errors: just use cached family from last time U+FFFD was seen.
   // This helps speed up pages with lots of encoding errors, binary-as-text,
   // etc.
-  if (aCh == 0xFFFD && mReplacementCharFallbackFamily) {
-    fontEntry = mReplacementCharFallbackFamily->FindFontForStyle(*aStyle);
+  if (aCh == 0xFFFD) {
+    if (!mReplacementCharFallbackFamily.mIsShared &&
+        mReplacementCharFallbackFamily.mUnshared) {
+      fontEntry =
+          mReplacementCharFallbackFamily.mUnshared->FindFontForStyle(*aStyle);
+    }
 
     // this should never fail, as we must have found U+FFFD in order to set
     // mReplacementCharFallbackFamily at all, but better play it safe
@@ -582,7 +585,7 @@ gfxFontEntry* gfxPlatformFontList::SystemFindFontForChar(
 
   // search commonly available fonts
   bool common = true;
-  gfxFontFamily* fallbackFamily = nullptr;
+  FontFamily fallbackFamily;
   fontEntry =
       CommonFontFallback(aCh, aNextCh, aRunScript, aStyle, &fallbackFamily);
 
@@ -613,7 +616,7 @@ gfxFontEntry* gfxPlatformFontList::SystemFindFontForChar(
   // no match? add to set of non-matching codepoints
   if (!fontEntry) {
     mCodepointsWithNoFonts.set(aCh);
-  } else if (aCh == 0xFFFD && fontEntry && fallbackFamily) {
+  } else if (aCh == 0xFFFD && fontEntry) {
     mReplacementCharFallbackFamily = fallbackFamily;
   }
 
@@ -638,7 +641,7 @@ gfxFontEntry* gfxPlatformFontList::SystemFindFontForChar(
 
 gfxFontEntry* gfxPlatformFontList::CommonFontFallback(
     uint32_t aCh, uint32_t aNextCh, Script aRunScript,
-    const gfxFontStyle* aMatchStyle, gfxFontFamily** aMatchedFamily) {
+    const gfxFontStyle* aMatchStyle, FontFamily* aMatchedFamily) {
   AutoTArray<const char*, NUM_FALLBACK_FONTS> defaultFallbacks;
   gfxPlatform::GetPlatform()->GetCommonFallbackFonts(aCh, aNextCh, aRunScript,
                                                      defaultFallbacks);
@@ -649,7 +652,7 @@ gfxFontEntry* gfxPlatformFontList::CommonFontFallback(
     if (fallback) {
       fallback->FindFontForChar(&data);
       if (data.mBestMatch) {
-        *aMatchedFamily = fallback;
+        *aMatchedFamily = FontFamily(fallback);
         return data.mBestMatch;
       }
     }
@@ -659,7 +662,7 @@ gfxFontEntry* gfxPlatformFontList::CommonFontFallback(
 
 gfxFontEntry* gfxPlatformFontList::GlobalFontFallback(
     const uint32_t aCh, Script aRunScript, const gfxFontStyle* aMatchStyle,
-    uint32_t& aCmapCount, gfxFontFamily** aMatchedFamily) {
+    uint32_t& aCmapCount, FontFamily* aMatchedFamily) {
   bool useCmaps = IsFontFamilyWhitelistActive() ||
                   gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
   if (!useCmaps) {
@@ -686,7 +689,7 @@ gfxFontEntry* gfxPlatformFontList::GlobalFontFallback(
   }
 
   aCmapCount = data.mCmapsTested;
-  *aMatchedFamily = data.mMatchedFamily;
+  *aMatchedFamily = FontFamily(data.mMatchedFamily);
 
   return data.mBestMatch;
 }
@@ -995,7 +998,7 @@ void gfxPlatformFontList::AddGenericFonts(
   if (!prefFonts->IsEmpty()) {
     aFamilyList.SetCapacity(aFamilyList.Length() + prefFonts->Length());
     for (auto& f : *prefFonts) {
-      aFamilyList.AppendElement(FamilyAndGeneric(f.get(), aGenericType));
+      aFamilyList.AppendElement(FamilyAndGeneric(f, aGenericType));
     }
   }
 }
@@ -1307,16 +1310,16 @@ mozilla::FontFamilyType gfxPlatformFontList::GetDefaultGeneric(
   return eFamily_serif;
 }
 
-gfxFontFamily* gfxPlatformFontList::GetDefaultFont(const gfxFontStyle* aStyle) {
-  gfxFontFamily* family = GetDefaultFontForPlatform(aStyle);
-  if (family) {
+FontFamily gfxPlatformFontList::GetDefaultFont(const gfxFontStyle* aStyle) {
+  FontFamily family = GetDefaultFontForPlatform(aStyle);
+  if (!family.mIsShared && family.mUnshared) {
     return family;
   }
   // Something has gone wrong and we were unable to retrieve a default font
   // from the platform. (Likely the whitelist has blocked all potential
   // default fonts.) As a last resort, we return the first font listed in
   // mFontFamilies.
-  return mFontFamilies.Iter().Data();
+  return FontFamily(mFontFamilies.Iter().Data());
 }
 
 void gfxPlatformFontList::GetFontFamilyNames(
