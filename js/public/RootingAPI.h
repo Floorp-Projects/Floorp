@@ -263,15 +263,23 @@ inline void AssertGCThingIsNotNurseryAllocable(js::gc::Cell* cell) {}
 #endif
 
 /**
- * The Heap<T> class is a heap-stored reference to a JS GC thing. All members of
- * heap classes that refer to GC things should use Heap<T> (or possibly
- * TenuredHeap<T>, described below).
+ * The Heap<T> class is a heap-stored reference to a JS GC thing for use outside
+ * the JS engine. All members of heap classes that refer to GC things should use
+ * Heap<T> (or possibly TenuredHeap<T>, described below).
  *
  * Heap<T> is an abstraction that hides some of the complexity required to
  * maintain GC invariants for the contained reference. It uses operator
- * overloading to provide a normal pointer interface, but notifies the GC every
- * time the value it contains is updated. This is necessary for generational GC,
- * which keeps track of all pointers into the nursery.
+ * overloading to provide a normal pointer interface, but adds barriers to
+ * notify the GC of changes.
+ *
+ * Heap<T> implements the following barriers:
+ *
+ *  - Pre-write barrier (necessary for incremental GC).
+ *  - Post-write barrier (necessary for generational GC).
+ *  - Read barrier (necessary for cycle collector integration).
+ *
+ * Heap<T> may be moved or destroyed outside of GC finalization and hence may be
+ * used in dynamic storage such as a Vector.
  *
  * Heap<T> instances must be traced when their containing object is traced to
  * keep the pointed-to GC thing alive.
