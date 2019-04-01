@@ -375,12 +375,12 @@ var gPermissionManager = {
     // to update the UI
     this.uninit();
 
-    for (let p of this._permissionsToAdd.values()) {
-      Services.perms.addFromPrincipal(p.principal, p.type, p.capability);
-    }
-
     for (let p of this._permissionsToDelete.values()) {
       Services.perms.removeFromPrincipal(p.principal, p.type);
+    }
+
+    for (let p of this._permissionsToAdd.values()) {
+      Services.perms.addFromPrincipal(p.principal, p.type, p.capability);
     }
 
     window.close();
