@@ -6473,13 +6473,6 @@ bool nsDisplayOwnLayer::IsZoomingLayer() const {
   return GetType() == DisplayItemType::TYPE_ASYNC_ZOOM;
 }
 
-bool nsDisplayOwnLayer::ShouldBuildLayerEvenIfInvisible(
-    nsDisplayListBuilder* aBuilder) const {
-  // Render scroll thumb layers even if they are invisible, because async
-  // scrolling might bring them into view.
-  return IsScrollThumbLayer();
-}
-
 // nsDisplayOpacity uses layers for rendering
 already_AddRefed<Layer> nsDisplayOwnLayer::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
@@ -6832,18 +6825,6 @@ bool nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   }
 
   return visible;
-}
-
-bool nsDisplaySubDocument::ShouldBuildLayerEvenIfInvisible(
-    nsDisplayListBuilder* aBuilder) const {
-  bool usingDisplayPort = UseDisplayPortForViewport(aBuilder, mFrame);
-
-  if ((mFlags & nsDisplayOwnLayerFlags::eGenerateScrollableLayer) &&
-      usingDisplayPort) {
-    return true;
-  }
-
-  return nsDisplayOwnLayer::ShouldBuildLayerEvenIfInvisible(aBuilder);
 }
 
 nsRegion nsDisplaySubDocument::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
@@ -8148,14 +8129,6 @@ const Matrix4x4& nsDisplayTransform::GetAccumulatedPreserved3DTransform(
   }
 
   return *mTransformPreserves3D;
-}
-
-bool nsDisplayTransform::ShouldBuildLayerEvenIfInvisible(
-    nsDisplayListBuilder* aBuilder) const {
-  // The visible rect of a Preserves-3D frame is just an intermediate
-  // result.  It should always build a layer to make sure it is
-  // rendering correctly.
-  return MayBeAnimated(aBuilder) || Combines3DTransformWithAncestors();
 }
 
 bool nsDisplayTransform::CreateWebRenderCommands(
