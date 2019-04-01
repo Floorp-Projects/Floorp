@@ -24,6 +24,7 @@ nsPrintSettings::nsPrintSettings()
       mPrintFrameType(kFramesAsIs),
       mHowToEnableFrameUI(kFrameEnableNone),
       mIsCancelled(false),
+      mSaveOnCancel(true),
       mPrintSilent(false),
       mPrintPreview(false),
       mShrinkToFit(true),
@@ -617,6 +618,11 @@ NS_IMETHODIMP nsPrintSettings::GetIsCancelled(bool *aIsCancelled) {
 }
 NS_IMETHODIMP nsPrintSettings::SetIsCancelled(bool aIsCancelled) {
   mIsCancelled = aIsCancelled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrintSettings::GetSaveOnCancel(bool *aSaveOnCancel) {
+  *aSaveOnCancel = mSaveOnCancel;
   return NS_OK;
 }
 
