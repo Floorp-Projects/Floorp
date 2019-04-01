@@ -3115,11 +3115,17 @@ class LazyScript : public gc::TenuredCell {
   bool mutedErrors() const { return scriptSource()->mutedErrors(); }
 
   uint32_t numClosedOverBindings() const { return numClosedOverBindings_; }
-  JSAtom** closedOverBindings() { return (JSAtom**)table_; }
+  mozilla::Span<GCPtrAtom> closedOverBindings() {
+    return mozilla::MakeSpan(reinterpret_cast<GCPtrAtom*>(table_),
+                             numClosedOverBindings_);
+  }
 
   uint32_t numInnerFunctions() const { return numInnerFunctions_; }
-  GCPtrFunction* innerFunctions() {
-    return (GCPtrFunction*)&closedOverBindings()[numClosedOverBindings()];
+  mozilla::Span<GCPtrFunction> innerFunctions() {
+    uintptr_t base = reinterpret_cast<uintptr_t>(table_);
+    size_t offset = numClosedOverBindings_ * sizeof(GCPtrAtom);
+    return mozilla::MakeSpan(reinterpret_cast<GCPtrFunction*>(base + offset),
+                             numInnerFunctions_);
   }
 
   GeneratorKind generatorKind() const {
