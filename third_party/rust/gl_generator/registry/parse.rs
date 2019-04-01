@@ -22,15 +22,19 @@ use xml::attribute::OwnedAttribute;
 use xml::reader::XmlEvent;
 use xml::EventReader as XmlEventReader;
 
-use registry::{Binding, Cmd, Enum, GlxOpcode, Registry};
+use registry::{Binding, Cmd, Enum, GlxOpcode, Group, Registry};
 use {Api, Fallbacks, Profile};
 
-pub fn from_xml<R: io::Read>(src: R, filter: Filter) -> Registry {
+pub fn from_xml<R: io::Read>(
+    src: R,
+    filter: &Filter,
+    require_feature: bool,
+) -> Registry {
     XmlEventReader::new(src)
         .into_iter()
         .map(Result::unwrap)
         .filter_map(ParseEvent::from_xml)
-        .parse(filter)
+        .parse(filter, require_feature)
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -287,7 +291,7 @@ pub struct Filter {
 }
 
 trait Parse: Sized + Iterator<Item = ParseEvent> {
-    fn parse(mut self, filter: Filter) -> Registry {
+    fn parse(mut self, filter: &Filter, require_feature: bool) -> Registry {
         self.consume_start_element("registry");
 
         let mut enums = Vec::new();
@@ -295,6 +299,7 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         let mut features = Vec::new();
         let mut extensions = Vec::new();
         let mut aliases = BTreeMap::new();
+        let mut groups: BTreeMap<String, Group> = BTreeMap::new();
 
         while let Some(event) = self.next() {
             match event {
@@ -302,11 +307,20 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
                 ParseEvent::Text(_) => (),
                 ParseEvent::Start(ref name, _) if name == "comment" => self.skip_to_end("comment"),
                 ParseEvent::Start(ref name, _) if name == "types" => self.skip_to_end("types"),
-                ParseEvent::Start(ref name, _) if name == "groups" => self.skip_to_end("groups"),
+
+                // add group namespace
+                ParseEvent::Start(ref name, _) if name == "groups" => {
+                    groups.extend(self.consume_groups(filter.api));
+                },
 
                 // add enum namespace
-                ParseEvent::Start(ref name, _) if name == "enums" => {
+                ParseEvent::Start(ref name, ref attributes) if name == "enums" => {
                     enums.extend(self.consume_enums(filter.api));
+                    let enums_group = get_attribute(&attributes, "group");
+                    let enums_type = get_attribute(&attributes, "type");
+                    if let Some(group) = enums_group.and_then(|name| groups.get_mut(&name)) {
+                        group.enums_type = enums_type;
+                    }
                 },
 
                 // add command namespace
@@ -370,7 +384,7 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
             }
         }
 
-        if !found_feature {
+        if !found_feature && require_feature {
             panic!("Did not find version {} in the registry", filter.version);
         }
 
@@ -412,6 +426,7 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
             } else {
                 aliases
             },
+            groups,
         }
     }
 
@@ -541,6 +556,42 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         }
     }
 
+    fn consume_groups(&mut self, api: Api) -> BTreeMap<String, Group> {
+        let mut groups = BTreeMap::new();
+        loop {
+            match self.next().unwrap() {
+                ParseEvent::Start(ref name, ref attributes) if name == "group" => {
+                    let ident = get_attribute(&attributes, "name").unwrap();
+                    let group = Group {
+                        ident: ident.clone(),
+                        enums_type: None,
+                        enums: self.consume_group_enums(api)
+                    };
+                    groups.insert(ident, group);
+                },
+                ParseEvent::End(ref name) if name == "groups" => break,
+                event => panic!("Expected </groups>, found: {:?}", event),
+            }
+        }
+        groups
+    }
+
+    fn consume_group_enums(&mut self, api: Api) -> Vec<String> {
+        let mut enums = Vec::new();
+        loop {
+            match self.next().unwrap() {
+                ParseEvent::Start(ref name, ref attributes) if name == "enum" => {
+                    let enum_name = get_attribute(&attributes, "name");
+                    enums.push(trim_enum_prefix(&enum_name.unwrap(), api));
+                    self.consume_end_element("enum");
+                },
+                ParseEvent::End(ref name) if name == "group" => break,
+                event => panic!("Expected </group>, found: {:?}", event),
+            }
+        }
+        enums
+    }
+
     fn consume_cmds(&mut self, api: Api) -> (Vec<Cmd>, BTreeMap<String, Vec<String>>) {
         let mut cmds = Vec::new();
         let mut aliases: BTreeMap<String, Vec<String>> = BTreeMap::new();
@@ -573,7 +624,7 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
     fn consume_cmd(&mut self, api: Api) -> Cmd {
         // consume command prototype
         self.consume_start_element("proto");
-        let mut proto = self.consume_binding("proto");
+        let mut proto = self.consume_binding("proto", &[]);
         proto.ident = trim_cmd_prefix(&proto.ident, api).to_string();
 
         let mut params = Vec::new();
@@ -582,8 +633,8 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         let mut glx = None;
         loop {
             match self.next().unwrap() {
-                ParseEvent::Start(ref name, _) if name == "param" => {
-                    params.push(self.consume_binding("param"));
+                ParseEvent::Start(ref name, ref attributes) if name == "param" => {
+                    params.push(self.consume_binding("param", attributes));
                 },
                 ParseEvent::Start(ref name, ref attributes) if name == "alias" => {
                     alias = get_attribute(&attributes, "name");
@@ -615,7 +666,7 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         }
     }
 
-    fn consume_binding(&mut self, outside_tag: &str) -> Binding {
+    fn consume_binding(&mut self, outside_tag: &str, attributes: &[Attribute]) -> Binding {
         // consume type
         let mut ty = String::new();
         loop {
@@ -644,6 +695,7 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         Binding {
             ident: ident,
             ty: to_rust_ty(ty),
+            group: get_attribute(&attributes, "group"),
         }
     }
 }
@@ -785,6 +837,7 @@ pub fn to_rust_ty<T: AsRef<str>>(ty: T) -> Cow<'static, str> {
         "void" => "()",
         "GLboolean *" => "*mut types::GLboolean",
         "GLchar *" => "*mut types::GLchar",
+        "const GLchar*" => "*const types::GLchar",
         "GLcharARB *" => "*mut types::GLcharARB",
         "GLdouble *" => "*mut types::GLdouble",
         "GLenum *" => "*mut types::GLenum",
@@ -822,6 +875,7 @@ pub fn to_rust_ty<T: AsRef<str>>(ty: T) -> Cow<'static, str> {
         "const GLint64EXT *" => "*const types::GLint64EXT",
         "const GLintptr *" => "*const types::GLintptr",
         "const GLshort *" => "*const types::GLshort",
+        "const GLsizei*" |
         "const GLsizei *" => "*const types::GLsizei",
         "const GLsizeiptr *" => "*const types::GLsizeiptr",
         "const GLubyte *" => "*const types::GLubyte",
@@ -831,6 +885,7 @@ pub fn to_rust_ty<T: AsRef<str>>(ty: T) -> Cow<'static, str> {
         "const GLushort *" => "*const types::GLushort",
         "const GLvdpauSurfaceNV *" => "*const types::GLvdpauSurfaceNV",
         "const GLvoid *" => "*const types::GLvoid",
+        "const void*" |
         "const void *" => "*const __gl_imports::raw::c_void",
         "const void **" => "*const *const __gl_imports::raw::c_void",
         "const void *const*" => "*const *const __gl_imports::raw::c_void",

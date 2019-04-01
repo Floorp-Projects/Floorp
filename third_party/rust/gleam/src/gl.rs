@@ -582,6 +582,9 @@ declare_gl_apis! {
 
     // GL_KHR_debug
     fn get_debug_messages(&self) -> Vec<DebugMessage>;
+
+    // GL_ANGLE_provoking_vertex.
+    fn provoking_vertex_angle(&self, mode: GLenum);
 }
 
 //#[deprecated(since = "0.6.11", note = "use ErrorReactingGl instead")]

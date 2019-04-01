@@ -2079,4 +2079,10 @@ impl Gl for GlesFns {
             }
         }
     }
+
+    fn provoking_vertex_angle(&self, mode: GLenum) {
+        unsafe {
+            self.ffi_gl_.ProvokingVertexANGLE(mode);
+        }
+    }
 }

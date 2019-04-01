@@ -2114,4 +2114,8 @@ impl Gl for GlFns {
             }
         }
     }
+
+    fn provoking_vertex_angle(&self, _mode: GLenum) {
+        unimplemented!("This extension is GLES only");
+    }
 }
