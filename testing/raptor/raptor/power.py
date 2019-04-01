@@ -7,10 +7,10 @@ import os
 import re
 
 
-def init_geckoview_power_test(raptor):
+def init_android_power_test(raptor):
     upload_dir = os.getenv('MOZ_UPLOAD_DIR')
     if not upload_dir:
-        raptor.log.critical("Geckoview power test ignored because MOZ_UPLOAD_DIR was not set")
+        raptor.log.critical("% power test ignored; MOZ_UPLOAD_DIR unset" % raptor.config['app'])
         return
     # Set the screen off timeout to 2 hours since the device will be running
     # disconnected and would otherwise turn off the screen thereby halting
@@ -67,10 +67,10 @@ def init_geckoview_power_test(raptor):
 # If only the cpu energy value is available, then it will be used
 # along with the values from the Screen and Wifi lines.
 
-def finish_geckoview_power_test(raptor):
+def finish_android_power_test(raptor, test_name):
     upload_dir = os.getenv('MOZ_UPLOAD_DIR')
     if not upload_dir:
-        raptor.log.critical("Geckoview power test ignored because MOZ_UPLOAD_DIR was not set")
+        raptor.log.critical("% power test ignored because MOZ_UPLOAD_DIR was not set" % test_name)
         return
     # Restore the screen off timeout.
     raptor.device.shell_output(
@@ -158,7 +158,7 @@ def finish_geckoview_power_test(raptor):
     # so it can be formatted and output for perfherder ingestion
 
     power_data = {'type': 'power',
-                  'test': 'raptor-speedometer-geckoview',
+                  'test': test_name,
                   'unit': 'mAh',
                   'values': {
                       'cpu': float(cpu),
