@@ -302,7 +302,7 @@ inline void JSContext::minorGC(JS::GCReason reason) {
   runtime()->gc.minorGC(reason);
 }
 
-inline void JSContext::setPendingException(JS::HandleValue v) {
+inline void JSContext::setPendingException(JS::HandleValue v, js::HandleSavedFrame stack) {
 #if defined(NIGHTLY_BUILD)
   do {
     // Do not intercept exceptions if we are already
@@ -335,6 +335,7 @@ inline void JSContext::setPendingException(JS::HandleValue v) {
   this->overRecursed_ = false;
   this->throwing = true;
   this->unwrappedException() = v;
+  this->unwrappedExceptionStack() = stack;
   check(v);
 }
 
