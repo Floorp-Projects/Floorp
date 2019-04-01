@@ -600,6 +600,9 @@ namespace ipc {
 namespace windows {
 
 void InitUIThread() {
+  if (!XRE_UseNativeEventProcessing()) {
+    return;
+  }
   // If we aren't setup before a call to NotifyWorkerThread, we'll hang
   // on startup.
   if (!gUIThreadId) {
@@ -763,6 +766,9 @@ void MessageChannel::SpinInternalEventLoop() {
 static HHOOK gWindowHook;
 
 static inline void StartNeutering() {
+  if (!gUIThreadId) {
+    mozilla::ipc::windows::InitUIThread();
+  }
   MOZ_ASSERT(gUIThreadId);
   MOZ_ASSERT(!gWindowHook);
   NS_ASSERTION(!MessageChannel::IsPumpingMessages(),
@@ -788,7 +794,9 @@ static void StopNeutering() {
 
 NeuteredWindowRegion::NeuteredWindowRegion(
     bool aDoNeuter MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : mNeuteredByThis(!gWindowHook && aDoNeuter) {
+    : mNeuteredByThis(!gWindowHook &&
+                      aDoNeuter &&
+                      XRE_UseNativeEventProcessing()) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (mNeuteredByThis) {
     StartNeutering();
@@ -912,7 +920,9 @@ bool MessageChannel::WaitForSyncNotifyWithA11yReentry() {
 bool MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages) {
   mMonitor->AssertCurrentThreadOwns();
 
-  MOZ_ASSERT(gUIThreadId, "InitUIThread was not called!");
+  if (!gUIThreadId) {
+    mozilla::ipc::windows::InitUIThread();
+  }
 
 #if defined(ACCESSIBILITY)
   if (mFlags & REQUIRE_A11Y_REENTRY) {
@@ -1055,7 +1065,9 @@ bool MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages) {
 bool MessageChannel::WaitForInterruptNotify() {
   mMonitor->AssertCurrentThreadOwns();
 
-  MOZ_ASSERT(gUIThreadId, "InitUIThread was not called!");
+  if (!gUIThreadId) {
+    mozilla::ipc::windows::InitUIThread();
+  }
 
   // Re-use sync notification wait code if this channel does not require
   // Windows message deferral behavior.
