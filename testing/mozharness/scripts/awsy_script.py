@@ -35,6 +35,7 @@ from mozharness.mozilla.testing.codecoverage import (
 scripts_path = os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__)))
 external_tools_path = os.path.join(scripts_path, 'external_tools')
 
+
 class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
     config_options = [
         [["--e10s"],
