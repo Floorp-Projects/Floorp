@@ -251,11 +251,7 @@ var Policies = {
           newCookieBehavior = REJECT_TRACKER;
         }
 
-        if (param.Locked) {
-          setAndLockPref("network.cookie.cookieBehavior", newCookieBehavior);
-        } else {
-          setDefaultPref("network.cookie.cookieBehavior", newCookieBehavior);
-        }
+        setDefaultPref("network.cookie.cookieBehavior", newCookieBehavior, param.Locked);
       }
 
       const KEEP_COOKIES_UNTIL_EXPIRATION = 0;
@@ -267,11 +263,7 @@ var Policies = {
           newLifetimePolicy = KEEP_COOKIES_UNTIL_END_OF_SESSION;
         }
 
-        if (param.Locked) {
-          setAndLockPref("network.cookie.lifetimePolicy", newLifetimePolicy);
-        } else {
-          setDefaultPref("network.cookie.lifetimePolicy", newLifetimePolicy);
-        }
+        setDefaultPref("network.cookie.lifetimePolicy", newLifetimePolicy, param.Locked);
       }
     },
   },
@@ -474,18 +466,10 @@ var Policies = {
     onBeforeAddons(manager, param) {
       if ("Enabled" in param) {
         let mode = param.Enabled ? 2 : 5;
-        if (param.Locked) {
-          setAndLockPref("network.trr.mode", mode);
-        } else {
-          setDefaultPref("network.trr.mode", mode);
-        }
+        setDefaultPref("network.trr.mode", mode, param.Locked);
       }
       if (param.ProviderURL) {
-        if (param.Locked) {
-          setAndLockPref("network.trr.uri", param.ProviderURL.href);
-        } else {
-          setDefaultPref("network.trr.uri", param.ProviderURL.href);
-        }
+        setDefaultPref("network.trr.uri", param.ProviderURL.href, param.Locked);
       }
     },
   },
@@ -499,13 +483,8 @@ var Policies = {
   "EnableTrackingProtection": {
     onBeforeUIStartup(manager, param) {
       if (param.Value) {
-        if (param.Locked) {
-          setAndLockPref("privacy.trackingprotection.enabled", true);
-          setAndLockPref("privacy.trackingprotection.pbmode.enabled", true);
-        } else {
-          setDefaultPref("privacy.trackingprotection.enabled", true);
-          setDefaultPref("privacy.trackingprotection.pbmode.enabled", true);
-        }
+        setDefaultPref("privacy.trackingprotection.enabled", true, param.Locked);
+        setDefaultPref("privacy.trackingprotection.pbmode.enabled", true, param.Locked);
       } else {
         setAndLockPref("privacy.trackingprotection.enabled", false);
         setAndLockPref("privacy.trackingprotection.pbmode.enabled", false);
@@ -647,13 +626,12 @@ var Policies = {
         if (param.Additional && param.Additional.length > 0) {
           homepages += "|" + param.Additional.map(url => url.href).join("|");
         }
+        setDefaultPref("browser.startup.homepage", homepages, param.Locked);
         if (param.Locked) {
-          setAndLockPref("browser.startup.homepage", homepages);
           setAndLockPref("pref.browser.homepage.disable_button.current_page", true);
           setAndLockPref("pref.browser.homepage.disable_button.bookmark_page", true);
           setAndLockPref("pref.browser.homepage.disable_button.restore_default", true);
         } else {
-          setDefaultPref("browser.startup.homepage", homepages);
           runOncePerModification("setHomepage", homepages, () => {
             Services.prefs.clearUserPref("browser.startup.homepage");
           });
@@ -672,11 +650,7 @@ var Policies = {
             prefValue = 3;
             break;
         }
-        if (param.Locked) {
-          setAndLockPref("browser.startup.page", prefValue);
-        } else {
-          setDefaultPref("browser.startup.page", prefValue);
-        }
+        setDefaultPref("browser.startup.page", prefValue, param.Locked);
       }
     },
   },
@@ -1008,27 +982,27 @@ var Policies = {
  *        The value to set and lock
  */
 function setAndLockPref(prefName, prefValue) {
-  if (Services.prefs.prefIsLocked(prefName)) {
-    Services.prefs.unlockPref(prefName);
-  }
-
-  setDefaultPref(prefName, prefValue);
-
-  Services.prefs.lockPref(prefName);
+  setDefaultPref(prefName, prefValue, true);
 }
 
 /**
  * setDefaultPref
  *
- * Sets the _default_ value of a pref.
+ * Sets the _default_ value of a pref and optionally locks it.
  * The value is only changed in memory, and not stored to disk.
  *
  * @param {string} prefName
  *        The pref to be changed
  * @param {boolean,number,string} prefValue
  *        The value to set
+ * @param {boolean} locked
+ *        Optionally lock the pref
  */
-function setDefaultPref(prefName, prefValue) {
+function setDefaultPref(prefName, prefValue, locked = false) {
+  if (Services.prefs.prefIsLocked(prefName)) {
+    Services.prefs.unlockPref(prefName);
+  }
+
   let defaults = Services.prefs.getDefaultBranch("");
 
   switch (typeof(prefValue)) {
@@ -1048,6 +1022,10 @@ function setDefaultPref(prefName, prefValue) {
       defaults.setStringPref(prefName, prefValue);
       break;
   }
+
+  if (locked) {
+    Services.prefs.lockPref(prefName);
+  }
 }
 
 /**
@@ -1065,15 +1043,9 @@ function setDefaultPermission(policyName, policyParam) {
     let prefName = "permissions.default." + policyName;
 
     if (policyParam.BlockNewRequests) {
-      if (policyParam.Locked) {
-        setAndLockPref(prefName, 2);
-      } else {
-        setDefaultPref(prefName, 2);
-      }
-    } else if (policyParam.Locked) {
-      setAndLockPref(prefName, 0);
+      setDefaultPref(prefName, 2, policyParam.Locked);
     } else {
-      setDefaultPref(prefName, 0);
+      setDefaultPref(prefName, 0, policyParam.Locked);
     }
   }
 }
