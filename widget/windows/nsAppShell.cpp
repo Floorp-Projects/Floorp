@@ -319,8 +319,6 @@ nsresult nsAppShell::Init() {
 
   hal::Init();
 
-  mozilla::ipc::windows::InitUIThread();
-
   if (XRE_Win32kCallsAllowed()) {
     sTaskbarButtonCreatedMsg = ::RegisterWindowMessageW(kTaskbarButtonEventId);
     NS_ASSERTION(sTaskbarButtonCreatedMsg,
