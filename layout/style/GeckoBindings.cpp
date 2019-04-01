@@ -1937,7 +1937,6 @@ nscoord Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont* aFont,
 
 void FontSizePrefs::CopyFrom(const LangGroupFontPrefs& prefs) {
   mDefaultVariableSize = prefs.mDefaultVariableFont.size;
-  mDefaultFixedSize = prefs.mDefaultFixedFont.size;
   mDefaultSerifSize = prefs.mDefaultSerifFont.size;
   mDefaultSansSerifSize = prefs.mDefaultSansSerifFont.size;
   mDefaultMonospaceSize = prefs.mDefaultMonospaceFont.size;

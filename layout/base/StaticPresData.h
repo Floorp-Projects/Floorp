@@ -22,7 +22,6 @@ struct LangGroupFontPrefs {
       : mLangGroup(nullptr),
         mMinimumFontSize(0),
         mDefaultVariableFont(),
-        mDefaultFixedFont(StyleGenericFontFamily::MozFixed, 0),
         mDefaultSerifFont(StyleGenericFontFamily::Serif, 0),
         mDefaultSansSerifFont(StyleGenericFontFamily::SansSerif, 0),
         mDefaultMonospaceFont(StyleGenericFontFamily::Monospace, 0),
@@ -68,14 +67,6 @@ struct LangGroupFontPrefs {
    *
    * This object is read-only, you must copy the font to modify it.
    *
-   * When aFontID is kPresContext_DefaultVariableFontID or
-   * kPresContext_DefaultFixedFontID (which equals MozFixed, which is used for
-   * the -moz-fixed generic),
-   * the nsFont returned has its name as a CSS generic family (serif or
-   * sans-serif for the former, monospace for the latter), and its size
-   * as the default font size for variable or fixed fonts for the
-   * language group.
-   *
    * For aFontID corresponding to a CSS Generic, the nsFont returned has
    * its name set to that generic font's name, and its size set to
    * the user's preference for font size for that generic and the
@@ -86,8 +77,6 @@ struct LangGroupFontPrefs {
       // Special (our default variable width font and fixed width font)
       case StyleGenericFontFamily::None:
         return &mDefaultVariableFont;
-      case StyleGenericFontFamily::MozFixed:
-        return &mDefaultFixedFont;
       // CSS
       case StyleGenericFontFamily::Serif:
         return &mDefaultSerifFont;
@@ -109,7 +98,6 @@ struct LangGroupFontPrefs {
   nsStaticAtom* mLangGroup;
   nscoord mMinimumFontSize;
   nsFont mDefaultVariableFont;
-  nsFont mDefaultFixedFont;
   nsFont mDefaultSerifFont;
   nsFont mDefaultSansSerifFont;
   nsFont mDefaultMonospaceFont;
