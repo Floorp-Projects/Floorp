@@ -8,7 +8,7 @@ var newTarget = Object.defineProperty(function(){}.bind(), "prototype", {
 });
 
 assertThrowsInstanceOf(() => {
-    Reflect.construct(Function, ["#error"], newTarget);
+    Reflect.construct(Function, ["@error"], newTarget);
 }, SyntaxError);
 
 assertEq(getProtoCalled, false);
