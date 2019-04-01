@@ -2245,16 +2245,6 @@ BrowserGlue.prototype = {
 
     let xulStore = Services.xulStore;
 
-    if (currentUIVersion < 51) {
-      // Switch to compact UI density if the user is using a formerly compact
-      // dark or light theme.
-      let currentTheme = Services.prefs.getCharPref("lightweightThemes.selectedThemeID", "");
-      if (currentTheme == "firefox-compact-dark@mozilla.org" ||
-          currentTheme == "firefox-compact-light@mozilla.org") {
-        Services.prefs.setIntPref("browser.uidensity", 1);
-      }
-    }
-
     if (currentUIVersion < 52) {
       // Keep old devtools log persistence behavior after splitting netmonitor and
       // webconsole prefs (bug 1307881).
@@ -2288,24 +2278,6 @@ BrowserGlue.prototype = {
       // sidebar was open. We should set the checked attribute in case it wasn't:
       if (xulStore.getValue(BROWSER_DOCURL, "sidebar-box", "sidebarcommand")) {
         xulStore.setValue(BROWSER_DOCURL, "sidebar-box", "checked", "true");
-      }
-    }
-
-    if (currentUIVersion < 57) {
-      // Beginning Firefox 57, the theme accent color is shown as highlight
-      // on top of tabs. This didn't look too good with the "A Web Browser Renaissance"
-      // theme, so we're changing its accent color.
-      let lwthemePrefs = Services.prefs.getBranch("lightweightThemes.");
-      if (lwthemePrefs.prefHasUserValue("usedThemes")) {
-        try {
-          let usedThemes = lwthemePrefs.getStringPref("usedThemes");
-          usedThemes = JSON.parse(usedThemes);
-          let renaissanceTheme = usedThemes.find(theme => theme.id == "recommended-1");
-          if (renaissanceTheme) {
-            renaissanceTheme.accentcolor = "#834d29";
-            lwthemePrefs.setStringPref("usedThemes", JSON.stringify(usedThemes));
-          }
-        } catch (e) { /* Don't panic if this pref isn't what we expect it to be. */ }
       }
     }
 

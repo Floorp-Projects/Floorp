@@ -158,9 +158,6 @@ user_pref("javascript.options.showInConsole", true);
 user_pref("layout.css.report_errors", true);
 // Disable spammy layout warnings because they pollute test logs
 user_pref("layout.spammy_warnings.enabled", false);
-// Make tests run consistently on DevEdition (which has a lightweight theme
-// selected by default).
-user_pref("lightweightThemes.selectedThemeID", "");
 // Disable all recommended Marionette preferences for Gecko tests.
 // The prefs recommended by Marionette are typically geared towards
 // consumer automation; not vendor testing.

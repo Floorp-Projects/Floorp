@@ -198,7 +198,6 @@ pref("extensions.autoupdate.enabled", true);
 pref("extensions.autoupdate.interval", 86400);
 pref("extensions.update.enabled", true);
 pref("extensions.update.interval", 86400);
-pref("lightweightThemes.update.enabled", true);
 pref("extensions.dss.enabled", false);
 pref("extensions.ignoreMTimeChanges", false);
 pref("extensions.logging.enabled", false);

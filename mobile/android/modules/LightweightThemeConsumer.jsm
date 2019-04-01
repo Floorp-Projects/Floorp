@@ -44,7 +44,6 @@ class LightweightThemeConsumer {
   constructor(aDocument) {
     this._doc = aDocument;
     Services.obs.addObserver(this, "lightweight-theme-styling-update");
-    Services.obs.addObserver(this, "lightweight-theme-apply");
 
     this._update(LightweightThemeManager.currentThemeWithFallback);
   }
@@ -52,14 +51,11 @@ class LightweightThemeConsumer {
   observe(aSubject, aTopic, aData) {
     if (aTopic == "lightweight-theme-styling-update") {
       this._update(aSubject.wrappedJSObject.theme);
-    } else if (aTopic == "lightweight-theme-apply") {
-      this._update(LightweightThemeManager.currentThemeWithFallback);
     }
   }
 
   destroy() {
     Services.obs.removeObserver(this, "lightweight-theme-styling-update");
-    Services.obs.removeObserver(this, "lightweight-theme-apply");
     this._doc = null;
   }
 
