@@ -78,20 +78,8 @@ static void RunTest(JSContext* cx, ArrayT* array) {
 }
 
 static void CreateGlobalAndRunTest(JSContext* cx) {
-  static const JSClassOps GlobalClassOps = {nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            JS_GlobalObjectTraceHook};
-
   static const JSClass GlobalClass = {"global", JSCLASS_GLOBAL_FLAGS,
-                                      &GlobalClassOps};
+                                      &JS::DefaultGlobalClassOps};
 
   JS::RealmOptions options;
   JS::PersistentRootedObject global(cx);
