@@ -40,6 +40,7 @@ StaticPresData::StaticPresData() {
 // clang-format off
 static const char* const kGenericFont[] = {
   ".variable.",
+  ".fixed.",
   ".serif.",
   ".sans-serif.",
   ".monospace.",
@@ -51,6 +52,7 @@ static const char* const kGenericFont[] = {
 // These are private, use the list in nsFont.h if you want a public list.
 enum {
   eDefaultFont_Variable,
+  eDefaultFont_Fixed,
   eDefaultFont_Serif,
   eDefaultFont_SansSerif,
   eDefaultFont_Monospace,
@@ -91,7 +93,7 @@ void LangGroupFontPrefs::Initialize(nsStaticAtom* aLangGroupAtom) {
   aLangGroupAtom->ToUTF8String(langGroup);
 
   mDefaultVariableFont.size = nsPresContext::CSSPixelsToAppUnits(16);
-  mDefaultMonospaceFont.size = nsPresContext::CSSPixelsToAppUnits(13);
+  mDefaultFixedFont.size = nsPresContext::CSSPixelsToAppUnits(13);
 
   nsAutoCString pref;
 
@@ -105,6 +107,7 @@ void LangGroupFontPrefs::Initialize(nsStaticAtom* aLangGroupAtom) {
   // clang-format off
   nsFont* fontTypes[] = {
     &mDefaultVariableFont,
+    &mDefaultFixedFont,
     &mDefaultSerifFont,
     &mDefaultSansSerifFont,
     &mDefaultMonospaceFont,
@@ -138,10 +141,10 @@ void LangGroupFontPrefs::Initialize(nsStaticAtom* aLangGroupAtom) {
       Preferences::GetCString(pref.get(), value);
       if (!value.IsEmpty()) {
         FontFamilyName defaultVariableName = FontFamilyName::Convert(value);
-        StyleGenericFontFamily defaultType = defaultVariableName.mGeneric;
-        NS_ASSERTION(defaultType == StyleGenericFontFamily::Serif ||
-                         defaultType == StyleGenericFontFamily::SansSerif,
-                     "default type must be serif or sans-serif");
+        FontFamilyType defaultType = defaultVariableName.mType;
+        NS_ASSERTION(
+            defaultType == eFamily_serif || defaultType == eFamily_sans_serif,
+            "default type must be serif or sans-serif");
         mDefaultVariableFont.fontlist = FontFamilyList();
         mDefaultVariableFont.fontlist.SetDefaultFontType(defaultType);
         // We create mDefaultVariableFont.fontlist with defaultType as the
@@ -152,10 +155,10 @@ void LangGroupFontPrefs::Initialize(nsStaticAtom* aLangGroupAtom) {
         Preferences::GetCString(pref.get(), value);
         if (!value.IsEmpty()) {
           FontFamilyName defaultVariableName = FontFamilyName::Convert(value);
-          StyleGenericFontFamily defaultType = defaultVariableName.mGeneric;
-          NS_ASSERTION(defaultType == StyleGenericFontFamily::Serif ||
-                           defaultType == StyleGenericFontFamily::SansSerif,
-                       "default type must be serif or sans-serif");
+          FontFamilyType defaultType = defaultVariableName.mType;
+          NS_ASSERTION(
+              defaultType == eFamily_serif || defaultType == eFamily_sans_serif,
+              "default type must be serif or sans-serif");
           mDefaultVariableFont.fontlist = FontFamilyList();
           mDefaultVariableFont.fontlist.SetDefaultFontType(defaultType);
           // We create mDefaultVariableFont.fontlist with defaultType as the
@@ -164,7 +167,14 @@ void LangGroupFontPrefs::Initialize(nsStaticAtom* aLangGroupAtom) {
         }
       }
     } else {
-      if (eType != eDefaultFont_Monospace) {
+      if (eType == eDefaultFont_Monospace) {
+        // This takes care of the confusion whereby people often expect
+        // "monospace" to have the same default font-size as "-moz-fixed" (this
+        // tentative size may be overwritten with the specific value for
+        // "monospace" when "font.size.monospace.[langGroup]" is read -- see
+        // below)
+        mDefaultMonospaceFont.size = mDefaultFixedFont.size;
+      } else if (eType != eDefaultFont_Fixed) {
         // all the other generic fonts are initialized with the size of the
         // variable font, but their specific size can supersede later -- see
         // below

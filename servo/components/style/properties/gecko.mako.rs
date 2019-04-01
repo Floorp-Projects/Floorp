@@ -1984,20 +1984,20 @@ fn static_assert() {
     <% impl_font_settings("font_variation_settings", "gfxFontVariation", "VariationValue", "f32", "f32") %>
 
     pub fn set_font_family(&mut self, v: longhands::font_family::computed_value::T) {
-        use crate::values::computed::font::GenericFontFamily;
+        use crate::gecko_bindings::structs::FontFamilyType;
 
         let is_system_font = v.is_system_font;
         self.gecko.mFont.systemFont = is_system_font;
         self.gecko.mGenericID = if is_system_font {
-            GenericFontFamily::None
+            structs::kGenericFont_NONE
         } else {
-            v.families.single_generic().unwrap_or(GenericFontFamily::None)
+            v.families.single_generic().unwrap_or(structs::kGenericFont_NONE)
         };
         self.gecko.mFont.fontlist.mFontlist.mBasePtr.set_move(
             v.families.shared_font_list().clone()
         );
         // Fixed-up if needed in Cascade::fixup_font_stuff.
-        self.gecko.mFont.fontlist.mDefaultFontType = GenericFontFamily::None;
+        self.gecko.mFont.fontlist.mDefaultFontType = FontFamilyType::eFamily_none;
     }
 
     pub fn copy_font_family_from(&mut self, other: &Self) {
@@ -2011,13 +2011,33 @@ fn static_assert() {
     }
 
     pub fn clone_font_family(&self) -> longhands::font_family::computed_value::T {
+        use crate::gecko_bindings::structs::FontFamilyType;
         use crate::values::computed::font::{FontFamily, SingleFontFamily, FontFamilyList};
 
         let fontlist = &self.gecko.mFont.fontlist;
         let shared_fontlist = unsafe { fontlist.mFontlist.mBasePtr.to_safe() };
 
         let families = if shared_fontlist.mNames.is_empty() {
-            let default = SingleFontFamily::Generic(fontlist.mDefaultFontType);
+            let default = fontlist.mDefaultFontType;
+            let default = match default {
+                FontFamilyType::eFamily_serif => {
+                    SingleFontFamily::Generic(atom!("serif"))
+                }
+                _ => {
+                    // This can break with some combinations of user prefs, see
+                    // bug 1442195 for example. It doesn't really matter in this
+                    // case...
+                    //
+                    // FIXME(emilio): Probably should be storing the whole
+                    // default font name instead though.
+                    debug_assert_eq!(
+                        default,
+                        FontFamilyType::eFamily_sans_serif,
+                        "Default generic should be serif or sans-serif"
+                    );
+                    SingleFontFamily::Generic(atom!("sans-serif"))
+                }
+            };
             FontFamilyList::new(Box::new([default]))
         } else {
             FontFamilyList::SharedFontList(shared_fontlist)

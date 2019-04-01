@@ -515,8 +515,7 @@ impl From<LengthPercentage> for FontSize {
 }
 
 /// Specifies a prioritized list of font family names or generic family names.
-#[derive(Clone, Debug, Eq, PartialEq, ToCss, ToShmem)]
-#[cfg_attr(feature = "servo", derive(Hash))]
+#[derive(Clone, Debug, Eq, Hash, PartialEq, ToCss, ToShmem)]
 pub enum FontFamily {
     /// List of `font-family`
     #[css(comma)]
@@ -531,8 +530,18 @@ impl FontFamily {
 
     /// Parse a specified font-family value
     pub fn parse_specified<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i>> {
-        let values = input.parse_comma_separated(SingleFontFamily::parse)?;
-        Ok(FontFamily::Values(FontFamilyList::new(values.into_boxed_slice())))
+        input
+            .parse_comma_separated(|input| SingleFontFamily::parse(input))
+            .map(|v| FontFamily::Values(FontFamilyList::new(v.into_boxed_slice())))
+    }
+
+    #[cfg(feature = "gecko")]
+    /// Return the generic ID if it is a single generic font
+    pub fn single_generic(&self) -> Option<u8> {
+        match *self {
+            FontFamily::Values(ref values) => values.single_generic(),
+            _ => None,
+        }
     }
 }
 

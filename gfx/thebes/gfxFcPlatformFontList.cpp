@@ -1972,9 +1972,14 @@ bool gfxFcPlatformFontList::GetStandardFamilyName(const nsCString& aFontName,
 }
 
 void gfxFcPlatformFontList::AddGenericFonts(
-    mozilla::StyleGenericFontFamily aGenericType, nsAtom* aLanguage,
+    mozilla::FontFamilyType aGenericType, nsAtom* aLanguage,
     nsTArray<FamilyAndGeneric>& aFamilyList) {
   bool usePrefFontList = false;
+
+  // treat -moz-fixed as monospace
+  if (aGenericType == eFamily_moz_fixed) {
+    aGenericType = eFamily_monospace;
+  }
 
   const char* generic = GetGenericName(aGenericType);
   NS_ASSERTION(generic, "weird generic font type");

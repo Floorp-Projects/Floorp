@@ -31,15 +31,15 @@ InspectorFontFace::InspectorFontFace(gfxFontEntry* aFontEntry,
 InspectorFontFace::~InspectorFontFace() { MOZ_COUNT_DTOR(InspectorFontFace); }
 
 bool InspectorFontFace::FromFontGroup() {
-  return bool(mMatchType.kind & FontMatchType::Kind::kFontGroup);
+  return bool(mMatchType & FontMatchType::kFontGroup);
 }
 
 bool InspectorFontFace::FromLanguagePrefs() {
-  return bool(mMatchType.kind & FontMatchType::Kind::kPrefsFallback);
+  return bool(mMatchType & FontMatchType::kPrefsFallback);
 }
 
 bool InspectorFontFace::FromSystemFallback() {
-  return bool(mMatchType.kind & FontMatchType::Kind::kSystemFallback);
+  return bool(mMatchType & FontMatchType::kSystemFallback);
 }
 
 void InspectorFontFace::GetName(nsAString& aName) {
@@ -56,8 +56,10 @@ void InspectorFontFace::GetCSSFamilyName(nsAString& aCSSFamilyName) {
 }
 
 void InspectorFontFace::GetCSSGeneric(nsAString& aName) {
-  if (mMatchType.generic != StyleGenericFontFamily::None) {
-    aName.AssignASCII(gfxPlatformFontList::GetGenericName(mMatchType.generic));
+  auto genericType = FontFamilyType(mMatchType & FontMatchType::kGenericMask);
+  if (genericType >= FontFamilyType::eFamily_generic_first &&
+      genericType <= FontFamilyType::eFamily_generic_last) {
+    aName.AssignASCII(gfxPlatformFontList::GetGenericName(genericType));
   } else {
     aName.Truncate(0);
   }
