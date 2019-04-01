@@ -1480,7 +1480,7 @@ inline already_AddRefed<T> do_AddRef(const nsCOMPtr<T>& aObj) {
 
 template <class T>
 std::ostream& operator<<(std::ostream& aOut, const nsCOMPtr<T>& aObj) {
-  return aOut << aObj.get();
+  return mozilla::DebugValue(aOut, aObj.get());
 }
 
 #endif  // !defined(nsCOMPtr_h___)

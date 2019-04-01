@@ -322,4 +322,12 @@ interface nsIURI : nsISupports
      * passed over IPC.  For deserialization, see nsIURIMutator.
      */
     [noscript, notxpcom] void serialize(in URIParams aParams);
+
+    %{C++
+    // MOZ_DBG support
+    friend std::ostream& operator<<(std::ostream& aOut, const nsIURI& aURI) {
+      nsIURI* uri = const_cast<nsIURI*>(&aURI);
+      return aOut << "nsIURI { " << uri->GetSpecOrDefault() << " }";
+    }
+    %}
 };
