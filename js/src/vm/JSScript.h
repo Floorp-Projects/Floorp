@@ -3017,14 +3017,12 @@ class LazyScript : public gc::TenuredCell {
   // bytecode for our immediate parent.
   GCPtr<ScriptSourceObject*> sourceObject_;
 
-  // Heap allocated table with any free variables or inner functions.
-  void* table_;
+  // Heap allocated table with any free variables, inner functions, or class
+  // fields. This will be nullptr if none exist.
+  LazyScriptData* lazyData_;
 
   static const uint32_t NumClosedOverBindingsBits = 20;
   static const uint32_t NumInnerFunctionsBits = 20;
-
-  uint32_t numClosedOverBindings_;
-  uint32_t numInnerFunctions_;
 
   // See: JSScript::ImmutableFlags / MutableFlags.
   // NOTE: Lazy script only defines and uses a subset of these flags.
@@ -3044,8 +3042,6 @@ class LazyScript : public gc::TenuredCell {
   }
   void setFlag(ImmutableFlags flag) { immutableFlags_ |= uint32_t(flag); }
 
-  FieldInitializers fieldInitializers_;
-
   // Source location for the script.
   // See the comment in JSScript for the details
   uint32_t sourceStart_;
@@ -3057,10 +3053,10 @@ class LazyScript : public gc::TenuredCell {
   uint32_t lineno_;
   uint32_t column_;
 
-  LazyScript(uint32_t numClosedOverBindings, uint32_t numInnerFunctions,
-             JSFunction* fun, ScriptSourceObject& sourceObject, void* table,
-             uint32_t immutableFlags, uint32_t sourceStart, uint32_t sourceEnd,
-             uint32_t toStringStart, uint32_t lineno, uint32_t column);
+  LazyScript(JSFunction* fun, ScriptSourceObject& sourceObject,
+             LazyScriptData* data, uint32_t immutableFlags,
+             uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
+             uint32_t lineno, uint32_t column);
 
   // Create a LazyScript without initializing the closedOverBindings and the
   // innerFunctions. To be GC-safe, the caller must initialize both vectors
@@ -3149,18 +3145,20 @@ class LazyScript : public gc::TenuredCell {
   ScriptSource* maybeForwardedScriptSource() const;
   bool mutedErrors() const { return scriptSource()->mutedErrors(); }
 
-  uint32_t numClosedOverBindings() const { return numClosedOverBindings_; }
   mozilla::Span<GCPtrAtom> closedOverBindings() {
-    return mozilla::MakeSpan(reinterpret_cast<GCPtrAtom*>(table_),
-                             numClosedOverBindings_);
+    return lazyData_ ? lazyData_->closedOverBindings()
+                     : mozilla::Span<GCPtrAtom>();
   }
+  uint32_t numClosedOverBindings() const {
+    return lazyData_ ? lazyData_->closedOverBindings().size() : 0;
+  };
 
-  uint32_t numInnerFunctions() const { return numInnerFunctions_; }
   mozilla::Span<GCPtrFunction> innerFunctions() {
-    uintptr_t base = reinterpret_cast<uintptr_t>(table_);
-    size_t offset = numClosedOverBindings_ * sizeof(GCPtrAtom);
-    return mozilla::MakeSpan(reinterpret_cast<GCPtrFunction*>(base + offset),
-                             numInnerFunctions_);
+    return lazyData_ ? lazyData_->innerFunctions()
+                     : mozilla::Span<GCPtrFunction>();
+  }
+  uint32_t numInnerFunctions() const {
+    return lazyData_ ? lazyData_->innerFunctions().size() : 0;
   }
 
   GeneratorKind generatorKind() const {
@@ -3266,10 +3264,14 @@ class LazyScript : public gc::TenuredCell {
   void setHasThisBinding() { setFlag(ImmutableFlags::FunctionHasThisBinding); }
 
   void setFieldInitializers(FieldInitializers fieldInitializers) {
-    fieldInitializers_ = fieldInitializers;
+    MOZ_ASSERT(lazyData_);
+    lazyData_->fieldInitializers_ = fieldInitializers;
   }
 
-  FieldInitializers getFieldInitializers() const { return fieldInitializers_; }
+  FieldInitializers getFieldInitializers() const {
+    return lazyData_ ? lazyData_->fieldInitializers_
+                     : FieldInitializers::Invalid();
+  }
 
   const char* filename() const { return scriptSource()->filename(); }
   uint32_t sourceStart() const { return sourceStart_; }
@@ -3303,7 +3305,7 @@ class LazyScript : public gc::TenuredCell {
   static const JS::TraceKind TraceKind = JS::TraceKind::LazyScript;
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-    return mallocSizeOf(table_);
+    return mallocSizeOf(lazyData_);
   }
 
   uint32_t immutableFlags() const { return immutableFlags_; }

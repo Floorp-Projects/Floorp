@@ -4594,7 +4594,7 @@ void JSScript::traceChildren(JSTracer* trc) {
   }
 }
 
-void LazyScript::finalize(FreeOp* fop) { fop->free_(table_); }
+void LazyScript::finalize(FreeOp* fop) { fop->free_(lazyData_); }
 
 size_t JSScript::calculateLiveFixed(jsbytecode* pc) {
   size_t nlivefixed = numAlwaysLiveFixedSlots();
@@ -4902,21 +4902,16 @@ void LazyScriptData::trace(JSTracer* trc) {
   }
 }
 
-LazyScript::LazyScript(uint32_t numClosedOverBindings,
-                       uint32_t numInnerFunctions, JSFunction* fun,
-                       ScriptSourceObject& sourceObject, void* table,
-                       uint32_t immutableFlags, uint32_t sourceStart,
-                       uint32_t sourceEnd, uint32_t toStringStart,
-                       uint32_t lineno, uint32_t column)
+LazyScript::LazyScript(JSFunction* fun, ScriptSourceObject& sourceObject,
+                       LazyScriptData* data, uint32_t immutableFlags,
+                       uint32_t sourceStart, uint32_t sourceEnd,
+                       uint32_t toStringStart, uint32_t lineno, uint32_t column)
     : script_(nullptr),
       function_(fun),
       sourceObject_(&sourceObject),
-      table_(table),
-      numClosedOverBindings_(numClosedOverBindings),
-      numInnerFunctions_(numInnerFunctions),
+      lazyData_(data),
       immutableFlags_(immutableFlags),
       mutableFlags_(0),
-      fieldInitializers_(FieldInitializers::Invalid()),
       sourceStart_(sourceStart),
       sourceEnd_(sourceEnd),
       toStringStart_(toStringStart),
@@ -4984,13 +4979,13 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t numClosedOverBindings,
 
   MOZ_ASSERT(sourceObject);
 
-  size_t bytes = (numClosedOverBindings * sizeof(JSAtom*)) +
-                 (numInnerFunctions * sizeof(GCPtrFunction));
-
-  UniquePtr<uint8_t, JS::FreePolicy> table;
-  if (bytes) {
-    table.reset(cx->pod_malloc<uint8_t>(bytes));
-    if (!table) {
+  // Allocate a LazyScriptData if it will not be empty. Lazy class constructors
+  // also need LazyScriptData for field lists.
+  Rooted<UniquePtr<LazyScriptData>> data(cx);
+  if (numClosedOverBindings || numInnerFunctions || fun->isClassConstructor()) {
+    data.reset(
+        LazyScriptData::new_(cx, numClosedOverBindings, numInnerFunctions));
+    if (!data) {
       return nullptr;
     }
   }
@@ -5003,9 +4998,8 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t numClosedOverBindings,
   cx->realm()->scheduleDelazificationForDebugger();
 
   return new (res)
-      LazyScript(numClosedOverBindings, numInnerFunctions, fun, *sourceObject,
-                 table.release(), immutableFlags, sourceStart, sourceEnd,
-                 toStringStart, lineno, column);
+      LazyScript(fun, *sourceObject, data.release(), immutableFlags,
+                 sourceStart, sourceEnd, toStringStart, lineno, column);
 }
 
 /* static */
@@ -5052,13 +5046,6 @@ LazyScript* LazyScript::CreateForXDR(
     HandleScriptSourceObject sourceObject, uint32_t immutableFlags,
     uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
     uint32_t toStringEnd, uint32_t lineno, uint32_t column) {
-  // Dummy atom which is not a valid property name.
-  RootedAtom dummyAtom(cx, cx->names().comma);
-
-  // Dummy function which is not a valid function as this is the one which is
-  // holding this lazy script.
-  HandleFunction dummyFun = fun;
-
   LazyScript* res = LazyScript::CreateRaw(
       cx, numClosedOverBindings, numInnerFunctions, fun, sourceObject,
       immutableFlags, sourceStart, sourceEnd, toStringStart, lineno, column);
@@ -5067,16 +5054,6 @@ LazyScript* LazyScript::CreateForXDR(
   }
 
   res->setToStringEnd(toStringEnd);
-
-  // Fill with dummies, to be GC-safe after the initialization of the free
-  // variables and inner functions.
-  for (GCPtrAtom& closedOverBinding : res->closedOverBindings()) {
-    closedOverBinding.init(dummyAtom);
-  }
-
-  for (GCPtrFunction& innerFunction : res->innerFunctions()) {
-    innerFunction.init(dummyFun);
-  }
 
   // Set the enclosing scope of the lazy function. This value should only be
   // set if we have a non-lazy enclosing script at this point.
