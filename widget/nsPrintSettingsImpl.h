@@ -59,6 +59,7 @@ class nsPrintSettings : public nsIPrintSettings {
   int16_t mPrintFrameType;
   int16_t mHowToEnableFrameUI;
   bool mIsCancelled;
+  bool mSaveOnCancel;
   bool mPrintSilent;
   bool mPrintPreview;
   bool mShrinkToFit;

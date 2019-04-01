@@ -28,6 +28,15 @@ nsPrintSettingsX::nsPrintSettingsX() : mAdjustedPaperWidth{0.0}, mAdjustedPaperH
   mWidthScale = COCOA_PAPER_UNITS_PER_INCH;
   mHeightScale = COCOA_PAPER_UNITS_PER_INCH;
 
+  /*
+   * Don't save print settings after the user cancels out of the
+   * print dialog. For saving print settings after a cancellation
+   * to work properly, in addition to changing |mSaveOnCancel|,
+   * the print dialog implementation must be updated to save changed
+   * settings and serialize them back to the child process.
+   */
+  mSaveOnCancel = false;
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
