@@ -49,6 +49,8 @@ LOCAL_INCLUDES += [
     '/layout/style',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'
 
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
