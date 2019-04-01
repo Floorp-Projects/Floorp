@@ -2976,17 +2976,14 @@ class LazyScript : public gc::TenuredCell {
   static const uint32_t NumClosedOverBindingsBits = 20;
   static const uint32_t NumInnerFunctionsBits = 20;
 
+  uint32_t numClosedOverBindings_;
+  uint32_t numInnerFunctions_;
+
   struct PackedView {
     uint32_t shouldDeclareArguments : 1;
     uint32_t hasThisBinding : 1;
     uint32_t isAsync : 1;
     uint32_t isBinAST : 1;
-
-    uint32_t numClosedOverBindings : NumClosedOverBindingsBits;
-
-    // -- 32bit boundary --
-
-    uint32_t numInnerFunctions : NumInnerFunctionsBits;
 
     // N.B. These are booleans but need to be uint32_t to pack correctly on
     // MSVC. If you add another boolean here, make sure to initialize it in
@@ -3025,14 +3022,16 @@ class LazyScript : public gc::TenuredCell {
   uint32_t lineno_;
   uint32_t column_;
 
-  LazyScript(JSFunction* fun, ScriptSourceObject& sourceObject, void* table,
+  LazyScript(uint32_t numClosedOverBindings, uint32_t numInnerFunctions,
+             JSFunction* fun, ScriptSourceObject& sourceObject, void* table,
              uint64_t packedFields, uint32_t sourceStart, uint32_t sourceEnd,
              uint32_t toStringStart, uint32_t lineno, uint32_t column);
 
   // Create a LazyScript without initializing the closedOverBindings and the
   // innerFunctions. To be GC-safe, the caller must initialize both vectors
   // with valid atoms and functions.
-  static LazyScript* CreateRaw(JSContext* cx, HandleFunction fun,
+  static LazyScript* CreateRaw(JSContext* cx, uint32_t numClosedOverBindings,
+                               uint32_t numInnerFunctions, HandleFunction fun,
                                HandleScriptSourceObject sourceObject,
                                uint64_t packedData, uint32_t sourceStart,
                                uint32_t sourceEnd, uint32_t toStringStart,
@@ -3062,14 +3061,12 @@ class LazyScript : public gc::TenuredCell {
   //
   // The sourceObject and enclosingScope arguments may be null if the
   // enclosing function is also lazy.
-  static LazyScript* CreateForXDR(JSContext* cx, HandleFunction fun,
-                                  HandleScript script,
-                                  HandleScope enclosingScope,
-                                  HandleScriptSourceObject sourceObject,
-                                  uint64_t packedData, uint32_t sourceStart,
-                                  uint32_t sourceEnd, uint32_t toStringStart,
-                                  uint32_t toStringEnd, uint32_t lineno,
-                                  uint32_t column);
+  static LazyScript* CreateForXDR(
+      JSContext* cx, uint32_t numClosedOverBindings, uint32_t numInnerFunctions,
+      HandleFunction fun, HandleScript script, HandleScope enclosingScope,
+      HandleScriptSourceObject sourceObject, uint64_t packedData,
+      uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
+      uint32_t toStringEnd, uint32_t lineno, uint32_t column);
 
   static inline JSFunction* functionDelazifying(JSContext* cx,
                                                 Handle<LazyScript*>);
@@ -3117,10 +3114,10 @@ class LazyScript : public gc::TenuredCell {
   ScriptSource* maybeForwardedScriptSource() const;
   bool mutedErrors() const { return scriptSource()->mutedErrors(); }
 
-  uint32_t numClosedOverBindings() const { return p_.numClosedOverBindings; }
+  uint32_t numClosedOverBindings() const { return numClosedOverBindings_; }
   JSAtom** closedOverBindings() { return (JSAtom**)table_; }
 
-  uint32_t numInnerFunctions() const { return p_.numInnerFunctions; }
+  uint32_t numInnerFunctions() const { return numInnerFunctions_; }
   GCPtrFunction* innerFunctions() {
     return (GCPtrFunction*)&closedOverBindings()[numClosedOverBindings()];
   }
