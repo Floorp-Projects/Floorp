@@ -674,11 +674,6 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     MessageLoop uiMessageLoop(uiLoopType);
     {
       nsAutoPtr<ProcessChild> process;
-
-#ifdef XP_WIN
-      mozilla::ipc::windows::InitUIThread();
-#endif
-
       switch (XRE_GetProcessType()) {
         case GeckoProcessType_Default:
           MOZ_CRASH("This makes no sense");
