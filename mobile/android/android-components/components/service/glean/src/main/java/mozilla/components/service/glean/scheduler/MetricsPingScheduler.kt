@@ -40,27 +40,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
     companion object {
         const val LAST_METRICS_PING_SENT_DATETIME = "last_metrics_ping_iso_datetime"
         const val STORE_NAME = "metrics"
-        const val METRICS_PING_WORKER_TAG = "mozac_service_glean_metrics_ping_tick"
         const val DUE_HOUR_OF_THE_DAY = 4
-    }
-
-    /**
-     * The class representing the work to be done by the [WorkManager]. This is used by
-     * [schedulePingCollection] for scheduling the collection of the "metrics" ping at
-     * the due hour.
-     *
-     * Please note that this is `inner` to make it easy to call collection functions without
-     * too much parameter juggling.
-     */
-    inner class MetricsPingWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
-        override fun doWork(): Result {
-            val now = this@MetricsPingScheduler.getCalendarInstance()
-            this@MetricsPingScheduler.logger.info("MetricsPingWorker doWork(), now = $now")
-            this@MetricsPingScheduler.collectPingAndReschedule(now)
-            // We don't expect to fail at collection: we might fail at upload, but that's handled
-            // separately by the upload worker.
-            return Result.success()
-        }
     }
 
     /**
@@ -83,7 +63,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
         // https://developer.android.com/reference/androidx/work/PeriodicWorkRequest.html
         // for more details.
         val workRequest = OneTimeWorkRequestBuilder<MetricsPingWorker>()
-            .addTag(MetricsPingScheduler.METRICS_PING_WORKER_TAG)
+            .addTag(MetricsPingWorker.TAG)
             .setInitialDelay(millisUntilNextDueTime, AndroidTimeUnit.MILLISECONDS)
             .build()
 
@@ -94,7 +74,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
         // - the ping is overdue and is immediately collected at startup;
         // - a new work is scheduled for the next calendar day.
         WorkManager.getInstance().enqueueUniqueWork(
-            MetricsPingScheduler.METRICS_PING_WORKER_TAG,
+            MetricsPingWorker.TAG,
             ExistingWorkPolicy.REPLACE,
             workRequest)
     }
@@ -274,4 +254,38 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun getCalendarInstance(): Calendar = Calendar.getInstance()
+}
+
+/**
+ * The class representing the work to be done by the [WorkManager]. This is used by
+ * [MetricsPingScheduler.schedulePingCollection] for scheduling the collection of the
+ * "metrics" ping at the due hour.
+ */
+internal class MetricsPingWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
+    private val logger = Logger("glean/MetricsPingWorker")
+
+    companion object {
+        const val TAG = "mozac_service_glean_metrics_ping_tick"
+    }
+
+    override fun doWork(): Result {
+        // This is getting the instance of the MetricsPingScheduler class instantiated by
+        // the [Glean] singleton. This is ugly. There are a few alternatives to this:
+        //
+        // 1. provide a custom WorkerFactory to the WorkManager; however this would require
+        //    us to prevent the application from initializing the WorkManager at startup in
+        //    order to manually init it ourselves and feed in our custom configuration with
+        //    the new factory.
+        // 2. make most functions of MetricsPingScheduler static and allow for calling them
+        //    from this worker; this makes testing much more complicated, due to the restrictions
+        //    related to static functions when testing.
+        val metricsScheduler = Glean.metricsPingScheduler
+        // Perform the actual work.
+        val now = metricsScheduler.getCalendarInstance()
+        logger.debug("MetricsPingWorker doWork(), now = $now")
+        metricsScheduler.collectPingAndReschedule(now)
+        // We don't expect to fail at collection: we might fail at upload, but that's handled
+        // separately by the upload worker.
+        return Result.success()
+    }
 }

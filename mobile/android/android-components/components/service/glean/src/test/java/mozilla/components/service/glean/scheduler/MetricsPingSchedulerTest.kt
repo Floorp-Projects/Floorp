@@ -31,6 +31,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.anyBoolean
+import org.mockito.Mockito.anyString
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
@@ -191,28 +192,28 @@ class MetricsPingSchedulerTest {
         assertEquals(expectedDate, mps.getLastCollectedDate(expectedDate))
     }
 
-    // @Test
-    // fun `collectMetricsPing must update the last sent date and reschedule the collection`() {
-    //     val mpsSpy = spy<MetricsPingScheduler>(
-    //         MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>()))
+    @Test
+    fun `collectMetricsPing must update the last sent date and reschedule the collection`() {
+        val mpsSpy = spy<MetricsPingScheduler>(
+            MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>()))
 
-    //     // Ensure we have the right assumptions in place: the methods were not called
-    //     // prior to |collectPingAndReschedule|.
-    //     verify(mpsSpy, times(0)).updateSentDate(anyString())
-    //     verify(mpsSpy, times(0)).schedulePingCollection(
-    //         kotlinFriendlyAny<Calendar>(),
-    //         anyBoolean()
-    //     )
+        // Ensure we have the right assumptions in place: the methods were not called
+        // prior to |collectPingAndReschedule|.
+        verify(mpsSpy, times(0)).updateSentDate(anyString())
+        verify(mpsSpy, times(0)).schedulePingCollection(
+            kotlinFriendlyAny<Calendar>(),
+            anyBoolean()
+        )
 
-    //     mpsSpy.collectPingAndReschedule(Calendar.getInstance())
+        mpsSpy.collectPingAndReschedule(Calendar.getInstance())
 
-    //     // Verify that we correctly called in the methods.
-    //     verify(mpsSpy, times(1)).updateSentDate(anyString())
-    //     verify(mpsSpy, times(1)).schedulePingCollection(
-    //         kotlinFriendlyAny<Calendar>(),
-    //         anyBoolean()
-    //     )
-    // }
+        // Verify that we correctly called in the methods.
+        verify(mpsSpy, times(1)).updateSentDate(anyString())
+        verify(mpsSpy, times(1)).schedulePingCollection(
+            kotlinFriendlyAny<Calendar>(),
+            anyBoolean()
+        )
+    }
 
     @Test
     fun `collectMetricsPing must correctly trigger the collection of the metrics ping`() {
@@ -266,36 +267,36 @@ class MetricsPingSchedulerTest {
         }
     }
 
-    // @Test
-    // fun `startupCheck must immediately collect if the ping is overdue for today`() {
-    //     // Set the current system time to a known datetime.
-    //     val fakeNow = Calendar.getInstance()
-    //     fakeNow.clear()
-    //     fakeNow.set(2015, 6, 11, 7, 0, 0)
+    @Test
+    fun `startupCheck must immediately collect if the ping is overdue for today`() {
+        // Set the current system time to a known datetime.
+        val fakeNow = Calendar.getInstance()
+        fakeNow.clear()
+        fakeNow.set(2015, 6, 11, 7, 0, 0)
 
-    //     // Set the last sent date to a previous day, so that today's ping is overdue.
-    //     val mpsSpy =
-    //         spy<MetricsPingScheduler>(MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>()))
-    //     val overdueTestDate = "2015-07-05T12:36:00-06:00"
-    //     mpsSpy.updateSentDate(overdueTestDate)
+        // Set the last sent date to a previous day, so that today's ping is overdue.
+        val mpsSpy =
+            spy<MetricsPingScheduler>(MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>()))
+        val overdueTestDate = "2015-07-05T12:36:00-06:00"
+        mpsSpy.updateSentDate(overdueTestDate)
 
-    //     verify(mpsSpy, never()).collectPingAndReschedule(kotlinFriendlyAny<Calendar>())
+        verify(mpsSpy, never()).collectPingAndReschedule(kotlinFriendlyAny<Calendar>())
 
-    //     // Make sure to return the fake date when requested.
-    //     doReturn(fakeNow).`when`(mpsSpy).getCalendarInstance()
+        // Make sure to return the fake date when requested.
+        doReturn(fakeNow).`when`(mpsSpy).getCalendarInstance()
 
-    //     // Trigger the startup check. We need to wrap this in `blockDispatchersAPI` since
-    //     // the immediate startup collection happens in the Dispatchers.API context. If we
-    //     // don't, test will fail due to async weirdness.
-    //     mpsSpy.startupCheck()
+        // Trigger the startup check. We need to wrap this in `blockDispatchersAPI` since
+        // the immediate startup collection happens in the Dispatchers.API context. If we
+        // don't, test will fail due to async weirdness.
+        mpsSpy.startupCheck()
 
-    //     // And that we're storing the current date (this only reports the date, not the time).
-    //     fakeNow.set(Calendar.HOUR_OF_DAY, 0)
-    //     assertEquals(fakeNow.time, mpsSpy.getLastCollectedDate())
+        // And that we're storing the current date (this only reports the date, not the time).
+        fakeNow.set(Calendar.HOUR_OF_DAY, 0)
+        assertEquals(fakeNow.time, mpsSpy.getLastCollectedDate())
 
-    //     // Verify that we're immediately collecting.
-    //     verify(mpsSpy, times(1)).collectPingAndReschedule(fakeNow)
-    // }
+        // Verify that we're immediately collecting.
+        verify(mpsSpy, times(1)).collectPingAndReschedule(fakeNow)
+    }
 
     @Test
     fun `startupCheck must schedule collection for the next calendar day if collection already happened`() {
@@ -360,13 +361,13 @@ class MetricsPingSchedulerTest {
         val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
 
         // No work should be enqueued at the beginning of the test.
-        assertFalse(isWorkScheduled(MetricsPingScheduler.METRICS_PING_WORKER_TAG))
+        assertFalse(isWorkScheduled(MetricsPingWorker.TAG))
 
         // Manually schedule a collection task for today.
         mps.schedulePingCollection(Calendar.getInstance(), sendTheNextCalendarDay = false)
 
         // We expect the worker to be scheduled.
-        assertTrue(isWorkScheduled(MetricsPingScheduler.METRICS_PING_WORKER_TAG))
+        assertTrue(isWorkScheduled(MetricsPingWorker.TAG))
     }
 
     // @Test
