@@ -1005,8 +1005,7 @@ already_AddRefed<AltSvcMapping> AltSvcCache::GetAltServiceMapping(
     // on another thread
     mStorage = DataStorage::Get(DataStorageClass::AlternateServices);
     if (mStorage) {
-      bool storageWillPersist = false;
-      if (NS_FAILED(mStorage->Init(storageWillPersist))) {
+      if (NS_FAILED(mStorage->Init(nullptr))) {
         mStorage = nullptr;
       }
     }
