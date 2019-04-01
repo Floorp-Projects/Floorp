@@ -164,7 +164,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 void MediaDevices::OnDeviceChange() {
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = CheckInnerWindowCorrectness();
+  nsresult rv = CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
     MOZ_ASSERT(false);
     return;

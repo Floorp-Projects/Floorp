@@ -51,7 +51,7 @@ already_AddRefed<IDBFileRequest> IDBFileRequest::Create(
 void IDBFileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal) {
   AssertIsOnOwningThread();
 
-  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+  if (NS_FAILED(CheckCurrentGlobalCorrectness())) {
     return;
   }
 

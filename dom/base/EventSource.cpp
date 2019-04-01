@@ -797,7 +797,7 @@ EventSourceImpl::AsyncOnChannelRedirect(
       (NS_SUCCEEDED(newURI->SchemeIs("https", &isValidScheme)) &&
        isValidScheme);
 
-  rv = mEventSource->CheckInnerWindowCorrectness();
+  rv = mEventSource->CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv) || !isValidScheme) {
     DispatchFailConnection();
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -842,7 +842,7 @@ EventSourceImpl::GetInterface(const nsIID& aIID, void** aResult) {
 
   if (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
       aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
-    nsresult rv = mEventSource->CheckInnerWindowCorrectness();
+    nsresult rv = mEventSource->CheckCurrentGlobalCorrectness();
     NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIPromptFactory> wwatch =
@@ -952,7 +952,7 @@ nsresult EventSourceImpl::InitChannelAndRequestEventSource() {
       (NS_SUCCEEDED(mSrc->SchemeIs("http", &isValidScheme)) && isValidScheme) ||
       (NS_SUCCEEDED(mSrc->SchemeIs("https", &isValidScheme)) && isValidScheme);
 
-  nsresult rv = mEventSource->CheckInnerWindowCorrectness();
+  nsresult rv = mEventSource->CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv) || !isValidScheme) {
     DispatchFailConnection();
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -1039,7 +1039,7 @@ void EventSourceImpl::AnnounceConnection() {
 
   SetReadyState(OPEN);
 
-  nsresult rv = mEventSource->CheckInnerWindowCorrectness();
+  nsresult rv = mEventSource->CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1120,7 +1120,7 @@ void EventSourceImpl::ReestablishConnection() {
     return;
   }
 
-  rv = mEventSource->CheckInnerWindowCorrectness();
+  rv = mEventSource->CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1252,7 +1252,7 @@ void EventSourceImpl::FailConnection() {
   // When a user agent is to fail the connection, the user agent must set the
   // readyState attribute to CLOSED and queue a task to fire a simple event
   // named error at the EventSource object.
-  nsresult rv = mEventSource->CheckInnerWindowCorrectness();
+  nsresult rv = mEventSource->CheckCurrentGlobalCorrectness();
   if (NS_SUCCEEDED(rv)) {
     rv = mEventSource->CreateAndDispatchSimpleEvent(NS_LITERAL_STRING("error"));
     if (NS_FAILED(rv)) {
@@ -1370,7 +1370,7 @@ void EventSourceImpl::DispatchAllMessageEvents() {
     return;
   }
 
-  nsresult rv = mEventSource->CheckInnerWindowCorrectness();
+  nsresult rv = mEventSource->CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
     return;
   }

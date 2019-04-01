@@ -570,7 +570,7 @@ void UDPSocket::HandleReceivedData(const nsACString& aRemoteAddress,
     return;
   }
 
-  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+  if (NS_FAILED(CheckCurrentGlobalCorrectness())) {
     return;
   }
 

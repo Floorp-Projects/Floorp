@@ -100,7 +100,7 @@ nsresult nsDOMDataChannel::Init(nsPIDOMWindowInner* aDOMWindow) {
 
   // Attempt to kill "ghost" DataChannel (if one can happen): but usually too
   // early for check to fail
-  rv = CheckInnerWindowCorrectness();
+  rv = CheckCurrentGlobalCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = nsContentUtils::GetUTFOrigin(principal, mOrigin);
@@ -261,7 +261,7 @@ nsresult nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
            ? ((mBinaryType == DC_BINARY_TYPE_BLOB) ? " (blob)" : " (binary)")
            : ""));
 
-  nsresult rv = CheckInnerWindowCorrectness();
+  nsresult rv = CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
     return NS_OK;
   }
@@ -333,7 +333,7 @@ nsresult nsDOMDataChannel::OnSimpleEvent(nsISupports* aContext,
                                          const nsAString& aName) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsresult rv = CheckInnerWindowCorrectness();
+  nsresult rv = CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
     return NS_OK;
   }

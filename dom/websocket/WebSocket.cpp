@@ -693,7 +693,7 @@ WebSocketImpl::OnStart(nsISupports* aContext) {
   }
 
   // Attempt to kill "ghost" websocket: but usually too early for check to fail
-  nsresult rv = mWebSocket->CheckInnerWindowCorrectness();
+  nsresult rv = mWebSocket->CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
     CloseConnection(nsIWebSocketChannel::CLOSE_GOING_AWAY);
     return rv;
@@ -1461,7 +1461,7 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
   RefPtr<WebSocketImpl> kungfuDeathGrip = this;
 
   // Attempt to kill "ghost" websocket: but usually too early for check to fail
-  nsresult rv = mWebSocket->CheckInnerWindowCorrectness();
+  nsresult rv = mWebSocket->CheckCurrentGlobalCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Shut down websocket if window is frozen or destroyed (only needed for
@@ -1512,7 +1512,7 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
 
   nsCOMPtr<Document> originDoc = mWebSocket->GetDocumentIfCurrent();
   if (!originDoc) {
-    rv = mWebSocket->CheckInnerWindowCorrectness();
+    rv = mWebSocket->CheckCurrentGlobalCorrectness();
     NS_ENSURE_SUCCESS(rv, rv);
   }
   mOriginDocument = do_GetWeakReference(originDoc);
@@ -1779,7 +1779,7 @@ nsresult WebSocket::CreateAndDispatchSimpleEvent(const nsAString& aName) {
   MOZ_ASSERT(mImpl);
   AssertIsOnTargetThread();
 
-  nsresult rv = CheckInnerWindowCorrectness();
+  nsresult rv = CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
     return NS_OK;
   }
@@ -1807,7 +1807,7 @@ nsresult WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
 
   JSContext* cx = jsapi.cx();
 
-  nsresult rv = CheckInnerWindowCorrectness();
+  nsresult rv = CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
     return NS_OK;
   }
@@ -1884,7 +1884,7 @@ nsresult WebSocket::CreateAndDispatchCloseEvent(bool aWasClean, uint16_t aCode,
                                      aReason);
   }
 
-  nsresult rv = CheckInnerWindowCorrectness();
+  nsresult rv = CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
     return NS_OK;
   }
