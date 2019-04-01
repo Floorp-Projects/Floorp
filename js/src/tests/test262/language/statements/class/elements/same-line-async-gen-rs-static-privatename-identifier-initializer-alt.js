@@ -1,4 +1,4 @@
-// |reftest| skip -- class-static-fields-private,class-fields-public is not supported
+// |reftest| skip -- class-static-fields-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/rs-static-privatename-identifier-initializer-alt.case
 // - src/class-elements/productions/cls-decl-after-same-line-async-gen.template
