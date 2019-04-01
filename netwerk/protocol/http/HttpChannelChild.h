@@ -145,8 +145,7 @@ class HttpChannelChild final : public PHttpChannelChild,
       const NetAddr& peerAddr, const int16_t& redirectCount,
       const uint32_t& cacheKey, const nsCString& altDataType,
       const int64_t& altDataLen, const bool& deliveringAltData,
-      const Maybe<IPCStream>& originalCacheInputStream,
-      const Maybe<IPCStream>& altDataInputStream, const bool& aApplyConversion,
+      const bool& aApplyConversion,
       const ResourceTimingStruct& aTiming) override;
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& status) override;
   mozilla::ipc::IPCResult RecvRedirect1Begin(
@@ -176,6 +175,12 @@ class HttpChannelChild final : public PHttpChannelChild,
   mozilla::ipc::IPCResult RecvCancelDiversion() override;
 
   mozilla::ipc::IPCResult RecvCancelRedirected() override;
+
+  mozilla::ipc::IPCResult RecvOriginalCacheInputStreamAvailable(
+      const Maybe<IPCStream>& aStream) override;
+
+  mozilla::ipc::IPCResult RecvAltDataCacheInputStreamAvailable(
+      const Maybe<IPCStream>& aStream) override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -338,8 +343,8 @@ class HttpChannelChild final : public PHttpChannelChild,
   nsCOMPtr<nsICacheInfoChannel> mSynthesizedCacheInfo;
   RefPtr<ChannelEventQueue> mEventQ;
 
-  nsCOMPtr<nsIInputStream> mOriginalCacheInputStream;
-  nsCOMPtr<nsIInputStream> mAltDataInputStream;
+  nsCOMPtr<nsIInputStreamReceiver> mOriginalInputStreamReceiver;
+  nsCOMPtr<nsIInputStreamReceiver> mAltDataInputStreamReceiver;
 
   // Used to ensure atomicity of mBgChild and mBgInitFailCallback
   Mutex mBgChildMutex;
@@ -464,10 +469,8 @@ class HttpChannelChild final : public PHttpChannelChild,
       const nsCString& securityInfoSerialization, const NetAddr& selfAddr,
       const NetAddr& peerAddr, const uint32_t& cacheKey,
       const nsCString& altDataType, const int64_t& altDataLen,
-      const bool& deliveringAltData,
-      already_AddRefed<nsIInputStream> originalCacheInputStream,
-      already_AddRefed<nsIInputStream> altDataInputStream,
-      const bool& aApplyConversion, const ResourceTimingStruct& aTiming);
+      const bool& deliveringAltData, const bool& aApplyConversion,
+      const ResourceTimingStruct& aTiming);
   void MaybeDivertOnData(const nsCString& data, const uint64_t& offset,
                          const uint32_t& count);
   void OnTransportAndData(const nsresult& channelStatus, const nsresult& status,
