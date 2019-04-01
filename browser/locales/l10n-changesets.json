@@ -1413,7 +1413,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "e3afc0e15222"
+        "revision": "9958d610ce93"
     },
     "son": {
         "platforms": [
