@@ -243,6 +243,25 @@ set_config('GRADLE_ANDROID_CHECKSTYLE_TASKS', gradle_android_checkstyle_tasks)
 
 
 @depends(gradle_android_build_config)
+def gradle_android_checkstyle_output_files(build_config):
+    def uncapitalize(s):
+        if s:
+            return s[0].lower() + s[1:]
+        else:
+            return s
+
+    variant = uncapitalize(build_config.geckoview.variant.name)
+
+    '''Output folder for checkstyle'''
+    return [
+        'gradle/build/mobile/android/geckoview/reports/checkstyle/{}.xml'.format(variant),
+        'gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml',
+    ]
+
+set_config('GRADLE_ANDROID_CHECKSTYLE_OUTPUT_FILES', gradle_android_checkstyle_output_files)
+
+
+@depends(gradle_android_build_config)
 def gradle_android_findbugs_tasks(build_config):
     '''Gradle tasks run by |mach android findbugs|.'''
     return [

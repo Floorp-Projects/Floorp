@@ -276,46 +276,40 @@ class MachCommands(MachCommandBase):
 
         return ret
 
-    @SubCommand('android', 'checkstyle',
-                """Run Android checkstyle.
-                See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-checkstyle""")  # NOQA: E501
-    @CommandArgument('args', nargs=argparse.REMAINDER)
-    def android_checkstyle(self, args):
-        ret = self.gradle(self.substs['GRADLE_ANDROID_CHECKSTYLE_TASKS'] +
-                          args, verbose=True)
-
+    def _parse_checkstyle_output(self, output_path):
+        ret = 0
         # Checkstyle produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
         # report(s) for human consumption.
         import xml.etree.ElementTree as ET
 
-        f = open(os.path.join(self.topobjdir,
-                              'gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml'),
-                 'rt')
+        output_absolute_path = os.path.join(self.topobjdir, output_path)
+        f = open(output_absolute_path, 'rt')
         tree = ET.parse(f)
         root = tree.getroot()
 
         # Now the reports, linkified.
-        root_url = self._root_url(
+        report_xml = self._root_url(
             artifactdir='public/android/checkstyle',
-            objdir='gradle/build/mobile/android/app/reports/checkstyle')
-
-        # Log reports for Tree Herder "Job Details".
-        print('TinderboxPrint: report<br/><a href="{}/checkstyle.html">HTML checkstyle report</a>, visit "Inspect Task" link for details'.format(root_url))  # NOQA: E501
-        print('TinderboxPrint: report<br/><a href="{}/checkstyle.xml">XML checkstyle report</a>, visit "Inspect Task" link for details'.format(root_url))  # NOQA: E501
+            objdir=output_absolute_path)
+        report_html = self._root_url(
+            artifactdir='public/android/checkstyle',
+            objdir=os.path.splitext(output_absolute_path)[0] + '.html')
 
         # And make the report display as soon as possible.
         if root.findall('file/error'):
             ret |= 1
 
         if ret:
-            print('TEST-UNEXPECTED-FAIL | android-checkstyle | Checkstyle rule violations were found. See the report at: {}/checkstyle.html'.format(root_url))  # NOQA: E501
+            # Log reports for Tree Herder "Job Details".
+            print('TinderboxPrint: report<br/><a href="{}">HTML checkstyle report</a>, visit "Inspect Task" link for details'.format(report_xml))  # NOQA: E501
+            print('TinderboxPrint: report<br/><a href="{}">XML checkstyle report</a>, visit "Inspect Task" link for details'.format(report_html))  # NOQA: E501
 
-        print('SUITE-START | android-checkstyle')
+            print('TEST-UNEXPECTED-FAIL | android-checkstyle | Checkstyle rule violations were found. See the report at: {}'.format(report_html))  # NOQA: E501
+
         for file in root.findall('file'):
             name = file.get('name')
 
-            print('TEST-START | {}'.format(name))
             error_count = 0
             for error in file.findall('error'):
                 # There's no particular advantage to formatting the
@@ -326,8 +320,18 @@ class MachCommands(MachCommandBase):
                     print('TEST-UNEXPECTED-FAIL | {}'.format(line))
                 error_count += 1
 
-            if not error_count:
-                print('TEST-PASS | {}'.format(name))
+        return ret
+
+    @SubCommand('android', 'checkstyle',
+                """Run Android checkstyle.
+                See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-checkstyle""")  # NOQA: E501
+    @CommandArgument('args', nargs=argparse.REMAINDER)
+    def android_checkstyle(self, args):
+        ret = self.gradle(self.substs['GRADLE_ANDROID_CHECKSTYLE_TASKS'] +
+                          args, verbose=True)
+        print('SUITE-START | android-checkstyle')
+        for filePath in self.substs['GRADLE_ANDROID_CHECKSTYLE_OUTPUT_FILES']:
+            ret |= self._parse_checkstyle_output(filePath)
         print('SUITE-END | android-checkstyle')
 
         return ret
