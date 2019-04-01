@@ -89,13 +89,13 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_1__;
 
 /***/ }),
 
-/***/ 109:
+/***/ 108:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _tree = __webpack_require__(110);
+var _tree = __webpack_require__(109);
 
 var _tree2 = _interopRequireDefault(_tree);
 
@@ -109,7 +109,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 110:
+/***/ 109:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -137,7 +137,7 @@ const { Component, createFactory } = _react2.default; /* This Source Code Form i
                                                        * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                        * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-__webpack_require__(111);
+__webpack_require__(110);
 
 // depth
 const AUTO_EXPAND_DEPTH = 0;
@@ -1088,14 +1088,14 @@ exports.default = Tree;
 
 /***/ }),
 
-/***/ 111:
+/***/ 110:
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
 
-/***/ 114:
+/***/ 113:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1400,7 +1400,7 @@ module.exports = Grip;
 
 /***/ }),
 
-/***/ 115:
+/***/ 114:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1412,11 +1412,11 @@ module.exports = Grip;
 
 const { maybeEscapePropertyName } = __webpack_require__(2);
 const ArrayRep = __webpack_require__(38);
-const GripArrayRep = __webpack_require__(191);
-const GripMap = __webpack_require__(193);
-const GripMapEntryRep = __webpack_require__(194);
-const ErrorRep = __webpack_require__(190);
-const BigIntRep = __webpack_require__(187);
+const GripArrayRep = __webpack_require__(192);
+const GripMap = __webpack_require__(194);
+const GripMapEntryRep = __webpack_require__(195);
+const ErrorRep = __webpack_require__(191);
+const BigIntRep = __webpack_require__(188);
 const { isLongString } = __webpack_require__(25);
 
 const MAX_NUMERICAL_PROPERTIES = 100;
@@ -2278,7 +2278,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 116:
+/***/ 115:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2387,7 +2387,7 @@ module.exports.default = reducer;
 
 /***/ }),
 
-/***/ 117:
+/***/ 116:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2397,9 +2397,9 @@ module.exports.default = reducer;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const client = __webpack_require__(196);
-const loadProperties = __webpack_require__(195);
-const node = __webpack_require__(115);
+const client = __webpack_require__(197);
+const loadProperties = __webpack_require__(196);
+const node = __webpack_require__(114);
 const { nodeIsError, nodeIsPrimitive } = node;
 const selection = __webpack_require__(488);
 
@@ -2439,7 +2439,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 187:
+/***/ 188:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2483,7 +2483,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 188:
+/***/ 189:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2648,7 +2648,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 189:
+/***/ 190:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2683,7 +2683,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 190:
+/***/ 191:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2697,7 +2697,7 @@ module.exports = {
 const PropTypes = __webpack_require__(0);
 // Utils
 const { getGripType, isGrip, wrapRender } = __webpack_require__(2);
-const { cleanFunctionName } = __webpack_require__(188);
+const { cleanFunctionName } = __webpack_require__(189);
 const { isLongString } = __webpack_require__(25);
 const { MODE } = __webpack_require__(4);
 
@@ -2910,7 +2910,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 191:
+/***/ 192:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2923,7 +2923,7 @@ module.exports = {
 // Dependencies
 const PropTypes = __webpack_require__(0);
 
-const { lengthBubble } = __webpack_require__(192);
+const { lengthBubble } = __webpack_require__(193);
 const {
   interleave,
   getGripType,
@@ -3142,7 +3142,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 192:
+/***/ 193:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3197,7 +3197,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 193:
+/***/ 194:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3209,7 +3209,7 @@ module.exports = {
 
 // Dependencies
 
-const { lengthBubble } = __webpack_require__(192);
+const { lengthBubble } = __webpack_require__(193);
 const PropTypes = __webpack_require__(0);
 const {
   interleave,
@@ -3392,7 +3392,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 194:
+/***/ 195:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3466,7 +3466,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 195:
+/***/ 196:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3483,7 +3483,7 @@ const {
   getPrototype,
   enumSymbols,
   getFullText
-} = __webpack_require__(196);
+} = __webpack_require__(197);
 
 const {
   getClosestGripNode,
@@ -3500,7 +3500,7 @@ const {
   nodeIsProxy,
   nodeNeedsNumericalBuckets,
   nodeIsLongString
-} = __webpack_require__(115);
+} = __webpack_require__(114);
 
 function loadItemProperties(item, createObjectClient, createLongStringClient, loadedProperties) {
   const gripItem = getClosestGripNode(item);
@@ -3617,13 +3617,13 @@ module.exports = {
 
 /***/ }),
 
-/***/ 196:
+/***/ 197:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const { getValue, nodeHasFullText } = __webpack_require__(115); /* This Source Code Form is subject to the terms of the Mozilla Public
+const { getValue, nodeHasFullText } = __webpack_require__(114); /* This Source Code Form is subject to the terms of the Mozilla Public
                                                                  * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                                  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
@@ -4188,26 +4188,26 @@ const Accessor = __webpack_require__(466);
 // DOM types (grips)
 const Accessible = __webpack_require__(467);
 const Attribute = __webpack_require__(468);
-const BigInt = __webpack_require__(187);
+const BigInt = __webpack_require__(188);
 const DateTime = __webpack_require__(469);
 const Document = __webpack_require__(470);
 const DocumentType = __webpack_require__(471);
 const Event = __webpack_require__(472);
-const Func = __webpack_require__(188);
+const Func = __webpack_require__(189);
 const PromiseRep = __webpack_require__(473);
 const RegExp = __webpack_require__(474);
 const StyleSheet = __webpack_require__(475);
 const CommentNode = __webpack_require__(476);
 const ElementNode = __webpack_require__(477);
 const TextNode = __webpack_require__(478);
-const ErrorRep = __webpack_require__(190);
+const ErrorRep = __webpack_require__(191);
 const Window = __webpack_require__(479);
 const ObjectWithText = __webpack_require__(480);
 const ObjectWithURL = __webpack_require__(481);
-const GripArray = __webpack_require__(191);
-const GripMap = __webpack_require__(193);
-const GripMapEntry = __webpack_require__(194);
-const Grip = __webpack_require__(114);
+const GripArray = __webpack_require__(192);
+const GripMap = __webpack_require__(194);
+const GripMapEntry = __webpack_require__(195);
+const Grip = __webpack_require__(113);
 
 // List of all registered template.
 // XXX there should be a way for extensions to register a new
@@ -4780,7 +4780,7 @@ PropRep.propTypes = {
  * @return {Array} Array of React elements.
  */
 function PropRep(props) {
-  const Grip = __webpack_require__(114);
+  const Grip = __webpack_require__(113);
   const { Rep } = __webpack_require__(24);
 
   let { name, mode, equal, suppressQuotes } = props;
@@ -5794,7 +5794,7 @@ const PropTypes = __webpack_require__(0);
 const { isGrip, wrapRender } = __webpack_require__(2);
 
 const { MODE } = __webpack_require__(4);
-const { rep } = __webpack_require__(114);
+const { rep } = __webpack_require__(113);
 
 /**
  * Renders DOM event objects.
@@ -6136,7 +6136,7 @@ const {
   wrapRender
 } = __webpack_require__(2);
 const { MODE } = __webpack_require__(4);
-const nodeConstants = __webpack_require__(189);
+const nodeConstants = __webpack_require__(190);
 const dom = __webpack_require__(1);
 const { span } = dom;
 
@@ -6198,7 +6198,7 @@ const PropTypes = __webpack_require__(0);
 const { isGrip, wrapRender } = __webpack_require__(2);
 const { rep: StringRep, isLongString } = __webpack_require__(25);
 const { MODE } = __webpack_require__(4);
-const nodeConstants = __webpack_require__(189);
+const nodeConstants = __webpack_require__(190);
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -6282,23 +6282,14 @@ function getElements(grip, mode) {
     attributes,
     nodeName,
     isAfterPseudoElement,
-    isBeforePseudoElement,
-    isMarkerPseudoElement
+    isBeforePseudoElement
   } = grip.preview;
   const nodeNameElement = span({
     className: "tag-name"
   }, nodeName);
 
-  let pseudoNodeName;
-  if (isAfterPseudoElement) {
-    pseudoNodeName = "after";
-  } else if (isBeforePseudoElement) {
-    pseudoNodeName = "before";
-  } else if (isMarkerPseudoElement) {
-    pseudoNodeName = "marker";
-  }
-  if (pseudoNodeName) {
-    return [span({ className: "attrName" }, `::${pseudoNodeName}`)];
+  if (isAfterPseudoElement || isBeforePseudoElement) {
+    return [span({ className: "attrName" }, `::${isAfterPseudoElement ? "after" : "before"}`)];
   }
 
   if (mode === MODE.TINY) {
@@ -6680,8 +6671,8 @@ module.exports = {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const ObjectInspector = __webpack_require__(483);
-const utils = __webpack_require__(117);
-const reducer = __webpack_require__(116);
+const utils = __webpack_require__(116);
+const reducer = __webpack_require__(115);
 
 module.exports = { ObjectInspector, utils, reducer };
 
@@ -6693,7 +6684,7 @@ module.exports = { ObjectInspector, utils, reducer };
 "use strict";
 
 
-var _devtoolsComponents = __webpack_require__(109);
+var _devtoolsComponents = __webpack_require__(108);
 
 var _devtoolsComponents2 = _interopRequireDefault(_devtoolsComponents);
 
@@ -6707,7 +6698,7 @@ const { Component, createFactory, createElement } = __webpack_require__(6);
 const { connect } = __webpack_require__(484);
 const actions = __webpack_require__(485);
 
-const selectors = __webpack_require__(116);
+const selectors = __webpack_require__(115);
 
 const Tree = createFactory(_devtoolsComponents2.default.Tree);
 __webpack_require__(486);
@@ -6716,7 +6707,7 @@ const ObjectInspectorItem = createFactory(__webpack_require__(487));
 
 const classnames = __webpack_require__(67);
 
-const Utils = __webpack_require__(117);
+const Utils = __webpack_require__(116);
 const { renderRep, shouldRenderRootsInReps } = Utils;
 const {
   getChildrenWithEvaluations,
@@ -7001,11 +6992,11 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_484__;
 "use strict";
 
 
-const { loadItemProperties } = __webpack_require__(195); /* This Source Code Form is subject to the terms of the Mozilla Public
+const { loadItemProperties } = __webpack_require__(196); /* This Source Code Form is subject to the terms of the Mozilla Public
                                                                     * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                                     * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { getLoadedProperties, getActors } = __webpack_require__(116);
+const { getLoadedProperties, getActors } = __webpack_require__(115);
 
 /**
  * This action is responsible for expanding a given node, which also means that
@@ -7148,7 +7139,7 @@ const isMacOS = appinfo.OS === "Darwin";
 const classnames = __webpack_require__(67);
 const { MODE } = __webpack_require__(4);
 
-const Utils = __webpack_require__(117);
+const Utils = __webpack_require__(116);
 
 const {
   getValue,

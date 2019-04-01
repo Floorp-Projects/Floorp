@@ -665,7 +665,7 @@ CssLogic.getSelectors = function(domRule) {
  *
  * @returns {Object}
  *            - {DOMNode} node The non-anonymous node
- *            - {string} pseudo One of ':marker', ':before', ':after', or null.
+ *            - {string} pseudo One of ':before', ':after', or null.
  */
 CssLogic.getBindingElementAndPseudo = getBindingElementAndPseudo;
 
