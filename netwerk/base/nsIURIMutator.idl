@@ -359,7 +359,6 @@ public:
       return *this;
     }
     mStatus = mMutator->SetSpec(aSpec, nullptr);
-    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetScheme(const nsACString& aScheme)
@@ -515,7 +514,7 @@ public:
   // Overload for nsIURI to avoid query interface.
   MOZ_MUST_USE nsresult Finalize(nsCOMPtr<nsIURI>& aURI)
   {
-    NS_ENSURE_SUCCESS(mStatus, mStatus);
+    if (NS_FAILED(mStatus)) return mStatus;
     mStatus = mMutator->Finalize(getter_AddRefs(aURI));
     NS_ENSURE_SUCCESS(mStatus, mStatus);
 
