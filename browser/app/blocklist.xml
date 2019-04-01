@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1553620435398" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1553847044919" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2652,10 +2652,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="50197dbd-71bc-492f-a0f1-6658ec454df4" id="/^((\{10f1b84d-79ca-41d0-97f6-abb53cec0765\})|(\{7891c029-0071-4534-b7f0-7288f14ee0ad\}))$/">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
     <emItem blockID="0c09f067-6e5f-4ee0-9040-08b4297ebe02" id="{a9c33302-4c97-11e9-9a9d-af400df725e3}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -2665,6 +2661,22 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="e00b2639-8a4f-427a-80d8-7c4937c58f31" id="/^((\{36261798-4c2a-4206-89cc-6c28932b2e98\})|(\{b2b9bb64-78d5-43ca-b0cf-a9ee8460521b\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="fa6c7cdb-e477-4478-8dd4-3e1106be6aa3" id="/^((\{54c7e57f-8ef0-48d5-92a0-6e95d193a12c\})|(\{32d262da-e3cd-4300-aa0b-c284eb4e17bf\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="e1355888-e1cd-4d21-9652-c3000662ed88" id="/^((\{058769c7-784e-47a9-a2c4-dfd81bbf6c8c\})|(\{2a58598a-f951-4fb0-af2b-12fb7482bf33\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="50197dbd-71bc-492f-a0f1-6658ec454df4" id="/^((\{10f1b84d-79ca-41d0-97f6-abb53cec0765\})|(\{7891c029-0071-4534-b7f0-7288f14ee0ad\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="d78262b0-ecfc-475e-9759-f7319451cb43" id="/^((\{70c2cef0-6cc6-41b8-ad6b-bbd11182a101\})|(\{a0366612-376e-47e3-b5fa-b805c7176088\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
