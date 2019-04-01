@@ -25,6 +25,9 @@ add_task(async function test_API_directly() {
   setAndLockPref("policies.test.stringPref", "policies test");
   checkLockedPref("policies.test.stringPref", "policies test");
 
+  setDefaultPref("policies.test.lockedPref", "policies test", true);
+  checkLockedPref("policies.test.lockedPref", "policies test");
+
   // Test that user values do not override the prefs, and the get*Pref call
   // still return the value set through setAndLockPref
   Services.prefs.setBoolPref("policies.test.boolPref", true);
