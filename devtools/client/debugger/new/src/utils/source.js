@@ -22,8 +22,7 @@ import { getURL, getFileExtension } from "./sources-tree";
 import { prefs, features } from "./prefs";
 
 import type { Source, SourceLocation, JsSource } from "../types";
-import type { SourceMetaDataType } from "../reducers/ast";
-import type { SymbolDeclarations } from "../workers/parser";
+import type { Symbols } from "../reducers/types";
 
 type transformUrlCallback = string => string;
 
@@ -316,7 +315,7 @@ export function getSourceLineCount(source: Source) {
 
 export function getMode(
   source: Source,
-  symbols?: SymbolDeclarations
+  symbols?: Symbols
 ): { name: string, base?: Object } {
   if (source.isWasm) {
     return { name: "text" };
@@ -430,10 +429,7 @@ export function getTextAtPosition(source: ?Source, location: SourceLocation) {
   return lineText.slice(column, column + 100).trim();
 }
 
-export function getSourceClassnames(
-  source: Object,
-  sourceMetaData?: SourceMetaDataType
-) {
+export function getSourceClassnames(source: Object, symbols?: Symbols) {
   // Conditionals should be ordered by priority of icon!
   const defaultClassName = "file";
 
@@ -449,8 +445,8 @@ export function getSourceClassnames(
     return "blackBox";
   }
 
-  if (sourceMetaData && sourceMetaData.framework) {
-    return sourceMetaData.framework.toLowerCase();
+  if (symbols && !symbols.loading && symbols.framework) {
+    return symbols.framework.toLowerCase();
   }
 
   return sourceTypes[getFileExtension(source)] || defaultClassName;

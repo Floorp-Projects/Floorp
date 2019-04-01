@@ -40,13 +40,22 @@ function summarize(symbol) {
   return `${loc} ${expression} ${name}${params} ${klass} ${names} ${values} ${index}`.trim(); // eslint-disable-line max-len
 }
 const bools = ["hasJsx", "hasTypes", "loading"];
+const strings = ["framework"];
 function formatBool(name, symbols) {
   return `${name}: ${symbols[name] ? "true" : "false"}`;
+}
+
+function formatString(name, symbols) {
+  return `${name}: ${symbols[name]}`;
 }
 
 function formatKey(name: string, symbols: any) {
   if (bools.includes(name)) {
     return formatBool(name, symbols);
+  }
+
+  if (strings.includes(name)) {
+    return formatString(name, symbols);
   }
 
   return `${name}:\n${symbols[name].map(summarize).join("\n")}`;

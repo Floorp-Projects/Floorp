@@ -214,7 +214,6 @@ function waitForSelectedSource(dbg, url) {
   const {
     getSelectedSource,
     hasSymbols,
-    hasSourceMetaData,
     hasBreakpointPositions
   } = dbg.selectors;
 
@@ -236,9 +235,9 @@ function waitForSelectedSource(dbg, url) {
         return false;
       }
 
-      return hasSymbols(state, source) &&
-        hasSourceMetaData( state, source.id) &&
-        hasBreakpointPositions(state, source.id);
+      return (
+        hasSymbols(state, source) && hasBreakpointPositions(state, source.id)
+      );
     },
     "selected source"
   );
