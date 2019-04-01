@@ -87,6 +87,7 @@ Events sent using the telemetry events API can contain additional information. U
 
 - ``trigger``: A label to distinguish what triggered the polling/fetching of remote content (eg. ``"broadcast"``, ``"timer"``, ``"forced"``, ``"manual"``)
 - ``age``: The age of pulled data in seconds (ie. difference between publication time and fetch time).
+- ``duration``: The duration of the synchronization process in milliseconds.
 
 .. code-block:: js
 
