@@ -40,7 +40,7 @@ def add_command(config, tasks):
                            ),
                 'sparse-profile': 'update-verify',
             }
-            for thing in ("CHANNEL", "VERIFY_CONFIG", "BUILD_TOOLS_REPO"):
+            for thing in ("CHANNEL", "VERIFY_CONFIG"):
                 thing = "worker.env.{}".format(thing)
                 resolve_keyed_by(
                     chunked, thing, thing,

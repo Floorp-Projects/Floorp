@@ -8,7 +8,6 @@ Transform the beetmover task into an actual task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import resolve_keyed_by
 
 transforms = TransformSequence()
 
@@ -34,7 +33,4 @@ def add_command(config, tasks):
             },
             'sparse-profile': 'update-verify',
         }
-        for thing in ("BUILD_TOOLS_REPO",):
-            thing = "worker.env.{}".format(thing)
-            resolve_keyed_by(task, thing, thing, **config.params)
         yield task
