@@ -626,9 +626,6 @@ class JSContextWrapper {
 
     JSAutoRealm ar(mContext, global);
     AutoPACErrorReporter aper(mContext);
-    if (!JS::InitRealmStandardClasses(mContext)) {
-      return NS_ERROR_FAILURE;
-    }
     if (!JS_DefineFunctions(mContext, global, PACGlobalFunctions)) {
       return NS_ERROR_FAILURE;
     }
@@ -639,22 +636,9 @@ class JSContextWrapper {
   }
 };
 
-static const JSClassOps sJSContextWrapperGlobalClassOps = {
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    JS_GlobalObjectTraceHook};
-
 const JSClass JSContextWrapper::sGlobalClass = {
     "PACResolutionThreadGlobal", JSCLASS_GLOBAL_FLAGS,
-    &sJSContextWrapperGlobalClassOps};
+    &JS::DefaultGlobalClassOps};
 
 void ProxyAutoConfig::SetThreadLocalIndex(uint32_t index) {
   sRunningIndex = index;

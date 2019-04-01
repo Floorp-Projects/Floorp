@@ -88,11 +88,6 @@ async function loadSourceTextPromise(
     return;
   }
 
-  dispatch({
-    type: "UPDATE_BREAKPOINT_TEXT",
-    source: newSource
-  });
-
   if (!newSource.isWasm && isLoaded(newSource)) {
     parser.setSource(newSource);
     dispatch(setBreakpointPositions(newSource.id));

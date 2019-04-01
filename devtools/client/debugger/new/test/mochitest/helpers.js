@@ -777,8 +777,7 @@ async function addBreakpoint(dbg, source, line, column, options) {
   source = findSource(dbg, source);
   const sourceId = source.id;
   const bpCount = dbg.selectors.getBreakpointCount(dbg.getState());
-  dbg.actions.addBreakpoint({ sourceId, line, column }, options);
-  await waitForDispatch(dbg, "ADD_BREAKPOINT");
+  await dbg.actions.addBreakpoint({ sourceId, line, column }, options);
   is(
     dbg.selectors.getBreakpointCount(dbg.getState()),
     bpCount + 1,
@@ -791,16 +790,14 @@ function disableBreakpoint(dbg, source, line, column) {
     column || getFirstBreakpointColumn(dbg, { line, sourceId: source.id });
   const location = { sourceId: source.id, sourceUrl: source.url, line, column };
   const bp = dbg.selectors.getBreakpointForLocation(dbg.getState(), location);
-  dbg.actions.disableBreakpoint(bp);
-  return waitForDispatch(dbg, "DISABLE_BREAKPOINT");
+  return dbg.actions.disableBreakpoint(bp);
 }
 
 function setBreakpointOptions(dbg, source, line, column, options) {
   source = findSource(dbg, source);
   const sourceId = source.id;
   column = column || getFirstBreakpointColumn(dbg, {line, sourceId});
-  dbg.actions.setBreakpointOptions({ sourceId, line, column }, options);
-  return waitForDispatch(dbg, "SET_BREAKPOINT_OPTIONS");
+  return dbg.actions.setBreakpointOptions({ sourceId, line, column }, options);
 }
 
 function findBreakpoint(dbg, url, line) {
@@ -938,8 +935,7 @@ function removeBreakpoint(dbg, sourceId, line, column) {
   column = column || getFirstBreakpointColumn(dbg, {line, sourceId});
   const location = { sourceId, sourceUrl: source.url, line, column };
   const bp = dbg.selectors.getBreakpointForLocation(dbg.getState(), location);
-  dbg.actions.removeBreakpoint(bp);
-  return waitForDispatch(dbg, "REMOVE_BREAKPOINT");
+  return dbg.actions.removeBreakpoint(bp);
 }
 
 /**

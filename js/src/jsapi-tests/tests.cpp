@@ -90,14 +90,6 @@ JSObject* JSAPITest::createGlobal(JSPrincipals* principals) {
     return nullptr;
   }
 
-  JSAutoRealm ar(cx, newGlobal);
-
-  // Populate the global object with the standard globals like Object and
-  // Array.
-  if (!JS::InitRealmStandardClasses(cx)) {
-    return nullptr;
-  }
-
   global = newGlobal;
   return newGlobal;
 }

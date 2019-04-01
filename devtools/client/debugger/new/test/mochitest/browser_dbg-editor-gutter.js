@@ -26,7 +26,7 @@ add_task(async function() {
 
   // Make sure that clicking the gutter creates a breakpoint icon.
   clickGutter(dbg, 4);
-  await waitForDispatch(dbg, "ADD_BREAKPOINT");
+  await waitForDispatch(dbg, "SET_BREAKPOINT");
   is(dbg.selectors.getBreakpointCount(getState()), 1, "One breakpoint exists");
   await assertEditorBreakpoint(dbg, 4, true);
 
