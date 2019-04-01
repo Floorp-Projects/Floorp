@@ -88,7 +88,6 @@
 #include "GMPProcessChild.h"
 #include "mozilla/gfx/GPUProcessImpl.h"
 #include "mozilla/net/SocketProcessImpl.h"
-#include "mozilla/IOInterposer.h"
 
 #include "GeckoProfiler.h"
 
@@ -364,12 +363,6 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     setASanReporterPath(asanReporterPath);
   }
 #endif
-
-  // Initialize the IOInterposer. This ensures that all threads that attempt to
-  // register themselves with the IOInterposer will be properly tracked. Note
-  // this initialization does not use the RAII guard IOInterposerInit, as it
-  // will fail to clear itself before the memory leak checks happen.
-  IOInterposer::Init();
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   // This has to happen before glib thread pools are started.
@@ -767,10 +760,6 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 
       // Run the UI event loop on the main thread.
       uiMessageLoop.MessageLoop::Run();
-
-      // Clear the interposer instrumentation before the child process shuts
-      // down, so it doesn't show up as a leak.
-      IOInterposer::Clear();
 
       // Allow ProcessChild to clean up after itself before going out of
       // scope and being deleted
