@@ -1348,7 +1348,7 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack,
   if (errorObj) {
     JS::RootedObject stackVal(cx);
     JS::RootedObject stackGlobal(cx);
-    FindExceptionStackForConsoleReport(win, error, &stackVal, &stackGlobal);
+    FindExceptionStackForConsoleReport(win, error, nullptr, &stackVal, &stackGlobal);
     if (stackVal) {
       scripterr = new nsScriptErrorWithStack(stackVal, stackGlobal);
     }
