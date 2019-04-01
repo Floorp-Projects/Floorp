@@ -3068,7 +3068,8 @@ class LazyScript : public gc::TenuredCell {
                                   HandleScriptSourceObject sourceObject,
                                   uint64_t packedData, uint32_t sourceStart,
                                   uint32_t sourceEnd, uint32_t toStringStart,
-                                  uint32_t lineno, uint32_t column);
+                                  uint32_t toStringEnd, uint32_t lineno,
+                                  uint32_t column);
 
   static inline JSFunction* functionDelazifying(JSContext* cx,
                                                 Handle<LazyScript*>);

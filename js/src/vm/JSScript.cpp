@@ -308,12 +308,11 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
       RootedScriptSourceObject sourceObject(cx, script->sourceObject());
       lazy.set(LazyScript::CreateForXDR(
           cx, fun, script, enclosingScope, sourceObject, packedFields,
-          sourceStart, sourceEnd, toStringStart, lineno, column));
+          sourceStart, sourceEnd, toStringStart, toStringEnd, lineno, column));
       if (!lazy) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
 
-      lazy->setToStringEnd(toStringEnd);
       if (numFieldInitializers != UINT32_MAX) {
         lazy->setFieldInitializers(
             FieldInitializers((size_t)numFieldInitializers));
@@ -1088,15 +1087,16 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
     if (mode == XDR_DECODE) {
       lazy.set(LazyScript::CreateForXDR(
           cx, fun, nullptr, enclosingScope, sourceObject, packedFields,
-          sourceStart, sourceEnd, toStringStart, lineno, column));
+          sourceStart, sourceEnd, toStringStart, toStringEnd, lineno, column));
       if (!lazy) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
-      lazy->setToStringEnd(toStringEnd);
+
       if (numFieldInitializers != UINT32_MAX) {
         lazy->setFieldInitializers(
             FieldInitializers((size_t)numFieldInitializers));
       }
+
       fun->initLazyScript(lazy);
     }
   }
@@ -4989,7 +4989,8 @@ LazyScript* LazyScript::CreateForXDR(
     JSContext* cx, HandleFunction fun, HandleScript script,
     HandleScope enclosingScope, HandleScriptSourceObject sourceObject,
     uint64_t packedFields, uint32_t sourceStart, uint32_t sourceEnd,
-    uint32_t toStringStart, uint32_t lineno, uint32_t column) {
+    uint32_t toStringStart, uint32_t toStringEnd, uint32_t lineno,
+    uint32_t column) {
   // Dummy atom which is not a valid property name.
   RootedAtom dummyAtom(cx, cx->names().comma);
 
@@ -5003,6 +5004,8 @@ LazyScript* LazyScript::CreateForXDR(
   if (!res) {
     return nullptr;
   }
+
+  res->setToStringEnd(toStringEnd);
 
   // Fill with dummies, to be GC-safe after the initialization of the free
   // variables and inner functions.
