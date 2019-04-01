@@ -146,7 +146,7 @@ class HttpChannelChild final : public PHttpChannelChild,
       const uint32_t& cacheKey, const nsCString& altDataType,
       const int64_t& altDataLen, const bool& deliveringAltData,
       const Maybe<IPCStream>& originalCacheInputStream,
-      const bool& aApplyConversion,
+      const Maybe<IPCStream>& altDataInputStream, const bool& aApplyConversion,
       const ResourceTimingStruct& aTiming) override;
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& status) override;
   mozilla::ipc::IPCResult RecvRedirect1Begin(
@@ -176,9 +176,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   mozilla::ipc::IPCResult RecvCancelDiversion() override;
 
   mozilla::ipc::IPCResult RecvCancelRedirected() override;
-
-  mozilla::ipc::IPCResult RecvAltDataCacheInputStreamAvailable(
-      const Maybe<IPCStream>& aStream) override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -342,7 +339,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   RefPtr<ChannelEventQueue> mEventQ;
 
   nsCOMPtr<nsIInputStream> mOriginalCacheInputStream;
-  nsCOMPtr<nsIInputStreamReceiver> mAltDataInputStreamReceiver;
+  nsCOMPtr<nsIInputStream> mAltDataInputStream;
 
   // Used to ensure atomicity of mBgChild and mBgInitFailCallback
   Mutex mBgChildMutex;
@@ -469,6 +466,7 @@ class HttpChannelChild final : public PHttpChannelChild,
       const nsCString& altDataType, const int64_t& altDataLen,
       const bool& deliveringAltData,
       already_AddRefed<nsIInputStream> originalCacheInputStream,
+      already_AddRefed<nsIInputStream> altDataInputStream,
       const bool& aApplyConversion, const ResourceTimingStruct& aTiming);
   void MaybeDivertOnData(const nsCString& data, const uint64_t& offset,
                          const uint32_t& count);
