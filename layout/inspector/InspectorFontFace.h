@@ -11,8 +11,8 @@
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "nsRange.h"
-#include "gfxFont.h"
 
+class gfxFontEntry;
 class gfxFontGroup;
 
 namespace mozilla {
@@ -25,17 +25,12 @@ namespace dom {
 class InspectorFontFace final : public NonRefcountedDOMObject {
  public:
   InspectorFontFace(gfxFontEntry* aFontEntry, gfxFontGroup* aFontGroup,
-                    gfxTextRange::MatchType aMatchType)
-      : mFontEntry(aFontEntry), mFontGroup(aFontGroup), mMatchType(aMatchType) {
-    MOZ_COUNT_CTOR(InspectorFontFace);
-  }
+                    FontMatchType aMatchType);
 
-  ~InspectorFontFace() { MOZ_COUNT_DTOR(InspectorFontFace); }
+  ~InspectorFontFace();
 
   gfxFontEntry* GetFontEntry() const { return mFontEntry; }
-  void AddMatchType(gfxTextRange::MatchType aMatchType) {
-    mMatchType |= aMatchType;
-  }
+  void AddMatchType(FontMatchType aMatchType) { mMatchType |= aMatchType; }
 
   void AddRange(nsRange* aRange);
   size_t RangeCount() const { return mRanges.Length(); }
@@ -71,7 +66,7 @@ class InspectorFontFace final : public NonRefcountedDOMObject {
   RefPtr<gfxFontEntry> mFontEntry;
   RefPtr<gfxFontGroup> mFontGroup;
   RefPtr<CSSFontFaceRule> mRule;
-  gfxTextRange::MatchType mMatchType;
+  FontMatchType mMatchType;
 
   nsTArray<RefPtr<nsRange>> mRanges;
 };

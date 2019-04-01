@@ -3124,7 +3124,7 @@ template <>
 bool gfxFont::InitFakeSmallCapsRun(DrawTarget* aDrawTarget,
                                    gfxTextRun* aTextRun, const char16_t* aText,
                                    uint32_t aOffset, uint32_t aLength,
-                                   gfxTextRange::MatchType aMatchType,
+                                   FontMatchType aMatchType,
                                    gfx::ShapedTextFlags aOrientation,
                                    Script aScript, bool aSyntheticLower,
                                    bool aSyntheticUpper) {
@@ -3276,7 +3276,7 @@ template <>
 bool gfxFont::InitFakeSmallCapsRun(DrawTarget* aDrawTarget,
                                    gfxTextRun* aTextRun, const uint8_t* aText,
                                    uint32_t aOffset, uint32_t aLength,
-                                   gfxTextRange::MatchType aMatchType,
+                                   FontMatchType aMatchType,
                                    gfx::ShapedTextFlags aOrientation,
                                    Script aScript, bool aSyntheticLower,
                                    bool aSyntheticUpper) {
