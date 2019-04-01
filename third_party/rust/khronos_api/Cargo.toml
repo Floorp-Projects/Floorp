@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,9 +12,9 @@
 
 [package]
 name = "khronos_api"
-version = "3.0.0"
+version = "3.1.0"
 authors = ["Brendan Zabarauskas <bjzaba@yahoo.com.au>", "Corey Richardson", "Arseny Kapoulkine", "Pierre Krieger <pierre.krieger1708@gmail.com>"]
-include = ["/README.md", "/src/**/*", "/Cargo.toml", "/build.rs", "/api/xml/**/*.xml", "/api_egl/api/**/*.xml", "/api_webgl/specs/latest/**/*.idl", "/api_webgl/extensions/**/extension.xml"]
+include = ["/README.md", "/src/**/*", "/Cargo.toml", "/build.rs", "/api/xml/**/*.xml", "/api_angle/scripts/**/*.xml", "/api_egl/api/**/*.xml", "/api_webgl/specs/latest/**/*.idl", "/api_webgl/extensions/**/extension.xml"]
 description = "The Khronos XML API Registry, exposed as byte string constants."
 homepage = "https://github.com/brendanzab/gl-rs/"
 documentation = "https://docs.rs/khronos_api"

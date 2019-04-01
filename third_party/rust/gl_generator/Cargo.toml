@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "gl_generator"
-version = "0.10.0"
+version = "0.11.0"
 authors = ["Brendan Zabarauskas <bjzaba@yahoo.com.au>", "Corey Richardson", "Arseny Kapoulkine"]
 description = "Code generators for creating bindings to the Khronos OpenGL APIs."
 homepage = "https://github.com/brendanzab/gl-rs/"
@@ -27,7 +27,7 @@ repository = "https://github.com/brendanzab/gl-rs/"
 name = "gl_generator"
 path = "lib.rs"
 [dependencies.khronos_api]
-version = "3.0.0"
+version = "3.1.0"
 
 [dependencies.log]
 version = "0.4"

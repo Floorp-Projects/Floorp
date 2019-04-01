@@ -19,7 +19,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::io;
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 use Generator;
 
@@ -83,6 +83,14 @@ impl Hash for Enum {
 pub struct Binding {
     pub ident: String,
     pub ty: Cow<'static, str>,
+    pub group: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Group {
+    pub ident: String,
+    pub enums_type: Option<String>,
+    pub enums: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -112,6 +120,7 @@ pub struct Registry {
     pub enums: BTreeSet<Enum>,
     pub cmds: BTreeSet<Cmd>,
     pub aliases: BTreeMap<String, Vec<String>>,
+    pub groups: BTreeMap<String, Group>,
 }
 
 impl Registry {
@@ -129,11 +138,11 @@ impl Registry {
         let extensions = extensions.as_ref().iter().map(<&str>::to_string).collect();
 
         let filter = parse::Filter {
-            api: api,
-            fallbacks: fallbacks,
-            extensions: extensions,
+            api,
+            fallbacks,
+            extensions,
             version: format!("{}.{}", major, minor),
-            profile: profile,
+            profile,
         };
 
         let src = match api {
@@ -143,7 +152,14 @@ impl Registry {
             Api::Egl => khronos_api::EGL_XML,
         };
 
-        parse::from_xml(src, filter)
+        let mut registry = parse::from_xml(src, &filter, true);
+        if filter.extensions.iter().any(|e| e.starts_with("GL_ANGLE_")) {
+            registry += parse::from_xml(khronos_api::GL_ANGLE_EXT_XML, &filter, false);
+        }
+        if filter.extensions.iter().any(|e| e.starts_with("EGL_ANGLE_")) {
+            registry += parse::from_xml(khronos_api::EGL_ANGLE_EXT_XML, &filter, false);
+        }
+        registry
     }
 
     pub fn write_bindings<W, G>(&self, generator: G, output: &mut W) -> io::Result<()>
@@ -172,9 +188,15 @@ impl Add for Registry {
     type Output = Registry;
 
     fn add(mut self, other: Registry) -> Registry {
+        self += other;
+        self
+    }
+}
+
+impl AddAssign for Registry {
+    fn add_assign(&mut self, other: Self) {
         self.enums.extend(other.enums);
         self.cmds.extend(other.cmds);
         self.aliases.extend(other.aliases);
-        self
     }
 }
