@@ -205,38 +205,83 @@ decorate_task(
       ["features.normandy-remote-settings.enabled", true],
     ],
   }),
+  withStub(NormandyApi, "verifyObjectSignature"),
   withStub(ActionsManager.prototype, "runRecipe"),
   withStub(ActionsManager.prototype, "fetchRemoteActions"),
   withStub(ActionsManager.prototype, "finalize"),
   withStub(Uptake, "reportRecipe"),
   async function testReadFromRemoteSettings(
+    verifyObjectSignatureStub,
     runRecipeStub,
     fetchRemoteActionsStub,
     finalizeStub,
     reportRecipeStub,
   ) {
-    const matchRecipe = { id: "match", action: "matchAction", filter_expression: "true", _status: "synced", enabled: true };
-    const noMatchRecipe = { id: "noMatch", action: "noMatchAction", filter_expression: "false", _status: "synced", enabled: true };
-    const missingRecipe = { id: "missing", action: "missingAction", filter_expression: "true", _status: "synced", enabled: true };
+    const matchRecipe =  { name: "match", action: "matchAction", filter_expression: "true" };
+    const noMatchRecipe = { name: "noMatch", action: "noMatchAction", filter_expression: "false" };
+    const missingRecipe = { name: "missing", action: "missingAction", filter_expression: "true" };
 
     const rsCollection = await RecipeRunner._remoteSettingsClientForTesting.openCollection();
-    await rsCollection.create(matchRecipe, { synced: true });
-    await rsCollection.create(noMatchRecipe, { synced: true });
-    await rsCollection.create(missingRecipe, { synced: true });
+    await rsCollection.clear();
+    const fakeSig = { signature: "abc" };
+    await rsCollection.create({ id: "match", recipe: matchRecipe, signature: fakeSig }, { synced: true });
+    await rsCollection.create({ id: "noMatch", recipe: noMatchRecipe, signature: fakeSig }, { synced: true });
+    await rsCollection.create({ id: "missing", recipe: missingRecipe, signature: fakeSig }, { synced: true });
     await rsCollection.db.saveLastModified(42);
     rsCollection.db.close();
 
     await RecipeRunner.run();
 
     Assert.deepEqual(
+      verifyObjectSignatureStub.args,
+      [[matchRecipe, fakeSig, "recipe"], [missingRecipe, fakeSig, "recipe"]],
+      "recipes with matching filters should have their signature verified",
+    );
+    Assert.deepEqual(
       runRecipeStub.args,
       [[matchRecipe], [missingRecipe]],
-      "recipe with matching filters should be executed",
+      "recipes with matching filters should be executed",
     );
     Assert.deepEqual(
       reportRecipeStub.args,
       [[noMatchRecipe, Uptake.RECIPE_DIDNT_MATCH_FILTER]],
       "Filtered-out recipes should be reported",
+    );
+  }
+);
+
+decorate_task(
+  withPrefEnv({
+    set: [
+      ["features.normandy-remote-settings.enabled", true],
+    ],
+  }),
+  withStub(ActionsManager.prototype, "runRecipe"),
+  withStub(NormandyApi, "get"),
+  withStub(Uptake, "reportRunner"),
+  async function testBadSignatureFromRemoteSettings(
+    runRecipeStub,
+    normandyGetStub,
+    reportRunnerStub,
+  ) {
+    normandyGetStub.resolves({ async text() { return "---CERT x5u----"; } });
+
+    const matchRecipe = { name: "badSig", action: "matchAction", filter_expression: "true" };
+
+    const rsCollection = await RecipeRunner._remoteSettingsClientForTesting.openCollection();
+    await rsCollection.clear();
+    const badSig = { x5u: "http://localhost/x5u", signature: "abc" };
+    await rsCollection.create({ id: "badSig", recipe: matchRecipe, signature: badSig }, { synced: true });
+    await rsCollection.db.saveLastModified(42);
+    rsCollection.db.close();
+
+    await RecipeRunner.run();
+
+    ok(!runRecipeStub.called, "no recipe is executed");
+    Assert.deepEqual(
+      reportRunnerStub.args,
+      [[Uptake.RUNNER_INVALID_SIGNATURE]],
+      "RecipeRunner should report uptake telemetry",
     );
   }
 );
