@@ -1206,7 +1206,7 @@ void XMLHttpRequestMainThread::DispatchProgressEvent(
     int64_t aLoaded, int64_t aTotal) {
   NS_ASSERTION(aTarget, "null target");
 
-  if (NS_FAILED(CheckInnerWindowCorrectness()) ||
+  if (NS_FAILED(CheckCurrentGlobalCorrectness()) ||
       (!AllowUploadProgress() && aTarget == mUpload)) {
     return;
   }
@@ -1266,7 +1266,7 @@ void XMLHttpRequestMainThread::DispatchOrStoreEvent(
   MOZ_ASSERT(aTarget);
   MOZ_ASSERT(aEvent);
 
-  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+  if (NS_FAILED(CheckCurrentGlobalCorrectness())) {
     return;
   }
 
@@ -1292,7 +1292,7 @@ void XMLHttpRequestMainThread::ResumeEventDispatching() {
   nsTArray<PendingEvent> pendingEvents;
   pendingEvents.SwapElements(mPendingEvents);
 
-  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+  if (NS_FAILED(CheckCurrentGlobalCorrectness())) {
     return;
   }
 
@@ -1364,7 +1364,7 @@ nsresult XMLHttpRequestMainThread::Open(const nsACString& aMethod,
   if (!responsibleDocument) {
     // This could be because we're no longer current or because we're in some
     // non-window context...
-    nsresult rv = CheckInnerWindowCorrectness();
+    nsresult rv = CheckCurrentGlobalCorrectness();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT;
     }
@@ -1417,7 +1417,7 @@ nsresult XMLHttpRequestMainThread::Open(const nsACString& aMethod,
     }
     return rv;
   }
-  if (NS_WARN_IF(NS_FAILED(CheckInnerWindowCorrectness()))) {
+  if (NS_WARN_IF(NS_FAILED(CheckCurrentGlobalCorrectness()))) {
     return NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT;
   }
 
@@ -1966,7 +1966,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
     } else {
       // If we're no longer current, just kill the load, though it really should
       // have been killed already.
-      if (NS_WARN_IF(NS_FAILED(CheckInnerWindowCorrectness()))) {
+      if (NS_WARN_IF(NS_FAILED(CheckCurrentGlobalCorrectness()))) {
         return NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT;
       }
     }
@@ -2790,7 +2790,7 @@ nsresult XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
     return NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_SENDING;
   }
 
-  nsresult rv = CheckInnerWindowCorrectness();
+  nsresult rv = CheckCurrentGlobalCorrectness();
   if (NS_FAILED(rv)) {
     return NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT;
   }

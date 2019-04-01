@@ -161,7 +161,7 @@ nsresult ImageCapture::PostBlobEvent(Blob* aBlob) {
 
 nsresult ImageCapture::PostErrorEvent(uint16_t aErrorCode, nsresult aReason) {
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = CheckInnerWindowCorrectness();
+  nsresult rv = CheckCurrentGlobalCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsString errorMsg;

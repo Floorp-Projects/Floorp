@@ -43,9 +43,7 @@ mozilla::ipc::IPCResult BroadcastChannelChild::RecvNotify(
     return IPC_OK();
   }
 
-  // CheckInnerWindowCorrectness can be used also without a window when
-  // BroadcastChannel is running in a worker. In this case, it's a NOP.
-  if (NS_FAILED(mBC->CheckInnerWindowCorrectness())) {
+  if (NS_FAILED(mBC->CheckCurrentGlobalCorrectness())) {
     return IPC_OK();
   }
 

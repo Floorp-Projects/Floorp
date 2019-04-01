@@ -80,6 +80,10 @@ WorkerGlobalScope::WorkerGlobalScope(WorkerPrivate* aWorkerPrivate)
 
   // We should always have an event target when the global is created.
   MOZ_DIAGNOSTIC_ASSERT(mSerialEventTarget);
+
+  // In workers, each DETH must have an owner. Because the global scope doesn't
+  // have one, let's set it as owner of itself.
+  BindToOwner(static_cast<nsIGlobalObject*>(this));
 }
 
 WorkerGlobalScope::~WorkerGlobalScope() {
@@ -781,6 +785,10 @@ WorkerDebuggerGlobalScope::WorkerDebuggerGlobalScope(
 
   // We should always have an event target when the global is created.
   MOZ_DIAGNOSTIC_ASSERT(mSerialEventTarget);
+
+  // In workers, each DETH must have an owner. Because the global scope doesn't
+  // have an owner, let's set it as owner of itself.
+  BindToOwner(static_cast<nsIGlobalObject*>(this));
 }
 
 WorkerDebuggerGlobalScope::~WorkerDebuggerGlobalScope() {
