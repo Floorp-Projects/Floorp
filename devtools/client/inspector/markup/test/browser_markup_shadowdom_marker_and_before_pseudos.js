@@ -9,8 +9,6 @@ requestLongerTimeout(1);
 // Test a few static pages using webcomponents with ::marker and ::before
 // pseudos and check that they are displayed as expected in the markup view.
 
-const SHOWANON_PREF = "devtools.inspector.showAllAnonymousContent";
-
 const TEST_DATA = [
   {
     // Test that ::before on an empty shadow host is displayed when the host
@@ -34,10 +32,6 @@ const TEST_DATA = [
         });
       </script>`,
     tree: `
-      test-component
-        #shadow-root
-        ::before`,
-    anonTree: `
       test-component
         #shadow-root
         ::marker
@@ -72,13 +66,6 @@ const TEST_DATA = [
         #shadow-root
           slot
             div!slotted
-        ::before
-        class="light-dom"`,
-    anonTree: `
-      test-component
-        #shadow-root
-          slot
-            div!slotted
         ::marker
         ::before
         class="light-dom"`,
@@ -103,15 +90,12 @@ const TEST_DATA = [
       </script>`,
     tree: `
       test-component
-        #shadow-root`,
-    anonTree: `
-      test-component
         #shadow-root
         ::marker`,
   },
 ];
 
-for (const {url, tree, anonTree, title} of TEST_DATA) {
+for (const {url, tree, title} of TEST_DATA) {
   // Test each configuration in both open and closed modes
   add_task(async function() {
     info(`Testing: [${title}] in OPEN mode`);
@@ -124,21 +108,5 @@ for (const {url, tree, anonTree, title} of TEST_DATA) {
     const {inspector, tab} = await openInspectorForURL(url.replace(/#MODE#/g, "closed"));
     await assertMarkupViewAsTree(tree, "test-component", inspector);
     await removeTab(tab);
-  });
-  add_task(async function() {
-    await pushPref(SHOWANON_PREF, true);
-    info(`Testing: [${title}] in OPEN mode with showAllAnonymousContent`);
-    const {inspector, tab} = await openInspectorForURL(url.replace(/#MODE#/g, "open"));
-    await assertMarkupViewAsTree(anonTree, "test-component", inspector);
-    await removeTab(tab);
-    await pushPref(SHOWANON_PREF, false);
-  });
-  add_task(async function() {
-    await pushPref(SHOWANON_PREF, true);
-    info(`Testing: [${title}] in CLOSED mode with showAllAnonymousContent`);
-    const {inspector, tab} = await openInspectorForURL(url.replace(/#MODE#/g, "closed"));
-    await assertMarkupViewAsTree(anonTree, "test-component", inspector);
-    await removeTab(tab);
-    await pushPref(SHOWANON_PREF, false);
   });
 }

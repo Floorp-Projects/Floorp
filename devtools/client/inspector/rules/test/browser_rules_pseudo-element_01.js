@@ -8,11 +8,9 @@
 
 const TEST_URI = URL_ROOT + "doc_pseudoelement.html";
 const PSEUDO_PREF = "devtools.inspector.show_pseudo_elements";
-const SHOWANON_PREF = "devtools.inspector.showAllAnonymousContent";
 
 add_task(async function() {
   await pushPref(PSEUDO_PREF, true);
-  await pushPref(SHOWANON_PREF, true);
 
   await addTab(TEST_URI);
   const {inspector, view} = await openRuleView();
