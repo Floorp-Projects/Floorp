@@ -150,8 +150,7 @@ void nsSelectsAreaFrame::BuildDisplayListInternal(
     // we can't just associate the display item with the list frame,
     // because then the list's scrollframe won't clip it (the scrollframe
     // only clips contained descendants).
-    aLists.Outlines()->AppendToTop(
-        MakeDisplayItem<nsDisplayListFocus>(aBuilder, this));
+    aLists.Outlines()->AppendNewToTop<nsDisplayListFocus>(aBuilder, this);
   }
 }
 

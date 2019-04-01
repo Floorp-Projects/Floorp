@@ -2819,6 +2819,7 @@ bool nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
   nsDisplayList list;
   nsDisplayTransform* item =
       MakeDisplayItem<nsDisplayTransform>(&builder, aFrame, &list, nsRect(), 0);
+  MOZ_ASSERT(item);
 
   *aTransform = item->GetTransform();
   item->Destroy(&builder);
