@@ -312,6 +312,18 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             getSettings().mAutoplayDefault.set(autoplay);
             return this;
         }
+
+        /**
+         * Sets the preferred color scheme override for web content.
+         *
+         * @param scheme The preferred color scheme. Must be one of the
+         *               {@link GeckoRuntimeSettings#COLOR_SCHEME_LIGHT COLOR_SCHEME_*} constants.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder preferredColorScheme(final @ColorScheme int scheme) {
+            getSettings().mPreferredColorScheme.set(scheme);
+            return this;
+        }
     }
 
     private GeckoRuntime mRuntime;
@@ -339,6 +351,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         "font.size.systemFontScale", 100);
     /* package */ final Pref<Integer> mFontInflationMinTwips = new Pref<>(
         "font.size.inflation.minTwips", 0);
+    /* package */ final Pref<Integer> mPreferredColorScheme = new Pref<>(
+        "ui.systemUsesDarkTheme", -1);
 
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;
@@ -757,6 +771,40 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      */
     public boolean getFontInflationEnabled() {
         return mFontInflationMinTwips.get() > 0;
+    }
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({COLOR_SCHEME_LIGHT,
+             COLOR_SCHEME_DARK,
+             COLOR_SCHEME_SYSTEM})
+    /* package */ @interface ColorScheme {}
+
+    /** A light theme for web content is preferred. */
+    public static final int COLOR_SCHEME_LIGHT = 0;
+    /** A dark theme for web content is preferred. */
+    public static final int COLOR_SCHEME_DARK = 1;
+    /** The preferred color scheme will be based on system settings. */
+    public static final int COLOR_SCHEME_SYSTEM = -1;
+
+    /**
+     * Gets the preferred color scheme override for web content.
+     *
+     * @return One of the {@link GeckoRuntimeSettings#COLOR_SCHEME_LIGHT COLOR_SCHEME_*} constants.
+     */
+    public @ColorScheme int getPreferredColorScheme() {
+        return mPreferredColorScheme.get();
+    }
+
+    /**
+     * Sets the preferred color scheme override for web content.
+     *
+     * @param scheme The preferred color scheme. Must be one of the
+     *               {@link GeckoRuntimeSettings#COLOR_SCHEME_LIGHT COLOR_SCHEME_*} constants.
+     * @return This GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setPreferredColorScheme(final @ColorScheme int scheme) {
+        mPreferredColorScheme.commit(scheme);
+        return this;
     }
 
     @Override // Parcelable
