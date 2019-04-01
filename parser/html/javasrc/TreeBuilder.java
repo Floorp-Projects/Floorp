@@ -5231,7 +5231,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         StackNode<T> node = stack[currentPtr];
         if (origPos != currentPtr || eltPos != currentPtr) {
             markMalformedIfScript(node.node);
-            }
+        }
         assert debugOnlyClearLastStackSlot();
         currentPtr--;
         elementPopped(node.ns, node.popName, node.node);
