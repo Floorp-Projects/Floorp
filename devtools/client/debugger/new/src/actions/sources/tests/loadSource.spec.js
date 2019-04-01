@@ -16,7 +16,6 @@ import {
   createSource,
   sourceThreadClient
 } from "../../tests/helpers/threadClient.js";
-import { addBreakpoint } from "../../breakpoints/addBreakpoint";
 import { getBreakpointsList } from "../../../selectors";
 
 describe("loadSourceText", () => {
@@ -79,21 +78,24 @@ describe("loadSourceText", () => {
     await dispatch(actions.newSource(fooOrigSource));
     await dispatch(actions.newSource(fooGenSource));
 
-    const breakpoint = await dispatch(
-      addBreakpoint({
-        sourceId: fooOrigSource.id,
-        line: 1,
-        column: 0
-      })
-    );
+    const location = {
+      sourceId: fooOrigSource.id,
+      line: 1,
+      column: 0
+    };
+    await dispatch(actions.addBreakpoint(location, {}));
+    const breakpoint = selectors.getBreakpoint(getState(), location);
+    if (!breakpoint) {
+      throw new Error("no breakpoint");
+    }
 
-    expect(breakpoint.text).toBe("");
-    expect(breakpoint.originalText).toBe("");
+    expect(breakpoint.text).toBe("var fooGen = 42;");
+    expect(breakpoint.originalText).toBe("var fooOrig = 42;");
 
     await dispatch(actions.loadSourceText(fooOrigSource));
 
     const breakpoint1 = getBreakpointsList(getState())[0];
-    expect(breakpoint1.text).toBe("");
+    expect(breakpoint1.text).toBe("var fooGen = 42;");
     expect(breakpoint1.originalText).toBe("var fooOrig = 42;");
 
     await dispatch(actions.loadSourceText(fooGenSource));
