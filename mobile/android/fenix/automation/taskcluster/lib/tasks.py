@@ -43,14 +43,15 @@ class TaskBuilder(object):
         self.date = arrow.get(date_string)
         self.trust_level = trust_level
 
-    def craft_assemble_release_task(self, apks, is_staging=False):
+    def craft_assemble_release_task(self, architectures, is_staging=False):
         artifacts = {
-            'public/{}'.format(os.path.basename(apk)): {
+            'public/target.{}.apk'.format(arch): {
                 "type": 'file',
-                "path": apk,
+                "path": '/opt/fenix/app/build/outputs/apk/'
+                        '{}Greenfield/release/app-{}-greenfield-release-unsigned.apk'.format(arch, arch),
                 "expires": taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
             }
-            for apk in apks
+            for arch in architectures
         }
 
         sentry_secret = '{}project/mobile/fenix/sentry'.format(
@@ -380,10 +381,10 @@ class TaskBuilder(object):
         )
 
     def craft_push_task(
-        self, signing_task_id, apks, is_staging=True, commit=False
+        self, signing_task_id, apks, is_staging=True
     ):
         payload = {
-            "commit": commit,
+            "commit": True,
             "google_play_track": 'nightly',
             "upstreamArtifacts": [
                 {

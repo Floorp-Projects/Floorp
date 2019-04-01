@@ -74,17 +74,18 @@ def pr_or_push():
     return (build_tasks, other_tasks)
 
 
-def nightly(apks, track, commit):
+def nightly(track):
     is_staging = track == 'staging-nightly'
+    architectures = ['x86', 'arm', 'aarch64']
 
     build_tasks = {}
     signing_tasks = {}
     push_tasks = {}
-    artifacts = ["public/{}".format(os.path.basename(apk)) for apk in apks]
 
     build_task_id = taskcluster.slugId()
-    build_tasks[build_task_id] = BUILDER.craft_assemble_release_task(apks, is_staging)
+    build_tasks[build_task_id] = BUILDER.craft_assemble_release_task(architectures, is_staging)
 
+    artifacts = ["public/target.{}.apk".format(arch) for arch in architectures]
     signing_task_id = taskcluster.slugId()
     signing_tasks[signing_task_id] = BUILDER.craft_signing_task(
         build_task_id,
@@ -96,7 +97,6 @@ def nightly(apks, track, commit):
     push_tasks[push_task_id] = BUILDER.craft_push_task(
         signing_task_id,
         apks=artifacts,
-        commit=commit,
         is_staging=is_staging
     )
 
@@ -117,16 +117,6 @@ if __name__ == "__main__":
     release_parser.add_argument(
         '--track', action="store", choices=['nightly', 'staging-nightly'], required=True
     )
-    release_parser.add_argument(
-        '--commit', action="store_true", help="commit the google play transaction"
-    )
-    release_parser.add_argument(
-        '--apk', dest="apks", metavar="path", action="append",
-        help="Path to APKs to sign and upload", required=True
-    )
-    release_parser.add_argument(
-        '--output', metavar="path", action="store", help="Path to the build output", required=True
-    )
 
     result = parser.parse_args()
 
@@ -135,8 +125,7 @@ if __name__ == "__main__":
     if command == 'pr-or-push':
         ordered_groups_of_tasks = pr_or_push()
     elif command == 'release':
-        apks = ["{}/{}".format(result.output, apk) for apk in result.apks]
-        ordered_groups_of_tasks = nightly(apks, result.track, result.commit)
+        ordered_groups_of_tasks = nightly(result.track)
     else:
         raise Exception('Unsupported command "{}"'.format(command))
 

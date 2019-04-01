@@ -183,12 +183,7 @@ tasks:
                         && python automation/taskcluster/decision_task.py \
                           release \
                           --nightly \
-                          --track ${track} \
-                          --commit \
-                          --output /opt/fenix/app/build/outputs/apk \
-                          --apk armGreenfield/release/app-arm-greenfield-release-unsigned.apk \
-                          --apk x86Greenfield/release/app-x86-greenfield-release-unsigned.apk \
-                          --apk aarch64Greenfield/release/app-aarch64-greenfield-release-unsigned.apk
+                          --track ${track}
                     artifacts:
                       public/task-graph.json:
                         type: file
