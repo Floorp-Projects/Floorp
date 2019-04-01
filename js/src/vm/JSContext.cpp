@@ -304,7 +304,7 @@ JS_FRIEND_API void js::ReportOutOfMemory(JSContext* cx) {
   }
 
   RootedValue oomMessage(cx, StringValue(cx->names().outOfMemory));
-  cx->setPendingException(oomMessage);
+  cx->setPendingException(oomMessage, nullptr);
 }
 
 mozilla::GenericErrorResult<OOM&> js::ReportOutOfMemoryResult(JSContext* cx) {
@@ -1342,9 +1342,25 @@ void JSContext::setRuntime(JSRuntime* rt) {
   MOZ_ASSERT(!compartment());
   MOZ_ASSERT(!activation());
   MOZ_ASSERT(!unwrappedException_.ref().initialized());
+  MOZ_ASSERT(!unwrappedExceptionStack_.ref().initialized());
   MOZ_ASSERT(!asyncStackForNewActivations_.ref().initialized());
 
   runtime_ = rt;
+}
+
+static const size_t MAX_REPORTED_STACK_DEPTH = 1u << 7;
+
+void JSContext::setPendingExceptionAndCaptureStack(HandleValue value) {
+  RootedObject stack(this);
+  if (!CaptureCurrentStack(this, &stack, JS::StackCapture(JS::MaxFrames(MAX_REPORTED_STACK_DEPTH)))) {
+    clearPendingException();
+  }
+
+  RootedSavedFrame nstack(this);
+  if (stack) {
+    nstack = &stack->as<SavedFrame>();
+  }
+  setPendingException(value, nstack);
 }
 
 bool JSContext::getPendingException(MutableHandleValue rval) {
@@ -1353,15 +1369,20 @@ bool JSContext::getPendingException(MutableHandleValue rval) {
   if (zone()->isAtomsZone()) {
     return true;
   }
+  RootedSavedFrame stack(this, unwrappedExceptionStack());
   bool wasOverRecursed = overRecursed_;
   clearPendingException();
   if (!compartment()->wrap(this, rval)) {
     return false;
   }
   this->check(rval);
-  setPendingException(rval);
+  setPendingException(rval, stack);
   overRecursed_ = wasOverRecursed;
   return true;
+}
+
+SavedFrame* JSContext::getPendingExceptionStack() {
+  return unwrappedExceptionStack();
 }
 
 bool JSContext::isThrowingOutOfMemory() {
