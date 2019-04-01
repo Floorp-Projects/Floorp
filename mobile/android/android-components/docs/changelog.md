@@ -66,6 +66,9 @@ permalink: /changelog/
   * Added `MotionEvent.use {}` (like `AutoCloseable.use {}`).
   * Added `Bitmap.arePixelsAllTheSame()`.
 
+* **concept-fetch**
+  * Added support for interceptors. Interceptors are a powerful mechanism to monitor, modify, retry, redirect or record requests as well as responses going through a `Client`. See the [concept-fetch README](https://github.com/mozilla-mobile/android-components/tree/master/components/concept/fetch) for example implementations of interceptors.
+
 # 0.48.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.47.0...v0.48.0)

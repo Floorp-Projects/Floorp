@@ -94,6 +94,71 @@ val deferredResponse = async { client.fetch(request) }
 val body = deferredResponse.await().body.string()
 ```
 
+### Interceptors
+
+Interceptors are a powerful mechanism to monitor, modify, retry, redirect or record requests as well as responses going through a `Client`. Interceptors can be used with any `concept-fetch` implementation.
+
+The `withInterceptors()` extension method can be used to create a wrapped `Client` that will use the provided interceptors for requests.
+
+```kotlin
+val response = HttpURLConnectionClient()
+  .withInterceptors(LoggingInterceptor(), RetryInterceptor())
+  .fetch(request)
+```
+
+The following example implements a simple `Interceptor` that logs requests and how long they took:
+
+```kotlin
+class LoggingInterceptor(
+    private val logger: Logger = Logger("Client")
+): Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        logger.info("Request to ${chain.request.url}")
+
+        val startTime = System.currentTimeMillis()
+
+        val response = chain.proceed(chain.request)
+
+        val took = System.currentTimeMillis() - startTime
+        logger.info("[${response.status}] took $took ms")
+
+        return response
+    }
+}
+```
+
+And the following example is a naive implementation of an interceptor that retries requests:
+
+```kotlin
+class NaiveRetryInterceptor(
+    private val maxRetries: Int = 3
+) : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val response = chain.proceed(chain.request)
+        if (response.isSuccess) {
+            return response
+        }
+
+        return retry(chain) ?: response
+    }
+
+    fun retry(chain: Interceptor.Chain): Response? {
+        var lastResponse: Response? = null
+        var retries = 0
+
+        while (retries < maxRetries) {
+            lastResponse = chain.proceed(chain.request)
+            if (lastResponse.isSuccess) {
+                return lastResponse
+            }
+            retries++
+        }
+
+        return lastResponse
+    }
+}
+```
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
