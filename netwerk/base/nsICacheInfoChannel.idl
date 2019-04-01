@@ -131,16 +131,18 @@ interface nsICacheInfoChannel : nsISupports
 
   /**
    * If preferAlternativeDataType() has been called passing deliverAltData
-   * equal to false, this attribute will expose the alt-data inputStream if
-   * avaiable.
+   * equal to false, this method will expose the alt-data inputStream if
+   * aviable.
    */
-  readonly attribute nsIInputStream alternativeDataInputStream;
+  void getAltDataInputStream(in ACString type,
+                             in nsIInputStreamReceiver aReceiver);
 
   /**
    * Sometimes when the channel is delivering alt-data, we may want to somehow
-   * access the original content too.
+   * access the original content too. This method asynchronously opens the
+   * input stream and delivers it to the receiver.
    */
-  readonly attribute nsIInputStream originalInputStream;
+  void getOriginalInputStream(in nsIInputStreamReceiver aReceiver);
 
   /**
    * Opens and returns an output stream that a consumer may use to save an

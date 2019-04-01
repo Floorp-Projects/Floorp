@@ -1274,18 +1274,19 @@ InterceptedHttpChannel::OpenAlternativeOutputStream(
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::GetOriginalInputStream(nsIInputStream** aStream) {
+InterceptedHttpChannel::GetOriginalInputStream(
+    nsIInputStreamReceiver* aReceiver) {
   if (mSynthesizedCacheInfo) {
-    return mSynthesizedCacheInfo->GetOriginalInputStream(aStream);
+    return mSynthesizedCacheInfo->GetOriginalInputStream(aReceiver);
   }
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::GetAlternativeDataInputStream(
-    nsIInputStream** aInputStream) {
+InterceptedHttpChannel::GetAltDataInputStream(
+    const nsACString& aType, nsIInputStreamReceiver* aReceiver) {
   if (mSynthesizedCacheInfo) {
-    return mSynthesizedCacheInfo->GetAlternativeDataInputStream(aInputStream);
+    return mSynthesizedCacheInfo->GetAltDataInputStream(aType, aReceiver);
   }
   return NS_ERROR_NOT_AVAILABLE;
 }

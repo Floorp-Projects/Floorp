@@ -8554,36 +8554,38 @@ nsHttpChannel::OpenAlternativeOutputStream(const nsACString &type,
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetOriginalInputStream(nsIInputStream **aInputStream) {
-  NS_ENSURE_ARG_POINTER(aInputStream);
-
-  *aInputStream = nullptr;
+nsHttpChannel::GetOriginalInputStream(nsIInputStreamReceiver *aReceiver) {
+  if (aReceiver == nullptr) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<nsIInputStream> inputStream;
 
   nsCOMPtr<nsICacheEntry> cacheEntry =
       mCacheEntry ? mCacheEntry : mAltDataCacheEntry;
   if (cacheEntry) {
-    cacheEntry->OpenInputStream(0, aInputStream);
+    cacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
   }
+  aReceiver->OnInputStreamReady(inputStream);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetAlternativeDataInputStream(nsIInputStream **aInputStream) {
-  NS_ENSURE_ARG_POINTER(aInputStream);
-
-  *aInputStream = nullptr;
-
-  if (!mAfterOnStartRequestBegun) {
-    return NS_ERROR_NOT_AVAILABLE;
+nsHttpChannel::GetAltDataInputStream(const nsACString &aType,
+                                     nsIInputStreamReceiver *aReceiver) {
+  if (aReceiver == nullptr) {
+    return NS_ERROR_INVALID_ARG;
   }
+  nsCOMPtr<nsIInputStream> inputStream;
 
   nsCOMPtr<nsICacheEntry> cacheEntry =
       mCacheEntry ? mCacheEntry : mAltDataCacheEntry;
-  if (!mAvailableCachedAltDataType.IsEmpty() && cacheEntry) {
-    Unused << cacheEntry->OpenAlternativeInputStream(
-        mAvailableCachedAltDataType, aInputStream);
+  if (cacheEntry) {
+    nsresult rv = cacheEntry->OpenAlternativeInputStream(
+        aType, getter_AddRefs(inputStream));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  aReceiver->OnInputStreamReady(inputStream);
   return NS_OK;
 }
 
