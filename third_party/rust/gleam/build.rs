@@ -52,6 +52,7 @@ fn main() {
         "GL_OES_EGL_image",
         "GL_OES_texture_half_float",
         "GL_EXT_shader_pixel_local_storage",
+        "GL_ANGLE_provoking_vertex",
     ];
     let gles_reg = Registry::new(
         Api::Gles2,

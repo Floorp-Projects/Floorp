@@ -29,6 +29,12 @@ pub const WGL_XML: &'static [u8] = include_bytes!("../api/xml/wgl.xml");
 /// The contents of [`glx.xml`](https://github.com/KhronosGroup/OpenGL-Registry/blob/master/xml/glx.xml)
 pub const GLX_XML: &'static [u8] = include_bytes!("../api/xml/glx.xml");
 
+/// The contents of [`gl_angle_ext.xml`](https://github.com/google/angle/blob/master/scripts/gl_angle_ext.xml)
+pub const GL_ANGLE_EXT_XML: &'static [u8] = include_bytes!("../api_angle/scripts/gl_angle_ext.xml");
+
+/// The contents of [`egl_angle_ext.xml`](https://github.com/google/angle/blob/master/scripts/egl_angle_ext.xml)
+pub const EGL_ANGLE_EXT_XML: &'static [u8] = include_bytes!("../api_angle/scripts/egl_angle_ext.xml");
+
 /// The contents of [`webgl.idl`](https://github.com/KhronosGroup/WebGL/blob/master/specs/latest/1.0/webgl.idl)
 pub const WEBGL_IDL: &'static [u8] = include_bytes!("../api_webgl/specs/latest/1.0/webgl.idl");
 
