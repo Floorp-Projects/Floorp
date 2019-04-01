@@ -469,7 +469,7 @@ class gfxTextRun : public gfxShapedText {
     uint32_t mCharacterOffset;  // into original UTF16 string
     mozilla::gfx::ShapedTextFlags
         mOrientation;  // gfxTextRunFactory::TEXT_ORIENT_* value
-    gfxTextRange::MatchType mMatchType;
+    FontMatchType mMatchType;
   };
 
   class MOZ_STACK_CLASS GlyphRunIterator {
@@ -524,8 +524,8 @@ class gfxTextRun : public gfxShapedText {
    * are added before any further operations are performed with this
    * TextRun.
    */
-  nsresult AddGlyphRun(gfxFont* aFont, gfxTextRange::MatchType aMatchType,
-                       uint32_t aStartCharIndex, bool aForceNewRun,
+  nsresult AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
+                       uint32_t aUTF16Offset, bool aForceNewRun,
                        mozilla::gfx::ShapedTextFlags aOrientation);
   void ResetGlyphRuns() {
     if (mHasGlyphRunArray) {
@@ -941,7 +941,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
 
   gfxFont* FindFontForChar(uint32_t ch, uint32_t prevCh, uint32_t aNextCh,
                            Script aRunScript, gfxFont* aPrevMatchedFont,
-                           gfxTextRange::MatchType* aMatchType);
+                           FontMatchType* aMatchType);
 
   gfxUserFontSet* GetUserFontSet();
 
@@ -991,6 +991,22 @@ class gfxFontGroup final : public gfxTextRunFactory {
       LazyReferenceDrawTargetGetter& aRefDrawTargetGetter);
 
  protected:
+  struct TextRange {
+    TextRange(uint32_t aStart, uint32_t aEnd, gfxFont* aFont,
+              FontMatchType aMatchType,
+              mozilla::gfx::ShapedTextFlags aOrientation)
+        : start(aStart),
+          end(aEnd),
+          font(aFont),
+          matchType(aMatchType),
+          orientation(aOrientation) {}
+    uint32_t Length() const { return end - start; }
+    uint32_t start, end;
+    RefPtr<gfxFont> font;
+    FontMatchType matchType;
+    mozilla::gfx::ShapedTextFlags orientation;
+  };
+
   // search through pref fonts for a character, return nullptr if no matching
   // pref font
   gfxFont* WhichPrefFontSupportsChar(uint32_t aCh, uint32_t aNextCh);
@@ -999,7 +1015,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
                                        Script aRunScript);
 
   template <typename T>
-  void ComputeRanges(nsTArray<gfxTextRange>& mRanges, const T* aString,
+  void ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
                      uint32_t aLength, Script aRunScript,
                      mozilla::gfx::ShapedTextFlags aOrientation);
 

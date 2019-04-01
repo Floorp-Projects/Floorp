@@ -7,6 +7,7 @@
 #define GFX_TYPES_H
 
 #include <stdint.h>
+#include "mozilla/TypedEnumBits.h"
 
 typedef struct _cairo_surface cairo_surface_t;
 typedef struct _cairo_user_data_key cairo_user_data_key_t;
@@ -81,5 +82,24 @@ enum class gfxAlphaType {
   Premult,
   NonPremult,
 };
+
+/**
+ * Type used to record how a particular font is selected during the font-
+ * matching process, so that this can be exposed to the Inspector.
+ */
+enum class FontMatchType : uint16_t {
+  // The CSS generic that mapped to this font, if any. This field of
+  // the MatchType stores a FontFamilyType value as defined in the enum
+  // in gfxFontFamilyList.h.
+  kGenericMask = 0x00ff,
+
+  // Flags for recording the kind of font-matching that was used.
+  // Note that multiple flags may be set on a single range.
+  kFontGroup = 0x0100,
+  kPrefsFallback = 0x0200,
+  kSystemFallback = 0x0400
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(FontMatchType)
 
 #endif /* GFX_TYPES_H */
