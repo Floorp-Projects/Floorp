@@ -97,6 +97,11 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   typedef mozilla::WeightRange WeightRange;
   typedef mozilla::unicode::Script Script;
 
+  // For font family lists loaded from user preferences (prefs such as
+  // font.name-list.<generic>.<langGroup>) that map CSS generics to
+  // platform-specific font families.
+  typedef nsTArray<RefPtr<gfxFontFamily>> PrefFontList;
+
   static gfxPlatformFontList* PlatformFontList() { return sPlatformFontList; }
 
   static nsresult Init() {
@@ -257,8 +262,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
                                nsAtom* aLanguage,
                                nsTArray<FamilyAndGeneric>& aFamilyList);
 
-  nsTArray<RefPtr<gfxFontFamily>>* GetPrefFontsLangGroup(
-      mozilla::FontFamilyType aGenericType, eFontPrefLang aPrefLang);
+  PrefFontList* GetPrefFontsLangGroup(mozilla::FontFamilyType aGenericType,
+                                      eFontPrefLang aPrefLang);
 
   // in some situations, need to make decisions about ambiguous characters, may
   // need to look at multiple pref langs
@@ -481,15 +486,15 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   void RebuildLocalFonts();
 
-  void ResolveGenericFontNames(
-      mozilla::FontFamilyType aGenericType, eFontPrefLang aPrefLang,
-      nsTArray<RefPtr<gfxFontFamily>>* aGenericFamilies);
+  void ResolveGenericFontNames(mozilla::FontFamilyType aGenericType,
+                               eFontPrefLang aPrefLang,
+                               PrefFontList* aGenericFamilies);
 
-  void ResolveEmojiFontNames(nsTArray<RefPtr<gfxFontFamily>>* aGenericFamilies);
+  void ResolveEmojiFontNames(PrefFontList* aGenericFamilies);
 
-  void GetFontFamiliesFromGenericFamilies(
-      nsTArray<nsCString>& aGenericFamilies, nsAtom* aLangGroup,
-      nsTArray<RefPtr<gfxFontFamily>>* aFontFamilies);
+  void GetFontFamiliesFromGenericFamilies(nsTArray<nsCString>& aGenericFamilies,
+                                          nsAtom* aLangGroup,
+                                          PrefFontList* aFontFamilies);
 
   virtual nsresult InitFontListForPlatform() = 0;
 
@@ -547,7 +552,6 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // localized family names missed when face name loading takes a long time
   mozilla::UniquePtr<nsTHashtable<nsCStringHashKey>> mOtherNamesMissed;
 
-  typedef nsTArray<RefPtr<gfxFontFamily>> PrefFontList;
   typedef mozilla::RangedArray<mozilla::UniquePtr<PrefFontList>,
                                mozilla::eFamily_generic_first,
                                mozilla::eFamily_generic_count>
