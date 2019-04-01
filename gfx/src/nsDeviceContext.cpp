@@ -8,9 +8,9 @@
 #include <algorithm>      // for max
 #include "gfxASurface.h"  // for gfxASurface, etc
 #include "gfxContext.h"
-#include "gfxFont.h"             // for gfxFontGroup
 #include "gfxImageSurface.h"     // for gfxImageSurface
 #include "gfxPoint.h"            // for gfxSize
+#include "gfxTextRun.h"          // for gfxFontGroup
 #include "mozilla/Attributes.h"  // for final
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/PrintTarget.h"

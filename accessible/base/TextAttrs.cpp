@@ -10,7 +10,7 @@
 #include "nsCoreUtils.h"
 #include "StyleInfo.h"
 
-#include "gfxFont.h"
+#include "gfxTextRun.h"
 #include "nsFontMetrics.h"
 #include "nsLayoutUtils.h"
 #include "nsContainerFrame.h"

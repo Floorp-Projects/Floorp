@@ -1725,8 +1725,8 @@ static gfxFont::Metrics GetFirstFontMetrics(gfxFontGroup* aFontGroup,
                                             bool aVerticalMetrics) {
   if (!aFontGroup) return gfxFont::Metrics();
   gfxFont* font = aFontGroup->GetFirstValidFont();
-  return font->GetMetrics(aVerticalMetrics ? gfxFont::eVertical
-                                           : gfxFont::eHorizontal);
+  return font->GetMetrics(aVerticalMetrics ? nsFontMetrics::eVertical
+                                           : nsFontMetrics::eHorizontal);
 }
 
 static nscoord GetSpaceWidthAppUnits(const gfxTextRun* aTextRun) {
@@ -6416,8 +6416,9 @@ void nsTextFrame::PaintTextSelectionDecorations(
   const auto kDecoration = rightUnderline ? StyleTextDecorationLine_OVERLINE
                                           : StyleTextDecorationLine_UNDERLINE;
   bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
-  gfxFont::Metrics decorationMetrics(firstFont->GetMetrics(
-      useVerticalMetrics ? gfxFont::eVertical : gfxFont::eHorizontal));
+  gfxFont::Metrics decorationMetrics(
+      firstFont->GetMetrics(useVerticalMetrics ? nsFontMetrics::eVertical
+                                               : nsFontMetrics::eHorizontal));
   if (!useVerticalMetrics) {
     // The potential adjustment from using gfxFontGroup::GetUnderlineOffset
     // is only valid for horizontal font metrics.
@@ -7351,8 +7352,9 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
   WritingMode wm = GetWritingMode();
   bool verticalRun = wm.IsVertical();
   bool useVerticalMetrics = verticalRun && !wm.IsSideways();
-  const gfxFont::Metrics& metrics = firstFont->GetMetrics(
-      useVerticalMetrics ? gfxFont::eVertical : gfxFont::eHorizontal);
+  const gfxFont::Metrics& metrics =
+      firstFont->GetMetrics(useVerticalMetrics ? nsFontMetrics::eVertical
+                                               : nsFontMetrics::eHorizontal);
 
   nsCSSRendering::DecorationRectParams params;
   params.ascent = aPresContext->AppUnitsToGfxUnits(mAscent);
