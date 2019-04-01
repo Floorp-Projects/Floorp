@@ -141,10 +141,11 @@ class U2F final : public WebAuthnManagerBase, public nsWrapperCache {
   MOZ_CAN_RUN_SCRIPT void ExecuteCallback(T& aResp,
                                           nsMainThreadPtrHandle<C>& aCb);
 
-  // Clears all information we have about the current transaction.
-  void ClearTransaction();
   // Rejects the current transaction and clears it.
   MOZ_CAN_RUN_SCRIPT void RejectTransaction(const nsresult& aError);
+
+  // Clears all information we have about the current transaction.
+  void ClearTransaction();
 
   nsString mOrigin;
 
