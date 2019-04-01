@@ -1556,51 +1556,6 @@ gfxFontFamily::~gfxFontFamily() {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-/*static*/
-void gfxFontFamily::ReadOtherFamilyNamesForFace(
-    const nsACString& aFamilyName, const char* aNameData, uint32_t aDataLength,
-    nsTArray<nsCString>& aOtherFamilyNames, bool useFullName) {
-  const gfxFontUtils::NameHeader* nameHeader =
-      reinterpret_cast<const gfxFontUtils::NameHeader*>(aNameData);
-
-  uint32_t nameCount = nameHeader->count;
-  if (nameCount * sizeof(gfxFontUtils::NameRecord) > aDataLength) {
-    NS_WARNING("invalid font (name records)");
-    return;
-  }
-
-  const gfxFontUtils::NameRecord* nameRecord =
-      reinterpret_cast<const gfxFontUtils::NameRecord*>(
-          aNameData + sizeof(gfxFontUtils::NameHeader));
-  uint32_t stringsBase = uint32_t(nameHeader->stringOffset);
-
-  for (uint32_t i = 0; i < nameCount; i++, nameRecord++) {
-    uint32_t nameLen = nameRecord->length;
-    uint32_t nameOff =
-        nameRecord->offset;  // offset from base of string storage
-
-    if (stringsBase + nameOff + nameLen > aDataLength) {
-      NS_WARNING("invalid font (name table strings)");
-      return;
-    }
-
-    uint16_t nameID = nameRecord->nameID;
-    if ((useFullName && nameID == gfxFontUtils::NAME_ID_FULL) ||
-        (!useFullName && (nameID == gfxFontUtils::NAME_ID_FAMILY ||
-                          nameID == gfxFontUtils::NAME_ID_PREFERRED_FAMILY))) {
-      nsAutoCString otherFamilyName;
-      bool ok = gfxFontUtils::DecodeFontName(
-          aNameData + stringsBase + nameOff, nameLen,
-          uint32_t(nameRecord->platformID), uint32_t(nameRecord->encodingID),
-          uint32_t(nameRecord->languageID), otherFamilyName);
-      // add if not same as canonical family name
-      if (ok && otherFamilyName != aFamilyName) {
-        aOtherFamilyNames.AppendElement(otherFamilyName);
-      }
-    }
-  }
-}
-
 // returns true if other names were found, false otherwise
 bool gfxFontFamily::ReadOtherFamilyNamesForFace(
     gfxPlatformFontList* aPlatformFontList, hb_blob_t* aNameTable,
@@ -1609,8 +1564,8 @@ bool gfxFontFamily::ReadOtherFamilyNamesForFace(
   const char* nameData = hb_blob_get_data(aNameTable, &dataLength);
   AutoTArray<nsCString, 4> otherFamilyNames;
 
-  ReadOtherFamilyNamesForFace(mName, nameData, dataLength, otherFamilyNames,
-                              useFullName);
+  gfxFontUtils::ReadOtherFamilyNamesForFace(mName, nameData, dataLength,
+                                            otherFamilyNames, useFullName);
 
   uint32_t n = otherFamilyNames.Length();
   for (uint32_t i = 0; i < n; i++) {

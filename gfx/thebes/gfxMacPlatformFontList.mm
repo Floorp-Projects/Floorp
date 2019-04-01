@@ -1625,8 +1625,8 @@ void MacFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
       if (nameTable) {
         const char* nameData = (const char*)CFDataGetBytePtr(nameTable);
         uint32_t nameLen = CFDataGetLength(nameTable);
-        gfxFontFamily::ReadOtherFamilyNamesForFace(aFamilyName, nameData, nameLen, otherFamilyNames,
-                                                   false);
+        gfxFontUtils::ReadOtherFamilyNamesForFace(aFamilyName, nameData, nameLen, otherFamilyNames,
+                                                  false);
         hasOtherFamilyNames = otherFamilyNames.Length() != 0;
         CFRelease(nameTable);
       }
