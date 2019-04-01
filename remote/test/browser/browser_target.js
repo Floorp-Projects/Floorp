@@ -42,8 +42,14 @@ async function testCDP() {
   const {Target} = client;
   ok("Target" in client, "Target domain is available");
 
+  const targetCreatedForAlreadyOpenedTab = Target.targetCreated();
+
   // Instruct the server to fire Target.targetCreated events
   Target.setDiscoverTargets({ discover: true });
+
+  // Calling `setDiscoverTargets` will dispatch `targetCreated` event for all
+  // already opened tabs
+  await targetCreatedForAlreadyOpenedTab;
 
   // Create a new target so that the test runs against a fresh new tab
   const targetCreated = Target.targetCreated();
