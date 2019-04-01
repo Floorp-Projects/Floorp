@@ -443,11 +443,15 @@ inline DenseElementResult NativeObject::setOrExtendDenseElements(
   return DenseElementResult::Success;
 }
 
-inline Value NativeObject::getDenseOrTypedArrayElement(uint32_t idx) {
+template <AllowGC allowGC>
+inline bool NativeObject::getDenseOrTypedArrayElement(
+    JSContext* cx, uint32_t idx,
+    typename MaybeRooted<Value, allowGC>::MutableHandleType val) {
   if (is<TypedArrayObject>()) {
-    return as<TypedArrayObject>().getElement(idx);
+    return as<TypedArrayObject>().getElement<allowGC>(cx, idx, val);
   }
-  return getDenseElement(idx);
+  val.set(getDenseElement(idx));
+  return true;
 }
 
 MOZ_ALWAYS_INLINE void NativeObject::setSlotWithType(JSContext* cx,
