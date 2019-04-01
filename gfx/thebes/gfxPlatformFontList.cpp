@@ -958,11 +958,6 @@ void gfxPlatformFontList::GetFontFamiliesFromGenericFamilies(
 
 gfxPlatformFontList::PrefFontList* gfxPlatformFontList::GetPrefFontsLangGroup(
     StyleGenericFontFamily aGenericType, eFontPrefLang aPrefLang) {
-  // treat -moz-fixed as monospace
-  if (aGenericType == StyleGenericFontFamily::MozFixed) {
-    aGenericType = StyleGenericFontFamily::Monospace;
-  }
-
   if (aGenericType == StyleGenericFontFamily::MozEmoji) {
     // Emoji font has no lang
     PrefFontList* prefFonts = mEmojiPrefFont.get();
@@ -1359,7 +1354,6 @@ nsAtom* gfxPlatformFontList::GetLangGroup(nsAtom* aLanguage) {
     case StyleGenericFontFamily::SansSerif:
       return kGeneric_sans_serif;
     case StyleGenericFontFamily::Monospace:
-    case StyleGenericFontFamily::MozFixed:
       return kGeneric_monospace;
     case StyleGenericFontFamily::Cursive:
       return kGeneric_cursive;
