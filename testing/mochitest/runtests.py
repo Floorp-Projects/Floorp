@@ -3114,6 +3114,13 @@ def run_test_harness(parser, options):
     if hasattr(options, 'log'):
         delattr(options, 'log')
 
+    # windows10-aarch64 does not yet support crashreporter testing.
+    # see https://bugzilla.mozilla.org/show_bug.cgi?id=1536221
+    if mozinfo.os == "win" and mozinfo.processor == "aarch64":
+        # manually override the mozinfo.crashreporter value after MochitestDesktop
+        # is instantiated.
+        mozinfo.update({u"crashreporter": False})
+
     options.runByManifest = False
     if options.flavor in ('plain', 'browser', 'chrome'):
         options.runByManifest = True
