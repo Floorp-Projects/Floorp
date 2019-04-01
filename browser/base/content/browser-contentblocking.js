@@ -1123,7 +1123,7 @@ var ContentBlocking = {
 
       if (!isBrowserPrivate) {
         let introCount = Services.prefs.getIntPref(this.prefIntroCount);
-        if (introCount < this.MAX_INTROS) {
+        if (introCount < this.MAX_INTROS && !this.anyOtherWindowHasTour()) {
           Services.prefs.setIntPref(this.prefIntroCount, ++introCount);
           Services.prefs.savePrefFile(null);
           this.showIntroPanel();
@@ -1187,6 +1187,16 @@ var ContentBlocking = {
     } else if (cryptominingAllowing) {
       this.cryptominersHistogramAdd("allowed");
     }
+  },
+
+  // Check if any existing window has a UItour initiated, both showing and hidden.
+  anyOtherWindowHasTour() {
+    for (let win of BrowserWindowTracker.orderedWindows) {
+      if (win != window && UITour.tourBrowsersByWindow.has(win)) {
+        return true;
+      }
+    }
+    return false;
   },
 
   disableForCurrentPage() {
