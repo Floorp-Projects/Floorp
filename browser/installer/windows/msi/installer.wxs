@@ -60,13 +60,13 @@
        too long, but they actually work just fine, the warning is spurious. -->
   <CustomAction Id="RunInstallNoDir" Return="check" Execute="deferred"
                 HideTarget="no" Impersonate="no" BinaryKey="WrappedExe"
-                ExeCommand="/S /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOTE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /LaunchedFromMSI" />
+                ExeCommand="/S /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOVE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /LaunchedFromMSI" />
   <CustomAction Id="RunInstallDirPath" Return="check" Execute="deferred"
                 HideTarget="no" Impersonate="no" BinaryKey="WrappedExe"
-                ExeCommand="/S /InstallDirectoryPath=[INSTALL_DIRECTORY_PATH] /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOTE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /LaunchedFromMSI" />
+                ExeCommand="/S /InstallDirectoryPath=[INSTALL_DIRECTORY_PATH] /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOVE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /LaunchedFromMSI" />
   <CustomAction Id="RunInstallDirName" Return="check" Execute="deferred"
                 HideTarget="no" Impersonate="no" BinaryKey="WrappedExe"
-                ExeCommand="/S /InstallDirectoryName=[INSTALL_DIRECTORY_NAME] /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOTE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /LaunchedFromMSI" />
+                ExeCommand="/S /InstallDirectoryName=[INSTALL_DIRECTORY_NAME] /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOVE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /LaunchedFromMSI" />
   <CustomAction Id="RunExtractOnly" Return="check" Execute="deferred"
                 HideTarget="no" Impersonate="no" BinaryKey="WrappedExe"
                 ExeCommand="/ExtractDir=[EXTRACT_DIR]" />
