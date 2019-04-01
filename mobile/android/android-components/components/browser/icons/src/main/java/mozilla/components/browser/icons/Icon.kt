@@ -25,6 +25,11 @@ data class Icon(
         /**
          * This icon was generated.
          */
-        GENERATOR
+        GENERATOR,
+
+        /**
+         * This icon was downloaded.
+         */
+        DOWNLOAD
     }
 }

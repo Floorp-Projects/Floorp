@@ -15,6 +15,9 @@ permalink: /changelog/
 * **support-ktx**
   * Added extension property `Uri.isHttpOrHttps`.
 
+* **browser-icons**
+  * ⚠️ **This is a breaking API change**: Creating a `BrowserIcons` instance requires a `Client` object (from `concept-fetch`) now.
+
 # 0.49.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.48.0...v0.49.0)

@@ -30,6 +30,7 @@ import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
 import java.util.concurrent.TimeUnit
@@ -50,7 +51,7 @@ open class DefaultComponents(private val applicationContext: Context) {
         SystemEngine(applicationContext, engineSettings)
     }
 
-    val icons by lazy { BrowserIcons(applicationContext) }
+    val icons by lazy { BrowserIcons(applicationContext, HttpURLConnectionClient()) }
 
     // Storage
     val historyStorage by lazy { InMemoryHistoryStorage() }

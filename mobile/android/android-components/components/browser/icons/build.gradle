@@ -36,6 +36,7 @@ android {
 dependencies {
     implementation project(':support-ktx')
     implementation project(':concept-engine')
+    implementation project(':concept-fetch')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
@@ -43,11 +44,14 @@ dependencies {
     implementation Dependencies.support_annotations
 
     testImplementation project(':support-test')
+    testImplementation project(':lib-fetch-httpurlconnection')
+    testImplementation project(':lib-fetch-okhttp')
 
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_mockwebserver
 
     androidTestImplementation Dependencies.androidx_test_core
     androidTestImplementation Dependencies.androidx_test_runner
