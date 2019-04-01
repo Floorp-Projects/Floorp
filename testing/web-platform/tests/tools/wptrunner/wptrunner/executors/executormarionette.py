@@ -846,7 +846,7 @@ class MarionetteRefTestExecutor(RefTestExecutor):
         return screenshot
 
 
-class InternalRefTestImplementation(object):
+class InternalRefTestImplementation(RefTestImplementation):
     def __init__(self, executor):
         self.timeout_multiplier = executor.timeout_multiplier
         self.executor = executor
@@ -865,11 +865,12 @@ class InternalRefTestImplementation(object):
         self.executor.protocol.marionette._send_message("reftest:setup", data)
 
     def reset(self, screenshot=None):
-        self.teardown()
-        self.setup(screenshot)
+        # this is obvious wrong; it shouldn't be a no-op
+        # see https://github.com/web-platform-tests/wpt/issues/15604
+        pass
 
     def run_test(self, test):
-        references = self.get_references(test)
+        references = self.get_references(test, test)
         timeout = (test.timeout * 1000) * self.timeout_multiplier
         rv = self.executor.protocol.marionette._send_message("reftest:run",
                                                              {"test": self.executor.test_url(test),
@@ -880,10 +881,11 @@ class InternalRefTestImplementation(object):
                                                               "height": 600})["value"]
         return rv
 
-    def get_references(self, node):
+    def get_references(self, root_test, node):
         rv = []
         for item, relation in node.references:
-            rv.append([self.executor.test_url(item), self.get_references(item), relation])
+            rv.append([self.executor.test_url(item), self.get_references(root_test, item), relation,
+                       {"fuzzy": self.get_fuzzy(root_test, [node, item], relation)}])
         return rv
 
     def teardown(self):
@@ -891,6 +893,11 @@ class InternalRefTestImplementation(object):
             if self.executor.protocol.marionette and self.executor.protocol.marionette.session_id:
                 self.executor.protocol.marionette._send_message("reftest:teardown", {})
                 self.executor.protocol.marionette.set_context(self.executor.protocol.marionette.CONTEXT_CONTENT)
+                # the reftest runner opens/closes a window with focus, so as
+                # with after closing a window we need to give a new window
+                # focus
+                handles = self.executor.protocol.marionette.window_handles
+                self.executor.protocol.marionette.switch_to_window(handles[0])
         except Exception as e:
             # Ignore errors during teardown
             self.logger.warning(traceback.format_exc(e))
