@@ -76,9 +76,6 @@ struct FontFamilyName final {
       case StyleGenericFontFamily::Monospace:
         aFamilyList.AppendLiteral("monospace");
         break;
-      case StyleGenericFontFamily::MozFixed:
-        aFamilyList.AppendLiteral("-moz-fixed");
-        break;
       case StyleGenericFontFamily::Cursive:
         aFamilyList.AppendLiteral("cursive");
         break;
@@ -104,10 +101,9 @@ struct FontFamilyName final {
       genericType = StyleGenericFontFamily::Serif;
     } else if (aFamilyOrGenericName.LowerCaseEqualsLiteral("sans-serif")) {
       genericType = StyleGenericFontFamily::SansSerif;
-    } else if (aFamilyOrGenericName.LowerCaseEqualsLiteral("monospace")) {
+    } else if (aFamilyOrGenericName.LowerCaseEqualsLiteral("monospace") ||
+               aFamilyOrGenericName.LowerCaseEqualsLiteral("-moz-fixed")) {
       genericType = StyleGenericFontFamily::Monospace;
-    } else if (aFamilyOrGenericName.LowerCaseEqualsLiteral("-moz-fixed")) {
-      genericType = StyleGenericFontFamily::MozFixed;
     } else if (aFamilyOrGenericName.LowerCaseEqualsLiteral("cursive")) {
       genericType = StyleGenericFontFamily::Cursive;
     } else if (aFamilyOrGenericName.LowerCaseEqualsLiteral("fantasy")) {
