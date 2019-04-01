@@ -39,6 +39,7 @@
 #include "mozilla/Logging.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
+#include "nsExceptionHandler.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
@@ -252,6 +253,20 @@ const uint32_t kPreparedDatastoreTimeoutMs = 20000;
 const uint32_t kShadowMaxWALSize = 512 * 1024;
 
 const uint32_t kShadowJournalSizeLimit = kShadowMaxWALSize * 3;
+
+/**
+ * Automatically crash the browser if LocalStorage shutdown takes this long.
+ * We've chosen a value that is longer than the value for QuotaManager shutdown
+ * timer which is currently set to 30 seconds.  We've also chosen a value that
+ * is long enough that it is unlikely for the problem to be falsely triggered by
+ * slow system I/O.  We've also chosen a value long enough so that automated
+ * tests should time out and fail if LocalStorage shutdown hangs.  Also, this
+ * value is long enough so that testers can notice the LocalStorage shutdown
+ * hang; we want to know about the hangs, not hide them.  On the other hand this
+ * value is less than 60 seconds which is used by nsTerminator to crash a hung
+ * main process.
+ */
+#define SHUTDOWN_TIMEOUT_MS 50000
 
 bool IsOnConnectionThread();
 
@@ -2663,6 +2678,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
  private:
   ~QuotaClient() override;
+
+  void ShutdownTimedOut();
 
   nsresult CreateArchivedOriginScope(
       const OriginScope& aOriginScope,
@@ -8059,6 +8076,17 @@ void QuotaClient::ShutdownWorkThreads() {
     gPreparedObsevers = nullptr;
   }
 
+  nsCOMPtr<nsITimer> timer = NS_NewTimer();
+
+  MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
+      [](nsITimer* aTimer, void* aClosure) {
+        auto quotaClient = static_cast<QuotaClient*>(aClosure);
+
+        quotaClient->ShutdownTimedOut();
+      },
+      this, SHUTDOWN_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT,
+      "localstorage::QuotaClient::ShutdownWorkThreads::SpinEventLoopTimer"));
+
   // This should release any local storage related quota objects or directory
   // locks.
   MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
@@ -8066,12 +8094,44 @@ void QuotaClient::ShutdownWorkThreads() {
     return !gPrepareDatastoreOps && !gDatastores && !gLiveDatabases;
   }));
 
+  MOZ_ALWAYS_SUCCEEDS(timer->Cancel());
+
   // And finally, shutdown the connection thread.
   if (gConnectionThread) {
     gConnectionThread->Shutdown();
 
     gConnectionThread = nullptr;
   }
+}
+
+void QuotaClient::ShutdownTimedOut() {
+  AssertIsOnBackgroundThread();
+  MOZ_DIAGNOSTIC_ASSERT(gPrepareDatastoreOps || gDatastores || gLiveDatabases);
+
+  nsCString data;
+
+  if (gPrepareDatastoreOps) {
+    data.Append("gPrepareDatastoreOps: ");
+    data.AppendInt(static_cast<uint32_t>(gPrepareDatastoreOps->Length()));
+    data.Append("\n");
+  }
+
+  if (gDatastores) {
+    data.Append("gDatastores: ");
+    data.AppendInt(gDatastores->Count());
+    data.Append("\n");
+  }
+
+  if (gLiveDatabases) {
+    data.Append("gLiveDatabases: ");
+    data.AppendInt(static_cast<uint32_t>(gLiveDatabases->Length()));
+    data.Append("\n");
+  }
+
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::LocalStorageShutdownTimeout, data);
+
+  MOZ_CRASH("LocalStorage shutdown timed out");
 }
 
 nsresult QuotaClient::CreateArchivedOriginScope(
