@@ -336,8 +336,7 @@ TRRService::Observe(nsISupports *aSubject, const char *aTopic,
       MutexAutoLock lock(mLock);
       mTRRBLStorage = DataStorage::Get(DataStorageClass::TRRBlacklist);
       if (mTRRBLStorage) {
-        bool storageWillPersist = true;
-        if (NS_FAILED(mTRRBLStorage->Init(storageWillPersist))) {
+        if (NS_FAILED(mTRRBLStorage->Init(nullptr))) {
           mTRRBLStorage = nullptr;
         }
         if (mClearTRRBLStorage) {

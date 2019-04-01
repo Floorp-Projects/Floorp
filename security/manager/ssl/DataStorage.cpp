@@ -241,8 +241,7 @@ void DataStorage::GetAllChildProcessData(
     if (!storage->mInitCalled) {
       // Perhaps no consumer has initialized the DataStorage object yet,
       // so do that now!
-      bool dataWillPersist = false;
-      nsresult rv = storage->Init(dataWillPersist);
+      nsresult rv = storage->Init(nullptr);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return;
       }
@@ -284,8 +283,7 @@ void DataStorage::SetCachedStorageEntries(
   for (auto& entry : entries) {
     RefPtr<DataStorage> storage =
         DataStorage::GetFromRawFileName(entry.filename());
-    bool dataWillPersist = false;
-    storage->Init(dataWillPersist, &entry.items());
+    storage->Init(&entry.items());
   }
 }
 
@@ -300,7 +298,6 @@ size_t DataStorage::SizeOfIncludingThis(
 }
 
 nsresult DataStorage::Init(
-    bool& aDataWillPersist,
     const InfallibleTArray<mozilla::dom::DataStorageItem>* aItems) {
   // Don't access the observer service or preferences off the main thread.
   if (!NS_IsMainThread()) {
@@ -335,7 +332,7 @@ nsresult DataStorage::Init(
       return rv;
     }
 
-    rv = AsyncReadData(aDataWillPersist, lock);
+    rv = AsyncReadData(lock);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -345,7 +342,6 @@ nsresult DataStorage::Init(
     MOZ_ASSERT(XRE_IsContentProcess());
     MOZ_ASSERT(aItems);
 
-    aDataWillPersist = false;
     for (auto& item : *aItems) {
       Entry entry;
       entry.mValue = item.value();
@@ -599,10 +595,8 @@ nsresult DataStorage::Reader::ParseLine(nsDependentCSubstring& aLine,
   return NS_OK;
 }
 
-nsresult DataStorage::AsyncReadData(bool& aHaveProfileDir,
-                                    const MutexAutoLock& /*aProofOfLock*/) {
+nsresult DataStorage::AsyncReadData(const MutexAutoLock& /*aProofOfLock*/) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  aHaveProfileDir = false;
   // Allocate a Reader so that even if it isn't dispatched,
   // the data-storage-ready notification will be fired and Get
   // will be able to proceed (this happens in its destructor).
@@ -627,7 +621,6 @@ nsresult DataStorage::AsyncReadData(bool& aHaveProfileDir,
     return rv;
   }
 
-  aHaveProfileDir = true;
   return NS_OK;
 }
 
