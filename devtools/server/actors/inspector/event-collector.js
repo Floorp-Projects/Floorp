@@ -12,7 +12,6 @@ const Services = require("Services");
 const {
   isAfterPseudoElement,
   isBeforePseudoElement,
-  isMarkerPseudoElement,
   isNativeAnonymous,
 } = require("devtools/shared/layout/utils");
 const Debugger = require("Debugger");
@@ -390,7 +389,7 @@ class JQueryEventCollector extends MainEventCollector {
 
     // If jQuery is not on the page, if this is an anonymous node or a pseudo
     // element we need to return early.
-    if (!jQuery || isNativeAnonymous(node) || isMarkerPseudoElement(node) ||
+    if (!jQuery || isNativeAnonymous(node) ||
         isBeforePseudoElement(node) || isAfterPseudoElement(node)) {
       if (checkOnly) {
         return false;
