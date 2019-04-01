@@ -2709,8 +2709,14 @@ void TypeZone::addPendingRecompile(JSContext* cx, const RecompileInfo& info) {
             info.script()->filename(), info.script()->lineno());
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!cx->zone()->types.activeAnalysis->pendingRecompiles.append(info)) {
-    oomUnsafe.crash("Could not update pendingRecompiles");
+  RecompileInfoVector& vector =
+      cx->zone()->types.activeAnalysis->pendingRecompiles;
+  if (!vector.append(info)) {
+    // BUG 1536159: For diagnostics, compute the size of the failed allocation.
+    // This presumes the vector growth strategy is to double. This is only used
+    // for crash reporting so not a problem if we get it wrong.
+    size_t allocSize = 2 * sizeof(RecompileInfo) * vector.capacity();
+    oomUnsafe.crash(allocSize, "Could not update pendingRecompiles");
   }
 }
 
