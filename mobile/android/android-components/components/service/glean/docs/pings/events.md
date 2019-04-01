@@ -47,8 +47,30 @@ Each entry in the `events` array is an object with the following properties:
   
 ```json
 {
-  ...,
-  
+  "ping_info": {
+    "ping_type": "metrics",
+    "experiments": {
+      "third_party_library": {
+        "branch": "enabled"
+      }
+    },
+    "seq": 0,
+    "start_time": "2019-03-29T09:50-04:00",
+    "end_time": "2019-03-29T10:02-04:00"
+  },
+  "client_info": {
+    "telemetry_sdk_build": "0.49.0",
+    "first_run_date": "2019-03-29-04:00",
+    "os": "Android",
+    "android_sdk_version": "27",
+    "os_version": "8.1.0",
+    "device_manufacturer": "Google",
+    "device_model": "Android SDK built for x86",
+    "architecture": "x86",
+    "app_build": "1",
+    "app_display_version": "1.0",
+    "client_id": "35dab852-74db-43f4-8aa0-88884211e545"
+  },
   "events": [
     {
       "timestamp": 123456789,
