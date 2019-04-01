@@ -8355,6 +8355,8 @@ TabModalPromptBox.prototype = {
     if (prompts.length) {
       let prompt = prompts[prompts.length - 1];
       prompt.element.hidden = false;
+      // Because we were hidden before, this won't have been possible, so do it now:
+      prompt.ensureXBLBindingAttached();
       prompt.Dialog.setDefaultFocus();
     } else {
       browser.removeAttribute("tabmodalPromptShowing");
