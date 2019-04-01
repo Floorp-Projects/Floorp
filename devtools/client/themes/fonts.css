@@ -285,6 +285,14 @@
   border-right: none;
 }
 
+.font-value-label {
+  /* Combined width of .font-value-input and .font-value-select */
+  width: calc(60px + 3.8em);
+  margin-left: 10px;
+  padding-top: 2px;
+  padding-bottom: 4px;
+}
+
 /* Mock separator because inputs don't have distinguishable borders in dark theme */
 .theme-dark .font-value-input + .font-value-select {
   margin-left: 2px;
