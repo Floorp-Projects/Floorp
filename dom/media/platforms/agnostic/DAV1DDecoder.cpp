@@ -62,19 +62,24 @@ void ReleaseDataBuffer_s(const uint8_t* buf, void* user_data) {
 }
 
 void DAV1DDecoder::ReleaseDataBuffer(const uint8_t* buf) {
-  // The release callback may be called on a
-  // different thread defined by third party
-  // dav1d execution. Post a task into TaskQueue
-  // to ensure mDecodingBuffers is only ever
-  // accessed on the TaskQueue
+  // The release callback may be called on a different thread defined by the
+  // third party dav1d execution. In that case post a task into TaskQueue to
+  // ensure that mDecodingBuffers is only ever accessed on the TaskQueue.
   RefPtr<DAV1DDecoder> self = this;
-  nsresult rv = mTaskQueue->Dispatch(
-      NS_NewRunnableFunction("DAV1DDecoder::ReleaseDataBuffer", [self, buf]() {
-        DebugOnly<bool> found = self->mDecodingBuffers.Remove(buf);
-        MOZ_ASSERT(found);
-      }));
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  Unused << rv;
+  auto releaseBuffer = [self, buf] {
+    MOZ_ASSERT(self->mTaskQueue->IsCurrentThreadIn());
+    DebugOnly<bool> found = self->mDecodingBuffers.Remove(buf);
+    MOZ_ASSERT(found);
+  };
+
+  if (mTaskQueue->IsCurrentThreadIn()) {
+    releaseBuffer();
+  } else {
+    nsresult rv = mTaskQueue->Dispatch(NS_NewRunnableFunction(
+        "DAV1DDecoder::ReleaseDataBuffer", std::move(releaseBuffer)));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
+  }
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::InvokeDecode(
