@@ -148,6 +148,10 @@ var originalListener = {
 
 function testAltDataStream(cc)
 {
-  Assert.ok(!!cc.alternativeDataInputStream);
-  httpServer.stop(do_test_finished);
+  cc.getAltDataInputStream(altContentType, {
+    onInputStreamReady: function(aInputStream) {
+      Assert.ok(!!aInputStream);
+      httpServer.stop(do_test_finished);
+    }
+  });
 }
