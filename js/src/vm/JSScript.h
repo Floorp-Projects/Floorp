@@ -3026,7 +3026,7 @@ class LazyScript : public gc::TenuredCell {
   uint32_t column_;
 
   LazyScript(JSFunction* fun, ScriptSourceObject& sourceObject, void* table,
-             uint64_t packedFields, uint32_t begin, uint32_t end,
+             uint64_t packedFields, uint32_t sourceStart, uint32_t sourceEnd,
              uint32_t toStringStart, uint32_t lineno, uint32_t column);
 
   // Create a LazyScript without initializing the closedOverBindings and the
@@ -3034,8 +3034,8 @@ class LazyScript : public gc::TenuredCell {
   // with valid atoms and functions.
   static LazyScript* CreateRaw(JSContext* cx, HandleFunction fun,
                                HandleScriptSourceObject sourceObject,
-                               uint64_t packedData, uint32_t begin,
-                               uint32_t end, uint32_t toStringStart,
+                               uint64_t packedData, uint32_t sourceStart,
+                               uint32_t sourceEnd, uint32_t toStringStart,
                                uint32_t lineno, uint32_t column);
 
  public:
@@ -3049,7 +3049,7 @@ class LazyScript : public gc::TenuredCell {
                             HandleScriptSourceObject sourceObject,
                             const frontend::AtomVector& closedOverBindings,
                             Handle<GCVector<JSFunction*, 8>> innerFunctions,
-                            uint32_t begin, uint32_t end,
+                            uint32_t sourceStart, uint32_t sourceEnd,
                             uint32_t toStringStart, uint32_t lineno,
                             uint32_t column, frontend::ParseGoal parseGoal);
 
@@ -3066,8 +3066,8 @@ class LazyScript : public gc::TenuredCell {
                                   HandleScript script,
                                   HandleScope enclosingScope,
                                   HandleScriptSourceObject sourceObject,
-                                  uint64_t packedData, uint32_t begin,
-                                  uint32_t end, uint32_t toStringStart,
+                                  uint64_t packedData, uint32_t sourceStart,
+                                  uint32_t sourceEnd, uint32_t toStringStart,
                                   uint32_t lineno, uint32_t column);
 
   static inline JSFunction* functionDelazifying(JSContext* cx,
