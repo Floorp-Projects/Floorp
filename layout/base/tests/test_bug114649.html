@@ -20,19 +20,20 @@ var gIFrame;
 var gCurrentWidth = 500;
 var gGotEventsAt = [];
 var gInterval;
+var gFinished = false;
 
 function run() {
     SimpleTest.waitForExplicitFinish();
-    SimpleTest.requestFlakyTimeout("untriaged");
+    SimpleTest.requestFlakyTimeout("Simulating dragging to resize a window");
 
     gIFrame = document.getElementById("display");
 
     var subdoc = gIFrame.contentDocument;
     subdoc.open();
-    subdoc.write("<body onresize='window.parent.handle_child_resize()'>");
+    subdoc.write("<body onresize='window.parent.handle_resize_event()'>");
     subdoc.close();
 
-    gInterval = window.setInterval(do_a_resize, 50);
+    setTimeout(do_a_resize, 50);
 }
 
 function do_a_resize()
@@ -41,24 +42,34 @@ function do_a_resize()
     gCurrentWidth -= 10;
     gIFrame.style.width = gCurrentWidth + "px";
 
-    if (gCurrentWidth == 400) {
-        window.clearInterval(gInterval);
-        window.setTimeout(check_for_resize_events, 250);
-        return;
+    if (gCurrentWidth > 400) {
+        setTimeout(do_a_resize, 50);
     }
 }
 
-function handle_child_resize()
+function handle_resize_event()
 {
     gGotEventsAt.push(gCurrentWidth);
+
+    if (gCurrentWidth == 400) {
+        check_resize_events();
+    }
 }
 
-function check_for_resize_events()
+function check_resize_events()
 {
-	ok(gGotEventsAt.length >= 2, "got continuous events");
-	isnot(gGotEventsAt[0], 400, "got continuous events");
-	is(gGotEventsAt[gGotEventsAt.length - 1], 400, "got last event");
-	SimpleTest.finish();
+    if (gFinished) {
+        // We can get here when the browser can't process the resizes and
+        // dispatch resize events as fast as we're doing the resizing.  We can
+        // then end up with multiple resize events queued up after we set our
+        // final size.  This return makes sure that in that case we avoid
+        // calling SimpleTest.finish() more than once.
+        return;
+    }
+    gFinished = true;
+    ok(gGotEventsAt.length >= 2, "We should get more than one event");
+    isnot(gGotEventsAt[0], 400, "The first event shouldn't be for the final size");
+    SimpleTest.finish();
 }
 
 </script>
