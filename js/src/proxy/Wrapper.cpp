@@ -446,12 +446,13 @@ ErrorCopier::~ErrorCopier() {
     RootedValue exc(cx);
     if (cx->getPendingException(&exc) && exc.isObject() &&
         exc.toObject().is<ErrorObject>()) {
+      RootedSavedFrame stack(cx, cx->getPendingExceptionStack());
       cx->clearPendingException();
       ar.reset();
       Rooted<ErrorObject*> errObj(cx, &exc.toObject().as<ErrorObject>());
       if (JSObject* copyobj = CopyErrorObject(cx, errObj)) {
         RootedValue rootedCopy(cx, ObjectValue(*copyobj));
-        cx->setPendingException(rootedCopy);
+        cx->setPendingException(rootedCopy, stack);
       }
     }
   }

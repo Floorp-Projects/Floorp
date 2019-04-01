@@ -1899,7 +1899,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
               }
               goto successful_return_continuation;
             case ResumeMode::Throw:
-              cx->setPendingException(rval);
+              cx->setPendingExceptionAndCaptureStack(rval);
               goto error;
             default:;
           }
@@ -1923,7 +1923,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
               }
               goto successful_return_continuation;
             case ResumeMode::Throw:
-              cx->setPendingException(rval);
+              cx->setPendingExceptionAndCaptureStack(rval);
               goto error;
             default:
               break;
@@ -3874,7 +3874,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
          * 350509, due to Igor Bukanov.
          */
         ReservedRooted<Value> v(&rootValue0, rval);
-        cx->setPendingException(v);
+        cx->setPendingExceptionAndCaptureStack(v);
         goto error;
       }
 
@@ -4424,7 +4424,7 @@ prologue_error:
 
 bool js::ThrowOperation(JSContext* cx, HandleValue v) {
   MOZ_ASSERT(!cx->isExceptionPending());
-  cx->setPendingException(v);
+  cx->setPendingExceptionAndCaptureStack(v);
   return false;
 }
 
@@ -4732,14 +4732,21 @@ bool js::ThrowMsgOperation(JSContext* cx, const unsigned errorNum) {
   return false;
 }
 
-bool js::GetAndClearException(JSContext* cx, MutableHandleValue res) {
+bool js::GetAndClearExceptionAndStack(JSContext* cx, MutableHandleValue res,
+                                      MutableHandleSavedFrame stack) {
   if (!cx->getPendingException(res)) {
     return false;
   }
+  stack.set(cx->getPendingExceptionStack());
   cx->clearPendingException();
 
   // Allow interrupting deeply nested exception handling.
   return CheckForInterrupt(cx);
+}
+
+bool js::GetAndClearException(JSContext* cx, MutableHandleValue res) {
+  RootedSavedFrame stack(cx);
+  return GetAndClearExceptionAndStack(cx, res, &stack);
 }
 
 template <bool strict>
