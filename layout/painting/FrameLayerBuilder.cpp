@@ -4417,13 +4417,6 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       aList->SetNeedsTransparentSurface();
     }
 
-    if (mParameters.mForEventsAndPluginsOnly &&
-        (marker != DisplayItemEntryType::HIT_TEST_INFO &&
-         itemType != DisplayItemType::TYPE_PLUGIN)) {
-      // Only process hit test info items or plugin items.
-      continue;
-    }
-
     LayerState layerState = LAYER_NONE;
     if (marker == DisplayItemEntryType::ITEM) {
       layerState = item->GetLayerState(mBuilder, mManager, mParameters);
@@ -5878,8 +5871,7 @@ void ContainerState::Finish(uint32_t* aTextContentFlags,
                             nsDisplayList* aChildItems) {
   mPaintedLayerDataTree.Finish();
 
-  if (!mParameters.mForEventsAndPluginsOnly &&
-      !gfxPrefs::LayoutUseContainersForRootFrames()) {
+  if (!gfxPrefs::LayoutUseContainersForRootFrames()) {
     // Bug 1336544 tracks re-enabling this assertion in the
     // gfxPrefs::LayoutUseContainersForRootFrames() case.
     NS_ASSERTION(mContainerBounds.IsEqualInterior(mAccumulatedChildBounds),

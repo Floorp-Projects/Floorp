@@ -260,7 +260,6 @@ struct ContainerLayerParameters {
         mInTransformedSubtree(false),
         mInActiveTransformedSubtree(false),
         mDisableSubpixelAntialiasingInDescendants(false),
-        mForEventsAndPluginsOnly(false),
         mLayerCreationHint(layers::LayerManager::NONE) {}
   ContainerLayerParameters(float aXScale, float aYScale)
       : mXScale(aXScale),
@@ -272,7 +271,6 @@ struct ContainerLayerParameters {
         mInTransformedSubtree(false),
         mInActiveTransformedSubtree(false),
         mDisableSubpixelAntialiasingInDescendants(false),
-        mForEventsAndPluginsOnly(false),
         mLayerCreationHint(layers::LayerManager::NONE) {}
   ContainerLayerParameters(float aXScale, float aYScale,
                            const nsIntPoint& aOffset,
@@ -288,7 +286,6 @@ struct ContainerLayerParameters {
         mInActiveTransformedSubtree(aParent.mInActiveTransformedSubtree),
         mDisableSubpixelAntialiasingInDescendants(
             aParent.mDisableSubpixelAntialiasingInDescendants),
-        mForEventsAndPluginsOnly(aParent.mForEventsAndPluginsOnly),
         mLayerCreationHint(aParent.mLayerCreationHint) {}
 
   float mXScale, mYScale;
@@ -319,7 +316,6 @@ struct ContainerLayerParameters {
   bool mInTransformedSubtree;
   bool mInActiveTransformedSubtree;
   bool mDisableSubpixelAntialiasingInDescendants;
-  bool mForEventsAndPluginsOnly;
   layers::LayerManager::PaintedLayerCreationHint mLayerCreationHint;
 
   /**
