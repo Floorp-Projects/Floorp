@@ -21,5 +21,6 @@
     "libtool": "/builds/worker/workspace/build/src/cctools/bin/x86_64-darwin11-libtool",
     "ld": "/builds/worker/workspace/build/src/clang/bin/clang",
     "patches": [
+      "clang-tidy-8.patch"
     ]
 }
