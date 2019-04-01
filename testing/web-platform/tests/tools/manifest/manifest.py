@@ -132,10 +132,7 @@ class TypeData(object):
             data = set()
             path = from_os_path(key)
             for test in iterfilter(self.meta_filters, self.json_data.get(path, [])):
-                manifest_item = self.type_cls.from_json(self.manifest,
-                                                        self.tests_root,
-                                                        path,
-                                                        test)
+                manifest_item = self.type_cls.from_json(self.manifest, path, test)
                 data.add(manifest_item)
             try:
                 del self.json_data[path]
@@ -154,10 +151,7 @@ class TypeData(object):
                     continue
                 data = set()
                 for test in iterfilter(self.meta_filters, self.json_data.get(path, [])):
-                    manifest_item = self.type_cls.from_json(self.manifest,
-                                                            self.tests_root,
-                                                            path,
-                                                            test)
+                    manifest_item = self.type_cls.from_json(self.manifest, path, test)
                     data.add(manifest_item)
                 self.data[key] = data
             self.json_data = None
@@ -167,6 +161,21 @@ class TypeData(object):
             raise ValueError("Got a %s expected a dict" % (type(data)))
         self.tests_root = tests_root
         self.json_data = data
+
+    def to_json(self):
+        data = {
+            from_os_path(path):
+            [t for t in sorted(test.to_json() for test in tests)]
+            for path, tests in iteritems(self.data)
+        }
+
+        if self.json_data is not None:
+            if not data:
+                # avoid copying if there's nothing here yet
+                return self.json_data
+            data.update(self.json_data)
+
+        return data
 
     def paths(self):
         """Get a list of all paths containing items of this type,
@@ -202,11 +211,12 @@ class ManifestData(dict):
 
 
 class Manifest(object):
-    def __init__(self, url_base="/", meta_filters=None):
+    def __init__(self, tests_root=None, url_base="/", meta_filters=None):
         assert url_base is not None
         self._path_hash = {}
         self._data = ManifestData(self, meta_filters)
         self._reftest_nodes_by_url = None
+        self.tests_root = tests_root
         self.url_base = url_base
 
     def __iter__(self):
@@ -270,6 +280,11 @@ class Manifest(object):
             if not update:
                 rel_path = source_file
                 seen_files.add(rel_path)
+                assert rel_path in self._path_hash
+                old_hash, old_type = self._path_hash[rel_path]
+                if old_type in reftest_types:
+                    manifest_items = self._data[old_type][rel_path]
+                    reftest_nodes.extend((item, old_hash) for item in manifest_items)
             else:
                 rel_path = source_file.rel_path
                 seen_files.add(rel_path)
@@ -285,27 +300,25 @@ class Manifest(object):
                         new_type, manifest_items = source_file.manifest_items()
                         hash_changed = True
                         if new_type != old_type:
-                            try:
-                                del self._data[old_type][rel_path]
-                            except KeyError:
-                                pass
+                            del self._data[old_type][rel_path]
+                            if old_type in reftest_types:
+                                reftest_changes = True
                     else:
-                        new_type, manifest_items = old_type, self._data[old_type][rel_path]
-                    if old_type in reftest_types and new_type != old_type:
-                        reftest_changes = True
+                        new_type = old_type
+                        if old_type in reftest_types:
+                            manifest_items = self._data[old_type][rel_path]
                 else:
                     new_type, manifest_items = source_file.manifest_items()
 
-                if new_type in ("reftest", "reftest_node"):
-                    reftest_nodes.extend(manifest_items)
+                if new_type in reftest_types:
+                    reftest_nodes.extend((item, file_hash) for item in manifest_items)
                     if is_new or hash_changed:
                         reftest_changes = True
-                elif new_type:
+                elif is_new or hash_changed:
                     self._data[new_type][rel_path] = set(manifest_items)
 
-                self._path_hash[rel_path] = (file_hash, new_type)
-
                 if is_new or hash_changed:
+                    self._path_hash[rel_path] = (file_hash, new_type)
                     changed = True
 
         deleted = prev_files - seen_files
@@ -337,7 +350,7 @@ class Manifest(object):
     def _compute_reftests(self, reftest_nodes):
         self._reftest_nodes_by_url = {}
         has_inbound = set()
-        for item in reftest_nodes:
+        for item, _ in reftest_nodes:
             for ref_url, ref_type in item.references:
                 has_inbound.add(ref_url)
 
@@ -345,31 +358,27 @@ class Manifest(object):
         references = defaultdict(set)
         changed_hashes = {}
 
-        for item in reftest_nodes:
+        for item, file_hash in reftest_nodes:
             if item.url in has_inbound:
                 # This is a reference
                 if isinstance(item, RefTest):
                     item = item.to_RefTestNode()
-                    changed_hashes[item.source_file.rel_path] = (item.source_file.hash,
-                                                                 item.item_type)
-                references[item.source_file.rel_path].add(item)
+                    changed_hashes[item.path] = (file_hash,
+                                                 item.item_type)
+                references[item.path].add(item)
             else:
                 if isinstance(item, RefTestNode):
                     item = item.to_RefTest()
-                    changed_hashes[item.source_file.rel_path] = (item.source_file.hash,
-                                                                 item.item_type)
-                reftests[item.source_file.rel_path].add(item)
+                    changed_hashes[item.path] = (file_hash,
+                                                 item.item_type)
+                reftests[item.path].add(item)
             self._reftest_nodes_by_url[item.url] = item
 
         return reftests, references, changed_hashes
 
     def to_json(self):
         out_items = {
-            test_type: {
-                from_os_path(path):
-                [t for t in sorted(test.to_json() for test in tests)]
-                for path, tests in iteritems(type_paths)
-            }
+            test_type: type_paths.to_json()
             for test_type, type_paths in iteritems(self._data) if type_paths
         }
         rv = {"url_base": self.url_base,
@@ -384,7 +393,7 @@ class Manifest(object):
         if version != CURRENT_VERSION:
             raise ManifestVersionMismatch
 
-        self = cls(url_base=obj.get("url_base", "/"), meta_filters=meta_filters)
+        self = cls(tests_root, url_base=obj.get("url_base", "/"), meta_filters=meta_filters)
         if not hasattr(obj, "items") and hasattr(obj, "paths"):
             raise ManifestError
 
@@ -473,7 +482,7 @@ def load_and_update(tests_root,
             logger.info("Manifest url base did not match, rebuilding")
 
     if manifest is None:
-        manifest = Manifest(url_base, meta_filters=meta_filters)
+        manifest = Manifest(tests_root, url_base, meta_filters=meta_filters)
         update = True
 
     if update:

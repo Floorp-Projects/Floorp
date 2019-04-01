@@ -9,7 +9,7 @@
 
 from time import time
 
-from wptrunner.formatters import WptreportFormatter
+from wptrunner.formatters.wptreport import WptreportFormatter
 
 
 class WptreportHandler(object):

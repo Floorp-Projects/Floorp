@@ -1951,7 +1951,10 @@ class Breakpoint {
   BreakpointSite* const site;
 
  private:
-  /* |handler| is marked unconditionally during minor GC. */
+  /*
+   * |handler| is marked unconditionally during minor GC so a post barrier is
+   * not required.
+   */
   js::PreBarrieredObject handler;
 
   /**
@@ -1969,7 +1972,7 @@ class Breakpoint {
 
   Breakpoint* nextInDebugger();
   Breakpoint* nextInSite();
-  const PreBarrieredObject& getHandler() const { return handler; }
+  JSObject* getHandler() const { return handler; }
   PreBarrieredObject& getHandlerRef() { return handler; }
 
   inline WasmBreakpoint* asWasm();
