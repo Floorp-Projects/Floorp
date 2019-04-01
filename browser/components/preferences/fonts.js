@@ -15,7 +15,7 @@ const kFontNameListFmtSerif     = "font.name-list.serif.%LANG%";
 const kFontNameListFmtSansSerif = "font.name-list.sans-serif.%LANG%";
 const kFontNameListFmtMonospace = "font.name-list.monospace.%LANG%";
 const kFontSizeFmtVariable      = "font.size.variable.%LANG%";
-const kFontSizeFmtFixed         = "font.size.monospace.%LANG%";
+const kFontSizeFmtFixed         = "font.size.fixed.%LANG%";
 const kFontMinSizeFmt           = "font.minimum-size.%LANG%";
 
 document.documentElement.addEventListener("dialoghelp", window.top.openPrefsHelp);

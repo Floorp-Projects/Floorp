@@ -56,13 +56,13 @@ static const float kLargeOpFactor = float(M_SQRT2);
 static const float kIntegralFactor = 2.0;
 
 static void NormalizeDefaultFont(nsFont& aFont, float aFontSizeInflation) {
-  if (aFont.fontlist.GetDefaultFontType() != StyleGenericFontFamily::None) {
+  if (aFont.fontlist.GetDefaultFontType() != eFamily_none) {
     nsTArray<FontFamilyName> names;
     names.AppendElements(aFont.fontlist.GetFontlist()->mNames);
     names.AppendElement(FontFamilyName(aFont.fontlist.GetDefaultFontType()));
 
     aFont.fontlist.SetFontlist(std::move(names));
-    aFont.fontlist.SetDefaultFontType(StyleGenericFontFamily::None);
+    aFont.fontlist.SetDefaultFontType(eFamily_none);
   }
   aFont.size = NSToCoordRound(aFont.size * aFontSizeInflation);
 }
@@ -166,8 +166,8 @@ class nsPropertiesTable final : public nsGlyphTable {
   explicit nsPropertiesTable(const nsACString& aPrimaryFontName)
       : mState(NS_TABLE_STATE_EMPTY) {
     MOZ_COUNT_CTOR(nsPropertiesTable);
-    mGlyphCodeFonts.AppendElement(FontFamilyName(
-        aPrimaryFontName, StyleFontFamilyNameSyntax::Identifiers));
+    mGlyphCodeFonts.AppendElement(
+        FontFamilyName(aPrimaryFontName, eUnquotedName));
   }
 
   ~nsPropertiesTable() { MOZ_COUNT_DTOR(nsPropertiesTable); }
@@ -286,8 +286,7 @@ nsGlyphCode nsPropertiesTable::ElementAt(DrawTarget* /* aDrawTarget */,
       Clean(value);
       mGlyphCodeFonts.AppendElement(FontFamilyName(
           NS_ConvertUTF16toUTF8(value),
-          StyleFontFamilyNameSyntax::Identifiers));  // i.e., mGlyphCodeFonts[i]
-                                                     // holds this font name
+          eUnquotedName));  // i.e., mGlyphCodeFonts[i] holds this font name
     }
   }
 
@@ -420,8 +419,7 @@ class nsOpenTypeTable final : public nsGlyphTable {
 
   explicit nsOpenTypeTable(gfxFont* aFont)
       : mFont(aFont),
-        mFontFamilyName(aFont->GetFontEntry()->FamilyName(),
-                        StyleFontFamilyNameSyntax::Identifiers),
+        mFontFamilyName(aFont->GetFontEntry()->FamilyName(), eUnquotedName),
         mGlyphID(0) {
     MOZ_COUNT_CTOR(nsOpenTypeTable);
   }
@@ -518,7 +516,7 @@ already_AddRefed<gfxTextRun> nsOpenTypeTable::MakeTextRun(
       gfxTextRun::Create(&params, 1, aFontGroup, gfx::ShapedTextFlags(),
                          nsTextFrameUtils::Flags());
   textRun->AddGlyphRun(aFontGroup->GetFirstValidFont(),
-                       FontMatchType::Kind::kFontGroup, 0, false,
+                       FontMatchType::kFontGroup, 0, false,
                        gfx::ShapedTextFlags::TEXT_ORIENT_HORIZONTAL);
   // We don't care about CSS writing mode here;
   // math runs are assumed to be horizontal.
@@ -892,7 +890,7 @@ bool nsMathMLChar::SetFontFamily(nsPresContext* aPresContext,
     // or if the same family name has been found
     gfxFont* firstFont = fm->GetThebesFontGroup()->GetFirstValidFont();
     FontFamilyList firstFontList(firstFont->GetFontEntry()->FamilyName(),
-                                 StyleFontFamilyNameSyntax::Identifiers);
+                                 eUnquotedName);
     if (aGlyphTable == &gGlyphTableList->mUnicodeTable ||
         firstFontList == familyList) {
       aFont.fontlist = familyList;
@@ -1282,8 +1280,8 @@ bool nsMathMLChar::StretchEnumContext::EnumCallback(
 
   // for comparisons, force use of unquoted names
   FontFamilyName unquotedFamilyName(aFamily);
-  if (unquotedFamilyName.mSyntax == StyleFontFamilyNameSyntax::Quoted) {
-    unquotedFamilyName.mSyntax = StyleFontFamilyNameSyntax::Identifiers;
+  if (unquotedFamilyName.mType == eFamily_named_quoted) {
+    unquotedFamilyName.mType = eFamily_named;
   }
 
   // Check font family if it is not a generic one
@@ -1292,7 +1290,7 @@ bool nsMathMLChar::StretchEnumContext::EnumCallback(
   nsFont font = sc->StyleFont()->mFont;
   NormalizeDefaultFont(font, context->mFontSizeInflation);
   RefPtr<gfxFontGroup> fontGroup;
-  FontFamilyList family({unquotedFamilyName});
+  FontFamilyList family(unquotedFamilyName);
   if (!aGeneric &&
       !context->mChar->SetFontFamily(context->mPresContext, nullptr, kNullGlyph,
                                      family, font, &fontGroup))
@@ -1345,8 +1343,7 @@ bool nsMathMLChar::StretchEnumContext::EnumCallback(
 static void AppendFallbacks(nsTArray<FontFamilyName>& aNames,
                             const nsTArray<nsCString>& aFallbacks) {
   for (const nsCString& fallback : aFallbacks) {
-    aNames.AppendElement(
-        FontFamilyName(fallback, StyleFontFamilyNameSyntax::Identifiers));
+    aNames.AppendElement(FontFamilyName(fallback, eUnquotedName));
   }
 }
 
