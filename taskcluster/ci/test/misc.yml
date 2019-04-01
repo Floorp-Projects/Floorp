@@ -115,7 +115,7 @@ test-verify:
                 macosx.*:
                     - unittests/mac_unittest.py
                 windows.*:
-                    - unittests/win_taskcluster_unittest.py
+                    - unittests/win_unittest.py
         extra-options:
             - --verify
 
@@ -160,7 +160,7 @@ test-verify-gpu:
                 macosx.*:
                     - unittests/mac_unittest.py
                 windows.*:
-                    - unittests/win_taskcluster_unittest.py
+                    - unittests/win_unittest.py
         extra-options:
             - --verify
             - --gpu-required
@@ -197,7 +197,7 @@ test-coverage:
                 macosx.*:
                     - unittests/mac_unittest.py
                 windows.*:
-                    - unittests/win_taskcluster_unittest.py
+                    - unittests/win_unittest.py
         extra-options:
             - --per-test-coverage
 
@@ -238,7 +238,7 @@ test-coverage-gpu:
                 macosx.*:
                     - unittests/mac_unittest.py
                 windows.*:
-                    - unittests/win_taskcluster_unittest.py
+                    - unittests/win_unittest.py
         extra-options:
             - --per-test-coverage
             - --gpu-required

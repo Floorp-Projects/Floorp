@@ -1,26 +1,37 @@
 import os
+import platform
 import sys
 
 # OS Specifics
 ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
-BINARY_PATH = os.path.join(ABS_WORK_DIR, "application", "firefox", "firefox.exe")
+BINARY_PATH = os.path.join(ABS_WORK_DIR, "firefox", "firefox.exe")
 INSTALLER_PATH = os.path.join(ABS_WORK_DIR, "installer.zip")
 XPCSHELL_NAME = 'xpcshell.exe'
 EXE_SUFFIX = '.exe'
 DISABLE_SCREEN_SAVER = False
 ADJUST_MOUSE_AND_SCREEN = True
+DESKTOP_VISUALFX_THEME = {
+    'Let Windows choose': 0,
+    'Best appearance': 1,
+    'Best performance': 2,
+    'Custom': 3
+}.get('Best appearance')
+TASKBAR_AUTOHIDE_REG_PATH = {
+    'Windows 7': 'HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects2',
+    'Windows 10': 'HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3'
+}.get('{} {}'.format(platform.system(), platform.release()))
 #####
 config = {
     "exes": {
         'python': sys.executable,
-        'hg': 'c:/mozilla-build/hg/hg',
+        'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg')
     },
     ###
     "installer_path": INSTALLER_PATH,
     "binary_path": BINARY_PATH,
     "xpcshell_name": XPCSHELL_NAME,
+    "virtualenv_modules": ['pypiwin32'],
     "virtualenv_path": 'venv',
-    "virtualenv_modules": ['pywin32'],
 
     "exe_suffix": EXE_SUFFIX,
     "run_file_names": {
@@ -103,6 +114,7 @@ config = {
                 "--log-errorsummary=%(error_summary_file)s",
                 "--cleanup-crashes",
                 "--marionette-startup-timeout=180",
+                "--sandbox-read-whitelist=%(abs_work_dir)s",
             ],
             "run_filename": "runreftest.py",
             "testsdir": "reftest"
@@ -181,11 +193,6 @@ config = {
                         "--setpref=layers.acceleration.disabled=true"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
         },
-        "reftest-qr": {
-            "options": ["--suite=reftest",
-                        "--setpref=gfx.webrender.enabled=true"],
-            "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
-        },
     },
     "all_xpcshell_suites": {
         "xpcshell": {
@@ -207,30 +214,71 @@ config = {
         "gtest": []
     },
     "all_jittest_suites": {
-        "jittest": []
+        "jittest": [],
+        "jittest-chunked": [],
     },
     "run_cmd_checks_enabled": True,
     "preflight_run_cmd_suites": [
-        # NOTE 'enabled' is only here while we have unconsolidated configs
         {
-            "name": "disable_screen_saver",
-            "cmd": ["xset", "s", "off", "s", "reset"],
-            "architectures": ["32bit", "64bit"],
-            "halt_on_failure": False,
-            "enabled": DISABLE_SCREEN_SAVER
+            'name': 'disable_screen_saver',
+            'cmd': ['xset', 's', 'off', 's', 'reset'],
+            'architectures': ['32bit', '64bit'],
+            'halt_on_failure': False,
+            'enabled': DISABLE_SCREEN_SAVER
         },
         {
-            "name": "run mouse & screen adjustment script",
-            "cmd": [
-                # when configs are consolidated this python path will only show
-                # for windows.
+            'name': 'run mouse & screen adjustment script',
+            'cmd': [
                 sys.executable,
-                "../scripts/external_tools/mouse_and_screen_resolution.py",
-                "--configuration-file",
-                "../scripts/external_tools/machine-configuration.json"],
-            "architectures": ["32bit"],
-            "halt_on_failure": True,
-            "enabled": ADJUST_MOUSE_AND_SCREEN
+                os.path.join(os.getcwd(),
+                    'mozharness', 'external_tools', 'mouse_and_screen_resolution.py'),
+                '--configuration-file',
+                os.path.join(os.getcwd(),
+                    'mozharness', 'external_tools', 'machine-configuration.json')
+            ],
+            'architectures': ['32bit', '64bit'],
+            'halt_on_failure': True,
+            'enabled': ADJUST_MOUSE_AND_SCREEN
+        },
+        {
+            'name': 'disable windows security and maintenance notifications',
+            'cmd': [
+                'powershell', '-command',
+                '"&{$p=\'HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Notifications\Settings\Windows.SystemToast.SecurityAndMaintenance\';if(!(Test-Path -Path $p)){&New-Item -Path $p -Force}&Set-ItemProperty -Path $p -Name Enabled -Value 0}"'
+            ],
+            'architectures': ['32bit', '64bit'],
+            'halt_on_failure': True,
+            'enabled': (platform.release() == 10)
+        },
+        {
+            'name': 'set windows VisualFX',
+            'cmd': [
+                'powershell', '-command',
+                '"&{{&Set-ItemProperty -Path \'HKCU:Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\' -Name VisualFXSetting -Value {}}}"'.format(DESKTOP_VISUALFX_THEME)
+            ],
+            'architectures': ['32bit', '64bit'],
+            'halt_on_failure': True,
+            'enabled': True
+        },
+        {
+            'name': 'hide windows taskbar',
+            'cmd': [
+                'powershell', '-command',
+                '"&{{$p=\'{}\';$v=(Get-ItemProperty -Path $p).Settings;$v[8]=3;&Set-ItemProperty -Path $p -Name Settings -Value $v}}"'.format(TASKBAR_AUTOHIDE_REG_PATH)
+            ],
+            'architectures': ['32bit', '64bit'],
+            'halt_on_failure': True,
+            'enabled': True
+        },
+        {
+            'name': 'restart windows explorer',
+            'cmd': [
+                'powershell', '-command',
+                '"&{&Stop-Process -ProcessName explorer}"'
+            ],
+            'architectures': ['32bit', '64bit'],
+            'halt_on_failure': True,
+            'enabled': True
         },
     ],
     "vcs_output_timeout": 1000,
