@@ -159,8 +159,7 @@ class UrlbarInput {
     this._initPasteAndGo();
 
     // Tracks IME composition.
-    this._compositionState = UrlbarUtils.COMPOSITION.NONE;
-    this._compositionClosedPopup = false;
+    this._compositionState == UrlbarUtils.COMPOSITION.NONE;
   }
 
   /**
@@ -207,11 +206,6 @@ class UrlbarInput {
     this.valueFormatter.update();
   }
 
-  /**
-   * This exists for legacy compatibility, and can be removed once the old
-   * urlbar code goes away, by changing callers. Internal consumers should use
-   * view.close().
-   */
   closePopup() {
     this.view.close();
   }
@@ -1058,7 +1052,7 @@ class UrlbarInput {
     // Ensure the start of the URL is visible for usability reasons.
     this.selectionStart = this.selectionEnd = 0;
 
-    this.view.close();
+    this.closePopup();
   }
 
   /**
@@ -1218,15 +1212,6 @@ class UrlbarInput {
     this._untrimmedValue = value;
     this.window.gBrowser.userTypedValue = value;
 
-    let compositionState = this._compositionState;
-    let compositionClosedPopup = this._compositionClosedPopup;
-
-    // Clear composition values if we're no more composing.
-    if (this._compositionState != UrlbarUtils.COMPOSITION.COMPOSING) {
-      this._compositionState = UrlbarUtils.COMPOSITION.NONE;
-      this._compositionClosedPopup = false;
-    }
-
     if (value) {
       this.setAttribute("usertyping", "true");
     } else {
@@ -1247,12 +1232,15 @@ class UrlbarInput {
     // 3. a compositionend event
     // 4. an input event
 
-    // We should do nothing during composition or if composition was canceled
-    // and we didn't close the popup on composition start.
-    if (compositionState == UrlbarUtils.COMPOSITION.COMPOSING ||
-        (compositionState == UrlbarUtils.COMPOSITION.CANCELED &&
-         !compositionClosedPopup)) {
+    // We should do nothing during composition.
+    if (this._compositionState == UrlbarUtils.COMPOSITION.COMPOSING) {
       return;
+    }
+
+    let handlingCompositionCommit =
+      this._compositionState == UrlbarUtils.COMPOSITION.COMMIT;
+    if (handlingCompositionCommit) {
+      this._compositionState = UrlbarUtils.COMPOSITION.NONE;
     }
 
     let sameSearchStrings = value == this._lastSearchString;
@@ -1265,11 +1253,11 @@ class UrlbarInput {
       this._autofillPlaceholder.startsWith(value);
 
     // Don't search again when the new search would produce the same results.
-    // If we're handling a composition input, we must continue the search
+    // If we're handling a composition commit, we must continue the search
     // because we canceled the previous search on composition start.
     if (sameSearchStrings &&
         !deletedAutofilledSubstring &&
-        compositionState == UrlbarUtils.COMPOSITION.NONE &&
+        !handlingCompositionCommit &&
         value.length > 0) {
       return;
     }
@@ -1388,12 +1376,7 @@ class UrlbarInput {
     this._compositionState = UrlbarUtils.COMPOSITION.COMPOSING;
 
     // Close the view. This will also stop searching.
-    if (this.view.isOpen) {
-      this._compositionClosedPopup = true;
-      this.view.close();
-    } else {
-      this._compositionClosedPopup = false;
-    }
+    this.closePopup();
   }
 
   _on_compositionend(event) {
@@ -1403,8 +1386,7 @@ class UrlbarInput {
 
     // We can't yet retrieve the committed value from the editor, since it isn't
     // completely committed yet. We'll handle it at the next input event.
-    this._compositionState = event.data ? UrlbarUtils.COMPOSITION.COMMIT :
-                                          UrlbarUtils.COMPOSITION.CANCELED;
+    this._compositionState = UrlbarUtils.COMPOSITION.COMMIT;
   }
 
   _on_popupshowing() {
