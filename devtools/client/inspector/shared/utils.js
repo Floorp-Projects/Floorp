@@ -139,15 +139,10 @@ function getSelectorFromGrip(grip) {
     nodeName,
     isAfterPseudoElement,
     isBeforePseudoElement,
-    isMarkerPseudoElement,
   } = grip.preview;
 
-  if (isAfterPseudoElement) {
-    return "::after";
-  } else if (isBeforePseudoElement) {
-    return "::before";
-  } else if (isMarkerPseudoElement) {
-    return "::marker";
+  if (isAfterPseudoElement || isBeforePseudoElement) {
+    return `::${isAfterPseudoElement ? "after" : "before"}`;
   }
 
   let selector = nodeName;
@@ -205,7 +200,6 @@ function translateNodeFrontToGrip(nodeFront) {
       attributesLength: attributes.length,
       isAfterPseudoElement: nodeFront.isAfterPseudoElement,
       isBeforePseudoElement: nodeFront.isBeforePseudoElement,
-      isMarkerPseudoElement: nodeFront.isMarkerPseudoElement,
       // All the grid containers are assumed to be in the DOM tree.
       isConnected: true,
       // nodeName is already lowerCased in Node grips

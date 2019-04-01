@@ -18,7 +18,6 @@ loader.lazyRequireGetter(this, "isAfterPseudoElement", "devtools/shared/layout/u
 loader.lazyRequireGetter(this, "isAnonymous", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isBeforePseudoElement", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isDirectShadowHostChild", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "isMarkerPseudoElement", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isNativeAnonymous", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isShadowAnonymous", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isShadowHost", "devtools/shared/layout/utils", true);
@@ -128,7 +127,6 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
       attrs: this.writeAttrs(),
       customElementLocation: this.getCustomElementLocation(),
-      isMarkerPseudoElement: isMarkerPseudoElement(this.rawNode),
       isBeforePseudoElement: isBeforePseudoElement(this.rawNode),
       isAfterPseudoElement: isAfterPseudoElement(this.rawNode),
       isAnonymous: isAnonymous(this.rawNode),
@@ -188,9 +186,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   get numChildren() {
     // For pseudo elements, childNodes.length returns 1, but the walker
     // will return 0.
-    if (isMarkerPseudoElement(this.rawNode) ||
-      isBeforePseudoElement(this.rawNode) || isAfterPseudoElement(this.rawNode)
-    ) {
+    if (isBeforePseudoElement(this.rawNode) || isAfterPseudoElement(this.rawNode)) {
       return 0;
     }
 

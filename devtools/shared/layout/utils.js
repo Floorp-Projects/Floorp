@@ -638,7 +638,6 @@ exports.isShadowHost = isShadowHost;
 function isDirectShadowHostChild(node) {
   // Pseudo elements and native anonymous elements are always part of the anonymous tree.
   if (
-    isMarkerPseudoElement(node) ||
     isBeforePseudoElement(node) ||
     isAfterPseudoElement(node) ||
     isNativeAnonymous(node)) {
@@ -649,17 +648,6 @@ function isDirectShadowHostChild(node) {
   return parentNode && !!parentNode.openOrClosedShadowRoot;
 }
 exports.isDirectShadowHostChild = isDirectShadowHostChild;
-
-/**
- * Determine whether a node is a ::marker pseudo.
- *
- * @param {DOMNode} node
- * @return {Boolean}
- */
-function isMarkerPseudoElement(node) {
-  return node.nodeName === "_moz_generated_content_marker";
-}
-exports.isMarkerPseudoElement = isMarkerPseudoElement;
 
 /**
  * Determine whether a node is a ::before pseudo.

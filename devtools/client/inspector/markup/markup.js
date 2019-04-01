@@ -2180,16 +2180,12 @@ MarkupView.prototype = {
       nextSibling = target.parentNode.container.node;
     }
 
-    if (nextSibling) {
-      while (
-        nextSibling.isMarkerPseudoElement || nextSibling.isBeforePseudoElement
-      ) {
-        nextSibling = this.getContainer(nextSibling).elt.nextSibling.container.node;
-      }
-      if (nextSibling.isAfterPseudoElement) {
-        parent = target.parentNode.container.node.parentNode();
-        nextSibling = null;
-      }
+    if (nextSibling && nextSibling.isBeforePseudoElement) {
+      nextSibling = target.parentNode.parentNode.children[1].container.node;
+    }
+    if (nextSibling && nextSibling.isAfterPseudoElement) {
+      parent = target.parentNode.container.node.parentNode();
+      nextSibling = null;
     }
 
     if (parent.nodeType !== nodeConstants.ELEMENT_NODE) {
