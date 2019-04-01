@@ -178,7 +178,7 @@ class gfxMacPlatformFontList : public gfxPlatformFontList {
       InfallibleTArray<mozilla::dom::SystemFontListEntry>* aList);
 
  protected:
-  gfxFontFamily* GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
+  FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
 
  private:
   friend class gfxPlatformMac;
@@ -204,9 +204,10 @@ class gfxMacPlatformFontList : public gfxPlatformFontList {
 
   // attempt to use platform-specific fallback for the given character
   // return null if no usable result found
-  gfxFontEntry* PlatformGlobalFontFallback(
-      const uint32_t aCh, Script aRunScript, const gfxFontStyle* aMatchStyle,
-      gfxFontFamily** aMatchedFamily) override;
+  gfxFontEntry* PlatformGlobalFontFallback(const uint32_t aCh,
+                                           Script aRunScript,
+                                           const gfxFontStyle* aMatchStyle,
+                                           FontFamily* aMatchedFamily) override;
 
   bool UsesSystemFallback() override { return true; }
 

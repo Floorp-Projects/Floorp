@@ -1283,7 +1283,7 @@ void gfxMacPlatformFontList::RegisteredFontsChangedNotificationCallback(
 gfxFontEntry* gfxMacPlatformFontList::PlatformGlobalFontFallback(const uint32_t aCh,
                                                                  Script aRunScript,
                                                                  const gfxFontStyle* aMatchStyle,
-                                                                 gfxFontFamily** aMatchedFamily) {
+                                                                 FontFamily* aMatchedFamily) {
   CFStringRef str;
   UniChar ch[2];
   CFIndex length = 1;
@@ -1335,7 +1335,7 @@ gfxFontEntry* gfxMacPlatformFontList::PlatformGlobalFontFallback(const uint32_t 
         fontEntry = family->FindFontForStyle(*aMatchStyle);
         if (fontEntry) {
           if (fontEntry->HasCharacter(aCh)) {
-            *aMatchedFamily = family;
+            *aMatchedFamily = FontFamily(family);
           } else {
             fontEntry = nullptr;
             cantUseFallbackFont = true;
@@ -1358,14 +1358,14 @@ gfxFontEntry* gfxMacPlatformFontList::PlatformGlobalFontFallback(const uint32_t 
   return fontEntry;
 }
 
-gfxFontFamily* gfxMacPlatformFontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle) {
+FontFamily gfxMacPlatformFontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle) {
   nsAutoreleasePool localPool;
 
   NSString* defaultFamily = [[NSFont userFontOfSize:aStyle->size] familyName];
   nsAutoString familyName;
 
   GetStringForNSString(defaultFamily, familyName);
-  return FindFamily(NS_ConvertUTF16toUTF8(familyName));
+  return FontFamily(FindFamily(NS_ConvertUTF16toUTF8(familyName)));
 }
 
 int32_t gfxMacPlatformFontList::AppleWeightToCSSWeight(int32_t aAppleWeight) {
