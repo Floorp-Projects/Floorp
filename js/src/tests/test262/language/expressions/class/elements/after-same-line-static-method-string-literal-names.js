@@ -1,4 +1,4 @@
-// |reftest| skip-if((function(){try{eval('c=class{x;}');return(false);}catch{return(true);}})()) -- class-fields-public is not enabled unconditionally
+// |reftest| skip -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/string-literal-names.case
 // - src/class-elements/productions/cls-expr-after-same-line-static-method.template
