@@ -131,7 +131,14 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             )
 
             (layoutParams as CoordinatorLayout.LayoutParams).apply {
-                gravity = Gravity.BOTTOM
+                gravity = getAppropriateLayoutGravity()
+
+                view.nestedScrollQuickAction.visibility = if (gravity == Gravity.TOP) {
+                    View.GONE
+                } else {
+                    View.VISIBLE
+                }
+
                 height = (resources.displayMetrics.density * TOOLBAR_HEIGHT).toInt()
             }
         }
@@ -142,6 +149,16 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         DefaultThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity, false)
 
         return view
+    }
+
+    private fun getAppropriateLayoutGravity(): Int {
+        sessionId?.let { sessionId ->
+            if (requireComponents.core.sessionManager.findSessionById(sessionId)?.isCustomTabSession() == true) {
+                return Gravity.TOP
+            }
+        }
+
+        return Gravity.BOTTOM
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -255,20 +272,24 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         )
 
         val actionEmitter = ActionBusFactory.get(this).getManagedEmitter(SearchAction::class.java)
-        sessionId?.let { id ->
-            customTabsIntegration.set(
-                feature = CustomTabsIntegration(
-                    requireContext(),
-                    requireComponents.core.sessionManager,
-                    toolbar,
-                    id,
-                    requireActivity(),
-                    onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
-                ),
-                owner = this,
-                view = view
-            )
+
+        sessionId?.let { sessionId ->
+            if (sessionManager.findSessionById(sessionId)?.isCustomTabSession() == true) {
+                customTabsIntegration.set(
+                    feature = CustomTabsIntegration(
+                        requireContext(),
+                        requireComponents.core.sessionManager,
+                        toolbar,
+                        sessionId,
+                        activity,
+                        onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
+                    ),
+                    owner = this,
+                    view = view
+                )
+            }
         }
+
         toolbarComponent.getView().setOnSiteSecurityClickedListener {
             showQuickSettingsDialog()
         }
@@ -374,7 +395,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         return when {
             findInPageIntegration.onBackPressed() -> true
             sessionFeature.onBackPressed() -> true
-            customTabsIntegration.onBackPressed() -> true
             else -> false
         }
     }

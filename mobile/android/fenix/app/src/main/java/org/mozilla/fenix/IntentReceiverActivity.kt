@@ -30,6 +30,7 @@ class IntentReceiverActivity : Activity() {
         val openToBrowser: Boolean
 
         val intent = Intent(intent)
+
         openToBrowser = when {
             CustomTabConfig.isCustomTabIntent(SafeIntent(intent)) -> {
                 intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
