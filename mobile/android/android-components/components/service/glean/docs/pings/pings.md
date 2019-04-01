@@ -12,8 +12,9 @@ The following is a list of these built-in pings:
 
 ## Ping sections
 
-There are two standard sections that are added to most pings, in addition to their
-core metrics and events content.
+There are two standard metadata sections that are added to most pings, in
+addition to their core metrics and events content (which are described elsewhere
+in [adding new metrics](../metrics/adding-new-metrics.md).
 
 - The [`ping_info` section](#The-ping_info-section) contains core metadata that
   is included in **every** ping.
