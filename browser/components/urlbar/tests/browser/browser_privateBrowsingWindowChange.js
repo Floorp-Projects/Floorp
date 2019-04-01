@@ -4,41 +4,36 @@
 "use strict";
 
 /**
- * Test that when opening a private browsing window and typing in it before about:privatebrowsing
- * loads, we don't clear the URL bar.
+ * Test that when opening a private browsing window and typing in it before
+ * about:privatebrowsing loads, we don't clear the URL bar.
  */
 add_task(async function() {
   let urlbarTestValue = "Mary had a little lamb";
   let win = OpenBrowserWindow({private: true});
+  registerCleanupFunction(() => BrowserTestUtils.closeWindow(win));
   await BrowserTestUtils.waitForEvent(win, "load");
-  let urlbar = win.document.getElementById("urlbar");
-  urlbar.value = urlbarTestValue;
-  // Need this so the autocomplete controller attaches:
-  let focusEv = new FocusEvent("focus", {});
-  urlbar.dispatchEvent(focusEv);
-  // And so we know input happened:
-  let inputEv = new InputEvent("input", {data: "", view: win, bubbles: true});
-  urlbar.inputField.dispatchEvent(inputEv);
-  // Check it worked:
-  is(urlbar.value, urlbarTestValue, "URL bar value should be there");
-  is(win.gBrowser.selectedBrowser.userTypedValue, urlbarTestValue, "browser object should know the url bar value");
+  let promise = new Promise(resolve => {
+    let wpl = {
+      onLocationChange(aWebProgress, aRequest, aLocation) {
+        if (aLocation && aLocation.spec == "about:privatebrowsing") {
+          win.gBrowser.removeProgressListener(wpl);
+          resolve();
+        }
+      },
+    };
+    win.gBrowser.addProgressListener(wpl);
+  });
+  Assert.notEqual(win.gBrowser.selectedBrowser.currentURI.spec,
+                  "about:privatebrowsing",
+                  "Check privatebrowsing page has not been loaded yet");
+  info("Search in urlbar");
+  await promiseAutocompleteResultPopup(urlbarTestValue, win, true);
+  info("waiting for about:privatebrowsing load");
+  await promise;
 
-  let continueTest;
-  let continuePromise = new Promise(resolve => continueTest = resolve);
-  let wpl = {
-    onLocationChange(aWebProgress, aRequest, aLocation) {
-      if (aLocation && aLocation.spec == "about:privatebrowsing") {
-        continueTest();
-      }
-    },
-  };
-  win.gBrowser.addProgressListener(wpl);
-
-  await continuePromise;
+  let urlbar = win.gURLBar;
   is(urlbar.value, urlbarTestValue,
      "URL bar value should be the same once about:privatebrowsing has loaded");
   is(win.gBrowser.selectedBrowser.userTypedValue, urlbarTestValue,
-     "browser object should still know url bar value once about:privatebrowsing has loaded");
-  win.gBrowser.removeProgressListener(wpl);
-  await BrowserTestUtils.closeWindow(win);
+     "User typed value should be the same once about:privatebrowsing has loaded");
 });
