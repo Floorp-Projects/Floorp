@@ -976,7 +976,7 @@ int CALLBACK GDIFontInfo::EnumerateFontsForFamily(
 
       // other family names
       if (famData->mFontInfo.mLoadOtherNames) {
-        gfxFontFamily::ReadOtherFamilyNamesForFace(
+        gfxFontUtils::ReadOtherFamilyNamesForFace(
             famData->mFamilyName, (const char*)(nameData.Elements()), nameSize,
             famData->mOtherFamilyNames, false);
       }

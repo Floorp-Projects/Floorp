@@ -782,13 +782,6 @@ class gfxFontFamily {
   // read in other family names, if any, and use functor to add each into cache
   virtual void ReadOtherFamilyNames(gfxPlatformFontList* aPlatformFontList);
 
-  // helper method for reading localized family names from the name table
-  // of a single face
-  static void ReadOtherFamilyNamesForFace(
-      const nsACString& aFamilyName, const char* aNameData,
-      uint32_t aDataLength, nsTArray<nsCString>& aOtherFamilyNames,
-      bool useFullName);
-
   // set when other family names have been read in
   void SetOtherFamilyNamesInitialized() { mOtherFamilyNamesInitialized = true; }
 
