@@ -93,7 +93,7 @@ nsresult WorkletImpl::SendControlMessage(
 
   if (!mWorkletThread) {
     // Thread creation. FIXME: this will change.
-    mWorkletThread = dom::WorkletThread::Create();
+    mWorkletThread = dom::WorkletThread::Create(this);
     if (!mWorkletThread) {
       return NS_ERROR_UNEXPECTED;
     }
