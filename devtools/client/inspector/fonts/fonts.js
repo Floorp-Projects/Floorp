@@ -42,7 +42,6 @@ const FONT_PROPERTIES = [
   "font-style",
   "font-variation-settings",
   "font-weight",
-  "letter-spacing",
   "line-height",
 ];
 const REGISTERED_AXES_TO_FONT_PROPERTIES = {
@@ -169,9 +168,7 @@ class FontInspector {
     // NodeFront instance of selected/target element.
     const node = this.node;
     // Reference node based on which to convert relative sizes like "em" and "%".
-    const referenceNode = (property === "line-height" || property === "letter-spacing")
-      ? node
-      : node.parentNode();
+    const referenceNode = (property === "line-height") ? node : node.parentNode();
     // Default output value to input value for a 1-to-1 conversion as a guard against
     // unrecognized CSS units. It will not be correct, but it will also not break.
     let out = value;
@@ -281,15 +278,12 @@ class FontInspector {
       out = 0;
     }
 
-    // Return values limited to 3 decimals when:
-    // - the unit is converted from pixels to something else
-    // - the value is for letter spacing, regardless of unit (allow sub-pixel precision)
-    if (fromPx || property === "letter-spacing") {
+    // Return rounded pixel values. Limit other values to 3 decimals.
+    if (fromPx) {
       // Round values like 1.000 to 1
       return out === Math.round(out) ? Math.round(out) : out.toFixed(3);
     }
 
-    // Round pixel values.
     return Math.round(out);
   }
 
@@ -366,7 +360,6 @@ class FontInspector {
    * - font-size
    * - font-weight
    * - font-stretch
-   * - letter-spacing
    * - line-height
    *
    * This list is used to filter out values when reading CSS font properties from rules.
@@ -379,7 +372,6 @@ class FontInspector {
       "font-size",
       "font-weight",
       "font-stretch",
-      "letter-spacing",
       "line-height",
     ].reduce((acc, property) => {
       return acc.concat(this.cssProperties.getValues(property));
