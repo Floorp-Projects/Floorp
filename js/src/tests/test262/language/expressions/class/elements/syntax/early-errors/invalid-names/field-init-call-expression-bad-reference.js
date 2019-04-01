@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-fields-private,class-fields-public is not supported
+// |reftest| skip error:SyntaxError -- class-fields-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/invalid-private-names/call-expression-bad-reference.case
 // - src/invalid-private-names/default/cls-expr-field-initializer.template

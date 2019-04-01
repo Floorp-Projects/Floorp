@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-methods-private,class-fields-public is not supported
+// |reftest| skip error:SyntaxError -- class-methods-private is not supported
 // Copyright (C) 2018 Leo Balter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

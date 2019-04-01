@@ -1,4 +1,4 @@
-// |reftest| skip -- class-methods-private,class-fields-public is not supported
+// |reftest| skip -- class-methods-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/private-method-usage.case
 // - src/class-elements/productions/cls-decl-after-same-line-static-async-method.template

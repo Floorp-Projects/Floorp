@@ -1,4 +1,4 @@
-// |reftest| skip -- class-fields-private,class-fields-public is not supported
+// |reftest| skip -- class-fields-private is not supported
 // Copyright (C) 2017 Valerie Young. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
