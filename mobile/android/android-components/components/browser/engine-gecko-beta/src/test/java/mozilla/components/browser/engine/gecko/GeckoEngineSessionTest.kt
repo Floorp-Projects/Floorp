@@ -1444,6 +1444,22 @@ class GeckoEngineSessionTest {
         verify(geckoSession).loadUri("sample:about")
     }
 
+    @Test
+    fun `recoverFromCrash does not restore`() {
+        // Functionality requires GeckoView 68.0
+
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        contentDelegate.value.onCrash(engineSession.geckoSession)
+
+        assertFalse(engineSession.recoverFromCrash())
+
+        verify(engineSession.geckoSession, never()).restoreState(any())
+    }
+
     private fun mockGeckoSession(): GeckoSession {
         val session = mock(GeckoSession::class.java)
         `when`(session.settings).thenReturn(

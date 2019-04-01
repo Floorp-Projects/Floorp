@@ -41,7 +41,6 @@ class SystemEngineSession(
     private val context: Context,
     private val defaultSettings: Settings? = null
 ) : EngineSession() {
-
     @Volatile internal lateinit var internalSettings: Settings
     @Volatile internal var historyTrackingDelegate: HistoryTrackingDelegate? = null
     @Volatile internal var trackingProtectionPolicy: TrackingProtectionPolicy? = null
@@ -205,6 +204,16 @@ class SystemEngineSession(
      */
     override fun clearFindMatches() {
         webView.clearMatches()
+    }
+
+    /**
+     * This method is a no-op.
+     */
+    override fun recoverFromCrash(): Boolean {
+        // Do nothing.
+        // Technically we could remember saved states and restore the last one we saw. But for that to be useful we
+        // would need to implement and handle onRenderProcessGone() first.
+        return false
     }
 
     /**

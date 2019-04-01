@@ -142,4 +142,9 @@ class ServoEngineSession(
     override fun exitFullScreenMode() {
         // not implemented yet
     }
+
+    override fun recoverFromCrash(): Boolean {
+        // not implemented yet
+        return false
+    }
 }

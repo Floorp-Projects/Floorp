@@ -11,9 +11,11 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -201,5 +203,19 @@ class SessionUseCasesTest {
         assertNotNull(createdSession)
         verify(sessionManager).getOrCreateEngineSession(createdSession!!)
         verify(engineSession).loadData("Hello", mimeType = "plain/text", encoding = "UTF-8")
+    }
+
+    @Test
+    fun `CrashRecoveryUseCase will invoke recoverFromCrash on engine session and reset flag`() {
+        val engineSession = mock(EngineSession::class.java)
+        doReturn(true).`when`(engineSession).recoverFromCrash()
+
+        val session = mock(Session::class.java)
+        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+
+        assertTrue(useCases.crashRecovery.invoke(session))
+
+        verify(engineSession).recoverFromCrash()
+        verify(session).crashed = false
     }
 }

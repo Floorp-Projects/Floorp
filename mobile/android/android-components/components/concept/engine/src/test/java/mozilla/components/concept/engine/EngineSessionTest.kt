@@ -645,6 +645,10 @@ open class DummyEngineSession : EngineSession() {
 
     override fun exitFullScreenMode() {}
 
+    override fun recoverFromCrash(): Boolean {
+        return false
+    }
+
     // Helper method to access the protected method from test cases.
     fun notifyInternalObservers(block: Observer.() -> Unit) {
         notifyObservers(block)

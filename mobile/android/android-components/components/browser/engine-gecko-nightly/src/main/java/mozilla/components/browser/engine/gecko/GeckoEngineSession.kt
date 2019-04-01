@@ -57,6 +57,7 @@ class GeckoEngineSession(
     internal var currentUrl: String? = null
     internal var job: Job = Job()
     private var lastSessionState: GeckoSession.SessionState? = null
+    private var stateBeforeCrash: GeckoSession.SessionState? = null
 
     /**
      * See [EngineSession.settings]
@@ -235,6 +236,22 @@ class GeckoEngineSession(
      */
     override fun exitFullScreenMode() {
         geckoSession.exitFullScreen()
+    }
+
+    /**
+     * See [EngineSession.recoverFromCrash]
+     */
+    @Synchronized
+    override fun recoverFromCrash(): Boolean {
+        val state = stateBeforeCrash
+
+        return if (state != null) {
+            geckoSession.restoreState(state)
+            stateBeforeCrash = null
+            true
+        } else {
+            false
+        }
     }
 
     /**
@@ -426,6 +443,8 @@ class GeckoEngineSession(
         }
 
         override fun onCrash(session: GeckoSession) {
+            stateBeforeCrash = lastSessionState
+
             geckoSession.close()
             createGeckoSession()
 

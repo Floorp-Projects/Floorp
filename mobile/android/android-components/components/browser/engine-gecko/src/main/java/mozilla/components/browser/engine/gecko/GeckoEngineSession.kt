@@ -53,7 +53,6 @@ class GeckoEngineSession(
     },
     private val context: CoroutineContext = Dispatchers.IO
 ) : CoroutineScope, EngineSession() {
-
     internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
     internal var job: Job = Job()
@@ -263,6 +262,11 @@ class GeckoEngineSession(
         super.close()
         job.cancel()
         geckoSession.close()
+    }
+
+    override fun recoverFromCrash(): Boolean {
+        // No-op: Functionality requires GeckoView 68.0
+        return false
     }
 
     /**

@@ -174,6 +174,22 @@ class SessionUseCases(
         }
     }
 
+    /**
+     * Tries to recover from a crash by restoring the last know state.
+     */
+    class CrashRecoveryUseCase internal constructor(
+        private val sessionManager: SessionManager
+    ) {
+        fun invoke(session: Session): Boolean {
+            val recovered = sessionManager.getOrCreateEngineSession(session)
+                .recoverFromCrash()
+
+            session.crashed = false
+
+            return recovered
+        }
+    }
+
     val loadUrl: DefaultLoadUrlUseCase by lazy { DefaultLoadUrlUseCase(sessionManager, onNoSession) }
     val loadData: LoadDataUseCase by lazy { LoadDataUseCase(sessionManager, onNoSession) }
     val reload: ReloadUrlUseCase by lazy { ReloadUrlUseCase(sessionManager) }
@@ -183,4 +199,5 @@ class SessionUseCases(
     val requestDesktopSite: RequestDesktopSiteUseCase by lazy { RequestDesktopSiteUseCase(sessionManager) }
     val exitFullscreen: ExitFullScreenUseCase by lazy { ExitFullScreenUseCase(sessionManager) }
     val clearData: ClearDataUseCase by lazy { ClearDataUseCase(sessionManager) }
+    val crashRecovery: CrashRecoveryUseCase by lazy { CrashRecoveryUseCase(sessionManager) }
 }

@@ -695,4 +695,15 @@ class SystemEngineSessionTest {
         engineSession.close()
         verify(webView).destroy()
     }
+
+    @Test
+    fun `recoverFromCrash does not restore state`() {
+        val engineSession = SystemEngineSession(getApplicationContext())
+        val webView = mock(WebView::class.java)
+        engineSession.webView = webView
+
+        assertFalse(engineSession.recoverFromCrash())
+
+        verify(webView, never()).restoreState(any())
+    }
 }

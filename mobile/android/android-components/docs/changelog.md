@@ -18,7 +18,7 @@ permalink: /changelog/
 * **browser-awesomebar**
    * `DefaultSuggestionViewHolder` now centers titles if no description is provided by the suggestion.
 
-* **browser-engine**
+* **browser-engine-gecko-***
   * Added `automaticFontSizeAdjustment` engine setting for automatic font size adjustment,
   in line with system accessibility settings. The default is `true`.
   ```kotlin
@@ -68,6 +68,11 @@ permalink: /changelog/
 
 * **concept-fetch**
   * Added support for interceptors. Interceptors are a powerful mechanism to monitor, modify, retry, redirect or record requests as well as responses going through a `Client`. See the [concept-fetch README](https://github.com/mozilla-mobile/android-components/tree/master/components/concept/fetch) for example implementations of interceptors.
+
+* 💥 **Better crash handling** (#2568, #2569, #2570, #2571)
+  * **browser-engine-gecko-nightly**: `EngineSession.Observer.onCrashStateChange()` gets invoked if the content process of a session crashed. Internally a new `GeckoSession` will be created. By default this new session will just render a white page (`about:blank`) and not recover the last state. This prevents crash loops and let's the app decide (and show UI) when to restore. Calling `EngineSession.recoverFromCrash()` will try to restore the last known state from before the crash.
+  * **browser-session**: `Session.crashed` now exposes if a `Session` has crashed.
+  * **feature-session**: New use case: `SessionUseCases.CrashRecoveryUseCase`.
 
 # 0.48.0
 

@@ -245,6 +245,13 @@ abstract class EngineSession(
     abstract fun exitFullScreenMode()
 
     /**
+     * Tries to recover from a crash by restoring the last know state.
+     *
+     * Returns true if a last known state was restored, otherwise false.
+     */
+    abstract fun recoverFromCrash(): Boolean
+
+    /**
      * Close the session. This may free underlying objects. Call this when you are finished using
      * this session.
      */

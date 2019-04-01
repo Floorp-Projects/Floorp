@@ -266,6 +266,11 @@ class GeckoEngineSession(
         geckoSession.close()
     }
 
+    override fun recoverFromCrash(): Boolean {
+        // No-op: Functionality requires GeckoView 68.0
+        return false
+    }
+
     /**
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */

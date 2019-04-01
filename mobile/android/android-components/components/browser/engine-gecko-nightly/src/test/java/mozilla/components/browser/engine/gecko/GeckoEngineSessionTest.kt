@@ -1469,6 +1469,52 @@ class GeckoEngineSessionTest {
         assertEquals(true, crashedState)
     }
 
+    @Test
+    fun `recoverFromCrash does not restore state if no state has been saved previously`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+            geckoSessionProvider = geckoSessionProvider)
+
+        assertFalse(engineSession.recoverFromCrash())
+        verify(engineSession.geckoSession, never()).restoreState(any())
+    }
+
+    @Test
+    fun `recoverFromCrash restores last known state`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        val state1: GeckoSession.SessionState = mock()
+        val state2: GeckoSession.SessionState = mock()
+
+        progressDelegate.value.onSessionStateChange(engineSession.geckoSession, state1)
+        progressDelegate.value.onSessionStateChange(engineSession.geckoSession, state2)
+
+        contentDelegate.value.onCrash(engineSession.geckoSession)
+
+        assertTrue(engineSession.recoverFromCrash())
+
+        verify(engineSession.geckoSession).restoreState(state2)
+    }
+
+    @Test
+    fun `recoverFromCrash does not restore last known state if no crash occurred`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        val state: GeckoSession.SessionState = mock()
+
+        progressDelegate.value.onSessionStateChange(engineSession.geckoSession, state)
+
+        assertFalse(engineSession.recoverFromCrash())
+
+        verify(engineSession.geckoSession, never()).restoreState(state)
+        verify(engineSession.geckoSession, never()).restoreState(any())
+    }
+
     private fun mockGeckoSession(): GeckoSession {
         val session = mock(GeckoSession::class.java)
         `when`(session.settings).thenReturn(
