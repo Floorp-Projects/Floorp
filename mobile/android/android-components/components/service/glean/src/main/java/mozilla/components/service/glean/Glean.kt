@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.support.annotation.VisibleForTesting
+import mozilla.components.service.glean.GleanMetrics.GleanBaseline
 import java.io.File
 import java.util.UUID
 
@@ -17,7 +18,6 @@ import mozilla.components.service.glean.firstrun.FileFirstRunDetector
 import mozilla.components.service.glean.GleanMetrics.GleanInternalMetrics
 import mozilla.components.service.glean.ping.PingMaker
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
-import mozilla.components.service.glean.ping.BaselinePing
 import mozilla.components.service.glean.scheduler.MetricsPingScheduler
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.storages.StorageEngineManager
@@ -29,6 +29,7 @@ import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.RecordedExperimentData
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.utils.ensureDirectoryExists
+import mozilla.components.service.glean.utils.getLocaleTag
 import mozilla.components.service.glean.utils.parseISOTimeString
 import mozilla.components.support.base.log.logger.Logger
 
@@ -55,10 +56,11 @@ open class GleanInternalAPI internal constructor () {
     // such as the last time it was sent and the store name
     internal lateinit var metricsPingScheduler: MetricsPingScheduler
 
-    // This object encapsulates initialization and information related to the baseline ping
-    internal lateinit var baselinePing: BaselinePing
-
     internal lateinit var pingStorageEngine: PingStorageEngine
+
+    companion object {
+        internal const val BASELINE_STORE_NAME = "baseline"
+    }
 
     /**
      * Initialize glean.
@@ -104,10 +106,6 @@ open class GleanInternalAPI internal constructor () {
         // on being dispatched to the API context before any other metric.
         metricsPingScheduler = MetricsPingScheduler(applicationContext)
         metricsPingScheduler.startupCheck()
-
-        // Other pings might set some other metrics (i.e. the baseline metrics),
-        // so we need to be initialized by now.
-        baselinePing = BaselinePing()
 
         // At this point, all metrics and events can be recorded.
         ProcessLifecycleOwner.get().lifecycle.addObserver(gleanLifecycleObserver)
@@ -260,6 +258,7 @@ open class GleanInternalAPI internal constructor () {
         }
 
         // Set a few more metrics that will be sent as part of every ping.
+        StringsStorageEngine.record(GleanBaseline.locale, getLocaleTag())
         StringsStorageEngine.record(GleanInternalMetrics.os, "Android")
         // https://developer.android.com/reference/android/os/Build.VERSION
         StringsStorageEngine.record(GleanInternalMetrics.androidSdkVersion, Build.VERSION.SDK_INT.toString())
@@ -309,7 +308,7 @@ open class GleanInternalAPI internal constructor () {
      */
     fun handleBackgroundEvent() {
         // Schedule the baseline and event pings
-        sendPings(listOf(BaselinePing.STORE_NAME, "events"))
+        sendPings(listOf(BASELINE_STORE_NAME, "events"))
     }
 
     /**

@@ -20,12 +20,14 @@ import mozilla.components.service.glean.metrics.EventMetricType
 import mozilla.components.service.glean.metrics.Lifetime
 import mozilla.components.service.glean.metrics.NoExtraKeys
 import mozilla.components.service.glean.metrics.StringMetricType
+import mozilla.components.service.glean.metrics.TimeUnit as GleanTimeUnit
 import mozilla.components.service.glean.metrics.UuidMetricType
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.storages.StorageEngineManager
-import mozilla.components.service.glean.metrics.TimeUnit as GleanTimeUnit
+import mozilla.components.service.glean.utils.getLanguageFromLocale
+import mozilla.components.service.glean.utils.getLocaleTag
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
@@ -47,8 +49,9 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.util.Date
-import java.util.concurrent.TimeUnit
+import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
@@ -387,5 +390,38 @@ class GleanTest {
 
         assertNotEquals(clientIdValue, GleanInternalMetrics.clientId.testGetValue())
         assertNotEquals(firstRunDateMetric.testGetValue(), GleanInternalMetrics.firstRunDate.testGetValue())
+    }
+
+    @Test
+    fun `getLanguageTag() reports the tag for the default locale`() {
+        val defaultLanguageTag = getLocaleTag()
+
+        assertNotNull(defaultLanguageTag)
+        assertFalse(defaultLanguageTag.isEmpty())
+        assertEquals("en-US", defaultLanguageTag)
+    }
+
+    @Test
+    fun `getLanguageTag reports the correct tag for a non-default language`() {
+        val defaultLocale = Locale.getDefault()
+
+        try {
+            Locale.setDefault(Locale("fy", "NL"))
+
+            val languageTag = getLocaleTag()
+
+            assertNotNull(languageTag)
+            assertFalse(languageTag.isEmpty())
+            assertEquals("fy-NL", languageTag)
+        } finally {
+            Locale.setDefault(defaultLocale)
+        }
+    }
+
+    @Test
+    fun `getLanguage reports the modern translation for some languages`() {
+        assertEquals("he", getLanguageFromLocale(Locale("iw", "IL")))
+        assertEquals("id", getLanguageFromLocale(Locale("in", "ID")))
+        assertEquals("yi", getLanguageFromLocale(Locale("ji", "ID")))
     }
 }
