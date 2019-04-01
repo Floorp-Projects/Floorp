@@ -17,10 +17,6 @@ BEGIN_TEST(testDebugger_newScriptHook) {
   JS::RootedObject g(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
                                             JS::FireOnNewGlobalHook, options));
   CHECK(g);
-  {
-    JSAutoRealm ar(cx, g);
-    CHECK(JS::InitRealmStandardClasses(cx));
-  }
 
   JS::RootedObject gWrapper(cx, g);
   CHECK(JS_WrapObject(cx, &gWrapper));

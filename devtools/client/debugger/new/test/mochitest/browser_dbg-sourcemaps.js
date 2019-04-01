@@ -40,6 +40,14 @@ async function clickGutter(dbg, line) {
   clickDOMElement(dbg, el);
 }
 
+async function waitForBreakpointCount(dbg, count) {
+  const {
+    selectors: { getBreakpointCount },
+    getState
+  } = dbg;
+  await waitForState(dbg, state => getBreakpointCount(getState()) == count);
+}
+
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger(
@@ -61,11 +69,11 @@ add_task(async function() {
   await selectSource(dbg, bundleSrc);
 
   await clickGutter(dbg, 70);
-  await waitForDispatch(dbg, "ADD_BREAKPOINT");
+  await waitForBreakpointCount(dbg, 1);
   await assertEditorBreakpoint(dbg, 70, true);
 
   await clickGutter(dbg, 70);
-  await waitForDispatch(dbg, "REMOVE_BREAKPOINT");
+  await waitForBreakpointCount(dbg, 0);
   is(dbg.selectors.getBreakpointCount(getState()), 0, "No breakpoints exists");
 
   const entrySrc = findSource(dbg, "entry.js");
