@@ -162,13 +162,15 @@ CommonDialog.prototype = {
         else
             button.setAttribute("default", "true");
 
-        // For tab prompts, we will need to ensure its content bindings are attached.
-        if (!xulDialog) {
-            this.ui.prompt.ensureXBLBindingAttached();
-        }
+        if (!this.ui.promptContainer || !this.ui.promptContainer.hidden) {
+            // For tab prompts, we will need to ensure its content bindings are attached.
+            if (!xulDialog) {
+                this.ui.prompt.ensureXBLBindingAttached();
+            }
 
-        // Set default focus / selection.
-        this.setDefaultFocus(true);
+            // Set default focus / selection.
+            this.setDefaultFocus(true);
+        }
 
         if (this.args.enableDelay) {
             this.delayHelper = new EnableDelayHelper({
@@ -259,9 +261,9 @@ CommonDialog.prototype = {
             else
                 this.ui.password1Textbox.focus();
         } else if (isInitialLoad) {
-                this.ui.loginTextbox.select();
+            this.ui.loginTextbox.select();
         } else {
-                this.ui.loginTextbox.focus();
+            this.ui.loginTextbox.focus();
         }
     },
 
