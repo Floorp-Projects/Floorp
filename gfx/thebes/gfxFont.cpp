@@ -635,7 +635,7 @@ void gfxShapedText::SetMissingGlyph(uint32_t aIndex, uint32_t aChar,
     details->mAdvance = 0;
   } else {
     gfxFloat width =
-        std::max(aFont->GetMetrics(gfxFont::eHorizontal).aveCharWidth,
+        std::max(aFont->GetMetrics(nsFontMetrics::eHorizontal).aveCharWidth,
                  gfxFloat(gfxFontMissingGlyphs::GetDesiredMinWidth(
                      aChar, mAppUnitsPerDevUnit)));
     details->mAdvance = uint32_t(width * mAppUnitsPerDevUnit);
@@ -889,7 +889,7 @@ gfxFloat gfxFont::GetGlyphHAdvance(DrawTarget* aDrawTarget, uint16_t aGID) {
     return GetGlyphWidth(aGID) / 65536.0;
   }
   if (mFUnitsConvFactor < 0.0f) {
-    GetMetrics(eHorizontal);
+    GetMetrics(nsFontMetrics::eHorizontal);
   }
   NS_ASSERTION(mFUnitsConvFactor >= 0.0f,
                "missing font unit conversion factor");
@@ -1970,7 +1970,7 @@ bool gfxFont::DrawMissingGlyph(const TextRunDrawParams& aRunParams,
     Point pt(Float(ToDeviceUnits(aPt.x, aRunParams.devPerApp)),
              Float(ToDeviceUnits(aPt.y, aRunParams.devPerApp)));
     Float advanceDevUnits = Float(ToDeviceUnits(advance, aRunParams.devPerApp));
-    Float height = GetMetrics(eHorizontal).maxAscent;
+    Float height = GetMetrics(nsFontMetrics::eHorizontal).maxAscent;
     // Horizontally center if drawing vertically upright with no sideways
     // transform.
     Rect glyphRect =
@@ -2170,7 +2170,7 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
     // those if available.
     // [1] See http://www.microsoft.com/typography/otspec/base.htm
     if (aTextRun->UseCenterBaseline()) {
-      const Metrics& metrics = GetMetrics(eHorizontal);
+      const Metrics& metrics = GetMetrics(nsFontMetrics::eHorizontal);
       float baseAdj = (metrics.emAscent - metrics.emDescent) / 2;
       baseline += baseAdj * aTextRun->GetAppUnitsPerDevUnit() * baselineDir;
     }
@@ -2411,14 +2411,15 @@ gfxFont::RunMetrics gfxFont::Measure(const gfxTextRun* aTextRun,
 
   const int32_t appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
   // Current position in appunits
-  gfxFont::Orientation orientation =
+  Orientation orientation =
       aOrientation == gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT
-          ? eVertical
-          : eHorizontal;
+          ? nsFontMetrics::eVertical
+          : nsFontMetrics::eHorizontal;
   const gfxFont::Metrics& fontMetrics = GetMetrics(orientation);
 
   gfxFloat baselineOffset = 0;
-  if (aTextRun->UseCenterBaseline() && orientation == eHorizontal) {
+  if (aTextRun->UseCenterBaseline() &&
+      orientation == nsFontMetrics::eHorizontal) {
     // For a horizontal font being used in vertical writing mode with
     // text-orientation:mixed, the overall metrics we're accumulating
     // will be aimed at a center baseline. But this font's metrics were
@@ -2775,7 +2776,8 @@ void gfxFont::PostShapingFixup(DrawTarget* aDrawTarget, const char16_t* aText,
                                uint32_t aOffset, uint32_t aLength,
                                bool aVertical, gfxShapedText* aShapedText) {
   if (IsSyntheticBold()) {
-    const Metrics& metrics = GetMetrics(aVertical ? eVertical : eHorizontal);
+    const Metrics& metrics = GetMetrics(aVertical ? nsFontMetrics::eVertical
+                                                  : nsFontMetrics::eHorizontal);
     if (metrics.maxAdvance > metrics.aveCharWidth) {
       float synBoldOffset = GetSyntheticBoldOffset() * CalcXScale(aDrawTarget);
       aShapedText->AdjustAdvancesForSyntheticBold(synBoldOffset, aOffset,
@@ -3373,7 +3375,7 @@ void gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
     aDrawTarget->GetGlyphRasterizationMetrics(sf, &glyphIndex, 1, &metrics);
   }
 
-  const Metrics& fontMetrics = GetMetrics(eHorizontal);
+  const Metrics& fontMetrics = GetMetrics(nsFontMetrics::eHorizontal);
   int32_t appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
   if (!aNeedTight && metrics.mXBearing >= 0.0 &&
       metrics.mYBearing >= -fontMetrics.maxAscent &&
@@ -3818,9 +3820,11 @@ gfxFloat gfxFont::SynthesizeSpaceWidth(uint32_t aCh) {
     case 0x2006:
       return GetAdjustedSize() / 6;  // six-per-em space
     case 0x2007:
-      return GetMetrics(eHorizontal).ZeroOrAveCharWidth();  // figure space
+      return GetMetrics(nsFontMetrics::eHorizontal)
+          .ZeroOrAveCharWidth();  // figure space
     case 0x2008:
-      return GetMetrics(eHorizontal).spaceWidth;  // punctuation space
+      return GetMetrics(nsFontMetrics::eHorizontal)
+          .spaceWidth;  // punctuation space
     case 0x2009:
       return GetAdjustedSize() / 5;  // thin space
     case 0x200a:

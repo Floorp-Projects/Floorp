@@ -310,7 +310,8 @@ hb_position_t gfxHarfBuzzShaper::GetGlyphVAdvance(hb_codepoint_t glyph) const {
   if (!mVmtxTable) {
     // Must be a "vertical" font that doesn't actually have vertical metrics;
     // use a fixed advance.
-    return FloatToFixed(mFont->GetMetrics(gfxFont::eVertical).aveCharWidth);
+    return FloatToFixed(
+        mFont->GetMetrics(nsFontMetrics::eVertical).aveCharWidth);
   }
 
   NS_ASSERTION(mNumLongVMetrics > 0,
@@ -473,7 +474,8 @@ void gfxHarfBuzzShaper::GetGlyphVOrigin(hb_codepoint_t aGlyph,
       // Last resort, for non-sfnt fonts: get the horizontal metrics and
       // compute a default VOrg from their ascent and descent.
       const gfxFont::Metrics &mtx = mFont->GetHorizontalMetrics();
-      gfxFloat advance = mFont->GetMetrics(gfxFont::eVertical).aveCharWidth;
+      gfxFloat advance =
+          mFont->GetMetrics(nsFontMetrics::eVertical).aveCharWidth;
       gfxFloat ascent = mtx.emAscent;
       gfxFloat height = ascent + mtx.emDescent;
       // vOrigin that will place the glyph so that its origin is shifted

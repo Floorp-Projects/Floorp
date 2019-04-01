@@ -1552,8 +1552,8 @@ bool gfxTextRun::SetSpaceGlyphIfSimple(gfxFont* aFont, uint32_t aCharIndex,
 
   gfxFont::Orientation fontOrientation =
       (aOrientation & gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT)
-          ? gfxFont::eVertical
-          : gfxFont::eHorizontal;
+          ? nsFontMetrics::eVertical
+          : nsFontMetrics::eHorizontal;
   uint32_t spaceWidthAppUnits = NS_lroundf(
       aFont->GetMetrics(fontOrientation).spaceWidth * mAppUnitsPerDevUnit);
   if (!CompressedGlyph::IsSimpleAdvance(spaceWidthAppUnits)) {
@@ -2644,9 +2644,10 @@ gfxFloat gfxFontGroup::GetUnderlineOffset() {
         if (!font) {
           continue;
         }
-        gfxFloat bad = font->GetMetrics(gfxFont::eHorizontal).underlineOffset;
+        gfxFloat bad =
+            font->GetMetrics(nsFontMetrics::eHorizontal).underlineOffset;
         gfxFloat first = GetFirstValidFont()
-                             ->GetMetrics(gfxFont::eHorizontal)
+                             ->GetMetrics(nsFontMetrics::eHorizontal)
                              .underlineOffset;
         mUnderlineOffset = std::min(first, bad);
         return mUnderlineOffset;
@@ -2654,8 +2655,9 @@ gfxFloat gfxFontGroup::GetUnderlineOffset() {
     }
 
     // no bad underline fonts, use the first valid font's metric
-    mUnderlineOffset =
-        GetFirstValidFont()->GetMetrics(gfxFont::eHorizontal).underlineOffset;
+    mUnderlineOffset = GetFirstValidFont()
+                           ->GetMetrics(nsFontMetrics::eHorizontal)
+                           .underlineOffset;
   }
 
   return mUnderlineOffset;

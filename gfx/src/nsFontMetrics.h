@@ -8,7 +8,6 @@
 
 #include <stdint.h>              // for uint32_t
 #include <sys/types.h>           // for int32_t
-#include "gfxTextRun.h"          // for gfxFont, gfxFontGroup
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT_HELPER2
 #include "mozilla/RefPtr.h"      // for RefPtr
 #include "nsCOMPtr.h"            // for nsCOMPtr
@@ -19,11 +18,18 @@
 #include "nscore.h"              // for char16_t
 
 class gfxContext;
+class gfxFontGroup;
 class gfxUserFontSet;
 class gfxTextPerfMetrics;
 class nsDeviceContext;
 class nsAtom;
 struct nsBoundingMetrics;
+
+namespace mozilla {
+namespace gfx {
+class DrawTarget;
+}  // namespace gfx
+}  // namespace mozilla
 
 /**
  * Font metrics
@@ -45,13 +51,14 @@ struct nsBoundingMetrics;
  */
 class nsFontMetrics final {
  public:
-  typedef gfxTextRun::Range Range;
   typedef mozilla::gfx::DrawTarget DrawTarget;
+
+  enum FontOrientation { eHorizontal, eVertical };
 
   struct MOZ_STACK_CLASS Params {
     nsAtom* language = nullptr;
     bool explicitLanguage = false;
-    gfxFont::Orientation orientation = gfxFont::eHorizontal;
+    FontOrientation orientation = eHorizontal;
     gfxUserFontSet* userFontSet = nullptr;
     gfxTextPerfMetrics* textPerf = nullptr;
     gfxFontFeatureValueSet* featureValueLookup = nullptr;
@@ -184,7 +191,7 @@ class nsFontMetrics final {
   /**
    * Returns the orientation (horizontal/vertical) of these metrics.
    */
-  gfxFont::Orientation Orientation() const { return mOrientation; }
+  FontOrientation Orientation() const { return mOrientation; }
 
   int32_t GetMaxStringLength();
 
@@ -225,22 +232,13 @@ class nsFontMetrics final {
   uint8_t GetTextOrientation() const { return mTextOrientation; }
 
   gfxFontGroup* GetThebesFontGroup() const { return mFontGroup; }
-  gfxUserFontSet* GetUserFontSet() const {
-    return mFontGroup->GetUserFontSet();
-  }
+  gfxUserFontSet* GetUserFontSet() const;
 
   int32_t AppUnitsPerDevPixel() const { return mP2A; }
 
  private:
   // Private destructor, to discourage deletion outside of Release():
   ~nsFontMetrics();
-
-  const gfxFont::Metrics& GetMetrics() const {
-    return GetMetrics(mOrientation);
-  }
-
-  const gfxFont::Metrics& GetMetrics(
-      const gfxFont::Orientation aFontOrientation) const;
 
   nsFont mFont;
   RefPtr<gfxFontGroup> mFontGroup;
@@ -253,7 +251,7 @@ class nsFontMetrics final {
   // The font orientation (horizontal or vertical) for which these metrics
   // have been initialized. This determines which line metrics (ascent and
   // descent) they will return.
-  gfxFont::Orientation mOrientation;
+  FontOrientation mOrientation;
 
   // These fields may be set by clients to control the behavior of methods
   // like GetWidth and DrawString according to the writing mode, direction
