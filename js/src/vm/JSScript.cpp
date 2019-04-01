@@ -4818,6 +4818,90 @@ bool JSScript::formalLivesInArgumentsObject(unsigned argSlot) {
   return argsObjAliasesFormals() && !formalIsAliased(argSlot);
 }
 
+/* static */ size_t LazyScriptData::AllocationSize(
+    uint32_t numClosedOverBindings, uint32_t numInnerFunctions) {
+  size_t size = sizeof(LazyScriptData);
+
+  size += numClosedOverBindings * sizeof(GCPtrAtom);
+  size += numInnerFunctions * sizeof(GCPtrFunction);
+
+  return size;
+}
+
+// Placement-new elements of an array. This should optimize away for types with
+// trivial default initiation.
+template <typename T>
+void LazyScriptData::initElements(size_t offset, size_t length) {
+  void* raw = offsetToPointer<void>(offset);
+  DefaultInitializeElements<T>(raw, length);
+}
+
+LazyScriptData::LazyScriptData(uint32_t numClosedOverBindings,
+                               uint32_t numInnerFunctions)
+    : numClosedOverBindings_(numClosedOverBindings),
+      numInnerFunctions_(numInnerFunctions) {
+  // Variable-length data begins immediately after LazyScriptData itself.
+  size_t cursor = sizeof(*this);
+
+  // Default-initialize trailing arrays.
+
+  static_assert(alignof(LazyScriptData) >= alignof(GCPtrAtom),
+                "Incompatible alignment");
+  initElements<GCPtrAtom>(cursor, numClosedOverBindings);
+  cursor += numClosedOverBindings * sizeof(GCPtrAtom);
+
+  static_assert(alignof(GCPtrAtom) >= alignof(GCPtrFunction),
+                "Incompatible alignment");
+  initElements<GCPtrFunction>(cursor, numInnerFunctions);
+  cursor += numInnerFunctions * sizeof(GCPtrFunction);
+
+  // Sanity check
+  MOZ_ASSERT(AllocationSize(numClosedOverBindings, numInnerFunctions) ==
+             cursor);
+}
+
+/* static */ LazyScriptData* LazyScriptData::new_(
+    JSContext* cx, uint32_t numClosedOverBindings, uint32_t numInnerFunctions) {
+  // Compute size including trailing arrays
+  size_t size = AllocationSize(numClosedOverBindings, numInnerFunctions);
+
+  // Allocate contiguous raw buffer
+  void* raw = cx->pod_malloc<uint8_t>(size);
+  MOZ_ASSERT(uintptr_t(raw) % alignof(LazyScriptData) == 0);
+  if (!raw) {
+    return nullptr;
+  }
+
+  // Constuct the LazyScriptData. Trailing arrays are uninitialized but
+  // GCPtrs are put into a safe state.
+  return new (raw) LazyScriptData(numClosedOverBindings, numInnerFunctions);
+}
+
+mozilla::Span<GCPtrAtom> LazyScriptData::closedOverBindings() {
+  size_t offset = sizeof(LazyScriptData);
+  return mozilla::MakeSpan(offsetToPointer<GCPtrAtom>(offset),
+                           numClosedOverBindings_);
+}
+
+mozilla::Span<GCPtrFunction> LazyScriptData::innerFunctions() {
+  size_t offset =
+      sizeof(LazyScriptData) + sizeof(GCPtrAtom) * numClosedOverBindings_;
+  return mozilla::MakeSpan(offsetToPointer<GCPtrFunction>(offset),
+                           numInnerFunctions_);
+}
+
+void LazyScriptData::trace(JSTracer* trc) {
+  if (numClosedOverBindings_) {
+    auto array = closedOverBindings();
+    TraceRange(trc, array.size(), array.data(), "closedOverBindings");
+  }
+
+  if (numInnerFunctions_) {
+    auto array = innerFunctions();
+    TraceRange(trc, array.size(), array.data(), "innerFunctions");
+  }
+}
+
 LazyScript::LazyScript(uint32_t numClosedOverBindings,
                        uint32_t numInnerFunctions, JSFunction* fun,
                        ScriptSourceObject& sourceObject, void* table,
