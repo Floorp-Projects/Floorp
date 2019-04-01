@@ -13,21 +13,9 @@
 
 using namespace JS;
 
-static const JSClassOps global_classOps = {nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           JS_GlobalObjectTraceHook};
-
 /* The class of the global object. */
 static const JSClass global_class = {"global", JSCLASS_GLOBAL_FLAGS,
-                                     &global_classOps};
+                                     &DefaultGlobalClassOps};
 
 static volatile int dontOptimizeMeAway = 0;
 
@@ -82,10 +70,6 @@ int main(int argc, const char** argv) {
       cx, checkPtr(JS_NewGlobalObject(cx, &global_class, nullptr,
                                       JS::FireOnNewGlobalHook, options)));
   JSAutoRealm ar(cx, global);
-
-  /* Populate the global object with the standard globals,
-     like Object and Array. */
-  checkBool(JS::InitRealmStandardClasses(cx));
 
   argv++;
   while (*argv) {

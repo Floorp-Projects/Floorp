@@ -100,6 +100,9 @@ function listWorkerThreadClients() {
 function forEachWorkerThread(iteratee) {
   const promises = listWorkerThreadClients().map(thread => iteratee(thread));
 
+  // Do not return promises for the caller to wait on unless a flag is set.
+  // Currently, worker threads are not guaranteed to respond to all requests,
+  // if we send a request while they are shutting down. See bug 1529163.
   if (shouldWaitForWorkers) {
     return Promise.all(promises);
   }
@@ -210,6 +213,10 @@ function maybeClearLogpoint(location: BreakpointLocation) {
   }
 }
 
+function hasBreakpoint(location: BreakpointLocation) {
+  return !!breakpoints[locationKey(location)];
+}
+
 async function setBreakpoint(
   location: BreakpointLocation,
   options: BreakpointOptions
@@ -217,25 +224,28 @@ async function setBreakpoint(
   maybeClearLogpoint(location);
   options = maybeGenerateLogGroupId(options);
   breakpoints[locationKey(location)] = { location, options };
-  await threadClient.setBreakpoint(location, options);
 
-  // Set breakpoints in other threads as well, but do not wait for the requests
-  // to complete, so that we don't get hung up if one of the threads stops
-  // responding. We don't strictly need to wait for the main thread to finish
-  // setting its breakpoint, but this leads to more consistent behavior if the
-  // user sets a breakpoint and immediately starts interacting with the page.
-  // If the main thread stops responding then we're toast regardless.
+  // We have to be careful here to atomically initiate the setBreakpoint() call
+  // on every thread, with no intervening await. Otherwise, other code could run
+  // and change or remove the breakpoint before we finish calling setBreakpoint
+  // on all threads. Requests on server threads will resolve in FIFO order, and
+  // this could result in the breakpoint state here being out of sync with the
+  // breakpoints that are installed in the server.
+  const mainThreadPromise = threadClient.setBreakpoint(location, options);
+
   await forEachWorkerThread(thread => thread.setBreakpoint(location, options));
+  await mainThreadPromise;
 }
 
 async function removeBreakpoint(location: PendingLocation) {
   maybeClearLogpoint((location: any));
   delete breakpoints[locationKey((location: any))];
-  await threadClient.removeBreakpoint(location);
 
-  // Remove breakpoints without waiting for the thread to respond, for the same
-  // reason as in setBreakpoint.
+  // Delay waiting on this promise, for the same reason as in setBreakpoint.
+  const mainThreadPromise = threadClient.removeBreakpoint(location);
+
   await forEachWorkerThread(thread => thread.removeBreakpoint(location));
+  await mainThreadPromise;
 }
 
 async function evaluateInFrame(script: Script, options: EvaluateParam) {
@@ -484,6 +494,7 @@ const clientCommands = {
   sourceContents,
   getSourceForActor,
   getBreakpointPositions,
+  hasBreakpoint,
   setBreakpoint,
   setXHRBreakpoint,
   removeXHRBreakpoint,

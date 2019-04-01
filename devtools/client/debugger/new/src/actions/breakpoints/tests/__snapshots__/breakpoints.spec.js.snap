@@ -29,11 +29,7 @@ Array [
           "sourceId": "a",
           "sourceUrl": "http://localhost:8000/examples/a",
         },
-        "options": Object {
-          "condition": null,
-          "hidden": false,
-          "logValue": null,
-        },
+        "options": Object {},
         "originalText": "return a",
         "text": "return a",
       },
@@ -64,12 +60,10 @@ exports[`breakpoints should remap breakpoints on pretty print 1`] = `
 Object {
   "astLocation": Object {
     "index": 0,
-    "name": undefined,
+    "name": "a",
     "offset": Object {
-      "column": 0,
-      "line": 1,
-      "sourceId": "a.js",
-      "sourceUrl": "http://localhost:8000/examples/a.js",
+      "column": undefined,
+      "line": 0,
     },
   },
   "disabled": false,
@@ -79,18 +73,14 @@ Object {
     "sourceId": "a.js",
     "sourceUrl": "http://localhost:8000/examples/a.js",
   },
-  "id": "a.js:1:",
+  "id": "a.js/originalSource-d6d70368d5c252598541e693a7ad6c27:1:",
   "location": Object {
     "column": 0,
     "line": 1,
     "sourceId": "a.js/originalSource-d6d70368d5c252598541e693a7ad6c27",
     "sourceUrl": "http://localhost:8000/examples/a.js:formatted",
   },
-  "options": Object {
-    "condition": null,
-    "hidden": false,
-    "logValue": null,
-  },
+  "options": Object {},
   "originalText": "function a() {",
   "text": "function a() {",
 }
@@ -125,11 +115,7 @@ Array [
           "sourceId": "a",
           "sourceUrl": "http://localhost:8000/examples/a",
         },
-        "options": Object {
-          "condition": null,
-          "hidden": false,
-          "logValue": null,
-        },
+        "options": Object {},
         "originalText": "",
         "text": "",
       },
