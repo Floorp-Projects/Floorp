@@ -27,8 +27,8 @@ class PageStyleChild extends ActorChild {
   }
 
   getAllStyleSheets(frameset) {
-    let selfSheets = Array.slice(frameset.document.styleSheets);
-    let subSheets = Array.map(frameset.frames, frame => this.getAllStyleSheets(frame));
+    let selfSheets = Array.from(frameset.document.styleSheets);
+    let subSheets = Array.from(frameset.frames, frame => this.getAllStyleSheets(frame));
     return selfSheets.concat(...subSheets);
   }
 
@@ -83,7 +83,7 @@ class PageStyleChild extends ActorChild {
   }
 
   _stylesheetInFrame(frame, title) {
-    return Array.some(frame.document.styleSheets, (styleSheet) => styleSheet.title == title);
+    return Array.from(frame.document.styleSheets).some((styleSheet) => styleSheet.title == title);
   }
 
   _filterStyleSheets(styleSheets, content) {
