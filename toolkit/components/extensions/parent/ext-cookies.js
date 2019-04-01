@@ -15,11 +15,15 @@ const SAME_SITE_STATUSES = [
   "strict",         // Index 2 = Ci.nsICookie2.SAMESITE_STRICT
 ];
 
+const isIPv6 = (host) => host.includes(":");
+const addBracketIfIPv6 = (host) => (isIPv6(host) && !host.startsWith("[")) ? `[${host}]` : host;
+const dropBracketIfIPv6 = (host) => (isIPv6(host) && host.startsWith("[") && host.endsWith("]")) ? host.slice(1, -1) : host;
+
 const convertCookie = ({cookie, isPrivate}) => {
   let result = {
     name: cookie.name,
     value: cookie.value,
-    domain: cookie.host,
+    domain: addBracketIfIPv6(cookie.host),
     hostOnly: !cookie.isDomain,
     path: cookie.path,
     secure: cookie.isSecure,
@@ -154,6 +158,7 @@ const query = function* (detailsIn, props, context) {
 
   if ("domain" in details) {
     details.domain = details.domain.toLowerCase().replace(/^\./, "");
+    details.domain = dropBracketIfIPv6(details.domain);
   }
 
   let userContextId = 0;
@@ -200,7 +205,7 @@ const query = function* (detailsIn, props, context) {
   if ("url" in details) {
     try {
       url = new URL(details.url);
-      host = url.hostname;
+      host = dropBracketIfIPv6(url.hostname);
     } catch (ex) {
       // This often happens for about: URLs
       return;
@@ -242,7 +247,7 @@ const query = function* (detailsIn, props, context) {
 
     // "Restricts the retrieved cookies to those that would match the given URL."
     if (url) {
-      if (!domainMatches(url.hostname)) {
+      if (!domainMatches(host)) {
         return false;
       }
 
