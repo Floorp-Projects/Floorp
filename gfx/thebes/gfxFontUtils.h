@@ -29,6 +29,8 @@ typedef struct hb_blob_t hb_blob_t;
 
 class gfxSparseBitSet {
  private:
+  friend class SharedBitSet;
+
   enum { BLOCK_SIZE = 32 };  // ==> 256 codepoints per block
   enum { BLOCK_SIZE_BITS = BLOCK_SIZE * 8 };
   enum { NO_BLOCK = 0xffff };  // index value indicating missing (empty) block
@@ -310,6 +312,129 @@ class gfxSparseBitSet {
  private:
   nsTArray<uint16_t> mBlockIndex;
   nsTArray<Block> mBlocks;
+};
+
+/**
+ * SharedBitSet is a version of gfxSparseBitSet that is intended to be used
+ * in a shared-memory block, and can be used regardless of the address at which
+ * the block has been mapped. The SharedBitSet cannot be modified once it has
+ * been created.
+ *
+ * Max size of a SharedBitSet = 4352 * 32  ; blocks
+ *                              + 4352 * 2 ; index
+ *                              + 4        ; counts
+ *   = 147972 bytes
+ *
+ * Therefore, SharedFontList must be able to allocate a contiguous block of at
+ * least this size.
+ */
+class SharedBitSet {
+ private:
+  // We use the same Block type as gfxSparseBitSet.
+  typedef gfxSparseBitSet::Block Block;
+
+  enum { BLOCK_SIZE = gfxSparseBitSet::BLOCK_SIZE };
+  enum { BLOCK_SIZE_BITS = gfxSparseBitSet::BLOCK_SIZE_BITS };
+  enum { NO_BLOCK = gfxSparseBitSet::NO_BLOCK };
+
+ public:
+  static const size_t kMaxSize = 147972;  // see above
+
+  // Returns the size needed for a SharedBitSet version of the given
+  // gfxSparseBitSet.
+  static size_t RequiredSize(const gfxSparseBitSet& aBitset) {
+    size_t total = sizeof(SharedBitSet);
+    size_t len = aBitset.mBlockIndex.Length();
+    total += len * sizeof(uint16_t);  // add size for index array
+    // add size for blocks, excluding any missing ones
+    for (uint16_t i = 0; i < len; i++) {
+      if (aBitset.mBlockIndex[i] != NO_BLOCK) {
+        total += sizeof(Block);
+      }
+    }
+    MOZ_ASSERT(total <= kMaxSize);
+    return total;
+  }
+
+  // Create a SharedBitSet in the provided buffer, initializing it with the
+  // contents of aBitset.
+  static SharedBitSet* Create(void* aBuffer, size_t aBufSize,
+                              const gfxSparseBitSet& aBitset) {
+    MOZ_ASSERT(aBufSize >= RequiredSize(aBitset));
+    return new (aBuffer) SharedBitSet(aBitset);
+  }
+
+  bool test(uint32_t aIndex) const {
+    uint16_t i = aIndex / BLOCK_SIZE_BITS;
+    if (i >= mBlockIndexCount) {
+      return false;
+    }
+    const uint16_t* const blockIndex =
+        reinterpret_cast<const uint16_t*>(this + 1);
+    if (blockIndex[i] == NO_BLOCK) {
+      return false;
+    }
+    const Block* const blocks =
+        reinterpret_cast<const Block*>(blockIndex + mBlockIndexCount);
+    const Block& block = blocks[blockIndex[i]];
+    return ((block.mBits[(aIndex >> 3) & (BLOCK_SIZE - 1)]) &
+            (1 << (aIndex & 0x7))) != 0;
+  }
+
+  bool Equals(const gfxSparseBitSet* aOther) const {
+    if (mBlockIndexCount != aOther->mBlockIndex.Length()) {
+      return false;
+    }
+    const uint16_t* const blockIndex =
+        reinterpret_cast<const uint16_t*>(this + 1);
+    const Block* const blocks =
+        reinterpret_cast<const Block*>(blockIndex + mBlockIndexCount);
+    for (uint16_t i = 0; i < mBlockIndexCount; ++i) {
+      uint16_t index = blockIndex[i];
+      uint16_t otherIndex = aOther->mBlockIndex[i];
+      if ((index == NO_BLOCK) != (otherIndex == NO_BLOCK)) {
+        return false;
+      }
+      if (index == NO_BLOCK) {
+        continue;
+      }
+      const Block& b1 = blocks[index];
+      const Block& b2 = aOther->mBlocks[otherIndex];
+      if (memcmp(&b1.mBits, &b2.mBits, BLOCK_SIZE) != 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+ private:
+  SharedBitSet() = delete;
+
+  explicit SharedBitSet(const gfxSparseBitSet& aBitset)
+      : mBlockIndexCount(aBitset.mBlockIndex.Length()), mBlockCount(0) {
+    uint16_t* blockIndex = reinterpret_cast<uint16_t*>(this + 1);
+    Block* blocks = reinterpret_cast<Block*>(blockIndex + mBlockIndexCount);
+    for (uint16_t i = 0; i < mBlockIndexCount; i++) {
+      if (aBitset.mBlockIndex[i] != NO_BLOCK) {
+        const Block& srcBlock = aBitset.mBlocks[aBitset.mBlockIndex[i]];
+        std::memcpy(&blocks[mBlockCount], &srcBlock, sizeof(Block));
+        blockIndex[i] = mBlockCount;
+        mBlockCount++;
+      } else {
+        blockIndex[i] = NO_BLOCK;
+      }
+    }
+  }
+
+  // We never manage SharedBitSet as a "normal" object, it's a view onto a
+  // buffer of shared memory. So we should never be trying to call this.
+  ~SharedBitSet() = delete;
+
+  uint16_t mBlockIndexCount;
+  uint16_t mBlockCount;
+
+  // After the two "header" fields above, we have a block index array
+  // of uint16_t[mBlockIndexCount], followed by mBlockCount Block records.
 };
 
 #define TRUETYPE_TAG(a, b, c, d) ((a) << 24 | (b) << 16 | (c) << 8 | (d))
