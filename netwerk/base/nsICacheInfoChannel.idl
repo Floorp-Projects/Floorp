@@ -139,10 +139,9 @@ interface nsICacheInfoChannel : nsISupports
 
   /**
    * Sometimes when the channel is delivering alt-data, we may want to somehow
-   * access the original content too. This method asynchronously opens the
-   * input stream and delivers it to the receiver.
+   * access the original content too.
    */
-  void getOriginalInputStream(in nsIInputStreamReceiver aReceiver);
+  readonly attribute nsIInputStream originalInputStream;
 
   /**
    * Opens and returns an output stream that a consumer may use to save an
