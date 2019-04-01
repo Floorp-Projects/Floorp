@@ -100,15 +100,12 @@ function waitForText(dbg, url, text) {
   }, "text is visible");
 }
 
-function waitForMetaData(dbg) {
+function waitForSymbols(dbg) {
   return waitUntil(
     () => {
       const state = dbg.store.getState();
       const source = dbg.selectors.getSelectedSource(state);
-      // wait for metadata -- this involves parsing the file to determine its type.
-      // if the object is empty, the data has not yet loaded
-      const metaData = dbg.selectors.getSourceMetaData(state, source.id);
-      return !!Object.keys(metaData).length;
+      return dbg.selectors.hasSymbols(state, source);
     },
     "has file metadata"
   );
@@ -219,7 +216,7 @@ async function openDebuggerAndLog(label, expected) {
     await waitForSource(dbg, expected.sourceURL);
     await selectSource(dbg, expected.file);
     await waitForText(dbg, expected.file, expected.text);
-    await waitForMetaData(dbg);
+    await waitForSymbols(dbg);
   };
 
   const toolbox = await openToolboxAndLog(label + ".jsdebugger", "jsdebugger", onLoad);
@@ -234,7 +231,7 @@ async function reloadDebuggerAndLog(label, toolbox, expected) {
     await waitForDispatch(dbg, "NAVIGATE");
     await waitForSources(dbg, expected.sources);
     await waitForText(dbg, expected.file, expected.text);
-    await waitForMetaData(dbg);
+    await waitForSymbols(dbg);
   };
   await reloadPageAndLog(`${label}.jsdebugger`, toolbox, onReload);
 }

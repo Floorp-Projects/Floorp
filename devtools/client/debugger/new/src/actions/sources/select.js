@@ -13,7 +13,8 @@ import { isOriginalId } from "devtools-source-map";
 
 import { getSourceFromId } from "../../reducers/sources";
 import { getSourcesForTabs } from "../../reducers/tabs";
-import { setOutOfScopeLocations, setSymbols } from "../ast";
+import { setOutOfScopeLocations } from "../ast";
+import { setSymbols } from "./symbols";
 import { closeActiveSearch, updateActiveFileSearch } from "../ui";
 
 import { togglePrettyPrint } from "./prettyPrint";

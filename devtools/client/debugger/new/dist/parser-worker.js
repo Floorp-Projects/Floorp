@@ -15207,15 +15207,15 @@ var _getFunctionName = __webpack_require__(158);
 
 var _getFunctionName2 = _interopRequireDefault(_getFunctionName);
 
+var _frameworks = __webpack_require__(159);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-let symbolDeclarations = new Map();
+let symbolDeclarations = new Map(); /* This Source Code Form is subject to the terms of the Mozilla Public
+                                     * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                     * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function getUniqueIdentifiers(identifiers) {
   const newIdentifiers = [];
@@ -15401,7 +15401,8 @@ function extractSymbols(sourceId) {
     literals: [],
     hasJsx: false,
     hasTypes: false,
-    loading: false
+    loading: false,
+    framework: undefined
   };
 
   const state = {
@@ -15424,6 +15425,7 @@ function extractSymbols(sourceId) {
   // comments are extracted separately from the AST
   symbols.comments = (0, _helpers.getComments)(ast);
   symbols.identifiers = getUniqueIdentifiers(symbols.identifiers);
+  symbols.framework = (0, _frameworks.getFramework)(symbols);
 
   return symbols;
 }
@@ -17464,32 +17466,23 @@ var _types = __webpack_require__(3);
 
 var t = _interopRequireWildcard(_types);
 
-var _getSymbols = __webpack_require__(117);
-
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function getFramework(sourceId) {
-  const sourceSymbols = (0, _getSymbols.getSymbols)(sourceId);
-
-  if (isReactComponent(sourceSymbols)) {
+function getFramework(symbols) {
+  if (isReactComponent(symbols)) {
     return "React";
   }
-  if (isAngularComponent(sourceSymbols)) {
+  if (isAngularComponent(symbols)) {
     return "Angular";
   }
-  if (isVueComponent(sourceSymbols)) {
+  if (isVueComponent(symbols)) {
     return "Vue";
   }
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// React
-
-function isReactComponent(sourceSymbols) {
-  const { imports, classes, callExpressions } = sourceSymbols;
+function isReactComponent({ imports, classes, callExpressions }) {
   return importsReact(imports) || requiresReact(callExpressions) || extendsReactComponent(classes);
 }
 
@@ -17505,19 +17498,13 @@ function extendsReactComponent(classes) {
   return classes.some(classObj => t.isIdentifier(classObj.parent, { name: "Component" }) || t.isIdentifier(classObj.parent, { name: "PureComponent" }) || t.isMemberExpression(classObj.parent, { computed: false }) && t.isIdentifier(classObj.parent, { name: "Component" }));
 }
 
-// Angular
-
-const isAngularComponent = sourceSymbols => {
-  const { memberExpressions } = sourceSymbols;
+function isAngularComponent({ memberExpressions }) {
   return memberExpressions.some(item => item.expression == "angular.controller" || item.expression == "angular.module");
-};
+}
 
-// Vue
-
-const isVueComponent = sourceSymbols => {
-  const { identifiers } = sourceSymbols;
+function isVueComponent({ identifiers }) {
   return identifiers.some(identifier => identifier.name == "Vue");
-};
+}
 
 /***/ }),
 /* 160 */

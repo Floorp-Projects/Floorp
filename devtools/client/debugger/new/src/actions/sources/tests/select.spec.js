@@ -19,7 +19,6 @@ const {
   getSourceCount,
   getSelectedSource,
   getSourceTabs,
-  getSourceMetaData,
   getOutOfScopeLocations,
   getSelectedLocation
 } = selectors;
@@ -67,11 +66,7 @@ describe("sources", () => {
     }
     expect(source.id).toEqual("foo1");
 
-    await waitForState(
-      store,
-      state =>
-        getOutOfScopeLocations(state) && getSourceMetaData(state, source.id)
-    );
+    await waitForState(store, state => getOutOfScopeLocations(state));
     const locations = getOutOfScopeLocations(getState());
     expect(locations).toHaveLength(1);
   });
