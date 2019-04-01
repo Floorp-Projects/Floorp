@@ -8,7 +8,7 @@ import assert from "../../utils/assert";
 import { recordEvent } from "../../utils/telemetry";
 import { remapBreakpoints } from "../breakpoints";
 
-import { setSymbols } from "../ast";
+import { setSymbols } from "./symbols";
 import { prettyPrint } from "../../workers/pretty-print";
 import { getPrettySourceURL, isLoaded } from "../../utils/source";
 import { loadSourceText } from "./loadSourceText";

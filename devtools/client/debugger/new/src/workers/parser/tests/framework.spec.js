@@ -4,58 +4,54 @@
 
 // @flow
 
-import { getFramework } from "../frameworks";
-import { getSource, getOriginalSource } from "./helpers";
+import { getSymbols } from "../getSymbols";
+import { getOriginalSource } from "./helpers";
 import { setSource } from "../sources";
+import cases from "jest-in-case";
 
-describe("Parser.frameworks", () => {
-  describe("no framework", () => {
-    it("is undefined when no framework", () => {
-      const source = getOriginalSource("frameworks/plainJavascript");
-      setSource(source);
-      expect(getFramework(source.id)).toBeUndefined();
-    });
-
-    it("does not get confused with angular (#6833)", () => {
-      const source = getOriginalSource("frameworks/angular1FalsePositive");
-      setSource(source);
-      expect(getFramework(source.id)).toBeUndefined();
-    });
-  });
-
-  describe("react", () => {
-    it("recognizes ES6 React component", () => {
-      const source = getOriginalSource("frameworks/reactComponent");
-      setSource(source);
-      expect(getFramework(source.id)).toBe("React");
-    });
-
-    it("recognizes ES5 React component", () => {
-      const source = getSource("frameworks/reactComponentEs5");
-      setSource(source);
-      expect(getFramework(source.id)).toBe("React");
-    });
-  });
-
-  describe("angular 1.*", () => {
-    it("recognizes Angular 1 module", () => {
-      const source = getOriginalSource("frameworks/angular1Module");
-      setSource(source);
-      expect(getFramework(source.id)).toBe("Angular");
-    });
-  });
-
-  describe("vue", () => {
-    it("recognizes declarative Vue file", () => {
-      const source = getOriginalSource("frameworks/vueFileDeclarative");
-      setSource(source);
-      expect(getFramework(source.id)).toBe("Vue");
-    });
-
-    it("recognizes component Vue file", () => {
-      const source = getOriginalSource("frameworks/vueFileComponent");
-      setSource(source);
-      expect(getFramework(source.id)).toBe("Vue");
-    });
-  });
-});
+cases(
+  "Parser.getFramework",
+  ({ name, file, value }) => {
+    const source = getOriginalSource("frameworks/plainJavascript");
+    setSource(source);
+    const symbols = getSymbols(source.id);
+    expect(symbols.framework).toBeUndefined();
+  },
+  [
+    {
+      name: "is undefined when no framework",
+      file: "frameworks/plainJavascript",
+      value: undefined
+    },
+    {
+      name: "does not get confused with angular (#6833)",
+      file: "frameworks/angular1FalsePositive",
+      value: undefined
+    },
+    {
+      name: "recognizes ES6 React component",
+      file: "frameworks/reactComponent",
+      value: "React"
+    },
+    {
+      name: "recognizes ES5 React component",
+      file: "frameworks/reactComponentEs5",
+      value: "React"
+    },
+    {
+      name: "recognizes Angular 1 module",
+      file: "frameworks/angular1Module",
+      value: "Angular"
+    },
+    {
+      name: "recognizes declarative Vue file",
+      file: "frameworks/vueFileDeclarative",
+      value: "Vue"
+    },
+    {
+      name: "recognizes component Vue file",
+      file: "frameworks/vueFileComponent",
+      value: "Vue"
+    }
+  ]
+);

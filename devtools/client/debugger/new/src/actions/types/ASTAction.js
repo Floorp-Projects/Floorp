@@ -5,7 +5,6 @@
 // @flow
 
 import type { SymbolDeclarations, AstLocation } from "../../workers/parser";
-import type { SourceMetaDataType } from "../../reducers/types";
 import type { PromiseAction } from "../utils/middleware/promise";
 
 export type ASTAction =
@@ -36,11 +35,6 @@ export type ASTAction =
         cursorPos: any
       }
     >
-  | {|
-      +type: "SET_SOURCE_METADATA",
-      +sourceId: string,
-      +sourceMetaData: SourceMetaDataType
-    |}
   | {|
       +type: "CLEAR_SELECTION"
     |};

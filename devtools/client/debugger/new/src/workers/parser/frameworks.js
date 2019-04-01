@@ -5,26 +5,22 @@
 // @flow
 
 import * as t from "@babel/types";
-import { getSymbols } from "./getSymbols";
 
-export function getFramework(sourceId: string): ?string {
-  const sourceSymbols = getSymbols(sourceId);
+import type { SymbolDeclarations } from "./getSymbols";
 
-  if (isReactComponent(sourceSymbols)) {
+export function getFramework(symbols: SymbolDeclarations): ?string {
+  if (isReactComponent(symbols)) {
     return "React";
   }
-  if (isAngularComponent(sourceSymbols)) {
+  if (isAngularComponent(symbols)) {
     return "Angular";
   }
-  if (isVueComponent(sourceSymbols)) {
+  if (isVueComponent(symbols)) {
     return "Vue";
   }
 }
 
-// React
-
-function isReactComponent(sourceSymbols) {
-  const { imports, classes, callExpressions } = sourceSymbols;
+function isReactComponent({ imports, classes, callExpressions }) {
   return (
     importsReact(imports) ||
     requiresReact(callExpressions) ||
@@ -58,20 +54,14 @@ function extendsReactComponent(classes) {
   );
 }
 
-// Angular
-
-const isAngularComponent = sourceSymbols => {
-  const { memberExpressions } = sourceSymbols;
+function isAngularComponent({ memberExpressions }) {
   return memberExpressions.some(
     item =>
       item.expression == "angular.controller" ||
       item.expression == "angular.module"
   );
-};
+}
 
-// Vue
-
-const isVueComponent = sourceSymbols => {
-  const { identifiers } = sourceSymbols;
+function isVueComponent({ identifiers }) {
   return identifiers.some(identifier => identifier.name == "Vue");
-};
+}

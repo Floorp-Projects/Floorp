@@ -50,4 +50,4 @@ export type { SourcesMap, SourcesMapByThread } from "./sources";
 export type { ActiveSearchType, OrientationType } from "./ui";
 export type { BreakpointsMap, XHRBreakpointsList } from "./breakpoints";
 export type { Command } from "./pause";
-export type { SourceMetaDataMap, SourceMetaDataType } from "./ast";
+export type { Symbols } from "./ast";

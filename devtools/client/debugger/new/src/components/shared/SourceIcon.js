@@ -12,17 +12,17 @@ import AccessibleImage from "./AccessibleImage";
 
 import { getSourceClassnames } from "../../utils/source";
 import { getFramework } from "../../utils/tabs";
-import { getSourceMetaData, getTabs } from "../../selectors";
+import { getSymbols, getTabs } from "../../selectors";
 
 import type { Source } from "../../types";
-import type { SourceMetaDataType } from "../../reducers/ast";
+import type { Symbols } from "../../reducers/types";
 
 import "./SourceIcon.css";
 
 type Props = {
   source: Source,
-  // sourceMetaData will provide framework information
-  sourceMetaData: SourceMetaDataType,
+  // symbols will provide framework information
+  symbols: Symbols,
   // An additional validator for the icon returned
   shouldHide?: Function,
   framework?: string
@@ -30,10 +30,10 @@ type Props = {
 
 class SourceIcon extends PureComponent<Props> {
   render() {
-    const { shouldHide, source, sourceMetaData, framework } = this.props;
+    const { shouldHide, source, symbols, framework } = this.props;
     const iconClass = framework
       ? framework.toLowerCase()
-      : getSourceClassnames(source, sourceMetaData);
+      : getSourceClassnames(source, symbols);
 
     if (shouldHide && shouldHide(iconClass)) {
       return null;
@@ -45,7 +45,7 @@ class SourceIcon extends PureComponent<Props> {
 
 export default connect((state, props) => {
   return {
-    sourceMetaData: getSourceMetaData(state, props.source.id),
+    symbols: getSymbols(state, props.source),
     framework: getFramework(getTabs(state), props.source.url)
   };
 })(SourceIcon);

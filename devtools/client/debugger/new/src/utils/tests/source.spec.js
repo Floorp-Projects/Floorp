@@ -30,7 +30,8 @@ const defaultSymbolDeclarations = {
   literals: [],
   hasJsx: false,
   hasTypes: false,
-  loading: false
+  loading: false,
+  framework: undefined
 };
 
 describe("sources", () => {

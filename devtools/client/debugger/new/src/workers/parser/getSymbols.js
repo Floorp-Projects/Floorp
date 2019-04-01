@@ -23,6 +23,7 @@ import {
 
 import { inferClassName } from "./utils/inferClassName";
 import getFunctionName from "./utils/getFunctionName";
+import { getFramework } from "./frameworks";
 
 import type { SimplePath, Node, TraversalAncestors } from "./utils/simple-path";
 
@@ -80,6 +81,7 @@ export type SymbolDeclarations = {|
   literals: Array<IdentifierDeclaration>,
   hasJsx: boolean,
   hasTypes: boolean,
+  framework: ?string,
   loading: false
 |};
 
@@ -276,7 +278,8 @@ function extractSymbols(sourceId): SymbolDeclarations {
     literals: [],
     hasJsx: false,
     hasTypes: false,
-    loading: false
+    loading: false,
+    framework: undefined
   };
 
   const state = {
@@ -299,6 +302,7 @@ function extractSymbols(sourceId): SymbolDeclarations {
   // comments are extracted separately from the AST
   symbols.comments = getComments(ast);
   symbols.identifiers = getUniqueIdentifiers(symbols.identifiers);
+  symbols.framework = getFramework(symbols);
 
   return symbols;
 }
