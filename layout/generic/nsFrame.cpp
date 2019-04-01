@@ -2332,8 +2332,8 @@ void nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  aList->AppendToTop(MakeDisplayItem<nsDisplaySelectionOverlay>(
-      aBuilder, this, selectionValue));
+  aList->AppendNewToTop<nsDisplaySelectionOverlay>(aBuilder, this,
+                                                   selectionValue);
 }
 
 void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
@@ -2342,8 +2342,7 @@ void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  aLists.Outlines()->AppendToTop(
-      MakeDisplayItem<nsDisplayOutline>(aBuilder, this));
+  aLists.Outlines()->AppendNewToTop<nsDisplayOutline>(aBuilder, this);
 }
 
 void nsFrame::DisplayOutline(nsDisplayListBuilder* aBuilder,
@@ -2357,7 +2356,7 @@ void nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
                             nsDisplayList* aList) {
   if (!IsVisibleForPainting()) return;
 
-  aList->AppendToTop(MakeDisplayItem<nsDisplayCaret>(aBuilder, this));
+  aList->AppendNewToTop<nsDisplayCaret>(aBuilder, this);
 }
 
 nscolor nsIFrame::GetCaretColorAt(int32_t aOffset) {
@@ -2391,23 +2390,22 @@ void nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder* aBuilder,
 
   nsCSSShadowArray* shadows = StyleEffects()->mBoxShadow;
   if (shadows && shadows->HasShadowWithInset(false)) {
-    aLists.BorderBackground()->AppendToTop(
-        MakeDisplayItem<nsDisplayBoxShadowOuter>(aBuilder, this));
+    aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowOuter>(aBuilder,
+                                                                       this);
   }
 
   bool bgIsThemed =
       DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground);
 
   if (shadows && shadows->HasShadowWithInset(true)) {
-    aLists.BorderBackground()->AppendToTop(
-        MakeDisplayItem<nsDisplayBoxShadowInner>(aBuilder, this));
+    aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowInner>(aBuilder,
+                                                                       this);
   }
 
   // If there's a themed background, we should not create a border item.
   // It won't be rendered.
   if (!bgIsThemed && StyleBorder()->HasBorder()) {
-    aLists.BorderBackground()->AppendToTop(
-        MakeDisplayItem<nsDisplayBorder>(aBuilder, this));
+    aLists.BorderBackground()->AppendNewToTop<nsDisplayBorder>(aBuilder, this);
   }
 
   DisplayOutlineUnconditional(aBuilder, aLists);
@@ -2529,16 +2527,16 @@ static void DisplayDebugBorders(nsDisplayListBuilder* aBuilder,
   // Draw a border around the child
   // REVIEW: From nsContainerFrame::PaintChild
   if (nsFrame::GetShowFrameBorders() && !aFrame->GetRect().IsEmpty()) {
-    aLists.Outlines()->AppendToTop(MakeDisplayItem<nsDisplayGeneric>(
+    aLists.Outlines()->AppendNewToTop<nsDisplayGeneric>(
         aBuilder, aFrame, PaintDebugBorder, "DebugBorder",
-        DisplayItemType::TYPE_DEBUG_BORDER));
+        DisplayItemType::TYPE_DEBUG_BORDER);
   }
   // Draw a border around the current event target
   if (nsFrame::GetShowEventTargetFrameBorder() &&
       aFrame->PresShell()->GetDrawEventTargetFrame() == aFrame) {
-    aLists.Outlines()->AppendToTop(MakeDisplayItem<nsDisplayGeneric>(
+    aLists.Outlines()->AppendNewToTop<nsDisplayGeneric>(
         aBuilder, aFrame, PaintEventTargetBorder, "EventTargetBorder",
-        DisplayItemType::TYPE_EVENT_TARGET_BORDER));
+        DisplayItemType::TYPE_EVENT_TARGET_BORDER);
   }
 }
 #endif
@@ -2654,7 +2652,7 @@ static void WrapSeparatorTransform(nsDisplayListBuilder* aBuilder,
   nsDisplayTransform* item = MakeDisplayItem<nsDisplayTransform>(
       aBuilder, aFrame, aNonParticipants, aBuilder->GetVisibleRect(), aIndex);
 
-  if (*aSeparator == nullptr) {
+  if (*aSeparator == nullptr && item) {
     *aSeparator = item;
   }
 
@@ -2815,9 +2813,8 @@ static void AddHitTestInfo(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
   } else {
     // No container item was created for this frame. Create a separate
     // nsDisplayCompositorHitTestInfo item instead.
-    hitTestItem = MakeDisplayItem<nsDisplayCompositorHitTestInfo>(
+    aList->AppendNewToBottom<nsDisplayCompositorHitTestInfo>(
         aBuilder, aFrame, std::move(aHitTestInfo));
-    aList->AppendToBottom(hitTestItem);
   }
 }
 
@@ -3198,8 +3195,10 @@ void nsIFrame::BuildDisplayListForStackingContext(
         aBuilder, this,
         dirtyRect + aBuilder->GetCurrentFrameOffsetToReferenceFrame(),
         NS_RGBA(255, 0, 0, 64), false);
-    color->SetOverrideZIndex(INT32_MAX);
-    set.PositionedDescendants()->AppendToTop(color);
+    if (color) {
+      color->SetOverrideZIndex(INT32_MAX);
+      set.PositionedDescendants()->AppendToTop(color);
+    }
   }
 
   nsIContent* content = GetContent();
@@ -3251,8 +3250,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // Skip all filter effects while generating glyph mask.
     if (usingFilter && !aBuilder->IsForGenerateGlyphMask()) {
       /* List now emptied, so add the new list to the top. */
-      resultList.AppendToTop(
-          MakeDisplayItem<nsDisplayFilters>(aBuilder, this, &resultList));
+      resultList.AppendNewToTop<nsDisplayFilters>(aBuilder, this, &resultList);
       ct.TrackContainer(resultList.GetTop());
     }
 
@@ -3271,8 +3269,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
           clipForMask.isSome() ? aBuilder->CurrentActiveScrolledRoot()
                                : containerItemASR;
       /* List now emptied, so add the new list to the top. */
-      resultList.AppendToTop(MakeDisplayItem<nsDisplayMasksAndClipPaths>(
-          aBuilder, this, &resultList, maskASR));
+      resultList.AppendNewToTop<nsDisplayMasksAndClipPaths>(
+          aBuilder, this, &resultList, maskASR);
       ct.TrackContainer(resultList.GetTop());
     }
 
@@ -3297,9 +3295,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
     const bool needsActiveOpacityLayer =
         nsDisplayOpacity::NeedsActiveLayer(aBuilder, this);
 
-    resultList.AppendToTop(MakeDisplayItem<nsDisplayOpacity>(
+    resultList.AppendNewToTop<nsDisplayOpacity>(
         aBuilder, this, &resultList, containerItemASR,
-        opacityItemForEventsAndPluginsOnly, needsActiveOpacityLayer));
+        opacityItemForEventsAndPluginsOnly, needsActiveOpacityLayer);
     ct.TrackContainer(resultList.GetTop());
   }
 
@@ -3375,15 +3373,17 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
     nsDisplayTransform* transformItem = MakeDisplayItem<nsDisplayTransform>(
         aBuilder, this, &resultList, visibleRect, 0, allowAsyncAnimation);
-    resultList.AppendToTop(transformItem);
-    ct.TrackContainer(transformItem);
+    if (transformItem) {
+      resultList.AppendToTop(transformItem);
+      ct.TrackContainer(transformItem);
+    }
 
     if (hasPerspective) {
       if (clipCapturedBy == ContainerItemType::ePerspective) {
         clipState.Restore();
       }
-      resultList.AppendToTop(
-          MakeDisplayItem<nsDisplayPerspective>(aBuilder, this, &resultList));
+      resultList.AppendNewToTop<nsDisplayPerspective>(aBuilder, this,
+                                                      &resultList);
       ct.TrackContainer(resultList.GetTop());
     }
   }
@@ -3391,10 +3391,10 @@ void nsIFrame::BuildDisplayListForStackingContext(
   if (clipCapturedBy ==
       ContainerItemType::eOwnLayerForTransformWithRoundedClip) {
     clipState.Restore();
-    resultList.AppendToTop(MakeDisplayItem<nsDisplayOwnLayer>(
+    resultList.AppendNewToTop<nsDisplayOwnLayer>(
         aBuilder, this, &resultList, aBuilder->CurrentActiveScrolledRoot(),
         nsDisplayOwnLayerFlags::eNone, ScrollbarData{},
-        /* aForceActive = */ false));
+        /* aForceActive = */ false);
     ct.TrackContainer(resultList.GetTop());
   }
 
@@ -3414,8 +3414,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // item as well.
     const ActiveScrolledRoot* fixedASR = ActiveScrolledRoot::PickAncestor(
         containerItemASR, aBuilder->CurrentActiveScrolledRoot());
-    resultList.AppendToTop(MakeDisplayItem<nsDisplayFixedPosition>(
-        aBuilder, this, &resultList, fixedASR, containerItemASR));
+    resultList.AppendNewToTop<nsDisplayFixedPosition>(
+        aBuilder, this, &resultList, fixedASR, containerItemASR);
     ct.TrackContainer(resultList.GetTop());
   } else if (useStickyPosition) {
     // For position:sticky, the clip needs to be applied both to the sticky
@@ -3433,9 +3433,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // descendants).
     const ActiveScrolledRoot* stickyASR = ActiveScrolledRoot::PickAncestor(
         containerItemASR, aBuilder->CurrentActiveScrolledRoot());
-    resultList.AppendToTop(MakeDisplayItem<nsDisplayStickyPosition>(
+    resultList.AppendNewToTop<nsDisplayStickyPosition>(
         aBuilder, this, &resultList, stickyASR,
-        aBuilder->CurrentActiveScrolledRoot()));
+        aBuilder->CurrentActiveScrolledRoot());
     ct.TrackContainer(resultList.GetTop());
   }
 
@@ -3446,8 +3446,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
   if (useBlendMode) {
     DisplayListClipState::AutoSaveRestore blendModeClipState(aBuilder);
-    resultList.AppendToTop(MakeDisplayItem<nsDisplayBlendMode>(
-        aBuilder, this, &resultList, effects->mMixBlendMode, containerItemASR));
+    resultList.AppendNewToTop<nsDisplayBlendMode>(
+        aBuilder, this, &resultList, effects->mMixBlendMode, containerItemASR);
     ct.TrackContainer(resultList.GetTop());
   }
 
@@ -3654,8 +3654,10 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
                       aBuilder->ToReferenceFrame(child);
       nsDisplaySolidColor* color = MakeDisplayItem<nsDisplaySolidColor>(
           aBuilder, child, bounds, NS_RGBA(255, 0, 255, 64));
-      color->SetOverrideZIndex(INT32_MAX);
-      aLists.PositionedDescendants()->AppendToTop(color);
+      if (color) {
+        color->SetOverrideZIndex(INT32_MAX);
+        aLists.PositionedDescendants()->AppendToTop(color);
+      }
     }
   }
 
@@ -10564,17 +10566,17 @@ void nsIFrame::CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder,
       gfxUtils::GetRenderRootForFrame(this).valueOr(wr::RenderRoot::Default);
 
   if (renderRoot != wr::RenderRoot::Default) {
-    aList->AppendToTop(MakeDisplayItem<nsDisplayRenderRoot>(
+    aList->AppendNewToTop<nsDisplayRenderRoot>(
         aBuilder, this, aList, aBuilder->CurrentActiveScrolledRoot(),
-        renderRoot));
+        renderRoot);
     if (aCreatedContainerItem) {
       *aCreatedContainerItem = true;
     }
   } else if (GetContent() && GetContent()->IsXULElement() &&
              GetContent()->AsElement()->HasAttr(kNameSpaceID_None,
                                                 nsGkAtoms::layer)) {
-    aList->AppendToTop(MakeDisplayItem<nsDisplayOwnLayer>(
-        aBuilder, this, aList, aBuilder->CurrentActiveScrolledRoot()));
+    aList->AppendNewToTop<nsDisplayOwnLayer>(
+        aBuilder, this, aList, aBuilder->CurrentActiveScrolledRoot());
     if (aCreatedContainerItem) {
       *aCreatedContainerItem = true;
     }
