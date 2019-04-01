@@ -12,8 +12,11 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.findinpage.FindInPageFeature
 import mozilla.components.feature.findinpage.view.FindInPageView
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -27,7 +30,7 @@ class FindInPageInteractorTest {
         get() = ApplicationProvider.getApplicationContext()
 
     @Test
-    fun `Start will register interactor as listener`() {
+    fun `Start will register interactor as listener and emit a fact`() {
         val view: FindInPageView = mock()
         val interactor = FindInPageInteractor(mock(), mock(), view, mock())
 
@@ -169,5 +172,34 @@ class FindInPageInteractorTest {
         interactor.onClearMatches()
 
         verify(engineSession).clearFindMatches()
+    }
+
+    @Test
+    fun `interactor emits the facts`() {
+        CollectionProcessor.withFactCollection { facts ->
+            val view: FindInPageView = mock()
+            `when`(view.asView()).thenReturn(View(context))
+
+            val actualEngineView: View = mock()
+            val engineView: EngineView = mock()
+            `when`(engineView.asView()).thenReturn(actualEngineView)
+
+            val interactor = FindInPageInteractor(mock(), mock(), view, engineView)
+            interactor.onClose()
+            interactor.onFindAll("Mozilla")
+            interactor.onNextResult()
+            interactor.onPreviousResult()
+
+            val closeFact = facts[0]
+            val commitFact = facts[1]
+            val nextFact = facts[2]
+            val previousFact = facts[3]
+
+            Assert.assertEquals("close", closeFact.item)
+            Assert.assertEquals("input", commitFact.item)
+            Assert.assertEquals(Action.COMMIT, commitFact.action)
+            Assert.assertEquals("next", nextFact.item)
+            Assert.assertEquals("previous", previousFact.item)
+        }
     }
 }

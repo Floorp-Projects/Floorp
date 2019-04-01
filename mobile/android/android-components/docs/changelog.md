@@ -18,6 +18,9 @@ permalink: /changelog/
 * **browser-icons**
   * ⚠️ **This is a breaking API change**: Creating a `BrowserIcons` instance requires a `Client` object (from `concept-fetch`) now.
 
+* **feature-findinpage**
+   * Find in Page now emits facts
+
 # 0.49.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.48.0...v0.49.0)
@@ -44,7 +47,7 @@ permalink: /changelog/
 
 * **feature-qr**
   * 🆕 New component/feature that provides functionality for scanning QR codes.
-  
+
     ```kotlin
       val qrFeature = QrFeature(
           context,
@@ -58,7 +61,7 @@ permalink: /changelog/
       )
       // When ready to scan simply call
       qrFeature.scan()
-    ```  
+    ```
 
 * **concept-storage**
   * ⚠️ **This is a breaking API change!** for non-component implementations of `HistoryStorage`.

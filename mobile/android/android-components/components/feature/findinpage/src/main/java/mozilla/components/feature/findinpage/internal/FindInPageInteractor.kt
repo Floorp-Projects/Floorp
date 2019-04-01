@@ -9,6 +9,10 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.findinpage.FindInPageFeature
+import mozilla.components.feature.findinpage.facts.emitCloseFact
+import mozilla.components.feature.findinpage.facts.emitCommitFact
+import mozilla.components.feature.findinpage.facts.emitNextFact
+import mozilla.components.feature.findinpage.facts.emitPreviousFact
 import mozilla.components.feature.findinpage.view.FindInPageView
 import mozilla.components.support.ktx.android.view.hideKeyboard
 
@@ -40,18 +44,21 @@ internal class FindInPageInteractor(
         engineSession?.findNext(forward = false)
         engineView?.asView()?.clearFocus()
         view.asView().hideKeyboard()
+        emitPreviousFact()
     }
 
     override fun onNextResult() {
         engineSession?.findNext(forward = true)
         engineView?.asView()?.clearFocus()
         view.asView().hideKeyboard()
+        emitNextFact()
     }
 
     override fun onClose() {
         // We pass this event up to the feature. The feature is responsible for unbinding its sub components and
         // potentially notifying other dependencies.
         feature.unbind()
+        emitCloseFact()
     }
 
     fun unbind() {
@@ -61,6 +68,7 @@ internal class FindInPageInteractor(
 
     override fun onFindAll(query: String) {
         engineSession?.findAll(query)
+        emitCommitFact(query)
     }
 
     override fun onClearMatches() {

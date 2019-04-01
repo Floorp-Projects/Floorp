@@ -58,6 +58,24 @@ findInPageFeature.bind(session)
 
 🦊 A practical example of using feature find in page can be found in [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
 
+## Facts
+
+This component emits the following [Facts](../../support/base/README.md#Facts):
+
+| Action | Item     | Extras        | Description                                         |
+|--------|----------|---------------|-----------------------------------------------------|
+| CLICK  | previous |               | The user clicked the previous result button.        |
+| CLICK  | next     |               | The user clicked the next result button.            |
+| CLICK  | close    |               | The user clicked the close button.                  |
+| COMMIT | input    | `inputExtras` | The user committed a query to be found on the page. |
+
+
+#### `inputExtras`
+
+| Key   | Type   | Value                       |
+|-------|--------|-----------------------------|
+| value | String | The query that was searched |
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
