@@ -43,7 +43,7 @@ module.exports = {
    *         CSS unit type, like "px", "em", "rem", etc or null.
    */
   getUnitFromValue(value) {
-    if (typeof value !== "string" || isNaN(parseFloat(value))) {
+    if (typeof value !== "string") {
       return null;
     }
 
