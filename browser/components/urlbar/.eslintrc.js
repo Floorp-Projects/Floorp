@@ -27,5 +27,6 @@ module.exports = {
       requireReturn: false,
       requireReturnDescription: false,
     }],
+    "no-unused-expressions": "error",
   }
 };
