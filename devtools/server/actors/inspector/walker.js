@@ -865,10 +865,14 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     if (shadowHost) {
-      // Use anonymous walkers to fetch ::before / ::after pseudo elements
+      // Use anonymous walkers to fetch ::marker / ::before / ::after pseudo
+      // elements
       const firstChildWalker = this.getDocumentWalker(node.rawNode);
       const first = firstChildWalker.firstChild();
-      const hasBefore = first && first.nodeName === "_moz_generated_content_before";
+      const hasMarker = first && first.nodeName === "_moz_generated_content_marker";
+      const maybeBeforeNode = hasMarker ? firstChildWalker.nextSibling() : first;
+      const hasBefore = maybeBeforeNode &&
+        maybeBeforeNode.nodeName === "_moz_generated_content_before";
 
       const lastChildWalker = this.getDocumentWalker(node.rawNode);
       const last = lastChildWalker.lastChild();
@@ -877,8 +881,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       nodes = [
         // #shadow-root
         ...(hideShadowRoot ? [] : [node.rawNode.openOrClosedShadowRoot]),
+        // ::marker
+        ...(hasMarker ? [first] : []),
         // ::before
-        ...(hasBefore ? [first] : []),
+        ...(hasBefore ? [maybeBeforeNode] : []),
         // shadow host direct children
         ...nodes,
         // native anonymous content for UA widgets
