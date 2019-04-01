@@ -55,7 +55,6 @@ var NetworkManager = (function NetworkManagerClosure() {
 
       this.currXhrId = 0;
       this.pendingRequests = Object.create(null);
-      this.loadedRequests = Object.create(null);
     }
 
     requestRange(begin, end, listeners) {
@@ -97,14 +96,7 @@ var NetworkManager = (function NetworkManagerClosure() {
         pendingRequest.expectedStatus = 200;
       }
 
-      var useMozChunkedLoading = !!args.onProgressiveData;
-      if (useMozChunkedLoading) {
-        xhr.responseType = "moz-chunked-arraybuffer";
-        pendingRequest.onProgressiveData = args.onProgressiveData;
-        pendingRequest.mozChunked = true;
-      } else {
-        xhr.responseType = "arraybuffer";
-      }
+      xhr.responseType = "arraybuffer";
 
       if (args.onError) {
         xhr.onerror = function(evt) {
@@ -129,11 +121,6 @@ var NetworkManager = (function NetworkManagerClosure() {
       if (!pendingRequest) {
         // Maybe abortRequest was called...
         return;
-      }
-
-      if (pendingRequest.mozChunked) {
-        var chunk = getArrayBuffer(pendingRequest.xhr);
-        pendingRequest.onProgressiveData(chunk);
       }
 
       var onProgress = pendingRequest.onProgress;
@@ -191,8 +178,6 @@ var NetworkManager = (function NetworkManagerClosure() {
         return;
       }
 
-      this.loadedRequests[xhrId] = true;
-
       var chunk = getArrayBuffer(xhr);
       if (xhrStatus === PARTIAL_CONTENT_RESPONSE) {
         var rangeHeader = xhr.getResponseHeader("Content-Range");
@@ -202,8 +187,6 @@ var NetworkManager = (function NetworkManagerClosure() {
           begin,
           chunk,
         });
-      } else if (pendingRequest.onProgressiveData) {
-        pendingRequest.onDone(null);
       } else if (chunk) {
         pendingRequest.onDone({
           begin: 0,
@@ -219,22 +202,6 @@ var NetworkManager = (function NetworkManagerClosure() {
         return true;
       }
       return false;
-    }
-
-    getRequestXhr(xhrId) {
-      return this.pendingRequests[xhrId].xhr;
-    }
-
-    isStreamingRequest(xhrId) {
-      return !!(this.pendingRequests[xhrId].onProgressiveData);
-    }
-
-    isPendingRequest(xhrId) {
-      return xhrId in this.pendingRequests;
-    }
-
-    isLoadedRequest(xhrId) {
-      return xhrId in this.loadedRequests;
     }
 
     abortAllRequests() {
