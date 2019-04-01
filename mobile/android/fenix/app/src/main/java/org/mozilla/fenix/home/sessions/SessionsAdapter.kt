@@ -103,6 +103,10 @@ class SessionsAdapter(
             session_card_overflow_button.setOnClickListener {
                 session?.apply { actionEmitter.onNext(SessionsAction.MenuTapped(this)) }
             }
+
+            session_card_share_button.setOnClickListener {
+                session?.apply { actionEmitter.onNext(SessionsAction.ShareTapped(this)) }
+            }
         }
 
         fun bind(session: ArchivedSession) {
