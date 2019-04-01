@@ -40,7 +40,7 @@ const TEST_DATA = [
     anonTree: `
       test-component
         #shadow-root
-        _moz_generated_content_marker
+        ::marker
         ::before`,
 
   }, {
@@ -79,7 +79,7 @@ const TEST_DATA = [
         #shadow-root
           slot
             div!slotted
-        _moz_generated_content_marker
+        ::marker
         ::before
         class="light-dom"`,
   }, {
@@ -107,7 +107,7 @@ const TEST_DATA = [
     anonTree: `
       test-component
         #shadow-root
-        _moz_generated_content_marker`,
+        ::marker`,
   },
 ];
 
