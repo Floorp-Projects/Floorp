@@ -8,6 +8,7 @@
 #include "builtin/String.h"
 
 #include "builtin/TestingFunctions.h"
+#include "js/CompilationAndEvaluation.h"
 #include "js/SavedFrameAPI.h"
 #include "jsapi-tests/tests.h"
 #include "vm/ArrayObject.h"
@@ -292,3 +293,96 @@ BEGIN_TEST(testSavedStacks_selfHostedFrames) {
   return true;
 }
 END_TEST(testSavedStacks_selfHostedFrames)
+
+BEGIN_TEST(test_JS_GetPendingExceptionStack)
+{
+  CHECK(js::DefineTestingFunctions(cx, global, false, false));
+
+  JSPrincipals* principals = cx->realm()->principals();
+
+  const char* sourceText =
+  //            1         2         3
+  //   123456789012345678901234567890123456789
+    "(function one() {                      \n"  // 1
+    "  (function two() {                    \n"  // 2
+    "    (function three() {                \n"  // 3
+    "      throw 5;                         \n"  // 4
+    "    }());                              \n"  // 5
+    "  }());                                \n"  // 6
+    "}())                                   \n"; // 7
+
+  JS::RootedValue val(cx);
+  JS::CompileOptions opts(cx);
+  opts.setFileAndLine("filename.js", 1U);
+  bool ok = JS::EvaluateUtf8(cx, opts, sourceText, strlen(sourceText), &val);
+
+  CHECK(!ok);
+  CHECK(JS_IsExceptionPending(cx));
+  CHECK(val.isUndefined());
+
+  JS::RootedObject stack(cx, JS::GetPendingExceptionStack(cx));
+  CHECK(stack);
+  CHECK(stack->is<js::SavedFrame>());
+  JS::Rooted<js::SavedFrame*> savedFrameStack(cx, &stack->as<js::SavedFrame>());
+
+  JS_GetPendingException(cx, &val);
+  CHECK(val.isInt32());
+  CHECK(val.toInt32() == 5);
+
+  struct {
+    uint32_t line;
+    uint32_t column;
+    const char* source;
+    const char* functionDisplayName;
+  } expected[] = {
+    { 4, 7, "filename.js", "three" },
+    { 5, 6, "filename.js", "two" },
+    { 6, 4, "filename.js", "one" },
+    { 7, 2, "filename.js", nullptr }
+  };
+
+  size_t i = 0;
+  for (JS::Handle<js::SavedFrame*> frame : js::SavedFrame::RootedRange(cx, savedFrameStack)) {
+    CHECK(i < 4);
+
+    // Line
+    uint32_t line = 123;
+    JS::SavedFrameResult result = JS::GetSavedFrameLine(cx, principals, frame, &line,
+                                                        JS::SavedFrameSelfHosted::Exclude);
+    CHECK(result == JS::SavedFrameResult::Ok);
+    CHECK_EQUAL(line, expected[i].line);
+
+    // Column
+    uint32_t column = 123;
+    result = JS::GetSavedFrameColumn(cx, principals, frame, &column,
+                                     JS::SavedFrameSelfHosted::Exclude);
+    CHECK(result == JS::SavedFrameResult::Ok);
+    CHECK_EQUAL(column, expected[i].column);
+
+    // Source
+    JS::RootedString str(cx);
+    result = JS::GetSavedFrameSource(cx, principals, frame, &str, JS::SavedFrameSelfHosted::Exclude);
+    CHECK(result == JS::SavedFrameResult::Ok);
+    JSLinearString* linear = str->ensureLinear(cx);
+    CHECK(linear);
+    CHECK(js::StringEqualsAscii(linear, expected[i].source));
+
+    // Function display name
+    result = JS::GetSavedFrameFunctionDisplayName(cx, principals, frame, &str,
+                                                  JS::SavedFrameSelfHosted::Exclude);
+    CHECK(result == JS::SavedFrameResult::Ok);
+    if (auto expectedName = expected[i].functionDisplayName) {
+      CHECK(str);
+      linear = str->ensureLinear(cx);
+      CHECK(linear);
+      CHECK(js::StringEqualsAscii(linear, expectedName));
+    } else {
+      CHECK(!str);
+    }
+
+    i++;
+  }
+
+  return true;
+}
+END_TEST(test_JS_GetPendingExceptionStack)
