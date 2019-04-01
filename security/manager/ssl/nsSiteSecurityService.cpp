@@ -489,21 +489,13 @@ nsresult nsSiteSecurityService::Init() {
       mozilla::DataStorage::Get(DataStorageClass::SiteSecurityServiceState);
   mPreloadStateStorage =
       mozilla::DataStorage::Get(DataStorageClass::SecurityPreloadState);
-  bool storageWillPersist = false;
-  bool preloadStorageWillPersist = false;
-  nsresult rv = mSiteStateStorage->Init(storageWillPersist);
+  nsresult rv = mSiteStateStorage->Init(nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  rv = mPreloadStateStorage->Init(preloadStorageWillPersist);
+  rv = mPreloadStateStorage->Init(nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
-  }
-  // This is not fatal. There are some cases where there won't be a
-  // profile directory (e.g. running xpcshell). There isn't the
-  // expectation that site information will be presisted in those cases.
-  if (!storageWillPersist || !preloadStorageWillPersist) {
-    NS_WARNING("site security information will not be persisted");
   }
 
   return NS_OK;
