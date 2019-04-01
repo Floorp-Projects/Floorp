@@ -222,6 +222,7 @@ package org.mozilla.geckoview {
     method public boolean getJavaScriptEnabled();
     method @android.support.annotation.Nullable public java.lang.String[] getLocales();
     method public boolean getPauseForDebuggerEnabled();
+    method public int getPreferredColorScheme();
     method public boolean getRemoteDebuggingEnabled();
     method @android.support.annotation.Nullable public org.mozilla.geckoview.GeckoRuntime getRuntime();
     method @android.support.annotation.Nullable public android.graphics.Rect getScreenSizeOverride();
@@ -235,10 +236,14 @@ package org.mozilla.geckoview {
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setFontSizeFactor(float);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setJavaScriptEnabled(boolean);
     method public void setLocales(@android.support.annotation.Nullable java.lang.String[]);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setPreferredColorScheme(int);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setRemoteDebuggingEnabled(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setWebFontsEnabled(boolean);
     field public static final int AUTOPLAY_DEFAULT_ALLOWED = 0;
     field public static final int AUTOPLAY_DEFAULT_BLOCKED = 1;
+    field public static final int COLOR_SCHEME_DARK = 1;
+    field public static final int COLOR_SCHEME_LIGHT = 0;
+    field public static final int COLOR_SCHEME_SYSTEM = -1;
     field public static final android.os.Parcelable.Creator<org.mozilla.geckoview.GeckoRuntimeSettings> CREATOR;
   }
 
@@ -258,6 +263,7 @@ package org.mozilla.geckoview {
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder javaScriptEnabled(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder locales(java.lang.String[]);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder pauseForDebugger(boolean);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder preferredColorScheme(int);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder remoteDebuggingEnabled(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder screenSizeOverride(int, int);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder useContentProcessHint(boolean);
