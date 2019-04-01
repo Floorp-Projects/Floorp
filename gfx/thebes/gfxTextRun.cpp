@@ -3177,7 +3177,7 @@ gfxFont* gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh,
     eFontPrefLang currentLang = prefLangs[i];
     mozilla::FontFamilyType defaultGeneric =
         pfl->GetDefaultGeneric(currentLang);
-    nsTArray<RefPtr<gfxFontFamily>>* families =
+    gfxPlatformFontList::PrefFontList* families =
         pfl->GetPrefFontsLangGroup(defaultGeneric, currentLang);
     NS_ASSERTION(families, "no pref font families found");
 
