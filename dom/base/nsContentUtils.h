@@ -2760,6 +2760,13 @@ class nsContentUtils {
   static bool IsAllowedNonCorsLanguage(const nsACString& aHeaderValue);
 
   /**
+   * Returns whether a given header and value is a CORS-safelisted request
+   * header per https://fetch.spec.whatwg.org/#cors-safelisted-request-header
+   */
+  static bool IsCORSSafelistedRequestHeader(const nsACString& aName,
+                                            const nsACString& aValue);
+
+  /**
    * Returns whether a given header is forbidden for an XHR or fetch
    * response.
    */
