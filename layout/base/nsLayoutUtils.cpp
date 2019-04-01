@@ -9749,8 +9749,9 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
   if (LookAndFeel::GetFont(aFontID, systemFontName, fontStyle)) {
     systemFontName.Trim("\"'");
     aSystemFont->fontlist =
-        FontFamilyList(NS_ConvertUTF16toUTF8(systemFontName), eUnquotedName);
-    aSystemFont->fontlist.SetDefaultFontType(eFamily_none);
+        FontFamilyList(NS_ConvertUTF16toUTF8(systemFontName),
+                       StyleFontFamilyNameSyntax::Identifiers);
+    aSystemFont->fontlist.SetDefaultFontType(StyleGenericFontFamily::None);
     aSystemFont->style = fontStyle.style;
     aSystemFont->systemFont = fontStyle.systemFont;
     aSystemFont->weight = fontStyle.weight;

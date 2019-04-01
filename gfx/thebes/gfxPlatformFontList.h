@@ -258,12 +258,12 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
     aLoaderState = (uint32_t)mState;
   }
 
-  virtual void AddGenericFonts(mozilla::FontFamilyType aGenericType,
+  virtual void AddGenericFonts(mozilla::StyleGenericFontFamily aGenericType,
                                nsAtom* aLanguage,
                                nsTArray<FamilyAndGeneric>& aFamilyList);
 
-  PrefFontList* GetPrefFontsLangGroup(mozilla::FontFamilyType aGenericType,
-                                      eFontPrefLang aPrefLang);
+  PrefFontList* GetPrefFontsLangGroup(
+      mozilla::StyleGenericFontFamily aGenericType, eFontPrefLang aPrefLang);
 
   // in some situations, need to make decisions about ambiguous characters, may
   // need to look at multiple pref langs
@@ -295,7 +295,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
                              eFontPrefLang aAddLang);
 
   // default serif/sans-serif choice based on font.default.xxx prefs
-  mozilla::FontFamilyType GetDefaultGeneric(eFontPrefLang aLang);
+  mozilla::StyleGenericFontFamily GetDefaultGeneric(eFontPrefLang aLang);
 
   // Returns true if the font family whitelist is not empty.
   bool IsFontFamilyWhitelistActive();
@@ -305,7 +305,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   bool AddWithLegacyFamilyName(const nsACString& aLegacyName,
                                gfxFontEntry* aFontEntry);
 
-  static const char* GetGenericName(mozilla::FontFamilyType aGenericType);
+  static const char* GetGenericName(
+      mozilla::StyleGenericFontFamily aGenericType);
 
  protected:
   class InitOtherFamilyNamesRunnable : public mozilla::CancelableRunnable {
@@ -486,7 +487,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   void RebuildLocalFonts();
 
-  void ResolveGenericFontNames(mozilla::FontFamilyType aGenericType,
+  void ResolveGenericFontNames(mozilla::StyleGenericFontFamily aGenericType,
                                eFontPrefLang aPrefLang,
                                PrefFontList* aGenericFamilies);
 
@@ -552,8 +553,9 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   mozilla::UniquePtr<nsTHashtable<nsCStringHashKey>> mOtherNamesMissed;
 
   typedef mozilla::RangedArray<mozilla::UniquePtr<PrefFontList>,
-                               mozilla::eFamily_generic_first,
-                               mozilla::eFamily_generic_count>
+                               size_t(mozilla::StyleGenericFontFamily::None),
+                               size_t(
+                                   mozilla::StyleGenericFontFamily::MozEmoji)>
       PrefFontsForLangGroup;
   mozilla::RangedArray<PrefFontsForLangGroup, eFontPrefLang_First,
                        eFontPrefLang_Count>
@@ -589,7 +591,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   nsLanguageAtomService* mLangService;
 
   nsTArray<uint32_t> mCJKPrefLangs;
-  nsTArray<mozilla::FontFamilyType> mDefaultGenericsLangGroup;
+  nsTArray<mozilla::StyleGenericFontFamily> mDefaultGenericsLangGroup;
 
   bool mFontFamilyWhitelistActive;
 };
