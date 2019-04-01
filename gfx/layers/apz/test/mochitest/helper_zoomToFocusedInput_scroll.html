@@ -1,0 +1,28 @@
+<!DOCTYPE>
+<html>
+  <head>
+  <title>Checking zoomToFocusedInput scrolls that focused input element is visible position</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  </head>
+<body>
+<div style="height: 8000px;">ABC</div>
+<input id="input1">
+<script type="application/javascript">
+function test() {
+  let SimpleTest = window.opener.SimpleTest;
+
+  SimpleTest.is(0, window.scrollY, "scroll position starts at zero");
+  input1.focus();
+  SimpleTest.isnot(0, window.scrollY, "scroll position isn't top");
+  window.scrollTo(0, 0);
+  SimpleTest.is(0, window.scrollY, "scroll position is top");
+
+  SpecialPowers.getDOMWindowUtils(window).zoomToFocusedInput();
+  SimpleTest.isnot(0, window.scrollY, "scroll position isn't top");
+}
+
+waitUntilApzStable().then(test).then(subtestDone);
+</script>
+</body>
+</html>

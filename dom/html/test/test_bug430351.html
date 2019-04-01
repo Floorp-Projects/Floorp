@@ -461,7 +461,7 @@ function testElements(parent, tags, shouldBeFocusable)
         while ((descendant = descendant.firstChild))
             element = descendant;
 
-        if (element.nodeName == "IFRAME" && element.hasAttribute("src"))
+        if (element.nodeName == "IFRAME")
             var foo = element.contentDocument;
 
         element.focus();

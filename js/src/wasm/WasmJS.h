@@ -25,6 +25,7 @@
 
 namespace js {
 
+class ArrayBufferObjectMaybeShared;
 class GlobalObject;
 class StructTypeDescr;
 class TypedArrayObject;
