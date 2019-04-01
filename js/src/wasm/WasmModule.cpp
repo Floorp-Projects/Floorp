@@ -286,14 +286,6 @@ MutableModule Module::deserialize(const uint8_t* begin, size_t size,
     return nullptr;
   }
 
-  if (metadata->nameCustomSectionIndex) {
-    metadata->namePayload =
-        customSections[*metadata->nameCustomSectionIndex].payload;
-  } else {
-    MOZ_RELEASE_ASSERT(!metadata->moduleName);
-    MOZ_RELEASE_ASSERT(metadata->funcNames.empty());
-  }
-
   SharedCode code;
   cursor = Code::deserialize(cursor, linkData, *metadata, &code);
   if (!cursor) {
@@ -302,6 +294,14 @@ MutableModule Module::deserialize(const uint8_t* begin, size_t size,
 
   MOZ_RELEASE_ASSERT(cursor == begin + size);
   MOZ_RELEASE_ASSERT(!!maybeMetadata == code->metadata().isAsmJS());
+
+  if (metadata->nameCustomSectionIndex) {
+    metadata->namePayload =
+        customSections[*metadata->nameCustomSectionIndex].payload;
+  } else {
+    MOZ_RELEASE_ASSERT(!metadata->moduleName);
+    MOZ_RELEASE_ASSERT(metadata->funcNames.empty());
+  }
 
   return js_new<Module>(*code, std::move(imports), std::move(exports),
                         std::move(dataSegments), std::move(elemSegments),
