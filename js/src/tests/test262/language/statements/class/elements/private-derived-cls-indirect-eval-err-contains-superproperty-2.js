@@ -1,4 +1,4 @@
-// |reftest| skip -- class-fields-public,class-fields-private is not supported
+// |reftest| skip -- class-fields-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/eval-err-contains-superproperty-2.case
 // - src/class-elements/initializer-eval-super-property/cls-decl-private-fields-indirect-eval.template

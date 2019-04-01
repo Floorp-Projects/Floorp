@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-methods-private,class-fields-private,class-fields-public is not supported
+// |reftest| skip error:SyntaxError -- class-methods-private,class-fields-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/err-delete-call-expression-private-method-async.case
 // - src/class-elements/delete-error/cls-expr-field-delete-covered.template

@@ -1,4 +1,4 @@
-// |reftest| skip -- class-static-methods-private,class-fields-public is not supported
+// |reftest| skip -- class-static-methods-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/rs-static-async-generator-method-privatename-identifier.case
 // - src/class-elements/productions/cls-expr-new-sc-line-method.template

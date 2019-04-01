@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-fields-public is not supported
+// |reftest| skip-if((function(){try{eval('c=class{x;}');return(false);}catch{return(true);}})()) error:SyntaxError -- class-fields-public is not enabled unconditionally
 // This file was procedurally generated from the following sources:
 // - src/class-elements/init-err-contains-super.case
 // - src/class-elements/initializer-error/cls-expr-fields-typeof.template
