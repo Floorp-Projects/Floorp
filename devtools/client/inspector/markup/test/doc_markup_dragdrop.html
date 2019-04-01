@@ -25,6 +25,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=858038
     <div slot="slot1" class="slotted2">slot1-2</div>
   </test-component>
 
+  <ol>
+    <li id="list"><span id="first-list-child"
+      >List item start</span><span id="last-list-child"
+      >List item end</span></li>
+  </ol>
+
   <script>
     "use strict";
     customElements.define("test-component", class extends HTMLElement {
