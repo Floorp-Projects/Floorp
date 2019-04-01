@@ -54,6 +54,7 @@ add_clang_library(clangTidyMozillaModule
   clangTidy
   clangTidyReadabilityModule
   clangTidyUtils
+  clangTidyMPIModule
   )""" % {'names': "\n".join(names)})
 
 
