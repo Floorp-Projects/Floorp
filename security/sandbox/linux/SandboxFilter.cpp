@@ -1403,7 +1403,31 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
   explicit RDDSandboxPolicy(SandboxBrokerClient* aBroker)
       : SandboxPolicyCommon(aBroker) {}
 
-  // Pass through EvaluateSyscall.
+  static intptr_t FcntlTrap(const sandbox::arch_seccomp_data& aArgs,
+                            void* aux) {
+    const auto cmd = static_cast<int>(aArgs.args[1]);
+    switch (cmd) {
+        // This process can't exec, so the actual close-on-exec flag
+        // doesn't matter; have it always read as true and ignore writes.
+      case F_GETFD:
+        return O_CLOEXEC;
+      case F_SETFD:
+        return 0;
+      default:
+        return -ENOSYS;
+    }
+  }
+
+  ResultExpr EvaluateSyscall(int sysno) const override {
+    switch (sysno) {
+      CASES_FOR_fcntl:
+        return Trap(FcntlTrap, nullptr);
+
+      // Pass through the common policy.
+      default:
+        return SandboxPolicyCommon::EvaluateSyscall(sysno);
+    }
+  }
 };
 
 UniquePtr<sandbox::bpf_dsl::Policy> GetDecoderSandboxPolicy(
