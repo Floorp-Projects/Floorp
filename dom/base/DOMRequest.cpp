@@ -138,7 +138,7 @@ void DOMRequest::FireDetailedError(DOMException& aError) {
 
 void DOMRequest::FireEvent(const nsAString& aType, bool aBubble,
                            bool aCancelable) {
-  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+  if (NS_FAILED(CheckCurrentGlobalCorrectness())) {
     return;
   }
 

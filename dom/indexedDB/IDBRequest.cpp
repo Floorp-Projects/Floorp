@@ -277,8 +277,8 @@ void IDBRequest::SetResultCallback(ResultCallback* aCallback) {
     return;
   }
 
-  // See if our window is still valid.
-  if (NS_WARN_IF(NS_FAILED(CheckInnerWindowCorrectness()))) {
+  // See this global is still valid.
+  if (NS_WARN_IF(NS_FAILED(CheckCurrentGlobalCorrectness()))) {
     SetError(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     return;
   }

@@ -131,13 +131,7 @@ class DOMEventTargetHelper : public dom::EventTarget,
     return nsPIDOMWindowOuter::GetFromCurrentInner(GetOwner());
   }
 
-  nsresult CheckInnerWindowCorrectness() const {
-    NS_ENSURE_STATE(!mHasOrHasHadOwnerWindow || mOwnerWindow);
-    if (mOwnerWindow && !mOwnerWindow->IsCurrentInnerWindow()) {
-      return NS_ERROR_FAILURE;
-    }
-    return NS_OK;
-  }
+  nsresult CheckCurrentGlobalCorrectness() const;
 
   nsPIDOMWindowInner* GetOwner() const { return mOwnerWindow; }
   // Like GetOwner, but only returns non-null if the window being returned is
