@@ -17,16 +17,14 @@ These tests can be run on CI when pushing to TRY. Not all tests are enabled at t
 These tests are located in `test/components/` and `test/store/`, and can be run with the following command:
 
 ```sh
-devtools/client/webconsole/test/ && npm install && npm test
+cd devtools/client/webconsole/test/ && npm install && npm test
 ```
 
 or using yarn with
 
 ```sh
-devtools/client/webconsole/test/ && yarn && yarn test
+cd devtools/client/webconsole/test/ && yarn && yarn test
 ```
-
-**⚠️️️️️️️️️️ These tests are not ran on CI at the moment. You need to run them manually when working on the console. (See Bug 1312823)**
 
 ---
 

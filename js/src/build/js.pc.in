@@ -8,4 +8,7 @@ Description: The Mozilla library for JavaScript
 Version: @MOZILLA_VERSION@
 @PKGCONF_REQUIRES_PRIVATE@
 Libs: -L${libdir} -l@JS_LIBRARY_NAME@
-Cflags: -include ${includedir}/@JS_LIBRARY_NAME@/js/RequiredDefines.h -I${includedir}/@JS_LIBRARY_NAME@
+# Use -isystem for includes rather than -I, to mark them as "system headers"
+# that don't generate warning diagnostics. For justification, see
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1539036
+Cflags: -include ${includedir}/@JS_LIBRARY_NAME@/js/RequiredDefines.h -isystem ${includedir}/@JS_LIBRARY_NAME@
