@@ -2781,7 +2781,9 @@ struct AutoCheckBuilder {
  */
 struct ContainerTracker {
   void TrackContainer(nsDisplayItem* aContainer) {
-    MOZ_ASSERT(aContainer);
+    if (!aContainer) {
+      return;
+    }
 
     if (!mContainer) {
       mContainer = aContainer;
@@ -3107,6 +3109,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
                                                                   inTransform);
     nsDisplayListBuilder::AutoEnterFilter filterASRSetter(aBuilder,
                                                           usingFilter);
+    nsDisplayListBuilder::AutoInEventsAndPluginsOnly inEventsAndPluginsSetter(
+        aBuilder, opacityItemForEventsAndPluginsOnly);
 
     CheckForApzAwareEventHandlers(aBuilder, this);
 
