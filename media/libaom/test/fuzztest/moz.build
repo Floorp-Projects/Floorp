@@ -28,6 +28,11 @@ elif CONFIG['CPU_ARCH'] == 'arm':
         '/media/libaom/config/linux/arm/',
         '/media/libvpx/config/linux/arm/',
     ]
+elif CONFIG['CPU_ARCH'] == 'aarch64':
+    LOCAL_INCLUDES += [
+        '/media/libaom/config/generic/',
+        '/media/libvpx/config/linux/arm64/',
+    ]
 
 SOURCES += [
     '/media/libvpx/libvpx/ivfdec.c',
