@@ -93,9 +93,6 @@ parent:
   // sure not to send any more messages after that.
   async DeletingChannel();
 
-  // Called to get the input stream when altData was delivered.
-  async OpenOriginalCacheInputStream();
-
   // Called to get the input stream when altData is available.
   async OpenAltDataCacheInputStream(nsCString aType);
 
@@ -125,6 +122,7 @@ child:
                        nsCString           altDataType,
                        int64_t             altDataLength,
                        bool                deliveringAltData,
+                       IPCStream?          originalCacheInputStream,
                        bool                applyConversion,
                        ResourceTimingStruct timing);
 
@@ -181,8 +179,6 @@ child:
 
   // See ADivertableParentChannel::CancelDiversion
   async CancelDiversion();
-
-  async OriginalCacheInputStreamAvailable(IPCStream? stream);
 
   async AltDataCacheInputStreamAvailable(IPCStream? stream);
 

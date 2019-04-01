@@ -1274,10 +1274,9 @@ InterceptedHttpChannel::OpenAlternativeOutputStream(
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::GetOriginalInputStream(
-    nsIInputStreamReceiver* aReceiver) {
+InterceptedHttpChannel::GetOriginalInputStream(nsIInputStream** aStream) {
   if (mSynthesizedCacheInfo) {
-    return mSynthesizedCacheInfo->GetOriginalInputStream(aReceiver);
+    return mSynthesizedCacheInfo->GetOriginalInputStream(aStream);
   }
   return NS_ERROR_NOT_AVAILABLE;
 }
