@@ -456,19 +456,22 @@ exports.getCssPath = getCssPath;
 exports.getXPath = getXPath;
 
 /**
- * Given a node, check to see if it is a ::before or ::after element.
+ * Given a node, check to see if it is a ::marker, ::before, or ::after element.
  * If so, return the node that is accessible from within the document
  * (the parent of the anonymous node), along with which pseudo element
  * it was.  Otherwise, return the node itself.
  *
  * @returns {Object}
  *            - {DOMNode} node The non-anonymous node
- *            - {string} pseudo One of ':before', ':after', or null.
+ *            - {string} pseudo One of ':marker', ':before', ':after', or null.
  */
 function getBindingElementAndPseudo(node) {
   let bindingElement = node;
   let pseudo = null;
-  if (node.nodeName == "_moz_generated_content_before") {
+  if (node.nodeName == "_moz_generated_content_marker") {
+    bindingElement = node.parentNode;
+    pseudo = ":marker";
+  } else if (node.nodeName == "_moz_generated_content_before") {
     bindingElement = node.parentNode;
     pseudo = ":before";
   } else if (node.nodeName == "_moz_generated_content_after") {
