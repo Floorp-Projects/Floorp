@@ -11,6 +11,7 @@
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/RandomNum.h"
 #include "nsIRandomGenerator.h"
 #include "nsIURI.h"
 #include "nsStreamUtils.h"
@@ -122,6 +123,11 @@ nsresult InternalResponse::GeneratePaddingInfo() {
   nsCOMPtr<nsIRandomGenerator> randomGenerator =
       do_GetService("@mozilla.org/security/random-generator;1", &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    Maybe<uint64_t> maybeRandomNum = RandomUint64();
+    if (maybeRandomNum.isSome()) {
+      mPaddingInfo.emplace(uint32_t(maybeRandomNum.value() % kMaxRandomNumber));
+      return NS_OK;
+    }
     return rv;
   }
 
@@ -130,6 +136,11 @@ nsresult InternalResponse::GeneratePaddingInfo() {
   uint8_t* buffer;
   rv = randomGenerator->GenerateRandomBytes(sizeof(randomNumber), &buffer);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    Maybe<uint64_t> maybeRandomNum = RandomUint64();
+    if (maybeRandomNum.isSome()) {
+      mPaddingInfo.emplace(uint32_t(maybeRandomNum.value() % kMaxRandomNumber));
+      return NS_OK;
+    }
     return rv;
   }
 
