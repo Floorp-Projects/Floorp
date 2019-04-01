@@ -22,13 +22,14 @@ struct LangGroupFontPrefs {
       : mLangGroup(nullptr),
         mMinimumFontSize(0),
         mDefaultVariableFont(),
-        mDefaultFixedFont(mozilla::eFamily_monospace, 0),
-        mDefaultSerifFont(mozilla::eFamily_serif, 0),
-        mDefaultSansSerifFont(mozilla::eFamily_sans_serif, 0),
-        mDefaultMonospaceFont(mozilla::eFamily_monospace, 0),
-        mDefaultCursiveFont(mozilla::eFamily_cursive, 0),
-        mDefaultFantasyFont(mozilla::eFamily_fantasy, 0) {
-    mDefaultVariableFont.fontlist.SetDefaultFontType(mozilla::eFamily_serif);
+        mDefaultFixedFont(StyleGenericFontFamily::MozFixed, 0),
+        mDefaultSerifFont(StyleGenericFontFamily::Serif, 0),
+        mDefaultSansSerifFont(StyleGenericFontFamily::SansSerif, 0),
+        mDefaultMonospaceFont(StyleGenericFontFamily::Monospace, 0),
+        mDefaultCursiveFont(StyleGenericFontFamily::Cursive, 0),
+        mDefaultFantasyFont(StyleGenericFontFamily::Fantasy, 0) {
+    mDefaultVariableFont.fontlist.SetDefaultFontType(
+        StyleGenericFontFamily::Serif);
     // We create mDefaultVariableFont.fontlist with defaultType as the
     // fallback font, and not as part of the font list proper. This way,
     // it can be overwritten should there be a language change.
@@ -68,8 +69,8 @@ struct LangGroupFontPrefs {
    * This object is read-only, you must copy the font to modify it.
    *
    * When aFontID is kPresContext_DefaultVariableFontID or
-   * kPresContext_DefaultFixedFontID (which equals
-   * kGenericFont_moz_fixed, which is used for the -moz-fixed generic),
+   * kPresContext_DefaultFixedFontID (which equals MozFixed, which is used for
+   * the -moz-fixed generic),
    * the nsFont returned has its name as a CSS generic family (serif or
    * sans-serif for the former, monospace for the latter), and its size
    * as the default font size for variable or fixed fonts for the
@@ -80,23 +81,23 @@ struct LangGroupFontPrefs {
    * the user's preference for font size for that generic and the
    * given language.
    */
-  const nsFont* GetDefaultFont(uint8_t aFontID) const {
-    switch (aFontID) {
+  const nsFont* GetDefaultFont(StyleGenericFontFamily aFamily) const {
+    switch (aFamily) {
       // Special (our default variable width font and fixed width font)
-      case kGenericFont_moz_variable:
+      case StyleGenericFontFamily::None:
         return &mDefaultVariableFont;
-      case kGenericFont_moz_fixed:
+      case StyleGenericFontFamily::MozFixed:
         return &mDefaultFixedFont;
       // CSS
-      case kGenericFont_serif:
+      case StyleGenericFontFamily::Serif:
         return &mDefaultSerifFont;
-      case kGenericFont_sans_serif:
+      case StyleGenericFontFamily::SansSerif:
         return &mDefaultSansSerifFont;
-      case kGenericFont_monospace:
+      case StyleGenericFontFamily::Monospace:
         return &mDefaultMonospaceFont;
-      case kGenericFont_cursive:
+      case StyleGenericFontFamily::Cursive:
         return &mDefaultCursiveFont;
-      case kGenericFont_fantasy:
+      case StyleGenericFontFamily::Fantasy:
         return &mDefaultFantasyFont;
         break;
       default:
