@@ -9,8 +9,6 @@ const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
 const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
 
 add_task(async function() {
-  Services.prefs.clearUserPref("lightweightThemes.usedThemes");
-
   await startCustomizing();
   // Check restore defaults button is disabled.
   ok(document.getElementById("customization-reset-button").disabled,
@@ -132,7 +130,6 @@ add_task(async function() {
   is(defaultTheme.isActive, true, "Current theme reset to default");
 
   await endCustomizing();
-  Services.prefs.setCharPref("lightweightThemes.usedThemes", "[]");
   await startCustomizing();
   popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
@@ -155,6 +152,4 @@ add_task(async function() {
 
 add_task(async function asyncCleanup() {
   await endCustomizing();
-
-  Services.prefs.clearUserPref("lightweightThemes.usedThemes");
 });
