@@ -64,6 +64,7 @@ async function testWithProperties(props, startTime) {
   }
 
   let dialog = await openConnectionsSubDialog();
+  await dialog.uiReady;
   info((Date.now() - startTime) + ": testWithProperties: connections dialog now open");
   let doc = dialog.document;
   let win = doc.ownerGlobal;
