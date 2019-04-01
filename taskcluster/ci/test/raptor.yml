@@ -87,13 +87,6 @@ raptor-tp6-3-firefox:
     description: "Raptor tp6-3 on Firefox"
     try-name: raptor-tp6-3-firefox
     treeherder-symbol: Rap(tp6-3)
-    run-on-projects:
-        by-test-platform:
-            win64-aarch64/opt: ['try']
-    tier:
-        by-test-platform:
-            win64-aarch64/opt: 3
-            default: 1
     mozharness:
         extra-options:
             - --test=raptor-tp6-3
