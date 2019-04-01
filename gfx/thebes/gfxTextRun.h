@@ -851,8 +851,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
   // Initiates userfont loads if userfont not loaded.
   // aGeneric: if non-null, returns the CSS generic type that was mapped to
   //           this font
-  gfxFont* GetFirstValidFont(uint32_t aCh = 0x20,
-                             mozilla::FontFamilyType* aGeneric = nullptr);
+  gfxFont* GetFirstValidFont(
+      uint32_t aCh = 0x20, mozilla::StyleGenericFontFamily* aGeneric = nullptr);
 
   // Returns the first font in the font-group that has an OpenType MATH table,
   // or null if no such font is available. The GetMathConstant methods may be
@@ -1024,14 +1024,14 @@ class gfxFontGroup final : public gfxTextRunFactory {
     FamilyFace()
         : mFamily(nullptr),
           mFontEntry(nullptr),
-          mGeneric(mozilla::eFamily_none),
+          mGeneric(mozilla::StyleGenericFontFamily::None),
           mFontCreated(false),
           mLoading(false),
           mInvalid(false),
           mCheckForFallbackFaces(false) {}
 
     FamilyFace(gfxFontFamily* aFamily, gfxFont* aFont,
-               mozilla::FontFamilyType aGeneric)
+               mozilla::StyleGenericFontFamily aGeneric)
         : mFamily(aFamily),
           mGeneric(aGeneric),
           mFontCreated(true),
@@ -1046,7 +1046,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
     }
 
     FamilyFace(gfxFontFamily* aFamily, gfxFontEntry* aFontEntry,
-               mozilla::FontFamilyType aGeneric)
+               mozilla::StyleGenericFontFamily aGeneric)
         : mFamily(aFamily),
           mGeneric(aGeneric),
           mFontCreated(false),
@@ -1115,7 +1115,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
       return mFontCreated ? mFont->GetFontEntry() : mFontEntry;
     }
 
-    mozilla::FontFamilyType Generic() const { return mGeneric; }
+    mozilla::StyleGenericFontFamily Generic() const { return mGeneric; }
 
     bool IsUserFontContainer() const {
       return FontEntry()->mIsUserFontContainer;
@@ -1152,7 +1152,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
       gfxFont* MOZ_OWNING_REF mFont;
       gfxFontEntry* MOZ_OWNING_REF mFontEntry;
     };
-    mozilla::FontFamilyType mGeneric;
+    mozilla::StyleGenericFontFamily mGeneric;
     bool mFontCreated : 1;
     bool mLoading : 1;
     bool mInvalid : 1;
@@ -1261,7 +1261,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
 
   // do style selection and add entries to list
   void AddFamilyToFontList(gfxFontFamily* aFamily,
-                           mozilla::FontFamilyType aGeneric);
+                           mozilla::StyleGenericFontFamily aGeneric);
 };
 
 // A "missing font recorder" is to be used during text-run creation to keep
