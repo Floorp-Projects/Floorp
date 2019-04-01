@@ -590,6 +590,16 @@ void WebrtcGmpVideoEncoder::Encoded(
         default:
           MOZ_CRASH("GMP_BufferType already handled in switch above");
       }
+
+      // OpenH264 1.8.1 occasionally generates a size of 0x01000000.
+      // This is a magic value in the NAL which should be replaced with a
+      // valid size, but for some reason this is not always happening.
+      // If we return early here, encoding will continue to work as expected.
+      // See Bug 1533001.
+      if (size == 0x01000000) {
+        return;
+      }
+
       MOZ_ASSERT(size != 0 &&
                  buffer + size <=
                      end);  // in non-debug code, don't crash in this case
