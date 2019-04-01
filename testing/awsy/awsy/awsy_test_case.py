@@ -61,6 +61,9 @@ class AwsyTestCase(MarionetteTestCase):
         self.marionette.set_context('chrome')
         self._resultsDir = self.testvars["resultsDir"]
 
+        self._binary = self.testvars['bin']
+        self._run_local = self.testvars.get('run_local', False)
+
         # Cleanup our files from previous runs.
         for patt in ('memory-report-*.json.gz',
                      'perfherder_data.json',

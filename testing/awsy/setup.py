@@ -17,7 +17,7 @@ setup(
     license='MPL 1.1/GPL 2.0/LGPL 2.1',
     packages=find_packages(),
     zip_safe=False,
-    install_requires=["marionette_harness"],
+    install_requires=["marionette_harness", "PyYaml"],
     classifiers=['Development Status :: 4 - Beta',
                  'Environment :: Console',
                  'Intended Audience :: Developers',
