@@ -42,6 +42,8 @@
 --ion-full-warmup-threshold=1000
 --ion-full-warmup-threshold=1500
 --ion-full-warmup-threshold=5000
+--ion-optimization-levels=off
+--ion-optimization-levels=on
 --no-native-regexp
 --nursery-strings=off
 --nursery-strings=on
