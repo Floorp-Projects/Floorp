@@ -12,6 +12,7 @@
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/VsyncDispatcher.h"
+#include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/ipc/CrashReporterHost.h"
 
 namespace mozilla {
@@ -66,8 +67,27 @@ class OpenVRControllerManifestManager {
 
 StaticRefPtr<OpenVRControllerManifestManager> sOpenVRControllerManifestManager;
 
-VRChild::VRChild(VRProcessParent* aHost) : mHost(aHost) {
+VRChild::VRChild(VRProcessParent* aHost)
+  : mHost(aHost),
+    mVRReady(false) {
   MOZ_ASSERT(XRE_IsParentProcess());
+}
+
+mozilla::ipc::IPCResult VRChild::RecvAddMemoryReport(
+    const MemoryReport& aReport) {
+  if (mMemoryReportRequest) {
+    mMemoryReportRequest->RecvReport(aReport);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult VRChild::RecvFinishMemoryReport(
+    const uint32_t& aGeneration) {
+  if (mMemoryReportRequest) {
+    mMemoryReportRequest->Finish(aGeneration);
+    mMemoryReportRequest = nullptr;
+  }
+  return IPC_OK();
 }
 
 void VRChild::ActorDestroy(ActorDestroyReason aWhy) {
@@ -144,6 +164,14 @@ void VRChild::Init() {
   gfxVars::AddReceiver(this);
 }
 
+bool VRChild::EnsureVRReady() {
+  if (!mVRReady) {
+    return false;
+  }
+
+  return true;
+}
+
 mozilla::ipc::IPCResult VRChild::RecvOpenVRControllerActionPathToParent(
     const nsCString& aPath) {
   sOpenVRControllerManifestManager->SetOpenVRControllerActionPath(aPath);
@@ -157,12 +185,28 @@ mozilla::ipc::IPCResult VRChild::RecvOpenVRControllerManifestPathToParent(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult VRChild::RecvInitComplete() {
+  // We synchronously requested VR parameters before this arrived.
+  mVRReady = true;
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult VRChild::RecvInitCrashReporter(
     Shmem&& aShmem, const NativeThreadId& aThreadId) {
   mCrashReporter = MakeUnique<ipc::CrashReporterHost>(GeckoProcessType_VR,
                                                       aShmem, aThreadId);
 
   return IPC_OK();
+}
+
+bool VRChild::SendRequestMemoryReport(const uint32_t& aGeneration,
+                                       const bool& aAnonymize,
+                                       const bool& aMinimizeMemoryUsage,
+                                       const Maybe<FileDescriptor>& aDMDFile) {
+  mMemoryReportRequest = MakeUnique<MemoryReportRequestHost>(aGeneration);
+  Unused << PVRChild::SendRequestMemoryReport(aGeneration, aAnonymize,
+                                              aMinimizeMemoryUsage, aDMDFile);
+  return true;
 }
 
 void VRChild::OnVarChanged(const GfxVarUpdate& aVar) { SendUpdateVar(aVar); }
