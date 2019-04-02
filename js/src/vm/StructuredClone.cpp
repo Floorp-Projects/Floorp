@@ -130,8 +130,8 @@ enum StructuredDataType : uint32_t {
   SCTAG_TYPED_ARRAY_V1_FLOAT64 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Float64,
   SCTAG_TYPED_ARRAY_V1_UINT8_CLAMPED =
       SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Uint8Clamped,
-  // BigInt64 and BigUint64 are not supported in the v1 format.
-  SCTAG_TYPED_ARRAY_V1_MAX = SCTAG_TYPED_ARRAY_V1_UINT8_CLAMPED,
+  SCTAG_TYPED_ARRAY_V1_MAX =
+      SCTAG_TYPED_ARRAY_V1_MIN + Scalar::MaxTypedArrayViewType - 1,
 
   // Define a separate range of numbers for Transferable-only tags, since
   // they are not used for persistent clone buffers and therefore do not
@@ -2078,7 +2078,7 @@ bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
                                              uint32_t nelems,
                                              MutableHandleValue vp,
                                              bool v1Read) {
-  if (arrayType > (v1Read ? Scalar::Uint8Clamped : Scalar::BigUint64)) {
+  if (arrayType > Scalar::Uint8Clamped) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_BAD_SERIALIZED_DATA,
                               "unhandled typed array element type");
@@ -2148,14 +2148,6 @@ bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
     case Scalar::Uint8Clamped:
       obj = JS_NewUint8ClampedArrayWithBuffer(context(), buffer, byteOffset,
                                               nelems);
-      break;
-    case Scalar::BigInt64:
-      obj =
-          JS_NewBigInt64ArrayWithBuffer(context(), buffer, byteOffset, nelems);
-      break;
-    case Scalar::BigUint64:
-      obj =
-          JS_NewBigUint64ArrayWithBuffer(context(), buffer, byteOffset, nelems);
       break;
     default:
       MOZ_CRASH("Can't happen: arrayType range checked above");
@@ -2353,8 +2345,6 @@ bool JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType,
     case Scalar::Float32:
       return in.readArray((uint32_t*)buffer.dataPointer(), nelems);
     case Scalar::Float64:
-    case Scalar::BigInt64:
-    case Scalar::BigUint64:
       return in.readArray((uint64_t*)buffer.dataPointer(), nelems);
     default:
       MOZ_CRASH("Can't happen: arrayType range checked by caller");
