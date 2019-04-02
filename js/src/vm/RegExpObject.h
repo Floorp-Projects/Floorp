@@ -15,6 +15,7 @@
 #include "builtin/SelfHostingDefines.h"
 #include "gc/Marking.h"
 #include "js/GCHashTable.h"
+#include "js/RegExpFlags.h"
 #include "proxy/Proxy.h"
 #include "vm/ArrayObject.h"
 #include "vm/JSContext.h"
@@ -70,19 +71,19 @@ class RegExpObject : public NativeObject {
 
   template <typename CharT>
   static RegExpObject* create(JSContext* cx, const CharT* chars, size_t length,
-                              RegExpFlag flags, NewObjectKind newKind);
+                              JS::RegExpFlags flags, NewObjectKind newKind);
 
   template <typename CharT>
   static RegExpObject* create(JSContext* cx, const CharT* chars, size_t length,
-                              RegExpFlag flags,
+                              JS::RegExpFlags flags,
                               frontend::TokenStreamAnyChars& ts,
                               NewObjectKind kind);
 
   static RegExpObject* create(JSContext* cx, HandleAtom source,
-                              RegExpFlag flags, NewObjectKind newKind);
+                              JS::RegExpFlags flags, NewObjectKind newKind);
 
   static RegExpObject* create(JSContext* cx, HandleAtom source,
-                              RegExpFlag flags,
+                              JS::RegExpFlags flags,
                               frontend::TokenStreamAnyChars& ts,
                               NewObjectKind newKind);
 
@@ -131,18 +132,20 @@ class RegExpObject : public NativeObject {
 
   static unsigned flagsSlot() { return FLAGS_SLOT; }
 
-  RegExpFlag getFlags() const {
-    return RegExpFlag(getFixedSlot(FLAGS_SLOT).toInt32());
+  JS::RegExpFlags getFlags() const {
+    return JS::RegExpFlags(getFixedSlot(FLAGS_SLOT).toInt32());
   }
-  void setFlags(RegExpFlag flags) { setSlot(FLAGS_SLOT, Int32Value(flags)); }
+  void setFlags(JS::RegExpFlags flags) {
+    setFixedSlot(FLAGS_SLOT, Int32Value(flags.value()));
+  }
 
-  bool ignoreCase() const { return getFlags() & IgnoreCaseFlag; }
-  bool global() const { return getFlags() & GlobalFlag; }
-  bool multiline() const { return getFlags() & MultilineFlag; }
-  bool sticky() const { return getFlags() & StickyFlag; }
-  bool unicode() const { return getFlags() & UnicodeFlag; }
+  bool global() const { return getFlags().global(); }
+  bool ignoreCase() const { return getFlags().ignoreCase(); }
+  bool multiline() const { return getFlags().multiline(); }
+  bool unicode() const { return getFlags().unicode(); }
+  bool sticky() const { return getFlags().sticky(); }
 
-  static bool isOriginalFlagGetter(JSNative native, RegExpFlag* mask);
+  static bool isOriginalFlagGetter(JSNative native, JS::RegExpFlags* mask);
 
   static RegExpShared* getShared(JSContext* cx, Handle<RegExpObject*> regexp);
 
@@ -161,12 +164,13 @@ class RegExpObject : public NativeObject {
   static void trace(JSTracer* trc, JSObject* obj);
   void trace(JSTracer* trc);
 
-  void initIgnoringLastIndex(JSAtom* source, RegExpFlag flags);
+  void initIgnoringLastIndex(JSAtom* source, JS::RegExpFlags flags);
 
   // NOTE: This method is *only* safe to call on RegExps that haven't been
   //       exposed to script, because it requires that the "lastIndex"
   //       property be writable.
-  void initAndZeroLastIndex(JSAtom* source, RegExpFlag flags, JSContext* cx);
+  void initAndZeroLastIndex(JSAtom* source, JS::RegExpFlags flags,
+                            JSContext* cx);
 
 #ifdef DEBUG
   static MOZ_MUST_USE bool dumpBytecode(JSContext* cx,
@@ -193,7 +197,8 @@ class RegExpObject : public NativeObject {
  *
  * N.B. flagStr must be rooted.
  */
-bool ParseRegExpFlags(JSContext* cx, JSString* flagStr, RegExpFlag* flagsOut);
+bool ParseRegExpFlags(JSContext* cx, JSString* flagStr,
+                      JS::RegExpFlags* flagsOut);
 
 // Assuming GetBuiltinClass(obj) is ESClass::RegExp, return a RegExpShared for
 // obj.

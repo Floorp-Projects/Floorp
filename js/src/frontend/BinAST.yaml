@@ -44,10 +44,13 @@ cpp:
     #include "frontend/ParseNode.h"
     #include "frontend/Parser.h"
     #include "frontend/SharedContext.h"
-
+    #include "js/RegExpFlags.h"  //  JS::RegExpFlag, JS::RegExpFlags
     #include "vm/RegExpObject.h"
 
     #include "frontend/ParseContext-inl.h"
+
+    using JS::RegExpFlag;
+    using JS::RegExpFlags;
 
     namespace js {
     namespace frontend {
@@ -1281,18 +1284,18 @@ LiteralRegExpExpression:
           Chars flags(cx_);
           MOZ_TRY(tokenizer_->readChars(flags));
   build: |
-    RegExpFlag reflags = NoFlags;
+    RegExpFlags reflags = RegExpFlag::NoFlags;
     for (auto c : flags) {
-      if (c == 'g' && !(reflags & GlobalFlag)) {
-        reflags = RegExpFlag(reflags | GlobalFlag);
-      } else if (c == 'i' && !(reflags & IgnoreCaseFlag)) {
-        reflags = RegExpFlag(reflags | IgnoreCaseFlag);
-      } else if (c == 'm' && !(reflags & MultilineFlag)) {
-        reflags = RegExpFlag(reflags | MultilineFlag);
-      } else if (c == 'y' && !(reflags & StickyFlag)) {
-        reflags = RegExpFlag(reflags | StickyFlag);
-      } else if (c == 'u' && !(reflags & UnicodeFlag)) {
-        reflags = RegExpFlag(reflags | UnicodeFlag);
+      if (c == 'g' && !reflags.global()) {
+        reflags |= RegExpFlag::Global;
+      } else if (c == 'i' && !reflags.ignoreCase()) {
+        reflags |= RegExpFlag::IgnoreCase;
+      } else if (c == 'm' && !reflags.multiline()) {
+        reflags |= RegExpFlag::Multiline;
+      } else if (c == 'u' && !reflags.unicode()) {
+        reflags |= RegExpFlag::Unicode;
+      } else if (c == 'y' && !reflags.sticky()) {
+        reflags |= RegExpFlag::Sticky;
       } else {
         return raiseError("Invalid regexp flags");
       }
