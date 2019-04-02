@@ -178,6 +178,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     CGTryNoteList& tryNoteList() { return tryNoteList_; };
     const CGTryNoteList& tryNoteList() const { return tryNoteList_; };
 
+    // ---- Scope ----
+
+    CGScopeNoteList& scopeNoteList() { return scopeNoteList_; };
+    const CGScopeNoteList& scopeNoteList() const { return scopeNoteList_; };
+
    private:
     // ---- Bytecode ----
 
@@ -209,6 +214,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
     // List of emitted try notes.
     CGTryNoteList tryNoteList_;
+
+    // ---- Scope ----
+
+    // List of emitted block scope notes.
+    CGScopeNoteList scopeNoteList_;
   };
 
   BytecodeSection bytecodeSection_;
@@ -216,6 +226,31 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
  public:
   BytecodeSection& bytecodeSection() { return bytecodeSection_; }
   const BytecodeSection& bytecodeSection() const { return bytecodeSection_; }
+
+ private:
+  // Data that is not directly associated with specific opcode/index inside
+  // bytecode, but referred from bytecode is stored in this class.
+  class PerScriptData {
+   public:
+    explicit PerScriptData(JSContext* cx);
+
+    // ---- Scope ----
+
+    CGScopeList& scopeList() { return scopeList_; }
+    const CGScopeList& scopeList() const { return scopeList_; }
+
+   private:
+    // ---- Scope ----
+
+    // List of emitted scopes.
+    CGScopeList scopeList_;
+  };
+
+  PerScriptData perScriptData_;
+
+ public:
+  PerScriptData& perScriptData() { return perScriptData_; }
+  const PerScriptData& perScriptData() const { return perScriptData_; }
 
  private:
   // Line number for srcnotes.
@@ -276,10 +311,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     return innermostEmitterScope_;
   }
 
-  CGNumberList numberList;       /* double and bigint values used by script */
-  CGObjectList objectList;       /* list of emitted objects */
-  CGScopeList scopeList;         /* list of emitted scopes */
-  CGScopeNoteList scopeNoteList; /* list of emitted block scope notes */
+  CGNumberList numberList; /* double and bigint values used by script */
+  CGObjectList objectList; /* list of emitted objects */
 
   // Certain ops (yield, await, gosub) have an entry in the script's
   // resumeOffsets list. This can be used to map from the op's resumeIndex to
@@ -440,11 +473,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     varEmitterScope = emitterScope;
   }
 
-  Scope* outermostScope() const { return scopeList.vector[0]; }
+  Scope* outermostScope() const {
+    return perScriptData().scopeList().vector[0];
+  }
   Scope* innermostScope() const;
   Scope* bodyScope() const {
-    MOZ_ASSERT(bodyScopeIndex < scopeList.length());
-    return scopeList.vector[bodyScopeIndex];
+    MOZ_ASSERT(bodyScopeIndex < perScriptData().scopeList().length());
+    return perScriptData().scopeList().vector[bodyScopeIndex];
   }
 
   MOZ_ALWAYS_INLINE

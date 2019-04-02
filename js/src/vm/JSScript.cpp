@@ -3238,11 +3238,11 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
 
 /* static */ bool PrivateScriptData::InitFromEmitter(
     JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce) {
-  uint32_t nscopes = bce->scopeList.length();
+  uint32_t nscopes = bce->perScriptData().scopeList().length();
   uint32_t nconsts = bce->numberList.length();
   uint32_t nobjects = bce->objectList.length;
   uint32_t ntrynotes = bce->bytecodeSection().tryNoteList().length();
-  uint32_t nscopenotes = bce->scopeNoteList.length();
+  uint32_t nscopenotes = bce->bytecodeSection().scopeNoteList().length();
   uint32_t nresumeoffsets = bce->resumeOffsetList.length();
 
   // Create and initialize PrivateScriptData
@@ -3254,7 +3254,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
 
   js::PrivateScriptData* data = script->data_;
   if (nscopes) {
-    bce->scopeList.finish(data->scopes());
+    bce->perScriptData().scopeList().finish(data->scopes());
   }
   if (nconsts) {
     bce->numberList.finish(data->consts());
@@ -3266,7 +3266,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
     bce->bytecodeSection().tryNoteList().finish(data->tryNotes());
   }
   if (nscopenotes) {
-    bce->scopeNoteList.finish(data->scopeNotes());
+    bce->bytecodeSection().scopeNoteList().finish(data->scopeNotes());
   }
   if (nresumeoffsets) {
     bce->resumeOffsetList.finish(data->resumeOffsets());
