@@ -87,11 +87,6 @@ module.exports = {
   }, {
     // TODO: Bug 1246594. Empty this list once the rule has landed for all dirs
     "files": [
-      "testing/marionette/event.js",
-      "testing/mochitest/**",
-      "testing/modules/tests/xpcshell/test_assert.js",
-      "testing/specialpowers/content/specialpowersAPI.js",
-      "testing/talos/talos/**",
       "toolkit/components/aboutmemory/content/aboutMemory.js",
       "toolkit/components/captivedetect/test/unit/test_multiple_requests.js",
       "toolkit/components/cleardata/ServiceWorkerCleanUp.jsm",
