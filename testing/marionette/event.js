@@ -466,7 +466,7 @@ function createKeyboardEventDictionary_(key, keyEvent, win) {
   } else if (key.indexOf("VK_") == 0) {
     keyCode = getKeyboardEvent_(win)["DOM_" + key];
     if (!keyCode) {
-      throw "Unknown key: " + key;
+      throw new Error("Unknown key: " + key);
     }
     keyName = guessKeyNameFromKeyCode_(keyCode, win);
     if (!isPrintable(keyCode, win)) {

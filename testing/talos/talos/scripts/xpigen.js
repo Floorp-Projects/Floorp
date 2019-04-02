@@ -22,7 +22,7 @@ function createXpiDataUri(base, files, callbacks) {
     // For 'file://' Firefox sets status=0 on success or throws otherwise
     // In Firefox 34-ish onwards, success status is 200.
     if (!(r.readyState == 4 && (r.status == 0 || r.status == 200)))
-      throw ("FileNotRetrieved: " + url + " - " + r.status + " " + r.statusText);
+      throw new Error("FileNotRetrieved: " + url + " - " + r.status + " " + r.statusText);
 
     return r.response;
   }

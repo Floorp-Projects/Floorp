@@ -325,7 +325,7 @@ var BrowserTestUtils = {
                 maybeErrorPage = false) {
     // Passing a url as second argument is a common mistake we should prevent.
     if (includeSubFrames && typeof includeSubFrames != "boolean") {
-      throw ("The second argument to browserLoaded should be a boolean.");
+      throw new Error("The second argument to browserLoaded should be a boolean.");
     }
 
     // If browser belongs to tabbrowser-tab, ensure it has been

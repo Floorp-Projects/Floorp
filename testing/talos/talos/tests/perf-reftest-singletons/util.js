@@ -51,7 +51,7 @@ function flush_layout(element) {
 
 function perf_start() {
   if (perf_data.start !== null) {
-    throw "already started timing!";
+    throw new Error("already started timing!");
   }
 
   perf_data.start = performance.now();
@@ -61,11 +61,11 @@ function perf_finish() {
   var end = performance.now();
 
   if (perf_data.start === null) {
-    throw "haven't started timing!";
+    throw new Error("haven't started timing!");
   }
 
   if (perf_data.end !== null) {
-    throw "already finished timing!";
+    throw new Error("already finished timing!");
   }
 
   var start = perf_data.start;
