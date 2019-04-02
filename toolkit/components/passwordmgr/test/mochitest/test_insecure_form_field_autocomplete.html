@@ -879,10 +879,12 @@ add_task(async function test_form12_formless() {
   checkACForm("", "");
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
-  await shownPromise;
+  let results = await shownPromise;
 
+  let expectedMenuItems = ["This connection is not secure. Logins entered here could be compromised. Learn More",
+                           "testuser10"];
+  checkAutoCompleteResults(results, expectedMenuItems, "mochi.test", "Check all menuitems are displayed correctly.");
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
-  // Trigger autocomplete
   synthesizeKey("KEY_ArrowDown");
   checkACForm("", ""); // value shouldn't update
   let processedPromise = promiseFormsProcessed();
