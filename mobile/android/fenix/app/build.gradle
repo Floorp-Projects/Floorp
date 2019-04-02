@@ -101,6 +101,15 @@ android {
         }
     }
 
+    variantFilter { variant ->
+        def flavors = variant.flavors*.name.toString().toLowerCase()
+
+        if (!flavors.contains("greenfield")) {
+            // For now everything that isn't a "greenfield" build isn't used. So let's ignore those variants.
+            setIgnore(true)
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
