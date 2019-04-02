@@ -1395,7 +1395,7 @@ SpecialPowersAPI.prototype = {
     };
     let val = this._sendSyncMessage("SPPrefService", msg);
     if (val == null || val[0] == null) {
-      throw "Error getting pref '" + prefName + "'";
+      throw new Error(`Error getting pref '${prefName}'`);
     }
     return val[0];
   },
