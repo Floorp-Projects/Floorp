@@ -1298,16 +1298,16 @@ static inline bool captureIsSatisfied(JSContext* cx, JSPrincipals* principals,
     Matcher(JSContext* cx, JSPrincipals* principals, const JSAtom* source)
         : cx_(cx), framePrincipals_(principals), frameSource_(source) {}
 
-    bool match(JS::FirstSubsumedFrame& target) {
+    bool operator()(JS::FirstSubsumedFrame& target) {
       auto subsumes = cx_->runtime()->securityCallbacks->subsumes;
       return (!subsumes || subsumes(target.principals, framePrincipals_)) &&
              (!target.ignoreSelfHosted ||
               frameSource_ != cx_->names().selfHosted);
     }
 
-    bool match(JS::MaxFrames& target) { return target.maxFrames == 1; }
+    bool operator()(JS::MaxFrames& target) { return target.maxFrames == 1; }
 
-    bool match(JS::AllFrames&) { return false; }
+    bool operator()(JS::AllFrames&) { return false; }
   };
 
   Matcher m(cx, principals, source);
@@ -1869,12 +1869,12 @@ struct MOZ_STACK_CLASS AtomizingMatcher {
   explicit AtomizingMatcher(JSContext* cx, size_t length)
       : cx(cx), length(length) {}
 
-  JSAtom* match(JSAtom* atom) {
+  JSAtom* operator()(JSAtom* atom) {
     MOZ_ASSERT(atom);
     return atom;
   }
 
-  JSAtom* match(const char16_t* chars) {
+  JSAtom* operator()(const char16_t* chars) {
     MOZ_ASSERT(chars);
     return AtomizeChars(cx, chars, length);
   }

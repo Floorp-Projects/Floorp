@@ -136,7 +136,7 @@ struct GetOrInternStringMatcher {
   explicit GetOrInternStringMatcher(InternedStringSet& strings)
       : internedStrings(strings) {}
 
-  const CharT* match(const std::string* str) {
+  const CharT* operator()(const std::string* str) {
     MOZ_ASSERT(str);
     size_t length = str->length() / sizeof(CharT);
     auto tempString = reinterpret_cast<const CharT*>(str->data());
@@ -147,7 +147,7 @@ struct GetOrInternStringMatcher {
     return internedStrings.back().get();
   }
 
-  const CharT* match(uint64_t ref) {
+  const CharT* operator()(uint64_t ref) {
     if (MOZ_LIKELY(ref < internedStrings.length())) {
       auto& string = internedStrings[ref];
       MOZ_ASSERT(string);
@@ -788,31 +788,33 @@ class TwoByteString
   using Base = Variant<JSAtom*, const char16_t*, JS::ubi::EdgeName>;
 
   struct AsTwoByteStringMatcher {
-    TwoByteString match(JSAtom* atom) { return TwoByteString(atom); }
+    TwoByteString operator()(JSAtom* atom) { return TwoByteString(atom); }
 
-    TwoByteString match(const char16_t* chars) { return TwoByteString(chars); }
+    TwoByteString operator()(const char16_t* chars) {
+      return TwoByteString(chars);
+    }
   };
 
   struct IsNonNullMatcher {
     template <typename T>
-    bool match(const T& t) {
+    bool operator()(const T& t) {
       return t != nullptr;
     }
   };
 
   struct LengthMatcher {
-    size_t match(JSAtom* atom) {
+    size_t operator()(JSAtom* atom) {
       MOZ_ASSERT(atom);
       JS::ubi::AtomOrTwoByteChars s(atom);
       return s.length();
     }
 
-    size_t match(const char16_t* chars) {
+    size_t operator()(const char16_t* chars) {
       MOZ_ASSERT(chars);
       return NS_strlen(chars);
     }
 
-    size_t match(const JS::ubi::EdgeName& ptr) {
+    size_t operator()(const JS::ubi::EdgeName& ptr) {
       MOZ_ASSERT(ptr);
       return NS_strlen(ptr.get());
     }
@@ -825,15 +827,17 @@ class TwoByteString
     CopyToBufferMatcher(RangedPtr<char16_t> destination, size_t maxLength)
         : destination(destination), maxLength(maxLength) {}
 
-    size_t match(JS::ubi::EdgeName& ptr) { return ptr ? match(ptr.get()) : 0; }
+    size_t operator()(JS::ubi::EdgeName& ptr) {
+      return ptr ? operator()(ptr.get()) : 0;
+    }
 
-    size_t match(JSAtom* atom) {
+    size_t operator()(JSAtom* atom) {
       MOZ_ASSERT(atom);
       JS::ubi::AtomOrTwoByteChars s(atom);
       return s.copyToBuffer(destination, maxLength);
     }
 
-    size_t match(const char16_t* chars) {
+    size_t operator()(const char16_t* chars) {
       MOZ_ASSERT(chars);
       JS::ubi::AtomOrTwoByteChars s(chars);
       return s.copyToBuffer(destination, maxLength);
@@ -896,19 +900,19 @@ struct TwoByteString::HashPolicy {
   using Lookup = TwoByteString;
 
   struct HashingMatcher {
-    js::HashNumber match(const JSAtom* atom) {
+    js::HashNumber operator()(const JSAtom* atom) {
       return js::DefaultHasher<const JSAtom*>::hash(atom);
     }
 
-    js::HashNumber match(const char16_t* chars) {
+    js::HashNumber operator()(const char16_t* chars) {
       MOZ_ASSERT(chars);
       auto length = NS_strlen(chars);
       return HashString(chars, length);
     }
 
-    js::HashNumber match(const JS::ubi::EdgeName& ptr) {
+    js::HashNumber operator()(const JS::ubi::EdgeName& ptr) {
       MOZ_ASSERT(ptr);
-      return match(ptr.get());
+      return operator()(ptr.get());
     }
   };
 
@@ -921,11 +925,11 @@ struct TwoByteString::HashPolicy {
     const TwoByteString& rhs;
     explicit EqualityMatcher(const TwoByteString& rhs) : rhs(rhs) {}
 
-    bool match(const JSAtom* atom) {
+    bool operator()(const JSAtom* atom) {
       return rhs.is<JSAtom*>() && rhs.as<JSAtom*>() == atom;
     }
 
-    bool match(const char16_t* chars) {
+    bool operator()(const char16_t* chars) {
       MOZ_ASSERT(chars);
 
       const char16_t* rhsChars = nullptr;
@@ -943,9 +947,9 @@ struct TwoByteString::HashPolicy {
       return memcmp(chars, rhsChars, length * sizeof(char16_t)) == 0;
     }
 
-    bool match(const JS::ubi::EdgeName& ptr) {
+    bool operator()(const JS::ubi::EdgeName& ptr) {
       MOZ_ASSERT(ptr);
-      return match(ptr.get());
+      return operator()(ptr.get());
     }
   };
 

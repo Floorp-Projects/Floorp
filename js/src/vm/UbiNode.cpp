@@ -72,7 +72,7 @@ struct CopyToBufferMatcher {
     return i;
   }
 
-  size_t match(JSAtom* atom) {
+  size_t operator()(JSAtom* atom) {
     if (!atom) {
       return 0;
     }
@@ -86,7 +86,7 @@ struct CopyToBufferMatcher {
                                     length);
   }
 
-  size_t match(const char16_t* chars) {
+  size_t operator()(const char16_t* chars) {
     if (!chars) {
       return 0;
     }
@@ -103,9 +103,11 @@ size_t JS::ubi::AtomOrTwoByteChars::copyToBuffer(
 }
 
 struct LengthMatcher {
-  size_t match(JSAtom* atom) { return atom ? atom->length() : 0; }
+  size_t operator()(JSAtom* atom) { return atom ? atom->length() : 0; }
 
-  size_t match(const char16_t* chars) { return chars ? js_strlen(chars) : 0; }
+  size_t operator()(const char16_t* chars) {
+    return chars ? js_strlen(chars) : 0;
+  }
 };
 
 size_t JS::ubi::AtomOrTwoByteChars::length() {

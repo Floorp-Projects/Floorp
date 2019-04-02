@@ -152,7 +152,7 @@ struct ParamTraits<IpdlTuple::IpdlTupleElement> {
     explicit LogMatcher(std::wstring* aLog) : mLog(aLog) {}
 
     template <typename EntryType>
-    void match(const EntryType& aParam) {
+    void operator()(const EntryType& aParam) {
       LogParam(aParam, mLog);
     }
 
