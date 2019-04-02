@@ -11,7 +11,8 @@ const TEST_URI = `data:text/html;charset=utf-8,<head><script>
      */
     window.foo = Object.create(null, Object.getOwnPropertyDescriptors({
       aa: "a",
-      bb: "b",
+      bbb: "b",
+      bbbb: "b",
     }));
   </script></head><body>Autocomplete text navigation key usage test</body>`;
 
@@ -29,70 +30,152 @@ async function performTests() {
   const { jsterm } = hud;
   const { autocompletePopup: popup } = jsterm;
 
-  const checkInput = (expected, assertionInfo) =>
-    checkInputValueAndCursorPosition(hud, expected, assertionInfo);
-
-  let onPopUpOpen = popup.once("popup-opened");
-  setInputValue(hud, "window.foo");
-  EventUtils.sendString(".");
-  await onPopUpOpen;
-
-  info("Trigger autocomplete popup opening");
-  // checkInput is asserting the cursor position with the "|" char.
-  checkInput("window.foo.|");
-  is(popup.isOpen, true, "popup is open");
-  checkInputCompletionValue(hud, "           aa", "completeNode has expected value");
-
-  info("Test that arrow left closes the popup and clears complete node");
-  let onPopUpClose = popup.once("popup-closed");
-  EventUtils.synthesizeKey("KEY_ArrowLeft");
-  await onPopUpClose;
-  checkInput("window.foo|.");
-  is(popup.isOpen, false, "popup is closed");
-  checkInputCompletionValue(hud, "", "completeNode is empty");
-
-  info("Trigger autocomplete popup opening again");
-  onPopUpOpen = popup.once("popup-opened");
-  setInputValue(hud, "window.foo");
-  EventUtils.sendString(".");
-  await onPopUpOpen;
-
-  checkInput("window.foo.|");
-  is(popup.isOpen, true, "popup is open");
-  checkInputCompletionValue(hud, "           aa", "completeNode has expected value");
-
-  info("Test that arrow right selects selected autocomplete item");
-  onPopUpClose = popup.once("popup-closed");
-  EventUtils.synthesizeKey("KEY_ArrowRight");
-  await onPopUpClose;
-  checkInput("window.foo.aa|");
-  is(popup.isOpen, false, "popup is closed");
-  checkInputCompletionValue(hud, "", "completeNode is empty");
-
-  info("Test that Ctrl/Cmd + Left removes complete node");
-  await setInputValueForAutocompletion(hud, "window.foo.a");
-  const prefix = getInputValue(hud).replace(/[\S]/g, " ");
-  checkInputCompletionValue(hud, prefix + "a", "completeNode has expected value");
-
-  const isOSX = Services.appinfo.OS == "Darwin";
-  EventUtils.synthesizeKey("KEY_ArrowLeft", {
-    [isOSX ? "metaKey" : "ctrlKey"]: true,
-  });
-  checkInputCompletionValue(hud, "",
-    "completeNode was cleared after Ctrl/Cmd + left");
+  await checkArrowLeftDismissPopup(hud);
+  await checkArrowLeftDismissCompletion(hud);
+  await checkArrowRightAcceptCompletion(hud);
 
   info("Test that Ctrl/Cmd + Right closes the popup if there's text after cursor");
   setInputValue(hud, ".");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
-  onPopUpOpen = popup.once("popup-opened");
+  const onPopUpOpen = popup.once("popup-opened");
   EventUtils.sendString("win");
   await onPopUpOpen;
   ok(popup.isOpen, "popup is open");
 
-  onPopUpClose = popup.once("popup-closed");
+  const isOSX = Services.appinfo.OS == "Darwin";
+  const onPopUpClose = popup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_ArrowRight", {
     [isOSX ? "metaKey" : "ctrlKey"]: true,
   });
   await onPopUpClose;
   is(getInputValue(hud), "win.", "input value wasn't modified");
+}
+
+async function checkArrowLeftDismissPopup(hud) {
+  const popup = hud.jsterm.autocompletePopup;
+  let tests;
+  if (Services.appinfo.OS == "Darwin") {
+    tests = [{
+      keyOption: null,
+      expectedInput: "window.foo.b|b",
+    }, {
+      keyOption: {metaKey: true},
+      expectedInput: "|window.foo.bb",
+    }, {
+      keyOption: {altKey: true},
+      expectedInput: "window.foo.|bb",
+    }];
+  } else {
+    tests = [{
+      keyOption: null,
+      expectedInput: "window.foo.b|b",
+    }, {
+      keyOption: {ctrlKey: true},
+      expectedInput: "window.foo.|bb",
+    }];
+  }
+
+  for (const test of tests) {
+    info("Trigger autocomplete popup opening");
+    const onPopUpOpen = popup.once("popup-opened");
+    await setInputValueForAutocompletion(hud, "window.foo.bb");
+    await onPopUpOpen;
+
+    // checkInput is asserting the cursor position with the "|" char.
+    checkInputValueAndCursorPosition(hud, "window.foo.bb|");
+    is(popup.isOpen, true, "popup is open");
+    checkInputCompletionValue(hud, "             b", "completeNode has expected value");
+
+    const {keyOption, expectedInput} = test;
+    info(`Test that arrow left closes the popup and clears complete node`);
+    const onPopUpClose = popup.once("popup-closed");
+    EventUtils.synthesizeKey("KEY_ArrowLeft", keyOption);
+    await onPopUpClose;
+
+    checkInputValueAndCursorPosition(hud, expectedInput);
+    is(popup.isOpen, false, "popup is closed");
+    checkInputCompletionValue(hud, "", "completeNode is empty");
+  }
+  setInputValue(hud, "");
+}
+
+async function checkArrowLeftDismissCompletion(hud) {
+  let tests;
+  if (Services.appinfo.OS == "Darwin") {
+    tests = [{
+      keyOption: null,
+      expectedInput: "window.foo.|a",
+    }, {
+      keyOption: {metaKey: true},
+      expectedInput: "|window.foo.a",
+    }, {
+      keyOption: {altKey: true},
+      expectedInput: "window.foo.|a",
+    }];
+  } else {
+    tests = [{
+      keyOption: null,
+      expectedInput: "window.foo.|a",
+    }, {
+      keyOption: {ctrlKey: true},
+      expectedInput: "window.foo.|a",
+    }];
+  }
+
+  for (const test of tests) {
+    await setInputValueForAutocompletion(hud, "window.foo.a");
+    const prefix = getInputValue(hud).replace(/[\S]/g, " ");
+    checkInputCompletionValue(hud, prefix + "a", "completeNode has expected value");
+
+    info(`Test that arrow left dismiss the completion text`);
+    const {keyOption, expectedInput} = test;
+    EventUtils.synthesizeKey("KEY_ArrowLeft", keyOption);
+
+    checkInputValueAndCursorPosition(hud, expectedInput);
+    checkInputCompletionValue(hud, "", "completeNode is empty");
+  }
+  setInputValue(hud, "");
+}
+
+async function checkArrowRightAcceptCompletion(hud) {
+  const popup = hud.jsterm.autocompletePopup;
+  let tests;
+  if (Services.appinfo.OS == "Darwin") {
+    tests = [{
+      keyOption: null,
+    }, {
+      keyOption: {metaKey: true},
+    }, {
+      keyOption: {altKey: true},
+    }];
+  } else {
+    tests = [{
+      keyOption: null,
+    }, {
+      keyOption: {ctrlKey: true},
+    }];
+  }
+
+  for (const test of tests) {
+    info("Trigger autocomplete popup opening");
+    const onPopUpOpen = popup.once("popup-opened");
+    await setInputValueForAutocompletion(hud, `window.foo.bb`);
+    await onPopUpOpen;
+
+    // checkInput is asserting the cursor position with the "|" char.
+    checkInputValueAndCursorPosition(hud, `window.foo.bb|`);
+    is(popup.isOpen, true, "popup is open");
+    checkInputCompletionValue(hud, "             b", "completeNode has expected value");
+
+    const {keyOption} = test;
+    info(`Test that arrow right closes the popup and accepts the completion`);
+    const onPopUpClose = popup.once("popup-closed");
+    EventUtils.synthesizeKey("KEY_ArrowRight", keyOption);
+    await onPopUpClose;
+
+    checkInputValueAndCursorPosition(hud, "window.foo.bbb|");
+    is(popup.isOpen, false, "popup is closed");
+    checkInputCompletionValue(hud, "", "completeNode is empty");
+  }
+  setInputValue(hud, "");
 }
