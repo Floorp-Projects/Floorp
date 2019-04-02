@@ -1,0 +1,130 @@
+job-defaults:
+    worker-type: b-linux
+    worker:
+        docker-image: {in-tree: mingw32-build}
+        max-run-time: 7200
+    run:
+        using: mozharness
+        actions: [build]
+        script: mozharness/scripts/fx_desktop_build.py
+        need-xvfb: false
+
+win32-mingwclang/opt:
+    description: "Win32 MinGW-Clang Opt"
+    index:
+        product: firefox
+        job-name: win32-mingwclang-opt
+    treeherder:
+        platform: windows-mingw32/all
+        symbol: WMC32(Bo)
+        tier: 2
+    worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: "opt 32 clang"
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_windows_32_mingw_builds.py
+            - builds/releng_sub_windows_configs/32_mingwclang.py
+        mozconfig-variant: mingwclang
+    toolchains:
+        - mingw32-rust
+        - linux64-upx
+        - linux64-wine
+        - linux64-sccache
+        - linux64-cbindgen
+        - linux64-nasm
+        - linux64-node
+        - linux64-clang-mingw-x86
+        - linux64-mingw32-nsis
+        - linux64-mingw-fxc2-x86
+
+win32-mingwclang/debug:
+    description: "Win32 MinGW-Clang Debug"
+    index:
+        product: firefox
+        job-name: win32-mingwclang-debug
+    treeherder:
+        platform: windows-mingw32/all
+        symbol: WMC32(Bd)
+        tier: 2
+    worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: "debug 32 clang"
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_windows_32_mingw_builds.py
+            - builds/releng_sub_windows_configs/32_mingwclang.py
+        mozconfig-variant: mingwclang-debug
+    toolchains:
+        - mingw32-rust
+        - linux64-upx
+        - linux64-wine
+        - linux64-sccache
+        - linux64-cbindgen
+        - linux64-nasm
+        - linux64-node
+        - linux64-clang-mingw-x86
+        - linux64-mingw32-nsis
+        - linux64-mingw-fxc2-x86
+
+win64-mingwclang/opt:
+    description: "Win64 MinGW-Clang Opt"
+    index:
+        product: firefox
+        job-name: win64-mingwclang-opt
+    treeherder:
+        platform: windows-mingw32/all
+        symbol: WMC64(Bo)
+        tier: 2
+    worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: "opt 64 clang"
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_windows_64_mingw_builds.py
+            - builds/releng_sub_windows_configs/64_mingwclang.py
+        mozconfig-variant: mingwclang
+    toolchains:
+        - mingw32-rust
+        - linux64-upx
+        - linux64-wine
+        - linux64-sccache
+        - linux64-cbindgen
+        - linux64-nasm
+        - linux64-node
+        - linux64-clang-mingw-x64
+        - linux64-mingw32-nsis
+        - linux64-mingw-fxc2-x86
+
+win64-mingwclang/debug:
+    description: "Win64 MinGW-Clang Debug"
+    index:
+        product: firefox
+        job-name: win64-mingwclang-debug
+    treeherder:
+        platform: windows-mingw32/all
+        symbol: WMC64(Bd)
+        tier: 2
+    worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: "debug 64 clang"
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_windows_64_mingw_builds.py
+            - builds/releng_sub_windows_configs/64_mingwclang.py
+        mozconfig-variant: mingwclang-debug
+    toolchains:
+        - mingw32-rust
+        - linux64-upx
+        - linux64-wine
+        - linux64-sccache
+        - linux64-cbindgen
+        - linux64-nasm
+        - linux64-node
+        - linux64-clang-mingw-x64
+        - linux64-mingw32-nsis
+        - linux64-mingw-fxc2-x86
