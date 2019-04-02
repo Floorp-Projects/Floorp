@@ -465,6 +465,35 @@ describe("ElementNode - Element attribute cropping", () => {
   });
 });
 
+describe("ElementNode - : Marker pseudo element", () => {
+  const stub = stubs.get("MarkerPseudoElement");
+
+  it("selects ElementNode Rep", () => {
+    expect(getRep(stub)).toBe(ElementNode.rep);
+  });
+
+  it("renders with expected text content", () => {
+    const renderedComponent = shallow(
+      ElementNode.rep({
+        object: stub
+      })
+    );
+
+    expect(renderedComponent.text()).toEqual("::marker");
+  });
+
+  it("renders with expected text content in tiny mode", () => {
+    const renderedComponent = shallow(
+      ElementNode.rep({
+        object: stub,
+        mode: MODE.TINY
+      })
+    );
+
+    expect(renderedComponent.text()).toEqual("::marker");
+  });
+});
+
 describe("ElementNode - : Before pseudo element", () => {
   const stub = stubs.get("BeforePseudoElement");
 

@@ -11,8 +11,10 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
+const Message = createFactory(require("../shared/Message"));
 const SidebarItem = createFactory(require("./SidebarItem"));
 const Actions = require("../../actions/index");
+const { MESSAGE_LEVEL } = require("../../constants");
 
 /**
  * This component displays a runtime item of the Sidebar component.
@@ -26,6 +28,9 @@ class SidebarRuntimeItem extends PureComponent {
       getString: PropTypes.func.isRequired,
       icon: PropTypes.string.isRequired,
       isConnected: PropTypes.bool.isRequired,
+      isConnecting: PropTypes.bool.isRequired,
+      isConnectionFailed: PropTypes.bool.isRequired,
+      isConnectionNotResponding: PropTypes.bool.isRequired,
       isSelected: PropTypes.bool.isRequired,
       isUnknown: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
@@ -34,19 +39,74 @@ class SidebarRuntimeItem extends PureComponent {
   }
 
   renderConnectButton() {
+    const { isConnecting } = this.props;
+    const localizationId = isConnecting
+                             ? "about-debugging-sidebar-item-connect-button-connecting"
+                             : "about-debugging-sidebar-item-connect-button";
     return Localized(
       {
-        id: "about-debugging-sidebar-item-connect-button",
+        id: localizationId,
       },
       dom.button(
         {
           className: "default-button default-button--micro js-connect-button",
+          disabled: isConnecting,
           onClick: () => {
             const { dispatch, runtimeId } = this.props;
             dispatch(Actions.connectRuntime(runtimeId));
           },
         },
-        "Connect"
+        localizationId
+      )
+    );
+  }
+
+  renderConnectionError() {
+    const { isConnectionFailed } = this.props;
+
+    if (!isConnectionFailed) {
+      return null;
+    }
+
+    const localizationId =
+      "about-debugging-sidebar-item-connect-button-connection-failed";
+
+    return Message(
+      {
+        level: MESSAGE_LEVEL.ERROR,
+        key: "connection-error",
+        className: "qa-connection-error",
+      },
+      Localized(
+        {
+          id: localizationId,
+        },
+        dom.p({ className: "word-wrap-anywhere" }, localizationId)
+      )
+    );
+  }
+
+  renderConnectionNotResponding() {
+    const { isConnectionNotResponding } = this.props;
+
+    if (!isConnectionNotResponding) {
+      return null;
+    }
+
+    const localizationId =
+      "about-debugging-sidebar-item-connect-button-connection-not-responding";
+
+    return Message(
+      {
+        level: MESSAGE_LEVEL.WARNING,
+        key: "connection-not-responding",
+        className: "qa-connection-not-responding",
+      },
+      Localized(
+        {
+          id: localizationId,
+        },
+        dom.p({ className: "word-wrap-anywhere" }, localizationId)
       )
     );
   }
@@ -115,28 +175,33 @@ class SidebarRuntimeItem extends PureComponent {
       getString("aboutdebugging-sidebar-runtime-connection-status-connected") :
       getString("aboutdebugging-sidebar-runtime-connection-status-disconnected");
 
-    return SidebarItem(
-      {
-        className: "sidebar-item--tall",
-        isSelected,
-        to: isConnected ? `/runtime/${encodeURIComponent(runtimeId)}` : null,
-      },
-      dom.section(
+    return [
+      SidebarItem(
         {
-          className: "sidebar-runtime-item__container",
+          className: "sidebar-item--tall",
+          key: "sidebar-item",
+          isSelected,
+          to: isConnected ? `/runtime/${encodeURIComponent(runtimeId)}` : null,
         },
-        dom.img(
+        dom.section(
           {
-            className: "sidebar-runtime-item__icon ",
-            src: icon,
-            alt: connectionStatus,
-            title: connectionStatus,
-          }
+            className: "sidebar-runtime-item__container",
+          },
+          dom.img(
+            {
+              className: "sidebar-runtime-item__icon ",
+              src: icon,
+              alt: connectionStatus,
+              title: connectionStatus,
+            }
+          ),
+          this.renderName(),
+          !isUnknown && !isConnected ? this.renderConnectButton() : null
         ),
-        this.renderName(),
-        !isUnknown && !isConnected ? this.renderConnectButton() : null
-      )
-    );
+      ),
+      this.renderConnectionError(),
+      this.renderConnectionNotResponding(),
+    ];
   }
 }
 

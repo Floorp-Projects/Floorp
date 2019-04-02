@@ -14,9 +14,6 @@
 </div>
 <pre id="test">
 
-<iframe id="testFrame1"></iframe>
-<iframe id="testFrame2"></iframe>
-
 <script class="testbody" type="text/javascript">
 
 // To add a request to test, add the request in trackerFrame.html
@@ -44,8 +41,9 @@ function setup() {
   });
 }
 
-function loadTestFrame(withcookie, frameId) {
+function loadTestWindow(withcookie) {
   return new Promise(resolve => {
+    let win;
     let query = withcookie ? "with-cookie" : "without-cookie";
     fetch(trackerFrame + "?callback=" + query, {
       credentials: "include",
@@ -57,12 +55,12 @@ function loadTestFrame(withcookie, frameId) {
             (withcookie ? "with" : "without") + " cookie";
           ok(trackers_found.includes(tracker), description);
         }
+        win.close();
         resolve();
       });
     });
 
-    let frame = document.getElementById(frameId);
-    frame.src = "trackerFrame.html";
+    win = window.open("trackerFrame.html");
   });
 }
 
@@ -77,13 +75,13 @@ async function runTests() {
 
   await setup();
 
-  await loadTestFrame(true, "testFrame1");
+  await loadTestWindow(true);
 
   await SpecialPowers.pushPrefEnv({set: [
     [ "privacy.trackingprotection.annotate_channels", true],
   ]});
 
-  await loadTestFrame(false, "testFrame2");
+  await loadTestWindow(false);
 
   SimpleTest.finish();
 }

@@ -36,6 +36,7 @@
 #include "vm/Opcodes.h"
 #include "vm/SelfHosting.h"
 #include "vm/TypedArrayObject.h"
+#include "vtune/VTuneWrapper.h"
 
 #include "builtin/Boolean-inl.h"
 
@@ -53,6 +54,26 @@ using mozilla::DebugOnly;
 
 namespace js {
 namespace jit {
+
+// Class used to emit all Baseline IC fallback code when initializing the
+// JitRuntime.
+class MOZ_RAII FallbackICCodeCompiler final : public ICStubCompilerBase {
+  BaselineICFallbackCode& code;
+  MacroAssembler& masm;
+
+  MOZ_MUST_USE bool emitCall(bool isSpread, bool isConstructing);
+  MOZ_MUST_USE bool emitGetElem(bool hasReceiver);
+  MOZ_MUST_USE bool emitGetProp(bool hasReceiver);
+
+ public:
+  FallbackICCodeCompiler(JSContext* cx, BaselineICFallbackCode& code,
+                         MacroAssembler& masm)
+      : ICStubCompilerBase(cx), code(code), masm(masm) {}
+
+#define DEF_METHOD(kind) MOZ_MUST_USE bool emit_##kind();
+  IC_BASELINE_FALLBACK_CODE_KIND_LIST(DEF_METHOD)
+#undef DEF_METHOD
+};
 
 #ifdef JS_JITSPEW
 void FallbackICSpew(JSContext* cx, ICFallbackStub* stub, const char* fmt, ...) {
@@ -108,13 +129,38 @@ void ICEntry::trace(JSTracer* trc) {
   }
 }
 
+// Allocator for Baseline IC fallback stubs. These stubs use trampoline code
+// stored in JitRuntime.
+class MOZ_RAII FallbackStubAllocator {
+  JSContext* cx_;
+  ICStubSpace& stubSpace_;
+  const BaselineICFallbackCode& code_;
+
+ public:
+  FallbackStubAllocator(JSContext* cx, ICStubSpace& stubSpace)
+      : cx_(cx),
+        stubSpace_(stubSpace),
+        code_(cx->runtime()->jitRuntime()->baselineICFallbackCode()) {}
+
+  template <typename T, typename... Args>
+  T* newStub(BaselineICFallbackKind kind, Args&&... args) {
+    TrampolinePtr addr = code_.addr(kind);
+    return ICStub::NewFallback<T>(cx_, &stubSpace_, addr,
+                                  std::forward<Args>(args)...);
+  }
+};
+
 /* static */
 UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
   MOZ_ASSERT(cx->realm()->jitRealm());
   MOZ_ASSERT(jit::IsBaselineEnabled(cx));
 
   FallbackICStubSpace stubSpace;
+  FallbackStubAllocator alloc(cx, stubSpace);
+
   js::Vector<ICEntry, 16, SystemAllocPolicy> icEntries;
+
+  using Kind = BaselineICFallbackKind;
 
   auto addIC = [cx, &icEntries, script](jsbytecode* pc, ICStub* stub) {
     if (!stub) {
@@ -133,14 +179,16 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
   // Note: we pass a nullptr pc to indicate this is a non-op IC.
   // See ICEntry::NonOpPCOffset.
   if (JSFunction* fun = script->functionNonDelazifying()) {
-    ICTypeMonitor_Fallback::Compiler compiler(cx, uint32_t(0));
-    if (!addIC(nullptr, compiler.getStub(&stubSpace))) {
+    ICStub* stub =
+        alloc.newStub<ICTypeMonitor_Fallback>(Kind::TypeMonitor, nullptr, 0);
+    if (!addIC(nullptr, stub)) {
       return nullptr;
     }
 
     for (size_t i = 0; i < fun->nargs(); i++) {
-      ICTypeMonitor_Fallback::Compiler compiler(cx, i + 1);
-      if (!addIC(nullptr, compiler.getStub(&stubSpace))) {
+      ICStub* stub = alloc.newStub<ICTypeMonitor_Fallback>(Kind::TypeMonitor,
+                                                           nullptr, i + 1);
+      if (!addIC(nullptr, stub)) {
         return nullptr;
       }
     }
@@ -166,8 +214,8 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_OR:
       case JSOP_IFEQ:
       case JSOP_IFNE: {
-        ICToBool_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICToBool_Fallback>(Kind::ToBool);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
@@ -176,8 +224,8 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_NEG:
       case JSOP_INC:
       case JSOP_DEC: {
-        ICUnaryArith_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICUnaryArith_Fallback>(Kind::UnaryArith);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
@@ -194,8 +242,8 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_DIV:
       case JSOP_MOD:
       case JSOP_POW: {
-        ICBinaryArith_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICBinaryArith_Fallback>(Kind::BinaryArith);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
@@ -208,15 +256,16 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_GE:
       case JSOP_STRICTEQ:
       case JSOP_STRICTNE: {
-        ICCompare_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICCompare_Fallback>(Kind::Compare);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
       }
       case JSOP_LOOPENTRY: {
-        ICWarmUpCounter_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub =
+            alloc.newStub<ICWarmUpCounter_Fallback>(Kind::WarmUpCounter);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
@@ -227,16 +276,17 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
         if (!group) {
           return nullptr;
         }
-        ICNewArray_Fallback::Compiler stubCompiler(cx, group);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub =
+            alloc.newStub<ICNewArray_Fallback>(Kind::NewArray, group);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
       }
       case JSOP_NEWOBJECT:
       case JSOP_NEWINIT: {
-        ICNewObject_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICNewObject_Fallback>(Kind::NewObject);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
@@ -247,8 +297,8 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_INITELEM_INC:
       case JSOP_SETELEM:
       case JSOP_STRICTSETELEM: {
-        ICSetElem_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICSetElem_Fallback>(Kind::SetElem);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
@@ -263,8 +313,8 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_STRICTSETNAME:
       case JSOP_SETGNAME:
       case JSOP_STRICTSETGNAME: {
-        ICSetProp_Fallback::Compiler compiler(cx);
-        if (!addIC(pc, compiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICSetProp_Fallback>(Kind::SetProp);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
@@ -272,66 +322,78 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_GETPROP:
       case JSOP_CALLPROP:
       case JSOP_LENGTH:
-      case JSOP_GETPROP_SUPER:
       case JSOP_GETBOUNDNAME: {
-        bool hasReceiver = (op == JSOP_GETPROP_SUPER);
-        ICGetProp_Fallback::Compiler compiler(cx, hasReceiver);
-        if (!addIC(pc, compiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICGetProp_Fallback>(Kind::GetProp);
+        if (!addIC(pc, stub)) {
+          return nullptr;
+        }
+        break;
+      }
+      case JSOP_GETPROP_SUPER: {
+        ICStub* stub = alloc.newStub<ICGetProp_Fallback>(Kind::GetPropSuper);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
       }
       case JSOP_GETELEM:
-      case JSOP_CALLELEM:
+      case JSOP_CALLELEM: {
+        ICStub* stub = alloc.newStub<ICGetElem_Fallback>(Kind::GetElem);
+        if (!addIC(pc, stub)) {
+          return nullptr;
+        }
+        break;
+      }
       case JSOP_GETELEM_SUPER: {
-        bool hasReceiver = (op == JSOP_GETELEM_SUPER);
-        ICGetElem_Fallback::Compiler stubCompiler(cx, hasReceiver);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICGetElem_Fallback>(Kind::GetElemSuper);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
       }
       case JSOP_IN: {
-        ICIn_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICIn_Fallback>(Kind::In);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
       }
       case JSOP_HASOWN: {
-        ICHasOwn_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICHasOwn_Fallback>(Kind::HasOwn);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
       }
       case JSOP_GETNAME:
       case JSOP_GETGNAME: {
-        ICGetName_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICGetName_Fallback>(Kind::GetName);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
       }
       case JSOP_BINDNAME:
       case JSOP_BINDGNAME: {
-        ICBindName_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICBindName_Fallback>(Kind::BindName);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
       }
       case JSOP_GETALIASEDVAR:
       case JSOP_GETIMPORT: {
-        ICTypeMonitor_Fallback::Compiler compiler(cx, nullptr);
-        if (!addIC(pc, compiler.getStub(&stubSpace))) {
+        ICStub* stub =
+            alloc.newStub<ICTypeMonitor_Fallback>(Kind::TypeMonitor, nullptr);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
       }
       case JSOP_GETINTRINSIC: {
-        ICGetIntrinsic_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub =
+            alloc.newStub<ICGetIntrinsic_Fallback>(Kind::GetIntrinsic);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
@@ -339,54 +401,60 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_CALL:
       case JSOP_CALL_IGNORES_RV:
       case JSOP_CALLITER:
-      case JSOP_SUPERCALL:
       case JSOP_FUNCALL:
       case JSOP_FUNAPPLY:
-      case JSOP_NEW:
       case JSOP_EVAL:
       case JSOP_STRICTEVAL: {
-        bool construct = JSOp(*pc) == JSOP_NEW || JSOp(*pc) == JSOP_SUPERCALL;
-        ICCall_Fallback::Compiler stubCompiler(cx,
-                                               /* isConstructing = */ construct,
-                                               /* isSpread = */ false);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::Call);
+        if (!addIC(pc, stub)) {
+          return nullptr;
+        }
+        break;
+      }
+      case JSOP_SUPERCALL:
+      case JSOP_NEW: {
+        ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::CallConstructing);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
       }
       case JSOP_SPREADCALL:
-      case JSOP_SPREADSUPERCALL:
-      case JSOP_SPREADNEW:
       case JSOP_SPREADEVAL:
       case JSOP_STRICTSPREADEVAL: {
-        bool construct =
-            JSOp(*pc) == JSOP_SPREADNEW || JSOp(*pc) == JSOP_SPREADSUPERCALL;
-        ICCall_Fallback::Compiler stubCompiler(cx,
-                                               /* isConstructing = */ construct,
-                                               /* isSpread = */ true);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::SpreadCall);
+        if (!addIC(pc, stub)) {
+          return nullptr;
+        }
+        break;
+      }
+      case JSOP_SPREADSUPERCALL:
+      case JSOP_SPREADNEW: {
+        ICStub* stub =
+            alloc.newStub<ICCall_Fallback>(Kind::SpreadCallConstructing);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
       }
       case JSOP_INSTANCEOF: {
-        ICInstanceOf_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICInstanceOf_Fallback>(Kind::InstanceOf);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
       }
       case JSOP_TYPEOF:
       case JSOP_TYPEOFEXPR: {
-        ICTypeOf_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICTypeOf_Fallback>(Kind::TypeOf);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
       }
       case JSOP_ITER: {
-        ICGetIterator_Fallback::Compiler compiler(cx);
-        if (!addIC(pc, compiler.getStub(&stubSpace))) {
+        ICStub* stub = alloc.newStub<ICGetIterator_Fallback>(Kind::GetIterator);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
@@ -398,8 +466,9 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
         if (!templateObject) {
           return nullptr;
         }
-        ICRest_Fallback::Compiler compiler(cx, templateObject);
-        if (!addIC(pc, compiler.getStub(&stubSpace))) {
+        ICStub* stub =
+            alloc.newStub<ICRest_Fallback>(Kind::Rest, templateObject);
+        if (!addIC(pc, stub)) {
           return nullptr;
         }
         break;
@@ -504,11 +573,6 @@ bool ICStub::makesGCCalls() const {
   }
 }
 
-void ICStub::traceCode(JSTracer* trc, const char* name) {
-  JitCode* stubJitCode = jitCode();
-  TraceManuallyBarrieredEdge(trc, &stubJitCode, name);
-}
-
 void ICStub::updateCode(JitCode* code) {
   // Write barrier on the old code.
   JitCode::writeBarrierPre(jitCode());
@@ -517,7 +581,11 @@ void ICStub::updateCode(JitCode* code) {
 
 /* static */
 void ICStub::trace(JSTracer* trc) {
-  traceCode(trc, "shared-stub-jitcode");
+  // Fallback stubs use runtime-wide trampoline code we don't need to trace.
+  if (!usesTrampolineCode()) {
+    JitCode* stubJitCode = jitCode();
+    TraceManuallyBarrieredEdge(trc, &stubJitCode, "baseline-ic-stub-code");
+  }
 
   // If the stub is a monitored fallback stub, then trace the monitor ICs
   // hanging off of that stub.  We don't need to worry about the regular
@@ -781,8 +849,7 @@ bool DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICWarmUpCounter_Fallback::Compiler::generateStubCode(
-    MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_WarmUpCounter() {
   // Push a stub frame so that we can perform a non-tail call.
   enterStubFrame(masm, R1.scratchReg());
 
@@ -1005,12 +1072,14 @@ bool ICMonitoredFallbackStub::initMonitoringChain(JSContext* cx,
                                                   JSScript* script) {
   MOZ_ASSERT(fallbackMonitorStub_ == nullptr);
 
-  ICTypeMonitor_Fallback::Compiler compiler(cx, this);
   ICStubSpace* space = script->icScript()->fallbackStubSpace();
-  ICTypeMonitor_Fallback* stub = compiler.getStub(space);
+  FallbackStubAllocator alloc(cx, *space);
+  auto* stub = alloc.newStub<ICTypeMonitor_Fallback>(
+      BaselineICFallbackKind::TypeMonitor, this);
   if (!stub) {
     return false;
   }
+
   fallbackMonitorStub_ = stub;
   return true;
 }
@@ -1030,8 +1099,9 @@ bool ICMonitoredFallbackStub::addMonitorStubForValue(JSContext* cx,
 bool ICUpdatedStub::initUpdatingChain(JSContext* cx, ICStubSpace* space) {
   MOZ_ASSERT(firstUpdateStub_ == nullptr);
 
-  ICTypeUpdate_Fallback::Compiler compiler(cx);
-  ICTypeUpdate_Fallback* stub = compiler.getStub(space);
+  FallbackStubAllocator alloc(cx, *space);
+  auto* stub =
+      alloc.newStub<ICTypeUpdate_Fallback>(BaselineICFallbackKind::TypeUpdate);
   if (!stub) {
     return false;
   }
@@ -1049,6 +1119,17 @@ ICStubSpace* ICStubCompiler::StubSpaceForStub(bool makesGCCalls,
   return script->zone()->jitZone()->optimizedStubSpace();
 }
 
+static void InitMacroAssemblerForICStub(StackMacroAssembler& masm) {
+#ifndef JS_USE_LINK_REGISTER
+  // The first value contains the return addres,
+  // which we pull into ICTailCallReg for tail calls.
+  masm.adjustFrame(sizeof(intptr_t));
+#endif
+#ifdef JS_CODEGEN_ARM
+  masm.setSecondScratchReg(BaselineSecondScratchReg);
+#endif
+}
+
 JitCode* ICStubCompiler::getStubCode() {
   JitRealm* realm = cx->realm()->jitRealm();
 
@@ -1062,14 +1143,7 @@ JitCode* ICStubCompiler::getStubCode() {
   // Compile new stubcode.
   JitContext jctx(cx, nullptr);
   StackMacroAssembler masm;
-#ifndef JS_USE_LINK_REGISTER
-  // The first value contains the return addres,
-  // which we pull into ICTailCallReg for tail calls.
-  masm.adjustFrame(sizeof(intptr_t));
-#endif
-#ifdef JS_CODEGEN_ARM
-  masm.setSecondScratchReg(BaselineSecondScratchReg);
-#endif
+  InitMacroAssemblerForICStub(masm);
 
   if (!generateStubCode(masm)) {
     return nullptr;
@@ -1085,10 +1159,6 @@ JitCode* ICStubCompiler::getStubCode() {
     return nullptr;
   }
 
-  // After generating code, run postGenerateStubCode().  We must not fail
-  // after this point.
-  postGenerateStubCode(masm, newStubCode);
-
   MOZ_ASSERT(entersStubFrame_ == ICStub::NonCacheIRStubMakesGCCalls(kind));
   MOZ_ASSERT(!inStubFrame_);
 
@@ -1099,8 +1169,8 @@ JitCode* ICStubCompiler::getStubCode() {
   return newStubCode;
 }
 
-bool ICStubCompiler::tailCallVMInternal(MacroAssembler& masm,
-                                        TailCallVMFunctionId id) {
+bool ICStubCompilerBase::tailCallVMInternal(MacroAssembler& masm,
+                                            TailCallVMFunctionId id) {
   TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(id);
   const VMFunctionData& fun = GetVMFunction(id);
   MOZ_ASSERT(fun.expectTailCall == TailCall);
@@ -1109,7 +1179,7 @@ bool ICStubCompiler::tailCallVMInternal(MacroAssembler& masm,
   return true;
 }
 
-bool ICStubCompiler::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
+bool ICStubCompilerBase::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
   MOZ_ASSERT(inStubFrame_);
 
   TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(id);
@@ -1120,18 +1190,19 @@ bool ICStubCompiler::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
 }
 
 template <typename Fn, Fn fn>
-bool ICStubCompiler::callVM(MacroAssembler& masm) {
+bool ICStubCompilerBase::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
   return callVMInternal(masm, id);
 }
 
 template <typename Fn, Fn fn>
-bool ICStubCompiler::tailCallVM(MacroAssembler& masm) {
+bool ICStubCompilerBase::tailCallVM(MacroAssembler& masm) {
   TailCallVMFunctionId id = TailCallVMFunctionToId<Fn, fn>::id;
   return tailCallVMInternal(masm, id);
 }
 
-void ICStubCompiler::enterStubFrame(MacroAssembler& masm, Register scratch) {
+void ICStubCompilerBase::enterStubFrame(MacroAssembler& masm,
+                                        Register scratch) {
   EmitBaselineEnterStubFrame(masm, scratch);
 #ifdef DEBUG
   framePushedAtEnterStubFrame_ = masm.framePushed();
@@ -1145,7 +1216,7 @@ void ICStubCompiler::enterStubFrame(MacroAssembler& masm, Register scratch) {
 #endif
 }
 
-void ICStubCompiler::assumeStubFrame() {
+void ICStubCompilerBase::assumeStubFrame() {
   MOZ_ASSERT(!inStubFrame_);
   inStubFrame_ = true;
 
@@ -1158,7 +1229,8 @@ void ICStubCompiler::assumeStubFrame() {
 #endif
 }
 
-void ICStubCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon) {
+void ICStubCompilerBase::leaveStubFrame(MacroAssembler& masm,
+                                        bool calledIntoIon) {
   MOZ_ASSERT(entersStubFrame_ && inStubFrame_);
   inStubFrame_ = false;
 
@@ -1171,7 +1243,8 @@ void ICStubCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon) {
   EmitBaselineLeaveStubFrame(masm, calledIntoIon);
 }
 
-void ICStubCompiler::pushStubPayload(MacroAssembler& masm, Register scratch) {
+void ICStubCompilerBase::pushStubPayload(MacroAssembler& masm,
+                                         Register scratch) {
   if (inStubFrame_) {
     masm.loadPtr(Address(BaselineFrameReg, 0), scratch);
     masm.pushBaselineFramePtr(scratch, scratch);
@@ -1180,7 +1253,8 @@ void ICStubCompiler::pushStubPayload(MacroAssembler& masm, Register scratch) {
   }
 }
 
-void ICStubCompiler::PushStubPayload(MacroAssembler& masm, Register scratch) {
+void ICStubCompilerBase::PushStubPayload(MacroAssembler& masm,
+                                         Register scratch) {
   pushStubPayload(masm, scratch);
   masm.adjustFrame(sizeof(intptr_t));
 }
@@ -1427,7 +1501,7 @@ bool DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame,
   return stub->addMonitorStubForValue(cx, frame, types, value);
 }
 
-bool ICTypeMonitor_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_TypeMonitor() {
   MOZ_ASSERT(R0 == JSReturnOperand);
 
   // Restore the tail call register.
@@ -1766,7 +1840,7 @@ bool DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICTypeUpdate_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_TypeUpdate() {
   // Just store false into R1.scratchReg() and return.
   masm.move32(Imm32(0), R1.scratchReg());
   EmitReturnFromIC(masm);
@@ -1892,7 +1966,7 @@ bool DoToBoolFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICToBool_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_ToBool() {
   MOZ_ASSERT(R0 == JSReturnOperand);
 
   // Restore the tail call register.
@@ -2106,14 +2180,14 @@ bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emitGetElem(bool hasReceiver) {
   MOZ_ASSERT(R0 == JSReturnOperand);
 
   // Restore the tail call register.
   EmitRestoreTailCallReg(masm);
 
   // Super property getters use a |this| that differs from base object
-  if (hasReceiver_) {
+  if (hasReceiver) {
     // State: receiver in R0, index in R1, obj on the stack
 
     // Ensure stack is fully synced for the expression decompiler.
@@ -2157,7 +2231,13 @@ bool ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
   // Ion inlined frames. The return address pushed onto reconstructed stack
   // will point here.
   assumeStubFrame();
-  bailoutReturnOffset_.bind(masm.currentOffset());
+  if (hasReceiver) {
+    code.initBailoutReturnOffset(BailoutReturnKind::GetElemSuper,
+                                 masm.currentOffset());
+  } else {
+    code.initBailoutReturnOffset(BailoutReturnKind::GetElem,
+                                 masm.currentOffset());
+  }
 
   leaveStubFrame(masm, true);
 
@@ -2175,12 +2255,12 @@ bool ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
   return true;
 }
 
-void ICGetElem_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm,
-                                                        Handle<JitCode*> code) {
-  BailoutReturnStub kind = hasReceiver_ ? BailoutReturnStub::GetElemSuper
-                                        : BailoutReturnStub::GetElem;
-  void* address = code->raw() + bailoutReturnOffset_.offset();
-  cx->realm()->jitRealm()->initBailoutReturnAddr(address, getKey(), kind);
+bool FallbackICCodeCompiler::emit_GetElem() {
+  return emitGetElem(/* hasReceiver = */ false);
+}
+
+bool FallbackICCodeCompiler::emit_GetElemSuper() {
+  return emitGetElem(/* hasReceiver = */ true);
 }
 
 static void SetUpdateStubData(ICCacheIR_Updated* stub,
@@ -2326,7 +2406,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_SetElem() {
   MOZ_ASSERT(R0 == JSReturnOperand);
 
   EmitRestoreTailCallReg(masm);
@@ -2467,7 +2547,7 @@ bool DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub,
   return true;
 }
 
-bool ICIn_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_In() {
   EmitRestoreTailCallReg(masm);
 
   // Sync for the decompiler.
@@ -2509,7 +2589,7 @@ bool DoHasOwnFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICHasOwn_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_HasOwn() {
   EmitRestoreTailCallReg(masm);
 
   // Sync for the decompiler.
@@ -2572,7 +2652,7 @@ bool DoGetNameFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICGetName_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_GetName() {
   MOZ_ASSERT(R0 == JSReturnOperand);
 
   EmitRestoreTailCallReg(masm);
@@ -2616,7 +2696,7 @@ bool DoBindNameFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICBindName_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_BindName() {
   MOZ_ASSERT(R0 == JSReturnOperand);
 
   EmitRestoreTailCallReg(masm);
@@ -2662,7 +2742,7 @@ bool DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICGetIntrinsic_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_GetIntrinsic() {
   EmitRestoreTailCallReg(masm);
 
   masm.push(ICStubReg);
@@ -2837,13 +2917,13 @@ bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emitGetProp(bool hasReceiver) {
   MOZ_ASSERT(R0 == JSReturnOperand);
 
   EmitRestoreTailCallReg(masm);
 
   // Super property getters use a |this| that differs from base object
-  if (hasReceiver_) {
+  if (hasReceiver) {
     // Push arguments.
     masm.pushValue(R0);
     masm.pushValue(R1);
@@ -2875,7 +2955,13 @@ bool ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
   // Ion inlined frames. The return address pushed onto reconstructed stack
   // will point here.
   assumeStubFrame();
-  bailoutReturnOffset_.bind(masm.currentOffset());
+  if (hasReceiver) {
+    code.initBailoutReturnOffset(BailoutReturnKind::GetPropSuper,
+                                 masm.currentOffset());
+  } else {
+    code.initBailoutReturnOffset(BailoutReturnKind::GetProp,
+                                 masm.currentOffset());
+  }
 
   leaveStubFrame(masm, true);
 
@@ -2893,12 +2979,12 @@ bool ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
   return true;
 }
 
-void ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm,
-                                                        Handle<JitCode*> code) {
-  BailoutReturnStub kind = hasReceiver_ ? BailoutReturnStub::GetPropSuper
-                                        : BailoutReturnStub::GetProp;
-  void* address = code->raw() + bailoutReturnOffset_.offset();
-  cx->realm()->jitRealm()->initBailoutReturnAddr(address, getKey(), kind);
+bool FallbackICCodeCompiler::emit_GetProp() {
+  return emitGetProp(/* hasReceiver = */ false);
+}
+
+bool FallbackICCodeCompiler::emit_GetPropSuper() {
+  return emitGetProp(/* hasReceiver = */ true);
 }
 
 //
@@ -3045,7 +3131,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_SetProp() {
   MOZ_ASSERT(R0 == JSReturnOperand);
 
   EmitRestoreTailCallReg(masm);
@@ -3079,19 +3165,13 @@ bool ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
   // Ion inlined frames. The return address pushed onto reconstructed stack
   // will point here.
   assumeStubFrame();
-  bailoutReturnOffset_.bind(masm.currentOffset());
+  code.initBailoutReturnOffset(BailoutReturnKind::SetProp,
+                               masm.currentOffset());
 
   leaveStubFrame(masm, true);
   EmitReturnFromIC(masm);
 
   return true;
-}
-
-void ICSetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm,
-                                                        Handle<JitCode*> code) {
-  BailoutReturnStub kind = BailoutReturnStub::SetProp;
-  void* address = code->raw() + bailoutReturnOffset_.offset();
-  cx->realm()->jitRealm()->initBailoutReturnAddr(address, getKey(), kind);
 }
 
 //
@@ -3886,7 +3966,7 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-void ICCallStubCompiler::pushCallArguments(MacroAssembler& masm,
+void ICStubCompilerBase::pushCallArguments(MacroAssembler& masm,
                                            AllocatableGeneralRegisterSet regs,
                                            Register argcReg, bool isJitCall,
                                            bool isConstructing) {
@@ -4195,7 +4275,7 @@ void ICCallStubCompiler::pushArrayArguments(
   masm.bind(&copyDone);
 }
 
-bool ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emitCall(bool isSpread, bool isConstructing) {
   MOZ_ASSERT(R0 == JSReturnOperand);
 
   // Values are on the stack left-to-right. Calling convention wants them
@@ -4204,7 +4284,7 @@ bool ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
 
   AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
 
-  if (MOZ_UNLIKELY(isSpread_)) {
+  if (MOZ_UNLIKELY(isSpread)) {
     // Push a stub frame so that we can perform a non-tail call.
     enterStubFrame(masm, R1.scratchReg());
 
@@ -4213,22 +4293,26 @@ bool ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
     // calling enterStubFrame.
 
     // newTarget
-    if (isConstructing_) {
+    uint32_t valueOffset = 0;
+    if (isConstructing) {
       masm.pushValue(Address(BaselineFrameReg, STUB_FRAME_SIZE));
+      valueOffset++;
     }
 
     // array
-    uint32_t valueOffset = isConstructing_;
     masm.pushValue(Address(BaselineFrameReg,
-                           valueOffset++ * sizeof(Value) + STUB_FRAME_SIZE));
+                           valueOffset * sizeof(Value) + STUB_FRAME_SIZE));
+    valueOffset++;
 
     // this
     masm.pushValue(Address(BaselineFrameReg,
-                           valueOffset++ * sizeof(Value) + STUB_FRAME_SIZE));
+                           valueOffset * sizeof(Value) + STUB_FRAME_SIZE));
+    valueOffset++;
 
     // callee
     masm.pushValue(Address(BaselineFrameReg,
-                           valueOffset++ * sizeof(Value) + STUB_FRAME_SIZE));
+                           valueOffset * sizeof(Value) + STUB_FRAME_SIZE));
+    valueOffset++;
 
     masm.push(masm.getStackPointer());
     masm.push(ICStubReg);
@@ -4255,7 +4339,7 @@ bool ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
   regs.take(R0.scratchReg());  // argc.
 
   pushCallArguments(masm, regs, R0.scratchReg(), /* isJitCall = */ false,
-                    isConstructing_);
+                    isConstructing);
 
   masm.push(masm.getStackPointer());
   masm.push(R0.scratchReg());
@@ -4276,7 +4360,14 @@ bool ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
   // Ion inlined frames. The return address pushed onto reconstructed stack
   // will point here.
   assumeStubFrame();
-  bailoutReturnOffset_.bind(masm.currentOffset());
+
+  MOZ_ASSERT(!isSpread);
+
+  if (isConstructing) {
+    code.initBailoutReturnOffset(BailoutReturnKind::New, masm.currentOffset());
+  } else {
+    code.initBailoutReturnOffset(BailoutReturnKind::Call, masm.currentOffset());
+  }
 
   // Load passed-in ThisV into R1 just in case it's needed.  Need to do this
   // before we leave the stub frame since that info will be lost.
@@ -4287,7 +4378,7 @@ bool ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
 
   // If this is a |constructing| call, if the callee returns a non-object, we
   // replace it with the |this| object passed in.
-  if (isConstructing_) {
+  if (isConstructing) {
     MOZ_ASSERT(JSReturnOperand == R0);
     Label skipThisReplace;
 
@@ -4315,16 +4406,20 @@ bool ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
   return true;
 }
 
-void ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm,
-                                                     Handle<JitCode*> code) {
-  if (MOZ_UNLIKELY(isSpread_)) {
-    return;
-  }
+bool FallbackICCodeCompiler::emit_Call() {
+  return emitCall(/* isSpread = */ false, /* isConstructing = */ false);
+}
 
-  void* address = code->raw() + bailoutReturnOffset_.offset();
-  BailoutReturnStub kind =
-      isConstructing_ ? BailoutReturnStub::New : BailoutReturnStub::Call;
-  cx->realm()->jitRealm()->initBailoutReturnAddr(address, getKey(), kind);
+bool FallbackICCodeCompiler::emit_CallConstructing() {
+  return emitCall(/* isSpread = */ false, /* isConstructing = */ true);
+}
+
+bool FallbackICCodeCompiler::emit_SpreadCall() {
+  return emitCall(/* isSpread = */ true, /* isConstructing = */ false);
+}
+
+bool FallbackICCodeCompiler::emit_SpreadCallConstructing() {
+  return emitCall(/* isSpread = */ true, /* isConstructing = */ true);
 }
 
 bool ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm) {
@@ -5281,7 +5376,7 @@ bool DoGetIteratorFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICGetIterator_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_GetIterator() {
   EmitRestoreTailCallReg(masm);
 
   // Sync stack for the decompiler.
@@ -5339,7 +5434,7 @@ bool DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICInstanceOf_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_InstanceOf() {
   EmitRestoreTailCallReg(masm);
 
   // Sync stack for the decompiler.
@@ -5375,7 +5470,7 @@ bool DoTypeOfFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICTypeOf_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_TypeOf() {
   EmitRestoreTailCallReg(masm);
 
   masm.pushValue(R0);
@@ -5464,7 +5559,7 @@ bool DoRestFallback(JSContext* cx, BaselineFrame* frame, ICRest_Fallback* stub,
   return true;
 }
 
-bool ICRest_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_Rest() {
   EmitRestoreTailCallReg(masm);
 
   masm.push(ICStubReg);
@@ -5531,7 +5626,7 @@ bool DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_UnaryArith() {
   MOZ_ASSERT(R0 == JSReturnOperand);
 
   // Restore the tail call register.
@@ -5655,7 +5750,7 @@ bool DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_BinaryArith() {
   MOZ_ASSERT(R0 == JSReturnOperand);
 
   // Restore the tail call register.
@@ -5752,7 +5847,7 @@ bool DoCompareFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_Compare() {
   MOZ_ASSERT(R0 == JSReturnOperand);
 
   // Restore the tail call register.
@@ -5813,7 +5908,7 @@ bool DoNewArrayFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICNewArray_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_NewArray() {
   EmitRestoreTailCallReg(masm);
 
   masm.push(R0.scratchReg());  // length
@@ -5868,7 +5963,7 @@ bool DoNewObjectFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool ICNewObject_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::emit_NewObject() {
   EmitRestoreTailCallReg(masm);
 
   masm.push(ICStubReg);  // stub.
@@ -5877,6 +5972,43 @@ bool ICNewObject_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
   using Fn = bool (*)(JSContext*, BaselineFrame*, ICNewObject_Fallback*,
                       MutableHandleValue);
   return tailCallVM<Fn, DoNewObjectFallback>(masm);
+}
+
+bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {
+  StackMacroAssembler masm;
+
+  BaselineICFallbackCode& fallbackCode = baselineICFallbackCode_.ref();
+  FallbackICCodeCompiler compiler(cx, fallbackCode, masm);
+
+  JitSpew(JitSpew_Codegen, "# Emitting Baseline IC fallback code");
+
+#define EMIT_CODE(kind)                                            \
+  {                                                                \
+    uint32_t offset = startTrampolineCode(masm);                   \
+    InitMacroAssemblerForICStub(masm);                             \
+    if (!compiler.emit_##kind()) {                                 \
+      return false;                                                \
+    }                                                              \
+    fallbackCode.initOffset(BaselineICFallbackKind::kind, offset); \
+  }
+  IC_BASELINE_FALLBACK_CODE_KIND_LIST(EMIT_CODE)
+#undef EMIT_CODE
+
+  Linker linker(masm, "BaselineICFallback");
+  JitCode* code = linker.newCode(cx, CodeKind::Other);
+  if (!code) {
+    return false;
+  }
+
+#ifdef JS_ION_PERF
+  writePerfSpewerJitCodeProfile(code, "BaselineICFallback");
+#endif
+#ifdef MOZ_VTUNE
+  vtune::MarkStub(code, "BaselineICFallback");
+#endif
+
+  fallbackCode.initCode(code);
+  return true;
 }
 
 }  // namespace jit
