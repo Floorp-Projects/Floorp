@@ -104,3 +104,11 @@ function testEvalcx() {
     assertEq(lazysb.__proto__, Math);
 }
 testEvalcx();
+
+function testSetProto() {
+    var o = {};
+    o.__proto__ = newGlobal();
+    o.__proto__ = newGlobal();
+    assertEq(objectGlobal(o), this);
+}
+testSetProto();
