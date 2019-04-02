@@ -28,6 +28,7 @@
 
 #include "js/StructuredClone.h"
 
+#include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
@@ -46,6 +47,7 @@
 #include "js/ArrayBuffer.h"  // JS::{ArrayBufferHasData,DetachArrayBuffer,IsArrayBufferObject,New{,Mapped}ArrayBufferWithContents,ReleaseMappedArrayBufferContents}
 #include "js/Date.h"
 #include "js/GCHashTable.h"
+#include "js/RegExpFlags.h"        // JS::RegExpFlags
 #include "js/SharedArrayBuffer.h"  // JS::IsSharedArrayBufferObject
 #include "js/Wrapper.h"
 #include "vm/BigIntType.h"
@@ -64,7 +66,9 @@
 using namespace js;
 
 using JS::CanonicalizeNaN;
+using JS::RegExpFlags;
 using JS::RootedValueVector;
+using mozilla::AssertedCast;
 using mozilla::BitwiseCast;
 using mozilla::NativeEndian;
 using mozilla::NumbersAreIdentical;
@@ -1669,7 +1673,7 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
         if (!re) {
           return false;
         }
-        return out.writePair(SCTAG_REGEXP_OBJECT, re->getFlags()) &&
+        return out.writePair(SCTAG_REGEXP_OBJECT, re->getFlags().value()) &&
                writeString(SCTAG_STRING, re->getSource());
       }
       case ESClass::ArrayBuffer: {
@@ -2448,7 +2452,7 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp) {
     }
 
     case SCTAG_REGEXP_OBJECT: {
-      RegExpFlag flags = RegExpFlag(data);
+      RegExpFlags flags = AssertedCast<uint8_t>(data);
       uint32_t tag2, stringData;
       if (!in.readPair(&tag2, &stringData)) {
         return false;
