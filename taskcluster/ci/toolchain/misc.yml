@@ -60,7 +60,7 @@ linux64-hfsplus:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/hfsplus-tools.tar.xz
     toolchains:
-        - linux64-clang-8
+        - linux64-clang-7
 
 linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"

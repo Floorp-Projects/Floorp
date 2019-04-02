@@ -54,7 +54,7 @@ macosx64-clang-tidy:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
     toolchains:
         - linux64-cctools-port
-        - linux64-clang-8
+        - linux64-clang-7
         - linux64-gcc-6
         - linux64-node
 
