@@ -13,14 +13,13 @@ add_task(async function() {
   const { tab, monitor } = await initNetMonitor(SIMPLE_SJS);
   info("Starting test... ");
 
-  const { document, store, windowRequire, NetMonitorView } = monitor.panelWin;
+  const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
+  const { PANELS } = windowRequire("devtools/client/netmonitor/src/constants");
   const {
     getSelectedRequest,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
-  const Editor = require("devtools/client/shared/sourceeditor/editor");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -35,6 +34,8 @@ add_task(async function() {
   is(!!document.querySelector(".network-details-panel"), false,
     "The network details panel should still be hidden after first request.");
 
+  const waitForHeaders = waitForDOM(document, ".headers-overview");
+
   store.dispatch(Actions.toggleNetworkDetails());
 
   isnot(getSelectedRequest(store.getState()), undefined,
@@ -44,11 +45,13 @@ add_task(async function() {
   is(!!document.querySelector(".network-details-panel"), true,
     "The network details panel should not be hidden after toggle button was pressed.");
 
-  testHeadersTab();
+  await waitForHeaders;
+
+  await testHeadersTab();
   await testCookiesTab();
-  testParamsTab();
+  await testParamsTab();
   await testResponseTab();
-  testTimingsTab();
+  await testTimingsTab();
   return teardown(monitor);
 
   function getSelectedIndex(state) {
@@ -58,215 +61,195 @@ add_task(async function() {
     return getSortedRequests(state).findIndex(r => r.id === state.requests.selectedId);
   }
 
-  function testHeadersTab() {
-    const tabEl = document.querySelectorAll("#details-pane tab")[0];
-    const tabpanel = document.querySelectorAll("#details-pane tabpanel")[0];
+  async function testHeadersTab() {
+    const tabEl = document.querySelectorAll(".network-details-panel .tabs-menu a")[0];
+    const tabpanel = document.querySelector(".network-details-panel .tab-panel");
 
-    is(tabEl.getAttribute("selected"), "true",
+    is(tabEl.getAttribute("aria-selected"), "true",
       "The headers tab in the network details pane should be selected.");
-
-    is(tabpanel.querySelector("#headers-summary-url-value").getAttribute("value"),
+    // Request URL
+    is(tabpanel.querySelectorAll(".tabpanel-summary-value")[0].innerText,
       SIMPLE_SJS, "The url summary value is incorrect.");
-    is(tabpanel.querySelector("#headers-summary-url-value").getAttribute("tooltiptext"),
-      SIMPLE_SJS, "The url summary tooltiptext is incorrect.");
-    is(tabpanel.querySelector("#headers-summary-method-value").getAttribute("value"),
+    // Request method
+    is(tabpanel.querySelectorAll(".tabpanel-summary-value")[1].innerText,
       "GET", "The method summary value is incorrect.");
-    is(tabpanel.querySelector("#headers-summary-address-value").getAttribute("value"),
+    // Remote address
+    is(tabpanel.querySelectorAll(".tabpanel-summary-value")[2].innerText,
       "127.0.0.1:8888", "The remote address summary value is incorrect.");
-    is(tabpanel.querySelector("#headers-summary-status-circle").getAttribute("data-code"),
+    // Status code
+    is(tabpanel.querySelector(".requests-list-status-code").innerText,
       "200", "The status summary code is incorrect.");
-    is(tabpanel.querySelector("#headers-summary-status-value").getAttribute("value"),
-      "200 Och Aye", "The status summary value is incorrect.");
+    is(tabpanel.querySelector(".status-text").getAttribute("value"),
+      "Och Aye", "The status summary value is incorrect.");
+    // Version
+    is(tabpanel.querySelectorAll(".tabpanel-summary-value")[4].innerText,
+    "HTTP/1.1", "The HTTP version is incorrect.");
 
-    is(tabpanel.querySelectorAll(".variables-view-scope").length, 2,
+    await waitForRequestData(store, ["requestHeaders", "responseHeaders"]);
+
+    is(tabpanel.querySelectorAll(".treeTable tbody .tree-section").length, 2,
       "There should be 2 header scopes displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll(".variable-or-property").length, 19,
-      "There should be 19 header values displayed in this tabpanel.");
 
-    is(tabpanel.querySelectorAll(".variables-view-empty-notice").length, 0,
-      "The empty notice should not be displayed in this tabpanel.");
+    is(tabpanel.querySelectorAll(":not(.tree-section) > .treeLabelCell").length,
+      23, "There should be 23 header values displayed in this tabpanel.");
 
-    const responseScope = tabpanel.querySelectorAll(".variables-view-scope")[0];
-    const requestScope = tabpanel.querySelectorAll(".variables-view-scope")[1];
+    const headersTable = tabpanel.querySelector(".treeTable tbody");
+    const responseScope = headersTable.querySelectorAll("tr[id^='/Response headers']");
+    const requestScope = headersTable.querySelectorAll("tr[id^='/Request headers']");
 
-    is(responseScope.querySelector(".name").getAttribute("value"),
-      L10N.getStr("responseHeaders") + " (" +
-      L10N.getFormatStr("networkMenu.sizeKB",
-        L10N.numberWithDecimals(330 / 1024, 3)) + ")",
+    ok(headersTable.querySelectorAll(".tree-section .treeLabel")[0].innerHTML
+      .match(new RegExp(L10N.getStr("responseHeaders") + " \\([0-9]+ .+\\)")),
       "The response headers scope doesn't have the correct title.");
 
-    ok(requestScope.querySelector(".name").getAttribute("value").includes(
-      L10N.getStr("requestHeaders") + " (0"),
+    ok(headersTable.querySelectorAll(".tree-section .treeLabel")[1].innerHTML.includes(
+      L10N.getStr("requestHeaders") + " ("),
       "The request headers scope doesn't have the correct title.");
-    // Can't test for full request headers title because the size may
-    // vary across platforms ("User-Agent" header differs). We're pretty
-    // sure it's smaller than 1 MB though, so it starts with a 0.
 
-    is(responseScope.querySelectorAll(".variables-view-variable .name")[0]
-      .getAttribute("value"),
-      "Cache-Control", "The first response header name was incorrect.");
-    is(responseScope.querySelectorAll(".variables-view-variable .value")[0]
-      .getAttribute("value"),
-      "\"no-cache, no-store, must-revalidate\"",
-      "The first response header value was incorrect.");
-    is(responseScope.querySelectorAll(".variables-view-variable .name")[1]
-      .getAttribute("value"),
-      "Connection", "The second response header name was incorrect.");
-    is(responseScope.querySelectorAll(".variables-view-variable .value")[1]
-      .getAttribute("value"),
-      "\"close\"", "The second response header value was incorrect.");
-    is(responseScope.querySelectorAll(".variables-view-variable .name")[2]
-      .getAttribute("value"),
-      "Content-Length", "The third response header name was incorrect.");
-    is(responseScope.querySelectorAll(".variables-view-variable .value")[2]
-      .getAttribute("value"),
-      "\"12\"", "The third response header value was incorrect.");
-    is(responseScope.querySelectorAll(".variables-view-variable .name")[3]
-      .getAttribute("value"),
-      "Content-Type", "The fourth response header name was incorrect.");
-    is(responseScope.querySelectorAll(".variables-view-variable .value")[3]
-      .getAttribute("value"),
-      "\"text/plain; charset=utf-8\"", "The fourth response header value was incorrect.");
-    is(responseScope.querySelectorAll(".variables-view-variable .name")[9]
-      .getAttribute("value"),
-      "foo-bar", "The last response header name was incorrect.");
-    is(responseScope.querySelectorAll(".variables-view-variable .value")[9]
-      .getAttribute("value"),
-      "\"baz\"", "The last response header value was incorrect.");
+    const responseHeaders = [
+      {
+        name: "cache-control",
+        value: "no-cache, no-store, must-revalidate",
+        pos: "first",
+        index: 1,
+      },
+      {
+        name: "connection",
+        value: "close",
+        pos: "second",
+        index: 2,
+      },
+      {
+        name: "content-length",
+        value: "12",
+        pos: "third",
+        index: 3,
+      },
+      {
+        name: "content-type",
+        value: "text/plain; charset=utf-8",
+        pos: "fourth",
+        index: 4,
+      },
+      {
+        name: "foo-bar",
+        value: "baz",
+        pos: "seventh",
+        index: 7,
+      },
+    ];
+    responseHeaders.forEach((header) => {
+      is(responseScope[header.index].querySelector(".treeLabel").innerHTML,
+        header.name, `The ${header.pos} response header name was incorrect.`);
+      is(responseScope[header.index].querySelector(".objectBox").innerHTML,
+        header.value, `The ${header.pos} response header value was incorrect.`);
+    });
 
-    is(requestScope.querySelectorAll(".variables-view-variable .name")[0]
-      .getAttribute("value"),
-      "Host", "The first request header name was incorrect.");
-    is(requestScope.querySelectorAll(".variables-view-variable .value")[0]
-      .getAttribute("value"),
-      "\"example.com\"", "The first request header value was incorrect.");
-    is(requestScope.querySelectorAll(".variables-view-variable .name")[6]
-      .getAttribute("value"),
-      "Connection", "The ante-penultimate request header name was incorrect.");
-    is(requestScope.querySelectorAll(".variables-view-variable .value")[6]
-      .getAttribute("value"),
-      "\"keep-alive\"", "The ante-penultimate request header value was incorrect.");
-    is(requestScope.querySelectorAll(".variables-view-variable .name")[7]
-      .getAttribute("value"),
-      "Pragma", "The penultimate request header name was incorrect.");
-    is(requestScope.querySelectorAll(".variables-view-variable .value")[7]
-      .getAttribute("value"),
-      "\"no-cache\"", "The penultimate request header value was incorrect.");
-    is(requestScope.querySelectorAll(".variables-view-variable .name")[8]
-      .getAttribute("value"),
-      "Cache-Control", "The last request header name was incorrect.");
-    is(requestScope.querySelectorAll(".variables-view-variable .value")[8]
-      .getAttribute("value"),
-      "\"no-cache\"", "The last request header value was incorrect.");
+    const requestHeaders = [
+      {
+        name: "Cache-Control",
+        value: "no-cache",
+        pos: "fourth",
+        index: 4,
+      },
+      {
+        name: "Connection",
+        value: "keep-alive",
+        pos: "fifth",
+        index: 5,
+      },
+      {
+        name: "Host",
+        value: "example.com",
+        pos: "seventh",
+        index: 7,
+      },
+      {
+        name: "Pragma",
+        value: "no-cache",
+        pos: "eighth",
+        index: 8,
+      },
+    ];
+    requestHeaders.forEach((header) => {
+      is(requestScope[header.index].querySelector(".treeLabel").innerHTML,
+        header.name, `The ${header.pos} request header name was incorrect.`);
+      is(requestScope[header.index].querySelector(".objectBox").innerHTML,
+        header.value, `The ${header.pos} request header value was incorrect.`);
+    });
   }
 
   async function testCookiesTab() {
-    const onEvent = monitor.panelWin.api.once(EVENTS.TAB_UPDATED);
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      document.querySelectorAll("#details-pane tab")[1]);
-    await onEvent;
+    const tabpanel = await selectTab(PANELS.COOKIES, 1);
 
-    const tabEl = document.querySelectorAll("#details-pane tab")[1];
-    const tabpanel = document.querySelectorAll("#details-pane tabpanel")[1];
-
-    is(tabEl.getAttribute("selected"), "true",
-      "The cookies tab in the network details pane should be selected.");
-
-    is(tabpanel.querySelectorAll(".variables-view-scope").length, 2,
+    const cookieTable = tabpanel.querySelector(".treeTable tbody");
+    is(cookieTable.querySelectorAll(".tree-section").length, 2,
       "There should be 2 cookie scopes displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll(".variable-or-property").length, 6,
-      "There should be 6 cookie values displayed in this tabpanel.");
+    // 2 Cookies in response - 1 httpOnly and 1 value for each cookie - total 6
+    is(cookieTable.querySelectorAll("tr[id^='/Response cookies/'").length, 6,
+      "There should be 6 rows displayed in response cookies table");
+    is(cookieTable.querySelectorAll("tr[id^='/Request cookies/'").length, 2,
+      "There should be 2 cookie values displayed in request cookies table.");
   }
 
-  function testParamsTab() {
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      document.querySelectorAll("#details-pane tab")[2]);
+  async function testParamsTab() {
+    const tabpanel = await selectTab(PANELS.PARAMS, 2);
 
-    const tabEl = document.querySelectorAll("#details-pane tab")[2];
-    const tabpanel = document.querySelectorAll("#details-pane tabpanel")[2];
-
-    is(tabEl.getAttribute("selected"), "true",
-      "The params tab in the network details pane should be selected.");
-
-    is(tabpanel.querySelectorAll(".variables-view-scope").length, 0,
+    is(tabpanel.querySelectorAll(".panel-container").length, 0,
       "There should be no param scopes displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll(".variable-or-property").length, 0,
-      "There should be no param values displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll(".variables-view-empty-notice").length, 1,
+    is(tabpanel.querySelectorAll(".empty-notice").length, 1,
       "The empty notice should be displayed in this tabpanel.");
-
-    is(tabpanel.querySelector("#request-params-box")
-      .hasAttribute("hidden"), false,
-      "The request params box should not be hidden.");
-    is(tabpanel.querySelector("#request-post-data-textarea-box")
-      .hasAttribute("hidden"), true,
-      "The request post data textarea box should be hidden.");
   }
 
   async function testResponseTab() {
-    const onEvent = monitor.panelWin.api.once(EVENTS.TAB_UPDATED);
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      document.querySelectorAll("#details-pane tab")[3]);
-    await onEvent;
+    const tabpanel = await selectTab(PANELS.RESPONSE, 3);
+    await waitForDOM(document, ".treeTable tbody");
 
-    const tabEl = document.querySelectorAll("#details-pane tab")[3];
-    const tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
-
-    is(tabEl.getAttribute("selected"), "true",
-      "The response tab in the network details pane should be selected.");
-
-    is(tabpanel.querySelector("#response-content-info-header")
-      .hasAttribute("hidden"), true,
-      "The response info header should be hidden.");
-    is(tabpanel.querySelector("#response-content-json-box")
-      .hasAttribute("hidden"), true,
-      "The response content json box should be hidden.");
-    is(tabpanel.querySelector("#response-content-textarea-box")
-      .hasAttribute("hidden"), false,
-      "The response content textarea box should not be hidden.");
-    is(tabpanel.querySelector("#response-content-image-box")
-      .hasAttribute("hidden"), true,
-      "The response content image box should be hidden.");
-
-    const editor = await NetMonitorView.editor("#response-content-textarea");
-    is(editor.getText(), "Hello world!",
-      "The text shown in the source editor is incorrect.");
-    is(editor.getMode(), Editor.modes.text,
-      "The mode active in the source editor is incorrect.");
+    const responseTable = tabpanel.querySelector(".treeTable tbody");
+    is(responseTable.querySelectorAll(".tree-section").length, 1,
+      "There should be 1 response scope displayed in this tabpanel.");
+    is(responseTable.querySelectorAll(".editor-row-container").length, 1,
+      "The response payload tab should be open initially.");
   }
 
-  function testTimingsTab() {
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      document.querySelectorAll("#details-pane tab")[4]);
+  async function testTimingsTab() {
+    const tabpanel = await selectTab(PANELS.TIMINGS, 4);
 
-    const tabEl = document.querySelectorAll("#details-pane tab")[4];
-    const tabpanel = document.querySelectorAll("#details-pane tabpanel")[4];
+    const displayFormat = new RegExp(/[0-9]+ ms$/);
+    const propsToVerify = [
+      "blocked",
+      "dns",
+      "connect",
+      "ssl",
+      "send",
+      "wait",
+      "receive",
+    ];
 
-    is(tabEl.getAttribute("selected"), "true",
-      "The timings tab in the network details pane should be selected.");
+    // To ensure that test case for a new property is written, otherwise this
+    // test will fail
+    is(tabpanel.querySelectorAll(".tabpanel-summary-container").length,
+      propsToVerify.length,
+      `There should be exactly ${propsToVerify.length} values
+      displayed in this tabpanel`);
 
-    ok(tabpanel.querySelector("#timings-summary-blocked .requests-list-timings-total")
-      .getAttribute("value").match(/[0-9]+/),
-      "The blocked timing info does not appear to be correct.");
+    propsToVerify.forEach((propName) => {
+      ok(tabpanel.querySelector(`#timings-summary-${propName}
+      .requests-list-timings-total`)
+        .innerHTML.match(displayFormat),
+        `The ${propName} timing info does not appear to be correct.`);
+    });
+  }
 
-    ok(tabpanel.querySelector("#timings-summary-dns .requests-list-timings-total")
-      .getAttribute("value").match(/[0-9]+/),
-      "The dns timing info does not appear to be correct.");
+  async function selectTab(tabName, pos) {
+    const tabEl = document.querySelectorAll(".network-details-panel .tabs-menu a")[pos];
 
-    ok(tabpanel.querySelector("#timings-summary-connect .requests-list-timings-total")
-      .getAttribute("value").match(/[0-9]+/),
-      "The connect timing info does not appear to be correct.");
+    const onPanelOpen = waitForDOM(document, `#${tabName}-panel`);
+    EventUtils.sendMouseEvent({ type: "click" }, tabEl);
+    await onPanelOpen;
 
-    ok(tabpanel.querySelector("#timings-summary-send .requests-list-timings-total")
-      .getAttribute("value").match(/[0-9]+/),
-      "The send timing info does not appear to be correct.");
+    is(tabEl.getAttribute("aria-selected"), "true",
+      `The ${tabName} tab in the network details pane should be selected.`);
 
-    ok(tabpanel.querySelector("#timings-summary-wait .requests-list-timings-total")
-      .getAttribute("value").match(/[0-9]+/),
-      "The wait timing info does not appear to be correct.");
-
-    ok(tabpanel.querySelector("#timings-summary-receive .requests-list-timings-total")
-      .getAttribute("value").match(/[0-9]+/),
-      "The receive timing info does not appear to be correct.");
+    return document.querySelector(".network-details-panel .tab-panel");
   }
 });
