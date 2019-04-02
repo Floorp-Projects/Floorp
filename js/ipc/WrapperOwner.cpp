@@ -12,7 +12,6 @@
 #include "jsfriendapi.h"
 #include "js/CharacterEncoding.h"
 #include "js/RegExp.h"
-#include "js/RegExpFlags.h"
 #include "xpcprivate.h"
 #include "WrapperFactory.h"
 
@@ -834,8 +833,7 @@ RegExpShared* WrapperOwner::regexp_toShared(JSContext* cx, HandleObject proxy) {
   }
 
   RootedObject regexp(cx);
-  regexp = JS::NewUCRegExpObject(cx, source.get(), source.Length(),
-                                 RegExpFlags(flags));
+  regexp = JS::NewUCRegExpObject(cx, source.get(), source.Length(), flags);
   if (!regexp) {
     return nullptr;
   }
