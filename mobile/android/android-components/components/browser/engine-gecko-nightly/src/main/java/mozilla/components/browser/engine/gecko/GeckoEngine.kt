@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.content.Context
 import android.util.AttributeSet
+import mozilla.components.browser.engine.gecko.integration.LocaleSettingUpdater
 import mozilla.components.browser.engine.gecko.mediaquery.from
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.concept.engine.Engine
@@ -34,6 +35,8 @@ class GeckoEngine(
     executorProvider: () -> GeckoWebExecutor = { GeckoWebExecutor(runtime) }
 ) : Engine {
     private val executor by lazy { executorProvider.invoke() }
+
+    private val localeUpdater = LocaleSettingUpdater(context, runtime)
 
     init {
         runtime.delegate = GeckoRuntime.Delegate {
@@ -114,6 +117,13 @@ class GeckoEngine(
             get() = runtime.settings.automaticFontSizeAdjustment
             set(value) { runtime.settings.automaticFontSizeAdjustment = value }
 
+        override var automaticLanguageAdjustment: Boolean
+            get() = localeUpdater.enabled
+            set(value) {
+                localeUpdater.enabled = value
+                defaultSettings?.automaticLanguageAdjustment = value
+            }
+
         override var trackingProtectionPolicy: TrackingProtectionPolicy?
             get() = TrackingProtectionPolicy.select(runtime.settings.contentBlocking.categories)
             set(value) {
@@ -147,6 +157,7 @@ class GeckoEngine(
             this.javascriptEnabled = it.javascriptEnabled
             this.webFontsEnabled = it.webFontsEnabled
             this.automaticFontSizeAdjustment = it.automaticFontSizeAdjustment
+            this.automaticLanguageAdjustment = it.automaticLanguageAdjustment
             this.trackingProtectionPolicy = it.trackingProtectionPolicy
             this.remoteDebuggingEnabled = it.remoteDebuggingEnabled
             this.testingModeEnabled = it.testingModeEnabled

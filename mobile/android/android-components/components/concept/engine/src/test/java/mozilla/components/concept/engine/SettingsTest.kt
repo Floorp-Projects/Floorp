@@ -31,6 +31,8 @@ class SettingsTest {
             { settings.webFontsEnabled = false },
             { settings.automaticFontSizeAdjustment },
             { settings.automaticFontSizeAdjustment = false },
+            { settings.automaticLanguageAdjustment },
+            { settings.automaticLanguageAdjustment = false },
             { settings.trackingProtectionPolicy },
             { settings.trackingProtectionPolicy = TrackingProtectionPolicy.all() },
             { settings.historyTrackingDelegate },
@@ -89,6 +91,7 @@ class SettingsTest {
         assertFalse(settings.javaScriptCanOpenWindowsAutomatically)
         assertTrue(settings.displayZoomControls)
         assertTrue(settings.automaticFontSizeAdjustment)
+        assertTrue(settings.automaticLanguageAdjustment)
         assertFalse(settings.loadWithOverviewMode)
         assertTrue(settings.allowContentAccess)
         assertTrue(settings.allowFileAccess)
@@ -109,6 +112,7 @@ class SettingsTest {
             domStorageEnabled = false,
             webFontsEnabled = false,
             automaticFontSizeAdjustment = false,
+            automaticLanguageAdjustment = false,
             trackingProtectionPolicy = TrackingProtectionPolicy.all(),
             historyTrackingDelegate = historyTrackingDelegate,
             requestInterceptor = interceptor,
@@ -132,6 +136,7 @@ class SettingsTest {
         assertFalse(defaultSettings.javascriptEnabled)
         assertFalse(defaultSettings.webFontsEnabled)
         assertFalse(defaultSettings.automaticFontSizeAdjustment)
+        assertFalse(defaultSettings.automaticLanguageAdjustment)
         assertEquals(TrackingProtectionPolicy.all(), defaultSettings.trackingProtectionPolicy)
         assertEquals(historyTrackingDelegate, defaultSettings.historyTrackingDelegate)
         assertEquals(interceptor, defaultSettings.requestInterceptor)

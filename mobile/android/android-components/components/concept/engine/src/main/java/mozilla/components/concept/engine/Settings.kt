@@ -38,6 +38,12 @@ abstract class Settings {
     open var automaticFontSizeAdjustment: Boolean by UnsupportedSetting()
 
     /**
+     * Setting to control whether the [Accept-Language] headers are altered with system locale
+     * settings.
+     */
+    open var automaticLanguageAdjustment: Boolean by UnsupportedSetting()
+
+    /**
      * Setting to control tracking protection.
      */
     open var trackingProtectionPolicy: TrackingProtectionPolicy? by UnsupportedSetting()
@@ -140,6 +146,7 @@ data class DefaultSettings(
     override var domStorageEnabled: Boolean = true,
     override var webFontsEnabled: Boolean = true,
     override var automaticFontSizeAdjustment: Boolean = true,
+    override var automaticLanguageAdjustment: Boolean = true,
     override var mediaPlaybackRequiresUserGesture: Boolean = true,
     override var trackingProtectionPolicy: TrackingProtectionPolicy? = null,
     override var requestInterceptor: RequestInterceptor? = null,

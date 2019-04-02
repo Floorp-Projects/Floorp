@@ -35,6 +35,10 @@ permalink: /changelog/
      labeled counter, rather than using `type: counter` and `labeled: true`, use
      `type: labeled_counter`. See bugzilla 1540725.
 
+* **concept-engine**
+   * Adds `automaticLanguageAdjustment` setting, which should hint to implementations to send 
+   language specific headers to websites. Implementation in `browser-engine-gecko-nightly`.
+
 # 0.49.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.48.0...v0.49.0)
