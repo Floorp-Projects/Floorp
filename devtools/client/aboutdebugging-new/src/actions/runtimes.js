@@ -24,6 +24,7 @@ const { remoteClientManager } =
 
 const {
   CONNECT_RUNTIME_FAILURE,
+  CONNECT_RUNTIME_NOT_RESPONDING,
   CONNECT_RUNTIME_START,
   CONNECT_RUNTIME_SUCCESS,
   DEBUG_TARGET_PANE,
@@ -52,6 +53,8 @@ const {
   WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 
+const CONNECTION_TIMING_OUT_DELAY = 3000;
+
 async function getRuntimeIcon(channel) {
   return (channel === "release" || channel === "beta" || channel === "aurora")
     ? `chrome://devtools/skin/images/aboutdebugging-firefox-${ channel }.svg`
@@ -70,6 +73,13 @@ function onMultiE10sUpdated() {
 function connectRuntime(id) {
   return async (dispatch, getState) => {
     dispatch({ type: CONNECT_RUNTIME_START, id });
+    const connectionNotRespondingTimer = setTimeout(() => {
+      // If connecting to the runtime takes time over CONNECTION_TIMING_OUT_DELAY,
+      // we assume the connection prompt is showing on the runtime, show a dialog
+      // to let user know that.
+      dispatch({ type: CONNECT_RUNTIME_NOT_RESPONDING, id });
+    }, CONNECTION_TIMING_OUT_DELAY);
+
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
       const clientWrapper = await createClientForRuntime(runtime);
@@ -136,6 +146,8 @@ function connectRuntime(id) {
       });
     } catch (e) {
       dispatch({ type: CONNECT_RUNTIME_FAILURE, id, error: e });
+    } finally {
+      clearTimeout(connectionNotRespondingTimer);
     }
   };
 }
@@ -146,6 +158,7 @@ function createThisFirefoxRuntime() {
       id: RUNTIMES.THIS_FIREFOX,
       isConnecting: false,
       isConnectionFailed: false,
+      isConnectionNotResponding: false,
       isUnknown: false,
       name: l10n.getString("about-debugging-this-firefox-runtime-name"),
       type: RUNTIMES.THIS_FIREFOX,
@@ -306,6 +319,7 @@ function updateNetworkRuntimes(locations) {
       },
       isConnecting: false,
       isConnectionFailed: false,
+      isConnectionNotResponding: false,
       isUnknown: false,
       name: location,
       type: RUNTIMES.NETWORK,
@@ -328,6 +342,7 @@ function updateUSBRuntimes(adbRuntimes) {
       },
       isConnecting: false,
       isConnectionFailed: false,
+      isConnectionNotResponding: false,
       isUnknown: adbRuntime.isUnknown(),
       name: adbRuntime.shortName,
       type: RUNTIMES.USB,
@@ -374,6 +389,8 @@ function updateRemoteRuntimes(runtimes, type) {
     // - runtimeDetails (set by about:debugging after a successful connection)
     // - isConnecting (set by about:debugging during the connection)
     // - isConnectionFailed (set by about:debugging if connection was failed)
+    // - isConnectionNotResponding
+    //     (set by about:debugging if connection is taking too much time)
     runtimes.forEach(runtime => {
       const existingRuntime = findRuntimeById(runtime.id, getState().runtimes);
       const isConnectionValid = existingRuntime && existingRuntime.runtimeDetails &&
@@ -382,6 +399,8 @@ function updateRemoteRuntimes(runtimes, type) {
       runtime.isConnecting = existingRuntime ? existingRuntime.isConnecting : false;
       runtime.isConnectionFailed =
         existingRuntime ? existingRuntime.isConnectionFailed : false;
+      runtime.isConnectionNotResponding =
+        existingRuntime ? existingRuntime.isConnectionNotResponding : false;
     });
 
     const existingRuntimes = getAllRuntimes(getState().runtimes);
