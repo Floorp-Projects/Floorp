@@ -25,45 +25,48 @@ var setupScript = runInParent(function setup() {
   assert.ok(nsLoginInfo != null, "nsLoginInfo constructor");
 
   // login0 has no username, so should be filtered out from the autocomplete list.
-  var login0 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+  var login0 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
                                "", "user0pass", "", "pword");
 
-  var login1 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+  var login1 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
                                "tempuser1", "temppass1", "uname", "pword");
 
-  var login2 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+  var login2 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
                                "testuser2", "testpass2", "uname", "pword");
 
-  var login3 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+  var login3 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
                                "testuser3", "testpass3", "uname", "pword");
 
-  var login4 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+  var login4 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
                                "zzzuser4", "zzzpass4", "uname", "pword");
 
+  // The following unused variables are referenced by `eval` in the message listeners below.
   // login 5 only used in the single-user forms
-  var login5 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete2", null,
+  /* eslint-disable no-unused-vars */
+  var login5 = new nsLoginInfo("https://example.com", "https://autocomplete2", null,
                                "singleuser5", "singlepass5", "uname", "pword");
 
-  var login6A = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete3", null,
+  var login6A = new nsLoginInfo("https://example.com", "https://autocomplete3", null,
                                 "form7user1", "form7pass1", "uname", "pword");
-  var login6B = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete3", null,
+  var login6B = new nsLoginInfo("https://example.com", "https://autocomplete3", null,
                                 "form7user2", "form7pass2", "uname", "pword");
 
-  var login7  = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete4", null,
+  var login7  = new nsLoginInfo("https://example.com", "https://autocomplete4", null,
                                 "form8user", "form8pass", "uname", "pword");
 
-  var login8A = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
+  var login8A = new nsLoginInfo("https://example.com", "https://autocomplete5", null,
                                 "form9userAB", "form9pass", "uname", "pword");
-  var login8B = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
+  var login8B = new nsLoginInfo("https://example.com", "https://autocomplete5", null,
                                 "form9userAAB", "form9pass", "uname", "pword");
-  // Reference by `eval` in the message listeners below.
-  // eslint-disable-next-line no-unused-vars
-  var login8C = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
+  var login8C = new nsLoginInfo("https://example.com", "https://autocomplete5", null,
                                 "form9userAABzz", "form9pass", "uname", "pword");
 
-  var login10 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete7", null,
+  var login10 = new nsLoginInfo("https://example.com", "https://autocomplete7", null,
                                 "testuser10", "testpass10", "uname", "pword");
 
+  var login11 = new nsLoginInfo("https://example.com", "https://example.com", null,
+                                "testuser11", "testpass11", "uname", "pword");
+  /* eslint-enable no-unused-vars */
 
   // try/catch in case someone runs the tests manually, twice.
   try {
@@ -72,14 +75,6 @@ var setupScript = runInParent(function setup() {
     Services.logins.addLogin(login2);
     Services.logins.addLogin(login3);
     Services.logins.addLogin(login4);
-    Services.logins.addLogin(login5);
-    Services.logins.addLogin(login6A);
-    Services.logins.addLogin(login6B);
-    Services.logins.addLogin(login7);
-    Services.logins.addLogin(login8A);
-    Services.logins.addLogin(login8B);
-    // login8C is added later
-    Services.logins.addLogin(login10);
   } catch (e) {
     assert.ok(false, "addLogin threw: " + e);
   }
@@ -104,85 +99,13 @@ var setupScript = runInParent(function setup() {
 <div id="content">
 
   <!-- form1 tests multiple matching logins -->
-  <form id="form1" action="http://autocomplete:8888/formtest.js" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
   <!-- other forms test single logins, with autocomplete=off set -->
-  <form id="form2" action="http://autocomplete2" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword" autocomplete="off">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form3" action="http://autocomplete2" onsubmit="return false;">
-    <input  type="text"       name="uname" autocomplete="off">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form4" action="http://autocomplete2" onsubmit="return false;" autocomplete="off">
+  <form id="form1" action="https://autocomplete:8888/formtest.js" onsubmit="return false;">
     <input  type="text"       name="uname">
     <input  type="password"   name="pword">
     <button type="submit">Submit</button>
   </form>
 
-  <form id="form5" action="http://autocomplete2" onsubmit="return false;">
-    <input  type="text"       name="uname" autocomplete="off">
-    <input  type="password"   name="pword" autocomplete="off">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- control -->
-  <form id="form6" action="http://autocomplete2" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- This form will be manipulated to insert a different username field. -->
-  <form id="form7" action="http://autocomplete3" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- test for no autofill after onblur with blank username -->
-  <form id="form8" action="http://autocomplete4" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- test autocomplete dropdown -->
-  <form id="form9" action="http://autocomplete5" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- tests <form>-less autocomplete -->
-  <div id="form11">
-     <input  type="text"       name="uname" id="uname">
-     <input  type="password"   name="pword" id="pword">
-     <button type="submit">Submit</button>
-  </div>
-
-  <!-- test for onUsernameInput recipe testing -->
-  <form id="form12" action="http://autocomplete7" onsubmit="return false;">
-    <input  type="text"   name="1">
-    <input  type="text"   name="2">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- test not closing when the search string (.value) becomes empty -->
-  <form id="form13" action="http://autocomplete:8888/formtest.js" onsubmit="return false;">
-    <input  type="text"       name="uname" value="prefilled">
-    <input  type="password"   name="pword" value="prefilled">
-    <button type="submit">Submit</button>
-  </form>
 </div>
 
 <pre id="test">
@@ -245,7 +168,7 @@ add_task(async function test_form1_menuitems() {
                            "testuser2",
                            "testuser3",
                            "zzzuser4"];
-  checkAutoCompleteResults(results, expectedMenuItems, "mochi.test", "Check all menuitems are displayed correctly.");
+  checkAutoCompleteResults(results, expectedMenuItems, "example.com", "Check all menuitems are displayed correctly.");
 
   checkACForm("", ""); // value shouldn't update just by selecting
   synthesizeKey("KEY_Enter");
@@ -468,7 +391,7 @@ add_task(async function test_form1_delete() {
 
   // Delete the first entry (of 4), "tempuser1"
   synthesizeKey("KEY_ArrowDown");
-  let numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  let numLogins = LoginManager.countLogins("https://example.com", "https://autocomplete:8888", null);
   is(numLogins, 5, "Correct number of logins before deleting one");
 
   let countChangedPromise = notifyMenuChanged(4);
@@ -479,7 +402,7 @@ add_task(async function test_form1_delete() {
   await deletionPromise;
 
   checkACForm("", "");
-  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  numLogins = LoginManager.countLogins("https://example.com", "https://autocomplete:8888", null);
   is(numLogins, 4, "Correct number of logins after deleting one");
   await countChangedPromise;
   synthesizeKey("KEY_Enter");
@@ -511,7 +434,7 @@ add_task(async function test_form1_delete_second() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkACForm("", "");
-  let numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  let numLogins = LoginManager.countLogins("https://example.com", "https://autocomplete:8888", null);
   is(numLogins, 3, "Correct number of logins after deleting one");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
@@ -543,7 +466,7 @@ add_task(async function test_form1_delete_last() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkACForm("", "");
-  let numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  let numLogins = LoginManager.countLogins("https://example.com", "https://autocomplete:8888", null);
   is(numLogins, 2, "Correct number of logins after deleting one");
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
@@ -575,15 +498,27 @@ add_task(async function test_form1_check_only_entry_remaining() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkACForm("", "");
-  let numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  let numLogins = LoginManager.countLogins("https://example.com", "https://autocomplete:8888", null);
   is(numLogins, 1, "Correct number of logins after deleting one");
 
-  // remove the login that's not shown in the list.
+  // remove the logins for the previous tests
   setupScript.sendSyncMessage("removeLogin", "login0");
+  setupScript.sendSyncMessage("removeLogin", "login1");
+  setupScript.sendSyncMessage("removeLogin", "login2");
+  setupScript.sendSyncMessage("removeLogin", "login3");
+  setupScript.sendSyncMessage("removeLogin", "login4");
+  setupScript.sendSyncMessage("addLogin", "login5");
 });
 
 /* Tests for single-user forms for ignoring autocomplete=off */
 add_task(async function test_form2() {
+  await setFormAndWaitForFieldFilled(`
+    <form id="form2" action="https://autocomplete2" onsubmit="return false;">
+      <input  type="text"       name="uname">
+      <input  type="password"   name="pword" autocomplete="off">
+      <button type="submit">Submit</button>
+    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
+
   // Turn our attention to form2
   uname = $_(2, "uname");
   pword = $_(2, "pword");
@@ -603,6 +538,13 @@ add_task(async function test_form2() {
 });
 
 add_task(async function test_form3() {
+  await setFormAndWaitForFieldFilled(`
+    <form id="form3" action="https://autocomplete2" onsubmit="return false;">
+      <input  type="text"       name="uname" autocomplete="off">
+      <input  type="password"   name="pword">
+      <button type="submit">Submit</button>
+    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
+
   uname = $_(3, "uname");
   pword = $_(3, "pword");
   checkACForm("singleuser5", "singlepass5");
@@ -620,6 +562,13 @@ add_task(async function test_form3() {
 });
 
 add_task(async function test_form4() {
+  await setFormAndWaitForFieldFilled(`
+    <form id="form4" action="https://autocomplete2" onsubmit="return false;" autocomplete="off">
+      <input  type="text"       name="uname">
+      <input  type="password"   name="pword">
+      <button type="submit">Submit</button>
+    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
+
   uname = $_(4, "uname");
   pword = $_(4, "pword");
   checkACForm("singleuser5", "singlepass5");
@@ -637,6 +586,13 @@ add_task(async function test_form4() {
 });
 
 add_task(async function test_form5() {
+  await setFormAndWaitForFieldFilled(`
+    <form id="form5" action="https://autocomplete2" onsubmit="return false;">
+      <input  type="text"       name="uname" autocomplete="off">
+      <input  type="password"   name="pword" autocomplete="off">
+      <button type="submit">Submit</button>
+    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
+
   uname = $_(5, "uname");
   pword = $_(5, "pword");
   checkACForm("singleuser5", "singlepass5");
@@ -654,6 +610,14 @@ add_task(async function test_form5() {
 });
 
 add_task(async function test_form6() {
+  await setFormAndWaitForFieldFilled(`
+    <!-- control -->
+    <form id="form6" action="https://autocomplete2" onsubmit="return false;">
+      <input  type="text"       name="uname">
+      <input  type="password"   name="pword">
+      <button type="submit">Submit</button>
+    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
+
   // (this is a control, w/o autocomplete=off, to ensure the login
   // that was being suppressed would have been filled in otherwise)
   uname = $_(6, "uname");
@@ -671,11 +635,22 @@ add_task(async function test_form6_changeUsername() {
   pword.focus();
   await spinEventLoop();
   checkACForm("singleuser5X", "singlepass5");
+  uname.focus();
 
   setupScript.sendSyncMessage("removeLogin", "login5");
 });
 
 add_task(async function test_form7() {
+  setupScript.sendSyncMessage("addLogin", "login6A");
+  setupScript.sendSyncMessage("addLogin", "login6B");
+  await setFormAndWaitForFieldFilled(`
+    <!-- This form will be manipulated to insert a different username field. -->
+    <form id="form7" action="https://autocomplete3" onsubmit="return false;">
+      <input  type="text"       name="uname">
+      <input  type="password"   name="pword">
+      <button type="submit">Submit</button>
+    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: ""});
+
   uname = $_(7, "uname");
   pword = $_(7, "pword");
   checkACForm("", "");
@@ -716,6 +691,21 @@ add_task(async function test_form7_2() {
 });
 
 add_task(async function test_form8() {
+  setupScript.sendSyncMessage("addLogin", "login7");
+  await setFormAndWaitForFieldFilled(`
+    <!-- This form will be manipulated to insert a different username field. -->
+    <form id="form7" action="https://autocomplete3" onsubmit="return false;">
+      <input  type="text"       name="uname">
+      <input  type="password"   name="pword">
+      <button type="submit">Submit</button>
+    </form>
+    <!-- test for no autofill after onblur with blank username -->
+    <form id="form8" action="https://autocomplete4" onsubmit="return false;">
+      <input  type="text"       name="uname">
+      <input  type="password"   name="pword">
+      <button type="submit">Submit</button>
+    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "form8user", formId: "form8"});
+
   uname = $_(8, "uname");
   pword = $_(8, "pword");
   checkACForm("form8user", "form8pass");
@@ -736,9 +726,19 @@ add_task(async function test_form8_2() {
 add_task(async function test_form8_3() {
   checkACForm("", "");
   setupScript.sendSyncMessage("removeLogin", "login7");
+  setupScript.sendSyncMessage("addLogin", "login8A");
+  setupScript.sendSyncMessage("addLogin", "login8B");
 });
 
 add_task(async function test_form9_filtering() {
+  await setFormAndWaitForFieldFilled(`
+    <!-- test autocomplete dropdown -->
+    <form id="form9" action="https://autocomplete5" onsubmit="return false;">
+      <input  type="text"       name="uname">
+      <input  type="password"   name="pword">
+      <button type="submit">Submit</button>
+    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: ""});
+
   // Turn our attention to form9 to test the dropdown - bug 497541
   uname = $_(9, "uname");
   pword = $_(9, "pword");
@@ -755,7 +755,7 @@ add_task(async function test_form9_filtering() {
   let results = await shownPromise;
 
   checkACForm("form9userAAB", "");
-  checkAutoCompleteResults(results, ["form9userAAB"], "mochi.test", "Check dropdown is updated after inserting 'A'");
+  checkAutoCompleteResults(results, ["form9userAAB"], "example.com", "Check dropdown is updated after inserting 'A'");
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
@@ -771,16 +771,28 @@ add_task(async function test_form9_autocomplete_cache() {
   let promise1 = notifyMenuChanged(1);
   sendString("z");
   let results = await promise1;
-  checkAutoCompleteResults(results, [], "mochi.test", "Check popup does not have any login items");
+  checkAutoCompleteResults(results, [], "example.com", "Check popup does not have any login items");
 
   // check that empty results are cached - bug 496466
   promise1 = notifyMenuChanged(1);
   sendString("z");
   results = await promise1;
-  checkAutoCompleteResults(results, [], "mochi.test", "Check popup only has the footer when it opens");
+  checkAutoCompleteResults(results, [], "example.com", "Check popup only has the footer when it opens");
 });
 
 add_task(async function test_form11_formless() {
+  setupScript.sendSyncMessage("removeLogin", "login8A");
+  setupScript.sendSyncMessage("removeLogin", "login8B");
+  setupScript.sendSyncMessage("removeLogin", "login8C");
+  setupScript.sendSyncMessage("addLogin", "login11");
+  await setFormAndWaitForFieldFilled(`
+    <!-- tests <form>-less autocomplete -->
+    <div id="form11">
+      <input  type="text"       name="uname" id="uname">
+      <input  type="password"   name="pword" id="pword">
+      <button type="submit">Submit</button>
+    </div>`, {fieldSelector: `input[name="uname"]`, fieldValue: "testuser11"});
+
   // Test form-less autocomplete
   uname = $_(11, "uname");
   pword = $_(11, "pword");
@@ -796,7 +808,7 @@ add_task(async function test_form11_formless() {
   let processedPromise = promiseFormsProcessed();
   synthesizeKey("KEY_Enter");
   await processedPromise;
-  checkACForm("testuser", "testpass");
+  checkACForm("testuser11", "testpass11");
 });
 
 add_task(async function test_form11_open_on_trusted_focus() {
@@ -823,13 +835,23 @@ add_task(async function test_form11_open_on_trusted_focus() {
   const processedPromise = promiseFormsProcessed();
   synthesizeKey("KEY_Enter");
   await processedPromise;
-  checkACForm("testuser", "testpass");
+  checkACForm("testuser11", "testpass11");
+  setupScript.sendSyncMessage("removeLogin", "login11");
 });
 
 add_task(async function test_form12_recipes() {
+  setupScript.sendSyncMessage("addLogin", "login10");
+  await setFormAndWaitForFieldFilled(`
+    <!-- test for onUsernameInput recipe testing -->
+    <form id="form12" action="https://autocomplete7" onsubmit="return false;">
+      <input  type="text"   name="1">
+      <input  type="text"   name="2">
+      <button type="submit">Submit</button>
+    </form>`, {fieldSelector: `input[name="1"]`, fieldValue: ""});
+
   await loadRecipes({
     siteRecipes: [{
-      "hosts": ["mochi.test:8888"],
+      "hosts": ["example.com"],
       "usernameSelector": "input[name='1']",
       "passwordSelector": "input[name='2']",
     }],
@@ -866,6 +888,14 @@ add_task(async function test_form12_recipes() {
 });
 
 add_task(async function test_form13_stays_open_upon_empty_search() {
+  await setFormAndWaitForFieldFilled(`
+    <!-- test not closing when the search string (.value) becomes empty -->
+    <form id="form13" action="http://autocomplete:8888/formtest.js" onsubmit="return false;">
+      <input  type="text"       name="uname" value="prefilled">
+      <input  type="password"   name="pword" value="prefilled">
+      <button type="submit">Submit</button>
+    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "prefilled"});
+
   uname = $_(13, "uname");
   pword = $_(13, "pword");
   checkACForm("prefilled", "prefilled");
