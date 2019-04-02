@@ -207,6 +207,16 @@ async function waitForElementWithSelector(dbg, selector) {
   return findElementWithSelector(dbg, selector);
 }
 
+function waitForSelectedLocation(dbg, line ) {
+  return waitForState(
+    dbg,
+    state => {
+      const location = dbg.selectors.getSelectedLocation(state)
+      return location && location.line == line
+    }
+  );
+}
+
 function waitForSelectedSource(dbg, url) {
   const {
     getSelectedSource,

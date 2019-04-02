@@ -7,7 +7,9 @@ add_task(async function() {
   const dbg = await initDebugger("doc-xhr-run-to-completion.html");
   invokeInTab("singleRequest", "doc-xhr-run-to-completion.html");
   await waitForPaused(dbg);
+  await waitForSelectedLocation(dbg, 23);
   assertPausedLocation(dbg);
+
   resume(dbg);
   await once(Services.ppmm, "test passed");
 });

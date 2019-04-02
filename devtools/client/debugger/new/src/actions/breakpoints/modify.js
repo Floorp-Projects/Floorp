@@ -4,13 +4,6 @@
 
 // @flow
 
-import type { ThunkArgs } from "../types";
-import type {
-  Breakpoint,
-  BreakpointOptions,
-  SourceLocation
-} from "../../types";
-
 import {
   makeBreakpointLocation,
   makeBreakpointId,
@@ -23,14 +16,21 @@ import {
   getBreakpoint,
   getBreakpointPositionsForLocation,
   getFirstBreakpointPosition,
-  getSourceFromId,
   getSymbols
 } from "../../selectors";
 
-import { loadSourceText } from "../sources/loadSourceText";
+import { loadSourceById } from "../sources/loadSourceText";
 import { setBreakpointPositions } from "./breakpointPositions";
 
 import { recordEvent } from "../../utils/telemetry";
+
+import type { ThunkArgs } from "../types";
+import type {
+  Breakpoint,
+  BreakpointOptions,
+  BreakpointPosition,
+  SourceLocation
+} from "../../types";
 
 // This file has the primitive operations used to modify individual breakpoints
 // and keep them in sync with the breakpoints installed on server threads. These
@@ -102,9 +102,9 @@ export function addBreakpoint(
 
     const { sourceId, column } = initialLocation;
 
-    await dispatch(setBreakpointPositions(sourceId));
+    await dispatch(setBreakpointPositions({ sourceId }));
 
-    const position = column
+    const position: ?BreakpointPosition = column
       ? getBreakpointPositionsForLocation(getState(), initialLocation)
       : getFirstBreakpointPosition(getState(), initialLocation);
 
@@ -113,20 +113,12 @@ export function addBreakpoint(
     }
 
     const { location, generatedLocation } = position;
-
     // Both the original and generated sources must be loaded to get the
     // breakpoint's text.
-    await dispatch(
-      loadSourceText(getSourceFromId(getState(), location.sourceId))
-    );
-    await dispatch(
-      loadSourceText(getSourceFromId(getState(), generatedLocation.sourceId))
-    );
 
-    const source = getSourceFromId(getState(), location.sourceId);
-    const generatedSource = getSourceFromId(
-      getState(),
-      generatedLocation.sourceId
+    const source = await dispatch(loadSourceById(sourceId));
+    const generatedSource = await dispatch(
+      loadSourceById(generatedLocation.sourceId)
     );
 
     const symbols = getSymbols(getState(), source);
@@ -156,16 +148,10 @@ export function addBreakpoint(
     // at |generatedLocation|.
     const generatedId = makeBreakpointId(breakpoint.generatedLocation);
     if (id != generatedId && getBreakpoint(getState(), generatedLocation)) {
-      dispatch({
-        type: "REMOVE_BREAKPOINT",
-        location: generatedLocation
-      });
+      dispatch({ type: "REMOVE_BREAKPOINT", location: generatedLocation });
     }
 
-    dispatch({
-      type: "SET_BREAKPOINT",
-      breakpoint
-    });
+    dispatch({ type: "SET_BREAKPOINT", breakpoint });
 
     if (disabled) {
       // If we just clobbered an enabled breakpoint with a disabled one, we need

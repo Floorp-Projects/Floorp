@@ -6,8 +6,12 @@
 
 const md5 = require("md5");
 
-function originalToGeneratedId(originalId: string) {
-  const match = originalId.match(/(.*)\/originalSource/);
+function originalToGeneratedId(sourceId: string) {
+  if (isGeneratedId(sourceId)) {
+    return sourceId;
+  }
+
+  const match = sourceId.match(/(.*)\/originalSource/);
   return match ? match[1] : "";
 }
 
