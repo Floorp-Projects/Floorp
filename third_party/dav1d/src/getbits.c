@@ -70,13 +70,34 @@ unsigned dav1d_get_bits(GetBits *const c, const unsigned n) {
     c->bits_left -= n;
     c->state <<= n;
 
-    return state >> (64 - n);
+    return (unsigned) (state >> (64 - n));
 }
 
 int dav1d_get_sbits(GetBits *const c, const unsigned n) {
     const int shift = 31 - n;
     const int res = dav1d_get_bits(c, n + 1) << shift;
     return res >> shift;
+}
+
+unsigned dav1d_get_uleb128(GetBits *c) {
+    unsigned val = 0, more, i = 0;
+
+    do {
+        more = dav1d_get_bits(c, 1);
+        unsigned bits = dav1d_get_bits(c, 7);
+        if (i <= 3 || (i == 4 && bits < (1 << 4)))
+            val |= bits << (i * 7);
+        else if (bits) {
+            c->error = 1;
+            return 0;
+        }
+        if (more && ++i == 8) {
+            c->error = 1;
+            return 0;
+        }
+    } while (more);
+
+    return val;
 }
 
 unsigned dav1d_get_uniform(GetBits *const c, const unsigned max) {

@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_REF_H__
-#define __DAV1D_SRC_REF_H__
+#ifndef DAV1D_SRC_REF_H
+#define DAV1D_SRC_REF_H
 
 #include "dav1d/dav1d.h"
 
@@ -50,4 +50,4 @@ void dav1d_ref_dec(Dav1dRef **ref);
 
 int dav1d_ref_is_writable(Dav1dRef *ref);
 
-#endif /* __DAV1D_SRC_REF_H__ */
+#endif /* DAV1D_SRC_REF_H */

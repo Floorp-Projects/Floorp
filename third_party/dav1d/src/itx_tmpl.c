@@ -46,21 +46,40 @@ static void NOINLINE
 inv_txfm_add_c(pixel *dst, const ptrdiff_t stride,
                coef *const coeff, const int eob,
                const int w, const int h, const int shift1, const int shift2,
-               const itx_1d_fn first_1d_fn, const itx_1d_fn second_1d_fn
-               HIGHBD_DECL_SUFFIX)
+               const itx_1d_fn first_1d_fn, const itx_1d_fn second_1d_fn,
+               const int has_dconly HIGHBD_DECL_SUFFIX)
 {
     int i, j;
-    const ptrdiff_t sh = imin(h, 32), sw = imin(w, 32);
     assert((h >= 4 || h <= 64) && (w >= 4 || w <= 64));
-    // Maximum value for h and w is 64
-    coef tmp[4096 /* w * h */], out[64 /* h */], in_mem[64 /* w */];
     const int is_rect2 = w * 2 == h || h * 2 == w;
     const int bitdepth = bitdepth_from_max(bitdepth_max);
+    const int rnd1 = (1 << shift1) >> 1;
+    const int rnd2 = (1 << shift2) >> 1;
+
+    if (has_dconly && eob == 0) {
+        int dc = coeff[0];
+        coeff[0] = 0;
+        if (is_rect2)
+            dc = (dc * 2896 + 2048) >> 12;
+        dc = (dc * 2896 + 2048) >> 12;
+        dc = (dc + rnd1) >> shift1;
+        dc = (dc * 2896 + 2048) >> 12;
+        dc = (dc + rnd2) >> shift2;
+        for (j = 0; j < h; j++)
+            for (i = 0; i < w; i++)
+                dst[i + j * PXSTRIDE(stride)] =
+                    iclip_pixel(dst[i + j * PXSTRIDE(stride)] + dc);
+        return;
+    }
+    assert(eob > 0 || (eob == 0 && !has_dconly));
+
+    const ptrdiff_t sh = imin(h, 32), sw = imin(w, 32);
+    // Maximum value for h and w is 64
+    coef tmp[4096 /* w * h */], out[64 /* h */], in_mem[64 /* w */];
     const int row_clip_max = (1 << (bitdepth + 8 - 1)) - 1;
     const int col_clip_max = (1 << (imax(bitdepth + 6, 16) - 1)) -1;
 
     if (w != sw) memset(&in_mem[sw], 0, (w - sw) * sizeof(*in_mem));
-    const int rnd1 = (1 << shift1) >> 1;
     for (i = 0; i < sh; i++) {
         if (w != sw || is_rect2) {
             for (j = 0; j < sw; j++) {
@@ -82,7 +101,6 @@ inv_txfm_add_c(pixel *dst, const ptrdiff_t stride,
     }
 
     if (h != sh) memset(&tmp[sh * w], 0, w * (h - sh) * sizeof(*tmp));
-    const int rnd2 = (1 << shift2) >> 1;
     for (i = 0; i < w; i++) {
         second_1d_fn(&tmp[i], w, out, 1, col_clip_max);
         for (j = 0; j < h; j++)
@@ -93,7 +111,7 @@ inv_txfm_add_c(pixel *dst, const ptrdiff_t stride,
     memset(coeff, 0, sizeof(*coeff) * sh * sw);
 }
 
-#define inv_txfm_fn(type1, type2, w, h, shift1, shift2) \
+#define inv_txfm_fn(type1, type2, w, h, shift1, shift2, has_dconly) \
 static void \
 inv_txfm_add_##type1##_##type2##_##w##x##h##_c(pixel *dst, \
                                                const ptrdiff_t stride, \
@@ -102,36 +120,36 @@ inv_txfm_add_##type1##_##type2##_##w##x##h##_c(pixel *dst, \
                                                HIGHBD_DECL_SUFFIX) \
 { \
     inv_txfm_add_c(dst, stride, coeff, eob, w, h, shift1, shift2, \
-                   inv_##type1##w##_1d, inv_##type2##h##_1d \
+                   inv_##type1##w##_1d, inv_##type2##h##_1d, has_dconly \
                    HIGHBD_TAIL_SUFFIX); \
 }
 
 #define inv_txfm_fn64(w, h, shift1, shift2) \
-inv_txfm_fn(dct, dct, w, h, shift1, shift2)
+inv_txfm_fn(dct, dct, w, h, shift1, shift2, 1)
 
 #define inv_txfm_fn32(w, h, shift1, shift2) \
 inv_txfm_fn64(w, h, shift1, shift2) \
-inv_txfm_fn(identity, identity, w, h, shift1, shift2)
+inv_txfm_fn(identity, identity, w, h, shift1, shift2, 0)
 
 #define inv_txfm_fn16(w, h, shift1, shift2) \
 inv_txfm_fn32(w, h, shift1, shift2) \
-inv_txfm_fn(adst,     dct,      w, h, shift1, shift2) \
-inv_txfm_fn(dct,      adst,     w, h, shift1, shift2) \
-inv_txfm_fn(adst,     adst,     w, h, shift1, shift2) \
-inv_txfm_fn(dct,      flipadst, w, h, shift1, shift2) \
-inv_txfm_fn(flipadst, dct,      w, h, shift1, shift2) \
-inv_txfm_fn(adst,     flipadst, w, h, shift1, shift2) \
-inv_txfm_fn(flipadst, adst,     w, h, shift1, shift2) \
-inv_txfm_fn(flipadst, flipadst, w, h, shift1, shift2) \
-inv_txfm_fn(identity, dct,      w, h, shift1, shift2) \
-inv_txfm_fn(dct,      identity, w, h, shift1, shift2) \
+inv_txfm_fn(adst,     dct,      w, h, shift1, shift2, 0) \
+inv_txfm_fn(dct,      adst,     w, h, shift1, shift2, 0) \
+inv_txfm_fn(adst,     adst,     w, h, shift1, shift2, 0) \
+inv_txfm_fn(dct,      flipadst, w, h, shift1, shift2, 0) \
+inv_txfm_fn(flipadst, dct,      w, h, shift1, shift2, 0) \
+inv_txfm_fn(adst,     flipadst, w, h, shift1, shift2, 0) \
+inv_txfm_fn(flipadst, adst,     w, h, shift1, shift2, 0) \
+inv_txfm_fn(flipadst, flipadst, w, h, shift1, shift2, 0) \
+inv_txfm_fn(identity, dct,      w, h, shift1, shift2, 0) \
+inv_txfm_fn(dct,      identity, w, h, shift1, shift2, 0) \
 
 #define inv_txfm_fn84(w, h, shift1, shift2) \
 inv_txfm_fn16(w, h, shift1, shift2) \
-inv_txfm_fn(identity, flipadst, w, h, shift1, shift2) \
-inv_txfm_fn(flipadst, identity, w, h, shift1, shift2) \
-inv_txfm_fn(identity, adst,     w, h, shift1, shift2) \
-inv_txfm_fn(adst,     identity, w, h, shift1, shift2) \
+inv_txfm_fn(identity, flipadst, w, h, shift1, shift2, 0) \
+inv_txfm_fn(flipadst, identity, w, h, shift1, shift2, 0) \
+inv_txfm_fn(identity, adst,     w, h, shift1, shift2, 0) \
+inv_txfm_fn(adst,     identity, w, h, shift1, shift2, 0) \
 
 inv_txfm_fn84( 4,  4, 0, 4)
 inv_txfm_fn84( 4,  8, 0, 4)

@@ -177,7 +177,7 @@ static inline void mask_edges_intra(uint16_t (*const masks)[32][3][2],
     // inner (tx) left|right edges
     const int hstep = t_dim->w;
     unsigned t = 1U << by4;
-    unsigned inner = (((uint64_t) t) << h4) - t;
+    unsigned inner = (unsigned) ((((uint64_t) t) << h4) - t);
     unsigned inner1 = inner & 0xffff, inner2 = inner >> 16;
     for (x = hstep; x < w4; x += hstep) {
         if (inner1) masks[0][bx4 + x][twl4c][0] |= inner1;
@@ -189,7 +189,7 @@ static inline void mask_edges_intra(uint16_t (*const masks)[32][3][2],
     //           bottom
     const int vstep = t_dim->h;
     t = 1U << bx4;
-    inner = (((uint64_t) t) << w4) - t;
+    inner = (unsigned) ((((uint64_t) t) << w4) - t);
     inner1 = inner & 0xffff;
     inner2 = inner >> 16;
     for (y = vstep; y < h4; y += vstep) {
@@ -248,7 +248,7 @@ static inline void mask_edges_chroma(uint16_t (*const masks)[32][2][2],
         // inner (tx) left|right edges
         const int hstep = t_dim->w;
         unsigned t = 1U << cby4;
-        unsigned inner = (((uint64_t) t) << ch4) - t;
+        unsigned inner = (unsigned) ((((uint64_t) t) << ch4) - t);
         unsigned inner1 = inner & ((1 << vmask) - 1), inner2 = inner >> vmask;
         for (x = hstep; x < cw4; x += hstep) {
             if (inner1) masks[0][cbx4 + x][twl4c][0] |= inner1;
@@ -260,7 +260,7 @@ static inline void mask_edges_chroma(uint16_t (*const masks)[32][2][2],
         //           bottom
         const int vstep = t_dim->h;
         t = 1U << cbx4;
-        inner = (((uint64_t) t) << cw4) - t;
+        inner = (unsigned) ((((uint64_t) t) << cw4) - t);
         inner1 = inner & ((1 << hmask) - 1), inner2 = inner >> hmask;
         for (y = vstep; y < ch4; y += vstep) {
             if (inner1) masks[1][cby4 + y][thl4c][0] |= inner1;

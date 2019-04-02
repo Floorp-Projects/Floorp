@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_LF_APPLY_H__
-#define __DAV1D_SRC_LF_APPLY_H__
+#ifndef DAV1D_SRC_LF_APPLY_H
+#define DAV1D_SRC_LF_APPLY_H
 
 #include <stdint.h>
 
@@ -39,4 +39,4 @@ void bytefn(dav1d_loopfilter_sbrow)(const Dav1dFrameContext *f,
                                     pixel *const p[3], Av1Filter *lflvl,
                                     int sby, int start_of_tile_row);
 
-#endif /* __DAV1D_SRC_LF_APPLY_H__ */
+#endif /* DAV1D_SRC_LF_APPLY_H */

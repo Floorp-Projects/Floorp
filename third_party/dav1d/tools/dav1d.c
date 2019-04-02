@@ -26,7 +26,7 @@
  */
 
 #include "config.h"
-#include "version.h"
+#include "vcs_version.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -36,8 +36,11 @@
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
+#ifdef HAVE_IO_H
+# include <io.h>
+#endif
 
-#include "dav1d/data.h"
+#include "dav1d/dav1d.h"
 
 #include "input/input.h"
 
@@ -97,7 +100,7 @@ int main(const int argc, char *const *const argv) {
     }
 
     if (!cli_settings.quiet)
-        fprintf(stderr, "dav1d %s - by VideoLAN\n", DAV1D_VERSION);
+        fprintf(stderr, "dav1d %s - by VideoLAN\n", dav1d_version());
 
     // skip frames until a sequence header is found
     if (cli_settings.skip) {

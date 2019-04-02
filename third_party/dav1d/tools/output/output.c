@@ -59,7 +59,7 @@ void init_muxers(void) {
 }
 
 static const char *find_extension(const char *const f) {
-    const int l = strlen(f);
+    const size_t l = strlen(f);
 
     if (l == 0) return NULL;
 

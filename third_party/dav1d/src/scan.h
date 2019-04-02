@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SCAN_H__
-#define __DAV1D_SCAN_H__
+#ifndef DAV1D_SRC_SCAN_H
+#define DAV1D_SRC_SCAN_H
 
 #include <stdint.h>
 
@@ -34,4 +34,4 @@
 
 extern const int16_t *const dav1d_scans[N_RECT_TX_SIZES][3];
 
-#endif /* __DAV1D_SCAN_H__ */
+#endif /* DAV1D_SRC_SCAN_H */

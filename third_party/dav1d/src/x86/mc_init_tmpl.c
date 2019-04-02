@@ -29,27 +29,46 @@
 #include "src/mc.h"
 
 decl_mc_fn(dav1d_put_8tap_regular_avx2);
+decl_mc_fn(dav1d_put_8tap_regular_ssse3);
 decl_mc_fn(dav1d_put_8tap_regular_smooth_avx2);
+decl_mc_fn(dav1d_put_8tap_regular_smooth_ssse3);
 decl_mc_fn(dav1d_put_8tap_regular_sharp_avx2);
+decl_mc_fn(dav1d_put_8tap_regular_sharp_ssse3);
 decl_mc_fn(dav1d_put_8tap_smooth_avx2);
+decl_mc_fn(dav1d_put_8tap_smooth_ssse3);
 decl_mc_fn(dav1d_put_8tap_smooth_regular_avx2);
+decl_mc_fn(dav1d_put_8tap_smooth_regular_ssse3);
 decl_mc_fn(dav1d_put_8tap_smooth_sharp_avx2);
+decl_mc_fn(dav1d_put_8tap_smooth_sharp_ssse3);
 decl_mc_fn(dav1d_put_8tap_sharp_avx2);
+decl_mc_fn(dav1d_put_8tap_sharp_ssse3);
 decl_mc_fn(dav1d_put_8tap_sharp_regular_avx2);
+decl_mc_fn(dav1d_put_8tap_sharp_regular_ssse3);
 decl_mc_fn(dav1d_put_8tap_sharp_smooth_avx2);
+decl_mc_fn(dav1d_put_8tap_sharp_smooth_ssse3);
 decl_mc_fn(dav1d_put_bilin_avx2);
 decl_mc_fn(dav1d_put_bilin_ssse3);
 
 decl_mct_fn(dav1d_prep_8tap_regular_avx2);
+decl_mct_fn(dav1d_prep_8tap_regular_ssse3);
 decl_mct_fn(dav1d_prep_8tap_regular_smooth_avx2);
+decl_mct_fn(dav1d_prep_8tap_regular_smooth_ssse3);
 decl_mct_fn(dav1d_prep_8tap_regular_sharp_avx2);
+decl_mct_fn(dav1d_prep_8tap_regular_sharp_ssse3);
 decl_mct_fn(dav1d_prep_8tap_smooth_avx2);
+decl_mct_fn(dav1d_prep_8tap_smooth_ssse3);
 decl_mct_fn(dav1d_prep_8tap_smooth_regular_avx2);
+decl_mct_fn(dav1d_prep_8tap_smooth_regular_ssse3);
 decl_mct_fn(dav1d_prep_8tap_smooth_sharp_avx2);
+decl_mct_fn(dav1d_prep_8tap_smooth_sharp_ssse3);
 decl_mct_fn(dav1d_prep_8tap_sharp_avx2);
+decl_mct_fn(dav1d_prep_8tap_sharp_ssse3);
 decl_mct_fn(dav1d_prep_8tap_sharp_regular_avx2);
+decl_mct_fn(dav1d_prep_8tap_sharp_regular_ssse3);
 decl_mct_fn(dav1d_prep_8tap_sharp_smooth_avx2);
+decl_mct_fn(dav1d_prep_8tap_sharp_smooth_ssse3);
 decl_mct_fn(dav1d_prep_bilin_avx2);
+decl_mct_fn(dav1d_prep_bilin_ssse3);
 
 decl_avg_fn(dav1d_avg_avx2);
 decl_avg_fn(dav1d_avg_ssse3);
@@ -59,6 +78,8 @@ decl_mask_fn(dav1d_mask_avx2);
 decl_mask_fn(dav1d_mask_ssse3);
 decl_w_mask_fn(dav1d_w_mask_420_avx2);
 decl_w_mask_fn(dav1d_w_mask_420_ssse3);
+decl_w_mask_fn(dav1d_w_mask_422_avx2);
+decl_w_mask_fn(dav1d_w_mask_444_avx2);
 decl_blend_fn(dav1d_blend_avx2);
 decl_blend_fn(dav1d_blend_ssse3);
 decl_blend_dir_fn(dav1d_blend_v_avx2);
@@ -85,6 +106,26 @@ void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
 
 #if BITDEPTH == 8
     init_mc_fn (FILTER_2D_BILINEAR,            bilin,               ssse3);
+    init_mc_fn (FILTER_2D_8TAP_REGULAR,        8tap_regular,        ssse3);
+    init_mc_fn (FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, ssse3);
+    init_mc_fn (FILTER_2D_8TAP_REGULAR_SHARP,  8tap_regular_sharp,  ssse3);
+    init_mc_fn (FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_smooth_regular, ssse3);
+    init_mc_fn (FILTER_2D_8TAP_SMOOTH,         8tap_smooth,         ssse3);
+    init_mc_fn (FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_smooth_sharp,   ssse3);
+    init_mc_fn (FILTER_2D_8TAP_SHARP_REGULAR,  8tap_sharp_regular,  ssse3);
+    init_mc_fn (FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   ssse3);
+    init_mc_fn (FILTER_2D_8TAP_SHARP,          8tap_sharp,          ssse3);
+
+    init_mct_fn(FILTER_2D_BILINEAR,            bilin,               ssse3);
+    init_mct_fn(FILTER_2D_8TAP_REGULAR,        8tap_regular,        ssse3);
+    init_mct_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, ssse3);
+    init_mct_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_regular_sharp,  ssse3);
+    init_mct_fn(FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_smooth_regular, ssse3);
+    init_mct_fn(FILTER_2D_8TAP_SMOOTH,         8tap_smooth,         ssse3);
+    init_mct_fn(FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_smooth_sharp,   ssse3);
+    init_mct_fn(FILTER_2D_8TAP_SHARP_REGULAR,  8tap_sharp_regular,  ssse3);
+    init_mct_fn(FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   ssse3);
+    init_mct_fn(FILTER_2D_8TAP_SHARP,          8tap_sharp,          ssse3);
 
     c->avg = dav1d_avg_ssse3;
     c->w_avg = dav1d_w_avg_ssse3;
@@ -125,6 +166,8 @@ void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     c->avg = dav1d_avg_avx2;
     c->w_avg = dav1d_w_avg_avx2;
     c->mask = dav1d_mask_avx2;
+    c->w_mask[0] = dav1d_w_mask_444_avx2;
+    c->w_mask[1] = dav1d_w_mask_422_avx2;
     c->w_mask[2] = dav1d_w_mask_420_avx2;
     c->blend = dav1d_blend_avx2;
     c->blend_v = dav1d_blend_v_avx2;

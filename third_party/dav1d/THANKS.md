@@ -16,4 +16,4 @@ The Alliance for Open Media (AOM) for funding this project.
 
 And all the dav1d Authors (git shortlog -sn), including:
 
-Janne Grunau, Ronald S. Bultje, James Almer, Marvin Scholz, Henrik Gramner, Martin Storsjö, Luc Trudeau, David Michael Barr, Hugo Beauzée-Luyssen, Steve Lhomme, Jean-Baptiste Kempf, Derek Buitenhuis, Nathan E. Egge, Raphaël Zumer, Francois Cartegnie, Niklas Haas, Konstantin Pavlov, Boyuan Xiao, Raphael Zumer and Michael Bradshaw.
+Janne Grunau, Ronald S. Bultje, Martin Storsjö, James Almer, Henrik Gramner, Marvin Scholz, Luc Trudeau, David Michael Barr, Jean-Baptiste Kempf, Hugo Beauzée-Luyssen, Steve Lhomme, Francois Cartegnie, Konstantin Pavlov, Nathan E. Egge, Victorien Le Couviour--Tuffet, Derek Buitenhuis, Liwei Wang, Raphaël Zumer, Michael Bradshaw, Niklas Haas, Xuefeng Jiang, Boyuan Xiao, Kyle Siefring, Matthias Dressel, Rupert Swarbrick, Thierry Foucu, Thomas Daede, Jan Beich, SmilingWolf, Tristan Laurent, Vittorio Giovara, Anisse Astier, Dale Curtis, Fred Barbier, Jean-Yves Avenard, Luca Barbato, Mark Shuttleworth, Nicolas Frattaroli, Rostislav Pehlivanov, Shiz, Steinar Midtskogen, Timo Gurr and skal.

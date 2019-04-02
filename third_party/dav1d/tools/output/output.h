@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_OUTPUT_OUTPUT_H__
-#define __DAV1D_OUTPUT_OUTPUT_H__
+#ifndef DAV1D_OUTPUT_OUTPUT_H
+#define DAV1D_OUTPUT_OUTPUT_H
 
 #include "picture.h"
 
@@ -46,4 +46,4 @@ void output_close(MuxerContext *ctx);
  */
 int output_verify(MuxerContext *ctx, const char *hash_string);
 
-#endif /* __DAV1D_OUTPUT_OUTPUT_H__ */
+#endif /* DAV1D_OUTPUT_OUTPUT_H */

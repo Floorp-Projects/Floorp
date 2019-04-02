@@ -26,25 +26,41 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
-#ifndef __DAVID_SRC_ARM_32_UTIL_S__
-#define __DAVID_SRC_ARM_32_UTIL_S__
+#ifndef DAV1D_SRC_ARM_32_UTIL_S
+#define DAV1D_SRC_ARM_32_UTIL_S
 
 #include "config.h"
 #include "src/arm/asm.S"
 
-.macro movrel rd, val
-#if defined(PIC)
+.macro movrel rd, val, offset=0
+#if defined(PIC) && defined(__APPLE__)
     ldr         \rd,  1f
     b           2f
 1:
-@ FIXME: thumb
-    .word       \val - (2f + 8)
+    .word       3f - (2f + 8 - 4 * CONFIG_THUMB)
+2:
+    ldr         \rd,  [pc, \rd]
+.if \offset < 0
+    sub         \rd,  \rd,  #-(\offset)
+.elseif \offset > 0
+    add         \rd,  \rd,  #\offset
+.endif
+    .non_lazy_symbol_pointer
+3:
+    .indirect_symbol \val
+    .word       0
+    .text
+#elif defined(PIC)
+    ldr         \rd,  1f
+    b           2f
+1:
+    .word       \val + \offset - (2f + 8 - 4 * CONFIG_THUMB)
 2:
     add         \rd,  \rd,  pc
 #else
-    movw        \rd, #:lower16:\val
-    movt        \rd, #:upper16:\val
+    movw        \rd, #:lower16:\val+\offset
+    movt        \rd, #:upper16:\val+\offset
 #endif
 .endm
 
-#endif /* __DAVID_SRC_ARM_32_UTIL_S__ */
+#endif /* DAV1D_SRC_ARM_32_UTIL_S */

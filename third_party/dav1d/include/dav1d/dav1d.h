@@ -25,18 +25,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_H__
-#define __DAV1D_H__
+#ifndef DAV1D_H
+#define DAV1D_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include <errno.h>
+#include <stdarg.h>
 
 #include "common.h"
 #include "picture.h"
 #include "data.h"
+#include "version.h"
 
 typedef struct Dav1dContext Dav1dContext;
 typedef struct Dav1dRef Dav1dRef;
@@ -44,13 +46,26 @@ typedef struct Dav1dRef Dav1dRef;
 #define DAV1D_MAX_FRAME_THREADS 256
 #define DAV1D_MAX_TILE_THREADS 64
 
+typedef struct Dav1dLogger {
+    void *cookie; ///< Custom data to pass to the callback.
+    /**
+     * Logger callback. Default prints to stderr. May be NULL to disable logging.
+     *
+     * @param cookie Custom pointer passed to all calls.
+     * @param format The vprintf compatible format string.
+     * @param     ap List of arguments referenced by the format string.
+     */
+    void (*callback)(void *cookie, const char *format, va_list ap);
+} Dav1dLogger;
+
 typedef struct Dav1dSettings {
     int n_frame_threads;
     int n_tile_threads;
-    Dav1dPicAllocator allocator;
     int apply_grain;
     int operating_point; ///< select an operating point for scalable AV1 bitstreams (0 - 31)
     int all_layers; ///< output all spatial layers of a scalable AV1 biststream
+    Dav1dPicAllocator allocator;
+    Dav1dLogger logger;
 } Dav1dSettings;
 
 /**
@@ -187,4 +202,4 @@ DAV1D_API void dav1d_flush(Dav1dContext *c);
 }
 # endif
 
-#endif /* __DAV1D_H__ */
+#endif /* DAV1D_H */

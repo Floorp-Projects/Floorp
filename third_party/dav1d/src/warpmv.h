@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_WARPMV_H__
-#define __DAV1D_SRC_WARPMV_H__
+#ifndef DAV1D_SRC_WARPMV_H
+#define DAV1D_SRC_WARPMV_H
 
 #include "src/levels.h"
 
@@ -34,4 +34,4 @@ int dav1d_get_shear_params(Dav1dWarpedMotionParams *wm);
 int dav1d_find_affine_int(const int (*pts)[2][2], int np, int bw4, int bh4,
                           mv mv, Dav1dWarpedMotionParams *wm, int by, int bx);
 
-#endif /* __DAV1D_SRC_WARPMV_H__ */
+#endif /* DAV1D_SRC_WARPMV_H */

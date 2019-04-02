@@ -446,11 +446,11 @@ static void selfguided_filter(coef *dst, const pixel *src,
 
             const unsigned p = imax(a * n - b * b, 0);
             const unsigned z = (p * s + (1 << 19)) >> 20;
+            const unsigned x = dav1d_sgr_x_by_x[imin(z, 255)];
 
-            const int x = dav1d_sgr_x_by_xplus1[imin(z, 255)];
             // This is where we invert A and B, so that B is of size coef.
-            AA[i] = (((1U << 8) - x) * BB[i] * sgr_one_by_x + (1 << 11)) >> 12;
-            BB[i] = x;
+            AA[i] = (x * BB[i] * sgr_one_by_x + (1 << 11)) >> 12;
+            BB[i] = 256 - x;
         }
         AA += step * REST_UNIT_STRIDE;
         BB += step * REST_UNIT_STRIDE;
@@ -508,7 +508,7 @@ static void selfguided_filter(coef *dst, const pixel *src,
             A += REST_UNIT_STRIDE;
         }
     }
-#undef NINE_NEIGHBORS
+#undef EIGHT_NEIGHBORS
 }
 
 static void selfguided_c(pixel *p, const ptrdiff_t p_stride,

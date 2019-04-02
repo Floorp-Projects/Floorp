@@ -35,7 +35,7 @@ The plan is the folllowing:
 6. Make it fast on older desktop, by writing asm for SSE chips.
 
 ### After
-7. Improve C code base with [various tweaks](wiki/task-list),
+7. Improve C code base with [various tweaks](https://code.videolan.org/videolan/dav1d/wikis/task-list),
 8. Accelerate for less common architectures,
 9. Use more GPU, when possible.
 
@@ -70,7 +70,7 @@ The [VideoLAN Code of Conduct](https://wiki.videolan.org/CoC) applies to this pr
 
 # Compile
 
-1. Install [Meson](https://mesonbuild.com/) (0.47 or higher), [Ninja](https://ninja-build.org/), and, for x86* targets, [nasm](https://nasm.us/) (2.13 or higher)
+1. Install [Meson](https://mesonbuild.com/) (0.47 or higher), [Ninja](https://ninja-build.org/), and, for x86\* targets, [nasm](https://nasm.us/) (2.13.02 or higher)
 2. Run `meson build --buildtype release`
 3. Build with `ninja -C build`
 
@@ -88,6 +88,10 @@ The [VideoLAN Code of Conduct](https://wiki.videolan.org/CoC) applies to this pr
    git clone https://code.videolan.org/videolan/dav1d-test-data.git tests/dav1d-test-data
    ```
 2. During initial build dir setup or `meson configure` specify `-Dbuild_tests=true` and `-Dtestdata_tests=true`
+
+   ```
+   meson .test -Dbuild_tests=true -Dtestdata_tests=true
+   ```
 3. In the build directory run `meson test` optionally with `-v` for more verbose output
 
 # Support

@@ -57,7 +57,8 @@ unsigned dav1d_get_cpu_flags_x86(void) {
                 if (info[2] & (1 << 28)) flags |= DAV1D_X86_CPU_FLAG_AVX;
                 if (n_ids >= 7) {
                     dav1d_cpu_cpuid(info, 7);
-                    if (info[1] & (1 <<  5)) flags |= DAV1D_X86_CPU_FLAG_AVX2;
+                    if ((info[1] & 0x00000128) == 0x00000128)
+                        flags |= DAV1D_X86_CPU_FLAG_AVX2;
                     if ((xcr & 0x000000e0) == 0x000000e0) /* ZMM/OPMASK */ {
                         if ((info[1] & 0xd0030000) == 0xd0030000)
                             flags |= DAV1D_X86_CPU_FLAG_AVX512;

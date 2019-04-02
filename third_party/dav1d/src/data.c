@@ -47,11 +47,7 @@ uint8_t *dav1d_data_create_internal(Dav1dData *const buf, const size_t sz) {
     if (!buf->ref) return NULL;
     buf->data = buf->ref->const_data;
     buf->sz = buf->m.size = sz;
-    buf->m.timestamp = INT64_MIN;
-    buf->m.duration = 0;
-    buf->m.offset = -1;
-    buf->m.user_data.data = NULL;
-    buf->m.user_data.ref = NULL;
+    dav1d_data_props_set_defaults(&buf->m);
 
     return buf->ref->data;
 }
@@ -70,11 +66,7 @@ int dav1d_data_wrap_internal(Dav1dData *const buf, const uint8_t *const ptr,
     if (!buf->ref) return -ENOMEM;
     buf->data = ptr;
     buf->sz = buf->m.size = sz;
-    buf->m.timestamp = INT64_MIN;
-    buf->m.duration = 0;
-    buf->m.offset = -1;
-    buf->m.user_data.data = NULL;
-    buf->m.user_data.ref = NULL;
+    dav1d_data_props_set_defaults(&buf->m);
 
     return 0;
 }
@@ -130,6 +122,16 @@ void dav1d_data_props_copy(Dav1dDataProps *const dst,
     dav1d_ref_dec(&dst->user_data.ref);
     *dst = *src;
     if (dst->user_data.ref) dav1d_ref_inc(dst->user_data.ref);
+}
+
+void dav1d_data_props_set_defaults(Dav1dDataProps *const props) {
+    assert(props != NULL);
+
+    props->timestamp = INT64_MIN;
+    props->duration = 0;
+    props->offset = -1;
+    props->user_data.data = NULL;
+    props->user_data.ref = NULL;
 }
 
 void dav1d_data_unref_internal(Dav1dData *const buf) {

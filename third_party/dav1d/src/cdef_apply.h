@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_CDEF_APPLY_H__
-#define __DAV1D_SRC_CDEF_APPLY_H__
+#ifndef DAV1D_SRC_CDEF_APPLY_H
+#define DAV1D_SRC_CDEF_APPLY_H
 
 #include "common/bitdepth.h"
 
@@ -35,4 +35,4 @@
 void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *f, pixel *const p[3],
                              const Av1Filter *lflvl, int by_start, int by_end);
 
-#endif /* __DAV1D_SRC_CDEF_APPLY_H__ */
+#endif /* DAV1D_SRC_CDEF_APPLY_H */
