@@ -508,9 +508,10 @@ JS_PUBLIC_API bool JS::CloneAndExecuteScript(JSContext* cx,
   return ExecuteScript(cx, envChain, script, rval.address());
 }
 
+template <typename Unit>
 static bool Evaluate(JSContext* cx, ScopeKind scopeKind, HandleObject env,
                      const ReadOnlyCompileOptions& optionsArg,
-                     SourceText<char16_t>& srcBuf, MutableHandleValue rval) {
+                     SourceText<Unit>& srcBuf, MutableHandleValue rval) {
   CompileOptions options(cx, optionsArg);
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   AssertHeapIsIdle();
@@ -548,14 +549,8 @@ static bool Evaluate(JSContext* cx, HandleObjectVector envChain,
 extern JS_PUBLIC_API bool JS::EvaluateUtf8(
     JSContext* cx, const ReadOnlyCompileOptions& options, const char* bytes,
     size_t length, MutableHandle<Value> rval) {
-  auto chars = UniqueTwoByteChars(
-      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
-  if (!chars) {
-    return false;
-  }
-
-  SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, std::move(chars), length)) {
+  SourceText<Utf8Unit> srcBuf;
+  if (!srcBuf.init(cx, bytes, length, SourceOwnership::Borrowed)) {
     return false;
   }
 
@@ -594,7 +589,19 @@ JS_PUBLIC_API bool JS::EvaluateUtf8Path(
   CompileOptions options(cx, optionsArg);
   options.setFileAndLine(filename, 1);
 
-  return EvaluateUtf8(cx, options,
-                      reinterpret_cast<const char*>(buffer.begin()),
-                      buffer.length(), rval);
+  auto contents = reinterpret_cast<const char*>(buffer.begin());
+  size_t length = buffer.length();
+  auto chars = UniqueTwoByteChars(
+      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(contents, length), &length)
+          .get());
+  if (!chars) {
+    return false;
+  }
+
+  SourceText<char16_t> srcBuf;
+  if (!srcBuf.init(cx, std::move(chars), length)) {
+    return false;
+  }
+
+  return Evaluate(cx, options, srcBuf, rval);
 }
