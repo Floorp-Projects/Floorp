@@ -159,7 +159,7 @@ void VRDisplayClient::FireGamepadEvents() {
     if ((lastState.controllerName[0] == '\0' || !existing) &&
         (state.numButtons > 0 || state.numAxes > 0)) {
       dom::GamepadAdded info(
-          NS_ConvertUTF8toUTF16(state.controllerName, kVRControllerNameMaxLen),
+          NS_ConvertUTF8toUTF16(state.controllerName),
           dom::GamepadMappingType::_empty, state.hand, mDisplayInfo.mDisplayID,
           state.numButtons, state.numAxes, state.numHaptics);
       dom::GamepadChangeEventBody body(info);
