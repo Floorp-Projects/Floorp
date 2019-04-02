@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.49.0-SNAPSHOT  (In Development)
+# 0.50.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.47.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/51?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.49.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/53?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 0.49.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.48.0...v0.49.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/52?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.49.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.49.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.49.0/buildSrc/src/main/java/Config.kt)
 
 * **feature-contextmenu**
    * Clicking on a context menu item now emits a fact
@@ -62,6 +70,7 @@ permalink: /changelog/
   * Add TalkBack support for page load status.
   * Added option to add "edit actions" that will show up next to the URL in edit mode.
   * Added option to set a listener for clicks on the site security indicator (globe / lock icon).
+  * The `toolbar` now emits a fact `COMMIT` when the user has edited the URL. [More information](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/README.md).
 
 * **browser-engine-gecko-nightly**
   * Added new `TrackingProtectionPolicy` category for blocking cryptocurrency miners (`TrackingProtectionPolicy.CRYPTOMINING`).
@@ -70,6 +79,7 @@ permalink: /changelog/
   * Added `Intent.toSafeIntent()`.
   * Added `MotionEvent.use {}` (like `AutoCloseable.use {}`).
   * Added `Bitmap.arePixelsAllTheSame()`.
+  * Added `Context.appName` returns the name (label) of the application or the package name as a fallback.
 
 * **concept-fetch**
   * Added support for interceptors. Interceptors are a powerful mechanism to monitor, modify, retry, redirect or record requests as well as responses going through a `Client`. See the [concept-fetch README](https://github.com/mozilla-mobile/android-components/tree/master/components/concept/fetch) for example implementations of interceptors.
