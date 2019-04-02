@@ -666,7 +666,7 @@ interface nsITelemetry : nsISupports
    * the storage. Only to be used by about:telemetry.
    *
    * The returned structure looks like:
-   *   { metric: {origin1: count1, origin2: count2, ...}, ...}
+   *   { metric: [origin1, origin2, ...], ...}
    *
    * @param aClear Whether to clear the storage. Default false.
    * @return a snapshot of the per-origin data.
