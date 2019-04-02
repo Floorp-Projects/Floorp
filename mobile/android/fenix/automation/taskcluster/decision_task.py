@@ -31,6 +31,7 @@ BUILDER = TaskBuilder(
     task_id=os.environ.get('TASK_ID'),
     repo_url=REPO_URL,
     git_ref=os.environ.get('MOBILE_HEAD_BRANCH'),
+    short_head_branch=os.environ.get('SHORT_HEAD_BRANCH'),
     commit=COMMIT,
     owner="fenix-eng-notifications@mozilla.com",
     source='{}/raw/{}/.taskcluster.yml'.format(REPO_URL, COMMIT),

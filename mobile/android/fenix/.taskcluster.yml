@@ -99,6 +99,7 @@ tasks:
               MOBILE_HEAD_REV: ${head_rev}
               MOBILE_TRIGGERED_BY: ${user}
               SCHEDULER_ID: ${scheduler_id}
+              SHORT_HEAD_BRANCH: ${short_head_branch}
               TASK_ID: ${decision_task_id}
               TASKS_PRIORITY: ${tasks_priority}
               TRUST_LEVEL: ${trust_level}
