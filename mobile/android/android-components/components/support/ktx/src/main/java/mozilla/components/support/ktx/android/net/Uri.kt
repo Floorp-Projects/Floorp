@@ -21,3 +21,9 @@ val Uri.hostWithoutCommonPrefixes: String?
             else -> host
         }
     }
+
+/**
+ * Returns true if the [Uri] uses the "http" or "https" protocol scheme.
+ */
+val Uri.isHttpOrHttps: Boolean
+    get() = (scheme?.equals("http") ?: false) || (scheme?.equals("https") ?: false)
