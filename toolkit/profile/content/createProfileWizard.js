@@ -31,6 +31,9 @@ function initWizard() {
 
     // Initialize the profile location display.
     gProfileDisplay = document.getElementById("profileDisplay").firstChild;
+    document.addEventListener("wizardfinish", onFinish);
+    document.getElementById("explanation").addEventListener("pageshow", enableNextButton);
+    document.getElementById("createProfile").addEventListener("pageshow", initSecondWizardPage);
     setDisplayToDefaultFolder();
   } catch (e) {
     window.close();
@@ -169,7 +172,7 @@ function enableNextButton() {
   document.documentElement.canAdvance = true;
 }
 
-function onFinish() {
+function onFinish(event) {
   var profileName = document.getElementById("profileName").value;
   var profile;
 
@@ -184,7 +187,8 @@ function onFinish() {
     Services.prompt.alert(window, profileCreationFailedTitle,
                           profileCreationFailed + "\n" + e);
 
-    return false;
+    event.preventDefault();
+    return;
   }
 
   // window.opener is false if the Create Profile Wizard was opened from the
@@ -199,7 +203,4 @@ function onFinish() {
     var dialogParams = window.arguments[0].QueryInterface(I.nsIDialogParamBlock);
     dialogParams.objects.insertElementAt(profileLock, 0);
   }
-
-  // Exit the wizard.
-  return true;
 }

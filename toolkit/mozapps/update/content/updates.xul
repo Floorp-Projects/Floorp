@@ -24,9 +24,6 @@
         title="&updateWizard.title;"
         windowtype="Update:Wizard"
         style="width: auto; height: auto"
-        onwizardfinish="gUpdates.onWizardFinish();"
-        onwizardcancel="gUpdates.onWizardCancel();"
-        onwizardnext="gUpdates.onWizardNext();"
         onload="gUpdates.onLoad();"
         onunload="gUpdates.onUnload();">
 
@@ -47,7 +44,7 @@
   <wizardpage id="dummy" pageid="dummy" firstpage="true"/>
 
   <wizardpage id="checking" pageid="checking" next="noupdatesfound"
-              object="gCheckingPage" onpageshow="gCheckingPage.onPageShow();">
+              object="gCheckingPage">
     <updateheader label="&checking.title;"/>
     <vbox class="update-content" flex="1">
       <label>&updateCheck.label;</label>
@@ -57,7 +54,7 @@
   </wizardpage>
 
   <wizardpage id="noupdatesfound" pageid="noupdatesfound"
-              object="gNoUpdatesPage" onpageshow="gNoUpdatesPage.onPageShow();">
+              object="gNoUpdatesPage">
     <updateheader label="&noupdatesfound.title;"/>
     <vbox class="update-content" flex="1">
       <label id="noUpdatesAutoEnabled" hidden="true">&noupdatesautoenabled.intro;</label>
@@ -65,8 +62,7 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="manualUpdate" pageid="manualUpdate" object="gManualUpdatePage"
-              onpageshow="gManualUpdatePage.onPageShow();">
+  <wizardpage id="manualUpdate" pageid="manualUpdate" object="gManualUpdatePage">
     <updateheader label="&manualUpdate.title;"/>
     <vbox class="update-content" flex="1">
       <label id="manualUpdateDesc">&manualUpdate.desc;</label>
@@ -82,8 +78,7 @@
   </wizardpage>
 
   <wizardpage id="unsupported" pageid="unsupported"
-              object="gUnsupportedPage"
-              onpageshow="gUnsupportedPage.onPageShow();">
+              object="gUnsupportedPage">
     <updateheader label="&unsupported.title;"/>
     <vbox class="update-content" flex="1">
       <description flex="1">&unsupported.label;
@@ -95,10 +90,7 @@
   </wizardpage>
 
   <wizardpage id="updatesfoundbasic" pageid="updatesfoundbasic"
-              object="gUpdatesFoundBasicPage" next="downloading"
-              onpageshow="gUpdatesFoundBasicPage.onPageShow();"
-              onextra1="gUpdatesFoundBasicPage.onExtra1();"
-              onextra2="gUpdatesFoundBasicPage.onExtra2();">
+              object="gUpdatesFoundBasicPage" next="downloading">
     <updateheader id="updatesFoundBasicHeader" label=""/>
     <vbox class="update-content" flex="1">
       <label id="updatesFoundInto"/>
@@ -117,8 +109,7 @@
   </wizardpage>
 
   <wizardpage id="downloading" pageid="downloading"
-              object="gDownloadingPage" onextra1="gDownloadingPage.onHide();"
-              onpageshow="gDownloadingPage.onPageShow();">
+              object="gDownloadingPage">
     <updateheader label="&downloadPage.title;"/>
     <vbox class="update-content" flex="1">
       <hbox id="downloadStatusProgress">
@@ -138,8 +129,7 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="errors" pageid="errors" object="gErrorsPage"
-              onpageshow="gErrorsPage.onPageShow();">
+  <wizardpage id="errors" pageid="errors" object="gErrorsPage">
     <updateheader label="&error.title;"/>
     <vbox class="update-content" flex="1">
       <label id="errorIntro">&error.label;</label>
@@ -155,8 +145,7 @@
   </wizardpage>
 
   <wizardpage id="errorextra" pageid="errorextra"
-              object="gErrorExtraPage"
-              onpageshow="gErrorExtraPage.onPageShow();">
+              object="gErrorExtraPage">
     <updateheader label="&error.title;"/>
     <vbox class="update-content" flex="1">
       <label id="bgErrorLabel">&genericBackgroundError.label;</label>
@@ -168,17 +157,14 @@
   </wizardpage>
 
   <wizardpage id="errorpatching" pageid="errorpatching" next="downloading"
-              object="gErrorPatchingPage"
-              onpageshow="gErrorPatchingPage.onPageShow();">
+              object="gErrorPatchingPage">
     <updateheader label="&error.title;"/>
     <vbox class="update-content" flex="1">
       <label>&errorpatching.intro;</label>
     </vbox>
   </wizardpage>
 
-  <wizardpage id="finished" pageid="finished" object="gFinishedPage"
-              onpageshow="gFinishedPage.onPageShow();"
-              onextra1="gFinishedPage.onExtra1()">
+  <wizardpage id="finished" pageid="finished" object="gFinishedPage">
     <updateheader label="&finishedPage.title;"/>
     <vbox class="update-content" flex="1">
       <label>&finishedPage.text;</label>
@@ -186,9 +172,7 @@
   </wizardpage>
 
   <wizardpage id="finishedBackground" pageid="finishedBackground"
-              object="gFinishedPage" onextra1="gFinishedPage.onExtra1()"
-              onextra2="gFinishedPage.onExtra2()"
-              onpageshow="gFinishedPage.onPageShowBackground();">
+              object="gFinishedPage">
     <updateheader label="&finishedPage.title;"/>
     <vbox class="update-content" flex="1">
       <label>&finishedBackgroundPage.text;</label>
