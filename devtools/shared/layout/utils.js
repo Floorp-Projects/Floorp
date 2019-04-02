@@ -638,6 +638,7 @@ exports.isShadowHost = isShadowHost;
 function isDirectShadowHostChild(node) {
   // Pseudo elements and native anonymous elements are always part of the anonymous tree.
   if (
+    isMarkerPseudoElement(node) ||
     isBeforePseudoElement(node) ||
     isAfterPseudoElement(node) ||
     isNativeAnonymous(node)) {

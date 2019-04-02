@@ -188,7 +188,9 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   get numChildren() {
     // For pseudo elements, childNodes.length returns 1, but the walker
     // will return 0.
-    if (isBeforePseudoElement(this.rawNode) || isAfterPseudoElement(this.rawNode)) {
+    if (isMarkerPseudoElement(this.rawNode) ||
+      isBeforePseudoElement(this.rawNode) || isAfterPseudoElement(this.rawNode)
+    ) {
       return 0;
     }
 
