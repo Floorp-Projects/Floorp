@@ -189,7 +189,9 @@ CustomizeMode.prototype = {
     gTab.setAttribute("customizemode", "true");
     SessionStore.persistTabAttribute("customizemode");
 
-    gTab.linkedBrowser.stop();
+    if (gTab.linkedPanel) {
+      gTab.linkedBrowser.stop();
+    }
 
     let win = gTab.ownerGlobal;
 
