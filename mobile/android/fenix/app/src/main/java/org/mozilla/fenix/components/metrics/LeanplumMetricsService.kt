@@ -45,13 +45,8 @@ private val Event.name: String?
         is Event.OpenedPocketStory -> "E_Opened_Pocket_Story"
         is Event.DarkModeEnabled -> "E_Dark_Mode_Enabled"
 
-        // Do not track these events in Leanplum
-        is Event.SearchBarTapped -> ""
-        is Event.EnteredUrl -> ""
-        is Event.PerformedSearch -> ""
-        is Event.SearchShortcutMenuOpened -> ""
-        is Event.SearchShortcutMenuClosed -> ""
-        is Event.SearchShortcutSelected -> ""
+        // Do not track other events in Leanplum
+        else -> ""
     }
 
 class LeanplumMetricsService(private val application: Application) : MetricsService {

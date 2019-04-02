@@ -5,15 +5,17 @@ package org.mozilla.fenix.components.metrics
 
 import android.content.Context
 import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.metrics.NoExtraKeys
 import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.FindInPage
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
-    private val keyMapper: ((String) -> T)?
+    private val keyMapper: ((String) -> T)? = null
 ) {
     private val String.asCamelCase: String
         get() = this.split("_").reduceIndexed { index, acc, s ->
@@ -50,6 +52,22 @@ private val Event.wrapper
             { Events.performedSearch.record(it) },
             { Events.performedSearchKeys.valueOf(it) }
         )
+        is Event.FindInPageOpened -> EventWrapper<NoExtraKeys>(
+            { FindInPage.opened.record(it) }
+        )
+        is Event.FindInPageClosed -> EventWrapper<NoExtraKeys>(
+            { FindInPage.closed.record(it) }
+        )
+        is Event.FindInPageNext -> EventWrapper<NoExtraKeys>(
+            { FindInPage.nextResult.record(it) }
+        )
+        is Event.FindInPagePrevious-> EventWrapper<NoExtraKeys>(
+            { FindInPage.previousResult.record(it) }
+        )
+        is Event.FindInPageSearchCommitted -> EventWrapper<NoExtraKeys>(
+            { FindInPage.searchedPage.record(it) }
+        )
+        // Don't track other events with Glean
         else -> null
     }
 

@@ -101,6 +101,63 @@ events:
     - telemetry-client-dev@mozilla.com
     expires: "2020-03-01"
 
+find_in_page:
+  opened:
+    type: event
+    description: >
+      A user opened the find in page UI
+    bugs:
+    - 1036
+    data_reviews:
+    - TBD
+    notification_emails:
+    - telemetry-client-dev@mozilla.com
+    expires: "2020-03-01"
+  closed:
+    type: event
+    description: >
+      A user closed the find in page UI
+    bugs:
+    - 1036
+    data_reviews:
+    - TBD
+    notification_emails:
+    - telemetry-client-dev@mozilla.com
+    expires: "2020-03-01"
+  next_result:
+    type: event
+    description: >
+      A user clicked the "next result" button
+    bugs:
+    - 1036
+    data_reviews:
+    - TBD
+    notification_emails:
+    - telemetry-client-dev@mozilla.com
+    expires: "2020-03-01"
+  previous_result:
+    type: event
+    description: >
+      A user clicked the "previous result" button
+    bugs:
+    - 1036
+    data_reviews:
+    - TBD
+    notification_emails:
+    - telemetry-client-dev@mozilla.com
+    expires: "2020-03-01"
+  searched_page:
+    type: event
+    description: >
+      A user searched the page
+    bugs:
+    - 1036
+    data_reviews:
+    - TBD
+    notification_emails:
+    - telemetry-client-dev@mozilla.com
+    expires: "2020-03-01"
+
 metrics:
   default_browser:
     type: boolean
