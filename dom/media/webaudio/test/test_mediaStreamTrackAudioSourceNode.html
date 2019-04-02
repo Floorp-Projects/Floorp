@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<head>
+  <title>Test MediaStreamTrackAudioSourceNode processing is correct</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function createBuffer(context) {
+  let buffer = context.createBuffer(2, 2048, context.sampleRate);
+  for (let i = 0; i < 2048; ++i) {
+    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+    buffer.getChannelData(1)[i] = -buffer.getChannelData(0)[i];
+  }
+  return buffer;
+}
+
+let gTest = {
+  length: 2048,
+  skipOfflineContextTests: true,
+  createGraph: function(context) {
+    let sourceGraph = new AudioContext();
+    let source = sourceGraph.createBufferSource();
+    source.buffer = createBuffer(context);
+    let dest = sourceGraph.createMediaStreamDestination();
+    source.connect(dest);
+
+    // Extract first audio track from dest.stream
+    let track = dest.stream.getAudioTracks()[0];
+
+    source.start(0);
+
+    let mediaStreamTrackSource = new MediaStreamTrackAudioSourceNode(context, { mediaStreamTrack: track });
+    // channelCount and channelCountMode should have no effect
+    mediaStreamTrackSource.channelCount = 1;
+    mediaStreamTrackSource.channelCountMode = "explicit";
+    return mediaStreamTrackSource;
+  },
+  createExpectedBuffers: function(context) {
+    return createBuffer(context);
+  },
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>
