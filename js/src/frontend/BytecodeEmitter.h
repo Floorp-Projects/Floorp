@@ -146,6 +146,24 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     ptrdiff_t lastNoteOffset() const { return lastNoteOffset_; }
     void setLastNoteOffset(ptrdiff_t offset) { lastNoteOffset_ = offset; }
 
+    // ---- Jump ----
+
+    ptrdiff_t lastTargetOffset() const { return lastTarget_.offset; }
+    void setLastTargetOffset(ptrdiff_t offset) { lastTarget_.offset = offset; }
+
+    // Check if the last emitted opcode is a jump target.
+    bool lastOpcodeIsJumpTarget() const {
+      return offset() - lastTarget_.offset == ptrdiff_t(JSOP_JUMPTARGET_LENGTH);
+    }
+
+    // JumpTarget should not be part of the emitted statement, as they can be
+    // aliased by multiple statements. If we included the jump target as part of
+    // the statement we might have issues where the enclosing statement might
+    // not contain all the opcodes of the enclosed statements.
+    ptrdiff_t lastNonJumpTargetOffset() const {
+      return lastOpcodeIsJumpTarget() ? lastTarget_.offset : offset();
+    }
+
    private:
     // ---- Bytecode ----
 
@@ -159,6 +177,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
     // Code offset for last source note
     ptrdiff_t lastNoteOffset_ = 0;
+
+    // ---- Jump ----
+
+    // Last jump target emitted.
+    JumpTarget lastTarget_ = {-1 - ptrdiff_t(JSOP_JUMPTARGET_LENGTH)};
   };
 
   BytecodeSection bytecodeSection_;
@@ -192,9 +215,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   const FieldInitializers fieldInitializers_;
 
  public:
-  // Last jump target emitted.
-  JumpTarget lastTarget = {-1 - ptrdiff_t(JSOP_JUMPTARGET_LENGTH)};
-
   // Private storage for parser wrapper. DO NOT REFERENCE INTERNALLY. May not be
   // initialized. Use |parser| instead.
   mozilla::Maybe<EitherParser> ep_ = {};
@@ -452,21 +472,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   void setCurrentLine(uint32_t line) {
     currentLine_ = line;
     lastColumn_ = 0;
-  }
-
-  // Check if the last emitted opcode is a jump target.
-  bool lastOpcodeIsJumpTarget() const {
-    return bytecodeSection().offset() - lastTarget.offset ==
-           ptrdiff_t(JSOP_JUMPTARGET_LENGTH);
-  }
-
-  // JumpTarget should not be part of the emitted statement, as they can be
-  // aliased by multiple statements. If we included the jump target as part of
-  // the statement we might have issues where the enclosing statement might
-  // not contain all the opcodes of the enclosed statements.
-  ptrdiff_t lastNonJumpTargetOffset() const {
-    return lastOpcodeIsJumpTarget() ? lastTarget.offset
-                                    : bytecodeSection().offset();
   }
 
   void setFunctionBodyEndPos(uint32_t pos) {
