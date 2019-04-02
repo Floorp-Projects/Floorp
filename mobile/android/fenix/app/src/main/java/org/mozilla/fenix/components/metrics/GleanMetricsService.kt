@@ -4,7 +4,6 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Context
-import mozilla.components.service.glean.metrics.EventMetricType
 import mozilla.components.service.glean.Glean
 import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.BuildConfig
@@ -13,8 +12,8 @@ import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Events
 
 private class EventWrapper<T : Enum<T>>(
-    private val event: EventMetricType<T>,
-    private val keyMapper: ((String) -> T)? = null
+    private val recorder: ((Map<T, String>?) -> Unit),
+    private val keyMapper: ((String) -> T)?
 ) {
     private val String.asCamelCase: String
         get() = this.split("_").reduceIndexed { index, acc, s ->
@@ -29,16 +28,28 @@ private class EventWrapper<T : Enum<T>>(
             null
         }
 
-        this.event.record(extras)
+        this.recorder(extras)
     }
 }
 
 private val Event.wrapper
     get() = when (this) {
-        is Event.OpenedApp -> EventWrapper(Events.appOpened) { Events.appOpenedKeys.valueOf(it) }
-        is Event.SearchBarTapped -> EventWrapper(Events.searchBarTapped) { Events.searchBarTappedKeys.valueOf(it) }
-        is Event.EnteredUrl -> EventWrapper(Events.enteredUrl) { Events.enteredUrlKeys.valueOf(it) }
-        is Event.PerformedSearch -> EventWrapper(Events.performedSearch) { Events.performedSearchKeys.valueOf(it) }
+        is Event.OpenedApp -> EventWrapper(
+            { Events.appOpened.record(it) },
+            { Events.appOpenedKeys.valueOf(it) }
+        )
+        is Event.SearchBarTapped -> EventWrapper(
+            { Events.searchBarTapped.record(it) },
+            { Events.searchBarTappedKeys.valueOf(it) }
+        )
+        is Event.EnteredUrl -> EventWrapper(
+            { Events.enteredUrl.record(it) },
+            { Events.enteredUrlKeys.valueOf(it) }
+        )
+        is Event.PerformedSearch -> EventWrapper(
+            { Events.performedSearch.record(it) },
+            { Events.performedSearchKeys.valueOf(it) }
+        )
         else -> null
     }
 
