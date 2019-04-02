@@ -319,7 +319,7 @@ class GleanTest {
         // and first_run_date to the new location in glean_client_info.  We
         // need to clear those out again so we can test what happens when they
         // are missing.
-        val storageManager = StorageEngineManager(
+        StorageEngineManager(
             applicationContext = ApplicationProvider.getApplicationContext()
         ).clearAllStores()
 

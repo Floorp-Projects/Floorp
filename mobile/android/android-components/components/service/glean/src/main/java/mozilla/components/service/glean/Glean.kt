@@ -371,6 +371,7 @@ open class GleanInternalAPI internal constructor () {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun enableTestingMode() {
+        @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.enableTestingMode()
     }
 }

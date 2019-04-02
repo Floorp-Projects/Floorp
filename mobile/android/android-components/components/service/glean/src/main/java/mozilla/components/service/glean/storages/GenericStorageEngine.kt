@@ -129,9 +129,7 @@ internal abstract class GenericStorageEngine<MetricType> : StorageEngine {
             val storeData = dataStores[lifetime.ordinal].getOrPut(storeName) { mutableMapOf() }
             // Only set the stored value if we're able to deserialize the persisted data.
             deserializeSingleMetric(metricName, metricValue)?.let { value ->
-                storeData?.let {
-                    it[metricName] = value
-                }
+                storeData[metricName] = value
             } ?: logger.warn("Failed to deserialize $metricStoragePath")
         }
 

@@ -61,6 +61,7 @@ data class BooleanMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
+        @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
 
         return BooleansStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
@@ -78,6 +79,7 @@ data class BooleanMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): Boolean {
+        @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
 
         return BooleansStorageEngine.getSnapshot(pingName, false)!![identifier]!!

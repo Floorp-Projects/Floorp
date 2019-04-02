@@ -50,7 +50,7 @@ internal object Dispatchers {
             assert(
                 testingMode,
                 {
-                    "To use the testing API, glean must be in testing mode by calling "
+                    "To use the testing API, glean must be in testing mode by calling " +
                     "Glean.enableTestingMode() (for example, in a @Before method)."
                 }
             )

@@ -18,6 +18,7 @@ class DispatchersTest {
     fun `API scope runs off the main thread`() {
         val mainThread = Thread.currentThread()
         var threadCanary = false
+        @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.testingMode = false
 
         runBlocking {
@@ -31,6 +32,7 @@ class DispatchersTest {
             }!!.join()
         }
 
+        @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.testingMode = true
         assertEquals(true, threadCanary)
         assertSame(mainThread, Thread.currentThread())

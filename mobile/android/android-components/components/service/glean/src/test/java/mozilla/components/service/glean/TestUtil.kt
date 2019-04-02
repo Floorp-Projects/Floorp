@@ -215,7 +215,7 @@ internal class TestPingTagClient(
 
         // Have to return a response here.
         return Response(
-            responseUrl ?: request.url,
+            responseUrl,
             responseStatus,
             request.headers ?: responseHeaders,
             responseBody)

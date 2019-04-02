@@ -101,6 +101,7 @@ object ErrorRecording {
         errorType: ErrorType,
         pingName: String? = null
     ): Int {
+        @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
 
         val usePingName = pingName?.let {

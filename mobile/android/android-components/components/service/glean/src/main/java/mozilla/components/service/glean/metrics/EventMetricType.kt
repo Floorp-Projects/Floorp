@@ -99,6 +99,7 @@ data class EventMetricType<ExtraKeysEnum : Enum<ExtraKeysEnum>>(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
+        @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
 
         val snapshot = EventsStorageEngine.getSnapshot(pingName, false) ?: return false
@@ -119,6 +120,7 @@ data class EventMetricType<ExtraKeysEnum : Enum<ExtraKeysEnum>>(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): List<RecordedEventData> {
+        @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
 
         return EventsStorageEngine.getSnapshot(pingName, false)!!.filter { event ->
