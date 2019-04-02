@@ -29,6 +29,9 @@ parent:
   async OpenVRControllerManifestPathToVR(OpenVRControllerType aType, nsCString aPath);
 
 child:
+  // Sent when the GPU process has initialized devices. This occurs once, after
+  // Init().
+  async InitComplete();
   async OpenVRControllerActionPathToParent(nsCString aPath);
   async OpenVRControllerManifestPathToParent(OpenVRControllerType aType, nsCString aPath);
   async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
