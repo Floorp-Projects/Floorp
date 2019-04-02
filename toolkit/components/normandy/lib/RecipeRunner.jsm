@@ -50,7 +50,7 @@ const PREFS_TO_WATCH = [
 
 XPCOMUtils.defineLazyGetter(this, "gRemoteSettingsClient", () => {
   return RemoteSettings(REMOTE_SETTINGS_COLLECTION, {
-    filterFunc: async recipe => (await RecipeRunner.checkFilter(recipe)) ? recipe : null,
+    filterFunc: async entry => (await RecipeRunner.checkFilter(entry.recipe)) ? entry : null,
   });
 });
 
@@ -215,7 +215,15 @@ var RecipeRunner = {
     try {
       recipesToRun = await this.loadRecipes();
     } catch (e) {
-      // The legacy call to `Normandy.fetchRecipes()` can throw.
+      // Either we failed at fetching the recipes from server (legacy),
+      // or the recipes signature verification failed.
+      let status = Uptake.RUNNER_SERVER_ERROR;
+      if (/NetworkError/.test(e)) {
+        status = Uptake.RUNNER_NETWORK_ERROR;
+      } else if (e instanceof NormandyApi.InvalidSignatureError) {
+        status = Uptake.RUNNER_INVALID_SIGNATURE;
+      }
+      await Uptake.reportRunner(status);
       return;
     }
 
@@ -242,10 +250,17 @@ var RecipeRunner = {
    */
   async loadRecipes() {
     // If RemoteSettings is enabled, we read the list of recipes from there.
-    // The JEXL filtering is done via the provided callback.
+    // The JEXL filtering is done via the provided callback (see `gRemoteSettingsClient`).
     if (await FeatureGate.isEnabled("normandy-remote-settings")) {
-      return gRemoteSettingsClient.get();
+      // First, fetch recipes whose JEXL filters match.
+      const entries = await gRemoteSettingsClient.get();
+      // Then, verify the signature of each recipe. It will throw if invalid.
+      return Promise.all(entries.map(async ( { recipe, signature } ) => {
+        await NormandyApi.verifyObjectSignature(recipe, signature, "recipe");
+        return recipe;
+      }));
     }
+
     // Obtain the recipes from the Normandy server (legacy).
     let recipes;
     try {
@@ -257,14 +272,6 @@ var RecipeRunner = {
     } catch (e) {
       const apiUrl = Services.prefs.getCharPref(API_URL_PREF);
       log.error(`Could not fetch recipes from ${apiUrl}: "${e}"`);
-
-      let status = Uptake.RUNNER_SERVER_ERROR;
-      if (/NetworkError/.test(e)) {
-        status = Uptake.RUNNER_NETWORK_ERROR;
-      } else if (e instanceof NormandyApi.InvalidSignatureError) {
-        status = Uptake.RUNNER_INVALID_SIGNATURE;
-      }
-      await Uptake.reportRunner(status);
       throw e;
     }
     // Evaluate recipe filters

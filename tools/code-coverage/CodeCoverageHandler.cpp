@@ -33,7 +33,7 @@ using namespace mozilla;
 // Linux, to avoid naming clashes in builds which mix GCC and LLVM. So, when we
 // are building with LLVM exclusively, we need to use __custom_llvm_gcov_flush
 // instead.
-#if defined(XP_LINUX) && defined(__clang__)
+#if !defined(XP_WIN) && defined(__clang__)
 #  define __gcov_flush __custom_llvm_gcov_flush
 #endif
 

@@ -267,6 +267,9 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this._form.hasEventListeners;
   }
 
+  get isMarkerPseudoElement() {
+    return this._form.isMarkerPseudoElement;
+  }
   get isBeforePseudoElement() {
     return this._form.isBeforePseudoElement;
   }
@@ -274,7 +277,8 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this._form.isAfterPseudoElement;
   }
   get isPseudoElement() {
-    return this.isBeforePseudoElement || this.isAfterPseudoElement;
+    return this.isBeforePseudoElement || this.isAfterPseudoElement ||
+      this.isMarkerPseudoElement;
   }
   get isAnonymous() {
     return this._form.isAnonymous;

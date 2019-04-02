@@ -308,6 +308,30 @@ var gUpdates = {
     this._cacheButtonStrings("extra1");
     this._cacheButtonStrings("extra2");
 
+    document.addEventListener("wizardfinish", function() { gUpdates.onWizardFinish(); });
+    document.addEventListener("wizardcancel", function() { gUpdates.onWizardCancel(); });
+    document.addEventListener("wizardnext", function() { gUpdates.onWizardNext(); });
+
+    document.getElementById("checking").addEventListener("pageshow", function() { gCheckingPage.onPageShow(); });
+    document.getElementById("noupdatesfound").addEventListener("pageshow", function() { gNoUpdatesPage.onPageShow(); });
+    document.getElementById("manualUpdate").addEventListener("pageshow", function() { gManualUpdatePage.onPageShow(); });
+    document.getElementById("unsupported").addEventListener("pageshow", function() { gUnsupportedPage.onPageShow(); });
+    document.getElementById("updatesfoundbasic").addEventListener("pageshow", function() { gUpdatesFoundBasicPage.onPageShow(); });
+    document.getElementById("downloading").addEventListener("pageshow", function() { gDownloadingPage.onPageShow(); });
+    document.getElementById("errors").addEventListener("pageshow", function() { gErrorsPage.onPageShow(); });
+    document.getElementById("errorextra").addEventListener("pageshow", function() { gErrorExtraPage.onPageShow(); });
+    document.getElementById("errorpatching").addEventListener("pageshow", function() { gErrorPatchingPage.onPageShow(); });
+    document.getElementById("finished").addEventListener("pageshow", function() { gFinishedPage.onPageShow(); });
+    document.getElementById("finishedBackground").addEventListener("pageshow", function() { gFinishedPage.onPageShowBackground(); });
+
+    document.getElementById("updatesfoundbasic").addEventListener("extra1", function() { gUpdatesFoundBasicPage.onExtra1(); });
+    document.getElementById("downloading").addEventListener("extra1", function() { gDownloadingPage.onHide(); });
+    document.getElementById("finished").addEventListener("extra1", function() { gFinishedPage.onExtra1(); });
+    document.getElementById("finishedBackground").addEventListener("extra1", function() { gFinishedPage.onExtra1(); });
+
+    document.getElementById("updatesfoundbasic").addEventListener("extra2", function() { gUpdatesFoundBasicPage.onExtra2(); });
+    document.getElementById("finishedBackground").addEventListener("extra2", function() { gFinishedPage.onExtra2(); });
+
     // Advance to the Start page.
     this.getStartPageID(function(startPageID) {
       LOG("gUpdates", "onLoad - setting current page to startpage " + startPageID);

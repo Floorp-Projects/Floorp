@@ -9,12 +9,14 @@
 #include "VRManager.h"
 #include "gfxConfig.h"
 #include "nsDebugImpl.h"
+#include "ProcessUtils.h"
 
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
 
 #if defined(XP_WIN)
+#  include <process.h>
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
@@ -39,6 +41,8 @@ IPCResult VRParent::RecvNewGPUVRManager(Endpoint<PVRGPUParent>&& aEndpoint) {
 IPCResult VRParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
                              nsTArray<GfxVarUpdate>&& vars,
                              const DevicePrefs& devicePrefs) {
+  Unused << SendInitComplete();
+
   const nsTArray<gfxPrefs::Pref*>& globalPrefs = gfxPrefs::all();
   for (auto& setting : prefs) {
     gfxPrefs::Pref* pref = globalPrefs[setting.index()];
@@ -90,6 +94,23 @@ mozilla::ipc::IPCResult VRParent::RecvOpenVRControllerActionPathToVR(
 mozilla::ipc::IPCResult VRParent::RecvOpenVRControllerManifestPathToVR(
     const OpenVRControllerType& aType, const nsCString& aPath) {
   mOpenVRControllerManifest.Put(static_cast<uint32_t>(aType), aPath);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult VRParent::RecvRequestMemoryReport(
+    const uint32_t& aGeneration, const bool& aAnonymize,
+    const bool& aMinimizeMemoryUsage, const Maybe<FileDescriptor>& aDMDFile) {
+  MOZ_ASSERT(XRE_IsVRProcess());
+  nsPrintfCString processName("VR (pid %u)", (unsigned)getpid());
+
+  mozilla::dom::MemoryReportRequestClient::Start(
+      aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, processName,
+      [&](const MemoryReport& aReport) {
+        Unused << SendAddMemoryReport(aReport);
+      },
+      [&](const uint32_t& aGeneration) {
+        return SendFinishMemoryReport(aGeneration);
+      });
   return IPC_OK();
 }
 
@@ -161,6 +182,7 @@ bool VRParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
     return false;
   }
 
+  mozilla::ipc::SetThisProcessName("VR Process");
   return true;
 }
 

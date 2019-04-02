@@ -9,6 +9,7 @@ using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 include "VRMessageUtils.h";
 
 include GraphicsMessages;
+include MemoryReportTypes;
 include protocol PVRGPU;
 
 include "VRMessageUtils.h";
@@ -27,11 +28,19 @@ parent:
   async UpdateVar(GfxVarUpdate var);
   async OpenVRControllerActionPathToVR(nsCString aPath);
   async OpenVRControllerManifestPathToVR(OpenVRControllerType aType, nsCString aPath);
-
+  async RequestMemoryReport(uint32_t generation,
+                            bool anonymize,
+                            bool minimizeMemoryUsage,
+                            FileDescriptor? DMDFile);
 child:
+  // Sent when the GPU process has initialized devices. This occurs once, after
+  // Init().
+  async InitComplete();
   async OpenVRControllerActionPathToParent(nsCString aPath);
   async OpenVRControllerManifestPathToParent(OpenVRControllerType aType, nsCString aPath);
   async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
+  async AddMemoryReport(MemoryReport aReport);
+  async FinishMemoryReport(uint32_t aGeneration);
 };
 
 } // namespace gfx

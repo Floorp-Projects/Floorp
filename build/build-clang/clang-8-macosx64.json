@@ -22,6 +22,7 @@
     "ld": "/builds/worker/workspace/build/src/clang/bin/clang",
     "patches": [
       "static-llvm-symbolizer.patch",
+      "rename_gcov_flush.patch",
       "compiler-rt-cross-compile.patch",
       "compiler-rt-no-codesign.patch"
     ]

@@ -15,15 +15,13 @@
         onunload="MigrationWizard.uninit()"
         style="width: 40em;"
         buttons="accept,cancel"
-        branded="true"
-        onwizardcancel="return MigrationWizard.onWizardCancel();">
+        branded="true">
 
   <script type="application/javascript" src="chrome://global/content/customElements.js"/>
   <script type="application/javascript" src="chrome://browser/content/migration/migration.js"/>
 
   <wizardpage id="importSource" pageid="importSource" next="selectProfile"
-              label="&importSource.title;"
-              onpageadvanced="return MigrationWizard.onImportSourcePageAdvanced();">
+              label="&importSource.title;">
 #ifdef XP_WIN
     <description id="importAll" control="importSourceGroup">&importFrom.label;</description>
 #else
@@ -60,10 +58,7 @@
   </wizardpage>
 
   <wizardpage id="selectProfile" pageid="selectProfile" label="&selectProfile.title;"
-              next="importItems"
-              onpageshow="return MigrationWizard.onSelectProfilePageShow();"
-              onpagerewound="return MigrationWizard.onSelectProfilePageRewound();"
-              onpageadvanced="return MigrationWizard.onSelectProfilePageAdvanced();">
+              next="importItems">
     <description control="profiles">&selectProfile.label;</description>
 
     <radiogroup id="profiles" align="left"/>
@@ -71,9 +66,6 @@
 
   <wizardpage id="importItems" pageid="importItems" label="&importItems.title;"
               next="migrating"
-              onpageshow="return MigrationWizard.onImportItemsPageShow();"
-              onpagerewound="return MigrationWizard.onImportItemsPageRewound();"
-              onpageadvanced="return MigrationWizard.onImportItemsPageAdvanced();"
               oncommand="MigrationWizard.onImportItemCommand();">
     <description control="dataSources">&importItems.label;</description>
 
@@ -81,19 +73,16 @@
   </wizardpage>
 
   <wizardpage id="migrating" pageid="migrating" label="&migrating.title;"
-              next="done"
-              onpageshow="MigrationWizard.onMigratingPageShow();">
+              next="done">
     <description control="migratingItems">&migrating.label;</description>
 
     <vbox id="migratingItems" style="overflow: auto;" align="left" role="group"/>
   </wizardpage>
 
-  <wizardpage id="done" pageid="done" label="&done.title;"
-              onpageshow="MigrationWizard.onDonePageShow();">
+  <wizardpage id="done" pageid="done" label="&done.title;">
     <description control="doneItems">&done.label;</description>
 
     <vbox id="doneItems" style="overflow: auto;" align="left" role="group"/>
   </wizardpage>
 
 </wizard>
-
