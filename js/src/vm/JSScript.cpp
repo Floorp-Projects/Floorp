@@ -4527,7 +4527,7 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
 
   // The + 1 is to account for the final SN_MAKE_TERMINATOR that is appended
   // when the notes are copied to their final destination by copySrcNotes.
-  uint32_t noteLength = bce->notes().length() + 1;
+  uint32_t noteLength = bce->bytecodeSection().notes().length() + 1;
 
   // Create and initialize SharedScriptData
   if (!script->createSharedScriptData(cx, codeLength, noteLength, natoms)) {
