@@ -787,39 +787,6 @@ class TwoByteString
     : public Variant<JSAtom*, const char16_t*, JS::ubi::EdgeName> {
   using Base = Variant<JSAtom*, const char16_t*, JS::ubi::EdgeName>;
 
-  struct AsTwoByteStringMatcher {
-    TwoByteString operator()(JSAtom* atom) { return TwoByteString(atom); }
-
-    TwoByteString operator()(const char16_t* chars) {
-      return TwoByteString(chars);
-    }
-  };
-
-  struct IsNonNullMatcher {
-    template <typename T>
-    bool operator()(const T& t) {
-      return t != nullptr;
-    }
-  };
-
-  struct LengthMatcher {
-    size_t operator()(JSAtom* atom) {
-      MOZ_ASSERT(atom);
-      JS::ubi::AtomOrTwoByteChars s(atom);
-      return s.length();
-    }
-
-    size_t operator()(const char16_t* chars) {
-      MOZ_ASSERT(chars);
-      return NS_strlen(chars);
-    }
-
-    size_t operator()(const JS::ubi::EdgeName& ptr) {
-      MOZ_ASSERT(ptr);
-      return NS_strlen(ptr.get());
-    }
-  };
-
   struct CopyToBufferMatcher {
     RangedPtr<char16_t> destination;
     size_t maxLength;
@@ -861,20 +828,30 @@ class TwoByteString
 
   // Rewrap the inner value of a JS::ubi::AtomOrTwoByteChars as a TwoByteString.
   static TwoByteString from(JS::ubi::AtomOrTwoByteChars&& s) {
-    AsTwoByteStringMatcher m;
-    return s.match(m);
+    return s.match([](auto* a) { return TwoByteString(a); });
   }
 
   // Returns true if the given TwoByteString is non-null, false otherwise.
   bool isNonNull() const {
-    IsNonNullMatcher m;
-    return match(m);
+    return match([](auto& t) { return t != nullptr; });
   }
 
   // Return the length of the string, 0 if it is null.
   size_t length() const {
-    LengthMatcher m;
-    return match(m);
+    return match(
+        [](JSAtom* atom) -> size_t {
+          MOZ_ASSERT(atom);
+          JS::ubi::AtomOrTwoByteChars s(atom);
+          return s.length();
+        },
+        [](const char16_t* chars) -> size_t {
+          MOZ_ASSERT(chars);
+          return NS_strlen(chars);
+        },
+        [](const JS::ubi::EdgeName& ptr) -> size_t {
+          MOZ_ASSERT(ptr);
+          return NS_strlen(ptr.get());
+        });
   }
 
   // Copy the contents of a TwoByteString into the provided buffer. The buffer
@@ -899,26 +876,22 @@ class TwoByteString
 struct TwoByteString::HashPolicy {
   using Lookup = TwoByteString;
 
-  struct HashingMatcher {
-    js::HashNumber operator()(const JSAtom* atom) {
-      return js::DefaultHasher<const JSAtom*>::hash(atom);
-    }
-
-    js::HashNumber operator()(const char16_t* chars) {
-      MOZ_ASSERT(chars);
-      auto length = NS_strlen(chars);
-      return HashString(chars, length);
-    }
-
-    js::HashNumber operator()(const JS::ubi::EdgeName& ptr) {
-      MOZ_ASSERT(ptr);
-      return operator()(ptr.get());
-    }
-  };
-
   static js::HashNumber hash(const Lookup& l) {
-    HashingMatcher hasher;
-    return l.match(hasher);
+    return l.match(
+        [](const JSAtom* atom) {
+          return js::DefaultHasher<const JSAtom*>::hash(atom);
+        },
+        [](const char16_t* chars) {
+          MOZ_ASSERT(chars);
+          auto length = NS_strlen(chars);
+          return HashString(chars, length);
+        },
+        [](const JS::ubi::EdgeName& ptr) {
+          const char16_t* chars = ptr.get();
+          MOZ_ASSERT(chars);
+          auto length = NS_strlen(chars);
+          return HashString(chars, length);
+        });
   }
 
   struct EqualityMatcher {
