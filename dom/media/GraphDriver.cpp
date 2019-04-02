@@ -461,10 +461,12 @@ AsyncCubebTask::Run() {
 }
 
 StreamAndPromiseForOperation::StreamAndPromiseForOperation(
-    MediaStream* aStream, void* aPromise, dom::AudioContextOperation aOperation)
-    : mStream(aStream), mPromise(aPromise), mOperation(aOperation) {
-  // MOZ_ASSERT(aPromise);
-}
+    MediaStream* aStream, void* aPromise, dom::AudioContextOperation aOperation,
+    dom::AudioContextOperationFlags aFlags)
+    : mStream(aStream),
+      mPromise(aPromise),
+      mOperation(aOperation),
+      mFlags(aFlags) {}
 
 AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl,
                                          uint32_t aInputChannelCount)
@@ -1042,12 +1044,16 @@ uint32_t AudioCallbackDriver::IterationDuration() {
 bool AudioCallbackDriver::IsStarted() { return mStarted; }
 
 void AudioCallbackDriver::EnqueueStreamAndPromiseForOperation(
-    MediaStream* aStream, void* aPromise,
-    dom::AudioContextOperation aOperation) {
+    MediaStream* aStream, void* aPromise, dom::AudioContextOperation aOperation,
+    dom::AudioContextOperationFlags aFlags) {
   MOZ_ASSERT(OnGraphThread() || !ThreadRunning());
   MonitorAutoLock mon(mGraphImpl->GetMonitor());
-  mPromisesForOperation.AppendElement(
-      StreamAndPromiseForOperation(aStream, aPromise, aOperation));
+  MOZ_ASSERT((aFlags | dom::AudioContextOperationFlags::SendStateChange) ||
+             !aPromise);
+  if (aFlags == dom::AudioContextOperationFlags::SendStateChange) {
+    mPromisesForOperation.AppendElement(
+        StreamAndPromiseForOperation(aStream, aPromise, aOperation, aFlags));
+  }
 }
 
 void AudioCallbackDriver::CompleteAudioContextOperations(
@@ -1068,8 +1074,9 @@ void AudioCallbackDriver::CompleteAudioContextOperations(
          s.mOperation == dom::AudioContextOperation::Resume) ||
         (aOperation == AsyncCubebOperation::SHUTDOWN &&
          s.mOperation != dom::AudioContextOperation::Resume)) {
+      MOZ_ASSERT(s.mFlags == dom::AudioContextOperationFlags::SendStateChange);
       GraphImpl()->AudioContextOperationCompleted(s.mStream, s.mPromise,
-                                                  s.mOperation);
+                                                  s.mOperation, s.mFlags);
       array.RemoveElementAt(i);
       i--;
     }
