@@ -14,9 +14,9 @@ add_task(async function() {
     data:text/html;charset=utf-8,
     <h1>foo</h1>
     <span>bar</span>
-    <ul>
-      <li></li>
-    </ul>`);
+    <dl>
+      <dt></dt>
+    </dl>`);
   const markup = inspector.markup;
   const doc = markup.doc;
   const win = doc.defaultView;
@@ -25,7 +25,7 @@ add_task(async function() {
   const bodyContainer = await getContainerForSelector("body", inspector);
   const spanContainer = await getContainerForSelector("span", inspector);
   const headerContainer = await getContainerForSelector("h1", inspector);
-  const listContainer = await getContainerForSelector("ul", inspector);
+  const listContainer = await getContainerForSelector("dl", inspector);
 
   // Focus on the tree element.
   rootElt.focus();
@@ -71,7 +71,7 @@ add_task(async function() {
     "Closed tree item should have aria-expanded unset");
 
   info("Selecting and expanding list container");
-  await selectNode("ul", inspector);
+  await selectNode("dl", inspector);
   EventUtils.synthesizeKey("VK_RIGHT", {}, win);
   await waitForMultipleChildrenUpdates(inspector);
 
@@ -80,7 +80,7 @@ add_task(async function() {
     "Active descendant should not be set to list container tagLine");
   is(listContainer.tagLine.getAttribute("aria-expanded"), "true",
     "Open tree item should have aria-expanded set");
-  const listItemContainer = await getContainerForSelector("li", inspector);
+  const listItemContainer = await getContainerForSelector("dt", inspector);
   is(listItemContainer.tagLine.getAttribute("aria-level"),
     TOP_CONTAINER_LEVEL + 1,
     "Grand child container tagLine should have nested level up to date");
