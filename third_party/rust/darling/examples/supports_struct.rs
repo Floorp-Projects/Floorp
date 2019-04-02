@@ -37,8 +37,7 @@ pub struct Foo {
     let parsed = syn::parse_str(good_input).unwrap();
     let receiver = Lorem::from_derive_input(&parsed).unwrap();
     let wrong_shape_parsed = syn::parse_str(bad_input).unwrap();
-    let wrong_shape = Lorem::from_derive_input(&wrong_shape_parsed)
-        .expect_err("Shape was wrong");
+    let wrong_shape = Lorem::from_derive_input(&wrong_shape_parsed).expect_err("Shape was wrong");
 
     println!(
         r#"

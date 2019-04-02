@@ -12,7 +12,7 @@
 
 [package]
 name = "proc-macro2"
-version = "0.4.24"
+version = "0.4.27"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 build = "build.rs"
 description = "A stable implementation of the upcoming new `proc_macro` API. Comes with an\noption, off by default, to also reimplement itself in terms of the upstream\nunstable API.\n"
@@ -32,7 +32,8 @@ version = "0.6"
 
 [features]
 default = ["proc-macro"]
-nightly = ["proc-macro"]
+nightly = []
 proc-macro = []
+span-locations = []
 [badges.travis-ci]
 repository = "alexcrichton/proc-macro2"

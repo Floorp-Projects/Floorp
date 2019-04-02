@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate darling;
-
 #[macro_use]
 extern crate syn;
 #[macro_use]
@@ -34,13 +33,11 @@ struct TraitCore {
 
 #[test]
 fn simple() {
-    let di = syn::parse_str(
-        r#"
+    let di = parse_quote! {
         #[derive(Foo)]
         #[darling_demo(lorem(ipsum))]
         pub struct Bar;
-    "#,
-    ).unwrap();
+    };
 
     assert_eq!(
         Core::from_derive_input(&di).unwrap(),
@@ -58,13 +55,11 @@ fn simple() {
 
 #[test]
 fn trait_type() {
-    let di = syn::parse_str(
-        r#"
+    let di = parse_quote! {
         #[derive(Foo)]
         #[darling_demo(lorem(dolor = "hello"))]
         pub struct Bar;
-    "#,
-    ).unwrap();
+    };
 
     assert_eq!(
         TraitCore::from_derive_input(&di).unwrap(),

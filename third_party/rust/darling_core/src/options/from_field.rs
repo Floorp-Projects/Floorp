@@ -1,3 +1,5 @@
+use proc_macro2::TokenStream;
+use quote::ToTokens;
 use syn::{self, Ident};
 
 use codegen::FromFieldImpl;
@@ -17,8 +19,9 @@ impl FromFieldOptions {
             base: OuterFrom::start(di),
             vis: Default::default(),
             ty: Default::default(),
-        }).parse_attributes(&di.attrs)?
-            .parse_body(&di.data)
+        })
+        .parse_attributes(&di.attrs)?
+        .parse_body(&di.data)
     }
 }
 
@@ -66,5 +69,11 @@ impl<'a> From<&'a FromFieldOptions> for FromFieldImpl<'a> {
             forward_attrs: v.base.forward_attrs.as_ref(),
             from_ident: v.base.from_ident,
         }
+    }
+}
+
+impl ToTokens for FromFieldOptions {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        FromFieldImpl::from(self).to_tokens(tokens)
     }
 }
