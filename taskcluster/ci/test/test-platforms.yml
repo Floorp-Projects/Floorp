@@ -36,7 +36,6 @@ linux64/debug:
         - common-tests
         - web-platform-tests
         - mochitest-headless
-        - marionette-media-tests
 linux64/opt:
     build-platform: linux64/opt
     test-sets:
@@ -136,7 +135,6 @@ windows7-32/debug:
         - windows-reftest-gpu
         - windows-tests
         - web-platform-tests
-        - marionette-media-tests
 
 windows7-32/opt:
     build-platform: win32/opt
@@ -189,7 +187,6 @@ windows10-64/debug:
         - windows-tests
         - web-platform-tests
         - mochitest-headless
-        - marionette-media-tests
 
 windows10-64/opt:
     build-platform: win64/opt
@@ -281,7 +278,6 @@ macosx64/debug:
     build-platform: macosx64/debug
     test-sets:
         - macosx64-tests
-        - marionette-media-tests
 
 macosx64-shippable/opt:
     build-platform: macosx64-shippable/opt

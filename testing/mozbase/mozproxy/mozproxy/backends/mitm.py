@@ -79,8 +79,7 @@ class Mitmproxy(Playback):
         self.browser_path = config.get("binary")
         self.policies_dir = None
         self.ignore_mitmdump_exit_failure = config.get(
-            "ignore_mitmdump_exit_failure", False
-        )
+                "ignore_mitmdump_exit_failure", False)
 
         # mozproxy_dir is where we will download all mitmproxy required files
         # when running locally it comes from obj_path via mozharness/mach
@@ -150,13 +149,8 @@ class Mitmproxy(Playback):
                 if not artifact:
                     continue
                 artifact_name = artifact.split("/")[-1]
-                if artifact_name.endswith(".manifest"):
-                    tooltool_download(
-                        artifact, self.config["run_local"], self.mozproxy_dir
-                    )
-                else:
-                    dest = os.path.join(self.mozproxy_dir, artifact_name)
-                    download_file_from_url(artifact, dest, extract=True)
+                dest = os.path.join(self.mozproxy_dir, artifact_name)
+                download_file_from_url(artifact, dest, extract=True)
 
     def stop(self):
         self.stop_mitmproxy_playback()
@@ -180,9 +174,10 @@ class Mitmproxy(Playback):
         LOG.info("Starting mitmproxy playback using command: %s" % " ".join(command))
         # to turn off mitmproxy log output, use these params for Popen:
         # Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-        self.mitmproxy_proc = ProcessHandler(
-            command, logfile=os.path.join(self.upload_dir, "mitmproxy.log"), env=env
-        )
+        self.mitmproxy_proc = ProcessHandler(command,
+                                             logfile=os.path.join(self.upload_dir,
+                                                                  "mitmproxy.log"),
+                                             env=env)
         self.mitmproxy_proc.run()
         end_time = time.time() + MITMDUMP_COMMAND_TIMEOUT
         ready = False
@@ -353,7 +348,7 @@ class MitmproxyAndroid(Mitmproxy):
     @property
     def certutil_sleep_seconds(self):
         """Time to sleep, in seconds, after issuing a `certutil` command."""
-        return 10 if not self.config["run_local"] else 1
+        return 10 if not self.config['run_local'] else 1
 
     def setup(self):
         """For geckoview we need to install the generated mitmproxy CA cert"""
@@ -377,18 +372,14 @@ class MitmproxyAndroid(Mitmproxy):
         2. Import the mitmproxy certificate into the database, i.e.:
            `certutil -A -d sql:<path to profile> -n "some nickname" -t TC,, -a -i <path to CA.pem>`
         """
-        if self.config["run_local"]:
+        if self.config['run_local']:
             # when running locally, it is found in the Firefox desktop build (..obj../dist/bin)
-            self.certutil = os.path.join(os.environ["MOZ_HOST_BIN"], "certutil")
-            if not (
-                os.path.isfile(self.certutil) and os.access(self.certutil, os.X_OK)
-            ):
-                LOG.critical(
-                    "Abort: unable to execute certutil: {}".format(self.certutil)
-                )
+            self.certutil = os.path.join(os.environ['MOZ_HOST_BIN'], 'certutil')
+            if not (os.path.isfile(self.certutil) and os.access(self.certutil, os.X_OK)):
+                LOG.critical("Abort: unable to execute certutil: {}".format(self.certutil))
                 raise
-            self.certutil = os.environ["MOZ_HOST_BIN"]
-            os.environ["LD_LIBRARY_PATH"] = self.certutil
+            self.certutil = os.environ['MOZ_HOST_BIN']
+            os.environ['LD_LIBRARY_PATH'] = self.certutil
         else:
             # must download certutil inside hostutils via tooltool; use this manifest:
             # mozilla-central/testing/config/tooltool-manifests/linux64/hostutils.manifest
