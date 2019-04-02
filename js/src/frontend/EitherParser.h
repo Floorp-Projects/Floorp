@@ -47,7 +47,7 @@ struct InvokeMemberFunction {
       : args{std::forward<ActualArgs>(actualArgs)...} {}
 
   template <class Parser>
-  auto match(Parser* parser)
+  auto operator()(Parser* parser)
       -> decltype(this->matchInternal(GetThis<Parser>::get(parser),
                                       std::index_sequence_for<Args...>{})) {
     return this->matchInternal(GetThis<Parser>::get(parser),
@@ -88,21 +88,21 @@ struct TokenStreamComputeLineAndColumn {
 
 struct ParseHandlerMatcher {
   template <class Parser>
-  frontend::FullParseHandler& match(Parser* parser) {
+  frontend::FullParseHandler& operator()(Parser* parser) {
     return parser->handler_;
   }
 };
 
 struct ParserSharedBaseMatcher {
   template <class Parser>
-  frontend::ParserSharedBase& match(Parser* parser) {
+  frontend::ParserSharedBase& operator()(Parser* parser) {
     return *static_cast<frontend::ParserSharedBase*>(parser);
   }
 };
 
 struct ErrorReporterMatcher {
   template <class Parser>
-  frontend::ErrorReporter& match(Parser* parser) {
+  frontend::ErrorReporter& operator()(Parser* parser) {
     return parser->tokenStream;
   }
 };

@@ -1021,7 +1021,7 @@ LiveSavedFrameCache::FramePtr::create(AbstractFramePtr afp) {
 
 struct LiveSavedFrameCache::FramePtr::HasCachedMatcher {
   template <typename Frame>
-  bool match(Frame* f) const {
+  bool operator()(Frame* f) const {
     return f->hasCachedSavedFrame();
   }
 };
@@ -1032,7 +1032,7 @@ inline bool LiveSavedFrameCache::FramePtr::hasCachedSavedFrame() const {
 
 struct LiveSavedFrameCache::FramePtr::SetHasCachedMatcher {
   template <typename Frame>
-  void match(Frame* f) {
+  void operator()(Frame* f) {
     f->setHasCachedSavedFrame();
   }
 };
@@ -1043,7 +1043,7 @@ inline void LiveSavedFrameCache::FramePtr::setHasCachedSavedFrame() {
 
 struct LiveSavedFrameCache::FramePtr::ClearHasCachedMatcher {
   template <typename Frame>
-  void match(Frame* f) {
+  void operator()(Frame* f) {
     f->clearHasCachedSavedFrame();
   }
 };

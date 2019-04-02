@@ -980,7 +980,7 @@ struct ParamTraits<mozilla::Variant<Ts...>> {
     Message* msg;
 
     template <class T>
-    void match(const T& t) {
+    void operator()(const T& t) {
       WriteParam(msg, t);
     }
   };

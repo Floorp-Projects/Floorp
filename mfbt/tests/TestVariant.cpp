@@ -372,9 +372,9 @@ struct Describer {
   static const char* medium;
   static const char* big;
 
-  const char* match(const uint8_t&) { return little; }
-  const char* match(const uint32_t&) { return medium; }
-  const char* match(const uint64_t&) { return big; }
+  const char* operator()(const uint8_t&) { return little; }
+  const char* operator()(const uint32_t&) { return medium; }
+  const char* operator()(const uint64_t&) { return big; }
 };
 
 const char* Describer::little = "little";
@@ -386,6 +386,41 @@ static void testMatching() {
   using V = Variant<uint8_t, uint32_t, uint64_t>;
 
   Describer desc;
+
+  V v1(uint8_t(1));
+  V v2(uint32_t(2));
+  V v3(uint64_t(3));
+
+  MOZ_RELEASE_ASSERT(v1.match(desc) == Describer::little);
+  MOZ_RELEASE_ASSERT(v2.match(desc) == Describer::medium);
+  MOZ_RELEASE_ASSERT(v3.match(desc) == Describer::big);
+
+  const V& constRef1 = v1;
+  const V& constRef2 = v2;
+  const V& constRef3 = v3;
+
+  MOZ_RELEASE_ASSERT(constRef1.match(desc) == Describer::little);
+  MOZ_RELEASE_ASSERT(constRef2.match(desc) == Describer::medium);
+  MOZ_RELEASE_ASSERT(constRef3.match(desc) == Describer::big);
+}
+
+static void testMatchingLambda() {
+  printf("testMatchingLambda\n");
+  using V = Variant<uint8_t, uint32_t, uint64_t>;
+
+  auto desc = [](auto& a) {
+    switch (sizeof(a)) {
+      case 1:
+        return Describer::little;
+      case 4:
+        return Describer::medium;
+      case 8:
+        return Describer::big;
+      default:
+        MOZ_RELEASE_ASSERT(false);
+        return "";
+    }
+  };
 
   V v1(uint8_t(1));
   V v2(uint32_t(2));
@@ -422,6 +457,7 @@ int main() {
   testDestructor();
   testEquality();
   testMatching();
+  testMatchingLambda();
   testRvalueMatcher();
 
   printf("TestVariant OK!\n");

@@ -738,8 +738,10 @@ DocInfo::DocInfo(nsPIDOMWindowOuter* aWindow)
 bool DocInfo::IsTopLevel() const {
   if (mIsTopLevel.isNothing()) {
     struct Matcher {
-      bool match(Window aWin) { return aWin->IsTopLevelWindow(); }
-      bool match(LoadInfo aLoadInfo) { return aLoadInfo->GetIsTopLevelLoad(); }
+      bool operator()(Window aWin) { return aWin->IsTopLevelWindow(); }
+      bool operator()(LoadInfo aLoadInfo) {
+        return aLoadInfo->GetIsTopLevelLoad();
+      }
     };
     mIsTopLevel.emplace(mObj.match(Matcher()));
   }
@@ -778,8 +780,8 @@ bool WindowShouldMatchActiveTab(nsPIDOMWindowOuter* aWin) {
 
 bool DocInfo::ShouldMatchActiveTabPermission() const {
   struct Matcher {
-    bool match(Window aWin) { return WindowShouldMatchActiveTab(aWin); }
-    bool match(LoadInfo aLoadInfo) { return false; }
+    bool operator()(Window aWin) { return WindowShouldMatchActiveTab(aWin); }
+    bool operator()(LoadInfo aLoadInfo) { return false; }
   };
   return mObj.match(Matcher());
 }
@@ -790,8 +792,8 @@ uint64_t DocInfo::FrameID() const {
       mFrameID.emplace(0);
     } else {
       struct Matcher {
-        uint64_t match(Window aWin) { return aWin->WindowID(); }
-        uint64_t match(LoadInfo aLoadInfo) {
+        uint64_t operator()(Window aWin) { return aWin->WindowID(); }
+        uint64_t operator()(LoadInfo aLoadInfo) {
           return aLoadInfo->GetOuterWindowID();
         }
       };
@@ -807,11 +809,11 @@ nsIPrincipal* DocInfo::Principal() const {
       explicit Matcher(const DocInfo& aThis) : mThis(aThis) {}
       const DocInfo& mThis;
 
-      nsIPrincipal* match(Window aWin) {
+      nsIPrincipal* operator()(Window aWin) {
         RefPtr<Document> doc = aWin->GetDoc();
         return doc->NodePrincipal();
       }
-      nsIPrincipal* match(LoadInfo aLoadInfo) {
+      nsIPrincipal* operator()(LoadInfo aLoadInfo) {
         if (!(mThis.URL().InheritsPrincipal() ||
               aLoadInfo->GetForceInheritPrincipal())) {
           return nullptr;

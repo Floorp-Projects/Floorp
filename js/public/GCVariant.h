@@ -119,7 +119,7 @@ struct GCPolicy<mozilla::Variant<Ts...>> {
  private:
   struct IsValidMatcher {
     template <typename T>
-    bool match(T& v) {
+    bool operator()(T& v) {
       return GCPolicy<T>::isValid(v);
     };
   };
