@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -16,6 +17,8 @@
 #include "signaling/src/sdp/Sdp.h"
 
 #include "signaling/src/jsep/JsepTransceiver.h"
+
+#include "mozilla/dom/PeerConnectionObserverEnumsBinding.h"
 
 namespace mozilla {
 
@@ -123,24 +126,32 @@ class JsepSession {
   virtual std::vector<RefPtr<JsepTransceiver>>& GetTransceivers() = 0;
   virtual nsresult AddTransceiver(RefPtr<JsepTransceiver> transceiver) = 0;
 
+  class Result {
+   public:
+    Result() = default;
+    MOZ_IMPLICIT Result(dom::PCError aError) : mError(Some(aError)) {}
+    // TODO(bug 1527916): Need c'tor and members for handling RTCError.
+    Maybe<dom::PCError> mError;
+  };
+
   // Basic JSEP operations.
-  virtual nsresult CreateOffer(const JsepOfferOptions& options,
-                               std::string* offer) = 0;
-  virtual nsresult CreateAnswer(const JsepAnswerOptions& options,
-                                std::string* answer) = 0;
+  virtual Result CreateOffer(const JsepOfferOptions& options,
+                             std::string* offer) = 0;
+  virtual Result CreateAnswer(const JsepAnswerOptions& options,
+                              std::string* answer) = 0;
   virtual std::string GetLocalDescription(
       JsepDescriptionPendingOrCurrent type) const = 0;
   virtual std::string GetRemoteDescription(
       JsepDescriptionPendingOrCurrent type) const = 0;
-  virtual nsresult SetLocalDescription(JsepSdpType type,
-                                       const std::string& sdp) = 0;
-  virtual nsresult SetRemoteDescription(JsepSdpType type,
-                                        const std::string& sdp) = 0;
-  virtual nsresult AddRemoteIceCandidate(const std::string& candidate,
-                                         const std::string& mid,
-                                         const Maybe<uint16_t>& level,
-                                         const std::string& ufrag,
-                                         std::string* transportId) = 0;
+  virtual Result SetLocalDescription(JsepSdpType type,
+                                     const std::string& sdp) = 0;
+  virtual Result SetRemoteDescription(JsepSdpType type,
+                                      const std::string& sdp) = 0;
+  virtual Result AddRemoteIceCandidate(const std::string& candidate,
+                                       const std::string& mid,
+                                       const Maybe<uint16_t>& level,
+                                       const std::string& ufrag,
+                                       std::string* transportId) = 0;
   virtual nsresult AddLocalIceCandidate(const std::string& candidate,
                                         const std::string& transportId,
                                         const std::string& ufrag,
