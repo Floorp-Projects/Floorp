@@ -179,7 +179,13 @@ internal class DisplayToolbar(
 
     private val defaultColor = ContextCompat.getColor(context, R.color.photonWhite)
 
+    private var currentSiteSecurity = SiteSecurity.INSECURE
+
     internal var securityIconColor = Pair(defaultColor, defaultColor)
+        set(value) {
+            field = value
+            setSiteSecurity(currentSiteSecurity)
+        }
 
     internal var menuViewColor = defaultColor
         set(value) {
@@ -274,6 +280,8 @@ internal class DisplayToolbar(
             setImageResource(image)
             setColorFilter(color)
         }
+
+        currentSiteSecurity = secure
     }
 
     /**

@@ -684,7 +684,7 @@ class DisplayToolbarTest {
     }
 
     @Test
-    fun `iconView changes image color filter on update`() {
+    fun `securityIconColor is set when securityIconColor changes`() {
         val toolbar = mock(BrowserToolbar::class.java)
         val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
 
@@ -692,6 +692,18 @@ class DisplayToolbarTest {
 
         assertEquals(R.color.photonBlue40, displayToolbar.securityIconColor.first)
         assertEquals(R.color.photonBlue40, displayToolbar.securityIconColor.second)
+    }
+
+    @Test
+    fun `setSiteSecurity is called when securityIconColor changes`() {
+        val toolbar = BrowserToolbar(context)
+        toolbar.displayToolbar
+
+        assertNull(toolbar.displayToolbar.siteSecurityIconView.colorFilter)
+
+        toolbar.siteSecurityColor = Pair(R.color.photonBlue40, R.color.photonBlue40)
+
+        assertNotNull(toolbar.displayToolbar.siteSecurityIconView.colorFilter)
     }
 
     @Test
