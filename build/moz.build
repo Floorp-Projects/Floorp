@@ -106,8 +106,6 @@ if CONFIG['ENABLE_TESTS']:
         '!automation.py',
     ]
 
-    DIRS += ['tests/gtest']
-
 # NOTE: Keep .gdbinit in the topsrcdir for people who run gdb from the topsrcdir.
 OBJDIR_FILES += ['/.gdbinit']
 
