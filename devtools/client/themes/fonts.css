@@ -127,6 +127,7 @@
 .font-family-name {
   margin-bottom: 0.2em;
   font-size: 1.2em;
+  padding: 0 3px;
 }
 
 .font-group {
@@ -135,7 +136,12 @@
 
 .font-group .font-name {
   white-space: unset;
-  margin-right: .5em;
+  padding: 3px;
+  border-radius: 3px;
+}
+
+.font-group .font-name:hover {
+  background-color: var(--theme-selection-background-hover);
 }
 
 .font-group .font-name::after {
