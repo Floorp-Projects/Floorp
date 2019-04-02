@@ -30,6 +30,7 @@ class SidebarRuntimeItem extends PureComponent {
       isConnected: PropTypes.bool.isRequired,
       isConnecting: PropTypes.bool.isRequired,
       isConnectionFailed: PropTypes.bool.isRequired,
+      isConnectionNotResponding: PropTypes.bool.isRequired,
       isSelected: PropTypes.bool.isRequired,
       isUnknown: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
@@ -74,6 +75,30 @@ class SidebarRuntimeItem extends PureComponent {
       {
         level: MESSAGE_LEVEL.ERROR,
         key: "connection-error",
+      },
+      Localized(
+        {
+          id: localizationId,
+        },
+        dom.p({ className: "word-wrap-anywhere" }, localizationId)
+      )
+    );
+  }
+
+  renderConnectionNotResponding() {
+    const { isConnectionNotResponding } = this.props;
+
+    if (!isConnectionNotResponding) {
+      return null;
+    }
+
+    const localizationId =
+      "about-debugging-sidebar-item-connect-button-connection-not-responding";
+
+    return Message(
+      {
+        level: MESSAGE_LEVEL.WARNING,
+        key: "connection-not-responding",
       },
       Localized(
         {
@@ -173,6 +198,7 @@ class SidebarRuntimeItem extends PureComponent {
         ),
       ),
       this.renderConnectionError(),
+      this.renderConnectionNotResponding(),
     ];
   }
 }
