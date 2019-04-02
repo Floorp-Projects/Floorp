@@ -88,7 +88,7 @@ export function searchSources(query: string) {
       if (cancelled) {
         return;
       }
-      await dispatch(loadSourceText(source));
+      await dispatch(loadSourceText({ source }));
       await dispatch(searchSource(source.id, query));
     }
     dispatch(updateSearchStatus(statusType.done));
