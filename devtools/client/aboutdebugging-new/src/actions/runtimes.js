@@ -69,7 +69,7 @@ function onMultiE10sUpdated() {
 
 function connectRuntime(id) {
   return async (dispatch, getState) => {
-    dispatch({ type: CONNECT_RUNTIME_START });
+    dispatch({ type: CONNECT_RUNTIME_START, id });
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
       const clientWrapper = await createClientForRuntime(runtime);
@@ -135,7 +135,7 @@ function connectRuntime(id) {
         },
       });
     } catch (e) {
-      dispatch({ type: CONNECT_RUNTIME_FAILURE, error: e });
+      dispatch({ type: CONNECT_RUNTIME_FAILURE, id, error: e });
     }
   };
 }
@@ -144,6 +144,7 @@ function createThisFirefoxRuntime() {
   return (dispatch, getState) => {
     const thisFirefoxRuntime = {
       id: RUNTIMES.THIS_FIREFOX,
+      isConnecting: false,
       isUnknown: false,
       name: l10n.getString("about-debugging-this-firefox-runtime-name"),
       type: RUNTIMES.THIS_FIREFOX,
@@ -302,6 +303,7 @@ function updateNetworkRuntimes(locations) {
       extra: {
         connectionParameters: { host, port: parseInt(port, 10) },
       },
+      isConnecting: false,
       isUnknown: false,
       name: location,
       type: RUNTIMES.NETWORK,
@@ -322,6 +324,7 @@ function updateUSBRuntimes(adbRuntimes) {
         connectionParameters,
         deviceName: adbRuntime.deviceName,
       },
+      isConnecting: false,
       isUnknown: adbRuntime.isUnknown(),
       name: adbRuntime.shortName,
       type: RUNTIMES.USB,
@@ -363,12 +366,16 @@ function updateRemoteRuntimes(runtimes, type) {
       await dispatch(Actions.selectPage(PAGE_TYPES.RUNTIME, RUNTIMES.THIS_FIREFOX));
     }
 
-    // Retrieve runtimeDetails from existing runtimes.
+    // For existing runtimes, transfer all properties that are not available in the
+    // runtime objects passed to this method:
+    // - runtimeDetails (set by about:debugging after a successful connection)
+    // - isConnecting (set by about:debugging during the connection)
     runtimes.forEach(runtime => {
       const existingRuntime = findRuntimeById(runtime.id, getState().runtimes);
       const isConnectionValid = existingRuntime && existingRuntime.runtimeDetails &&
         !existingRuntime.runtimeDetails.clientWrapper.isClosed();
       runtime.runtimeDetails = isConnectionValid ? existingRuntime.runtimeDetails : null;
+      runtime.isConnecting = existingRuntime ? existingRuntime.isConnecting : false;
     });
 
     const existingRuntimes = getAllRuntimes(getState().runtimes);
