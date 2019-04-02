@@ -3582,7 +3582,7 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   script->nfixed_ = bce->maxFixedSlots;
   script->nslots_ = nslots;
   script->bodyScopeIndex_ = bce->bodyScopeIndex;
-  script->numBytecodeTypeSets_ = bce->typesetCount;
+  script->numBytecodeTypeSets_ = bce->bytecodeSection().typesetCount();
 
   // Initialize script flags from BytecodeEmitter
   script->setFlag(ImmutableFlags::Strict, bce->sc->strict());
