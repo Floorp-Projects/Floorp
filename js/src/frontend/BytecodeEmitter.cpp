@@ -94,7 +94,8 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
 BytecodeEmitter::BytecodeSection::BytecodeSection(JSContext* cx)
     : code_(cx), notes_(cx), tryNoteList_(cx), scopeNoteList_(cx) {}
 
-BytecodeEmitter::PerScriptData::PerScriptData(JSContext* cx) : scopeList_(cx) {}
+BytecodeEmitter::PerScriptData::PerScriptData(JSContext* cx)
+    : scopeList_(cx), numberList_(cx) {}
 
 BytecodeEmitter::BytecodeEmitter(
     BytecodeEmitter* parent, SharedContext* sc, HandleScript script,
@@ -111,7 +112,6 @@ BytecodeEmitter::BytecodeEmitter(
       fieldInitializers_(fieldInitializers),
       atomIndices(cx->frontendCollectionPool()),
       firstLine(lineNum),
-      numberList(cx),
       resumeOffsetList(cx),
       emitterMode(emitterMode) {
   MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
@@ -953,18 +953,18 @@ bool BytecodeEmitter::emitInternedScopeOp(uint32_t index, JSOp op) {
 
 bool BytecodeEmitter::emitInternedObjectOp(uint32_t index, JSOp op) {
   MOZ_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
-  MOZ_ASSERT(index < objectList.length);
+  MOZ_ASSERT(index < perScriptData().objectList().length);
   return emitIndex32(op, index);
 }
 
 bool BytecodeEmitter::emitObjectOp(ObjectBox* objbox, JSOp op) {
-  return emitInternedObjectOp(objectList.add(objbox), op);
+  return emitInternedObjectOp(perScriptData().objectList().add(objbox), op);
 }
 
 bool BytecodeEmitter::emitObjectPairOp(ObjectBox* objbox1, ObjectBox* objbox2,
                                        JSOp op) {
-  uint32_t index = objectList.add(objbox1);
-  objectList.add(objbox2);
+  uint32_t index = perScriptData().objectList().add(objbox1);
+  perScriptData().objectList().add(objbox2);
   return emitInternedObjectOp(index, op);
 }
 
@@ -1723,7 +1723,7 @@ bool BytecodeEmitter::iteratorResultShape(unsigned* shape) {
     return false;
   }
 
-  *shape = objectList.add(objbox);
+  *shape = perScriptData().objectList().add(objbox);
 
   return true;
 }
@@ -4966,10 +4966,10 @@ bool BytecodeEmitter::emitCopyDataProperties(CopyOption option) {
 }
 
 bool BytecodeEmitter::emitBigIntOp(BigInt* bigint) {
-  if (!numberList.append(BigIntValue(bigint))) {
+  if (!perScriptData().numberList().append(BigIntValue(bigint))) {
     return false;
   }
-  return emitIndex32(JSOP_BIGINT, numberList.length() - 1);
+  return emitIndex32(JSOP_BIGINT, perScriptData().numberList().length() - 1);
 }
 
 bool BytecodeEmitter::emitIterator() {
@@ -8190,7 +8190,7 @@ bool BytecodeEmitter::replaceNewInitWithNewObject(JSObject* obj,
       JSOP_NEWINIT_LENGTH == JSOP_NEWOBJECT_LENGTH,
       "newinit and newobject must have equal length to edit in-place");
 
-  uint32_t index = objectList.add(objbox);
+  uint32_t index = perScriptData().objectList().add(objbox);
   jsbytecode* code = bytecodeSection().code(offset);
 
   MOZ_ASSERT(code[0] == JSOP_NEWINIT);
@@ -9241,7 +9241,8 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::RegExpExpr:
-      if (!emitRegExp(objectList.add(pn->as<RegExpLiteral>().objbox()))) {
+      if (!emitRegExp(perScriptData().objectList().add(
+              pn->as<RegExpLiteral>().objbox()))) {
         return false;
       }
       break;
