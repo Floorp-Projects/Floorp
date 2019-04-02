@@ -227,7 +227,8 @@ void GetEncodedOriginStrings(JSContext* aCx, const nsCString& encoding,
   nsAutoJSString jsStr;
   ASSERT_TRUE(jsStr.init(aCx, encodingVal));
   ASSERT_TRUE(NS_ConvertUTF16toUTF8(jsStr) == encoding)
-      << "Encoding must match expectation.";
+      << "Actual 'encoding' (" << NS_ConvertUTF16toUTF8(jsStr).get()
+      << ") must match expected (" << encoding.get();
 
   JS::RootedValue prioVal(aCx);
   ASSERT_TRUE(JS_GetProperty(aCx, arrayItemObj, "prio", &prioVal));
