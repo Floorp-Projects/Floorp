@@ -135,12 +135,12 @@ bool ForOfLoopControl::emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce) {
 bool ForOfLoopControl::emitIteratorCloseInInnermostScopeWithTryNote(
     BytecodeEmitter* bce,
     CompletionKind completionKind /* = CompletionKind::Normal */) {
-  ptrdiff_t start = bce->offset();
+  ptrdiff_t start = bce->bytecodeSection().offset();
   if (!emitIteratorCloseInScope(bce, *bce->innermostEmitterScope(),
                                 completionKind)) {
     return false;
   }
-  ptrdiff_t end = bce->offset();
+  ptrdiff_t end = bce->bytecodeSection().offset();
   return bce->addTryNote(JSTRY_FOR_OF_ITERCLOSE, 0, start, end);
 }
 
@@ -193,7 +193,7 @@ bool ForOfLoopControl::emitPrepareForNonLocalJumpFromScope(
     return false;
   }
 
-  *tryNoteStart = bce->offset();
+  *tryNoteStart = bce->bytecodeSection().offset();
   if (!emitIteratorCloseInScope(bce, currentScope, CompletionKind::Normal)) {
     //              [stack] UNDEF
     return false;

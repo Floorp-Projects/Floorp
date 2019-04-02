@@ -62,7 +62,7 @@ bool TryEmitter::emitTry() {
   if (!bce_->emit1(JSOP_TRY)) {
     return false;
   }
-  tryStart_ = bce_->offset();
+  tryStart_ = bce_->bytecodeSection().offset();
 
 #ifdef DEBUG
   state_ = State::Try;
@@ -82,8 +82,9 @@ bool TryEmitter::emitTryEnd() {
   }
 
   // Source note points to the jump at the end of the try block.
-  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::Try::EndOfTryJumpOffset,
-                              bce_->offset() - tryStart_ + JSOP_TRY_LENGTH)) {
+  if (!bce_->setSrcNoteOffset(
+          noteIndex_, SrcNote::Try::EndOfTryJumpOffset,
+          bce_->bytecodeSection().offset() - tryStart_ + JSOP_TRY_LENGTH)) {
     return false;
   }
 
