@@ -5655,7 +5655,14 @@ bool jit::ElementAccessIsTypedArray(CompilerConstraintList* constraints,
   }
 
   *arrayType = types->getTypedArrayType(constraints);
-  return *arrayType != Scalar::MaxTypedArrayViewType;
+
+  // FIXME: https://bugzil.la/1536699
+  if (*arrayType == Scalar::MaxTypedArrayViewType ||
+      Scalar::isBigIntType(*arrayType)) {
+    return false;
+  }
+
+  return true;
 }
 
 bool jit::ElementAccessIsPacked(CompilerConstraintList* constraints,
