@@ -7,10 +7,8 @@
 // Test drag and dropping a node before a ::marker pseudo.
 
 const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
-const SHOWANON_PREF = "devtools.inspector.showAllAnonymousContent";
 
 add_task(async function() {
-  await pushPref(SHOWANON_PREF, true);
   const {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Expand #list node");
