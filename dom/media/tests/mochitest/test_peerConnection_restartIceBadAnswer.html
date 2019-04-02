@@ -43,7 +43,7 @@
                                            test._remote_answer,
                                            STABLE)
            .then(() => ok(false, "setRemoteDescription must fail"),
-                 e => is(e.name, "InvalidSessionDescriptionError",
+                 e => is(e.name, "InvalidAccessError",
                          "setRemoteDescription must fail and did"));
          }
       ], 1 // replace after the second PC_LOCAL_GET_ANSWER
