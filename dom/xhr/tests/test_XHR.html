@@ -129,7 +129,6 @@ checkSetResponseType(xhr, "document");
 checkSetResponseType(xhr, "arraybuffer");
 checkSetResponseType(xhr, "blob");
 checkSetResponseType(xhr, "json");
-checkSetResponseType(xhr, "moz-chunked-arraybuffer");
 checkOpenThrows(xhr, "GET", "file_XHR_pass2.txt", false);
 
 // test response (sync, responseType is not changeable)
@@ -141,7 +140,6 @@ checkSetResponseTypeThrows(xhr, "document");
 checkSetResponseTypeThrows(xhr, "arraybuffer");
 checkSetResponseTypeThrows(xhr, "blob");
 checkSetResponseTypeThrows(xhr, "json");
-checkSetResponseTypeThrows(xhr, "moz-chunked-arraybuffer");
 xhr.send(null);
 checkSetResponseTypeThrows(xhr, "document");
 is(xhr.status, 200, "wrong status");

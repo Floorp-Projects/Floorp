@@ -13274,15 +13274,6 @@
     "description": "The total usage amount of the operations of tab audio indicator, mute=0 , unmuted=1, unblockByVisitingTab=2, unblockingByClickingIcon=3",
     "releaseChannelCollection": "opt-out"
   },
-  "MOZ_CHUNKED_ARRAYBUFFER_IN_XHR": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "58",
-    "kind": "boolean",
-    "bug_numbers": [1335365],
-    "releaseChannelCollection": "opt-out",
-    "description": "XMLHttpRequest.responseType set to moz-chunked-arraybuffer"
-  },
   "EXTENSION_INSTALL_PROMPT_RESULT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["aswan@mozilla.com", "andym@mozilla.com"],

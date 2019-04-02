@@ -20,9 +20,6 @@ enum XMLHttpRequestResponseType {
   "document",
   "json",
   "text",
-
-  // Mozilla-specific stuff
-  "moz-chunked-arraybuffer",
 };
 
 /**
