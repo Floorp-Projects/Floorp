@@ -109,20 +109,16 @@ nsTArray<const char*>* gOriginsList = nullptr;
 typedef nsDataHashtable<nsCStringHashKey, size_t> OriginToIndexMap;
 OriginToIndexMap* gOriginToIndexMap;
 
-typedef nsDataHashtable<OriginMetricIDHashKey, nsTArray<nsCString>>
-    IdToOriginsMap;
+typedef nsDataHashtable<nsCStringHashKey, uint32_t> OriginBag;
+typedef nsDataHashtable<OriginMetricIDHashKey, OriginBag> IdToOriginBag;
 
-IdToOriginsMap* gMetricToOriginsMap;
+IdToOriginBag* gMetricToOriginBag;
 
 mozilla::Atomic<bool, mozilla::Relaxed> gInitDone(false);
 
 // Useful for app-encoded data
 typedef nsTArray<Pair<OriginMetricID, nsTArray<nsTArray<bool>>>>
     IdBoolsPairArray;
-
-// The number of prioData elements needed to encode the contents of storage.
-// Will be some whole multiple of gPrioDatasPerMetric.
-static uint32_t gPrioDataCount = 0;
 
 // Prio has a maximum supported number of bools it can encode at a time.
 // This means a single metric may result in several encoded payloads if the
@@ -154,41 +150,79 @@ const char* GetNameForMetricID(OriginMetricID aId) {
   return mozilla::Telemetry::MetricIDToString[static_cast<uint32_t>(aId)];
 }
 
+// Calculates the number of `prioData` elements we'd need if we were asked for
+// an encoded snapshot right now.
+uint32_t PrioDataCount(const StaticMutexAutoLock& lock) {
+  uint32_t count = 0;
+  auto iter = gMetricToOriginBag->ConstIter();
+  for (; !iter.Done(); iter.Next()) {
+    auto originIt = iter.Data().ConstIter();
+    uint32_t maxOriginCount = 0;
+    for (; !originIt.Done(); originIt.Next()) {
+      maxOriginCount = std::max(maxOriginCount, originIt.Data());
+    }
+    count += gPrioDatasPerMetric * maxOriginCount;
+  }
+  return count;
+}
+
+// Takes the storage and turns it into bool arrays for Prio to encode, turning
+// { metric1: [origin1, origin2, ...], ...}
+// into
+// [(metric1, [[shard1], [shard2], ...]), ...]
+// Note: if an origin is present multiple times for a given metric, we must
+// generate multiple (id, boolvectors) pairs so that they are all reported.
+// Meaning
+// { metric1: [origin1, origin2, origin2] }
+// must turn into (with a pretend gNumBooleans of 1)
+// [(metric1, [[1], [1]]), (metric1, [[0], [1]])]
 nsresult AppEncodeTo(const StaticMutexAutoLock& lock,
                      IdBoolsPairArray& aResult) {
-  auto iter = gMetricToOriginsMap->ConstIter();
+  auto iter = gMetricToOriginBag->ConstIter();
   for (; !iter.Done(); iter.Next()) {
     OriginMetricID id = iter.Key();
+    const OriginBag& bag = iter.Data();
 
-    // Fill in the result bool vectors with `false`s.
-    nsTArray<nsTArray<bool>> metricData(gPrioDatasPerMetric);
-    metricData.SetLength(gPrioDatasPerMetric);
-    for (size_t i = 0; i < metricData.Length() - 1; ++i) {
-      metricData[i].SetLength(PrioEncoder::gNumBooleans);
-      for (auto& metricDatum : metricData[i]) {
+    uint32_t generation = 1;
+    uint32_t maxGeneration = 1;
+    do {
+      // Fill in the result bool vectors with `false`s.
+      nsTArray<nsTArray<bool>> metricData(gPrioDatasPerMetric);
+      metricData.SetLength(gPrioDatasPerMetric);
+      for (size_t i = 0; i < metricData.Length() - 1; ++i) {
+        metricData[i].SetLength(PrioEncoder::gNumBooleans);
+        for (auto& metricDatum : metricData[i]) {
+          metricDatum = false;
+        }
+      }
+      auto& lastArray = metricData[metricData.Length() - 1];
+      lastArray.SetLength(gOriginsList->Length() % PrioEncoder::gNumBooleans);
+      for (auto& metricDatum : lastArray) {
         metricDatum = false;
       }
-    }
-    auto& lastArray = metricData[metricData.Length() - 1];
-    lastArray.SetLength(gOriginsList->Length() % PrioEncoder::gNumBooleans);
-    for (auto& metricDatum : lastArray) {
-      metricDatum = false;
-    }
 
-    for (const auto& origin : iter.Data()) {
-      size_t index;
-      if (!gOriginToIndexMap->Get(origin, &index)) {
-        return NS_ERROR_FAILURE;
+      auto originIt = bag.ConstIter();
+      for (; !originIt.Done(); originIt.Next()) {
+        uint32_t originCount = originIt.Data();
+        if (originCount >= generation) {
+          maxGeneration = std::max(maxGeneration, originCount);
+
+          const nsACString& origin = originIt.Key();
+          size_t index;
+          if (!gOriginToIndexMap->Get(origin, &index)) {
+            return NS_ERROR_FAILURE;
+          }
+          MOZ_ASSERT(index < gOriginsList->Length());
+          size_t shardIndex =
+              ceil(static_cast<double>(index) / PrioEncoder::gNumBooleans);
+          MOZ_ASSERT(shardIndex < metricData.Length());
+          MOZ_ASSERT(index % PrioEncoder::gNumBooleans <
+                     metricData[shardIndex].Length());
+          metricData[shardIndex][index % PrioEncoder::gNumBooleans] = true;
+        }
       }
-      MOZ_ASSERT(index < gOriginsList->Length());
-      size_t shardIndex =
-          ceil(static_cast<double>(index) / PrioEncoder::gNumBooleans);
-      MOZ_ASSERT(shardIndex < metricData.Length());
-      MOZ_ASSERT(index % PrioEncoder::gNumBooleans <
-                 metricData[shardIndex].Length());
-      metricData[shardIndex][index % PrioEncoder::gNumBooleans] = true;
-    }
-    aResult.AppendElement(MakePair(id, metricData));
+      aResult.AppendElement(MakePair(id, metricData));
+    } while (generation < maxGeneration);
   }
   return NS_OK;
 }
@@ -232,7 +266,7 @@ void TelemetryOrigin::InitializeGlobalState() {
   // Add the meta-origin for tracking recordings to untracked origins.
   gOriginToIndexMap->Put(kUnknownOrigin, gOriginsList->Length());
 
-  gMetricToOriginsMap = new IdToOriginsMap();
+  gMetricToOriginBag = new IdToOriginBag();
 
   // This map shouldn't change at runtime, so make debug builds complain
   // if it tries.
@@ -260,8 +294,8 @@ void TelemetryOrigin::DeInitializeGlobalState() {
   delete gOriginToIndexMap;
   gOriginToIndexMap = nullptr;
 
-  delete gMetricToOriginsMap;
-  gMetricToOriginsMap = nullptr;
+  delete gMetricToOriginBag;
+  gMetricToOriginBag = nullptr;
 
   gInitDone = false;
 }
@@ -272,47 +306,41 @@ nsresult TelemetryOrigin::RecordOrigin(OriginMetricID aId,
     return NS_ERROR_FAILURE;
   }
 
-  StaticMutexAutoLock locker(gTelemetryOriginMutex);
+  uint32_t prioDataCount;
+  {
+    StaticMutexAutoLock locker(gTelemetryOriginMutex);
 
-  // Common Telemetry error-handling practices for recording functions:
-  // only illegal calls return errors whereas merely incorrect ones are mutely
-  // ignored.
-  if (!gInitDone) {
-    return NS_OK;
-  }
-
-  nsCString origin(aOrigin);
-  if (!gOriginToIndexMap->Contains(aOrigin)) {
-    // Only record one unknown origin per metric per snapshot.
-    // (otherwise we may get swamped and blow our data budget.)
-    if (gMetricToOriginsMap->Contains(aId) &&
-        gMetricToOriginsMap->GetOrInsert(aId).Contains(kUnknownOrigin)) {
+    // Common Telemetry error-handling practices for recording functions:
+    // only illegal calls return errors whereas merely incorrect ones are mutely
+    // ignored.
+    if (!gInitDone) {
       return NS_OK;
     }
-    origin = kUnknownOrigin;
+
+    nsCString origin(aOrigin);
+    if (!gOriginToIndexMap->Contains(aOrigin)) {
+      // Only record one unknown origin per metric per snapshot.
+      // (otherwise we may get swamped and blow our data budget.)
+      if (gMetricToOriginBag->Contains(aId) &&
+          gMetricToOriginBag->GetOrInsert(aId).Contains(kUnknownOrigin)) {
+        return NS_OK;
+      }
+      origin = kUnknownOrigin;
+    }
+
+    auto& originBag = gMetricToOriginBag->GetOrInsert(aId);
+    originBag.GetOrInsert(origin)++;
+
+    prioDataCount = PrioDataCount(locker);
   }
-
-  if (!gMetricToOriginsMap->Contains(aId)) {
-    // If we haven't recorded anything for this metric yet, we're adding some
-    // prioDatas.
-    gPrioDataCount += gPrioDatasPerMetric;
-  }
-
-  auto& originArray = gMetricToOriginsMap->GetOrInsert(aId);
-
-  if (originArray.Contains(origin)) {
-    // If we've already recorded this metric for this origin, then we're going
-    // to need more prioDatas to encode that it happened again.
-    gPrioDataCount += gPrioDatasPerMetric;
-  }
-
-  originArray.AppendElement(origin);
 
   static uint32_t sPrioPingLimit =
       mozilla::Preferences::GetUint("toolkit.telemetry.prioping.dataLimit", 10);
-  if (gPrioDataCount >= sPrioPingLimit) {
+  if (prioDataCount >= sPrioPingLimit) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
+      // Ensure we don't notify while holding the lock in case of synchronous
+      // dispatch. May deadlock ourselves if we then trigger a snapshot.
       os->NotifyObservers(nullptr, "origin-telemetry-storage-limit-reached",
                           nullptr);
     }
@@ -332,7 +360,7 @@ nsresult TelemetryOrigin::GetOriginSnapshot(bool aClear, JSContext* aCx,
   }
 
   // Step 1: Grab the lock, copy into stack-local storage, optionally clear.
-  IdToOriginsMap copy;
+  IdToOriginBag copy;
   {
     StaticMutexAutoLock locker(gTelemetryOriginMutex);
 
@@ -342,12 +370,15 @@ nsresult TelemetryOrigin::GetOriginSnapshot(bool aClear, JSContext* aCx,
       // APIs. And replaying any interleaving recording sounds like too much
       // squeeze for not enough juice.
 
-      gMetricToOriginsMap->SwapElements(copy);
-      gPrioDataCount = 0;
+      gMetricToOriginBag->SwapElements(copy);
     } else {
-      auto iter = gMetricToOriginsMap->ConstIter();
+      auto iter = gMetricToOriginBag->ConstIter();
       for (; !iter.Done(); iter.Next()) {
-        copy.Put(iter.Key(), iter.Data());
+        OriginBag& bag = copy.GetOrInsert(iter.Key());
+        auto originIt = iter.Data().ConstIter();
+        for (; !originIt.Done(); originIt.Next()) {
+          bag.Put(originIt.Key(), originIt.Data());
+        }
       }
     }
   }
@@ -359,24 +390,22 @@ nsresult TelemetryOrigin::GetOriginSnapshot(bool aClear, JSContext* aCx,
   }
   aResult.setObject(*rootObj);
   for (auto iter = copy.ConstIter(); !iter.Done(); iter.Next()) {
-    const auto& origins = iter.Data();
-    JS::RootedObject originsArrayObj(aCx,
-                                     JS_NewArrayObject(aCx, origins.Length()));
-    if (NS_WARN_IF(!originsArrayObj)) {
+    JS::RootedObject originsObj(aCx, JS_NewPlainObject(aCx));
+    if (NS_WARN_IF(!originsObj)) {
       return NS_ERROR_FAILURE;
     }
     if (!JS_DefineProperty(aCx, rootObj, GetNameForMetricID(iter.Key()),
-                           originsArrayObj, JSPROP_ENUMERATE)) {
+                           originsObj, JSPROP_ENUMERATE)) {
       NS_WARNING("Failed to define property in origin snapshot.");
       return NS_ERROR_FAILURE;
     }
 
-    for (uint32_t i = 0; i < origins.Length(); ++i) {
-      JS::RootedValue origin(aCx);
-      origin.setString(ToJSString(aCx, origins[i]));
-      if (!JS_DefineElement(aCx, originsArrayObj, i, origin,
-                            JSPROP_ENUMERATE)) {
-        NS_WARNING("Failed to define element in origin snapshot array.");
+    auto originIt = iter.Data().ConstIter();
+    for (; !originIt.Done(); originIt.Next()) {
+      if (!JS_DefineProperty(aCx, originsObj,
+                             nsPromiseFlatCString(originIt.Key()).get(),
+                             originIt.Data(), JSPROP_ENUMERATE)) {
+        NS_WARNING("Failed to define origin and count in snapshot.");
         return NS_ERROR_FAILURE;
       }
     }
@@ -412,7 +441,7 @@ nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
       // APIs. And replaying any interleaving recording sounds like too much
       // squeeze for not enough juice.
 
-      gMetricToOriginsMap->Clear();
+      gMetricToOriginBag->Clear();
     }
   }
 
@@ -517,7 +546,7 @@ void TelemetryOrigin::ClearOrigins() {
     return;
   }
 
-  gMetricToOriginsMap->Clear();
+  gMetricToOriginBag->Clear();
 }
 
 size_t TelemetryOrigin::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
@@ -528,14 +557,11 @@ size_t TelemetryOrigin::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
     return 0;
   }
 
-  n += gMetricToOriginsMap->ShallowSizeOfIncludingThis(aMallocSizeOf);
-  auto iter = gMetricToOriginsMap->ConstIter();
+  n += gMetricToOriginBag->ShallowSizeOfIncludingThis(aMallocSizeOf);
+  auto iter = gMetricToOriginBag->ConstIter();
   for (; !iter.Done(); iter.Next()) {
+    // The string hashkey and count should both be contained by the hashtable.
     n += iter.Data().ShallowSizeOfIncludingThis(aMallocSizeOf);
-    for (const auto& origin : iter.Data()) {
-      // nsTArray's shallow size should include the strings' `this`
-      n += origin.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-    }
   }
 
   // The string hashkey and ID should both be contained within the hashtable.
