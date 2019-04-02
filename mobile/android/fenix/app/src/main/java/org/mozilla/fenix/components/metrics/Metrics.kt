@@ -3,6 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.fenix.components.metrics
 
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Fact
+import mozilla.components.support.base.facts.FactProcessor
+import mozilla.components.support.base.facts.Facts
 import org.mozilla.fenix.BuildConfig
 
 sealed class Event {
@@ -70,9 +74,25 @@ sealed class Event {
             get() = mapOf("engine" to engine)
     }
 
+    object FindInPageOpened: Event()
+    object FindInPageClosed: Event()
+    object FindInPageNext: Event()
+    object FindInPagePrevious: Event()
+    object FindInPageSearchCommitted: Event()
+
+
     open val extras: Map<String, String>?
         get() = null
 }
+
+private fun Fact.toEvent(): Event? = when(Pair(component, item)){
+    Pair(Component.FEATURE_FINDINPAGE, "previous") -> Event.FindInPagePrevious
+    Pair(Component.FEATURE_FINDINPAGE, "next") -> Event.FindInPageNext
+    Pair(Component.FEATURE_FINDINPAGE, "close") -> Event.FindInPageClosed
+    Pair(Component.FEATURE_FINDINPAGE, "input") -> Event.FindInPageSearchCommitted
+    else -> null
+}
+
 
 interface MetricsService {
     fun start()
@@ -82,6 +102,16 @@ interface MetricsService {
 
 class Metrics(private val services: List<MetricsService>, private val isTelemetryEnabled: () -> Boolean) {
     private var initialized = false
+
+    init {
+        Facts.registerProcessor(object : FactProcessor {
+            override fun process(fact: Fact) {
+                fact.toEvent()?.also {
+                    track(it)
+                }
+            }
+        })
+    }
 
     fun start() {
         if (BuildConfig.TELEMETRY && !isTelemetryEnabled.invoke() || initialized) { return }

@@ -374,7 +374,10 @@ class BrowserFragment : Fragment(), BackHandler {
                 Navigation.findNavController(view!!).navigate(directions)
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
             }
-            ToolbarMenu.Item.FindInPage -> FindInPageIntegration.launch?.invoke()
+            ToolbarMenu.Item.FindInPage -> {
+                FindInPageIntegration.launch?.invoke()
+                requireComponents.analytics.metrics.track(Event.FindInPageOpened)
+            }
             ToolbarMenu.Item.ReportIssue -> requireComponents.core.sessionManager
                 .selectedSession?.url?.apply {
                 val reportUrl = String.format(REPORT_SITE_ISSUE_URL, this)
