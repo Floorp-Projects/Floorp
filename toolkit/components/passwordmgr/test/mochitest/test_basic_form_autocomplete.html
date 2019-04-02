@@ -496,6 +496,7 @@ add_task(async function test_form1_check_only_entry_remaining() {
   /* test 56 */
   // Delete the only remaining entry, "testuser2"
   synthesizeKey("KEY_ArrowDown");
+  let storageChanged = promiseStorageChanged(["removeLogin", "removeLogin", "addLogin"]);
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkACForm("", "");
   let numLogins = LoginManager.countLogins("https://example.com", "https://autocomplete:8888", null);
@@ -503,11 +504,8 @@ add_task(async function test_form1_check_only_entry_remaining() {
 
   // remove the logins for the previous tests
   setupScript.sendSyncMessage("removeLogin", "login0");
-  setupScript.sendSyncMessage("removeLogin", "login1");
-  setupScript.sendSyncMessage("removeLogin", "login2");
-  setupScript.sendSyncMessage("removeLogin", "login3");
-  setupScript.sendSyncMessage("removeLogin", "login4");
   setupScript.sendSyncMessage("addLogin", "login5");
+  await storageChanged;
 });
 
 /* Tests for single-user forms for ignoring autocomplete=off */
@@ -637,12 +635,16 @@ add_task(async function test_form6_changeUsername() {
   checkACForm("singleuser5X", "singlepass5");
   uname.focus();
 
+  let storageChanged = promiseStorageChanged(["removeLogin"]);
   setupScript.sendSyncMessage("removeLogin", "login5");
+  await storageChanged;
 });
 
 add_task(async function test_form7() {
+  let storageChanged = promiseStorageChanged(["addLogin", "addLogin"]);
   setupScript.sendSyncMessage("addLogin", "login6A");
   setupScript.sendSyncMessage("addLogin", "login6B");
+  await storageChanged;
   await setFormAndWaitForFieldFilled(`
     <!-- This form will be manipulated to insert a different username field. -->
     <form id="form7" action="https://autocomplete3" onsubmit="return false;">
@@ -666,14 +668,20 @@ add_task(async function test_form7() {
   // Delete login6B. It was created just to prevent filling in a login
   // automatically, removing it makes it more likely that we'll catch a
   // future regression with form filling here.
+  storageChanged = promiseStorageChanged(["removeLogin"]);
   setupScript.sendSyncMessage("removeLogin", "login6B");
+  await storageChanged;
 });
 
 add_task(async function test_form7_2() {
   restoreForm();
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
-  await shownPromise;
+  let results = await shownPromise;
+  checkAutoCompleteResults(results,
+                           ["form7user1"],
+                           "example.com",
+                           "Check dropdown is showing all logins while field is blank");
 
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
@@ -682,16 +690,21 @@ add_task(async function test_form7_2() {
   // The form changes, so we expect the old username field to get the
   // selected autocomplete value, but neither the new username field nor
   // the password field should have any values filled in.
-  await spinEventLoop();
+  await SimpleTest.promiseWaitForCondition(() => uname.value == "form7user1",
+                                           "Wait for username to get filled");
   checkACForm("form7user1", "");
   is($_(7, "uname2").value, "", "Verifying empty uname2");
   restoreForm(); // clear field, so reloading test doesn't fail
 
+  let storageChanged = promiseStorageChanged(["removeLogin"]);
   setupScript.sendSyncMessage("removeLogin", "login6A");
+  await storageChanged;
 });
 
 add_task(async function test_form8() {
+  let storageChanged = promiseStorageChanged(["addLogin"]);
   setupScript.sendSyncMessage("addLogin", "login7");
+  await storageChanged;
   await setFormAndWaitForFieldFilled(`
     <!-- This form will be manipulated to insert a different username field. -->
     <form id="form7" action="https://autocomplete3" onsubmit="return false;">
@@ -725,9 +738,11 @@ add_task(async function test_form8_2() {
 
 add_task(async function test_form8_3() {
   checkACForm("", "");
+  let storageChanged = promiseStorageChanged(["removeLogin", "addLogin", "addLogin"]);
   setupScript.sendSyncMessage("removeLogin", "login7");
   setupScript.sendSyncMessage("addLogin", "login8A");
   setupScript.sendSyncMessage("addLogin", "login8B");
+  await storageChanged;
 });
 
 add_task(async function test_form9_filtering() {
@@ -740,19 +755,31 @@ add_task(async function test_form9_filtering() {
     </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: ""});
 
   // Turn our attention to form9 to test the dropdown - bug 497541
+  let shownPromise = promiseACShown();
   uname = $_(9, "uname");
   pword = $_(9, "pword");
   uname.focus();
-  let shownPromise = promiseACShown();
+  let results = await shownPromise;
+  checkAutoCompleteResults(results,
+                           ["form9userAAB", "form9userAB"],
+                           "example.com",
+                           "Check dropdown is showing all logins while field is blank");
+  synthesizeKey("KEY_Escape"); // Need to close the popup so we can get another popupshown after sending the string below.
+
+  shownPromise = promiseACShown();
   sendString("form9userAB");
-  await shownPromise;
+  results = await shownPromise;
+  checkAutoCompleteResults(results,
+                           ["form9userAB"],
+                           "example.com",
+                           "Check dropdown is showing login with only one 'A'");
 
   checkACForm("form9userAB", "");
   uname.focus();
   synthesizeKey("KEY_ArrowLeft");
   shownPromise = promiseACShown();
   synthesizeKey("A", {shiftKey: true});
-  let results = await shownPromise;
+  results = await shownPromise;
 
   checkACForm("form9userAAB", "");
   checkAutoCompleteResults(results, ["form9userAAB"], "example.com", "Check dropdown is updated after inserting 'A'");
@@ -766,7 +793,9 @@ add_task(async function test_form9_autocomplete_cache() {
   // Note that this addLogin call will only be seen by the autocomplete
   // attempt for the synthesizeKey if we do not successfully cache the
   // autocomplete results.
+  let storageChanged = promiseStorageChanged(["addLogin"]);
   setupScript.sendSyncMessage("addLogin", "login8C");
+  await storageChanged;
   uname.focus();
   let promise1 = notifyMenuChanged(1);
   sendString("z");
@@ -781,10 +810,12 @@ add_task(async function test_form9_autocomplete_cache() {
 });
 
 add_task(async function test_form11_formless() {
+  let storageChanged = promiseStorageChanged(["removeLogin", "removeLogin", "removeLogin", "addLogin"]);
   setupScript.sendSyncMessage("removeLogin", "login8A");
   setupScript.sendSyncMessage("removeLogin", "login8B");
   setupScript.sendSyncMessage("removeLogin", "login8C");
   setupScript.sendSyncMessage("addLogin", "login11");
+  await storageChanged;
   await setFormAndWaitForFieldFilled(`
     <!-- tests <form>-less autocomplete -->
     <div id="form11">
@@ -836,11 +867,15 @@ add_task(async function test_form11_open_on_trusted_focus() {
   synthesizeKey("KEY_Enter");
   await processedPromise;
   checkACForm("testuser11", "testpass11");
+  let storageChanged = promiseStorageChanged(["removeLogin"]);
   setupScript.sendSyncMessage("removeLogin", "login11");
+  await storageChanged;
 });
 
 add_task(async function test_form12_recipes() {
+  let storageChanged = promiseStorageChanged(["addLogin"]);
   setupScript.sendSyncMessage("addLogin", "login10");
+  await storageChanged;
   await setFormAndWaitForFieldFilled(`
     <!-- test for onUsernameInput recipe testing -->
     <form id="form12" action="https://autocomplete7" onsubmit="return false;">
