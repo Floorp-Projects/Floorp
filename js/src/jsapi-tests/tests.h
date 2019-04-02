@@ -20,6 +20,7 @@
 #include "js/AllocPolicy.h"
 #include "js/CharacterEncoding.h"
 #include "js/Equality.h"  // JS::SameValue
+#include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "js/Vector.h"
 #include "vm/JSContext.h"
 
@@ -157,6 +158,26 @@ class JSAPITest {
 
   JSAPITestString toSource(bool v) {
     return JSAPITestString(v ? "true" : "false");
+  }
+
+  JSAPITestString toSource(JS::RegExpFlags flags) {
+    JSAPITestString str;
+    if (flags.global()) {
+      str += "g";
+    }
+    if (flags.ignoreCase()) {
+      str += "i";
+    }
+    if (flags.multiline()) {
+      str += "m";
+    }
+    if (flags.unicode()) {
+      str += "u";
+    }
+    if (flags.sticky()) {
+      str += "y";
+    }
+    return str;
   }
 
   JSAPITestString toSource(JSAtom* v) {

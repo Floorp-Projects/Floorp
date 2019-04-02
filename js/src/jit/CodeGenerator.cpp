@@ -44,6 +44,7 @@
 #include "jit/SharedICHelpers.h"
 #include "jit/StackSlotAllocator.h"
 #include "jit/VMFunctions.h"
+#include "js/RegExpFlags.h"  // JS::RegExpFlag
 #include "util/Unicode.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
@@ -1943,7 +1944,7 @@ static bool PrepareAndExecuteRegExp(
 
     masm.branchTest32(Assembler::Zero,
                       Address(temp1, RegExpShared::offsetOfFlags()),
-                      Imm32(UnicodeFlag), &done);
+                      Imm32(int32_t(JS::RegExpFlag::Unicode)), &done);
 
     // If input is latin1, there should not be surrogate pair.
     masm.branchLatin1String(input, &done);
