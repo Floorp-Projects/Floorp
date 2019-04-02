@@ -16,7 +16,13 @@ function ReadOnlyEditor(container, node) {
 
   if (node.isPseudoElement) {
     this.tag.classList.add("theme-fg-color3");
-    this.tag.textContent = node.isBeforePseudoElement ? "::before" : "::after";
+    if (node.isMarkerPseudoElement) {
+      this.tag.textContent = "::marker";
+    } else if (node.isBeforePseudoElement) {
+      this.tag.textContent = "::before";
+    } else if (node.isAfterPseudoElement) {
+      this.tag.textContent = "::after";
+    }
   } else if (node.nodeType == nodeConstants.DOCUMENT_TYPE_NODE) {
     this.elt.classList.add("comment", "doctype");
     this.tag.textContent = node.doctypeString;
