@@ -215,7 +215,7 @@ function run_test() {
   // Test for a content-type which isn't a field-value
   try {
     srv.registerContentType("foo", "bar\nbaz");
-    throw "this server throws on content-types which aren't field-values";
+    throw new Error("this server throws on content-types which aren't field-values");
   } catch (e) {
     isException(e, Cr.NS_ERROR_INVALID_ARG);
   }
