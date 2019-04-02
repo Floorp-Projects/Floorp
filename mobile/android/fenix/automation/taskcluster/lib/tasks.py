@@ -130,7 +130,7 @@ class TaskBuilder(object):
     def _craft_branch_routes(self, variant):
         routes = []
 
-        if self.repo_url == _OFFICIAL_REPO_URL and self.branch == 'master':
+        if self.repo_url == _OFFICIAL_REPO_URL and self.branch == 'refs/heads/master':
             architecture, build_type, product = \
                 _get_architecture_and_build_type_and_product_from_variant(variant)
             product = convert_camel_case_into_kebab_case(product)
