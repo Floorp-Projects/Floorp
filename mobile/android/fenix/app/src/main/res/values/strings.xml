@@ -177,8 +177,6 @@
     <string name="quick_action_bookmark">Bookmark</string>
     <!-- Option in Quick Action Sheet in the browser to put the the current page in reader mode -->
     <string name="quick_action_read">Read</string>
-    <!-- Content description (not visible, for screen readers etc.): Quick action sheet-->
-    <string name="quick_action_sheet">Quick action sheet</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle -->
     <string name="quick_action_sheet_handle">Quick actions</string>
 

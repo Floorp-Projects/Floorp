@@ -9,7 +9,6 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:contentDescription="@string/quick_action_sheet"
     android:background="?attr/toolbarColor">
 
     <androidx.appcompat.widget.AppCompatImageButton
