@@ -34,7 +34,6 @@
 #include "frontend/Parser.h"
 #include "frontend/ReservedWords.h"
 #include "js/CharacterEncoding.h"
-#include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "js/UniquePtr.h"
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
@@ -57,8 +56,6 @@ using mozilla::PointerRangeSize;
 using mozilla::Utf8Unit;
 
 using JS::ReadOnlyCompileOptions;
-using JS::RegExpFlag;
-using JS::RegExpFlags;
 
 struct ReservedWordInfo {
   const char* chars;  // C string with reserved word text
@@ -2322,34 +2319,34 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::regexpLiteral(
   } while (true);
 
   int32_t unit;
-  RegExpFlags reflags = RegExpFlag::NoFlags;
+  RegExpFlag reflags = NoFlags;
   while (true) {
-    uint8_t flag;
+    RegExpFlag flag;
     unit = getCodeUnit();
     if (unit == 'g') {
-      flag = RegExpFlag::Global;
+      flag = GlobalFlag;
     } else if (unit == 'i') {
-      flag = RegExpFlag::IgnoreCase;
+      flag = IgnoreCaseFlag;
     } else if (unit == 'm') {
-      flag = RegExpFlag::Multiline;
-    } else if (unit == 'u') {
-      flag = RegExpFlag::Unicode;
+      flag = MultilineFlag;
     } else if (unit == 'y') {
-      flag = RegExpFlag::Sticky;
+      flag = StickyFlag;
+    } else if (unit == 'u') {
+      flag = UnicodeFlag;
     } else if (IsAsciiAlpha(unit)) {
-      flag = RegExpFlag::NoFlags;
+      flag = NoFlags;
     } else {
       break;
     }
 
-    if ((reflags & flag) || flag == RegExpFlag::NoFlags) {
+    if ((reflags & flag) || flag == NoFlags) {
       ungetCodeUnit(unit);
       char buf[2] = {char(unit), '\0'};
       error(JSMSG_BAD_REGEXP_FLAG, buf);
       return badToken();
     }
 
-    reflags |= flag;
+    reflags = RegExpFlag(reflags | flag);
   }
   ungetCodeUnit(unit);
 
