@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/RegExp.h"
+#include "js/RegExpFlags.h"
 #include "jsapi-tests/tests.h"
 
 BEGIN_TEST(testObjectIsRegExp) {
@@ -30,16 +31,19 @@ BEGIN_TEST(testGetRegExpFlags) {
 
   EVAL("/foopy/", &val);
   obj = val.toObjectOrNull();
-  CHECK_EQUAL(JS::GetRegExpFlags(cx, obj), 0u);
+  CHECK_EQUAL(JS::GetRegExpFlags(cx, obj),
+              JS::RegExpFlags(JS::RegExpFlag::NoFlags));
 
   EVAL("/foopy/g", &val);
   obj = val.toObjectOrNull();
-  CHECK(JS::GetRegExpFlags(cx, obj) == JS::RegExpFlags::Global);
+  CHECK_EQUAL(JS::GetRegExpFlags(cx, obj),
+              JS::RegExpFlags(JS::RegExpFlag::Global));
 
   EVAL("/foopy/gi", &val);
   obj = val.toObjectOrNull();
-  CHECK(JS::GetRegExpFlags(cx, obj) ==
-        (JS::RegExpFlags::Global | JS::RegExpFlags::IgnoreCase));
+  CHECK_EQUAL(
+      JS::GetRegExpFlags(cx, obj),
+      JS::RegExpFlags(JS::RegExpFlag::Global | JS::RegExpFlag::IgnoreCase));
 
   return true;
 }

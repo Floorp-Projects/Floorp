@@ -42,6 +42,7 @@
 #include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
+#include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "vm/BytecodeUtil.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -70,6 +71,7 @@ using mozilla::Utf8Unit;
 
 using JS::AutoGCRooter;
 using JS::ReadOnlyCompileOptions;
+using JS::RegExpFlags;
 
 namespace js {
 namespace frontend {
@@ -9257,7 +9259,7 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
 
   // Create the regexp and check its syntax.
   const auto& chars = tokenStream.getCharBuffer();
-  RegExpFlag flags = anyChars.currentToken().regExpFlags();
+  RegExpFlags flags = anyChars.currentToken().regExpFlags();
 
   Rooted<RegExpObject*> reobj(cx_);
   reobj = RegExpObject::create(cx_, chars.begin(), chars.length(), flags,
@@ -9276,13 +9278,13 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
 
   // Only check the regexp's syntax, but don't create a regexp object.
   const auto& chars = tokenStream.getCharBuffer();
-  RegExpFlag flags = anyChars.currentToken().regExpFlags();
+  RegExpFlags flags = anyChars.currentToken().regExpFlags();
 
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
   {
     LifoAllocScope scopeAlloc(&alloc_);
     if (!js::irregexp::ParsePatternSyntax(anyChars, scopeAlloc.alloc(), source,
-                                          flags & UnicodeFlag)) {
+                                          flags.unicode())) {
       return null();
     }
   }
