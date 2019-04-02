@@ -71,7 +71,7 @@ with Files("ConvolverNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
 with Files("Coordinates.webidl"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("Crypto.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Security")
@@ -113,7 +113,7 @@ with Files("FormData.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("Geolocation.webidl"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("GainNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
@@ -236,7 +236,7 @@ with Files("PopStateEvent.webidl*"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
 with Files("Position*"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("ProfileTimelineMarker.webidl"):
     BUG_COMPONENT = ("DevTools", "Performance Tools (Profiler/Timeline)")
