@@ -19,7 +19,7 @@ _OFFICIAL_REPO_URL = 'https://github.com/mozilla-mobile/fenix'
 class TaskBuilder(object):
     def __init__(
         self, task_id, repo_url, branch, commit, owner, source, scheduler_id, date_string,
-        tasks_priority='lowest'
+        tasks_priority='lowest', trust_level=1
     ):
         self.task_id = task_id
         self.repo_url = repo_url
@@ -30,6 +30,7 @@ class TaskBuilder(object):
         self.scheduler_id = scheduler_id
         self.tasks_priority = tasks_priority
         self.date = arrow.get(date_string)
+        self.trust_level = trust_level
 
     def craft_assemble_release_task(self, apks, is_staging=False):
         artifacts = {
@@ -82,7 +83,6 @@ class TaskBuilder(object):
             ],
             artifacts=artifacts,
             routes=routes,
-            is_staging=is_staging,
             treeherder={
                 'jobKind': 'build',
                 'machine': {
@@ -231,7 +231,7 @@ class TaskBuilder(object):
 
     def _craft_build_ish_task(
         self, name, description, command, dependencies=None, artifacts=None, scopes=None,
-        routes=None, is_staging=True, treeherder=None
+        routes=None, treeherder=None
     ):
         dependencies = [] if dependencies is None else dependencies
         artifacts = {} if artifacts is None else artifacts
@@ -269,7 +269,7 @@ class TaskBuilder(object):
         }
 
         return self._craft_default_task_definition(
-            'mobile-1-b-fenix' if is_staging else 'mobile-3-b-fenix',
+            'mobile-{}-b-fenix'.format(self.trust_level),
             'aws-provisioner-v1',
             dependencies,
             routes,
