@@ -400,11 +400,6 @@ void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
         branchTest32(Assembler::Signed, dest.gpr(), dest.gpr(), fail);
       }
       break;
-    case Scalar::BigInt64:
-    case Scalar::BigUint64:
-      // FIXME: https://bugzil.la/1536702
-      jump(fail);
-      break;
     case Scalar::Float32:
       loadFloat32(src, dest.fpu());
       canonicalizeFloat(dest.fpu());
@@ -486,12 +481,6 @@ void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
       loadFromTypedArray(arrayType, src, AnyRegister(fpscratch),
                          dest.scratchReg(), nullptr);
       boxDouble(fpscratch, dest, fpscratch);
-      break;
-    }
-    // FIXME: https://bugzil.la/1536702
-    case Scalar::BigInt64:
-    case Scalar::BigUint64: {
-      jump(fail);
       break;
     }
     default:

@@ -16,7 +16,6 @@
 #include "selfhosted.out.h"
 
 #include "builtin/Array.h"
-#include "builtin/BigInt.h"
 #include "builtin/intl/Collator.h"
 #include "builtin/intl/DateTimeFormat.h"
 #include "builtin/intl/IntlObject.h"
@@ -46,7 +45,6 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
-#include "vm/BigIntType.h"
 #include "vm/Compression.h"
 #include "vm/GeneratorObject.h"
 #include "vm/Interpreter.h"
@@ -1083,10 +1081,6 @@ static bool intrinsic_GetTypedArrayKind(JSContext* cx, unsigned argc,
                 "TYPEDARRAY_KIND_FLOAT64 doesn't match the scalar type");
   static_assert(TYPEDARRAY_KIND_UINT8CLAMPED == Scalar::Type::Uint8Clamped,
                 "TYPEDARRAY_KIND_UINT8CLAMPED doesn't match the scalar type");
-  static_assert(TYPEDARRAY_KIND_BIGINT64 == Scalar::Type::BigInt64,
-                "TYPEDARRAY_KIND_BIGINT64 doesn't match the scalar type");
-  static_assert(TYPEDARRAY_KIND_BIGUINT64 == Scalar::Type::BigUint64,
-                "TYPEDARRAY_KIND_BIGUINT64 doesn't match the scalar type");
 
   JSObject* obj = &args[0].toObject();
   Scalar::Type type = JS_GetArrayBufferViewType(obj);
@@ -1457,14 +1451,6 @@ struct DisjointElements {
         CopyValues(dest, src.cast<uint8_clamped*>(), count);
         return;
 
-      case Scalar::BigInt64:
-        CopyValues(dest, src.cast<int64_t*>(), count);
-        return;
-
-      case Scalar::BigUint64:
-        CopyValues(dest, src.cast<uint64_t*>(), count);
-        return;
-
       default:
         MOZ_CRASH("NonoverlappingSet with bogus from-type");
     }
@@ -1656,10 +1642,6 @@ static bool IsTypedArrayBitwiseSlice(Scalar::Type sourceType,
 
     case Scalar::Float64:
       return targetType == Scalar::Float64;
-
-    case Scalar::BigInt64:
-    case Scalar::BigUint64:
-      return targetType == Scalar::BigInt64 || targetType == Scalar::BigUint64;
 
     default:
       MOZ_CRASH("IsTypedArrayBitwiseSlice with a bogus typed array type");
@@ -2363,17 +2345,6 @@ static bool intrinsic_CopyDataPropertiesOrGetOwnKeys(JSContext* cx,
       cx, from, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, args.rval());
 }
 
-static bool intrinsic_ToBigInt(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  BigInt* res = ToBigInt(cx, args[0]);
-  if (!res) {
-    return false;
-  }
-  args.rval().setBigInt(res);
-  return true;
-}
-
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -2860,8 +2831,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ModuleNamespaceExports", intrinsic_ModuleNamespaceExports, 1, 0),
 
     JS_FN("PromiseResolve", intrinsic_PromiseResolve, 2, 0),
-
-    JS_FN("ToBigInt", intrinsic_ToBigInt, 1, 0),
 
     JS_FS_END};
 

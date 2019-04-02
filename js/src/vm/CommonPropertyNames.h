@@ -44,8 +44,6 @@
   MACRO(async, async, "async")                                                 \
   MACRO(autoAllocateChunkSize, autoAllocateChunkSize, "autoAllocateChunkSize") \
   MACRO(await, await, "await")                                                 \
-  MACRO(bigint64, bigint64, "bigint64")                                        \
-  MACRO(biguint64, biguint64, "biguint64")                                     \
   MACRO(Bool8x16, Bool8x16, "Bool8x16")                                        \
   MACRO(Bool16x8, Bool16x8, "Bool16x8")                                        \
   MACRO(Bool32x4, Bool32x4, "Bool32x4")                                        \
