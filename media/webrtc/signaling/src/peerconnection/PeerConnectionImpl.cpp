@@ -1228,6 +1228,16 @@ static void DeferredCreateOffer(const std::string& aPcHandle,
   }
 }
 
+// Have to use unique_ptr because webidl enums are generated without a
+// copy c'tor.
+static std::unique_ptr<dom::PCErrorData> buildJSErrorData(
+    const JsepSession::Result& aResult, const std::string& aMessage) {
+  std::unique_ptr<dom::PCErrorData> result(new dom::PCErrorData);
+  result->mName = *aResult.mError;
+  result->mMessage = NS_ConvertASCIItoUTF16(aMessage.c_str());
+  return result;
+}
+
 // Used by unit tests and the IDL CreateOffer.
 NS_IMETHODIMP
 PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions) {
@@ -1257,23 +1267,15 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions) {
 
   std::string offer;
 
-  nrv = mJsepSession->CreateOffer(aOptions, &offer);
+  JsepSession::Result result = mJsepSession->CreateOffer(aOptions, &offer);
   JSErrorResult rv;
-  if (NS_FAILED(nrv)) {
-    Error error;
-    switch (nrv) {
-      case NS_ERROR_UNEXPECTED:
-        error = kInvalidState;
-        break;
-      default:
-        error = kInternalError;
-    }
+  if (result.mError.isSome()) {
     std::string errorString = mJsepSession->GetLastError();
 
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                 mHandle.c_str(), errorString.c_str());
 
-    pco->OnCreateOfferError(error, ObString(errorString.c_str()), rv);
+    pco->OnCreateOfferError(*buildJSErrorData(result, errorString), rv);
   } else {
     UpdateSignalingState();
     pco->OnCreateOfferSuccess(ObString(offer.c_str()), rv);
@@ -1299,23 +1301,15 @@ PeerConnectionImpl::CreateAnswer() {
   JsepAnswerOptions options;
   std::string answer;
 
-  nsresult nrv = mJsepSession->CreateAnswer(options, &answer);
+  JsepSession::Result result = mJsepSession->CreateAnswer(options, &answer);
   JSErrorResult rv;
-  if (NS_FAILED(nrv)) {
-    Error error;
-    switch (nrv) {
-      case NS_ERROR_UNEXPECTED:
-        error = kInvalidState;
-        break;
-      default:
-        error = kInternalError;
-    }
+  if (result.mError.isSome()) {
     std::string errorString = mJsepSession->GetLastError();
 
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                 mHandle.c_str(), errorString.c_str());
 
-    pco->OnCreateAnswerError(error, ObString(errorString.c_str()), rv);
+    pco->OnCreateAnswerError(*buildJSErrorData(result, errorString), rv);
   } else {
     UpdateSignalingState();
     pco->OnCreateAnswerSuccess(ObString(answer.c_str()), rv);
@@ -1366,24 +1360,13 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
       MOZ_ASSERT(false);
       return NS_ERROR_FAILURE;
   }
-  nsresult nrv = mJsepSession->SetLocalDescription(sdpType, mLocalRequestedSDP);
-  if (NS_FAILED(nrv)) {
-    Error error;
-    switch (nrv) {
-      case NS_ERROR_INVALID_ARG:
-        error = kInvalidSessionDescription;
-        break;
-      case NS_ERROR_UNEXPECTED:
-        error = kInvalidState;
-        break;
-      default:
-        error = kInternalError;
-    }
-
+  JsepSession::Result result =
+      mJsepSession->SetLocalDescription(sdpType, mLocalRequestedSDP);
+  if (result.mError.isSome()) {
     std::string errorString = mJsepSession->GetLastError();
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                 mHandle.c_str(), errorString.c_str());
-    pco->OnSetLocalDescriptionError(error, ObString(errorString.c_str()), rv);
+    pco->OnSetLocalDescriptionError(*buildJSErrorData(result, errorString), rv);
   } else {
     if (wasRestartingIce) {
       RecordIceRestartStatistics(sdpType);
@@ -1466,25 +1449,14 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
   }
 
   size_t originalTransceiverCount = mJsepSession->GetTransceivers().size();
-  nsresult nrv =
+  JsepSession::Result result =
       mJsepSession->SetRemoteDescription(sdpType, mRemoteRequestedSDP);
-  if (NS_FAILED(nrv)) {
-    Error error;
-    switch (nrv) {
-      case NS_ERROR_INVALID_ARG:
-        error = kInvalidSessionDescription;
-        break;
-      case NS_ERROR_UNEXPECTED:
-        error = kInvalidState;
-        break;
-      default:
-        error = kInternalError;
-    }
-
+  if (result.mError.isSome()) {
     std::string errorString = mJsepSession->GetLastError();
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                 mHandle.c_str(), errorString.c_str());
-    pco->OnSetRemoteDescriptionError(error, ObString(errorString.c_str()), jrv);
+    pco->OnSetRemoteDescriptionError(*buildJSErrorData(result, errorString),
+                                     jrv);
   } else {
     // Iterate over the JSEP transceivers that were just created
     for (size_t i = originalTransceiverCount;
@@ -1635,10 +1607,10 @@ PeerConnectionImpl::AddIceCandidate(
   if (!aLevel.IsNull()) {
     level = Some(aLevel.Value());
   }
-  nsresult res = mJsepSession->AddRemoteIceCandidate(aCandidate, aMid, level,
-                                                     aUfrag, &transportId);
+  JsepSession::Result result = mJsepSession->AddRemoteIceCandidate(
+      aCandidate, aMid, level, aUfrag, &transportId);
 
-  if (NS_SUCCEEDED(res)) {
+  if (!result.mError.isSome()) {
     // We do not bother PCMedia about this before offer/answer concludes.
     // Once offer/answer concludes, PCMedia will extract these candidates from
     // the remote SDP.
@@ -1649,30 +1621,15 @@ PeerConnectionImpl::AddIceCandidate(
     pco->OnAddIceCandidateSuccess(rv);
   } else {
     ++mAddCandidateErrorCount;
-    Error error;
-    switch (res) {
-      case NS_ERROR_UNEXPECTED:
-        error = kInvalidState;
-        break;
-      case NS_ERROR_INVALID_ARG:
-        error = kOperationError;
-        break;
-      case NS_ERROR_TYPE_ERR:
-        error = kTypeError;
-        break;
-      default:
-        error = kInternalError;
-    }
-
     std::string errorString = mJsepSession->GetLastError();
 
     CSFLogError(LOGTAG,
                 "Failed to incorporate remote candidate into SDP:"
                 " res = %u, candidate = %s, level = %i, error = %s",
-                static_cast<unsigned>(res), aCandidate, level.valueOr(-1),
-                errorString.c_str());
+                static_cast<unsigned>(*result.mError), aCandidate,
+                level.valueOr(-1), errorString.c_str());
 
-    pco->OnAddIceCandidateError(error, ObString(errorString.c_str()), rv);
+    pco->OnAddIceCandidateError(*buildJSErrorData(result, errorString), rv);
   }
 
   return NS_OK;
@@ -3013,8 +2970,7 @@ void PeerConnectionImpl::DeliverStatsReportToPCObserver_m(
       if (NS_SUCCEEDED(result)) {
         pco->OnGetStatsSuccess(*query->report, rv);
       } else {
-        pco->OnGetStatsError(kInternalError,
-                             ObString("Failed to fetch statistics"), rv);
+        pco->OnGetStatsError(ObString("Failed to fetch statistics"), rv);
       }
 
       if (rv.Failed()) {
