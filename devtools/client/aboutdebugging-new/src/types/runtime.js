@@ -119,6 +119,9 @@ const runtime = {
   // connected or has failures.
   isConnecting: PropTypes.bool.isRequired,
 
+  // this flag will be true when the connection failed.
+  isConnectionFailed: PropTypes.bool.isRequired,
+
   // unknown runtimes are placeholders for devices where the runtime has not been started
   // yet. For instance an ADB device connected without a compatible runtime running.
   isUnknown: PropTypes.bool.isRequired,
