@@ -393,6 +393,7 @@ class BaselineCodeGen {
   MOZ_MUST_USE bool emitCheckThis(ValueOperand val, bool reinit = false);
   void emitLoadReturnValue(ValueOperand val);
   void emitPushNonArrowFunctionNewTarget();
+  void emitGetAliasedVar(ValueOperand dest);
 
   MOZ_MUST_USE bool emitNextIC();
   MOZ_MUST_USE bool emitInterruptCheck();
