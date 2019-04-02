@@ -2,7 +2,7 @@
 
 # AssetsSearchEngineProvider
 
-`class AssetsSearchEngineProvider : `[`SearchEngineProvider`](../-search-engine-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/provider/AssetsSearchEngineProvider.kt#L33)
+`class AssetsSearchEngineProvider : `[`SearchEngineProvider`](../-search-engine-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/provider/AssetsSearchEngineProvider.kt#L35)
 
 SearchEngineProvider implementation to load the included search engines from assets.
 
@@ -25,4 +25,4 @@ identifier corresponds to the search plugin XML file name (e.g. duckduckgo -&gt;
 
 | Name | Summary |
 |---|---|
-| [loadSearchEngines](load-search-engines.md) | `suspend fun loadSearchEngines(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`SearchEngine`](../../mozilla.components.browser.search/-search-engine/index.md)`>`<br>Load search engines from this provider. |
+| [loadSearchEngines](load-search-engines.md) | `suspend fun loadSearchEngines(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`SearchEngineList`](../-search-engine-list/index.md)<br>Load search engines from this provider. |

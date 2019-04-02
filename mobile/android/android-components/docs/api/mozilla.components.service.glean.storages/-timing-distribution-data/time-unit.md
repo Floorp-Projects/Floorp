@@ -2,7 +2,7 @@
 
 # timeUnit
 
-`val timeUnit: `[`TimeUnit`](../../mozilla.components.service.glean/-time-unit/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/storages/TimingDistributionsStorageEngine.kt#L140)
+`val timeUnit: `[`TimeUnit`](../../mozilla.components.service.glean.metrics/-time-unit/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/storages/TimingDistributionsStorageEngine.kt#L140)
 
-the base [TimeUnit](../../mozilla.components.service.glean/-time-unit/index.md) of the bucket values
+the base [TimeUnit](../../mozilla.components.service.glean.metrics/-time-unit/index.md) of the bucket values
 

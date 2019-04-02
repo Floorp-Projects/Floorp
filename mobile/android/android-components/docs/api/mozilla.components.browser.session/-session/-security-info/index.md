@@ -2,7 +2,7 @@
 
 # SecurityInfo
 
-`data class SecurityInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L83)
+`data class SecurityInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L84)
 
 A value type holding security information for a Session.
 

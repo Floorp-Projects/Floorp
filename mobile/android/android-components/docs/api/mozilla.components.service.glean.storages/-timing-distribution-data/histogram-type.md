@@ -2,7 +2,7 @@
 
 # histogramType
 
-`val histogramType: `[`HistogramType`](../../mozilla.components.service.glean/-histogram-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/storages/TimingDistributionsStorageEngine.kt#L137)
+`val histogramType: `[`HistogramType`](../../mozilla.components.service.glean.metrics/-histogram-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/storages/TimingDistributionsStorageEngine.kt#L137)
 
-the [HistogramType](../../mozilla.components.service.glean/-histogram-type/index.md) representing the bucket layout
+the [HistogramType](../../mozilla.components.service.glean.metrics/-histogram-type/index.md) representing the bucket layout
 

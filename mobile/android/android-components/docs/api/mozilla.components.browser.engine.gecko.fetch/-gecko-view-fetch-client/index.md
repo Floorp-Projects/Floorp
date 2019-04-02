@@ -29,3 +29,9 @@ GeckoView ([GeckoWebExecutor](https://mozilla.github.io/geckoview/javadoc/mozill
 | Name | Summary |
 |---|---|
 | [MAX_READ_TIMEOUT_MINUTES](-m-a-x_-r-e-a-d_-t-i-m-e-o-u-t_-m-i-n-u-t-e-s.md) | `const val MAX_READ_TIMEOUT_MINUTES: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [withInterceptors](../../mozilla.components.concept.fetch.interceptor/with-interceptors.md) | `fun `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`.withInterceptors(vararg interceptors: `[`Interceptor`](../../mozilla.components.concept.fetch.interceptor/-interceptor/index.md)`): `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)<br>Creates a new [Client](../../mozilla.components.concept.fetch/-client/index.md) instance that will use the provided list of [Interceptor](../../mozilla.components.concept.fetch.interceptor/-interceptor/index.md) instances. |

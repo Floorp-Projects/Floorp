@@ -2,7 +2,7 @@
 
 # Source
 
-`enum class Source` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L88)
+`enum class Source` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L89)
 
 Represents the origin of a session to describe how and why it was created.
 

@@ -10,7 +10,7 @@ Interface for classes that load search engines from a specific source.
 
 | Name | Summary |
 |---|---|
-| [loadSearchEngines](load-search-engines.md) | `abstract suspend fun loadSearchEngines(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`SearchEngine`](../../mozilla.components.browser.search/-search-engine/index.md)`>`<br>Load search engines from this provider. |
+| [loadSearchEngines](load-search-engines.md) | `abstract suspend fun loadSearchEngines(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`SearchEngineList`](../-search-engine-list/index.md)<br>Load search engines from this provider. |
 
 ### Inheritors
 

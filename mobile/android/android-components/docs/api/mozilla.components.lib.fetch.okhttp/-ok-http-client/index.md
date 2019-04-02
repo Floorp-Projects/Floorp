@@ -29,3 +29,9 @@
 | Name | Summary |
 |---|---|
 | [getOrCreateCookieManager](get-or-create-cookie-manager.md) | `fun getOrCreateCookieManager(): `[`CookieManager`](https://developer.android.com/reference/java/net/CookieManager.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [withInterceptors](../../mozilla.components.concept.fetch.interceptor/with-interceptors.md) | `fun `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`.withInterceptors(vararg interceptors: `[`Interceptor`](../../mozilla.components.concept.fetch.interceptor/-interceptor/index.md)`): `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)<br>Creates a new [Client](../../mozilla.components.concept.fetch/-client/index.md) instance that will use the provided list of [Interceptor](../../mozilla.components.concept.fetch.interceptor/-interceptor/index.md) instances. |

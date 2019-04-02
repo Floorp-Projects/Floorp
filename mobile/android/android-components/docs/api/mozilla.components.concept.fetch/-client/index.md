@@ -29,6 +29,12 @@ https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 |---|---|
 | [fetch](fetch.md) | `abstract fun fetch(request: `[`Request`](../-request/index.md)`): `[`Response`](../-response/index.md)<br>Starts the process of fetching a resource from the network as described by the [Request](../-request/index.md) object. This call is synchronous. |
 
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [withInterceptors](../../mozilla.components.concept.fetch.interceptor/with-interceptors.md) | `fun `[`Client`](./index.md)`.withInterceptors(vararg interceptors: `[`Interceptor`](../../mozilla.components.concept.fetch.interceptor/-interceptor/index.md)`): `[`Client`](./index.md)<br>Creates a new [Client](./index.md) instance that will use the provided list of [Interceptor](../../mozilla.components.concept.fetch.interceptor/-interceptor/index.md) instances. |
+
 ### Inheritors
 
 | Name | Summary |

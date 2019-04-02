@@ -49,7 +49,7 @@
 | [mozilla.components.concept.storage.BookmarkNodeType](../mozilla.components.concept.storage/-bookmark-node-type/index.md) | The types of bookmark nodes |
 | [mozilla.components.concept.storage.BookmarksStorage](../mozilla.components.concept.storage/-bookmarks-storage/index.md) | An interface which defines read/write operations for bookmarks data. |
 | [kotlin.Boolean](../mozilla.components.lib.jexl.ext/kotlin.-boolean/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
-| [mozilla.components.service.glean.BooleanMetricType](../mozilla.components.service.glean/-boolean-metric-type/index.md) | This implements the developer facing API for recording boolean metrics. |
+| [mozilla.components.service.glean.metrics.BooleanMetricType](../mozilla.components.service.glean.metrics/-boolean-metric-type/index.md) | This implements the developer facing API for recording boolean metrics. |
 | [mozilla.components.browser.awesomebar.BrowserAwesomeBar](../mozilla.components.browser.awesomebar/-browser-awesome-bar/index.md) | A customizable [AwesomeBar](../mozilla.components.concept.awesomebar/-awesome-bar/index.md) implementation. |
 | [mozilla.components.browser.icons.BrowserIcons](../mozilla.components.browser.icons/-browser-icons/index.md) | Entry point for loading icons for websites. |
 | [mozilla.components.browser.menu.BrowserMenu](../mozilla.components.browser.menu/-browser-menu/index.md) | A popup menu composed of BrowserMenuItem objects. |
@@ -75,7 +75,7 @@
 | [mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider](../mozilla.components.feature.awesomebar.provider/-clipboard-suggestion-provider/index.md) | An [AwesomeBar.SuggestionProvider](../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that returns a suggestions for an URL in the clipboard (if there's any). |
 | [mozilla.components.support.base.facts.processor.CollectionProcessor](../mozilla.components.support.base.facts.processor/-collection-processor/index.md) | A [FactProcessor](../mozilla.components.support.base.facts/-fact-processor/index.md) implementation that keeps all [Fact](../mozilla.components.support.base.facts/-fact/index.md) objects in a list. |
 | [mozilla.components.support.utils.ColorUtils](../mozilla.components.support.utils/-color-utils/index.md) |  |
-| [mozilla.components.service.glean.CommonMetricData](../mozilla.components.service.glean/-common-metric-data/index.md) | This defines the common set of data shared across all the different metric types. |
+| [mozilla.components.service.glean.metrics.CommonMetricData](../mozilla.components.service.glean.metrics/-common-metric-data/index.md) | This defines the common set of data shared across all the different metric types. |
 | [mozilla.components.service.fxa.Config](../mozilla.components.service.fxa/-config.md) |  |
 | [mozilla.components.service.glean.config.Configuration](../mozilla.components.service.glean.config/-configuration/index.md) | The Configuration class describes how to configure the Glean. |
 | [mozilla.components.browser.storage.sync.Connection](../mozilla.components.browser.storage.sync/-connection/index.md) | A slight abstraction over [PlacesApi](#). |
@@ -87,7 +87,7 @@
 | [mozilla.components.feature.contextmenu.ContextMenuFragment](../mozilla.components.feature.contextmenu/-context-menu-fragment/index.md) | [DialogFragment](#) implementation to display the actual context menu dialog. |
 | [org.mozilla.telemetry.util.ContextUtils](../org.mozilla.telemetry.util/-context-utils/index.md) |  |
 | [mozilla.components.feature.session.CoordinateScrollingFeature](../mozilla.components.feature.session/-coordinate-scrolling-feature/index.md) | Feature implementation for connecting an [EngineView](../mozilla.components.concept.engine/-engine-view/index.md) with any View that you want to coordinate scrolling behavior with. |
-| [mozilla.components.service.glean.CounterMetricType](../mozilla.components.service.glean/-counter-metric-type/index.md) | This implements the developer facing API for recording counter metrics. |
+| [mozilla.components.service.glean.metrics.CounterMetricType](../mozilla.components.service.glean.metrics/-counter-metric-type/index.md) | This implements the developer facing API for recording counter metrics. |
 | [mozilla.components.lib.crash.Crash](../mozilla.components.lib.crash/-crash/index.md) | Crash types that are handled by this library. |
 | [mozilla.components.lib.crash.handler.CrashHandlerService](../mozilla.components.lib.crash.handler/-crash-handler-service/index.md) | Service receiving native code crashes (from GeckoView). |
 | [mozilla.components.lib.crash.CrashReporter](../mozilla.components.lib.crash/-crash-reporter/index.md) | A generic crash reporter that can report crashes to multiple services. |
@@ -103,7 +103,7 @@
 | [mozilla.components.browser.session.tab.CustomTabConfig](../mozilla.components.browser.session.tab/-custom-tab-config/index.md) | Holds configuration data for a Custom Tab. Use [createFromIntent](../mozilla.components.browser.session.tab/-custom-tab-config/create-from-intent.md) to create instances. |
 | [mozilla.components.browser.session.tab.CustomTabMenuItem](../mozilla.components.browser.session.tab/-custom-tab-menu-item/index.md) |  |
 | [mozilla.components.feature.customtabs.CustomTabsToolbarFeature](../mozilla.components.feature.customtabs/-custom-tabs-toolbar-feature/index.md) | Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig. |
-| [mozilla.components.service.glean.DatetimeMetricType](../mozilla.components.service.glean/-datetime-metric-type/index.md) | This implements the developer facing API for recording datetime metrics. |
+| [mozilla.components.service.glean.metrics.DatetimeMetricType](../mozilla.components.service.glean.metrics/-datetime-metric-type/index.md) | This implements the developer facing API for recording datetime metrics. |
 | [mozilla.components.browser.icons.generator.DefaultIconGenerator](../mozilla.components.browser.icons.generator/-default-icon-generator/index.md) | [IconGenerator](../mozilla.components.browser.icons.generator/-icon-generator/index.md) implementation that will generate an icon with a background color, rounded corners and a letter representing the URL. |
 | [org.mozilla.telemetry.measurement.DefaultSearchMeasurement](../org.mozilla.telemetry.measurement/-default-search-measurement/index.md) |  |
 | [mozilla.components.concept.engine.DefaultSettings](../mozilla.components.concept.engine/-default-settings/index.md) | [Settings](../mozilla.components.concept.engine/-settings/index.md) implementation used to set defaults for [Engine](../mozilla.components.concept.engine/-engine/index.md) and [EngineSession](../mozilla.components.concept.engine/-engine-session/index.md). |
@@ -135,7 +135,7 @@
 | [mozilla.components.browser.errorpages.ErrorPages](../mozilla.components.browser.errorpages/-error-pages/index.md) |  |
 | [mozilla.components.service.glean.error.ErrorRecording](../mozilla.components.service.glean.error/-error-recording.md) |  |
 | [mozilla.components.browser.errorpages.ErrorType](../mozilla.components.browser.errorpages/-error-type/index.md) | Enum containing all supported error types that we can display an error page for. |
-| [mozilla.components.service.glean.EventMetricType](../mozilla.components.service.glean/-event-metric-type/index.md) | This implements the developer facing API for recording events. |
+| [mozilla.components.service.glean.metrics.EventMetricType](../mozilla.components.service.glean.metrics/-event-metric-type/index.md) | This implements the developer facing API for recording events. |
 | [org.mozilla.telemetry.measurement.EventsMeasurement](../org.mozilla.telemetry.measurement/-events-measurement/index.md) |  |
 | [mozilla.components.lib.crash.handler.ExceptionHandler](../mozilla.components.lib.crash.handler/-exception-handler/index.md) | [Thread.UncaughtExceptionHandler](https://developer.android.com/reference/java/lang/Thread/UncaughtExceptionHandler.html) implementation that forwards crashes to the [CrashReporter](../mozilla.components.lib.crash/-crash-reporter/index.md) instance. |
 | [mozilla.components.service.fretboard.Experiment](../mozilla.components.service.fretboard/-experiment/index.md) | Represents an A/B test experiment, independent of the underlying storage mechanism |
@@ -190,7 +190,7 @@
 | [mozilla.components.lib.jexl.grammar.GrammarElement](../mozilla.components.lib.jexl.grammar/-grammar-element/index.md) |  |
 | [mozilla.components.concept.fetch.Header](../mozilla.components.concept.fetch/-header/index.md) | Represents a [Header](../mozilla.components.concept.fetch/-header/index.md) containing of a [name](../mozilla.components.concept.fetch/-header/name.md) and [value](../mozilla.components.concept.fetch/-header/value.md). |
 | [mozilla.components.concept.fetch.Headers](../mozilla.components.concept.fetch/-headers/index.md) | A collection of HTTP [Headers](../mozilla.components.concept.fetch/-headers/index.md) (immutable) of a [Request](../mozilla.components.concept.fetch/-request/index.md) or [Response](../mozilla.components.concept.fetch/-response/index.md). |
-| [mozilla.components.service.glean.HistogramType](../mozilla.components.service.glean/-histogram-type/index.md) | Enumeration of the different kinds of histograms supported by metrics based on histograms. |
+| [mozilla.components.service.glean.metrics.HistogramType](../mozilla.components.service.glean.metrics/-histogram-type/index.md) | Enumeration of the different kinds of histograms supported by metrics based on histograms. |
 | [mozilla.components.concept.storage.HistoryAutocompleteResult](../mozilla.components.concept.storage/-history-autocomplete-result/index.md) | Describes an autocompletion result against history storage. |
 | [mozilla.components.feature.session.HistoryDelegate](../mozilla.components.feature.session/-history-delegate/index.md) | Implementation of the [HistoryTrackingDelegate](../mozilla.components.concept.engine.history/-history-tracking-delegate/index.md) which delegates work to an instance of [HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md). |
 | [mozilla.components.concept.storage.HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md) | An interface which defines read/write methods for history data. |
@@ -211,6 +211,7 @@
 | [android.content.Intent](../mozilla.components.support.utils/android.content.-intent/index.md) (extensions in package mozilla.components.support.utils) |  |
 | [mozilla.components.feature.intent.IntentHandler](../mozilla.components.feature.intent/-intent-handler.md) |  |
 | [mozilla.components.feature.intent.IntentProcessor](../mozilla.components.feature.intent/-intent-processor/index.md) | Processor for intents which should trigger session-related actions. |
+| [mozilla.components.concept.fetch.interceptor.Interceptor](../mozilla.components.concept.fetch.interceptor/-interceptor/index.md) | An [Interceptor](../mozilla.components.concept.fetch.interceptor/-interceptor/index.md) for a [Client](../mozilla.components.concept.fetch/-client/index.md) implementation. |
 | [mozilla.components.service.sync.logins.InvalidKeyException](../mozilla.components.service.sync.logins/-invalid-key-exception.md) | This error is emitted in two cases: |
 | [mozilla.components.service.sync.logins.InvalidRecordException](../mozilla.components.service.sync.logins/-invalid-record-exception.md) | This is thrown on attempts to insert or update a record so that it is no longer valid, where "invalid" is defined as such: |
 | [org.json.JSONArray](../mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-array/index.md) (extensions in package mozilla.components.support.ktx.android.org.json) |  |
@@ -236,11 +237,11 @@
 | [mozilla.components.lib.dataprotect.Keystore](../mozilla.components.lib.dataprotect/-keystore/index.md) | Manages data protection using a system-isolated cryptographic key. |
 | [mozilla.components.lib.dataprotect.KeystoreException](../mozilla.components.lib.dataprotect/-keystore-exception/index.md) | Exception type thrown by {@link Keystore} when an error is encountered that is not otherwise covered by an existing sub-class to `GeneralSecurityException`. |
 | [mozilla.components.service.fretboard.source.kinto.KintoExperimentSource](../mozilla.components.service.fretboard.source.kinto/-kinto-experiment-source/index.md) | Class responsible for fetching and parsing experiments from a Kinto server |
-| [mozilla.components.service.glean.LabeledMetricType](../mozilla.components.service.glean/-labeled-metric-type/index.md) | This implements the developer facing API for labeled metrics. |
+| [mozilla.components.service.glean.metrics.LabeledMetricType](../mozilla.components.service.glean.metrics/-labeled-metric-type/index.md) | This implements the developer facing API for labeled metrics. |
 | [android.arch.lifecycle.Lifecycle](../mozilla.components.support.ktx.android.arch.lifecycle/android.arch.lifecycle.-lifecycle/index.md) (extensions in package mozilla.components.support.ktx.android.arch.lifecycle) |  |
 | [mozilla.components.support.base.feature.LifecycleAwareFeature](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) | An interface for all entry points to feature components to implement in order to make them lifecycle aware. |
 | [mozilla.components.concept.engine.LifecycleObserver](../mozilla.components.concept.engine/-lifecycle-observer/index.md) | [LifecycleObserver](#) which dispatches lifecycle events to an [EngineView](../mozilla.components.concept.engine/-engine-view/index.md). |
-| [mozilla.components.service.glean.Lifetime](../mozilla.components.service.glean/-lifetime/index.md) | Enumeration of different metric lifetimes. |
+| [mozilla.components.service.glean.metrics.Lifetime](../mozilla.components.service.glean.metrics/-lifetime/index.md) | Enumeration of different metric lifetimes. |
 | [mozilla.components.tooling.lint.LintIssueRegistry](../mozilla.components.tooling.lint/-lint-issue-registry/index.md) | Registry which provides a list of our custom lint checks to be performed on an Android project. |
 | [mozilla.components.tooling.lint.LintLogChecks](../mozilla.components.tooling.lint/-lint-log-checks/index.md) | Custom lint checks related to logging. |
 | [kotlin.collections.List](../mozilla.components.lib.jexl.ext/kotlin.collections.-list/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
@@ -258,11 +259,12 @@
 | [mozilla.components.concept.engine.media.Media](../mozilla.components.concept.engine.media/-media/index.md) | Value type that represents a media element that is present on the currently displayed page in a session. |
 | [org.mozilla.telemetry.measurement.MetricsMeasurement](../org.mozilla.telemetry.measurement/-metrics-measurement/index.md) |  |
 | [mozilla.components.service.sync.logins.MismatchedLockException](../mozilla.components.service.sync.logins/-mismatched-lock-exception.md) | This is thrown if `lock()`/`unlock()` pairs don't match up. |
+| [android.view.MotionEvent](../mozilla.components.support.ktx.android.view/android.view.-motion-event/index.md) (extensions in package mozilla.components.support.ktx.android.view) |  |
 | [mozilla.components.lib.crash.service.MozillaSocorroService](../mozilla.components.lib.crash.service/-mozilla-socorro-service/index.md) | A [CrashReporterService](../mozilla.components.lib.crash.service/-crash-reporter-service/index.md) implementation uploading crash reports to crash-stats.mozilla.com. |
 | [mozilla.components.concept.fetch.MutableHeaders](../mozilla.components.concept.fetch/-mutable-headers/index.md) | A collection of HTTP [Headers](../mozilla.components.concept.fetch/-headers/index.md) (mutable) of a [Request](../mozilla.components.concept.fetch/-request/index.md) or [Response](../mozilla.components.concept.fetch/-response/index.md). |
 | [mozilla.components.browser.engine.gecko.NestedGeckoView](../mozilla.components.browser.engine.gecko/-nested-gecko-view/index.md) | geckoView that supports nested scrolls (for using in a CoordinatorLayout). |
 | [mozilla.components.browser.engine.system.NestedWebView](../mozilla.components.browser.engine.system/-nested-web-view/index.md) | WebView that supports nested scrolls (for using in a CoordinatorLayout). |
-| [mozilla.components.service.glean.NoExtraKeys](../mozilla.components.service.glean/-no-extra-keys/index.md) | An enum with no values for convenient use as the default set of extra keys that an [EventMetricType](../mozilla.components.service.glean/-event-metric-type/index.md) can accept. |
+| [mozilla.components.service.glean.metrics.NoExtraKeys](../mozilla.components.service.glean.metrics/-no-extra-keys/index.md) | An enum with no values for convenient use as the default set of extra keys that an [EventMetricType](../mozilla.components.service.glean.metrics/-event-metric-type/index.md) can accept. |
 | [mozilla.components.service.sync.logins.NoSuchRecordException](../mozilla.components.service.sync.logins/-no-such-record-exception.md) | This is thrown if `update()` is performed with a record whose ID does not exist. |
 | [mozilla.components.concept.sync.OAuthAccount](../mozilla.components.concept.sync/-o-auth-account/index.md) | Facilitates testing consumers of FirefoxAccount. |
 | [mozilla.components.concept.sync.OAuthScopedKey](../mozilla.components.concept.sync/-o-auth-scoped-key/index.md) | Scoped key data. |
@@ -330,6 +332,7 @@
 | [mozilla.appservices.fxaclient.ScopedKey](../mozilla.components.service.fxa/mozilla.appservices.fxaclient.-scoped-key/index.md) (extensions in package mozilla.components.service.fxa) |  |
 | [mozilla.components.browser.search.SearchEngine](../mozilla.components.browser.search/-search-engine/index.md) | A data class representing a search engine. |
 | [mozilla.components.browser.search.provider.filter.SearchEngineFilter](../mozilla.components.browser.search.provider.filter/-search-engine-filter/index.md) | Interface for classes that want to filter the list of search engines a SearchEngineProvider implementation loads. |
+| [mozilla.components.browser.search.provider.SearchEngineList](../mozilla.components.browser.search.provider/-search-engine-list/index.md) | Data class providing an ordered list of search engines and a default search engine from a specific source. |
 | [mozilla.components.browser.search.SearchEngineManager](../mozilla.components.browser.search/-search-engine-manager/index.md) | This class provides access to a centralized registry of search engines. |
 | [mozilla.components.browser.search.SearchEngineParser](../mozilla.components.browser.search/-search-engine-parser/index.md) | A very simple parser for search plugins. |
 | [mozilla.components.browser.search.provider.SearchEngineProvider](../mozilla.components.browser.search.provider/-search-engine-provider/index.md) | Interface for classes that load search engines from a specific source. |
@@ -378,8 +381,8 @@
 | [kotlin.String](../mozilla.components.browser.engine.system.matcher/kotlin.-string/index.md) (extensions in package mozilla.components.browser.engine.system.matcher) |  |
 | [kotlin.String](../mozilla.components.lib.jexl.ext/kotlin.-string/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
 | [kotlin.String](../mozilla.components.support.ktx.kotlin/kotlin.-string/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
-| [mozilla.components.service.glean.StringListMetricType](../mozilla.components.service.glean/-string-list-metric-type/index.md) | This implements the developer facing API for recording string list metrics. |
-| [mozilla.components.service.glean.StringMetricType](../mozilla.components.service.glean/-string-metric-type/index.md) | This implements the developer facing API for recording string metrics. |
+| [mozilla.components.service.glean.metrics.StringListMetricType](../mozilla.components.service.glean.metrics/-string-list-metric-type/index.md) | This implements the developer facing API for recording string list metrics. |
+| [mozilla.components.service.glean.metrics.StringMetricType](../mozilla.components.service.glean.metrics/-string-metric-type/index.md) | This implements the developer facing API for recording string metrics. |
 | [org.mozilla.telemetry.util.StringUtils](../org.mozilla.telemetry.util/-string-utils/index.md) |  |
 | [mozilla.components.browser.awesomebar.layout.SuggestionLayout](../mozilla.components.browser.awesomebar.layout/-suggestion-layout/index.md) | A [SuggestionLayout](../mozilla.components.browser.awesomebar.layout/-suggestion-layout/index.md) implementation defines how the suggestions of the [BrowserAwesomeBar](../mozilla.components.browser.awesomebar/-browser-awesome-bar/index.md) are getting layout. By default [BrowserAwesomeBar](../mozilla.components.browser.awesomebar/-browser-awesome-bar/index.md) uses [DefaultSuggestionLayout](../mozilla.components.browser.awesomebar.layout/-default-suggestion-layout/index.md). However a consumer can provide its own implementation in order to create a customized look &amp; feel. |
 | [mozilla.components.browser.awesomebar.transform.SuggestionTransformer](../mozilla.components.browser.awesomebar.transform/-suggestion-transformer/index.md) | A [SuggestionTransformer](../mozilla.components.browser.awesomebar.transform/-suggestion-transformer/index.md) takes an input list of [AwesomeBar.Suggestion](../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion/index.md) and returns a new list of transformed [AwesomeBar.Suggestion| objects. |
@@ -433,11 +436,11 @@
 | [android.os.StrictMode.ThreadPolicy](../mozilla.components.support.ktx.android.os/android.os.-strict-mode.-thread-policy/index.md) (extensions in package mozilla.components.support.ktx.android.os) |  |
 | [mozilla.components.support.utils.ThreadUtils](../mozilla.components.support.utils/-thread-utils/index.md) |  |
 | [mozilla.components.feature.session.ThumbnailsFeature](../mozilla.components.feature.session/-thumbnails-feature/index.md) | Feature implementation for automatically taking thumbnails of sites. The feature will take a screenshot when the page finishes loading, and will add it to the [Session.thumbnail](../mozilla.components.browser.session/-session/thumbnail.md) property. |
-| [mozilla.components.service.glean.TimeUnit](../mozilla.components.service.glean/-time-unit/index.md) | Enumeration of different resolutions supported by the Timespan and TimingDistribution metric types. |
-| [mozilla.components.service.glean.TimespanMetricType](../mozilla.components.service.glean/-timespan-metric-type/index.md) | This implements the developer facing API for recording timespans. |
+| [mozilla.components.service.glean.metrics.TimeUnit](../mozilla.components.service.glean.metrics/-time-unit/index.md) | Enumeration of different resolutions supported by the Timespan and TimingDistribution metric types. |
+| [mozilla.components.service.glean.metrics.TimespanMetricType](../mozilla.components.service.glean.metrics/-timespan-metric-type/index.md) | This implements the developer facing API for recording timespans. |
 | [org.mozilla.telemetry.measurement.TimezoneOffsetMeasurement](../org.mozilla.telemetry.measurement/-timezone-offset-measurement/index.md) |  |
 | [mozilla.components.service.glean.storages.TimingDistributionData](../mozilla.components.service.glean.storages/-timing-distribution-data/index.md) | This class represents the structure of a timing distribution according to the pipeline schema. It is meant to help serialize and deserialize data to the correct format for transport and storage, as well as including a helper function to calculate the bucket sizes. |
-| [mozilla.components.service.glean.TimingDistributionMetricType](../mozilla.components.service.glean/-timing-distribution-metric-type/index.md) | This implements the developer facing API for recording timing distribution metrics. |
+| [mozilla.components.service.glean.metrics.TimingDistributionMetricType](../mozilla.components.service.glean.metrics/-timing-distribution-metric-type/index.md) | This implements the developer facing API for recording timing distribution metrics. |
 | [mozilla.components.lib.jexl.lexer.Token](../mozilla.components.lib.jexl.lexer/-token/index.md) | A token emitted by the [Lexer](#). |
 | [mozilla.components.concept.toolbar.Toolbar](../mozilla.components.concept.toolbar/-toolbar/index.md) | Interface to be implemented by components that provide browser toolbar functionality. |
 | [mozilla.components.feature.toolbar.ToolbarAutocompleteFeature](../mozilla.components.feature.toolbar/-toolbar-autocomplete-feature/index.md) | Feature implementation for connecting a toolbar with a list of autocomplete providers. |
@@ -450,7 +453,7 @@
 | [mozilla.components.concept.engine.UnsupportedSettingException](../mozilla.components.concept.engine/-unsupported-setting-exception/index.md) | Exception thrown by default if a setting is not supported by an engine or session. |
 | [android.net.Uri](../mozilla.components.support.ktx.android.net/android.net.-uri/index.md) (extensions in package mozilla.components.support.ktx.android.net) |  |
 | [mozilla.components.browser.engine.system.matcher.UrlMatcher](../mozilla.components.browser.engine.system.matcher/-url-matcher/index.md) | Provides functionality to process categorized URL black/white lists and match URLs against these lists. |
-| [mozilla.components.service.glean.UuidMetricType](../mozilla.components.service.glean/-uuid-metric-type/index.md) | This implements the developer facing API for recording uuids. |
+| [mozilla.components.service.glean.metrics.UuidMetricType](../mozilla.components.service.glean.metrics/-uuid-metric-type/index.md) | This implements the developer facing API for recording uuids. |
 | [mozilla.components.service.fretboard.ValuesProvider](../mozilla.components.service.fretboard/-values-provider/index.md) | Class used to provide custom filter values |
 | [org.mozilla.telemetry.measurement.VersionMeasurement](../org.mozilla.telemetry.measurement/-version-measurement/index.md) |  |
 | [android.view.View](../mozilla.components.support.ktx.android.view/android.view.-view/index.md) (extensions in package mozilla.components.support.ktx.android.view) |  |

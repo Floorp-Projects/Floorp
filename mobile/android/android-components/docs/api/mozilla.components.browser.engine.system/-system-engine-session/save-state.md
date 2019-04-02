@@ -2,7 +2,7 @@
 
 # saveState
 
-`fun saveState(): `[`EngineSessionState`](../../mozilla.components.concept.engine/-engine-session-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineSession.kt#L112)
+`fun saveState(): `[`EngineSessionState`](../../mozilla.components.concept.engine/-engine-session-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineSession.kt#L111)
 
 Overrides [EngineSession.saveState](../../mozilla.components.concept.engine/-engine-session/save-state.md)
 

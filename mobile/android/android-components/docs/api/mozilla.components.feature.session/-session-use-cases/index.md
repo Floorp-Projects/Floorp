@@ -19,6 +19,7 @@ it to the [SessionManager](../../mozilla.components.browser.session/-session-man
 | Name | Summary |
 |---|---|
 | [ClearDataUseCase](-clear-data-use-case/index.md) | `class ClearDataUseCase` |
+| [CrashRecoveryUseCase](-crash-recovery-use-case/index.md) | `class CrashRecoveryUseCase`<br>Tries to recover from a crash by restoring the last know state. |
 | [DefaultLoadUrlUseCase](-default-load-url-use-case/index.md) | `class DefaultLoadUrlUseCase : `[`LoadUrlUseCase`](-load-url-use-case/index.md) |
 | [ExitFullScreenUseCase](-exit-full-screen-use-case/index.md) | `class ExitFullScreenUseCase` |
 | [GoBackUseCase](-go-back-use-case/index.md) | `class GoBackUseCase` |
@@ -42,6 +43,7 @@ it to the [SessionManager](../../mozilla.components.browser.session/-session-man
 | Name | Summary |
 |---|---|
 | [clearData](clear-data.md) | `val clearData: `[`ClearDataUseCase`](-clear-data-use-case/index.md) |
+| [crashRecovery](crash-recovery.md) | `val crashRecovery: `[`CrashRecoveryUseCase`](-crash-recovery-use-case/index.md) |
 | [exitFullscreen](exit-fullscreen.md) | `val exitFullscreen: `[`ExitFullScreenUseCase`](-exit-full-screen-use-case/index.md) |
 | [goBack](go-back.md) | `val goBack: `[`GoBackUseCase`](-go-back-use-case/index.md) |
 | [goForward](go-forward.md) | `val goForward: `[`GoForwardUseCase`](-go-forward-use-case/index.md) |

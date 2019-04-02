@@ -32,6 +32,7 @@ $dokka.location:mozilla.components.support.ktx.android.content$share(android.con
 $dokka.location:mozilla.components.support.ktx.android.content$systemService(android.content.Context, kotlin.String)mozilla.components.support.ktx.android.content/android.content.-context/system-service.md
 $dokka.location:mozilla.components.support.ktx.android.content.res$pxToDp(android.content.res.Resources, kotlin.Int)mozilla.components.support.ktx.android.content.res/android.content.res.-resources/px-to-dp.md
 $dokka.location:mozilla.components.support.ktx.android.content.res$readJSONObject(android.content.res.AssetManager, kotlin.String)mozilla.components.support.ktx.android.content.res/android.content.res.-asset-manager/read-j-s-o-n-object.md
+$dokka.location:mozilla.components.support.ktx.android.graphics$arePixelsAllTheSame(android.graphics.Bitmap)mozilla.components.support.ktx.android.graphics/android.graphics.-bitmap/are-pixels-all-the-same.md
 $dokka.location:mozilla.components.support.ktx.android.graphics$toDataUri(android.graphics.Bitmap)mozilla.components.support.ktx.android.graphics/android.graphics.-bitmap/to-data-uri.md
 $dokka.location:mozilla.components.support.ktx.android.graphics$withRoundedCorners(android.graphics.Bitmap, kotlin.Float)mozilla.components.support.ktx.android.graphics/android.graphics.-bitmap/with-rounded-corners.md
 $dokka.location:mozilla.components.support.ktx.android.graphics.drawable$toBitmap(android.graphics.drawable.Drawable, android.graphics.Bitmap.Config)mozilla.components.support.ktx.android.graphics.drawable/android.graphics.drawable.-drawable/to-bitmap.md
@@ -59,6 +60,7 @@ $dokka.location:mozilla.components.support.ktx.android.view$isRTL#android.view.V
 $dokka.location:mozilla.components.support.ktx.android.view$isVisible(android.view.View)mozilla.components.support.ktx.android.view/android.view.-view/is-visible.md
 $dokka.location:mozilla.components.support.ktx.android.view$setPadding(android.view.View, mozilla.components.support.base.android.Padding)mozilla.components.support.ktx.android.view/android.view.-view/set-padding.md
 $dokka.location:mozilla.components.support.ktx.android.view$showKeyboard(android.view.View, kotlin.Int)mozilla.components.support.ktx.android.view/android.view.-view/show-keyboard.md
+$dokka.location:mozilla.components.support.ktx.android.view$use(android.view.MotionEvent, kotlin.Function1((android.view.MotionEvent, mozilla.components.support.ktx.android.view.use.R)))mozilla.components.support.ktx.android.view/android.view.-motion-event/use.md
 $dokka.location:mozilla.components.support.ktx.java.io$truncateDirectory(java.io.File)mozilla.components.support.ktx.java.io/java.io.-file/truncate-directory.md
 $dokka.location:mozilla.components.support.ktx.kotlin$ELLIPSIS#kotlin.Char.Companionmozilla.components.support.ktx.kotlin/kotlin.-char/-e-l-l-i-p-s-i-s.md
 $dokka.location:mozilla.components.support.ktx.kotlin$containsAtOffset(kotlin.ByteArray, kotlin.Int, kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/contains-at-offset.md
@@ -119,6 +121,7 @@ mozilla.components.concept.engine.request
 mozilla.components.concept.engine.webextension
 mozilla.components.concept.engine.window
 mozilla.components.concept.fetch
+mozilla.components.concept.fetch.interceptor
 mozilla.components.concept.push
 mozilla.components.concept.storage
 mozilla.components.concept.sync
@@ -173,6 +176,7 @@ mozilla.components.service.glean
 mozilla.components.service.glean.config
 mozilla.components.service.glean.debug
 mozilla.components.service.glean.error
+mozilla.components.service.glean.metrics
 mozilla.components.service.glean.scheduler
 mozilla.components.service.glean.storages
 mozilla.components.service.pocket
