@@ -442,24 +442,25 @@ static inline bool IsInlinableFallback(ICFallbackStub* icEntry) {
 #endif
 
 static inline void* GetStubReturnAddress(JSContext* cx, jsbytecode* pc) {
-  JitRealm* jitRealm = cx->realm()->jitRealm();
+  const BaselineICFallbackCode& code =
+      cx->runtime()->jitRuntime()->baselineICFallbackCode();
 
   if (IsGetPropPC(pc)) {
-    return jitRealm->bailoutReturnAddr(BailoutReturnStub::GetProp);
+    return code.bailoutReturnAddr(BailoutReturnKind::GetProp);
   }
   if (IsSetPropPC(pc)) {
-    return jitRealm->bailoutReturnAddr(BailoutReturnStub::SetProp);
+    return code.bailoutReturnAddr(BailoutReturnKind::SetProp);
   }
   if (IsGetElemPC(pc)) {
-    return jitRealm->bailoutReturnAddr(BailoutReturnStub::GetElem);
+    return code.bailoutReturnAddr(BailoutReturnKind::GetElem);
   }
 
   // This should be a call op of some kind, now.
   MOZ_ASSERT(IsCallPC(pc) && !IsSpreadCallPC(pc));
   if (IsConstructorCallPC(pc)) {
-    return jitRealm->bailoutReturnAddr(BailoutReturnStub::New);
+    return code.bailoutReturnAddr(BailoutReturnKind::New);
   }
-  return jitRealm->bailoutReturnAddr(BailoutReturnStub::Call);
+  return code.bailoutReturnAddr(BailoutReturnKind::Call);
 }
 
 static inline jsbytecode* GetNextNonLoopEntryPc(jsbytecode* pc,
