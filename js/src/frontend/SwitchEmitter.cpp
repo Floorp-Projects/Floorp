@@ -409,8 +409,9 @@ bool SwitchEmitter::emitEnd() {
   static_assert(unsigned(SrcNote::TableSwitch::EndOffset) ==
                     unsigned(SrcNote::CondSwitch::EndOffset),
                 "{TableSwitch,CondSwitch}::EndOffset should be same");
-  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::TableSwitch::EndOffset,
-                              bce_->lastNonJumpTargetOffset() - top_)) {
+  if (!bce_->setSrcNoteOffset(
+          noteIndex_, SrcNote::TableSwitch::EndOffset,
+          bce_->bytecodeSection().lastNonJumpTargetOffset() - top_)) {
     return false;
   }
 
