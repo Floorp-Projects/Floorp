@@ -673,7 +673,7 @@ class BaseBootstrapper(object):
             print('Your version of Rust (%s) is new enough.' % version)
             rustup = self.which('rustup', cargo_bin)
             if rustup:
-                self.ensure_rust_targets(rustup)
+                self.ensure_rust_targets(rustup, version)
             return
 
         if version:
@@ -697,7 +697,7 @@ class BaseBootstrapper(object):
             print('Will try to install Rust.')
             self.install_rust()
 
-    def ensure_rust_targets(self, rustup):
+    def ensure_rust_targets(self, rustup, rust_version):
         """Make sure appropriate cross target libraries are installed."""
         target_list = subprocess.check_output([rustup, 'target', 'list'])
         targets = [line.split()[0] for line in target_list.splitlines()
@@ -712,7 +712,11 @@ class BaseBootstrapper(object):
 
         if 'mobile_android' in self.application:
             # Let's add the most common targets.
-            android_targets = ('thumbv7neon-linux-androideabi',
+            if LooseVersion(rust_version) < '1.33':
+                arm_target = 'armv7-linux-androideabi'
+            else:
+                arm_target = 'thumbv7neon-linux-androideabi'
+            android_targets = (arm_target,
                                'aarch64-linux-android',
                                'i686-linux-android',
                                'x86_64-linux-android', )

@@ -1645,11 +1645,13 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
           cx, &genObj->as<AsyncFunctionGeneratorObject>());
 
       // 1.  `return <value>` fulfills and returns the async function's promise.
-      JSObject* promise = AsyncFunctionResolve(
-          cx, asyncGenObj, vp, AsyncFunctionResolveKind::Fulfill);
-      if (!promise) {
-        getAndClearExceptionThenThrow();
-        return;
+      Rooted<PromiseObject*> promise(cx, asyncGenObj->promise());
+      if (promise->state() == JS::PromiseState::Pending) {
+        if (!AsyncFunctionResolve(cx, asyncGenObj, vp,
+                                  AsyncFunctionResolveKind::Fulfill)) {
+          getAndClearExceptionThenThrow();
+          return;
+        }
       }
       vp.setObject(*promise);
 
