@@ -5,19 +5,14 @@
 
 #include "core/TelemetryOrigin.h"
 #include "gtest/gtest.h"
-#include "gmock/gmock.h"
-#include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
-#include "nsIObserverService.h"
 #include "TelemetryFixture.h"
 #include "TelemetryTestHelpers.h"
 
 using namespace mozilla;
 using namespace TelemetryTestHelpers;
 using mozilla::Telemetry::OriginMetricID;
-using ::testing::_;
-using ::testing::AtLeast;
 
 // Test that we can properly record origin stuff using the C++ API.
 TEST_F(TelemetryTestFixture, RecordOrigin) {
@@ -43,10 +38,21 @@ TEST_F(TelemetryTestFixture, RecordOrigin) {
       << "telemetry.test_test1 must be in the snapshot.";
 
   JS::RootedObject originsObj(aCx, &origins.toObject());
-  JS::RootedValue count(aCx);
-  ASSERT_TRUE(JS_GetProperty(aCx, originsObj, doubleclick.get(), &count));
-  ASSERT_TRUE(count.isInt32() && count.toInt32() == 1)
-      << "Must have recorded the origin exactly once.";
+  bool isArray = false;
+  ASSERT_TRUE(JS_IsArrayObject(aCx, originsObj, &isArray) && isArray)
+      << "The metric's origins must be in an array.";
+
+  uint32_t length = 0;
+  ASSERT_TRUE(JS_GetArrayLength(aCx, originsObj, &length) && length == 1)
+      << "Length of returned array must be 1.";
+
+  JS::RootedValue origin(aCx);
+  ASSERT_TRUE(JS_GetElement(aCx, originsObj, 0, &origin));
+  ASSERT_TRUE(origin.isString());
+  nsAutoJSString jsStr;
+  ASSERT_TRUE(jsStr.init(aCx, origin));
+  ASSERT_TRUE(NS_ConvertUTF16toUTF8(jsStr) == doubleclick)
+      << "Origin must be faithfully stored and snapshotted.";
 
   // Now test that the snapshot didn't clear things out.
   GetOriginSnapshot(aCx, &originSnapshot);
@@ -81,10 +87,23 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceAndClear) {
       << "telemetry.test_test1 must be in the snapshot.";
 
   JS::RootedObject originsObj(aCx, &origins.toObject());
-  JS::RootedValue count(aCx);
-  ASSERT_TRUE(JS_GetProperty(aCx, originsObj, doubleclick.get(), &count));
-  ASSERT_TRUE(count.isInt32() && count.toInt32() == 2)
-      << "Must have recorded the origin exactly twice.";
+  bool isArray = false;
+  ASSERT_TRUE(JS_IsArrayObject(aCx, originsObj, &isArray) && isArray)
+      << "The metric's origins must be in an array.";
+
+  uint32_t length = 0;
+  ASSERT_TRUE(JS_GetArrayLength(aCx, originsObj, &length) && length == 2)
+      << "Length of returned array must be 1.";
+
+  for (uint32_t i = 0; i < length; ++i) {
+    JS::RootedValue origin(aCx);
+    ASSERT_TRUE(JS_GetElement(aCx, originsObj, i, &origin));
+    ASSERT_TRUE(origin.isString());
+    nsAutoJSString jsStr;
+    ASSERT_TRUE(jsStr.init(aCx, origin));
+    ASSERT_TRUE(NS_ConvertUTF16toUTF8(jsStr) == doubleclick)
+        << "Origin must be faithfully stored and snapshotted.";
+  }
 
   // Now check that snapshotting with clear actually cleared it.
   GetOriginSnapshot(aCx, &originSnapshot);
@@ -93,54 +112,6 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceAndClear) {
   JS::Rooted<JS::IdVector> ids(aCx, JS::IdVector(aCx));
   ASSERT_TRUE(JS_Enumerate(aCx, emptySnapshotObj, &ids));
   ASSERT_EQ(ids.length(), (unsigned)0) << "Returned object must be empty.";
-}
-
-TEST_F(TelemetryTestFixture, RecordUnknownOrigin) {
-  AutoJSContextWithGlobal cx(mCleanGlobal);
-  JSContext* aCx = cx.GetJSContext();
-
-  Unused << mTelemetry->ClearOrigins();
-
-  const nsLiteralCString telemetryTest1("telemetry.test_test1");
-  const nsLiteralCString unknown("this origin isn't known to Origin Telemetry");
-  const nsLiteralCString unknown2("neither is this one");
-
-  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, unknown);
-
-  JS::RootedValue originSnapshot(aCx);
-  GetOriginSnapshot(aCx, &originSnapshot);
-
-  ASSERT_FALSE(originSnapshot.isNullOrUndefined())
-      << "Origin snapshot must not be null/undefined.";
-
-  JS::RootedValue origins(aCx);
-  JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
-  ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj, telemetryTest1.get(), &origins))
-      << "telemetry.test_test1 must be in the snapshot.";
-
-  JS::RootedObject originsObj(aCx, &origins.toObject());
-  JS::RootedValue count(aCx);
-  ASSERT_TRUE(JS_GetProperty(aCx, originsObj, "__UNKNOWN__", &count));
-  ASSERT_TRUE(count.isInt32() && count.toInt32() == 1)
-      << "Must have recorded the unknown origin exactly once.";
-
-  // Record a second, different unknown origin and ensure only one is stored.
-  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, unknown2);
-
-  GetOriginSnapshot(aCx, &originSnapshot);
-
-  ASSERT_FALSE(originSnapshot.isNullOrUndefined())
-      << "Origin snapshot must not be null/undefined.";
-
-  JS::RootedObject snapshotObj2(aCx, &originSnapshot.toObject());
-  ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj2, telemetryTest1.get(), &origins))
-      << "telemetry.test_test1 must be in the snapshot.";
-
-  JS::RootedObject originsObj2(aCx, &origins.toObject());
-  JS::RootedValue count2(aCx);
-  ASSERT_TRUE(JS_GetProperty(aCx, originsObj2, "__UNKNOWN__", &count2));
-  ASSERT_TRUE(count2.isInt32() && count2.toInt32() == 1)
-      << "Must have recorded the unknown origin exactly once.";
 }
 
 TEST_F(TelemetryTestFixture, EncodedSnapshot) {
@@ -165,14 +136,12 @@ TEST_F(TelemetryTestFixture, EncodedSnapshot) {
 
   nsAutoJSString aStr;
   nsAutoJSString bStr;
-  GetEncodedOriginStrings(aCx, telemetryTest1 + NS_LITERAL_CSTRING("-0"), aStr,
-                          bStr);
+  GetEncodedOriginStrings(aCx, telemetryTest1, aStr, bStr);
 
   // Now snapshot a second time and ensure the encoded payloads change.
   nsAutoJSString secondAStr;
   nsAutoJSString secondBStr;
-  GetEncodedOriginStrings(aCx, telemetryTest1 + NS_LITERAL_CSTRING("-0"),
-                          secondAStr, secondBStr);
+  GetEncodedOriginStrings(aCx, telemetryTest1, secondAStr, secondBStr);
 
   ASSERT_TRUE(aStr != secondAStr)
       << "aStr (" << NS_ConvertUTF16toUTF8(aStr).get()
@@ -182,49 +151,4 @@ TEST_F(TelemetryTestFixture, EncodedSnapshot) {
       << "bStr (" << NS_ConvertUTF16toUTF8(bStr).get()
       << ") must not equal secondBStr ("
       << NS_ConvertUTF16toUTF8(secondBStr).get() << ")";
-}
-
-class MockObserver final : public nsIObserver {
- public:
-  NS_DECL_ISUPPORTS
-
-  MOCK_METHOD1(Mobserve, void(const char* aTopic));
-  nsresult Observe(nsISupports* aSubject, const char* aTopic,
-                   const char16_t* aData) override {
-    Mobserve(aTopic);
-    return NS_OK;
-  };
-
-  MockObserver() = default;
-
- private:
-  ~MockObserver() = default;
-};
-
-NS_IMPL_ISUPPORTS(MockObserver, nsIObserver);
-
-TEST_F(TelemetryTestFixture, OriginTelemetryNotifiesTopic) {
-  Unused << mTelemetry->ClearOrigins();
-
-  const char* kTopic = "origin-telemetry-storage-limit-reached";
-  NS_NAMED_LITERAL_CSTRING(doubleclick, "doubleclick.de");
-  NS_NAMED_LITERAL_CSTRING(fb, "fb.com");
-
-  MockObserver* mo = new MockObserver();
-  nsCOMPtr<nsIObserver> nsMo(mo);
-  EXPECT_CALL(*mo, Mobserve(kTopic)).Times(1);
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  ASSERT_TRUE(os);
-  os->AddObserver(nsMo, kTopic, false);
-
-  for (int i = 0; i < 10; ++i) {
-    if (i < 9) {
-      // Let's ensure we only notify the once.
-      Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, fb);
-    }
-    Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
-  }
-
-  os->RemoveObserver(nsMo, kTopic);
 }

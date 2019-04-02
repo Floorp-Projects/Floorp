@@ -8,26 +8,19 @@
 #include "TelemetryOrigin.h"
 
 #include "nsDataHashtable.h"
-#include "nsIObserverService.h"
-#include "nsPrintfCString.h"
+#include "nsIXULAppInfo.h"
 #include "TelemetryCommon.h"
 #include "TelemetryOriginEnums.h"
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/PrioEncoder.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/Pair.h"
-#include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
 
-#include <cmath>
 #include <type_traits>
 
 using mozilla::ErrorResult;
-using mozilla::MakePair;
 using mozilla::MallocSizeOf;
-using mozilla::Pair;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
 using mozilla::dom::PrioEncoder;
@@ -86,9 +79,6 @@ class OriginMetricIDHashKey : public PLDHashEntryHdr {
 ////////////////////////////////////////////////////////////////////////
 //
 // PRIVATE STATE, SHARED BY ALL THREADS
-//
-// Access for all of this state (except gInitDone) must be guarded by
-// gTelemetryOriginMutex.
 
 namespace {
 
@@ -109,32 +99,18 @@ nsTArray<const char*>* gOriginsList = nullptr;
 typedef nsDataHashtable<nsCStringHashKey, size_t> OriginToIndexMap;
 OriginToIndexMap* gOriginToIndexMap;
 
-typedef nsDataHashtable<nsCStringHashKey, uint32_t> OriginBag;
-typedef nsDataHashtable<OriginMetricIDHashKey, OriginBag> IdToOriginBag;
+typedef nsDataHashtable<OriginMetricIDHashKey, nsTArray<nsCString>>
+    IdToOriginsMap;
 
-IdToOriginBag* gMetricToOriginBag;
+IdToOriginsMap* gMetricToOriginsMap;
 
 mozilla::Atomic<bool, mozilla::Relaxed> gInitDone(false);
 
 // Useful for app-encoded data
-typedef nsTArray<Pair<OriginMetricID, nsTArray<nsTArray<bool>>>>
-    IdBoolsPairArray;
+typedef nsDataHashtable<OriginMetricIDHashKey, nsTArray<bool>> IdToBoolsMap;
 
-// Prio has a maximum supported number of bools it can encode at a time.
-// This means a single metric may result in several encoded payloads if the
-// number of origins exceeds the number of bools.
-// Each encoded payload corresponds to an element in the `prioData` array in the
-// "prio" ping.
-// This number is the number of encoded payloads needed per metric, and is
-// equivalent to "how many bitvectors do we need to encode this whole list of
-// origins?"
-static uint32_t gPrioDatasPerMetric;
-
-// The number of "meta-origins": in-band metadata about origin telemetry.
-// Currently 1: the "unknown origin recorded" meta-origin.
-static uint32_t kNumMetaOrigins = 1;
-
-NS_NAMED_LITERAL_CSTRING(kUnknownOrigin, "__UNKNOWN__");
+static nsCString gBatchID;
+#define CANARY_BATCH_ID "decaffcoffee"
 
 }  // namespace
 
@@ -150,79 +126,30 @@ const char* GetNameForMetricID(OriginMetricID aId) {
   return mozilla::Telemetry::MetricIDToString[static_cast<uint32_t>(aId)];
 }
 
-// Calculates the number of `prioData` elements we'd need if we were asked for
-// an encoded snapshot right now.
-uint32_t PrioDataCount(const StaticMutexAutoLock& lock) {
-  uint32_t count = 0;
-  auto iter = gMetricToOriginBag->ConstIter();
-  for (; !iter.Done(); iter.Next()) {
-    auto originIt = iter.Data().ConstIter();
-    uint32_t maxOriginCount = 0;
-    for (; !originIt.Done(); originIt.Next()) {
-      maxOriginCount = std::max(maxOriginCount, originIt.Data());
-    }
-    count += gPrioDatasPerMetric * maxOriginCount;
-  }
-  return count;
-}
+nsresult AppEncodeTo(const StaticMutexAutoLock& lock, IdToBoolsMap& aResult) {
+  // TODO: support sharding for an origins list longer than gNumBooleans.
+  // For now, assert that it's not a problem.
+  MOZ_ASSERT(gOriginsList->Length() <= PrioEncoder::gNumBooleans);
 
-// Takes the storage and turns it into bool arrays for Prio to encode, turning
-// { metric1: [origin1, origin2, ...], ...}
-// into
-// [(metric1, [[shard1], [shard2], ...]), ...]
-// Note: if an origin is present multiple times for a given metric, we must
-// generate multiple (id, boolvectors) pairs so that they are all reported.
-// Meaning
-// { metric1: [origin1, origin2, origin2] }
-// must turn into (with a pretend gNumBooleans of 1)
-// [(metric1, [[1], [1]]), (metric1, [[0], [1]])]
-nsresult AppEncodeTo(const StaticMutexAutoLock& lock,
-                     IdBoolsPairArray& aResult) {
-  auto iter = gMetricToOriginBag->ConstIter();
+  auto iter = gMetricToOriginsMap->ConstIter();
   for (; !iter.Done(); iter.Next()) {
     OriginMetricID id = iter.Key();
-    const OriginBag& bag = iter.Data();
 
-    uint32_t generation = 1;
-    uint32_t maxGeneration = 1;
-    do {
-      // Fill in the result bool vectors with `false`s.
-      nsTArray<nsTArray<bool>> metricData(gPrioDatasPerMetric);
-      metricData.SetLength(gPrioDatasPerMetric);
-      for (size_t i = 0; i < metricData.Length() - 1; ++i) {
-        metricData[i].SetLength(PrioEncoder::gNumBooleans);
-        for (auto& metricDatum : metricData[i]) {
-          metricDatum = false;
-        }
-      }
-      auto& lastArray = metricData[metricData.Length() - 1];
-      lastArray.SetLength(gOriginsList->Length() % PrioEncoder::gNumBooleans);
-      for (auto& metricDatum : lastArray) {
-        metricDatum = false;
-      }
+    nsTArray<bool> metricData(gOriginsList->Length());
+    metricData.SetLength(gOriginsList->Length());
+    for (auto& metricDatum : metricData) {
+      metricDatum = false;
+    }
 
-      auto originIt = bag.ConstIter();
-      for (; !originIt.Done(); originIt.Next()) {
-        uint32_t originCount = originIt.Data();
-        if (originCount >= generation) {
-          maxGeneration = std::max(maxGeneration, originCount);
-
-          const nsACString& origin = originIt.Key();
-          size_t index;
-          if (!gOriginToIndexMap->Get(origin, &index)) {
-            return NS_ERROR_FAILURE;
-          }
-          MOZ_ASSERT(index < gOriginsList->Length());
-          size_t shardIndex =
-              ceil(static_cast<double>(index) / PrioEncoder::gNumBooleans);
-          MOZ_ASSERT(shardIndex < metricData.Length());
-          MOZ_ASSERT(index % PrioEncoder::gNumBooleans <
-                     metricData[shardIndex].Length());
-          metricData[shardIndex][index % PrioEncoder::gNumBooleans] = true;
-        }
+    for (const auto& origin : iter.Data()) {
+      size_t index;
+      if (!gOriginToIndexMap->Get(origin, &index)) {
+        return NS_ERROR_FAILURE;
       }
-      aResult.AppendElement(MakePair(id, metricData));
-    } while (generation < maxGeneration);
+      MOZ_ASSERT(index < gOriginsList->Length());
+      metricData[index] = true;
+    }
+    aResult.Put(id, metricData);
   }
   return NS_OK;
 }
@@ -252,27 +179,28 @@ void TelemetryOrigin::InitializeGlobalState() {
       "fb.com",
   });
 
-  gPrioDatasPerMetric =
-      ceil(static_cast<double>(gOriginsList->Length() + kNumMetaOrigins) /
-           PrioEncoder::gNumBooleans);
-
   gOriginToIndexMap = new OriginToIndexMap(gOriginsList->Length());
   for (size_t i = 0; i < gOriginsList->Length(); ++i) {
-    MOZ_ASSERT(!kUnknownOrigin.Equals((*gOriginsList)[i]),
-               "Unknown origin literal is reserved in Origin Telemetry");
     gOriginToIndexMap->Put(nsDependentCString((*gOriginsList)[i]), i);
   }
 
-  // Add the meta-origin for tracking recordings to untracked origins.
-  gOriginToIndexMap->Put(kUnknownOrigin, gOriginsList->Length());
-
-  gMetricToOriginBag = new IdToOriginBag();
+  gMetricToOriginsMap = new IdToOriginsMap();
 
   // This map shouldn't change at runtime, so make debug builds complain
   // if it tries.
 #ifdef DEBUG
   gOriginToIndexMap->MarkImmutable();
 #endif  // DEBUG
+
+  // We use the app's buildid for the prio batch ID
+  nsCOMPtr<nsIXULAppInfo> appInfo =
+      do_GetService("@mozilla.org/xre/app-info;1");
+  if (!appInfo || NS_FAILED(appInfo->GetAppBuildID(gBatchID))) {
+    // Some tests forget to set either of build ID or xpc::IsInAutomation(),
+    // so all we can do is warn.
+    NS_WARNING("Cannot get app build ID. Defaulting to canary.");
+    gBatchID.AssignLiteral(CANARY_BATCH_ID);
+  }
 
   gInitDone = true;
 }
@@ -294,8 +222,10 @@ void TelemetryOrigin::DeInitializeGlobalState() {
   delete gOriginToIndexMap;
   gOriginToIndexMap = nullptr;
 
-  delete gMetricToOriginBag;
-  gMetricToOriginBag = nullptr;
+  delete gMetricToOriginsMap;
+  gMetricToOriginsMap = nullptr;
+
+  gBatchID.Truncate();
 
   gInitDone = false;
 }
@@ -306,45 +236,21 @@ nsresult TelemetryOrigin::RecordOrigin(OriginMetricID aId,
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t prioDataCount;
-  {
-    StaticMutexAutoLock locker(gTelemetryOriginMutex);
+  StaticMutexAutoLock locker(gTelemetryOriginMutex);
 
-    // Common Telemetry error-handling practices for recording functions:
-    // only illegal calls return errors whereas merely incorrect ones are mutely
-    // ignored.
-    if (!gInitDone) {
-      return NS_OK;
-    }
-
-    nsCString origin(aOrigin);
-    if (!gOriginToIndexMap->Contains(aOrigin)) {
-      // Only record one unknown origin per metric per snapshot.
-      // (otherwise we may get swamped and blow our data budget.)
-      if (gMetricToOriginBag->Contains(aId) &&
-          gMetricToOriginBag->GetOrInsert(aId).Contains(kUnknownOrigin)) {
-        return NS_OK;
-      }
-      origin = kUnknownOrigin;
-    }
-
-    auto& originBag = gMetricToOriginBag->GetOrInsert(aId);
-    originBag.GetOrInsert(origin)++;
-
-    prioDataCount = PrioDataCount(locker);
+  // Common Telemetry error-handling practices for recording functions:
+  // only illegal calls return errors whereas merely incorrect ones are mutely
+  // ignored.
+  if (!gInitDone) {
+    return NS_OK;
   }
 
-  static uint32_t sPrioPingLimit =
-      mozilla::Preferences::GetUint("toolkit.telemetry.prioping.dataLimit", 10);
-  if (prioDataCount >= sPrioPingLimit) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
-      // Ensure we don't notify while holding the lock in case of synchronous
-      // dispatch. May deadlock ourselves if we then trigger a snapshot.
-      os->NotifyObservers(nullptr, "origin-telemetry-storage-limit-reached",
-                          nullptr);
-    }
+  if (!gOriginToIndexMap->Contains(aOrigin)) {
+    return NS_OK;
   }
+
+  auto& originArray = gMetricToOriginsMap->GetOrInsert(aId);
+  originArray.AppendElement(aOrigin);
 
   return NS_OK;
 }
@@ -360,7 +266,7 @@ nsresult TelemetryOrigin::GetOriginSnapshot(bool aClear, JSContext* aCx,
   }
 
   // Step 1: Grab the lock, copy into stack-local storage, optionally clear.
-  IdToOriginBag copy;
+  IdToOriginsMap copy;
   {
     StaticMutexAutoLock locker(gTelemetryOriginMutex);
 
@@ -370,15 +276,11 @@ nsresult TelemetryOrigin::GetOriginSnapshot(bool aClear, JSContext* aCx,
       // APIs. And replaying any interleaving recording sounds like too much
       // squeeze for not enough juice.
 
-      gMetricToOriginBag->SwapElements(copy);
+      gMetricToOriginsMap->SwapElements(copy);
     } else {
-      auto iter = gMetricToOriginBag->ConstIter();
+      auto iter = gMetricToOriginsMap->ConstIter();
       for (; !iter.Done(); iter.Next()) {
-        OriginBag& bag = copy.GetOrInsert(iter.Key());
-        auto originIt = iter.Data().ConstIter();
-        for (; !originIt.Done(); originIt.Next()) {
-          bag.Put(originIt.Key(), originIt.Data());
-        }
+        copy.Put(iter.Key(), iter.Data());
       }
     }
   }
@@ -390,22 +292,24 @@ nsresult TelemetryOrigin::GetOriginSnapshot(bool aClear, JSContext* aCx,
   }
   aResult.setObject(*rootObj);
   for (auto iter = copy.ConstIter(); !iter.Done(); iter.Next()) {
-    JS::RootedObject originsObj(aCx, JS_NewPlainObject(aCx));
-    if (NS_WARN_IF(!originsObj)) {
+    const auto& origins = iter.Data();
+    JS::RootedObject originsArrayObj(aCx,
+                                     JS_NewArrayObject(aCx, origins.Length()));
+    if (NS_WARN_IF(!originsArrayObj)) {
       return NS_ERROR_FAILURE;
     }
     if (!JS_DefineProperty(aCx, rootObj, GetNameForMetricID(iter.Key()),
-                           originsObj, JSPROP_ENUMERATE)) {
+                           originsArrayObj, JSPROP_ENUMERATE)) {
       NS_WARNING("Failed to define property in origin snapshot.");
       return NS_ERROR_FAILURE;
     }
 
-    auto originIt = iter.Data().ConstIter();
-    for (; !originIt.Done(); originIt.Next()) {
-      if (!JS_DefineProperty(aCx, originsObj,
-                             nsPromiseFlatCString(originIt.Key()).get(),
-                             originIt.Data(), JSPROP_ENUMERATE)) {
-        NS_WARNING("Failed to define origin and count in snapshot.");
+    for (uint32_t i = 0; i < origins.Length(); ++i) {
+      JS::RootedValue origin(aCx);
+      origin.setString(ToJSString(aCx, origins[i]));
+      if (!JS_DefineElement(aCx, originsArrayObj, i, origin,
+                            JSPROP_ENUMERATE)) {
+        NS_WARNING("Failed to define element in origin snapshot array.");
         return NS_ERROR_FAILURE;
       }
     }
@@ -424,9 +328,9 @@ nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
     return NS_OK;
   }
 
-  // Step 1: Take the lock and app-encode. Optionally clear.
+  // Step 1: Take the lock and app-encode
   nsresult rv;
-  IdBoolsPairArray appEncodedMetricData;
+  IdToBoolsMap appEncodedMetricData;
   {
     StaticMutexAutoLock lock(gTelemetryOriginMutex);
 
@@ -434,73 +338,45 @@ nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    if (aClear) {
-      // I'd really prefer to clear after we're sure the snapshot didn't go
-      // awry, but we can't hold a lock preventing recording while using JS
-      // APIs. And replaying any interleaving recording sounds like too much
-      // squeeze for not enough juice.
-
-      gMetricToOriginBag->Clear();
-    }
   }
 
-  // Step 2: Don't need the lock to prio-encode and base64-encode
-  nsTArray<Pair<nsCString, Pair<nsCString, nsCString>>> prioData;
-  for (auto& metricData : appEncodedMetricData) {
-    auto& boolVectors = metricData.second();
-    for (uint32_t i = 0; i < boolVectors.Length(); ++i) {
-      // "encoding" is of the form `metricName-X` where X is the shard index.
-      nsCString encodingName =
-          nsPrintfCString("%s-%u", GetNameForMetricID(metricData.first()), i);
-      nsCString aResult;
-      nsCString bResult;
-      rv = PrioEncoder::EncodeNative(encodingName, boolVectors[i], aResult,
-                                     bResult);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      nsCString aBase64;
-      rv = mozilla::Base64Encode(aResult, aBase64);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      nsCString bBase64;
-      rv = mozilla::Base64Encode(bResult, bBase64);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+  // Step 2: Don't need the lock to prio-encode and base64-encode and JS-encode
 
-      prioData.AppendElement(
-          MakePair(encodingName, MakePair(aBase64, bBase64)));
-    }
-  }
-
-  // Step 3: Still don't need the lock to translate to JS
-  // The resulting data structure is:
-  // [{
-  //   encoding: <encoding name>,
-  //   prio: {
-  //     a: <base64 string>,
-  //     b: <base64 string>,
-  //   },
-  // }, ...]
-
-  JS::RootedObject prioDataArray(aCx,
-                                 JS_NewArrayObject(aCx, prioData.Length()));
+  JS::RootedObject prioDataArray(
+      aCx, JS_NewArrayObject(aCx, appEncodedMetricData.Count()));
   if (NS_WARN_IF(!prioDataArray)) {
     return NS_ERROR_FAILURE;
   }
+
+  auto it = appEncodedMetricData.ConstIter();
   uint32_t i = 0;
-  for (auto& prioDatum : prioData) {
-    JS::RootedObject prioDatumObj(aCx, JS_NewPlainObject(aCx));
-    if (NS_WARN_IF(!prioDatumObj)) {
+  for (; !it.Done(); it.Next()) {
+    nsCString aResult;
+    nsCString bResult;
+    rv = PrioEncoder::EncodeNative(gBatchID, it.Data(), aResult, bResult);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    nsCString aBase64;
+    rv = mozilla::Base64Encode(aResult, aBase64);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    nsCString bBase64;
+    rv = mozilla::Base64Encode(bResult, bBase64);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    JS::RootedObject rootObj(aCx, JS_NewPlainObject(aCx));
+    if (NS_WARN_IF(!rootObj)) {
       return NS_ERROR_FAILURE;
     }
-    JSString* encoding = ToJSString(aCx, prioDatum.first());
-    JS::RootedString rootedEncoding(aCx, encoding);
-    if (NS_WARN_IF(!JS_DefineProperty(aCx, prioDatumObj, "encoding",
-                                      rootedEncoding, JSPROP_ENUMERATE))) {
+    JSString* metricName =
+        ToJSString(aCx, nsDependentCString(GetNameForMetricID(it.Key())));
+    JS::RootedString rootStr(aCx, metricName);
+    if (NS_WARN_IF(!JS_DefineProperty(aCx, rootObj, "encoding", rootStr,
+                                      JSPROP_ENUMERATE))) {
       return NS_ERROR_FAILURE;
     }
 
@@ -508,27 +384,32 @@ nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
     if (NS_WARN_IF(!prioObj)) {
       return NS_ERROR_FAILURE;
     }
-    if (NS_WARN_IF(!JS_DefineProperty(aCx, prioDatumObj, "prio", prioObj,
+    if (NS_WARN_IF(!JS_DefineProperty(aCx, rootObj, "prio", prioObj,
                                       JSPROP_ENUMERATE))) {
       return NS_ERROR_FAILURE;
     }
 
-    JS::RootedString aRootStr(aCx, ToJSString(aCx, prioDatum.second().first()));
+    JS::RootedString aRootStr(aCx, ToJSString(aCx, aBase64));
     if (NS_WARN_IF(!JS_DefineProperty(aCx, prioObj, "a", aRootStr,
                                       JSPROP_ENUMERATE))) {
       return NS_ERROR_FAILURE;
     }
-    JS::RootedString bRootStr(aCx,
-                              ToJSString(aCx, prioDatum.second().second()));
+    JS::RootedString bRootStr(aCx, ToJSString(aCx, bBase64));
     if (NS_WARN_IF(!JS_DefineProperty(aCx, prioObj, "b", bRootStr,
                                       JSPROP_ENUMERATE))) {
       return NS_ERROR_FAILURE;
     }
 
-    if (NS_WARN_IF(!JS_DefineElement(aCx, prioDataArray, i++, prioDatumObj,
+    if (NS_WARN_IF(!JS_DefineElement(aCx, prioDataArray, i++, rootObj,
                                      JSPROP_ENUMERATE))) {
       return NS_ERROR_FAILURE;
     }
+  }
+
+  // Step 4: If we need to clear, we'll need that lock again
+  if (aClear) {
+    StaticMutexAutoLock lock(gTelemetryOriginMutex);
+    gMetricToOriginsMap->Clear();
   }
 
   aSnapshot.setObject(*prioDataArray);
@@ -546,7 +427,7 @@ void TelemetryOrigin::ClearOrigins() {
     return;
   }
 
-  gMetricToOriginBag->Clear();
+  gMetricToOriginsMap->Clear();
 }
 
 size_t TelemetryOrigin::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
@@ -557,11 +438,14 @@ size_t TelemetryOrigin::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
     return 0;
   }
 
-  n += gMetricToOriginBag->ShallowSizeOfIncludingThis(aMallocSizeOf);
-  auto iter = gMetricToOriginBag->ConstIter();
+  n += gMetricToOriginsMap->ShallowSizeOfIncludingThis(aMallocSizeOf);
+  auto iter = gMetricToOriginsMap->ConstIter();
   for (; !iter.Done(); iter.Next()) {
-    // The string hashkey and count should both be contained by the hashtable.
     n += iter.Data().ShallowSizeOfIncludingThis(aMallocSizeOf);
+    for (const auto& origin : iter.Data()) {
+      // nsTArray's shallow size should include the strings' `this`
+      n += origin.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    }
   }
 
   // The string hashkey and ID should both be contained within the hashtable.
