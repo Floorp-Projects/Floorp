@@ -9,6 +9,7 @@ import android.app.Application
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fretboard.Fretboard
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
@@ -72,7 +73,8 @@ open class FenixApplication : Application() {
             EXPERIMENTS_BASE_URL,
             EXPERIMENTS_BUCKET_NAME,
             EXPERIMENTS_COLLECTION_NAME,
-            components.core.client
+            // TODO Switch back to components.core.client (see https://github.com/mozilla-mobile/fenix/issues/1329)
+            HttpURLConnectionClient()
         )
         // TODO add ValueProvider to keep clientID in sync with Glean when ready
         fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile))

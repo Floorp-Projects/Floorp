@@ -305,6 +305,8 @@ dependencies {
     debugImplementation Deps.leakcanary
     releaseImplementation Deps.leakcanary_noop
 
+    implementation Deps.mozilla_lib_fetch_httpurlconnection
+
     armImplementation Gecko.geckoview_beta_arm
     x86Implementation Gecko.geckoview_beta_x86
     aarch64Implementation Gecko.geckoview_beta_aarch64

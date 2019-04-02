@@ -103,6 +103,7 @@ object Deps {
     const val mozilla_ui_icons = "org.mozilla.components:ui-icons:${Versions.mozilla_android_components}"
 
     const val mozilla_lib_crash = "org.mozilla.components:lib-crash:${Versions.mozilla_android_components}"
+    const val mozilla_lib_fetch_httpurlconnection = "org.mozilla.components:lib-fetch-httpurlconnection:${Versions.mozilla_android_components}"
 
     const val mozilla_support_base = "org.mozilla.components:support-base:${Versions.mozilla_android_components}"
     const val mozilla_support_ktx = "org.mozilla.components:support-ktx:${Versions.mozilla_android_components}"
