@@ -156,7 +156,7 @@ LightweightThemeConsumer.prototype = {
       return;
     }
 
-    this._update(data, data.experiment);
+    this._update(data);
   },
 
   handleEvent(aEvent) {
@@ -186,7 +186,7 @@ LightweightThemeConsumer.prototype = {
     return this.darkThemeMediaQuery && this.darkThemeMediaQuery.matches;
   },
 
-  _update(themeData, experiment) {
+  _update(themeData) {
     this._lastData = themeData;
 
     let theme = themeData.theme;
@@ -219,7 +219,7 @@ LightweightThemeConsumer.prototype = {
       _setImage(root, active, `--${icon}-icon`, value);
     }
 
-    this._setExperiment(active, experiment, theme.experimental);
+    this._setExperiment(active, themeData.experiment, theme.experimental);
     _setImage(root, active, "--lwt-header-image", theme.headerURL);
     _setImage(root, active, "--lwt-additional-images", theme.additionalBackgrounds);
     _setProperties(root, active, theme);
