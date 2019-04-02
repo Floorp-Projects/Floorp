@@ -28,6 +28,7 @@
                 android:layout_gravity="start"
                 android:button="@null"
                 android:clickable="false"
+                android:focusable="false"
                 android:drawableStart="?android:attr/listChoiceIndicatorSingle"
                 android:drawablePadding="@dimen/radio_button_preference_drawable_padding"/>
 
