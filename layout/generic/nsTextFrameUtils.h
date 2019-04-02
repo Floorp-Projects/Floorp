@@ -9,7 +9,6 @@
 
 #include "gfxSkipChars.h"
 #include "nsBidiUtils.h"
-#include "nsUnicodeProperties.h"
 
 class nsIContent;
 struct nsStyleText;
@@ -83,12 +82,7 @@ class nsTextFrameUtils {
    * controls).
    */
   static bool IsSpaceCombiningSequenceTail(const char16_t* aChars,
-                                           int32_t aLength) {
-    return aLength > 0 &&
-           (mozilla::unicode::IsClusterExtender(aChars[0]) ||
-            (IsBidiControl(aChars[0]) &&
-             IsSpaceCombiningSequenceTail(aChars + 1, aLength - 1)));
-  }
+                                           int32_t aLength);
   static bool IsSpaceCombiningSequenceTail(const uint8_t* aChars,
                                            int32_t aLength) {
     return false;
