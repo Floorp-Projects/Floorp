@@ -25,3 +25,16 @@ index 9af64ed332c..bcebe303ff4 100644
      Builder.CreateCall(GCOVFlush);
      I->getParent()->splitBasicBlock(I);
    }
+diff --git a/clang/lib/Driver/ToolChains/Darwin.cpp b/clang/lib/Driver/ToolChains/Darwin.cpp
+index e113f9a679..b3a07b18c0 100644
+--- a/clang/lib/Driver/ToolChains/Darwin.cpp
++++ b/clang/lib/Driver/ToolChains/Darwin.cpp
+@@ -1058,7 +1058,7 @@ void Darwin::addProfileRTLibs(const ArgList &Args,
+   // runtime's functionality.
+   if (hasExportSymbolDirective(Args)) {
+     if (needsGCovInstrumentation(Args)) {
+-      addExportedSymbol(CmdArgs, "___gcov_flush");
++      addExportedSymbol(CmdArgs, "___custom_llvm_gcov_flush");
+       addExportedSymbol(CmdArgs, "_flush_fn_list");
+       addExportedSymbol(CmdArgs, "_writeout_fn_list");
+     } else {

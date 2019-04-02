@@ -47,6 +47,6 @@
     "patches": [
       "static-llvm-symbolizer.patch",
       "find_symbolizer_linux.patch",
-      "rename_gcov_flush_.patch"
+      "rename_gcov_flush.patch"
     ]
 }
