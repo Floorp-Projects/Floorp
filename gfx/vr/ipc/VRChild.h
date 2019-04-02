@@ -30,6 +30,7 @@ class VRChild final : public PVRChild, public gfxVarReceiver {
 
   static void Destroy(UniquePtr<VRChild>&& aChild);
   void Init();
+  bool EnsureVRReady();
   virtual void OnVarChanged(const GfxVarUpdate& aVar) override;
 
  protected:
@@ -38,12 +39,14 @@ class VRChild final : public PVRChild, public gfxVarReceiver {
       const nsCString& aPath);
   mozilla::ipc::IPCResult RecvOpenVRControllerManifestPathToParent(
       const OpenVRControllerType& aType, const nsCString& aPath);
+  mozilla::ipc::IPCResult RecvInitComplete();
   mozilla::ipc::IPCResult RecvInitCrashReporter(
       Shmem&& shmem, const NativeThreadId& aThreadId);
 
  private:
   VRProcessParent* mHost;
   UniquePtr<ipc::CrashReporterHost> mCrashReporter;
+  bool mVRReady;
 };
 
 }  // namespace gfx
