@@ -1065,19 +1065,19 @@ WasmToken WasmTokenStream::next() {
             if (consume(u"const")) {
               return WasmToken(WasmToken::Const, ValType::F32, begin, cur_);
             }
-            if (consume(u"convert_s/i32")) {
+            if (consume(u"convert_i32_s") || consume(u"convert_s/i32")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::F32ConvertSI32,
                                begin, cur_);
             }
-            if (consume(u"convert_u/i32")) {
+            if (consume(u"convert_i32_u") || consume(u"convert_u/i32")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::F32ConvertUI32,
                                begin, cur_);
             }
-            if (consume(u"convert_s/i64")) {
+            if (consume(u"convert_i64_s") || consume(u"convert_s/i64")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::F32ConvertSI64,
                                begin, cur_);
             }
-            if (consume(u"convert_u/i64")) {
+            if (consume(u"convert_i64_u") || consume(u"convert_u/i64")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::F32ConvertUI64,
                                begin, cur_);
             }
@@ -1087,7 +1087,7 @@ WasmToken WasmTokenStream::next() {
             }
             break;
           case 'd':
-            if (consume(u"demote/f64")) {
+            if (consume(u"demote_f64") || consume(u"demote/f64")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::F32DemoteF64,
                                begin, cur_);
             }
@@ -1159,7 +1159,7 @@ WasmToken WasmTokenStream::next() {
             }
             break;
           case 'r':
-            if (consume(u"reinterpret/i32")) {
+            if (consume(u"reinterpret_i32") || consume(u"reinterpret/i32")) {
               return WasmToken(WasmToken::ConversionOpcode,
                                Op::F32ReinterpretI32, begin, cur_);
             }
@@ -1209,19 +1209,19 @@ WasmToken WasmTokenStream::next() {
             if (consume(u"const")) {
               return WasmToken(WasmToken::Const, ValType::F64, begin, cur_);
             }
-            if (consume(u"convert_s/i32")) {
+            if (consume(u"convert_i32_s") || consume(u"convert_s/i32")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::F64ConvertSI32,
                                begin, cur_);
             }
-            if (consume(u"convert_u/i32")) {
+            if (consume(u"convert_i32_u") || consume(u"convert_u/i32")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::F64ConvertUI32,
                                begin, cur_);
             }
-            if (consume(u"convert_s/i64")) {
+            if (consume(u"convert_i64_s") || consume(u"convert_s/i64")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::F64ConvertSI64,
                                begin, cur_);
             }
-            if (consume(u"convert_u/i64")) {
+            if (consume(u"convert_i64_u") || consume(u"convert_u/i64")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::F64ConvertUI64,
                                begin, cur_);
             }
@@ -1299,13 +1299,13 @@ WasmToken WasmTokenStream::next() {
             }
             break;
           case 'p':
-            if (consume(u"promote/f32")) {
+            if (consume(u"promote_f32") || consume(u"promote/f32")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::F64PromoteF32,
                                begin, cur_);
             }
             break;
           case 'r':
-            if (consume(u"reinterpret/i64")) {
+            if (consume(u"reinterpret_i64") || consume(u"reinterpret/i64")) {
               return WasmToken(WasmToken::UnaryOpcode, Op::F64ReinterpretI64,
                                begin, cur_);
             }
@@ -1377,11 +1377,11 @@ WasmToken WasmTokenStream::next() {
                                cur_);
             }
             if (consume(u"atomic.")) {
-              if (consume(u"rmw8_u.add")) {
+              if (consume(u"rmw8.add_u") || consume(u"rmw8_u.add")) {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I32AtomicAdd8U,
                                  begin, cur_);
               }
-              if (consume(u"rmw16_u.add")) {
+              if (consume(u"rmw16.add_u") || consume(u"rmw16_u.add")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I32AtomicAdd16U, begin, cur_);
               }
@@ -1389,11 +1389,11 @@ WasmToken WasmTokenStream::next() {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I32AtomicAdd,
                                  begin, cur_);
               }
-              if (consume(u"rmw8_u.and")) {
+              if (consume(u"rmw8.and_u") || consume(u"rmw8_u.and")) {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I32AtomicAnd8U,
                                  begin, cur_);
               }
-              if (consume(u"rmw16_u.and")) {
+              if (consume(u"rmw16.and_u") || consume(u"rmw16_u.and")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I32AtomicAnd16U, begin, cur_);
               }
@@ -1401,11 +1401,11 @@ WasmToken WasmTokenStream::next() {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I32AtomicAnd,
                                  begin, cur_);
               }
-              if (consume(u"rmw8_u.cmpxchg")) {
+              if (consume(u"rmw8.cmpxchg_u") || consume(u"rmw8_u.cmpxchg")) {
                 return WasmToken(WasmToken::AtomicCmpXchg,
                                  ThreadOp::I32AtomicCmpXchg8U, begin, cur_);
               }
-              if (consume(u"rmw16_u.cmpxchg")) {
+              if (consume(u"rmw16.cmpxchg_u") || consume(u"rmw16_u.cmpxchg")) {
                 return WasmToken(WasmToken::AtomicCmpXchg,
                                  ThreadOp::I32AtomicCmpXchg16U, begin, cur_);
               }
@@ -1425,11 +1425,11 @@ WasmToken WasmTokenStream::next() {
                 return WasmToken(WasmToken::AtomicLoad, ThreadOp::I32AtomicLoad,
                                  begin, cur_);
               }
-              if (consume(u"rmw8_u.or")) {
+              if (consume(u"rmw8.or_u") || consume(u"rmw8_u.or")) {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I32AtomicOr8U,
                                  begin, cur_);
               }
-              if (consume(u"rmw16_u.or")) {
+              if (consume(u"rmw16.or_u") || consume(u"rmw16_u.or")) {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I32AtomicOr16U,
                                  begin, cur_);
               }
@@ -1449,11 +1449,11 @@ WasmToken WasmTokenStream::next() {
                 return WasmToken(WasmToken::AtomicStore,
                                  ThreadOp::I32AtomicStore, begin, cur_);
               }
-              if (consume(u"rmw8_u.sub")) {
+              if (consume(u"rmw8.sub_u") || consume(u"rmw8_u.sub")) {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I32AtomicSub8U,
                                  begin, cur_);
               }
-              if (consume(u"rmw16_u.sub")) {
+              if (consume(u"rmw16.sub_u") || consume(u"rmw16_u.sub")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I32AtomicSub16U, begin, cur_);
               }
@@ -1461,11 +1461,11 @@ WasmToken WasmTokenStream::next() {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I32AtomicSub,
                                  begin, cur_);
               }
-              if (consume(u"rmw8_u.xor")) {
+              if (consume(u"rmw8.xor_u") || consume(u"rmw8_u.xor")) {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I32AtomicXor8U,
                                  begin, cur_);
               }
-              if (consume(u"rmw16_u.xor")) {
+              if (consume(u"rmw16.xor_u") || consume(u"rmw16_u.xor")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I32AtomicXor16U, begin, cur_);
               }
@@ -1473,11 +1473,11 @@ WasmToken WasmTokenStream::next() {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I32AtomicXor,
                                  begin, cur_);
               }
-              if (consume(u"rmw8_u.xchg")) {
+              if (consume(u"rmw8.xchg_u") || consume(u"rmw8_u.xchg")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I32AtomicXchg8U, begin, cur_);
               }
-              if (consume(u"rmw16_u.xchg")) {
+              if (consume(u"rmw16.xchg_u") || consume(u"rmw16_u.xchg")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I32AtomicXchg16U, begin, cur_);
               }
@@ -1607,7 +1607,7 @@ WasmToken WasmTokenStream::next() {
             }
             break;
           case 'r':
-            if (consume(u"reinterpret/f32")) {
+            if (consume(u"reinterpret_f32") || consume(u"reinterpret/f32")) {
               return WasmToken(WasmToken::UnaryOpcode, Op::I32ReinterpretF32,
                                begin, cur_);
             }
@@ -1659,41 +1659,41 @@ WasmToken WasmTokenStream::next() {
             }
             break;
           case 't':
-            if (consume(u"trunc_s/f32")) {
+            if (consume(u"trunc_f32_s") || consume(u"trunc_s/f32")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::I32TruncSF32,
                                begin, cur_);
             }
-            if (consume(u"trunc_s/f64")) {
+            if (consume(u"trunc_f64_s") || consume(u"trunc_s/f64")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::I32TruncSF64,
                                begin, cur_);
             }
-            if (consume(u"trunc_u/f32")) {
+            if (consume(u"trunc_f32_u") || consume(u"trunc_u/f32")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::I32TruncUF32,
                                begin, cur_);
             }
-            if (consume(u"trunc_u/f64")) {
+            if (consume(u"trunc_f64_u") || consume(u"trunc_u/f64")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::I32TruncUF64,
                                begin, cur_);
             }
-            if (consume(u"trunc_s:sat/f32")) {
+            if (consume(u"trunc_sat_f32_s") || consume(u"trunc_s:sat/f32")) {
               return WasmToken(WasmToken::ExtraConversionOpcode,
                                MiscOp::I32TruncSSatF32, begin, cur_);
             }
-            if (consume(u"trunc_s:sat/f64")) {
+            if (consume(u"trunc_sat_f64_s") || consume(u"trunc_s:sat/f64")) {
               return WasmToken(WasmToken::ExtraConversionOpcode,
                                MiscOp::I32TruncSSatF64, begin, cur_);
             }
-            if (consume(u"trunc_u:sat/f32")) {
+            if (consume(u"trunc_sat_f32_u") || consume(u"trunc_u:sat/f32")) {
               return WasmToken(WasmToken::ExtraConversionOpcode,
                                MiscOp::I32TruncUSatF32, begin, cur_);
             }
-            if (consume(u"trunc_u:sat/f64")) {
+            if (consume(u"trunc_sat_f64_u") || consume(u"trunc_u:sat/f64")) {
               return WasmToken(WasmToken::ExtraConversionOpcode,
                                MiscOp::I32TruncUSatF64, begin, cur_);
             }
             break;
           case 'w':
-            if (consume(u"wrap/i64")) {
+            if (consume(u"wrap_i64") || consume(u"wrap/i64")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::I32WrapI64,
                                begin, cur_);
             }
@@ -1723,15 +1723,15 @@ WasmToken WasmTokenStream::next() {
                                cur_);
             }
             if (consume(u"atomic.")) {
-              if (consume(u"rmw8_u.add")) {
+              if (consume(u"rmw8.add_u") || consume(u"rmw8_u.add")) {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I64AtomicAdd8U,
                                  begin, cur_);
               }
-              if (consume(u"rmw16_u.add")) {
+              if (consume(u"rmw16.add_u") || consume(u"rmw16_u.add")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I64AtomicAdd16U, begin, cur_);
               }
-              if (consume(u"rmw32_u.add")) {
+              if (consume(u"rmw32.add_u") || consume(u"rmw32_u.add")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I64AtomicAdd32U, begin, cur_);
               }
@@ -1739,15 +1739,15 @@ WasmToken WasmTokenStream::next() {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I64AtomicAdd,
                                  begin, cur_);
               }
-              if (consume(u"rmw8_u.and")) {
+              if (consume(u"rmw8.and_u") || consume(u"rmw8_u.and")) {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I64AtomicAnd8U,
                                  begin, cur_);
               }
-              if (consume(u"rmw16_u.and")) {
+              if (consume(u"rmw16.and_u") || consume(u"rmw16_u.and")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I64AtomicAnd16U, begin, cur_);
               }
-              if (consume(u"rmw32_u.and")) {
+              if (consume(u"rmw32.and_u") || consume(u"rmw32_u.and")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I64AtomicAnd32U, begin, cur_);
               }
@@ -1755,15 +1755,15 @@ WasmToken WasmTokenStream::next() {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I64AtomicAnd,
                                  begin, cur_);
               }
-              if (consume(u"rmw8_u.cmpxchg")) {
+              if (consume(u"rmw8.cmpxchg_u") || consume(u"rmw8_u.cmpxchg")) {
                 return WasmToken(WasmToken::AtomicCmpXchg,
                                  ThreadOp::I64AtomicCmpXchg8U, begin, cur_);
               }
-              if (consume(u"rmw16_u.cmpxchg")) {
+              if (consume(u"rmw16.cmpxchg_u") || consume(u"rmw16_u.cmpxchg")) {
                 return WasmToken(WasmToken::AtomicCmpXchg,
                                  ThreadOp::I64AtomicCmpXchg16U, begin, cur_);
               }
-              if (consume(u"rmw32_u.cmpxchg")) {
+              if (consume(u"rmw32.cmpxchg_u") || consume(u"rmw32_u.cmpxchg")) {
                 return WasmToken(WasmToken::AtomicCmpXchg,
                                  ThreadOp::I64AtomicCmpXchg32U, begin, cur_);
               }
@@ -1787,15 +1787,15 @@ WasmToken WasmTokenStream::next() {
                 return WasmToken(WasmToken::AtomicLoad, ThreadOp::I64AtomicLoad,
                                  begin, cur_);
               }
-              if (consume(u"rmw8_u.or")) {
+              if (consume(u"rmw8.or_u") || consume(u"rmw8_u.or")) {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I64AtomicOr8U,
                                  begin, cur_);
               }
-              if (consume(u"rmw16_u.or")) {
+              if (consume(u"rmw16.or_u") || consume(u"rmw16_u.or")) {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I64AtomicOr16U,
                                  begin, cur_);
               }
-              if (consume(u"rmw32_u.or")) {
+              if (consume(u"rmw32.or_u") || consume(u"rmw32_u.or")) {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I64AtomicOr32U,
                                  begin, cur_);
               }
@@ -1819,15 +1819,15 @@ WasmToken WasmTokenStream::next() {
                 return WasmToken(WasmToken::AtomicStore,
                                  ThreadOp::I64AtomicStore, begin, cur_);
               }
-              if (consume(u"rmw8_u.sub")) {
+              if (consume(u"rmw8.sub_u") || consume(u"rmw8_u.sub")) {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I64AtomicSub8U,
                                  begin, cur_);
               }
-              if (consume(u"rmw16_u.sub")) {
+              if (consume(u"rmw16.sub_u") || consume(u"rmw16_u.sub")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I64AtomicSub16U, begin, cur_);
               }
-              if (consume(u"rmw32_u.sub")) {
+              if (consume(u"rmw32.sub_u") || consume(u"rmw32_u.sub")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I64AtomicSub32U, begin, cur_);
               }
@@ -1835,15 +1835,15 @@ WasmToken WasmTokenStream::next() {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I64AtomicSub,
                                  begin, cur_);
               }
-              if (consume(u"rmw8_u.xor")) {
+              if (consume(u"rmw8.xor_u") || consume(u"rmw8_u.xor")) {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I64AtomicXor8U,
                                  begin, cur_);
               }
-              if (consume(u"rmw16_u.xor")) {
+              if (consume(u"rmw16.xor_u") || consume(u"rmw16_u.xor")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I64AtomicXor16U, begin, cur_);
               }
-              if (consume(u"rmw32_u.xor")) {
+              if (consume(u"rmw32.xor_u") || consume(u"rmw32_u.xor")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I64AtomicXor32U, begin, cur_);
               }
@@ -1851,15 +1851,15 @@ WasmToken WasmTokenStream::next() {
                 return WasmToken(WasmToken::AtomicRMW, ThreadOp::I64AtomicXor,
                                  begin, cur_);
               }
-              if (consume(u"rmw8_u.xchg")) {
+              if (consume(u"rmw8.xchg_u") || consume(u"rmw8_u.xchg")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I64AtomicXchg8U, begin, cur_);
               }
-              if (consume(u"rmw16_u.xchg")) {
+              if (consume(u"rmw16.xchg_u") || consume(u"rmw16_u.xchg")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I64AtomicXchg16U, begin, cur_);
               }
-              if (consume(u"rmw32_u.xchg")) {
+              if (consume(u"rmw32.xchg_u") || consume(u"rmw32_u.xchg")) {
                 return WasmToken(WasmToken::AtomicRMW,
                                  ThreadOp::I64AtomicXchg32U, begin, cur_);
               }
@@ -1902,11 +1902,11 @@ WasmToken WasmTokenStream::next() {
               return WasmToken(WasmToken::ComparisonOpcode, Op::I64Eq, begin,
                                cur_);
             }
-            if (consume(u"extend_s/i32")) {
+            if (consume(u"extend_i32_s") || consume(u"extend_s/i32")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::I64ExtendSI32,
                                begin, cur_);
             }
-            if (consume(u"extend_u/i32")) {
+            if (consume(u"extend_i32_u") || consume(u"extend_u/i32")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::I64ExtendUI32,
                                begin, cur_);
             }
@@ -2007,7 +2007,7 @@ WasmToken WasmTokenStream::next() {
             }
             break;
           case 'r':
-            if (consume(u"reinterpret/f64")) {
+            if (consume(u"reinterpret_f64") || consume(u"reinterpret/f64")) {
               return WasmToken(WasmToken::UnaryOpcode, Op::I64ReinterpretF64,
                                begin, cur_);
             }
@@ -2062,35 +2062,35 @@ WasmToken WasmTokenStream::next() {
             }
             break;
           case 't':
-            if (consume(u"trunc_s/f32")) {
+            if (consume(u"trunc_f32_s") || consume(u"trunc_s/f32")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::I64TruncSF32,
                                begin, cur_);
             }
-            if (consume(u"trunc_s/f64")) {
+            if (consume(u"trunc_f64_s") || consume(u"trunc_s/f64")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::I64TruncSF64,
                                begin, cur_);
             }
-            if (consume(u"trunc_u/f32")) {
+            if (consume(u"trunc_f32_u") || consume(u"trunc_u/f32")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::I64TruncUF32,
                                begin, cur_);
             }
-            if (consume(u"trunc_u/f64")) {
+            if (consume(u"trunc_f64_u") || consume(u"trunc_u/f64")) {
               return WasmToken(WasmToken::ConversionOpcode, Op::I64TruncUF64,
                                begin, cur_);
             }
-            if (consume(u"trunc_s:sat/f32")) {
+            if (consume(u"trunc_sat_f32_s") || consume(u"trunc_s:sat/f32")) {
               return WasmToken(WasmToken::ExtraConversionOpcode,
                                MiscOp::I64TruncSSatF32, begin, cur_);
             }
-            if (consume(u"trunc_s:sat/f64")) {
+            if (consume(u"trunc_sat_f64_s") || consume(u"trunc_s:sat/f64")) {
               return WasmToken(WasmToken::ExtraConversionOpcode,
                                MiscOp::I64TruncSSatF64, begin, cur_);
             }
-            if (consume(u"trunc_u:sat/f32")) {
+            if (consume(u"trunc_sat_f32_u") || consume(u"trunc_u:sat/f32")) {
               return WasmToken(WasmToken::ExtraConversionOpcode,
                                MiscOp::I64TruncUSatF32, begin, cur_);
             }
-            if (consume(u"trunc_u:sat/f64")) {
+            if (consume(u"trunc_sat_f64_u") || consume(u"trunc_u:sat/f64")) {
               return WasmToken(WasmToken::ExtraConversionOpcode,
                                MiscOp::I64TruncUSatF64, begin, cur_);
             }
@@ -2124,6 +2124,9 @@ WasmToken WasmTokenStream::next() {
         }
         if (consume(u".set")) {
           return WasmToken(WasmToken::SetLocal, begin, cur_);
+        }
+        if (consume(u".tee")) {
+          return WasmToken(WasmToken::TeeLocal, begin, cur_);
         }
         return WasmToken(WasmToken::Local, begin, cur_);
       }
