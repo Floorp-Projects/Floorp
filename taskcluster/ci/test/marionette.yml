@@ -47,3 +47,12 @@ marionette-gpu:
         by-test-platform:
             windows10-64.*: virtual-with-gpu
             default: virtual
+
+marionette-media:
+    description: "Marionette DOM media test run"
+    treeherder-symbol: MnM
+    max-run-time: 5400
+    instance-size: default
+    mozharness:
+        extra-options:
+            - --test-manifest=stream-tests.ini

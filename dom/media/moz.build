@@ -359,3 +359,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     ]
 
 FINAL_LIBRARY = 'xul'
+
+MARIONETTE_DOM_MEDIA_MANIFESTS += [
+ 'test/marionette/manifest.ini'
+]
