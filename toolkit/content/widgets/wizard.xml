@@ -444,18 +444,7 @@
           event.initEvent(aType, true, true);
 
           // handle dom event handlers
-          var noCancel = aTarget.dispatchEvent(event);
-
-          // handle any xml attribute event handlers
-          var handler = aTarget.getAttribute("on"+aType);
-          if (handler != "") {
-            var fn = new Function("event", handler);
-            var returned = fn.apply(aTarget, [event]);
-            if (returned == false)
-              noCancel = false;
-          }
-
-          return noCancel;
+          return aTarget.dispatchEvent(event);
         ]]>
         </body>
       </method>

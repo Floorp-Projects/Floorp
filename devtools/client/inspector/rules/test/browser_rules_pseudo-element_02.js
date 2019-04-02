@@ -26,4 +26,18 @@ add_task(async function() {
   is(afterElement.tagName, "_moz_generated_content_after",
     "tag name is correct");
   await selectNode(afterElement, inspector);
+
+  const listNode = await getNodeFront("#list", inspector);
+  const listChildren = await inspector.markup.walker.children(listNode);
+
+  is(listChildren.nodes.length, 4, "<li> has correct number of children");
+  const markerElement = listChildren.nodes[0];
+  is(markerElement.tagName, "_moz_generated_content_marker",
+    "tag name is correct");
+  await selectNode(markerElement, inspector);
+
+  const listBeforeElement = listChildren.nodes[1];
+  is(listBeforeElement.tagName, "_moz_generated_content_before",
+    "tag name is correct");
+  await selectNode(listBeforeElement, inspector);
 });

@@ -26,7 +26,7 @@ if CONFIG['OS_ARCH'] == 'GNU':
             'xptcstubs_gcc_x86_unix.cpp'
         ]
 
-if CONFIG['OS_ARCH'] in ('Linux', 'Bitrig', 'DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD') or \
+if CONFIG['OS_ARCH'] in ('Linux', 'Bitrig', 'DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD', 'SunOS') or \
    CONFIG['OS_ARCH'].startswith('GNU_'):
     if CONFIG['CPU_ARCH'] == 'x86_64':
         SOURCES += [
@@ -48,41 +48,6 @@ if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD'):
             'xptcstubs_asm_ipf64.s',
             'xptcstubs_ipf64.cpp'
         ]
-
-if CONFIG['OS_ARCH'] == 'SunOS' and CONFIG['INTEL_ARCHITECTURE']:
-    if CONFIG['CPU_ARCH'] == 'x86_64':
-        if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-            SOURCES += [
-                'xptcinvoke_asm_x86_64_unix.S',
-                'xptcinvoke_x86_64_unix.cpp',
-                'xptcstubs_x86_64_linux.cpp'
-            ]
-        else:
-            GENERATED_FILES = [
-                'xptcstubsdef_asm.solx86',
-            ]
-            ASFLAGS += ['-xarch=amd64']
-            SOURCES += [
-                'xptcinvoke_x86_64_solaris.cpp',
-                'xptcstubs_asm_x86_64_solaris_SUNW.s',
-                'xptcstubs_x86_64_solaris.cpp',
-            ]
-    else:
-        if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-            SOURCES += [
-                'xptcinvoke_gcc_x86_unix.cpp',
-                'xptcstubs_gcc_x86_unix.cpp'
-            ]
-        else:
-            GENERATED_FILES = [
-                'xptcstubsdef_asm.solx86',
-            ]
-            SOURCES += [
-                'xptcinvoke_asm_x86_solaris_SUNW.s',
-                'xptcinvoke_x86_solaris.cpp',
-                'xptcstubs_asm_x86_solaris_SUNW.s',
-                'xptcstubs_x86_solaris.cpp'
-            ]
 
 if CONFIG['CPU_ARCH'] == 'Alpha':
     if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD', 'NetBSD'):
@@ -240,42 +205,13 @@ if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['CPU_ARCH'] == 'sparc':
         'xptcstubs_sparc_openbsd.cpp',
     ]
 
-if CONFIG['OS_ARCH'] in ('OpenBSD', 'FreeBSD', 'Linux') and CONFIG['CPU_ARCH'] == 'sparc64':
+if CONFIG['OS_ARCH'] in ('OpenBSD', 'FreeBSD', 'Linux', 'SunOS') and CONFIG['CPU_ARCH'] == 'sparc64':
     SOURCES += [
         'xptcinvoke_asm_sparc64_openbsd.s',
         'xptcinvoke_sparc64_openbsd.cpp',
         'xptcstubs_asm_sparc64_openbsd.s',
         'xptcstubs_sparc64_openbsd.cpp',
     ]
-
-if CONFIG['OS_ARCH'] == 'SunOS' and not CONFIG['INTEL_ARCHITECTURE']:
-    if CONFIG['HAVE_64BIT_BUILD']:
-        ASFLAGS += ['-xarch=v9']
-        SOURCES += [
-            'xptcinvoke_sparcv9_solaris.cpp',
-            'xptcstubs_sparcv9_solaris.cpp',
-        ]
-    else:
-        SOURCES += [
-            'xptcinvoke_sparc_solaris.cpp',
-            'xptcstubs_sparc_solaris.cpp',
-        ]
-    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-        SOURCES += [
-            'xptcinvoke_asm_sparc_solaris_GCC3.s',
-            'xptcstubs_asm_sparc_solaris.s',
-        ]
-    else:
-        if CONFIG['HAVE_64BIT_BUILD']:
-            SOURCES += [
-                'xptcinvoke_asm_sparcv9_solaris_SUNW.s',
-                'xptcstubs_asm_sparcv9_solaris.s',
-            ]
-        else:
-            SOURCES += [
-                'xptcinvoke_asm_sparc_solaris_SUNW.s',
-                'xptcstubs_asm_sparc_solaris.s',
-            ]
 
 if CONFIG['OS_ARCH'] == 'Linux':
     if CONFIG['CPU_ARCH'] == 's390':

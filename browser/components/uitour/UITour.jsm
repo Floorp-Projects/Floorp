@@ -1318,7 +1318,10 @@ var UITour = {
       urlbar.value = SEARCH_STRING;
       urlbar.select();
       if (quantumbar) {
-        urlbar.startQuery();
+        urlbar.startQuery({
+          searchString: SEARCH_STRING,
+          allowAutofill: false,
+        });
       } else {
         urlbar.controller.startSearch(SEARCH_STRING);
       }

@@ -16,12 +16,16 @@ namespace mozilla {
 namespace ipc {
 class CrashReporterHost;
 }  // namespace ipc
+namespace dom {
+class MemoryReportRequestHost;
+}  // namespace dom
 namespace gfx {
 
 class VRProcessParent;
 class VRChild;
 
 class VRChild final : public PVRChild, public gfxVarReceiver {
+  typedef mozilla::dom::MemoryReportRequestHost MemoryReportRequestHost;
   friend class PVRChild;
 
  public:
@@ -30,7 +34,12 @@ class VRChild final : public PVRChild, public gfxVarReceiver {
 
   static void Destroy(UniquePtr<VRChild>&& aChild);
   void Init();
+  bool EnsureVRReady();
   virtual void OnVarChanged(const GfxVarUpdate& aVar) override;
+  bool SendRequestMemoryReport(const uint32_t& aGeneration,
+                               const bool& aAnonymize,
+                               const bool& aMinimizeMemoryUsage,
+                               const Maybe<ipc::FileDescriptor>& aDMDFile);
 
  protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -38,12 +47,18 @@ class VRChild final : public PVRChild, public gfxVarReceiver {
       const nsCString& aPath);
   mozilla::ipc::IPCResult RecvOpenVRControllerManifestPathToParent(
       const OpenVRControllerType& aType, const nsCString& aPath);
+  mozilla::ipc::IPCResult RecvInitComplete();
   mozilla::ipc::IPCResult RecvInitCrashReporter(
       Shmem&& shmem, const NativeThreadId& aThreadId);
+
+  mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport);
+  mozilla::ipc::IPCResult RecvFinishMemoryReport(const uint32_t& aGeneration);
 
  private:
   VRProcessParent* mHost;
   UniquePtr<ipc::CrashReporterHost> mCrashReporter;
+  UniquePtr<MemoryReportRequestHost> mMemoryReportRequest;
+  bool mVRReady;
 };
 
 }  // namespace gfx

@@ -224,7 +224,7 @@ bool BytecodeEmitter::markSimpleBreakpoint() {
 bool BytecodeEmitter::emitCheck(JSOp op, ptrdiff_t delta, ptrdiff_t* offset) {
   *offset = code().length();
 
-  if (!code().growBy(delta)) {
+  if (!code().growByUninitialized(delta)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -9193,7 +9193,7 @@ bool BytecodeEmitter::emitTree(
 
 static bool AllocSrcNote(JSContext* cx, SrcNotesVector& notes,
                          unsigned* index) {
-  if (!notes.growBy(1)) {
+  if (!notes.growByUninitialized(1)) {
     ReportOutOfMemory(cx);
     return false;
   }

@@ -24,6 +24,7 @@ const { remoteClientManager } =
 
 const {
   CONNECT_RUNTIME_FAILURE,
+  CONNECT_RUNTIME_NOT_RESPONDING,
   CONNECT_RUNTIME_START,
   CONNECT_RUNTIME_SUCCESS,
   DEBUG_TARGET_PANE,
@@ -52,6 +53,8 @@ const {
   WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 
+const CONNECTION_TIMING_OUT_DELAY = 3000;
+
 async function getRuntimeIcon(channel) {
   return (channel === "release" || channel === "beta" || channel === "aurora")
     ? `chrome://devtools/skin/images/aboutdebugging-firefox-${ channel }.svg`
@@ -69,7 +72,14 @@ function onMultiE10sUpdated() {
 
 function connectRuntime(id) {
   return async (dispatch, getState) => {
-    dispatch({ type: CONNECT_RUNTIME_START });
+    dispatch({ type: CONNECT_RUNTIME_START, id });
+    const connectionNotRespondingTimer = setTimeout(() => {
+      // If connecting to the runtime takes time over CONNECTION_TIMING_OUT_DELAY,
+      // we assume the connection prompt is showing on the runtime, show a dialog
+      // to let user know that.
+      dispatch({ type: CONNECT_RUNTIME_NOT_RESPONDING, id });
+    }, CONNECTION_TIMING_OUT_DELAY);
+
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
       const clientWrapper = await createClientForRuntime(runtime);
@@ -135,7 +145,9 @@ function connectRuntime(id) {
         },
       });
     } catch (e) {
-      dispatch({ type: CONNECT_RUNTIME_FAILURE, error: e });
+      dispatch({ type: CONNECT_RUNTIME_FAILURE, id, error: e });
+    } finally {
+      clearTimeout(connectionNotRespondingTimer);
     }
   };
 }
@@ -144,6 +156,9 @@ function createThisFirefoxRuntime() {
   return (dispatch, getState) => {
     const thisFirefoxRuntime = {
       id: RUNTIMES.THIS_FIREFOX,
+      isConnecting: false,
+      isConnectionFailed: false,
+      isConnectionNotResponding: false,
       isUnknown: false,
       name: l10n.getString("about-debugging-this-firefox-runtime-name"),
       type: RUNTIMES.THIS_FIREFOX,
@@ -302,6 +317,9 @@ function updateNetworkRuntimes(locations) {
       extra: {
         connectionParameters: { host, port: parseInt(port, 10) },
       },
+      isConnecting: false,
+      isConnectionFailed: false,
+      isConnectionNotResponding: false,
       isUnknown: false,
       name: location,
       type: RUNTIMES.NETWORK,
@@ -322,6 +340,9 @@ function updateUSBRuntimes(adbRuntimes) {
         connectionParameters,
         deviceName: adbRuntime.deviceName,
       },
+      isConnecting: false,
+      isConnectionFailed: false,
+      isConnectionNotResponding: false,
       isUnknown: adbRuntime.isUnknown(),
       name: adbRuntime.shortName,
       type: RUNTIMES.USB,
@@ -363,12 +384,23 @@ function updateRemoteRuntimes(runtimes, type) {
       await dispatch(Actions.selectPage(PAGE_TYPES.RUNTIME, RUNTIMES.THIS_FIREFOX));
     }
 
-    // Retrieve runtimeDetails from existing runtimes.
+    // For existing runtimes, transfer all properties that are not available in the
+    // runtime objects passed to this method:
+    // - runtimeDetails (set by about:debugging after a successful connection)
+    // - isConnecting (set by about:debugging during the connection)
+    // - isConnectionFailed (set by about:debugging if connection was failed)
+    // - isConnectionNotResponding
+    //     (set by about:debugging if connection is taking too much time)
     runtimes.forEach(runtime => {
       const existingRuntime = findRuntimeById(runtime.id, getState().runtimes);
       const isConnectionValid = existingRuntime && existingRuntime.runtimeDetails &&
         !existingRuntime.runtimeDetails.clientWrapper.isClosed();
       runtime.runtimeDetails = isConnectionValid ? existingRuntime.runtimeDetails : null;
+      runtime.isConnecting = existingRuntime ? existingRuntime.isConnecting : false;
+      runtime.isConnectionFailed =
+        existingRuntime ? existingRuntime.isConnectionFailed : false;
+      runtime.isConnectionNotResponding =
+        existingRuntime ? existingRuntime.isConnectionNotResponding : false;
     });
 
     const existingRuntimes = getAllRuntimes(getState().runtimes);
