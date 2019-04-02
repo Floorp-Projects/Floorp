@@ -88,6 +88,7 @@ const PSEUDO_SELECTORS = [
   [":disabled", 0],
   [":checked", 1],
   ["::selection", 0],
+  ["::marker", 0],
 ];
 
 const HELPER_SHEET = "data:text/css;charset=utf-8," + encodeURIComponent(`
