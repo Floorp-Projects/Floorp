@@ -11656,7 +11656,7 @@ bool IonBuilder::canInlinePropertyOpShapes(
     // dictionary mode. We cannot be sure that the shape is still a
     // lastProperty, and calling Shape::search() on dictionary mode
     // shapes that aren't lastProperty is invalid.
-    if (receivers[i].shape && receivers[i].shape->inDictionary()) {
+    if (receivers[i].getShape() && receivers[i].getShape()->inDictionary()) {
       trackOptimizationOutcome(TrackedOutcome::InDictionaryMode);
       return false;
     }
@@ -11669,11 +11669,11 @@ static Shape* PropertyShapesHaveSameSlot(
     const BaselineInspector::ReceiverVector& receivers, jsid id) {
   Shape* firstShape = nullptr;
   for (size_t i = 0; i < receivers.length(); i++) {
-    if (receivers[i].group) {
+    if (receivers[i].getGroup()) {
       return nullptr;
     }
 
-    Shape* shape = receivers[i].shape->searchLinear(id);
+    Shape* shape = receivers[i].getShape()->searchLinear(id);
     MOZ_ASSERT(shape);
 
     if (i == 0) {
@@ -11709,13 +11709,13 @@ AbortReasonOr<Ok> IonBuilder::getPropTryInlineAccess(bool* emitted,
   }
 
   if (receivers.length() == 1) {
-    if (!receivers[0].group) {
+    if (!receivers[0].getGroup()) {
       // Monomorphic load from a native object.
       spew("Inlining monomorphic native GETPROP");
 
-      obj = addShapeGuard(obj, receivers[0].shape, Bailout_ShapeGuard);
+      obj = addShapeGuard(obj, receivers[0].getShape(), Bailout_ShapeGuard);
 
-      Shape* shape = receivers[0].shape->searchLinear(NameToId(name));
+      Shape* shape = receivers[0].getShape()->searchLinear(NameToId(name));
       MOZ_ASSERT(shape);
 
       MOZ_TRY(loadSlot(obj, shape, rvalType, barrier, types));
@@ -11752,8 +11752,8 @@ AbortReasonOr<Ok> IonBuilder::getPropTryInlineAccess(bool* emitted,
 
   for (size_t i = 0; i < receivers.length(); i++) {
     Shape* propShape = nullptr;
-    if (receivers[i].shape) {
-      propShape = receivers[i].shape->searchLinear(NameToId(name));
+    if (receivers[i].getShape()) {
+      propShape = receivers[i].getShape()->searchLinear(NameToId(name));
       MOZ_ASSERT(propShape);
     }
     if (!load->addReceiver(receivers[i], propShape)) {
@@ -12407,13 +12407,13 @@ AbortReasonOr<Ok> IonBuilder::setPropTryInlineAccess(
   }
 
   if (receivers.length() == 1) {
-    if (!receivers[0].group) {
+    if (!receivers[0].getGroup()) {
       // Monomorphic store to a native object.
       spew("Inlining monomorphic native SETPROP");
 
-      obj = addShapeGuard(obj, receivers[0].shape, Bailout_ShapeGuard);
+      obj = addShapeGuard(obj, receivers[0].getShape(), Bailout_ShapeGuard);
 
-      Shape* shape = receivers[0].shape->searchLinear(NameToId(name));
+      Shape* shape = receivers[0].getShape()->searchLinear(NameToId(name));
       MOZ_ASSERT(shape);
 
       if (needsPostBarrier(value)) {
@@ -12464,8 +12464,8 @@ AbortReasonOr<Ok> IonBuilder::setPropTryInlineAccess(
 
   for (size_t i = 0; i < receivers.length(); i++) {
     Shape* propShape = nullptr;
-    if (receivers[i].shape) {
-      propShape = receivers[i].shape->searchLinear(NameToId(name));
+    if (receivers[i].getShape()) {
+      propShape = receivers[i].getShape()->searchLinear(NameToId(name));
       MOZ_ASSERT(propShape);
     }
     if (!ins->addReceiver(receivers[i], propShape)) {
@@ -13515,9 +13515,9 @@ MInstruction* IonBuilder::addGroupGuard(MDefinition* obj, ObjectGroup* group,
 MInstruction* IonBuilder::addGuardReceiverPolymorphic(
     MDefinition* obj, const BaselineInspector::ReceiverVector& receivers) {
   if (receivers.length() == 1) {
-    if (!receivers[0].group) {
+    if (!receivers[0].getGroup()) {
       // Monomorphic guard on a native object.
-      return addShapeGuard(obj, receivers[0].shape, Bailout_ShapeGuard);
+      return addShapeGuard(obj, receivers[0].getShape(), Bailout_ShapeGuard);
     }
   }
 
