@@ -206,6 +206,8 @@ void LIRGenerator::visitWasmStore(MWasmStore* ins) {
     case Scalar::Float64:
       valueAlloc = useRegisterAtStart(value);
       break;
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
     case Scalar::Uint8Clamped:
     case Scalar::MaxTypedArrayViewType:
       MOZ_CRASH("unexpected array type");
