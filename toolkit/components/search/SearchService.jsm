@@ -799,14 +799,16 @@ function sanitizeName(aName) {
 }
 
 /**
- * Retrieve a pref from the search param branch.
+ * Retrieve a pref from the search param branch. Returns null if the
+ * preference is not found.
  *
  * @param prefName
  *        The name of the pref.
  **/
 function getMozParamPref(prefName) {
   let branch = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF + "param.");
-  return encodeURIComponent(branch.getCharPref(prefName));
+  let prefValue = branch.getCharPref(prefName, null);
+  return prefValue ? encodeURIComponent(prefValue) : null;
 }
 
 /**
@@ -1078,7 +1080,9 @@ EngineURL.prototype = {
       if (param.mozparam) {
         if (param.condition == "pref") {
           let value = getMozParamPref(param.pref);
-          this.addParam(param.name, value);
+          if (value) {
+            this.addParam(param.name, value);
+          }
         }
         this._addMozParam(param);
       } else {
@@ -1708,7 +1712,9 @@ Engine.prototype = {
         }
         if (p.condition == "pref") {
           let value = getMozParamPref(p.pref);
-          url.addParam(p.name, value);
+          if (value) {
+            url.addParam(p.name, value);
+          }
           url._addMozParam(p);
         } else {
           url.addParam(p.name, p.value, p.purpose || undefined);
@@ -1841,13 +1847,13 @@ Engine.prototype = {
             // also requires a unique "name" which is not normally the case when @purpose is used.
             break;
           case "pref":
-            try {
-              value = getMozParamPref(param.getAttribute("pref"), value);
+            value = getMozParamPref(param.getAttribute("pref"), value);
+            if (value) {
               url.addParam(param.getAttribute("name"), value);
-              url._addMozParam({"pref": param.getAttribute("pref"),
-                                "name": param.getAttribute("name"),
-                                "condition": "pref"});
-            } catch (e) { }
+            }
+            url._addMozParam({"pref": param.getAttribute("pref"),
+                              "name": param.getAttribute("name"),
+                              "condition": "pref"});
             break;
           default:
             let engineLoc = this._location;
