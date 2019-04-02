@@ -1002,7 +1002,7 @@ class MRootList : public TempObject {
     return append(static_cast<T>(ptr));
   }
   MOZ_MUST_USE bool append(const ReceiverGuard& guard) {
-    return append(guard.group) && append(guard.shape);
+    return append(guard.getGroup()) && append(guard.getShape());
   }
 };
 

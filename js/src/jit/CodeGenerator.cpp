@@ -3940,12 +3940,12 @@ void CodeGenerator::visitStoreSlotV(LStoreSlotV* lir) {
 
 static void GuardReceiver(MacroAssembler& masm, const ReceiverGuard& guard,
                           Register obj, Register scratch, Label* miss) {
-  if (guard.group) {
-    masm.branchTestObjGroup(Assembler::NotEqual, obj, guard.group, scratch, obj,
-                            miss);
+  if (guard.getGroup()) {
+    masm.branchTestObjGroup(Assembler::NotEqual, obj, guard.getGroup(), scratch,
+                            obj, miss);
   } else {
-    masm.branchTestObjShape(Assembler::NotEqual, obj, guard.shape, scratch, obj,
-                            miss);
+    masm.branchTestObjShape(Assembler::NotEqual, obj, guard.getShape(), scratch,
+                            obj, miss);
   }
 }
 
@@ -3963,7 +3963,7 @@ void CodeGenerator::emitGetPropertyPolymorphic(
     masm.comment("GuardReceiver");
     GuardReceiver(masm, receiver, obj, scratch, &next);
 
-    if (receiver.shape) {
+    if (receiver.getShape()) {
       masm.comment("loadTypedOrValue");
       Register target = obj;
 
@@ -4031,7 +4031,7 @@ void CodeGenerator::emitSetPropertyPolymorphic(
     Label next;
     GuardReceiver(masm, receiver, obj, scratch, &next);
 
-    if (receiver.shape) {
+    if (receiver.getShape()) {
       Register target = obj;
 
       Shape* shape = mir->shape(i);
