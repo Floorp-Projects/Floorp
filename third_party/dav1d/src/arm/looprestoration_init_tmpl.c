@@ -29,10 +29,8 @@
 #include "src/looprestoration.h"
 
 #include "common/attributes.h"
-#include "common/intops.h"
-#include "src/tables.h"
 
-#if BITDEPTH == 8 && ARCH_AARCH64
+#if BITDEPTH == 8
 // This calculates things slightly differently than the reference C version.
 // This version calculates roughly this:
 // int16_t sum = 0;
@@ -66,7 +64,7 @@ static void wiener_filter_neon(pixel *const dst, const ptrdiff_t dst_stride,
                                const int w, const int h, const int16_t fh[7],
                                const int16_t fv[7], const enum LrEdgeFlags edges)
 {
-    ALIGN_STK_32(int16_t, mid, 68 * 384,);
+    ALIGN_STK_16(int16_t, mid, 68 * 384,);
     int mid_stride = (w + 7) & ~7;
 
     // Horizontal filter
@@ -100,7 +98,7 @@ void bitfn(dav1d_loop_restoration_dsp_init_arm)(Dav1dLoopRestorationDSPContext *
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
-#if BITDEPTH == 8 && ARCH_AARCH64
+#if BITDEPTH == 8
     c->wiener = wiener_filter_neon;
 #endif
 }

@@ -25,12 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_OBU_H__
-#define __DAV1D_SRC_OBU_H__
+#ifndef DAV1D_SRC_OBU_H
+#define DAV1D_SRC_OBU_H
 
 #include "dav1d/data.h"
 #include "src/internal.h"
 
 int dav1d_parse_obus(Dav1dContext *c, Dav1dData *in, int global);
 
-#endif /* __DAV1D_SRC_OBU_H__ */
+#endif /* DAV1D_SRC_OBU_H */

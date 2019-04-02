@@ -36,10 +36,6 @@
 
 #include "input/demuxer.h"
 
-#ifdef _MSC_VER
-#define ftello _ftelli64
-#endif
-
 typedef struct DemuxerPriv {
     FILE *f;
 } IvfInputContext;
@@ -55,7 +51,7 @@ static int64_t rl64(const uint8_t *const p) {
 static int ivf_open(IvfInputContext *const c, const char *const file,
                     unsigned fps[2], unsigned *const num_frames)
 {
-    int res;
+    size_t res;
     uint8_t hdr[32];
 
     memset(c, 0, sizeof(*c));
@@ -85,11 +81,11 @@ static int ivf_open(IvfInputContext *const c, const char *const file,
     for (*num_frames = 0;; (*num_frames)++) {
         if ((res = fread(data, 4, 1, c->f)) != 1)
             break; // EOF
-        fseek(c->f, rl32(data) + 8, SEEK_CUR);
+        fseeko(c->f, rl32(data) + 8, SEEK_CUR);
     }
     fps[0] *= *num_frames;
     fps[1] *= duration;
-    fseek(c->f, 32, SEEK_SET);
+    fseeko(c->f, 32, SEEK_SET);
 
     return 0;
 }
@@ -97,7 +93,7 @@ static int ivf_open(IvfInputContext *const c, const char *const file,
 static int ivf_read(IvfInputContext *const c, Dav1dData *const buf) {
     uint8_t data[8];
     uint8_t *ptr;
-    int res;
+    size_t res;
 
     const int64_t off = ftello(c->f);
     if ((res = fread(data, 4, 1, c->f)) != 1)

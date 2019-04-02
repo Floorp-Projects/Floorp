@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_LF_MASK_H__
-#define __DAV1D_SRC_LF_MASK_H__
+#ifndef DAV1D_SRC_LF_MASK_H
+#define DAV1D_SRC_LF_MASK_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -82,4 +82,4 @@ void dav1d_calc_eih(Av1FilterLUT *lim_lut, int filter_sharpness);
 void dav1d_calc_lf_values(uint8_t (*values)[4][8][2], const Dav1dFrameHeader *hdr,
                           const int8_t lf_delta[4]);
 
-#endif /* __DAV1D_SRC_LF_MASK_H__ */
+#endif /* DAV1D_SRC_LF_MASK_H */

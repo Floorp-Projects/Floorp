@@ -4,17 +4,32 @@ stages:
     - test
 
 style-check:
-    image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: style
     tags:
         - debian
         - amd64
     script:
-        - git grep -n -e $'\t' --or -e $'\r' -- . ':(exclude)*/compat/*' && exit 1
-        - /bin/true
+        - git grep -n -P "\t|\r| $" -- . ':(exclude)*/compat/*' && exit 1
+        - git grep -n -i "david" -- . ':(exclude)THANKS.md' ':(exclude).gitlab-ci.yml' && exit 1
+        - git remote rm upstream 2> /dev/null || true
+        - git remote add upstream https://code.videolan.org/videolan/dav1d.git
+        - git fetch -q upstream master
+        - for i in $(git rev-list HEAD ^upstream/master); do
+              echo "Checking commit message of $i";
+              msg="$(git log --format=%B -n 1 $i)";
+              if [ -n "$(echo "$msg" | awk "NR==2")" ]; then
+                  echo "Malformed commit message in $i, second line must be empty";
+                  exit 1;
+              fi;
+              if echo "$msg" | head -1 | grep -q '\.$'; then
+                  echo "Malformed commit message in $i, trailing period in subject line";
+                  exit 1;
+              fi;
+          done
 
 build-debian:
-    image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: build
     tags:
         - debian
@@ -25,7 +40,7 @@ build-debian:
         - cd build && meson test -v
 
 build-debian-static:
-    image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: build
     tags:
         - debian
@@ -49,11 +64,13 @@ build-debian32:
         - cd build && meson test -v
 
 build-win32:
-    image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: build
     tags:
-        - win32
+        - debian
+        - amd64
     script:
+        - wineserver -p && wine wineboot
         - meson build --buildtype release
                       --werror
                       --libdir lib
@@ -62,23 +79,78 @@ build-win32:
                       -Ddefault_library=both
         - ninja -C build
         - ninja -C build install
+        - cd build && meson test -v
     artifacts:
         name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
         paths:
             - build/dav1d_install/
         expire_in: 1 week
 
-build-win64:
-    image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
+build-win32-unaligned-stack:
+    image: registry.videolan.org:5000/vlc-debian-llvm-mingw:20190218133533
     stage: build
     tags:
-        - win64
+        - debian
+        - amd64
     script:
+        - wineserver -p && wine wineboot
+        - meson build --buildtype release
+                      --werror
+                      --cross-file /opt/crossfiles/i686-w64-mingw32.meson
+                      -Dstack_alignment=4
+        - ninja -C build
+        - cd build && meson test -v
+
+build-win64:
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
+    stage: build
+    tags:
+        - debian
+        - amd64
+    script:
+        - wineserver -p && wine wineboot
         - meson build --buildtype release
                       --werror
                       --libdir lib
                       --prefix "$(pwd)/build/dav1d_install"
                       --cross-file /opt/crossfiles/x86_64-w64-mingw32.meson
+                      -Ddefault_library=both
+        - ninja -C build
+        - ninja -C build install
+        - cd build && meson test -v
+    artifacts:
+        name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+        paths:
+            - build/dav1d_install/
+        expire_in: 1 week
+
+build-win-arm32:
+    image: registry.videolan.org:5000/vlc-debian-llvm-mingw:20190218133533
+    stage: build
+    tags:
+        - debian
+        - amd64
+    script:
+        - meson build --buildtype release
+                      --werror
+                      --libdir lib
+                      --prefix "$(pwd)/build/dav1d_install"
+                      --cross-file /opt/crossfiles/armv7-w64-mingw32.meson
+                      -Ddefault_library=both
+        - ninja -C build
+
+build-win-arm64:
+    image: registry.videolan.org:5000/vlc-debian-llvm-mingw:20190218133533
+    stage: build
+    tags:
+        - debian
+        - amd64
+    script:
+        - meson build --buildtype release
+                      --werror
+                      --libdir lib
+                      --prefix "$(pwd)/build/dav1d_install"
+                      --cross-file /opt/crossfiles/aarch64-w64-mingw32.meson
                       -Ddefault_library=both
         - ninja -C build
         - ninja -C build install
@@ -129,14 +201,57 @@ build-debian-werror:
         - env CC='clang-7' meson build --buildtype debug --werror
         - ninja -C build
 
+build-debian-armv7:
+    stage: build
+    image: registry.videolan.org:5000/dav1d-debian-unstable-armv7:20190202101732
+    tags:
+        - armv7
+        - debian
+    script:
+        - meson build --buildtype release --werror
+        - ninja -C build
+        - cd build && meson test -v
+
+build-debian-armv7-clang-5:
+    stage: build
+    image: registry.videolan.org:5000/dav1d-debian-unstable-armv7:20190202101732
+    tags:
+        - armv7
+        - debian
+    script:
+        - env CC=clang-5.0 CFLAGS='-integrated-as' meson build --buildtype release
+        - ninja -C build
+        - cd build && meson test -v
+
+build-ubuntu-snap:
+    stage: build
+    image: registry.videolan.org:5000/dav1d-ubuntu-bionic:20190221154127
+    tags:
+        - debian
+        - amd64
+    script:
+        - snapcraft snap
+        - |
+           if [ "$CI_PROJECT_NAMESPACE" = "videolan" ]; then
+            echo $SNAP_LOGIN | base64 --decode | snapcraft login --with -
+            snapcraft push dav1d_*.snap --release edge
+            snapcraft logout
+           fi
+    artifacts:
+        name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+        paths:
+            - dav1d_*.snap
+        expire_in: 1 week
+    allow_failure: true
+
 test-debian:
-    image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: test
     tags:
         - debian
         - amd64
     cache:
-        key: testdata.git
+        key: testdata.git-20190215
         paths:
             - cache/dav1d-test-data.git/
     script:
@@ -144,19 +259,19 @@ test-debian:
         - test -d cache/dav1d-test-data.git && GIT_DIR=cache/dav1d-test-data.git git fetch --refmap=refs/heads/master:refs/heads/master origin master
         - test -d cache/dav1d-test-data.git || git clone --bare https://code.videolan.org/videolan/dav1d-test-data.git cache/dav1d-test-data.git
         - git clone cache/dav1d-test-data.git tests/dav1d-test-data
-        - meson build --buildtype release -Dtestdata_tests=true
+        - meson build --buildtype release -Dtestdata_tests=true -Dlogging=false
         - ninja -C build
         - cd build && time meson test -v
     dependencies: []
 
 test-debian-asan:
-    image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: test
     tags:
         - debian
         - amd64
     cache:
-        key: testdata.git
+        key: testdata.git-20190215
         paths:
             - cache/dav1d-test-data.git/
     variables:
@@ -166,19 +281,19 @@ test-debian-asan:
         - test -d cache/dav1d-test-data.git && GIT_DIR=cache/dav1d-test-data.git git fetch --refmap=refs/heads/master:refs/heads/master origin master
         - test -d cache/dav1d-test-data.git || git clone --bare https://code.videolan.org/videolan/dav1d-test-data.git cache/dav1d-test-data.git
         - git clone cache/dav1d-test-data.git tests/dav1d-test-data
-        - meson build --buildtype debugoptimized -Dtestdata_tests=true -Db_sanitize=address -Dbuild_asm=false
+        - meson build --buildtype debugoptimized -Dtestdata_tests=true -Dlogging=false -Db_sanitize=address -Dbuild_asm=false
         - ninja -C build
         - cd build && time meson test -v --setup=sanitizer
     dependencies: []
 
 test-debian-msan:
-    image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: test
     tags:
         - debian
         - amd64
     cache:
-        key: testdata.git
+        key: testdata.git-20190215
         paths:
             - cache/dav1d-test-data.git/
     variables:
@@ -188,19 +303,19 @@ test-debian-msan:
         - test -d cache/dav1d-test-data.git && GIT_DIR=cache/dav1d-test-data.git git fetch --refmap=refs/heads/master:refs/heads/master origin master
         - test -d cache/dav1d-test-data.git || git clone --bare https://code.videolan.org/videolan/dav1d-test-data.git cache/dav1d-test-data.git
         - git clone cache/dav1d-test-data.git tests/dav1d-test-data
-        - env CC=clang meson build --buildtype debugoptimized -Dtestdata_tests=true -Db_sanitize=memory -Db_lundef=false -Dbuild_asm=false
+        - env CC=clang meson build --buildtype debugoptimized -Dtestdata_tests=true -Dlogging=false -Db_sanitize=memory -Db_lundef=false -Dbuild_asm=false
         - ninja -C build
         - cd build && time meson test -v --setup=sanitizer
     dependencies: []
 
 test-debian-ubsan:
-    image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: test
     tags:
         - debian
         - amd64
     cache:
-        key: testdata.git
+        key: testdata.git-20190215
         paths:
             - cache/dav1d-test-data.git/
     variables:
@@ -210,7 +325,31 @@ test-debian-ubsan:
         - test -d cache/dav1d-test-data.git && GIT_DIR=cache/dav1d-test-data.git git fetch --refmap=refs/heads/master:refs/heads/master origin master
         - test -d cache/dav1d-test-data.git || git clone --bare https://code.videolan.org/videolan/dav1d-test-data.git cache/dav1d-test-data.git
         - git clone cache/dav1d-test-data.git tests/dav1d-test-data
-        - env CC=clang meson build --buildtype debugoptimized -Dtestdata_tests=true -Db_sanitize=undefined -Db_lundef=false -Dbuild_asm=false
+        - env CC=clang meson build --buildtype debugoptimized -Dtestdata_tests=true -Dlogging=false -Db_sanitize=undefined -Db_lundef=false -Dbuild_asm=false
         - ninja -C build
         - cd build && time meson test -v --setup=sanitizer
+    dependencies: []
+
+test-win64:
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
+    stage: test
+    tags:
+        - debian
+        - amd64
+    cache:
+        key: testdata.git-20190215
+        paths:
+            - cache/dav1d-test-data.git/
+    script:
+        - test -d cache || mkdir cache
+        - test -d cache/dav1d-test-data.git && GIT_DIR=cache/dav1d-test-data.git git fetch --refmap=refs/heads/master:refs/heads/master origin master
+        - test -d cache/dav1d-test-data.git || git clone --bare https://code.videolan.org/videolan/dav1d-test-data.git cache/dav1d-test-data.git
+        - git clone cache/dav1d-test-data.git tests/dav1d-test-data
+        - wineserver -p && wine wineboot
+        - meson build --buildtype release
+                      -Dtestdata_tests=true
+                      -Dlogging=false
+                      --cross-file /opt/crossfiles/x86_64-w64-mingw32.meson
+        - ninja -C build
+        - cd build && time meson test -v
     dependencies: []

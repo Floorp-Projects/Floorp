@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_ARM_CPU_H__
-#define __DAV1D_SRC_ARM_CPU_H__
+#ifndef DAV1D_SRC_ARM_CPU_H
+#define DAV1D_SRC_ARM_CPU_H
 
 enum CpuFlags {
     DAV1D_ARM_CPU_FLAG_NEON = 1 << 0,
@@ -34,4 +34,4 @@ enum CpuFlags {
 
 unsigned dav1d_get_cpu_flags_arm(void);
 
-#endif /* __DAV1D_SRC_ARM_CPU_H__ */
+#endif /* DAV1D_SRC_ARM_CPU_H */

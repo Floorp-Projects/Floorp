@@ -1,7 +1,7 @@
 ;*****************************************************************************
 ;* x86inc.asm: x264asm abstraction layer
 ;*****************************************************************************
-;* Copyright (C) 2005-2018 x264 project
+;* Copyright (C) 2005-2019 x264 project
 ;*
 ;* Authors: Loren Merritt <lorenm@u.washington.edu>
 ;*          Henrik Gramner <henrik@gramner.com>
@@ -65,12 +65,19 @@
 %endif
 
 %define FORMAT_ELF 0
+%define FORMAT_MACHO 0
 %ifidn __OUTPUT_FORMAT__,elf
     %define FORMAT_ELF 1
 %elifidn __OUTPUT_FORMAT__,elf32
     %define FORMAT_ELF 1
 %elifidn __OUTPUT_FORMAT__,elf64
     %define FORMAT_ELF 1
+%elifidn __OUTPUT_FORMAT__,macho
+    %define FORMAT_MACHO 1
+%elifidn __OUTPUT_FORMAT__,macho32
+    %define FORMAT_MACHO 1
+%elifidn __OUTPUT_FORMAT__,macho64
+    %define FORMAT_MACHO 1
 %endif
 
 %ifdef PREFIX
@@ -98,8 +105,12 @@
     %define PIC 0
 %endif
 
+%define HAVE_PRIVATE_EXTERN 1
 %ifdef __NASM_VER__
     %use smartalign
+    %if __NASM_VERSION_ID__ < 0x020e0000 ; 2.14
+        %define HAVE_PRIVATE_EXTERN 0
+    %endif
 %endif
 
 ; Macros to eliminate most code duplication between x86_32 and x86_64:
@@ -712,22 +723,25 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
 %endmacro
 %macro cglobal_internal 2-3+
     annotate_function_size
-    %if %1
-        %xdefine %%FUNCTION_PREFIX private_prefix
-        %xdefine %%VISIBILITY hidden
-    %else
-        %xdefine %%FUNCTION_PREFIX public_prefix
-        %xdefine %%VISIBILITY
-    %endif
     %ifndef cglobaled_%2
-        %xdefine %2 mangle(%%FUNCTION_PREFIX %+ _ %+ %2)
+        %if %1
+            %xdefine %2 mangle(private_prefix %+ _ %+ %2)
+        %else
+            %xdefine %2 mangle(public_prefix %+ _ %+ %2)
+        %endif
         %xdefine %2.skip_prologue %2 %+ .skip_prologue
         CAT_XDEFINE cglobaled_, %2, 1
     %endif
     %xdefine current_function %2
     %xdefine current_function_section __SECT__
     %if FORMAT_ELF
-        global %2:function %%VISIBILITY
+        %if %1
+            global %2:function hidden
+        %else
+            global %2:function
+        %endif
+    %elif FORMAT_MACHO && HAVE_PRIVATE_EXTERN && %1
+        global %2:private_extern
     %else
         global %2
     %endif
@@ -748,6 +762,8 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
 %macro cglobal_label 1
     %if FORMAT_ELF
         global current_function %+ %1:function hidden
+    %elif FORMAT_MACHO && HAVE_PRIVATE_EXTERN
+        global current_function %+ %1:private_extern
     %else
         global current_function %+ %1
     %endif
@@ -773,6 +789,8 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
     %xdefine %1 mangle(private_prefix %+ _ %+ %1)
     %if FORMAT_ELF
         global %1:data hidden
+    %elif FORMAT_MACHO && HAVE_PRIVATE_EXTERN
+        global %1:private_extern
     %else
         global %1
     %endif
@@ -817,19 +835,20 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
 %assign cpuflags_sse4     (1<<10)| cpuflags_ssse3
 %assign cpuflags_sse42    (1<<11)| cpuflags_sse4
 %assign cpuflags_aesni    (1<<12)| cpuflags_sse42
-%assign cpuflags_avx      (1<<13)| cpuflags_sse42
-%assign cpuflags_xop      (1<<14)| cpuflags_avx
-%assign cpuflags_fma4     (1<<15)| cpuflags_avx
-%assign cpuflags_fma3     (1<<16)| cpuflags_avx
-%assign cpuflags_bmi1     (1<<17)| cpuflags_avx|cpuflags_lzcnt
-%assign cpuflags_bmi2     (1<<18)| cpuflags_bmi1
-%assign cpuflags_avx2     (1<<19)| cpuflags_fma3|cpuflags_bmi2
-%assign cpuflags_avx512   (1<<20)| cpuflags_avx2 ; F, CD, BW, DQ, VL
+%assign cpuflags_gfni     (1<<13)| cpuflags_sse42
+%assign cpuflags_avx      (1<<14)| cpuflags_sse42
+%assign cpuflags_xop      (1<<15)| cpuflags_avx
+%assign cpuflags_fma4     (1<<16)| cpuflags_avx
+%assign cpuflags_fma3     (1<<17)| cpuflags_avx
+%assign cpuflags_bmi1     (1<<18)| cpuflags_avx|cpuflags_lzcnt
+%assign cpuflags_bmi2     (1<<19)| cpuflags_bmi1
+%assign cpuflags_avx2     (1<<20)| cpuflags_fma3|cpuflags_bmi2
+%assign cpuflags_avx512   (1<<21)| cpuflags_avx2 ; F, CD, BW, DQ, VL
 
-%assign cpuflags_cache32  (1<<21)
-%assign cpuflags_cache64  (1<<22)
-%assign cpuflags_aligned  (1<<23) ; not a cpu feature, but a function variant
-%assign cpuflags_atom     (1<<24)
+%assign cpuflags_cache32  (1<<22)
+%assign cpuflags_cache64  (1<<23)
+%assign cpuflags_aligned  (1<<24) ; not a cpu feature, but a function variant
+%assign cpuflags_atom     (1<<25)
 
 ; Returns a boolean value expressing whether or not the specified cpuflag is enabled.
 %define    cpuflag(x) (((((cpuflags & (cpuflags_ %+ x)) ^ (cpuflags_ %+ x)) - 1) >> 31) & 1)
@@ -1221,8 +1240,16 @@ INIT_XMM
         %ifdef cpuname
             %if notcpuflag(%2)
                 %error use of ``%1'' %2 instruction in cpuname function: current_function
-            %elif cpuflags_%2 < cpuflags_sse && notcpuflag(sse2) && __sizeofreg > 8
+            %elif %3 == 0 && __sizeofreg == 16 && notcpuflag(sse2)
                 %error use of ``%1'' sse2 instruction in cpuname function: current_function
+            %elif %3 == 0 && __sizeofreg == 32 && notcpuflag(avx2)
+                %error use of ``%1'' avx2 instruction in cpuname function: current_function
+            %elifidn %1, pextrw ; special case because the base instruction is mmx2,
+                %ifnid %6       ; but sse4 is required for memory operands
+                    %if notcpuflag(sse4)
+                        %error use of ``%1'' sse4 instruction in cpuname function: current_function
+                    %endif
+                %endif
             %endif
         %endif
     %endif
@@ -1384,38 +1411,41 @@ AVX_INSTR cmpunordpd, sse2, 1, 0, 1
 AVX_INSTR cmpunordps, sse, 1, 0, 1
 AVX_INSTR cmpunordsd, sse2, 1, 0, 0
 AVX_INSTR cmpunordss, sse, 1, 0, 0
-AVX_INSTR comisd, sse2
-AVX_INSTR comiss, sse
-AVX_INSTR cvtdq2pd, sse2
-AVX_INSTR cvtdq2ps, sse2
-AVX_INSTR cvtpd2dq, sse2
-AVX_INSTR cvtpd2ps, sse2
-AVX_INSTR cvtps2dq, sse2
-AVX_INSTR cvtps2pd, sse2
-AVX_INSTR cvtsd2si, sse2
+AVX_INSTR comisd, sse2, 1
+AVX_INSTR comiss, sse, 1
+AVX_INSTR cvtdq2pd, sse2, 1
+AVX_INSTR cvtdq2ps, sse2, 1
+AVX_INSTR cvtpd2dq, sse2, 1
+AVX_INSTR cvtpd2ps, sse2, 1
+AVX_INSTR cvtps2dq, sse2, 1
+AVX_INSTR cvtps2pd, sse2, 1
+AVX_INSTR cvtsd2si, sse2, 1
 AVX_INSTR cvtsd2ss, sse2, 1, 0, 0
 AVX_INSTR cvtsi2sd, sse2, 1, 0, 0
 AVX_INSTR cvtsi2ss, sse, 1, 0, 0
 AVX_INSTR cvtss2sd, sse2, 1, 0, 0
-AVX_INSTR cvtss2si, sse
-AVX_INSTR cvttpd2dq, sse2
-AVX_INSTR cvttps2dq, sse2
-AVX_INSTR cvttsd2si, sse2
-AVX_INSTR cvttss2si, sse
+AVX_INSTR cvtss2si, sse, 1
+AVX_INSTR cvttpd2dq, sse2, 1
+AVX_INSTR cvttps2dq, sse2, 1
+AVX_INSTR cvttsd2si, sse2, 1
+AVX_INSTR cvttss2si, sse, 1
 AVX_INSTR divpd, sse2, 1, 0, 0
 AVX_INSTR divps, sse, 1, 0, 0
 AVX_INSTR divsd, sse2, 1, 0, 0
 AVX_INSTR divss, sse, 1, 0, 0
 AVX_INSTR dppd, sse4, 1, 1, 0
 AVX_INSTR dpps, sse4, 1, 1, 0
-AVX_INSTR extractps, sse4
+AVX_INSTR extractps, sse4, 1
+AVX_INSTR gf2p8affineinvqb, gfni, 0, 1, 0
+AVX_INSTR gf2p8affineqb, gfni, 0, 1, 0
+AVX_INSTR gf2p8mulb, gfni, 0, 0, 0
 AVX_INSTR haddpd, sse3, 1, 0, 0
 AVX_INSTR haddps, sse3, 1, 0, 0
 AVX_INSTR hsubpd, sse3, 1, 0, 0
 AVX_INSTR hsubps, sse3, 1, 0, 0
 AVX_INSTR insertps, sse4, 1, 1, 0
 AVX_INSTR lddqu, sse3
-AVX_INSTR ldmxcsr, sse
+AVX_INSTR ldmxcsr, sse, 1
 AVX_INSTR maskmovdqu, sse2
 AVX_INSTR maxpd, sse2, 1, 0, 1
 AVX_INSTR maxps, sse, 1, 0, 1
@@ -1425,10 +1455,10 @@ AVX_INSTR minpd, sse2, 1, 0, 1
 AVX_INSTR minps, sse, 1, 0, 1
 AVX_INSTR minsd, sse2, 1, 0, 0
 AVX_INSTR minss, sse, 1, 0, 0
-AVX_INSTR movapd, sse2
-AVX_INSTR movaps, sse
+AVX_INSTR movapd, sse2, 1
+AVX_INSTR movaps, sse, 1
 AVX_INSTR movd, mmx
-AVX_INSTR movddup, sse3
+AVX_INSTR movddup, sse3, 1
 AVX_INSTR movdqa, sse2
 AVX_INSTR movdqu, sse2
 AVX_INSTR movhlps, sse, 1, 0, 0
@@ -1437,19 +1467,19 @@ AVX_INSTR movhps, sse, 1, 0, 0
 AVX_INSTR movlhps, sse, 1, 0, 0
 AVX_INSTR movlpd, sse2, 1, 0, 0
 AVX_INSTR movlps, sse, 1, 0, 0
-AVX_INSTR movmskpd, sse2
-AVX_INSTR movmskps, sse
+AVX_INSTR movmskpd, sse2, 1
+AVX_INSTR movmskps, sse, 1
 AVX_INSTR movntdq, sse2
 AVX_INSTR movntdqa, sse4
-AVX_INSTR movntpd, sse2
-AVX_INSTR movntps, sse
+AVX_INSTR movntpd, sse2, 1
+AVX_INSTR movntps, sse, 1
 AVX_INSTR movq, mmx
 AVX_INSTR movsd, sse2, 1, 0, 0
-AVX_INSTR movshdup, sse3
-AVX_INSTR movsldup, sse3
+AVX_INSTR movshdup, sse3, 1
+AVX_INSTR movsldup, sse3, 1
 AVX_INSTR movss, sse, 1, 0, 0
-AVX_INSTR movupd, sse2
-AVX_INSTR movups, sse
+AVX_INSTR movupd, sse2, 1
+AVX_INSTR movups, sse, 1
 AVX_INSTR mpsadbw, sse4, 0, 1, 0
 AVX_INSTR mulpd, sse2, 1, 0, 1
 AVX_INSTR mulps, sse, 1, 0, 1
@@ -1582,27 +1612,27 @@ AVX_INSTR punpcklwd, mmx, 0, 0, 0
 AVX_INSTR punpckldq, mmx, 0, 0, 0
 AVX_INSTR punpcklqdq, sse2, 0, 0, 0
 AVX_INSTR pxor, mmx, 0, 0, 1
-AVX_INSTR rcpps, sse
+AVX_INSTR rcpps, sse, 1
 AVX_INSTR rcpss, sse, 1, 0, 0
-AVX_INSTR roundpd, sse4
-AVX_INSTR roundps, sse4
+AVX_INSTR roundpd, sse4, 1
+AVX_INSTR roundps, sse4, 1
 AVX_INSTR roundsd, sse4, 1, 1, 0
 AVX_INSTR roundss, sse4, 1, 1, 0
-AVX_INSTR rsqrtps, sse
+AVX_INSTR rsqrtps, sse, 1
 AVX_INSTR rsqrtss, sse, 1, 0, 0
 AVX_INSTR shufpd, sse2, 1, 1, 0
 AVX_INSTR shufps, sse, 1, 1, 0
-AVX_INSTR sqrtpd, sse2
-AVX_INSTR sqrtps, sse
+AVX_INSTR sqrtpd, sse2, 1
+AVX_INSTR sqrtps, sse, 1
 AVX_INSTR sqrtsd, sse2, 1, 0, 0
 AVX_INSTR sqrtss, sse, 1, 0, 0
-AVX_INSTR stmxcsr, sse
+AVX_INSTR stmxcsr, sse, 1
 AVX_INSTR subpd, sse2, 1, 0, 0
 AVX_INSTR subps, sse, 1, 0, 0
 AVX_INSTR subsd, sse2, 1, 0, 0
 AVX_INSTR subss, sse, 1, 0, 0
-AVX_INSTR ucomisd, sse2
-AVX_INSTR ucomiss, sse
+AVX_INSTR ucomisd, sse2, 1
+AVX_INSTR ucomiss, sse, 1
 AVX_INSTR unpckhpd, sse2, 1, 0, 0
 AVX_INSTR unpckhps, sse, 1, 0, 0
 AVX_INSTR unpcklpd, sse2, 1, 0, 0
@@ -1614,6 +1644,37 @@ AVX_INSTR xorps, sse, 1, 0, 1
 AVX_INSTR pfadd, 3dnow, 1, 0, 1
 AVX_INSTR pfsub, 3dnow, 1, 0, 0
 AVX_INSTR pfmul, 3dnow, 1, 0, 1
+
+;%1 == instruction
+;%2 == minimal instruction set
+%macro GPR_INSTR 2
+    %macro %1 2-5 fnord, %1, %2
+        %ifdef cpuname
+            %if notcpuflag(%5)
+                %error use of ``%4'' %5 instruction in cpuname function: current_function
+            %endif
+        %endif
+        %ifidn %3, fnord
+            %4 %1, %2
+        %else
+            %4 %1, %2, %3
+        %endif
+    %endmacro
+%endmacro
+
+GPR_INSTR andn, bmi1
+GPR_INSTR bextr, bmi1
+GPR_INSTR blsi, bmi1
+GPR_INSTR blsmsk, bmi1
+GPR_INSTR bzhi, bmi2
+GPR_INSTR mulx, bmi2
+GPR_INSTR pdep, bmi2
+GPR_INSTR pext, bmi2
+GPR_INSTR popcnt, sse42
+GPR_INSTR rorx, bmi2
+GPR_INSTR sarx, bmi2
+GPR_INSTR shlx, bmi2
+GPR_INSTR shrx, bmi2
 
 ; base-4 constants for shuffles
 %assign i 0

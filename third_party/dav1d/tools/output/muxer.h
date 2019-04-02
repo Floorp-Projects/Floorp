@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_OUTPUT_MUXER_H__
-#define __DAV1D_OUTPUT_MUXER_H__
+#ifndef DAV1D_OUTPUT_MUXER_H
+#define DAV1D_OUTPUT_MUXER_H
 
 #include "picture.h"
 
@@ -49,4 +49,4 @@ typedef struct Muxer {
     int (*verify)(MuxerPriv *ctx, const char *hash_string);
 } Muxer;
 
-#endif /* __DAV1D_OUTPUT_MUXER_H__ */
+#endif /* DAV1D_OUTPUT_MUXER_H */

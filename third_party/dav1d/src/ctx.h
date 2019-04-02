@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_CTX_H__
-#define __DAV1D_SRC_CTX_H__
+#ifndef DAV1D_SRC_CTX_H
+#define DAV1D_SRC_CTX_H
 
 #include <stdint.h>
 
@@ -88,4 +88,4 @@ union alias8 { uint8_t u8; } ATTR_ALIAS;
     default: default_memset(dir, diridx, off, var); break; \
     }
 
-#endif /* __DAV1D_SRC_CTX_H__ */
+#endif /* DAV1D_SRC_CTX_H */

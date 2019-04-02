@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_COMMON_DUMP_H__
-#define __DAV1D_COMMON_DUMP_H__
+#ifndef DAV1D_COMMON_DUMP_H
+#define DAV1D_COMMON_DUMP_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -83,4 +83,4 @@ static inline void ac_dump(const int16_t *buf, int w, int h, const char *what)
     }
 }
 
-#endif /* __DAV1D_COMMON_DUMP_H__ */
+#endif /* DAV1D_COMMON_DUMP_H */

@@ -34,6 +34,7 @@
 
 #include "src/msac.h"
 
+#define EC_PROB_SHIFT 6
 #define EC_MIN_PROB 4  // must be <= (1<<EC_PROB_SHIFT)/16
 
 #define EC_WIN_SIZE (sizeof(ec_win) << 3)
@@ -67,10 +68,75 @@ static inline void ctx_norm(MsacContext *s, ec_win dif, uint32_t rng) {
         ctx_refill(s);
 }
 
+unsigned dav1d_msac_decode_bool_equi(MsacContext *const s) {
+    ec_win v, vw, dif = s->dif;
+    uint16_t r = s->rng;
+    unsigned ret;
+    assert((dif >> (EC_WIN_SIZE - 16)) < r);
+    // When the probability is 1/2, f = 16384 >> EC_PROB_SHIFT = 256 and we can
+    // replace the multiply with a simple shift.
+    v = ((r >> 8) << 7) + EC_MIN_PROB;
+    vw   = v << (EC_WIN_SIZE - 16);
+    ret  = dif >= vw;
+    dif -= ret*vw;
+    v   += ret*(r - 2*v);
+    ctx_norm(s, dif, (unsigned) v);
+    return !ret;
+}
+
+/* Decode a single binary value.
+ * f: The probability that the bit is one
+ * Return: The value decoded (0 or 1). */
+unsigned dav1d_msac_decode_bool(MsacContext *const s, const unsigned f) {
+    ec_win v, vw, dif = s->dif;
+    uint16_t r = s->rng;
+    unsigned ret;
+    assert((dif >> (EC_WIN_SIZE - 16)) < r);
+    v = ((r >> 8) * (f >> EC_PROB_SHIFT) >> (7 - EC_PROB_SHIFT)) + EC_MIN_PROB;
+    vw   = v << (EC_WIN_SIZE - 16);
+    ret  = dif >= vw;
+    dif -= ret*vw;
+    v   += ret*(r - 2*v);
+    ctx_norm(s, dif, (unsigned) v);
+    return !ret;
+}
+
+unsigned dav1d_msac_decode_bools(MsacContext *const c, const unsigned l) {
+    int v = 0;
+    for (int n = (int) l - 1; n >= 0; n--)
+        v = (v << 1) | dav1d_msac_decode_bool_equi(c);
+    return v;
+}
+
+int dav1d_msac_decode_subexp(MsacContext *const c, const int ref,
+                             const int n, const unsigned k)
+{
+    int i = 0;
+    int a = 0;
+    int b = k;
+    while ((2 << b) < n) {
+        if (!dav1d_msac_decode_bool_equi(c)) break;
+        b = k + i++;
+        a = (1 << b);
+    }
+    const unsigned v = dav1d_msac_decode_bools(c, b) + a;
+    return ref * 2 <= n ? inv_recenter(ref, v) :
+                          n - 1 - inv_recenter(n - 1 - ref, v);
+}
+
+int dav1d_msac_decode_uniform(MsacContext *const c, const unsigned n) {
+    assert(n > 0);
+    const int l = ulog2(n) + 1;
+    assert(l > 1);
+    const unsigned m = (1 << l) - n;
+    const unsigned v = dav1d_msac_decode_bools(c, l - 1);
+    return v < m ? v : (v << 1) - m + dav1d_msac_decode_bool_equi(c);
+}
+
 /* Decodes a symbol given an inverse cumulative distribution function (CDF)
  * table in Q15. */
-unsigned msac_decode_symbol(MsacContext *const s, const uint16_t *const cdf,
-                            const unsigned n_symbols)
+static unsigned decode_symbol(MsacContext *const s, const uint16_t *const cdf,
+                              const unsigned n_symbols)
 {
     ec_win u, v = s->rng, r = s->rng >> 8;
     const ec_win c = s->dif >> (EC_WIN_SIZE - 16);
@@ -87,57 +153,8 @@ unsigned msac_decode_symbol(MsacContext *const s, const uint16_t *const cdf,
 
     assert(u <= s->rng);
 
-    ctx_norm(s, s->dif - (v << (EC_WIN_SIZE - 16)), u - v);
+    ctx_norm(s, s->dif - (v << (EC_WIN_SIZE - 16)), (unsigned) (u - v));
     return ret - 1;
-}
-
-/* Decode a single binary value.
- * f: The probability that the bit is one
- * Return: The value decoded (0 or 1). */
-unsigned msac_decode_bool(MsacContext *const s, const unsigned f) {
-    ec_win v, vw, dif = s->dif;
-    uint16_t r = s->rng;
-    unsigned ret;
-    assert((dif >> (EC_WIN_SIZE - 16)) < r);
-    v = ((r >> 8) * f >> (7 - EC_PROB_SHIFT)) + EC_MIN_PROB;
-    vw   = v << (EC_WIN_SIZE - 16);
-    ret  = dif >= vw;
-    dif -= ret*vw;
-    v   += ret*(r - 2*v);
-    ctx_norm(s, dif, v);
-    return !ret;
-}
-
-unsigned msac_decode_bools(MsacContext *const c, const unsigned l) {
-    int v = 0;
-    for (int n = (int) l - 1; n >= 0; n--)
-        v = (v << 1) | msac_decode_bool(c, EC_BOOL_EPROB);
-    return v;
-}
-
-int msac_decode_subexp(MsacContext *const c, const int ref,
-                       const int n, const unsigned k)
-{
-    int i = 0;
-    int a = 0;
-    int b = k;
-    while ((2 << b) < n) {
-        if (!msac_decode_bool(c, EC_BOOL_EPROB)) break;
-        b = k + i++;
-        a = (1 << b);
-    }
-    const unsigned v = msac_decode_bools(c, b) + a;
-    return ref * 2 <= n ? inv_recenter(ref, v) :
-                          n - 1 - inv_recenter(n - 1 - ref, v);
-}
-
-int msac_decode_uniform(MsacContext *const c, const unsigned n) {
-    assert(n > 0);
-    const int l = ulog2(n) + 1;
-    assert(l > 1);
-    const unsigned m = (1 << l) - n;
-    const unsigned v = msac_decode_bools(c, l - 1);
-    return v < m ? v : (v << 1) - m + msac_decode_bool(c, EC_BOOL_EPROB);
 }
 
 static void update_cdf(uint16_t *const cdf, const unsigned val,
@@ -153,17 +170,20 @@ static void update_cdf(uint16_t *const cdf, const unsigned val,
     cdf[n_symbols] = count + (count < 32);
 }
 
-unsigned msac_decode_symbol_adapt(MsacContext *const c,
-                                  uint16_t *const cdf, const unsigned n_symbols)
+unsigned dav1d_msac_decode_symbol_adapt(MsacContext *const c,
+                                        uint16_t *const cdf,
+                                        const unsigned n_symbols)
 {
-    const unsigned val = msac_decode_symbol(c, cdf, n_symbols);
+    const unsigned val = decode_symbol(c, cdf, n_symbols);
     if(c->allow_update_cdf)
         update_cdf(cdf, val, n_symbols);
     return val;
 }
 
-unsigned msac_decode_bool_adapt(MsacContext *const c, uint16_t *const cdf) {
-    const unsigned bit = msac_decode_bool(c, *cdf >> EC_PROB_SHIFT);
+unsigned dav1d_msac_decode_bool_adapt(MsacContext *const c,
+                                      uint16_t *const cdf)
+{
+    const unsigned bit = dav1d_msac_decode_bool(c, *cdf);
 
     if(c->allow_update_cdf){
         // update_cdf() specialized for boolean CDFs
@@ -180,8 +200,8 @@ unsigned msac_decode_bool_adapt(MsacContext *const c, uint16_t *const cdf) {
     return bit;
 }
 
-void msac_init(MsacContext *const s, const uint8_t *const data,
-               const size_t sz, const int disable_cdf_update_flag)
+void dav1d_msac_init(MsacContext *const s, const uint8_t *const data,
+                     const size_t sz, const int disable_cdf_update_flag)
 {
     s->buf_pos = data;
     s->buf_end = data + sz;

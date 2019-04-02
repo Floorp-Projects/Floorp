@@ -26,8 +26,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
-#ifndef __DAVID_SRC_ARM_64_UTIL_S__
-#define __DAVID_SRC_ARM_64_UTIL_S__
+#ifndef DAV1D_SRC_ARM_64_UTIL_S
+#define DAV1D_SRC_ARM_64_UTIL_S
 
 #include "config.h"
 #include "src/arm/asm.S"
@@ -59,4 +59,33 @@
 #endif
 .endm
 
-#endif /* __DAVID_SRC_ARM_64_UTIL_S__ */
+.macro transpose_8x8b r0, r1, r2, r3, r4, r5, r6, r7, r8, r9
+    trn1        \r8\().8b,  \r0\().8b,  \r1\().8b
+    trn2        \r9\().8b,  \r0\().8b,  \r1\().8b
+    trn1        \r1\().8b,  \r2\().8b,  \r3\().8b
+    trn2        \r3\().8b,  \r2\().8b,  \r3\().8b
+    trn1        \r0\().8b,  \r4\().8b,  \r5\().8b
+    trn2        \r5\().8b,  \r4\().8b,  \r5\().8b
+    trn1        \r2\().8b,  \r6\().8b,  \r7\().8b
+    trn2        \r7\().8b,  \r6\().8b,  \r7\().8b
+
+    trn1        \r4\().4h,  \r0\().4h,  \r2\().4h
+    trn2        \r2\().4h,  \r0\().4h,  \r2\().4h
+    trn1        \r6\().4h,  \r5\().4h,  \r7\().4h
+    trn2        \r7\().4h,  \r5\().4h,  \r7\().4h
+    trn1        \r5\().4h,  \r9\().4h,  \r3\().4h
+    trn2        \r9\().4h,  \r9\().4h,  \r3\().4h
+    trn1        \r3\().4h,  \r8\().4h,  \r1\().4h
+    trn2        \r8\().4h,  \r8\().4h,  \r1\().4h
+
+    trn1        \r0\().2s,  \r3\().2s,  \r4\().2s
+    trn2        \r4\().2s,  \r3\().2s,  \r4\().2s
+    trn1        \r1\().2s,  \r5\().2s,  \r6\().2s
+    trn2        \r5\().2s,  \r5\().2s,  \r6\().2s
+    trn2        \r6\().2s,  \r8\().2s,  \r2\().2s
+    trn1        \r2\().2s,  \r8\().2s,  \r2\().2s
+    trn1        \r3\().2s,  \r9\().2s,  \r7\().2s
+    trn2        \r7\().2s,  \r9\().2s,  \r7\().2s
+.endm
+
+#endif /* DAV1D_SRC_ARM_64_UTIL_S */

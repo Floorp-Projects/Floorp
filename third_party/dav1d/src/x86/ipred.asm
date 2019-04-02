@@ -3483,21 +3483,21 @@ ALIGN function_align
     sub                 rsp, stack_size_padded
     sub                  hd, 2
     lea                  r3, [dstq+16]
-    mov                 r5d, hd
+    lea                 r5d, [hq-2]
     call .w16_main
     add                 tlq, r5
     mov                dstq, r3
     lea                  r3, [strideq-4]
     lea                  r4, [r3+strideq*2]
-    movq                xm0, [tlq+19]
+    movq                xm0, [tlq+21]
     pinsrd              xm0, [dstq-4], 2
     pinsrd              xm0, [dstq+r3*1], 3
     FILTER_XMM           12, 0, 7, 14         ; a0 b0 a0 b0
     movq                xm7, [dstq+r3*2]
     pinsrd              xm7, [dstq+r4], 2
     palignr             xm7, xm0, 12          ; 0 _ _ _ _ _ _ _ _ _ _ 5 _ _ _ 6
-    vpbroadcastd         m0, [tlq+26]
-    vpbroadcastd         m9, [tlq+27]
+    vpbroadcastd         m0, [tlq+28]
+    vpbroadcastd         m9, [tlq+29]
     vbroadcasti128       m8, [base+filter_shuf1+16]
     vpblendd             m0, m9, 0x20
     vpblendd             m0, m7, 0x0f
@@ -3506,16 +3506,17 @@ ALIGN function_align
     call .main                                ; c0 d0 a1 b1   a1 b1 c0 d0
     add                  r3, 2
     lea                  r4, [r4+strideq*2]
-    movlps              xm9, xm7, [tlq+27]    ; _ _ _ 0 1 2 3 4 _ _ _ 5 _ _ _ 6
+    movlps              xm9, xm7, [tlq+29]    ; _ _ _ 0 1 2 3 4 _ _ _ 5 _ _ _ 6
     vpblendd           xm12, xm7, 0x0c        ; a0 b0 a1 b1
     FILTER_XMM            6, 9, 10, 14
     vpbroadcastq         m6, xm6              ; a2 b2 __ __ __ __ a2 b2
-    vpbroadcastd         m9, [tlq+35]
-    vpbroadcastd        m10, [tlq+34]
+    vpbroadcastd         m9, [tlq+37]
+    vpbroadcastd        m10, [tlq+36]
     vpblendd             m6, m9, 0x20         ; top
 .w32_loop:
     movq                xm9, [dstq+r3*4]
     pinsrd              xm9, [dstq+r4], 2
+.w32_loop_last:
     palignr              m9, m0, 12
     vpblendd             m0, m9, m7, 0xe2     ; 0 _ _ _ 1 2 3 4 _ _ _ 5 _ _ _ 6
     mova               xm13, xm7              ; c0 d0
@@ -3535,6 +3536,7 @@ ALIGN function_align
     lea                dstq, [dstq+strideq*2]
     sub                 r5d, 2
     jg .w32_loop
+    jz .w32_loop_last
     vpblendd            xm7, xm6, xm10, 0x04  ; _ _ _ 5 _ _ _ 6 0 _ _ _ 1 2 3 4
     pshufd              xm7, xm7, q1032       ; 0 _ _ _ 1 2 3 4 _ _ _ 5 _ _ _ 6
     FILTER_XMM            0, 7, 9, [base+filter_shuf1+16]

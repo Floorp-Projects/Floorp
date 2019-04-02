@@ -107,7 +107,7 @@ static void backup_lpf(const Dav1dFrameContext *const f,
 void bytefn(dav1d_lr_copy_lpf)(Dav1dFrameContext *const f,
                                /*const*/ pixel *const src[3], const int sby)
 {
-    const ptrdiff_t offset = 8 * !!sby;
+    const int offset = 8 * !!sby;
     const ptrdiff_t *const src_stride = f->cur.stride;
     const ptrdiff_t lr_stride = ((f->sr_cur.p.p.w + 31) & ~31) * sizeof(pixel);
 
@@ -132,7 +132,7 @@ void bytefn(dav1d_lr_copy_lpf)(Dav1dFrameContext *const f,
         const int h = (f->cur.p.h + ss_ver) >> ss_ver;
         const int w = f->bw << (2 - ss_hor);
         const int row_h = imin((sby + 1) << ((6 - ss_ver) + f->seq_hdr->sb128), h - 1);
-        const ptrdiff_t offset_uv = offset >> ss_ver;
+        const int offset_uv = offset >> ss_ver;
         const int y_stripe =
             (sby << ((6 - ss_ver) + f->seq_hdr->sb128)) - offset_uv;
 
@@ -277,7 +277,7 @@ static void lr_sbrow(const Dav1dFrameContext *const f, pixel *p, const int y,
 void bytefn(dav1d_lr_sbrow)(Dav1dFrameContext *const f, pixel *const dst[3],
                             const int sby)
 {
-    const ptrdiff_t offset_y = 8 * !!sby;
+    const int offset_y = 8 * !!sby;
     const ptrdiff_t *const dst_stride = f->sr_cur.p.stride;
 
     const int restore_planes =
@@ -299,7 +299,7 @@ void bytefn(dav1d_lr_sbrow)(Dav1dFrameContext *const f, pixel *const dst[3],
         const int h = (f->sr_cur.p.p.h + ss_ver) >> ss_ver;
         const int w = (f->sr_cur.p.p.w + ss_hor) >> ss_hor;
         const int row_h = imin((sby + 1) << ((6 - ss_ver) + f->seq_hdr->sb128), h);
-        const ptrdiff_t offset_uv = offset_y >> ss_ver;
+        const int offset_uv = offset_y >> ss_ver;
         const int y_stripe =
             (sby << ((6 - ss_ver) + f->seq_hdr->sb128)) - offset_uv;
         if (restore_planes & LR_RESTORE_U)

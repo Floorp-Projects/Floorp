@@ -29,18 +29,35 @@
 #include "src/cdef.h"
 
 decl_cdef_fn(dav1d_cdef_filter_8x8_avx2);
+decl_cdef_fn(dav1d_cdef_filter_8x8_ssse3);
+
+decl_cdef_fn(dav1d_cdef_filter_4x8_avx2);
+decl_cdef_fn(dav1d_cdef_filter_4x8_ssse3);
+
 decl_cdef_fn(dav1d_cdef_filter_4x4_avx2);
+decl_cdef_fn(dav1d_cdef_filter_4x4_ssse3);
 
 decl_cdef_dir_fn(dav1d_cdef_dir_avx2);
+decl_cdef_dir_fn(dav1d_cdef_dir_ssse3);
 
 void bitfn(dav1d_cdef_dsp_init_x86)(Dav1dCdefDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
+
+    if (!(flags & DAV1D_X86_CPU_FLAG_SSSE3)) return;
+
+#if BITDEPTH ==8
+    c->dir = dav1d_cdef_dir_ssse3;
+    c->fb[0] = dav1d_cdef_filter_8x8_ssse3;
+    c->fb[1] = dav1d_cdef_filter_4x8_ssse3;
+    c->fb[2] = dav1d_cdef_filter_4x4_ssse3;
+#endif
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
 
 #if BITDEPTH == 8 && ARCH_X86_64
     c->dir = dav1d_cdef_dir_avx2;
     c->fb[0] = dav1d_cdef_filter_8x8_avx2;
+    c->fb[1] = dav1d_cdef_filter_4x8_avx2;
     c->fb[2] = dav1d_cdef_filter_4x4_avx2;
 #endif
 }

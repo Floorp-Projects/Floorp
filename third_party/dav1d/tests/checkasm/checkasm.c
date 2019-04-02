@@ -53,7 +53,7 @@ static unsigned get_seed(void) {
 static unsigned get_seed(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    return tv.tv_usec + tv.tv_sec * 1000000;
+    return (unsigned) (tv.tv_usec + tv.tv_sec * 1000000);
 }
 #endif
 
@@ -127,7 +127,7 @@ static struct {
     CheckasmFuncVersion *current_func_ver;
     const char *current_test_name;
     const char *bench_pattern;
-    int bench_pattern_len;
+    size_t bench_pattern_len;
     int num_checked;
     int num_failed;
     int nop_time;
@@ -325,7 +325,7 @@ static int measure_nop_time(void) {
 
     for (i = 0; i < 10000; i++) {
         uint64_t t = readtime();
-        nops[i] = readtime() - t;
+        nops[i] = (uint16_t) (readtime() - t);
     }
 
     qsort(nops, 10000, sizeof(uint16_t), cmp_nop);
@@ -345,8 +345,8 @@ static void print_benchs(const CheckasmFunc *const f) {
             const CheckasmFuncVersion *v = &f->versions;
             do {
                 if (v->iterations) {
-                    int decicycles = (10*v->cycles/v->iterations -
-                                      state.nop_time) / 4;
+                    int decicycles = (int) (10*v->cycles/v->iterations -
+                                            state.nop_time) / 4;
                     printf("%s_%s: %d.%d\n", f->name, cpu_suffix(v->cpu),
                            decicycles/10, decicycles%10);
                 }
@@ -420,7 +420,7 @@ static CheckasmFunc *get_func(CheckasmFunc **root, const char *const name) {
         }
     } else {
         /* Allocate and insert a new node into the tree */
-        const int name_length = strlen(name);
+        const size_t name_length = strlen(name);
         f = *root = checkasm_malloc(sizeof(CheckasmFunc) + name_length);
         memcpy(f->name, name, name_length + 1);
     }
@@ -521,7 +521,7 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "]\n");
             return 0;
         } else {
-            state.seed = strtoul(argv[1], NULL, 10);
+            state.seed = (unsigned int) strtoul(argv[1], NULL, 10);
         }
 
         argc--;
@@ -636,10 +636,11 @@ void checkasm_update_bench(const int iterations, const uint64_t cycles) {
 /* Print the outcome of all tests performed since
  * the last time this function was called */
 void checkasm_report(const char *const name, ...) {
-    static int prev_checked, prev_failed, max_length;
+    static int prev_checked, prev_failed;
+    static size_t max_length;
 
     if (state.num_checked > prev_checked) {
-        int pad_length = max_length + 4;
+        int pad_length = (int) max_length + 4;
         va_list arg;
 
         print_cpu_name();
@@ -660,7 +661,7 @@ void checkasm_report(const char *const name, ...) {
     } else if (!state.cpu_flag) {
         /* Calculate the amount of padding required
          * to make the output vertically aligned */
-        int length = strlen(state.current_test_name);
+        size_t length = strlen(state.current_test_name);
         va_list arg;
 
         va_start(arg, name);

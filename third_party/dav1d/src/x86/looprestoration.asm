@@ -42,14 +42,12 @@ pw_2048: times 2 dw 2048
 pw_16380: times 2 dw 16380
 pw_0_128: dw 0, 128
 pw_5_6: dw 5, 6
-pw_82: times 2 dw 82
-pw_91_5: dw 91, 5
 pd_6: dd 6
-pd_255: dd 255
 pd_1024: dd 1024
-pd_0x80000: dd 0x80000
+pd_0xf0080029: dd 0xf0080029
+pd_0xf00801c7: dd 0xf00801c7
 
-cextern sgr_x_by_xplus1
+cextern sgr_x_by_x
 
 SECTION .text
 
@@ -477,76 +475,65 @@ cglobal sgr_box3_v, 5, 10, 9, sumsq, sum, w, h, edge, x, y, sumsq_ptr, sum_ptr, 
     RET
 
 INIT_YMM avx2
-cglobal sgr_calc_ab1, 4, 6, 14, a, b, w, h, s
+cglobal sgr_calc_ab1, 4, 6, 11, a, b, w, h, s
     sub           aq, (384+16-1)*4
     sub           bq, (384+16-1)*2
     add           hd, 2
-    lea           r5, [sgr_x_by_xplus1]
-    pxor          m6, m6
-    vpbroadcastd  m7, [pw_91_5]
+    lea           r5, [sgr_x_by_x-0xf03]
 %ifidn sd, sm
-    movd         xm8, sd
-    vpbroadcastd  m8, xm8
+    movd         xm6, sd
+    vpbroadcastd  m6, xm6
 %else
-    vpbroadcastd  m8, sm
+    vpbroadcastd  m6, sm
 %endif
-    vpbroadcastd  m9, [pd_0x80000]
-    vpbroadcastd m10, [pd_255]
-    psrad        m12, m9, 8                         ; pd_2048
-    psrad        m11, m9, 11                        ; pd_256
-    pcmpeqb      m13, m13
+    vpbroadcastd  m8, [pd_0xf00801c7]
+    vpbroadcastd  m9, [pw_256]
+    pcmpeqb       m7, m7
+    psrld        m10, m9, 13                        ; pd_2048
     DEFINE_ARGS a, b, w, h, x
+
 .loop_y:
     mov           xq, -2
 .loop_x:
-    movu         xm0, [aq+xq*4+ 0]
-    movu         xm1, [aq+xq*4+16]
-    vinserti128   m0, [aq+xq*4+ 0+(384+16)*4], 1
-    vinserti128   m1, [aq+xq*4+16+(384+16)*4], 1
-    movu         xm2, [bq+xq*2]
-    vinserti128   m2, [bq+xq*2+(384+16)*2], 1
-    pslld         m3, m0, 3
-    pslld         m4, m1, 3
-    paddd         m3, m0                            ; aa * 9 [first half]
-    paddd         m4, m1                            ; aa * 9 [second half]
-    punpcklwd     m0, m6, m2
-    punpckhwd     m2, m6, m2
-    pmaddwd       m1, m0, m0
-    pmaddwd       m5, m2, m2
-    pmaddwd       m0, m7
-    pmaddwd       m2, m7
-    psubd         m3, m1                            ; p = aa * 9 - bb * bb [first half]
-    psubd         m4, m5                            ; p = aa * 9 - bb * bb [second half]
-    pmulld        m3, m8
-    pmulld        m4, m8
-    paddd         m3, m9
-    paddd         m4, m9
-    psrld         m3, 20                            ; z [first half]
-    psrld         m4, 20                            ; z [second half]
-    pminsd        m3, m10
-    pminsd        m4, m10
-    mova          m5, m13
-    vpgatherdd    m1, [r5+m3*4], m5                 ; xx [first half]
-    mova          m5, m13
-    vpgatherdd    m3, [r5+m4*4], m5                 ; xx [second half]
-    psubd         m5, m11, m1
-    psubd         m4, m11, m3
-    packssdw      m1, m3
-    pmullw        m5, m7
-    pmullw        m4, m7
-    pmaddwd       m5, m0
-    pmaddwd       m4, m2
-    paddd         m5, m12
-    paddd         m4, m12
-    psrad         m5, 12
-    psrad         m4, 12
-    movu   [bq+xq*2], xm1
-    vextracti128 [bq+xq*2+(384+16)*2], m1, 1
-    movu [aq+xq*4+ 0], xm5
-    movu [aq+xq*4+16], xm4
-    vextracti128 [aq+xq*4+ 0+(384+16)*4], m5, 1
-    vextracti128 [aq+xq*4+16+(384+16)*4], m4, 1
-
+    pmovzxwd      m0, [bq+xq*2]
+    pmovzxwd      m1, [bq+xq*2+(384+16)*2]
+    movu          m2, [aq+xq*4]
+    movu          m3, [aq+xq*4+(384+16)*4]
+    pslld         m4, m2, 3
+    pslld         m5, m3, 3
+    paddd         m2, m4                            ; aa * 9
+    paddd         m3, m5
+    pmaddwd       m4, m0, m0
+    pmaddwd       m5, m1, m1
+    pmaddwd       m0, m8
+    pmaddwd       m1, m8
+    psubd         m2, m4                            ; p = aa * 9 - bb * bb
+    psubd         m3, m5
+    pmulld        m2, m6
+    pmulld        m3, m6
+    paddusw       m2, m8
+    paddusw       m3, m8
+    psrld         m2, 20                            ; z
+    psrld         m3, 20
+    mova          m5, m7
+    vpgatherdd    m4, [r5+m2], m5                   ; xx
+    mova          m5, m7
+    vpgatherdd    m2, [r5+m3], m5
+    psrld         m4, 24
+    psrld         m2, 24
+    pmulld        m0, m4
+    pmulld        m1, m2
+    packssdw      m4, m2
+    psubw         m4, m9, m4
+    vpermq        m4, m4, q3120
+    paddd         m0, m10
+    paddd         m1, m10
+    psrld         m0, 12
+    psrld         m1, 12
+    movu   [bq+xq*2], xm4
+    vextracti128 [bq+xq*2+(384+16)*2], m4, 1
+    movu   [aq+xq*4], m0
+    movu [aq+xq*4+(384+16)*4], m1
     add           xd, 8
     cmp           xd, wd
     jl .loop_x
@@ -815,7 +802,7 @@ cglobal sgr_box5_v, 5, 10, 15, sumsq, sum, w, h, edge, x, y, sumsq_ptr, sum_ptr,
     mov        ylimd, edged
     and        ylimd, 8                             ; have_bottom
     shr        ylimd, 2
-    sub        ylimd, 3                             ; -2 if have_bottom=0, else 0
+    sub        ylimd, 3                             ; -3 if have_bottom=0, else -1
 .loop_x:
     lea           yd, [hd+ylimd+2]
     lea   sumsq_ptrq, [sumsqq+xq*4+4-(384+16)*4]
@@ -903,78 +890,67 @@ cglobal sgr_box5_v, 5, 10, 15, sumsq, sum, w, h, edge, x, y, sumsq_ptr, sum_ptr,
     jmp .loop_y_noload
 
 INIT_YMM avx2
-cglobal sgr_calc_ab2, 4, 6, 14, a, b, w, h, s
+cglobal sgr_calc_ab2, 4, 6, 11, a, b, w, h, s
     sub           aq, (384+16-1)*4
     sub           bq, (384+16-1)*2
     add           hd, 2
-    lea           r5, [sgr_x_by_xplus1]
-    pxor          m6, m6
-    vpbroadcastd  m7, [pw_82]
+    lea           r5, [sgr_x_by_x-0xf03]
 %ifidn sd, sm
-    movd         xm8, sd
-    vpbroadcastd  m8, xm8
+    movd         xm6, sd
+    vpbroadcastd  m6, xm6
 %else
-    vpbroadcastd  m8, sm
+    vpbroadcastd  m6, sm
 %endif
-    vpbroadcastd  m9, [pd_0x80000]
-    vpbroadcastd m10, [pd_255]
-    psrad        m12, m9, 8                         ; pd_2048
-    psrad        m11, m9, 11                        ; pd_256
-    pcmpeqb      m13, m13
+    vpbroadcastd  m8, [pd_0xf0080029]
+    vpbroadcastd  m9, [pw_256]
+    pcmpeqb       m7, m7
+    psrld        m10, m9, 15                        ; pd_512
     DEFINE_ARGS a, b, w, h, x
 .loop_y:
     mov           xq, -2
 .loop_x:
-    movu         xm0, [aq+xq*4+ 0]
-    movu         xm1, [aq+xq*4+16]
-    vinserti128   m0, [aq+xq*4+32], 1
-    vinserti128   m1, [aq+xq*4+48], 1
-    movu          m2, [bq+xq*2]
-    pslld         m3, m0, 5                         ; aa * 32 [first half]
-    pslld         m4, m1, 5                         ; aa * 32 [second half]
-    paddd         m3, m0                            ; aa * 33 [first half]
-    paddd         m4, m1                            ; aa * 33 [first half]
-    pslld         m0, 3                             ; aa * 8 [first half]
-    pslld         m1, 3                             ; aa * 8 [second half]
-    psubd         m3, m0                            ; aa * 25 [first half]
-    psubd         m4, m1                            ; aa * 25 [second half]
-    punpcklwd     m0, m2, m6
-    punpckhwd     m2, m6
-    pmaddwd       m1, m0, m0
-    pmaddwd       m5, m2, m2
-    paddw         m0, m0
-    paddw         m2, m2
-    psubd         m3, m1                            ; p = aa * 25 - bb * bb [first half]
-    psubd         m4, m5                            ; p = aa * 25 - bb * bb [second half]
-    pmulld        m3, m8
-    pmulld        m4, m8
-    paddd         m3, m9
-    paddd         m4, m9
-    psrld         m3, 20                            ; z [first half]
-    psrld         m4, 20                            ; z [second half]
-    pminsd        m3, m10
-    pminsd        m4, m10
-    mova          m5, m13
-    vpgatherdd    m1, [r5+m3*4], m5                 ; xx [first half]
-    mova          m5, m13
-    vpgatherdd    m3, [r5+m4*4], m5                 ; xx [second half]
-    psubd         m5, m11, m1
-    psubd         m4, m11, m3
-    packssdw      m1, m3
-    pmullw        m5, m7
-    pmullw        m4, m7
-    pmaddwd       m5, m0
-    pmaddwd       m4, m2
-    paddd         m5, m12
-    paddd         m4, m12
-    psrad         m5, 12
-    psrad         m4, 12
-    movu   [bq+xq*2], m1
-    movu [aq+xq*4+ 0], xm5
-    movu [aq+xq*4+16], xm4
-    vextracti128 [aq+xq*4+32], m5, 1
-    vextracti128 [aq+xq*4+48], m4, 1
-
+    pmovzxwd      m0, [bq+xq*2+ 0]
+    pmovzxwd      m1, [bq+xq*2+16]
+    movu          m2, [aq+xq*4+ 0]
+    movu          m3, [aq+xq*4+32]
+    pslld         m4, m2, 3                         ; aa * 8
+    pslld         m5, m3, 3
+    paddd         m2, m4                            ; aa * 9
+    paddd         m3, m5
+    paddd         m4, m4                            ; aa * 16
+    paddd         m5, m5
+    paddd         m2, m4                            ; aa * 25
+    paddd         m3, m5
+    pmaddwd       m4, m0, m0
+    pmaddwd       m5, m1, m1
+    psubd         m2, m4                            ; p = aa * 25 - bb * bb
+    psubd         m3, m5
+    pmulld        m2, m6
+    pmulld        m3, m6
+    paddusw       m2, m8
+    paddusw       m3, m8
+    psrld         m2, 20                            ; z
+    psrld         m3, 20
+    mova          m5, m7
+    vpgatherdd    m4, [r5+m2], m5                   ; xx
+    mova          m5, m7
+    vpgatherdd    m2, [r5+m3], m5
+    psrld         m4, 24
+    psrld         m2, 24
+    packssdw      m3, m4, m2
+    pmullw        m4, m8
+    pmullw        m2, m8
+    psubw         m3, m9, m3
+    vpermq        m3, m3, q3120
+    pmaddwd       m0, m4
+    pmaddwd       m1, m2
+    paddd         m0, m10
+    paddd         m1, m10
+    psrld         m0, 10
+    psrld         m1, 10
+    movu   [bq+xq*2], m3
+    movu [aq+xq*4+ 0], m0
+    movu [aq+xq*4+32], m1
     add           xd, 16
     cmp           xd, wd
     jl .loop_x

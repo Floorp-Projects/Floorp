@@ -52,7 +52,7 @@ function wiener_filter_h_neon, export=1
         add             x13, x2,  x3
         lsl             x3,  x3,  #1
 
-        // Subtract the width from mid_strid3
+        // Subtract the width from mid_stride
         sub             x10, x10, w5, uxtw #1
 
         // For w >= 8, we read (w+5)&~7+8 pixels, for w < 8 we read 16 pixels.
@@ -224,31 +224,25 @@ function wiener_filter_h_neon, export=1
         mov             v3.16b,  v28.16b
         mov             v5.16b,  v29.16b
         br              x11
+44:     // 4 pixels valid in v2/v4, fill the high half with padding.
+        ins             v2.d[1], v3.d[0]
+        ins             v4.d[1], v5.d[0]
+        b               88f
         // Shift v2 right, shifting out invalid pixels,
         // shift v2 left to the original offset, shifting in padding pixels.
-44:     // 4 pixels valid
-        ext             v2.16b,  v2.16b,  v2.16b,  #8
-        ext             v2.16b,  v2.16b,  v3.16b,  #8
-        ext             v4.16b,  v4.16b,  v4.16b,  #8
-        ext             v4.16b,  v4.16b,  v5.16b,  #8
-        b               88f
 55:     // 5 pixels valid
         ext             v2.16b,  v2.16b,  v2.16b,  #10
         ext             v2.16b,  v2.16b,  v3.16b,  #6
         ext             v4.16b,  v4.16b,  v4.16b,  #10
         ext             v4.16b,  v4.16b,  v5.16b,  #6
         b               88f
-66:     // 6 pixels valid
-        ext             v2.16b,  v2.16b,  v2.16b,  #12
-        ext             v2.16b,  v2.16b,  v3.16b,  #4
-        ext             v4.16b,  v4.16b,  v4.16b,  #12
-        ext             v4.16b,  v4.16b,  v5.16b,  #4
+66:     // 6 pixels valid, fill the upper 2 pixels with padding.
+        ins             v2.s[3], v3.s[0]
+        ins             v4.s[3], v5.s[0]
         b               88f
-77:     // 7 pixels valid
-        ext             v2.16b,  v2.16b,  v2.16b,  #14
-        ext             v2.16b,  v2.16b,  v3.16b,  #2
-        ext             v4.16b,  v4.16b,  v4.16b,  #14
-        ext             v4.16b,  v4.16b,  v5.16b,  #2
+77:     // 7 pixels valid, fill the last pixel with padding.
+        ins             v2.h[7], v3.h[0]
+        ins             v4.h[7], v5.h[0]
         b               88f
 
 L(variable_shift_tbl):
@@ -282,19 +276,15 @@ L(variable_shift_tbl):
         addv            h6,      v6.8h
         addv            h7,      v7.8h
         dup             v16.4h,  v2.h[3]
-        dup             v17.4h,  v4.h[3]
+        ins             v16.h[1], v4.h[3]
+        ins             v6.h[1], v7.h[0]
         shl             v16.4h,  v16.4h,  #7
-        shl             v17.4h,  v17.4h,  #7
         sub             v16.4h,  v16.4h,  v30.4h
-        sub             v17.4h,  v17.4h,  v30.4h
         sqadd           v6.4h,   v6.4h,   v16.4h
-        sqadd           v7.4h,   v7.4h,   v17.4h
         sshr            v6.4h,   v6.4h,   #3
-        sshr            v7.4h,   v7.4h,   #3
         add             v6.4h,   v6.4h,   v31.4h
-        add             v7.4h,   v7.4h,   v31.4h
         st1             {v6.h}[0], [x0],  #2
-        st1             {v7.h}[0], [x12], #2
+        st1             {v6.h}[1], [x12], #2
         subs            w5,  w5,  #1
         ext             v2.16b,  v2.16b,  v3.16b,  #2
         ext             v4.16b,  v4.16b,  v5.16b,  #2
@@ -322,8 +312,7 @@ endfunc
 function wiener_filter_v_neon, export=1
         mov             w8,  w4
         ld1             {v0.8h},  [x5]
-        mov             w9,  #128
-        dup             v1.8h, w9
+        movi            v1.8h, #128
         add             v1.8h,  v1.8h,  v0.8h
 
         // Calculate the number of rows to move back when looping vertically
@@ -437,7 +426,7 @@ function wiener_filter_v_neon, export=1
         mov             v21.16b,  v19.16b
         mov             v22.16b,  v19.16b
         b               8f
-62:     // 2 rows in total, v19 already loaded, load v20 and pad that into v20-v23.
+62:     // 2 rows in total, v19 already loaded, load v20 and pad that into v21-v23.
         ld1             {v20.8h}, [x2], x7
         mov             v21.16b,  v20.16b
         mov             v22.16b,  v20.16b
@@ -503,9 +492,8 @@ function copy_narrow_neon, export=1
         add             x7,  x0,  x1
         lsl             x1,  x1,  #1
 18:
-        cmp             w4,  #8
-        b.lt            110f
         subs            w4,  w4,  #8
+        b.lt            110f
         ld1             {v0.8b}, [x2], #8
         st1             {v0.b}[0], [x0], x1
         st1             {v0.b}[1], [x7], x1
@@ -518,12 +506,13 @@ function copy_narrow_neon, export=1
         b.le            0f
         b               18b
 110:
+        add             w4,  w4,  #8
         asr             x1,  x1,  #1
 11:
         subs            w4,  w4,  #1
         ld1             {v0.b}[0], [x2], #1
         st1             {v0.b}[0], [x0], x1
-        b.ge            11b
+        b.gt            11b
 0:
         ret
 
@@ -531,9 +520,8 @@ function copy_narrow_neon, export=1
         add             x7,  x0,  x1
         lsl             x1,  x1,  #1
 24:
-        cmp             w4,  #4
-        b.lt            210f
         subs            w4,  w4,  #4
+        b.lt            210f
         ld1             {v0.4h}, [x2], #8
         st1             {v0.h}[0], [x0], x1
         st1             {v0.h}[1], [x7], x1
@@ -542,12 +530,13 @@ function copy_narrow_neon, export=1
         b.le            0f
         b               24b
 210:
+        add             w4,  w4,  #4
         asr             x1,  x1,  #1
 22:
         subs            w4,  w4,  #1
         ld1             {v0.h}[0], [x2], #2
         st1             {v0.h}[0], [x0], x1
-        b.ge            22b
+        b.gt            22b
 0:
         ret
 
@@ -566,9 +555,8 @@ function copy_narrow_neon, export=1
         add             x7,  x0,  x1
         lsl             x1,  x1,  #1
 42:
-        cmp             w4,  #2
-        b.lt            41f
         subs            w4,  w4,  #2
+        b.lt            41f
         ld1             {v0.2s}, [x2], #8
         st1             {v0.s}[0], [x0], x1
         st1             {v0.s}[1], [x7], x1

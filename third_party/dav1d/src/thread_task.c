@@ -59,7 +59,7 @@ void *dav1d_tile_task(void *const data) {
     Dav1dTileContext *const t = data;
     struct FrameTileThreadData *const fttd = t->tile_thread.fttd;
     const Dav1dFrameContext *const f = t->f;
-    const int tile_thread_idx = t - f->tc;
+    const int tile_thread_idx = (int) (t - f->tc);
     const uint64_t mask = 1ULL << tile_thread_idx;
 
     for (;;) {
