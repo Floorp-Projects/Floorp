@@ -30,9 +30,9 @@ invoke_copy_to_stack(uint64_t* d, uint32_t paramCount, nsXPTCVariant* s)
   {
     if (regCount < 5) regCount++;
 
-    if (l_s->IsPtrData())
+    if (l_s->IsIndirect())
     {
-      *l_d = (uint64_t)l_s->ptr;
+      *l_d = (uint64_t) &l_s->val;
       continue;
     }
     switch (l_s->type)
