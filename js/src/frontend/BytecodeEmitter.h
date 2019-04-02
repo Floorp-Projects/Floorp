@@ -128,7 +128,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // bytecode is stored in this class.
   class BytecodeSection {
    public:
-    explicit BytecodeSection(JSContext* cx);
+    BytecodeSection(JSContext* cx, uint32_t lineNum);
 
     // ---- Bytecode ----
 
@@ -193,6 +193,34 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     uint32_t numYields() const { return numYields_; }
     void addNumYields() { numYields_++; }
 
+    // ---- Line and column ----
+
+    uint32_t currentLine() const { return currentLine_; }
+    uint32_t lastColumn() const { return lastColumn_; }
+    void setCurrentLine(uint32_t line) {
+      currentLine_ = line;
+      lastColumn_ = 0;
+    }
+    void setLastColumn(uint32_t column) { lastColumn_ = column; }
+
+    void updateSeparatorPosition() {
+      lastSeparatorOffet_ = code().length();
+      lastSeparatorLine_ = currentLine_;
+      lastSeparatorColumn_ = lastColumn_;
+    }
+
+    void updateSeparatorPositionIfPresent() {
+      if (lastSeparatorOffet_ == code().length()) {
+        lastSeparatorLine_ = currentLine_;
+        lastSeparatorColumn_ = lastColumn_;
+      }
+    }
+
+    bool isDuplicateLocation() const {
+      return lastSeparatorLine_ == currentLine_ &&
+             lastSeparatorColumn_ == lastColumn_;
+    }
+
     // ---- JIT ----
 
     size_t numICEntries() const { return numICEntries_; }
@@ -250,6 +278,27 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
     // Number of yield instructions emitted. Does not include JSOP_AWAIT.
     uint32_t numYields_ = 0;
+
+    // ---- Line and column ----
+
+    // Line number for srcnotes.
+    //
+    // WARNING: If this becomes out of sync with already-emitted srcnotes,
+    // we can get undefined behavior.
+    uint32_t currentLine_;
+
+    // Zero-based column index on currentLine_ of last SRC_COLSPAN-annotated
+    // opcode.
+    //
+    // WARNING: If this becomes out of sync with already-emitted srcnotes,
+    // we can get undefined behavior.
+    uint32_t lastColumn_ = 0;
+
+    // The offset, line and column numbers of the last opcode for the
+    // breakpoint for step execution.
+    uint32_t lastSeparatorOffet_ = 0;
+    uint32_t lastSeparatorLine_ = 0;
+    uint32_t lastSeparatorColumn_ = 0;
 
     // ---- JIT ----
 
@@ -318,23 +367,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   const PerScriptData& perScriptData() const { return perScriptData_; }
 
  private:
-  // Line number for srcnotes.
-  //
-  // WARNING: If this becomes out of sync with already-emitted srcnotes,
-  // we can get undefined behavior.
-  uint32_t currentLine_ = 0;
-
-  // Zero-based column index on currentLine of last SRC_COLSPAN-annotated
-  // opcode.
-  //
-  // WARNING: If this becomes out of sync with already-emitted srcnotes,
-  // we can get undefined behavior.
-  uint32_t lastColumn_ = 0;
-
-  uint32_t lastSeparatorOffet_ = 0;
-  uint32_t lastSeparatorLine_ = 0;
-  uint32_t lastSeparatorColumn_ = 0;
-
   // switchToMain sets this to the bytecode offset of the main section.
   mozilla::Maybe<uint32_t> mainOffset_ = {};
 
@@ -569,13 +601,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     mainOffset_.emplace(bytecodeSection().code().length());
   }
 
-  unsigned currentLine() const { return currentLine_; }
-
-  void setCurrentLine(uint32_t line) {
-    currentLine_ = line;
-    lastColumn_ = 0;
-  }
-
   void setFunctionBodyEndPos(uint32_t pos) {
     functionBodyEndPos = mozilla::Some(pos);
   }
@@ -648,7 +673,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool markSimpleBreakpoint();
   MOZ_MUST_USE bool updateLineNumberNotes(uint32_t offset);
   MOZ_MUST_USE bool updateSourceCoordNotes(uint32_t offset);
-  void updateSeparatorPosition();
 
   JSOp strictifySetNameOp(JSOp op);
 
