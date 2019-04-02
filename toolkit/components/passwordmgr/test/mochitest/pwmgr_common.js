@@ -44,6 +44,8 @@ function $_(formNum, name) {
  */
 function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
   if (hostname !== null) {
+    isnot(actualValues.length, 0, "There should be items in the autocomplete popup: " + JSON.stringify(actualValues));
+
     // Check the footer first.
     let footerResult = actualValues[actualValues.length - 1];
     ok(footerResult.includes("View Saved Logins"), "the footer text is shown correctly");
@@ -55,7 +57,8 @@ function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
     return;
   }
 
-  if (actualValues.length == 0) {
+  if (actualValues.length == 1) {
+    is(expectedValues.length, 0, "If only the footer is present then there should be no expectedValues");
     info("Only the footer is present in the popup");
     return;
   }

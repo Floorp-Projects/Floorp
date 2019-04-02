@@ -444,7 +444,9 @@ add_task(async function test_form1_delete_second() {
   // Delete the second entry (of 3), "testuser3"
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_ArrowDown");
+  let storageChanged = promiseStorageChanged(["removeLogin"]);
   synthesizeKey("KEY_Delete", {shiftKey: true});
+  await storageChanged;
   checkACForm("", "");
   let numLogins = LoginManager.countLogins("http://mochi.test:8888", "", null);
   is(numLogins, 3, "Correct number of logins after deleting one");
@@ -478,7 +480,9 @@ add_task(async function test_form1_delete_last() {
   // Delete the last entry (of 2), "zzzuser4"
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_ArrowDown");
+  let storageChanged = promiseStorageChanged(["removeLogin"]);
   synthesizeKey("KEY_Delete", {shiftKey: true});
+  await storageChanged;
   checkACForm("", "");
   let numLogins = LoginManager.countLogins("http://mochi.test:8888", "", null);
   is(numLogins, 2, "Correct number of logins after deleting one");
@@ -513,6 +517,7 @@ add_task(async function test_form1_check_only_entry_remaining() {
   // test 56
   // Delete the only remaining entry, "testuser2"
   synthesizeKey("KEY_ArrowDown");
+  let storageChanged = promiseStorageChanged(["removeLogin", "removeLogin"]);
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkACForm("", "");
   let numLogins = LoginManager.countLogins("http://mochi.test:8888", "", null);
@@ -520,11 +525,14 @@ add_task(async function test_form1_check_only_entry_remaining() {
 
   // remove the login that's not shown in the list.
   setupScript.sendSyncMessage("removeLogin", "login0");
+  await storageChanged;
 });
 
 // Tests for single-user forms for ignoring autocomplete=off
 add_task(async function test_form2() {
+  let storageChanged = promiseStorageChanged(["addLogin"]);
   setupScript.sendSyncMessage("addLogin", "login5");
+  await storageChanged;
   await setFormAndWaitForFieldFilled(`
     <!-- other forms test single logins, with autocomplete=off set -->
     <form id="form2" action="http://autocomplete2" onsubmit="return false;">
@@ -655,12 +663,16 @@ add_task(async function test_form6_changeUsername() {
   checkACForm("singleuser5X", "singlepass5");
   uname.focus();
 
+  let storageChanged = promiseStorageChanged(["removeLogin"]);
   setupScript.sendSyncMessage("removeLogin", "login5");
+  await storageChanged;
 });
 
 add_task(async function test_form7() {
+  let storageChanged = promiseStorageChanged(["addLogin", "addLogin"]);
   setupScript.sendSyncMessage("addLogin", "login6A");
   setupScript.sendSyncMessage("addLogin", "login6B");
+  await storageChanged;
   await setFormAndWaitForFieldFilled(`
     <!-- This form will be manipulated to insert a different username field. -->
     <form id="form7" action="http://autocomplete3" onsubmit="return false;">
@@ -684,7 +696,9 @@ add_task(async function test_form7() {
   // Delete login6B. It was created just to prevent filling in a login
   // automatically, removing it makes it more likely that we'll catch a
   // future regression with form filling here.
+  storageChanged = promiseStorageChanged(["removeLogin"]);
   setupScript.sendSyncMessage("removeLogin", "login6B");
+  await storageChanged;
 });
 
 add_task(async function test_form7_2() {
@@ -706,11 +720,15 @@ add_task(async function test_form7_2() {
   is($_(7, "uname2").value, "", "Verifying empty uname2");
   restoreForm(); // clear field, so reloading test doesn't fail
 
+  let storageChanged = promiseStorageChanged(["removeLogin"]);
   setupScript.sendSyncMessage("removeLogin", "login6A");
+  await storageChanged;
 });
 
 add_task(async function test_form8() {
+  let storageChanged = promiseStorageChanged(["addLogin"]);
   setupScript.sendSyncMessage("addLogin", "login7");
+  await storageChanged;
   await setFormAndWaitForFieldFilled(`
     <!-- This form will be manipulated to insert a different username field. -->
     <form id="form7" action="http://autocomplete3" onsubmit="return false;">
@@ -745,12 +763,14 @@ add_task(async function test_form8_2() {
 
 add_task(async function test_form8_3() {
   checkACForm("", "");
-  setupScript.sendSyncMessage("removeLogin", "login7");
 });
 
 add_task(async function test_form9_filtering() {
+  let storageChanged = promiseStorageChanged(["removeLogin", "addLogin", "addLogin"]);
+  setupScript.sendSyncMessage("removeLogin", "login7");
   setupScript.sendSyncMessage("addLogin", "login8A");
   setupScript.sendSyncMessage("addLogin", "login8B");
+  await storageChanged;
   await setFormAndWaitForFieldFilled(`
     <!-- test autocomplete dropdown -->
     <form id="form9" action="http://autocomplete5" onsubmit="return false;">
@@ -760,19 +780,30 @@ add_task(async function test_form9_filtering() {
     </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: ""});
 
   // Turn our attention to form9 to test the dropdown - bug 497541
+  let shownPromise = promiseACShown();
   uname = $_(9, "uname");
   pword = $_(9, "pword");
   uname.focus();
-  let shownPromise = promiseACShown();
+  let results = await shownPromise;
+  checkAutoCompleteResults(results,
+                           ["This connection is not secure. Logins entered here could be compromised. Learn More", "form9userAAB", "form9userAB"],
+                           "mochi.test",
+                           "Check dropdown is showing all logins while field is blank");
+  synthesizeKey("KEY_Escape"); // Need to close the popup so we can get another popupshown after sending the string below.
+  shownPromise = promiseACShown();
   sendString("form9userAB");
-  await shownPromise;
+  results = await shownPromise;
+  checkAutoCompleteResults(results,
+                           ["This connection is not secure. Logins entered here could be compromised. Learn More", "form9userAB"],
+                           "mochi.test",
+                           "Check dropdown is showing login with only one 'A'");
 
   checkACForm("form9userAB", "");
   uname.focus();
   synthesizeKey("KEY_ArrowLeft");
   shownPromise = promiseACShown();
   synthesizeKey("A", {shiftKey: true});
-  let results = await shownPromise;
+  results = await shownPromise;
 
   checkACForm("form9userAAB", "");
   checkAutoCompleteResults(results,
@@ -790,7 +821,9 @@ add_task(async function test_form9_autocomplete_cache() {
   // Note that this addLogin call will only be seen by the autocomplete
   // attempt for the synthesizeKey if we do not successfully cache the
   // autocomplete results.
+  let storageChanged = promiseStorageChanged(["addLogin"]);
   setupScript.sendSyncMessage("addLogin", "login8C");
+  await storageChanged;
   uname.focus();
   let promise2 = notifyMenuChanged(2);
   let shownPromise = promiseACShown();
@@ -809,13 +842,17 @@ add_task(async function test_form9_autocomplete_cache() {
                            ["This connection is not secure. Logins entered here could be compromised. Learn More"],
                            "mochi.test",
                            "Check popup only has the footer and insecure warning");
+  storageChanged = promiseStorageChanged(["removeLogin", "removeLogin", "removeLogin"]);
   setupScript.sendSyncMessage("removeLogin", "login8A");
   setupScript.sendSyncMessage("removeLogin", "login8B");
   setupScript.sendSyncMessage("removeLogin", "login8C");
+  await storageChanged;
 });
 
 add_task(async function test_form11_recipes() {
+  let storageChanged = promiseStorageChanged(["addLogin"]);
   setupScript.sendSyncMessage("addLogin", "login10");
+  await storageChanged;
   await loadRecipes({
     siteRecipes: [{
       "hosts": ["mochi.test:8888"],
@@ -875,9 +912,11 @@ add_task(async function test_form12_formless() {
 
   uname = $_(12, "uname");
   pword = $_(12, "pword");
-  restoreForm();
-  checkACForm("", "");
   let shownPromise = promiseACShown();
+  uname.focus();
+  await shownPromise;
+  synthesizeKey("KEY_Escape"); // close the autocomplete popup
+  shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   let results = await shownPromise;
 
