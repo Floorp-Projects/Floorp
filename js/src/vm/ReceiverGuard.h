@@ -61,7 +61,14 @@ class ReceiverGuard {
   }
 };
 
+// Heap storage for ReceiverGuards.
+//
+// This is a storage only class -- all computation is actually
+// done by converting this back to a RecieverGuard, hence why
+// there are no accessors.
 class HeapReceiverGuard {
+  friend class ReceiverGuard;
+
   GCPtrObjectGroup group_;
   GCPtrShape shape_;
 
@@ -69,19 +76,11 @@ class HeapReceiverGuard {
   explicit HeapReceiverGuard(const ReceiverGuard& guard)
       : group_(guard.group), shape_(guard.shape) {}
 
-  void init(const ReceiverGuard& other) {
-    group_.init(other.group);
-    shape_.init(other.shape);
-  }
-
   void trace(JSTracer* trc);
-
-  Shape* shape() const { return shape_; }
-  ObjectGroup* group() const { return group_; }
 };
 
 inline ReceiverGuard::ReceiverGuard(const HeapReceiverGuard& guard)
-    : group(guard.group()), shape(guard.shape()) {}
+    : group(guard.group_), shape(guard.shape_) {}
 
 }  // namespace js
 
