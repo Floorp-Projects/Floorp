@@ -91,7 +91,8 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
          kind == ParseNodeKind::Function;
 }
 
-BytecodeEmitter::BytecodeSection::BytecodeSection(JSContext* cx) : code_(cx) {}
+BytecodeEmitter::BytecodeSection::BytecodeSection(JSContext* cx)
+    : code_(cx), notes_(cx) {}
 
 BytecodeEmitter::BytecodeEmitter(
     BytecodeEmitter* parent, SharedContext* sc, HandleScript script,
@@ -103,7 +104,6 @@ BytecodeEmitter::BytecodeEmitter(
       script(cx, script),
       lazyScript(cx, lazyScript),
       bytecodeSection_(cx),
-      notes_(cx),
       currentLine_(lineNum),
       fieldInitializers_(fieldInitializers),
       atomIndices(cx->frontendCollectionPool()),
@@ -9344,7 +9344,9 @@ bool BytecodeEmitter::addTryNote(JSTryNoteKind kind, uint32_t stackDepth,
 }
 
 bool BytecodeEmitter::newSrcNote(SrcNoteType type, unsigned* indexp) {
-  SrcNotesVector& notes = this->notes();
+  // Prologue shouldn't have source notes.
+  MOZ_ASSERT(!inPrologue());
+  SrcNotesVector& notes = bytecodeSection().notes();
   unsigned index;
   if (!AllocSrcNote(cx, notes, &index)) {
     return false;
@@ -9355,8 +9357,8 @@ bool BytecodeEmitter::newSrcNote(SrcNoteType type, unsigned* indexp) {
    * big to fit in sn, allocate one or more xdelta notes and reset sn.
    */
   ptrdiff_t offset = bytecodeSection().offset();
-  ptrdiff_t delta = offset - lastNoteOffset();
-  lastNoteOffset_ = offset;
+  ptrdiff_t delta = offset - bytecodeSection().lastNoteOffset();
+  bytecodeSection().setLastNoteOffset(offset);
   if (delta >= SN_DELTA_LIMIT) {
     do {
       ptrdiff_t xdelta = Min(delta, SN_XDELTA_MASK);
@@ -9426,7 +9428,7 @@ bool BytecodeEmitter::setSrcNoteOffset(unsigned index, unsigned which,
     return false;
   }
 
-  SrcNotesVector& notes = this->notes();
+  SrcNotesVector& notes = bytecodeSection().notes();
 
   /* Find the offset numbered which (i.e., skip exactly which offsets). */
   jssrcnote* sn = &notes[index];
@@ -9464,10 +9466,10 @@ bool BytecodeEmitter::setSrcNoteOffset(unsigned index, unsigned which,
 }
 
 void BytecodeEmitter::copySrcNotes(jssrcnote* destination, uint32_t nsrcnotes) {
-  unsigned count = notes_.length();
+  unsigned count = bytecodeSection().notes().length();
   // nsrcnotes includes SN_MAKE_TERMINATOR in addition to the srcnotes.
   MOZ_ASSERT(nsrcnotes == count + 1);
-  PodCopy(destination, notes_.begin(), count);
+  PodCopy(destination, bytecodeSection().notes().begin(), count);
   SN_MAKE_TERMINATOR(&destination[count]);
 }
 
