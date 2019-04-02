@@ -751,6 +751,14 @@ var Policies = {
     },
   },
 
+  "Preferences": {
+    onBeforeAddons(manager, param) {
+      for (let preference in param) {
+        setAndLockPref(preference, param[preference]);
+      }
+    },
+  },
+
   "Proxy": {
     onBeforeAddons(manager, param) {
       if (param.Locked) {
