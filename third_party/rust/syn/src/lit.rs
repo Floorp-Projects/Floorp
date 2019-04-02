@@ -6,8 +6,6 @@ use proc_macro2::Ident;
 
 #[cfg(feature = "parsing")]
 use proc_macro2::TokenStream;
-#[cfg(feature = "parsing")]
-use Error;
 
 use proc_macro2::TokenTree;
 
@@ -17,7 +15,7 @@ use std::hash::{Hash, Hasher};
 #[cfg(feature = "parsing")]
 use lookahead;
 #[cfg(feature = "parsing")]
-use parse::Parse;
+use parse::{Parse, Parser, Result};
 
 ast_enum_of_structs! {
     /// A Rust literal such as a string or integer or boolean.
@@ -140,23 +138,44 @@ impl LitStr {
     ///             lit_str.parse().map(Some)
     ///         }
     ///         _ => {
-    ///             let error_span = attr.bracket_token.span;
     ///             let message = "expected #[path = \"...\"]";
-    ///             Err(Error::new(error_span, message))
+    ///             Err(Error::new_spanned(attr, message))
     ///         }
     ///     }
     /// }
     /// ```
     #[cfg(feature = "parsing")]
-    pub fn parse<T: Parse>(&self) -> Result<T, Error> {
-        use proc_macro2::Group;
+    pub fn parse<T: Parse>(&self) -> Result<T> {
+        self.parse_with(T::parse)
+    }
 
-        // Parse string literal into a token stream with every span equal to the
-        // original literal's span.
-        fn spanned_tokens(s: &LitStr) -> Result<TokenStream, Error> {
-            let stream = ::parse_str(&s.value())?;
-            Ok(respan_token_stream(stream, s.span()))
-        }
+    /// Invoke parser on the content of this string literal.
+    ///
+    /// All spans in the syntax tree will point to the span of this `LitStr`.
+    ///
+    /// # Example
+    ///
+    /// ```edition2018
+    /// # use proc_macro2::Span;
+    /// # use syn::{LitStr, Result};
+    /// #
+    /// # fn main() -> Result<()> {
+    /// #     let lit_str = LitStr::new("a::b::c", Span::call_site());
+    /// #
+    /// #     const IGNORE: &str = stringify! {
+    /// let lit_str: LitStr = /* ... */;
+    /// #     };
+    ///
+    /// // Parse a string literal like "a::b::c" into a Path, not allowing
+    /// // generic arguments on any of the path segments.
+    /// let basic_path = lit_str.parse_with(syn::Path::parse_mod_style)?;
+    /// #
+    /// #     Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "parsing")]
+    pub fn parse_with<F: Parser>(&self, parser: F) -> Result<F::Output> {
+        use proc_macro2::Group;
 
         // Token stream with every span replaced by the given one.
         fn respan_token_stream(stream: TokenStream, span: Span) -> TokenStream {
@@ -179,7 +198,12 @@ impl LitStr {
             token
         }
 
-        spanned_tokens(self).and_then(::parse2)
+        // Parse string literal into a token stream with every span equal to the
+        // original literal's span.
+        let mut tokens = ::parse_str(&self.value())?;
+        tokens = respan_token_stream(tokens, self.span());
+
+        parser.parse2(tokens)
     }
 
     pub fn span(&self) -> Span {

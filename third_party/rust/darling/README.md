@@ -10,8 +10,9 @@ Darling
 `darling` provides a set of traits which can be derived or manually implemented.
 
 1. `FromMeta` is used to extract values from a meta-item in an attribute. Implementations are likely reusable for many libraries, much like `FromStr` or `serde::Deserialize`. Trait implementations are provided for primitives, some std types, and some `syn` types.
-1. `FromDeriveInput` is implemented or derived by each proc-macro crate which depends on `darling`. This is the root for input parsing; it gets access to the identity, generics, and visibility of the target type, and can specify which attribute names should be parsed or forwarded from the input AST.
-1. `FromField` is implemented or derived by each proc-macro crate which depends on `darling`. Structs deriving this trait will get access to the identity (if it exists), type, and visibility of the field.
+2. `FromDeriveInput` is implemented or derived by each proc-macro crate which depends on `darling`. This is the root for input parsing; it gets access to the identity, generics, and visibility of the target type, and can specify which attribute names should be parsed or forwarded from the input AST.
+3. `FromField` is implemented or derived by each proc-macro crate which depends on `darling`. Structs deriving this trait will get access to the identity (if it exists), type, and visibility of the field.
+4. `FromVariant` is implemented or derived by each proc-macro crate which depends on `darling`. Structs deriving this trait will get access to the identity and contents of the variant, which can be transformed the same as any other `darling` input.
 
 # Example
 
@@ -46,6 +47,49 @@ The above code will then be able to parse this input:
 pub struct ConsumingType;
 ```
 
+# Attribute Macros
+Non-derive attribute macros are supported.
+To parse arguments for attribute macros, derive `FromMeta` on the argument receiver type, then pass `&syn::AttributeArgs` to the `from_list` method.
+This will produce a normal `darling::Result<T>` that can be used the same as a result from parsing a `DeriveInput`.
+
+## Macro Code
+```rust,ignore
+use darling::FromMeta;
+use syn::{AttributeArgs, ItemFn};
+use proc_macro::TokenStream;
+
+#[derive(Debug, FromMeta)]
+pub struct MacroArgs {
+    #[darling(default)]
+    timeout_ms: Option<u16>,
+    path: String,
+}
+
+#[proc_macro_attribute]
+fn your_attr(args: TokenStream, input: TokenStream) -> TokenStream {
+    let attr_args = parse_macro_input!(args as AttributeArgs);
+    let _input = parse_macro_input!(input as ItemFn);
+
+    let _args = match MacroArgs::from_list(&attr_args) {
+        Ok(v) => v,
+        Err(e) => { return e.write_errors(); }
+    };
+
+    // do things with `args`
+    unimplemented!()
+}
+```
+
+## Consuming Code
+```rust,ignore
+use your_crate::your_attr;
+
+#[your_attr(path = "hello", timeout_ms = 15)]
+fn do_stuff() {
+    println!("Hello");
+}
+```
+
 # Features
 Darling's features are built to work well for real-world projects.
 
@@ -55,3 +99,4 @@ Darling's features are built to work well for real-world projects.
 * **Mapping function**: Use `#[darling(map="path")]` to specify a function that runs on the result of parsing a meta-item field. This can change the return type, which enables you to parse to an intermediate form and convert that to the type you need in your struct.
 * **Skip fields**: Use `#[darling(skip)]` to mark a field that shouldn't be read from attribute meta-items.
 * **Multiple-occurrence fields**: Use `#[darling(multiple)]` on a `Vec` field to allow that field to appear multiple times in the meta-item. Each occurrence will be pushed into the `Vec`.
+* **Span access**: Use `darling::util::SpannedValue` in a struct to get access to that meta item's source code span. This can be used to emit warnings that point at a specific field from your proc macro. In addition, you can use `darling::Error::write_errors` to automatically get precise error location details in most cases.

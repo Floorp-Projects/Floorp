@@ -1092,6 +1092,13 @@ pub mod parsing {
             let content;
             let paren_token = parenthesized!(content in input);
             let inputs = content.parse_terminated(FnArg::parse)?;
+            let variadic: Option<Token![...]> = match inputs.last() {
+                Some(punctuated::Pair::End(&FnArg::Captured(ArgCaptured {
+                    ty: Type::Verbatim(TypeVerbatim { ref tts }),
+                    ..
+                }))) => parse2(tts.clone()).ok(),
+                _ => None,
+            };
 
             let output: ReturnType = input.parse()?;
             let where_clause: Option<WhereClause> = input.parse()?;
@@ -1114,7 +1121,7 @@ pub mod parsing {
                     paren_token: paren_token,
                     inputs: inputs,
                     output: output,
-                    variadic: None,
+                    variadic: variadic,
                     generics: Generics {
                         where_clause: where_clause,
                         ..generics
@@ -1179,7 +1186,23 @@ pub mod parsing {
         Ok(ArgCaptured {
             pat: input.parse()?,
             colon_token: input.parse()?,
-            ty: input.parse()?,
+            ty: match input.parse::<Token![...]>() {
+                Ok(dot3) => {
+                    let mut args = vec![
+                        TokenTree::Punct(Punct::new('.', Spacing::Joint)),
+                        TokenTree::Punct(Punct::new('.', Spacing::Joint)),
+                        TokenTree::Punct(Punct::new('.', Spacing::Alone)),
+                    ];
+                    let tokens = TokenStream::from_iter(args.into_iter().zip(&dot3.spans).map(
+                        |(mut arg, span)| {
+                            arg.set_span(*span);
+                            arg
+                        },
+                    ));
+                    Type::Verbatim(TypeVerbatim { tts: tokens })
+                }
+                Err(_) => input.parse()?,
+            },
         })
     }
 
