@@ -46,6 +46,10 @@ class VRParent final : public PVRParent {
       const nsCString& aPath);
   mozilla::ipc::IPCResult RecvOpenVRControllerManifestPathToVR(
       const OpenVRControllerType& aType, const nsCString& aPath);
+  mozilla::ipc::IPCResult RecvRequestMemoryReport(
+      const uint32_t& generation, const bool& anonymize,
+      const bool& minimizeMemoryUsage,
+      const Maybe<ipc::FileDescriptor>& DMDFile);
 
  private:
   nsCString mOpenVRControllerAction;

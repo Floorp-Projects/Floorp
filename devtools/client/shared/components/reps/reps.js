@@ -6282,14 +6282,23 @@ function getElements(grip, mode) {
     attributes,
     nodeName,
     isAfterPseudoElement,
-    isBeforePseudoElement
+    isBeforePseudoElement,
+    isMarkerPseudoElement
   } = grip.preview;
   const nodeNameElement = span({
     className: "tag-name"
   }, nodeName);
 
-  if (isAfterPseudoElement || isBeforePseudoElement) {
-    return [span({ className: "attrName" }, `::${isAfterPseudoElement ? "after" : "before"}`)];
+  let pseudoNodeName;
+  if (isAfterPseudoElement) {
+    pseudoNodeName = "after";
+  } else if (isBeforePseudoElement) {
+    pseudoNodeName = "before";
+  } else if (isMarkerPseudoElement) {
+    pseudoNodeName = "marker";
+  }
+  if (pseudoNodeName) {
+    return [span({ className: "attrName" }, `::${pseudoNodeName}`)];
   }
 
   if (mode === MODE.TINY) {

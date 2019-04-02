@@ -32,6 +32,11 @@ class VRProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   explicit VRProcessParent(Listener* aListener);
 
   bool Launch();
+  // If the process is being launched, block until it has launched and
+  // connected. If a launch task is pending, it will fire immediately.
+  //
+  // Returns true if the process is successfully connected; false otherwise.
+  bool WaitForLaunch();
   void Shutdown();
   void DestroyProcess();
   bool CanShutdown() override { return true; }
@@ -45,6 +50,9 @@ class VRProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
 
   base::ProcessId OtherPid();
   VRChild* GetActor() const { return mVRChild.get(); }
+  // Return a unique id for this process, guaranteed not to be shared with any
+  // past or future instance of VRProcessParent.
+  uint64_t GetProcessToken() const;
 
  private:
   ~VRProcessParent();
@@ -59,6 +67,8 @@ class VRProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   nsCOMPtr<nsIThread> mLaunchThread;
   Listener* mListener;
 
+  enum class LaunchPhase { Unlaunched, Waiting, Complete };
+  LaunchPhase mLaunchPhase;
   bool mChannelClosed;
   bool mShutdownRequested;
 };

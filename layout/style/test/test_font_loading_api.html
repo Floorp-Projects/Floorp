@@ -409,6 +409,13 @@ function runTest() {
     // (TEST 18) Test passing valid url() source strings to the FontFace
     // constructor.
     var p = Promise.resolve();
+
+    // The sub-test is very fragile on Android platform, see Bug 1455824,
+    // especially Comment 34.
+    if (navigator.appVersion.includes("Android")) {
+      return p;
+    }
+
     sourceWindows.forEach(function({ win, what }) {
       p = p.then(function() {
         var srcTests = Promise.resolve();

@@ -248,6 +248,19 @@ stubs.set("NodeWithLongStringAttribute", {
   }
 });
 
+stubs.set("MarkerPseudoElement", {
+  type: "object",
+  actor: "server1.conn1.child1/obj26",
+  preview: {
+    kind: "DOMNode",
+    nodeType: 1,
+    nodeName: "_moz_generated_content_marker",
+    attributes: {},
+    attributesLength: 0,
+    isMarkerPseudoElement: true
+  }
+});
+
 stubs.set("BeforePseudoElement", {
   type: "object",
   actor: "server1.conn1.child1/obj27",

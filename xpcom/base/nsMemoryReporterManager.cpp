@@ -27,6 +27,7 @@
 #endif
 #include "nsNetCID.h"
 #include "nsThread.h"
+#include "VRProcessManager.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/PodOperations.h"
@@ -1810,6 +1811,12 @@ nsresult nsMemoryReporterManager::StartGettingReports() {
 
   if (RDDProcessManager* rdd = RDDProcessManager::Get()) {
     if (RefPtr<MemoryReportingProcess> proc = rdd->GetProcessMemoryReporter()) {
+      s->mChildrenPending.AppendElement(proc.forget());
+    }
+  }
+
+  if (gfx::VRProcessManager* vr = gfx::VRProcessManager::Get()) {
+    if (RefPtr<MemoryReportingProcess> proc = vr->GetProcessMemoryReporter()) {
       s->mChildrenPending.AppendElement(proc.forget());
     }
   }

@@ -50,6 +50,20 @@ var MigrationWizard = { /* exported MigrationWizard */
       }
     }
 
+    document.addEventListener("wizardcancel", function() { MigrationWizard.onWizardCancel(); });
+
+    document.getElementById("selectProfile").addEventListener("pageshow", function() { MigrationWizard.onSelectProfilePageShow(); });
+    document.getElementById("importItems").addEventListener("pageshow", function() { MigrationWizard.onImportItemsPageShow(); });
+    document.getElementById("migrating").addEventListener("pageshow", function() { MigrationWizard.onMigratingPageShow(); });
+    document.getElementById("done").addEventListener("pageshow", function() { MigrationWizard.onDonePageShow(); });
+
+    document.getElementById("selectProfile").addEventListener("pagerewound", function() { MigrationWizard.onSelectProfilePageRewound(); });
+    document.getElementById("importItems").addEventListener("pagerewound", function() { MigrationWizard.onImportItemsPageRewound(); });
+
+    document.getElementById("selectProfile").addEventListener("pageadvanced", function() { MigrationWizard.onSelectProfilePageAdvanced(); });
+    document.getElementById("importItems").addEventListener("pageadvanced", function() { MigrationWizard.onImportItemsPageAdvanced(); });
+    document.getElementById("importSource").addEventListener("pageadvanced", function(e) { MigrationWizard.onImportSourcePageAdvanced(e); });
+
     this.onImportSourcePageShow();
   },
 
@@ -145,7 +159,7 @@ var MigrationWizard = { /* exported MigrationWizard */
     }
   },
 
-  onImportSourcePageAdvanced() {
+  onImportSourcePageAdvanced(event) {
     var newSource = document.getElementById("importSourceGroup").selectedItem.id;
 
     if (newSource == "nothing") {
@@ -155,7 +169,7 @@ var MigrationWizard = { /* exported MigrationWizard */
       Services.telemetry.getHistogramById("FX_MIGRATION_SOURCE_BROWSER")
                         .add(MigrationUtils.getSourceIdForTelemetry("nothing"));
       document.documentElement.cancel();
-      return false;
+      event.preventDefault();
     }
 
     if (!this._migrator || (newSource != this._source)) {
@@ -184,7 +198,6 @@ var MigrationWizard = { /* exported MigrationWizard */
       else
         this._selectedProfile = null;
     }
-    return undefined;
   },
 
   // 2 - [Profile Selection]
