@@ -267,6 +267,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   bool CheckHandleEventForAnchorsPreconditions(
       mozilla::EventChainVisitor& aVisitor);
   void GetEventTargetParentForAnchors(mozilla::EventChainPreVisitor& aVisitor);
+  MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEventForAnchors(mozilla::EventChainPostVisitor& aVisitor);
   bool IsHTMLLink(nsIURI** aURI) const;
 
