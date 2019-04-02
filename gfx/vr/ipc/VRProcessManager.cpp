@@ -30,7 +30,7 @@ void VRProcessManager::Initialize() {
 /* static */
 void VRProcessManager::Shutdown() { sSingleton = nullptr; }
 
-VRProcessManager::VRProcessManager() : mProcess(nullptr) {
+VRProcessManager::VRProcessManager() : mProcess(nullptr), mVRChild(nullptr) {
   MOZ_COUNT_CTOR(VRProcessManager);
 
   mObserver = new Observer(this);
@@ -79,13 +79,42 @@ void VRProcessManager::DestroyProcess() {
 
   mProcess->Shutdown();
   mProcess = nullptr;
+  mVRChild = nullptr;
 
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::VRProcessStatus,
                                      NS_LITERAL_CSTRING("Destroyed"));
 }
 
+bool VRProcessManager::EnsureVRReady() {
+  if (mProcess && !mProcess->IsConnected()) {
+    if (!mProcess->WaitForLaunch()) {
+      // If this fails, we should have fired OnProcessLaunchComplete and
+      // removed the process.
+      MOZ_ASSERT(!mProcess && !mVRChild);
+      return false;
+    }
+  }
+
+  if (mVRChild) {
+    if (mVRChild->EnsureVRReady()) {
+      return true;
+    }
+
+    // If the initialization above fails, we likely have a GPU process teardown
+    // waiting in our message queue (or will soon). We need to ensure we don't
+    // restart it later because if we fail here, our callers assume they should
+    // fall back to a combined UI/GPU process. This also ensures our internal
+    // state is consistent (e.g. process token is reset).
+    DisableVRProcess("Failed to initialize VR process");
+  }
+
+  return false;
+}
+
 void VRProcessManager::OnProcessLaunchComplete(VRProcessParent* aParent) {
   MOZ_ASSERT(mProcess && mProcess == aParent);
+
+  mVRChild = mProcess->GetActor();
 
   if (!mProcess->IsConnected()) {
     DestroyProcess();

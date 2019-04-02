@@ -39,6 +39,8 @@ IPCResult VRParent::RecvNewGPUVRManager(Endpoint<PVRGPUParent>&& aEndpoint) {
 IPCResult VRParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
                              nsTArray<GfxVarUpdate>&& vars,
                              const DevicePrefs& devicePrefs) {
+  Unused << SendInitComplete();
+
   const nsTArray<gfxPrefs::Pref*>& globalPrefs = gfxPrefs::all();
   for (auto& setting : prefs) {
     gfxPrefs::Pref* pref = globalPrefs[setting.index()];
@@ -161,6 +163,7 @@ bool VRParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
     return false;
   }
 
+  mozilla::ipc::SetThisProcessName("VR Process");
   return true;
 }
 
