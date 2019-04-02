@@ -115,8 +115,6 @@ _OPT\.OBJ/
 
 # XCode project cruft
 ^[^/]*\.xcodeproj/
-^embedding/ios/GeckoEmbed/GeckoEmbed.xcodeproj/project.xcworkspace/xcuserdata
-^embedding/ios/GeckoEmbed/GeckoEmbed.xcodeproj/xcuserdata
 
 # Rust/Cargo output from running `cargo` directly
 ^target/
