@@ -3194,7 +3194,7 @@ void BaselineCompilerCodeGen::getEnvironmentCoordinateObject(Register reg) {
 
 template <>
 void BaselineInterpreterCodeGen::getEnvironmentCoordinateObject(Register reg) {
-  MOZ_CRASH("NYI: interpreter getEnvironmentCoordinateObject");
+  MOZ_CRASH("Shouldn't call this for interpreter");
 }
 
 template <>
@@ -3214,7 +3214,7 @@ Address BaselineCompilerCodeGen::getEnvironmentCoordinateAddressFromObject(
 template <>
 Address BaselineInterpreterCodeGen::getEnvironmentCoordinateAddressFromObject(
     Register objReg, Register reg) {
-  MOZ_CRASH("NYI: interpreter getEnvironmentCoordinateAddressFromObject");
+  MOZ_CRASH("Shouldn't call this for interpreter");
 }
 
 template <typename Handler>
@@ -3224,12 +3224,72 @@ Address BaselineCodeGen<Handler>::getEnvironmentCoordinateAddress(
   return getEnvironmentCoordinateAddressFromObject(reg, reg);
 }
 
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_JSOP_GETALIASEDVAR() {
+// For a JOF_ENVCOORD op load the number of hops from the bytecode and skip this
+// number of environment objects.
+static void LoadAliasedVarEnv(MacroAssembler& masm, Register pc, Register env,
+                              Register scratch) {
+  static_assert(ENVCOORD_HOPS_LEN == 1,
+                "Code assumes number of hops is stored in uint8 operand");
+  LoadUint8Operand(masm, pc, scratch);
+
+  Label top, done;
+  masm.bind(&top);
+  masm.branchTest32(Assembler::Zero, scratch, scratch, &done);
+  {
+    Address nextEnv(env, EnvironmentObject::offsetOfEnclosingEnvironment());
+    masm.unboxObject(nextEnv, env);
+    masm.sub32(Imm32(1), scratch);
+    masm.jump(&top);
+  }
+  masm.bind(&done);
+}
+
+template <>
+void BaselineCompilerCodeGen::emitGetAliasedVar(ValueOperand dest) {
   frame.syncStack(0);
 
   Address address = getEnvironmentCoordinateAddress(R0.scratchReg());
-  masm.loadValue(address, R0);
+  masm.loadValue(address, dest);
+}
+
+template <>
+void BaselineInterpreterCodeGen::emitGetAliasedVar(ValueOperand dest) {
+  Register env = R0.scratchReg();
+  Register scratch = R1.scratchReg();
+
+  // Load the right environment object.
+  masm.loadPtr(frame.addressOfEnvironmentChain(), env);
+  LoadAliasedVarEnv(masm, PCRegAtStart, env, scratch);
+
+  // Load the slot index.
+  static_assert(ENVCOORD_SLOT_LEN == 3,
+                "Code assumes slot is stored in uint24 operand");
+  LoadUint24Operand(masm, PCRegAtStart, ENVCOORD_HOPS_LEN, scratch);
+
+  // Load the Value from a fixed or dynamic slot.
+  // See EnvironmentObject::nonExtensibleIsFixedSlot.
+  Label isDynamic, done;
+  masm.branch32(Assembler::AboveOrEqual, scratch,
+                Imm32(NativeObject::MAX_FIXED_SLOTS), &isDynamic);
+  {
+    uint32_t offset = NativeObject::getFixedSlotOffset(0);
+    masm.loadValue(BaseValueIndex(env, scratch, offset), dest);
+    masm.jump(&done);
+  }
+  masm.bind(&isDynamic);
+  {
+    masm.loadPtr(Address(env, NativeObject::offsetOfSlots()), env);
+
+    // Use an offset to subtract the number of fixed slots.
+    int32_t offset = -int32_t(NativeObject::MAX_FIXED_SLOTS * sizeof(Value));
+    masm.loadValue(BaseValueIndex(env, scratch, offset), dest);
+  }
+  masm.bind(&done);
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_JSOP_GETALIASEDVAR() {
+  emitGetAliasedVar(R0);
 
   if (handler.maybeIonCompileable()) {
     // No need to monitor types if we know Ion can't compile this script.
@@ -3271,7 +3331,69 @@ bool BaselineCompilerCodeGen::emit_JSOP_SETALIASEDVAR() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_SETALIASEDVAR() {
-  MOZ_CRASH("NYI: interpreter JSOP_SETALIASEDVAR");
+  AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+  regs.take(BaselineFrameReg);
+  regs.take(R2);
+  MOZ_ASSERT(!regs.has(PCRegAtStart), "R2 contains PCRegAtStart");
+
+  Register env = regs.takeAny();
+  Register scratch1 = regs.takeAny();
+  Register scratch2 = regs.takeAny();
+  Register scratch3 = regs.takeAny();
+
+  // Load the right environment object.
+  masm.loadPtr(frame.addressOfEnvironmentChain(), env);
+  LoadAliasedVarEnv(masm, PCRegAtStart, env, scratch1);
+
+  // Load the slot index.
+  static_assert(ENVCOORD_SLOT_LEN == 3,
+                "Code assumes slot is stored in uint24 operand");
+  LoadUint24Operand(masm, PCRegAtStart, ENVCOORD_HOPS_LEN, scratch1);
+
+  // Store the RHS Value in R2.
+  masm.loadValue(frame.addressOfStackValue(-1), R2);
+
+  // Load a pointer to the fixed or dynamic slot into scratch2. We want to call
+  // guardedCallPreBarrierAnyZone once to avoid code bloat.
+
+  // See EnvironmentObject::nonExtensibleIsFixedSlot.
+  Label isDynamic, done;
+  masm.branch32(Assembler::AboveOrEqual, scratch1,
+                Imm32(NativeObject::MAX_FIXED_SLOTS), &isDynamic);
+  {
+    uint32_t offset = NativeObject::getFixedSlotOffset(0);
+    BaseValueIndex slotAddr(env, scratch1, offset);
+    masm.computeEffectiveAddress(slotAddr, scratch2);
+    masm.jump(&done);
+  }
+  masm.bind(&isDynamic);
+  {
+    masm.loadPtr(Address(env, NativeObject::offsetOfSlots()), scratch2);
+
+    // Use an offset to subtract the number of fixed slots.
+    int32_t offset = -int32_t(NativeObject::MAX_FIXED_SLOTS * sizeof(Value));
+    BaseValueIndex slotAddr(scratch2, scratch1, offset);
+    masm.computeEffectiveAddress(slotAddr, scratch2);
+  }
+  masm.bind(&done);
+
+  // Pre-barrier and store.
+  Address slotAddr(scratch2, 0);
+  masm.guardedCallPreBarrierAnyZone(slotAddr, MIRType::Value, scratch3);
+  masm.storeValue(R2, slotAddr);
+
+  // Post barrier.
+  Label skipBarrier;
+  masm.branchPtrInNurseryChunk(Assembler::Equal, env, scratch1, &skipBarrier);
+  masm.branchValueIsNurseryCell(Assembler::NotEqual, R2, scratch1,
+                                &skipBarrier);
+  {
+    // Post barrier code expects the object in R2.
+    masm.movePtr(env, R2.scratchReg());
+    masm.call(&postBarrierSlot_);
+  }
+  masm.bind(&skipBarrier);
+  return true;
 }
 
 template <typename Handler>
@@ -4018,7 +4140,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_INITGLEXICAL() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_CHECKALIASEDLEXICAL() {
   frame.syncStack(0);
-  masm.loadValue(getEnvironmentCoordinateAddress(R0.scratchReg()), R0);
+  emitGetAliasedVar(R0);
   return emitUninitializedLexicalCheck(R0);
 }
 
