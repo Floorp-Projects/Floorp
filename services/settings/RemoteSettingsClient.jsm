@@ -285,6 +285,7 @@ class RemoteSettingsClient extends EventEmitter {
   async maybeSync(expectedTimestamp, options = {}) {
     const { loadDump = true, trigger = "manual" } = options;
 
+    const startedAt = new Date();
     let reportStatus = null;
     try {
       // Synchronize remote data into a local DB using Kinto.
@@ -393,12 +394,17 @@ class RemoteSettingsClient extends EventEmitter {
       }
       throw e;
     } finally {
+      const durationMilliseconds = new Date() - startedAt;
       // No error was reported, this is a success!
       if (reportStatus === null) {
         reportStatus = UptakeTelemetry.STATUS.SUCCESS;
       }
       // Report success/error status to Telemetry.
-      await UptakeTelemetry.report(TELEMETRY_COMPONENT, reportStatus, { source: this.identifier, trigger });
+      await UptakeTelemetry.report(TELEMETRY_COMPONENT, reportStatus, {
+        source: this.identifier,
+        trigger,
+        duration: durationMilliseconds,
+      });
     }
   }
 

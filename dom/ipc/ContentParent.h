@@ -1007,14 +1007,15 @@ class ContentParent final : public PContentParent,
       const nsString& aMessage, const nsString& aSourceName,
       const nsString& aSourceLine, const uint32_t& aLineNumber,
       const uint32_t& aColNumber, const uint32_t& aFlags,
-      const nsCString& aCategory, const bool& aIsFromPrivateWindow);
+      const nsCString& aCategory, const bool& aIsFromPrivateWindow,
+      const bool& aIsFromChromeContext);
 
   mozilla::ipc::IPCResult RecvScriptErrorWithStack(
       const nsString& aMessage, const nsString& aSourceName,
       const nsString& aSourceLine, const uint32_t& aLineNumber,
       const uint32_t& aColNumber, const uint32_t& aFlags,
       const nsCString& aCategory, const bool& aIsFromPrivateWindow,
-      const ClonedMessageData& aStack);
+      const bool& aIsFromChromeContext, const ClonedMessageData& aStack);
 
  private:
   mozilla::ipc::IPCResult RecvScriptErrorInternal(
@@ -1022,6 +1023,7 @@ class ContentParent final : public PContentParent,
       const nsString& aSourceLine, const uint32_t& aLineNumber,
       const uint32_t& aColNumber, const uint32_t& aFlags,
       const nsCString& aCategory, const bool& aIsFromPrivateWindow,
+      const bool& aIsFromChromeContext,
       const ClonedMessageData* aStack = nullptr);
 
  public:

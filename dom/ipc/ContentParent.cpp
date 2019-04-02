@@ -4100,10 +4100,11 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptError(
     const nsString& aMessage, const nsString& aSourceName,
     const nsString& aSourceLine, const uint32_t& aLineNumber,
     const uint32_t& aColNumber, const uint32_t& aFlags,
-    const nsCString& aCategory, const bool& aFromPrivateWindow) {
+    const nsCString& aCategory, const bool& aFromPrivateWindow,
+    const bool& aFromChromeContext) {
   return RecvScriptErrorInternal(aMessage, aSourceName, aSourceLine,
                                  aLineNumber, aColNumber, aFlags, aCategory,
-                                 aFromPrivateWindow);
+                                 aFromPrivateWindow, aFromChromeContext);
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvScriptErrorWithStack(
@@ -4111,10 +4112,10 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptErrorWithStack(
     const nsString& aSourceLine, const uint32_t& aLineNumber,
     const uint32_t& aColNumber, const uint32_t& aFlags,
     const nsCString& aCategory, const bool& aFromPrivateWindow,
-    const ClonedMessageData& aFrame) {
-  return RecvScriptErrorInternal(aMessage, aSourceName, aSourceLine,
-                                 aLineNumber, aColNumber, aFlags, aCategory,
-                                 aFromPrivateWindow, &aFrame);
+    const bool& aFromChromeContext, const ClonedMessageData& aFrame) {
+  return RecvScriptErrorInternal(
+      aMessage, aSourceName, aSourceLine, aLineNumber, aColNumber, aFlags,
+      aCategory, aFromPrivateWindow, aFromChromeContext, &aFrame);
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvScriptErrorInternal(
@@ -4122,7 +4123,7 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptErrorInternal(
     const nsString& aSourceLine, const uint32_t& aLineNumber,
     const uint32_t& aColNumber, const uint32_t& aFlags,
     const nsCString& aCategory, const bool& aFromPrivateWindow,
-    const ClonedMessageData* aStack) {
+    const bool& aFromChromeContext, const ClonedMessageData* aStack) {
   RefPtr<nsConsoleService> consoleService = GetConsoleService();
   if (!consoleService) {
     return IPC_OK();
@@ -4157,9 +4158,9 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptErrorInternal(
     msg = new nsScriptError();
   }
 
-  nsresult rv =
-      msg->Init(aMessage, aSourceName, aSourceLine, aLineNumber, aColNumber,
-                aFlags, aCategory.get(), aFromPrivateWindow);
+  nsresult rv = msg->Init(aMessage, aSourceName, aSourceLine, aLineNumber,
+                          aColNumber, aFlags, aCategory.get(),
+                          aFromPrivateWindow, aFromChromeContext);
   if (NS_FAILED(rv)) return IPC_OK();
 
   consoleService->LogMessageWithMode(msg, nsConsoleService::SuppressLog);

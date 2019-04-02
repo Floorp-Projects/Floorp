@@ -21,7 +21,7 @@ using namespace mozilla;
 nsFont::nsFont(const FontFamilyList& aFontlist, nscoord aSize)
     : fontlist(aFontlist), size(aSize) {}
 
-nsFont::nsFont(FontFamilyType aGenericType, nscoord aSize)
+nsFont::nsFont(StyleGenericFontFamily aGenericType, nscoord aSize)
     : fontlist(aGenericType), size(aSize) {}
 
 nsFont::nsFont(const nsFont& aOther) = default;

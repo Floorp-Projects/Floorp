@@ -1,2 +1,17 @@
 #filter substitution
 script topsrcdir = "@topsrcdir@"; lldb.debugger.HandleCommand("command source -s true '%s'" % os.path.join(topsrcdir, ".lldbinit"))
+
+#ifdef MOZ_WIDGET_ANDROID
+settings set symbols.enable-external-lookup true
+
+# This is where libxul.so and libmozglue.so are produced in full builds.
+settings append target.exec-search-paths @topobjdir@/toolkit/library
+settings append target.exec-search-paths @topobjdir@/mozglue/build
+
+# This is where artifact builds unpacks "crashreporter-symbols-full.zip" uncompressed ELF debug symbols.
+settings append target.debug-file-search-paths @topobjdir@/dist/crashreporter-symbols
+
+# These are specific paths encoded into Mozilla's automation outputs.
+settings append target.source-map /builds/worker/workspace/build/src/obj-firefox @topobjdir@
+settings append target.source-map /builds/worker/workspace/build/src @topsrcdir@
+#endif

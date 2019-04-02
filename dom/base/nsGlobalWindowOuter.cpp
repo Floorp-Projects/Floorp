@@ -5951,7 +5951,8 @@ bool nsGlobalWindowOuter::GetPrincipalForPostMessage(
                 R"(origin "%s" from a system principal scope with mismatched )"
                 R"(origin "%s".)",
                 targetURL.get(), targetOrigin.get(), sourceOrigin.get())),
-            "DOM", !!principal->PrivateBrowsingId());
+            "DOM", !!principal->PrivateBrowsingId(),
+            nsContentUtils::IsSystemPrincipal(principal));
 
         attrs = principal->OriginAttributesRef();
       }

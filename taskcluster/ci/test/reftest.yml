@@ -30,7 +30,7 @@ job-defaults:
                 macosx.*:
                     - unittests/mac_unittest.py
                 windows.*:
-                    - unittests/win_taskcluster_unittest.py
+                    - unittests/win_unittest.py
 
 crashtest:
     description: "Crashtest run"

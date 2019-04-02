@@ -27,6 +27,17 @@ awsy:
             .*-devedition/.*: []  # don't run on devedition
             default: built-projects
 
+awsy-tp6:
+    description: "Are we slim yet - tp6 pageset"
+    treeherder-symbol: SY(sy-tp6)
+    run-on-projects:
+        by-test-platform:
+            .*-devedition/.*: []  # don't run on devedition
+            default: built-projects
+    mozharness:
+        extra-options:
+            - --tp6
+
 awsy-dmd:
     description: "Are we slim yet - dmd enabled"
     treeherder-symbol: SY(sy-d)

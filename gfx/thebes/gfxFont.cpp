@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/SVGContextPaint.h"
@@ -4000,10 +4001,11 @@ bool gfxFont::TryGetMathTable() {
 void SharedFontList::Initialize() {
   sEmpty = new SharedFontList();
 
-  for (uint8_t i = 0; i < uint8_t(eFamily_generic_count_including_special);
-       ++i) {
-    auto type = static_cast<FontFamilyType>(i + uint8_t(eFamily_generic_first));
-    sSingleGenerics[i] = new SharedFontList(type);
+  for (auto i : IntegerRange(ArrayLength(sSingleGenerics))) {
+    auto type = static_cast<StyleGenericFontFamily>(i);
+    if (type != StyleGenericFontFamily::None) {
+      sSingleGenerics[i] = new SharedFontList(type);
+    }
   }
 }
 
@@ -4019,4 +4021,4 @@ void SharedFontList::Shutdown() {
 StaticRefPtr<SharedFontList> SharedFontList::sEmpty;
 
 StaticRefPtr<SharedFontList>
-    SharedFontList::sSingleGenerics[eFamily_generic_count_including_special];
+    SharedFontList::sSingleGenerics[size_t(StyleGenericFontFamily::MozEmoji)];
