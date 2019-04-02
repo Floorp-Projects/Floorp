@@ -29,7 +29,7 @@ bool ExpressionStatementEmitter::prepareForExpr(
   }
 
 #ifdef DEBUG
-  depth_ = bce_->stackDepth;
+  depth_ = bce_->bytecodeSection().stackDepth();
   state_ = State::Expr;
 #endif
   return true;
@@ -37,7 +37,7 @@ bool ExpressionStatementEmitter::prepareForExpr(
 
 bool ExpressionStatementEmitter::emitEnd() {
   MOZ_ASSERT(state_ == State::Expr);
-  MOZ_ASSERT(bce_->stackDepth == depth_ + 1);
+  MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == depth_ + 1);
 
   //                [stack] VAL
 

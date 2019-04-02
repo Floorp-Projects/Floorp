@@ -41,7 +41,7 @@ LoopControl::LoopControl(BytecodeEmitter* bce, StatementKind loopKind)
 
   LoopControl* enclosingLoop = findNearest<LoopControl>(enclosing());
 
-  stackDepth_ = bce->stackDepth;
+  stackDepth_ = bce->bytecodeSection().stackDepth();
   loopDepth_ = enclosingLoop ? enclosingLoop->loopDepth_ + 1 : 1;
 
   int loopSlots;
@@ -81,7 +81,7 @@ bool LoopControl::emitContinueTarget(BytecodeEmitter* bce) {
 bool LoopControl::emitSpecialBreakForDone(BytecodeEmitter* bce) {
   // This doesn't pop stack values, nor handle any other controls.
   // Should be called on the toplevel of the loop.
-  MOZ_ASSERT(bce->stackDepth == stackDepth_);
+  MOZ_ASSERT(bce->bytecodeSection().stackDepth() == stackDepth_);
   MOZ_ASSERT(bce->innermostNestableControl == this);
 
   if (!bce->newSrcNote(SRC_BREAK)) {
