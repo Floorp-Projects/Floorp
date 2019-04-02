@@ -12,7 +12,7 @@
     </item>
     <item>
         <shape>
-            <solid android:color="?attr/pillWrapperBackground" />
+            <solid android:color="?attr/sessionBackgroundColor" />
             <corners android:radius="8dp" />
         </shape>
     </item>

@@ -28,7 +28,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/history_delete_all"
-                android:textColor="@color/photonRed60"
+                android:textColor="?attr/deleteColor"
                 android:drawablePadding="8dp"
                 android:textSize="16sp"
                 android:gravity="center"

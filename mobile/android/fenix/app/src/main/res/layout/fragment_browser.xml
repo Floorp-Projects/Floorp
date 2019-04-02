@@ -21,7 +21,7 @@
         android:id="@+id/nestedScrollQuickAction"
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:background="?attr/toolbarColor"
+        android:background="?attr/quickActionBackgroundColor"
         android:clipToPadding="true"
         app:behavior_hideable="true"
         app:behavior_peekHeight="15dp"

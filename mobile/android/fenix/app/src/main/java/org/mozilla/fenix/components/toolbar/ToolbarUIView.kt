@@ -8,7 +8,6 @@ import android.graphics.drawable.BitmapDrawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
-import androidx.core.content.ContextCompat
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.functions.Consumer
@@ -55,9 +54,7 @@ class ToolbarUIView(
             browserActionMargin = resources.pxToDp(browserActionMarginDp)
             urlBoxView = urlBackground
 
-            textColor = ContextCompat.getColor(context, R.color.search_text)
             hint = context.getString(R.string.search_hint)
-            hintColor = ContextCompat.getColor(context, R.color.search_text)
 
             setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
                 override fun onCancelEditing(): Boolean {

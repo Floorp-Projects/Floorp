@@ -4,68 +4,77 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
 
-    <style name="LightThemeBase" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:statusBarColor">@color/off_white</item>
+    <style name="NormalThemeBase" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@color/status_bar_color_normal_theme</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
-        <item name="android:colorPrimary">@color/off_white</item>
-        <item name="android:windowBackground">@color/off_white</item>
-        <item name="iconColor">@color/icons_light_mode</item>
-        <item name="disabledIconColor">@color/disabled_icons_light_mode</item>
-        <item name="toolbarColor">@color/toolbar_light_mode</item>
-        <item name="colorPrimary">@color/off_white</item>
+        <item name="android:colorPrimary">@color/colorPrimary_normal_theme</item>
+        <item name="android:windowBackground">@color/windowBackground_normal_theme</item>
+        <item name="iconColor">@color/icons_normal_theme</item>
+        <item name="disabledIconColor">@color/disabled_icons_normal_theme</item>
+        <item name="toolbarColor">@color/toolbar_normal_theme</item>
+        <item name="colorPrimary">@color/color_primary</item>
         <item name="colorAccent">@color/session_border_color</item>
+        <item name="primaryTextColor">@color/text_color_normal_theme</item>
+        <item name="secondaryTextColor">@color/secondary_text_color_normal_theme</item>
+        <item name="colorPrimaryDark">@color/background_dark_theme</item>
+
 
         <!-- Toggle colors activated and off -->
-        <item name="colorControlActivated">@color/toggle_activated_light_mode</item>
-        <item name="colorSwitchThumbNormal">@color/off_white</item>
+        <item name="colorControlActivated">@color/toggle_activated_normal_theme</item>
+        <item name="colorSwitchThumbNormal">@color/colorSwitchThumbNormal_normal_theme</item>
 
         <!-- Color of overscroll glow -->
-        <item name="android:colorEdgeEffect">@color/toggle_activated_light_mode</item>
+        <item name="android:colorEdgeEffect">@color/toggle_activated_normal_theme</item>
 
         <!-- Style the navigation bar -->
-        <item name="navigationBarColorHome">@android:color/transparent</item>
-        <item name="navigationBarColorBrowser">@android:color/transparent</item>
+        <item name="navigationBarColorHome">@color/navigationBarColorHome_normal_theme</item>
+        <item name="navigationBarColorBrowser">@color/navigationBarColorBrowser_normal_theme</item>
 
         <!-- Home fragment colors -->
-        <item name="homeBackgroundTopGradient">@color/off_white</item>
-        <item name="homeBackgroundBottomGradient">@color/off_white</item>
+        <item name="homeBackgroundTopGradient">@color/homeBackgroundTopGradient_normal_theme</item>
+        <item name="homeBackgroundBottomGradient">@color/homeBackgroundBottomGradient_normal_theme
+        </item>
         <item name="homeBackgroundGradient">@drawable/home_background_gradient</item>
-        <item name="privateBrowsingButtonBackground">?android:attr/selectableItemBackgroundBorderless</item>
-        <item name="privateBrowsingButtonTint">@color/off_white</item>
+        <item name="privateBrowsingButtonBackground">
+            ?android:attr/selectableItemBackgroundBorderless
+        </item>
+        <item name="privateBrowsingButtonTint">@color/privateBrowsingButtonTint_normal_theme</item>
         <item name="fenixLogo">@drawable/ic_logo_wordmark</item>
-        <item name="menuButtonTint">@color/light_mode_text_color</item>
-        <item name="toolbarWrapperBackground">@drawable/home_search_background_light</item>
-        <item name="toolbarTextColor">@color/light_mode_text_color</item>
-        <item name="homeDividerColor">@color/photonGrey30</item>
-        <item name="sessionBackgroundColor">@color/photonWhite</item>
+        <item name="menuButtonTint">@color/menu_button_tint_normal_theme</item>
+        <item name="toolbarWrapperBackground">@drawable/home_search_background_normal</item>
+        <item name="toolbarTextColor">@color/text_color_normal_theme</item>
+        <item name="homeDividerColor">@color/homeDividerColor_normal_theme</item>
+        <item name="sessionBackgroundColor">@color/sessionBackgroundColor_normal_theme</item>
         <item name="sessionBorderColor">@color/session_border_color</item>
+        <item name="deleteColor">@color/delete_color</item>
 
         <!-- Search fragment colors -->
-        <item name="searchBackground">@color/off_white</item>
+        <item name="searchBackground">@color/searchBackground_normal_theme</item>
         <item name="searchShortcutsTextColor">@color/awesome_bar_title_color</item>
-        <item name="pillWrapperBackground">@color/off_white</item>
+        <item name="pillWrapperBackground">@color/pillWrapperBackground_normal_theme</item>
         <item name="pillWrapperSelectedBackground">@color/search_pill_selected_background</item>
         <item name="awesomeBarTitleTextColor">@color/awesome_bar_title_color</item>
         <item name="awesomeBarDescriptionTextColor">@color/awesome_bar_description_color</item>
-        <item name="suggestionBackground">@color/photonBlue50</item>
+        <item name="suggestionBackground">@color/suggestionBackground_normal_theme</item>
 
         <!-- Browser fragment colors -->
         <item name="browserUrlBarBackground">@drawable/home_search_background_dark</item>
-        <item name="browserToolbarBackground">@color/off_white</item>
-        <item name="browserToolbarIcons">@color/icons_light_mode</item>
-        <item name="browserToolbarMenuIcons">@color/icons_light_mode</item>
+        <item name="browserToolbarBackground">@color/browserToolbarBackground_normal_theme</item>
+        <item name="browserToolbarIcons">@color/icons_normal_theme</item>
+        <item name="browserToolbarMenuIcons">@color/icons_normal_theme</item>
         <item name="quickActionPullTabColor">@color/quick_action_pull_tab</item>
+        <item name="quickActionBackgroundColor">@color/quick_action_background_normal_theme</item>
 
         <!-- History fragment colors -->
-        <item name="historyTitleColor">@color/history_title_light_theme</item>
-        <item name="historyURLColor">@color/history_url_light_theme</item>
-        <item name="historyHeader">@color/history_header_light_theme</item>
+        <item name="historyTitleColor">@color/history_title_normal_theme</item>
+        <item name="historyURLColor">@color/history_url_normal_theme</item>
+        <item name="historyHeader">@color/history_header_normal_theme</item>
 
         <!-- Library Fragment -->
         <item name="libraryListItemTextColor">@color/library_list_item_text_color_light_mode</item>
     </style>
 
-    <style name="LightTheme" parent="LightThemeBase">
+    <style name="NormalTheme" parent="NormalThemeBase">
 
     </style>
 
@@ -80,6 +89,8 @@
         <item name="toolbarColor">@color/toolbar_dark_mode</item>
         <item name="colorPrimary">@color/private_browsing_primary</item>
         <item name="colorAccent">@color/private_browsing_primary</item>
+        <item name="primaryTextColor">@color/off_white</item>
+        <item name="secondaryTextColor">@color/photonGrey40</item>
 
         <!-- Style the navigation bar -->
         <item name="navigationBarColorHome">@color/private_browsing_bottom_gradient</item>
@@ -98,7 +109,7 @@
         <item name="homeDividerColor">@color/search_private_background</item>
         <item name="sessionBackgroundColor">@color/session_list_private_header</item>
         <item name="sessionBorderColor">@color/private_browsing_primary</item>
-        <item name="quickActionPullTabColor">@color/off_white</item>
+        <item name="deleteColor">@color/photonRed60</item>
 
         <!-- Search fragment colors -->
         <item name="searchBackground">@color/private_browsing_bottom_gradient</item>
@@ -114,6 +125,8 @@
         <item name="browserToolbarBackground">@color/private_browsing_top_gradient</item>
         <item name="browserToolbarIcons">@color/icons_dark_mode</item>
         <item name="browserToolbarMenuIcons">@color/icons_dark_mode</item>
+        <item name="quickActionPullTabColor">@color/off_white</item>
+        <item name="quickActionBackgroundColor">@color/quick_action_background_private_theme</item>
 
         <!-- History fragment colors -->
         <item name="historyTitleColor">@color/history_title_private_theme</item>
@@ -169,7 +182,7 @@
 
     <style name="CurrentSessionBottomSheetDialogTheme" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
         <item name="bottomSheetStyle">@style/CurrentSessionBottomSheetStyle</item>
-        <item name="android:textColor">@color/light_mode_text_color</item>
+        <item name="android:textColor">@color/text_color_normal_theme</item>
 
         <!-- This doesn't seem to work see https://issuetracker.google.com/issues/120426520 -->
         <item name="scrimBackground">@drawable/session_sheet_background</item>
@@ -177,7 +190,7 @@
 
     <style name="CurrentSessionBottomSheetStyle" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
         <item name="android:background">@android:color/transparent</item>
-        <item name="android:textColor">@color/light_mode_text_color</item>
+        <item name="android:textColor">@color/text_color_normal_theme</item>
 
         <!-- This doesn't seem to work see https://issuetracker.google.com/issues/120426520 -->
         <item name="scrimBackground">@drawable/session_sheet_background</item>

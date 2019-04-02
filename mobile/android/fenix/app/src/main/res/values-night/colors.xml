@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <color name="secondary_text_color_normal_theme">@color/secondaryTextColor_dark_theme</color>
+    <color name="icons_normal_theme">@color/off_white</color>
+    <color name="disabled_icons_normal_theme">@color/disabled_icons_dark_mode</color>
+    <color name="status_bar_color_normal_theme">@color/background_dark_theme</color>
+    <color name="colorPrimary_normal_theme">@color/background_dark_theme</color>
+    <color name="windowBackground_normal_theme">@color/background_dark_theme</color>
+    <color name="text_color_normal_theme">@color/off_white</color>
+    <color name="toolbar_normal_theme">@color/foreground_dark_theme</color>
+    <color name="toggle_activated_normal_theme">#A374F7</color>
+    <color name="colorSwitchThumbNormal_normal_theme">@color/off_white</color>
+
+    <color name="navigationBarColorHome_normal_theme">@android:color/transparent</color>
+    <color name="navigationBarColorBrowser_normal_theme">@android:color/transparent</color>
+
+    <!-- Browser -->
+    <color name="browserToolbarBackground_normal_theme">@color/background_dark_theme</color>
+
+    <!-- home -->
+    <color name="history_header_normal_theme">@color/off_white</color>
+    <color name="history_title_normal_theme">@color/off_white</color>
+    <color name="history_url_normal_theme">@color/off_white</color>
+    <color name="homeBackgroundTopGradient_normal_theme">@color/background_dark_theme</color>
+    <color name="homeBackgroundBottomGradient_normal_theme">@color/background_dark_theme</color>
+    <color name="menu_button_tint_normal_theme">@color/home_buttons_dark_theme</color>
+    <color name="privateBrowsingButtonTint_normal_theme">@color/home_buttons_dark_theme</color>
+
+    <!-- Colors for SearchView on homescreen -->
+    <color name="searchBackground_normal_theme">@color/foreground_dark_theme</color>
+    <color name="search_stroke_normal">#27262F</color>
+    <color name="search_dark_background">@color/foreground_dark_theme</color>
+    <color name="search_dark_background_alternative">@color/foreground_dark_theme</color>
+
+    <!-- Color of divider between searchView and tabs -->
+    <color name="homeDividerColor_normal_theme">@color/foreground_dark_theme</color>
+
+    <!-- Session Colors -->
+    <color name="sessionBackgroundColor_normal_theme">@color/foreground_dark_theme</color>
+    <color name="session_border_color">#592ACB</color>
+    <color name="save_session_button_color">#EFEFF2</color>
+    <color name="save_session_button_text_color">#1E1338</color>
+    <color name="delete_session_button_background">#e5e5ea</color>
+    <color name="delete_color">#EB5D63</color>
+    <color name="session_list_empty_bg">@color/foreground_dark_theme</color>
+    <color name="session_list_empty_fg">@color/off_white</color>
+    <color name="session_list_header">@color/off_white</color>
+    <color name="session_time_stamp_text_color">@color/off_white</color>
+
+    <color name="bottom_sheet_text_color_normal_theme">@color/off_white</color>
+    <color name="history_delete_button_background">#E3E3E6</color>
+
+    <!-- Library -->
+    <color name="library_list_item_text_color_light_mode">@color/off_white</color>
+
+    <!-- Search Fragment -->
+    <color name="suggestionBackground_normal_theme">#A374F7</color>
+    <color name="search_text">@color/off_white</color>
+    <color name="url_box_view">@color/foreground_dark_theme</color>
+
+    <!-- Search Pill -->
+    <color name="pillWrapperBackground_normal_theme">@color/background_dark_theme</color>
+    <color name="search_pill_background">@color/background_dark_theme</color>
+    <color name="search_pill_selected_background">@color/off_white</color>
+    <color name="search_pill_primary">#202340</color>
+
+    <!-- Awesome Bar -->
+    <color name="awesome_bar_title_color">@color/off_white</color>
+    <color name="awesome_bar_description_color">@color/secondaryTextColor_dark_theme</color>
+
+    <!-- Quick Action Sheet -->
+    <color name="quick_action_pull_tab">@color/secondaryTextColor_dark_theme</color>
+    <color name="quick_action_background_normal_theme">@color/background_dark_theme</color>
+</resources>

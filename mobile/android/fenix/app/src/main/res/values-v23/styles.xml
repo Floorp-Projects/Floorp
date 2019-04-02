@@ -3,12 +3,12 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <style name="LightTheme" parent="LightThemeBase">
+    <style name="NormalTheme" parent="NormalThemeBase">
         <!-- Style the status bar -->
         <!-- We have to pull in the changes from v23/styles.xml to make
             sure we also get them in 27+ -->
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightStatusBar">@bool/theme_is_light</item>
 
         <!-- Style the navigation bar -->
         <item name="android:navigationBarColor">@android:color/transparent</item>

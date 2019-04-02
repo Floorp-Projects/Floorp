@@ -27,7 +27,7 @@ class DefaultBrowsingModeManager(private val homeActivity: HomeActivity) : Brows
     private fun updateTheme(mode: BrowsingModeManager.Mode) {
         homeActivity.themeManager.apply {
             val newTheme = when (mode) {
-                BrowsingModeManager.Mode.Normal -> ThemeManager.Theme.Light
+                BrowsingModeManager.Mode.Normal -> ThemeManager.Theme.Normal
                 BrowsingModeManager.Mode.Private -> ThemeManager.Theme.Private
             }
             setTheme(newTheme)

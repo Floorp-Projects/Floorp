@@ -13,6 +13,8 @@
     <attr name="iconColor" format="reference" />
     <attr name="disabledIconColor" format="reference" />
     <attr name="toolbarColor" format="reference" />
+    <attr name="primaryTextColor" format="reference" />
+    <attr name="secondaryTextColor" format="reference" />
 
     <!-- Home fragment -->
     <attr name="homeBackgroundTopGradient" format="reference" />
@@ -28,6 +30,7 @@
     <attr name="homeDividerColor" format="reference" />
     <attr name="sessionBackgroundColor" format="reference" />
     <attr name="sessionBorderColor" format="reference" />
+    <attr name="deleteColor" format="reference" />
 
     <!-- Search fragment -->
     <attr name="searchBackground" format="reference"/>
@@ -43,6 +46,7 @@
     <attr name="browserToolbarMenuIcons" format="reference" />
     <attr name="navigationBarColorBrowser" format="reference" />
     <attr name="quickActionPullTabColor" format="reference" />
+    <attr name="quickActionBackgroundColor" format="reference" />
 
     <!-- History Fragment -->
     <attr name="historyURLColor" format="reference" />

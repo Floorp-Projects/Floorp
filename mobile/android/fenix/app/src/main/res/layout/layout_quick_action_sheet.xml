@@ -9,7 +9,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/toolbarColor">
+    android:background="?attr/quickActionBackgroundColor">
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/quick_action_sheet_handle"
@@ -25,7 +25,7 @@
         android:layout_gravity="bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/toolbarColor">
+        android:background="?attr/quickActionBackgroundColor">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/quick_action_share"

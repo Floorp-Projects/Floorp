@@ -4,6 +4,7 @@ package org.mozilla.fenix.search.awesomebar
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import android.graphics.PorterDuff
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -19,6 +20,7 @@ import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.android.graphics.drawable.toBitmap
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.UIView
@@ -76,7 +78,12 @@ class AwesomeBarUIView(
 
     private val shortcutSearchUseCase = object : SearchUseCases.SearchUseCase {
         override fun invoke(searchTerms: String, searchEngine: SearchEngine?) {
-            actionEmitter.onNext(AwesomeBarAction.SearchTermsTapped(searchTerms, state?.suggestionEngine))
+            actionEmitter.onNext(
+                AwesomeBarAction.SearchTermsTapped(
+                    searchTerms,
+                    state?.suggestionEngine
+                )
+            )
         }
     }
 
@@ -87,7 +94,7 @@ class AwesomeBarUIView(
                 loadUrlUseCase,
                 getDrawable(R.drawable.ic_link)!!.toBitmap(),
                 getString(R.string.awesomebar_clipboard_title)
-                )
+            )
 
             sessionProvider =
                 SessionSuggestionProvider(
@@ -105,11 +112,17 @@ class AwesomeBarUIView(
 
             if (Settings.getInstance(container.context).showSearchSuggestions()) {
                 val draw = getDrawable(R.drawable.ic_search)
-                draw?.setTint(ContextCompat.getColor(this, R.color.search_text))
-
+                draw?.setColorFilter(
+                    ContextCompat.getColor(
+                        this,
+                        DefaultThemeManager.resolveAttribute(R.attr.searchShortcutsTextColor, this)
+                    ), PorterDuff.Mode.SRC_IN
+                )
                 defaultSearchSuggestionProvider =
                     SearchSuggestionProvider(
-                        searchEngine = components.search.searchEngineManager.getDefaultSearchEngine(this),
+                        searchEngine = components.search.searchEngineManager.getDefaultSearchEngine(
+                            this
+                        ),
                         searchUseCase = searchUseCase,
                         fetchClient = components.core.client,
                         mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
@@ -119,11 +132,12 @@ class AwesomeBarUIView(
             }
 
             shortcutsEnginePickerProvider =
-                    ShortcutsSuggestionProvider(
-                        components.search.searchEngineManager,
-                        this,
-                        shortcutEngineManager::selectShortcutEngine,
-                        shortcutEngineManager::selectShortcutEngineSettings)
+                ShortcutsSuggestionProvider(
+                    components.search.searchEngineManager,
+                    this,
+                    shortcutEngineManager::selectShortcutEngine,
+                    shortcutEngineManager::selectShortcutEngineSettings
+                )
 
             shortcutEngineManager.shortcutsEnginePickerProvider = shortcutsEnginePickerProvider
         }
@@ -148,16 +162,21 @@ class AwesomeBarUIView(
     private fun setShortcutEngine(engine: SearchEngine) {
         with(container.context) {
             val draw = getDrawable(R.drawable.ic_search)
-            draw?.setTint(androidx.core.content.ContextCompat.getColor(this, R.color.search_text))
+            draw?.setColorFilter(
+                ContextCompat.getColor(
+                    this,
+                    DefaultThemeManager.resolveAttribute(R.attr.searchShortcutsTextColor, this)
+                ), PorterDuff.Mode.SRC_IN
+            )
 
             searchSuggestionFromShortcutProvider =
-                    SearchSuggestionProvider(
-                        components.search.searchEngineManager.getDefaultSearchEngine(this, engine.name),
-                        shortcutSearchUseCase,
-                        components.core.client,
-                        mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
-                        icon = draw?.toBitmap()
-                    )
+                SearchSuggestionProvider(
+                    components.search.searchEngineManager.getDefaultSearchEngine(this, engine.name),
+                    shortcutSearchUseCase,
+                    components.core.client,
+                    mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
+                    icon = draw?.toBitmap()
+                )
         }
     }
 

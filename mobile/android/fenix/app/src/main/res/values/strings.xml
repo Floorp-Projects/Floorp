@@ -119,6 +119,8 @@
     <string name="preferences_category_account">Account</string>
     <!-- Preference shown on banner to sign into account -->
     <string name="preferences_sign_in">Sign in</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Theme</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Sync bookmarks, history, and more with your Firefox Account</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -167,6 +169,16 @@
     <string name="preferences_mozilla_location_service">Mozilla location service</string>
     <!-- Preference switch for app health report. -->
     <string name="preferences_fenix_health_report">Fenix health report</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Light</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Dark</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Set by Battery Saver</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Follow device theme</string>
 
     <!-- Quick Action Sheet -->
     <!-- Option in Quick Action Sheet in the browser to share the current page -->

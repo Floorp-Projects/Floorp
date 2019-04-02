@@ -15,7 +15,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:background="?android:attr/colorBackground"
+        app:cardBackgroundColor="?attr/sessionBackgroundColor"
+        android:background="?attr/sessionBackgroundColor"
         android:elevation="5dp"
         android:padding="10dp"
         app:cardCornerRadius="10dp">
@@ -45,6 +46,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="@string/tabs_header_title"
                 android:textAppearance="@style/HeaderTextStyle"
+                android:textColor="?attr/toolbarTextColor"
                 app:layout_constraintStart_toEndOf="@id/current_session_image"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -58,6 +60,7 @@
                 android:fadingEdgeLength="48dp"
                 android:requiresFadingEdge="vertical"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                android:textColor="?attr/secondaryTextColor"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0"
@@ -73,15 +76,15 @@
         android:id="@+id/delete_session_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:attr/colorBackground"
+        android:background="?attr/sessionBackgroundColor"
         android:drawableStart="@drawable/ic_delete"
         android:drawablePadding="14dp"
-        android:drawableTint="@color/photonRed60"
+        android:drawableTint="?attr/deleteColor"
         android:paddingStart="20dp"
         android:paddingTop="12dp"
         android:paddingBottom="12dp"
         android:text="@string/current_session_delete"
-        android:textColor="@color/photonRed60"
+        android:textColor="?attr/deleteColor"
         android:textSize="16sp"
         tools:targetApi="m" />
 
@@ -94,29 +97,31 @@
         android:id="@+id/archive_session_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:attr/colorBackground"
+        android:background="?attr/sessionBackgroundColor"
         android:drawableStart="@drawable/ic_archive"
         android:drawablePadding="14dp"
+        android:drawableTint="?attr/iconColor"
         android:paddingStart="20dp"
         android:paddingTop="12dp"
         android:paddingBottom="12dp"
         android:text="@string/current_session_save"
-        android:textColor="@color/light_mode_bottom_sheet_text_color"
-        android:textSize="16sp" />
+        android:textColor="?attr/toolbarTextColor"
+        android:textSize="16sp"
+        tools:targetApi="m" />
 
     <TextView
         android:id="@+id/send_and_share_session_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:attr/colorBackground"
+        android:background="?attr/sessionBackgroundColor"
         android:drawableStart="@drawable/ic_share"
         android:drawablePadding="14dp"
-        android:drawableTint="@color/icons_light_mode"
+        android:drawableTint="?attr/iconColor"
         android:paddingStart="20dp"
         android:paddingTop="12dp"
         android:paddingBottom="12dp"
         android:text="@string/current_session_share"
-        android:textColor="@color/light_mode_bottom_sheet_text_color"
-        android:textSize="16sp" />
-
+        android:textColor="?attr/toolbarTextColor"
+        android:textSize="16sp"
+        tools:targetApi="m" />
 </LinearLayout>

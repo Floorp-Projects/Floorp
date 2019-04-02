@@ -20,7 +20,7 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:name=".FenixApplication"
-            android:theme="@style/LightTheme"
+            android:theme="@style/NormalTheme"
             android:usesCleartextTraffic="true"
             tools:ignore="UnusedAttribute">
         <activity android:name=".HomeActivity"

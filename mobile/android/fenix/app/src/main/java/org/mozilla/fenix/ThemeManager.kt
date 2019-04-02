@@ -6,6 +6,7 @@ package org.mozilla.fenix
 
 import android.app.Activity
 import android.content.Context
+import android.content.res.Configuration
 import android.util.TypedValue
 import android.view.View
 import android.view.Window
@@ -13,7 +14,7 @@ import androidx.core.content.ContextCompat
 
 interface ThemeManager {
     enum class Theme {
-        Light, Private
+        Normal, Private
     }
 
     val currentTheme: Theme
@@ -22,7 +23,7 @@ interface ThemeManager {
 
 fun Activity.setTheme(theme: ThemeManager.Theme) {
     val themeCode = when (theme) {
-        ThemeManager.Theme.Light -> R.style.LightTheme
+        ThemeManager.Theme.Normal -> R.style.NormalTheme
         ThemeManager.Theme.Private -> R.style.PrivateTheme
     }
 
@@ -31,7 +32,7 @@ fun Activity.setTheme(theme: ThemeManager.Theme) {
 
 fun ThemeManager.Theme.isPrivate(): Boolean = this == ThemeManager.Theme.Private
 
-private var temporaryThemeManagerStorage = ThemeManager.Theme.Light
+private var temporaryThemeManagerStorage = ThemeManager.Theme.Normal
 class DefaultThemeManager : ThemeManager {
     var onThemeChange: ((ThemeManager.Theme) -> Unit)? = null
 
@@ -77,9 +78,29 @@ class DefaultThemeManager : ThemeManager {
             }
 
             when (themeManager.currentTheme) {
-                ThemeManager.Theme.Light -> {
-                    window.decorView.systemUiVisibility = window.decorView.systemUiVisibility or
-                            View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                ThemeManager.Theme.Normal -> {
+                    val currentNightMode =
+                        context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+                    when (currentNightMode) {
+                        Configuration.UI_MODE_NIGHT_NO -> {
+                            window.decorView.systemUiVisibility =
+                                window.decorView.systemUiVisibility or
+                                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
+                                        View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                        }
+                        Configuration.UI_MODE_NIGHT_YES -> {
+                            window.decorView.systemUiVisibility =
+                                window.decorView.systemUiVisibility and
+                                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and
+                                        View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
+                        }
+                        Configuration.UI_MODE_NIGHT_UNDEFINED -> {
+                            window.decorView.systemUiVisibility =
+                                window.decorView.systemUiVisibility or
+                                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
+                                        View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                        }
+                    }
                 }
                 ThemeManager.Theme.Private -> {
                     window.decorView.systemUiVisibility = window.decorView.systemUiVisibility and

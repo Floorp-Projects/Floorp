@@ -75,13 +75,14 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:clickable="false"
+            android:drawableTint="@color/save_session_button_text_color"
             android:drawableStart="@drawable/ic_archive"
             android:drawablePadding="8dp"
             android:focusable="false"
             android:gravity="center"
             android:textStyle="bold"
             android:text="@string/session_save"
-            android:textColor="@color/photonWhite" />
+            android:textColor="@color/save_session_button_text_color" />
     </FrameLayout>
 
     <FrameLayout

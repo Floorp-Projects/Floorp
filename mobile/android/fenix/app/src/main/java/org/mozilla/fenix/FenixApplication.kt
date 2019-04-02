@@ -6,6 +6,8 @@ package org.mozilla.fenix
 
 import android.annotation.SuppressLint
 import android.app.Application
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.preference.PreferenceManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -20,6 +22,7 @@ import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.ktx.android.content.runOnlyInMainProcess
 import mozilla.components.support.rustlog.RustLog
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.utils.Settings
 import java.io.File
 
 @SuppressLint("Registered")
@@ -30,6 +33,7 @@ open class FenixApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        setDayNightTheme()
         val megazordEnabled = setupMegazord()
         setupLogging(megazordEnabled)
         setupCrashReporting()
@@ -136,6 +140,47 @@ open class FenixApplication : Application() {
         super.onTrimMemory(level)
         runOnlyInMainProcess {
             components.core.sessionManager.onLowMemory()
+        }
+    }
+
+    private fun setDayNightTheme() {
+        when {
+            Settings.getInstance(this).shouldUseLightTheme -> {
+                AppCompatDelegate.setDefaultNightMode(
+                    AppCompatDelegate.MODE_NIGHT_NO
+                )
+            }
+            Settings.getInstance(this).shouldUseDarkTheme -> {
+                AppCompatDelegate.setDefaultNightMode(
+                    AppCompatDelegate.MODE_NIGHT_YES
+                )
+            }
+            Settings.getInstance(this).shouldUseAutoBatteryTheme -> {
+                AppCompatDelegate.setDefaultNightMode(
+                    AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY
+                )
+            }
+            Settings.getInstance(this).shouldFollowDeviceTheme -> {
+                AppCompatDelegate.setDefaultNightMode(
+                    AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                )
+            }
+            // First run of app no default set, set the default to Follow System for 28+ and Normal Mode otherwise
+            else -> {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                    AppCompatDelegate.setDefaultNightMode(
+                        AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                    )
+                    PreferenceManager.getDefaultSharedPreferences(this).edit()
+                        .putBoolean(getString(R.string.pref_key_follow_device_theme), true).apply()
+                } else {
+                    AppCompatDelegate.setDefaultNightMode(
+                        AppCompatDelegate.MODE_NIGHT_NO
+                    )
+                    PreferenceManager.getDefaultSharedPreferences(this).edit()
+                        .putBoolean(getString(R.string.pref_key_light_theme), true).apply()
+                }
+            }
         }
     }
 }

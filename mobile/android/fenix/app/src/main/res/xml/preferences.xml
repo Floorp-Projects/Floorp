@@ -42,6 +42,11 @@
             android:key="@string/pref_key_credit_cards_addresses"
             android:title="@string/preferences_credit_cards_addresses" />
 
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_customize"
+            android:key="@string/pref_key_theme"
+            android:title="@string/preferences_theme" />
+
         <org.mozilla.fenix.settings.DefaultBrowserPreference
             android:key="@string/pref_key_make_default_browser"
             android:title="@string/preferences_set_as_default_browser" />

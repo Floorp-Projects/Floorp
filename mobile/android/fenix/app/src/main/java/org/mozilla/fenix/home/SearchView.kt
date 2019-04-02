@@ -15,7 +15,7 @@ class SearchView(context: Context, attrs: AttributeSet) : FrameLayout(context, a
     var isPrivateModeEnabled = false
 
     private val lightDrawable =
-        resources.getDrawable(R.drawable.home_search_background_light, context.theme)
+        resources.getDrawable(R.drawable.home_search_background_normal, context.theme)
     private val privateLightDrawable =
         resources.getDrawable(R.drawable.home_search_background_private, context.theme)
     private val darkDrawable =

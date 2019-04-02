@@ -15,15 +15,15 @@
         <item name="android:windowLightNavigationBar">false</item>
     </style>
 
-    <style name="LightTheme" parent="LightThemeBase">
+    <style name="NormalTheme" parent="NormalThemeBase">
         <!-- Style the status bar -->
         <!-- We have to pull in the changes from v23/styles.xml to make
             sure we also get them in 27+ -->
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightStatusBar">@bool/theme_is_light</item>
 
         <!-- Style the navigation bar -->
         <item name="android:navigationBarDividerColor">@android:color/transparent</item>
-        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightNavigationBar">@bool/theme_is_light</item>
     </style>
 </resources>

@@ -54,8 +54,9 @@ class TabsUIView(
                 actionEmitter.onNext(TabsAction.MenuTapped)
             }
 
+            // Using a color here is fine for now because private browsing does not have this button
             save_session_button_text.apply {
-                val color = ContextCompat.getColor(context, R.color.photonWhite)
+                val color = ContextCompat.getColor(context, R.color.save_session_button_text_color)
                 val drawable = ContextCompat.getDrawable(context, R.drawable.ic_archive)
                 drawable?.setTint(color)
                 this.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)

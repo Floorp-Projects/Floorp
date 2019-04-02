@@ -56,6 +56,39 @@ class Settings private constructor(context: Context) {
     val shouldRecommendedSettingsBeActivated: Boolean
         get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_recommended_settings), true)
 
+    val shouldUseLightTheme: Boolean
+        get() = preferences.getBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_light_theme),
+            false
+        )
+
+    val shouldUseDarkTheme: Boolean
+        get() = preferences.getBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_dark_theme),
+            false
+        )
+
+    val shouldFollowDeviceTheme: Boolean
+        get() = preferences.getBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_follow_device_theme),
+            false
+        )
+
+    val shouldUseAutoBatteryTheme: Boolean
+        get() = preferences.getBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_auto_battery_theme),
+            false
+        )
+
+    val themeSettingString: String
+        get() = when {
+            shouldFollowDeviceTheme -> appContext.getString(R.string.preference_follow_device_theme)
+            shouldUseAutoBatteryTheme -> appContext.getString(R.string.preference_auto_battery_theme)
+            shouldUseDarkTheme -> appContext.getString(R.string.preference_dark_theme)
+            shouldUseLightTheme -> appContext.getString(R.string.preference_light_theme)
+            else -> appContext.getString(R.string.preference_light_theme)
+        }
+
     private val autoBounceQuickActionSheetCount: Int
         get() = (preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_bounce_quick_action), 0))
 

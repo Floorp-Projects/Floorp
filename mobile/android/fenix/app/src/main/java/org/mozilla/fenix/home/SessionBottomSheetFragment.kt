@@ -4,13 +4,16 @@
 
 package org.mozilla.fenix.home
 
+import android.graphics.PorterDuff
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.session_bottom_sheet.view.*
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.sessions.ArchivedSession
@@ -41,6 +44,14 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
         view.current_session_card_tab_list.text = getTabTitles()
         view.archive_session_button.apply {
             visibility = if (sessionType is SessionType.Current) View.VISIBLE else View.GONE
+            val drawable = ContextCompat.getDrawable(context!!, R.drawable.ic_archive)
+            drawable?.setColorFilter(
+                ContextCompat.getColor(
+                    context!!,
+                    DefaultThemeManager.resolveAttribute(R.attr.iconColor, context!!)
+                ), PorterDuff.Mode.SRC_IN
+            )
+            setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
             setOnClickListener {
                 sessionType?.also {
                     if (it is SessionType.Current) {
@@ -50,6 +61,28 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
 
                 dismiss()
             }
+        }
+
+        view.delete_session_button.apply {
+            val drawable = ContextCompat.getDrawable(context!!, R.drawable.ic_delete)
+            drawable?.setColorFilter(
+                ContextCompat.getColor(
+                    context!!,
+                    DefaultThemeManager.resolveAttribute(R.attr.deleteColor, context!!)
+                ), PorterDuff.Mode.SRC_IN
+            )
+            setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
+        }
+
+        view.send_and_share_session_button.apply {
+            val drawable = ContextCompat.getDrawable(context!!, R.drawable.ic_share)
+            drawable?.setColorFilter(
+                ContextCompat.getColor(
+                    context!!,
+                    DefaultThemeManager.resolveAttribute(R.attr.iconColor, context!!)
+                ), PorterDuff.Mode.SRC_IN
+            )
+            setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
         }
 
         view.send_and_share_session_button.setOnClickListener {

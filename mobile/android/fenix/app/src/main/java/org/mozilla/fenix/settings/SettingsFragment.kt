@@ -43,6 +43,7 @@ import org.mozilla.fenix.R.string.pref_key_language
 import org.mozilla.fenix.R.string.pref_key_data_choices
 import org.mozilla.fenix.R.string.pref_key_about
 import org.mozilla.fenix.R.string.pref_key_sign_in
+import org.mozilla.fenix.R.string.pref_key_theme
 import org.mozilla.fenix.R.string.pref_key_account
 import org.mozilla.fenix.R.string.pref_key_account_category
 import org.mozilla.fenix.R.string.pref_key_search_engine_settings
@@ -75,6 +76,12 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
             findPreference<Preference>(getString(R.string.pref_key_search_engine_settings))
         searchEnginePreference?.summary = context?.let {
             requireComponents.search.searchEngineManager.getDefaultSearchEngine(it).name
+        }
+
+        val themesPreference =
+            findPreference<Preference>(getString(R.string.pref_key_theme))
+        themesPreference?.summary = context?.let {
+            org.mozilla.fenix.utils.Settings.getInstance(it).themeSettingString
         }
 
         val aboutPreference = findPreference<Preference>(getString(R.string.pref_key_about))
@@ -121,6 +128,9 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
             }
             resources.getString(pref_key_account) -> {
                 navigateToAccountSettings()
+            }
+            resources.getString(pref_key_theme) -> {
+                navigateToThemeSettings()
             }
         }
         return super.onPreferenceTreeClick(preference)
@@ -207,6 +217,11 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
 
     private fun navigateToSearchEngineSettings() {
         val directions = SettingsFragmentDirections.actionSettingsFragmentToSearchEngineFragment()
+        Navigation.findNavController(view!!).navigate(directions)
+    }
+
+    private fun navigateToThemeSettings() {
+        val directions = SettingsFragmentDirections.actionSettingsFragmentToThemeFragment()
         Navigation.findNavController(view!!).navigate(directions)
     }
 

@@ -3,57 +3,92 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
+    <!-- normal colors file-->
     <color name="color_primary">#544CD9</color>
     <color name="color_primary_dark">#202340</color>
     <color name="color_accent">#D81B60</color>
 
-    <color name="history_delete_button_background">#F2F2F5</color>
-    <color name="bookmark_favicon_background">#DFDFE3</color>
-    <color name="light_mode_text_color">#20123A</color>
-
-    <color name="awesome_bar_title_color">#212121</color>
-    <color name="awesome_bar_description_color">#6b6b6b</color>
-    <color name="search_dark_background">#F2F2F5</color>
-    <color name="search_dark_background_alternative">#E9E9ED</color>
-    <color name="search_private_background">#4f4e75</color>
-    <color name="search_dark_private_background">#42416b</color>
-    <color name="search_dark_private_background_alternative">#393863</color>
-    <color name="search_stroke">#c5c8d7</color>
-    <color name="search_stroke_alternative">#0A202340</color>
-    <color name="search_stroke_private">#2d2e5f</color>
-    <color name="search_text">#0C0C0D</color>
     <color name="off_white">#f9f9fa</color>
-    <color name="url_box_view">#E9E9ED</color>
+    <color name="secondary_text_color_normal_theme">#6b6b6b</color>
+    <color name="text_color_normal_theme">#20123A</color>
+
+    <!-- Bookmarks -->
+    <color name="bookmark_favicon_background">#DFDFE3</color>
+
+    <!-- Specific colors for dark theme -->
+    <color name="background_dark_theme">#1C1B22</color>
+    <color name="foreground_dark_theme">#32313C</color>
+    <color name="home_buttons_dark_theme">#A2A1A5</color>
+    <color name="secondaryTextColor_dark_theme">#A4A3AA</color>
+
+    <!-- Normal Theme -->
+    <color name="history_header_normal_theme">#696A6A</color>
+    <color name="history_title_normal_theme">@color/text_color_normal_theme</color>
+    <color name="history_url_normal_theme">#696A6A</color>
+    <color name="icons_normal_theme">#20123A</color>
+    <color name="disabled_icons_normal_theme">#8020233E</color>
+    <color name="status_bar_color_normal_theme">@color/off_white</color>
+    <color name="colorPrimary_normal_theme">@color/off_white</color>
+    <color name="windowBackground_normal_theme">@color/off_white</color>
+    <color name="toolbar_normal_theme">@color/off_white</color>
+    <color name="toggle_activated_normal_theme">#2E0EC1</color>
+    <color name="colorSwitchThumbNormal_normal_theme">@color/off_white</color>
+    <color name="navigationBarColorHome_normal_theme">@android:color/transparent</color>
+    <color name="navigationBarColorBrowser_normal_theme">@android:color/transparent</color>
+    <color name="homeBackgroundTopGradient_normal_theme">@color/off_white</color>
+    <color name="homeBackgroundBottomGradient_normal_theme">@color/off_white</color>
+    <color name="privateBrowsingButtonTint_normal_theme">@color/menu_button_tint_normal_theme</color>
+    <color name="browserToolbarBackground_normal_theme">@color/off_white</color>
+
+    <color name="searchBackground_normal_theme">@color/off_white</color>
+    <color name="search_stroke_normal">#c5c8d7</color>
+    <color name="search_stroke_alternative">#0A202340</color>
+
+    <color name="homeDividerColor_normal_theme">@color/photonGrey30</color>
+    <color name="sessionBackgroundColor_normal_theme">@color/photonWhite</color>
     <color name="session_border_color">#592ACB</color>
     <color name="save_session_button_color">#352F65</color>
-    <color name="light_mode_bottom_sheet_text_color">#232749</color>
-
-    <color name="icons_light_mode">#20123A</color>
-    <color name="disabled_icons_light_mode">#8020233E</color>
-
-    <color name="icons_dark_mode">@color/off_white</color>
-    <color name="disabled_icons_dark_mode">#80F9F9FA</color>
-
-    <color name="toolbar_light_mode">@color/off_white</color>
-    <color name="toolbar_dark_mode">@color/private_browsing_top_gradient</color>
-
+    <color name="save_session_button_text_color">@color/off_white</color>
+    <color name="bottom_sheet_text_color_normal_theme">#232749</color>
+    <color name="history_delete_button_background">#F2F2F5</color>
+    <color name="pillWrapperBackground_normal_theme">@color/off_white</color>
+    <color name="suggestionBackground_normal_theme">@color/photonBlue50</color>
+    <color name="library_list_item_text_color_light_mode">#202340</color>
     <color name="session_list_empty_bg">#1A665BFD</color>
     <color name="session_list_empty_fg">#544CD9</color>
     <color name="session_list_header">#6D6D6E</color>
-    <color name="session_list_private_header">#4a4671</color>
+    <color name="session_time_stamp_text_color">@color/photonInk80</color>
     <color name="delete_session_button_background">#e5e5ea</color>
+    <color name="delete_color">@color/photonRed60</color>
+    <color name="search_pill_background">#FAFAFC</color>
+    <color name="search_pill_selected_background">#2f2c61</color>
+    <color name="search_pill_primary">#202340</color>
+    <color name="awesome_bar_title_color">#212121</color>
+    <color name="awesome_bar_description_color">#6b6b6b</color>
+    <color name="search_text">#0C0C0D</color>
+    <color name="url_box_view">#E9E9ED</color>
+    <color name="menu_button_tint_normal_theme">#20123A</color>
+    <color name="search_dark_background">#F2F2F5</color>
+    <color name="search_dark_background_alternative">#E9E9ED</color>
 
-    <color name="toggle_activated_light_mode">#2E0EC1</color>
-
+    <!-- Private Theme -->
+    <color name="search_private_background">#4f4e75</color>
+    <color name="search_dark_private_background">#42416b</color>
+    <color name="search_dark_private_background_alternative">#393863</color>
+    <color name="search_stroke_private">#2d2e5f</color>
+    <color name="icons_dark_mode">@color/off_white</color>
+    <color name="disabled_icons_dark_mode">#80F9F9FA</color>
+    <color name="toolbar_dark_mode">@color/private_browsing_top_gradient</color>
+    <color name="session_list_private_header">#4a4671</color>
     <color name="private_browsing_primary">#ad3bff</color>
     <color name="private_browsing_top_gradient">#242251</color>
     <color name="private_browsing_bottom_gradient">#393862</color>
-
-    <color name="search_pill_background">#FAFAFC</color>
-    <color name="search_pill_selected_background">#2f2c61</color>
     <color name="search_pill_private_selected_background">#080639</color>
-    <color name="search_pill_primary">#202340</color>
+    <color name="history_header_private_theme">@color/photonGrey40</color>
+    <color name="history_title_private_theme">@color/off_white</color>
+    <color name="history_url_private_theme">@color/photonGrey40</color>
 
+    <!-- Library Colors -->
     <color name="library_sessions_icon_background">#B9F0FD</color>
     <color name="library_sessions_icon">#0E214A</color>
 
@@ -72,17 +107,11 @@
     <color name="library_reading_list_icon_background">#FCE98F</color>
     <color name="library_reading_list_icon">#8A201F</color>
 
-    <color name="history_header_light_theme">#696A6A</color>
-    <color name="history_title_light_theme">@color/light_mode_text_color</color>
-    <color name="history_url_light_theme">#696A6A</color>
-
-    <color name="history_header_private_theme">@color/photonGrey40</color>
-    <color name="history_title_private_theme">@color/off_white</color>
-    <color name="history_url_private_theme">@color/photonGrey40</color>
-
+    <!-- Crash Page Colors -->
     <color name="crash_page_accent">#312a65</color>
     <color name="crash_page_off_accent">#efeff2</color>
 
+    <!-- Quick Action Colors -->
     <color name="quick_action_share_icon">#174291</color>
     <color name="quick_action_share_icon_background">#b9f0fd</color>
 
@@ -90,6 +119,6 @@
     <color name="quick_action_read_icon_background">#fce98f</color>
 
     <color name="quick_action_pull_tab">#2915141A</color>
-
-    <color name="library_list_item_text_color_light_mode">#202340</color>
+    <color name="quick_action_background_normal_theme">@color/toolbar_normal_theme</color>
+    <color name="quick_action_background_private_theme">@color/toolbar_dark_mode</color>
 </resources>

@@ -137,6 +137,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_aboutFragment"
             app:destination="@id/aboutFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_themeFragment"
+            app:destination="@id/themeFragment" />
     </fragment>
     <fragment android:id="@+id/dataChoicesFragment" android:name="org.mozilla.fenix.settings.DataChoicesFragment"
               android:label="DataChoicesFragment"/>
@@ -175,4 +178,8 @@
         <action android:id="@+id/action_crashReporterFragment_to_homeFragment" app:destination="@id/homeFragment"/>
         <argument android:name="crashIntent" app:argType="android.content.Intent"/>
     </fragment>
+    <fragment
+        android:id="@+id/themeFragment"
+        android:name="org.mozilla.fenix.settings.ThemeFragment"
+        android:label="ThemeFragment" />
 </navigation>
