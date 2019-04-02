@@ -305,7 +305,8 @@ MutableModule Module::deserialize(const uint8_t* begin, size_t size,
 
   return js_new<Module>(*code, std::move(imports), std::move(exports),
                         std::move(dataSegments), std::move(elemSegments),
-                        std::move(customSections));
+                        std::move(customSections), nullptr, nullptr, nullptr,
+                        /* loggingDeserialized = */ true);
 }
 
 void Module::serialize(const LinkData& linkData,
