@@ -93,11 +93,11 @@ It returns a structure of the form:
 .. code-block:: js
 
   {
-    "categoryname.metric_name": {
-      "origin1": count1,
-      "origin2": count2,
+    "categoryname.metric_name": [
+      "origin1",
+      "origin2",
       ...
-    },
+    ],
     ...
   }
 
@@ -124,8 +124,8 @@ At this time a call to ``Telemetry.getOriginSnapshot()`` would return:
 .. code-block:: js
 
   {
-    "contentblocking.blocked": {"example.net": 1},
-    "contentblocking.exempt": {"example.com": 1},
+    "contentblocking.blocked": ["example.net"],
+    "contentblocking.exempt": ["example.com"],
   }
 
 Later, Origin Telemetry will get the encoded snapshot (clearing the storage) and assemble it with other information into a :doc:`"prio" ping <../data/prio-ping>` which will then be submitted.
