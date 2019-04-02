@@ -26,6 +26,7 @@ class SidebarRuntimeItem extends PureComponent {
       getString: PropTypes.func.isRequired,
       icon: PropTypes.string.isRequired,
       isConnected: PropTypes.bool.isRequired,
+      isConnecting: PropTypes.bool.isRequired,
       isSelected: PropTypes.bool.isRequired,
       isUnknown: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
@@ -34,19 +35,24 @@ class SidebarRuntimeItem extends PureComponent {
   }
 
   renderConnectButton() {
+    const { isConnecting } = this.props;
+    const localizationId = isConnecting
+                             ? "about-debugging-sidebar-item-connect-button-connecting"
+                             : "about-debugging-sidebar-item-connect-button";
     return Localized(
       {
-        id: "about-debugging-sidebar-item-connect-button",
+        id: localizationId,
       },
       dom.button(
         {
           className: "default-button default-button--micro js-connect-button",
+          disabled: isConnecting,
           onClick: () => {
             const { dispatch, runtimeId } = this.props;
             dispatch(Actions.connectRuntime(runtimeId));
           },
         },
-        "Connect"
+        localizationId
       )
     );
   }

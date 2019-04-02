@@ -5,6 +5,8 @@
 "use strict";
 
 const {
+  CONNECT_RUNTIME_FAILURE,
+  CONNECT_RUNTIME_START,
   CONNECT_RUNTIME_SUCCESS,
   DISCONNECT_RUNTIME_SUCCESS,
   RUNTIMES,
@@ -72,10 +74,20 @@ function _updateRuntimeById(runtimeId, updatedRuntime, state) {
 
 function runtimesReducer(state = RuntimesState(), action) {
   switch (action.type) {
+    case CONNECT_RUNTIME_START: {
+      const { id } = action;
+      return _updateRuntimeById(id, { isConnecting: true }, state);
+    }
+
     case CONNECT_RUNTIME_SUCCESS: {
       const { id, runtimeDetails, type } = action.runtime;
       remoteClientManager.setClient(id, type, runtimeDetails.clientWrapper.client);
-      return _updateRuntimeById(id, { runtimeDetails }, state);
+      return _updateRuntimeById(id, { isConnecting: false, runtimeDetails }, state);
+    }
+
+    case CONNECT_RUNTIME_FAILURE: {
+      const { id } = action;
+      return _updateRuntimeById(id, { isConnecting: false }, state);
     }
 
     case DISCONNECT_RUNTIME_SUCCESS: {
