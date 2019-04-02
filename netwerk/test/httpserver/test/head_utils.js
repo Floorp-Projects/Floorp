@@ -351,15 +351,15 @@ function runHttpTests(testArray, done) {
  */
 function RawTest(host, port, data, responseCheck) {
   if (0 > port || 65535 < port || port % 1 !== 0)
-    throw "bad port";
+    throw new Error("bad port");
   if (!(data instanceof Array))
     data = [data];
   if (data.length <= 0)
-    throw "bad data length";
+    throw new Error("bad data length");
 
   // eslint-disable-next-line no-control-regex
   if (!data.every(function(v) { return /^[\x00-\xff]*$/.test(v); }))
-    throw "bad data contained non-byte-valued character";
+    throw new Error("bad data contained non-byte-valued character");
 
   this.host = host;
   this.port = port;
