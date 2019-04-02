@@ -27,19 +27,12 @@ static mozilla::Atomic<bool, mozilla::SequentiallyConsistent,
                        mozilla::recordreplay::Behavior::DontPreserve>
     sCrashing(false);
 
-#ifndef DEBUG
-MFBT_API MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE MOZ_FORMAT_PRINTF(
-    2, 3) void MOZ_CrashPrintf(int aLine, const char* aFormat, ...)
-#else
-MFBT_API MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE
-MOZ_FORMAT_PRINTF(3, 4) void MOZ_CrashPrintf(const char* aFilename, int aLine,
-                                             const char* aFormat, ...)
-#endif
-{
+MFBT_API MOZ_COLD MOZ_NEVER_INLINE MOZ_FORMAT_PRINTF(1, 2) const
+    char* MOZ_CrashPrintf(const char* aFormat, ...) {
   if (!sCrashing.compareExchange(false, true)) {
     // In the unlikely event of a race condition, skip
     // setting the crash reason and just crash safely.
-    MOZ_REALLY_CRASH(aLine);
+    MOZ_RELEASE_ASSERT(false);
   }
   va_list aArgs;
   va_start(aArgs, aFormat);
@@ -49,11 +42,7 @@ MOZ_FORMAT_PRINTF(3, 4) void MOZ_CrashPrintf(const char* aFilename, int aLine,
   MOZ_RELEASE_ASSERT(
       ret >= 0 && size_t(ret) < sPrintfCrashReasonSize,
       "Could not write the explanation string to the supplied buffer!");
-#ifdef DEBUG
-  MOZ_Crash(aFilename, aLine, sPrintfCrashReason);
-#else
-  MOZ_Crash(nullptr, aLine, sPrintfCrashReason);
-#endif
+  return sPrintfCrashReason;
 }
 
 MOZ_END_EXTERN_C
