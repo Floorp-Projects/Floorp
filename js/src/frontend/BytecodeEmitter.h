@@ -173,6 +173,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
     void updateDepth(ptrdiff_t target);
 
+    // ---- Try notes ----
+
+    CGTryNoteList& tryNoteList() { return tryNoteList_; };
+    const CGTryNoteList& tryNoteList() const { return tryNoteList_; };
+
    private:
     // ---- Bytecode ----
 
@@ -199,6 +204,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
     // Current stack depth in script frame.
     int32_t stackDepth_ = 0;
+
+    // ---- Try notes ----
+
+    // List of emitted try notes.
+    CGTryNoteList tryNoteList_;
   };
 
   BytecodeSection bytecodeSection_;
@@ -269,7 +279,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   CGNumberList numberList;       /* double and bigint values used by script */
   CGObjectList objectList;       /* list of emitted objects */
   CGScopeList scopeList;         /* list of emitted scopes */
-  CGTryNoteList tryNoteList;     /* list of emitted try notes */
   CGScopeNoteList scopeNoteList; /* list of emitted block scope notes */
 
   // Certain ops (yield, await, gosub) have an entry in the script's
