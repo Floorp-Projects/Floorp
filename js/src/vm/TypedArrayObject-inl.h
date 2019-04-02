@@ -71,6 +71,16 @@ inline uint32_t ConvertNumber<uint32_t, float>(float src) {
 }
 
 template <>
+inline int64_t ConvertNumber<int64_t, float>(float src) {
+  return JS::ToInt64(src);
+}
+
+template <>
+inline uint64_t ConvertNumber<uint64_t, float>(float src) {
+  return JS::ToUint64(src);
+}
+
+template <>
 inline int8_t ConvertNumber<int8_t, double>(double src) {
   return JS::ToInt8(src);
 }
@@ -103,6 +113,16 @@ inline int32_t ConvertNumber<int32_t, double>(double src) {
 template <>
 inline uint32_t ConvertNumber<uint32_t, double>(double src) {
   return JS::ToUint32(src);
+}
+
+template <>
+inline int64_t ConvertNumber<int64_t, double>(double src) {
+  return JS::ToInt64(src);
+}
+
+template <>
+inline uint64_t ConvertNumber<uint64_t, double>(double src) {
+  return JS::ToUint64(src);
 }
 
 template <typename To, typename From>
@@ -147,6 +167,16 @@ template <>
 struct TypeIDOfType<uint32_t> {
   static const Scalar::Type id = Scalar::Uint32;
   static const JSProtoKey protoKey = JSProto_Uint32Array;
+};
+template <>
+struct TypeIDOfType<int64_t> {
+  static const Scalar::Type id = Scalar::BigInt64;
+  static const JSProtoKey protoKey = JSProto_BigInt64Array;
+};
+template <>
+struct TypeIDOfType<uint64_t> {
+  static const Scalar::Type id = Scalar::BigUint64;
+  static const JSProtoKey protoKey = JSProto_BigUint64Array;
 };
 template <>
 struct TypeIDOfType<float> {
@@ -331,6 +361,20 @@ class ElementSpecific {
         }
         break;
       }
+      case Scalar::BigInt64: {
+        SharedMem<int64_t*> src = data.cast<int64_t*>();
+        for (uint32_t i = 0; i < count; ++i) {
+          Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
+        }
+        break;
+      }
+      case Scalar::BigUint64: {
+        SharedMem<uint64_t*> src = data.cast<uint64_t*>();
+        for (uint32_t i = 0; i < count; ++i) {
+          Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
+        }
+        break;
+      }
       case Scalar::Float32: {
         SharedMem<float*> src = data.cast<float*>();
         for (uint32_t i = 0; i < count; ++i) {
@@ -377,12 +421,13 @@ class ElementSpecific {
       SharedMem<T*> dest =
           target->dataPointerEither().template cast<T*>() + offset;
 
-      MOZ_ASSERT(!canConvertInfallibly(MagicValue(JS_ELEMENTS_HOLE)),
-                 "the following loop must abort on holes");
+      MOZ_ASSERT(
+          !canConvertInfallibly(MagicValue(JS_ELEMENTS_HOLE), target->type()),
+          "the following loop must abort on holes");
 
       const Value* srcValues = source->as<NativeObject>().getDenseElements();
       for (; i < bound; i++) {
-        if (!canConvertInfallibly(srcValues[i])) {
+        if (!canConvertInfallibly(srcValues[i], target->type())) {
           break;
         }
         Ops::store(dest + i, infallibleValueToNative(srcValues[i]));
@@ -441,7 +486,7 @@ class ElementSpecific {
 
     const Value* srcValues = source->getDenseElements();
     for (; i < len; i++) {
-      if (!canConvertInfallibly(srcValues[i])) {
+      if (!canConvertInfallibly(srcValues[i], target->type())) {
         break;
       }
       Ops::store(dest + i, infallibleValueToNative(srcValues[i]));
@@ -560,6 +605,20 @@ class ElementSpecific {
         }
         break;
       }
+      case Scalar::BigInt64: {
+        int64_t* src = static_cast<int64_t*>(data);
+        for (uint32_t i = 0; i < len; ++i) {
+          Ops::store(dest++, ConvertNumber<T>(*src++));
+        }
+        break;
+      }
+      case Scalar::BigUint64: {
+        uint64_t* src = static_cast<uint64_t*>(data);
+        for (uint32_t i = 0; i < len; ++i) {
+          Ops::store(dest++, ConvertNumber<T>(*src++));
+        }
+        break;
+      }
       case Scalar::Float32: {
         float* src = static_cast<float*>(data);
         for (uint32_t i = 0; i < len; ++i) {
@@ -583,7 +642,10 @@ class ElementSpecific {
     return true;
   }
 
-  static bool canConvertInfallibly(const Value& v) {
+  static bool canConvertInfallibly(const Value& v, Scalar::Type type) {
+    if (type == Scalar::BigInt64 || type == Scalar::BigUint64) {
+      return false;
+    }
     return v.isNumber() || v.isBoolean() || v.isNull() || v.isUndefined();
   }
 
@@ -608,8 +670,18 @@ class ElementSpecific {
   static bool valueToNative(JSContext* cx, HandleValue v, T* result) {
     MOZ_ASSERT(!v.isMagic());
 
-    if (MOZ_LIKELY(canConvertInfallibly(v))) {
+    if (MOZ_LIKELY(canConvertInfallibly(v, TypeIDOfType<T>::id))) {
       *result = infallibleValueToNative(v);
+      return true;
+    }
+
+    if (std::is_same<T, int64_t>::value) {
+      JS_TRY_VAR_OR_RETURN_FALSE(cx, *result, ToBigInt64(cx, v));
+      return true;
+    }
+
+    if (std::is_same<T, uint64_t>::value) {
+      JS_TRY_VAR_OR_RETURN_FALSE(cx, *result, ToBigUint64(cx, v));
       return true;
     }
 

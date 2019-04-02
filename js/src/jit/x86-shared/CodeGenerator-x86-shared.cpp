@@ -413,6 +413,8 @@ void CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(
     OutOfLineLoadTypedArrayOutOfBounds* ool) {
   switch (ool->viewType()) {
     case Scalar::Int64:
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
     case Scalar::MaxTypedArrayViewType:
       MOZ_CRASH("unexpected array type");
     case Scalar::Float32:

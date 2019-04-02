@@ -28,6 +28,8 @@ var ecmaGlobals =
     {name: "Atomics", disabled: true},
     "Boolean",
     {name: "BigInt", nightly: true},
+    {name: "BigInt64Array", nightly: true},
+    {name: "BigUint64Array", nightly: true},
     {name: "ByteLengthQueuingStrategy", optional: true},
     {name: "CountQueuingStrategy", optional: true},
     "DataView",
