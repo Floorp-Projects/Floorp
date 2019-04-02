@@ -68,7 +68,12 @@ describe("project text search", () => {
   });
 
   it("should ignore sources with minified versions", async () => {
-    const source1 = makeSource("bar", { sourceMapURL: "bar:formatted" });
+    const source1 = makeSource("bar", {
+      sourceMapURL: "bar:formatted",
+      loadedState: "loaded",
+      source: "function bla(x, y) { const bar = 4; return 2;}",
+      contentType: "text/javascript"
+    });
     const source2 = makeSource("bar:formatted");
 
     const mockMaps = {
@@ -76,6 +81,7 @@ describe("project text search", () => {
         source: "function bla(x, y) {\n const bar = 4; return 2;\n}",
         contentType: "text/javascript"
       }),
+      applySourceMap: async () => {},
       getOriginalURLs: async () => [source2.url],
       getGeneratedRangesForOriginal: async () => [],
       getOriginalLocations: async items => items
@@ -98,7 +104,7 @@ describe("project text search", () => {
 
     const source = makeSource("bar");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(source));
+    await dispatch(actions.loadSourceText({ source }));
 
     dispatch(actions.addSearchQuery("bla"));
 
