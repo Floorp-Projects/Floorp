@@ -63,10 +63,25 @@ class ToolbarFeature(
      * @property registrableDomainColor Text color that should be used for the registrable domain of the URL (see
      * [PublicSuffixList.getPublicSuffixPlusOne] for an explanation of "registrable domain".
      * @property urlColor Optional text color used for the URL.
+     * @property renderStyle Sealed class that controls the style of the url to be displayed
      */
     data class UrlRenderConfiguration(
         internal val publicSuffixList: PublicSuffixList,
         @ColorInt internal val registrableDomainColor: Int,
-        @ColorInt internal val urlColor: Int? = null
+        @ColorInt internal val urlColor: Int? = null,
+        internal val renderStyle: RenderStyle = RenderStyle.ColoredUrl
     )
+
+    /**
+     * Controls how the url should be styled
+     *
+     * RegistrableDomain: displays only the url, uncolored
+     * ColoredUrl: displays the registrableDomain with color and url with another color
+     * UncoloredUrl: displays the full url, uncolored
+     */
+    sealed class RenderStyle {
+        object RegistrableDomain : RenderStyle()
+        object ColoredUrl : RenderStyle()
+        object UncoloredUrl : RenderStyle()
+    }
 }

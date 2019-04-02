@@ -10,6 +10,7 @@ import android.support.v4.content.ContextCompat
 import android.support.v7.widget.AppCompatImageButton
 import android.support.v7.widget.AppCompatImageView
 import android.support.v7.widget.AppCompatTextView
+import android.text.TextUtils
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -66,7 +67,7 @@ import mozilla.components.ui.icons.R.drawable.mozac_ic_lock
  *
  */
 @SuppressLint("ViewConstructor") // This view is only instantiated in code
-@Suppress("LargeClass")
+@Suppress("LargeClass", "TooManyFunctions")
 internal class DisplayToolbar(
     context: Context,
     val toolbar: BrowserToolbar
@@ -87,6 +88,16 @@ internal class DisplayToolbar(
         // with a value or null text behind the icon can be selectable.
         // https://github.com/mozilla-mobile/reference-browser/issues/448
         setOnClickListener(null)
+    }
+
+    internal val titleView = AppCompatTextView(context).apply {
+        id = R.id.mozac_browser_toolbar_title_view
+        gravity = Gravity.CENTER_VERTICAL
+        textSize = URL_TEXT_SIZE
+        visibility = View.GONE
+        ellipsize = TextUtils.TruncateAt.END
+
+        setSingleLine(true)
     }
 
     internal val urlView = AppCompatTextView(context).apply {
@@ -195,9 +206,18 @@ internal class DisplayToolbar(
 
     init {
         addView(siteSecurityIconView)
+        addView(titleView)
         addView(urlView)
         addView(menuView)
         addView(progressView)
+    }
+
+    /**
+     * Updates the title to be displayed.
+     */
+    fun updateTitle(title: String) {
+        titleView.text = title
+        titleView.visibility = if (title.isEmpty()) View.GONE else View.VISIBLE
     }
 
     /**
@@ -306,7 +326,8 @@ internal class DisplayToolbar(
         val height = MeasureSpec.getSize(heightMeasureSpec)
 
         val fixedHeightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-
+        val halfFixedHeightSpec = MeasureSpec
+                .makeMeasureSpec(height / MEASURED_HEIGHT_DENOMINATOR, MeasureSpec.EXACTLY)
         setMeasuredDimension(width, height)
 
         // The icon and menu fill the whole height and have a square shape
@@ -325,7 +346,15 @@ internal class DisplayToolbar(
         val urlWidth = (width - iconSize - browserActionsWidth - pageActionsWidth -
             menuWidth - navigationActionsWidth - 2 * urlBoxMargin)
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
-        urlView.measure(urlWidthSpec, fixedHeightSpec)
+
+        if (titleView.isVisible()) {
+            // With a title view, the url and title split the rest of the space vertically
+            titleView.measure(urlWidthSpec, halfFixedHeightSpec)
+            urlView.measure(urlWidthSpec, halfFixedHeightSpec)
+        } else {
+            // With no title view, the url view takes up the rest of the space
+            urlView.measure(urlWidthSpec, fixedHeightSpec)
+        }
 
         val progressHeightSpec = MeasureSpec.makeMeasureSpec(resources.pxToDp(PROGRESS_BAR_HEIGHT_DP),
                 MeasureSpec.EXACTLY)
@@ -427,10 +456,32 @@ internal class DisplayToolbar(
         //   | navigation  | icon | url       [ page    ] | browser  | menu |
         //   |   actions   |      |           [ actions ] | actions  |      |
         //   +-------------+------+-----------------------+----------+------+
-
         val iconWidth = if (siteSecurityIconView.isVisible()) siteSecurityIconView.measuredWidth else 0
         val urlLeft = navigationActionsWidth + iconWidth + urlBoxMargin
-        urlView.layout(urlLeft, 0, urlLeft + urlView.measuredWidth, measuredHeight)
+
+        // If the titleView is visible, it will appear above the URL:
+        //   +-------------+------+-----------------------+----------+------+
+        //   | navigation  | icon |  title       [ page    ] | browser  | menu |
+        //   |   actions   |      |  url         [ actions ] | actions  |      |
+        //   +-------------+------+-----------------------+----------+------+
+        if (titleView.isVisible()) {
+            val totalTextHeights = urlView.measuredHeight + titleView.measuredHeight
+            val totalAvailablePadding = height - totalTextHeights
+            val padding = totalAvailablePadding / MEASURED_HEIGHT_DENOMINATOR
+
+            titleView.layout(
+                    urlLeft,
+                    padding,
+                    urlLeft + titleView.measuredWidth,
+                    padding + titleView.measuredHeight)
+            urlView.layout(
+                    urlLeft,
+                    padding + titleView.measuredHeight,
+                    urlLeft + urlView.measuredWidth,
+                    padding + titleView.measuredHeight + urlView.measuredHeight)
+        } else {
+            urlView.layout(urlLeft, 0, urlLeft + urlView.measuredWidth, measuredHeight)
+        }
 
         // The progress bar by default is going to be drawn at the bottom of the toolbar, top if defined:
         progressView.layout(
@@ -449,6 +500,7 @@ internal class DisplayToolbar(
     }
 
     companion object {
+        internal const val MEASURED_HEIGHT_DENOMINATOR = 2
         internal const val URL_FADING_EDGE_SIZE_DP = 24
 
         const val BOTTOM_PROGRESS_BAR = 0

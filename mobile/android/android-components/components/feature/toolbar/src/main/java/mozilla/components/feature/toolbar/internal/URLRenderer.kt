@@ -59,8 +59,23 @@ internal class URLRenderer(
     internal suspend fun updateUrl(url: String) {
         if (url.isEmpty() || configuration == null) {
             setUncoloredUrl(url)
+            return
+        }
+
+        when (configuration.renderStyle) {
+            ToolbarFeature.RenderStyle.UncoloredUrl -> setUncoloredUrl(url)
+            ToolbarFeature.RenderStyle.ColoredUrl -> setColoredUrl(url, configuration)
+            ToolbarFeature.RenderStyle.RegistrableDomain -> setRegistrableDomainUrl(url)
+        }
+    }
+
+    private suspend fun setRegistrableDomainUrl(url: String) {
+        val host = url.toUri().host
+
+        if (!host.isNullOrEmpty()) {
+            toolbar.url = getRegistrableDomain(host) ?: url
         } else {
-            setColoredUrl(url, configuration)
+            toolbar.url = url
         }
     }
 
@@ -75,6 +90,10 @@ internal class URLRenderer(
 
     private fun setUncoloredUrl(url: String) {
         toolbar.url = url
+    }
+
+    private suspend fun getRegistrableDomain(host: String): CharSequence? {
+        return configuration?.publicSuffixList?.getPublicSuffixPlusOne(host)?.await()
     }
 }
 

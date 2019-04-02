@@ -22,6 +22,11 @@ import java.lang.ref.WeakReference
 @Suppress("TooManyFunctions")
 interface Toolbar {
     /**
+     * Sets/Gets the title to be displayed on the toolbar.
+     */
+    var title: String
+
+    /**
      * Sets/Gets the URL to be displayed on the toolbar.
      */
     var url: CharSequence

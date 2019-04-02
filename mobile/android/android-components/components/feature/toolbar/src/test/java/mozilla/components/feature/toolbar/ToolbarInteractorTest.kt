@@ -23,6 +23,7 @@ class ToolbarInteractorTest {
         override var url: CharSequence = ""
         override var siteSecure: Toolbar.SiteSecurity = Toolbar.SiteSecurity.INSECURE
         override var private: Boolean = false
+        override var title: String = ""
 
         override fun setSearchTerms(searchTerms: String) {
             fail()

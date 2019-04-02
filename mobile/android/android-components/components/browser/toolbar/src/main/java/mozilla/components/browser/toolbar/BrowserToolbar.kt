@@ -193,6 +193,15 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     /**
+     * Sets the colour of the text for title displayed in the toolbar.
+     */
+    var titleColor: Int
+        get() = displayToolbar.urlView.currentTextColor
+        set(value) {
+            displayToolbar.titleView.setTextColor(value)
+        }
+
+    /**
      * Sets the colour of the text for the URL/search term displayed in the toolbar.
      */
     var textColor: Int
@@ -200,6 +209,15 @@ class BrowserToolbar @JvmOverloads constructor(
         set(value) {
             displayToolbar.urlView.setTextColor(value)
             editToolbar.urlView.setTextColor(value)
+        }
+
+    /**
+     * Sets the size of the text for the title displayed in the toolbar.
+     */
+    var titleTextSize: Float
+        get() = displayToolbar.titleView.textSize
+        set(value) {
+            displayToolbar.titleView.textSize = value
         }
 
     /**
@@ -295,6 +313,13 @@ class BrowserToolbar @JvmOverloads constructor(
     private var state: State = State.DISPLAY
     private var searchTerms: String = ""
     private var urlCommitListener: ((String) -> Boolean)? = null
+
+    override var title: String = ""
+        set(value) {
+            displayToolbar.updateTitle(value)
+
+            field = value
+        }
 
     override var url: CharSequence = ""
         set(value) {
