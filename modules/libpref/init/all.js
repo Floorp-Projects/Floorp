@@ -665,7 +665,7 @@ pref("media.av1.enabled", true);
 pref("media.av1.use-dav1d", true);
 #elif defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
 pref("media.av1.enabled", true);
-pref("media.av1.use-dav1d", false);
+pref("media.av1.use-dav1d", true);
 #else
 pref("media.av1.enabled", false);
 pref("media.av1.use-dav1d", false);
