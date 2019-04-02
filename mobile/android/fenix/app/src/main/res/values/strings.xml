@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <!-- Name of the application -->
-    <string name="app_name">Fenix</string>
+    <string name="app_name">%1$s</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
@@ -13,20 +13,16 @@
     <string name="content_description_private_browsing_button">Enable private browsing</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Disable private browsing</string>
-    <!-- Explanation for how sessions work -->
-    <string name="sessions_intro_description">Sessions help you return to the sites you visit often and those you\'ve
-        just discovered. Start browsing and they\'ll begin to appear here.
-    </string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Search or enter address</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">You\'re in a private session</string>
+    <string name="private_browsing_title">You’re in a private session</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_explanation">%1$s clears your search and browsing history when you close your private
-        session. While this doesn\'t make you anonymous to websites or your internet service provider, it makes it
+        session. While this doesn’t make you anonymous to websites or your internet service provider, it makes it
         easier to keep what you do online private from anyone else who uses this device.\n\nCommon myths about private
         browsing
     </string>
@@ -151,11 +147,11 @@
     <string name="preferences_sign_out">Sign out</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing">Syncing</string>
-    <!-- Label summary indicating that sync failed along with last time it succeeded -->
+    <!-- Label summary indicating that sync failed along with a date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">Sync failed. Last success: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_failed_never_synced_summary">Sync failed. Last synced: never</string>
-    <!-- Label summary showing last time synced -->
+    <!-- Label summary  with a date stamp showing last time synced -->
     <string name="sync_last_synced_summary">Last synced: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Last synced: never</string>
@@ -218,7 +214,7 @@
     <!-- About content. Sentences are separated by two new lines -->
     <string name="about_content">
         %1$s puts you in control.
-        \n\n%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.
+        \n\n%1$s is produced by Mozilla.
     </string>
 
     <!-- Sessions -->
@@ -227,7 +223,7 @@
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">Private session</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
-    <string name="add_tab">Add Tab</string>
+    <string name="add_tab">Add tab</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Close tab</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
@@ -247,7 +243,7 @@
     <!-- Text for the button to delete a single session -->
     <string name="session_item_delete">Delete</string>
     <!-- Text to tell the user how many more tabs this session has.
-        The first parameter is how many extra tabs the session has. -->
+        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
     <string name="session_items_more">%1$d sites…</string>
 
     <!-- History -->
@@ -256,14 +252,14 @@
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Delete</string>
     <!-- Text for the button to clear selected history items. The first parameter
-        is the number of items you have selected -->
+        is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Delete %1$d items</string>
     <!-- Text for the header that groups the history for Today -->
     <string name="history_today">Today</string>
     <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">This Week</string>
+    <string name="history_this_week">This week</string>
     <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">This Month</string>
+    <string name="history_this_month">This month</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Older</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
@@ -271,7 +267,7 @@
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page -->
-    <string name="tab_crash_title">Sorry. %1$s can\'t get that tab back</string>
+    <string name="tab_crash_title">Sorry. %1$s can’t get that tab back</string>
     <!-- Description text displayed on the tab crash page -->
     <string name="tab_crash_description">You can attempt to restore or close this tab below.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
@@ -296,7 +292,7 @@
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Add folder</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Bookmark Created.</string>
+    <string name="bookmark_created_snackbar">Bookmark created.</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">EDIT</string>
 
