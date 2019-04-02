@@ -2208,6 +2208,7 @@ static bool SetProto(JSContext* cx, HandleObject obj,
     }
     newGroup->setInterpretedFunction(oldGroup->maybeInterpretedFunction());
   } else {
+    AutoRealm ar(cx, oldGroup);
     newGroup = ObjectGroup::defaultNewGroup(cx, obj->getClass(), proto);
     if (!newGroup) {
       return false;
