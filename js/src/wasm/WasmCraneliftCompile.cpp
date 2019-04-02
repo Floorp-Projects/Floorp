@@ -18,11 +18,17 @@
 
 #include "wasm/WasmCraneliftCompile.h"
 
+#include "mozilla/ScopeExit.h"
+
 #include "js/Printf.h"
 
 #include "wasm/cranelift/baldrapi.h"
 #include "wasm/cranelift/clifapi.h"
 #include "wasm/WasmGenerator.h"
+#if defined(JS_CODEGEN_X64) && defined(JS_JITSPEW) && \
+    defined(ENABLE_WASM_CRANELIFT)
+#  include "zydis/ZydisAPI.h"
+#endif
 
 #include "jit/MacroAssembler-inl.h"
 
@@ -64,6 +70,17 @@ static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
       break;
   }
   MOZ_CRASH("unknown baldrdash symbolic address");
+}
+
+static void DisassembleCode(uint8_t* code, size_t codeLen) {
+#if defined(JS_CODEGEN_X64) && defined(JS_JITSPEW) && \
+    defined(ENABLE_WASM_CRANELIFT)
+  zydisDisassemble(code, codeLen, [](const char* text) {
+                                    JitSpew(JitSpew_Codegen, "%s", text);
+                                  });
+#else
+  JitSpew(JitSpew_Codegen, "*** No disassembly available ***");
+#endif
 }
 
 static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
@@ -369,6 +386,19 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
     return false;
   }
 
+  // Disable instruction spew if we're going to disassemble after code
+  // generation, or the output will be a mess.
+
+  bool jitSpew = JitSpewEnabled(js::jit::JitSpew_Codegen);
+  if (jitSpew) {
+    DisableChannel(js::jit::JitSpew_Codegen);
+  }
+  auto reenableSpew = mozilla::MakeScopeExit([&] {
+    if (jitSpew) {
+      EnableChannel(js::jit::JitSpew_Codegen);
+    }
+  });
+
   for (const FuncCompileInput& func : inputs) {
     Decoder d(func.begin, func.end, func.lineOrBytecode, error);
 
@@ -402,6 +432,31 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
   masm.finish();
   if (masm.oom()) {
     return false;
+  }
+
+  if (jitSpew) {
+    // The disassembler uses the jitspew for output, so re-enable now.
+    EnableChannel(js::jit::JitSpew_Codegen);
+
+    uint32_t totalCodeSize = masm.currentOffset();
+    uint8_t* codeBuf = (uint8_t*)js_malloc(totalCodeSize);
+    if (codeBuf) {
+        masm.executableCopy(codeBuf, totalCodeSize);
+
+        for (const FuncCompileInput& func : inputs) {
+          JitSpew(JitSpew_Codegen, "# ========================================");
+          JitSpew(JitSpew_Codegen, "# Start of wasm cranelift code for index %d",
+                  (int)func.index);
+
+          uint32_t codeStart = code->codeRanges[func.index].begin();
+          uint32_t codeEnd = code->codeRanges[func.index].end();
+          DisassembleCode(codeBuf + codeStart, codeEnd - codeStart);
+
+          JitSpew(JitSpew_Codegen, "# End of wasm cranelift code for index %d",
+                  (int)func.index);
+        }
+        js_free(codeBuf);
+    }
   }
 
   return code->swap(masm);
