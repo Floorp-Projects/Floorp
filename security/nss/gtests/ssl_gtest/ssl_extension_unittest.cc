@@ -482,6 +482,73 @@ TEST_P(TlsExtensionTestGeneric, SupportedCurvesTrailingData) {
       client_, ssl_elliptic_curves_xtn, extension));
 }
 
+TEST_P(TlsExtensionTest12, SupportedCurvesDisableX25519) {
+  // Disable session resumption.
+  ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
+
+  // Ensure that we can enable its use in the key exchange.
+  SECStatus rv =
+      NSS_SetAlgorithmPolicy(SEC_OID_CURVE25519, NSS_USE_ALG_IN_SSL_KX, 0);
+  ASSERT_EQ(SECSuccess, rv);
+  rv = NSS_SetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY, NSS_USE_POLICY_IN_SSL,
+                              0);
+  ASSERT_EQ(SECSuccess, rv);
+
+  auto capture1 =
+      MakeTlsFilter<TlsExtensionCapture>(client_, ssl_elliptic_curves_xtn);
+  Connect();
+
+  EXPECT_TRUE(capture1->captured());
+  const DataBuffer& ext1 = capture1->extension();
+
+  uint32_t count;
+  ASSERT_TRUE(ext1.Read(0, 2, &count));
+
+  // Whether or not we've seen x25519 offered in this handshake.
+  bool seen1_x25519 = false;
+  for (size_t offset = 2; offset <= count; offset++) {
+    uint32_t val;
+    ASSERT_TRUE(ext1.Read(offset, 2, &val));
+    if (val == ssl_grp_ec_curve25519) {
+      seen1_x25519 = true;
+      break;
+    }
+  }
+  ASSERT_TRUE(seen1_x25519);
+
+  // Ensure that we can disable its use in the key exchange.
+  rv = NSS_SetAlgorithmPolicy(SEC_OID_CURVE25519, 0, NSS_USE_ALG_IN_SSL_KX);
+  ASSERT_EQ(SECSuccess, rv);
+  rv = NSS_SetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY, NSS_USE_POLICY_IN_SSL,
+                              0);
+  ASSERT_EQ(SECSuccess, rv);
+
+  // Clean up after the last run.
+  Reset();
+  auto capture2 =
+      MakeTlsFilter<TlsExtensionCapture>(client_, ssl_elliptic_curves_xtn);
+  Connect();
+
+  EXPECT_TRUE(capture2->captured());
+  const DataBuffer& ext2 = capture2->extension();
+
+  ASSERT_TRUE(ext2.Read(0, 2, &count));
+
+  // Whether or not we've seen x25519 offered in this handshake.
+  bool seen2_x25519 = false;
+  for (size_t offset = 2; offset <= count; offset++) {
+    uint32_t val;
+    ASSERT_TRUE(ext2.Read(offset, 2, &val));
+
+    if (val == ssl_grp_ec_curve25519) {
+      seen2_x25519 = true;
+      break;
+    }
+  }
+
+  ASSERT_FALSE(seen2_x25519);
+}
+
 TEST_P(TlsExtensionTestPre13, SupportedPointsEmpty) {
   const uint8_t val[] = {0x00};
   DataBuffer extension(val, sizeof(val));
