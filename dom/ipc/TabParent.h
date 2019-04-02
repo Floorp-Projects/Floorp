@@ -97,10 +97,14 @@ class TabParent final : public PBrowserParent,
   // Helper class for ContentParent::RecvCreateWindow.
   struct AutoUseNewTab;
 
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_NSIAUTHPROMPTPROVIDER
   // nsITabParent
   NS_DECL_NSITABPARENT
   // nsIDOMEventListener interfaces
   NS_DECL_NSIDOMEVENTLISTENER
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(TabParent, nsITabParent)
 
   TabParent(ContentParent* aManager, const TabId& aTabId,
             const TabContext& aContext,
@@ -458,9 +462,6 @@ class TabParent final : public PBrowserParent,
 
   bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIAUTHPROMPTPROVIDER
-
   void StartPersistence(uint64_t aOuterWindowID,
                         nsIWebBrowserPersistDocumentReceiver* aRecv,
                         ErrorResult& aRv);
@@ -611,7 +612,7 @@ class TabParent final : public PBrowserParent,
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
-  Element* mFrameElement;
+  nsCOMPtr<Element> mFrameElement;
   nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
 
   mozilla::ipc::IPCResult RecvRemotePaintIsReady();
