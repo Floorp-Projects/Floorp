@@ -1,4 +1,4 @@
-use std::slice;
+use std::{slice, vec};
 
 use syn;
 
@@ -16,7 +16,7 @@ pub enum Data<V, F> {
     Struct(Fields<F>),
 }
 
-#[deprecated(since = "0.3", note = "this has been renamed to Data")]
+#[deprecated(since = "0.3.0", note = "this has been renamed to Data")]
 pub type Body<V, F> = Data<V, F>;
 
 impl<V, F> Data<V, F> {
@@ -32,7 +32,7 @@ impl<V, F> Data<V, F> {
     /// Creates a new `Data<&'a V, &'a F>` instance from `Data<V, F>`.
     pub fn as_ref<'a>(&'a self) -> Data<&'a V, &'a F> {
         match *self {
-            Data::Enum(ref variants) => Data::Enum(variants.into_iter().collect()),
+            Data::Enum(ref variants) => Data::Enum(variants.iter().collect()),
             Data::Struct(ref data) => Data::Struct(data.as_ref()),
         }
     }
@@ -107,11 +107,7 @@ impl<V: FromVariant, F: FromField> Data<V, F> {
             syn::Data::Enum(ref data) => {
                 let mut items = Vec::with_capacity(data.variants.len());
                 let mut errors = Vec::new();
-                for v_result in data.variants
-                    .clone()
-                    .into_iter()
-                    .map(|v| FromVariant::from_variant(&v))
-                {
+                for v_result in data.variants.iter().map(FromVariant::from_variant) {
                     match v_result {
                         Ok(val) => items.push(val),
                         Err(err) => errors.push(err),
@@ -156,13 +152,14 @@ impl<V: UsesLifetimes, F: UsesLifetimes> UsesLifetimes for Data<V, F> {
     }
 }
 
+/// Equivalent to `syn::Fields`, but replaces the AST element with a generic.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Fields<T> {
     pub style: Style,
     pub fields: Vec<T>,
 }
 
-#[deprecated(since = "0.3", note = "this has been renamed to Fields")]
+#[deprecated(since = "0.3.0", note = "this has been renamed to Fields")]
 pub type VariantData<T> = Fields<T>;
 
 impl<T> Fields<T> {
@@ -181,7 +178,7 @@ impl<T> Fields<T> {
 
     /// Returns true if this variant's data makes it a newtype.
     pub fn is_newtype(&self) -> bool {
-        self.style == Style::Tuple && self.fields.len() == 1
+        self.style == Style::Tuple && self.len() == 1
     }
 
     pub fn is_unit(&self) -> bool {
@@ -216,6 +213,16 @@ impl<T> Fields<T> {
     pub fn iter(&self) -> slice::Iter<T> {
         self.fields.iter()
     }
+
+    /// Returns the number of fields in the structure.
+    pub fn len(&self) -> usize {
+        self.fields.len()
+    }
+
+    /// Returns `true` if the `Fields` contains no fields.
+    pub fn is_empty(&self) -> bool {
+        self.fields.is_empty()
+    }
 }
 
 impl<F: FromField> Fields<F> {
@@ -226,8 +233,7 @@ impl<F: FromField> Fields<F> {
                 let mut errors = Vec::new();
 
                 for field in &fields.named {
-                    let f_result = FromField::from_field(field);
-                    match f_result {
+                    match FromField::from_field(field) {
                         Ok(val) => items.push(val),
                         Err(err) => errors.push(if let Some(ref ident) = field.ident {
                             err.at(ident)
@@ -244,8 +250,7 @@ impl<F: FromField> Fields<F> {
                 let mut errors = Vec::new();
 
                 for field in &fields.unnamed {
-                    let f_result = FromField::from_field(field);
-                    match f_result {
+                    match FromField::from_field(field) {
                         Ok(val) => items.push(val),
                         Err(err) => errors.push(if let Some(ref ident) = field.ident {
                             err.at(ident)
@@ -268,6 +273,15 @@ impl<F: FromField> Fields<F> {
                 fields: items,
             })
         }
+    }
+}
+
+impl<T> IntoIterator for Fields<T> {
+    type Item = T;
+    type IntoIter = vec::IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.fields.into_iter()
     }
 }
 
@@ -314,16 +328,16 @@ pub enum Style {
 }
 
 impl Style {
-    pub fn is_unit(&self) -> bool {
-        *self == Style::Unit
+    pub fn is_unit(self) -> bool {
+        self == Style::Unit
     }
 
-    pub fn is_tuple(&self) -> bool {
-        *self == Style::Tuple
+    pub fn is_tuple(self) -> bool {
+        self == Style::Tuple
     }
 
-    pub fn is_struct(&self) -> bool {
-        *self == Style::Struct
+    pub fn is_struct(self) -> bool {
+        self == Style::Struct
     }
 
     /// Creates a new `Fields` of the specified style with the passed-in fields.

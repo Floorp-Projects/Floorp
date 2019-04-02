@@ -222,7 +222,7 @@
 //!   dynamic library libproc_macro from rustc toolchain.
 
 // Syn types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/syn/0.15.24")]
+#![doc(html_root_url = "https://docs.rs/syn/0.15.30")]
 #![cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
 #![cfg_attr(feature = "cargo-clippy", deny(clippy, clippy_pedantic))]
 // Ignored clippy lints.
@@ -230,8 +230,8 @@
     feature = "cargo-clippy",
     allow(
         block_in_if_condition_stmt,
+        cognitive_complexity,
         const_static_lifetime,
-        cyclomatic_complexity,
         deprecated_cfg_attr,
         doc_markdown,
         eval_order_dependence,
@@ -672,7 +672,8 @@ pub fn parse_str<T: parse::Parse>(s: &str) -> Result<T> {
 ///
 /// If present, either of these would be an error using `from_str`.
 ///
-/// *This function is available if Syn is built with the `"parsing"` and `"full"` features.*
+/// *This function is available if Syn is built with the `"parsing"` and
+/// `"full"` features.*
 ///
 /// # Examples
 ///
