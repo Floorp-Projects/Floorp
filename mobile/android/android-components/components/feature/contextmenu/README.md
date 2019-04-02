@@ -70,6 +70,21 @@ contextMenuFeature = ContextMenuFeature(
     customCandidates)
 ```
 
+## Facts
+
+This component emits the following [Facts](../../support/base/README.md#Facts):
+
+| Action | Item    | Extras         | Description                              |
+|--------|---------|----------------|------------------------------------------|
+| CLICK  | item    | `itemExtras`   | The user clicked on a context menu item. |
+
+
+#### `itemExtras`
+
+| Key          | Type    | Value                                      |
+|--------------|---------|--------------------------------------------|
+| item         | String  | The `id` of the menu item that was clicked |
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
