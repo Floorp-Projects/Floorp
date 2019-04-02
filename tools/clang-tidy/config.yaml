@@ -134,6 +134,7 @@ clang_checkers:
   - name: readability-misleading-indentation
   - name: readability-non-const-parameter
   - name: readability-redundant-control-flow
+  - name: readability-redundant-preprocessor
   - name: readability-redundant-smartptr-get
   - name: readability-redundant-string-cstr
   - name: readability-redundant-string-init
