@@ -119,8 +119,7 @@ Service::CollectReports(nsIHandleReportCallback *aHandleReport,
       // main-thread, like the DOM Cache and IndexedDB, and as such we must be
       // sure that we have a connection.
       MutexAutoLock lockedAsyncScope(conn->sharedAsyncExecutionMutex);
-      nsresult rv = conn->connectionReady(Connection::ASYNCHRONOUS);
-      if (NS_FAILED(rv)) {
+      if (!conn->connectionReady()) {
         continue;
       }
 
@@ -304,17 +303,14 @@ void Service::minimizeMemory() {
     RefPtr<Connection> conn = connections[i];
     // For non-main-thread owning/opening threads, we may be racing against them
     // closing their connection or their thread.  That's okay, see below.
-    nsresult rv = conn->connectionReady(Connection::ASYNCHRONOUS);
-    if (NS_FAILED(rv)) {
+    if (!conn->connectionReady()) {
       continue;
     }
 
     NS_NAMED_LITERAL_CSTRING(shrinkPragma, "PRAGMA shrink_memory");
-    nsCOMPtr<mozIStorageConnection> syncConn = do_QueryInterface(
-        NS_ISUPPORTS_CAST(mozIStorageAsyncConnection *, conn));
     bool onOpenedThread = false;
 
-    if (!syncConn) {
+    if (!conn->operationSupported(Connection::SYNCHRONOUS)) {
       // This is a mozIStorageAsyncConnection, it can only be used on the main
       // thread, so we can do a straight API call.
       nsCOMPtr<mozIStoragePendingStatement> ps;

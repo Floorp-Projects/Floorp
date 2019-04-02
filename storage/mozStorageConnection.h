@@ -236,16 +236,18 @@ class Connection final : public mozIStorageConnection,
   nsresult rollbackTransactionInternal(sqlite3 *aNativeConnection);
 
   /**
-   * Indicates if this database connection is ready and supports the given
-   * operation.
+   * Indicates if this database connection is open.
+   */
+  inline bool connectionReady() { return mDBConn != nullptr; }
+
+  /**
+   * Indicates if this database connection supports the given operation.
    *
    * @param  aOperationType
    *         The operation type, sync or async.
-   * @throws NS_ERROR_NOT_AVAILABLE if the operation isn't supported on this
-   *         connection.
-   * @throws NS_ERROR_NOT_INITIALIZED if the connection isn't set up.
+   * @return `true` if the operation is supported, `false` otherwise.
    */
-  nsresult connectionReady(ConnectionOperation aOperationType);
+  bool operationSupported(ConnectionOperation aOperationType);
 
   /**
    * Thread-aware version of connectionReady, results per caller's thread are:
@@ -345,6 +347,12 @@ class Connection final : public mozIStorageConnection,
   // Dispatch call to registered progress handler,
   // if there is one. Do nothing in other cases.
   int progressHandler();
+
+  /**
+   * Like `operationSupported`, but throws (and, in a debug build, asserts) if
+   * the operation is unsupported.
+   */
+  nsresult ensureOperationSupported(ConnectionOperation aOperationType);
 
   sqlite3 *mDBConn;
   nsCOMPtr<nsIFileURL> mFileURL;
