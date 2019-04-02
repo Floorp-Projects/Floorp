@@ -151,7 +151,12 @@ class OptimizationInfo {
       case OptimizationLevel::Normal:
         return JitOptions.normalIonWarmUpThreshold;
       case OptimizationLevel::Full:
-        return JitOptions.fullIonWarmUpThreshold;
+        if (!JitOptions.disableOptimizationLevels) {
+          return JitOptions.fullIonWarmUpThreshold;
+        }
+        // Use the 'normal' threshold so Ion uses a single optimization level,
+        // OptimizationLevel::Full.
+        return JitOptions.normalIonWarmUpThreshold;
       case OptimizationLevel::DontCompile:
       case OptimizationLevel::Wasm:
       case OptimizationLevel::Count:
