@@ -1,5 +1,6 @@
 // Tests that keyboard navigation in the search panel works as designed.
 
+const {SearchTestUtils} = ChromeUtils.import("resource://testing-common/SearchTestUtils.jsm");
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
 const oneOffsContainer = searchPopup.searchOneOffsContainer;
 
@@ -304,6 +305,50 @@ add_task(async function test_alt_up() {
      "the settings item should be selected");
   EventUtils.synthesizeKey("KEY_ArrowDown");
   ok(!textbox.selectedButton, "no one-off should be selected anymore");
+});
+
+add_task(async function test_accel_down() {
+  // Pressing accel+down should select the next visible search engine, without
+  // selecting suggestions.
+  let engines = await Services.search.getVisibleEngines();
+  let current = Services.search.defaultEngine;
+  let currIdx = -1;
+  for (let i = 0, l = engines.length; i < l; ++i) {
+    if (engines[i].name == current.name) {
+      currIdx = i;
+      break;
+    }
+  }
+  for (let i = 0, l = engines.length; i < l; ++i) {
+    EventUtils.synthesizeKey("KEY_ArrowDown", {accelKey: true});
+    await SearchTestUtils.promiseSearchNotification("engine-default", "browser-search-engine-modified");
+    let expected = engines[++currIdx % engines.length];
+    is(Services.search.defaultEngine.name, expected.name, "Default engine should have changed");
+    is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
+  }
+  Services.search.defaultEngine = current;
+});
+
+add_task(async function test_accel_up() {
+  // Pressing accel+down should select the previous visible search engine, without
+  // selecting suggestions.
+  let engines = await Services.search.getVisibleEngines();
+  let current = Services.search.defaultEngine;
+  let currIdx = -1;
+  for (let i = 0, l = engines.length; i < l; ++i) {
+    if (engines[i].name == current.name) {
+      currIdx = i;
+      break;
+    }
+  }
+  for (let i = 0, l = engines.length; i < l; ++i) {
+    EventUtils.synthesizeKey("KEY_ArrowUp", {accelKey: true});
+    await SearchTestUtils.promiseSearchNotification("engine-default", "browser-search-engine-modified");
+    let expected = engines[--currIdx < 0 ? currIdx = engines.length - 1 : currIdx];
+    is(Services.search.defaultEngine.name, expected.name, "Default engine should have changed");
+    is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
+  }
+  Services.search.defaultEngine = current;
 });
 
 add_task(async function test_tab_and_arrows() {
