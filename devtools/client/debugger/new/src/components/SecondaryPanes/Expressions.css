@@ -101,7 +101,7 @@
 
 .expression-container:hover .expression-container__close-btn,
 .expression-container__close-btn:focus-within {
-  top: calc(50% - 8px);
+  top: 0;
 }
 
 [dir="ltr"] .expression-container__close-btn {
