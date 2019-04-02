@@ -9,19 +9,16 @@ from mozbuild.util import memoize
 from .keyed_by import evaluate_keyed_by
 
 WORKER_TYPES = {
-    'aws-provisioner-v1/gecko-1-b-android': ('docker-worker', 'linux'),
     'aws-provisioner-v1/gecko-1-b-linux': ('docker-worker', 'linux'),
     'aws-provisioner-v1/gecko-1-b-linux-large': ('docker-worker', 'linux'),
     'aws-provisioner-v1/gecko-1-b-linux-xlarge': ('docker-worker', 'linux'),
     'aws-provisioner-v1/gecko-1-b-win2012': ('generic-worker', 'windows'),
     'aws-provisioner-v1/gecko-1-images': ('docker-worker', 'linux'),
-    'aws-provisioner-v1/gecko-2-b-android': ('docker-worker', 'linux'),
     'aws-provisioner-v1/gecko-2-b-linux': ('docker-worker', 'linux'),
     'aws-provisioner-v1/gecko-2-b-linux-large': ('docker-worker', 'linux'),
     'aws-provisioner-v1/gecko-2-b-linux-xlarge': ('docker-worker', 'linux'),
     'aws-provisioner-v1/gecko-2-b-win2012': ('generic-worker', 'windows'),
     'aws-provisioner-v1/gecko-2-images': ('docker-worker', 'linux'),
-    'aws-provisioner-v1/gecko-3-b-android': ('docker-worker', 'linux'),
     'aws-provisioner-v1/gecko-3-b-linux': ('docker-worker', 'linux'),
     'aws-provisioner-v1/gecko-3-b-linux-large': ('docker-worker', 'linux'),
     'aws-provisioner-v1/gecko-3-b-linux-xlarge': ('docker-worker', 'linux'),
