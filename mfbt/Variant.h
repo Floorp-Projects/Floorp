@@ -10,10 +10,10 @@
 #include <stdint.h>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
+#include <utility>
 
 #ifndef mozilla_Variant_h
 #  define mozilla_Variant_h
@@ -174,9 +174,8 @@ struct VariantImplementation<Tag, N, T> {
   }
 
   template <typename Matcher, typename ConcreteVariant>
-  static auto match(Matcher&& aMatcher, ConcreteVariant& aV)
-      -> decltype(aMatcher.match(aV.template as<N>())) {
-    return aMatcher.match(aV.template as<N>());
+  static decltype(auto) match(Matcher&& aMatcher, ConcreteVariant& aV) {
+    return aMatcher(aV.template as<N>());
   }
 };
 
@@ -229,22 +228,21 @@ struct VariantImplementation<Tag, N, T, Ts...> {
   }
 
   template <typename Matcher, typename ConcreteVariant>
-  static auto match(Matcher&& aMatcher, ConcreteVariant& aV)
-      -> decltype(aMatcher.match(aV.template as<N>())) {
+  static decltype(auto) match(Matcher&& aMatcher, ConcreteVariant& aV) {
     if (aV.template is<N>()) {
-      return aMatcher.match(aV.template as<N>());
+      return aMatcher(aV.template as<N>());
     } else {
       // If you're seeing compilation errors here like "no matching
       // function for call to 'match'" then that means that the
       // Matcher doesn't exhaust all variant types. There must exist a
-      // Matcher::match(T&) for every variant type T.
+      // Matcher::operator()(T&) for every variant type T.
       //
       // If you're seeing compilation errors here like "cannot
       // initialize return object of type <...> with an rvalue of type
-      // <...>" then that means that the Matcher::match(T&) overloads
+      // <...>" then that means that the Matcher::operator()(T&) overloads
       // are returning different types. They must all return the same
       // Matcher::ReturnType type.
-      return Next::match(aMatcher, aV);
+      return Next::match(std::forward<Matcher>(aMatcher), aV);
     }
   }
 };
@@ -423,17 +421,23 @@ struct VariantIndex {
  *       }
  *     }
  *
- *     // Good!
+ *     // Instead, a single function object (that can deal with all possible
+ *     // options) may be provided:
  *     struct FooMatcher
  *     {
  *       // The return type of all matchers must be identical.
- *       char* match(A& a) { ... }
- *       char* match(B& b) { ... }
- *       char* match(C& c) { ... }
- *       char* match(D& d) { ... } // Compile-time error to forget D!
+ *       char* operator()(A& a) { ... }
+ *       char* operator()(B& b) { ... }
+ *       char* operator()(C& c) { ... }
+ *       char* operator()(D& d) { ... } // Compile-time error to forget D!
  *     }
  *     char* foo(Variant<A, B, C, D>& v) {
  *       return v.match(FooMatcher());
+ *     }
+ *
+ *     // In some situations, a single generic lambda may also be appropriate:
+ *     char* foo(Variant<A, B, C, D>& v) {
+ *       return v.match([](auto&){...});
  *     }
  *
  * ## Examples
@@ -684,15 +688,14 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS MOZ_NON_PARAM Variant {
 
   /** Match on an immutable const reference. */
   template <typename Matcher>
-  auto match(Matcher&& aMatcher) const
-      -> decltype(Impl::match(aMatcher, *this)) {
-    return Impl::match(aMatcher, *this);
+  decltype(auto) match(Matcher&& aMatcher) const {
+    return Impl::match(std::forward<Matcher>(aMatcher), *this);
   }
 
   /** Match on a mutable non-const reference. */
   template <typename Matcher>
-  auto match(Matcher&& aMatcher) -> decltype(Impl::match(aMatcher, *this)) {
-    return Impl::match(aMatcher, *this);
+  decltype(auto) match(Matcher&& aMatcher) {
+    return Impl::match(std::forward<Matcher>(aMatcher), *this);
   }
 };
 

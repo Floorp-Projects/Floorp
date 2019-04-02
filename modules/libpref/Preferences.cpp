@@ -912,13 +912,13 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
   bool IsTypeInt() const { return IsType(PrefType::Int); }
   bool IsTypeBool() const { return IsType(PrefType::Bool); }
 
-#define FORWARD(retType, method)                                   \
-  retType method() const {                                         \
-    struct Matcher {                                               \
-      retType match(const Pref* aPref) { return aPref->method(); } \
-      retType match(SharedPref& aPref) { return aPref.method(); }  \
-    };                                                             \
-    return match(Matcher());                                       \
+#define FORWARD(retType, method)                                        \
+  retType method() const {                                              \
+    struct Matcher {                                                    \
+      retType operator()(const Pref* aPref) { return aPref->method(); } \
+      retType operator()(SharedPref& aPref) { return aPref.method(); }  \
+    };                                                                  \
+    return match(Matcher());                                            \
   }
 
   FORWARD(bool, DefaultChanged)
@@ -931,15 +931,15 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
   FORWARD(PrefType, Type)
 #undef FORWARD
 
-#define FORWARD(retType, method)                                        \
-  retType method(PrefValueKind aKind = PrefValueKind::User) const {     \
-    struct Matcher {                                                    \
-      PrefValueKind mKind;                                              \
-                                                                        \
-      retType match(const Pref* aPref) { return aPref->method(mKind); } \
-      retType match(SharedPref& aPref) { return aPref.method(mKind); }  \
-    };                                                                  \
-    return match(Matcher{aKind});                                       \
+#define FORWARD(retType, method)                                             \
+  retType method(PrefValueKind aKind = PrefValueKind::User) const {          \
+    struct Matcher {                                                         \
+      PrefValueKind mKind;                                                   \
+                                                                             \
+      retType operator()(const Pref* aPref) { return aPref->method(mKind); } \
+      retType operator()(SharedPref& aPref) { return aPref.method(mKind); }  \
+    };                                                                       \
+    return match(Matcher{aKind});                                            \
   }
 
   FORWARD(bool, GetBoolValue)
@@ -1299,11 +1299,11 @@ class PrefsIter {
   do {                                                                  \
     struct Matcher {                                                    \
       PrefsIter& mIter;                                                 \
-      type match(HashElem& pos) {                                       \
+      type operator()(HashElem& pos) {                                  \
         HashElem& end MOZ_MAYBE_UNUSED = mIter.mEnd.as<HashElem>();     \
         __VA_ARGS__;                                                    \
       }                                                                 \
-      type match(SharedElem& pos) {                                     \
+      type operator()(SharedElem& pos) {                                \
         SharedElem& end MOZ_MAYBE_UNUSED = mIter.mEnd.as<SharedElem>(); \
         __VA_ARGS__;                                                    \
       }                                                                 \
@@ -1960,8 +1960,8 @@ class nsPrefBranch final : public nsIPrefBranch,
     PrefName& operator=(const PrefName&) = delete;
 
     struct PtrMatcher {
-      static const char* match(const char* aVal) { return aVal; }
-      static const char* match(const nsCString& aVal) { return aVal.get(); }
+      const char* operator()(const char* aVal) { return aVal; }
+      const char* operator()(const nsCString& aVal) { return aVal.get(); }
     };
 
     struct CStringMatcher {
@@ -1969,26 +1969,20 @@ class nsPrefBranch final : public nsIPrefBranch,
       // method argument through to our matcher methods.
       nsACString& mStr;
 
-      void match(const char* aVal) { mStr.Assign(aVal); }
-      void match(const nsCString& aVal) { mStr.Assign(aVal); }
+      void operator()(const char* aVal) { mStr.Assign(aVal); }
+      void operator()(const nsCString& aVal) { mStr.Assign(aVal); }
     };
 
     struct LenMatcher {
-      static size_t match(const char* aVal) { return strlen(aVal); }
-      static size_t match(const nsCString& aVal) { return aVal.Length(); }
+      size_t operator()(const char* aVal) { return strlen(aVal); }
+      size_t operator()(const nsCString& aVal) { return aVal.Length(); }
     };
 
-    const char* get() const {
-      static PtrMatcher m;
-      return match(m);
-    }
+    const char* get() const { return match(PtrMatcher{}); }
 
     void get(nsACString& aStr) const { match(CStringMatcher{aStr}); }
 
-    size_t Length() const {
-      static LenMatcher m;
-      return match(m);
-    }
+    size_t Length() const { return match(LenMatcher{}); }
   };
 
   virtual ~nsPrefBranch();

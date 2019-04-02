@@ -87,13 +87,17 @@ class CrossCompartmentKey {
     struct WrappedMatcher {
       F f_;
       explicit WrappedMatcher(F f) : f_(f) {}
-      auto match(JSObject*& obj) { return f_(&obj); }
-      auto match(JSString*& str) { return f_(&str); }
-      auto match(DebuggerAndScript& tpl) { return f_(&mozilla::Get<1>(tpl)); }
-      auto match(DebuggerAndLazyScript& tpl) {
+      auto operator()(JSObject*& obj) { return f_(&obj); }
+      auto operator()(JSString*& str) { return f_(&str); }
+      auto operator()(DebuggerAndScript& tpl) {
         return f_(&mozilla::Get<1>(tpl));
       }
-      auto match(DebuggerAndObject& tpl) { return f_(&mozilla::Get<1>(tpl)); }
+      auto operator()(DebuggerAndLazyScript& tpl) {
+        return f_(&mozilla::Get<1>(tpl));
+      }
+      auto operator()(DebuggerAndObject& tpl) {
+        return f_(&mozilla::Get<1>(tpl));
+      }
     } matcher(f);
     return wrapped.match(matcher);
   }
@@ -104,15 +108,15 @@ class CrossCompartmentKey {
     struct DebuggerMatcher {
       F f_;
       explicit DebuggerMatcher(F f) : f_(f) {}
-      ReturnType match(JSObject*& obj) { return ReturnType(); }
-      ReturnType match(JSString*& str) { return ReturnType(); }
-      ReturnType match(DebuggerAndScript& tpl) {
+      ReturnType operator()(JSObject*& obj) { return ReturnType(); }
+      ReturnType operator()(JSString*& str) { return ReturnType(); }
+      ReturnType operator()(DebuggerAndScript& tpl) {
         return f_(&mozilla::Get<0>(tpl));
       }
-      ReturnType match(DebuggerAndLazyScript& tpl) {
+      ReturnType operator()(DebuggerAndLazyScript& tpl) {
         return f_(&mozilla::Get<0>(tpl));
       }
-      ReturnType match(DebuggerAndObject& tpl) {
+      ReturnType operator()(DebuggerAndObject& tpl) {
         return f_(&mozilla::Get<0>(tpl));
       }
     } matcher(f);
@@ -125,21 +129,21 @@ class CrossCompartmentKey {
 
   struct Hasher : public DefaultHasher<CrossCompartmentKey> {
     struct HashFunctor {
-      HashNumber match(JSObject* obj) {
+      HashNumber operator()(JSObject* obj) {
         return DefaultHasher<JSObject*>::hash(obj);
       }
-      HashNumber match(JSString* str) {
+      HashNumber operator()(JSString* str) {
         return DefaultHasher<JSString*>::hash(str);
       }
-      HashNumber match(const DebuggerAndScript& tpl) {
+      HashNumber operator()(const DebuggerAndScript& tpl) {
         return DefaultHasher<NativeObject*>::hash(mozilla::Get<0>(tpl)) ^
                DefaultHasher<JSScript*>::hash(mozilla::Get<1>(tpl));
       }
-      HashNumber match(const DebuggerAndLazyScript& tpl) {
+      HashNumber operator()(const DebuggerAndLazyScript& tpl) {
         return DefaultHasher<NativeObject*>::hash(mozilla::Get<0>(tpl)) ^
                DefaultHasher<LazyScript*>::hash(mozilla::Get<1>(tpl));
       }
-      HashNumber match(const DebuggerAndObject& tpl) {
+      HashNumber operator()(const DebuggerAndObject& tpl) {
         return DefaultHasher<NativeObject*>::hash(mozilla::Get<0>(tpl)) ^
                DefaultHasher<JSObject*>::hash(mozilla::Get<1>(tpl)) ^
                (mozilla::Get<2>(tpl) << 5);
