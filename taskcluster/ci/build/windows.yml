@@ -932,6 +932,7 @@ win64-aarch64/debug:
     toolchains:
         - win64-clang-cl
         - win64-aarch64-rust
+        - win64-rust-size
         - win64-cbindgen
         - win64-sccache
         - win64-nasm
@@ -969,6 +970,7 @@ win64-aarch64/opt:
     toolchains:
         - win64-clang-cl
         - win64-aarch64-rust
+        - win64-rust-size
         - win64-cbindgen
         - win64-sccache
         - win64-nasm
@@ -1100,6 +1102,7 @@ win64-aarch64-shippable-no-eme/opt:
     toolchains:
         - win64-clang-cl
         - win64-aarch64-rust
+        - win64-rust-size
         - win64-cbindgen
         - win64-nasm
         - win64-node
@@ -1143,6 +1146,7 @@ win64-aarch64-devedition-nightly/opt:
     toolchains:
         - win64-clang-cl
         - win64-aarch64-rust
+        - win64-rust-size
         - win64-cbindgen
         - win64-nasm
         - win64-node
