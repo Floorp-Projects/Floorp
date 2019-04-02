@@ -40,8 +40,7 @@ function assertValidHeader(fieldName, fieldValue, headers) {
 function assertInvalidHeader(fieldName, fieldValue, headers) {
   try {
     headers.setHeader(fieldName, fieldValue, false);
-    throw "Setting (" + fieldName + ", " +
-          fieldValue + ") as header succeeded!";
+    throw new Error(`Setting (${fieldName}, ${fieldValue}) as header succeeded!`);
   } catch (e) {
     if (e.result !== Cr.NS_ERROR_INVALID_ARG)
       do_throw("Unexpected exception thrown: " + e);
