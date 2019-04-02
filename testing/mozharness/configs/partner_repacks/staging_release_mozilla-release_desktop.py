@@ -7,7 +7,7 @@ config = {
         {
             "filename": "/builds/partner-github-ssh",
             "secret_name": "project/releng/gecko/build/level-%(scm-level)s/partner-github-ssh",
-            "min_scm_level": 3,
+            "min_scm_level": 1,
             "mode": 0o600,
         },
     ],
