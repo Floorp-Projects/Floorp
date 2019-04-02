@@ -75,6 +75,7 @@ class SidebarRuntimeItem extends PureComponent {
       {
         level: MESSAGE_LEVEL.ERROR,
         key: "connection-error",
+        className: "qa-connection-error",
       },
       Localized(
         {
@@ -99,6 +100,7 @@ class SidebarRuntimeItem extends PureComponent {
       {
         level: MESSAGE_LEVEL.WARNING,
         key: "connection-not-responding",
+        className: "qa-connection-not-responding",
       },
       Localized(
         {
