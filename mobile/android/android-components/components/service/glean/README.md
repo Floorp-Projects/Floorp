@@ -73,8 +73,12 @@ class SampleApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // Initialize the Glean library. Ideally, this is the first thing that
-        // must be done right after enabling logging.
+        // Call setUploadEnabled first, since Glean.initialize
+        // might send pings if there are any metrics queued up
+        // from a previous run.
+        Glean.setUploadEnabled(Settings.isTelemetryEnabled)
+
+        // Initialize the Glean library.
         Glean.initialize(applicationContext)
     }
 }
@@ -116,9 +120,12 @@ please refer to [Unit testing glean metrics](docs/metrics/testing-metrics.md).
 
 ### Providing UI to enable / disable metrics
 
-Every application must provide a way to disable and re-enable data collection and upload. This is
-controlled with the `glean.setUploadEnabled()` method. The application should
-provide some form of user interface to call this method.
+Every application must provide a way to disable and re-enable data collection
+and upload. This is controlled with the `glean.setUploadEnabled()` method. The
+application should provide some form of user interface to call this method.
+Additionally, it is good practice to call this method immediately before calling
+`Glean.initialize()` to ensure that glean doesn't send any pings at start up
+when telemetry is disabled.
 
 ## Debugging products using glean
 Glean exports the [`GleanDebugActivity`](src/main/java/mozilla/components/service/glean/debug/GleanDebugActivity.kt)
