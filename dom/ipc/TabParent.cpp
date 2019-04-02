@@ -145,8 +145,15 @@ namespace dom {
 
 TabParent::LayerToTabParentTable* TabParent::sLayerToTabParentTable = nullptr;
 
-NS_IMPL_ISUPPORTS(TabParent, nsITabParent, nsIAuthPromptProvider,
-                  nsISupportsWeakReference)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TabParent)
+  NS_INTERFACE_MAP_ENTRY(nsITabParent)
+  NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITabParent)
+NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION(TabParent, mFrameElement, mBrowserDOMWindow, mLoadContext, mFrameLoader, mBrowsingContext)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(TabParent)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(TabParent)
 
 TabParent::TabParent(ContentParent* aManager, const TabId& aTabId,
                      const TabContext& aContext,
@@ -1935,7 +1942,7 @@ mozilla::ipc::IPCResult TabParent::RecvRequestFocus(const bool& aCanRaise) {
   uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
   if (aCanRaise) flags |= nsIFocusManager::FLAG_RAISE;
 
-  RefPtr<Element> element = mFrameElement;
+  nsCOMPtr<Element> element = mFrameElement;
   fm->SetFocus(element, flags);
   return IPC_OK();
 }
@@ -2543,7 +2550,8 @@ already_AddRefed<nsFrameLoader> TabParent::GetFrameLoader(
     RefPtr<nsFrameLoader> fl = mFrameLoader;
     return fl.forget();
   }
-  RefPtr<nsFrameLoaderOwner> frameLoaderOwner = do_QueryObject(mFrameElement);
+  nsCOMPtr<Element> frameElement(mFrameElement);
+  RefPtr<nsFrameLoaderOwner> frameLoaderOwner = do_QueryObject(frameElement);
   return frameLoaderOwner ? frameLoaderOwner->GetFrameLoader() : nullptr;
 }
 

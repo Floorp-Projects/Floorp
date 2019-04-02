@@ -467,7 +467,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // An opener window which should be used when the docshell is created.
   nsCOMPtr<nsPIDOMWindowOuter> mOpener;
 
-  TabParent* mRemoteBrowser;
+  RefPtr<TabParent> mRemoteBrowser;
   uint64_t mChildID;
 
   // This is used when this refers to a remote sub frame
