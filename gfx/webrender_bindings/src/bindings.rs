@@ -1145,7 +1145,6 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     } else {
         gl = unsafe { gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
     }
-    gl.clear_color(0.0, 0.0, 0.0, 1.0);
 
     let version = gl.get_string(gl::VERSION);
 
@@ -1170,6 +1169,13 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     let cached_programs = match program_cache {
         Some(program_cache) => Some(Rc::clone(&program_cache.rc_get())),
         None => None,
+    };
+
+    let color = if cfg!(target_os = "android") {
+        // The color is for avoiding black flash before receiving display list.
+        ColorF::new(1.0, 1.0, 1.0, 1.0)
+    } else {
+        ColorF::new(0.0, 0.0, 0.0, 0.0)
     };
 
     let opts = RendererOptions {
@@ -1199,7 +1205,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         scene_builder_hooks: Some(Box::new(APZCallbacks::new(window_id))),
         sampler: Some(Box::new(SamplerCallback::new(window_id))),
         max_texture_size: Some(8192), // Moz2D doesn't like textures bigger than this
-        clear_color: Some(ColorF::new(0.0, 0.0, 0.0, 0.0)),
+        clear_color: Some(color),
         precache_flags,
         namespace_alloc_by_client: true,
         enable_picture_caching,
