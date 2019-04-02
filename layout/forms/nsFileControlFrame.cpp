@@ -25,6 +25,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
+#include "nsUnicodeProperties.h"
 #include "mozilla/EventStates.h"
 #include "nsTextNode.h"
 #include "nsTextFrame.h"

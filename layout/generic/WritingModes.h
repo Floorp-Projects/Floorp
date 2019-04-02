@@ -287,7 +287,7 @@ class WritingMode {
     // and hypothetical) values.  But this is fine; we only need to
     // distinguish between vertical and horizontal in
     // PhysicalAxisForLogicalAxis.
-    int wm = mWritingMode & eOrientationMask;
+    const auto wm = static_cast<uint8_t>(mWritingMode & eOrientationMask);
     return PhysicalAxisForLogicalAxis(wm, aAxis);
   }
 
@@ -362,8 +362,8 @@ class WritingMode {
     if (IsBlock(aSide)) {
       static_assert(eOrientationMask == 0x01 && eBlockFlowMask == 0x04,
                     "unexpected mask values");
-      int wm = ((mWritingMode & eBlockFlowMask) >> 1) |
-               (mWritingMode & eOrientationMask);
+      const auto wm = static_cast<uint8_t>(((mWritingMode & eBlockFlowMask) >> 1) |
+                                           (mWritingMode & eOrientationMask));
       return PhysicalSideForBlockAxis(wm, GetEdge(aSide));
     }
 
