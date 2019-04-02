@@ -6594,10 +6594,6 @@ static bool ValidateArrayView(JSContext* cx, const AsmJSGlobal& global,
     return true;
   }
 
-  if (Scalar::isBigIntType(global.viewType())) {
-    return LinkFail(cx, "bad typed array constructor");
-  }
-
   RootedValue v(cx);
   if (!GetDataProperty(cx, globalVal, global.field(), &v)) {
     return false;

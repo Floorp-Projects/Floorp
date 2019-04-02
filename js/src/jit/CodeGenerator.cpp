@@ -7585,11 +7585,11 @@ void CodeGenerator::visitTypedArrayElementShift(LTypedArrayElementShift* lir) {
   Register out = ToRegister(lir->output());
 
   static_assert(Scalar::Int8 == 0, "Int8 is the first typed array class");
-  static_assert(
-      (Scalar::BigUint64 - Scalar::Int8) == Scalar::MaxTypedArrayViewType - 1,
-      "BigUint64 is the last typed array class");
+  static_assert((Scalar::Uint8Clamped - Scalar::Int8) ==
+                    Scalar::MaxTypedArrayViewType - 1,
+                "Uint8Clamped is the last typed array class");
 
-  Label zero, one, two, three, done;
+  Label zero, one, two, done;
 
   masm.loadObjClassUnsafe(obj, out);
 
@@ -7610,22 +7610,13 @@ void CodeGenerator::visitTypedArrayElementShift(LTypedArrayElementShift* lir) {
 
   static_assert(ValidateShiftRange(Scalar::Float64, Scalar::Uint8Clamped),
                 "shift amount is three in [Float64, Uint8Clamped)");
-  masm.branchPtr(Assembler::Below, out,
+  static_assert(
+      ValidateShiftRange(Scalar::Uint8Clamped, Scalar::MaxTypedArrayViewType),
+      "shift amount is zero in [Uint8Clamped, MaxTypedArrayViewType)");
+  masm.branchPtr(Assembler::AboveOrEqual, out,
                  ImmPtr(TypedArrayObject::classForType(Scalar::Uint8Clamped)),
-                 &three);
-
-  static_assert(ValidateShiftRange(Scalar::Uint8Clamped, Scalar::BigInt64),
-                "shift amount is zero in [Uint8Clamped, BigInt64)");
-  masm.branchPtr(Assembler::Below, out,
-                 ImmPtr(TypedArrayObject::classForType(Scalar::BigInt64)),
                  &zero);
 
-  static_assert(
-      ValidateShiftRange(Scalar::BigInt64, Scalar::MaxTypedArrayViewType),
-      "shift amount is three in [BigInt64, MaxTypedArrayViewType)");
-  // Fall through for BigInt64 and BigUint64
-
-  masm.bind(&three);
   masm.move32(Imm32(3), out);
   masm.jump(&done);
 
@@ -12989,14 +12980,13 @@ void CodeGenerator::visitIsTypedArray(LIsTypedArray* lir) {
   Label done;
 
   static_assert(Scalar::Int8 == 0, "Int8 is the first typed array class");
+  static_assert((Scalar::Uint8Clamped - Scalar::Int8) ==
+                    Scalar::MaxTypedArrayViewType - 1,
+                "Uint8Clamped is the last typed array class");
   const Class* firstTypedArrayClass =
       TypedArrayObject::classForType(Scalar::Int8);
-
-  static_assert(
-      (Scalar::BigUint64 - Scalar::Int8) == Scalar::MaxTypedArrayViewType - 1,
-      "BigUint64 is the last typed array class");
   const Class* lastTypedArrayClass =
-      TypedArrayObject::classForType(Scalar::BigUint64);
+      TypedArrayObject::classForType(Scalar::Uint8Clamped);
 
   masm.loadObjClassUnsafe(object, output);
   masm.branchPtr(Assembler::Below, output, ImmPtr(firstTypedArrayClass),

@@ -2688,22 +2688,6 @@ BigInt* js::ToBigInt(JSContext* cx, HandleValue val) {
   return nullptr;
 }
 
-JS::Result<int64_t> js::ToBigInt64(JSContext* cx, HandleValue v) {
-  BigInt* bi = ToBigInt(cx, v);
-  if (!bi) {
-    return cx->alreadyReportedError();
-  }
-  return BigInt::toInt64(bi);
-}
-
-JS::Result<uint64_t> js::ToBigUint64(JSContext* cx, HandleValue v) {
-  BigInt* bi = ToBigInt(cx, v);
-  if (!bi) {
-    return cx->alreadyReportedError();
-  }
-  return BigInt::toUint64(bi);
-}
-
 double BigInt::numberValue(BigInt* x) {
   if (x->isZero()) {
     return 0.0;

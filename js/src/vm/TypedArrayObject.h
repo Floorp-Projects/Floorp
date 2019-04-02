@@ -26,9 +26,7 @@
   MACRO(uint32_t, Uint32)              \
   MACRO(float, Float32)                \
   MACRO(double, Float64)               \
-  MACRO(uint8_clamped, Uint8Clamped)   \
-  MACRO(int64_t, BigInt64)             \
-  MACRO(uint64_t, BigUint64)
+  MACRO(uint8_clamped, Uint8Clamped)
 
 namespace js {
 
@@ -131,16 +129,14 @@ class TypedArrayObject : public ArrayBufferViewObject {
   void assertZeroLengthArrayData() const {};
 #endif
 
-  template <AllowGC allowGC>
-  bool getElement(JSContext* cx, uint32_t index,
-                  typename MaybeRooted<Value, allowGC>::MutableHandleType val);
-  bool getElementPure(uint32_t index, Value* vp);
+  Value getElement(uint32_t index);
+  static void setElement(TypedArrayObject& obj, uint32_t index, double d);
 
   /*
    * Copy all elements from this typed array to vp. vp must point to rooted
    * memory.
    */
-  static bool getElements(JSContext* cx, Handle<TypedArrayObject*> tarray, Value* vp);
+  void getElements(Value* vp);
 
   static bool GetTemplateObjectForNative(JSContext* cx, Native native,
                                          const JS::HandleValueArray args,
@@ -189,8 +185,6 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static bool is(HandleValue v);
 
   static bool set(JSContext* cx, unsigned argc, Value* vp);
-
-  bool convertForSideEffect(JSContext* cx, HandleValue v) const;
 
  private:
   static bool set_impl(JSContext* cx, const CallArgs& args);
@@ -273,10 +267,6 @@ inline bool IsTypedArrayIndex(jsid id, uint64_t* indexp) {
   return StringIsTypedArrayIndex(s, length, indexp);
 }
 
-bool SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
-                          uint64_t index, HandleValue v,
-                          ObjectOpResult& result);
-
 /*
  * Implements [[DefineOwnProperty]] for TypedArrays when the property
  * key is a TypedArray index.
@@ -298,8 +288,6 @@ static inline constexpr unsigned TypedArrayShift(Scalar::Type viewType) {
     case Scalar::Uint32:
     case Scalar::Float32:
       return 2;
-    case Scalar::BigInt64:
-    case Scalar::BigUint64:
     case Scalar::Int64:
     case Scalar::Float64:
       return 3;
