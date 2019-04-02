@@ -14,27 +14,41 @@
     const done = window.opener.wrappedJSObject.done;
     const SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 
-    function crashObserver(subject, topic, data) {
-      is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
-      ok(subject instanceof Ci.nsIPropertyBag2,
-         'Subject implements nsIPropertyBag2.');
-
-      var dumpID;
-      if ('nsICrashReporter' in Ci) {
-        dumpID = subject.getPropertyAsAString('dumpID');
-        ok(dumpID, "dumpID is present and not an empty string");
-      }
-
-      Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');
-      done();
-    }
-
-    Services.obs.addObserver(crashObserver, 'ipc:content-shutdown');
-
     // Allow the browser to get connected before using the messageManager to cause
     // a crash:
     addEventListener("DOMContentLoaded", () => {
-      BrowserTestUtils.crashBrowser(document.getElementById('thebrowser'), true, false);
+      let browser = document.getElementById('thebrowser');
+
+      let observerPromise = new Promise(resolve => {
+        let crashObserver = (subject, topic, data) => {
+          is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
+          ok(subject instanceof Ci.nsIPropertyBag2,
+             'Subject implements nsIPropertyBag2.');
+
+          var dumpID;
+          if ('nsICrashReporter' in Ci) {
+            dumpID = subject.getPropertyAsAString('dumpID');
+            ok(dumpID, "dumpID is present and not an empty string");
+          }
+
+          Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');
+          resolve();
+        }
+
+        Services.obs.addObserver(crashObserver, 'ipc:content-shutdown');
+      });
+
+      let browsingContextId = browser.frameLoader.browsingContext.id;
+
+      let eventFiredPromise = BrowserTestUtils.waitForEvent(browser, "oop-browser-crashed");
+      let eventPromise = eventFiredPromise.then(event => {
+        is(event.browsingContextId, browsingContextId,
+           "Expected the right browsing context id on the oop-browser-crashed event.");
+      })
+
+      BrowserTestUtils.crashBrowser(browser, true, false);
+
+      Promise.all([observerPromise, eventPromise]).then(done);
     });
   ]]></script>
 
