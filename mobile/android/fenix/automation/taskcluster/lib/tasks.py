@@ -18,12 +18,12 @@ _OFFICIAL_REPO_URL = 'https://github.com/mozilla-mobile/fenix'
 
 class TaskBuilder(object):
     def __init__(
-        self, task_id, repo_url, branch, commit, owner, source, scheduler_id, date_string,
+        self, task_id, repo_url, git_ref, commit, owner, source, scheduler_id, date_string,
         tasks_priority='lowest', trust_level=1
     ):
         self.task_id = task_id
         self.repo_url = repo_url
-        self.branch = branch
+        self.git_ref = git_ref
         self.commit = commit
         self.owner = owner
         self.source = source
@@ -130,7 +130,7 @@ class TaskBuilder(object):
     def _craft_branch_routes(self, variant):
         routes = []
 
-        if self.repo_url == _OFFICIAL_REPO_URL and self.branch == 'refs/heads/master':
+        if self.repo_url == _OFFICIAL_REPO_URL and self.git_ref == 'refs/heads/master':
             architecture, build_type, product = \
                 _get_architecture_and_build_type_and_product_from_variant(variant)
             product = convert_camel_case_into_kebab_case(product)
@@ -138,17 +138,17 @@ class TaskBuilder(object):
 
             routes = [
                 'index.project.mobile.fenix.branch.{}.revision.{}.{}.{}'.format(
-                    self.branch, self.commit, product, postfix
+                    self.git_ref, self.commit, product, postfix
                 ),
                 'index.project.mobile.fenix.branch.{}.latest.{}.{}'.format(
-                    self.branch, product, postfix
+                    self.git_ref, product, postfix
                 ),
                 'index.project.mobile.fenix.branch.{}.pushdate.{}.{}.{}.revision.{}.{}.{}'.format(
-                    self.branch, self.date.year, self.date.month, self.date.day, self.commit,
+                    self.git_ref, self.date.year, self.date.month, self.date.day, self.commit,
                     product, postfix
                 ),
                 'index.project.mobile.fenix.branch.{}.pushdate.{}.{}.{}.latest.{}.{}'.format(
-                    self.branch. self.date.year, self.date.month, self.date.day, product, postfix
+                    self.git_ref. self.date.year, self.date.month, self.date.day, product, postfix
                 ),
             ]
         return routes
@@ -243,7 +243,7 @@ class TaskBuilder(object):
             "git fetch {} {} --tags && "
             "git config advice.detachedHead false && "
             "git checkout {}".format(
-                self.repo_url, self.branch, self.commit
+                self.repo_url, self.git_ref, self.commit
             )
         )
 
