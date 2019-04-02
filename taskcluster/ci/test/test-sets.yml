@@ -274,6 +274,9 @@ windows-talos:
 marionette-gpu-tests:
     - marionette-gpu
 
+marionette-media-tests:
+    - marionette-media
+
 macosx64-tests:
     - cppunit
     - crashtest

@@ -1872,6 +1872,10 @@ VARIABLES = {
         """List of manifest files defining mochitest chrome tests.
         """),
 
+    'MARIONETTE_DOM_MEDIA_MANIFESTS': (ManifestparserManifestList, list,
+        """List of manifest files defining marionette-media tests.
+        """),
+
     'MOCHITEST_MANIFESTS': (ManifestparserManifestList, list,
         """List of manifest files defining mochitest tests.
         """),
