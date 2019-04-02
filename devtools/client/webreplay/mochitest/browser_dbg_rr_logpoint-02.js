@@ -34,7 +34,7 @@ add_task(async function() {
     { logValue: `"Logpoint Number " + number`, condition: `number % 2 == 0` });
   await waitForMessageCount(hud, "Logpoint", 6);
 
-  await dbg.actions.removeAllBreakpoints();
+  await dbg.actions.removeAllBreakpoints(getContext(dbg));
 
   await toolbox.destroy();
   await gBrowser.removeTab(tab);
