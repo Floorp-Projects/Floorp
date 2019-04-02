@@ -4,10 +4,6 @@
 
 package org.mozilla.fenix.settings
 
-import android.Manifest.permission.ACCESS_COARSE_LOCATION
-import android.Manifest.permission.CAMERA
-import android.Manifest.permission.RECORD_AUDIO
-import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
@@ -33,7 +29,6 @@ import androidx.fragment.app.Fragment
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
-import mozilla.components.support.ktx.android.content.isPermissionGranted
 import org.mozilla.fenix.R
 
 class SitePermissionsManagePhoneFeature : Fragment() {
@@ -126,13 +121,6 @@ class SitePermissionsManagePhoneFeature : Fragment() {
         }
     }
 
-    enum class PhoneFeature(val id: Int) {
-        CAMERA(CAMERA_PERMISSION),
-        LOCATION(LOCATION_PERMISSION),
-        MICROPHONE(MICROPHONE_PERMISSION),
-        NOTIFICATION(NOTIFICATION_PERMISSION)
-    }
-
     private val PhoneFeature.label: String
         get() {
             return when (this) {
@@ -143,18 +131,9 @@ class SitePermissionsManagePhoneFeature : Fragment() {
             }
         }
 
-    @Suppress("SpreadOperator")
     private val PhoneFeature.isAndroidPermissionGranted: Boolean
         get() {
-            val permissions = when (this) {
-                PhoneFeature.CAMERA -> arrayOf(CAMERA)
-                PhoneFeature.LOCATION -> arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)
-                PhoneFeature.MICROPHONE -> arrayOf(RECORD_AUDIO)
-                PhoneFeature.NOTIFICATION -> {
-                    return true
-                }
-            }
-            return requireContext().isPermissionGranted(*permissions)
+            return this.isAndroidPermissionGranted(requireContext())
         }
 
     private fun Int.toPhoneFeature(): PhoneFeature {

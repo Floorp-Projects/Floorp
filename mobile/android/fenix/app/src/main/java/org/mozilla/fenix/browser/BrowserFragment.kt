@@ -67,6 +67,7 @@ import org.mozilla.fenix.quickactionsheet.QuickActionAction
 import org.mozilla.fenix.quickactionsheet.QuickActionComponent
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment
 
 class BrowserFragment : Fragment(), BackHandler {
     private lateinit var toolbarComponent: ToolbarComponent
@@ -254,6 +255,17 @@ class BrowserFragment : Fragment(), BackHandler {
                 owner = this,
                 view = view
             )
+        }
+        toolbarComponent.getView().setOnSiteSecurityClickedListener {
+            sessionId?.run {
+                val session = requireNotNull(requireContext().components.core.sessionManager.findSessionById(this))
+                val quickSettingsSheet = QuickSettingsSheetDialogFragment.newInstance(
+                    url = session.url,
+                    isSecured = session.securityInfo.secure,
+                    isSiteInExceptionList = false
+                )
+                quickSettingsSheet.show(requireFragmentManager(), QuickSettingsSheetDialogFragment.FRAGMENT_TAG)
+            }
         }
     }
 

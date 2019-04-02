@@ -117,8 +117,12 @@ class Settings private constructor(context: Context) {
     }
 
     fun getSitePermissionsPhoneFeatureCameraAction(): SitePermissionsRules.Action {
-        return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_camera), 1)
-            .toSitePermissionsRulesAction()
+        return if (shouldRecommendedSettingsBeActivated) {
+            getSitePermissionsRecommendedSettingsRules().camera
+        } else {
+            preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_camera), 1)
+                .toSitePermissionsRulesAction()
+        }
     }
 
     fun setSitePermissionsPhoneFeatureMicrophoneAction(action: SitePermissionsRules.Action) {
@@ -128,8 +132,12 @@ class Settings private constructor(context: Context) {
     }
 
     fun getSitePermissionsPhoneFeatureMicrophoneAction(): SitePermissionsRules.Action {
-        return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_microphone), 1)
-            .toSitePermissionsRulesAction()
+        return if (shouldRecommendedSettingsBeActivated) {
+            getSitePermissionsRecommendedSettingsRules().microphone
+        } else {
+            preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_microphone), 1)
+                .toSitePermissionsRulesAction()
+        }
     }
 
     fun setSitePermissionsPhoneFeatureNotificationAction(action: SitePermissionsRules.Action) {
@@ -139,8 +147,12 @@ class Settings private constructor(context: Context) {
     }
 
     fun getSitePermissionsPhoneFeatureNotificationAction(): SitePermissionsRules.Action {
-        return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_notification), 1)
-            .toSitePermissionsRulesAction()
+        return if (shouldRecommendedSettingsBeActivated) {
+            getSitePermissionsRecommendedSettingsRules().notification
+        } else {
+            return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_notification), 1)
+                .toSitePermissionsRulesAction()
+        }
     }
 
     fun setSitePermissionsPhoneFeatureLocation(action: SitePermissionsRules.Action) {
@@ -150,8 +162,12 @@ class Settings private constructor(context: Context) {
     }
 
     fun getSitePermissionsPhoneFeatureLocation(): SitePermissionsRules.Action {
-        return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_location), 1)
-            .toSitePermissionsRulesAction()
+        return if (shouldRecommendedSettingsBeActivated) {
+            getSitePermissionsRecommendedSettingsRules().location
+        } else {
+            preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_location), 1)
+                .toSitePermissionsRulesAction()
+        }
     }
 
     fun getSitePermissionsRecommendedSettingsRules() = SitePermissionsRules(

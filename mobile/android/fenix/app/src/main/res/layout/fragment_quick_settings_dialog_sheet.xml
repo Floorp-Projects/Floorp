@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/quick_action_sheet"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/quick_settings_sheet"
+        android:background="?attr/toolbarColor">
+
+    <TextView
+            android:id="@+id/url"
+            style="@style/QuickSettingsText"
+            android:layout_height="@dimen/quicksettings_item_height"
+            android:layout_width="wrap_content"
+            tools:text="https://wikipedia.org"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+            android:id="@+id/security_info"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_height="@dimen/quicksettings_item_height"
+            android:layout_width="wrap_content"
+            tools:drawableStartCompat="@drawable/mozac_ic_lock"
+            tools:drawableTint="@color/photonGreen50"
+            tools:text="Secure connection"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/url"/>
+
+    <View
+            android:id="@+id/line_divider"
+            android:layout_width="match_parent"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_height="1dp"
+            android:background="?attr/homeDividerColor"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/security_info"/>
+
+    <TextView
+            android:id="@+id/camera_icon"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_height="@dimen/quicksettings_item_height"
+            android:layout_width="wrap_content"
+            app:drawableStartCompat="@drawable/ic_camera"
+            android:text="@string/preference_phone_feature_camera"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line_divider"/>
+
+    <TextView
+            android:id="@+id/camera_action_label"
+            android:layout_height="@dimen/quicksettings_item_height"
+            android:layout_width="wrap_content"
+            style="@style/QuickSettingsText.PermissionItemEnd"
+            tools:text="Allowed"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line_divider"/>
+
+    <TextView
+            android:id="@+id/microphone_icon"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/quicksettings_item_height"
+            app:drawableStartCompat="@drawable/ic_microphone"
+            android:text="@string/preference_phone_feature_microphone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/camera_icon"/>
+
+
+    <TextView
+            android:id="@+id/microphone_action_label"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/quicksettings_item_height"
+            style="@style/QuickSettingsText.PermissionItemEnd"
+            tools:text="Blocked by Android"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/camera_action_label"/>
+
+    <TextView
+            android:id="@+id/notification_icon"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/quicksettings_item_height"
+            app:drawableStartCompat="@drawable/ic_notification"
+            android:text="@string/preference_phone_feature_notification"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/microphone_icon"/>
+
+    <TextView
+            android:id="@+id/notification_action_label"
+            style="@style/QuickSettingsText.PermissionItemEnd"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/quicksettings_item_height"
+            tools:text="Blocked"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/microphone_action_label"/>
+
+    <TextView
+            android:id="@+id/location_icon"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/quicksettings_item_height"
+            app:drawableStartCompat="@drawable/ic_location"
+            android:text="@string/preference_phone_feature_location"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/notification_icon"/>
+
+    <TextView
+            android:id="@+id/location_action_label"
+            style="@style/QuickSettingsText.PermissionItemEnd"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/quicksettings_item_height"
+            tools:text="Blocked"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/notification_action_label"/>
+
+    <TextView
+            android:id="@+id/manage_site_permissions"
+            style="@style/QuickSettingsText"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/quicksettings_item_height"
+            android:textColor="@color/photonBlue50"
+            android:background="?android:attr/selectableItemBackground"
+            android:text="@string/quick_settings_sheet_manage_site_permissions"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/location_icon"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

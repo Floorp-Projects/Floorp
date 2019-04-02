@@ -12,11 +12,10 @@ import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
-import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature
-import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature.NOTIFICATION
-import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature.LOCATION
-import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature.CAMERA
-import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature.MICROPHONE
+import org.mozilla.fenix.settings.PhoneFeature.NOTIFICATION
+import org.mozilla.fenix.settings.PhoneFeature.LOCATION
+import org.mozilla.fenix.settings.PhoneFeature.CAMERA
+import org.mozilla.fenix.settings.PhoneFeature.MICROPHONE
 import org.mozilla.fenix.utils.Settings
 
 @SuppressWarnings("TooManyFunctions")

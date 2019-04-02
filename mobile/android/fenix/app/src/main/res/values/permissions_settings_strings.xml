@@ -39,6 +39,8 @@
     <string name="preference_option_phone_feature_block">Block</string>
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">Blocked by Android</string>
+    <!--Label that indicates that a user hasn't select a value for a site permission-->
+    <string name="phone_feature_no_decision">No Decision</string>
     <!-- Alternative explanation label that is shown when a permissions like (camera,location and microphone) is required, this indicate to the user how to enable the permission via Android settings %1$s indicate the name of the permission (camera,location and microphone)  -->
     <string name="phone_feature_blocked_by_android_explanation"><![CDATA[
         To allow it: <br/><br/> 1. Go to Android Settings <br/><br/>2. Tap <b>Permissions</b> <br/><br/> 3. Toggle <b>%1$s</b> to ON
@@ -47,4 +49,14 @@
     <string name="phone_feature_recommended">Recommended</string>
     <!--Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Go to Settings</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet-->
+    <string name="quick_settings_sheet">Quick settings sheet</string>
+
+    <!--Label that indicates a site is using a secure connection-->
+    <string name="quick_settings_sheet_secure_connection">Secure Connection</string>
+    <!--Label that indicates a site is using a insecure connection-->
+    <string name="quick_settings_sheet_insecure_connection">Insecure Connection</string>
+    <!--button that allows editing site permissions settings-->
+    <string name="quick_settings_sheet_manage_site_permissions">Manage site permissions</string>
 </resources>

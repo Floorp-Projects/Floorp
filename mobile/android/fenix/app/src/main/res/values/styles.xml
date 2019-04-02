@@ -222,4 +222,23 @@
     <style name="progressBarStyleHorizontal" parent="@style/Widget.AppCompat.ProgressBar.Horizontal">
         <item name="android:progressDrawable">@drawable/progress_gradient</item>
     </style>
+
+        <style name="QuickSettingsText">
+            <item name="android:textColor">?attr/toolbarTextColor</item>
+            <item name="android:textSize">14sp</item>
+            <item name="android:paddingStart">16dp</item>
+            <item name="android:gravity">center_vertical</item>
+            <item name="android:layout_alignParentStart">true</item>
+        </style>
+
+        <style name="QuickSettingsText.Icon">
+            <item name="android:drawablePadding">8dp</item>
+        </style>
+
+        <style name="QuickSettingsText.PermissionItemEnd">
+            <item name="android:layout_alignParentEnd">true</item>
+            <item name="android:paddingEnd">24dp</item>
+            <item name="android:gravity">end|center_vertical</item>
+            <item name="android:background">?android:attr/selectableItemBackground</item>
+        </style>
 </resources>

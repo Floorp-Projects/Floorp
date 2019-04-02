@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings
 
 import android.content.Context
+import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import org.mozilla.fenix.R
 
@@ -15,6 +16,20 @@ internal fun SitePermissionsRules.Action.toString(context: Context): String {
         }
         SitePermissionsRules.Action.BLOCKED -> {
             context.getString(R.string.preference_option_phone_feature_block)
+        }
+    }
+}
+
+internal fun SitePermissions.Status.toString(context: Context): String {
+    return when (this) {
+        SitePermissions.Status.BLOCKED -> {
+            context.getString(R.string.preference_option_phone_feature_block)
+        }
+        SitePermissions.Status.NO_DECISION -> {
+            context.getString(R.string.preference_option_phone_feature_ask_to_allow)
+        }
+        SitePermissions.Status.ALLOWED -> {
+            context.getString(R.string.phone_feature_no_decision)
         }
     }
 }
