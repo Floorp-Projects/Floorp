@@ -76,6 +76,7 @@ class MachCommands(MachCommandBase):
                      action='store_true',
                      help='Verbose output.')
     @CommandArgument('--python',
+                     default='2.7',
                      help='Version of Python for Pipenv to use. When given a '
                           'Python version, Pipenv will automatically scan your '
                           'system for a Python that matches that given version.')
@@ -108,7 +109,6 @@ class MachCommands(MachCommandBase):
                          jobs=None,
                          python=None,
                          **kwargs):
-        python = python or self.virtualenv_manager.python_path
         self.activate_pipenv(pipfile=None, populate=True, python=python)
 
         if test_objects is None:
