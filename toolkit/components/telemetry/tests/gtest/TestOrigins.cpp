@@ -5,14 +5,20 @@
 
 #include "core/TelemetryOrigin.h"
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
+#include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
+#include "nsIObserverService.h"
 #include "TelemetryFixture.h"
 #include "TelemetryTestHelpers.h"
 
 using namespace mozilla;
 using namespace TelemetryTestHelpers;
 using mozilla::Telemetry::OriginMetricID;
+using ::testing::_;
+using ::testing::AtLeast;
+using ::testing::StrEq;
 
 // Test that we can properly record origin stuff using the C++ API.
 TEST_F(TelemetryTestFixture, RecordOrigin) {
@@ -151,4 +157,42 @@ TEST_F(TelemetryTestFixture, EncodedSnapshot) {
       << "bStr (" << NS_ConvertUTF16toUTF8(bStr).get()
       << ") must not equal secondBStr ("
       << NS_ConvertUTF16toUTF8(secondBStr).get() << ")";
+}
+
+class MockObserver final : public nsIObserver {
+ public:
+  NS_DECL_ISUPPORTS
+
+  MOCK_METHOD1(Mobserve, void(const char* aTopic));
+  NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
+                     const char16_t* aData) override {
+    Mobserve(aTopic);
+    return NS_OK;
+  };
+
+  MockObserver() = default;
+
+ private:
+  ~MockObserver() = default;
+};
+
+NS_IMPL_ISUPPORTS(MockObserver, nsIObserver);
+
+TEST_F(TelemetryTestFixture, OriginTelemetryNotifiesTopic) {
+  const char* kTopic = "origin-telemetry-storage-limit-reached";
+  NS_NAMED_LITERAL_CSTRING(doubleclick, "doubleclick.de");
+
+  MockObserver* mo = new MockObserver();
+  nsCOMPtr<nsIObserver> nsMo(mo);
+  EXPECT_CALL(*mo, Mobserve(StrEq(kTopic))).Times(1);
+
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  ASSERT_TRUE(os);
+  os->AddObserver(nsMo, kTopic, false);
+
+  for (int i = 0; i < 10; ++i) {
+    Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
+  }
+
+  os->RemoveObserver(nsMo, kTopic);
 }
