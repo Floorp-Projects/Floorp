@@ -289,7 +289,8 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
    * graph thread.
    */
   void AudioContextOperationCompleted(MediaStream* aStream, void* aPromise,
-                                      dom::AudioContextOperation aOperation);
+                                      dom::AudioContextOperation aOperation,
+                                      dom::AudioContextOperationFlags aFlags);
 
   /**
    * Apply and AudioContext operation (suspend/resume/closed), on the graph
@@ -298,7 +299,8 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
   void ApplyAudioContextOperationImpl(MediaStream* aDestinationStream,
                                       const nsTArray<MediaStream*>& aStreams,
                                       dom::AudioContextOperation aOperation,
-                                      void* aPromise);
+                                      void* aPromise,
+                                      dom::AudioContextOperationFlags aSource);
 
   /**
    * Increment suspend count on aStream and move it to mSuspendedStreams if
