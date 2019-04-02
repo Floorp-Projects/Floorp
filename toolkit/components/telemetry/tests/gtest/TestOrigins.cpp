@@ -120,6 +120,68 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceAndClear) {
   ASSERT_EQ(ids.length(), (unsigned)0) << "Returned object must be empty.";
 }
 
+TEST_F(TelemetryTestFixture, RecordUnknownOrigin) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+  JSContext* aCx = cx.GetJSContext();
+
+  Unused << mTelemetry->ClearOrigins();
+
+  const nsLiteralCString telemetryTest1("telemetry.test_test1");
+  const nsLiteralCString unknown("this origin isn't known to Origin Telemetry");
+  const nsLiteralCString unknown2("neither is this one");
+
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, unknown);
+
+  JS::RootedValue originSnapshot(aCx);
+  GetOriginSnapshot(aCx, &originSnapshot);
+
+  ASSERT_FALSE(originSnapshot.isNullOrUndefined())
+      << "Origin snapshot must not be null/undefined.";
+
+  JS::RootedValue origins(aCx);
+  JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
+  ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj, telemetryTest1.get(), &origins))
+      << "telemetry.test_test1 must be in the snapshot.";
+
+  JS::RootedObject originsObj(aCx, &origins.toObject());
+  bool isArray = false;
+  ASSERT_TRUE(JS_IsArrayObject(aCx, originsObj, &isArray) && isArray)
+      << "The metric's origins must be in an array.";
+
+  uint32_t length = 0;
+  ASSERT_TRUE(JS_GetArrayLength(aCx, originsObj, &length) && length == 1)
+      << "Length of returned array must be 1.";
+
+  JS::RootedValue origin(aCx);
+  ASSERT_TRUE(JS_GetElement(aCx, originsObj, 0, &origin));
+  ASSERT_TRUE(origin.isString());
+  nsAutoJSString jsStr;
+  ASSERT_TRUE(jsStr.init(aCx, origin));
+  ASSERT_TRUE(NS_ConvertUTF16toUTF8(jsStr) == nsLiteralCString("__UNKNOWN__"))
+      << "Unknown origin must be faithfully stored and snapshotted.";
+
+  // Record a second, different unknown origin and ensure only one is stored.
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, unknown2);
+
+  GetOriginSnapshot(aCx, &originSnapshot);
+
+  ASSERT_FALSE(originSnapshot.isNullOrUndefined())
+      << "Origin snapshot must not be null/undefined.";
+
+  JS::RootedObject snapshotObj2(aCx, &originSnapshot.toObject());
+  ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj2, telemetryTest1.get(), &origins))
+      << "telemetry.test_test1 must be in the snapshot.";
+
+  JS::RootedObject originsObj2(aCx, &origins.toObject());
+  isArray = false;
+  ASSERT_TRUE(JS_IsArrayObject(aCx, originsObj2, &isArray) && isArray)
+      << "The metric's origins must be in an array.";
+
+  length = 0;
+  ASSERT_TRUE(JS_GetArrayLength(aCx, originsObj2, &length) && length == 1)
+      << "Length of returned array must be 1.";
+}
+
 TEST_F(TelemetryTestFixture, EncodedSnapshot) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
   JSContext* aCx = cx.GetJSContext();
