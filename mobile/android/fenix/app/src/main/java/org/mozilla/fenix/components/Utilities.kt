@@ -10,6 +10,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import org.mozilla.fenix.ext.components
 
 /**
  * Component group for miscellaneous components.
@@ -33,6 +34,6 @@ class Utilities(
     }
 
     val icons by lazy {
-        BrowserIcons(context)
+        BrowserIcons(context, context.components.core.client)
     }
 }

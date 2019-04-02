@@ -21,6 +21,7 @@ import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import kotlin.coroutines.CoroutineContext
 
 class BookmarkAdapter(val actionEmitter: Observer<BookmarkAction>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -164,7 +165,7 @@ class BookmarkAdapter(val actionEmitter: Observer<BookmarkAction>) : RecyclerVie
 
             if (item.url?.startsWith("http") == true) {
                 launch(Dispatchers.IO) {
-                    val bitmap = BrowserIcons(bookmark_favicon.context)
+                    val bitmap = BrowserIcons(bookmark_favicon.context, bookmark_layout.context.components.core.client)
                         .loadIcon(IconRequest(item.url!!)).await().bitmap
                     launch(Dispatchers.Main) {
                         bookmark_favicon.setImageBitmap(bitmap)
