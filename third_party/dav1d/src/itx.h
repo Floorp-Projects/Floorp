@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_ITX_H__
-#define __DAV1D_SRC_ITX_H__
+#ifndef DAV1D_SRC_ITX_H
+#define DAV1D_SRC_ITX_H
 
 #include <stddef.h>
 
@@ -46,4 +46,4 @@ typedef struct Dav1dInvTxfmDSPContext {
 bitfn_decls(void dav1d_itx_dsp_init, Dav1dInvTxfmDSPContext *c);
 bitfn_decls(void dav1d_itx_dsp_init_x86, Dav1dInvTxfmDSPContext *c);
 
-#endif /* __DAV1D_SRC_ITX_H__ */
+#endif /* DAV1D_SRC_ITX_H */

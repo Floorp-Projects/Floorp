@@ -30,6 +30,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <pthread.h>
 
 #include "alloc_fail.h"
 
@@ -63,3 +64,39 @@ int __wrap_posix_memalign(void **memptr, size_t alignment, size_t size) {
 #else
 #error "HAVE_POSIX_MEMALIGN required"
 #endif
+
+int __wrap_pthread_create(pthread_t *, const pthread_attr_t *,
+                          void *(*) (void *), void *);
+
+int __wrap_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
+                          void *(*start_routine) (void *), void *arg)
+{
+    if (rand() < (fail_probability + RAND_MAX/16))
+        return EAGAIN;
+
+    return pthread_create(thread, attr, start_routine, arg);
+}
+
+int __wrap_pthread_mutex_init(pthread_mutex_t *,
+                              const pthread_mutexattr_t *);
+
+int __wrap_pthread_mutex_init(pthread_mutex_t *restrict mutex,
+                              const pthread_mutexattr_t *restrict attr)
+{
+    if (rand() < (fail_probability + RAND_MAX/8))
+        return ENOMEM;
+
+    return pthread_mutex_init(mutex, attr);
+}
+
+int __wrap_pthread_cond_init(pthread_cond_t *,
+                             const pthread_condattr_t *);
+
+int __wrap_pthread_cond_init(pthread_cond_t *restrict cond,
+                             const pthread_condattr_t *restrict attr)
+{
+    if (rand() < (fail_probability + RAND_MAX/16))
+        return ENOMEM;
+
+    return pthread_cond_init(cond, attr);
+}

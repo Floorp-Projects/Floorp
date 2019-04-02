@@ -1,9 +1,27 @@
-Changes for 0.1.1 'Gazelle':
+Changes for 0.2.2 'Antelope':
 ----------------------------
 
+
+Changes for 0.2.1 'Antelope':
+----------------------------
+
+ - SSSE3 optimization for cdef_dir
+ - AVX-2 improvements of the existing CDEF optimizations
+ - NEON improvements of the existing CDEF and wiener optimizations
+ - Clarification about the numbering/versionning scheme
+
+
+Changes for 0.2.0 'Antelope':
+----------------------------
+
+ - ARM64 and ARM optimizations using NEON instructions
+ - SSSE3 optimizations for both 32 and 64bits
+ - More AVX-2 assembly, reaching almost completion
  - Fix installation of includes
  - Rewrite inverse transforms to avoid overflows
- - More AVX-2 assembly
+ - Snap packaging for Linux
+ - Updated API (ABI and API break)
+ - Fixes for un-decodable samples
 
 
 Changes for 0.1.0 'Gazelle':

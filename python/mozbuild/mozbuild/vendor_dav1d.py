@@ -105,6 +105,16 @@ Please set a repository url with --repo on either googlesource or github.''' % h
             with open(filename, 'w') as f:
                 f.write(new_yaml)
 
+    def update_vcs_version(self, revision, vendor_dir, glue_dir):
+        src_filename = mozpath.join(vendor_dir, 'include/vcs_version.h.in')
+        dst_filename = mozpath.join(glue_dir, 'vcs_version.h')
+        with open(src_filename) as f:
+            vcs_version_in = f.read()
+        vcs_version = vcs_version_in.replace('@VCS_TAG@', revision)
+        with open(dst_filename, 'w') as f:
+            f.write(vcs_version)
+
+
     def clean_upstream(self, target):
         '''Remove files we don't want to import.'''
         mozfile.remove(mozpath.join(target, '.gitattributes'))
@@ -154,7 +164,9 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         self.log(logging.INFO, 'update_moz.yaml', {},
                  '''Updating moz.yaml.''')
         self.update_yaml(commit, timestamp, glue_dir)
-        self.repository.add_remove_files(vendor_dir)
+        self.log(logging.INFO, 'update_vcs_version', {},
+                 '''Updating vcs_version.h.''')
+        self.update_vcs_version(commit, vendor_dir, glue_dir)
         self.log(logging.INFO, 'add_remove_files', {},
                  '''Registering changes with version control.''')
         self.repository.add_remove_files(vendor_dir)

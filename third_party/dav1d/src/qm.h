@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_QM_H__
-#define __DAV1D_SRC_QM_H__
+#ifndef DAV1D_SRC_QM_H
+#define DAV1D_SRC_QM_H
 
 #include "src/levels.h"
 
@@ -34,4 +34,4 @@ extern const uint8_t *dav1d_qm_tbl[16][2][N_RECT_TX_SIZES];
 
 void dav1d_init_qm_tables(void);
 
-#endif /* __DAV1D_SRC_QM_H__ */
+#endif /* DAV1D_SRC_QM_H */

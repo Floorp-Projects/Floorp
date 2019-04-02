@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_TESTS_CHECKASM_CHECKASM_H
-#define __DAV1D_TESTS_CHECKASM_CHECKASM_H
+#ifndef DAV1D_TESTS_CHECKASM_CHECKASM_H
+#define DAV1D_TESTS_CHECKASM_CHECKASM_H
 
 #include "config.h"
 
@@ -262,4 +262,4 @@ void checkasm_stack_clobber(uint64_t clobber, ...);
 #define bench_new(...) while (0)
 #endif
 
-#endif /* __DAV1D_TESTS_CHECKASM_CHECKASM_H */
+#endif /* DAV1D_TESTS_CHECKASM_CHECKASM_H */

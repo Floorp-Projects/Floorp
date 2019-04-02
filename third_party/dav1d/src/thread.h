@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_THREAD_H__
-# define __DAV1D_THREAD_H__
+#ifndef DAV1D_SRC_THREAD_H
+#define DAV1D_SRC_THREAD_H
 
 #if defined(_WIN32)
 
@@ -34,62 +34,72 @@
 
 #define PTHREAD_ONCE_INIT INIT_ONCE_STATIC_INIT
 
+typedef struct {
+    HANDLE h;
+    void *(*func)(void*);
+    void *arg;
+} pthread_t;
+
 typedef SRWLOCK pthread_mutex_t;
 typedef CONDITION_VARIABLE pthread_cond_t;
 typedef INIT_ONCE pthread_once_t;
-typedef void *pthread_t;
-typedef void *pthread_mutexattr_t;
-typedef void *pthread_condattr_t;
-typedef void *pthread_attr_t;
 
-int dav1d_pthread_create(pthread_t* thread, const pthread_attr_t* attr,
-                         void*(*proc)(void*), void* param);
-void dav1d_pthread_join(pthread_t thread, void** res);
+int dav1d_pthread_create(pthread_t *thread, const void *attr,
+                         void *(*func)(void*), void *arg);
+int dav1d_pthread_join(pthread_t *thread, void **res);
 int dav1d_pthread_once(pthread_once_t *once_control,
                        void (*init_routine)(void));
 
 #define pthread_create dav1d_pthread_create
-#define pthread_join   dav1d_pthread_join
+#define pthread_join(thread, res) dav1d_pthread_join(&(thread), res)
 #define pthread_once   dav1d_pthread_once
 
-static inline void pthread_mutex_init(pthread_mutex_t* mutex,
-                                      const pthread_mutexattr_t* attr)
+static inline int pthread_mutex_init(pthread_mutex_t *const mutex,
+                                     const void *const attr)
 {
-    (void)attr;
     InitializeSRWLock(mutex);
+    return 0;
 }
 
-static inline void pthread_mutex_destroy(pthread_mutex_t* mutex) {
-    (void)mutex;
+static inline int pthread_mutex_destroy(pthread_mutex_t *const mutex) {
+    return 0;
 }
 
-static inline void pthread_mutex_lock(pthread_mutex_t* mutex) {
+static inline int pthread_mutex_lock(pthread_mutex_t *const mutex) {
     AcquireSRWLockExclusive(mutex);
+    return 0;
 }
 
-static inline void pthread_mutex_unlock(pthread_mutex_t* mutex) {
+static inline int pthread_mutex_unlock(pthread_mutex_t *const mutex) {
     ReleaseSRWLockExclusive(mutex);
+    return 0;
 }
 
-static inline void pthread_cond_init(pthread_cond_t* cond, const pthread_condattr_t* attr) {
-    (void)attr;
+static inline int pthread_cond_init(pthread_cond_t *const cond,
+                                    const void *const attr)
+{
     InitializeConditionVariable(cond);
+    return 0;
 }
 
-static inline void pthread_cond_destroy(pthread_cond_t* cond) {
-    (void)cond;
+static inline int pthread_cond_destroy(pthread_cond_t *const cond) {
+    return 0;
 }
 
-static inline void pthread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex) {
-    SleepConditionVariableSRW(cond, mutex, INFINITE, 0);
+static inline int pthread_cond_wait(pthread_cond_t *const cond,
+                                    pthread_mutex_t *const mutex)
+{
+    return !SleepConditionVariableSRW(cond, mutex, INFINITE, 0);
 }
 
-static inline void pthread_cond_signal(pthread_cond_t* cond) {
+static inline int pthread_cond_signal(pthread_cond_t *const cond) {
     WakeConditionVariable(cond);
+    return 0;
 }
 
-static inline void pthread_cond_broadcast(pthread_cond_t* cond) {
+static inline int pthread_cond_broadcast(pthread_cond_t *const cond) {
     WakeAllConditionVariable(cond);
+    return 0;
 }
 
 #else
@@ -98,4 +108,4 @@ static inline void pthread_cond_broadcast(pthread_cond_t* cond) {
 
 #endif
 
-#endif // __DAV1D_THREAD_H__
+#endif /* DAV1D_SRC_THREAD_H */

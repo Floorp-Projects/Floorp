@@ -546,58 +546,61 @@ endfunc
         mla             \d\wd,  \s2\wd,  v0.h[2]
         mla             \d\wd,  \s3\wd,  v0.h[3]
 .endm
+// Interleaving the mul/mla chains actually hurts performance
+// significantly on Cortex A53, thus keeping mul/mla tightly
+// chained like this.
 .macro mul_mla_8_1 d0, d1, s0, s1, s2, s3, s4, s5, s6, s7, s8
         mul             \d0\().8h, \s0\().8h, v0.h[0]
-        mul             \d1\().8h, \s1\().8h, v0.h[0]
         mla             \d0\().8h, \s1\().8h, v0.h[1]
-        mla             \d1\().8h, \s2\().8h, v0.h[1]
         mla             \d0\().8h, \s2\().8h, v0.h[2]
-        mla             \d1\().8h, \s3\().8h, v0.h[2]
         mla             \d0\().8h, \s3\().8h, v0.h[3]
-        mla             \d1\().8h, \s4\().8h, v0.h[3]
         mla             \d0\().8h, \s4\().8h, v0.h[4]
-        mla             \d1\().8h, \s5\().8h, v0.h[4]
         mla             \d0\().8h, \s5\().8h, v0.h[5]
-        mla             \d1\().8h, \s6\().8h, v0.h[5]
         mla             \d0\().8h, \s6\().8h, v0.h[6]
-        mla             \d1\().8h, \s7\().8h, v0.h[6]
         mla             \d0\().8h, \s7\().8h, v0.h[7]
+        mul             \d1\().8h, \s1\().8h, v0.h[0]
+        mla             \d1\().8h, \s2\().8h, v0.h[1]
+        mla             \d1\().8h, \s3\().8h, v0.h[2]
+        mla             \d1\().8h, \s4\().8h, v0.h[3]
+        mla             \d1\().8h, \s5\().8h, v0.h[4]
+        mla             \d1\().8h, \s6\().8h, v0.h[5]
+        mla             \d1\().8h, \s7\().8h, v0.h[6]
         mla             \d1\().8h, \s8\().8h, v0.h[7]
 .endm
 .macro mul_mla_8_2 d0, d1, s0, s1, s2, s3, s4, s5, s6, s7, s8, s9
         mul             \d0\().8h, \s0\().8h, v0.h[0]
-        mul             \d1\().8h, \s2\().8h, v0.h[0]
         mla             \d0\().8h, \s1\().8h, v0.h[1]
-        mla             \d1\().8h, \s3\().8h, v0.h[1]
         mla             \d0\().8h, \s2\().8h, v0.h[2]
-        mla             \d1\().8h, \s4\().8h, v0.h[2]
         mla             \d0\().8h, \s3\().8h, v0.h[3]
-        mla             \d1\().8h, \s5\().8h, v0.h[3]
         mla             \d0\().8h, \s4\().8h, v0.h[4]
-        mla             \d1\().8h, \s6\().8h, v0.h[4]
         mla             \d0\().8h, \s5\().8h, v0.h[5]
-        mla             \d1\().8h, \s7\().8h, v0.h[5]
         mla             \d0\().8h, \s6\().8h, v0.h[6]
-        mla             \d1\().8h, \s8\().8h, v0.h[6]
         mla             \d0\().8h, \s7\().8h, v0.h[7]
+        mul             \d1\().8h, \s2\().8h, v0.h[0]
+        mla             \d1\().8h, \s3\().8h, v0.h[1]
+        mla             \d1\().8h, \s4\().8h, v0.h[2]
+        mla             \d1\().8h, \s5\().8h, v0.h[3]
+        mla             \d1\().8h, \s6\().8h, v0.h[4]
+        mla             \d1\().8h, \s7\().8h, v0.h[5]
+        mla             \d1\().8h, \s8\().8h, v0.h[6]
         mla             \d1\().8h, \s9\().8h, v0.h[7]
 .endm
 .macro mul_mla_8_4 d0, d1, s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11
         mul             \d0\().8h, \s0\().8h,  v0.h[0]
-        mul             \d1\().8h, \s4\().8h,  v0.h[0]
         mla             \d0\().8h, \s1\().8h,  v0.h[1]
-        mla             \d1\().8h, \s5\().8h,  v0.h[1]
         mla             \d0\().8h, \s2\().8h,  v0.h[2]
-        mla             \d1\().8h, \s6\().8h,  v0.h[2]
         mla             \d0\().8h, \s3\().8h,  v0.h[3]
-        mla             \d1\().8h, \s7\().8h,  v0.h[3]
         mla             \d0\().8h, \s4\().8h,  v0.h[4]
-        mla             \d1\().8h, \s8\().8h,  v0.h[4]
         mla             \d0\().8h, \s5\().8h,  v0.h[5]
-        mla             \d1\().8h, \s9\().8h,  v0.h[5]
         mla             \d0\().8h, \s6\().8h,  v0.h[6]
-        mla             \d1\().8h, \s10\().8h, v0.h[6]
         mla             \d0\().8h, \s7\().8h,  v0.h[7]
+        mul             \d1\().8h, \s4\().8h,  v0.h[0]
+        mla             \d1\().8h, \s5\().8h,  v0.h[1]
+        mla             \d1\().8h, \s6\().8h,  v0.h[2]
+        mla             \d1\().8h, \s7\().8h,  v0.h[3]
+        mla             \d1\().8h, \s8\().8h,  v0.h[4]
+        mla             \d1\().8h, \s9\().8h,  v0.h[5]
+        mla             \d1\().8h, \s10\().8h, v0.h[6]
         mla             \d1\().8h, \s11\().8h, v0.h[7]
 .endm
 .macro sqrshrun_b shift, r0, r1, r2, r3
@@ -628,7 +631,7 @@ endfunc
         st1             {\reg\().h}[3], [x8], \strd
 .endif
 .endm
-.macro st_s strd, r0, r1, r2, r3
+.macro st_s strd, r0, r1
         st1             {\r0\().s}[0], [x0], \strd
         st1             {\r0\().s}[1], [x8], \strd
 .ifnb \r1
@@ -636,7 +639,7 @@ endfunc
         st1             {\r1\().s}[1], [x8], \strd
 .endif
 .endm
-.macro st_d strd, r0, r1, r2, r3
+.macro st_d strd, r0, r1
         st1             {\r0\().d}[0], [x0], \strd
         st1             {\r0\().d}[1], [x8], \strd
 .ifnb \r1
@@ -644,13 +647,13 @@ endfunc
         st1             {\r1\().d}[1], [x8], \strd
 .endif
 .endm
-.macro shift_store_4 type, strd, r0, r1, r2, r3
+.macro shift_store_4 type, strd, r0, r1
 .ifc \type, put
-        sqrshrun_b      6,     \r0, \r1, \r2, \r3
-        st_s            \strd, \r0, \r1, \r2, \r3
+        sqrshrun_b      6,     \r0, \r1
+        st_s            \strd, \r0, \r1
 .else
-        srshr_h         2,     \r0, \r1, \r2, \r3
-        st_d            \strd, \r0, \r1, \r2, \r3
+        srshr_h         2,     \r0, \r1
+        st_d            \strd, \r0, \r1
 .endif
 .endm
 .macro st_reg strd, wd, r0, r1, r2, r3, r4, r5, r6, r7
@@ -742,7 +745,7 @@ function \type\()_8tap
 
 L(\type\()_8tap_h):
         cmp             \w,  #4
-        ubfm            w9,  \mx, #7, #13
+        ubfx            w9,  \mx, #7, #7
         and             \mx, \mx, #0x7f
         b.le            4f
         mov             \mx,  w9
@@ -965,7 +968,7 @@ L(\type\()_8tap_h_tbl):
 
 L(\type\()_8tap_v):
         cmp             \h,  #4
-        ubfm            w9,  \my, #7, #13
+        ubfx            w9,  \my, #7, #7
         and             \my, \my, #0x7f
         b.le            4f
         mov             \my, w9
@@ -1216,7 +1219,7 @@ L(\type\()_8tap_v):
 160:
         b.gt            1680b
 
-        // 16x4 v
+        // 16x2, 16x4 v
         add             \xmy, \xmy, #2
         ld1             {v0.s}[0], [\xmy]
         sub             \src, \src, \s_strd
@@ -1269,7 +1272,7 @@ L(\type\()_8tap_v_tbl):
 
 L(\type\()_8tap_hv):
         cmp             \h,  #4
-        ubfm            w9,  \my, #7, #13
+        ubfx            w9,  \my, #7, #7
         and             \my, \my, #0x7f
         b.le            4f
         mov             \my,  w9
@@ -1304,21 +1307,19 @@ L(\type\()_8tap_hv):
         ext             v29.16b, v28.16b, v28.16b, #2
         mul             v28.4h,  v28.4h,  v0.4h
         mul             v29.4h,  v29.4h,  v0.4h
-        addv            h28, v28.4h
-        addv            h29, v29.4h
-        trn1            v16.4h, v28.4h, v29.4h
-        srshr           v16.4h, v16.4h, #2
+        addp            v28.4h,  v28.4h,  v29.4h
+        addp            v16.4h,  v28.4h,  v28.4h
+        srshr           v16.4h,  v16.4h,  #2
         bl              L(\type\()_8tap_filter_2)
 
         trn1            v16.2s, v16.2s, v28.2s
-        trn1            v17.2s, v28.2s, v30.2s
-        mov             v18.8b, v30.8b
+        mov             v17.8b, v28.8b
 
 2:
         bl              L(\type\()_8tap_filter_2)
 
-        trn1            v18.2s, v18.2s, v28.2s
-        trn1            v19.2s, v28.2s, v30.2s
+        ext             v18.8b, v17.8b, v28.8b, #4
+        mov             v19.8b, v28.8b
         smull           v2.4s,  v16.4h, v1.h[0]
         smlal           v2.4s,  v17.4h, v1.h[1]
         smlal           v2.4s,  v18.4h, v1.h[2]
@@ -1332,7 +1333,6 @@ L(\type\()_8tap_hv):
         b.le            0f
         mov             v16.8b, v18.8b
         mov             v17.8b, v19.8b
-        mov             v18.8b, v30.8b
         b               2b
 
 280:    // 2x8, 2x16, 2x32 hv
@@ -1352,28 +1352,24 @@ L(\type\()_8tap_hv):
         ext             v29.16b, v28.16b, v28.16b, #2
         mul             v28.4h,  v28.4h,  v0.4h
         mul             v29.4h,  v29.4h,  v0.4h
-        addv            h28, v28.4h
-        addv            h29, v29.4h
-        trn1            v16.4h, v28.4h, v29.4h
-        srshr           v16.4h, v16.4h, #2
+        addp            v28.4h,  v28.4h,  v29.4h
+        addp            v16.4h,  v28.4h,  v28.4h
+        srshr           v16.4h,  v16.4h,  #2
 
         bl              L(\type\()_8tap_filter_2)
         trn1            v16.2s, v16.2s, v28.2s
-        trn1            v17.2s, v28.2s, v30.2s
-        mov             v18.8b, v30.8b
+        mov             v17.8b, v28.8b
         bl              L(\type\()_8tap_filter_2)
-        trn1            v18.2s, v18.2s, v28.2s
-        trn1            v19.2s, v28.2s, v30.2s
-        mov             v20.8b, v30.8b
+        ext             v18.8b, v17.8b, v28.8b, #4
+        mov             v19.8b, v28.8b
         bl              L(\type\()_8tap_filter_2)
-        trn1            v20.2s, v20.2s, v28.2s
-        trn1            v21.2s, v28.2s, v30.2s
-        mov             v22.8b, v30.8b
+        ext             v20.8b, v19.8b, v28.8b, #4
+        mov             v21.8b, v28.8b
 
 28:
         bl              L(\type\()_8tap_filter_2)
-        trn1            v22.2s, v22.2s, v28.2s
-        trn1            v23.2s, v28.2s, v30.2s
+        ext             v22.8b, v21.8b, v28.8b, #4
+        mov             v23.8b, v28.8b
         smull           v2.4s,  v16.4h, v1.h[0]
         smlal           v2.4s,  v17.4h, v1.h[1]
         smlal           v2.4s,  v18.4h, v1.h[2]
@@ -1395,7 +1391,6 @@ L(\type\()_8tap_hv):
         mov             v19.8b, v21.8b
         mov             v20.8b, v22.8b
         mov             v21.8b, v23.8b
-        mov             v22.8b, v30.8b
         b               28b
 
 0:
@@ -1417,7 +1412,6 @@ L(\type\()_8tap_filter_2):
         mla             v27.4h,  v30.4h,  v0.h[2]
         mla             v27.4h,  v31.4h,  v0.h[3]
         srshr           v28.4h,  v27.4h,  #2
-        trn2            v30.2s,  v28.2s,  v28.2s
         ret
 .endif
 
@@ -1453,14 +1447,17 @@ L(\type\()_8tap_filter_2):
         mov             v18.8b, v29.8b
 
 4:
-        smull           v2.4s,  v16.4h, v1.h[0]
         bl              L(\type\()_8tap_filter_4)
-        smull           v3.4s,  v17.4h, v1.h[0]
+        // Interleaving the mul/mla chains actually hurts performance
+        // significantly on Cortex A53, thus keeping mul/mla tightly
+        // chained like this.
+        smull           v2.4s,  v16.4h, v1.h[0]
         smlal           v2.4s,  v17.4h, v1.h[1]
-        smlal           v3.4s,  v18.4h, v1.h[1]
         smlal           v2.4s,  v18.4h, v1.h[2]
-        smlal           v3.4s,  v28.4h, v1.h[2]
         smlal           v2.4s,  v28.4h, v1.h[3]
+        smull           v3.4s,  v17.4h, v1.h[0]
+        smlal           v3.4s,  v18.4h, v1.h[1]
+        smlal           v3.4s,  v28.4h, v1.h[2]
         smlal           v3.4s,  v29.4h, v1.h[3]
         sqrshrn         v2.4h,  v2.4s,  #\shift_hv
         sqrshrn         v3.4h,  v3.4s,  #\shift_hv
@@ -1514,22 +1511,22 @@ L(\type\()_8tap_filter_2):
         mov             v22.8b, v29.8b
 
 48:
-        smull           v2.4s,  v16.4h, v1.h[0]
         bl              L(\type\()_8tap_filter_4)
-        smull           v3.4s,  v17.4h, v1.h[0]
+        smull           v2.4s,  v16.4h, v1.h[0]
         smlal           v2.4s,  v17.4h, v1.h[1]
-        smlal           v3.4s,  v18.4h, v1.h[1]
         smlal           v2.4s,  v18.4h, v1.h[2]
-        smlal           v3.4s,  v19.4h, v1.h[2]
         smlal           v2.4s,  v19.4h, v1.h[3]
-        smlal           v3.4s,  v20.4h, v1.h[3]
         smlal           v2.4s,  v20.4h, v1.h[4]
-        smlal           v3.4s,  v21.4h, v1.h[4]
         smlal           v2.4s,  v21.4h, v1.h[5]
-        smlal           v3.4s,  v22.4h, v1.h[5]
         smlal           v2.4s,  v22.4h, v1.h[6]
-        smlal           v3.4s,  v28.4h, v1.h[6]
         smlal           v2.4s,  v28.4h, v1.h[7]
+        smull           v3.4s,  v17.4h, v1.h[0]
+        smlal           v3.4s,  v18.4h, v1.h[1]
+        smlal           v3.4s,  v19.4h, v1.h[2]
+        smlal           v3.4s,  v20.4h, v1.h[3]
+        smlal           v3.4s,  v21.4h, v1.h[4]
+        smlal           v3.4s,  v22.4h, v1.h[5]
+        smlal           v3.4s,  v28.4h, v1.h[6]
         smlal           v3.4s,  v29.4h, v1.h[7]
         sqrshrn         v2.4h,  v2.4s,  #\shift_hv
         sqrshrn         v3.4h,  v3.4s,  #\shift_hv
@@ -2331,3 +2328,191 @@ endfunc
 
 filter_fn put,  x0, x1, x2, x3, w4, w5, w6, x6, w7, x7, x8, x9, 10
 filter_fn prep, x0, x7, x1, x2, w3, w4, w5, x5, w6, x6, x8, x9, 6
+
+.macro load_filter_row dst, src, inc
+        asr             w13, \src, #10
+        ldr             \dst, [x11, w13, sxtw #3]
+        add             \src, \src, \inc
+.endm
+
+function warp_filter_horz
+        add             w12, w5,  #512
+
+        ld1             {v16.8b, v17.8b}, [x2], x3
+
+        load_filter_row d0, w12, w7
+        load_filter_row d1, w12, w7
+        load_filter_row d2, w12, w7
+        sxtl            v0.8h,   v0.8b
+        load_filter_row d3, w12, w7
+        sxtl            v1.8h,   v1.8b
+        load_filter_row d4, w12, w7
+        sxtl            v2.8h,   v2.8b
+        load_filter_row d5, w12, w7
+        sxtl            v3.8h,   v3.8b
+        load_filter_row d6, w12, w7
+        sxtl            v4.8h,   v4.8b
+        load_filter_row d7, w12, w7
+        sxtl            v5.8h,   v5.8b
+        sxtl            v6.8h,   v6.8b
+        sxtl            v7.8h,   v7.8b
+
+        uxtl            v16.8h,  v16.8b
+        uxtl            v17.8h,  v17.8b
+
+        ext             v18.16b, v16.16b, v17.16b, #2*1
+        mul             v23.8h,  v16.8h,  v0.8h
+        ext             v19.16b, v16.16b, v17.16b, #2*2
+        mul             v18.8h,  v18.8h,  v1.8h
+        ext             v20.16b, v16.16b, v17.16b, #2*3
+        mul             v19.8h,  v19.8h,  v2.8h
+        ext             v21.16b, v16.16b, v17.16b, #2*4
+        saddlp          v23.4s,  v23.8h
+        mul             v20.8h,  v20.8h,  v3.8h
+        ext             v22.16b, v16.16b, v17.16b, #2*5
+        saddlp          v18.4s,  v18.8h
+        mul             v21.8h,  v21.8h,  v4.8h
+        saddlp          v19.4s,  v19.8h
+        mul             v22.8h,  v22.8h,  v5.8h
+        saddlp          v20.4s,  v20.8h
+        addv            s23,     v23.4s
+        saddlp          v21.4s,  v21.8h
+        addv            s18,     v18.4s
+        saddlp          v22.4s,  v22.8h
+        addv            s19,     v19.4s
+        trn1            v18.2s,  v23.2s,  v18.2s
+        addv            s20,     v20.4s
+        ext             v23.16b, v16.16b, v17.16b, #2*6
+        trn1            v19.2s,  v19.2s,  v20.2s
+        addv            s21,     v21.4s
+        mul             v23.8h,  v23.8h,  v6.8h
+        ext             v20.16b, v16.16b, v17.16b, #2*7
+        addv            s22,     v22.4s
+        mul             v20.8h,  v20.8h,  v7.8h
+        saddlp          v23.4s,  v23.8h
+        trn1            v21.2s,  v21.2s,  v22.2s
+        saddlp          v20.4s,  v20.8h
+        addv            s23,     v23.4s
+        addv            s20,     v20.4s
+        trn1            v20.2s,  v23.2s,  v20.2s
+        trn1            v18.2d,  v18.2d,  v19.2d
+        trn1            v20.2d,  v21.2d,  v20.2d
+
+        add             w5,  w5,  w8
+
+        rshrn           v16.4h,  v18.4s,  #3
+        rshrn2          v16.8h,  v20.4s,  #3
+
+        ret
+endfunc
+
+// void dav1d_warp_affine_8x8_8bpc_neon(
+//         pixel *dst, const ptrdiff_t dst_stride,
+//         const pixel *src, const ptrdiff_t src_stride,
+//         const int16_t *const abcd, int mx, int my)
+.macro warp t, shift
+function warp_affine_8x8\t\()_8bpc_neon, export=1
+        ldr             x4,  [x4]
+        ubfx            x7,  x4, #0,  #16
+        ubfx            x8,  x4, #16, #16
+        ubfx            x9,  x4, #32, #16
+        ubfx            x4,  x4, #48, #16
+        sxth            w7,  w7
+        sxth            w8,  w8
+        sxth            w9,  w9
+        sxth            w4,  w4
+        mov             w10, #8
+        sub             x2,  x2,  x3, lsl #1
+        sub             x2,  x2,  x3
+        sub             x2,  x2,  #3
+        movrel          x11, X(mc_warp_filter), 64*8
+        mov             x15, x30
+.ifnb \t
+        lsl             x1,  x1,  #1
+.endif
+
+        bl              warp_filter_horz
+        mov             v24.16b, v16.16b
+        bl              warp_filter_horz
+        mov             v25.16b, v16.16b
+        bl              warp_filter_horz
+        mov             v26.16b, v16.16b
+        bl              warp_filter_horz
+        mov             v27.16b, v16.16b
+        bl              warp_filter_horz
+        mov             v28.16b, v16.16b
+        bl              warp_filter_horz
+        mov             v29.16b, v16.16b
+        bl              warp_filter_horz
+        mov             v30.16b, v16.16b
+
+1:
+        add             w14, w6,  #512
+        bl              warp_filter_horz
+        mov             v31.16b, v16.16b
+
+        load_filter_row d0, w14, w9
+        load_filter_row d1, w14, w9
+        load_filter_row d2, w14, w9
+        load_filter_row d3, w14, w9
+        load_filter_row d4, w14, w9
+        load_filter_row d5, w14, w9
+        load_filter_row d6, w14, w9
+        load_filter_row d7, w14, w9
+        transpose_8x8b  v0, v1, v2, v3, v4, v5, v6, v7, v16, v17
+        sxtl            v0.8h,   v0.8b
+        sxtl            v1.8h,   v1.8b
+        sxtl            v2.8h,   v2.8b
+        sxtl            v3.8h,   v3.8b
+        sxtl            v4.8h,   v4.8b
+        sxtl            v5.8h,   v5.8b
+        sxtl            v6.8h,   v6.8b
+        sxtl            v7.8h,   v7.8b
+
+        // This ordering of smull/smlal/smull2/smlal2 is highly
+        // beneficial for Cortex A53 here.
+        smull           v16.4s,  v24.4h,  v0.4h
+        smlal           v16.4s,  v25.4h,  v1.4h
+        smlal           v16.4s,  v26.4h,  v2.4h
+        smlal           v16.4s,  v27.4h,  v3.4h
+        smlal           v16.4s,  v28.4h,  v4.4h
+        smlal           v16.4s,  v29.4h,  v5.4h
+        smlal           v16.4s,  v30.4h,  v6.4h
+        smlal           v16.4s,  v31.4h,  v7.4h
+        smull2          v17.4s,  v24.8h,  v0.8h
+        smlal2          v17.4s,  v25.8h,  v1.8h
+        smlal2          v17.4s,  v26.8h,  v2.8h
+        smlal2          v17.4s,  v27.8h,  v3.8h
+        smlal2          v17.4s,  v28.8h,  v4.8h
+        smlal2          v17.4s,  v29.8h,  v5.8h
+        smlal2          v17.4s,  v30.8h,  v6.8h
+        smlal2          v17.4s,  v31.8h,  v7.8h
+
+        mov             v24.16b, v25.16b
+        mov             v25.16b, v26.16b
+        sqrshrn         v16.4h,  v16.4s,  #\shift
+        mov             v26.16b, v27.16b
+        sqrshrn2        v16.8h,  v17.4s,  #\shift
+        mov             v27.16b, v28.16b
+        mov             v28.16b, v29.16b
+.ifb \t
+        sqxtun          v16.8b,  v16.8h
+.endif
+        mov             v29.16b, v30.16b
+        mov             v30.16b, v31.16b
+        subs            w10, w10, #1
+.ifnb \t
+        st1             {v16.8h}, [x0], x1
+.else
+        st1             {v16.8b}, [x0], x1
+.endif
+
+        add             w6,  w6,  w4
+        b.gt            1b
+
+        br              x15
+endfunc
+.endm
+
+warp  , 11
+warp t, 7

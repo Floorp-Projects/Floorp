@@ -82,7 +82,7 @@ bytefn(dav1d_prepare_intra_edges)(const int x, const int have_left,
                                   const ptrdiff_t stride,
                                   const pixel *prefilter_toplevel_sb_edge,
                                   enum IntraPredMode mode, int *const angle,
-                                  const int tw, const int th,
+                                  const int tw, const int th, const int filter_edge,
                                   pixel *const topleft_out HIGHBD_DECL_SUFFIX)
 {
     const int bitdepth = bitdepth_from_max(bitdepth_max);
@@ -201,7 +201,7 @@ bytefn(dav1d_prepare_intra_edges)(const int x, const int have_left,
         } else {
             *topleft_out = have_top ? *dst_top : (1 << bitdepth) >> 1;
         }
-        if (mode == Z2_PRED && tw + th >= 6)
+        if (mode == Z2_PRED && tw + th >= 6 && filter_edge)
             *topleft_out = (topleft_out[-1] * 5 + topleft_out[0] * 6 +
                             topleft_out[1] * 5 + 8) >> 4;
     }

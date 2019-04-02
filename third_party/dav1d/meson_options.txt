@@ -20,6 +20,11 @@ option('build_tests',
     value: true,
     description: 'Build dav1d tests')
 
+option('logging',
+    type: 'boolean',
+    value: true,
+    description: 'Print error log messages using the provided callback function')
+
 option('testdata_tests',
     type: 'boolean',
     value: false,
@@ -30,3 +35,7 @@ option('fuzzing_engine',
     choices : ['none', 'libfuzzer', 'oss-fuzz'],
     value: 'none',
     description: 'Select the fuzzing engine')
+
+option('stack_alignment',
+    type: 'integer',
+    value: 0)

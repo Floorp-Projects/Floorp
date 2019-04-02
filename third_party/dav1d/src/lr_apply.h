@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_LR_APPLY_H__
-#define __DAV1D_SRC_LR_APPLY_H__
+#ifndef DAV1D_SRC_LR_APPLY_H
+#define DAV1D_SRC_LR_APPLY_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -41,4 +41,4 @@ void bytefn(dav1d_lr_copy_lpf)(Dav1dFrameContext *const f,
 void bytefn(dav1d_lr_sbrow)(Dav1dFrameContext *const f, pixel *const dst[3],
                             int sby);
 
-#endif /* __DAV1D_SRC_LR_APPLY_H__ */
+#endif /* DAV1D_SRC_LR_APPLY_H */

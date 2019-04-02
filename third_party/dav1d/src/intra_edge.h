@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_INTRA_EDGE_H__
-#define __DAV1D_SRC_INTRA_EDGE_H__
+#ifndef DAV1D_SRC_INTRA_EDGE_H
+#define DAV1D_SRC_INTRA_EDGE_H
 
 enum EdgeFlags {
     EDGE_I444_TOP_HAS_RIGHT = 1 << 0,
@@ -54,4 +54,4 @@ typedef struct EdgeBranch {
 void dav1d_init_mode_tree(EdgeNode *const root, EdgeTip *const nt,
                           const int allow_sb128);
 
-#endif /* __DAV1D_SRC_INTRA_EDGE_H__ */
+#endif /* DAV1D_SRC_INTRA_EDGE_H */

@@ -18,7 +18,3 @@ The upstream git repository is https://aomedia.googlesource.com/aom
 To update to a fork, use
 
   ./mach vendor dav1d --repo <repository url> [-r <commit>]
-
-The last update was pulled from https://code.videolan.org/videolan/dav1d
-
-The git commit ID used was 197a19ad702d5e7472852efcde98feeb07f373e0 (2018-11-26T12:15:41.000Z).

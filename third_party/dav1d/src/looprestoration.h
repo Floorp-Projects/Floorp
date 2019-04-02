@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_LOOPRESTORATION_H__
-#define __DAV1D_SRC_LOOPRESTORATION_H__
+#ifndef DAV1D_SRC_LOOPRESTORATION_H
+#define DAV1D_SRC_LOOPRESTORATION_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -76,4 +76,4 @@ bitfn_decls(void dav1d_loop_restoration_dsp_init, Dav1dLoopRestorationDSPContext
 bitfn_decls(void dav1d_loop_restoration_dsp_init_arm, Dav1dLoopRestorationDSPContext *c);
 bitfn_decls(void dav1d_loop_restoration_dsp_init_x86, Dav1dLoopRestorationDSPContext *c);
 
-#endif /* __DAV1D_SRC_LOOPRESTORATION_H__ */
+#endif /* DAV1D_SRC_LOOPRESTORATION_H */

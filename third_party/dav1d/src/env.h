@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_ENV_H__
-#define __DAV1D_SRC_ENV_H__
+#ifndef DAV1D_SRC_ENV_H
+#define DAV1D_SRC_ENV_H
 
 #include <assert.h>
 #include <stddef.h>
@@ -602,8 +602,8 @@ static inline int get_coef_skip_ctx(const TxfmInfo *const t_dim,
         }
 #undef MERGE_CTX
 
-        const int max = imin(la | ll, 4);
-        const int min = imin(imin(la, ll), 4);
+        const int max = imin((int) (la | ll), 4);
+        const int min = imin(imin((int) la, (int) ll), 4);
 
         return skip_contexts[min][max];
     }
@@ -754,4 +754,4 @@ static inline mv get_gmv_2d(const Dav1dWarpedMotionParams *const gmv,
     }
 }
 
-#endif /* __DAV1D_SRC_ENV_H__ */
+#endif /* DAV1D_SRC_ENV_H */

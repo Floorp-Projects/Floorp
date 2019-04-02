@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef __DAV1D_SRC_REF_MVS_H__
-#define __DAV1D_SRC_REF_MVS_H__
+#ifndef DAV1D_SRC_REF_MVS_H
+#define DAV1D_SRC_REF_MVS_H
 
 #include <stddef.h>
 
@@ -178,4 +178,4 @@ static inline void fix_mv_precision(const Dav1dFrameHeader *const hdr,
     }
 }
 
-#endif /* __DAV1D_SRC_REF_MVS_H__ */
+#endif /* DAV1D_SRC_REF_MVS_H */

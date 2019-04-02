@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_DEQUANT_TABLES_H__
-#define __DAV1D_SRC_DEQUANT_TABLES_H__
+#ifndef DAV1D_SRC_DEQUANT_TABLES_H
+#define DAV1D_SRC_DEQUANT_TABLES_H
 
 #include <stdint.h>
 
@@ -34,4 +34,4 @@
 
 extern const uint16_t dav1d_dq_tbl[][QINDEX_RANGE][2];
 
-#endif /* __DAV1D_SRC_DEQUANT_TABLES_H__ */
+#endif /* DAV1D_SRC_DEQUANT_TABLES_H */

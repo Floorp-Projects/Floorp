@@ -77,9 +77,9 @@ static int annexb_open(AnnexbInputContext *const c, const char *const file,
         res = leb128(c, &len);
         if (res < 0)
             break;
-        fseek(c->f, len, SEEK_CUR);
+        fseeko(c->f, len, SEEK_CUR);
     }
-    fseek(c->f, 0, SEEK_SET);
+    fseeko(c->f, 0, SEEK_SET);
 
     return 0;
 }
@@ -103,7 +103,7 @@ static int annexb_read(AnnexbInputContext *const c, Dav1dData *const data) {
     if (!ptr) return -1;
     c->temporal_unit_size -= len + res;
     c->frame_unit_size -= len + res;
-    if ((res = fread(ptr, len, 1, c->f)) != 1) {
+    if (fread(ptr, len, 1, c->f) != 1) {
         fprintf(stderr, "Failed to read frame data: %s\n", strerror(errno));
         dav1d_data_unref(data);
         return -1;

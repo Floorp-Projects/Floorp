@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_INPUT_DEMUXER_H__
-#define __DAV1D_INPUT_DEMUXER_H__
+#ifndef DAV1D_INPUT_DEMUXER_H
+#define DAV1D_INPUT_DEMUXER_H
 
 #include "data.h"
 
@@ -41,4 +41,4 @@ typedef struct Demuxer {
     void (*close)(DemuxerPriv *ctx);
 } Demuxer;
 
-#endif /* __DAV1D_INPUT_DEMUXER_H__ */
+#endif /* DAV1D_INPUT_DEMUXER_H */
