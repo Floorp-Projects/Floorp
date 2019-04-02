@@ -136,6 +136,10 @@ DefaultJitOptions::DefaultJitOptions() {
   // Toggles whether sink code motion is globally disabled.
   SET_DEFAULT(disableSink, true);
 
+  // Toggles whether the use of multiple Ion optimization levels is globally
+  // disabled.
+  SET_DEFAULT(disableOptimizationLevels, false);
+
   // Whether IonBuilder should prefer IC generation above specialized MIR.
   SET_DEFAULT(forceInlineCaches, false);
 
