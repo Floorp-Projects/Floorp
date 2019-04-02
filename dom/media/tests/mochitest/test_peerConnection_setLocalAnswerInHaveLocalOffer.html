@@ -21,7 +21,7 @@ runNetworkTest(function () {
       test.pcLocal._latest_offer.type = "answer";
       return test.pcLocal.setLocalDescriptionAndFail(test.pcLocal._latest_offer)
         .then(err => {
-          is(err.name, "InvalidStateError", "Error is InvalidStateError");
+          is(err.name, "InvalidModificationError", "Error is InvalidModificationError");
         });
     }
   ]);
