@@ -8,6 +8,7 @@
 #include "TelemetryOrigin.h"
 
 #include "nsDataHashtable.h"
+#include "nsIObserverService.h"
 #include "nsIXULAppInfo.h"
 #include "TelemetryCommon.h"
 #include "TelemetryOriginEnums.h"
@@ -15,8 +16,11 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/PrioEncoder.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
 
+#include <cmath>
 #include <type_traits>
 
 using mozilla::ErrorResult;
@@ -79,6 +83,9 @@ class OriginMetricIDHashKey : public PLDHashEntryHdr {
 ////////////////////////////////////////////////////////////////////////
 //
 // PRIVATE STATE, SHARED BY ALL THREADS
+//
+// Access for all of this state (except gInitDone) must be guarded by
+// gTelemetryOriginMutex.
 
 namespace {
 
@@ -111,6 +118,20 @@ typedef nsDataHashtable<OriginMetricIDHashKey, nsTArray<bool>> IdToBoolsMap;
 
 static nsCString gBatchID;
 #define CANARY_BATCH_ID "decaffcoffee"
+
+// The number of prioData elements needed to encode the contents of storage.
+// Will be some whole multiple of gPrioDatasPerMetric.
+static uint32_t gPrioDataCount = 0;
+
+// Prio has a maximum supported number of bools it can encode at a time.
+// This means a single metric may result in several encoded payloads if the
+// number of origins exceeds the number of bools.
+// Each encoded payload corresponds to an element in the `prioData` array in the
+// "prio" ping.
+// This number is the number of encoded payloads needed per metric, and is
+// equivalent to "how many bitvectors do we need to encode this whole list of
+// origins?"
+static uint32_t gPrioDatasPerMetric;
 
 }  // namespace
 
@@ -178,6 +199,9 @@ void TelemetryOrigin::InitializeGlobalState() {
       "doubleclick.de",
       "fb.com",
   });
+
+  gPrioDatasPerMetric = ceil(static_cast<double>(gOriginsList->Length()) /
+                             PrioEncoder::gNumBooleans);
 
   gOriginToIndexMap = new OriginToIndexMap(gOriginsList->Length());
   for (size_t i = 0; i < gOriginsList->Length(); ++i) {
@@ -249,8 +273,31 @@ nsresult TelemetryOrigin::RecordOrigin(OriginMetricID aId,
     return NS_OK;
   }
 
+  if (!gMetricToOriginsMap->Contains(aId)) {
+    // If we haven't recorded anything for this metric yet, we're adding some
+    // prioDatas.
+    gPrioDataCount += gPrioDatasPerMetric;
+  }
+
   auto& originArray = gMetricToOriginsMap->GetOrInsert(aId);
+
+  if (originArray.Contains(aOrigin)) {
+    // If we've already recorded this metric for this origin, then we're going
+    // to need more prioDatas to encode that it happened again.
+    gPrioDataCount += gPrioDatasPerMetric;
+  }
+
   originArray.AppendElement(aOrigin);
+
+  static uint32_t sPrioPingLimit =
+      mozilla::Preferences::GetUint("toolkit.telemetry.prioping.dataLimit", 10);
+  if (gPrioDataCount >= sPrioPingLimit) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->NotifyObservers(nullptr, "origin-telemetry-storage-limit-reached",
+                          nullptr);
+    }
+  }
 
   return NS_OK;
 }
@@ -277,6 +324,7 @@ nsresult TelemetryOrigin::GetOriginSnapshot(bool aClear, JSContext* aCx,
       // squeeze for not enough juice.
 
       gMetricToOriginsMap->SwapElements(copy);
+      gPrioDataCount = 0;
     } else {
       auto iter = gMetricToOriginsMap->ConstIter();
       for (; !iter.Done(); iter.Next()) {
@@ -410,6 +458,7 @@ nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
   if (aClear) {
     StaticMutexAutoLock lock(gTelemetryOriginMutex);
     gMetricToOriginsMap->Clear();
+    gPrioDataCount = 0;
   }
 
   aSnapshot.setObject(*prioDataArray);
