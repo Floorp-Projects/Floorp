@@ -200,7 +200,7 @@ class TaskBuilder(object):
         return self._craft_clean_gradle_task(
             name='lint',
             description='Running ktlint over all modules',
-            gradle_task='lint',
+            gradle_task='lintAarch64GreenfieldRelease',
             treeherder={
                 'jobKind': 'test',
                 'machine': {
