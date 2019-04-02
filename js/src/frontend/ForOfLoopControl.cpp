@@ -45,7 +45,7 @@ bool ForOfLoopControl::emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce) {
     //              [stack] ITER ... EXCEPTION
     return false;
   }
-  unsigned slotFromTop = bce->stackDepth - iterDepth_;
+  unsigned slotFromTop = bce->bytecodeSection().stackDepth() - iterDepth_;
   if (!bce->emitDupAt(slotFromTop)) {
     //              [stack] ITER ... EXCEPTION ITER
     return false;
@@ -69,7 +69,8 @@ bool ForOfLoopControl::emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce) {
     return false;
   }
 
-  MOZ_ASSERT(slotFromTop == unsigned(bce->stackDepth - iterDepth_));
+  MOZ_ASSERT(slotFromTop ==
+             unsigned(bce->bytecodeSection().stackDepth() - iterDepth_));
   if (!bce->emitDupAt(slotFromTop)) {
     //              [stack] ITER ... EXCEPTION ITER
     return false;

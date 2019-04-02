@@ -75,7 +75,8 @@ bool DoWhileEmitter::emitEnd() {
     return false;
   }
 
-  if (!bce_->addTryNote(JSTRY_LOOP, bce_->stackDepth, loopInfo_->headOffset(),
+  if (!bce_->addTryNote(JSTRY_LOOP, bce_->bytecodeSection().stackDepth(),
+                        loopInfo_->headOffset(),
                         loopInfo_->breakTargetOffset())) {
     return false;
   }
