@@ -5,10 +5,20 @@
 "use strict";
 
 const InspectorUtils = require("InspectorUtils");
+loader.lazyRequireGetter(this, "loadSheet", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "removeSheet", "devtools/shared/layout/utils", true);
 
 // How many text runs are we highlighting at a time. There may be many text runs, and we
 // want to prevent performance problems.
 const MAX_TEXT_RANGES = 100;
+
+// This stylesheet is inserted into the page to customize the color of the selected text
+// runs.
+// Note that this color is defined as --highlighter-content-color in the highlighters.css
+// file, and corresponds to the box-model content color. We want to give it an opacity of
+// 0.6 here.
+const STYLESHEET_URI = "data:text/css," +
+  encodeURIComponent("::selection{background-color:hsl(197,71%,73%,.6)!important;}");
 
 /**
  * This highlighter highlights runs of text in the page that have been rendered given a
@@ -61,6 +71,10 @@ class FontsHighlighter {
       return;
     }
 
+    // Load the stylesheet that will customize the color of the highlighter (using a
+    // ::selection rule).
+    loadSheet(this.env.window, STYLESHEET_URI);
+
     // Create a multi-selection in the page to highlight the text runs.
     const selection = doc.defaultView.getSelection();
     selection.removeAllRanges();
@@ -76,6 +90,12 @@ class FontsHighlighter {
     // No node was highlighted before, don't need to continue any further.
     if (!this.currentNode) {
       return;
+    }
+
+    try {
+      removeSheet(this.env.window, STYLESHEET_URI);
+    } catch (e) {
+      // Silently fail here as we might not have inserted the stylesheet at all.
     }
 
     // Simply remove all current ranges in the seletion.
