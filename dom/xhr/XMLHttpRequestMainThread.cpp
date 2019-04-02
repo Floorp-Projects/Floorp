@@ -3931,9 +3931,20 @@ void RequestHeaders::ApplyToChannel(nsIHttpChannel* aHttpChannel) const {
 }
 
 void RequestHeaders::GetCORSUnsafeHeaders(nsTArray<nsCString>& aArray) const {
+  static const char* kCrossOriginSafeHeaders[] = {
+      "accept", "accept-language", "content-language", "content-type",
+      "last-event-id"};
+  const uint32_t kCrossOriginSafeHeadersLength =
+      ArrayLength(kCrossOriginSafeHeaders);
   for (const RequestHeader& header : mHeaders) {
-    if (!nsContentUtils::IsCORSSafelistedRequestHeader(header.mName,
-                                                       header.mValue)) {
+    bool safe = false;
+    for (uint32_t i = 0; i < kCrossOriginSafeHeadersLength; ++i) {
+      if (header.mName.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
+        safe = true;
+        break;
+      }
+    }
+    if (!safe) {
       aArray.AppendElement(header.mName);
     }
   }
