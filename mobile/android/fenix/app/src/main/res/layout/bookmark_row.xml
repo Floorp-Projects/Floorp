@@ -15,42 +15,42 @@
 
     <ImageView
         android:id="@+id/bookmark_favicon"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="@drawable/favicon_background"
+        android:importantForAccessibility="no"
+        android:padding="10dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        tools:src="@drawable/ic_folder_icon"
+        app:layout_constraintDimensionRatio="1:1"
         tools:foregroundTint="@android:color/black"
-        android:padding="10dp"
-        android:importantForAccessibility="no"
-        android:background="@drawable/favicon_background"/>
+        tools:src="@drawable/ic_folder_icon" />
 
     <TextView
         android:id="@+id/bookmark_title"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:ellipsize="end"
         android:lines="1"
         android:textSize="16sp"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/bookmark_favicon"
         app:layout_constraintEnd_toStartOf="@id/bookmark_overflow"
         app:layout_constraintHorizontal_bias="0"
-        tools:text="Internet"/>
+        app:layout_constraintStart_toEndOf="@id/bookmark_favicon"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Internet" />
 
     <ImageView
         android:id="@+id/bookmark_overflow"
         android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:src="@drawable/ic_menu"
+        android:layout_height="wrap_content"
         android:layout_margin="10dp"
-        app:layout_constraintTop_toTopOf="parent"
+        android:contentDescription="@string/bookmark_menu_content_description"
+        android:src="@drawable/ic_menu"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:contentDescription="@string/bookmark_menu_content_description"/>
+        app:layout_constraintTop_toTopOf="parent" />
     
     <View
         android:id="@+id/bookmark_separator"
