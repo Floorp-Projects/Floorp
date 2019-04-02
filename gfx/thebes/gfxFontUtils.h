@@ -10,9 +10,10 @@
 #include "gfxPlatform.h"
 #include "nsComponentManagerUtils.h"
 #include "nsTArray.h"
-#include "mozilla/Likely.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
 
@@ -158,7 +159,7 @@ class gfxSparseBitSet {
     if (mBlockIndex[i] == NO_BLOCK) {
       mBlocks.AppendElement();
       MOZ_ASSERT(mBlocks.Length() < 0xffff, "block index overflow!");
-      mBlockIndex[i] = mBlocks.Length() - 1;
+      mBlockIndex[i] = static_cast<uint16_t>(mBlocks.Length() - 1);
     }
     Block& block = mBlocks[mBlockIndex[i]];
     block.mBits[(aIndex >> 3) & (BLOCK_SIZE - 1)] |= 1 << (aIndex & 0x7);
@@ -188,7 +189,7 @@ class gfxSparseBitSet {
         bool fullBlock = (aStart <= blockFirstBit && aEnd >= blockLastBit);
         mBlocks.AppendElement(Block(fullBlock ? 0xFF : 0));
         MOZ_ASSERT(mBlocks.Length() < 0xffff, "block index overflow!");
-        mBlockIndex[i] = mBlocks.Length() - 1;
+        mBlockIndex[i] = static_cast<uint16_t>(mBlocks.Length() - 1);
         if (fullBlock) {
           continue;
         }
@@ -214,7 +215,7 @@ class gfxSparseBitSet {
     if (mBlockIndex[i] == NO_BLOCK) {
       mBlocks.AppendElement();
       MOZ_ASSERT(mBlocks.Length() < 0xffff, "block index overflow!");
-      mBlockIndex[i] = mBlocks.Length() - 1;
+      mBlockIndex[i] = static_cast<uint16_t>(mBlocks.Length() - 1);
     }
     Block& block = mBlocks[mBlockIndex[i]];
     block.mBits[(aIndex >> 3) & (BLOCK_SIZE - 1)] &= ~(1 << (aIndex & 0x7));
@@ -278,7 +279,7 @@ class gfxSparseBitSet {
       if (mBlockIndex[i] == NO_BLOCK) {
         mBlocks.AppendElement(aBitset.mBlocks[aBitset.mBlockIndex[i]]);
         MOZ_ASSERT(mBlocks.Length() < 0xffff, "block index overflow!");
-        mBlockIndex[i] = mBlocks.Length() - 1;
+        mBlockIndex[i] = static_cast<uint16_t>(mBlocks.Length() - 1);
         continue;
       }
       // else set existing block to the union of both
@@ -365,7 +366,7 @@ class SharedBitSet {
   }
 
   bool test(uint32_t aIndex) const {
-    uint16_t i = aIndex / BLOCK_SIZE_BITS;
+    const auto i = static_cast<uint16_t>(aIndex / BLOCK_SIZE_BITS);
     if (i >= mBlockIndexCount) {
       return false;
     }
@@ -411,7 +412,7 @@ class SharedBitSet {
   SharedBitSet() = delete;
 
   explicit SharedBitSet(const gfxSparseBitSet& aBitset)
-      : mBlockIndexCount(aBitset.mBlockIndex.Length()), mBlockCount(0) {
+      : mBlockIndexCount(mozilla::AssertedCast<uint16_t>(aBitset.mBlockIndex.Length())), mBlockCount(0) {
     uint16_t* blockIndex = reinterpret_cast<uint16_t*>(this + 1);
     Block* blocks = reinterpret_cast<Block*>(blockIndex + mBlockIndexCount);
     for (uint16_t i = 0; i < mBlockIndexCount; i++) {
@@ -857,13 +858,13 @@ class gfxFontUtils {
   // for reading big-endian font data on either big or little-endian platforms
 
   static inline uint16_t ReadShortAt(const uint8_t* aBuf, uint32_t aIndex) {
-    return (aBuf[aIndex] << 8) | aBuf[aIndex + 1];
+    return static_cast<uint16_t>(aBuf[aIndex] << 8) | aBuf[aIndex + 1];
   }
 
   static inline uint16_t ReadShortAt16(const uint16_t* aBuf, uint32_t aIndex) {
     const uint8_t* buf = reinterpret_cast<const uint8_t*>(aBuf);
     uint32_t index = aIndex << 1;
-    return (buf[index] << 8) | buf[index + 1];
+    return static_cast<uint16_t>(buf[index] << 8) | buf[index + 1];
   }
 
   static inline uint32_t ReadUint24At(const uint8_t* aBuf, uint32_t aIndex) {
