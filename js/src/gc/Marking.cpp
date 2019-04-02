@@ -992,17 +992,16 @@ void LazyScript::traceChildren(JSTracer* trc) {
   }
 
   // We rely on the fact that atoms are always tenured.
-  JSAtom** closedOverBindings = this->closedOverBindings();
-  for (auto i : IntegerRange(numClosedOverBindings())) {
-    if (closedOverBindings[i]) {
-      TraceManuallyBarrieredEdge(trc, &closedOverBindings[i],
-                                 "closedOverBinding");
+  for (GCPtrAtom& closedOverBinding : closedOverBindings()) {
+    if (closedOverBinding) {
+      TraceEdge(trc, &closedOverBinding, "closedOverBinding");
     }
   }
 
-  GCPtrFunction* innerFunctions = this->innerFunctions();
-  for (auto i : IntegerRange(numInnerFunctions())) {
-    TraceEdge(trc, &innerFunctions[i], "lazyScriptInnerFunction");
+  for (GCPtrFunction& innerFunction : innerFunctions()) {
+    if (innerFunction) {
+      TraceEdge(trc, &innerFunction, "lazyScriptInnerFunction");
+    }
   }
 
   if (trc->isMarkingTracer()) {
@@ -1031,16 +1030,16 @@ inline void js::GCMarker::eagerlyMarkChildren(LazyScript* thing) {
   }
 
   // We rely on the fact that atoms are always tenured.
-  JSAtom** closedOverBindings = thing->closedOverBindings();
-  for (auto i : IntegerRange(thing->numClosedOverBindings())) {
-    if (closedOverBindings[i]) {
-      traverseEdge(thing, static_cast<JSString*>(closedOverBindings[i]));
+  for (GCPtrAtom& closedOverBinding : thing->closedOverBindings()) {
+    if (closedOverBinding) {
+      traverseEdge(thing, static_cast<JSString*>(closedOverBinding));
     }
   }
 
-  GCPtrFunction* innerFunctions = thing->innerFunctions();
-  for (auto i : IntegerRange(thing->numInnerFunctions())) {
-    traverseEdge(thing, static_cast<JSObject*>(innerFunctions[i]));
+  for (GCPtrFunction& innerFunction : thing->innerFunctions()) {
+    if (innerFunction) {
+      traverseEdge(thing, static_cast<JSObject*>(innerFunction));
+    }
   }
 
   markImplicitEdges(thing);

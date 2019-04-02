@@ -112,13 +112,10 @@ class DataStorage : public nsIObserver {
   static already_AddRefed<DataStorage> Get(DataStorageClass aFilename);
 
   // Initializes the DataStorage. Must be called before using.
-  // aDataWillPersist returns whether or not data can be persistently saved.
   // aItems is used in the content process to initialize a cache of the items
   // received from the parent process over IPC. nullptr must be passed for the
   // parent process.
-  nsresult Init(
-      /*out*/ bool& aDataWillPersist,
-      const InfallibleTArray<mozilla::dom::DataStorageItem>* aItems = nullptr);
+  nsresult Init(const InfallibleTArray<mozilla::dom::DataStorageItem>* aItems);
   // Given a key and a type of data, returns a value. Returns an empty string if
   // the key is not present for that type of data. If Get is called before the
   // "data-storage-ready" event is observed, it will block. NB: It is not
@@ -186,8 +183,7 @@ class DataStorage : public nsIObserver {
 
   void WaitForReady();
   nsresult AsyncWriteData(const MutexAutoLock& aProofOfLock);
-  nsresult AsyncReadData(bool& aHaveProfileDir,
-                         const MutexAutoLock& aProofOfLock);
+  nsresult AsyncReadData(const MutexAutoLock& aProofOfLock);
   nsresult AsyncSetTimer(const MutexAutoLock& aProofOfLock);
   nsresult DispatchShutdownTimer(const MutexAutoLock& aProofOfLock);
 

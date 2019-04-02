@@ -175,6 +175,7 @@ awsy:
     - awsy-base
     - awsy-dmd
     - awsy-base-dmd
+    - awsy-tp6
 
 awsy-stylo-sequential:
     - awsy-stylo-sequential

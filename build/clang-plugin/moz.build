@@ -70,6 +70,11 @@ HOST_COMPILE_FLAGS['VISIBILITY'] = []
 if CONFIG['HOST_OS_ARCH'] == 'Darwin':
     HOST_CXXFLAGS += ['-stdlib=libc++']
 
+# As of clang 8, llvm-config doesn't output the flags used to build clang
+# itself, so we don't end up with -fPIC as a side effect. llvm.org/PR8220
+if CONFIG['HOST_OS_ARCH'] != 'Windows':
+    HOST_CXXFLAGS += ['-fPIC']
+
 DIRS += [
     'tests',
 ]

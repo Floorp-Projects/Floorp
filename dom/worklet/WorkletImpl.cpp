@@ -11,6 +11,7 @@
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/RegisterWorkletBindings.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkletBinding.h"
 
 namespace mozilla {
@@ -42,7 +43,7 @@ WorkletLoadInfo::~WorkletLoadInfo() {
 WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
     : mWorkletLoadInfo(aWindow, aPrincipal), mTerminated(false) {}
 
-WorkletImpl::~WorkletImpl() = default;
+WorkletImpl::~WorkletImpl() { MOZ_ASSERT(!mGlobalScope); }
 
 JSObject* WorkletImpl::WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -50,29 +51,45 @@ JSObject* WorkletImpl::WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
   return dom::Worklet_Binding::Wrap(aCx, aWorklet, aGivenProto);
 }
 
-already_AddRefed<dom::WorkletGlobalScope> WorkletImpl::CreateGlobalScope(
-    JSContext* aCx) {
+dom::WorkletGlobalScope* WorkletImpl::GetGlobalScope() {
   dom::WorkletThread::AssertIsOnWorkletThread();
 
-  RefPtr<dom::WorkletGlobalScope> scope = ConstructGlobalScope();
+  if (mGlobalScope) {
+    return mGlobalScope;
+  }
 
-  JS::Rooted<JSObject*> global(aCx);
-  NS_ENSURE_TRUE(scope->WrapGlobalObject(aCx, &global), nullptr);
+  dom::AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
 
-  JSAutoRealm ar(aCx, global);
+  mGlobalScope = ConstructGlobalScope();
+
+  JS::Rooted<JSObject*> global(cx);
+  NS_ENSURE_TRUE(mGlobalScope->WrapGlobalObject(cx, &global), nullptr);
+
+  JSAutoRealm ar(cx, global);
 
   // Init Web IDL bindings
-  if (!dom::RegisterWorkletBindings(aCx, global)) {
+  if (!dom::RegisterWorkletBindings(cx, global)) {
     return nullptr;
   }
 
-  JS_FireOnNewGlobalObject(aCx, global);
+  JS_FireOnNewGlobalObject(cx, global);
 
-  return scope.forget();
+  return mGlobalScope;
 }
 
 void WorkletImpl::NotifyWorkletFinished() {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mTerminated) {
+    return;
+  }
+
+  // Release global scope on its thread.
+  SendControlMessage(NS_NewRunnableFunction(
+      "WorkletImpl::NotifyWorkletFinished",
+      [self = RefPtr<WorkletImpl>(this)]() { self->mGlobalScope = nullptr; }));
 
   mTerminated = true;
   if (mWorkletThread) {
@@ -93,7 +110,7 @@ nsresult WorkletImpl::SendControlMessage(
 
   if (!mWorkletThread) {
     // Thread creation. FIXME: this will change.
-    mWorkletThread = dom::WorkletThread::Create();
+    mWorkletThread = dom::WorkletThread::Create(this);
     if (!mWorkletThread) {
       return NS_ERROR_UNEXPECTED;
     }

@@ -48,6 +48,7 @@ ifdef MOZ_PACKAGE_JSSHELL
 	$(RM) $(PKG_JSSHELL)
 	$(MAKE_JSSHELL)
 endif # MOZ_PACKAGE_JSSHELL
+ifdef MOZ_AUTOMATION
 ifdef MOZ_ARTIFACT_BUILD_SYMBOLS
 	@echo 'Packaging existing crashreporter symbols from artifact build...'
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
@@ -59,6 +60,7 @@ ifeq ($(MOZ_ARTIFACT_BUILD_SYMBOLS),full)
           zip -r5D '../$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip' .
 endif
 endif # MOZ_ARTIFACT_BUILD_SYMBOLS
+endif # MOZ_AUTOMATION
 ifdef MOZ_CODE_COVERAGE
 	@echo 'Generating chrome-map for coverage data...'
 	$(topsrcdir)/mach build-backend -b ChromeMap

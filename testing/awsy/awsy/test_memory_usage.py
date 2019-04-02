@@ -4,8 +4,12 @@
 
 import os
 import sys
+import yaml
+
+import mozinfo
 
 from marionette_driver.errors import JavascriptException, ScriptTimeoutException
+from mozproxy import get_playback
 
 AWSY_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 if AWSY_PATH not in sys.path:
@@ -36,12 +40,10 @@ class TestMemoryUsage(AwsyTestCase):
     def perf_checkpoints(self):
         return process_perf_data.CHECKPOINTS
 
-    def setUp(self):
-        AwsyTestCase.setUp(self)
-        self.logger.info("setting up")
-        self._webroot_dir = self.testvars["webRootDir"]
-        self._urls = []
+    def perf_extra_opts(self):
+        return self._extra_opts
 
+    def setupTp5(self):
         urls = None
         default_tp5n_manifest = os.path.join(self._webroot_dir, 'page_load_test', 'tp5n',
                                              'tp5n.manifest')
@@ -63,6 +65,88 @@ class TestMemoryUsage(AwsyTestCase):
         for url, server in zip(urls, self._webservers.servers):
             self._urls.append(url.strip().format(server.port))
 
+    def setupTp6(self):
+        # tp5n stores its manifest in the zip file that gets extracted, tp6
+        # doesn't so we just keep one in our project dir for now.
+        default_tp6_pages_manifest = os.path.join(AWSY_PATH, 'conf', 'tp6-pages.yml')
+        tp6_pages_manifest = self.testvars.get("pageManifest", default_tp6_pages_manifest)
+        urls = []
+        recordings = set()
+        with open(tp6_pages_manifest) as f:
+            d = yaml.safe_load(f)
+            for r in d:
+                recordings.add(r['rec'])
+                url = r['url']
+                if isinstance(url, list):
+                    urls.extend(url)
+                else:
+                    urls.append(url)
+
+        self._urls = urls
+
+        # Indicate that we're using tp6 in the perf data.
+        self._extra_opts = ["tp6"]
+
+        # Now we setup the mitm proxy with our tp6 pageset.
+        tp6_pageset_manifest = os.path.join(AWSY_PATH, 'tp6-pageset.manifest')
+        config = {
+            'playback_tool': 'mitmproxy',
+            'playback_binary_manifest': 'mitmproxy-rel-bin-{platform}.manifest',
+            'playback_pageset_manifest': tp6_pageset_manifest,
+            'platform': mozinfo.os,
+            'obj_path': self._webroot_dir,
+            'binary': self._binary,
+            'run_local': self._run_local,
+            'app': 'firefox',
+            'host': 'localhost',
+            'ignore_mitmdump_exit_failure': True,
+        }
+
+        self._playback = get_playback(config)
+
+        script = os.path.join(AWSY_PATH, "awsy", "alternate-server-replay.py")
+        recording_arg = []
+        for recording in recordings:
+            recording_arg.append(os.path.join(self._playback.mozproxy_dir, recording))
+
+        script = '""%s %s""' % (script, " ".join(recording_arg))
+
+        if mozinfo.os == "win":
+            script = script.replace("\\", "\\\\\\")
+
+        # --no-upstream-cert prevents mitmproxy from needing network access to
+        # the upstream servers
+        self._playback.config['playback_tool_args'] = [
+                "--no-upstream-cert",
+                "-s", script]
+
+        self.logger.info("Using script %s" % script)
+
+        self._playback.start()
+
+        # We need to reload after the mitmproxy cert is installed
+        self.marionette.restart(clean=False)
+
+        # Setup WebDriver capabilities that we need
+        self.marionette.delete_session()
+        caps = {
+                "unhandledPromptBehavior": "dismiss",  # Ignore page navigation warnings
+        }
+        self.marionette.start_session(caps)
+        self.marionette.set_context('chrome')
+
+    def setUp(self):
+        AwsyTestCase.setUp(self)
+        self.logger.info("setting up")
+        self._webroot_dir = self.testvars["webRootDir"]
+        self._urls = []
+        self._extra_opts = None
+
+        if self.testvars.get("tp6", False):
+            self.setupTp6()
+        else:
+            self.setupTp5()
+
         self.logger.info("areweslimyet run by %d pages, %d iterations,"
                          " %d perTabPause, %d settleWaitTime"
                          % (self._pages_to_load, self._iterations,
@@ -73,7 +157,11 @@ class TestMemoryUsage(AwsyTestCase):
         self.logger.info("tearing down!")
 
         self.logger.info("tearing down webservers!")
-        self._webservers.stop()
+
+        if self.testvars.get("tp6", False):
+            self._playback.stop()
+        else:
+            self._webservers.stop()
 
         AwsyTestCase.tearDown(self)
 

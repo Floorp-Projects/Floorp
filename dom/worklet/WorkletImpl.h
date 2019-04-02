@@ -74,7 +74,7 @@ class WorkletImpl {
   void NotifyWorkletFinished();
 
   // Execution thread only.
-  already_AddRefed<dom::WorkletGlobalScope> CreateGlobalScope(JSContext* aCx);
+  dom::WorkletGlobalScope* GetGlobalScope();
 
   // Any thread.
 
@@ -93,6 +93,9 @@ class WorkletImpl {
   // Parent thread only.
   RefPtr<dom::WorkletThread> mWorkletThread;
   bool mTerminated;
+
+  // Execution thread only.
+  RefPtr<dom::WorkletGlobalScope> mGlobalScope;
 };
 
 }  // namespace mozilla

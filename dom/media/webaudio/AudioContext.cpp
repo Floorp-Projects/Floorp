@@ -92,6 +92,10 @@ static dom::AudioContext::AudioContextId gAudioContextId = 1;
 NS_IMPL_CYCLE_COLLECTION_CLASS(AudioContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioContext)
+  // The destination node and AudioContext form a cycle and so the destination
+  // stream will be destroyed.  mWorklet must be shut down before the stream
+  // is destroyed.  Do this before clearing mWorklet.
+  tmp->ShutdownWorklet();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDestination)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWorklet)
@@ -632,6 +636,12 @@ AudioNodeStream* AudioContext::DestinationStream() const {
   return nullptr;
 }
 
+void AudioContext::ShutdownWorklet() {
+  if (mWorklet) {
+    mWorklet->Impl()->NotifyWorkletFinished();
+  }
+}
+
 double AudioContext::CurrentTime() {
   MediaStream* stream = Destination()->Stream();
 
@@ -702,6 +712,12 @@ void AudioContext::Shutdown() {
   // Active AudioNodes don't unregister in destructors, at which point the
   // Node is already unregistered.
   mActiveNodes.Clear();
+
+  // On process shutdown, the MSG thread shuts down before the destination
+  // stream is destroyed, but AudioWorklet needs to release objects on the MSG
+  // thread.  AudioContext::Shutdown() is invoked on processing the
+  // PBrowser::Destroy() message before xpcom shutdown begins.
+  ShutdownWorklet();
 
   // For offline contexts, we can destroy the MediaStreamGraph at this point.
   if (mIsOffline && mDestination) {

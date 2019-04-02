@@ -26,7 +26,7 @@ void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
   nsContentUtils::LogSimpleConsoleError(
       NS_ConvertUTF8toUTF16(
           nsPrintfCString("LocalStorage %s: %s:%" PRIu32, aStr, aFile, aLine)),
-      "localstorage", false);
+      "localstorage", false, true /* Internal errors are chrome context only*/);
 }
 
 }  // namespace localstorage

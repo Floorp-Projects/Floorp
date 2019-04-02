@@ -91,9 +91,9 @@ ServoTraversalStatistics ServoTraversalStatistics::sSingleton;
 
 static RWLock* sServoFFILock = nullptr;
 
-static const nsFont* ThreadSafeGetDefaultFontHelper(const Document& aDocument,
-                                                    nsAtom* aLanguage,
-                                                    uint8_t aGenericId) {
+static const nsFont* ThreadSafeGetDefaultFontHelper(
+    const Document& aDocument, nsAtom* aLanguage,
+    StyleGenericFontFamily aGenericId) {
   bool needsCache = false;
   const nsFont* retval;
 
@@ -962,14 +962,14 @@ void Gecko_AddRefAtom(nsAtom* aAtom) { NS_ADDREF(aAtom); }
 
 void Gecko_ReleaseAtom(nsAtom* aAtom) { NS_RELEASE(aAtom); }
 
-void Gecko_nsTArray_FontFamilyName_AppendNamed(nsTArray<FontFamilyName>* aNames,
-                                               nsAtom* aName, bool aQuoted) {
-  aNames->AppendElement(
-      FontFamilyName(aName, aQuoted ? eQuotedName : eUnquotedName));
+void Gecko_nsTArray_FontFamilyName_AppendNamed(
+    nsTArray<FontFamilyName>* aNames, nsAtom* aName,
+    StyleFontFamilyNameSyntax aSyntax) {
+  aNames->AppendElement(FontFamilyName(aName, aSyntax));
 }
 
 void Gecko_nsTArray_FontFamilyName_AppendGeneric(
-    nsTArray<FontFamilyName>* aNames, FontFamilyType aType) {
+    nsTArray<FontFamilyName>* aNames, StyleGenericFontFamily aType) {
   aNames->AppendElement(FontFamilyName(aType));
 }
 
@@ -1002,7 +1002,7 @@ void Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
                              const nsStyleFont* aFont,
                              const Document* aDocument) {
   const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(
-      *aDocument, aFont->mLanguage, kPresContext_DefaultVariableFont_ID);
+      *aDocument, aFont->mLanguage, StyleGenericFontFamily::None);
 
   // We have passed uninitialized memory to this function,
   // initialize it. We can't simply return an nsFont because then
@@ -1018,9 +1018,9 @@ void Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
 
 void Gecko_nsFont_Destroy(nsFont* aDest) { aDest->~nsFont(); }
 
-FontFamilyType Gecko_nsStyleFont_ComputeDefaultFontType(const Document* aDoc,
-                                                        uint8_t aGenericId,
-                                                        nsAtom* aLanguage) {
+StyleGenericFontFamily Gecko_nsStyleFont_ComputeDefaultFontType(
+    const Document* aDoc, StyleGenericFontFamily aGenericId,
+    nsAtom* aLanguage) {
   const nsFont* defaultFont =
       ThreadSafeGetDefaultFontHelper(*aDoc, aLanguage, aGenericId);
   return defaultFont->fontlist.GetDefaultFontType();
@@ -1892,29 +1892,12 @@ void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont,
   aFont->mLanguage = aSource->mLanguage;
 }
 
-void Gecko_nsStyleFont_PrioritizeUserFonts(nsStyleFont* aFont,
-                                           FontFamilyType aDefaultGeneric) {
+void Gecko_nsStyleFont_PrioritizeUserFonts(
+    nsStyleFont* aFont, StyleGenericFontFamily aDefaultGeneric) {
   MOZ_ASSERT(!StaticPrefs::browser_display_use_document_fonts());
-  MOZ_ASSERT(aDefaultGeneric != eFamily_none);
+  MOZ_ASSERT(aDefaultGeneric != StyleGenericFontFamily::None);
   if (!aFont->mFont.fontlist.PrioritizeFirstGeneric()) {
     aFont->mFont.fontlist.PrependGeneric(aDefaultGeneric);
-  }
-}
-
-void Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* aFont,
-                                                const Document* aDocument,
-                                                uint8_t aGenericId) {
-  const nsFont* defaultFont =
-      ThreadSafeGetDefaultFontHelper(*aDocument, aFont->mLanguage, aGenericId);
-  // In case of just the language changing, the parent could have had no
-  // generic, which Gecko just does regular cascading with. Do the same. This
-  // can only happen in the case where the language changed but the family did
-  // not
-  if (aGenericId != kGenericFont_NONE) {
-    aFont->mFont.fontlist = defaultFont->fontlist;
-  } else {
-    aFont->mFont.fontlist.SetDefaultFontType(
-        defaultFont->fontlist.GetDefaultFontType());
   }
 }
 
@@ -1954,7 +1937,6 @@ nscoord Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont* aFont,
 
 void FontSizePrefs::CopyFrom(const LangGroupFontPrefs& prefs) {
   mDefaultVariableSize = prefs.mDefaultVariableFont.size;
-  mDefaultFixedSize = prefs.mDefaultFixedFont.size;
   mDefaultSerifSize = prefs.mDefaultSerifFont.size;
   mDefaultSansSerifSize = prefs.mDefaultSansSerifFont.size;
   mDefaultMonospaceSize = prefs.mDefaultMonospaceFont.size;

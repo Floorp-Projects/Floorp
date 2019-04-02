@@ -937,28 +937,28 @@ struct FontFamily {
 // particular case (so it can be reported to the DevTools font inspector).
 struct FamilyAndGeneric final {
   FamilyAndGeneric()
-      : mFamily(), mGeneric(mozilla::FontFamilyType::eFamily_none) {}
+      : mFamily(), mGeneric(mozilla::StyleGenericFontFamily::None) {}
   FamilyAndGeneric(const FamilyAndGeneric& aOther)
       : mFamily(aOther.mFamily), mGeneric(aOther.mGeneric) {}
-  explicit FamilyAndGeneric(
-      gfxFontFamily* aFamily,
-      mozilla::FontFamilyType aGeneric = mozilla::FontFamilyType::eFamily_none)
+  explicit FamilyAndGeneric(gfxFontFamily* aFamily,
+                            mozilla::StyleGenericFontFamily aGeneric =
+                                mozilla::StyleGenericFontFamily::None)
       : mFamily(aFamily), mGeneric(aGeneric) {}
-  explicit FamilyAndGeneric(
-      mozilla::fontlist::Family* aFamily,
-      mozilla::FontFamilyType aGeneric = mozilla::FontFamilyType::eFamily_none)
+  explicit FamilyAndGeneric(mozilla::fontlist::Family* aFamily,
+                            mozilla::StyleGenericFontFamily aGeneric =
+                                mozilla::StyleGenericFontFamily::None)
       : mFamily(aFamily), mGeneric(aGeneric) {}
-  explicit FamilyAndGeneric(
-      const FontFamily& aFamily,
-      mozilla::FontFamilyType aGeneric = mozilla::FontFamilyType::eFamily_none)
+  explicit FamilyAndGeneric(const FontFamily& aFamily,
+                            mozilla::StyleGenericFontFamily aGeneric =
+                                mozilla::StyleGenericFontFamily::None)
       : mFamily(aFamily), mGeneric(aGeneric) {}
 
   bool operator==(const FamilyAndGeneric& aOther) const {
-    return (mFamily == aOther.mFamily && mGeneric == aOther.mGeneric);
+    return mFamily == aOther.mFamily && mGeneric == aOther.mGeneric;
   }
 
   FontFamily mFamily;
-  mozilla::FontFamilyType mGeneric;
+  mozilla::StyleGenericFontFamily mGeneric;
 };
 
 #endif

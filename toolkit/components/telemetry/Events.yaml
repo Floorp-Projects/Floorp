@@ -1014,6 +1014,8 @@ uptake.remotecontent.result:
         "timer", "forced", "manual")
       age: >
         The age of pulled data in seconds (ie. difference between publication time and fetch time).
+      duration: >
+        The duration of the synchronization process in milliseconds.
     bug_numbers:
       - 1517469
     record_in_processes: ["main"]

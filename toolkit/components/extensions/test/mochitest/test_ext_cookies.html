@@ -68,6 +68,44 @@ add_task(async function test_cookies() {
       return url.href;
     }
 
+    const IPV6_TEST_HOST = "[2a03:4000:6:310e:216:3eff:fe53:99b]";
+    const IPV6_TEST_URL = `http://${IPV6_TEST_HOST}/`;
+    const IPV6_THE_FUTURE = Date.now() + 5 * 60;
+    const IPV6_STORE_ID = "firefox-default";
+
+    let ipv6_expected = {
+      name: "name1",
+      value: "value1",
+      domain: IPV6_TEST_HOST,
+      hostOnly: true,
+      path: "/",
+      secure: false,
+      httpOnly: false,
+      sameSite: "no_restriction",
+      session: false,
+      expirationDate: IPV6_THE_FUTURE,
+      storeId: IPV6_STORE_ID,
+      firstPartyDomain: "",
+    };
+
+    await browser.browsingData.removeCookies({});
+    let ipv6_cookie = await browser.cookies.set({url: IPV6_TEST_URL, name: "name1", value: "value1", expirationDate: IPV6_THE_FUTURE});
+    assertExpected(ipv6_expected, ipv6_cookie);
+
+    let ipv6_cookies = await browser.cookies.getAll({name: "name1"});
+    browser.test.assertEq(1, ipv6_cookies.length, "ipv6 cookie can be added");
+    assertExpected(ipv6_expected, ipv6_cookies[0]);
+
+    ipv6_cookies = await browser.cookies.getAll({domain: IPV6_TEST_HOST, name: "name1"});
+    browser.test.assertEq(1, ipv6_cookies.length, "can get ipv6 cookie by host");
+    assertExpected(ipv6_expected, ipv6_cookies[0]);
+
+    let ipv6_details = await browser.cookies.remove({url: IPV6_TEST_URL, name: "name1"});
+    assertExpected({url: IPV6_TEST_URL, name: "name1", storeId: IPV6_STORE_ID, firstPartyDomain: ""}, ipv6_details);
+
+    ipv6_cookies = await browser.cookies.getAll({name: "name1"});
+    browser.test.assertEq(0, ipv6_cookies.length, "ipv6 cookie can be removed");
+
     const TEST_URL = "http://example.org/";
     const TEST_SECURE_URL = "https://example.org/";
     const THE_FUTURE = Date.now() + 5 * 60;
@@ -299,7 +337,7 @@ add_task(async function test_cookies() {
     incognitoOverride: "spanning",
     background,
     manifest: {
-      permissions: ["cookies", "*://example.org/", "webNavigation", "browsingData"],
+      permissions: ["cookies", "*://example.org/", "*://[2a03:4000:6:310e:216:3eff:fe53:99b]/", "webNavigation", "browsingData"],
     },
   });
 

@@ -1368,8 +1368,8 @@ void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
   nsContentUtils::LogSimpleConsoleError(
       NS_ConvertUTF8toUTF16(
           nsPrintfCString("Quota %s: %s:%" PRIu32, aStr, aFile, aLine)),
-      "quota",
-      false /* Quota Manager is not active in private browsing mode */);
+      "quota", false /* Quota Manager is not active in private browsing mode */,
+      true /* Quota Manager runs always in a chrome context */);
 }
 
 namespace {

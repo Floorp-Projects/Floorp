@@ -16,8 +16,6 @@ ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
-
 XPCOMUtils.defineLazyGetter(this, "gPipNSSBundle", function() {
   return Services.strings.createBundle("chrome://pipnss/locale/pipnss.properties");
 });

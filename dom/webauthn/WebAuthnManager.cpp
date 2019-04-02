@@ -38,8 +38,18 @@ static mozilla::LazyLogModule gWebAuthnManagerLog("webauthnmanager");
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(WebAuthnManager,
                                                WebAuthnManagerBase)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(WebAuthnManager, WebAuthnManagerBase,
-                                   mFollowingSignal, mTransaction)
+NS_IMPL_CYCLE_COLLECTION_CLASS(WebAuthnManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WebAuthnManager,
+                                                WebAuthnManagerBase)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFollowingSignal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTransaction)
+  tmp->ClearTransaction();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WebAuthnManager,
+                                                  WebAuthnManagerBase)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFollowingSignal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTransaction)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 /***********************************************************************
  * Utility Functions
@@ -156,7 +166,7 @@ nsresult RelaxSameOrigin(nsPIDOMWindowInner* aParent,
  **********************************************************************/
 
 void WebAuthnManager::ClearTransaction() {
-  if (!NS_WARN_IF(mTransaction.isNothing())) {
+  if (!mTransaction.isNothing()) {
     StopListeningForVisibilityEvents();
   }
 

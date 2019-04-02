@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/RefPtr.h"
+#include "nsContentUtils.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 

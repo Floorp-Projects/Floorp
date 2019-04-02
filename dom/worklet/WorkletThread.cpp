@@ -210,10 +210,11 @@ class WorkletThread::TerminateRunnable final : public Runnable {
   RefPtr<WorkletThread> mWorkletThread;
 };
 
-WorkletThread::WorkletThread()
+WorkletThread::WorkletThread(WorkletImpl* aWorkletImpl)
     : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
                    MakeUnique<mozilla::EventQueue>()),
                nsThread::NOT_MAIN_THREAD, kWorkletStackSize),
+      mWorkletImpl(aWorkletImpl),
       mExitLoop(false),
       mIsTerminating(false) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -226,8 +227,9 @@ WorkletThread::~WorkletThread() {
 }
 
 // static
-already_AddRefed<WorkletThread> WorkletThread::Create() {
-  RefPtr<WorkletThread> thread = new WorkletThread();
+already_AddRefed<WorkletThread> WorkletThread::Create(
+    WorkletImpl* aWorkletImpl) {
+  RefPtr<WorkletThread> thread = new WorkletThread(aWorkletImpl);
   if (NS_WARN_IF(NS_FAILED(thread->Init()))) {
     return nullptr;
   }
@@ -368,7 +370,9 @@ WorkletThread::Observe(nsISupports* aSubject, const char* aTopic,
                        const char16_t*) {
   MOZ_ASSERT(strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
 
-  Terminate();
+  // The WorkletImpl will terminate the worklet thread after sending a message
+  // to release worklet thread objects.
+  mWorkletImpl->NotifyWorkletFinished();
   return NS_OK;
 }
 

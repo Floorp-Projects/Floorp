@@ -40,7 +40,12 @@ UniquePtr<RenderCompositor> RenderCompositor::Create(
   }
 #endif
 
+#if defined(MOZ_WIDGET_ANDROID)
+  // RenderCompositorOGL is not used on android
+  return nullptr;
+#else
   return RenderCompositorOGL::Create(std::move(aWidget));
+#endif
 }
 
 RenderCompositor::RenderCompositor(RefPtr<widget::CompositorWidget>&& aWidget)

@@ -79,7 +79,7 @@ class MachCommands(MachCommandBase):
 
         runtime_testvars = {}
         for arg in ('webRootDir', 'pageManifest', 'resultsDir', 'entities', 'iterations',
-                    'perTabPause', 'settleWaitTime', 'maxTabs', 'dmd'):
+                    'perTabPause', 'settleWaitTime', 'maxTabs', 'dmd', 'tp6'):
             if arg in kwargs and kwargs[arg] is not None:
                 runtime_testvars[arg] = kwargs[arg]
 
@@ -94,6 +94,10 @@ class MachCommands(MachCommandBase):
         if 'resultsDir' not in runtime_testvars:
             runtime_testvars['resultsDir'] = os.path.join(awsy_tests_dir,
                                                           'results')
+
+        runtime_testvars['bin'] = binary
+        runtime_testvars['run_local'] = True
+
         page_load_test_dir = os.path.join(web_root_dir, 'page_load_test')
         if not os.path.isdir(page_load_test_dir):
             os.makedirs(page_load_test_dir)
@@ -238,6 +242,9 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--dmd', group='AWSY', action='store_true',
                      dest='dmd', default=False,
                      help='Enable DMD during testing. Requires a DMD-enabled build.')
+    @CommandArgument('--tp6', group='AWSY', action='store_true',
+                     dest='tp6', default=False,
+                     help='Use the tp6 pageset during testing.')
     def run_awsy_test(self, tests, **kwargs):
         """mach awsy-test runs the in-tree version of the Are We Slim Yet
         (AWSY) tests.

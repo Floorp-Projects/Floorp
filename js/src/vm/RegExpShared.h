@@ -21,6 +21,7 @@
 #include "gc/Marking.h"
 #include "gc/Zone.h"
 #include "js/AllocPolicy.h"
+#include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "js/UbiNode.h"
 #include "js/Vector.h"
 #include "vm/ArrayObject.h"
@@ -83,7 +84,7 @@ class RegExpShared : public gc::TenuredCell {
   /* Source to the RegExp, for lazy compilation. */
   GCPtr<JSAtom*> source;
 
-  RegExpFlag flags;
+  JS::RegExpFlags flags;
   bool canStringMatch;
   size_t parenCount;
 
@@ -103,7 +104,7 @@ class RegExpShared : public gc::TenuredCell {
   JitCodeTables tables;
 
   /* Internal functions. */
-  RegExpShared(JSAtom* source, RegExpFlag flags);
+  RegExpShared(JSAtom* source, JS::RegExpFlags flags);
 
   static bool compile(JSContext* cx, MutableHandleRegExpShared res,
                       HandleLinearString input, CompilationMode mode,
@@ -148,12 +149,13 @@ class RegExpShared : public gc::TenuredCell {
   size_t pairCount() const { return getParenCount() + 1; }
 
   JSAtom* getSource() const { return source; }
-  RegExpFlag getFlags() const { return flags; }
-  bool ignoreCase() const { return flags & IgnoreCaseFlag; }
-  bool global() const { return flags & GlobalFlag; }
-  bool multiline() const { return flags & MultilineFlag; }
-  bool sticky() const { return flags & StickyFlag; }
-  bool unicode() const { return flags & UnicodeFlag; }
+  JS::RegExpFlags getFlags() const { return flags; }
+
+  bool global() const { return flags.global(); }
+  bool ignoreCase() const { return flags.ignoreCase(); }
+  bool multiline() const { return flags.multiline(); }
+  bool unicode() const { return flags.unicode(); }
+  bool sticky() const { return flags.sticky(); }
 
   bool isCompiled(CompilationMode mode, bool latin1,
                   ForceByteCodeEnum force = DontForceByteCode) const {
@@ -197,22 +199,22 @@ class RegExpShared : public gc::TenuredCell {
 
 class RegExpZone {
   struct Key {
-    JSAtom* atom;
-    uint16_t flag;
+    JSAtom* atom = nullptr;
+    JS::RegExpFlags flags = JS::RegExpFlag::NoFlags;
 
-    Key() : atom(nullptr), flag(0) {}
-    Key(JSAtom* atom, RegExpFlag flag) : atom(atom), flag(flag) {}
+    Key() = default;
+    Key(JSAtom* atom, JS::RegExpFlags flags) : atom(atom), flags(flags) {}
     MOZ_IMPLICIT Key(const ReadBarriered<RegExpShared*>& shared)
         : atom(shared.unbarrieredGet()->getSource()),
-          flag(shared.unbarrieredGet()->getFlags()) {}
+          flags(shared.unbarrieredGet()->getFlags()) {}
 
     typedef Key Lookup;
     static HashNumber hash(const Lookup& l) {
       HashNumber hash = DefaultHasher<JSAtom*>::hash(l.atom);
-      return mozilla::AddToHash(hash, l.flag);
+      return mozilla::AddToHash(hash, l.flags.value());
     }
     static bool match(Key l, Key r) {
-      return l.atom == r.atom && l.flag == r.flag;
+      return l.atom == r.atom && l.flags == r.flags;
     }
   };
 
@@ -231,12 +233,12 @@ class RegExpZone {
 
   bool empty() const { return set_.empty(); }
 
-  RegExpShared* maybeGet(JSAtom* source, RegExpFlag flags) const {
+  RegExpShared* maybeGet(JSAtom* source, JS::RegExpFlags flags) const {
     Set::Ptr p = set_.lookup(Key(source, flags));
     return p ? *p : nullptr;
   }
 
-  RegExpShared* get(JSContext* cx, HandleAtom source, RegExpFlag flags);
+  RegExpShared* get(JSContext* cx, HandleAtom source, JS::RegExpFlags flags);
 
   /* Like 'get', but compile 'maybeOpt' (if non-null). */
   RegExpShared* get(JSContext* cx, HandleAtom source, JSString* maybeOpt);

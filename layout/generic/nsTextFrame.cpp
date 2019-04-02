@@ -5731,7 +5731,7 @@ gfxFloat nsTextFrame::ComputeSelectionUnderlineHeight(
       nscoord defaultFontSize =
           aPresContext->Document()
               ->GetFontPrefsForLang(nullptr)
-              ->GetDefaultFont(kPresContext_DefaultVariableFont_ID)
+              ->GetDefaultFont(StyleGenericFontFamily::None)
               ->size;
       int32_t zoomedFontSize = aPresContext->AppUnitsToDevPixels(
           nsStyleFont::ZoomText(*aPresContext->Document(), defaultFontSize));

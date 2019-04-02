@@ -1,0 +1,132 @@
+[
+    {
+        "algorithm": "sha512",
+        "digest": "edc07e9eb78e3ec83364f5b9150a40c2640338957a7c53da848a1c0a5f0b917411a088d2ad7f2a5be0deb42dc5a2413534a1b682940f0e4c12f703d50b6ff1f2",
+        "filename": "mitmproxy-tp6-instagram-binast.zip",
+        "size": 6626956,
+        "unpack": true,
+        "visibility": "public"
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "f1dba7631f1f17d04e4811a3ee139c23a8ff599bb1a38b564a05d87b02261f58168d3c3e8c49a1e16d3b268c9c315a0f7eb106eec1d759261641b729f691d013",
+        "filename": "mitmproxy-tp6-ebay.zip",
+        "size": 2860653,
+        "unpack": true,
+        "visibility": "public"
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "28c3b2a5871bba34fbb25e1a9bbb367c665792484cffec40f2cb6b17d989569b9e56a51bf901ad195dcde45bc1dfa5c7428266147ffe5124e8dc8e1c2a7a9f3f",
+        "filename": "mitmproxy-tp6-google-mail.zip",
+        "size": 9966121,
+        "unpack": true,
+        "visibility": "public"
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "913d7631cc2f1685310ea1d807cf4dc6a91298f6f24700393e46272128de9bb47ce44c9e88a771ff2169d0458c83b1df07b654456495b7d8fb6c6899fba0bc3a",
+        "filename": "mitmproxy-tp6-paypal.zip",
+        "size": 1037796,
+        "unpack": true,
+        "visibility": "public"
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "a0dd4ccb99bac02a38b3c67baa08296c3e894837aba1c1b0750c592db6ff962ab0c61f557ffb45c2ea77e95345954a0786bf764448d090cc6cf76679d1a8a616",
+        "filename": "mitmproxy-tp6-pinterest.zip",
+        "size": 11627712,
+        "unpack": true,
+        "visibility": "public"
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "3343f54b6c727a2061534872888da4e3aa647e81903c675dc318c717ed0c93f6ce4e2b98c66eb4128376cf8507590531283c95f3951259607edaaae28944d9a5",
+        "filename": "mitmproxy-recordings-raptor-tp6.zip",
+        "size": 8767174,
+        "unpack": true
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "eb32218815d3c2187807f3a18d6df1657e01a215820deaaa7a035f06d180780ac9652479ac7db1d8cde3728a890521aff2e0a5c4738304966b2a93ce1b7f33bb",
+        "filename": "mitmproxy-recordings-raptor-gdocs.zip",
+        "size": 26179496,
+        "unpack": true
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "5b8080cf842a50fe2055127daa084fa9f133307965e4d8af246978150b8b3b11f1fb06cdf65ba69e13c875b77db14e7494cdb940376b264c3aefb5b53e22b892",
+        "filename": "raptor-tp6-3.zip",
+        "size": 24512088,
+        "unpack": true
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "0e9f2a23323f93f7a9839ab49d84555cce03bfab2196aa8670e604d6df390b22f0594527cecf7b2efd0449dd87507ec934bdcc74f1ebee68c22161f4104b6513",
+        "filename": "raptor-tp6-4.zip",
+        "size": 1643188,
+        "unpack": true
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "4a52cb6770062231f9f283ab42ac53634d91677146b4d91931f508de22bff262512775d0c93d80730287000907e438d467136768883691c3e20c1e6a8f475a03",
+        "filename": "raptor-tp6-5.zip",
+        "size": 27670268,
+        "unpack": true
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "21110ee297074413a72343bcb7d22ae88efce104de6e7eea5916e2dae004b29746ec6dd6155686cffed816e88d38ad1bbc04fe1253623ed8c0d4256a146d8b77",
+        "filename": "raptor-tp6-6.zip",
+        "size": 2240008,
+        "unpack": true
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "3b5d06a79b2f9fb4e18534229844da69ca6f8e0f0759562947a29f681e27204ebae25b9a56c4ae2b95dabf067c3afeda424bcfb4d104bbc474a3970d4f2177aa",
+        "filename": "raptor-tp6-7.zip",
+        "size": 1862165,
+        "unpack": true,
+        "visibility": "public"
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "d49ac687231a71a19d946e49ad9abea172316201d58ebd84bea360b70792948b36454966a0193039bafe18311444b3f25ab3f6101b77fa0a1e77b7ec83f3c8dc",
+        "filename": "mitmproxy-tp6-tumblr.zip",
+        "size": 20872384,
+        "unpack": true,
+        "visibility": "public"
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "46ab2d3b58fe5be72029bae6ed2e84b8b81ac46d30a1ffaf4ac4ba3ba4284e73507d3becc2a274b9d5ef3497f91bb655fa48df959f0ed1c98e0581e638702200",
+        "filename": "mitmproxy-tp6-twitter.zip",
+        "size": 17821103,
+        "unpack": true,
+        "visibility": "public"
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "efd7090b826d03f54ef58e631d8b24e0e7263e06fb679a8c2f072dde9e7a8223e02812db73e6fb71b08d4247f7652a72c94029959e34f6d49271c6172c0587cb",
+        "filename": "mitmproxy-tp6-wikipedia.zip",
+        "size": 1336699,
+        "unpack": true,
+        "visibility": "public"
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "daf99106a71bea24ff6a0b195096fb36d328121effe9de84fc57e26a6ad8674db7c08eb17966cb2f3312a1e2b87b05da4339889c58b81c46c1e5af301dd27ad2",
+        "filename": "mitmproxy-tp6-yahoo-mail.zip",
+        "size": 4110884,
+        "unpack": true,
+        "visibility": "public"
+    },
+    {
+        "algorithm": "sha512",
+        "digest": "c29479b82a26db3722d6fe60c6a9d5b0849c828b4904553c115712610ead7be508d1c194050860140f8d9f4057b5e5088c085ea52319e37a0c9862fa120e5f22",
+        "filename": "mitmproxy-tp6-yahoo-news.zip",
+        "size": 11849146,
+        "unpack": true,
+        "visibility": "public"
+    }
+]

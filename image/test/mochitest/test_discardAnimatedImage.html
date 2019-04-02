@@ -114,8 +114,10 @@ function checkIfFinished() {
 
   if ((gNumFrameUpdates[0] >= kNumFrameUpdatesToExpect) &&
       (gNumFrameUpdates[1] >= kNumFrameUpdatesToExpect) &&
+      (gNumFrameUpdates[2] >= kNumFrameUpdatesToExpect) &&
       (gNumSnapShotChanges[0] >= kNumFrameUpdatesToExpect) &&
-      (gNumSnapShotChanges[1] >= kNumFrameUpdatesToExpect)) {
+      (gNumSnapShotChanges[1] >= kNumFrameUpdatesToExpect) &&
+      (gNumSnapShotChanges[2] >= kNumFrameUpdatesToExpect)) {
     ok(true, "got expected frame updates");
     gFinished = true;
     SimpleTest.finish();
@@ -129,7 +131,7 @@ function addCallbacks(anImage, arrayIndex) {
   observer.discard = function () {
     gNumDiscards++;
     ok(true, "got image discard");
-    if (arrayIndex >= 2) {
+    if (arrayIndex >= 3) {
       // The last two images are finite, so we don't expect any frame updates,
       // this image is done the test, so remove the observer.
       if (!gRemovedObserver[arrayIndex]) {

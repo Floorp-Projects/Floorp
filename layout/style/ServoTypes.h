@@ -161,7 +161,6 @@ struct MediumFeaturesChangedResult {
 struct FontSizePrefs {
   void CopyFrom(const mozilla::LangGroupFontPrefs&);
   nscoord mDefaultVariableSize;
-  nscoord mDefaultFixedSize;
   nscoord mDefaultSerifSize;
   nscoord mDefaultSansSerifSize;
   nscoord mDefaultMonospaceSize;

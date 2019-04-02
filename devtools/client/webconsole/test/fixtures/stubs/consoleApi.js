@@ -2104,6 +2104,7 @@ stubPackets.set(`console.log('foobar', 'test')`, {
       "foobar",
       "test"
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2133,6 +2134,7 @@ stubPackets.set(`console.log(undefined)`, {
         "type": "undefined"
       }
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2160,6 +2162,7 @@ stubPackets.set(`console.warn('danger, will robinson!')`, {
     "arguments": [
       "danger, will robinson!"
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2189,6 +2192,7 @@ stubPackets.set(`console.log(NaN)`, {
         "type": "NaN"
       }
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2218,6 +2222,7 @@ stubPackets.set(`console.log(null)`, {
         "type": "null"
       }
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2245,6 +2250,7 @@ stubPackets.set(`console.log('鼬')`, {
     "arguments": [
       "鼬"
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2270,6 +2276,7 @@ stubPackets.set(`console.clear()`, {
   "message": {
     "addonId": "",
     "arguments": [],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2297,6 +2304,7 @@ stubPackets.set(`console.count('bar')`, {
     "arguments": [
       "bar"
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": {
       "count": 1,
@@ -2350,6 +2358,7 @@ stubPackets.set(`console.assert(false, {message: 'foobar'})`, {
         }
       }
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2386,6 +2395,7 @@ stubPackets.set(`console.log('hello \nfrom \rthe \"string world!')`, {
     "arguments": [
       "hello \nfrom \rthe \"string world!"
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2413,6 +2423,7 @@ stubPackets.set(`console.log('úṇĩçödê țĕșť')`, {
     "arguments": [
       "úṇĩçödê țĕșť"
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2452,6 +2463,7 @@ stubPackets.set(`console.dirxml(window)`, {
         }
       }
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2497,6 +2509,7 @@ stubPackets.set(`console.log('myarray', ['red', 'green', 'blue'])`, {
         }
       }
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2534,6 +2547,7 @@ stubPackets.set(`console.log('myregex', /a.b.c/)`, {
         "displayString": "/a.b.c/"
       }
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2578,6 +2592,7 @@ stubPackets.set(`console.table(['red', 'green', 'blue']);`, {
         }
       }
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2641,6 +2656,7 @@ stubPackets.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', 
         }
       }
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2668,6 +2684,7 @@ stubPackets.set(`console.debug('debug message');`, {
     "arguments": [
       "debug message"
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2695,6 +2712,7 @@ stubPackets.set(`console.info('info message');`, {
     "arguments": [
       "info message"
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2722,6 +2740,7 @@ stubPackets.set(`console.error('error message');`, {
     "arguments": [
       "error message"
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2781,6 +2800,7 @@ stubPackets.set(`console.log('mymap')`, {
         }
       }
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2825,6 +2845,7 @@ stubPackets.set(`console.log('myset')`, {
         }
       }
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2850,6 +2871,7 @@ stubPackets.set(`console.trace()`, {
   "message": {
     "addonId": "",
     "arguments": [],
+    "chromeContext": false,
     "columnNumber": 11,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2942,6 +2964,7 @@ stubPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
         }
       }
     ],
+    "chromeContext": false,
     "columnNumber": 11,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -2992,6 +3015,7 @@ stubPackets.set(`console.time('bar')`, {
     "arguments": [
       "bar"
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3021,6 +3045,7 @@ stubPackets.set(`timerAlreadyExists`, {
     "arguments": [
       "bar"
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3051,6 +3076,7 @@ stubPackets.set(`console.timeLog('bar') - 1`, {
     "arguments": [
       "bar"
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3106,6 +3132,7 @@ stubPackets.set(`console.timeLog('bar') - 2`, {
         }
       }
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3136,6 +3163,7 @@ stubPackets.set(`console.timeEnd('bar')`, {
     "arguments": [
       "bar"
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3166,6 +3194,7 @@ stubPackets.set(`timeEnd.timerDoesntExist`, {
     "arguments": [
       "bar"
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3196,6 +3225,7 @@ stubPackets.set(`timeLog.timerDoesntExist`, {
     "arguments": [
       "bar"
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3226,6 +3256,7 @@ stubPackets.set(`console.table('bar')`, {
     "arguments": [
       "bar"
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3270,6 +3301,7 @@ stubPackets.set(`console.table(['a', 'b', 'c'])`, {
         }
       }
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3297,6 +3329,7 @@ stubPackets.set(`console.group('bar')`, {
     "arguments": [
       "bar"
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3322,6 +3355,7 @@ stubPackets.set(`console.groupEnd('bar')`, {
   "message": {
     "addonId": "",
     "arguments": [],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3349,6 +3383,7 @@ stubPackets.set(`console.groupCollapsed('foo')`, {
     "arguments": [
       "foo"
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3374,6 +3409,7 @@ stubPackets.set(`console.groupEnd('foo')`, {
   "message": {
     "addonId": "",
     "arguments": [],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3399,6 +3435,7 @@ stubPackets.set(`console.group()`, {
   "message": {
     "addonId": "",
     "arguments": [],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3424,6 +3461,7 @@ stubPackets.set(`console.groupEnd()`, {
   "message": {
     "addonId": "",
     "arguments": [],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3452,6 +3490,7 @@ stubPackets.set(`console.log(%cfoobar)`, {
       "foo",
       "bar"
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3484,6 +3523,7 @@ stubPackets.set(`console.log("%cHello%c|%cWorld")`, {
       "|",
       "World"
     ],
+    "chromeContext": false,
     "columnNumber": 11,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3516,6 +3556,7 @@ stubPackets.set(`console.group(%cfoo%cbar)`, {
       "foo",
       "bar"
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3544,6 +3585,7 @@ stubPackets.set(`console.groupEnd(%cfoo%cbar)`, {
   "message": {
     "addonId": "",
     "arguments": [],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3572,6 +3614,7 @@ stubPackets.set(`console.groupCollapsed(%cfoo%cbaz)`, {
       "foo",
       "baz"
     ],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3600,6 +3643,7 @@ stubPackets.set(`console.groupEnd(%cfoo%cbaz)`, {
   "message": {
     "addonId": "",
     "arguments": [],
+    "chromeContext": false,
     "columnNumber": 9,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3668,6 +3712,7 @@ stubPackets.set(`console.dir({C, M, Y, K})`, {
         }
       }
     ],
+    "chromeContext": false,
     "columnNumber": 35,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3695,6 +3740,7 @@ stubPackets.set(`console.count | default: 1`, {
     "arguments": [
       "default"
     ],
+    "chromeContext": false,
     "columnNumber": 13,
     "counter": {
       "count": 1,
@@ -3725,6 +3771,7 @@ stubPackets.set(`console.count | default: 2`, {
     "arguments": [
       "default"
     ],
+    "chromeContext": false,
     "columnNumber": 13,
     "counter": {
       "count": 2,
@@ -3755,6 +3802,7 @@ stubPackets.set(`console.count | test counter: 1`, {
     "arguments": [
       "test counter"
     ],
+    "chromeContext": false,
     "columnNumber": 13,
     "counter": {
       "count": 1,
@@ -3785,6 +3833,7 @@ stubPackets.set(`console.count | test counter: 2`, {
     "arguments": [
       "test counter"
     ],
+    "chromeContext": false,
     "columnNumber": 13,
     "counter": {
       "count": 2,
@@ -3815,6 +3864,7 @@ stubPackets.set(`console.count | default: 3`, {
     "arguments": [
       "default"
     ],
+    "chromeContext": false,
     "columnNumber": 13,
     "counter": {
       "count": 3,
@@ -3843,6 +3893,7 @@ stubPackets.set(`console.count | clear`, {
   "message": {
     "addonId": "",
     "arguments": [],
+    "chromeContext": false,
     "columnNumber": 13,
     "counter": null,
     "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -3870,6 +3921,7 @@ stubPackets.set(`console.count | default: 4`, {
     "arguments": [
       "default"
     ],
+    "chromeContext": false,
     "columnNumber": 13,
     "counter": {
       "count": 4,
@@ -3900,6 +3952,7 @@ stubPackets.set(`console.count | test counter: 3`, {
     "arguments": [
       "test counter"
     ],
+    "chromeContext": false,
     "columnNumber": 13,
     "counter": {
       "count": 3,
@@ -3930,6 +3983,7 @@ stubPackets.set(`console.countReset | test counter: 0`, {
     "arguments": [
       "test counter"
     ],
+    "chromeContext": false,
     "columnNumber": 13,
     "counter": {
       "count": 0,
@@ -3960,6 +4014,7 @@ stubPackets.set(`console.countReset | counterDoesntExist`, {
     "arguments": [
       "test counter"
     ],
+    "chromeContext": false,
     "columnNumber": 13,
     "counter": {
       "error": "counterDoesntExist",
