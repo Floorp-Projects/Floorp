@@ -6,7 +6,6 @@
 
 #include "builtin/RegExp.h"
 
-#include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/TypeTraits.h"
 
@@ -14,7 +13,6 @@
 #include "irregexp/RegExpParser.h"
 #include "jit/InlinableNatives.h"
 #include "js/PropertySpec.h"
-#include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
 #include "vm/JSContext.h"
@@ -28,13 +26,10 @@
 
 using namespace js;
 
-using mozilla::AssertedCast;
 using mozilla::CheckedInt;
 using mozilla::IsAsciiDigit;
 
 using JS::CompileOptions;
-using JS::RegExpFlag;
-using JS::RegExpFlags;
 
 /*
  * ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad 21.2.5.2.2
@@ -192,16 +187,16 @@ bool js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res,
 }
 
 static bool CheckPatternSyntaxSlow(JSContext* cx, HandleAtom pattern,
-                                   RegExpFlags flags) {
+                                   RegExpFlag flags) {
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   CompileOptions options(cx);
   frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
   return irregexp::ParsePatternSyntax(dummyTokenStream, allocScope.alloc(),
-                                      pattern, flags.unicode());
+                                      pattern, flags & UnicodeFlag);
 }
 
 static RegExpShared* CheckPatternSyntax(JSContext* cx, HandleAtom pattern,
-                                        RegExpFlags flags) {
+                                        RegExpFlag flags) {
   // If we already have a RegExpShared for this pattern/flags, we can
   // avoid the much slower CheckPatternSyntaxSlow call.
 
@@ -257,7 +252,7 @@ static bool RegExpInitializeIgnoringLastIndex(JSContext* cx,
   }
 
   /* Step 3. */
-  RegExpFlags flags = RegExpFlag::NoFlags;
+  RegExpFlag flags = RegExpFlag(0);
   if (!flagsValue.isUndefined()) {
     /* Step 4. */
     RootedString flagStr(cx, ToString<CanGC>(cx, flagsValue));
@@ -368,7 +363,7 @@ MOZ_ALWAYS_INLINE bool regexp_compile_impl(JSContext* cx,
     RootedObject patternObj(cx, &patternValue.toObject());
 
     RootedAtom sourceAtom(cx);
-    RegExpFlags flags = RegExpFlag::NoFlags;
+    RegExpFlag flags;
     {
       // Step 3b.
       RegExpShared* shared = RegExpToShared(cx, patternObj);
@@ -466,7 +461,7 @@ bool js::regexp_construct(JSContext* cx, unsigned argc, Value* vp) {
     RootedObject patternObj(cx, &patternValue.toObject());
 
     RootedAtom sourceAtom(cx);
-    RegExpFlags flags;
+    RegExpFlag flags;
     RootedRegExpShared shared(cx);
     {
       // Step 4.a.
@@ -500,7 +495,7 @@ bool js::regexp_construct(JSContext* cx, unsigned argc, Value* vp) {
     // Step 8.
     if (args.hasDefined(1)) {
       // Step 4.c / 21.2.3.2.2 RegExpInitialize step 4.
-      RegExpFlags flagsArg = RegExpFlag::NoFlags;
+      RegExpFlag flagsArg = RegExpFlag(0);
       RootedString flagStr(cx, ToString<CanGC>(cx, args[1]));
       if (!flagStr) {
         return false;
@@ -514,7 +509,7 @@ bool js::regexp_construct(JSContext* cx, unsigned argc, Value* vp) {
         shared = nullptr;
       }
 
-      if (!flags.unicode() && flagsArg.unicode()) {
+      if (!(flags & UnicodeFlag) && flagsArg & UnicodeFlag) {
         // Have to check syntax again when adding 'u' flag.
 
         // ES 2017 draft rev 9b49a888e9dfe2667008a01b2754c3662059ae56
@@ -599,7 +594,7 @@ bool js::regexp_construct_raw_flags(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 4.c.
-  RegExpFlags flags = AssertedCast<uint8_t>(int32_t(args[1].toNumber()));
+  int32_t flags = int32_t(args[1].toNumber());
 
   // Step 7.
   RegExpObject* regexp = RegExpAlloc(cx, GenericObject);
@@ -608,7 +603,7 @@ bool js::regexp_construct_raw_flags(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 8.
-  regexp->initAndZeroLastIndex(sourceAtom, flags, cx);
+  regexp->initAndZeroLastIndex(sourceAtom, RegExpFlag(flags), cx);
   args.rval().setObject(*regexp);
   return true;
 }

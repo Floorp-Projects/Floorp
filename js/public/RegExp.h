@@ -13,7 +13,6 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "js/RootingAPI.h"  // JS::{,Mutable}Handle
 #include "js/Value.h"       // JS::Value
 
@@ -23,19 +22,45 @@ class JSString;
 namespace JS {
 
 /**
+ * A namespace for all regular expression flags as they appear in the APIs below
+ * as flags values.
+ */
+struct RegExpFlags {
+ public:
+  /**
+   * Interpret regular expression source text case-insensitively by folding
+   * uppercase letters to lowercase, i.e. /i.
+   */
+  static constexpr unsigned IgnoreCase = 0b0'0001;
+
+  /**
+   * Act globally and find *all* matches (rather than stopping after just the
+   * first one), i.e. /g.
+   */
+  static constexpr unsigned Global = 0b0'0010;
+
+  /** Treat ^ and $ as begin and end of line, i.e. /m. */
+  static constexpr unsigned Multiline = 0b0'0100;
+
+  /** Only match starting from <regular expression>.lastIndex, i.e. /y. */
+  static constexpr unsigned Sticky = 0b0'1000;
+
+  /** Use Unicode semantics, i.e. /u. */
+  static constexpr unsigned Unicode = 0b1'0000;
+};
+
+/**
  * Create a new RegExp for the given Latin-1-encoded bytes and flags.
  */
 extern JS_PUBLIC_API JSObject* NewRegExpObject(JSContext* cx, const char* bytes,
-                                               size_t length,
-                                               RegExpFlags flags);
+                                               size_t length, unsigned flags);
 
 /**
  * Create a new RegExp for the given source and flags.
  */
 extern JS_PUBLIC_API JSObject* NewUCRegExpObject(JSContext* cx,
                                                  const char16_t* chars,
-                                                 size_t length,
-                                                 RegExpFlags flags);
+                                                 size_t length, unsigned flags);
 
 extern JS_PUBLIC_API bool SetRegExpInput(JSContext* cx, Handle<JSObject*> obj,
                                          Handle<JSString*> input);
@@ -70,10 +95,10 @@ extern JS_PUBLIC_API bool ObjectIsRegExp(JSContext* cx, Handle<JSObject*> obj,
 
 /**
  * Given a RegExp object (or a wrapper around one), return the set of all
- * JS::RegExpFlag::* for it.
+ * JS::RegExpFlags::* for it.
  */
-extern JS_PUBLIC_API RegExpFlags GetRegExpFlags(JSContext* cx,
-                                                Handle<JSObject*> obj);
+extern JS_PUBLIC_API unsigned GetRegExpFlags(JSContext* cx,
+                                             Handle<JSObject*> obj);
 
 /**
  * Return the source text for a RegExp object (or a wrapper around one), or null

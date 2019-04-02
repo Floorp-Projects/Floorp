@@ -24,7 +24,6 @@
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
-#include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
@@ -44,8 +43,6 @@ using mozilla::AssertedCast;
 using mozilla::Maybe;
 
 using JS::DoubleNaNValue;
-using JS::RegExpFlag;
-using JS::RegExpFlags;
 using JS::TrackedOutcome;
 
 namespace js {
@@ -627,7 +624,7 @@ IonBuilder::InliningResult IonBuilder::inlineNativeGetter(CallInfo& callInfo,
   }
 
   // Try to optimize RegExp getters.
-  RegExpFlags mask = RegExpFlag::NoFlags;
+  RegExpFlag mask = NoFlags;
   if (RegExpObject::isOriginalFlagGetter(native, &mask)) {
     const Class* clasp = thisTypes->getKnownClass(constraints());
     if (clasp != &RegExpObject::class_) {
@@ -638,7 +635,7 @@ IonBuilder::InliningResult IonBuilder::inlineNativeGetter(CallInfo& callInfo,
         MLoadFixedSlot::New(alloc(), thisArg, RegExpObject::flagsSlot());
     current->add(flags);
     flags->setResultType(MIRType::Int32);
-    MConstant* maskConst = MConstant::New(alloc(), Int32Value(mask.value()));
+    MConstant* maskConst = MConstant::New(alloc(), Int32Value(mask));
     current->add(maskConst);
     MBitAnd* maskedFlag = MBitAnd::New(alloc(), flags, maskConst);
     maskedFlag->setInt32Specialization();

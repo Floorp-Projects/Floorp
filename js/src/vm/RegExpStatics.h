@@ -29,7 +29,7 @@ class RegExpStatics {
    * a different compartment via evalcx().
    */
   HeapPtr<JSAtom*> lazySource;
-  JS::RegExpFlags lazyFlags;
+  RegExpFlag lazyFlags;
   size_t lazyIndex;
 
   /* The latest RegExp input, set before execution. */
@@ -274,7 +274,7 @@ inline void RegExpStatics::clear() {
   matches.forgetArray();
   matchesInput = nullptr;
   lazySource = nullptr;
-  lazyFlags = JS::RegExpFlag::NoFlags;
+  lazyFlags = RegExpFlag(0);
   lazyIndex = size_t(-1);
   pendingInput = nullptr;
   pendingLazyEvaluation = false;

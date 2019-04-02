@@ -49,7 +49,6 @@
 #include "js/HashTable.h"
 #include "js/LocaleSensitive.h"
 #include "js/PropertySpec.h"
-#include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
@@ -98,8 +97,6 @@ using mozilla::Maybe;
 
 using JS::AutoStableStringChars;
 using JS::CompileOptions;
-using JS::RegExpFlag;
-using JS::RegExpFlags;
 using JS::SourceOwnership;
 using JS::SourceText;
 
@@ -4855,7 +4852,7 @@ static bool ParseRegExp(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RegExpFlags flags = RegExpFlag::NoFlags;
+  RegExpFlag flags = RegExpFlag(0);
   if (!args.get(1).isUndefined()) {
     if (!args.get(1).isString()) {
       ReportUsageErrorASCII(cx, callee,
@@ -4890,7 +4887,9 @@ static bool ParseRegExp(JSContext* cx, unsigned argc, Value* vp) {
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   irregexp::RegExpCompileData data;
   if (!irregexp::ParsePattern(dummyTokenStream, allocScope.alloc(), pattern,
-                              match_only, flags, &data)) {
+                              flags & MultilineFlag, match_only,
+                              flags & UnicodeFlag, flags & IgnoreCaseFlag,
+                              flags & GlobalFlag, flags & StickyFlag, &data)) {
     return false;
   }
 

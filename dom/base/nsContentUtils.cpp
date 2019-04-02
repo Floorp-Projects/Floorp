@@ -6516,7 +6516,7 @@ bool nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   JS::Rooted<JSObject*> re(
       cx,
       JS::NewUCRegExpObject(cx, static_cast<char16_t*>(aPattern.BeginWriting()),
-                            aPattern.Length(), JS::RegExpFlag::Unicode));
+                            aPattern.Length(), JS::RegExpFlags::Unicode));
   if (!re) {
     // Remove extra patterns added above to report with the original pattern.
     aPattern.Cut(0, 4);
