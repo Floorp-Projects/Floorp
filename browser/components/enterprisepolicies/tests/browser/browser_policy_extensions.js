@@ -92,6 +92,27 @@ add_task(async function test_addon_uninstall() {
   is(addon, null, "Addon should be uninstalled.");
 });
 
+add_task(async function test_addon_download_failure() {
+  // Test that if the download fails, the runOnce pref
+  // is cleared so that the dowbnload will happen again
+
+  let installPromise = wait_for_addon_install();
+  await setupPolicyEngineWithJson({
+    "policies": {
+      "Extensions": {
+        "Install": [
+          `${BASE_URL}/policytest_invalid.xpi`,
+        ],
+      },
+    },
+  });
+
+  try {
+    await installPromise;
+  } catch (e) {}
+  is(Services.prefs.prefHasUserValue("browser.policies.runOncePerModification.extensionsInstall"), false, "runOnce pref should be unset");
+});
+
 function wait_for_addon_install() {
   return new Promise((resolve, reject) => {
       AddonManager.addInstallListener({
