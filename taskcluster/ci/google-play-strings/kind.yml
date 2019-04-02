@@ -17,7 +17,7 @@ jobs:
          nightly: true
       shipping-phase: promote
       shipping-product: fennec
-      worker-type: aws-provisioner-v1/gecko-{level}-b-android
+      worker-type: b-linux
       worker:
          implementation: docker-worker
          os: linux
