@@ -37,7 +37,8 @@ pub trait ExtractAttribute {
         let declarations = self.declarations();
 
         let will_parse_any = !self.attr_names().is_empty();
-        let will_fwd_any = self.forwarded_attrs()
+        let will_fwd_any = self
+            .forwarded_attrs()
             .map(|fa| !fa.is_empty())
             .unwrap_or_default();
 
@@ -56,7 +57,7 @@ pub trait ExtractAttribute {
             let core_loop = self.core_loop();
             quote!(
                 #(#attr_names)|* => {
-                    if let Some(::syn::Meta::List(ref __data)) = __attr.interpret_meta() {
+                    if let ::darling::export::Some(::syn::Meta::List(ref __data)) = __attr.interpret_meta() {
                         let __items = &__data.nested;
 
                         #core_loop

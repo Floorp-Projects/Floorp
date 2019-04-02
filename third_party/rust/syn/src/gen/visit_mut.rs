@@ -22,20 +22,20 @@ macro_rules! full {
 macro_rules! skip {
     ($($tt:tt)*) => {};
 }
-#[doc = r" Syntax tree traversal to mutate an exclusive borrow of a syntax tree in"]
-#[doc = r" place."]
-#[doc = r""]
-#[doc = r" See the [module documentation] for details."]
-#[doc = r""]
-#[doc = r" [module documentation]: index.html"]
-#[doc = r""]
-#[doc = r#" *This trait is available if Syn is built with the `"visit-mut"` feature.*"#]
+/// Syntax tree traversal to mutate an exclusive borrow of a syntax tree in
+/// place.
+///
+/// See the [module documentation] for details.
+///
+/// [module documentation]: index.html
+///
+/// *This trait is available if Syn is built with the `"visit-mut"` feature.*
 pub trait VisitMut {
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_abi_mut(&mut self, i: &mut Abi) {
         visit_abi_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_angle_bracketed_generic_arguments_mut(
         &mut self,
         i: &mut AngleBracketedGenericArguments,
@@ -54,49 +54,47 @@ pub trait VisitMut {
     fn visit_arg_self_ref_mut(&mut self, i: &mut ArgSelfRef) {
         visit_arg_self_ref_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_arm_mut(&mut self, i: &mut Arm) {
         visit_arm_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_attr_style_mut(&mut self, i: &mut AttrStyle) {
         visit_attr_style_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_attribute_mut(&mut self, i: &mut Attribute) {
         visit_attribute_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_bare_fn_arg_mut(&mut self, i: &mut BareFnArg) {
         visit_bare_fn_arg_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_bare_fn_arg_name_mut(&mut self, i: &mut BareFnArgName) {
         visit_bare_fn_arg_name_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_bin_op_mut(&mut self, i: &mut BinOp) {
         visit_bin_op_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_binding_mut(&mut self, i: &mut Binding) {
         visit_binding_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_block_mut(&mut self, i: &mut Block) {
         visit_block_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_bound_lifetimes_mut(&mut self, i: &mut BoundLifetimes) {
         visit_bound_lifetimes_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_const_param_mut(&mut self, i: &mut ConstParam) {
         visit_const_param_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_constraint_mut(&mut self, i: &mut Constraint) {
         visit_constraint_mut(self, i)
     }
@@ -120,223 +118,191 @@ pub trait VisitMut {
     fn visit_derive_input_mut(&mut self, i: &mut DeriveInput) {
         visit_derive_input_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_expr_mut(&mut self, i: &mut Expr) {
         visit_expr_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_array_mut(&mut self, i: &mut ExprArray) {
         visit_expr_array_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_assign_mut(&mut self, i: &mut ExprAssign) {
         visit_expr_assign_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_assign_op_mut(&mut self, i: &mut ExprAssignOp) {
         visit_expr_assign_op_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_async_mut(&mut self, i: &mut ExprAsync) {
         visit_expr_async_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_expr_binary_mut(&mut self, i: &mut ExprBinary) {
         visit_expr_binary_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_block_mut(&mut self, i: &mut ExprBlock) {
         visit_expr_block_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_box_mut(&mut self, i: &mut ExprBox) {
         visit_expr_box_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_break_mut(&mut self, i: &mut ExprBreak) {
         visit_expr_break_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_expr_call_mut(&mut self, i: &mut ExprCall) {
         visit_expr_call_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_expr_cast_mut(&mut self, i: &mut ExprCast) {
         visit_expr_cast_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_closure_mut(&mut self, i: &mut ExprClosure) {
         visit_expr_closure_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_continue_mut(&mut self, i: &mut ExprContinue) {
         visit_expr_continue_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_expr_field_mut(&mut self, i: &mut ExprField) {
         visit_expr_field_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_for_loop_mut(&mut self, i: &mut ExprForLoop) {
         visit_expr_for_loop_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_group_mut(&mut self, i: &mut ExprGroup) {
         visit_expr_group_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_if_mut(&mut self, i: &mut ExprIf) {
         visit_expr_if_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_in_place_mut(&mut self, i: &mut ExprInPlace) {
         visit_expr_in_place_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_expr_index_mut(&mut self, i: &mut ExprIndex) {
         visit_expr_index_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_let_mut(&mut self, i: &mut ExprLet) {
         visit_expr_let_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_expr_lit_mut(&mut self, i: &mut ExprLit) {
         visit_expr_lit_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_loop_mut(&mut self, i: &mut ExprLoop) {
         visit_expr_loop_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_macro_mut(&mut self, i: &mut ExprMacro) {
         visit_expr_macro_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_match_mut(&mut self, i: &mut ExprMatch) {
         visit_expr_match_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_method_call_mut(&mut self, i: &mut ExprMethodCall) {
         visit_expr_method_call_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_expr_paren_mut(&mut self, i: &mut ExprParen) {
         visit_expr_paren_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_expr_path_mut(&mut self, i: &mut ExprPath) {
         visit_expr_path_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_range_mut(&mut self, i: &mut ExprRange) {
         visit_expr_range_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_reference_mut(&mut self, i: &mut ExprReference) {
         visit_expr_reference_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_repeat_mut(&mut self, i: &mut ExprRepeat) {
         visit_expr_repeat_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_return_mut(&mut self, i: &mut ExprReturn) {
         visit_expr_return_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_struct_mut(&mut self, i: &mut ExprStruct) {
         visit_expr_struct_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_try_mut(&mut self, i: &mut ExprTry) {
         visit_expr_try_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_try_block_mut(&mut self, i: &mut ExprTryBlock) {
         visit_expr_try_block_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_tuple_mut(&mut self, i: &mut ExprTuple) {
         visit_expr_tuple_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_type_mut(&mut self, i: &mut ExprType) {
         visit_expr_type_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_expr_unary_mut(&mut self, i: &mut ExprUnary) {
         visit_expr_unary_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_unsafe_mut(&mut self, i: &mut ExprUnsafe) {
         visit_expr_unsafe_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_expr_verbatim_mut(&mut self, i: &mut ExprVerbatim) {
         visit_expr_verbatim_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_while_mut(&mut self, i: &mut ExprWhile) {
         visit_expr_while_mut(self, i)
     }
     #[cfg(feature = "full")]
-    #[cfg(any(feature = "full", feature = "derive"))]
     fn visit_expr_yield_mut(&mut self, i: &mut ExprYield) {
         visit_expr_yield_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_field_mut(&mut self, i: &mut Field) {
         visit_field_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_field_pat_mut(&mut self, i: &mut FieldPat) {
         visit_field_pat_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_field_value_mut(&mut self, i: &mut FieldValue) {
         visit_field_value_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_fields_mut(&mut self, i: &mut Fields) {
         visit_fields_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_fields_named_mut(&mut self, i: &mut FieldsNamed) {
         visit_fields_named_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_fields_unnamed_mut(&mut self, i: &mut FieldsUnnamed) {
         visit_fields_unnamed_mut(self, i)
     }
@@ -376,25 +342,21 @@ pub trait VisitMut {
     fn visit_foreign_item_verbatim_mut(&mut self, i: &mut ForeignItemVerbatim) {
         visit_foreign_item_verbatim_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_generic_argument_mut(&mut self, i: &mut GenericArgument) {
         visit_generic_argument_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_generic_method_argument_mut(&mut self, i: &mut GenericMethodArgument) {
         visit_generic_method_argument_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_generic_param_mut(&mut self, i: &mut GenericParam) {
         visit_generic_param_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_generics_mut(&mut self, i: &mut Generics) {
         visit_generics_mut(self, i)
-    }
-    fn visit_ident_mut(&mut self, i: &mut Ident) {
-        visit_ident_mut(self, i)
     }
     #[cfg(feature = "full")]
     fn visit_impl_item_mut(&mut self, i: &mut ImplItem) {
@@ -424,7 +386,7 @@ pub trait VisitMut {
     fn visit_impl_item_verbatim_mut(&mut self, i: &mut ImplItemVerbatim) {
         visit_impl_item_verbatim_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_index_mut(&mut self, i: &mut Index) {
         visit_index_mut(self, i)
     }
@@ -504,7 +466,6 @@ pub trait VisitMut {
     fn visit_item_verbatim_mut(&mut self, i: &mut ItemVerbatim) {
         visit_item_verbatim_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_label_mut(&mut self, i: &mut Label) {
         visit_label_mut(self, i)
@@ -512,72 +473,71 @@ pub trait VisitMut {
     fn visit_lifetime_mut(&mut self, i: &mut Lifetime) {
         visit_lifetime_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lifetime_def_mut(&mut self, i: &mut LifetimeDef) {
         visit_lifetime_def_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_mut(&mut self, i: &mut Lit) {
         visit_lit_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_bool_mut(&mut self, i: &mut LitBool) {
         visit_lit_bool_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_byte_mut(&mut self, i: &mut LitByte) {
         visit_lit_byte_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_byte_str_mut(&mut self, i: &mut LitByteStr) {
         visit_lit_byte_str_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_char_mut(&mut self, i: &mut LitChar) {
         visit_lit_char_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_float_mut(&mut self, i: &mut LitFloat) {
         visit_lit_float_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_int_mut(&mut self, i: &mut LitInt) {
         visit_lit_int_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_str_mut(&mut self, i: &mut LitStr) {
         visit_lit_str_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_verbatim_mut(&mut self, i: &mut LitVerbatim) {
         visit_lit_verbatim_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_local_mut(&mut self, i: &mut Local) {
         visit_local_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_macro_mut(&mut self, i: &mut Macro) {
         visit_macro_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_macro_delimiter_mut(&mut self, i: &mut MacroDelimiter) {
         visit_macro_delimiter_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_member_mut(&mut self, i: &mut Member) {
         visit_member_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_meta_mut(&mut self, i: &mut Meta) {
         visit_meta_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_meta_list_mut(&mut self, i: &mut MetaList) {
         visit_meta_list_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_meta_name_value_mut(&mut self, i: &mut MetaNameValue) {
         visit_meta_name_value_mut(self, i)
     }
@@ -585,139 +545,119 @@ pub trait VisitMut {
     fn visit_method_sig_mut(&mut self, i: &mut MethodSig) {
         visit_method_sig_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_method_turbofish_mut(&mut self, i: &mut MethodTurbofish) {
         visit_method_turbofish_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_nested_meta_mut(&mut self, i: &mut NestedMeta) {
         visit_nested_meta_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_parenthesized_generic_arguments_mut(&mut self, i: &mut ParenthesizedGenericArguments) {
         visit_parenthesized_generic_arguments_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_mut(&mut self, i: &mut Pat) {
         visit_pat_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_box_mut(&mut self, i: &mut PatBox) {
         visit_pat_box_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_ident_mut(&mut self, i: &mut PatIdent) {
         visit_pat_ident_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_lit_mut(&mut self, i: &mut PatLit) {
         visit_pat_lit_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_macro_mut(&mut self, i: &mut PatMacro) {
         visit_pat_macro_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_path_mut(&mut self, i: &mut PatPath) {
         visit_pat_path_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_range_mut(&mut self, i: &mut PatRange) {
         visit_pat_range_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_ref_mut(&mut self, i: &mut PatRef) {
         visit_pat_ref_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_slice_mut(&mut self, i: &mut PatSlice) {
         visit_pat_slice_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_struct_mut(&mut self, i: &mut PatStruct) {
         visit_pat_struct_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_tuple_mut(&mut self, i: &mut PatTuple) {
         visit_pat_tuple_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_tuple_struct_mut(&mut self, i: &mut PatTupleStruct) {
         visit_pat_tuple_struct_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_verbatim_mut(&mut self, i: &mut PatVerbatim) {
         visit_pat_verbatim_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_pat_wild_mut(&mut self, i: &mut PatWild) {
         visit_pat_wild_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_path_mut(&mut self, i: &mut Path) {
         visit_path_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_path_arguments_mut(&mut self, i: &mut PathArguments) {
         visit_path_arguments_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_path_segment_mut(&mut self, i: &mut PathSegment) {
         visit_path_segment_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_predicate_eq_mut(&mut self, i: &mut PredicateEq) {
         visit_predicate_eq_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_predicate_lifetime_mut(&mut self, i: &mut PredicateLifetime) {
         visit_predicate_lifetime_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_predicate_type_mut(&mut self, i: &mut PredicateType) {
         visit_predicate_type_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_qself_mut(&mut self, i: &mut QSelf) {
         visit_qself_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_range_limits_mut(&mut self, i: &mut RangeLimits) {
         visit_range_limits_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_return_type_mut(&mut self, i: &mut ReturnType) {
         visit_return_type_mut(self, i)
     }
-    fn visit_span_mut(&mut self, i: &mut Span) {
-        visit_span_mut(self, i)
-    }
-    #[cfg(any(feature = "full", feature = "derive"))]
     #[cfg(feature = "full")]
     fn visit_stmt_mut(&mut self, i: &mut Stmt) {
         visit_stmt_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_trait_bound_mut(&mut self, i: &mut TraitBound) {
         visit_trait_bound_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_trait_bound_modifier_mut(&mut self, i: &mut TraitBoundModifier) {
         visit_trait_bound_modifier_mut(self, i)
     }
@@ -745,79 +685,79 @@ pub trait VisitMut {
     fn visit_trait_item_verbatim_mut(&mut self, i: &mut TraitItemVerbatim) {
         visit_trait_item_verbatim_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_mut(&mut self, i: &mut Type) {
         visit_type_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_array_mut(&mut self, i: &mut TypeArray) {
         visit_type_array_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_bare_fn_mut(&mut self, i: &mut TypeBareFn) {
         visit_type_bare_fn_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_group_mut(&mut self, i: &mut TypeGroup) {
         visit_type_group_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_impl_trait_mut(&mut self, i: &mut TypeImplTrait) {
         visit_type_impl_trait_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_infer_mut(&mut self, i: &mut TypeInfer) {
         visit_type_infer_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_macro_mut(&mut self, i: &mut TypeMacro) {
         visit_type_macro_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_never_mut(&mut self, i: &mut TypeNever) {
         visit_type_never_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_param_mut(&mut self, i: &mut TypeParam) {
         visit_type_param_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_param_bound_mut(&mut self, i: &mut TypeParamBound) {
         visit_type_param_bound_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_paren_mut(&mut self, i: &mut TypeParen) {
         visit_type_paren_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_path_mut(&mut self, i: &mut TypePath) {
         visit_type_path_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_ptr_mut(&mut self, i: &mut TypePtr) {
         visit_type_ptr_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_reference_mut(&mut self, i: &mut TypeReference) {
         visit_type_reference_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_slice_mut(&mut self, i: &mut TypeSlice) {
         visit_type_slice_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_trait_object_mut(&mut self, i: &mut TypeTraitObject) {
         visit_type_trait_object_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_tuple_mut(&mut self, i: &mut TypeTuple) {
         visit_type_tuple_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_type_verbatim_mut(&mut self, i: &mut TypeVerbatim) {
         visit_type_verbatim_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_un_op_mut(&mut self, i: &mut UnOp) {
         visit_un_op_mut(self, i)
     }
@@ -845,43 +785,49 @@ pub trait VisitMut {
     fn visit_use_tree_mut(&mut self, i: &mut UseTree) {
         visit_use_tree_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_variant_mut(&mut self, i: &mut Variant) {
         visit_variant_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_vis_crate_mut(&mut self, i: &mut VisCrate) {
         visit_vis_crate_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_vis_public_mut(&mut self, i: &mut VisPublic) {
         visit_vis_public_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_vis_restricted_mut(&mut self, i: &mut VisRestricted) {
         visit_vis_restricted_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_visibility_mut(&mut self, i: &mut Visibility) {
         visit_visibility_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_where_clause_mut(&mut self, i: &mut WhereClause) {
         visit_where_clause_mut(self, i)
     }
-    #[cfg(any(feature = "full", feature = "derive"))]
+    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_where_predicate_mut(&mut self, i: &mut WherePredicate) {
         visit_where_predicate_mut(self, i)
     }
+    fn visit_span_mut(&mut self, i: &mut Span) {
+        visit_span_mut(self, i)
+    }
+    fn visit_ident_mut(&mut self, i: &mut Ident) {
+        visit_ident_mut(self, i)
+    }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_abi_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Abi) {
     tokens_helper(_visitor, &mut _i.extern_token.span);
     if let Some(ref mut it) = _i.name {
         _visitor.visit_lit_str_mut(it)
     };
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_angle_bracketed_generic_arguments_mut<V: VisitMut + ?Sized>(
     _visitor: &mut V,
     _i: &mut AngleBracketedGenericArguments,
@@ -920,7 +866,6 @@ pub fn visit_arg_self_ref_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut A
     };
     tokens_helper(_visitor, &mut _i.self_token.span);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_arm_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Arm) {
     for it in &mut _i.attrs {
@@ -943,7 +888,7 @@ pub fn visit_arm_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Arm) {
         tokens_helper(_visitor, &mut it.spans)
     };
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_attr_style_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut AttrStyle) {
     match *_i {
         AttrStyle::Outer => {}
@@ -952,7 +897,7 @@ pub fn visit_attr_style_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Att
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_attribute_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Attribute) {
     tokens_helper(_visitor, &mut _i.pound_token.spans);
     _visitor.visit_attr_style_mut(&mut _i.style);
@@ -960,7 +905,7 @@ pub fn visit_attribute_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Attr
     _visitor.visit_path_mut(&mut _i.path);
     skip!(_i.tts);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_bare_fn_arg_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut BareFnArg) {
     if let Some(ref mut it) = _i.name {
         _visitor.visit_bare_fn_arg_name_mut(&mut (it).0);
@@ -968,7 +913,7 @@ pub fn visit_bare_fn_arg_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Ba
     };
     _visitor.visit_type_mut(&mut _i.ty);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_bare_fn_arg_name_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut BareFnArgName) {
     match *_i {
         BareFnArgName::Named(ref mut _binding_0) => {
@@ -979,7 +924,7 @@ pub fn visit_bare_fn_arg_name_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &m
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_bin_op_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut BinOp) {
     match *_i {
         BinOp::Add(ref mut _binding_0) => {
@@ -1068,13 +1013,12 @@ pub fn visit_bin_op_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut BinOp) 
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_binding_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Binding) {
     _visitor.visit_ident_mut(&mut _i.ident);
     tokens_helper(_visitor, &mut _i.eq_token.spans);
     _visitor.visit_type_mut(&mut _i.ty);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_block_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Block) {
     tokens_helper(_visitor, &mut _i.brace_token.span);
@@ -1082,7 +1026,7 @@ pub fn visit_block_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Block) {
         _visitor.visit_stmt_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_bound_lifetimes_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut BoundLifetimes) {
     tokens_helper(_visitor, &mut _i.for_token.span);
     tokens_helper(_visitor, &mut _i.lt_token.spans);
@@ -1092,7 +1036,7 @@ pub fn visit_bound_lifetimes_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mu
     }
     tokens_helper(_visitor, &mut _i.gt_token.spans);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_const_param_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ConstParam) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1108,7 +1052,7 @@ pub fn visit_const_param_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Co
         _visitor.visit_expr_mut(it)
     };
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_constraint_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Constraint) {
     _visitor.visit_ident_mut(&mut _i.ident);
     tokens_helper(_visitor, &mut _i.colon_token.spans);
@@ -1163,7 +1107,7 @@ pub fn visit_derive_input_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut D
     _visitor.visit_generics_mut(&mut _i.generics);
     _visitor.visit_data_mut(&mut _i.data);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_expr_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Expr) {
     match *_i {
         Expr::Box(ref mut _binding_0) => {
@@ -1289,7 +1233,6 @@ pub fn visit_expr_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Expr) {
     }
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_array_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprArray) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1301,7 +1244,6 @@ pub fn visit_expr_array_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
     }
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_assign_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprAssign) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1311,7 +1253,6 @@ pub fn visit_expr_assign_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Ex
     _visitor.visit_expr_mut(&mut *_i.right);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_assign_op_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprAssignOp) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1321,7 +1262,6 @@ pub fn visit_expr_assign_op_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut
     _visitor.visit_expr_mut(&mut *_i.right);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_async_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprAsync) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1332,7 +1272,7 @@ pub fn visit_expr_async_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
     };
     _visitor.visit_block_mut(&mut _i.block);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_expr_binary_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprBinary) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1342,7 +1282,6 @@ pub fn visit_expr_binary_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Ex
     _visitor.visit_expr_mut(&mut *_i.right);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_block_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprBlock) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1353,7 +1292,6 @@ pub fn visit_expr_block_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
     _visitor.visit_block_mut(&mut _i.block);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_box_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprBox) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1362,7 +1300,6 @@ pub fn visit_expr_box_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprB
     _visitor.visit_expr_mut(&mut *_i.expr);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_break_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprBreak) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1375,7 +1312,7 @@ pub fn visit_expr_break_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
         _visitor.visit_expr_mut(&mut **it)
     };
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_expr_call_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprCall) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1387,7 +1324,7 @@ pub fn visit_expr_call_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Expr
         _visitor.visit_expr_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_expr_cast_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprCast) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1397,7 +1334,6 @@ pub fn visit_expr_cast_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Expr
     _visitor.visit_type_mut(&mut *_i.ty);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_closure_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprClosure) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1421,7 +1357,6 @@ pub fn visit_expr_closure_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut E
     _visitor.visit_expr_mut(&mut *_i.body);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_continue_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprContinue) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1431,7 +1366,7 @@ pub fn visit_expr_continue_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut 
         _visitor.visit_lifetime_mut(it)
     };
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_expr_field_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprField) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1441,7 +1376,6 @@ pub fn visit_expr_field_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
     _visitor.visit_member_mut(&mut _i.member);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_for_loop_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprForLoop) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1456,7 +1390,6 @@ pub fn visit_expr_for_loop_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut 
     _visitor.visit_block_mut(&mut _i.body);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_group_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprGroup) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1465,7 +1398,6 @@ pub fn visit_expr_group_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
     _visitor.visit_expr_mut(&mut *_i.expr);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_if_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprIf) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1479,7 +1411,6 @@ pub fn visit_expr_if_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprIf
     };
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_in_place_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprInPlace) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1488,7 +1419,7 @@ pub fn visit_expr_in_place_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut 
     tokens_helper(_visitor, &mut _i.arrow_token.spans);
     _visitor.visit_expr_mut(&mut *_i.value);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_expr_index_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprIndex) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1498,7 +1429,6 @@ pub fn visit_expr_index_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
     _visitor.visit_expr_mut(&mut *_i.index);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_let_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprLet) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1511,7 +1441,7 @@ pub fn visit_expr_let_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprL
     tokens_helper(_visitor, &mut _i.eq_token.spans);
     _visitor.visit_expr_mut(&mut *_i.expr);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_expr_lit_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprLit) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1519,7 +1449,6 @@ pub fn visit_expr_lit_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprL
     _visitor.visit_lit_mut(&mut _i.lit);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_loop_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprLoop) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1531,7 +1460,6 @@ pub fn visit_expr_loop_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Expr
     _visitor.visit_block_mut(&mut _i.body);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_macro_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprMacro) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1539,7 +1467,6 @@ pub fn visit_expr_macro_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
     _visitor.visit_macro_mut(&mut _i.mac);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_match_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprMatch) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1552,7 +1479,6 @@ pub fn visit_expr_match_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
     }
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_method_call_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprMethodCall) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1569,7 +1495,7 @@ pub fn visit_expr_method_call_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &m
         _visitor.visit_expr_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_expr_paren_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprParen) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1577,7 +1503,7 @@ pub fn visit_expr_paren_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
     tokens_helper(_visitor, &mut _i.paren_token.span);
     _visitor.visit_expr_mut(&mut *_i.expr);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_expr_path_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprPath) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1588,7 +1514,6 @@ pub fn visit_expr_path_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Expr
     _visitor.visit_path_mut(&mut _i.path);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_range_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprRange) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1602,7 +1527,6 @@ pub fn visit_expr_range_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
     };
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_reference_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprReference) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1614,7 +1538,6 @@ pub fn visit_expr_reference_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut
     _visitor.visit_expr_mut(&mut *_i.expr);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_repeat_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprRepeat) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1625,7 +1548,6 @@ pub fn visit_expr_repeat_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Ex
     _visitor.visit_expr_mut(&mut *_i.len);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_return_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprReturn) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1636,7 +1558,6 @@ pub fn visit_expr_return_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Ex
     };
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_struct_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprStruct) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1655,7 +1576,6 @@ pub fn visit_expr_struct_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Ex
     };
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_try_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprTry) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1664,7 +1584,6 @@ pub fn visit_expr_try_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprT
     tokens_helper(_visitor, &mut _i.question_token.spans);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_try_block_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprTryBlock) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1673,7 +1592,6 @@ pub fn visit_expr_try_block_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut
     _visitor.visit_block_mut(&mut _i.block);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_tuple_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprTuple) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1685,7 +1603,6 @@ pub fn visit_expr_tuple_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
     }
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_type_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprType) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1694,7 +1611,7 @@ pub fn visit_expr_type_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Expr
     tokens_helper(_visitor, &mut _i.colon_token.spans);
     _visitor.visit_type_mut(&mut *_i.ty);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_expr_unary_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprUnary) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1703,7 +1620,6 @@ pub fn visit_expr_unary_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
     _visitor.visit_expr_mut(&mut *_i.expr);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_unsafe_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprUnsafe) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1711,12 +1627,11 @@ pub fn visit_expr_unsafe_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Ex
     tokens_helper(_visitor, &mut _i.unsafe_token.span);
     _visitor.visit_block_mut(&mut _i.block);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_expr_verbatim_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprVerbatim) {
     skip!(_i.tts);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_while_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprWhile) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1729,7 +1644,6 @@ pub fn visit_expr_while_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
     _visitor.visit_block_mut(&mut _i.body);
 }
 #[cfg(feature = "full")]
-#[cfg(any(feature = "full", feature = "derive"))]
 pub fn visit_expr_yield_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ExprYield) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1739,7 +1653,7 @@ pub fn visit_expr_yield_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Exp
         _visitor.visit_expr_mut(&mut **it)
     };
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_field_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Field) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -1753,7 +1667,6 @@ pub fn visit_field_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Field) {
     };
     _visitor.visit_type_mut(&mut _i.ty);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_field_pat_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut FieldPat) {
     for it in &mut _i.attrs {
@@ -1765,7 +1678,6 @@ pub fn visit_field_pat_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Fiel
     };
     _visitor.visit_pat_mut(&mut *_i.pat);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_field_value_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut FieldValue) {
     for it in &mut _i.attrs {
@@ -1777,7 +1689,7 @@ pub fn visit_field_value_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Fi
     };
     _visitor.visit_expr_mut(&mut _i.expr);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_fields_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Fields) {
     match *_i {
         Fields::Named(ref mut _binding_0) => {
@@ -1789,7 +1701,7 @@ pub fn visit_fields_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Fields)
         Fields::Unit => {}
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_fields_named_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut FieldsNamed) {
     tokens_helper(_visitor, &mut _i.brace_token.span);
     for mut el in Punctuated::pairs_mut(&mut _i.named) {
@@ -1797,7 +1709,7 @@ pub fn visit_fields_named_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut F
         _visitor.visit_field_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_fields_unnamed_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut FieldsUnnamed) {
     tokens_helper(_visitor, &mut _i.paren_token.span);
     for mut el in Punctuated::pairs_mut(&mut _i.unnamed) {
@@ -1930,7 +1842,7 @@ pub fn visit_foreign_item_verbatim_mut<V: VisitMut + ?Sized>(
 ) {
     skip!(_i.tts);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_generic_argument_mut<V: VisitMut + ?Sized>(
     _visitor: &mut V,
     _i: &mut GenericArgument,
@@ -1953,7 +1865,6 @@ pub fn visit_generic_argument_mut<V: VisitMut + ?Sized>(
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_generic_method_argument_mut<V: VisitMut + ?Sized>(
     _visitor: &mut V,
@@ -1968,7 +1879,7 @@ pub fn visit_generic_method_argument_mut<V: VisitMut + ?Sized>(
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_generic_param_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut GenericParam) {
     match *_i {
         GenericParam::Type(ref mut _binding_0) => {
@@ -1982,7 +1893,7 @@ pub fn visit_generic_param_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut 
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_generics_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Generics) {
     if let Some(ref mut it) = _i.lt_token {
         tokens_helper(_visitor, &mut it.spans)
@@ -1998,7 +1909,6 @@ pub fn visit_generics_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Gener
         _visitor.visit_where_clause_mut(it)
     };
 }
-pub fn visit_ident_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Ident) {}
 #[cfg(feature = "full")]
 pub fn visit_impl_item_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ImplItem) {
     match *_i {
@@ -2105,7 +2015,7 @@ pub fn visit_impl_item_verbatim_mut<V: VisitMut + ?Sized>(
 ) {
     skip!(_i.tts);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_index_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Index) {
     skip!(_i.index);
     _visitor.visit_span_mut(&mut _i.span);
@@ -2456,7 +2366,6 @@ pub fn visit_item_use_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ItemU
 pub fn visit_item_verbatim_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ItemVerbatim) {
     skip!(_i.tts);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_label_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Label) {
     _visitor.visit_lifetime_mut(&mut _i.name);
@@ -2466,7 +2375,7 @@ pub fn visit_lifetime_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Lifet
     _visitor.visit_span_mut(&mut _i.apostrophe);
     _visitor.visit_ident_mut(&mut _i.ident);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_lifetime_def_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LifetimeDef) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -2480,7 +2389,7 @@ pub fn visit_lifetime_def_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut L
         _visitor.visit_lifetime_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_lit_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Lit) {
     match *_i {
         Lit::Str(ref mut _binding_0) => {
@@ -2509,40 +2418,27 @@ pub fn visit_lit_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Lit) {
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_lit_bool_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitBool) {
     skip!(_i.value);
     _visitor.visit_span_mut(&mut _i.span);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
-pub fn visit_lit_byte_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitByte) {
-    skip!(_i.token);
-}
-#[cfg(any(feature = "full", feature = "derive"))]
-pub fn visit_lit_byte_str_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitByteStr) {
-    skip!(_i.token);
-}
-#[cfg(any(feature = "full", feature = "derive"))]
-pub fn visit_lit_char_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitChar) {
-    skip!(_i.token);
-}
-#[cfg(any(feature = "full", feature = "derive"))]
-pub fn visit_lit_float_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitFloat) {
-    skip!(_i.token);
-}
-#[cfg(any(feature = "full", feature = "derive"))]
-pub fn visit_lit_int_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitInt) {
-    skip!(_i.token);
-}
-#[cfg(any(feature = "full", feature = "derive"))]
-pub fn visit_lit_str_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitStr) {
-    skip!(_i.token);
-}
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
+pub fn visit_lit_byte_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitByte) {}
+#[cfg(any(feature = "derive", feature = "full"))]
+pub fn visit_lit_byte_str_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitByteStr) {}
+#[cfg(any(feature = "derive", feature = "full"))]
+pub fn visit_lit_char_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitChar) {}
+#[cfg(any(feature = "derive", feature = "full"))]
+pub fn visit_lit_float_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitFloat) {}
+#[cfg(any(feature = "derive", feature = "full"))]
+pub fn visit_lit_int_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitInt) {}
+#[cfg(any(feature = "derive", feature = "full"))]
+pub fn visit_lit_str_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitStr) {}
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_lit_verbatim_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LitVerbatim) {
     skip!(_i.token);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_local_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Local) {
     for it in &mut _i.attrs {
@@ -2563,14 +2459,14 @@ pub fn visit_local_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Local) {
     };
     tokens_helper(_visitor, &mut _i.semi_token.spans);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_macro_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Macro) {
     _visitor.visit_path_mut(&mut _i.path);
     tokens_helper(_visitor, &mut _i.bang_token.spans);
     _visitor.visit_macro_delimiter_mut(&mut _i.delimiter);
     skip!(_i.tts);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_macro_delimiter_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut MacroDelimiter) {
     match *_i {
         MacroDelimiter::Paren(ref mut _binding_0) => {
@@ -2584,7 +2480,7 @@ pub fn visit_macro_delimiter_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mu
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_member_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Member) {
     match *_i {
         Member::Named(ref mut _binding_0) => {
@@ -2595,7 +2491,7 @@ pub fn visit_member_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Member)
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_meta_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Meta) {
     match *_i {
         Meta::Word(ref mut _binding_0) => {
@@ -2609,7 +2505,7 @@ pub fn visit_meta_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Meta) {
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_meta_list_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut MetaList) {
     _visitor.visit_ident_mut(&mut _i.ident);
     tokens_helper(_visitor, &mut _i.paren_token.span);
@@ -2618,7 +2514,7 @@ pub fn visit_meta_list_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Meta
         _visitor.visit_nested_meta_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_meta_name_value_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut MetaNameValue) {
     _visitor.visit_ident_mut(&mut _i.ident);
     tokens_helper(_visitor, &mut _i.eq_token.spans);
@@ -2641,7 +2537,6 @@ pub fn visit_method_sig_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Met
     _visitor.visit_ident_mut(&mut _i.ident);
     _visitor.visit_fn_decl_mut(&mut _i.decl);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_method_turbofish_mut<V: VisitMut + ?Sized>(
     _visitor: &mut V,
@@ -2655,7 +2550,7 @@ pub fn visit_method_turbofish_mut<V: VisitMut + ?Sized>(
     }
     tokens_helper(_visitor, &mut _i.gt_token.spans);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_nested_meta_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut NestedMeta) {
     match *_i {
         NestedMeta::Meta(ref mut _binding_0) => {
@@ -2666,7 +2561,7 @@ pub fn visit_nested_meta_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Ne
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_parenthesized_generic_arguments_mut<V: VisitMut + ?Sized>(
     _visitor: &mut V,
     _i: &mut ParenthesizedGenericArguments,
@@ -2678,7 +2573,6 @@ pub fn visit_parenthesized_generic_arguments_mut<V: VisitMut + ?Sized>(
     }
     _visitor.visit_return_type_mut(&mut _i.output);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Pat) {
     match *_i {
@@ -2723,13 +2617,11 @@ pub fn visit_pat_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Pat) {
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_box_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatBox) {
     tokens_helper(_visitor, &mut _i.box_token.span);
     _visitor.visit_pat_mut(&mut *_i.pat);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_ident_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatIdent) {
     if let Some(ref mut it) = _i.by_ref {
@@ -2744,17 +2636,14 @@ pub fn visit_pat_ident_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatI
         _visitor.visit_pat_mut(&mut *(it).1);
     };
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_lit_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatLit) {
     _visitor.visit_expr_mut(&mut *_i.expr);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_macro_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatMacro) {
     _visitor.visit_macro_mut(&mut _i.mac);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_path_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatPath) {
     if let Some(ref mut it) = _i.qself {
@@ -2762,14 +2651,12 @@ pub fn visit_pat_path_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatPa
     };
     _visitor.visit_path_mut(&mut _i.path);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_range_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatRange) {
     _visitor.visit_expr_mut(&mut *_i.lo);
     _visitor.visit_range_limits_mut(&mut _i.limits);
     _visitor.visit_expr_mut(&mut *_i.hi);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_ref_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatRef) {
     tokens_helper(_visitor, &mut _i.and_token.spans);
@@ -2778,7 +2665,6 @@ pub fn visit_pat_ref_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatRef
     };
     _visitor.visit_pat_mut(&mut *_i.pat);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_slice_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatSlice) {
     tokens_helper(_visitor, &mut _i.bracket_token.span);
@@ -2800,7 +2686,6 @@ pub fn visit_pat_slice_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatS
         _visitor.visit_pat_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_struct_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatStruct) {
     _visitor.visit_path_mut(&mut _i.path);
@@ -2813,7 +2698,6 @@ pub fn visit_pat_struct_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Pat
         tokens_helper(_visitor, &mut it.spans)
     };
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_tuple_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatTuple) {
     tokens_helper(_visitor, &mut _i.paren_token.span);
@@ -2832,23 +2716,20 @@ pub fn visit_pat_tuple_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatT
         _visitor.visit_pat_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_tuple_struct_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatTupleStruct) {
     _visitor.visit_path_mut(&mut _i.path);
     _visitor.visit_pat_tuple_mut(&mut _i.pat);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_verbatim_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatVerbatim) {
     skip!(_i.tts);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_pat_wild_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PatWild) {
     tokens_helper(_visitor, &mut _i.underscore_token.spans);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_path_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Path) {
     if let Some(ref mut it) = _i.leading_colon {
         tokens_helper(_visitor, &mut it.spans)
@@ -2858,7 +2739,7 @@ pub fn visit_path_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Path) {
         _visitor.visit_path_segment_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_path_arguments_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PathArguments) {
     match *_i {
         PathArguments::None => {}
@@ -2870,18 +2751,18 @@ pub fn visit_path_arguments_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_path_segment_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PathSegment) {
     _visitor.visit_ident_mut(&mut _i.ident);
     _visitor.visit_path_arguments_mut(&mut _i.arguments);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_predicate_eq_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PredicateEq) {
     _visitor.visit_type_mut(&mut _i.lhs_ty);
     tokens_helper(_visitor, &mut _i.eq_token.spans);
     _visitor.visit_type_mut(&mut _i.rhs_ty);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_predicate_lifetime_mut<V: VisitMut + ?Sized>(
     _visitor: &mut V,
     _i: &mut PredicateLifetime,
@@ -2893,7 +2774,7 @@ pub fn visit_predicate_lifetime_mut<V: VisitMut + ?Sized>(
         _visitor.visit_lifetime_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_predicate_type_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut PredicateType) {
     if let Some(ref mut it) = _i.lifetimes {
         _visitor.visit_bound_lifetimes_mut(it)
@@ -2905,7 +2786,7 @@ pub fn visit_predicate_type_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut
         _visitor.visit_type_param_bound_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_qself_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut QSelf) {
     tokens_helper(_visitor, &mut _i.lt_token.spans);
     _visitor.visit_type_mut(&mut *_i.ty);
@@ -2915,7 +2796,6 @@ pub fn visit_qself_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut QSelf) {
     };
     tokens_helper(_visitor, &mut _i.gt_token.spans);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_range_limits_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut RangeLimits) {
     match *_i {
@@ -2927,7 +2807,7 @@ pub fn visit_range_limits_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut R
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_return_type_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ReturnType) {
     match *_i {
         ReturnType::Default => {}
@@ -2937,8 +2817,6 @@ pub fn visit_return_type_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Re
         }
     }
 }
-pub fn visit_span_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Span) {}
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "full")]
 pub fn visit_stmt_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Stmt) {
     match *_i {
@@ -2957,7 +2835,7 @@ pub fn visit_stmt_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Stmt) {
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_trait_bound_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TraitBound) {
     if let Some(ref mut it) = _i.paren_token {
         tokens_helper(_visitor, &mut it.span)
@@ -2968,7 +2846,7 @@ pub fn visit_trait_bound_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Tr
     };
     _visitor.visit_path_mut(&mut _i.path);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_trait_bound_modifier_mut<V: VisitMut + ?Sized>(
     _visitor: &mut V,
     _i: &mut TraitBoundModifier,
@@ -3069,7 +2947,7 @@ pub fn visit_trait_item_verbatim_mut<V: VisitMut + ?Sized>(
 ) {
     skip!(_i.tts);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Type) {
     match *_i {
         Type::Slice(ref mut _binding_0) => {
@@ -3119,14 +2997,14 @@ pub fn visit_type_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Type) {
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_array_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeArray) {
     tokens_helper(_visitor, &mut _i.bracket_token.span);
     _visitor.visit_type_mut(&mut *_i.elem);
     tokens_helper(_visitor, &mut _i.semi_token.spans);
     _visitor.visit_expr_mut(&mut _i.len);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_bare_fn_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeBareFn) {
     if let Some(ref mut it) = _i.lifetimes {
         _visitor.visit_bound_lifetimes_mut(it)
@@ -3148,12 +3026,12 @@ pub fn visit_type_bare_fn_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut T
     };
     _visitor.visit_return_type_mut(&mut _i.output);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_group_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeGroup) {
     tokens_helper(_visitor, &mut _i.group_token.span);
     _visitor.visit_type_mut(&mut *_i.elem);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_impl_trait_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeImplTrait) {
     tokens_helper(_visitor, &mut _i.impl_token.span);
     for mut el in Punctuated::pairs_mut(&mut _i.bounds) {
@@ -3161,19 +3039,19 @@ pub fn visit_type_impl_trait_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mu
         _visitor.visit_type_param_bound_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_infer_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeInfer) {
     tokens_helper(_visitor, &mut _i.underscore_token.spans);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_macro_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeMacro) {
     _visitor.visit_macro_mut(&mut _i.mac);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_never_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeNever) {
     tokens_helper(_visitor, &mut _i.bang_token.spans);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_param_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeParam) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -3193,7 +3071,7 @@ pub fn visit_type_param_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Typ
         _visitor.visit_type_mut(it)
     };
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_param_bound_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeParamBound) {
     match *_i {
         TypeParamBound::Trait(ref mut _binding_0) => {
@@ -3204,19 +3082,19 @@ pub fn visit_type_param_bound_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &m
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_paren_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeParen) {
     tokens_helper(_visitor, &mut _i.paren_token.span);
     _visitor.visit_type_mut(&mut *_i.elem);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_path_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypePath) {
     if let Some(ref mut it) = _i.qself {
         _visitor.visit_qself_mut(it)
     };
     _visitor.visit_path_mut(&mut _i.path);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_ptr_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypePtr) {
     tokens_helper(_visitor, &mut _i.star_token.spans);
     if let Some(ref mut it) = _i.const_token {
@@ -3227,7 +3105,7 @@ pub fn visit_type_ptr_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeP
     };
     _visitor.visit_type_mut(&mut *_i.elem);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_reference_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeReference) {
     tokens_helper(_visitor, &mut _i.and_token.spans);
     if let Some(ref mut it) = _i.lifetime {
@@ -3238,12 +3116,12 @@ pub fn visit_type_reference_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut
     };
     _visitor.visit_type_mut(&mut *_i.elem);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_slice_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeSlice) {
     tokens_helper(_visitor, &mut _i.bracket_token.span);
     _visitor.visit_type_mut(&mut *_i.elem);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_trait_object_mut<V: VisitMut + ?Sized>(
     _visitor: &mut V,
     _i: &mut TypeTraitObject,
@@ -3256,7 +3134,7 @@ pub fn visit_type_trait_object_mut<V: VisitMut + ?Sized>(
         _visitor.visit_type_param_bound_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_tuple_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeTuple) {
     tokens_helper(_visitor, &mut _i.paren_token.span);
     for mut el in Punctuated::pairs_mut(&mut _i.elems) {
@@ -3264,11 +3142,11 @@ pub fn visit_type_tuple_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Typ
         _visitor.visit_type_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_type_verbatim_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut TypeVerbatim) {
     skip!(_i.tts);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_un_op_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut UnOp) {
     match *_i {
         UnOp::Deref(ref mut _binding_0) => {
@@ -3330,7 +3208,7 @@ pub fn visit_use_tree_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut UseTr
         }
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_variant_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Variant) {
     for it in &mut _i.attrs {
         _visitor.visit_attribute_mut(it)
@@ -3342,15 +3220,15 @@ pub fn visit_variant_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Varian
         _visitor.visit_expr_mut(&mut (it).1);
     };
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_vis_crate_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut VisCrate) {
     tokens_helper(_visitor, &mut _i.crate_token.span);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_vis_public_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut VisPublic) {
     tokens_helper(_visitor, &mut _i.pub_token.span);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_vis_restricted_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut VisRestricted) {
     tokens_helper(_visitor, &mut _i.pub_token.span);
     tokens_helper(_visitor, &mut _i.paren_token.span);
@@ -3359,7 +3237,7 @@ pub fn visit_vis_restricted_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut
     };
     _visitor.visit_path_mut(&mut *_i.path);
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_visibility_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Visibility) {
     match *_i {
         Visibility::Public(ref mut _binding_0) => {
@@ -3374,7 +3252,7 @@ pub fn visit_visibility_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Vis
         Visibility::Inherited => {}
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_where_clause_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut WhereClause) {
     tokens_helper(_visitor, &mut _i.where_token.span);
     for mut el in Punctuated::pairs_mut(&mut _i.predicates) {
@@ -3382,7 +3260,7 @@ pub fn visit_where_clause_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut W
         _visitor.visit_where_predicate_mut(it)
     }
 }
-#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_where_predicate_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut WherePredicate) {
     match *_i {
         WherePredicate::Type(ref mut _binding_0) => {
@@ -3396,3 +3274,5 @@ pub fn visit_where_predicate_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mu
         }
     }
 }
+pub fn visit_span_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Span) {}
+pub fn visit_ident_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Ident) {}

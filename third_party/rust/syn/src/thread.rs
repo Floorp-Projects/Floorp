@@ -54,10 +54,12 @@ mod thread_id {
 
 #[cfg(not(syn_can_use_thread_id))]
 mod thread_id {
+    #[allow(deprecated)]
     use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 
     thread_local! {
         static THREAD_ID: usize = {
+            #[allow(deprecated)]
             static NEXT_THREAD_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
             // Ordering::Relaxed because our only requirement for the ids is

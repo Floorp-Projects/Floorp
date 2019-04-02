@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.8.6 (March 18, 2019)
+- Added "did you mean" suggestions for unknown fields behind the `suggestions` flag [#60](https://github.com/TedDriggs/issues/60)
+- Added `Error::unknown_field_with_alts` to support the suggestion use-case.
+- Added `ast::Fields::len` and `ast::Fields::is_empty` methods.
+
+## v0.8.5 (February 4, 2019)
+- Accept unquoted positive numeric literals [#52](https://github.com/TedDriggs/issues/52)
+- Add `FromMeta` to the `syn::Lit` enum and its variants
+- Improve error message for unexpected literal formats to not say "other"
+
+## v0.8.4 (February 4, 2019)
+- Use `syn::Error` to provide precise errors before `proc_macro::Diagnostic` is available
+- Add `diagnostics` feature flag to toggle between stable and unstable error backends
+- Attach error information in more contexts
+- Add `allow_unknown_fields` to support parsing the same attribute multiple times for different macros [#51](https://github.com/darling/issues/51)
+- Proc-macro authors will now see better errors in `darling` attributes
+
+## v0.8.3 (January 21, 2019)
+- Attach spans to errors in generated trait impls [#37](https://github.com/darling/issues/37)
+- Attach spans to errors for types with provided bespoke implementations
+- Deprecate `set_span` from 0.8.2, as spans should never be broadened after being initially set
+
+## v0.8.2 (January 17, 2019)
+- Add spans to errors to make quality warnings and errors easy in darling. This is blocked on diagnostics stabilizing.
+- Add `darling::util::SpannedValue` so proc-macro authors can remember position information alongside parsed values.
+
 ## v0.8.0
 - Update dependency on `syn` to 0.15 [#44](https://github.com/darling/pull/44). Thanks to @hcpl
 

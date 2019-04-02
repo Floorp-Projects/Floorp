@@ -1,5 +1,3 @@
-#![cfg_attr(not(super_unstable), allow(dead_code))]
-
 use std::fmt;
 use std::iter;
 use std::panic::{self, PanicInfo};
@@ -7,20 +5,20 @@ use std::panic::{self, PanicInfo};
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use fallback;
 use proc_macro;
-use stable;
 
 use {Delimiter, Punct, Spacing, TokenTree};
 
 #[derive(Clone)]
 pub enum TokenStream {
-    Nightly(proc_macro::TokenStream),
-    Stable(stable::TokenStream),
+    Compiler(proc_macro::TokenStream),
+    Fallback(fallback::TokenStream),
 }
 
 pub enum LexError {
-    Nightly(proc_macro::LexError),
-    Stable(stable::LexError),
+    Compiler(proc_macro::LexError),
+    Fallback(fallback::LexError),
 }
 
 fn nightly_works() -> bool {
@@ -87,30 +85,30 @@ fn mismatch() -> ! {
 impl TokenStream {
     pub fn new() -> TokenStream {
         if nightly_works() {
-            TokenStream::Nightly(proc_macro::TokenStream::new())
+            TokenStream::Compiler(proc_macro::TokenStream::new())
         } else {
-            TokenStream::Stable(stable::TokenStream::new())
+            TokenStream::Fallback(fallback::TokenStream::new())
         }
     }
 
     pub fn is_empty(&self) -> bool {
         match self {
-            TokenStream::Nightly(tts) => tts.is_empty(),
-            TokenStream::Stable(tts) => tts.is_empty(),
+            TokenStream::Compiler(tts) => tts.is_empty(),
+            TokenStream::Fallback(tts) => tts.is_empty(),
         }
     }
 
     fn unwrap_nightly(self) -> proc_macro::TokenStream {
         match self {
-            TokenStream::Nightly(s) => s,
-            TokenStream::Stable(_) => mismatch(),
+            TokenStream::Compiler(s) => s,
+            TokenStream::Fallback(_) => mismatch(),
         }
     }
 
-    fn unwrap_stable(self) -> stable::TokenStream {
+    fn unwrap_stable(self) -> fallback::TokenStream {
         match self {
-            TokenStream::Nightly(_) => mismatch(),
-            TokenStream::Stable(s) => s,
+            TokenStream::Compiler(_) => mismatch(),
+            TokenStream::Fallback(s) => s,
         }
     }
 }
@@ -120,9 +118,9 @@ impl FromStr for TokenStream {
 
     fn from_str(src: &str) -> Result<TokenStream, LexError> {
         if nightly_works() {
-            Ok(TokenStream::Nightly(src.parse()?))
+            Ok(TokenStream::Compiler(src.parse()?))
         } else {
-            Ok(TokenStream::Stable(src.parse()?))
+            Ok(TokenStream::Fallback(src.parse()?))
         }
     }
 }
@@ -130,37 +128,37 @@ impl FromStr for TokenStream {
 impl fmt::Display for TokenStream {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            TokenStream::Nightly(tts) => tts.fmt(f),
-            TokenStream::Stable(tts) => tts.fmt(f),
+            TokenStream::Compiler(tts) => tts.fmt(f),
+            TokenStream::Fallback(tts) => tts.fmt(f),
         }
     }
 }
 
 impl From<proc_macro::TokenStream> for TokenStream {
     fn from(inner: proc_macro::TokenStream) -> TokenStream {
-        TokenStream::Nightly(inner)
+        TokenStream::Compiler(inner)
     }
 }
 
 impl From<TokenStream> for proc_macro::TokenStream {
     fn from(inner: TokenStream) -> proc_macro::TokenStream {
         match inner {
-            TokenStream::Nightly(inner) => inner,
-            TokenStream::Stable(inner) => inner.to_string().parse().unwrap(),
+            TokenStream::Compiler(inner) => inner,
+            TokenStream::Fallback(inner) => inner.to_string().parse().unwrap(),
         }
     }
 }
 
-impl From<stable::TokenStream> for TokenStream {
-    fn from(inner: stable::TokenStream) -> TokenStream {
-        TokenStream::Stable(inner)
+impl From<fallback::TokenStream> for TokenStream {
+    fn from(inner: fallback::TokenStream) -> TokenStream {
+        TokenStream::Fallback(inner)
     }
 }
 
 impl From<TokenTree> for TokenStream {
     fn from(token: TokenTree) -> TokenStream {
         if !nightly_works() {
-            return TokenStream::Stable(token.into());
+            return TokenStream::Fallback(token.into());
         }
         let tt: proc_macro::TokenTree = match token {
             TokenTree::Group(tt) => tt.inner.unwrap_nightly().into(),
@@ -176,7 +174,7 @@ impl From<TokenTree> for TokenStream {
             TokenTree::Ident(tt) => tt.inner.unwrap_nightly().into(),
             TokenTree::Literal(tt) => tt.inner.unwrap_nightly().into(),
         };
-        TokenStream::Nightly(tt.into())
+        TokenStream::Compiler(tt.into())
     }
 }
 
@@ -187,12 +185,12 @@ impl iter::FromIterator<TokenTree> for TokenStream {
                 .into_iter()
                 .map(TokenStream::from)
                 .flat_map(|t| match t {
-                    TokenStream::Nightly(s) => s,
-                    TokenStream::Stable(_) => mismatch(),
+                    TokenStream::Compiler(s) => s,
+                    TokenStream::Fallback(_) => mismatch(),
                 });
-            TokenStream::Nightly(trees.collect())
+            TokenStream::Compiler(trees.collect())
         } else {
-            TokenStream::Stable(trees.into_iter().collect())
+            TokenStream::Fallback(trees.into_iter().collect())
         }
     }
 }
@@ -202,36 +200,31 @@ impl iter::FromIterator<TokenStream> for TokenStream {
         let mut streams = streams.into_iter();
         match streams.next() {
             #[cfg(slow_extend)]
-            Some(TokenStream::Nightly(first)) => {
-                let stream = iter::once(first).chain(streams.map(|s| {
-                    match s {
-                        TokenStream::Nightly(s) => s,
-                        TokenStream::Stable(_) => mismatch(),
-                    }
-                })).collect();
-                TokenStream::Nightly(stream)
+            Some(TokenStream::Compiler(first)) => {
+                let stream = iter::once(first)
+                    .chain(streams.map(|s| match s {
+                        TokenStream::Compiler(s) => s,
+                        TokenStream::Fallback(_) => mismatch(),
+                    }))
+                    .collect();
+                TokenStream::Compiler(stream)
             }
             #[cfg(not(slow_extend))]
-            Some(TokenStream::Nightly(mut first)) => {
-                first.extend(streams.map(|s| {
-                    match s {
-                        TokenStream::Nightly(s) => s,
-                        TokenStream::Stable(_) => mismatch(),
-                    }
+            Some(TokenStream::Compiler(mut first)) => {
+                first.extend(streams.map(|s| match s {
+                    TokenStream::Compiler(s) => s,
+                    TokenStream::Fallback(_) => mismatch(),
                 }));
-                TokenStream::Nightly(first)
+                TokenStream::Compiler(first)
             }
-            Some(TokenStream::Stable(mut first)) => {
-                first.extend(streams.map(|s| {
-                    match s {
-                        TokenStream::Stable(s) => s,
-                        TokenStream::Nightly(_) => mismatch(),
-                    }
+            Some(TokenStream::Fallback(mut first)) => {
+                first.extend(streams.map(|s| match s {
+                    TokenStream::Fallback(s) => s,
+                    TokenStream::Compiler(_) => mismatch(),
                 }));
-                TokenStream::Stable(first)
+                TokenStream::Fallback(first)
             }
             None => TokenStream::new(),
-
         }
     }
 }
@@ -239,7 +232,7 @@ impl iter::FromIterator<TokenStream> for TokenStream {
 impl Extend<TokenTree> for TokenStream {
     fn extend<I: IntoIterator<Item = TokenTree>>(&mut self, streams: I) {
         match self {
-            TokenStream::Nightly(tts) => {
+            TokenStream::Compiler(tts) => {
                 #[cfg(not(slow_extend))]
                 {
                     tts.extend(
@@ -250,21 +243,19 @@ impl Extend<TokenTree> for TokenStream {
                 }
                 #[cfg(slow_extend)]
                 {
-                    *tts = tts
-                        .clone()
-                        .into_iter()
-                        .chain(
-                            streams
-                                .into_iter()
-                                .map(TokenStream::from)
-                                .flat_map(|t| match t {
-                                    TokenStream::Nightly(tts) => tts.into_iter(),
+                    *tts =
+                        tts.clone()
+                            .into_iter()
+                            .chain(streams.into_iter().map(TokenStream::from).flat_map(
+                                |t| match t {
+                                    TokenStream::Compiler(tts) => tts.into_iter(),
                                     _ => mismatch(),
-                                }),
-                        ).collect();
+                                },
+                            ))
+                            .collect();
                 }
             }
-            TokenStream::Stable(tts) => tts.extend(streams),
+            TokenStream::Fallback(tts) => tts.extend(streams),
         }
     }
 }
@@ -272,7 +263,7 @@ impl Extend<TokenTree> for TokenStream {
 impl Extend<TokenStream> for TokenStream {
     fn extend<I: IntoIterator<Item = TokenStream>>(&mut self, streams: I) {
         match self {
-            TokenStream::Nightly(tts) => {
+            TokenStream::Compiler(tts) => {
                 #[cfg(not(slow_extend))]
                 {
                     tts.extend(streams.into_iter().map(|stream| stream.unwrap_nightly()));
@@ -282,17 +273,14 @@ impl Extend<TokenStream> for TokenStream {
                     *tts = tts
                         .clone()
                         .into_iter()
-                        .chain(
-                            streams
-                                .into_iter()
-                                .flat_map(|t| match t {
-                                    TokenStream::Nightly(tts) => tts.into_iter(),
-                                    _ => mismatch(),
-                                }),
-                        ).collect();
+                        .chain(streams.into_iter().flat_map(|t| match t {
+                            TokenStream::Compiler(tts) => tts.into_iter(),
+                            _ => mismatch(),
+                        }))
+                        .collect();
                 }
             }
-            TokenStream::Stable(tts) => {
+            TokenStream::Fallback(tts) => {
                 tts.extend(streams.into_iter().map(|stream| stream.unwrap_stable()))
             }
         }
@@ -302,36 +290,36 @@ impl Extend<TokenStream> for TokenStream {
 impl fmt::Debug for TokenStream {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            TokenStream::Nightly(tts) => tts.fmt(f),
-            TokenStream::Stable(tts) => tts.fmt(f),
+            TokenStream::Compiler(tts) => tts.fmt(f),
+            TokenStream::Fallback(tts) => tts.fmt(f),
         }
     }
 }
 
 impl From<proc_macro::LexError> for LexError {
     fn from(e: proc_macro::LexError) -> LexError {
-        LexError::Nightly(e)
+        LexError::Compiler(e)
     }
 }
 
-impl From<stable::LexError> for LexError {
-    fn from(e: stable::LexError) -> LexError {
-        LexError::Stable(e)
+impl From<fallback::LexError> for LexError {
+    fn from(e: fallback::LexError) -> LexError {
+        LexError::Fallback(e)
     }
 }
 
 impl fmt::Debug for LexError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            LexError::Nightly(e) => e.fmt(f),
-            LexError::Stable(e) => e.fmt(f),
+            LexError::Compiler(e) => e.fmt(f),
+            LexError::Fallback(e) => e.fmt(f),
         }
     }
 }
 
 pub enum TokenTreeIter {
-    Nightly(proc_macro::token_stream::IntoIter),
-    Stable(stable::TokenTreeIter),
+    Compiler(proc_macro::token_stream::IntoIter),
+    Fallback(fallback::TokenTreeIter),
 }
 
 impl IntoIterator for TokenStream {
@@ -340,8 +328,8 @@ impl IntoIterator for TokenStream {
 
     fn into_iter(self) -> TokenTreeIter {
         match self {
-            TokenStream::Nightly(tts) => TokenTreeIter::Nightly(tts.into_iter()),
-            TokenStream::Stable(tts) => TokenTreeIter::Stable(tts.into_iter()),
+            TokenStream::Compiler(tts) => TokenTreeIter::Compiler(tts.into_iter()),
+            TokenStream::Fallback(tts) => TokenTreeIter::Fallback(tts.into_iter()),
         }
     }
 }
@@ -351,29 +339,29 @@ impl Iterator for TokenTreeIter {
 
     fn next(&mut self) -> Option<TokenTree> {
         let token = match self {
-            TokenTreeIter::Nightly(iter) => iter.next()?,
-            TokenTreeIter::Stable(iter) => return iter.next(),
+            TokenTreeIter::Compiler(iter) => iter.next()?,
+            TokenTreeIter::Fallback(iter) => return iter.next(),
         };
         Some(match token {
-            proc_macro::TokenTree::Group(tt) => ::Group::_new(Group::Nightly(tt)).into(),
+            proc_macro::TokenTree::Group(tt) => ::Group::_new(Group::Compiler(tt)).into(),
             proc_macro::TokenTree::Punct(tt) => {
                 let spacing = match tt.spacing() {
                     proc_macro::Spacing::Joint => Spacing::Joint,
                     proc_macro::Spacing::Alone => Spacing::Alone,
                 };
                 let mut o = Punct::new(tt.as_char(), spacing);
-                o.set_span(::Span::_new(Span::Nightly(tt.span())));
+                o.set_span(::Span::_new(Span::Compiler(tt.span())));
                 o.into()
             }
-            proc_macro::TokenTree::Ident(s) => ::Ident::_new(Ident::Nightly(s)).into(),
-            proc_macro::TokenTree::Literal(l) => ::Literal::_new(Literal::Nightly(l)).into(),
+            proc_macro::TokenTree::Ident(s) => ::Ident::_new(Ident::Compiler(s)).into(),
+            proc_macro::TokenTree::Literal(l) => ::Literal::_new(Literal::Compiler(l)).into(),
         })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self {
-            TokenTreeIter::Nightly(tts) => tts.size_hint(),
-            TokenTreeIter::Stable(tts) => tts.size_hint(),
+            TokenTreeIter::Compiler(tts) => tts.size_hint(),
+            TokenTreeIter::Fallback(tts) => tts.size_hint(),
         }
     }
 }
@@ -387,28 +375,28 @@ impl fmt::Debug for TokenTreeIter {
 #[derive(Clone, PartialEq, Eq)]
 #[cfg(super_unstable)]
 pub enum SourceFile {
-    Nightly(proc_macro::SourceFile),
-    Stable(stable::SourceFile),
+    Compiler(proc_macro::SourceFile),
+    Fallback(fallback::SourceFile),
 }
 
 #[cfg(super_unstable)]
 impl SourceFile {
     fn nightly(sf: proc_macro::SourceFile) -> Self {
-        SourceFile::Nightly(sf)
+        SourceFile::Compiler(sf)
     }
 
     /// Get the path to this source file as a string.
     pub fn path(&self) -> PathBuf {
         match self {
-            SourceFile::Nightly(a) => a.path(),
-            SourceFile::Stable(a) => a.path(),
+            SourceFile::Compiler(a) => a.path(),
+            SourceFile::Fallback(a) => a.path(),
         }
     }
 
     pub fn is_real(&self) -> bool {
         match self {
-            SourceFile::Nightly(a) => a.is_real(),
-            SourceFile::Stable(a) => a.is_real(),
+            SourceFile::Compiler(a) => a.is_real(),
+            SourceFile::Fallback(a) => a.is_real(),
         }
     }
 }
@@ -417,12 +405,13 @@ impl SourceFile {
 impl fmt::Debug for SourceFile {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            SourceFile::Nightly(a) => a.fmt(f),
-            SourceFile::Stable(a) => a.fmt(f),
+            SourceFile::Compiler(a) => a.fmt(f),
+            SourceFile::Fallback(a) => a.fmt(f),
         }
     }
 }
 
+#[cfg(any(super_unstable, feature = "span-locations"))]
 pub struct LineColumn {
     pub line: usize,
     pub column: usize,
@@ -430,33 +419,33 @@ pub struct LineColumn {
 
 #[derive(Copy, Clone)]
 pub enum Span {
-    Nightly(proc_macro::Span),
-    Stable(stable::Span),
+    Compiler(proc_macro::Span),
+    Fallback(fallback::Span),
 }
 
 impl Span {
     pub fn call_site() -> Span {
         if nightly_works() {
-            Span::Nightly(proc_macro::Span::call_site())
+            Span::Compiler(proc_macro::Span::call_site())
         } else {
-            Span::Stable(stable::Span::call_site())
+            Span::Fallback(fallback::Span::call_site())
         }
     }
 
     #[cfg(super_unstable)]
     pub fn def_site() -> Span {
         if nightly_works() {
-            Span::Nightly(proc_macro::Span::def_site())
+            Span::Compiler(proc_macro::Span::def_site())
         } else {
-            Span::Stable(stable::Span::def_site())
+            Span::Fallback(fallback::Span::def_site())
         }
     }
 
     #[cfg(super_unstable)]
     pub fn resolved_at(&self, other: Span) -> Span {
         match (self, other) {
-            (Span::Nightly(a), Span::Nightly(b)) => Span::Nightly(a.resolved_at(b)),
-            (Span::Stable(a), Span::Stable(b)) => Span::Stable(a.resolved_at(b)),
+            (Span::Compiler(a), Span::Compiler(b)) => Span::Compiler(a.resolved_at(b)),
+            (Span::Fallback(a), Span::Fallback(b)) => Span::Fallback(a.resolved_at(b)),
             _ => mismatch(),
         }
     }
@@ -464,50 +453,56 @@ impl Span {
     #[cfg(super_unstable)]
     pub fn located_at(&self, other: Span) -> Span {
         match (self, other) {
-            (Span::Nightly(a), Span::Nightly(b)) => Span::Nightly(a.located_at(b)),
-            (Span::Stable(a), Span::Stable(b)) => Span::Stable(a.located_at(b)),
+            (Span::Compiler(a), Span::Compiler(b)) => Span::Compiler(a.located_at(b)),
+            (Span::Fallback(a), Span::Fallback(b)) => Span::Fallback(a.located_at(b)),
             _ => mismatch(),
         }
     }
 
-    pub fn unstable(self) -> proc_macro::Span {
+    pub fn unwrap(self) -> proc_macro::Span {
         match self {
-            Span::Nightly(s) => s,
-            Span::Stable(_) => mismatch(),
+            Span::Compiler(s) => s,
+            Span::Fallback(_) => panic!("proc_macro::Span is only available in procedural macros"),
         }
     }
 
     #[cfg(super_unstable)]
     pub fn source_file(&self) -> SourceFile {
         match self {
-            Span::Nightly(s) => SourceFile::nightly(s.source_file()),
-            Span::Stable(s) => SourceFile::Stable(s.source_file()),
+            Span::Compiler(s) => SourceFile::nightly(s.source_file()),
+            Span::Fallback(s) => SourceFile::Fallback(s.source_file()),
         }
     }
 
-    #[cfg(super_unstable)]
+    #[cfg(any(super_unstable, feature = "span-locations"))]
     pub fn start(&self) -> LineColumn {
         match self {
-            Span::Nightly(s) => {
+            #[cfg(nightly)]
+            Span::Compiler(s) => {
                 let proc_macro::LineColumn { line, column } = s.start();
                 LineColumn { line, column }
             }
-            Span::Stable(s) => {
-                let stable::LineColumn { line, column } = s.start();
+            #[cfg(not(nightly))]
+            Span::Compiler(_) => LineColumn { line: 0, column: 0 },
+            Span::Fallback(s) => {
+                let fallback::LineColumn { line, column } = s.start();
                 LineColumn { line, column }
             }
         }
     }
 
-    #[cfg(super_unstable)]
+    #[cfg(any(super_unstable, feature = "span-locations"))]
     pub fn end(&self) -> LineColumn {
         match self {
-            Span::Nightly(s) => {
+            #[cfg(nightly)]
+            Span::Compiler(s) => {
                 let proc_macro::LineColumn { line, column } = s.end();
                 LineColumn { line, column }
             }
-            Span::Stable(s) => {
-                let stable::LineColumn { line, column } = s.end();
+            #[cfg(not(nightly))]
+            Span::Compiler(_) => LineColumn { line: 0, column: 0 },
+            Span::Fallback(s) => {
+                let fallback::LineColumn { line, column } = s.end();
                 LineColumn { line, column }
             }
         }
@@ -516,8 +511,8 @@ impl Span {
     #[cfg(super_unstable)]
     pub fn join(&self, other: Span) -> Option<Span> {
         let ret = match (self, other) {
-            (Span::Nightly(a), Span::Nightly(b)) => Span::Nightly(a.join(b)?),
-            (Span::Stable(a), Span::Stable(b)) => Span::Stable(a.join(b)?),
+            (Span::Compiler(a), Span::Compiler(b)) => Span::Compiler(a.join(b)?),
+            (Span::Fallback(a), Span::Fallback(b)) => Span::Fallback(a.join(b)?),
             _ => return None,
         };
         Some(ret)
@@ -526,134 +521,143 @@ impl Span {
     #[cfg(super_unstable)]
     pub fn eq(&self, other: &Span) -> bool {
         match (self, other) {
-            (Span::Nightly(a), Span::Nightly(b)) => a.eq(b),
-            (Span::Stable(a), Span::Stable(b)) => a.eq(b),
+            (Span::Compiler(a), Span::Compiler(b)) => a.eq(b),
+            (Span::Fallback(a), Span::Fallback(b)) => a.eq(b),
             _ => false,
         }
     }
 
     fn unwrap_nightly(self) -> proc_macro::Span {
         match self {
-            Span::Nightly(s) => s,
-            Span::Stable(_) => mismatch(),
+            Span::Compiler(s) => s,
+            Span::Fallback(_) => mismatch(),
         }
     }
 }
 
 impl From<proc_macro::Span> for ::Span {
     fn from(proc_span: proc_macro::Span) -> ::Span {
-        ::Span::_new(Span::Nightly(proc_span))
+        ::Span::_new(Span::Compiler(proc_span))
     }
 }
 
-impl From<stable::Span> for Span {
-    fn from(inner: stable::Span) -> Span {
-        Span::Stable(inner)
+impl From<fallback::Span> for Span {
+    fn from(inner: fallback::Span) -> Span {
+        Span::Fallback(inner)
     }
 }
 
 impl fmt::Debug for Span {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Span::Nightly(s) => s.fmt(f),
-            Span::Stable(s) => s.fmt(f),
+            Span::Compiler(s) => s.fmt(f),
+            Span::Fallback(s) => s.fmt(f),
         }
+    }
+}
+
+pub fn debug_span_field_if_nontrivial(debug: &mut fmt::DebugStruct, span: Span) {
+    match span {
+        Span::Compiler(s) => {
+            debug.field("span", &s);
+        }
+        Span::Fallback(s) => fallback::debug_span_field_if_nontrivial(debug, s),
     }
 }
 
 #[derive(Clone)]
 pub enum Group {
-    Nightly(proc_macro::Group),
-    Stable(stable::Group),
+    Compiler(proc_macro::Group),
+    Fallback(fallback::Group),
 }
 
 impl Group {
     pub fn new(delimiter: Delimiter, stream: TokenStream) -> Group {
         match stream {
-            TokenStream::Nightly(stream) => {
+            TokenStream::Compiler(stream) => {
                 let delimiter = match delimiter {
                     Delimiter::Parenthesis => proc_macro::Delimiter::Parenthesis,
                     Delimiter::Bracket => proc_macro::Delimiter::Bracket,
                     Delimiter::Brace => proc_macro::Delimiter::Brace,
                     Delimiter::None => proc_macro::Delimiter::None,
                 };
-                Group::Nightly(proc_macro::Group::new(delimiter, stream))
+                Group::Compiler(proc_macro::Group::new(delimiter, stream))
             }
-            TokenStream::Stable(stream) => {
-                Group::Stable(stable::Group::new(delimiter, stream))
+            TokenStream::Fallback(stream) => {
+                Group::Fallback(fallback::Group::new(delimiter, stream))
             }
         }
     }
 
     pub fn delimiter(&self) -> Delimiter {
         match self {
-            Group::Nightly(g) => match g.delimiter() {
+            Group::Compiler(g) => match g.delimiter() {
                 proc_macro::Delimiter::Parenthesis => Delimiter::Parenthesis,
                 proc_macro::Delimiter::Bracket => Delimiter::Bracket,
                 proc_macro::Delimiter::Brace => Delimiter::Brace,
                 proc_macro::Delimiter::None => Delimiter::None,
-            }
-            Group::Stable(g) => g.delimiter(),
+            },
+            Group::Fallback(g) => g.delimiter(),
         }
     }
 
     pub fn stream(&self) -> TokenStream {
         match self {
-            Group::Nightly(g) => TokenStream::Nightly(g.stream()),
-            Group::Stable(g) => TokenStream::Stable(g.stream()),
+            Group::Compiler(g) => TokenStream::Compiler(g.stream()),
+            Group::Fallback(g) => TokenStream::Fallback(g.stream()),
         }
     }
 
     pub fn span(&self) -> Span {
         match self {
-            Group::Nightly(g) => Span::Nightly(g.span()),
-            Group::Stable(g) => Span::Stable(g.span()),
+            Group::Compiler(g) => Span::Compiler(g.span()),
+            Group::Fallback(g) => Span::Fallback(g.span()),
         }
     }
 
     #[cfg(super_unstable)]
     pub fn span_open(&self) -> Span {
         match self {
-            Group::Nightly(g) => Span::Nightly(g.span_open()),
-            Group::Stable(g) => Span::Stable(g.span_open()),
+            Group::Compiler(g) => Span::Compiler(g.span_open()),
+            Group::Fallback(g) => Span::Fallback(g.span_open()),
         }
     }
 
     #[cfg(super_unstable)]
     pub fn span_close(&self) -> Span {
         match self {
-            Group::Nightly(g) => Span::Nightly(g.span_close()),
-            Group::Stable(g) => Span::Stable(g.span_close()),
+            Group::Compiler(g) => Span::Compiler(g.span_close()),
+            Group::Fallback(g) => Span::Fallback(g.span_close()),
         }
     }
 
     pub fn set_span(&mut self, span: Span) {
         match (self, span) {
-            (Group::Nightly(g), Span::Nightly(s)) => g.set_span(s),
-            (Group::Stable(g), Span::Stable(s)) => g.set_span(s),
+            (Group::Compiler(g), Span::Compiler(s)) => g.set_span(s),
+            (Group::Fallback(g), Span::Fallback(s)) => g.set_span(s),
             _ => mismatch(),
         }
     }
 
     fn unwrap_nightly(self) -> proc_macro::Group {
         match self {
-            Group::Nightly(g) => g,
-            Group::Stable(_) => mismatch(),
+            Group::Compiler(g) => g,
+            Group::Fallback(_) => mismatch(),
         }
     }
 }
 
-impl From<stable::Group> for Group {
-    fn from(g: stable::Group) -> Self {
-        Group::Stable(g)
+impl From<fallback::Group> for Group {
+    fn from(g: fallback::Group) -> Self {
+        Group::Fallback(g)
     }
 }
 
 impl fmt::Display for Group {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Group::Nightly(group) => group.fmt(formatter),
-            Group::Stable(group) => group.fmt(formatter),
+            Group::Compiler(group) => group.fmt(formatter),
+            Group::Fallback(group) => group.fmt(formatter),
         }
     }
 }
@@ -661,29 +665,29 @@ impl fmt::Display for Group {
 impl fmt::Debug for Group {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Group::Nightly(group) => group.fmt(formatter),
-            Group::Stable(group) => group.fmt(formatter),
+            Group::Compiler(group) => group.fmt(formatter),
+            Group::Fallback(group) => group.fmt(formatter),
         }
     }
 }
 
 #[derive(Clone)]
 pub enum Ident {
-    Nightly(proc_macro::Ident),
-    Stable(stable::Ident),
+    Compiler(proc_macro::Ident),
+    Fallback(fallback::Ident),
 }
 
 impl Ident {
     pub fn new(string: &str, span: Span) -> Ident {
         match span {
-            Span::Nightly(s) => Ident::Nightly(proc_macro::Ident::new(string, s)),
-            Span::Stable(s) => Ident::Stable(stable::Ident::new(string, s)),
+            Span::Compiler(s) => Ident::Compiler(proc_macro::Ident::new(string, s)),
+            Span::Fallback(s) => Ident::Fallback(fallback::Ident::new(string, s)),
         }
     }
 
     pub fn new_raw(string: &str, span: Span) -> Ident {
         match span {
-            Span::Nightly(s) => {
+            Span::Compiler(s) => {
                 let p: proc_macro::TokenStream = string.parse().unwrap();
                 let ident = match p.into_iter().next() {
                     Some(proc_macro::TokenTree::Ident(mut i)) => {
@@ -692,31 +696,31 @@ impl Ident {
                     }
                     _ => panic!(),
                 };
-                Ident::Nightly(ident)
+                Ident::Compiler(ident)
             }
-            Span::Stable(s) => Ident::Stable(stable::Ident::new_raw(string, s)),
+            Span::Fallback(s) => Ident::Fallback(fallback::Ident::new_raw(string, s)),
         }
     }
 
     pub fn span(&self) -> Span {
         match self {
-            Ident::Nightly(t) => Span::Nightly(t.span()),
-            Ident::Stable(t) => Span::Stable(t.span()),
+            Ident::Compiler(t) => Span::Compiler(t.span()),
+            Ident::Fallback(t) => Span::Fallback(t.span()),
         }
     }
 
     pub fn set_span(&mut self, span: Span) {
         match (self, span) {
-            (Ident::Nightly(t), Span::Nightly(s)) => t.set_span(s),
-            (Ident::Stable(t), Span::Stable(s)) => t.set_span(s),
+            (Ident::Compiler(t), Span::Compiler(s)) => t.set_span(s),
+            (Ident::Fallback(t), Span::Fallback(s)) => t.set_span(s),
             _ => mismatch(),
         }
     }
 
     fn unwrap_nightly(self) -> proc_macro::Ident {
         match self {
-            Ident::Nightly(s) => s,
-            Ident::Stable(_) => mismatch(),
+            Ident::Compiler(s) => s,
+            Ident::Fallback(_) => mismatch(),
         }
     }
 }
@@ -724,8 +728,8 @@ impl Ident {
 impl PartialEq for Ident {
     fn eq(&self, other: &Ident) -> bool {
         match (self, other) {
-            (Ident::Nightly(t), Ident::Nightly(o)) => t.to_string() == o.to_string(),
-            (Ident::Stable(t), Ident::Stable(o)) => t == o,
+            (Ident::Compiler(t), Ident::Compiler(o)) => t.to_string() == o.to_string(),
+            (Ident::Fallback(t), Ident::Fallback(o)) => t == o,
             _ => mismatch(),
         }
     }
@@ -738,8 +742,8 @@ where
     fn eq(&self, other: &T) -> bool {
         let other = other.as_ref();
         match self {
-            Ident::Nightly(t) => t.to_string() == other,
-            Ident::Stable(t) => t == other,
+            Ident::Compiler(t) => t.to_string() == other,
+            Ident::Fallback(t) => t == other,
         }
     }
 }
@@ -747,8 +751,8 @@ where
 impl fmt::Display for Ident {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Ident::Nightly(t) => t.fmt(f),
-            Ident::Stable(t) => t.fmt(f),
+            Ident::Compiler(t) => t.fmt(f),
+            Ident::Fallback(t) => t.fmt(f),
         }
     }
 }
@@ -756,25 +760,25 @@ impl fmt::Display for Ident {
 impl fmt::Debug for Ident {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Ident::Nightly(t) => t.fmt(f),
-            Ident::Stable(t) => t.fmt(f),
+            Ident::Compiler(t) => t.fmt(f),
+            Ident::Fallback(t) => t.fmt(f),
         }
     }
 }
 
 #[derive(Clone)]
 pub enum Literal {
-    Nightly(proc_macro::Literal),
-    Stable(stable::Literal),
+    Compiler(proc_macro::Literal),
+    Fallback(fallback::Literal),
 }
 
 macro_rules! suffixed_numbers {
     ($($name:ident => $kind:ident,)*) => ($(
         pub fn $name(n: $kind) -> Literal {
             if nightly_works() {
-                Literal::Nightly(proc_macro::Literal::$name(n))
+                Literal::Compiler(proc_macro::Literal::$name(n))
             } else {
-                Literal::Stable(stable::Literal::$name(n))
+                Literal::Fallback(fallback::Literal::$name(n))
             }
         }
     )*)
@@ -784,9 +788,9 @@ macro_rules! unsuffixed_integers {
     ($($name:ident => $kind:ident,)*) => ($(
         pub fn $name(n: $kind) -> Literal {
             if nightly_works() {
-                Literal::Nightly(proc_macro::Literal::$name(n))
+                Literal::Compiler(proc_macro::Literal::$name(n))
             } else {
-                Literal::Stable(stable::Literal::$name(n))
+                Literal::Fallback(fallback::Literal::$name(n))
             }
         }
     )*)
@@ -836,78 +840,78 @@ impl Literal {
 
     pub fn f32_unsuffixed(f: f32) -> Literal {
         if nightly_works() {
-            Literal::Nightly(proc_macro::Literal::f32_unsuffixed(f))
+            Literal::Compiler(proc_macro::Literal::f32_unsuffixed(f))
         } else {
-            Literal::Stable(stable::Literal::f32_unsuffixed(f))
+            Literal::Fallback(fallback::Literal::f32_unsuffixed(f))
         }
     }
 
     pub fn f64_unsuffixed(f: f64) -> Literal {
         if nightly_works() {
-            Literal::Nightly(proc_macro::Literal::f64_unsuffixed(f))
+            Literal::Compiler(proc_macro::Literal::f64_unsuffixed(f))
         } else {
-            Literal::Stable(stable::Literal::f64_unsuffixed(f))
+            Literal::Fallback(fallback::Literal::f64_unsuffixed(f))
         }
     }
 
     pub fn string(t: &str) -> Literal {
         if nightly_works() {
-            Literal::Nightly(proc_macro::Literal::string(t))
+            Literal::Compiler(proc_macro::Literal::string(t))
         } else {
-            Literal::Stable(stable::Literal::string(t))
+            Literal::Fallback(fallback::Literal::string(t))
         }
     }
 
     pub fn character(t: char) -> Literal {
         if nightly_works() {
-            Literal::Nightly(proc_macro::Literal::character(t))
+            Literal::Compiler(proc_macro::Literal::character(t))
         } else {
-            Literal::Stable(stable::Literal::character(t))
+            Literal::Fallback(fallback::Literal::character(t))
         }
     }
 
     pub fn byte_string(bytes: &[u8]) -> Literal {
         if nightly_works() {
-            Literal::Nightly(proc_macro::Literal::byte_string(bytes))
+            Literal::Compiler(proc_macro::Literal::byte_string(bytes))
         } else {
-            Literal::Stable(stable::Literal::byte_string(bytes))
+            Literal::Fallback(fallback::Literal::byte_string(bytes))
         }
     }
 
     pub fn span(&self) -> Span {
         match self {
-            Literal::Nightly(lit) => Span::Nightly(lit.span()),
-            Literal::Stable(lit) => Span::Stable(lit.span()),
+            Literal::Compiler(lit) => Span::Compiler(lit.span()),
+            Literal::Fallback(lit) => Span::Fallback(lit.span()),
         }
     }
 
     pub fn set_span(&mut self, span: Span) {
         match (self, span) {
-            (Literal::Nightly(lit), Span::Nightly(s)) => lit.set_span(s),
-            (Literal::Stable(lit), Span::Stable(s)) => lit.set_span(s),
+            (Literal::Compiler(lit), Span::Compiler(s)) => lit.set_span(s),
+            (Literal::Fallback(lit), Span::Fallback(s)) => lit.set_span(s),
             _ => mismatch(),
         }
     }
 
     fn unwrap_nightly(self) -> proc_macro::Literal {
         match self {
-            Literal::Nightly(s) => s,
-            Literal::Stable(_) => mismatch(),
+            Literal::Compiler(s) => s,
+            Literal::Fallback(_) => mismatch(),
         }
     }
 }
 
-impl From<stable::Literal> for Literal {
-    fn from(s: stable::Literal) -> Literal {
-        Literal::Stable(s)
+impl From<fallback::Literal> for Literal {
+    fn from(s: fallback::Literal) -> Literal {
+        Literal::Fallback(s)
     }
 }
 
 impl fmt::Display for Literal {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Literal::Nightly(t) => t.fmt(f),
-            Literal::Stable(t) => t.fmt(f),
+            Literal::Compiler(t) => t.fmt(f),
+            Literal::Fallback(t) => t.fmt(f),
         }
     }
 }
@@ -915,8 +919,8 @@ impl fmt::Display for Literal {
 impl fmt::Debug for Literal {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Literal::Nightly(t) => t.fmt(f),
-            Literal::Stable(t) => t.fmt(f),
+            Literal::Compiler(t) => t.fmt(f),
+            Literal::Fallback(t) => t.fmt(f),
         }
     }
 }
