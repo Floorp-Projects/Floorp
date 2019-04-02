@@ -203,6 +203,8 @@ tasks:
                         expires: ${expires_in}
                   extra:
                     cron: {$json: {$eval: 'cron'}}
+                    treeherder:
+                      symbol: N
                   metadata:
                     name: Fenix Nightly Decision Task
                     description: Decision task scheduled by cron task [${cron.task_id}](https://tools.taskcluster.net/tasks/${cron.task_id})
