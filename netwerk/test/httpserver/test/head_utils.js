@@ -98,25 +98,25 @@ function* LineIterator(data) {
  *   an Iterator which returns lines of text
  * @param expectedLines : [string]
  *   an array of the expected lines of text
- * @throws string
- *   an error message if iter doesn't agree with expectedLines
+ * @throws an error message if iter doesn't agree with expectedLines
  */
 function expectLines(iter, expectedLines) {
   var index = 0;
   for (var line of iter) {
     if (expectedLines.length == index)
-      throw "Error: got more than " + expectedLines.length + " expected lines!";
+      throw new Error(`Error: got more than ${expectedLines.length} expected lines!`);
 
     var expected = expectedLines[index++];
     if (expected !== line)
-      throw "Error on line " + index + "!\n" +
-            "  actual: '" + line + "',\n" +
-            "  expect: '" + expected + "'";
+      throw new Error(`Error on line ${index}!
+  actual: '${line}',
+  expect: '${expected}'`);
   }
 
   if (expectedLines.length !== index) {
-    throw "Expected more lines!  Got " + index +
-          ", expected " + expectedLines.length;
+    throw new Error(
+      `Expected more lines!  Got ${index}, expected ${expectedLines.length}`
+    );
   }
 }
 
