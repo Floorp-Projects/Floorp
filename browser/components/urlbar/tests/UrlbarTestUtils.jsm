@@ -463,14 +463,12 @@ class UrlbarAbstraction {
         url: urls.length > 0 ? urls[0].textContent : null,
         typeIcon: typeIconStyle["background-image"],
       };
-      let actionElement = element.getElementsByClassName("urlbarView-action")[0];
-      let urlElement = element.getElementsByClassName("urlbarView-url")[0];
       details.element = {
-        action: actionElement,
+        action: element.getElementsByClassName("urlbarView-action")[0],
         row: element,
-        separator: urlElement || actionElement,
+        separator: element.getElementsByClassName("urlbarView-title-separator")[0],
         title: element.getElementsByClassName("urlbarView-title")[0],
-        url: urlElement,
+        url: element.getElementsByClassName("urlbarView-url")[0],
       };
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
         details.searchParams = {
