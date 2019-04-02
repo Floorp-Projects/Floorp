@@ -12,22 +12,22 @@ with Files("*OSFile*"):
     BUG_COMPONENT = ("Toolkit", "OS.File")
 
 with Files("*ocationProvider*"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("windows/*LocationProvider*"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("mac/*LocationProvider*"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("mac/*OSPermissionRequest*"):
     BUG_COMPONENT = ("Firefox", "Device Permissions")
 
 with Files("linux/*LocationProvider*"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("android/*LocationProvider*"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("tests/chrome.ini"):
     BUG_COMPONENT = ("Toolkit", "OS.File")
