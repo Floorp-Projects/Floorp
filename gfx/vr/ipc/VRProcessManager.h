@@ -9,6 +9,7 @@
 #include "VRProcessParent.h"
 
 namespace mozilla {
+class MemoryReportingProcess;
 namespace gfx {
 
 class VRManagerChild;
@@ -37,6 +38,9 @@ class VRProcessManager final : public VRProcessParent::Listener {
                         mozilla::ipc::Endpoint<PVRGPUChild>* aOutVRBridge);
 
   VRChild* GetVRChild();
+  // If a VR process is present, create a MemoryReportingProcess object.
+  // Otherwise, return null.
+  RefPtr<MemoryReportingProcess> GetProcessMemoryReporter();
 
   virtual void OnProcessLaunchComplete(VRProcessParent* aParent) override;
   virtual void OnProcessUnexpectedShutdown(VRProcessParent* aParent) override;

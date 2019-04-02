@@ -10,6 +10,7 @@
 #include "VRChild.h"
 #include "VRGPUChild.h"
 #include "VRGPUParent.h"
+#include "mozilla/MemoryReportingProcess.h"
 
 namespace mozilla {
 namespace gfx {
@@ -194,6 +195,58 @@ void VRProcessManager::OnXPCOMShutdown() {
 }
 
 VRChild* VRProcessManager::GetVRChild() { return mProcess->GetActor(); }
+
+class VRMemoryReporter : public MemoryReportingProcess {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRMemoryReporter, override)
+
+  bool IsAlive() const override {
+    if (VRProcessManager* vpm = VRProcessManager::Get()) {
+      return !!vpm->GetVRChild();
+    }
+    return false;
+  }
+
+  bool SendRequestMemoryReport(const uint32_t& aGeneration,
+                               const bool& aAnonymize,
+                               const bool& aMinimizeMemoryUsage,
+                               const Maybe<FileDescriptor>& aDMDFile) override {
+    VRChild* child = GetChild();
+    if (!child) {
+      return false;
+    }
+
+    return child->SendRequestMemoryReport(aGeneration, aAnonymize,
+                                          aMinimizeMemoryUsage, aDMDFile);
+  }
+
+  int32_t Pid() const override {
+    if (VRChild* child = GetChild()) {
+      return (int32_t)child->OtherPid();
+    }
+    return 0;
+  }
+
+ private:
+  VRChild* GetChild() const {
+    if (VRProcessManager* vpm = VRProcessManager::Get()) {
+      if (VRChild* child = vpm->GetVRChild()) {
+        return child;
+      }
+    }
+    return nullptr;
+  }
+
+ protected:
+  ~VRMemoryReporter() = default;
+};
+
+RefPtr<MemoryReportingProcess> VRProcessManager::GetProcessMemoryReporter() {
+  if (!EnsureVRReady()) {
+    return nullptr;
+  }
+  return new VRMemoryReporter();
+}
 
 }  // namespace gfx
 }  // namespace mozilla
