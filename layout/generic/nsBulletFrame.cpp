@@ -21,6 +21,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Move.h"
 #include "nsCOMPtr.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsFontMetrics.h"
 #include "nsGkAtoms.h"
 #include "nsGenericHTMLElement.h"

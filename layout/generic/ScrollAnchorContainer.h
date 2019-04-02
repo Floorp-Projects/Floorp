@@ -9,7 +9,10 @@
 
 #include "nsPoint.h"
 
+class nsFrameList;
 class nsIFrame;
+class nsIScrollableFrame;
+
 namespace mozilla {
 class ScrollFrameHelper;
 }  // namespace mozilla
