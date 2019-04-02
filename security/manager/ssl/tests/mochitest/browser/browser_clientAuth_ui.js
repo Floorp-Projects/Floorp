@@ -56,36 +56,25 @@ function openClientAuthDialog(cert) {
  *        The notAfterLocalTime attribute of mochitest.client.
  */
 function checkDialogContents(win, notBefore, notAfter) {
-  Assert.equal(win.document.getElementById("hostname").textContent,
-               `${TEST_HOSTNAME}:${TEST_PORT}`,
-               "Actual and expected hostname and port should be equal");
-  Assert.equal(win.document.getElementById("organization").textContent,
-               `Organization: “${TEST_ORG}”`,
-               "Actual and expected organization should be equal");
-  Assert.equal(win.document.getElementById("issuer").textContent,
-               `Issued Under: “${TEST_ISSUER_ORG}”`,
-               "Actual and expected issuer organization should be equal");
+  is(win.document.getElementById("hostname").textContent, `${TEST_HOSTNAME}:${TEST_PORT}`,
+     "Actual and expected hostname and port should be equal");
+  is(win.document.getElementById("organization").textContent, `Organization: “${TEST_ORG}”`,
+     "Actual and expected organization should be equal");
+  is(win.document.getElementById("issuer").textContent, `Issued Under: “${TEST_ISSUER_ORG}”`,
+     "Actual and expected issuer organization should be equal");
 
-  Assert.equal(win.document.getElementById("nicknames").label,
-               "Mochitest client [03]",
-               "Actual and expected selected cert nickname and serial should " +
-               "be equal");
-  Assert.equal(win.document.getElementById("nicknames").itemCount, 1, "correct number of items");
+  is(win.document.getElementById("nicknames").label, "Mochitest client [03]",
+     "Actual and expected selected cert nickname and serial should be equal");
+  is(win.document.getElementById("nicknames").itemCount, 1, "correct number of items");
 
   let [subject, serialNum, validity, issuer, tokenName] =
     win.document.getElementById("details").value.split("\n");
-  Assert.equal(subject, "Issued to: CN=Mochitest client",
-               "Actual and expected subject should be equal");
-  Assert.equal(serialNum, "Serial number: 03",
-               "Actual and expected serial number should be equal");
-  Assert.equal(validity, `Valid from ${notBefore} to ${notAfter}`,
-               "Actual and expected validity should be equal");
-  Assert.equal(issuer,
-               "Issued by: OU=Profile Guided Optimization,O=Mozilla Testing," +
-               "CN=Temporary Certificate Authority",
-               "Actual and expected issuer should be equal");
-  Assert.equal(tokenName, "Stored on: Software Security Device",
-               "Actual and expected token name should be equal");
+  is(subject, "Issued to: CN=Mochitest client", "Actual and expected subject should be equal");
+  is(serialNum, "Serial number: 03", "Actual and expected serial number should be equal");
+  is(validity, `Valid from ${notBefore} to ${notAfter}`, "Actual and expected validity should be equal");
+  is(issuer, "Issued by: OU=Profile Guided Optimization,O=Mozilla Testing,CN=Temporary Certificate Authority",
+     "Actual and expected issuer should be equal");
+  is(tokenName, "Stored on: Software Security Device", "Actual and expected token name should be equal");
 }
 
 function findCertByCommonName(commonName) {
@@ -99,7 +88,7 @@ function findCertByCommonName(commonName) {
 
 add_task(async function setup() {
   cert = findCertByCommonName("Mochitest client");
-  Assert.notEqual(cert, null, "Should be able to find the test client cert");
+  isnot(cert, null, "Should be able to find the test client cert");
 });
 
 // Test that the contents of the dialog correspond to the details of the
@@ -119,13 +108,10 @@ add_task(async function testAcceptDialogReturnValues() {
   win.document.getElementById("certAuthAsk").acceptDialog();
   await BrowserTestUtils.windowClosed(win);
 
-  Assert.ok(retVals.get("certChosen"),
-            "Return value should signal user chose a certificate");
-  Assert.equal(retVals.get("selectedIndex"), 0,
-               "0 should be returned as the selected index");
-  Assert.ok(retVals.get("rememberSelection"),
-            "Return value should signal 'Remember this decision' checkbox was" +
-            "checked");
+  ok(retVals.get("certChosen"), "Return value should signal user chose a certificate");
+  is(retVals.get("selectedIndex"), 0, "0 should be returned as the selected index");
+  ok(retVals.get("rememberSelection"),
+     "Return value should signal 'Remember this decision' checkbox was checked");
 });
 
 // Test that the right values are returned when the dialog is canceled.
@@ -136,9 +122,8 @@ add_task(async function testCancelDialogReturnValues() {
   win.document.getElementById("certAuthAsk").cancelDialog();
   await BrowserTestUtils.windowClosed(win);
 
-  Assert.ok(!retVals.get("certChosen"),
-            "Return value should signal user did not choose a certificate");
-  Assert.ok(!retVals.get("rememberSelection"),
-            "Return value should signal 'Remember this decision' checkbox was" +
-            "unchecked");
+  ok(!retVals.get("certChosen"),
+     "Return value should signal user did not choose a certificate");
+  ok(!retVals.get("rememberSelection"),
+     "Return value should signal 'Remember this decision' checkbox was unchecked");
 });
