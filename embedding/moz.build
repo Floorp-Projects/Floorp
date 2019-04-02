@@ -1,3 +1,0 @@
-with Files("**"):
-    BUG_COMPONENT = ("Core", "General")
-
