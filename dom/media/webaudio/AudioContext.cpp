@@ -931,6 +931,9 @@ already_AddRefed<Promise> AudioContext::Suspend(ErrorResult& aRv) {
 }
 
 void AudioContext::SuspendFromChrome() {
+  if (mIsOffline || mIsShutDown) {
+    return;
+  }
   SuspendInternal(nullptr, AudioContextOperationFlags::None);
 }
 
@@ -954,6 +957,9 @@ void AudioContext::SuspendInternal(void* aPromise,
 }
 
 void AudioContext::ResumeFromChrome() {
+  if (mIsOffline || mIsShutDown) {
+    return;
+  }
   ResumeInternal(AudioContextOperationFlags::None);
 }
 
