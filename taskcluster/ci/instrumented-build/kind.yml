@@ -62,7 +62,7 @@ jobs:
             enable-full-crashsymbols: true
         treeherder:
             platform: android-4-0-armv7-api16/pgo
-        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker-type: b-linux
         worker:
             docker-image: {in-tree: android-build}
             max-run-time: 7200
