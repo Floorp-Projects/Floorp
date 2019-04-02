@@ -1319,7 +1319,6 @@ menuitem.panel-subview-footer@menuStateActive@,
   -moz-box-pack: end;
   margin-inline-start: 10px;
   margin-inline-end: auto;
-  color: var(--panel-disabled-color);
 }
 
 #PanelUI-remotetabs-tabslist > toolbarbutton[itemtype="tab"],

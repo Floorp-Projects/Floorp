@@ -61,7 +61,7 @@ class ConsoleOutput extends Component {
       messagesTableData: PropTypes.object.isRequired,
       messagesRepeat: PropTypes.object.isRequired,
       warningGroups: PropTypes.object.isRequired,
-      isInWarningGroup: PropTypes.isRequired,
+      isInWarningGroup: PropTypes.func,
       networkMessagesUpdate: PropTypes.object.isRequired,
       visibleMessages: PropTypes.array.isRequired,
       networkMessageActiveTabId: PropTypes.string.isRequired,

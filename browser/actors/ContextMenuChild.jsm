@@ -32,6 +32,11 @@ XPCOMUtils.defineLazyGetter(this, "PageMenuChild", () => {
   return new tmp.PageMenuChild();
 });
 
+XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
+  Components.Constructor("@mozilla.org/referrer-info;1",
+                         "nsIReferrerInfo",
+                         "init"));
+
 const messageListeners = {
   "ContextMenu:BookmarkFrame": function(aMessage) {
     let frame = this.getTarget(aMessage).ownerDocument;
@@ -601,6 +606,15 @@ class ContextMenuChild extends ActorChild {
       delete data.disableSetDesktopBg;
 
       data.context.targetAsCPOW = targetAsCPOW;
+
+      data.referrerInfo = new ReferrerInfo(
+        referrerPolicy,
+        !context.linkHasNoReferrer,
+        data.documentURIObject);
+      data.frameReferrerInfo = new ReferrerInfo(
+        referrerPolicy,
+        !context.linkHasNoReferrer,
+        referrer ? Services.io.newURI(referrer) : null);
 
       mainWin.setContextMenuContentData(data);
     }

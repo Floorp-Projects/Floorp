@@ -115,6 +115,17 @@ const runtime = {
   // unavailable on this-firefox runtime
   extra: PropTypes.shape(runtimeExtra),
 
+  // this flag will be true when start to connect to the runtime, will be false after
+  // connected or has failures.
+  isConnecting: PropTypes.bool.isRequired,
+
+  // this flag will be true when the connection failed.
+  isConnectionFailed: PropTypes.bool.isRequired,
+
+  // will be true if connecting to runtime is taking time, will be false after connecting
+  // or failing.
+  isConnectionNotResponding: PropTypes.bool.isRequired,
+
   // unknown runtimes are placeholders for devices where the runtime has not been started
   // yet. For instance an ADB device connected without a compatible runtime running.
   isUnknown: PropTypes.bool.isRequired,
