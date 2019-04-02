@@ -256,6 +256,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
    public:
     explicit PerScriptData(JSContext* cx);
 
+    MOZ_MUST_USE bool init(JSContext* cx);
+
     // ---- Scope ----
 
     CGScopeList& scopeList() { return scopeList_; }
@@ -268,6 +270,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
     CGObjectList& objectList() { return objectList_; }
     const CGObjectList& objectList() const { return objectList_; }
+
+    PooledMapPtr<AtomIndexMap>& atomIndices() { return atomIndices_; }
+    const PooledMapPtr<AtomIndexMap>& atomIndices() const {
+      return atomIndices_;
+    }
 
    private:
     // ---- Scope ----
@@ -282,6 +289,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
     // List of emitted objects.
     CGObjectList objectList_;
+
+    // Map from atom to index.
+    PooledMapPtr<AtomIndexMap> atomIndices_;
   };
 
   PerScriptData perScriptData_;
@@ -320,7 +330,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   mozilla::Maybe<EitherParser> ep_ = {};
   BCEParserHandle* parser = nullptr;
 
-  PooledMapPtr<AtomIndexMap> atomIndices; /* literals indexed for mapping */
   unsigned firstLine = 0; /* first line, for JSScript::initFromEmitter */
 
   uint32_t maxFixedSlots = 0; /* maximum number of fixed frame slots so far */
@@ -509,15 +518,15 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_ALWAYS_INLINE
   MOZ_MUST_USE bool makeAtomIndex(JSAtom* atom, uint32_t* indexp) {
-    MOZ_ASSERT(atomIndices);
-    AtomIndexMap::AddPtr p = atomIndices->lookupForAdd(atom);
+    MOZ_ASSERT(perScriptData().atomIndices());
+    AtomIndexMap::AddPtr p = perScriptData().atomIndices()->lookupForAdd(atom);
     if (p) {
       *indexp = p->value();
       return true;
     }
 
-    uint32_t index = atomIndices->count();
-    if (!atomIndices->add(p, atom, index)) {
+    uint32_t index = perScriptData().atomIndices()->count();
+    if (!perScriptData().atomIndices()->add(p, atom, index)) {
       ReportOutOfMemory(cx);
       return false;
     }
