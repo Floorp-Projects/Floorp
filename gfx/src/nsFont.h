@@ -21,22 +21,6 @@
 
 struct gfxFontStyle;
 
-// IDs for generic fonts
-// NOTE: 0, 1 are reserved for the special IDs of the default variable
-// and fixed fonts in the presentation context, see nsPresContext.h
-const uint8_t kGenericFont_NONE = 0x00;
-// Special
-const uint8_t kGenericFont_moz_variable =
-    0x00;  // for the default variable width font
-const uint8_t kGenericFont_moz_fixed =
-    0x01;  // our special "use the user's fixed font"
-// CSS
-const uint8_t kGenericFont_serif = 0x02;
-const uint8_t kGenericFont_sans_serif = 0x04;
-const uint8_t kGenericFont_monospace = 0x08;
-const uint8_t kGenericFont_cursive = 0x10;
-const uint8_t kGenericFont_fantasy = 0x20;
-
 // Font structure.
 struct nsFont {
   typedef mozilla::FontStretch FontStretch;
@@ -117,7 +101,7 @@ struct nsFont {
   nsFont(const mozilla::FontFamilyList& aFontlist, nscoord aSize);
 
   // initialize the font with a single generic
-  nsFont(mozilla::FontFamilyType aGenericType, nscoord aSize);
+  nsFont(mozilla::StyleGenericFontFamily, nscoord aSize);
 
   // Make a copy of the given font
   nsFont(const nsFont& aFont);

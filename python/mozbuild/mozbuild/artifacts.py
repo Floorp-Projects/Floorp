@@ -187,7 +187,7 @@ class ArtifactJob(object):
             elif self._symbols_archive_suffix and name.endswith(self._symbols_archive_suffix):
                 yield name
             else:
-                self.log(logging.DEBUG, 'artifact',
+                self.log(logging.INFO, 'artifact',
                          {'name': name},
                          'Not yielding artifact named {name} as a candidate artifact')
         if self._tests_re and not tests_artifact:
@@ -286,10 +286,15 @@ class ArtifactJob(object):
                              'matched an archive path.'.format(
                                  patterns=LinuxArtifactJob.test_artifact_patterns))
 
-    def process_symbols_archive(self, filename, processed_filename):
+    def process_symbols_archive(self, filename, processed_filename, skip_compressed=False):
         with JarWriter(file=processed_filename, compress_level=5) as writer:
             reader = JarReader(filename)
             for filename in reader.entries:
+                if skip_compressed and filename.endswith('.gz'):
+                    self.log(logging.INFO, 'artifact',
+                             {'filename': filename},
+                             'Skipping compressed ELF debug symbol file {filename}')
+                    continue
                 destpath = mozpath.join('crashreporter-symbols', filename)
                 self.log(logging.INFO, 'artifact',
                          {'destpath': destpath},
@@ -333,6 +338,35 @@ class AndroidArtifactJob(ArtifactJob):
                     basedir = mozpath.join('bin', dirname.lstrip('assets/'))
                 basename = mozpath.join(basedir, basename)
                 writer.add(basename.encode('utf-8'), f.open())
+
+    def process_symbols_archive(self, filename, processed_filename):
+        ArtifactJob.process_symbols_archive(self, filename, processed_filename, skip_compressed=True)
+
+        if self._symbols_archive_suffix != 'crashreporter-symbols-full.zip':
+            return
+
+        import gzip
+
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
+            reader = JarReader(filename)
+            for filename in reader.entries:
+                if not filename.endswith('.gz'):
+                    continue
+
+                # Uncompress "libxul.so/D3271457813E976AE7BF5DAFBABABBFD0/libxul.so.dbg.gz" into "libxul.so.dbg".
+                #
+                # After `settings append target.debug-file-search-paths /path/to/topobjdir/dist/crashreporter-symbols`,
+                # Android Studio's lldb (7.0.0, at least) will find the ELF debug symbol files.
+                #
+                # There are other paths that will work but none seem more desireable.  See
+                # https://github.com/llvm-mirror/lldb/blob/882670690ca69d9dd96b7236c620987b11894af9/source/Host/common/Symbols.cpp#L324.
+                basename = os.path.basename(filename).replace('.gz', '')
+                destpath = mozpath.join('crashreporter-symbols', basename)
+                self.log(logging.INFO, 'artifact',
+                         {'destpath': destpath},
+                         'Adding uncompressed ELF debug symbol file {destpath} to processed archive')
+                writer.add(destpath.encode('utf-8'),
+                           gzip.GzipFile(fileobj=reader[filename].uncompressed_data))
 
 
 class LinuxArtifactJob(ArtifactJob):
@@ -599,7 +633,7 @@ class CacheManager(object):
 
     def load_cache(self):
         if self._skip_cache:
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                 {},
                 'Skipping cache: ignoring load_cache!')
             return
@@ -619,7 +653,7 @@ class CacheManager(object):
 
     def dump_cache(self):
         if self._skip_cache:
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                 {},
                 'Skipping cache: ignoring dump_cache!')
             return
@@ -629,7 +663,7 @@ class CacheManager(object):
 
     def clear_cache(self):
         if self._skip_cache:
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                 {},
                 'Skipping cache: ignoring clear_cache!')
             return
@@ -839,7 +873,7 @@ class ArtifactCache(object):
 
         path = os.path.abspath(mozpath.join(self._cache_dir, fname))
         if self._skip_cache and os.path.exists(path):
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                 {'path': path},
                 'Skipping cache: removing cached downloaded artifact {path}')
             os.remove(path)
@@ -880,7 +914,7 @@ class ArtifactCache(object):
 
     def clear_cache(self):
         if self._skip_cache:
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                 {},
                 'Skipping cache: ignoring clear_cache!')
             return
@@ -1065,10 +1099,10 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
         nodes = [pair[1] for pair in sorted(pairs, reverse=True)]
 
         for node in nodes[:20]:
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                      {'node': node},
                      'hg suggested candidate revision: {node}')
-        self.log(logging.DEBUG, 'artifact',
+        self.log(logging.INFO, 'artifact',
                  {'remaining': max(0, len(nodes) - 20)},
                  'hg suggested candidate revision: and {remaining} more')
 
@@ -1128,7 +1162,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
         processed_filename = filename + PROCESSED_SUFFIX
 
         if self._skip_cache and os.path.exists(processed_filename):
-            self.log(logging.DEBUG, 'artifact',
+            self.log(logging.INFO, 'artifact',
                 {'path': processed_filename},
                 'Skipping cache: removing cached processed artifact {path}')
             os.remove(processed_filename)
@@ -1190,7 +1224,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
             for trees, hg_hash in hg_pushheads:
                 for tree in trees:
                     count += 1
-                    self.log(logging.DEBUG, 'artifact',
+                    self.log(logging.INFO, 'artifact',
                              {'hg_hash': hg_hash,
                               'tree': tree},
                              'Trying to find artifacts for hg revision {hg_hash} on tree {tree}.')

@@ -107,12 +107,14 @@ dictionary ConsoleEvent {
   any timer = null;
   any counter = null;
   DOMString prefix = "";
+  boolean chromeContext = false;
 };
 
 // Event for profile operations
 dictionary ConsoleProfileEvent {
   DOMString action = "";
   sequence<any> arguments;
+  boolean chromeContext = false;
 };
 
 // This dictionary is used to manage stack trace data.

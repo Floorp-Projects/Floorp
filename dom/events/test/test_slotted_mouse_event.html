@@ -5,34 +5,57 @@
 <script src="/tests/SimpleTest/EventUtils.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 <script>
+// We move the mouse from the #host to #target, then to #child-target.
+//
+// By the time we get to #child-target, we shouldn't have fired any mouseleave.
 function runTests() {
   let iframe = document.createElement('iframe');
+  iframe.style.width = "600px";
+  iframe.style.height = "600px";
   document.body.appendChild(iframe);
   iframe.onload = () => frameLoaded(iframe);
-  iframe.srcdoc =
-    `<div id="host"><div id="target"></div></div>`
+  iframe.srcdoc = `
+    <style>
+      #child-target {
+        width: 80px;
+        height: 80px;
+        background: yellow;
+      }
+    </style>
+    <div id="host"><div id="target"><div id="child-target"></div></div></div>
+  `;
 }
 
 function frameLoaded(iframe) {
   let host = iframe.contentDocument.getElementById('host');
   let target = iframe.contentDocument.getElementById('target');
+  let childTarget = iframe.contentDocument.getElementById('child-target');
+  let sawHost = false;
+  let sawTarget = false;
   let finished = false;
 
   host.attachShadow({ mode: 'open' }).innerHTML = `
     <style>
       :host {
-        width: 300px;
-        height: 300px;
+        width: 500px;
+        height: 500px;
         background: purple;
       }
       ::slotted(div) {
-        width: 100px;
-        height: 100px;
+        width: 200px;
+        height: 200px;
         background: green;
       }
     </style>
     <slot></slot>
   `;
+
+  host.addEventListener("mouseenter", e => {
+    if (finished)
+      return;
+    sawHost = true;
+    ok(true, "Should fire mouseenter on the host.");
+  });
 
   host.addEventListener("mouseleave", e => {
     if (finished)
@@ -43,15 +66,28 @@ function frameLoaded(iframe) {
   target.addEventListener("mouseenter", () => {
     if (finished)
       return;
+    ok(sawHost, "Should've seen the hostmouseenter already");
+    sawTarget = true;
     ok(true, "Moving the mouse into the target should trigger a mouseenter there");
-    setTimeout(() => {
-      finished = true;
-      SimpleTest.finish()
-    }, 0);
+  });
+
+  target.addEventListener("mouseleave", () => {
+    if (finished)
+      return;
+    ok(false, "Should not fire mouseleave when moving the cursor to the slotted target's child");
+  });
+
+  childTarget.addEventListener("mouseenter", () => {
+    if (finished)
+      return;
+    ok(sawTarget, "Should've seen the target mouseenter already");
+    finished = true;
+    SimpleTest.finish();
   });
 
   synthesizeMouseAtCenter(host, { type: "mousemove" });
   synthesizeMouseAtCenter(target, { type: "mousemove" });
+  synthesizeMouseAtCenter(childTarget, { type: "mousemove" });
 }
 
 SimpleTest.waitForExplicitFinish();

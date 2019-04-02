@@ -31,9 +31,18 @@ imply_option('--enable-artifact-build-symbols',
 option('--enable-artifact-build-symbols', nargs='?', choices=('full',),
        help='Download symbols when artifact builds are enabled.')
 
+@depends('--enable-artifact-build-symbols', 'MOZ_AUTOMATION', target)
+def enable_artifact_build_symbols(value, automation, target):
+    if len(value):
+        return value[0]
+    if bool(value):
+        if target.os == 'Android' and not automation:
+            return 'full'
+        return True
+    return None
+
 set_config('MOZ_ARTIFACT_BUILD_SYMBOLS',
-           depends('--enable-artifact-build-symbols')(
-               lambda v: v[0] if len(v) else (bool(v) or None)))
+           enable_artifact_build_symbols)
 
 @depends('--enable-artifact-builds')
 def imply_disable_compile_environment(value):

@@ -540,6 +540,7 @@ function sendConsoleAPIMessage(aConsole, aLevel, aFrame, aArgs, aOptions = {}) {
     timeStamp: Date.now(),
     arguments: aArgs,
     prefix: aConsole.prefix,
+    chromeContext: true,
   };
 
   consoleEvent.wrappedJSObject = consoleEvent;
@@ -698,6 +699,7 @@ ConsoleAPI.prototype = {
       wrappedJSObject: {
         action: "profile",
         arguments: [ profileName ],
+        chromeContext: true,
       },
     }, "console-api-profiler");
     dumpMessage(this, "profile", `'${profileName}'`);
@@ -711,6 +713,7 @@ ConsoleAPI.prototype = {
       wrappedJSObject: {
         action: "profileEnd",
         arguments: [ profileName ],
+        chromeContext: true,
       },
     }, "console-api-profiler");
     dumpMessage(this, "profileEnd", `'${profileName}'`);

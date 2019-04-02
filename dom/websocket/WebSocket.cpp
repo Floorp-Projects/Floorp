@@ -102,6 +102,7 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
         mScriptColumn(0),
         mInnerWindowID(0),
         mPrivateBrowsing(false),
+        mIsChromeContext(false),
         mIsMainThread(true),
         mMutex("WebSocketImpl::mMutex"),
         mWorkerShuttingDown(false) {
@@ -201,6 +202,7 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
   uint32_t mScriptColumn;
   uint64_t mInnerWindowID;
   bool mPrivateBrowsing;
+  bool mIsChromeContext;
 
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
 
@@ -344,7 +346,7 @@ void WebSocketImpl::PrintErrorOnConsole(const char* aBundleURI,
     rv = errorObject->Init(message, NS_ConvertUTF8toUTF16(mScriptFile),
                            EmptyString(), mScriptLine, mScriptColumn,
                            nsIScriptError::errorFlag, "Web Socket",
-                           mPrivateBrowsing);
+                           mPrivateBrowsing, mIsChromeContext);
   }
 
   NS_ENSURE_SUCCESS_VOID(rv);
@@ -1505,6 +1507,7 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
   }
 
   mPrivateBrowsing = !!aPrincipal->OriginAttributesRef().mPrivateBrowsingId;
+  mIsChromeContext = nsContentUtils::IsSystemPrincipal(aPrincipal);
 
   // parses the url
   rv = ParseURL(aURL);

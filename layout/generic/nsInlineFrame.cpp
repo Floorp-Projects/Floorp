@@ -855,11 +855,8 @@ nscoord nsInlineFrame::GetLogicalBaseline(
 
 #ifdef ACCESSIBILITY
 a11y::AccType nsInlineFrame::AccessibleType() {
-  // Broken image accessibles are created here, because layout
-  // replaces the image or image control frame with an inline frame
-  if (mContent->IsHTMLElement(
-          nsGkAtoms::input))  // Broken <input type=image ... />
-    return a11y::eHTMLButtonType;
+  // FIXME(emilio): This is broken, if the image has its default `display` value
+  // overridden. Should be somewhere else.
   if (mContent->IsHTMLElement(
           nsGkAtoms::img))  // Create accessible for broken <img>
     return a11y::eHyperTextType;

@@ -307,6 +307,20 @@ add_task(async function test_telemetry_if_sync_succeeds() {
 });
 add_task(clear_state);
 
+add_task(async function test_synchronization_duration_is_reported_in_uptake_status() {
+  const backup = UptakeTelemetry.report;
+  let reportedDuration = -1;
+  UptakeTelemetry.report = (component, status, { duration }) => {
+    reportedDuration = duration;
+  };
+
+  await client.maybeSync(2000);
+
+  UptakeTelemetry.report = backup;
+  Assert.ok(reportedDuration > 0);
+});
+add_task(clear_state);
+
 add_task(async function test_telemetry_reports_if_application_fails() {
   const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
   client.on("sync", () => { throw new Error("boom"); });

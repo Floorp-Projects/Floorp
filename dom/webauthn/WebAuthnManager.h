@@ -116,10 +116,11 @@ class WebAuthnManager final : public WebAuthnManagerBase, public AbortFollower {
  private:
   virtual ~WebAuthnManager();
 
-  // Clears all information we have about the current transaction.
-  void ClearTransaction();
   // Rejects the current transaction and calls ClearTransaction().
   void RejectTransaction(const nsresult& aError);
+
+  // Clears all information we have about the current transaction.
+  void ClearTransaction();
 
   // The current transaction, if any.
   Maybe<WebAuthnTransaction> mTransaction;

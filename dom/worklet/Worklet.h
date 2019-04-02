@@ -46,6 +46,8 @@ class Worklet final : public nsISupports, public nsWrapperCache {
                                       const WorkletOptions& aOptions,
                                       CallerType aCallerType, ErrorResult& aRv);
 
+  WorkletImpl* Impl() const { return mImpl; }
+
  private:
   ~Worklet();
 

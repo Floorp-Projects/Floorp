@@ -401,6 +401,8 @@ void AudioDestinationNode::DestroyMediaStream() {
 
   if (!mStream) return;
 
+  Context()->ShutdownWorklet();
+
   mStream->RemoveMainThreadListener(this);
   MediaStreamGraph* graph = mStream->Graph();
   if (graph->IsNonRealtime()) {

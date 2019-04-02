@@ -3862,8 +3862,10 @@ HttpChannelChild::LogBlockedCORSRequest(const nsAString& aMessage,
     uint64_t innerWindowID = mLoadInfo->GetInnerWindowID();
     bool privateBrowsing =
         !!mLoadInfo->GetOriginAttributes().mPrivateBrowsingId;
-    nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, privateBrowsing,
-                                               aMessage, aCategory);
+    bool fromChromeContext =
+        nsContentUtils::IsSystemPrincipal(mLoadInfo->TriggeringPrincipal());
+    nsCORSListenerProxy::LogBlockedCORSRequest(
+        innerWindowID, privateBrowsing, fromChromeContext, aMessage, aCategory);
   }
   return NS_OK;
 }

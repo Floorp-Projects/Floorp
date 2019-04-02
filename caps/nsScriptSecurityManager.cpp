@@ -1148,7 +1148,8 @@ nsresult nsScriptSecurityManager::ReportError(const char* aMessageTag,
 
   // using category of "SOP" so we can link to MDN
   rv = error->Init(message, EmptyString(), EmptyString(), 0, 0,
-                   nsIScriptError::errorFlag, "SOP", aFromPrivateWindow);
+                   nsIScriptError::errorFlag, "SOP", aFromPrivateWindow,
+                   true /* From chrome context */);
   NS_ENSURE_SUCCESS(rv, rv);
   console->LogMessage(error);
   return NS_OK;

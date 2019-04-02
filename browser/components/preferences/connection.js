@@ -45,7 +45,14 @@ window.addEventListener("DOMContentLoaded", () => {
     gConnectionsDialog.proxyTypeChanged.bind(gConnectionsDialog));
   Preferences.get("network.proxy.socks_version").on("change",
     gConnectionsDialog.updateDNSPref.bind(gConnectionsDialog));
-  gConnectionsDialog.initDnsOverHttpsUI();
+
+  // wait until the network.trr prefs are added before init'ing the UI for them
+  gConnectionsDialog.uiReady = new Promise(resolve => {
+    gConnectionsDialog._initialPrefsAdded = resolve;
+  }).then(() => {
+    delete gConnectionsDialog._initialPrefsAdded;
+    gConnectionsDialog.initDnsOverHttpsUI();
+  });
 
   document
     .getElementById("disableProxyExtension")
@@ -302,9 +309,13 @@ var gConnectionsDialog = {
 
   readDnsOverHttpsMode() {
     // called to update checked element property to reflect current pref value
+    // this is the first signal we get when the prefs are added, so lazy-init
     let enabled = this.isDnsOverHttpsEnabled();
     let uriPref = Preferences.get("network.trr.uri");
     uriPref.disabled = !enabled || this.isDnsOverHttpsLocked();
+    if (this._initialPrefsAdded) {
+      this._initialPrefsAdded();
+    }
     return enabled;
   },
 

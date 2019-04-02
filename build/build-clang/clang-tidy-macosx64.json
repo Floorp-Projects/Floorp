@@ -1,16 +1,16 @@
 {
-    "llvm_revision": "349247",
+    "llvm_revision": "356365",
     "stages": "1",
     "build_libcxx": true,
     "build_type": "Release",
     "assertions": false,
     "build_clang_tidy": true,
     "osx_cross_compile": true,
-    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_701/final",
-    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_701/final",
-    "extra_repo": "https://llvm.org/svn/llvm-project/clang-tools-extra/tags/RELEASE_701/final",
-    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_701/final",
-    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/tags/RELEASE_701/final",
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_800/final",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_800/final",
+    "extra_repo": "https://llvm.org/svn/llvm-project/clang-tools-extra/tags/RELEASE_800/final",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_800/final",
+    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/tags/RELEASE_800/final",
     "python_path": "/usr/bin/python2.7",
     "gcc_dir": "/builds/worker/workspace/build/src/gcc",
     "cc": "/builds/worker/workspace/build/src/clang/bin/clang",
@@ -21,5 +21,6 @@
     "libtool": "/builds/worker/workspace/build/src/cctools/bin/x86_64-darwin11-libtool",
     "ld": "/builds/worker/workspace/build/src/clang/bin/clang",
     "patches": [
+      "clang-tidy-8.patch"
     ]
 }

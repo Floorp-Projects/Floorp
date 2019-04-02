@@ -51,8 +51,16 @@ NS_INTERFACE_MAP_END_INHERITING(WebAuthnManagerBase)
 NS_IMPL_ADDREF_INHERITED(U2F, WebAuthnManagerBase)
 NS_IMPL_RELEASE_INHERITED(U2F, WebAuthnManagerBase)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(U2F, WebAuthnManagerBase,
-                                                mTransaction)
+NS_IMPL_CYCLE_COLLECTION_CLASS(U2F)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(U2F, WebAuthnManagerBase)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTransaction)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  tmp->ClearTransaction();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(U2F, WebAuthnManagerBase)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTransaction)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(U2F)
 
 /***********************************************************************
  * Utility Functions
@@ -513,7 +521,7 @@ void U2F::FinishGetAssertion(const uint64_t& aTransactionId,
 }
 
 void U2F::ClearTransaction() {
-  if (!NS_WARN_IF(mTransaction.isNothing())) {
+  if (!mTransaction.isNothing()) {
     StopListeningForVisibilityEvents();
   }
 
