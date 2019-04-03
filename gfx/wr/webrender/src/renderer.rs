@@ -75,7 +75,7 @@ use prim_store::DeferredResolve;
 use profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
 use profiler::{Profiler, ChangeIndicator};
-use device::query::GpuProfiler;
+use device::query::{GpuProfiler, GpuDebugMethod};
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use record::ApiRecordingReceiver;
 use render_backend::{FrameId, RenderBackend};
@@ -2339,8 +2339,17 @@ impl Renderer {
             }
         })?;
 
-        let ext_debug_marker = device.supports_extension("GL_EXT_debug_marker");
-        let gpu_profile = GpuProfiler::new(Rc::clone(device.rc_gl()), ext_debug_marker);
+        let debug_support = if device.supports_extension("GL_KHR_debug") {
+            GpuDebugMethod::KHR
+        } else if device.supports_extension("GL_EXT_debug_marker") {
+            GpuDebugMethod::MarkerEXT
+        } else {
+            GpuDebugMethod::None
+        };
+
+        info!("using {:?}", debug_support);
+
+        let gpu_profile = GpuProfiler::new(Rc::clone(device.rc_gl()), debug_support);
         #[cfg(feature = "capture")]
         let read_fbo = device.create_fbo();
 

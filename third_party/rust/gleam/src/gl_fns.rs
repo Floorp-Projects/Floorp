@@ -1946,6 +1946,32 @@ impl Gl for GlFns {
         }
     }
 
+    fn debug_message_insert_khr(&self, source: GLenum, type_: GLenum, id: GLuint, severity: GLenum, message: &str) {
+        if self.ffi_gl_.DebugMessageInsertKHR.is_loaded() {
+            unsafe {
+                self.ffi_gl_
+                    .DebugMessageInsertKHR(source, type_, id, severity, message.len() as GLsizei, message.as_ptr() as *const _);
+            }
+        }
+    }
+
+    fn push_debug_group_khr(&self, source: GLenum, id: GLuint, message: &str) {
+        if self.ffi_gl_.PushDebugGroupKHR.is_loaded() {
+            unsafe {
+                self.ffi_gl_
+                    .PushDebugGroupKHR(source, id, message.len() as GLsizei, message.as_ptr() as *const _);
+            }
+        }
+    }
+
+    fn pop_debug_group_khr(&self) {
+        if self.ffi_gl_.PopDebugGroupKHR.is_loaded() {
+            unsafe {
+                self.ffi_gl_.PopDebugGroupKHR();
+            }
+        }
+    }
+
     fn fence_sync(&self, condition: GLenum, flags: GLbitfield) -> GLsync {
         unsafe { self.ffi_gl_.FenceSync(condition, flags) as *const _ }
     }
