@@ -43,7 +43,7 @@ bool GlobalObject::initAsyncFunction(JSContext* cx,
     return false;
   }
   RootedObject proto(cx, &function.toObject());
-  RootedAtom name(cx, cx->names().AsyncFunction);
+  HandlePropertyName name = cx->names().AsyncFunction;
   RootedObject asyncFunction(
       cx, NewFunctionWithProto(cx, AsyncFunctionConstructor, 1,
                                JSFunction::NATIVE_CTOR, nullptr, name, proto));

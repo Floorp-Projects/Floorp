@@ -465,7 +465,7 @@ static const JSFunctionSpec async_generator_methods[] = {
     return false;
   }
   RootedObject proto(cx, &function.toObject());
-  RootedAtom name(cx, cx->names().AsyncGeneratorFunction);
+  HandlePropertyName name = cx->names().AsyncGeneratorFunction;
 
   // 25.3.1 The AsyncGeneratorFunction Constructor
   RootedObject asyncGenFunction(
