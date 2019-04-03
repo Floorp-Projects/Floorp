@@ -1,72 +1,35 @@
-//! A wrapper around the procedural macro API of the compiler's [`proc_macro`]
-//! crate. This library serves three purposes:
+//! A "shim crate" intended to multiplex the [`proc_macro`] API on to stable
+//! Rust.
 //!
-//! [`proc_macro`]: https://doc.rust-lang.org/proc_macro/
+//! Procedural macros in Rust operate over the upstream
+//! [`proc_macro::TokenStream`][ts] type. This type currently is quite
+//! conservative and exposed no internal implementation details. Nightly
+//! compilers, however, contain a much richer interface. This richer interface
+//! allows fine-grained inspection of the token stream which avoids
+//! stringification/re-lexing and also preserves span information.
 //!
-//! - **Bring proc-macro-like functionality to other contexts like build.rs and
-//!   main.rs.** Types from `proc_macro` are entirely specific to procedural
-//!   macros and cannot ever exist in code outside of a procedural macro.
-//!   Meanwhile `proc_macro2` types may exist anywhere including non-macro code.
-//!   By developing foundational libraries like [syn] and [quote] against
-//!   `proc_macro2` rather than `proc_macro`, the procedural macro ecosystem
-//!   becomes easily applicable to many other use cases and we avoid
-//!   reimplementing non-macro equivalents of those libraries.
+//! The upcoming APIs added to [`proc_macro`] upstream are the foundation for
+//! productive procedural macros in the ecosystem. To help prepare the ecosystem
+//! for using them this crate serves to both compile on stable and nightly and
+//! mirrors the API-to-be. The intention is that procedural macros which switch
+//! to use this crate will be trivially able to switch to the upstream
+//! `proc_macro` crate once its API stabilizes.
 //!
-//! - **Make procedural macros unit testable.** As a consequence of being
-//!   specific to procedural macros, nothing that uses `proc_macro` can be
-//!   executed from a unit test. In order for helper libraries or components of
-//!   a macro to be testable in isolation, they must be implemented using
-//!   `proc_macro2`.
+//! In the meantime this crate also has a `nightly` Cargo feature which
+//! enables it to reimplement itself with the unstable API of [`proc_macro`].
+//! This'll allow immediate usage of the beneficial upstream API, particularly
+//! around preserving span information.
 //!
-//! - **Provide the latest and greatest APIs across all compiler versions.**
-//!   Procedural macros were first introduced to Rust in 1.15.0 with an
-//!   extremely minimal interface. Since then, many improvements have landed to
-//!   make macros more flexible and easier to write. This library tracks the
-//!   procedural macro API of the most recent stable compiler but employs a
-//!   polyfill to provide that API consistently across any compiler since
-//!   1.15.0.
+//! # Unstable Features
 //!
-//! [syn]: https://github.com/dtolnay/syn
-//! [quote]: https://github.com/dtolnay/quote
+//! `proc-macro2` supports exporting some methods from `proc_macro` which are
+//! currently highly unstable, and may not be stabilized in the first pass of
+//! `proc_macro` stabilizations. These features are not exported by default.
+//! Minor versions of `proc-macro2` may make breaking changes to them at any
+//! time.
 //!
-//! # Usage
-//!
-//! The skeleton of a typical procedural macro typically looks like this:
-//!
-//! ```edition2018
-//! extern crate proc_macro;
-//!
-//! # const IGNORE: &str = stringify! {
-//! #[proc_macro_derive(MyDerive)]
-//! # };
-//! pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-//!     let input = proc_macro2::TokenStream::from(input);
-//!
-//!     let output: proc_macro2::TokenStream = {
-//!         /* transform input */
-//!         # input
-//!     };
-//!
-//!     proc_macro::TokenStream::from(output)
-//! }
-//! ```
-//!
-//! If parsing with [Syn], you'll use [`parse_macro_input!`] instead to
-//! propagate parse errors correctly back to the compiler when parsing fails.
-//!
-//! [`parse_macro_input!`]: https://docs.rs/syn/0.15/syn/macro.parse_macro_input.html
-//!
-//! # Unstable features
-//!
-//! The default feature set of proc-macro2 tracks the most recent stable
-//! compiler API. Functionality in `proc_macro` that is not yet stable is not
-//! exposed by proc-macro2 by default.
-//!
-//! To opt into the additional APIs available in the most recent nightly
-//! compiler, the `procmacro2_semver_exempt` config flag must be passed to
-//! rustc. As usual, we will polyfill those nightly-only APIs all the way back
-//! to Rust 1.15.0. As these are unstable APIs that track the nightly compiler,
-//! minor versions of proc-macro2 may make breaking changes to them at any time.
+//! To enable these features, the `procmacro2_semver_exempt` config flag must be
+//! passed to rustc.
 //!
 //! ```sh
 //! RUSTFLAGS='--cfg procmacro2_semver_exempt' cargo build
@@ -76,12 +39,15 @@
 //! depends on your crate. This infectious nature is intentional, as it serves
 //! as a reminder that you are outside of the normal semver guarantees.
 //!
-//! Semver exempt methods are marked as such in the proc-macro2 documentation.
+//! [`proc_macro`]: https://doc.rust-lang.org/proc_macro/
+//! [ts]: https://doc.rust-lang.org/proc_macro/struct.TokenStream.html
 
 // Proc-macro2 types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/proc-macro2/0.4.27")]
-#![cfg_attr(nightly, feature(proc_macro_span))]
-#![cfg_attr(super_unstable, feature(proc_macro_raw_ident, proc_macro_def_site))]
+#![doc(html_root_url = "https://docs.rs/proc-macro2/0.4.24")]
+#![cfg_attr(
+    super_unstable,
+    feature(proc_macro_raw_ident, proc_macro_span, proc_macro_def_site)
+)]
 
 #[cfg(use_proc_macro)]
 extern crate proc_macro;
@@ -99,11 +65,11 @@ use std::str::FromStr;
 
 #[macro_use]
 mod strnom;
-mod fallback;
+mod stable;
 
 #[cfg(not(wrap_proc_macro))]
-use fallback as imp;
-#[path = "wrapper.rs"]
+use stable as imp;
+#[path = "unstable.rs"]
 #[cfg(wrap_proc_macro)]
 mod imp;
 
@@ -134,7 +100,7 @@ impl TokenStream {
         }
     }
 
-    fn _new_stable(inner: fallback::TokenStream) -> TokenStream {
+    fn _new_stable(inner: stable::TokenStream) -> TokenStream {
         TokenStream {
             inner: inner.into(),
             _marker: marker::PhantomData,
@@ -300,7 +266,7 @@ impl fmt::Debug for SourceFile {
 /// A line-column pair representing the start or end of a `Span`.
 ///
 /// This type is semver exempt and not exposed by default.
-#[cfg(span_locations)]
+#[cfg(procmacro2_semver_exempt)]
 pub struct LineColumn {
     /// The 1-indexed line in the source file on which the span starts or ends
     /// (inclusive).
@@ -325,7 +291,7 @@ impl Span {
         }
     }
 
-    fn _new_stable(inner: fallback::Span) -> Span {
+    fn _new_stable(inner: stable::Span) -> Span {
         Span {
             inner: inner.into(),
             _marker: marker::PhantomData,
@@ -367,26 +333,11 @@ impl Span {
         Span::_new(self.inner.located_at(other.inner))
     }
 
-    /// Convert `proc_macro2::Span` to `proc_macro::Span`.
-    ///
-    /// This method is available when building with a nightly compiler, or when
-    /// building with rustc 1.29+ *without* semver exempt features.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from outside of a procedural macro. Unlike
-    /// `proc_macro2::Span`, the `proc_macro::Span` type can only exist within
-    /// the context of a procedural macro invocation.
-    #[cfg(wrap_proc_macro)]
-    pub fn unwrap(self) -> proc_macro::Span {
-        self.inner.unwrap()
-    }
-
-    // Soft deprecated. Please use Span::unwrap.
-    #[cfg(wrap_proc_macro)]
+    /// This method is only available when the `"nightly"` feature is enabled.
     #[doc(hidden)]
+    #[cfg(any(feature = "nightly", super_unstable))]
     pub fn unstable(self) -> proc_macro::Span {
-        self.unwrap()
+        self.inner.unstable()
     }
 
     /// The original source file into which this span points.
@@ -399,8 +350,8 @@ impl Span {
 
     /// Get the starting line/column in the source file for this span.
     ///
-    /// This method requires the `"span-locations"` feature to be enabled.
-    #[cfg(span_locations)]
+    /// This method is semver exempt and not exposed by default.
+    #[cfg(procmacro2_semver_exempt)]
     pub fn start(&self) -> LineColumn {
         let imp::LineColumn { line, column } = self.inner.start();
         LineColumn {
@@ -411,8 +362,8 @@ impl Span {
 
     /// Get the ending line/column in the source file for this span.
     ///
-    /// This method requires the `"span-locations"` feature to be enabled.
-    #[cfg(span_locations)]
+    /// This method is semver exempt and not exposed by default.
+    #[cfg(procmacro2_semver_exempt)]
     pub fn end(&self) -> LineColumn {
         let imp::LineColumn { line, column } = self.inner.end();
         LineColumn {
@@ -536,7 +487,8 @@ impl fmt::Debug for TokenTree {
             TokenTree::Ident(ref t) => {
                 let mut debug = f.debug_struct("Ident");
                 debug.field("sym", &format_args!("{}", t));
-                imp::debug_span_field_if_nontrivial(&mut debug, t.span().inner);
+                #[cfg(any(feature = "nightly", procmacro2_semver_exempt))]
+                debug.field("span", &t.span());
                 debug.finish()
             }
             TokenTree::Punct(ref t) => t.fmt(f),
@@ -575,10 +527,12 @@ pub enum Delimiter {
 
 impl Group {
     fn _new(inner: imp::Group) -> Self {
-        Group { inner: inner }
+        Group {
+            inner: inner,
+        }
     }
 
-    fn _new_stable(inner: fallback::Group) -> Self {
+    fn _new_stable(inner: stable::Group) -> Self {
         Group {
             inner: inner.into(),
         }
@@ -745,7 +699,8 @@ impl fmt::Debug for Punct {
         let mut debug = fmt.debug_struct("Punct");
         debug.field("op", &self.op);
         debug.field("spacing", &self.spacing);
-        imp::debug_span_field_if_nontrivial(&mut debug, self.span.inner);
+        #[cfg(procmacro2_semver_exempt)]
+        debug.field("span", &self.span);
         debug.finish()
     }
 }
@@ -772,7 +727,9 @@ impl fmt::Debug for Punct {
 /// A span must be provided explicitly which governs the name resolution
 /// behavior of the resulting identifier.
 ///
-/// ```edition2018
+/// ```rust
+/// extern crate proc_macro2;
+///
 /// use proc_macro2::{Ident, Span};
 ///
 /// fn main() {
@@ -784,9 +741,13 @@ impl fmt::Debug for Punct {
 ///
 /// An ident can be interpolated into a token stream using the `quote!` macro.
 ///
-/// ```edition2018
+/// ```rust
+/// #[macro_use]
+/// extern crate quote;
+///
+/// extern crate proc_macro2;
+///
 /// use proc_macro2::{Ident, Span};
-/// use quote::quote;
 ///
 /// fn main() {
 ///     let ident = Ident::new("demo", Span::call_site());
@@ -803,7 +764,9 @@ impl fmt::Debug for Punct {
 /// A string representation of the ident is available through the `to_string()`
 /// method.
 ///
-/// ```edition2018
+/// ```rust
+/// # extern crate proc_macro2;
+/// #
 /// # use proc_macro2::{Ident, Span};
 /// #
 /// # let ident = Ident::new("another_identifier", Span::call_site());
@@ -991,7 +954,7 @@ impl Literal {
         }
     }
 
-    fn _new_stable(inner: fallback::Literal) -> Literal {
+    fn _new_stable(inner: stable::Literal) -> Literal {
         Literal {
             inner: inner.into(),
             _marker: marker::PhantomData,

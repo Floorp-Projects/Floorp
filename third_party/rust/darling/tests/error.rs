@@ -1,10 +1,7 @@
 //! In case of bad input, parsing should fail. The error should have locations set in derived implementations.
 #[macro_use]
 extern crate darling;
-#[macro_use]
 extern crate syn;
-#[macro_use]
-extern crate quote;
 
 use darling::FromDeriveInput;
 
@@ -36,20 +33,24 @@ impl From<syn::Ident> for Lorem {
 
 #[test]
 fn parsing_fail() {
-    let di = parse_quote! {
+    let di = syn::parse_str(
+        r#"
         #[hello(ipsum(amet = "yes", world = false))]
         pub struct Foo;
-    };
+    "#,
+    ).unwrap();
 
     println!("{}", Lorem::from_derive_input(&di).unwrap_err());
 }
 
 #[test]
 fn missing_field() {
-    let di = parse_quote! {
+    let di = syn::parse_str(
+        r#"
         #[hello(ipsum(amet = true))]
         pub struct Foo;
-    };
+    "#,
+    ).unwrap();
 
     println!("{}", Lorem::from_derive_input(&di).unwrap_err());
 }

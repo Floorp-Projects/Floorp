@@ -1,8 +1,6 @@
-use proc_macro2::TokenStream;
-use quote::ToTokens;
 use syn;
 
-use codegen::FromMetaImpl;
+use codegen;
 use options::{Core, ParseAttribute, ParseData};
 use Result;
 
@@ -14,9 +12,8 @@ impl FromMetaOptions {
     pub fn new(di: &syn::DeriveInput) -> Result<Self> {
         (FromMetaOptions {
             base: Core::start(di),
-        })
-        .parse_attributes(&di.attrs)?
-        .parse_body(&di.data)
+        }).parse_attributes(&di.attrs)?
+            .parse_body(&di.data)
     }
 }
 
@@ -36,16 +33,10 @@ impl ParseData for FromMetaOptions {
     }
 }
 
-impl<'a> From<&'a FromMetaOptions> for FromMetaImpl<'a> {
+impl<'a> From<&'a FromMetaOptions> for codegen::FromMetaImpl<'a> {
     fn from(v: &'a FromMetaOptions) -> Self {
-        FromMetaImpl {
+        codegen::FromMetaImpl {
             base: (&v.base).into(),
         }
-    }
-}
-
-impl ToTokens for FromMetaOptions {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        FromMetaImpl::from(self).to_tokens(tokens)
     }
 }

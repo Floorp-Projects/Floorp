@@ -1,9 +1,6 @@
 #[macro_use]
 extern crate darling;
-#[macro_use]
 extern crate syn;
-#[macro_use]
-extern crate quote;
 
 use darling::ast;
 use darling::FromDeriveInput;
@@ -31,35 +28,41 @@ mod source {
     use syn::{self, DeriveInput};
 
     pub fn newtype_enum() -> DeriveInput {
-        parse_quote!{
-            enum Hello {
-                World(bool),
-                String(String),
-            }
+        syn::parse_str(
+            r#"
+        enum Hello {
+            World(bool),
+            String(String),
         }
+    "#,
+        ).unwrap()
     }
 
     pub fn named_field_enum() -> DeriveInput {
-        parse_quote! {
-            enum Hello {
-                Foo(u16),
-                World {
-                    name: String
-                },
-            }
+        syn::parse_str(
+            r#"
+        enum Hello {
+            Foo(u16),
+            World {
+                name: String
+            },
         }
+    "#,
+        ).unwrap()
     }
 
     pub fn named_struct() -> DeriveInput {
-        parse_quote! {
-            struct Hello {
-                world: bool,
-            }
+        syn::parse_str(
+            r#"
+        struct Hello {
+            world: bool,
         }
+    "#,
+        ).unwrap()
     }
 
     pub fn tuple_struct() -> DeriveInput {
-        parse_quote! { struct Hello(String, bool); }
+        syn::parse_str("struct Hello(String, bool);").unwrap()
     }
 }
 
