@@ -1,6 +1,8 @@
 const {SitePermissions} = ChromeUtils.import("resource:///modules/SitePermissions.jsm");
 
 const TEST_ORIGIN = "https://example.com";
+const TEST_ORIGIN_CERT_ERROR = "https://expired.example.com";
+const LOW_TLS_VERSION = "https://tls1.example.com/";
 
 async function testPermissions(defaultPermission) {
   await BrowserTestUtils.withNewTab(TEST_ORIGIN, async function(browser) {
@@ -49,6 +51,76 @@ async function testPermissions(defaultPermission) {
     SitePermissions.remove(gBrowser.currentURI, "geo");
   });
 }
+
+// Test displaying website permissions on certificate error pages.
+add_task(async function test_CertificateError() {
+  let browser;
+  let pageLoaded;
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_ORIGIN_CERT_ERROR);
+    browser = gBrowser.selectedBrowser;
+    pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
+  }, false);
+
+  await pageLoaded;
+
+  let pageInfo = BrowserPageInfo(TEST_ORIGIN_CERT_ERROR, "permTab");
+  await BrowserTestUtils.waitForEvent(pageInfo, "load");
+  let permissionTab = pageInfo.document.getElementById("permTab");
+  await TestUtils.waitForCondition(() => BrowserTestUtils.is_visible(permissionTab),
+    "Permission tab should be visible.");
+
+  let hostText = pageInfo.document.getElementById("hostText");
+  let permList = pageInfo.document.getElementById("permList");
+  let permissions = SitePermissions.listPermissions()
+    .filter(p => SitePermissions.getPermissionLabel(p) != null);
+
+  await TestUtils.waitForCondition(() => hostText.value === browser.currentURI.displayPrePath,
+    `Value of owner should be "${browser.currentURI.displayPrePath}" instead got "${hostText.value}".`);
+
+  await TestUtils.waitForCondition(() => permList.childElementCount === permissions.length,
+    `Value of verifier should be ${permissions.length}, instead got ${permList.childElementCount}.`);
+
+  pageInfo.close();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+// Test displaying website permissions on network error pages.
+add_task(async function test_NetworkError() {
+  // Setup for TLS error
+  Services.prefs.setIntPref("security.tls.version.max", 3);
+  Services.prefs.setIntPref("security.tls.version.min", 3);
+
+  let browser;
+  let pageLoaded;
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, LOW_TLS_VERSION);
+    browser = gBrowser.selectedBrowser;
+    pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
+  }, false);
+
+  await pageLoaded;
+
+  let pageInfo = BrowserPageInfo(LOW_TLS_VERSION, "permTab");
+  await BrowserTestUtils.waitForEvent(pageInfo, "load");
+  let permissionTab = pageInfo.document.getElementById("permTab");
+  await TestUtils.waitForCondition(() => BrowserTestUtils.is_visible(permissionTab),
+    "Permission tab should be visible.");
+
+  let hostText = pageInfo.document.getElementById("hostText");
+  let permList = pageInfo.document.getElementById("permList");
+  let permissions = SitePermissions.listPermissions()
+    .filter(p => SitePermissions.getPermissionLabel(p) != null);
+
+  await TestUtils.waitForCondition(() => hostText.value === browser.currentURI.displayPrePath,
+    `Value of host should be should be "${browser.currentURI.displayPrePath}" instead got "${hostText.value}".`);
+
+  await TestUtils.waitForCondition(() => permList.childElementCount === permissions.length,
+    `Value of permissions list should be ${permissions.length}, instead got ${permList.childElementCount}.`);
+
+  pageInfo.close();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
 
 // Test some standard operations in the permission tab.
 add_task(async function test_geo_permission() {
