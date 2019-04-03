@@ -289,12 +289,8 @@ class BaseBootstrapper(object):
 
     def install_toolchain_static_analysis(self, state_dir, checkout_root, toolchain_job):
         clang_tools_path = os.path.join(state_dir, 'clang-tools')
-        import shutil
-        if os.path.exists(clang_tools_path):
-            shutil.rmtree(clang_tools_path)
-
-        # Re-create the directory for clang_tools
-        os.mkdir(clang_tools_path)
+        if not os.path.exists(clang_tools_path):
+            os.mkdir(clang_tools_path)
         self.install_toolchain_artifact(clang_tools_path, checkout_root, toolchain_job)
 
     def install_toolchain_artifact(self, state_dir, checkout_root, toolchain_job):

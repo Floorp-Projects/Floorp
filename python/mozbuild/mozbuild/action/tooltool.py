@@ -519,14 +519,39 @@ def clean_path(dirname):
         shutil.rmtree(dirname)
 
 
+CHECKSUM_SUFFIX = ".checksum"
+
+
+def _cache_checksum_matches(base_file, checksum):
+    try:
+        with open(base_file + CHECKSUM_SUFFIX, "rb") as f:
+            prev_checksum = f.read().strip()
+            if prev_checksum == checksum:
+                log.info("Cache matches, avoiding extracting in '%s'" % base_file)
+                return True
+            return False
+    except IOError as e:
+        return False
+
+
+def _compute_cache_checksum(filename):
+    with open(filename, "rb") as f:
+        return digest_file(f, "sha256")
+
+
 def unpack_file(filename, setup=None):
     """Untar `filename`, assuming it is uncompressed or compressed with bzip2,
     xz, gzip, or unzip a zip file. The file is assumed to contain a single
     directory with a name matching the base of the given filename.
     Xz support is handled by shelling out to 'tar'."""
+
+    checksum = _compute_cache_checksum(filename)
+
     if tarfile.is_tarfile(filename):
         tar_file, zip_ext = os.path.splitext(filename)
         base_file, tar_ext = os.path.splitext(tar_file)
+        if _cache_checksum_matches(base_file, checksum):
+            return True
         clean_path(base_file)
         log.info('untarring "%s"' % filename)
         tar = tarfile.open(filename)
@@ -534,12 +559,16 @@ def unpack_file(filename, setup=None):
         tar.close()
     elif filename.endswith('.tar.xz'):
         base_file = filename.replace('.tar.xz', '')
+        if _cache_checksum_matches(base_file, checksum):
+            return True
         clean_path(base_file)
         log.info('untarring "%s"' % filename)
         if not execute('tar -Jxf %s 2>&1' % filename):
             return False
     elif zipfile.is_zipfile(filename):
         base_file = filename.replace('.zip', '')
+        if _cache_checksum_matches(base_file, checksum):
+            return True
         clean_path(base_file)
         log.info('unzipping "%s"' % filename)
         z = zipfile.ZipFile(filename)
@@ -548,6 +577,9 @@ def unpack_file(filename, setup=None):
     else:
         log.error("Unknown archive extension for filename '%s'" % filename)
         return False
+
+    with open(base_file + CHECKSUM_SUFFIX, "wb") as f:
+        f.write(checksum)
 
     if setup and not execute(os.path.join(base_file, setup)):
         return False
