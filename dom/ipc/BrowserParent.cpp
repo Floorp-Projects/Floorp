@@ -3744,6 +3744,12 @@ BrowserParent::StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId) {
   return NS_OK;
 }
 
+void BrowserParent::SkipBrowsingContextDetach() {
+  RefPtr<nsFrameLoader> fl = GetFrameLoader();
+  MOZ_ASSERT(fl);
+  fl->SkipBrowsingContextDetach();
+}
+
 mozilla::ipc::IPCResult BrowserParent::RecvLookUpDictionary(
     const nsString& aText, nsTArray<FontRange>&& aFontRangeArray,
     const bool& aIsVertical, const LayoutDeviceIntPoint& aPoint) {
