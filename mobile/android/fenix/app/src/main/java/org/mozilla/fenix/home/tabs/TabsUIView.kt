@@ -79,6 +79,7 @@ class TabsUIView(
         (if (it.sessions.isEmpty()) View.GONE else View.VISIBLE).also { visibility ->
             view.tabs_header.visibility = visibility
             sessionButton.visibility = visibility
+            view.tabs_list.visibility = visibility
         }
     }
 }
