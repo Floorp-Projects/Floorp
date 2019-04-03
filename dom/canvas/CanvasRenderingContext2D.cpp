@@ -20,6 +20,7 @@
 #include "SVGObserverUtils.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIPresShellInlines.h"
 
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIFrame.h"
