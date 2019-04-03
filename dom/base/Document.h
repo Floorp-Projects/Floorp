@@ -2021,6 +2021,8 @@ class Document : public nsINode,
   // implementation of Document::GetDocumentState.
   void DocumentStatesChanged(EventStates aStateMask);
 
+  void ResetDocumentDirection();
+
   // Observation hooks for style data to propagate notifications
   // to document observers
   void StyleRuleChanged(StyleSheet* aStyleSheet, css::Rule* aStyleRule);
@@ -2865,7 +2867,7 @@ class Document : public nsINode,
    * pseudoclass so once can know whether a document is expected to be rendered
    * left-to-right or right-to-left.
    */
-  virtual bool IsDocumentRightToLeft() { return false; }
+  bool IsDocumentRightToLeft();
 
   /**
    * Called by Parser for link rel=preconnect
