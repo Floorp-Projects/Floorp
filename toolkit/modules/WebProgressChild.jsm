@@ -27,8 +27,10 @@ class WebProgressChild {
 
     this.inLoadURI = false;
 
-    // NOTIFY_CONTENT_BLOCKING is handled by PBrowser.
-    let notifyCode = Ci.nsIWebProgress.NOTIFY_ALL & ~Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING;
+    // NOTIFY_CONTENT_BLOCKING and NOTIFY_STATUS_CHANGE are handled by PBrowser.
+    let notifyCode = Ci.nsIWebProgress.NOTIFY_ALL &
+                        ~Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING &
+                        ~Ci.nsIWebProgress.NOTIFY_STATUS;
 
     this._filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
                      .createInstance(Ci.nsIWebProgress);
@@ -174,18 +176,6 @@ class WebProgressChild {
     }
 
     this._send("Content:LocationChange", json);
-  }
-
-  // Note: Because the nsBrowserStatusFilter timeout runnable is
-  // SystemGroup-labeled, this method should not modify this.mm.content DOM or
-  // run this.mm.content JS.
-  onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
-    let json = this._setupJSON(aWebProgress, aRequest);
-
-    json.status = aStatus;
-    json.message = aMessage;
-
-    this._send("Content:StatusChange", json);
   }
 
   getSecInfoAsString() {
