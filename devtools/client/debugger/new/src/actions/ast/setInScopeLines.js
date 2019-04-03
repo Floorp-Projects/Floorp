@@ -11,7 +11,6 @@ import { range, flatMap, uniq, without } from "lodash";
 
 import type { AstLocation } from "../../workers/parser";
 import type { ThunkArgs } from "../types";
-import type { Context } from "../../types";
 
 function getOutOfScopeLines(outOfScopeLocations: ?(AstLocation[])) {
   if (!outOfScopeLocations) {
@@ -25,7 +24,7 @@ function getOutOfScopeLines(outOfScopeLocations: ?(AstLocation[])) {
   );
 }
 
-export function setInScopeLines(cx: Context) {
+export function setInScopeLines() {
   return ({ dispatch, getState }: ThunkArgs) => {
     const source = getSelectedSource(getState());
     const outOfScopeLocations = getOutOfScopeLocations(getState());
@@ -45,7 +44,6 @@ export function setInScopeLines(cx: Context) {
 
     dispatch({
       type: "IN_SCOPE_LINES",
-      cx,
       lines: inScopeLines
     });
   };

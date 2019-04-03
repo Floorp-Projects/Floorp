@@ -14,11 +14,11 @@ import {
 describe("blackbox", () => {
   it("should blackbox a source", async () => {
     const store = createStore({ blackBox: async () => true });
-    const { dispatch, getState, cx } = store;
+    const { dispatch, getState } = store;
 
     const foo1Source = makeSource("foo1");
     await dispatch(actions.newSource(foo1Source));
-    await dispatch(actions.toggleBlackBox(cx, foo1Source));
+    await dispatch(actions.toggleBlackBox(foo1Source));
 
     const fooSource = selectors.getSource(getState(), "foo1");
 

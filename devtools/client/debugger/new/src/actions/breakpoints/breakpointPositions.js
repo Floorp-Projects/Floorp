@@ -14,7 +14,7 @@ import {
   getBreakpointPositionsForSource
 } from "../../selectors";
 
-import type { MappedLocation, SourceLocation, Context } from "../../types";
+import type { MappedLocation, SourceLocation } from "../../types";
 import type { ThunkArgs } from "../../actions/types";
 import { makeBreakpointId } from "../../utils/breakpoint";
 import typeof SourceMaps from "../../../packages/devtools-source-map/src";
@@ -64,7 +64,7 @@ function convertToList(results, source) {
   return positions;
 }
 
-async function _setBreakpointPositions(cx, sourceId, thunkArgs) {
+async function _setBreakpointPositions(sourceId, thunkArgs) {
   const { client, dispatch, getState, sourceMaps } = thunkArgs;
   let generatedSource = getSource(getState(), sourceId);
   if (!generatedSource) {
@@ -115,7 +115,6 @@ async function _setBreakpointPositions(cx, sourceId, thunkArgs) {
   }
   dispatch({
     type: "ADD_BREAKPOINT_POSITIONS",
-    cx,
     source: source,
     positions
   });
@@ -137,7 +136,7 @@ function buildCacheKey(sourceId: string, thunkArgs: ThunkArgs): string {
   return key;
 }
 
-export function setBreakpointPositions(cx: Context, sourceId: string) {
+export function setBreakpointPositions(sourceId: string) {
   return async (thunkArgs: ThunkArgs) => {
     const { getState } = thunkArgs;
     if (hasBreakpointPositions(getState(), sourceId)) {
@@ -151,7 +150,7 @@ export function setBreakpointPositions(cx: Context, sourceId: string) {
         cacheKey,
         (async () => {
           try {
-            await _setBreakpointPositions(cx, sourceId, thunkArgs);
+            await _setBreakpointPositions(sourceId, thunkArgs);
           } catch (e) {
             // TODO: Address exceptions originating from 1536618
             // `Debugger.Source belongs to a different Debugger`

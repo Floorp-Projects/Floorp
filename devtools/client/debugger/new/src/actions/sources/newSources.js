@@ -28,14 +28,13 @@ import {
   getSource,
   getPendingSelectedLocation,
   getPendingBreakpointsForSource,
-  hasBreakpointPositions,
-  getContext
+  hasBreakpointPositions
 } from "../../selectors";
 
 import { prefs } from "../../utils/prefs";
 import sourceQueue from "../../utils/source-queue";
 
-import type { Source, SourceId, Context } from "../../types";
+import type { Source, SourceId } from "../../types";
 import type { Action, ThunkArgs } from "../types";
 
 function createOriginalSource(
@@ -58,14 +57,14 @@ function createOriginalSource(
   };
 }
 
-function loadSourceMaps(cx: Context, sources: Source[]) {
+function loadSourceMaps(sources: Source[]) {
   return async function({
     dispatch,
     sourceMaps
   }: ThunkArgs): Promise<Promise<Source>[]> {
     const sourceList = await Promise.all(
       sources.map(async ({ id }) => {
-        const originalSources = await dispatch(loadSourceMap(cx, id));
+        const originalSources = await dispatch(loadSourceMap(id));
         sourceQueue.queueSources(originalSources);
         return originalSources;
       })
@@ -77,7 +76,7 @@ function loadSourceMaps(cx: Context, sources: Source[]) {
     // loading source maps as sometimes generated and original
     // files share the same paths.
     for (const source of sources) {
-      dispatch(checkPendingBreakpoints(cx, source.id));
+      dispatch(checkPendingBreakpoints(source.id));
     }
 
     return flatten(sourceList);
@@ -88,7 +87,7 @@ function loadSourceMaps(cx: Context, sources: Source[]) {
  * @memberof actions/sources
  * @static
  */
-function loadSourceMap(cx: Context, sourceId: SourceId) {
+function loadSourceMap(sourceId: SourceId) {
   return async function({
     dispatch,
     getState,
@@ -132,7 +131,6 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
       dispatch(
         ({
           type: "UPDATE_SOURCE",
-          cx,
           // NOTE: Flow https://github.com/facebook/flow/issues/6342 issue
           source: (({ ...currentSource, sourceMapURL: "" }: any): Source)
         }: Action)
@@ -146,7 +144,7 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
 
 // If a request has been made to show this source, go ahead and
 // select it.
-function checkSelectedSource(cx: Context, sourceId: string) {
+function checkSelectedSource(sourceId: string) {
   return async ({ dispatch, getState }: ThunkArgs) => {
     const source = getSource(getState(), sourceId);
     const pendingLocation = getPendingSelectedLocation(getState());
@@ -160,12 +158,12 @@ function checkSelectedSource(cx: Context, sourceId: string) {
 
     if (rawPendingUrl === source.url) {
       if (isPrettyURL(pendingUrl)) {
-        const prettySource = await dispatch(togglePrettyPrint(cx, source.id));
-        return dispatch(checkPendingBreakpoints(cx, prettySource.id));
+        const prettySource = await dispatch(togglePrettyPrint(source.id));
+        return dispatch(checkPendingBreakpoints(prettySource.id));
       }
 
       await dispatch(
-        selectLocation(cx, {
+        selectLocation({
           sourceId: source.id,
           line:
             typeof pendingLocation.line === "number" ? pendingLocation.line : 0,
@@ -176,7 +174,7 @@ function checkSelectedSource(cx: Context, sourceId: string) {
   };
 }
 
-function checkPendingBreakpoints(cx: Context, sourceId: string) {
+function checkPendingBreakpoints(sourceId: string) {
   return async ({ dispatch, getState }: ThunkArgs) => {
     // source may have been modified by selectLocation
     const source = getSource(getState(), sourceId);
@@ -194,17 +192,17 @@ function checkPendingBreakpoints(cx: Context, sourceId: string) {
     }
 
     // load the source text if there is a pending breakpoint for it
-    await dispatch(loadSourceText(cx, source));
+    await dispatch(loadSourceText(source));
 
     await Promise.all(
       pendingBreakpoints.map(bp => {
-        return dispatch(syncBreakpoint(cx, sourceId, bp));
+        return dispatch(syncBreakpoint(sourceId, bp));
       })
     );
   };
 }
 
-function restoreBlackBoxedSources(cx: Context, sources: Source[]) {
+function restoreBlackBoxedSources(sources: Source[]) {
   return async ({ dispatch }: ThunkArgs) => {
     const tabs = getBlackBoxList();
     if (tabs.length == 0) {
@@ -212,7 +210,7 @@ function restoreBlackBoxedSources(cx: Context, sources: Source[]) {
     }
     for (const source of sources) {
       if (tabs.includes(source.url) && !source.isBlackBoxed) {
-        dispatch(toggleBlackBox(cx, source));
+        dispatch(toggleBlackBox(source));
       }
     }
   };
@@ -231,8 +229,6 @@ export function newSource(source: Source) {
 
 export function newSources(sources: Source[]) {
   return async ({ dispatch, getState }: ThunkArgs) => {
-    const cx = getContext(getState());
-
     const _newSources = sources.filter(
       source => !getSource(getState(), source.id) || isInlineScript(source)
     );
@@ -241,10 +237,10 @@ export function newSources(sources: Source[]) {
       hasBreakpointPositions(getState(), source.id)
     );
 
-    dispatch({ type: "ADD_SOURCES", cx, sources });
+    dispatch({ type: "ADD_SOURCES", sources });
 
     for (const source of _newSources) {
-      dispatch(checkSelectedSource(cx, source.id));
+      dispatch(checkSelectedSource(source.id));
     }
 
     // Adding new sources may have cleared this file's breakpoint positions
@@ -252,11 +248,11 @@ export function newSources(sources: Source[]) {
     // re-request new breakpoint positions.
     for (const source of sourcesNeedingPositions) {
       if (!hasBreakpointPositions(getState(), source.id)) {
-        dispatch(setBreakpointPositions(cx, source.id));
+        dispatch(setBreakpointPositions(source.id));
       }
     }
 
-    dispatch(restoreBlackBoxedSources(cx, _newSources));
-    dispatch(loadSourceMaps(cx, _newSources));
+    dispatch(restoreBlackBoxedSources(_newSources));
+    dispatch(loadSourceMaps(_newSources));
   };
 }

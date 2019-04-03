@@ -12,10 +12,9 @@ import * as parser from "../workers/parser";
 
 import { isLoaded } from "../utils/source";
 
-import type { Context } from "../types";
 import type { ThunkArgs, Action } from "./types";
 
-export function setOutOfScopeLocations(cx: Context) {
+export function setOutOfScopeLocations() {
   return async ({ dispatch, getState }: ThunkArgs) => {
     const location = getSelectedLocation(getState());
     if (!location) {
@@ -39,10 +38,9 @@ export function setOutOfScopeLocations(cx: Context) {
     dispatch(
       ({
         type: "OUT_OF_SCOPE_LOCATIONS",
-        cx,
         locations
       }: Action)
     );
-    dispatch(setInScopeLines(cx));
+    dispatch(setInScopeLines());
   };
 }

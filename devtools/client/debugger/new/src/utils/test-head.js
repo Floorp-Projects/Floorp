@@ -53,9 +53,6 @@ function createStore(client: any, initialState: any = {}, sourceMapsMock: any) {
     panel: {}
   });
 
-  // Put the initial context in the store, for convenience to unit tests.
-  store.cx = selectors.getThreadContext(store.getState());
-
   return store;
 }
 

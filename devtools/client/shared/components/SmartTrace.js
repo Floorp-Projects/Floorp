@@ -203,7 +203,7 @@ class SmartTrace extends Component {
 
     return Frames({
       frames,
-      selectFrame: (cx, {location}) => {
+      selectFrame: ({location}) => {
         const viewSource = /^Scratchpad\/\d+$/.test(location.filename)
           ? onViewSourceInScratchpad
           : onViewSourceInDebugger || onViewSource;

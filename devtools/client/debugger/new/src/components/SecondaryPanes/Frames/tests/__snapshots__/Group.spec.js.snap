@@ -155,14 +155,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
     />
     <Frame
       copyStackTrace={[MockFunction]}
-      cx={
-        Object {
-          "isPaused": false,
-          "navigateCounter": 0,
-          "pauseCounter": 0,
-          "thread": "FakeThread",
-        }
-      }
       disableContextMenu={false}
       displayFullUrl={false}
       frame={
@@ -266,14 +258,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
     />
     <Frame
       copyStackTrace={[MockFunction]}
-      cx={
-        Object {
-          "isPaused": false,
-          "navigateCounter": 0,
-          "pauseCounter": 0,
-          "thread": "FakeThread",
-        }
-      }
       disableContextMenu={false}
       displayFullUrl={false}
       frame={
@@ -377,14 +361,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
     />
     <Frame
       copyStackTrace={[MockFunction]}
-      cx={
-        Object {
-          "isPaused": false,
-          "navigateCounter": 0,
-          "pauseCounter": 0,
-          "thread": "FakeThread",
-        }
-      }
       disableContextMenu={false}
       displayFullUrl={false}
       frame={
@@ -642,14 +618,6 @@ exports[`Group renders group with anonymous functions 2`] = `
     />
     <Frame
       copyStackTrace={[MockFunction]}
-      cx={
-        Object {
-          "isPaused": false,
-          "navigateCounter": 0,
-          "pauseCounter": 0,
-          "thread": "FakeThread",
-        }
-      }
       disableContextMenu={false}
       displayFullUrl={false}
       frame={
@@ -752,14 +720,6 @@ exports[`Group renders group with anonymous functions 2`] = `
     />
     <Frame
       copyStackTrace={[MockFunction]}
-      cx={
-        Object {
-          "isPaused": false,
-          "navigateCounter": 0,
-          "pauseCounter": 0,
-          "thread": "FakeThread",
-        }
-      }
       disableContextMenu={false}
       displayFullUrl={false}
       frame={
@@ -862,14 +822,6 @@ exports[`Group renders group with anonymous functions 2`] = `
     />
     <Frame
       copyStackTrace={[MockFunction]}
-      cx={
-        Object {
-          "isPaused": false,
-          "navigateCounter": 0,
-          "pauseCounter": 0,
-          "thread": "FakeThread",
-        }
-      }
       disableContextMenu={false}
       displayFullUrl={false}
       frame={

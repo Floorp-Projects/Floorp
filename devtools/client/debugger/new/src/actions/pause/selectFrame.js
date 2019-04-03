@@ -7,29 +7,25 @@
 import { selectLocation } from "../sources";
 import { evaluateExpressions } from "../expressions";
 import { fetchScopes } from "./fetchScopes";
-import assert from "../../utils/assert";
 
-import type { Frame, ThreadContext } from "../../types";
+import type { Frame } from "../../types";
 import type { ThunkArgs } from "../types";
 
 /**
  * @memberof actions/pause
  * @static
  */
-export function selectFrame(cx: ThreadContext, frame: Frame) {
+export function selectFrame(frame: Frame) {
   return async ({ dispatch, client, getState, sourceMaps }: ThunkArgs) => {
-    assert(cx.thread == frame.thread, "Thread mismatch");
-
     dispatch({
       type: "SELECT_FRAME",
-      cx,
-      thread: cx.thread,
+      thread: frame.thread,
       frame
     });
 
-    dispatch(selectLocation(cx, frame.location));
+    dispatch(selectLocation(frame.location));
 
-    dispatch(evaluateExpressions(cx));
-    dispatch(fetchScopes(cx));
+    dispatch(evaluateExpressions());
+    dispatch(fetchScopes(frame.thread));
   };
 }
