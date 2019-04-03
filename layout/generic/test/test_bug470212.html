@@ -26,6 +26,11 @@ function doShiftDrag(){
     // Drag canvas element starts with a mouse down event, combine with shift
     // key, follows by two mouse move events.
 
+    canvas.addEventListener("dragstart", e => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
     // Press on left-top corner of the canvas element.
     wu.sendMouseEvent('mousedown',  canvasRect.left, canvasRect.top, 0, 1, 4);
     // Move to the center of this cavas element.
