@@ -640,7 +640,7 @@ nsresult nsXPCWrappedJSClass::CheckForException(
   /* JS might throw an expection whether the reporter was called or not */
   if (is_js_exception) {
     if (!xpc_exception) {
-      XPCConvert::JSValToXPCException(&js_exception, anInterfaceName,
+      XPCConvert::JSValToXPCException(cx, &js_exception, anInterfaceName,
                                       aPropertyName,
                                       getter_AddRefs(xpc_exception));
     }

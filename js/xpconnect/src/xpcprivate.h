@@ -1882,7 +1882,7 @@ class XPCConvert {
   // for the WN case. You probably want UnwrapReflectorToISupports.
   static bool GetISupportsFromJSObject(JSObject* obj, nsISupports** iface);
 
-  static nsresult JSValToXPCException(JS::MutableHandleValue s,
+  static nsresult JSValToXPCException(JSContext* cx, JS::MutableHandleValue s,
                                       const char* ifaceName,
                                       const char* methodName,
                                       mozilla::dom::Exception** exception);
@@ -1897,6 +1897,8 @@ class XPCConvert {
   /**
    * Convert a native array into a JS::Value.
    *
+   * @param cx the JSContext we're working with and in whose global the array
+   *           should be created.
    * @param d [out] the resulting JS::Value
    * @param buf the native buffer containing input values
    * @param type the type of objects in the array
@@ -1905,15 +1907,16 @@ class XPCConvert {
    * @param scope the default scope to put on the new JSObjects' parent chain
    * @param pErr [out] relevant error code, if any.
    */
-  static bool NativeArray2JS(JS::MutableHandleValue d, const void* buf,
-                             const nsXPTType& type, const nsID* iid,
-                             uint32_t count, nsresult* pErr);
+  static bool NativeArray2JS(JSContext* cx, JS::MutableHandleValue d,
+                             const void* buf, const nsXPTType& type,
+                             const nsID* iid, uint32_t count, nsresult* pErr);
 
   typedef std::function<void*(uint32_t*)> ArrayAllocFixupLen;
 
   /**
    * Convert a JS::Value into a native array.
    *
+   * @param cx the JSContext we're working with
    * @param aJSVal the JS::Value to convert
    * @param aEltType the type of objects in the array
    * @param aIID the interface of each object in the array
@@ -1922,8 +1925,9 @@ class XPCConvert {
    *                       allocate the backing buffer. This function may
    *                       modify the length of array to be converted.
    */
-  static bool JSArray2Native(JS::HandleValue aJSVal, const nsXPTType& aEltType,
-                             const nsIID* aIID, nsresult* pErr,
+  static bool JSArray2Native(JSContext* cx, JS::HandleValue aJSVal,
+                             const nsXPTType& aEltType, const nsIID* aIID,
+                             nsresult* pErr,
                              const ArrayAllocFixupLen& aAllocFixupLen);
 
   XPCConvert() = delete;
@@ -2238,14 +2242,14 @@ class XPCVariant : public nsIVariant {
   /**
    * Convert a variant into a JS::Value.
    *
-   * @param ccx the context for the whole procedure
+   * @param cx the context for the whole procedure
    * @param variant the variant to convert
    * @param scope the default scope to put on the new JSObject's parent chain
    * @param pErr [out] relevant error code, if any.
    * @param pJSVal [out] the resulting jsval.
    */
-  static bool VariantDataToJS(nsIVariant* variant, nsresult* pErr,
-                              JS::MutableHandleValue pJSVal);
+  static bool VariantDataToJS(JSContext* cx, nsIVariant* variant,
+                              nsresult* pErr, JS::MutableHandleValue pJSVal);
 
   bool IsPurple() { return mRefCnt.IsPurple(); }
 
