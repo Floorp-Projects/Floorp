@@ -149,6 +149,8 @@ const testCases = [
 ];
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["privacy.documentCookies.maxage", 0]]});
+
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-complex-values.html");
 
   gUI.tree.expandAll();
