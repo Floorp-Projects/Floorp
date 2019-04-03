@@ -85,7 +85,8 @@ static void TestUncompressCorrupt(const char* aCorruptData,
                                   uint32_t aCorruptLength) {
   nsCOMPtr<nsIInputStream> source;
   nsresult rv = NS_NewByteInputStream(getter_AddRefs(source),
-                                      MakeSpan(aCorruptData, aCorruptLength));
+                                      MakeSpan(aCorruptData, aCorruptLength),
+                                      NS_ASSIGNMENT_DEPEND);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   nsCOMPtr<nsIInputStream> uncompress = new SnappyUncompressInputStream(source);

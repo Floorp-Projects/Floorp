@@ -47,9 +47,9 @@
  * If aLength is less than zero, then the length of aStringToRead will be
  * determined by scanning the buffer for the first null byte.
  */
-extern nsresult NS_NewByteInputStream(
-    nsIInputStream** aStreamResult, mozilla::Span<const char> aStringToRead,
-    nsAssignmentType aAssignment = NS_ASSIGNMENT_DEPEND);
+extern nsresult NS_NewByteInputStream(nsIInputStream** aStreamResult,
+                                      mozilla::Span<const char> aStringToRead,
+                                      nsAssignmentType aAssignment);
 
 /**
  * Factory method to get an nsInputStream from an nsACString.  Result will
