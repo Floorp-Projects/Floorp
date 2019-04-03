@@ -11,3 +11,4 @@ The source of an [Icon](../index.md).
 | Name | Summary |
 |---|---|
 | [GENERATOR](-g-e-n-e-r-a-t-o-r.md) | This icon was generated. |
+| [DOWNLOAD](-d-o-w-n-l-o-a-d.md) | This icon was downloaded. |

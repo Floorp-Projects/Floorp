@@ -2,7 +2,7 @@
 
 # RecordedEventData
 
-`data class RecordedEventData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/storages/EventsStorageEngine.kt#L350)
+`data class RecordedEventData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/storages/EventsStorageEngine.kt#L351)
 
 ### Constructors
 

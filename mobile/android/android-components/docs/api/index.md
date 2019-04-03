@@ -23,6 +23,7 @@
 | [mozilla.components.browser.icons.decoder](mozilla.components.browser.icons.decoder/index.md) |  |
 | [mozilla.components.browser.icons.decoder.ico](mozilla.components.browser.icons.decoder.ico/index.md) |  |
 | [mozilla.components.browser.icons.generator](mozilla.components.browser.icons.generator/index.md) |  |
+| [mozilla.components.browser.icons.loader](mozilla.components.browser.icons.loader/index.md) |  |
 | [mozilla.components.browser.menu](mozilla.components.browser.menu/index.md) |  |
 | [mozilla.components.browser.menu.item](mozilla.components.browser.menu.item/index.md) |  |
 | [mozilla.components.browser.search](mozilla.components.browser.search/index.md) |  |
