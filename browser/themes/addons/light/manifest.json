@@ -28,5 +28,9 @@
       "toolbar_field": "#fff",
       "toolbar_field_border": "#ccc"
     }
+  },
+
+  "theme_experiment": {
+    "stylesheet": "experiment.css"
   }
 }
