@@ -27,13 +27,6 @@ allprojects {
         google()
         jcenter()
 
-        // Currently the main repository where appservices artifacts are published.
-        // This will eventually move to maven.mozilla.org
-        // See https://github.com/mozilla/application-services/issues/252
-        maven {
-            url "https://dl.bintray.com/mozilla-appservices/application-services"
-        }
-
         maven {
             url "https://maven.mozilla.org/maven2"
         }
