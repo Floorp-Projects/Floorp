@@ -10,7 +10,7 @@ from urlparse import urljoin
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
-from mozharness.base.log import DEBUG, INFO, FATAL
+from mozharness.base.log import DEBUG, INFO, FATAL, WARNING
 from mozharness.base.script import BaseScript
 
 
@@ -335,10 +335,24 @@ class UpdateVerifyConfigCreator(BaseScript):
                     self.update_paths[version]["marChannelIds"] = mar_channel_ids
 
     def gather_info(self):
+        from mozilla_version.gecko import GeckoVersion
+
         self._get_update_paths()
         if self.update_paths:
             self.log("Found update paths:", level=DEBUG)
             self.log(pprint.pformat(self.update_paths), level=DEBUG)
+        elif (
+            GeckoVersion.parse(self.config["to_version"])
+            <= GeckoVersion.parse(self.config["last_watershed"])
+        ):
+            self.log(
+                "Didn't find any update paths, but to_version {} is before the last_"
+                "watershed {}, generating empty config".format(
+                    self.config['to_version'],
+                    self.config['last_watershed'],
+                ),
+                level=WARNING,
+            )
         else:
             self.log("Didn't find any update paths, cannot continue", level=FATAL)
 
