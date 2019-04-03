@@ -143,6 +143,7 @@ bool js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock) {
     return false;
   }
   capacity_ = roundSize(tunables().gcMinNurseryBytes());
+  MOZ_ASSERT(capacity_ >= ArenaSize);
   /* After this point the Nursery has been enabled */
 
   setCurrentChunk(0, true);
@@ -195,6 +196,7 @@ void js::Nursery::enable() {
       return;
     }
     capacity_ = roundSize(tunables().gcMinNurseryBytes());
+    MOZ_ASSERT(capacity_ >= ArenaSize);
   }
 
   setCurrentChunk(0, true);
@@ -1193,6 +1195,7 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   size_t newCapacity = size_t(float(capacity()) * factor);
 
   const size_t minNurseryBytes = roundSize(tunables().gcMinNurseryBytes());
+  MOZ_ASSERT(minNurseryBytes >= ArenaSize);
 
   // If one of these conditions is true then we always shrink or grow the
   // nursery.  This way the thresholds still have an effect even if the goal
@@ -1252,6 +1255,7 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
   }
 
   const size_t minNurseryBytes = roundSize(tunables().gcMinNurseryBytes());
+  MOZ_ASSERT(minNurseryBytes >= ArenaSize);
 
   if (minNurseryBytes > capacity()) {
     /*
@@ -1317,6 +1321,7 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
   }
 
   capacity_ = newCapacity;
+  MOZ_ASSERT(capacity_ >= ArenaSize);
   setCurrentEnd();
 }
 
