@@ -373,12 +373,11 @@ XPCVariant::GetAsJSVal(MutableHandleValue result) {
 }
 
 // static
-bool XPCVariant::VariantDataToJS(nsIVariant* variant, nsresult* pErr,
-                                 MutableHandleValue pJSVal) {
+bool XPCVariant::VariantDataToJS(JSContext* cx, nsIVariant* variant,
+                                 nsresult* pErr, MutableHandleValue pJSVal) {
   // Get the type early because we might need to spoof it below.
   uint16_t type = variant->GetDataType();
 
-  AutoJSContext cx;
   RootedValue realVal(cx);
   nsresult rv = variant->GetAsJSVal(&realVal);
 

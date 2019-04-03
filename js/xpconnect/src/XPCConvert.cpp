@@ -376,7 +376,7 @@ bool XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
           return false;
         }
 
-        return XPCVariant::VariantDataToJS(variant, pErr, d);
+        return XPCVariant::VariantDataToJS(cx, variant, pErr, d);
       }
 
       xpcObjectHelper helper(iface);
@@ -409,13 +409,13 @@ bool XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
     }
 
     case nsXPTType::T_LEGACY_ARRAY:
-      return NativeArray2JS(d, *static_cast<const void* const*>(s),
+      return NativeArray2JS(cx, d, *static_cast<const void* const*>(s),
                             type.ArrayElementType(), iid, arrlen, pErr);
 
     case nsXPTType::T_ARRAY: {
       auto* array = static_cast<const xpt::detail::UntypedTArray*>(s);
-      return NativeArray2JS(d, array->Elements(), type.ArrayElementType(), iid,
-                            array->Length(), pErr);
+      return NativeArray2JS(cx, d, array->Elements(), type.ArrayElementType(),
+                            iid, array->Length(), pErr);
     }
 
     default:
@@ -860,8 +860,8 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
         return true;
       }
 
-      bool ok =
-          JSArray2Native(s, elty, iid, pErr, [&](uint32_t* aLength) -> void* {
+      bool ok = JSArray2Native(
+          cx, s, elty, iid, pErr, [&](uint32_t* aLength) -> void* {
             // Check that we have enough elements in our array.
             if (*aLength < arrlen) {
               if (pErr) {
@@ -888,16 +888,16 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
       auto* dest = (xpt::detail::UntypedTArray*)d;
       const nsXPTType& elty = type.ArrayElementType();
 
-      bool ok =
-          JSArray2Native(s, elty, iid, pErr, [&](uint32_t* aLength) -> void* {
-            if (!dest->SetLength(elty, *aLength)) {
-              if (pErr) {
-                *pErr = NS_ERROR_OUT_OF_MEMORY;
-              }
-              return nullptr;
-            }
-            return dest->Elements();
-          });
+      bool ok = JSArray2Native(cx, s, elty, iid, pErr,
+                               [&](uint32_t* aLength) -> void* {
+                                 if (!dest->SetLength(elty, *aLength)) {
+                                   if (pErr) {
+                                     *pErr = NS_ERROR_OUT_OF_MEMORY;
+                                   }
+                                   return nullptr;
+                                 }
+                                 return dest->Elements();
+                               });
 
       if (!ok) {
         // An error occurred, free any allocated backing buffer.
@@ -1221,12 +1221,11 @@ class MOZ_STACK_CLASS AutoExceptionRestorer {
   RootedValue tvr;
 };
 
-static nsresult JSErrorToXPCException(const char* toStringResult,
+static nsresult JSErrorToXPCException(JSContext* cx, const char* toStringResult,
                                       const char* ifaceName,
                                       const char* methodName,
                                       const JSErrorReport* report,
                                       Exception** exceptn) {
-  AutoJSContext cx;
   nsresult rv = NS_ERROR_FAILURE;
   RefPtr<nsScriptError> data;
   if (report) {
@@ -1268,11 +1267,10 @@ static nsresult JSErrorToXPCException(const char* toStringResult,
 }
 
 // static
-nsresult XPCConvert::JSValToXPCException(MutableHandleValue s,
+nsresult XPCConvert::JSValToXPCException(JSContext* cx, MutableHandleValue s,
                                          const char* ifaceName,
                                          const char* methodName,
                                          Exception** exceptn) {
-  AutoJSContext cx;
   AutoExceptionRestorer aer(cx, s);
 
   if (!s.isPrimitive()) {
@@ -1317,7 +1315,7 @@ nsresult XPCConvert::JSValToXPCException(MutableHandleValue s,
         if (str) {
           toStringResult = JS_EncodeStringToUTF8(cx, str);
         }
-        return JSErrorToXPCException(toStringResult.get(), ifaceName,
+        return JSErrorToXPCException(cx, toStringResult.get(), ifaceName,
                                      methodName, report, exceptn);
       }
 
@@ -1415,12 +1413,11 @@ nsresult XPCConvert::JSValToXPCException(MutableHandleValue s,
 // array fun...
 
 // static
-bool XPCConvert::NativeArray2JS(MutableHandleValue d, const void* buf,
-                                const nsXPTType& type, const nsID* iid,
-                                uint32_t count, nsresult* pErr) {
+bool XPCConvert::NativeArray2JS(JSContext* cx, MutableHandleValue d,
+                                const void* buf, const nsXPTType& type,
+                                const nsID* iid, uint32_t count,
+                                nsresult* pErr) {
   MOZ_ASSERT(buf || count == 0, "Must have buf or 0 elements");
-
-  AutoJSContext cx;
 
   RootedObject array(cx, JS_NewArrayObject(cx, count));
   if (!array) {
@@ -1446,7 +1443,7 @@ bool XPCConvert::NativeArray2JS(MutableHandleValue d, const void* buf,
 }
 
 // static
-bool XPCConvert::JSArray2Native(JS::HandleValue aJSVal,
+bool XPCConvert::JSArray2Native(JSContext* cx, JS::HandleValue aJSVal,
                                 const nsXPTType& aEltType, const nsIID* aIID,
                                 nsresult* pErr,
                                 const ArrayAllocFixupLen& aAllocFixupLen) {
@@ -1468,8 +1465,6 @@ bool XPCConvert::JSArray2Native(JS::HandleValue aJSVal,
     }
     return buf;
   };
-
-  AutoJSContext cx;
 
   // JSArray2Native only accepts objects (Array and TypedArray).
   if (!aJSVal.isObject()) {

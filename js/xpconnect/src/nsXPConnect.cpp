@@ -843,7 +843,7 @@ nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scopeArg, nsIVariant* value,
   MOZ_ASSERT(js::IsObjectInContextCompartment(scope, ctx));
 
   nsresult rv = NS_OK;
-  if (!XPCVariant::VariantDataToJS(value, &rv, _retval)) {
+  if (!XPCVariant::VariantDataToJS(ctx, value, &rv, _retval)) {
     if (NS_FAILED(rv)) {
       return rv;
     }
