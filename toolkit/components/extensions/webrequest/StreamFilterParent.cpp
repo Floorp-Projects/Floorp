@@ -361,7 +361,8 @@ nsresult StreamFilterParent::Write(Data& aData) {
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewByteInputStream(
       getter_AddRefs(stream),
-      MakeSpan(reinterpret_cast<char*>(aData.Elements()), aData.Length()));
+      MakeSpan(reinterpret_cast<char*>(aData.Elements()), aData.Length()),
+      NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv =
