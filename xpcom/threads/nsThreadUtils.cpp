@@ -28,6 +28,10 @@
 #  include <sys/resource.h>
 #endif
 
+#if defined(ANDROID)
+#  include <sys/prctl.h>
+#endif
+
 using namespace mozilla;
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
@@ -483,7 +487,12 @@ bool NS_ProcessNextEvent(nsIThread* aThread, bool aMayWait) {
 }
 
 void NS_SetCurrentThreadName(const char* aName) {
+#if defined(ANDROID)
+  // Workaround for Bug 1541216 - PR_SetCurrentThreadName() Fails to set the thread name on Android.
+  prctl(PR_SET_NAME, reinterpret_cast<unsigned long>(aName));
+#else
   PR_SetCurrentThreadName(aName);
+#endif
   CrashReporter::SetCurrentThreadName(aName);
 }
 
