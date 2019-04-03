@@ -12,7 +12,6 @@
 #include "nsWeakReference.h"
 
 #include "nsICommandManager.h"
-#include "nsPICommandUpdater.h"
 #include "nsCycleCollectionParticipant.h"
 
 class nsIController;
@@ -20,18 +19,28 @@ template <class E>
 class nsCOMArray;
 
 class nsCommandManager final : public nsICommandManager,
-                               public nsPICommandUpdater,
                                public nsSupportsWeakReference {
  public:
   typedef nsTArray<nsCOMPtr<nsIObserver> > ObserverList;
 
-  nsCommandManager();
+  nsCommandManager() = delete;
+
+  /**
+   * @param aWindow     An window which is what this command manager lives on.
+   */
+  explicit nsCommandManager(mozIDOMWindowProxy* aWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsCommandManager, nsICommandManager)
 
   NS_DECL_NSICOMMANDMANAGER
-  NS_DECL_NSPICOMMANDUPDATER
+
+  /**
+   * Notify the command manager that the status of a command changed. It may
+   * have changed from enabled to disabled, or vice versa, or become toggled
+   * etc.
+   */
+  nsresult CommandStatusChanged(const char* aCommandName);
 
   bool IsCommandEnabled(const nsCString& aCommandName,
                         mozIDOMWindowProxy* aTargetWindow);
