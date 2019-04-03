@@ -91,7 +91,7 @@ var Harness = {
   leaveOpen: {},
 
   // Setup and tear down functions
-  setup() {
+  setup(win = window) {
     if (!this.waitingForFinish) {
       waitForExplicitFinish();
       this.waitingForFinish = true;
@@ -109,12 +109,13 @@ var Harness = {
       Services.obs.addObserver(this, "addon-install-failed");
       Services.obs.addObserver(this, "addon-install-complete");
 
+      this._boundWin = Cu.getWeakReference(win); // need this so our addon manager listener knows which window to use.
       AddonManager.addInstallListener(this);
 
       Services.wm.addListener(this);
 
-      window.addEventListener("popupshown", this);
-      PanelUI.notificationPanel.addEventListener("popupshown", this);
+      win.addEventListener("popupshown", this);
+      win.PanelUI.notificationPanel.addEventListener("popupshown", this);
 
       var self = this;
       registerCleanupFunction(async function() {
@@ -134,8 +135,9 @@ var Harness = {
 
         Services.wm.removeListener(self);
 
-        window.removeEventListener("popupshown", self);
-        PanelUI.notificationPanel.removeEventListener("popupshown", self);
+        win.removeEventListener("popupshown", self);
+        win.PanelUI.notificationPanel.removeEventListener("popupshown", self);
+        win = null;
 
         let aInstalls = await AddonManager.getAllInstalls();
         is(aInstalls.length, 0, "Should be no active installs at the end of the test");
@@ -151,12 +153,13 @@ var Harness = {
     this.runningInstalls = [];
   },
 
-  finish() {
+  finish(win = window) {
     // Some tests using this harness somehow finish leaving
     // the addon-installed panel open.  hiding here addresses
     // that which fixes the rest of the tests.  Since no test
     // here cares about this panel, we just need it to close.
-    PanelUI.notificationPanel.hidePopup();
+    win.PanelUI.notificationPanel.hidePopup();
+    delete this._boundWin;
     finish();
   },
 
@@ -246,8 +249,8 @@ var Harness = {
 
   handleEvent(event) {
     if (event.type === "popupshown") {
-      if (event.target == PanelUI.notificationPanel) {
-        PanelUI.notificationPanel.hidePopup();
+      if (event.target == event.view.PanelUI.notificationPanel) {
+        event.view.PanelUI.notificationPanel.hidePopup();
       } else if (event.target.firstElementChild) {
         let popupId = event.target.firstElementChild.getAttribute("popupid");
         if (popupId === "addon-webext-permissions") {
@@ -323,7 +326,7 @@ var Harness = {
     if (this.finalContentEvent && !this.waitingForEvent) {
       this.waitingForEvent = true;
       info("Waiting for " + this.finalContentEvent);
-      let mm = gBrowser.selectedBrowser.messageManager;
+      let mm = this._boundWin.get().gBrowser.selectedBrowser.messageManager;
       mm.loadFrameScript(`data:,content.addEventListener("${this.finalContentEvent}", () => { sendAsyncMessage("Test:GotNewInstallEvent"); });`, false);
       let listener = () => {
         info("Saw " + this.finalContentEvent);
