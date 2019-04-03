@@ -116,6 +116,7 @@ class AsyncGeneratorObject : public AbstractGeneratorObject {
     Slots
   };
 
+ public:
   enum State {
     // "suspendedStart" in the spec.
     // Suspended after invocation.
@@ -150,6 +151,7 @@ class AsyncGeneratorObject : public AbstractGeneratorObject {
   }
   void setState(State state_) { setFixedSlot(Slot_State, Int32Value(state_)); }
 
+ private:
   // Queue is implemented in 2 ways.  If only one request is queued ever,
   // request is stored directly to the slot.  Once 2 requests are queued, a
   // list is created and requests are appended into it, and the list is
