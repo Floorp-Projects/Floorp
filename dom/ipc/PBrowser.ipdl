@@ -537,6 +537,10 @@ parent:
     async RegisterProtocolHandler(nsString scheme, nsIURI handlerURI, nsString title,
                                   nsIURI documentURI);
 
+    async OnStatusChange(WebProgressData? aWebProgressData,
+                         RequestData aRequestData, nsresult aStatus,
+                         nsString aMessage);
+
     async OnContentBlockingEvent(WebProgressData? aWebProgressData,
                                  RequestData aRequestData, uint32_t aEvent);
 
