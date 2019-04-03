@@ -242,6 +242,7 @@ RestyleHint ServoStyleSet::MediumFeaturesChanged(
   }
 
   if (rulesChanged) {
+    // TODO(emilio): This could be more granular.
     return RestyleHint::RestyleSubtree();
   }
 
@@ -933,31 +934,24 @@ void ServoStyleSet::MarkOriginsDirty(OriginFlags aChangedOrigins) {
 }
 
 void ServoStyleSet::SetStylistStyleSheetsDirty() {
-  // Note that there's another hidden mutator of mStylistState for XBL style
-  // sets in MediumFeaturesChanged...
-  //
-  // We really need to stop using a full-blown StyleSet there...
   mStylistState |= StylistState::StyleSheetsDirty;
 
   // We need to invalidate cached style in getComputedStyle for undisplayed
-  // elements, since we don't know if any of the style sheet change that we
-  // do would affect undisplayed elements.
+  // elements, since we don't know if any of the style sheet change that we do
+  // would affect undisplayed elements.
+  //
+  // We don't allow to call getComputedStyle in elements without a pres shell
+  // yet, so it is fine if there's no pres context here.
   if (nsPresContext* presContext = GetPresContext()) {
-    // XBL sheets don't have a pres context, but invalidating the restyle
-    // generation in that case is handled by SetXBLStyleSheetsDirty in the
-    // "master" stylist.
     presContext->RestyleManager()->IncrementUndisplayedRestyleGeneration();
   }
 }
 
 void ServoStyleSet::SetStylistXBLStyleSheetsDirty() {
   mStylistState |= StylistState::XBLStyleSheetsDirty;
-
-  // We need to invalidate cached style in getComputedStyle for undisplayed
-  // elements, since we don't know if any of the style sheet change that we
-  // do would affect undisplayed elements.
-  MOZ_ASSERT(GetPresContext());
-  GetPresContext()->RestyleManager()->IncrementUndisplayedRestyleGeneration();
+  if (nsPresContext* presContext = GetPresContext()) {
+    presContext->RestyleManager()->IncrementUndisplayedRestyleGeneration();
+  }
 }
 
 void ServoStyleSet::RuleAdded(StyleSheet& aSheet, css::Rule& aRule) {
@@ -1142,6 +1136,16 @@ void ServoStyleSet::ClearCachedStyleData() {
 void ServoStyleSet::CompatibilityModeChanged() {
   Servo_StyleSet_CompatModeChanged(mRawSet.get());
   SetStylistStyleSheetsDirty();
+  bool anyShadow = false;
+  EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {
+    if (auto* authorStyles = aShadowRoot.GetServoStyles()) {
+      anyShadow = true;
+      Servo_AuthorStyles_ForceDirty(authorStyles);
+    }
+  });
+  if (anyShadow) {
+    SetStylistXBLStyleSheetsDirty();
+  }
 }
 
 void ServoStyleSet::ClearNonInheritingComputedStyles() {
