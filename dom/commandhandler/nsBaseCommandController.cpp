@@ -21,21 +21,11 @@ NS_INTERFACE_MAP_BEGIN(nsBaseCommandController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIControllerContext)
 NS_INTERFACE_MAP_END
 
-nsBaseCommandController::nsBaseCommandController()
-    : mCommandContextRawPtr(nullptr) {}
+nsBaseCommandController::nsBaseCommandController(
+    nsControllerCommandTable* aControllerCommandTable)
+    : mCommandContextRawPtr(nullptr), mCommandTable(aControllerCommandTable) {}
 
 nsBaseCommandController::~nsBaseCommandController() {}
-
-NS_IMETHODIMP
-nsBaseCommandController::Init(nsIControllerCommandTable* aCommandTable) {
-  if (aCommandTable) {
-    mCommandTable = aCommandTable->AsControllerCommandTable();
-  } else {
-    mCommandTable = new nsControllerCommandTable();
-  }
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsBaseCommandController::SetCommandContext(nsISupports* aCommandContext) {
@@ -171,9 +161,6 @@ typedef already_AddRefed<nsControllerCommandTable> (*CommandTableCreatorFn)();
 
 static already_AddRefed<nsBaseCommandController>
 CreateControllerWithSingletonCommandTable(CommandTableCreatorFn aCreatorFn) {
-  RefPtr<nsBaseCommandController> commandController =
-      new nsBaseCommandController();
-
   RefPtr<nsControllerCommandTable> commandTable = aCreatorFn();
   if (!commandTable) {
     return nullptr;
@@ -182,11 +169,8 @@ CreateControllerWithSingletonCommandTable(CommandTableCreatorFn aCreatorFn) {
   // this is a singleton; make it immutable
   commandTable->MakeImmutable();
 
-  nsresult rv = commandController->Init(commandTable);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
+  RefPtr<nsBaseCommandController> commandController =
+      new nsBaseCommandController(commandTable);
   return commandController.forget();
 }
 
