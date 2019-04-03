@@ -810,7 +810,20 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvCancel(const nsresult& status) {
   // May receive cancel before channel has been constructed!
   if (mChannel) {
     mChannel->Cancel(status);
+
+    // Once we receive |Cancel|, child will stop sending RecvBytesRead. Force
+    // the channel resumed if needed.
+    if (mSuspendedForFlowControl) {
+      LOG(("  resume the channel due to e10s backpressure relief by cancel"));
+      Unused << mChannel->Resume();
+      mSuspendedForFlowControl = false;
+    }
   }
+
+  // We won't need flow control anymore. Toggle the flag to avoid |Suspend|
+  // since OnDataAvailable could be off-main-thread.
+  mCacheNeedFlowControlInitialized = true;
+  mNeedFlowControl = false;
   return IPC_OK();
 }
 
@@ -2128,6 +2141,7 @@ nsresult HttpChannelParent::SuspendForDiversion() {
   // channel is suspended until all the data is consumed and no more e10s later.
   // No point to have another redundant suspension.
   if (mSuspendedForFlowControl) {
+    LOG(("  resume the channel due to e10s backpressure relief by diversion"));
     Unused << mChannel->Resume();
     mSuspendedForFlowControl = false;
   }
