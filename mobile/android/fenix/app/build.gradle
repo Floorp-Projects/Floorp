@@ -253,7 +253,6 @@ dependencies {
     implementation Deps.rxKotlin
     implementation Deps.anko_commons
     implementation Deps.anko_sdk
-    implementation Deps.anko_appcompat
     implementation Deps.anko_constraintlayout
 
     implementation Deps.sentry

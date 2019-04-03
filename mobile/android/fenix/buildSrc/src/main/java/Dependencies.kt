@@ -54,7 +54,6 @@ object Deps {
 
     const val anko_commons = "org.jetbrains.anko:anko-commons:${Versions.anko}"
     const val anko_sdk = "org.jetbrains.anko:anko-sdk25:${Versions.anko}"
-    const val anko_appcompat = "org.jetbrains.anko:anko-appcompat-v7:${Versions.anko}"
     const val anko_constraintlayout = "org.jetbrains.anko:anko-constraint-layout:${Versions.anko}"
 
     const val mozilla_concept_engine = "org.mozilla.components:concept-engine:${Versions.mozilla_android_components}"

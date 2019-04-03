@@ -5,12 +5,12 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
+import android.preference.PreferenceManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
-import org.jetbrains.anko.support.v4.defaultSharedPreferences
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature
 import org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature.PhoneFeature.NOTIFICATION
@@ -79,7 +79,8 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
 
         categoryPhoneFeatures = requireNotNull(findPreference(keyCategoryPhoneFeatures))
 
-        val isCategoryActivate = defaultSharedPreferences.getBoolean(radioCustomSettings.key, false)
+        val isCategoryActivate = PreferenceManager.getDefaultSharedPreferences(requireContext())
+            .getBoolean(radioCustomSettings.key, false)
         if (isCategoryActivate) {
             categoryPhoneFeatures.isVisible = true
         }
