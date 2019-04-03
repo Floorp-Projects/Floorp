@@ -573,7 +573,7 @@ function* runTest() {
       is(res.responseText, "",
          "wrong responseText in test for " + testName);
       is(res.events.join(","),
-         "opening,rs1,sending,loadstart,rs2,rs4,error,loadend",
+         "opening,rs1,sending,loadstart,rs4,error,loadend",
          "wrong events in test for " + testName);
       is(res.progressEvents, 0,
          "wrong events in test for " + testName);
