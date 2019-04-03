@@ -54,7 +54,7 @@
     do {                             \
     } while (0)
 #else
-#  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
+#  define ASSERT_UNLESS_FUZZING(...) MOZ_DIAGNOSTIC_ASSERT(false, __VA_ARGS__)
 #endif
 
 #define LS_LOG_TEST() MOZ_LOG_TEST(GetLocalStorageLogger(), LogLevel::Info)
@@ -273,7 +273,7 @@ nsCString GetArchivedOriginHashKey(const nsACString& aOriginSuffix,
 
 nsresult CreateTables(mozIStorageConnection* aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   // Table `database`
   nsresult rv = aConnection->ExecuteSimpleSQL(
@@ -310,7 +310,7 @@ nsresult CreateTables(mozIStorageConnection* aConnection) {
 
 nsresult UpgradeSchemaFrom1_0To2_0(mozIStorageConnection* aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "ALTER TABLE database ADD COLUMN usage INTEGER NOT NULL DEFAULT 0;"));
@@ -336,7 +336,7 @@ nsresult UpgradeSchemaFrom1_0To2_0(mozIStorageConnection* aConnection) {
 
 nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   nsresult rv = aConnection->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("PRAGMA synchronous = FULL;"));
@@ -364,10 +364,10 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aUsageFile,
                                  mozIStorageConnection** aConnection,
                                  bool* aRemovedUsageFile) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aDBFile);
-  MOZ_ASSERT(aUsageFile);
-  MOZ_ASSERT(aConnection);
-  MOZ_ASSERT(aRemovedUsageFile);
+  MOZ_DIAGNOSTIC_ASSERT(aDBFile);
+  MOZ_DIAGNOSTIC_ASSERT(aUsageFile);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aRemovedUsageFile);
 
   // aRemovedUsageFile has to be initialized even when this method fails.
   *aRemovedUsageFile = false;
@@ -460,8 +460,9 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aUsageFile,
         return rv;
       }
 
-      MOZ_ASSERT(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)));
-      MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
+      MOZ_DIAGNOSTIC_ASSERT(
+          NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)));
+      MOZ_DIAGNOSTIC_ASSERT(schemaVersion == kSQLiteSchemaVersion);
 
       nsCOMPtr<mozIStorageStatement> stmt;
       nsresult rv = connection->CreateStatement(
@@ -506,7 +507,7 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aUsageFile,
         }
       }
 
-      MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
+      MOZ_DIAGNOSTIC_ASSERT(schemaVersion == kSQLiteSchemaVersion);
     }
 
     rv = transaction.Commit();
@@ -528,10 +529,10 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aUsageFile,
         return rv;
       }
 
-      MOZ_ASSERT(fileSize > 0);
+      MOZ_DIAGNOSTIC_ASSERT(fileSize > 0);
 
       PRTime vacuumTime = PR_Now();
-      MOZ_ASSERT(vacuumTime);
+      MOZ_DIAGNOSTIC_ASSERT(vacuumTime);
 
       nsCOMPtr<mozIStorageStatement> vacuumTimeStmt;
       rv = connection->CreateStatement(
@@ -569,9 +570,10 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aUsageFile,
 nsresult GetStorageConnection(const nsAString& aDatabaseFilePath,
                               mozIStorageConnection** aConnection) {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(!aDatabaseFilePath.IsEmpty());
-  MOZ_ASSERT(StringEndsWith(aDatabaseFilePath, NS_LITERAL_STRING(".sqlite")));
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(!aDatabaseFilePath.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(
+      StringEndsWith(aDatabaseFilePath, NS_LITERAL_STRING(".sqlite")));
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   nsCOMPtr<nsIFile> databaseFile;
   nsresult rv =
@@ -613,8 +615,8 @@ nsresult GetStorageConnection(const nsAString& aDatabaseFilePath,
 
 nsresult GetArchiveFile(const nsAString& aStoragePath, nsIFile** aArchiveFile) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(!aStoragePath.IsEmpty());
-  MOZ_ASSERT(aArchiveFile);
+  MOZ_DIAGNOSTIC_ASSERT(!aStoragePath.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(aArchiveFile);
 
   nsCOMPtr<nsIFile> archiveFile;
   nsresult rv =
@@ -635,8 +637,8 @@ nsresult GetArchiveFile(const nsAString& aStoragePath, nsIFile** aArchiveFile) {
 nsresult CreateArchiveStorageConnection(const nsAString& aStoragePath,
                                         mozIStorageConnection** aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(!aStoragePath.IsEmpty());
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(!aStoragePath.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   nsCOMPtr<nsIFile> archiveFile;
   nsresult rv = GetArchiveFile(aStoragePath, getter_AddRefs(archiveFile));
@@ -644,10 +646,12 @@ nsresult CreateArchiveStorageConnection(const nsAString& aStoragePath,
     return rv;
   }
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // QuotaManager ensures this file always exists.
-  DebugOnly<bool> exists;
-  MOZ_ASSERT(NS_SUCCEEDED(archiveFile->Exists(&exists)));
-  MOZ_ASSERT(exists);
+  bool exists;
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(archiveFile->Exists(&exists)));
+  MOZ_DIAGNOSTIC_ASSERT(exists);
+#endif
 
   bool isDirectory;
   rv = archiveFile->IsDirectory(&isDirectory);
@@ -693,8 +697,8 @@ nsresult CreateArchiveStorageConnection(const nsAString& aStoragePath,
 nsresult AttachArchiveDatabase(const nsAString& aStoragePath,
                                mozIStorageConnection* aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(!aStoragePath.IsEmpty());
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(!aStoragePath.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
   nsCOMPtr<nsIFile> archiveFile;
 
   nsresult rv = GetArchiveFile(aStoragePath, getter_AddRefs(archiveFile));
@@ -702,14 +706,14 @@ nsresult AttachArchiveDatabase(const nsAString& aStoragePath,
     return rv;
   }
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool exists;
   rv = archiveFile->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  MOZ_ASSERT(exists);
+  MOZ_DIAGNOSTIC_ASSERT(exists);
 #endif
 
   nsString path;
@@ -741,7 +745,7 @@ nsresult AttachArchiveDatabase(const nsAString& aStoragePath,
 
 nsresult DetachArchiveDatabase(mozIStorageConnection* aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   nsresult rv = aConnection->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("DETACH DATABASE archive"));
@@ -754,8 +758,8 @@ nsresult DetachArchiveDatabase(mozIStorageConnection* aConnection) {
 
 nsresult GetShadowFile(const nsAString& aBasePath, nsIFile** aArchiveFile) {
   MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
-  MOZ_ASSERT(!aBasePath.IsEmpty());
-  MOZ_ASSERT(aArchiveFile);
+  MOZ_DIAGNOSTIC_ASSERT(!aBasePath.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(aArchiveFile);
 
   nsCOMPtr<nsIFile> archiveFile;
   nsresult rv = NS_NewLocalFile(aBasePath, false, getter_AddRefs(archiveFile));
@@ -774,7 +778,7 @@ nsresult GetShadowFile(const nsAString& aBasePath, nsIFile** aArchiveFile) {
 
 nsresult SetShadowJournalMode(mozIStorageConnection* aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   // Try enabling WAL mode. This can fail in various circumstances so we have to
   // check the results here.
@@ -794,7 +798,7 @@ nsresult SetShadowJournalMode(mozIStorageConnection* aConnection) {
     return rv;
   }
 
-  MOZ_ASSERT(hasResult);
+  MOZ_DIAGNOSTIC_ASSERT(hasResult);
 
   nsCString journalMode;
   rv = stmt->GetUTF8String(0, journalMode);
@@ -819,7 +823,7 @@ nsresult SetShadowJournalMode(mozIStorageConnection* aConnection) {
       return rv;
     }
 
-    MOZ_ASSERT(hasResult);
+    MOZ_DIAGNOSTIC_ASSERT(hasResult);
 
     int32_t pageSize;
     rv = stmt->GetInt32(0, &pageSize);
@@ -827,7 +831,7 @@ nsresult SetShadowJournalMode(mozIStorageConnection* aConnection) {
       return rv;
     }
 
-    MOZ_ASSERT(pageSize >= 512 && pageSize <= 65536);
+    MOZ_DIAGNOSTIC_ASSERT(pageSize >= 512 && pageSize <= 65536);
 
     nsAutoCString pageCount;
     pageCount.AppendInt(static_cast<int32_t>(kShadowMaxWALSize / pageSize));
@@ -862,8 +866,8 @@ nsresult SetShadowJournalMode(mozIStorageConnection* aConnection) {
 nsresult CreateShadowStorageConnection(const nsAString& aBasePath,
                                        mozIStorageConnection** aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(!aBasePath.IsEmpty());
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(!aBasePath.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   nsCOMPtr<nsIFile> shadowFile;
   nsresult rv = GetShadowFile(aBasePath, getter_AddRefs(shadowFile));
@@ -931,8 +935,8 @@ nsresult CreateShadowStorageConnection(const nsAString& aBasePath,
 nsresult GetShadowStorageConnection(const nsAString& aBasePath,
                                     mozIStorageConnection** aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(!aBasePath.IsEmpty());
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(!aBasePath.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   nsCOMPtr<nsIFile> shadowFile;
   nsresult rv = GetShadowFile(aBasePath, getter_AddRefs(shadowFile));
@@ -969,8 +973,8 @@ nsresult GetShadowStorageConnection(const nsAString& aBasePath,
 nsresult AttachShadowDatabase(const nsAString& aBasePath,
                               mozIStorageConnection* aConnection) {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(!aBasePath.IsEmpty());
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(!aBasePath.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   nsCOMPtr<nsIFile> shadowFile;
   nsresult rv = GetShadowFile(aBasePath, getter_AddRefs(shadowFile));
@@ -978,14 +982,14 @@ nsresult AttachShadowDatabase(const nsAString& aBasePath,
     return rv;
   }
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool exists;
   rv = shadowFile->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  MOZ_ASSERT(exists);
+  MOZ_DIAGNOSTIC_ASSERT(exists);
 #endif
 
   nsString path;
@@ -1017,7 +1021,7 @@ nsresult AttachShadowDatabase(const nsAString& aBasePath,
 
 nsresult DetachShadowDatabase(mozIStorageConnection* aConnection) {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   nsresult rv = aConnection->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("DETACH DATABASE shadow"));
@@ -1030,8 +1034,8 @@ nsresult DetachShadowDatabase(mozIStorageConnection* aConnection) {
 
 nsresult GetUsageFile(const nsAString& aDirectoryPath, nsIFile** aUsageFile) {
   MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
-  MOZ_ASSERT(!aDirectoryPath.IsEmpty());
-  MOZ_ASSERT(aUsageFile);
+  MOZ_DIAGNOSTIC_ASSERT(!aDirectoryPath.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(aUsageFile);
 
   nsCOMPtr<nsIFile> usageFile;
   nsresult rv =
@@ -1052,8 +1056,8 @@ nsresult GetUsageFile(const nsAString& aDirectoryPath, nsIFile** aUsageFile) {
 nsresult GetUsageJournalFile(const nsAString& aDirectoryPath,
                              nsIFile** aUsageJournalFile) {
   MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
-  MOZ_ASSERT(!aDirectoryPath.IsEmpty());
-  MOZ_ASSERT(aUsageJournalFile);
+  MOZ_DIAGNOSTIC_ASSERT(!aDirectoryPath.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(aUsageJournalFile);
 
   nsCOMPtr<nsIFile> usageJournalFile;
   nsresult rv =
@@ -1074,9 +1078,9 @@ nsresult GetUsageJournalFile(const nsAString& aDirectoryPath,
 nsresult UpdateUsageFile(nsIFile* aUsageFile, nsIFile* aUsageJournalFile,
                          int64_t aUsage) {
   MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
-  MOZ_ASSERT(aUsageFile);
-  MOZ_ASSERT(aUsageJournalFile);
-  MOZ_ASSERT(aUsage >= 0);
+  MOZ_DIAGNOSTIC_ASSERT(aUsageFile);
+  MOZ_DIAGNOSTIC_ASSERT(aUsageJournalFile);
+  MOZ_DIAGNOSTIC_ASSERT(aUsage >= 0);
 
   nsresult rv = aUsageJournalFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1112,8 +1116,8 @@ nsresult UpdateUsageFile(nsIFile* aUsageFile, nsIFile* aUsageJournalFile,
 
 nsresult LoadUsageFile(nsIFile* aUsageFile, int64_t* aUsage) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aUsageFile);
-  MOZ_ASSERT(aUsage);
+  MOZ_DIAGNOSTIC_ASSERT(aUsageFile);
+  MOZ_DIAGNOSTIC_ASSERT(aUsage);
 
   int64_t fileSize;
   nsresult rv = aUsageFile->GetFileSize(&fileSize);
@@ -1192,7 +1196,7 @@ class WriteOptimizer final {
   WriteOptimizer(WriteOptimizer&& aWriteOptimizer)
       : mClearInfo(std::move(aWriteOptimizer.mClearInfo)) {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(&aWriteOptimizer != this);
+    MOZ_DIAGNOSTIC_ASSERT(&aWriteOptimizer != this);
 
     mWriteInfos.SwapElements(aWriteOptimizer.mWriteInfos);
     mTotalDelta = aWriteOptimizer.mTotalDelta;
@@ -1306,13 +1310,13 @@ class DatastoreOperationBase : public Runnable {
 
  public:
   nsIEventTarget* OwningEventTarget() const {
-    MOZ_ASSERT(mOwningEventTarget);
+    MOZ_DIAGNOSTIC_ASSERT(mOwningEventTarget);
 
     return mOwningEventTarget;
   }
 
   bool IsOnOwningThread() const {
-    MOZ_ASSERT(mOwningEventTarget);
+    MOZ_DIAGNOSTIC_ASSERT(mOwningEventTarget);
 
     bool current;
     return NS_SUCCEEDED(mOwningEventTarget->IsOnCurrentThread(&current)) &&
@@ -1327,14 +1331,14 @@ class DatastoreOperationBase : public Runnable {
   nsresult ResultCode() const { return mResultCode; }
 
   void SetFailureCode(nsresult aErrorCode) {
-    MOZ_ASSERT(NS_SUCCEEDED(mResultCode));
-    MOZ_ASSERT(NS_FAILED(aErrorCode));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(mResultCode));
+    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(aErrorCode));
 
     mResultCode = aErrorCode;
   }
 
   void MaybeSetFailureCode(nsresult aErrorCode) {
-    MOZ_ASSERT(NS_FAILED(aErrorCode));
+    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(aErrorCode));
 
     if (NS_SUCCEEDED(mResultCode)) {
       mResultCode = aErrorCode;
@@ -1368,7 +1372,7 @@ class DatastoreOperationBase : public Runnable {
         mMayProceedOnNonOwningThread(true),
         mMayProceed(true) {}
 
-  ~DatastoreOperationBase() override { MOZ_ASSERT(!mMayProceed); }
+  ~DatastoreOperationBase() override { MOZ_DIAGNOSTIC_ASSERT(!mMayProceed); }
 };
 
 class ConnectionDatastoreOperationBase : public DatastoreOperationBase {
@@ -1426,7 +1430,7 @@ class Connection final {
   const nsCString mOrigin;
   const nsString mDirectoryPath;
   bool mFlushScheduled;
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool mInUpdateBatch;
 #endif
 
@@ -1473,7 +1477,7 @@ class Connection final {
 
   mozIStorageConnection* StorageConnection() const {
     AssertIsOnConnectionThread();
-    MOZ_ASSERT(mStorageConnection);
+    MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
 
     return mStorageConnection;
   }
@@ -1562,8 +1566,6 @@ class ConnectionThread final {
 
   bool IsOnConnectionThread();
 
-  void AssertIsOnConnectionThread();
-
   already_AddRefed<Connection> CreateConnection(
       const nsACString& aOrigin, const nsAString& aDirectoryPath,
       nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope);
@@ -1633,7 +1635,7 @@ class Datastore final {
   int64_t mSizeOfKeys;
   int64_t mSizeOfItems;
   bool mClosed;
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool mInUpdateBatch;
 #endif
 
@@ -1676,7 +1678,7 @@ class Datastore final {
 
   void NoteFinishedPreparedDatastore(PreparedDatastore* aPreparedDatastore);
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool HasLivePreparedDatastores() const;
 #endif
 
@@ -1684,7 +1686,7 @@ class Datastore final {
 
   void NoteFinishedDatabase(Database* aDatabase);
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool HasLiveDatabases() const;
 #endif
 
@@ -1776,8 +1778,8 @@ class PreparedDatastore {
         mForPreload(aForPreload),
         mInvalidated(false) {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(aDatastore);
-    MOZ_ASSERT(mTimer);
+    MOZ_DIAGNOSTIC_ASSERT(aDatastore);
+    MOZ_DIAGNOSTIC_ASSERT(mTimer);
 
     aDatastore->NoteLivePreparedDatastore(this);
 
@@ -1787,8 +1789,8 @@ class PreparedDatastore {
   }
 
   ~PreparedDatastore() {
-    MOZ_ASSERT(mDatastore);
-    MOZ_ASSERT(mTimer);
+    MOZ_DIAGNOSTIC_ASSERT(mDatastore);
+    MOZ_DIAGNOSTIC_ASSERT(mTimer);
 
     mTimer->Cancel();
 
@@ -1797,7 +1799,7 @@ class PreparedDatastore {
 
   Datastore* GetDatastore() const {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(mDatastore);
+    MOZ_DIAGNOSTIC_ASSERT(mDatastore);
 
     return mDatastore;
   }
@@ -1850,7 +1852,7 @@ class Database final : public PBackgroundLSDatabaseParent {
   bool mAllowedToClose;
   bool mActorDestroyed;
   bool mRequestedAllowToClose;
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool mActorWasAlive;
 #endif
 
@@ -2023,13 +2025,14 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
             int64_t aInitialUsage, int64_t aPeakUsage,
             LSSnapshot::LoadState aLoadState) {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(aInitialUsage >= 0);
-    MOZ_ASSERT(aPeakUsage >= aInitialUsage);
-    MOZ_ASSERT_IF(aLoadState == LSSnapshot::LoadState::AllOrderedItems,
-                  aLoadedItems.Count() == 0);
-    MOZ_ASSERT(mTotalLength == 0);
-    MOZ_ASSERT(mUsage == -1);
-    MOZ_ASSERT(mPeakUsage == -1);
+    MOZ_DIAGNOSTIC_ASSERT(aInitialUsage >= 0);
+    MOZ_DIAGNOSTIC_ASSERT(aPeakUsage >= aInitialUsage);
+    MOZ_DIAGNOSTIC_ASSERT_IF(
+        aLoadState == LSSnapshot::LoadState::AllOrderedItems,
+        aLoadedItems.Count() == 0);
+    MOZ_DIAGNOSTIC_ASSERT(mTotalLength == 0);
+    MOZ_DIAGNOSTIC_ASSERT(mUsage == -1);
+    MOZ_DIAGNOSTIC_ASSERT(mPeakUsage == -1);
 
     mLoadedItems.SwapElements(aLoadedItems);
     mTotalLength = aTotalLength;
@@ -2271,7 +2274,7 @@ class PrepareDatastoreOp : public LSRequestBase, public OpenDirectoryListener {
   bool mRequestedDirectoryLock;
   bool mInvalidated;
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   int64_t mDEBUGUsage;
 #endif
 
@@ -2288,7 +2291,7 @@ class PrepareDatastoreOp : public LSRequestBase, public OpenDirectoryListener {
 
   const nsCString& Origin() const {
     AssertIsOnOwningThread();
-    MOZ_ASSERT(OriginIsKnown());
+    MOZ_DIAGNOSTIC_ASSERT(OriginIsKnown());
 
     return mOrigin;
   }
@@ -2506,7 +2509,7 @@ class ArchivedOriginScope {
     Pattern(Pattern&& aOther) = default;
 
     const OriginAttributesPattern& GetPattern() const {
-      MOZ_ASSERT(mPattern);
+      MOZ_DIAGNOSTIC_ASSERT(mPattern);
       return *mPattern;
     }
   };
@@ -2537,13 +2540,13 @@ class ArchivedOriginScope {
   bool IsNull() const { return mData.is<Null>(); }
 
   const nsACString& OriginSuffix() const {
-    MOZ_ASSERT(IsOrigin());
+    MOZ_DIAGNOSTIC_ASSERT(IsOrigin());
 
     return mData.as<Origin>().OriginSuffix();
   }
 
   const nsACString& OriginNoSuffix() const {
-    MOZ_ASSERT(IsOrigin() || IsPrefix());
+    MOZ_DIAGNOSTIC_ASSERT(IsOrigin() || IsPrefix());
 
     if (IsOrigin()) {
       return mData.as<Origin>().OriginNoSuffix();
@@ -2552,7 +2555,7 @@ class ArchivedOriginScope {
   }
 
   const OriginAttributesPattern& GetPattern() const {
-    MOZ_ASSERT(IsPattern());
+    MOZ_DIAGNOSTIC_ASSERT(IsPattern());
 
     return mData.as<Pattern>().GetPattern();
   }
@@ -2705,7 +2708,7 @@ class QuotaClient::MatchFunction final : public mozIStorageFunction {
  * Globals
  ******************************************************************************/
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 bool gLocalStorageInitialized = false;
 #endif
 
@@ -2758,14 +2761,11 @@ StaticAutoPtr<ArchivedOriginHashtable> gArchivedOrigins;
 bool gInitializedShadowStorage = false;
 
 bool IsOnConnectionThread() {
-  MOZ_ASSERT(gConnectionThread);
+  MOZ_DIAGNOSTIC_ASSERT(gConnectionThread);
   return gConnectionThread->IsOnConnectionThread();
 }
 
-void AssertIsOnConnectionThread() {
-  MOZ_ASSERT(gConnectionThread);
-  gConnectionThread->AssertIsOnConnectionThread();
-}
+void AssertIsOnConnectionThread() { MOZ_ASSERT(IsOnConnectionThread()); }
 
 void InitUsageForOrigin(const nsACString& aOrigin, int64_t aUsage) {
   AssertIsOnIOThread();
@@ -2774,24 +2774,24 @@ void InitUsageForOrigin(const nsACString& aOrigin, int64_t aUsage) {
     gUsages = new UsageHashtable();
   }
 
-  MOZ_ASSERT(!gUsages->Contains(aOrigin));
+  MOZ_DIAGNOSTIC_ASSERT(!gUsages->Contains(aOrigin));
   gUsages->Put(aOrigin, aUsage);
 }
 
 void UpdateUsageForOrigin(const nsACString& aOrigin, int64_t aUsage) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(gUsages);
-  MOZ_ASSERT(gUsages->Contains(aOrigin));
+  MOZ_DIAGNOSTIC_ASSERT(gUsages);
+  MOZ_DIAGNOSTIC_ASSERT(gUsages->Contains(aOrigin));
 
   gUsages->Put(aOrigin, aUsage);
 }
 
 nsresult LoadArchivedOrigins() {
   AssertIsOnIOThread();
-  MOZ_ASSERT(!gArchivedOrigins);
+  MOZ_DIAGNOSTIC_ASSERT(!gArchivedOrigins);
 
   QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
+  MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
   // Ensure that the webappsstore.sqlite is moved to new place.
   nsresult rv = quotaManager->EnsureStorageIsInitialized();
@@ -2860,8 +2860,8 @@ nsresult LoadArchivedOrigins() {
 nsresult GetUsage(mozIStorageConnection* aConnection,
                   ArchivedOriginScope* aArchivedOriginScope, int64_t* aUsage) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
-  MOZ_ASSERT(aUsage);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aUsage);
 
   nsresult rv;
 
@@ -2910,16 +2910,16 @@ nsresult GetUsage(mozIStorageConnection* aConnection,
 
 void ShadowWritesPrefChangedCallback(const char* aPrefName, void* aClosure) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!strcmp(aPrefName, kShadowWritesPref));
-  MOZ_ASSERT(!aClosure);
+  MOZ_DIAGNOSTIC_ASSERT(!strcmp(aPrefName, kShadowWritesPref));
+  MOZ_DIAGNOSTIC_ASSERT(!aClosure);
 
   gShadowWrites = Preferences::GetBool(aPrefName, kDefaultShadowWrites);
 }
 
 void SnapshotPrefillPrefChangedCallback(const char* aPrefName, void* aClosure) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!strcmp(aPrefName, kSnapshotPrefillPref));
-  MOZ_ASSERT(!aClosure);
+  MOZ_DIAGNOSTIC_ASSERT(!strcmp(aPrefName, kSnapshotPrefillPref));
+  MOZ_DIAGNOSTIC_ASSERT(!aClosure);
 
   int32_t snapshotPrefill =
       Preferences::GetInt(aPrefName, kDefaultSnapshotPrefill);
@@ -2935,8 +2935,8 @@ void SnapshotPrefillPrefChangedCallback(const char* aPrefName, void* aClosure) {
 void ClientValidationPrefChangedCallback(const char* aPrefName,
                                          void* aClosure) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!strcmp(aPrefName, kClientValidationPref));
-  MOZ_ASSERT(!aClosure);
+  MOZ_DIAGNOSTIC_ASSERT(!strcmp(aPrefName, kClientValidationPref));
+  MOZ_DIAGNOSTIC_ASSERT(!aClosure);
 
   gClientValidation = Preferences::GetBool(aPrefName, kDefaultClientValidation);
 }
@@ -2950,7 +2950,7 @@ void ClientValidationPrefChangedCallback(const char* aPrefName,
 void InitializeLocalStorage() {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!gLocalStorageInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!gLocalStorageInitialized);
 
   if (!QuotaManager::IsRunningGTests()) {
     // This service has to be started on the main thread currently.
@@ -2983,7 +2983,7 @@ void InitializeLocalStorage() {
   Preferences::RegisterCallbackAndCall(ClientValidationPrefChangedCallback,
                                        kClientValidationPref);
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   gLocalStorageInitialized = true;
 #endif
 }
@@ -3029,10 +3029,10 @@ bool RecvPBackgroundLSDatabaseConstructor(PBackgroundLSDatabaseParent* aActor,
                                           const uint32_t& aPrivateBrowsingId,
                                           const uint64_t& aDatastoreId) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(gPreparedDatastores);
-  MOZ_ASSERT(gPreparedDatastores->Get(aDatastoreId));
-  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_DIAGNOSTIC_ASSERT(aActor);
+  MOZ_DIAGNOSTIC_ASSERT(gPreparedDatastores);
+  MOZ_DIAGNOSTIC_ASSERT(gPreparedDatastores->Get(aDatastoreId));
+  MOZ_DIAGNOSTIC_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 
   // The actor is now completely built (it has a manager, channel and it's
   // registered as a subprotocol).
@@ -3040,7 +3040,7 @@ bool RecvPBackgroundLSDatabaseConstructor(PBackgroundLSDatabaseParent* aActor,
 
   nsAutoPtr<PreparedDatastore> preparedDatastore;
   gPreparedDatastores->Remove(aDatastoreId, &preparedDatastore);
-  MOZ_ASSERT(preparedDatastore);
+  MOZ_DIAGNOSTIC_ASSERT(preparedDatastore);
 
   auto* database = static_cast<Database*>(aActor);
 
@@ -3058,7 +3058,7 @@ bool RecvPBackgroundLSDatabaseConstructor(PBackgroundLSDatabaseParent* aActor,
 
 bool DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
+  MOZ_DIAGNOSTIC_ASSERT(aActor);
 
   // Transfer ownership back from IPDL.
   RefPtr<Database> actor = dont_AddRef(static_cast<Database*>(aActor));
@@ -3094,13 +3094,13 @@ PBackgroundLSObserverParent* AllocPBackgroundLSObserverParent(
 bool RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
                                           const uint64_t& aObserverId) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(gPreparedObsevers);
-  MOZ_ASSERT(gPreparedObsevers->GetWeak(aObserverId));
+  MOZ_DIAGNOSTIC_ASSERT(aActor);
+  MOZ_DIAGNOSTIC_ASSERT(gPreparedObsevers);
+  MOZ_DIAGNOSTIC_ASSERT(gPreparedObsevers->GetWeak(aObserverId));
 
   RefPtr<Observer> observer;
   gPreparedObsevers->Remove(aObserverId, observer.StartAssignment());
-  MOZ_ASSERT(observer);
+  MOZ_DIAGNOSTIC_ASSERT(observer);
 
   if (!gPreparedObsevers->Count()) {
     gPreparedObsevers = nullptr;
@@ -3122,7 +3122,7 @@ bool RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
 
 bool DeallocPBackgroundLSObserverParent(PBackgroundLSObserverParent* aActor) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
+  MOZ_DIAGNOSTIC_ASSERT(aActor);
 
   // Transfer ownership back from IPDL.
   RefPtr<Observer> actor = dont_AddRef(static_cast<Observer*>(aActor));
@@ -3177,7 +3177,7 @@ bool VerifyOriginKey(const nsACString& aOriginKey,
 bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
                          const LSRequestParams& aParams) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aParams.type() != LSRequestParams::T__None);
+  MOZ_DIAGNOSTIC_ASSERT(aParams.type() != LSRequestParams::T__None);
 
   switch (aParams.type()) {
     case LSRequestParams::TLSRequestPreloadDatastoreParams: {
@@ -3241,13 +3241,13 @@ bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
 PBackgroundLSRequestParent* AllocPBackgroundLSRequestParent(
     PBackgroundParent* aBackgroundActor, const LSRequestParams& aParams) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aParams.type() != LSRequestParams::T__None);
+  MOZ_DIAGNOSTIC_ASSERT(aParams.type() != LSRequestParams::T__None);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
     return nullptr;
   }
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // Always verify parameters in DEBUG builds!
   bool trustParams = false;
 #else
@@ -3312,9 +3312,9 @@ PBackgroundLSRequestParent* AllocPBackgroundLSRequestParent(
 bool RecvPBackgroundLSRequestConstructor(PBackgroundLSRequestParent* aActor,
                                          const LSRequestParams& aParams) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(aParams.type() != LSRequestParams::T__None);
-  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_DIAGNOSTIC_ASSERT(aActor);
+  MOZ_DIAGNOSTIC_ASSERT(aParams.type() != LSRequestParams::T__None);
+  MOZ_DIAGNOSTIC_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 
   // The actor is now completely built.
 
@@ -3338,7 +3338,7 @@ bool DeallocPBackgroundLSRequestParent(PBackgroundLSRequestParent* aActor) {
 bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
                          const LSSimpleRequestParams& aParams) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aParams.type() != LSSimpleRequestParams::T__None);
+  MOZ_DIAGNOSTIC_ASSERT(aParams.type() != LSSimpleRequestParams::T__None);
 
   switch (aParams.type()) {
     case LSSimpleRequestParams::TLSSimpleRequestPreloadedParams: {
@@ -3363,13 +3363,13 @@ bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
 PBackgroundLSSimpleRequestParent* AllocPBackgroundLSSimpleRequestParent(
     PBackgroundParent* aBackgroundActor, const LSSimpleRequestParams& aParams) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aParams.type() != LSSimpleRequestParams::T__None);
+  MOZ_DIAGNOSTIC_ASSERT(aParams.type() != LSSimpleRequestParams::T__None);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
     return nullptr;
   }
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // Always verify parameters in DEBUG builds!
   bool trustParams = false;
 #else
@@ -3413,9 +3413,9 @@ bool RecvPBackgroundLSSimpleRequestConstructor(
     PBackgroundLSSimpleRequestParent* aActor,
     const LSSimpleRequestParams& aParams) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(aParams.type() != LSSimpleRequestParams::T__None);
-  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_DIAGNOSTIC_ASSERT(aActor);
+  MOZ_DIAGNOSTIC_ASSERT(aParams.type() != LSSimpleRequestParams::T__None);
+  MOZ_DIAGNOSTIC_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 
   // The actor is now completely built.
 
@@ -3443,7 +3443,7 @@ bool RecvLSClearPrivateBrowsing() {
   if (gDatastores) {
     for (auto iter = gDatastores->ConstIter(); !iter.Done(); iter.Next()) {
       Datastore* datastore = iter.Data();
-      MOZ_ASSERT(datastore);
+      MOZ_DIAGNOSTIC_ASSERT(datastore);
 
       if (datastore->PrivateBrowsingId()) {
         datastore->PrivateBrowsingClear();
@@ -3458,7 +3458,7 @@ namespace localstorage {
 
 already_AddRefed<mozilla::dom::quota::Client> CreateQuotaClient() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(CachedNextGenLocalStorageEnabled());
+  MOZ_DIAGNOSTIC_ASSERT(CachedNextGenLocalStorageEnabled());
 
   RefPtr<QuotaClient> client = new QuotaClient();
   return client.forget();
@@ -3570,7 +3570,7 @@ void WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems) {
   for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
     WriteInfo* writeInfo = iter.Data();
 
-    MOZ_ASSERT(writeInfo->GetType() == WriteInfo::AddItem);
+    MOZ_DIAGNOSTIC_ASSERT(writeInfo->GetType() == WriteInfo::AddItem);
 
     auto addItemInfo = static_cast<AddItemInfo*>(writeInfo);
 
@@ -3585,7 +3585,7 @@ void WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems) {
 nsresult WriteOptimizer::PerformWrites(Connection* aConnection,
                                        bool aShadowWrites, int64_t& aOutUsage) {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   nsresult rv;
 
@@ -3652,7 +3652,7 @@ nsresult WriteOptimizer::PerformWrites(Connection* aConnection,
 nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
                                               bool aShadowWrites) {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   Connection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(
@@ -3729,7 +3729,7 @@ nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
 nsresult WriteOptimizer::RemoveItemInfo::Perform(Connection* aConnection,
                                                  bool aShadowWrites) {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   Connection::CachedStatement stmt;
   nsresult rv =
@@ -3785,7 +3785,7 @@ nsresult WriteOptimizer::RemoveItemInfo::Perform(Connection* aConnection,
 nsresult WriteOptimizer::ClearInfo::Perform(Connection* aConnection,
                                             bool aShadowWrites) {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   Connection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(
@@ -3836,18 +3836,19 @@ nsresult WriteOptimizer::ClearInfo::Perform(Connection* aConnection,
 ConnectionDatastoreOperationBase::ConnectionDatastoreOperationBase(
     Connection* aConnection)
     : mConnection(aConnection) {
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 }
 
 ConnectionDatastoreOperationBase::~ConnectionDatastoreOperationBase() {
-  MOZ_ASSERT(!mConnection,
-             "ConnectionDatabaseOperationBase::Cleanup() was not called by a "
-             "subclass!");
+  MOZ_DIAGNOSTIC_ASSERT(
+      !mConnection,
+      "ConnectionDatabaseOperationBase::Cleanup() was not called by a "
+      "subclass!");
 }
 
 void ConnectionDatastoreOperationBase::Cleanup() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mConnection);
 
   mConnection = nullptr;
 
@@ -3858,13 +3859,13 @@ void ConnectionDatastoreOperationBase::OnSuccess() { AssertIsOnOwningThread(); }
 
 void ConnectionDatastoreOperationBase::OnFailure(nsresult aResultCode) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(NS_FAILED(aResultCode));
+  MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(aResultCode));
 }
 
 void ConnectionDatastoreOperationBase::RunOnConnectionThread() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mConnection);
-  MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
+  MOZ_DIAGNOSTIC_ASSERT(mConnection);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(ResultCode()));
 
   if (!MayProceedOnNonOwningThread()) {
     SetFailureCode(NS_ERROR_FAILURE);
@@ -3873,7 +3874,7 @@ void ConnectionDatastoreOperationBase::RunOnConnectionThread() {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       SetFailureCode(rv);
     } else {
-      MOZ_ASSERT(mConnection->StorageConnection());
+      MOZ_DIAGNOSTIC_ASSERT(mConnection->StorageConnection());
 
       rv = DoDatastoreWork();
       if (NS_FAILED(rv)) {
@@ -3887,7 +3888,7 @@ void ConnectionDatastoreOperationBase::RunOnConnectionThread() {
 
 void ConnectionDatastoreOperationBase::RunOnOwningThread() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mConnection);
 
   if (!MayProceed()) {
     MaybeSetFailureCode(NS_ERROR_FAILURE);
@@ -3926,27 +3927,27 @@ Connection::Connection(ConnectionThread* aConnectionThread,
       mOrigin(aOrigin),
       mDirectoryPath(aDirectoryPath),
       mFlushScheduled(false)
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       ,
       mInUpdateBatch(false)
 #endif
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!aOrigin.IsEmpty());
-  MOZ_ASSERT(!aDirectoryPath.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(!aOrigin.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(!aDirectoryPath.IsEmpty());
 }
 
 Connection::~Connection() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!mStorageConnection);
-  MOZ_ASSERT(!mCachedStatements.Count());
-  MOZ_ASSERT(!mInUpdateBatch);
-  MOZ_ASSERT(!mFlushScheduled);
+  MOZ_DIAGNOSTIC_ASSERT(!mStorageConnection);
+  MOZ_DIAGNOSTIC_ASSERT(!mCachedStatements.Count());
+  MOZ_DIAGNOSTIC_ASSERT(!mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(!mFlushScheduled);
 }
 
 void Connection::Dispatch(ConnectionDatastoreOperationBase* aOp) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mConnectionThread);
+  MOZ_DIAGNOSTIC_ASSERT(mConnectionThread);
 
   MOZ_ALWAYS_SUCCEEDS(
       mConnectionThread->mThread->Dispatch(aOp, NS_DISPATCH_NORMAL));
@@ -3954,10 +3955,10 @@ void Connection::Dispatch(ConnectionDatastoreOperationBase* aOp) {
 
 void Connection::Close(nsIRunnable* aCallback) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aCallback);
+  MOZ_DIAGNOSTIC_ASSERT(aCallback);
 
   if (mFlushScheduled) {
-    MOZ_ASSERT(mFlushTimer);
+    MOZ_DIAGNOSTIC_ASSERT(mFlushTimer);
     MOZ_ALWAYS_SUCCEEDS(mFlushTimer->Cancel());
 
     Flush();
@@ -3973,7 +3974,7 @@ void Connection::Close(nsIRunnable* aCallback) {
 void Connection::AddItem(const nsString& aKey, const nsString& aValue,
                          int64_t aDelta) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(mInUpdateBatch);
 
   mWriteOptimizer.AddItem(aKey, aValue, aDelta);
 }
@@ -3981,43 +3982,43 @@ void Connection::AddItem(const nsString& aKey, const nsString& aValue,
 void Connection::UpdateItem(const nsString& aKey, const nsString& aValue,
                             int64_t aDelta) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(mInUpdateBatch);
 
   mWriteOptimizer.UpdateItem(aKey, aValue, aDelta);
 }
 
 void Connection::RemoveItem(const nsString& aKey, int64_t aDelta) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(mInUpdateBatch);
 
   mWriteOptimizer.RemoveItem(aKey, aDelta);
 }
 
 void Connection::Clear(int64_t aDelta) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(mInUpdateBatch);
 
   mWriteOptimizer.Clear(aDelta);
 }
 
 void Connection::BeginUpdateBatch() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(!mInUpdateBatch);
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   mInUpdateBatch = true;
 #endif
 }
 
 void Connection::EndUpdateBatch() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(mInUpdateBatch);
 
   if (mWriteOptimizer.HasWrites() && !mFlushScheduled) {
     ScheduleFlush();
   }
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   mInUpdateBatch = false;
 #endif
 }
@@ -4057,7 +4058,7 @@ nsresult Connection::EnsureStorageConnection() {
 
 void Connection::CloseStorageConnection() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStorageConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
 
   mCachedStatements.Clear();
 
@@ -4068,9 +4069,9 @@ void Connection::CloseStorageConnection() {
 nsresult Connection::GetCachedStatement(const nsACString& aQuery,
                                         CachedStatement* aCachedStatement) {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(!aQuery.IsEmpty());
-  MOZ_ASSERT(aCachedStatement);
-  MOZ_ASSERT(mStorageConnection);
+  MOZ_DIAGNOSTIC_ASSERT(!aQuery.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(aCachedStatement);
+  MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
 
   nsCOMPtr<mozIStorageStatement> stmt;
 
@@ -4101,12 +4102,12 @@ nsresult Connection::GetCachedStatement(const nsACString& aQuery,
 
 void Connection::ScheduleFlush() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mWriteOptimizer.HasWrites());
-  MOZ_ASSERT(!mFlushScheduled);
+  MOZ_DIAGNOSTIC_ASSERT(mWriteOptimizer.HasWrites());
+  MOZ_DIAGNOSTIC_ASSERT(!mFlushScheduled);
 
   if (!mFlushTimer) {
     mFlushTimer = NS_NewTimer();
-    MOZ_ASSERT(mFlushTimer);
+    MOZ_DIAGNOSTIC_ASSERT(mFlushTimer);
   }
 
   MOZ_ALWAYS_SUCCEEDS(mFlushTimer->InitWithNamedFuncCallback(
@@ -4118,7 +4119,7 @@ void Connection::ScheduleFlush() {
 
 void Connection::Flush() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mFlushScheduled);
+  MOZ_DIAGNOSTIC_ASSERT(mFlushScheduled);
 
   if (mWriteOptimizer.HasWrites()) {
     RefPtr<FlushOp> op = new FlushOp(this, std::move(mWriteOptimizer));
@@ -4131,11 +4132,11 @@ void Connection::Flush() {
 
 // static
 void Connection::FlushTimerCallback(nsITimer* aTimer, void* aClosure) {
-  MOZ_ASSERT(aClosure);
+  MOZ_DIAGNOSTIC_ASSERT(aClosure);
 
   auto* self = static_cast<Connection*>(aClosure);
-  MOZ_ASSERT(self);
-  MOZ_ASSERT(self->mFlushScheduled);
+  MOZ_DIAGNOSTIC_ASSERT(self);
+  MOZ_DIAGNOSTIC_ASSERT(self->mFlushScheduled);
 
   self->Flush();
 }
@@ -4160,7 +4161,7 @@ Connection::CachedStatement::operator mozIStorageStatement*() const {
 
 mozIStorageStatement* Connection::CachedStatement::operator->() const {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStatement);
+  MOZ_DIAGNOSTIC_ASSERT(mStatement);
 
   return mStatement;
 }
@@ -4185,26 +4186,26 @@ Connection::FlushOp::FlushOp(Connection* aConnection,
       mQuotaClient(QuotaClient::GetInstance()),
       mWriteOptimizer(std::move(aWriteOptimizer)),
       mShadowWrites(gShadowWrites) {
-  MOZ_ASSERT(mQuotaClient);
+  MOZ_DIAGNOSTIC_ASSERT(mQuotaClient);
 }
 
 nsresult Connection::FlushOp::DoDatastoreWork() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mConnection);
 
   QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
+  MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
   nsCOMPtr<mozIStorageConnection> storageConnection =
       mConnection->StorageConnection();
-  MOZ_ASSERT(storageConnection);
+  MOZ_DIAGNOSTIC_ASSERT(storageConnection);
 
   nsresult rv;
 
   Maybe<MutexAutoLock> shadowDatabaseLock;
 
   if (mShadowWrites) {
-    MOZ_ASSERT(mQuotaClient);
+    MOZ_DIAGNOSTIC_ASSERT(mQuotaClient);
 
     shadowDatabaseLock.emplace(mQuotaClient->ShadowDatabaseMutex());
 
@@ -4288,7 +4289,7 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
 
 nsresult Connection::CloseOp::DoDatastoreWork() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mConnection);
 
   mConnection->CloseStorageConnection();
 
@@ -4297,7 +4298,7 @@ nsresult Connection::CloseOp::DoDatastoreWork() {
 
 void Connection::CloseOp::Cleanup() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mConnection);
 
   mConnection->mConnectionThread->mConnections.Remove(mConnection->mOrigin);
 
@@ -4322,26 +4323,22 @@ ConnectionThread::ConnectionThread() {
 
 ConnectionThread::~ConnectionThread() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!mConnections.Count());
+  MOZ_DIAGNOSTIC_ASSERT(!mConnections.Count());
 }
 
 bool ConnectionThread::IsOnConnectionThread() {
-  MOZ_ASSERT(mThread);
+  MOZ_DIAGNOSTIC_ASSERT(mThread);
 
   bool current;
   return NS_SUCCEEDED(mThread->IsOnCurrentThread(&current)) && current;
-}
-
-void ConnectionThread::AssertIsOnConnectionThread() {
-  MOZ_ASSERT(IsOnConnectionThread());
 }
 
 already_AddRefed<Connection> ConnectionThread::CreateConnection(
     const nsACString& aOrigin, const nsAString& aDirectoryPath,
     nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!aOrigin.IsEmpty());
-  MOZ_ASSERT(!mConnections.GetWeak(aOrigin));
+  MOZ_DIAGNOSTIC_ASSERT(!aOrigin.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(!mConnections.GetWeak(aOrigin));
 
   RefPtr<Connection> connection = new Connection(
       this, aOrigin, aDirectoryPath, std::move(aArchivedOriginScope));
@@ -4352,7 +4349,7 @@ already_AddRefed<Connection> ConnectionThread::CreateConnection(
 
 void ConnectionThread::Shutdown() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mThread);
+  MOZ_DIAGNOSTIC_ASSERT(mThread);
 
   mThread->Shutdown();
 }
@@ -4378,7 +4375,7 @@ Datastore::Datastore(const nsACString& aOrigin, uint32_t aPrivateBrowsingId,
       mSizeOfKeys(aSizeOfKeys),
       mSizeOfItems(aSizeOfItems),
       mClosed(false)
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       ,
       mInUpdateBatch(false)
 #endif
@@ -4391,20 +4388,20 @@ Datastore::Datastore(const nsACString& aOrigin, uint32_t aPrivateBrowsingId,
 
 Datastore::~Datastore() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(mClosed);
 }
 
 void Datastore::Close() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mClosed);
-  MOZ_ASSERT(!mDatabases.Count());
-  MOZ_ASSERT(mDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(!mDatabases.Count());
+  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock);
 
   mClosed = true;
 
   if (IsPersistent()) {
-    MOZ_ASSERT(mConnection);
-    MOZ_ASSERT(mQuotaObject);
+    MOZ_DIAGNOSTIC_ASSERT(mConnection);
+    MOZ_DIAGNOSTIC_ASSERT(mQuotaObject);
 
     // We can't release the directory lock and unregister itself from the
     // hashtable until the connection is fully closed.
@@ -4413,8 +4410,8 @@ void Datastore::Close() {
                           &Datastore::ConnectionClosedCallback);
     mConnection->Close(callback);
   } else {
-    MOZ_ASSERT(!mConnection);
-    MOZ_ASSERT(!mQuotaObject);
+    MOZ_DIAGNOSTIC_ASSERT(!mConnection);
+    MOZ_DIAGNOSTIC_ASSERT(!mQuotaObject);
 
     // There's no connection, so it's safe to release the directory lock and
     // unregister itself from the hashtable.
@@ -4427,9 +4424,9 @@ void Datastore::Close() {
 
 void Datastore::WaitForConnectionToComplete(nsIRunnable* aCallback) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aCallback);
-  MOZ_ASSERT(!mCompleteCallback);
-  MOZ_ASSERT(mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(aCallback);
+  MOZ_DIAGNOSTIC_ASSERT(!mCompleteCallback);
+  MOZ_DIAGNOSTIC_ASSERT(mClosed);
 
   mCompleteCallback = aCallback;
 }
@@ -4437,10 +4434,10 @@ void Datastore::WaitForConnectionToComplete(nsIRunnable* aCallback) {
 void Datastore::NoteLivePrepareDatastoreOp(
     PrepareDatastoreOp* aPrepareDatastoreOp) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aPrepareDatastoreOp);
-  MOZ_ASSERT(!mPrepareDatastoreOps.GetEntry(aPrepareDatastoreOp));
-  MOZ_ASSERT(mDirectoryLock);
-  MOZ_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(aPrepareDatastoreOp);
+  MOZ_DIAGNOSTIC_ASSERT(!mPrepareDatastoreOps.GetEntry(aPrepareDatastoreOp));
+  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   mPrepareDatastoreOps.PutEntry(aPrepareDatastoreOp);
 }
@@ -4448,10 +4445,10 @@ void Datastore::NoteLivePrepareDatastoreOp(
 void Datastore::NoteFinishedPrepareDatastoreOp(
     PrepareDatastoreOp* aPrepareDatastoreOp) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aPrepareDatastoreOp);
-  MOZ_ASSERT(mPrepareDatastoreOps.GetEntry(aPrepareDatastoreOp));
-  MOZ_ASSERT(mDirectoryLock);
-  MOZ_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(aPrepareDatastoreOp);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOps.GetEntry(aPrepareDatastoreOp));
+  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   mPrepareDatastoreOps.RemoveEntry(aPrepareDatastoreOp);
 
@@ -4461,10 +4458,10 @@ void Datastore::NoteFinishedPrepareDatastoreOp(
 void Datastore::NoteLivePreparedDatastore(
     PreparedDatastore* aPreparedDatastore) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aPreparedDatastore);
-  MOZ_ASSERT(!mPreparedDatastores.GetEntry(aPreparedDatastore));
-  MOZ_ASSERT(mDirectoryLock);
-  MOZ_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(aPreparedDatastore);
+  MOZ_DIAGNOSTIC_ASSERT(!mPreparedDatastores.GetEntry(aPreparedDatastore));
+  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   mPreparedDatastores.PutEntry(aPreparedDatastore);
 }
@@ -4472,17 +4469,17 @@ void Datastore::NoteLivePreparedDatastore(
 void Datastore::NoteFinishedPreparedDatastore(
     PreparedDatastore* aPreparedDatastore) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aPreparedDatastore);
-  MOZ_ASSERT(mPreparedDatastores.GetEntry(aPreparedDatastore));
-  MOZ_ASSERT(mDirectoryLock);
-  MOZ_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(aPreparedDatastore);
+  MOZ_DIAGNOSTIC_ASSERT(mPreparedDatastores.GetEntry(aPreparedDatastore));
+  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   mPreparedDatastores.RemoveEntry(aPreparedDatastore);
 
   MaybeClose();
 }
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 bool Datastore::HasLivePreparedDatastores() const {
   AssertIsOnBackgroundThread();
 
@@ -4492,28 +4489,28 @@ bool Datastore::HasLivePreparedDatastores() const {
 
 void Datastore::NoteLiveDatabase(Database* aDatabase) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aDatabase);
-  MOZ_ASSERT(!mDatabases.GetEntry(aDatabase));
-  MOZ_ASSERT(mDirectoryLock);
-  MOZ_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(aDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(!mDatabases.GetEntry(aDatabase));
+  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   mDatabases.PutEntry(aDatabase);
 }
 
 void Datastore::NoteFinishedDatabase(Database* aDatabase) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aDatabase);
-  MOZ_ASSERT(mDatabases.GetEntry(aDatabase));
-  MOZ_ASSERT(!mActiveDatabases.GetEntry(aDatabase));
-  MOZ_ASSERT(mDirectoryLock);
-  MOZ_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(aDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(mDatabases.GetEntry(aDatabase));
+  MOZ_DIAGNOSTIC_ASSERT(!mActiveDatabases.GetEntry(aDatabase));
+  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   mDatabases.RemoveEntry(aDatabase);
 
   MaybeClose();
 }
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 bool Datastore::HasLiveDatabases() const {
   AssertIsOnBackgroundThread();
 
@@ -4523,20 +4520,20 @@ bool Datastore::HasLiveDatabases() const {
 
 void Datastore::NoteActiveDatabase(Database* aDatabase) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aDatabase);
-  MOZ_ASSERT(mDatabases.GetEntry(aDatabase));
-  MOZ_ASSERT(!mActiveDatabases.GetEntry(aDatabase));
-  MOZ_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(aDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(mDatabases.GetEntry(aDatabase));
+  MOZ_DIAGNOSTIC_ASSERT(!mActiveDatabases.GetEntry(aDatabase));
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   mActiveDatabases.PutEntry(aDatabase);
 }
 
 void Datastore::NoteInactiveDatabase(Database* aDatabase) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aDatabase);
-  MOZ_ASSERT(mDatabases.GetEntry(aDatabase));
-  MOZ_ASSERT(mActiveDatabases.GetEntry(aDatabase));
-  MOZ_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(aDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(mDatabases.GetEntry(aDatabase));
+  MOZ_DIAGNOSTIC_ASSERT(mActiveDatabases.GetEntry(aDatabase));
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   mActiveDatabases.RemoveEntry(aDatabase);
 
@@ -4547,11 +4544,15 @@ void Datastore::NoteInactiveDatabase(Database* aDatabase) {
       finalDelta += delta;
     }
 
-    MOZ_ASSERT(finalDelta <= 0);
+    MOZ_DIAGNOSTIC_ASSERT(finalDelta <= 0);
 
     if (finalDelta != 0) {
-      DebugOnly<bool> ok = UpdateUsage(finalDelta);
-      MOZ_ASSERT(ok);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      bool ok = UpdateUsage(finalDelta);
+      MOZ_DIAGNOSTIC_ASSERT(ok);
+#else
+      UpdateUsage(finalDelta);
+#endif
     }
 
     mPendingUsageDeltas.Clear();
@@ -4564,10 +4565,10 @@ void Datastore::GetSnapshotInitInfo(nsTHashtable<nsStringHashKey>& aLoadedItems,
                                     int64_t& aInitialUsage, int64_t& aPeakUsage,
                                     LSSnapshot::LoadState& aLoadState) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mClosed);
-  MOZ_ASSERT(!mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(!mInUpdateBatch);
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   int64_t sizeOfKeys = 0;
   int64_t sizeOfItems = 0;
   for (auto item : mOrderedItems) {
@@ -4575,8 +4576,8 @@ void Datastore::GetSnapshotInitInfo(nsTHashtable<nsStringHashKey>& aLoadedItems,
     sizeOfKeys += sizeOfKey;
     sizeOfItems += sizeOfKey + static_cast<int64_t>(item.value().Length());
   }
-  MOZ_ASSERT(mSizeOfKeys == sizeOfKeys);
-  MOZ_ASSERT(mSizeOfItems == sizeOfItems);
+  MOZ_DIAGNOSTIC_ASSERT(mSizeOfKeys == sizeOfKeys);
+  MOZ_DIAGNOSTIC_ASSERT(mSizeOfItems == sizeOfItems);
 #endif
 
   int64_t size = 0;
@@ -4626,7 +4627,7 @@ void Datastore::GetSnapshotInitInfo(nsTHashtable<nsStringHashKey>& aLoadedItems,
       itemInfo->value() = iter.Data();
     }
 
-    MOZ_ASSERT(aItemInfos.Length() < mOrderedItems.Length());
+    MOZ_DIAGNOSTIC_ASSERT(aItemInfos.Length() < mOrderedItems.Length());
     aLoadState = LSSnapshot::LoadState::Partial;
   }
 
@@ -4638,7 +4639,7 @@ void Datastore::GetSnapshotInitInfo(nsTHashtable<nsStringHashKey>& aLoadedItems,
 
 void Datastore::GetItem(const nsString& aKey, nsString& aValue) const {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   if (!mValues.Get(aKey, &aValue)) {
     aValue.SetIsVoid(true);
@@ -4647,7 +4648,7 @@ void Datastore::GetItem(const nsString& aKey, nsString& aValue) const {
 
 void Datastore::GetKeys(nsTArray<nsString>& aKeys) const {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   for (auto item : mOrderedItems) {
     aKeys.AppendElement(item.key());
@@ -4658,9 +4659,9 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
                         const nsString& aKey, const nsString& aOldValue,
                         const nsString& aValue) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aDatabase);
-  MOZ_ASSERT(!mClosed);
-  MOZ_ASSERT(mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(aDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(mInUpdateBatch);
 
   nsString oldValue;
   GetItem(aKey, oldValue);
@@ -4710,9 +4711,9 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
 void Datastore::RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
                            const nsString& aKey, const nsString& aOldValue) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aDatabase);
-  MOZ_ASSERT(!mClosed);
-  MOZ_ASSERT(mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(aDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(mInUpdateBatch);
 
   nsString oldValue;
   GetItem(aKey, oldValue);
@@ -4742,9 +4743,9 @@ void Datastore::RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
 
 void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aDatabase);
-  MOZ_ASSERT(!mClosed);
-  MOZ_ASSERT(mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(aDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(mInUpdateBatch);
 
   if (mValues.Count()) {
     int64_t sizeOfItems = 0;
@@ -4778,9 +4779,9 @@ void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
 
 void Datastore::PrivateBrowsingClear() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mPrivateBrowsingId);
-  MOZ_ASSERT(!mClosed);
-  MOZ_ASSERT(!mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(mPrivateBrowsingId);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(!mInUpdateBatch);
 
   if (mValues.Count()) {
     MarkSnapshotsDirty();
@@ -4789,8 +4790,12 @@ void Datastore::PrivateBrowsingClear() {
 
     mOrderedItems.Clear();
 
-    DebugOnly<bool> ok = UpdateUsage(-mSizeOfItems);
-    MOZ_ASSERT(ok);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    bool ok = UpdateUsage(-mSizeOfItems);
+    MOZ_DIAGNOSTIC_ASSERT(ok);
+#else
+    UpdateUsage(-mSizeOfItems);
+#endif
 
     mSizeOfKeys = 0;
     mSizeOfItems = 0;
@@ -4799,10 +4804,10 @@ void Datastore::PrivateBrowsingClear() {
 
 void Datastore::BeginUpdateBatch(int64_t aSnapshotInitialUsage) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aSnapshotInitialUsage >= 0);
-  MOZ_ASSERT(!mClosed);
-  MOZ_ASSERT(mUpdateBatchUsage == -1);
-  MOZ_ASSERT(!mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(aSnapshotInitialUsage >= 0);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(mUpdateBatchUsage == -1);
+  MOZ_DIAGNOSTIC_ASSERT(!mInUpdateBatch);
 
   mUpdateBatchUsage = aSnapshotInitialUsage;
 
@@ -4810,15 +4815,15 @@ void Datastore::BeginUpdateBatch(int64_t aSnapshotInitialUsage) {
     mConnection->BeginUpdateBatch();
   }
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   mInUpdateBatch = true;
 #endif
 }
 
 int64_t Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mClosed);
-  MOZ_ASSERT(mInUpdateBatch);
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(mInUpdateBatch);
 
   mWriteOptimizer.ApplyWrites(mOrderedItems);
 
@@ -4833,10 +4838,14 @@ int64_t Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage) {
 
       mPendingUsageDeltas.AppendElement(delta);
     } else {
-      MOZ_ASSERT(delta <= 0);
+      MOZ_DIAGNOSTIC_ASSERT(delta <= 0);
       if (delta != 0) {
-        DebugOnly<bool> ok = UpdateUsage(delta);
-        MOZ_ASSERT(ok);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+        bool ok = UpdateUsage(delta);
+        MOZ_DIAGNOSTIC_ASSERT(ok);
+#else
+        UpdateUsage(delta);
+#endif
       }
     }
   }
@@ -4848,7 +4857,7 @@ int64_t Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage) {
     mConnection->EndUpdateBatch();
   }
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   mInUpdateBatch = false;
 #endif
 
@@ -4858,8 +4867,8 @@ int64_t Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage) {
 int64_t Datastore::RequestUpdateUsage(int64_t aRequestedSize,
                                       int64_t aMinSize) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aRequestedSize > 0);
-  MOZ_ASSERT(aMinSize > 0);
+  MOZ_DIAGNOSTIC_ASSERT(aRequestedSize > 0);
+  MOZ_DIAGNOSTIC_ASSERT(aMinSize > 0);
 
   if (UpdateUsage(aRequestedSize)) {
     return aRequestedSize;
@@ -4878,7 +4887,7 @@ bool Datastore::UpdateUsage(int64_t aDelta) {
   // Check internal LocalStorage origin limit.
   int64_t newUsage = mUsage + aDelta;
 
-  MOZ_ASSERT(newUsage >= 0);
+  MOZ_DIAGNOSTIC_ASSERT(newUsage >= 0);
 
   if (newUsage > gOriginLimitKB * 1024) {
     return false;
@@ -4886,7 +4895,7 @@ bool Datastore::UpdateUsage(int64_t aDelta) {
 
   // Check QuotaManager limits (group and global limit).
   if (IsPersistent()) {
-    MOZ_ASSERT(mQuotaObject);
+    MOZ_DIAGNOSTIC_ASSERT(mQuotaObject);
 
     if (!mQuotaObject->MaybeUpdateSize(newUsage, /* aTruncate */ true)) {
       return false;
@@ -4910,10 +4919,10 @@ void Datastore::MaybeClose() {
 
 void Datastore::ConnectionClosedCallback() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mDirectoryLock);
-  MOZ_ASSERT(mConnection);
-  MOZ_ASSERT(mQuotaObject);
-  MOZ_ASSERT(mClosed);
+  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(mConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mQuotaObject);
+  MOZ_DIAGNOSTIC_ASSERT(mClosed);
 
   // Release the quota object first.
   mQuotaObject = nullptr;
@@ -4934,8 +4943,8 @@ void Datastore::ConnectionClosedCallback() {
 void Datastore::CleanupMetadata() {
   AssertIsOnBackgroundThread();
 
-  MOZ_ASSERT(gDatastores);
-  MOZ_ASSERT(gDatastores->Get(mOrigin));
+  MOZ_DIAGNOSTIC_ASSERT(gDatastores);
+  MOZ_DIAGNOSTIC_ASSERT(gDatastores->Get(mOrigin));
   gDatastores->Remove(mOrigin);
 
   if (!gDatastores->Count()) {
@@ -4947,7 +4956,7 @@ void Datastore::NotifySnapshots(Database* aDatabase, const nsAString& aKey,
                                 const nsAString& aOldValue,
                                 bool aAffectsOrder) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(aDatabase);
 
   for (auto iter = mDatabases.ConstIter(); !iter.Done(); iter.Next()) {
     Database* database = iter.Get()->GetKey();
@@ -4980,7 +4989,7 @@ void Datastore::NotifyObservers(Database* aDatabase,
                                 const nsString& aKey, const nsString& aOldValue,
                                 const nsString& aNewValue) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(aDatabase);
 
   if (!gObservers) {
     return;
@@ -4991,7 +5000,7 @@ void Datastore::NotifyObservers(Database* aDatabase,
     return;
   }
 
-  MOZ_ASSERT(array);
+  MOZ_DIAGNOSTIC_ASSERT(array);
 
   // We do not want to send information about events back to the content process
   // that caused the change.
@@ -5010,12 +5019,12 @@ void Datastore::NotifyObservers(Database* aDatabase,
 
 void PreparedDatastore::Destroy() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(gPreparedDatastores);
-  MOZ_ASSERT(gPreparedDatastores->Get(mDatastoreId));
+  MOZ_DIAGNOSTIC_ASSERT(gPreparedDatastores);
+  MOZ_DIAGNOSTIC_ASSERT(gPreparedDatastores->Get(mDatastoreId));
 
   nsAutoPtr<PreparedDatastore> preparedDatastore;
   gPreparedDatastores->Remove(mDatastoreId, &preparedDatastore);
-  MOZ_ASSERT(preparedDatastore);
+  MOZ_DIAGNOSTIC_ASSERT(preparedDatastore);
 }
 
 // static
@@ -5023,7 +5032,7 @@ void PreparedDatastore::TimerCallback(nsITimer* aTimer, void* aClosure) {
   AssertIsOnBackgroundThread();
 
   auto* self = static_cast<PreparedDatastore*>(aClosure);
-  MOZ_ASSERT(self);
+  MOZ_DIAGNOSTIC_ASSERT(self);
 
   self->Destroy();
 }
@@ -5043,7 +5052,7 @@ Database::Database(const PrincipalInfo& aPrincipalInfo,
       mAllowedToClose(false),
       mActorDestroyed(false),
       mRequestedAllowToClose(false)
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       ,
       mActorWasAlive(false)
 #endif
@@ -5052,16 +5061,16 @@ Database::Database(const PrincipalInfo& aPrincipalInfo,
 }
 
 Database::~Database() {
-  MOZ_ASSERT_IF(mActorWasAlive, mAllowedToClose);
-  MOZ_ASSERT_IF(mActorWasAlive, mActorDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT_IF(mActorWasAlive, mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT_IF(mActorWasAlive, mActorDestroyed);
 }
 
 void Database::SetActorAlive(Datastore* aDatastore) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorWasAlive);
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(!mActorWasAlive);
+  MOZ_DIAGNOSTIC_ASSERT(!mActorDestroyed);
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   mActorWasAlive = true;
 #endif
 
@@ -5078,9 +5087,9 @@ void Database::SetActorAlive(Datastore* aDatastore) {
 
 void Database::RegisterSnapshot(Snapshot* aSnapshot) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aSnapshot);
-  MOZ_ASSERT(!mSnapshot);
-  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT(aSnapshot);
+  MOZ_DIAGNOSTIC_ASSERT(!mSnapshot);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
 
   // Only one snapshot at a time is currently supported.
   mSnapshot = aSnapshot;
@@ -5089,8 +5098,8 @@ void Database::RegisterSnapshot(Snapshot* aSnapshot) {
 }
 
 void Database::UnregisterSnapshot(Snapshot* aSnapshot) {
-  MOZ_ASSERT(aSnapshot);
-  MOZ_ASSERT(mSnapshot == aSnapshot);
+  MOZ_DIAGNOSTIC_ASSERT(aSnapshot);
+  MOZ_DIAGNOSTIC_ASSERT(mSnapshot == aSnapshot);
 
   mSnapshot = nullptr;
 
@@ -5109,7 +5118,7 @@ void Database::RequestAllowToClose() {
   // Send the RequestAllowToClose message to the child to avoid racing with the
   // child actor. Except the case when the actor was already destroyed.
   if (mActorDestroyed) {
-    MOZ_ASSERT(mAllowedToClose);
+    MOZ_DIAGNOSTIC_ASSERT(mAllowedToClose);
   } else {
     Unused << SendRequestAllowToClose();
   }
@@ -5117,8 +5126,8 @@ void Database::RequestAllowToClose() {
 
 void Database::AllowToClose() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mAllowedToClose);
-  MOZ_ASSERT(mDatastore);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT(mDatastore);
 
   mAllowedToClose = true;
 
@@ -5126,7 +5135,7 @@ void Database::AllowToClose() {
 
   mDatastore = nullptr;
 
-  MOZ_ASSERT(gLiveDatabases);
+  MOZ_DIAGNOSTIC_ASSERT(gLiveDatabases);
   gLiveDatabases->RemoveElement(this);
 
   if (gLiveDatabases->IsEmpty()) {
@@ -5136,7 +5145,7 @@ void Database::AllowToClose() {
 
 void Database::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(!mActorDestroyed);
 
   mActorDestroyed = true;
 
@@ -5147,7 +5156,7 @@ void Database::ActorDestroy(ActorDestroyReason aWhy) {
 
 mozilla::ipc::IPCResult Database::RecvDeleteMe() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(!mActorDestroyed);
 
   IProtocol* mgr = Manager();
   if (!PBackgroundLSDatabaseParent::Send__delete__(this)) {
@@ -5201,10 +5210,10 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
     const bool& aIncreasePeakUsage, const int64_t& aRequestedSize,
     const int64_t& aMinSize, LSSnapshotInitInfo* aInitInfo) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT_IF(aIncreasePeakUsage, aRequestedSize > 0);
-  MOZ_ASSERT_IF(aIncreasePeakUsage, aMinSize > 0);
-  MOZ_ASSERT(aInitInfo);
-  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT_IF(aIncreasePeakUsage, aRequestedSize > 0);
+  MOZ_DIAGNOSTIC_ASSERT_IF(aIncreasePeakUsage, aMinSize > 0);
+  MOZ_DIAGNOSTIC_ASSERT(aInitInfo);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
 
   auto* snapshot = static_cast<Snapshot*>(aActor);
 
@@ -5240,7 +5249,7 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
 bool Database::DeallocPBackgroundLSSnapshotParent(
     PBackgroundLSSnapshotParent* aActor) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
+  MOZ_DIAGNOSTIC_ASSERT(aActor);
 
   // Transfer ownership back from IPDL.
   RefPtr<Snapshot> actor = dont_AddRef(static_cast<Snapshot*>(aActor));
@@ -5267,12 +5276,12 @@ Snapshot::Snapshot(Database* aDatabase, const nsAString& aDocumentURI)
       mLoadKeysReceived(false),
       mSentMarkDirty(false) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(aDatabase);
 }
 
 Snapshot::~Snapshot() {
-  MOZ_ASSERT(mActorDestroyed);
-  MOZ_ASSERT(mFinishReceived);
+  MOZ_DIAGNOSTIC_ASSERT(mActorDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(mFinishReceived);
 }
 
 void Snapshot::SaveItem(const nsAString& aKey, const nsAString& aOldValue,
@@ -5307,9 +5316,9 @@ void Snapshot::MarkDirty() {
 
 void Snapshot::Finish() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mDatabase);
-  MOZ_ASSERT(mDatastore);
-  MOZ_ASSERT(!mFinishReceived);
+  MOZ_DIAGNOSTIC_ASSERT(mDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(mDatastore);
+  MOZ_DIAGNOSTIC_ASSERT(!mFinishReceived);
 
   mDatastore->BeginUpdateBatch(mUsage);
 
@@ -5322,7 +5331,7 @@ void Snapshot::Finish() {
 
 void Snapshot::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(!mActorDestroyed);
 
   mActorDestroyed = true;
 
@@ -5333,7 +5342,7 @@ void Snapshot::ActorDestroy(ActorDestroyReason aWhy) {
 
 mozilla::ipc::IPCResult Snapshot::RecvDeleteMe() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(!mActorDestroyed);
 
   IProtocol* mgr = Manager();
   if (!PBackgroundLSSnapshotParent::Send__delete__(this)) {
@@ -5345,8 +5354,8 @@ mozilla::ipc::IPCResult Snapshot::RecvDeleteMe() {
 mozilla::ipc::IPCResult Snapshot::RecvCheckpoint(
     nsTArray<LSWriteInfo>&& aWriteInfos) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mUsage >= 0);
-  MOZ_ASSERT(mPeakUsage >= mUsage);
+  MOZ_DIAGNOSTIC_ASSERT(mUsage >= 0);
+  MOZ_DIAGNOSTIC_ASSERT(mPeakUsage >= mUsage);
 
   if (NS_WARN_IF(aWriteInfos.IsEmpty())) {
     ASSERT_UNLESS_FUZZING();
@@ -5443,8 +5452,8 @@ mozilla::ipc::IPCResult Snapshot::RecvLoaded() {
 mozilla::ipc::IPCResult Snapshot::RecvLoadItem(const nsString& aKey,
                                                nsString* aValue) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aValue);
-  MOZ_ASSERT(mDatastore);
+  MOZ_DIAGNOSTIC_ASSERT(aValue);
+  MOZ_DIAGNOSTIC_ASSERT(mDatastore);
 
   if (NS_WARN_IF(mFinishReceived)) {
     ASSERT_UNLESS_FUZZING();
@@ -5481,9 +5490,9 @@ mozilla::ipc::IPCResult Snapshot::RecvLoadItem(const nsString& aKey,
     if (mLoadedItems.Count() == mTotalLength) {
       mLoadedItems.Clear();
       mUnknownItems.Clear();
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
-        MOZ_ASSERT(iter.Data().IsVoid());
+        MOZ_DIAGNOSTIC_ASSERT(iter.Data().IsVoid());
       }
 #endif
       mValues.Clear();
@@ -5496,8 +5505,8 @@ mozilla::ipc::IPCResult Snapshot::RecvLoadItem(const nsString& aKey,
 
 mozilla::ipc::IPCResult Snapshot::RecvLoadKeys(nsTArray<nsString>* aKeys) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aKeys);
-  MOZ_ASSERT(mDatastore);
+  MOZ_DIAGNOSTIC_ASSERT(aKeys);
+  MOZ_DIAGNOSTIC_ASSERT(mDatastore);
 
   if (NS_WARN_IF(mFinishReceived)) {
     ASSERT_UNLESS_FUZZING();
@@ -5528,7 +5537,7 @@ mozilla::ipc::IPCResult Snapshot::RecvLoadKeys(nsTArray<nsString>* aKeys) {
 mozilla::ipc::IPCResult Snapshot::RecvIncreasePeakUsage(
     const int64_t& aRequestedSize, const int64_t& aMinSize, int64_t* aSize) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aSize);
+  MOZ_DIAGNOSTIC_ASSERT(aSize);
 
   if (NS_WARN_IF(aRequestedSize <= 0)) {
     ASSERT_UNLESS_FUZZING();
@@ -5572,13 +5581,13 @@ Observer::Observer(const nsACString& aOrigin)
   AssertIsOnBackgroundThread();
 }
 
-Observer::~Observer() { MOZ_ASSERT(mActorDestroyed); }
+Observer::~Observer() { MOZ_DIAGNOSTIC_ASSERT(mActorDestroyed); }
 
 void Observer::Observe(Database* aDatabase, const nsString& aDocumentURI,
                        const nsString& aKey, const nsString& aOldValue,
                        const nsString& aNewValue) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(aDatabase);
 
   Unused << SendObserve(aDatabase->GetPrincipalInfo(),
                         aDatabase->PrivateBrowsingId(), aDocumentURI, aKey,
@@ -5587,15 +5596,15 @@ void Observer::Observe(Database* aDatabase, const nsString& aDocumentURI,
 
 void Observer::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(!mActorDestroyed);
 
   mActorDestroyed = true;
 
-  MOZ_ASSERT(gObservers);
+  MOZ_DIAGNOSTIC_ASSERT(gObservers);
 
   nsTArray<Observer*>* array;
   gObservers->Get(mOrigin, &array);
-  MOZ_ASSERT(array);
+  MOZ_DIAGNOSTIC_ASSERT(array);
 
   array->RemoveElement(this);
 
@@ -5610,7 +5619,7 @@ void Observer::ActorDestroy(ActorDestroyReason aWhy) {
 
 mozilla::ipc::IPCResult Observer::RecvDeleteMe() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(!mActorDestroyed);
 
   IProtocol* mgr = Manager();
   if (!PBackgroundLSObserverParent::Send__delete__(this)) {
@@ -5629,8 +5638,9 @@ LSRequestBase::LSRequestBase(nsIEventTarget* aMainEventTarget)
       mWaitingForFinish(false) {}
 
 LSRequestBase::~LSRequestBase() {
-  MOZ_ASSERT_IF(MayProceedOnNonOwningThread(),
-                mState == State::Initial || mState == State::Completed);
+  MOZ_DIAGNOSTIC_ASSERT_IF(
+      MayProceedOnNonOwningThread(),
+      mState == State::Initial || mState == State::Completed);
 }
 
 void LSRequestBase::Dispatch() {
@@ -5700,7 +5710,7 @@ void LSRequestBase::LogState() {
 
 void LSRequestBase::SendReadyMessage() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::SendingReadyMessage);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::SendingReadyMessage);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
@@ -5717,7 +5727,7 @@ void LSRequestBase::SendReadyMessage() {
 
 nsresult LSRequestBase::SendReadyMessageInternal() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::SendingReadyMessage);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::SendingReadyMessage);
 
   if (!MayProceed()) {
     return NS_ERROR_FAILURE;
@@ -5736,7 +5746,7 @@ nsresult LSRequestBase::SendReadyMessageInternal() {
 
 void LSRequestBase::Finish() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::WaitingForFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::WaitingForFinish);
 
   mWaitingForFinish = false;
 
@@ -5745,8 +5755,8 @@ void LSRequestBase::Finish() {
 
 void LSRequestBase::FinishInternal() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::SendingReadyMessage ||
-             mState == State::WaitingForFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::SendingReadyMessage ||
+                        mState == State::WaitingForFinish);
 
   mState = State::SendingResults;
 
@@ -5759,7 +5769,7 @@ void LSRequestBase::FinishInternal() {
 
 void LSRequestBase::SendResults() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::SendingResults);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::SendingResults);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
@@ -5900,27 +5910,28 @@ PrepareDatastoreOp::PrepareDatastoreOp(
       mDatabaseNotAvailable(false),
       mRequestedDirectoryLock(false),
       mInvalidated(false)
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       ,
       mDEBUGUsage(0)
 #endif
 {
-  MOZ_ASSERT(
+  MOZ_DIAGNOSTIC_ASSERT(
       aParams.type() == LSRequestParams::TLSRequestPreloadDatastoreParams ||
       aParams.type() == LSRequestParams::TLSRequestPrepareDatastoreParams);
 }
 
 PrepareDatastoreOp::~PrepareDatastoreOp() {
-  MOZ_ASSERT(!mDirectoryLock);
-  MOZ_ASSERT_IF(MayProceedOnNonOwningThread(),
-                mState == State::Initial || mState == State::Completed);
-  MOZ_ASSERT(!mLoadDataOp);
+  MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT_IF(
+      MayProceedOnNonOwningThread(),
+      mState == State::Initial || mState == State::Completed);
+  MOZ_DIAGNOSTIC_ASSERT(!mLoadDataOp);
 }
 
 nsresult PrepareDatastoreOp::Open() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Opening);
-  MOZ_ASSERT(mNestedState == NestedState::BeforeNesting);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Opening);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::BeforeNesting);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
@@ -5932,7 +5943,8 @@ nsresult PrepareDatastoreOp::Open() {
   if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     QuotaManager::GetInfoForChrome(&mSuffix, &mGroup, &mOrigin);
   } else {
-    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+    MOZ_DIAGNOSTIC_ASSERT(principalInfo.type() ==
+                          PrincipalInfo::TContentPrincipalInfo);
 
     QuotaManager::GetInfoFromValidatedPrincipalInfo(
         principalInfo, &mSuffix, &mGroup, &mMainThreadOrigin);
@@ -5948,9 +5960,9 @@ nsresult PrepareDatastoreOp::Open() {
 
 nsresult PrepareDatastoreOp::CheckExistingOperations() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::CheckExistingOperations);
-  MOZ_ASSERT(gPrepareDatastoreOps);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::CheckExistingOperations);
+  MOZ_DIAGNOSTIC_ASSERT(gPrepareDatastoreOps);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
@@ -5965,7 +5977,8 @@ nsresult PrepareDatastoreOp::CheckExistingOperations() {
   if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     privateBrowsingId = 0;
   } else {
-    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+    MOZ_DIAGNOSTIC_ASSERT(principalInfo.type() ==
+                          PrincipalInfo::TContentPrincipalInfo);
 
     const ContentPrincipalInfo& info = principalInfo.get_ContentPrincipalInfo();
     const OriginAttributes& attrs = info.attrs();
@@ -5976,7 +5989,7 @@ nsresult PrepareDatastoreOp::CheckExistingOperations() {
 
   mArchivedOriginScope = ArchivedOriginScope::CreateFromOrigin(
       originAttrSuffix, mParams.originKey());
-  MOZ_ASSERT(mArchivedOriginScope);
+  MOZ_DIAGNOSTIC_ASSERT(mArchivedOriginScope);
 
   // Normally it's safe to access member variables without a mutex because even
   // though we hop between threads, the variables are never accessed by multiple
@@ -5986,7 +5999,7 @@ nsresult PrepareDatastoreOp::CheckExistingOperations() {
   // those methods are called.
   mOrigin = mMainThreadOrigin;
 
-  MOZ_ASSERT(!mOrigin.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(!mOrigin.IsEmpty());
 
   mPrivateBrowsingId = privateBrowsingId;
 
@@ -6004,7 +6017,7 @@ nsresult PrepareDatastoreOp::CheckExistingOperations() {
 
     if (foundThis && existingOp->Origin() == mOrigin) {
       // Only one op can be delayed.
-      MOZ_ASSERT(!existingOp->mDelayedOp);
+      MOZ_DIAGNOSTIC_ASSERT(!existingOp->mDelayedOp);
       existingOp->mDelayedOp = this;
 
       return NS_OK;
@@ -6021,8 +6034,8 @@ nsresult PrepareDatastoreOp::CheckExistingOperations() {
 
 nsresult PrepareDatastoreOp::CheckClosingDatastore() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::CheckClosingDatastore);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::CheckClosingDatastore);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
@@ -6039,10 +6052,10 @@ nsresult PrepareDatastoreOp::CheckClosingDatastore() {
 
 nsresult PrepareDatastoreOp::CheckClosingDatastoreInternal() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::CheckClosingDatastore);
-  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
-  MOZ_ASSERT(MayProceed());
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::CheckClosingDatastore);
+  MOZ_DIAGNOSTIC_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_DIAGNOSTIC_ASSERT(MayProceed());
 
   mNestedState = NestedState::PreparationPending;
 
@@ -6064,8 +6077,8 @@ nsresult PrepareDatastoreOp::CheckClosingDatastoreInternal() {
 
 nsresult PrepareDatastoreOp::BeginDatastorePreparation() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::PreparationPending);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::PreparationPending);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
@@ -6082,13 +6095,13 @@ nsresult PrepareDatastoreOp::BeginDatastorePreparation() {
 
 nsresult PrepareDatastoreOp::BeginDatastorePreparationInternal() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::PreparationPending);
-  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
-  MOZ_ASSERT(MayProceed());
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::PreparationPending);
+  MOZ_DIAGNOSTIC_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_DIAGNOSTIC_ASSERT(MayProceed());
 
   if (gDatastores && (mDatastore = gDatastores->Get(mOrigin))) {
-    MOZ_ASSERT(!mDatastore->IsClosed());
+    MOZ_DIAGNOSTIC_ASSERT(!mDatastore->IsClosed());
 
     mDatastore->NoteLivePrepareDatastoreOp(this);
 
@@ -6114,8 +6127,8 @@ nsresult PrepareDatastoreOp::BeginDatastorePreparationInternal() {
 
 nsresult PrepareDatastoreOp::QuotaManagerOpen() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::QuotaManagerPending);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::QuotaManagerPending);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
@@ -6136,14 +6149,14 @@ nsresult PrepareDatastoreOp::QuotaManagerOpen() {
 
 nsresult PrepareDatastoreOp::OpenDirectory() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::PreparationPending ||
-             mNestedState == NestedState::QuotaManagerPending);
-  MOZ_ASSERT(!mOrigin.IsEmpty());
-  MOZ_ASSERT(!mDirectoryLock);
-  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
-  MOZ_ASSERT(MayProceed());
-  MOZ_ASSERT(QuotaManager::Get());
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::PreparationPending ||
+                        mNestedState == NestedState::QuotaManagerPending);
+  MOZ_DIAGNOSTIC_ASSERT(!mOrigin.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_DIAGNOSTIC_ASSERT(MayProceed());
+  MOZ_DIAGNOSTIC_ASSERT(QuotaManager::Get());
 
   mNestedState = NestedState::DirectoryOpenPending;
   RefPtr<DirectoryLock> pendingDirectoryLock =
@@ -6151,7 +6164,7 @@ nsresult PrepareDatastoreOp::OpenDirectory() {
                                                mOrigin,
                                                mozilla::dom::quota::Client::LS,
                                                /* aExclusive */ false, this);
-  MOZ_ASSERT(pendingDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(pendingDirectoryLock);
 
   if (mNestedState == NestedState::DirectoryOpenPending) {
     mPendingDirectoryLock = pendingDirectoryLock.forget();
@@ -6164,10 +6177,10 @@ nsresult PrepareDatastoreOp::OpenDirectory() {
 
 void PrepareDatastoreOp::SendToIOThread() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::DirectoryOpenPending);
-  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
-  MOZ_ASSERT(MayProceed());
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::DirectoryOpenPending);
+  MOZ_DIAGNOSTIC_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_DIAGNOSTIC_ASSERT(MayProceed());
 
   // Skip all disk related stuff and transition to SendingReadyMessage if we
   // are preparing a datastore for private browsing.
@@ -6185,7 +6198,7 @@ void PrepareDatastoreOp::SendToIOThread() {
   }
 
   QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
+  MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
   // Must set this before dispatching otherwise we will race with the IO thread.
   mNestedState = NestedState::DatabaseWorkOpen;
@@ -6196,9 +6209,9 @@ void PrepareDatastoreOp::SendToIOThread() {
 
 nsresult PrepareDatastoreOp::DatabaseWork() {
   AssertIsOnIOThread();
-  MOZ_ASSERT(mArchivedOriginScope);
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
+  MOZ_DIAGNOSTIC_ASSERT(mArchivedOriginScope);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
@@ -6206,7 +6219,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   }
 
   QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
+  MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
   nsresult rv;
 
@@ -6215,7 +6228,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    MOZ_ASSERT(gArchivedOrigins);
+    MOZ_DIAGNOSTIC_ASSERT(gArchivedOrigins);
   }
 
   bool hasDataForMigration = mArchivedOriginScope->HasMatches(gArchivedOrigins);
@@ -6268,11 +6281,15 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   }
 
   if (alreadyExisted) {
-    MOZ_ASSERT(gUsages);
-    DebugOnly<bool> hasUsage = gUsages->Get(mOrigin, &mUsage);
-    MOZ_ASSERT(hasUsage);
+    MOZ_DIAGNOSTIC_ASSERT(gUsages);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    bool hasUsage = gUsages->Get(mOrigin, &mUsage);
+    MOZ_DIAGNOSTIC_ASSERT(hasUsage);
+#else
+    gUsages->Get(mOrigin, &mUsage);
+#endif
   } else {
-    MOZ_ASSERT(mUsage == 0);
+    MOZ_DIAGNOSTIC_ASSERT(mUsage == 0);
     InitUsageForOrigin(mOrigin, mUsage);
   }
 
@@ -6310,7 +6327,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   }
 
   if (hasDataForMigration) {
-    MOZ_ASSERT(mUsage == 0);
+    MOZ_DIAGNOSTIC_ASSERT(mUsage == 0);
 
     rv = AttachArchiveDatabase(quotaManager->GetStoragePath(), connection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -6324,7 +6341,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     }
 
     RefPtr<QuotaObject> quotaObject = GetQuotaObject();
-    MOZ_ASSERT(quotaObject);
+    MOZ_DIAGNOSTIC_ASSERT(quotaObject);
 
     if (!quotaObject->MaybeUpdateSize(newUsage, /* aTruncate */ true)) {
       return NS_ERROR_FILE_NO_DEVICE_SPACE;
@@ -6403,14 +6420,14 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
       return rv;
     }
 
-    MOZ_ASSERT(gArchivedOrigins);
-    MOZ_ASSERT(mArchivedOriginScope->HasMatches(gArchivedOrigins));
+    MOZ_DIAGNOSTIC_ASSERT(gArchivedOrigins);
+    MOZ_DIAGNOSTIC_ASSERT(mArchivedOriginScope->HasMatches(gArchivedOrigins));
     mArchivedOriginScope->RemoveMatches(gArchivedOrigins);
 
     mUsage = newUsage;
 
-    MOZ_ASSERT(gUsages);
-    MOZ_ASSERT(gUsages->Contains(mOrigin));
+    MOZ_DIAGNOSTIC_ASSERT(gUsages);
+    MOZ_DIAGNOSTIC_ASSERT(gUsages->Contains(mOrigin));
     gUsages->Put(mOrigin, newUsage);
   }
 
@@ -6447,8 +6464,8 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
 nsresult PrepareDatastoreOp::DatabaseNotAvailable() {
   AssertIsOnIOThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
 
   mDatabaseNotAvailable = true;
 
@@ -6465,7 +6482,7 @@ nsresult PrepareDatastoreOp::EnsureDirectoryEntry(nsIFile* aEntry,
                                                   bool aIsDirectory,
                                                   bool* aAlreadyExisted) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aEntry);
+  MOZ_DIAGNOSTIC_ASSERT(aEntry);
 
   bool exists;
   nsresult rv = aEntry->Exists(&exists);
@@ -6485,11 +6502,11 @@ nsresult PrepareDatastoreOp::EnsureDirectoryEntry(nsIFile* aEntry,
       }
     }
   }
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   else {
     bool isDirectory;
-    MOZ_ASSERT(NS_SUCCEEDED(aEntry->IsDirectory(&isDirectory)));
-    MOZ_ASSERT(isDirectory == aIsDirectory);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(aEntry->IsDirectory(&isDirectory)));
+    MOZ_DIAGNOSTIC_ASSERT(isDirectory == aIsDirectory);
   }
 #endif
 
@@ -6502,7 +6519,7 @@ nsresult PrepareDatastoreOp::EnsureDirectoryEntry(nsIFile* aEntry,
 nsresult PrepareDatastoreOp::VerifyDatabaseInformation(
     mozIStorageConnection* aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv =
@@ -6538,25 +6555,25 @@ nsresult PrepareDatastoreOp::VerifyDatabaseInformation(
 
 already_AddRefed<QuotaObject> PrepareDatastoreOp::GetQuotaObject() {
   MOZ_ASSERT(IsOnOwningThread() || IsOnIOThread());
-  MOZ_ASSERT(!mGroup.IsEmpty());
-  MOZ_ASSERT(!mOrigin.IsEmpty());
-  MOZ_ASSERT(!mDatabaseFilePath.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(!mGroup.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(!mOrigin.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(!mDatabaseFilePath.IsEmpty());
 
   QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
+  MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
   RefPtr<QuotaObject> quotaObject = quotaManager->GetQuotaObject(
       PERSISTENCE_TYPE_DEFAULT, mGroup, mOrigin, mDatabaseFilePath, mUsage);
-  MOZ_ASSERT(quotaObject);
+  MOZ_DIAGNOSTIC_ASSERT(quotaObject);
 
   return quotaObject.forget();
 }
 
 nsresult PrepareDatastoreOp::BeginLoadData() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::BeginLoadData);
-  MOZ_ASSERT(!mConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::BeginLoadData);
+  MOZ_DIAGNOSTIC_ASSERT(!mConnection);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
@@ -6569,7 +6586,7 @@ nsresult PrepareDatastoreOp::BeginLoadData() {
 
   mConnection = gConnectionThread->CreateConnection(
       mOrigin, mDirectoryPath, std::move(mArchivedOriginScope));
-  MOZ_ASSERT(mConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mConnection);
 
   // Must set this before dispatching otherwise we will race with the
   // connection thread.
@@ -6591,7 +6608,7 @@ nsresult PrepareDatastoreOp::BeginLoadData() {
 
 void PrepareDatastoreOp::FinishNesting() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
 
   // The caller holds a strong reference to us, no need for a self reference
   // before calling Run().
@@ -6604,7 +6621,7 @@ void PrepareDatastoreOp::FinishNesting() {
 
 nsresult PrepareDatastoreOp::FinishNestingOnNonOwningThread() {
   MOZ_ASSERT(!IsOnOwningThread());
-  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
 
   // Must set mState before dispatching otherwise we will race with the owning
   // thread.
@@ -6662,11 +6679,11 @@ nsresult PrepareDatastoreOp::NestedRun() {
 
 void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::SendingResults);
-  MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::SendingResults);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(ResultCode()));
 
   if (mDatabaseNotAvailable) {
-    MOZ_ASSERT(!mCreateIfNotExists);
+    MOZ_DIAGNOSTIC_ASSERT(!mCreateIfNotExists);
 
     LSRequestPreloadDatastoreResponse preloadDatastoreResponse;
 
@@ -6676,13 +6693,13 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
   }
 
   if (!mDatastore) {
-    MOZ_ASSERT(mUsage == mDEBUGUsage);
+    MOZ_DIAGNOSTIC_ASSERT(mUsage == mDEBUGUsage);
 
     RefPtr<QuotaObject> quotaObject;
 
     if (mPrivateBrowsingId == 0) {
       quotaObject = GetQuotaObject();
-      MOZ_ASSERT(quotaObject);
+      MOZ_DIAGNOSTIC_ASSERT(quotaObject);
     }
 
     mDatastore = new Datastore(mOrigin, mPrivateBrowsingId, mUsage, mSizeOfKeys,
@@ -6696,7 +6713,7 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
       gDatastores = new DatastoreHashtable();
     }
 
-    MOZ_ASSERT(!gDatastores->Get(mOrigin));
+    MOZ_DIAGNOSTIC_ASSERT(!gDatastores->Get(mOrigin));
     gDatastores->Put(mOrigin, mDatastore);
   }
 
@@ -6733,13 +6750,13 @@ void PrepareDatastoreOp::Cleanup() {
   AssertIsOnOwningThread();
 
   if (mDatastore) {
-    MOZ_ASSERT(!mDirectoryLock);
-    MOZ_ASSERT(!mConnection);
+    MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLock);
+    MOZ_DIAGNOSTIC_ASSERT(!mConnection);
 
     if (NS_FAILED(ResultCode())) {
-      MOZ_ASSERT(!mDatastore->IsClosed());
-      MOZ_ASSERT(!mDatastore->HasLiveDatabases());
-      MOZ_ASSERT(!mDatastore->HasLivePreparedDatastores());
+      MOZ_DIAGNOSTIC_ASSERT(!mDatastore->IsClosed());
+      MOZ_DIAGNOSTIC_ASSERT(!mDatastore->HasLiveDatabases());
+      MOZ_DIAGNOSTIC_ASSERT(!mDatastore->HasLivePreparedDatastores());
       mDatastore->Close();
     }
 
@@ -6753,8 +6770,8 @@ void PrepareDatastoreOp::Cleanup() {
   } else if (mConnection) {
     // If we have a connection then the operation must have failed and there
     // must be a directory lock too.
-    MOZ_ASSERT(NS_FAILED(ResultCode()));
-    MOZ_ASSERT(mDirectoryLock);
+    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(ResultCode()));
+    MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock);
 
     // We must close the connection on the connection thread before releasing
     // it on this thread. The directory lock can't be released either.
@@ -6767,8 +6784,8 @@ void PrepareDatastoreOp::Cleanup() {
     // If we don't have a connection, but we do have a directory lock then the
     // operation must have failed or we were preloading a datastore and there
     // was no physical database on disk.
-    MOZ_ASSERT_IF(mDirectoryLock,
-                  NS_FAILED(ResultCode()) || mDatabaseNotAvailable);
+    MOZ_DIAGNOSTIC_ASSERT_IF(mDirectoryLock,
+                             NS_FAILED(ResultCode()) || mDatabaseNotAvailable);
 
     // There's no connection, so it's safe to release the directory lock and
     // unregister itself from the array.
@@ -6781,9 +6798,9 @@ void PrepareDatastoreOp::Cleanup() {
 
 void PrepareDatastoreOp::ConnectionClosedCallback() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(NS_FAILED(ResultCode()));
-  MOZ_ASSERT(mDirectoryLock);
-  MOZ_ASSERT(mConnection);
+  MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(ResultCode()));
+  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(mConnection);
 
   mConnection = nullptr;
   mDirectoryLock = nullptr;
@@ -6798,7 +6815,7 @@ void PrepareDatastoreOp::CleanupMetadata() {
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(mDelayedOp.forget()));
   }
 
-  MOZ_ASSERT(gPrepareDatastoreOps);
+  MOZ_DIAGNOSTIC_ASSERT(gPrepareDatastoreOps);
   gPrepareDatastoreOps->RemoveElement(this);
 
   if (gPrepareDatastoreOps->IsEmpty()) {
@@ -6877,7 +6894,7 @@ void PrepareDatastoreOp::LogNestedState() {
     }
 
     case NestedState::DirectoryOpenPending: {
-      MOZ_ASSERT(mPendingDirectoryLock);
+      MOZ_DIAGNOSTIC_ASSERT(mPendingDirectoryLock);
 
       LS_LOG(("  mPendingDirectoryLock: [%p]", mPendingDirectoryLock.get()));
 
@@ -6904,9 +6921,9 @@ void PrepareDatastoreOp::ActorDestroy(ActorDestroyReason aWhy) {
 
 void PrepareDatastoreOp::DirectoryLockAcquired(DirectoryLock* aLock) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::DirectoryOpenPending);
-  MOZ_ASSERT(!mDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::DirectoryOpenPending);
+  MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLock);
 
   mPendingDirectoryLock = nullptr;
 
@@ -6926,9 +6943,9 @@ void PrepareDatastoreOp::DirectoryLockAcquired(DirectoryLock* aLock) {
 
 void PrepareDatastoreOp::DirectoryLockFailed() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::DirectoryOpenPending);
-  MOZ_ASSERT(!mDirectoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedState == NestedState::DirectoryOpenPending);
+  MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLock);
 
   mPendingDirectoryLock = nullptr;
 
@@ -6939,11 +6956,11 @@ void PrepareDatastoreOp::DirectoryLockFailed() {
 
 nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mConnection);
-  MOZ_ASSERT(mPrepareDatastoreOp);
-  MOZ_ASSERT(mPrepareDatastoreOp->mState == State::Nesting);
-  MOZ_ASSERT(mPrepareDatastoreOp->mNestedState ==
-             NestedState::DatabaseWorkLoadData);
+  MOZ_DIAGNOSTIC_ASSERT(mConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOp);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOp->mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOp->mNestedState ==
+                        NestedState::DatabaseWorkLoadData);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
@@ -6979,7 +6996,7 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
     item->value() = value;
     mPrepareDatastoreOp->mSizeOfKeys += key.Length();
     mPrepareDatastoreOp->mSizeOfItems += key.Length() + value.Length();
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     mPrepareDatastoreOp->mDEBUGUsage += key.Length() + value.Length();
 #endif
   }
@@ -6992,22 +7009,22 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
 
 void PrepareDatastoreOp::LoadDataOp::OnSuccess() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mPrepareDatastoreOp);
-  MOZ_ASSERT(mPrepareDatastoreOp->mState == State::Nesting);
-  MOZ_ASSERT(mPrepareDatastoreOp->mNestedState ==
-             NestedState::DatabaseWorkLoadData);
-  MOZ_ASSERT(mPrepareDatastoreOp->mLoadDataOp == this);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOp);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOp->mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOp->mNestedState ==
+                        NestedState::DatabaseWorkLoadData);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOp->mLoadDataOp == this);
 
   mPrepareDatastoreOp->FinishNesting();
 }
 
 void PrepareDatastoreOp::LoadDataOp::OnFailure(nsresult aResultCode) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mPrepareDatastoreOp);
-  MOZ_ASSERT(mPrepareDatastoreOp->mState == State::Nesting);
-  MOZ_ASSERT(mPrepareDatastoreOp->mNestedState ==
-             NestedState::DatabaseWorkLoadData);
-  MOZ_ASSERT(mPrepareDatastoreOp->mLoadDataOp == this);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOp);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOp->mState == State::Nesting);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOp->mNestedState ==
+                        NestedState::DatabaseWorkLoadData);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOp->mLoadDataOp == this);
 
   mPrepareDatastoreOp->SetFailureCode(aResultCode);
 
@@ -7016,8 +7033,8 @@ void PrepareDatastoreOp::LoadDataOp::OnFailure(nsresult aResultCode) {
 
 void PrepareDatastoreOp::LoadDataOp::Cleanup() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mPrepareDatastoreOp);
-  MOZ_ASSERT(mPrepareDatastoreOp->mLoadDataOp == this);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOp);
+  MOZ_DIAGNOSTIC_ASSERT(mPrepareDatastoreOp->mLoadDataOp == this);
 
   mPrepareDatastoreOp->mLoadDataOp = nullptr;
   mPrepareDatastoreOp = nullptr;
@@ -7033,13 +7050,13 @@ PrepareObserverOp::PrepareObserverOp(nsIEventTarget* aMainEventTarget,
                                      const LSRequestParams& aParams)
     : LSRequestBase(aMainEventTarget),
       mParams(aParams.get_LSRequestPrepareObserverParams()) {
-  MOZ_ASSERT(aParams.type() ==
-             LSRequestParams::TLSRequestPrepareObserverParams);
+  MOZ_DIAGNOSTIC_ASSERT(aParams.type() ==
+                        LSRequestParams::TLSRequestPrepareObserverParams);
 }
 
 nsresult PrepareObserverOp::Open() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Opening);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Opening);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
@@ -7051,7 +7068,8 @@ nsresult PrepareObserverOp::Open() {
   if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     QuotaManager::GetInfoForChrome(nullptr, nullptr, &mOrigin);
   } else {
-    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+    MOZ_DIAGNOSTIC_ASSERT(principalInfo.type() ==
+                          PrincipalInfo::TContentPrincipalInfo);
 
     QuotaManager::GetInfoFromValidatedPrincipalInfo(principalInfo, nullptr,
                                                     nullptr, &mOrigin);
@@ -7065,8 +7083,8 @@ nsresult PrepareObserverOp::Open() {
 
 void PrepareObserverOp::GetResponse(LSRequestResponse& aResponse) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::SendingResults);
-  MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::SendingResults);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(ResultCode()));
 
   uint64_t observerId = ++gLastObserverId;
 
@@ -7091,8 +7109,9 @@ void PrepareObserverOp::GetResponse(LSRequestResponse& aResponse) {
 LSSimpleRequestBase::LSSimpleRequestBase() : mState(State::Initial) {}
 
 LSSimpleRequestBase::~LSSimpleRequestBase() {
-  MOZ_ASSERT_IF(MayProceedOnNonOwningThread(),
-                mState == State::Initial || mState == State::Completed);
+  MOZ_DIAGNOSTIC_ASSERT_IF(
+      MayProceedOnNonOwningThread(),
+      mState == State::Initial || mState == State::Completed);
 }
 
 void LSSimpleRequestBase::Dispatch() {
@@ -7105,7 +7124,7 @@ void LSSimpleRequestBase::Dispatch() {
 
 void LSSimpleRequestBase::SendResults() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::SendingResults);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::SendingResults);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
@@ -7174,13 +7193,13 @@ void LSSimpleRequestBase::ActorDestroy(ActorDestroyReason aWhy) {
 
 PreloadedOp::PreloadedOp(const LSSimpleRequestParams& aParams)
     : mParams(aParams.get_LSSimpleRequestPreloadedParams()) {
-  MOZ_ASSERT(aParams.type() ==
-             LSSimpleRequestParams::TLSSimpleRequestPreloadedParams);
+  MOZ_DIAGNOSTIC_ASSERT(aParams.type() ==
+                        LSSimpleRequestParams::TLSSimpleRequestPreloadedParams);
 }
 
 nsresult PreloadedOp::Open() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Opening);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Opening);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
@@ -7192,7 +7211,8 @@ nsresult PreloadedOp::Open() {
   if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     QuotaManager::GetInfoForChrome(nullptr, nullptr, &mOrigin);
   } else {
-    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+    MOZ_DIAGNOSTIC_ASSERT(principalInfo.type() ==
+                          PrincipalInfo::TContentPrincipalInfo);
 
     QuotaManager::GetInfoFromValidatedPrincipalInfo(principalInfo, nullptr,
                                                     nullptr, &mOrigin);
@@ -7206,8 +7226,8 @@ nsresult PreloadedOp::Open() {
 
 void PreloadedOp::GetResponse(LSSimpleRequestResponse& aResponse) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::SendingResults);
-  MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::SendingResults);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(ResultCode()));
 
   bool preloaded;
   RefPtr<Datastore> datastore;
@@ -7283,7 +7303,7 @@ void ArchivedOriginScope::GetBindingClause(nsACString& aBindingClause) const {
 nsresult ArchivedOriginScope::BindToStatement(
     mozIStorageStatement* aStmt) const {
   MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
-  MOZ_ASSERT(aStmt);
+  MOZ_DIAGNOSTIC_ASSERT(aStmt);
 
   struct Matcher {
     mozIStorageStatement* mStmt;
@@ -7341,7 +7361,7 @@ nsresult ArchivedOriginScope::BindToStatement(
 bool ArchivedOriginScope::HasMatches(
     ArchivedOriginHashtable* aHashtable) const {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aHashtable);
+  MOZ_DIAGNOSTIC_ASSERT(aHashtable);
 
   struct Matcher {
     ArchivedOriginHashtable* mHashtable;
@@ -7391,7 +7411,7 @@ bool ArchivedOriginScope::HasMatches(
 void ArchivedOriginScope::RemoveMatches(
     ArchivedOriginHashtable* aHashtable) const {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aHashtable);
+  MOZ_DIAGNOSTIC_ASSERT(aHashtable);
 
   struct Matcher {
     ArchivedOriginHashtable* mHashtable;
@@ -7443,14 +7463,14 @@ QuotaClient::QuotaClient()
     : mShadowDatabaseMutex("LocalStorage mShadowDatabaseMutex"),
       mShutdownRequested(false) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!sInstance, "We expect this to be a singleton!");
+  MOZ_DIAGNOSTIC_ASSERT(!sInstance, "We expect this to be a singleton!");
 
   sInstance = this;
 }
 
 QuotaClient::~QuotaClient() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(sInstance == this, "We expect this to be a singleton!");
+  MOZ_DIAGNOSTIC_ASSERT(sInstance == this, "We expect this to be a singleton!");
 
   sInstance = nullptr;
 }
@@ -7477,10 +7497,10 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
                                  const AtomicBool& aCanceled,
                                  UsageInfo* aUsageInfo) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
+  MOZ_DIAGNOSTIC_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
 
   QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
+  MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
   nsCOMPtr<nsIFile> directory;
   nsresult rv = quotaManager->GetDirectoryForOrigin(aPersistenceType, aOrigin,
@@ -7490,7 +7510,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     return rv;
   }
 
-  MOZ_ASSERT(directory);
+  MOZ_DIAGNOSTIC_ASSERT(directory);
 
   rv = directory->Append(NS_LITERAL_STRING(LS_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -7498,7 +7518,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     return rv;
   }
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool exists;
   rv = directory->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -7506,7 +7526,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     return rv;
   }
 
-  MOZ_ASSERT(exists);
+  MOZ_DIAGNOSTIC_ASSERT(exists);
 #endif
 
   nsString directoryPath;
@@ -7638,7 +7658,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       }
     }
 
-    MOZ_ASSERT(usage >= 0);
+    MOZ_DIAGNOSTIC_ASSERT(usage >= 0);
 
     InitUsageForOrigin(aOrigin, usage);
 
@@ -7723,8 +7743,8 @@ nsresult QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
                                         const AtomicBool& aCanceled,
                                         UsageInfo* aUsageInfo) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
-  MOZ_ASSERT(aUsageInfo);
+  MOZ_DIAGNOSTIC_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
+  MOZ_DIAGNOSTIC_ASSERT(aUsageInfo);
 
   // We can't open the database at this point, since it can be already used
   // by the connection thread. Use the cached value instead.
@@ -7732,7 +7752,7 @@ nsresult QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
   if (gUsages) {
     int64_t usage;
     if (gUsages->Get(aOrigin, &usage)) {
-      MOZ_ASSERT(usage >= 0);
+      MOZ_DIAGNOSTIC_ASSERT(usage >= 0);
       aUsageInfo->AppendToDatabaseUsage(usage);
     }
   }
@@ -7777,13 +7797,13 @@ nsresult QuotaClient::AboutToClearOrigins(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    MOZ_ASSERT(gArchivedOrigins);
+    MOZ_DIAGNOSTIC_ASSERT(gArchivedOrigins);
   }
 
   bool hasDataForRemoval = archivedOriginScope->HasMatches(gArchivedOrigins);
 
   QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
+  MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
   nsString basePath = quotaManager->GetBasePath();
 
@@ -7876,8 +7896,8 @@ nsresult QuotaClient::AboutToClearOrigins(
         return rv;
       }
 
-      MOZ_ASSERT(gArchivedOrigins);
-      MOZ_ASSERT(archivedOriginScope->HasMatches(gArchivedOrigins));
+      MOZ_DIAGNOSTIC_ASSERT(gArchivedOrigins);
+      MOZ_DIAGNOSTIC_ASSERT(archivedOriginScope->HasMatches(gArchivedOrigins));
       archivedOriginScope->RemoveMatches(gArchivedOrigins);
     }
 
@@ -7947,7 +7967,7 @@ void QuotaClient::AbortOperations(const nsACString& aOrigin) {
 
   if (gPrepareDatastoreOps) {
     for (PrepareDatastoreOp* prepareDatastoreOp : *gPrepareDatastoreOps) {
-      MOZ_ASSERT(prepareDatastoreOp);
+      MOZ_DIAGNOSTIC_ASSERT(prepareDatastoreOp);
 
       // Explicitely check if a directory lock has been requested.
       // Origin clearing can't be blocked by this PrepareDatastoreOp if it
@@ -7960,7 +7980,7 @@ void QuotaClient::AbortOperations(const nsACString& aOrigin) {
         continue;
       }
 
-      MOZ_ASSERT(prepareDatastoreOp->OriginIsKnown());
+      MOZ_DIAGNOSTIC_ASSERT(prepareDatastoreOp->OriginIsKnown());
 
       if (aOrigin.IsVoid() || prepareDatastoreOp->Origin() == aOrigin) {
         prepareDatastoreOp->Invalidate();
@@ -7972,7 +7992,7 @@ void QuotaClient::AbortOperations(const nsACString& aOrigin) {
     for (auto iter = gPreparedDatastores->ConstIter(); !iter.Done();
          iter.Next()) {
       PreparedDatastore* preparedDatastore = iter.Data();
-      MOZ_ASSERT(preparedDatastore);
+      MOZ_DIAGNOSTIC_ASSERT(preparedDatastore);
 
       if (aOrigin.IsVoid() || preparedDatastore->Origin() == aOrigin) {
         preparedDatastore->Invalidate();
@@ -8011,7 +8031,7 @@ void QuotaClient::StopIdleMaintenance() { AssertIsOnBackgroundThread(); }
 
 void QuotaClient::ShutdownWorkThreads() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mShutdownRequested);
+  MOZ_DIAGNOSTIC_ASSERT(!mShutdownRequested);
 
   mShutdownRequested = true;
 
@@ -8112,12 +8132,12 @@ nsresult QuotaClient::CreateArchivedOriginScope(
     archivedOriginScope =
         ArchivedOriginScope::CreateFromPattern(aOriginScope.GetPattern());
   } else {
-    MOZ_ASSERT(aOriginScope.IsNull());
+    MOZ_DIAGNOSTIC_ASSERT(aOriginScope.IsNull());
 
     archivedOriginScope = ArchivedOriginScope::CreateFromNull();
   }
 
-  MOZ_ASSERT(archivedOriginScope);
+  MOZ_DIAGNOSTIC_ASSERT(archivedOriginScope);
 
   aArchivedOriginScope = std::move(archivedOriginScope);
   return NS_OK;
@@ -8127,8 +8147,8 @@ nsresult QuotaClient::PerformDelete(
     mozIStorageConnection* aConnection, const nsACString& aSchemaName,
     ArchivedOriginScope* aArchivedOriginScope) const {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
-  MOZ_ASSERT(aArchivedOriginScope);
+  MOZ_DIAGNOSTIC_ASSERT(aConnection);
+  MOZ_DIAGNOSTIC_ASSERT(aArchivedOriginScope);
 
   nsresult rv;
 
@@ -8256,8 +8276,8 @@ NS_IMETHODIMP
 QuotaClient::MatchFunction::OnFunctionCall(
     mozIStorageValueArray* aFunctionArguments, nsIVariant** aResult) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aFunctionArguments);
-  MOZ_ASSERT(aResult);
+  MOZ_DIAGNOSTIC_ASSERT(aFunctionArguments);
+  MOZ_DIAGNOSTIC_ASSERT(aResult);
 
   nsCString suffix;
   nsresult rv = aFunctionArguments->GetUTF8String(1, suffix);

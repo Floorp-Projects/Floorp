@@ -31,7 +31,7 @@ LSObserver::LSObserver(const nsACString& aOrigin)
     gLSObservers = new LSObserverHashtable();
   }
 
-  MOZ_ASSERT(!gLSObservers->Get(mOrigin));
+  MOZ_DIAGNOSTIC_ASSERT(!gLSObservers->Get(mOrigin));
   gLSObservers->Put(mOrigin, this);
 }
 
@@ -40,11 +40,11 @@ LSObserver::~LSObserver() {
 
   if (mActor) {
     mActor->SendDeleteMeInternal();
-    MOZ_ASSERT(!mActor, "SendDeleteMeInternal should have cleared!");
+    MOZ_DIAGNOSTIC_ASSERT(!mActor, "SendDeleteMeInternal should have cleared!");
   }
 
-  MOZ_ASSERT(gLSObservers);
-  MOZ_ASSERT(gLSObservers->Get(mOrigin));
+  MOZ_DIAGNOSTIC_ASSERT(gLSObservers);
+  MOZ_DIAGNOSTIC_ASSERT(gLSObservers->Get(mOrigin));
   gLSObservers->Remove(mOrigin);
 
   if (!gLSObservers->Count()) {
@@ -59,8 +59,8 @@ LSObserver* LSObserver::Get(const nsACString& aOrigin) {
 
 void LSObserver::SetActor(LSObserverChild* aActor) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(!mActor);
+  MOZ_DIAGNOSTIC_ASSERT(aActor);
+  MOZ_DIAGNOSTIC_ASSERT(!mActor);
 
   mActor = aActor;
 }

@@ -1,0 +1,34 @@
+<html>
+<head>
+    <style>
+        LI {
+            min-width: max-content;
+            column-count: 72;
+        }
+    </style>
+    <script>
+      function start () {
+        document.getElementById('ul').animate({
+          'scrollSnapPointsY': ['repeat(2vh', ''],
+          'paddingInlineStart': ['25in', '']
+        }, {
+          delay: 2,
+          fill: 'both',
+        })
+        document.getElementById('ul').scrollIntoView(false)
+      }
+      // reload once
+      if (location.hash == "") {
+        location.hash = "#hello";
+        setTimeout('location.reload()', 0)
+      }
+      document.addEventListener('DOMContentLoaded', start)
+    </script>
+
+</head>
+<body>
+<ul id="ul">
+    <li></li>
+</ul>
+</body>
+</html>

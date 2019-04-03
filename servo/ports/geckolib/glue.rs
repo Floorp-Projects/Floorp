@@ -3550,7 +3550,6 @@ fn parse_property_into(
     quirks_mode: QuirksMode,
     reporter: Option<&ParseErrorReporter>,
 ) -> Result<(), ()> {
-    use style_traits::ParsingMode;
     let value = unsafe { value.as_ref().unwrap().as_str_unchecked() };
     let url_data = unsafe { UrlExtraData::from_ptr_ref(&data) };
     let parsing_mode = ParsingMode::from_bits_truncate(parsing_mode);
@@ -4300,7 +4299,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetIdentStringValue(
     value: *mut nsAtom,
 ) {
     use style::properties::longhands::_x_lang::computed_value::T as Lang;
-    use style::properties::{LonghandId, PropertyDeclaration};
+    use style::properties::PropertyDeclaration;
 
     let long = get_longhand_from_id!(property);
     let prop = match_wrap_declared! { long,
@@ -4320,7 +4319,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
 ) {
     use num_traits::FromPrimitive;
     use style::properties::longhands;
-    use style::properties::{LonghandId, PropertyDeclaration};
+    use style::properties::PropertyDeclaration;
     use style::values::generics::font::FontStyle;
     use style::values::specified::BorderStyle;
     use style::values::specified::Display;
@@ -4384,7 +4383,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetIntValue(
 ) {
     use style::properties::longhands::_moz_script_level::SpecifiedValue as MozScriptLevel;
     use style::properties::longhands::_x_span::computed_value::T as Span;
-    use style::properties::{LonghandId, PropertyDeclaration};
+    use style::properties::PropertyDeclaration;
 
     let long = get_longhand_from_id!(property);
     let prop = match_wrap_declared! { long,
@@ -4455,7 +4454,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
     value: f32,
 ) {
     use style::properties::longhands::border_spacing::SpecifiedValue as BorderSpacing;
-    use style::properties::{LonghandId, PropertyDeclaration};
+    use style::properties::PropertyDeclaration;
     use style::values::generics::length::Size;
     use style::values::generics::NonNegative;
     use style::values::generics::length::LengthPercentageOrAuto;
@@ -4517,7 +4516,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
     unit: structs::nsCSSUnit,
 ) {
     use style::properties::longhands::_moz_script_min_size::SpecifiedValue as MozScriptMinSize;
-    use style::properties::{LonghandId, PropertyDeclaration};
+    use style::properties::PropertyDeclaration;
     use style::values::generics::NonNegative;
     use style::values::generics::length::Size;
     use style::values::specified::length::NoCalcLength;
@@ -4564,7 +4563,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetNumberValue(
 ) {
     use style::properties::longhands::_moz_script_level::SpecifiedValue as MozScriptLevel;
     use style::properties::longhands::_moz_script_size_multiplier::SpecifiedValue as MozScriptSizeMultiplier;
-    use style::properties::{LonghandId, PropertyDeclaration};
+    use style::properties::PropertyDeclaration;
 
     let long = get_longhand_from_id!(property);
 
@@ -4584,7 +4583,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetPercentValue(
     property: nsCSSPropertyID,
     value: f32,
 ) {
-    use style::properties::{LonghandId, PropertyDeclaration};
+    use style::properties::PropertyDeclaration;
     use style::values::computed::Percentage;
     use style::values::generics::NonNegative;
     use style::values::generics::length::{Size, LengthPercentageOrAuto};
@@ -4614,7 +4613,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetAutoValue(
     declarations: &RawServoDeclarationBlock,
     property: nsCSSPropertyID,
 ) {
-    use style::properties::{LonghandId, PropertyDeclaration};
+    use style::properties::PropertyDeclaration;
     use style::values::generics::length::{LengthPercentageOrAuto, Size};
 
     let long = get_longhand_from_id!(property);
@@ -4638,7 +4637,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetCurrentColor(
     declarations: &RawServoDeclarationBlock,
     property: nsCSSPropertyID,
 ) {
-    use style::properties::{LonghandId, PropertyDeclaration};
+    use style::properties::PropertyDeclaration;
     use style::values::specified::Color;
 
     let long = get_longhand_from_id!(property);
@@ -4663,7 +4662,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetColorValue(
 ) {
     use style::gecko::values::convert_nscolor_to_rgba;
     use style::properties::longhands;
-    use style::properties::{LonghandId, PropertyDeclaration};
+    use style::properties::PropertyDeclaration;
     use style::values::specified::Color;
 
     let long = get_longhand_from_id!(property);
@@ -4688,7 +4687,6 @@ pub extern "C" fn Servo_DeclarationBlock_SetFontFamily(
     declarations: &RawServoDeclarationBlock,
     value: *const nsAString,
 ) {
-    use cssparser::{Parser, ParserInput};
     use style::properties::longhands::font_family::SpecifiedValue as FontFamily;
     use style::properties::PropertyDeclaration;
 
@@ -5060,8 +5058,6 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
     raw_data: &RawServoStyleSet,
     computed_keyframes: &mut nsTArray<structs::ComputedKeyframeValues>,
 ) {
-    use style::properties::LonghandIdSet;
-
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
     let metrics = get_metrics_provider_for_product();
 

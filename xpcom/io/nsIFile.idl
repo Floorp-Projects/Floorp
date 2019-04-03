@@ -541,5 +541,13 @@ interface nsIFile : nsISupports
 %{C++
 #ifdef MOZILLA_INTERNAL_API
 #include "nsDirectoryServiceUtils.h"
+#include "nsString.h"
+
+inline std::ostream& operator<<(std::ostream& aOut, const nsIFile& aFile) {
+  nsIFile* file = const_cast<nsIFile*>(&aFile);
+  nsAutoString path;
+  file->GetPath(path);
+  return aOut << "nsIFile { " << path << " }";
+}
 #endif
 %}
