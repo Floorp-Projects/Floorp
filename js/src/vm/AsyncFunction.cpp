@@ -79,6 +79,14 @@ static bool AsyncFunctionResume(JSContext* cx,
     return true;
   }
 
+  // The debugger sets the async function's generator object into the "running"
+  // state while firing debugger events to ensure the debugger can't re-enter
+  // the async function, cf. |AutoSetGeneratorRunning| in Debugger.cpp. Catch
+  // this case here by checking if the generator is already runnning.
+  if (generator->isRunning()) {
+    return true;
+  }
+
   Rooted<PromiseObject*> resultPromise(cx, generator->promise());
 
   RootedObject stack(cx);
