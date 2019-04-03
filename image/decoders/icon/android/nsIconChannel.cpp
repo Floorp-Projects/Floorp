@@ -104,7 +104,7 @@ static nsresult moz_icon_to_channel(nsIURI* aURI, const nsACString& aFileExt,
   rv = stream->AdoptData((char*)buf, buf_size);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // nsIconProtocolHandler::NewChannel2 will provide the correct loadInfo for
+  // nsIconProtocolHandler::NewChannel will provide the correct loadInfo for
   // this iconChannel. Use the most restrictive security settings for the
   // temporary loadInfo to make sure the channel can not be openend.
   nsCOMPtr<nsIPrincipal> nullPrincipal =
