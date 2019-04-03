@@ -177,12 +177,12 @@ export class Outline extends Component<Props, State> {
     );
 
     return (
-      <div className="outline-list__class" key={klass}>
+      <li className="outline-list__class" key={klass}>
         {heading}
         <ul className="outline-list__class-list">
           {classFunctions.map(func => this.renderFunction(func))}
         </ul>
-      </div>
+      </li>
     );
   }
 
