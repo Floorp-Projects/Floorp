@@ -81,9 +81,9 @@ open class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // There is no session, or it has timed out; we should pop everything to home if not in private mode
+        // No session or timed out; we should try to pop inclusive to browser if not in private mode
         if (components.core.sessionStorage.current() == null && !browsingModeManager.isPrivate) {
-            navHost.navController.popBackStack(R.id.homeFragment, false)
+            navHost.navController.popBackStack(R.id.browserFragment, true)
         }
     }
 
