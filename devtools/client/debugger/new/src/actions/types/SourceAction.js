@@ -4,13 +4,12 @@
 
 // @flow
 
-import type { Source, SourceLocation, Context } from "../../types";
+import type { Source, SourceLocation } from "../../types";
 import type { PromiseAction } from "../utils/middleware/promise";
 
 export type LoadSourceAction = PromiseAction<
   {|
     +type: "LOAD_SOURCE_TEXT",
-    +cx: Context,
     +sourceId: string,
     +epoch: number
   |},
@@ -20,37 +19,31 @@ export type SourceAction =
   | LoadSourceAction
   | {|
       +type: "ADD_SOURCE",
-      +cx: Context,
       +source: Source
     |}
   | {|
       +type: "ADD_SOURCES",
-      +cx: Context,
       +sources: Array<Source>
     |}
   | {|
       +type: "UPDATE_SOURCE",
-      +cx: Context,
       +source: Source
     |}
   | {|
       +type: "SET_SELECTED_LOCATION",
-      +cx: Context,
       +source: Source,
       +location?: SourceLocation
     |}
   | {|
       +type: "SET_PENDING_SELECTED_LOCATION",
-      +cx: Context,
       +url: string,
       +line?: number,
       +column?: number
     |}
-  | {| type: "CLEAR_SELECTED_LOCATION", +cx: Context |}
+  | {| type: "CLEAR_SELECTED_LOCATION" |}
   | PromiseAction<
       {|
         +type: "BLACKBOX",
-        +cx: Context,
         +source: Source
       |},
       {|

@@ -14,14 +14,9 @@ import { editorItemActions } from "./menus/editor";
 
 import type { BreakpointItemActions } from "./menus/breakpoints";
 import type { EditorItemActions } from "./menus/editor";
-import type {
-  Breakpoint as BreakpointType,
-  Source,
-  ThreadContext
-} from "../../types";
+import type { Breakpoint as BreakpointType, Source } from "../../types";
 
 type Props = {
-  cx: ThreadContext,
   selectedSource: Source,
   breakpoints: BreakpointType[],
   editor: Object,
@@ -32,7 +27,6 @@ type Props = {
 class Breakpoints extends Component<Props> {
   render() {
     const {
-      cx,
       breakpoints,
       selectedSource,
       editor,
@@ -49,7 +43,6 @@ class Breakpoints extends Component<Props> {
         {breakpoints.map(bp => {
           return (
             <Breakpoint
-              cx={cx}
               key={makeBreakpointId(bp.location)}
               breakpoint={bp}
               selectedSource={selectedSource}

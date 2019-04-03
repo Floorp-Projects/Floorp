@@ -686,7 +686,7 @@ class gfxShapedText {
   typedef mozilla::unicode::Script Script;
 
   gfxShapedText(uint32_t aLength, mozilla::gfx::ShapedTextFlags aFlags,
-                int32_t aAppUnitsPerDevUnit)
+                uint16_t aAppUnitsPerDevUnit)
       : mLength(aLength),
         mFlags(aFlags),
         mAppUnitsPerDevUnit(aAppUnitsPerDevUnit) {}
@@ -1202,7 +1202,7 @@ class gfxShapedWord final : public gfxShapedText {
   // glyph data; the caller must call gfxFont::ShapeText() with appropriate
   // parameters to set up the glyphs.
   static gfxShapedWord* Create(const uint8_t* aText, uint32_t aLength,
-                               Script aRunScript, int32_t aAppUnitsPerDevUnit,
+                               Script aRunScript, uint16_t aAppUnitsPerDevUnit,
                                mozilla::gfx::ShapedTextFlags aFlags,
                                gfxFontShaper::RoundingFlags aRounding) {
     NS_ASSERTION(aLength <= gfxPlatform::GetPlatform()->WordCacheCharLimit(),
@@ -1223,7 +1223,7 @@ class gfxShapedWord final : public gfxShapedText {
   }
 
   static gfxShapedWord* Create(const char16_t* aText, uint32_t aLength,
-                               Script aRunScript, int32_t aAppUnitsPerDevUnit,
+                               Script aRunScript, uint16_t aAppUnitsPerDevUnit,
                                mozilla::gfx::ShapedTextFlags aFlags,
                                gfxFontShaper::RoundingFlags aRounding) {
     NS_ASSERTION(aLength <= gfxPlatform::GetPlatform()->WordCacheCharLimit(),
@@ -1295,7 +1295,7 @@ class gfxShapedWord final : public gfxShapedText {
 
   // Construct storage for a ShapedWord, ready to receive glyph data
   gfxShapedWord(const uint8_t* aText, uint32_t aLength, Script aRunScript,
-                int32_t aAppUnitsPerDevUnit,
+                uint16_t aAppUnitsPerDevUnit,
                 mozilla::gfx::ShapedTextFlags aFlags,
                 gfxFontShaper::RoundingFlags aRounding)
       : gfxShapedText(aLength,
@@ -1310,7 +1310,7 @@ class gfxShapedWord final : public gfxShapedText {
   }
 
   gfxShapedWord(const char16_t* aText, uint32_t aLength, Script aRunScript,
-                int32_t aAppUnitsPerDevUnit,
+                uint16_t aAppUnitsPerDevUnit,
                 mozilla::gfx::ShapedTextFlags aFlags,
                 gfxFontShaper::RoundingFlags aRounding)
       : gfxShapedText(aLength, aFlags, aAppUnitsPerDevUnit),

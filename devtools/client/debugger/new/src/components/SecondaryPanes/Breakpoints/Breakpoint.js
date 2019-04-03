@@ -27,8 +27,7 @@ import type {
   Breakpoint as BreakpointType,
   Frame,
   Source,
-  SourceLocation,
-  Context
+  SourceLocation
 } from "../../../types";
 
 type FormattedFrame = Frame & {
@@ -39,12 +38,10 @@ import {
   getBreakpointsList,
   getSelectedFrame,
   getSelectedSource,
-  getCurrentThread,
-  getContext
+  getCurrentThread
 } from "../../../selectors";
 
 type Props = {
-  cx: Context,
   breakpoint: BreakpointType,
   breakpoints: BreakpointType[],
   selectedSource: Source,
@@ -82,22 +79,22 @@ class Breakpoint extends PureComponent<Props> {
 
   selectBreakpoint = event => {
     event.preventDefault();
-    const { cx, selectSpecificLocation } = this.props;
-    selectSpecificLocation(cx, this.selectedLocation);
+    const { selectSpecificLocation } = this.props;
+    selectSpecificLocation(this.selectedLocation);
   };
 
   removeBreakpoint = event => {
-    const { cx, removeBreakpoint, breakpoint } = this.props;
+    const { removeBreakpoint, breakpoint } = this.props;
     event.stopPropagation();
-    removeBreakpoint(cx, breakpoint);
+    removeBreakpoint(breakpoint);
   };
 
   handleBreakpointCheckbox = () => {
-    const { cx, breakpoint, enableBreakpoint, disableBreakpoint } = this.props;
+    const { breakpoint, enableBreakpoint, disableBreakpoint } = this.props;
     if (breakpoint.disabled) {
-      enableBreakpoint(cx, breakpoint);
+      enableBreakpoint(breakpoint);
     } else {
-      disableBreakpoint(cx, breakpoint);
+      disableBreakpoint(breakpoint);
     }
   };
 
@@ -214,7 +211,6 @@ const getFormattedFrame = createSelector(
 );
 
 const mapStateToProps = state => ({
-  cx: getContext(state),
   breakpoints: getBreakpointsList(state),
   frame: getFormattedFrame(state, getCurrentThread(state))
 });

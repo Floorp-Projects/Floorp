@@ -23,6 +23,7 @@ jobs-from:
     - linux.yml
     - macosx.yml
     - windows.yml
+    - windows-mingw.yml
 
 job-defaults:
     run:

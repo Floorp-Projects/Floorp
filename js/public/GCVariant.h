@@ -113,16 +113,11 @@ struct GCPolicy<mozilla::Variant<Ts...>> {
   }
 
   static bool isValid(const mozilla::Variant<Ts...>& v) {
-    return v.match(IsValidMatcher());
+    return v.match([](auto& v) {
+      return GCPolicy<
+          typename mozilla::RemoveReference<decltype(v)>::Type>::isValid(v);
+    });
   }
-
- private:
-  struct IsValidMatcher {
-    template <typename T>
-    bool match(T& v) {
-      return GCPolicy<T>::isValid(v);
-    };
-  };
 };
 
 }  // namespace JS

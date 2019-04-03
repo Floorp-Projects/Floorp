@@ -6,6 +6,13 @@
 
 interface nsISupports;
 
+dictionary PCErrorData
+{
+  required PCError name;
+  required DOMString message;
+  // Will need to add more stuff (optional) for RTCError
+};
+
 [ChromeOnly,
  JSImplementation="@mozilla.org/dom/peerconnectionobserver;1",
  Constructor (RTCPeerConnection domPC)]
@@ -13,20 +20,20 @@ interface PeerConnectionObserver
 {
   /* JSEP callbacks */
   void onCreateOfferSuccess(DOMString offer);
-  void onCreateOfferError(unsigned long name, DOMString message);
+  void onCreateOfferError(PCErrorData error);
   void onCreateAnswerSuccess(DOMString answer);
-  void onCreateAnswerError(unsigned long name, DOMString message);
+  void onCreateAnswerError(PCErrorData error);
   void onSetLocalDescriptionSuccess();
   void onSetRemoteDescriptionSuccess();
-  void onSetLocalDescriptionError(unsigned long name, DOMString message);
-  void onSetRemoteDescriptionError(unsigned long name, DOMString message);
+  void onSetLocalDescriptionError(PCErrorData error);
+  void onSetRemoteDescriptionError(PCErrorData error);
   void onAddIceCandidateSuccess();
-  void onAddIceCandidateError(unsigned long name, DOMString message);
+  void onAddIceCandidateError(PCErrorData error);
   void onIceCandidate(unsigned short level, DOMString mid, DOMString candidate, DOMString ufrag);
 
   /* Stats callbacks */
   void onGetStatsSuccess(optional RTCStatsReportInternal report);
-  void onGetStatsError(unsigned long name, DOMString message);
+  void onGetStatsError(DOMString message);
 
   /* Data channel callbacks */
   void notifyDataChannel(RTCDataChannel channel);

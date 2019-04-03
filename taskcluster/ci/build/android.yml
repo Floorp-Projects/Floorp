@@ -12,7 +12,7 @@ android-api-16/debug:
     treeherder:
         platform: android-4-0-armv7-api16/debug
         symbol: B
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
@@ -67,7 +67,7 @@ android-x86/opt:
     treeherder:
         platform: android-4-2-x86/opt
         symbol: B
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
@@ -120,7 +120,7 @@ android-x86-fuzzing/debug:
     treeherder:
         platform: android-4-2-x86/debug
         symbol: Bf
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
@@ -175,7 +175,7 @@ android-x86-nightly/opt:
     treeherder:
         platform: android-4-2-x86/opt
         symbol: N
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
@@ -230,7 +230,7 @@ android-api-16/opt:
     treeherder:
         platform: android-4-0-armv7-api16/opt
         symbol: B
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
@@ -286,7 +286,7 @@ android-api-16/pgo:
     treeherder:
         platform: android-4-0-armv7-api16/pgo
         symbol: Bpgo(B)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
@@ -338,7 +338,7 @@ android-api-16-without-google-play-services/opt:
     treeherder:
         platform: android-4-0-armv7-api16/opt
         symbol: BnoGPS
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
@@ -397,7 +397,7 @@ android-api-16-nightly/opt:
     treeherder:
         platform: android-4-0-armv7-api16/opt
         symbol: N
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
@@ -452,7 +452,7 @@ android-aarch64/opt:
     treeherder:
         platform: android-5-0-aarch64/opt
         symbol: B
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
@@ -507,7 +507,7 @@ android-aarch64/debug:
     treeherder:
         platform: android-5-0-aarch64/debug
         symbol: B
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
@@ -566,7 +566,7 @@ android-aarch64-nightly/opt:
     treeherder:
         platform: android-5-0-aarch64/opt
         symbol: N
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
@@ -621,7 +621,7 @@ android-x86_64/opt:
     treeherder:
         platform: android-5-0-x86_64/opt
         symbol: B
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
@@ -680,7 +680,7 @@ android-x86_64-nightly/opt:
     treeherder:
         platform: android-5-0-x86_64/opt
         symbol: N
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
@@ -735,7 +735,7 @@ android-x86_64/debug:
     treeherder:
         platform: android-5-0-x86_64/debug
         symbol: B
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200

@@ -155,8 +155,8 @@ void nsSVGForeignObjectFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                        &newList);
   DisplayOutline(aBuilder, set);
   BuildDisplayListForNonBlockChildren(aBuilder, set);
-  aLists.Content()->AppendToTop(
-      MakeDisplayItem<nsDisplayForeignObject>(aBuilder, this, &newList));
+  aLists.Content()->AppendNewToTop<nsDisplayForeignObject>(aBuilder, this,
+                                                           &newList);
 }
 
 bool nsSVGForeignObjectFrame::IsSVGTransformed(

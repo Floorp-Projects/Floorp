@@ -212,13 +212,19 @@ class OriginScope {
 
       explicit Matcher(const OriginScope& aThis) : mThis(aThis) {}
 
-      bool match(const Origin& aOther) { return mThis.MatchesOrigin(aOther); }
+      bool operator()(const Origin& aOther) {
+        return mThis.MatchesOrigin(aOther);
+      }
 
-      bool match(const Prefix& aOther) { return mThis.MatchesPrefix(aOther); }
+      bool operator()(const Prefix& aOther) {
+        return mThis.MatchesPrefix(aOther);
+      }
 
-      bool match(const Pattern& aOther) { return mThis.MatchesPattern(aOther); }
+      bool operator()(const Pattern& aOther) {
+        return mThis.MatchesPattern(aOther);
+      }
 
-      bool match(const Null& aOther) { return true; }
+      bool operator()(const Null& aOther) { return true; }
     };
 
     return aOther.mData.match(Matcher(*this));
@@ -245,19 +251,19 @@ class OriginScope {
 
       explicit OriginMatcher(const Origin& aOther) : mOther(aOther) {}
 
-      bool match(const Origin& aThis) {
+      bool operator()(const Origin& aThis) {
         return aThis.GetOrigin().Equals(mOther.GetOrigin());
       }
 
-      bool match(const Prefix& aThis) {
+      bool operator()(const Prefix& aThis) {
         return aThis.GetOriginNoSuffix().Equals(mOther.GetOriginNoSuffix());
       }
 
-      bool match(const Pattern& aThis) {
+      bool operator()(const Pattern& aThis) {
         return aThis.GetPattern().Matches(mOther.GetAttributes());
       }
 
-      bool match(const Null& aThis) {
+      bool operator()(const Null& aThis) {
         // Null covers everything.
         return true;
       }
@@ -272,22 +278,22 @@ class OriginScope {
 
       explicit PrefixMatcher(const Prefix& aOther) : mOther(aOther) {}
 
-      bool match(const Origin& aThis) {
+      bool operator()(const Origin& aThis) {
         return aThis.GetOriginNoSuffix().Equals(mOther.GetOriginNoSuffix());
       }
 
-      bool match(const Prefix& aThis) {
+      bool operator()(const Prefix& aThis) {
         return aThis.GetOriginNoSuffix().Equals(mOther.GetOriginNoSuffix());
       }
 
-      bool match(const Pattern& aThis) {
+      bool operator()(const Pattern& aThis) {
         // The match will be always true here because any origin attributes
         // pattern overlaps any origin prefix (an origin prefix targets all
         // origin attributes).
         return true;
       }
 
-      bool match(const Null& aThis) {
+      bool operator()(const Null& aThis) {
         // Null covers everything.
         return true;
       }
@@ -302,22 +308,22 @@ class OriginScope {
 
       explicit PatternMatcher(const Pattern& aOther) : mOther(aOther) {}
 
-      bool match(const Origin& aThis) {
+      bool operator()(const Origin& aThis) {
         return mOther.GetPattern().Matches(aThis.GetAttributes());
       }
 
-      bool match(const Prefix& aThis) {
+      bool operator()(const Prefix& aThis) {
         // The match will be always true here because any origin attributes
         // pattern overlaps any origin prefix (an origin prefix targets all
         // origin attributes).
         return true;
       }
 
-      bool match(const Pattern& aThis) {
+      bool operator()(const Pattern& aThis) {
         return aThis.GetPattern().Overlaps(mOther.GetPattern());
       }
 
-      bool match(const Null& aThis) {
+      bool operator()(const Null& aThis) {
         // Null covers everything.
         return true;
       }

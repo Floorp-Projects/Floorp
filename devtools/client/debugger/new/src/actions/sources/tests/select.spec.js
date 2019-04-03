@@ -50,9 +50,8 @@ describe("sources", () => {
       })
     );
 
-    const cx = selectors.getThreadContext(getState());
     await dispatch(
-      actions.selectLocation(cx, { sourceId: "foo1", line: 1, column: 5 })
+      actions.selectLocation({ sourceId: "foo1", line: 1, column: 5 })
     );
 
     const selectedSource = getSelectedSource(getState());
@@ -73,7 +72,7 @@ describe("sources", () => {
   });
 
   it("should select next tab on tab closed if no previous tab", async () => {
-    const { dispatch, getState, cx } = createStore(sourceThreadClient);
+    const { dispatch, getState } = createStore(sourceThreadClient);
 
     const fooSource = makeSource("foo.js");
 
@@ -82,19 +81,19 @@ describe("sources", () => {
     await dispatch(actions.newSource(makeSource("baz.js")));
 
     // 3rd tab
-    await dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
+    await dispatch(actions.selectLocation(initialLocation("foo.js")));
 
     // 2nd tab
-    await dispatch(actions.selectLocation(cx, initialLocation("bar.js")));
+    await dispatch(actions.selectLocation(initialLocation("bar.js")));
 
     // 1st tab
-    await dispatch(actions.selectLocation(cx, initialLocation("baz.js")));
+    await dispatch(actions.selectLocation(initialLocation("baz.js")));
 
     // 3rd tab is reselected
-    await dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
+    await dispatch(actions.selectLocation(initialLocation("foo.js")));
 
     // closes the 1st tab, which should have no previous tab
-    await dispatch(actions.closeTab(cx, fooSource));
+    await dispatch(actions.closeTab(fooSource));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("bar.js");
@@ -102,9 +101,9 @@ describe("sources", () => {
   });
 
   it("should open a tab for the source", async () => {
-    const { dispatch, getState, cx } = createStore(sourceThreadClient);
+    const { dispatch, getState } = createStore(sourceThreadClient);
     await dispatch(actions.newSource(makeSource("foo.js")));
-    dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
+    dispatch(actions.selectLocation(initialLocation("foo.js")));
 
     const tabs = getSourceTabs(getState());
     expect(tabs).toHaveLength(1);
@@ -112,17 +111,17 @@ describe("sources", () => {
   });
 
   it("should select previous tab on tab closed", async () => {
-    const { dispatch, getState, cx } = createStore(sourceThreadClient);
+    const { dispatch, getState } = createStore(sourceThreadClient);
     await dispatch(actions.newSource(makeSource("foo.js")));
     await dispatch(actions.newSource(makeSource("bar.js")));
 
     const bazSource = makeSource("baz.js");
     await dispatch(actions.newSource(bazSource));
 
-    await dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
-    await dispatch(actions.selectLocation(cx, initialLocation("bar.js")));
-    await dispatch(actions.selectLocation(cx, initialLocation("baz.js")));
-    await dispatch(actions.closeTab(cx, bazSource));
+    await dispatch(actions.selectLocation(initialLocation("foo.js")));
+    await dispatch(actions.selectLocation(initialLocation("bar.js")));
+    await dispatch(actions.selectLocation(initialLocation("baz.js")));
+    await dispatch(actions.closeTab(bazSource));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("bar.js");
@@ -130,7 +129,7 @@ describe("sources", () => {
   });
 
   it("should keep the selected source when other tab closed", async () => {
-    const { dispatch, getState, cx } = createStore(sourceThreadClient);
+    const { dispatch, getState } = createStore(sourceThreadClient);
 
     const bazSource = makeSource("baz.js");
 
@@ -139,17 +138,17 @@ describe("sources", () => {
     await dispatch(actions.newSource(bazSource));
 
     // 3rd tab
-    await dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
+    await dispatch(actions.selectLocation(initialLocation("foo.js")));
 
     // 2nd tab
-    await dispatch(actions.selectLocation(cx, initialLocation("bar.js")));
+    await dispatch(actions.selectLocation(initialLocation("bar.js")));
 
     // 1st tab
-    await dispatch(actions.selectLocation(cx, initialLocation("baz.js")));
+    await dispatch(actions.selectLocation(initialLocation("baz.js")));
 
     // 3rd tab is reselected
-    await dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
-    await dispatch(actions.closeTab(cx, bazSource));
+    await dispatch(actions.selectLocation(initialLocation("foo.js")));
+    await dispatch(actions.closeTab(bazSource));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("foo.js");
@@ -169,29 +168,29 @@ describe("sources", () => {
   });
 
   it("sets and clears selected location correctly", () => {
-    const { dispatch, getState, cx } = createStore(sourceThreadClient);
+    const { dispatch, getState } = createStore(sourceThreadClient);
     const source = makeSource("testSource");
     const location = ({ test: "testLocation" }: any);
 
     // set value
-    dispatch(actions.setSelectedLocation(cx, source, location));
+    dispatch(actions.setSelectedLocation(source, location));
     expect(getSelectedLocation(getState())).toEqual({
       sourceId: source.id,
       ...location
     });
 
     // clear value
-    dispatch(actions.clearSelectedLocation(cx));
+    dispatch(actions.clearSelectedLocation());
     expect(getSelectedLocation(getState())).toEqual(null);
   });
 
   it("sets and clears pending selected location correctly", () => {
-    const { dispatch, getState, cx } = createStore(sourceThreadClient);
+    const { dispatch, getState } = createStore(sourceThreadClient);
     const url = "testURL";
     const options = { location: { line: "testLine" } };
 
     // set value
-    dispatch(actions.setPendingSelectedLocation(cx, url, options));
+    dispatch(actions.setPendingSelectedLocation(url, options));
     const setResult = getState().sources.pendingSelectedLocation;
     expect(setResult).toEqual({
       url,
@@ -199,19 +198,19 @@ describe("sources", () => {
     });
 
     // clear value
-    dispatch(actions.clearSelectedLocation(cx));
+    dispatch(actions.clearSelectedLocation());
     const clearResult = getState().sources.pendingSelectedLocation;
     expect(clearResult).toEqual({ url: "" });
   });
 
   it("should keep the generated the viewing context", async () => {
     const store = createStore(sourceThreadClient);
-    const { dispatch, getState, cx } = store;
+    const { dispatch, getState } = store;
     const baseSource = makeSource("base.js");
     await dispatch(actions.newSource(baseSource));
 
     await dispatch(
-      actions.selectLocation(cx, { sourceId: baseSource.id, line: 1 })
+      actions.selectLocation({ sourceId: baseSource.id, line: 1 })
     );
 
     const selected = getSelectedSource(getState());
@@ -220,7 +219,7 @@ describe("sources", () => {
   });
 
   it("should keep the original the viewing context", async () => {
-    const { dispatch, getState, cx } = createStore(
+    const { dispatch, getState } = createStore(
       sourceThreadClient,
       {},
       {
@@ -238,20 +237,18 @@ describe("sources", () => {
     const originalBaseSource = makeOriginalSource("base.js");
     await dispatch(actions.newSource(originalBaseSource));
 
-    await dispatch(actions.selectSource(cx, originalBaseSource.id));
+    await dispatch(actions.selectSource(originalBaseSource.id));
 
     const fooSource = makeSource("foo.js");
     await dispatch(actions.newSource(fooSource));
-    await dispatch(
-      actions.selectLocation(cx, { sourceId: fooSource.id, line: 1 })
-    );
+    await dispatch(actions.selectLocation({ sourceId: fooSource.id, line: 1 }));
 
     const selected = getSelectedLocation(getState());
     expect(selected && selected.line).toBe(12);
   });
 
   it("should change the original the viewing context", async () => {
-    const { dispatch, getState, cx } = createStore(
+    const { dispatch, getState } = createStore(
       sourceThreadClient,
       {},
       {
@@ -266,10 +263,10 @@ describe("sources", () => {
     const baseSource = makeOriginalSource("base.js");
 
     await dispatch(actions.newSource(baseSource));
-    await dispatch(actions.selectSource(cx, baseSource.id));
+    await dispatch(actions.selectSource(baseSource.id));
 
     await dispatch(
-      actions.selectSpecificLocation(cx, {
+      actions.selectSpecificLocation({
         sourceId: baseSource.id,
         line: 1
       })
@@ -281,9 +278,9 @@ describe("sources", () => {
 
   describe("selectSourceURL", () => {
     it("should automatically select a pending source", async () => {
-      const { dispatch, getState, cx } = createStore(sourceThreadClient);
+      const { dispatch, getState } = createStore(sourceThreadClient);
       const baseSource = makeSource("base.js");
-      await dispatch(actions.selectSourceURL(cx, baseSource.url));
+      await dispatch(actions.selectSourceURL(baseSource.url));
 
       expect(getSelectedSource(getState())).toBe(undefined);
       await dispatch(actions.newSource(baseSource));

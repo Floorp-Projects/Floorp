@@ -1766,11 +1766,7 @@ nsresult nsIOService::SpeculativeConnectInternal(
   MOZ_ASSERT(aPrincipal, "We expect passing a principal here.");
 
   if (!aPrincipal) {
-    // Bug 1537883, fail silently in case aPrincipal is null rather
-    // than having the browser crash because we cannot create a
-    // loadInfo without a principal. Within Bug 1539853 we should
-    // resolve why aPrincipal is null here and remove the silent fail.
-    return NS_OK;
+    return NS_ERROR_INVALID_ARG;
   }
 
   // dummy channel used to create a TCP connection.

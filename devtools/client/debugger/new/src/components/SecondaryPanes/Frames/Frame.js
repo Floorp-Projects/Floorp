@@ -13,9 +13,8 @@ import { formatDisplayName } from "../../../utils/pause/frames";
 import { getFilename, getFileURL } from "../../../utils/source";
 import FrameMenu from "./FrameMenu";
 import FrameIndent from "./FrameIndent";
-import actions from "../../../actions";
 
-import type { Frame, ThreadContext } from "../../../types";
+import type { Frame } from "../../../types";
 
 type FrameTitleProps = {
   frame: Frame,
@@ -62,12 +61,11 @@ function FrameLocation({ frame, displayFullUrl = false }: FrameLocationProps) {
 FrameLocation.displayName = "FrameLocation";
 
 type FrameComponentProps = {
-  cx: ThreadContext,
   frame: Frame,
   selectedFrame: Frame,
   copyStackTrace: Function,
   toggleFrameworkGrouping: Function,
-  selectFrame: typeof actions.selectFrame,
+  selectFrame: Function,
   frameworkGroupingOn: boolean,
   hideLocation: boolean,
   shouldMapDisplayName: boolean,
@@ -109,7 +107,7 @@ export default class FrameComponent extends Component<FrameComponentProps> {
     if (e.button !== 0) {
       return;
     }
-    this.props.selectFrame(this.props.cx, frame);
+    this.props.selectFrame(frame);
   }
 
   onKeyUp(
@@ -120,7 +118,7 @@ export default class FrameComponent extends Component<FrameComponentProps> {
     if (event.key != "Enter") {
       return;
     }
-    this.props.selectFrame(this.props.cx, frame);
+    this.props.selectFrame(frame);
   }
 
   render() {

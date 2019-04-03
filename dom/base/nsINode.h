@@ -948,6 +948,7 @@ class nsINode : public mozilla::dom::EventTarget {
                      mozilla::dom::CallerType aCallerType,
                      mozilla::ErrorResult& aRv) override;
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
 
   /**

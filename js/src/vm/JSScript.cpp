@@ -2320,12 +2320,12 @@ struct SourceCompressionTask::PerformTaskWork {
   explicit PerformTaskWork(SourceCompressionTask* task) : task_(task) {}
 
   template <typename Unit>
-  void match(const ScriptSource::Uncompressed<Unit>&) {
+  void operator()(const ScriptSource::Uncompressed<Unit>&) {
     task_->workEncodingSpecific<Unit>();
   }
 
   template <typename T>
-  void match(const T&) {
+  void operator()(const T&) {
     MOZ_CRASH(
         "why are we compressing missing, already-compressed, or "
         "BinAST source?");

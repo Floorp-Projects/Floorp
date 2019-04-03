@@ -17,8 +17,7 @@ import {
   getSelectedSource,
   getSymbols,
   getTabs,
-  isSymbolsLoading,
-  getContext
+  isSymbolsLoading
 } from "../selectors";
 import { scrollList } from "../utils/result-list";
 import {
@@ -36,14 +35,13 @@ import type {
   QuickOpenResult
 } from "../utils/quick-open";
 
-import type { Source, Context } from "../types";
+import type { Source } from "../types";
 import type { QuickOpenType } from "../reducers/quick-open";
 import type { Tab } from "../reducers/tabs";
 
 import "./QuickOpenModal.css";
 
 type Props = {
-  cx: Context,
   enabled: boolean,
   sources: Array<Object>,
   selectedSource?: Source,
@@ -247,11 +245,11 @@ export class QuickOpenModal extends Component<Props, State> {
   };
 
   gotoLocation = (location: ?GotoLocationType) => {
-    const { cx, selectSpecificLocation, selectedSource } = this.props;
+    const { selectSpecificLocation, selectedSource } = this.props;
     const selectedSourceId = selectedSource ? selectedSource.id : "";
     if (location != null) {
       const sourceId = location.sourceId ? location.sourceId : selectedSourceId;
-      selectSpecificLocation(cx, {
+      selectSpecificLocation({
         sourceId,
         line: location.line,
         column: location.column
@@ -421,7 +419,6 @@ function mapStateToProps(state) {
   const selectedSource = getSelectedSource(state);
 
   return {
-    cx: getContext(state),
     enabled: getQuickOpenEnabled(state),
     sources: formatSources(getDisplayedSourcesList(state), getTabs(state)),
     selectedSource,

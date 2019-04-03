@@ -116,9 +116,9 @@ class MozSearchbar extends MozXULElement {
     }, { capture: true, once: true });
   }
 
-  get engines() {
+  async getEngines() {
     if (!this._engines)
-      this._engines = Services.search.getVisibleEngines();
+      this._engines = await Services.search.getVisibleEngines();
     return this._engines;
   }
 
@@ -207,17 +207,31 @@ class MozSearchbar extends MozXULElement {
     }
   }
 
-  selectEngine(aEvent, isNextEngine) {
-    // Find the new index
-    let newIndex = this.engines.indexOf(this.currentEngine);
-    newIndex += isNextEngine ? 1 : -1;
-
-    if (newIndex >= 0 && newIndex < this.engines.length) {
-      this.currentEngine = this.engines[newIndex];
-    }
-
+  async selectEngine(aEvent, isNextEngine) {
+    // Stop event bubbling now, because the rest of this method is async.
     aEvent.preventDefault();
     aEvent.stopPropagation();
+
+    // Find the new index.
+    let engines = await this.getEngines();
+    let currentName = this.currentEngine.name;
+    let newIndex = -1;
+    let lastIndex = engines.length - 1;
+    for (let i = lastIndex; i >= 0; --i) {
+      if (engines[i].name == currentName) {
+        // Check bounds to cycle through the list of engines continuously.
+        if (!isNextEngine && i == 0) {
+          newIndex = lastIndex;
+        } else if (isNextEngine && i == lastIndex) {
+          newIndex = 0;
+        } else {
+          newIndex = i + (isNextEngine ? 1 : -1);
+        }
+        break;
+      }
+    }
+
+    this.currentEngine = engines[newIndex];
 
     this.openSuggestionsPanel();
   }

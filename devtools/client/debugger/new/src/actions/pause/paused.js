@@ -7,8 +7,7 @@ import {
   getHiddenBreakpoint,
   isEvaluatingExpression,
   getSelectedFrame,
-  wasStepping,
-  getThreadContext
+  wasStepping
 } from "../../selectors";
 
 import { mapFrames } from ".";
@@ -16,7 +15,6 @@ import { removeBreakpoint } from "../breakpoints";
 import { evaluateExpressions } from "../expressions";
 import { selectLocation } from "../sources";
 import { togglePaneCollapse } from "../ui";
-import assert from "../../utils/assert";
 
 import { fetchScopes } from "./fetchScopes";
 
@@ -44,33 +42,29 @@ export function paused(pauseInfo: Pause) {
       loadedObjects: loadedObjects || []
     });
 
-    // Get a context capturing the newly paused and selected thread.
-    const cx = getThreadContext(getState());
-    assert(cx.thread == thread, "Thread mismatch");
-
     const hiddenBreakpoint = getHiddenBreakpoint(getState());
     if (hiddenBreakpoint) {
-      dispatch(removeBreakpoint(cx, hiddenBreakpoint));
+      dispatch(removeBreakpoint(hiddenBreakpoint));
     }
 
-    await dispatch(mapFrames(cx));
+    await dispatch(mapFrames(thread));
 
     const selectedFrame = getSelectedFrame(getState(), thread);
     if (selectedFrame) {
-      await dispatch(selectLocation(cx, selectedFrame.location));
+      await dispatch(selectLocation(selectedFrame.location));
     }
 
     if (!wasStepping(getState(), thread)) {
       dispatch(togglePaneCollapse("end", false));
     }
 
-    await dispatch(fetchScopes(cx));
+    await dispatch(fetchScopes(thread));
 
     // Run after fetching scoping data so that it may make use of the sourcemap
     // expression mappings for local variables.
     const atException = why.type == "exception";
     if (!atException || !isEvaluatingExpression(getState(), thread)) {
-      await dispatch(evaluateExpressions(cx));
+      await dispatch(evaluateExpressions());
     }
   };
 }

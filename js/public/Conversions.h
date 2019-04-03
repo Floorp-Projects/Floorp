@@ -348,7 +348,7 @@ inline UnsignedInteger ToUnsignedInteger(double d) {
   //   The implicit leading bit matters identically to the other case, so
   //   again, |exponent < ResultWidth|.
   if (exponent < ResultWidth) {
-    UnsignedInteger implicitOne = UnsignedInteger(1) << exponent;
+    const auto implicitOne = static_cast<UnsignedInteger>(UnsignedInteger{1} << exponent);
     result &= implicitOne - 1;  // remove bogus bits
     result += implicitOne;      // add the implicit bit
   }

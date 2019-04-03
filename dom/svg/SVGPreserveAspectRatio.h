@@ -43,7 +43,7 @@ class SVGPreserveAspectRatio final {
         mMeetOrSlice(
             dom::SVGPreserveAspectRatio_Binding::SVG_MEETORSLICE_UNKNOWN) {}
 
-  SVGPreserveAspectRatio(uint16_t aAlign, uint16_t aMeetOrSlice)
+  SVGPreserveAspectRatio(uint8_t aAlign, uint8_t aMeetOrSlice)
       : mAlign(aAlign), mMeetOrSlice(aMeetOrSlice) {}
 
   static nsresult FromString(const nsAString& aString,
@@ -59,7 +59,7 @@ class SVGPreserveAspectRatio final {
     return NS_OK;
   }
 
-  uint16_t GetAlign() const { return mAlign; }
+  auto GetAlign() const { return mAlign; }
 
   nsresult SetMeetOrSlice(uint16_t aMeetOrSlice) {
     if (aMeetOrSlice < SVG_MEETORSLICE_MIN_VALID ||
@@ -69,7 +69,7 @@ class SVGPreserveAspectRatio final {
     return NS_OK;
   }
 
-  uint16_t GetMeetOrSlice() const { return mMeetOrSlice; }
+  auto GetMeetOrSlice() const { return mMeetOrSlice; }
 
   PLDHashNumber Hash() const { return HashGeneric(mAlign, mMeetOrSlice); }
 

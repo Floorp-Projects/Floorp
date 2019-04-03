@@ -55,7 +55,7 @@ add_task(async function() {
   ok(firstCallEvaluationResult === unresolvedSymbol, "firstCall was not evaluated yet");
 
   info("Resuming the thread");
-  dbg.actions.resume(dbg.selectors.getThreadContext(dbg.getState()));
+  dbg.actions.resume(dbg.getState());
 
   message = await onFirstCallMessageReceived;
   ok(firstCallEvaluationResult !== unresolvedSymbol,
