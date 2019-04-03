@@ -42,15 +42,6 @@ function isDocumentReady(source, frame) {
 export class DebugLine extends Component<Props> {
   debugExpression: null;
 
-  componentDidUpdate(prevProps: Props) {
-    const { why, frame, source } = this.props;
-
-    startOperation();
-    this.clearDebugLine(prevProps.why, prevProps.frame, prevProps.source);
-    this.setDebugLine(why, frame, source);
-    endOperation();
-  }
-
   componentDidMount() {
     const { why, frame, source } = this.props;
     this.setDebugLine(why, frame, source);
@@ -59,6 +50,15 @@ export class DebugLine extends Component<Props> {
   componentWillUnmount() {
     const { why, frame, source } = this.props;
     this.clearDebugLine(why, frame, source);
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    const { why, frame, source } = this.props;
+
+    startOperation();
+    this.clearDebugLine(prevProps.why, prevProps.frame, prevProps.source);
+    this.setDebugLine(why, frame, source);
+    endOperation();
   }
 
   setDebugLine(why: Why, frame: Frame, source: Source) {

@@ -166,6 +166,15 @@ void U2FTokenManager::AbortTransaction(const uint64_t& aTransactionId,
   ClearTransaction();
 }
 
+void U2FTokenManager::AbortOngoingTransaction() {
+  if (mLastTransactionId > 0 && mTransactionParent) {
+    // Send an abort to any other ongoing transaction
+    Unused << mTransactionParent->SendAbort(mLastTransactionId,
+                                            NS_ERROR_DOM_ABORT_ERR);
+  }
+  ClearTransaction();
+}
+
 void U2FTokenManager::MaybeClearTransaction(
     PWebAuthnTransactionParent* aParent) {
   // Only clear if we've been requested to do so by our current transaction
@@ -176,12 +185,9 @@ void U2FTokenManager::MaybeClearTransaction(
 }
 
 void U2FTokenManager::ClearTransaction() {
-  if (mLastTransactionId > 0 && mTransactionParent) {
+  if (mLastTransactionId) {
     // Remove any prompts we might be showing for the current transaction.
     SendPromptNotification(kCancelPromptNotifcation, mLastTransactionId);
-    // Send an abort to any other ongoing transaction
-    Unused << mTransactionParent->SendAbort(mLastTransactionId,
-                                            NS_ERROR_DOM_ABORT_ERR);
   }
 
   mTransactionParent = nullptr;
@@ -271,7 +277,7 @@ void U2FTokenManager::Register(
     const WebAuthnMakeCredentialInfo& aTransactionInfo) {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthRegister"));
 
-  ClearTransaction();
+  AbortOngoingTransaction();
   mTransactionParent = aTransactionParent;
   mTokenManagerImpl = GetTokenManagerImpl();
 
@@ -368,7 +374,7 @@ void U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
                            const WebAuthnGetAssertionInfo& aTransactionInfo) {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthSign"));
 
-  ClearTransaction();
+  AbortOngoingTransaction();
   mTransactionParent = aTransactionParent;
   mTokenManagerImpl = GetTokenManagerImpl();
 

@@ -16,7 +16,9 @@ import type { Action, DonePromiseAction } from "../actions/types";
 
 type EmptyLinesType = number[];
 
-export type Symbols = SymbolDeclarations | {| loading: true |};
+export type LoadedSymbols = SymbolDeclarations;
+export type Symbols = LoadedSymbols | {| loading: true |};
+
 export type EmptyLinesMap = { [k: string]: EmptyLinesType };
 export type SymbolsMap = { [k: string]: Symbols };
 

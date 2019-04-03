@@ -10,6 +10,7 @@
 
 // Most WebIDL typedefs are identical to their OpenGL counterparts.
 #include "GLTypes.h"
+#include "mozilla/Casting.h"
 
 // Manual reflection of WebIDL typedefs that are different from their
 // OpenGL counterparts.
@@ -53,6 +54,30 @@ inline void* malloc(const ForbidNarrowing<size_t> s) {
 inline void* calloc(const ForbidNarrowing<size_t> n,
                     const ForbidNarrowing<size_t> size) {
   return ::calloc(size_t(n), size_t(size));
+}
+
+// -
+
+namespace detail {
+
+template<typename From>
+class AutoAssertCastT final {
+  const From mVal;
+
+public:
+  explicit AutoAssertCastT(const From val) : mVal(val) { }
+
+  template<typename To>
+  operator To() const {
+    return AssertedCast<To>(mVal);
+  }
+};
+
+}  // namespace detail
+
+template<typename From>
+inline auto AutoAssertCast(const From val) {
+  return detail::AutoAssertCastT<From>(val);
 }
 
 /*

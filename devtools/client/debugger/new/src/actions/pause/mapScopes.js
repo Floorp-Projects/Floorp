@@ -72,9 +72,9 @@ export function mapScopes(scopes: Promise<Scope>, frame: Frame) {
           return null;
         }
 
-        await dispatch(loadSourceText(source));
+        await dispatch(loadSourceText({ source }));
         if (isOriginal(source)) {
-          await dispatch(loadSourceText(generatedSource));
+          await dispatch(loadSourceText({ source: generatedSource }));
         }
 
         try {

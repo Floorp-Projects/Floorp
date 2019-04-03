@@ -102,7 +102,7 @@ inline float UInt8bitToAudioSample<float>(uint8_t aValue) {
 }
 template <>
 inline int16_t UInt8bitToAudioSample<int16_t>(uint8_t aValue) {
-  return (int16_t(aValue) << 8) + aValue + INT16_MIN;
+  return static_cast<int16_t>((aValue << 8) + aValue + INT16_MIN);
 }
 
 template <typename T>
@@ -126,7 +126,7 @@ inline float Int24bitToAudioSample<float>(int32_t aValue) {
 }
 template <>
 inline int16_t Int24bitToAudioSample<int16_t>(int32_t aValue) {
-  return aValue / 256;
+  return static_cast<int16_t>(aValue / 256);
 }
 
 template <typename SrcT, typename DstT>
