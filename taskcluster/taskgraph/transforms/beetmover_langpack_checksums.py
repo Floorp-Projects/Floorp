@@ -11,14 +11,18 @@ from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import craft_release_properties
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
-from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
+from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
+                                         generate_beetmover_upstream_artifacts,
                                          get_beetmover_action_scope,
-                                         get_worker_type_for_scope)
+                                         get_beetmover_bucket_scope,
+                                         get_worker_type_for_scope,
+                                         should_use_artifact_map)
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
 beetmover_checksums_description_schema = schema.extend({
     Required('depname', default='build'): basestring,
+    Required('attributes'): {basestring: object},
     Optional('label'): basestring,
     Optional('treeherder'): task_description_schema['treeherder'],
     Optional('locale'): basestring,
@@ -67,6 +71,7 @@ def make_beetmover_checksums_description(config, jobs):
         attributes = copy_attributes_from_dependent_job(dep_job)
         if 'chunk_locales' in dep_job.attributes:
             attributes['chunk_locales'] = dep_job.attributes['chunk_locales']
+        attributes.update(job.get('attributes', {}))
 
         bucket_scope = get_beetmover_bucket_scope(config)
         action_scope = get_beetmover_action_scope(config)
@@ -136,11 +141,20 @@ def make_beetmover_checksums_worker(config, jobs):
         worker = {
             'implementation': 'beetmover',
             'release-properties': craft_release_properties(config, job),
-            'upstream-artifacts': generate_upstream_artifacts(
-                refs, platform, locales
-            ),
         }
 
+        if should_use_artifact_map(platform, config.params['project']):
+            upstream_artifacts = generate_beetmover_upstream_artifacts(
+                config, job, platform, locales
+            )
+            worker['artifact-map'] = generate_beetmover_artifact_map(
+                config, job, platform=platform, locale=locales)
+        else:
+            upstream_artifacts = generate_upstream_artifacts(
+                refs, platform, locales
+            )
+
+        worker['upstream-artifacts'] = upstream_artifacts
         job["worker"] = worker
 
         yield job
