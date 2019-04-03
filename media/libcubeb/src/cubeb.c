@@ -303,7 +303,7 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
 {
   int r;
 
-  if (!context || !stream) {
+  if (!context || !stream || !data_callback || !state_callback) {
     return CUBEB_ERROR_INVALID_PARAMETER;
   }
 

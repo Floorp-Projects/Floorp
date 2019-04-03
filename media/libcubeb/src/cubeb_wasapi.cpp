@@ -1449,6 +1449,7 @@ int wasapi_init(cubeb ** context, char const * context_name)
   com_ptr<IMMDevice> device;
   HRESULT hr = get_default_endpoint(device, eRender);
   if (FAILED(hr)) {
+    XASSERT(hr != CO_E_NOTINITIALIZED);
     LOG("It wasn't able to find a default rendering device: %lx", hr);
     hr = get_default_endpoint(device, eCapture);
     if (FAILED(hr)) {
