@@ -92,43 +92,21 @@ add_task(async function test_addon_uninstall() {
   is(addon, null, "Addon should be uninstalled.");
 });
 
-add_task(async function test_addon_download_failure() {
-  // Test that if the download fails, the runOnce pref
-  // is cleared so that the dowbnload will happen again
-
-  let installPromise = wait_for_addon_install();
-  await setupPolicyEngineWithJson({
-    "policies": {
-      "Extensions": {
-        "Install": [
-          `${BASE_URL}/policytest_invalid.xpi`,
-        ],
-      },
-    },
-  });
-
-  try {
-    await installPromise;
-  } catch (e) {}
-  is(Services.prefs.prefHasUserValue("browser.policies.runOncePerModification.extensionsInstall"), false, "runOnce pref should be unset");
-});
-
 function wait_for_addon_install() {
   return new Promise((resolve, reject) => {
-    let listener = {};
-    listener.onInstallEnded = (install, addon) => {
-      AddonManager.removeInstallListener(listener);
-      resolve();
-    };
-    listener.onDownloadFailed = install => {
-      AddonManager.removeInstallListener(listener);
-      reject();
-    };
-    listener.onInstallFailed = install => {
-      AddonManager.removeInstallListener(listener);
-      reject();
-    };
-    AddonManager.addInstallListener(listener);
+      AddonManager.addInstallListener({
+        onInstallEnded(install, addon) {
+          if (addon.id == addonID) {
+            resolve();
+          }
+        },
+        onDownloadFailed: (install) => {
+          reject();
+        },
+        onInstallFailed: (install) => {
+          reject();
+        },
+      });
   });
 }
 
