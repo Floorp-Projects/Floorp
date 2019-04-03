@@ -1487,13 +1487,13 @@ void CodeGenerator::visitObjectGroupDispatch(LObjectGroupDispatch* lir) {
 
   if (!mir->hasFallback()) {
     MOZ_ASSERT(lastBranch.isInitialized());
-#ifdef DEBUG
+
     Label ok;
     lastBranch.relink(&ok);
     lastBranch.emit(masm);
     masm.assumeUnreachable("Unexpected ObjectGroup");
     masm.bind(&ok);
-#endif
+
     if (!isNextBlock(lastBlock)) {
       masm.jump(lastBlock->label());
     }
