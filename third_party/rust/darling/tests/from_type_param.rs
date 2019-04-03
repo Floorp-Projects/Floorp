@@ -1,9 +1,6 @@
 #[macro_use]
 extern crate darling;
-#[macro_use]
 extern crate syn;
-#[macro_use]
-extern crate quote;
 
 use darling::FromTypeParam;
 use syn::{DeriveInput, GenericParam, Ident, TypeParam};
@@ -37,13 +34,14 @@ fn extract_type(param: &GenericParam) -> &TypeParam {
 
 #[test]
 fn expand_many() {
-    let di: DeriveInput = parse_quote! {
+    let di: DeriveInput = syn::parse_str(
+        r#"
         struct Baz<
             #[lorem(foo)] T,
             #[lorem(bar = "x")] U: Eq + ?Sized
         >(T, U);
-    };
-
+    "#,
+    ).unwrap();
     let params = di.generics.params;
 
     {

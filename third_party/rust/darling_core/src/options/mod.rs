@@ -42,37 +42,23 @@ impl FromMeta for DefaultExpression {
         Ok(DefaultExpression::Trait)
     }
 
-    fn from_value(value: &syn::Lit) -> Result<Self> {
-        syn::Path::from_value(value).map(DefaultExpression::Explicit)
+    fn from_string(lit: &str) -> Result<Self> {
+        Ok(DefaultExpression::Explicit(
+            syn::parse_str(lit).map_err(|_| Error::unknown_value(lit))?
+        ))
     }
 }
 
-/// Run a parsing task, and if it produces an error push it into `$errors`
-macro_rules! collect_error {
-    ($errors:ident, $task:expr) => {
-        if let Err(e) = $task {
-            $errors.push(e);
-        }
-    };
-}
-
-/// Middleware for extracting attribute values. Implementers are expected to override
-/// `parse_nested` so they can apply individual items to themselves, while `parse_attributes`
-/// is responsible for looping through distinct outer attributes and collecting errors.
+/// Middleware for extracting attribute values.
 pub trait ParseAttribute: Sized {
     fn parse_attributes(mut self, attrs: &[syn::Attribute]) -> Result<Self> {
-        let mut errors = Vec::new();
         for attr in attrs {
             if attr.path == parse_quote!(darling) {
-                collect_error!(errors, parse_attr(attr, &mut self));
+                parse_attr(attr, &mut self)?;
             }
         }
 
-        if !errors.is_empty() {
-            Err(Error::multiple(errors))
-        } else {
-            Ok(self)
-        }
+        Ok(self)
     }
 
     /// Read a meta-item, and apply its values to the current instance.
@@ -80,75 +66,66 @@ pub trait ParseAttribute: Sized {
 }
 
 fn parse_attr<T: ParseAttribute>(attr: &syn::Attribute, target: &mut T) -> Result<()> {
-    let mut errors = Vec::new();
-    match attr.parse_meta().ok() {
+    match attr.interpret_meta() {
         Some(syn::Meta::List(data)) => {
             for item in data.nested {
                 if let syn::NestedMeta::Meta(ref mi) = item {
-                    collect_error!(errors, target.parse_nested(mi));
+                    target.parse_nested(mi)?;
                 } else {
                     panic!("Wasn't able to parse: `{:?}`", item);
                 }
             }
 
-            if !errors.is_empty() {
-                Err(Error::multiple(errors))
-            } else {
-                Ok(())
-            }
+            Ok(())
         }
         Some(ref item) => panic!("Wasn't able to parse: `{:?}`", item),
         None => panic!("Unable to parse {:?}", attr),
     }
 }
 
-/// Middleware for extracting values from the body of the derive input. Implementers are
-/// expected to override `parse_field` or `parse_variant` as appropriate for their use-case,
-/// while `parse_body` dispatches to the appropriate methods and handles error collection.
 pub trait ParseData: Sized {
     fn parse_body(mut self, body: &syn::Data) -> Result<Self> {
         use syn::{Data, Fields};
 
-        let mut errors = Vec::new();
-
         match *body {
             Data::Struct(ref data) => match data.fields {
-                Fields::Unit => {}
+                Fields::Unit => Ok(self),
                 Fields::Named(ref fields) => {
                     for field in &fields.named {
-                        collect_error!(errors, self.parse_field(field));
+                        self.parse_field(field)?;
                     }
+                    Ok(self)
                 }
                 Fields::Unnamed(ref fields) => {
                     for field in &fields.unnamed {
-                        collect_error!(errors, self.parse_field(field));
+                        self.parse_field(field)?;
                     }
+
+                    Ok(self)
                 }
             },
             Data::Enum(ref data) => {
                 for variant in &data.variants {
-                    collect_error!(errors, self.parse_variant(variant));
+                    self.parse_variant(variant)?;
                 }
+
+                Ok(self)
             }
             Data::Union(_) => unreachable!(),
-        };
-
-        if !errors.is_empty() {
-            Err(Error::multiple(errors))
-        } else {
-            Ok(self)
         }
     }
 
     /// Apply the next found variant to the object, returning an error
     /// if parsing goes wrong.
+    #[allow(unused_variables)]
     fn parse_variant(&mut self, variant: &syn::Variant) -> Result<()> {
-        Err(Error::unsupported_format("enum variant").with_span(variant))
+        Err(Error::unsupported_format("enum variant"))
     }
 
     /// Apply the next found struct field to the object, returning an error
     /// if parsing goes wrong.
+    #[allow(unused_variables)]
     fn parse_field(&mut self, field: &syn::Field) -> Result<()> {
-        Err(Error::unsupported_format("struct field").with_span(field))
+        Err(Error::unsupported_format("struct field"))
     }
 }

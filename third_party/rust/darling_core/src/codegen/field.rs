@@ -1,7 +1,5 @@
-use std::borrow::Cow;
-
 use proc_macro2::TokenStream;
-use quote::{ToTokens, TokenStreamExt};
+use quote::{TokenStreamExt, ToTokens};
 use syn::{Ident, Path, Type};
 
 use codegen::DefaultExpression;
@@ -13,7 +11,7 @@ use usage::{self, IdentRefSet, IdentSet, UsesTypeParams};
 pub struct Field<'a> {
     /// The name presented to the user of the library. This will appear
     /// in error messages and will be looked when parsing names.
-    pub name_in_attr: Cow<'a, String>,
+    pub name_in_attr: String,
 
     /// The name presented to the author of the library. This will appear
     /// in the setters or temporary variables which contain the values.
@@ -22,17 +20,13 @@ pub struct Field<'a> {
     /// The type of the field in the input.
     pub ty: &'a Type,
     pub default_expression: Option<DefaultExpression<'a>>,
-    pub with_path: Cow<'a, Path>,
+    pub with_path: Path,
     pub map: Option<&'a Path>,
     pub skip: bool,
     pub multiple: bool,
 }
 
 impl<'a> Field<'a> {
-    pub fn as_name(&'a self) -> &'a str {
-        &self.name_in_attr
-    }
-
     pub fn as_declaration(&'a self) -> Declaration<'a> {
         Declaration(self, !self.skip)
     }
@@ -110,12 +104,7 @@ impl<'a> ToTokens for MatchArm<'a> {
                 quote!(#name_str)
             };
 
-            // Add the span immediately on extraction failure, so that it's as specific as possible.
-            // The behavior of `with_span` makes this safe to do; if the child applied an
-            // even-more-specific span, our attempt here will not overwrite that and will only cost
-            // us one `if` check.
-            let mut extractor =
-                quote!(#with_path(__inner).map_err(|e| e.with_span(&__inner).at(#location)));
+            let mut extractor = quote!(#with_path(__inner).map_err(|e| e.at(#location)));
             if let Some(ref map) = field.map {
                 extractor = quote!(#extractor.map(#map))
             }
@@ -127,10 +116,10 @@ impl<'a> ToTokens for MatchArm<'a> {
                         // it for error reporting.
                         let __len = #ident.len();
                         match #extractor {
-                            ::darling::export::Ok(__val) => {
+                            Ok(__val) => {
                                 #ident.push(__val)
                             }
-                            ::darling::export::Err(__err) => {
+                            Err(__err) => {
                                 __errors.push(__err)
                             }
                         }
@@ -141,16 +130,16 @@ impl<'a> ToTokens for MatchArm<'a> {
                     #name_str => {
                         if !#ident.0 {
                             match #extractor {
-                                ::darling::export::Ok(__val) => {
+                                Ok(__val) => {
                                     #ident = (true, ::darling::export::Some(__val));
                                 }
-                                ::darling::export::Err(__err) => {
+                                Err(__err) => {
                                     #ident = (true, None);
                                     __errors.push(__err);
                                 }
                             }
                         } else {
-                            __errors.push(::darling::Error::duplicate_field(#name_str).with_span(&__inner));
+                            __errors.push(::darling::Error::duplicate_field(#name_str));
                         }
                     }
                 )
@@ -176,13 +165,15 @@ impl<'a> ToTokens for Initializer<'a> {
             } else {
                 quote!(#ident: #ident)
             }
-        } else if let Some(ref expr) = field.default_expression {
-            quote!(#ident: match #ident.1 {
-                ::darling::export::Some(__val) => __val,
-                ::darling::export::None => #expr,
-            })
         } else {
-            quote!(#ident: #ident.1.expect("Uninitialized fields without defaults were already checked"))
+            if let Some(ref expr) = field.default_expression {
+                quote!(#ident: match #ident.1 {
+                    ::darling::export::Some(__val) => __val,
+                    ::darling::export::None => #expr,
+                })
+            } else {
+                quote!(#ident: #ident.1.expect("Uninitialized fields without defaults were already checked"))
+            }
         });
     }
 }

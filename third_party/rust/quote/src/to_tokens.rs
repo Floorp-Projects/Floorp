@@ -21,9 +21,12 @@ pub trait ToTokens {
     /// Example implementation for a struct representing Rust paths like
     /// `std::cmp::PartialEq`:
     ///
-    /// ```edition2018
-    /// use proc_macro2::{TokenTree, Spacing, Span, Punct, TokenStream};
+    /// ```
+    /// extern crate quote;
     /// use quote::{TokenStreamExt, ToTokens};
+    ///
+    /// extern crate proc_macro2;
+    /// use proc_macro2::{TokenTree, Spacing, Span, Punct, TokenStream};
     ///
     /// pub struct Path {
     ///     pub global: bool,
@@ -50,6 +53,8 @@ pub trait ToTokens {
     /// #         unimplemented!()
     /// #     }
     /// # }
+    /// #
+    /// # fn main() {}
     /// ```
     fn to_tokens(&self, tokens: &mut TokenStream);
 

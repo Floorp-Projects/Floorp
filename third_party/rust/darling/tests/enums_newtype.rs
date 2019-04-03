@@ -1,11 +1,9 @@
 #[macro_use]
 extern crate darling;
-#[macro_use]
-extern crate syn;
-#[macro_use]
-extern crate quote;
 
 use darling::FromDeriveInput;
+
+extern crate syn;
 
 #[derive(Debug, Default, PartialEq, Eq, FromMeta)]
 #[darling(default)]
@@ -36,10 +34,12 @@ impl PartialEq<Lorem> for Holder {
 
 #[test]
 fn bool_word() {
-    let di = parse_quote! {
+    let di = syn::parse_str(
+        r#"
         #[hello(lorem(ipsum))]
         pub struct Bar;
-    };
+    "#,
+    ).unwrap();
 
     let pr = Holder::from_derive_input(&di).unwrap();
     assert_eq!(pr, Lorem::Ipsum(true));
@@ -47,10 +47,12 @@ fn bool_word() {
 
 #[test]
 fn bool_literal() {
-    let di = parse_quote! {
+    let di = syn::parse_str(
+        r#"
         #[hello(lorem(ipsum = false))]
         pub struct Bar;
-    };
+    "#,
+    ).unwrap();
 
     let pr = Holder::from_derive_input(&di).unwrap();
     assert_eq!(pr, Lorem::Ipsum(false));
@@ -58,10 +60,12 @@ fn bool_literal() {
 
 #[test]
 fn string_literal() {
-    let di = parse_quote! {
+    let di = syn::parse_str(
+        r#"
         #[hello(lorem(dolor = "Hello"))]
         pub struct Bar;
-    };
+    "#,
+    ).unwrap();
 
     let pr = Holder::from_derive_input(&di).unwrap();
     assert_eq!(pr, Lorem::Dolor("Hello".to_string()));
@@ -69,10 +73,12 @@ fn string_literal() {
 
 #[test]
 fn struct_nested() {
-    let di = parse_quote! {
+    let di = syn::parse_str(
+        r#"
         #[hello(lorem(sit(world = "Hello", hello = false)))]
         pub struct Bar;
-    };
+    "#,
+    ).unwrap();
 
     let pr = Holder::from_derive_input(&di).unwrap();
     assert_eq!(
@@ -87,10 +93,12 @@ fn struct_nested() {
 #[test]
 #[should_panic]
 fn format_mismatch() {
-    let di = parse_quote! {
+    let di = syn::parse_str(
+        r#"
         #[hello(lorem(dolor(world = "Hello", hello = false)))]
         pub struct Bar;
-    };
+    "#,
+    ).unwrap();
 
     Holder::from_derive_input(&di).unwrap();
 }

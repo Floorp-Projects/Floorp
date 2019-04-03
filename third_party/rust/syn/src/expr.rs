@@ -799,8 +799,8 @@ ast_enum_of_structs! {
         /// A path pattern like `Color::Red`, optionally qualified with a
         /// self-type.
         ///
-        /// Unqualified path patterns can legally refer to variants, structs,
-        /// constants or associated constants. Qualified path patterns like
+        /// Unquailfied path patterns can legally refer to variants, structs,
+        /// constants or associated constants. Quailfied path patterns like
         /// `<A>::B::C` and `<A as Trait>::B::C` can only legally refer to
         /// associated constants.
         ///
@@ -1508,7 +1508,7 @@ pub mod parsing {
         } else if input.peek(Token![loop]) {
             input.call(expr_loop).map(Expr::Loop)
         } else if input.peek(Token![match]) {
-            input.parse().map(Expr::Match)
+            input.call(expr_match).map(Expr::Match)
         } else if input.peek(Token![yield]) {
             input.call(expr_yield).map(Expr::Yield)
         } else if input.peek(Token![unsafe]) {
@@ -1703,7 +1703,7 @@ pub mod parsing {
         } else if input.peek(Token![loop]) {
             Expr::Loop(input.call(expr_loop)?)
         } else if input.peek(Token![match]) {
-            Expr::Match(input.parse()?)
+            Expr::Match(input.call(expr_match)?)
         } else if input.peek(Token![try]) && input.peek2(token::Brace) {
             Expr::TryBlock(input.call(expr_try_block)?)
         } else if input.peek(Token![unsafe]) {
@@ -1775,7 +1775,6 @@ pub mod parsing {
             let_token: input.parse()?,
             pats: {
                 let mut pats = Punctuated::new();
-                input.parse::<Option<Token![|]>>()?;
                 let value: Pat = input.parse()?;
                 pats.push_value(value);
                 while input.peek(Token![|]) && !input.peek(Token![||]) && !input.peek(Token![|=]) {
@@ -1877,28 +1876,26 @@ pub mod parsing {
     }
 
     #[cfg(feature = "full")]
-    impl Parse for ExprMatch {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let match_token: Token![match] = input.parse()?;
-            let expr = expr_no_struct(input)?;
+    fn expr_match(input: ParseStream) -> Result<ExprMatch> {
+        let match_token: Token![match] = input.parse()?;
+        let expr = expr_no_struct(input)?;
 
-            let content;
-            let brace_token = braced!(content in input);
-            let inner_attrs = content.call(Attribute::parse_inner)?;
+        let content;
+        let brace_token = braced!(content in input);
+        let inner_attrs = content.call(Attribute::parse_inner)?;
 
-            let mut arms = Vec::new();
-            while !content.is_empty() {
-                arms.push(content.call(Arm::parse)?);
-            }
-
-            Ok(ExprMatch {
-                attrs: inner_attrs,
-                match_token: match_token,
-                expr: Box::new(expr),
-                brace_token: brace_token,
-                arms: arms,
-            })
+        let mut arms = Vec::new();
+        while !content.is_empty() {
+            arms.push(content.call(Arm::parse)?);
         }
+
+        Ok(ExprMatch {
+            attrs: inner_attrs,
+            match_token: match_token,
+            expr: Box::new(expr),
+            brace_token: brace_token,
+            arms: arms,
+        })
     }
 
     #[cfg(feature = "full")]
