@@ -178,9 +178,6 @@ with Files("Media*Source*"):
 with Files("MediaStream*"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
-with Files("MediaStreamTrackAudio*"):
-    BUG_COMPONENT = ("Core", "Web Audio")
-
 with Files("MediaStreamAudio*"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
@@ -660,7 +657,6 @@ WEBIDL_FILES = [
     'MediaStreamAudioSourceNode.webidl',
     'MediaStreamError.webidl',
     'MediaStreamTrack.webidl',
-    'MediaStreamTrackAudioSourceNode.webidl',
     'MediaTrackConstraintSet.webidl',
     'MediaTrackSettings.webidl',
     'MediaTrackSupportedConstraints.webidl',
