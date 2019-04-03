@@ -50,15 +50,15 @@ const autocompleteTypes = {
   "sex": false,
   "url": false,
   "photo": false,
-  "tel": false,
+  "tel": true,
   "tel-country-code": false,
-  "tel-national": false,
+  "tel-national": true,
   "tel-area-code": false,
   "tel-local": false,
   "tel-local-prefix": false,
   "tel-local-suffix": false,
   "tel-extension": false,
-  "email": false,
+  "email": true,
   "impp": false,
 };
 
