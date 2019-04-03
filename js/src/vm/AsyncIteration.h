@@ -135,7 +135,7 @@ class AsyncGeneratorObject : public AbstractGeneratorObject {
     // while executing.
     State_AwaitingYieldReturn,
 
-    // Part of "executing" in the spec.
+    // "awaiting-return" in the spec.
     // Awaiting on the value passed by AsyncGenerator#return which is called
     // after completed.
     State_AwaitingReturn,
