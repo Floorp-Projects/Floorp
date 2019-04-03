@@ -28,7 +28,7 @@
 
 #include "HTMLFormSubmissionConstants.h"
 #include "mozilla/Telemetry.h"
-#include "nsIControllers.h"
+#include "nsBaseCommandController.h"
 #include "nsIStringBundle.h"
 #include "nsFocusManager.h"
 #include "nsColorControlFrame.h"
@@ -109,7 +109,6 @@
 #include "nsIColorPicker.h"
 #include "nsIStringEnumerator.h"
 #include "HTMLSplitOnSpacesTokenizer.h"
-#include "nsIController.h"
 #include "nsIMIMEInfo.h"
 #include "nsFrameSelection.h"
 #include "nsBaseCommandController.h"
@@ -5448,22 +5447,22 @@ nsIControllers* HTMLInputElement::GetControllers(ErrorResult& aRv) {
         return nullptr;
       }
 
-      nsCOMPtr<nsIController> controller =
+      RefPtr<nsBaseCommandController> commandController =
           nsBaseCommandController::CreateEditorController();
-      if (!controller) {
+      if (!commandController) {
         aRv.Throw(NS_ERROR_FAILURE);
         return nullptr;
       }
 
-      mControllers->AppendController(controller);
+      mControllers->AppendController(commandController);
 
-      controller = nsBaseCommandController::CreateEditingController();
-      if (!controller) {
+      commandController = nsBaseCommandController::CreateEditingController();
+      if (!commandController) {
         aRv.Throw(NS_ERROR_FAILURE);
         return nullptr;
       }
 
-      mControllers->AppendController(controller);
+      mControllers->AppendController(commandController);
     }
   }
 

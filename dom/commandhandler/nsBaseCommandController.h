@@ -9,9 +9,10 @@
 
 #include "nsIController.h"
 #include "nsIControllerContext.h"
-#include "nsIControllerCommandTable.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWeakReferenceUtils.h"
+
+class nsControllerCommandTable;
 
 // The base editor controller is used for both text widgets, and all other text
 // and html editing
@@ -28,11 +29,12 @@ class nsBaseCommandController : public nsIController,
   NS_DECL_NSICONTROLLERCONTEXT
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  static already_AddRefed<nsIController> CreateWindowController();
-  static already_AddRefed<nsIController> CreateEditorController();
-  static already_AddRefed<nsIController> CreateEditingController();
-  static already_AddRefed<nsIController> CreateHTMLEditorController();
-  static already_AddRefed<nsIController> CreateHTMLEditorDocStateController();
+  static already_AddRefed<nsBaseCommandController> CreateWindowController();
+  static already_AddRefed<nsBaseCommandController> CreateEditorController();
+  static already_AddRefed<nsBaseCommandController> CreateEditingController();
+  static already_AddRefed<nsBaseCommandController> CreateHTMLEditorController();
+  static already_AddRefed<nsBaseCommandController>
+  CreateHTMLEditorDocStateController();
 
  protected:
   virtual ~nsBaseCommandController();
@@ -42,7 +44,7 @@ class nsBaseCommandController : public nsIController,
   nsISupports* mCommandContextRawPtr;
 
   // Our reference to the command manager
-  nsCOMPtr<nsIControllerCommandTable> mCommandTable;
+  RefPtr<nsControllerCommandTable> mCommandTable;
 };
 
 #endif /* nsBaseCommandController_h_ */

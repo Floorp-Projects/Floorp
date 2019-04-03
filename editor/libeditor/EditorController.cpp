@@ -7,9 +7,9 @@
 
 #include "EditorCommands.h"
 #include "mozilla/mozalloc.h"
+#include "nsControllerCommandTable.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsIControllerCommandTable.h"
 
 class nsIControllerCommand;
 
@@ -41,7 +41,7 @@ namespace mozilla {
 
 // static
 nsresult EditorController::RegisterEditingCommands(
-    nsIControllerCommandTable* aCommandTable) {
+    nsControllerCommandTable* aCommandTable) {
   // now register all our commands
   // These are commands that will be used in text widgets, and in composer
 
@@ -79,7 +79,7 @@ nsresult EditorController::RegisterEditingCommands(
 
 // static
 nsresult EditorController::RegisterEditorCommands(
-    nsIControllerCommandTable* aCommandTable) {
+    nsControllerCommandTable* aCommandTable) {
   // These are commands that will be used in text widgets only.
 
   NS_REGISTER_FIRST_COMMAND(SelectionMoveCommands, "cmd_scrollTop");
