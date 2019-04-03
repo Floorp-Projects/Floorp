@@ -1,13 +1,9 @@
 # lint_ignore=E501
 config = {
-    "shipped-locales-url": "https://hg.mozilla.org/%(repo)s/raw-file/%(revision)s/mail/locales/shipped-locales",
     "products": {
         "installer": {
             "product-name": "Thunderbird-%(version)s",
             "check_uptake": True,
-            "alias": "thunderbird-latest",
-            "ssl-only": False,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/thunderbird/releases/%(version)s/linux-i686/:lang/thunderbird-%(version)s.tar.bz2",
@@ -30,8 +26,6 @@ config = {
         "installer-ssl": {
             "product-name": "Thunderbird-%(version)s-SSL",
             "check_uptake": True,
-            "ssl-only": True,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/thunderbird/releases/%(version)s/linux-i686/:lang/thunderbird-%(version)s.tar.bz2",
@@ -54,8 +48,6 @@ config = {
         "complete-mar": {
             "product-name": "Thunderbird-%(version)s-Complete",
             "check_uptake": True,
-            "ssl-only": False,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/thunderbird/releases/%(version)s/update/linux-i686/:lang/thunderbird-%(version)s.complete.mar",
@@ -80,8 +72,6 @@ config = {
         "releases-dir": {
             "product-name": "Thunderbird-%(version)s-Partial-%(prev_version)s",
             "check_uptake": True,
-            "ssl-only": False,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/thunderbird/releases/%(version)s/update/linux-i686/:lang/thunderbird-%(prev_version)s-%(version)s.partial.mar",
