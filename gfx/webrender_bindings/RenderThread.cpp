@@ -612,6 +612,52 @@ void RenderThread::UnregisterExternalImage(uint64_t aExternalImageId) {
   }
 }
 
+void RenderThread::PrepareForUse(uint64_t aExternalImageId) {
+  if (!IsInRenderThread()) {
+    Loop()->PostTask(NewRunnableMethod<uint64_t>(
+        "RenderThread::PrepareForUse", this, &RenderThread::PrepareForUse,
+        aExternalImageId));
+    return;
+  }
+
+  MutexAutoLock lock(mRenderTextureMapLock);
+  if (mHasShutdown) {
+    return;
+  }
+
+  auto it = mRenderTextures.find(aExternalImageId);
+  MOZ_ASSERT(it != mRenderTextures.end());
+  if (it == mRenderTextures.end()) {
+    return;
+  }
+
+  RefPtr<RenderTextureHost> texture = it->second;
+  texture->PrepareForUse();
+}
+
+void RenderThread::NotifyNotUsed(uint64_t aExternalImageId) {
+  if (!IsInRenderThread()) {
+    Loop()->PostTask(NewRunnableMethod<uint64_t>(
+        "RenderThread::NotifyNotUsed", this, &RenderThread::NotifyNotUsed,
+        aExternalImageId));
+    return;
+  }
+
+  MutexAutoLock lock(mRenderTextureMapLock);
+  if (mHasShutdown) {
+    return;
+  }
+
+  auto it = mRenderTextures.find(aExternalImageId);
+  MOZ_ASSERT(it != mRenderTextures.end());
+  if (it == mRenderTextures.end()) {
+    return;
+  }
+
+  RefPtr<RenderTextureHost> texture = it->second;
+  texture->NotifyNotUsed();
+}
+
 void RenderThread::UpdateRenderTextureHost(uint64_t aSrcExternalImageId,
                                            uint64_t aWrappedExternalImageId) {
   MOZ_ASSERT(aSrcExternalImageId != aWrappedExternalImageId);
