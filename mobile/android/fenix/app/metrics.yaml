@@ -117,7 +117,7 @@ context_menu:
     bugs:
     - 957
     data_reviews:
-    - TBD
+    - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
     - telemetry-client-dev@mozilla.com
     expires: "2020-03-01"
@@ -130,7 +130,7 @@ find_in_page:
     bugs:
     - 1036
     data_reviews:
-    - TBD
+    - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
     - telemetry-client-dev@mozilla.com
     expires: "2020-03-01"
@@ -141,7 +141,7 @@ find_in_page:
     bugs:
     - 1036
     data_reviews:
-    - TBD
+    - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
     - telemetry-client-dev@mozilla.com
     expires: "2020-03-01"
@@ -152,7 +152,7 @@ find_in_page:
     bugs:
     - 1036
     data_reviews:
-    - TBD
+    - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
     - telemetry-client-dev@mozilla.com
     expires: "2020-03-01"
@@ -163,7 +163,7 @@ find_in_page:
     bugs:
     - 1036
     data_reviews:
-    - TBD
+    - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
     - telemetry-client-dev@mozilla.com
     expires: "2020-03-01"
@@ -174,7 +174,7 @@ find_in_page:
     bugs:
     - 1036
     data_reviews:
-    - TBD
+    - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
     - telemetry-client-dev@mozilla.com
     expires: "2020-03-01"
