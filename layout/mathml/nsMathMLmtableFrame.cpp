@@ -1146,8 +1146,7 @@ uint8_t nsMathMLmtdFrame::GetVerticalAlign() const {
 nsresult nsMathMLmtdFrame::ProcessBorders(nsTableFrame* aFrame,
                                           nsDisplayListBuilder* aBuilder,
                                           const nsDisplayListSet& aLists) {
-  aLists.BorderBackground()->AppendToTop(
-      MakeDisplayItem<nsDisplaymtdBorder>(aBuilder, this));
+  aLists.BorderBackground()->AppendNewToTop<nsDisplaymtdBorder>(aBuilder, this);
   return NS_OK;
 }
 

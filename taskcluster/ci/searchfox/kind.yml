@@ -131,7 +131,7 @@ jobs:
             job-name: android-armv7-searchfox-debug
         treeherder:
             platform: android-4-0-armv7-api16/debug
-        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker-type: b-linux
         worker:
             docker-image: {in-tree: android-build}
             max-run-time: 36000

@@ -13,7 +13,7 @@ struct Setter {
   Setter(FilterNode* aNode, DrawTarget* aDT, bool aInputsChanged)
       : mNode{aNode}, mIndex{0}, mDT{aDT}, mInputsChanged{aInputsChanged} {}
   template <typename T>
-  void match(T& aValue) {
+  void operator()(T& aValue) {
     mNode->SetAttribute(mIndex, aValue);
   }
 
@@ -24,12 +24,13 @@ struct Setter {
 };
 
 template <>
-void Setter::match<std::vector<Float>>(std::vector<Float>& aValue) {
+void Setter::operator()<std::vector<Float>>(std::vector<Float>& aValue) {
   mNode->SetAttribute(mIndex, aValue.data(), aValue.size());
 }
 
 template <>
-void Setter::match<RefPtr<SourceSurface>>(RefPtr<SourceSurface>& aSurface) {
+void Setter::operator()<RefPtr<SourceSurface>>(
+    RefPtr<SourceSurface>& aSurface) {
   if (!mInputsChanged) {
     return;
   }
@@ -37,7 +38,7 @@ void Setter::match<RefPtr<SourceSurface>>(RefPtr<SourceSurface>& aSurface) {
 }
 
 template <>
-void Setter::match<RefPtr<FilterNode>>(RefPtr<FilterNode>& aNode) {
+void Setter::operator()<RefPtr<FilterNode>>(RefPtr<FilterNode>& aNode) {
   RefPtr<FilterNode> node = aNode;
   if (node->GetBackendType() == FilterBackend::FILTER_BACKEND_CAPTURE) {
     FilterNodeCapture* captureNode =

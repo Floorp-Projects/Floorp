@@ -46,7 +46,8 @@ class SVGAnimatedPreserveAspectRatio final {
     if (aAlign < SVG_ALIGN_MIN_VALID || aAlign > SVG_ALIGN_MAX_VALID) {
       return NS_ERROR_FAILURE;
     }
-    SetBaseValue(SVGPreserveAspectRatio(aAlign, mBaseVal.GetMeetOrSlice()),
+    SetBaseValue(SVGPreserveAspectRatio(static_cast<uint8_t>(aAlign),
+                                        mBaseVal.GetMeetOrSlice()),
                  aSVGElement);
     return NS_OK;
   }
@@ -56,7 +57,8 @@ class SVGAnimatedPreserveAspectRatio final {
         aMeetOrSlice > SVG_MEETORSLICE_MAX_VALID) {
       return NS_ERROR_FAILURE;
     }
-    SetBaseValue(SVGPreserveAspectRatio(mBaseVal.GetAlign(), aMeetOrSlice),
+    SetBaseValue(SVGPreserveAspectRatio(mBaseVal.GetAlign(),
+                                        static_cast<uint8_t>(aMeetOrSlice)),
                  aSVGElement);
     return NS_OK;
   }

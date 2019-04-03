@@ -945,26 +945,27 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
     EnumeratedArray<Style, Style::MAX, nscolor> colorStyles;
 
     nsString font;
-    TextAlign textAlign;
-    TextBaseline textBaseline;
+    TextAlign textAlign = TextAlign::START;
+    TextBaseline textBaseline = TextBaseline::ALPHABETIC;
 
-    nscolor shadowColor;
+    nscolor shadowColor = 0;
 
     mozilla::gfx::Matrix transform;
     mozilla::gfx::Point shadowOffset;
-    mozilla::gfx::Float lineWidth;
-    mozilla::gfx::Float miterLimit;
-    mozilla::gfx::Float globalAlpha;
-    mozilla::gfx::Float shadowBlur;
+    mozilla::gfx::Float lineWidth = 1.0f;
+    mozilla::gfx::Float miterLimit = 10.0f;
+    mozilla::gfx::Float globalAlpha = 1.0f;
+    mozilla::gfx::Float shadowBlur = 0.0f;
+
     nsTArray<mozilla::gfx::Float> dash;
-    mozilla::gfx::Float dashOffset;
+    mozilla::gfx::Float dashOffset = 0.0f;
 
-    mozilla::gfx::CompositionOp op;
-    mozilla::gfx::FillRule fillRule;
-    mozilla::gfx::CapStyle lineCap;
-    mozilla::gfx::JoinStyle lineJoin;
+    mozilla::gfx::CompositionOp op = mozilla::gfx::CompositionOp::OP_OVER;
+    mozilla::gfx::FillRule fillRule = mozilla::gfx::FillRule::FILL_WINDING;
+    mozilla::gfx::CapStyle lineCap = mozilla::gfx::CapStyle::BUTT;
+    mozilla::gfx::JoinStyle lineJoin = mozilla::gfx::JoinStyle::MITER_OR_BEVEL;
 
-    nsString filterString;
+    nsString filterString = nsString(u"none");
     nsTArray<nsStyleFilter> filterChain;
     // RAII object that we obtain when we start to observer SVG filter elements
     // for rendering changes.  When released we stop observing the SVG elements.
@@ -983,10 +984,10 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
     //
     // We keep track of this to ensure that if this gets out of sync with the
     // tainted state of the canvas itself, we update our filters accordingly.
-    bool filterSourceGraphicTainted;
+    bool filterSourceGraphicTainted = false;
 
-    bool imageSmoothingEnabled;
-    bool fontExplicitLanguage;
+    bool imageSmoothingEnabled = true;
+    bool fontExplicitLanguage = false;
   };
 
   AutoTArray<ContextState, 3> mStyleStack;

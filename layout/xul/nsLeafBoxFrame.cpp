@@ -94,8 +94,7 @@ void nsLeafBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   if (!aBuilder->IsForEventDelivery() || !IsVisibleForPainting()) return;
 
-  aLists.Content()->AppendToTop(
-      MakeDisplayItem<nsDisplayEventReceiver>(aBuilder, this));
+  aLists.Content()->AppendNewToTop<nsDisplayEventReceiver>(aBuilder, this);
 }
 
 /* virtual */

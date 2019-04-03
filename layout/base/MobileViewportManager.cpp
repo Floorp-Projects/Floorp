@@ -9,6 +9,7 @@
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTarget.h"
 #include "nsIFrame.h"
@@ -16,7 +17,6 @@
 #include "nsViewManager.h"
 #include "nsViewportInfo.h"
 #include "UnitTransforms.h"
-#include "mozilla/dom/Document.h"
 
 #define MVM_LOG(...)
 // #define MVM_LOG(...) printf_stderr("MVM: " __VA_ARGS__)
@@ -30,6 +30,7 @@ NS_IMPL_ISUPPORTS(MobileViewportManager, nsIDOMEventListener, nsIObserver)
 #define BEFORE_FIRST_PAINT NS_LITERAL_CSTRING("before-first-paint")
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::layers;
 
 MobileViewportManager::MobileViewportManager(nsIPresShell* aPresShell,

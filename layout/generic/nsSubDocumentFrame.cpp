@@ -292,7 +292,9 @@ static void WrapBackgroundColorInOwnLayer(nsDisplayListBuilder* aBuilder,
       item = MakeDisplayItem<nsDisplayOwnLayer>(
           aBuilder, aFrame, &tmpList, aBuilder->CurrentActiveScrolledRoot());
     }
-    tempItems.AppendToTop(item);
+    if (item) {
+      tempItems.AppendToTop(item);
+    }
   }
   aList->AppendToTop(&tempItems);
 }
@@ -342,8 +344,7 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nsRect bounds = this->EnsureInnerView()->GetBounds() + offset;
     clipState.ClipContentDescendants(bounds);
 
-    aLists.Content()->AppendToTop(
-        MakeDisplayItem<nsDisplayRemote>(aBuilder, this));
+    aLists.Content()->AppendNewToTop<nsDisplayRemote>(aBuilder, this);
     return;
   }
 
@@ -542,11 +543,10 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     if (ignoreViewportScrolling && !constructResolutionItem) {
       zoomFlags |= nsDisplayOwnLayerFlags::eGenerateScrollableLayer;
     }
-    nsDisplayZoom* zoomItem = MakeDisplayItem<nsDisplayZoom>(
-        aBuilder, subdocRootFrame, this, &childItems, subdocAPD, parentAPD,
-        zoomFlags);
+    childItems.AppendNewToTop<nsDisplayZoom>(aBuilder, subdocRootFrame, this,
+                                             &childItems, subdocAPD, parentAPD,
+                                             zoomFlags);
 
-    childItems.AppendToTop(zoomItem);
     needsOwnLayer = false;
   }
   // Wrap the zoom item in the resolution item if we have both because we want
@@ -556,10 +556,9 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     flags |= nsDisplayOwnLayerFlags::eGenerateScrollableLayer;
   }
   if (constructResolutionItem) {
-    nsDisplayResolution* resolutionItem = MakeDisplayItem<nsDisplayResolution>(
-        aBuilder, subdocRootFrame, this, &childItems, flags);
+    childItems.AppendNewToTop<nsDisplayResolution>(aBuilder, subdocRootFrame,
+                                                   this, &childItems, flags);
 
-    childItems.AppendToTop(resolutionItem);
     needsOwnLayer = false;
   }
 
@@ -567,8 +566,10 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsDisplaySubDocument* layerItem = MakeDisplayItem<nsDisplaySubDocument>(
       aBuilder, subdocRootFrame ? subdocRootFrame : this, this, &childItems,
       flags);
-  childItems.AppendToTop(layerItem);
-  layerItem->SetShouldFlattenAway(!needsOwnLayer);
+  if (layerItem) {
+    childItems.AppendToTop(layerItem);
+    layerItem->SetShouldFlattenAway(!needsOwnLayer);
+  }
 
   // If we're using containers for root frames, then the earlier call
   // to AddCanvasBackgroundColorItem won't have been able to add an

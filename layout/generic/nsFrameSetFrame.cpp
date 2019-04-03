@@ -643,8 +643,7 @@ void nsHTMLFramesetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   BuildDisplayListForInline(aBuilder, aLists);
 
   if (mDragger && aBuilder->IsForEventDelivery()) {
-    aLists.Content()->AppendToTop(
-        MakeDisplayItem<nsDisplayEventReceiver>(aBuilder, this));
+    aLists.Content()->AppendNewToTop<nsDisplayEventReceiver>(aBuilder, this);
   }
 }
 
@@ -1357,8 +1356,7 @@ void nsDisplayFramesetBorder::Paint(nsDisplayListBuilder* aBuilder,
 
 void nsHTMLFramesetBorderFrame::BuildDisplayList(
     nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
-  aLists.Content()->AppendToTop(
-      MakeDisplayItem<nsDisplayFramesetBorder>(aBuilder, this));
+  aLists.Content()->AppendNewToTop<nsDisplayFramesetBorder>(aBuilder, this);
 }
 
 void nsHTMLFramesetBorderFrame::PaintBorder(DrawTarget* aDrawTarget,
@@ -1540,6 +1538,5 @@ void nsDisplayFramesetBlank::Paint(nsDisplayListBuilder* aBuilder,
 
 void nsHTMLFramesetBlankFrame::BuildDisplayList(
     nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
-  aLists.Content()->AppendToTop(
-      MakeDisplayItem<nsDisplayFramesetBlank>(aBuilder, this));
+  aLists.Content()->AppendNewToTop<nsDisplayFramesetBlank>(aBuilder, this);
 }

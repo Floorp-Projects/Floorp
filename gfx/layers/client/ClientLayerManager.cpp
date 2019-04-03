@@ -716,6 +716,7 @@ void ClientLayerManager::ForwardTransaction(bool aScheduleComposite) {
     // unless we forwarded to somewhere that doesn't actually
     // have a compositor.
     mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
+    mLatestTransactionId = mLatestTransactionId.Prev();
   }
 
   mPhase = PHASE_NONE;

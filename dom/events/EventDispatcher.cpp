@@ -128,11 +128,9 @@ static bool IsEventTargetChrome(EventTarget* aEventTarget,
 
 // EventTargetChainItem represents a single item in the event target chain.
 class EventTargetChainItem {
- private:
-  explicit EventTargetChainItem(EventTarget* aTarget);
-
  public:
-  EventTargetChainItem() : mItemFlags(0) {
+  explicit EventTargetChainItem(EventTarget* aTarget)
+      : mTarget(aTarget), mItemFlags(0) {
     MOZ_COUNT_CTOR(EventTargetChainItem);
   }
 
@@ -144,8 +142,7 @@ class EventTargetChainItem {
     // The last item which can handle the event must be aChild.
     MOZ_ASSERT(GetLastCanHandleEventTarget(aChain) == aChild);
     MOZ_ASSERT(!aTarget || aTarget == aTarget->GetTargetForEventTargetChain());
-    EventTargetChainItem* etci = aChain.AppendElement();
-    etci->mTarget = aTarget;
+    EventTargetChainItem* etci = aChain.AppendElement(aTarget);
     return etci;
   }
 
@@ -304,6 +301,7 @@ class EventTargetChainItem {
    * and system event group and calls also PostHandleEvent for each
    * item in the chain.
    */
+  MOZ_CAN_RUN_SCRIPT
   static void HandleEventTargetChain(nsTArray<EventTargetChainItem>& aChain,
                                      EventChainPostVisitor& aVisitor,
                                      EventDispatchingCallback* aCallback,
@@ -359,10 +357,10 @@ class EventTargetChainItem {
   /**
    * Copies mItemFlags and mItemData to aVisitor and calls PostHandleEvent.
    */
-  void PostHandleEvent(EventChainPostVisitor& aVisitor);
+  MOZ_CAN_RUN_SCRIPT void PostHandleEvent(EventChainPostVisitor& aVisitor);
 
  private:
-  nsCOMPtr<EventTarget> mTarget;
+  const nsCOMPtr<EventTarget> mTarget;
   nsCOMPtr<EventTarget> mRetargetedRelatedTarget;
   Maybe<nsTArray<RefPtr<EventTarget>>> mRetargetedTouchTargets;
   Maybe<nsTArray<RefPtr<dom::Touch>>> mInitialTargetTouches;

@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include "GLContext.h"
+#include "mozilla/Casting.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/MathAlgorithms.h"
@@ -260,7 +261,7 @@ Maybe<const WebGLTexture::CompletenessInfo> WebGLTexture::CalcCompletenessInfo(
     ret->incompleteReason = "Bad mipmap dimension or format.";
     return ret;
   }
-  ret->levels = maxLevel - mBaseMipmapLevel + 1;
+  ret->levels = AutoAssertCast(maxLevel - mBaseMipmapLevel + 1);
   ret->mipmapComplete = true;
 
   // -
