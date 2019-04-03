@@ -73,6 +73,12 @@ class BouncerCheck(BaseScript, VirtualenvMixin):
                     "futures==3.1.1",
                 ],
                 "virtualenv_path": "venv",
+                "cdn_urls": [
+                    'download-installer.cdn.mozilla.net',
+                    'download.cdn.mozilla.net',
+                    'download.mozilla.org',
+                    'archive.mozilla.org',
+                ],
             },
             all_actions=[
                 "create-virtualenv",
@@ -107,13 +113,6 @@ class BouncerCheck(BaseScript, VirtualenvMixin):
             # Python 2
             from urlparse import urlparse
 
-        mozilla_locations = [
-            'download-installer.cdn.mozilla.net',
-            'download.cdn.mozilla.net',
-            'download.mozilla.org',
-            'archive.mozilla.org',
-        ]
-
         def do_check_url():
             self.log("Checking {}".format(url))
             r = session.head(url, verify=True, timeout=10, allow_redirects=True)
@@ -127,7 +126,7 @@ class BouncerCheck(BaseScript, VirtualenvMixin):
             if final_url.scheme != 'https':
                 self.error('FAIL: URL scheme is not https: {}'.format(r.url))
 
-            if final_url.netloc not in mozilla_locations:
+            if final_url.netloc not in self.config['cdn_urls']:
                 self.error('FAIL: host not in allowed locations: {}'.format(r.url))
 
         retry(do_check_url, sleeptime=3, max_sleeptime=10, attempts=3)
