@@ -13,7 +13,10 @@ from taskgraph.transforms.beetmover import craft_release_properties
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
-                                         get_beetmover_action_scope)
+                                         get_beetmover_action_scope,
+                                         generate_beetmover_upstream_artifacts,
+                                         generate_beetmover_artifact_map,
+                                         should_use_artifact_map)
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.transforms.release_sign_and_push_langpacks import get_upstream_task_ref
 from voluptuous import Required, Optional
@@ -30,6 +33,9 @@ transforms = TransformSequence()
 beetmover_description_schema = schema.extend({
     # depname is used in taskref's to identify the taskID of the unsigned things
     Required('depname', default='build'): basestring,
+
+    # attributes is used for enabling artifact-map by declarative artifacts
+    Required('attributes'): {basestring: object},
 
     # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
     Optional('label'): basestring,
@@ -66,10 +72,14 @@ transforms.add_validate(beetmover_description_schema)
 @transforms.add
 def resolve_keys(config, jobs):
     for job in jobs:
-        resolve_keyed_by(
-            job, 'worker-type', item_name=job['label'],
-            **{'release-level': config.params.release_level()}
-        )
+        for field in ('worker-type', 'attributes.artifact_map'):
+            resolve_keyed_by(
+                job, field, item_name=job['label'],
+                **{
+                    'release-level': config.params.release_level(),
+                    'project': config.params['project']
+                }
+            )
         yield job
 
 
@@ -88,7 +98,7 @@ def make_task_description(config, jobs):
         treeherder.setdefault('tier', 1)
         treeherder.setdefault('kind', 'build')
 
-        job['attributes'] = copy_attributes_from_dependent_job(dep_job)
+        job['attributes'].update(copy_attributes_from_dependent_job(dep_job))
         job['attributes']['chunk_locales'] = dep_job.attributes['chunk_locales']
 
         job['description'] = job['description'].format(
@@ -118,13 +128,25 @@ def make_task_worker(config, jobs):
             job, expected_kinds=('release-sign-and-push-langpacks',)
         )
 
+        platform = job["attributes"]["build_platform"]
+        locale = job["attributes"]["chunk_locales"]
+        if should_use_artifact_map(platform, config.params['project']):
+            upstream_artifacts = generate_beetmover_upstream_artifacts(
+                config, job, platform, locale,
+            )
+        else:
+            upstream_artifacts = generate_upstream_artifacts(
+                signing_task_ref, job['attributes']['chunk_locales']
+            )
         job['worker'] = {
             'implementation': 'beetmover',
             'release-properties': craft_release_properties(config, job),
-            'upstream-artifacts': generate_upstream_artifacts(
-                signing_task_ref, job['attributes']['chunk_locales']
-            ),
+            'upstream-artifacts': upstream_artifacts,
         }
+
+        if should_use_artifact_map(platform, config.params['project']):
+            job['worker']['artifact-map'] = generate_beetmover_artifact_map(
+                config, job, platform=platform, locale=locale)
 
         yield job
 
@@ -167,7 +189,7 @@ def yield_all_platform_jobs(config, jobs):
                         platform in ('macosx64', 'macosx64-devedition'):
                     platform_job = _strip_ja_data_from_linux_job(platform_job)
 
-                platform_job = _change_platform_data(platform_job, platform)
+                platform_job = _change_platform_data(config, platform_job, platform)
 
                 yield platform_job
 
@@ -187,10 +209,25 @@ def _strip_ja_data_from_linux_job(platform_job):
     return platform_job
 
 
-def _change_platform_data(platform_job, platform):
+def _change_platform_in_artifact_map_paths(paths, orig_platform, new_platform):
+    amended_paths = {}
+    for artifact, artifact_info in paths.iteritems():
+        amended_artifact_info = {
+            'checksums_path': artifact_info['checksums_path'].replace(orig_platform, new_platform),
+            'destinations': [
+                d.replace(orig_platform, new_platform) for d in artifact_info['destinations']
+            ]
+        }
+        amended_paths[artifact] = amended_artifact_info
+
+    return amended_paths
+
+
+def _change_platform_data(config, platform_job, platform):
     orig_platform = 'linux64'
     if 'devedition' in platform:
         orig_platform = 'linux64-devedition'
+    backup_platform = platform_job['attributes']['build_platform']
     platform_job['attributes']['build_platform'] = platform
     platform_job['label'] = platform_job['label'].replace(orig_platform, platform)
     platform_job['description'] = platform_job['description'].replace(orig_platform, platform)
@@ -198,5 +235,26 @@ def _change_platform_data(platform_job, platform):
         orig_platform, platform
     )
     platform_job['worker']['release-properties']['platform'] = platform
+
+    # amend artifactMap entries as well
+    if should_use_artifact_map(backup_platform, config.params['project']):
+        platform_mapping = {
+            'linux64': 'linux-x86_64',
+            'linux': 'linux-i686',
+            'macosx64': 'mac',
+            'win32': 'win32',
+            'win64': 'win64',
+        }
+        orig_platform = platform_mapping.get(orig_platform, orig_platform)
+        platform = platform_mapping.get(platform, platform)
+        platform_job['worker']['artifact-map'] = [
+            {
+                'locale': entry['locale'],
+                'taskId': entry['taskId'],
+                'paths': _change_platform_in_artifact_map_paths(entry['paths'],
+                                                                orig_platform,
+                                                                platform)
+            } for entry in platform_job['worker']['artifact-map']
+        ]
 
     return platform_job
