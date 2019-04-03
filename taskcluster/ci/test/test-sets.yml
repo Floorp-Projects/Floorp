@@ -254,6 +254,27 @@ windows-tests:
     - test-verify-wpt
     - xpcshell
 
+windows-aarch64-tests:
+    - crashtest
+    - jsreftest
+    - marionette
+    - marionette-headless
+    - mochitest
+    - mochitest-browser-chrome
+    - mochitest-chrome
+    - mochitest-clipboard
+    - mochitest-devtools-chrome
+    - mochitest-gpu
+    - mochitest-media
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
+    - reftest
+    # - web-platform-tests - disabled due to wpt11 experiencing BSoD
+    - web-platform-tests-reftests
+    - xpcshell
+
 windows-talos:
     - talos-bcv
     - talos-chrome
