@@ -236,6 +236,8 @@ EXPORTS.mozilla.dom += [
     'TimeoutHandler.h',
     'TimeoutManager.h',
     'TreeIterator.h',
+    'TreeOrderedArray.h',
+    'TreeOrderedArrayInlines.h',
     'TreeWalker.h',
     'VisualViewport.h',
     'WebKitCSSMatrix.h',
