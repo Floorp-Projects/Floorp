@@ -17,7 +17,7 @@
         role="dialog"
         onload="gBrowserLanguagesDialog.onLoad();"
         onbeforeaccept="return gBrowserLanguagesDialog.beforeAccept();"
-        helpTopic="prefs-languages">
+        helpTopic="change-language">
 
   <linkset>
     <html:link rel="localization" href="branding/brand.ftl"/>
