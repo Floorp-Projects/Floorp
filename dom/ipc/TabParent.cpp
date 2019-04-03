@@ -2215,17 +2215,16 @@ mozilla::ipc::IPCResult TabParent::RecvOnContentBlockingEvent(
   nsCOMPtr<nsIBrowser> browser =
       mFrameElement ? mFrameElement->AsBrowser() : nullptr;
   if (browser) {
-    if (aWebProgressData.isNothing()) {
+    if (aWebProgressData) {
       Unused << browser->CallWebProgressContentBlockingEventListeners(
-          false, false, false, 0, 0, aRequestData.requestURI(),
+          true, aWebProgressData->isTopLevel(),
+          aWebProgressData->isLoadingDocument(), aWebProgressData->loadType(),
+          aWebProgressData->DOMWindowID(), aRequestData.requestURI(),
           aRequestData.originalRequestURI(), aRequestData.matchedList(),
           aEvent);
     } else {
       Unused << browser->CallWebProgressContentBlockingEventListeners(
-          true, aWebProgressData.ref().isTopLevel(),
-          aWebProgressData.ref().isLoadingDocument(),
-          aWebProgressData.ref().loadType(),
-          aWebProgressData.ref().DOMWindowID(), aRequestData.requestURI(),
+          false, false, false, 0, 0, aRequestData.requestURI(),
           aRequestData.originalRequestURI(), aRequestData.matchedList(),
           aEvent);
     }

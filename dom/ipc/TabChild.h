@@ -792,7 +792,7 @@ class TabChild final : public TabChildBase,
 
   nsresult PrepareProgressListenerData(nsIWebProgress* aWebProgress,
                                        nsIRequest* aRequest,
-                                       WebProgressData& aWebProgressData,
+                                       Maybe<WebProgressData>& aWebProgressData,
                                        RequestData& aRequestData);
 
   class DelayedDeleteRunnable;
