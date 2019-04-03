@@ -64,6 +64,29 @@ runInParent(function setup() {
 
   <form id="form5" action="https://autocomplete">
     <input  type="text" name="uname">
+    <input  type="text" autocomplete="email" name="acfield">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form6" action="https://autocomplete">
+    <input  type="text" name="uname">
+    <input  type="text" autocomplete="tel" name="acfield">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form7" action="https://autocomplete">
+    <input  type="text" name="uname">
+    <input  type="text" autocomplete="tel-national" name="acfield">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- Begin forms where the first field is skipped for the username -->
+
+  <form id="form101" action="https://autocomplete">
+    <input  type="text" name="uname">
     <input  type="text" autocomplete="cc-number" name="acfield">
     <input  type="password" name="pword">
     <button type="submit">Submit</button>
@@ -88,7 +111,10 @@ add_task(async function test_autofill_autocomplete_types() {
   checkForm(2, null, "testuser@example.com", "testpass1");
   checkForm(3, null, "testuser@example.com", "testpass1");
   checkForm(4, null, "testuser@example.com", "testpass1");
-  checkForm(5, "testuser@example.com", null, "testpass1");
+  checkForm(5, null, "testuser@example.com", "testpass1");
+  checkForm(6, null, "testuser@example.com", "testpass1");
+  checkForm(7, null, "testuser@example.com", "testpass1");
+  checkForm(101, "testuser@example.com", null, "testpass1");
 });
 
 </script>

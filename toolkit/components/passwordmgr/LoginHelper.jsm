@@ -652,6 +652,10 @@ var LoginHelper = {
 
     let acFieldName = element.getAutocompleteInfo().fieldName;
     if (!(acFieldName == "username" ||
+          // Bug 1540154: Some sites use tel/email on their username fields.
+          acFieldName == "email" ||
+          acFieldName == "tel" ||
+          acFieldName == "tel-national" ||
           acFieldName == "off" ||
           acFieldName == "on" ||
           acFieldName == "")) {
