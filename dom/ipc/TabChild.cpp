@@ -3310,47 +3310,43 @@ NS_IMETHODIMP TabChild::OnSecurityChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP TabChild::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
                                                nsIRequest* aRequest,
                                                uint32_t aEvent) {
-  WebProgressData webProgressData;
+  Maybe<WebProgressData> webProgressData;
   RequestData requestData;
   nsresult rv = PrepareProgressListenerData(aWebProgress, aRequest,
                                             webProgressData, requestData);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  Maybe<WebProgressData> maybeWebProgressData;
-  if (aWebProgress) {
-    maybeWebProgressData.emplace(webProgressData);
-  }
-  Unused << SendOnContentBlockingEvent(maybeWebProgressData, requestData,
-                                       aEvent);
+  Unused << SendOnContentBlockingEvent(webProgressData, requestData, aEvent);
 
   return NS_OK;
 }
 
 nsresult TabChild::PrepareProgressListenerData(
     nsIWebProgress* aWebProgress, nsIRequest* aRequest,
-    WebProgressData& aWebProgressData, RequestData& aRequestData) {
+    Maybe<WebProgressData>& aWebProgressData, RequestData& aRequestData) {
   if (aWebProgress) {
+    aWebProgressData.emplace();
+
     bool isTopLevel = false;
     nsresult rv = aWebProgress->GetIsTopLevel(&isTopLevel);
     NS_ENSURE_SUCCESS(rv, rv);
-    aWebProgressData.isTopLevel() = isTopLevel;
+    aWebProgressData->isTopLevel() = isTopLevel;
 
     bool isLoadingDocument = false;
     rv = aWebProgress->GetIsLoadingDocument(&isLoadingDocument);
     NS_ENSURE_SUCCESS(rv, rv);
-    aWebProgressData.isLoadingDocument() = isLoadingDocument;
+    aWebProgressData->isLoadingDocument() = isLoadingDocument;
 
     uint32_t loadType = 0;
     rv = aWebProgress->GetLoadType(&loadType);
     NS_ENSURE_SUCCESS(rv, rv);
-    aWebProgressData.loadType() = loadType;
+    aWebProgressData->loadType() = loadType;
 
     uint64_t DOMWindowID = 0;
     // The DOM Window ID getter here may throw if the inner or outer windows
     // aren't created yet or are destroyed at the time we're making this call
     // but that isn't fatal so ignore the exceptions here.
     Unused << aWebProgress->GetDOMWindowID(&DOMWindowID);
-    aWebProgressData.DOMWindowID() = DOMWindowID;
+    aWebProgressData->DOMWindowID() = DOMWindowID;
   }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
