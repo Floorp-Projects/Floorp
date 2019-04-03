@@ -138,20 +138,21 @@ class PingStorageEngineTest {
         assertNull("Pending pings directory must be empty before test start",
             pingStorageEngine.storageDirectory.listFiles())
 
-        // Store a "valid" ping with a UUID file name
-        pingStorageEngine.store(fileName1, path1, "dummy data")
-        pingStorageEngine.testWait()
+        // Store a "valid" ping with a UUID file name, using runBlocking to make sure the write is
+        // complete before continuing.
+        runBlocking {
+            pingStorageEngine.store(fileName1, path1, "dummy data").join()
+        }
 
-        // Store an "invalid" ping without a UUID file name
-        runBlocking(Dispatchers.IO) {
-            val invalidPingFile = File(pingStorageEngine.storageDirectory, "NotUuid")
-            FileOutputStream(invalidPingFile, true).bufferedWriter().use {
-                it.write("/test/NotUuid")
-                it.newLine()
-                it.write("dummy data")
-                it.newLine()
-                it.flush()
-            }
+        // Store an "invalid" ping without a UUID file name (writing synchronously on purpose as we
+        // immediately assert the file count after this)
+        val invalidPingFile = File(pingStorageEngine.storageDirectory, "NotUuid")
+        FileOutputStream(invalidPingFile, true).bufferedWriter().use {
+            it.write("/test/NotUuid")
+            it.newLine()
+            it.write("dummy data")
+            it.newLine()
+            it.flush()
         }
 
         // Check to see that we list both the valid and invalid ping files

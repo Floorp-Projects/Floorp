@@ -263,8 +263,6 @@ class GleanTest {
             Glean.handleBackgroundEvent()
         }
 
-        Glean.pingStorageEngine.testWait()
-
         // We should only have a baseline ping and no events or metrics pings since nothing was
         // recorded
         val files = Glean.pingStorageEngine.storageDirectory.listFiles()

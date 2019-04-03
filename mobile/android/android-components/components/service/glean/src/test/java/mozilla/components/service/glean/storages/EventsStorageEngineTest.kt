@@ -282,9 +282,6 @@ class EventsStorageEngineTest {
 
             Assert.assertTrue(click.testHasValue())
 
-            // Wait for the ping to be written to disk.
-            Glean.pingStorageEngine.testWait()
-
             // Trigger worker task to upload the pings in the background
             triggerWorkManager()
 

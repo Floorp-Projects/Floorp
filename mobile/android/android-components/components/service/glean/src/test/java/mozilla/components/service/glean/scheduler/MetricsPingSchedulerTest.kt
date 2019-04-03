@@ -59,6 +59,8 @@ class MetricsPingSchedulerTest {
     fun setup() {
         WorkManagerTestInitHelper.initializeTestWorkManager(
             ApplicationProvider.getApplicationContext())
+
+        Glean.enableTestingMode()
     }
 
     @Test

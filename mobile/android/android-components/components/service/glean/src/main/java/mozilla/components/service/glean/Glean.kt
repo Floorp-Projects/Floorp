@@ -9,6 +9,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.support.annotation.VisibleForTesting
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.joinAll
 import mozilla.components.service.glean.GleanMetrics.GleanBaseline
 import java.io.File
 import java.util.UUID
@@ -331,19 +333,28 @@ open class GleanInternalAPI internal constructor () {
             return false
         }
 
-        var hasPingContent = false
+        val pingSerializationTasks: MutableList<Job> = mutableListOf()
         for (pingName in pingNames) {
-            val hasContent = assembleAndSerializePing(pingName)
-            hasPingContent = hasPingContent || hasContent
+            assembleAndSerializePing(pingName)?.let {
+                pingSerializationTasks.add(it)
+            }
         }
 
-        // It should only take a single PingUploadWorker to process all queued pings, so we only
-        // want to have one scheduled at a time.
-        if (hasPingContent) {
-            PingUploadWorker.enqueueWorker()
+        // If there are any pings to serialize, await the IO in a background thread before we
+        // enqueue the PingUploadWorker
+        if (pingSerializationTasks.any()) {
+            // Await the serialization tasks in a background thread as they run blocking and we
+            // don't necessarily want to block any calling thread.  Once the serialization tasks
+            // have all completed, we can then safely enqueue the PingUploadWorker
+            Dispatchers.API.launch {
+                pingSerializationTasks.joinAll()
+                PingUploadWorker.enqueueWorker()
+            }
         }
 
-        return hasPingContent
+        // Return whether or not we uploaded any pings.  Even though the tasks have joined, the
+        // list will not be empty if there were any serialization/uploads done.
+        return pingSerializationTasks.any()
     }
 
     /**
@@ -352,15 +363,15 @@ open class GleanInternalAPI internal constructor () {
      *
      * @param pingName This is the ping store/name for which to build and schedule the ping
      */
-    internal fun assembleAndSerializePing(pingName: String): Boolean {
+    internal fun assembleAndSerializePing(pingName: String): Job? {
         // Since the pingMaker.collect() function returns null if there is nothing to send we can
         // use this to avoid sending an empty ping
-        return pingMaker.collect(pingName)?.also { pingContent ->
+        return pingMaker.collect(pingName)?.let { pingContent ->
             // Store the serialized ping to file for PingUploadWorker to read and upload when the
             // schedule is triggered
             val pingId = UUID.randomUUID()
             pingStorageEngine.store(pingId, makePath(pingName, pingId), pingContent)
-        } != null
+        }
     }
 
     /**

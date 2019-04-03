@@ -10,8 +10,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers as KotlinDispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.utils.ensureDirectoryExists
@@ -39,10 +37,6 @@ internal class PingStorageEngine(context: Context) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     val storageDirectory: File = File(context.applicationInfo.dataDir, PING_STORAGE_DIRECTORY)
 
-    // Store the last Job writing the ping to disk
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    private var ioTask: Job? = null
-
     companion object {
         // Since ping file names are UUIDs, this matches UUIDs for filtering purposes
         private const val FILE_PATTERN =
@@ -64,7 +58,7 @@ internal class PingStorageEngine(context: Context) {
      */
     fun store(uuidFileName: UUID, pingPath: String, pingData: String): Job {
         logger.debug("Storing ping $uuidFileName in $pingPath")
-        ioTask = GlobalScope.launch(KotlinDispatchers.IO) {
+        return GlobalScope.launch(KotlinDispatchers.IO) {
             // Check that the director exists and create it if needed
             ensureDirectoryExists(storageDirectory)
 
@@ -74,7 +68,6 @@ internal class PingStorageEngine(context: Context) {
             // Write ping to file
             writePingToFile(pingFile, pingPath, pingData)
         }
-        return ioTask!!
     }
 
     /**
@@ -166,22 +159,6 @@ internal class PingStorageEngine(context: Context) {
                 it.flush()
             } catch (e: IOException) {
                 logger.warn("IOException while writing ping to file", e)
-            }
-        }
-    }
-
-    /**
-     * Wait for the ping to be written to disk.
-     *
-     * For testing only.
-     */
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun testWait() {
-        ioTask?.let { job ->
-            runBlocking() {
-                withTimeout(JOB_TIMEOUT_MS) {
-                    job.join()
-                }
             }
         }
     }
