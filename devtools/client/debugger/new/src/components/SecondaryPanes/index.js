@@ -233,7 +233,7 @@ class SecondaryPanes extends Component<Props, State> {
     }
 
     return [
-      <div>
+      <div key="scopes-buttons">
         <label
           className="map-scopes-header"
           title={L10N.getStr("scopes.mapping.label")}
