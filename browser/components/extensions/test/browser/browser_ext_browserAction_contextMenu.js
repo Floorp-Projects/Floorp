@@ -50,7 +50,7 @@ const type = "extension";
 
 function assertTelemetryMatches(events) {
   let snapshot = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
 
   if (events.length == 0) {
     ok(!snapshot.parent || snapshot.parent.length == 0, "There are no telemetry events");

@@ -1449,7 +1449,7 @@ add_task(async function contextMenu() {
 
   // Check the telemetry was collected properly.
   let snapshot = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
   ok(snapshot.parent && snapshot.parent.length > 0,
      "Got parent telemetry events in the snapshot");
   let relatedEvents = snapshot.parent

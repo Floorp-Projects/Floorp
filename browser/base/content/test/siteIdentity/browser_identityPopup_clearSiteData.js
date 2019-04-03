@@ -72,7 +72,7 @@ async function testClearing(testQuota, testCookies) {
     await hideEvent;
     await removeDialogPromise;
 
-    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN).parent;
+    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS).parent;
     let buttonEvents = events.filter(
       e => e[1] == "security.ui.identitypopup" && e[2] == "click" && e[3] == "clear_sitedata");
     is(buttonEvents.length, 1, "recorded telemetry for the button click");

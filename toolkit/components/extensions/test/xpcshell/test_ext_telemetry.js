@@ -182,7 +182,7 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "record_event_ok",
     });
 
-    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
     equal(events.parent.length, 1);
     equal(events.parent[0][1], "telemetry.test");
 
@@ -311,7 +311,7 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "register_events",
     });
 
-    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS);
     let expected = [["telemetry.test.dynamic", "test1", "object1"]];
     equal(events.dynamic.length, expected.length);
     deepEqual(events.dynamic.map(e => e.slice(1)), expected);
