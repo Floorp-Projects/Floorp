@@ -6,6 +6,10 @@
 
 # Temporarily disabled. See bug 1256495.
 #test_certificates = (
+#    'another-ee-revoked-by-revocations-txt-serial-2.pem',
+#    'another-ee-revoked-by-revocations-txt.pem',
+#    'ee-revoked-by-revocations-txt.pem',
+#    'ee-revoked-by-subject-and-pubkey.pem',
 #    'same-issuer-ee.pem',
 #    'test-int-ee.pem',
 #)
