@@ -1,0 +1,17 @@
+steps:
+  - template: azure-install-rust.yml
+  - bash: rustup target add $TARGET
+    displayName: Install Rust target
+
+  - script: cargo build
+    displayName: "Normal build"
+  - bash: cargo test $NO_RUN -- --test-threads 1
+    displayName: "Crate tests"
+  - bash: cargo test $NO_RUN --features parallel -- --test-threads 1
+    displayName: "Crate tests (parallel)"
+  - bash: cargo test $NO_RUN --manifest-path cc-test/Cargo.toml --target $TARGET
+    displayName: "cc-test tests"
+  - bash: cargo test $NO_RUN --manifest-path cc-test/Cargo.toml --target $TARGET --features parallel
+    displayName: "cc-test tests (parallel)"
+  - bash: cargo test $NO_RUN --manifest-path cc-test/Cargo.toml --target $TARGET --release
+    displayName: "cc-test tests (release)"
