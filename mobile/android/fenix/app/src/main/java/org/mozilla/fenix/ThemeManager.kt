@@ -64,18 +64,10 @@ class DefaultThemeManager : ThemeManager {
             onHomeScreen: Boolean = true
         ) {
             window.statusBarColor = ContextCompat
-                .getColor(context, DefaultThemeManager
-                    .resolveAttribute(android.R.attr.statusBarColor, context))
-
-            if (onHomeScreen) {
-                window.navigationBarColor = ContextCompat
-                    .getColor(context, DefaultThemeManager
-                        .resolveAttribute(R.attr.navigationBarColorHome, context))
-            } else {
-                window.navigationBarColor = ContextCompat
-                    .getColor(context, DefaultThemeManager
-                        .resolveAttribute(R.attr.navigationBarColorBrowser, context))
-            }
+                .getColor(
+                    context, DefaultThemeManager
+                        .resolveAttribute(android.R.attr.statusBarColor, context)
+                )
 
             when (themeManager.currentTheme) {
                 ThemeManager.Theme.Normal -> {
@@ -87,18 +79,28 @@ class DefaultThemeManager : ThemeManager {
                                 window.decorView.systemUiVisibility or
                                         View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
                                         View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                            if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.O) {
+                                // API level can display handle light navigation bar color
+                                updateNavigationBar(onHomeScreen, window, context)
+                            }
                         }
                         Configuration.UI_MODE_NIGHT_YES -> {
                             window.decorView.systemUiVisibility =
                                 window.decorView.systemUiVisibility and
                                         View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and
                                         View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
+                            updateNavigationBar(onHomeScreen, window, context)
                         }
                         Configuration.UI_MODE_NIGHT_UNDEFINED -> {
+                            // We assume light here per Android doc's recommendation
                             window.decorView.systemUiVisibility =
                                 window.decorView.systemUiVisibility or
                                         View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
                                         View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                            if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.O) {
+                                // API level can display handle light navigation bar color
+                                updateNavigationBar(onHomeScreen, window, context)
+                            }
                         }
                     }
                 }
@@ -106,7 +108,24 @@ class DefaultThemeManager : ThemeManager {
                     window.decorView.systemUiVisibility = window.decorView.systemUiVisibility and
                             View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and
                             View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
+                    updateNavigationBar(onHomeScreen, window, context)
                 }
+            }
+        }
+
+        private fun updateNavigationBar(onHomeScreen: Boolean, window: Window, context: Context) {
+            if (onHomeScreen) {
+                window.navigationBarColor = ContextCompat
+                    .getColor(
+                        context, DefaultThemeManager
+                            .resolveAttribute(R.attr.navigationBarColorHome, context)
+                    )
+            } else {
+                window.navigationBarColor = ContextCompat
+                    .getColor(
+                        context, DefaultThemeManager
+                            .resolveAttribute(R.attr.navigationBarColorBrowser, context)
+                    )
             }
         }
     }
