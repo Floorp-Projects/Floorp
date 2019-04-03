@@ -136,8 +136,7 @@ class BouncerCheck(BaseScript, VirtualenvMixin):
             if not product["check_uptake"]:
                 continue
             product_name = product["product-name"] % {"version": self.config["version"]}
-            for path in product["paths"].values():
-                bouncer_platform = path["bouncer-platform"]
+            for bouncer_platform in product["platforms"]:
                 for locale in self.config["locales"]:
                     url = BOUNCER_URL_PATTERN.format(
                         bouncer_prefix=self.config["bouncer_prefix"],
@@ -153,8 +152,7 @@ class BouncerCheck(BaseScript, VirtualenvMixin):
             for prev_version in self.config.get("prev_versions", []):
                 product_name = product["product-name"] % {"version": self.config["version"],
                                                           "prev_version": prev_version}
-                for path in product["paths"].values():
-                    bouncer_platform = path["bouncer-platform"]
+                for bouner_platform in product["platforms"]:
                     for locale in self.config["locales"]:
                         url = BOUNCER_URL_PATTERN.format(
                             bouncer_prefix=self.config["bouncer_prefix"],
