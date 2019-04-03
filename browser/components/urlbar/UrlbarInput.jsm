@@ -176,6 +176,10 @@ class UrlbarInput {
 
     this.inputField.controllers.removeControllerAt(0);
 
+    if (Object.getOwnPropertyDescriptor(this, "valueFormatter").get) {
+      this.valueFormatter.uninit();
+    }
+
     delete this.document;
     delete this.window;
     delete this.eventBufferer;
