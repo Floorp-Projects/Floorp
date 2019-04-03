@@ -3345,12 +3345,16 @@ nsresult TabChild::PrepareProgressListenerData(
     NS_ENSURE_SUCCESS(rv, rv);
     aWebProgressData->loadType() = loadType;
 
-    uint64_t DOMWindowID = 0;
-    // The DOM Window ID getter here may throw if the inner or outer windows
+    uint64_t outerDOMWindowID = 0;
+    uint64_t innerDOMWindowID = 0;
+    // The DOM Window ID getters here may throw if the inner or outer windows
     // aren't created yet or are destroyed at the time we're making this call
     // but that isn't fatal so ignore the exceptions here.
-    Unused << aWebProgress->GetDOMWindowID(&DOMWindowID);
-    aWebProgressData->DOMWindowID() = DOMWindowID;
+    Unused << aWebProgress->GetDOMWindowID(&outerDOMWindowID);
+    aWebProgressData->outerDOMWindowID() = outerDOMWindowID;
+
+    Unused << aWebProgress->GetInnerDOMWindowID(&innerDOMWindowID);
+    aWebProgressData->innerDOMWindowID() = innerDOMWindowID;
   }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
