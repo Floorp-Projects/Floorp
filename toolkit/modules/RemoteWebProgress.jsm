@@ -31,7 +31,6 @@ class RemoteWebProgressManager {
       this._messageManager.removeMessageListener("Content:StateChange", this);
       this._messageManager.removeMessageListener("Content:LocationChange", this);
       this._messageManager.removeMessageListener("Content:SecurityChange", this);
-      this._messageManager.removeMessageListener("Content:StatusChange", this);
       this._messageManager.removeMessageListener("Content:ProgressChange", this);
       this._messageManager.removeMessageListener("Content:LoadURIResult", this);
     }
@@ -41,7 +40,6 @@ class RemoteWebProgressManager {
     this._messageManager.addMessageListener("Content:StateChange", this);
     this._messageManager.addMessageListener("Content:LocationChange", this);
     this._messageManager.addMessageListener("Content:SecurityChange", this);
-    this._messageManager.addMessageListener("Content:StatusChange", this);
     this._messageManager.addMessageListener("Content:ProgressChange", this);
     this._messageManager.addMessageListener("Content:LoadURIResult", this);
   }
@@ -250,10 +248,6 @@ class RemoteWebProgressManager {
       }
 
       this.onSecurityChange(webProgress, request, state);
-      break;
-
-    case "Content:StatusChange":
-      this.onStatusChange(webProgress, request, json.status, json.message);
       break;
 
     case "Content:ProgressChange":

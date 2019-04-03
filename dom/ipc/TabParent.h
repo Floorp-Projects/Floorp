@@ -169,6 +169,11 @@ class TabParent final : public PBrowserParent,
                                                       const nsString& aTitle,
                                                       nsIURI* aDocURI);
 
+  mozilla::ipc::IPCResult RecvOnStatusChange(
+      const Maybe<WebProgressData>& aWebProgressData,
+      const RequestData& aRequestData, const nsresult aStatus,
+      const nsString& aMessage);
+
   mozilla::ipc::IPCResult RecvOnContentBlockingEvent(
       const Maybe<WebProgressData>& aWebProgressData,
       const RequestData& aRequestData, const uint32_t& aEvent);
