@@ -2945,13 +2945,8 @@ static bool MoveToPending(nsIFile* dumpFile, nsIFile* extraFile,
 }
 
 static void OnChildProcessDumpRequested(void* aContext,
-#ifdef XP_MACOSX
                                         const ClientInfo& aClientInfo,
                                         const xpstring& aFilePath
-#else
-                                        const ClientInfo* aClientInfo,
-                                        const xpstring* aFilePath
-#endif
 ) {
   nsCOMPtr<nsIFile> minidump;
   nsCOMPtr<nsIFile> extraFile;
@@ -2962,20 +2957,9 @@ static void OnChildProcessDumpRequested(void* aContext,
   MutexAutoLock lock(*dumpSafetyLock);
   if (!isSafeToDump) return;
 
-  CreateFileFromPath(
-#ifdef XP_MACOSX
-      aFilePath,
-#else
-      *aFilePath,
-#endif
-      getter_AddRefs(minidump));
+  CreateFileFromPath(aFilePath, getter_AddRefs(minidump));
 
-  uint32_t pid =
-#ifdef XP_MACOSX
-      aClientInfo.pid();
-#else
-      aClientInfo->pid();
-#endif
+  uint32_t pid = aClientInfo.pid();
 
   if (!WriteExtraForMinidump(minidump, pid, /* content */ true,
                              getter_AddRefs(extraFile))) {
