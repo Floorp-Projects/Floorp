@@ -74,11 +74,11 @@
         },
         "awscli": {
             "hashes": [
-                "sha256:9cbc48eff6f8c9ee2072be2caf569dd5f18734d61e020556b792ba509bbb03f0",
-                "sha256:e0b9afc24c591ecb04d02a34d9e8d3508a4bd25c713d10a358cdad09abbbcf8e"
+                "sha256:16e663ef121420d9ff602d643d0108f7d0d07ec29c361f53915ff41248c2eb16",
+                "sha256:99f7aedcaef3f0b97036933064c9daf5f2999c3347288ff070f7e2227bf45cce"
             ],
             "index": "pypi",
-            "version": "==1.16.130"
+            "version": "==1.16.135"
         },
         "backports.lzma": {
             "hashes": [
@@ -88,10 +88,10 @@
         },
         "botocore": {
             "hashes": [
-                "sha256:2bf8768887bfb008406eec725eecf6f174307dac00f5fad244cdd5d39c6c2147",
-                "sha256:c0f9c57e7a8c65f17a62a0926c3e73686f6ae1c08abf3b5a63cc3a5bcc4c437b"
+                "sha256:2c071fb9f3cd71d792846e18e2c650f2985b822c552514ea6f27e44764d45a0a",
+                "sha256:ac9585c2afdf81929ccb69b8e6919ec64f3693cc7d3f4f216f292f63312111cf"
             ],
-            "version": "==1.12.120"
+            "version": "==1.12.125"
         },
         "certifi": {
             "hashes": [
@@ -186,11 +186,11 @@
         },
         "datadog": {
             "hashes": [
-                "sha256:9487480fd4b5898b665384f95eeb0cbca4ec998bb58224b7bb60fff3978191ad",
-                "sha256:d28251dd28f51f27e942bb23fe15349e5223aef75246a94ff7233fb174b74bb9"
+                "sha256:eb6f2707151be8851f7da3768e605ac92ec45464fc48d5a878d0b6e08610dd8b",
+                "sha256:f0c3260654cf1c9a4a610aee6282ee62688e734f7d59ebc830560ca0cc0ef81d"
             ],
             "index": "pypi",
-            "version": "==0.27.0"
+            "version": "==0.28.0"
         },
         "decorator": {
             "hashes": [
@@ -198,13 +198,6 @@
                 "sha256:f069f3a01830ca754ba5258fde2278454a0b5b79e0d7f5c13b3b97e57d4acff6"
             ],
             "version": "==4.4.0"
-        },
-        "defusedxml": {
-            "hashes": [
-                "sha256:24d7f2f94f7f3cb6061acb215685e5125fbcdc40a857eff9de22518820b0a4f4",
-                "sha256:702a91ade2968a82beb0db1e0766a6a273f33d4616a6ce8cde475d8e09853b20"
-            ],
-            "version": "==0.5.0"
         },
         "dictdiffer": {
             "hashes": [
@@ -324,20 +317,6 @@
             ],
             "version": "==4.5.2"
         },
-        "pexpect": {
-            "hashes": [
-                "sha256:2a8e88259839571d1251d278476f3eec5db26deb73a70be5ed5dc5435e418aba",
-                "sha256:3fbd41d4caf27fa4a377bfd16fef87271099463e6fa73e92a52f92dfee5d425b"
-            ],
-            "version": "==4.6.0"
-        },
-        "ptyprocess": {
-            "hashes": [
-                "sha256:923f299cc5ad920c68f2bc0bc98b75b9f838b93b599941a6b63ddbc2476394c0",
-                "sha256:d7cc528d76e76342423ca640335bd3633420dc1366f258cb31d05e865ef5ca1f"
-            ],
-            "version": "==0.6.0"
-        },
         "pyasn1": {
             "hashes": [
                 "sha256:da2420fe13a9452d8ae97a0e478adde1dee153b11ba832a95b223a2ba01c10f7",
@@ -364,13 +343,6 @@
             ],
             "markers": "python_version >= '2.7'",
             "version": "==2.8.0"
-        },
-        "python-gnupg": {
-            "hashes": [
-                "sha256:45daf020b370bda13a1429c859fcdff0b766c0576844211446f9266cae97fb0e",
-                "sha256:85c231850a0275c9722f06e34b45a22510b83a6a6e88f93b5ae32ba04c95056c"
-            ],
-            "version": "==0.4.4"
         },
         "pyyaml": {
             "hashes": [
@@ -420,11 +392,11 @@
         },
         "scriptworker": {
             "hashes": [
-                "sha256:8ba955d1e6d8078e9e6da322d206045f15c150c1bffa21665df7d57ee1b3c3d2",
-                "sha256:cebb4b3a4dc130c4cc3112123301ca8cca53c3e33de37ae527e270c1ddca2099"
+                "sha256:6f9d463379c586256f2da51c37015aee2cf4b31a86468324c871f08d2a1ea8c1",
+                "sha256:bdd30c73c78217c8d923a660366f50fb9a8a1029e409c6bf17be89ff1159fdf7"
             ],
             "index": "pypi",
-            "version": "==22.1.0"
+            "version": "==23.0.0"
         },
         "sh": {
             "hashes": [
