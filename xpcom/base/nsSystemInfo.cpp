@@ -731,11 +731,40 @@ nsresult nsSystemInfo::Init() {
   }
 
 #ifdef XP_WIN
-  BOOL isWow64;
-  BOOL gotWow64Value = IsWow64Process(GetCurrentProcess(), &isWow64);
+  // IsWow64Process2 is only available on Windows 10+, so we have to dynamically
+  // check for its existence.
+  typedef BOOL(WINAPI* LPFN_IWP2)(HANDLE, USHORT*, USHORT*);
+  LPFN_IWP2 iwp2 = reinterpret_cast<LPFN_IWP2>(GetProcAddress(
+      GetModuleHandle(L"kernel32"), "IsWow64Process2"));
+  BOOL isWow64 = false;
+  USHORT processMachine = IMAGE_FILE_MACHINE_UNKNOWN;
+  USHORT nativeMachine = IMAGE_FILE_MACHINE_UNKNOWN;
+  BOOL gotWow64Value;
+  if (iwp2) {
+    gotWow64Value = iwp2(GetCurrentProcess(), &processMachine, &nativeMachine);
+    if (gotWow64Value) {
+      isWow64 = (processMachine != IMAGE_FILE_MACHINE_UNKNOWN);
+    }
+  } else {
+    gotWow64Value = IsWow64Process(GetCurrentProcess(), &isWow64);
+    // The function only indicates a WOW64 environment if it's 32-bit x86
+    // running on x86-64, so emulate what IsWow64Process2 would have given.
+    if (gotWow64Value && isWow64) {
+      processMachine = IMAGE_FILE_MACHINE_I386;
+      nativeMachine = IMAGE_FILE_MACHINE_AMD64;
+    }
+  }
   NS_WARNING_ASSERTION(gotWow64Value, "IsWow64Process failed");
   if (gotWow64Value) {
+    // Set this always, even for the x86-on-arm64 case.
     rv = SetPropertyAsBool(NS_LITERAL_STRING("isWow64"), !!isWow64);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    // Additional information if we're running x86-on-arm64
+    bool isWowARM64 = (processMachine == IMAGE_FILE_MACHINE_I386 &&
+                       nativeMachine == IMAGE_FILE_MACHINE_ARM64);
+    rv = SetPropertyAsBool(NS_LITERAL_STRING("isWowARM64"), !!isWowARM64);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
