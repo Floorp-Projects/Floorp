@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -165,7 +166,7 @@ already_AddRefed<nsINode> UIEvent::GetRangeParent() {
   if (NS_WARN_IF(!mPresContext)) {
     return nullptr;
   }
-  nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
+  RefPtr<PresShell> presShell = mPresContext->GetPresShell();
   if (NS_WARN_IF(!presShell)) {
     return nullptr;
   }
@@ -179,7 +180,7 @@ int32_t UIEvent::RangeOffset() const {
   if (NS_WARN_IF(!mPresContext)) {
     return 0;
   }
-  nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
+  RefPtr<PresShell> presShell = mPresContext->GetPresShell();
   if (NS_WARN_IF(!presShell)) {
     return 0;
   }

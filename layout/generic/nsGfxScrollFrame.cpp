@@ -39,6 +39,7 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -3792,7 +3793,7 @@ bool ScrollFrameHelper::DecideScrollableLayer(
             rootPresContext = pc->GetRootPresContext();
           }
           if (rootPresContext) {
-            const nsIPresShell* const rootPresShell =
+            const mozilla::PresShell* const rootPresShell =
                 rootPresContext->PresShell();
             nsIFrame* rootFrame = rootPresShell->GetRootScrollFrame();
             if (!rootFrame) {

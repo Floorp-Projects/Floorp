@@ -11,6 +11,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/IntegerRange.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/WritingModes.h"
 
 #include "gfxContext.h"
@@ -35,7 +36,6 @@
 #include "nsCSSRendering.h"
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsIPresShell.h"
 #include "nsIScriptError.h"
 #include "nsFrameManager.h"
 #include "nsError.h"
@@ -644,14 +644,14 @@ nsTableCellMap* nsTableFrame::GetCellMap() const {
 nsTableColGroupFrame* nsTableFrame::CreateSyntheticColGroupFrame() {
   nsIContent* colGroupContent = GetContent();
   nsPresContext* presContext = PresContext();
-  nsIPresShell* shell = presContext->PresShell();
+  mozilla::PresShell* presShell = presContext->PresShell();
 
   RefPtr<ComputedStyle> colGroupStyle;
-  colGroupStyle = shell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(
+  colGroupStyle = presShell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(
       PseudoStyleType::tableColGroup);
   // Create a col group frame
   nsTableColGroupFrame* newFrame =
-      NS_NewTableColGroupFrame(shell, colGroupStyle);
+      NS_NewTableColGroupFrame(presShell, colGroupStyle);
   newFrame->SetIsSynthetic();
   newFrame->Init(colGroupContent, this, nullptr);
   return newFrame;

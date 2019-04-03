@@ -4,6 +4,7 @@
 
 #include "js/JSON.h"
 #include "jsapi.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/HTMLInputElement.h"

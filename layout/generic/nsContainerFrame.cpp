@@ -9,6 +9,7 @@
 #include "nsContainerFrame.h"
 
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsAttrValue.h"
@@ -20,7 +21,6 @@
 #include "nsPoint.h"
 #include "nsStyleConsts.h"
 #include "nsView.h"
-#include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 #include "nsViewManager.h"
@@ -257,9 +257,9 @@ void nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
     // Destroy frames on the auxiliary frame lists and delete the lists.
     nsPresContext* pc = PresContext();
-    nsIPresShell* shell = pc->PresShell();
+    mozilla::PresShell* presShell = pc->PresShell();
     if (hasO) {
-      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
+      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
                                  OverflowProperty());
     }
 
@@ -267,11 +267,11 @@ void nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot,
         IsFrameOfType(eCanContainOverflowContainers) || !(hasOC || hasEOC),
         "this type of frame shouldn't have overflow containers");
     if (hasOC) {
-      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
+      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
                                  OverflowContainersProperty());
     }
     if (hasEOC) {
-      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
+      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
                                  ExcessOverflowContainersProperty());
     }
 
@@ -279,7 +279,7 @@ void nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot,
                    StyleDisplay()->mTopLayer != NS_STYLE_TOP_LAYER_NONE,
                "only top layer frame may have backdrop");
     if (hasBackdrop) {
-      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
+      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
                                  BackdropProperty());
     }
   }

@@ -11,7 +11,6 @@
 #include "mozilla/dom/HTMLFormSubmission.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
-#include "nsIPresShell.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIFormControl.h"
@@ -24,6 +23,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
 #include "nsUnicharUtils.h"
 #include "nsLayoutUtils.h"
@@ -204,11 +204,10 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       InternalUIEvent actEvent(true, eLegacyDOMActivate, mouseEvent);
       actEvent.mDetail = 1;
 
-      nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
-      if (shell) {
+      if (RefPtr<PresShell> presShell = aVisitor.mPresContext->GetPresShell()) {
         nsEventStatus status = nsEventStatus_eIgnore;
         mInInternalActivate = true;
-        shell->HandleDOMEventWithTarget(this, &actEvent, &status);
+        presShell->HandleDOMEventWithTarget(this, &actEvent, &status);
         mInInternalActivate = false;
 
         // If activate is cancelled, we must do the same as when click is
@@ -258,8 +257,7 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         event.mOriginator = this;
         nsEventStatus status = nsEventStatus_eIgnore;
 
-        nsCOMPtr<nsIPresShell> presShell =
-            aVisitor.mPresContext->GetPresShell();
+        RefPtr<PresShell> presShell = aVisitor.mPresContext->GetPresShell();
         // If |nsIPresShell::Destroy| has been called due to
         // handling the event, the pres context will return
         // a null pres shell.  See bug 125624.

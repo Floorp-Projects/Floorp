@@ -15,6 +15,7 @@
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/layers/AnimationInfo.h"
 #include "mozilla/layout/ScrollAnchorContainer.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/Unused.h"
@@ -2665,7 +2666,7 @@ static ServoPostTraversalFlags SendA11yNotifications(
   }
 
   if (needsNotify) {
-    nsIPresShell* presShell = aPresContext->PresShell();
+    PresShell* presShell = aPresContext->PresShell();
     if (isVisible) {
       accService->ContentRangeInserted(presShell, aElement,
                                        aElement->GetNextSibling());
@@ -3019,7 +3020,7 @@ ServoElementSnapshot& RestyleManager::SnapshotFor(Element& aElement) {
 
 void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
   nsPresContext* presContext = PresContext();
-  nsIPresShell* shell = presContext->PresShell();
+  PresShell* presShell = presContext->PresShell();
 
   MOZ_ASSERT(presContext->Document(), "No document?  Pshaw!");
   // FIXME(emilio): In the "flush animations" case, ideally, we should only
@@ -3033,7 +3034,7 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(), "Missing a script blocker!");
   MOZ_RELEASE_ASSERT(!mInStyleRefresh, "Reentrant call?");
 
-  if (MOZ_UNLIKELY(!shell->DidInitialize())) {
+  if (MOZ_UNLIKELY(!presShell->DidInitialize())) {
     // PresShell::FlushPendingNotifications doesn't early-return in the case
     // where the PresShell hasn't yet been initialized (and therefore we haven't
     // yet done the initial style traversal of the DOM tree). We should arguably
@@ -3043,7 +3044,7 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
   }
 
   // It'd be bad!
-  nsIPresShell::AutoAssertNoFlush noReentrantFlush(*shell);
+  nsIPresShell::AutoAssertNoFlush noReentrantFlush(*presShell);
 
   // Create a AnimationsWithDestroyedFrame during restyling process to
   // stop animations and transitions on elements that have no frame at the end

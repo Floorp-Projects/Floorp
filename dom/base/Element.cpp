@@ -2158,16 +2158,16 @@ nsresult Element::DispatchEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> shell = aPresContext->GetPresShell();
-  if (!shell) {
+  RefPtr<PresShell> presShell = aPresContext->GetPresShell();
+  if (!presShell) {
     return NS_OK;
   }
 
   if (aFullDispatch) {
-    return shell->HandleEventWithTarget(aEvent, nullptr, aTarget, aStatus);
+    return presShell->HandleEventWithTarget(aEvent, nullptr, aTarget, aStatus);
   }
 
-  return shell->HandleDOMEventWithTarget(aTarget, aEvent, aStatus);
+  return presShell->HandleDOMEventWithTarget(aTarget, aEvent, aStatus);
 }
 
 /* static */
@@ -3120,8 +3120,8 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
         }
 
         // The default action is simply to dispatch DOMActivate
-        nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
-        if (shell) {
+        if (RefPtr<PresShell> presShell =
+                aVisitor.mPresContext->GetPresShell()) {
           // single-click
           nsEventStatus status = nsEventStatus_eIgnore;
           // DOMActive event should be trusted since the activation is actually
@@ -3129,7 +3129,7 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
           InternalUIEvent actEvent(true, eLegacyDOMActivate, mouseEvent);
           actEvent.mDetail = 1;
 
-          rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
+          rv = presShell->HandleDOMEventWithTarget(this, &actEvent, &status);
           if (NS_SUCCEEDED(rv)) {
             aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
           }

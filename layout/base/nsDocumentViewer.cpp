@@ -2749,8 +2749,8 @@ nsDocumentViewer::SetFullZoom(float aFullZoom) {
   if (GetIsPrintPreview()) {
     nsPresContext* pc = GetPresContext();
     NS_ENSURE_TRUE(pc, NS_OK);
-    nsCOMPtr<nsIPresShell> shell = pc->GetPresShell();
-    NS_ENSURE_TRUE(shell, NS_OK);
+    PresShell* presShell = pc->GetPresShell();
+    NS_ENSURE_TRUE(presShell, NS_OK);
 
     if (!mPrintPreviewZoomed) {
       mOriginalPrintPreviewScale = pc->GetPrintPreviewScale();
@@ -2759,13 +2759,13 @@ nsDocumentViewer::SetFullZoom(float aFullZoom) {
 
     mPrintPreviewZoom = aFullZoom;
     pc->SetPrintPreviewScale(aFullZoom * mOriginalPrintPreviewScale);
-    nsIPageSequenceFrame* pf = shell->GetPageSequenceFrame();
+    nsIPageSequenceFrame* pf = presShell->GetPageSequenceFrame();
     if (pf) {
       nsIFrame* f = do_QueryFrame(pf);
-      shell->FrameNeedsReflow(f, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+      presShell->FrameNeedsReflow(f, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
     }
 
-    nsIFrame* rootFrame = shell->GetRootFrame();
+    nsIFrame* rootFrame = presShell->GetRootFrame();
     if (rootFrame) {
       rootFrame->InvalidateFrame();
     }
