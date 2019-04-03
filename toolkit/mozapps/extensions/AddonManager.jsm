@@ -1559,8 +1559,6 @@ var AddonManagerInternal = {
    *         An optional placeholder version while the add-on is being downloaded
    * @param  {XULElement} [aOptions.browser]
    *         An optional <browser> element for download permissions prompts.
-   * @param  {nsIPrincipal} [aOptions.triggeringPrincipal]
-   *         The principal which is attempting to install the add-on.
    * @param  {Object} [aOptions.telemetryInfo]
    *         An optional object which provides details about the installation source
    *         included in the addon manager telemetry events.
@@ -2683,7 +2681,7 @@ var AddonManagerInternal = {
         installPromise.catch(() => {});
 
         return {listener, installPromise};
-      };
+     };
 
       try {
         checkInstallUrl(options.url);
@@ -2692,8 +2690,6 @@ var AddonManagerInternal = {
       }
 
       return AddonManagerInternal.getInstallForURL(options.url, {
-        browser: target,
-        triggeringPrincipal: options.triggeringPrincipal,
         hash: options.hash,
         telemetryInfo: {
           source: AddonManager.getInstallSourceFromHost(options.sourceHost),
