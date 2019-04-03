@@ -27,6 +27,7 @@
 #include "nsITabChild.h"
 #include "nsITooltipListener.h"
 #include "nsIWebProgressListener.h"
+#include "nsIWebProgressListener2.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/dom/CoalescedMouseData.h"
@@ -204,7 +205,7 @@ class TabChild final : public TabChildBase,
                        public nsSupportsWeakReference,
                        public nsITabChild,
                        public nsIObserver,
-                       public nsIWebProgressListener,
+                       public nsIWebProgressListener2,
                        public TabContext,
                        public nsITooltipListener,
                        public mozilla::ipc::IShmemAllocator {
@@ -264,6 +265,7 @@ class TabChild final : public TabChildBase,
   NS_DECL_NSITABCHILD
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSIWEBPROGRESSLISTENER2
   NS_DECL_NSITOOLTIPLISTENER
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(TabChild, TabChildBase)
