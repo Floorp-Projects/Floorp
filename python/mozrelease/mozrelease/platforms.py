@@ -19,6 +19,7 @@ update_platform_map = {
             "Darwin_x86-gcc3", "Darwin_x86_64-gcc3"],
     "win32": ["WINNT_x86-msvc", "WINNT_x86-msvc-x86", "WINNT_x86-msvc-x64"],
     "win64": ["WINNT_x86_64-msvc", "WINNT_x86_64-msvc-x64"],
+    "win64-aarch64": ["WINNT_aarch64-msvc-aarch64"],
 }
 
 # ftp -> shipped locales map
@@ -37,11 +38,12 @@ info_file_platform_map = {
     "mac": "macosx64",
     "win32": "win32",
     "win64": "win64",
+    "win64-aarch64": "win64_aarch64",
 }
 
 
 def ftp2updatePlatforms(platform):
-    return update_platform_map.get(platform, platform)
+    return update_platform_map[platform]
 
 
 def ftp2shippedLocales(platform):

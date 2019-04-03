@@ -46,7 +46,10 @@ job-defaults:
             staging: dep
             production: null
       include-version: beta
-      last-watershed: "56.0b3"
+      last-watershed:
+         by-platform:
+            win64-aarch64.*: "67.0b2"
+            default: "56.0b3"
       mar-channel-id-override: beta
       channel: "beta-localtest"
 
@@ -109,4 +112,16 @@ jobs:
          build_platform: win64-nightly
       extra:
          platform: win64
+         updater-platform: linux-x86_64
+
+   firefox-secondary-win64-aarch64:
+      treeherder:
+         symbol: UVCS
+         platform: win64-aarch64/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: win64-aarch64-nightly
+      extra:
+         platform: win64-aarch64
          updater-platform: linux-x86_64
