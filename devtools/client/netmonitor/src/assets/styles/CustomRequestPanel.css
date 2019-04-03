@@ -33,6 +33,7 @@
 .network-monitor .custom-method-and-url input {
   font-weight: 400;
   margin-top: 4px;
+  min-width: 9ch;
   padding: 2px 3px;
 }
 
@@ -58,28 +59,49 @@
 }
 
 .network-monitor .custom-request {
-  flex-direction: row-reverse;
-  flex-wrap: wrap;
+  display: block;
   padding: 0;
+}
+
+.network-monitor .custom-request .custom-request-button-container {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  margin-left: 12px;
 }
 
 .network-monitor .custom-request-panel .custom-request-label {
   font-weight: 400;
+  white-space: nowrap;
 }
 
 .network-monitor .custom-request button {
-  align-self: flex-end;
   height: 24px;
+  margin-bottom: 4px;
   padding-left: 8px;
   padding-right: 8px;
   width: auto;
 }
 
+.network-monitor .custom-request button:focus {
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff,
+  0 0 0 4px rgba(10,132,255,0.3)
+}
+
 .network-monitor .custom-request #custom-request-send-button {
   background-color: var(--blue-60);
   color: white;
-  margin-left: 4px;
-  margin-right: 16px;
+}
+
+.network-monitor .custom-request #custom-request-send-button:active {
+  background-color: var(--blue-80);
+}
+
+.network-monitor .custom-request #custom-request-send-button:hover {
+  background-color: var(--blue-70);
+}
+
+.network-monitor .custom-request #custom-request-close-button {
+  margin-right: 4px;
 }
 
 .network-monitor .custom-request .custom-header {
@@ -99,6 +121,14 @@
 :root.theme-dark .network-monitor #custom-request-close-button {
   background-color: var(--toolbarbutton-background);
   border: 1px solid var(--theme-splitter-color);
+}
+
+:root.theme-dark .network-monitor #custom-request-close-button:hover:active {
+  background-color: var(--theme-selection-background-hover);
+}
+
+:root.theme-dark .network-monitor #custom-request-close-button:focus {
+  background-color: var(--theme-selection-focus-background);
 }
 
 :root.theme-dark .network-monitor .custom-request-label.custom-header {
@@ -124,6 +154,19 @@
 
 :root.theme-light .network-monitor #custom-request-close-button {
   background-color: var(--grey-20);
+  border: var(--theme-splitter-color);
+}
+
+:root.theme-light .network-monitor #custom-request-close-button:hover:active {
+  background-color: var(--theme-selection-background-hover);
+}
+
+:root.theme-light .network-monitor #custom-request-close-button:focus {
+  outline: 2px solid var(--blue-50);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.3);
+  border-radius: 2px;
+  -moz-outline-radius: 2px;
 }
 
 :root.theme-light .network-details-panel .custom-request-panel input,

@@ -156,7 +156,3 @@ const { PromiseTestUtils } = scopedCuImport(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
 PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_NOT_INITIALIZED/);
-
-// Many web replay tests can resume execution before the debugger has finished
-// all operations related to the pause.
-PromiseTestUtils.whitelistRejectionsGlobally(/Current thread has paused or resumed/);

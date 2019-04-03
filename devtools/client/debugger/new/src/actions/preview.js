@@ -22,7 +22,7 @@ import {
 import { getMappedExpression } from "./expressions";
 
 import type { Action, ThunkArgs } from "./types";
-import type { Position, Context } from "../types";
+import type { Position } from "../types";
 import type { AstLocation } from "../workers/parser";
 
 function findExpressionMatch(state, codeMirror, tokenPos) {
@@ -43,7 +43,6 @@ function findExpressionMatch(state, codeMirror, tokenPos) {
 }
 
 export function updatePreview(
-  cx: Context,
   target: HTMLElement,
   tokenPos: Object,
   codeMirror: any
@@ -69,12 +68,11 @@ export function updatePreview(
       return;
     }
 
-    dispatch(setPreview(cx, expression, location, tokenPos, cursorPos));
+    dispatch(setPreview(expression, location, tokenPos, cursorPos));
   };
 }
 
 export function setPreview(
-  cx: Context,
   expression: string,
   location: AstLocation,
   tokenPos: Position,
@@ -83,7 +81,6 @@ export function setPreview(
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     await dispatch({
       type: "SET_PREVIEW",
-      cx,
       [PROMISE]: (async function() {
         const source = getSelectedSource(getState());
         if (!source) {
@@ -129,7 +126,7 @@ export function setPreview(
   };
 }
 
-export function clearPreview(cx: Context) {
+export function clearPreview() {
   return ({ dispatch, getState, client }: ThunkArgs) => {
     const currentSelection = getPreview(getState());
     if (!currentSelection) {
@@ -138,8 +135,7 @@ export function clearPreview(cx: Context) {
 
     return dispatch(
       ({
-        type: "CLEAR_SELECTION",
-        cx
+        type: "CLEAR_SELECTION"
       }: Action)
     );
   };

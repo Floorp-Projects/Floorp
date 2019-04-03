@@ -7,6 +7,7 @@
 import { PROMISE } from "../utils/middleware/promise";
 import {
   getSource,
+  getSourceFromId,
   getGeneratedSource,
   getSourcesEpoch
 } from "../../selectors";
@@ -16,13 +17,16 @@ import { prettyPrintSource } from "./prettyPrint";
 
 import * as parser from "../../workers/parser";
 import { isLoaded, isOriginal, isPretty } from "../../utils/source";
+import {
+  memoizeableAction,
+  type MemoizedAction
+} from "../../utils/memoizableAction";
+
 import { Telemetry } from "devtools-modules";
 
 import type { ThunkArgs } from "../types";
 
-import type { Source, Context } from "../../types";
-
-const requests = new Map();
+import type { Source } from "../../types";
 
 // Measures the time it takes for a source to load
 const loadSourceHistogram = "DEVTOOLS_DEBUGGER_LOAD_SOURCE_MS";
@@ -68,15 +72,10 @@ async function loadSource(
 }
 
 async function loadSourceTextPromise(
-  cx: Context,
   source: Source,
-  epoch: number,
   { dispatch, getState, client, sourceMaps }: ThunkArgs
 ): Promise<?Source> {
-  if (isLoaded(source)) {
-    return source;
-  }
-
+  const epoch = getSourcesEpoch(getState());
   await dispatch({
     type: "LOAD_SOURCE_TEXT",
     sourceId: source.id,
@@ -85,50 +84,36 @@ async function loadSourceTextPromise(
   });
 
   const newSource = getSource(getState(), source.id);
+
   if (!newSource) {
     return;
   }
 
   if (!newSource.isWasm && isLoaded(newSource)) {
     parser.setSource(newSource);
-    dispatch(setBreakpointPositions(cx, newSource.id));
+    dispatch(setBreakpointPositions({ sourceId: newSource.id }));
   }
 
   return newSource;
 }
 
-/**
- * @memberof actions/sources
- * @static
- */
-export function loadSourceText(cx: Context, inputSource: ?Source) {
-  return async (thunkArgs: ThunkArgs) => {
-    if (!inputSource) {
-      return;
-    }
-
-    // This ensures that the falsy check above is preserved into the IIFE
-    // below in a way that Flow is happy with.
-    const source = inputSource;
-
-    const epoch = getSourcesEpoch(thunkArgs.getState());
-
-    const id = `${epoch}:${source.id}`;
-    let promise = requests.get(id);
-    if (!promise) {
-      promise = (async () => {
-        try {
-          return await loadSourceTextPromise(cx, source, epoch, thunkArgs);
-        } catch (e) {
-          // TODO: This swallows errors for now. Ideally we would get rid of
-          // this once we have a better handle on our async state management.
-        } finally {
-          requests.delete(id);
-        }
-      })();
-      requests.set(id, promise);
-    }
-
-    return promise;
+export function loadSourceById(sourceId: string) {
+  return ({ getState, dispatch }: ThunkArgs) => {
+    const source = getSourceFromId(getState(), sourceId);
+    return dispatch(loadSourceText({ source }));
   };
 }
+
+export const loadSourceText: MemoizedAction<
+  { source: Source },
+  ?Source
+> = memoizeableAction("loadSourceText", {
+  exitEarly: ({ source }) => !source,
+  hasValue: ({ source }, { getState }) => isLoaded(source),
+  getValue: ({ source }, { getState }) => getSource(getState(), source.id),
+  createKey: ({ source }, { getState }) => {
+    const epoch = getSourcesEpoch(getState());
+    return `${epoch}:${source.id}`;
+  },
+  action: ({ source }, thunkArgs) => loadSourceTextPromise(source, thunkArgs)
+});

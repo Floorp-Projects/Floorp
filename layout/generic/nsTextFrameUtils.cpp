@@ -12,9 +12,19 @@
 #include "nsStyleStruct.h"
 #include "nsTextFragment.h"
 #include "nsUnicharUtils.h"
+#include "nsUnicodeProperties.h"
 #include <algorithm>
 
 using namespace mozilla;
+
+// static
+bool nsTextFrameUtils::IsSpaceCombiningSequenceTail(const char16_t* aChars,
+                                         int32_t aLength) {
+  return aLength > 0 &&
+         (mozilla::unicode::IsClusterExtender(aChars[0]) ||
+          (IsBidiControl(aChars[0]) &&
+           IsSpaceCombiningSequenceTail(aChars + 1, aLength - 1)));
+}
 
 static bool IsDiscardable(char16_t ch, nsTextFrameUtils::Flags* aFlags) {
   // Unlike IS_DISCARDABLE, we don't discard \r. \r will be ignored by

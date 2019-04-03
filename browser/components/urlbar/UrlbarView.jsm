@@ -341,12 +341,6 @@ class UrlbarView {
     this.panel.removeAttribute("hidden");
     this.panel.removeAttribute("actionoverride");
 
-    this._alignPanel();
-
-    this.panel.openPopup(this.input.textbox, "after_start");
-  }
-
-  _alignPanel() {
     // Make the panel span the width of the window.
     let documentRect =
       this._getBoundsWithoutFlushing(this.document.documentElement);
@@ -394,10 +388,12 @@ class UrlbarView {
     // Align the panel with the input's parent toolbar.
     let toolbarRect =
       this._getBoundsWithoutFlushing(this.input.textbox.closest("toolbar"));
-    this.panel.style.marginInlineStart = this.window.RTL_UI ?
-      inputRect.right - documentRect.right + "px" :
-      documentRect.left - inputRect.left + "px";
-    this.panel.style.marginTop = inputRect.top - toolbarRect.top + "px";
+    let offsetX = Math.round(this.window.RTL_UI ?
+      inputRect.right - documentRect.right :
+      documentRect.left - inputRect.left);
+    let offsetY = Math.round(inputRect.top - toolbarRect.top);
+
+    this.panel.openPopup(this.input.textbox, "after_start", offsetX, offsetY);
   }
 
   _createRow() {

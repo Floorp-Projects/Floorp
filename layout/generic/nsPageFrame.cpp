@@ -545,15 +545,14 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         *aBuilder, content, child, backgroundRect, NS_RGBA(0, 0, 0, 0));
   }
 
-  content.AppendToTop(MakeDisplayItem<nsDisplayTransform>(
-      aBuilder, child, &content, content.GetBuildingRect(), 0,
-      ::ComputePageTransform));
+  content.AppendNewToTop<nsDisplayTransform>(aBuilder, child, &content,
+                                             content.GetBuildingRect(), 0,
+                                             ::ComputePageTransform);
 
   set.Content()->AppendToTop(&content);
 
   if (PresContext()->IsRootPaginatedDocument()) {
-    set.Content()->AppendToTop(
-        MakeDisplayItem<nsDisplayHeaderFooter>(aBuilder, this));
+    set.Content()->AppendNewToTop<nsDisplayHeaderFooter>(aBuilder, this);
   }
 
   set.MoveTo(aLists);

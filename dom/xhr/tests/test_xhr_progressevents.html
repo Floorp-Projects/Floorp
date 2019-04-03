@@ -56,12 +56,8 @@ function updateProgress(e, data, testName) {
     if (data.blob) {
       is(e.loaded, response.size, "event.loaded matches response size" + test);
     }
-    else if (!data.chunked) {
-      is(e.loaded, response.length, "event.loaded matches response size" + test);
-    }
     else {
-      is(e.loaded - data.receivedBytes, response.length,
-         "event.loaded grew by response size" + test);
+      is(e.loaded, response.length, "event.loaded matches response size" + test);
     }
   }
   ok(e.loaded > data.receivedBytes, "event.loaded increased" + test);
@@ -135,7 +131,6 @@ function* runTests() {
                        { type: "document", text: true, nodata: true },
                        { type: "json", text: true, nodata: true },
                        { type: "", text: true },
-                       { type: "moz-chunked-arraybuffer", text: false, chunked: true },
                       ];
   var responseType;
   var fileExpectedResult = "";
@@ -192,7 +187,6 @@ function* runTests() {
                       total: test.total,
                       encoded: test.encoded,
                       nodata: responseType.nodata,
-                      chunked: responseType.chunked,
                       text: responseType.text,
                       blob: responseType.blob,
                       file: test.file };
@@ -231,19 +225,10 @@ function* runTests() {
         is(xhr.readyState, xhr.DONE, "should be in state DONE closing " + testState.name);
         log("readystate to 4");
 
-        if (responseType.chunked) {
-          xhr.responseType;
-          is(xhr.response, null, "chunked data has null response for " + testState.name);
-        }
-
         e = yield undefined;
         is(e.type, "load", "should fire load closing " + testState.name);
         is(e.lengthComputable, e.total != 0, "length should " + (e.total == 0 ? "not " : "") + "be computable during load closing " + testState.name);
         log("got load");
-
-        if (responseType.chunked) {
-          is(xhr.response, null, "chunked data has null response for " + testState.name);
-        }
 
         e = yield undefined;
         is(e.type, "loadend", "should fire loadend closing " + testState.name);
@@ -260,11 +245,7 @@ function* runTests() {
           is(xhrClose.readyState, xhrClose.DONE, "closeConn finished");
         }
 
-        if (responseType.chunked) {
-          is(xhr.response, null, "chunked data has null response for " + testState.name);
-        }
-
-        if (!testState.nodata && !responseType.blob || responseType.chunked) {
+        if (!testState.nodata && !responseType.blob) {
           // This branch intentionally left blank
           // Under these conditions we check the response during updateProgress
         }
@@ -304,9 +285,6 @@ function* runTests() {
           continue;
 
         updateProgress(e, testState, "data for " + testState.name + "[" + testState.index + "]");
-        if (responseType.chunked) {
-          testState.receivedResult = "";
-        }
       }
 
       if (!testState.nodata && !testState.blob) {

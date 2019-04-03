@@ -910,7 +910,8 @@ inline SelectionTypeMask ToSelectionTypeMask(SelectionType aSelectionType) {
   MOZ_ASSERT(aSelectionType != SelectionType::eInvalid);
   return aSelectionType == SelectionType::eNone
              ? 0
-             : (1 << (static_cast<uint8_t>(aSelectionType) - 1));
+             : static_cast<SelectionTypeMask>(
+                   1 << (static_cast<uint8_t>(aSelectionType) - 1));
 }
 
 }  // namespace mozilla

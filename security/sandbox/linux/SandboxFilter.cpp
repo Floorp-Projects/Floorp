@@ -626,6 +626,9 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
       case __NR_exit_group:
         return Allow();
 
+      case __NR_getrandom:
+        return Allow();
+
 #ifdef MOZ_ASAN
         // ASAN's error reporter wants to know if stderr is a tty.
       case __NR_ioctl: {
@@ -1232,11 +1235,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         return Allow();
 
 #endif  // DESKTOP
-
-#ifdef __NR_getrandom
-      case __NR_getrandom:
-        return Allow();
-#endif
 
         // nsSystemInfo uses uname (and we cache an instance, so
         // the info remains present even if we block the syscall)

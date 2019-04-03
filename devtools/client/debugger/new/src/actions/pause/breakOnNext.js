@@ -4,8 +4,8 @@
 
 // @flow
 
+import { getCurrentThread } from "../../selectors";
 import type { ThunkArgs } from "../types";
-import type { ThreadContext } from "../../types";
 
 /**
  * Debugger breakOnNext command.
@@ -15,9 +15,10 @@ import type { ThreadContext } from "../../types";
  * @memberof actions/pause
  * @static
  */
-export function breakOnNext(cx: ThreadContext) {
+export function breakOnNext() {
   return async ({ dispatch, getState, client }: ThunkArgs) => {
-    await client.breakOnNext(cx.thread);
-    return dispatch({ type: "BREAK_ON_NEXT", thread: cx.thread });
+    const thread = getCurrentThread(getState());
+    await client.breakOnNext(thread);
+    return dispatch({ type: "BREAK_ON_NEXT", thread });
   };
 }

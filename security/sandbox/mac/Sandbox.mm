@@ -14,12 +14,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <CoreFoundation/CoreFoundation.h>
-
 #include <iostream>
 #include <sstream>
 #include <vector>
 
 #include "mozilla/Assertions.h"
+#include "SandboxPolicyContent.h"
+#include "SandboxPolicyFlash.h"
+#include "SandboxPolicyGMP.h"
+#include "SandboxPolicyUtility.h"
+
 
 // XXX There are currently problems with the /usr/include/sandbox.h file on
 // some/all of the Macs in Mozilla's build system. Further,

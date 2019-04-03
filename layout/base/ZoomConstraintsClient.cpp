@@ -36,6 +36,7 @@ NS_IMPL_ISUPPORTS(ZoomConstraintsClient, nsIDOMEventListener, nsIObserver)
 #define NS_PREF_CHANGED NS_LITERAL_CSTRING("nsPref:changed")
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::layers;
 
 ZoomConstraintsClient::ZoomConstraintsClient()

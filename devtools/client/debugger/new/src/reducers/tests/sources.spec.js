@@ -10,7 +10,7 @@ declare var expect: (value: any) => any;
 import update, { initialSourcesState, getDisplayedSources } from "../sources";
 import type { Source } from "../../types";
 import { prefs } from "../../utils/prefs";
-import { makeMockSource, mockcx } from "../../utils/test-mockup";
+import { makeMockSource } from "../../utils/test-mockup";
 
 const extensionSource = {
   ...makeMockSource(),
@@ -54,7 +54,6 @@ describe("sources reducer", () => {
     let state = initialSourcesState();
     state = update(state, {
       type: "ADD_SOURCE",
-      cx: mockcx,
       source: makeMockSource()
     });
     expect(Object.keys(state.sources)).toHaveLength(1);
@@ -68,7 +67,6 @@ describe("sources selectors", () => {
     state = {
       sources: update(state, {
         type: "ADD_SOURCES",
-        cx: mockcx,
         // coercing to a Source for the purpose of this test
         sources: ((mockedSources: any): Source[])
       })
@@ -84,7 +82,6 @@ describe("sources selectors", () => {
     state = {
       sources: update(state, {
         type: "ADD_SOURCES",
-        cx: mockcx,
         // coercing to a Source for the purpose of this test
         sources: ((mockedSources: any): Source[])
       })

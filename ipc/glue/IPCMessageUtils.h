@@ -976,18 +976,9 @@ struct ParamTraits<mozilla::Variant<Ts...>> {
   typedef mozilla::Variant<Ts...> paramType;
   using Tag = typename mozilla::detail::VariantTag<Ts...>::Type;
 
-  struct VariantWriter {
-    Message* msg;
-
-    template <class T>
-    void match(const T& t) {
-      WriteParam(msg, t);
-    }
-  };
-
   static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.tag);
-    param.match(VariantWriter{msg});
+    param.match([msg](const auto& t) { WriteParam(msg, t); });
   }
 
   // Because VariantReader is a nested struct, we need the dummy template

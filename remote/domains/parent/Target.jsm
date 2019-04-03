@@ -32,6 +32,9 @@ class Target extends Domain {
     } else {
       targets.off("connect", this.onTargetCreated);
     }
+    for (const target of targets) {
+      this.onTargetCreated("connect", target);
+    }
   }
 
   onTargetCreated(eventName, target) {

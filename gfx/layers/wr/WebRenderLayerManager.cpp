@@ -208,6 +208,7 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
       WrBridge()->SendSetFocusTarget(mFocusTarget);
       // Revoke TransactionId to trigger next paint.
       mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
+      mLatestTransactionId = mLatestTransactionId.Prev();
       return true;
     }
   }

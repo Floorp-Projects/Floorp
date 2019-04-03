@@ -14,7 +14,7 @@ const {
 
 describe("file text search", () => {
   it("should update search results", () => {
-    const { dispatch, getState, cx } = createStore();
+    const { dispatch, getState } = createStore();
     expect(getFileSearchResults(getState())).toEqual({
       matches: [],
       matchIndex: -1,
@@ -23,7 +23,7 @@ describe("file text search", () => {
     });
 
     const matches = [{ line: 1, ch: 3 }, { line: 3, ch: 2 }];
-    dispatch(actions.updateSearchResults(cx, 2, 3, matches));
+    dispatch(actions.updateSearchResults(2, 3, matches));
 
     expect(getFileSearchResults(getState())).toEqual({
       count: 2,
@@ -34,29 +34,29 @@ describe("file text search", () => {
   });
 
   it("should update the file search query", () => {
-    const { dispatch, getState, cx } = createStore();
+    const { dispatch, getState } = createStore();
     let fileSearchQueryState = getFileSearchQuery(getState());
     expect(fileSearchQueryState).toBe("");
-    dispatch(actions.setFileSearchQuery(cx, "foobar"));
+    dispatch(actions.setFileSearchQuery("foobar"));
     fileSearchQueryState = getFileSearchQuery(getState());
     expect(fileSearchQueryState).toBe("foobar");
   });
 
   it("should toggle a file search modifier", () => {
-    const { dispatch, getState, cx } = createStore();
+    const { dispatch, getState } = createStore();
     let fileSearchModState = getFileSearchModifiers(getState());
     expect(fileSearchModState.get("caseSensitive")).toBe(false);
-    dispatch(actions.toggleFileSearchModifier(cx, "caseSensitive"));
+    dispatch(actions.toggleFileSearchModifier("caseSensitive"));
     fileSearchModState = getFileSearchModifiers(getState());
     expect(fileSearchModState.get("caseSensitive")).toBe(true);
   });
 
   it("should toggle a file search query cleaning", () => {
-    const { dispatch, getState, cx } = createStore();
-    dispatch(actions.setFileSearchQuery(cx, "foobar"));
+    const { dispatch, getState } = createStore();
+    dispatch(actions.setFileSearchQuery("foobar"));
     let fileSearchQueryState = getFileSearchQuery(getState());
     expect(fileSearchQueryState).toBe("foobar");
-    dispatch(actions.setFileSearchQuery(cx, ""));
+    dispatch(actions.setFileSearchQuery(""));
     fileSearchQueryState = getFileSearchQuery(getState());
     expect(fileSearchQueryState).toBe("");
   });

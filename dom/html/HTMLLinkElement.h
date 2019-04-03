@@ -39,7 +39,8 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
 
   // EventTarget
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
-  virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
+  MOZ_CAN_RUN_SCRIPT
+  nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
   // nsINode
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;

@@ -248,6 +248,7 @@ class EventTarget : public nsISupports, public nsWrapperCache {
    * @see EventDispatcher.h for documentation about aVisitor.
    * @note Only EventDispatcher should call this method.
    */
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) = 0;
 
  protected:

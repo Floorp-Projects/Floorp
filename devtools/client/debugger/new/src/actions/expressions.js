@@ -22,7 +22,7 @@ import { features } from "../utils/prefs";
 import { isOriginal } from "../utils/source";
 
 import * as parser from "../workers/parser";
-import type { Expression, ThreadContext } from "../types";
+import type { Expression } from "../types";
 import type { ThunkArgs } from "./types";
 
 /**
@@ -33,7 +33,7 @@ import type { ThunkArgs } from "./types";
  * @memberof actions/pause
  * @static
  */
-export function addExpression(cx: ThreadContext, input: string) {
+export function addExpression(input: string) {
   return async ({ dispatch, getState }: ThunkArgs) => {
     if (!input) {
       return;
@@ -43,26 +43,27 @@ export function addExpression(cx: ThreadContext, input: string) {
 
     const expression = getExpression(getState(), input);
     if (expression) {
-      return dispatch(evaluateExpression(cx, expression));
+      return dispatch(evaluateExpression(expression));
     }
 
-    dispatch({ type: "ADD_EXPRESSION", cx, input, expressionError });
+    dispatch({ type: "ADD_EXPRESSION", input, expressionError });
 
     const newExpression = getExpression(getState(), input);
     if (newExpression) {
-      return dispatch(evaluateExpression(cx, newExpression));
+      return dispatch(evaluateExpression(newExpression));
     }
   };
 }
 
-export function autocomplete(cx: ThreadContext, input: string, cursor: number) {
+export function autocomplete(input: string, cursor: number) {
   return async ({ dispatch, getState, client }: ThunkArgs) => {
     if (!input) {
       return;
     }
-    const frameId = getSelectedFrameId(getState(), cx.thread);
+    const thread = getCurrentThread(getState());
+    const frameId = getSelectedFrameId(getState(), thread);
     const result = await client.autocomplete(input, cursor, frameId);
-    await dispatch({ type: "AUTOCOMPLETE", cx, input, result });
+    await dispatch({ type: "AUTOCOMPLETE", input, result });
   };
 }
 
@@ -74,11 +75,7 @@ export function clearExpressionError() {
   return { type: "CLEAR_EXPRESSION_ERROR" };
 }
 
-export function updateExpression(
-  cx: ThreadContext,
-  input: string,
-  expression: Expression
-) {
+export function updateExpression(input: string, expression: Expression) {
   return async ({ dispatch, getState }: ThunkArgs) => {
     if (!input) {
       return;
@@ -87,13 +84,12 @@ export function updateExpression(
     const expressionError = await parser.hasSyntaxError(input);
     dispatch({
       type: "UPDATE_EXPRESSION",
-      cx,
       expression,
       input: expressionError ? expression.input : input,
       expressionError
     });
 
-    dispatch(evaluateExpressions(cx));
+    dispatch(evaluateExpressions());
   };
 }
 
@@ -119,20 +115,21 @@ export function deleteExpression(expression: Expression) {
  * @param {number} selectedFrameId
  * @static
  */
-export function evaluateExpressions(cx: ThreadContext) {
+export function evaluateExpressions() {
   return async function({ dispatch, getState, client }: ThunkArgs) {
     const expressions = getExpressions(getState()).toJS();
     const inputs = expressions.map(({ input }) => input);
-    const frameId = getSelectedFrameId(getState(), cx.thread);
+    const thread = getCurrentThread(getState());
+    const frameId = getSelectedFrameId(getState(), thread);
     const results = await client.evaluateExpressions(inputs, {
       frameId,
-      thread: cx.thread
+      thread
     });
-    dispatch({ type: "EVALUATE_EXPRESSIONS", cx, inputs, results });
+    dispatch({ type: "EVALUATE_EXPRESSIONS", inputs, results });
   };
 }
 
-function evaluateExpression(cx: ThreadContext, expression: Expression) {
+function evaluateExpression(expression: Expression) {
   return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
     if (!expression.input) {
       console.warn("Expressions should not be empty");
@@ -140,7 +137,8 @@ function evaluateExpression(cx: ThreadContext, expression: Expression) {
     }
 
     let input = expression.input;
-    const frame = getSelectedFrame(getState(), cx.thread);
+    const thread = getCurrentThread(getState());
+    const frame = getSelectedFrame(getState(), thread);
 
     if (frame) {
       const { location } = frame;
@@ -156,16 +154,15 @@ function evaluateExpression(cx: ThreadContext, expression: Expression) {
       }
     }
 
-    const frameId = getSelectedFrameId(getState(), cx.thread);
+    const frameId = getSelectedFrameId(getState(), thread);
 
     return dispatch({
       type: "EVALUATE_EXPRESSION",
-      cx,
-      thread: cx.thread,
+      thread,
       input: expression.input,
       [PROMISE]: client.evaluateInFrame(wrapExpression(input), {
         frameId,
-        thread: cx.thread
+        thread
       })
     });
   };

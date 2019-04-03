@@ -5,12 +5,6 @@
 // This test can be really slow on debug platforms
 requestLongerTimeout(5);
 
-// Debugger operations may still be in progress when we step.
-const { PromiseTestUtils } = scopedCuImport(
-  "resource://testing-common/PromiseTestUtils.jsm"
-);
-PromiseTestUtils.whitelistRejectionsGlobally(/Current thread has paused or resumed/);
-
 add_task(async function test() {
   const dbg = await initDebugger("big-sourcemap.html", "big-sourcemap");
   invokeInTab("hitDebugStatement");

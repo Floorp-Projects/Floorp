@@ -18,7 +18,6 @@ import { history } from "./middleware/history";
 import { promise } from "./middleware/promise";
 import { thunk } from "./middleware/thunk";
 import { timing } from "./middleware/timing";
-import { context } from "./middleware/context";
 
 /**
  * @memberof utils/create-store
@@ -48,7 +47,6 @@ type ReduxStoreOptions = {
 const configureStore = (opts: ReduxStoreOptions = {}) => {
   const middleware = [
     thunk(opts.makeThunkArgs),
-    context,
     promise,
 
     // Order is important: services must go last as they always

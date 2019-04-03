@@ -9,10 +9,9 @@ import { getSelectedLocation } from "../../../utils/source-maps";
 import actions from "../../../actions";
 import { features } from "../../../utils/prefs";
 
-import type { Breakpoint, Source, Context } from "../../../types";
+import type { Breakpoint, Source } from "../../../types";
 
 type Props = {
-  cx: Context,
   breakpoint: Breakpoint,
   breakpoints: Breakpoint[],
   selectedSource: Source,
@@ -30,7 +29,6 @@ type Props = {
 
 export default function showContextMenu(props: Props) {
   const {
-    cx,
     breakpoint,
     breakpoints,
     selectedSource,
@@ -117,7 +115,7 @@ export default function showContextMenu(props: Props) {
     accesskey: deleteSelfKey,
     disabled: false,
     click: () => {
-      removeBreakpoint(cx, breakpoint);
+      removeBreakpoint(breakpoint);
     }
   };
 
@@ -126,7 +124,7 @@ export default function showContextMenu(props: Props) {
     label: deleteAllLabel,
     accesskey: deleteAllKey,
     disabled: false,
-    click: () => removeAllBreakpoints(cx)
+    click: () => removeAllBreakpoints()
   };
 
   const deleteOthersItem = {
@@ -134,7 +132,7 @@ export default function showContextMenu(props: Props) {
     label: deleteOthersLabel,
     accesskey: deleteOthersKey,
     disabled: false,
-    click: () => removeBreakpoints(cx, otherBreakpoints)
+    click: () => removeBreakpoints(otherBreakpoints)
   };
 
   const enableSelfItem = {
@@ -143,7 +141,7 @@ export default function showContextMenu(props: Props) {
     accesskey: enableSelfKey,
     disabled: false,
     click: () => {
-      toggleDisabledBreakpoint(cx, breakpoint);
+      toggleDisabledBreakpoint(breakpoint);
     }
   };
 
@@ -152,7 +150,7 @@ export default function showContextMenu(props: Props) {
     label: enableAllLabel,
     accesskey: enableAllKey,
     disabled: false,
-    click: () => toggleAllBreakpoints(cx, false)
+    click: () => toggleAllBreakpoints(false)
   };
 
   const enableOthersItem = {
@@ -160,7 +158,7 @@ export default function showContextMenu(props: Props) {
     label: enableOthersLabel,
     accesskey: enableOthersKey,
     disabled: false,
-    click: () => toggleBreakpoints(cx, false, otherDisabledBreakpoints)
+    click: () => toggleBreakpoints(false, otherDisabledBreakpoints)
   };
 
   const disableSelfItem = {
@@ -169,7 +167,7 @@ export default function showContextMenu(props: Props) {
     accesskey: disableSelfKey,
     disabled: false,
     click: () => {
-      toggleDisabledBreakpoint(cx, breakpoint);
+      toggleDisabledBreakpoint(breakpoint);
     }
   };
 
@@ -178,14 +176,14 @@ export default function showContextMenu(props: Props) {
     label: disableAllLabel,
     accesskey: disableAllKey,
     disabled: false,
-    click: () => toggleAllBreakpoints(cx, true)
+    click: () => toggleAllBreakpoints(true)
   };
 
   const disableOthersItem = {
     id: "node-menu-disable-others",
     label: disableOthersLabel,
     accesskey: disableOthersKey,
-    click: () => toggleBreakpoints(cx, true, otherEnabledBreakpoints)
+    click: () => toggleBreakpoints(true, otherEnabledBreakpoints)
   };
 
   const removeConditionItem = {
@@ -194,7 +192,7 @@ export default function showContextMenu(props: Props) {
     accesskey: removeConditionKey,
     disabled: false,
     click: () =>
-      setBreakpointOptions(cx, selectedLocation, {
+      setBreakpointOptions(selectedLocation, {
         ...breakpoint.options,
         condition: null
       })
@@ -205,7 +203,7 @@ export default function showContextMenu(props: Props) {
     label: addConditionLabel,
     accesskey: addConditionKey,
     click: () => {
-      selectSpecificLocation(cx, selectedLocation);
+      selectSpecificLocation(selectedLocation);
       openConditionalPanel(selectedLocation);
     },
     accelerator: L10N.getStr("toggleCondPanel.breakpoint.key")
@@ -216,7 +214,7 @@ export default function showContextMenu(props: Props) {
     label: editConditionLabel,
     accesskey: editConditionKey,
     click: () => {
-      selectSpecificLocation(cx, selectedLocation);
+      selectSpecificLocation(selectedLocation);
       openConditionalPanel(selectedLocation);
     },
     accelerator: L10N.getStr("toggleCondPanel.breakpoint.key")
@@ -246,7 +244,7 @@ export default function showContextMenu(props: Props) {
     accesskey: L10N.getStr("editor.removeLogPoint.accesskey"),
     disabled: false,
     click: () =>
-      setBreakpointOptions(cx, selectedLocation, {
+      setBreakpointOptions(selectedLocation, {
         ...breakpoint.options,
         logValue: null
       })

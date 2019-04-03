@@ -238,7 +238,7 @@ jobs:
 
     wrench-android-build:
         description: Build wrench for Android
-        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker-type: b-linux
         worker:
             max-run-time: 5400
             docker-image: {in-tree: webrender}

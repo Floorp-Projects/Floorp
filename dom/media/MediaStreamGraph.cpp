@@ -3569,7 +3569,12 @@ void MediaStreamGraphImpl::SuspendOrResumeStreams(
 }
 
 void MediaStreamGraphImpl::AudioContextOperationCompleted(
-    MediaStream* aStream, void* aPromise, AudioContextOperation aOperation) {
+    MediaStream* aStream, void* aPromise, AudioContextOperation aOperation,
+    AudioContextOperationFlags aFlags) {
+  if (aFlags != AudioContextOperationFlags::SendStateChange) {
+    MOZ_ASSERT(!aPromise);
+    return;
+  }
   // This can be called from the thread created to do cubeb operation, or the
   // MSG thread. The pointers passed back here are refcounted, so are still
   // alive.
@@ -3595,7 +3600,8 @@ void MediaStreamGraphImpl::AudioContextOperationCompleted(
 
 void MediaStreamGraphImpl::ApplyAudioContextOperationImpl(
     MediaStream* aDestinationStream, const nsTArray<MediaStream*>& aStreams,
-    AudioContextOperation aOperation, void* aPromise) {
+    AudioContextOperation aOperation, void* aPromise,
+    AudioContextOperationFlags aFlags) {
   MOZ_ASSERT(OnGraphThread());
 
   SuspendOrResumeStreams(aOperation, aStreams);
@@ -3628,11 +3634,12 @@ void MediaStreamGraphImpl::ApplyAudioContextOperationImpl(
         CurrentDriver()->SwitchAtNextIteration(driver);
       }
       driver->EnqueueStreamAndPromiseForOperation(aDestinationStream, aPromise,
-                                                  aOperation);
+                                                  aOperation, aFlags);
     } else {
       // We are resuming a context, but we are already using an
       // AudioCallbackDriver, we can resolve the promise now.
-      AudioContextOperationCompleted(aDestinationStream, aPromise, aOperation);
+      AudioContextOperationCompleted(aDestinationStream, aPromise, aOperation,
+                                     aFlags);
     }
   }
   // Close, suspend: check if we are going to switch to a
@@ -3647,7 +3654,7 @@ void MediaStreamGraphImpl::ApplyAudioContextOperationImpl(
       CurrentDriver()
           ->AsAudioCallbackDriver()
           ->EnqueueStreamAndPromiseForOperation(aDestinationStream, aPromise,
-                                                aOperation);
+                                                aOperation, aFlags);
 
       SystemClockDriver* driver;
       if (nextDriver) {
@@ -3666,7 +3673,7 @@ void MediaStreamGraphImpl::ApplyAudioContextOperationImpl(
       if (nextDriver->AsAudioCallbackDriver()) {
         nextDriver->AsAudioCallbackDriver()
             ->EnqueueStreamAndPromiseForOperation(aDestinationStream, aPromise,
-                                                  aOperation);
+                                                  aOperation, aFlags);
       } else {
         // If this is not an AudioCallbackDriver, this means we failed opening
         // an AudioCallbackDriver in the past, and we're constantly trying to
@@ -3676,33 +3683,37 @@ void MediaStreamGraphImpl::ApplyAudioContextOperationImpl(
         // (because suspend or close have been called on an AudioContext, or
         // we've closed the page), but we're already running one. We can just
         // resolve the promise now: we're already running off a system thread.
-        AudioContextOperationCompleted(aDestinationStream, aPromise,
-                                       aOperation);
+        AudioContextOperationCompleted(aDestinationStream, aPromise, aOperation,
+                                       aFlags);
       }
     } else {
       // We are closing or suspending an AudioContext, but something else is
       // using the audio stream, we can resolve the promise now.
-      AudioContextOperationCompleted(aDestinationStream, aPromise, aOperation);
+      AudioContextOperationCompleted(aDestinationStream, aPromise, aOperation,
+                                     aFlags);
     }
   }
 }
 
 void MediaStreamGraph::ApplyAudioContextOperation(
     MediaStream* aDestinationStream, const nsTArray<MediaStream*>& aStreams,
-    AudioContextOperation aOperation, void* aPromise) {
+    AudioContextOperation aOperation, void* aPromise,
+    AudioContextOperationFlags aFlags) {
   class AudioContextOperationControlMessage : public ControlMessage {
    public:
     AudioContextOperationControlMessage(MediaStream* aDestinationStream,
                                         const nsTArray<MediaStream*>& aStreams,
                                         AudioContextOperation aOperation,
-                                        void* aPromise)
+                                        void* aPromise,
+                                        AudioContextOperationFlags aFlags)
         : ControlMessage(aDestinationStream),
           mStreams(aStreams),
           mAudioContextOperation(aOperation),
-          mPromise(aPromise) {}
+          mPromise(aPromise),
+          mFlags(aFlags) {}
     void Run() override {
       mStream->GraphImpl()->ApplyAudioContextOperationImpl(
-          mStream, mStreams, mAudioContextOperation, mPromise);
+          mStream, mStreams, mAudioContextOperation, mPromise, mFlags);
     }
     void RunDuringShutdown() override {
       MOZ_ASSERT(mAudioContextOperation == AudioContextOperation::Close,
@@ -3715,11 +3726,12 @@ void MediaStreamGraph::ApplyAudioContextOperation(
     nsTArray<MediaStream*> mStreams;
     AudioContextOperation mAudioContextOperation;
     void* mPromise;
+    AudioContextOperationFlags mFlags;
   };
 
   MediaStreamGraphImpl* graphImpl = static_cast<MediaStreamGraphImpl*>(this);
   graphImpl->AppendMessage(MakeUnique<AudioContextOperationControlMessage>(
-      aDestinationStream, aStreams, aOperation, aPromise));
+      aDestinationStream, aStreams, aOperation, aPromise, aFlags));
 }
 
 bool MediaStreamGraph::IsNonRealtime() const {

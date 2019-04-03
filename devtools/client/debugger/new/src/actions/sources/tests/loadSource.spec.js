@@ -21,11 +21,11 @@ import { getBreakpointsList } from "../../../selectors";
 describe("loadSourceText", () => {
   it("should load source text", async () => {
     const store = createStore(sourceThreadClient);
-    const { dispatch, getState, cx } = store;
+    const { dispatch, getState } = store;
 
     const foo1Source = makeSource("foo1");
     await dispatch(actions.newSource(foo1Source));
-    await dispatch(actions.loadSourceText(cx, foo1Source));
+    await dispatch(actions.loadSourceText({ source: foo1Source }));
     const fooSource = selectors.getSource(getState(), "foo1");
 
     if (!fooSource || typeof fooSource.text != "string") {
@@ -35,7 +35,7 @@ describe("loadSourceText", () => {
 
     const baseFoo2Source = makeSource("foo2");
     await dispatch(actions.newSource(baseFoo2Source));
-    await dispatch(actions.loadSourceText(cx, baseFoo2Source));
+    await dispatch(actions.loadSourceText({ source: baseFoo2Source }));
     const foo2Source = selectors.getSource(getState(), "foo2");
 
     if (!foo2Source || typeof foo2Source.text != "string") {
@@ -73,7 +73,7 @@ describe("loadSourceText", () => {
         })
       }
     );
-    const { cx, dispatch, getState } = store;
+    const { dispatch, getState } = store;
 
     await dispatch(actions.newSource(fooOrigSource));
     await dispatch(actions.newSource(fooGenSource));
@@ -83,22 +83,13 @@ describe("loadSourceText", () => {
       line: 1,
       column: 0
     };
-    await dispatch(actions.addBreakpoint(cx, location, {}));
-    const breakpoint = selectors.getBreakpoint(getState(), location);
-    if (!breakpoint) {
-      throw new Error("no breakpoint");
-    }
-
-    expect(breakpoint.text).toBe("var fooGen = 42;");
-    expect(breakpoint.originalText).toBe("var fooOrig = 42;");
-
-    await dispatch(actions.loadSourceText(cx, fooOrigSource));
+    await dispatch(actions.addBreakpoint(location, {}));
 
     const breakpoint1 = getBreakpointsList(getState())[0];
     expect(breakpoint1.text).toBe("var fooGen = 42;");
     expect(breakpoint1.originalText).toBe("var fooOrig = 42;");
 
-    await dispatch(actions.loadSourceText(cx, fooGenSource));
+    await dispatch(actions.loadSourceText({ source: fooGenSource }));
 
     const breakpoint2 = getBreakpointsList(getState())[0];
     expect(breakpoint2.text).toBe("var fooGen = 42;");
@@ -108,7 +99,7 @@ describe("loadSourceText", () => {
   it("loads two sources w/ one request", async () => {
     let resolve;
     let count = 0;
-    const { dispatch, getState, cx } = createStore({
+    const { dispatch, getState } = createStore({
       sourceContents: () =>
         new Promise(r => {
           count++;
@@ -121,11 +112,11 @@ describe("loadSourceText", () => {
 
     await dispatch(actions.newSource(baseSource));
 
-    let source = selectors.getSource(getState(), id);
-    dispatch(actions.loadSourceText(cx, source));
+    let source = selectors.getSourceFromId(getState(), id);
+    dispatch(actions.loadSourceText({ source }));
 
-    source = selectors.getSource(getState(), id);
-    const loading = dispatch(actions.loadSourceText(cx, source));
+    source = selectors.getSourceFromId(getState(), id);
+    const loading = dispatch(actions.loadSourceText({ source }));
 
     if (!resolve) {
       throw new Error("no resolve");
@@ -141,7 +132,7 @@ describe("loadSourceText", () => {
   it("doesn't re-load loaded sources", async () => {
     let resolve;
     let count = 0;
-    const { dispatch, getState, cx } = createStore({
+    const { dispatch, getState } = createStore({
       sourceContents: () =>
         new Promise(r => {
           count++;
@@ -153,8 +144,8 @@ describe("loadSourceText", () => {
     const baseSource = makeSource(id, { loadedState: "unloaded" });
 
     await dispatch(actions.newSource(baseSource));
-    let source = selectors.getSource(getState(), id);
-    const loading = dispatch(actions.loadSourceText(cx, source));
+    let source = selectors.getSourceFromId(getState(), id);
+    const loading = dispatch(actions.loadSourceText({ source }));
 
     if (!resolve) {
       throw new Error("no resolve");
@@ -162,8 +153,8 @@ describe("loadSourceText", () => {
     resolve({ source: "yay", contentType: "text/javascript" });
     await loading;
 
-    source = selectors.getSource(getState(), id);
-    await dispatch(actions.loadSourceText(cx, source));
+    source = selectors.getSourceFromId(getState(), id);
+    await dispatch(actions.loadSourceText({ source }));
     expect(count).toEqual(1);
 
     source = selectors.getSource(getState(), id);
@@ -171,13 +162,14 @@ describe("loadSourceText", () => {
   });
 
   it("should cache subsequent source text loads", async () => {
-    const { dispatch, getState, cx } = createStore(sourceThreadClient);
+    const { dispatch, getState } = createStore(sourceThreadClient);
 
     const source = makeSource("foo1");
-    await dispatch(actions.loadSourceText(cx, source));
-    const prevSource = selectors.getSource(getState(), "foo1");
+    dispatch(actions.newSource(source));
+    await dispatch(actions.loadSourceText({ source }));
+    const prevSource = selectors.getSourceFromId(getState(), "foo1");
 
-    await dispatch(actions.loadSourceText(cx, prevSource));
+    await dispatch(actions.loadSourceText({ source: prevSource }));
     const curSource = selectors.getSource(getState(), "foo1");
 
     expect(prevSource === curSource).toBeTruthy();
@@ -185,7 +177,7 @@ describe("loadSourceText", () => {
 
   it("should indicate a loading source", async () => {
     const store = createStore(sourceThreadClient);
-    const { dispatch, cx } = store;
+    const { dispatch } = store;
 
     const source = makeSource("foo2");
     await dispatch(actions.newSource(source));
@@ -195,17 +187,17 @@ describe("loadSourceText", () => {
       return fooSource && fooSource.loadedState === "loading";
     });
 
-    await dispatch(actions.loadSourceText(cx, source));
+    await dispatch(actions.loadSourceText({ source }));
 
     expect(wasLoading()).toBe(true);
   });
 
   it("should indicate an errored source text", async () => {
-    const { dispatch, getState, cx } = createStore(sourceThreadClient);
+    const { dispatch, getState } = createStore(sourceThreadClient);
 
     const source = makeSource("bad-id");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(cx, source));
+    await dispatch(actions.loadSourceText({ source }));
     const badSource = selectors.getSource(getState(), "bad-id");
 
     if (!badSource || !badSource.error) {

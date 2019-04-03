@@ -8,22 +8,17 @@ import React, { Component } from "react";
 
 import ColumnBreakpoint from "./ColumnBreakpoint";
 
-import {
-  getSelectedSource,
-  visibleColumnBreakpoints,
-  getContext
-} from "../../selectors";
+import { getSelectedSource, visibleColumnBreakpoints } from "../../selectors";
 import { connect } from "../../utils/connect";
 import { makeBreakpointId } from "../../utils/breakpoint";
 import { breakpointItemActions } from "./menus/breakpoints";
 import type { BreakpointItemActions } from "./menus/breakpoints";
 
-import type { Source, Context } from "../../types";
+import type { Source } from "../../types";
 // eslint-disable-next-line max-len
 import type { ColumnBreakpoint as ColumnBreakpointType } from "../../selectors/visibleColumnBreakpoints";
 
 type Props = {
-  cx: Context,
   editor: Object,
   selectedSource: Source,
   columnBreakpoints: ColumnBreakpointType[],
@@ -35,7 +30,6 @@ class ColumnBreakpoints extends Component<Props> {
 
   render() {
     const {
-      cx,
       editor,
       columnBreakpoints,
       selectedSource,
@@ -50,7 +44,6 @@ class ColumnBreakpoints extends Component<Props> {
     editor.codeMirror.operation(() => {
       breakpoints = columnBreakpoints.map(breakpoint => (
         <ColumnBreakpoint
-          cx={cx}
           key={makeBreakpointId(breakpoint.location)}
           columnBreakpoint={breakpoint}
           editor={editor}
@@ -65,7 +58,6 @@ class ColumnBreakpoints extends Component<Props> {
 
 const mapStateToProps = state => {
   return {
-    cx: getContext(state),
     selectedSource: getSelectedSource(state),
     columnBreakpoints: visibleColumnBreakpoints(state)
   };
