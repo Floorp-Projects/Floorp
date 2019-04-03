@@ -6,6 +6,8 @@
 var EXPORTED_SYMBOLS = ["RemoteWebProgressManager"];
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const RemoteWebProgress = Components.Constructor(
+    "@mozilla.org/dom/remote-web-progress;1", "nsIRemoteWebProgress", "init");
 
 ChromeUtils.defineModuleGetter(this, "E10SUtils",
                                "resource://gre/modules/E10SUtils.jsm");
@@ -28,56 +30,18 @@ RemoteWebProgressRequest.prototype = {
   get matchedList() { return this._matchedList; },
 };
 
-function RemoteWebProgress(aManager, aIsTopLevel) {
-  this.wrappedJSObject = this;
-
-  this._manager = aManager;
-
-  this._isLoadingDocument = false;
-  this._DOMWindowID = 0;
-  this._isTopLevel = aIsTopLevel;
-  this._loadType = 0;
-}
-
-RemoteWebProgress.prototype = {
-  NOTIFY_STATE_REQUEST:    0x00000001,
-  NOTIFY_STATE_DOCUMENT:   0x00000002,
-  NOTIFY_STATE_NETWORK:    0x00000004,
-  NOTIFY_STATE_WINDOW:     0x00000008,
-  NOTIFY_STATE_ALL:        0x0000000f,
-  NOTIFY_PROGRESS:         0x00000010,
-  NOTIFY_STATUS:           0x00000020,
-  NOTIFY_SECURITY:         0x00000040,
-  NOTIFY_LOCATION:         0x00000080,
-  NOTIFY_REFRESH:          0x00000100,
-  NOTIFY_CONTENT_BLOCKING: 0x00000200,
-  NOTIFY_ALL:              0x000003ff,
-
-  get isLoadingDocument() { return this._isLoadingDocument; },
-  get DOMWindow() {
-    throw Cr.NS_ERROR_NOT_AVAILABLE;
-  },
-  get DOMWindowID() { return this._DOMWindowID; },
-  get isTopLevel() { return this._isTopLevel; },
-  get loadType() { return this._loadType; },
-
-  addProgressListener(aListener, aNotifyMask) {
-    this._manager.addProgressListener(aListener, aNotifyMask);
-  },
-
-  removeProgressListener(aListener) {
-    this._manager.removeProgressListener(aListener);
-  },
-};
-
 function RemoteWebProgressManager(aBrowser) {
-  this._topLevelWebProgress = new RemoteWebProgress(this, true);
+  this._topLevelWebProgress = new RemoteWebProgress(
+    this.QueryInterface(Ci.nsIWebProgress),
+    /* aIsTopLevel = */ true);
   this._progressListeners = [];
 
   this.swapBrowser(aBrowser);
 }
 
 RemoteWebProgressManager.prototype = {
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgress]),
+
   swapBrowser(aBrowser) {
     if (this._messageManager) {
       this._messageManager.removeMessageListener("Content:StateChange", this);
@@ -198,12 +162,12 @@ RemoteWebProgressManager.prototype = {
       // really have a concept of subframes/content we always create a new object
       // for those.
       webProgress = aIsTopLevel ? this._topLevelWebProgress
-                                : new RemoteWebProgress(this, false);
-
-      // Update the actual WebProgress fields.
-      webProgress._isLoadingDocument = aIsLoadingDocument;
-      webProgress._DOMWindowID = aDOMWindowID;
-      webProgress._loadType = aLoadType;
+                                : new RemoteWebProgress(this, aIsTopLevel);
+      webProgress.update(aDOMWindowID,
+                         0,
+                         aLoadType,
+                         aIsLoadingDocument);
+      webProgress.QueryInterface(Ci.nsIWebProgress);
     }
 
     let request =
@@ -233,12 +197,12 @@ RemoteWebProgressManager.prototype = {
     // for those.
     if (json.webProgress) {
       webProgress = isTopLevel ? this._topLevelWebProgress
-                               : new RemoteWebProgress(this, false);
-
-      // Update the actual WebProgress fields.
-      webProgress._isLoadingDocument = json.webProgress.isLoadingDocument;
-      webProgress._DOMWindowID = json.webProgress.DOMWindowID;
-      webProgress._loadType = json.webProgress.loadType;
+                               : new RemoteWebProgress(this, isTopLevel);
+      webProgress.update(json.webProgress.DOMWindowID,
+                         0,
+                         json.webProgress.loadType,
+                         json.webProgress.isLoadingDocument);
+      webProgress.QueryInterface(Ci.nsIWebProgress);
     }
 
     // The WebProgressRequest object however is always dynamic.

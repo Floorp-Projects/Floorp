@@ -9,9 +9,14 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIHangReport.idl',
+    'nsIRemoteWebProgress.idl',
 ]
 
 XPIDL_MODULE = 'dom'
+
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
 
 EXTRA_JS_MODULES += [
     'ManifestMessagesChild.jsm',
@@ -47,6 +52,7 @@ EXPORTS.mozilla.dom += [
     'MemoryReportRequest.h',
     'PermissionMessageUtils.h',
     'ReferrerInfoUtils.h',
+    'RemoteWebProgress.h',
     'TabChild.h',
     'TabContext.h',
     'TabMessageUtils.h',
@@ -86,6 +92,7 @@ UNIFIED_SOURCES += [
     'PreallocatedProcessManager.cpp',
     'ProcessPriorityManager.cpp',
     'ReferrerInfoUtils.cpp',
+    'RemoteWebProgress.cpp',
     'SharedMap.cpp',
     'SharedStringMap.cpp',
     'StructuredCloneData.cpp',
