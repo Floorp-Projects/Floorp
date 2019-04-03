@@ -272,7 +272,7 @@ double wasm::EstimateCompiledCodeSize(Tier tier, size_t bytecodeSize) {
 // If parallel Ion compilation is going to take longer than this, we should
 // tier.
 
-static const double tierCutoffMs = 250;
+static const double tierCutoffMs = 10;
 
 // Compilation rate values are empirical except when noted, the reference
 // systems are:
