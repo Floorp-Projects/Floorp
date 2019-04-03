@@ -86,6 +86,10 @@ class GleanMetricsService(private val context: Context) : MetricsService {
         }
     }
 
+    override fun stop() {
+        Glean.setUploadEnabled(false)
+    }
+
     override fun track(event: Event) {
         event.wrapper?.track(event)
     }

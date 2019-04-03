@@ -35,8 +35,12 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
         config.setLogLevel(LogLevel.SUPRESS)
 
         Adjust.onCreate(config)
-
+        Adjust.setEnabled(true)
         application.registerActivityLifecycleCallbacks(AdjustLifecycleCallbacks())
+    }
+
+    override fun stop() {
+        Adjust.setEnabled(false)
     }
 
     // We're not currently sending events directly to Adjust

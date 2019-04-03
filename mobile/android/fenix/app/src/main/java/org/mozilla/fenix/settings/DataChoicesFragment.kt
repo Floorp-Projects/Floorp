@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.utils.Settings
 
 class DataChoicesFragment : PreferenceFragmentCompat() {
@@ -17,6 +18,18 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
         super.onCreate(savedInstanceState)
         (activity as AppCompatActivity).title = getString(R.string.preferences_data_choices)
         (activity as AppCompatActivity).supportActionBar?.show()
+
+        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener { sharedPreferences, key ->
+            when (key) {
+                getString(R.string.pref_key_telemetry) -> {
+                    if (sharedPreferences.getBoolean(key, Settings.getInstance(requireContext()).isTelemetryEnabled)) {
+                        requireComponents.analytics.metrics.start()
+                    } else {
+                        requireComponents.analytics.metrics.stop()
+                    }
+                }
+            }
+        }
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

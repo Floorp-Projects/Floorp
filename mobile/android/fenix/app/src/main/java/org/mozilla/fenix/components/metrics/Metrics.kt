@@ -117,6 +117,7 @@ private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
 
 interface MetricsService {
     fun start()
+    fun stop()
     fun track(event: Event)
     fun shouldTrack(event: Event): Boolean
 }
@@ -139,6 +140,13 @@ class Metrics(private val services: List<MetricsService>, private val isTelemetr
 
         services.forEach { it.start() }
         initialized = true
+    }
+
+    fun stop() {
+        if (!initialized) { return }
+
+        services.forEach { it.stop() }
+        initialized = false
     }
 
     fun track(event: Event) {

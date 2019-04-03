@@ -48,7 +48,9 @@ open class FenixApplication : Application() {
 
         setupLeakCanary()
         loadExperiments()
-        components.analytics.metrics.start()
+        if (Settings.getInstance(this).isTelemetryEnabled) {
+            components.analytics.metrics.start()
+        }
     }
 
     protected open fun setupLeakCanary() {

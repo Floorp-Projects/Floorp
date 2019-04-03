@@ -8,6 +8,7 @@ import android.util.Log
 import com.leanplum.Leanplum
 import com.leanplum.LeanplumActivityHelper
 import com.leanplum.annotations.Parser
+import com.leanplum.internal.LeanplumInternal
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.utils.Settings
 
@@ -79,11 +80,26 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
             }
         }
 
+        Leanplum.setIsTestModeEnabled(false)
         Leanplum.setApplicationContext(application)
         Parser.parseVariables(application)
 
         LeanplumActivityHelper.enableLifecycleCallbacks(application)
         Leanplum.start(application)
+    }
+
+    override fun stop() {
+        // As written in LeanPlum SDK documentation, "This prevents Leanplum from communicating with the server."
+        // as this "isTestMode" flag is checked before LeanPlum SDK does anything.
+        // Also has the benefit effect of blocking the display of already downloaded messages.
+        // The reverse of this - setIsTestModeEnabled(false) must be called before trying to init
+        // LP in the same session.
+        Leanplum.setIsTestModeEnabled(true)
+
+        // This is just to allow restarting LP and it's functionality in the same app session
+        // as LP stores it's state internally and check against it
+        LeanplumInternal.setCalledStart(false)
+        LeanplumInternal.setHasStarted(false)
     }
 
     override fun track(event: Event) {
