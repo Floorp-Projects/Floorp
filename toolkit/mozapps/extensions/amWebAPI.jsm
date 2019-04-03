@@ -237,6 +237,7 @@ class WebAPI extends APIObject {
       sourceHost: this.window.document.nodePrincipal.URI &&
         this.window.document.nodePrincipal.URI.host,
     };
+    installOptions.triggeringPrincipal = this.window.document.nodePrincipal;
     return this._apiTask("createInstall", [installOptions], installInfo => {
       if (!installInfo) {
         return null;
