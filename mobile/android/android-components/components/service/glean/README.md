@@ -132,13 +132,14 @@ Glean exports the [`GleanDebugActivity`](src/main/java/mozilla/components/servic
 that can be used to toggle debugging features on or off. Users can invoke this special activity, at
 run-time, using the following [`adb`](https://developer.android.com/studio/command-line/adb) command:
 
-`adb shell am start -n [package.name]/mozilla.components.service.glean.debug.GleanDebugActivity [extra keys]`
+`adb shell am start -n [applicationId]/mozilla.components.service.glean.debug.GleanDebugActivity [extra keys]`
 
 In the above:
 
-- `[package.name]` is the product's package name as exported in the manifest
-  file. For the glean sample application, this is `org.mozilla.samples.glean`
-  for a release build and `org.mozilla.samples.glean.debug` for a debug build.
+- `[applicationId]` is the product's application id as defined in the manifest
+  file and/or build script. For the glean sample application, this is
+  `org.mozilla.samples.glean` for a release build and
+  `org.mozilla.samples.glean.debug` for a debug build.
 
 - `[extra keys]` is a list of extra keys to be passed to the debug activity. See the
   [documentation](https://developer.android.com/studio/command-line/adb#IntentSpec)
