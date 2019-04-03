@@ -66,53 +66,6 @@ function dumpn(msg) {
 }
 
 /**
- * Tree View
- */
-
-const TEST_TREE_VIEW = {
-  A: { label: "A", value: "A" },
-  B: { label: "B", value: "B" },
-  C: { label: "C", value: "C" },
-  D: { label: "D", value: "D" },
-  E: { label: "E", value: "E" },
-  F: { label: "F", value: "F" },
-  G: { label: "G", value: "G" },
-  H: { label: "H", value: "H" },
-  I: { label: "I", value: "I" },
-  J: { label: "J", value: "J" },
-  K: { label: "K", value: "K" },
-  L: { label: "L", value: "L" },
-};
-
-TEST_TREE_VIEW.children = {
-  A: [TEST_TREE_VIEW.B, TEST_TREE_VIEW.C, TEST_TREE_VIEW.D],
-  B: [TEST_TREE_VIEW.E, TEST_TREE_VIEW.F, TEST_TREE_VIEW.G],
-  C: [TEST_TREE_VIEW.H, TEST_TREE_VIEW.I],
-  D: [TEST_TREE_VIEW.J],
-  E: [TEST_TREE_VIEW.K, TEST_TREE_VIEW.L],
-  F: [],
-  G: [],
-  H: [],
-  I: [],
-  J: [],
-  K: [],
-  L: [],
-};
-
-const TEST_TREE_VIEW_INTERFACE = {
-  provider: {
-    getChildren: x => TEST_TREE_VIEW.children[x.label],
-    hasChildren: x => TEST_TREE_VIEW.children[x.label].length > 0,
-    getLabel: x => x.label,
-    getValue: x => x.value,
-    getKey: x => x.label,
-    getType: () => "string",
-  },
-  object: TEST_TREE_VIEW.A,
-  columns: [{ id: "default" }, { id: "value" }],
-};
-
-/**
  * Tree
  */
 
