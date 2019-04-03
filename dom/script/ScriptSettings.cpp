@@ -483,6 +483,11 @@ void AutoJSAPI::ReportException() {
       errorGlobal = xpc::PrivilegedJunkScope();
     } else {
       errorGlobal = GetCurrentThreadWorkerGlobal();
+      if (!errorGlobal) {
+        // We might be reporting an error in debugger code that ran before the
+        // worker's global was created. Use the debugger global instead.
+        errorGlobal = GetCurrentThreadWorkerDebuggerGlobal();
+      }
     }
   }
   MOZ_ASSERT(JS_IsGlobalObject(errorGlobal));

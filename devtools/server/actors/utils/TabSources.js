@@ -148,6 +148,19 @@ TabSources.prototype = {
   },
 
   getOrCreateSourceActor(source) {
+    // Tolerate the source coming from a different Debugger than the one
+    // associated with the thread.
+    try {
+      source = this._thread.dbg.adoptSource(source);
+    } catch (e) {
+      // We can't create actors for sources in the same compartment as the
+      // thread's Debugger.
+      if (/is in the same compartment as this debugger/.test(e)) {
+        return null;
+      }
+      throw e;
+    }
+
     if (this.hasSourceActor(source)) {
       return this.getSourceActor(source);
     }
