@@ -2587,7 +2587,7 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
                                               bool aIsWidgetTransaction) {
   nsIFrame* frame = aBuilder->RootReferenceFrame();
   nsPresContext* presContext = frame->PresContext();
-  nsIPresShell* presShell = presContext->PresShell();
+  PresShell* presShell = presContext->PresShell();
 
   FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
   layerBuilder->Init(aBuilder, aLayerManager);
@@ -2715,7 +2715,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
 
   nsIFrame* frame = aBuilder->RootReferenceFrame();
   nsPresContext* presContext = frame->PresContext();
-  nsIPresShell* presShell = presContext->PresShell();
+  PresShell* presShell = presContext->PresShell();
   Document* document = presShell->GetDocument();
 
   if (layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
@@ -6740,7 +6740,7 @@ UniquePtr<ScrollMetadata> nsDisplaySubDocument::ComputeScrollMetadata(
   nsPresContext* presContext = mFrame->PresContext();
   nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
   bool isRootContentDocument = presContext->IsRootContentDocument();
-  nsIPresShell* presShell = presContext->PresShell();
+  PresShell* presShell = presContext->PresShell();
   ContainerLayerParameters params(
       aContainerParameters.mXScale * presShell->GetResolution(),
       aContainerParameters.mYScale * presShell->GetResolution(), nsIntPoint(),

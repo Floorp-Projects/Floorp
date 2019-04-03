@@ -1293,7 +1293,7 @@ void nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
   if (!popupFrame) return;
 
   nsPresContext* presContext = popupFrame->PresContext();
-  nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
+  RefPtr<PresShell> presShell = presContext->PresShell();
   presShell->FrameNeedsReflow(popupFrame, nsIPresShell::eTreeChange,
                               NS_FRAME_HAS_DIRTY_CHILDREN);
 
@@ -1393,7 +1393,7 @@ void nsXULPopupManager::FirePopupHidingEvent(
     nsIContent* aPopup, nsIContent* aNextPopup, nsIContent* aLastPopup,
     nsPresContext* aPresContext, nsPopupType aPopupType, bool aDeselectMenu,
     bool aIsCancel) {
-  nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
+  RefPtr<PresShell> presShell = aPresContext->PresShell();
   mozilla::Unused << presShell;  // This presShell may be keeping things alive
                                  // on non GTK platforms
 
@@ -2662,17 +2662,17 @@ nsXULMenuCommandEvent::Run() {
     }
 
     nsPresContext* presContext = menuFrame->PresContext();
-    nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
-    RefPtr<nsViewManager> kungFuDeathGrip = shell->GetViewManager();
+    RefPtr<PresShell> presShell = presContext->PresShell();
+    RefPtr<nsViewManager> kungFuDeathGrip = presShell->GetViewManager();
     mozilla::Unused
         << kungFuDeathGrip;  // Not referred to directly within this function
 
     // Deselect ourselves.
     if (mCloseMenuMode != CloseMenuMode_None) menuFrame->SelectMenu(false);
 
-    AutoHandlingUserInputStatePusher userInpStatePusher(mUserInput, nullptr,
-                                                        shell->GetDocument());
-    nsContentUtils::DispatchXULCommand(mMenu, mIsTrusted, nullptr, shell,
+    AutoHandlingUserInputStatePusher userInpStatePusher(
+        mUserInput, nullptr, presShell->GetDocument());
+    nsContentUtils::DispatchXULCommand(mMenu, mIsTrusted, nullptr, presShell,
                                        mControl, mAlt, mShift, mMeta);
   }
 

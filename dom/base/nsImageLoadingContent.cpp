@@ -29,8 +29,6 @@
 #include "nsImageFrame.h"
 #include "nsSVGImageFrame.h"
 
-#include "nsIPresShell.h"
-
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
 
@@ -53,6 +51,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 
 #ifdef LoadImage
 // Undefine LoadImage to prevent naming conflict with Windows.
@@ -318,7 +317,7 @@ void nsImageLoadingContent::OnUnlockedDraw() {
     return;
   }
 
-  nsIPresShell* presShell = presContext->PresShell();
+  PresShell* presShell = presContext->GetPresShell();
   if (!presShell) {
     return;
   }
@@ -865,7 +864,7 @@ nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame) {
   UntrackImage(mCurrentRequest);
   UntrackImage(mPendingRequest);
 
-  nsIPresShell* presShell = presContext ? presContext->GetPresShell() : nullptr;
+  PresShell* presShell = presContext ? presContext->GetPresShell() : nullptr;
   if (presShell) {
     presShell->RemoveFrameFromApproximatelyVisibleList(aFrame);
   }

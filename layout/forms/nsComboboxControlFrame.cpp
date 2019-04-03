@@ -20,7 +20,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsListControlFrame.h"
 #include "nsPIDOMWindow.h"
-#include "nsIPresShell.h"
 #include "mozilla/PresState.h"
 #include "nsView.h"
 #include "nsViewManager.h"
@@ -46,6 +45,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Unused.h"
 #include "gfx2DGlue.h"
 #include "mozilla/widget/nsAutoRollup.h"
@@ -307,14 +307,14 @@ void nsComboboxControlFrame::ShowPopup(bool aShowPopup) {
   }
 
   // fire a popup dom event if it is safe to do so
-  nsCOMPtr<nsIPresShell> shell = PresContext()->GetPresShell();
-  if (shell && nsContentUtils::IsSafeToRunScript()) {
+  RefPtr<mozilla::PresShell> presShell = PresContext()->GetPresShell();
+  if (presShell && nsContentUtils::IsSafeToRunScript()) {
     nsEventStatus status = nsEventStatus_eIgnore;
     WidgetMouseEvent event(true,
                            aShowPopup ? eXULPopupShowing : eXULPopupHiding,
                            nullptr, WidgetMouseEvent::eReal);
 
-    shell->HandleDOMEventWithTarget(mContent, &event, &status);
+    presShell->HandleDOMEventWithTarget(mContent, &event, &status);
   }
 }
 

@@ -10,6 +10,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
@@ -258,7 +259,7 @@ static nsIContent* GetClickableAncestor(
 
 static nscoord AppUnitsFromMM(nsIFrame* aFrame, uint32_t aMM) {
   nsPresContext* pc = aFrame->PresContext();
-  nsIPresShell* presShell = pc->PresShell();
+  PresShell* presShell = pc->PresShell();
   float result = float(aMM) * (pc->DeviceContext()->AppUnitsPerPhysicalInch() /
                                MM_PER_INCH_FLOAT);
   result = result / presShell->GetResolution();
@@ -356,7 +357,7 @@ static bool IsLargeElement(nsIFrame* aFrame, const EventRadiusPrefs* aPrefs) {
   uint32_t keepLimitSizeForCluster = aPrefs->mKeepLimitSizeForCluster;
   nsSize frameSize = aFrame->GetSize();
   nsPresContext* pc = aFrame->PresContext();
-  nsIPresShell* presShell = pc->PresShell();
+  PresShell* presShell = pc->PresShell();
   float cumulativeResolution = presShell->GetCumulativeResolution();
   if ((pc->AppUnitsToGfxUnits(frameSize.height) * cumulativeResolution) >
           keepLimitSizeForCluster &&
@@ -487,7 +488,7 @@ static bool IsElementClickableAndReadable(nsIFrame* aFrame,
   uint32_t limitReadableSize = aPrefs->mLimitReadableSize;
   nsSize frameSize = aFrame->GetSize();
   nsPresContext* pc = aFrame->PresContext();
-  nsIPresShell* presShell = pc->PresShell();
+  PresShell* presShell = pc->PresShell();
   float cumulativeResolution = presShell->GetCumulativeResolution();
   if ((pc->AppUnitsToGfxUnits(frameSize.height) * cumulativeResolution) <
           limitReadableSize ||

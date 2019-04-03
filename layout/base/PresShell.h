@@ -179,6 +179,8 @@ class PresShell final : public nsIPresShell,
     mPresContext->UIResolutionChangedSync();
   }
 
+  void SynthesizeMouseMove(bool aFromScroll) override;
+
   // nsIViewObserver interface
 
   void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
@@ -213,6 +215,8 @@ class PresShell final : public nsIPresShell,
 
   NS_IMETHOD SetSelectionFlags(int16_t aInEnable) override;
   NS_IMETHOD GetSelectionFlags(int16_t* aOutEnable) override;
+
+  using nsIPresShell::GetSelectionFlags;
 
   // nsISelectionController
 
@@ -274,11 +278,10 @@ class PresShell final : public nsIPresShell,
 
   void UpdateCanvasBackground() override;
 
-  void AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
-                                    nsDisplayList& aList, nsIFrame* aFrame,
-                                    const nsRect& aBounds,
-                                    nscolor aBackstopColor,
-                                    uint32_t aFlags) override;
+  void AddCanvasBackgroundColorItem(
+      nsDisplayListBuilder& aBuilder, nsDisplayList& aList, nsIFrame* aFrame,
+      const nsRect& aBounds, nscolor aBackstopColor = NS_RGBA(0, 0, 0, 0),
+      uint32_t aFlags = 0) override;
 
   void AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
                                      nsDisplayList& aList, nsIFrame* aFrame,
@@ -1282,8 +1285,6 @@ class PresShell final : public nsIPresShell,
     static TimeStamp sLastInputProcessed;
     static StaticRefPtr<dom::Element> sLastKeyDownEventTargetElement;
   };
-
-  void SynthesizeMouseMove(bool aFromScroll) override;
 
   PresShell* GetRootPresShell();
 

@@ -17,7 +17,6 @@
 #include "nsPopupSetFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIFrameInlines.h"
-#include "nsIPresShell.h"
 #include "nsDisplayList.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsFrameManager.h"

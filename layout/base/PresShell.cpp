@@ -940,7 +940,7 @@ void PresShell::Init(Document* aDocument, nsPresContext* aPresContext,
 
   // Bind the context to the presentation shell.
   mPresContext = aPresContext;
-  mPresContext->AttachShell(this);
+  mPresContext->AttachPresShell(this);
 
   mPresContext->DeviceContext()->InitFontCache();
 
@@ -1352,7 +1352,7 @@ void PresShell::Destroy() {
     // We hold a reference to the pres context, and it holds a weak link back
     // to us. To avoid the pres context having a dangling reference, set its
     // pres shell to nullptr
-    mPresContext->DetachShell();
+    mPresContext->DetachPresShell();
 
     // Clear the link handler (weak reference) as well
     mPresContext->SetLinkHandler(nullptr);
@@ -5065,7 +5065,7 @@ static bool IsTransparentContainerElement(nsPresContext* aPresContext) {
   if (tab) {
     // Check if presShell is the top PresShell. Only the top can
     // influence the canvas background color.
-    nsCOMPtr<nsIPresShell> presShell = aPresContext->GetPresShell();
+    PresShell* presShell = aPresContext->GetPresShell();
     nsCOMPtr<nsIPresShell> topPresShell = tab->GetPresShell();
     if (presShell != topPresShell) {
       tab = nullptr;
@@ -5207,17 +5207,17 @@ float PresShell::GetCumulativeResolution() {
 
 float PresShell::GetCumulativeNonRootScaleResolution() {
   float resolution = 1.0;
-  nsIPresShell* currentShell = this;
-  while (currentShell) {
-    nsPresContext* currentCtx = currentShell->GetPresContext();
+  PresShell* currentPresShell = this;
+  while (currentPresShell) {
+    nsPresContext* currentCtx = currentPresShell->GetPresContext();
     if (currentCtx != currentCtx->GetRootPresContext()) {
-      resolution *= currentShell->GetResolution();
+      resolution *= currentPresShell->GetResolution();
     }
     nsPresContext* parentCtx = currentCtx->GetParentPresContext();
     if (parentCtx) {
-      currentShell = parentCtx->PresShell();
+      currentPresShell = parentCtx->PresShell();
     } else {
-      currentShell = nullptr;
+      currentPresShell = nullptr;
     }
   }
   return resolution;
@@ -6400,7 +6400,6 @@ PresShell* PresShell::GetShellForEventTarget(nsIFrame* aFrame,
 
 /* static */
 PresShell* PresShell::GetShellForTouchEvent(WidgetGUIEvent* aEvent) {
-  PresShell* shell = nullptr;
   switch (aEvent->mMessage) {
     case eTouchMove:
     case eTouchCancel:
@@ -6409,37 +6408,35 @@ PresShell* PresShell::GetShellForTouchEvent(WidgetGUIEvent* aEvent) {
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
       for (dom::Touch* touch : touchEvent->mTouches) {
         if (!touch) {
-          break;
+          return nullptr;
         }
 
         RefPtr<dom::Touch> oldTouch =
             TouchManager::GetCapturedTouch(touch->Identifier());
         if (!oldTouch) {
-          break;
+          return nullptr;
         }
 
         nsCOMPtr<nsIContent> content = do_QueryInterface(oldTouch->GetTarget());
         if (!content) {
-          break;
+          return nullptr;
         }
 
         nsIFrame* contentFrame = content->GetPrimaryFrame();
         if (!contentFrame) {
-          break;
+          return nullptr;
         }
 
-        shell =
-            static_cast<PresShell*>(contentFrame->PresContext()->PresShell());
-        if (shell) {
-          break;
+        PresShell* presShell = contentFrame->PresContext()->GetPresShell();
+        if (presShell) {
+          return presShell;
         }
       }
-      break;
+      return nullptr;
     }
     default:
-      break;
+      return nullptr;
   }
-  return shell;
 }
 
 nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
@@ -7138,8 +7135,8 @@ bool PresShell::EventHandler::MaybeHandleEventWithAnotherPresShell(
   }
 
   // We need to handle aGUIEvent with another PresShell.
-  nsCOMPtr<nsIPresShell> shell = frame->PresContext()->GetPresShell();
-  *aRv = shell->HandleEvent(frame, aGUIEvent, true, aEventStatus);
+  RefPtr<PresShell> presShell = frame->PresContext()->PresShell();
+  *aRv = presShell->HandleEvent(frame, aGUIEvent, true, aEventStatus);
   return true;
 }
 
@@ -10556,7 +10553,7 @@ PresShell* PresShell::GetRootPresShell() {
   if (mPresContext) {
     nsPresContext* rootPresContext = mPresContext->GetRootPresContext();
     if (rootPresContext) {
-      return static_cast<PresShell*>(rootPresContext->PresShell());
+      return rootPresContext->PresShell();
     }
   }
   return nullptr;
@@ -10967,7 +10964,7 @@ bool PresShell::EventHandler::EventTargetData::MaybeRetargetToActiveDocument(
     return false;
   }
 
-  nsIPresShell* activePresShell = activePresContext->GetPresShell();
+  PresShell* activePresShell = activePresContext->GetPresShell();
   if (!activePresShell) {
     return false;
   }
@@ -10979,8 +10976,7 @@ bool PresShell::EventHandler::EventTargetData::MaybeRetargetToActiveDocument(
     return false;
   }
 
-  SetPresShellAndFrame(static_cast<PresShell*>(activePresShell),
-                       activePresShell->GetRootFrame());
+  SetPresShellAndFrame(activePresShell, activePresShell->GetRootFrame());
   return true;
 }
 

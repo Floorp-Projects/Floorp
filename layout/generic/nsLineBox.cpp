@@ -11,6 +11,7 @@
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/WritingModes.h"
 #include "nsBidiPresUtils.h"
@@ -352,7 +353,7 @@ bool nsLineBox::CachedIsEmpty() {
 void nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
                                nsIFrame* aDestructRoot, nsFrameList* aFrames,
                                PostDestroyData& aPostDestroyData) {
-  nsIPresShell* shell = aPresContext->PresShell();
+  PresShell* presShell = aPresContext->PresShell();
 
   // Keep our line list and frame list up to date as we
   // remove frames, in case something wants to traverse the
@@ -373,7 +374,7 @@ void nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
     MOZ_DIAGNOSTIC_ASSERT(line == aLines.front(),
                           "destroying child frames messed up our lines!");
     aLines.pop_front();
-    line->Destroy(shell);
+    line->Destroy(presShell);
   }
 }
 

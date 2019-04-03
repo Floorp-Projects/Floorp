@@ -13,6 +13,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEditor.h"
@@ -47,7 +48,6 @@
 #include "nsITextControlElement.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"
 #include "nsComboboxControlFrame.h"
@@ -1654,10 +1654,11 @@ void EventStateManager::FillInEventFromGestureDown(WidgetMouseEvent* aEvent) {
 }
 
 void EventStateManager::MaybeFirePointerCancel(WidgetInputEvent* aEvent) {
-  nsCOMPtr<nsIPresShell> shell = mPresContext->GetPresShell();
+  RefPtr<PresShell> presShell = mPresContext->GetPresShell();
   AutoWeakFrame targetFrame = mCurrentTarget;
 
-  if (!PointerEventHandler::IsPointerEventEnabled() || !shell || !targetFrame) {
+  if (!PointerEventHandler::IsPointerEventEnabled() || !presShell ||
+      !targetFrame) {
     return;
   }
 
@@ -1675,7 +1676,7 @@ void EventStateManager::MaybeFirePointerCancel(WidgetInputEvent* aEvent) {
                                                    ePointerCancel);
 
     event.convertToPointer = false;
-    shell->HandleEventWithTarget(&event, targetFrame, content, &status);
+    presShell->HandleEventWithTarget(&event, targetFrame, content, &status);
   } else if (WidgetTouchEvent* aTouchEvent = aEvent->AsTouchEvent()) {
     WidgetPointerEvent event(aTouchEvent->IsTrusted(), ePointerCancel,
                              aTouchEvent->mWidget);
@@ -1684,7 +1685,7 @@ void EventStateManager::MaybeFirePointerCancel(WidgetInputEvent* aEvent) {
         &event, aTouchEvent, aTouchEvent->mTouches[0], true);
 
     event.convertToPointer = false;
-    shell->HandleEventWithTarget(&event, targetFrame, content, &status);
+    presShell->HandleEventWithTarget(&event, targetFrame, content, &status);
   } else {
     MOZ_ASSERT(false);
   }
@@ -3239,9 +3240,8 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             esm->PostHandleMouseUp(mouseUpEvent, aStatus, aOverrideClickTarget);
       }
 
-      nsIPresShell* shell = presContext->GetPresShell();
-      if (shell) {
-        RefPtr<nsFrameSelection> frameSelection = shell->FrameSelection();
+      if (PresShell* presShell = presContext->GetPresShell()) {
+        RefPtr<nsFrameSelection> frameSelection = presShell->FrameSelection();
         frameSelection->SetDragState(false);
       }
     } break;
@@ -4901,7 +4901,7 @@ nsresult EventStateManager::PostHandleMouseUp(
   MOZ_ASSERT(EventCausesClickEvents(*aMouseUpEvent));
   MOZ_ASSERT(aStatus);
 
-  nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
+  RefPtr<PresShell> presShell = mPresContext->GetPresShell();
   if (!presShell) {
     return NS_OK;
   }
@@ -5115,9 +5115,9 @@ nsresult EventStateManager::HandleMiddleClickPaste(
 }
 
 nsIFrame* EventStateManager::GetEventTarget() {
-  nsIPresShell* shell;
+  PresShell* presShell;
   if (mCurrentTarget || !mPresContext ||
-      !(shell = mPresContext->GetPresShell())) {
+      !(presShell = mPresContext->GetPresShell())) {
     return mCurrentTarget;
   }
 
@@ -5128,7 +5128,7 @@ nsIFrame* EventStateManager::GetEventTarget() {
     }
   }
 
-  nsIFrame* frame = shell->GetCurrentEventFrame();
+  nsIFrame* frame = presShell->GetCurrentEventFrame();
   return (mCurrentTarget = frame);
 }
 
@@ -5145,9 +5145,7 @@ already_AddRefed<nsIContent> EventStateManager::GetEventTargetContent(
   }
 
   nsCOMPtr<nsIContent> content;
-
-  nsIPresShell* presShell = mPresContext->GetPresShell();
-  if (presShell) {
+  if (PresShell* presShell = mPresContext->GetPresShell()) {
     content = presShell->GetEventTargetContent(aEvent);
   }
 
@@ -5490,10 +5488,9 @@ void EventStateManager::EnsureDocument(nsPresContext* aPresContext) {
 }
 
 void EventStateManager::FlushPendingEvents(nsPresContext* aPresContext) {
-  MOZ_ASSERT(nullptr != aPresContext, "nullptr ptr");
-  nsIPresShell* shell = aPresContext->GetPresShell();
-  if (shell) {
-    shell->FlushPendingNotifications(FlushType::InterruptibleLayout);
+  MOZ_ASSERT(aPresContext, "nullptr ptr");
+  if (RefPtr<PresShell> presShell = aPresContext->GetPresShell()) {
+    presShell->FlushPendingNotifications(FlushType::InterruptibleLayout);
   }
 }
 
@@ -5649,8 +5646,8 @@ nsresult EventStateManager::DoContentCommandEvent(
 nsresult EventStateManager::DoContentCommandScrollEvent(
     WidgetContentCommandEvent* aEvent) {
   NS_ENSURE_TRUE(mPresContext, NS_ERROR_NOT_AVAILABLE);
-  nsIPresShell* ps = mPresContext->GetPresShell();
-  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_AVAILABLE);
+  PresShell* presShell = mPresContext->GetPresShell();
+  NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(aEvent->mScroll.mAmount != 0, NS_ERROR_INVALID_ARG);
 
   nsIScrollableFrame::ScrollUnit scrollUnit;
@@ -5671,7 +5668,7 @@ nsresult EventStateManager::DoContentCommandScrollEvent(
   aEvent->mSucceeded = true;
 
   nsIScrollableFrame* sf =
-      ps->GetScrollableFrameToScroll(nsIPresShell::eEither);
+      presShell->GetScrollableFrameToScroll(nsIPresShell::eEither);
   aEvent->mIsEnabled =
       sf ? (aEvent->mScroll.mIsHorizontal ? WheelHandlingUtils::CanScrollOn(
                                                 sf, aEvent->mScroll.mAmount, 0)

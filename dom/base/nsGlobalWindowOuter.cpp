@@ -98,6 +98,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/ThrottledEventQueue.h"
@@ -123,7 +124,6 @@
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsThreadUtils.h"
 #include "nsILoadContext.h"
-#include "nsIPresShell.h"
 #include "nsIScrollableFrame.h"
 #include "nsView.h"
 #include "nsViewManager.h"
@@ -6293,17 +6293,18 @@ void nsGlobalWindowOuter::EnterModalState() {
   EventStateManager* activeESM = static_cast<EventStateManager*>(
       EventStateManager::GetActiveEventStateManager());
   if (activeESM && activeESM->GetPresContext()) {
-    nsIPresShell* activeShell = activeESM->GetPresContext()->GetPresShell();
-    if (activeShell && (nsContentUtils::ContentIsCrossDocDescendantOf(
-                            activeShell->GetDocument(), mDoc) ||
-                        nsContentUtils::ContentIsCrossDocDescendantOf(
-                            mDoc, activeShell->GetDocument()))) {
+    PresShell* activePresShell = activeESM->GetPresContext()->GetPresShell();
+    if (activePresShell && (nsContentUtils::ContentIsCrossDocDescendantOf(
+                                activePresShell->GetDocument(), mDoc) ||
+                            nsContentUtils::ContentIsCrossDocDescendantOf(
+                                mDoc, activePresShell->GetDocument()))) {
       EventStateManager::ClearGlobalActiveContent(activeESM);
 
       nsIPresShell::SetCapturingContent(nullptr, 0);
 
-      if (activeShell) {
-        RefPtr<nsFrameSelection> frameSelection = activeShell->FrameSelection();
+      if (activePresShell) {
+        RefPtr<nsFrameSelection> frameSelection =
+            activePresShell->FrameSelection();
         frameSelection->SetDragState(false);
       }
     }

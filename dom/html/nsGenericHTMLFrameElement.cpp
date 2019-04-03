@@ -10,6 +10,7 @@
 #include "mozilla/dom/XULFrameElement.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ErrorResult.h"
 #include "GeckoProfiler.h"
 #include "nsAttrValueInlines.h"
@@ -18,7 +19,6 @@
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPermissionManager.h"
-#include "nsIPresShell.h"
 #include "nsIScrollable.h"
 #include "nsPresContext.h"
 #include "nsServiceManagerUtils.h"
@@ -296,13 +296,13 @@ nsresult nsGenericHTMLFrameElement::AfterSetAttr(
             scrollable->SetDefaultScrollbarPreferences(
                 nsIScrollable::ScrollOrientation_Y, val);
             RefPtr<nsPresContext> presContext = docshell->GetPresContext();
-            nsIPresShell* shell =
+            PresShell* presShell =
                 presContext ? presContext->GetPresShell() : nullptr;
             nsIFrame* rootScroll =
-                shell ? shell->GetRootScrollFrame() : nullptr;
+                presShell ? presShell->GetRootScrollFrame() : nullptr;
             if (rootScroll) {
-              shell->FrameNeedsReflow(rootScroll, nsIPresShell::eStyleChange,
-                                      NS_FRAME_IS_DIRTY);
+              presShell->FrameNeedsReflow(
+                  rootScroll, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
             }
           }
         }

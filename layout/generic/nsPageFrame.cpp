@@ -6,6 +6,7 @@
 
 #include "nsPageFrame.h"
 
+#include "mozilla/PresShell.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxContext.h"
 #include "nsDeviceContext.h"
@@ -13,7 +14,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
-#include "nsIPresShell.h"
 #include "nsPageContentFrame.h"
 #include "nsDisplayList.h"
 #include "nsSimplePageSequenceFrame.h"  // for nsSharedPageData

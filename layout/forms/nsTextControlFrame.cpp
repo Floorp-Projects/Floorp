@@ -23,7 +23,6 @@
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
-#include "nsIPresShell.h"
 
 #include <algorithm>
 #include "nsRange.h"  //for selection setting helper func
@@ -33,6 +32,7 @@
 #include "nsILayoutHistoryState.h"
 
 #include "nsFocusManager.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/PresState.h"
 #include "nsAttrValueInlines.h"
 #include "mozilla/dom/Selection.h"
@@ -709,7 +709,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint) {
     return;
   }
 
-  nsIPresShell* presShell = PresContext()->GetPresShell();
+  mozilla::PresShell* presShell = PresContext()->GetPresShell();
   RefPtr<nsCaret> caret = presShell->GetCaret();
   if (!caret) {
     return;
@@ -745,9 +745,8 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint) {
   // document or by the text input/area. Clear any selection in the
   // document since the focus is now on our independent selection.
 
-  nsCOMPtr<nsISelectionController> selcon = do_QueryInterface(presShell);
   RefPtr<Selection> docSel =
-      selcon->GetSelection(nsISelectionController::SELECTION_NORMAL);
+      presShell->GetSelection(nsISelectionController::SELECTION_NORMAL);
   if (!docSel) {
     return;
   }

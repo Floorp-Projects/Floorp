@@ -18,12 +18,12 @@
 #include "nsIDOMWindowUtils.h"
 #include "nsIDocShell.h"
 #include "nsIHttpChannel.h"
-#include "nsIPresShell.h"
 #include "nsIURI.h"
 #include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 
 namespace mozilla {
 
@@ -147,7 +147,7 @@ class ThumbnailHelper final
       return nullptr;
     }
 
-    nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
+    RefPtr<PresShell> presShell = presContext->PresShell();
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
     MOZ_ASSERT(context);  // checked the draw target above
 
