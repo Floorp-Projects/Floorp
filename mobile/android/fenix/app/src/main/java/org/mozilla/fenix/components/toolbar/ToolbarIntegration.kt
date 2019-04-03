@@ -45,7 +45,7 @@ class ToolbarIntegration(
         tabsIcon?.let {
             val home = BrowserToolbar.Button(
                 it,
-                context.getString(R.string.browser_home_button),
+                context.getString(R.string.browser_tabs_button),
                 visible = {
                     sessionId == null ||
                             sessionManager.runWithSession(sessionId) {
