@@ -25,7 +25,10 @@
 
 #include "nsCommandManager.h"
 
-nsCommandManager::nsCommandManager() : mWindow(nullptr) {}
+nsCommandManager::nsCommandManager(mozIDOMWindowProxy* aWindow)
+    : mWindow(aWindow) {
+  MOZ_DIAGNOSTIC_ASSERT(mWindow);
+}
 
 nsCommandManager::~nsCommandManager() {}
 
@@ -49,21 +52,11 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCommandManager)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCommandManager)
   NS_INTERFACE_MAP_ENTRY(nsICommandManager)
-  NS_INTERFACE_MAP_ENTRY(nsPICommandUpdater)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICommandManager)
 NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP
-nsCommandManager::Init(mozIDOMWindowProxy* aWindow) {
-  NS_ENSURE_ARG_POINTER(aWindow);
-
-  mWindow = aWindow;  // weak ptr
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommandManager::CommandStatusChanged(const char* aCommandName) {
+nsresult nsCommandManager::CommandStatusChanged(const char* aCommandName) {
   ObserverList* commandObservers;
   mObserversTable.Get(aCommandName, &commandObservers);
 
