@@ -16,7 +16,6 @@
 #include "nsHTMLDNSPrefetch.h"
 #include "nsAttrValueOrString.h"
 #include "mozilla/dom/Document.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIURI.h"
 #include "nsWindowSizes.h"

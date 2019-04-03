@@ -8,9 +8,9 @@
 
 #include "mozilla/dom/Document.h"
 
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "nsContentUtils.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsStyleSheetService.h"
 
