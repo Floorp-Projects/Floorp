@@ -35,7 +35,23 @@ var PictureInPicture = {
         this.closePipWindow();
         break;
       }
+      case "PictureInPicture:Playing": {
+        this.weakPipControls.classList.add("playing");
+        break;
+      }
+      case "PictureInPicture:Paused": {
+        this.weakPipControls.classList.remove("playing");
+        break;
+      }
     }
+  },
+
+  focusTabAndClosePip() {
+    let gBrowser = this.browser.ownerGlobal.gBrowser;
+    let tab = gBrowser.getTabForBrowser(this.browser);
+    gBrowser.selectedTab = tab;
+    this.unload();
+    this.closePipWindow();
   },
 
   /**
@@ -48,7 +64,6 @@ var PictureInPicture = {
       if (win.closed) {
         continue;
       }
-
       win.close();
     }
   },
@@ -74,10 +89,24 @@ var PictureInPicture = {
    *   the player component inside it has finished loading.
    */
   async handlePictureInPictureRequest(browser, videoData) {
+    this.browser = browser;
     let parentWin = browser.ownerGlobal;
     this.closePipWindow();
     let win = await this.openPipWindow(parentWin, videoData);
+    this.weakPipControls = win.document.getElementById("controls");
+    if (videoData.playing) {
+      this.weakPipControls.classList.add("playing");
+    }
     win.setupPlayer(browser, videoData);
+  },
+
+  /**
+   * unload event has been called in player.js, cleanup our preserved
+   * browser object.
+   */
+  unload() {
+    delete this.weakPipControls;
+    delete this.browser;
   },
 
   /**
