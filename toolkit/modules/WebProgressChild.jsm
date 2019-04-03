@@ -27,11 +27,12 @@ class WebProgressChild {
 
     this.inLoadURI = false;
 
-    // NOTIFY_PROGRESS, NOTIFY_STATUS, and NOTIFY_CONTENT_BLOCKING are handled
-    // by PBrowser.
+    // NOTIFY_PROGRESS, NOTIFY_STATUS, NOTIFY_REFRESH, and
+    // NOTIFY_CONTENT_BLOCKING are handled by PBrowser.
     let notifyCode = Ci.nsIWebProgress.NOTIFY_ALL &
                         ~Ci.nsIWebProgress.NOTIFY_PROGRESS &
                         ~Ci.nsIWebProgress.NOTIFY_STATUS &
+                        ~Ci.nsIWebProgress.NOTIFY_REFRESH &
                         ~Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING;
 
     this._filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
@@ -180,10 +181,6 @@ class WebProgressChild {
     this._send("Content:SecurityChange", json);
   }
 
-  onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
-    return true;
-  }
-
   sendLoadCallResult() {
     this.mm.sendAsyncMessage("Content:LoadURIResult");
   }
@@ -191,5 +188,4 @@ class WebProgressChild {
 
 WebProgressChild.prototype.QueryInterface =
   ChromeUtils.generateQI(["nsIWebProgressListener",
-                          "nsIWebProgressListener2",
                           "nsISupportsWeakReference"]);

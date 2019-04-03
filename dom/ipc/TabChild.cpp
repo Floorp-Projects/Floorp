@@ -540,9 +540,9 @@ nsresult TabChild::Init(mozIDOMWindowProxy* aParent) {
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
   MOZ_ASSERT(docShell);
 
-  const uint32_t notifyMask = nsIWebProgress::NOTIFY_PROGRESS |
-                              nsIWebProgress::NOTIFY_STATUS |
-                              nsIWebProgress::NOTIFY_CONTENT_BLOCKING;
+  const uint32_t notifyMask =
+      nsIWebProgress::NOTIFY_PROGRESS | nsIWebProgress::NOTIFY_STATUS |
+      nsIWebProgress::NOTIFY_REFRESH | nsIWebProgress::NOTIFY_CONTENT_BLOCKING;
 
   mStatusFilter = new nsBrowserStatusFilter();
 
@@ -3373,7 +3373,10 @@ NS_IMETHODIMP TabChild::OnProgressChange64(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP TabChild::OnRefreshAttempted(nsIWebProgress* aWebProgress,
                                            nsIURI* aRefreshURI, int32_t aMillis,
                                            bool aSameURI, bool* aOut) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aOut);
+  *aOut = true;
+
+  return NS_OK;
 }
 
 nsresult TabChild::PrepareProgressListenerData(
