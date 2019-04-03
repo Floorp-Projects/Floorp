@@ -19,9 +19,9 @@ class nsIController;
 template <class E>
 class nsCOMArray;
 
-class nsCommandManager : public nsICommandManager,
-                         public nsPICommandUpdater,
-                         public nsSupportsWeakReference {
+class nsCommandManager final : public nsICommandManager,
+                               public nsPICommandUpdater,
+                               public nsSupportsWeakReference {
  public:
   typedef nsTArray<nsCOMPtr<nsIObserver> > ObserverList;
 
@@ -32,6 +32,9 @@ class nsCommandManager : public nsICommandManager,
 
   NS_DECL_NSICOMMANDMANAGER
   NS_DECL_NSPICOMMANDUPDATER
+
+  bool IsCommandEnabled(const nsCString& aCommandName,
+                        mozIDOMWindowProxy* aTargetWindow);
 
  protected:
   virtual ~nsCommandManager();
@@ -45,5 +48,13 @@ class nsCommandManager : public nsICommandManager,
 
   mozIDOMWindowProxy* mWindow;  // weak ptr. The window should always outlive us
 };
+
+nsCommandManager* nsICommandManager::AsCommandManager() {
+  return static_cast<nsCommandManager*>(this);
+}
+
+const nsCommandManager* nsICommandManager::AsCommandManager() const {
+  return static_cast<const nsCommandManager*>(this);
+}
 
 #endif  // nsCommandManager_h__

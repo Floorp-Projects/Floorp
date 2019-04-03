@@ -79,7 +79,6 @@
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
 #include "nsIClassOfService.h"
-#include "nsICommandManager.h"
 #include "nsIConsoleReportCollector.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
@@ -575,7 +574,7 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink) {
 
   if (aIID.Equals(NS_GET_IID(nsICommandManager))) {
     NS_ENSURE_SUCCESS(EnsureCommandHandler(), NS_ERROR_FAILURE);
-    *aSink = mCommandManager;
+    *aSink = static_cast<nsICommandManager*>(mCommandManager.get());
   } else if (aIID.Equals(NS_GET_IID(nsIURIContentListener))) {
     *aSink = mContentListener;
   } else if ((aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)) ||
@@ -12383,12 +12382,11 @@ nsDocShell::DoCommandWithParams(const char* aCommand,
 
 nsresult nsDocShell::EnsureCommandHandler() {
   if (!mCommandManager) {
-    nsCOMPtr<nsPICommandUpdater> commandUpdater = new nsCommandManager();
-
+    RefPtr<nsCommandManager> commandManager = new nsCommandManager();
     nsCOMPtr<nsPIDOMWindowOuter> domWindow = GetWindow();
-    nsresult rv = commandUpdater->Init(domWindow);
+    nsresult rv = commandManager->Init(domWindow);
     if (NS_SUCCEEDED(rv)) {
-      mCommandManager = do_QueryInterface(commandUpdater);
+      mCommandManager = std::move(commandManager);
     }
   }
 
@@ -13289,7 +13287,7 @@ already_AddRefed<nsITabChild> nsDocShell::GetTabChild() {
   return tc.forget();
 }
 
-nsICommandManager* nsDocShell::GetCommandManager() {
+nsCommandManager* nsDocShell::GetCommandManager() {
   NS_ENSURE_SUCCESS(EnsureCommandHandler(), nullptr);
   return mCommandManager;
 }
