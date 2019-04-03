@@ -15,26 +15,6 @@
 namespace mozilla {
 namespace dom {
 
-namespace detail {
-
-template <typename Node>
-struct PositionComparator {
-  Node& mNode;
-  explicit PositionComparator(Node& aNode) : mNode(aNode) {}
-
-  int operator()(void* aNode) const {
-    auto* curNode = static_cast<Node*>(aNode);
-    MOZ_DIAGNOSTIC_ASSERT(curNode != &mNode,
-                          "Tried to insert a node already in the list");
-    if (nsContentUtils::PositionIsBefore(&mNode, curNode)) {
-      return -1;
-    }
-    return 1;
-  }
-};
-
-}  // namespace detail
-
 template <typename Node>
 size_t TreeOrderedArray<Node>::Insert(Node& aNode) {
   static_assert(std::is_base_of<nsINode, Node>::value, "Should be a node");
@@ -51,9 +31,24 @@ size_t TreeOrderedArray<Node>::Insert(Node& aNode) {
     return 0;
   }
 
+  struct PositionComparator {
+    Node& mNode;
+    explicit PositionComparator(Node& aNode) : mNode(aNode) {}
+
+    int operator()(void* aNode) const {
+      auto* curNode = static_cast<Node*>(aNode);
+      MOZ_DIAGNOSTIC_ASSERT(curNode != &mNode,
+                            "Tried to insert a node already in the list");
+      if (nsContentUtils::PositionIsBefore(&mNode, curNode)) {
+        return -1;
+      }
+      return 1;
+    }
+  };
+
   size_t idx;
   BinarySearchIf(mList, 0, mList.Length(),
-                 detail::PositionComparator<Node>(aNode), &idx);
+                 PositionComparator(aNode), &idx);
   mList.InsertElementAt(idx, &aNode);
   return idx;
 }
