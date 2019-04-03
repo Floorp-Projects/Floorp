@@ -70,6 +70,17 @@ jobs:
       attributes:
          build_platform: win64-shippable
 
+   firefox-secondary-win64-aarch64:
+      description: win64 secondary channel update verify
+      shipping-product: firefox
+      treeherder:
+         symbol: UV(UVS)
+         platform: windows2012-aarch6464/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: win64-aarch64-shippable
+
    firefox-secondary-win32:
       description: win32 secondary channel update verify
       shipping-product: firefox
