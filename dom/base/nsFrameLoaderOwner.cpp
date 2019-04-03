@@ -32,8 +32,14 @@ nsFrameLoaderOwner::GetBrowsingContext() {
 
 void nsFrameLoaderOwner::ChangeRemoteness(
     const mozilla::dom::RemotenessOptions& aOptions, mozilla::ErrorResult& rv) {
+  RefPtr<BrowsingContext> bc;
   // If we already have a Frameloader, destroy it.
   if (mFrameLoader) {
+    bc = mFrameLoader->GetBrowsingContext();
+
+    // TODO pass in Cross-Origin-Load-Policy rules
+    mFrameLoader->SkipBrowsingContextDetach();
+
     mFrameLoader->Destroy();
     mFrameLoader = nullptr;
   }
@@ -43,7 +49,8 @@ void nsFrameLoaderOwner::ChangeRemoteness(
   // owner.
   RefPtr<Element> owner = do_QueryObject(this);
   MOZ_ASSERT(owner);
-  mFrameLoader = nsFrameLoader::Create(owner, aOptions);
+  mFrameLoader = nsFrameLoader::Create(owner, bc, aOptions);
+
   if (NS_WARN_IF(!mFrameLoader)) {
     return;
   }
@@ -70,9 +77,8 @@ void nsFrameLoaderOwner::ChangeRemoteness(
   // FrameLoader, fire an event to act like we've recreated ourselves, similar
   // to what XULFrameElement does after rebinding to the tree.
   // ChromeOnlyDispatch is turns on to make sure this isn't fired into content.
-  (new mozilla::AsyncEventDispatcher(owner,
-                                     NS_LITERAL_STRING("XULFrameLoaderCreated"),
-                                     mozilla::CanBubble::eYes,
-                                     mozilla::ChromeOnlyDispatch::eYes))
+  (new mozilla::AsyncEventDispatcher(
+       owner, NS_LITERAL_STRING("XULFrameLoaderCreated"),
+       mozilla::CanBubble::eYes, mozilla::ChromeOnlyDispatch::eYes))
       ->RunDOMEventWhenSafe();
 }

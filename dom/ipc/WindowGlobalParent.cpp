@@ -82,10 +82,6 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   mBrowsingContext = CanonicalBrowsingContext::Cast(aInit.browsingContext());
   MOZ_ASSERT(mBrowsingContext);
 
-  // XXX(nika): This won't be the case soon, but for now this is a good
-  // assertion as we can't switch processes. We should relax this eventually.
-  MOZ_ASSERT(mBrowsingContext->IsOwnedByProcess(processId));
-
   // Attach ourself to the browsing context.
   mBrowsingContext->RegisterWindowGlobal(this);
 
