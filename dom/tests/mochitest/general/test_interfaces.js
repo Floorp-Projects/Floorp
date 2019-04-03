@@ -656,8 +656,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MediaStreamAudioSourceNode", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "MediaStreamTrackAudioSourceNode", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MediaStreamEvent", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MediaStreamTrackEvent", insecureContext: true},
