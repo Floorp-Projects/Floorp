@@ -20,73 +20,67 @@ import {
 } from "../reducers/project-text-search";
 
 import type { Action, ThunkArgs } from "./types";
-import type { Context } from "../types";
 import type { SearchOperation } from "../reducers/project-text-search";
 
-export function addSearchQuery(cx: Context, query: string): Action {
-  return { type: "ADD_QUERY", cx, query };
+export function addSearchQuery(query: string): Action {
+  return { type: "ADD_QUERY", query };
 }
 
-export function addOngoingSearch(
-  cx: Context,
-  ongoingSearch: SearchOperation
-): Action {
-  return { type: "ADD_ONGOING_SEARCH", cx, ongoingSearch };
+export function addOngoingSearch(ongoingSearch: SearchOperation): Action {
+  return { type: "ADD_ONGOING_SEARCH", ongoingSearch };
 }
 
 export function addSearchResult(
-  cx: Context,
   sourceId: string,
   filepath: string,
   matches: Object[]
 ): Action {
   return {
     type: "ADD_SEARCH_RESULT",
-    cx,
     result: { sourceId, filepath, matches }
   };
 }
 
-export function clearSearchResults(cx: Context): Action {
-  return { type: "CLEAR_SEARCH_RESULTS", cx };
+export function clearSearchResults(): Action {
+  return { type: "CLEAR_SEARCH_RESULTS" };
 }
 
-export function clearSearch(cx: Context): Action {
-  return { type: "CLEAR_SEARCH", cx };
+export function clearSearch(): Action {
+  return { type: "CLEAR_SEARCH" };
 }
 
-export function updateSearchStatus(cx: Context, status: string): Action {
-  return { type: "UPDATE_STATUS", cx, status };
+export function updateSearchStatus(status: string): Action {
+  return { type: "UPDATE_STATUS", status };
 }
 
-export function closeProjectSearch(cx: Context) {
+export function closeProjectSearch() {
   return ({ dispatch, getState }: ThunkArgs) => {
-    dispatch(stopOngoingSearch(cx));
+    dispatch(stopOngoingSearch());
     dispatch({ type: "CLOSE_PROJECT_SEARCH" });
   };
 }
 
-export function stopOngoingSearch(cx: Context) {
+export function stopOngoingSearch() {
   return ({ dispatch, getState }: ThunkArgs) => {
     const state = getState();
     const ongoingSearch = getTextSearchOperation(state);
     const status = getTextSearchStatus(state);
     if (ongoingSearch && status !== statusType.done) {
       ongoingSearch.cancel();
-      dispatch(updateSearchStatus(cx, statusType.cancelled));
+      dispatch(updateSearchStatus(statusType.cancelled));
     }
   };
 }
 
-export function searchSources(cx: Context, query: string) {
+export function searchSources(query: string) {
   let cancelled = false;
 
   const search = async ({ dispatch, getState }: ThunkArgs) => {
-    dispatch(stopOngoingSearch(cx));
-    await dispatch(addOngoingSearch(cx, search));
-    await dispatch(clearSearchResults(cx));
-    await dispatch(addSearchQuery(cx, query));
-    dispatch(updateSearchStatus(cx, statusType.fetching));
+    dispatch(stopOngoingSearch());
+    await dispatch(addOngoingSearch(search));
+    await dispatch(clearSearchResults());
+    await dispatch(addSearchQuery(query));
+    dispatch(updateSearchStatus(statusType.fetching));
     const validSources = getSourceList(getState()).filter(
       source => !hasPrettySource(getState(), source.id) && !isThirdParty(source)
     );
@@ -94,10 +88,10 @@ export function searchSources(cx: Context, query: string) {
       if (cancelled) {
         return;
       }
-      await dispatch(loadSourceText(cx, source));
-      await dispatch(searchSource(cx, source.id, query));
+      await dispatch(loadSourceText(source));
+      await dispatch(searchSource(source.id, query));
     }
-    dispatch(updateSearchStatus(cx, statusType.done));
+    dispatch(updateSearchStatus(statusType.done));
   };
 
   search.cancel = () => {
@@ -107,7 +101,7 @@ export function searchSources(cx: Context, query: string) {
   return search;
 }
 
-export function searchSource(cx: Context, sourceId: string, query: string) {
+export function searchSource(sourceId: string, query: string) {
   return async ({ dispatch, getState }: ThunkArgs) => {
     const source = getSource(getState(), sourceId);
     if (!source) {
@@ -118,6 +112,6 @@ export function searchSource(cx: Context, sourceId: string, query: string) {
     if (!matches.length) {
       return;
     }
-    dispatch(addSearchResult(cx, source.id, source.url, matches));
+    dispatch(addSearchResult(source.id, source.url, matches));
   };
 }

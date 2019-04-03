@@ -35,8 +35,7 @@ import {
   getConditionalPanelLocation,
   getSymbols,
   getIsPaused,
-  getCurrentThread,
-  getThreadContext
+  getCurrentThread
 } from "../../selectors";
 
 // Redux actions
@@ -81,14 +80,13 @@ import "./Highlight.css";
 
 import type SourceEditor from "../../utils/editor/source-editor";
 import type { SymbolDeclarations } from "../../workers/parser";
-import type { SourceLocation, Source, ThreadContext } from "../../types";
+import type { SourceLocation, Source } from "../../types";
 
 const cssVars = {
   searchbarHeight: "var(--editor-searchbar-height)"
 };
 
 export type Props = {
-  cx: ThreadContext,
   selectedLocation: ?SourceLocation,
   selectedSource: ?Source,
   searchOn: boolean,
@@ -233,11 +231,11 @@ class Editor extends PureComponent<Props, State> {
   }
 
   onClosePress = (key, e: KeyboardEvent) => {
-    const { cx, selectedSource } = this.props;
+    const { selectedSource } = this.props;
     if (selectedSource) {
       e.preventDefault();
       e.stopPropagation();
-      this.props.closeTab(cx, selectedSource);
+      this.props.closeTab(selectedSource);
     }
   };
 
@@ -301,7 +299,7 @@ class Editor extends PureComponent<Props, State> {
       return;
     }
 
-    this.props.toggleBreakpointAtLine(this.props.cx, line);
+    this.props.toggleBreakpointAtLine(line);
   };
 
   onToggleConditionalPanel = (key, e: KeyboardEvent) => {
@@ -355,7 +353,7 @@ class Editor extends PureComponent<Props, State> {
   };
 
   onSearchAgain = (_, e: KeyboardEvent) => {
-    this.props.traverseResults(this.props.cx, e.shiftKey, this.state.editor);
+    this.props.traverseResults(e.shiftKey, this.state.editor);
   };
 
   openMenu(event: MouseEvent) {
@@ -363,7 +361,6 @@ class Editor extends PureComponent<Props, State> {
     event.preventDefault();
 
     const {
-      cx,
       selectedSource,
       breakpointActions,
       editorActions,
@@ -386,9 +383,9 @@ class Editor extends PureComponent<Props, State> {
 
     if (target.classList.contains("CodeMirror-linenumber")) {
       return showMenu(event, [
-        ...createBreakpointItems(cx, location, breakpointActions),
+        ...createBreakpointItems(location, breakpointActions),
         { type: "separator" },
-        continueToHereItem(cx, location, isPaused, editorActions)
+        continueToHereItem(location, isPaused, editorActions)
       ]);
     }
 
@@ -410,7 +407,6 @@ class Editor extends PureComponent<Props, State> {
     ev: MouseEvent
   ) => {
     const {
-      cx,
       selectedSource,
       conditionalPanelLocation,
       closeConditionalPanel,
@@ -442,10 +438,10 @@ class Editor extends PureComponent<Props, State> {
     }
 
     if (ev.metaKey) {
-      return continueToHere(cx, sourceLine);
+      return continueToHere(sourceLine);
     }
 
-    return addBreakpointAtLine(cx, sourceLine);
+    return addBreakpointAtLine(sourceLine);
   };
 
   onGutterContextMenu = (event: MouseEvent) => {
@@ -453,7 +449,7 @@ class Editor extends PureComponent<Props, State> {
   };
 
   onClick(e: MouseEvent) {
-    const { cx, selectedSource, jumpToMappedLocation } = this.props;
+    const { selectedSource, jumpToMappedLocation } = this.props;
 
     if (selectedSource && e.metaKey && e.altKey) {
       const sourceLocation = getSourceLocationFromMouseEvent(
@@ -461,7 +457,7 @@ class Editor extends PureComponent<Props, State> {
         selectedSource,
         e
       );
-      jumpToMappedLocation(cx, sourceLocation);
+      jumpToMappedLocation(sourceLocation);
     }
   }
 
@@ -601,7 +597,7 @@ class Editor extends PureComponent<Props, State> {
   }
 
   renderItems() {
-    const { cx, selectedSource, conditionalPanelLocation } = this.props;
+    const { selectedSource, conditionalPanelLocation } = this.props;
     const { editor, contextMenu } = this.state;
 
     if (!selectedSource || !editor || !getDocument(selectedSource.id)) {
@@ -613,7 +609,7 @@ class Editor extends PureComponent<Props, State> {
         <DebugLine editor={editor} />
         <HighlightLine />
         <EmptyLines editor={editor} />
-        <Breakpoints editor={editor} cx={cx} />
+        <Breakpoints editor={editor} />
         <Preview editor={editor} editorRef={this.$editorWrapper} />
         <HighlightLines editor={editor} />
         {
@@ -670,7 +666,6 @@ const mapStateToProps = state => {
   const selectedSource = getSelectedSource(state);
 
   return {
-    cx: getThreadContext(state),
     selectedLocation: getSelectedLocation(state),
     selectedSource,
     searchOn: getActiveSearch(state) === "file",

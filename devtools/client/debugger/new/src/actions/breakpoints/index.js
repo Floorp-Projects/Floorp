@@ -37,17 +37,16 @@ import type {
   Breakpoint,
   Source,
   SourceLocation,
-  XHRBreakpoint,
-  Context
+  XHRBreakpoint
 } from "../../types";
 
 export * from "./breakpointPositions";
 export * from "./modify";
 export * from "./syncBreakpoint";
 
-export function addHiddenBreakpoint(cx: Context, location: SourceLocation) {
+export function addHiddenBreakpoint(location: SourceLocation) {
   return ({ dispatch }: ThunkArgs) => {
-    return dispatch(addBreakpoint(cx, location, { hidden: true }));
+    return dispatch(addBreakpoint(location, { hidden: true }));
   };
 }
 
@@ -57,12 +56,12 @@ export function addHiddenBreakpoint(cx: Context, location: SourceLocation) {
  * @memberof actions/breakpoints
  * @static
  */
-export function disableBreakpointsInSource(cx: Context, source: Source) {
+export function disableBreakpointsInSource(source: Source) {
   return async ({ dispatch, getState, client }: ThunkArgs) => {
     const breakpoints = getBreakpointsForSource(getState(), source.id);
     for (const breakpoint of breakpoints) {
       if (!breakpoint.disabled) {
-        dispatch(disableBreakpoint(cx, breakpoint));
+        dispatch(disableBreakpoint(breakpoint));
       }
     }
   };
@@ -74,12 +73,12 @@ export function disableBreakpointsInSource(cx: Context, source: Source) {
  * @memberof actions/breakpoints
  * @static
  */
-export function enableBreakpointsInSource(cx: Context, source: Source) {
+export function enableBreakpointsInSource(source: Source) {
   return async ({ dispatch, getState, client }: ThunkArgs) => {
     const breakpoints = getBreakpointsForSource(getState(), source.id);
     for (const breakpoint of breakpoints) {
       if (breakpoint.disabled) {
-        dispatch(enableBreakpoint(cx, breakpoint));
+        dispatch(enableBreakpoint(breakpoint));
       }
     }
   };
@@ -91,18 +90,15 @@ export function enableBreakpointsInSource(cx: Context, source: Source) {
  * @memberof actions/breakpoints
  * @static
  */
-export function toggleAllBreakpoints(
-  cx: Context,
-  shouldDisableBreakpoints: boolean
-) {
+export function toggleAllBreakpoints(shouldDisableBreakpoints: boolean) {
   return async ({ dispatch, getState, client }: ThunkArgs) => {
     const breakpoints = getBreakpointsList(getState());
 
     for (const breakpoint of breakpoints) {
       if (shouldDisableBreakpoints) {
-        dispatch(disableBreakpoint(cx, breakpoint));
+        dispatch(disableBreakpoint(breakpoint));
       } else {
-        dispatch(enableBreakpoint(cx, breakpoint));
+        dispatch(enableBreakpoint(breakpoint));
       }
     }
   };
@@ -115,7 +111,6 @@ export function toggleAllBreakpoints(
  * @static
  */
 export function toggleBreakpoints(
-  cx: Context,
   shouldDisableBreakpoints: boolean,
   breakpoints: Breakpoint[]
 ) {
@@ -123,8 +118,8 @@ export function toggleBreakpoints(
     const promises = breakpoints.map(
       breakpoint =>
         shouldDisableBreakpoints
-          ? dispatch(disableBreakpoint(cx, breakpoint))
-          : dispatch(enableBreakpoint(cx, breakpoint))
+          ? dispatch(disableBreakpoint(breakpoint))
+          : dispatch(enableBreakpoint(breakpoint))
     );
 
     await Promise.all(promises);
@@ -132,15 +127,12 @@ export function toggleBreakpoints(
 }
 
 export function toggleBreakpointsAtLine(
-  cx: Context,
   shouldDisableBreakpoints: boolean,
   line: number
 ) {
   return async ({ dispatch, getState }: ThunkArgs) => {
-    const breakpoints = getBreakpointsAtLine(getState(), line);
-    return dispatch(
-      toggleBreakpoints(cx, shouldDisableBreakpoints, breakpoints)
-    );
+    const breakpoints = await getBreakpointsAtLine(getState(), line);
+    return dispatch(toggleBreakpoints(shouldDisableBreakpoints, breakpoints));
   };
 }
 
@@ -150,11 +142,11 @@ export function toggleBreakpointsAtLine(
  * @memberof actions/breakpoints
  * @static
  */
-export function removeAllBreakpoints(cx: Context) {
+export function removeAllBreakpoints() {
   return async ({ dispatch, getState }: ThunkArgs) => {
     const breakpointList = getBreakpointsList(getState());
     return Promise.all(
-      breakpointList.map(bp => dispatch(removeBreakpoint(cx, bp)))
+      breakpointList.map(bp => dispatch(removeBreakpoint(bp)))
     );
   };
 }
@@ -165,11 +157,9 @@ export function removeAllBreakpoints(cx: Context) {
  * @memberof actions/breakpoints
  * @static
  */
-export function removeBreakpoints(cx: Context, breakpoints: Breakpoint[]) {
+export function removeBreakpoints(breakpoints: Breakpoint[]) {
   return async ({ dispatch }: ThunkArgs) => {
-    return Promise.all(
-      breakpoints.map(bp => dispatch(removeBreakpoint(cx, bp)))
-    );
+    return Promise.all(breakpoints.map(bp => dispatch(removeBreakpoint(bp))));
   };
 }
 
@@ -179,16 +169,16 @@ export function removeBreakpoints(cx: Context, breakpoints: Breakpoint[]) {
  * @memberof actions/breakpoints
  * @static
  */
-export function removeBreakpointsInSource(cx: Context, source: Source) {
+export function removeBreakpointsInSource(source: Source) {
   return async ({ dispatch, getState, client }: ThunkArgs) => {
     const breakpoints = getBreakpointsForSource(getState(), source.id);
     for (const breakpoint of breakpoints) {
-      dispatch(removeBreakpoint(cx, breakpoint));
+      dispatch(removeBreakpoint(breakpoint));
     }
   };
 }
 
-export function remapBreakpoints(cx: Context, sourceId: string) {
+export function remapBreakpoints(sourceId: string) {
   return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
     const breakpoints = getBreakpointsList(getState());
     const newBreakpoints = await remapLocations(
@@ -198,12 +188,12 @@ export function remapBreakpoints(cx: Context, sourceId: string) {
     );
 
     for (const bp of newBreakpoints) {
-      await dispatch(addBreakpoint(cx, bp.location, bp.options, bp.disabled));
+      await dispatch(addBreakpoint(bp.location, bp.options, bp.disabled));
     }
   };
 }
 
-export function toggleBreakpointAtLine(cx: Context, line: number) {
+export function toggleBreakpointAtLine(line: number) {
   return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const state = getState();
     const selectedSource = getSelectedSource(state);
@@ -224,10 +214,10 @@ export function toggleBreakpointAtLine(cx: Context, line: number) {
     }
 
     if (bp) {
-      return dispatch(removeBreakpoint(cx, bp));
+      return dispatch(removeBreakpoint(bp));
     }
     return dispatch(
-      addBreakpoint(cx, {
+      addBreakpoint({
         sourceId: selectedSource.id,
         sourceUrl: selectedSource.url,
         line: line
@@ -236,7 +226,7 @@ export function toggleBreakpointAtLine(cx: Context, line: number) {
   };
 }
 
-export function addBreakpointAtLine(cx: Context, line: number) {
+export function addBreakpointAtLine(line: number) {
   return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const state = getState();
     const source = getSelectedSource(state);
@@ -246,7 +236,7 @@ export function addBreakpointAtLine(cx: Context, line: number) {
     }
 
     return dispatch(
-      addBreakpoint(cx, {
+      addBreakpoint({
         sourceId: source.id,
         sourceUrl: source.url,
         column: undefined,
@@ -256,57 +246,45 @@ export function addBreakpointAtLine(cx: Context, line: number) {
   };
 }
 
-export function removeBreakpointsAtLine(
-  cx: Context,
-  sourceId: string,
-  line: number
-) {
+export function removeBreakpointsAtLine(sourceId: string, line: number) {
   return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const breakpointsAtLine = getBreakpointsForSource(
       getState(),
       sourceId,
       line
     );
-    return dispatch(removeBreakpoints(cx, breakpointsAtLine));
+    return dispatch(removeBreakpoints(breakpointsAtLine));
   };
 }
 
-export function disableBreakpointsAtLine(
-  cx: Context,
-  sourceId: string,
-  line: number
-) {
+export function disableBreakpointsAtLine(sourceId: string, line: number) {
   return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const breakpointsAtLine = getBreakpointsForSource(
       getState(),
       sourceId,
       line
     );
-    return dispatch(toggleBreakpoints(cx, true, breakpointsAtLine));
+    return dispatch(toggleBreakpoints(true, breakpointsAtLine));
   };
 }
 
-export function enableBreakpointsAtLine(
-  cx: Context,
-  sourceId: string,
-  line: number
-) {
+export function enableBreakpointsAtLine(sourceId: string, line: number) {
   return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const breakpointsAtLine = getBreakpointsForSource(
       getState(),
       sourceId,
       line
     );
-    return dispatch(toggleBreakpoints(cx, false, breakpointsAtLine));
+    return dispatch(toggleBreakpoints(false, breakpointsAtLine));
   };
 }
 
-export function toggleDisabledBreakpoint(cx: Context, breakpoint: Breakpoint) {
+export function toggleDisabledBreakpoint(breakpoint: Breakpoint) {
   return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     if (!breakpoint.disabled) {
-      return dispatch(disableBreakpoint(cx, breakpoint));
+      return dispatch(disableBreakpoint(breakpoint));
     }
-    return dispatch(enableBreakpoint(cx, breakpoint));
+    return dispatch(enableBreakpoint(breakpoint));
   };
 }
 

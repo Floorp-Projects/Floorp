@@ -14,7 +14,7 @@ import {
 import assert from "../../utils/assert";
 import { findClosestFunction } from "../../utils/ast";
 
-import type { Frame, ThreadContext } from "../../types";
+import type { Frame, ThreadId } from "../../types";
 import type { State } from "../../reducers/types";
 import type { ThunkArgs } from "../types";
 
@@ -161,9 +161,9 @@ async function expandFrames(
  * @memberof actions/pause
  * @static
  */
-export function mapFrames(cx: ThreadContext) {
+export function mapFrames(thread: ThreadId) {
   return async function({ dispatch, getState, sourceMaps }: ThunkArgs) {
-    const frames = getFrames(getState(), cx.thread);
+    const frames = getFrames(getState(), thread);
     if (!frames) {
       return;
     }
@@ -174,13 +174,12 @@ export function mapFrames(cx: ThreadContext) {
 
     const selectedFrameId = getSelectedFrameId(
       getState(),
-      cx.thread,
+      thread,
       mappedFrames
     );
     dispatch({
       type: "MAP_FRAMES",
-      cx,
-      thread: cx.thread,
+      thread,
       frames: mappedFrames,
       selectedFrameId
     });

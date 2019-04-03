@@ -14,16 +14,14 @@ import actions from "../../actions";
 import {
   getBreakpointForLocation,
   getConditionalPanelLocation,
-  getLogPointStatus,
-  getContext
+  getLogPointStatus
 } from "../../selectors";
 
-import type { SourceLocation, Context } from "../../types";
+import type { SourceLocation } from "../../types";
 
 type Props = {
-  cx: Context,
   breakpoint: ?Object,
-  setBreakpointOptions: typeof actions.setBreakpointOptions,
+  setBreakpointOptions: Function,
   location: SourceLocation,
   log: boolean,
   editor: Object,
@@ -65,10 +63,10 @@ export class ConditionalPanel extends PureComponent<Props> {
   };
 
   setBreakpoint(value: string) {
-    const { cx, location, log, breakpoint } = this.props;
+    const { location, log, breakpoint } = this.props;
     const options = breakpoint ? breakpoint.options : {};
     const type = log ? "logValue" : "condition";
-    return this.props.setBreakpointOptions(cx, location, {
+    return this.props.setBreakpointOptions(location, {
       ...options,
       [type]: value
     });
@@ -201,7 +199,6 @@ const mapStateToProps = state => {
   const location = getConditionalPanelLocation(state);
   const log = getLogPointStatus(state);
   return {
-    cx: getContext(state),
     breakpoint: getBreakpointForLocation(state, location),
     location,
     log

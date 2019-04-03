@@ -17,17 +17,12 @@ import { breakpointItems } from "./menus/breakpoints";
 import type { BreakpointItemActions } from "./menus/breakpoints";
 import type { EditorItemActions } from "./menus/editor";
 
-import type {
-  Source,
-  Breakpoint as BreakpointType,
-  ThreadContext
-} from "../../types";
+import type { Source, Breakpoint as BreakpointType } from "../../types";
 
 const breakpointSvg = document.createElement("div");
 ReactDOM.render(<Svg name="breakpoint" />, breakpointSvg);
 
 type Props = {
-  cx: ThreadContext,
   breakpoint: BreakpointType,
   selectedSource: Source,
   editor: Object,
@@ -67,7 +62,6 @@ class Breakpoint extends PureComponent<Props> {
 
   onClick = (event: MouseEvent) => {
     const {
-      cx,
       breakpointActions,
       editorActions,
       breakpoint,
@@ -84,33 +78,31 @@ class Breakpoint extends PureComponent<Props> {
 
     const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
     if (event.metaKey) {
-      return editorActions.continueToHere(cx, selectedLocation.line);
+      return editorActions.continueToHere(selectedLocation.line);
     }
 
     if (event.shiftKey) {
       if (features.columnBreakpoints) {
         return breakpointActions.toggleBreakpointsAtLine(
-          cx,
           !breakpoint.disabled,
           selectedLocation.line
         );
       }
 
-      return breakpointActions.toggleDisabledBreakpoint(cx, breakpoint);
+      return breakpointActions.toggleDisabledBreakpoint(breakpoint);
     }
 
     return breakpointActions.removeBreakpointsAtLine(
-      cx,
       selectedLocation.sourceId,
       selectedLocation.line
     );
   };
 
   onContextMenu = (event: MouseEvent) => {
-    const { cx, breakpoint, breakpointActions } = this.props;
+    const { breakpoint, breakpointActions } = this.props;
     event.stopPropagation();
     event.preventDefault();
-    showMenu(event, breakpointItems(cx, breakpoint, breakpointActions));
+    showMenu(event, breakpointItems(breakpoint, breakpointActions));
   };
 
   addBreakpoint(props: Props) {

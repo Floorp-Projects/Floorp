@@ -15,7 +15,7 @@ import {
 import { isWasm, renderWasmText } from "../utils/wasm";
 import { getMatches } from "../workers/search";
 import type { Action, FileTextSearchModifier, ThunkArgs } from "./types";
-import type { WasmSource, Context } from "../types";
+import type { WasmSource } from "../types";
 
 import {
   getSelectedSource,
@@ -32,15 +32,15 @@ import {
 type Editor = Object;
 type Match = Object;
 
-export function doSearch(cx: Context, query: string, editor: Editor) {
+export function doSearch(query: string, editor: Editor) {
   return ({ getState, dispatch }: ThunkArgs) => {
     const selectedSource = getSelectedSource(getState());
     if (!selectedSource || !selectedSource.text) {
       return;
     }
 
-    dispatch(setFileSearchQuery(cx, query));
-    dispatch(searchContents(cx, query, editor));
+    dispatch(setFileSearchQuery(query));
+    dispatch(searchContents(query, editor));
   };
 }
 
@@ -59,23 +59,20 @@ export function doSearchForHighlight(
   };
 }
 
-export function setFileSearchQuery(cx: Context, query: string): Action {
+export function setFileSearchQuery(query: string): Action {
   return {
     type: "UPDATE_FILE_SEARCH_QUERY",
-    cx,
     query
   };
 }
 
 export function toggleFileSearchModifier(
-  cx: Context,
   modifier: FileTextSearchModifier
 ): Action {
-  return { type: "TOGGLE_FILE_SEARCH_MODIFIER", cx, modifier };
+  return { type: "TOGGLE_FILE_SEARCH_MODIFIER", modifier };
 }
 
 export function updateSearchResults(
-  cx: Context,
   characterIndex: number,
   line: number,
   matches: Match[]
@@ -86,7 +83,6 @@ export function updateSearchResults(
 
   return {
     type: "UPDATE_SEARCH_RESULTS",
-    cx,
     results: {
       matches,
       matchIndex,
@@ -96,7 +92,7 @@ export function updateSearchResults(
   };
 }
 
-export function searchContents(cx: Context, query: string, editor: Object) {
+export function searchContents(query: string, editor: Object) {
   return async ({ getState, dispatch }: ThunkArgs) => {
     const modifiers = getFileSearchModifiers(getState());
     const selectedSource = getSelectedSource(getState());
@@ -128,7 +124,7 @@ export function searchContents(cx: Context, query: string, editor: Object) {
 
     const { ch, line } = res;
 
-    dispatch(updateSearchResults(cx, ch, line, matches));
+    dispatch(updateSearchResults(ch, line, matches));
   };
 }
 
@@ -159,7 +155,7 @@ export function searchContentsForHighlight(
   };
 }
 
-export function traverseResults(cx: Context, rev: boolean, editor: Editor) {
+export function traverseResults(rev: boolean, editor: Editor) {
   return async ({ getState, dispatch }: ThunkArgs) => {
     if (!editor) {
       return;
@@ -184,12 +180,12 @@ export function traverseResults(cx: Context, rev: boolean, editor: Editor) {
         return;
       }
       const { ch, line } = results;
-      dispatch(updateSearchResults(cx, ch, line, matchedLocations));
+      dispatch(updateSearchResults(ch, line, matchedLocations));
     }
   };
 }
 
-export function closeFileSearch(cx: Context, editor: Editor) {
+export function closeFileSearch(editor: Editor) {
   return ({ getState, dispatch }: ThunkArgs) => {
     if (editor) {
       const query = getFileSearchQuery(getState());
@@ -197,7 +193,7 @@ export function closeFileSearch(cx: Context, editor: Editor) {
       removeOverlay(ctx, query);
     }
 
-    dispatch(setFileSearchQuery(cx, ""));
+    dispatch(setFileSearchQuery(""));
     dispatch(closeActiveSearch());
     dispatch(clearHighlightLineRange());
   };

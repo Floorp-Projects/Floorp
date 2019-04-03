@@ -17,8 +17,7 @@ import {
   getFileSearchQuery,
   getFileSearchModifiers,
   getFileSearchResults,
-  getHighlightedLineRange,
-  getContext
+  getHighlightedLineRange
 } from "../../selectors";
 
 import { removeOverlay } from "../../utils/editor";
@@ -26,7 +25,7 @@ import { removeOverlay } from "../../utils/editor";
 import { scrollList } from "../../utils/result-list";
 import classnames from "classnames";
 
-import type { Source, Context } from "../../types";
+import type { Source } from "../../types";
 import type { Modifiers, SearchResults } from "../../reducers/file-search";
 
 import SearchInput from "../shared/SearchInput";
@@ -56,7 +55,6 @@ type State = {
 };
 
 type Props = {
-  cx: Context,
   editor: SourceEditor,
   selectedSource?: Source,
   searchOn: boolean,
@@ -139,10 +137,10 @@ class SearchBar extends Component<Props, State> {
   };
 
   closeSearch = (e: SyntheticEvent<HTMLElement>) => {
-    const { cx, closeFileSearch, editor, searchOn } = this.props;
+    const { closeFileSearch, editor, searchOn } = this.props;
     if (editor && searchOn) {
       this.clearSearch();
-      closeFileSearch(cx, editor);
+      closeFileSearch(editor);
       e.stopPropagation();
       e.preventDefault();
     }
@@ -171,12 +169,12 @@ class SearchBar extends Component<Props, State> {
   };
 
   doSearch = (query: string) => {
-    const { cx, selectedSource } = this.props;
+    const { selectedSource } = this.props;
     if (!selectedSource || !selectedSource.text) {
       return;
     }
 
-    this.props.doSearch(cx, query, this.props.editor);
+    this.props.doSearch(query, this.props.editor);
   };
 
   traverseResults = (e: SyntheticEvent<HTMLElement>, rev: boolean) => {
@@ -187,7 +185,7 @@ class SearchBar extends Component<Props, State> {
     if (!editor) {
       return;
     }
-    this.props.traverseResults(this.props.cx, rev, editor);
+    this.props.traverseResults(rev, editor);
   };
 
   // Handlers
@@ -244,7 +242,7 @@ class SearchBar extends Component<Props, State> {
   }
 
   renderSearchModifiers = () => {
-    const { cx, modifiers, toggleFileSearchModifier, query } = this.props;
+    const { modifiers, toggleFileSearchModifier, query } = this.props;
     const { doSearch } = this;
 
     function SearchModBtn({ modVal, className, svgName, tooltip }) {
@@ -255,12 +253,12 @@ class SearchBar extends Component<Props, State> {
         <button
           className={preppedClass}
           onMouseDown={() => {
-            toggleFileSearchModifier(cx, modVal);
+            toggleFileSearchModifier(modVal);
             doSearch(query);
           }}
           onKeyDown={(e: any) => {
             if (e.key === "Enter") {
-              toggleFileSearchModifier(cx, modVal);
+              toggleFileSearchModifier(modVal);
               doSearch(query);
             }
           }}
@@ -359,7 +357,6 @@ SearchBar.contextTypes = {
 };
 
 const mapStateToProps = state => ({
-  cx: getContext(state),
   searchOn: getActiveSearch(state) === "file",
   selectedSource: getSelectedSource(state),
   selectedLocation: getSelectedLocation(state),

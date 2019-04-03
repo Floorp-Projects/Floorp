@@ -4,7 +4,6 @@
 // @flow
 
 import type { Action, FocusItem, ThunkArgs } from "./types";
-import type { Context } from "../types";
 
 export function setExpandedState(thread: string, expanded: Set<string>) {
   return ({ dispatch, getState }: ThunkArgs) => {
@@ -18,11 +17,10 @@ export function setExpandedState(thread: string, expanded: Set<string>) {
   };
 }
 
-export function focusItem(cx: Context, item: FocusItem) {
+export function focusItem(item: FocusItem) {
   return ({ dispatch, getState }: ThunkArgs) => {
     dispatch({
       type: "SET_FOCUSED_SOURCE_ITEM",
-      cx,
       item
     });
   };

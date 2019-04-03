@@ -18,7 +18,6 @@ CompiledModules(
     'build-query.js',
     'clipboard.js',
     'connect.js',
-    'context.js',
     'dbg.js',
     'defer.js',
     'DevToolsUtils.js',
