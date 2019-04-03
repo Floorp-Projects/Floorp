@@ -5,8 +5,8 @@
 ChromeUtils.defineModuleGetter(this, "TestUtils", "resource://testing-common/TestUtils.jsm");
 const { TelemetryTestUtils } = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 
-const OPTIN = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
-const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
+const PRERELEASE_CHANNELS = Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS;
+const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 
 function checkEventFormat(events) {
   Assert.ok(Array.isArray(events), "Events should be serialized to an array.");
@@ -234,12 +234,12 @@ add_task(async function test_recording() {
   };
 
   // Check that the expected events were recorded.
-  let snapshot = Telemetry.snapshotEvents(OPTIN, false);
+  let snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, false);
   Assert.ok(("parent" in snapshot), "Should have entry for main process.");
   checkEvents(snapshot.parent, expected);
 
   // Check serializing only opt-out events.
-  snapshot = Telemetry.snapshotEvents(OPTOUT, false);
+  snapshot = Telemetry.snapshotEvents(ALL_CHANNELS, false);
   Assert.ok(("parent" in snapshot), "Should have entry for main process.");
   let filtered = expected.filter(e => !!e.optout);
   checkEvents(snapshot.parent, filtered);
@@ -256,30 +256,30 @@ add_task(async function test_clear() {
 
   // Check that events were recorded.
   // The events are cleared by passing the respective flag.
-  let snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  let snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.ok(("parent" in snapshot), "Should have entry for main process.");
   Assert.equal(snapshot.parent.length, 2 * COUNT, `Should have recorded ${2 * COUNT} events.`);
 
   // Now the events should be cleared.
-  snapshot = Telemetry.snapshotEvents(OPTIN, false);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, false);
   Assert.equal(Object.keys(snapshot).length, 0, `Should have cleared the events.`);
 
   for (let i = 0; i < COUNT; ++i) {
     Telemetry.recordEvent("telemetry.test", "test1", "object1");
     Telemetry.recordEvent("telemetry.test.second", "test", "object1");
   }
-  snapshot = Telemetry.snapshotEvents(OPTIN, true, 5);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true, 5);
   Assert.ok(("parent" in snapshot), "Should have entry for main process.");
   Assert.equal(snapshot.parent.length, 5, "Should have returned 5 events");
-  snapshot = Telemetry.snapshotEvents(OPTIN, false);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, false);
   Assert.ok(("parent" in snapshot), "Should have entry for main process.");
   Assert.equal(snapshot.parent.length, (2 * COUNT) - 5, `Should have returned ${(2 * COUNT) - 5} events`);
 
   Telemetry.recordEvent("telemetry.test", "test1", "object1");
-  snapshot = Telemetry.snapshotEvents(OPTIN, false, 5);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, false, 5);
   Assert.ok(("parent" in snapshot), "Should have entry for main process.");
   Assert.equal(snapshot.parent.length, 5, "Should have returned 5 events");
-  snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.ok(("parent" in snapshot), "Should have entry for main process.");
   Assert.equal(snapshot.parent.length, (2 * COUNT) - 5 + 1, `Should have returned ${(2 * COUNT) - 5 + 1} events`);
 });
@@ -290,7 +290,7 @@ add_task(async function test_expiry() {
   // Recording call with event that is expired by version.
   Telemetry.recordEvent("telemetry.test", "expired_version", "object1");
   checkRecordingFailure(1 /* Expired */);
-  let snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  let snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.equal(Object.keys(snapshot).length, 0, "Should not record event with expired version.");
 
   // Recording call with event that has expiry_version set into the future.
@@ -303,25 +303,25 @@ add_task(async function test_invalidParams() {
 
   // Recording call with wrong type for value argument.
   Telemetry.recordEvent("telemetry.test", "test1", "object1", 1);
-  let snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  let snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.equal(Object.keys(snapshot).length, 0, "Should not record event when value argument with invalid type is passed.");
   checkRecordingFailure(3 /* Value */);
 
   // Recording call with wrong type for extra argument.
   Telemetry.recordEvent("telemetry.test", "test1", "object1", null, "invalid");
-  snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.equal(Object.keys(snapshot).length, 0, "Should not record event when extra argument with invalid type is passed.");
   checkRecordingFailure(4 /* Extra */);
 
   // Recording call with unknown extra key.
   Telemetry.recordEvent("telemetry.test", "test1", "object1", null, {"key3": "x"});
-  snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.equal(Object.keys(snapshot).length, 0, "Should not record event when extra argument with invalid key is passed.");
   checkRecordingFailure(2 /* ExtraKey */);
 
   // Recording call with invalid value type.
   Telemetry.recordEvent("telemetry.test", "test1", "object1", null, {"key3": 1});
-  snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.equal(Object.keys(snapshot).length, 0, "Should not record event when extra argument with invalid value type is passed.");
   checkRecordingFailure(4 /* Extra */);
 });
@@ -341,7 +341,7 @@ add_task(async function test_storageLimit() {
   Assert.ok(true, "Topic was notified when event limit was reached");
 
   // Check that the right events were recorded.
-  let snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  let snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.ok(("parent" in snapshot), "Should have entry for main process.");
   let events = snapshot.parent;
   Assert.equal(events.length, COUNT, `Should have only recorded all ${COUNT} events`);
@@ -449,7 +449,7 @@ add_task(async function test_dynamicEvents() {
   checkRecordingFailure(0 /* UnknownEvent */);
 
   // Now check that the snapshot contains the expected data.
-  let snapshot = Telemetry.snapshotEvents(OPTIN, false);
+  let snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, false);
   Assert.ok(("dynamic" in snapshot), "Should have dynamic events in the snapshot.");
 
   let expected = [
@@ -470,7 +470,7 @@ add_task(async function test_dynamicEvents() {
   checkEventSummary(expected.map(ev => ["dynamic", ev, 1]), true);
 
   // Check that the opt-out snapshot contains only the one expected event.
-  snapshot = Telemetry.snapshotEvents(OPTOUT, false);
+  snapshot = Telemetry.snapshotEvents(ALL_CHANNELS, false);
   Assert.ok(("dynamic" in snapshot), "Should have dynamic events in the snapshot.");
   Assert.equal(snapshot.dynamic.length, 1, "Should have one opt-out event in the snapshot.");
   expected = ["telemetry.test.dynamic", "test4", "object1"];
@@ -480,12 +480,12 @@ add_task(async function test_dynamicEvents() {
   Telemetry.clearEvents();
   Telemetry.recordEvent("telemetry.test.dynamic", "test1", "object1", null, {"key1": "foo"});
   Telemetry.recordEvent("telemetry.test.dynamic", "test2", "object1", null, {"key1": "foo", "unknown": "bar"});
-  snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.ok(!("dynamic" in snapshot), "Should have not recorded dynamic events with unknown extra keys.");
 
   // Other built-in events should not show up in the "dynamic" bucket of the snapshot.
   Telemetry.recordEvent("telemetry.test", "test1", "object1");
-  snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.ok(!("dynamic" in snapshot), "Should have not recorded built-in event into dynamic bucket.");
 
   // Test that recording opt-in and opt-out events works as expected.
@@ -499,7 +499,7 @@ add_task(async function test_dynamicEvents() {
     // Only "test4" should have been recorded.
     ["telemetry.test.dynamic", "test4", "object1"],
   ];
-  snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.equal(snapshot.dynamic.length, 1, "Should have one opt-out event in the snapshot.");
   Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
 });
@@ -661,7 +661,7 @@ add_task(async function test_dynamicEventRegisterAgain() {
   ];
   expected.forEach(e => Telemetry.recordEvent(...e));
 
-  let snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  let snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.equal(snapshot.dynamic.length, expected.length,
                "Should have right number of events in the snapshot.");
   Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
@@ -670,7 +670,7 @@ add_task(async function test_dynamicEventRegisterAgain() {
   Telemetry.registerEvents(category, events);
   Telemetry.recordEvent(category, "test1", "object1");
 
-  snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.equal(snapshot.dynamic.length, expected.length,
                "Should have right number of events in the snapshot.");
   Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
@@ -688,7 +688,7 @@ add_task(async function test_dynamicEventRegisterAgain() {
   ];
   expected.forEach(e => Telemetry.recordEvent(...e));
 
-  snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.equal(snapshot.dynamic.length, expected.length,
                "Should have right number of events in the snapshot.");
   Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
@@ -706,7 +706,7 @@ add_task(async function test_dynamicEventRegisterAgain() {
   ];
   expected.forEach(e => Telemetry.recordEvent(...e));
 
-  snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.equal(snapshot.dynamic.length, expected.length,
                "Should have right number of events in the snapshot.");
   Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
@@ -720,7 +720,7 @@ add_task(async function test_dynamicEventRegisterAgain() {
   ];
   expected.forEach(e => Telemetry.recordEvent(...e));
 
-  snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.equal(snapshot.dynamic.length, expected.length,
                "Should have right number of events in the snapshot.");
   Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
@@ -746,7 +746,7 @@ async function test_productSpecificEvents() {
   // Try to record the mobile-only event
   Telemetry.recordEvent(EVENT_CATEGORY, MOBILE_ONLY_EVENT, "object1");
 
-  let events = Telemetry.snapshotEvents(OPTIN, true).parent;
+  let events = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true).parent;
 
   let expected = [
     [EVENT_CATEGORY, DEFAULT_PRODUCTS_EVENT, "object1"],
@@ -780,7 +780,7 @@ async function test_mobileSpecificEvents() {
   // Try to record the mobile-only event
   Telemetry.recordEvent(EVENT_CATEGORY, DESKTOP_ONLY_EVENT, "object1");
 
-  let events = Telemetry.snapshotEvents(OPTIN, true).parent;
+  let events = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true).parent;
 
   let expected = [
     [EVENT_CATEGORY, DEFAULT_PRODUCTS_EVENT, "object1"],
