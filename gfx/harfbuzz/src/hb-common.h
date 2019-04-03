@@ -357,6 +357,14 @@ typedef enum
   /*11.0*/HB_SCRIPT_OLD_SOGDIAN			= HB_TAG ('S','o','g','o'),
   /*11.0*/HB_SCRIPT_SOGDIAN			= HB_TAG ('S','o','g','d'),
 
+  /*
+   * Since REPLACEME
+   */
+  /*12.0*/HB_SCRIPT_ELYMAIC			= HB_TAG ('E','l','y','m'),
+  /*12.0*/HB_SCRIPT_NANDINAGARI			= HB_TAG ('N','a','n','d'),
+  /*12.0*/HB_SCRIPT_NYIAKENG_PUACHUE_HMONG	= HB_TAG ('H','m','n','p'),
+  /*12.0*/HB_SCRIPT_WANCHO			= HB_TAG ('W','c','h','o'),
+
   /* No script set. */
   HB_SCRIPT_INVALID				= HB_TAG_NONE,
 

@@ -9,8 +9,8 @@
  * # Copied from https://docs.microsoft.com/en-us/typography/script-development/use
  * # On October 23, 2018; with documentd dated 02/07/2018.
  *
- * # Scripts-11.0.0.txt
- * # Date: 2018-02-21, 05:34:31 GMT
+ * # Scripts-12.0.0.txt
+ * # Date: 2019-01-28, 22:16:47 GMT
  */
 
 #include "hb-ot-shape-complex-vowel-constraints.hh"
@@ -34,6 +34,9 @@ _hb_preprocess_text_vowel_constraints (const hb_ot_shape_plan_t *plan HB_UNUSED,
 				       hb_buffer_t              *buffer,
 				       hb_font_t                *font HB_UNUSED)
 {
+  if (buffer->flags & HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE)
+    return;
+
   /* UGLY UGLY UGLY business of adding dotted-circle in the middle of
    * vowel-sequences that look like another vowel.  Data for each script
    * collected from the USE script development spec.

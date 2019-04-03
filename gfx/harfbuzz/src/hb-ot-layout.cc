@@ -958,19 +958,6 @@ hb_ot_layout_lookup_would_substitute (hb_face_t            *face,
 				      unsigned int          glyphs_length,
 				      hb_bool_t             zero_context)
 {
-  return hb_ot_layout_lookup_would_substitute_fast (face,
-						    lookup_index,
-						    glyphs, glyphs_length,
-						    zero_context);
-}
-
-bool
-hb_ot_layout_lookup_would_substitute_fast (hb_face_t            *face,
-					   unsigned int          lookup_index,
-					   const hb_codepoint_t *glyphs,
-					   unsigned int          glyphs_length,
-					   bool                  zero_context)
-{
   if (unlikely (lookup_index >= face->table.GSUB->lookup_count)) return false;
   OT::hb_would_apply_context_t c (face, glyphs, glyphs_length, (bool) zero_context);
 

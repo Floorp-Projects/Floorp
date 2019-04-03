@@ -214,7 +214,8 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan HB_UNUSED,
       else
       {
 	/* No valid syllable as base for tone mark; try to insert dotted circle. */
-	if (font->has_glyph (0x25CCu))
+      if (!(buffer->flags & HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE) &&
+	  font->has_glyph (0x25CCu))
 	{
 	  hb_codepoint_t chars[2];
 	  if (!is_zero_width_char (font, u)) {

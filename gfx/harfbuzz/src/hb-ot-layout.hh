@@ -96,13 +96,6 @@ HB_MARK_AS_FLAG_T (hb_ot_layout_glyph_props_flags_t);
  * GSUB/GPOS
  */
 
-HB_INTERNAL bool
-hb_ot_layout_lookup_would_substitute_fast (hb_face_t            *face,
-					   unsigned int          lookup_index,
-					   const hb_codepoint_t *glyphs,
-					   unsigned int          glyphs_length,
-					   bool                  zero_context);
-
 
 /* Should be called before all the substitute_lookup's are done. */
 HB_INTERNAL void
@@ -215,7 +208,7 @@ _hb_glyph_info_set_unicode_props (hb_glyph_info_t *info, hb_buffer_t *buffer)
   unsigned int gen_cat = (unsigned int) unicode->general_category (u);
   unsigned int props = gen_cat;
 
-  if (u >= 0x80)
+  if (u >= 0x80u)
   {
     buffer->scratch_flags |= HB_BUFFER_SCRATCH_FLAG_HAS_NON_ASCII;
 
@@ -232,10 +225,10 @@ _hb_glyph_info_set_unicode_props (hb_glyph_info_t *info, hb_buffer_t *buffer)
        * FVSes are GC=Mn, we have use a separate bit to remember them.
        * Fixes:
        * https://github.com/harfbuzz/harfbuzz/issues/234 */
-      else if (unlikely (hb_in_range (u, 0x180Bu, 0x180Du))) props |= UPROPS_MASK_HIDDEN;
+      else if (unlikely (hb_in_range<hb_codepoint_t> (u, 0x180Bu, 0x180Du))) props |= UPROPS_MASK_HIDDEN;
       /* TAG characters need similar treatment. Fixes:
        * https://github.com/harfbuzz/harfbuzz/issues/463 */
-      else if (unlikely (hb_in_range (u, 0xE0020u, 0xE007Fu))) props |= UPROPS_MASK_HIDDEN;
+      else if (unlikely (hb_in_range<hb_codepoint_t> (u, 0xE0020u, 0xE007Fu))) props |= UPROPS_MASK_HIDDEN;
       /* COMBINING GRAPHEME JOINER should not be skipped; at least some times.
        * https://github.com/harfbuzz/harfbuzz/issues/554 */
       else if (unlikely (u == 0x034Fu))

@@ -76,6 +76,7 @@ struct ankr
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this) &&
 			  version == 0 &&
+			  c->check_range (this, anchorData) &&
 			  lookupTable.sanitize (c, this, &(this+anchorData))));
   }
 
