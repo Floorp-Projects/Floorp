@@ -908,7 +908,23 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
                             aLoadingNode, aSecurityFlags, aContentPolicyType,
                             aLoadingClientInfo, aController);
   }
-  MOZ_ASSERT(loadInfo, "Please pass security info when creating a channel");
+  if (!loadInfo) {
+    JSContext *cx = nsContentUtils::GetCurrentJSContext();
+    // if coming from JS we like to know the JS stack, otherwise
+    // we just assert that we are able to create a valid loadinfo!
+    if (cx) {
+      JS::UniqueChars chars = xpc_PrintJSStack(cx,
+                                               /*showArgs=*/false,
+                                               /*showLocals=*/false,
+                                               /*showThisProps=*/false);
+      nsDependentCString stackTrace(chars.get());
+      CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::Bug_1541161,
+                                         stackTrace);
+    }
+    MOZ_DIAGNOSTIC_ASSERT(false,
+                          "Please pass security info when creating a channel");
+    return NS_ERROR_INVALID_ARG;
+  }
   return NewChannelFromURIWithProxyFlagsInternal(aURI, aProxyURI, aProxyFlags,
                                                  loadInfo, result);
 }
