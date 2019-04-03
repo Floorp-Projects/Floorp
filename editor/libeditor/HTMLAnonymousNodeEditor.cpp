@@ -27,6 +27,7 @@
 #include "nsIHTMLObjectResizer.h"
 #include "nsStubMutationObserver.h"
 #include "nsINode.h"
+#include "nsIPresShellInlines.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsUtils.h"
 #include "nsLiteralString.h"

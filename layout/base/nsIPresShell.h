@@ -272,7 +272,7 @@ class nsIPresShell : public nsStubDocumentObserver {
   }
 #endif
 
-  mozilla::ServoStyleSet* StyleSet() const { return mStyleSet.get(); }
+  inline mozilla::ServoStyleSet* StyleSet() const;
 
   nsCSSFrameConstructor* FrameConstructor() const {
     return mFrameConstructor.get();
@@ -1778,8 +1778,6 @@ class nsIPresShell : public nsStubDocumentObserver {
       FrameMetrics::ScrollOffsetUpdateType aUpdateType);
 
 #ifdef DEBUG
-  mozilla::UniquePtr<mozilla::ServoStyleSet> CloneStyleSet(
-      mozilla::ServoStyleSet*);
   bool VerifyIncrementalReflow();
   void DoVerifyReflow();
   void VerifyHasDirtyRootAncestor(nsIFrame* aFrame);
@@ -1857,9 +1855,8 @@ class nsIPresShell : public nsStubDocumentObserver {
   // we must share ownership.
   RefPtr<Document> mDocument;
   RefPtr<nsPresContext> mPresContext;
-  // mStyleSet owns it but we maintain a ref, may be null
+  // The document's style set owns it but we maintain a ref, may be null.
   RefPtr<mozilla::StyleSheet> mPrefStyleSheet;
-  mozilla::UniquePtr<mozilla::ServoStyleSet> mStyleSet;
   mozilla::UniquePtr<nsCSSFrameConstructor> mFrameConstructor;
   nsViewManager* mViewManager;  // [WEAK] docViewer owns it so I don't have to
   nsPresArena<8192> mFrameArena;

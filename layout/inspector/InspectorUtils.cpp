@@ -18,6 +18,7 @@
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDOMWindow.h"
+#include "nsIPresShellInlines.h"
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsIMutableArray.h"

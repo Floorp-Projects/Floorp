@@ -44,6 +44,8 @@ enum class MediaFeatureChangeReason {
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MediaFeatureChangeReason)
 
 struct MediaFeatureChange {
+  static const auto kAllChanges = static_cast<MediaFeatureChangeReason>(~0);
+
   RestyleHint mRestyleHint;
   nsChangeHint mChangeHint;
   MediaFeatureChangeReason mReason;

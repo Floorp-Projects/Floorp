@@ -64,6 +64,7 @@ class PresShell final : public nsIPresShell,
                         public nsIObserver,
                         public nsSupportsWeakReference {
   typedef layers::FocusTarget FocusTarget;
+  typedef dom::Element Element;
 
  public:
   PresShell();
@@ -73,8 +74,7 @@ class PresShell final : public nsIPresShell,
 
   static bool AccessibleCaretEnabled(nsIDocShell* aDocShell);
 
-  void Init(Document* aDocument, nsPresContext* aPresContext,
-            nsViewManager* aViewManager, UniquePtr<ServoStyleSet> aStyleSet);
+  void Init(Document*, nsPresContext*, nsViewManager*);
   void Destroy() override;
 
   NS_IMETHOD GetSelectionFromScript(RawSelectionType aRawSelectionType,

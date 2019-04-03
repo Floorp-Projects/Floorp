@@ -847,44 +847,6 @@ nsRootPresContext* nsPresContext::GetRootPresContext() {
   return pc->IsRoot() ? static_cast<nsRootPresContext*>(pc) : nullptr;
 }
 
-void nsPresContext::CompatibilityModeChanged() {
-  if (!mShell) {
-    return;
-  }
-
-  ServoStyleSet* styleSet = mShell->StyleSet();
-  styleSet->CompatibilityModeChanged();
-
-  mShell->EnsureStyleFlush();
-
-  if (mDocument->IsSVGDocument()) {
-    // SVG documents never load quirk.css.
-    return;
-  }
-
-  bool needsQuirkSheet = CompatibilityMode() == eCompatibility_NavQuirks;
-  if (mQuirkSheetAdded == needsQuirkSheet) {
-    return;
-  }
-
-  auto cache = nsLayoutStylesheetCache::Singleton();
-  StyleSheet* sheet = cache->QuirkSheet();
-
-  if (needsQuirkSheet) {
-    // quirk.css needs to come after html.css; we just keep it at the end.
-    DebugOnly<nsresult> rv =
-        styleSet->AppendStyleSheet(SheetType::Agent, sheet);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "failed to insert quirk.css");
-  } else {
-    DebugOnly<nsresult> rv =
-        styleSet->RemoveStyleSheet(SheetType::Agent, sheet);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "failed to remove quirk.css");
-  }
-
-  mQuirkSheetAdded = needsQuirkSheet;
-  mShell->ApplicableStylesChanged();
-}
-
 // Helper function for setting Anim Mode on image
 static void SetImgAnimModeOnImgReq(imgIRequest* aImgReq, uint16_t aMode) {
   if (aImgReq) {

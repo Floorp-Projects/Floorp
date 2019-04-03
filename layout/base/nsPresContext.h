@@ -295,11 +295,6 @@ class nsPresContext : public nsISupports,
   nsCompatibility CompatibilityMode() const;
 
   /**
-   * Notify the context that the document's compatibility mode has changed
-   */
-  void CompatibilityModeChanged();
-
-  /**
    * Access the image animation mode for this context
    */
   uint16_t ImageAnimationMode() const { return mImageAnimationMode; }

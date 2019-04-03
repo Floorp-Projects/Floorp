@@ -588,6 +588,29 @@ nsRadioGroupStruct* DocumentOrShadowRoot::GetOrCreateRadioGroup(
 
 void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
                                     nsCycleCollectionTraversalCallback& cb) {
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStyleSheets)
+  for (StyleSheet* sheet : tmp->mStyleSheets) {
+    if (!sheet->IsApplicable()) {
+      continue;
+    }
+    // The style set or mServoStyles keep more references to it if the sheet is
+    // applicable.
+    if (tmp->mKind == Kind::ShadowRoot) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mServoStyles->sheets[i]");
+      cb.NoteXPCOMChild(sheet);
+    } else if (tmp->AsNode().AsDocument()->StyleSetFilled()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
+          cb, "mStyleSet->mStyleSheets[SheetType::Author][i]");
+      cb.NoteXPCOMChild(sheet);
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
+          cb, "mStyleSet->mRawSet.stylist.stylesheets.author[i]");
+      cb.NoteXPCOMChild(sheet);
+    }
+  }
+  for (auto iter = tmp->mIdentifierMap.ConstIter(); !iter.Done(); iter.Next()) {
+    iter.Get()->Traverse(&cb);
+  }
   for (auto iter = tmp->mRadioGroups.Iter(); !iter.Done(); iter.Next()) {
     nsRadioGroupStruct* radioGroup = iter.UserData();
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
@@ -604,6 +627,8 @@ void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
 }
 
 void DocumentOrShadowRoot::Unlink(DocumentOrShadowRoot* tmp) {
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMStyleSheets)
+  tmp->mIdentifierMap.Clear();
   tmp->mRadioGroups.Clear();
 }
 
