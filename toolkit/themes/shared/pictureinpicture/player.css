@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root {
+  --btn-bg-color: rgba(50,50,50,0.55);
+  --close-btn-bg-color: rgb(211,216,220);
+}
+
 body {
   margin: 0;
 }
@@ -14,5 +19,67 @@ body {
 }
 
 browser {
+  -moz-window-dragging: drag;
   flex: 1;
+}
+
+#controls {
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
+.control-item {
+  -moz-window-dragging: no-drag;
+  background: var(--btn-bg-color);
+  border-radius: 4px;
+  bottom: 15px;
+  cursor: pointer;
+  height: 15%;
+  max-height: 32px;
+  max-width: 32px;
+  min-height: 16px;
+  min-width: 16px;
+  position: absolute;
+  width: 10%;
+}
+
+#close {
+  background-color: var(--close-btn-bg-color);
+  background-image: url("chrome://global/skin/pictureinpicture/close-pip.svg");
+  right: 10px;
+  top: 10px;
+}
+
+#play {
+  background-image: url("chrome://global/skin/pictureinpicture/play.svg");
+  display: block;
+  left: 55%;
+}
+
+#pause {
+  background-image: url("chrome://global/skin/pictureinpicture/pause.svg");
+  display: none;
+  left: 55%;
+}
+
+.playing #play {
+  display: none;
+}
+
+.playing #pause {
+  display: block;
+}
+
+#unpip {
+  left: 45%;
+}
+
+#unpip {
+  background-image: url("chrome://global/skin/pictureinpicture/unpip.svg");
+  background-position: 60%;
+  background-repeat: no-repeat;
+  background-size: 80%;
 }
