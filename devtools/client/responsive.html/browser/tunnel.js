@@ -430,7 +430,6 @@ MessageManagerTunnel.prototype = {
     // Messages sent to RemoteWebProgress.jsm
     "Content:LoadURIResult",
     "Content:LocationChange",
-    "Content:ProgressChange",
     "Content:SecurityChange",
     "Content:StateChange",
     // Messages sent to browser.js

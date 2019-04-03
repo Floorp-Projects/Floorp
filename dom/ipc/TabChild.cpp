@@ -540,8 +540,9 @@ nsresult TabChild::Init(mozIDOMWindowProxy* aParent) {
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
   MOZ_ASSERT(docShell);
 
-  const uint32_t notifyMask =
-      nsIWebProgress::NOTIFY_STATUS | nsIWebProgress::NOTIFY_CONTENT_BLOCKING;
+  const uint32_t notifyMask = nsIWebProgress::NOTIFY_PROGRESS |
+                              nsIWebProgress::NOTIFY_STATUS |
+                              nsIWebProgress::NOTIFY_CONTENT_BLOCKING;
 
   mStatusFilter = new nsBrowserStatusFilter();
 
@@ -3289,7 +3290,22 @@ NS_IMETHODIMP TabChild::OnProgressChange(nsIWebProgress* aWebProgress,
                                          int32_t aMaxSelfProgress,
                                          int32_t aCurTotalProgress,
                                          int32_t aMaxTotalProgress) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!IPCOpen()) {
+    return NS_OK;
+  }
+
+  Maybe<WebProgressData> webProgressData;
+  RequestData requestData;
+
+  nsresult rv = PrepareProgressListenerData(aWebProgress, aRequest,
+                                            webProgressData, requestData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  Unused << SendOnProgressChange(webProgressData, requestData, aCurSelfProgress,
+                                 aMaxSelfProgress, aCurTotalProgress,
+                                 aMaxTotalProgress);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP TabChild::OnLocationChange(nsIWebProgress* aWebProgress,
@@ -3348,6 +3364,9 @@ NS_IMETHODIMP TabChild::OnProgressChange64(nsIWebProgress* aWebProgress,
                                            int64_t aMaxSelfProgress,
                                            int64_t aCurTotalProgress,
                                            int64_t aMaxTotalProgress) {
+  // All the events we receive are filtered through an nsBrowserStatusFilter,
+  // which accepts ProgressChange64 events, but truncates the progress values to
+  // uint32_t and calls OnProgressChange.
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

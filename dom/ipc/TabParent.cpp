@@ -2211,6 +2211,42 @@ mozilla::ipc::IPCResult TabParent::RecvRegisterProtocolHandler(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult TabParent::RecvOnProgressChange(
+    const Maybe<WebProgressData>& aWebProgressData,
+    const RequestData& aRequestData, const int32_t aCurSelfProgress,
+    const int32_t aMaxSelfProgress, const int32_t aCurTotalProgress,
+    const int32_t aMaxTotalProgress) {
+  nsCOMPtr<nsIBrowser> browser =
+      mFrameElement ? mFrameElement->AsBrowser() : nullptr;
+
+  if (!browser) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIWebProgress> manager;
+  nsresult rv = browser->GetRemoteWebProgressManager(getter_AddRefs(manager));
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
+
+  nsCOMPtr<nsIWebProgressListener> managerAsListener =
+      do_QueryInterface(manager);
+
+  if (!managerAsListener) {
+    // We are no longer remote, so we cannot propagate this message.
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIWebProgress> webProgress;
+  nsCOMPtr<nsIRequest> request;
+  ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
+                                   webProgress, request);
+
+  Unused << managerAsListener->OnProgressChange(
+      webProgress, request, aCurSelfProgress, aMaxSelfProgress,
+      aCurTotalProgress, aMaxTotalProgress);
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult TabParent::RecvOnStatusChange(
     const Maybe<WebProgressData>& aWebProgressData,
     const RequestData& aRequestData, const nsresult aStatus,

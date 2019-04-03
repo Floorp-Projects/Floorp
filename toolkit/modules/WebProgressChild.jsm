@@ -27,10 +27,12 @@ class WebProgressChild {
 
     this.inLoadURI = false;
 
-    // NOTIFY_CONTENT_BLOCKING and NOTIFY_STATUS_CHANGE are handled by PBrowser.
+    // NOTIFY_PROGRESS, NOTIFY_STATUS, and NOTIFY_CONTENT_BLOCKING are handled
+    // by PBrowser.
     let notifyCode = Ci.nsIWebProgress.NOTIFY_ALL &
-                        ~Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING &
-                        ~Ci.nsIWebProgress.NOTIFY_STATUS;
+                        ~Ci.nsIWebProgress.NOTIFY_PROGRESS &
+                        ~Ci.nsIWebProgress.NOTIFY_STATUS &
+                        ~Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING;
 
     this._filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
                      .createInstance(Ci.nsIWebProgress);
@@ -116,24 +118,6 @@ class WebProgressChild {
     }
 
     this._send("Content:StateChange", json);
-  }
-
-  // Note: Because the nsBrowserStatusFilter timeout runnable is
-  // SystemGroup-labeled, this method should not modify this.mm.content DOM or
-  // run this.mm.content JS.
-  onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
-    let json = this._setupJSON(aWebProgress, aRequest);
-
-    json.curSelf = aCurSelf;
-    json.maxSelf = aMaxSelf;
-    json.curTotal = aCurTotal;
-    json.maxTotal = aMaxTotal;
-
-    this._send("Content:ProgressChange", json);
-  }
-
-  onProgressChange64(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
-    this.onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal);
   }
 
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
