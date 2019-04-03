@@ -975,7 +975,7 @@ bool BaselineCacheIRCompiler::callTypeUpdateIC(
     masm.push(ICTailCallReg);
   }
   masm.push(ICStubReg);
-  masm.loadPtr(Address(ICStubReg, ICUpdatedStub::offsetOfFirstUpdateStub()),
+  masm.loadPtr(Address(ICStubReg, ICCacheIR_Updated::offsetOfFirstUpdateStub()),
                ICStubReg);
   masm.call(Address(ICStubReg, ICStub::offsetOfStubCode()));
   masm.pop(ICStubReg);
@@ -1001,8 +1001,8 @@ bool BaselineCacheIRCompiler::callTypeUpdateIC(
   masm.loadPtr(Address(BaselineFrameReg, 0), scratch);
   masm.pushBaselineFramePtr(scratch, scratch);
 
-  using Fn = bool (*)(JSContext*, BaselineFrame*, ICUpdatedStub*, HandleValue,
-                      HandleValue);
+  using Fn = bool (*)(JSContext*, BaselineFrame*, ICCacheIR_Updated*,
+                      HandleValue, HandleValue);
   callVM<Fn, DoTypeUpdateFallback>(masm);
 
   masm.PopRegsInMask(saveRegs);
