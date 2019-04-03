@@ -52,6 +52,7 @@ add_task(async function() {
   await testParamsTab();
   await testResponseTab();
   await testTimingsTab();
+  await closePanelOnEsc();
   return teardown(monitor);
 
   function getSelectedIndex(state) {
@@ -251,5 +252,17 @@ add_task(async function() {
       `The ${tabName} tab in the network details pane should be selected.`);
 
     return document.querySelector(".network-details-panel .tab-panel");
+  }
+
+  // This test will timeout on failure
+  async function closePanelOnEsc() {
+    EventUtils.sendKey("ESCAPE", window);
+
+    await waitUntil(() => {
+      return document.querySelector(".network-details-panel") == null;
+    });
+
+    is(document.querySelectorAll(".network-details-panel").length, 0,
+      "Network details panel should close on ESC key");
   }
 });
