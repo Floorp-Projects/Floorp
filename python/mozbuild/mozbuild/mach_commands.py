@@ -1431,8 +1431,7 @@ class PackageFrontend(MachCommandBase):
                 records[record.filename] = DownloadRecord(
                     url, record.filename, record.size, record.digest,
                     record.algorithm, unpack=record.unpack,
-                    version=record.version, visibility=record.visibility,
-                    setup=record.setup)
+                    version=record.version, visibility=record.visibility)
 
         if from_build:
             if 'MOZ_AUTOMATION' in os.environ:
@@ -1577,7 +1576,7 @@ class PackageFrontend(MachCommandBase):
                     'sha256': h.hexdigest(),
                 }
             if record.unpack and not no_unpack:
-                unpack_file(local, record.setup)
+                unpack_file(local)
                 os.unlink(local)
 
         if not downloaded:
