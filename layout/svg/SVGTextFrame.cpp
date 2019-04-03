@@ -5222,9 +5222,20 @@ bool SVGTextFrame::UpdateFontSizeScaleFactor() {
     mFontSizeScaleFactor = contextScale;
   } else if (maxSize / minSize > CLAMP_MAX_SIZE / CLAMP_MIN_SIZE) {
     // We can't scale the font sizes so that all of the text frames lie
-    // within our ideal font size range, so we treat the minimum as more
-    // important and just scale so that minSize = CLAMP_MIN_SIZE.
-    mFontSizeScaleFactor = CLAMP_MIN_SIZE / minSize;
+    // within our ideal font size range.
+    // Heuristically, if the maxTextRunSize is within the CLAMP_MAX_SIZE
+    // as a reasonable value, it's likely to be the user's intent to
+    // get a valid font for the maxTextRunSize one, we should honor it.
+    // The same for minTextRunSize.
+    if (maxTextRunSize <= CLAMP_MAX_SIZE) {
+      mFontSizeScaleFactor = CLAMP_MAX_SIZE / maxSize;
+    } else if (minTextRunSize >= CLAMP_MIN_SIZE) {
+      mFontSizeScaleFactor = CLAMP_MIN_SIZE / minSize;
+    } else {
+      // So maxTextRunSize is too big, minTextRunSize is too small,
+      // we can't really do anything for this case, just leave it as is.
+      mFontSizeScaleFactor = contextScale;
+    }
   } else if (minTextRunSize < CLAMP_MIN_SIZE) {
     mFontSizeScaleFactor = CLAMP_MIN_SIZE / minSize;
   } else {
