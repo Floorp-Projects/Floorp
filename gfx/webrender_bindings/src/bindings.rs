@@ -7,6 +7,7 @@ use std::os::windows::ffi::OsStringExt;
 use std::os::unix::ffi::OsStringExt;
 use std::io::Cursor;
 use std::{mem, slice, ptr, env};
+use std::marker::PhantomData;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -186,19 +187,19 @@ impl WrStackingContextClip {
     }
 }
 
-fn make_slice<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
+unsafe fn make_slice<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
     if ptr.is_null() {
         &[]
     } else {
-        unsafe { slice::from_raw_parts(ptr, len) }
+        slice::from_raw_parts(ptr, len)
     }
 }
 
-fn make_slice_mut<'a, T>(ptr: *mut T, len: usize) -> &'a mut [T] {
+unsafe fn make_slice_mut<'a, T>(ptr: *mut T, len: usize) -> &'a mut [T] {
     if ptr.is_null() {
         &mut []
     } else {
-        unsafe { slice::from_raw_parts_mut(ptr, len) }
+        slice::from_raw_parts_mut(ptr, len)
     }
 }
 
@@ -319,41 +320,45 @@ pub extern "C" fn wr_vec_u8_free(v: WrVecU8) {
 }
 
 #[repr(C)]
-pub struct ByteSlice {
+pub struct ByteSlice<'a> {
     buffer: *const u8,
     len: usize,
+    _phantom: PhantomData<&'a ()>,
 }
 
-impl ByteSlice {
-    pub fn new(slice: &[u8]) -> ByteSlice {
+impl<'a> ByteSlice<'a> {
+    pub fn new(slice: &'a [u8]) -> ByteSlice<'a> {
         ByteSlice {
             buffer: slice.as_ptr(),
             len: slice.len(),
+            _phantom: PhantomData,
         }
     }
 
-    pub fn as_slice(&self) -> &[u8] {
-        make_slice(self.buffer, self.len)
+    pub fn as_slice(&self) -> &'a [u8] {
+        unsafe { make_slice(self.buffer, self.len) }
     }
 }
 
 #[repr(C)]
-pub struct MutByteSlice {
+pub struct MutByteSlice<'a> {
     buffer: *mut u8,
     len: usize,
+    _phantom: PhantomData<&'a ()>,
 }
 
-impl MutByteSlice {
-    pub fn new(slice: &mut [u8]) -> MutByteSlice {
+impl<'a> MutByteSlice<'a> {
+    pub fn new(slice: &'a mut [u8]) -> MutByteSlice<'a> {
         let len = slice.len();
         MutByteSlice {
             buffer: slice.as_mut_ptr(),
             len: len,
+            _phantom: PhantomData,
         }
     }
 
-    pub fn as_mut_slice(&mut self) -> &mut [u8] {
-        make_slice_mut(self.buffer, self.len)
+    pub fn as_mut_slice(&mut self) -> &'a mut [u8] {
+        unsafe { make_slice_mut(self.buffer, self.len) }
     }
 }
 
@@ -447,7 +452,7 @@ impl ExternalImageHandler for WrExternalImageHandler {
             uv: TexelRect::new(image.u0, image.v0, image.u1, image.v1),
             source: match image.image_type {
                 WrExternalImageType::NativeTexture => ExternalImageSource::NativeTexture(image.handle),
-                WrExternalImageType::RawData => ExternalImageSource::RawData(make_slice(image.buff, image.size)),
+                WrExternalImageType::RawData => ExternalImageSource::RawData(unsafe { make_slice(image.buff, image.size) }),
                 WrExternalImageType::Invalid => ExternalImageSource::Invalid,
             },
         }
@@ -710,7 +715,7 @@ pub extern "C" fn wr_renderer_map_and_recycle_screenshot(
 ) -> bool {
     renderer.map_and_recycle_screenshot(
         handle,
-        make_slice_mut(dst_buffer, dst_buffer_len),
+        unsafe { make_slice_mut(dst_buffer, dst_buffer_len) },
         dst_stride,
     )
 }
@@ -1468,7 +1473,7 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
     };
 
     if transform_count > 0 {
-        let transform_slice = make_slice(transform_array, transform_count);
+        let transform_slice = unsafe { make_slice(transform_array, transform_count) };
 
         properties.transforms.reserve(transform_slice.len());
         for element in transform_slice.iter() {
@@ -1482,7 +1487,7 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
     }
 
     if opacity_count > 0 {
-        let opacity_slice = make_slice(opacity_array, opacity_count);
+        let opacity_slice = unsafe { make_slice(opacity_array, opacity_count) };
 
         properties.floats.reserve(opacity_slice.len());
         for element in opacity_slice.iter() {
@@ -1512,7 +1517,7 @@ pub extern "C" fn wr_transaction_append_transform_properties(
         floats: Vec::new(),
     };
 
-    let transform_slice = make_slice(transform_array, transform_count);
+    let transform_slice = unsafe { make_slice(transform_array, transform_count) };
     properties.transforms.reserve(transform_slice.len());
     for element in transform_slice.iter() {
         let prop = PropertyValue {
@@ -2029,22 +2034,22 @@ pub extern "C" fn wr_dp_push_stacking_context(
 ) -> WrSpatialId {
     debug_assert!(unsafe { !is_in_render_thread() });
 
-    let c_filters = make_slice(filters, filter_count);
+    let c_filters = unsafe { make_slice(filters, filter_count) };
     let mut filters : Vec<FilterOp> = c_filters.iter().map(|c_filter| {
                                                            *c_filter
     }).collect();
 
-    let c_filter_datas = make_slice(filter_datas, filter_datas_count);
+    let c_filter_datas = unsafe { make_slice(filter_datas, filter_datas_count) };
     let r_filter_datas : Vec<FilterData> = c_filter_datas.iter().map(|c_filter_data| {
         FilterData {
             func_r_type: c_filter_data.funcR_type,
-            r_values: make_slice(c_filter_data.R_values, c_filter_data.R_values_count).to_vec(),
+            r_values: unsafe { make_slice(c_filter_data.R_values, c_filter_data.R_values_count).to_vec() },
             func_g_type: c_filter_data.funcG_type,
-            g_values: make_slice(c_filter_data.G_values, c_filter_data.G_values_count).to_vec(),
+            g_values: unsafe { make_slice(c_filter_data.G_values, c_filter_data.G_values_count).to_vec() },
             func_b_type: c_filter_data.funcB_type,
-            b_values: make_slice(c_filter_data.B_values, c_filter_data.B_values_count).to_vec(),
+            b_values: unsafe { make_slice(c_filter_data.B_values, c_filter_data.B_values_count).to_vec() },
             func_a_type: c_filter_data.funcA_type,
-            a_values: make_slice(c_filter_data.A_values, c_filter_data.A_values_count).to_vec(),
+            a_values: unsafe { make_slice(c_filter_data.A_values, c_filter_data.A_values_count).to_vec() },
         }
     }).collect();
 
@@ -2163,7 +2168,7 @@ pub extern "C" fn wr_dp_define_clipchain(state: &mut WrState,
         .map(|id| ClipChainId(*id, state.pipeline_id));
 
     let pipeline_id = state.pipeline_id;
-    let clips = make_slice(clips, clips_count)
+    let clips = unsafe { make_slice(clips, clips_count) }
         .iter()
         .map(|clip_id| clip_id.to_webrender(pipeline_id));
 
@@ -2185,7 +2190,7 @@ pub extern "C" fn wr_dp_define_clip_with_parent_clip(
         &mut state.frame_builder,
         parent.to_webrender(state.pipeline_id),
         clip_rect,
-        make_slice(complex, complex_count),
+        unsafe { make_slice(complex, complex_count) },
         unsafe { mask.as_ref() }.map(|m| *m),
     )
 }
@@ -2203,7 +2208,7 @@ pub extern "C" fn wr_dp_define_clip_with_parent_clip_chain(
         &mut state.frame_builder,
         parent.to_webrender(state.pipeline_id),
         clip_rect,
-        make_slice(complex, complex_count),
+        unsafe { make_slice(complex, complex_count) },
         unsafe { mask.as_ref() }.map(|m| *m),
     )
 }
@@ -2500,7 +2505,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
                                   glyph_options: *const GlyphOptions) {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    let glyph_slice = make_slice(glyphs, glyph_count as usize);
+    let glyph_slice = unsafe { make_slice(glyphs, glyph_count as usize) };
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
@@ -2656,7 +2661,7 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                              outset: SideOffsets2D<f32>) {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    let stops_slice = make_slice(stops, stops_count);
+    let stops_slice = unsafe { make_slice(stops, stops_count) };
     let stops_vector = stops_slice.to_owned();
 
     let gradient = state.frame_builder.dl_builder.create_gradient(
@@ -2703,7 +2708,7 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
                                                     outset: SideOffsets2D<f32>) {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    let stops_slice = make_slice(stops, stops_count);
+    let stops_slice = unsafe { make_slice(stops, stops_count) };
     let stops_vector = stops_slice.to_owned();
 
     let slice = SideOffsets2D::new(
@@ -2756,7 +2761,7 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                              tile_spacing: LayoutSize) {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    let stops_slice = make_slice(stops, stops_count);
+    let stops_slice = unsafe { make_slice(stops, stops_count) };
     let stops_vector = stops_slice.to_owned();
 
     let gradient = state.frame_builder
@@ -2792,7 +2797,7 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                              tile_spacing: LayoutSize) {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    let stops_slice = make_slice(stops, stops_count);
+    let stops_slice = unsafe { make_slice(stops, stops_count) };
     let stops_vector = stops_slice.to_owned();
 
     let gradient = state.frame_builder
