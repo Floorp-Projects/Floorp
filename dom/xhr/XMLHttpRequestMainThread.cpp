@@ -1807,7 +1807,9 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
   }
 
   mFlagParseBody = true;
-  ChangeState(XMLHttpRequest_Binding::HEADERS_RECEIVED);
+  if (mErrorLoad == ErrorType::eOK) {
+    ChangeState(XMLHttpRequest_Binding::HEADERS_RECEIVED);
+  }
 
   ResetResponse();
 
