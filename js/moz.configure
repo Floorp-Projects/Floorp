@@ -185,36 +185,6 @@ set_define('JS_CODEGEN_MIPS64', jit_codegen.mips64)
 set_define('JS_CODEGEN_X86', jit_codegen.x86)
 set_define('JS_CODEGEN_X64', jit_codegen.x64)
 
-@depends('--enable-ion', simulator, target, moz_debug)
-def jit_disasm_arm(ion_enabled, simulator, target, debug):
-    if not ion_enabled:
-        return
-
-    if simulator and debug:
-        if getattr(simulator, 'arm', None):
-            return True
-
-    if target.cpu == 'arm' and debug:
-        return True
-
-set_config('JS_DISASM_ARM', jit_disasm_arm)
-set_define('JS_DISASM_ARM', jit_disasm_arm)
-
-@depends('--enable-ion', simulator, target, moz_debug)
-def jit_disasm_arm64(ion_enabled, simulator, target, debug):
-    if not ion_enabled:
-        return
-
-    if simulator and debug:
-        if getattr(simulator, 'arm64', None):
-            return True
-
-    if target.cpu == 'aarch64' and debug:
-        return True
-
-set_config('JS_DISASM_ARM64', jit_disasm_arm64)
-set_define('JS_DISASM_ARM64', jit_disasm_arm64)
-
 # Profiling
 # =======================================================
 js_option('--enable-instruments', env='MOZ_INSTRUMENTS',
@@ -361,6 +331,37 @@ set_define('JS_STRUCTURED_SPEW',
            depends_if('--enable-jitspew')(lambda _: True))
 set_config('JS_STRUCTURED_SPEW',
            depends_if('--enable-jitspew')(lambda _: True))
+
+@depends('--enable-ion', '--enable-jitspew', simulator, target, moz_debug)
+def jit_disasm_arm(ion_enabled, spew, simulator, target, debug):
+    if not ion_enabled:
+        return
+
+    if simulator and (debug or spew):
+        if getattr(simulator, 'arm', None):
+            return True
+
+    if target.cpu == 'arm' and (debug or spew):
+        return True
+
+set_config('JS_DISASM_ARM', jit_disasm_arm)
+set_define('JS_DISASM_ARM', jit_disasm_arm)
+
+@depends('--enable-ion', '--enable-jitspew', simulator, target, moz_debug)
+def jit_disasm_arm64(ion_enabled, spew, simulator, target, debug):
+    if not ion_enabled:
+        return
+
+    if simulator and (debug or spew):
+        if getattr(simulator, 'arm64', None):
+            return True
+
+    if target.cpu == 'aarch64' and (debug or spew):
+        return True
+
+set_config('JS_DISASM_ARM64', jit_disasm_arm64)
+set_define('JS_DISASM_ARM64', jit_disasm_arm64)
+
 # When enabled, masm will generate assumeUnreachable calls that act as
 # assertions in the generated code. This option is worth disabling when you
 # have to track mutated values through the generated code, to avoid constantly
