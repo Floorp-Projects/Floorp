@@ -14,8 +14,8 @@ SimpleTest.requestFlakyTimeout("gUM and WebAudio data is async to main thread. "
                                "We need a timeout to see that something does " +
                                "NOT happen to data.");
 
-let context = new AudioContext();
-let analyser = context.createAnalyser();
+var context = new AudioContext();
+var analyser = context.createAnalyser();
 
 function wait(millis, resolveWithThis) {
   return new Promise(resolve => setTimeout(() => resolve(resolveWithThis), millis));
@@ -26,15 +26,15 @@ function binIndexForFrequency(frequency) {
 }
 
 function waitForAudio(analysisFunction, cancelPromise) {
-  let data = new Uint8Array(analyser.frequencyBinCount);
-  let cancelled = false;
-  let cancelledMsg = "";
+  var data = new Uint8Array(analyser.frequencyBinCount);
+  var cancelled = false;
+  var cancelledMsg = "";
   cancelPromise.then(msg => {
     cancelled = true;
     cancelledMsg = msg;
   });
   return new Promise((resolve, reject) => {
-    let loop = () => {
+    var loop = () => {
       analyser.getByteFrequencyData(data);
       if (cancelled) {
         reject(new Error("waitForAudio cancelled: " + cancelledMsg));
@@ -50,8 +50,20 @@ function waitForAudio(analysisFunction, cancelPromise) {
   });
 }
 
-async function test(sourceNode) {
+SpecialPowers.pushPrefEnv({
+  set: [
+    // This test expects the fake audio device, specifically for the tones
+    // it outputs. Explicitly disable the audio loopback device and enable
+    // fake streams.
+    ['media.audio_loopback_dev', ''],
+    ['media.navigator.streams.fake', true]
+  ]
+}).then(async () => {
   try {
+    let stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    stream.onended = () => ended = true;
+    let source = context.createMediaStreamSource(stream);
+    source.connect(analyser);
     await analyser.connect(context.destination);
 
     ok(true, "Waiting for audio to pass through the analyser")
@@ -71,43 +83,12 @@ async function test(sourceNode) {
                         () => Promise.resolve());
 
     ok(true, "Audio is still flowing");
+    SimpleTest.finish();
   } catch(e) {
     ok(false, "Error executing test: " + e + (e.stack ? "\n" + e.stack : ""));
     SimpleTest.finish();
   }
-}
-
-(async function() {
-  try {
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        // This test expects the fake audio device, specifically for the tones
-        // it outputs. Explicitly disable the audio loopback device and enable
-        // fake streams.
-        ['media.audio_loopback_dev', ''],
-        ['media.navigator.streams.fake', true]
-      ]
-    });
-
-    // Test stream source GC
-    let stream = await navigator.mediaDevices.getUserMedia({audio: true});
-    let source = context.createMediaStreamSource(stream);
-    stream = null;
-    source.connect(analyser);
-    await test(source);
-
-    // Test track source GC
-    stream = await navigator.mediaDevices.getUserMedia({audio: true});
-    source = context.createMediaStreamTrackSource(stream.getAudioTracks()[0]);
-    stream = null;
-    source.connect(analyser);
-    await test(source);
-  } catch(e) {
-    ok(false, `Error executing test: ${e}${e.stack ? "\n" + e.stack : ""}`);
-  } finally {
-    SimpleTest.finish();
-  }
-})();
+});
 </script>
 </pre>
 </body>

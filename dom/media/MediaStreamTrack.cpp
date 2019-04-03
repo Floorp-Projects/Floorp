@@ -112,10 +112,6 @@ class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
     mGraph->DispatchToMainThreadStableState(
         NS_NewRunnableFunction("MediaStreamTrack::MSGListener::mTrackReleaser",
                                [self = RefPtr<MSGListener>(this)]() {}));
-
-    mGraph->Dispatch(NS_NewRunnableFunction(
-        "MediaStreamTrack::MSGListener::DoNotifyEnded",
-        [self = RefPtr<MSGListener>(this)]() { self->DoNotifyEnded(); }));
   }
 
   void DoNotifyEnded() {
