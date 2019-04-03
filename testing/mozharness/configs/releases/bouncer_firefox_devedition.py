@@ -1,13 +1,9 @@
 # lint_ignore=E501
 config = {
-    "shipped-locales-url": "https://hg.mozilla.org/%(repo)s/raw-file/%(revision)s/browser/locales/shipped-locales",
     "products": {
         "installer": {
             "product-name": "Devedition-%(version)s",
             "check_uptake": True,
-            "alias": "firefox-devedition-latest",
-            "ssl-only": False,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/devedition/releases/%(version)s/linux-i686/:lang/firefox-%(version)s.tar.bz2",
@@ -34,9 +30,6 @@ config = {
         "installer-ssl": {
             "product-name": "Devedition-%(version)s-SSL",
             "check_uptake": True,
-            "alias": "firefox-devedition-latest-ssl",
-            "ssl-only": True,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/devedition/releases/%(version)s/linux-i686/:lang/firefox-%(version)s.tar.bz2",
@@ -63,9 +56,6 @@ config = {
         "msi": {
             "product-name": "Devedition-%(version)s-msi-SSL",
             "check_uptake": True,
-            "alias": "firefox-devedition-msi-latest-ssl",
-            "ssl-only": True,
-            "add-locales": True,
             "paths": {
                 "win32": {
                     "path": "/devedition/releases/%(version)s/win32/:lang/Firefox%%20Setup%%20%(version)s.msi",
@@ -80,9 +70,6 @@ config = {
         "stub-installer": {
             "product-name": "Devedition-%(version)s-stub",
             "check_uptake": True,
-            "alias": "firefox-devedition-stub",
-            "ssl-only": True,
-            "add-locales": True,
             "paths": {
                 "win32": {
                     "path": "/devedition/releases/%(version)s/win32/:lang/Firefox%%20Installer.exe",
@@ -97,8 +84,6 @@ config = {
         "complete-mar": {
             "product-name": "Devedition-%(version)s-Complete",
             "check_uptake": True,
-            "ssl-only": False,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/devedition/releases/%(version)s/update/linux-i686/:lang/firefox-%(version)s.complete.mar",
@@ -127,8 +112,6 @@ config = {
         "releases-dir": {
             "product-name": "Devedition-%(version)s-Partial-%(prev_version)s",
             "check_uptake": True,
-            "ssl-only": False,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/devedition/releases/%(version)s/update/linux-i686/:lang/firefox-%(prev_version)s-%(version)s.partial.mar",
