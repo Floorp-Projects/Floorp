@@ -45,6 +45,7 @@
 #include "nsDeque.h"
 #include "nsISHistoryListener.h"
 
+class nsBrowserStatusFilter;
 class nsIDOMWindowUtils;
 class nsIHttpChannel;
 class nsIRequest;
@@ -804,6 +805,7 @@ class TabChild final : public TabChildBase,
   nsCOMPtr<nsIURI> mLastURI;
   RefPtr<ContentChild> mManager;
   RefPtr<BrowsingContext> mBrowsingContext;
+  RefPtr<nsBrowserStatusFilter> mStatusFilter;
   uint32_t mChromeFlags;
   uint32_t mMaxTouchPoints;
   layers::LayersId mLayersId;
@@ -820,7 +822,7 @@ class TabChild final : public TabChildBase,
   SetAllowedTouchBehaviorCallback mSetAllowedTouchBehaviorCallback;
   bool mHasValidInnerSize;
   bool mDestroyed;
-  bool mProgressListenerRegistered;
+
   // Position of client area relative to the outer window
   LayoutDeviceIntPoint mClientOffset;
   // Position of tab, relative to parent widget (typically the window)

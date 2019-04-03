@@ -60,6 +60,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Unused.h"
+#include "nsBrowserStatusFilter.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsEmbedCID.h"
@@ -381,7 +382,6 @@ TabChild::TabChild(ContentChild* aManager, const TabId& aTabId,
       mIgnoreKeyPressEvent(false),
       mHasValidInnerSize(false),
       mDestroyed(false),
-      mProgressListenerRegistered(false),
       mUniqueId(aTabId),
       mHasSiblings(false),
       mIsTransparent(false),
@@ -540,11 +540,22 @@ nsresult TabChild::Init(mozIDOMWindowProxy* aParent) {
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
   MOZ_ASSERT(docShell);
 
-  nsCOMPtr<nsIWebProgress> webProgress = do_QueryInterface(docShell);
-  nsresult rv = webProgress->AddProgressListener(
-      this, nsIWebProgress::NOTIFY_CONTENT_BLOCKING);
+  const uint32_t notifyMask = nsIWebProgress::NOTIFY_CONTENT_BLOCKING;
+
+  mStatusFilter = new nsBrowserStatusFilter();
+
+  RefPtr<nsIEventTarget> eventTarget =
+      TabGroup()->EventTargetFor(TaskCategory::Network);
+
+  mStatusFilter->SetTarget(eventTarget);
+  nsresult rv = mStatusFilter->AddProgressListener(this, notifyMask);
   NS_ENSURE_SUCCESS(rv, rv);
-  mProgressListenerRegistered = true;
+
+  {
+    nsCOMPtr<nsIWebProgress> webProgress = do_QueryInterface(docShell);
+    rv = webProgress->AddProgressListener(mStatusFilter, notifyMask);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   docShell->SetAffectPrivateSessionLifetime(
       mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME);
@@ -634,11 +645,13 @@ void TabChild::UpdateFrameType() {
 NS_IMPL_CYCLE_COLLECTION_CLASS(TabChild)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TabChild, TabChildBase)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStatusFilter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWebNav)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowsingContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TabChild, TabChildBase)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStatusFilter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWebNav)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -930,6 +943,16 @@ void TabChild::DestroyWindow() {
     mBrowsingContext = nullptr;
   }
 
+  if (mStatusFilter) {
+    if (nsCOMPtr<nsIWebProgress> webProgress =
+            do_QueryInterface(WebNavigation())) {
+      webProgress->RemoveProgressListener(mStatusFilter);
+    }
+
+    mStatusFilter->RemoveProgressListener(this);
+    mStatusFilter = nullptr;
+  }
+
   if (mCoalescedMouseEventFlusher) {
     mCoalescedMouseEventFlusher->RemoveObserver();
     mCoalescedMouseEventFlusher = nullptr;
@@ -962,14 +985,6 @@ void TabChild::DestroyWindow() {
       sTabChildren = nullptr;
     }
     mLayersId = layers::LayersId{0};
-  }
-
-  if (mProgressListenerRegistered) {
-    nsCOMPtr<nsIWebProgress> webProgress = do_QueryInterface(WebNavigation());
-    if (webProgress) {
-      webProgress->RemoveProgressListener(this);
-      mProgressListenerRegistered = false;
-    }
   }
 }
 
