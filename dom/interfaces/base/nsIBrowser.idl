@@ -5,7 +5,7 @@
 
 interface nsIContentSecurityPolicy;
 interface nsIPrincipal;
-interface nsIURI;
+interface nsIWebProgress;
 
 webidl FrameLoader;
 
@@ -61,6 +61,14 @@ interface nsIBrowser : nsISupports
   readonly attribute boolean isRemoteBrowser;
 
   /**
+   * The nsIWebProgress instance responsible for handling progress events
+   * from the content process.
+   *
+   * Will always be non-null when isRemoteBrowser is true.
+   */
+  readonly attribute nsIWebProgress remoteWebProgressManager;
+
+  /**
    * Called by the child to inform the parent that a command update has occurred
    * and the supplied set of commands are now enabled and disabled.
    *
@@ -78,29 +86,4 @@ interface nsIBrowser : nsISupports
 
   readonly attribute nsIPrincipal contentPrincipal;
   readonly attribute nsIContentSecurityPolicy csp;
-
-  /**
-   * Called by Gecko when we need to call the web progress listeners on our
-   * browser element in order to notify them about a content blocking event
-   * which happened in the content process.
-   * @param isWebProgressPassed whether we're passed a webProgress argument
-   * @param isTopLevel whether we're in the top-level document
-   * @param isLoadingDocument whether we're in the process of loading a document
-   * @param loadType the type of load in progress
-   * @param DOMWindowID the ID of the window receiving the notification
-   * @param requestURI the current URI of the request
-   * @param originalRequestURI the original URI of the request
-   * @param matchedList the matched list for the content blocking event
-   * @param eventType one of the content blocking event codes defined in
-   *                  nsIWebProgressListener.idl.
-   */
-  void callWebProgressContentBlockingEventListeners(in boolean isWebProgressPassed,
-                                                    in boolean isTopLevel,
-                                                    in boolean isLoadingDocument,
-                                                    in unsigned long loadType,
-                                                    in uint64_t DOMWindowID,
-                                                    in nsIURI requestURI,
-                                                    in nsIURI originalRequestURI,
-                                                    in ACString matchedList,
-                                                    in unsigned long eventType);
 };

@@ -1387,27 +1387,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
     }
   }
 
-  callWebProgressContentBlockingEventListeners(aIsWebProgressPassed,
-                                               aIsTopLevel,
-                                               aIsLoadingDocument,
-                                               aLoadType,
-                                               aDOMWindowID,
-                                               aRequestURI,
-                                               aOriginalRequestURI,
-                                               aMatchedList,
-                                               aEvent) {
-    if (this._remoteWebProgressManager) {
-      this._remoteWebProgressManager
-          .callWebProgressContentBlockingEventListeners(aIsWebProgressPassed,
-                                                        aIsTopLevel,
-                                                        aIsLoadingDocument,
-                                                        aLoadType,
-                                                        aDOMWindowID,
-                                                        aRequestURI,
-                                                        aOriginalRequestURI,
-                                                        aMatchedList,
-                                                        aEvent);
-    }
+  get remoteWebProgressManager() {
+    return this._remoteWebProgressManager;
   }
 
   purgeSessionHistory() {

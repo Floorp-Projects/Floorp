@@ -173,6 +173,12 @@ class TabParent final : public PBrowserParent,
       const Maybe<WebProgressData>& aWebProgressData,
       const RequestData& aRequestData, const uint32_t& aEvent);
 
+  void ReconstructWebProgressAndRequest(
+      nsIWebProgress* aManager, const Maybe<WebProgressData>& aWebProgressData,
+      const RequestData& aRequestData,
+      nsCOMPtr<nsIWebProgress>& aOutWebProgress,
+      nsCOMPtr<nsIRequest>& aOutRequest);
+
   mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(
       PBrowserParent* aOpener, const nsString& aURL, const nsString& aName,
       const nsString& aFeatures, BrowserFrameOpenWindowResolver&& aResolve);
