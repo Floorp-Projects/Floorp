@@ -42,11 +42,14 @@ nsEffectiveTLDService::nsEffectiveTLDService()
     : mIDNService(), mGraph(etld_dafsa::kDafsa) {}
 
 nsresult nsEffectiveTLDService::Init() {
+  if (gService) {
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
+
   nsresult rv;
   mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  MOZ_ASSERT(!gService);
   gService = this;
   RegisterWeakMemoryReporter(this);
 
@@ -55,7 +58,10 @@ nsresult nsEffectiveTLDService::Init() {
 
 nsEffectiveTLDService::~nsEffectiveTLDService() {
   UnregisterWeakMemoryReporter(this);
-  gService = nullptr;
+  if (mIDNService) {
+    // Only clear gService if Init() finished successfully.
+    gService = nullptr;
+  }
 }
 
 // static

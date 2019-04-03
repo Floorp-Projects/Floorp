@@ -642,6 +642,11 @@ with modules["DOM"]:
     # decoding process.
     errors["NS_ERROR_DOM_JS_DECODING_ERROR"] = FAILURE(1026)
 
+    # Image decode errors.
+    errors["NS_ERROR_DOM_IMAGE_INACTIVE_DOCUMENT"] = FAILURE(1027)
+    errors["NS_ERROR_DOM_IMAGE_INVALID_REQUEST"] = FAILURE(1028)
+    errors["NS_ERROR_DOM_IMAGE_BROKEN"] = FAILURE(1029)
+
     # May be used to indicate when e.g. setting a property value didn't
     # actually change the value, like for obj.foo = "bar"; obj.foo = "bar";
     # the second assignment throws NS_SUCCESS_DOM_NO_OPERATION.

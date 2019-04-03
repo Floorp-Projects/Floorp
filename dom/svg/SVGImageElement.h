@@ -93,6 +93,8 @@ class SVGImageElement : public SVGImageElementBase,
   }
   void GetDecoding(nsAString& aValue);
 
+  already_AddRefed<Promise> Decode(ErrorResult& aRv);
+
  protected:
   nsresult LoadSVGImage(bool aForce, bool aNotify);
 

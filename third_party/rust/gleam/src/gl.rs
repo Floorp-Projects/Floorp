@@ -553,6 +553,9 @@ declare_gl_apis! {
     fn insert_event_marker_ext(&self, message: &str);
     fn push_group_marker_ext(&self, message: &str);
     fn pop_group_marker_ext(&self);
+    fn debug_message_insert_khr(&self, source: GLenum, type_: GLenum, id: GLuint, severity: GLenum, message: &str);
+    fn push_debug_group_khr(&self, source: GLenum, id: GLuint, message: &str);
+    fn pop_debug_group_khr(&self);
     fn fence_sync(&self, condition: GLenum, flags: GLbitfield) -> GLsync;
     fn client_wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64);
     fn wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64);
