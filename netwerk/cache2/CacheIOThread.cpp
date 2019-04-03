@@ -562,9 +562,22 @@ void CacheIOThread::LoopOneLevel(uint32_t aLevel) {
     }
   }
 
-  if (returnEvents)
-    mEventQueue[aLevel].InsertElementsAt(0, events.Elements() + index,
-                                         length - index);
+  if (returnEvents) {
+    // This code must prevent any AddRef/Release calls on the stored COMPtrs as
+    // it might be exhaustive and block the monitor's lock for an excessive
+    // amout of time.
+
+    // 'index' points at the event that was interrupted and asked for re-run,
+    // all events before have run, been nullified, and can be removed.
+    events.RemoveElementsAt(0, index);
+    // Move events that might have been scheduled on this queue to the tail to
+    // preserve the expected per-queue FIFO order.
+    if (!events.AppendElements(std::move(mEventQueue[aLevel]))) {
+      MOZ_CRASH("Can't allocate memory for cache IO thread queue");
+    }
+    // And finally move everything back to the main queue.
+    events.SwapElements(mEventQueue[aLevel]);
+  }
 }
 
 bool CacheIOThread::EventsPending(uint32_t aLastLevel) {
