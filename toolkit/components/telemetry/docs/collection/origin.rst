@@ -48,6 +48,10 @@ Please consult the Firefox Telemetry Team before changing these lists.
 Origins can be arbitrary byte sequences of any length.
 Do not add duplicate origins to the list.
 
+If an attempt is made to record to an unknown origin, a meta-origin ``__UNKNOWN__`` captures that it happened.
+Unlike other origins where multiple recordings are considered additive ``__UNKNOWN__`` only accumulates a single value.
+This is to avoid inflating the ping size in case the caller submits a lot of unknown origins for a given unit (e.g. pageload).
+
 Metrics should be of the form ``categoryname.metric_name``.
 Both ``categoryname`` and ``metric_name`` should not exceed 40 bytes (UTF-8 encoded) in length and should only contain alphanumeric character and infix underscores.
 
