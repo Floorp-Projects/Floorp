@@ -6,6 +6,7 @@
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // The chrome window and friends.
 let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
@@ -25,7 +26,25 @@ function cleanupTabs() {
   }
 }
 
+// A user prompt is displayed during theme installation and responding to
+// the prompt from test code is tricky.  Instead, just override the prompt
+// implementation and let installation proceed.
+const PROMPT_CLASSID = Components.ID("{85325f87-03f8-d142-b3a0-d2a0b8f2d4e0}");
+const PROMPT_CONTRACTID = "@mozilla.org/addons/web-install-prompt;1";
+function NullPrompt() {}
+NullPrompt.prototype = {
+  QueryInterface: ChromeUtils.generateQI([Ci.amIWebInstallPrompt]),
+  confirm(browser, url, installs) {
+    installs[0].install();
+  },
+};
+
 add_task(async function testThemeInstall() {
+  let factory = XPCOMUtils.generateSingletonFactory(NullPrompt);
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  let originalCID = registrar.contractIDToCID(PROMPT_CONTRACTID);
+  registrar.registerFactory(PROMPT_CLASSID, "", PROMPT_CONTRACTID, factory);
+
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.webapi.testing", true],
           ["extensions.install.requireBuiltInCerts", false]],
@@ -61,6 +80,9 @@ add_task(async function testThemeInstall() {
 
   Services.obs.removeObserver(observer, "lightweight-theme-styling-update");
   cleanupTabs();
+
+  registrar.unregisterFactory(PROMPT_CLASSID, factory);
+  registrar.registerFactory(originalCID, "", PROMPT_CONTRACTID, null);
 });
 
 run_next_test();
