@@ -20,6 +20,7 @@
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsError.h"
+#include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsGlobalWindowInner.h"
 #include "nsQueryObject.h"
