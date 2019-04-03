@@ -79,6 +79,21 @@ export function createPrettySource(sourceId: string) {
   };
 }
 
+function selectPrettyLocation(prettySource: Source) {
+  return async ({ dispatch, sourceMaps, getState }: ThunkArgs) => {
+    let location = getSelectedLocation(getState());
+
+    if (location) {
+      location = await sourceMaps.getOriginalLocation(location);
+      return dispatch(
+        selectSpecificLocation({ ...location, sourceId: prettySource.id })
+      );
+    }
+
+    return dispatch(selectSource(prettySource.id));
+  };
+}
+
 /**
  * Toggle the pretty printing of a source's text. All subsequent calls to
  * |getText| will return the pretty-toggled text. Nothing will happen for
@@ -103,7 +118,7 @@ export function togglePrettyPrint(sourceId: string) {
     }
 
     if (!isLoaded(source)) {
-      await dispatch(loadSourceText(source));
+      await dispatch(loadSourceText({ source }));
     }
 
     assert(
@@ -111,37 +126,22 @@ export function togglePrettyPrint(sourceId: string) {
       "Pretty-printing only allowed on generated sources"
     );
 
-    const selectedLocation = getSelectedLocation(getState());
     const url = getPrettySourceURL(source.url);
     const prettySource = getSourceByURL(getState(), url);
 
-    const options = {};
-    if (selectedLocation) {
-      options.location = await sourceMaps.getOriginalLocation(selectedLocation);
-    }
-
     if (prettySource) {
-      const _sourceId = prettySource.id;
-      return dispatch(
-        selectSpecificLocation({ ...options.location, sourceId: _sourceId })
-      );
+      return dispatch(selectPrettyLocation(prettySource));
     }
 
     const newPrettySource = await dispatch(createPrettySource(sourceId));
+    await dispatch(selectPrettyLocation(newPrettySource));
 
     await dispatch(remapBreakpoints(sourceId));
 
     const threads = getSourceThreads(getState(), source);
     await Promise.all(threads.map(thread => dispatch(mapFrames(thread))));
 
-    await dispatch(setSymbols(newPrettySource.id));
-
-    dispatch(
-      selectSpecificLocation({
-        ...options.location,
-        sourceId: newPrettySource.id
-      })
-    );
+    await dispatch(setSymbols({ source: newPrettySource }));
 
     return newPrettySource;
   };

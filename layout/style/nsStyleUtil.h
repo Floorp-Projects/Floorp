@@ -78,7 +78,7 @@ class nsStyleUtil {
    */
   static uint8_t FloatToColorComponent(float aAlpha) {
     NS_ASSERTION(0.0 <= aAlpha && aAlpha <= 1.0, "out of range");
-    return NSToIntRound(aAlpha * 255);
+    return static_cast<uint8_t>(NSToIntRound(aAlpha * 255));
   }
 
   /*

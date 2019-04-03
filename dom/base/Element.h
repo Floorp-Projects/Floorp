@@ -1868,6 +1868,7 @@ class Element : public FragmentOrElement {
   /**
    * Handle default actions for link event if the event isn't consumed yet.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEventForLinks(EventChainPostVisitor& aVisitor);
 
   /**

@@ -17,7 +17,6 @@ import {
 
 import readFixture from "./helpers/readFixture";
 const {
-  getSource,
   getSymbols,
   getOutOfScopeLocations,
   getInScopeLines,
@@ -70,8 +69,10 @@ describe("ast", () => {
         const { dispatch, getState } = store;
         const base = makeSource("base.js");
         await dispatch(actions.newSource(base));
-        await dispatch(actions.loadSourceText(base));
-        await dispatch(actions.setSymbols("base.js"));
+        await dispatch(actions.loadSourceText({ source: base }));
+
+        const loadedSource = selectors.getSourceFromId(getState(), base.id);
+        await dispatch(actions.setSymbols({ source: loadedSource }));
         await waitForState(store, state => !isSymbolsLoading(state, base));
 
         const baseSymbols = getSymbols(getState(), base);
@@ -108,10 +109,9 @@ describe("ast", () => {
 
         await dispatch(actions.newSource(source));
 
-        await dispatch(
-          actions.loadSourceText(getSource(getState(), source.id))
-        );
-        await dispatch(actions.setSymbols(source.id));
+        await dispatch(actions.loadSourceText({ source }));
+        const loadedSource = selectors.getSourceFromId(getState(), source.id);
+        await dispatch(actions.setSymbols({ source: loadedSource }));
 
         expect(getFramework(getState(), source)).toBe("React");
       });
@@ -121,8 +121,8 @@ describe("ast", () => {
         const { dispatch, getState } = store;
         const base = makeSource("base.js");
         await dispatch(actions.newSource(base));
-        await dispatch(actions.loadSourceText(base));
-        await dispatch(actions.setSymbols("base.js"));
+        await dispatch(actions.loadSourceText({ source: base }));
+        await dispatch(actions.setSymbols({ source: base }));
 
         expect(getFramework(getState(), base)).toBe(undefined);
       });

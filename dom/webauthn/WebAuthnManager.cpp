@@ -43,7 +43,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WebAuthnManager,
                                                 WebAuthnManagerBase)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFollowingSignal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTransaction)
-  tmp->ClearTransaction();
+  tmp->mTransaction.reset();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WebAuthnManager,
                                                   WebAuthnManagerBase)

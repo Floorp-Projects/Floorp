@@ -751,8 +751,12 @@ module.exports = __webpack_require__(182);
 
 const md5 = __webpack_require__(105);
 
-function originalToGeneratedId(originalId) {
-  const match = originalId.match(/(.*)\/originalSource/);
+function originalToGeneratedId(sourceId) {
+  if (isGeneratedId(sourceId)) {
+    return sourceId;
+  }
+
+  const match = sourceId.match(/(.*)\/originalSource/);
   return match ? match[1] : "";
 }
 

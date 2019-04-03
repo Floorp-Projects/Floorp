@@ -26,6 +26,7 @@
 #include "mozilla/Unused.h"
 #include "nsCharTraits.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsFontMetrics.h"
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"

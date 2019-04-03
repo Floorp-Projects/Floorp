@@ -11,6 +11,7 @@ pub type Result<T> = result::Result<T, Error>;
 #[derive(Debug)]
 pub enum Error {
     Dogear(dogear::Error),
+    Storage(storage::Error),
     InvalidLocalRoots,
     InvalidRemoteRoots,
     Nsresult(nsresult),
@@ -24,6 +25,7 @@ impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
             Error::Dogear(err) => Some(err),
+            Error::Storage(err) => Some(err),
             _ => None,
         }
     }
@@ -32,6 +34,12 @@ impl error::Error for Error {
 impl From<dogear::Error> for Error {
     fn from(err: dogear::Error) -> Error {
         Error::Dogear(err)
+    }
+}
+
+impl From<storage::Error> for Error {
+    fn from(err: storage::Error) -> Error {
+        Error::Storage(err)
     }
 }
 
@@ -53,6 +61,7 @@ impl From<Error> for nsresult {
             Error::Dogear(_) | Error::InvalidLocalRoots | Error::InvalidRemoteRoots => {
                 NS_ERROR_UNEXPECTED
             }
+            Error::Storage(err) => err.into(),
             Error::Nsresult(result) => result.clone(),
             Error::UnknownItemKind(_)
             | Error::MalformedString(_)
@@ -66,6 +75,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Error::Dogear(err) => err.fmt(f),
+            Error::Storage(err) => err.fmt(f),
             Error::InvalidLocalRoots => f.write_str("The Places roots are invalid"),
             Error::InvalidRemoteRoots => {
                 f.write_str("The roots in the mirror database are invalid")
