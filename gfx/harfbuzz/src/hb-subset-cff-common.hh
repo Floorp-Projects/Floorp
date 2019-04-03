@@ -282,30 +282,35 @@ struct flatten_param_t
   bool	drop_hints;
 };
 
-template <typename ACC, typename ENV, typename OPSET>
+template <typename ACC, typename ENV, typename OPSET, op_code_t endchar_op=OpCode_Invalid>
 struct subr_flattener_t
 {
   subr_flattener_t (const ACC &acc_,
-		    const hb_vector_t<hb_codepoint_t> &glyphs_,
-		    bool drop_hints_) : acc (acc_), glyphs (glyphs_),
-					drop_hints (drop_hints_) {}
+		    const hb_subset_plan_t *plan_)
+		   : acc (acc_), plan (plan_) {}
 
   bool flatten (str_buff_vec_t &flat_charstrings)
   {
-    if (!flat_charstrings.resize (glyphs.length))
+    if (!flat_charstrings.resize (plan->num_output_glyphs ()))
       return false;
-    for (unsigned int i = 0; i < glyphs.length; i++)
+    for (unsigned int i = 0; i < plan->num_output_glyphs (); i++)
       flat_charstrings[i].init ();
-    for (unsigned int i = 0; i < glyphs.length; i++)
+    for (unsigned int i = 0; i < plan->num_output_glyphs (); i++)
     {
-      hb_codepoint_t  glyph = glyphs[i];
+      hb_codepoint_t  glyph;
+      if (!plan->old_gid_for_new_gid (i, &glyph))
+      {
+      	/* add an endchar only charstring for a missing glyph if CFF1 */
+      	if (endchar_op != OpCode_Invalid) flat_charstrings[i].push (endchar_op);
+      	continue;
+      }
       const byte_str_t str = (*acc.charStrings)[glyph];
       unsigned int fd = acc.fdSelect->get_fd (glyph);
       if (unlikely (fd >= acc.fdCount))
       	return false;
       cs_interpreter_t<ENV, OPSET, flatten_param_t> interp;
       interp.env.init (str, acc, fd);
-      flatten_param_t  param = { flat_charstrings[i], drop_hints };
+      flatten_param_t  param = { flat_charstrings[i], plan->drop_hints };
       if (unlikely (!interp.interpret (param)))
 	return false;
     }
@@ -313,8 +318,7 @@ struct subr_flattener_t
   }
 
   const ACC &acc;
-  const hb_vector_t<hb_codepoint_t> &glyphs;
-  bool  drop_hints;
+  const hb_subset_plan_t *plan;
 };
 
 struct subr_closures_t
@@ -611,10 +615,11 @@ struct subr_remap_ts
   hb_vector_t<subr_remap_t>  local_remaps;
 };
 
-template <typename SUBSETTER, typename SUBRS, typename ACC, typename ENV, typename OPSET>
+template <typename SUBSETTER, typename SUBRS, typename ACC, typename ENV, typename OPSET, op_code_t endchar_op=OpCode_Invalid>
 struct subr_subsetter_t
 {
-  subr_subsetter_t ()
+  subr_subsetter_t (ACC &acc_, const hb_subset_plan_t *plan_)
+    : acc (acc_), plan (plan_)
   {
     parsed_charstrings.init ();
     parsed_global_subrs.init ();
@@ -644,12 +649,12 @@ struct subr_subsetter_t
    * Assumption: a callsubr/callgsubr operator must immediately follow a (biased) subroutine number
    * within the same charstring/subroutine, e.g., not split across a charstring and a subroutine.
    */
-  bool subset (ACC &acc, const hb_vector_t<hb_codepoint_t> &glyphs, bool drop_hints)
+  bool subset (void)
   {
     closures.init (acc.fdCount);
     remaps.init (acc.fdCount);
 
-    parsed_charstrings.init (glyphs.length);
+    parsed_charstrings.init (plan->num_output_glyphs ());
     parsed_global_subrs.init (acc.globalSubrs->count);
     parsed_local_subrs.resize (acc.fdCount);
     for (unsigned int i = 0; i < acc.fdCount; i++)
@@ -660,9 +665,11 @@ struct subr_subsetter_t
       return false;
 
     /* phase 1 & 2 */
-    for (unsigned int i = 0; i < glyphs.length; i++)
+    for (unsigned int i = 0; i < plan->num_output_glyphs (); i++)
     {
-      hb_codepoint_t  glyph = glyphs[i];
+      hb_codepoint_t  glyph;
+      if (!plan->old_gid_for_new_gid (i, &glyph))
+      	continue;
       const byte_str_t str = (*acc.charStrings)[glyph];
       unsigned int fd = acc.fdSelect->get_fd (glyph);
       if (unlikely (fd >= acc.fdCount))
@@ -675,7 +682,7 @@ struct subr_subsetter_t
       param.init (&parsed_charstrings[i],
 		  &parsed_global_subrs,  &parsed_local_subrs[fd],
 		  closures.global_closure, closures.local_closures[fd],
-		  drop_hints);
+		  plan->drop_hints);
 
       if (unlikely (!interp.interpret (param)))
 	return false;
@@ -684,19 +691,22 @@ struct subr_subsetter_t
       SUBSETTER::finalize_parsed_str (interp.env, param, parsed_charstrings[i]);
     }
 
-    if (drop_hints)
+    if (plan->drop_hints)
     {
       /* mark hint ops and arguments for drop */
-      for (unsigned int i = 0; i < glyphs.length; i++)
+      for (unsigned int i = 0; i < plan->num_output_glyphs (); i++)
       {
-	unsigned int fd = acc.fdSelect->get_fd (glyphs[i]);
+	hb_codepoint_t  glyph;
+	if (!plan->old_gid_for_new_gid (i, &glyph))
+	  continue;
+	unsigned int fd = acc.fdSelect->get_fd (glyph);
 	if (unlikely (fd >= acc.fdCount))
 	  return false;
 	subr_subset_param_t  param;
 	param.init (&parsed_charstrings[i],
 		    &parsed_global_subrs,  &parsed_local_subrs[fd],
 		    closures.global_closure, closures.local_closures[fd],
-		    drop_hints);
+		    plan->drop_hints);
 
 	drop_hints_param_t  drop;
 	if (drop_hints_in_str (parsed_charstrings[i], param, drop))
@@ -709,16 +719,19 @@ struct subr_subsetter_t
 
       /* after dropping hints recreate closures of actually used subrs */
       closures.reset ();
-      for (unsigned int i = 0; i < glyphs.length; i++)
+      for (unsigned int i = 0; i < plan->num_output_glyphs (); i++)
       {
-	unsigned int fd = acc.fdSelect->get_fd (glyphs[i]);
+	hb_codepoint_t  glyph;
+	if (!plan->old_gid_for_new_gid (i, &glyph))
+	  continue;
+	unsigned int fd = acc.fdSelect->get_fd (glyph);
 	if (unlikely (fd >= acc.fdCount))
 	  return false;
 	subr_subset_param_t  param;
 	param.init (&parsed_charstrings[i],
 		    &parsed_global_subrs,  &parsed_local_subrs[fd],
 		    closures.global_closure, closures.local_closures[fd],
-		    drop_hints);
+		    plan->drop_hints);
 	collect_subr_refs_in_str (parsed_charstrings[i], param);
       }
     }
@@ -728,13 +741,20 @@ struct subr_subsetter_t
     return true;
   }
 
-  bool encode_charstrings (ACC &acc, const hb_vector_t<hb_codepoint_t> &glyphs, str_buff_vec_t &buffArray) const
+  bool encode_charstrings (str_buff_vec_t &buffArray) const
   {
-    if (unlikely (!buffArray.resize (glyphs.length)))
+    if (unlikely (!buffArray.resize (plan->num_output_glyphs ())))
       return false;
-    for (unsigned int i = 0; i < glyphs.length; i++)
+    for (unsigned int i = 0; i < plan->num_output_glyphs (); i++)
     {
-      unsigned int  fd = acc.fdSelect->get_fd (glyphs[i]);
+      hb_codepoint_t  glyph;
+      if (!plan->old_gid_for_new_gid (i, &glyph))
+      {
+      	/* add an endchar only charstring for a missing glyph if CFF1 */
+      	if (endchar_op != OpCode_Invalid) buffArray[i].push (endchar_op);
+      	continue;
+      }
+      unsigned int  fd = acc.fdSelect->get_fd (glyph);
       if (unlikely (fd >= acc.fdCount))
       	return false;
       if (unlikely (!encode_str (parsed_charstrings[i], fd, buffArray[i])))
@@ -777,10 +797,12 @@ struct subr_subsetter_t
     drop_hints_param_t ()
       : seen_moveto (false),
 	ends_in_hint (false),
+	all_dropped (false),
 	vsindex_dropped (false) {}
 
     bool  seen_moveto;
     bool  ends_in_hint;
+    bool  all_dropped;
     bool  vsindex_dropped;
   };
 
@@ -791,7 +813,7 @@ struct subr_subsetter_t
     drop.ends_in_hint = false;
     bool has_hint = drop_hints_in_str (subrs[subr_num], param, drop);
 
-    /* if this subr ends with a stem hint (i.e., not a number a potential argument for moveto),
+    /* if this subr ends with a stem hint (i.e., not a number; potential argument for moveto),
      * then this entire subroutine must be a hint. drop its call. */
     if (drop.ends_in_hint)
     {
@@ -800,6 +822,10 @@ struct subr_subsetter_t
        * otherwise reset the flag */
       if (!str.at_end (pos))
 	drop.ends_in_hint = false;
+    }
+    else if (drop.all_dropped)
+    {
+      str.values[pos].set_drop ();
     }
 
     return has_hint;
@@ -819,7 +845,6 @@ struct subr_subsetter_t
 	  has_hint = drop_hints_in_subr (str, pos,
 					*param.parsed_local_subrs, str.values[pos].subr_num,
 					param, drop);
-
 	  break;
 
 	case OpCode_callgsubr:
@@ -873,6 +898,23 @@ struct subr_subsetter_t
 	    drop.vsindex_dropped = true;
 	}
 	seen_hint |= has_hint;
+      }
+    }
+
+    /* Raise all_dropped flag if all operators except return are dropped from a subr.
+     * It may happen even after seeing the first moveto if a subr contains
+     * only (usually one) hintmask operator, then calls to this subr can be dropped.
+     */
+    drop.all_dropped = true;
+    for (unsigned int pos = 0; pos < str.values.length; pos++)
+    {
+      parsed_cs_op_t  &csop = str.values[pos];
+      if (csop.op == OpCode_return)
+      	break;
+      if (!csop.for_drop ())
+      {
+      	drop.all_dropped = false;
+      	break;
       }
     }
 
@@ -954,13 +996,16 @@ struct subr_subsetter_t
   }
 
   protected:
-  subr_closures_t	      closures;
+  const ACC   			&acc;
+  const hb_subset_plan_t	*plan;
 
-  parsed_cs_str_vec_t	       parsed_charstrings;
-  parsed_cs_str_vec_t	       parsed_global_subrs;
+  subr_closures_t		closures;
+
+  parsed_cs_str_vec_t		parsed_charstrings;
+  parsed_cs_str_vec_t		parsed_global_subrs;
   hb_vector_t<parsed_cs_str_vec_t>  parsed_local_subrs;
 
-  subr_remap_ts		remaps;
+  subr_remap_ts			remaps;
 
   private:
   typedef typename SUBRS::count_type subr_count_type;
@@ -969,7 +1014,7 @@ struct subr_subsetter_t
 } /* namespace CFF */
 
 HB_INTERNAL bool
-hb_plan_subset_cff_fdselect (const hb_vector_t<hb_codepoint_t> &glyphs,
+hb_plan_subset_cff_fdselect (const hb_subset_plan_t *plan,
 			    unsigned int fdCount,
 			    const CFF::FDSelect &src, /* IN */
 			    unsigned int &subset_fd_count /* OUT */,

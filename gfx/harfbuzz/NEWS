@@ -1,3 +1,14 @@
+Overview of changes leading to 2.4.0
+Monday, March 25, 2019
+====================================
+- Unicode 12.
+- Misc fixes.
+- Subsetter improvements.
+- New API:
+HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE
+hb_directwrite_face_create()
+
+
 Overview of changes leading to 2.3.1
 Wednesday, January 30, 2019
 ====================================

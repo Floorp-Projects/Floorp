@@ -43,7 +43,7 @@ using namespace CFF;
  **/
 
 bool
-hb_plan_subset_cff_fdselect (const hb_vector_t<hb_codepoint_t> &glyphs,
+hb_plan_subset_cff_fdselect (const hb_subset_plan_t *plan,
 			    unsigned int fdCount,
 			    const FDSelect &src, /* IN */
 			    unsigned int &subset_fd_count /* OUT */,
@@ -57,7 +57,7 @@ hb_plan_subset_cff_fdselect (const hb_vector_t<hb_codepoint_t> &glyphs,
   subset_fdselect_format = 0;
   unsigned int  num_ranges = 0;
 
-  unsigned int subset_num_glyphs = glyphs.length;
+  unsigned int subset_num_glyphs = plan->num_output_glyphs ();
   if (subset_num_glyphs == 0)
     return true;
 
@@ -69,7 +69,14 @@ hb_plan_subset_cff_fdselect (const hb_vector_t<hb_codepoint_t> &glyphs,
     hb_codepoint_t  prev_fd = CFF_UNDEF_CODE;
     for (hb_codepoint_t i = 0; i < subset_num_glyphs; i++)
     {
-      hb_codepoint_t  fd = src.get_fd (glyphs[i]);
+      hb_codepoint_t	glyph;
+      hb_codepoint_t  	fd;
+      if (!plan->old_gid_for_new_gid (i, &glyph))
+      {
+	/* fonttools retains FDSelect & font dicts for missing glyphs. do the same */
+	glyph = i;
+      }
+      fd = src.get_fd (glyph);
       set->add (fd);
 
       if (fd != prev_fd)

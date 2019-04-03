@@ -326,27 +326,29 @@ struct hb_sanitize_context_t :
   }
 
   bool check_range (const void *base,
-			   unsigned int len) const
+		    unsigned int len) const
   {
     const char *p = (const char *) base;
-    bool ok = this->start <= p &&
-	      p <= this->end &&
-	      (unsigned int) (this->end - p) >= len &&
-	      this->max_ops-- > 0;
+    bool ok = !len ||
+	      (this->start <= p &&
+	       p <= this->end &&
+	       (unsigned int) (this->end - p) >= len &&
+	       this->max_ops-- > 0);
 
     DEBUG_MSG_LEVEL (SANITIZE, p, this->debug_depth+1, 0,
-       "check_range [%p..%p] (%d bytes) in [%p..%p] -> %s",
-       p, p + len, len,
-       this->start, this->end,
-       ok ? "OK" : "OUT-OF-RANGE");
+		     "check_range [%p..%p]"
+		     " (%d bytes) in [%p..%p] -> %s",
+		     p, p + len, len,
+		     this->start, this->end,
+		     ok ? "OK" : "OUT-OF-RANGE");
 
     return likely (ok);
   }
 
   template <typename T>
   bool check_range (const T *base,
-			   unsigned int a,
-			   unsigned int b) const
+		    unsigned int a,
+		    unsigned int b) const
   {
     return !hb_unsigned_mul_overflows (a, b) &&
 	   this->check_range (base, a * b);
@@ -354,9 +356,9 @@ struct hb_sanitize_context_t :
 
   template <typename T>
   bool check_range (const T *base,
-			   unsigned int a,
-			   unsigned int b,
-			   unsigned int c) const
+		    unsigned int a,
+		    unsigned int b,
+		    unsigned int c) const
   {
     return !hb_unsigned_mul_overflows (a, b) &&
 	   this->check_range (base, a * b, c);
