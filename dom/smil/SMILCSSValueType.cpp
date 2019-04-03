@@ -16,6 +16,7 @@
 #include "nsPresContext.h"
 #include "nsString.h"
 #include "nsStyleUtil.h"
+#include "nsIPresShellInlines.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h"
