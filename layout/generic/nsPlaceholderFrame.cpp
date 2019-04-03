@@ -252,9 +252,9 @@ void nsPlaceholderFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 #  ifdef DEBUG
   if (GetShowFrameBorders()) {
-    aLists.Outlines()->AppendToTop(MakeDisplayItem<nsDisplayGeneric>(
+    aLists.Outlines()->AppendNewToTop<nsDisplayGeneric>(
         aBuilder, this, PaintDebugPlaceholder, "DebugPlaceholder",
-        DisplayItemType::TYPE_DEBUG_PLACEHOLDER));
+        DisplayItemType::TYPE_DEBUG_PLACEHOLDER);
   }
 #  endif
 }

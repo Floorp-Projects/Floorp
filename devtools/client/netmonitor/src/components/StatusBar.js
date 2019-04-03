@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/redux/visibility-handler-connect");
@@ -18,6 +19,7 @@ const {
   getFormattedTime,
 } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
+const { propertiesEqual } = require("../utils/request-utils");
 
 const { button, div } = dom;
 
@@ -30,23 +32,54 @@ const TOOLTIP_DOM_CONTENT_LOADED =
         L10N.getStr("networkMenu.summary.tooltip.domContentLoaded");
 const TOOLTIP_LOAD = L10N.getStr("networkMenu.summary.tooltip.load");
 
-function StatusBar({ summary, openStatistics, timingMarkers }) {
-  const { count, contentSize, transferredSize, millis } = summary;
-  const {
-    DOMContentLoaded,
-    load,
-  } = timingMarkers;
+const UPDATED_SUMMARY_PROPS = [
+  "count",
+  "contentSize",
+  "transferredSize",
+  "millis",
+];
 
-  const countText = count === 0 ? REQUESTS_COUNT_EMPTY :
-    PluralForm.get(count,
-      L10N.getStr("networkMenu.summary.requestsCount2")).replace("#1", count);
-  const transferText = L10N.getFormatStrWithNumbers("networkMenu.summary.transferred",
-    getFormattedSize(contentSize), getFormattedSize(transferredSize));
-  const finishText = L10N.getFormatStrWithNumbers("networkMenu.summary.finish",
-    getFormattedTime(millis));
+const UPDATED_TIMING_PROPS = [
+  "DOMContentLoaded",
+  "load",
+];
 
-  return (
-    div({ className: "devtools-toolbar devtools-toolbar-bottom" },
+/**
+ * Status Bar component
+ * Displays the summary of total size and transferred size by all requests
+ * Also displays different timing markers
+ */
+class StatusBar extends Component {
+  static get propTypes() {
+    return {
+      connector: PropTypes.object.isRequired,
+      openStatistics: PropTypes.func.isRequired,
+      summary: PropTypes.object.isRequired,
+      timingMarkers: PropTypes.object.isRequired,
+    };
+  }
+
+  shouldComponentUpdate(nextProps) {
+    const { summary, timingMarkers } = this.props;
+    return !propertiesEqual(UPDATED_SUMMARY_PROPS, summary, nextProps.summary) ||
+      !propertiesEqual(UPDATED_TIMING_PROPS, timingMarkers, nextProps.timingMarkers);
+  }
+
+  render() {
+    const { openStatistics, summary, timingMarkers } = this.props;
+    const { count, contentSize, transferredSize, millis } = summary;
+    const { DOMContentLoaded, load } = timingMarkers;
+
+    const countText = count === 0 ? REQUESTS_COUNT_EMPTY :
+      PluralForm.get(count,
+        L10N.getStr("networkMenu.summary.requestsCount2")).replace("#1", count);
+    const transferText = L10N.getFormatStrWithNumbers("networkMenu.summary.transferred",
+      getFormattedSize(contentSize), getFormattedSize(transferredSize));
+    const finishText = L10N.getFormatStrWithNumbers("networkMenu.summary.finish",
+      getFormattedTime(millis));
+
+    return (
+      div({ className: "devtools-toolbar devtools-toolbar-bottom" },
       button({
         className: "devtools-button requests-list-network-summary-button",
         title: TOOLTIP_PERF,
@@ -78,18 +111,10 @@ function StatusBar({ summary, openStatistics, timingMarkers }) {
           className: "status-bar-label load",
           title: TOOLTIP_LOAD,
         }, `load: ${getFormattedTime(load)}`),
-    )
-  );
+      )
+    );
+  }
 }
-
-StatusBar.displayName = "StatusBar";
-
-StatusBar.propTypes = {
-  connector: PropTypes.object.isRequired,
-  openStatistics: PropTypes.func.isRequired,
-  summary: PropTypes.object.isRequired,
-  timingMarkers: PropTypes.object.isRequired,
-};
 
 module.exports = connect(
   (state) => ({

@@ -1132,7 +1132,7 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
     // scratch3 := RectFrame + Rect-Descriptor.Size +
     //             RectifierFrameLayout::Size()
     masm.addPtr(scratch2, scratch1, scratch3);
-    masm.add32(Imm32(RectifierFrameLayout::Size()), scratch3);
+    masm.addPtr(Imm32(RectifierFrameLayout::Size()), scratch3);
     masm.storePtr(scratch3, lastProfilingFrame);
     masm.ret();
 

@@ -33,7 +33,11 @@ waitUntilApzStable()
   <div id="spacer" style="height: 2000px">
     Inside the black border is a zero-opacity touch-action none.
     <div id="border" style="border: solid 1px black">
-        <div id="target" style="opacity: 0; height: 300px; touch-action: none">this text shouldn't be visible</div>
+        <div style="opacity: 0; height: 300px;">
+            <div style="transform:translate(0px)">
+                <div id="target" style="height: 300px; touch-action: none">this text shouldn't be visible</div>
+            </div>
+        </div>
     </div>
   </div>
 </body>

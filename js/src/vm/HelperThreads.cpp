@@ -234,15 +234,17 @@ static void FinishOffThreadIonCompile(jit::IonBuilder* builder,
 
 static JSRuntime* GetSelectorRuntime(const CompilationSelector& selector) {
   struct Matcher {
-    JSRuntime* match(JSScript* script) {
+    JSRuntime* operator()(JSScript* script) {
       return script->runtimeFromMainThread();
     }
-    JSRuntime* match(Realm* realm) { return realm->runtimeFromMainThread(); }
-    JSRuntime* match(Zone* zone) { return zone->runtimeFromMainThread(); }
-    JSRuntime* match(ZonesInState zbs) { return zbs.runtime; }
-    JSRuntime* match(JSRuntime* runtime) { return runtime; }
-    JSRuntime* match(AllCompilations all) { return nullptr; }
-    JSRuntime* match(CompilationsUsingNursery cun) { return cun.runtime; }
+    JSRuntime* operator()(Realm* realm) {
+      return realm->runtimeFromMainThread();
+    }
+    JSRuntime* operator()(Zone* zone) { return zone->runtimeFromMainThread(); }
+    JSRuntime* operator()(ZonesInState zbs) { return zbs.runtime; }
+    JSRuntime* operator()(JSRuntime* runtime) { return runtime; }
+    JSRuntime* operator()(AllCompilations all) { return nullptr; }
+    JSRuntime* operator()(CompilationsUsingNursery cun) { return cun.runtime; }
   };
 
   return selector.match(Matcher());
@@ -250,13 +252,13 @@ static JSRuntime* GetSelectorRuntime(const CompilationSelector& selector) {
 
 static bool JitDataStructuresExist(const CompilationSelector& selector) {
   struct Matcher {
-    bool match(JSScript* script) { return !!script->realm()->jitRealm(); }
-    bool match(Realm* realm) { return !!realm->jitRealm(); }
-    bool match(Zone* zone) { return !!zone->jitZone(); }
-    bool match(ZonesInState zbs) { return zbs.runtime->hasJitRuntime(); }
-    bool match(JSRuntime* runtime) { return runtime->hasJitRuntime(); }
-    bool match(AllCompilations all) { return true; }
-    bool match(CompilationsUsingNursery cun) {
+    bool operator()(JSScript* script) { return !!script->realm()->jitRealm(); }
+    bool operator()(Realm* realm) { return !!realm->jitRealm(); }
+    bool operator()(Zone* zone) { return !!zone->jitZone(); }
+    bool operator()(ZonesInState zbs) { return zbs.runtime->hasJitRuntime(); }
+    bool operator()(JSRuntime* runtime) { return runtime->hasJitRuntime(); }
+    bool operator()(AllCompilations all) { return true; }
+    bool operator()(CompilationsUsingNursery cun) {
       return cun.runtime->hasJitRuntime();
     }
   };
@@ -269,20 +271,22 @@ static bool IonBuilderMatches(const CompilationSelector& selector,
   struct BuilderMatches {
     jit::IonBuilder* builder_;
 
-    bool match(JSScript* script) { return script == builder_->script(); }
-    bool match(Realm* realm) { return realm == builder_->script()->realm(); }
-    bool match(Zone* zone) {
+    bool operator()(JSScript* script) { return script == builder_->script(); }
+    bool operator()(Realm* realm) {
+      return realm == builder_->script()->realm();
+    }
+    bool operator()(Zone* zone) {
       return zone == builder_->script()->zoneFromAnyThread();
     }
-    bool match(JSRuntime* runtime) {
+    bool operator()(JSRuntime* runtime) {
       return runtime == builder_->script()->runtimeFromAnyThread();
     }
-    bool match(AllCompilations all) { return true; }
-    bool match(ZonesInState zbs) {
+    bool operator()(AllCompilations all) { return true; }
+    bool operator()(ZonesInState zbs) {
       return zbs.runtime == builder_->script()->runtimeFromAnyThread() &&
              zbs.state == builder_->script()->zoneFromAnyThread()->gcState();
     }
-    bool match(CompilationsUsingNursery cun) {
+    bool operator()(CompilationsUsingNursery cun) {
       return cun.runtime == builder_->script()->runtimeFromAnyThread() &&
              !builder_->safeForMinorGC();
     }

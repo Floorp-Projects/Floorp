@@ -8,11 +8,13 @@ import {
   getFrames,
   getSymbols,
   getSource,
+  getSourceFromId,
   getSelectedFrame
 } from "../../selectors";
 
 import assert from "../../utils/assert";
 import { findClosestFunction } from "../../utils/ast";
+import { setSymbols } from "../sources/symbols";
 
 import type { Frame, ThreadId } from "../../types";
 import type { State } from "../../reducers/types";
@@ -67,6 +69,7 @@ export function mapDisplayNames(
     if (frame.isOriginal) {
       return frame;
     }
+
     const source = getSource(getState(), frame.location.sourceId);
 
     if (!source) {
@@ -152,6 +155,15 @@ async function expandFrames(
   return result;
 }
 
+async function updateFrameSymbols(frames, { dispatch, getState }) {
+  await Promise.all(
+    frames.map(frame => {
+      const source = getSourceFromId(getState(), frame.location.sourceId);
+      return dispatch(setSymbols({ source }));
+    })
+  );
+}
+
 /**
  * Map call stack frame locations and display names to originals.
  * e.g.
@@ -162,13 +174,16 @@ async function expandFrames(
  * @static
  */
 export function mapFrames(thread: ThreadId) {
-  return async function({ dispatch, getState, sourceMaps }: ThunkArgs) {
+  return async function(thunkArgs: ThunkArgs) {
+    const { dispatch, getState, sourceMaps } = thunkArgs;
     const frames = getFrames(getState(), thread);
     if (!frames) {
       return;
     }
 
     let mappedFrames = await updateFrameLocations(frames, sourceMaps);
+    await updateFrameSymbols(mappedFrames, thunkArgs);
+
     mappedFrames = await expandFrames(mappedFrames, sourceMaps, getState);
     mappedFrames = mapDisplayNames(mappedFrames, getState);
 

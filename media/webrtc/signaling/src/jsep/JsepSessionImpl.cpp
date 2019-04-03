@@ -346,13 +346,14 @@ nsresult JsepSessionImpl::GetRemoteIds(const Sdp& sdp,
   return rv;
 }
 
-nsresult JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
-                                      std::string* offer) {
+JsepSession::Result JsepSessionImpl::CreateOffer(
+    const JsepOfferOptions& options, std::string* offer) {
   mLastError.clear();
 
   if (mState != kJsepStateStable) {
     JSEP_SET_ERROR("Cannot create offer in state " << GetStateStr(mState));
-    return NS_ERROR_UNEXPECTED;
+    // Spec doesn't seem to say this is an error. It probably should.
+    return dom::PCError::InvalidStateError;
   }
 
   // This is one of those places where CreateOffer sets some state.
@@ -362,12 +363,12 @@ nsresult JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
 
   // Make the basic SDP that is common to offer/answer.
   nsresult rv = CreateGenericSDP(&sdp);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
 
   for (size_t level = 0;
        JsepTransceiver* transceiver = GetTransceiverForLocal(level); ++level) {
     rv = CreateOfferMsection(options, *transceiver, sdp.get());
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
   }
 
   SetupBundle(sdp.get());
@@ -375,7 +376,7 @@ nsresult JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
   if (mCurrentLocalDescription) {
     rv = CopyPreviousTransportParams(*GetAnswer(), *mCurrentLocalDescription,
                                      *sdp, sdp.get());
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
     CopyPreviousMsid(*mCurrentLocalDescription, sdp.get());
   }
 
@@ -383,7 +384,7 @@ nsresult JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
   mGeneratedOffer = std::move(sdp);
   ++mSessionVersion;
 
-  return NS_OK;
+  return Result();
 }
 
 std::string JsepSessionImpl::GetLocalDescription(
@@ -467,20 +468,20 @@ void JsepSessionImpl::AddCommonExtmaps(const SdpMediaSection& remoteMsection,
                               msection);
 }
 
-nsresult JsepSessionImpl::CreateAnswer(const JsepAnswerOptions& options,
-                                       std::string* answer) {
+JsepSession::Result JsepSessionImpl::CreateAnswer(
+    const JsepAnswerOptions& options, std::string* answer) {
   mLastError.clear();
 
   if (mState != kJsepStateHaveRemoteOffer) {
     JSEP_SET_ERROR("Cannot create answer in state " << GetStateStr(mState));
-    return NS_ERROR_UNEXPECTED;
+    return dom::PCError::InvalidStateError;
   }
 
   UniquePtr<Sdp> sdp;
 
   // Make the basic SDP that is common to offer/answer.
   nsresult rv = CreateGenericSDP(&sdp);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
 
   const Sdp& offer = *mPendingRemoteDescription;
 
@@ -495,18 +496,18 @@ nsresult JsepSessionImpl::CreateAnswer(const JsepAnswerOptions& options,
     if (!transceiver) {
       JSEP_SET_ERROR("No transceiver for level " << i);
       MOZ_ASSERT(false);
-      return NS_ERROR_FAILURE;
+      return dom::PCError::OperationError;
     }
     rv = CreateAnswerMsection(options, *transceiver, offer.GetMediaSection(i),
                               sdp.get());
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
   }
 
   if (mCurrentLocalDescription) {
     // per discussion with bwc, 3rd parm here should be offer, not *sdp. (mjf)
     rv = CopyPreviousTransportParams(*GetAnswer(), *mCurrentRemoteDescription,
                                      offer, sdp.get());
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
     CopyPreviousMsid(*mCurrentLocalDescription, sdp.get());
   }
 
@@ -514,7 +515,7 @@ nsresult JsepSessionImpl::CreateAnswer(const JsepAnswerOptions& options,
   mGeneratedAnswer = std::move(sdp);
   ++mSessionVersion;
 
-  return NS_OK;
+  return Result();
 }
 
 nsresult JsepSessionImpl::CreateAnswerMsection(
@@ -622,8 +623,8 @@ nsresult JsepSessionImpl::DetermineAnswererSetupRole(
   return NS_OK;
 }
 
-nsresult JsepSessionImpl::SetLocalDescription(JsepSdpType type,
-                                              const std::string& constSdp) {
+JsepSession::Result JsepSessionImpl::SetLocalDescription(
+    JsepSdpType type, const std::string& constSdp) {
   mLastError.clear();
   std::string sdp = constSdp;
 
@@ -636,7 +637,7 @@ nsresult JsepSessionImpl::SetLocalDescription(JsepSdpType type,
       if (!mGeneratedOffer) {
         JSEP_SET_ERROR(
             "Cannot set local offer when createOffer has not been called.");
-        return NS_ERROR_UNEXPECTED;
+        return dom::PCError::InvalidModificationError;
       }
       if (sdp.empty()) {
         sdp = mGeneratedOffer->ToString();
@@ -647,7 +648,7 @@ nsresult JsepSessionImpl::SetLocalDescription(JsepSdpType type,
       if (!mGeneratedAnswer) {
         JSEP_SET_ERROR(
             "Cannot set local answer when createAnswer has not been called.");
-        return NS_ERROR_UNEXPECTED;
+        return dom::PCError::InvalidModificationError;
       }
       if (sdp.empty()) {
         sdp = mGeneratedAnswer->ToString();
@@ -657,13 +658,15 @@ nsresult JsepSessionImpl::SetLocalDescription(JsepSdpType type,
       if (mState != kJsepStateHaveLocalOffer) {
         JSEP_SET_ERROR("Cannot rollback local description in "
                        << GetStateStr(mState));
-        return NS_ERROR_UNEXPECTED;
+        // Currently, spec allows this in any state except stable, and
+        // sRD(rollback) and sLD(rollback) do exactly the same thing.
+        return dom::PCError::InvalidStateError;
       }
 
       mPendingLocalDescription.reset();
       SetState(kJsepStateStable);
       RollbackLocalOffer();
-      return NS_OK;
+      return Result();
   }
 
   switch (mState) {
@@ -671,7 +674,7 @@ nsresult JsepSessionImpl::SetLocalDescription(JsepSdpType type,
       if (type != kJsepSdpOffer) {
         JSEP_SET_ERROR("Cannot set local answer in state "
                        << GetStateStr(mState));
-        return NS_ERROR_UNEXPECTED;
+        return dom::PCError::InvalidStateError;
       }
       mIsOfferer = true;
       break;
@@ -679,22 +682,23 @@ nsresult JsepSessionImpl::SetLocalDescription(JsepSdpType type,
       if (type != kJsepSdpAnswer && type != kJsepSdpPranswer) {
         JSEP_SET_ERROR("Cannot set local offer in state "
                        << GetStateStr(mState));
-        return NS_ERROR_UNEXPECTED;
+        return dom::PCError::InvalidStateError;
       }
       break;
     default:
       JSEP_SET_ERROR("Cannot set local offer or answer in state "
                      << GetStateStr(mState));
-      return NS_ERROR_UNEXPECTED;
+      return dom::PCError::InvalidStateError;
   }
 
   UniquePtr<Sdp> parsed;
   nsresult rv = ParseSdp(sdp, &parsed);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Needs to be RTCError with sdp-syntax-error
+  NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
 
   // Check that content hasn't done anything unsupported with the SDP
   rv = ValidateLocalDescription(*parsed, type);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, dom::PCError::InvalidModificationError);
 
   switch (type) {
     case kJsepSdpOffer:
@@ -707,7 +711,7 @@ nsresult JsepSessionImpl::SetLocalDescription(JsepSdpType type,
     case kJsepSdpRollback:
       MOZ_CRASH();  // Handled above
   }
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, dom::PCError::InvalidAccessError);
 
   if (type == kJsepSdpOffer) {
     // Save in case we need to rollback
@@ -722,7 +726,7 @@ nsresult JsepSessionImpl::SetLocalDescription(JsepSdpType type,
     if (!transceiver) {
       MOZ_ASSERT(false);
       JSEP_SET_ERROR("No transceiver for level " << i);
-      return NS_ERROR_FAILURE;
+      return dom::PCError::OperationError;
     }
     transceiver->Associate(
         parsed->GetMediaSection(i).GetAttributeList().GetMid());
@@ -749,7 +753,8 @@ nsresult JsepSessionImpl::SetLocalDescription(JsepSdpType type,
       MOZ_CRASH();  // Handled above
   }
 
-  return rv;
+  NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
+  return Result();
 }
 
 nsresult JsepSessionImpl::SetLocalDescriptionOffer(UniquePtr<Sdp> offer) {
@@ -777,8 +782,8 @@ nsresult JsepSessionImpl::SetLocalDescriptionAnswer(JsepSdpType type,
   return NS_OK;
 }
 
-nsresult JsepSessionImpl::SetRemoteDescription(JsepSdpType type,
-                                               const std::string& sdp) {
+JsepSession::Result JsepSessionImpl::SetRemoteDescription(
+    JsepSdpType type, const std::string& sdp) {
   mLastError.clear();
 
   MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: SetRemoteDescription type=" << type
@@ -789,14 +794,14 @@ nsresult JsepSessionImpl::SetRemoteDescription(JsepSdpType type,
     if (mState != kJsepStateHaveRemoteOffer) {
       JSEP_SET_ERROR("Cannot rollback remote description in "
                      << GetStateStr(mState));
-      return NS_ERROR_UNEXPECTED;
+      return dom::PCError::InvalidStateError;
     }
 
     mPendingRemoteDescription.reset();
     SetState(kJsepStateStable);
     RollbackRemoteOffer();
 
-    return NS_OK;
+    return Result();
   }
 
   switch (mState) {
@@ -804,7 +809,7 @@ nsresult JsepSessionImpl::SetRemoteDescription(JsepSdpType type,
       if (type != kJsepSdpOffer) {
         JSEP_SET_ERROR("Cannot set remote answer in state "
                        << GetStateStr(mState));
-        return NS_ERROR_UNEXPECTED;
+        return dom::PCError::InvalidStateError;
       }
       mIsOfferer = false;
       break;
@@ -813,22 +818,23 @@ nsresult JsepSessionImpl::SetRemoteDescription(JsepSdpType type,
       if (type != kJsepSdpAnswer && type != kJsepSdpPranswer) {
         JSEP_SET_ERROR("Cannot set remote offer in state "
                        << GetStateStr(mState));
-        return NS_ERROR_UNEXPECTED;
+        return dom::PCError::InvalidStateError;
       }
       break;
     default:
       JSEP_SET_ERROR("Cannot set remote offer or answer in current state "
                      << GetStateStr(mState));
-      return NS_ERROR_UNEXPECTED;
+      return dom::PCError::InvalidStateError;
   }
 
   // Parse.
   UniquePtr<Sdp> parsed;
   nsresult rv = ParseSdp(sdp, &parsed);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Needs to be RTCError with sdp-syntax-error
+  NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
 
   rv = ValidateRemoteDescription(*parsed);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, dom::PCError::InvalidAccessError);
 
   switch (type) {
     case kJsepSdpOffer:
@@ -841,7 +847,7 @@ nsresult JsepSessionImpl::SetRemoteDescription(JsepSdpType type,
     case kJsepSdpRollback:
       MOZ_CRASH();  // Handled above
   }
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, dom::PCError::InvalidAccessError);
 
   bool iceLite =
       parsed->GetAttributeList().HasAttribute(SdpAttribute::kIceLiteAttribute);
@@ -888,7 +894,7 @@ nsresult JsepSessionImpl::SetRemoteDescription(JsepSdpType type,
   // TODO(bug 1095780): Note that we create remote tracks even when
   // They contain only codecs we can't negotiate or other craziness.
   rv = UpdateTransceiversFromRemoteDescription(*parsed);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
 
   for (size_t i = 0; i < parsed->GetMediaSectionCount(); ++i) {
     MOZ_ASSERT(GetTransceiverForLevel(i));
@@ -906,13 +912,12 @@ nsresult JsepSessionImpl::SetRemoteDescription(JsepSdpType type,
       MOZ_CRASH();  // Handled above
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    mRemoteIsIceLite = iceLite;
-    mIceOptions = iceOptions;
-    SetIceRestarting(iceRestarting);
-  }
+  NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
 
-  return rv;
+  mRemoteIsIceLite = iceLite;
+  mIceOptions = iceOptions;
+  SetIceRestarting(iceRestarting);
+  return Result();
 }
 
 nsresult JsepSessionImpl::HandleNegotiatedSession(
@@ -2034,15 +2039,14 @@ void JsepSessionImpl::SetState(JsepSignalingState state) {
   mState = state;
 }
 
-nsresult JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
-                                                const std::string& mid,
-                                                const Maybe<uint16_t>& level,
-                                                const std::string& ufrag,
-                                                std::string* transportId) {
+JsepSession::Result JsepSessionImpl::AddRemoteIceCandidate(
+    const std::string& candidate, const std::string& mid,
+    const Maybe<uint16_t>& level, const std::string& ufrag,
+    std::string* transportId) {
   mLastError.clear();
   if (!mCurrentRemoteDescription && !mPendingRemoteDescription) {
     JSEP_SET_ERROR("Cannot add ICE candidate when there is no remote SDP");
-    return NS_ERROR_UNEXPECTED;
+    return dom::PCError::InvalidStateError;
   }
 
   if (mid.empty() && !level.isSome() && candidate.empty()) {
@@ -2050,7 +2054,7 @@ nsresult JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
     if (mCurrentRemoteDescription) {
       nsresult rv = mSdpHelper.SetIceGatheringComplete(
           mCurrentRemoteDescription.get(), ufrag);
-      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
     }
 
     if (mPendingRemoteDescription) {
@@ -2058,9 +2062,9 @@ nsresult JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
       // description, we stomp them here. This is deliberate.
       nsresult rv = mSdpHelper.SetIceGatheringComplete(
           mPendingRemoteDescription.get(), ufrag);
-      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
     }
-    return NS_OK;
+    return Result();
   }
 
   JsepTransceiver* transceiver = nullptr;
@@ -2073,7 +2077,7 @@ nsresult JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
   if (!transceiver) {
     JSEP_SET_ERROR("Cannot set ICE candidate for level="
                    << level << " mid=" << mid << ": No such transceiver.");
-    return NS_ERROR_INVALID_ARG;
+    return dom::PCError::OperationError;
   }
 
   if (level.isSome() && transceiver->GetLevel() != level.value()) {
@@ -2098,7 +2102,8 @@ nsresult JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
                                      transceiver->GetLevel(), ufrag);
   }
 
-  return rv;
+  NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
+  return Result();
 }
 
 nsresult JsepSessionImpl::AddLocalIceCandidate(const std::string& candidate,

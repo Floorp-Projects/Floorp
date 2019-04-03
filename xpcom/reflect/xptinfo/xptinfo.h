@@ -213,7 +213,7 @@ struct nsXPTType {
 
  private:
   // Helper for reading 16-bit data values split between mData1 and mData2.
-  uint16_t Data16() const { return ((uint16_t)mData1 << 8) | mData2; }
+  uint16_t Data16() const { return static_cast<uint16_t>(mData1 << 8) | mData2; }
 
  public:
   // Get the type of the element in the current array or sequence. Arrays only

@@ -16,19 +16,18 @@ const BLOCKED_URL = TRACKER_URL +
   "browser/devtools/client/webconsole/test/mochitest/test-image.png";
 
 const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+UrlClassifierTestUtils.addTestTrackers();
 registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
+pushPref("privacy.trackingprotection.enabled", true);
+pushPref("devtools.webconsole.groupWarningMessages", true);
+
 add_task(async function testContentBlockingMessage() {
   const CONTENT_BLOCKING_GROUP_LABEL = "Content blocked messages";
 
-  // Tracking protection preferences
-  await UrlClassifierTestUtils.addTestTrackers();
-  await pushPref("privacy.trackingprotection.enabled", true);
-
   // Enable groupWarning and persist log
-  await pushPref("devtools.webconsole.groupWarningMessages", true);
   await pushPref("devtools.webconsole.persistlog", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);

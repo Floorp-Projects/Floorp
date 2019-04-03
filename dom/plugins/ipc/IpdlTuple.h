@@ -148,20 +148,9 @@ struct ParamTraits<IpdlTuple::IpdlTupleElement> {
     return ret;
   }
 
-  struct LogMatcher {
-    explicit LogMatcher(std::wstring* aLog) : mLog(aLog) {}
-
-    template <typename EntryType>
-    void match(const EntryType& aParam) {
-      LogParam(aParam, mLog);
-    }
-
-   private:
-    std::wstring* mLog;
-  };
-
   static void Log(const paramType& aParam, std::wstring* aLog) {
-    aParam.GetVariant().match(LogMatcher(aLog));
+    aParam.GetVariant().match(
+        [aLog](const auto& aParam) { LogParam(aParam, aLog); });
   }
 };
 

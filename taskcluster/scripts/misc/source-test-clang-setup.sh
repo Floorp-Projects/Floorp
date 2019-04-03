@@ -22,7 +22,3 @@ export LD_LIBRARY_PATH=$MOZBUILD_STATE_PATH/clang/lib
 # Mach lookup clang-tidy in clang-tools
 mkdir -p $MOZBUILD_STATE_PATH/clang-tools
 ln -s $MOZBUILD_STATE_PATH/clang-tidy $MOZBUILD_STATE_PATH/clang-tools/clang-tidy
-
-# List modified files since last public revision
-cd $HOME/checkouts/gecko
-export TRY_MODIFIED_FILES=$(hg status --rev 'max(ancestors(tip) and public())' -q --no-status)

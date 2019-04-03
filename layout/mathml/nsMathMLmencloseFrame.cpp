@@ -829,6 +829,6 @@ void nsMathMLmencloseFrame::DisplayNotation(nsDisplayListBuilder* aBuilder,
       aThickness <= 0)
     return;
 
-  aLists.Content()->AppendToTop(MakeDisplayItem<nsDisplayNotation>(
-      aBuilder, aFrame, aRect, aThickness, aType));
+  aLists.Content()->AppendNewToTop<nsDisplayNotation>(aBuilder, aFrame, aRect,
+                                                      aThickness, aType);
 }

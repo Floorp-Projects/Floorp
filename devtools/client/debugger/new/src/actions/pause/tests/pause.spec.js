@@ -161,7 +161,6 @@ describe("pause", () => {
 
       const source = makeSource("await");
       await dispatch(actions.newSource(source));
-      await dispatch(actions.loadSourceText(source));
 
       await dispatch(actions.paused(mockPauseInfo));
       const getNextStepSpy = jest.spyOn(parser, "getNextStep");
@@ -181,7 +180,6 @@ describe("pause", () => {
 
       const source = makeSource("await");
       await dispatch(actions.newSource(source));
-      await dispatch(actions.loadSourceText(source));
 
       await dispatch(actions.paused(mockPauseInfo));
       const getNextStepSpy = jest.spyOn(parser, "getNextStep");
@@ -208,7 +206,6 @@ describe("pause", () => {
       const source = makeSource("foo");
       await dispatch(actions.newSource(source));
       await dispatch(actions.newSource(makeOriginalSource("foo")));
-      await dispatch(actions.loadSourceText(source));
 
       await dispatch(actions.paused(mockPauseInfo));
       expect(selectors.getFrames(getState(), "FakeThread")).toEqual([
@@ -216,6 +213,7 @@ describe("pause", () => {
           generatedLocation: { column: 0, line: 1, sourceId: "foo" },
           id: mockFrameId,
           location: { column: 0, line: 1, sourceId: "foo" },
+          originalDisplayName: "foo",
           scope: {
             bindings: { arguments: [{ a: {} }], variables: { b: {} } }
           },
@@ -272,9 +270,6 @@ describe("pause", () => {
       const fooOriginalSource = makeSource("foo-original");
       await dispatch(actions.newSource(fooSource));
       await dispatch(actions.newSource(fooOriginalSource));
-      await dispatch(actions.loadSourceText(fooSource));
-      await dispatch(actions.loadSourceText(fooOriginalSource));
-      await dispatch(actions.setSymbols("foo-original"));
 
       await dispatch(actions.paused(mockPauseInfo));
       expect(selectors.getFrames(getState(), "FakeThread")).toEqual([
@@ -339,8 +334,6 @@ describe("pause", () => {
 
       await dispatch(actions.newSource(source));
       await dispatch(actions.newSource(originalSource));
-      await dispatch(actions.loadSourceText(source));
-      await dispatch(actions.loadSourceText(originalSource));
 
       await dispatch(actions.paused(mockPauseInfo));
       expect(selectors.getFrames(getState(), "FakeThread")).toEqual([

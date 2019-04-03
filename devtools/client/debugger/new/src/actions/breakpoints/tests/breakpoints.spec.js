@@ -33,7 +33,7 @@ describe("breakpoints", () => {
 
     const source = makeSource("a");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(source));
+    await dispatch(actions.loadSourceText({ source }));
     await dispatch(
       actions.setSelectedLocation(source, {
         line: 1,
@@ -63,7 +63,7 @@ describe("breakpoints", () => {
     };
     const source = makeSource("a");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(source));
+    await dispatch(actions.loadSourceText({ source }));
     await dispatch(
       actions.setSelectedLocation(source, {
         line: 1,
@@ -90,7 +90,7 @@ describe("breakpoints", () => {
     };
     const source = makeSource("a");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(source));
+    await dispatch(actions.loadSourceText({ source }));
     await dispatch(
       actions.setSelectedLocation(source, {
         line: 1,
@@ -124,7 +124,7 @@ describe("breakpoints", () => {
 
     const source = makeSource("a");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(source));
+    await dispatch(actions.loadSourceText({ source }));
     await dispatch(
       actions.setSelectedLocation(source, {
         line: 1,
@@ -163,11 +163,11 @@ describe("breakpoints", () => {
 
     const aSource = makeSource("a");
     await dispatch(actions.newSource(aSource));
-    await dispatch(actions.loadSourceText(aSource));
+    await dispatch(actions.loadSourceText({ source: aSource }));
 
     const bSource = makeSource("b");
     await dispatch(actions.newSource(bSource));
-    await dispatch(actions.loadSourceText(bSource));
+    await dispatch(actions.loadSourceText({ source: bSource }));
 
     await dispatch(
       actions.setSelectedLocation(aSource, {
@@ -210,11 +210,11 @@ describe("breakpoints", () => {
 
     const aSource = makeSource("a");
     await dispatch(actions.newSource(aSource));
-    await dispatch(actions.loadSourceText(aSource));
+    await dispatch(actions.loadSourceText({ source: aSource }));
 
     const bSource = makeSource("b");
     await dispatch(actions.newSource(bSource));
-    await dispatch(actions.loadSourceText(bSource));
+    await dispatch(actions.loadSourceText({ source: bSource }));
 
     await dispatch(actions.addBreakpoint(loc1));
     await dispatch(actions.addBreakpoint(loc2));
@@ -243,7 +243,7 @@ describe("breakpoints", () => {
 
     const aSource = makeSource("a");
     await dispatch(actions.newSource(aSource));
-    await dispatch(actions.loadSourceText(aSource));
+    await dispatch(actions.loadSourceText({ source: aSource }));
 
     await dispatch(actions.addBreakpoint(loc));
     let bp = selectors.getBreakpoint(getState(), loc);
@@ -287,11 +287,11 @@ describe("breakpoints", () => {
 
     const aSource = makeSource("a");
     await dispatch(actions.newSource(aSource));
-    await dispatch(actions.loadSourceText(aSource));
+    await dispatch(actions.loadSourceText({ source: aSource }));
 
     const bSource = makeSource("b");
     await dispatch(actions.newSource(bSource));
-    await dispatch(actions.loadSourceText(bSource));
+    await dispatch(actions.loadSourceText({ source: bSource }));
 
     await dispatch(actions.addBreakpoint(loc1));
     await dispatch(actions.addBreakpoint(loc2));
@@ -320,7 +320,7 @@ describe("breakpoints", () => {
 
     const source = makeSource("foo1");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(source));
+    await dispatch(actions.loadSourceText({ source }));
 
     await dispatch(actions.selectLocation(loc));
 
@@ -340,7 +340,7 @@ describe("breakpoints", () => {
 
     const source = makeSource("foo1");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(source));
+    await dispatch(actions.loadSourceText({ source }));
 
     await dispatch(actions.selectLocation({ sourceId: "foo1", line: 1 }));
 
@@ -368,7 +368,7 @@ describe("breakpoints", () => {
 
     const source = makeSource("a");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(source));
+    await dispatch(actions.loadSourceText({ source }));
 
     await dispatch(actions.addBreakpoint(loc));
 
@@ -398,7 +398,7 @@ describe("breakpoints", () => {
 
     const source = makeSource("a");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(source));
+    await dispatch(actions.loadSourceText({ source }));
 
     await dispatch(actions.addBreakpoint(loc));
     let bp = selectors.getBreakpoint(getState(), loc);
@@ -436,7 +436,7 @@ describe("breakpoints", () => {
 
     const source = makeSource("a.js");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(source));
+    await dispatch(actions.loadSourceText({ source }));
 
     await dispatch(actions.addBreakpoint(loc));
     await dispatch(actions.togglePrettyPrint("a.js"));

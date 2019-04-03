@@ -304,9 +304,8 @@ MOZ_NoReturn(int aLine) {
  * to crash-stats and are publicly visible. Firefox data stewards must do data
  * review on usages of this macro.
  */
-static inline MOZ_COLD MOZ_NORETURN void MOZ_Crash(const char* aFilename,
-                                                   int aLine,
-                                                   const char* aReason) {
+static MOZ_ALWAYS_INLINE MOZ_COLD MOZ_NORETURN void MOZ_Crash(
+    const char* aFilename, int aLine, const char* aReason) {
 #ifdef DEBUG
   MOZ_ReportCrash(aReason, aFilename, aLine);
 #endif
@@ -318,18 +317,8 @@ static inline MOZ_COLD MOZ_NORETURN void MOZ_Crash(const char* aFilename,
 static const size_t sPrintfMaxArgs = 4;
 static const size_t sPrintfCrashReasonSize = 1024;
 
-#ifndef DEBUG
-MFBT_API MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE MOZ_FORMAT_PRINTF(
-    2, 3) void MOZ_CrashPrintf(int aLine, const char* aFormat, ...);
-#  define MOZ_CALL_CRASH_PRINTF(format, ...) \
-    MOZ_CrashPrintf(__LINE__, format, __VA_ARGS__)
-#else
-MFBT_API MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE MOZ_FORMAT_PRINTF(
-    3, 4) void MOZ_CrashPrintf(const char* aFilename, int aLine,
-                               const char* aFormat, ...);
-#  define MOZ_CALL_CRASH_PRINTF(format, ...) \
-    MOZ_CrashPrintf(__FILE__, __LINE__, format, __VA_ARGS__)
-#endif
+MFBT_API MOZ_COLD MOZ_NEVER_INLINE MOZ_FORMAT_PRINTF(1, 2) const
+    char* MOZ_CrashPrintf(const char* aFormat, ...);
 
 /*
  * MOZ_CRASH_UNSAFE_PRINTF(format, arg1 [, args]) can be used when more
@@ -343,16 +332,16 @@ MFBT_API MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE MOZ_FORMAT_PRINTF(
  * to crash-stats and are publicly visible. Firefox data stewards must do data
  * review on usages of this macro.
  */
-#define MOZ_CRASH_UNSAFE_PRINTF(format, ...)                              \
-  do {                                                                    \
-    static_assert(MOZ_ARG_COUNT(__VA_ARGS__) > 0,                         \
-                  "Did you forget arguments to MOZ_CRASH_UNSAFE_PRINTF? " \
-                  "Or maybe you want MOZ_CRASH instead?");                \
-    static_assert(MOZ_ARG_COUNT(__VA_ARGS__) <= sPrintfMaxArgs,           \
-                  "Only up to 4 additional arguments are allowed!");      \
-    static_assert(sizeof(format) <= sPrintfCrashReasonSize,               \
-                  "The supplied format string is too long!");             \
-    MOZ_CALL_CRASH_PRINTF("" format, __VA_ARGS__);                        \
+#define MOZ_CRASH_UNSAFE_PRINTF(format, ...)                                \
+  do {                                                                      \
+    static_assert(MOZ_ARG_COUNT(__VA_ARGS__) > 0,                           \
+                  "Did you forget arguments to MOZ_CRASH_UNSAFE_PRINTF? "   \
+                  "Or maybe you want MOZ_CRASH instead?");                  \
+    static_assert(MOZ_ARG_COUNT(__VA_ARGS__) <= sPrintfMaxArgs,             \
+                  "Only up to 4 additional arguments are allowed!");        \
+    static_assert(sizeof(format) <= sPrintfCrashReasonSize,                 \
+                  "The supplied format string is too long!");               \
+    MOZ_Crash(__FILE__, __LINE__, MOZ_CrashPrintf("" format, __VA_ARGS__)); \
   } while (false)
 
 MOZ_END_EXTERN_C
