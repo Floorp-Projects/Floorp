@@ -94,7 +94,7 @@ class QrFragment : Fragment() {
     }
 
     internal lateinit var textureView: AutoFitTextureView
-    private var cameraId: String? = null
+    internal var cameraId: String? = null
     private var captureSession: CameraCaptureSession? = null
     internal var cameraDevice: CameraDevice? = null
     internal var previewSize: Size? = null
@@ -339,6 +339,8 @@ class QrFragment : Fragment() {
             manager?.openCamera(cameraId as String, stateCallback, backgroundHandler)
         } catch (e: InterruptedException) {
             throw IllegalStateException("Interrupted while trying to lock camera opening.", e)
+        } catch (e: CameraAccessException) {
+            logger.error("Failed to open camera", e)
         }
     }
 
@@ -445,7 +447,7 @@ class QrFragment : Fragment() {
                 it.createCaptureSession(Arrays.asList(mImageSurface, surface), stateCallback, null)
             }
         } catch (e: CameraAccessException) {
-                logger.error("Failed to create camera preview session", e)
+            logger.error("Failed to create camera preview session", e)
         }
     }
 

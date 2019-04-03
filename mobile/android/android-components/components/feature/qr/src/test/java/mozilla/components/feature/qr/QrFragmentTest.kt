@@ -4,8 +4,11 @@
 
 package mozilla.components.feature.qr
 
+import android.content.Context
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraDevice
+import android.hardware.camera2.CameraManager
+import android.support.v4.app.FragmentActivity
 import android.util.Size
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
@@ -28,6 +31,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
+import org.mockito.ArgumentMatchers.anyString
 
 @RunWith(RobolectricTestRunner::class)
 class QrFragmentTest {
@@ -135,7 +139,7 @@ class QrFragmentTest {
     }
 
     @Test
-    fun `catches and handles CameraAccessException`() {
+    fun `catches and handles CameraAccessException when creating preview session`() {
         val qrFragment = spy(QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java)))
 
         var camera: CameraDevice = mock()
@@ -150,6 +154,27 @@ class QrFragmentTest {
 
         try {
             qrFragment.createCameraPreviewSession()
+        } catch (e: CameraAccessException) {
+            fail("CameraAccessException should have been caught and logged, not re-thrown.")
+        }
+    }
+
+    @Test
+    fun `catches and handles CameraAccessException when opening camera`() {
+        val qrFragment = spy(QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java)))
+        `when`(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }
+
+        val cameraManager: CameraManager = mock()
+        `when`(cameraManager.openCamera(anyString(), any<CameraDevice.StateCallback>(), any()))
+                .thenThrow(CameraAccessException(123))
+
+        val activity: FragmentActivity = mock()
+        `when`(activity.getSystemService(Context.CAMERA_SERVICE)).thenReturn(cameraManager)
+        `when`(qrFragment.activity).thenReturn(activity)
+        qrFragment.cameraId = "mockCamera"
+
+        try {
+            qrFragment.openCamera(1920, 1080)
         } catch (e: CameraAccessException) {
             fail("CameraAccessException should have been caught and logged, not re-thrown.")
         }
