@@ -159,7 +159,7 @@ class TaskBuilder(object):
                     self.commit, product, postfix
                 ),
                 'index.project.mobile.fenix.branch.{}.pushdate.{}.{}.{}.latest.{}.{}'.format(
-                    self.short_head_branch. self.date.year, self.date.month, self.date.day,
+                    self.short_head_branch, self.date.year, self.date.month, self.date.day,
                     product, postfix
                 ),
             ]
