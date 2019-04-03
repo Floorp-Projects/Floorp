@@ -467,7 +467,7 @@ apply_stch (const hb_ot_shape_plan_t *plan HB_UNUSED,
     unsigned int j = new_len;
     for (unsigned int i = count; i; i--)
     {
-      if (!hb_in_range<unsigned> (info[i - 1].arabic_shaping_action(), STCH_FIXED, STCH_REPEATING))
+      if (!hb_in_range<uint8_t> (info[i - 1].arabic_shaping_action(), STCH_FIXED, STCH_REPEATING))
       {
         if (step == CUT)
 	{
@@ -488,7 +488,7 @@ apply_stch (const hb_ot_shape_plan_t *plan HB_UNUSED,
 
       unsigned int end = i;
       while (i &&
-	     hb_in_range<unsigned> (info[i - 1].arabic_shaping_action(), STCH_FIXED, STCH_REPEATING))
+	     hb_in_range<uint8_t> (info[i - 1].arabic_shaping_action(), STCH_FIXED, STCH_REPEATING))
       {
 	i--;
 	hb_position_t width = font->get_glyph_h_advance (info[i].codepoint);
@@ -506,7 +506,7 @@ apply_stch (const hb_ot_shape_plan_t *plan HB_UNUSED,
       unsigned int start = i;
       unsigned int context = i;
       while (context &&
-	     !hb_in_range<unsigned> (info[context - 1].arabic_shaping_action(), STCH_FIXED, STCH_REPEATING) &&
+	     !hb_in_range<uint8_t> (info[context - 1].arabic_shaping_action(), STCH_FIXED, STCH_REPEATING) &&
 	     (_hb_glyph_info_is_default_ignorable (&info[context - 1]) ||
 	      HB_ARABIC_GENERAL_CATEGORY_IS_WORD (_hb_glyph_info_get_general_category (&info[context - 1]))))
       {

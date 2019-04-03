@@ -85,11 +85,11 @@ _hb_atomic_ptr_impl_cmplexch (const void **P, const void *O_, const void *N)
 #define hb_atomic_int_impl_add(AI, V)		(reinterpret_cast<std::atomic<int> *> (AI)->fetch_add ((V), std::memory_order_acq_rel))
 #define hb_atomic_int_impl_set_relaxed(AI, V)	(reinterpret_cast<std::atomic<int> *> (AI)->store ((V), std::memory_order_relaxed))
 #define hb_atomic_int_impl_set(AI, V)		(reinterpret_cast<std::atomic<int> *> (AI)->store ((V), std::memory_order_release))
-#define hb_atomic_int_impl_get_relaxed(AI)	(reinterpret_cast<std::atomic<int> *> (AI)->load (std::memory_order_relaxed))
-#define hb_atomic_int_impl_get(AI)		(reinterpret_cast<std::atomic<int> *> (AI)->load (std::memory_order_acquire))
+#define hb_atomic_int_impl_get_relaxed(AI)	(reinterpret_cast<std::atomic<int> const *> (AI)->load (std::memory_order_relaxed))
+#define hb_atomic_int_impl_get(AI)		(reinterpret_cast<std::atomic<int> const *> (AI)->load (std::memory_order_acquire))
 
 #define hb_atomic_ptr_impl_set_relaxed(P, V)	(reinterpret_cast<std::atomic<void*> *> (P)->store ((V), std::memory_order_relaxed))
-#define hb_atomic_ptr_impl_get_relaxed(P)	(reinterpret_cast<std::atomic<void*> *> (P)->load (std::memory_order_relaxed))
+#define hb_atomic_ptr_impl_get_relaxed(P)	(reinterpret_cast<std::atomic<void*> const *> (P)->load (std::memory_order_relaxed))
 #define hb_atomic_ptr_impl_get(P)		(reinterpret_cast<std::atomic<void*> *> (P)->load (std::memory_order_acquire))
 static inline bool
 _hb_atomic_ptr_impl_cmplexch (const void **P, const void *O_, const void *N)
@@ -184,7 +184,7 @@ static inline bool _hb_compare_and_swap_ptr (void **P, void *O, void *N)
 #endif
 
 
-#elif !defined(HB_NO_MT) && defined(_AIX) && defined(__IBMCPP__)
+#elif !defined(HB_NO_MT) && defined(_AIX) && (defined(__IBMCPP__) || defined(__ibmxl__))
 
 #include <builtins.h>
 

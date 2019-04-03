@@ -48,7 +48,6 @@ defaults = ('Other', 'Not_Applicable', 'Cn', 'No_Block')
 # TODO Characters that are not in Unicode Indic files, but used in USE
 data[0][0x034F] = defaults[0]
 data[0][0x2060] = defaults[0]
-data[0][0x20F0] = defaults[0]
 # TODO https://github.com/roozbehp/unicode-data/issues/9
 data[0][0x11C44] = 'Consonant_Placeholder'
 data[0][0x11C45] = 'Consonant_Placeholder'
@@ -317,12 +316,11 @@ def map_to_use(data):
 
 		# Resolve Indic_Syllabic_Category
 
-		# TODO: These don't have UISC assigned in Unicode 8.0, but have UIPC
-		if U == 0x17DD: UISC = Vowel_Dependent
+		# TODO: These don't have UISC assigned in Unicode 12.0, but have UIPC
 		if 0x1CE2 <= U <= 0x1CE8: UISC = Cantillation_Mark
 
 		# Tibetan:
-		# TODO: These don't have UISC assigned in Unicode 11.0, but have UIPC
+		# TODO: These don't have UISC assigned in Unicode 12.0, but have UIPC
 		if 0x0F18 <= U <= 0x0F19 or 0x0F3E <= U <= 0x0F3F: UISC = Vowel_Dependent
 		if 0x0F86 <= U <= 0x0F87: UISC = Tone_Mark
 		# Overrides to allow NFC order matching syllable
@@ -347,13 +345,7 @@ def map_to_use(data):
 		if U == 0x1CED: UISC = Tone_Mark
 
 		# TODO: https://github.com/harfbuzz/harfbuzz/issues/525
-		if U == 0x1A7F: UISC = Consonant_Final; UIPC = Bottom
-
-		# TODO: https://github.com/harfbuzz/harfbuzz/pull/609
-		if U == 0x20F0: UISC = Cantillation_Mark; UIPC = Top
-
-		# TODO: https://github.com/harfbuzz/harfbuzz/pull/626
-		if U == 0xA8B4: UISC = Consonant_Medial
+		if U == 0x1A7F: UISC = Consonant_Final
 
 		# TODO: https://github.com/harfbuzz/harfbuzz/issues/1105
 		if U == 0x11134: UISC = Gemination_Mark
@@ -367,27 +359,19 @@ def map_to_use(data):
 
 		# Resolve Indic_Positional_Category
 
-		# TODO: Not in Unicode 8.0 yet, but in spec.
-		if U == 0x1B6C: UIPC = Bottom
-
-		# TODO: These should die, but have UIPC in Unicode 8.0
+		# TODO: These should die, but have UIPC in Unicode 12.0
 		if U in [0x953, 0x954]: UIPC = Not_Applicable
 
-		# TODO: In USE's override list but not in Unicode 11.0
+		# TODO: In USE's override list but not in Unicode 12.0
 		if U == 0x103C: UIPC = Left
 
-		# TODO: These are not in USE's override list that we have, nor are they in Unicode 11.0
+		# TODO: These are not in USE's override list that we have, nor are they in Unicode 12.0
 		if 0xA926 <= U <= 0xA92A: UIPC = Top
-		if U == 0x111CA: UIPC = Bottom
-		if U == 0x11300: UIPC = Top
 		# TODO: https://github.com/harfbuzz/harfbuzz/pull/1037
-		if U == 0x11302: UIPC = Top
-		if U == 0x1133C: UIPC = Bottom
-		if U == 0x1171E: UIPC = Left # Correct?!
-		if 0x1CF2 <= U <= 0x1CF3: UIPC = Right
+		#  and https://github.com/harfbuzz/harfbuzz/issues/1631
+		if U in [0x11302, 0x11303, 0x114C1]: UIPC = Top
+		if U == 0x1171E: UIPC = Left
 		if 0x1CF8 <= U <= 0x1CF9: UIPC = Top
-		# https://github.com/roozbehp/unicode-data/issues/8
-		if U == 0x0A51: UIPC = Bottom
 
 		assert (UIPC in [Not_Applicable, Visual_Order_Left] or
 			USE in use_positions), "%s %s %s %s %s" % (hex(U), UIPC, USE, UISC, UGC)

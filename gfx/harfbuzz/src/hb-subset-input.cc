@@ -44,7 +44,10 @@ hb_subset_input_create_or_fail ()
 
   input->unicodes = hb_set_create ();
   input->glyphs = hb_set_create ();
+  input->drop_hints = false;
   input->drop_layout = true;
+  input->desubroutinize = false;
+  input->retain_gids = false;
 
   return input;
 }
@@ -143,4 +146,28 @@ HB_EXTERN hb_bool_t
 hb_subset_input_get_desubroutinize (hb_subset_input_t *subset_input)
 {
   return subset_input->desubroutinize;
+}
+
+/**
+ * hb_subset_input_set_retain_gids:
+ * @subset_input: a subset_input.
+ * @retain_gids: If true the subsetter will not renumber glyph ids.
+ * Since: REPLACEME
+ **/
+HB_EXTERN void
+hb_subset_input_set_retain_gids (hb_subset_input_t *subset_input,
+				 hb_bool_t retain_gids)
+{
+  subset_input->retain_gids = retain_gids;
+}
+
+/**
+ * hb_subset_input_get_retain_gids:
+ * Returns: value of retain_gids.
+ * Since: REPLACEME
+ **/
+HB_EXTERN hb_bool_t
+hb_subset_input_get_retain_gids (hb_subset_input_t *subset_input)
+{
+  return subset_input->retain_gids;
 }
