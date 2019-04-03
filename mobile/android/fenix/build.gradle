@@ -25,9 +25,6 @@ allprojects {
     repositories {
         google()
         maven {
-            url "https://dl.bintray.com/mozilla-appservices/application-services"
-        }
-        maven {
             url "https://snapshots.maven.mozilla.org/maven2"
         }
         maven {
