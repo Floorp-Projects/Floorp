@@ -1654,7 +1654,7 @@ PeerConnectionWrapper.prototype = {
     let attempts = 0;
     // Time-units are MS
     const waitPeriod = 500;
-    const maxTime = 15000;
+    const maxTime = 20000;
     for (let totalTime = maxTime; totalTime > 0; totalTime -= waitPeriod) {
       try {
         let syncedStats = await ensureSyncedRtcp();
