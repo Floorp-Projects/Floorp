@@ -125,12 +125,12 @@ win64-rust-1.28:
         ]
         toolchain-artifact: public/build/rustc.tar.bz2
 
-win64-rust-1.32:
+win64-rust-1.34:
     treeherder:
         symbol: TW64(rust)
     run:
         arguments: [
-            '--channel', '1.32.0',
+            '--channel', 'beta-2019-03-27',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
@@ -157,7 +157,7 @@ win64-aarch64-rust:
         symbol: TW64(rust-aarch64)
     run:
         arguments: [
-            '--channel', '1.32.0',
+            '--channel', 'beta-2019-03-27',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'aarch64-pc-windows-msvc',
