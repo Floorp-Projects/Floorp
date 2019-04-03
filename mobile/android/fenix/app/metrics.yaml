@@ -101,6 +101,27 @@ events:
     - telemetry-client-dev@mozilla.com
     expires: "2020-03-01"
 
+context_menu:
+  item_tapped:
+    type: event
+    description: >
+      A user tapped an item in the browsers context menu
+    extra_keys:
+      named:
+        description: >
+          The name of the item that was tapped. Available items are
+          ```
+          open_in_new_tab, open_in_private_tab, open_image_in_new_tab,
+          save_image, share_link, copy_link, copy_image_location
+          ```
+    bugs:
+    - 957
+    data_reviews:
+    - TBD
+    notification_emails:
+    - telemetry-client-dev@mozilla.com
+    expires: "2020-03-01"
+
 find_in_page:
   opened:
     type: event

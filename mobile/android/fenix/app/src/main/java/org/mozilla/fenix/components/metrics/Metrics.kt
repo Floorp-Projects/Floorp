@@ -74,25 +74,46 @@ sealed class Event {
             get() = mapOf("engine" to engine)
     }
 
-    object FindInPageOpened: Event()
-    object FindInPageClosed: Event()
-    object FindInPageNext: Event()
-    object FindInPagePrevious: Event()
-    object FindInPageSearchCommitted: Event()
+    object FindInPageOpened : Event()
+    object FindInPageClosed : Event()
+    object FindInPageNext : Event()
+    object FindInPagePrevious : Event()
+    object FindInPageSearchCommitted : Event()
 
+    class ContextMenuItemTapped private constructor(val item: String) : Event() {
+        override val extras: Map<String, String>?
+            get() = mapOf("named" to item)
+
+        companion object {
+            fun create(context_item: String) = allowList[context_item]?.let { ContextMenuItemTapped(it) }
+
+            private val allowList = mapOf(
+                "mozac.feature.contextmenu.open_in_new_tab" to "open_in_new_tab",
+                "mozac.feature.contextmenu.open_in_private_tab" to "open_in_private_tab",
+                "mozac.feature.contextmenu.open_image_in_new_tab" to "open_image_in_new_tab",
+                "mozac.feature.contextmenu.save_image" to "save_image",
+                "mozac.feature.contextmenu.share_link" to "share_link",
+                "mozac.feature.contextmenu.copy_link" to "copy_link",
+                "mozac.feature.contextmenu.copy_image_location" to "copy_image_location"
+            )
+        }
+    }
 
     open val extras: Map<String, String>?
         get() = null
 }
 
-private fun Fact.toEvent(): Event? = when(Pair(component, item)){
+private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
     Pair(Component.FEATURE_FINDINPAGE, "previous") -> Event.FindInPagePrevious
     Pair(Component.FEATURE_FINDINPAGE, "next") -> Event.FindInPageNext
     Pair(Component.FEATURE_FINDINPAGE, "close") -> Event.FindInPageClosed
     Pair(Component.FEATURE_FINDINPAGE, "input") -> Event.FindInPageSearchCommitted
+    Pair(Component.FEATURE_CONTEXTMENU, "item") -> {
+        metadata?.get("item")?.let { Event.ContextMenuItemTapped.create(it.toString()) }
+    }
+
     else -> null
 }
-
 
 interface MetricsService {
     fun start()

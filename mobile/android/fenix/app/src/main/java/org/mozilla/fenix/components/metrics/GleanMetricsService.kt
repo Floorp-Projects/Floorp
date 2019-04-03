@@ -8,6 +8,7 @@ import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.metrics.NoExtraKeys
 import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Events
@@ -61,11 +62,15 @@ private val Event.wrapper
         is Event.FindInPageNext -> EventWrapper<NoExtraKeys>(
             { FindInPage.nextResult.record(it) }
         )
-        is Event.FindInPagePrevious-> EventWrapper<NoExtraKeys>(
+        is Event.FindInPagePrevious -> EventWrapper<NoExtraKeys>(
             { FindInPage.previousResult.record(it) }
         )
         is Event.FindInPageSearchCommitted -> EventWrapper<NoExtraKeys>(
             { FindInPage.searchedPage.record(it) }
+        )
+        is Event.ContextMenuItemTapped -> EventWrapper(
+            { ContextMenu.itemTapped.record(it) },
+            { ContextMenu.itemTappedKeys.valueOf(it) }
         )
         // Don't track other events with Glean
         else -> null
