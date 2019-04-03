@@ -252,17 +252,17 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
             )
 
     if promotion_config.get('partial-updates', False):
-        partial_updates = json.dumps(input.get('partial_updates', {}))
-        if partial_updates == "{}":
+        partial_updates = input.get('partial_updates', {})
+        if not partial_updates:
             raise Exception(
                 "`partial_updates` property needs to be provided for `{}`"
                 "target.".format(release_promotion_flavor)
             )
         balrog_prefix = product.title()
-        os.environ['PARTIAL_UPDATES'] = partial_updates
+        os.environ['PARTIAL_UPDATES'] = json.dumps(partial_updates)
         release_history = populate_release_history(
             balrog_prefix, parameters['project'],
-            partial_updates=input['partial_updates']
+            partial_updates=partial_updates
         )
 
     target_tasks_method = promotion_config['target-tasks-method'].format(
