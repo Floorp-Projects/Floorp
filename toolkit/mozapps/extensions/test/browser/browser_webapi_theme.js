@@ -21,6 +21,11 @@ add_task(async function test_theme_install() {
       Services.obs.removeObserver(observer, "lightweight-theme-styling-update");
     });
 
+    let sawConfirm = false;
+    promisePopupNotificationShown("addon-install-confirmation").then(panel => {
+      sawConfirm = true;
+      panel.button.click();
+    });
 
     let prompt1 = waitAppMenuNotificationShown("addon-installed", "theme@tests.mozilla.org", false);
     let installPromise = ContentTask.spawn(browser, URL, async (url) => {
@@ -28,6 +33,8 @@ add_task(async function test_theme_install() {
       return install.install();
     });
     await prompt1;
+
+    ok(sawConfirm, "Confirm notification was displayed before installation");
 
     // Open a new window and test the app menu panel from there.  This verifies the
     // incognito checkbox as well as finishing install in this case.
