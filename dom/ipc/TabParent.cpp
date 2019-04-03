@@ -2219,7 +2219,7 @@ mozilla::ipc::IPCResult TabParent::RecvOnContentBlockingEvent(
       Unused << browser->CallWebProgressContentBlockingEventListeners(
           true, aWebProgressData->isTopLevel(),
           aWebProgressData->isLoadingDocument(), aWebProgressData->loadType(),
-          aWebProgressData->DOMWindowID(), aRequestData.requestURI(),
+          aWebProgressData->outerDOMWindowID(), aRequestData.requestURI(),
           aRequestData.originalRequestURI(), aRequestData.matchedList(),
           aEvent);
     } else {
