@@ -67,16 +67,16 @@ add_task(async function test_parsing_search_urls() {
   Assert.ok("duckduckgo.in-content:organic:hi" in hs, "The histogram must contain the correct key");
 
   // Baidu search access point.
-  SearchTelemetry.updateTrackingStatus({}, "https://www.baidu.com/baidu?wd=test&tn=monline_dg&ie=utf-8");
+  SearchTelemetry.updateTrackingStatus({}, "https://www.baidu.com/baidu?wd=test&tn=monline_7_dg&ie=utf-8");
   hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
   Assert.ok(hs);
-  Assert.ok("baidu.in-content:sap:monline_dg" in hs, "The histogram must contain the correct key");
+  Assert.ok("baidu.in-content:sap:monline_7_dg" in hs, "The histogram must contain the correct key");
 
   // Baidu search access point follow-on.
-  SearchTelemetry.updateTrackingStatus({}, "https://www.baidu.com/s?ie=utf-8&f=8&rsv_bp=1&tn=monline_dg&wd=test2&oq=test&rsv_pq=RSV_PQ_VALUE&rsv_t=RSV_T_VALUE&rqlang=cn&rsv_enter=1&rsv_sug3=2&rsv_sug2=0&inputT=227&rsv_sug4=397");
+  SearchTelemetry.updateTrackingStatus({}, "https://www.baidu.com/s?ie=utf-8&f=8&rsv_bp=1&tn=monline_7_dg&wd=test2&oq=test&rsv_pq=RSV_PQ_VALUE&rsv_t=RSV_T_VALUE&rqlang=cn&rsv_enter=1&rsv_sug3=2&rsv_sug2=0&inputT=227&rsv_sug4=397");
   hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
   Assert.ok(hs);
-  Assert.ok("baidu.in-content:sap-follow-on:monline_dg" in hs, "The histogram must contain the correct key");
+  Assert.ok("baidu.in-content:sap-follow-on:monline_7_dg" in hs, "The histogram must contain the correct key");
 
   // Baidu organic.
   SearchTelemetry.updateTrackingStatus({}, "https://www.baidu.com/s?ie=utf-8&f=8&rsv_bp=1&rsv_idx=1&ch=&tn=baidu&bar=&wd=test&rn=&oq=&rsv_pq=RSV_PQ_VALUE&rsv_t=RSV_T_VALUE&rqlang=cn");
