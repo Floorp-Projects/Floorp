@@ -1376,7 +1376,6 @@ var gBrowserInit = {
     TabsInTitlebar.init();
 
     new LightweightThemeConsumer(document);
-    CompactTheme.init();
 
     if (AppConstants.platform == "win") {
       if (window.matchMedia("(-moz-os-version: windows-win8)").matches &&
@@ -2003,8 +2002,6 @@ var gBrowserInit = {
     TabsInTitlebar.uninit();
 
     ToolbarIconColor.uninit();
-
-    CompactTheme.uninit();
 
     // In certain scenarios it's possible for unload to be fired before onload,
     // (e.g. if the window is being closed after browser.js loads but before the

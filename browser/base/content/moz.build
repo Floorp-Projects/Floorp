@@ -121,9 +121,6 @@ with Files("browser-addons.js"):
 with Files("*menu*"):
     BUG_COMPONENT = ("Firefox", "Menus")
 
-with Files("browser-compacttheme.js"):
-    BUG_COMPONENT = ("Firefox", "Themes")
-
 with Files("browser-customization.js"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
 
