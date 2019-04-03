@@ -1,0 +1,117 @@
+# This file contains exhaustive information about all the release artifacs that
+# are needed within a type of release.
+#
+# Structure
+# --------
+# `s3_bucket_paths`       -- prefix to be used per product to correctly access our S3 buckets
+# `default_locales`       -- list of locales to be used when composing upstream artifacts or the list of
+#                      destinations. If given an empty locale, it uses these locales instead.
+# `tasktype_map`          -- mapping between task reference and task type, particularly usefule when
+#                      composing the upstreamArtifacts for scriptworker.
+# `platform_names`        -- various platform mappings used in reckoning artifacts or other paths
+# `default`               -- a default entry, which the mappings extend and override in such a way that
+#                      final path full-destinations will be a concatenation of the following:
+#                      `s3_bucket_paths`, `destinations`, `locale_prefix`, `pretty_name`
+# `from`                  -- specifies the dependency(ies) from which to expect the particular artifact
+# `all_locales`           -- boolean argument to specify whether that particular artifact is to be expected
+#                      for all locales or just the default one
+# `description`           -- brief summary of what that artifact is
+# `locale_prefix`         -- prefix to be used in the final destination paths, whether that's for default locale or not
+# `source_path_modifier`  -- any parent dir that might be used in between artifact prefix and filename at source location
+#                            for example `public/build` vs `public/build/ach/`.
+# `destinations`          -- final list of directories where to push the artifacts in S3
+# `pretty_name`           -- the final name the artifact will have at destination
+# `checksums_path`        -- the name to identify one artifact within the checksums file
+# `not_for_platforms`     -- filtering option to avoid associating an artifact with a specific platform
+# `only_for_platforms`    -- filtering option to exclusively include the association of an artifact for a specific platform
+# `partials_only`         -- filtering option to avoid associating an artifact unless this flag is present
+# `update_balrog_manifest`-- flag needed downstream in beetmover jobs to reckon the balrog manifest
+# `from_buildid`          -- flag needed downstream in beetmover jobs to reckon the balrog manifest
+---
+s3_bucket_paths:
+  by-platform:
+    .*devedition.*:
+      - pub/devedition/candidates
+    default:
+      - pub/firefox/candidates
+default_locales:
+  - en-US
+tasktype_map:
+  checksums-signing: signing
+  release-beetmover-signed-langpacks: signing
+platform_names:
+  path_platform:
+    by-platform:
+      linux-nightly: 'linux-i686'
+      linux64-nightly: 'linux-x86_64'
+      linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
+      macosx64-nightly: 'mac'
+      win32-nightly: 'win32'
+      win64-nightly: 'win64'
+      win64-aarch64-nightly: 'win64-aarch64'
+      win64-asan-reporter-nightly: 'win64-asan-reporter'
+      linux-shippable: 'linux-i686'
+      linux64-shippable: 'linux-x86_64'
+      macosx64-shippable: 'mac'
+      win32-shippable: 'win32'
+      win64-shippable: 'win64'
+      win64-aarch64-shippable: 'win64-aarch64'
+      linux: 'linux-i686'
+      linux64: 'linux-x86_64'
+      macosx64: 'mac'
+      win32: 'win32'
+      win64: 'win64'
+  filename_platform:
+    by-platform:
+      linux-nightly: 'linux-i686'
+      linux64-nightly: 'linux-x86_64'
+      linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
+      macosx64-nightly: 'mac'
+      win32-nightly: 'win32'
+      win64-nightly: 'win64'
+      win64-aarch64-nightly: 'win64-aarch64'
+      win64-asan-reporter-nightly: 'win64-asan-reporter'
+      linux-shippable: 'linux-i686'
+      linux64-shippable: 'linux-x86_64'
+      macosx64-shippable: 'mac'
+      win32-shippable: 'win32'
+      win64-shippable: 'win64'
+      win64-aarch64-shippable: 'win64-aarch64'
+      linux: 'linux-i686'
+      linux64: 'linux-x86_64'
+      macosx64: 'mac'
+      win32: 'win32'
+      win64: 'win64'
+  stage_platform: ''
+
+default: &default
+  from:
+    - checksums-signing
+  all_locales: true
+  description: "TO_BE_OVERRIDDEN"
+  locale_prefix: '${locale}/'
+  source_path_modifier: ''
+  destinations:
+    - ${version}-candidates/build${build_number}/beetmover-checksums/${path_platform}
+
+mapping:
+  target.checksums:
+    <<: *default
+    description: "Checksums file containing size, hash, sha algorithm and filename"
+    pretty_name: firefox-${version}.checksums.beet
+    checksums_path: beetmover-checksums/${path_platform}/${locale}/firefox-${version}.checksums.beet
+  target.checksums.asc:
+    <<: *default
+    description: "Detached signature for the checksums file"
+    pretty_name: firefox-${version}.checksums.asc
+    checksums_path: beetmover-checksums/${path_platform}/${locale}/firefox-${version}.checksums.asc
+  target-langpack.checksums:
+    <<: *default
+    description: "Checksums file containing size, hash, sha algorithm and filename for the langpack"
+    locale_prefix: ''
+    from:
+      - release-beetmover-signed-langpacks
+    pretty_name: ${locale}.checksums.beet
+    checksums_path: beetmover-checksums/${path_platform}/xpi/${locale}.checksums.beet
+    destinations:
+      - ${version}-candidates/build${build_number}/beetmover-checksums/${path_platform}/xpi

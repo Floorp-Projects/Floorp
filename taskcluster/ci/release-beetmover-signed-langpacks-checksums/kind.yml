@@ -14,3 +14,6 @@ kind-dependencies:
 
 job-template:
    shipping-phase: promote
+   attributes:
+      artifact_prefix: public
+      artifact_map: taskcluster/taskgraph/manifests/firefox_candidates_checksums.yml
