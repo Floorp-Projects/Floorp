@@ -11,13 +11,12 @@
 
 // Interfaces
 #include "nsCOMPtr.h"
-#include "nsIPresShell.h"
 #include "nsViewManager.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 
 class nsIContent;
-
+class nsIPresShell;
 class nsPresContext;
 
 // nsPrintObject Document Type

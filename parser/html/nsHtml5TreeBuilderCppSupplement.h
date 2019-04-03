@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsError.h"
-#include "nsIPresShell.h"
 #include "nsNodeUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Likely.h"
