@@ -2,10 +2,7 @@
 
 #[macro_use]
 extern crate darling;
-#[macro_use]
 extern crate syn;
-#[macro_use]
-extern crate quote;
 
 use darling::FromDeriveInput;
 
@@ -37,10 +34,12 @@ pub enum Sit {
 
 #[test]
 fn verify_skipped_field_not_required() {
-    let di = parse_quote! {
+    let di = syn::parse_str(
+        r#"
         #[skip_test(ipsum = "Hello")]
         struct Baz;
-    };
+    "#,
+    ).unwrap();
 
     assert_eq!(
         Lorem::from_derive_input(&di).unwrap(),

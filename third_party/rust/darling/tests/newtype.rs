@@ -2,10 +2,8 @@
 
 #[macro_use]
 extern crate darling;
-#[macro_use]
+
 extern crate syn;
-#[macro_use]
-extern crate quote;
 
 use darling::FromDeriveInput;
 
@@ -20,11 +18,13 @@ struct DemoContainer {
 
 #[test]
 fn generated() {
-    let di = parse_quote! {
+    let di = syn::parse_str(
+        r#"
         #[derive(Baz)]
         #[newtype(lorem = false)]
         pub struct Foo;
-    };
+    "#,
+    ).unwrap();
 
     let c = DemoContainer::from_derive_input(&di).unwrap();
 

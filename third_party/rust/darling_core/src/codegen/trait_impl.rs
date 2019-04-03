@@ -15,7 +15,6 @@ pub struct TraitImpl<'a> {
     pub default: Option<DefaultExpression<'a>>,
     pub map: Option<&'a Path>,
     pub bound: Option<&'a [WherePredicate]>,
-    pub allow_unknown_fields: bool,
 }
 
 impl<'a> TraitImpl<'a> {
@@ -45,18 +44,17 @@ impl<'a> TraitImpl<'a> {
         let declared = self.declared_type_params();
         match self.data {
             Data::Struct(ref v) => self.type_params_in_fields(v, &field_filter, &declared),
-            Data::Enum(ref v) => {
-                v.iter()
-                    .filter(variant_filter)
-                    .fold(Default::default(), |mut state, variant| {
-                        state.extend(self.type_params_in_fields(
-                            &variant.data,
-                            &field_filter,
-                            &declared,
-                        ));
-                        state
-                    })
-            }
+            Data::Enum(ref v) => v.iter().filter(variant_filter).fold(
+                Default::default(),
+                |mut state, variant| {
+                    state.extend(self.type_params_in_fields(
+                        &variant.data,
+                        &field_filter,
+                        &declared,
+                    ));
+                    state
+                },
+            ),
         }
     }
 
@@ -80,12 +78,12 @@ impl<'a> TraitImpl<'a> {
 impl<'a> TraitImpl<'a> {
     /// Gets the `let` declaration for errors accumulated during parsing.
     pub fn declare_errors(&self) -> ErrorDeclaration {
-        ErrorDeclaration::default()
+        ErrorDeclaration::new()
     }
 
     /// Gets the check which performs an early return if errors occurred during parsing.
     pub fn check_errors(&self) -> ErrorCheck {
-        ErrorCheck::default()
+        ErrorCheck::new()
     }
 
     /// Generate local variable declarations for all fields.
@@ -131,18 +129,21 @@ impl<'a> TraitImpl<'a> {
     }
 
     pub(in codegen) fn initializers(&self) -> TokenStream {
-        self.make_field_ctx().initializers()
+        let foo = match self.data {
+            Data::Enum(_) => panic!("Core loop on enums isn't supported"),
+            Data::Struct(ref data) => FieldsGen(data),
+        };
+
+        foo.initializers()
     }
 
     /// Generate the loop which walks meta items looking for property matches.
     pub(in codegen) fn core_loop(&self) -> TokenStream {
-        self.make_field_ctx().core_loop()
-    }
-
-    fn make_field_ctx(&'a self) -> FieldsGen<'a> {
-        match self.data {
+        let foo = match self.data {
             Data::Enum(_) => panic!("Core loop on enums isn't supported"),
-            Data::Struct(ref data) => FieldsGen::new(data, self.allow_unknown_fields),
-        }
+            Data::Struct(ref data) => FieldsGen(data),
+        };
+
+        foo.core_loop()
     }
 }

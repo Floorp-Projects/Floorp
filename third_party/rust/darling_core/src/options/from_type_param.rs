@@ -1,5 +1,3 @@
-use proc_macro2::TokenStream;
-use quote::ToTokens;
 use syn::{self, Ident};
 
 use codegen::FromTypeParamImpl;
@@ -19,9 +17,8 @@ impl FromTypeParamOptions {
             base: OuterFrom::start(di),
             bounds: None,
             default: None,
-        })
-        .parse_attributes(&di.attrs)?
-        .parse_body(&di.data)
+        }).parse_attributes(&di.attrs)?
+            .parse_body(&di.data)
     }
 }
 
@@ -69,11 +66,5 @@ impl<'a> From<&'a FromTypeParamOptions> for FromTypeParamImpl<'a> {
             forward_attrs: v.base.forward_attrs.as_ref(),
             from_ident: v.base.from_ident,
         }
-    }
-}
-
-impl ToTokens for FromTypeParamOptions {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        FromTypeParamImpl::from(self).to_tokens(tokens)
     }
 }

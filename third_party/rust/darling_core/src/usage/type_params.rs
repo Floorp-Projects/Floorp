@@ -246,11 +246,15 @@ impl UsesTypeParams for syn::TypeParamBound {
 #[cfg(test)]
 mod tests {
     use proc_macro2::Span;
-    use syn::{DeriveInput, Ident};
+    use syn::{self, Ident};
 
     use super::UsesTypeParams;
     use usage::IdentSet;
     use usage::Purpose::*;
+
+    fn given_src(src: &str) -> syn::DeriveInput {
+        syn::parse_str(src).unwrap()
+    }
 
     fn ident_set(idents: Vec<&str>) -> IdentSet {
         idents
@@ -261,7 +265,7 @@ mod tests {
 
     #[test]
     fn finds_simple() {
-        let input: DeriveInput = parse_quote! { struct Foo<T, U>(T, i32, A, U); };
+        let input = given_src("struct Foo<T, U>(T, i32, A, U);");
         let generics = ident_set(vec!["T", "U", "X"]);
         let matches = input.data.uses_type_params(&BoundImpl.into(), &generics);
         assert_eq!(matches.len(), 2);
@@ -273,12 +277,14 @@ mod tests {
 
     #[test]
     fn finds_named() {
-        let input: DeriveInput = parse_quote! {
-            struct Foo<T, U = usize> {
-                bar: T,
-                world: U,
-            }
-        };
+        let input = given_src(
+            r#"
+        struct Foo<T, U = usize> {
+            bar: T,
+            world: U,
+        }
+        "#,
+        );
 
         let generics = ident_set(vec!["T", "U", "X"]);
 
@@ -293,12 +299,14 @@ mod tests {
 
     #[test]
     fn finds_as_type_arg() {
-        let input: DeriveInput = parse_quote! {
-            struct Foo<T, U> {
-                bar: T,
-                world: Vec<U>,
-            }
-        };
+        let input = given_src(
+            r#"
+        struct Foo<T, U> {
+            bar: T,
+            world: Vec<U>,
+        }
+        "#,
+        );
 
         let generics = ident_set(vec!["T", "U", "X"]);
 
@@ -313,8 +321,7 @@ mod tests {
 
     #[test]
     fn associated_type() {
-        let input: DeriveInput =
-            parse_quote! { struct Foo<'a, T> where T: Iterator { peek: T::Item } };
+        let input = given_src("struct Foo<'a, T> where T: Iterator { peek: T::Item }");
         let generics = ident_set(vec!["T", "INTO"]);
         let matches = input.data.uses_type_params(&BoundImpl.into(), &generics);
         assert_eq!(matches.len(), 1);
@@ -322,7 +329,7 @@ mod tests {
 
     #[test]
     fn box_fn_output() {
-        let input: DeriveInput = parse_quote! { struct Foo<T>(Box<Fn() -> T>); };
+        let input = given_src("struct Foo<T>(Box<Fn() -> T>);");
         let generics = ident_set(vec!["T"]);
         let matches = input.data.uses_type_params(&BoundImpl.into(), &generics);
         assert_eq!(matches.len(), 1);
@@ -331,7 +338,7 @@ mod tests {
 
     #[test]
     fn box_fn_input() {
-        let input: DeriveInput = parse_quote! { struct Foo<T>(Box<Fn(&T) -> ()>); };
+        let input = given_src("struct Foo<T>(Box<Fn(&T) -> ()>);");
         let generics = ident_set(vec!["T"]);
         let matches = input.data.uses_type_params(&BoundImpl.into(), &generics);
         assert_eq!(matches.len(), 1);
@@ -342,8 +349,7 @@ mod tests {
     /// search can execute in.
     #[test]
     fn qself_vec() {
-        let input: DeriveInput =
-            parse_quote! { struct Foo<T>(<Vec<T> as a::b::Trait>::AssociatedItem); };
+        let input = given_src("struct Foo<T>(<Vec<T> as a::b::Trait>::AssociatedItem);");
         let generics = ident_set(vec!["T", "U"]);
 
         let bound_matches = input.data.uses_type_params(&BoundImpl.into(), &generics);
