@@ -5,13 +5,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/WindowGlobalParent.h"
+
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ipc/InProcessParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/ChromeUtils.h"
+#include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozJSComponentLoader.h"
 #include "nsContentUtils.h"
+#include "nsDocShell.h"
 #include "nsError.h"
+#include "nsFrameLoaderOwner.h"
+#include "nsGlobalWindowInner.h"
 #include "nsQueryObject.h"
 
 #include "mozilla/dom/JSWindowActorBinding.h"
@@ -19,6 +29,7 @@
 #include "mozilla/dom/JSWindowActorService.h"
 
 using namespace mozilla::ipc;
+using namespace mozilla::dom::ipc;
 
 namespace mozilla {
 namespace dom {
