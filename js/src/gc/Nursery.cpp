@@ -860,12 +860,6 @@ void js::Nursery::collect(JS::GCReason reason) {
   if (rt->gc.heapSize.gcBytes() >= tunables().gcMaxBytes()) {
     disable();
   }
-  // Disable the nursery if the user changed the configuration setting.  The
-  // nursery can only be re-enabled by resetting the configurationa and
-  // restarting firefox.
-  if (chunkCountLimit_ == 0) {
-    disable();
-  }
 
   endProfile(ProfileKey::Total);
   rt->gc.incMinorGcNumber();
@@ -1219,6 +1213,14 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
 }
 
 bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
+  // Disable the nursery if the user changed the configuration setting. The
+  // nursery can only be re-enabled by resetting the configuration and
+  // restarting firefox.
+  if (tunables().gcMaxNurseryBytes() == 0) {
+    disable();
+    return true;
+  }
+
   // Shrink the nursery to its minimum size of we ran out of memory or
   // received a memory pressure event.
   if (gc::IsOOMReason(reason)) {
