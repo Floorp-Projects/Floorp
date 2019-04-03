@@ -64,7 +64,7 @@ function assertMigrationHistogramCount(category, expectedCount) {
 }
 
 function assertTelemetryEvents(extensionId, expectedEvents) {
-  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
 
   ok(snapshot.parent && snapshot.parent.length > 0, "Got parent telemetry events in the snapshot");
 
@@ -203,7 +203,7 @@ add_task(async function test_storage_local_data_migration() {
   assertMigrationHistogramCount("failure", 0);
 
   // No new telemetry events recorded for the extension.
-  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
   const filterByCategory = ([timestamp, category]) => category === EVENT_CATEGORY;
 
   ok(!snapshot.parent || snapshot.parent.filter(filterByCategory).length === 0,

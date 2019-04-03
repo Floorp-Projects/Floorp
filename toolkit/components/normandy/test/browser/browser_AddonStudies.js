@@ -114,7 +114,7 @@ decorate_task(
       newActiveStudy.studyEndDate,
       "init sets the study end date if a study's add-on is not installed."
     );
-    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false);
     events = (events.parent || []).filter(e => e[1] == "normandy");
     Assert.deepEqual(
       events[0].slice(2), // strip timestamp and "normandy"
