@@ -94,6 +94,8 @@ function promiseBrowserLoaded(browser, url, redirectUrl) {
       QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIWebProgressListener]),
 
       onStateChange(webProgress, request, stateFlags, statusCode) {
+        request.QueryInterface(Ci.nsIChannel);
+
         let requestUrl = request.originalURI ? request.originalURI.spec : webProgress.DOMWindow.location.href;
         if (webProgress.isTopLevel &&
             (requestUrl === url || requestUrl === redirectUrl) &&
