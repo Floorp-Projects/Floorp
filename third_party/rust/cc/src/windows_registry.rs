@@ -103,6 +103,8 @@ pub enum VsVers {
     Vs14,
     /// Visual Studio 15 (2017)
     Vs15,
+    /// Visual Studio 16 (2019)
+    Vs16,
 
     /// Hidden variant that should not be matched on. Callers that want to
     /// handle an enumeration of `VsVers` instances should always have a default
@@ -128,6 +130,7 @@ pub fn find_vs_version() -> Result<VsVers, String> {
 
     match env::var("VisualStudioVersion") {
         Ok(version) => match &version[..] {
+            "16.0" => Ok(VsVers::Vs16),
             "15.0" => Ok(VsVers::Vs15),
             "14.0" => Ok(VsVers::Vs14),
             "12.0" => Ok(VsVers::Vs12),
@@ -144,7 +147,9 @@ pub fn find_vs_version() -> Result<VsVers, String> {
         _ => {
             // Check for the presense of a specific registry key
             // that indicates visual studio is installed.
-            if impl_::has_msbuild_version("15.0") {
+            if impl_::has_msbuild_version("16.0") {
+                Ok(VsVers::Vs16)
+            } else if impl_::has_msbuild_version("15.0") {
                 Ok(VsVers::Vs15)
             } else if impl_::has_msbuild_version("14.0") {
                 Ok(VsVers::Vs14)
@@ -174,7 +179,7 @@ mod impl_ {
     use std::io::Read;
     use registry::{RegistryKey, LOCAL_MACHINE};
     use com;
-    use setup_config::{SetupConfiguration, SetupInstance};
+    use setup_config::{EnumSetupInstances, SetupConfiguration, SetupInstance};
 
     use Tool;
 
@@ -217,11 +222,15 @@ mod impl_ {
     // Note that much of this logic can be found [online] wrt paths, COM, etc.
     //
     // [online]: https://blogs.msdn.microsoft.com/vcblog/2017/03/06/finding-the-visual-c-compiler-tools-in-visual-studio-2017/
-    pub fn find_msvc_15(tool: &str, target: &str) -> Option<Tool> {
+    fn vs15_instances() -> Option<EnumSetupInstances> {
         otry!(com::initialize().ok());
 
         let config = otry!(SetupConfiguration::new().ok());
-        let iter = otry!(config.enum_all_instances().ok());
+        config.enum_all_instances().ok()
+    }
+
+    pub fn find_msvc_15(tool: &str, target: &str) -> Option<Tool> {
+        let iter = otry!(vs15_instances());
         for instance in iter {
             let instance = otry!(instance.ok());
             let tool = tool_from_vs15_instance(tool, target, &instance);
@@ -231,6 +240,44 @@ mod impl_ {
         }
 
         None
+    }
+
+    // While the paths to Visual Studio 2017's devenv and MSBuild could
+    // potentially be retrieved from the registry, finding them via
+    // SetupConfiguration has shown to be [more reliable], and is preferred
+    // according to Microsoft. To help head off potential regressions though,
+    // we keep the registry method as a fallback option.
+    //
+    // [more reliable]: https://github.com/alexcrichton/cc-rs/pull/331
+    fn find_tool_in_vs15_path(tool: &str, target: &str) -> Option<Tool> {
+        let mut path = match vs15_instances() {
+            Some(instances) => instances
+                .filter_map(|instance| {
+                    instance
+                        .ok()
+                        .and_then(|instance| instance.installation_path().ok())
+                }).map(|path| PathBuf::from(path).join(tool))
+                .find(|ref path| path.is_file()),
+            None => None,
+        };
+
+        if path.is_none() {
+            let key = r"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7";
+            path = LOCAL_MACHINE
+                .open(key.as_ref())
+                .ok()
+                .and_then(|key| key.query_str("15.0").ok())
+                .map(|path| PathBuf::from(path).join(tool))
+                .filter(|ref path| path.is_file());
+        }
+
+        path.map(|path| {
+            let mut tool = Tool::new(path);
+            if target.contains("x86_64") {
+                tool.env.push(("Platform".into(), "X64".into()));
+            }
+            tool
+        })
     }
 
     fn tool_from_vs15_instance(tool: &str, target: &str, instance: &SetupInstance) -> Option<Tool> {
@@ -523,8 +570,8 @@ mod impl_ {
             ("i586", X86_64) | ("i686", X86_64) => vec![("amd64_x86", "amd64"), ("", "")],
             ("x86_64", X86) => vec![("x86_amd64", "")],
             ("x86_64", X86_64) => vec![("amd64", "amd64"), ("x86_amd64", "")],
-            ("arm", X86) => vec![("x86_arm", "")],
-            ("arm", X86_64) => vec![("amd64_arm", "amd64"), ("x86_arm", "")],
+            ("arm", X86) | ("thumbv7a", X86) => vec![("x86_arm", "")],
+            ("arm", X86_64) | ("thumbv7a", X86_64) => vec![("amd64_arm", "amd64"), ("x86_arm", "")],
             _ => vec![],
         }
     }
@@ -534,7 +581,7 @@ mod impl_ {
         match arch {
             "i586" | "i686" => Some("x86"),
             "x86_64" => Some("x64"),
-            "arm" => Some("arm"),
+            "arm" | "thumbv7a" => Some("arm"),
             "aarch64" => Some("arm64"),
             _ => None,
         }
@@ -546,7 +593,7 @@ mod impl_ {
         match arch {
             "i586" | "i686" => Some(""),
             "x86_64" => Some("amd64"),
-            "arm" => Some("arm"),
+            "arm" | "thumbv7a" => Some("arm"),
             "aarch64" => Some("arm64"),
             _ => None,
         }
@@ -595,7 +642,7 @@ mod impl_ {
         for subkey in key.iter().filter_map(|k| k.ok()) {
             let val = subkey
                 .to_str()
-                .and_then(|s| s.trim_left_matches("v").replace(".", "").parse().ok());
+                .and_then(|s| s.trim_start_matches("v").replace(".", "").parse().ok());
             let val = match val {
                 Some(s) => s,
                 None => continue,
@@ -631,19 +678,7 @@ mod impl_ {
     }
 
     fn find_devenv_vs15(target: &str) -> Option<Tool> {
-        let key = r"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7";
-        LOCAL_MACHINE
-            .open(key.as_ref())
-            .ok()
-            .and_then(|key| key.query_str("15.0").ok())
-            .map(|path| {
-                let path = PathBuf::from(path).join(r"Common7\IDE\devenv.exe");
-                let mut tool = Tool::new(path);
-                if target.contains("x86_64") {
-                    tool.env.push(("Platform".into(), "X64".into()));
-                }
-                tool
-            })
+        find_tool_in_vs15_path(r"Common7\IDE\devenv.exe", target)
     }
 
     // see http://stackoverflow.com/questions/328017/path-to-msbuild
@@ -657,22 +692,7 @@ mod impl_ {
     }
 
     fn find_msbuild_vs15(target: &str) -> Option<Tool> {
-        // Seems like this could also go through SetupConfiguration,
-        // or that find_msvc_15 could just use this registry key
-        // instead of the COM interface.
-        let key = r"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7";
-        LOCAL_MACHINE
-            .open(key.as_ref())
-            .ok()
-            .and_then(|key| key.query_str("15.0").ok())
-            .map(|path| {
-                let path = PathBuf::from(path).join(r"MSBuild\15.0\Bin\MSBuild.exe");
-                let mut tool = Tool::new(path);
-                if target.contains("x86_64") {
-                    tool.env.push(("Platform".into(), "X64".into()));
-                }
-                tool
-            })
+        find_tool_in_vs15_path(r"MSBuild\15.0\Bin\MSBuild.exe", target)
     }
 
     fn find_old_msbuild(target: &str) -> Option<Tool> {

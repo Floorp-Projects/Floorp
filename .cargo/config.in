@@ -17,11 +17,6 @@ git = "https://github.com/froydnj/winapi-rs"
 branch = "aarch64"
 replace-with = "vendored-sources"
 
-[source."https://github.com/alexcrichton/cc-rs"]
-git = "https://github.com/glandium/cc-rs"
-branch = "1.0.23-clang-cl-aarch64"
-replace-with = "vendored-sources"
-
 [source."https://github.com/rust-lang-nursery/packed_simd"]
 git = "https://github.com/hsivonen/packed_simd"
 branch = "rust_1_32"
