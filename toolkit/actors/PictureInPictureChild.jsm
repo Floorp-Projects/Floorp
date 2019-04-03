@@ -16,10 +16,6 @@ var gWeakVideo = null;
 var gWeakPlayerContent = null;
 
 class PictureInPictureChild extends ActorChild {
-  static videoIsPlaying(video) {
-    return !!(video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2);
-  }
-
   handleEvent(event) {
     switch (event.type) {
       case "MozTogglePictureInPicture": {
@@ -32,14 +28,6 @@ class PictureInPictureChild extends ActorChild {
         // The originating video's content document has unloaded,
         // so close Picture-in-Picture.
         this.closePictureInPicture();
-        break;
-      }
-      case "play": {
-        this.mm.sendAsyncMessage("PictureInPicture:Playing");
-        break;
-      }
-      case "pause": {
-        this.mm.sendAsyncMessage("PictureInPicture:Paused");
         break;
       }
     }
@@ -85,7 +73,6 @@ class PictureInPictureChild extends ActorChild {
 
       gWeakVideo = Cu.getWeakReference(video);
       this.mm.sendAsyncMessage("PictureInPicture:Request", {
-        playing: PictureInPictureChild.videoIsPlaying(video),
         videoHeight: video.videoHeight,
         videoWidth: video.videoWidth,
       });
@@ -141,14 +128,6 @@ class PictureInPictureChild extends ActorChild {
         this.setupPlayer();
         break;
       }
-      case "PictureInPicture:Play": {
-        this.play();
-        break;
-      }
-      case "PictureInPicture:Pause": {
-        this.pause();
-        break;
-      }
     }
   }
 
@@ -161,8 +140,6 @@ class PictureInPictureChild extends ActorChild {
     let originatingWindow = originatingVideo.ownerGlobal;
     if (originatingWindow) {
       originatingWindow.addEventListener("pagehide", this);
-      originatingVideo.addEventListener("play", this);
-      originatingVideo.addEventListener("pause", this);
     }
   }
 
@@ -176,8 +153,6 @@ class PictureInPictureChild extends ActorChild {
     let originatingWindow = originatingVideo.ownerGlobal;
     if (originatingWindow) {
       originatingWindow.removeEventListener("pagehide", this);
-      originatingVideo.removeEventListener("play", this);
-      originatingVideo.removeEventListener("pause", this);
     }
   }
 
@@ -248,19 +223,5 @@ class PictureInPictureChild extends ActorChild {
     }, { once: true });
 
     gWeakPlayerContent = Cu.getWeakReference(this.content);
-  }
-
-  play() {
-    let video = this.weakVideo;
-    if (video) {
-      video.play();
-    }
-  }
-
-  pause() {
-    let video = this.weakVideo;
-    if (video) {
-      video.pause();
-    }
   }
 }

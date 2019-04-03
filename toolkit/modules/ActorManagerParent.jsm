@@ -225,8 +225,6 @@ let ACTORS = {
 
       messages: [
         "PictureInPicture:SetupPlayer",
-        "PictureInPicture:Play",
-        "PictureInPicture:Pause",
       ],
     },
   },
