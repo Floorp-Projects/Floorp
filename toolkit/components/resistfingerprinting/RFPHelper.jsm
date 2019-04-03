@@ -260,7 +260,7 @@ class _RFPHelper {
   }
 
   _getCurrentAcceptLanguageValue(uri) {
-    let channel = Services.io.newChannelFromURI2(
+    let channel = Services.io.newChannelFromURI(
         uri,
         null, // aLoadingNode
         Services.scriptSecurityManager.getSystemPrincipal(),
