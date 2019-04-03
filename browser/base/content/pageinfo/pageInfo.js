@@ -356,6 +356,11 @@ function loadPageInfo(frameOuterWindowID, imageElement, browser) {
     document.getElementById("main-window").setAttribute("relatedUrl", docInfo.location);
 
     await makeGeneralTab(pageInfoData.metaViewRows, docInfo);
+    if (uri.spec.startsWith("about:neterror") || uri.spec.startsWith("about:certerror")) {
+      uri = browser.currentURI;
+      principal = Services.scriptSecurityManager
+        .createCodebasePrincipal(uri, browser.contentPrincipal.originAttributes);
+    }
     onLoadPermission(uri, principal);
     securityOnLoad(uri, windowInfo);
   });
