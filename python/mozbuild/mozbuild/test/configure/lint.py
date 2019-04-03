@@ -28,7 +28,6 @@ class LintMeta(type):
 
         for project in (
             'browser',
-            'embedding/ios',
             'extensions',
             'js',
             'memory',

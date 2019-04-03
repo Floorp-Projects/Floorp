@@ -29,7 +29,7 @@ LSSnapshot::LSSnapshot(LSDatabase* aDatabase)
       mHasPendingStableStateCallback(false),
       mHasPendingTimerCallback(false),
       mDirty(false)
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       ,
       mInitialized(false),
       mSentFinish(false)
@@ -40,32 +40,32 @@ LSSnapshot::LSSnapshot(LSDatabase* aDatabase)
 
 LSSnapshot::~LSSnapshot() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mDatabase);
-  MOZ_ASSERT(!mHasPendingStableStateCallback);
-  MOZ_ASSERT(!mHasPendingTimerCallback);
-  MOZ_ASSERT_IF(mInitialized, mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(!mHasPendingStableStateCallback);
+  MOZ_DIAGNOSTIC_ASSERT(!mHasPendingTimerCallback);
+  MOZ_DIAGNOSTIC_ASSERT_IF(mInitialized, mSentFinish);
 
   if (mActor) {
     mActor->SendDeleteMeInternal();
-    MOZ_ASSERT(!mActor, "SendDeleteMeInternal should have cleared!");
+    MOZ_DIAGNOSTIC_ASSERT(!mActor, "SendDeleteMeInternal should have cleared!");
   }
 }
 
 void LSSnapshot::SetActor(LSSnapshotChild* aActor) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(!mActor);
+  MOZ_DIAGNOSTIC_ASSERT(aActor);
+  MOZ_DIAGNOSTIC_ASSERT(!mActor);
 
   mActor = aActor;
 }
 
 nsresult LSSnapshot::Init(const LSSnapshotInitInfo& aInitInfo, bool aExplicit) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!mSelfRef);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mLoadState == LoadState::Initial);
-  MOZ_ASSERT(!mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(!mSelfRef);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mLoadState == LoadState::Initial);
+  MOZ_DIAGNOSTIC_ASSERT(!mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   mSelfRef = this;
 
@@ -90,7 +90,7 @@ nsresult LSSnapshot::Init(const LSSnapshotInitInfo& aInitInfo, bool aExplicit) {
   } else if (loadState == LoadState::AllOrderedKeys) {
     mInitLength = aInitInfo.totalLength();
   } else {
-    MOZ_ASSERT(loadState == LoadState::AllOrderedItems);
+    MOZ_DIAGNOSTIC_ASSERT(loadState == LoadState::AllOrderedItems);
   }
 
   mExactUsage = aInitInfo.initialUsage();
@@ -100,13 +100,13 @@ nsresult LSSnapshot::Init(const LSSnapshotInitInfo& aInitInfo, bool aExplicit) {
 
   mExplicit = aExplicit;
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   mInitialized = true;
 #endif
 
   if (!mExplicit) {
     mTimer = NS_NewTimer();
-    MOZ_ASSERT(mTimer);
+    MOZ_DIAGNOSTIC_ASSERT(mTimer);
 
     ScheduleStableStateCallback();
   }
@@ -116,9 +116,9 @@ nsresult LSSnapshot::Init(const LSSnapshotInitInfo& aInitInfo, bool aExplicit) {
 
 nsresult LSSnapshot::GetLength(uint32_t* aResult) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   MaybeScheduleStableStateCallback();
 
@@ -133,9 +133,9 @@ nsresult LSSnapshot::GetLength(uint32_t* aResult) {
 
 nsresult LSSnapshot::GetKey(uint32_t aIndex, nsAString& aResult) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   MaybeScheduleStableStateCallback();
 
@@ -158,9 +158,9 @@ nsresult LSSnapshot::GetKey(uint32_t aIndex, nsAString& aResult) {
 
 nsresult LSSnapshot::GetItem(const nsAString& aKey, nsAString& aResult) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   MaybeScheduleStableStateCallback();
 
@@ -176,9 +176,9 @@ nsresult LSSnapshot::GetItem(const nsAString& aKey, nsAString& aResult) {
 
 nsresult LSSnapshot::GetKeys(nsTArray<nsString>& aKeys) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   MaybeScheduleStableStateCallback();
 
@@ -197,9 +197,9 @@ nsresult LSSnapshot::GetKeys(nsTArray<nsString>& aKeys) {
 nsresult LSSnapshot::SetItem(const nsAString& aKey, const nsAString& aValue,
                              LSNotifyInfo& aNotifyInfo) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   MaybeScheduleStableStateCallback();
 
@@ -254,9 +254,9 @@ nsresult LSSnapshot::SetItem(const nsAString& aKey, const nsAString& aValue,
 nsresult LSSnapshot::RemoveItem(const nsAString& aKey,
                                 LSNotifyInfo& aNotifyInfo) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   MaybeScheduleStableStateCallback();
 
@@ -276,8 +276,12 @@ nsresult LSSnapshot::RemoveItem(const nsAString& aKey,
     int64_t delta = -(static_cast<int64_t>(aKey.Length()) +
                       static_cast<int64_t>(oldValue.Length()));
 
-    DebugOnly<nsresult> rv = UpdateUsage(delta);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    nsresult rv = UpdateUsage(delta);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+#else
+    UpdateUsage(delta);
+#endif
 
     if (mLoadState == LoadState::Partial) {
       mLength--;
@@ -298,16 +302,16 @@ nsresult LSSnapshot::RemoveItem(const nsAString& aKey,
 
 nsresult LSSnapshot::Clear(LSNotifyInfo& aNotifyInfo) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   MaybeScheduleStableStateCallback();
 
   uint32_t length;
   if (mLoadState == LoadState::Partial) {
     length = mLength;
-    MOZ_ASSERT(length);
+    MOZ_DIAGNOSTIC_ASSERT(length);
 
     MOZ_ALWAYS_TRUE(mActor->SendLoaded());
 
@@ -325,8 +329,12 @@ nsresult LSSnapshot::Clear(LSNotifyInfo& aNotifyInfo) {
   } else {
     changed = true;
 
-    DebugOnly<nsresult> rv = UpdateUsage(-mExactUsage);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    nsresult rv = UpdateUsage(-mExactUsage);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+#else
+    UpdateUsage(-mExactUsage);
+#endif
 
     mValues.Clear();
 
@@ -342,9 +350,9 @@ nsresult LSSnapshot::Clear(LSNotifyInfo& aNotifyInfo) {
 
 void LSSnapshot::MarkDirty() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   if (mDirty) {
     return;
@@ -359,18 +367,18 @@ void LSSnapshot::MarkDirty() {
 
     MOZ_ALWAYS_SUCCEEDS(Finish());
   } else {
-    MOZ_ASSERT(!mHasPendingTimerCallback);
+    MOZ_DIAGNOSTIC_ASSERT(!mHasPendingTimerCallback);
   }
 }
 
 nsresult LSSnapshot::End() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mExplicit);
-  MOZ_ASSERT(!mHasPendingStableStateCallback);
-  MOZ_ASSERT(!mHasPendingTimerCallback);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mExplicit);
+  MOZ_DIAGNOSTIC_ASSERT(!mHasPendingStableStateCallback);
+  MOZ_DIAGNOSTIC_ASSERT(!mHasPendingTimerCallback);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   nsresult rv = Checkpoint();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -393,9 +401,9 @@ nsresult LSSnapshot::End() {
 
 void LSSnapshot::ScheduleStableStateCallback() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mTimer);
-  MOZ_ASSERT(!mExplicit);
-  MOZ_ASSERT(!mHasPendingStableStateCallback);
+  MOZ_DIAGNOSTIC_ASSERT(mTimer);
+  MOZ_DIAGNOSTIC_ASSERT(!mExplicit);
+  MOZ_DIAGNOSTIC_ASSERT(!mHasPendingStableStateCallback);
 
   CancelTimer();
 
@@ -411,7 +419,7 @@ void LSSnapshot::MaybeScheduleStableStateCallback() {
   if (!mExplicit && !mHasPendingStableStateCallback) {
     ScheduleStableStateCallback();
   } else {
-    MOZ_ASSERT(!mHasPendingTimerCallback);
+    MOZ_DIAGNOSTIC_ASSERT(!mHasPendingTimerCallback);
   }
 }
 
@@ -419,16 +427,16 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
                                      const Optional<nsString>& aValue,
                                      nsAString& aResult) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   nsString result;
 
   switch (mLoadState) {
     case LoadState::Partial: {
       if (mValues.Get(aKey, &result)) {
-        MOZ_ASSERT(!result.IsVoid());
+        MOZ_DIAGNOSTIC_ASSERT(!result.IsVoid());
       } else if (mLoadedItems.GetEntry(aKey) || mUnknownItems.GetEntry(aKey)) {
         result.SetIsVoid(true);
       } else {
@@ -470,14 +478,14 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
             return NS_ERROR_FAILURE;
           }
 
-          MOZ_ASSERT(!result.IsVoid());
+          MOZ_DIAGNOSTIC_ASSERT(!result.IsVoid());
 
           mLoadedItems.PutEntry(aKey);
           mValues.Put(aKey, result);
 
           if (mLoadedItems.Count() == mInitLength) {
             mLoadedItems.Clear();
-            MOZ_ASSERT(mLength == 0);
+            MOZ_DIAGNOSTIC_ASSERT(mLength == 0);
             mLoadState = LoadState::AllOrderedItems;
           }
         }
@@ -513,7 +521,7 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
         } else {
           if (auto entry = mValues.Lookup(aKey)) {
             result = entry.Data();
-            MOZ_ASSERT(!result.IsVoid());
+            MOZ_DIAGNOSTIC_ASSERT(!result.IsVoid());
             entry.Remove();
           } else {
             result.SetIsVoid(true);
@@ -521,7 +529,7 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
         }
       } else {
         if (mValues.Get(aKey, &result)) {
-          MOZ_ASSERT(!result.IsVoid());
+          MOZ_DIAGNOSTIC_ASSERT(!result.IsVoid());
         } else {
           result.SetIsVoid(true);
         }
@@ -540,10 +548,10 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
 
 nsresult LSSnapshot::EnsureAllKeys() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
-  MOZ_ASSERT(mLoadState != LoadState::Initial);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mLoadState != LoadState::Initial);
 
   if (mLoadState == LoadState::AllOrderedKeys ||
       mLoadState == LoadState::AllOrderedItems) {
@@ -583,8 +591,8 @@ nsresult LSSnapshot::EnsureAllKeys() {
     }
   }
 
-  MOZ_ASSERT_IF(mLoadState == LoadState::AllUnorderedItems,
-                newValues.Count() == mValues.Count());
+  MOZ_DIAGNOSTIC_ASSERT_IF(mLoadState == LoadState::AllUnorderedItems,
+                           newValues.Count() == mValues.Count());
 
   for (auto iter = newValues.Iter(); !iter.Done(); iter.Next()) {
     nsString value;
@@ -600,10 +608,10 @@ nsresult LSSnapshot::EnsureAllKeys() {
     mLength = 0;
     mLoadState = LoadState::AllOrderedKeys;
   } else {
-    MOZ_ASSERT(mLoadState == LoadState::AllUnorderedItems);
+    MOZ_DIAGNOSTIC_ASSERT(mLoadState == LoadState::AllUnorderedItems);
 
-    MOZ_ASSERT(mUnknownItems.Count() == 0);
-    MOZ_ASSERT(mLength == 0);
+    MOZ_DIAGNOSTIC_ASSERT(mUnknownItems.Count() == 0);
+    MOZ_DIAGNOSTIC_ASSERT(mLength == 0);
     mLoadState = LoadState::AllOrderedItems;
   }
 
@@ -612,11 +620,11 @@ nsresult LSSnapshot::EnsureAllKeys() {
 
 nsresult LSSnapshot::UpdateUsage(int64_t aDelta) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mDatabase);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mPeakUsage >= mExactUsage);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mPeakUsage >= mExactUsage);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   int64_t newExactUsage = mExactUsage + aDelta;
   if (newExactUsage > mPeakUsage) {
@@ -628,7 +636,7 @@ nsresult LSSnapshot::UpdateUsage(int64_t aDelta) {
       return NS_ERROR_FAILURE;
     }
 
-    MOZ_ASSERT(size >= 0);
+    MOZ_DIAGNOSTIC_ASSERT(size >= 0);
 
     if (size == 0) {
       return NS_ERROR_FILE_NO_DEVICE_SPACE;
@@ -643,9 +651,9 @@ nsresult LSSnapshot::UpdateUsage(int64_t aDelta) {
 
 nsresult LSSnapshot::Checkpoint() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   if (!mWriteInfos.IsEmpty()) {
     MOZ_ALWAYS_TRUE(mActor->SendCheckpoint(mWriteInfos));
@@ -658,21 +666,21 @@ nsresult LSSnapshot::Checkpoint() {
 
 nsresult LSSnapshot::Finish() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mDatabase);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_DIAGNOSTIC_ASSERT(mDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!mSentFinish);
 
   MOZ_ALWAYS_TRUE(mActor->SendFinish());
 
   mDatabase->NoteFinishedSnapshot(this);
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   mSentFinish = true;
 #endif
 
   // Clear the self reference added in Init method.
-  MOZ_ASSERT(mSelfRef);
+  MOZ_DIAGNOSTIC_ASSERT(mSelfRef);
   mSelfRef = nullptr;
 
   return NS_OK;
@@ -680,7 +688,7 @@ nsresult LSSnapshot::Finish() {
 
 void LSSnapshot::CancelTimer() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mTimer);
+  MOZ_DIAGNOSTIC_ASSERT(mTimer);
 
   if (mHasPendingTimerCallback) {
     MOZ_ALWAYS_SUCCEEDS(mTimer->Cancel());
@@ -690,14 +698,14 @@ void LSSnapshot::CancelTimer() {
 
 // static
 void LSSnapshot::TimerCallback(nsITimer* aTimer, void* aClosure) {
-  MOZ_ASSERT(aTimer);
+  MOZ_DIAGNOSTIC_ASSERT(aTimer);
 
   auto* self = static_cast<LSSnapshot*>(aClosure);
-  MOZ_ASSERT(self);
-  MOZ_ASSERT(self->mTimer);
-  MOZ_ASSERT(SameCOMIdentity(self->mTimer, aTimer));
-  MOZ_ASSERT(!self->mHasPendingStableStateCallback);
-  MOZ_ASSERT(self->mHasPendingTimerCallback);
+  MOZ_DIAGNOSTIC_ASSERT(self);
+  MOZ_DIAGNOSTIC_ASSERT(self->mTimer);
+  MOZ_DIAGNOSTIC_ASSERT(SameCOMIdentity(self->mTimer, aTimer));
+  MOZ_DIAGNOSTIC_ASSERT(!self->mHasPendingStableStateCallback);
+  MOZ_DIAGNOSTIC_ASSERT(self->mHasPendingTimerCallback);
 
   self->mHasPendingTimerCallback = false;
 
@@ -709,9 +717,9 @@ NS_IMPL_ISUPPORTS(LSSnapshot, nsIRunnable)
 NS_IMETHODIMP
 LSSnapshot::Run() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!mExplicit);
-  MOZ_ASSERT(mHasPendingStableStateCallback);
-  MOZ_ASSERT(!mHasPendingTimerCallback);
+  MOZ_DIAGNOSTIC_ASSERT(!mExplicit);
+  MOZ_DIAGNOSTIC_ASSERT(mHasPendingStableStateCallback);
+  MOZ_DIAGNOSTIC_ASSERT(!mHasPendingTimerCallback);
 
   mHasPendingStableStateCallback = false;
 
@@ -720,7 +728,7 @@ LSSnapshot::Run() {
   if (mDirty || !Preferences::GetBool("dom.storage.snapshot_reusing")) {
     MOZ_ALWAYS_SUCCEEDS(Finish());
   } else if (!mExplicit) {
-    MOZ_ASSERT(mTimer);
+    MOZ_DIAGNOSTIC_ASSERT(mTimer);
 
     MOZ_ALWAYS_SUCCEEDS(mTimer->InitWithNamedFuncCallback(
         TimerCallback, this, kSnapshotTimeoutMs, nsITimer::TYPE_ONE_SHOT,

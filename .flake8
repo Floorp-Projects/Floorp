@@ -12,7 +12,6 @@ exclude =
     dom/imptests,
     dom/security,
     dom/websocket,
-    embedding/ios/moz.configure,
     gfx/tests,
     layout/base/tests/marionette,
     layout/reftests/border-image,

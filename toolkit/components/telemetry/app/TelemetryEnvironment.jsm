@@ -1832,6 +1832,7 @@ EnvironmentCache.prototype = {
 
     if (AppConstants.platform === "win") {
       data.isWow64 = getSysinfoProperty("isWow64", null);
+      data.isWowARM64 = getSysinfoProperty("isWowARM64", null);
     } else if (AppConstants.platform == "android") {
       data.device = this._getDeviceData();
     }

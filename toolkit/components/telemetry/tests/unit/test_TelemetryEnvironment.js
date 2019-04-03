@@ -548,6 +548,8 @@ function checkSystemSection(data) {
     if (gIsWindows) {
       Assert.equal(typeof data.system.isWow64, "boolean",
              "isWow64 must be available on Windows and have the correct type.");
+      Assert.equal(typeof data.system.isWowARM64, "boolean",
+             "isWowARM64 must be available on Windows and have the correct type.");
       Assert.ok("virtualMaxMB" in data.system, "virtualMaxMB must be available.");
       Assert.ok(Number.isFinite(data.system.virtualMaxMB),
                 "virtualMaxMB must be a number.");
