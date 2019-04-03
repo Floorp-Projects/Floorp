@@ -1,13 +1,9 @@
 # lint_ignore=E501
 config = {
-    "shipped-locales-url": "https://hg.mozilla.org/%(repo)s/raw-file/%(revision)s/browser/locales/shipped-locales",
     "products": {
         "installer": {
             "product-name": "Firefox-%(version)s",
             "check_uptake": True,
-            "alias": "firefox-latest",
-            "ssl-only": False,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/firefox/releases/%(version)s/linux-i686/:lang/firefox-%(version)s.tar.bz2",
@@ -34,9 +30,6 @@ config = {
         "installer-ssl": {
             "product-name": "Firefox-%(version)s-SSL",
             "check_uptake": True,
-            "alias": "firefox-latest-ssl",
-            "ssl-only": True,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/firefox/releases/%(version)s/linux-i686/:lang/firefox-%(version)s.tar.bz2",
@@ -63,9 +56,6 @@ config = {
         "msi": {
             "product-name": "Firefox-%(version)s-msi-SSL",
             "check_uptake": True,
-            "alias": "firefox-msi-latest-ssl",
-            "ssl-only": True,
-            "add-locales": True,
             "paths": {
                 "win32": {
                     "path": "/firefox/releases/%(version)s/win32/:lang/Firefox%%20Setup%%20%(version)s.msi",
@@ -80,9 +70,6 @@ config = {
         "stub-installer": {
             "product-name": "Firefox-%(version)s-stub",
             "check_uptake": True,
-            "alias": "firefox-stub",
-            "ssl-only": True,
-            "add-locales": True,
             "paths": {
                 "win32": {
                     "path": "/firefox/releases/%(version)s/win32/:lang/Firefox%%20Installer.exe",
@@ -97,8 +84,6 @@ config = {
         "complete-mar": {
             "product-name": "Firefox-%(version)s-Complete",
             "check_uptake": True,
-            "ssl-only": False,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/firefox/releases/%(version)s/update/linux-i686/:lang/firefox-%(version)s.complete.mar",
@@ -125,8 +110,6 @@ config = {
         "complete-mar-candidates": {
             "product-name": "Firefox-%(version)sbuild%(build_number)s-Complete",
             "check_uptake": False,
-            "ssl-only": False,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/firefox/candidates/%(version)s-candidates/build%(build_number)s/update/linux-i686/:lang/firefox-%(version)s.complete.mar",
@@ -155,8 +138,6 @@ config = {
         "releases-dir": {
             "product-name": "Firefox-%(version)s-Partial-%(prev_version)s",
             "check_uptake": True,
-            "ssl-only": False,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/firefox/releases/%(version)s/update/linux-i686/:lang/firefox-%(prev_version)s-%(version)s.partial.mar",
@@ -183,8 +164,6 @@ config = {
         "candidates-dir": {
             "product-name": "Firefox-%(version)sbuild%(build_number)s-Partial-%(prev_version)sbuild%(prev_build_number)s",
             "check_uptake": False,
-            "ssl-only": False,
-            "add-locales": True,
             "paths": {
                 "linux": {
                     "path": "/firefox/candidates/%(version)s-candidates/build%(build_number)s/update/linux-i686/:lang/firefox-%(prev_version)s-%(version)s.partial.mar",
