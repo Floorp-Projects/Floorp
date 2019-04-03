@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "cssparser"
-version = "0.25.0"
+version = "0.25.3"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 build = "build.rs"
 exclude = ["src/css-parsing-tests/**", "src/big-data-url.css"]
@@ -54,7 +54,7 @@ version = "0.6"
 version = "2.0"
 
 [dev-dependencies.encoding_rs]
-version = "0.7"
+version = "0.8"
 
 [dev-dependencies.rustc-serialize]
 version = "0.3"
@@ -65,7 +65,7 @@ version = "0.4"
 version = "0.6"
 
 [build-dependencies.syn]
-version = "0.14"
+version = "0.15.12"
 features = ["extra-traits", "fold", "full"]
 
 [features]
