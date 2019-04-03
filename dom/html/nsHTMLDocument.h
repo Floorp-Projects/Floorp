@@ -17,10 +17,10 @@
 #include "PLDHashTable.h"
 #include "nsIHttpChannel.h"
 #include "nsThreadUtils.h"
-#include "nsICommandManager.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/BindingDeclarations.h"
 
+class nsCommandManager;
 class nsIURI;
 class nsIDocShell;
 class nsICachingChannel;
@@ -321,9 +321,9 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   bool mWarnedWidthHeight;
 
   /* Midas implementation */
-  nsresult GetMidasCommandManager(nsICommandManager** aCommandManager);
+  nsCommandManager* GetMidasCommandManager();
 
-  nsCOMPtr<nsICommandManager> mMidasCommandManager;
+  RefPtr<nsCommandManager> mMidasCommandManager;
 
   nsresult TurnEditingOff();
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY because this is called from all sorts

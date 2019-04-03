@@ -415,11 +415,11 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
  *    We check the input command param for different behavior
  *
  *  How to use:
- *  1. Get the nsICommandManager for the current editor
+ *  1. Get the nsCommandManager for the current editor
  *  2. Implement an nsIObserve object, e.g:
  *
  *    void Observe(
- *        in nsISupports aSubject, // The nsICommandManager calling this
+ *        in nsISupports aSubject, // The nsCommandManager calling this
  *                                 // Observer
  *        in string      aTopic,   // command name, e.g.:"obs_documentCreated"
  *                                 //    or "obs_documentWillBeDestroyed"
@@ -430,11 +430,8 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
  *  4. In the appropriate location in editorSession, editor, or commands code,
  *     trigger the notification of this observer by something like:
  *
- *  nsCOMPtr<nsICommandManager> commandManager = mDocShell->GetCommandManager();
- *  nsCOMPtr<nsPICommandUpdater> commandUpdater =
- *    do_QueryInterface(commandManager);
- *  NS_ENSURE_TRUE(commandUpdater, NS_ERROR_FAILURE);
- *    commandUpdater->CommandStatusChanged(obs_documentCreated);
+ *  RefPtr<nsCommandManager> commandManager = mDocShell->GetCommandManager();
+ *  commandManager->CommandStatusChanged(obs_documentCreated);
  *
  *  5. Use GetCommandStateParams() to obtain state information
  *     e.g., any creation state codes when creating an editor are

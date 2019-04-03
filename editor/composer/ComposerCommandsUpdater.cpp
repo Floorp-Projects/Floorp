@@ -10,17 +10,16 @@
 #include "mozilla/TransactionManager.h"  // for TransactionManager
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
+#include "nsCommandManager.h"            // for nsCommandManager
 #include "nsComponentManagerUtils.h"     // for do_CreateInstance
 #include "nsDebug.h"                     // for NS_ENSURE_TRUE, etc
 #include "nsError.h"                     // for NS_OK, NS_ERROR_FAILURE, etc
-#include "nsICommandManager.h"           // for nsICommandManager
 #include "nsID.h"                        // for NS_GET_IID, etc
 #include "nsIDOMWindow.h"                // for nsIDOMWindow
 #include "nsIDocShell.h"                 // for nsIDocShell
 #include "nsIInterfaceRequestorUtils.h"  // for do_GetInterface
 #include "nsITransactionManager.h"       // for nsITransactionManager
 #include "nsLiteralString.h"             // for NS_LITERAL_STRING
-#include "nsPICommandUpdater.h"          // for nsPICommandUpdater
 #include "nsPIDOMWindow.h"               // for nsPIDOMWindow
 
 class nsITransaction;
@@ -325,10 +324,7 @@ ComposerCommandsUpdater::GetCommandUpdater() {
   if (NS_WARN_IF(!mDocShell)) {
     return nullptr;
   }
-
-  nsCOMPtr<nsICommandManager> manager = mDocShell->GetCommandManager();
-  nsCOMPtr<nsPICommandUpdater> updater = do_QueryInterface(manager);
-  return updater.forget();
+  return do_AddRef(mDocShell->GetCommandManager());
 }
 
 NS_IMETHODIMP
