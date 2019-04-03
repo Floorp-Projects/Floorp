@@ -42,6 +42,13 @@ exclude: true
 
 [68.9]: ../GeckoRuntimeSettings.html#setPreferredColorScheme-int-
 
+- Added [`GeckoRuntimeSettings.Builder#configFilePath`][68.10] to set
+  a path to a configuration file from which GeckoView will read
+  configuration options such as Gecko process arguments, environment
+  variables, and preferences.
+
+[68.10]: ../GeckoRuntimeSettings.Builder.html#configFilePath-java.lang.String-
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -248,4 +255,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 053d9b4164690ff13996be9e7288dd183e2a1db4
+[api-version]: affe9cc5dc22f0700867a1ac7f9b55a033a4b88c
