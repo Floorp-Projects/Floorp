@@ -14,10 +14,10 @@
         <item name="toolbarColor">@color/toolbar_normal_theme</item>
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorAccent">@color/session_border_color</item>
+        <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
         <item name="primaryTextColor">@color/text_color_normal_theme</item>
         <item name="secondaryTextColor">@color/secondary_text_color_normal_theme</item>
         <item name="colorPrimaryDark">@color/background_dark_theme</item>
-
 
         <!-- Toggle colors activated and off -->
         <item name="colorControlActivated">@color/toggle_activated_normal_theme</item>
@@ -64,6 +64,7 @@
         <item name="browserToolbarMenuIcons">@color/icons_normal_theme</item>
         <item name="quickActionPullTabColor">@color/quick_action_pull_tab</item>
         <item name="quickActionBackgroundColor">@color/quick_action_background_normal_theme</item>
+        <item name="unloadedProgressColor">@color/unloaded_progress_normal_theme</item>
 
         <!-- History fragment colors -->
         <item name="historyTitleColor">@color/history_title_normal_theme</item>
@@ -127,6 +128,7 @@
         <item name="browserToolbarMenuIcons">@color/icons_dark_mode</item>
         <item name="quickActionPullTabColor">@color/off_white</item>
         <item name="quickActionBackgroundColor">@color/quick_action_background_private_theme</item>
+        <item name="unloadedProgressColor">@color/unloaded_progress_private_theme</item>
 
         <!-- History fragment colors -->
         <item name="historyTitleColor">@color/history_title_private_theme</item>
@@ -215,5 +217,9 @@
 
     <style name="ListItemTextStyle" parent="TextAppearance.MaterialComponents.Subtitle1">
         <item name="android:textColor">?attr/libraryListItemTextColor</item>
+    </style>
+
+    <style name="progressBarStyleHorizontal" parent="@style/Widget.AppCompat.ProgressBar.Horizontal">
+        <item name="android:progressDrawable">@drawable/progress_gradient</item>
     </style>
 </resources>

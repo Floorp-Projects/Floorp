@@ -39,6 +39,7 @@
     <color name="homeBackgroundBottomGradient_normal_theme">@color/off_white</color>
     <color name="privateBrowsingButtonTint_normal_theme">@color/menu_button_tint_normal_theme</color>
     <color name="browserToolbarBackground_normal_theme">@color/off_white</color>
+    <color name="unloaded_progress_normal_theme">#E0E0E6</color>
 
     <color name="searchBackground_normal_theme">@color/off_white</color>
     <color name="search_stroke_normal">#c5c8d7</color>
@@ -87,6 +88,7 @@
     <color name="history_header_private_theme">@color/photonGrey40</color>
     <color name="history_title_private_theme">@color/off_white</color>
     <color name="history_url_private_theme">@color/photonGrey40</color>
+    <color name="unloaded_progress_private_theme">#4f4e75</color>
 
     <!-- Library Colors -->
     <color name="library_sessions_icon_background">#B9F0FD</color>

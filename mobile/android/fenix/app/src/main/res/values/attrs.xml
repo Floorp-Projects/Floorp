@@ -47,6 +47,7 @@
     <attr name="navigationBarColorBrowser" format="reference" />
     <attr name="quickActionPullTabColor" format="reference" />
     <attr name="quickActionBackgroundColor" format="reference" />
+    <attr name="unloadedProgressColor" format="reference" />
 
     <!-- History Fragment -->
     <attr name="historyURLColor" format="reference" />

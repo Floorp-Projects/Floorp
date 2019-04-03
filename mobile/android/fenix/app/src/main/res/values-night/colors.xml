@@ -19,6 +19,7 @@
 
     <!-- Browser -->
     <color name="browserToolbarBackground_normal_theme">@color/background_dark_theme</color>
+    <color name="unloaded_progress_normal_theme">#42414D</color>
 
     <!-- home -->
     <color name="history_header_normal_theme">@color/off_white</color>
