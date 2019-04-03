@@ -10,6 +10,7 @@ with Files("**"):
 XPIDL_SOURCES += [
     'nsIHangReport.idl',
     'nsIRemoteWebProgress.idl',
+    'nsIRemoteWebProgressRequest.idl',
 ]
 
 XPIDL_MODULE = 'dom'
@@ -53,6 +54,7 @@ EXPORTS.mozilla.dom += [
     'PermissionMessageUtils.h',
     'ReferrerInfoUtils.h',
     'RemoteWebProgress.h',
+    'RemoteWebProgressRequest.h',
     'TabChild.h',
     'TabContext.h',
     'TabMessageUtils.h',
@@ -93,6 +95,7 @@ UNIFIED_SOURCES += [
     'ProcessPriorityManager.cpp',
     'ReferrerInfoUtils.cpp',
     'RemoteWebProgress.cpp',
+    'RemoteWebProgressRequest.cpp',
     'SharedMap.cpp',
     'SharedStringMap.cpp',
     'StructuredCloneData.cpp',
