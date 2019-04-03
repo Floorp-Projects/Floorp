@@ -156,59 +156,6 @@ class RemoteWebProgressManager {
     );
   }
 
-  callWebProgressContentBlockingEventListeners(aIsWebProgressPassed,
-                                               aIsTopLevel,
-                                               aIsLoadingDocument,
-                                               aLoadType,
-                                               aDOMWindowID,
-                                               aRequestURI,
-                                               aOriginalRequestURI,
-                                               aMatchedList,
-                                               aEvent) {
-    let [webProgress, request] =
-      this.getWebProgressAndRequest(aIsWebProgressPassed, aIsTopLevel,
-                                    aIsLoadingDocument, aLoadType,
-                                    aDOMWindowID, aRequestURI,
-                                    aOriginalRequestURI, aMatchedList);
-    this._callProgressListeners(
-      Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING, "onContentBlockingEvent",
-      webProgress, request, aEvent
-    );
-  }
-
-  getWebProgressAndRequest(aIsWebProgressPassed,
-                           aIsTopLevel,
-                           aIsLoadingDocument,
-                           aLoadType,
-                           aDOMWindowID,
-                           aRequestURI,
-                           aOriginalRequestURI,
-                           aMatchedList) {
-    let webProgress = null;
-    if (aIsWebProgressPassed) {
-      // The top-level WebProgress is always the same, but because we don't
-      // really have a concept of subframes/content we always create a new object
-      // for those.
-      webProgress = aIsTopLevel ? this._topLevelWebProgress
-                                : new RemoteWebProgress(this, aIsTopLevel);
-      webProgress.update(aDOMWindowID,
-                         0,
-                         aLoadType,
-                         aIsLoadingDocument);
-      webProgress.QueryInterface(Ci.nsIWebProgress);
-    }
-
-    let request = null;
-    if (aRequestURI) {
-      request = new RemoteWebProgressRequest(aRequestURI,
-                                             aOriginalRequestURI,
-                                             aMatchedList);
-      request = request.QueryInterface(Ci.nsIRequest);
-    }
-
-    return [webProgress, request];
-  }
-
   receiveMessage(aMessage) {
     let json = aMessage.json;
     // This message is a custom one we send as a result of a loadURI call.
