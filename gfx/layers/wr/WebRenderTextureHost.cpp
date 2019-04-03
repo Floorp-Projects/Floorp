@@ -10,6 +10,10 @@
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/webrender/RenderThread.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/layers/TextureHostOGL.h"
+#endif
+
 namespace mozilla {
 namespace layers {
 
@@ -89,6 +93,25 @@ gfx::SurfaceFormat WebRenderTextureHost::GetFormat() const {
     return gfx::SurfaceFormat::UNKNOWN;
   }
   return mWrappedTextureHost->GetFormat();
+}
+
+void WebRenderTextureHost::NotifyNotUsed() {
+#ifdef MOZ_WIDGET_ANDROID
+  if (mWrappedTextureHost && mWrappedTextureHost->AsSurfaceTextureHost()) {
+    wr::RenderThread::Get()->NotifyNotUsed(wr::AsUint64(mExternalImageId));
+  }
+#endif
+  TextureHost::NotifyNotUsed();
+}
+
+void WebRenderTextureHost::PrepareForUse() {
+#ifdef MOZ_WIDGET_ANDROID
+  if (mWrappedTextureHost && mWrappedTextureHost->AsSurfaceTextureHost()) {
+    // Call PrepareForUse on render thread.
+    // See RenderAndroidSurfaceTextureHostOGL::PrepareForUse.
+    wr::RenderThread::Get()->PrepareForUse(wr::AsUint64(mExternalImageId));
+  }
+#endif
 }
 
 gfx::SurfaceFormat WebRenderTextureHost::GetReadFormat() const {

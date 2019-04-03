@@ -187,6 +187,12 @@ class RenderThread final {
   /// Can be called from any thread.
   void UnregisterExternalImage(uint64_t aExternalImageId);
 
+  /// Can be called from any thread.
+  void PrepareForUse(uint64_t aExternalImageId);
+
+  /// Can be called from any thread.
+  void NotifyNotUsed(uint64_t aExternalImageId);
+
   /// Can only be called from the render thread.
   void UpdateRenderTextureHost(uint64_t aSrcExternalImageId,
                                uint64_t aWrappedExternalImageId);
