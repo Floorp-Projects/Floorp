@@ -409,7 +409,7 @@ var ActionBarHandler = {
         }
 
         // Close ActionBarHandler, then selectAll, and display handles.
-        ActionBarHandler._getSelectAllController(element, win).selectAll();
+        ActionBarHandler._getDocShell(win).doCommand("cmd_selectAll");
         UITelemetry.addEvent("action.1", "actionbar", null, "select_all");
       },
     },
@@ -795,28 +795,6 @@ var ActionBarHandler = {
     }
 
     return win.docShell.editingSession.getEditorForWindow(win);
-  },
-
-  /**
-   * Returns a selection controller.
-   */
-  _getSelectionController: function(element = this._targetElement, win = this._contentWindow) {
-    if (this._isElementEditable(element)) {
-      return this._getEditor(element, win).selectionController;
-    }
-
-    return win.docShell.
-               QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsISelectionDisplay).
-               QueryInterface(Ci.nsISelectionController);
-  },
-
-  /**
-   * For selectAll(), provides the editor, or the default window selection Controller.
-   */
-  _getSelectAllController: function(element = this._targetElement, win = this._contentWindow) {
-    let editor = this._getEditor(element, win);
-    return (editor) ?
-      editor : this._getSelectionController(element, win);
   },
 
   /**
