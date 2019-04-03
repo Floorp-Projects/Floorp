@@ -3342,6 +3342,21 @@ NS_IMETHODIMP TabChild::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
 
+NS_IMETHODIMP TabChild::OnProgressChange64(nsIWebProgress* aWebProgress,
+                                           nsIRequest* aRequest,
+                                           int64_t aCurSelfProgress,
+                                           int64_t aMaxSelfProgress,
+                                           int64_t aCurTotalProgress,
+                                           int64_t aMaxTotalProgress) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP TabChild::OnRefreshAttempted(nsIWebProgress* aWebProgress,
+                                           nsIURI* aRefreshURI, int32_t aMillis,
+                                           bool aSameURI, bool* aOut) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult TabChild::PrepareProgressListenerData(
     nsIWebProgress* aWebProgress, nsIRequest* aRequest,
     Maybe<WebProgressData>& aWebProgressData, RequestData& aRequestData) {
