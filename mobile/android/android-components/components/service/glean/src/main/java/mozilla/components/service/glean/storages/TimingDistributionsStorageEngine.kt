@@ -135,7 +135,7 @@ data class TimingDistributionData(
     val bucketCount: Int = DEFAULT_BUCKET_COUNT,
     val range: List<Long> = listOf(DEFAULT_RANGE_MIN, DEFAULT_RANGE_MAX),
     val histogramType: HistogramType = HistogramType.Exponential,
-    val values: MutableMap<String, Long> = mutableMapOf(),
+    val values: MutableMap<Int, Long> = mutableMapOf(),
     var sum: Long = 0,
     val timeUnit: TimeUnit = TimeUnit.Millisecond
 ) {
@@ -186,9 +186,9 @@ data class TimingDistributionData(
             // return null.
             val values = try {
                 val mapData = jsonObject.getJSONObject("values")
-                val valueMap: MutableMap<String, Long> = mutableMapOf()
+                val valueMap: MutableMap<Int, Long> = mutableMapOf()
                 mapData.keys().forEach { key ->
-                    valueMap[key] = mapData.tryGetLong(key) ?: 0L
+                    valueMap[key.toInt()] = mapData.tryGetLong(key) ?: 0L
                 }
                 valueMap
             } catch (e: org.json.JSONException) {
@@ -235,7 +235,7 @@ data class TimingDistributionData(
     internal fun accumulate(sample: Long) {
         for (i in buckets.indices) {
             if (sample <= buckets[i] || i == bucketCount - 1) {
-                values["$i"] = (values["$i"] ?: 0) + 1
+                values[i] = (values[i] ?: 0) + 1
                 break
             }
         }
@@ -248,13 +248,20 @@ data class TimingDistributionData(
      * purposes.
      */
     internal fun toJsonObject(): JSONObject {
+        // Create a map with string keys to match schema for use with "values" and to make valid
+        // JSON since key names can ONLY be strings.
+        val jsonValues = mutableMapOf<String, Long>()
+        values.forEach {
+            jsonValues["${it.key}"] = it.value
+        }
+
         return JSONObject(mapOf(
             "category" to category,
             "name" to name,
             "bucketCount" to bucketCount,
             "range" to JSONArray(range),
             "histogramType" to histogramType.ordinal,
-            "values" to values,
+            "values" to jsonValues,
             "sum" to sum,
             "timeUnit" to timeUnit.ordinal
         ))

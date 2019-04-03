@@ -61,7 +61,7 @@ class TimingDistributionsStorageEngineTest {
                 clearStore = true
             )
             assertEquals(1, snapshot!!.size)
-            assertEquals(1L, snapshot["telemetry.test_timing_distribution"]?.values!!["0"])
+            assertEquals(1L, snapshot["telemetry.test_timing_distribution"]?.values!![0])
         }
     }
 
@@ -213,7 +213,7 @@ class TimingDistributionsStorageEngineTest {
         val snapshot = metric.testGetValue()
         assertEquals("Accumulating overflow values should increment last bucket",
             1L,
-            snapshot.values["${TimingDistributionData.DEFAULT_BUCKET_COUNT - 1}"])
+            snapshot.values[TimingDistributionData.DEFAULT_BUCKET_COUNT - 1])
     }
 
     @Test
@@ -245,7 +245,7 @@ class TimingDistributionsStorageEngineTest {
         // Make sure that the sample in the correct (first) bucket
         val snapshot = metric.testGetValue()
         assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values["0"])
+            1L, snapshot.values[0])
 
         // verify buckets lists worked
         assertNotNull("Buckets must not be null", snapshot.buckets)
@@ -285,15 +285,15 @@ class TimingDistributionsStorageEngineTest {
         assertEquals("Accumulating updates the count", 5, snapshot.count)
 
         assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values["0"])
+            1L, snapshot.values[0])
         assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values["9"])
+            1L, snapshot.values[9])
         assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values["33"])
+            1L, snapshot.values[33])
         assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values["57"])
+            1L, snapshot.values[57])
         assertEquals("Accumulating should increment correct bucket",
-            1L, snapshot.values["80"])
+            1L, snapshot.values[80])
     }
 
     @Test
@@ -327,11 +327,11 @@ class TimingDistributionsStorageEngineTest {
             tdd.histogramType.ordinal, jsonTdd.getInt("histogramType"))
         val jsonValue = jsonTdd.getJSONObject("values")
         assertEquals("JSON values must match Timing Distribution values",
-            tdd.values["0"], jsonValue.getLong("0"))
+            tdd.values[0], jsonValue.getLong("0"))
         assertEquals("JSON values must match Timing Distribution values",
-            tdd.values["1"], jsonValue.getLong("1"))
+            tdd.values[1], jsonValue.getLong("1"))
         assertEquals("JSON values must match Timing Distribution values",
-            tdd.values["2"], jsonValue.getLong("2"))
+            tdd.values[2], jsonValue.getLong("2"))
         assertEquals("JSON sum must match Timing Distribution sum",
             tdd.sum, jsonTdd.getLong("sum"))
         assertEquals("JSON time unit must match Timing Distribution time unit",
