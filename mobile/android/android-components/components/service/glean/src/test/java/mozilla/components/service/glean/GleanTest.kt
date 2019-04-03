@@ -125,6 +125,10 @@ class GleanTest {
     @Test
     fun `test sending of background pings`() {
         val server = MockWebServer()
+
+        // It's important to note here that we expect to receive two pings back, the baseline and
+        // the events ping so we need to enqueue a response back for EACH of them.
+        server.enqueue(MockResponse().setBody("OK"))
         server.enqueue(MockResponse().setBody("OK"))
 
         val click = EventMetricType<NoExtraKeys>(

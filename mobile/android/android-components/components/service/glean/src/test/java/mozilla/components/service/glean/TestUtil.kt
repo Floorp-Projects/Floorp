@@ -11,6 +11,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.testing.WorkManagerTestInitHelper
+import junit.framework.Assert.assertTrue
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers
 import mozilla.components.concept.fetch.MutableHeaders
@@ -194,7 +195,8 @@ internal fun triggerWorkManager() {
         isWorkScheduled(PingUploadWorker.PING_WORKER_TAG))
 
     // Since WorkManager does not properly run in tests, simulate the work being done
-    PingUploadWorker.uploadPings()
+    // We also assertTrue here to ensure that uploadPings() was successful
+    assertTrue("Upload Pings must return true", PingUploadWorker.uploadPings())
 }
 
 /**
