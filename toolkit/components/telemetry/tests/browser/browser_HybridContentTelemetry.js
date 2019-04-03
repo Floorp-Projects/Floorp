@@ -14,7 +14,7 @@ async function waitForProcessesEvents(aProcesses,
                                       aAdditionalCondition = data => true) {
   await ContentTaskUtils.waitForCondition(() => {
     const events =
-      Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+      Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS);
     return aProcesses.every(p => Object.keys(events).includes(p))
            && aAdditionalCondition(events);
   });
@@ -318,7 +318,7 @@ add_task(async function test_hybrid_content_recording() {
   // Wait for the data to be in the snapshot, then get the Telemetry data.
   await waitForProcessesEvents(["dynamic"]);
   let snapshot =
-      Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+      Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS);
 
   // Check that the dynamically register events made it to the snapshot.
   ok("dynamic" in snapshot,
