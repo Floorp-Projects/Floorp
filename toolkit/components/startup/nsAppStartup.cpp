@@ -155,8 +155,7 @@ nsAppStartup::nsAppStartup()
       mRestart(false),
       mInterrupted(false),
       mIsSafeModeNecessary(false),
-      mStartupCrashTrackingEnded(false),
-      mRestartNotSameProfile(false) {}
+      mStartupCrashTrackingEnded(false) {}
 
 nsresult nsAppStartup::Init() {
   nsresult rv;
@@ -275,8 +274,6 @@ nsAppStartup::Run(void) {
   nsresult retval = NS_OK;
   if (mRestart) {
     retval = NS_SUCCESS_RESTART_APP;
-  } else if (mRestartNotSameProfile) {
-    retval = NS_SUCCESS_RESTART_APP_NOT_SAME_PROFILE;
   }
 
   return retval;
@@ -369,11 +366,7 @@ nsAppStartup::Quit(uint32_t aMode) {
       mRestart = (aMode & eRestart) != 0;
     }
 
-    if (!mRestartNotSameProfile) {
-      mRestartNotSameProfile = (aMode & eRestartNotSameProfile) != 0;
-    }
-
-    if (mRestart || mRestartNotSameProfile) {
+    if (mRestart) {
       // Mark the next startup as a restart.
       PR_SetEnv("MOZ_APP_RESTART=1");
 
@@ -440,9 +433,8 @@ nsAppStartup::Quit(uint32_t aMode) {
     // No chance of the shutdown being cancelled from here on; tell people
     // we're shutting down for sure while all services are still available.
     if (obsService) {
-      obsService->NotifyObservers(
-          nullptr, "quit-application",
-          (mRestart || mRestartNotSameProfile) ? u"restart" : u"shutdown");
+      obsService->NotifyObservers(nullptr, "quit-application",
+                                  mRestart ? u"restart" : u"shutdown");
     }
 
     if (!mRunning) {
