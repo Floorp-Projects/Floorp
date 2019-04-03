@@ -180,6 +180,8 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   }
   void GetDecoding(nsAString& aValue);
 
+  already_AddRefed<Promise> Decode(ErrorResult& aRv);
+
   net::ReferrerPolicy GetImageReferrerPolicy() override {
     return GetReferrerPolicyAsEnum();
   }

@@ -163,8 +163,22 @@ interface imgIRequest : nsIRequest
   /**
    * Exactly like startDecoding above except returns whether the current frame
    * of the image is complete or not.
+   *
+   * @param aFlags Flags of the FLAG_* variety. Only FLAG_ASYNC_NOTIFY
+   *               is accepted; all others are ignored.
    */
   [noscript, notxpcom] boolean startDecodingWithResult(in uint32_t aFlags);
+
+  /**
+   * This method triggers decoding for an image, but unlike startDecoding() it
+   * enables the caller to provide more detailed information about the decode
+   * request.
+   *
+   * @param aFlags Flags of the FLAG_* variety.
+   * @return True there is a surface that satisfies the request and it is
+   *         fully decoded, else false.
+   */
+  [noscript, notxpcom] boolean requestDecodeWithResult(in uint32_t aFlags);
 
   /**
    * Locks an image. If the image does not exist yet, locks it once it becomes

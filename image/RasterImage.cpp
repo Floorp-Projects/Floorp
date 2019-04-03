@@ -339,9 +339,12 @@ LookupResult RasterImage::LookupFrame(const IntSize& aSize, uint32_t aFlags,
     return LookupResult(MatchType::NOT_FOUND);
   }
 
+  const bool syncDecode = aFlags & FLAG_SYNC_DECODE;
+  const bool avoidRedecode = aFlags & FLAG_AVOID_REDECODE_FOR_SIZE;
   if (result.Type() == MatchType::NOT_FOUND ||
-      result.Type() == MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND ||
-      ((aFlags & FLAG_SYNC_DECODE) && !result)) {
+      (result.Type() == MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND &&
+       !avoidRedecode) ||
+      (syncDecode && !avoidRedecode && !result)) {
     // We don't have a copy of this frame, and there's no decoder working on
     // one. (Or we're sync decoding and the existing decoder hasn't even started
     // yet.) Trigger decoding so it'll be available next time.
@@ -353,15 +356,14 @@ LookupResult RasterImage::LookupFrame(const IntSize& aSize, uint32_t aFlags,
     // The surface cache may suggest the preferred size we are supposed to
     // decode at. This should only happen if we accept substitutions.
     if (!result.SuggestedSize().IsEmpty()) {
-      MOZ_ASSERT(!(aFlags & FLAG_SYNC_DECODE) &&
-                 (aFlags & FLAG_HIGH_QUALITY_SCALING));
+      MOZ_ASSERT(!syncDecode && (aFlags & FLAG_HIGH_QUALITY_SCALING));
       requestedSize = result.SuggestedSize();
     }
 
     bool ranSync = Decode(requestedSize, aFlags, aPlaybackType);
 
     // If we can or did sync decode, we should already have the frame.
-    if (ranSync || (aFlags & FLAG_SYNC_DECODE)) {
+    if (ranSync || syncDecode) {
       result =
           LookupFrameInternal(requestedSize, aFlags, aPlaybackType, aMarkUsed);
     }
@@ -375,7 +377,7 @@ LookupResult RasterImage::LookupFrame(const IntSize& aSize, uint32_t aFlags,
   // Sync decoding guarantees that we got the frame, but if it's owned by an
   // async decoder that's currently running, the contents of the frame may not
   // be available yet. Make sure we get everything.
-  if (mAllSourceData && (aFlags & FLAG_SYNC_DECODE)) {
+  if (mAllSourceData && syncDecode) {
     result.Surface()->WaitUntilFinished();
   }
 
@@ -1074,6 +1076,18 @@ bool RasterImage::StartDecodingWithResult(uint32_t aFlags) {
 
   uint32_t flags = (aFlags & FLAG_ASYNC_NOTIFY) | FLAG_SYNC_DECODE_IF_FAST |
                    FLAG_HIGH_QUALITY_SCALING;
+  DrawableSurface surface = RequestDecodeForSizeInternal(mSize, flags);
+  return surface && surface->IsFinished();
+}
+
+bool RasterImage::RequestDecodeWithResult(uint32_t aFlags) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mError) {
+    return false;
+  }
+
+  uint32_t flags = aFlags | FLAG_ASYNC_NOTIFY;
   DrawableSurface surface = RequestDecodeForSizeInternal(mSize, flags);
   return surface && surface->IsFinished();
 }
