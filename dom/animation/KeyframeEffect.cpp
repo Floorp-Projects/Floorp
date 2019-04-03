@@ -32,6 +32,7 @@
 #include "nsCSSPseudoElements.h"    // For PseudoStyleType
 #include "nsDOMMutationObserver.h"  // For nsAutoAnimationMutationBatch
 #include "nsIFrame.h"
+#include "nsIPresShellInlines.h"
 #include "nsIScriptError.h"
 #include "nsPresContextInlines.h"
 #include "nsRefreshDriver.h"
