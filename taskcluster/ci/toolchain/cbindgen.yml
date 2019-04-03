@@ -52,4 +52,4 @@ win64-cbindgen:
         arguments: ['x86_64-pc-windows-msvc']
         toolchain-artifact: public/build/cbindgen.tar.bz2
     toolchains:
-        - win64-rust-1.32
+        - win64-rust-1.34
