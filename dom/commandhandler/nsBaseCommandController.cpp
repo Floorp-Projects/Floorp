@@ -29,7 +29,7 @@ nsBaseCommandController::~nsBaseCommandController() {}
 NS_IMETHODIMP
 nsBaseCommandController::Init(nsIControllerCommandTable* aCommandTable) {
   if (aCommandTable) {
-    mCommandTable = aCommandTable;
+    mCommandTable = aCommandTable->AsControllerCommandTable();
   } else {
     mCommandTable = new nsControllerCommandTable();
   }
@@ -67,7 +67,10 @@ nsBaseCommandController::GetInterface(const nsIID& aIID, void** aResult) {
 
   if (aIID.Equals(NS_GET_IID(nsIControllerCommandTable))) {
     if (mCommandTable) {
-      return mCommandTable->QueryInterface(aIID, aResult);
+      *aResult =
+          do_AddRef(static_cast<nsIControllerCommandTable*>(mCommandTable))
+              .take();
+      return NS_OK;
     }
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -118,7 +121,7 @@ nsBaseCommandController::DoCommand(const char* aCommand) {
   if (!context) {
     context = do_QueryReferent(mCommandContextWeakPtr);
   }
-  nsCOMPtr<nsIControllerCommandTable> commandTable(mCommandTable);
+  RefPtr<nsControllerCommandTable> commandTable(mCommandTable);
   return commandTable->DoCommand(aCommand, context);
 }
 
@@ -132,7 +135,7 @@ nsBaseCommandController::DoCommandWithParams(const char* aCommand,
   if (!context) {
     context = do_QueryReferent(mCommandContextWeakPtr);
   }
-  nsCOMPtr<nsIControllerCommandTable> commandTable(mCommandTable);
+  RefPtr<nsControllerCommandTable> commandTable(mCommandTable);
   return commandTable->DoCommandParams(aCommand, aParams, context);
 }
 
@@ -164,54 +167,54 @@ nsBaseCommandController::GetSupportedCommands(uint32_t* aCount,
   return mCommandTable->GetSupportedCommands(aCount, aCommands);
 }
 
-typedef already_AddRefed<nsIControllerCommandTable> (*CommandTableCreatorFn)();
+typedef already_AddRefed<nsControllerCommandTable> (*CommandTableCreatorFn)();
 
-static already_AddRefed<nsIController>
+static already_AddRefed<nsBaseCommandController>
 CreateControllerWithSingletonCommandTable(CommandTableCreatorFn aCreatorFn) {
-  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
+  RefPtr<nsBaseCommandController> commandController =
+      new nsBaseCommandController();
 
-  nsCOMPtr<nsIControllerCommandTable> commandTable = aCreatorFn();
-  if (!commandTable) return nullptr;
+  RefPtr<nsControllerCommandTable> commandTable = aCreatorFn();
+  if (!commandTable) {
+    return nullptr;
+  }
 
   // this is a singleton; make it immutable
   commandTable->MakeImmutable();
 
-  nsresult rv;
-  nsCOMPtr<nsIControllerContext> controllerContext =
-      do_QueryInterface(controller, &rv);
-  if (NS_FAILED(rv)) return nullptr;
+  nsresult rv = commandController->Init(commandTable);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
 
-  rv = controllerContext->Init(commandTable);
-  if (NS_FAILED(rv)) return nullptr;
-
-  return controller.forget();
+  return commandController.forget();
 }
 
-already_AddRefed<nsIController>
+already_AddRefed<nsBaseCommandController>
 nsBaseCommandController::CreateWindowController() {
   return CreateControllerWithSingletonCommandTable(
       nsControllerCommandTable::CreateWindowCommandTable);
 }
 
-already_AddRefed<nsIController>
+already_AddRefed<nsBaseCommandController>
 nsBaseCommandController::CreateEditorController() {
   return CreateControllerWithSingletonCommandTable(
       nsControllerCommandTable::CreateEditorCommandTable);
 }
 
-already_AddRefed<nsIController>
+already_AddRefed<nsBaseCommandController>
 nsBaseCommandController::CreateEditingController() {
   return CreateControllerWithSingletonCommandTable(
       nsControllerCommandTable::CreateEditingCommandTable);
 }
 
-already_AddRefed<nsIController>
+already_AddRefed<nsBaseCommandController>
 nsBaseCommandController::CreateHTMLEditorController() {
   return CreateControllerWithSingletonCommandTable(
       nsControllerCommandTable::CreateHTMLEditorCommandTable);
 }
 
-already_AddRefed<nsIController>
+already_AddRefed<nsBaseCommandController>
 nsBaseCommandController::CreateHTMLEditorDocStateController() {
   return CreateControllerWithSingletonCommandTable(
       nsControllerCommandTable::CreateHTMLEditorDocStateCommandTable);

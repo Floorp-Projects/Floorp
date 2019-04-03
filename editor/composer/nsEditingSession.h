@@ -23,6 +23,7 @@
 #include "nsString.h"  // for nsCString
 
 class mozIDOMWindowProxy;
+class nsBaseCommandController;
 class nsIDOMWindow;
 class nsISupports;
 class nsITimer;
@@ -55,7 +56,7 @@ class nsEditingSession final : public nsIEditingSession,
  protected:
   virtual ~nsEditingSession();
 
-  typedef already_AddRefed<nsIController> (*ControllerCreatorFn)();
+  typedef already_AddRefed<nsBaseCommandController> (*ControllerCreatorFn)();
 
   nsresult SetupEditorCommandController(
       ControllerCreatorFn aControllerCreatorFn, mozIDOMWindowProxy* aWindow,

@@ -16,6 +16,7 @@
 #include "mozilla/MappedDeclarations.h"
 #include "mozilla/MouseEvents.h"
 #include "nsAttrValueInlines.h"
+#include "nsBaseCommandController.h"
 #include "nsContentCID.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
@@ -39,7 +40,6 @@
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
 #include "nsTextEditorState.h"
-#include "nsIController.h"
 #include "nsBaseCommandController.h"
 #include "nsXULControllers.h"
 
@@ -558,22 +558,22 @@ nsIControllers* HTMLTextAreaElement::GetControllers(ErrorResult& aError) {
       return nullptr;
     }
 
-    nsCOMPtr<nsIController> controller =
+    RefPtr<nsBaseCommandController> commandController =
         nsBaseCommandController::CreateEditorController();
-    if (!controller) {
+    if (!commandController) {
       aError.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
 
-    mControllers->AppendController(controller);
+    mControllers->AppendController(commandController);
 
-    controller = nsBaseCommandController::CreateEditingController();
-    if (!controller) {
+    commandController = nsBaseCommandController::CreateEditingController();
+    if (!commandController) {
       aError.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
 
-    mControllers->AppendController(controller);
+    mControllers->AppendController(commandController);
   }
 
   return mControllers;
