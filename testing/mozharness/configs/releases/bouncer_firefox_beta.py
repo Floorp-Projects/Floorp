@@ -10,6 +10,7 @@ config = {
                 "osx",
                 "win",
                 "win64",
+                "win64-aarch64",
             ],
         },
         "installer-ssl": {
@@ -21,6 +22,7 @@ config = {
                 "osx",
                 "win",
                 "win64",
+                "win64-aarch64",
             ],
         },
         "msi": {
@@ -37,6 +39,7 @@ config = {
             "platforms": [
                 "win",
                 "win64",
+                "win64-aarch64",
             ],
         },
         "complete-mar": {
@@ -48,6 +51,7 @@ config = {
                 "osx",
                 "win",
                 "win64",
+                "win64-aarch64",
             ],
         },
     },
@@ -61,6 +65,7 @@ config = {
                 "osx",
                 "win",
                 "win64",
+                "win64-aarch64",
             ],
         },
     },
