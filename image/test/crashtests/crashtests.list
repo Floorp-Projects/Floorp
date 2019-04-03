@@ -23,7 +23,7 @@ load 1235605.gif
 load 1241728-1.html
 load 1241729-1.html
 load 1242093-1.html
-load 1242778-1.png
+skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)) load 1242778-1.png
 load 1249576-1.png
 load 1253362-1.html
 skip-if(Android&&browserIsRemote) load 1355898-1.html # bug 1507207
