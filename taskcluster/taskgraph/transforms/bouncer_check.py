@@ -61,8 +61,14 @@ def handle_keyed_by(config, jobs):
 
     for job in jobs:
         for field in fields:
-            resolve_keyed_by(item=job, field=field, item_name=job['name'],
-                             project=config.params['project'])
+            resolve_keyed_by(
+                item=job, field=field, item_name=job['name'],
+                **{
+                    'project': config.params['project'],
+                    'release-level': config.params.release_level(),
+                    'release-type': config.params['release_type'],
+                }
+            )
 
         for cfg in job["run"]["config"]:
             job["run"]["mach"].extend(["--config", cfg])
