@@ -8,6 +8,7 @@
 #include "mozilla/TextEventDispatcher.h"
 #include "nsIDocShell.h"
 #include "nsIFrame.h"
+#include "nsIPresShell.h"
 #include "nsIWidget.h"
 #include "nsPIDOMWindow.h"
 #include "nsView.h"

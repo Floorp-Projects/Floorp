@@ -16,6 +16,7 @@
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
+#include "nsIPresShell.h"
 #include "nsContainerFrame.h"
 #include "nsBoxFrame.h"
 #include "StackArena.h"

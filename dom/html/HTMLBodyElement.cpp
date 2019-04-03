@@ -13,6 +13,7 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
+#include "nsIPresShell.h"
 #include "mozilla/dom/Document.h"
 #include "DocumentInlines.h"
 #include "nsHTMLStyleSheet.h"

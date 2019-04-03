@@ -41,6 +41,7 @@
 #include "nsTableRowFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsHTMLParts.h"
+#include "nsIPresShell.h"
 #include "nsUnicharUtils.h"
 #include "nsViewManager.h"
 #include "nsStyleConsts.h"
