@@ -38,11 +38,11 @@ bool GlobalObject::initAsyncFunction(JSContext* cx,
     return false;
   }
 
-  RootedValue function(cx, global->getConstructor(JSProto_Function));
-  if (!function.toObjectOrNull()) {
+  RootedObject proto(
+      cx, GlobalObject::getOrCreateFunctionConstructor(cx, cx->global()));
+  if (!proto) {
     return false;
   }
-  RootedObject proto(cx, &function.toObject());
   HandlePropertyName name = cx->names().AsyncFunction;
   RootedObject asyncFunction(
       cx, NewFunctionWithProto(cx, AsyncFunctionConstructor, 1,

@@ -460,11 +460,11 @@ static const JSFunctionSpec async_generator_methods[] = {
     return false;
   }
 
-  RootedValue function(cx, global->getConstructor(JSProto_Function));
-  if (!function.toObjectOrNull()) {
+  RootedObject proto(
+      cx, GlobalObject::getOrCreateFunctionConstructor(cx, cx->global()));
+  if (!proto) {
     return false;
   }
-  RootedObject proto(cx, &function.toObject());
   HandlePropertyName name = cx->names().AsyncGeneratorFunction;
 
   // 25.3.1 The AsyncGeneratorFunction Constructor
