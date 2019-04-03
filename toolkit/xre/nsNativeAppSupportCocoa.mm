@@ -154,7 +154,8 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool* _retval) {
   NSArray* arguments = [[NSProcessInfo processInfo] arguments];
   BOOL shallProceedLikeNoRemote = NO;
   for (NSString* arg in arguments) {
-    if ([arg isEqualToString:@"-no-remote"] || [arg isEqualToString:@"-headless"]) {
+    if ([arg isEqualToString:@"-no-remote"] || [arg isEqualToString:@"-headless"] ||
+        [arg isEqualToString:@"--no-remote"] || [arg isEqualToString:@"--headless"]) {
       shallProceedLikeNoRemote = YES;
       break;
     }
