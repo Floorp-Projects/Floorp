@@ -8,27 +8,13 @@ var EXPORTED_SYMBOLS = ["RemoteWebProgressManager"];
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const RemoteWebProgress = Components.Constructor(
     "@mozilla.org/dom/remote-web-progress;1", "nsIRemoteWebProgress", "init");
+const RemoteWebProgressRequest = Components.Constructor(
+    "@mozilla.org/dom/remote-web-progress-request;1",
+    "nsIRemoteWebProgressRequest", "init");
 
 ChromeUtils.defineModuleGetter(this, "E10SUtils",
                                "resource://gre/modules/E10SUtils.jsm");
 
-function RemoteWebProgressRequest(uriOrSpec, originalURIOrSpec, matchedList) {
-  this.wrappedJSObject = this;
-
-  this._uri = uriOrSpec instanceof Ci.nsIURI ? uriOrSpec
-                                          : Services.io.newURI(uriOrSpec);
-  this._originalURI = originalURIOrSpec instanceof Ci.nsIURI ?
-                        originalURIOrSpec : Services.io.newURI(originalURIOrSpec);
-  this._matchedList = matchedList;
-}
-
-RemoteWebProgressRequest.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIChannel, Ci.nsIClassifiedChannel]),
-
-  get URI() { return this._uri; },
-  get originalURI() { return this._originalURI; },
-  get matchedList() { return this._matchedList; },
-};
 
 function RemoteWebProgressManager(aBrowser) {
   this._topLevelWebProgress = new RemoteWebProgress(
@@ -170,12 +156,13 @@ RemoteWebProgressManager.prototype = {
       webProgress.QueryInterface(Ci.nsIWebProgress);
     }
 
-    let request =
-      aRequestURI ?
-        new RemoteWebProgressRequest(aRequestURI,
-                                     aOriginalRequestURI,
-                                     aMatchedList) :
-        null;
+    let request = null;
+    if (aRequestURI) {
+      request = new RemoteWebProgressRequest(aRequestURI,
+                                             aOriginalRequestURI,
+                                             aMatchedList);
+      request = request.QueryInterface(Ci.nsIRequest);
+    }
 
     return [webProgress, request];
   },
@@ -208,9 +195,11 @@ RemoteWebProgressManager.prototype = {
     // The WebProgressRequest object however is always dynamic.
     let request = null;
     if (json.requestURI) {
-      request = new RemoteWebProgressRequest(json.requestURI,
-                                             json.originalRequestURI,
-                                             json.matchedList);
+      request = new RemoteWebProgressRequest(
+        Services.io.newURI(json.requestURI),
+        Services.io.newURI(json.originalRequestURI),
+        json.matchedList);
+      request = request.QueryInterface(Ci.nsIRequest);
     }
 
     if (isTopLevel) {
