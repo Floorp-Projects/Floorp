@@ -111,7 +111,7 @@ enum device_flags {
 };
 
 void audiounit_stream_stop_internal(cubeb_stream * stm);
-void audiounit_stream_start_internal(cubeb_stream * stm);
+static int audiounit_stream_start_internal(cubeb_stream * stm);
 static void audiounit_close_stream(cubeb_stream *stm);
 static int audiounit_setup_stream(cubeb_stream *stm);
 static vector<AudioObjectID>
@@ -139,7 +139,7 @@ struct cubeb {
   // Store list of devices to detect changes
   vector<AudioObjectID> input_device_array;
   vector<AudioObjectID> output_device_array;
-  // The queue is asynchronously deallocated once all references to it are released
+  // The queue should be released when it’s no longer needed.
   dispatch_queue_t serial_queue = dispatch_queue_create(DISPATCH_QUEUE_LABEL, DISPATCH_QUEUE_SERIAL);
   // Current used channel layout
   atomic<cubeb_channel_layout> layout{ CUBEB_LAYOUT_UNDEFINED };
@@ -854,7 +854,10 @@ audiounit_reinit_stream(cubeb_stream * stm, device_flags_value flags)
 
     // If the stream was running, start it again.
     if (!stm->shutdown) {
-      audiounit_stream_start_internal(stm);
+      r = audiounit_stream_start_internal(stm);
+      if (r != CUBEB_OK) {
+        return CUBEB_ERROR;
+      }
     }
   }
   return CUBEB_OK;
@@ -1432,6 +1435,8 @@ audiounit_destroy(cubeb * ctx)
     }
   }
 
+  dispatch_release(ctx->serial_queue);
+
   delete ctx;
 }
 
@@ -1681,6 +1686,9 @@ audiounit_create_blank_aggregate_device(AudioObjectID * plugin_id, AudioDeviceID
   return CUBEB_OK;
 }
 
+// The returned CFStringRef object needs to be released (via CFRelease)
+// if it's not NULL, since the reference count of the returned CFStringRef
+// object is increased.
 static CFStringRef
 get_device_name(AudioDeviceID id)
 {
@@ -1713,6 +1721,7 @@ audiounit_set_aggregate_sub_device_list(AudioDeviceID aggregate_device_id,
       return CUBEB_ERROR;
     }
     CFArrayAppendValue(aggregate_sub_devices_array, ref);
+    CFRelease(ref);
   }
   for (UInt32 i = 0; i < input_sub_devices.size(); i++) {
     CFStringRef ref = get_device_name(input_sub_devices[i]);
@@ -1721,6 +1730,7 @@ audiounit_set_aggregate_sub_device_list(AudioDeviceID aggregate_device_id,
       return CUBEB_ERROR;
     }
     CFArrayAppendValue(aggregate_sub_devices_array, ref);
+    CFRelease(ref);
   }
 
   AudioObjectPropertyAddress aggregate_sub_device_list = { kAudioAggregateDevicePropertyFullSubDeviceList,
@@ -1762,6 +1772,9 @@ audiounit_set_master_aggregate_device(const AudioDeviceID aggregate_device_id)
                                            NULL,
                                            size,
                                            &master_sub_device);
+  if (master_sub_device) {
+    CFRelease(master_sub_device);
+  }
   if (rv != noErr) {
     LOG("AudioObjectSetPropertyData/kAudioAggregateDevicePropertyMasterSubDevice, rv=%d", rv);
     return CUBEB_ERROR;
@@ -2874,18 +2887,25 @@ audiounit_stream_destroy(cubeb_stream * stm)
   delete stm;
 }
 
-void
+static int
 audiounit_stream_start_internal(cubeb_stream * stm)
 {
   OSStatus r;
   if (stm->input_unit != NULL) {
     r = AudioOutputUnitStart(stm->input_unit);
-    assert(r == 0);
+    if (r != noErr) {
+      LOG("AudioOutputUnitStart (input) rv=%d", r);
+      return CUBEB_ERROR;
+    }
   }
   if (stm->output_unit != NULL) {
     r = AudioOutputUnitStart(stm->output_unit);
-    assert(r == 0);
+    if (r != noErr) {
+      LOG("AudioOutputUnitStart (output) rv=%d", r);
+      return CUBEB_ERROR;
+    }
   }
+  return CUBEB_OK;
 }
 
 static int
@@ -2895,7 +2915,10 @@ audiounit_stream_start(cubeb_stream * stm)
   stm->shutdown = false;
   stm->draining = false;
 
-  audiounit_stream_start_internal(stm);
+  int r = audiounit_stream_start_internal(stm);
+  if (r != CUBEB_OK) {
+    return r;
+  }
 
   stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STARTED);
 
@@ -3427,6 +3450,9 @@ audiounit_get_devices_of_type(cubeb_device_type devtype)
       it = devices.erase(it);
     } else {
       it++;
+    }
+    if (name) {
+      CFRelease(name);
     }
   }
 
