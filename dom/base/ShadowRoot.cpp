@@ -30,19 +30,6 @@ using namespace mozilla::dom;
 NS_IMPL_CYCLE_COLLECTION_CLASS(ShadowRoot)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ShadowRoot, DocumentFragment)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
-  for (StyleSheet* sheet : tmp->mStyleSheets) {
-    // mServoStyles keeps another reference to it if applicable.
-    if (sheet->IsApplicable()) {
-      MOZ_ASSERT(tmp->mServoStyles);
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mServoStyles->sheets[i]");
-      cb.NoteXPCOMChild(sheet);
-    }
-  }
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStyleSheets)
-  for (auto iter = tmp->mIdentifierMap.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.Get()->Traverse(&cb);
-  }
   DocumentOrShadowRoot::Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -50,8 +37,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ShadowRoot)
   if (tmp->GetHost()) {
     tmp->GetHost()->RemoveMutationObserver(tmp);
   }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMStyleSheets)
-  tmp->mIdentifierMap.Clear();
   DocumentOrShadowRoot::Unlink(tmp);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(DocumentFragment)
 

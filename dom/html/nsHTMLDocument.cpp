@@ -509,7 +509,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (!viewSource && xhtml) {
     // We're parsing XHTML as XML, remember that.
     mType = eXHTML;
-    mCompatMode = eCompatibility_FullStandards;
+    SetCompatibilityMode(eCompatibility_FullStandards);
     loadAsHtml5 = false;
   }
 
@@ -527,8 +527,6 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       }
     }
   }
-
-  CSSLoader()->SetCompatibilityMode(mCompatMode);
 
   nsresult rv = Document::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
                                             aContainer, aDocListener, aReset);
@@ -782,10 +780,7 @@ void nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode) {
     return;
   }
   mCompatMode = aMode;
-  CSSLoader()->SetCompatibilityMode(mCompatMode);
-  if (nsPresContext* pc = GetPresContext()) {
-    pc->CompatibilityModeChanged();
-  }
+  CompatibilityModeChanged();
 }
 
 bool nsHTMLDocument::UseWidthDeviceWidthFallbackViewport() const {
