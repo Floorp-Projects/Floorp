@@ -144,17 +144,26 @@ nsCommandManager::IsCommandEnabled(const char* aCommandName,
                                    mozIDOMWindowProxy* aTargetWindow,
                                    bool* aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
-
-  bool commandEnabled = false;
-
-  nsCOMPtr<nsIController> controller;
-  GetControllerForCommand(aCommandName, aTargetWindow,
-                          getter_AddRefs(controller));
-  if (controller) {
-    controller->IsCommandEnabled(aCommandName, &commandEnabled);
+  if (!aCommandName) {
+    *aResult = false;
+    return NS_OK;
   }
-  *aResult = commandEnabled;
+  *aResult = IsCommandEnabled(nsDependentCString(aCommandName), aTargetWindow);
   return NS_OK;
+}
+
+bool nsCommandManager::IsCommandEnabled(const nsCString& aCommandName,
+                                        mozIDOMWindowProxy* aTargetWindow) {
+  nsCOMPtr<nsIController> controller;
+  GetControllerForCommand(aCommandName.get(), aTargetWindow,
+                          getter_AddRefs(controller));
+  if (!controller) {
+    return false;
+  }
+
+  bool enabled = false;
+  controller->IsCommandEnabled(aCommandName.get(), &enabled);
+  return enabled;
 }
 
 NS_IMETHODIMP
