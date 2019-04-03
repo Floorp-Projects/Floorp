@@ -415,13 +415,13 @@ void Selection::ToStringWithFormat(const nsAString& aFormatType,
     return;
   }
 
-  nsIPresShell* shell = GetPresShell();
-  if (!shell) {
+  PresShell* presShell = GetPresShell();
+  if (!presShell) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  Document* doc = shell->GetDocument();
+  Document* doc = presShell->GetDocument();
 
   // Flags should always include OutputSelectionOnly if we're coming from here:
   aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
@@ -677,20 +677,16 @@ void Selection::Disconnect() {
 }
 
 Document* Selection::GetParentObject() const {
-  nsIPresShell* shell = GetPresShell();
-  if (shell) {
-    return shell->GetDocument();
-  }
-  return nullptr;
+  PresShell* presShell = GetPresShell();
+  return presShell ? presShell->GetDocument() : nullptr;
 }
 
 DocGroup* Selection::GetDocGroup() const {
-  nsIPresShell* shell = GetPresShell();
-  if (!shell) {
+  PresShell* presShell = GetPresShell();
+  if (!presShell) {
     return nullptr;
   }
-
-  Document* doc = shell->GetDocument();
+  Document* doc = presShell->GetDocument();
   return doc ? doc->GetDocGroup() : nullptr;
 }
 
@@ -1868,7 +1864,8 @@ nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   }
 
   nsPresContext* presContext = aFrame->PresContext();
-  nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
+  RefPtr<PresShell> presShell =
+      static_cast<PresShell*>(presContext->PresShell());
   nsRootPresContext* rootPC = presContext->GetRootPresContext();
   if (!rootPC) return NS_OK;
   nsIFrame* rootmostFrame = rootPC->PresShell()->GetRootFrame();
@@ -1881,7 +1878,7 @@ nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   bool done = false;
   bool didScroll;
   while (true) {
-    didScroll = shell->ScrollFrameRectIntoView(
+    didScroll = presShell->ScrollFrameRectIntoView(
         aFrame, nsRect(aPoint, nsSize(0, 0)), nsIPresShell::ScrollAxis(),
         nsIPresShell::ScrollAxis(), 0);
     if (!weakFrame || !weakRootFrame) {
@@ -1889,7 +1886,8 @@ nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
     }
     if (!didScroll && !done) {
       // If aPoint is at the screen edge then try to scroll anyway, once.
-      RefPtr<nsDeviceContext> dx = shell->GetViewManager()->GetDeviceContext();
+      RefPtr<nsDeviceContext> dx =
+          presShell->GetViewManager()->GetDeviceContext();
       nsRect screen;
       dx->GetRect(screen);
       nsPoint screenPoint =
@@ -1916,7 +1914,8 @@ nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   // Start the AutoScroll timer if necessary.
   if (didScroll && mAutoScrollTimer) {
     nsPoint presContextPoint =
-        globalPoint - shell->GetRootFrame()->GetOffsetToCrossDoc(rootmostFrame);
+        globalPoint -
+        presShell->GetRootFrame()->GetOffsetToCrossDoc(rootmostFrame);
     mAutoScrollTimer->Start(presContext, presContextPoint);
   }
 
@@ -2860,22 +2859,19 @@ bool Selection::ContainsPoint(const nsPoint& aPoint) {
 }
 
 nsPresContext* Selection::GetPresContext() const {
-  nsIPresShell* shell = GetPresShell();
-  if (!shell) {
-    return nullptr;
-  }
-
-  return shell->GetPresContext();
+  PresShell* presShell = GetPresShell();
+  return presShell ? presShell->GetPresContext() : nullptr;
 }
 
-nsIPresShell* Selection::GetPresShell() const {
-  if (!mFrameSelection) return nullptr;  // nothing to do
-
+PresShell* Selection::GetPresShell() const {
+  if (!mFrameSelection) {
+    return nullptr;  // nothing to do
+  }
   return mFrameSelection->GetPresShell();
 }
 
 Document* Selection::GetDocument() const {
-  nsIPresShell* presShell = GetPresShell();
+  PresShell* presShell = GetPresShell();
   return presShell ? presShell->GetDocument() : nullptr;
 }
 
@@ -3214,9 +3210,9 @@ nsresult Selection::NotifySelectionListeners() {
   }
 
   nsCOMPtr<Document> doc;
-  nsIPresShell* ps = GetPresShell();
-  if (ps) {
-    doc = ps->GetDocument();
+  PresShell* presShell = GetPresShell();
+  if (presShell) {
+    doc = presShell->GetDocument();
   }
 
   // We've notified all selection listeners even when some of them are removed
