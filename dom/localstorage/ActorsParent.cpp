@@ -7259,22 +7259,22 @@ void ArchivedOriginScope::GetBindingClause(nsACString& aBindingClause) const {
     explicit Matcher(nsACString* aBindingClause)
         : mBindingClause(aBindingClause) {}
 
-    void match(const Origin& aOrigin) {
+    void operator()(const Origin& aOrigin) {
       *mBindingClause = NS_LITERAL_CSTRING(
           " WHERE originKey = :originKey "
           "AND originAttributes = :originAttributes");
     }
 
-    void match(const Prefix& aPrefix) {
+    void operator()(const Prefix& aPrefix) {
       *mBindingClause = NS_LITERAL_CSTRING(" WHERE originKey = :originKey");
     }
 
-    void match(const Pattern& aPattern) {
+    void operator()(const Pattern& aPattern) {
       *mBindingClause = NS_LITERAL_CSTRING(
           " WHERE originAttributes MATCH :originAttributesPattern");
     }
 
-    void match(const Null& aNull) { *mBindingClause = EmptyCString(); }
+    void operator()(const Null& aNull) { *mBindingClause = EmptyCString(); }
   };
 
   mData.match(Matcher(&aBindingClause));
@@ -7290,7 +7290,7 @@ nsresult ArchivedOriginScope::BindToStatement(
 
     explicit Matcher(mozIStorageStatement* aStmt) : mStmt(aStmt) {}
 
-    nsresult match(const Origin& aOrigin) {
+    nsresult operator()(const Origin& aOrigin) {
       nsresult rv = mStmt->BindUTF8StringByName(NS_LITERAL_CSTRING("originKey"),
                                                 aOrigin.OriginNoSuffix());
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -7306,7 +7306,7 @@ nsresult ArchivedOriginScope::BindToStatement(
       return NS_OK;
     }
 
-    nsresult match(const Prefix& aPrefix) {
+    nsresult operator()(const Prefix& aPrefix) {
       nsresult rv = mStmt->BindUTF8StringByName(NS_LITERAL_CSTRING("originKey"),
                                                 aPrefix.OriginNoSuffix());
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -7316,7 +7316,7 @@ nsresult ArchivedOriginScope::BindToStatement(
       return NS_OK;
     }
 
-    nsresult match(const Pattern& aPattern) {
+    nsresult operator()(const Pattern& aPattern) {
       nsresult rv = mStmt->BindUTF8StringByName(
           NS_LITERAL_CSTRING("originAttributesPattern"),
           NS_LITERAL_CSTRING("pattern1"));
@@ -7327,7 +7327,7 @@ nsresult ArchivedOriginScope::BindToStatement(
       return NS_OK;
     }
 
-    nsresult match(const Null& aNull) { return NS_OK; }
+    nsresult operator()(const Null& aNull) { return NS_OK; }
   };
 
   nsresult rv = mData.match(Matcher(aStmt));
@@ -7349,7 +7349,7 @@ bool ArchivedOriginScope::HasMatches(
     explicit Matcher(ArchivedOriginHashtable* aHashtable)
         : mHashtable(aHashtable) {}
 
-    bool match(const Origin& aOrigin) {
+    bool operator()(const Origin& aOrigin) {
       nsCString hashKey = GetArchivedOriginHashKey(aOrigin.OriginSuffix(),
                                                    aOrigin.OriginNoSuffix());
 
@@ -7357,7 +7357,7 @@ bool ArchivedOriginScope::HasMatches(
       return mHashtable->Get(hashKey, &archivedOriginInfo);
     }
 
-    bool match(const Prefix& aPrefix) {
+    bool operator()(const Prefix& aPrefix) {
       for (auto iter = mHashtable->ConstIter(); !iter.Done(); iter.Next()) {
         ArchivedOriginInfo* archivedOriginInfo = iter.Data();
 
@@ -7369,7 +7369,7 @@ bool ArchivedOriginScope::HasMatches(
       return false;
     }
 
-    bool match(const Pattern& aPattern) {
+    bool operator()(const Pattern& aPattern) {
       for (auto iter = mHashtable->ConstIter(); !iter.Done(); iter.Next()) {
         ArchivedOriginInfo* archivedOriginInfo = iter.Data();
 
@@ -7382,7 +7382,7 @@ bool ArchivedOriginScope::HasMatches(
       return false;
     }
 
-    bool match(const Null& aNull) { return mHashtable->Count(); }
+    bool operator()(const Null& aNull) { return mHashtable->Count(); }
   };
 
   return mData.match(Matcher(aHashtable));
@@ -7399,14 +7399,14 @@ void ArchivedOriginScope::RemoveMatches(
     explicit Matcher(ArchivedOriginHashtable* aHashtable)
         : mHashtable(aHashtable) {}
 
-    void match(const Origin& aOrigin) {
+    void operator()(const Origin& aOrigin) {
       nsCString hashKey = GetArchivedOriginHashKey(aOrigin.OriginSuffix(),
                                                    aOrigin.OriginNoSuffix());
 
       mHashtable->Remove(hashKey);
     }
 
-    void match(const Prefix& aPrefix) {
+    void operator()(const Prefix& aPrefix) {
       for (auto iter = mHashtable->Iter(); !iter.Done(); iter.Next()) {
         ArchivedOriginInfo* archivedOriginInfo = iter.Data();
 
@@ -7416,7 +7416,7 @@ void ArchivedOriginScope::RemoveMatches(
       }
     }
 
-    void match(const Pattern& aPattern) {
+    void operator()(const Pattern& aPattern) {
       for (auto iter = mHashtable->Iter(); !iter.Done(); iter.Next()) {
         ArchivedOriginInfo* archivedOriginInfo = iter.Data();
 
@@ -7427,7 +7427,7 @@ void ArchivedOriginScope::RemoveMatches(
       }
     }
 
-    void match(const Null& aNull) { mHashtable->Clear(); }
+    void operator()(const Null& aNull) { mHashtable->Clear(); }
   };
 
   mData.match(Matcher(aHashtable));

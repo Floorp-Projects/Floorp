@@ -503,6 +503,14 @@ export function getGeneratedSource(
   return getSourceFromId(state, originalToGeneratedId(source.id));
 }
 
+export function getGeneratedSourceById(
+  state: OuterState,
+  sourceId: string
+): Source {
+  const generatedSourceId = originalToGeneratedId(sourceId);
+  return getSourceFromId(state, generatedSourceId);
+}
+
 export function getPendingSelectedLocation(state: OuterState) {
   return state.sources.pendingSelectedLocation;
 }

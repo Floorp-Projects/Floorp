@@ -281,7 +281,7 @@ class EnumSet {
   constexpr static Serialized bitFor(T aEnum) {
     auto bitNumber = static_cast<Serialized>(aEnum);
     MOZ_DIAGNOSTIC_ASSERT(bitNumber < kMaxBits);
-    return Serialized(1) << bitNumber;
+    return static_cast<Serialized>(Serialized{1} << bitNumber);
   }
 
   constexpr void incVersion() {

@@ -162,7 +162,6 @@ DOM4_MSG_DEF(InvalidStateError, "XMLHttpRequest must not be sending.", NS_ERROR_
 DOM4_MSG_DEF(InvalidStateError, "XMLHttpRequest state must not be LOADING or DONE.", NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE)
 DOM4_MSG_DEF(InvalidStateError, "responseXML is only available if responseType is '' or 'document'.", NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSEXML)
 DOM4_MSG_DEF(InvalidStateError, "responseText is only available if responseType is '' or 'text'.", NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSETEXT)
-DOM4_MSG_DEF(InvalidStateError, "synchronous XMLHttpRequests do not support 'moz-chunked-arraybuffer' responseType.", NS_ERROR_DOM_INVALID_STATE_XHR_CHUNKED_RESPONSETYPES_UNSUPPORTED_FOR_SYNC)
 DOM4_MSG_DEF(InvalidAccessError, "synchronous XMLHttpRequests do not support timeout and responseType.", NS_ERROR_DOM_INVALID_ACCESS_XHR_TIMEOUT_AND_RESPONSETYPE_UNSUPPORTED_FOR_SYNC)
 
 /* Image decode errors. */

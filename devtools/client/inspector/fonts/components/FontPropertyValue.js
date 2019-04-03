@@ -19,6 +19,8 @@ class FontPropertyValue extends PureComponent {
     return {
       // Whether to allow input values above the value defined by the `max` prop.
       allowOverflow: PropTypes.bool,
+      // Whether to allow input values below the value defined by the `min` prop.
+      allowUnderflow: PropTypes.bool,
       className: PropTypes.string,
       defaultValue: PropTypes.number,
       disabled: PropTypes.bool.isRequired,
@@ -34,20 +36,28 @@ class FontPropertyValue extends PureComponent {
       nameLabel: PropTypes.bool,
       onChange: PropTypes.func.isRequired,
       step: PropTypes.number,
+      // Whether to show the value input field.
+      showInput: PropTypes.bool,
+      // Whether to show the unit select dropdown.
+      showUnit: PropTypes.bool,
       unit: PropTypes.string,
       unitOptions: PropTypes.array,
       value: PropTypes.number,
+      valueLabel: PropTypes.string,
     };
   }
 
   static get defaultProps() {
     return {
       allowOverflow: false,
+      allowUnderflow: false,
       className: "",
       minLabel: false,
       maxLabel: false,
       nameLabel: false,
       step: 1,
+      showInput: true,
+      showUnit: true,
       unit: null,
       unitOptions: [],
     };
@@ -93,7 +103,7 @@ class FontPropertyValue extends PureComponent {
   /**
    * Check if the given value is valid according to the constraints of this component.
    * Ensure it is a number and that it does not go outside the min/max limits, unless
-   * allowed by the `allowOverflow` props flag.
+   * allowed by the `allowOverflow` and `allowUnderflow` props.
    *
    * @param  {Number} value
    *         Numeric value
@@ -101,18 +111,19 @@ class FontPropertyValue extends PureComponent {
    *         Whether the value conforms to the components contraints.
    */
   isValueValid(value) {
-    const { allowOverflow, min, max } = this.props;
+    const { allowOverflow, allowUnderflow, min, max } = this.props;
 
     if (typeof value !== "number" || isNaN(value)) {
       return false;
     }
 
-    if (min !== undefined && value < min) {
+    // Ensure it does not go below minimum value, unless underflow is allowed.
+    if (min !== undefined && value < min && !allowUnderflow) {
       return false;
     }
 
-    // Ensure it does not exceed maximum value, unless overflow is allowed.
-    if (max !== undefined && value > this.props.max && !allowOverflow) {
+    // Ensure it does not go over maximum value, unless overflow is allowed.
+    if (max !== undefined && value > max && !allowOverflow) {
       return false;
     }
 
@@ -328,6 +339,14 @@ class FontPropertyValue extends PureComponent {
     return createElement(Fragment, null, labelEl, detailEl);
   }
 
+  renderValueLabel() {
+    if (!this.props.valueLabel) {
+      return null;
+    }
+
+    return dom.div({ className: "font-value-label" }, this.props.valueLabel);
+  }
+
   render() {
     // Guard against bad axis data.
     if (this.props.min === this.props.max) {
@@ -366,6 +385,8 @@ class FontPropertyValue extends PureComponent {
     const input = dom.input(
       {
         ...defaults,
+        // Remove lower limit from number input if it is allowed to underflow.
+        min: this.props.allowUnderflow ? null : this.props.min,
         // Remove upper limit from number input if it is allowed to overflow.
         max: this.props.allowOverflow ? null : this.props.max,
         name: this.props.name,
@@ -399,8 +420,9 @@ class FontPropertyValue extends PureComponent {
           },
           range
         ),
-        input,
-        this.renderUnitSelect()
+        this.renderValueLabel(),
+        this.props.showInput && input,
+        this.props.showUnit && this.renderUnitSelect()
       )
     );
   }

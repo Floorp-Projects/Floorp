@@ -264,10 +264,12 @@ class JSTerm extends Component {
             "Left": onArrowLeft,
             "Ctrl-Left": onArrowLeft,
             "Cmd-Left": onArrowLeft,
+            "Alt-Left": onArrowLeft,
 
             "Right": onArrowRight,
             "Ctrl-Right": onArrowRight,
             "Cmd-Right": onArrowRight,
+            "Alt-Right": onArrowRight,
 
             "Ctrl-N": () => {
               // Control-N differs from down arrow: it ignores autocomplete state.
@@ -908,6 +910,7 @@ class JSTerm extends Component {
       if (event.keyCode === KeyCodes.DOM_VK_RIGHT) {
         if (this.getAutoCompletionText()) {
           this.acceptProposedCompletion();
+          event.preventDefault();
         }
         this.clearCompletion();
         event.preventDefault();

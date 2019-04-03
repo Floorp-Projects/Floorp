@@ -191,7 +191,7 @@ class Utils {
   uint8_t GetChannelCount() const { return mChannels; }
 
  protected:
-  Utils(uint32_t aChannels, ChannelPixelLayoutDataType aDataType)
+  Utils(uint8_t aChannels, ChannelPixelLayoutDataType aDataType)
       : mChannels(aChannels),
         mBytesPerPixelValue(GetBytesPerPixelValue(aDataType)),
         mDataType(aDataType) {}

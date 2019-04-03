@@ -189,11 +189,11 @@ class MOZ_STACK_CLASS EntryWrapper final {
 
   explicit EntryWrapper(const StaticModule* aEntry) : mEntry(aEntry) {}
 
-#define MATCH(type, ifFactory, ifStatic)                \
-  struct Matcher {                                      \
-    type match(nsFactoryEntry* entry) { ifFactory; }    \
-    type match(const StaticModule* entry) { ifStatic; } \
-  };                                                    \
+#define MATCH(type, ifFactory, ifStatic)                     \
+  struct Matcher {                                           \
+    type operator()(nsFactoryEntry* entry) { ifFactory; }    \
+    type operator()(const StaticModule* entry) { ifStatic; } \
+  };                                                         \
   return mEntry.match((Matcher()))
 
   const nsID& CID() {

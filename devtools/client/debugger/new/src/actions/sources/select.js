@@ -145,7 +145,7 @@ export function selectLocation(
 
     dispatch(setSelectedLocation(source, location));
 
-    await dispatch(loadSourceText(source));
+    await dispatch(loadSourceText({ source }));
     const loadedSource = getSource(getState(), source.id);
 
     if (!loadedSource) {
@@ -164,7 +164,7 @@ export function selectLocation(
       dispatch(closeTab(loadedSource));
     }
 
-    dispatch(setSymbols(loadedSource.id));
+    dispatch(setSymbols({ source: loadedSource }));
     dispatch(setOutOfScopeLocations());
 
     // If a new source is selected update the file search results

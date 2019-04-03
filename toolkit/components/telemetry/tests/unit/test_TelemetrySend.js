@@ -481,7 +481,8 @@ add_task(async function test_tooLateToSend() {
 
   Assert.equal(Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE_TYPE").snapshot().values[7], 1,
     "Should have registered the failed attempt to send");
-
+  Assert.equal(Telemetry.getKeyedHistogramById("TELEMETRY_SEND_FAILURE_TYPE_PER_PING").snapshot()[TEST_TYPE].values[7],
+    1, "Should have registered the failed attempt to send TEST_TYPE ping");
   await TelemetryStorage.reset();
   Assert.equal(TelemetrySend.pendingPingCount, 0, "Should clean up after yourself");
 });

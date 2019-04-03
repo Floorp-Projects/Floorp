@@ -314,10 +314,12 @@ class OfflineClockDriver : public ThreadedDriver {
 
 struct StreamAndPromiseForOperation {
   StreamAndPromiseForOperation(MediaStream* aStream, void* aPromise,
-                               dom::AudioContextOperation aOperation);
+                               dom::AudioContextOperation aOperation,
+                               dom::AudioContextOperationFlags aFlags);
   RefPtr<MediaStream> mStream;
   void* mPromise;
   dom::AudioContextOperation mOperation;
+  dom::AudioContextOperationFlags mFlags;
 };
 
 enum AsyncCubebOperation { INIT, SHUTDOWN };
@@ -404,7 +406,8 @@ class AudioCallbackDriver : public GraphDriver,
    * occurs on the cubeb stream. */
   void EnqueueStreamAndPromiseForOperation(
       MediaStream* aStream, void* aPromise,
-      dom::AudioContextOperation aOperation);
+      dom::AudioContextOperation aOperation,
+      dom::AudioContextOperationFlags aFlags);
 
   std::thread::id ThreadId() { return mAudioThreadId.load(); }
 

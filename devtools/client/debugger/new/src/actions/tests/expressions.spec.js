@@ -37,6 +37,7 @@ const mockThreadClient = {
     ),
   getFrameScopes: async () => {},
   sourceContents: () => ({ source: "", contentType: "text/javascript" }),
+  getBreakpointPositions: async () => [],
   autocomplete: () => {
     return new Promise(resolve => {
       resolve({
@@ -61,7 +62,6 @@ describe("expressions", () => {
 
     dispatch(actions.addExpression((undefined: any)));
     dispatch(actions.addExpression(""));
-
     expect(selectors.getExpressions(getState()).size).toBe(0);
   });
 
@@ -97,12 +97,10 @@ describe("expressions", () => {
 
     await dispatch(actions.addExpression("foo"));
     await dispatch(actions.addExpression("bar"));
-
     expect(selectors.getExpressions(getState()).size).toBe(2);
 
     const expression = selectors.getExpression(getState(), "foo");
     dispatch(actions.deleteExpression(expression));
-
     expect(selectors.getExpressions(getState()).size).toBe(1);
     expect(selectors.getExpression(getState(), "bar").input).toBe("bar");
   });
@@ -112,12 +110,10 @@ describe("expressions", () => {
 
     await dispatch(actions.addExpression("foo"));
     await dispatch(actions.addExpression("bar"));
-
     expect(selectors.getExpression(getState(), "foo").value).toBe("bla");
     expect(selectors.getExpression(getState(), "bar").value).toBe("bla");
 
     await dispatch(actions.evaluateExpressions());
-
     expect(selectors.getExpression(getState(), "foo").value).toBe("bla");
     expect(selectors.getExpression(getState(), "bar").value).toBe("bla");
   });
@@ -125,9 +121,7 @@ describe("expressions", () => {
   it("should evaluate expressions in specific scope", async () => {
     const { dispatch, getState } = createStore(mockThreadClient);
     await createFrames(dispatch);
-
     await dispatch(actions.newSource(makeSource("source")));
-
     await dispatch(actions.addExpression("foo"));
     await dispatch(actions.addExpression("bar"));
 
@@ -142,17 +136,15 @@ describe("expressions", () => {
 
   it("should get the autocomplete matches for the input", async () => {
     const { dispatch, getState } = createStore(mockThreadClient);
-
     await dispatch(actions.autocomplete("to", 2));
-
     expect(selectors.getAutocompleteMatchset(getState())).toMatchSnapshot();
   });
 });
 
 async function createFrames(dispatch) {
   const frame = makeMockFrame();
-
   await dispatch(actions.newSource(makeSource("example.js")));
+  await dispatch(actions.newSource(makeSource("source")));
 
   await dispatch(
     actions.paused({

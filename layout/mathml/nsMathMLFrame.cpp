@@ -295,8 +295,8 @@ void nsMathMLFrame::DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
   nscoord w = aMetrics.rightBearing - aMetrics.leftBearing;
   nscoord h = aMetrics.ascent + aMetrics.descent;
 
-  aLists.Content()->AppendToTop(MakeDisplayItem<nsDisplayMathMLBoundingMetrics>(
-      aBuilder, aFrame, nsRect(x, y, w, h)));
+  aLists.Content()->AppendNewToTop<nsDisplayMathMLBoundingMetrics>(
+      aBuilder, aFrame, nsRect(x, y, w, h));
 }
 #endif
 
@@ -340,8 +340,8 @@ void nsMathMLFrame::DisplayBar(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                                uint32_t aIndex) {
   if (!aFrame->StyleVisibility()->IsVisible() || aRect.IsEmpty()) return;
 
-  aLists.Content()->AppendToTop(
-      MakeDisplayItem<nsDisplayMathMLBar>(aBuilder, aFrame, aRect, aIndex));
+  aLists.Content()->AppendNewToTop<nsDisplayMathMLBar>(aBuilder, aFrame, aRect,
+                                                       aIndex);
 }
 
 void nsMathMLFrame::GetRadicalParameters(nsFontMetrics* aFontMetrics,

@@ -6,6 +6,7 @@
 #include "WebGLContext.h"
 
 #include "GLContext.h"
+#include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 #include "WebGLBuffer.h"
 #include "WebGLFramebuffer.h"
@@ -401,7 +402,7 @@ void WebGLContext::VertexAttribAnyPointer(bool isFuncInt, GLuint index,
   }
 
   WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
-  vd.VertexAttribPointer(isFuncInt, buffer, size, type, normalized, stride,
+  vd.VertexAttribPointer(isFuncInt, buffer, AutoAssertCast(size), type, normalized, stride,
                          byteOffset);
   mBoundVertexArray->InvalidateCaches();
 }

@@ -48,7 +48,7 @@ tidy:
         command: >-
             source $HOME/checkouts/gecko/taskcluster/scripts/misc/source-test-clang-setup.sh &&
             cd $HOME/checkouts/gecko &&
-            ./mach --log-no-times static-analysis check $TRY_MODIFIED_FILES --output $HOME/clang-tidy.json --format json
+            ./mach --log-no-times static-analysis check --outgoing --output $HOME/clang-tidy.json --format json
 
     worker:
         artifacts:
@@ -64,7 +64,7 @@ format:
         command: >-
             source $HOME/checkouts/gecko/taskcluster/scripts/misc/source-test-clang-setup.sh &&
             cd $HOME/checkouts/gecko &&
-            ./mach --log-no-times clang-format --path $TRY_MODIFIED_FILES --output $HOME/clang-format.json --format json
+            ./mach --log-no-times clang-format --outgoing --output $HOME/clang-format.json --format json
     worker:
         artifacts:
             - type: file

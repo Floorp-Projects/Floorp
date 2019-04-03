@@ -814,10 +814,9 @@ void TextOverflow::CreateMarkers(const nsLineBox* aLine, bool aCreateIStart,
         markerLogicalRect.GetPhysicalRect(mBlockWM, mBlockSize) + offset;
     ClipMarker(aContentArea.GetPhysicalRect(mBlockWM, mBlockSize) + offset,
                markerRect, clipState);
-    nsDisplayItem* marker = MakeDisplayItem<nsDisplayTextOverflowMarker>(
+    mMarkerList.AppendNewToTop<nsDisplayTextOverflowMarker>(
         mBuilder, mBlock, markerRect, aLine->GetLogicalAscent(), mIStart.mStyle,
         aLineNumber, 0);
-    mMarkerList.AppendToTop(marker);
   }
 
   if (aCreateIEnd) {
@@ -831,10 +830,9 @@ void TextOverflow::CreateMarkers(const nsLineBox* aLine, bool aCreateIStart,
         markerLogicalRect.GetPhysicalRect(mBlockWM, mBlockSize) + offset;
     ClipMarker(aContentArea.GetPhysicalRect(mBlockWM, mBlockSize) + offset,
                markerRect, clipState);
-    nsDisplayItem* marker = MakeDisplayItem<nsDisplayTextOverflowMarker>(
+    mMarkerList.AppendNewToTop<nsDisplayTextOverflowMarker>(
         mBuilder, mBlock, markerRect, aLine->GetLogicalAscent(), mIEnd.mStyle,
         aLineNumber, 1);
-    mMarkerList.AppendToTop(marker);
   }
 }
 

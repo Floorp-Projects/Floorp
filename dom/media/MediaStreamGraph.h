@@ -47,7 +47,8 @@ extern LazyLogModule gMediaStreamGraphLog;
 
 namespace dom {
 enum class AudioContextOperation;
-}
+enum class AudioContextOperationFlags;
+}  // namespace dom
 
 /*
  * MediaStreamGraph is a framework for synchronized audio/video processing
@@ -1249,7 +1250,8 @@ class MediaStreamGraph {
   void ApplyAudioContextOperation(MediaStream* aDestinationStream,
                                   const nsTArray<MediaStream*>& aStreams,
                                   dom::AudioContextOperation aState,
-                                  void* aPromise);
+                                  void* aPromise,
+                                  dom::AudioContextOperationFlags aFlags);
 
   bool IsNonRealtime() const;
   /**

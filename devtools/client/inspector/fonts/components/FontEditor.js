@@ -13,6 +13,7 @@ const FontName = createFactory(require("./FontName"));
 const FontSize = createFactory(require("./FontSize"));
 const FontStyle = createFactory(require("./FontStyle"));
 const FontWeight = createFactory(require("./FontWeight"));
+const LetterSpacing = createFactory(require("./LetterSpacing"));
 const LineHeight = createFactory(require("./LineHeight"));
 
 const { getStr } = require("../utils/l10n");
@@ -161,6 +162,15 @@ class FontEditor extends PureComponent {
     });
   }
 
+  renderLetterSpacing(value) {
+    return value !== null && LetterSpacing({
+      key: `${this.props.fontEditor.id}:letter-spacing`,
+      disabled: this.props.fontEditor.disabled,
+      onChange: this.props.onPropertyChange,
+      value,
+    });
+  }
+
   renderFontStyle(value) {
     return value && FontStyle({
       onChange: this.props.onPropertyChange,
@@ -283,6 +293,8 @@ class FontEditor extends PureComponent {
       this.renderFontSize(properties["font-size"]),
       // Always render UI for line height.
       this.renderLineHeight(properties["line-height"]),
+      // Always render UI for letter spacing.
+      this.renderLetterSpacing(properties["letter-spacing"]),
       // Render UI for font weight if no "wght" registered axis is defined.
       !hasWeightAxis && this.renderFontWeight(properties["font-weight"]),
       // Render UI for font style if no "slnt" or "ital" registered axis is defined.

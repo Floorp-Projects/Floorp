@@ -760,8 +760,7 @@ void nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                          contentList, contentList);
     BuildDisplayListForNonBlockChildren(aBuilder, set);
   } else if (IsVisibleForPainting() || !aBuilder->IsForPainting()) {
-    aLists.Content()->AppendToTop(
-        MakeDisplayItem<nsDisplayOuterSVG>(aBuilder, this));
+    aLists.Content()->AppendNewToTop<nsDisplayOuterSVG>(aBuilder, this);
   }
 }
 
@@ -963,8 +962,8 @@ void nsSVGOuterSVGAnonChildFrame::BuildDisplayList(
   nsDisplayListSet set(&newList, &newList, &newList, &newList, &newList,
                        &newList);
   BuildDisplayListForNonBlockChildren(aBuilder, set);
-  aLists.Content()->AppendToTop(
-      MakeDisplayItem<nsDisplaySVGWrapper>(aBuilder, this, &newList));
+  aLists.Content()->AppendNewToTop<nsDisplaySVGWrapper>(aBuilder, this,
+                                                        &newList);
 }
 
 static Matrix ComputeOuterSVGAnonChildFrameTransform(

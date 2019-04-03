@@ -2770,6 +2770,7 @@ int NS_main(int argc, NS_tchar **argv) {
   }
   // The directory containing the update information.
   NS_tstrncpy(gPatchDirPath, argv[1], MAXPATHLEN);
+  gPatchDirPath[MAXPATHLEN - 1] = NS_T('\0');
 
   // This check is also performed in workmonitor.cpp since the maintenance
   // service can be called directly.
