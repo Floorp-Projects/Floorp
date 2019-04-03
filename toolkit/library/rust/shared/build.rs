@@ -5,7 +5,7 @@ use rustc_version::{version, Version};
 fn main() {
     let ver = version().unwrap();
     let mut bootstrap = false;
-    let max_oom_hook_version = Version::parse("1.33.0-alpha").unwrap();
+    let max_oom_hook_version = Version::parse("1.35.0-alpha").unwrap();
 
     if ver >= Version::parse("1.28.0-alpha").unwrap() && ver < max_oom_hook_version {
         println!("cargo:rustc-cfg=feature=\"oom_with_hook\"");
