@@ -2615,7 +2615,6 @@ struct ArenasToUpdate {
   Arena* arena;      // Next arena to process
 
   AllocKind nextAllocKind(AllocKind i) { return AllocKind(uint8_t(i) + 1); }
-  bool shouldProcessKind(AllocKind kind);
   Arena* next(AutoLockHelperThreadState& lock);
 };
 
@@ -2627,9 +2626,9 @@ ArenasToUpdate::ArenasToUpdate(Zone* zone, AllocKinds kinds)
 Arena* ArenasToUpdate::next(AutoLockHelperThreadState& lock) {
   // Find the next arena to update.
   //
-  // This iterates through the GC thing kinds filtered by shouldProcessKind(),
-  // and then through thea arenas of that kind.  All state is held in the
-  // object and we just return when we find an arena.
+  // This iterates through the GC thing kinds and then through the arenas of
+  // that kind.  All state is held in the object and we just return when we find
+  // an arena.
 
   for (; kind < AllocKind::LIMIT; kind = nextAllocKind(kind)) {
     if (kinds.contains(kind)) {
