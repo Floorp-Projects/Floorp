@@ -34,6 +34,4 @@
     <string name="mozac_feature_prompts_allow">Allow</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">Deny</string>
-    <!-- Text of the title of a dialog when a page is requesting to open a new window. -->
-    <string name="mozac_feature_prompts_popup_dialog_title">Prevent this site from opening a pop-up window?</string>
 </resources>
