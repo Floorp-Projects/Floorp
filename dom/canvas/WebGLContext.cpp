@@ -128,7 +128,7 @@ WebGLContext::WebGLContext()
       mNeedsFakeNoDepth(false),
       mNeedsFakeNoStencil(false),
       mAllowFBInvalidation(gfxPrefs::WebGLFBInvalidation()),
-      mMsaaSamples(gfxPrefs::WebGLMsaaSamples()) {
+      mMsaaSamples((uint8_t)gfxPrefs::WebGLMsaaSamples()) {
   mGeneration = 0;
   mInvalidated = false;
   mCapturedFrameInvalidated = false;

@@ -892,23 +892,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CanvasRenderingContext2D)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-CanvasRenderingContext2D::ContextState::ContextState()
-    : textAlign(TextAlign::START),
-      textBaseline(TextBaseline::ALPHABETIC),
-      shadowColor(0),
-      lineWidth(1.0f),
-      miterLimit(10.0f),
-      globalAlpha(1.0f),
-      shadowBlur(0.0),
-      dashOffset(0.0f),
-      op(mozilla::gfx::CompositionOp::OP_OVER),
-      fillRule(mozilla::gfx::FillRule::FILL_WINDING),
-      lineCap(mozilla::gfx::CapStyle::BUTT),
-      lineJoin(mozilla::gfx::JoinStyle::MITER_OR_BEVEL),
-      filterString(u"none"),
-      filterSourceGraphicTainted(false),
-      imageSmoothingEnabled(true),
-      fontExplicitLanguage(false) {}
+CanvasRenderingContext2D::ContextState::ContextState() =  default;
 
 CanvasRenderingContext2D::ContextState::ContextState(const ContextState& aOther)
     : fontGroup(aOther.fontGroup),

@@ -42,6 +42,7 @@ const FONT_PROPERTIES = [
   "font-style",
   "font-variation-settings",
   "font-weight",
+  "letter-spacing",
   "line-height",
 ];
 const REGISTERED_AXES_TO_FONT_PROPERTIES = {
@@ -144,6 +145,7 @@ class FontInspector {
       throw TypeError(`Invalid value for conversion. Expected Number, got ${value}`);
     }
 
+    // Early return with the same value if conversion is not required.
     if (fromUnit === toUnit || value === 0) {
       return value;
     }
@@ -165,15 +167,9 @@ class FontInspector {
     const fromPx = fromUnit === "px";
     // Determine the target CSS unit for conversion.
     const unit = toUnit === "px" ? fromUnit : toUnit;
-    // NodeFront instance of selected/target element.
-    const node = this.node;
-    // Reference node based on which to convert relative sizes like "em" and "%".
-    const referenceNode = (property === "line-height") ? node : node.parentNode();
     // Default output value to input value for a 1-to-1 conversion as a guard against
     // unrecognized CSS units. It will not be correct, but it will also not break.
     let out = value;
-    // Computed style for reference node used for conversion of "em", "rem", "%".
-    let computedStyle;
 
     if (unit === "in") {
       out = fromPx
@@ -206,70 +202,53 @@ class FontInspector {
     }
 
     if (unit === "%") {
-      computedStyle =
-        await this.pageStyle.getComputed(referenceNode).catch(console.error);
-
-      if (!computedStyle) {
-        return value;
-      }
-
+      const fontSize = await this.getReferenceFontSize(property, unit);
       out = fromPx
-        ? value * 100 / parseFloat(computedStyle["font-size"].value)
-        : value / 100 * parseFloat(computedStyle["font-size"].value);
+        ? value * 100 / parseFloat(fontSize)
+        : value / 100 * parseFloat(fontSize);
     }
 
     // Special handling for unitless line-height.
     if (unit === "em" || (unit === "" && property === "line-height")) {
-      computedStyle =
-        await this.pageStyle.getComputed(referenceNode).catch(console.error);
-
-      if (!computedStyle) {
-        return value;
-      }
-
+      const fontSize = await this.getReferenceFontSize(property, unit);
       out = fromPx
-        ? value / parseFloat(computedStyle["font-size"].value)
-        : value * parseFloat(computedStyle["font-size"].value);
+        ? value / parseFloat(fontSize)
+        : value * parseFloat(fontSize);
     }
 
     if (unit === "rem") {
-      const document = await this.inspector.walker.documentElement();
-      computedStyle = await this.pageStyle.getComputed(document).catch(console.error);
-
-      if (!computedStyle) {
-        return value;
-      }
-
+      const fontSize = await this.getReferenceFontSize(property, unit);
       out = fromPx
-        ? value / parseFloat(computedStyle["font-size"].value)
-        : value * parseFloat(computedStyle["font-size"].value);
+        ? value / parseFloat(fontSize)
+        : value * parseFloat(fontSize);
     }
 
-    if (unit === "vh" || unit === "vw" || unit === "vmin" || unit === "vmax") {
-      const dim = await node.getOwnerGlobalDimensions();
+    if (unit === "vh") {
+      const { height } = await this.getReferenceBox(property, unit);
+      out = fromPx
+        ? value * 100 / height
+        : value / 100 * height;
+    }
 
-      // The getOwnerGlobalDimensions() method does not exist on the NodeFront API spec
-      // prior to Firefox 63. In that case, return a 1-to-1 conversion which isn't a
-      // correct conversion, but doesn't break the font editor either.
-      if (!dim || !dim.innerWidth || !dim.innerHeight) {
-        out = value;
-      } else if (unit === "vh") {
-        out = fromPx
-          ? value * 100 / dim.innerHeight
-          : value / 100 * dim.innerHeight;
-      } else if (unit === "vw") {
-        out = fromPx
-          ? value * 100 / dim.innerWidth
-          : value / 100 * dim.innerWidth;
-      } else if (unit === "vmin") {
-        out = fromPx
-          ? value * 100 / Math.min(dim.innerWidth, dim.innerHeight)
-          : value / 100 * Math.min(dim.innerWidth, dim.innerHeight);
-      } else if (unit === "vmax") {
-        out = fromPx
-          ? value * 100 / Math.max(dim.innerWidth, dim.innerHeight)
-          : value / 100 * Math.max(dim.innerWidth, dim.innerHeight);
-      }
+    if (unit === "vw") {
+      const { width } = await this.getReferenceBox(property, unit);
+      out = fromPx
+        ? value * 100 / width
+        : value / 100 * width;
+    }
+
+    if (unit === "vmin") {
+      const { width, height } = await this.getReferenceBox(property, unit);
+      out = fromPx
+        ? value * 100 / Math.min(width, height)
+        : value / 100 * Math.min(width, height);
+    }
+
+    if (unit === "vmax") {
+      const { width, height } = await this.getReferenceBox(property, unit);
+      out = fromPx
+        ? value * 100 / Math.max(width, height)
+        : value / 100 * Math.max(width, height);
     }
 
     // Catch any NaN or Infinity as result of dividing by zero in any
@@ -278,12 +257,15 @@ class FontInspector {
       out = 0;
     }
 
-    // Return rounded pixel values. Limit other values to 3 decimals.
-    if (fromPx) {
+    // Return values limited to 3 decimals when:
+    // - the unit is converted from pixels to something else
+    // - the value is for letter spacing, regardless of unit (allow sub-pixel precision)
+    if (fromPx || property === "letter-spacing") {
       // Round values like 1.000 to 1
       return out === Math.round(out) ? Math.round(out) : out.toFixed(3);
     }
 
+    // Round pixel values.
     return Math.round(out);
   }
 
@@ -360,6 +342,7 @@ class FontInspector {
    * - font-size
    * - font-weight
    * - font-stretch
+   * - letter-spacing
    * - line-height
    *
    * This list is used to filter out values when reading CSS font properties from rules.
@@ -372,6 +355,7 @@ class FontInspector {
       "font-size",
       "font-weight",
       "font-stretch",
+      "letter-spacing",
       "line-height",
     ].reduce((acc, property) => {
       return acc.concat(this.cssProperties.getValues(property));
@@ -405,6 +389,109 @@ class FontInspector {
     }
 
     return allFonts;
+  }
+
+  /**
+   * Get the box dimensions used for unit conversion according to the CSS property and
+   * target CSS unit.
+   *
+   * @param  {String} property
+   *         CSS property
+   * @param  {String} unit
+   *         Target CSS unit
+   * @return {Promise}
+   *         Promise that resolves with an object with box dimensions in pixels.
+   */
+  async getReferenceBox(property, unit) {
+    const box = { width: 0, height: 0 };
+    const node = await this.getReferenceNode(property, unit).catch(console.error);
+
+    if (!node) {
+      return box;
+    }
+
+    switch (unit) {
+      case "vh":
+      case "vw":
+      case "vmin":
+      case "vmax":
+        const dim = await node.getOwnerGlobalDimensions().catch(console.error);
+        if (dim) {
+          box.width = dim.innerWidth;
+          box.height = dim.innerHeight;
+        }
+        break;
+
+      case "%":
+        const style = await this.pageStyle.getComputed(node).catch(console.error);
+        if (style) {
+          box.width = style.width.value;
+          box.height = style.height.value;
+        }
+        break;
+    }
+
+    return box;
+  }
+
+  /**
+   * Get the refernece font size value used for unit conversion according to the
+   * CSS property and target CSS unit.
+   *
+   * @param {String} property
+   *        CSS property
+   * @param {String} unit
+   *        Target CSS unit
+   * @return {Promise}
+   *         Promise that resolves with the reference font size value or null if there
+   *         was an error getting that value.
+   */
+  async getReferenceFontSize(property, unit) {
+    const node = await this.getReferenceNode(property, unit).catch(console.error);
+    if (!node) {
+      return null;
+    }
+
+    const style = await this.pageStyle.getComputed(node).catch(console.error);
+    if (!style) {
+      return null;
+    }
+
+    return style["font-size"].value;
+  }
+
+  /**
+   * Get the reference node used in measurements for unit conversion according to the
+   * the CSS property and target CSS unit type.
+   *
+   * @param  {String} property
+   *         CSS property
+   * @param  {String} unit
+   *         Target CSS unit
+   * @return {Promise}
+   *          Promise that resolves with the reference node used in measurements for unit
+   *          conversion.
+   */
+  async getReferenceNode(property, unit) {
+    let node;
+
+    switch (property) {
+      case "line-height":
+      case "letter-spacing":
+        node = this.node;
+        break;
+      default:
+        node = this.node.parentNode();
+    }
+
+    switch (unit) {
+      case "rem":
+        // Regardless of CSS property, always use the root document element for "rem".
+        node = await this.inspector.walker.documentElement();
+        break;
+    }
+
+    return node;
   }
 
   /**
