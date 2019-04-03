@@ -358,6 +358,8 @@ MOZ_MUST_USE bool js::AsyncGeneratorResume(
              "closed generator when resuming async generator");
   MOZ_ASSERT(asyncGenObj->isSuspended(),
              "non-suspended generator when resuming async generator");
+  MOZ_ASSERT(asyncGenObj->isExecuting(),
+             "async generator not set into 'executing' state");
 
   // 25.5.3.5, steps 12-14, 16-20.
   HandlePropertyName funName = completionKind == CompletionKind::Normal
