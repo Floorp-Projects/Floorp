@@ -57,7 +57,7 @@ function run_child_test() {
 async function waitForContentEvents() {
   await ContentTaskUtils.waitForCondition(() => {
     const snapshot =
-      Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+      Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false);
     return Object.keys(snapshot).includes("content") &&
            Object.keys(snapshot).includes("dynamic");
   });
@@ -114,7 +114,7 @@ add_task(async function() {
   UNRECORDED_PARENT_EVENTS.forEach(e => Telemetry.recordEvent(...e));
 
   let snapshot =
-    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false);
 
   Assert.ok("parent" in snapshot, "Should have main process section");
   Assert.ok(snapshot.parent.length > 0, "Main process section should have events.");
@@ -156,9 +156,9 @@ add_task(async function() {
 
   // Make sure all events are cleared from storage properly.
   snapshot =
-      Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+      Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
   Assert.greaterOrEqual(Object.keys(snapshot).length, 2, "Should have events from at least two processes.");
   snapshot =
-      Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+      Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
   Assert.equal(Object.keys(snapshot).length, 0, "Should have cleared all events from storage.");
 });
