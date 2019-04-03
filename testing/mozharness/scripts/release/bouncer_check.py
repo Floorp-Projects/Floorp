@@ -15,13 +15,12 @@ import sys
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
-from mozharness.base.python import VirtualenvMixin, virtualenv_config_options
 from mozharness.base.script import BaseScript
 
 BOUNCER_URL_PATTERN = "{bouncer_prefix}?product={product}&os={os}&lang={lang}"
 
 
-class BouncerCheck(BaseScript, VirtualenvMixin):
+class BouncerCheck(BaseScript):
     config_options = [
         [["--version"], {
             "dest": "version",
@@ -60,19 +59,13 @@ class BouncerCheck(BaseScript, VirtualenvMixin):
             "type": int,
             "help": "Number of HTTP sessions running in parallel",
         }],
-    ] + virtualenv_config_options
+    ]
 
     def __init__(self, require_config_file=True):
         super(BouncerCheck, self).__init__(
             config_options=self.config_options,
             require_config_file=require_config_file,
             config={
-                "virtualenv_modules": [
-                    "redo",
-                    "requests",
-                    "futures==3.1.1",
-                ],
-                "virtualenv_path": "venv",
                 "cdn_urls": [
                     'download-installer.cdn.mozilla.net',
                     'download.cdn.mozilla.net',
@@ -81,13 +74,9 @@ class BouncerCheck(BaseScript, VirtualenvMixin):
                 ],
             },
             all_actions=[
-                "create-virtualenv",
-                "activate-virtualenv",
                 "check-bouncer",
             ],
             default_actions=[
-                "create-virtualenv",
-                "activate-virtualenv",
                 "check-bouncer",
             ],
         )
