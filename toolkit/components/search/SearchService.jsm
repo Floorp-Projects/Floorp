@@ -723,7 +723,7 @@ function makeURI(aURLSpec, aCharset) {
 }
 
 /**
- * Wrapper function for nsIIOService::newChannel2.
+ * Wrapper function for nsIIOService::newChannel.
  * @param url
  *        The URL string from which to create an nsIChannel.
  * @returns an nsIChannel object, or null if the url is invalid.
