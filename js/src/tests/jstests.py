@@ -255,7 +255,7 @@ def parse_args():
     if options.rr:
         debugger_prefix = ['rr', 'record']
 
-    js_cmd_args = options.shell_args.split() + shlex.split(options.feature_args)
+    js_cmd_args = shlex.split(options.shell_args) + shlex.split(options.feature_args)
     if options.jorendb:
         options.passthrough = True
         options.hide_progress = True
