@@ -19,9 +19,9 @@ static __inline int32_t clamp255(int32_t v) {
   return (((255 - (v)) >> 31) | (v)) & 255;
 }
 
-static __inline uint32_t Clamp(int32_t val) {
-  int v = clamp0(val);
-  return (uint32_t)(clamp255(v));
+static __inline uint8_t Clamp(int32_t val) {
+  const auto v = clamp0(val);
+  return uint8_t(clamp255(v));
 }
 
 #define YG 74 /* (int8_t)(1.164 * 64 + 0.5) */
@@ -47,16 +47,16 @@ static __inline void YuvPixel(uint8_t y, uint8_t u, uint8_t v, uint8_t* b,
   *r = Clamp((int32_t)((u * UR + v * VR) - (BR) + y1) >> 6);
 }
 
-static __inline int RGBToY(uint8_t r, uint8_t g, uint8_t b) {
-  return (66 * r + 129 * g + 25 * b + 0x1080) >> 8;
+static __inline uint8_t RGBToY(uint8_t r, uint8_t g, uint8_t b) {
+  return uint8_t((66 * r + 129 * g + 25 * b + 0x1080) >> 8);
 }
 
-static __inline int RGBToU(uint8_t r, uint8_t g, uint8_t b) {
-  return (112 * b - 74 * g - 38 * r + 0x8080) >> 8;
+static __inline uint8_t RGBToU(uint8_t r, uint8_t g, uint8_t b) {
+  return uint8_t((112 * b - 74 * g - 38 * r + 0x8080) >> 8);
 }
 
-static __inline int RGBToV(uint8_t r, uint8_t g, uint8_t b) {
-  return (112 * r - 94 * g - 18 * b + 0x8080) >> 8;
+static __inline uint8_t RGBToV(uint8_t r, uint8_t g, uint8_t b) {
+  return uint8_t((112 * r - 94 * g - 18 * b + 0x8080) >> 8);
 }
 
 /*

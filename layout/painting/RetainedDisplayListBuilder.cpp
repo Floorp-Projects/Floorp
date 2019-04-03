@@ -320,25 +320,8 @@ class MergeState {
     MOZ_RELEASE_ASSERT(mOldItems.Length() == mOldDAG.Length());
   }
 
-  // Items within an opacity:0 container (excluding plugins and hit test info)
-  // aren't needed, so we can strip them out from both the old and new lists.
-  // Do this silently, so that these changes don't result in us reporting that
-  // the display list changed. Both FrameLayerBuilder and
-  // WebRenderCommandBuilder also do this removal, so it's functionally correct
-  // to report that the display list is identical.
-  bool ShouldSilentlyDiscardItem(nsDisplayItem* aItem) {
-    return aItem && mBuilder->mCurrentSubtreeIsForEventsAndPluginsOnly &&
-           (aItem->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO &&
-            aItem->GetType() != DisplayItemType::TYPE_PLUGIN);
-  }
-
   Maybe<MergedListIndex> ProcessItemFromNewList(
       nsDisplayItem* aNewItem, const Maybe<MergedListIndex>& aPreviousItem) {
-    if (ShouldSilentlyDiscardItem(aNewItem)) {
-      aNewItem->Destroy(mBuilder->Builder());
-      return aPreviousItem;
-    }
-
     OldListIndex oldIndex;
     if (!HasModifiedFrame(aNewItem) &&
         HasMatchingItemInOldList(aNewItem, &oldIndex)) {
@@ -530,11 +513,7 @@ class MergeState {
   void ProcessOldNode(OldListIndex aNode,
                       nsTArray<MergedListIndex>&& aDirectPredecessors) {
     nsDisplayItem* item = mOldItems[aNode.val].mItem;
-    if (ShouldSilentlyDiscardItem(item)) {
-      // If the item should be discarded, then just silently drop it and
-      // don't mark the display list as being modified.
-      mOldItems[aNode.val].Discard(mBuilder, std::move(aDirectPredecessors));
-    } else if (mOldItems[aNode.val].IsChanged() || HasModifiedFrame(item)) {
+    if (mOldItems[aNode.val].IsChanged() || HasModifiedFrame(item)) {
       mOldItems[aNode.val].Discard(mBuilder, std::move(aDirectPredecessors));
       mResultIsModified = true;
     } else {
@@ -664,13 +643,6 @@ bool RetainedDisplayListBuilder::MergeDisplayLists(
 
   MergeState merge(this, *aOldList,
                    aOuterItem ? aOuterItem->GetPerFrameKey() : 0);
-
-  AutoRestore<bool> restoreForEventAndPluginsOnly(
-      mCurrentSubtreeIsForEventsAndPluginsOnly);
-  if (aOuterItem && aOuterItem->GetType() == DisplayItemType::TYPE_OPACITY &&
-      static_cast<nsDisplayOpacity*>(aOuterItem)->ForEventsAndPluginsOnly()) {
-    mCurrentSubtreeIsForEventsAndPluginsOnly = true;
-  }
 
   Maybe<MergedListIndex> previousItemIndex;
   while (nsDisplayItem* item = aNewList->RemoveBottom()) {

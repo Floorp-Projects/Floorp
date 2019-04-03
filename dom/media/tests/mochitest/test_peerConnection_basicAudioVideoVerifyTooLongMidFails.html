@@ -31,7 +31,9 @@
                                           test.originalOffer,
                                           HAVE_LOCAL_OFFER)
            .then(() => ok(false, "setLocalDescription must fail"),
-                 e => is(e.name, "InvalidSessionDescriptionError",
+                 // This needs to be RTCError once we support it, and once we
+                 // stop allowing any modification, InvalidModificationError
+                 e => is(e.name, "OperationError",
                          "setLocalDescription must fail and did"));
         }
       ], 0 // first occurance

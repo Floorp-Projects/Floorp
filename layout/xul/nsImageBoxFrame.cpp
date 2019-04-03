@@ -322,7 +322,7 @@ void nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       aBuilder, this, clipFlags);
 
   nsDisplayList list;
-  list.AppendToTop(MakeDisplayItem<nsDisplayXULImage>(aBuilder, this));
+  list.AppendNewToTop<nsDisplayXULImage>(aBuilder, this);
 
   CreateOwnLayerIfNeeded(aBuilder, &list);
 

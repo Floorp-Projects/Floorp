@@ -2978,6 +2978,9 @@ static void AppendToTop(nsDisplayListBuilder* aBuilder,
     newItem = MakeDisplayItem<nsDisplayWrapList>(aBuilder, aSourceFrame,
                                                  aSource, asr, false, 1);
   }
+  if (!newItem) {
+    return;
+  }
 
   if (aFlags & APPEND_POSITIONED) {
     // We want overlay scrollbars to always be on top of the scrolled content,
@@ -3559,11 +3562,11 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       if (info != CompositorHitTestInvisibleToHit) {
         auto* hitInfo = MakeDisplayItem<nsDisplayCompositorHitTestInfo>(
             aBuilder, mScrolledFrame, info, 1);
-
-        aBuilder->SetCompositorHitTestInfo(hitInfo->HitTestArea(),
-                                           hitInfo->HitTestFlags());
-
-        set.BorderBackground()->AppendToTop(hitInfo);
+        if (hitInfo) {
+          aBuilder->SetCompositorHitTestInfo(hitInfo->HitTestArea(),
+                                             hitInfo->HitTestFlags());
+          set.BorderBackground()->AppendToTop(hitInfo);
+        }
       }
     }
 
@@ -3608,8 +3611,10 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
             aBuilder, mOuter,
             dirtyRect + aBuilder->GetCurrentFrameOffsetToReferenceFrame(),
             NS_RGBA(0, 0, 255, 64), false);
-        color->SetOverrideZIndex(INT32_MAX);
-        set.PositionedDescendants()->AppendToTop(color);
+        if (color) {
+          color->SetOverrideZIndex(INT32_MAX);
+          set.PositionedDescendants()->AppendToTop(color);
+        }
       }
     }
 
@@ -3677,9 +3682,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     clipState.ClipContentDescendants(clipRect, haveRadii ? radii : nullptr);
 
-    set.Content()->AppendToTop(MakeDisplayItem<nsDisplayAsyncZoom>(
+    set.Content()->AppendNewToTop<nsDisplayAsyncZoom>(
         aBuilder, mOuter, &resultList, aBuilder->CurrentActiveScrolledRoot(),
-        viewID));
+        viewID);
   }
 
   nsDisplayListCollection scrolledContent(aBuilder);
@@ -3713,7 +3718,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
             MakeDisplayItem<nsDisplayCompositorHitTestInfo>(
                 aBuilder, mScrolledFrame, info, 1,
                 Some(mScrollPort + aBuilder->ToReferenceFrame(mOuter)));
-        AppendInternalItemToTop(scrolledContent, hitInfo, Some(INT32_MAX));
+        if (hitInfo) {
+          AppendInternalItemToTop(scrolledContent, hitInfo, Some(INT32_MAX));
+        }
       }
     }
 
@@ -3743,9 +3750,11 @@ void ScrollFrameHelper::MaybeAddTopLayerItems(nsDisplayListBuilder* aBuilder,
         nsDisplayWrapList* wrapList = MakeDisplayItem<nsDisplayWrapList>(
             aBuilder, viewportFrame, &topLayerList,
             aBuilder->CurrentActiveScrolledRoot(), false, 2);
-        wrapList->SetOverrideZIndex(
-            std::numeric_limits<decltype(wrapList->ZIndex())>::max());
-        aLists.PositionedDescendants()->AppendToTop(wrapList);
+        if (wrapList) {
+          wrapList->SetOverrideZIndex(
+              std::numeric_limits<decltype(wrapList->ZIndex())>::max());
+          aLists.PositionedDescendants()->AppendToTop(wrapList);
+        }
       }
     }
   }

@@ -44,11 +44,6 @@ exports[`ProjectSearch found search results 1`] = `
   activeSearch="project"
   clearSearch={[MockFunction]}
   closeProjectSearch={[MockFunction]}
-  cx={
-    Object {
-      "navigateCounter": 0,
-    }
-  }
   doSearchForHighlight={[MockFunction]}
   query="match"
   results={

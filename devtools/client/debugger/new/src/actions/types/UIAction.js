@@ -4,12 +4,7 @@
 
 // @flow
 
-import type {
-  Source,
-  PartialRange,
-  SourceLocation,
-  Context
-} from "../../types";
+import type { Source, PartialRange, SourceLocation } from "../../types";
 
 import type {
   ActiveSearchType,
@@ -69,7 +64,6 @@ export type UIAction =
     |}
   | {|
       +type: "SET_PROJECT_DIRECTORY_ROOT",
-      +cx: Context,
       +url: string
     |}
   | {|

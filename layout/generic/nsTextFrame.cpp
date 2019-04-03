@@ -5141,8 +5141,7 @@ void nsTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  aLists.Content()->AppendToTop(
-      MakeDisplayItem<nsDisplayText>(aBuilder, this, isSelected));
+  aLists.Content()->AppendNewToTop<nsDisplayText>(aBuilder, this, isSelected);
 }
 
 static nsIFrame* GetGeneratedContentOwner(nsIFrame* aFrame, bool* aIsBefore) {

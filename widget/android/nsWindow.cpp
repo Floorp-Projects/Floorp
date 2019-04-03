@@ -1668,6 +1668,7 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
   ALOG("nsWindow[%p]::Resize [%f %f %f %f] (repaint %d)", (void*)this, aX, aY,
        aWidth, aHeight, aRepaint);
 
+  bool needPositionDispatch = aX != mBounds.x || aY != mBounds.y;
   bool needSizeDispatch = aWidth != mBounds.width || aHeight != mBounds.height;
 
   mBounds.x = NSToIntRound(aX);
@@ -1677,6 +1678,10 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
 
   if (needSizeDispatch) {
     OnSizeChanged(gfx::IntSize::Truncate(aWidth, aHeight));
+  }
+
+  if (needPositionDispatch) {
+    NotifyWindowMoved(mBounds.x, mBounds.y);
   }
 
   // Should we skip honoring aRepaint here?

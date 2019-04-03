@@ -19,8 +19,7 @@ import {
   getActiveSearch,
   getTextSearchResults,
   getTextSearchStatus,
-  getTextSearchQuery,
-  getContext
+  getTextSearchQuery
 } from "../selectors";
 
 import ManagedTree from "./shared/ManagedTree";
@@ -30,7 +29,6 @@ import AccessibleImage from "./shared/AccessibleImage";
 import type { List } from "immutable";
 import type { ActiveSearchType } from "../reducers/types";
 import type { StatusType } from "../reducers/project-text-search";
-import type { Context } from "../types";
 
 import "./ProjectSearch.css";
 
@@ -61,7 +59,6 @@ type State = {
 };
 
 type Props = {
-  cx: Context,
   query: string,
   results: List<Result>,
   status: StatusType,
@@ -122,17 +119,17 @@ export class ProjectSearch extends Component<Props, State> {
   }
 
   doSearch(searchTerm: string) {
-    this.props.searchSources(this.props.cx, searchTerm);
+    this.props.searchSources(searchTerm);
   }
 
   toggleProjectTextSearch = (key: string, e: KeyboardEvent) => {
-    const { cx, closeProjectSearch, setActiveSearch } = this.props;
+    const { closeProjectSearch, setActiveSearch } = this.props;
     if (e) {
       e.preventDefault();
     }
 
     if (this.isProjectSearchEnabled()) {
-      return closeProjectSearch(cx);
+      return closeProjectSearch();
     }
 
     return setActiveSearch("project");
@@ -141,7 +138,7 @@ export class ProjectSearch extends Component<Props, State> {
   isProjectSearchEnabled = () => this.props.activeSearch === "project";
 
   selectMatchItem = (matchItem: Match) => {
-    this.props.selectSpecificLocation(this.props.cx, {
+    this.props.selectSpecificLocation({
       sourceId: matchItem.sourceId,
       line: matchItem.line,
       column: matchItem.column
@@ -199,10 +196,10 @@ export class ProjectSearch extends Component<Props, State> {
 
   inputOnChange = (e: SyntheticInputEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
-    const { cx, clearSearch } = this.props;
+    const { clearSearch } = this.props;
     this.setState({ inputValue });
     if (inputValue === "") {
-      clearSearch(cx);
+      clearSearch();
     }
   };
 
@@ -334,7 +331,6 @@ ProjectSearch.contextTypes = {
 };
 
 const mapStateToProps = state => ({
-  cx: getContext(state),
   activeSearch: getActiveSearch(state),
   results: getTextSearchResults(state),
   query: getTextSearchQuery(state),

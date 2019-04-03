@@ -6,31 +6,26 @@
 
 import type { SymbolDeclarations, AstLocation } from "../../workers/parser";
 import type { PromiseAction } from "../utils/middleware/promise";
-import type { Context } from "../../types";
 
 export type ASTAction =
   | PromiseAction<
       {|
         +type: "SET_SYMBOLS",
-        +cx: Context,
         +sourceId: string
       |},
       SymbolDeclarations
     >
   | {|
       +type: "OUT_OF_SCOPE_LOCATIONS",
-      +cx: Context,
       +locations: ?(AstLocation[])
     |}
   | {|
       +type: "IN_SCOPE_LINES",
-      +cx: Context,
       +lines: number[]
     |}
   | PromiseAction<
       {|
-        +type: "SET_PREVIEW",
-        +cx: Context
+        +type: "SET_PREVIEW"
       |},
       {
         expression: string,
@@ -41,6 +36,5 @@ export type ASTAction =
       }
     >
   | {|
-      +type: "CLEAR_SELECTION",
-      +cx: Context
+      +type: "CLEAR_SELECTION"
     |};

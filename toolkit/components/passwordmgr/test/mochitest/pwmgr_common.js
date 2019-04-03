@@ -44,6 +44,8 @@ function $_(formNum, name) {
  */
 function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
   if (hostname !== null) {
+    isnot(actualValues.length, 0, "There should be items in the autocomplete popup: " + JSON.stringify(actualValues));
+
     // Check the footer first.
     let footerResult = actualValues[actualValues.length - 1];
     ok(footerResult.includes("View Saved Logins"), "the footer text is shown correctly");
@@ -55,7 +57,8 @@ function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
     return;
   }
 
-  if (actualValues.length == 0) {
+  if (actualValues.length == 1) {
+    is(expectedValues.length, 0, "If only the footer is present then there should be no expectedValues");
     info("Only the footer is present in the popup");
     return;
   }
@@ -141,11 +144,7 @@ function checkUnmodifiedForm(formNum) {
 
 function registerRunTests() {
   return new Promise(resolve => {
-    // We provide a general mechanism for our tests to know when they can
-    // safely run: we add a final form that we know will be filled in, wait
-    // for the login manager to tell us that it's filled in and then continue
-    // with the rest of the tests.
-    window.addEventListener("DOMContentLoaded", (event) => {
+    function onDOMContentLoaded() {
       var form = document.createElement("form");
       form.id = "observerforcer";
       var username = document.createElement("input");
@@ -172,7 +171,18 @@ function registerRunTests() {
       SpecialPowers.addObserver(observer, "passwordmgr-processed-form");
 
       document.body.appendChild(form);
-    });
+    }
+    // We provide a general mechanism for our tests to know when they can
+    // safely run: we add a final form that we know will be filled in, wait
+    // for the login manager to tell us that it's filled in and then continue
+    // with the rest of the tests.
+    if (document.readyState == "complete" ||
+        document.readyState == "loaded" ||
+        document.readyState == "interactive") {
+      onDOMContentLoaded();
+    } else {
+      window.addEventListener("DOMContentLoaded", onDOMContentLoaded);
+    }
   });
 }
 
@@ -278,6 +288,31 @@ function runInParent(aFunctionOrURL) {
   return chromeScript;
 }
 
+/*
+ * gTestDependsOnDeprecatedLogin Set this global to true if your test relies
+ * on the testuser/testpass login that is created in pwmgr_common.js. New tests
+ * should not rely on this login.
+ */
+var gTestDependsOnDeprecatedLogin = false;
+
+/**
+ * Replace the content innerHTML with the provided form and wait for autofill to fill in the form.
+ *
+ * @param {string} form The form to be appended to the #content element.
+ * @param {string} fieldSelector The CSS selector for the field to-be-filled
+ * @param {string} fieldValue The value expected to be filled
+ * @param {string} formId The ID (excluding the # character) of the form
+ */
+function setFormAndWaitForFieldFilled(form, {fieldSelector, fieldValue, formId}) {
+  // eslint-disable-next-line no-unsanitized/property
+  document.querySelector("#content").innerHTML = form;
+  return SimpleTest.promiseWaitForCondition(() => {
+    let ancestor = formId ? document.querySelector("#" + formId) :
+                            document.documentElement;
+    return ancestor.querySelector(fieldSelector).value == fieldValue;
+  }, "Wait for password manager to fill form");
+}
+
 /**
  * Run commonInit synchronously in the parent then run the test function after the runTests event.
  *
@@ -289,7 +324,7 @@ function runChecksAfterCommonInit(aFunction = null) {
     window.addEventListener("runTests", aFunction);
     PWMGR_COMMON_PARENT.addMessageListener("registerRunTests", () => registerRunTests());
   }
-  PWMGR_COMMON_PARENT.sendSyncMessage("setupParent");
+  PWMGR_COMMON_PARENT.sendSyncMessage("setupParent", {testDependsOnDeprecatedLogin: gTestDependsOnDeprecatedLogin});
   return PWMGR_COMMON_PARENT;
 }
 

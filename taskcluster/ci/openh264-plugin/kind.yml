@@ -156,7 +156,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: android-api-16/opt
-        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker-type: b-linux
         worker:
             max-run-time: 1800
             artifacts:
@@ -183,7 +183,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: android-5-0-aarch64/opt
-        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker-type: b-linux
         worker:
             max-run-time: 1800
             artifacts:
@@ -210,7 +210,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: android-4-2-x86/opt
-        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker-type: b-linux
         worker:
             max-run-time: 1800
             artifacts:
@@ -237,7 +237,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: android-5-0-x86_64/opt
-        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker-type: b-linux
         worker:
             max-run-time: 1800
             artifacts:

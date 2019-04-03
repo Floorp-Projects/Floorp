@@ -27,8 +27,8 @@
 }
 
 :-moz-native-anonymous .highlighter-container {
-  --highlighter-guide-color: #08c;
-  --highlighter-content-color: #87ceeb;
+  --highlighter-guide-color: hsl(200, 100%, 40%);
+  --highlighter-content-color: hsl(197, 71%, 73%);
   --highlighter-bubble-text-color: hsl(216, 33%, 97%);
   --highlighter-bubble-background-color: hsl(214, 13%, 24%);
   --highlighter-bubble-border-color: rgba(255, 255, 255, 0.2);

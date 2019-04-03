@@ -45,9 +45,9 @@ describe("sources - new sources", () => {
   });
 
   it("should automatically select a pending source", async () => {
-    const { dispatch, getState, cx } = createStore(threadClient);
+    const { dispatch, getState } = createStore(threadClient);
     const baseSource = makeSource("base.js");
-    await dispatch(actions.selectSourceURL(cx, baseSource.url));
+    await dispatch(actions.selectSourceURL(baseSource.url));
 
     expect(getSelectedSource(getState())).toBe(undefined);
     await dispatch(actions.newSource(baseSource));

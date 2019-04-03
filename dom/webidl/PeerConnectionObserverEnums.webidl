@@ -12,3 +12,17 @@ enum PCObserverStateType {
     "IceGatheringState",
     "SignalingState"
 };
+
+enum PCError {
+  "UnknownError",
+  "InvalidAccessError",
+  "InvalidStateError",
+  "InvalidModificationError",
+  "OperationError",
+  "NotSupportedError",
+  "SyntaxError",
+  "NotReadableError",
+  "TypeError",
+  "RangeError",
+  "InvalidCharacterError"
+};

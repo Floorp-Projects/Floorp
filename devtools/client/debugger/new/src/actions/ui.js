@@ -17,7 +17,7 @@ import type { ThunkArgs, panelPositionType } from "./types";
 import { getEditor, getLocationsInViewport } from "../utils/editor";
 import { searchContents } from "./file-search";
 
-import type { SourceLocation, Context } from "../types";
+import type { SourceLocation } from "../types";
 import type {
   ActiveSearchType,
   OrientationType,
@@ -53,13 +53,13 @@ export function setActiveSearch(activeSearch?: ActiveSearchType) {
   };
 }
 
-export function updateActiveFileSearch(cx: Context) {
+export function updateActiveFileSearch() {
   return ({ dispatch, getState }: ThunkArgs) => {
     const isFileSearchOpen = getActiveSearch(getState()) === "file";
     const fileSearchQuery = getFileSearchQuery(getState());
     if (isFileSearchOpen && fileSearchQuery) {
       const editor = getEditor();
-      dispatch(searchContents(cx, fileSearchQuery, editor));
+      dispatch(searchContents(fileSearchQuery, editor));
     }
   };
 }
@@ -73,7 +73,7 @@ export function toggleFrameworkGrouping(toggleValue: boolean) {
   };
 }
 
-export function showSource(cx: Context, sourceId: string) {
+export function showSource(sourceId: string) {
   return ({ dispatch, getState }: ThunkArgs) => {
     const source = getSource(getState(), sourceId);
     if (!source) {
@@ -91,7 +91,7 @@ export function showSource(cx: Context, sourceId: string) {
     dispatch(setPrimaryPaneTab("sources"));
 
     dispatch({ type: "SHOW_SOURCE", source: null });
-    dispatch(selectSource(cx, source.id));
+    dispatch(selectSource(source.id));
     dispatch({ type: "SHOW_SOURCE", source });
   };
 }
@@ -171,15 +171,14 @@ export function closeConditionalPanel() {
   };
 }
 
-export function clearProjectDirectoryRoot(cx: Context) {
+export function clearProjectDirectoryRoot() {
   return {
     type: "SET_PROJECT_DIRECTORY_ROOT",
-    cx,
     url: ""
   };
 }
 
-export function setProjectDirectoryRoot(cx: Context, newRoot: string) {
+export function setProjectDirectoryRoot(newRoot: string) {
   return ({ dispatch, getState }: ThunkArgs) => {
     const curRoot = getProjectDirectoryRoot(getState());
     if (newRoot && curRoot) {
@@ -196,7 +195,6 @@ export function setProjectDirectoryRoot(cx: Context, newRoot: string) {
 
     dispatch({
       type: "SET_PROJECT_DIRECTORY_ROOT",
-      cx,
       url: newRoot
     });
   };

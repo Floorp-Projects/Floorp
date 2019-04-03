@@ -642,18 +642,6 @@ void XMLHttpRequestMainThread::SetResponseType(
     return;
   }
 
-  if (mFlagSynchronous &&
-      aResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer) {
-    aRv.Throw(
-        NS_ERROR_DOM_INVALID_STATE_XHR_CHUNKED_RESPONSETYPES_UNSUPPORTED_FOR_SYNC);
-    return;
-  }
-
-  // We want to get rid of this moz-only types. Bug 1335365.
-  if (aResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer) {
-    Telemetry::Accumulate(Telemetry::MOZ_CHUNKED_ARRAYBUFFER_IN_XHR, 1);
-  }
-
   // Set the responseType attribute's value to the given value.
   mResponseType = aResponseType;
 }
@@ -674,13 +662,8 @@ void XMLHttpRequestMainThread::GetResponse(
       return;
     }
 
-    case XMLHttpRequestResponseType::Arraybuffer:
-    case XMLHttpRequestResponseType::Moz_chunked_arraybuffer: {
-      if (!(mResponseType == XMLHttpRequestResponseType::Arraybuffer &&
-            mState == XMLHttpRequest_Binding::DONE) &&
-          !(mResponseType ==
-                XMLHttpRequestResponseType::Moz_chunked_arraybuffer &&
-            mInLoadProgressEvent)) {
+    case XMLHttpRequestResponseType::Arraybuffer: {
+      if (mState != XMLHttpRequest_Binding::DONE) {
         aResponse.setNull();
         return;
       }
@@ -1242,14 +1225,6 @@ void XMLHttpRequestMainThread::DispatchProgressEvent(
 
   if (aType == ProgressEventType::progress) {
     mInLoadProgressEvent = false;
-
-    // clear chunked responses after every progress event
-    if (mResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer) {
-      mResponseBody.Truncate();
-      TruncateResponseText();
-      mResultArrayBuffer = nullptr;
-      mArrayBufferBuilder.reset();
-    }
   }
 
   // If we're sending a load, error, timeout or abort event, then
@@ -1515,11 +1490,9 @@ nsresult XMLHttpRequestMainThread::StreamReaderFunc(
   if (xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Blob) {
     xmlHttpRequest->MaybeCreateBlobStorage();
     rv = xmlHttpRequest->mBlobStorage->Append(fromRawSegment, count);
-  } else if ((xmlHttpRequest->mResponseType ==
+  } else if (xmlHttpRequest->mResponseType ==
                   XMLHttpRequestResponseType::Arraybuffer &&
-              !xmlHttpRequest->mIsMappedArrayBuffer) ||
-             xmlHttpRequest->mResponseType ==
-                 XMLHttpRequestResponseType::Moz_chunked_arraybuffer) {
+              !xmlHttpRequest->mIsMappedArrayBuffer) {
     // get the initial capacity to something reasonable to avoid a bunch of
     // reallocs right at the start
     if (xmlHttpRequest->mArrayBufferBuilder.capacity() == 0)
@@ -2163,11 +2136,8 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
 
     NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
     NS_ASSERTION(mResponseText.IsEmpty(), "mResponseText should be empty");
-  } else if (NS_SUCCEEDED(status) &&
-             ((mResponseType == XMLHttpRequestResponseType::Arraybuffer &&
-               !mIsMappedArrayBuffer) ||
-              mResponseType ==
-                  XMLHttpRequestResponseType::Moz_chunked_arraybuffer)) {
+  } else if (NS_SUCCEEDED(status) && !mIsMappedArrayBuffer &&
+             mResponseType == XMLHttpRequestResponseType::Arraybuffer) {
     // set the capacity down to the actual length, to realloc back
     // down to the actual size
     if (!mArrayBufferBuilder.setCapacity(mArrayBufferBuilder.length())) {

@@ -714,12 +714,12 @@ class ScriptSource {
  private:
   struct UncompressedDataMatcher {
     template <typename Unit>
-    const void* match(const Uncompressed<Unit>& u) {
+    const void* operator()(const Uncompressed<Unit>& u) {
       return u.units();
     }
 
     template <typename T>
-    const void* match(const T&) {
+    const void* operator()(const T&) {
       MOZ_CRASH(
           "attempting to access uncompressed data in a "
           "ScriptSource not containing it");
@@ -736,12 +736,12 @@ class ScriptSource {
  private:
   struct CompressedDataMatcher {
     template <typename Unit>
-    char* match(const Compressed<Unit>& c) {
+    char* operator()(const Compressed<Unit>& c) {
       return const_cast<char*>(c.raw.chars());
     }
 
     template <typename T>
-    char* match(const T&) {
+    char* operator()(const T&) {
       MOZ_CRASH(
           "attempting to access compressed data in a ScriptSource "
           "not containing it");
@@ -757,12 +757,14 @@ class ScriptSource {
 
  private:
   struct BinASTDataMatcher {
-    void* match(const BinAST& b) { return const_cast<char*>(b.string.chars()); }
+    void* operator()(const BinAST& b) {
+      return const_cast<char*>(b.string.chars());
+    }
 
     void notBinAST() { MOZ_CRASH("ScriptSource isn't backed by BinAST data"); }
 
     template <typename T>
-    void* match(const T&) {
+    void* operator()(const T&) {
       notBinAST();
       return nullptr;
     }
@@ -774,18 +776,18 @@ class ScriptSource {
  private:
   struct HasUncompressedSource {
     template <typename Unit>
-    bool match(const Uncompressed<Unit>&) {
+    bool operator()(const Uncompressed<Unit>&) {
       return true;
     }
 
     template <typename Unit>
-    bool match(const Compressed<Unit>&) {
+    bool operator()(const Compressed<Unit>&) {
       return false;
     }
 
-    bool match(const BinAST&) { return false; }
+    bool operator()(const BinAST&) { return false; }
 
-    bool match(const Missing&) { return false; }
+    bool operator()(const Missing&) { return false; }
   };
 
  public:
@@ -802,18 +804,18 @@ class ScriptSource {
  private:
   struct HasCompressedSource {
     template <typename Unit>
-    bool match(const Compressed<Unit>&) {
+    bool operator()(const Compressed<Unit>&) {
       return true;
     }
 
     template <typename Unit>
-    bool match(const Uncompressed<Unit>&) {
+    bool operator()(const Uncompressed<Unit>&) {
       return false;
     }
 
-    bool match(const BinAST&) { return false; }
+    bool operator()(const BinAST&) { return false; }
 
-    bool match(const Missing&) { return false; }
+    bool operator()(const Missing&) { return false; }
   };
 
  public:
@@ -829,21 +831,21 @@ class ScriptSource {
   template <typename Unit>
   struct SourceTypeMatcher {
     template <template <typename C> class Data>
-    bool match(const Data<Unit>&) {
+    bool operator()(const Data<Unit>&) {
       return true;
     }
 
     template <template <typename C> class Data, typename NotUnit>
-    bool match(const Data<NotUnit>&) {
+    bool operator()(const Data<NotUnit>&) {
       return false;
     }
 
-    bool match(const BinAST&) {
+    bool operator()(const BinAST&) {
       MOZ_CRASH("doesn't make sense to ask source type of BinAST data");
       return false;
     }
 
-    bool match(const Missing&) {
+    bool operator()(const Missing&) {
       MOZ_CRASH("doesn't make sense to ask source type when missing");
       return false;
     }
@@ -858,19 +860,19 @@ class ScriptSource {
  private:
   struct SourceCharSizeMatcher {
     template <template <typename C> class Data, typename Unit>
-    uint8_t match(const Data<Unit>& data) {
+    uint8_t operator()(const Data<Unit>& data) {
       static_assert(std::is_same<Unit, mozilla::Utf8Unit>::value ||
                         std::is_same<Unit, char16_t>::value,
                     "should only have UTF-8 or UTF-16 source char");
       return sizeof(Unit);
     }
 
-    uint8_t match(const BinAST&) {
+    uint8_t operator()(const BinAST&) {
       MOZ_CRASH("BinAST source has no source-char size");
       return 0;
     }
 
-    uint8_t match(const Missing&) {
+    uint8_t operator()(const Missing&) {
       MOZ_CRASH("missing source has no source-char size");
       return 0;
     }
@@ -882,18 +884,18 @@ class ScriptSource {
  private:
   struct UncompressedLengthMatcher {
     template <typename Unit>
-    size_t match(const Uncompressed<Unit>& u) {
+    size_t operator()(const Uncompressed<Unit>& u) {
       return u.length();
     }
 
     template <typename Unit>
-    size_t match(const Compressed<Unit>& u) {
+    size_t operator()(const Compressed<Unit>& u) {
       return u.uncompressedLength;
     }
 
-    size_t match(const BinAST& b) { return b.string.length(); }
+    size_t operator()(const BinAST& b) { return b.string.length(); }
 
-    size_t match(const Missing& m) {
+    size_t operator()(const Missing& m) {
       MOZ_CRASH("ScriptSource::length on a missing source");
       return 0;
     }
@@ -908,21 +910,21 @@ class ScriptSource {
  private:
   struct CompressedLengthOrZeroMatcher {
     template <typename Unit>
-    size_t match(const Uncompressed<Unit>&) {
+    size_t operator()(const Uncompressed<Unit>&) {
       return 0;
     }
 
     template <typename Unit>
-    size_t match(const Compressed<Unit>& c) {
+    size_t operator()(const Compressed<Unit>& c) {
       return c.raw.length();
     }
 
-    size_t match(const BinAST&) {
+    size_t operator()(const BinAST&) {
       MOZ_CRASH("trying to get compressed length for BinAST data");
       return 0;
     }
 
-    size_t match(const Missing&) {
+    size_t operator()(const Missing&) {
       MOZ_CRASH("missing source data");
       return 0;
     }
@@ -998,26 +1000,26 @@ class ScriptSource {
         : source_(source), compressed_(compressed) {}
 
     template <typename Unit>
-    void match(const Uncompressed<Unit>&) {
+    void operator()(const Uncompressed<Unit>&) {
       source_->setCompressedSource<Unit>(std::move(compressed_),
                                          source_->length());
     }
 
     template <typename Unit>
-    void match(const Compressed<Unit>&) {
+    void operator()(const Compressed<Unit>&) {
       MOZ_CRASH(
           "can't set compressed source when source is already "
           "compressed -- ScriptSource::tryCompressOffThread "
           "shouldn't have queued up this task?");
     }
 
-    void match(const BinAST&) {
+    void operator()(const BinAST&) {
       MOZ_CRASH(
           "doesn't make sense to set compressed source for BinAST "
           "data");
     }
 
-    void match(const Missing&) {
+    void operator()(const Missing&) {
       MOZ_CRASH(
           "doesn't make sense to set compressed source for "
           "missing source -- ScriptSource::tryCompressOffThread "
