@@ -102,7 +102,6 @@ amManager.prototype = {
       name,
       icon,
       browser: aBrowser,
-      triggeringPrincipal,
       telemetryInfo,
       sendCookies: true,
     }).then(aInstall => {
