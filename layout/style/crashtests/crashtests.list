@@ -209,9 +209,9 @@ load large_border_image_width.html
 load link-transition-before.html
 skip-if(winWidget&&isDebugBuild&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) load long-url-list-stack-overflow.html #Bug 1525117
 load scale-on-block-continuation.html
-skip-if(Android&&AndroidVersion<21||(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) load 1383981.html
-skip-if(Android&&AndroidVersion<21||(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) load 1383981-2.html
-skip-if(Android&&AndroidVersion<21||(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) load 1383981-3.html
+skip-if(Android&&AndroidVersion<21||(/^Windows\x20NT\x2010\.0/.test(http.oscpu))&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) load 1383981.html
+skip-if(Android&&AndroidVersion<21||(/^Windows\x20NT\x2010\.0/.test(http.oscpu))&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) load 1383981-2.html
+skip-if(Android&&AndroidVersion<21||(/^Windows\x20NT\x2010\.0/.test(http.oscpu))&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) load 1383981-3.html
 load 1384824-1.html
 load 1384824-2.html
 load 1386773.html
