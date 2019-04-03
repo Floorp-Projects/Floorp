@@ -3,8 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsTArray.h"
 #include "nsCellMap.h"
+
+#include "mozilla/PresShell.h"
+
+#include "nsTArray.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsTableRowFrame.h"

@@ -10,6 +10,9 @@
 // Keep others in (case-insensitive) order:
 #include "ImgDrawResult.h"
 #include "gfxContext.h"
+#include "mozilla/AutoRestore.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/SVGForeignObjectElement.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
@@ -17,11 +20,9 @@
 #include "nsRegion.h"
 #include "nsSVGContainerFrame.h"
 #include "SVGObserverUtils.h"
-#include "mozilla/dom/SVGForeignObjectElement.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGUtils.h"
-#include "mozilla/AutoRestore.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
