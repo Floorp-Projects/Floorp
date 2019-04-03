@@ -552,6 +552,7 @@ var Policies = {
                 onDownloadFailed: () => {
                   install.removeListener(listener);
                   log.error(`Download failed - ${location}`);
+                  clearRunOnceModification("extensionsInstall");
                 },
                 onInstallFailed: () => {
                   install.removeListener(listener);
@@ -1141,6 +1142,16 @@ async function runOncePerModification(actionName, policyValue, callback) {
   }
   Services.prefs.setStringPref(prefName, policyValue);
   return callback();
+}
+
+/**
+ * clearRunOnceModification
+ *
+ * Helper function that clears a runOnce policy.
+*/
+function clearRunOnceModification(actionName) {
+  let prefName = `browser.policies.runOncePerModification.${actionName}`;
+  Services.prefs.clearUserPref(prefName);
 }
 
 let gChromeURLSBlocked = false;
