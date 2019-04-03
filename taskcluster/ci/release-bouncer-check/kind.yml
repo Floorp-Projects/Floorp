@@ -24,6 +24,18 @@ job-defaults:
         docker-image: {in-tree: "update-verify"}
     run:
         sparse-profile: mozharness
+        extra-config:
+            by-release-level:
+                production:
+                    bouncer_prefix: "https://download.mozilla.org/"
+                staging:
+                    # This is the list on-change locales, excluding ja/ja-JP-mac
+                    # which bouncer_check doesn't support.
+                    locales: ['en-US', 'en-CA', 'he', 'it']
+                    bouncer_prefix: "https://bouncer-bouncer-releng.stage.mozaws.net/"
+                    cdn_urls:
+                        - ftp.stage.mozaws.net
+
     attributes:
         build_platform: linux64
         build_type: opt
@@ -40,17 +52,15 @@ jobs:
             job-name: firefox-release-bouncer-check
         run:
             config:
-                by-project:
-                    mozilla-beta:
+                by-release-type:
+                    beta:
                         - releases/bouncer_firefox_beta.py
-                    mozilla-release:
+                    release:
                         - releases/bouncer_firefox_release.py
-                    mozilla-esr60:
+                    esr60:
                         - releases/bouncer_firefox_esr.py
-                    jamun:
-                        - releases/dev_bouncer_firefox_esr.py
                     default:
-                        - releases/dev_bouncer_firefox_beta.py
+                        - releases/bouncer_firefox_beta.py
         treeherder:
             platform: firefox-release/opt
 
@@ -61,10 +71,6 @@ jobs:
             job-name: devedition-release-bouncer-check
         run:
             config:
-                by-project:
-                    mozilla-beta:
-                        - releases/bouncer_firefox_devedition.py
-                    default:
-                        - releases/dev_bouncer_firefox_devedition.py
+                - releases/bouncer_firefox_devedition.py
         treeherder:
             platform: devedition-release/opt
