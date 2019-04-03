@@ -3841,6 +3841,47 @@ bool BaselineCodeGen<Handler>::emit_JSOP_SETARG() {
 }
 
 template <>
+void BaselineCompilerCodeGen::loadNumFormalArguments(Register dest) {
+  masm.move32(Imm32(handler.function()->nargs()), dest);
+}
+
+template <>
+void BaselineInterpreterCodeGen::loadNumFormalArguments(Register dest) {
+  masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), dest);
+  masm.load16ZeroExtend(Address(dest, JSFunction::offsetOfNargs()), dest);
+}
+
+template <typename Handler>
+void BaselineCodeGen<Handler>::emitPushNonArrowFunctionNewTarget() {
+  // if (isConstructing()) push(argv[Max(numActualArgs, numFormalArgs)])
+  Label notConstructing, done;
+  masm.branchTestPtr(Assembler::Zero, frame.addressOfCalleeToken(),
+                     Imm32(CalleeToken_FunctionConstructing), &notConstructing);
+  {
+    Register argvLen = R0.scratchReg();
+    Register nformals = R1.scratchReg();
+    Address actualArgs(BaselineFrameReg,
+                       BaselineFrame::offsetOfNumActualArgs());
+    masm.loadPtr(actualArgs, argvLen);
+
+    // If argvLen < nformals, set argvlen := nformals.
+    loadNumFormalArguments(nformals);
+    masm.cmp32Move32(Assembler::Below, argvLen, nformals, nformals, argvLen);
+
+    BaseValueIndex newTarget(BaselineFrameReg, argvLen,
+                             BaselineFrame::offsetOfArg(0));
+    masm.loadValue(newTarget, R0);
+    masm.jump(&done);
+  }
+  // else push(undefined)
+  masm.bind(&notConstructing);
+  masm.moveValue(UndefinedValue(), R0);
+
+  masm.bind(&done);
+  frame.push(R0);
+}
+
+template <>
 bool BaselineCompilerCodeGen::emit_JSOP_NEWTARGET() {
   if (handler.script()->isForEval()) {
     frame.pushEvalNewTarget();
@@ -3861,50 +3902,45 @@ bool BaselineCompilerCodeGen::emit_JSOP_NEWTARGET() {
     return true;
   }
 
-  // if (isConstructing()) push(argv[Max(numActualArgs, numFormalArgs)])
-  Label notConstructing, done;
-  masm.branchTestPtr(Assembler::Zero, frame.addressOfCalleeToken(),
-                     Imm32(CalleeToken_FunctionConstructing), &notConstructing);
-
-  Register argvLen = R0.scratchReg();
-
-  Address actualArgs(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs());
-  masm.loadPtr(actualArgs, argvLen);
-
-  Label useNFormals;
-
-  uint32_t nargs = handler.function()->nargs();
-  masm.branchPtr(Assembler::Below, argvLen, Imm32(nargs), &useNFormals);
-
-  {
-    BaseValueIndex newTarget(BaselineFrameReg, argvLen,
-                             BaselineFrame::offsetOfArg(0));
-    masm.loadValue(newTarget, R0);
-    masm.jump(&done);
-  }
-
-  masm.bind(&useNFormals);
-
-  {
-    Address newTarget(BaselineFrameReg,
-                      BaselineFrame::offsetOfArg(0) + (nargs * sizeof(Value)));
-    masm.loadValue(newTarget, R0);
-    masm.jump(&done);
-  }
-
-  // else push(undefined)
-  masm.bind(&notConstructing);
-  masm.moveValue(UndefinedValue(), R0);
-
-  masm.bind(&done);
-  frame.push(R0);
-
+  emitPushNonArrowFunctionNewTarget();
   return true;
 }
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_NEWTARGET() {
-  MOZ_CRASH("NYI: interpreter JSOP_NEWTARGET");
+  Register scratch1 = R0.scratchReg();
+  Register scratch2 = R1.scratchReg();
+
+  Label isFunction, done;
+  masm.loadPtr(frame.addressOfCalleeToken(), scratch1);
+  masm.branchTestPtr(Assembler::Zero, scratch1, Imm32(CalleeTokenScriptBit),
+                     &isFunction);
+  {
+    // Case 1: eval.
+    frame.pushEvalNewTarget();
+    masm.jump(&done);
+  }
+
+  masm.bind(&isFunction);
+
+  Label notArrow;
+  masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
+  masm.branchFunctionKind(Assembler::NotEqual, JSFunction::FunctionKind::Arrow,
+                          scratch1, scratch2, &notArrow);
+  {
+    // Case 2: arrow function.
+    masm.pushValue(
+        Address(scratch1, FunctionExtended::offsetOfArrowNewTargetSlot()));
+    masm.jump(&done);
+  }
+
+  masm.bind(&notArrow);
+
+  // Case 3: non-arrow function.
+  emitPushNonArrowFunctionNewTarget();
+
+  masm.bind(&done);
+  return true;
 }
 
 template <typename Handler>
@@ -3959,7 +3995,11 @@ bool BaselineCompilerCodeGen::emit_JSOP_CHECKLEXICAL() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_CHECKLEXICAL() {
-  MOZ_CRASH("NYI: interpreter JSOP_CHECKLEXICAL");
+  Register scratch = R0.scratchReg();
+  LoadUint24Operand(masm, PCRegAtStart, 0, scratch);
+  BaseValueIndex addr = ComputeAddressOfLocal(masm, scratch);
+  masm.loadValue(addr, R0);
+  return emitUninitializedLexicalCheck(R0);
 }
 
 template <typename Handler>
@@ -4997,7 +5037,26 @@ bool BaselineCompilerCodeGen::emit_JSOP_ENVCALLEE() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_ENVCALLEE() {
-  MOZ_CRASH("NYI: interpreter JSOP_ENVCALLEE");
+  Register numHops = R0.scratchReg();
+  LoadUint8Operand(masm, PCRegAtStart, numHops);
+
+  Register env = R1.scratchReg();
+  masm.loadPtr(frame.addressOfEnvironmentChain(), env);
+
+  // Skip numHops environment objects.
+  Label top, done;
+  masm.bind(&top);
+  masm.branchTest32(Assembler::Zero, numHops, numHops, &done);
+  {
+    Address nextAddr(env, EnvironmentObject::offsetOfEnclosingEnvironment());
+    masm.unboxObject(nextAddr, env);
+    masm.sub32(Imm32(1), numHops);
+    masm.jump(&top);
+  }
+
+  masm.bind(&done);
+  masm.pushValue(Address(env, CallObject::offsetOfCallee()));
+  return true;
 }
 
 template <typename Handler>

@@ -323,6 +323,7 @@ class BaselineCodeGen {
   void loadResumeIndexBytecodeOperand(Register dest);
   void loadInt32LengthBytecodeOperand(Register dest);
   void loadInt32IndexBytecodeOperand(ValueOperand dest);
+  void loadNumFormalArguments(Register dest);
 
   // Loads the current JSScript* in dest.
   void loadScript(Register dest);
@@ -391,6 +392,7 @@ class BaselineCodeGen {
 
   MOZ_MUST_USE bool emitCheckThis(ValueOperand val, bool reinit = false);
   void emitLoadReturnValue(ValueOperand val);
+  void emitPushNonArrowFunctionNewTarget();
 
   MOZ_MUST_USE bool emitNextIC();
   MOZ_MUST_USE bool emitInterruptCheck();
