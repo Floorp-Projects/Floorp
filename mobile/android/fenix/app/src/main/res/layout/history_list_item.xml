@@ -17,31 +17,29 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/history_title" />
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/history_item_overflow"
+        android:layout_width="@dimen/glyph_button_width"
+        android:layout_height="@dimen/glyph_button_height"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/content_description_history_menu"
+        android:src="@drawable/ic_menu"
+        android:tint="?attr/menuButtonTint"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/history_favicon"
         android:layout_width="@dimen/history_favicon_width_height"
         android:layout_height="@dimen/history_favicon_width_height"
         android:background="@drawable/history_favicon_background"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/history_title"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="20dp"
-        android:ellipsize="end"
-        android:singleLine="true"
-        android:textAlignment="viewStart"
-        android:textColor="?attr/historyTitleColor"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/history_favicon"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -49,9 +47,6 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="8dp"
         android:ellipsize="end"
         android:singleLine="true"
         android:textAlignment="viewStart"
@@ -62,14 +57,17 @@
         app:layout_constraintStart_toEndOf="@id/history_favicon"
         app:layout_constraintTop_toBottomOf="@id/history_title" />
 
-    <ImageButton
-        android:id="@+id/history_item_overflow"
-        android:layout_width="@dimen/glyph_button_height"
-        android:layout_height="@dimen/glyph_button_height"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/content_description_history_menu"
-        android:src="@drawable/ic_menu"
-        android:tint="?attr/menuButtonTint"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <TextView
+        android:id="@+id/history_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:textAlignment="viewStart"
+        android:textColor="?attr/historyTitleColor"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toStartOf="@id/history_item_overflow"
+        app:layout_constraintStart_toEndOf="@id/history_favicon"
+        app:layout_constraintTop_toTopOf="@id/history_item_overflow" />
 </androidx.constraintlayout.widget.ConstraintLayout>
