@@ -787,6 +787,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   static bool drainTraceLogger(JSContext* cx, unsigned argc, Value* vp);
 #endif
   static bool adoptDebuggeeValue(JSContext* cx, unsigned argc, Value* vp);
+  static bool adoptSource(JSContext* cx, unsigned argc, Value* vp);
   static bool construct(JSContext* cx, unsigned argc, Value* vp);
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];

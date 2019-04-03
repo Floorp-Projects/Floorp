@@ -5649,6 +5649,69 @@ bool Debugger::adoptDebuggeeValue(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+class DebuggerAdoptSourceMatcher {
+  JSContext* cx_;
+  Debugger* dbg_;
+
+ public:
+  explicit DebuggerAdoptSourceMatcher(JSContext* cx, Debugger* dbg)
+      : cx_(cx), dbg_(dbg) {}
+
+  using ReturnType = JSObject*;
+
+  ReturnType match(HandleScriptSourceObject source) {
+    if (source->compartment() == cx_->compartment()) {
+      JS_ReportErrorASCII(cx_, "Source is in the same compartment as this debugger");
+      return nullptr;
+    }
+    return dbg_->wrapSource(cx_, source);
+  }
+  ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
+    if (wasmInstance->compartment() == cx_->compartment()) {
+      JS_ReportErrorASCII(cx_, "WasmInstance is in the same compartment as this debugger");
+      return nullptr;
+    }
+    return dbg_->wrapWasmSource(cx_, wasmInstance);
+  }
+};
+
+static inline NativeObject* GetSourceReferentRawObject(JSObject* obj);
+static inline DebuggerSourceReferent GetSourceReferent(JSObject* obj);
+
+bool Debugger::adoptSource(JSContext* cx, unsigned argc, Value* vp) {
+  THIS_DEBUGGER(cx, argc, vp, "adoptSource", args, dbg);
+  if (!args.requireAtLeast(cx, "Debugger.adoptSource", 1)) {
+    return false;
+  }
+
+  RootedObject obj(cx, NonNullObject(cx, args[0]));
+  if (!obj) {
+    return false;
+  }
+
+  obj = UncheckedUnwrap(obj);
+  if (obj->getClass() != &DebuggerSource_class) {
+    JS_ReportErrorASCII(cx, "Argument is not a Debugger.Source");
+    return false;
+  }
+
+  if (!GetSourceReferentRawObject(obj)) {
+    JS_ReportErrorASCII(cx, "Argument is Debugger.Source.prototype");
+    return false;
+  }
+
+  Rooted<DebuggerSourceReferent> referent(cx, GetSourceReferent(obj));
+
+  DebuggerAdoptSourceMatcher matcher(cx, dbg);
+  JSObject* res = referent.match(matcher);
+  if (!res) {
+    return false;
+  }
+
+  args.rval().setObject(*res);
+  return true;
+}
+
 const JSPropertySpec Debugger::properties[] = {
     JS_PSGS("enabled", Debugger::getEnabled, Debugger::setEnabled, 0),
     JS_PSGS("onDebuggerStatement", Debugger::getOnDebuggerStatement,
@@ -5690,6 +5753,7 @@ const JSFunctionSpec Debugger::methods[] = {
     JS_FN("makeGlobalObjectReference", Debugger::makeGlobalObjectReference, 1,
           0),
     JS_FN("adoptDebuggeeValue", Debugger::adoptDebuggeeValue, 1, 0),
+    JS_FN("adoptSource", Debugger::adoptSource, 1, 0),
     JS_FS_END};
 
 const JSFunctionSpec Debugger::static_methods[]{
