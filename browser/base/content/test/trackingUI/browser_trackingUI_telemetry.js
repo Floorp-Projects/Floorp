@@ -89,7 +89,7 @@ add_task(async function testIdentityPopupEvents() {
 
   await openIdentityPopup();
 
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true).parent;
+  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true).parent;
   let openEvents = events.filter(
     e => e[1] == "security.ui.identitypopup" && e[2] == "open" && e[3] == "identity_popup");
   is(openEvents.length, 1, "recorded telemetry for opening the identity popup");
@@ -99,7 +99,7 @@ add_task(async function testIdentityPopupEvents() {
 
   await openIdentityPopup();
 
-  events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true).parent;
+  events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true).parent;
   openEvents = events.filter(
     e => e[1] == "security.ui.identitypopup" && e[2] == "open" && e[3] == "identity_popup");
   is(openEvents.length, 1, "recorded telemetry for opening the identity popup");
@@ -110,7 +110,7 @@ add_task(async function testIdentityPopupEvents() {
   document.querySelector("#tracking-action-unblock").doCommand();
   await tabReloadPromise;
 
-  events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true).parent;
+  events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true).parent;
   let clickEvents = events.filter(
     e => e[1] == "security.ui.identitypopup" && e[2] == "click" && e[3] == "unblock");
   is(clickEvents.length, 1, "recorded telemetry for the click");
@@ -120,7 +120,7 @@ add_task(async function testIdentityPopupEvents() {
   document.querySelector("#tracking-action-block").doCommand();
   await tabReloadPromise;
 
-  events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true).parent;
+  events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true).parent;
   clickEvents = events.filter(
     e => e[1] == "security.ui.identitypopup" && e[2] == "click" && e[3] == "block");
   is(clickEvents.length, 1, "recorded telemetry for the click");

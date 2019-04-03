@@ -3,7 +3,7 @@
 
 "use strict";
 const URL = "data:text/html;charset=utf8,browser_telemetry_activate_rdm.js";
-const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
+const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 const DATA = [
   {
     timestamp: null,
@@ -53,7 +53,7 @@ add_task(async function() {
   Services.telemetry.clearEvents();
 
   // Ensure no events have been logged
-  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
   ok(!snapshot.parent, "No events have been logged for the main process");
 
   const tab = await addTab(URL);
@@ -82,7 +82,7 @@ async function openCloseRDM(tab) {
 }
 
 async function checkResults() {
-  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
   const events = snapshot.parent.filter(event => event[1] === "devtools.main" &&
                                                  (event[2] === "activate" ||
                                                  event[2] === "deactivate")
