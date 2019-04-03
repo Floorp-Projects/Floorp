@@ -3310,6 +3310,10 @@ NS_IMETHODIMP TabChild::OnSecurityChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP TabChild::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
                                                nsIRequest* aRequest,
                                                uint32_t aEvent) {
+  if (!IPCOpen()) {
+    return NS_OK;
+  }
+
   Maybe<WebProgressData> webProgressData;
   RequestData requestData;
   nsresult rv = PrepareProgressListenerData(aWebProgress, aRequest,
