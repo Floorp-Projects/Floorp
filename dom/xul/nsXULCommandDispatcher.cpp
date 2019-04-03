@@ -16,6 +16,7 @@
 #include "nsIDOMWindow.h"
 #include "mozilla/dom/Document.h"
 #include "nsPresContext.h"
+#include "nsIPresShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"

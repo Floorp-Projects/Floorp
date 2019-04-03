@@ -16,6 +16,7 @@
 #include "nsMappedAttributes.h"
 #include "nsStyleConsts.h"
 #include "mozilla/dom/Document.h"
+#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "mozAutoDocUpdate.h"
 #include "nsIScriptError.h"

@@ -11,6 +11,8 @@
 #include "mozilla/ServoBindingTypes.h"
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
+#include "nsIPresShell.h"
+#include "nsIPresShellInlines.h"
 
 namespace mozilla {
 namespace dom {

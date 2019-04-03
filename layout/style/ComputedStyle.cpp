@@ -22,6 +22,7 @@
 #include "nsWindowSizes.h"
 
 #include "nsCOMPtr.h"
+#include "nsIPresShell.h"
 
 #include "GeckoProfiler.h"
 #include "mozilla/dom/Document.h"
