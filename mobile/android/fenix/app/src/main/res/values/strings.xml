@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <!-- Name of the application -->
-    <string name="app_name">%1$s</string>
+    <string name="app_name">Fenix</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
