@@ -12,6 +12,8 @@
 #include <winnt.h>
 #include <winternl.h>
 
+#include <algorithm>
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LauncherResult.h"
@@ -403,6 +405,10 @@ class MOZ_RAII PEHeaders final {
       return;
     }
 
+    if (mPeHeader->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC) {
+      return;
+    }
+
     DWORD imageSize = mPeHeader->OptionalHeader.SizeOfImage;
     // This is a coarse-grained check to ensure that the image size is
     // reasonable. It we aren't big enough to contain headers, we have a
@@ -415,13 +421,17 @@ class MOZ_RAII PEHeaders final {
   }
 
   template <typename T>
-  T GetImageDirectoryEntry(unsigned int aDirectoryIndex) {
-    if (aDirectoryIndex >= IMAGE_NUMBEROF_DIRECTORY_ENTRIES) {
+  T GetImageDirectoryEntry(const uint32_t aDirectoryIndex) {
+    IMAGE_OPTIONAL_HEADER& optionalHeader = mPeHeader->OptionalHeader;
+
+    const uint32_t maxIndex = std::min(optionalHeader.NumberOfRvaAndSizes,
+                                       DWORD(IMAGE_NUMBEROF_DIRECTORY_ENTRIES));
+    if (aDirectoryIndex >= maxIndex) {
       return nullptr;
     }
 
     IMAGE_DATA_DIRECTORY& dirEntry =
-        mPeHeader->OptionalHeader.DataDirectory[aDirectoryIndex];
+        optionalHeader.DataDirectory[aDirectoryIndex];
     return RVAToPtr<T>(dirEntry.VirtualAddress);
   }
 
