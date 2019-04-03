@@ -1687,12 +1687,16 @@ NSView<mozView>* nsChildView::GetEditorView() {
   // We need to get editor's view. E.g., when the focus is in the bookmark
   // dialog, the view is <panel> element of the dialog.  At this time, the key
   // events are processed the parent window's view that has native focus.
-  WidgetQueryContentEvent textContent(true, eQueryTextContent, this);
-  textContent.InitForQueryTextContent(0, 0);
-  DispatchWindowEvent(textContent);
-  if (textContent.mSucceeded && textContent.mReply.mFocusedWidget) {
+  WidgetQueryContentEvent queryContentState(true, eQueryContentState, this);
+  // This may be called during creating a menu popup frame due to creating
+  // widget synchronously and that causes Cocoa asking current window level.
+  // In this case, it's not safe to flush layout on the document and we don't
+  // need any layout information right now.
+  queryContentState.mNeedsToFlushLayout = false;
+  DispatchWindowEvent(queryContentState);
+  if (queryContentState.mSucceeded && queryContentState.mReply.mFocusedWidget) {
     NSView<mozView>* view = static_cast<NSView<mozView>*>(
-        textContent.mReply.mFocusedWidget->GetNativeData(NS_NATIVE_WIDGET));
+        queryContentState.mReply.mFocusedWidget->GetNativeData(NS_NATIVE_WIDGET));
     if (view) editorView = view;
   }
   return editorView;

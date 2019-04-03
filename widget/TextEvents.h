@@ -1001,13 +1001,7 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
     Init(aOptions);
   }
 
-  bool NeedsToFlushLayout() const {
-#ifdef XP_MACOSX
-    return true;
-#else
-    return mNeedsToFlushLayout;
-#endif
-  }
+  bool NeedsToFlushLayout() const { return mNeedsToFlushLayout; }
 
   void RequestFontRanges() {
     NS_ASSERTION(mMessage == eQueryTextContent, "not querying text content");
