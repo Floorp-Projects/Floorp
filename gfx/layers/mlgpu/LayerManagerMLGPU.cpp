@@ -205,7 +205,6 @@ LayersBackend LayerManagerMLGPU::GetBackendType() {
 void LayerManagerMLGPU::SetRoot(Layer* aLayer) { mRoot = aLayer; }
 
 bool LayerManagerMLGPU::BeginTransaction(const nsCString& aURL) {
-  MOZ_ASSERT(!mTarget);
   return true;
 }
 
