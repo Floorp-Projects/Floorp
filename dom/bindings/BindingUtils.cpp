@@ -1116,7 +1116,7 @@ bool XPCOMObjectToJsval(JSContext* cx, JS::Handle<JSObject*> scope,
 bool VariantToJsval(JSContext* aCx, nsIVariant* aVariant,
                     JS::MutableHandle<JS::Value> aRetval) {
   nsresult rv;
-  if (!XPCVariant::VariantDataToJS(aVariant, &rv, aRetval)) {
+  if (!XPCVariant::VariantDataToJS(aCx, aVariant, &rv, aRetval)) {
     // Does it throw?  Who knows
     if (!JS_IsExceptionPending(aCx)) {
       Throw(aCx, NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED);
