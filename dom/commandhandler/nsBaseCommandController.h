@@ -11,17 +11,24 @@
 #include "nsIControllerContext.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWeakReferenceUtils.h"
-
-class nsControllerCommandTable;
+#include "nsControllerCommandTable.h"
 
 // The base editor controller is used for both text widgets, and all other text
 // and html editing
-class nsBaseCommandController : public nsIController,
-                                public nsIControllerContext,
-                                public nsIInterfaceRequestor,
-                                public nsICommandController {
+class nsBaseCommandController final : public nsIController,
+                                      public nsIControllerContext,
+                                      public nsIInterfaceRequestor,
+                                      public nsICommandController {
  public:
-  nsBaseCommandController();
+  /**
+   * The default constructor initializes the instance with new
+   * nsControllerCommandTable.  The other constructor does it with
+   * the given aControllerCommandTable.
+   */
+  nsBaseCommandController() = delete;
+  explicit nsBaseCommandController(
+      nsControllerCommandTable* aControllerCommandTable =
+          new nsControllerCommandTable());
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTROLLER
