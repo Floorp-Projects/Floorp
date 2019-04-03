@@ -12,6 +12,7 @@ See the adjacent README.txt for more details.
 from __future__ import print_function
 
 import os
+import shlex
 import sys
 import tempfile
 import textwrap
@@ -118,6 +119,8 @@ def parse_args():
                           'considered slow (default %default).')
     harness_og.add_option('-a', '--args', dest='shell_args', default='',
                           help='Extra args to pass to the JS shell.')
+    harness_og.add_option('--feature-args', dest='feature_args', default='',
+                          help='Extra args to pass to the JS shell even when feature-testing.')
     harness_og.add_option('--jitflags', dest='jitflags', default='none',
                           type='string',
                           help='IonMonkey option combinations. One of all,'
@@ -252,7 +255,7 @@ def parse_args():
     if options.rr:
         debugger_prefix = ['rr', 'record']
 
-    js_cmd_args = options.shell_args.split()
+    js_cmd_args = options.shell_args.split() + shlex.split(options.feature_args)
     if options.jorendb:
         options.passthrough = True
         options.hide_progress = True
@@ -432,7 +435,8 @@ def load_tests(options, requested_paths, excluded_paths):
             xul_abi, xul_os, xul_debug = options.xul_info_src.split(r':')
             xul_debug = xul_debug.lower() is 'true'
             xul_info = manifest.XULInfo(xul_abi, xul_os, xul_debug)
-        xul_tester = manifest.XULInfoTester(xul_info, options.js_shell)
+        feature_args = shlex.split(options.feature_args)
+        xul_tester = manifest.XULInfoTester(xul_info, options.js_shell, feature_args)
 
     test_dir = dirname(abspath(__file__))
     path_options = PathOptions(test_dir, requested_paths, excluded_paths)
