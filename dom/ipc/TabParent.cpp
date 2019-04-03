@@ -18,7 +18,6 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/FrameCrashedEvent.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/PaymentRequestParent.h"
@@ -468,27 +467,18 @@ void TabParent::ActorDestroy(ActorDestroyReason why) {
         // and created a new frameloader. If so, we don't fire the event,
         // since the frameloader owner has clearly moved on.
         if (currentFrameLoader == frameLoader) {
-          nsString eventName;
           MessageChannel* channel = GetIPCChannel();
           if (channel && !channel->DoBuildIDsMatch()) {
-            eventName = NS_LITERAL_STRING("oop-browser-buildid-mismatch");
+            nsContentUtils::DispatchTrustedEvent(
+                frameElement->OwnerDoc(), frameElement,
+                NS_LITERAL_STRING("oop-browser-buildid-mismatch"),
+                CanBubble::eYes, Cancelable::eYes);
           } else {
-            eventName = NS_LITERAL_STRING("oop-browser-crashed");
+            nsContentUtils::DispatchTrustedEvent(
+                frameElement->OwnerDoc(), frameElement,
+                NS_LITERAL_STRING("oop-browser-crashed"), CanBubble::eYes,
+                Cancelable::eYes);
           }
-
-          dom::FrameCrashedEventInit init;
-          init.mBubbles = true;
-          init.mCancelable = true;
-          init.mBrowsingContextId = mBrowsingContext->Id();
-
-          RefPtr<dom::FrameCrashedEvent> event =
-              dom::FrameCrashedEvent::Constructor(frameElement->OwnerDoc(),
-                                                  eventName, init);
-          event->SetTrusted(true);
-          event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
-          event->WidgetEventPtr()->mFlags.mBubbles = true;
-          EventDispatcher::DispatchDOMEvent(frameElement, nullptr, event,
-                                            nullptr, nullptr);
         }
       }
     }
