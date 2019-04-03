@@ -271,7 +271,7 @@ dependencies {
     implementation Deps.mozilla_feature_downloads
     implementation Deps.mozilla_browser_domains
     implementation Deps.mozilla_browser_icons
-    implementation Deps.mozilla_browser_engine_gecko_beta
+    implementation Deps.mozilla_browser_engine_gecko_nightly
     implementation Deps.mozilla_browser_session
     implementation Deps.mozilla_browser_storage_sync
     implementation Deps.mozilla_browser_toolbar
