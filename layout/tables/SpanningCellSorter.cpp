@@ -10,6 +10,7 @@
 
 #include "SpanningCellSorter.h"
 #include "nsQuickSort.h"
+#include "nsIPresShell.h"
 #include "mozilla/HashFunctions.h"
 
 using namespace mozilla;

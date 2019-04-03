@@ -11,6 +11,7 @@
 #include "nsIContentViewer.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
+#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/dom/DocumentInlines.h"

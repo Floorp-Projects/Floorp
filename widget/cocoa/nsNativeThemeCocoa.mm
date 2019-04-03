@@ -16,6 +16,7 @@
 #include "nsRect.h"
 #include "nsSize.h"
 #include "nsStyleConsts.h"
+#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
