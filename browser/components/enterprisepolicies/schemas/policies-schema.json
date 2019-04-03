@@ -551,21 +551,6 @@
       }
     },
 
-    "Preferences": {
-      "type": "object",
-      "properties": {
-        "network.IDN_show_punycode": {
-          "type": "boolean"
-        },
-        "browser.fixup.dns_first_for_single_words": {
-          "type": "boolean"
-        },
-        "browser.cache.disk.parent_directory": {
-          "type": "string"
-        }
-      }
-    },
-
     "Proxy": {
       "type": "object",
       "properties": {

@@ -111,8 +111,6 @@ policy-Permissions = Configure permissions for camera, microphone, location and 
 
 policy-PopupBlocking = Allow certain websites to display popups by default.
 
-policy-Preferences = Set and lock the value for a subset of preferences.
-
 policy-Proxy = Configure proxy settings.
 
 policy-RequestedLocales = Set the list of requested locales for the application in order of preference.
