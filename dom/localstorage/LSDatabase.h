@@ -40,7 +40,7 @@ class LSDatabase final {
 
   void ClearActor() {
     AssertIsOnOwningThread();
-    MOZ_ASSERT(mActor);
+    MOZ_DIAGNOSTIC_ASSERT(mActor);
 
     mActor = nullptr;
   }

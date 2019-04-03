@@ -364,6 +364,15 @@ IAccessibleConfig:
     the computer's registry. The value is always set to "NoSystemTypeLibOrPS"
   type: string
 
+IndexedDBShutdownTimeout:
+  description: >
+    This annotation is present if IndexedDB shutdown was not finished in time
+    and the browser was crashed instead of waiting for IndexedDB shutdown to
+    finish. The condition that caused the hang is contained in the annotation.
+  type: string
+  content: false
+  ping: true
+
 InstallTime:
   description: >
     The time when Firefox was installed expressed as seconds since the Epoch

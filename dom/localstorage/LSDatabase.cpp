@@ -45,24 +45,24 @@ LSDatabase::LSDatabase(const nsACString& aOrigin)
   if (!gLSDatabases) {
     gLSDatabases = new LSDatabaseHashtable();
 
-    MOZ_ASSERT(!sObserver);
+    MOZ_DIAGNOSTIC_ASSERT(!sObserver);
 
     sObserver = new Observer();
 
     nsCOMPtr<nsIObserverService> obsSvc = GetObserverService();
-    MOZ_ASSERT(obsSvc);
+    MOZ_DIAGNOSTIC_ASSERT(obsSvc);
 
     MOZ_ALWAYS_SUCCEEDS(
         obsSvc->AddObserver(sObserver, XPCOM_SHUTDOWN_OBSERVER_TOPIC, false));
   }
 
-  MOZ_ASSERT(!gLSDatabases->Get(mOrigin));
+  MOZ_DIAGNOSTIC_ASSERT(!gLSDatabases->Get(mOrigin));
   gLSDatabases->Put(mOrigin, this);
 }
 
 LSDatabase::~LSDatabase() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!mSnapshot);
+  MOZ_DIAGNOSTIC_ASSERT(!mSnapshot);
 
   if (!mAllowedToClose) {
     AllowToClose();
@@ -70,7 +70,7 @@ LSDatabase::~LSDatabase() {
 
   if (mActor) {
     mActor->SendDeleteMeInternal();
-    MOZ_ASSERT(!mActor, "SendDeleteMeInternal should have cleared!");
+    MOZ_DIAGNOSTIC_ASSERT(!mActor, "SendDeleteMeInternal should have cleared!");
   }
 }
 
@@ -81,8 +81,8 @@ LSDatabase* LSDatabase::Get(const nsACString& aOrigin) {
 
 void LSDatabase::SetActor(LSDatabaseChild* aActor) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(!mActor);
+  MOZ_DIAGNOSTIC_ASSERT(aActor);
+  MOZ_DIAGNOSTIC_ASSERT(!mActor);
 
   mActor = aActor;
 }
@@ -105,7 +105,7 @@ void LSDatabase::RequestAllowToClose() {
 
 void LSDatabase::NoteFinishedSnapshot(LSSnapshot* aSnapshot) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aSnapshot == mSnapshot);
+  MOZ_DIAGNOSTIC_ASSERT(aSnapshot == mSnapshot);
 
   mSnapshot = nullptr;
 
@@ -116,9 +116,9 @@ void LSDatabase::NoteFinishedSnapshot(LSSnapshot* aSnapshot) {
 
 nsresult LSDatabase::GetLength(LSObject* aObject, uint32_t* aResult) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aObject);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT(aObject);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
 
   nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -136,9 +136,9 @@ nsresult LSDatabase::GetLength(LSObject* aObject, uint32_t* aResult) {
 nsresult LSDatabase::GetKey(LSObject* aObject, uint32_t aIndex,
                             nsAString& aResult) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aObject);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT(aObject);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
 
   nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -156,9 +156,9 @@ nsresult LSDatabase::GetKey(LSObject* aObject, uint32_t aIndex,
 nsresult LSDatabase::GetItem(LSObject* aObject, const nsAString& aKey,
                              nsAString& aResult) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aObject);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT(aObject);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
 
   nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -175,9 +175,9 @@ nsresult LSDatabase::GetItem(LSObject* aObject, const nsAString& aKey,
 
 nsresult LSDatabase::GetKeys(LSObject* aObject, nsTArray<nsString>& aKeys) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aObject);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT(aObject);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
 
   nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -196,9 +196,9 @@ nsresult LSDatabase::SetItem(LSObject* aObject, const nsAString& aKey,
                              const nsAString& aValue,
                              LSNotifyInfo& aNotifyInfo) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aObject);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT(aObject);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
 
   nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -216,9 +216,9 @@ nsresult LSDatabase::SetItem(LSObject* aObject, const nsAString& aKey,
 nsresult LSDatabase::RemoveItem(LSObject* aObject, const nsAString& aKey,
                                 LSNotifyInfo& aNotifyInfo) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aObject);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT(aObject);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
 
   nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -235,9 +235,9 @@ nsresult LSDatabase::RemoveItem(LSObject* aObject, const nsAString& aKey,
 
 nsresult LSDatabase::Clear(LSObject* aObject, LSNotifyInfo& aNotifyInfo) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aObject);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT(aObject);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
 
   nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -254,9 +254,9 @@ nsresult LSDatabase::Clear(LSObject* aObject, LSNotifyInfo& aNotifyInfo) {
 
 nsresult LSDatabase::BeginExplicitSnapshot(LSObject* aObject) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aObject);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT(aObject);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
 
   if (mSnapshot) {
     return NS_ERROR_ALREADY_INITIALIZED;
@@ -272,15 +272,15 @@ nsresult LSDatabase::BeginExplicitSnapshot(LSObject* aObject) {
 
 nsresult LSDatabase::EndExplicitSnapshot(LSObject* aObject) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aObject);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT(aObject);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
 
   if (!mSnapshot) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  MOZ_ASSERT(mSnapshot->Explicit());
+  MOZ_DIAGNOSTIC_ASSERT(mSnapshot->Explicit());
 
   nsresult rv = mSnapshot->End();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -291,10 +291,10 @@ nsresult LSDatabase::EndExplicitSnapshot(LSObject* aObject) {
 }
 
 nsresult LSDatabase::EnsureSnapshot(LSObject* aObject, bool aExplicit) {
-  MOZ_ASSERT(aObject);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT_IF(mSnapshot, !aExplicit);
-  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT(aObject);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT_IF(mSnapshot, !aExplicit);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
 
   if (mSnapshot) {
     return NS_OK;
@@ -330,8 +330,8 @@ nsresult LSDatabase::EnsureSnapshot(LSObject* aObject, bool aExplicit) {
 
 void LSDatabase::AllowToClose() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!mAllowedToClose);
-  MOZ_ASSERT(!mSnapshot);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllowedToClose);
+  MOZ_DIAGNOSTIC_ASSERT(!mSnapshot);
 
   mAllowedToClose = true;
 
@@ -339,17 +339,17 @@ void LSDatabase::AllowToClose() {
     mActor->SendAllowToClose();
   }
 
-  MOZ_ASSERT(gLSDatabases);
-  MOZ_ASSERT(gLSDatabases->Get(mOrigin));
+  MOZ_DIAGNOSTIC_ASSERT(gLSDatabases);
+  MOZ_DIAGNOSTIC_ASSERT(gLSDatabases->Get(mOrigin));
   gLSDatabases->Remove(mOrigin);
 
   if (!gLSDatabases->Count()) {
     gLSDatabases = nullptr;
 
-    MOZ_ASSERT(sObserver);
+    MOZ_DIAGNOSTIC_ASSERT(sObserver);
 
     nsCOMPtr<nsIObserverService> obsSvc = GetObserverService();
-    MOZ_ASSERT(obsSvc);
+    MOZ_DIAGNOSTIC_ASSERT(obsSvc);
 
     MOZ_ALWAYS_SUCCEEDS(
         obsSvc->RemoveObserver(sObserver, XPCOM_SHUTDOWN_OBSERVER_TOPIC));
@@ -364,14 +364,14 @@ NS_IMETHODIMP
 LSDatabase::Observer::Observe(nsISupports* aSubject, const char* aTopic,
                               const char16_t* aData) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!strcmp(aTopic, XPCOM_SHUTDOWN_OBSERVER_TOPIC));
-  MOZ_ASSERT(gLSDatabases);
+  MOZ_DIAGNOSTIC_ASSERT(!strcmp(aTopic, XPCOM_SHUTDOWN_OBSERVER_TOPIC));
+  MOZ_DIAGNOSTIC_ASSERT(gLSDatabases);
 
   nsTArray<RefPtr<LSDatabase>> databases;
 
   for (auto iter = gLSDatabases->ConstIter(); !iter.Done(); iter.Next()) {
     LSDatabase* database = iter.Data();
-    MOZ_ASSERT(database);
+    MOZ_DIAGNOSTIC_ASSERT(database);
 
     databases.AppendElement(database);
   }

@@ -154,7 +154,7 @@ typedef ScrollableLayerGuid::ViewID ViewID;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsFrameLoader, mDocShell, mMessageManager,
                                       mChildMessageManager, mOpener,
-                                      mParentSHistory)
+                                      mParentSHistory, mRemoteBrowser)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
 

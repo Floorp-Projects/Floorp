@@ -164,7 +164,7 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
         mCancelled(false) {}
 
   bool IsOnOwningThread() const {
-    MOZ_ASSERT(mOwningEventTarget);
+    MOZ_DIAGNOSTIC_ASSERT(mOwningEventTarget);
 
     bool current;
     return NS_SUCCEEDED(mOwningEventTarget->IsOnCurrentThread(&current)) &&
@@ -200,7 +200,7 @@ LSObject::LSObject(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
       mPrivateBrowsingId(0),
       mInExplicitSnapshot(false) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(NextGenLocalStorageEnabled());
+  MOZ_DIAGNOSTIC_ASSERT(NextGenLocalStorageEnabled());
 }
 
 LSObject::~LSObject() {
@@ -241,14 +241,14 @@ void LSObject::Initialize() {
 nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
                                    Storage** aStorage) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aStorage);
-  MOZ_ASSERT(NextGenLocalStorageEnabled());
-  MOZ_ASSERT(nsContentUtils::StorageAllowedForWindow(aWindow) >
-             nsContentUtils::StorageAccess::eDeny);
+  MOZ_DIAGNOSTIC_ASSERT(aWindow);
+  MOZ_DIAGNOSTIC_ASSERT(aStorage);
+  MOZ_DIAGNOSTIC_ASSERT(NextGenLocalStorageEnabled());
+  MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::StorageAllowedForWindow(aWindow) >
+                        nsContentUtils::StorageAccess::eDeny);
 
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aWindow);
-  MOZ_ASSERT(sop);
+  MOZ_DIAGNOSTIC_ASSERT(sop);
 
   nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
   if (NS_WARN_IF(!principal)) {
@@ -275,7 +275,8 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
     return rv;
   }
 
-  MOZ_ASSERT(principalInfo->type() == PrincipalInfo::TContentPrincipalInfo);
+  MOZ_DIAGNOSTIC_ASSERT(principalInfo->type() ==
+                        PrincipalInfo::TContentPrincipalInfo);
 
   if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
     return NS_ERROR_FAILURE;
@@ -288,7 +289,7 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
     return rv;
   }
 
-  MOZ_ASSERT(originAttrSuffix == suffix);
+  MOZ_DIAGNOSTIC_ASSERT(originAttrSuffix == suffix);
 
   uint32_t privateBrowsingId;
   rv = principal->GetPrivateBrowsingId(&privateBrowsingId);
@@ -329,8 +330,8 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
                                       const nsAString& aDocumentURI,
                                       bool aPrivate, LSObject** aObject) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(aObject);
+  MOZ_DIAGNOSTIC_ASSERT(aPrincipal);
+  MOZ_DIAGNOSTIC_ASSERT(aObject);
 
   nsCString originAttrSuffix;
   nsCString originKey;
@@ -345,8 +346,9 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
     return rv;
   }
 
-  MOZ_ASSERT(principalInfo->type() == PrincipalInfo::TContentPrincipalInfo ||
-             principalInfo->type() == PrincipalInfo::TSystemPrincipalInfo);
+  MOZ_DIAGNOSTIC_ASSERT(
+      principalInfo->type() == PrincipalInfo::TContentPrincipalInfo ||
+      principalInfo->type() == PrincipalInfo::TSystemPrincipalInfo);
 
   if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
     return NS_ERROR_FAILURE;
@@ -365,7 +367,7 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
     }
   }
 
-  MOZ_ASSERT(originAttrSuffix == suffix);
+  MOZ_DIAGNOSTIC_ASSERT(originAttrSuffix == suffix);
 
   Maybe<nsID> clientId;
   if (aWindow) {
@@ -456,7 +458,7 @@ Storage::StorageType LSObject::Type() const {
 
 bool LSObject::IsForkOf(const Storage* aStorage) const {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aStorage);
+  MOZ_DIAGNOSTIC_ASSERT(aStorage);
 
   if (aStorage->Type() != eLocalStorage) {
     return false;
@@ -796,7 +798,7 @@ nsresult LSObject::EnsureDatabase() {
   mDatabase = LSDatabase::Get(mOrigin);
 
   if (mDatabase) {
-    MOZ_ASSERT(!mDatabase->IsAllowedToClose());
+    MOZ_DIAGNOSTIC_ASSERT(!mDatabase->IsAllowedToClose());
     return NS_OK;
   }
 
@@ -824,8 +826,8 @@ nsresult LSObject::EnsureDatabase() {
     return rv;
   }
 
-  MOZ_ASSERT(response.type() ==
-             LSRequestResponse::TLSRequestPrepareDatastoreResponse);
+  MOZ_DIAGNOSTIC_ASSERT(response.type() ==
+                        LSRequestResponse::TLSRequestPrepareDatastoreResponse);
 
   const LSRequestPrepareDatastoreResponse& prepareDatastoreResponse =
       response.get_LSRequestPrepareDatastoreResponse();
@@ -888,8 +890,8 @@ nsresult LSObject::EnsureObserver() {
     return rv;
   }
 
-  MOZ_ASSERT(response.type() ==
-             LSRequestResponse::TLSRequestPrepareObserverResponse);
+  MOZ_DIAGNOSTIC_ASSERT(response.type() ==
+                        LSRequestResponse::TLSRequestPrepareObserverResponse);
 
   const LSRequestPrepareObserverResponse& prepareObserverResponse =
       response.get_LSRequestPrepareObserverResponse();
@@ -904,7 +906,7 @@ nsresult LSObject::EnsureObserver() {
   // strong reference to the observer.
 
   PBackgroundChild* backgroundActor = BackgroundChild::GetForCurrentThread();
-  MOZ_ASSERT(backgroundActor);
+  MOZ_DIAGNOSTIC_ASSERT(backgroundActor);
 
   RefPtr<LSObserver> observer = new LSObserver(mOrigin);
 
@@ -943,20 +945,20 @@ nsresult LSObject::EndExplicitSnapshotInternal() {
 
   // Can be only called if the mInExplicitSnapshot flag is true.
   // An explicit snapshot must have been created.
-  MOZ_ASSERT(mInExplicitSnapshot);
+  MOZ_DIAGNOSTIC_ASSERT(mInExplicitSnapshot);
 
   // If an explicit snapshot have been created then mDatabase must be not null.
   // DropDatabase could be called in the meatime, but that would set
   // mInExplicitSnapshot to false. EnsureDatabase could be called in the
   // meantime too, but that can't set mDatabase to null or to a new value. See
   // the comment below.
-  MOZ_ASSERT(mDatabase);
+  MOZ_DIAGNOSTIC_ASSERT(mDatabase);
 
   // Existence of a snapshot prevents the database from allowing to close. See
   // LSDatabase::RequestAllowToClose and LSDatabase::NoteFinishedSnapshot.
   // If the database is not allowed to close then mDatabase could not have been
   // nulled out or set to a new value. See EnsureDatabase.
-  MOZ_ASSERT(!mDatabase->IsAllowedToClose());
+  MOZ_DIAGNOSTIC_ASSERT(!mDatabase->IsAllowedToClose());
 
   nsresult rv = mDatabase->EndExplicitSnapshot(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -994,7 +996,7 @@ NestedEventTargetWrapper::IsOnCurrentThread(bool* aResult) {
 NS_IMETHODIMP
 NestedEventTargetWrapper::Dispatch(already_AddRefed<nsIRunnable> aEvent,
                                    uint32_t aFlags) {
-  MOZ_ASSERT(mNestedEventTarget);
+  MOZ_DIAGNOSTIC_ASSERT(mNestedEventTarget);
 
   if (mDisconnected) {
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(std::move(aEvent), aFlags));
@@ -1057,7 +1059,7 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
 
     const nsLocalExecutionGuard localExecution(thread->EnterLocalExecution());
     mNestedEventTarget = localExecution.GetEventTarget();
-    MOZ_ASSERT(mNestedEventTarget);
+    MOZ_DIAGNOSTIC_ASSERT(mNestedEventTarget);
 
     mNestedEventTargetWrapper =
         new NestedEventTargetWrapper(mNestedEventTarget);
@@ -1179,7 +1181,7 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
 
 nsresult RequestHelper::Start() {
   AssertIsOnDOMFileThread();
-  MOZ_ASSERT(mState == State::Initial);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Initial);
 
   mState = State::ResponsePending;
 
@@ -1196,7 +1198,7 @@ nsresult RequestHelper::Start() {
 
 void RequestHelper::Finish() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Finishing);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::Finishing);
 
   mObject = nullptr;
 
@@ -1244,7 +1246,7 @@ RequestHelper::Run() {
 
 void RequestHelper::OnResponse(const LSRequestResponse& aResponse) {
   AssertIsOnDOMFileThread();
-  MOZ_ASSERT(mState == State::ResponsePending);
+  MOZ_DIAGNOSTIC_ASSERT(mState == State::ResponsePending);
 
   mActor = nullptr;
 

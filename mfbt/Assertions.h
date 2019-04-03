@@ -507,6 +507,26 @@ struct AssertionConditionType {
 #endif
 
 /*
+ * MOZ_DIAGNOSTIC_ASSERT_IF is like MOZ_ASSERT_IF, but using
+ * MOZ_DIAGNOSTIC_ASSERT as the underlying assert.
+ *
+ * See the block comment for MOZ_DIAGNOSTIC_ASSERT above for more details on how
+ * diagnostic assertions work and how to use them.
+ */
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#  define MOZ_DIAGNOSTIC_ASSERT_IF(cond, expr) \
+    do {                                       \
+      if (cond) {                              \
+        MOZ_DIAGNOSTIC_ASSERT(expr);           \
+      }                                        \
+    } while (false)
+#else
+#  define MOZ_DIAGNOSTIC_ASSERT_IF(cond, expr) \
+    do {                                       \
+    } while (false)
+#endif
+
+/*
  * MOZ_ASSUME_UNREACHABLE_MARKER() expands to an expression which states that
  * it is undefined behavior for execution to reach this point.  No guarantees
  * are made about what will happen if this is reached at runtime.  Most code

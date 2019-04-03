@@ -54,7 +54,7 @@ class SimpleRequestResolver final : public LSSimpleRequestChildCallback {
 
 nsresult CreatePromise(JSContext* aContext, Promise** aPromise) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aContext);
+  MOZ_DIAGNOSTIC_ASSERT(aContext);
 
   nsIGlobalObject* global =
       xpc::NativeGlobal(JS::CurrentGlobalOrNull(aContext));
@@ -75,7 +75,7 @@ nsresult CreatePromise(JSContext* aContext, Promise** aPromise) {
 nsresult CheckedPrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
                                          PrincipalInfo& aPrincipalInfo) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
+  MOZ_DIAGNOSTIC_ASSERT(aPrincipal);
 
   nsresult rv = PrincipalToPrincipalInfo(aPrincipal, &aPrincipalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -98,7 +98,7 @@ nsresult CheckedPrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
 
 LocalStorageManager2::LocalStorageManager2() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(NextGenLocalStorageEnabled());
+  MOZ_DIAGNOSTIC_ASSERT(NextGenLocalStorageEnabled());
 }
 
 LocalStorageManager2::~LocalStorageManager2() { MOZ_ASSERT(NS_IsMainThread()); }
@@ -110,8 +110,8 @@ NS_IMETHODIMP
 LocalStorageManager2::PrecacheStorage(nsIPrincipal* aPrincipal,
                                       Storage** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(_retval);
+  MOZ_DIAGNOSTIC_ASSERT(aPrincipal);
+  MOZ_DIAGNOSTIC_ASSERT(_retval);
 
   // This method was created as part of the e10s-ification of the old LS
   // implementation to perform a preload in the content/current process.  That's
@@ -127,8 +127,8 @@ LocalStorageManager2::CreateStorage(mozIDOMWindow* aWindow,
                                     const nsAString& aDocumentURI,
                                     bool aPrivate, Storage** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(_retval);
+  MOZ_DIAGNOSTIC_ASSERT(aPrincipal);
+  MOZ_DIAGNOSTIC_ASSERT(_retval);
 
   nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
 
@@ -148,8 +148,8 @@ LocalStorageManager2::GetStorage(mozIDOMWindow* aWindow,
                                  nsIPrincipal* aPrincipal, bool aPrivate,
                                  Storage** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(_retval);
+  MOZ_DIAGNOSTIC_ASSERT(aPrincipal);
+  MOZ_DIAGNOSTIC_ASSERT(_retval);
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -157,7 +157,7 @@ LocalStorageManager2::GetStorage(mozIDOMWindow* aWindow,
 NS_IMETHODIMP
 LocalStorageManager2::CloneStorage(Storage* aStorageToCloneFrom) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aStorageToCloneFrom);
+  MOZ_DIAGNOSTIC_ASSERT(aStorageToCloneFrom);
 
   // Cloning is specific to sessionStorage; state is forked when a new tab is
   // opened from an existing tab.
@@ -168,9 +168,9 @@ NS_IMETHODIMP
 LocalStorageManager2::CheckStorage(nsIPrincipal* aPrincipal, Storage* aStorage,
                                    bool* _retval) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(aStorage);
-  MOZ_ASSERT(_retval);
+  MOZ_DIAGNOSTIC_ASSERT(aPrincipal);
+  MOZ_DIAGNOSTIC_ASSERT(aStorage);
+  MOZ_DIAGNOSTIC_ASSERT(_retval);
 
   // Only used by sessionStorage.
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -179,7 +179,7 @@ LocalStorageManager2::CheckStorage(nsIPrincipal* aPrincipal, Storage* aStorage,
 NS_IMETHODIMP
 LocalStorageManager2::GetNextGenLocalStorageEnabled(bool* aResult) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aResult);
+  MOZ_DIAGNOSTIC_ASSERT(aResult);
 
   *aResult = NextGenLocalStorageEnabled();
   return NS_OK;
@@ -189,8 +189,8 @@ NS_IMETHODIMP
 LocalStorageManager2::Preload(nsIPrincipal* aPrincipal, JSContext* aContext,
                               nsISupports** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(_retval);
+  MOZ_DIAGNOSTIC_ASSERT(aPrincipal);
+  MOZ_DIAGNOSTIC_ASSERT(_retval);
 
   nsCString originAttrSuffix;
   nsCString originKey;
@@ -233,8 +233,8 @@ NS_IMETHODIMP
 LocalStorageManager2::IsPreloaded(nsIPrincipal* aPrincipal, JSContext* aContext,
                                   nsISupports** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(_retval);
+  MOZ_DIAGNOSTIC_ASSERT(aPrincipal);
+  MOZ_DIAGNOSTIC_ASSERT(_retval);
 
   RefPtr<Promise> promise;
   nsresult rv = CreatePromise(aContext, getter_AddRefs(promise));
@@ -282,7 +282,7 @@ nsresult LocalStorageManager2::StartRequest(Promise* aPromise,
 nsresult LocalStorageManager2::StartSimpleRequest(
     Promise* aPromise, const LSSimpleRequestParams& aParams) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPromise);
+  MOZ_DIAGNOSTIC_ASSERT(aPromise);
 
   PBackgroundChild* backgroundActor =
       BackgroundChild::GetOrCreateForCurrentThread();
@@ -340,14 +340,14 @@ void RequestResolver::OnResponse(const LSRequestResponse& aResponse) {
 
 void SimpleRequestResolver::HandleResponse(nsresult aResponse) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mPromise);
+  MOZ_DIAGNOSTIC_ASSERT(mPromise);
 
   mPromise->MaybeReject(aResponse);
 }
 
 void SimpleRequestResolver::HandleResponse(bool aResponse) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mPromise);
+  MOZ_DIAGNOSTIC_ASSERT(mPromise);
 
   mPromise->MaybeResolve(aResponse);
 }

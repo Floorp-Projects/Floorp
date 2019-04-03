@@ -74,6 +74,7 @@
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsEscape.h"
+#include "nsExceptionHandler.h"
 #include "nsHashKeys.h"
 #include "nsNetUtil.h"
 #include "nsIAsyncInputStream.h"
@@ -272,6 +273,20 @@ const char kPrefFileHandleEnabled[] = "dom.fileHandle.enabled";
 #define IDB_DELETION_MARKER_FILE_PREFIX "idb-deleting-"
 
 const uint32_t kDeleteTimeoutMs = 1000;
+
+/**
+ * Automatically crash the browser if IndexedDB shutdown takes this long.  We've
+ * chosen a value that is longer than the value for QuotaManager shutdown timer
+ * which is currently set to 30 seconds.  We've also chosen a value that is long
+ * long enough that it is unlikely for the problem to be falsely triggered by
+ * slow system I/O.  We've also chosen a value long enough so that automated
+ * tests should time out and fail if IndexedDB shutdown hangs.  Also, this value
+ * is long enough so that testers can notice the IndexedDB shutdown hang; we
+ * want to know about the hangs, not hide them.  On the other hand this value is
+ * less than 60 seconds which is used by nsTerminator to crash a hung main
+ * process.
+ */
+#define SHUTDOWN_TIMEOUT_MS 50000
 
 #ifdef DEBUG
 
@@ -7849,6 +7864,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
  private:
   ~QuotaClient() override;
+
+  void ShutdownTimedOut();
 
   static void DeleteTimerCallback(nsITimer* aTimer, void* aClosure);
 
@@ -16209,12 +16226,25 @@ void QuotaClient::ShutdownWorkThreads() {
 
   AbortOperations(VoidCString());
 
+  nsCOMPtr<nsITimer> timer = NS_NewTimer();
+
+  MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
+      [](nsITimer* aTimer, void* aClosure) {
+        auto quotaClient = static_cast<QuotaClient*>(aClosure);
+
+        quotaClient->ShutdownTimedOut();
+      },
+      this, SHUTDOWN_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT,
+      "indexeddb::QuotaClient::ShutdownWorkThreads::SpinEventLoopTimer"));
+
   // This should release any IDB related quota objects or directory locks.
   MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
     return (!gFactoryOps || gFactoryOps->IsEmpty()) &&
            (!gLiveDatabaseHashtable || !gLiveDatabaseHashtable->Count()) &&
            !mCurrentMaintenance;
   }));
+
+  MOZ_ALWAYS_SUCCEEDS(timer->Cancel());
 
   // And finally, shutdown all threads.
   RefPtr<ConnectionPool> connectionPool = gConnectionPool.get();
@@ -16241,6 +16271,37 @@ void QuotaClient::ShutdownWorkThreads() {
     MOZ_ALWAYS_SUCCEEDS(mDeleteTimer->Cancel());
     mDeleteTimer = nullptr;
   }
+}
+
+void QuotaClient::ShutdownTimedOut() {
+  AssertIsOnBackgroundThread();
+  MOZ_DIAGNOSTIC_ASSERT(
+      (gFactoryOps && !gFactoryOps->IsEmpty()) ||
+      (gLiveDatabaseHashtable && gLiveDatabaseHashtable->Count()) ||
+      mCurrentMaintenance);
+
+  nsCString data;
+
+  if (gFactoryOps && !gFactoryOps->IsEmpty()) {
+    data.Append("gFactoryOps: ");
+    data.AppendInt(static_cast<uint32_t>(gFactoryOps->Length()));
+    data.Append("\n");
+  }
+
+  if (gLiveDatabaseHashtable && gLiveDatabaseHashtable->Count()) {
+    data.Append("gLiveDatabaseHashtable: ");
+    data.AppendInt(gLiveDatabaseHashtable->Count());
+    data.Append("\n");
+  }
+
+  if (mCurrentMaintenance) {
+    data.Append("mCurrentMaintenance\n");
+  }
+
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::IndexedDBShutdownTimeout, data);
+
+  MOZ_CRASH("IndexedDB shutdown timed out");
 }
 
 void QuotaClient::DeleteTimerCallback(nsITimer* aTimer, void* aClosure) {
