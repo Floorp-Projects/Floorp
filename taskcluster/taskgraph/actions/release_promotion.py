@@ -24,7 +24,7 @@ from taskgraph.util.partners import (
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.decision import taskgraph_decision
 from taskgraph.parameters import Parameters
-from taskgraph.util.attributes import RELEASE_PROMOTION_PROJECTS
+from taskgraph.util.attributes import RELEASE_PROMOTION_PROJECTS, release_level
 
 
 RELEASE_PROMOTION_SIGNOFFS = ('mar-signing', )
@@ -253,7 +253,7 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
 
     if promotion_config.get('partial-updates', False):
         partial_updates = input.get('partial_updates', {})
-        if not partial_updates:
+        if not partial_updates and release_level(parameters['project']) == 'production':
             raise Exception(
                 "`partial_updates` property needs to be provided for `{}`"
                 "target.".format(release_promotion_flavor)
