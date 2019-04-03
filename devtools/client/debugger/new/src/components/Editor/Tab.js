@@ -13,7 +13,7 @@ import SourceIcon from "../shared/SourceIcon";
 import { CloseButton } from "../shared/Button";
 
 import type { List } from "immutable";
-import type { Source, Context } from "../../types";
+import type { Source } from "../../types";
 
 import actions from "../../actions";
 
@@ -33,8 +33,7 @@ import {
   getSelectedSource,
   getActiveSearch,
   getSourcesForTabs,
-  getHasSiblingOfSameName,
-  getContext
+  getHasSiblingOfSameName
 } from "../../selectors";
 import type { ActiveSearchType } from "../../selectors";
 
@@ -43,7 +42,6 @@ import classnames from "classnames";
 type SourcesList = List<Source>;
 
 type Props = {
-  cx: Context,
   tabSources: SourcesList,
   selectedSource: Source,
   source: Source,
@@ -65,7 +63,6 @@ class Tab extends PureComponent<Props> {
 
   showContextMenu(e, tab: string) {
     const {
-      cx,
       closeTab,
       closeTabs,
       tabSources,
@@ -91,13 +88,13 @@ class Tab extends PureComponent<Props> {
       {
         item: {
           ...tabMenuItems.closeTab,
-          click: () => closeTab(cx, sourceTab)
+          click: () => closeTab(sourceTab)
         }
       },
       {
         item: {
           ...tabMenuItems.closeOtherTabs,
-          click: () => closeTabs(cx, otherTabURLs),
+          click: () => closeTabs(otherTabURLs),
           disabled: otherTabURLs.length === 0
         }
       },
@@ -106,7 +103,7 @@ class Tab extends PureComponent<Props> {
           ...tabMenuItems.closeTabsToEnd,
           click: () => {
             const tabIndex = tabSources.findIndex(t => t.id == tab);
-            closeTabs(cx, tabURLs.filter((t, i) => i > tabIndex));
+            closeTabs(tabURLs.filter((t, i) => i > tabIndex));
           },
           disabled:
             tabCount === 1 ||
@@ -114,10 +111,7 @@ class Tab extends PureComponent<Props> {
         }
       },
       {
-        item: {
-          ...tabMenuItems.closeAllTabs,
-          click: () => closeTabs(cx, tabURLs)
-        }
+        item: { ...tabMenuItems.closeAllTabs, click: () => closeTabs(tabURLs) }
       },
       { item: { type: "separator" } },
       {
@@ -138,7 +132,7 @@ class Tab extends PureComponent<Props> {
         item: {
           ...tabMenuItems.showSource,
           disabled: !selectedSource.url,
-          click: () => showSource(cx, tab)
+          click: () => showSource(tab)
         }
       },
       {
@@ -148,13 +142,13 @@ class Tab extends PureComponent<Props> {
             ? L10N.getStr("sourceFooter.unblackbox")
             : L10N.getStr("sourceFooter.blackbox"),
           disabled: !shouldBlackbox(source),
-          click: () => toggleBlackBox(cx, source)
+          click: () => toggleBlackBox(source)
         }
       },
       {
         item: {
           ...tabMenuItems.prettyPrint,
-          click: () => togglePrettyPrint(cx, tab),
+          click: () => togglePrettyPrint(tab),
           disabled: isPretty(sourceTab)
         }
       }
@@ -173,7 +167,6 @@ class Tab extends PureComponent<Props> {
 
   render() {
     const {
-      cx,
       selectedSource,
       selectSource,
       closeTab,
@@ -190,13 +183,13 @@ class Tab extends PureComponent<Props> {
 
     function onClickClose(e) {
       e.stopPropagation();
-      closeTab(cx, source);
+      closeTab(source);
     }
 
     function handleTabClick(e) {
       e.preventDefault();
       e.stopPropagation();
-      return selectSource(cx, sourceId);
+      return selectSource(sourceId);
     }
 
     const className = classnames("source-tab", {
@@ -213,7 +206,7 @@ class Tab extends PureComponent<Props> {
         key={sourceId}
         onClick={handleTabClick}
         // Accommodate middle click to close tab
-        onMouseUp={e => e.button === 1 && closeTab(cx, source)}
+        onMouseUp={e => e.button === 1 && closeTab(source)}
         onContextMenu={e => this.onTabContextMenu(e, sourceId)}
         title={getFileURL(source, false)}
       >
@@ -238,7 +231,6 @@ const mapStateToProps = (state, { source }) => {
   const selectedSource = getSelectedSource(state);
 
   return {
-    cx: getContext(state),
     tabSources: getSourcesForTabs(state),
     selectedSource: selectedSource,
     activeSearch: getActiveSearch(state),

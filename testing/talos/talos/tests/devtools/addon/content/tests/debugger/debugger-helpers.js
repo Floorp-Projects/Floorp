@@ -179,8 +179,7 @@ function selectSource(dbg, url) {
   dump(`Selecting source: ${url}\n`);
   const line = 1;
   const source = findSource(dbg, url);
-  const cx = dbg.selectors.getContext(dbg.getState());
-  dbg.actions.selectLocation(cx, { sourceId: source.id, line });
+  dbg.actions.selectLocation({ sourceId: source.id, line });
   return waitForState(
     dbg,
     state => {
@@ -247,9 +246,7 @@ async function addBreakpoint(dbg, line, url) {
   };
 
   await selectSource(dbg, url);
-
-  const cx = dbg.selectors.getContext(dbg.getState());
-  await dbg.actions.addBreakpoint(cx, location);
+  await dbg.actions.addBreakpoint(location);
 }
 exports.addBreakpoint = addBreakpoint;
 
@@ -261,8 +258,7 @@ async function removeBreakpoints(dbg, line, url) {
     dbg,
     state => dbg.selectors.getBreakpointCount(state) === 0
   );
-  const cx = dbg.selectors.getContext(dbg.getState());
-  await dbg.actions.removeBreakpoints(cx, breakpoints);
+  await dbg.actions.removeBreakpoints(breakpoints);
   return onBreakpointsCleared;
 }
 exports.removeBreakpoints = removeBreakpoints;
@@ -277,16 +273,14 @@ exports.pauseDebugger = pauseDebugger;
 
 async function resume(dbg) {
   const onResumed = waitForResumed(dbg);
-  const cx = dbg.selectors.getThreadContext(dbg.getState());
-  dbg.actions.resume(cx);
+  dbg.actions.resume();
   return onResumed;
 }
 exports.resume = resume;
 
 async function step(dbg, stepType) {
   const resumed = waitForResumed(dbg);
-  const cx = dbg.selectors.getThreadContext(dbg.getState());
-  dbg.actions[stepType](cx);
+  dbg.actions[stepType]();
   await resumed;
   return waitForPaused(dbg);
 }

@@ -12,21 +12,22 @@ import Popup from "./Popup";
 import {
   getPreview,
   getSelectedSource,
-  getThreadContext
+  getIsPaused,
+  getCurrentThread
 } from "../../../selectors";
 import actions from "../../../actions";
 import { toEditorRange } from "../../../utils/editor";
 
-import type { Source, ThreadContext } from "../../../types";
+import type { Source } from "../../../types";
 
 import type { Preview as PreviewType } from "../../../reducers/ast";
 
 type Props = {
-  cx: ThreadContext,
   editor: any,
   editorRef: ?HTMLDivElement,
   selectedSource: Source,
   preview: PreviewType,
+  isPaused: boolean,
   clearPreview: typeof actions.clearPreview,
   setPopupObjectProperties: typeof actions.setPopupObjectProperties,
   addExpression: typeof actions.addExpression,
@@ -112,41 +113,40 @@ class Preview extends PureComponent<Props, State> {
   }
 
   onTokenEnter = ({ target, tokenPos }) => {
-    const { cx, updatePreview, editor } = this.props;
-    if (cx.isPaused) {
-      updatePreview(cx, target, tokenPos, editor.codeMirror);
+    if (this.props.isPaused) {
+      this.props.updatePreview(target, tokenPos, this.props.editor.codeMirror);
     }
   };
 
   onTokenLeave = e => {
-    if (this.props.cx.isPaused && !inPopup(e)) {
-      this.props.clearPreview(this.props.cx);
+    if (this.props.isPaused && !inPopup(e)) {
+      this.props.clearPreview();
     }
   };
 
   onMouseUp = () => {
-    if (this.props.cx.isPaused) {
+    if (this.props.isPaused) {
       this.setState({ selecting: false });
       return true;
     }
   };
 
   onMouseDown = () => {
-    if (this.props.cx.isPaused) {
+    if (this.props.isPaused) {
       this.setState({ selecting: true });
       return true;
     }
   };
 
   onScroll = () => {
-    if (this.props.cx.isPaused) {
-      this.props.clearPreview(this.props.cx);
+    if (this.props.isPaused) {
+      this.props.clearPreview();
     }
   };
 
   onClose = e => {
-    if (this.props.cx.isPaused) {
-      this.props.clearPreview(this.props.cx);
+    if (this.props.isPaused) {
+      this.props.clearPreview();
     }
   };
 
@@ -183,8 +183,8 @@ class Preview extends PureComponent<Props, State> {
 }
 
 const mapStateToProps = state => ({
-  cx: getThreadContext(state),
   preview: getPreview(state),
+  isPaused: getIsPaused(state, getCurrentThread(state)),
   selectedSource: getSelectedSource(state)
 });
 

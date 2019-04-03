@@ -18,14 +18,14 @@ import { selectSpecificLocation } from "../sources";
 import {
   getSource,
   getSourceFromId,
+  getSourceThreads,
   getSourceByURL,
-  getSelectedLocation,
-  getThreadContext
+  getSelectedLocation
 } from "../../selectors";
 
 import type { Action, ThunkArgs } from "../types";
 import { selectSource } from "./select";
-import type { JsSource, Source, Context } from "../../types";
+import type { JsSource, Source } from "../../types";
 
 export async function prettyPrintSource(
   sourceMaps: any,
@@ -51,7 +51,7 @@ export async function prettyPrintSource(
   };
 }
 
-export function createPrettySource(cx: Context, sourceId: string) {
+export function createPrettySource(sourceId: string) {
   return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
     const source = getSourceFromId(getState(), sourceId);
     const url = getPrettySourceURL(source.url);
@@ -72,8 +72,8 @@ export function createPrettySource(cx: Context, sourceId: string) {
       actors: []
     };
 
-    dispatch(({ type: "ADD_SOURCE", cx, source: prettySource }: Action));
-    await dispatch(selectSource(cx, prettySource.id));
+    dispatch(({ type: "ADD_SOURCE", source: prettySource }: Action));
+    await dispatch(selectSource(prettySource.id));
 
     return prettySource;
   };
@@ -91,7 +91,7 @@ export function createPrettySource(cx: Context, sourceId: string) {
  *          A promise that resolves to [aSource, prettyText] or rejects to
  *          [aSource, error].
  */
-export function togglePrettyPrint(cx: Context, sourceId: string) {
+export function togglePrettyPrint(sourceId: string) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const source = getSource(getState(), sourceId);
     if (!source) {
@@ -103,7 +103,7 @@ export function togglePrettyPrint(cx: Context, sourceId: string) {
     }
 
     if (!isLoaded(source)) {
-      await dispatch(loadSourceText(cx, source));
+      await dispatch(loadSourceText(source));
     }
 
     assert(
@@ -123,21 +123,21 @@ export function togglePrettyPrint(cx: Context, sourceId: string) {
     if (prettySource) {
       const _sourceId = prettySource.id;
       return dispatch(
-        selectSpecificLocation(cx, { ...options.location, sourceId: _sourceId })
+        selectSpecificLocation({ ...options.location, sourceId: _sourceId })
       );
     }
 
-    const newPrettySource = await dispatch(createPrettySource(cx, sourceId));
+    const newPrettySource = await dispatch(createPrettySource(sourceId));
 
-    await dispatch(remapBreakpoints(cx, sourceId));
+    await dispatch(remapBreakpoints(sourceId));
 
-    const threadcx = getThreadContext(getState());
-    await dispatch(mapFrames(threadcx));
+    const threads = getSourceThreads(getState(), source);
+    await Promise.all(threads.map(thread => dispatch(mapFrames(thread))));
 
-    await dispatch(setSymbols(cx, newPrettySource.id));
+    await dispatch(setSymbols(newPrettySource.id));
 
     dispatch(
-      selectSpecificLocation(cx, {
+      selectSpecificLocation({
         ...options.location,
         sourceId: newPrettySource.id
       })

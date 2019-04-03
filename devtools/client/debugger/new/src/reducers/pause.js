@@ -25,9 +25,7 @@ import type {
   ChromeFrame,
   FrameId,
   MappedLocation,
-  ThreadId,
-  Context,
-  ThreadContext
+  ThreadId
 } from "../types";
 
 export type Command =
@@ -75,8 +73,7 @@ type ThreadPauseState = {
 
 // Pause state describing all threads.
 export type PauseState = {
-  cx: Context,
-  threadcx: ThreadContext,
+  currentThread: ThreadId,
   canRewind: boolean,
   threads: { [ThreadId]: ThreadPauseState },
   skipPausing: boolean,
@@ -85,25 +82,15 @@ export type PauseState = {
   shouldPauseOnCaughtExceptions: boolean
 };
 
-function createPauseState(thread: ThreadId = "UnknownThread") {
-  return {
-    cx: {
-      navigateCounter: 0
-    },
-    threadcx: {
-      navigateCounter: 0,
-      thread,
-      isPaused: false,
-      pauseCounter: 0
-    },
-    threads: {},
-    canRewind: false,
-    skipPausing: prefs.skipPausing,
-    mapScopes: prefs.mapScopes,
-    shouldPauseOnExceptions: prefs.pauseOnExceptions,
-    shouldPauseOnCaughtExceptions: prefs.pauseOnCaughtExceptions
-  };
-}
+export const createPauseState = (): PauseState => ({
+  currentThread: "UnknownThread",
+  threads: {},
+  canRewind: false,
+  skipPausing: prefs.skipPausing,
+  mapScopes: prefs.mapScopes,
+  shouldPauseOnExceptions: prefs.pauseOnExceptions,
+  shouldPauseOnCaughtExceptions: prefs.pauseOnCaughtExceptions
+});
 
 const resumedPauseState = {
   frames: null,
@@ -159,17 +146,8 @@ function update(
   };
 
   switch (action.type) {
-    case "SELECT_THREAD": {
-      return {
-        ...state,
-        threadcx: {
-          ...state.threadcx,
-          thread: action.thread,
-          isPaused: !!threadState().frames,
-          pauseCounter: state.threadcx.pauseCounter + 1
-        }
-      };
-    }
+    case "SELECT_THREAD":
+      return { ...state, currentThread: action.thread };
 
     case "PAUSED": {
       const { thread, selectedFrameId, frames, loadedObjects, why } = action;
@@ -180,15 +158,7 @@ function update(
         objectMap[obj.value.objectId] = obj;
       });
 
-      state = {
-        ...state,
-        threadcx: {
-          ...state.threadcx,
-          pauseCounter: state.threadcx.pauseCounter + 1,
-          thread,
-          isPaused: true
-        }
-      };
+      state = { ...state, currentThread: thread };
       return updateThreadState({
         isWaitingOnBreak: false,
         selectedFrameId,
@@ -271,7 +241,8 @@ function update(
 
     case "CONNECT":
       return {
-        ...createPauseState(action.mainThread.actor),
+        ...createPauseState(),
+        currentThread: action.mainThread.actor,
         canRewind: action.canRewind
       };
 
@@ -302,41 +273,25 @@ function update(
       }
       return updateThreadState({ command: null });
 
-    case "RESUME": {
-      if (action.thread == state.threadcx.thread) {
-        state = {
-          ...state,
-          threadcx: {
-            ...state.threadcx,
-            pauseCounter: state.threadcx.pauseCounter + 1,
-            isPaused: false
-          }
-        };
+    case "RESUME":
+      // Workaround for threads resuming before the initial connection.
+      if (!action.thread && !state.currentThread) {
+        return state;
       }
       return updateThreadState({
         ...resumedPauseState,
         wasStepping: !!action.wasStepping
       });
-    }
 
     case "EVALUATE_EXPRESSION":
       return updateThreadState({
         command: action.status === "start" ? "expression" : null
       });
 
-    case "NAVIGATE": {
-      const navigateCounter = state.cx.navigateCounter + 1;
+    case "NAVIGATE":
       return {
         ...state,
-        cx: {
-          navigateCounter
-        },
-        threadcx: {
-          navigateCounter,
-          thread: action.mainThread.actor,
-          pauseCounter: 0,
-          isPaused: false
-        },
+        currentThread: action.mainThread.actor,
         threads: {
           [action.mainThread.actor]: {
             ...state.threads[action.mainThread.actor],
@@ -344,7 +299,6 @@ function update(
           }
         }
       };
-    }
 
     case "TOGGLE_SKIP_PAUSING": {
       const { skipPausing } = action;
@@ -394,14 +348,6 @@ function getPauseLocation(state, action) {
 // (right now) to type those wrapped functions.
 type OuterState = State;
 
-export function getContext(state: OuterState) {
-  return state.pause.cx;
-}
-
-export function getThreadContext(state: OuterState) {
-  return state.pause.threadcx;
-}
-
 export function getAllPopupObjectProperties(
   state: OuterState,
   thread: ThreadId
@@ -428,7 +374,7 @@ export function isStepping(state: OuterState, thread: ThreadId) {
 }
 
 export function getCurrentThread(state: OuterState) {
-  return getThreadContext(state).thread;
+  return state.pause.currentThread;
 }
 
 export function getIsPaused(state: OuterState, thread: ThreadId) {

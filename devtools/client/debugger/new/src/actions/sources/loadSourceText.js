@@ -20,7 +20,7 @@ import { Telemetry } from "devtools-modules";
 
 import type { ThunkArgs } from "../types";
 
-import type { Source, Context } from "../../types";
+import type { Source } from "../../types";
 
 const requests = new Map();
 
@@ -68,7 +68,6 @@ async function loadSource(
 }
 
 async function loadSourceTextPromise(
-  cx: Context,
   source: Source,
   epoch: number,
   { dispatch, getState, client, sourceMaps }: ThunkArgs
@@ -91,7 +90,7 @@ async function loadSourceTextPromise(
 
   if (!newSource.isWasm && isLoaded(newSource)) {
     parser.setSource(newSource);
-    dispatch(setBreakpointPositions(cx, newSource.id));
+    dispatch(setBreakpointPositions(newSource.id));
   }
 
   return newSource;
@@ -101,7 +100,7 @@ async function loadSourceTextPromise(
  * @memberof actions/sources
  * @static
  */
-export function loadSourceText(cx: Context, inputSource: ?Source) {
+export function loadSourceText(inputSource: ?Source) {
   return async (thunkArgs: ThunkArgs) => {
     if (!inputSource) {
       return;
@@ -118,7 +117,7 @@ export function loadSourceText(cx: Context, inputSource: ?Source) {
     if (!promise) {
       promise = (async () => {
         try {
-          return await loadSourceTextPromise(cx, source, epoch, thunkArgs);
+          return await loadSourceTextPromise(source, epoch, thunkArgs);
         } catch (e) {
           // TODO: This swallows errors for now. Ideally we would get rid of
           // this once we have a better handle on our async state management.

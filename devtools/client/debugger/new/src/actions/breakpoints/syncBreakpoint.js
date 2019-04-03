@@ -24,18 +24,14 @@ import type {
   SourceLocation,
   ASTLocation,
   PendingBreakpoint,
-  SourceId,
-  Context
+  SourceId
 } from "../../types";
 
 async function findBreakpointPosition(
-  cx: Context,
   { getState, dispatch },
   location: SourceLocation
 ) {
-  const positions = await dispatch(
-    setBreakpointPositions(cx, location.sourceId)
-  );
+  const positions = await dispatch(setBreakpointPositions(location.sourceId));
   const position = findPosition(positions, location);
   return position && position.generatedLocation;
 }
@@ -79,7 +75,6 @@ async function findNewLocation(
 //   to the reducer for the new location corresponding to the original location
 //   in the pending breakpoint.
 export function syncBreakpoint(
-  cx: Context,
   sourceId: SourceId,
   pendingBreakpoint: PendingBreakpoint
 ) {
@@ -126,7 +121,6 @@ export function syncBreakpoint(
       }
       return dispatch(
         addBreakpoint(
-          cx,
           sourceGeneratedLocation,
           pendingBreakpoint.options,
           pendingBreakpoint.disabled
@@ -143,7 +137,6 @@ export function syncBreakpoint(
     );
 
     const newGeneratedLocation = await findBreakpointPosition(
-      cx,
       thunkArgs,
       newLocation
     );
@@ -165,7 +158,7 @@ export function syncBreakpoint(
     if (!isSameLocation) {
       const bp = getBreakpoint(getState(), sourceGeneratedLocation);
       if (bp) {
-        dispatch(removeBreakpoint(cx, bp));
+        dispatch(removeBreakpoint(bp));
       } else {
         const breakpointLocation = makeBreakpointLocation(
           getState(),
@@ -177,7 +170,6 @@ export function syncBreakpoint(
 
     return dispatch(
       addBreakpoint(
-        cx,
         newLocation,
         pendingBreakpoint.options,
         pendingBreakpoint.disabled

@@ -6,11 +6,10 @@
 
 import actions from "../../../actions";
 import { bindActionCreators } from "redux";
-import type { SourceLocation, Breakpoint, Context } from "../../../types";
+import type { SourceLocation, Breakpoint } from "../../../types";
 import { features } from "../../../utils/prefs";
 
 export const addBreakpointItem = (
-  cx: Context,
   location: SourceLocation,
   breakpointActions: BreakpointItemActions
 ) => ({
@@ -18,12 +17,11 @@ export const addBreakpointItem = (
   label: L10N.getStr("editor.addBreakpoint"),
   accesskey: L10N.getStr("shortcuts.toggleBreakpoint.accesskey"),
   disabled: false,
-  click: () => breakpointActions.addBreakpoint(cx, location),
+  click: () => breakpointActions.addBreakpoint(location),
   accelerator: L10N.getStr("toggleBreakpoint.key")
 });
 
 export const removeBreakpointItem = (
-  cx: Context,
   breakpoint: Breakpoint,
   breakpointActions: BreakpointItemActions
 ) => ({
@@ -31,7 +29,7 @@ export const removeBreakpointItem = (
   label: L10N.getStr("editor.removeBreakpoint"),
   accesskey: L10N.getStr("shortcuts.toggleBreakpoint.accesskey"),
   disabled: false,
-  click: () => breakpointActions.removeBreakpoint(cx, breakpoint),
+  click: () => breakpointActions.removeBreakpoint(breakpoint),
   accelerator: L10N.getStr("toggleBreakpoint.key")
 });
 
@@ -110,14 +108,13 @@ export const logPointItem = (
 };
 
 export const toggleDisabledBreakpointItem = (
-  cx: Context,
   breakpoint: Breakpoint,
   breakpointActions: BreakpointItemActions
 ) => {
   return {
     accesskey: L10N.getStr("editor.disableBreakpoint.accesskey"),
     disabled: false,
-    click: () => breakpointActions.toggleDisabledBreakpoint(cx, breakpoint),
+    click: () => breakpointActions.toggleDisabledBreakpoint(breakpoint),
     ...(breakpoint.disabled
       ? {
           id: "node-menu-enable-breakpoint",
@@ -131,30 +128,21 @@ export const toggleDisabledBreakpointItem = (
 };
 
 export function breakpointItems(
-  cx: Context,
   breakpoint: Breakpoint,
   breakpointActions: BreakpointItemActions
 ) {
   const items = [
-    removeBreakpointItem(cx, breakpoint, breakpointActions),
-    toggleDisabledBreakpointItem(cx, breakpoint, breakpointActions)
+    removeBreakpointItem(breakpoint, breakpointActions),
+    toggleDisabledBreakpointItem(breakpoint, breakpointActions)
   ];
 
   if (features.columnBreakpoints) {
     items.push(
       { type: "separator" },
-      removeBreakpointsOnLineItem(cx, breakpoint.location, breakpointActions),
+      removeBreakpointsOnLineItem(breakpoint.location, breakpointActions),
       breakpoint.disabled
-        ? enableBreakpointsOnLineItem(
-            cx,
-            breakpoint.location,
-            breakpointActions
-          )
-        : disableBreakpointsOnLineItem(
-            cx,
-            breakpoint.location,
-            breakpointActions
-          ),
+        ? enableBreakpointsOnLineItem(breakpoint.location, breakpointActions)
+        : disableBreakpointsOnLineItem(breakpoint.location, breakpointActions),
       { type: "separator" }
     );
   }
@@ -169,12 +157,11 @@ export function breakpointItems(
 }
 
 export function createBreakpointItems(
-  cx: Context,
   location: SourceLocation,
   breakpointActions: BreakpointItemActions
 ) {
   const items = [
-    addBreakpointItem(cx, location, breakpointActions),
+    addBreakpointItem(location, breakpointActions),
     addConditionalBreakpointItem(location, breakpointActions)
   ];
 
@@ -186,7 +173,6 @@ export function createBreakpointItems(
 
 // ToDo: Only enable if there are more than one breakpoints on a line?
 export const removeBreakpointsOnLineItem = (
-  cx: Context,
   location: SourceLocation,
   breakpointActions: BreakpointItemActions
 ) => ({
@@ -195,15 +181,10 @@ export const removeBreakpointsOnLineItem = (
   accesskey: L10N.getStr("breakpointMenuItem.removeAllAtLine.accesskey"),
   disabled: false,
   click: () =>
-    breakpointActions.removeBreakpointsAtLine(
-      cx,
-      location.sourceId,
-      location.line
-    )
+    breakpointActions.removeBreakpointsAtLine(location.sourceId, location.line)
 });
 
 export const enableBreakpointsOnLineItem = (
-  cx: Context,
   location: SourceLocation,
   breakpointActions: BreakpointItemActions
 ) => ({
@@ -212,15 +193,10 @@ export const enableBreakpointsOnLineItem = (
   accesskey: L10N.getStr("breakpointMenuItem.enableAllAtLine.accesskey"),
   disabled: false,
   click: () =>
-    breakpointActions.enableBreakpointsAtLine(
-      cx,
-      location.sourceId,
-      location.line
-    )
+    breakpointActions.enableBreakpointsAtLine(location.sourceId, location.line)
 });
 
 export const disableBreakpointsOnLineItem = (
-  cx: Context,
   location: SourceLocation,
   breakpointActions: BreakpointItemActions
 ) => ({
@@ -229,11 +205,7 @@ export const disableBreakpointsOnLineItem = (
   accesskey: L10N.getStr("breakpointMenuItem.disableAllAtLine.accesskey"),
   disabled: false,
   click: () =>
-    breakpointActions.disableBreakpointsAtLine(
-      cx,
-      location.sourceId,
-      location.line
-    )
+    breakpointActions.disableBreakpointsAtLine(location.sourceId, location.line)
 });
 
 export type BreakpointItemActions = {

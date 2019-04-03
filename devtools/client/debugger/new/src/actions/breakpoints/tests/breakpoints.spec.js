@@ -23,7 +23,7 @@ function mockClient(positionsResponse = {}) {
 
 describe("breakpoints", () => {
   it("should add a breakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "2": [1] }));
+    const { dispatch, getState } = createStore(mockClient({ "2": [1] }));
     const loc1 = {
       sourceId: "a",
       line: 2,
@@ -33,16 +33,16 @@ describe("breakpoints", () => {
 
     const source = makeSource("a");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(cx, source));
+    await dispatch(actions.loadSourceText(source));
     await dispatch(
-      actions.setSelectedLocation(cx, source, {
+      actions.setSelectedLocation(source, {
         line: 1,
         column: 1,
         sourceId: source.id
       })
     );
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
+    await dispatch(actions.addBreakpoint(loc1));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
     const bp = selectors.getBreakpoint(getState(), loc1);
@@ -54,7 +54,7 @@ describe("breakpoints", () => {
   });
 
   it("should not show a breakpoint that does not have text", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState } = createStore(mockClient({ "5": [1] }));
     const loc1 = {
       sourceId: "a",
       line: 5,
@@ -63,16 +63,16 @@ describe("breakpoints", () => {
     };
     const source = makeSource("a");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(cx, source));
+    await dispatch(actions.loadSourceText(source));
     await dispatch(
-      actions.setSelectedLocation(cx, source, {
+      actions.setSelectedLocation(source, {
         line: 1,
         column: 1,
         sourceId: source.id
       })
     );
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
+    await dispatch(actions.addBreakpoint(loc1));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
     const bp = selectors.getBreakpoint(getState(), loc1);
@@ -81,7 +81,7 @@ describe("breakpoints", () => {
   });
 
   it("should show a disabled breakpoint that does not have text", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState } = createStore(mockClient({ "5": [1] }));
     const loc1 = {
       sourceId: "a",
       line: 5,
@@ -90,22 +90,22 @@ describe("breakpoints", () => {
     };
     const source = makeSource("a");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(cx, source));
+    await dispatch(actions.loadSourceText(source));
     await dispatch(
-      actions.setSelectedLocation(cx, source, {
+      actions.setSelectedLocation(source, {
         line: 1,
         column: 1,
         sourceId: source.id
       })
     );
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
+    await dispatch(actions.addBreakpoint(loc1));
     const breakpoint = selectors.getBreakpoint(getState(), loc1);
     if (!breakpoint) {
       throw new Error("no breakpoint");
     }
 
-    await dispatch(actions.disableBreakpoint(cx, breakpoint));
+    await dispatch(actions.disableBreakpoint(breakpoint));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
     const bp = selectors.getBreakpoint(getState(), loc1);
@@ -114,7 +114,7 @@ describe("breakpoints", () => {
   });
 
   it("should not re-add a breakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState } = createStore(mockClient({ "5": [1] }));
     const loc1 = {
       sourceId: "a",
       line: 5,
@@ -124,26 +124,26 @@ describe("breakpoints", () => {
 
     const source = makeSource("a");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(cx, source));
+    await dispatch(actions.loadSourceText(source));
     await dispatch(
-      actions.setSelectedLocation(cx, source, {
+      actions.setSelectedLocation(source, {
         line: 1,
         column: 1,
         sourceId: source.id
       })
     );
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
+    await dispatch(actions.addBreakpoint(loc1));
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
     const bp = selectors.getBreakpoint(getState(), loc1);
     expect(bp && bp.location).toEqual(loc1);
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
+    await dispatch(actions.addBreakpoint(loc1));
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
   });
 
   it("should remove a breakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(
+    const { dispatch, getState } = createStore(
       mockClient({ "5": [1], "6": [2] })
     );
 
@@ -163,34 +163,34 @@ describe("breakpoints", () => {
 
     const aSource = makeSource("a");
     await dispatch(actions.newSource(aSource));
-    await dispatch(actions.loadSourceText(cx, aSource));
+    await dispatch(actions.loadSourceText(aSource));
 
     const bSource = makeSource("b");
     await dispatch(actions.newSource(bSource));
-    await dispatch(actions.loadSourceText(cx, bSource));
+    await dispatch(actions.loadSourceText(bSource));
 
     await dispatch(
-      actions.setSelectedLocation(cx, aSource, {
+      actions.setSelectedLocation(aSource, {
         line: 1,
         column: 1,
         sourceId: aSource.id
       })
     );
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
-    await dispatch(actions.addBreakpoint(cx, loc2));
+    await dispatch(actions.addBreakpoint(loc1));
+    await dispatch(actions.addBreakpoint(loc2));
 
     const bp = selectors.getBreakpoint(getState(), loc1);
     if (!bp) {
       throw new Error("no bp");
     }
-    await dispatch(actions.removeBreakpoint(cx, bp));
+    await dispatch(actions.removeBreakpoint(bp));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
   });
 
   it("should disable a breakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(
+    const { dispatch, getState } = createStore(
       mockClient({ "5": [1], "6": [2] })
     );
 
@@ -210,28 +210,28 @@ describe("breakpoints", () => {
 
     const aSource = makeSource("a");
     await dispatch(actions.newSource(aSource));
-    await dispatch(actions.loadSourceText(cx, aSource));
+    await dispatch(actions.loadSourceText(aSource));
 
     const bSource = makeSource("b");
     await dispatch(actions.newSource(bSource));
-    await dispatch(actions.loadSourceText(cx, bSource));
+    await dispatch(actions.loadSourceText(bSource));
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
-    await dispatch(actions.addBreakpoint(cx, loc2));
+    await dispatch(actions.addBreakpoint(loc1));
+    await dispatch(actions.addBreakpoint(loc2));
 
     const breakpoint = selectors.getBreakpoint(getState(), loc1);
     if (!breakpoint) {
       throw new Error("no breakpoint");
     }
 
-    await dispatch(actions.disableBreakpoint(cx, breakpoint));
+    await dispatch(actions.disableBreakpoint(breakpoint));
 
     const bp = selectors.getBreakpoint(getState(), loc1);
     expect(bp && bp.disabled).toBe(true);
   });
 
   it("should enable breakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(
+    const { dispatch, getState } = createStore(
       mockClient({ "5": [1], "6": [2] })
     );
     const loc = {
@@ -243,15 +243,15 @@ describe("breakpoints", () => {
 
     const aSource = makeSource("a");
     await dispatch(actions.newSource(aSource));
-    await dispatch(actions.loadSourceText(cx, aSource));
+    await dispatch(actions.loadSourceText(aSource));
 
-    await dispatch(actions.addBreakpoint(cx, loc));
+    await dispatch(actions.addBreakpoint(loc));
     let bp = selectors.getBreakpoint(getState(), loc);
     if (!bp) {
       throw new Error("no breakpoint");
     }
 
-    await dispatch(actions.disableBreakpoint(cx, bp));
+    await dispatch(actions.disableBreakpoint(bp));
 
     bp = selectors.getBreakpoint(getState(), loc);
     if (!bp) {
@@ -260,14 +260,14 @@ describe("breakpoints", () => {
 
     expect(bp && bp.disabled).toBe(true);
 
-    await dispatch(actions.enableBreakpoint(cx, bp));
+    await dispatch(actions.enableBreakpoint(bp));
 
     bp = selectors.getBreakpoint(getState(), loc);
     expect(bp && !bp.disabled).toBe(true);
   });
 
   it("should toggle all the breakpoints", async () => {
-    const { dispatch, getState, cx } = createStore(
+    const { dispatch, getState } = createStore(
       mockClient({ "5": [1], "6": [2] })
     );
 
@@ -287,16 +287,16 @@ describe("breakpoints", () => {
 
     const aSource = makeSource("a");
     await dispatch(actions.newSource(aSource));
-    await dispatch(actions.loadSourceText(cx, aSource));
+    await dispatch(actions.loadSourceText(aSource));
 
     const bSource = makeSource("b");
     await dispatch(actions.newSource(bSource));
-    await dispatch(actions.loadSourceText(cx, bSource));
+    await dispatch(actions.loadSourceText(bSource));
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
-    await dispatch(actions.addBreakpoint(cx, loc2));
+    await dispatch(actions.addBreakpoint(loc1));
+    await dispatch(actions.addBreakpoint(loc2));
 
-    await dispatch(actions.toggleAllBreakpoints(cx, true));
+    await dispatch(actions.toggleAllBreakpoints(true));
 
     let bp1 = selectors.getBreakpoint(getState(), loc1);
     let bp2 = selectors.getBreakpoint(getState(), loc2);
@@ -304,7 +304,7 @@ describe("breakpoints", () => {
     expect(bp1 && bp1.disabled).toBe(true);
     expect(bp2 && bp2.disabled).toBe(true);
 
-    await dispatch(actions.toggleAllBreakpoints(cx, false));
+    await dispatch(actions.toggleAllBreakpoints(false));
 
     bp1 = selectors.getBreakpoint(getState(), loc1);
     bp2 = selectors.getBreakpoint(getState(), loc2);
@@ -316,19 +316,19 @@ describe("breakpoints", () => {
     const loc = { sourceId: "foo1", line: 5, column: 1 };
     const getBp = () => selectors.getBreakpoint(getState(), loc);
 
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState } = createStore(mockClient({ "5": [1] }));
 
     const source = makeSource("foo1");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(cx, source));
+    await dispatch(actions.loadSourceText(source));
 
-    await dispatch(actions.selectLocation(cx, loc));
+    await dispatch(actions.selectLocation(loc));
 
-    await dispatch(actions.toggleBreakpointAtLine(cx, 5));
+    await dispatch(actions.toggleBreakpointAtLine(5));
     const bp = getBp();
     expect(bp && !bp.disabled).toBe(true);
 
-    await dispatch(actions.toggleBreakpointAtLine(cx, 5));
+    await dispatch(actions.toggleBreakpointAtLine(5));
     expect(getBp()).toBe(undefined);
   });
 
@@ -336,28 +336,28 @@ describe("breakpoints", () => {
     const location = { sourceId: "foo1", line: 5, column: 1 };
     const getBp = () => selectors.getBreakpoint(getState(), location);
 
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState } = createStore(mockClient({ "5": [1] }));
 
     const source = makeSource("foo1");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(cx, source));
+    await dispatch(actions.loadSourceText(source));
 
-    await dispatch(actions.selectLocation(cx, { sourceId: "foo1", line: 1 }));
+    await dispatch(actions.selectLocation({ sourceId: "foo1", line: 1 }));
 
-    await dispatch(actions.toggleBreakpointAtLine(cx, 5));
+    await dispatch(actions.toggleBreakpointAtLine(5));
     let bp = getBp();
     expect(bp && !bp.disabled).toBe(true);
     bp = getBp();
     if (!bp) {
       throw new Error("no bp");
     }
-    await dispatch(actions.toggleDisabledBreakpoint(cx, bp));
+    await dispatch(actions.toggleDisabledBreakpoint(bp));
     bp = getBp();
     expect(bp && bp.disabled).toBe(true);
   });
 
   it("should set the breakpoint condition", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState } = createStore(mockClient({ "5": [1] }));
 
     const loc = {
       sourceId: "a",
@@ -368,15 +368,15 @@ describe("breakpoints", () => {
 
     const source = makeSource("a");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(cx, source));
+    await dispatch(actions.loadSourceText(source));
 
-    await dispatch(actions.addBreakpoint(cx, loc));
+    await dispatch(actions.addBreakpoint(loc));
 
     let bp = selectors.getBreakpoint(getState(), loc);
     expect(bp && bp.options.condition).toBe(undefined);
 
     await dispatch(
-      actions.setBreakpointOptions(cx, loc, {
+      actions.setBreakpointOptions(loc, {
         condition: "const foo = 0",
         getTextForLine: () => {}
       })
@@ -387,7 +387,7 @@ describe("breakpoints", () => {
   });
 
   it("should set the condition and enable a breakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState } = createStore(mockClient({ "5": [1] }));
 
     const loc = {
       sourceId: "a",
@@ -398,21 +398,21 @@ describe("breakpoints", () => {
 
     const source = makeSource("a");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(cx, source));
+    await dispatch(actions.loadSourceText(source));
 
-    await dispatch(actions.addBreakpoint(cx, loc));
+    await dispatch(actions.addBreakpoint(loc));
     let bp = selectors.getBreakpoint(getState(), loc);
     if (!bp) {
       throw new Error("no breakpoint");
     }
 
-    await dispatch(actions.disableBreakpoint(cx, bp));
+    await dispatch(actions.disableBreakpoint(bp));
 
     bp = selectors.getBreakpoint(getState(), loc);
     expect(bp && bp.options.condition).toBe(undefined);
 
     await dispatch(
-      actions.setBreakpointOptions(cx, loc, {
+      actions.setBreakpointOptions(loc, {
         condition: "const foo = 0",
         getTextForLine: () => {}
       })
@@ -425,7 +425,7 @@ describe("breakpoints", () => {
   });
 
   it("should remap breakpoints on pretty print", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "1": [0] }));
+    const { dispatch, getState } = createStore(mockClient({ "1": [0] }));
 
     const loc = {
       sourceId: "a.js",
@@ -436,10 +436,10 @@ describe("breakpoints", () => {
 
     const source = makeSource("a.js");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(cx, source));
+    await dispatch(actions.loadSourceText(source));
 
-    await dispatch(actions.addBreakpoint(cx, loc));
-    await dispatch(actions.togglePrettyPrint(cx, "a.js"));
+    await dispatch(actions.addBreakpoint(loc));
+    await dispatch(actions.togglePrettyPrint("a.js"));
 
     const breakpoint = selectors.getBreakpointsList(getState())[0];
 

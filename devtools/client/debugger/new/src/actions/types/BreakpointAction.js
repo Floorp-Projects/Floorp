@@ -9,8 +9,7 @@ import type {
   SourceLocation,
   XHRBreakpoint,
   Source,
-  BreakpointPositions,
-  Context
+  BreakpointPositions
 } from "../../types";
 
 import type { PromiseAction } from "../utils/middleware/promise";
@@ -42,17 +41,14 @@ export type BreakpointAction =
     |}>
   | {|
       +type: "SET_BREAKPOINT",
-      +cx: Context,
       +breakpoint: Breakpoint
     |}
   | {|
       +type: "REMOVE_BREAKPOINT",
-      +cx: Context,
       +location: SourceLocation
     |}
   | {|
       type: "ADD_BREAKPOINT_POSITIONS",
-      +cx: Context,
       positions: BreakpointPositions,
       source: Source
     |};
