@@ -32,8 +32,7 @@ interface AudioContext : BaseAudioContext {
     [NewObject, Throws]
     MediaStreamAudioSourceNode createMediaStreamSource(MediaStream mediaStream);
 
-    [NewObject, Throws]
-    MediaStreamTrackAudioSourceNode createMediaStreamTrackSource(MediaStreamTrack mediaStreamTrack);
+    // Bug 1324548: MediaStreamTrackAudioSourceNode createMediaStreamTrackSource (AudioMediaStreamTrack mediaStreamTrack);
 
     [NewObject, Throws]
     MediaStreamAudioDestinationNode createMediaStreamDestination();

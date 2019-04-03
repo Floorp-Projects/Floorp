@@ -67,8 +67,6 @@ class IIRFilterNode;
 class MediaElementAudioSourceNode;
 class MediaStreamAudioDestinationNode;
 class MediaStreamAudioSourceNode;
-class MediaStreamTrack;
-class MediaStreamTrackAudioSourceNode;
 class OscillatorNode;
 class PannerNode;
 class ScriptProcessorNode;
@@ -248,9 +246,6 @@ class AudioContext final : public DOMEventTargetHelper,
       HTMLMediaElement& aMediaElement, ErrorResult& aRv);
   already_AddRefed<MediaStreamAudioSourceNode> CreateMediaStreamSource(
       DOMMediaStream& aMediaStream, ErrorResult& aRv);
-  already_AddRefed<MediaStreamTrackAudioSourceNode>
-  CreateMediaStreamTrackSource(MediaStreamTrack& aMediaStreamTrack,
-                               ErrorResult& aRv);
 
   already_AddRefed<DelayNode> CreateDelay(double aMaxDelayTime,
                                           ErrorResult& aRv);
