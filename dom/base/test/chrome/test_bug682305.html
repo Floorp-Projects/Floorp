@@ -113,7 +113,7 @@ CustomProtocol.prototype = {
              .setSpec(spec)
              .finalize();
   },
-  newChannel: function newChannel2(URI, loadInfo) {
+  newChannel: function newChannel(URI, loadInfo) {
     return new CustomChannel(URI, loadInfo);
   },
   QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIProtocolHandler]),
