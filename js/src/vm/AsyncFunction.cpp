@@ -64,11 +64,9 @@ bool GlobalObject::initAsyncFunction(JSContext* cx,
 
 enum class ResumeKind { Normal, Throw };
 
-// Async Functions proposal 2.2 steps 3.f, 3.g.
-// Async Functions proposal 2.2 steps 3.d-e, 3.g.
-// Implemented in js/src/builtin/Promise.cpp
-
-// Async Functions proposal 2.2 steps 3-8, 2.4 steps 2-7, 2.5 steps 2-7.
+// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// 6.2.3.1.1 Await Fulfilled Functions
+// 6.2.3.1.2 Await Rejected Functions
 static bool AsyncFunctionResume(JSContext* cx,
                                 Handle<AsyncFunctionGeneratorObject*> generator,
                                 ResumeKind kind, HandleValue valueOrReason) {
@@ -131,26 +129,19 @@ static bool AsyncFunctionResume(JSContext* cx,
   return true;
 }
 
-// Async Functions proposal 2.3 steps 1-8.
-// Implemented in js/src/builtin/Promise.cpp
-
-// Async Functions proposal 2.4.
+// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// 6.2.3.1.1 Await Fulfilled Functions
 MOZ_MUST_USE bool js::AsyncFunctionAwaitedFulfilled(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
     HandleValue value) {
-  // Step 1 (implicit).
-
-  // Steps 2-7.
   return AsyncFunctionResume(cx, generator, ResumeKind::Normal, value);
 }
 
-// Async Functions proposal 2.5.
+// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// 6.2.3.1.2 Await Rejected Functions
 MOZ_MUST_USE bool js::AsyncFunctionAwaitedRejected(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
     HandleValue reason) {
-  // Step 1 (implicit).
-
-  // Step 2-7.
   return AsyncFunctionResume(cx, generator, ResumeKind::Throw, reason);
 }
 
