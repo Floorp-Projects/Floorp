@@ -7,6 +7,7 @@
 #include "HttpLog.h"
 
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -102,6 +103,9 @@ nsresult HttpTrafficAnalyzer::IncrementHttpTransaction(
   LOG(("HttpTrafficAnalyzer::IncrementHttpTransaction [%s] [this=%p]\n",
        gKeyName[aCategory].get(), this));
 
+  Telemetry::AccumulateCategoricalKeyed(
+      gKeyName[aCategory],
+      Telemetry::LABELS_HTTP_TRAFFIC_ANALYSIS::Transaction);
   return NS_OK;
 }
 
@@ -114,6 +118,8 @@ nsresult HttpTrafficAnalyzer::IncrementHttpConnection(
   LOG(("HttpTrafficAnalyzer::IncrementHttpConnection [%s] [this=%p]\n",
        gKeyName[aCategory].get(), this));
 
+  Telemetry::AccumulateCategoricalKeyed(
+      gKeyName[aCategory], Telemetry::LABELS_HTTP_TRAFFIC_ANALYSIS::Connection);
   return NS_OK;
 }
 
@@ -145,6 +151,9 @@ nsresult HttpTrafficAnalyzer::IncrementHttpConnection(
   return NS_OK;
 }
 
+#define CLAMP_U32(num) \
+  Clamp<uint32_t>(num, 0, std::numeric_limits<uint32_t>::max())
+
 nsresult HttpTrafficAnalyzer::AccumulateHttpTransferredSize(
     HttpTrafficCategory aCategory, uint64_t aBytesRead, uint64_t aBytesSent) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
@@ -155,6 +164,10 @@ nsresult HttpTrafficAnalyzer::AccumulateHttpTransferredSize(
        "sb=%" PRIu64 " [this=%p]\n",
        gKeyName[aCategory].get(), aBytesRead, aBytesSent, this));
 
+  // Telemetry supports uint32_t only.
+  auto total = CLAMP_U32(CLAMP_U32(aBytesRead) + CLAMP_U32(aBytesSent));
+  Telemetry::ScalarAdd(Telemetry::ScalarID::NETWORKING_DATA_TRANSFERRED,
+                       NS_ConvertUTF8toUTF16(gKeyName[aCategory]), total);
   return NS_OK;
 }
 
