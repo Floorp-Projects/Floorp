@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/StyleComplexColor.h"
+#include "mozilla/StyleColorInlines.h"
 
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ComputedStyleInlines.h"
@@ -46,8 +46,8 @@ static nscolor LinearBlendColors(nscolor aBg, float aBgRatio, nscolor aFg,
   return NS_RGBA(r, g, b, NSToIntRound(a * 255));
 }
 
-template<>
-bool StyleComplexColor::MaybeTransparent() const {
+template <>
+bool StyleColor::MaybeTransparent() const {
   // We know that the color is opaque when it's a numeric color with
   // alpha == 255.
   // TODO(djg): Should we extend this to check Complex with bgRatio =
@@ -59,8 +59,8 @@ static nscolor RGBAToNSColor(const StyleRGBA& aRGBA) {
   return NS_RGBA(aRGBA.red, aRGBA.green, aRGBA.blue, aRGBA.alpha);
 }
 
-template<>
-nscolor StyleComplexColor::CalcColor(nscolor aForegroundColor) const {
+template <>
+nscolor StyleColor::CalcColor(nscolor aForegroundColor) const {
   if (IsNumeric()) {
     return RGBAToNSColor(AsNumeric());
   }
@@ -73,8 +73,8 @@ nscolor StyleComplexColor::CalcColor(nscolor aForegroundColor) const {
                            aForegroundColor, complex.ratios.fg);
 }
 
-template<>
-nscolor StyleComplexColor::CalcColor(const ComputedStyle& aStyle) const {
+template <>
+nscolor StyleColor::CalcColor(const ComputedStyle& aStyle) const {
   // Common case that is numeric color, which is pure background, we
   // can skip resolving StyleColor().
   // TODO(djg): Is this optimization worth it?
@@ -86,7 +86,7 @@ nscolor StyleComplexColor::CalcColor(const ComputedStyle& aStyle) const {
   return CalcColor(fgColor);
 }
 
-template<>
-nscolor StyleComplexColor::CalcColor(const nsIFrame* aFrame) const {
+template <>
+nscolor StyleColor::CalcColor(const nsIFrame* aFrame) const {
   return CalcColor(*aFrame->Style());
 }
