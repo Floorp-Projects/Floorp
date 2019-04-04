@@ -654,7 +654,7 @@ nsresult nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget,
   JS::RootedVector<JS::Value> args(cx);
 
   JS::Rooted<JSObject*> global(cx, GetWindowProxy());
-  nsresult rv = ConvertSupportsTojsvals(aArgs, global, &args);
+  nsresult rv = ConvertSupportsTojsvals(cx, aArgs, global, &args);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // got the arguments, now attach them.
@@ -675,7 +675,7 @@ nsresult nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget,
 }
 
 nsresult nsJSContext::ConvertSupportsTojsvals(
-    nsISupports* aArgs, JS::Handle<JSObject*> aScope,
+    JSContext* aCx, nsISupports* aArgs, JS::Handle<JSObject*> aScope,
     JS::MutableHandleVector<JS::Value> aArgsOut) {
   nsresult rv = NS_OK;
 
@@ -697,7 +697,6 @@ nsresult nsJSContext::ConvertSupportsTojsvals(
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
-  AutoJSContext cx;
 
   if (!aArgs) return NS_OK;
   uint32_t argCount;
@@ -730,12 +729,12 @@ nsresult nsJSContext::ConvertSupportsTojsvals(
       }
       nsCOMPtr<nsIVariant> variant(do_QueryInterface(arg));
       if (variant != nullptr) {
-        rv = xpc->VariantToJS(cx, aScope, variant, thisVal);
+        rv = xpc->VariantToJS(aCx, aScope, variant, thisVal);
       } else {
         // And finally, support the nsISupportsPrimitives supplied
         // by the AppShell.  It generally will pass only strings, but
         // as we have code for handling all, we may as well use it.
-        rv = AddSupportsPrimitiveTojsvals(arg, thisVal.address());
+        rv = AddSupportsPrimitiveTojsvals(aCx, arg, thisVal.address());
         if (rv == NS_ERROR_NO_INTERFACE) {
           // something else - probably an event object or similar -
           // just wrap it.
@@ -746,15 +745,15 @@ nsresult nsJSContext::ConvertSupportsTojsvals(
           NS_ASSERTION(prim == nullptr,
                        "Don't pass nsISupportsPrimitives - use nsIVariant!");
 #endif
-          JSAutoRealm ar(cx, aScope);
-          rv = nsContentUtils::WrapNative(cx, arg, thisVal);
+          JSAutoRealm ar(aCx, aScope);
+          rv = nsContentUtils::WrapNative(aCx, arg, thisVal);
         }
       }
     }
   } else {
     nsCOMPtr<nsIVariant> variant = do_QueryInterface(aArgs);
     if (variant) {
-      rv = xpc->VariantToJS(cx, aScope, variant, aArgsOut[0]);
+      rv = xpc->VariantToJS(aCx, aScope, variant, aArgsOut[0]);
     } else {
       NS_ERROR("Not an array, not an interface?");
       rv = NS_ERROR_UNEXPECTED;
@@ -764,14 +763,14 @@ nsresult nsJSContext::ConvertSupportsTojsvals(
 }
 
 // This really should go into xpconnect somewhere...
-nsresult nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports* aArg,
+nsresult nsJSContext::AddSupportsPrimitiveTojsvals(JSContext* aCx,
+                                                   nsISupports* aArg,
                                                    JS::Value* aArgv) {
   MOZ_ASSERT(aArg, "Empty arg");
 
   nsCOMPtr<nsISupportsPrimitive> argPrimitive(do_QueryInterface(aArg));
   if (!argPrimitive) return NS_ERROR_NO_INTERFACE;
 
-  AutoJSContext cx;
   uint16_t type;
   argPrimitive->GetType(&type);
 
@@ -784,7 +783,7 @@ nsresult nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports* aArg,
 
       p->GetData(data);
 
-      JSString* str = ::JS_NewStringCopyN(cx, data.get(), data.Length());
+      JSString* str = ::JS_NewStringCopyN(aCx, data.get(), data.Length());
       NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
       aArgv->setString(str);
@@ -801,7 +800,7 @@ nsresult nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports* aArg,
 
       // cast is probably safe since wchar_t and char16_t are expected
       // to be equivalent; both unsigned 16-bit entities
-      JSString* str = ::JS_NewUCStringCopyN(cx, data.get(), data.Length());
+      JSString* str = ::JS_NewUCStringCopyN(aCx, data.get(), data.Length());
       NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
       aArgv->setString(str);
@@ -863,7 +862,7 @@ nsresult nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports* aArg,
 
       p->GetData(&data);
 
-      JSString* str = ::JS_NewStringCopyN(cx, &data, 1);
+      JSString* str = ::JS_NewStringCopyN(aCx, &data, 1);
       NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
       aArgv->setString(str);
@@ -931,10 +930,10 @@ nsresult nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports* aArg,
 
       AutoFree iidGuard(iid);  // Free iid upon destruction.
 
-      JS::Rooted<JSObject*> scope(cx, GetWindowProxy());
-      JS::Rooted<JS::Value> v(cx);
-      JSAutoRealm ar(cx, scope);
-      nsresult rv = nsContentUtils::WrapNative(cx, data, iid, &v);
+      JS::Rooted<JSObject*> scope(aCx, GetWindowProxy());
+      JS::Rooted<JS::Value> v(aCx);
+      JSAutoRealm ar(aCx, scope);
+      nsresult rv = nsContentUtils::WrapNative(aCx, data, iid, &v);
       NS_ENSURE_SUCCESS(rv, rv);
 
       *aArgv = v;
