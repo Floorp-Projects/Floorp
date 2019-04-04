@@ -25,6 +25,7 @@ interface OAuthAccount : AutoCloseable {
     fun completeOAuthFlow(code: String, state: String): Deferred<Unit>
     fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo>
     fun getTokenServerEndpointURL(): String
+    fun registerPersistenceCallback(callback: StatePersistenceCallback)
     fun toJSONString(): String
 
     suspend fun authInfo(singleScope: String): AuthInfo {
@@ -39,6 +40,16 @@ interface OAuthAccount : AutoCloseable {
                 tokenServerUrl = tokenServerURL
         )
     }
+}
+
+/**
+ * Describes a delegate object that is used by [OAuthAccount] to persist its internal state as it changes.
+ */
+interface StatePersistenceCallback {
+    /**
+     * @param data Account state representation as a string (e.g. as json).
+     */
+    fun persist(data: String)
 }
 
 /**

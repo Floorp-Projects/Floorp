@@ -16,6 +16,8 @@ import mozilla.appservices.fxaclient.FxaException.Unauthorized as Unauthorized
 import mozilla.components.concept.sync.AccessTokenInfo
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.concept.sync.StatePersistenceCallback
+import mozilla.components.support.base.log.logger.Logger
 
 typealias PersistCallback = mozilla.appservices.fxaclient.FirefoxAccount.PersistCallback
 
@@ -24,9 +26,45 @@ typealias PersistCallback = mozilla.appservices.fxaclient.FirefoxAccount.Persist
  */
 @Suppress("TooManyFunctions")
 class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : OAuthAccount {
-
+    private val logger = Logger("FirefoxAccount")
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO) + job
+
+    /**
+     * Why this exists: in the `init` block below you'll notice that we register a persistence callback
+     * as soon as we initialize this object. Essentially, we _always_ have a persistence callback
+     * registered with [InternalFxAcct]. However, our own lifecycle is such that we will not know
+     * how to actually persist account state until sometime after this object has been created.
+     * Currently, we're expecting [FxaAccountManager] to configure a real callback.
+     * This wrapper exists to facilitate that flow of events.
+     */
+    private class WrappingPersistenceCallback : PersistCallback {
+        private val logger = Logger("StatePersistenceCallback")
+        @Volatile
+        private var persistenceCallback: StatePersistenceCallback? = null
+
+        fun setCallback(callback: StatePersistenceCallback) {
+            logger.debug("Setting persistence callback")
+            persistenceCallback = callback
+        }
+
+        override fun persist(data: String) {
+            val callback = persistenceCallback
+
+            if (callback == null) {
+                logger.warn("InternalFxAcct tried persist state, but persistence callback is not set")
+            } else {
+                logger.debug("Logging state to $callback")
+                callback.persist(data)
+            }
+        }
+    }
+
+    private var persistCallback = WrappingPersistenceCallback()
+
+    init {
+        inner.registerPersistCallback(persistCallback)
+    }
 
     /**
      * Construct a FirefoxAccount from a [Config], a clientId, and a redirectUri.
@@ -52,24 +90,8 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : O
         inner.close()
     }
 
-    /**
-     * Registers a [PersistCallback] that will be called every time the
-     * [FirefoxAccount] internal state has mutated.
-     * The [FirefoxAccount] instance can be later restored using the
-     * [FirefoxAccount.fromJSONString] class method.
-     * It is the responsibility of the consumer to ensure the persisted data
-     * is saved in a secure location, as it can contain Sync Keys and
-     * OAuth tokens.
-     */
-    fun registerPersistCallback(persistCallback: PersistCallback) {
-        inner.registerPersistCallback(persistCallback)
-    }
-
-    /**
-     * Unregisters any previously registered [PersistCallback].
-     */
-    fun unregisterPersistCallback() {
-        inner.unregisterPersistCallback()
+    override fun registerPersistenceCallback(callback: mozilla.components.concept.sync.StatePersistenceCallback) {
+        persistCallback.setCallback(callback)
     }
 
     /**

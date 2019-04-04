@@ -15,14 +15,17 @@ import kotlinx.coroutines.async
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.concept.sync.StatePersistenceCallback
 import mozilla.components.concept.sync.SyncManager
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.CoroutineContext
 
 import mozilla.components.support.base.log.Log
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import java.io.Closeable
+import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 
 enum class AccountState {
@@ -125,6 +128,20 @@ open class FxaAccountManager(
         syncManager?.let { this.register(SyncManagerIntegration(it)) }
     }
 
+    private class FxaStatePersistenceCallback(
+        private val accountManager: WeakReference<FxaAccountManager>
+    ) : StatePersistenceCallback {
+        private val logger = Logger("FxaStatePersistenceCallback")
+
+        override fun persist(data: String) {
+            val manager = accountManager.get()
+            logger.debug("Persisting account state into ${manager?.getAccountStorage()}")
+            manager?.getAccountStorage()?.write(data)
+        }
+    }
+
+    private lateinit var statePersistenceCallback: FxaStatePersistenceCallback
+
     companion object {
         /**
          * State transition matrix. It's in the companion object to enforce purity.
@@ -190,6 +207,7 @@ open class FxaAccountManager(
      * Call this after registering your observers, and before interacting with this class.
      */
     fun initAsync(): Deferred<Unit> {
+        statePersistenceCallback = FxaStatePersistenceCallback(WeakReference(this))
         return processQueueAsync(Event.Init)
     }
 
@@ -368,13 +386,16 @@ open class FxaAccountManager(
                 when (via) {
                     is Event.Authenticated -> {
                         account.completeOAuthFlow(via.code, via.state).await()
-                        getAccountStorage().write(account)
+
+                        account.registerPersistenceCallback(statePersistenceCallback)
 
                         notifyObservers { onAuthenticated(account) }
 
                         Event.FetchProfile
                     }
                     Event.AccountRestored -> {
+                        account.registerPersistenceCallback(statePersistenceCallback)
+
                         notifyObservers { onAuthenticated(account) }
 
                         Event.FetchProfile

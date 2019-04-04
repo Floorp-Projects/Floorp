@@ -97,6 +97,13 @@ permalink: /changelog/
     - **Removed**: `String.isUrl()` and `String.toNormalizedUrl()`
     - use `URLStringUtils` `isURLLike()` and `toNormalizedURL()` instead.
 
+* **concept-sync**
+  * ⚠️ **This is a breaking API change**
+  * `OAuthAccount` now has a new method `registerPersistenceCallback`.
+
+* **service-fxa**
+  * `FxaAccountManager` is now using a state persistence callback to keep FxA account state up-to-date as it changes.
+
 # 0.50.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.49.0...v0.50.0)

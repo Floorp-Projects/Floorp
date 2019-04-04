@@ -14,7 +14,7 @@ const val FXA_STATE_KEY = "fxaState"
 interface AccountStorage {
     @Throws(Exception::class)
     fun read(): OAuthAccount?
-    fun write(account: OAuthAccount)
+    fun write(accountState: String)
     fun clear()
 }
 
@@ -30,10 +30,10 @@ class SharedPrefAccountStorage(val context: Context) : AccountStorage {
         return FirefoxAccount.fromJSONString(savedJSON)
     }
 
-    override fun write(account: OAuthAccount) {
+    override fun write(accountState: String) {
         accountPreferences()
             .edit()
-            .putString(FXA_STATE_KEY, account.toJSONString())
+            .putString(FXA_STATE_KEY, accountState)
             .apply()
     }
 
