@@ -222,7 +222,8 @@ static const mozilla::Module::ContractIDEntry kLocalContracts[] = {
 static const mozilla::Module kLocalModule = {mozilla::Module::kVersion,
                                              kLocalCIDs, kLocalContracts};
 
-TEST(RacingServiceManager, Test) {
+TEST(RacingServiceManager, Test)
+{
   nsresult rv;
   XRE_AddStaticComponent(&kLocalModule);
 

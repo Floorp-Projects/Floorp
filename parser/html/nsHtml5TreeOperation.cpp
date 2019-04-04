@@ -1116,7 +1116,9 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
           aInterrupted);  // this causes a notification flush anyway
       return NS_OK;
     }
-    default: { MOZ_CRASH("Bogus tree op"); }
+    default: {
+      MOZ_CRASH("Bogus tree op");
+    }
   }
   return NS_OK;  // keep compiler happy
 }

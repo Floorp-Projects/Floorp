@@ -14,7 +14,8 @@
 
 using RN8 = mozilla::RollingNumber<uint8_t>;
 
-TEST(RollingNumber, Value) {
+TEST(RollingNumber, Value)
+{
   // Value type should reflect template argument.
   static_assert(mozilla::IsSame<RN8::ValueType, uint8_t>::value, "");
 
@@ -40,7 +41,8 @@ TEST(RollingNumber, Value) {
   EXPECT_EQ(0, n42.Value());
 }
 
-TEST(RollingNumber, Operations) {
+TEST(RollingNumber, Operations)
+{
   RN8 n;
   EXPECT_EQ(0, n.Value());
 
@@ -90,7 +92,8 @@ TEST(RollingNumber, Operations) {
   EXPECT_EQ(10, n.Value());
 }
 
-TEST(RollingNumber, Comparisons) {
+TEST(RollingNumber, Comparisons)
+{
   uint8_t i = 0;
   do {
     RN8 n{i};

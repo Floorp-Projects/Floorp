@@ -85,9 +85,9 @@ static const char kContentBundles[][52] = {
 
 static bool IsContentBundle(const nsCString& aUrl) {
   size_t index;
-  return BinarySearchIf(kContentBundles, 0, MOZ_ARRAY_LENGTH(kContentBundles),
-                        [&](const char* aElem) { return aUrl.Compare(aElem); },
-                        &index);
+  return BinarySearchIf(
+      kContentBundles, 0, MOZ_ARRAY_LENGTH(kContentBundles),
+      [&](const char* aElem) { return aUrl.Compare(aElem); }, &index);
 }
 
 namespace {

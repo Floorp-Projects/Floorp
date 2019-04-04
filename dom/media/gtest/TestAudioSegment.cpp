@@ -224,7 +224,8 @@ void TestDownmixStereo() {
   delete[] output;
 }
 
-TEST(AudioSegment, Test) {
+TEST(AudioSegment, Test)
+{
   TestInterleaveAndConvert<float, float>();
   TestInterleaveAndConvert<float, int16_t>();
   TestInterleaveAndConvert<int16_t, float>();

@@ -14,7 +14,8 @@ namespace TestTaskQueue {
 
 using namespace mozilla;
 
-TEST(TaskQueue, EventOrder) {
+TEST(TaskQueue, EventOrder)
+{
   RefPtr<TaskQueue> tq1 =
       new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK), true);
   RefPtr<TaskQueue> tq2 =

@@ -27,7 +27,8 @@ bool TestQITo(SourcePtr& aPtr1) {
   return (bool)aPtr2;
 }
 
-TEST(TestEventTargetQI, ThreadPool) {
+TEST(TestEventTargetQI, ThreadPool)
+{
   nsCOMPtr<nsIThreadPool> thing = new nsThreadPool();
 
   EXPECT_FALSE(TestQITo<nsISerialEventTarget>(thing));
@@ -37,7 +38,8 @@ TEST(TestEventTargetQI, ThreadPool) {
   thing->Shutdown();
 }
 
-TEST(TestEventTargetQI, SharedThreadPool) {
+TEST(TestEventTargetQI, SharedThreadPool)
+{
   nsCOMPtr<nsIThreadPool> thing =
       SharedThreadPool::Get(NS_LITERAL_CSTRING("TestPool"), 1);
   EXPECT_TRUE(thing);
@@ -47,7 +49,8 @@ TEST(TestEventTargetQI, SharedThreadPool) {
   EXPECT_TRUE(TestQITo<nsIEventTarget>(thing));
 }
 
-TEST(TestEventTargetQI, Thread) {
+TEST(TestEventTargetQI, Thread)
+{
   nsCOMPtr<nsIThread> thing = do_GetCurrentThread();
   EXPECT_TRUE(thing);
 
@@ -56,7 +59,8 @@ TEST(TestEventTargetQI, Thread) {
   EXPECT_TRUE(TestQITo<nsIEventTarget>(thing));
 }
 
-TEST(TestEventTargetQI, ThrottledEventQueue) {
+TEST(TestEventTargetQI, ThrottledEventQueue)
+{
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
   RefPtr<ThrottledEventQueue> thing = ThrottledEventQueue::Create(thread);
   EXPECT_TRUE(thing);
@@ -66,7 +70,8 @@ TEST(TestEventTargetQI, ThrottledEventQueue) {
   EXPECT_TRUE(TestQITo<nsIEventTarget>(thing));
 }
 
-TEST(TestEventTargetQI, LazyIdleThread) {
+TEST(TestEventTargetQI, LazyIdleThread)
+{
   nsCOMPtr<nsIThread> thing =
       new LazyIdleThread(0, NS_LITERAL_CSTRING("TestThread"));
   EXPECT_TRUE(thing);
@@ -78,7 +83,8 @@ TEST(TestEventTargetQI, LazyIdleThread) {
   thing->Shutdown();
 }
 
-TEST(TestEventTargetQI, SchedulerGroup) {
+TEST(TestEventTargetQI, SchedulerGroup)
+{
   nsCOMPtr<nsIEventTarget> thing =
       SystemGroup::EventTargetFor(TaskCategory::Other);
   EXPECT_TRUE(thing);

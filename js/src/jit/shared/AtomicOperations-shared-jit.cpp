@@ -198,7 +198,9 @@ static void GenGprArg(MacroAssembler& masm, MIRType t, ArgIterator* iter,
       masm.loadPtr(src, reg);
       break;
     }
-    default: { MOZ_CRASH("Not possible"); }
+    default: {
+      MOZ_CRASH("Not possible");
+    }
   }
 }
 
@@ -232,7 +234,9 @@ static void GenGpr64Arg(MacroAssembler& masm, ArgIterator* iter,
       break;
     }
 #endif
-    default: { MOZ_CRASH("Not possible"); }
+    default: {
+      MOZ_CRASH("Not possible");
+    }
   }
 }
 

@@ -277,7 +277,9 @@ void nsHtml5TreeBuilder::comment(char16_t* buf, int32_t start, int32_t length) {
         appendComment(stack[0]->node, buf, start, length);
         return;
       }
-      default: { break; }
+      default: {
+        break;
+      }
     }
   }
   flushCharacters();
@@ -639,7 +641,9 @@ void nsHtml5TreeBuilder::eof() {
       case AFTER_FRAMESET:
       case AFTER_AFTER_BODY:
       case AFTER_AFTER_FRAMESET:
-      default: { NS_HTML5_BREAK(eofloop); }
+      default: {
+        NS_HTML5_BREAK(eofloop);
+      }
     }
   }
 eofloop_end:;
@@ -2129,7 +2133,9 @@ nsHtml5String nsHtml5TreeBuilder::extractCharsetFromContent(
             charsetState = CHARSET_C;
             continue;
           }
-          default: { continue; }
+          default: {
+            continue;
+          }
         }
       }
       case CHARSET_C: {
@@ -2223,7 +2229,9 @@ nsHtml5String nsHtml5TreeBuilder::extractCharsetFromContent(
             charsetState = CHARSET_EQUALS;
             continue;
           }
-          default: { return nullptr; }
+          default: {
+            return nullptr;
+          }
         }
       }
       case CHARSET_EQUALS: {
@@ -2258,7 +2266,9 @@ nsHtml5String nsHtml5TreeBuilder::extractCharsetFromContent(
             end = i;
             NS_HTML5_BREAK(charsetloop);
           }
-          default: { continue; }
+          default: {
+            continue;
+          }
         }
       }
       case CHARSET_DOUBLE_QUOTED: {
@@ -2267,7 +2277,9 @@ nsHtml5String nsHtml5TreeBuilder::extractCharsetFromContent(
             end = i;
             NS_HTML5_BREAK(charsetloop);
           }
-          default: { continue; }
+          default: {
+            continue;
+          }
         }
       }
       case CHARSET_UNQUOTED: {
@@ -2281,7 +2293,9 @@ nsHtml5String nsHtml5TreeBuilder::extractCharsetFromContent(
             end = i;
             NS_HTML5_BREAK(charsetloop);
           }
-          default: { continue; }
+          default: {
+            continue;
+          }
         }
       }
     }
@@ -2503,7 +2517,9 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
           case TEMPLATE: {
             break;
           }
-          default: { errStrayEndTag(name); }
+          default: {
+            errStrayEndTag(name);
+          }
         }
         MOZ_FALLTHROUGH;
       }
@@ -3294,7 +3310,9 @@ void nsHtml5TreeBuilder::generateImpliedEndTagsExceptFor(nsAtom* name) {
         pop();
         continue;
       }
-      default: { return; }
+      default: {
+        return;
+      }
     }
   }
 }
@@ -3312,7 +3330,9 @@ void nsHtml5TreeBuilder::generateImpliedEndTags() {
         pop();
         continue;
       }
-      default: { return; }
+      default: {
+        return;
+      }
     }
   }
 }
@@ -4484,7 +4504,9 @@ bool nsHtml5TreeBuilder::charBufferContainsNonWhitespace() {
       case '\f': {
         continue;
       }
-      default: { return true; }
+      default: {
+        return true;
+      }
     }
   }
   return false;
