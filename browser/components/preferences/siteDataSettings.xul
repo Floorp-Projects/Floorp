@@ -26,7 +26,7 @@
 
   <script src="chrome://browser/content/preferences/siteDataSettings.js"/>
 
-  <vbox flex="1">
+  <vbox flex="1" class="contentPane">
     <description id="settingsDescription" data-l10n-id="site-data-settings-description"/>
     <separator class="thin"/>
 
