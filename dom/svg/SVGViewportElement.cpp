@@ -310,7 +310,7 @@ bool SVGViewportElement::HasValidDimensions() const {
            mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0));
 }
 
-SVGViewBox* SVGViewportElement::GetViewBox() { return &mViewBox; }
+SVGAnimatedViewBox* SVGViewportElement::GetViewBox() { return &mViewBox; }
 
 SVGAnimatedPreserveAspectRatio* SVGViewportElement::GetPreserveAspectRatio() {
   return &mPreserveAspectRatio;

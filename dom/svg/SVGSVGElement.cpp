@@ -638,7 +638,7 @@ SVGViewElement* SVGSVGElement::GetCurrentViewElement() const {
   return nullptr;
 }
 
-const SVGViewBox& SVGSVGElement::GetViewBoxInternal() const {
+const SVGAnimatedViewBox& SVGSVGElement::GetViewBoxInternal() const {
   SVGViewElement* viewElement = GetCurrentViewElement();
 
   if (viewElement && viewElement->mViewBox.HasRect()) {

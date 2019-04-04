@@ -25,7 +25,7 @@ class SVGAnimationElement;
 class SVGElement;
 }  // namespace dom
 
-class SVGNumberPair {
+class SVGAnimatedNumberPair {
  public:
   typedef mozilla::dom::SVGElement SVGElement;
 
@@ -72,16 +72,16 @@ class SVGNumberPair {
 
  public:
   // DOM wrapper class for the (DOM)SVGAnimatedNumber interface where the
-  // wrapped class is SVGNumberPair.
+  // wrapped class is SVGAnimatedNumberPair.
   struct DOMAnimatedNumber final : public mozilla::dom::DOMSVGAnimatedNumber {
-    DOMAnimatedNumber(SVGNumberPair* aVal, PairIndex aIndex,
+    DOMAnimatedNumber(SVGAnimatedNumberPair* aVal, PairIndex aIndex,
                       SVGElement* aSVGElement)
         : mozilla::dom::DOMSVGAnimatedNumber(aSVGElement),
           mVal(aVal),
           mIndex(aIndex) {}
     virtual ~DOMAnimatedNumber();
 
-    SVGNumberPair* mVal;  // kept alive because it belongs to content
+    SVGAnimatedNumberPair* mVal;  // kept alive because it belongs to content
     PairIndex mIndex;     // are we the first or second number
 
     virtual float BaseVal() override { return mVal->GetBaseValue(mIndex); }
@@ -100,13 +100,13 @@ class SVGNumberPair {
 
   struct SMILNumberPair : public SMILAttr {
    public:
-    SMILNumberPair(SVGNumberPair* aVal, SVGElement* aSVGElement)
+    SMILNumberPair(SVGAnimatedNumberPair* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    SVGNumberPair* mVal;
+    SVGAnimatedNumberPair* mVal;
     SVGElement* mSVGElement;
 
     // SMILAttr methods

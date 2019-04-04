@@ -9,7 +9,7 @@
 
 #include "DOMSVGAnimatedEnumeration.h"
 #include "nsError.h"
-#include "SVGEnum.h"
+#include "SVGAnimatedEnumeration.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILAttr.h"
@@ -30,7 +30,7 @@ class SVGAnimationElement;
 class SVGElement;
 }  // namespace dom
 
-class SVGOrient {
+class SVGAnimatedOrient {
   friend class AutoChangeOrientNotifier;
   friend class mozilla::dom::DOMSVGAngle;
   friend class mozilla::dom::DOMSVGAnimatedAngle;
@@ -100,13 +100,13 @@ class SVGOrient {
 
  public:
   // DOM wrapper class for the (DOM)SVGAnimatedEnumeration interface where the
-  // wrapped class is SVGOrient.
+  // wrapped class is SVGAnimatedOrient.
   struct DOMAnimatedEnum final : public dom::DOMSVGAnimatedEnumeration {
-    DOMAnimatedEnum(SVGOrient* aVal, SVGElement* aSVGElement)
+    DOMAnimatedEnum(SVGAnimatedOrient* aVal, SVGElement* aSVGElement)
         : DOMSVGAnimatedEnumeration(aSVGElement), mVal(aVal) {}
     ~DOMAnimatedEnum();
 
-    SVGOrient* mVal;  // kept alive because it belongs to content
+    SVGAnimatedOrient* mVal;  // kept alive because it belongs to content
 
     using mozilla::dom::DOMSVGAnimatedEnumeration::SetBaseVal;
     uint16_t BaseVal() override { return Sanitize(mVal->mBaseType); }
@@ -127,13 +127,13 @@ class SVGOrient {
 
   struct SMILOrient final : public SMILAttr {
    public:
-    SMILOrient(SVGOrient* aOrient, SVGElement* aSVGElement)
+    SMILOrient(SVGAnimatedOrient* aOrient, SVGElement* aSVGElement)
         : mOrient(aOrient), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    SVGOrient* mOrient;
+    SVGAnimatedOrient* mOrient;
     SVGElement* mSVGElement;
 
     // SMILAttr methods

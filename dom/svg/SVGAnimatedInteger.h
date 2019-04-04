@@ -23,7 +23,7 @@ namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
 
-class SVGInteger {
+class SVGAnimatedInteger {
  public:
   typedef mozilla::dom::SVGElement SVGElement;
 
@@ -63,11 +63,11 @@ class SVGInteger {
 
  public:
   struct DOMAnimatedInteger final : public mozilla::dom::DOMSVGAnimatedInteger {
-    DOMAnimatedInteger(SVGInteger* aVal, SVGElement* aSVGElement)
+    DOMAnimatedInteger(SVGAnimatedInteger* aVal, SVGElement* aSVGElement)
         : mozilla::dom::DOMSVGAnimatedInteger(aSVGElement), mVal(aVal) {}
     virtual ~DOMAnimatedInteger();
 
-    SVGInteger* mVal;  // kept alive because it belongs to content
+    SVGAnimatedInteger* mVal;  // kept alive because it belongs to content
 
     virtual int32_t BaseVal() override { return mVal->GetBaseValue(); }
     virtual void SetBaseVal(int32_t aValue) override {
@@ -84,13 +84,13 @@ class SVGInteger {
 
   struct SMILInteger : public SMILAttr {
    public:
-    SMILInteger(SVGInteger* aVal, SVGElement* aSVGElement)
+    SMILInteger(SVGAnimatedInteger* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    SVGInteger* mVal;
+    SVGAnimatedInteger* mVal;
     SVGElement* mSVGElement;
 
     // SMILAttr methods
