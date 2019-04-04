@@ -24,5 +24,3 @@ job-template:
          staging: scriptworker-prov-v1/beetmoverworker-dev
    run-on-projects: []
    shipping-phase: promote
-   attributes:
-      artifact_map: taskcluster/taskgraph/manifests/firefox_candidates.yml
