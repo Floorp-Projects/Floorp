@@ -30,6 +30,7 @@ struct RawServoAnimationValueTable;
 struct RawServoAnimationValueMap;
 
 class nsAtom;
+class nsIFrame;
 class nsINode;
 class nsCSSPropertyIDSet;
 class nsPresContext;
@@ -57,6 +58,8 @@ template <typename T>
 class nsMainThreadPtrHolder;
 
 namespace mozilla {
+
+class ComputedStyle;
 
 using Matrix4x4Components = float[16];
 using StyleMatrix4x4Components = Matrix4x4Components;

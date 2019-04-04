@@ -806,7 +806,7 @@ static nsCSSBorderRenderer ConstructBorderRenderer(
   // pull out styles, colors
   NS_FOR_CSS_SIDES(i) {
     borderStyles[i] = aStyleBorder.GetBorderStyle(i);
-    borderColors[i] = aStyleBorder.BorderColorFor(i).CalcColor(aComputedStyle);
+    borderColors[i] = aStyleBorder.BorderColorFor(i).CalcColor(*aComputedStyle);
   }
 
   PrintAsFormatString(
@@ -2290,36 +2290,46 @@ static void DrawBackgroundColor(nsCSSRendering::ImageLayerClipState& aClipState,
   aCtx->Restore();
 }
 
+enum class ScrollbarColorKind {
+  Thumb,
+  Track,
+};
+
 static Maybe<nscolor> CalcScrollbarColor(nsIFrame* aFrame,
-                                         StyleComplexColor nsStyleUI::*aColor) {
+                                         ScrollbarColorKind aKind) {
   ComputedStyle* scrollbarStyle = nsLayoutUtils::StyleForScrollbar(aFrame);
-  auto color = scrollbarStyle->StyleUI()->*aColor;
-  if (color.IsAuto()) {
+  const auto& colors = scrollbarStyle->StyleUI()->mScrollbarColor;
+  if (colors.IsAuto()) {
     return Nothing();
   }
-  return Some(color.CalcColor(scrollbarStyle));
+  const auto& color = aKind == ScrollbarColorKind::Thumb
+                          ? colors.AsColors().thumb
+                          : colors.AsColors().track;
+  return Some(color.CalcColor(*scrollbarStyle));
 }
 
 static nscolor GetBackgroundColor(nsIFrame* aFrame,
                                   ComputedStyle* aComputedStyle) {
-  Maybe<nscolor> overrideColor = Nothing();
   switch (aComputedStyle->StyleDisplay()->mAppearance) {
     case StyleAppearance::ScrollbarthumbVertical:
-    case StyleAppearance::ScrollbarthumbHorizontal:
-      overrideColor =
-          CalcScrollbarColor(aFrame, &nsStyleUI::mScrollbarFaceColor);
+    case StyleAppearance::ScrollbarthumbHorizontal: {
+      if (Maybe<nscolor> overrideColor =
+              CalcScrollbarColor(aFrame, ScrollbarColorKind::Thumb)) {
+        return *overrideColor;
+      }
       break;
+    }
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::Scrollcorner:
-      overrideColor =
-          CalcScrollbarColor(aFrame, &nsStyleUI::mScrollbarTrackColor);
+    case StyleAppearance::Scrollcorner: {
+      if (Maybe<nscolor> overrideColor =
+              CalcScrollbarColor(aFrame, ScrollbarColorKind::Track)) {
+        return *overrideColor;
+      }
       break;
+    }
     default:
       break;
-  }
-  if (overrideColor.isSome()) {
-    return *overrideColor;
   }
   return aComputedStyle->GetVisitedDependentColor(
       &nsStyleBackground::mBackgroundColor);
