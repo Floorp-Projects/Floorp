@@ -261,4 +261,36 @@ stubs.set("longString stack Error - cut-off location", {
   }
 });
 
+stubs.set("Error with V8-like stack", {
+  type: "object",
+  actor: "server1.conn1.child1/obj1020",
+  class: "Error",
+  ownPropertyLength: 4,
+  preview: {
+    kind: "Error",
+    name: "Error",
+    message: "BOOM",
+    stack: "Error: BOOM\ngetAccount@http://moz.com/script.js:1:2",
+    fileName: "http://moz.com/script.js:1:2",
+    lineNumber: 1,
+    columnNumber: 2
+  }
+});
+
+stubs.set("Error with invalid stack", {
+  type: "object",
+  actor: "server1.conn1.child1/obj1020",
+  class: "Error",
+  ownPropertyLength: 4,
+  preview: {
+    kind: "Error",
+    name: "Error",
+    message: "bad stack",
+    stack: "bar\nbaz\nfoo\n\n\n\n\n\n\n",
+    fileName: "http://moz.com/script.js:1:2",
+    lineNumber: 1,
+    columnNumber: 2
+  }
+});
+
 module.exports = stubs;
