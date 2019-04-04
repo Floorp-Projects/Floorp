@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -69,6 +70,8 @@ class ThemeFragment : PreferenceFragmentCompat() {
         }
     }
 
+    @SuppressLint("WrongConstant")
+    // Suppressing erroneous lint warning about using MODE_NIGHT_AUTO_BATTERY, a likely library bug
     private fun bindAutoBatteryTheme() {
         val keyBatteryTheme = getString(R.string.pref_key_auto_battery_theme)
         radioAutoBatteryTheme = requireNotNull(findPreference(keyBatteryTheme))
