@@ -429,7 +429,7 @@ nsDocShell::~nsDocShell() {
   Destroy();
 
   if (mSessionHistory) {
-    mSessionHistory->LegacySHistory()->SetRootDocShell(nullptr);
+    mSessionHistory->LegacySHistory()->ClearRootDocShell();
   }
 
   if (--gDocShellCount == 0) {
