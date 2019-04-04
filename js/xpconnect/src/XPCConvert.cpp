@@ -95,12 +95,12 @@ bool XPCConvert::GetISupportsFromJSObject(JSObject* obj, nsISupports** iface) {
 /***************************************************************************/
 
 // static
-bool XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
-                               const nsXPTType& type, const nsID* iid,
-                               uint32_t arrlen, nsresult* pErr) {
+bool XPCConvert::NativeData2JS(JSContext* cx, MutableHandleValue d,
+                               const void* s, const nsXPTType& type,
+                               const nsID* iid, uint32_t arrlen,
+                               nsresult* pErr) {
   MOZ_ASSERT(s, "bad param");
 
-  AutoJSContext cx;
   if (pErr) {
     *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
   }
@@ -1429,7 +1429,8 @@ bool XPCConvert::NativeArray2JS(JSContext* cx, MutableHandleValue d,
 
   RootedValue current(cx, JS::NullValue());
   for (uint32_t i = 0; i < count; ++i) {
-    if (!NativeData2JS(&current, type.ElementPtr(buf, i), type, iid, 0, pErr) ||
+    if (!NativeData2JS(cx, &current, type.ElementPtr(buf, i), type, iid, 0,
+                       pErr) ||
         !JS_DefineElement(cx, array, i, current, JSPROP_ENUMERATE))
       return false;
   }

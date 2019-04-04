@@ -939,8 +939,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
           !GetArraySizeFromParam(info, type, nativeParams, &array_count))
         goto pre_call_clean_up;
 
-      if (!XPCConvert::NativeData2JS(&val, pv, type, &param_iid, array_count,
-                                     nullptr))
+      if (!XPCConvert::NativeData2JS(cx, &val, pv, type, &param_iid,
+                                     array_count, nullptr))
         goto pre_call_clean_up;
     }
 

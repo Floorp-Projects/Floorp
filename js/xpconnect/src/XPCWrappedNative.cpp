@@ -1322,8 +1322,8 @@ bool CallMethodHelper::GatherAndConvertResults() {
       return false;
 
     nsresult err;
-    if (!XPCConvert::NativeData2JS(&v, &dp->val, type, &param_iid, array_count,
-                                   &err)) {
+    if (!XPCConvert::NativeData2JS(mCallContext, &v, &dp->val, type, &param_iid,
+                                   array_count, &err)) {
       ThrowBadParam(err, i, mCallContext);
       return false;
     }
@@ -1378,8 +1378,9 @@ bool CallMethodHelper::QueryInterfaceFastPath() {
 
   RootedValue v(mCallContext, NullValue());
   nsresult err;
-  bool success = XPCConvert::NativeData2JS(
-      &v, &qiresult, {nsXPTType::T_INTERFACE_IS}, iid.ptr(), 0, &err);
+  bool success = XPCConvert::NativeData2JS(mCallContext, &v, &qiresult,
+                                           {nsXPTType::T_INTERFACE_IS},
+                                           iid.ptr(), 0, &err);
   NS_IF_RELEASE(qiresult);
 
   if (!success) {
