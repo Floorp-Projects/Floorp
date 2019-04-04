@@ -76,6 +76,7 @@
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ScrollLinkedEffectDetector.h"
 #include "mozilla/Unused.h"
+#include "MobileViewportManager.h"
 #include "VisualViewport.h"
 #include "LayersLogging.h"  // for Stringify
 #include <algorithm>

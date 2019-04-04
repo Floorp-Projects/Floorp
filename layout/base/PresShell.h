@@ -9,7 +9,6 @@
 #ifndef mozilla_PresShell_h
 #define mozilla_PresShell_h
 
-#include "MobileViewportManager.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/HTMLDocumentBinding.h"
@@ -40,6 +39,7 @@ struct RangePaintInfo;
 
 class nsPresShellEventCB;
 class AutoPointerEventTargetUpdater;
+class MobileViewportManager;
 
 namespace mozilla {
 
@@ -295,9 +295,7 @@ class PresShell final : public nsIPresShell,
     return (mMobileViewportManager != nullptr);
   }
 
-  RefPtr<MobileViewportManager> GetMobileViewportManager() const override {
-    return mMobileViewportManager;
-  }
+  RefPtr<MobileViewportManager> GetMobileViewportManager() const override;
 
   void UpdateViewportOverridden(bool aAfterInitialization) override;
 
