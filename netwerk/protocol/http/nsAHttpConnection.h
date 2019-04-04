@@ -149,6 +149,10 @@ class nsAHttpConnection : public nsISupports {
 
   // A notification of the current active tab id change.
   virtual void TopLevelOuterContentWindowIdChanged(uint64_t windowId) = 0;
+
+  // categories set by nsHttpTransaction to identify how this connection is
+  // being used.
+  virtual void SetTrafficCategory(HttpTrafficCategory) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
@@ -225,6 +229,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
   }                                                                           \
   void SetSecurityCallbacks(nsIInterfaceRequestor *aCallbacks) override {     \
     if (fwdObject) (fwdObject)->SetSecurityCallbacks(aCallbacks);             \
+  }                                                                           \
+  void SetTrafficCategory(HttpTrafficCategory aCategory) override {           \
+    if (fwdObject) (fwdObject)->SetTrafficCategory(aCategory);                \
   }
 
 // ThrottleResponse deliberately ommited since we want different implementation
