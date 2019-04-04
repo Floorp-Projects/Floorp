@@ -18,7 +18,6 @@
 #include "nsSize.h"
 #include "nsTransform2D.h"
 #include "nsStyleConsts.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"

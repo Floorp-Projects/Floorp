@@ -44,6 +44,7 @@
 #include "nsTableWrapperFrame.h"
 #include "nsView.h"
 #include "nsViewManager.h"
+#include "nsIPresShellInlines.h"
 #include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"

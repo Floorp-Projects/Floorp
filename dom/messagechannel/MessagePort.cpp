@@ -34,7 +34,6 @@
 
 #include "nsIBFCacheEntry.h"
 #include "mozilla/dom/Document.h"
-#include "nsIPresShell.h"
 #include "nsISupportsPrimitives.h"
 #include "nsServiceManagerUtils.h"
 

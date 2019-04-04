@@ -29,8 +29,6 @@
 #include "nsIMemoryReporter.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsINode.h"
-#include "nsIPresShell.h"
-#include "nsIPresShellInlines.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsFontMetrics.h"

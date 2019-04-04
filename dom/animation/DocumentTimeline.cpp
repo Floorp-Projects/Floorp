@@ -11,7 +11,6 @@
 #include "nsContentUtils.h"
 #include "nsDOMMutationObserver.h"
 #include "nsDOMNavigationTiming.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsRefreshDriver.h"
 
