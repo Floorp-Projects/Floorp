@@ -334,8 +334,7 @@ nsresult nsXPCWrappedJS::GetNewOrUsed(JSContext* cx, JS::HandleObject jsObj,
   MOZ_RELEASE_ASSERT(js::GetContextCompartment(cx) ==
                      js::GetObjectCompartment(jsObj));
 
-  RefPtr<nsXPCWrappedJSClass> clasp =
-      nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID);
+  RefPtr<nsXPCWrappedJSClass> clasp = nsXPCWrappedJSClass::GetNewOrUsed(aIID);
   if (!clasp) {
     return NS_ERROR_FAILURE;
   }
@@ -371,7 +370,7 @@ nsresult nsXPCWrappedJS::GetNewOrUsed(JSContext* cx, JS::HandleObject jsObj,
     // root wrapper, and the wrapper we are trying to make isn't
     // a root.
     RefPtr<nsXPCWrappedJSClass> rootClasp =
-        nsXPCWrappedJSClass::GetNewOrUsed(cx, NS_GET_IID(nsISupports));
+        nsXPCWrappedJSClass::GetNewOrUsed(NS_GET_IID(nsISupports));
     if (!rootClasp) {
       return NS_ERROR_FAILURE;
     }
