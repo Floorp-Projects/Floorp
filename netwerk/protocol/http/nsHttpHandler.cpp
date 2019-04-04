@@ -2645,5 +2645,15 @@ bool nsHttpHandler::IsSpdyBlacklisted(const nsHttpConnectionInfo *ci) {
   return mBlacklistedSpdyOrigins.Contains(ci->GetOrigin());
 }
 
+HttpTrafficAnalyzer *nsHttpHandler::GetHttpTrafficAnalyzer() {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  if (!StaticPrefs::network_traffic_analyzer_enabled()) {
+    return nullptr;
+  }
+
+  return &mHttpTrafficAnalyzer;
+}
+
 }  // namespace net
 }  // namespace mozilla

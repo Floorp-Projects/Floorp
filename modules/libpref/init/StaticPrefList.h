@@ -1980,6 +1980,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Telemetry of traffic categories
+VARCACHE_PREF(
+  "network.traffic_analyzer.enabled",
+  network_traffic_analyzer_enabled,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // ContentSessionStore prefs
 //---------------------------------------------------------------------------

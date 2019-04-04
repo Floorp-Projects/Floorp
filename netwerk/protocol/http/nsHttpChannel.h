@@ -450,6 +450,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   MOZ_MUST_USE nsresult ContinueAsyncRedirectChannelToURI(nsresult rv);
   MOZ_MUST_USE nsresult OpenRedirectChannel(nsresult rv);
 
+  HttpTrafficCategory CreateTrafficCategory();
+
   /**
    * A function that takes care of reading STS and PKP headers and enforcing
    * STS and PKP load rules. After a secure channel is erected, STS and PKP
