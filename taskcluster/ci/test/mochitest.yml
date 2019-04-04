@@ -294,6 +294,7 @@ mochitest-media:
         by-test-platform:
             android-hw-.*-api-16/opt: ['try']
             android-em-4.3-arm7-api-16/opt: ['try']
+            windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     socketprocess-e10s:
         by-test-platform:
@@ -368,7 +369,10 @@ mochitest-webgl1-core:
     description: "Mochitest webgl1-core run"
     suite: mochitest/mochitest-webgl1-core
     treeherder-symbol: M(gl1c)
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            windows10-aarch64/opt: ['try', 'mozilla-central']
+            default: built-projects
     virtualization: virtual-with-gpu
     e10s:
         by-test-platform:
@@ -389,7 +393,10 @@ mochitest-webgl1-ext:
     description: "Mochitest webgl1-ext run"
     suite: mochitest/mochitest-webgl1-ext
     treeherder-symbol: M(gl1e)
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            windows10-aarch64/opt: ['try', 'mozilla-central']
+            default: built-projects
     virtualization: virtual-with-gpu
     e10s:
         by-test-platform:
@@ -409,7 +416,10 @@ mochitest-webgl2-core:
     description: "Mochitest webgl2-core run"
     suite: mochitest/mochitest-webgl2-core
     treeherder-symbol: M(gl2c)
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            windows10-aarch64/opt: ['try', 'mozilla-central']
+            default: built-projects
     virtualization: virtual-with-gpu
     e10s:
         by-test-platform:
@@ -429,7 +439,10 @@ mochitest-webgl2-ext:
     description: "Mochitest webgl2-ext run"
     suite: mochitest/mochitest-webgl2-ext
     treeherder-symbol: M(gl2e)
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            windows10-aarch64/opt: ['try', 'mozilla-central']
+            default: built-projects
     virtualization: virtual-with-gpu
     chunks: 4
     e10s:
