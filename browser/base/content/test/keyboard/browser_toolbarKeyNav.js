@@ -316,3 +316,23 @@ registerCleanupFunction(async function() {
   CustomizableUI.reset();
   await PlacesUtils.bookmarks.eraseEverything();
 });
+
+// Test that when a toolbar button opens a panel, closing the panel restores
+// focus to the button which opened it.
+add_task(async function testPanelCloseRestoresFocus() {
+  await withNewBlankTab(async function() {
+    // We can't use forceFocus because that removes focusability immediately.
+    // Instead, we must let ToolbarKeyboardNavigator handle this properly.
+    startFromUrlBar();
+    await expectFocusAfterKey("Tab", "library-button");
+    let view = document.getElementById("appMenu-libraryView");
+    let shown = BrowserTestUtils.waitForEvent(view, "ViewShown");
+    EventUtils.synthesizeKey(" ");
+    await shown;
+    let hidden = BrowserTestUtils.waitForEvent(document, "popuphidden", true);
+    view.closest("panel").hidePopup();
+    await hidden;
+    is(document.activeElement.id, "library-button",
+     "Focus restored to Library button after panel closed");
+  });
+});
