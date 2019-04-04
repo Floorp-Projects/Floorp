@@ -40,10 +40,12 @@ gboolean toplevel_event_watcher(GSignalInvocationHint* ihint,
   if (!GTK_IS_WINDOW(object)) return TRUE;
 
   AtkObject* child = gtk_widget_get_accessible(GTK_WIDGET(object));
+  AtkRole role = atk_object_get_role(child);
 
   // GTK native dialog
   if (!IS_MAI_OBJECT(child) &&
-      (atk_object_get_role(child) == ATK_ROLE_DIALOG)) {
+      (role == ATK_ROLE_DIALOG || role == ATK_ROLE_FILE_CHOOSER ||
+       role == ATK_ROLE_COLOR_CHOOSER || role == ATK_ROLE_FONT_CHOOSER)) {
     if (data == reinterpret_cast<gpointer>(nsIAccessibleEvent::EVENT_SHOW)) {
       // Attach the dialog accessible to app accessible tree
       Accessible* windowAcc = GetAccService()->AddNativeRootAccessible(child);
