@@ -332,6 +332,9 @@ testing/raptor/raptor/playback/scripts/catapult/**
 testing/web-platform/**
 testing/xpcshell/moz-http2/**
 testing/xpcshell/node-http2/**
+testing/xpcshell/dns-packet/**
+testing/xpcshell/node-ip/**
+
 
 # Third party services
 services/common/kinto-http-client.js
