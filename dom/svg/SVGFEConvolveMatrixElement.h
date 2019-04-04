@@ -8,6 +8,7 @@
 #define mozilla_dom_SVGFEConvolveMatrixElement_h
 
 #include "DOMSVGAnimatedNumberList.h"
+#include "SVGAnimatedNumberList.h"
 #include "SVGBoolean.h"
 #include "SVGEnum.h"
 #include "SVGFilters.h"
