@@ -50,11 +50,55 @@ module.exports = function(config) {
       dir: PATHS.coverageReportingPath,
       // This will make karma fail if coverage reporting is less than the minimums here
       thresholds: !isTDD && {
-        global: {
+        each: {
           statements: 100,
           lines: 100,
           functions: 100,
-          branches: 90,
+          branches: 66,
+          overrides: {
+            "lib/ActivityStreamStorage.jsm": {
+              statements: 100,
+              lines: 100,
+              functions: 100,
+              branches: 83,
+            },
+            "lib/SnippetsFeed.jsm": {
+              statements: 100,
+              lines: 100,
+              functions: 100,
+              branches: 66,
+            },
+            "lib/UTEventReporting.jsm": {
+              statements: 100,
+              lines: 100,
+              functions: 100,
+              branches: 75,
+            },
+            "lib/*.jsm": {
+              statements: 100,
+              lines: 100,
+              functions: 100,
+              branches: 84,
+            },
+            "content-src/components/DiscoveryStreamComponents/**/*.jsx": {
+              statements: 0,
+              lines: 0,
+              functions: 0,
+              branches: 0,
+            },
+            "content-src/asrouter/**/*.jsx": {
+              statements: 57,
+              lines: 58,
+              functions: 60,
+              branches: 50,
+            },
+            "content-src/components/**/*.jsx": {
+              statements: 0,
+              lines: 0,
+              functions: 0,
+              branches: 0,
+            },
+          },
         },
       },
     },
@@ -92,9 +136,6 @@ module.exports = function(config) {
                 plugins: [
                   // Converts .jsm files into common-js modules
                   ["jsm-to-commonjs", {basePath: PATHS.resourcePathRegEx, removeOtherImports: true, replace: true}], // require("babel-plugin-jsm-to-commonjs")
-                  ["transform-async-to-module-method", {module: "co-task", method: "async"}], // require("babel-plugin-transform-async-to-module-method")
-                  "transform-es2015-modules-commonjs", // require("babel-plugin-transform-es2015-modules-commonjs")
-                  ["transform-object-rest-spread", {"useBuiltIns": true}], // require("babel-plugin-transform-object-rest-spread")
                 ],
               },
             }],
@@ -102,26 +143,14 @@ module.exports = function(config) {
           {
             test: /\.js$/,
             exclude: [/node_modules\/(?!(fluent|fluent-react)\/).*/, /test/],
-            use: [{
-              loader: "babel-loader",
-              options: {
-                plugins: [
-                  ["transform-async-to-module-method", {module: "co-task", method: "async"}],
-                  "transform-es2015-modules-commonjs",
-                  ["transform-object-rest-spread", {"useBuiltIns": true}],
-                  ["transform-async-to-generator"],
-                  ["transform-async-generator-functions"],
-                ],
-              },
-            }],
+            loader: "babel-loader",
           },
           {
             test: /\.jsx$/,
             exclude: /node_modules/,
             loader: "babel-loader",
             options: {
-              presets: ["react"], // require("babel-preset-react")
-              plugins: [["transform-object-rest-spread", {"useBuiltIns": true}]],
+              presets: ["@babel/preset-react"],
             },
           },
           {
@@ -130,8 +159,9 @@ module.exports = function(config) {
           },
           {
             enforce: "post",
-            test: /\.jsm?$/,
+            test: /\.js[mx]?$/,
             loader: "istanbul-instrumenter-loader",
+            options: {esModules: true},
             include: [
               path.resolve("content-src"),
               path.resolve("lib"),

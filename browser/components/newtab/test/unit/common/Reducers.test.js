@@ -1,5 +1,5 @@
 import {INITIAL_STATE, insertPinned, reducers} from "common/Reducers.jsm";
-const {TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket, DiscoveryStream, Search} = reducers;
+const {TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket, DiscoveryStream, Search, ASRouter} = reducers;
 import {actionTypes as at} from "common/Actions.jsm";
 
 describe("Reducers", () => {
@@ -664,6 +664,22 @@ describe("Reducers", () => {
       assert.equal(state.layout[0], "test");
       assert.equal(state.lastUpdated, 123);
     });
+    it("should reset layout data with DISCOVERY_STREAM_LAYOUT_RESET", () => {
+      const layoutData = {layout: ["test"], lastUpdated: 123};
+      const feedsData = {
+        "https://foo.com/feed1": {lastUpdated: 123, data: [1, 2, 3]},
+      };
+      const spocsData = {
+        lastUpdated: 123,
+        spocs: [1, 2, 3],
+      };
+      let state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: layoutData});
+      state = DiscoveryStream(state, {type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: feedsData});
+      state = DiscoveryStream(state, {type: at.DISCOVERY_STREAM_SPOCS_UPDATE, data: spocsData});
+      state = DiscoveryStream(state, {type: at.DISCOVERY_STREAM_LAYOUT_RESET});
+
+      assert.deepEqual(state, INITIAL_STATE.DiscoveryStream);
+    });
     it("should set config data with DISCOVERY_STREAM_CONFIG_CHANGE", () => {
       const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_CONFIG_CHANGE, data: {enabled: true}});
       assert.deepEqual(state.config, {enabled: true});
@@ -800,6 +816,226 @@ describe("Reducers", () => {
       assert.deepEqual(newState.spocs.data.spocs, [{url: "test-spoc.com"}]);
       assert.deepEqual(newState.feeds.data["https://foo.com/feed1"].data.recommendations, [{url: "test.com"}]);
     });
+    it("should not update state for empty action.data on PLACES_SAVED_TO_POCKET", () => {
+      const newState = DiscoveryStream(undefined, {type: at.PLACES_SAVED_TO_POCKET});
+      assert.equal(newState, INITIAL_STATE.DiscoveryStream);
+    });
+    it("should add pocket_id on PLACES_SAVED_TO_POCKET in both feeds and spocs", () => {
+      const oldState = {
+        feeds: {
+          data: {
+            "https://foo.com/feed1": {
+              data: {
+                recommendations: [
+                  {url: "https://foo.com"},
+                  {url: "test.com"},
+                ],
+              },
+            },
+          },
+          loaded: true,
+        },
+        spocs: {
+          data: {
+            spocs: [
+              {url: "https://foo.com"},
+              {url: "test-spoc.com"},
+            ],
+          },
+          loaded: true,
+        },
+      };
+      const action = {
+        type: at.PLACES_SAVED_TO_POCKET,
+        data: {
+          url: "https://foo.com",
+          pocket_id: 1234,
+          open_url: "https://foo-1234",
+        },
+      };
+
+      const newState = DiscoveryStream(oldState, action);
+
+      assert.lengthOf(newState.spocs.data.spocs, 2);
+      assert.equal(newState.spocs.data.spocs[0].pocket_id, action.data.pocket_id);
+      assert.equal(newState.spocs.data.spocs[0].open_url, action.data.open_url);
+      assert.isUndefined(newState.spocs.data.spocs[1].pocket_id);
+
+      assert.lengthOf(newState.feeds.data["https://foo.com/feed1"].data.recommendations, 2);
+      assert.equal(newState.feeds.data["https://foo.com/feed1"].data.recommendations[0].pocket_id,
+        action.data.pocket_id);
+      assert.equal(newState.feeds.data["https://foo.com/feed1"].data.recommendations[0].open_url,
+        action.data.open_url);
+      assert.isUndefined(newState.feeds.data["https://foo.com/feed1"].data.recommendations[1].pocket_id);
+    });
+    it("should not update state for empty action.data on DELETE_FROM_POCKET", () => {
+      const newState = DiscoveryStream(undefined, {type: at.DELETE_FROM_POCKET});
+      assert.equal(newState, INITIAL_STATE.DiscoveryStream);
+    });
+    it("should remove site on DELETE_FROM_POCKET in both feeds and spocs", () => {
+      const oldState = {
+        feeds: {
+          data: {
+            "https://foo.com/feed1": {
+              data: {
+                recommendations: [
+                  {url: "https://foo.com", pocket_id: 1234},
+                  {url: "test.com"},
+                ],
+              },
+            },
+          },
+          loaded: true,
+        },
+        spocs: {
+          data: {
+            spocs: [
+              {url: "https://foo.com", pocket_id: 1234},
+              {url: "test-spoc.com"},
+            ],
+          },
+          loaded: true,
+        },
+      };
+      const deleteAction = {
+        type: at.DELETE_FROM_POCKET,
+        data: {
+          pocket_id: 1234,
+        },
+      };
+
+      const newState = DiscoveryStream(oldState, deleteAction);
+      assert.deepEqual(newState.spocs.data.spocs, [{url: "test-spoc.com"}]);
+      assert.deepEqual(newState.feeds.data["https://foo.com/feed1"].data.recommendations, [{url: "test.com"}]);
+    });
+    it("should remove site on ARCHIVE_FROM_POCKET in both feeds and spocs", () => {
+      const oldState = {
+        feeds: {
+          data: {
+            "https://foo.com/feed1": {
+              data: {
+                recommendations: [
+                  {url: "https://foo.com", pocket_id: 1234},
+                  {url: "test.com"},
+                ],
+              },
+            },
+          },
+          loaded: true,
+        },
+        spocs: {
+          data: {
+            spocs: [
+              {url: "https://foo.com", pocket_id: 1234},
+              {url: "test-spoc.com"},
+            ],
+          },
+          loaded: true,
+        },
+      };
+      const deleteAction = {
+        type: at.ARCHIVE_FROM_POCKET,
+        data: {
+          pocket_id: 1234,
+        },
+      };
+
+      const newState = DiscoveryStream(oldState, deleteAction);
+      assert.deepEqual(newState.spocs.data.spocs, [{url: "test-spoc.com"}]);
+      assert.deepEqual(newState.feeds.data["https://foo.com/feed1"].data.recommendations, [{url: "test.com"}]);
+    });
+    it("should add boookmark details on PLACES_BOOKMARK_ADDED in both feeds and spocs", () => {
+      const oldState = {
+        feeds: {
+          data: {
+            "https://foo.com/feed1": {
+              data: {
+                recommendations: [
+                  {url: "https://foo.com"},
+                  {url: "test.com"},
+                ],
+              },
+            },
+          },
+          loaded: true,
+        },
+        spocs: {
+          data: {
+            spocs: [
+              {url: "https://foo.com"},
+              {url: "test-spoc.com"},
+            ],
+          },
+          loaded: true,
+        },
+      };
+      const bookmarkAction = {
+        type: at.PLACES_BOOKMARK_ADDED,
+        data: {
+          url: "https://foo.com",
+          bookmarkGuid: "bookmark123",
+          bookmarkTitle: "Title for bar.com",
+          dateAdded: 1234567,
+        },
+      };
+
+      const newState = DiscoveryStream(oldState, bookmarkAction);
+
+      assert.lengthOf(newState.spocs.data.spocs, 2);
+      assert.equal(newState.spocs.data.spocs[0].bookmarkGuid, bookmarkAction.data.bookmarkGuid);
+      assert.equal(newState.spocs.data.spocs[0].bookmarkTitle, bookmarkAction.data.bookmarkTitle);
+      assert.isUndefined(newState.spocs.data.spocs[1].bookmarkGuid);
+
+      assert.lengthOf(newState.feeds.data["https://foo.com/feed1"].data.recommendations, 2);
+      assert.equal(newState.feeds.data["https://foo.com/feed1"].data.recommendations[0].bookmarkGuid,
+      bookmarkAction.data.bookmarkGuid);
+      assert.equal(newState.feeds.data["https://foo.com/feed1"].data.recommendations[0].bookmarkTitle,
+      bookmarkAction.data.bookmarkTitle);
+      assert.isUndefined(newState.feeds.data["https://foo.com/feed1"].data.recommendations[1].bookmarkGuid);
+    });
+
+    it("should remove boookmark details on PLACES_BOOKMARK_REMOVED in both feeds and spocs", () => {
+      const oldState = {
+        feeds: {
+          data: {
+            "https://foo.com/feed1": {
+              data: {
+                recommendations: [
+                  {url: "https://foo.com", bookmarkGuid: "bookmark123", bookmarkTitle: "Title for bar.com"},
+                  {url: "test.com"},
+                ],
+              },
+            },
+          },
+          loaded: true,
+        },
+        spocs: {
+          data: {
+            spocs: [
+              {url: "https://foo.com", bookmarkGuid: "bookmark123", bookmarkTitle: "Title for bar.com"},
+              {url: "test-spoc.com"},
+            ],
+          },
+          loaded: true,
+        },
+      };
+      const action = {
+        type: at.PLACES_BOOKMARK_REMOVED,
+        data: {
+          url: "https://foo.com",
+        },
+      };
+
+      const newState = DiscoveryStream(oldState, action);
+
+      assert.lengthOf(newState.spocs.data.spocs, 2);
+      assert.isUndefined(newState.spocs.data.spocs[0].bookmarkGuid);
+      assert.isUndefined(newState.spocs.data.spocs[0].bookmarkTitle);
+
+      assert.lengthOf(newState.feeds.data["https://foo.com/feed1"].data.recommendations, 2);
+      assert.isUndefined(newState.feeds.data["https://foo.com/feed1"].data.recommendations[0].bookmarkGuid);
+      assert.isUndefined(newState.feeds.data["https://foo.com/feed1"].data.recommendations[0].bookmarkTitle);
+    });
   });
   describe("Search", () => {
     it("should return INITIAL_STATE by default", () => {
@@ -817,6 +1053,15 @@ describe("Reducers", () => {
       const nextState = Search(undefined, {type: "SHOW_SEARCH"});
       assert.propertyVal(nextState, "fakeFocus", false);
       assert.propertyVal(nextState, "hide", false);
+    });
+  });
+  describe("ASRouter", () => {
+    it("should listen for pref changes on AS_ROUTER_PREF_CHANGED", async () => {
+      const action = {data: {foo: "bar"}, type: at.AS_ROUTER_PREF_CHANGED};
+
+      const result = ASRouter({}, action);
+
+      assert.propertyVal(result, "foo", "bar");
     });
   });
 });

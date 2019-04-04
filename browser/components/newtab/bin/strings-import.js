@@ -39,7 +39,7 @@ const transvision = {};
 async function cherryPickString(locale) {
   const getTransvision = async string => {
     if (!transvision[string]) {
-      const response = await fetch(`https://transvision.mozfr.org/api/v1/entity/gecko_strings/?id=${string}`);
+      const response = await fetch(`https://transvision.mozfr.org/api/v1/entity/gecko_strings/?id=${string}`); // eslint-disable-line fetch-options/no-fetch-credentials
       transvision[string] = response.ok ? await response.json() : {};
     }
     return transvision[string];
@@ -54,7 +54,7 @@ async function cherryPickString(locale) {
 async function saveProperties(locale) {
   // Only save a file if the repository has the file
   const url = `${L10N_CENTRAL}/${locale}/${PROPERTIES_PATH}`;
-  const response = await fetch(url);
+  const response = await fetch(url); // eslint-disable-line fetch-options/no-fetch-credentials
   if (!response.ok) {
     // Indicate that this locale didn't save
     return locale;

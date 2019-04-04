@@ -93,7 +93,7 @@ describe("SectionsManager", () => {
     });
     it("should not throw if the indexedDB operation fails", async () => {
       globals.sandbox.spy(global.Cu, "reportError");
-      storage.get.returns(new Error());
+      storage.get = sandbox.stub().throws();
       SectionsManager._storage = storage;
 
       try {

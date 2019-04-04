@@ -580,8 +580,24 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     this.reportRequestTime();
   }
 
-  async disable() {
-    await this.clearCache();
+  async reset() {
+    this.resetImpressionPrefs();
+    await this.resetCache();
+    this.resetState();
+  }
+
+  async resetCache() {
+    await this.cache.set("layout", {});
+    await this.cache.set("feeds", {});
+    await this.cache.set("spocs", {});
+  }
+
+  resetImpressionPrefs() {
+    this.writeImpressionsPref(PREF_SPOC_IMPRESSIONS, {});
+    this.writeImpressionsPref(PREF_REC_IMPRESSIONS, {});
+  }
+
+  resetState() {
     // Reset reducer
     this.store.dispatch(ac.BroadcastToContent({type: at.DISCOVERY_STREAM_LAYOUT_RESET}));
     this.loaded = false;
@@ -591,29 +607,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     this.totalRequestTime = undefined;
   }
 
-  async clearCache() {
-    await this.cache.set("layout", {});
-    await this.cache.set("feeds", {});
-    await this.cache.set("spocs", {});
-  }
-
-  clearImpressionPrefs() {
-    this.writeImpressionsPref(PREF_SPOC_IMPRESSIONS, {});
-    this.writeImpressionsPref(PREF_REC_IMPRESSIONS, {});
-  }
-
   async onPrefChange() {
-    this.clearImpressionPrefs();
+    // We always want to clear the cache/state if the pref has changed
+    await this.reset();
     if (this.config.enabled) {
-      // We always want to clear the cache if the pref has changed
-      await this.clearCache();
       // Load data from all endpoints
       await this.enable();
-    }
-
-    // Clear state and relevant listeners if config.enabled = false.
-    if (this.loaded && !this.config.enabled) {
-      await this.disable();
     }
   }
 

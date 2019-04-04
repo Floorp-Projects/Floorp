@@ -10,6 +10,8 @@ Field name | Type     | Required | Description | Example / Note
 `campaign` | `string` | No | Campaign id that the message belongs to | `RustWebAssembly`
 `targeting` | `string` `JEXL` | No | A [JEXL expression](http://normandy.readthedocs.io/en/latest/user/filter_expressions.html#jexl-basics) with all targeting information needed in order to decide if the message is shown | Not yet implemented, [Examples](#targeting-attributes)
 `trigger` | `string` | No | An event or condition upon which the message will be immediately shown. This can be combined with `targeting`. Messages that define a trigger will not be shown during non-trigger-based passive message rotation.
+`trigger.params` | `[string]` | No | A set of hostnames passed down as parameters to the trigger condition. Used to restrict the number of domains where the trigger/message is valid. | [See example below](#trigger-params)
+`trigger.patterns` | `[string]` | No | A set of patterns that match multiple hostnames passed down as parameters to the trigger condition. Used to restrict the number of domains where the trigger/message is valid. | [See example below](#trigger-patterns)
 `frequency` | `object` | No | A definition for frequency cap information for the message
 `frequency.lifetime` | `integer` | No | The maximum number of lifetime impressions for the message.
 `frequency.custom` | `array` | No | An array of frequency cap definition objects including `period`, a time period in milliseconds, and `cap`, a max number of impressions for that period.
@@ -80,6 +82,20 @@ Links cannot be rendered using regular anchor tags because [Fluent does not allo
 If a tag that is not on the allowed is used, the text content will be extracted and displayed.
 
 Grouping multiple allowed elements is not possible, only the first level will be used: `<u><b>text</b></u>` will be interpreted as `<u>text</u>`.
+
+### Trigger params
+A set of hostnames that need to exactly match the location of the selected tab in order for the trigger to execute.
+```
+["github.com", "wwww.github.com"]
+```
+More examples in the [CFRMessageProvider](https://github.com/mozilla/activity-stream/blob/e76ce12fbaaac1182aa492b84fc038f78c3acc33/lib/CFRMessageProvider.jsm#L40-L47).
+
+### Trigger patterns
+A set of patterns that can match multiple hostnames. When the location of the selected tab matches one of the patterns it can execute a trigger.
+```
+["*://*.github.com"] // can match `github.com` but also match `https://gist.github.com/`
+```
+More [MatchPattern examples](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns#Examples).
 
 ### Targeting attributes
 (This section has moved to [targeting-attributes.md](../docs/targeting-attributes.md)).

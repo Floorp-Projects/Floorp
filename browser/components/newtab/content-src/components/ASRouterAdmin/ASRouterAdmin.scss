@@ -48,6 +48,20 @@
   table {
     border-collapse: collapse;
     width: 100%;
+
+    &.errorReporting {
+      tr {
+        border: 1px solid var(--newtab-textbox-background-color);
+      }
+
+      td {
+        padding: 4px;
+
+        &[rowspan] {
+          border: 1px solid var(--newtab-textbox-background-color);
+        }
+      }
+    }
   }
 
   .sourceLabel {

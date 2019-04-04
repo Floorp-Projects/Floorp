@@ -562,6 +562,37 @@ export class ASRouterAdminInner extends React.PureComponent {
       </div>);
   }
 
+  renderErrorMessage({id, errors}) {
+    const providerId = <td rowSpan={errors.length}>{id}</td>;
+    // .reverse() so that the last error (most recent) is first
+    return errors.map(({error, timestamp}, cellKey) => (<tr key={cellKey}>
+      {cellKey === errors.length - 1 ? providerId : null}
+      <td>{error.message}</td>
+      <td>{relativeTime(timestamp)}</td>
+      </tr>)
+    ).reverse();
+  }
+
+  renderErrors() {
+    const providersWithErrors = this.state.providers && this.state.providers
+      .filter(p => p.errors && p.errors.length);
+
+    if (providersWithErrors && providersWithErrors.length) {
+      return (<table className="errorReporting">
+        <thead>
+          <tr>
+            <th>Provider ID</th>
+            <th>Message</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>{providersWithErrors.map(this.renderErrorMessage)}</tbody>
+        </table>);
+    }
+
+    return <p>No errors</p>;
+  }
+
   getSection() {
     const [section] = this.props.location.routes;
     switch (section) {
@@ -582,6 +613,12 @@ export class ASRouterAdminInner extends React.PureComponent {
           <h2>Discovery Stream</h2>
           <DiscoveryStreamAdmin state={this.props.DiscoveryStream} otherPrefs={this.props.Prefs.values} dispatch={this.props.dispatch} />
         </React.Fragment>);
+      case "errors":
+        return (<React.Fragment>
+          <h2>ASRouter Errors</h2>
+          {this.renderErrors()}
+          </React.Fragment>
+        );
       default:
         return (<React.Fragment>
           <h2>Message Providers <button title="Restore all provider settings that ship with Firefox" className="button" onClick={this.resetPref}>Restore default prefs</button></h2>
@@ -602,6 +639,7 @@ export class ASRouterAdminInner extends React.PureComponent {
           <li><a href="#devtools-targeting">Targeting</a></li>
           <li><a href="#devtools-pocket">Pocket</a></li>
           <li><a href="#devtools-ds">Discovery Stream</a></li>
+          <li><a href="#devtools-errors">Errors</a></li>
         </ul>
       </aside>
       <main className="main-panel">

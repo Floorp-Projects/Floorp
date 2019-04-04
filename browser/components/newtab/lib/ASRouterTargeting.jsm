@@ -337,6 +337,8 @@ this.ASRouterTargeting = {
       return false;
     } else if (!candidateMessageTrigger.params) {
       return true;
+    } else if (candidateMessageTrigger.patterns) {
+      return true;
     }
     return candidateMessageTrigger.params.includes(trigger.param);
   },

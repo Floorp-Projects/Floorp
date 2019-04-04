@@ -53,7 +53,9 @@ export class Hero extends React.PureComponent {
         type={this.props.type}
         dispatch={this.props.dispatch}
         context={rec.context}
-        source={rec.domain} />
+        source={rec.domain}
+        pocket_id={rec.pocket_id}
+        bookmarkGuid={rec.bookmarkGuid} />
     ));
 
     let list = (
@@ -104,7 +106,9 @@ export class Hero extends React.PureComponent {
               url={heroRec.url}
               title={heroRec.title}
               source={heroRec.domain}
-              type={this.props.type} />
+              type={this.props.type}
+              pocket_id={heroRec.pocket_id}
+              bookmarkGuid={heroRec.bookmarkGuid} />
           </div>
           <div className={`${this.props.subComponentType}`}>
             { this.props.subComponentType === `cards` ? cards : list }

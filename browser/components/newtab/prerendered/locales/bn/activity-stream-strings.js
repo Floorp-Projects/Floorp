@@ -1,4 +1,4 @@
-// Note - this is a generated bn-BD file.
+// Note - this is a generated bn file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "নতুন ট্যাব",
   "header_top_sites": "শীর্ঘ সাইট",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "গোপনীয়তা নীতি",
   "firstrun_continue_to_login": "চালিয়ে যান",
   "firstrun_skip_login": "এই ধাপটি বাদ দিন",
-  "context_menu_title": "মেনু খুলুন",
-  "pocket_learn_more": "আরো জানুন"
+  "context_menu_title": "মেনু খুলুন"
 };
