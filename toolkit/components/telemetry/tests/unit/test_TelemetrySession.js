@@ -400,10 +400,6 @@ function checkPayload(payload, reason, successfulPings) {
   Assert.ok("processes" in payload, "The payload must have a processes section.");
   Assert.ok("parent" in payload.processes, "There must be at least a parent process.");
 
-  if (Services.prefs.getBoolPref("prio.enabled", false)) {
-    Assert.ok("prio" in payload, "The payload must have a prio section.");
-  }
-
   checkScalars(payload.processes);
 }
 
@@ -931,36 +927,6 @@ add_task(async function test_environmentChange() {
   startHour = TelemetryUtils.truncateToHours(now);
   gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE);
   now = fakeNow(futureDate(now, 10 * MILLISECONDS_PER_MINUTE));
-
-  if (Services.prefs.getBoolPref("prio.enabled", false)) {
-    fakePrioEncode();
-
-    // Set histograms to expected state.
-    let prioMeasures = [
-      "BROWSER_IS_USER_DEFAULT",
-      "NEWTAB_PAGE_ENABLED",
-    ];
-
-    for (let measure of prioMeasures) {
-      const value = Telemetry.getHistogramById(measure);
-      value.clear();
-      value.add(1);
-    }
-
-    let expectedPrioResult = {
-      "booleans": [
-        true,
-        true,
-        false,
-      ],
-    };
-
-    Preferences.set(PREF_TEST, 3);
-    ping = await PingServer.promiseNextPing();
-    Assert.ok(!!ping);
-
-    Assert.deepEqual(ping.payload.prio, expectedPrioResult);
-  }
 
   await TelemetryController.testShutdown();
 });
