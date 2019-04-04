@@ -177,7 +177,11 @@ class PingCentre {
       }
     }
 
-    return fetch(this._pingEndpoint, {method: "POST", body: JSON.stringify(payload)}).then(response => {
+    return fetch(this._pingEndpoint, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      credentials: "omit",
+    }).then(response => {
       if (!response.ok) {
         Cu.reportError(`Ping failure with HTTP response code: ${response.status}`);
       }
@@ -203,7 +207,11 @@ class PingCentre {
 
     const payload = await this._createPing(data, options);
 
-    return fetch(endpoint, {method: "POST", body: JSON.stringify(payload)}).then(response => {
+    return fetch(endpoint, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      credentials: "omit",
+    }).then(response => {
       if (!response.ok) {
         Cu.reportError(`Structured Ingestion ping failure with HTTP response code: ${response.status}`);
       }

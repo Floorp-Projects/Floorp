@@ -9,6 +9,7 @@
 #include "mozilla/dom/ContentChild.h"  // for launching RDD w/ ContentChild
 #include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/SyncRunnable.h"
 
 #ifdef MOZ_AV1
 #  include "AOMDecoder.h"
@@ -56,24 +57,19 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
     return nullptr;
   }
 
-  RemoteAudioDecoderChild* child = new RemoteAudioDecoderChild();
+  RefPtr<RemoteAudioDecoderChild> child = new RemoteAudioDecoderChild();
   RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(
       child, RemoteDecoderManagerChild::GetManagerThread(),
       RemoteDecoderManagerChild::GetManagerAbstractThread());
 
-  // (per Matt Woodrow) We can't use NS_DISPATCH_SYNC here since that
-  // can spin the event loop while it waits.
-  SynchronousTask task("InitIPDL");
   MediaResult result(NS_OK);
-  RemoteDecoderManagerChild::GetManagerThread()->Dispatch(
-      NS_NewRunnableFunction("RemoteDecoderModule::CreateAudioDecoder",
-                             [&, child]() {
-                               AutoCompleteTask complete(&task);
-                               result = child->InitIPDL(aParams.AudioConfig(),
-                                                        aParams.mOptions);
-                             }),
-      NS_DISPATCH_NORMAL);
-  task.Wait();
+  RefPtr<Runnable> task = NS_NewRunnableFunction(
+      "RemoteDecoderModule::CreateAudioDecoder", [&, child]() {
+        result = child->InitIPDL(aParams.AudioConfig(),
+                                 aParams.mOptions);
+      });
+  SyncRunnable::DispatchToThread(RemoteDecoderManagerChild::GetManagerThread(),
+                                 task);
 
   if (NS_FAILED(result)) {
     if (aParams.mError) {
@@ -96,25 +92,20 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateVideoDecoder(
     return nullptr;
   }
 
-  RemoteVideoDecoderChild* child = new RemoteVideoDecoderChild();
+  RefPtr<RemoteVideoDecoderChild> child = new RemoteVideoDecoderChild();
   RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(
       child, RemoteDecoderManagerChild::GetManagerThread(),
       RemoteDecoderManagerChild::GetManagerAbstractThread());
 
-  // (per Matt Woodrow) We can't use NS_DISPATCH_SYNC here since that
-  // can spin the event loop while it waits.
-  SynchronousTask task("InitIPDL");
   MediaResult result(NS_OK);
-  RemoteDecoderManagerChild::GetManagerThread()->Dispatch(
-      NS_NewRunnableFunction("RemoteDecoderModule::CreateVideoDecoder",
-                             [&, child]() {
-                               AutoCompleteTask complete(&task);
-                               result = child->InitIPDL(aParams.VideoConfig(),
-                                                        aParams.mRate.mValue,
-                                                        aParams.mOptions);
-                             }),
-      NS_DISPATCH_NORMAL);
-  task.Wait();
+  RefPtr<Runnable> task = NS_NewRunnableFunction(
+      "RemoteDecoderModule::CreateVideoDecoder", [&, child]() {
+        result = child->InitIPDL(aParams.VideoConfig(),
+                                 aParams.mRate.mValue,
+                                 aParams.mOptions);
+      });
+  SyncRunnable::DispatchToThread(RemoteDecoderManagerChild::GetManagerThread(),
+                                 task);
 
   if (NS_FAILED(result)) {
     if (aParams.mError) {

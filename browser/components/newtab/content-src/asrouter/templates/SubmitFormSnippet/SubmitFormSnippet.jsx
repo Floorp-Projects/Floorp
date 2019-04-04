@@ -49,7 +49,7 @@ export class SubmitFormSnippet extends React.PureComponent {
 
     try {
       const fetchRequest = new Request(url, {body: formData, method: "POST", credentials: "omit"});
-      const response = await fetch(fetchRequest);
+      const response = await fetch(fetchRequest); // eslint-disable-line fetch-options/no-fetch-credentials
       json = await response.json();
     } catch (err) {
       console.log(err); // eslint-disable-line no-console

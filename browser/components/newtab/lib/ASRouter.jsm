@@ -49,6 +49,18 @@ const STARTPAGE_VERSION = "6";
 const MessageLoaderUtils = {
   STARTPAGE_VERSION,
   REMOTE_LOADER_CACHE_KEY: "RemoteLoaderCache",
+  _errors: [],
+
+  reportError(e) {
+    Cu.reportError(e);
+    this._errors.push({timestamp: new Date(), error: {message: e.toString(), stack: e.stack}});
+  },
+
+  get errors() {
+    const errors = this._errors;
+    this._errors = [];
+    return errors;
+  },
 
   /**
    * _localLoader - Loads messages for a local provider (i.e. one that lives in mozilla central)
@@ -67,7 +79,7 @@ const MessageLoaderUtils = {
       allCached = await storage.get(MessageLoaderUtils.REMOTE_LOADER_CACHE_KEY) || {};
     } catch (e) {
       // istanbul ignore next
-      Cu.reportError(e);
+      MessageLoaderUtils.reportError(e);
       // istanbul ignore next
       allCached = {};
     }
@@ -104,17 +116,26 @@ const MessageLoaderUtils = {
         headers.set("If-None-Match", etag);
       }
 
+      let response;
       try {
-        const response = await fetch(provider.url, {headers});
-        if (
-          // Empty response
-          response.status !== 204 &&
-          // Not modified
-          response.status !== 304 &&
-          (response.ok || response.status === 302)
-        ) {
-          remoteMessages = (await response.json())
-            .messages
+        response = await fetch(provider.url, {headers, credentials: "omit"});
+      } catch (e) {
+        MessageLoaderUtils.reportError(e);
+      }
+      if (
+        response &&
+        response.ok &&
+        (response.status >= 200 && response.status < 400)
+      ) {
+        let jsonResponse;
+        try {
+          jsonResponse = await response.json();
+        } catch (e) {
+          MessageLoaderUtils.reportError(e);
+          return remoteMessages;
+        }
+        if (jsonResponse && jsonResponse.messages) {
+          remoteMessages = jsonResponse.messages
             .map(msg => ({...msg, provider_url: provider.url}));
 
           // Cache the results if this isn't a preview URL.
@@ -129,9 +150,11 @@ const MessageLoaderUtils = {
 
             storage.set(MessageLoaderUtils.REMOTE_LOADER_CACHE_KEY, {...allCached, [provider.id]: cacheInfo});
           }
+        } else {
+          MessageLoaderUtils.reportError(`No messages returned from ${provider.url}.`);
         }
-      } catch (e) {
-        Cu.reportError(e);
+      } else if (response) {
+        MessageLoaderUtils.reportError(`Invalid response status ${response.status} from ${provider.url}.`);
       }
     }
     return remoteMessages;
@@ -150,14 +173,14 @@ const MessageLoaderUtils = {
       try {
         messages = await MessageLoaderUtils._getRemoteSettingsMessages(provider.bucket);
       } catch (e) {
-        Cu.reportError(e);
+        MessageLoaderUtils.reportError(e);
       }
     }
     return messages;
   },
 
   _getRemoteSettingsMessages(bucket) {
-    return RemoteSettings(bucket).get({filters: {locale: Services.locale.appLocaleAsLangTag}});
+    return RemoteSettings(bucket).get();
   },
 
   /**
@@ -205,7 +228,7 @@ const MessageLoaderUtils = {
     // istanbul ignore if
     if (!messages) {
       messages = [];
-      Cu.reportError(new Error(`Tried to load messages for ${provider.id} but the result was not an Array.`));
+      MessageLoaderUtils.reportError(new Error(`Tried to load messages for ${provider.id} but the result was not an Array.`));
     }
     // Filter out messages we temporarily want to exclude
     if (provider.exclude && provider.exclude.length) {
@@ -216,6 +239,7 @@ const MessageLoaderUtils = {
       messages: messages.map(msg => ({weight: 100, ...msg, provider: provider.id}))
                         .filter(message => message.weight > 0),
       lastUpdated,
+      errors: MessageLoaderUtils.errors,
     };
   },
 
@@ -302,6 +326,7 @@ class _ASRouter {
       messageImpressions: {},
       providerImpressions: {},
       messages: [],
+      errors: [],
     };
     this._triggerHandler = this._triggerHandler.bind(this);
     this._localProviders = localProviders;
@@ -418,9 +443,9 @@ class _ASRouter {
       let newState = {messages: [], providers: []};
       for (const provider of this.state.providers) {
         if (needsUpdate.includes(provider)) {
-          let {messages, lastUpdated} = await MessageLoaderUtils.loadMessagesForProvider(provider, this._storage);
+          let {messages, lastUpdated, errors} = await MessageLoaderUtils.loadMessagesForProvider(provider, this._storage);
           messages = messages.filter(({content}) => !content || !content.category || ASRouterPreferences.getUserPreference(content.category));
-          newState.providers.push({...provider, lastUpdated});
+          newState.providers.push({...provider, lastUpdated, errors});
           newState.messages = [...newState.messages, ...messages];
         } else {
           // Skip updating this provider's messages if no update is required
@@ -438,7 +463,7 @@ class _ASRouter {
       const unseenListeners = new Set(ASRouterTriggerListeners.keys());
       for (const {trigger} of newState.messages) {
         if (trigger && ASRouterTriggerListeners.has(trigger.id)) {
-          await ASRouterTriggerListeners.get(trigger.id).init(this._triggerHandler, trigger.params);
+          await ASRouterTriggerListeners.get(trigger.id).init(this._triggerHandler, trigger.params, trigger.patterns);
           unseenListeners.delete(trigger.id);
         }
       }
@@ -555,6 +580,7 @@ class _ASRouter {
         providerPrefs: ASRouterPreferences.providers,
         userPrefs: ASRouterPreferences.getAllUserPreferences(),
         targetingParameters: await this.getTargetingParameters(ASRouterTargeting.Environment, this._getMessagesContext()),
+        errors: this.errors,
       },
     });
   }

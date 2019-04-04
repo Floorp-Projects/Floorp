@@ -41,4 +41,9 @@ describe("CFRMessageProvider", () => {
       }
     }
   });
+  it("should contain `www.` version of the hosts", () => {
+    const pinTabMessage = messages.find(m => m.id === "PIN_TAB");
+
+    assert.isTrue(pinTabMessage.trigger.params.filter(host => host.startsWith("www.")).length > 0);
+  });
 });

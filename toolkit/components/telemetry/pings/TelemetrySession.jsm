@@ -72,9 +72,6 @@ const IDLE_TIMEOUT_SECONDS = Services.prefs.getIntPref("toolkit.telemetry.idleTi
 // in case of aborted sessions (currently 5 minutes).
 const ABORTED_SESSION_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
 
-// Control whether Telemetry data should be encrypted with Prio.
-const PRIO_ENABLED_PREF = "prio.enabled";
-
 var gWasDebuggerAttached = false;
 
 XPCOMUtils.defineLazyServiceGetters(this, {
@@ -98,7 +95,6 @@ var Policy = {
   generateSubsessionUUID: () => generateUUID(),
   setSchedulerTickTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
   clearSchedulerTickTimeout: id => clearTimeout(id),
-  prioEncode: (batchID, prioParams) => PrioEncoder.encode(batchID, prioParams),
 };
 
 /**
@@ -953,11 +949,6 @@ var Impl = {
 
     payloadObj.info = info;
 
-    // Collect Prio-encoded measurements.
-    if (Services.prefs.getBoolPref(PRIO_ENABLED_PREF, false)) {
-      payloadObj.prio = protect(() => this._prioEncode(payloadObj));
-    }
-
     // Add extended set measurements for chrome process.
     if (Telemetry.canRecordExtended) {
       payloadObj.slowSQL = protect(() => Telemetry.slowSQL);
@@ -1574,49 +1565,5 @@ var Impl = {
     this._log.trace("markNewProfilePingSent");
     this._newProfilePingSent = true;
     return TelemetryStorage.saveSessionData(this._getSessionDataObject());
-  },
-
-  /**
-   * Encodes data for experimental Prio pilot project.
-   *
-   * @param {Object} measurements - measurements taken until now. Histograms will have been cleared if
-   *                 this is a subsession, so use this to get the correct values.
-   * @return {Object} An object containing Prio-encoded data.
-   */
-  _prioEncode(payloadObj) {
-    // First, map the Telemetry histogram names to the params PrioEncoder expects.
-    const prioEncodedHistograms = [
-      "BROWSER_IS_USER_DEFAULT",
-      "NEWTAB_PAGE_ENABLED",
-      "PDF_VIEWER_USED",
-    ];
-
-    // Build list of Prio parameters, using the first value recorded in each histogram.
-    let prioParams = { booleans: [] };
-    for (const [i, histogramName] of prioEncodedHistograms.entries()) {
-      try {
-        if (histogramName in payloadObj.histograms) {
-          const histogram = payloadObj.histograms[histogramName];
-          prioParams.booleans[i] = Boolean(histogram.sum);
-        } else {
-          prioParams.booleans[i] = false;
-        }
-      } catch (ex) {
-        this._log.error(ex);
-      }
-    }
-
-    // Prio encode the data and add to payload.
-    const batchID = Services.appinfo.appBuildID;
-
-    let prioEncodedData;
-
-    try {
-      prioEncodedData = Policy.prioEncode(batchID, prioParams);
-    } catch (ex) {
-      this._log.error(ex);
-    }
-
-    return prioEncodedData;
   },
 };

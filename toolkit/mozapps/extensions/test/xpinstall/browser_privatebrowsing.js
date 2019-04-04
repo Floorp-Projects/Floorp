@@ -18,6 +18,7 @@ function check_channel(subject) {
 // ----------------------------------------------------------------------------
 // Tests we send the right cookies when installing through an InstallTrigger call
 let gPrivateWin;
+let gPopupShown;
 async function test() {
   waitForExplicitFinish(); // have to call this ourselves because we're async.
   Harness.installConfirmCallback = confirm_install;
@@ -40,6 +41,7 @@ async function test() {
   gPrivateWin.gBrowser.selectedTab = BrowserTestUtils.addTab(gPrivateWin.gBrowser);
   Services.obs.addObserver(check_channel, "http-on-before-connect");
   BrowserTestUtils.loadURI(gPrivateWin.gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  gPopupShown = BrowserTestUtils.waitForEvent(gPrivateWin.PanelUI.notificationPanel, "popupshown");
 }
 
 function confirm_install(panel) {
@@ -73,13 +75,14 @@ const finish_test = async function(count) {
 
   // Explicitly click the "OK" button to avoid the panel reopening in the other window once this
   // window closes (see also bug 1535069):
-  await BrowserTestUtils.waitForEvent(gPrivateWin.PanelUI.notificationPanel, "popupshown");
+  await gPopupShown;
   gPrivateWin.PanelUI.notificationPanel.querySelector("popupnotification[popupid=addon-installed]").button.click();
 
   // Now finish the test:
   await BrowserTestUtils.closeWindow(gPrivateWin);
   Harness.finish(gPrivateWin);
   gPrivateWin = null;
+  gPopupShown = null;
 };
 
 

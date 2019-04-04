@@ -175,6 +175,10 @@ body {
     background-image: url("../data/content/assets/glyph-pocket-16.svg"); }
   .icon.icon-pocket-save {
     background-image: url("../data/content/assets/glyph-pocket-save-16.svg"); }
+  .icon.icon-pocket-delete {
+    background-image: url("../data/content/assets/glyph-pocket-delete-16.svg"); }
+  .icon.icon-pocket-archive {
+    background-image: url("../data/content/assets/glyph-pocket-archive-16.svg"); }
   .icon.icon-history-item {
     background-image: url("chrome://browser/skin/history.svg"); }
   .icon.icon-trending {
@@ -1679,6 +1683,12 @@ main {
   .asrouter-admin table {
     border-collapse: collapse;
     width: 100%; }
+    .asrouter-admin table.errorReporting tr {
+      border: 1px solid var(--newtab-textbox-background-color); }
+    .asrouter-admin table.errorReporting td {
+      padding: 4px; }
+      .asrouter-admin table.errorReporting td[rowspan] {
+        border: 1px solid var(--newtab-textbox-background-color); }
   .asrouter-admin .sourceLabel {
     background: var(--newtab-textbox-background-color);
     padding: 2px 5px;

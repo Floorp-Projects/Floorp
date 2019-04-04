@@ -22,11 +22,9 @@ module.exports = (env = {}) => ({
         exclude: /node_modules\/(?!(fluent|fluent-react)\/).*/,
         loader: "babel-loader",
         options: {
-          presets: ["react"],
+          presets: ["@babel/preset-react"],
           plugins: [
-            ["transform-async-to-generator"],
-            ["transform-async-generator-functions"],
-            ["transform-object-rest-spread", {"useBuiltIns": true}],
+            ["@babel/plugin-proposal-async-generator-functions"],
           ],
         },
       },
@@ -35,7 +33,7 @@ module.exports = (env = {}) => ({
         exclude: /node_modules/,
         loader: "babel-loader",
         // Converts .jsm files into common-js modules
-        options: {plugins: [["jsm-to-esmodules", {basePath: resourcePathRegEx, removeOtherImports: true, replace: true}], ["transform-object-rest-spread", {"useBuiltIns": true}]]},
+        options: {plugins: [["jsm-to-esmodules", {basePath: resourcePathRegEx, removeOtherImports: true, replace: true}]]},
       },
     ],
   },

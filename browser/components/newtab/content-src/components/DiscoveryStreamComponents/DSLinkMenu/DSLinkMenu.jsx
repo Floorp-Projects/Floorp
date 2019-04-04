@@ -42,7 +42,7 @@ export class _DSLinkMenu extends React.PureComponent {
   render() {
     const {index, dispatch} = this.props;
     const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
-    const TOP_STORIES_CONTEXT_MENU_OPTIONS = ["OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"];
+    const TOP_STORIES_CONTEXT_MENU_OPTIONS = ["CheckBookmarkOrArchive", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"];
     const title = this.props.title || this.props.source;
     const type = this.props.type || "DISCOVERY_STREAM";
 
@@ -70,6 +70,8 @@ export class _DSLinkMenu extends React.PureComponent {
             type: this.props.type,
             url: this.props.url,
             guid: this.props.id,
+            pocket_id: this.props.pocket_id,
+            bookmarkGuid: this.props.bookmarkGuid,
           }} />
       }
     </div>);

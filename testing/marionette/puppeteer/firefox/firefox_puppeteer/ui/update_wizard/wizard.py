@@ -54,27 +54,27 @@ class Wizard(UIBaseLib):
 
     @property
     def cancel_button(self):
-        return self._buttons.find_element(By.ANON_ATTRIBUTE, {'dlgtype': 'cancel'})
+        return self._buttons.find_element(By.CSS_SELECTOR, '[dlgtype="cancel"]')
 
     @property
     def extra1_button(self):
-        return self._buttons.find_element(By.ANON_ATTRIBUTE, {'dlgtype': 'extra1'})
+        return self._buttons.find_element(By.CSS_SELECTOR, '[dlgtype="extra1"]')
 
     @property
     def extra2_button(self):
-        return self._buttons.find_element(By.ANON_ATTRIBUTE, {'dlgtype': 'extra2'})
+        return self._buttons.find_element(By.CSS_SELECTOR, '[dlgtype="extra2"]')
 
     @property
     def previous_button(self):
-        return self._buttons.find_element(By.ANON_ATTRIBUTE, {'dlgtype': 'back'})
+        return self._buttons.find_element(By.CSS_SELECTOR, '[dlgtype="back"]')
 
     @property
     def finish_button(self):
-        return self._buttons.find_element(By.ANON_ATTRIBUTE, {'dlgtype': 'finish'})
+        return self._buttons.find_element(By.CSS_SELECTOR, '[dlgtype="finish"]')
 
     @property
     def next_button(self):
-        return self._buttons.find_element(By.ANON_ATTRIBUTE, {'dlgtype': 'next'})
+        return self._buttons.find_element(By.CSS_SELECTOR, '[dlgtype="next"]')
 
     # Properties for visual panels of the wizard #
 

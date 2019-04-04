@@ -12,8 +12,10 @@
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedInteger.h"
 #include "SVGAnimatedIntegerPair.h"
+#include "SVGAnimatedNumberList.h"
 #include "nsSVGNumber2.h"
 #include "SVGAnimatedString.h"
+#include "SVGAnimatedNumberList.h"
 #include "SVGFilters.h"
 
 nsresult NS_NewSVGFEConvolveMatrixElement(

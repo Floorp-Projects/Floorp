@@ -1,4 +1,5 @@
 import {CFRPageActions, PageAction} from "lib/CFRPageActions.jsm";
+import {FAKE_RECOMMENDATION} from "./constants";
 import {GlobalOverrider} from "test/unit/utils";
 
 describe("CFRPageActions", () => {
@@ -41,50 +42,7 @@ describe("CFRPageActions", () => {
     sandbox = sinon.createSandbox();
     clock = sandbox.useFakeTimers();
 
-    fakeRecommendation = {
-      id: "fake_id",
-      content: {
-        category: "cfrDummy",
-        bucket_id: "fake_bucket_id",
-        notification_text: "Fake Notification Text",
-        info_icon: {
-          label: "Fake Info Icon Label",
-          sumo_path: "a_help_path_fragment",
-        },
-        heading_text: "Fake Heading Text",
-        addon:  {
-          title: "Fake Addon Title",
-          author: "Fake Addon Author",
-          icon: "a_path_to_some_icon",
-          rating: 4.2,
-          users: 1234,
-          amo_url: "a_path_to_amo",
-        },
-        descriptionDetails: {
-          steps: [{string_id: "cfr-features-step1"}],
-        },
-        text: "Here is the recommendation text body",
-        buttons: {
-          primary: {
-            label: {string_id: "primary_button_id"},
-            action: {
-              id: "primary_action",
-              data: {},
-            },
-          },
-          secondary: [{
-            label: {string_id: "secondary_button_id"},
-            action: {id: "secondary_action"},
-          }, {
-            label: {string_id: "secondary_button_id_2"},
-            action: {id: "secondary_action"},
-          }, {
-            label: {string_id: "secondary_button_id_3"},
-            action: {id: "secondary_action"},
-          }],
-        },
-      },
-    };
+    fakeRecommendation = {...FAKE_RECOMMENDATION};
     fakeHost = "mozilla.org";
     fakeBrowser = {
       documentURI: {
@@ -114,8 +72,6 @@ describe("CFRPageActions", () => {
     for (const id of elementIDs) {
       const elem = document.createElement("div");
       elem.setAttribute("id", id);
-      // TODO: Remove this once travis is on Firefox 63+
-      elem.toggleAttribute = () => {};
       containerElem.appendChild(elem);
       elements[id] = elem;
     }
@@ -789,6 +745,38 @@ describe("CFRPageActions", () => {
         assert.equal(recommendation.content.buttons.primary.action.id, fakeRecommendation.content.buttons.primary.action.id);
 
         delete fakeRecommendation.template;
+      });
+      it("should prevent a second message if one is currently displayed", async () => {
+        const secondMessage = {...fakeRecommendation, id: "second_message"};
+        let messageAdded = await CFRPageActions.addRecommendation(fakeBrowser, fakeHost, fakeRecommendation, dispatchStub);
+
+        assert.isTrue(messageAdded);
+        assert.deepInclude(CFRPageActions.RecommendationMap.get(fakeBrowser), {
+          id: fakeRecommendation.id,
+          host: fakeHost,
+          content: fakeRecommendation.content,
+        });
+
+        messageAdded = await CFRPageActions.addRecommendation(fakeBrowser, fakeHost, secondMessage, dispatchStub);
+        // Adding failed
+        assert.isFalse(messageAdded);
+        // First message is still there
+        assert.deepInclude(CFRPageActions.RecommendationMap.get(fakeBrowser), {
+          id: fakeRecommendation.id,
+          host: fakeHost,
+          content: fakeRecommendation.content,
+        });
+      });
+      it("should send impressions just for the first message", async () => {
+        const secondMessage = {...fakeRecommendation, id: "second_message"};
+        await CFRPageActions.addRecommendation(fakeBrowser, fakeHost, fakeRecommendation, dispatchStub);
+        await CFRPageActions.addRecommendation(fakeBrowser, fakeHost, secondMessage, dispatchStub);
+
+        // Doorhanger telemetry + Impression for just 1 message
+        assert.calledTwice(dispatchStub);
+        const [firstArgs] = dispatchStub.firstCall.args;
+        const [secondArgs] = dispatchStub.secondCall.args;
+        assert.equal(firstArgs.data.id, secondArgs.data.message_id);
       });
     });
 

@@ -13,12 +13,15 @@ const FAKE_RESPONSE_HEADERS = {get() {}};
 describe("MessageLoaderUtils", () => {
   let fetchStub;
   let clock;
+  let sandbox;
 
   beforeEach(() => {
+    sandbox = sinon.createSandbox();
     clock = sinon.useFakeTimers();
     fetchStub = sinon.stub(global, "fetch");
   });
   afterEach(() => {
+    sandbox.restore();
     clock.restore();
     fetchStub.restore();
   });
@@ -77,7 +80,7 @@ describe("MessageLoaderUtils", () => {
       });
 
       it("should return messages for a 302 response with json", async () => {
-        fetchStub.resolves({ok: false, status: 302, json: () => Promise.resolve(respJson), headers: FAKE_RESPONSE_HEADERS});
+        fetchStub.resolves({ok: true, status: 302, json: () => Promise.resolve(respJson), headers: FAKE_RESPONSE_HEADERS});
         assertReturnsCorrectMessages(await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE));
       });
 
@@ -124,6 +127,37 @@ describe("MessageLoaderUtils", () => {
         fetchStub.resolves({ok: false, status: 200, json: () => "", headers: FAKE_RESPONSE_HEADERS});
         const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
         assert.deepEqual(result.messages, []);
+      });
+
+      it("should report response parsing errors with MessageLoaderUtils.reportError", async () => {
+        const err = {};
+        sandbox.spy(MessageLoaderUtils, "reportError");
+        fetchStub.resolves({ok: true, status: 200, json: sandbox.stub().rejects(err), headers: FAKE_RESPONSE_HEADERS});
+        await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+
+        assert.calledOnce(MessageLoaderUtils.reportError);
+        // Report that json parsing failed
+        assert.calledWith(MessageLoaderUtils.reportError, err);
+      });
+
+      it("should report missing `messages` with MessageLoaderUtils.reportError", async () => {
+        sandbox.spy(MessageLoaderUtils, "reportError");
+        fetchStub.resolves({ok: true, status: 200, json: sandbox.stub().resolves({}), headers: FAKE_RESPONSE_HEADERS});
+        await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+
+        assert.calledOnce(MessageLoaderUtils.reportError);
+        // Report no messages returned
+        assert.calledWith(MessageLoaderUtils.reportError, "No messages returned from https://foo.com.");
+      });
+
+      it("should report bad status responses with MessageLoaderUtils.reportError", async () => {
+        sandbox.spy(MessageLoaderUtils, "reportError");
+        fetchStub.resolves({ok: false, status: 500, json: sandbox.stub().resolves({}), headers: FAKE_RESPONSE_HEADERS});
+        await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+
+        assert.calledOnce(MessageLoaderUtils.reportError);
+        // Report no messages returned
+        assert.calledWith(MessageLoaderUtils.reportError, "Invalid response status 500 from https://foo.com.");
       });
 
       it("should return an empty array if the request rejects", async () => {
@@ -234,18 +268,13 @@ describe("MessageLoaderUtils", () => {
   });
 
   describe("#_loadAddonIconInURLBar", () => {
-    let sandbox;
     let notificationContainerEl;
     let browser;
     let getContainerStub;
     beforeEach(() => {
-      sandbox = sinon.createSandbox();
       notificationContainerEl = {style: {}};
       browser = {ownerDocument: {getElementById() { return {}; }}};
       getContainerStub = sandbox.stub(browser.ownerDocument, "getElementById");
-    });
-    afterEach(() => {
-      sandbox.restore();
     });
     it("should return for empty args", () => {
       MessageLoaderUtils._loadAddonIconInURLBar();
@@ -274,12 +303,10 @@ describe("MessageLoaderUtils", () => {
 
   describe("#installAddonFromURL", () => {
     let globals;
-    let sandbox;
     let getInstallStub;
     let installAddonStub;
     beforeEach(() => {
       globals = new GlobalOverrider();
-      sandbox = sinon.createSandbox();
       getInstallStub = sandbox.stub();
       installAddonStub = sandbox.stub();
       sandbox.stub(MessageLoaderUtils, "_loadAddonIconInURLBar").returns(null);
@@ -289,7 +316,6 @@ describe("MessageLoaderUtils", () => {
       });
     });
     afterEach(() => {
-      sandbox.restore();
       globals.restore();
     });
     it("should call the Addons API when passed a valid URL", async () => {

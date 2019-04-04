@@ -672,10 +672,6 @@ wizardpage {
   overflow: auto;
 }
 
-.wizard-buttons {
-  -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizard-buttons");
-}
-
 /********** Rich Listbox ********/
 
 richlistbox {

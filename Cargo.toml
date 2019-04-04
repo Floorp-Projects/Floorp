@@ -58,7 +58,7 @@ codegen-units = 1
 
 [patch.crates-io]
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
-serde_derive = { git = "https://github.com/servo/serde", branch = "deserialize_from_enums9" }
+serde_derive = { git = "https://github.com/servo/serde", branch = "deserialize_from_enums10" }
 winapi = { git = "https://github.com/froydnj/winapi-rs", branch = "aarch64" }
 packed_simd = { git = "https://github.com/hsivonen/packed_simd", branch = "rust_1_32" }
 target-lexicon = { git = "https://github.com/glandium/target-lexicon", branch = "thumbv7neon-v0.2" }

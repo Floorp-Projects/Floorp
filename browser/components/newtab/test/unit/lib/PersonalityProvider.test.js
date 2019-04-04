@@ -36,6 +36,7 @@ describe("Personality Provider", () => {
   let NaiveBayesTextTaggerStub;
   let NmfTextTaggerStub;
   let RecipeExecutorStub;
+  let baseURLStub;
 
   beforeEach(() => {
     globals = new GlobalOverrider();
@@ -51,13 +52,13 @@ describe("Personality Provider", () => {
     NmfTextTaggerStub = globals.sandbox.stub();
     RecipeExecutorStub = globals.sandbox.stub();
 
-    globals.set("baseAttachmentsURL", new Promise(resolve => resolve("/")));
+    baseURLStub = "";
 
     global.fetch = async server => ({
       ok: true,
       json: async () => {
         if (server === "services.settings.server/") {
-          return {capabilities: {attachments: {base_url: ""}}};
+          return {capabilities: {attachments: {base_url: baseURLStub}}};
         }
         return {};
       },
@@ -386,6 +387,7 @@ describe("Personality Provider", () => {
         ok: true,
         arrayBuffer: async () => {},
       });
+      baseURLStub = "/";
 
       const writeAtomicStub = globals.sandbox.stub(global.OS.File, "writeAtomic").resolves(Promise.resolve());
       globals.sandbox.stub(global.OS.Path, "join").callsFake((first, second) => first + second);
@@ -403,6 +405,7 @@ describe("Personality Provider", () => {
     it("should call reportError from _downloadAttachment if not valid response", async () => {
       globals.sandbox.stub(global, "fetch").resolves({ok: false});
       globals.sandbox.spy(global.Cu, "reportError");
+      baseURLStub = "/";
 
       await instance._downloadAttachment({attachment: {location: "location", filename: "filename"}});
       assert.calledWith(Cu.reportError, "Failed to fetch /location: undefined");
