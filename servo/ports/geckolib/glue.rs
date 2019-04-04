@@ -3517,14 +3517,8 @@ pub extern "C" fn Servo_ComputedValues_GetStyleRuleList(
     }))
 }
 
-/// See the comment in `Device` to see why it's ok to pass an owned reference to
-/// the pres context (hint: the context outlives the StyleSet, that holds the
-/// device alive).
 #[no_mangle]
-pub extern "C" fn Servo_StyleSet_Init(
-    pres_context: &structs::nsPresContext,
-) -> *mut RawServoStyleSet {
-    let doc = pres_context.mDocument.mRawPtr;
+pub extern "C" fn Servo_StyleSet_Init(doc: &structs::Document) -> *mut RawServoStyleSet {
     let data = Box::new(PerDocumentStyleData::new(doc));
     Box::into_raw(data) as *mut RawServoStyleSet
 }

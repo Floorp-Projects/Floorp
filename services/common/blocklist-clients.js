@@ -34,6 +34,18 @@ const PREF_BLOCKLIST_GFX_COLLECTION          = "services.blocklist.gfx.collectio
 const PREF_BLOCKLIST_GFX_CHECKED_SECONDS     = "services.blocklist.gfx.checked";
 const PREF_BLOCKLIST_GFX_SIGNER              = "services.blocklist.gfx.signer";
 
+function setRevocationByIssuerAndSerial(certStorage, issuer, serial, state) {
+  return new Promise((resolve) =>
+    certStorage.setRevocationByIssuerAndSerial(issuer, serial, state, resolve)
+  );
+}
+
+function setRevocationBySubjectAndPubKey(certStorage, subject, pubKey, state) {
+  return new Promise((resolve) =>
+    certStorage.setRevocationBySubjectAndPubKey(subject, pubKey, state, resolve)
+  );
+}
+
 /**
  * Revoke the appropriate certificates based on the records from the blocklist.
  *
@@ -44,14 +56,12 @@ async function updateCertBlocklist({ data: { created, updated, deleted } }) {
                      .getService(Ci.nsICertStorage);
   for (let item of deleted) {
     if (item.issuerName && item.serialNumber) {
-      certList.setRevocationByIssuerAndSerial(item.issuerName,
-                                              item.serialNumber,
-                                              Ci.nsICertStorage.STATE_UNSET);
-      } else if (item.subject && item.pubKeyHash) {
-        certList.setRevocationBySubjectAndPubKey(item.subject,
-                                                 item.pubKeyHash,
-                                                 Ci.nsICertStorage.STATE_UNSET);
-      }
+      await setRevocationByIssuerAndSerial(certList, item.issuerName, item.serialNumber,
+                                           Ci.nsICertStorage.STATE_UNSET);
+    } else if (item.subject && item.pubKeyHash) {
+      await setRevocationBySubjectAndPubKey(certList, item.subject, item.pubKeyHash,
+                                            Ci.nsICertStorage.STATE_UNSET);
+    }
   }
 
   const toAdd = created.concat(updated.map(u => u.new));
@@ -59,13 +69,11 @@ async function updateCertBlocklist({ data: { created, updated, deleted } }) {
   for (let item of toAdd) {
     try {
       if (item.issuerName && item.serialNumber) {
-        certList.setRevocationByIssuerAndSerial(item.issuerName,
-                                                item.serialNumber,
-                                                Ci.nsICertStorage.STATE_ENFORCE);
+        await setRevocationByIssuerAndSerial(certList, item.issuerName, item.serialNumber,
+                                             Ci.nsICertStorage.STATE_ENFORCE);
       } else if (item.subject && item.pubKeyHash) {
-        certList.setRevocationBySubjectAndPubKey(item.subject,
-                                                 item.pubKeyHash,
-                                                 Ci.nsICertStorage.STATE_ENFORCE);
+        await setRevocationBySubjectAndPubKey(certList, item.subject, item.pubKeyHash,
+                                             Ci.nsICertStorage.STATE_ENFORCE);
       }
     } catch (e) {
       // prevent errors relating to individual blocklist entries from

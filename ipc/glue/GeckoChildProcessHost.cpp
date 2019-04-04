@@ -950,7 +950,9 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
   LaunchAndroidService(childProcessType, childArgv,
                        mLaunchOptions->fds_to_remap, &process);
 #  else   // goes with defined(MOZ_WIDGET_ANDROID)
-  base::LaunchApp(childArgv, *mLaunchOptions, &process);
+  if (!base::LaunchApp(childArgv, *mLaunchOptions, &process)) {
+    return false;
+  }
 #  endif  // defined(MOZ_WIDGET_ANDROID)
 
   // We're in the parent and the child was launched. Close the child FD in the
@@ -1222,11 +1224,15 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
           .print("==> process %d launched child process %d (%S)\n",
                  base::GetCurrentProcId(), base::GetProcId(process),
                  cmdLine.command_line_string().c_str());
+    } else {
+      return false;
     }
   } else
 #  endif  // defined(MOZ_SANDBOX)
   {
-    base::LaunchApp(cmdLine, *mLaunchOptions, &process);
+    if (!base::LaunchApp(cmdLine, *mLaunchOptions, &process)) {
+      return false;
+    }
 
 #  ifdef MOZ_SANDBOX
     // We need to be able to duplicate handles to some types of non-sandboxed
@@ -1251,9 +1257,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
 #  error Sorry
 #endif  // defined(OS_POSIX)
 
-  if (!process) {
-    return false;
-  }
+  MOZ_ASSERT(process);
   // NB: on OS X, we block much longer than we need to in order to
   // reach this call, waiting for the child process's task_t.  The
   // best way to fix that is to refactor this file, hard.

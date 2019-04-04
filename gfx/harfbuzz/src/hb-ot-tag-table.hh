@@ -6,8 +6,8 @@
  *
  * on files with these headers:
  *
- * <meta name="updated_at" content="2018-09-07 07:45 PM" />
- * File-Date: 2018-08-08
+ * <meta name="updated_at" content="2018-11-18 05:25 AM" />
+ * File-Date: 2019-02-20
  */
 
 #ifndef HB_OT_TAG_TABLE_HH
@@ -131,7 +131,7 @@ static const LangTag ot_languages[] = {
   {"bjt",	{HB_TAG('B','L','N',' ')}},	/* Balanta-Ganja -> Balante */
   {"bla",	{HB_TAG('B','K','F',' ')}},	/* Siksika -> Blackfoot */
   {"ble",	{HB_TAG('B','L','N',' ')}},	/* Balanta-Kentohe -> Balante */
-  {"blk",	{HB_TAG('B','L','K',' ')}},	/* Pa'o Karen */
+  {"blk",	{HB_TAG('B','L','K',' ')}},	/* Pa’o Karen */
   {"bln",	{HB_TAG('B','I','K',' ')}},	/* Southern Catanduanes Bikol -> Bikol */
   {"bm",	{HB_TAG('B','M','B',' ')}},	/* Bambara (Bamanankan) */
   {"bmm",	{HB_TAG('M','L','G',' ')}},	/* Northern Betsimisaraka Malagasy -> Malagasy */
@@ -318,7 +318,7 @@ static const LangTag ot_languages[] = {
   {"fj",	{HB_TAG('F','J','I',' ')}},	/* Fijian */
   {"flm",	{HB_TAG('H','A','L',' '),	/* Halam (Falam Chin) (retired code) */
 		 HB_TAG('Q','I','N',' ')}},	/* Falam Chin (retired code) -> Chin */
-  {"fmp",	{HB_TAG('F','M','P',' ')}},	/* Fe'fe' */
+  {"fmp",	{HB_TAG('F','M','P',' ')}},	/* Fe’fe’ */
   {"fo",	{HB_TAG('F','O','S',' ')}},	/* Faroese */
   {"fon",	{HB_TAG('F','O','N',' ')}},	/* Fon */
   {"fr",	{HB_TAG('F','R','A',' ')}},	/* French */
@@ -653,7 +653,7 @@ static const LangTag ot_languages[] = {
   {"mwr",	{HB_TAG('M','A','W',' ')}},	/* Marwari [macrolanguage] */
   {"mww",	{HB_TAG('M','W','W',' ')}},	/* Hmong Daw */
   {"my",	{HB_TAG('B','R','M',' ')}},	/* Burmese */
-  {"mym",	{HB_TAG('M','E','N',' ')}},	/* Me'en */
+  {"mym",	{HB_TAG('M','E','N',' ')}},	/* Me’en */
   {"myn",	{HB_TAG('M','Y','N',' ')}},	/* Mayan [family] */
   {"myq",	{HB_TAG('M','N','K',' ')}},	/* Forest Maninka (retired code) -> Maninka */
   {"myv",	{HB_TAG('E','R','Z',' ')}},	/* Erzya */
@@ -687,7 +687,7 @@ static const LangTag ot_languages[] = {
   {"nog",	{HB_TAG('N','O','G',' ')}},	/* Nogai */
   {"nov",	{HB_TAG('N','O','V',' ')}},	/* Novial */
   {"npi",	{HB_TAG('N','E','P',' ')}},	/* Nepali */
-  {"nqo",	{HB_TAG('N','K','O',' ')}},	/* N'Ko */
+  {"nqo",	{HB_TAG('N','K','O',' ')}},	/* N’Ko */
   {"nr",	{HB_TAG('N','D','B',' ')}},	/* South Ndebele -> Ndebele */
   {"nsk",	{HB_TAG('N','A','S',' ')}},	/* Naskapi */
   {"nso",	{HB_TAG('N','S','O',' ')}},	/* Pedi -> Sotho, Northern */

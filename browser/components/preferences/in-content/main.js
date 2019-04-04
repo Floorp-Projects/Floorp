@@ -644,54 +644,6 @@ var gMainPane = {
     this.readBrowserContainersCheckbox();
   },
 
-  async separateProfileModeChange() {
-    if (AppConstants.MOZ_DEV_EDITION) {
-      function quitApp() {
-        Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestartNotSameProfile);
-      }
-      function revertCheckbox(error) {
-        separateProfileModeCheckbox.checked = !separateProfileModeCheckbox.checked;
-        if (error) {
-          Cu.reportError("Failed to toggle separate profile mode: " + error);
-        }
-      }
-      function createOrRemoveSpecialDevEditionFile(onSuccess) {
-        let uAppData = OS.Constants.Path.userApplicationDataDir;
-        let ignoreSeparateProfile = OS.Path.join(uAppData, "ignore-dev-edition-profile");
-
-        if (separateProfileModeCheckbox.checked) {
-          OS.File.remove(ignoreSeparateProfile).then(onSuccess, revertCheckbox);
-        } else {
-          OS.File.writeAtomic(ignoreSeparateProfile, new Uint8Array()).then(onSuccess, revertCheckbox);
-        }
-      }
-
-      let separateProfileModeCheckbox = document.getElementById("separateProfileMode");
-      let button_index = await confirmRestartPrompt(separateProfileModeCheckbox.checked,
-        0, false, true);
-      switch (button_index) {
-        case CONFIRM_RESTART_PROMPT_CANCEL:
-          revertCheckbox();
-          return;
-        case CONFIRM_RESTART_PROMPT_RESTART_NOW:
-          let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
-            .createInstance(Ci.nsISupportsPRBool);
-          Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
-            "restart");
-          if (!cancelQuit.data) {
-            createOrRemoveSpecialDevEditionFile(quitApp);
-            return;
-          }
-
-          // Revert the checkbox in case we didn't quit
-          revertCheckbox();
-          return;
-        case CONFIRM_RESTART_PROMPT_RESTART_LATER:
-          createOrRemoveSpecialDevEditionFile();
-      }
-    }
-  },
-
   async onGetStarted(aEvent) {
     if (!AppConstants.MOZ_DEV_EDITION) {
       return;

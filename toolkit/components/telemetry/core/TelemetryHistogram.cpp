@@ -3157,7 +3157,7 @@ nsresult TelemetryHistogram::SerializeHistograms(mozilla::JSONWriter& aWriter) {
     // it was recorded.
     if (NS_FAILED(internal_GetHistogramsSnapshot(
             locker, NS_LITERAL_CSTRING("main"),
-            nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN,
+            nsITelemetry::DATASET_PRERELEASE_CHANNELS,
             false /* aClearSubsession */, includeGPUProcess,
             false /* aFilterTest */, processHistArray))) {
       return NS_ERROR_FAILURE;
@@ -3202,7 +3202,7 @@ nsresult TelemetryHistogram::SerializeKeyedHistograms(
     // it was recorded.
     if (NS_FAILED(internal_GetKeyedHistogramsSnapshot(
             locker, NS_LITERAL_CSTRING("main"),
-            nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN,
+            nsITelemetry::DATASET_PRERELEASE_CHANNELS,
             false /* aClearSubsession */, includeGPUProcess,
             false /* aFilterTest */, processHistArray))) {
       return NS_ERROR_FAILURE;

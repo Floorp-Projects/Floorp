@@ -24,6 +24,7 @@
 #include "nsNetUtil.h"
 #include "nsIConsoleService.h"
 #include "nsIObserverService.h"
+#include "nsIPresShellInlines.h"
 #include "nsLayoutStatics.h"
 #include "nsLayoutUtils.h"
 

@@ -9,59 +9,90 @@
 #define NS_CERTSTORAGE_CONTRACTID "@mozilla.org/security/certstorage;1"
 %}
 
+/**
+ * Callback type used to notify callers that an operation performed by
+ * nsICertStorage has completed. Indicates the result of the requested
+ * operation.
+ */
+[scriptable, function, uuid(3f8fe26a-a436-4ad4-9c1c-a53c60973c31)]
+interface nsICertStorageCallback : nsISupports {
+  [must_use]
+  void done(in nsresult result);
+};
+
 [scriptable, uuid(327100a7-3401-45ef-b160-bf880f1016fd)]
 interface nsICertStorage : nsISupports {
   const short STATE_UNSET = 0;
   const short STATE_ENFORCE = 1;
 
   /**
-   * Set the revocation state of a certificate by issuer and serial number:
-   * issuer name (base-64 encoded DER) and serial number (base-64 encoded DER).
+   * Asynchronously set the revocation state of a certificate by issuer and
+   * serial number. Both issuer name and serial number are base64-encoded.
+   * Pass STATE_UNSET to mark the certificate as not revoked.
+   * Pass STATE_ENFORCE to mark the certificate as revoked.
+   * The given callback is called with the result of the operation when it
+   * completes.
+   * Must only be called from the main thread.
    */
   [must_use]
   void setRevocationByIssuerAndSerial(in ACString issuer,
                                       in ACString serialNumber,
-                                      in short state);
+                                      in short state,
+                                      in nsICertStorageCallback callback);
 
   /**
-   * Set the revocation state of a certificate by subject and public key hash:
-   * subject name (base-64 encoded DER) and hash of public key (base-64 encoded
-   * sha-256 hash of the public key).
-   * state (short) is STATE_ENFORCE for revoked certs, STATE_UNSET otherwise.
+   * Asynchronously set the revocation state of a certificate by subject and
+   * public key hash (the hash algorithm should be SHA-256). Both subject name
+   * and public key hash are base64-encoded.
+   * Pass STATE_UNSET to mark the certificate as not revoked.
+   * Pass STATE_ENFORCE to mark the certificate as revoked.
+   * The given callback is called with the result of the operation when it
+   * completes.
+   * Must only be called from the main thread.
    */
   [must_use]
   void setRevocationBySubjectAndPubKey(in ACString subject,
                                        in ACString pubKeyHash,
-                                       in short state);
+                                       in short state,
+                                       in nsICertStorageCallback callback);
 
   /**
-   * Set the whitelist state of an intermediate certificate by issuer and
-   * serial number:
-   * issuer name (base-64 encoded DER) and serial number (base-64 encoded DER).
+   * Asynchronously set the whitelist state of an intermediate certificate by
+   * issuer and serial number. Both are base64-encoded.
    * state (short) is STATE_ENFORCE for whitelisted certs, STATE_UNSET otherwise.
+   * The given callback is called with the result of the operation when it
+   * completes.
+   * Must only be called from the main thread.
    */
   [must_use]
   void setWhitelist(in ACString issuer,
                     in ACString serialNumber,
-                    in short state);
+                    in short state,
+                    in nsICertStorageCallback callback);
 
   /**
-   * Set the CRLite enrollment state of a certificate by issuer and serial
-   * number:
-   * issuer name (base-64 encoded DER) and serial number (base-64 encoded DER).
+   * Asynchronously set the CRLite enrollment state of a certificate by issuer
+   * and serial number. Both are base64-encoded.
    * state (short) is STATE_ENFORCE for enrolled certs, STATE_UNSET otherwise.
+   * The given callback is called with the result of the operation when it
+   * completes.
+   * Must only be called from the main thread.
    */
   [must_use]
   void setEnrollment(in ACString issuer,
                     in ACString serialNumber,
-                    in short state);
+                    in short state,
+                    in nsICertStorageCallback callback);
 
   /**
-   * Get the revocation state of a certificate.
+   * Get the revocation state of a certificate. STATE_UNSET indicates the
+   * certificate is not revoked. STATE_ENFORCE indicates the certificate is
+   * revoked.
    * issuer - issuer name, DER, Base64 encoded
    * serial - serial number, DER, Base64 encoded
    * subject - subject name, DER, Base64 encoded
    * pubkey - public key, DER, Base64 encoded
+   * Must not be called from the main thread.
    */
   [must_use]
   short getRevocationState(in ACString issuer,
@@ -73,6 +104,7 @@ interface nsICertStorage : nsISupports {
    * Get the CRLite enrollment status of a certificate.
    * issuer - issuer name, DER, Base64 encoded
    * serial - serial number, DER, Base64 encoded
+   * Must not be called from the main thread.
    */
   [must_use]
   short getEnrollmentState(in ACString issuer,
@@ -82,6 +114,7 @@ interface nsICertStorage : nsISupports {
    * Get the whitelist status of an intermediate certificate.
    * issuer - issuer name, DER, Base64 encoded
    * serial - serial number, DER, Base64 encoded
+   * Must not be called from the main thread.
    */
   [must_use]
   short getWhitelistState(in ACString issuer,

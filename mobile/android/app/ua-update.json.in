@@ -6,15 +6,4 @@
 // "#" hash sign is the separator. If no hash sign, the full string is used as replacement.
 // NOTE: trailing commas are not valid JSON and will prevent the CDN from syncing.
 {
-  "weather.yahoo.co.jp": "Mozilla/5.0 (Linux; Android 5.0.2; Galaxy Nexus Build/IMM76B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.93 Mobile Safari/537.36",
-  // bug 1177298, lohaco.jp
-  "lohaco.jp": "Mozilla/5.0 (Linux; Android 5.0.2; Galaxy Nexus Build/IMM76B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.93 Mobile Safari/537.36",
-  // bug 1177298, www.nhk.or.jp
-  "nhk.or.jp": "\\)\\s# AppleWebKit ",
-  // bug 1177298, uniqlo.com
-  "uniqlo.com": "\\)\\s#) Mobile Safari ",
-  // bug 1338260, directv.com
-  "directv.com": "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36",
-  // bug 1385206, rakuten.co.jp
-  "rakuten.co.jp": "Firefox.+$# "
 }

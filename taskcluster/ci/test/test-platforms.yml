@@ -204,17 +204,13 @@ windows10-64/opt:
         - raptor-firefox
         - marionette-media-tests
 
-# windows10-aarch64/opt:
-#     build-platform: win64-aarch64/opt
-#     test-sets:
-#         - awsy
-#         - desktop-screenshot-capture
-#         - windows-talos
-#         - marionette-gpu-tests
-#         - windows-tests
-#         - web-platform-tests
-#         - mochitest-headless
-#         - raptor-firefox
+windows10-aarch64/opt:
+    build-platform: win64-aarch64/opt
+    test-sets:
+        - awsy
+        - marionette-gpu-tests
+        - raptor-firefox
+        - windows-aarch64-tests
 
 windows10-64-ux/opt:
     build-platform: win64-shippable/opt

@@ -7,6 +7,7 @@
 #include "nsFontFaceUtils.h"
 
 #include "gfxUserFontSet.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "nsFontMetrics.h"
 #include "nsIFrame.h"
@@ -129,7 +130,7 @@ void nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
   subtrees.AppendElement(aSubtreeRoot);
 
   nsPresContext* pc = aSubtreeRoot->PresContext();
-  nsIPresShell* ps = pc->PresShell();
+  PresShell* presShell = pc->PresShell();
 
   // check descendants, iterating over subtrees that may include
   // additional subtrees associated with placeholders
@@ -150,7 +151,7 @@ void nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
       FontUsageKind kind = FrameFontUsage(f, pc, aFont);
       if (kind != FontUsageKind::None) {
         if (alreadyScheduled == ReflowAlreadyScheduled::No) {
-          ScheduleReflow(ps, f);
+          ScheduleReflow(presShell, f);
           alreadyScheduled = ReflowAlreadyScheduled::Yes;
         }
         if (kind == FontUsageKind::FrameAndFontMetrics) {

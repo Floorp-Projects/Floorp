@@ -35,8 +35,8 @@ bool IsInDataset(uint32_t aDataset, uint32_t aContainingDataset) {
 
   // The "optin on release channel" dataset is a superset of the
   // "optout on release channel one".
-  if (aContainingDataset == nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN &&
-      aDataset == nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT) {
+  if (aContainingDataset == nsITelemetry::DATASET_PRERELEASE_CHANNELS &&
+      aDataset == nsITelemetry::DATASET_ALL_CHANNELS) {
     return true;
   }
 
@@ -54,7 +54,7 @@ bool CanRecordDataset(uint32_t aDataset, bool aCanRecordBase,
   // If base telemetry data is enabled and we're trying to record base
   // telemetry, allow it.
   if (aCanRecordBase &&
-      IsInDataset(aDataset, nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT)) {
+      IsInDataset(aDataset, nsITelemetry::DATASET_ALL_CHANNELS)) {
     return true;
   }
 

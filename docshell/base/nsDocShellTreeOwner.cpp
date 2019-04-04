@@ -33,7 +33,6 @@
 #include "nsIFormControl.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIWebNavigation.h"
-#include "nsIPresShell.h"
 #include "nsIStringBundle.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
@@ -46,7 +45,6 @@
 #include "nsIWebBrowserChromeFocus.h"
 #include "nsIContent.h"
 #include "imgIContainer.h"
-#include "nsPresContext.h"
 #include "nsViewManager.h"
 #include "nsView.h"
 #include "nsIConstraintValidation.h"
@@ -57,6 +55,7 @@
 #include "mozilla/dom/File.h"      // for input type=file
 #include "mozilla/dom/FileList.h"  // for input type=file
 #include "mozilla/dom/LoadURIOptionsBinding.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
 
 using namespace mozilla;
@@ -394,7 +393,7 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem, int32_t aCX,
   RefPtr<nsPresContext> presContext = mWebBrowser->mDocShell->GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-  nsIPresShell* presShell = presContext->GetPresShell();
+  PresShell* presShell = presContext->GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   NS_ENSURE_SUCCESS(

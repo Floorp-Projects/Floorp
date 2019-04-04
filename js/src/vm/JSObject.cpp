@@ -2179,6 +2179,7 @@ static bool SetProto(JSContext* cx, HandleObject obj,
     }
     newGroup->setInterpretedFunction(oldGroup->maybeInterpretedFunction());
   } else {
+    AutoRealm ar(cx, oldGroup);
     newGroup = ObjectGroup::defaultNewGroup(cx, obj->getClass(), proto);
     if (!newGroup) {
       return false;
@@ -2560,15 +2561,15 @@ bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
 }
 
 static inline bool NativeGetPureInline(NativeObject* pobj, jsid id,
-                                       PropertyResult prop, Value* vp) {
+                                       PropertyResult prop, Value* vp,
+                                       JSContext* cx) {
   if (prop.isDenseOrTypedArrayElement()) {
     // For simplicity we ignore the TypedArray with string index case.
     if (!JSID_IS_INT(id)) {
       return false;
     }
 
-    *vp = pobj->getDenseOrTypedArrayElement(JSID_TO_INT(id));
-    return true;
+    return pobj->getDenseOrTypedArrayElement<NoGC>(cx, JSID_TO_INT(id), vp);
   }
 
   // Fail if we have a custom getter.
@@ -2594,7 +2595,7 @@ bool js::GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp) {
     return true;
   }
 
-  return NativeGetPureInline(&pobj->as<NativeObject>(), id, prop, vp);
+  return NativeGetPureInline(&pobj->as<NativeObject>(), id, prop, vp, cx);
 }
 
 bool js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp,
@@ -2611,7 +2612,7 @@ bool js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp,
   }
 
   *found = true;
-  return NativeGetPureInline(&obj->as<NativeObject>(), id, prop, vp);
+  return NativeGetPureInline(&obj->as<NativeObject>(), id, prop, vp, cx);
 }
 
 static inline bool NativeGetGetterPureInline(PropertyResult prop,

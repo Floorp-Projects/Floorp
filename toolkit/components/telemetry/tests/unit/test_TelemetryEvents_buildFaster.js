@@ -118,7 +118,7 @@ add_task({
 
   // Check the values we tried to store.
   const snapshot =
-    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false);
   Assert.ok(("parent" in snapshot), "Should have parent events in the snapshot.");
 
   let expected = [
@@ -169,7 +169,7 @@ add_task(async function test_dynamicBuiltinEvents() {
                         {"key2": "bar"});
   // Now check that the snapshot contains the expected data.
   let snapshot =
-    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false);
   Assert.ok(("parent" in snapshot), "Should have parent events in the snapshot.");
 
   let expected = [
@@ -206,7 +206,7 @@ add_task(async function test_dynamicBuiltinEventsDisabledByDefault() {
 
   // Now check that the snapshot contains the expected data.
   let snapshot =
-    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false);
   Assert.ok(!("parent" in snapshot), "Should not have parent events in the snapshot.");
 
   // Now enable the category and record again
@@ -214,7 +214,7 @@ add_task(async function test_dynamicBuiltinEventsDisabledByDefault() {
   Telemetry.recordEvent(TEST_EVENT_NAME, "test1", "object1");
 
   snapshot =
-    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false);
   Assert.ok(("parent" in snapshot), "Should have parent events in the snapshot.");
 
   let expected = [
@@ -253,7 +253,7 @@ add_task(async function test_dynamicBuiltinDontOverwriteStaticData() {
   Telemetry.recordEvent(TEST_EVENT_NAME, "dynamic", "anotherone");
 
   let snapshot =
-    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false);
   Assert.ok(("parent" in snapshot), "Should have parent events in the snapshot.");
 
   // All events should now be recorded in the right order
@@ -303,7 +303,7 @@ add_task(async function test_dynamicBuiltinEventsOverridingStatic() {
                         {"key1": "foo"});
   // Now check that the snapshot contains the expected data.
   let snapshot =
-    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false);
   Assert.ok(("parent" in snapshot), "Should have parent events in the snapshot.");
 
   let expected = [
@@ -356,7 +356,7 @@ add_task(async function test_realDynamicDontOverwrite() {
                         {"key1": "foo"});
   // Now check that the snapshot contains the expected data.
   let snapshot =
-    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false);
   Assert.ok(("parent" in snapshot), "Should have parent events in the snapshot.");
 
   let expected = [

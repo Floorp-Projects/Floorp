@@ -1127,7 +1127,6 @@ with modules["GENERAL"]:
     # the application should be restarted.  This condition corresponds to the
     # case in which nsIAppStartup::Quit was called with the eRestart flag.
     errors["NS_SUCCESS_RESTART_APP"] = SUCCESS(1)
-    errors["NS_SUCCESS_RESTART_APP_NOT_SAME_PROFILE"] = SUCCESS(3)
 
     # a11y
     # raised when current pivot's position is needed but it's not in the tree

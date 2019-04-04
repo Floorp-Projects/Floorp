@@ -157,7 +157,7 @@ function uninstallFakePAC() {
 function _eventsTelemetrySnapshot(component, source) {
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   const TELEMETRY_CATEGORY_ID = "uptake.remotecontent.result";
-  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT, true);
+  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_ALL_CHANNELS, true);
   const parentEvents = snapshot.parent || [];
   return parentEvents
     // Transform raw event data to objects.

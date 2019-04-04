@@ -3,13 +3,13 @@
 
 namespace webrtc {
 
-struct WebRtcRTPHeader;
+struct RTPHeader;
 
 class RtpPacketObserver {
   public:
 
   virtual void
-  OnRtpPacket(const WebRtcRTPHeader* aRtpHeader,
+  OnRtpPacket(const RTPHeader& aRtpHeader,
               const int64_t aTimestamp,
               const uint32_t aJitter) = 0;
 };

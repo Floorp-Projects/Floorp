@@ -33,7 +33,6 @@
 #include "nsFrameManager.h"
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"
-#include "nsIPresShell.h"
 #include "nsHTMLParts.h"
 #include "nsGkAtoms.h"
 #include "nsAttrValueInlines.h"
@@ -54,6 +53,7 @@
 #include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/Telemetry.h"
@@ -323,12 +323,12 @@ void nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot,
   DestroyAbsoluteFrames(aDestructRoot, aPostDestroyData);
   mFloats.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
   nsPresContext* presContext = PresContext();
-  nsIPresShell* shell = presContext->PresShell();
+  mozilla::PresShell* presShell = presContext->PresShell();
   nsLineBox::DeleteLineList(presContext, mLines, aDestructRoot, &mFrames,
                             aPostDestroyData);
 
   if (HasPushedFloats()) {
-    SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
+    SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
                                PushedFloatProperty());
     RemoveStateBits(NS_BLOCK_HAS_PUSHED_FLOATS);
   }
@@ -342,13 +342,13 @@ void nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot,
   }
 
   if (GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS) {
-    SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
+    SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
                                OverflowOutOfFlowsProperty());
     RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   }
 
   if (HasOutsideMarker()) {
-    SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, shell,
+    SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
                                OutsideMarkerProperty());
     RemoveStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER);
   }

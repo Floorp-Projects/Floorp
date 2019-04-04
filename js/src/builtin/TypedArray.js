@@ -351,7 +351,12 @@ function TypedArrayFill(value, start = 0, end = undefined) {
     var len = TypedArrayLength(O);
 
     // Step 4.
-    value = ToNumber(value);
+    var kind = GetTypedArrayKind(O);
+    if (kind === TYPEDARRAY_KIND_BIGINT64 || kind === TYPEDARRAY_KIND_BIGUINT64) {
+        value = ToBigInt(value);
+    } else {
+        value = ToNumber(value);
+    }
 
     // Step 5.
     var relativeStart = ToInteger(start);
@@ -1188,6 +1193,30 @@ function TypedArrayCompareInt(x, y) {
     return 0;
 }
 
+// https://tc39.github.io/proposal-bigint/#sec-%typedarray%.prototype.sort
+// TypedArray SortCompare specialization for BigInt values.
+function TypedArrayCompareBigInt(x, y) {
+    // Step 1.
+    // eslint-disable-next-line valid-typeof
+    assert(typeof x === "bigint" && typeof y === "bigint",
+           "x and y are not BigInts.");
+
+    // Step 2 (Implemented in TypedArraySort).
+
+    // Step 6.
+    if (x < y)
+        return -1;
+
+    // Step 7.
+    if (x > y)
+        return 1;
+
+    // Steps 3-5, 8-9 (Not applicable when sorting BigInt values).
+
+    // Step 10.
+    return 0;
+}
+
 // ES2019 draft rev 8a16cb8d18660a1106faae693f0f39b9f1a30748
 // 22.2.3.26 %TypedArray%.prototype.sort ( comparefn )
 function TypedArraySort(comparefn) {
@@ -1248,6 +1277,9 @@ function TypedArraySort(comparefn) {
             return RadixSort(obj, len, buffer,
                              4 /* nbytes */, true /* signed */, false /* floating */,
                              TypedArrayCompareInt);
+          case TYPEDARRAY_KIND_BIGINT64:
+          case TYPEDARRAY_KIND_BIGUINT64:
+            return QuickSort(obj, len, TypedArrayCompareBigInt);
           case TYPEDARRAY_KIND_FLOAT32:
             return RadixSort(obj, len, buffer,
                              4 /* nbytes */, true /* signed */, true /* floating */,

@@ -48,20 +48,6 @@ const uint32_t kRotateFilesNumber = 4;
 
 namespace mozilla {
 
-LazyLogModule::operator LogModule*() {
-  // NB: The use of an atomic makes the reading and assignment of mLog
-  //     thread-safe. There is a small chance that mLog will be set more
-  //     than once, but that's okay as it will be set to the same LogModule
-  //     instance each time. Also note LogModule::Get is thread-safe.
-  LogModule* tmp = mLog;
-  if (MOZ_UNLIKELY(!tmp)) {
-    tmp = LogModule::Get(mLogName);
-    mLog = tmp;
-  }
-
-  return tmp;
-}
-
 namespace detail {
 
 void log_print(const LogModule* aModule, LogLevel aLevel, const char* aFmt,

@@ -10306,6 +10306,16 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
+  if (const char* str = op.getStringOption("ion-optimization-levels")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableOptimizationLevels = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableOptimizationLevels = true;
+    } else {
+      return OptionFailure("ion-optimization-levels", str);
+    }
+  }
+
   if (const char* str = op.getStringOption("ion-instruction-reordering")) {
     if (strcmp(str, "on") == 0) {
       jit::JitOptions.disableInstructionReordering = false;
@@ -10933,6 +10943,9 @@ int main(int argc, char** argv, char** envp) {
 #endif
       || !op.addStringOption('\0', "ion-sink", "on/off",
                              "Sink code motion (default: off, on to enable)") ||
+      !op.addStringOption('\0', "ion-optimization-levels", "on/off",
+                          "Use multiple Ion optimization levels (default: on, "
+                          "off to disable)") ||
       !op.addStringOption('\0', "ion-loop-unrolling", "on/off",
                           "(NOP for fuzzers)") ||
       !op.addStringOption(

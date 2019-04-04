@@ -30,6 +30,7 @@
 #include "nsTreeBodyFrame.h"
 #include "nsTreeColumns.h"
 #include "nsTreeUtils.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/XULTreeElementBinding.h"
 
 using namespace mozilla::a11y;
@@ -160,7 +161,7 @@ Accessible* XULTreeAccessible::ChildAtPoint(int32_t aX, int32_t aY,
   if (!frame) return nullptr;
 
   nsPresContext* presContext = frame->PresContext();
-  nsIPresShell* presShell = presContext->PresShell();
+  PresShell* presShell = presContext->PresShell();
 
   nsIFrame* rootFrame = presShell->GetRootFrame();
   NS_ENSURE_TRUE(rootFrame, nullptr);

@@ -208,7 +208,8 @@ function tunnelToInnerBrowser(outer, inner) {
       // reattach it here.
       const tab = gBrowser.getTabForBrowser(outer);
       const filteredProgressListener = gBrowser._tabFilters.get(tab);
-      outer.webProgress.addProgressListener(filteredProgressListener);
+      outer.webProgress.addProgressListener(filteredProgressListener,
+                                            Ci.nsIWebProgress.NOTIFY_ALL);
 
       // Add the inner browser to tabbrowser's WeakMap from browser to tab.  This assists
       // with tabbrowser's processing of some events such as MozLayerTreeReady which
@@ -429,10 +430,8 @@ MessageManagerTunnel.prototype = {
     // Messages sent to RemoteWebProgress.jsm
     "Content:LoadURIResult",
     "Content:LocationChange",
-    "Content:ProgressChange",
     "Content:SecurityChange",
     "Content:StateChange",
-    "Content:StatusChange",
     // Messages sent to browser.js
     "DOMTitleChanged",
     "ImageDocumentLoaded",

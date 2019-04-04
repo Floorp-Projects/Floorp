@@ -38,4 +38,4 @@ win64-grcov:
     run:
         toolchain-artifact: public/build/grcov.tar.bz2
     toolchains:
-        - win64-rust-1.32
+        - win64-rust-1.34

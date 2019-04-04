@@ -10,12 +10,13 @@
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/RestyleManager.h"
+#include "mozilla/ServoStyleSet.h"
 #include "nsIContent.h"
 #include "nsLineLayout.h"
 #include "nsGkAtoms.h"
-#include "mozilla/ServoStyleSet.h"
 #include "nsFrameManager.h"
-#include "mozilla/RestyleManager.h"
 #include "nsPlaceholderFrame.h"
 #include "nsCSSFrameConstructor.h"
 
@@ -289,7 +290,7 @@ nsresult nsFirstLetterFrame::CreateContinuationForFloatingParent(
 
   *aContinuation = nullptr;
 
-  nsIPresShell* presShell = aPresContext->PresShell();
+  mozilla::PresShell* presShell = aPresContext->PresShell();
   nsPlaceholderFrame* placeholderFrame = GetPlaceholderFrame();
   nsContainerFrame* parent = placeholderFrame->GetParent();
 

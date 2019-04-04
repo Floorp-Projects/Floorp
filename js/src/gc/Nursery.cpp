@@ -143,6 +143,7 @@ bool js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock) {
     return false;
   }
   capacity_ = roundSize(tunables().gcMinNurseryBytes());
+  MOZ_ASSERT(capacity_ >= ArenaSize);
   /* After this point the Nursery has been enabled */
 
   setCurrentChunk(0, true);
@@ -195,6 +196,7 @@ void js::Nursery::enable() {
       return;
     }
     capacity_ = roundSize(tunables().gcMinNurseryBytes());
+    MOZ_ASSERT(capacity_ >= ArenaSize);
   }
 
   setCurrentChunk(0, true);
@@ -860,12 +862,6 @@ void js::Nursery::collect(JS::GCReason reason) {
   if (rt->gc.heapSize.gcBytes() >= tunables().gcMaxBytes()) {
     disable();
   }
-  // Disable the nursery if the user changed the configuration setting.  The
-  // nursery can only be re-enabled by resetting the configurationa and
-  // restarting firefox.
-  if (chunkCountLimit_ == 0) {
-    disable();
-  }
 
   endProfile(ProfileKey::Total);
   rt->gc.incMinorGcNumber();
@@ -1199,6 +1195,7 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   size_t newCapacity = size_t(float(capacity()) * factor);
 
   const size_t minNurseryBytes = roundSize(tunables().gcMinNurseryBytes());
+  MOZ_ASSERT(minNurseryBytes >= ArenaSize);
 
   // If one of these conditions is true then we always shrink or grow the
   // nursery.  This way the thresholds still have an effect even if the goal
@@ -1219,6 +1216,14 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
 }
 
 bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
+  // Disable the nursery if the user changed the configuration setting. The
+  // nursery can only be re-enabled by resetting the configuration and
+  // restarting firefox.
+  if (tunables().gcMaxNurseryBytes() == 0) {
+    disable();
+    return true;
+  }
+
   // Shrink the nursery to its minimum size of we ran out of memory or
   // received a memory pressure event.
   if (gc::IsOOMReason(reason)) {
@@ -1250,6 +1255,7 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
   }
 
   const size_t minNurseryBytes = roundSize(tunables().gcMinNurseryBytes());
+  MOZ_ASSERT(minNurseryBytes >= ArenaSize);
 
   if (minNurseryBytes > capacity()) {
     /*
@@ -1315,6 +1321,7 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
   }
 
   capacity_ = newCapacity;
+  MOZ_ASSERT(capacity_ >= ArenaSize);
   setCurrentEnd();
 }
 

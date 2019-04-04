@@ -13,16 +13,15 @@
 #include "mozilla/mozalloc.h"                 // for operator new
 #include "mozilla/PresShell.h"                // for PresShell
 #include "nsAString.h"
+#include "nsBaseCommandController.h"  // for nsBaseCommandController
+#include "nsCommandManager.h"         // for nsCommandManager
 #include "nsComponentManagerUtils.h"  // for do_CreateInstance
 #include "nsContentUtils.h"
 #include "nsDebug.h"  // for NS_ENSURE_SUCCESS, etc
 #include "nsEditingSession.h"
 #include "nsError.h"               // for NS_ERROR_FAILURE, NS_OK, etc
 #include "nsIChannel.h"            // for nsIChannel
-#include "nsICommandManager.h"     // for nsICommandManager
 #include "nsIContentViewer.h"      // for nsIContentViewer
-#include "nsIController.h"         // for nsIController
-#include "nsIControllerContext.h"  // for nsIControllerContext
 #include "nsIControllers.h"        // for nsIControllers
 #include "nsID.h"                  // for NS_GET_IID, etc
 #include "nsHTMLDocument.h"        // for nsHTMLDocument
@@ -42,7 +41,6 @@
 #include "nsIWebNavigation.h"            // for nsIWebNavigation
 #include "nsIWebProgress.h"              // for nsIWebProgress, etc
 #include "nsLiteralString.h"             // for NS_LITERAL_STRING
-#include "nsPICommandUpdater.h"          // for nsPICommandUpdater
 #include "nsPIDOMWindow.h"               // for nsPIDOMWindow
 #include "nsPresContext.h"               // for nsPresContext
 #include "nsReadableUtils.h"             // for AppendUTF16toUTF8
@@ -753,12 +751,8 @@ nsEditingSession::OnLocationChange(nsIWebProgress* aWebProgress,
   nsIDocShell* docShell = piWindow->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsICommandManager> commandManager = docShell->GetCommandManager();
-  nsCOMPtr<nsPICommandUpdater> commandUpdater =
-      do_QueryInterface(commandManager);
-  NS_ENSURE_TRUE(commandUpdater, NS_ERROR_FAILURE);
-
-  return commandUpdater->CommandStatusChanged("obs_documentLocationChanged");
+  RefPtr<nsCommandManager> commandManager = docShell->GetCommandManager();
+  return commandManager->CommandStatusChanged("obs_documentLocationChanged");
 }
 
 /*---------------------------------------------------------------------------
@@ -1076,17 +1070,17 @@ nsresult nsEditingSession::SetupEditorCommandController(
   // We only have to create each singleton controller once
   // We know this has happened once we have a controllerId value
   if (!*aControllerId) {
-    nsCOMPtr<nsIController> controller = aControllerCreatorFn();
-    NS_ENSURE_TRUE(controller, NS_ERROR_FAILURE);
+    RefPtr<nsBaseCommandController> commandController = aControllerCreatorFn();
+    NS_ENSURE_TRUE(commandController, NS_ERROR_FAILURE);
 
     // We must insert at head of the list to be sure our
     //   controller is found before other implementations
     //   (e.g., not-implemented versions by browser)
-    rv = controllers->InsertControllerAt(0, controller);
+    rv = controllers->InsertControllerAt(0, commandController);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Remember the ID for the controller
-    rv = controllers->GetControllerId(controller, aControllerId);
+    rv = controllers->GetControllerId(commandController, aControllerId);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

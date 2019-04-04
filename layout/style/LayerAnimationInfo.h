@@ -10,7 +10,7 @@
 #include "nsChangeHint.h"
 #include "nsCSSPropertyID.h"
 #include "nsCSSPropertyIDSet.h"
-#include "nsDisplayList.h"  // For nsDisplayItem::Type
+#include "nsDisplayItemTypes.h"  // For nsDisplayItem::Type
 #include "mozilla/Array.h"
 
 namespace mozilla {

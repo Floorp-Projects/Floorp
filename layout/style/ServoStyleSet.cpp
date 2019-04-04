@@ -92,12 +92,15 @@ class MOZ_RAII AutoPrepareTraversal {
 
 }  // namespace mozilla
 
-ServoStyleSet::ServoStyleSet()
-    : mDocument(nullptr),
+ServoStyleSet::ServoStyleSet(Document& aDocument)
+    : mDocument(&aDocument),
       mAuthorStyleDisabled(false),
       mStylistState(StylistState::NotDirty),
       mUserFontSetUpdateGeneration(0),
-      mNeedsRestyleAfterEnsureUniqueInner(false) {}
+      mNeedsRestyleAfterEnsureUniqueInner(false) {
+  PreferenceSheet::EnsureInitialized();
+  mRawSet.reset(Servo_StyleSet_Init(&aDocument));
+}
 
 ServoStyleSet::~ServoStyleSet() {
   for (auto& sheetArray : mSheets) {
@@ -108,41 +111,10 @@ ServoStyleSet::~ServoStyleSet() {
 }
 
 nsPresContext* ServoStyleSet::GetPresContext() {
-  if (!mDocument) {
-    return nullptr;
-  }
-
   return mDocument->GetPresContext();
 }
 
-void ServoStyleSet::Init(nsPresContext* aPresContext) {
-  mDocument = aPresContext->Document();
-  MOZ_ASSERT(GetPresContext() == aPresContext);
-
-  mRawSet.reset(Servo_StyleSet_Init(aPresContext));
-
-  aPresContext->DeviceContext()->InitFontCache();
-
-  // Now that we have an mRawSet, go ahead and notify about whatever stylesheets
-  // we have so far.
-  for (auto& sheetArray : mSheets) {
-    for (auto& sheet : sheetArray) {
-      // There's no guarantee this will create a list on the servo side whose
-      // ordering matches the list that would have been created had all those
-      // sheets been appended/prepended/etc after we had mRawSet. That's okay
-      // because Servo only needs to maintain relative ordering within a sheet
-      // type, which this preserves.
-
-      MOZ_ASSERT(sheet->RawContents(),
-                 "We should only append non-null raw sheets.");
-      Servo_StyleSet_AppendStyleSheet(mRawSet.get(), sheet);
-    }
-  }
-
-  // We added prefilled stylesheets into mRawSet, so the stylist is dirty.
-  // The Stylist should be updated later when necessary.
-  SetStylistStyleSheetsDirty();
-
+void ServoStyleSet::ShellAttachedToDocument() {
   // We may have Shadow DOM style changes that we weren't notified about because
   // the document didn't have a shell, if the ShadowRoot was created in a
   // display: none iframe.
@@ -165,11 +137,10 @@ void EnumerateShadowRoots(const Document& aDoc, const Functor& aCb) {
   }
 }
 
-void ServoStyleSet::Shutdown() {
+void ServoStyleSet::ShellDetachedFromDocument() {
   // Make sure we drop our cached styles before the presshell arena starts going
   // away.
   ClearNonInheritingComputedStyles();
-  mRawSet = nullptr;
   mStyleRuleMap = nullptr;
 }
 
@@ -630,13 +601,11 @@ nsresult ServoStyleSet::AppendStyleSheet(SheetType aType, StyleSheet* aSheet) {
   RemoveSheetOfType(aType, aSheet);
   AppendSheetOfType(aType, aSheet);
 
-  if (mRawSet) {
-    // Maintain a mirrored list of sheets on the servo side.
-    // Servo will remove aSheet from its original position as part of the call
-    // to Servo_StyleSet_AppendStyleSheet.
-    Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet);
-    SetStylistStyleSheetsDirty();
-  }
+  // Maintain a mirrored list of sheets on the servo side.
+  // Servo will remove aSheet from its original position as part of the call
+  // to Servo_StyleSet_AppendStyleSheet.
+  Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet);
+  SetStylistStyleSheetsDirty();
 
   if (mStyleRuleMap) {
     mStyleRuleMap->SheetAdded(*aSheet);
@@ -650,11 +619,10 @@ nsresult ServoStyleSet::RemoveStyleSheet(SheetType aType, StyleSheet* aSheet) {
   MOZ_ASSERT(IsCSSSheetType(aType));
 
   RemoveSheetOfType(aType, aSheet);
-  if (mRawSet) {
-    // Maintain a mirrored list of sheets on the servo side.
-    Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), aSheet);
-    SetStylistStyleSheetsDirty();
-  }
+
+  // Maintain a mirrored list of sheets on the servo side.
+  Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), aSheet);
+  SetStylistStyleSheetsDirty();
 
   if (mStyleRuleMap) {
     mStyleRuleMap->SheetRemoved(*aSheet);
@@ -675,20 +643,16 @@ nsresult ServoStyleSet::ReplaceSheets(
   // Remove all the existing sheets first.
   for (const auto& sheet : mSheets[aType]) {
     sheet->DropStyleSet(this);
-    if (mRawSet) {
-      Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), sheet);
-    }
+    Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), sheet);
   }
   mSheets[aType].Clear();
 
   // Add in all the new sheets.
   for (auto& sheet : aNewSheets) {
     AppendSheetOfType(aType, sheet);
-    if (mRawSet) {
-      MOZ_ASSERT(sheet->RawContents(),
-                 "Raw sheet should be in place before replacement.");
-      Servo_StyleSet_AppendStyleSheet(mRawSet.get(), sheet);
-    }
+    MOZ_ASSERT(sheet->RawContents(),
+               "Raw sheet should be in place before replacement.");
+    Servo_StyleSet_AppendStyleSheet(mRawSet.get(), sheet);
   }
 
   // Just don't bother calling SheetRemoved / SheetAdded, and recreate the rule
@@ -714,12 +678,10 @@ nsresult ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
   RemoveSheetOfType(aType, aNewSheet);
   InsertSheetOfType(aType, aNewSheet, aReferenceSheet);
 
-  if (mRawSet) {
-    // Maintain a mirrored list of sheets on the servo side.
-    Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aNewSheet,
-                                          aReferenceSheet);
-    SetStylistStyleSheetsDirty();
-  }
+  // Maintain a mirrored list of sheets on the servo side.
+  Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aNewSheet,
+                                        aReferenceSheet);
+  SetStylistStyleSheetsDirty();
 
   if (mStyleRuleMap) {
     mStyleRuleMap->SheetAdded(*aNewSheet);
@@ -772,20 +734,16 @@ nsresult ServoStyleSet::AddDocStyleSheet(StyleSheet* aSheet,
     StyleSheet* beforeSheet = mSheets[SheetType::Doc][index];
     InsertSheetOfType(SheetType::Doc, aSheet, beforeSheet);
 
-    if (mRawSet) {
-      // Maintain a mirrored list of sheets on the servo side.
-      Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aSheet, beforeSheet);
-      SetStylistStyleSheetsDirty();
-    }
+    // Maintain a mirrored list of sheets on the servo side.
+    Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aSheet, beforeSheet);
+    SetStylistStyleSheetsDirty();
   } else {
     // This case is append.
     AppendSheetOfType(SheetType::Doc, aSheet);
 
-    if (mRawSet) {
-      // Maintain a mirrored list of sheets on the servo side.
-      Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet);
-      SetStylistStyleSheetsDirty();
-    }
+    // Maintain a mirrored list of sheets on the servo side.
+    Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet);
+    SetStylistStyleSheetsDirty();
   }
 
   if (mStyleRuleMap) {
@@ -970,10 +928,6 @@ void ServoStyleSet::StyleNewSubtree(Element* aRoot) {
 }
 
 void ServoStyleSet::MarkOriginsDirty(OriginFlags aChangedOrigins) {
-  if (MOZ_UNLIKELY(!mRawSet)) {
-    return;
-  }
-
   SetStylistStyleSheetsDirty();
   Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get(), aChangedOrigins);
 }

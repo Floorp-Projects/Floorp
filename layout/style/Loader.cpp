@@ -369,8 +369,9 @@ Loader::Loader()
 Loader::Loader(DocGroup* aDocGroup) : Loader() { mDocGroup = aDocGroup; }
 
 Loader::Loader(Document* aDocument) : Loader() {
+  MOZ_ASSERT(aDocument, "We should get a valid document from the caller!");
   mDocument = aDocument;
-  MOZ_ASSERT(mDocument, "We should get a valid document from the caller!");
+  mCompatMode = aDocument->GetCompatibilityMode();
 }
 
 Loader::~Loader() {
