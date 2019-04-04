@@ -189,7 +189,7 @@ export const LinkMenuOptions = {
   }),
   DeleteFromPocket: site => ({
     id: "menu_action_delete_pocket",
-    icon: "delete",
+    icon: "pocket-delete",
     action: ac.AlsoToMain({
       type: at.DELETE_FROM_POCKET,
       data: {pocket_id: site.pocket_id},
@@ -198,7 +198,7 @@ export const LinkMenuOptions = {
   }),
   ArchiveFromPocket: site => ({
     id: "menu_action_archive_pocket",
-    icon: "check",
+    icon: "pocket-archive",
     action: ac.AlsoToMain({
       type: at.ARCHIVE_FROM_POCKET,
       data: {pocket_id: site.pocket_id},

@@ -590,6 +590,10 @@ const CFRPageActions = {
     if (browser !== win.gBrowser.selectedBrowser || !isHostMatch(browser, host)) {
       return false;
     }
+    if (RecommendationMap.has(browser)) {
+      // Don't replace an existing message
+      return false;
+    }
     const {id, content} = recommendation;
     RecommendationMap.set(browser, {id, host, retain: true, content});
     if (!PageActionMap.has(win)) {

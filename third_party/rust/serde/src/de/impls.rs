@@ -1,11 +1,3 @@
-// Copyright 2017 Serde Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use lib::*;
 
 use de::{
@@ -874,7 +866,9 @@ where
             }
         }
 
-        let visitor = VecVisitor { marker: PhantomData };
+        let visitor = VecVisitor {
+            marker: PhantomData,
+        };
         deserializer.deserialize_seq(visitor)
     }
 
@@ -1425,7 +1419,7 @@ impl<'de> Deserialize<'de> for net::IpAddr {
             deserializer.deserialize_str(IpAddrVisitor)
         } else {
             use lib::net::IpAddr;
-            deserialize_enum!{
+            deserialize_enum! {
                 IpAddr IpAddrKind (V4; b"V4"; 0, V6; b"V6"; 1)
                 "`V4` or `V6`",
                 deserializer
@@ -1502,7 +1496,7 @@ impl<'de> Deserialize<'de> for net::SocketAddr {
             deserializer.deserialize_str(SocketAddrVisitor)
         } else {
             use lib::net::SocketAddr;
-            deserialize_enum!{
+            deserialize_enum! {
                 SocketAddr SocketAddrKind (V4; b"V4"; 0, V6; b"V6"; 1)
                 "`V4` or `V6`",
                 deserializer
@@ -1602,7 +1596,7 @@ impl<'de> Deserialize<'de> for PathBuf {
 //    #[derive(Deserialize)]
 //    #[serde(variant_identifier)]
 #[cfg(all(feature = "std", any(unix, windows)))]
-variant_identifier!{
+variant_identifier! {
     OsStringKind (Unix; b"Unix"; 0, Windows; b"Windows"; 1)
     "`Unix` or `Windows`",
     OSSTR_VARIANTS
@@ -1760,11 +1754,7 @@ where
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#[cfg(all(
-    de_rc_dst,
-    feature = "rc",
-    any(feature = "std", feature = "alloc")
-))]
+#[cfg(all(de_rc_dst, feature = "rc", any(feature = "std", feature = "alloc")))]
 macro_rules! box_forwarded_impl {
     (
         $(#[doc = $doc:tt])*
@@ -1785,11 +1775,7 @@ macro_rules! box_forwarded_impl {
     };
 }
 
-#[cfg(all(
-    de_rc_dst,
-    feature = "rc",
-    any(feature = "std", feature = "alloc")
-))]
+#[cfg(all(de_rc_dst, feature = "rc", any(feature = "std", feature = "alloc")))]
 box_forwarded_impl! {
     /// This impl requires the [`"rc"`] Cargo feature of Serde.
     ///
@@ -1801,11 +1787,7 @@ box_forwarded_impl! {
     Rc
 }
 
-#[cfg(all(
-    de_rc_dst,
-    feature = "rc",
-    any(feature = "std", feature = "alloc")
-))]
+#[cfg(all(de_rc_dst, feature = "rc", any(feature = "std", feature = "alloc")))]
 box_forwarded_impl! {
     /// This impl requires the [`"rc"`] Cargo feature of Serde.
     ///
@@ -2282,6 +2264,117 @@ mod range {
             };
             Ok((start, end))
         }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+#[cfg(any(ops_bound, collections_bound))]
+impl<'de, T> Deserialize<'de> for Bound<T>
+where
+    T: Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        enum Field {
+            Unbounded,
+            Included,
+            Excluded,
+        }
+
+        impl<'de> Deserialize<'de> for Field {
+            #[inline]
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: Deserializer<'de>,
+            {
+                struct FieldVisitor;
+
+                impl<'de> Visitor<'de> for FieldVisitor {
+                    type Value = Field;
+
+                    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                        formatter.write_str("`Unbounded`, `Included` or `Excluded`")
+                    }
+
+                    fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+                    where
+                        E: Error,
+                    {
+                        match value {
+                            0 => Ok(Field::Unbounded),
+                            1 => Ok(Field::Included),
+                            2 => Ok(Field::Excluded),
+                            _ => Err(Error::invalid_value(
+                                Unexpected::Unsigned(value as u64),
+                                &self,
+                            )),
+                        }
+                    }
+
+                    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                    where
+                        E: Error,
+                    {
+                        match value {
+                            "Unbounded" => Ok(Field::Unbounded),
+                            "Included" => Ok(Field::Included),
+                            "Excluded" => Ok(Field::Excluded),
+                            _ => Err(Error::unknown_variant(value, VARIANTS)),
+                        }
+                    }
+
+                    fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+                    where
+                        E: Error,
+                    {
+                        match value {
+                            b"Unbounded" => Ok(Field::Unbounded),
+                            b"Included" => Ok(Field::Included),
+                            b"Excluded" => Ok(Field::Excluded),
+                            _ => match str::from_utf8(value) {
+                                Ok(value) => Err(Error::unknown_variant(value, VARIANTS)),
+                                Err(_) => {
+                                    Err(Error::invalid_value(Unexpected::Bytes(value), &self))
+                                }
+                            },
+                        }
+                    }
+                }
+
+                deserializer.deserialize_identifier(FieldVisitor)
+            }
+        }
+
+        struct BoundVisitor<T>(PhantomData<Bound<T>>);
+
+        impl<'de, T> Visitor<'de> for BoundVisitor<T>
+        where
+            T: Deserialize<'de>,
+        {
+            type Value = Bound<T>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("enum Bound")
+            }
+
+            fn visit_enum<A>(self, data: A) -> Result<Self::Value, A::Error>
+            where
+                A: EnumAccess<'de>,
+            {
+                match try!(data.variant()) {
+                    (Field::Unbounded, v) => v.unit_variant().map(|()| Bound::Unbounded),
+                    (Field::Included, v) => v.newtype_variant().map(Bound::Included),
+                    (Field::Excluded, v) => v.newtype_variant().map(Bound::Excluded),
+                }
+            }
+        }
+
+        const VARIANTS: &'static [&'static str] = &["Unbounded", "Included", "Excluded"];
+
+        deserializer.deserialize_enum("Bound", VARIANTS, BoundVisitor(PhantomData))
     }
 }
 

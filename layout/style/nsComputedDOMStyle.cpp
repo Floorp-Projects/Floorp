@@ -1041,8 +1041,8 @@ void nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
 }
 
 void nsComputedDOMStyle::SetValueFromComplexColor(
-    nsROCSSPrimitiveValue* aValue, const StyleComplexColor& aColor) {
-  SetToRGBAColor(aValue, aColor.CalcColor(mComputedStyle));
+    nsROCSSPrimitiveValue* aValue, const mozilla::StyleColor& aColor) {
+  SetToRGBAColor(aValue, aColor.CalcColor(*mComputedStyle));
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetColor() {
@@ -1858,24 +1858,21 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetScrollSnapPointsY() {
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetScrollbarColor() {
   const nsStyleUI* ui = StyleUI();
-  MOZ_ASSERT(
-      ui->mScrollbarFaceColor.IsAuto() == ui->mScrollbarTrackColor.IsAuto(),
-      "Whether the two colors are auto should be identical");
-
-  if (ui->mScrollbarFaceColor.IsAuto()) {
+  if (ui->mScrollbarColor.IsAuto()) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     val->SetIdent(eCSSKeyword_auto);
     return val.forget();
   }
 
   RefPtr<nsDOMCSSValueList> list = GetROCSSValueList(false);
-  auto put = [this, &list](const StyleComplexColor& color) {
+  auto put = [this, &list](const mozilla::StyleColor& color) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     SetValueFromComplexColor(val, color);
     list->AppendCSSValue(val.forget());
   };
-  put(ui->mScrollbarFaceColor);
-  put(ui->mScrollbarTrackColor);
+  auto& colors = ui->mScrollbarColor.AsColors();
+  put(colors.thumb);
+  put(colors.track);
   return list.forget();
 }
 
@@ -2002,7 +1999,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecoration() {
 
   bool isInitialStyle =
       textReset->mTextDecorationStyle == NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
-  StyleComplexColor color = textReset->mTextDecorationColor;
+  const mozilla::StyleColor& color = textReset->mTextDecorationColor;
 
   RefPtr<nsROCSSPrimitiveValue> textDecorationLine = new nsROCSSPrimitiveValue;
 
@@ -2153,7 +2150,11 @@ static_assert(NS_STYLE_UNICODE_BIDI_NORMAL == 0,
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetCaretColor() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueFromComplexColor(val, StyleUI()->mCaretColor);
+  if (StyleUI()->mCaretColor.IsAuto()) {
+    SetToRGBAColor(val, StyleColor()->mColor);
+  } else {
+    SetValueFromComplexColor(val, StyleUI()->mCaretColor.AsColor());
+  }
   return val.forget();
 }
 

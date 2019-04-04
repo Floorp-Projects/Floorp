@@ -552,6 +552,7 @@ var Policies = {
                 onDownloadFailed: () => {
                   install.removeListener(listener);
                   log.error(`Download failed - ${location}`);
+                  clearRunOnceModification("extensionsInstall");
                 },
                 onInstallFailed: () => {
                   install.removeListener(listener);
@@ -747,6 +748,14 @@ var Policies = {
         setAndLockPref("dom.disable_open_during_load", blockValue);
       } else if (param.Default !== undefined) {
         setDefaultPref("dom.disable_open_during_load", !!param.Default);
+      }
+    },
+  },
+
+  "Preferences": {
+    onBeforeAddons(manager, param) {
+      for (let preference in param) {
+        setAndLockPref(preference, param[preference]);
       }
     },
   },
@@ -1141,6 +1150,16 @@ async function runOncePerModification(actionName, policyValue, callback) {
   }
   Services.prefs.setStringPref(prefName, policyValue);
   return callback();
+}
+
+/**
+ * clearRunOnceModification
+ *
+ * Helper function that clears a runOnce policy.
+*/
+function clearRunOnceModification(actionName) {
+  let prefName = `browser.policies.runOncePerModification.${actionName}`;
+  Services.prefs.clearUserPref(prefName);
 }
 
 let gChromeURLSBlocked = false;

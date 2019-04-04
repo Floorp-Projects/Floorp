@@ -511,7 +511,7 @@ describe("Highlights Feed", () => {
         url: FAKE_URL,
       };
 
-      await feed.fetchImage(card);
+      await fetchImage(card);
 
       assert.notProperty(card, "image");
     });

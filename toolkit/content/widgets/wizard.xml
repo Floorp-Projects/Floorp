@@ -4,11 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 
-<!DOCTYPE bindings [
-  <!ENTITY % wizardDTD SYSTEM "chrome://global/locale/wizard.dtd">
-  %wizardDTD;
-]>
-
 <bindings id="wizardBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -23,7 +18,7 @@
       </xul:deck>
       <children/>
 
-      <xul:hbox class="wizard-buttons" anonid="Buttons" xbl:inherits="pagestep,firstpage,lastpage"/>
+      <xul:wizard-buttons class="wizard-buttons" anonid="Buttons" xbl:inherits="pagestep,firstpage,lastpage"/>
     </content>
 
     <implementation>
@@ -31,9 +26,9 @@
                              onset="return document.title = val;"/>
 
       <property name="canAdvance" onget="return this._canAdvance;"
-                                  onset="this._nextButton.disabled = !val; return this._canAdvance = val;"/>
+                                  onset="this.getButton('next').disabled = !val; return this._canAdvance = val;"/>
       <property name="canRewind" onget="return this._canRewind;"
-                                 onset="this._backButton.disabled = !val; return this._canRewind = val;"/>
+                                 onset="this.getButton('back').disabled = !val; return this._canRewind = val;"/>
 
       <property name="pageStep" readonly="true" onget="return this._pageStack.length"/>
 
@@ -67,13 +62,13 @@
             this.canRewind = false;
             this.setAttribute("firstpage", "true");
             if (/Linux/.test(navigator.platform)) {
-              this._backButton.setAttribute('hidden', 'true');
+              this.getButton("back").setAttribute("hidden", "true");
             }
           } else {
             this.canRewind = true;
             this.setAttribute("firstpage", "false");
             if (/Linux/.test(navigator.platform)) {
-              this._backButton.setAttribute('hidden', 'false');
+              this.getButton("back").setAttribute("hidden", "false");
             }
           }
 
@@ -128,8 +123,7 @@
         <parameter name="aDlgType"/>
         <body>
         <![CDATA[
-          var btns = this.getElementsByAttribute("dlgtype", aDlgType);
-          return btns.item(0) ? btns[0] : document.getAnonymousElementByAttribute(this._wizardButtons, "dlgtype", aDlgType);
+          return this._wizardButtons.getButton(aDlgType);
         ]]>
         </body>
       </method>
@@ -139,22 +133,6 @@
       <field name="_wizardHeader"/>
       <field name="_wizardButtons"/>
       <field name="_deck"/>
-      <field name="_backButton"/>
-      <field name="_nextButton"/>
-      <field name="_cancelButton"/>
-
-      <!-- functions to be added as oncommand listeners to the wizard buttons -->
-      <field name="_backFunc">(function() { document.documentElement.rewind(); })</field>
-      <field name="_nextFunc">(function() { document.documentElement.advance(); })</field>
-      <field name="_finishFunc">(function() { document.documentElement.advance(); })</field>
-      <field name="_cancelFunc">(function() { document.documentElement.cancel(); })</field>
-      <field name="_extra1Func">(function() { document.documentElement.extra1(); })</field>
-      <field name="_extra2Func">(function() { document.documentElement.extra2(); })</field>
-
-      <field name="_closeHandler">(function(event) {
-        if (document.documentElement.cancel())
-          event.preventDefault();
-      })</field>
 
       <constructor><![CDATA[
         this._canAdvance = true;
@@ -201,18 +179,17 @@
         );
 
         this._wizardButtons = document.getAnonymousElementByAttribute(this, "anonid", "Buttons");
-        this._deck = document.getAnonymousElementByAttribute(this, "anonid", "Deck");
+        customElements.upgrade(this._wizardButtons);
 
-        this._initWizardButton("back");
-        this._initWizardButton("next");
-        this._initWizardButton("finish");
-        this._initWizardButton("cancel");
-        this._initWizardButton("extra1");
-        this._initWizardButton("extra2");
+        this._deck = document.getAnonymousElementByAttribute(this, "anonid", "Deck");
 
         this._initPages();
 
-        window.addEventListener("close", this._closeHandler);
+        window.addEventListener("close", (event) => {
+          if (document.documentElement.cancel()) {
+            event.preventDefault();
+          }
+        });
 
         // start off on the first page
         this.pageCount = this.wizardPages.length;
@@ -386,18 +363,6 @@
         ]]></body>
       </method>
 
-      <method name="_initWizardButton">
-        <parameter name="aName"/>
-        <body><![CDATA[
-         var btn = document.getAnonymousElementByAttribute(this._wizardButtons, "dlgtype", aName);
-         if (btn) {
-           btn.addEventListener("command", this["_"+aName+"Func"]);
-           this["_"+aName+"Button"] = btn;
-         }
-         return btn;
-        ]]></body>
-      </method>
-
       <method name="_adjustWizardHeader">
         <body><![CDATA[
           var label = this.currentPage.getAttribute("label");
@@ -460,116 +425,4 @@
       </handler>
     </handlers>
   </binding>
-
-#ifdef XP_MACOSX
-  <binding id="wizard-buttons">
-    <content>
-      <xul:vbox flex="1">
-        <xul:hbox class="wizard-buttons-btm">
-          <xul:button class="wizard-button" dlgtype="extra1" hidden="true"/>
-          <xul:button class="wizard-button" dlgtype="extra2" hidden="true"/>
-          <xul:button label="&button-cancel-mac.label;" class="wizard-button" dlgtype="cancel"/>
-          <xul:spacer flex="1"/>
-          <xul:button label="&button-back-mac.label;" accesskey="&button-back-mac.accesskey;"
-                      class="wizard-button wizard-nav-button" dlgtype="back"/>
-          <xul:button label="&button-next-mac.label;" accesskey="&button-next-mac.accesskey;"
-                      class="wizard-button wizard-nav-button" dlgtype="next"
-                      default="true" xbl:inherits="hidden=lastpage" />
-          <xul:button label="&button-finish-mac.label;" class="wizard-button"
-                      dlgtype="finish" default="true" xbl:inherits="hidden=hidefinishbutton" />
-        </xul:hbox>
-      </xul:vbox>
-    </content>
-
-    <implementation>
-      <method name="onPageChange">
-        <body><![CDATA[
-          this.setAttribute("hidefinishbutton", !(this.getAttribute("lastpage") == "true"));
-        ]]></body>
-      </method>
-    </implementation>
-
-  </binding>
-
-#else
-
-  <binding id="wizard-buttons">
-    <content>
-      <xul:vbox class="wizard-buttons-box-1" flex="1">
-        <xul:separator class="wizard-buttons-separator groove"/>
-        <xul:hbox class="wizard-buttons-box-2">
-          <xul:button class="wizard-button" dlgtype="extra1" hidden="true"/>
-          <xul:button class="wizard-button" dlgtype="extra2" hidden="true"/>
-          <xul:spacer flex="1" anonid="spacer"/>
-#ifdef XP_UNIX
-          <xul:button label="&button-cancel-unix.label;" class="wizard-button"
-                      dlgtype="cancel"/>
-          <xul:spacer style="width: 24px"/>
-          <xul:button label="&button-back-unix.label;" accesskey="&button-back-unix.accesskey;"
-                      class="wizard-button" dlgtype="back"/>
-          <xul:deck class="wizard-next-deck" anonid="WizardButtonDeck">
-            <xul:hbox>
-              <xul:button label="&button-finish-unix.label;" class="wizard-button"
-                          dlgtype="finish" default="true" flex="1"/>
-            </xul:hbox>
-            <xul:hbox>
-              <xul:button label="&button-next-unix.label;" accesskey="&button-next-unix.accesskey;"
-                          class="wizard-button" dlgtype="next"
-                          default="true" flex="1"/>
-            </xul:hbox>
-          </xul:deck>
-#else
-          <xul:button label="&button-back-win.label;" accesskey="&button-back-win.accesskey;"
-                      class="wizard-button" dlgtype="back"/>
-          <xul:deck class="wizard-next-deck" anonid="WizardButtonDeck">
-            <xul:hbox>
-              <xul:button label="&button-finish-win.label;" class="wizard-button"
-                          dlgtype="finish" default="true" flex="1"/>
-            </xul:hbox>
-            <xul:hbox>
-              <xul:button label="&button-next-win.label;" accesskey="&button-next-win.accesskey;"
-                          class="wizard-button" dlgtype="next"
-                          default="true" flex="1"/>
-            </xul:hbox>
-          </xul:deck>
-          <xul:button label="&button-cancel-win.label;" class="wizard-button"
-                      dlgtype="cancel"/>
-#endif
-        </xul:hbox>
-      </xul:vbox>
-    </content>
-
-    <implementation>
-      <field name="_wizardButtonDeck" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "WizardButtonDeck");
-      </field>
-
-      <method name="onPageChange">
-        <body><![CDATA[
-          if (this.getAttribute("lastpage") == "true") {
-            this._wizardButtonDeck.setAttribute("selectedIndex", 0);
-          } else {
-            this._wizardButtonDeck.setAttribute("selectedIndex", 1);
-          }
-        ]]></body>
-      </method>
-
-      <property name="defaultButton" readonly="true">
-        <getter><![CDATA[
-          const kXULNS =
-            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-          var buttons = this._wizardButtonDeck.selectedPanel
-                            .getElementsByTagNameNS(kXULNS, "button");
-          for (var i = 0; i < buttons.length; i++) {
-            if (buttons[i].getAttribute("default") == "true" &&
-                !buttons[i].hidden && !buttons[i].disabled)
-              return buttons[i];
-          }
-          return null;
-        ]]></getter>
-      </property>
-    </implementation>
-  </binding>
-#endif
-
 </bindings>

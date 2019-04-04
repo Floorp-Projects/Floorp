@@ -25,7 +25,9 @@ export class CardGrid extends React.PureComponent {
         type={this.props.type}
         context={rec.context}
         dispatch={this.props.dispatch}
-        source={rec.domain} />
+        source={rec.domain}
+        pocket_id={rec.pocket_id}
+        bookmarkGuid={rec.bookmarkGuid} />
     ));
 
     let divisibility = ``;

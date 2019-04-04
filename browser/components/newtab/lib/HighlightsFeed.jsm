@@ -223,7 +223,7 @@ this.HighlightsFeed = class HighlightsFeed {
   fetchImage(page) {
     // Request a screenshot if we don't already have one pending
     const {preview_image_url: imageUrl, url} = page;
-    Screenshots.maybeCacheScreenshot(page, imageUrl || url, "image", image => {
+    return Screenshots.maybeCacheScreenshot(page, imageUrl || url, "image", image => {
       SectionsManager.updateSectionCard(SECTION_ID, url, {image}, true);
     });
   }
