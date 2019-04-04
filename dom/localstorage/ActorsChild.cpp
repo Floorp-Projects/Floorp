@@ -191,7 +191,9 @@ mozilla::ipc::IPCResult LSRequestChild::RecvReady() {
 
   mFinishing = true;
 
-  SendFinish();
+  // We only expect this to return false if the channel has been closed, but
+  // PBackground's channel never gets shutdown.
+  MOZ_ALWAYS_TRUE(SendFinish());
 
   return IPC_OK();
 }
