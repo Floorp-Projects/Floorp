@@ -475,10 +475,6 @@ def set_defaults(config, tests):
             test['mozharness']['tooltool-downloads'] = 'internal'
             test['mozharness']['actions'] = ['get-secrets']
 
-            if not any(app in test['test-name'] for app in ('geckoview', 'refbrow')):
-                # Fennec is non-e10s
-                test['e10s'] = False
-
             # loopback-video is always true for Android, but false for other
             # platform phyla
             test['loopback-video'] = True
@@ -828,6 +824,43 @@ def handle_suite_category(config, tests):
             if not any(arg.startswith(category_arg) for arg in extra):
                 extra.append('{}={}'.format(category_arg, flavor))
 
+        yield test
+
+
+def get_mobile_project(test):
+    """Returns the mobile project of the specified task or None."""
+
+    if not test['build-platform'].startswith('android'):
+        return
+
+    mobile_projects = (
+        'fennec',
+        'geckoview',
+        'refbrow',
+    )
+
+    for name in mobile_projects:
+        if name in test['test-name']:
+            return name
+
+    target = test.get('target')
+    if target:
+        if isinstance(target, dict):
+            target = target['name']
+
+        for name in mobile_projects:
+            if name in target:
+                return name
+
+    return 'fennec'
+
+
+@transforms.add
+def disable_fennec_e10s(config, tests):
+    for test in tests:
+        if get_mobile_project(test) == 'fennec':
+            # Fennec is non-e10s
+            test['e10s'] = False
         yield test
 
 
