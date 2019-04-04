@@ -20,6 +20,7 @@ var gIFrame;
 var gCurrentWidth = 500;
 var gGotEventsAt = [];
 var gInterval;
+var gFinished = false;
 
 function run() {
     SimpleTest.waitForExplicitFinish();
@@ -29,7 +30,7 @@ function run() {
 
     var subdoc = gIFrame.contentDocument;
     subdoc.open();
-    subdoc.write("<body onresize='window.parent.handle_child_resize()'>");
+    subdoc.write("<body onresize='window.parent.handle_resize_event()'>");
     subdoc.close();
 
     setTimeout(do_a_resize, 50);
@@ -46,17 +47,26 @@ function do_a_resize()
     }
 }
 
-function handle_child_resize()
+function handle_resize_event()
 {
     gGotEventsAt.push(gCurrentWidth);
 
     if (gCurrentWidth == 400) {
-        check_for_resize_events();
+        check_resize_events();
     }
 }
 
-function check_for_resize_events()
+function check_resize_events()
 {
+    if (gFinished) {
+        // We can get here when the browser can't process the resizes and
+        // dispatch resize events as fast as we're doing the resizing.  We can
+        // then end up with multiple resize events queued up after we set our
+        // final size.  This return makes sure that in that case we avoid
+        // calling SimpleTest.finish() more than once.
+        return;
+    }
+    gFinished = true;
     ok(gGotEventsAt.length >= 2, "We should get more than one event");
     isnot(gGotEventsAt[0], 400, "The first event shouldn't be for the final size");
     SimpleTest.finish();
