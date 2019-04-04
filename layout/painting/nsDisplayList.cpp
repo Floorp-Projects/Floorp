@@ -3177,8 +3177,7 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame, aBuilder->CurrentActiveScrolledRoot()) {}
 
 nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                             const ActiveScrolledRoot* aActiveScrolledRoot,
-                             bool aAnonymous)
+                             const ActiveScrolledRoot* aActiveScrolledRoot)
     : mFrame(aFrame),
       mActiveScrolledRoot(aActiveScrolledRoot),
       mAnimatedGeometryRoot(nullptr),
@@ -3193,7 +3192,7 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
 #endif
 {
   MOZ_COUNT_CTOR(nsDisplayItem);
-  if (aBuilder->IsRetainingDisplayList() && !aAnonymous) {
+  if (aBuilder->IsRetainingDisplayList()) {
     mFrame->AddDisplayItem(this);
   }
   mReferenceFrame = aBuilder->FindReferenceFrameFor(aFrame, &mToReferenceFrame);
@@ -5629,18 +5628,15 @@ bool nsDisplayBoxShadowInner::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
-                                     nsIFrame* aFrame, nsDisplayList* aList,
-                                     bool aAnonymous)
+                                     nsIFrame* aFrame, nsDisplayList* aList)
     : nsDisplayWrapList(aBuilder, aFrame, aList,
-                        aBuilder->CurrentActiveScrolledRoot(), false, 0,
-                        aAnonymous) {}
+                        aBuilder->CurrentActiveScrolledRoot(), false, 0) {}
 
 nsDisplayWrapList::nsDisplayWrapList(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
     const ActiveScrolledRoot* aActiveScrolledRoot, bool aClearClipChain,
-    uint32_t aIndex, bool aAnonymous)
-    : nsDisplayHitTestInfoItem(aBuilder, aFrame, aActiveScrolledRoot,
-                               aAnonymous),
+    uint32_t aIndex)
+    : nsDisplayHitTestInfoItem(aBuilder, aFrame, aActiveScrolledRoot),
       mFrameActiveScrolledRoot(aBuilder->CurrentActiveScrolledRoot()),
       mOverrideZIndex(0),
       mIndex(aIndex),
@@ -5683,10 +5679,9 @@ nsDisplayWrapList::nsDisplayWrapList(
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
-                                     nsIFrame* aFrame, nsDisplayItem* aItem,
-                                     bool aAnonymous)
-    : nsDisplayHitTestInfoItem(
-          aBuilder, aFrame, aBuilder->CurrentActiveScrolledRoot(), aAnonymous),
+                                     nsIFrame* aFrame, nsDisplayItem* aItem)
+    : nsDisplayHitTestInfoItem(aBuilder, aFrame,
+                               aBuilder->CurrentActiveScrolledRoot()),
       mOverrideZIndex(0),
       mIndex(0),
       mHasZIndexOverride(false) {
