@@ -30,6 +30,11 @@ data class Icon(
         /**
          * This icon was downloaded.
          */
-        DOWNLOAD
+        DOWNLOAD,
+
+        /**
+         * This icon was inlined in the document.
+         */
+        INLINE
     }
 }

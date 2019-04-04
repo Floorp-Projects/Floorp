@@ -16,6 +16,7 @@ import mozilla.components.browser.icons.decoder.ICOIconDecoder
 import mozilla.components.browser.icons.decoder.IconDecoder
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
 import mozilla.components.browser.icons.generator.IconGenerator
+import mozilla.components.browser.icons.loader.DataUriIconLoader
 import mozilla.components.browser.icons.loader.HttpIconLoader
 import mozilla.components.browser.icons.loader.IconLoader
 import mozilla.components.concept.engine.Engine
@@ -42,7 +43,8 @@ class BrowserIcons(
     private val httpClient: Client,
     private val generator: IconGenerator = DefaultIconGenerator(context),
     private val loaders: List<IconLoader> = listOf(
-        HttpIconLoader(httpClient)
+        HttpIconLoader(httpClient),
+        DataUriIconLoader()
     ),
     private val decoders: List<IconDecoder> = listOf(
         AndroidIconDecoder(),
