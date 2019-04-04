@@ -291,11 +291,6 @@ interface nsISHEntry : nsISupports
 
     nsISHEntry clone();
 
-    /** Return any content viewer present in or below this node in the
-        nsSHEntry tree.  This will differ from contentViewer in the case
-        where a child nsSHEntry has the content viewer for this tree. */
-    [noscript] nsIContentViewer getAnyContentViewer(out nsISHEntry ownerEntry);
-
     /**
      * Gets the owning pointer to the editor data assosicated with
      * this shistory entry. This forgets its pointer, so free it when
