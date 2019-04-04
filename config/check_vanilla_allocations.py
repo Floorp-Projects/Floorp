@@ -150,6 +150,14 @@ def main():
         if "ProfilingStack" in filename:
             continue
 
+        # Ignore implicit call to operator new in std::condition_variable_any.
+        #
+        # From intl/icu/source/common/umutex.h:
+        # On Linux, the default constructor of std::condition_variable_any
+        # produces an in-line reference to global operator new(), [...].
+        if filename == 'umutex.o':
+            continue
+
         fn = m.group(2)
         if filename == 'jsutil.o':
             jsutil_cpp.add(fn)
