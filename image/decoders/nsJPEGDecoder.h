@@ -8,15 +8,14 @@
 #define mozilla_image_decoders_nsJPEGDecoder_h
 
 #include "RasterImage.h"
+#include "SurfacePipe.h"
+
 // On Windows systems, RasterImage.h brings in 'windows.h', which defines INT32.
 // But the jpeg decoder has its own definition of INT32. To avoid build issues,
 // we need to undefine the version from 'windows.h'.
 #undef INT32
 
 #include "Decoder.h"
-
-#include "nsIInputStream.h"
-#include "nsIPipe.h"
 
 extern "C" {
 #include "jpeglib.h"
@@ -64,7 +63,7 @@ class nsJPEGDecoder : public Decoder {
 
  protected:
   Orientation ReadOrientationFromEXIF();
-  void OutputScanlines(bool* suspend);
+  WriteState OutputScanlines();
 
  private:
   friend class DecoderFactory;
@@ -99,11 +98,15 @@ class nsJPEGDecoder : public Decoder {
   JOCTET* mProfile;
   uint32_t mProfileLength;
 
+  uint32_t* mCMSLine;
+
   bool mReading;
 
   const Decoder::DecodeStyle mDecodeStyle;
 
   uint32_t mCMSMode;
+
+  SurfacePipe mPipe;
 };
 
 }  // namespace image
