@@ -36,9 +36,10 @@ class MFTDecoder final {
   //  - aOutputType needs at least major and minor types set.
   //    This is used to select the matching output type out
   //    of all the available output types of the MFT.
-  HRESULT SetMediaTypes(IMFMediaType* aInputType, IMFMediaType* aOutputType,
-                        std::function<HRESULT(IMFMediaType*)>&& aCallback =
-                            [](IMFMediaType* aOutput) { return S_OK; });
+  HRESULT SetMediaTypes(
+      IMFMediaType* aInputType, IMFMediaType* aOutputType,
+      std::function<HRESULT(IMFMediaType*)>&& aCallback =
+          [](IMFMediaType* aOutput) { return S_OK; });
 
   // Returns the MFT's IMFAttributes object.
   already_AddRefed<IMFAttributes> GetAttributes();

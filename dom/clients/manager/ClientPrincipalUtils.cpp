@@ -35,7 +35,9 @@ bool ClientMatchPrincipalInfo(const PrincipalInfo& aLeft,
       // null principal never matches
       return false;
     }
-    default: { break; }
+    default: {
+      break;
+    }
   }
 
   // Clients (windows/workers) should never have an expanded principal type.

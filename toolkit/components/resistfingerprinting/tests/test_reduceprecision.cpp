@@ -79,12 +79,14 @@ void process(double clock, nsRFPService::TimeScale clockUnits,
   ASSERT_EQ(reduced1, reduced2);
 }
 
-TEST(ResistFingerprinting, ReducePrecision_Assumptions) {
+TEST(ResistFingerprinting, ReducePrecision_Assumptions)
+{
   ASSERT_EQ(FLT_RADIX, 2);
   ASSERT_EQ(DBL_MANT_DIG, 53);
 }
 
-TEST(ResistFingerprinting, ReducePrecision_Reciprocal) {
+TEST(ResistFingerprinting, ReducePrecision_Reciprocal)
+{
   bool jitterEnabled = setupJitter(false);
   // This one has a rounding error in the Reciprocal case:
   process(2064.8338460, nsRFPService::TimeScale::MicroSeconds, 20);
@@ -94,7 +96,8 @@ TEST(ResistFingerprinting, ReducePrecision_Reciprocal) {
   cleanupJitter(jitterEnabled);
 }
 
-TEST(ResistFingerprinting, ReducePrecision_KnownGood) {
+TEST(ResistFingerprinting, ReducePrecision_KnownGood)
+{
   bool jitterEnabled = setupJitter(false);
   process(2064.8338460, nsRFPService::TimeScale::MilliSeconds, 20);
   process(69027.62, nsRFPService::TimeScale::MilliSeconds, 20);
@@ -102,7 +105,8 @@ TEST(ResistFingerprinting, ReducePrecision_KnownGood) {
   cleanupJitter(jitterEnabled);
 }
 
-TEST(ResistFingerprinting, ReducePrecision_KnownBad) {
+TEST(ResistFingerprinting, ReducePrecision_KnownBad)
+{
   bool jitterEnabled = setupJitter(false);
   process(1054.842405, nsRFPService::TimeScale::MilliSeconds, 20);
   process(273.53038600000002, nsRFPService::TimeScale::MilliSeconds, 20);
@@ -111,7 +115,8 @@ TEST(ResistFingerprinting, ReducePrecision_KnownBad) {
   cleanupJitter(jitterEnabled);
 }
 
-TEST(ResistFingerprinting, ReducePrecision_Edge) {
+TEST(ResistFingerprinting, ReducePrecision_Edge)
+{
   bool jitterEnabled = setupJitter(false);
   process(2611.14, nsRFPService::TimeScale::MilliSeconds, 20);
   process(2611.16, nsRFPService::TimeScale::MilliSeconds, 20);
@@ -122,7 +127,8 @@ TEST(ResistFingerprinting, ReducePrecision_Edge) {
   cleanupJitter(jitterEnabled);
 }
 
-TEST(ResistFingerprinting, ReducePrecision_Expectations) {
+TEST(ResistFingerprinting, ReducePrecision_Expectations)
+{
   bool jitterEnabled = setupJitter(false);
   double result;
   result = nsRFPService::ReduceTimePrecisionImpl(
@@ -152,7 +158,8 @@ TEST(ResistFingerprinting, ReducePrecision_Expectations) {
   cleanupJitter(jitterEnabled);
 }
 
-TEST(ResistFingerprinting, ReducePrecision_ExpectedLossOfPrecision) {
+TEST(ResistFingerprinting, ReducePrecision_ExpectedLossOfPrecision)
+{
   bool jitterEnabled = setupJitter(false);
   double result;
   // We lose integer precision at 9007199254740992 - let's confirm that.
@@ -186,7 +193,8 @@ TEST(ResistFingerprinting, ReducePrecision_ExpectedLossOfPrecision) {
 // If you're doing logging, you really don't want to run this test.
 #define RUN_AGGRESSIVE false
 
-TEST(ResistFingerprinting, ReducePrecision_Aggressive) {
+TEST(ResistFingerprinting, ReducePrecision_Aggressive)
+{
   if (!RUN_AGGRESSIVE) {
     return;
   }
@@ -240,7 +248,8 @@ TEST(ResistFingerprinting, ReducePrecision_Aggressive) {
   cleanupJitter(jitterEnabled);
 }
 
-TEST(ResistFingerprinting, ReducePrecision_JitterTestVectors) {
+TEST(ResistFingerprinting, ReducePrecision_JitterTestVectors)
+{
   bool jitterEnabled = setupJitter(true);
 
   // clang-format off

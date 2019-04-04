@@ -84,7 +84,8 @@ bool operator==(const MozPolygon& lhs, const MozPolygon& rhs) {
 }  // namespace gfx
 }  // namespace mozilla
 
-TEST(PolygonTestUtils, TestSanity) {
+TEST(PolygonTestUtils, TestSanity)
+{
   EXPECT_TRUE(FuzzyEquals(Point4D(0.0f, 0.0f, 0.0f, 1.0f),
                           Point4D(0.0f, 0.0f, 0.0f, 1.0f)));
 

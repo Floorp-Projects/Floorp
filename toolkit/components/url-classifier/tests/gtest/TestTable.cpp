@@ -8,7 +8,8 @@ void TestResponseCode(const char* table, nsresult result) {
   ASSERT_EQ(TablesToResponse(tableName), result);
 }
 
-TEST(UrlClassifierTable, ResponseCode) {
+TEST(UrlClassifierTable, ResponseCode)
+{
   // malware URIs.
   TestResponseCode("goog-malware-shavar", NS_ERROR_MALWARE_URI);
   TestResponseCode("test-malware-simple", NS_ERROR_MALWARE_URI);

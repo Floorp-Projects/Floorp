@@ -32,15 +32,16 @@ void StartClientManagerOp(Func aFunc, const Arg& aArg, nsIGlobalObject* aGlobal,
       MakeRefPtr<DOMMozPromiseRequestHolder<ClientOpPromise>>(aGlobal);
 
   aFunc(aArg, target)
-      ->Then(target, __func__,
-             [aResolve, holder](const ClientOpResult& aResult) {
-               holder->Complete();
-               aResolve(aResult);
-             },
-             [aReject, holder](nsresult aResult) {
-               holder->Complete();
-               aReject(aResult);
-             })
+      ->Then(
+          target, __func__,
+          [aResolve, holder](const ClientOpResult& aResult) {
+            holder->Complete();
+            aResolve(aResult);
+          },
+          [aReject, holder](nsresult aResult) {
+            holder->Complete();
+            aReject(aResult);
+          })
       ->Track(*holder);
 }
 

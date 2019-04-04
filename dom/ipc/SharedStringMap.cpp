@@ -67,11 +67,12 @@ bool SharedStringMap::Get(const nsCString& aKey, nsAString& aValue) {
 bool SharedStringMap::Find(const nsCString& aKey, size_t* aIndex) {
   const auto& keys = KeyTable();
 
-  return BinarySearchIf(Entries(), 0, EntryCount(),
-                        [&](const Entry& aEntry) {
-                          return aKey.Compare(keys.GetBare(aEntry.mKey));
-                        },
-                        aIndex);
+  return BinarySearchIf(
+      Entries(), 0, EntryCount(),
+      [&](const Entry& aEntry) {
+        return aKey.Compare(keys.GetBare(aEntry.mKey));
+      },
+      aIndex);
 }
 
 void SharedStringMapBuilder::Add(const nsCString& aKey,
