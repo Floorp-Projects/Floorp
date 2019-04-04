@@ -34,8 +34,6 @@ async function testCDP() {
 
   // Connect to the server
   const {webSocketDebuggerUrl} = await CDP.Version();
-  is(webSocketDebuggerUrl, "ws://localhost:9222/devtools/browser", "Version endpoint refers to /devtools/browser target");
-
   const client = await CDP({"target": webSocketDebuggerUrl});
   ok(true, "CDP client has been instantiated");
 
