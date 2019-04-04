@@ -271,15 +271,15 @@ void nsWebPDecoder::ApplyColorProfile(const char* aProfile, size_t aLength) {
   }
 
   auto mode = gfxPlatform::GetCMSMode();
-  if (mode == eCMSMode_Off || (mode == eCMSMode_TaggedOnly && !aProfile)) {
+  if (mode == eCMSMode_Off || (mode == eCMSMode_TaggedOnly && !aProfile) ||
+      !gfxPlatform::GetCMSOutputProfile()) {
     return;
   }
 
-  if (!aProfile || !gfxPlatform::GetCMSOutputProfile()) {
+  if (!aProfile) {
     MOZ_LOG(sWebPLog, LogLevel::Debug,
-            ("[this=%p] nsWebPDecoder::ApplyColorProfile -- not tagged or no "
-             "output "
-             "profile , use sRGB transform\n",
+            ("[this=%p] nsWebPDecoder::ApplyColorProfile -- not tagged, use "
+             "sRGB transform\n",
              this));
     mTransform = gfxPlatform::GetCMSBGRATransform();
     return;
@@ -295,10 +295,10 @@ void nsWebPDecoder::ApplyColorProfile(const char* aProfile, size_t aLength) {
   }
 
   uint32_t profileSpace = qcms_profile_get_color_space(mInProfile);
-  if (profileSpace == icSigGrayData) {
+  if (profileSpace != icSigRgbData) {
     // WebP doesn't produce grayscale data, this must be corrupt.
     MOZ_LOG(sWebPLog, LogLevel::Error,
-            ("[this=%p] nsWebPDecoder::ApplyColorProfile -- ignoring grayscale "
+            ("[this=%p] nsWebPDecoder::ApplyColorProfile -- ignoring non-rgb "
              "color profile\n",
              this));
     return;
