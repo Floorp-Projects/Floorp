@@ -2846,9 +2846,8 @@ nscolor nsStyleBackground::BackgroundColor(const nsIFrame* aFrame) const {
   return mBackgroundColor.CalcColor(aFrame);
 }
 
-nscolor nsStyleBackground::BackgroundColor(
-    mozilla::ComputedStyle* aStyle) const {
-  return mBackgroundColor.CalcColor(aStyle);
+nscolor nsStyleBackground::BackgroundColor(ComputedStyle* aStyle) const {
+  return mBackgroundColor.CalcColor(*aStyle);
 }
 
 bool nsStyleBackground::IsTransparent(const nsIFrame* aFrame) const {
@@ -3918,9 +3917,8 @@ nsStyleUI::nsStyleUI(const Document& aDocument)
       mUserFocus(StyleUserFocus::None),
       mPointerEvents(NS_STYLE_POINTER_EVENTS_AUTO),
       mCursor(StyleCursorKind::Auto),
-      mCaretColor(StyleComplexColor::Auto()),
-      mScrollbarFaceColor(StyleComplexColor::Auto()),
-      mScrollbarTrackColor(StyleComplexColor::Auto()) {
+      mCaretColor(StyleColorOrAuto::Auto()),
+      mScrollbarColor(StyleScrollbarColor::Auto()) {
   MOZ_COUNT_CTOR(nsStyleUI);
 }
 
@@ -3932,8 +3930,7 @@ nsStyleUI::nsStyleUI(const nsStyleUI& aSource)
       mCursor(aSource.mCursor),
       mCursorImages(aSource.mCursorImages),
       mCaretColor(aSource.mCaretColor),
-      mScrollbarFaceColor(aSource.mScrollbarFaceColor),
-      mScrollbarTrackColor(aSource.mScrollbarTrackColor) {
+      mScrollbarColor(aSource.mScrollbarColor) {
   MOZ_COUNT_CTOR(nsStyleUI);
 }
 
@@ -3995,8 +3992,7 @@ nsChangeHint nsStyleUI::CalcDifference(const nsStyleUI& aNewData) const {
   }
 
   if (mCaretColor != aNewData.mCaretColor ||
-      mScrollbarFaceColor != aNewData.mScrollbarFaceColor ||
-      mScrollbarTrackColor != aNewData.mScrollbarTrackColor) {
+      mScrollbarColor != aNewData.mScrollbarColor) {
     hint |= nsChangeHint_RepaintFrame;
   }
 
